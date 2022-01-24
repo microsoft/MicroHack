@@ -1,0 +1,36 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "name": {
+            "type": "string",
+            "defaultValue": "[concat('microhack-workspace', uniquestring(resourceGroup().id))]"
+        },
+        "location": {
+            "type": "string",
+            "defaultValue": "westeurope"
+        },
+        "sku": {
+            "type": "string",
+            "defaultValue": "pergb2018"
+        },
+        "tags": {
+            "type": "object",
+            "defaultValue": "microhack"
+        }
+    },
+    "resources": [
+        {
+            "apiVersion": "2020-10-01",
+            "name": "[parameters('name')]",
+            "location": "[parameters('location')]",
+            "tags": "[parameters('tags')]",
+            "type": "Microsoft.OperationalInsights/workspaces",
+            "properties": {
+                "sku": {
+                    "name": "[parameters('sku')]"
+                }
+            }
+        }
+    ]
+}

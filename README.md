@@ -1,33 +1,56 @@
-# Project
+# **Microsoft MicroHacks**
 
-> This repo has been populated by an initial template to help get you started. Please
-> make sure to update the content to build a great experience for community-building.
+# **Table of Content**
 
-As the maintainer of this project, please make a few updates:
+[MicroHack introduction and context](#MicroHack)
 
-- Improving this README.MD file to provide a great experience
-- Updating SUPPORT.MD with content about this project's support experience
-- Understanding the security reporting process in SECURITY.MD
-- Remove this section from the README
+[00 - Foundation]() 
 
-## Contributing
+[99- Template](#99-microhack-template)
 
-This project welcomes contributions and suggestions.  Most contributions require you to agree to a
-Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
-the rights to use your contribution. For details, visit https://cla.opensource.microsoft.com.
 
-When you submit a pull request, a CLA bot will automatically determine whether you need to provide
-a CLA and decorate the PR appropriately (e.g., status check, comment). Simply follow the instructions
-provided by the bot. You will only need to do this once across all repos using our CLA.
+# **MicroHack Overview**
 
-This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
-For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
-contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
+MicroHacks are great for building base knowledge for people new to a technical area. However, they are often too high-level to build technical readiness in many niche areas of Azure that our customers need support on.  Our teams often hear from customers once they have read documentation and tried to setup a PoC. If this fails, they come to us looking for support. To be effective in this situation we need to build additional ‘hands on’ technical readiness.
 
-## Trademarks
+## **What is a MicroHack?** 
+A MicroHack is a small workshop, less than four hours, where you’ll get hands-on experience and solve different challenges to better understand a certain technology / topic. Let’s say, it’s the mini Version of an OpenHack which focuses on real life scenario or transformation.
 
-This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft 
-trademarks or logos is subject to and must follow 
-[Microsoft's Trademark & Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks/usage/general).
-Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship.
-Any use of third-party trademarks or logos are subject to those third-party's policies.
+## **How does it work?**
+There are many small individual MicroHacks that build on each other and therefore have certain dependencies. In each MicroHack the requirements are therefore described to understand exactly what must be done before. The procedure is described relatively simple and explained step by step what to do. You have to fulfill certain challenge based tasks before you can continue with the next challenge. At first glance, everything looks simple, but if you take a closer look, the whole construct is revealed at the end of the MicroHack series. 
+
+## **What is the benefit?**
+The great benefit of MicroHacks is that you can quickly, precisely and hands on understand one or the combination of several services. There are often only a few concrete tasks to do and the hands on experience is lifted to the next level in a very short time. After completing all the challenges you will almost certainly have jumped over your own shadow, expanded the mindset and can directly deal with the implementation in practice and outside of a lab environment. 
+
+## Why? 
+Why a MicroHack is necessary
+
+# Pre-requisites
+
+### License
+Regarding licenses, just read the requirements in each MicroHack. It describes exactly which requirements are necessary to perform the MicroHack alone or together with Microsoft colleagues. If you are supported by a partner or directly by Microsoft, you can always contact a colleague at the partner or your Microsoft account team. 
+
+### Tenant
+A tenant is always required as the basis for each MicroHack. We explain this in the Foundation and show you how to create a tenant if you don't have one yet. 
+
+### Subscription
+Some microhack also requires an Azure subscription. This always depends on the topic, but as mentioned above, before each MicroHack we will show you exactly which requirements you need. 
+
+### Permissions
+
+
+
+# **Available MicroHacks**
+
+## 00 - Foundation
+
+[See here for MicroHacks Foundation]()
+
+## 01 - Identity and Access Management 
+
+[See here for Microsoft Azure Advanced Security MicroHacks](../../tree/main/01-Identity-Access-Management/README.md)
+
+## 99-MicroHack-Template
+
+[See here for template instructions](../../tree/main/99-MicroHack-Template/README.md)
+

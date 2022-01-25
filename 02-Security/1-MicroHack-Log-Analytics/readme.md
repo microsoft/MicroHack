@@ -31,13 +31,13 @@ This MicroHack scenario walks through the use of Log Analytics and with a focus 
 The overall architecture is designed for the Security MicroHacks in this repository. This means that some parts of the architecture of the MicroHacks contain e.g. only placeholders for services or elements that will be added in the following MicroHacks. To get a comprehensive learning experience it makes sense to start with the first MicroHack and then work your way through piece by piece. 
 
 ## Architecture for this MicroHack Series (Overall architecture at the end)
-![image](./Architecture.svg)
+![image](images/Architecture.svg)
 
 This lab is not a full explanation of Azure Monitor & Log Analytics as a technology, please consider the following articles required pre-reading to build foundational knowledge.
 
 - [Overview Log Analytics ](https://docs.microsoft.com/en-us/azure/azure-monitor/logs/log-analytics-tutorial)
 - [Azure Monitor Agent](https://docs.microsoft.com/en-us/azure/azure-monitor/agents/azure-monitor-agent-overview)
-sdfsdf
+
 ### Optional (read this after completing this lab to take your learning even deeper!)
 - [Azure Monitor design principles and best practices](Link to Martina & Mo´s Repo)
 - [Should I switch to the new Azure Monitor agent?](https://docs.microsoft.com/en-us/azure/azure-monitor/agents/azure-monitor-agent-overview#should-i-switch-to-azure-monitor-agent)
@@ -59,7 +59,7 @@ With these pre-requisites in place, we can focus on building the differentiated 
 
 ### At the end of this section your base lab build looks as follows:
 
-![image](./FirstMicroHackLA.svg)
+![image](images/FirstMicroHackLA.svg)
 
 # Lab environment for this MicroHack
 
@@ -93,10 +93,10 @@ The goal of this exercise is to deploy the Lab environment and get some hands on
 1. Login to Azure cloud shell [https://shell.azure.com/](https://shell.azure.com/)
 2. If you don´t have a storage account mounted, choose you subscription and create a new one --> otherwise move on with the next step
 
-![Cloudshellnewstorage](./Cloudshellcreatestorage.png)
+![Cloudshellnewstorage](images/Cloudshellcreatestorage.png)
 
 
-![Terminalconnected](Terminalconnected.png)
+![Terminalconnected](images/Terminalconnected.png)
 
 3. Ensure that you are operating within the correct subscription via. Please copy the command and execute it in you active Azure Cloud Shell session. 
 
@@ -148,75 +148,159 @@ In the next steps you will deploy a virtual machine setup. This machines will la
 In this task you will deploy a virtual machine with an Ubuntu Image. Pleas copy the command and execute in your Azure Cloud Shell session. 
 
 ```
-az vm create -n Linux-VM -g rg-MicroHack-AzureSecurity --image UbuntuLTS --admin-username microhack
+az vm create -n Linux -g rg-MicroHack-AzureSecurity --image UbuntuLTS --admin-username microhack
 ```
-
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fgist.githubusercontent.com%2Fnilsbankert%2F64400dda72ae30bf49cb2065b726dc70%2Fraw%2Fd1b3df74031e5c204f7a00ab06773e8e43463661%2FARM%252520Template%252520Linux-VM)
-
 
 ### Deploy Windows Virtual Machine with CLI 
 
 In this task you will deploy a virtual machine with an Windows Image. Please copy the command and execute in your Azure Cloud Shell session. 
 
 ```
-az vm create \ --resource-group rg-MicroHack-AzureSecurity \ --name Windows-VM \ --image win2019datacenter \ --admin-username microhack
+az vm create \ --resource-group rg-MicroHack-AzureSecurity \ --name Windows \ --image win2019datacenter \ --admin-username microhack
 ```
 
 ✅ Congratulations our lab environment is ready and now you will get some hands on with the virtual machines and the relevant log collection configuration. 
 
-# Challenge 2 : Collect logs from Windows VM
+# Challenge 2 - Collect logs from Windows virtual machine
 
 ## Goal
 
-## Task 1: 
+In this challenge you will connect a Windows virtual machine running in Azure with a centralized Log Analytics workspace for collecting important Windows Logs. After completing the challenge the Windows virtual machine will continuously send relevant logs to the Log Anayltics workspace for further analysis.
 
-## Task 2: 
+## Task 1: Configure Log Analytics to collect relevant Windows logs
 
-## Task 3: 
+Please go to the Azure Portal and open your Log Analytics Workspace that was created at the beginning of this MicroHack. Select "Agents configuration" and click on "add windows event log" to add "System" and "Application" log the the collected data. 
 
-**Explain the background...**
+![alt text](images/law-agent-config-win.png "Agents configuration")
 
-## Task 4: 
+In addition to the Event Logs we want to collect some performance metrics from the virtual machine. Please select the "Windows performance counters" tab and click on "Add recommended counters". 
 
-Before proceeding to challenge 3, ...
+The basic configuration to collect relevant data from the connected Windows virtual machines is completed. 
+
+`❗ Hint: In a real-world scenario you might add additional performance counters based on your scenario. If you have additional software on the virtual machine that integrates with Windows performance counters you can add them to Log Analytics as well.`  
+
+
+## Task 2: Onboard the Windows virtual machine to Log Analytics
+
+Please select "Virtual machines" under "Workspace Data Sources" in the Log Analytics workspace. You should see two virtual machines running Windows and Linux that are currently not connected. 
+
+![alt text](images/vm-overview-not-connected.png "VMs not connected")
+
+Click on the Windows virtual Machine and connect it to the Log Analytics workspace. The virtual machine is now connected to the Log Analytics workspace. 
+
+![alt text](images/vm-overview-connected.png "Windows VM connected")
+
+Immediately after connecting the Windows virtual machine to the Log Analytics workspace the agents inside the Windows virtual machine will start to collect data from the configured data sources and send it to the workspace.
+
+`❗ Hint: In general it's recommended to onboard virtual machines to Log Analytics via Azure Policy.`  
+
+## Task 3: Login to the Windows virtual machine
+
+In order to generate some security events please login to the Windows virtual machine via RDP with valid credentials. 
+
 
 # Challenge 3: Collect logs from Linux VM 
 
 ## Goal
 
-## Task 1: 
+In this challenge you will connect a Linux VM running in Azure with a centralized Log Analytics Workspace for collecting the syslog logs.  
 
-## Task 2: 
+## Task 1: Configure Log Analytics to collect relevant Windows logs
 
-## Task 3: 
+Please navigate to "Agents configuration" and click on "Syslog" in the Log Analytics workspace. Select "Add facility" and choose "syslog" in the list of available sources and hit "Apply".
 
-**Explain the background...**
+![alt text](images/law-agent-config-linux.png "Agents configuration")
 
-## Task 4: 
+The basic configuration to collect the syslog events from the Linux virtual machine is completed. 
 
-Before proceeding to challenge 4, ...
+`❗ Hint: In a real-world scenario you might add additional performance counters based on your scenario. If you have additional software on the virtual machine that integrates with Windows performance counters you can add them to Log Analytics as well.`  
+
+
+## Task 2: Onboard the Linux virtual machine to Log Analytics
+
+Please select "Virtual machines" under "Workspace Data Sources" in the Log Analytics workspace. Connect the Linux virtual machine to the workspace. 
+
+![alt text](images/vm-overview-all-connected.png "All VMs connected")
+
+After connecting the Linux virtual machine to the Log Analytics workspace the agents inside the Linux virtual machine will start to collect data from syslog and send it to the workspace.
+
+`❗ Hint: In general it's recommended to onboard virtual machines to Log Analytics via automation.`  
 
 # Challenge 4: First query with KQL
 
 ## Goal
 
-## Task 1: Linux VM
+In this challenge we will execute our first queries to get an overview about the collected logs from our Windows and Linux virtual machines. The goal is to explore the different event sources and get some insights about our virtual machines. 
 
-## Task 2: Correlation query between Windows and Linux 
+## Task 1: Query successful Windows logins
 
+Remember that you successfully logged in to the Windows virtual machine in [Challenge 2](#challenge-2---collect-logs-from-windows-vm)? Let's see if we can find the event in Log Analytics. 
 
+Please go to the Log Analytics workspace and select Logs to open the query editor. 
+```
+SecurityEvent
+| where EventID == "4624"
+| project TimeGenerated, Account, Computer, Activity
+```
+![alt text](images/succesful-login-query-results.png "All succesfull logins to Windows")
+
+## Task 2: Query failed Windows logins
+
+Log Analytics offers different built-in queries to help you getting started. In this task we will have a look at all failed Windows authentications reported to the Log Analytics workspace. Please select "Queries" and search for "Windows failed logins". Click on the item under the security pillar and run the query. 
+
+![alt text](images/failed-login-query-results.png "All failed logins to Windows")
+
+`❗ Hint: Depending on the pace of some port scanners you should see a lot of failed login requests with different user names.`  
+
+All alarm bells should start to ring now. There is definitly something malicious going on and let's gather some further details. Edit the query and add the source IP-Address of the request to the query to see who is actually trying to login.  
+
+```
+SecurityEvent
+| where EventID == 4625
+| summarize count() by TargetAccount, Computer, IpAddress, _ResourceId
+```
+
+![alt text](images/failed-login-query-results2.png "All failed logins to Windows with IP-Address")
+
+No surprise - all requests originate from the internet. Bad actors try to connect via RDP using password spray attacks to our Windows virtual machine. 
+
+❗ Important note: It's highly recommended to protect your Windows and Linux virtual machines with Network Security Groups if you need to assign a public IP-address. Consider using [just-in-time access](https://docs.microsoft.com/en-us/azure/security-center/security-center-just-in-time) to secure SSH and RDP. The virtual machines in this MicroHack are only for demonstration purposes accessible over the internet.  
+
+## Task 3: Create an alarm if too many Windows logins fail from a certain IP-Address 
+
+to be continued...
 
 # Challenge 5: Onboard storage account to Log Analytics Workspace
 
 ## Goal
 
-## Task 1: 
+In this challenge you will onboard an Azure Storage account to Log Analytics. As a result, important log entries like changes to blobs inside the storage account will be send to Log Analytics. 
 
-## Task 2: 
+## Task 1: Configure diagnostic settings of the storage account
 
-## Task 3: Immutable Storage for long term archive
+Please navigate to the storage account with the prefix loganalytics that was created earlier in Challenge 1 as part of the lab deployment. Now select the "Diagnostic settings (preview)" and click on "blob". In order to complete this task configure the diagnostic settings to send the logs to your Log Analytics workspace. 
 
-**Explain the background...**
+![alt text](images/storage-account-diagnostic-settings.png "Diagnostic settings")
+
+## Task 2: Upload some files and delete them afterwards
+
+Use the Storage Explorer in the Azure Portal to upload some files for testing purposes into the storage account. After successfully uploading the files you can delete some of these files to generate some additional log entries.
+
+![alt text](images/upload-file-to-azure-storage.png "Upload files to Azure storage")
+
+## Task 3: Query Log Analytics workspace for events in your storage account
+
+Go back to the Log Analytics workspace and open the query editor. Let's list all file uploads and deletions in the storage account. Execute the following query: 
+
+```
+StorageBlobLogs
+| where OperationName contains "PutBlob" or OperationName contains "DeleteBlob"
+| project TimeGenerated, CallerIpAddress, AuthenticationType, AccountName, OperationName, Uri
+```
+
+You shoud see a list of all your activities incl. the upload and deletion of blobs. 
+
+![alt text](images/storage-account-query-results.png "Results in Log Analytics")
 
 ## Task 4: 
 
@@ -234,7 +318,7 @@ After the configuration is in place you can gain insights into subscription-leve
 
 Open the Azure Monitor threw the Azure Portal. Click on Activity Log and choose Diagnostic settings. 
 
-![AzureMonitorActivity](AzureMonitor_ActivityLogToLogAnalytics.png)
+![AzureMonitorActivity](images/AzureMonitor_ActivityLogToLogAnalytics.png)
 
 
 
@@ -243,9 +327,9 @@ Select **"Add diagnostic setting"**, choose a name for the configuration, tick a
 
 
 
-![AzureMonitorActivity](AzureMonitor_ActivityLogToLogAnalytics2.png)
+![AzureMonitorActivity](images/AzureMonitor_ActivityLogToLogAnalytics2.png)
 
-![AzureMonitorActivity](AzureMonitor_ActivityLogToLogAnalytics3.png)
+![AzureMonitorActivity](images/AzureMonitor_ActivityLogToLogAnalytics3.png)
 
 💡 Only new Activity log entries will be sent to the Log Analytics workspace, so perform some actions in your subscription that will be logged such as starting or stopping a virtual machine or creating or modifying another resource. You may need to wait a few minutes for the diagnostic setting to be created and for data to initially be written to the workspace. After this delay, all events written to the Activity log will be sent to the workspace within a few seconds.
 
@@ -258,7 +342,7 @@ In the query window type in the following queries and click run to execute. Plea
 - **"AzureActivity"** 
 - **"AzureActivity | summarize count() by CategoryValue"** 
 
-![AzureMonitorActivity](AzureMonitor_ActivityLogToLogAnalytics4.png)
+![AzureMonitorActivity](images/AzureMonitor_ActivityLogToLogAnalytics4.png)
 
 💡 If you want to learn more about Azure Monitor and the language KQL which is used in Azure Monitor see here: 
 

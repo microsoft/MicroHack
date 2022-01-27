@@ -27,11 +27,10 @@ Configure your session hosts to store FSLogix user profiles on Azure Files.
 
 ## Success Criteria
 - Test your deployment
-- Once you've installed and configured FSLogix, you can test your deployment by signing in with a user account that's been assigned to an application group on the host pool. 
+- test your deployment by signing in with a user account that's been assigned to an application group on the host pool. 
 - The user account you sign in with must have permission to use the file share.
-- If the user has signed in before, they'll have an existing local profile that the service will use during this session. To avoid creating a local profile, either create a new
-  user account to use for tests or use the configuration methods described in Tutorial: [Configure profile container to redirect user profiles to enable the DeleteLocalProfileWhenVHDShouldApply setting](https://docs.microsoft.com/en-us/fslogix/configure-profile-container-tutorial/).
- - Finally, test the profile to make sure that it works
+- Make sure you test with an user, who has not has signed in before and no local profile exists 
+- Finally, test the profile to make sure that it works
 
 
 ### Disclaimer

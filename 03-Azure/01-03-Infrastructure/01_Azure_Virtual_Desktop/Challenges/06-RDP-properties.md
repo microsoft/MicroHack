@@ -3,8 +3,7 @@
 [Previous Challenge](./05-scaling-plan.md) - **[Home](../readne.md)** - [Next Challenge](./xxx.md)
 
 ## Introduction
-Azure Virtual Desktop enables you to configure and customize Remote Desktop Protocol (RDP) properties for a host pool. This 
-
+Azure Virtual Desktop enables you to configure and customize Remote Desktop Protocol (RDP) properties for a host pool. 
 Customizing a host pool's Remote Desktop Protocol (RDP) properties, such as multi-monitor experience and audio redirection, lets you deliver an optimal experience for your users based on their needs. If you'd like to change the default RDP file properties, you can customize RDP properties in Azure Virtual Desktop by either using the Azure portal or by using the -CustomRdpProperty parameter in the Update-AzWvdHostPool cmdlet.
 
 ## Challenge 

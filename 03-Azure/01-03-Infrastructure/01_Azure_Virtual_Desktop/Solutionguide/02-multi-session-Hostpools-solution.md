@@ -1,4 +1,4 @@
-# Challenge 2 Solution:
+# Exercise 2: Create a host pool for multi-session desktops
 
 ## Task 1:
 

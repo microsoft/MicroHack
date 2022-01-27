@@ -6,7 +6,7 @@
 |----------|:-------------:|
 | Description | Links |
 | Customize RDP Properties | https://docs.microsoft.com/en-us/azure/virtual-desktop/customize-rdp-properties |
-| Supported RDP Properties | Supported RDP Properties |
+| Supported RDP Properties | https://docs.microsoft.com/en-us/windows-server/remote/remote-desktop-services/clients/rdp-files?context=/azure/virtual-desktop/context/context|
   |              |            | 
 
 ## Task1:

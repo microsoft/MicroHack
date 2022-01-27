@@ -1,5 +1,5 @@
 # Exercise 2: Multi-Session Hostpools
-[Previous Challenge](./01-Personal-Hostpools.md) - **[Home](../readme.md)** - [Next Challenge](./xxx.md)
+[Previous Challenge](./01-Personal-Hostpools.md) - **[Home](../readme.md)** - [Next Challenge](./03-Implement-FSLogix-Profile-Solution.md)
 
 ## Introduction
 In this challenge you will create Azure Active Directory joined pooled desktops used as a jump box. After deployment you will connect to the jumpbox, deploy Notepad, 

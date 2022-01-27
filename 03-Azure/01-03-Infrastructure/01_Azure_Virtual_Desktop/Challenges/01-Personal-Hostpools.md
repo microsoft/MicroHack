@@ -1,4 +1,4 @@
-# RDP Personal Hostpools
+# Challenge 1: RDP Personal Hostpools
 
 [Previous Challenge](./00-Pre-Reqs.md) - **[Home](../readme.md)** - **[Next Challenge](02-multi-session-Hostpools.md)**
 

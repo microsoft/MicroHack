@@ -1,5 +1,5 @@
 # Exercise 5: Scaling plan 
-[Previous Challenge](./04-start-VM-on-connect.md) - **[Home](../readme.md)** - [Next Challenge](./06-RDP-Properties.md)
+[Previous Challenge](./04-start-VM-on-connect.md) - **[Home](../readme.md)** - [Next Challenge](./06-RDP-properties.md)
 
 ## Introduction
 Taking a look at the multi-session usage pattern we recognize that some days are busier than others. Busy days have specific peak hours as well as times where the desktops are not used at all. Moreover, users complain about performance issues with rising users per session. On the other hand, management askes for cost saving opportunities. To optimize costs and user experience, AVD scaling plans are recommended *(feature is still in preview)*. 

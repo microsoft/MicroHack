@@ -1,4 +1,4 @@
-# Scaling plan 
+# Challenge 5: Scaling plan 
 [Previous Challenge](./04-start-VM-on-connect.md) - **[Home](../readme.md)** - [Next Challenge](./06-RDP-Properties.md)
 
 ## Introduction

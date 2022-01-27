@@ -1,4 +1,4 @@
-# Challenge 3: FSLogix Profile Solution
+# Exercise 3: FSLogix Profile Solution
 
 [Previous Challenge](./00-Pre-Reqs.md) - **[Home](../readme.md)** - **[Next Challenge](02-multi-session-Hostpools.md)**
 

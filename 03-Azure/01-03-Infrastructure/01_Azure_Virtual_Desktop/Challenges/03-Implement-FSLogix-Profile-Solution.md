@@ -12,12 +12,8 @@ Configure the permissions on an Azure Files share.
 Configure your session hosts to store FSLogix user profiles on Azure Files.
 
 ## Challenge 
-- West Europe Region
-- Personal Host Pool via the Azure Portal, with Windows 10 Enterprise from the Gallary
-- Metadata located in West Europe
-- Users should be assigned directly to the session host.
-- Change the friendly name of the Workspace
-- Change the friendly name of the Application Group
+- Create a storage account in your subscription for Azure file shares 
+
 
 ## Success Criteria
 - Host Pools are created and Session Hosts showing available
@@ -31,3 +27,6 @@ For more information, see [Supplemental Terms of Use for Microsoft Azure Preview
 
 ### Learning Resources
 [Create a profile container with Azure Files and Azure Active Directory (preview)](https://docs.microsoft.com/en-us/azure/virtual-desktop/create-profile-container-azure-ad)
+[Create a storage account for Azure File Shares](https://docs.microsoft.com/en-us/azure/storage/files/storage-how-to-create-file-share?tabs=azure-portal#create-a-storage-account)
+[Configure FSLogix for the Enterprise](https://docs.microsoft.com/en-us/azure/architecture/example-scenario/wvd/windows-virtual-desktop-fslogix)
+

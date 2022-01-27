@@ -2,8 +2,8 @@
 
 Thank you for your interest in our MicroHacks! 
 
-* [How to contribute](#how-to-contribute)
-* [Contributing guidelines](#contributing-guidelines)
+* [How to contribute](#how-to-contribute-)
+* [Contributing guidelines](#contributing-guidelines-)
 * [MicroHack intent](#microhack-intent)
 * [Repository organization](#repository-organization)
 * [Authoring Tools](#authoring-tools)

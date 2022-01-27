@@ -2,15 +2,23 @@
 
 Thank you for your interest in our MicroHacks! 
 
-* [How to contribute](#how-to-contribute-)
-* [Contributing guidelines](#contributing-guidelines-)
-* [MicroHack intent](#microhack-intent)
-* [Repository organization](#repository-organization)
-* [Authoring Tools](#authoring-tools)
-* [IaC Tools](#iac-tools)
-* [How to use Markdown to format your topic](#how-to-use-markdown-to-format-your-topic)
-* [Template](#template)
-* [Formatting](#formatting)
+- [Contribute to MicroHacks](#contribute-to-microhacks)
+- [How to contribute 🚀](#how-to-contribute-)
+- [Contributing guidelines 🚩](#contributing-guidelines-)
+- [MicroHack intent](#microhack-intent)
+- [Repository organization](#repository-organization)
+  - [Branches](#branches)
+- [Authoring tools](#authoring-tools)
+- [IaC Tools](#iac-tools)
+- [How to use Markdown to format your topic](#how-to-use-markdown-to-format-your-topic)
+- [File and Folder names](#file-and-folder-names)
+- [Template](#template)
+- [Formatting](#formatting)
+  - [Headings & Right Nav](#headings--right-nav)
+  - [Text formatting](#text-formatting)
+  - [Links](#links)
+  - [Bookmarks](#bookmarks)
+  - [Images](#images)
 
 ## How to contribute 🚀
 
@@ -24,7 +32,7 @@ To contribute to the [MicroHacks](./README.md), you need to fork this repository
 
 ## Contributing guidelines 🚩
 
-This project welcomes contributions and suggestions.  Most contributions require you to agree to a
+This project welcomes contributions and suggestions. Most contributions require you to agree to a
 Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
 the rights to use your contribution. For details, visit https://cla.opensource.microsoft.com.
 
@@ -71,7 +79,7 @@ We recommend that you create local working branches that target a specific scope
 
 ## IaC Tools
 
-In case that you need to deploy Azure services as a prerequisite for the MicroHack pelase use well-known solutions like ARM-, Bicep- or Terraform templates or Azure CLI.
+In case that you need to deploy Azure services as a prerequisite for the MicroHack please use well-known solutions like ARM-, Bicep- or Terraform templates or Azure CLI.
 
 ## How to use Markdown to format your topic
 

@@ -1,5 +1,5 @@
 # Exercise 4: Start VM on Connect
-[Previous Challenge](./02-multi-session-Hostpools.md) - **[Home](../readme.md)** - [Next Challenge](./05-scaling-plan.md)
+[Previous Challenge](./03-Implement-FSLogix-Profile-Solution.md) - **[Home](../readme.md)** - [Next Challenge](./05-scaling-plan.md)
 
 ## Introduction
 

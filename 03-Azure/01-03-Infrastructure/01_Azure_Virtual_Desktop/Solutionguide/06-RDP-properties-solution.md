@@ -1,4 +1,4 @@
-# Challenge 6 Solution:
+# Exercise 6: Customize RDP Properties
 
 ## Task1:
 Personal Hostpool

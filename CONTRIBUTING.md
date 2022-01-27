@@ -2,13 +2,14 @@
 
 Thank you for your interest in our MicroHacks! 
 
-* [Contributing](#contributing)
-* [Documentation intent](#documentation-intent)
+* [How to contribute](#how-to-contribute)
+* [Contributing guidelines](#contributing-guidelines)
+* [MicroHack intent](#microhack-intent)
 * [Repository organization](#repository-organization)
-* [Branches](#branches)
 * [Authoring Tools](#authoring-tools)
+* [IaC Tools](#iac-tools)
 * [How to use Markdown to format your topic](#how-to-use-markdown-to-format-your-topic)
-* [Topic Metadata](#topic-metadata)
+* [Template](#template)
 * [Formatting](#formatting)
 
 ## How to contribute 🚀

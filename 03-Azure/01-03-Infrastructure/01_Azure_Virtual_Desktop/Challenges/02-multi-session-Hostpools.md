@@ -1,4 +1,4 @@
-# Challenge 2: Multi-Session Hostpools
+# Exercise 2: Multi-Session Hostpools
 [Previous Challenge](./01-Personal-Hostpools.md) - **[Home](../readme.md)** - [Next Challenge](./xxx.md)
 
 ## Introduction

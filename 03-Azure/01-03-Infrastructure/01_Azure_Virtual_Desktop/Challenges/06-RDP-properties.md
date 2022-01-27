@@ -1,4 +1,4 @@
-# Challenge 6: RDP Properties
+# Exercise 6: RDP Properties
 
 [Previous Challenge](./05-scaling-plan.md) - **[Home](../readne.md)** - [Next Challenge](./xxx.md)
 

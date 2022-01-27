@@ -1,5 +1,14 @@
 # Exercise 6: Customize RDP Properties
 
+**Additional Resources**
+
+  |              |            |  
+|----------|:-------------:|
+| Description | Links |
+| Customize RDP Properties | https://docs.microsoft.com/en-us/azure/virtual-desktop/customize-rdp-properties |
+| Supported RDP Properties | Supported RDP Properties |
+  |              |            | 
+
 ## Task1:
 Personal Hostpool
 -	Deny Storage, networkdrive and printers redirection.

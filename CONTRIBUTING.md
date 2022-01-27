@@ -35,7 +35,7 @@ provided by the bot. You will only need to do this once across all repos using o
 This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
 For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
 contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
-<hr/>
+
 
 ## MicroHack intent
 
@@ -55,7 +55,7 @@ This repository contains the following folders:
 * \04-Microsoft-365
 * \99-MicroHack-Template
 
-Within these folders, you'll find the MicroHacks and the Markdown files used for the content. Each of these folders also contains an `\images` folder that references the images (such as screenshots) used in the topics. The `\iac` folder includes necessary deploymemt files (ARM, Bicep, Terraform).
+Within these folders, you'll find the MicroHacks and the Markdown files used for the content. Each of these folders also contains an `\images` folder that references the images (such as screenshots) used in the MicroHacks. The `\iac` folder includes necessary deployment files (ARM, Bicep, Terraform).
 
 ### Branches
 
@@ -101,27 +101,11 @@ H2 subheadings `##` end up in the right-hand jump list for the document (the jum
 
 ### Text formatting
 
-Use bold for VS Code commands and UI elements.
-
-    **Extensions: Install Extension**
-    **Debug Console**
-
-Limit the use of bold for emphasis unless it is crucial to get the user's attention. Avoid the use of italics for emphasis since italics doesn't render well on the code.visualstudio.com site.
-
-Use inline code formatting (backticks) for settings, filename, and JSON attributes.
-
-    `files.exclude`
-    `tasks.json`
-    `preLaunchTask`
-
-Use '>' to show menu sequence.
-
-    **File** > **Preferences** > **Settings**
-    **View** > **Command Palette**
+...
 
 ### Links
 
-For links within our own documentation, use a site relative link like `/readme.md`.
+For links within our own repository, use a site relative link like `/readme.md`.
 
 >For example: `[Code of Conduct](/CODE_OF_CONDUCT.md)` - links to the **Code of Conduct** page
 
@@ -129,7 +113,7 @@ For links within our own documentation, use a site relative link like `/readme.m
 
 ### Bookmarks
 
-To provide links to h2 subheadings (Markdown ##), the format is `[Link Text](page.md#subheading-title)`.
+To provide links to h2 subheadings (Markdown ##), the format is `[Link Text](subheading-title)`.
 
 Note the subheading title is lowercase and subheading title words are separated by '-' hyphens.
 
@@ -137,7 +121,8 @@ Note the subheading title is lowercase and subheading title words are separated 
 
 Images are important to bring the MicroHack to life and clarify the written content.
 
-For images you're adding to the repo, store them in the `images` subfolder of the MicroHack section, for example: *`01-identity-and-access-management/01-zero-trust/images/`
+For images you're adding to the repo, store them in the `images` subfolder of the MicroHack section, for example:
+`01-identity-and-access-management/01-zero-trust/images/`
 
 When you link to an image, the path and filename are case-sensitive. The convention is for image filenames to be all lowercase and use dashes `-` for separators.
 

@@ -39,7 +39,12 @@ Microsoft.Compute/virtualMachines/instanceView/read
 
 ### Assign custom role:
 
+- Make sure you are still working in the subscription where you just created the custom role
+- Navigate again to Access Control (IAM) on the left side menu and click on Add on the top left and then Add Role Assignment (compare image below)
+
 ![Assign Custom Role](../Images/04-custom_role_3.png)
+
+- 
 
 ![Assign Custom Role](../Images/04-custom_role_4.png)
  

@@ -2,7 +2,7 @@
 
 ## Task 1:
 
-In this first part of the challenge...
+In this first part of the challenge we create a custom role, which enables Azure Virtual Desktop to turn on, shut down and managed VMs. This custom role is required to make the scaling plan work, which is created in a second step of the challenge. 
 
 ### Create custom role:
 

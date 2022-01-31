@@ -60,10 +60,8 @@ In a second step we want to enable the feature *start VM on connect* for the sin
 
 - In the Azure Portal move to the single session host-pool, which you created in one of the previous challenges
 - On the left-side menu navigate to Properties
-- Within the properties window, select *Yes* for start VM on connect
-
-To test: Go sure that all VMs in the host-pool are turned off and try to connect to the single session with an eligible user. If the feature is enabled successfully, you are able to connect even if no VM from the host-pool is turned on at the moment. 
+- Within the properties window, select *Yes* for start VM on connect (compare image below) 
 
 ![Start VM on connect feature](../Images/04-enable_feature_1.png)
 
-
+To test: Go sure that all VMs in the host-pool are turned off and try to connect to the single session with an eligible user. If the feature is enabled successfully, you are able to connect even if no VM from the host-pool is turned on at the moment. 

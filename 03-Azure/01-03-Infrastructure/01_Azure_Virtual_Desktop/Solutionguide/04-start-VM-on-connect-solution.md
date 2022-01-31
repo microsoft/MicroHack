@@ -44,7 +44,11 @@ Microsoft.Compute/virtualMachines/instanceView/read
 
 ![Assign Custom Role](../Images/04-custom_role_3.png)
 
-- 
+- Under the Role tab select the role you just created (If you just created the role, it might take a few minutes until it appears)
+- Navigate to the Members tab:
+  - Here you select the first option *users, groups or service principals* 
+  - Click on Add Members and search for *Windows Virtual Desktop* (choose any options with that name) 
+- Navigate to Review and Create the create the role assignment (by doing so you give Azure Virtual Desktop the permission to turn on VMs) 
 
 ![Assign Custom Role](../Images/04-custom_role_4.png)
  

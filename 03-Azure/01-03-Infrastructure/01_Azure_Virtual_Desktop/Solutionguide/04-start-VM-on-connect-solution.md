@@ -15,12 +15,10 @@
 #### Option 1: Add permissions for custom role by choosing manually:
 
 -	In this case you go to the Permissions tab in the window to create a custom role
--	Here you add the permissions that are required for the custom role, manually from a list. The required permissions are as follows: 
-```
-Microsoft.Compute/virtualMachines/start/action
-Microsoft.Compute/virtualMachines/read
-Microsoft.Compute/virtualMachines/instanceView/read
-```
+-	Here you add the permissions that are required for the custom role, manually from a list. The required permissions are as follows:
+  -	Microsoft.Compute/virtualMachines/start/action
+  -	Microsoft.Compute/virtualMachines/read
+  -	Microsoft.Compute/virtualMachines/instanceView/read
 -	Save the choice and continue to Assignable Scopes to go sure the correct subscription (the one where the VMs are located) is chosen
 -	Afterwards, continue to Review and Create to create the custom role
 
@@ -46,9 +44,9 @@ Microsoft.Compute/virtualMachines/instanceView/read
 
 - Under the Role tab select the role you just created (If you just created the role, it might take a few minutes until it appears)
 - Navigate to the Members tab:
-  - Here you select the first option *users, groups or service principals* 
-  - Click on Add Members and search for *Windows Virtual Desktop* (choose any options with that name) 
-- Navigate to Review and Create the create the role assignment (by doing so you give Azure Virtual Desktop the permission to turn on VMs) 
+  - Here you select the first option *user, group or service principal* 
+  - Click on Select Members, search for *Windows Virtual Desktop* and select the option
+- Navigate to Review and Assign to create the role assignment (by doing so you give Azure Virtual Desktop the permission to turn on VMs) 
 
 ![Assign Custom Role](../Images/04-custom_role_4.png)
  

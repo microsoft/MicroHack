@@ -26,13 +26,11 @@
 
 -	With this option you can jump directly to the JSON tab of the custom role creation window and enter the subscription ID in the template for *assignable scopes* 
 -	Afterwards, enter the following lines within the brackets behind *permissions* (compare Image below): 
-
-´´´
+```
 "Microsoft.Compute/virtualMachines/start/action"
 "Microsoft.Compute/virtualMachines/read"
 "Microsoft.Compute/virtualMachines/instanceView/read"
-´´´
-
+```
 -	Save the process and continue to *Review and Create* to create the custom role
 
 ![Create Custom Role](../Images/04-custom_role_2.png)

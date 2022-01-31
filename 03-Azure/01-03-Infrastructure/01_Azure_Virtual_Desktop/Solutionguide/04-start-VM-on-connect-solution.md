@@ -1,6 +1,8 @@
 # Exercise 4: Implement Start VM on connect Feature
 
-## Task1:
+## Task 1:
+
+In this first part of the challenge we have to create and assign a custom role. Once assigned, this custom role enables Azure Virtual Desktop to turn on VMs.
 
 ### Create custom role:
 
@@ -50,9 +52,15 @@
 
 ![Assign Custom Role](../Images/04-custom_role_4.png)
  
-## Task2:
+## Task 2:
+
+In a second step we want to enable the feature *start VM on connect* for the single session host-pool, which we created in a previous challenge. This will work only if the custom role, as described above, is created and assigned to Azure Virtual Desktop - otherwise Azure Virtual Desktop does not have the permission to turn on VMs. 
 
 ### Enable the start VM on connect feature: 
+
+- In the Azure Portal move to the single session host-pool, which you created in one of the previous challenges
+- On the left-side menu navigate to Properties
+- Within the properties window, turn on start VM on connect
 
 ![Start VM on connect feature](../Images/04-enable_feature_1.png)
 

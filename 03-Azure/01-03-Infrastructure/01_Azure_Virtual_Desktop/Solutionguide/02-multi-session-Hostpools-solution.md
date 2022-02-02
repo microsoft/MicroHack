@@ -133,7 +133,8 @@ Assign the following role. For detailed steps, see [Assign Azure roles using the
 
 | Setting	| Value | 
 | --------| ------| 
-|Role	| Virtual Machine Administrator Login and Virtual Machine User Login |
+|Role	| Virtual Machine Administrator Login |
+|Role | and Virtual Machine User Login | 
 | Assign access to	| User, group, service principal, or managed identity |
 
 

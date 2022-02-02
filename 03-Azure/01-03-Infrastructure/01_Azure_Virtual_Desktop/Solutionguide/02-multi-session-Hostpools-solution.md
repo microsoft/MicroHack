@@ -129,7 +129,7 @@ Select Access control (IAM).
 
 Select Add > Add role assignment to open the Add role assignment page.
 
-Assign the following role. For detailed steps, see Assign Azure roles using the Azure portal.
+Assign the following role. For detailed steps, see [Assign Azure roles using the Azure portal](https://docs.microsoft.com/en-us/azure/role-based-access-control/role-assignments-portal?tabs=current).
 
 | Setting	| Value | 
 | --------| ------| 

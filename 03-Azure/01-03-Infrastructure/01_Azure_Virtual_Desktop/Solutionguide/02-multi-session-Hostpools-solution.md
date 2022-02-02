@@ -182,3 +182,12 @@ Log off
 - if you want, you can select an End of life date. This date can be used to track when older images need to be retired.
 - Under Replication, select a default replica count and then select any additional regions where you would like your image replicated.
 - When you are done, select Review + create.
+
+## Task 4:
+### Create 2 session hosts from your recently created image
+
+![Create Image](../Images/02-Hostpool_create_sessionhosts_1.png)
+
+- Navigate to your multisession hostpool and select Session hosts
+- click add
+- 

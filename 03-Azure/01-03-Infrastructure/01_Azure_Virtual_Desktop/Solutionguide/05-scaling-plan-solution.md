@@ -1,5 +1,10 @@
 # Exercise 5: Set up a scaling plan
 
+Duration:
+
+
+[Previous Challenge](./04-start-VM-on-connect-solution.md) - **[Home](../readme.md)** - **[Next Challenge](06-RDP-properties-solution.md)**
+
 ## Task 1:
 
 In this first part of the challenge we create a custom role, which enables Azure Virtual Desktop to turn on, shut down and managed VMs. This custom role is required to make the scaling plan work, which is created in a second step of the challenge. 

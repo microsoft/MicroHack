@@ -150,3 +150,5 @@ Target VM image definition: Select Create new
 
 ![Create Image](../Images/02-Create_Image_2.png)
 
+![Create Image](../Images/02-Create_Image_3.png)
+

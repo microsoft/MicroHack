@@ -80,17 +80,46 @@ In a second step we want to create the scaling plan and assign it to the multi s
 
 ### Create the scaling plan:
 
+- Within the same subscription, which we used for the previous steps already, navigate to Azure Virtual Desktop
+- Select Scaling plans on the left side menu
+- Click on Create on the top left of the Scaling plan window
+- The *create a scaling plan* window opens as visible on the screenshot below
+  - select the used subscription 
+  - choose a Resource Group, ideally the one where the multi session host-pool is created 
+  - give a name to the scaling plan
+  - choose a location, ideally the one where the multi session host-pool is located 
+  - select a time zone - **Important note:** The time zone of the host-pool and the scaling plan have to be the same
+
 ![Create Scaling Plan](../Images/05-scaling_plan_1.png)
+
+- Afterwards, we can move to the schedules tab 
+- Click on *add schedule* to create a new schedule, which defines the pattern to ramp down and up VMs in the host pool
+- In the following, we will perform this step twice: first to create the schedule for weekdays and second to create the schedule for weekends
+
+**weekdays schedule:**
+- General: give a name to the schedule and select the days from Monday to Friday (compare screenshot) 
+- Ramp-up: 
+- Peak hours: 
+- Ramp-down:
+- Off-peak hours: 
 
 ![Add schedule for weekdays](../Images/05-scaling_plan_2.png)
 
-![Prevent users being logged off](../Images/05-scaling_plan_3.png)
+**weekend schedule:**
+- General: give a name to the schedule and select the days Saturday and Sunday only
+- Ramp-up: 
+- Peak hours: 
+- Ramp-down:
+- Off-peak hours: 
 
 ![Add schedule for weekends](../Images/05-scaling_plan_4.png)
 
+![Prevent users being logged off](../Images/05-scaling_plan_3.png)
+
 ### Assign the scaling plan to the host-pool: 
 
-In the final step, we want to assign the scaling plan to the host-pool. 
+Now we created the schedules for the scaling plan. But we are not done yet: In the final step, we want to assign the scaling plan so that the host-pool, which it is etting assigned on, is automatically ramped up and down by following the schedules for weekdays and weekends, which we defined before.
+
 - In the window of *create a scaling plan* we go to the tab *Host pool assignments* 
 - Here we select the multi session host-pool, which we created earlier
 - Check once more that *Enable autoscale* is set to Yes

@@ -76,11 +76,26 @@ Microsoft.DesktopVirtualization/hostpools/sessionhosts/usersessions/read
  
 ## Task 2:
 
-In a second step we want to...
+In a second step we want to create the scaling plan and assign it to the multi session host-pool, which we created earlier.
 
 ### Create the scaling plan:
 
+![Create Scaling Plan](../Images/05-scaling_plan_1.png)
+
+![Add schedule for weekdays](../Images/05-scaling_plan_2.png)
+
+![Prevent users being logged off](../Images/05-scaling_plan_3.png)
+
+![Add schedule for weekends](../Images/05-scaling_plan_4.png)
+
 ### Assign the scaling plan to the host-pool: 
 
+In the final step, we want to assign the scaling plan to the host-pool. 
+- In the window of *create a scaling plan* we go to the tab *Host pool assignments* 
+- Here we select the multi session host-pool, which we created earlier
+- Check once more that *Enable autoscale* is set to Yes
+- Go to Review and Create to finally create and assign the scaling plan
+
+![Assign Scaling Plan](../Images/05-scaling_plan_5.png)
 
 Test: 

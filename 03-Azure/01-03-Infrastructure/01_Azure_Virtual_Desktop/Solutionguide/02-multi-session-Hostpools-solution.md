@@ -3,7 +3,7 @@
 Duration: 45 min
 
 
-[Previous Challenge](./01-Personal-Hostpools-solution.md) - **[Home](../readme.md)** - **[Next Challenge Solution](03-Implement-FSLogix-Profile-Solution.md)**
+[Previous Challenge Solution](./01-Personal-Hostpools-solution.md) - **[Home](../readme.md)** - **[Next Challenge Solution](03-Implement-FSLogix-Profile-Solution.md)**
 
 In this challenge you will create Azure Active Directory joined pooled desktops used as a jump box. After deployment you will connect to the jumpbox, deploy Notepad++, 
 create an Image and upload the image to the Image gallery. You will deploy a new hostpool from this image and deploy 2 Session hosts. Then you will provide Remote Apps to user

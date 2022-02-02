@@ -174,4 +174,4 @@ Log off
 - Offer: office-365
 - SKU: 20h2-evd-o365pp
 
-
+![Create Image](../Images/02-Create_Image_4.png)

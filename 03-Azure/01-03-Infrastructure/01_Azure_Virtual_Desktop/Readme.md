@@ -41,11 +41,11 @@ In this hack you will learn how to set up a Azure Virtual Desktop in a typical s
 
 - Challenge 0: **[Getting started](....md)**
 - Challenge 1: **[Deploy a personal session host](Solutionguide/01-Personal-Hostpools-solution.md)**
-- Challenge 2: jumpbox - remote apps (multi-session RDP verbinden, Notepad deployen, Image erstellen, in image gallery laden und 2 Session hosts mit dem image deployen)
-- Challenge 3: FSLogix (Azure Files joined in AAD provided to attendees) 
-- Challenge 4: Implement „start VM on connect“ (single-session) 
-- Challenge 5: Setup scaling-plan (multi-session)
-- Challenge 6: **[Configure RDP Properties](....md)**
+- Challenge 2: **[Deploy multi-session hostpool](Solutionguide/02-multi-session-Hostpools-solution.md)**
+- Challenge 3: **[Implement FSLogix Profile Solution](Solutionguide/03-Implement-FSLogix-Profile-Solution.md)**
+- Challenge 4: **[Implement „start VM on connect“ (single-session)](Solutionguide/04-start-VM-on-connect.md)**
+- Challenge 5: **[Setup scaling-plan (multi-session)](Solutionguide/05-scaling-plan.md)**
+- Challenge 6: **[Configure RDP Properties](Solutionguide/06-RDP-properties.md)**
 - Challenge 7 (optional): Monitoring (Log Analytics workspace required)
 - Challenge 8 (optional): disaster recovery & backup for AVD (failover / replicate in other region) 
 - Challenge 9 (optional): conditional access (MFA required)

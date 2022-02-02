@@ -39,7 +39,6 @@ In this hack you will learn how to set up a Azure Virtual Desktop in a typical s
 
 ## Solution Guide
 
-- Challenge 0: **[Getting started](....md)**
 - Challenge 1: **[Deploy a personal session host](Solutionguide/01-Personal-Hostpools-solution.md)**
 - Challenge 2: **[Deploy multi-session hostpool](Solutionguide/02-multi-session-Hostpools-solution.md)**
 - Challenge 3: **[Implement FSLogix Profile Solution](Solutionguide/03-Implement-FSLogix-Profile-Solution.md)**

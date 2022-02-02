@@ -1,5 +1,19 @@
 # Exercise 2: Create a host pool for multi-session desktops
 
+Duration: 45 min
+
+**Additional Resources**
+
+  |              |            |  
+|----------|:-------------:|
+| Description | Links |
+| Create Azure Virtual Desktop Hostpool | https://docs.microsoft.com/de-de/azure/virtual-desktop/create-host-pools-azure-marketplace?tabs=azure-portal|
+| Deploy Azure AD joined VMs in Azure Virtual Desktop |  https://docs.microsoft.com/en-us/azure/virtual-desktop/deploy-azure-ad-joined-vm   | 
+| Capture an image of a VM using the portal |  https://docs.microsoft.com/en-us/azure/virtual-machines/capture-image-portal   | 
+| Manage app groups for Azure Virtual Desktop portal |  https://docs.microsoft.com/en-us/azure/virtual-desktop/manage-app-groups   | 
+| Connect with the Windows Desktop Client |  https://docs.microsoft.com/en-us/azure/virtual-desktop/user-documentation/connect-windows-7-10#install-the-windows-desktop-client   | 
+  |              |            | 
+
 ## Task 1:
 
 Create multi-session Hostpool joined in Azure Active Directory with the following settings:
@@ -152,4 +166,9 @@ Log off
 
 ![Create Image](../Images/02-Create_Image_3.png)
 - Target VM image definition: Select Create new
+- Insert name: AVD_multisession_Image_gallery
+- Publisher: microsoftwindowsdesktop
+- Offer: office-365
+- SKU: 20h2-evd-o365pp
+
 

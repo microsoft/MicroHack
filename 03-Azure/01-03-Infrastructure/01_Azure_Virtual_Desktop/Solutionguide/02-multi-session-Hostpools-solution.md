@@ -143,12 +143,14 @@ Select Capture, add Subscription and Resource group details
 
 ![Create Image](../Images/02-Create_Image_1.png)
 
-Share image to Azure compute gallery: Yes, share it to a gallery as a VM image version
-Operating system state: Generalized: VMs created from this image require hostname, admin user, and other VM related setup to be completed on first boot
-Target VM image definition: Select Create new
+- Share image to Azure compute gallery: Yes, share it to a gallery as a VM image version
+- Operating system state: Generalized: VMs created from this image require hostname, admin user, and other VM related setup to be completed on first boot
+- Target VM image definition: Select Create new
 
 
 ![Create Image](../Images/02-Create_Image_2.png)
+
+
 
 ![Create Image](../Images/02-Create_Image_3.png)
 

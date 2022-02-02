@@ -3,7 +3,7 @@
 Duration: 45 minutes
 
 
-[Previous Challenge](./02-multi-session-Hostpools-solution.md) - **[Home](../readme.md)** - **[Next Challenge](04-start-VM-on-connect-solution.md)**
+[Previous Challenge Solution](./02-multi-session-Hostpools-solution.md) - **[Home](../readme.md)** - **[Next Challenge Solution](04-start-VM-on-connect-solution.md)**
 
 **Additional Resources**
 

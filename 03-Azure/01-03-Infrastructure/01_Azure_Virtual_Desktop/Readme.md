@@ -20,7 +20,7 @@ In this hack you will learn how to set up a Azure Virtual Desktop in a typical s
 - Challenge 0: **[Getting started](Challenges/00-Pre-Reqs.md)**
 - Challenge 1: **[Deploy a personal session host](Challenges/01-Personal-Hostpools.md)**
 - Challenge 2: **[Deploy multi-session hostpool](Challenges/02-multi-session-Hostpools.md)**
-- Challenge 3: **[Implement FSLogix Profile solution](Challenges/03-Implement-FSLogix-Profile-Solution.md)**
+- Challenge 3: **[Implement FSLogix Profile solution](Challenges/03-Implement-FSLogix-Profile.md)**
 - Challenge 4: **[Start VM on connect](04-start-VM-on-connect.md)**
 - Challenge 5: **[Scaling plan](05-scaling-plan.md)**
 - Challenge 6: **[Configure RDP Properties](Challenges/06-RDP-properties.md)**

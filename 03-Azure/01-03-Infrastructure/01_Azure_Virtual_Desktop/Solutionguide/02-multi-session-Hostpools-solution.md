@@ -146,7 +146,7 @@ Log off
 ![Create Image](../Images/02-Create_Image_2.png)
 
 - Share image to Azure compute gallery: Yes, share it to a gallery as a VM image version
-- Target Azure compute gallery: Select create new 
+- Target Azure compute gallery: Select create new, insert a name: AVD_multisession_Image_gallery
 - Operating system state: Generalized: VMs created from this image require hostname, admin user, and other VM related setup to be completed on first boot
 
 

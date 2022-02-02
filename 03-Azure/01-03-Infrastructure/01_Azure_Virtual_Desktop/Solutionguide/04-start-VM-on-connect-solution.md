@@ -1,5 +1,10 @@
 # Exercise 4: Implement Start VM on connect Feature
 
+Duration:
+
+
+[Previous Challenge](./03-Implement-FSLogix-Profile-Solution.md) - **[Home](../readme.md)** - **[Next Challenge](05-scaling-plan-solution.md)**
+
 ## Task 1:
 
 In this first part of the challenge we have to create and assign a custom role. Once assigned, this custom role enables Azure Virtual Desktop to turn on VMs.

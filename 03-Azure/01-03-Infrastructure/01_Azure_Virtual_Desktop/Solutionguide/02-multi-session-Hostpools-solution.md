@@ -175,3 +175,13 @@ Log off
 - SKU: 20h2-evd-o365pp
 
 ![Create Image](../Images/02-Create_Image_4.png)
+
+- Enter an image version number, type 0.0.1
+
+- If you want this version to be included when you specify latest for the image version, then leave Exclude from latest unchecked.
+
+- if you want, you can select an End of life date. This date can be used to track when older images need to be retired.
+
+- Under Replication, select a default replica count and then select any additional regions where you would like your image replicated.
+
+- When you are done, select Review + create.

@@ -106,14 +106,14 @@ With the assignment added, you can move on to the resource group and configure t
 
 1.  Go to the resource group e.g. **rg-microhack** and select **Access Control (IAM)**.
 
-    ![This image shows how to add and apply RBAC permissions to a resource group.]()../Images/01-rbac1.png "Add Permissions")
+    ![This image shows how to add and apply RBAC permissions to a resource group.](../Images/01-rbac1.png "Add Permissions")
 
 2. Select **Add** and search for **Virtual Machine User Login** or **Virtual Machine Administator Login** to access the session with local admin rights.
 
-     ![This image shows how to add and apply RBAC permissions to a resource group.]()../Images/01-rbac2.png "Add Permissions")
+     ![This image shows how to add and apply RBAC permissions to a resource group.](../Images/01-rbac2.png "Add Permissions")
 
 3. Select and add the **User or Group** and apply the Role assignment. 
 
-    ![This image shows how to add and apply RBAC permissions to a resource group.]()../Images/01-rbac3.png "Add Permissions")
+    ![This image shows how to add and apply RBAC permissions to a resource group.](../Images/01-rbac3.png "Add Permissions")
 
 With this assignment you now can test the first connection to your AVD session host.

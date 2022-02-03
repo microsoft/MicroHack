@@ -1,8 +1,6 @@
 ## Exercise 1: Create a host pool for personal desktops
 
-Duration:  45 minutes
-
-[Previous Challenge](./00-Pre-Reqs.md) - **[Home](../readme.md)** - **[Next Challenge solution](02-multi-session-Hostpools-solution.md)**
+Duration:  30 minutes
 
 In this exercise we will be creating an Azure Virtual Desktop host pool for personal desktops. This is a set of computers or hosts which operate on an as-needed basis. In a pooled configuration we will be hosting multiple non-persistent sessions, with no user profile information stored locally. This is where FSLogix Profile Containers provide the users profile to the host dynamically. This provides the ability for an organization to fully utilize the compute resources on a single host and lower the total overhead, cost, and number of remote workstations.
 
@@ -37,7 +35,7 @@ Once complete, select **Next: Virtual Machines**.
 
 5.  On the Virtual Machines page, provision a Virtual machine with the **Windows 10 multi-user + M365 apps**. Once complete, select **Next: Workspace**.
    
-6.  For the **Image**, select **Browse all images and disks** and search to find **Windows 10 Enterprise multi-session, Version 2004 + Microsoft 365 Apps** and select that image.
+6.  For the **Image**, select **Browse all images and disks** and search to find **Windows 10 Enterprise or Windows 11 Enterprise** and select that image.
     >**Note**: Selecting this image is very important. You will need the Microsoft 365 for assigning apps in this exercise.
 
     ![This image shows the image that you need for your host pool virtual machine.](../Images/01-vmwith365.png "Host pool Virtual Machine with image")
@@ -96,8 +94,7 @@ In the new Azure Virtual Desktop ARM portal, we now can use Azure Active Directo
 
     ![This image shows where to find manage in the menu and select assignments and add.](../Images/01-addassignments.png)
 
-6.  In the fly out, enter **AVD** in the search to find the name of your Azure AD group. In this exercise we will select **AVD Pooled Desktop Users** and **AAD DC Administrators**.
-    >**Note**: AAD DC Administrators will allow you to use your Azure tenant login to access resources in Exercise 7.
+6.  In the fly out, enter **AAD Username or AAD Group** in the search to find the name of your Azure AD group. In this exercise we will select **Alex Wilber**.
 
     ![In this image, you can view the groups that you need to select and save.](../Images/01-avdpooleduseradd.png "Add Pooled Desktop user")
 
@@ -105,4 +102,18 @@ In the new Azure Virtual Desktop ARM portal, we now can use Azure Active Directo
 
     ![This image shows how to find and select the AVD Pooled desktop users in the list of users and groups.](../Images/01-hostpoolusers.png "Host pool users for AVD")
 
-With the assignment added, you can move on to the next exercise. The users in the Azure AD group can be used to validate access to the new host pool in a later exercise.
+With the assignment added, you can move on to the resource group and configure the RBAC permission so the selected user can access the desktop via AAD only.
+
+1.  Go to the resource group e.g. **rg-microhack** and select **Access Control (IAM)**.
+
+    ![This image shows how to add and apply RBAC permissions to a resource group.]()../Images/01-rbac1.png "Add Permissions")
+
+2. Select **Add** and search for **Virtual Machine User Login** or **Virtual Machine Administator Login** to access the session with local admin rights.
+
+     ![This image shows how to add and apply RBAC permissions to a resource group.]()../Images/01-rbac2.png "Add Permissions")
+
+3. Select and add the **User or Group** and apply the Role assignment. 
+
+    ![This image shows how to add and apply RBAC permissions to a resource group.]()../Images/01-rbac3.png "Add Permissions")
+
+With this assignment you now can test the first connection to your AVD session host.

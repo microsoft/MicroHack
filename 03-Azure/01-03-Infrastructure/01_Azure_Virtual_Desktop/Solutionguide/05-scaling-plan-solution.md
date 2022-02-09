@@ -103,10 +103,10 @@ In a second step we want to create the scaling plan and assign it to the multi s
 
 **weekdays schedule:**
 - General: give a name to the schedule and select the days from Monday to Friday (compare screenshot) 
-- Ramp-up: 
-- Peak hours: 
-- Ramp-down:
-- Off-peak hours: 
+- Ramp-up: starts at 8 AM, depth-first, Min. capacity = 50%, Capacity Threshold = 75%
+- Peak hours: starts at 9 AM, depth-first, capacity threshold (default) = 75%
+- Ramp-down: starts at 5 PM, Min. capacity = 25%, Capacity Threshold = 100%  
+- Off-peak hours: starts at 6 PM, Capacity Threshold = 100%, disable "Force logoff users" and set "Turn off VM" to *no active or disconnected sessions*
 
 ![Add schedule for weekdays](../Images/05-scaling_plan_2.png)
 

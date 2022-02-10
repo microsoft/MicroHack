@@ -194,4 +194,7 @@ Log off
 
 - Navigate to your multisession hostpool and select Session hosts
 - click add
-- 
+![Create Image](../Images/02-Hostpool_create_sessionhosts_2.png)
+![Create Image](../Images/02-Hostpool_create_sessionhosts_3.png)
+![Create Image](../Images/02-Hostpool_create_sessionhosts_4.png)
+

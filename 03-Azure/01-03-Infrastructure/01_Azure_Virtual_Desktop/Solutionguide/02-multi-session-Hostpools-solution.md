@@ -192,9 +192,24 @@ Log off
 
 ![Create Image](../Images/02-Hostpool_create_sessionhosts_1.png)
 
-- Navigate to your multisession hostpool and select Session hosts
+- Navigate to your multisession hostpool and select Session host
 - click add
+-
 ![Create Image](../Images/02-Hostpool_create_sessionhosts_2.png)
+
+- On the top, navigate to Virtual Machines
+- Image type: Gallery
+- Select see all images
+
 ![Create Image](../Images/02-Hostpool_create_sessionhosts_3.png)
+
+- On the top, go to: My Items
+- select: Shared Images
+- click on your recently created image
+
 ![Create Image](../Images/02-Hostpool_create_sessionhosts_4.png)
+
+- Image: your recently created image should show up
+- Number of VMs: 2
+- click: Review + Create
 

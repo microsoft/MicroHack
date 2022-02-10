@@ -75,6 +75,73 @@ Azure Virtual Desktop uses Azure AD for identity and access management. Azure AD
 #### AD DS:
 Azure Virtual Desktop VMs must domain-join an AD DS service, and the AD DS must be in sync with Azure AD to associate users between the two services. You can use Azure AD Connect to associate AD DS with Azure AD.
 
+#### Azure Active Directory Domain Services
+In challenge 3 (FSLogix), you have to apply the steps from [this guide](https://docs.microsoft.com/en-us/azure/virtual-desktop/create-profile-container-adds)
+
+<a id="step4">Step 4: Configure Azure AD Domain Services</a>
+1. Create a Virtual Network in the selected region. Name it **AVDVNet**
+
+![Create VNetGeneral](../Images/20-VNet-1.png)
+
+Keep the VNet IP range at **10.0.0.0/16**
+
+Add 2 Subnets:
+
+- **AADDSSubnet 10.0.1.0/24**
+
+- **AVDSubnet 10.0.2.0/24**
+
+![Create VNetIPRanges](../Images/20-VNet-2.png)
+
+2. Create Azure AD Domain Services
+Click on **Create a resource** and type **Azure AD Domain Services**
+Click on **Create**
+Use the following settings:
+- Resource group: Create a new one named **AADDSRG**
+- DNS domain name: Keep the automativally filled one (should be like somethingoutlook.onmicrosoft.com)
+- Region: The same you selected for the Virtual Network
+- SKU: **Standard**
+- Forest Type: User
+
+![Create AADDSGeneral](../Images/20-AADDS-1.png)
+
+Click **next**
+- Virtual Network: Select **AVDVNet**
+- Subnet: Select **AADDSSubnet**
+
+![Create AADDSNetwork](../Images/20-AADDS-2.png)
+
+Click **next**
+- AAD DC Administrators: Click on **Manage Group Membership**. Select the first account that you created in step 3. The outlook.com account you are logged in would not work. 
+- After this, click on the breadcrumb (top of white part of page) **Create Azure AD Domain Services** to get back to the wizard
+- Click next until you reach the end of the wizard, then click **Create**
+
+The creation of AADDS should take about 1 hour. After this, you need to wait for another hour until your Azure AD Domain Services Overview page no longer shows **Deploying**
+
+## <a id="step5">Step 5: Change the Virtual Network DNS settings</a>
+You need to change the DNS settings of your Virtual network to point to the domain controller IP addresses for Azure Active Directory Domain Services
+1. In the Azure portal, go to your Azure AD Domain Services. Go to **Properties** and get the two values from IP addresses. They should be 10.0.1.4 and 10.0.1.5
+2. Go to **AVDVNet** **DNS Servers**
+3. Change to **Custom** and enter the 2 IP addresses from step 1 (one by one)
+4. Click **Save**
+
+![DNS settings](../Images/20-DNS.png)
+
+## <a id="step6">Step 6: Change user passwords</a>
+After deploying Azure AD Domain Services, in order to synchronize passwords, you need to change the passwords of all synchronized users. So in our case, these are the 2 users created in [step 3](#step3). 
+1. Open an InPrivate tab in your browser
+2. Go to [myapps.microsoft.com](https://myapps.microsoft.com)
+3. Log in with the first account you created in step 3 (user name can be found under **User principal name** in the Azure Active Directory Users list)
+4. Change the password to a new one
+5. Repeat steps 1-4 for the other user
+
+
+When you are asked to join an Active Directory domain, use the following data:
+- Domain name: same as your Azure ad domain name (somethingoutlook.onmicrosoft.com)
+- User for joining the domain: The first user you created in step 3 (the one you added to Azure AD administrators) with it's new password
+
+In challenge 3 (FSLogix), you have to apply the steps from [this guide](https://docs.microsoft.com/en-us/azure/virtual-desktop/create-profile-container-adds)
+
 #### Azure Virtual Desktop session hosts:
 A host pool can run the following operating systems:
 

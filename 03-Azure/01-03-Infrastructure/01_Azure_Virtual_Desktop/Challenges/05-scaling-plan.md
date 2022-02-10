@@ -28,10 +28,11 @@ In this Challenge you will set up a scaling plan based on certain insights from 
 2.	Set up a scaling automation and assign it to the multi-session host pool with respect to the following requirements: 
     - Standard office hours are from 8 am to 6 pm from Monday to Friday
     - Peak hours are between 9 am and 5 pm from Monday to Friday
-    - One VM should be turned on at any time - the other ones can be deallocated
-    - Maximum of 1 session per CPU
-    - If 75% of the current session capacity are reached during peak time, a further host pool should be turned on
-    - During ramp down only VMs with no active or disconnected session should be deallocated
+    - The load balancing algorithm should first allocate all the users to one host pool until the maximum amount of sessions per host pool is reached
+    - At least 25% of available session capacity should be turned on at any time, even outside the standard office hours - the other ones can be deallocated
+    - During ramp up at least 50% of the available session capacity should be turned on
+    - If 75% of the current session capacity is reached during peak time, a further session host pool should be turned on
+    - During ramp down a new host pool should be turned on only if all the session capacity is used. Furthermore, only VMs with no active or disconnected session should be deallocated and no users should be forced to log off.
     - Keep in mind that the scaling plan has to be in the same time zone as the host pool that it should be applied on
 
 ## Success Criteria

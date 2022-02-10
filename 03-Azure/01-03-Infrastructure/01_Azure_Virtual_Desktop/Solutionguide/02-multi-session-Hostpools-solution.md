@@ -213,3 +213,6 @@ Log off
 - Number of VMs: 2
 - click: Review + Create
 
+After the VMs are created, login and verify, if Notepad++ is installed
+
+## Task 5: create Remote Apps

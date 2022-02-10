@@ -36,7 +36,7 @@ In this Challenge you will set up a scaling plan based on certain insights from 
     - Keep in mind that the scaling plan has to be in the same time zone as the host pool that it should be applied on
 
 ## Success Criteria
-Depending on the current time, either x, y or z VMs are turned on (check from the VM view). When connecting x users, one more VM should turn on. 
+Depending on the current time, either 25% or 50% of the sessions are available. When connecting more users, further host pools should turn on.
 
 ## Learning Resources
 - [Autoscale for AVD](https://docs.microsoft.com/en-us/azure/virtual-desktop/autoscale-scaling-plan)

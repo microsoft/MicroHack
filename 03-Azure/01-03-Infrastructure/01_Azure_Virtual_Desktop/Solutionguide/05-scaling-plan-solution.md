@@ -1,15 +1,27 @@
-# Exercise 5: Set up a scaling plan
+## Exercise 5: Set up a scaling plan
 
 Duration:
 
 
-[Previous Challenge Solution](./04-start-VM-on-connect-solution.md) - **[Home](../readme.md)** - **[Next Challenge Solution](06-RDP-properties-solution.md)**
+[Previous Challenge Solution](./04-start-VM-on-connect-solution.md) - **[Home](../readme.md)** - [Next Challenge Solution](06-RDP-properties-solution.md)
 
-## Task 1:
+
+**Additional Resources**
+
+  |              |            |  
+|----------|:-------------:|
+| Description | Links |
+| Create a custom role in Azure | https://docs.microsoft.com/en-us/azure/role-based-access-control/custom-roles-portal#step-1-determine-the-permissions-you-need |
+|Set up scaling plans for AVD  |  https://docs.microsoft.com/en-us/azure/virtual-desktop/autoscale-scaling-plan#create-a-scaling-plan   | 
+  |              |            | 
+
+
+
+### Task 1:
 
 In this first part of the challenge we create a custom role, which enables Azure Virtual Desktop to turn on, shut down and manage VMs. This custom role is required to make the scaling plan work, which is created in a second step of the challenge. 
 
-### Create custom role:
+#### Create custom role:
 
 - Navigate to *Access Control (IAM)* in the subscription where the VMs of the multi session host-pool are located
 - On the top left click on *Add* and then choose *Add custom role* (compare image below)
@@ -19,7 +31,7 @@ In this first part of the challenge we create a custom role, which enables Azure
 
 ![Create Custom Role](../Images/04-custom_role_1.png)
 
-#### Option 1: Add permissions for custom role by choosing manually from a list:
+##### Option 1: Add permissions for custom role by choosing manually from a list:
 
 -	In this case you go to the *Permissions* tab in the window to create a custom role
 -	Here you add the permissions that are required for the custom role manually from a list. The required permissions are as follows:
@@ -42,7 +54,7 @@ Microsoft.DesktopVirtualization/hostpools/sessionhosts/usersessions/read
 -	Save the choice and continue to *Assignable Scopes* to go sure the correct subscription (the one where the VMs are located) is chosen
 -	Afterwards, continue to *Review and Create* to create the custom role
 
-#### Option 2: Add permissions for custom role in JSON template:
+##### Option 2: Add permissions for custom role in JSON template:
 
 -	With this option you can jump directly to the *JSON* tab of the custom role creation window and enter the subscription ID in the template for *assignable scopes* 
 -	Afterwards, enter the following lines within the brackets behind *permissions*, as we already did in the previous challenge: 
@@ -64,7 +76,7 @@ Microsoft.DesktopVirtualization/hostpools/sessionhosts/usersessions/read
 ```
 -	Save the progress and continue to *Review and Create* to create the custom role
 
-### Assign custom role:
+#### Assign custom role:
 
 - Make sure you are still working in the subscription where you just created the custom role
 - Navigate again to *Access Control (IAM)* on the left side menu and click on *Add* on the top left and then choose *Add Role Assignment* (compare image below)
@@ -79,11 +91,11 @@ Microsoft.DesktopVirtualization/hostpools/sessionhosts/usersessions/read
 
 ![Assign Custom Role](../Images/04-custom_role_4.png)
  
-## Task 2:
+### Task 2:
 
 In a second step we want to create the scaling plan and assign it to the multi session host-pool, which we created earlier.
 
-### Create the scaling plan:
+#### Create the scaling plan:
 
 - Within the same subscription, which we used for the previous steps already, navigate to Azure Virtual Desktop (by entering it in the search bar)
 - Select *Scaling plans* on the left side menu
@@ -121,7 +133,7 @@ Move through the five tabs on top of the schedule window to create the schedule:
 - *Ramp-down:* starts at 5 PM, Min. capacity = 25%, Capacity threshold = 100%, Force logoff users = No, Stop VMs only when VMs have no active or disconnected sessions
 - *Off-peak hours:* starts at 6 PM, Load balancing algorithm = depth-first, Capacity threshold (default) = 100%
 
-### Assign the scaling plan to the host-pool: 
+#### Assign the scaling plan to the host-pool: 
 
 Now we created the schedules for the scaling plan. But we are not done yet: In the final step, we want to assign the scaling plan so that the host-pool, which it is getting assigned on, is automatically ramped up and down by following the schedules for weekdays and weekends, which we defined before.
 

@@ -28,15 +28,15 @@ In this Challenge you will set up a scaling plan based on certain insights from 
 2.	Set up a scaling automation and assign it to the multi-session host pool with respect to the following requirements: 
     - Standard office hours are from 8 am to 6 pm from Monday to Friday
     - Peak hours are between 9 am and 5 pm from Monday to Friday
-    - The load balancing algorithm should first allocate all the users to one host pool until the maximum amount of sessions per host pool is reached
+    - The load balancing algorithm should first allocate all the users to one host until the maximum amount of sessions per host is reached
     - At least 25% of available session capacity should be turned on at any time, even outside the standard office hours - the other ones can be deallocated
     - During ramp up at least 50% of the available session capacity should be turned on
-    - If 75% of the current session capacity is reached during peak time, a further session host pool should be turned on
-    - During ramp down a new host pool should be turned on only if all the session capacity is used. Furthermore, only VMs with no active or disconnected session should be deallocated and no users should be forced to log off.
+    - If 75% of the current session capacity is reached during ramp up and peak time, a further session host should be turned on
+    - During ramp-down and during weekends a new host should be turned on only if all the session capacity is used. Furthermore, only VMs with no active or disconnected session should be deallocated and no users should be forced to log off
     - Keep in mind that the scaling plan has to be in the same time zone as the host pool that it should be applied on
 
 ## Success Criteria
-Depending on the current time, either 25% or 50% of the sessions are available. When connecting more users, further host pools should turn on.
+Depending on the current time, either (at least) 25% or 50% of the session hosts are available. When connecting more users, further host pools should turn on.
 
 ## Learning Resources
 - [Autoscale for AVD](https://docs.microsoft.com/en-us/azure/virtual-desktop/autoscale-scaling-plan)

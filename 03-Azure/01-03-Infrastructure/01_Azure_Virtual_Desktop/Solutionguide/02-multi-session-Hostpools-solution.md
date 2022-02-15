@@ -1,9 +1,9 @@
-# Exercise 2: Create a host pool for multi-session desktops
+## Exercise 2: Create a host pool for multi-session desktops
 
 Duration: 45 min
 
 
-[Previous Challenge Solution](./01-Personal-Hostpools-solution.md) - **[Home](../readme.md)** - **[Next Challenge Solution](03-Implement-FSLogix-Profile-Solution.md)**
+[Previous Challenge Solution](./01-Personal-Hostpools-solution.md) - **[Home](../readme.md)** - [Next Challenge Solution](03-Implement-FSLogix-Profile-Solution.md)
 
 In this challenge you will create Azure Active Directory joined pooled desktops used as a jump box. After deployment you will connect to the jumpbox, deploy Notepad++, 
 create an Image and upload the image to the Image gallery. You will deploy a new hostpool from this image and deploy 2 Session hosts. Then you will provide Remote Apps to user
@@ -20,7 +20,7 @@ create an Image and upload the image to the Image gallery. You will deploy a new
 | Connect with the Windows Desktop Client |  https://docs.microsoft.com/en-us/azure/virtual-desktop/user-documentation/connect-windows-7-10#install-the-windows-desktop-client   | 
   |              |            | 
 
-## Task 1:
+### Task 1:
 
 Create multi-session Hostpool joined in Azure Active Directory with the following settings:
 - West Europe Region
@@ -38,7 +38,7 @@ Create multi-session Hostpool joined in Azure Active Directory with the followin
 
 ![Create Hostpool](../Images/02-Hostpool_create_multisession_2.png)
 
-### Basics:
+#### Basics:
 - choose your appropriate subscription
 - choose the Resource group 
 - Host pool name: Multi-session
@@ -50,7 +50,7 @@ Create multi-session Hostpool joined in Azure Active Directory with the followin
 
 klick next: Virtual machines
 
-### Virtual machines:
+#### Virtual machines:
 
 ![Create Hostpool](../Images/02-Hostpool_create_multisession_3.png)
 
@@ -70,7 +70,7 @@ Add Azure Virtual Machines: select yes
 
 
 
-#### Network and Security:
+##### Network and Security:
 
 ![Create Hostpool](../Images/02-Hostpool_create_multisession_6.png)
 
@@ -78,14 +78,14 @@ Add Azure Virtual Machines: select yes
 - Network security group: Basic
 - Public inbound ports: No
 
-#### Domain to join:
+##### Domain to join:
 
 ![Create Hostpool](../Images/02-Hostpool_create_multisession_7.png)
 
 - Select which directory you would like to join: Select Azure Active Directory
 - Enroll VM with Intune: No
 
-#### Virtual Machine Administrator account:
+##### Virtual Machine Administrator account:
 
 ![Create Hostpool](../Images/02-Hostpool_create_multisession_8.png)
 
@@ -95,7 +95,7 @@ Add Azure Virtual Machines: select yes
 
 click Next: Workspace
 
-### Workspace:
+#### Workspace:
 
 ![Create Hostpool](../Images/02-Hostpool_create_multisession_4.png)
 
@@ -111,9 +111,9 @@ Enter workspace name: multi-session
 click Review + create
 
 
-## Task2:
+### Task2:
 
-### Assign user access to host pools
+#### Assign user access to host pools
 
 After you've created your host pool, you must assign users access to let them access their resources. To grant access to resources, add each user to the app group. Follow the instructions in Manage app groups to assign user access to apps and desktops. We recommend that you use user groups instead of individual users wherever possible.
 
@@ -124,7 +124,7 @@ Assign administrators who need local administrative privileges the Virtual Machi
 To grant users access to Azure AD-joined VMs, you must [configure role assignments for the VM](https://docs.microsoft.com/en-us/azure/active-directory/devices/howto-vm-sign-in-azure-ad-windows#configure-role-assignments-for-the-vm). 
 You can assign the Virtual Machine User Login or Virtual Machine Administrator Login role either on the VMs, the resource group containing the VMs, or the subscription. We recommend assigning the Virtual Machine User Login role to the same user group you used for the app group at the resource group level to make it apply to all the VMs in the host pool.
 
-### Add role assignment page in Azure portal
+#### Add role assignment page in Azure portal
 
 To configure role assignments for your Azure AD enabled VMs:
 
@@ -143,20 +143,20 @@ Assign the following role. For detailed steps, see [Assign Azure roles using the
 
 ![Assign user access to host pools](../Images/02-assign_user_access_2.png)
 
-## Task 3:
-### Login to the session host and create image
+### Task 3:
+#### Login to the session host and create image
 
 Login as a user with local administrative privileges (:bulb: therefore we added the role assignment "Virtual Machine Administrator Login" in Task 2)
 You can Login either with the [AVD Webclient](https://rdweb.wvd.microsoft.com/arm/webclient/index.html) or with the [Windows Desktop Client](https://rdweb.wvd.microsoft.com/arm/webclient/index.html)
 
 ![Login to the session host](../Images/02-Login_session_host_1.png)
 
-### Install Notepad++
+#### Install Notepad++
 [Download Notepad++](https://notepad-plus-plus.org/downloads/) and Install Notepad++
 
 Log off
 
-### Create Image with generalized option and upload it to the shared image gallery
+#### Create Image with generalized option and upload it to the shared image gallery
 
 ![Create Image](../Images/02-Create_Image_1.png)
 
@@ -187,8 +187,8 @@ Log off
 - Under Replication, select a default replica count and then select any additional regions where you would like your image replicated.
 - When you are done, select Review + create.
 
-## Task 4:
-### Create 2 session hosts from your recently created image
+### Task 4:
+#### Create 2 session hosts from your recently created image
 
 ![Create Image](../Images/02-Hostpool_create_sessionhosts_1.png)
 
@@ -215,7 +215,7 @@ Log off
 
 After the VMs are created, login and verify, if Notepad++ is installed
 
-## Task 5: create Remote Apps
+### Task 5: create Remote Apps
 
 ![Create Image](../Images/02-Hostpool-RemoteApp_1.png)
 Create a new Application group

@@ -7,22 +7,22 @@ Duration:
 
 ## Task 1:
 
-In this first part of the challenge we create a custom role, which enables Azure Virtual Desktop to turn on, shut down and managed VMs. This custom role is required to make the scaling plan work, which is created in a second step of the challenge. 
+In this first part of the challenge we create a custom role, which enables Azure Virtual Desktop to turn on, shut down and manage VMs. This custom role is required to make the scaling plan work, which is created in a second step of the challenge. 
 
 ### Create custom role:
 
-- Navigate to Access Control (IAM) in the Subscription where the VMs of the multi session host-pool are located
-- On the top left choose Add and then click on Add custom role (compare image below)
+- Navigate to *Access Control (IAM)* in the subscription where the VMs of the multi session host-pool are located
+- On the top left click on *Add* and then choose *Add custom role* (compare image below)
 - The window to create a custom role opens
 - Give a name to the role like, for example: AVD-scaling plan
-- Now you have two options to continue: either giving the permissions by choosing them manually or by entering them in the JSON format
+- Now you have two options to continue: either defining the permissions for the custom role by choosing them manually from a list or by entering them in JSON format to the template
 
 ![Create Custom Role](../Images/04-custom_role_1.png)
 
-#### Option 1: Add permissions for custom role by choosing manually:
+#### Option 1: Add permissions for custom role by choosing manually from a list:
 
--	In this case you go to the Permissions tab in the window to create a custom role
--	Here you add the permissions that are required for the custom role, manually from a list. The required permissions are as follows:
+-	In this case you go to the *Permissions* tab in the window to create a custom role
+-	Here you add the permissions that are required for the custom role manually from a list. The required permissions are as follows:
 ```
 Microsoft.Insights/eventtypes/values/read
 Microsoft.Compute/virtualMachines/deallocate/action
@@ -39,12 +39,12 @@ Microsoft.DesktopVirtualization/hostpools/sessionhosts/usersessions/read
 Microsoft.DesktopVirtualization/hostpools/sessionhosts/usersessions/sendMessage/action
 Microsoft.DesktopVirtualization/hostpools/sessionhosts/usersessions/read 
 ```
--	Save the choice and continue to Assignable Scopes to go sure the correct subscription (the one where the VMs are located) is chosen
--	Afterwards, continue to Review and Create to create the custom role
+-	Save the choice and continue to *Assignable Scopes* to go sure the correct subscription (the one where the VMs are located) is chosen
+-	Afterwards, continue to *Review and Create* to create the custom role
 
 #### Option 2: Add permissions for custom role in JSON template:
 
--	With this option you can jump directly to the JSON tab of the custom role creation window and enter the subscription ID in the template for *assignable scopes* 
+-	With this option you can jump directly to the *JSON* tab of the custom role creation window and enter the subscription ID in the template for *assignable scopes* 
 -	Afterwards, enter the following lines within the brackets behind *permissions*, as we already did in the previous challenge: 
 ```
 "Microsoft.Insights/eventtypes/values/read"
@@ -62,20 +62,20 @@ Microsoft.DesktopVirtualization/hostpools/sessionhosts/usersessions/read
 "Microsoft.DesktopVirtualization/hostpools/sessionhosts/usersessions/sendMessage/action"
 "Microsoft.DesktopVirtualization/hostpools/sessionhosts/usersessions/read"
 ```
--	Save the progress and continue to Review and Create to create the custom role
+-	Save the progress and continue to *Review and Create* to create the custom role
 
 ### Assign custom role:
 
 - Make sure you are still working in the subscription where you just created the custom role
-- Navigate again to Access Control (IAM) on the left side menu and click on Add on the top left and then Add Role Assignment (compare image below)
+- Navigate again to *Access Control (IAM)* on the left side menu and click on *Add* on the top left and then choose *Add Role Assignment* (compare image below)
 
 ![Assign Custom Role](../Images/04-custom_role_3.png)
 
-- Under the Role tab select the role you just created (If you just created the role, it might take a few minutes until it appears)
-- Navigate to the Members tab:
+- Under the *Role* tab select the role you just created (Note: If you just created the role, it might take a few minutes until it appears)
+- Navigate to the *Members* tab:
   - Here you select the first option *user, group or service principal* 
-  - Click on Select Members, search for *Windows Virtual Desktop* and select the option
-- Navigate to Review and Assign to create the role assignment (by doing so you give Azure Virtual Desktop the permission to manage, turn on and shut down VMs) 
+  - Click on *Select Members*, search for *Windows Virtual Desktop* and select the option
+- Navigate to *Review and Assign* to create the role assignment (by doing so you give Azure Virtual Desktop the permission to manage, turn on and shut down VMs) 
 
 ![Assign Custom Role](../Images/04-custom_role_4.png)
  
@@ -85,10 +85,10 @@ In a second step we want to create the scaling plan and assign it to the multi s
 
 ### Create the scaling plan:
 
-- Within the same subscription, which we used for the previous steps already, navigate to Azure Virtual Desktop
-- Select Scaling plans on the left side menu
-- Click on Create on the top left of the Scaling plan window
-- The *create a scaling plan* window opens as visible on the screenshot below
+- Within the same subscription, which we used for the previous steps already, navigate to Azure Virtual Desktop (by entering it in the search bar)
+- Select *Scaling plans* on the left side menu
+- Click on *Create* on the top left of the scaling plan window
+- The window to create a scaling plan opens as visible on the screenshot below
   - select the used subscription 
   - choose a Resource Group, ideally the one where the multi session host-pool is created 
   - give a name to the scaling plan
@@ -97,7 +97,7 @@ In a second step we want to create the scaling plan and assign it to the multi s
 
 ![Create Scaling Plan](../Images/05-scaling_plan_1.png)
 
-- Afterwards, we can move to the schedules tab 
+- Afterwards, we can move to the *schedules* tab 
 - Click on *add schedule* to create a new schedule, which defines the pattern to ramp down and up VMs in the host pool
 - In the following, we will perform this step twice: first to create the schedule for weekdays and second to create the schedule for weekends
 

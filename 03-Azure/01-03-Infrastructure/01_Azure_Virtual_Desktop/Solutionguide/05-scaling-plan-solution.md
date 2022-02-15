@@ -107,23 +107,19 @@ Move through the five tabs on top of the schedule window to create the schedule:
 - *General:* give a name to the schedule and select the days from Monday to Friday from the drop down of Repeat on
 - *Ramp-up:* starts at 8 AM, Load balancing algorithm = depth-first, Min. percentage of hosts = 50%, Capacity threshold = 75%
 - *Peak hours:* starts at 9 AM, depth-first, capacity threshold (default) = 75%
-- *Ramp-down:* starts at 5 PM, Min. capacity = 25%, Capacity Threshold = 100%, Force logoff users = No, Stop VMs only when VMs have no active or disconnected sessions
+- *Ramp-down:* starts at 5 PM, Min. capacity = 25%, Capacity threshold = 100%, Force logoff users = No, Stop VMs only when VMs have no active or disconnected sessions
 - *Off-peak hours:* starts at 6 PM, Load balancing algorithm = depth-first, Capacity threshold (default) = 100%
 
-![Add schedule for weekdays](../Images/05-scaling_plan_2.png)
+![Add schedule](../Images/05-scaling_plan_2.png)
 
 **weekend schedule:**
 
 Move through the five tabs on top of the schedule window to create the schedule: 
 - *General:* give a name to the schedule and select the days Saturday and Sunday only from the drop down of Repeat on
-- *Ramp-up:* starts at 8 AM, Load balancing algorithm = depth-first, Min. percentage of hosts = 50%, Capacity threshold = 75%
-- *Peak hours:* starts at 9 AM, depth-first, capacity threshold (default) = 75%
-- *Ramp-down:* starts at 5 PM, Min. capacity = 25%, Capacity Threshold = 100%, Force logoff users = No, Stop VMs only when VMs have no active or disconnected sessions
+- *Ramp-up:* starts at 8 AM, Load balancing algorithm = depth-first, Min. percentage of hosts = 25%, Capacity threshold = 100%
+- *Peak hours:* starts at 9 AM, depth-first, capacity threshold (default) = 100%
+- *Ramp-down:* starts at 5 PM, Min. capacity = 25%, Capacity threshold = 100%, Force logoff users = No, Stop VMs only when VMs have no active or disconnected sessions
 - *Off-peak hours:* starts at 6 PM, Load balancing algorithm = depth-first, Capacity threshold (default) = 100%
-
-![Add schedule for weekends](../Images/05-scaling_plan_4.png)
-
-![Prevent users being logged off](../Images/05-scaling_plan_3.png)
 
 ### Assign the scaling plan to the host-pool: 
 

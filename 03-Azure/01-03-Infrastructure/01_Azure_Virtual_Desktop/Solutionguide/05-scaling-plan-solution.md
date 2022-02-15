@@ -102,20 +102,22 @@ In a second step we want to create the scaling plan and assign it to the multi s
 - In the following, we will perform this step twice: first to create the schedule for weekdays and second to create the schedule for weekends
 
 **weekdays schedule:**
-- General: give a name to the schedule and select the days from Monday to Friday (compare screenshot) 
-- Ramp-up: starts at 8 AM, depth-first, Min. capacity = 50%, Capacity Threshold = 75%
-- Peak hours: starts at 9 AM, depth-first, capacity threshold (default) = 75%
-- Ramp-down: starts at 5 PM, Min. capacity = 25%, Capacity Threshold = 100%  
-- Off-peak hours: starts at 6 PM, Capacity Threshold = 100%, disable "Force logoff users" and set "Turn off VM" to *no active or disconnected sessions*
+Move through the five tabs on top of the schedule window to create the schedule: 
+- *General:* give a name to the schedule and select the days from Monday to Friday from the drop down of Repeat on
+- *Ramp-up:* starts at 8 AM, Load balancing algorithm = depth-first, Min. percentage of hosts = 50%, Capacity threshold = 75%
+- *Peak hours:* starts at 9 AM, depth-first, capacity threshold (default) = 75%
+- *Ramp-down:* starts at 5 PM, Min. capacity = 25%, Capacity Threshold = 100%, Force logoff users = No, Stop VMs only when VMs have no active or disconnected sessions
+- *Off-peak hours:* starts at 6 PM, Load balancing algorithm = depth-first, Capacity threshold (default) = 100%
 
 ![Add schedule for weekdays](../Images/05-scaling_plan_2.png)
 
 **weekend schedule:**
-- General: give a name to the schedule and select the days Saturday and Sunday only
-- Ramp-up: 
-- Peak hours: 
-- Ramp-down:
-- Off-peak hours: 
+Move through the five tabs on top of the schedule window to create the schedule: 
+- *General:* give a name to the schedule and select the days Saturday and Sunday only from the drop down of Repeat on
+- *Ramp-up:* starts at 8 AM, Load balancing algorithm = depth-first, Min. percentage of hosts = 50%, Capacity threshold = 75%
+- *Peak hours:* starts at 9 AM, depth-first, capacity threshold (default) = 75%
+- *Ramp-down:* starts at 5 PM, Min. capacity = 25%, Capacity Threshold = 100%, Force logoff users = No, Stop VMs only when VMs have no active or disconnected sessions
+- *Off-peak hours:* starts at 6 PM, Load balancing algorithm = depth-first, Capacity threshold (default) = 100%
 
 ![Add schedule for weekends](../Images/05-scaling_plan_4.png)
 
@@ -123,13 +125,12 @@ In a second step we want to create the scaling plan and assign it to the multi s
 
 ### Assign the scaling plan to the host-pool: 
 
-Now we created the schedules for the scaling plan. But we are not done yet: In the final step, we want to assign the scaling plan so that the host-pool, which it is etting assigned on, is automatically ramped up and down by following the schedules for weekdays and weekends, which we defined before.
+Now we created the schedules for the scaling plan. But we are not done yet: In the final step, we want to assign the scaling plan so that the host-pool, which it is getting assigned on, is automatically ramped up and down by following the schedules for weekdays and weekends, which we defined before.
 
-- In the window of *create a scaling plan* we go to the tab *Host pool assignments* 
+- In the window to create a scaling plan go to the tab *Host pool assignments* 
 - Here we select the multi session host-pool, which we created earlier
-- Check once more that *Enable autoscale* is set to Yes
-- Go to Review and Create to finally create and assign the scaling plan
+- Check that *Enable autoscale* is set to Yes
+- Go to *Review and Create* to finally create and assign the scaling plan
 
 ![Assign Scaling Plan](../Images/05-scaling_plan_5.png)
 
-Test: 

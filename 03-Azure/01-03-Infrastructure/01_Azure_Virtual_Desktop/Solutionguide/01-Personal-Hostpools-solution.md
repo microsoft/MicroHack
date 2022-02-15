@@ -2,6 +2,8 @@
 
 Duration:  30 minutes
 
+[Previous Challenge Solution](./01-Personal-Hostpools-solution.md) - **[Home](../readme.md)** - [Next Challenge Solution](02-multi-session-Hostpools-solution.md)
+
 In this exercise we will be creating an Azure Virtual Desktop host pool for personal desktops. This is a set of computers or hosts which operate on an as-needed basis. In a pooled configuration we will be hosting multiple non-persistent sessions, with no user profile information stored locally. This is where FSLogix Profile Containers provide the users profile to the host dynamically. This provides the ability for an organization to fully utilize the compute resources on a single host and lower the total overhead, cost, and number of remote workstations.
 
 **Additional Resources**

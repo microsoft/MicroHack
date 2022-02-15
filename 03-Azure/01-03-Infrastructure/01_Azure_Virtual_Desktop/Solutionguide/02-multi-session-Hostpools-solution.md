@@ -217,7 +217,7 @@ After the VMs are created, login and verify, if Notepad++ is installed
 
 ## Task 5: create Remote Apps
 
-![Create Image](../Images/02-Hostpool-RemoteApp-1.png)
+![Create Image](../Images/02-Hostpool-RemoteApp_1.png)
 Create a new Application group
 - Navigate to Application groups
 - Select your Wind10multisession-DAG Workspace
@@ -227,20 +227,20 @@ Create a new Application group
 - click create
 
 
-![Create Image](../Images/02-Hostpool-RemoteApp-2.png)
+![Create Image](../Images/02-Hostpool-RemoteApp_2.png)
 Navigate to your Win10 multisession Hostpool, on the left side below Manage, select Application groups
 click on your recently created Application group named RemoteApp
 
 
-![Create Image](../Images/02-Hostpool-RemoteApp-3.png)
+![Create Image](../Images/02-Hostpool-RemoteApp_3.png)
 in your Application group RemoteApp, on the left side below Manage, select Applications
 click on +Add
 
-![Create Image](../Images/02-Hostpool-RemoteApp-4.png)
+![Create Image](../Images/02-Hostpool-RemoteApp_4.png)
 Application source: Startmenu
 Application: select Notepad++
 
-![Create Image](../Images/02-Hostpool-RemoteApp-5.png)
+![Create Image](../Images/02-Hostpool_RemoteApp-5.png) 
 Application: Notepad++ should appear
 Application path and Icon path should automatically appear
 Click on Save

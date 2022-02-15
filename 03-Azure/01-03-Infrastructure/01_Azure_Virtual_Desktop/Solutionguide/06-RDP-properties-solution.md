@@ -1,9 +1,9 @@
-# Exercise 6: Customize RDP Properties
+## Exercise 6: Customize RDP Properties
 
 Duration:
 
 
-[Previous Challenge Solution](./05-scaling-plan-solution.md) - **[Home](../readme.md)** - **[Next Challenge Solution](06-RDP-properties-solution.md)**
+[Previous Challenge Solution](./05-scaling-plan-solution.md) - **[Home](../readme.md)** - [Next Challenge Solution](06-RDP-properties-solution.md)
 
 In this challenge, you will configure optimal user experience by customizing RDP Properties.
 
@@ -18,7 +18,7 @@ Azure Virtual Desktop enables you to configure and customize Remote Desktop Prot
 | Supported RDP Properties | https://docs.microsoft.com/en-us/windows-server/remote/remote-desktop-services/clients/rdp-files?context=/azure/virtual-desktop/context/context|
   |              |            | 
 
-## Task1:
+### Task1:
 Personal Hostpool
 -	Deny Storage, networkdrive and printers redirection.
 -	Allow Camera, Microphone and Copy&Paste
@@ -28,7 +28,7 @@ In your Personal Hostpool, navigate to RDP Properties
 
 ![RDP Property](../Images/06-RDPProperty_1.png)
  
-## Configure the following settings:
+### Configure the following settings:
 - Microphone redirection: Enable audio capture from the local device and redirection to an audio application in the remote session 
 - camera redirection: Redirect cameras
 - Drive/storage redirection: Don’t redirect any drives 
@@ -37,7 +37,7 @@ In your Personal Hostpool, navigate to RDP Properties
 
 ![RDP Property](../Images/06-RDPProperty_2.png)
  
-## Add or edit multiple custom RDP properties with Powershell
+### Add or edit multiple custom RDP properties with Powershell
 To add or edit multiple custom RDP properties, run the following PowerShell cmdlets by providing the custom RDP properties as a semicolon-separated string:
 PowerShell
 
@@ -55,7 +55,7 @@ You can check to make sure the RDP property was added by running the following c
 Get-AzWvdHostPool -ResourceGroupName <resourcegroupname> -Name <hostpoolname> | format-list Name, CustomRdpProperty
 ``
 
-## Task2:
+### Task2:
 Remote App Pool
 - Allow Multiple Displays
 - Smart Sizing should be enabled
@@ -67,15 +67,15 @@ Remote App Pool
 
 ![RDP Property](../Images/06-RDPProperty_1.png)
  
-## Configure the following settings:
+### Configure the following settings:
 
-### Session behaviour
+#### Session behaviour
 - Multiple displays: Enable multiple display support
 - Smart sizing: The local window content will scale when resized
 
 ![RDP Property](../Images/06-RDPProperty_3.png)
 
-### Device redirection
+#### Device redirection
 - Microphone redirection: Disable audio capture from the local device 
 - camera redirection: Don't redirect any cameras
 - Drive/storage redirection: Redirect all drives, including ones that are connected later 
@@ -84,7 +84,7 @@ Remote App Pool
 
 ![RDP Property](../Images/06-RDPProperty_4.png)
  
-## Add or edit multiple custom RDP properties with Powershell
+### Add or edit multiple custom RDP properties with Powershell
 To add or edit multiple custom RDP properties, run the following PowerShell cmdlets by providing the custom RDP properties as a semicolon-separated string:
 PowerShell
 ``$properties="audiocapturemode:i:0; camerastoredirect:s:0; drivestoredirect:s:; redirectclipboard:i:1;redirectprinters:i:1"``

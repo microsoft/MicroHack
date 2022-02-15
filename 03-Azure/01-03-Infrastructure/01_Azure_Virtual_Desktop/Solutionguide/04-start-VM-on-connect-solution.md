@@ -1,4 +1,4 @@
-# Exercise 4: Implement Start VM on connect Feature
+## Exercise 4: Implement Start VM on connect Feature
 
 Duration:
 
@@ -6,11 +6,22 @@ Duration:
 [Previous Challenge Solution](./03-Implement-FSLogix-Profile-Solution.md) - **[Home](../readme.md)** - [Next Challenge Solution](05-scaling-plan-solution.md)
 
 
-## Task 1:
+**Additional Resources**
+
+  |              |            |  
+|----------|:-------------:|
+| Description | Links |
+| Create a custom role | https://docs.microsoft.com/en-us/azure/role-based-access-control/custom-roles-portal |
+|Enable start VM on connect feature for AVD  |  https://docs.microsoft.com/en-us/azure/virtual-desktop/start-virtual-machine-connect#configure-the-start-vm-on-connect-feature   | 
+  |              |            | 
+
+
+
+### Task 1:
 
 In this first part of the challenge we have to create and assign a custom role. Once assigned, this custom role enables Azure Virtual Desktop to turn on VMs.
 
-### Create custom role:
+#### Create custom role:
 
 - Navigate to Access Control (IAM) in the Subscription where the VMs are located
 - On the top left choose Add and then click on Add custom role 
@@ -20,7 +31,7 @@ In this first part of the challenge we have to create and assign a custom role. 
 
 ![Create Custom Role](../Images/04-custom_role_1.png)
 
-#### Option 1: Add permissions for custom role by choosing manually:
+##### Option 1: Add permissions for custom role by choosing manually:
 
 -	In this case you go to the Permissions tab in the window to create a custom role
 -	Here you add the permissions that are required for the custom role, manually from a list. The required permissions are as follows:
@@ -30,7 +41,7 @@ In this first part of the challenge we have to create and assign a custom role. 
 -	Save the choice and continue to Assignable Scopes to go sure the correct subscription (the one where the VMs are located) is chosen
 -	Afterwards, continue to Review and Create to create the custom role
 
-#### Option 2: Add permissions for custom role in JSON template:
+##### Option 2: Add permissions for custom role in JSON template:
 
 -	With this option you can jump directly to the JSON tab of the custom role creation window and enter the subscription ID in the template for *assignable scopes* 
 -	Afterwards, enter the following lines within the brackets behind *permissions* (compare Image below): 
@@ -43,7 +54,7 @@ In this first part of the challenge we have to create and assign a custom role. 
 
 ![Create Custom Role](../Images/04-custom_role_2.png)
 
-### Assign custom role:
+#### Assign custom role:
 
 - Make sure you are still working in the subscription where you just created the custom role
 - Navigate again to Access Control (IAM) on the left side menu and click on Add on the top left and then Add Role Assignment (compare image below)
@@ -58,11 +69,11 @@ In this first part of the challenge we have to create and assign a custom role. 
 
 ![Assign Custom Role](../Images/04-custom_role_4.png)
  
-## Task 2:
+### Task 2:
 
 In a second step we want to enable the feature *start VM on connect* for the single session host-pool, which we created in a previous challenge. This will work only if the custom role, as described above, is created and assigned to Azure Virtual Desktop - otherwise Azure Virtual Desktop does not have the permission to turn on VMs. 
 
-### Enable the start VM on connect feature: 
+#### Enable the start VM on connect feature: 
 
 - In the Azure Portal move to the single session host-pool, which you created in one of the previous challenges
 - On the left-side menu navigate to Properties

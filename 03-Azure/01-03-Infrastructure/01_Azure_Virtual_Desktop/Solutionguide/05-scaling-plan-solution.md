@@ -102,6 +102,7 @@ In a second step we want to create the scaling plan and assign it to the multi s
 - In the following, we will perform this step twice: first to create the schedule for weekdays and second to create the schedule for weekends
 
 **weekdays schedule:**
+
 Move through the five tabs on top of the schedule window to create the schedule: 
 - *General:* give a name to the schedule and select the days from Monday to Friday from the drop down of Repeat on
 - *Ramp-up:* starts at 8 AM, Load balancing algorithm = depth-first, Min. percentage of hosts = 50%, Capacity threshold = 75%
@@ -112,6 +113,7 @@ Move through the five tabs on top of the schedule window to create the schedule:
 ![Add schedule for weekdays](../Images/05-scaling_plan_2.png)
 
 **weekend schedule:**
+
 Move through the five tabs on top of the schedule window to create the schedule: 
 - *General:* give a name to the schedule and select the days Saturday and Sunday only from the drop down of Repeat on
 - *Ramp-up:* starts at 8 AM, Load balancing algorithm = depth-first, Min. percentage of hosts = 50%, Capacity threshold = 75%

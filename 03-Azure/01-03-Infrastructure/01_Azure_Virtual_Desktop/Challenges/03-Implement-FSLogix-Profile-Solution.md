@@ -3,13 +3,13 @@
 [Previous Challenge](./02-multi-session-Hostpools.md) - **[Home](../readme.md)** - **[Next Challenge](04-start-VM-on-connect.md)**
 
 ## Introduction
-In this challenge, you'll learn how to create an Azure Files share to store FSLogix profiles that can be accessed by hybrid user identities authenticated with Azure Active Directory (AD). Azure AD users can now access an Azure file share using Kerberos authentication. This configuration uses Azure AD to issue the necessary Kerberos tickets to access the file share with the industry-standard SMB protocol. Your end-users can access Azure file shares over the internet without requiring a line-of-sight to domain controllers from Hybrid Azure AD-joined and Azure AD-joined VMs.
+In this challenge, you'll learn how to create an Azure Files share to store FSLogix user profiles that can be accessed by hybrid user identities authenticated with Azure Active Directory (AD) for your multi-session Hostpool. Azure AD users can now access an Azure file share using Kerberos authentication. This configuration uses Azure AD to issue the necessary Kerberos tickets to access the file share with the industry-standard SMB protocol. Your end-users can access Azure file shares over the internet without requiring a line-of-sight to domain controllers from Hybrid Azure AD-joined and Azure AD-joined VMs.
 
 In this challenge, you'll learn how to:
 
 Configure an Azure storage account for authentication using Azure AD.
 Configure the permissions on an Azure Files share.
-Configure your session hosts to store FSLogix user profiles on Azure Files.
+Configure your session hosts in your multi-session Hostpool to store FSLogix user profiles on Azure Files.
 
 ## Challenge 
 - Create a storage account in your subscription for Azure file shares 
@@ -20,7 +20,7 @@ Configure your session hosts to store FSLogix user profiles on Azure Files.
 - Configure your Azure Files share
 - Assign share-level permissions to grant your users access to the file share before they can use it
 - Assign directory level access permissions to prevent users from accessing the user profile of other users
-- Configure the session hosts to access Azure file shares from an Azure AD-joined VM for FSLogix profiles
+- Configure the session hosts in your multi-session Hostpool to access Azure file shares from an Azure AD-joined VM for FSLogix profiles
 - Configure FSLogix on the session host to to create the Enabled and VHDLocations registry values. Set the value of VHDLocations to your previously created fileshare name
 
 

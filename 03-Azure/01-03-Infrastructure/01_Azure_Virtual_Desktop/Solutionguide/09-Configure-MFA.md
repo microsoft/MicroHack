@@ -23,4 +23,7 @@ Enable MFA for your user accounts and assign an Azure Active Directory P1 or P2 
  In this task we will create an Conditional Access policy.
 
 - You need to be signed in as a global administrator, security administrator, or conditional access administrator
-- Now browse to AAD > Security and then to consitional Access within the Azure Portal
+- In Azure Active Directory create a group and add your AVD users to that group
+- Now browse to AAD > Security and then to conditional access within the Azure Portal and create a new policy
+- Assign the policy to the group you created before and click*Done* 
+- 

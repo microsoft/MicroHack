@@ -26,7 +26,7 @@ In this hack you will learn how to set up a Azure Virtual Desktop in a typical s
 - Challenge 6: **[Configure RDP Properties](Challenges/06-RDP-properties.md)**
 - Challenge 7 (optional): Monitoring (Log Analytics workspace required)
 - Challenge 8 (optional): disaster recovery & backup for AVD (failover / replicate in other region) 
-- Challenge 9 **(optional): [conditional access (MFA required)](Challenges/09-Configure-MFA)**
+- Challenge 9 (optional): **[conditional access (MFA required)](Challenges/09-Configure-MFA)**
 
 
 ## Prerequisites
@@ -53,3 +53,4 @@ In this hack you will learn how to set up a Azure Virtual Desktop in a typical s
 - Ben Martin Baur
 - Angelika Gerl
 - Leonie Mueller
+- Steffen Krause

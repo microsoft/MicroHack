@@ -1,4 +1,4 @@
-## Exercise 6: Customize RDP Properties
+## Exercise 6: Configure MFA
 
 Duration:
 
@@ -19,8 +19,8 @@ In this challenge, you will configure enable Azure multifactor authentication fo
 ### Task1:
 Enable MFA for your user accounts and assign an Azure Active Directory P1 or P2 License. 
 
-### Task2:
-Create an Conditional Access policy.
+### Task2: 
+ In this task we will create an Conditional Access policy.
 
 - You need to be signed in as a global administrator, security administrator, or conditional access administrator
 - Now browse to AAD > Security and then to consitional Access within the Azure Portal

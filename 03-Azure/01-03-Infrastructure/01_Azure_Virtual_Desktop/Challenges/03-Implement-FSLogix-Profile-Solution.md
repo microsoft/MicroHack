@@ -3,39 +3,29 @@
 [Previous Challenge](./02-multi-session-Hostpools.md) - **[Home](../readme.md)** - **[Next Challenge](04-start-VM-on-connect.md)**
 
 ## Introduction
-In this challenge, you'll learn how to create an Azure Files share to store FSLogix user profiles that can be accessed by hybrid user identities authenticated with Azure Active Directory (AD) for your multi-session Hostpool. Azure AD users can now access an Azure file share using Kerberos authentication. This configuration uses Azure AD to issue the necessary Kerberos tickets to access the file share with the industry-standard SMB protocol. Your end-users can access Azure file shares over the internet without requiring a line-of-sight to domain controllers from Hybrid Azure AD-joined and Azure AD-joined VMs.
+The Azure Virtual Desktop service recommends FSLogix profile containers as a user profile solution. FSLogix is designed to roam profiles in Azure Virtual Desktop, mostly needed for multi-session with floating user scenarios. It stores a complete user profile in a single container. At sign in, this container is dynamically attached to the computing environment using natively supported Virtual Hard Disk (VHD) and Hyper-V Virtual Hard disk (VHDX). The user profile is immediately available and appears in the system exactly like a native user profile. 
 
 In this challenge, you'll learn how to:
 
-Configure an Azure storage account for authentication using Azure AD.
-Configure the permissions on an Azure Files share.
-Configure your session hosts in your multi-session Hostpool to store FSLogix user profiles on Azure Files.
+Setup and configure an Azure storage account for authentication using Azure ADDS.
+Setup an Azure storage account
+Assign access permissions to an identity
+create a profile container with FSLogix for your session hosts in your multi-session Hostpool 
 
-## Challenge 
-- Create a storage account in your subscription for Azure file shares 
-- Configure Azure AD authentication on your Azure Storage account
-- Configure the Azure AD service principal and application (to enable Azure AD authentication on a storage account, you need to create an Azure AD application to represent the
-  storage account in Azure AD).
-- Set the API permissions on the newly created application
-- Configure your Azure Files share
-- Assign share-level permissions to grant your users access to the file share before they can use it
-- Assign directory level access permissions to prevent users from accessing the user profile of other users
-- Configure the session hosts in your multi-session Hostpool to access Azure file shares from an Azure AD-joined VM for FSLogix profiles
-- Configure FSLogix on the session host to to create the Enabled and VHDLocations registry values. Set the value of VHDLocations to your previously created fileshare name
+As a prerequisite for this Microhack, you've already set up an Azure AD DS instance. 
 
+### Task 1: Set up an Azure Storage account
+    
+### Task 2: Assign access permissions to an identity
 
+### Task 3: Create a profile container with FSLogix
+
+       
 
 ## Success Criteria
-- Test your deployment
-- test your deployment by signing in with a user account that's been assigned to an application group on the host pool. 
-- The user account you sign in with must have permission to use the file share.
-- Make sure you test with an user, who has not has signed in before and no local profile exists 
-- Finally, test the profile to make sure that it works
 
 
-### Disclaimer
-Storing FSLogix profiles on Azure Files for Azure Active Directory (AD)-joined VMs is currently in public preview. This preview version is provided without a service level agreement, and is not recommended for production workloads. Certain features might not be supported or might have constrained capabilities. 
-For more information, see [Supplemental Terms of Use for Microsoft Azure Previews](https://azure.microsoft.com/support/legal/preview-supplemental-terms)
+
 
 
 ### Learning Resources

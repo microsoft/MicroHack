@@ -7,7 +7,7 @@ create an Image and upload the image to the Image gallery. You will deploy a new
 Then you will provide Remote Apps to user
 
 ## Challenge
-Create multi-session Hostpool joined in Azure AD
+Create multi-session Hostpool joined in Azure Active Directory Domain Services
 - West Europe Region
 - Metadata located in West Europe
 - Mark as Validation environment

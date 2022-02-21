@@ -76,7 +76,6 @@ Azure Virtual Desktop uses Azure AD for identity and access management. Azure AD
 Azure Virtual Desktop VMs must domain-join an AD DS service, and the AD DS must be in sync with Azure AD to associate users between the two services. You can use Azure AD Connect to associate AD DS with Azure AD.
 
 #### Azure Active Directory Domain Services
-In challenge 3 (FSLogix), you have to apply the steps from [this guide](https://docs.microsoft.com/en-us/azure/virtual-desktop/create-profile-container-adds)
 
 <a id="step4">Step 4: Configure Azure AD Domain Services</a>
 1. Create a Virtual Network in the selected region. Name it **AVDVNet**

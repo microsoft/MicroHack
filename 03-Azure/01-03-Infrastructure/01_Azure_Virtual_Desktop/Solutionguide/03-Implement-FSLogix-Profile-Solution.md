@@ -15,6 +15,7 @@ The Azure Virtual Desktop service recommends FSLogix profile containers as a use
   |              |            |  
 |----------|:-------------:|
 | Description | Links |
+| Create a storage account | https://docs.microsoft.com/en-us/azure/storage/common/storage-account-create?tabs=azure-portal |
 | Create an Azure file share | https://docs.microsoft.com/en-us/azure/storage/files/storage-how-to-create-file-share?tabs=azure-portal |
 |Create a profile container with Azure Files and Azure Active Directory  |  https://docs.microsoft.com/en-us/azure/virtual-desktop/create-profile-container-azure-ad   | 
   |              |            | 

@@ -39,7 +39,7 @@ FileStorage storage accounts: FileStorage storage accounts allow you to deploy A
 
 ![Create Storage account](../Images/03-FSLogix_create-storage-account-1.png)
 
-Create a genera-purposev2 storage account with the following settings:
+Create a general-purposev2 storage account with the following settings:
 - Resource group: select your Resource group
 - Storage account name: fslogixprofilefs (or something similar)
 - Region: West Europe
@@ -51,7 +51,18 @@ Note: The advanced, Networking, Data protection and Encryption settings we don't
 
 ![Create Storage account](../Images/03-FSLogix_create-storage-account-2.png)
 
+The storage account is created. Now navigate to the section Data storage and select File shares.
+Click + File share on the top
+
 ![Create Storage account](../Images/03-FSLogix_create-storage-account-3.png)
+
+Create a file share 
+- Name: fslogixfs (or something similar)
+- Tier: Transaction optimized
+- click create
+
+Note :bulb: To use SMB protocol with this share, you need to check if you can communicate over port 445. 
+            [Script for Windows Client ](https://github.com/Azure-Samples/azure-files-samples/tree/master/AzFileDiagnostics/Windows)
 
 
 ![Create Storage account](../Images/03-FSLogix_create-storage-account-6.png)

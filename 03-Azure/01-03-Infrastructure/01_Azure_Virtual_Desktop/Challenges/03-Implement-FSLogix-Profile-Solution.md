@@ -15,18 +15,29 @@ create a profile container with FSLogix for your session hosts in your multi-ses
 As a prerequisite for this Microhack, you've already set up an Azure AD DS instance. 
 
 ### Task 1: Set up an Azure Storage account
+- Setup an Azure Storage account and a File Share
+- enable Azure Active Directory authentication for Azure files
     
 ### Task 2: Assign access permissions to an identity
+- AVD users will nedd access permissions to access the file share. You need to assign each user a role with 
+  the appropriate user access permissions
 
 ### Task 3: Create a profile container with FSLogix
+In order to use profile containers, you'll need to configure FSLogix on your session host VMs. If you're using a custom image that doesn't have the FSLogix Agent already installed, follow the instructions in [Download and install FSLogix](https://docs.microsoft.com/en-us/fslogix/install-ht). 
 
+- Login into your multi-session VMs
+- mount your fileshare
+- allow your Azure Virtual Desktop users to create their own profile container while blocking access to the profile containers from other users
+- create a prifile container with FSLogix
        
 
 ## Success Criteria
-
-
-
-
+- Storage Account and File share is setup correctly
+- Azure AD authentication is enabled on the File share
+- Appropriate user access permissions are configured on the file share
+- You are able to connect to your session hosts as an Administrator to configure FSLogix (you need to find a solution for this)
+- A profile container with FS Logix is created successful
+- Make sure your profile works
 
 ### Learning Resources
 - [Create a profile container with Azure Files and Azure Active Directory (preview)](https://docs.microsoft.com/en-us/azure/virtual-desktop/create-profile-container-azure-ad)

@@ -124,6 +124,8 @@ You'll need to get the access key for your Storage account
 
 - copy the key from key 1
 
+💡Next you need to logon to your virtual machine. 
+
 
 
 

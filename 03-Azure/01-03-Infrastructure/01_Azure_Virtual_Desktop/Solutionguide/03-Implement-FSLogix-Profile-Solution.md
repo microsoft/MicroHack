@@ -90,15 +90,19 @@ To assign users access permissions:
 - From the Azure portal, open the file share you created in Set up an Azure Storage account
 - Select Access Control (IAM)
 - Select Add a role assignment
-- In the Add role assignment tab, select the appropriate built-in role from the role list. 
-  You'll need to at least select Storage File Data SMB Share Contributor for the account to get proper permissions.
-- For Assign access to, select Azure Active Directory user, group, or service principal.
-- Select a name or email address for the target Azure Active Directory identity.
-- Select Save.
+
 
 ![Create Storage account](../Images/03-FSLogix_create-storage-account-10.png)
 
+- In the Add role assignment tab, select the appropriate built-in role from the role list. 
+  You'll need to at least select Storage File Data SMB Share Contributor for the account to get proper permissions.
+
+
 ![Create Storage account](../Images/03-FSLogix_create-storage-account-11.png)
+
+- For Assign access to, select Azure Active Directory user, group, or service principal.
+- Select a name or email address for the target Azure Active Directory identity.
+- Select Save.
 
 ![Create Storage account](../Images/03-FSLogix_create-storage-account-12.png)
 

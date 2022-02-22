@@ -17,7 +17,8 @@ The Azure Virtual Desktop service recommends FSLogix profile containers as a use
 | Description | Links |
 | Create a storage account | https://docs.microsoft.com/en-us/azure/storage/common/storage-account-create?tabs=azure-portal |
 | Create an Azure file share | https://docs.microsoft.com/en-us/azure/storage/files/storage-how-to-create-file-share?tabs=azure-portal |
-|Create a profile container with Azure Files and Azure Active Directory  |  https://docs.microsoft.com/en-us/azure/virtual-desktop/create-profile-container-azure-ad   | 
+|Create a profile container with Azure Files and Azure Active Directory  |  https://docs.microsoft.com/en-us/azure/virtual-desktop/create-profile-container-adds  | 
+| Circumvent port 445 issues | https://docs.microsoft.com/en-us/azure/storage/files/storage-files-networking-overview#azure-networking |
   |              |            | 
 
 
@@ -67,11 +68,33 @@ Note :bulb: To use SMB protocol with this share, you need to check if you can co
 
 ![Create Storage account](../Images/03-FSLogix_create-storage-account-6.png)
 
+When the file share is created, navigate to File shares in your Storage account. Beneath File share settings, click on Active directory: Not configured.
+We need to enable Identity-based access for the file share in this storage account.
+
 ![Create Storage account](../Images/03-FSLogix_create-storage-account-7.png)
+
+As we are using Azure Active Directory Domain Services in this Microhack, click on Azure Active Directory Domain Services Set up.
 
 ![Create Storage account](../Images/03-FSLogix_create-storage-account-8.png)
 
+click on the check-box to enable Azure Active Directory Domain Services (Azure AD DS) for this file share.
+
 ![Create Storage account](../Images/03-FSLogix_create-storage-account-9.png)
+
+### Task 2: Assign access permissions to an identity
+
+Other users will need access permissions to access your file share. To do this, you'll need to assign each user a role with the appropriate access permissions.
+
+To assign users access permissions:
+
+- From the Azure portal, open the file share you created in Set up an Azure Storage account
+- Select Access Control (IAM)
+- Select Add a role assignment
+- In the Add role assignment tab, select the appropriate built-in role from the role list. 
+  You'll need to at least select Storage File Data SMB Share Contributor for the account to get proper permissions.
+- For Assign access to, select Azure Active Directory user, group, or service principal.
+- Select a name or email address for the target Azure Active Directory identity.
+- Select Save.
 
 ![Create Storage account](../Images/03-FSLogix_create-storage-account-10.png)
 

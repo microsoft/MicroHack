@@ -34,8 +34,6 @@ General purpose version 2 (GPv2) storage accounts: GPv2 storage accounts allow y
 To create a storage account via the Azure portal, select + Create a resource from the dashboard. In the resulting Azure Marketplace search window, search for storage account and select the resulting search result. This will lead to an overview page for storage accounts; select Create to proceed with the storage account creation wizard.
 
 
-![Create Storage account](../Images/03-files-create-smb-share-performance-premium.png)
-
 FileStorage storage accounts: FileStorage storage accounts allow you to deploy Azure file shares on premium/solid-state disk-based (SSD-based) hardware. FileStorage accounts can only be used to store Azure file shares; no other storage resources (blob containers, queues, tables, etc.) can be deployed in a FileStorage account.
 
 
@@ -45,9 +43,6 @@ FileStorage storage accounts: FileStorage storage accounts allow you to deploy A
 
 ![Create Storage account](../Images/03-FSLogix_create-storage-account-3.png)
 
-![Create Storage account](../Images/03-FSLogix_create-storage-account-4.png)
-
-![Create Storage account](../Images/03-FSLogix_create-storage-account-5.png)
 
 ![Create Storage account](../Images/03-FSLogix_create-storage-account-6.png)
 

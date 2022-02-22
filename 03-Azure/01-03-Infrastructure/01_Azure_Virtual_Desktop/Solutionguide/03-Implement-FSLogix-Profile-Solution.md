@@ -100,11 +100,13 @@ To assign users access permissions:
 
 ![Create Storage account](../Images/03-FSLogix_create-storage-account-11.png)
 
+
+
+![Create Storage account](../Images/03-FSLogix_create-storage-account-12.png)
+
 - For Assign access to, select Azure Active Directory user, group, or service principal.
 - Select a name or email address for the target Azure Active Directory identity.
 - Select Save.
-
-![Create Storage account](../Images/03-FSLogix_create-storage-account-12.png)
 
 ![Create Storage account](../Images/03-FSLogix_create-storage-account-13.png)
 

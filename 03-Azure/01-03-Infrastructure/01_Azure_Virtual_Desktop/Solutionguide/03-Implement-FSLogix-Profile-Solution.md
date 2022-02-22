@@ -110,9 +110,17 @@ To assign users access permissions:
 
 ![Create Storage account](../Images/03-FSLogix_create-storage-account-13.png)
 
+
 ![Create Storage account](../Images/03-FSLogix_create-storage-account-14.png)
 
+
+You'll need to get the access key for your Storage account
+- Under settings, select Acccess keys
+- Click on show key
+
 ![Create Storage account](../Images/03-FSLogix_create-storage-account-15.png)
+
+copy the key from key 1
 
 
 

@@ -39,6 +39,16 @@ FileStorage storage accounts: FileStorage storage accounts allow you to deploy A
 
 ![Create Storage account](../Images/03-FSLogix_create-storage-account-1.png)
 
+Create a genera-purposev2 storage account with the following settings:
+- Resource group: select your Resource group
+- Storage account name: fslogixprofilefs (or something similar)
+- Region: West Europe
+- Performance: Standard
+- Redundancy: Geo-redundant storage (GRS)
+- Click Review + create
+
+Note: The advanced, Networking, Data protection and Encryption settings we don't need to change anything as we choose default settings
+
 ![Create Storage account](../Images/03-FSLogix_create-storage-account-2.png)
 
 ![Create Storage account](../Images/03-FSLogix_create-storage-account-3.png)

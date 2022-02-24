@@ -17,7 +17,7 @@ For this MiniHack we simplify the deployment down to Azure AD joined sessionhost
 
 The architecture will be like 
 
-***"ADD NEW PICTURE HERE"***
+![AVD Architecture MicroHack](../Images/00_AVD_Microhack.png)
 
 ## Setup your networking and resource groups structure
 
@@ -78,6 +78,13 @@ Azure Virtual Desktop uses Azure AD for identity and access management. Azure AD
 Azure Virtual Desktop VMs must domain-join an AD DS service, and the AD DS must be in sync with Azure AD to associate users between the two services. You can use Azure AD Connect to associate AD DS with Azure AD.
 
 #### Azure Active Directory Domain Services
+
+Go to the [Azure Portal](https://portal.azure.com) and open the Azure Active Directory. Create three user accounts and two groups. 
+- AVDUsers
+- AVDAdmins
+- AVDUser1 is member of AVDUsers
+- AVDUser2 is member of AVDUsers
+- AVDUser3 is member of AVDAdmins
 
 <a id="step4">Step 4: Configure Azure AD Domain Services</a>
 1. Create a Virtual Network in the selected region. Name it **AVDVNet**

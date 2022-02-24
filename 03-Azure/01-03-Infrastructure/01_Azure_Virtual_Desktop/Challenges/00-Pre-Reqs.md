@@ -17,9 +17,11 @@ For this MiniHack we simplify the deployment down to Azure AD joined sessionhost
 
 The architecture will be like 
 
-"ADD NEW PICTURE HERE"
+***"ADD NEW PICTURE HERE"***
 
 ## Setup your networking and resource groups structure
+
+You can setup your networking infrastrcuture with this script and jump to directly to the Azure Active Directory Domain Services konfiguration or do it via the Azure Portal see the Azure Active Directory Domain Services guide below.
 
 - Open Visual Studio Code and log in to Azure Cloud Shell at https://shell.azure.com/ and select Bash
 

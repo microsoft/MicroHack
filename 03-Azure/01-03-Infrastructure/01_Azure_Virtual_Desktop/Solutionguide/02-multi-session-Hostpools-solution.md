@@ -243,6 +243,12 @@ Application: Notepad++ should appear
 Application path and Icon path should automatically appear
 Click on Save
 
+![Create Image](../Images/02-Hostpool_RemoteApp-8.png) 
+
+- Navigate to Assignments
+- Assign the AVDUsers group to the Application group
+
+
 ![Create Image](../Images/02-Hostpool_RemoteApp-6.png) 
 
 Start your Remote Desktop Client App and launch Notepad++

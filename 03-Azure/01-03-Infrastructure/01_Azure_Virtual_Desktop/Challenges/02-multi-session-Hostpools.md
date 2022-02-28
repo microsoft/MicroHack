@@ -27,7 +27,6 @@ Deploy session host with recently created image
 - Choose your recently created image
 - Deploy Notepad++ as Remote App
 
-NOTE: ALL HOST POOLS MUST BE CONFIGURED AS VALIDATION POOLS
 
 ## Success Criteria
 1.	Host Pools are created and Session Hosts are showing available

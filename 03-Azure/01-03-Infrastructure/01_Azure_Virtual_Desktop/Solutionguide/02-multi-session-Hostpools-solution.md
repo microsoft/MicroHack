@@ -117,12 +117,11 @@ click Review + create
 
 After you've created your host pool, you must assign users access to let them access their resources. To grant access to resources, add each user to the app group. Follow the instructions in Manage app groups to assign user access to apps and desktops. We recommend that you use user groups instead of individual users wherever possible.
 
-For Azure AD-joined VMs, you'll need to do two extra things on top of the requirements for Active Directory or Azure Active Directory Domain Services-based deployments:
-
 Assign your users the Virtual Machine User Login role so they can sign in to the VMs.
+
 Assign administrators who need local administrative privileges the Virtual Machine Administrator Login role.
 To grant users access to Azure AD-joined VMs, you must [configure role assignments for the VM](https://docs.microsoft.com/en-us/azure/active-directory/devices/howto-vm-sign-in-azure-ad-windows#configure-role-assignments-for-the-vm). 
-You can assign the Virtual Machine User Login or Virtual Machine Administrator Login role either on the VMs, the resource group containing the VMs, or the subscription. We recommend assigning the Virtual Machine User Login role to the same user group you used for the app group at the resource group level to make it apply to all the VMs in the host pool.
+
 
 #### Add role assignment page in Azure portal
 
@@ -145,7 +144,7 @@ Assign the following role. For detailed steps, see [Assign Azure roles using the
 ### Task 3:
 #### Login to the session host and create image
 
-Login as a user with local administrative privileges (:bulb: therefore we added the role assignment "Virtual Machine Administrator Login" in Task 2)
+Login with your administrative user account avduser3 with local administrative privileges (:bulb: therefore we added the role assignment "Virtual Machine Administrator Login" in Task 2)
 You can Login either with the [AVD Webclient](https://rdweb.wvd.microsoft.com/arm/webclient/index.html) or with the [Windows Desktop Client](https://rdweb.wvd.microsoft.com/arm/webclient/index.html)
 
 ![Login to the session host](../Images/02-Login_session_host_1.png)

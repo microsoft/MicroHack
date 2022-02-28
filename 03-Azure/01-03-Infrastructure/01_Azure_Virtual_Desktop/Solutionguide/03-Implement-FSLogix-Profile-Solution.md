@@ -124,7 +124,17 @@ You'll need to get the access key for your Storage account
 
 - copy the key from key 1
 
-💡Next you need to logon to your virtual machine. 
+💡
+
+![Custom Script Extension](../Images/03-FSLogix_customscriptextension-1.png)
+
+![Custom Script Extension](../Images/03-FSLogix_customscriptextension-2.png)
+
+![Custom Script Extension](../Images/03-FSLogix_customscriptextension-3.png)
+
+![Custom Script Extension](../Images/03-FSLogix_customscriptextension-4.png)
+
+![Custom Script Extension](../Images/03-FSLogix_customscriptextension-5.png)
 
 
 

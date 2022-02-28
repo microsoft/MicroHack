@@ -113,19 +113,38 @@ To assign users access permissions:
 click Review + assign
 
 
-💡
+💡To setup FSLogix on the session Hosts, you need to upload the setupFSLogix.ps1 into a Container in your Storage Account
 [Custom Script Extension Setup FSLogix](01_Azure_Virtual_Desktop/modules/SetupFSLogix.ps1)
 
 
 ![Custom Script Extension](../Images/03-FSLogix_customscriptextension-1.png)
 
+- Navigate to your Storage Account 
+- select Containers
+- click on + Container, choose a name for the Container (in our case, we selected cse for custom script extension)
+- Public access level: private
+
+
 ![Custom Script Extension](../Images/03-FSLogix_customscriptextension-2.png)
+
+- select your recently created Container
+- upload the setupFSLogix.ps1 as shown in the screenshot above
+- 
 
 ![Custom Script Extension](../Images/03-FSLogix_customscriptextension-3.png)
 
+- Navigate to your Virtual machine (from your multi-session Hostpool)
+- On the left side beneath Settings, select Extensions + applications
+- click Add
+
 ![Custom Script Extension](../Images/03-FSLogix_customscriptextension-4.png)
 
+- select Custom Script Extension
+
 ![Custom Script Extension](../Images/03-FSLogix_customscriptextension-5.png)
+
+- Script file -> browse for the setupFSLogix.ps1 Script
+- Arguments: type the UNC Path of your fileshare, e. g. \\fslogixprofilefs.file.core.windows.net\fslogixfs
 
 
 

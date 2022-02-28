@@ -113,18 +113,9 @@ To assign users access permissions:
 click Review + assign
 
 
-![Create Storage account](../Images/03-FSLogix_create-storage-account-14.png)
-
-
-You'll need to get the access key for your Storage account
-- Under settings, select Acccess keys
-- Click on show key
-
-![Create Storage account](../Images/03-FSLogix_create-storage-account-15.png)
-
-- copy the key from key 1
-
 💡
+[Custom Script Extension Setup FSLogix](01_Azure_Virtual_Desktop/modules/SetupFSLogix.ps1)
+
 
 ![Custom Script Extension](../Images/03-FSLogix_customscriptextension-1.png)
 

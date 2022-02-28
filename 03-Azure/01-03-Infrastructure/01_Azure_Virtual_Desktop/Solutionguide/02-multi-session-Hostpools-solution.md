@@ -79,9 +79,11 @@ Add Azure Virtual Machines: select yes
 
 ##### Domain to join:
 
-![Create Hostpool](../Images/02-Hostpool_create_multisession_7.png)
+![Create Hostpool](../Images/02-Hostpool_create_multisession_AzureADDS1.png)
 
 - Select which directory you would like to join: Select Active Directory
+- insert a UPN of an Azure Active Directory user that has permissions and will be used to join the virtual machine to your domain.
+  For example, avduser3@contoso.com
 
 ##### Virtual Machine Administrator account:
 

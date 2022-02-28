@@ -2,7 +2,7 @@
 [Previous Challenge](./01-Personal-Hostpools.md) - **[Home](../readme.md)** - [Next Challenge](./03-Implement-FSLogix-Profile-Solution.md)
 
 ## Introduction
-In this challenge you will create Azure Active Directory joined pooled desktops used as a jump box. After deployment you will connect to the jumpbox, deploy Notepad, 
+In this challenge you will create Azure AD DS joined pooled desktops. After deployment you will connect to the session host, deploy Notepad, 
 create an Image and upload the image to the Image gallery. You will deploy a new hostpool and deploy 2 Session hosts from this image. 
 Then you will provide Remote Apps to user
 
@@ -38,7 +38,6 @@ Deploy session host with recently created image
 
 ## Learning Resources
 - [Create Azure Virtual Desktop Hostpool](https://docs.microsoft.com/de-de/azure/virtual-desktop/create-host-pools-azure-marketplace?tabs=azure-portal)
-- [Deploy Azure AD joined VMs in Azure Virtual Desktop](https://docs.microsoft.com/en-us/azure/virtual-desktop/deploy-azure-ad-joined-vm)
 - [Capture an image of a VM using the portal](https://docs.microsoft.com/en-us/azure/virtual-machines/capture-image-portal)
 - [Manage app groups for Azure Virtual Desktop portal](https://docs.microsoft.com/en-us/azure/virtual-desktop/manage-app-groups)
 - [Connect with the Windows Desktop Client](https://docs.microsoft.com/en-us/azure/virtual-desktop/user-documentation/connect-windows-7-10#install-the-windows-desktop-client)

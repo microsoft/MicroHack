@@ -33,7 +33,7 @@ NOTE: ALL HOST POOLS MUST BE CONFIGURED AS VALIDATION POOLS
 1.	Host Pools are created and Session Hosts are showing available
 2.	Users are assigned to the HostPool's appropriate app group
 3.	Able to show the Host Pool settings configured.
-4.	VMs are joined to AAD
+4.	VMs are joined to Azure AD DS
 5.	users can sign in to the VM.
 6.	Notepad++ is installed on all VMs within the pooled Hostpool and can be accessed via RemoteApp
 
@@ -44,13 +44,7 @@ NOTE: ALL HOST POOLS MUST BE CONFIGURED AS VALIDATION POOLS
 - [Manage app groups for Azure Virtual Desktop portal](https://docs.microsoft.com/en-us/azure/virtual-desktop/manage-app-groups)
 - [Connect with the Windows Desktop Client](https://docs.microsoft.com/en-us/azure/virtual-desktop/user-documentation/connect-windows-7-10#install-the-windows-desktop-client)
 
-## Disclaimer
-##### Azure AD joined virtual machines currently supported configurations *(public preview Feature)*
 
-The following configurations are currently supported with Azure AD-joined VMs:
-- Personal desktops with local user profiles.
-- Pooled desktops used as a jump box. In this configuration, users first access the Azure Virtual Desktop VM before connecting to a different PC on the network. Users shouldn't save data on the VM.
-- Pooled desktops or apps where users don't need to save data on the VM. For example, for applications that save data online or connect to a remote database. User accounts can be cloud-only or hybrid users from the same Azure AD tenant.
 
 
 

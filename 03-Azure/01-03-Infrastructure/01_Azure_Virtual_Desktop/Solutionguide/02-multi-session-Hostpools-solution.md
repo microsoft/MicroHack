@@ -215,7 +215,7 @@ After the VMs are created, login and verify, if Notepad++ is installed
 
 ### Task 5: create Remote Apps
 
-![Create Image](../Images/02-Hostpool_RemoteApp_1.png)
+![Create Image](../Images/02-Hostpool_RemoteApp-1.png)
 Create a new Application group
 - Navigate to Application groups
 - Select your Wind10multisession-DAG Workspace

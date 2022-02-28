@@ -13,8 +13,7 @@ create an Image and upload the image to the Image gallery. You will deploy a new
   |              |            |  
 |----------|:-------------:|
 | Description | Links |
-| Create Azure Virtual Desktop Hostpool | https://docs.microsoft.com/de-de/azure/virtual-desktop/create-host-pools-azure-marketplace?tabs=azure-portal|
-| Deploy Azure AD joined VMs in Azure Virtual Desktop |  https://docs.microsoft.com/en-us/azure/virtual-desktop/deploy-azure-ad-joined-vm   | 
+| Create Azure Virtual Desktop Hostpool | https://docs.microsoft.com/de-de/azure/virtual-desktop/create-host-pools-azure-marketplace?tabs=azure-portal |
 | Capture an image of a VM using the portal |  https://docs.microsoft.com/en-us/azure/virtual-machines/capture-image-portal   | 
 | Manage app groups for Azure Virtual Desktop portal |  https://docs.microsoft.com/en-us/azure/virtual-desktop/manage-app-groups   | 
 | Connect with the Windows Desktop Client |  https://docs.microsoft.com/en-us/azure/virtual-desktop/user-documentation/connect-windows-7-10#install-the-windows-desktop-client   | 
@@ -28,7 +27,7 @@ Create multi-session Hostpool joined in Azure Active Directory with the followin
 - Mark as Validation environment
 - Host Pool type: Pooled
 - Add 1 Virtual machine with a Windows 10 Enterprise multi-session Version 20H2 + Microsoft 365 Apps Gallery image
-- Domain to join: Azure Active Directory (Enroll with Intune “No”)
+- Domain to join: Active Directory 
 - Register desktop app group to new workspace
 - Assign users
 
@@ -43,7 +42,7 @@ Create multi-session Hostpool joined in Azure Active Directory with the followin
 - choose the Resource group 
 - Host pool name: Multi-session
 - Location: West Europe
-- Validation environment: yes (:bulb:as we are using the Azure AD join preview feature)
+- Validation environment: no
 - Host pool type: Pooled
 - Load balancing algorithm: Breath-first
 - Max session limit: 15
@@ -82,8 +81,7 @@ Add Azure Virtual Machines: select yes
 
 ![Create Hostpool](../Images/02-Hostpool_create_multisession_7.png)
 
-- Select which directory you would like to join: Select Azure Active Directory
-- Enroll VM with Intune: No
+- Select which directory you would like to join: Select Active Directory
 
 ##### Virtual Machine Administrator account:
 

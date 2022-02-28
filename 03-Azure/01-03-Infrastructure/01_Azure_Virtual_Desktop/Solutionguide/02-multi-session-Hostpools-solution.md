@@ -126,7 +126,7 @@ You can assign the Virtual Machine User Login or Virtual Machine Administrator L
 
 #### Add role assignment page in Azure portal
 
-To configure role assignments for your Azure AD enabled VMs:
+To configure Virtual machine Administrator login for AVDuser3, follow the following steps:
 
 Select Access control (IAM).
 
@@ -137,8 +137,7 @@ Assign the following role. For detailed steps, see [Assign Azure roles using the
 | Setting	| Value | 
 | --------| ------| 
 |Role	| Virtual Machine Administrator Login |
-|Role | Virtual Machine User Login | 
-| Assign access to	| User, group, service principal, or managed identity |
+|Assign access to	| User, group, service principal, or managed identity |
 
 
 ![Assign user access to host pools](../Images/02-assign_user_access_2.png)

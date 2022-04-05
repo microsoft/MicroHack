@@ -2,10 +2,7 @@
 
 # **Microsoft MicroHacks**
 
-## **Table of Content**
-
 - [**Microsoft MicroHacks**](#microsoft-microhacks)
-  - [**Table of Content**](#table-of-content)
 - [**MicroHack Overview**](#microhack-overview)
   - [**What is a MicroHack?**](#what-is-a-microhack)
   - [**How does it work?**](#how-does-it-work)

@@ -1,4 +1,4 @@
-![image](img/MicroHack_Logo.png)
+![image](img/MicroHack_Logo_1.png)
 
 # **Microsoft MicroHacks**
 

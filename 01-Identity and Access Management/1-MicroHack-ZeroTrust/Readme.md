@@ -1,4 +1,4 @@
-# **How to create a Zero Trust concept? (Log Analytics)**
+# **How to create a Zero Trust concept?**
 
 # Contents
 
@@ -301,41 +301,6 @@ The goal of this challenge is to create all necessary conditional access policie
 
 ## Task 7: CA104-Admins-IdentityProtection-AllApps-AnyPlatform-MFAforMediumandHighSignInRisk
 
-## Task 8: CA105-Admins-IdentityProtection-AllApps-AnyPlatform-BlockLegacyAuth
-
-## Task 9: CA106-Admins-AppProtection-MicrosoftIntuneEnrollment-AnyPlatform-MFA
-
-## Task 10: CA107-Admins-DataandAppProtection-AllApps-iOSorAndroid-ClientAppandAP
-
-## Task 11: CA108-Admins-DataProtection-AllApps-AnyPlatform-SessionPolic
-
-## Task 12: CA109-Admins-AttackSurfaceReduction-AllApps-AnyPlatform-BlockUnknownPlatform
-
-## Task 13: CA200-Internals-BaseProtection-AllApps-AnyPlatform-CompliantorAADH
-
-## Task 14: CA201-Internals-IdentityProtection-AllApps-AnyPlatform-CombinedRegistration
-
-## Task 15: CA202-Internals-IdentityProtection-AllApps-AnyPlatform-MFAandPWDforHighUserRisk
-
-## Task 16: CA203-Internals-IdentityProtection-AllApps-AnyPlatform-MFAforHighSignInRisk
-
-## Task 17: CA204-Internals-IdentityProtection-AllApps-AnyPlatform-BlockLegacyAuth
-
-## Task 18: CA205-Internals-AppProtection-MicrosoftIntuneEnrollment-AnyPlatform-MFA
-
-## Task 19: CA206-Internals-DataandAppProtection-AllApps-iOSorAndroid-ClientAppORAPP
-
-## Task 20: CA207-Internals-AttackSurfaceReduction-AllApps-AnyPlatform-BlockUnknownPlatforms
-
-## Task 21: CA300-Externals-BaseProtection-AllApps-AnyPlatform-CompliantorAADHJ
-
-## Task 22: CA301-Externals-IdentityProtection-AllApps-AnyPlatform-CombinedRegistration
-
-## Task 23: CA302-Externals-IdentityProtection-AllApps-AnyPlatform-MFAandPWDforHighUserRisk
-
-## Task 24: CA303-Externals-IdentityProtection-AllApps-AnyPlatform-MFAforHighSignInRisk
-
-## Task 25: CA304-Externals-IdentityProtection-AllApps-AnyPlatform-BlockLegacyAuth
 
 
 # Challenge 5: Create Rings for test deployment of Conditional access policies 

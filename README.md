@@ -1,12 +1,24 @@
+![image](img/MicroHack_Logo.png)
+
 # **Microsoft MicroHacks**
 
-# **Table of Content**
+## **Table of Content**
 
-[MicroHack introduction and context](#MicroHack)
-
-[00 - Foundation]() 
-
-[99- Template](#99-microhack-template)
+- [**Microsoft MicroHacks**](#microsoft-microhacks)
+  - [**Table of Content**](#table-of-content)
+- [**MicroHack Overview**](#microhack-overview)
+  - [**What is a MicroHack?**](#what-is-a-microhack)
+  - [**How does it work?**](#how-does-it-work)
+  - [**What is the benefit?**](#what-is-the-benefit)
+- [**Pre-requisites**](#pre-requisites)
+  - [License](#license)
+  - [Subscription](#subscription)
+- [**How to contribute** 🚀](#how-to-contribute-)
+- [**Which MicroHacks are available**](#which-microhacks-are-available)
+  - [01 - Identity and Access Management](#01---identity-and-access-management)
+  - [02 - Security](#02---security)
+  - [03 - Azure](#03---azure)
+  - [99 - MicroHack-Template](#99---microhack-template)
 
 
 # **MicroHack Overview**
@@ -22,35 +34,39 @@ There are many small individual MicroHacks that build on each other and therefor
 ## **What is the benefit?**
 The great benefit of MicroHacks is that you can quickly, precisely and hands on understand one or the combination of several services. There are often only a few concrete tasks to do and the hands on experience is lifted to the next level in a very short time. After completing all the challenges you will almost certainly have jumped over your own shadow, expanded the mindset and can directly deal with the implementation in practice and outside of a lab environment. 
 
-## Why? 
-Why a MicroHack is necessary
+# **Pre-requisites**
 
-# Pre-requisites
+## License
+Regarding licenses, just read the requirements in each MicroHack. It describes exactly which requirements are necessary to perform the MicroHack alone or together with Microsoft colleagues. If you are supported by a partner or directly by Microsoft, you can always contact a colleague at the partner or your Microsoft account team.  
 
-### License
-Regarding licenses, just read the requirements in each MicroHack. It describes exactly which requirements are necessary to perform the MicroHack alone or together with Microsoft colleagues. If you are supported by a partner or directly by Microsoft, you can always contact a colleague at the partner or your Microsoft account team. 
+## Subscription
+Some Microhack also requires an Azure subscription. This always depends on the topic, but as mentioned above, before each MicroHack we will show you exactly which requirements you need. 
 
-### Tenant
-A tenant is always required as the basis for each MicroHack. We explain this in the Foundation and show you how to create a tenant if you don't have one yet. 
+# **How to contribute** 🚀
 
-### Subscription
-Some microhack also requires an Azure subscription. This always depends on the topic, but as mentioned above, before each MicroHack we will show you exactly which requirements you need. 
+To [contribute](./CONTRIBUTING.md) to the MicroHacks, you need to fork this repository and submit a pull request for the Markdown and/or image changes that you're proposing.
 
-### Permissions
+All you need to know for contributing is documented --> [Jump directly to the contributing guide](./CONTRIBUTING.md).
 
 
-
-# **Available MicroHacks**
-
-## 00 - Foundation
-
-[See here for MicroHacks Foundation]()
+# **Which MicroHacks are available**
 
 ## 01 - Identity and Access Management 
+In this section you will find the MicroHacks around Identity and Access Management. Identity and Access management is often not taken seriously, but these microhacks show you real insights into many exciting topics. 
 
-[See here for Microsoft Azure Advanced Security MicroHacks](../../tree/main/01-Identity-Access-Management/README.md)
+[Click here to jump directly to the Identity and Access Management MicroHacks](#01---identity-and-access-management)
 
-## 99-MicroHack-Template
+## 02 - Security 
+Here you will find all the exciting topics around security and it will be discussed, for example, how I can collect all my relevant security logs in the infrastructure and how I can integrate Hands with other security products. Not to be forgotten when it comes to security is the integration into existing 3rd party solutions or even multi-hybrid cloud integrations and these integrations are also critically examined by our experts in some MicroHacks and tuned to the necessary degree of implementation. 
 
-[See here for template instructions](../../tree/main/99-MicroHack-Template/README.md)
+[Click here to jump directly to the Advanced Security MicroHacks](#02---security)
+
+## 03 - Azure
+Here you will find microhacks for all Azure services, best practices implementations and concrete implementations not only for cloud native, but also for hybrid and multicloud approaches. Also exciting are the Application Innovation and Developer MicroHacks, which also allow developers to gain deep dive hands on experience with Azure. 
+
+[Click here to jump directly to the Overall Azure MicroHacks](#02---security)
+
+## 99 - MicroHack-Template
+
+[See here for template instructions](#99-microhack-template)
 

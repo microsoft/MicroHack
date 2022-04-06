@@ -1,3 +1,3 @@
 # **How to create a Zero Trust concept?**
 
-# Still under construction - the MicroHack will be finished soon
+# Still under construction - the MicroHack will be finished soon stay tuned

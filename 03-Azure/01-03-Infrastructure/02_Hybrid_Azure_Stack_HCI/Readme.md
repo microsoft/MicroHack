@@ -102,9 +102,10 @@ MicroHack Series - Hybrid AVD on Stack HCI
 
 # MicroHack Challenges 
 
--- Link and some words about prereqs 
+Before you dive into the challenges please make sure that the pre-requisites are fulfilled otherwise move on with the challenges. [Jump directly to prerequisites to verify](#prerequisites)
 
-## Challenge 1 - Create you first virtual machines on HCI
+
+## Challenge 1 - First virtual machines on Azure Stack HCI
 
 ### Goal 
 
@@ -112,12 +113,62 @@ The goal of this exercise is to deploy the first virtual machines on your Azure 
 
 ### Task 1: Create virtual machines on Cluster Manager via Windows Admin Center
 
+![image](./img/1_Admin_Center_New_VM.png)
+
+![image](./img/2_Admin_Center_New_VM.png)
+
+![image](./img/3_Admin_Center_New_VM.png)
+
+![image](./img/4_Admin_Center_New_VM_win-app.png)
+
+![image](./img/5_Admin_Center_New_VM_lin-app-mi.png)
+
+![image](./img/6_Admin_Center_VM_lin-app-mi-Securitysettings.png)
+
+![image](./img/7_Admin_Center_load_balancing_High.png)
+
+![image](./img/8_Admin_Center_New_Start_All_VMs.png)
+
+### Task 2: Create necessary Azure Resources 
+
+![image](./img/9_CreateResourceGroup.png)
+
+![image](./img/10_CreateAutomationAccount.png)
+
+![image](./img/11_CreateAutomationAccount.png)
+
+![image](./img/12_CreateAutomationAccount.png)
+
+![image](./img/13_CreateLAW.png)
+
+![image](./img/14_CreateLAW.png)
+
+### Task 3: Prepare the Azure Arc environment
+
+![image](./img/15_Arc_Page.png)
+
+![image](./img/16_Arc_Add.png)
+
+![image](./img/17_Arc_GenerateScript.png)
+
+![image](./img/18_Arc_GenerateScript.png)
+
+![image](./img/19_Arc_GenerateScript.png)
+
+![image](./img/20_Arc.png)
+
+![image](./img/21_Serviceprincipal.png)
+
+![image](./img/22_Serviceprincipal_secret.png)
+
+![image](./img/23_Add_Servers_Arc.png)
+
+![image](./img/24_Add_Servers_Download.png)
+
+### Task 4: Domainjoin
 
 
-### Task 2: 
-
-
-# Challenge 2 : Name..
+# Challenge 2 : Readiness, Onboarding 
 
 ### Goal
 

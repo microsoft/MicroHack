@@ -1,4 +1,4 @@
-# **Master Template MicroHack**
+# **MicroHack Azure Stack HCI**
 
 # Contents 
 
@@ -28,7 +28,7 @@
 
 This MicroHack scenario walks through the use of ... with a focus on the best practices and the design principles. Specifically, this builds up to include working with an existing infrastructure.
 
-![image](Path to the architecture )
+![image](./img/Architecture.png)
 
 This lab is not a full explanation of .... as a technology, please consider the following articles required pre-reading to build foundational knowledge.
 
@@ -46,20 +46,23 @@ After completing this MicroHack you will:
 
 # Prerequisites
 
+!!Eval Lab or own hardware from validated vendors --> See here
+
+!! Hybrid Connectivity !! 
+
 In order to use the MicroHack time most effectively, the following tasks should be completed prior to starting the session.
+
+- Azure Stack HCI Deployment done (Link Eval Lab)
+- Download ISO FIles on Azure Stack HCI to location: C:
+  - Ubuntu --> Link to ISO for download
+  - Windows Server 2019 Link to ISO - https://software-download.microsoft.com/download/pr/17763.737.190906-2324.rs5_release_svc_refresh_SERVER_EVAL_x64FRE_en-us_1.iso
+- 
 
 With these pre-requisites in place, we can focus on building the differentiated knowledge in ... that is required when working with the product, rather than spending hours repeating relatively simple tasks such as setting up Log Analytics 
 
 At the end of this section your base lab build looks as follows:
 
 ![image](Path to the architecture )
-
-In summary:
-
-- Azure Subscription 
-- Resource Group 
-- Log Analytics Workspace 
-- Azure Sentinel 
 
 Permissions for the deployment: 
 - Contributor on your Resource Group
@@ -74,19 +77,49 @@ Description
 
 ![image](Path to the architecture )
 
+
+Naming standards / taxonomie: 
+- https://docs.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/resource-naming
+
+MicroHack Series - Hybrid Stack HCI / Arc
+- 1 Challenge: Readiness Automation Account / Log Analytics
+    - Change Tracking, Patch und das andere
+    - Policy / guest Policys
+    - Windows Admin center
+    - Monitoring / Azure Monitor / Cluster Monitoring
+  - Task 1 VM Deployment (setting up the basic lab environment)
+    - 2 x Windows --> win-file / win-app
+    - Linux --> lin-app-mi
+  - Onboarding Arc - Interactively / At Scale
+- 2 Challenge: Arc / MSI Access Secret in KeyVault / SQL 
+- 3 Challenge: Fileserver / FileSync
+- 4 Challenge: Backup 
+- 5 Challenge: Site recovery
+- 6 Challenge: Scale out storage - Storage Spaces Direct 
+
+MicroHack Series - Hybrid Stack HCI AKS / 
+- 4 Challenge: AKS 
+- 4 Challenge: Azure Arc Bridge 
+- 5 Challenge: Arc enabled Data
+- 6 Challenge: Arc enabled App Service
+
+MicroHack Series - Hybrid AVD on Stack HCI
+- 99 Challenge: Azure Virtual Desktop
+
+
 # MicroHack Challenges 
 
-## Challenge 1 - Deploy the Lab environment
+-- Link and some words about prereqs 
+
+## Challenge 1 - Create you first virtual machines on HCI
 
 ### Goal 
 
-The goal of this exercise is to deploy a simple Azure Sentinel Connector and observe the default behaviour when connecting to it. 
+The goal of this exercise is to deploy the first virtual machines on your Azure Stack HCI. We will use this virtual machines in the next challenges and all other challenges are directly connected this this challenge. 
 
-### Task 1: Deploy Baseline
+### Task 1: Create virtual machines on Cluster Manager via Windows Admin Center
 
-We are going to use a predefined ARM template to deploy the base environment. It will be deployed in to *your* Azure subscription, with resources running in the your specified Azure region.
 
-To start the ARM deployment, follow the steps listed below:
 
 - Login to Azure cloud shell [https://shell.azure.com/](https://shell.azure.com/)
 - Ensure that you are operating within the correct subscription via:

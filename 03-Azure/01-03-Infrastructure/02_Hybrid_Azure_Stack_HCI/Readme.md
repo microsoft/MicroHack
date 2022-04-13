@@ -2,9 +2,8 @@
 
 # Contents 
 
-[MicroHack introduction and context]()
-
-[Objectives](#objectives)
+- [MicroHack introduction and context](#microhack-introduction-and-context)
+- [Objectives](#objectives)
 
 [Prerequisites](#prerequisites)
 
@@ -28,7 +27,7 @@
 
 This MicroHack scenario walks through the use of Azure Stack HCI with a focus on the best practices and the design principles and some interesting challenges for real world scenarios. Specifically, this builds up to include working with an existing infrastructure in your datacenter. 
 
-![image](./img/Architecture.png)
+![image](./img/0_azure-stack-hci-solution.png)
 
 This lab is not a full explanation of Azure Stack HCI as a technology, please consider the following articles required pre-reading to build foundational knowledge.
 
@@ -68,27 +67,14 @@ Explain the lab ..
 
 Description
 
-![image](Path to the architecture )
+![image](./img/Architecture.png)
 
 
 Naming standards / taxonomie: 
 - https://docs.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/resource-naming
 
 MicroHack Series - Hybrid Stack HCI / Arc
-- 1 Challenge: Readiness Automation Account / Log Analytics
-    - Change Tracking, Patch und das andere
-    - Policy / guest Policys
-    - Windows Admin center
-    - Monitoring / Azure Monitor / Cluster Monitoring
-  - Task 1 VM Deployment (setting up the basic lab environment)
-    - 2 x Windows --> win-file / win-app
-    - Linux --> lin-app-mi
-  - Onboarding Arc - Interactively / At Scale
-- 2 Challenge: Arc / MSI Access Secret in KeyVault / SQL 
-- 3 Challenge: Fileserver / FileSync
-- 4 Challenge: Backup 
-- 5 Challenge: Site recovery
-- 6 Challenge: Scale out storage - Storage Spaces Direct 
+
 
 MicroHack Series - Hybrid Stack HCI AKS / 
 - 4 Challenge: AKS 
@@ -168,7 +154,35 @@ The goal of this exercise is to deploy the first virtual machines on your Azure 
 ### Task 4: Domainjoin
 
 
-# Challenge 2 : Readiness, Onboarding 
+!! Summarize the challenge !!
+
+# Challenge 2 : Management / control plane fundamentals at the beginning
+
+### Goal
+
+At the beginning it is always a good approach setting up the stage, onboard the necessary infrastructure and management components to have the right focus and support for the next challenges. In this section the focus will be on 
+
+### Task 1: Onboard your servers to Azure Arc
+
+
+
+### Task 2: 
+
+### Task 3: 
+- 1 Challenge: Readiness Automation Account / Log Analytics
+    - Change Tracking, Patch und das andere
+    - Policy / guest Policys
+    - Windows Admin center
+    - Monitoring / Azure Monitor / Cluster Monitoring
+  - Task 1 VM Deployment (setting up the basic lab environment)
+    - 2 x Windows --> win-file / win-app
+    - Linux --> lin-app-mi
+  - Onboarding Arc - Interactively / At Scale
+- 2 Challenge: Arc / MSI Access Secret in KeyVault / SQL 
+- 3 Challenge: Fileserver / FileSync
+- 4 Challenge: Backup 
+- 5 Challenge: Site recovery
+- 6 Challenge: Scale out storage - Storage Spaces Direct 
 
 ### Goal
 

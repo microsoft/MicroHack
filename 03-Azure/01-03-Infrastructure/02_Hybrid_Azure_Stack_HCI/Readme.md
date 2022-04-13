@@ -54,17 +54,13 @@ After completing this MicroHack you will:
 
 For this MicroHack we have a few prerequisites they are very important to be successful in this MicroHack. Normally, for the use of Azure Stack HCI, validated hardware is required from selected partners and such hardware can of course be used for the MicroHack. The alternative is the Azure Stack HCI Evaluation Lab, which allows to convert Azure Stack HCI to Hyper-V with Nested Virtualization.
 
-- Eval Lab or own hardware from validated vendors --> See here](https://github.com/Azure/AzureStackHCI-EvalGuide?msclkid=44e04d5fb4e811eca429547b3ced494b)
-- 
-!! Hybrid Connectivity !! 
-
 In order to use the MicroHack time most effectively, the following tasks should be completed prior to starting the session.
 
-- Azure Stack HCI Deployment done (Link Eval Lab)
-- Download ISO FIles on Azure Stack HCI to location: C:
-  - Ubuntu --> Link to ISO for download https://ubuntu.com/download
-  - Windows Server 2022 Link to ISO - https://software-static.download.prss.microsoft.com/sg/download/888969d5-f34g-4e03-ac9d-1f9786c66749/SERVER_EVAL_x64FRE_en-us.iso
-- 
+- If you do not have own hardware then you need to go through the [Azure Stack HCI Evaluation Lab](https://github.com/Azure/AzureStackHCI-EvalGuide?msclkid=44e04d5fb4e811eca429547b3ced494b) 
+
+- Download ISO FIles on Azure Stack HCI to location for example Cluster Shared Volumes: 
+  - [Ubuntu](https://ubuntu.com/download)
+  - [Windows Server 2022](https://software-static.download.prss.microsoft.com/sg/download/888969d5-f34g-4e03-ac9d-1f9786c66749/SERVER_EVAL_x64FRE_en-us.iso)
 
 With these pre-requisites in place, we can focus on building the differentiated knowledge in the hybrid world on Azure Stack HCI to modernize your hybrid estate. 
 

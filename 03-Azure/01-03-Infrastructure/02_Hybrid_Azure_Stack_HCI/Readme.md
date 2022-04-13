@@ -26,23 +26,23 @@
 
 # MicroHack introduction and context
 
-This MicroHack scenario walks through the use of ... with a focus on the best practices and the design principles. Specifically, this builds up to include working with an existing infrastructure.
+This MicroHack scenario walks through the use of Azure Stack HCI with a focus on the best practices and the design principles and some interesting challenges for real world scenarios. Specifically, this builds up to include working with an existing infrastructure in your datacenter. 
 
 ![image](./img/Architecture.png)
 
-This lab is not a full explanation of .... as a technology, please consider the following articles required pre-reading to build foundational knowledge.
+This lab is not a full explanation of Azure Stack HCI as a technology, please consider the following articles required pre-reading to build foundational knowledge.
+
+- [What is Azure Stack HCI?](https://docs.microsoft.com/en-us/azure-stack/hci/overview)
+- [Watch a video to see an high level overview of the features from Azure Stack HCI](https://youtu.be/fw8RVqo9dcs)
 
 Optional (read this after completing this lab to take your learning even deeper!
-
-Describe the scenario here...
 
 # Objectives
 
 After completing this MicroHack you will:
 
-- Know how to build a ...
-- Understand default ..
-- Understand how ..
+- Know how to build or use Azure Stack HCI
+- Understand use cases and possible scenarios in your hybrid world to modernize your infrastructure estate. 
 
 # Prerequisites
 
@@ -54,18 +54,11 @@ In order to use the MicroHack time most effectively, the following tasks should 
 
 - Azure Stack HCI Deployment done (Link Eval Lab)
 - Download ISO FIles on Azure Stack HCI to location: C:
-  - Ubuntu --> Link to ISO for download
-  - Windows Server 2019 Link to ISO - https://software-download.microsoft.com/download/pr/17763.737.190906-2324.rs5_release_svc_refresh_SERVER_EVAL_x64FRE_en-us_1.iso
+  - Ubuntu --> Link to ISO for download https://ubuntu.com/download
+  - Windows Server 2022 Link to ISO - https://software-static.download.prss.microsoft.com/sg/download/888969d5-f34g-4e03-ac9d-1f9786c66749/SERVER_EVAL_x64FRE_en-us.iso
 - 
 
-With these pre-requisites in place, we can focus on building the differentiated knowledge in ... that is required when working with the product, rather than spending hours repeating relatively simple tasks such as setting up Log Analytics 
-
-At the end of this section your base lab build looks as follows:
-
-![image](Path to the architecture )
-
-Permissions for the deployment: 
-- Contributor on your Resource Group
+With these pre-requisites in place, we can focus on building the differentiated knowledge in the hybrid world on Azure Stack HCI to modernize your hybrid estate. 
 
 # Lab environment for this MicroHack
 
@@ -121,18 +114,7 @@ The goal of this exercise is to deploy the first virtual machines on your Azure 
 
 
 
-- Login to Azure cloud shell [https://shell.azure.com/](https://shell.azure.com/)
-- Ensure that you are operating within the correct subscription via:
-
-`az account show`
-
-- Clone the following GitHub repository 
-
-`git clone Link to Github Repo `
-
-### Task 2: Verify baseline
-
-Now that we have the base lab deployed, we can progress to the ... challenges!
+### Task 2: 
 
 
 # Challenge 2 : Name..

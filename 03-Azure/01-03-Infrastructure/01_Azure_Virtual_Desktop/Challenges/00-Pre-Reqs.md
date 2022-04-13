@@ -23,6 +23,11 @@ The architecture will be like
 
 You can setup your networking infrastrcuture with this script and jump to directly to the Azure Active Directory Domain Services konfiguration or do it via the Azure Portal see the Azure Active Directory Domain Services guide below.
 
+⚠️ You can find Biceps templates in our [Repo](https://github.com/microsoft/MicroHack/tree/main/03-Azure/01-03-Infrastructure/01_Azure_Virtual_Desktop).
+
+Bicep is a domain-specific language (DSL) that uses declarative syntax to deploy Azure resources. In a Bicep file, you define the infrastructure you want to deploy to Azure, and then use that file throughout the development lifecycle to repeatedly deploy your infrastructure. Your resources are deployed in a consistent manner.
+To learn more about Biceps check the learning resources at the end of this section. 
+
 - Open Visual Studio Code and log in to Azure Cloud Shell at https://shell.azure.com/ and select Bash
 
   `az login`
@@ -195,3 +200,4 @@ The bracketed numbers relate to the diagram above.
 - The Azure Virtual Desktop construction set from the [Cloud Adoption Framework](https://docs.microsoft.com/en-us/azure/cloud-adoption-framework/scenarios/wvd/enterprise-scale-landing-zone)
 - Azure Virtual Desktop for the enterprise - [Architecture Center](https://docs.microsoft.com/en-us/azure/architecture/example-scenario/wvd/windows-virtual-desktop)
 - Azure Virtual Desktop Documentation - [Doc](https://docs.microsoft.com/en-us/azure/virtual-desktop/)
+- Biceps Documentation - [Doc](https://docs.microsoft.com/EN-US/azure/azure-resource-manager/bicep/overview?tabs=bicep)

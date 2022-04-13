@@ -1,27 +1,28 @@
 # **MicroHack Azure Stack HCI**
 
-# Contents 
-
+- [**MicroHack Azure Stack HCI**](#microhack-azure-stack-hci)
 - [MicroHack introduction and context](#microhack-introduction-and-context)
 - [Objectives](#objectives)
+- [Prerequisites](#prerequisites)
+- [Lab environment for this MicroHack](#lab-environment-for-this-microhack)
+  - [Architecture](#architecture)
+- [MicroHack Challenges](#microhack-challenges)
+  - [Challenge 1 - First virtual machines on Azure Stack HCI](#challenge-1---first-virtual-machines-on-azure-stack-hci)
+    - [Goal](#goal)
+    - [Task 1: Create virtual machines on Cluster Manager via Windows Admin Center](#task-1-create-virtual-machines-on-cluster-manager-via-windows-admin-center)
+    - [Task 2: Create necessary Azure Resources](#task-2-create-necessary-azure-resources)
+    - [Task 3: Prepare the Azure Arc environment](#task-3-prepare-the-azure-arc-environment)
+    - [Task 4: Domainjoin](#task-4-domainjoin)
+- [Challenge 2 : Management / control plane fundamentals at the beginning](#challenge-2--management--control-plane-fundamentals-at-the-beginning)
+    - [Goal](#goal-1)
+    - [Task 1: Onboard your servers to Azure Arc](#task-1-onboard-your-servers-to-azure-arc)
+    - [Task 2:](#task-2)
+    - [Task 3:](#task-3)
+    - [Goal](#goal-2)
+    - [Task 1:](#task-1)
+    - [Task 4:](#task-4)
+- [Finished? Delete your lab](#finished-delete-your-lab)
 
-[Prerequisites](#prerequisites)
-
-[Lab environment for this MicroHack](#lab-environment-for-this-microhack)
-
-[Challenge 1: ](#challenge-1) 
-
-[Challenge 2: ]
-
-[Challenge 3: ]
-
-[Challenge 4: ]
-
-[Challenge 5: ]
-
-[Challenge 6: ]
-
-[Challenge 7 :]
 
 # MicroHack introduction and context
 
@@ -33,8 +34,13 @@ This lab is not a full explanation of Azure Stack HCI as a technology, please co
 
 - [What is Azure Stack HCI?](https://docs.microsoft.com/en-us/azure-stack/hci/overview)
 - [Watch a video to see an high level overview of the features from Azure Stack HCI](https://youtu.be/fw8RVqo9dcs)
+- [eBook: Five Hybrid Cloud Use Cases for Azure Stack HCI](https://aka.ms/technicalusecaseswp)
+- [What´s new for Azure Stack HCI at Microsoft Ignite 2021](https://techcommunity.microsoft.com/t5/azure-stack-blog/what-s-new-for-azure-stack-hci-at-microsoft-ignite-2021/ba-p/2897222)
+- [Azure Stack HCI Solutions](https://hcicatalog.azurewebsites.net/#/)
+- [Plan your solution with the sizer tool](https://hcicatalog.azurewebsites.net/#/sizer)
+- [Azure Stack HCI FAQ](https://docs.microsoft.com/en-us/azure-stack/hci/faq)
 
-Optional (read this after completing this lab to take your learning even deeper!
+Optional: Read this after completing this lab to take your learning even deeper!
 
 # Objectives
 
@@ -42,11 +48,14 @@ After completing this MicroHack you will:
 
 - Know how to build or use Azure Stack HCI
 - Understand use cases and possible scenarios in your hybrid world to modernize your infrastructure estate. 
+- Get insights into real world challenges and scenarios
 
 # Prerequisites
 
-!!Eval Lab or own hardware from validated vendors --> See here
+For this MicroHack we have a few prerequisites they are very important to be successful in this MicroHack. Normally, for the use of Azure Stack HCI, validated hardware is required from selected partners and such hardware can of course be used for the MicroHack. The alternative is the Azure Stack HCI Evaluation Lab, which allows to convert Azure Stack HCI to Hyper-V with Nested Virtualization.
 
+- Eval Lab or own hardware from validated vendors --> See here](https://github.com/Azure/AzureStackHCI-EvalGuide?msclkid=44e04d5fb4e811eca429547b3ced494b)
+- 
 !! Hybrid Connectivity !! 
 
 In order to use the MicroHack time most effectively, the following tasks should be completed prior to starting the session.
@@ -89,7 +98,6 @@ MicroHack Series - Hybrid AVD on Stack HCI
 # MicroHack Challenges 
 
 Before you dive into the challenges please make sure that the pre-requisites are fulfilled otherwise move on with the challenges. [Jump directly to prerequisites to verify](#prerequisites)
-
 
 ## Challenge 1 - First virtual machines on Azure Stack HCI
 
@@ -160,7 +168,7 @@ The goal of this exercise is to deploy the first virtual machines on your Azure 
 
 ### Goal
 
-At the beginning it is always a good approach setting up the stage, onboard the necessary infrastructure and management components to have the right focus and support for the next challenges. In this section the focus will be on 
+At the beginning it is always a good approach setting up the stage, onboard the necessary infrastructure and management components to have the right focus and support for the next challenges. In this section the focus will be on onboarding the servers we have created in the first challenge and integrate them in the necessary control plane & management tools. 
 
 ### Task 1: Onboard your servers to Azure Arc
 
@@ -169,7 +177,7 @@ At the beginning it is always a good approach setting up the stage, onboard the 
 ### Task 2: 
 
 ### Task 3: 
-- 1 Challenge: Readiness Automation Account / Log Analytics
+- 2 Challenge: Readiness Automation Account / Log Analytics
     - Change Tracking, Patch und das andere
     - Policy / guest Policys
     - Windows Admin center
@@ -188,29 +196,11 @@ At the beginning it is always a good approach setting up the stage, onboard the 
 
 ### Task 1: 
 
-### Task 2: 
-
-### Task 3: 
-
 **Explain the background...**
 
 ### Task 4: 
 
 Before proceeding to challenge 3, ...
-
-# Challenge 3 : Name ...
-
-### Goal
-
-### Task 1: 
-
-### Task 2: 
-
-### Task 3: 
-
-**Explain the background...**
-
-### Task 4: 
 
 # Finished? Delete your lab
 

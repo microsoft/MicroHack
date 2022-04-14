@@ -11,6 +11,7 @@
   - [License](#license)
   - [Subscription](#subscription)
 - [**How to contribute** 🚀](#how-to-contribute-)
+- [**Security hints and handling / Report an issue**](#security-hints-and-handling--report-an-issue)
 - [**Which MicroHacks are available**](#which-microhacks-are-available)
   - [01 - Identity and Access Management](#01---identity-and-access-management)
   - [02 - Security](#02---security)
@@ -46,6 +47,9 @@ To [contribute](./CONTRIBUTING.md) to the MicroHacks, you need to fork this repo
 
 All you need to know for contributing is documented --> [Jump directly to the contributing guide](./CONTRIBUTING.md).
 
+# **Security hints and handling / [Report an issue](./SECURITY.md)**
+
+Microsoft takes the security of our software products and services seriously, which includes all source code repositories managed through our GitHub organizations, which include [Microsoft](https://github.com/Microsoft), [Azure](https://github.com/Azure), [DotNet](https://github.com/dotnet), [AspNet](https://github.com/aspnet), [Xamarin](https://github.com/xamarin), and [our GitHub organizations](https://opensource.microsoft.com/). Click here to jump 
 
 # **Which MicroHacks are available**
 

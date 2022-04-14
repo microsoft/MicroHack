@@ -40,7 +40,7 @@ This lab is not a full explanation of Azure Stack HCI as a technology, please co
 - [Plan your solution with the sizer tool](https://hcicatalog.azurewebsites.net/#/sizer)
 - [Azure Stack HCI FAQ](https://docs.microsoft.com/en-us/azure-stack/hci/faq)
 
-Optional: Read this after completing this lab to take your learning even deeper!
+💡 Optional: Read this after completing this lab to take your learning even deeper!
 
 # Objectives
 

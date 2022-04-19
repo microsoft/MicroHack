@@ -99,9 +99,17 @@ Before you dive into the challenges please make sure that the pre-requisites are
 
 ### Goal 
 
-The goal of this exercise is to deploy the first virtual machines on your Azure Stack HCI. We will use this virtual machines in the next challenges and all other challenges are directly connected this this challenge. 
+The goal of this exercise is to deploy the first virtual machines on your Azure Stack HCI. We will use this virtual machines in the next challenges and all other challenges are directly connected to this challenge. 
 
 ### Task 1: Create virtual machines on Cluster Manager via Windows Admin Center
+
+2x Win
+ - win-app
+ - win-file
+1x Lin
+ - lin-app-mi
+
+ Sizing, etc. 
 
 ![image](./img/1_Admin_Center_New_VM.png)
 
@@ -119,7 +127,23 @@ The goal of this exercise is to deploy the first virtual machines on your Azure 
 
 ![image](./img/8_Admin_Center_New_Start_All_VMs.png)
 
-### Task 2: Create necessary Azure Resources 
+
+### Task 4: Domainjoin
+
+
+!! Summarize the challenge !!
+
+# Challenge 2 - Management / control plane fundamentals at the beginning
+
+### Goal
+
+At the beginning it is always a good approach setting up the stage, onboard the necessary infrastructure and management components to have the right focus and support for the next challenges. In this section the focus will be on onboarding the servers we have created in the first challenge and integrate them in the necessary control plane & management tools. 
+
+### Task 1: Create necessary Azure Resources 
+
+- Azure RG
+- Automation Account
+- Log Analytics Workspace
 
 ![image](./img/9_CreateResourceGroup.png)
 
@@ -133,7 +157,18 @@ The goal of this exercise is to deploy the first virtual machines on your Azure 
 
 ![image](./img/14_CreateLAW.png)
 
+### Task 2: Create Azure Policy for onboarding Azure Arc enabled Servers
+
+- Azure Policy Asssignment
+
+Azure Policy: initiative Enable Azure Monitor for VMs
+
 ### Task 3: Prepare the Azure Arc environment
+
+- Setup Arc
+- Service Principal
+- generate Scripts
+
 
 ![image](./img/15_Arc_Page.png)
 
@@ -155,22 +190,37 @@ The goal of this exercise is to deploy the first virtual machines on your Azure 
 
 ![image](./img/24_Add_Servers_Download.png)
 
-### Task 4: Domainjoin
 
-
-!! Summarize the challenge !!
-
-# Challenge 2 : Management / control plane fundamentals at the beginning
+# Challenge 3 - Onboard your servers to Azure Arc
 
 ### Goal
 
-At the beginning it is always a good approach setting up the stage, onboard the necessary infrastructure and management components to have the right focus and support for the next challenges. In this section the focus will be on onboarding the servers we have created in the first challenge and integrate them in the necessary control plane & management tools. 
+Onboard servers to Azure Arc
 
-### Task 1: Onboard your servers to Azure Arc
+### Task 1: Windows VMs
+
+![image](./img/25_onboarding_script_win.png)
+![image](./img/26_onboarding_success.png)
 
 
+### Task 2: Linux VMs
 
-### Task 2: 
+![image](./img/27_generate_script_linux.png)
+![image](./img/28_edit_linux_script.png)
+![image](./img/29_onboarding_success_linux.png)
+
+
+Be aware to block Azure IDMS endpoint! 
+
+### Task 3: Enable Update Management
+
+![image](./img/33_enable_update_mgmt_allVMs.png)
+
+### Task 4: Enable Inventory
+
+### Task 5: Enable VM Insights
+
+![image](./img/34_Enable_VM_Insights.png)
 
 ### Task 3: 
 - 2 Challenge: Readiness Automation Account / Log Analytics

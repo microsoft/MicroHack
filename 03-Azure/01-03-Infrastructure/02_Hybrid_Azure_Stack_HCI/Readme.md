@@ -222,6 +222,42 @@ Be aware to block Azure IDMS endpoint!
 
 ![image](./img/34_Enable_VM_Insights.png)
 
+
+# Challenge 4 - Access Azure resources using Managed Identities from your on-prem servers
+
+### Goal
+
+Access Key Vault using Managed Identities
+
+### Task 1: Create Key Vault 
+
+![image](./img/40_Create_KeyVault.png)
+Create Key Vault with default settings
+
+### Task 2: Assign permissions to Key Vault
+
+![image](./img/41_Assign_KeyVault_permissions.png)
+
+### Task 3: Create Secret
+
+![image](./img/42_Create_Secret.png)
+
+### Task 4: Retrieve secret via Bash
+
+ChallengeTokenPath=$(curl -s -D - -H Metadata:true "http://127.0.0.1:40342/metadata/identity/oauth2/token?api-version=2019-11-01&resource=https%3A%2F%2Fmanagement.azure.com" | grep Www-Authenticate | cut -d "=" -f 2 | tr -d "[:cntrl:]")
+ChallengeToken=$(cat $ChallengeTokenPath)
+if [ $? -ne 0 ]; then
+    echo "Could not retrieve challenge token, double check that this command is run with root privileges."
+else
+    curl -s -H Metadata:true -H "Authorization: Basic $ChallengeToken" "http://127.0.0.1:40342/metadata/identity/oauth2/token?api-version=2019-11-01&resource=https%3A%2F%2Fvault.azure.net"
+fi
+
+Extract Refresh Token
+
+curl 'https://mh-keyvault0815.vault.azure.net/secrets/kv-secret?api-version=2016-10-01' -H "Authorization: Bearer $token"
+
+
+
 ### Task 3: 
 - 2 Challenge: Readiness Automation Account / Log Analytics
     - Change Tracking, Patch und das andere

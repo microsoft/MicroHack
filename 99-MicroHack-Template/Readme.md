@@ -1,34 +1,35 @@
 # **Master Template MicroHack**
 
-# Contents 
-
-[MicroHack introduction and context]()
-
-[Objectives](#objectives)
-
-[Prerequisites](#prerequisites)
-
-[Lab environment for this MicroHack](#lab-environment-for-this-microhack)
-
-[Challenge 1: ](#challenge-1) 
-
-[Challenge 2: ]
-
-[Challenge 3: ]
-
-[Challenge 4: ]
-
-[Challenge 5: ]
-
-[Challenge 6: ]
-
-[Challenge 7 :]
+- [**Master Template MicroHack**](#master-template-microhack)
+- [MicroHack introduction and context](#microhack-introduction-and-context)
+- [Objectives](#objectives)
+- [Prerequisites](#prerequisites)
+- [Lab environment for this MicroHack](#lab-environment-for-this-microhack)
+  - [Architecture](#architecture)
+- [MicroHack Challenges](#microhack-challenges)
+  - [Challenge 1 - Deploy the Lab environment](#challenge-1---deploy-the-lab-environment)
+    - [Goal](#goal)
+    - [Task 1: Deploy Baseline](#task-1-deploy-baseline)
+    - [Task 2: Verify baseline](#task-2-verify-baseline)
+- [Challenge 2 : Name..](#challenge-2--name)
+    - [Goal](#goal-1)
+    - [Task 1:](#task-1)
+    - [Task 2:](#task-2)
+    - [Task 3:](#task-3)
+    - [Task 4:](#task-4)
+- [Challenge 3 : Name ...](#challenge-3--name-)
+    - [Goal](#goal-2)
+    - [Task 1:](#task-1-1)
+    - [Task 2:](#task-2-1)
+    - [Task 3:](#task-3-1)
+    - [Task 4:](#task-4-1)
+- [Finished? Delete your lab](#finished-delete-your-lab)
 
 # MicroHack introduction and context
 
 This MicroHack scenario walks through the use of ... with a focus on the best practices and the design principles. Specifically, this builds up to include working with an existing infrastructure.
 
-![image](Path to the architecture )
+![image](Path to the high level architecture )
 
 This lab is not a full explanation of .... as a technology, please consider the following articles required pre-reading to build foundational knowledge.
 
@@ -48,21 +49,18 @@ After completing this MicroHack you will:
 
 In order to use the MicroHack time most effectively, the following tasks should be completed prior to starting the session.
 
-With these pre-requisites in place, we can focus on building the differentiated knowledge in ... that is required when working with the product, rather than spending hours repeating relatively simple tasks such as setting up Log Analytics 
-
-At the end of this section your base lab build looks as follows:
-
-![image](Path to the architecture )
+With these pre-requisites in place, we can focus on building the differentiated knowledge in ... that is required when working with the product, rather than spending hours repeating relatively simple tasks such as setting up....
 
 In summary:
 
 - Azure Subscription 
 - Resource Group 
-- Log Analytics Workspace 
-- Azure Sentinel 
+- Service 1
+- Service 2  
 
 Permissions for the deployment: 
 - Contributor on your Resource Group
+- Other necessary permissions
 
 # Lab environment for this MicroHack
 
@@ -70,7 +68,7 @@ Explain the lab ..
 
 ## Architecture
 
-Description
+At the end of this MicroHack your base lab build looks as follows:
 
 ![image](Path to the architecture )
 
@@ -80,7 +78,7 @@ Description
 
 ### Goal 
 
-The goal of this exercise is to deploy a simple Azure Sentinel Connector and observe the default behaviour when connecting to it. 
+The goal of this exercise is to deploy...
 
 ### Task 1: Deploy Baseline
 

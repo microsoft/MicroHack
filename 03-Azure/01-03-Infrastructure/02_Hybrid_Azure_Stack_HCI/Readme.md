@@ -163,6 +163,9 @@ At the beginning it is always a good approach setting up the stage, onboard the 
 
 Azure Policy: initiative Enable Azure Monitor for VMs
 
+Hint: Permissions Contronutor Policy
+Alternative approach: manual deployment in VMs
+
 ### Task 3: Prepare the Azure Arc environment
 
 - Setup Arc
@@ -216,12 +219,18 @@ Be aware to block Azure IDMS endpoint!
 
 ![image](./img/33_enable_update_mgmt_allVMs.png)
 
+https://docs.microsoft.com/en-us/azure/azure-monitor/logs/computer-groups#creating-a-computer-group
+
+Save as function
+
+
 ### Task 4: Enable Inventory
 
 ### Task 5: Enable VM Insights
 
 ![image](./img/34_Enable_VM_Insights.png)
 
+### Coffee break
 
 # Challenge 4 - Access Azure resources using Managed Identities from your on-prem servers
 
@@ -256,23 +265,32 @@ Extract Refresh Token
 
 curl 'https://mh-keyvault0815.vault.azure.net/secrets/kv-secret?api-version=2016-10-01' -H "Authorization: Bearer $token"
 
-
+### Optional: Certificate IIS
 
 ### Task 3: 
 - 2 Challenge: Readiness Automation Account / Log Analytics
     - Change Tracking, Patch und das andere
-    - Policy / guest Policys
+    - Policy
+    - guest Policys (Christian; Administrator Group)
     - Windows Admin center
     - Monitoring / Azure Monitor / Cluster Monitoring
+    - MSFT Defender for Cloud!
   - Task 1 VM Deployment (setting up the basic lab environment)
     - 2 x Windows --> win-file / win-app
     - Linux --> lin-app-mi
   - Onboarding Arc - Interactively / At Scale
 - 2 Challenge: Arc / MSI Access Secret in KeyVault / SQL 
-- 3 Challenge: Fileserver / FileSync
-- 4 Challenge: Backup 
-- 5 Challenge: Site recovery
-- 6 Challenge: Scale out storage - Storage Spaces Direct 
+- 3 Challenge: Fileserver / FileSync / Cloud Tiering (Christian)
+- 4 Challenge: Backup (Nils)
+   - Storage Account
+   - VMs im Azure Stack HCI
+   - Optional Tasks: Restore VM/File
+   Hinweis: Arc enabled SQL MI
+- 5 Challenge: Site recovery (Nils)
+   - win-app nach Azure replizieren
+   - Optional: failover initieren
+
+Optional - 6 Challenge: Scale out storage - Storage Spaces Direct 
 
 ### Goal
 

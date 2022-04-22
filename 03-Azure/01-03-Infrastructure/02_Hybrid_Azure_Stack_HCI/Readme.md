@@ -287,20 +287,24 @@ You will learn how to configure the on premises Server and needed Azure Service 
 
 For this challenge we will use one of the servers you created in [Challenge 1](#challenge-1---first-virtual-machines-on-azure-stack-hci).  
 First start by adding a Data Disk to the Server "win-file".  
-After this install the Fileserver Role on the Server.
+After this install the Fileserver Role on the Server.   
+
+With a Working Fileserver you can create some demo data in your share. (Like text or office documents)
 
 ### Reference
 [https://docs.microsoft.com/en-us/azure-stack/hci/manage/vm](https://docs.microsoft.com/en-us/azure-stack/hci/manage/vm)  
 [https://docs.microsoft.com/en-us/windows-server/storage/file-server/file-server-smb-overview](https://docs.microsoft.com/en-us/windows-server/storage/file-server/file-server-smb-overview)
 
 ### Walkthrough - Spoilerwarning
-[Walkthrough](./Walkthrough/Challenge5/task1.md)
+[Walkthrough Task 1](./Walkthrough/Challenge5/task1.md)
 
 
+## Task 2: Configure the File Sync Service
 
+### Reference
 
-
-
+### Walkthrough - Spoilerwarning
+[Walkthrough Task 2](./Walkthrough/Challenge5/task2.md)
 
 
 

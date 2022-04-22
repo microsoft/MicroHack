@@ -267,6 +267,35 @@ curl 'https://mh-keyvault0815.vault.azure.net/secrets/kv-secret?api-version=2016
 
 ### Optional: Certificate IIS
 
+
+# Challenge 5 - Create Hybrid Fileservices
+
+## Goal
+
+The Goal of this challenge is to show the very common hybrid scenario of Fileservices.  
+You will learn how to configure the on premises Server and needed Azure Service to create a Hybrid File Service Deployment.
+
+## Task 1: Configure the on premises Fileserver
+
+For this challenge we will use one of the servers you created in [Challenge 1](#challenge-1---first-virtual-machines-on-azure-stack-hci).  
+First start by adding a Data Disk to the Server "win-file".  
+After this install the Fileserver Role on the Server.
+
+### Reference
+[https://docs.microsoft.com/en-us/azure-stack/hci/manage/vm](https://docs.microsoft.com/en-us/azure-stack/hci/manage/vm)  
+[https://docs.microsoft.com/en-us/windows-server/storage/file-server/file-server-smb-overview](https://docs.microsoft.com/en-us/windows-server/storage/file-server/file-server-smb-overview)
+
+### Walkthrough - Spoilerwarning
+[Walkthrough](./Walkthrough/Challenge5/task1.md)
+
+
+
+
+
+
+
+
+
 ### Task 3: 
 - 2 Challenge: Readiness Automation Account / Log Analytics
     - Change Tracking, Patch und das andere

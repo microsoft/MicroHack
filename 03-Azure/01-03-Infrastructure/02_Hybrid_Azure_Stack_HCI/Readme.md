@@ -157,6 +157,9 @@ At the beginning it is always a good approach setting up the stage, onboard the 
 
 ![image](./img/14_CreateLAW.png)
 
+Add Windows event logs
+Add Syslog
+
 ### Task 2: Create Azure Policy for onboarding Azure Arc enabled Servers
 
 - Azure Policy Asssignment
@@ -222,7 +225,9 @@ Be aware to block Azure IDMS endpoint!
 https://docs.microsoft.com/en-us/azure/azure-monitor/logs/computer-groups#creating-a-computer-group
 
 Save as function
+schedule update (your local time + 6 min)
 
+### coffee break
 
 ### Task 4: Enable Inventory
 
@@ -237,6 +242,9 @@ Save as function
 ### Goal
 
 Access Key Vault using Managed Identities
+
+
+
 
 ### Task 1: Create Key Vault 
 

@@ -21,6 +21,10 @@
     - [Goal](#goal-2)
     - [Task 1:](#task-1)
     - [Task 4:](#task-4)
+- [Challenge 5: Create Hybrid Fileservices](#challenge-5---create-hybrid-fileservices)
+    - [Goal](#goal-4)
+    - [Task 1: Configure the on premises Fileserver](#task-1-configure-the-on-premises-fileserver)
+    - [Task 2: Configure the File Sync Service](#task-2-configure-the-file-sync-service)
 - [Finished? Delete your lab](#finished-delete-your-lab)
 
 

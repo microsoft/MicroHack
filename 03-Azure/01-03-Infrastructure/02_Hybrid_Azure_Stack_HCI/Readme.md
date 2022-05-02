@@ -1,32 +1,6 @@
-# **MicroHack Azure Stack HCI**
+# **MicroHack Azure Stack HCI - Part I**
 
-- [**MicroHack Azure Stack HCI**](#microhack-azure-stack-hci)
-- [MicroHack introduction and context](#microhack-introduction-and-context)
-- [Objectives](#objectives)
-- [Prerequisites](#prerequisites)
-- [Lab environment for this MicroHack](#lab-environment-for-this-microhack)
-  - [Architecture](#architecture)
-- [MicroHack Challenges](#microhack-challenges)
-  - [Challenge 1 - First virtual machines on Azure Stack HCI](#challenge-1---first-virtual-machines-on-azure-stack-hci)
-    - [Goal](#goal)
-    - [Task 1: Create virtual machines on Cluster Manager via Windows Admin Center](#task-1-create-virtual-machines-on-cluster-manager-via-windows-admin-center)
-    - [Task 2: Create necessary Azure Resources](#task-2-create-necessary-azure-resources)
-    - [Task 3: Prepare the Azure Arc environment](#task-3-prepare-the-azure-arc-environment)
-    - [Task 4: Domainjoin](#task-4-domainjoin)
-- [Challenge 2 : Management / control plane fundamentals at the beginning](#challenge-2--management--control-plane-fundamentals-at-the-beginning)
-    - [Goal](#goal-1)
-    - [Task 1: Onboard your servers to Azure Arc](#task-1-onboard-your-servers-to-azure-arc)
-    - [Task 2:](#task-2)
-    - [Task 3:](#task-3)
-    - [Goal](#goal-2)
-    - [Task 1:](#task-1)
-    - [Task 4:](#task-4)
-- [Challenge 5: Create Hybrid Fileservices](#challenge-5---create-hybrid-fileservices)
-    - [Goal](#goal-4)
-    - [Task 1: Configure the on premises Fileserver](#task-1-configure-the-on-premises-fileserver)
-    - [Task 2: Configure the File Sync Service](#task-2-configure-the-file-sync-service)
-- [Finished? Delete your lab](#finished-delete-your-lab)
-
+[toc]
 
 # MicroHack introduction and context
 
@@ -103,39 +77,32 @@ Before you dive into the challenges please make sure that the pre-requisites are
 
 ### Goal 
 
-The goal of this exercise is to deploy the first virtual machines on your Azure Stack HCI. We will use this virtual machines in the next challenges and all other challenges are directly connected to this challenge. 
+The goal of this exercise is to deploy the first virtual machines on your Azure Stack HCI. We will use these virtual machines in the next challenges and all other challenges are directly connected to this challenge. 
 
-### Task 1: Create virtual machines on Cluster Manager via Windows Admin Center
+### Actions
 
-2x Win
- - win-app
- - win-file
-1x Lin
- - lin-app-mi
+* Create three virtual machines running on your Azure Stack HCI cluster via Windows Admin Center
+  * Basic VM configuration: 2 vCPU, 8 GB RAM, 1 disk with 128 GB storage
+  * win-app, win-file based on Windows Server 2022 
+  * lin-app based on Ubuntu 22.04 LTS (or your prefered Linux distro)
+* Join the Windows-based Virtual Machines to Active Directory
 
- Sizing, etc. 
+[Detailed solution](solution.md)
 
-![image](./img/1_Admin_Center_New_VM.png)
+### Success criteria
 
-![image](./img/2_Admin_Center_New_VM.png)
+* You have two Windows-based Virtual Machines running on your Azure Stack HCI cluster
+* You have one Linux-based Virtual Machine running on your Azure Stack HCI cluster
+* The Windows-based Virtual Machines are domain-joined and successfully activated
+* You can access the Virtual Machines via RDP/SSH
 
-![image](./img/3_Admin_Center_New_VM.png)
+### Learning resources
 
-![image](./img/4_Admin_Center_New_VM_win-app.png)
-
-![image](./img/5_Admin_Center_New_VM_lin-app-mi.png)
-
-![image](./img/6_Admin_Center_VM_lin-app-mi-Securitysettings.png)
-
-![image](./img/7_Admin_Center_load_balancing_High.png)
-
-![image](./img/8_Admin_Center_New_Start_All_VMs.png)
+* [Get started with Azure Stack HCI and Windows Admin Center](https://docs.microsoft.com/en-us/azure-stack/hci/get-started)
+* [Manage VMs with Windows Admin Center](https://docs.microsoft.com/en-us/azure-stack/hci/manage/vm)
+* [License Windows Server VMs on Azure Stack HCI](https://docs.microsoft.com/en-us/azure-stack/hci/manage/vm-activate)
 
 
-### Task 4: Domainjoin
-
-
-!! Summarize the challenge !!
 
 # Challenge 2 - Management / control plane fundamentals at the beginning
 
@@ -143,141 +110,87 @@ The goal of this exercise is to deploy the first virtual machines on your Azure 
 
 At the beginning it is always a good approach setting up the stage, onboard the necessary infrastructure and management components to have the right focus and support for the next challenges. In this section the focus will be on onboarding the servers we have created in the first challenge and integrate them in the necessary control plane & management tools. 
 
-### Task 1: Create necessary Azure Resources 
+### Actions
 
-- Azure RG
-- Automation Account
-- Log Analytics Workspace
+* Create all necessary Azure Resources
+  * Azure Resource group (Name: AzStackHCI-MicroHack-Azure)
+  * Azure Automation Account (Name: mh-automation)
+  * Log Analytics Workspace (Name: mh-la)
+* Configure Log Analytics to collect Windows event logs and Linux syslog
+* Deploy Azure Policy initiative for automatic onboarding of Azure Arc enabled Servers
+* Configure Azure Arc environment
 
-![image](./img/9_CreateResourceGroup.png)
+### Success criteria
 
-![image](./img/10_CreateAutomationAccount.png)
+* You have one Azure resource group containing the Azure Automation Account and Log Analytics Workspace
+* You successfully linked the necessary Azure Policy initiative to the Azure resource group
+* You have the onboarding scripts for both Windows and Linux servers
 
-![image](./img/11_CreateAutomationAccount.png)
-
-![image](./img/12_CreateAutomationAccount.png)
-
-![image](./img/13_CreateLAW.png)
-
-![image](./img/14_CreateLAW.png)
-
-Add Windows event logs
-Add Syslog
-
-### Task 2: Create Azure Policy for onboarding Azure Arc enabled Servers
-
-- Azure Policy Asssignment
-
-Azure Policy: initiative Enable Azure Monitor for VMs
-
-Hint: Permissions Contronutor Policy
-Alternative approach: manual deployment in VMs
-
-### Task 3: Prepare the Azure Arc environment
-
-- Setup Arc
-- Service Principal
-- generate Scripts
+### Learning resources
 
 
-![image](./img/15_Arc_Page.png)
-
-![image](./img/16_Arc_Add.png)
-
-![image](./img/17_Arc_GenerateScript.png)
-
-![image](./img/18_Arc_GenerateScript.png)
-
-![image](./img/19_Arc_GenerateScript.png)
-
-![image](./img/20_Arc.png)
-
-![image](./img/21_Serviceprincipal.png)
-
-![image](./img/22_Serviceprincipal_secret.png)
-
-![image](./img/23_Add_Servers_Arc.png)
-
-![image](./img/24_Add_Servers_Download.png)
+* [Manage Azure resource groups by using the Azure portal](https://docs.microsoft.com/en-us/azure/azure-resource-manager/management/manage-resource-groups-portal)
+* [Create an Automation account using the Azure portal](https://docs.microsoft.com/en-us/azure/automation/quickstarts/create-account-portal)
+* [Create a Log Analytics workspace in the Azure portal](https://docs.microsoft.com/en-us/azure/azure-monitor/logs/quick-create-workspace)
+* [Collect Windows event log data sources with Log Analytics agent](https://docs.microsoft.com/en-us/azure/azure-monitor/agents/data-sources-windows-events#configuring-windows-event-logs)
+* [Collect Syslog data sources with Log Analytics agent](https://docs.microsoft.com/en-us/azure/azure-monitor/agents/data-sources-syslog#configure-syslog-in-the-azure-portal)
+* [Understand deployment options for the Log Analytics agent on Azure Arc-enabled servers](https://docs.microsoft.com/en-us/azure/azure-arc/servers/concept-log-analytics-extension-deployment)
+* [Azure Policy built-in definitions for Azure Arc-enabled servers](https://docs.microsoft.com/en-us/azure/azure-arc/servers/policy-reference)
 
 
 # Challenge 3 - Onboard your servers to Azure Arc
 
 ### Goal
 
-Onboard servers to Azure Arc
+In challenge 3 you will successfully onboard your servers to Azure Arc and leverage Azure native services like Update Management, Inventory and VM Insights for your Azure Stack HCI Virtual Machines.
 
-### Task 1: Windows VMs
+### Actions
 
-![image](./img/25_onboarding_script_win.png)
-![image](./img/26_onboarding_success.png)
+* Onboard your three Virtual Machines to Azure Arc using the onboarding scripts
+* Enable and configure Update Management
+* Enable Inventory 
+* Enable VM Insights
 
+### Success Criteria
 
-### Task 2: Linux VMs
+* All Virtual Machines are connected to Azure Arc and visible in the Azure Portal
+* All Virtual Machines have the latest Windows and Linux updates installed
+* You can browse through the software inventory of your Virtual Machines
+* You can use VM Insights to get a detailed view of your Virtual Machines
 
-![image](./img/27_generate_script_linux.png)
-![image](./img/28_edit_linux_script.png)
-![image](./img/29_onboarding_success_linux.png)
+### Learning resources
 
+* [Connect hybrid machines with Azure Arc-enabled servers](https://docs.microsoft.com/en-us/azure/azure-arc/servers/learn/quick-enable-hybrid-vm)
+* [Enable Update Management from an Automation account](https://docs.microsoft.com/en-us/azure/automation/update-management/enable-from-automation-account)
+* [How to deploy updates and review results](https://docs.microsoft.com/en-us/azure/automation/update-management/deploy-updates)
+* [Enable Change Tracking and Inventory from an Automation account](https://docs.microsoft.com/en-us/azure/automation/change-tracking/enable-from-automation-account)
+* [Monitor a hybrid machine with VM insights](https://docs.microsoft.com/en-us/azure/azure-arc/servers/learn/tutorial-enable-vm-insights)
 
-Be aware to block Azure IDMS endpoint! 
-
-### Task 3: Enable Update Management
-
-![image](./img/33_enable_update_mgmt_allVMs.png)
-
-https://docs.microsoft.com/en-us/azure/azure-monitor/logs/computer-groups#creating-a-computer-group
-
-Save as function
-schedule update (your local time + 6 min)
-
-### coffee break
-
-### Task 4: Enable Inventory
-
-### Task 5: Enable VM Insights
-
-![image](./img/34_Enable_VM_Insights.png)
-
-### Coffee break
 
 # Challenge 4 - Access Azure resources using Managed Identities from your on-prem servers
 
 ### Goal
 
-Access Key Vault using Managed Identities
+Managing secrets, credentials or certificates to secure communication between different services is a main challenge for developers and administrators. Managed Identities is Azure's answer to all these challenges and eliminates the need to manage and securely store secrets, credentials or certificates on the Virtual Machine. In challenge 4 you will leverage Managed Identities via Azure Arc to securely access an Azure Key Vault secret from your Azure Arc enabled servers without the need of managing any credential. 
+
+### Actions
+
+* Create an Azure Key Vault in your Azure resource group
+* Create a secret in the Azure Key Vault and assign permissions to your Virtual Machine lin-app
+* Access the secret via Bash script
 
 
 
+### Success Criteria
 
-### Task 1: Create Key Vault 
+* You successfully output the secret in the terminal on lin-app without providing any credentials (except for your SSH login 😊).
 
-![image](./img/40_Create_KeyVault.png)
-Create Key Vault with default settings
 
-### Task 2: Assign permissions to Key Vault
+### Learning resources
 
-![image](./img/41_Assign_KeyVault_permissions.png)
-
-### Task 3: Create Secret
-
-![image](./img/42_Create_Secret.png)
-
-### Task 4: Retrieve secret via Bash
-
-ChallengeTokenPath=$(curl -s -D - -H Metadata:true "http://127.0.0.1:40342/metadata/identity/oauth2/token?api-version=2019-11-01&resource=https%3A%2F%2Fmanagement.azure.com" | grep Www-Authenticate | cut -d "=" -f 2 | tr -d "[:cntrl:]")
-ChallengeToken=$(cat $ChallengeTokenPath)
-if [ $? -ne 0 ]; then
-    echo "Could not retrieve challenge token, double check that this command is run with root privileges."
-else
-    curl -s -H Metadata:true -H "Authorization: Basic $ChallengeToken" "http://127.0.0.1:40342/metadata/identity/oauth2/token?api-version=2019-11-01&resource=https%3A%2F%2Fvault.azure.net"
-fi
-
-Extract Refresh Token
-
-curl 'https://mh-keyvault0815.vault.azure.net/secrets/kv-secret?api-version=2016-10-01' -H "Authorization: Bearer $token"
-
-### Optional: Certificate IIS
+* [Create a key vault using the Azure portal](https://docs.microsoft.com/en-us/azure/key-vault/general/quick-create-portal)
+* [Set and retrieve a secret from Azure Key Vault using the Azure portal](https://docs.microsoft.com/en-us/azure/key-vault/secrets/quick-create-portal)
+* [Use a Linux VM system-assigned managed identity to access Azure Key Vault](https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/tutorial-linux-vm-access-nonaad)
 
 
 # Challenge 5 - Create Hybrid Fileservices

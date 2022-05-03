@@ -198,24 +198,28 @@ Managing secrets, credentials or certificates to secure communication between di
 ## Goal
 
 The Goal of this challenge is to show the very common hybrid scenario of fileservices.  
-You will learn how to configure the on premises Server and needed Azure Services to create a Hybrid File Service Deployment.
+You will learn how to configure the on premises Server and needed Azure Services to create a Hybrid File Service Deployment.  
+For this challenge we will use the sever "win-file" you created in [Challenge 1](#challenge-1---first-virtual-machines-on-azure-stack-hci).  
 
 ## Actions
 
-Task 2: Configure the File Sync Service
-
-For this challenge we will use one of the servers you created in [Challenge 1](#challenge-1---first-virtual-machines-on-azure-stack-hci).  
-First start by adding a Data Disk to the Server "win-file".  
-After this install the Fileserver Role on the Server.   
-
-With a Working Fileserver you can create some demo data in your share. (Like text or office documents)
+* Configure the Server "win-file" to be used as a fileserver
+  * Attach and mount data disk
+  * Install Fileserver Role and create a share
+* Deploy an configure Azure Filesync resources
+* Setup sync between the fileserver and the Azure Fileshare
 
 ## Success Criteria
 
+* You have a working fileserver on premises
+* Azure Filesync will automatically sync Files to Azure Files using Azure Filesync
 
-### Reference
-[https://docs.microsoft.com/en-us/azure-stack/hci/manage/vm](https://docs.microsoft.com/en-us/azure-stack/hci/manage/vm)  
-[https://docs.microsoft.com/en-us/windows-server/storage/file-server/file-server-smb-overview](https://docs.microsoft.com/en-us/windows-server/storage/file-server/file-server-smb-overview)
+## Learning resources
+* [https://docs.microsoft.com/en-us/azure-stack/hci/manage/vm](https://docs.microsoft.com/en-us/azure-stack/hci/manage/vm)  
+* [https://docs.microsoft.com/en-us/windows-server/storage/file-server/file-server-smb-overview](https://docs.microsoft.com/en-us/windows-server/storage/file-server/file-server-smb-overview)  
+* [https://docs.microsoft.com/en-us/azure/storage/files/storage-files-planning](https://docs.microsoft.com/en-us/azure/storage/files/storage-files-planning)
+* [https://docs.microsoft.com/en-us/azure/storage/files/storage-how-to-create-file-share?tabs=azure-portal](https://docs.microsoft.com/en-us/azure/storage/files/storage-how-to-create-file-share?tabs=azure-portal)  
+* [https://docs.microsoft.com/en-us/azure/storage/file-sync/file-sync-extend-servers?toc=/azure/storage/files/toc.json](https://docs.microsoft.com/en-us/azure/storage/file-sync/file-sync-extend-servers?toc=/azure/storage/files/toc.json)  
 
 ### Solution - Spoilerwarning
 [Solution Steps](./Walkthrough/Challenge5/solution.md)

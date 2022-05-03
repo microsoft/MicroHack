@@ -1,1 +1,0 @@
-# Walkthrough Task 2 Challenge 5 - Configure the File Sync Service

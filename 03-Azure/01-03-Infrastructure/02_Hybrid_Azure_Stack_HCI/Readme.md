@@ -197,10 +197,12 @@ Managing secrets, credentials or certificates to secure communication between di
 
 ## Goal
 
-The Goal of this challenge is to show the very common hybrid scenario of Fileservices.  
-You will learn how to configure the on premises Server and needed Azure Service to create a Hybrid File Service Deployment.
+The Goal of this challenge is to show the very common hybrid scenario of fileservices.  
+You will learn how to configure the on premises Server and needed Azure Services to create a Hybrid File Service Deployment.
 
-## Task 1: Configure the on premises Fileserver
+## Actions
+
+Task 2: Configure the File Sync Service
 
 For this challenge we will use one of the servers you created in [Challenge 1](#challenge-1---first-virtual-machines-on-azure-stack-hci).  
 First start by adding a Data Disk to the Server "win-file".  
@@ -208,59 +210,16 @@ After this install the Fileserver Role on the Server.
 
 With a Working Fileserver you can create some demo data in your share. (Like text or office documents)
 
+## Success Criteria
+
+
 ### Reference
 [https://docs.microsoft.com/en-us/azure-stack/hci/manage/vm](https://docs.microsoft.com/en-us/azure-stack/hci/manage/vm)  
 [https://docs.microsoft.com/en-us/windows-server/storage/file-server/file-server-smb-overview](https://docs.microsoft.com/en-us/windows-server/storage/file-server/file-server-smb-overview)
 
-### Walkthrough - Spoilerwarning
-[Walkthrough Task 1](./Walkthrough/Challenge5/task1.md)
-
-
-## Task 2: Configure the File Sync Service
-
-### Reference
-
-### Walkthrough - Spoilerwarning
-[Walkthrough Task 2](./Walkthrough/Challenge5/task2.md)
+### Solution - Spoilerwarning
+[Walkthrough Task 1](./Walkthrough/Challenge5/solution.md.md)
 
 
 
-### Task 3: 
-- 2 Challenge: Readiness Automation Account / Log Analytics
-    - Change Tracking, Patch und das andere
-    - Policy
-    - guest Policys (Christian; Administrator Group)
-    - Windows Admin center
-    - Monitoring / Azure Monitor / Cluster Monitoring
-    - MSFT Defender for Cloud!
-  - Task 1 VM Deployment (setting up the basic lab environment)
-    - 2 x Windows --> win-file / win-app
-    - Linux --> lin-app-mi
-  - Onboarding Arc - Interactively / At Scale
-- 2 Challenge: Arc / MSI Access Secret in KeyVault / SQL 
-- 3 Challenge: Fileserver / FileSync / Cloud Tiering (Christian)
-- 4 Challenge: Backup (Nils)
-   - Storage Account
-   - VMs im Azure Stack HCI
-   - Optional Tasks: Restore VM/File
-   Hinweis: Arc enabled SQL MI
-- 5 Challenge: Site recovery (Nils)
-   - win-app nach Azure replizieren
-   - Optional: failover initieren
 
-Optional - 6 Challenge: Scale out storage - Storage Spaces Direct 
-
-### Goal
-
-### Task 1: 
-
-**Explain the background...**
-
-### Task 4: 
-
-Before proceeding to challenge 3, ...
-
-# Finished? Delete your lab
-
-
-Thank you for participating in this MicroHack!

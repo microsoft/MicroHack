@@ -218,7 +218,7 @@ With a Working Fileserver you can create some demo data in your share. (Like tex
 [https://docs.microsoft.com/en-us/windows-server/storage/file-server/file-server-smb-overview](https://docs.microsoft.com/en-us/windows-server/storage/file-server/file-server-smb-overview)
 
 ### Solution - Spoilerwarning
-[Walkthrough Task 1](./Walkthrough/Challenge5/solution.md.md)
+[Solution Steps](./Walkthrough/Challenge5/solution.md)
 
 
 

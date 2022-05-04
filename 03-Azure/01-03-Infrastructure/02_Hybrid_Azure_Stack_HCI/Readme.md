@@ -80,7 +80,7 @@ The goal of this exercise is to deploy the first virtual machines on your Azure 
   * lin-app based on Ubuntu 22.04 LTS (or your prefered Linux distro)
 * Join the Windows-based Virtual Machines to Active Directory
 
-[Detailed solution](solution.md)
+[Detailed solution](./Walkthrough/challenge1/solution.md)
 
 ## Success criteria
 

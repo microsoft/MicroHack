@@ -1,4 +1,4 @@
-# Walkthrough Task 1 Challenge 5 - Configure the on premises Fileserver
+# Walkthrough Challenge 5 - Configure the on premises Fileserver
 
 ## Prerequisites
 This walkthrogh assumes that you have created the VMs like described in [Challenge 1](../../Readme.md#challenge-1---first-virtual-machines-on-azure-stack-hci).  

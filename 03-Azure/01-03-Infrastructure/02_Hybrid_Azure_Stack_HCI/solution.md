@@ -3,39 +3,7 @@
 [toc]
 
 
-# Challenge 1
 
-### Task 1: Create virtual machines on Cluster Manager via Windows Admin Center
-
-2x Win
- - win-app
- - win-file
-1x Lin
- - lin-app-mi
-
- Sizing, etc. 
-
-![image](./img/1_Admin_Center_New_VM.png)
-
-![image](./img/2_Admin_Center_New_VM.png)
-
-![image](./img/3_Admin_Center_New_VM.png)
-
-![image](./img/4_Admin_Center_New_VM_win-app.png)
-
-![image](./img/5_Admin_Center_New_VM_lin-app-mi.png)
-
-![image](./img/6_Admin_Center_VM_lin-app-mi-Securitysettings.png)
-
-![image](./img/7_Admin_Center_load_balancing_High.png)
-
-![image](./img/8_Admin_Center_New_Start_All_VMs.png)
-
-
-### Task 4: Domainjoin
-
-
-!! Summarize the challenge !!
 
 # Challenge 2
 ### Task 1: Create necessary Azure Resources 

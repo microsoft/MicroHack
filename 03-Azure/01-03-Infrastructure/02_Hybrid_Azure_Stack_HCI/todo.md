@@ -34,7 +34,17 @@ Optional - 6 Challenge: Scale out storage - Storage Spaces Direct
 
 Before proceeding to challenge 3, ...
 
-# Finished? Delete your lab
 
 
-Thank you for participating in this MicroHack!
+
+
+
+
+MicroHack Series - Hybrid Stack HCI AKS / 
+- 4 Challenge: AKS 
+- 4 Challenge: Azure Arc Bridge 
+- 5 Challenge: Arc enabled Data
+- 6 Challenge: Arc enabled App Service
+
+MicroHack Series - Hybrid AVD on Stack HCI
+- 99 Challenge: Azure Virtual Desktop

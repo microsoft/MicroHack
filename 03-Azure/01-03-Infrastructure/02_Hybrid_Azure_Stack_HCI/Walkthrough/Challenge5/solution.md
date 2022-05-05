@@ -4,7 +4,9 @@
 This walkthrogh assumes that you have created the VMs like described in [Challenge 1](../../Readme.md#challenge-1---first-virtual-machines-on-azure-stack-hci).  
 It requies you to do some configurations in the Windows Admin Center and also in your Azure Environment.
 
-## Add Data Disk
+## Configure the Server "win-file" to be used as a fileserver
+
+### Attach and mount data disk
 
 To add a Data Disk to the VM "win-file" log in to the Window Admin Center and Locate the VM "win-file" on your HCI Cluster.
 ![1_AdminCenterVMFile.png](./img/1_AdminCenterVMFile.png)
@@ -36,6 +38,8 @@ F           Shares       NTFS           Fixed     Healthy      OK               
 
 
 ```
+
+### Install Fileserver Role and create a share
 
 To install the Fileserver Role you can again choose between Powershell and Windows Admin Center.  
 To use Windows Admin Center locate the VM on your HCI Cluster and use the Connect Menu to choose "Use Windows Admin Center".  

@@ -112,12 +112,14 @@ At the beginning it is always a good approach setting up the stage, onboard the 
 * Configure Log Analytics to collect Windows event logs and Linux syslog
 * Deploy Azure Policy initiative for automatic onboarding of Azure Arc enabled Servers
 * Configure Azure Arc environment
+* Setup a Policy that checks if the user "FrodoBaggins" is part of the local administrators group
 
 ## Success criteria
 
 * You have one Azure resource group containing the Azure Automation Account and Log Analytics Workspace
 * You successfully linked the necessary Azure Policy initiative to the Azure resource group
 * You have the onboarding scripts for both Windows and Linux servers
+* You can view the compliance state of the Administrator Group Policy
 
 ## Learning resources
 
@@ -129,6 +131,11 @@ At the beginning it is always a good approach setting up the stage, onboard the 
 * [Collect Syslog data sources with Log Analytics agent](https://docs.microsoft.com/en-us/azure/azure-monitor/agents/data-sources-syslog#configure-syslog-in-the-azure-portal)
 * [Understand deployment options for the Log Analytics agent on Azure Arc-enabled servers](https://docs.microsoft.com/en-us/azure/azure-arc/servers/concept-log-analytics-extension-deployment)
 * [Azure Policy built-in definitions for Azure Arc-enabled servers](https://docs.microsoft.com/en-us/azure/azure-arc/servers/policy-reference)
+* [https://docs.microsoft.com/en-us/azure/governance/policy/concepts/guest-configuration](https://docs.microsoft.com/en-us/azure/governance/policy/concepts/guest-configuration)
+
+
+### Solution - Spoilerwarning
+[Solution Steps](./Walkthrough/Challenge2/solution.md)
 
 
 # Challenge 3 - Onboard your servers to Azure Arc
@@ -205,7 +212,7 @@ For this challenge we will use the sever "win-file" you created in [Challenge 1]
 ## Success Criteria
 
 * You have a working fileserver on premises
-* Azure Filesync will automatically sync Files to Azure Files using Azure Filesync
+* Azure Filesync will automatically sync Files to Azure Files.
 
 ## Learning resources
 * [https://docs.microsoft.com/en-us/azure-stack/hci/manage/vm](https://docs.microsoft.com/en-us/azure-stack/hci/manage/vm)  

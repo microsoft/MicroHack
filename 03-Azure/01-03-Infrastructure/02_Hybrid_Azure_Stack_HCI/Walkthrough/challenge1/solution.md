@@ -60,4 +60,4 @@ Add-Computer –DomainName "INSERT-DOMAIN-NAME" -Restart
 
 ![image](./img/6_domjoin.png)
 
-You successfully passed challenge 1! 🚀🚀🚀
+You successfully completed challenge 1! 🚀🚀🚀

@@ -134,6 +134,10 @@ At the beginning it is always a good approach setting up the stage, onboard the 
 * [https://docs.microsoft.com/en-us/azure/governance/policy/concepts/guest-configuration](https://docs.microsoft.com/en-us/azure/governance/policy/concepts/guest-configuration)
 
 
+### Solution - Spoilerwarning
+[Solution Steps](./Walkthrough/Challenge2/solution.md)
+
+
 # Challenge 3 - Onboard your servers to Azure Arc
 
 ## Goal

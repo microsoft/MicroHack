@@ -212,7 +212,7 @@ For this challenge we will use the sever "win-file" you created in [Challenge 1]
 ## Success Criteria
 
 * You have a working fileserver on premises
-* Azure Filesync will automatically sync Files to Azure Files using Azure Filesync
+* Azure Filesync will automatically sync Files to Azure Files.
 
 ## Learning resources
 * [https://docs.microsoft.com/en-us/azure-stack/hci/manage/vm](https://docs.microsoft.com/en-us/azure-stack/hci/manage/vm)  

@@ -51,8 +51,14 @@ On the left side you can find "Roles & Features". Search for the "File and Stora
 
 After the Fileserver installed you can find "Files & file sharing" on the left Menu.  
 Create a New Share by clicking "New Share" in the Files Shares Menu.   
-Note: This is for demonstration purpose only. Please setup correct permissions in your environment.
+Note: This is for demonstration purpose only. Please setup correct permissions that suit the requirements in your environment.
 
 ![4_FileShare.png](./img/4_FileShare.png)
 
 Congratulations. You have a working Fileserver in you on premises Environment.
+
+
+## Deploy an configure Azure Filesync resources
+
+
+## Setup sync between the fileserver and the Azure Fileshare

@@ -75,10 +75,21 @@ Please ensure that you successfully passed [challenge 1](../../Readme.md#challen
 
 ![image](./img/19_Arc_GenerateScript.png)
 
+5. Select the Service Principal that was created in [Task 3](#task-3-create-a-new-service-principal-for-azure-arc) and hit *Next*.
+
 ![image](./img/20_Arc.png)
 
+6. Skip the tags section and hit *Next*.
 
+7. Select "Register" to enable your subscription for Azure Arc and copy the generated script. Please insert your retrieved secret from [Task 3](#task-3-create-a-new-service-principal-for-azure-arc) into the script and save it in your favorite text editor.
 
+![image](./img/21_download_script.png)
+
+8. Please repeat steps 1-7 for Linux servers. Please make sure to select Linux as the Operating System in step 4.
+
+![image](./img/22_Arc_Generate_Script.png)
+
+### Task 5: Prepare the Azure Arc environment
 
 
 

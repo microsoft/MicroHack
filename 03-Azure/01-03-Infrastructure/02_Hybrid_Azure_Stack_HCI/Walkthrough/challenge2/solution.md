@@ -89,49 +89,26 @@ Please ensure that you successfully passed [challenge 1](../../Readme.md#challen
 
 ![image](./img/22_Arc_Generate_Script.png)
 
-### Task 5: Prepare the Azure Arc environment
+### Task 5: Assign Azure Policy Initiative to your Azure Arc resource group
 
+1. Navigate to *Policy* using the top search bar and select *Assignments* in the left navigation pane.
 
+![image](./img/23_azure_policy.png)
 
+2. Select *Assignments* in the left navigation pane and go to *Assign initiative*
 
-# Walkthrough Challenge 2 - Management / control plane fundamentals at the beginning
+![image](./img/24_assignments.png)
 
+3. In this section you can now configure the assignment with the following settings and create the assignment:
 
+- Scope: Please select the resource group called *AzStackHCI-MicroHack-Azure*
+- Basics: Please search for *Enable Azure Monitor for VMs* and select the initiative.
+- Parameters: Please select your Log Analytics workspace.
 
-## Setup a Policy that checks if the user "FrodoBaggins" is part of the local administrators group
+![image](./img/25_basic_settings_initiative.png)
 
-For this action you can leverage a policy that is already built into Azure.
-Please Locate the Azure Policy Page as you have done before to assign the Policy to automatically onboard Azure Arc enabled servers.  
-After that locate the assignment in the blade on the left side.  
-From the assignments choose "Assign policy" from the top menu.
+![image](./img/25_basic_settings_initiative.png)
 
-![PolicyAssignment.png](./img/PolicyAssignment.png)
-
-From the basics tab use the picker to select the policy "Audit Windows machines that have the specified members in the Administrators group".  
-Give the assignment a name and description and click next.
-
-![PolicyAssignmentBasics.png](./img/PolicyAssignmentBasics.png)
-
-On the parameters page make sure that you include Arc connected servers and define the needed member as "FrodoBaggins". Then hit next.
-
-![PolicyAssignmentParameters.png](./img/PolicyAssignmentParameters.png)
-
-This example does not include remediation. If you want to learn more on how to use guest configuration to remediate the state of your servers please refer to   
-[https://docs.microsoft.com/en-us/azure/governance/policy/concepts/guest-configuration-policy-effects](https://docs.microsoft.com/en-us/azure/governance/policy/concepts/guest-configuration-policy-effects)  
-On Non-Compliance Message you can create a custom message that may contain additional information like link to internal documentation or just an explaination why this policy is set.
-
-![PolicyAssignmentMessage.png](./img/PolicyAssignmentMessage.png)
-
-Review you policy assignment and click create.
-
-![PolicyAssignmentReview.png](./img/PolicyAssignmentReview.png)
-
-After a few minutes you will be able to see the compliance state of your server.
-
-
-
-
-
-### Task 3: Prepare the Azure Arc environment
+4. Please wait a few seconds until the creation of the assignment is complete. You should see that the initiative is assigned. Every new Azure Arc Server will now automatically install the necessary agents. 
 
 You successfully completed challenge 2! 🚀🚀🚀

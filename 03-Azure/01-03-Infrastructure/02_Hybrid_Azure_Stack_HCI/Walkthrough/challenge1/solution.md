@@ -55,7 +55,6 @@ nslookup *INSERT-DOMAIN-NAME*
 
 ```
 Add-Computer –DomainName "INSERT-DOMAIN-NAME" -Restart
-
 ```
 
 ![image](./img/6_domjoin.png)

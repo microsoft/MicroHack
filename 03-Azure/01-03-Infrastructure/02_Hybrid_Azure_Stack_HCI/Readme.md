@@ -80,8 +80,6 @@ The goal of this exercise is to deploy the first virtual machines on your Azure 
   * lin-app based on Ubuntu 22.04 LTS (or your prefered Linux distro)
 * Join the Windows-based Virtual Machines to Active Directory
 
-[Detailed solution](./Walkthrough/challenge1/solution.md)
-
 ## Success criteria
 
 * You have two Windows-based Virtual Machines running on your Azure Stack HCI cluster
@@ -95,7 +93,8 @@ The goal of this exercise is to deploy the first virtual machines on your Azure 
 * [Manage VMs with Windows Admin Center](https://docs.microsoft.com/en-us/azure-stack/hci/manage/vm)
 * [License Windows Server VMs on Azure Stack HCI](https://docs.microsoft.com/en-us/azure-stack/hci/manage/vm-activate)
 
-
+### Solution - Spoilerwarning
+[Solution Steps](./Walkthrough/challenge1/solution.md)
 
 # Challenge 2 - Management / control plane fundamentals at the beginning
 
@@ -112,14 +111,13 @@ At the beginning it is always a good approach setting up the stage, onboard the 
 * Configure Log Analytics to collect Windows event logs and Linux syslog
 * Deploy Azure Policy initiative for automatic onboarding of Azure Arc enabled Servers
 * Configure Azure Arc environment
-* Setup a Policy that checks if the user "FrodoBaggins" is part of the local administrators group
+
 
 ## Success criteria
 
 * You have one Azure resource group containing the Azure Automation Account and Log Analytics Workspace
 * You successfully linked the necessary Azure Policy initiative to the Azure resource group
 * You have the onboarding scripts for both Windows and Linux servers
-* You can view the compliance state of the Administrator Group Policy
 
 ## Learning resources
 
@@ -131,11 +129,10 @@ At the beginning it is always a good approach setting up the stage, onboard the 
 * [Collect Syslog data sources with Log Analytics agent](https://docs.microsoft.com/en-us/azure/azure-monitor/agents/data-sources-syslog#configure-syslog-in-the-azure-portal)
 * [Understand deployment options for the Log Analytics agent on Azure Arc-enabled servers](https://docs.microsoft.com/en-us/azure/azure-arc/servers/concept-log-analytics-extension-deployment)
 * [Azure Policy built-in definitions for Azure Arc-enabled servers](https://docs.microsoft.com/en-us/azure/azure-arc/servers/policy-reference)
-* [https://docs.microsoft.com/en-us/azure/governance/policy/concepts/guest-configuration](https://docs.microsoft.com/en-us/azure/governance/policy/concepts/guest-configuration)
 
 
 ### Solution - Spoilerwarning
-[Solution Steps](./Walkthrough/Challenge2/solution.md)
+[Solution Steps](./Walkthrough/challenge2/solution.md)
 
 
 # Challenge 3 - Onboard your servers to Azure Arc
@@ -150,6 +147,7 @@ In challenge 3 you will successfully onboard your servers to Azure Arc and lever
 * Enable and configure Update Management
 * Enable Inventory 
 * Enable VM Insights
+* Setup a Policy that checks if the user "FrodoBaggins" is part of the local administrators group
 
 ## Success Criteria
 
@@ -157,6 +155,7 @@ In challenge 3 you will successfully onboard your servers to Azure Arc and lever
 * All Virtual Machines have the latest Windows and Linux updates installed
 * You can browse through the software inventory of your Virtual Machines
 * You can use VM Insights to get a detailed view of your Virtual Machines
+* You can view the compliance state of the Administrator Group Policy
 
 ## Learning resources
 
@@ -165,6 +164,8 @@ In challenge 3 you will successfully onboard your servers to Azure Arc and lever
 * [How to deploy updates and review results](https://docs.microsoft.com/en-us/azure/automation/update-management/deploy-updates)
 * [Enable Change Tracking and Inventory from an Automation account](https://docs.microsoft.com/en-us/azure/automation/change-tracking/enable-from-automation-account)
 * [Monitor a hybrid machine with VM insights](https://docs.microsoft.com/en-us/azure/azure-arc/servers/learn/tutorial-enable-vm-insights)
+* [Understand the guest configuration feature of Azure Policy](https://docs.microsoft.com/en-us/azure/governance/policy/concepts/guest-configuration)
+
 
 ### Solution - Spoilerwarning
 [Solution Steps](./Walkthrough/challenge4/solution.md)

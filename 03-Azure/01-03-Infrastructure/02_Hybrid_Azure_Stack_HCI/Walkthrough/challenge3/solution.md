@@ -1,4 +1,4 @@
-# Walkthrough Challenge 2 - Management / control plane fundamentals at the beginning
+# Walkthrough Challenge 3 - Onboard your servers to Azure Arc
 
 Duration: 30 minutes
 

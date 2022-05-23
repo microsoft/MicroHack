@@ -47,7 +47,7 @@ With these prerequisites in place, we can focus on building the differentiated k
 
 The [Azure Stack HCI Evaluation Guide](https://github.com/Azure/AzureStackHCI-EvalGuide) will help you to deploy the foundation for this MicroHack. After successfully completing the guide you will have a two-node Azure Stack HCI cluster running on an Azure VM with nested virtualization enabled. This two-node cluster will represent your on-premises location and is tightly integrated with Azure. 
 
-![image](./img/Architecture.jpg)
+![image](./img/architecture.jpg)
 
 As you can see in the target architecture a lot of things are missing. You are tasked to complete all challenges to finish the MicroHack. 
 

@@ -36,7 +36,7 @@ sudo -i
 
 ![image](./img/3_onboarding_success_linux.png)
 
-`❗Hint: By default, the installation of the Azure Arc agebt is not permitted on Virtual Machines that are already hosted on Azure. This should not apply to our Virtual Machines as they are nested in Azure but the Linux agent may state that the Virtual Machine is in Azure resulting in the installation being denied. [Blocking access to Azure IMDS is a simple workaround if you receive an error during agent installation.](https://docs.microsoft.com/en-us/azure/azure-arc/servers/plan-evaluate-on-azure-virtual-machine#reconfigure-azure-vm)
+`❗Hint: By default, the installation of the Azure Arc agebt is not permitted on Virtual Machines that are already hosted on Azure. This should not apply to our Virtual Machines as they are nested in Azure but the Linux agent may state that the Virtual Machine is in Azure resulting in the installation being denied. See` [Blocking access to Azure IMDS is a simple workaround if you receive an error during agent installation.](https://docs.microsoft.com/en-us/azure/azure-arc/servers/plan-evaluate-on-azure-virtual-machine#reconfigure-azure-vm)
 
 4. Please verify that you can see all three Virtual Machines in your Azure Arc Dashboard.
 

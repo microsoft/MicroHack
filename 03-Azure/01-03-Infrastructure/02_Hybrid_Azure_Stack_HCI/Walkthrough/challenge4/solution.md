@@ -22,7 +22,7 @@ Please ensure that you successfully passed [challenge 3](../../Readme.md#challen
 
 ### Task 2: Create a new secret in your Key Vault
 
-1. After the creation navigate to the Azure Key Vault and assign the *Secret Management* template to the managed identity of your Azure Arc-enabled server *lin-app-mi*.
+1. After the creation navigate to the Azure Key Vault and assign the *Secret Management* template to the managed identity of your Azure Arc-enabled server *lin-app*.
 
 ![image](./img/3_Assign_KeyVault_permissions.png)
 
@@ -31,9 +31,9 @@ Please ensure that you successfully passed [challenge 3](../../Readme.md#challen
 ![image](./img/4_Create_Secret.png)
 
 
-### Task 3: Call the secret withtout providing any credentials
+### Task 3: Call the secret without providing any credentials
 
-1. Connect via SSH to the Virtual Machine *lin-app-mi*.
+1. Connect via SSH to the Virtual Machine *lin-app*.
 
 2. Elevate your privileges using the following command:
 

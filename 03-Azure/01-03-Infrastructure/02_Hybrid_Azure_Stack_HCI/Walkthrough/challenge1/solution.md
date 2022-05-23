@@ -6,7 +6,7 @@ Duration: 30 minutes
 
 ## Prerequisites
 
-In order to successfully finish the first challenge you need to make sure that your Azure Stack HCI cluster is up and running like described in the[Prerequisites of the MicroHack](../../Readme.md#Prerequisites).
+In order to successfully finish the first challenge you need to make sure that your Azure Stack HCI cluster is up and running like described in the [Prerequisites of the MicroHack](../../Readme.md#Prerequisites).
 
 ### Task 1: Create virtual machines on Cluster Manager via Windows Admin Center
 
@@ -23,15 +23,16 @@ In order to successfully finish the first challenge you need to make sure that y
 - win-app
 - win-file
 
-`❗Hint: Please make sure to store the Virtual Machine's disk in the cluster storage under C:\ClusterStorage\Volume01\ and deploy the Virtual Machines across your two nodes.
+`❗Hint: Please make sure to store the Virtual Machine's disk in the cluster storage under C:\ClusterStorage\Volume01\ and deploy the Virtual Machines across your two nodes.`
 
-![image](./img/3_VM_part1.png) ![image](./img/3_VM_part2.png)
+![image](./img/3_VM_part1.png) 
+![image](./img/3_VM_part2.png)
 
-4. Create a new Virtual Machine called *lin-app-mi* with the same settings as *win-app* and *win-file* but instead of selecting the ISO file for Windows Server, select the ISO file for Ubuntu Server.
+4. Create a new Virtual Machine called *lin-app* with the same settings as *win-app* and *win-file* but instead of selecting the ISO file for Windows Server, select the ISO file for Ubuntu Server.
 
 ![image](./img/4_Admin_Center_New_VM_lin-app-mi.png)
 
-5. Select the lin-app-mi in the Windows Admin Center and disable *Secure Boot* in the Security settings of the Virtual Machine.
+5. Select the lin-app in the Windows Admin Center and disable *Secure Boot* in the Security settings of the Virtual Machine.
 
 ![image](./img/5_boot_settings.png)
 
@@ -39,7 +40,7 @@ In order to successfully finish the first challenge you need to make sure that y
 
 1. Power on the newly created Virtual Machines, connect via the Windows Admin Center and install the OS with default settings.
 
-`❗Hint: Take a note of your chosen username and password. 
+`❗Hint: Take a note of your chosen username and password.`
 
 ### Task 3: Perform Domain Join
 
@@ -51,7 +52,7 @@ In order to successfully finish the first challenge you need to make sure that y
 nslookup *INSERT-DOMAIN-NAME*
 ```
 
-3. After successfully veryfing the name resolution join the servers to the domain using the following command:
+3. After successfully verifying the name resolution join the servers to the domain using the following command:
 
 ```
 Add-Computer –DomainName "INSERT-DOMAIN-NAME" -Restart

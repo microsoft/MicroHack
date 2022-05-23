@@ -55,7 +55,7 @@ Please ensure that you successfully passed [challenge 1](../../Readme.md#challen
 
 ![image](./img/12_secret.png)
 
-`❗Hint: Take a note of the Client ID and Secret before you proceed!
+`❗Hint: Take a note of the Client ID and Secret before you proceed!`
 
 ### Task 4: Prepare the Azure Arc environment
 
@@ -85,7 +85,7 @@ Please ensure that you successfully passed [challenge 1](../../Readme.md#challen
 
 ![image](./img/21_download_script.png)
 
-8. Please repeat steps 1-7 for Linux servers. Please make sure to select Linux as the Operating System in step 4.
+8. Please repeat steps 1-7 for Linux servers and make sure to select Linux as the Operating System in step 4.
 
 ![image](./img/22_Arc_Generate_Script.png)
 

@@ -1,0 +1,3 @@
+{"rule":"UPPERCASE_SENTENCE_START","sentence":"^\\Qimage\\E$"}
+{"rule":"MORFOLOGIK_RULE_EN_US","sentence":"^\\QWatch a video to see a high level overview of the features from Azure Stack HCI\neBook: Five Hybrid Cloud Use Cases for Azure Stack HCI\nWhat´s new for Azure Stack HCI at Microsoft Ignite 2021\nAzure Stack HCI Solutions\nPlan your solution with the sizer tool\nAzure Stack HCI FAQ\\E$"}
+{"rule":"MORFOLOGIK_RULE_EN_US","sentence":"^\\QWatch a video to see a high level overview of the features from Azure Stack HCI\neBook: Five Hybrid Cloud Use Cases for Azure Stack HCI\nWhat's new for Azure Stack HCI at Microsoft Ignite 2021\nAzure Stack HCI Solutions\nPlan your solution with the sizer tool\nAzure Stack HCI FAQ\\E$"}

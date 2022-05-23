@@ -27,7 +27,7 @@ In order to successfully finish the first challenge you need to make sure that y
 
 ![image](./img/3_VM_part1.png) ![image](./img/3_VM_part2.png)
 
-4. Create a new Virtual Machine called lin-app-mi with the same settings as win-app and win-file but instead of selecting the ISO file for Windows Server, select the ISO file for Ubuntu Server.
+4. Create a new Virtual Machine called *lin-app-mi* with the same settings as *win-app* and *win-file* but instead of selecting the ISO file for Windows Server, select the ISO file for Ubuntu Server.
 
 ![image](./img/4_Admin_Center_New_VM_lin-app-mi.png)
 

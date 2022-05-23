@@ -11,60 +11,49 @@ This MicroHack scenario walks through the use of Azure Stack HCI with a focus on
 This lab is not a full explanation of Azure Stack HCI as a technology, please consider the following articles required pre-reading to build foundational knowledge.
 
 - [What is Azure Stack HCI?](https://docs.microsoft.com/en-us/azure-stack/hci/overview)
-- [Watch a video to see an high level overview of the features from Azure Stack HCI](https://youtu.be/fw8RVqo9dcs)
+- [Watch a video to see a high level overview of the features from Azure Stack HCI](https://youtu.be/fw8RVqo9dcs)
 - [eBook: Five Hybrid Cloud Use Cases for Azure Stack HCI](https://aka.ms/technicalusecaseswp)
-- [What´s new for Azure Stack HCI at Microsoft Ignite 2021](https://techcommunity.microsoft.com/t5/azure-stack-blog/what-s-new-for-azure-stack-hci-at-microsoft-ignite-2021/ba-p/2897222)
+- [What's new for Azure Stack HCI at Microsoft Ignite 2021](https://techcommunity.microsoft.com/t5/azure-stack-blog/what-s-new-for-azure-stack-hci-at-microsoft-ignite-2021/ba-p/2897222)
 - [Azure Stack HCI Solutions](https://hcicatalog.azurewebsites.net/#/)
 - [Plan your solution with the sizer tool](https://hcicatalog.azurewebsites.net/#/sizer)
 - [Azure Stack HCI FAQ](https://docs.microsoft.com/en-us/azure-stack/hci/faq)
 
-💡 Optional: Read this after completing this lab to take your learning even deeper!
+💡 Optional: Read this after completing this lab to deepen the learned!
 
 # Objectives
 
 After completing this MicroHack you will:
 
 - Know how to build or use Azure Stack HCI
-- Understand use cases and possible scenarios in your hybrid world to modernize your infrastructure estate. 
+- Understand use cases and possible scenarios in your hybrid world to modernize your infrastructure estate
 - Get insights into real world challenges and scenarios
 
 # Prerequisites
 
-For this MicroHack we have a few prerequisites they are very important to be successful in this MicroHack. Normally, for the use of Azure Stack HCI, validated hardware is required from selected partners and such hardware can of course be used for the MicroHack. The alternative is the Azure Stack HCI Evaluation Lab, which allows to convert Azure Stack HCI to Hyper-V with Nested Virtualization.
+This MicroHack has a few prerequisites that are very important to understand before starting this lab. Usually, validated hardware from selected partners is required to successfully deploy Azure Stack HCI. As this requires time and effort, we will leverage Azure's nested virtualization feature to set up a test environment for this MicroHack. In order to reduce the prep time for this MicroHack we will use the [Azure Stack HCI Evaluation Guide](https://github.com/Azure/AzureStackHCI-EvalGuide) as a starting point.
 
-In order to use the MicroHack time most effectively, the following tasks should be completed prior to starting the session.
+In order to use the MicroHack time most effectively, the following tasks should be completed prior to starting the session:
 
-- If you do not have own hardware then you need to go through the [Azure Stack HCI Evaluation Lab](https://github.com/Azure/AzureStackHCI-EvalGuide?msclkid=44e04d5fb4e811eca429547b3ced494b) 
-
-- Download ISO FIles on Azure Stack HCI to location for example Cluster Shared Volumes: 
+- If you do not have your own hardware please go through the [Azure Stack HCI Evaluation Guide](https://github.com/Azure/AzureStackHCI-EvalGuide) and follow the instructions to set up a test environment in your Azure subscription.
+- Download the following ISO files and save them to the Cluster Shared Volumes of your Azure Stack HCI cluster: 
   - [Ubuntu](https://ubuntu.com/download)
   - [Windows Server 2022](https://software-static.download.prss.microsoft.com/sg/download/888969d5-f34g-4e03-ac9d-1f9786c66749/SERVER_EVAL_x64FRE_en-us.iso)
 
-With these pre-requisites in place, we can focus on building the differentiated knowledge in the hybrid world on Azure Stack HCI to modernize your hybrid estate. 
+With these prerequisites in place, we can focus on building the differentiated knowledge in the hybrid world on Azure Stack HCI to modernize your hybrid estate. 
 
 # Lab environment for this MicroHack
 
-Explain the lab ..
-
 ## Architecture
 
-Description
+The [Azure Stack HCI Evaluation Guide](https://github.com/Azure/AzureStackHCI-EvalGuide) will help you to deploy the foundation for this MicroHack. After successfully completing the guide you will have a two-node Azure Stack HCI cluster running on an Azure VM with nested virtualization enabled. This two-node cluster will represent your on-premises location and is tightly integrated with Azure. 
 
-![image](./img/Architecture.png)
+![image](./img/Architecture.jpg)
 
-
-Naming standards / taxonomie: 
-- https://docs.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/resource-naming
-
-MicroHack Series - Hybrid Stack HCI / Arc
-
-
-
-
+As you can see in the target architecture a lot of things are missing. You are tasked to complete all challenges to finish the MicroHack. 
 
 # MicroHack Challenges 
 
-Before you dive into the challenges please make sure that the pre-requisites are fulfilled otherwise move on with the challenges. [Jump directly to prerequisites to verify](#prerequisites)
+Before you dive into the challenges, please make sure that the prerequisites are fulfilled. [Jump directly to prerequisites to verify](#prerequisites)
 
 # Challenge 1 - Create your first virtual machines on Azure Stack HCI
 
@@ -77,7 +66,7 @@ The goal of this exercise is to deploy the first virtual machines on your Azure 
 * Create three virtual machines running on your Azure Stack HCI cluster via Windows Admin Center
   * Basic VM configuration: 2 vCPU, 8 GB RAM, 1 disk with 128 GB storage
   * win-app, win-file based on Windows Server 2022 
-  * lin-app based on Ubuntu 22.04 LTS (or your prefered Linux distro)
+  * lin-app based on Ubuntu 22.04 LTS (or your preferred Linux distro)
 * Join the Windows-based Virtual Machines to Active Directory
 
 ## Success criteria
@@ -192,6 +181,7 @@ Managing secrets, credentials or certificates to secure communication between di
 * [Create a key vault using the Azure portal](https://docs.microsoft.com/en-us/azure/key-vault/general/quick-create-portal)
 * [Set and retrieve a secret from Azure Key Vault using the Azure portal](https://docs.microsoft.com/en-us/azure/key-vault/secrets/quick-create-portal)
 * [Use a Linux VM system-assigned managed identity to access Azure Key Vault](https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/tutorial-linux-vm-access-nonaad)
+* [Authenticate against Azure resources with Azure Arc-enabled servers](https://docs.microsoft.com/en-us/azure/azure-arc/servers/managed-identity-authentication)
 
 
 # Challenge 5 - Create Hybrid Fileservices
@@ -221,48 +211,6 @@ For this challenge we will use the sever "win-file" you created in [Challenge 1]
 * [https://docs.microsoft.com/en-us/azure/storage/files/storage-files-planning](https://docs.microsoft.com/en-us/azure/storage/files/storage-files-planning)
 * [https://docs.microsoft.com/en-us/azure/storage/files/storage-how-to-create-file-share?tabs=azure-portal](https://docs.microsoft.com/en-us/azure/storage/files/storage-how-to-create-file-share?tabs=azure-portal)  
 * [https://docs.microsoft.com/en-us/azure/storage/file-sync/file-sync-extend-servers?toc=/azure/storage/files/toc.json](https://docs.microsoft.com/en-us/azure/storage/file-sync/file-sync-extend-servers?toc=/azure/storage/files/toc.json)  
-
-### Solution - Spoilerwarning
-[Solution Steps](./Walkthrough/Challenge5/solution.md)
-
-
-# Challenge 6 - Backup your Azure Stack HCI Virtual Machines
-
-## Goal
-
-... 
-
-## Actions
-
-* ...
-
-## Success Criteria
-
-* ...
-
-## Learning resources
-* ...
-
-### Solution - Spoilerwarning
-[Solution Steps](./Walkthrough/Challenge5/solution.md)
-
-
-# Challenge 7 - Business Continuity using Azure Site Recovery
-
-## Goal
-
-... 
-
-## Actions
-
-* ...
-
-## Success Criteria
-
-* ...
-
-## Learning resources
-* ...
 
 ### Solution - Spoilerwarning
 [Solution Steps](./Walkthrough/Challenge5/solution.md)

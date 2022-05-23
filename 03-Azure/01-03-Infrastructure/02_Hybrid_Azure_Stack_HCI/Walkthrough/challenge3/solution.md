@@ -24,7 +24,7 @@ Please ensure that you successfully passed [challenge 2](../../Readme.md#challen
 
 ### Task 2: Onboard the Linux Virtual Machine to Azure Arc
 
-1. Connect via SSH to the Virtual Machine linux-app.
+1. Connect via SSH to the Virtual Machine *lin-app-mi*.
 
 2. Elevate your privileges using the following command:
 

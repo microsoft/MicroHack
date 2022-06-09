@@ -70,11 +70,13 @@ Screenshots and Architecture later
 
 The following components are needed for this: 
 
-Components:
+- [Azure AD Tenant](https://docs.microsoft.com/en-us/azure/active-directory/develop/quickstart-create-new-tenant) (Test Tenant for initial design)
 
+[Create an Azure AD](https://docs.microsoft.com/en-us/azure/active-directory/develop/quickstart-create-new-tenant) Tenant or use an existing one you already have and keep in mind that you use the following permissions. 
 
-Permissions for the deployment: 
-
+Permissions for the deployment in [AzureAD](https://docs.microsoft.com/en-us/azure/active-directory/roles/permissions-reference): 
+- [Groups Administrator](https://docs.microsoft.com/en-us/azure/active-directory/roles/permissions-reference#groups-administrator)  
+- [Conditional Access Administrator](https://docs.microsoft.com/en-us/azure/active-directory/roles/permissions-reference#conditional-access-administrator)
 
 Now it should be clear which components we need and in order not to lose any time let's start directly with the first challenge. 
 

@@ -123,7 +123,7 @@ Questions:
 | Service Accounts                        | Service accounts for classical operations activities or to maintain least privilege             |         
 | BreakGlass Accounts                     | Breakglass Accounts are emergency accounts that are not subject to a policy             |         
 
-💡 Keep in mind: Of course, there can be more personas and these can also be changed or adapted to specific use cases / requirements. Please contact your Microsoft Account Team for support. 
+💡 Keep in mind: Of course, there can be more personas and these can also be changed or adapted to specific use cases / requirements.
 
 ## Task 3: Deal with naming standards
 Many organizations no longer have a proper overview of their policies, nor did they have a concept when they initially created them. Naming standards are an important part of CA policies to keep the overview. 

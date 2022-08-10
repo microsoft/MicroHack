@@ -1,136 +1,161 @@
-# **Master Template MicroHack**
+# **MicroHack Azure Stack HCI - Part I**
 
-- [**Master Template MicroHack**](#master-template-microhack)
-- [MicroHack introduction and context](#microhack-introduction-and-context)
-- [Objectives](#objectives)
-- [Prerequisites](#prerequisites)
-- [Lab environment for this MicroHack](#lab-environment-for-this-microhack)
-  - [Architecture](#architecture)
-- [MicroHack Challenges](#microhack-challenges)
-  - [Challenge 1 - Deploy the Lab environment](#challenge-1---deploy-the-lab-environment)
-    - [Goal](#goal)
-    - [Task 1: Deploy Baseline](#task-1-deploy-baseline)
-    - [Task 2: Verify baseline](#task-2-verify-baseline)
-- [Challenge 2 : Name..](#challenge-2--name)
-    - [Goal](#goal-1)
-    - [Task 1:](#task-1)
-    - [Task 2:](#task-2)
-    - [Task 3:](#task-3)
-    - [Task 4:](#task-4)
-- [Challenge 3 : Name ...](#challenge-3--name-)
-    - [Goal](#goal-2)
-    - [Task 1:](#task-1-1)
-    - [Task 2:](#task-2-1)
-    - [Task 3:](#task-3-1)
-    - [Task 4:](#task-4-1)
-- [Finished? Delete your lab](#finished-delete-your-lab)
+[toc]
 
-# MicroHack introduction and context
+## MicroHack introduction and context
 
-This MicroHack scenario walks through the use of ... with a focus on the best practices and the design principles. Specifically, this builds up to include working with an existing infrastructure.
+This MicroHack scenario walks through the use of Azure Stack HCI with a focus on the best practices and the design principles and some interesting challenges for real world scenarios. Specifically, this builds up to include working with an existing infrastructure in your datacenter.
 
-![image](Path to the high level architecture )
+![image](./img/0_azure-stack-hci-solution.png)
 
-This lab is not a full explanation of .... as a technology, please consider the following articles required pre-reading to build foundational knowledge.
+This lab is not a full explanation of Azure Stack HCI as a technology, please consider the following articles required pre-reading to build foundational knowledge.
 
-Optional (read this after completing this lab to take your learning even deeper!
+* [What is Azure Stack HCI?](https://docs.microsoft.com/en-us/azure-stack/hci/overview)
+* [Watch a video to see a high level overview of the features from Azure Stack HCI](https://youtu.be/fw8RVqo9dcs)
+* [eBook: Five Hybrid Cloud Use Cases for Azure Stack HCI](https://aka.ms/technicalusecaseswp)
+* [What's new for Azure Stack HCI at Microsoft Ignite 2021](https://techcommunity.microsoft.com/t5/azure-stack-blog/what-s-new-for-azure-stack-hci-at-microsoft-ignite-2021/ba-p/2897222)
+* [Azure Stack HCI Solutions](https://hcicatalog.azurewebsites.net/#/)
+* [Plan your solution with the sizer tool](https://hcicatalog.azurewebsites.net/#/sizer)
+* [Azure Stack HCI FAQ](https://docs.microsoft.com/en-us/azure-stack/hci/faq)
 
-Describe the scenario here...
+💡 Optional: Read this after completing this lab to deepen the learned!
 
-# Objectives
+## Objectives
 
 After completing this MicroHack you will:
 
-- Know how to build a ...
-- Understand default ..
-- Understand how ..
+* Know how to build or use Azure Stack HCI
+* Understand use cases and possible scenarios in your hybrid world to modernize your infrastructure estate
+* Get insights into real world challenges and scenarios
 
-# Prerequisites
+## Prerequisites
 
-In order to use the MicroHack time most effectively, the following tasks should be completed prior to starting the session.
+This MicroHack has a few but very important prerequisites to be understood before starting this lab!
+Usually, validated hardware from selected _Original Equipment Manufacturers_ (OEMs) is required to successfully deploy Azure Stack HCI. While this requires time and effort, we leverage Azure's nested virtualization feature instead of setting up a test environment for this MicroHack. In order to reduce the preparation time for this MicroHack, we use the [Azure Stack HCI Evaluation Guide](https://github.com/Azure/AzureStackHCI-EvalGuide) as a starting point.
 
-With these pre-requisites in place, we can focus on building the differentiated knowledge in ... that is required when working with the product, rather than spending hours repeating relatively simple tasks such as setting up....
+[comment]: # (It is not clear where I'd find the Cluster Shared Volume. Also, do I have to download Ubuntu and WS22K for the virtual instance?)
 
-In summary:
+In order to use the MicroHack time most effectively, the following tasks must be completed prior to starting the session:
 
-- Azure Subscription 
-- Resource Group 
-- Service 1
-- Service 2  
+* If you do not have your own hardware, go through the [Azure Stack HCI Evaluation Guide](https://github.com/Azure/AzureStackHCI-EvalGuide) and follow the instructions to set up a test environment in your Azure subscription.
+* Then, download the following ISO files and save them to the _Cluster Shared Volumes_ of your Azure Stack HCI cluster:
+  * [Ubuntu](https://ubuntu.com/download)
+  * [Windows Server 2022](https://software-static.download.prss.microsoft.com/sg/download/888969d5-f34g-4e03-ac9d-1f9786c66749/SERVER_EVAL_x64FRE_en-us.iso)
 
-Permissions for the deployment: 
-- Contributor on your Resource Group
-- Other necessary permissions
+With these prerequisites in place, we can focus on building the differentiated knowledge in the hybrid world on Azure Stack HCI to modernize your hybrid estate.
 
-# Lab environment for this MicroHack
-
-Explain the lab ..
+## Lab environment for this MicroHack
 
 ## Architecture
 
-At the end of this MicroHack your base lab build looks as follows:
+The [Azure Stack HCI Evaluation Guide](https://github.com/Azure/AzureStackHCI-EvalGuide) will help you to deploy the foundation for this MicroHack. After successfully completing the guide you will have a two-node Azure Stack HCI cluster running on an Azure VM with nested virtualization enabled. This two-node cluster will represent your on-premises location and is tightly integrated with Azure.
 
-![image](Path to the architecture )
+![image](./img/architecture.jpg)
 
-# MicroHack Challenges 
+As you can see, the target architecture is missing a lot of things. You are tasked to complete all challenges to finish the MicroHack.
 
-## Challenge 1 - Deploy the Lab environment
+## MicroHack Challenges
 
-### Goal 
+Before you dive into the challenges, please make sure that the prerequisites are fulfilled. [Jump directly to prerequisites to verify](#prerequisites)
 
-The goal of this exercise is to deploy...
+## Challenge 1 - Create virtual machines on Azure Stack HCI
 
-### Task 1: Deploy Baseline
+### Challenge 1 Goal
 
-We are going to use a predefined ARM template to deploy the base environment. It will be deployed in to *your* Azure subscription, with resources running in the your specified Azure region.
+The goal of this exercise is to deploy the first virtual machines on your Azure Stack HCI cluster. We will use these virtual machines in the following challenges for different purposes.
 
-To start the ARM deployment, follow the steps listed below:
+### Actions
 
-- Login to Azure cloud shell [https://shell.azure.com/](https://shell.azure.com/)
-- Ensure that you are operating within the correct subscription via:
+* Create three virtual machines running on your Azure Stack HCI cluster via Windows Admin Center
+  * Basic VM configuration: 2 vCPU, 8 GB RAM, 1 disk with 128 GB storage
+  * win-app, win-file based on Windows Server 2022
+  * lin-app based on Ubuntu 22.04 LTS (or your preferred Linux distro)
+* Join the Windows-based Virtual Machines to Active Directory
 
-`az account show`
+### Success criteria
 
-- Clone the following GitHub repository 
+* You have two Windows-based Virtual Machines running on your Azure Stack HCI cluster
+* You have one Linux-based Virtual Machine running on your Azure Stack HCI cluster
+* The Windows-based Virtual Machines are domain-joined and successfully activated
+* You can access the Virtual Machines via RDP/SSH
 
-`git clone Link to Github Repo `
+### Learning resources
 
-### Task 2: Verify baseline
+* [Get started with Azure Stack HCI and Windows Admin Center](https://docs.microsoft.com/en-us/azure-stack/hci/get-started)
+* [Manage VMs with Windows Admin Center](https://docs.microsoft.com/en-us/azure-stack/hci/manage/vm)
+* [License Windows Server VMs on Azure Stack HCI](https://docs.microsoft.com/en-us/azure-stack/hci/manage/vm-activate)
 
-Now that we have the base lab deployed, we can progress to the ... challenges!
+### Solution - Spoilerwarning
 
+[Solution Steps](./Walkthrough/challenge1/solution.md)
 
-# Challenge 2 : Name..
+## Challenge 2 - Management / control plane fundamentals at the beginning
 
-### Goal
+### Challenge 2 Goal
 
-### Task 1: 
+At the beginning it is always a good approach setting up the stage, onboard the necessary infrastructure and management components to have the right focus and support for the next challenges. In this section the focus will be on onboarding the servers we have created in the first challenge and integrate them in the necessary control plane & management tools. 
 
-### Task 2: 
+### Actions
 
-### Task 3: 
+* Create all necessary Azure Resources
+  * Azure Resource group (Name: AzStackHCI-MicroHack-Azure)
+  * Azure Automation Account (Name: mh-automation)
+  * Log Analytics Workspace (Name: mh-la)
+* Configure Log Analytics to collect Windows event logs and Linux syslog
+* Deploy Azure Policy initiative for automatic onboarding of Azure Arc enabled Servers
+* Configure Azure Arc environment
 
-**Explain the background...**
+## Success criteria
 
-### Task 4: 
+* You have one Azure resource group containing the Azure Automation Account and Log Analytics Workspace
+* You successfully linked the necessary Azure Policy initiative to the Azure resource group
+* You have the onboarding scripts for both Windows and Linux servers
 
-Before proceeding to challenge 3, ...
+## Learning resources
 
-# Challenge 3 : Name ...
+* [Manage Azure resource groups by using the Azure portal](https://docs.microsoft.com/en-us/azure/azure-resource-manager/management/manage-resource-groups-portal)
+* [Create an Automation account using the Azure portal](https://docs.microsoft.com/en-us/azure/automation/quickstarts/create-account-portal)
+* [Create a Log Analytics workspace in the Azure portal](https://docs.microsoft.com/en-us/azure/azure-monitor/logs/quick-create-workspace)
+* [Collect Windows event log data sources with Log Analytics agent](https://docs.microsoft.com/en-us/azure/azure-monitor/agents/data-sources-windows-events#configuring-windows-event-logs)
+* [Collect Syslog data sources with Log Analytics agent](https://docs.microsoft.com/en-us/azure/azure-monitor/agents/data-sources-syslog#configure-syslog-in-the-azure-portal)
+* [Understand deployment options for the Log Analytics agent on Azure Arc-enabled servers](https://docs.microsoft.com/en-us/azure/azure-arc/servers/concept-log-analytics-extension-deployment)
+* [Azure Policy built-in definitions for Azure Arc-enabled servers](https://docs.microsoft.com/en-us/azure/azure-arc/servers/policy-reference)
 
-### Goal
+### Solution - Spoilerwarning
 
-### Task 1: 
+[Solution Steps](./Walkthrough/challenge2/solution.md)
 
-### Task 2: 
+# Challenge 3 - Onboard your servers to Azure Arc
 
-### Task 3: 
+## Goal
 
-**Explain the background...**
+In challenge 3 you will successfully onboard your servers to Azure Arc and leverage Azure native services like Update Management, Inventory and VM Insights for your Azure Stack HCI Virtual Machines.
 
-### Task 4: 
+## Actions
 
-# Finished? Delete your lab
+* Onboard your three Virtual Machines to Azure Arc using the onboarding scripts
+* Enable and configure Update Management
+* Enable Inventory
+* Enable VM Insights
+* Setup a Policy that checks if the user "FrodoBaggins" is part of the local administrators group
 
+## Success Criteria
 
-Thank you for participating in this MicroHack!
+* All Virtual Machines are connected to Azure Arc and visible in the Azure Portal
+* All Virtual Machines have the latest Windows and Linux updates installed
+* You can browse through the software inventory of your Virtual Machines
+* You can use VM Insights to get a detailed view of your Virtual Machines
+* You can view the compliance state of the Administrator Group Policy
+
+## Learning resources
+
+* [Connect hybrid machines with Azure Arc-enabled servers](https://docs.microsoft.com/en-us/azure/azure-arc/servers/learn/quick-enable-hybrid-vm)
+* [Enable Update Management from an Automation account](https://docs.microsoft.com/en-us/azure/automation/update-management/enable-from-automation-account)
+* [How to deploy updates and review results](https://docs.microsoft.com/en-us/azure/automation/update-management/deploy-updates)
+* [Enable Change Tracking and Inventory from an Automation account](https://docs.microsoft.com/en-us/azure/automation/change-tracking/enable-from-automation-account)
+* [Monitor a hybrid machine with VM insights](https://docs.microsoft.com/en-us/azure/azure-arc/servers/learn/tutorial-enable-vm-insights)
+* [Understand the guest configuration feature of Azure Policy](https://docs.microsoft.com/en-us/azure/governance/policy/concepts/guest-configuration)
+
+### Solution - Spoilerwarning
+
+[Solution Steps](./Walkthrough/challenge4/solution.md)

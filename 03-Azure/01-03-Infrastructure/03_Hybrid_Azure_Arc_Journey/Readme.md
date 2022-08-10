@@ -6,6 +6,8 @@
 
 This MicroHack scenario walks through the use of Azure Stack HCI with a focus on the best practices and the design principles and some interesting challenges for real world scenarios. Specifically, this builds up to include working with an existing infrastructure in your datacenter.
 
+test
+
 ![image](./img/0_azure-stack-hci-solution.png)
 
 This lab is not a full explanation of Azure Stack HCI as a technology, please consider the following articles required pre-reading to build foundational knowledge.

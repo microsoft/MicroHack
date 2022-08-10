@@ -95,7 +95,37 @@ Setup Azure Subscription
 Create AAD Service principal
 Prep Azure resources (Resource Group)
 
-## Challenge 2 - 
+Screenshot von Azure Portal & Azure Arc -- empty 
+
+## Challenge 2 - Onboard Server to Azure Arc enabled Servers
+
+Windows Server 2022
+Login Admin account
+Connect via RDP
+Copy script from Azure Arc to onboard via RDP
+Screenshot Azure Portal with onboarded Windows Server
+
+Linux Ubuntu
+Login root
+remote ssh
+execute bash script
+screenshot Azure Portal with onbaorded Linux Server
+
+
+## Challenge 3 - Add Azure Monitor
+
+Create Log analytics workspace
+copy workspace ID and Key
+Onboard Windows & Linux to Log Analytics workspace
+
+## Challenge 4 - Integrate with Microsoft Defender for Cloud
+
+Enable Azure Arc Defender for Cloud
+
+## Challenge 5 - Unsing Azure Policy with Arc enabled Server
+
+Enable Azure Policies
+Use Azure Policies
 
 ## Challenge 1 - Create virtual machines on Azure Stack HCI
 

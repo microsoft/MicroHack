@@ -2,7 +2,7 @@
 
 [toc]
 
-## MicroHack introduction and context
+## MicroHack introduction
 
 What is Azure Arc?
 
@@ -10,13 +10,17 @@ For customers who want to simplify complex and distributed environments across o
 
 ![image](./IMG/AzureArc-01.png)
 
-	- Gain central visibility, operations, and compliance Standardize visibility, operationsand compliance across a wide range of resources and locations by extending the Azure control plane. Right from Azure, you can easily organize, govern, and secure Windows, Linux, SQL Servers and Kubernetes clusters across datacenters, edge, and multi-cloud.
+- Gain central visibility, operations, and compliance Standardize visibility, operationsand compliance across a wide range of resources and locations by extending the Azure control plane. Right from Azure, you can easily organize, govern, and secure Windows, Linux, SQL Servers and Kubernetes clusters across datacenters, edge, and multi-cloud.
 
-	- Build Cloud native apps anywhere, at scale Centrally code and deploy applications confidently to any Kubernetes distribution in any location. Accelerate development by using best in class applications services with standardized deployment, configuration, security, and observability.
+- Build Cloud native apps anywhere, at scale Centrally code and deploy applications confidently to any Kubernetes distribution in any location. Accelerate development by using best in class applications services with standardized deployment, configuration, security, and observability.
 
-	- Run Azure services anywhere Flexibly use cloud innovation where you need it by deploying Azure services anywhere. Implement cloud practices and automation to deploy faster, consistently, and at scale with always-up-to-date Azure Arc enabled services.
+- Run Azure services anywhere Flexibly use cloud innovation where you need it by deploying Azure services anywhere. Implement cloud practices and automation to deploy faster, consistently, and at scale with always-up-to-date Azure Arc enabled services.
+
+## MicroHack context
 
 This MicroHack scenario walks through the use of Azure Arc with a focus on the best practices and the design principles and some interesting challenges for real world scenarios. Specifically, this builds up to include working with an existing infrastructure in your datacenter.
+
+Further resources - Thomas Maurer & Lior links
 
 
 ![image](./img/0_azure-stack-hci-solution.png)
@@ -37,25 +41,40 @@ This lab is not a full explanation of Azure Stack HCI as a technology, please co
 
 After completing this MicroHack you will:
 
-* Know how to build or use Azure Stack HCI
+* Know how to use Azure Arc in your environment, on-prem or Multi-cloud
 * Understand use cases and possible scenarios in your hybrid world to modernize your infrastructure estate
 * Get insights into real world challenges and scenarios
 
 ## Prerequisites
 
 This MicroHack has a few but very important prerequisites to be understood before starting this lab!
-Usually, validated hardware from selected _Original Equipment Manufacturers_ (OEMs) is required to successfully deploy Azure Stack HCI. While this requires time and effort, we leverage Azure's nested virtualization feature instead of setting up a test environment for this MicroHack. In order to reduce the preparation time for this MicroHack, we use the [Azure Stack HCI Evaluation Guide](https://github.com/Azure/AzureStackHCI-EvalGuide) as a starting point.
 
-[comment]: # (It is not clear where I'd find the Cluster Shared Volume. Also, do I have to download Ubuntu and WS22K for the virtual instance?)
+For Arc enabled Servers
 
-In order to use the MicroHack time most effectively, the following tasks must be completed prior to starting the session:
+* Have an server, windows or linux ready
+For windows, pls use if possible Windows Server 2019 or 2022 with the latest patch level
 
-* If you do not have your own hardware, go through the [Azure Stack HCI Evaluation Guide](https://github.com/Azure/AzureStackHCI-EvalGuide) and follow the instructions to set up a test environment in your Azure subscription.
-* Then, download the following ISO files and save them to the _Cluster Shared Volumes_ of your Azure Stack HCI cluster:
+  [Supported operating systems @ Connected Machine agent prerequisites - Azure Arc | Microsoft Docs](https://docs.microsoft.com/en-us/azure/azure-arc/servers/prerequisites#supported-operating-systems)
+	
+  This Server OS could be hosted as a VM on VMware, Hyper-V, Nutanix, AWS, GCP or bare metal.
+	
+Additional:
+  * These servers should be able to reach the internet and Azure.
+  * You need to have full access and admin or root permissions on these Server OS
+	
+
+For Arc enabled Kubernetes
+	
+* Prepare your familiar kubernetes distribution. To check if this distribution is valid for [Azure Arc enbaled Kubernetes, please check here Azure Arc-enabled Kubernetes validation - Azure Arc | Microsoft Docs](https://docs.microsoft.com/en-us/azure/azure-arc/kubernetes/validation-program)
+
+
+* If you need to install and deploy your own server OS from scratch, then, download the following ISO files and save them on your own PC / Environment with your prefered Hypervisor e.g. Hyper-V or Virtualization Client (Windows 10/11 Hyper-V or Virtual Box).
   * [Ubuntu](https://ubuntu.com/download)
-  * [Windows Server 2022](https://software-static.download.prss.microsoft.com/sg/download/888969d5-f34g-4e03-ac9d-1f9786c66749/SERVER_EVAL_x64FRE_en-us.iso)
+  * [Windows Server 2022](https://www.microsoft.com/en-us/evalcenter/download-windows-server-2022)
 
-With these prerequisites in place, we can focus on building the differentiated knowledge in the hybrid world on Azure Stack HCI to modernize your hybrid estate.
+Install from the downloaded ISO your prefered OS. 
+
+With these prerequisites in place, we can focus on building the differentiated knowledge in the hybrid world with Azure Arc to enable your on-prem, Multi-Cloud environment for the Cloud operations model.
 
 ## Lab environment for this MicroHack
 
@@ -70,6 +89,13 @@ As you can see, the target architecture is missing a lot of things. You are task
 ## MicroHack Challenges
 
 Before you dive into the challenges, please make sure that the prerequisites are fulfilled. [Jump directly to prerequisites to verify](#prerequisites)
+
+## Challenge 1 - Preparing the environment
+Setup Azure Subscription
+Create AAD Service principal
+Prep Azure resources (Resource Group)
+
+## Challenge 2 - 
 
 ## Challenge 1 - Create virtual machines on Azure Stack HCI
 

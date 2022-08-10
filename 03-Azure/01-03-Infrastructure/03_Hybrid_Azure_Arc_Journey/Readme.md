@@ -1,4 +1,4 @@
-# **MicroHack Azure Stack HCI - Part I**
+# **MicroHack Azure Arc - Part I**
 
 [toc]
 

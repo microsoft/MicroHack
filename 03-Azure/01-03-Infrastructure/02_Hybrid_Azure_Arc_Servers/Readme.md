@@ -7,14 +7,13 @@
 - [**Lab environment for this MicroHack**](#lab-environment-for-this-microHack)
   - [Architecture](#architecture)
 - [**MicroHack Challenges**](#microhack-challenges)
-  - [Challenge-1 - Azure Arc pre-requisits & onboarding](#challenge-1---azure-arc-pre-requisits-&-onboarding)
+  - [General prerequisites](#General prerequisites)
+  - [Challenge-1 - Azure Arc prerequisites & onboarding](#challenge-1---azure-arc-pre-requisits-&-onboarding)
   - [Challenge 2 - Azure Monitor integration](#challenge-2---azure-monitor-integration)
   - [Challenge 3 - Access Azure resources using Managed Identities from your on-premises servers](#challenge-3---access-azure-resources-using-managed-identities-from-your-on-premises-servers)
   - [Challenge 4 - Microsoft Defender for Cloud integration](#challenge-4---microsoft-defender-for-cloud-integration)
   - [Challenge 5 - Azure Policy](#Challenge-5---azure-policy)
 - [**Contributors**](#contributors)
-
-
 
 ## MicroHack introduction
 
@@ -72,7 +71,7 @@ Adrian
 * [Visual Studio Code](https://code.visualstudio.com/)
 * [Git SCM](https://git-scm.com/download/) 
 
-## Challenge 1 - Azure Arc pre-requisits & onboarding
+## Challenge 1 - Azure Arc prerequisites & onboarding
 
 1. Pre requisits --> Nils, Alexander
    OS / VM deploy , 1 WS, 1 LX Ubuntu 22.04

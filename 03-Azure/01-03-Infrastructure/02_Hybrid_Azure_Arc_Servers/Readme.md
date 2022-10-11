@@ -2,19 +2,17 @@
 
 - [**MicroHack introduction**](#MicroHack-introduction)
   - [**What is Azure Arc?**](#what-is-azure-arc)
-  - [**How does it work?**](#how-does-it-work)
-  - [**What is the benefit?**](#what-is-the-benefit)
-- [**Pre-requisites**](#pre-requisites)
+- [**MicroHack context**](#microhack-context)
   - [License](#license)
   - [Subscription](#subscription)
-- [**How to contribute** 🚀](#how-to-contribute-)
-- [**Security hints and handling / Report an issue**](#security-hints-and-handling--report-an-issue)
-- [**Which MicroHacks are available**](#which-microhacks-are-available)
-  - [01 - Identity and Access Management](#01---identity-and-access-management)
-  - [02 - Security](#02---security)
-  - [03 - Azure](#03---azure)
-  - [04 - M365](#04---m365)
-  - [99 - MicroHack-Template](#99---microhack-template)
+- [**Objectives**](#objectives)
+- [**Lab environment for this MicroHack**](#lab-environment-for-this-microHack)
+- [**Architecture**](#which-microhacks-are-available)
+  - [Challenge-1 - Azure Arc pre-requisits & onboarding](#challenge-1---azure-arc-pre-requisits-&-onboarding)
+  - [Challenge 2 - Azure Monitor integration](#challenge-2---azure-monitor-integration)
+  - [Challenge 3 - Access Azure resources using Managed Identities from your on-premises servers](#challenge-3---access-azure-resources-using-managed-identities-from-your-on-premises-servers)
+  - [Challenge 4 - Microsoft Defender for Cloud integration](#challenge-4---microsoft-defender-for-cloud-integration)
+  - [Challenge 5 - Azure Policy](#Challenge-5---azure-policy)
 
 ## MicroHack introduction
 
@@ -62,7 +60,7 @@ Adrian
 ## MicroHack Challenges
 Alexander
 
-## Challenge 1
+## Challenge 1 - Azure Arc pre-requisits & onboarding
 
 1. Pre requisits --> Nils, Alexander
    OS / VM deploy , 1 WS, 1 LX Ubuntu 22.04
@@ -80,7 +78,7 @@ Alexander
 
 ### Solution - Spoilerwarning
 
-## Challenge 2
+## Challenge 2 - Azure Monitor integration
 
 2. Azure Monitor / Log Analytics --> Adrian
    Pre Requisits - AA Account & Log Analytics WS
@@ -158,7 +156,7 @@ Managing secrets, credentials or certificates to secure communication between di
 
 [Solution Steps](./walkthrough/challenge-3/solution.md)
 
-## Challenge 4
+## Challenge 4 - Microsoft Defender for Cloud integration
 
 4. Defender
    Pre requisits - Enable Defender for Sub
@@ -174,7 +172,7 @@ Managing secrets, credentials or certificates to secure communication between di
 
 ### Solution - Spoilerwarning
 
-## Challenge 5
+## Challenge 5 - Azure Policy
 
 ```
 Info

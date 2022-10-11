@@ -14,7 +14,7 @@ Please ensure that you successfully passed [challenge 2](../../Readme.md#challen
 
 ![image](./img/1_new_KV.png)
 
-2. Create the Azure Key Vault in your resource group *microhack-arc-servers-rg* with default settings and call it *mh-keyvault* with a random number at the end as the name needs to be unique across all Azure Key Vaults.
+2. Create the Azure Key Vault in your resource group *microhack-arc-servers-rg* with default settings and call it *mh-arc-servers-kv* with a random number at the end as the name needs to be unique across all Azure Key Vaults.
 
 ![image](./img/2_KV_settings.png)
 
@@ -49,7 +49,6 @@ apt-get -y install jq
 
 4. Request an access token for the Key Vault using the following command:
 
-
 ```
 ChallengeTokenPath=$(curl -s -D - -H Metadata:true "http://127.0.0.1:40342/metadata/identity/oauth2/token?api-version=2019-11-01&resource=https%3A%2F%2Fmanagement.azure.com" | grep Www-Authenticate | cut -d "=" -f 2 | tr -d "[:cntrl:]")
 ChallengeToken=$(cat $ChallengeTokenPath)
@@ -58,7 +57,6 @@ if [ $? -ne 0 ]; then
 else
     AccessToken=$(curl -s -H Metadata:true -H "Authorization: Basic $ChallengeToken" "http://127.0.0.1:40342/metadata/identity/oauth2/token?api-version=2019-11-01&resource=https%3A%2F%2Fvault.azure.net")
 fi
-
 ```
 
 `❗Hint: The above request connects to the Azure Instance Metadata Service to retrieve an access token for the managed identity of your Azure Arc-enabled server. By default, the IMDS is accessible via 169.254.169.254 from Azure VMs. Azure Arc-enabled servers need to use 127.0.0.1 to proxy the request with the Azure Arc agent to Azure.`
@@ -69,12 +67,12 @@ fi
 token=$(echo "$AccessToken" | jq -r '.access_token')
 echo $token
 ```
-You shoud see the access token in the output. In addition, the result is saved in the variable *token* for the next step.
+You should see the access token in the output. In addition, the result is saved in the variable *token* for the next step.
 
 5. Now, it's time to call the Azure Key Vault instance to retrieve the secret from the previous task.
 
 ```
-curl 'https://mh-keyvault0815.vault.azure.net/secrets/kv-secret?api-version=2016-10-01' -H "Authorization: Bearer $token"
+curl 'https://mh-arc-servers-kv0815.vault.azure.net/secrets/kv-secret?api-version=2016-10-01' -H "Authorization: Bearer $token"
 ```
 
 `❗Hint: Please make sure to call your instance of Key Vault and adjust the name in the above command accordingly.`

@@ -11,7 +11,7 @@
   - [Challenge-1 - Azure Arc prerequisites & onboarding](#challenge-1---azure-arc-prerequisites-&-onboarding)
   - [Challenge 2 - Azure Monitor integration](#challenge-2---azure-monitor-integration)
   - [Challenge 3 - Access Azure resources using Managed Identities from your on-premises servers](#challenge-3---access-azure-resources-using-managed-identities-from-your-on-premises-servers)
-  - [Challenge 4 - Microsoft Defender for Cloud integration](#challenge-4---microsoft-defender-for-cloud-integration)
+  - [Challenge 4 - Microsoft Defender for Cloud integration with Azure Arc](#challenge-4---microsoft-defender-for-cloud-integration-with-azure-arc)
   - [Challenge 5 - Azure Policy](#Challenge-5---azure-policy)
 - [**Contributors**](#contributors)
 
@@ -78,6 +78,7 @@ Adrian
    Service Principal
    Resource Group
    Onboard WS / LX
+https://learn.microsoft.com/en-us/azure/azure-arc/servers/plan-evaluate-on-azure-virtual-machine
 
 ### Goal
 
@@ -168,7 +169,7 @@ Managing secrets, credentials or certificates to secure communication between di
 
 [Solution Steps](./walkthrough/challenge-3/solution.md)
 
-## Challenge 4 - Microsoft Defender for Cloud integration
+## Challenge 4 - Microsoft Defender for Cloud integration with Azure Arc
 
 4. Defender
    Pre requisits - Enable Defender for Sub
@@ -176,13 +177,23 @@ Managing secrets, credentials or certificates to secure communication between di
 
 ### Goal
 
+* In this challenge, we will integrate your Azure Arc connected machines with Azure Security Center (ASC). After completing the previous challenges, you should now have an Azure subscription with one or more Azure Arc managed servers. You should also have an available Log Analytics workspace and have deployed the Log Analytics agent to your server(s).
+
 ### Actions
+
+* Enable Azure Security Center on your Azure Arc connected machines.
 
 ### Success criteria
 
+* Open Azure Security Center and view the Secure Score for your Azure arc connected machine.
+
 ### Learning resources
 
+
+
 ### Solution - Spoilerwarning
+
+
 
 ## Challenge 5 - Azure Policy
 
@@ -218,7 +229,7 @@ Challenge 5 is all about interacting with the Client Operating System. We will h
 [Solution Steps](./walkthrough/challenge-5/solution.md)
 
 ## **Contributors**
-* Adrian Schöne [GitHub](https://github.com/alexor-ms/guest-configuration); [LinkedIn](https://www.linkedin.com/in/alexanderortha/)
+* Adrian Schöne [GitHub](https://github.com/adriandiver); [LinkedIn](https://www.linkedin.com/in/adrian-schoene//)
 * Christian Thönes [GitHub](https://github.com/alexor-ms/guest-configuration); [LinkedIn](https://www.linkedin.com/in/alexanderortha/)
 * Nild Bankert [GitHub](https://github.com/nilsbankert); [LinkedIn](https://www.linkedin.com/in/nilsbankert/)
 * Alexander Ortha [GitHub](https://github.com/alexor-ms/); [LinkedIn](https://www.linkedin.com/in/alexanderortha/)

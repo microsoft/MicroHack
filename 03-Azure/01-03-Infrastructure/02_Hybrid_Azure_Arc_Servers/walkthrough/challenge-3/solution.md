@@ -22,7 +22,7 @@ Please ensure that you successfully passed [challenge 2](../../Readme.md#challen
 
 ### Task 2: Create a new secret in your Key Vault
 
-1. After the creation navigate to the Azure Key Vault and assign the *Secret Management* template to the managed identity of your Azure Arc-enabled server *lin-app*.
+1. After the creation navigate to the Azure Key Vault and assign the *Secret Management* template to the managed identity of your Azure Arc-enabled server *microhack-arc-servers-lin01*.
 
 ![image](./img/3_Assign_KeyVault_permissions.png)
 
@@ -33,7 +33,7 @@ Please ensure that you successfully passed [challenge 2](../../Readme.md#challen
 
 ### Task 3: Call the secret without providing any credentials
 
-1. Connect via SSH to the Virtual Machine *lin-app*.
+1. Connect via SSH to the Virtual Machine *microhack-arc-servers-lin01*.
 
 2. Elevate your privileges using the following command:
 

@@ -91,11 +91,43 @@ Alexander
 
 ### Goal
 
+In challenge 3 you will successfully onboard your servers to Azure Arc and leverage Azure native services like Update Management, Inventory and VM Insights for your Azure Stack HCI Virtual Machines.
+At the beginning it is always a good approach setting up the stage, onboard the necessary infrastructure and management components to have the right focus and support for the next challenges. In this section the focus will be on onboarding the servers we have created in the first challenge and integrate them in the necessary control plane & management tools. 
+
 ### Actions
+
+* Create all necessary Azure Resources
+  * Azure Automation Account (Name: mh-arc-servers-automation)
+  * Log Analytics Workspace (Name: mh-arc-servers-kv-law)
+* Configure Log Analytics to collect Windows event logs and Linux syslog
+* Enable Azure Monitor for Azure Arc enabled Servers with Azure Policy initiative
+* Enable and configure Update Management
+* Enable Inventory
+* Enable VM Insights
+
 
 ### Success criteria
 
+* You have an Azure Automation Account and a Log Analytics Workspace
+* You successfully linked the necessary Azure Policy initiative to the Azure resource group
+* You can query the Log Analytics Workspace for events of your Virtual Machines
+* All Virtual Machines have the latest Windows and Linux updates installed
+* You can browse through the software inventory of your Virtual Machines
+* You can use VM Insights to get a detailed view of your Virtual Machines
+
 ### Learning resources
+
+* [Create an Automation account using the Azure portal](https://docs.microsoft.com/en-us/azure/automation/quickstarts/create-account-portal)
+* [Create a Log Analytics workspace in the Azure portal](https://docs.microsoft.com/en-us/azure/azure-monitor/logs/quick-create-workspace)
+* [Collect Windows event log data sources with Log Analytics agent](https://docs.microsoft.com/en-us/azure/azure-monitor/agents/data-sources-windows-events#configuring-windows-event-logs)
+* [Collect Syslog data sources with Log Analytics agent](https://docs.microsoft.com/en-us/azure/azure-monitor/agents/data-sources-syslog#configure-syslog-in-the-azure-portal)
+* [Understand deployment options for the Log Analytics agent on Azure Arc-enabled servers](https://docs.microsoft.com/en-us/azure/azure-arc/servers/concept-log-analytics-extension-deployment)
+* [Azure Policy built-in definitions for Azure Arc-enabled servers](https://docs.microsoft.com/en-us/azure/azure-arc/servers/policy-reference)
+* [Enable Update Management from an Automation account](https://docs.microsoft.com/en-us/azure/automation/update-management/enable-from-automation-account)
+* [How to deploy updates and review results](https://docs.microsoft.com/en-us/azure/automation/update-management/deploy-updates)
+* [Enable Change Tracking and Inventory from an Automation account](https://docs.microsoft.com/en-us/azure/automation/change-tracking/enable-from-automation-account)
+* [Monitor a hybrid machine with VM insights](https://docs.microsoft.com/en-us/azure/azure-arc/servers/learn/tutorial-enable-vm-insights)
+
 
 ### Solution - Spoilerwarning
 
@@ -108,12 +140,12 @@ Managing secrets, credentials or certificates to secure communication between di
 ## Actions
 
 * Create an Azure Key Vault in your Azure resource group
-* Create a secret in the Azure Key Vault and assign permissions to your Virtual Machine lin-app
+* Create a secret in the Azure Key Vault and assign permissions to your Virtual Machine microhack-arc-servers-lin01
 * Access the secret via Bash script
 
 ## Success Criteria
 
-* You successfully output the secret in the terminal on lin-app without providing any credentials (except for your SSH login 😊).
+* You successfully output the secret in the terminal on microhack-arc-servers-lin01 without providing any credentials (except for your SSH login 😊).
 
 ## Learning resources
 

@@ -73,14 +73,15 @@ Adrian
 
 ## Challenge 1 - Azure Arc prerequisites & onboarding
 
+# Delete
 
-# Pre requisits --> Nils, Alexander
+Pre requisits --> Nils, Alexander
    OS / VM deploy , 1 WS, 1 LX Ubuntu 22.04
    Service Principal
    Resource Group
    Onboard WS / LX
 
-
+# End Delete
 
 
 This MicroHack has a few but very important prerequisites to be understood before starting this lab!
@@ -109,16 +110,6 @@ Using Azure Arc with Azure VMs
   * [Evaluate Azure Arc-enabled servers on an Azure virtual machine](https://learn.microsoft.com/en-us/azure/azure-arc/servers/plan-evaluate-on-azure-virtual-machine)
 
 With these prerequisites in place, we can focus on building the differentiated knowledge in the hybrid world with Azure Arc to enable your on-prem, Multi-Cloud environment for the Cloud operations model.
-
-### Goal
-
-### Actions
-
-### Success criteria
-
-### Learning resources
-
-### Solution - Spoilerwarning
 
 ## Challenge 2 - Azure Monitor integration
 

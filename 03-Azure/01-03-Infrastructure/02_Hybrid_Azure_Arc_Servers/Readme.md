@@ -201,16 +201,20 @@ Challenge 5 is all about interacting with the Client Operating System. We will h
 ### Actions
 
 * Setup a Policy that checks if the user "FrodoBaggins" is part of the local administrators group
+* Setup a Custom Configuration that creates a file in "C:\temp" Folder.
 
 ### Success criteria
 
 * You can view the compliance state of the Administrator Group Policy
+* You can show the file being created by the Machine Configuration
 
 ### Learning resources
 
 * [Understand the machine configuration feature of Azure Automanage](https://learn.microsoft.com/en-us/azure/governance/machine-configuration/overview)
-
-* [Understand the guest configuration feature of Azure Policy](https://docs.microsoft.com/en-us/azure/governance/policy/concepts/guest-configuration)
+* [How to setup a machine configuration authoring environment](https://learn.microsoft.com/en-us/azure/governance/machine-configuration/machine-configuration-create-setup)
+* [How to create custom machine configuration package artifacts](https://learn.microsoft.com/en-us/azure/governance/machine-configuration/machine-configuration-create)
+* [How to create custom machine configuration policy definitions](https://learn.microsoft.com/en-us/azure/governance/machine-configuration/machine-configuration-create-definition)
+* [Create SAS tokens for storage containers](https://learn.microsoft.com/en-us/azure/applied-ai-services/form-recognizer/create-sas-tokens)
 
 ### Solution - Spoilerwarning
 
@@ -218,7 +222,7 @@ Challenge 5 is all about interacting with the Client Operating System. We will h
 
 ## **Contributors**
 * Adrian Schöne
-* Christian Thönes
+* Christian Thönes [Github](https://github.com/cthoenes)
 * Nild Bankert
 * Alexander Ortha [GitHub](https://github.com/alexor-ms/guest-configuration); [LinkedIn](https://www.linkedin.com/in/alexanderortha/)
 

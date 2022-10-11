@@ -75,6 +75,15 @@ Adrian
 
 This MicroHack has a few but very important prerequisites to be understood before starting this lab!
 
+### For Azure Resources
+
+* [Create Resource Group](https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/manage-resource-groups-portal#create-resource-groups)
+
+* [Create Service Principal](https://learn.microsoft.com/en-us/azure/azure-arc/servers/onboard-service-principal#create-a-service-principal-for-onboarding-at-scale)
+
+* Enable Azure Resource Provider 
+  [Azure Arc Azure resource providers](https://learn.microsoft.com/en-us/azure/azure-arc/servers/prerequisites#azure-resource-providers)
+
 ### For Arc enabled Servers
 
 * Have a server, windows or linux ready
@@ -180,10 +189,6 @@ Managing secrets, credentials or certificates to secure communication between di
 [Solution Steps](./walkthrough/challenge-3/solution.md)
 
 ## Challenge 4 - Microsoft Defender for Cloud integration with Azure Arc
-
-4. Defender
-   Pre requisits - Enable Defender for Sub
-   Check / verify - Recommendations
 
 ### Goal
 

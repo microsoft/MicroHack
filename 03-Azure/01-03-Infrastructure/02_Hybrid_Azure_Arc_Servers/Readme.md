@@ -91,13 +91,6 @@ Adrian
 
 ## Challenge 2 - Azure Monitor integration
 
-2. Azure Monitor / Log Analytics --> Adrian
-   Pre Requisits - AA Account & Log Analytics WS
-   Deployment Agent via Policy
-   Update Management
-   Inventory
-   Change Tracking
-
 ### Goal
 
 In challenge 2 you will successfully onboard your Windows and Linux Virtual Machines to a centralized Log Analytics Workspace to leverage Azure Monitor, Azure Update Management, Change Tracking and Inventory. 

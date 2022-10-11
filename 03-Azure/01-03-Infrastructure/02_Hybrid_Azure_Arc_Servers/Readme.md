@@ -73,17 +73,6 @@ Adrian
 
 ## Challenge 1 - Azure Arc prerequisites & onboarding
 
-# Delete
-
-Pre requisits --> Nils, Alexander
-   OS / VM deploy , 1 WS, 1 LX Ubuntu 22.04
-   Service Principal
-   Resource Group
-   Onboard WS / LX
-
-# End Delete
-
-
 This MicroHack has a few but very important prerequisites to be understood before starting this lab!
 
 ### For Arc enabled Servers

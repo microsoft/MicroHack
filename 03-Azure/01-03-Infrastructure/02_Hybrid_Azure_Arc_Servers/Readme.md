@@ -200,17 +200,16 @@ Managing secrets, credentials or certificates to secure communication between di
 
 [Solution Steps](./walkthrough/challenge-4/solution.md)
 
-## Challenge 5 - Azure Policy
+## Challenge 5 - Azure Automanage Machine Configuration
 
 ### Goal
-
 
 Challenge 5 is all about interacting with the Client Operating System. We will have a look at Machine Configurations as the final step of this journey.
 
 ### Actions
 
 * Setup a Policy that checks if the user "FrodoBaggins" is part of the local administrators group
-* Setup a Custom Configuration that creates a file in "C:\temp" Folder.
+* Setup a Custom Machine Configuration, for the Windows Server, that creates a file in "C:\temp" Folder.
 
 ### Success criteria
 

@@ -121,6 +121,8 @@ Challenge 5 is all about interacting with the Client Operating System. We will h
 
 ### Learning resources
 
+* [Understand the machine configuration feature of Azure Automanage](https://learn.microsoft.com/en-us/azure/governance/machine-configuration/overview)
+
 * [Understand the guest configuration feature of Azure Policy](https://docs.microsoft.com/en-us/azure/governance/policy/concepts/guest-configuration)
 
 ### Solution - Spoilerwarning

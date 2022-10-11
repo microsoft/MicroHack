@@ -95,7 +95,7 @@ For windows, pls use if possible Windows Server 2019 or 2022 with the latest pat
 	
   This Server OS could be hosted as a VM on VMware, Hyper-V, Nutanix, AWS, GCP or bare metal.
 	
-Additional:
+#### Additional:
   * These servers should be able to reach the internet and Azure.
   * You need to have full access and admin or root permissions on these Server OS
 
@@ -103,9 +103,9 @@ Additional:
   * [Ubuntu](https://ubuntu.com/download)
   * [Windows Server 2022](https://www.microsoft.com/en-us/evalcenter/download-windows-server-2022)
 
-Install from the downloaded ISO your prefered OS. 
+* Install from the downloaded ISO your prefered OS. 
 
-Using Azure Arc with Azure VMs
+#### Using Azure Arc with Azure VMs
 * In case you want to use an Azure VM for this MicroHack, you need to follow the guidance 
   * [Evaluate Azure Arc-enabled servers on an Azure virtual machine](https://learn.microsoft.com/en-us/azure/azure-arc/servers/plan-evaluate-on-azure-virtual-machine)
 

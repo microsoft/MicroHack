@@ -98,18 +98,31 @@ Managing secrets, credentials or certificates to secure communication between di
 
 ## Challenge 5
 
+```
+Info
 5. Policy --> Christian
    Guest Config Policy
    Check for local admin/user
    Machine Configuration test
+```
 
 ### Goal
+``` ok ```
+
+Challenge 5 is all about interacting with the Client Operating System. We will have a look at Guest Configuration Policies and Machine Configurations as the final step of this journey.
 
 ### Actions
 
+* Setup a Policy that checks if the user "FrodoBaggins" is part of the local administrators group
+
 ### Success criteria
+
+* You can view the compliance state of the Administrator Group Policy
 
 ### Learning resources
 
+* [Understand the guest configuration feature of Azure Policy](https://docs.microsoft.com/en-us/azure/governance/policy/concepts/guest-configuration)
+
 ### Solution - Spoilerwarning
 
+[Solution Steps](./walkthrough/challenge-5/solution.md)

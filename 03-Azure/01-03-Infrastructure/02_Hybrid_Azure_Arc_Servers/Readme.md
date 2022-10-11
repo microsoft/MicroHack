@@ -217,8 +217,8 @@ Challenge 5 is all about interacting with the Client Operating System. We will h
 [Solution Steps](./walkthrough/challenge-5/solution.md)
 
 ## **Contributors**
-* Adrian Schöne
-* Christian Thönes
-* Nild Bankert
-* Alexander Ortha [GitHub](https://github.com/alexor-ms/guest-configuration); [LinkedIn](https://www.linkedin.com/in/alexanderortha/)
+* Adrian Schöne [GitHub](https://github.com/alexor-ms/guest-configuration); [LinkedIn](https://www.linkedin.com/in/alexanderortha/)
+* Christian Thönes [GitHub](https://github.com/alexor-ms/guest-configuration); [LinkedIn](https://www.linkedin.com/in/alexanderortha/)
+* Nild Bankert [GitHub](https://github.com/alexor-ms/guest-configuration); [LinkedIn](https://www.linkedin.com/in/alexanderortha/)
+* Alexander Ortha [GitHub](https://github.com/alexor-ms/); [LinkedIn](https://www.linkedin.com/in/alexanderortha/)
 

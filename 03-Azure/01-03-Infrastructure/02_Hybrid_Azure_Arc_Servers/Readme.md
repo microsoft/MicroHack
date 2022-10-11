@@ -3,16 +3,17 @@
 - [**MicroHack introduction**](#MicroHack-introduction)
   - [**What is Azure Arc?**](#what-is-azure-arc)
 - [**MicroHack context**](#microhack-context)
-  - [License](#license)
-  - [Subscription](#subscription)
 - [**Objectives**](#objectives)
 - [**Lab environment for this MicroHack**](#lab-environment-for-this-microHack)
-- [**Architecture**](#which-microhacks-are-available)
-  - [Challenge-1 - Azure Arc pre-requisits & onboarding](#challenge-1---azure-arc-pre-requisits-&-onboarding)
+  - [Architecture](#architecture)
+- [**MicroHack Challenges**](#microhack-challenges)
+  - [General prerequisites](#general-prerequisites)
+  - [Challenge-1 - Azure Arc prerequisites & onboarding](#challenge-1---azure-arc-prerequisites-&-onboarding)
   - [Challenge 2 - Azure Monitor integration](#challenge-2---azure-monitor-integration)
   - [Challenge 3 - Access Azure resources using Managed Identities from your on-premises servers](#challenge-3---access-azure-resources-using-managed-identities-from-your-on-premises-servers)
-  - [Challenge 4 - Microsoft Defender for Cloud integration](#challenge-4---microsoft-defender-for-cloud-integration)
+  - [Challenge 4 - Microsoft Defender for Cloud integration with Azure Arc](#challenge-4---microsoft-defender-for-cloud-integration-with-azure-arc)
   - [Challenge 5 - Azure Policy](#Challenge-5---azure-policy)
+- [**Contributors**](#contributors)
 
 ## MicroHack introduction
 
@@ -38,6 +39,10 @@ Further resources - Thomas Maurer & Lior links
 * [Azure Arc Blog from Microsoft](https://techcommunity.microsoft.com/t5/azure-arc-blog/bg-p/AzureArcBlog)
 * [Azure Arc Jumpstart Scenarios](https://azurearcjumpstart.io/azure_arc_jumpstart/)
 * [Azure Arc Jumpstart ArcBox](https://azurearcjumpstart.io/azure_jumpstart_arcbox/)
+* [Azure Arc for Developers](https://techcommunity.microsoft.com/t5/itops-talk-blog/azure-arc-for-developers/ba-p/2561513)
+* [Azure Arc for Cloud Solutions Architects](https://techcommunity.microsoft.com/t5/itops-talk-blog/azure-arc-for-cloud-solutions-architects/ba-p/2521928)
+* [Azure Arc for IT Pros](https://techcommunity.microsoft.com/t5/itops-talk-blog/azure-arc-for-it-pros/ba-p/2347921)
+* [Azure Arc for Security Engineers](https://techcommunity.microsoft.com/t5/itops-talk-blog/azure-arc-for-security-engineers/ba-p/2367830)
 * [Learning Path Bring Azure innovation to your hybrid environments with Azure Arc](https://learn.microsoft.com/en-us/training/paths/manage-hybrid-infrastructure-with-azure-arc/)
 * [Customer reference: Wüstenrot & Württembergische reduces patching time by 35 percent, leans into hybrid cloud management with Azure Arc](https://customers.microsoft.com/en-us/story/1538266003319018436-ww-azure-banking-and-capital-markets)
 
@@ -58,9 +63,15 @@ Adrian
 Adrian
 
 ## MicroHack Challenges
-Alexander
 
-## Challenge 1 - Azure Arc pre-requisits & onboarding
+### General prerequisites
+
+* Your own Azure subscription with Owner RBAC rights at the subscription level
+* [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) 
+* [Visual Studio Code](https://code.visualstudio.com/)
+* [Git SCM](https://git-scm.com/download/) 
+
+## Challenge 1 - Azure Arc prerequisites & onboarding
 
 
 # Pre requisits --> Nils, Alexander
@@ -68,6 +79,7 @@ Alexander
    Service Principal
    Resource Group
    Onboard WS / LX
+https://learn.microsoft.com/en-us/azure/azure-arc/servers/plan-evaluate-on-azure-virtual-machine
 
 
 
@@ -115,8 +127,7 @@ With these prerequisites in place, we can focus on building the differentiated k
 
 ### Goal
 
-In challenge 3 you will successfully onboard your servers to Azure Arc and leverage Azure native services like Update Management, Inventory and VM Insights for your Azure Stack HCI Virtual Machines.
-At the beginning it is always a good approach setting up the stage, onboard the necessary infrastructure and management components to have the right focus and support for the next challenges. In this section the focus will be on onboarding the servers we have created in the first challenge and integrate them in the necessary control plane & management tools. 
+In challenge 2 you will successfully onboard your Windows and Linux Virtual Machines to a centralized Log Analytics Workspace to leverage Azure Monitor, Azure Update Management, Change Tracking and Inventory. 
 
 ### Actions
 
@@ -126,7 +137,7 @@ At the beginning it is always a good approach setting up the stage, onboard the 
 * Configure Log Analytics to collect Windows event logs and Linux syslog
 * Enable Azure Monitor for Azure Arc enabled Servers with Azure Policy initiative
 * Enable and configure Update Management
-* Enable Inventory
+* Enable Change Tracking and Inventory
 * Enable VM Insights
 
 
@@ -155,6 +166,8 @@ At the beginning it is always a good approach setting up the stage, onboard the 
 
 ### Solution - Spoilerwarning
 
+[Solution Steps](./walkthrough/challenge-2/solution.md)
+
 ## Challenge 3 - Access Azure resources using Managed Identities from your on-premises servers
 
 ## Goal
@@ -182,7 +195,7 @@ Managing secrets, credentials or certificates to secure communication between di
 
 [Solution Steps](./walkthrough/challenge-3/solution.md)
 
-## Challenge 4 - Microsoft Defender for Cloud integration
+## Challenge 4 - Microsoft Defender for Cloud integration with Azure Arc
 
 4. Defender
    Pre requisits - Enable Defender for Sub
@@ -190,28 +203,38 @@ Managing secrets, credentials or certificates to secure communication between di
 
 ### Goal
 
+* In this challenge, we will integrate your Azure Arc connected machines with Azure Security Center (ASC). After completing the previous challenges, you should now have an Azure subscription with one or more Azure Arc managed servers. You should also have an available Log Analytics workspace and have deployed the Log Analytics agent to your server(s).
+
 ### Actions
+
+* Enable Azure Security Center on your Azure Arc connected machines.
 
 ### Success criteria
 
+* Open Azure Security Center and view the Secure Score for your Azure arc connected machine.
+
 ### Learning resources
 
+
+
 ### Solution - Spoilerwarning
+
+
 
 ## Challenge 5 - Azure Policy
 
 ```
 Info
 5. Policy --> Christian
-   Guest Config Policy
-   Check for local admin/user
-   Machine Configuration test
+   Guest Config Policy -> Not Named Azure Automanage Machine Configuration
+   Check for local admin/user -> Still valid. Will be kept
+   Machine Configuration - Create Config to update local file / create folder 
 ```
 
 ### Goal
-``` ok ```
 
-Challenge 5 is all about interacting with the Client Operating System. We will have a look at Guest Configuration Policies and Machine Configurations as the final step of this journey.
+
+Challenge 5 is all about interacting with the Client Operating System. We will have a look at Machine Configurations as the final step of this journey.
 
 ### Actions
 
@@ -230,3 +253,10 @@ Challenge 5 is all about interacting with the Client Operating System. We will h
 ### Solution - Spoilerwarning
 
 [Solution Steps](./walkthrough/challenge-5/solution.md)
+
+## **Contributors**
+* Adrian Schöne [GitHub](https://github.com/adriandiver); [LinkedIn](https://www.linkedin.com/in/adrian-schoene//)
+* Christian Thönes [GitHub](https://github.com/alexor-ms/guest-configuration); [LinkedIn](https://www.linkedin.com/in/alexanderortha/)
+* Nild Bankert [GitHub](https://github.com/nilsbankert); [LinkedIn](https://www.linkedin.com/in/nilsbankert/)
+* Alexander Ortha [GitHub](https://github.com/alexor-ms/); [LinkedIn](https://www.linkedin.com/in/alexanderortha/)
+

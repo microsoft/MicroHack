@@ -2,19 +2,18 @@
 
 - [**MicroHack introduction**](#MicroHack-introduction)
   - [**What is Azure Arc?**](#what-is-azure-arc)
-  - [**How does it work?**](#how-does-it-work)
-  - [**What is the benefit?**](#what-is-the-benefit)
-- [**Pre-requisites**](#pre-requisites)
-  - [License](#license)
-  - [Subscription](#subscription)
-- [**How to contribute** 🚀](#how-to-contribute-)
-- [**Security hints and handling / Report an issue**](#security-hints-and-handling--report-an-issue)
-- [**Which MicroHacks are available**](#which-microhacks-are-available)
-  - [01 - Identity and Access Management](#01---identity-and-access-management)
-  - [02 - Security](#02---security)
-  - [03 - Azure](#03---azure)
-  - [04 - M365](#04---m365)
-  - [99 - MicroHack-Template](#99---microhack-template)
+- [**MicroHack context**](#microhack-context)
+- [**Objectives**](#objectives)
+- [**Lab environment for this MicroHack**](#lab-environment-for-this-microHack)
+  - [Architecture](#architecture)
+- [**MicroHack Challenges**](#microhack-challenges)
+  - [General prerequisites](#general-prerequisites)
+  - [Challenge-1 - Azure Arc prerequisites & onboarding](#challenge-1---azure-arc-pre-requisits-&-onboarding)
+  - [Challenge 2 - Azure Monitor integration](#challenge-2---azure-monitor-integration)
+  - [Challenge 3 - Access Azure resources using Managed Identities from your on-premises servers](#challenge-3---access-azure-resources-using-managed-identities-from-your-on-premises-servers)
+  - [Challenge 4 - Microsoft Defender for Cloud integration](#challenge-4---microsoft-defender-for-cloud-integration)
+  - [Challenge 5 - Azure Policy](#Challenge-5---azure-policy)
+- [**Contributors**](#contributors)
 
 ## MicroHack introduction
 
@@ -40,6 +39,10 @@ Further resources - Thomas Maurer & Lior links
 * [Azure Arc Blog from Microsoft](https://techcommunity.microsoft.com/t5/azure-arc-blog/bg-p/AzureArcBlog)
 * [Azure Arc Jumpstart Scenarios](https://azurearcjumpstart.io/azure_arc_jumpstart/)
 * [Azure Arc Jumpstart ArcBox](https://azurearcjumpstart.io/azure_jumpstart_arcbox/)
+* [Azure Arc for Developers](https://techcommunity.microsoft.com/t5/itops-talk-blog/azure-arc-for-developers/ba-p/2561513)
+* [Azure Arc for Cloud Solutions Architects](https://techcommunity.microsoft.com/t5/itops-talk-blog/azure-arc-for-cloud-solutions-architects/ba-p/2521928)
+* [Azure Arc for IT Pros](https://techcommunity.microsoft.com/t5/itops-talk-blog/azure-arc-for-it-pros/ba-p/2347921)
+* [Azure Arc for Security Engineers](https://techcommunity.microsoft.com/t5/itops-talk-blog/azure-arc-for-security-engineers/ba-p/2367830)
 * [Learning Path Bring Azure innovation to your hybrid environments with Azure Arc](https://learn.microsoft.com/en-us/training/paths/manage-hybrid-infrastructure-with-azure-arc/)
 * [Customer reference: Wüstenrot & Württembergische reduces patching time by 35 percent, leans into hybrid cloud management with Azure Arc](https://customers.microsoft.com/en-us/story/1538266003319018436-ww-azure-banking-and-capital-markets)
 
@@ -60,9 +63,15 @@ Adrian
 Adrian
 
 ## MicroHack Challenges
-Alexander
 
-## Challenge 1
+### General prerequisites
+
+* Your own Azure subscription with Owner RBAC rights at the subscription level
+* [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) 
+* [Visual Studio Code](https://code.visualstudio.com/)
+* [Git SCM](https://git-scm.com/download/) 
+
+## Challenge 1 - Azure Arc prerequisites & onboarding
 
 1. Pre requisits --> Nils, Alexander
    OS / VM deploy , 1 WS, 1 LX Ubuntu 22.04
@@ -80,7 +89,7 @@ Alexander
 
 ### Solution - Spoilerwarning
 
-## Challenge 2
+## Challenge 2 - Azure Monitor integration
 
 2. Azure Monitor / Log Analytics --> Adrian
    Pre Requisits - AA Account & Log Analytics WS
@@ -158,7 +167,7 @@ Managing secrets, credentials or certificates to secure communication between di
 
 [Solution Steps](./walkthrough/challenge-3/solution.md)
 
-## Challenge 4
+## Challenge 4 - Microsoft Defender for Cloud integration
 
 4. Defender
    Pre requisits - Enable Defender for Sub
@@ -174,7 +183,7 @@ Managing secrets, credentials or certificates to secure communication between di
 
 ### Solution - Spoilerwarning
 
-## Challenge 5
+## Challenge 5 - Azure Policy
 
 ```
 Info
@@ -206,3 +215,10 @@ Challenge 5 is all about interacting with the Client Operating System. We will h
 ### Solution - Spoilerwarning
 
 [Solution Steps](./walkthrough/challenge-5/solution.md)
+
+## **Contributors**
+* Adrian Schöne
+* Christian Thönes
+* Nild Bankert
+* Alexander Ortha [GitHub](https://github.com/alexor-ms/guest-configuration); [LinkedIn](https://www.linkedin.com/in/alexanderortha/)
+

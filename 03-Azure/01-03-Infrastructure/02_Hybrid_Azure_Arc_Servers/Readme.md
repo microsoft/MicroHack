@@ -188,15 +188,15 @@ Managing secrets, credentials or certificates to secure communication between di
 ```
 Info
 5. Policy --> Christian
-   Guest Config Policy
-   Check for local admin/user
-   Machine Configuration test
+   Guest Config Policy -> Not Named Azure Automanage Machine Configuration
+   Check for local admin/user -> Still valid. Will be kept
+   Machine Configuration - Create Config to update local file / create folder 
 ```
 
 ### Goal
-``` ok ```
 
-Challenge 5 is all about interacting with the Client Operating System. We will have a look at Guest Configuration Policies and Machine Configurations as the final step of this journey.
+
+Challenge 5 is all about interacting with the Client Operating System. We will have a look at Machine Configurations as the final step of this journey.
 
 ### Actions
 

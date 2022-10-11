@@ -202,14 +202,6 @@ Managing secrets, credentials or certificates to secure communication between di
 
 ## Challenge 5 - Azure Policy
 
-```
-Info
-5. Policy --> Christian
-   Guest Config Policy -> Not Named Azure Automanage Machine Configuration
-   Check for local admin/user -> Still valid. Will be kept
-   Machine Configuration - Create Config to update local file / create folder 
-```
-
 ### Goal
 
 
@@ -239,7 +231,7 @@ Challenge 5 is all about interacting with the Client Operating System. We will h
 
 ## **Contributors**
 * Adrian Schöne [GitHub](https://github.com/adriandiver); [LinkedIn](https://www.linkedin.com/in/adrian-schoene//)
-* Christian Thönes [Github](https://github.com/cthoenes) [GitHub](https://github.com/alexor-ms/guest-configuration); [LinkedIn](https://www.linkedin.com/in/alexanderortha/)
+* Christian Thönes [Github](https://github.com/cthoenes)
 * Nild Bankert [GitHub](https://github.com/nilsbankert); [LinkedIn](https://www.linkedin.com/in/nilsbankert/)
 * Alexander Ortha [GitHub](https://github.com/alexor-ms/); [LinkedIn](https://www.linkedin.com/in/alexanderortha/)
 

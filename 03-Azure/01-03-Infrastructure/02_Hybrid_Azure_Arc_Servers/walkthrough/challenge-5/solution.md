@@ -44,6 +44,8 @@
 
 ### Create the Machine Configuration from the Portal
 
+File Script https://github.com/PowerShell/PSDscResources/blob/master/Examples/Sample_Script.ps1
+
 1. Take the attached zip file to be used as your package. If you want to learn how to create those package plase refer to the Learning Resources
 2. Upload the Package to a Storage Account in your environment
 3. Make sure the machine we want to apply the machine config to can connect to the storage account

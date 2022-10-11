@@ -81,4 +81,4 @@ curl 'https://mh-arc-servers-kv0815.vault.azure.net/secrets/kv-secret?api-versio
 
 Congratulations! You retrieved the secret from your Key Vault without providing any credentials.
 
-You successfully completed challenge 4! 🚀🚀🚀
+You successfully completed challenge 3! 🚀🚀🚀

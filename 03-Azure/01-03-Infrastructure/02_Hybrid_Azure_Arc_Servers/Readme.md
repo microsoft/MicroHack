@@ -1,6 +1,20 @@
 # **MicroHack Azure Arc for Servers**
 
-[toc]
+- [**MicroHack introduction**](#MicroHack-introduction)
+  - [**What is Azure Arc?**](#what-is-azure-arc)
+  - [**How does it work?**](#how-does-it-work)
+  - [**What is the benefit?**](#what-is-the-benefit)
+- [**Pre-requisites**](#pre-requisites)
+  - [License](#license)
+  - [Subscription](#subscription)
+- [**How to contribute** 🚀](#how-to-contribute-)
+- [**Security hints and handling / Report an issue**](#security-hints-and-handling--report-an-issue)
+- [**Which MicroHacks are available**](#which-microhacks-are-available)
+  - [01 - Identity and Access Management](#01---identity-and-access-management)
+  - [02 - Security](#02---security)
+  - [03 - Azure](#03---azure)
+  - [04 - M365](#04---m365)
+  - [99 - MicroHack-Template](#99---microhack-template)
 
 ## MicroHack introduction
 
@@ -22,12 +36,12 @@ This MicroHack scenario walks through the use of Azure Arc with a focus on the b
 
 Further resources - Thomas Maurer & Lior links
 
-* [Secure, develop, and operate infrastructure, apps, and Azure services anywhere](https://azure.microsoft.com/en-us/products/azure-arc/#product-overview)
-* [Secure, develop, and operate infrastructure, apps, and Azure services anywhere](https://azure.microsoft.com/en-us/products/azure-arc/#product-overview)
-* [Secure, develop, and operate infrastructure, apps, and Azure services anywhere](https://azure.microsoft.com/en-us/products/azure-arc/#product-overview)
-
-
-
+* [Azure Arc Overview Documentation](https://learn.microsoft.com/en-us/azure/azure-arc/overview)
+* [Azure Arc Blog from Microsoft](https://techcommunity.microsoft.com/t5/azure-arc-blog/bg-p/AzureArcBlog)
+* [Azure Arc Jumpstart Scenarios](https://azurearcjumpstart.io/azure_arc_jumpstart/)
+* [Azure Arc Jumpstart ArcBox](https://azurearcjumpstart.io/azure_jumpstart_arcbox/)
+* [Learning Path Bring Azure innovation to your hybrid environments with Azure Arc](https://learn.microsoft.com/en-us/training/paths/manage-hybrid-infrastructure-with-azure-arc/)
+* [Customer reference: Wüstenrot & Württembergische reduces patching time by 35 percent, leans into hybrid cloud management with Azure Arc](https://customers.microsoft.com/en-us/story/1538266003319018436-ww-azure-banking-and-capital-markets)
 
 💡 Optional: Read this after completing this lab to deepen the learned!
 

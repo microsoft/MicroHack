@@ -8,10 +8,10 @@
   - [Architecture](#architecture)
 - [**MicroHack Challenges**](#microhack-challenges)
   - [General prerequisites](#general-prerequisites)
-  - [Challenge-1 - Azure Arc prerequisites & onboarding](#challenge-1---azure-arc-pre-requisits-&-onboarding)
+  - [Challenge-1 - Azure Arc prerequisites & onboarding](#challenge-1---azure-arc-prerequisites-&-onboarding)
   - [Challenge 2 - Azure Monitor integration](#challenge-2---azure-monitor-integration)
   - [Challenge 3 - Access Azure resources using Managed Identities from your on-premises servers](#challenge-3---access-azure-resources-using-managed-identities-from-your-on-premises-servers)
-  - [Challenge 4 - Microsoft Defender for Cloud integration](#challenge-4---microsoft-defender-for-cloud-integration)
+  - [Challenge 4 - Microsoft Defender for Cloud integration with Azure Arc](#challenge-4---microsoft-defender-for-cloud-integration-with-azure-arc)
   - [Challenge 5 - Azure Policy](#Challenge-5---azure-policy)
 - [**Contributors**](#contributors)
 
@@ -56,12 +56,6 @@ After completing this MicroHack you will:
 * Understand use cases and possible scenarios in your hybrid world to modernize your infrastructure estate
 * Get insights into real world challenges and scenarios
 
-## Lab environment for this MicroHack
-Adrian
-
-### Architecture
-Adrian
-
 ## MicroHack Challenges
 
 ### General prerequisites
@@ -73,35 +67,47 @@ Adrian
 
 ## Challenge 1 - Azure Arc prerequisites & onboarding
 
-1. Pre requisits --> Nils, Alexander
-   OS / VM deploy , 1 WS, 1 LX Ubuntu 22.04
-   Service Principal
-   Resource Group
-   Onboard WS / LX
+This MicroHack has a few but very important prerequisites to be understood before starting this lab!
 
-### Goal
+### For Azure Resources
 
-### Actions
+* [Create Resource Group](https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/manage-resource-groups-portal#create-resource-groups)
 
-### Success criteria
+* [Create Service Principal](https://learn.microsoft.com/en-us/azure/azure-arc/servers/onboard-service-principal#create-a-service-principal-for-onboarding-at-scale)
 
-### Learning resources
+* Enable Azure Resource Provider 
+  [Azure Arc Azure resource providers](https://learn.microsoft.com/en-us/azure/azure-arc/servers/prerequisites#azure-resource-providers)
 
-### Solution - Spoilerwarning
+### For Arc enabled Servers
+
+* Have a server, windows or linux ready
+For windows, pls use if possible Windows Server 2019 or 2022 with the latest patch level
+
+  [Supported operating systems @ Connected Machine agent prerequisites - Azure Arc | Microsoft Docs](https://docs.microsoft.com/en-us/azure/azure-arc/servers/prerequisites#supported-operating-systems)
+	
+  This Server OS could be hosted as a VM on VMware, Hyper-V, Nutanix, AWS, GCP or bare metal.
+	
+#### Additional:
+  * These servers should be able to reach the internet and Azure.
+  * You need to have full access and admin or root permissions on these Server OS
+
+* If you need to install and deploy your own server OS from scratch, then, download the following ISO files and save them on your own PC / Environment with your preferred Hypervisor e.g. Hyper-V or Virtualization Client (Windows 10/11 Hyper-V or Virtual Box).
+  * [Ubuntu](https://ubuntu.com/download)
+  * [Windows Server 2022](https://www.microsoft.com/en-us/evalcenter/download-windows-server-2022)
+
+* Install from the downloaded ISO your preferred OS. 
+
+#### Using Azure Arc with Azure VMs
+* In case you want to use an Azure VM for this MicroHack, you need to follow the guidance 
+  * [Evaluate Azure Arc-enabled servers on an Azure virtual machine](https://learn.microsoft.com/en-us/azure/azure-arc/servers/plan-evaluate-on-azure-virtual-machine)
+
+With these prerequisites in place, we can focus on building the differentiated knowledge in the hybrid world with Azure Arc to enable your on-prem, Multi-Cloud environment for the Cloud operations model.
 
 ## Challenge 2 - Azure Monitor integration
 
-2. Azure Monitor / Log Analytics --> Adrian
-   Pre Requisits - AA Account & Log Analytics WS
-   Deployment Agent via Policy
-   Update Management
-   Inventory
-   Change Tracking
-
 ### Goal
 
-In challenge 3 you will successfully onboard your servers to Azure Arc and leverage Azure native services like Update Management, Inventory and VM Insights for your Azure Stack HCI Virtual Machines.
-At the beginning it is always a good approach setting up the stage, onboard the necessary infrastructure and management components to have the right focus and support for the next challenges. In this section the focus will be on onboarding the servers we have created in the first challenge and integrate them in the necessary control plane & management tools. 
+In challenge 2 you will successfully onboard your Windows and Linux Virtual Machines to a centralized Log Analytics Workspace to leverage Azure Monitor, Azure Update Management, Change Tracking and Inventory. 
 
 ### Actions
 
@@ -111,7 +117,7 @@ At the beginning it is always a good approach setting up the stage, onboard the 
 * Configure Log Analytics to collect Windows event logs and Linux syslog
 * Enable Azure Monitor for Azure Arc enabled Servers with Azure Policy initiative
 * Enable and configure Update Management
-* Enable Inventory
+* Enable Change Tracking and Inventory
 * Enable VM Insights
 
 
@@ -140,6 +146,8 @@ At the beginning it is always a good approach setting up the stage, onboard the 
 
 ### Solution - Spoilerwarning
 
+[Solution Steps](./walkthrough/challenge-2/solution.md)
+
 ## Challenge 3 - Access Azure resources using Managed Identities from your on-premises servers
 
 ## Goal
@@ -167,21 +175,30 @@ Managing secrets, credentials or certificates to secure communication between di
 
 [Solution Steps](./walkthrough/challenge-3/solution.md)
 
-## Challenge 4 - Microsoft Defender for Cloud integration
-
-4. Defender
-   Pre requisits - Enable Defender for Sub
-   Check / verify - Recommendations
+## Challenge 4 - Microsoft Defender for Cloud integration with Azure Arc
 
 ### Goal
 
+* In this challenge, we will integrate your Azure Arc connected machines with Azure Security Center (ASC). After completing the previous challenges, you should now have an Azure subscription with one or more Azure Arc managed servers. You should also have an available Log Analytics workspace and have deployed the Log Analytics agent to your server(s).
+
 ### Actions
+
+* Enable Microsoft Defender for Cloud with Azure Security Center on your Azure Arc connected machines.
 
 ### Success criteria
 
+* Open Microsoft Defender for Cloud with Azure Security Center and view the Secure Score for your Azure arc connected machine.
+
 ### Learning resources
 
+* [Quickstart: Connect your non-Azure machines to Microsoft Defender for Cloud](https://learn.microsoft.com/en-us/azure/defender-for-cloud/quickstart-onboard-machines?pivots=azure-arc)
+* [Connect Azure Arc-enabled servers to Microsoft Defender for Cloud](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/manage/hybrid/server/best-practices/arc-security-center)
+* [Protect non-Azure resources using Azure Arc and Microsoft Defender for Cloud](https://techcommunity.microsoft.com/t5/microsoft-defender-for-cloud/protect-non-azure-resources-using-azure-arc-and-microsoft/ba-p/2277215)
+
+
 ### Solution - Spoilerwarning
+
+[Solution Steps](./walkthrough/challenge-4/solution.md)
 
 ## Challenge 5 - Azure Policy
 
@@ -221,8 +238,8 @@ Challenge 5 is all about interacting with the Client Operating System. We will h
 [Solution Steps](./walkthrough/challenge-5/solution.md)
 
 ## **Contributors**
-* Adrian Schöne
-* Christian Thönes [Github](https://github.com/cthoenes)
-* Nild Bankert
-* Alexander Ortha [GitHub](https://github.com/alexor-ms/guest-configuration); [LinkedIn](https://www.linkedin.com/in/alexanderortha/)
+* Adrian Schöne [GitHub](https://github.com/adriandiver); [LinkedIn](https://www.linkedin.com/in/adrian-schoene//)
+* Christian Thönes [Github](https://github.com/cthoenes) [GitHub](https://github.com/alexor-ms/guest-configuration); [LinkedIn](https://www.linkedin.com/in/alexanderortha/)
+* Nild Bankert [GitHub](https://github.com/nilsbankert); [LinkedIn](https://www.linkedin.com/in/nilsbankert/)
+* Alexander Ortha [GitHub](https://github.com/alexor-ms/); [LinkedIn](https://www.linkedin.com/in/alexanderortha/)
 

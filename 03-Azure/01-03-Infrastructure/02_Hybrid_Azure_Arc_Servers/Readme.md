@@ -101,7 +101,7 @@ Managing secrets, credentials or certificates to secure communication between di
 5. Policy --> Christian
    Guest Config Policy
    Check for local admin/user
-   Machine Configuration
+   Machine Configuration test
 
 ### Goal
 

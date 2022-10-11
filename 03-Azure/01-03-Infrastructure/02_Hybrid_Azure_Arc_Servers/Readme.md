@@ -62,11 +62,37 @@ Alexander
 
 ## Challenge 1 - Azure Arc pre-requisits & onboarding
 
-1. Pre requisits --> Nils, Alexander
+
+# Pre requisits --> Nils, Alexander
    OS / VM deploy , 1 WS, 1 LX Ubuntu 22.04
    Service Principal
    Resource Group
    Onboard WS / LX
+
+
+
+This MicroHack has a few but very important prerequisites to be understood before starting this lab!
+
+### For Arc enabled Servers
+
+* Have a server, windows or linux ready
+For windows, pls use if possible Windows Server 2019 or 2022 with the latest patch level
+
+  [Supported operating systems @ Connected Machine agent prerequisites - Azure Arc | Microsoft Docs](https://docs.microsoft.com/en-us/azure/azure-arc/servers/prerequisites#supported-operating-systems)
+	
+  This Server OS could be hosted as a VM on VMware, Hyper-V, Nutanix, AWS, GCP or bare metal.
+	
+Additional:
+  * These servers should be able to reach the internet and Azure.
+  * You need to have full access and admin or root permissions on these Server OS
+
+* If you need to install and deploy your own server OS from scratch, then, download the following ISO files and save them on your own PC / Environment with your prefered Hypervisor e.g. Hyper-V or Virtualization Client (Windows 10/11 Hyper-V or Virtual Box).
+  * [Ubuntu](https://ubuntu.com/download)
+  * [Windows Server 2022](https://www.microsoft.com/en-us/evalcenter/download-windows-server-2022)
+
+Install from the downloaded ISO your prefered OS. 
+
+With these prerequisites in place, we can focus on building the differentiated knowledge in the hybrid world with Azure Arc to enable your on-prem, Multi-Cloud environment for the Cloud operations model.
 
 ### Goal
 

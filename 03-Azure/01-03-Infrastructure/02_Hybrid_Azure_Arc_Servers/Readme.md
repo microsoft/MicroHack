@@ -79,7 +79,7 @@ Adrian
    Service Principal
    Resource Group
    Onboard WS / LX
-https://learn.microsoft.com/en-us/azure/azure-arc/servers/plan-evaluate-on-azure-virtual-machine
+
 
 
 
@@ -103,6 +103,10 @@ Additional:
   * [Windows Server 2022](https://www.microsoft.com/en-us/evalcenter/download-windows-server-2022)
 
 Install from the downloaded ISO your prefered OS. 
+
+Using Azure Arc with Azure VMs
+* In case you want to use an Azure VM for this MicroHack, you need to follow the guidance 
+  * [Evaluate Azure Arc-enabled servers on an Azure virtual machine](https://learn.microsoft.com/en-us/azure/azure-arc/servers/plan-evaluate-on-azure-virtual-machine)
 
 With these prerequisites in place, we can focus on building the differentiated knowledge in the hybrid world with Azure Arc to enable your on-prem, Multi-Cloud environment for the Cloud operations model.
 
@@ -207,19 +211,22 @@ Managing secrets, credentials or certificates to secure communication between di
 
 ### Actions
 
-* Enable Azure Security Center on your Azure Arc connected machines.
+* Enable Microsoft Defender for Cloud with Azure Security Center on your Azure Arc connected machines.
 
 ### Success criteria
 
-* Open Azure Security Center and view the Secure Score for your Azure arc connected machine.
+* Open Microsoft Defender for Cloud with Azure Security Center and view the Secure Score for your Azure arc connected machine.
 
 ### Learning resources
 
+* [Quickstart: Connect your non-Azure machines to Microsoft Defender for Cloud](https://learn.microsoft.com/en-us/azure/defender-for-cloud/quickstart-onboard-machines?pivots=azure-arc)
+* [Connect Azure Arc-enabled servers to Microsoft Defender for Cloud](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/manage/hybrid/server/best-practices/arc-security-center)
+* [Protect non-Azure resources using Azure Arc and Microsoft Defender for Cloud](https://techcommunity.microsoft.com/t5/microsoft-defender-for-cloud/protect-non-azure-resources-using-azure-arc-and-microsoft/ba-p/2277215)
 
 
 ### Solution - Spoilerwarning
 
-
+[Solution Steps](./walkthrough/challenge-4/solution.md)
 
 ## Challenge 5 - Azure Policy
 

@@ -100,8 +100,7 @@ Adrian
 
 ### Goal
 
-In challenge 3 you will successfully onboard your servers to Azure Arc and leverage Azure native services like Update Management, Inventory and VM Insights for your Azure Stack HCI Virtual Machines.
-At the beginning it is always a good approach setting up the stage, onboard the necessary infrastructure and management components to have the right focus and support for the next challenges. In this section the focus will be on onboarding the servers we have created in the first challenge and integrate them in the necessary control plane & management tools. 
+In challenge 2 you will successfully onboard your Windows and Linux Virtual Machines to a centralized Log Analytics Workspace to leverage Azure Monitor, Azure Update Management, Change Tracking and Inventory. 
 
 ### Actions
 
@@ -111,7 +110,7 @@ At the beginning it is always a good approach setting up the stage, onboard the 
 * Configure Log Analytics to collect Windows event logs and Linux syslog
 * Enable Azure Monitor for Azure Arc enabled Servers with Azure Policy initiative
 * Enable and configure Update Management
-* Enable Inventory
+* Enable Change Tracking and Inventory
 * Enable VM Insights
 
 
@@ -139,6 +138,8 @@ At the beginning it is always a good approach setting up the stage, onboard the 
 
 
 ### Solution - Spoilerwarning
+
+[Solution Steps](./walkthrough/challenge-2/solution.md)
 
 ## Challenge 3 - Access Azure resources using Managed Identities from your on-premises servers
 

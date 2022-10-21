@@ -230,7 +230,7 @@ Challenge 5 is all about interacting with the Client Operating System. We will h
 
 ## **Contributors**
 * Adrian Schöne [GitHub](https://github.com/adriandiver); [LinkedIn](https://www.linkedin.com/in/adrian-schoene//)
-* Christian Thönes [Github](https://github.com/cthoenes)
+* Christian Thönes [Github](https://github.com/cthoenes); [LinkedIn](https://www.linkedin.com/in/christian-th%C3%B6nes-510b7522/)
 * Nild Bankert [GitHub](https://github.com/nilsbankert); [LinkedIn](https://www.linkedin.com/in/nilsbankert/)
 * Alexander Ortha [GitHub](https://github.com/alexor-ms/); [LinkedIn](https://www.linkedin.com/in/alexanderortha/)
 

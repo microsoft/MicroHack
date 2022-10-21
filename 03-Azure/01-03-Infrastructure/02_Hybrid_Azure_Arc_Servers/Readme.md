@@ -69,6 +69,15 @@ After completing this MicroHack you will:
 
 This MicroHack has a few but very important prerequisites to be understood before starting this lab!
 
+### For Azure Resources
+
+* [Create Resource Group](https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/manage-resource-groups-portal#create-resource-groups)
+
+* [Create Service Principal](https://learn.microsoft.com/en-us/azure/azure-arc/servers/onboard-service-principal#create-a-service-principal-for-onboarding-at-scale)
+
+* Enable Azure Resource Provider 
+  [Azure Arc Azure resource providers](https://learn.microsoft.com/en-us/azure/azure-arc/servers/prerequisites#azure-resource-providers)
+
 ### For Arc enabled Servers
 
 * Have a server, windows or linux ready
@@ -168,10 +177,6 @@ Managing secrets, credentials or certificates to secure communication between di
 
 ## Challenge 4 - Microsoft Defender for Cloud integration with Azure Arc
 
-4. Defender
-   Pre requisits - Enable Defender for Sub
-   Check / verify - Recommendations
-
 ### Goal
 
 * In this challenge, we will integrate your Azure Arc connected machines with Azure Security Center (ASC). After completing the previous challenges, you should now have an Azure subscription with one or more Azure Arc managed servers. You should also have an available Log Analytics workspace and have deployed the Log Analytics agent to your server(s).
@@ -195,34 +200,29 @@ Managing secrets, credentials or certificates to secure communication between di
 
 [Solution Steps](./walkthrough/challenge-4/solution.md)
 
-## Challenge 5 - Azure Policy
-
-```
-Info
-5. Policy --> Christian
-   Guest Config Policy -> Not Named Azure Automanage Machine Configuration
-   Check for local admin/user -> Still valid. Will be kept
-   Machine Configuration - Create Config to update local file / create folder 
-```
+## Challenge 5 - Azure Automanage Machine Configuration
 
 ### Goal
-
 
 Challenge 5 is all about interacting with the Client Operating System. We will have a look at Machine Configurations as the final step of this journey.
 
 ### Actions
 
 * Setup a Policy that checks if the user "FrodoBaggins" is part of the local administrators group
+* Setup a Custom Machine Configuration, for the Windows Server, that creates a file in "C:\temp" Folder.
 
 ### Success criteria
 
 * You can view the compliance state of the Administrator Group Policy
+* You can show the file being created by the Machine Configuration
 
 ### Learning resources
 
 * [Understand the machine configuration feature of Azure Automanage](https://learn.microsoft.com/en-us/azure/governance/machine-configuration/overview)
-
-* [Understand the guest configuration feature of Azure Policy](https://docs.microsoft.com/en-us/azure/governance/policy/concepts/guest-configuration)
+* [How to setup a machine configuration authoring environment](https://learn.microsoft.com/en-us/azure/governance/machine-configuration/machine-configuration-create-setup)
+* [How to create custom machine configuration package artifacts](https://learn.microsoft.com/en-us/azure/governance/machine-configuration/machine-configuration-create)
+* [How to create custom machine configuration policy definitions](https://learn.microsoft.com/en-us/azure/governance/machine-configuration/machine-configuration-create-definition)
+* [Create SAS tokens for storage containers](https://learn.microsoft.com/en-us/azure/applied-ai-services/form-recognizer/create-sas-tokens)
 
 ### Solution - Spoilerwarning
 
@@ -230,7 +230,7 @@ Challenge 5 is all about interacting with the Client Operating System. We will h
 
 ## **Contributors**
 * Adrian Schöne [GitHub](https://github.com/adriandiver); [LinkedIn](https://www.linkedin.com/in/adrian-schoene//)
-* Christian Thönes [GitHub](https://github.com/alexor-ms/guest-configuration); [LinkedIn](https://www.linkedin.com/in/alexanderortha/)
+* Christian Thönes [Github](https://github.com/cthoenes)
 * Nild Bankert [GitHub](https://github.com/nilsbankert); [LinkedIn](https://www.linkedin.com/in/nilsbankert/)
 * Alexander Ortha [GitHub](https://github.com/alexor-ms/); [LinkedIn](https://www.linkedin.com/in/alexanderortha/)
 

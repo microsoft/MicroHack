@@ -35,4 +35,24 @@
 
 ## Action 2: Create an Azure Policy Guest Configuration for your Azure Arc VMs
 
-### Setup a Policy that checks if the user "FrodoBaggins" is part of the local administrators group
+### Setup a Custom Configuration that created a file in "C:\temp" Folder.
+
+#### Optional Steps:  
+
+1. Set up your Authoring Environment for DSC
+2. Create DSC Config and Corresponding MOF File
+
+### Create the Machine Configuration from the Portal
+
+File Script https://github.com/PowerShell/PSDscResources/blob/master/Examples/Sample_Script.ps1
+
+1. Take the attached zip file to be used as your package. If you want to learn how to create those package plase refer to the Learning Resources
+2. Upload the Package to a Storage Account in your environment
+3. Make sure the machine we want to apply the machine config to can connect to the storage account
+4. Create a SAS for package file
+5. From the Arc Server in the Portal select "Machine Configuration" and select "Create" in the top.  
+**TODO** Screenshot portal
+6. Fill in the required information and create the resource
+
+
+After the resource is being create check you Client Operating System for the desired change.

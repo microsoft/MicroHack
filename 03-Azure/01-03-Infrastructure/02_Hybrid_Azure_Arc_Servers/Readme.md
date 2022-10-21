@@ -141,21 +141,21 @@ In challenge 2 you will successfully onboard your Windows and Linux Virtual Mach
 
 ## Challenge 3 - Access Azure resources using Managed Identities from your on-premises servers
 
-## Goal
+### Goal
 
 Managing secrets, credentials or certificates to secure communication between different services is a main challenge for developers and administrators. Managed Identities is Azure's answer to all these challenges and eliminates the need to manage and securely store secrets, credentials or certificates on the Virtual Machine. In challenge 4 you will leverage Managed Identities via Azure Arc to securely access an Azure Key Vault secret from your Azure Arc enabled servers without the need of managing any credential. 
 
-## Actions
+### Actions
 
 * Create an Azure Key Vault in your Azure resource group
 * Create a secret in the Azure Key Vault and assign permissions to your Virtual Machine microhack-arc-servers-lin01
 * Access the secret via Bash script
 
-## Success Criteria
+### Success Criteria
 
 * You successfully output the secret in the terminal on microhack-arc-servers-lin01 without providing any credentials (except for your SSH login 😊).
 
-## Learning resources
+### Learning resources
 
 * [Create a key vault using the Azure portal](https://docs.microsoft.com/en-us/azure/key-vault/general/quick-create-portal)
 * [Set and retrieve a secret from Azure Key Vault using the Azure portal](https://docs.microsoft.com/en-us/azure/key-vault/secrets/quick-create-portal)

@@ -13,7 +13,8 @@ az acr create `
   --sku Basic `
   --admin-enabled true
 ```
-The Resource Group and Container Registry name are global variables, you should set in advance or replace here with the actual names. with the 
+The Resource Group and Container Registry name are global variables, you should set in advance or replace here with the actual names. 
+With the 
 `--sku Basic`
 you are setting the basic permission concept.
 
@@ -29,3 +30,5 @@ az containterapp env create `
   --resource-group $RESOURCE_GROUP`
   --loctation "westeurope"
 ```
+
+In this example we used $ACR_NAME=flightbookeracr,$RESOURCE_GROUP=ServerlessMicroservices and $ENVIRONMENT=Flightbooker-env but you are free to choose your own names.

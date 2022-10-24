@@ -15,6 +15,8 @@ az ad sp create-for-rbac `
 For $SUBSCRIPTION_ID and $RESOURCE_GROUP use your respectable ones. 
 Copy the JSON output for the next step.
 
+To create a Service Principal you have to have owner role over the azure subscription you're working in. If you don't have that you will not be able to do the deployment automatically via GitHub actions but the build pipeline should still be possible.
+
 ## Task 2: Create credentials for Azure
 
 To use Azure Credentials in GitHub Actions we need to create some secrets. In GitHub go to your repository and select "Settings", then "Secrets" and then "Actions". Create a "New Repository Secret".
@@ -22,7 +24,7 @@ Name it for example "FLIGHTBOOKER_AZURE_CREDENTIALS" and paste the copied JSON.
 
 ## Task 3: Create credentials for Azure Container Registry
 
-To be able to build, push and pull images with GitHub actions you will also need a secret for the ACR username and passwod.
+To be able to build, push and pull images with GitHub actions you will also need a secret for the ACR username and password.
 
 To get the username and password use the following command or look it up in the Azure Portal: <br>
 `az acr credentials show -n $ACR-NAME`
@@ -69,13 +71,15 @@ jobs:
           password: ${{ secrets.FLIGHTBOOKER_REGISTRY_PASSWORD }}
 
       - name: Build and push container image to registry
-        uses: docker/build-push-action@v2
+        uses: azure/docker-login@v1
         with:
-          push: true
-          tags: flightbookeracr.azurecr.io/flightbooker-backend:${{ github.sha }} , flightbookeracr.azurecr.io/flightbooker-backend:latest
-          file: Flightbooker.Backend/Dockerfile
-          context: ./.
-
+          login-server: flightbooker-azurecr.io
+          username: ${{ secrets.FLIGHTBOOKER_REGISTRY_USERNAME }}
+          password: ${{ secrets.FLIGHTBOOKER_REGISTRY_PASSWORD }}
+      - run: |
+          cd Flightbooker/flightbooker-backend
+          docker build . -t flightbookeracr.azurecr.io/flightbookerbackend:latest
+          docker push flightbookeracr.azurecr.io/flightbookerbackend:latest
 
   deploy:
     runs-on: ubuntu-latest
@@ -93,8 +97,8 @@ jobs:
         with:
           inlineScript: |
             az config set extension.use_dynamic_install=yes_without_prompt
-            az containerapp registry set -n flightbooker-backend -g flightbooker-rg --server flightbookeracr.azurecr.io --username  ${{ secrets.FLIGHTBOOKER_REGISTRY_USERNAME }} --password ${{ secrets.FLIGHTBOOKER_REGISTRY_PASSWORD }}
-            az containerapp update -n flightbooker-backend-api -g flightbooker-rg --image flightbookeracr.azurecr.io/flightbooker-backend:${{ github.sha }}
+            az containerapp registry set -n flightbooker-backend -g ServerlessMicroservices --server flightbookeracr.azurecr.io --username  ${{ secrets.FLIGHTBOOKER_REGISTRY_USERNAME }} --password ${{ secrets.FLIGHTBOOKER_REGISTRY_PASSWORD }}
+            az containerapp update -n flightbooker-backend -g ServerlessMicroservices --image flightbookeracr.azurecr.io/flightbookerbackend:latest
 ```
 
 ## Task 5: Create GitHub Actions for Frontend
@@ -135,12 +139,15 @@ jobs:
           password: ${{ secrets.FLIGHTBOOKER_REGISTRY_PASSWORD }}
 
       - name: Build and push container image to registry
-        uses: docker/build-push-action@v2
+        uses: azure/docker-login@v1
         with:
-          push: true
-          tags: flightbookeracr.azurecr.io/flightbooker-frontend:${{ github.sha }} , flightbookeracr.azurecr.io/flightbooker-frontend:latest
-          file: Flightbooker.Frontend/Dockerfile
-          context: ./.
+          login-server: flightbookeracr.azurecr.io
+          username: ${{ secrets.FLIGHTBOOKER_REGISTRY_USERNAME }}
+          password: ${{ secrets.FLIGHTBOOKER_REGISTRY_PASSWORD }}
+      - run: |
+          cd Flightbooker/flightbooker-frontend
+          docker build . -t flightbookeracr.azurecr.io/flightbookerfrontend:latest
+          docker push flightbookeracr.azurecr.io/flightbookerfrontend:latest
 
 
   deploy:
@@ -162,5 +169,15 @@ jobs:
             az containerapp registry set -n flightbooker-frontend -g flightbooker-rg --server flightbookeracr.azurecr.io --username  ${{ secrets.FLIGHTBOOKER_REGISTRY_USERNAME }} --password ${{ secrets.FLIGHTBOOKER_REGISTRY_PASSWORD }}
             az containerapp update -n flightbooker-frontend-webapp -g tasks-tracker-rg --image flightbookeracr.azurecr.io/flightbooker-frontend:${{ github.sha }}
 ```
+What exactly is happening in the build:
+* step 1: checks out the branch in our repository
+* step 2: sets up the docker builder so we are able to build the image later
+* step 3: logs in to our azure container registry
+* step 4: navigating to the right folder, then building the docker image and pushing it to the container registry
 
-With this in place, you can commit your work and the GitHub action should be triggered, if all is configured correctly.  You should also be able to see the results in the GitHub Actions workflows tab as well and the Azure App Service should be updated with a new revision.
+What exactly is happening in the deploy:
+* step 1: logs into azure subscription using the credentials from the Service Principal stored in GitHub action secrets
+* step 2: Use azure CLI to deploy/updtae the Azure Container App and deploy a new revision
+
+
+With this in place, you can commit your work and the GitHub action should be triggered, if all is configured correctly.  You should also be able to see the results in the GitHub Actions workflows tab as well and the Azure Container App should be updated with a new revision (see revision management in your Container App).

@@ -13,24 +13,40 @@ az containerapp create `
   --name flightbooker-backend `
   --resource-group $RESOURCE_GROUP `
   --environment $CONTAINERAPPS_ENVIRONMENT `
-  --image "$ACR_NAME.azurecr.io/Flightbooker/flightbooker-backend"`
-  --target-port 3000`
+  --image "$ACR_NAME.azurecr.io/flightbooker-backend:latest"`
+  --target-port 443`
   --ingress 'internal' `
   --query properties.configruation.ingress.fqdn
 ```
-The frontend deployment would look like this:
+If you want to check if the backend is working properly you can also for now set the ingress to 'external' and change it later on. 
+When the deployment of the backend is finished you will receive an application URL (FQDN) visible on the overview page of your new container app. If ingress is set to external you can open it with '/api/seats' appended and you will see the an array with the seats like this:
+
+![seatarray](../Images/seatarray.png)
+
+Before you can deploy the frontend you need to take some additional steps since the frontend needs to be able to access the backend. Copy the FQDN of your backend Container App. In VS Code create a .env file in the flightbooker-frontend folder. There you create two environment variables:
+
+```
+VITE_DAPR_HOST='YOUR_BACKEND_FQDN'
+VITE_DAPR_HTTP_PORT='443'
+```
+This will connect the variables in the BookingService.js with your environment variables and instead of the localhost the frontend will access the backend container app. 
+
+Now you can begin to deploy the frontend:
 ```
 az containerapp create `
   --name flightbooker-frontend `
   --resource-group $RESOURCE_GROUP`
   --environment $CONTAINERAPPS_ENVIRONMENT`
-  --image "$ACR_NAME.azurecr.io/Flightbooker/flightbooker-frontend"`
-  -- registry-server "$ACR_NAME.azurecr.io"`
-  --env-vars BackendEnvVar=backendURL`
+  --image "$ACR_NAME.azurecr.io/flightbooker-frontend:latest"`
+  --registry-server "$ACR_NAME.azurecr.io"`
+  --env-vars VITE_DAPR_HOST=https://$(az containerapp show --resource-group ServerlessMicroservices --name flightbooker-backend --query properties.configuration.ingress.fqdn -o tsv) VITE_DAPR_HTTP_PORT=443`
   --target-port 5173`
   --ingress 'external' `
   --query properties.configruation.ingress.fqdn
 ```
+
+Instead of the query in the VITE_DAPR_HOST you can also again just copy and paste your backend FQDN.
+
 
 To deploy the apps with the portal, take a look [here](https://learn.microsoft.com/en-us/azure/container-apps/get-started-existing-container-image-portal?pivots=container-apps-private-registry).
 
@@ -41,21 +57,12 @@ After deployment you can copy the Application URL (FQDN) of the frontend contain
 ## Task 3: Setup basic Security
 
 If you set up the backend ingress to "internal", it won't be reachable from the public internet but only from applications deployed within your Azure Container Environment.
+If you set it to external first you can change it under the <b>Ingress</b> tab in your backend container app to disable external ingress. 
 
-## Task 4: Try dapr locally
+![ingress-internal](../Images/ingress.png)
 
-Dapr is already integrated in the FLightbooker App. To see if it runs on your local machine you first need to install the Dapr CLI. <br>
-Open the PowerShell console as an administrator and run the following command: <br>
-`powershell -Command "iwr -useb https://raw.githubusercontent.com/dapr/cli/master/install/install.ps1 | iex"`
-<br>
-Verify that the dapr CLI is installed by restarting the PowerShell console and run the following command:<br> `dapr` <br>
-To initialize dapr run <br>
-`dapr init` <br>
-on the PowerShell console as administrator.
-After that you can use the start_frontend and start_backend script in the repository to start your back- and frontend with dapr. 
-
-## Task 5: Activate dapr in your Container Apps
-Now back to azure: <br>
+ 
+## Task 4: Activate dapr in your Container Apps
 So far dapr was not enabled on the Azure Container Apps we provisioned. You can check this in the Portal and it should look something like this: 
 ![dapr-disabled](../Images/dapr-disabled.png)
 <br>
@@ -65,12 +72,16 @@ To enable dapr for both Apps, run the following commands:
 az containerapp dapr enable --name "flightbooker-backend" `
   --resource-group $RESOURCE_GROUP`
   --dapr-app-id "flightbooker-backend"`
-  --dapr-app-port 3501
+  --dapr-app-port 443
 
 az containerapp dapr enable --name "flightbooker-frontend" `
   --resource-group $RESOURCE_GROUP`
   --dapr-app-id "flightbooker-frontend" `
-  --dapr-app-port 3501
+  --dapr-app-port 5173
 ```
+Or you can just enable it in the portal:
+
+![dapr-enabled](../Images/dapr-enabled.png)
+
 For more dapr configurations look [here](https://learn.microsoft.com/en-us/azure/container-apps/dapr-overview?tabs=bicep1%2Cyaml).
-With this you should be able to access the Frontend Web App and call the backend API app using dapr.
+With this you should be able to access the Frontend Web App and call the backend API app using dapr. This is a Service-to-Service invocation.

@@ -54,7 +54,7 @@ For a method using a service principal and key vault, you can find a solution [h
 
 After deployment you can copy the Application URL (FQDN) of the frontend container app and open it in your browser and you should be able to browse the frontend web app.
 
-## Task 3: Setup basic Security
+## Task 2: Setup basic Security
 
 If you set up the backend ingress to "internal", it won't be reachable from the public internet but only from applications deployed within your Azure Container Environment.
 If you set it to external first you can change it under the <b>Ingress</b> tab in your backend container app to disable external ingress. 
@@ -62,7 +62,7 @@ If you set it to external first you can change it under the <b>Ingress</b> tab i
 ![ingress-internal](../Images/ingress.png)
 
  
-## Task 4: Activate dapr in your Container Apps
+## Task 3: Activate dapr in your Container Apps
 So far dapr was not enabled on the Azure Container Apps we provisioned. You can check this in the Portal and it should look something like this: 
 ![dapr-disabled](../Images/dapr-disabled.png)
 <br>

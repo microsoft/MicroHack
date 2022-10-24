@@ -166,8 +166,8 @@ jobs:
         with:
           inlineScript: |
             az config set extension.use_dynamic_install=yes_without_prompt
-            az containerapp registry set -n flightbooker-frontend -g flightbooker-rg --server flightbookeracr.azurecr.io --username  ${{ secrets.FLIGHTBOOKER_REGISTRY_USERNAME }} --password ${{ secrets.FLIGHTBOOKER_REGISTRY_PASSWORD }}
-            az containerapp update -n flightbooker-frontend-webapp -g tasks-tracker-rg --image flightbookeracr.azurecr.io/flightbooker-frontend:${{ github.sha }}
+            az containerapp registry set -n flightbooker-frontend -g ServerlessMicroservices --server flightbookeracr.azurecr.io --username  ${{ secrets.FLIGHTBOOKER_REGISTRY_USERNAME }} --password ${{ secrets.FLIGHTBOOKER_REGISTRY_PASSWORD }}
+            az containerapp update -n flightbooker-frontend -g ServerlessMicroservices --image flightbookeracr.azurecr.io/flightbookerfrontend:latest
 ```
 What exactly is happening in the build:
 * step 1: checks out the branch in our repository

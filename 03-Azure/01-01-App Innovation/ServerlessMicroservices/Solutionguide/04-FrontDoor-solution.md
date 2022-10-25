@@ -5,6 +5,34 @@
 
 A quickstart for setting up Azure Front Door with Azure Portal, CLI, PowerShell or Bicep for your App Service you can find [here](https://learn.microsoft.com/en-us/azure/frontdoor/create-front-door-portal) under the "Create a Front Door for your application" section.
 
+1. Search for Front Door and CDN profiles and select Create. Since we already have an application you can select Custom create and continue.
+
+![frontdoor-create](../Images/frontdoor-create.png)
+
+2. On the Basics tab enter the following information (or adjust them to your settings) and then select <b>Next:Secrets</b>. In the subscription field choose the subscription you also used to create the Microservices. Same goes for the resource group.
+
+![frontdoor-basics](../Images/frontdoor-basics.png)
+
+3. We can skip the secrets step for now but optionally if you have and existing Key Vault in azure that you plan to use to bring your own certificate for a custom domain, then add a certificate but you can also add one in the management experience after creation of the FrontDoor.
+
+4. Go to <b>Next:Endpoint</b> and add an endpoint. You can give it a name you seem fit, it'll automatically create an endpoint hostname for you, then click "add".
+
+![frontdoor-endpoint](../Images/frontdoor-endpoint.png)
+
+5. Then select <b>Add a route</b> to configure routing to your Web App origin. On the Add a route page, enter the following information:
+
+![frontdoor-route](../Images/frontdoor-route.png)
+
+You will also want to create a new origin group like this:
+
+![frontdoor-origingroup](../Images/frontdoor-origingroup.png)
+
+![frontdoor-origin](../Images/frontdoor-origin.png)
+
+The origin host name is the FQDN of the your frontend without https://.
+
+6.
+
 ## Task 2: Monitor your application
 
 ### Access Reports

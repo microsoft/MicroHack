@@ -8,6 +8,7 @@ Here you can find ready to go manifests for both instances:
 * [wordpress](https://kubernetes.io/docs/tutorials/stateful-application/mysql-wordpress-persistent-volume/)
 
 Scaling your clusters can be achieved via the scale command of kubectl. Here is a sample:
-```
+
+```bash
 kubectl scale [--resource-version=version] [--current-replicas=count] --replicas=COUNT (-f FILENAME | TYPE NAME)
 ```

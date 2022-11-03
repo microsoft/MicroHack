@@ -12,7 +12,7 @@ In this challenge we will setup the basic Azure resources we need to fulfill our
 * Naming conventions for resources
 * Key-Vault for storing secrets (optional)
 * Go with one node in the beginning
-* Default K8s roles 
+* Default K8s roles
 * Kubenet as network provider
 * Basic permission concept for accessing resources
 
@@ -24,5 +24,5 @@ In this challenge we will setup the basic Azure resources we need to fulfill our
 
 ## Learning resources
 
-* [AKS documentation]https://learn.microsoft.com/en-us/azure/aks/
-* [AKS best practices]https://learn.microsoft.com/en-us/azure/aks/best-practices
+* [AKS documentation](https://learn.microsoft.com/en-us/azure/aks/)
+* [AKS best practices](https://learn.microsoft.com/en-us/azure/aks/best-practices)

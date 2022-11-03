@@ -4,7 +4,7 @@
 
 ## Introduction
 
-Kubernetes is the de facto standard for big, scalable containerized platforms today and AKS is the solution on Azure. So in this challenge we will take a look into some basic concepts of AKS and K8s in general and what can happen during daily business operating an AKS. 
+Kubernetes is the de facto standard for big, scalable containerized platforms today and AKS is the solution on Azure. So in this challenge we will take a look into some basic concepts of AKS and K8s in general and what can happen during daily business operating an AKS.
 
 ## Architecture
 

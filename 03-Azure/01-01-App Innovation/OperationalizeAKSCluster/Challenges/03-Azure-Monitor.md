@@ -21,4 +21,3 @@ To observe our cluster we now add Azure Monitor to our environment. This is the 
 
 * [Azure Monitor Documentation](https://learn.microsoft.com/en-us/azure/azure-monitor/overview)
 * [Container Insights Documentation](https://learn.microsoft.com/en-us/azure/azure-monitor/containers/container-insights-overview)
-

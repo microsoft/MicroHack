@@ -13,12 +13,18 @@ If not, you can just create a YAML-Manifest by your own, but be aware of the rig
 
 To apply your manifest, use the following command:
 
-```
+```bash
 kubectl apply -f (manifest-filename)
+```
+
+To see your container and some others that are deployed by default, just type in the following:
+
+```bash
+kubectl get pod --all-namespaces
 ```
 
 To access your freshly deployed container, you can use the following command:
 
-```
+```bash
 kubectl exec -it (pod-name) /bin/bash
 ```

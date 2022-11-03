@@ -2,8 +2,6 @@
 
 [Previous Challenge](./04-Scale-up.md) - **[Home](../README.md)**
 
-# Challenge 5: Access your services via an ingress controller
-
 ## Introduction
 
 To now access our services from outside the cluster, we will deploy and configure an ingress controller. One of the core concepts for AKS workloads and use cases.

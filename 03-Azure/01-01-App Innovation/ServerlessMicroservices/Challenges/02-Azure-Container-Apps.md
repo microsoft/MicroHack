@@ -16,6 +16,7 @@ We also want to enable dapr in our Azure Container Apps, so we can use it for Se
 * Images are pulled from the ACR
 * Basic Security is set up
 * Set up environment variables for VITE_DAPR_HOST and VITE_DAPR_HTTP_PORT (hint: BookingService.js)
+* Set scale to 0-1 replicas
 * Activate dapr in Container Apps
 
 ## Success Criteria

@@ -14,7 +14,7 @@ az containerapp create `
   --resource-group $RESOURCE_GROUP `
   --environment $CONTAINERAPPS_ENVIRONMENT `
   --image "$ACR_NAME.azurecr.io/flightbooker-backend:latest"`
-  --target-port 443`
+  --target-port 3000`
   --ingress 'internal' `
   --query properties.configruation.ingress.fqdn
 ```
@@ -47,6 +47,7 @@ az containerapp create `
 
 Instead of the query in the VITE_DAPR_HOST you can also again just copy and paste your backend FQDN.
 
+In this case we want to have just one replica available so go to the <b>Scale</b> section und the <b>Application</b> tag in your newly deployed frontend and change the scale to 0-1.
 
 To deploy the apps with the portal, take a look [here](https://learn.microsoft.com/en-us/azure/container-apps/get-started-existing-container-image-portal?pivots=container-apps-private-registry).
 

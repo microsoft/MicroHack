@@ -5,15 +5,15 @@
 ## Task 1: Clone the FlightBooker Folder from this Repository
 If you are using VS Code make sure you are connected to your gitHub account.
 Then you can use the terminal or the command palette to clone the repository.
-To better work with the further Challenges create a new gitHub repsository in your own account and copy only the ServerlessMicroservices or even only the Flightbooker folder into it. This way you can easily make changes and follow the Challenges.
+To better work with the further Challenges create a new gitHub repository in your own account and copy only the ServerlessMicroservices or even only the Flightbooker folder into it. This way you can easily make changes and follow the Challenges.
 
-You can check if the services run locally on you Computer. Therefor in a terminal direct to the folder of the frontend and run `npm install`. In a second terminal go to the folder of the backend and do the same. After that you should be able to run `npm run dev` on the frontend terminal and 'npm start' on the backend terminal and open the application in your localhost. If this doesn't work, check if you have installed all dependcies.
+You can check if the services run locally on you Computer. Therefor in a terminal direct to the folder of the frontend and run `npm install`. In a second terminal go to the folder of the backend and do the same. After that you should be able to run `npm run dev` on the frontend terminal and `npm start` on the backend terminal and open the application in your localhost. If this doesn't work, check if you have installed all dependencies.
 
 
 ## Task 2: Create Docker images of the microservices
 
 The next step would be to add Docker files and build a Docker image for each microservice. 
-You can find how to add Docker files and build images [here](https://learn.microsoft.com/en-us/azure/developer/javascript/tutorial/tutorial-vscode-docker-node/tutorial-vscode-docker-node-04).
+You can find how to add Docker files and build images [here](https://learn.microsoft.com/en-us/azure/developer/javascript/tutorial/tutorial-vscode-docker-node/tutorial-vscode-docker-node-04) which is applied on our case below:
 
 The general process for the frontend and backend is the same. Make sure you have docker running, for example via Docker Desktop. If you work with VS Code also make sure you have the Docker extension.  In VS Code open the Command Palette and type `add docker files to workspace` then select the <b>Docker: Add Docker files to workspace </b> command. In the following chose Node.js as the application platform, the respective package.json file, port 3000 for the backend (5173 for the frontend) and no Docker Compose file. 
 This will create a Dockerfile and a .dockerignore. Now that you have the basic Dockerfiles you might have to make some changes so that the image created from them will be able to run. Here's how they could look like: 

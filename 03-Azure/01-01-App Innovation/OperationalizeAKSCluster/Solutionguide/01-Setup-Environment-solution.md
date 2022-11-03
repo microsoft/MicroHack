@@ -15,7 +15,7 @@ Down below is described, how to setup everything via the Azure Portal:
 
 It is recommended in Azure to use a naming convention, since some resources need a globally unique name.
 For our microhack, we will go with the best practice convention provided by microsoft, which has the following structure:
-[!NamingConvention](../Images/01-setup-env/namingconventions.png)
+![NamingConvention](../Images/01-setup-env/namingconventions.png)
 
 A detailed overview of all the shortcuts can be found here [link](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/resource-naming)
 
@@ -23,19 +23,19 @@ A detailed overview of all the shortcuts can be found here [link](https://learn.
 
 The first resource we are going to deploy is a KeyVault. It will be used to store our secrets.
 Go to the menu 'Create new resource' in the Portal and fill the forms out as shown:
-[!KeyVaultSetup](../Images/01-setup-env/KeyvaultSetup.png)
+![KeyVaultSetup](../Images/01-setup-env/KeyvaultSetup.png)
 
 ## Step 3: Setting up the AKS
 
 Now we create the AKS as well via the portal. Therefor go again to the resource creation menu and fill everything out according to the picture. We will go with the same resource group as the keyvault:
 Standard Setup:
-[!AKSSetup1](../Images/01-setup-env/akssetup01.png)
+![AKSSetup1](../Images/01-setup-env/akssetup01.png)
 Nodepools:
-[!AKSSetup2](../Images/01-setup-env/akssetup02.png)
+![AKSSetup2](../Images/01-setup-env/akssetup02.png)
 Access:
-[!AKSSetup3](../Images/01-setup-env/akssetup03.png)
+![AKSSetup3](../Images/01-setup-env/akssetup03.png)
 Network:
-[!AKSSetup4](../Images/01-setup-env/akssetup04.png)
+![AKSSetup4](../Images/01-setup-env/akssetup04.png)
 
 ## Step 4: Accessing the resources
 

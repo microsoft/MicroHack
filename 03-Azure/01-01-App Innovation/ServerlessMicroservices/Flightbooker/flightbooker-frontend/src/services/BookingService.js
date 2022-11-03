@@ -1,7 +1,7 @@
 import axios from "axios";
 
-const DAPR_HOST = import.meta.env.DAPR_HOST || "http://localhost";
-const DAPR_HTTP_PORT = import.meta.env.DAPR_HTTP_PORT || "3000";
+const DAPR_HOST = import.meta.env.VITE_DAPR_HOST || "http://localhost";
+const DAPR_HTTP_PORT = import.meta.env.VITE_DAPR_HTTP_PORT || "3000";
 
 let axiosConfig = {
     headers: {

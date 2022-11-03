@@ -28,7 +28,7 @@ A Container App Environment like the Container Registry can be setup in several 
 az containterapp env create `
   --name $ENVIRONMENT `
   --resource-group $RESOURCE_GROUP`
-  --loctation "westeurope"
+  --location "westeurope"
 ```
 
 In this example we used $ACR_NAME=flightbookeracr,$RESOURCE_GROUP=ServerlessMicroservices and $ENVIRONMENT=Flightbooker-env but you are free to choose your own names.

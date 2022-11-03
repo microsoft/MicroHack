@@ -2,9 +2,10 @@
   "name": "hello-world",
   "version": "0.0.0",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host",
     "build": "vite build",
-    "preview": "vite preview --port 4173"
+    "preview": "vite preview --port 4173",
+    "start": "vite --port 5173"
   },
   "dependencies": {
     "axios": "^0.27.2",

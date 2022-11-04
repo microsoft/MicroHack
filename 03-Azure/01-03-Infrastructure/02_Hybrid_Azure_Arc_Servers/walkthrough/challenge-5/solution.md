@@ -33,26 +33,72 @@
 
 6. After a few minutes you will be able to see the compliance state of your Windows-based servers.
 
-## Action 2: Create an Azure Policy Guest Configuration for your Azure Arc VMs
+## Action 2: Create an Machine Configuration
 
-### Setup a Custom Configuration that created a file in "C:\temp" Folder.
+### Setup a Machine Configuration that creates a registry key 
+
+Find the needed DSC Configuration in the following powershell code block
+
+
+```powershell
+Configuration AddKey {
+    Import-DscResource -ModuleName 'PSDscResources'
+
+    Node localhost {
+        Registry EnvironmentDSCKey {
+            Key       = 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment\EnvironmentKeyDSC'
+            Ensure    = 'Present'
+            ValueName = ''
+        }
+    }
+}
+
+AddKey
+```
 
 #### Optional Steps:  
 
 1. Set up your Authoring Environment for DSC
 2. Create DSC Config and Corresponding MOF File
+3. Create the zip file for the Machine Configuration
 
-### Create the Machine Configuration from the Portal
+As this MicroHack focuses on the Arc and Hybrid those Steps are optional and you can also use the prepared zip file from the repository.  
+Find it here [AddKey.zip](../../resources/AddKey.zip)
 
-File Script https://github.com/PowerShell/PSDscResources/blob/master/Examples/Sample_Script.ps1
+### Create the Machine Configuration as Azure Policy
 
-1. Take the attached zip file to be used as your package. If you want to learn how to create those package plase refer to the Learning Resources
-2. Upload the Package to a Storage Account in your environment
-3. Make sure the machine we want to apply the machine config to can connect to the storage account
-4. Create a SAS for package file
-5. From the Arc Server in the Portal select "Machine Configuration" and select "Create" in the top.  
-**TODO** Screenshot portal
-6. Fill in the required information and create the resource
+1. You will need to upload the zip file to a Storage Account and create a SAS with read permissions
 
+```powershell
+$blob = az storage blob upload --auth-mode login --account-name [StorageAccountName] --container-name [ContainerName] --file [File] --name [Name] --overwrite
 
-After the resource is being create check you Client Operating System for the desired change.
+$sas = az storage blob generate-sas --account-name [StorageAccountName] --container-name [ContainerName] --name [File] --permissions r --expiry [ExpirationDate format: 2023-01-01T00:00:00Z] --https-only --full-uri
+```
+
+To assign the Machine Configuration we will use a Azure Policy. To create the Policy refer to the following Powershell Block
+```powershell
+#Define Policy Parameters
+$id = (New-Guid).guid
+$name = "AddKey Policy"
+$version = "1.0.0"
+$url = $sas #SAS of the Blob in the Storage Account
+$PolicyConfig      = @{
+    PolicyId      = $id
+    ContentUri    = $url
+    DisplayName   = $name
+    Description   = $name
+    Path          = 'PathToGenerateThePolicyTo'
+    Platform      = 'Windows'
+    PolicyVersion = $version
+    Mode          = 'ApplyAndAutoCorrect'
+}
+
+# Create the policy definition file
+New-GuestConfigurationPolicy @PolicyConfig
+
+# Create new policy from definition file
+New-AzPolicyDefinition -Name [Name] -Policy [PathToGenerateThePolicyJSONFile] -ManagementGroupName [TenantID] #Tenant ID is the ID of the Root Management Group
+```
+Now that the policy definition is created you can assign the policy just like in Action 1.
+
+It takes some minutes for the Machine Configuration to become compliant. If thats the case you can verify the registry key being created by launching ``` regedit.exe ``` and browse to ``` HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment\ ```

@@ -209,12 +209,12 @@ Challenge 5 is all about interacting with the Client Operating System. We will h
 ### Actions
 
 * Setup a Policy that checks if the user "FrodoBaggins" is part of the local administrators group
-* Setup a Custom Machine Configuration, for the Windows Server, that creates a file in "C:\temp" Folder.
+* Setup a Custom Machine Configuration, for the Windows Server, that creates a registry key in ``` HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment\ ```
 
 ### Success criteria
 
 * You can view the compliance state of the Administrator Group Policy
-* You can show the file being created by the Machine Configuration
+* You can show the registry key being present on the Windows Server
 
 ### Learning resources
 
@@ -230,7 +230,7 @@ Challenge 5 is all about interacting with the Client Operating System. We will h
 
 ## **Contributors**
 * Adrian Schöne [GitHub](https://github.com/adriandiver); [LinkedIn](https://www.linkedin.com/in/adrian-schoene//)
-* Christian Thönes [Github](https://github.com/cthoenes); [LinkedIn](https://www.linkedin.com/in/christian-th%C3%B6nes-510b7522/)
+* Christian Thönes [Github](https://github.com/cthoenes); [LinkedIn](https://www.linkedin.com/in/christian-t-510b7522/)
 * Nild Bankert [GitHub](https://github.com/nilsbankert); [LinkedIn](https://www.linkedin.com/in/nilsbankert/)
 * Alexander Ortha [GitHub](https://github.com/alexor-ms/); [LinkedIn](https://www.linkedin.com/in/alexanderortha/)
 

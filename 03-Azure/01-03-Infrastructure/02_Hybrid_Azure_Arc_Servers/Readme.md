@@ -12,7 +12,7 @@
   - [Challenge 2 - Azure Monitor integration](#challenge-2---azure-monitor-integration)
   - [Challenge 3 - Access Azure resources using Managed Identities from your on-premises servers](#challenge-3---access-azure-resources-using-managed-identities-from-your-on-premises-servers)
   - [Challenge 4 - Microsoft Defender for Cloud integration with Azure Arc](#challenge-4---microsoft-defender-for-cloud-integration-with-azure-arc)
-  - [Challenge 5 - Azure Policy](#Challenge-5---azure-policy)
+  - [Challenge 5 - Azure Policy](#challenge-5---azure-automanage-machine-configuration)
 - [**Contributors**](#contributors)
 
 ## MicroHack introduction

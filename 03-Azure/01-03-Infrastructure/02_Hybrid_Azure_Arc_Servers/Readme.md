@@ -15,7 +15,7 @@
 
 ## MicroHack introduction
 
-What is Azure Arc?
+### What is Azure Arc?
 
 For customers who want to simplify complex and distributed environments across on-premises, edge, and multi-cloud, [Azure Arc](https://azure.microsoft.com/services/azure-arc/) enables deployment of Azure services anywhere and extends Azure management to any infrastructure. Azure Arc helps you accelerate innovation across hybrid and multi-cloud environments and provides the following benefits to your organization:
 
@@ -36,6 +36,7 @@ Further resources - Thomas Maurer & Lior links
 * [Azure Arc Overview Documentation](https://learn.microsoft.com/en-us/azure/azure-arc/overview)
 * [Azure Arc Blog from Microsoft](https://techcommunity.microsoft.com/t5/azure-arc-blog/bg-p/AzureArcBlog)
 * [Azure Arc Jumpstart Scenarios](https://azurearcjumpstart.io/azure_arc_jumpstart/)
+* [Azure Arc Jumpstart HCIBox](https://azurearcjumpstart.io/azure_jumpstart_hcibox/)
 * [Azure Arc Jumpstart ArcBox](https://azurearcjumpstart.io/azure_jumpstart_arcbox/)
 * [Azure Arc for Developers](https://techcommunity.microsoft.com/t5/itops-talk-blog/azure-arc-for-developers/ba-p/2561513)
 * [Azure Arc for Cloud Solutions Architects](https://techcommunity.microsoft.com/t5/itops-talk-blog/azure-arc-for-cloud-solutions-architects/ba-p/2521928)

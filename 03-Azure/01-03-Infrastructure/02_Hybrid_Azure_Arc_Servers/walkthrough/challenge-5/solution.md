@@ -75,7 +75,7 @@ $blob = az storage blob upload --auth-mode login --account-name [StorageAccountN
 $sas = az storage blob generate-sas --account-name [StorageAccountName] --container-name [ContainerName] --name [File] --permissions r --expiry [ExpirationDate format: 2023-01-01T00:00:00Z] --https-only --full-uri
 ```
 
-To assign the Machine Configuration we will use a Azure Policy. To create the Policy refer to the following Powershell Block
+2. To assign the Machine Configuration we will use a Azure Policy. To create the Policy refer to the following Powershell Block
 ```powershell
 #Define Policy Parameters
 $id = (New-Guid).guid
@@ -99,6 +99,8 @@ New-GuestConfigurationPolicy @PolicyConfig
 # Create new policy from definition file
 New-AzPolicyDefinition -Name [Name] -Policy [PathToGenerateThePolicyJSONFile] -ManagementGroupName [TenantID] #Tenant ID is the ID of the Root Management Group
 ```
-Now that the policy definition is created you can assign the policy just like in Action 1.
+3. Now that the policy definition is created you can assign the policy like in Action 1 but add a remediation like in the screenshot below.
 
-It takes some minutes for the Machine Configuration to become compliant. If thats the case you can verify the registry key being created by launching ``` regedit.exe ``` and browse to ``` HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment\ ```
+![PolicyAssignmentRemediation.png](./img/PolicyAssignmentRemediation.png)
+
+4. It takes some minutes for the Machine Configuration to become compliant. If thats the case you can verify the registry key being created by launching ``` regedit.exe ``` and browse to ``` HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment\ ```

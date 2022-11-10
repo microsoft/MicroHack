@@ -44,6 +44,7 @@ Further resources - Thomas Maurer & Lior links
 * [Azure Arc for Security Engineers](https://techcommunity.microsoft.com/t5/itops-talk-blog/azure-arc-for-security-engineers/ba-p/2367830)
 * [Learning Path Bring Azure innovation to your hybrid environments with Azure Arc](https://learn.microsoft.com/en-us/training/paths/manage-hybrid-infrastructure-with-azure-arc/)
 * [Customer reference: Wüstenrot & Württembergische reduces patching time by 35 percent, leans into hybrid cloud management with Azure Arc](https://customers.microsoft.com/en-us/story/1538266003319018436-ww-azure-banking-and-capital-markets)
+* [Introduction to Azure Arc landing zone accelerator for hybrid and multicloud](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/scenarios/hybrid/enterprise-scale-landing-zone)
 
 💡 Optional: Read this after completing this lab to deepen the learned!
 
@@ -59,48 +60,43 @@ After completing this MicroHack you will:
 
 ### General prerequisites
 
+This MicroHack has a few but important prerequisites to be understood before starting this lab!
+
 * Your own Azure subscription with Owner RBAC rights at the subscription level
+  * [Azure Evaluation free account](https://azure.microsoft.com/en-us/free/search/?OCID=AIDcmmzzaokddl_SEM_0fa7acb99db91c1fb85fcfd489e5ca6e:G:s&ef_id=0fa7acb99db91c1fb85fcfd489e5ca6e:G:s&msclkid=0fa7acb99db91c1fb85fcfd489e5ca6e)
 * [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) 
 * [Visual Studio Code](https://code.visualstudio.com/)
 * [Git SCM](https://git-scm.com/download/) 
 
 ## Challenge 1 - Azure Arc prerequisites & onboarding
 
-This MicroHack has a few but very important prerequisites to be understood before starting this lab!
+### Goal
 
-### For Azure Resources
+In challenge 1 you will prepare your Azure Environemnt for onboarding of existing Windows- and Linux Servers and onboard them to Azure Arc.
 
-* [Create Resource Group](https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/manage-resource-groups-portal#create-resource-groups)
+### Actions
 
-* [Create Service Principal](https://learn.microsoft.com/en-us/azure/azure-arc/servers/onboard-service-principal#create-a-service-principal-for-onboarding-at-scale)
+* Create all necessary Azure Resources
+  * Resource Group (Name: mh-arc-servers-rg)
+  * Service Principal (Name: mh-arc-servers-sp)
+* Enable required Resource Provider
+* Prep existing Server Operating System on-prem
+* Onboard existing Server to Azure Arc
 
-* Enable Azure Resource Provider 
-  [Azure Arc Azure resource providers](https://learn.microsoft.com/en-us/azure/azure-arc/servers/prerequisites#azure-resource-providers)
+### Success criteria
 
-### For Arc enabled Servers
+* You created an Azure Resource Group
+* You created an Service Principal with the required role membership
+* Prepared successfully an existing Server OS
+* Onboarded Server OS is visible in the Azure Arc plane in the Azure Portal
 
-* Have a server, windows or linux ready
-For windows, pls use if possible Windows Server 2019 or 2022 with the latest patch level
+### Learning resources
 
-  [Supported operating systems @ Connected Machine agent prerequisites - Azure Arc | Microsoft Docs](https://docs.microsoft.com/en-us/azure/azure-arc/servers/prerequisites#supported-operating-systems)
-	
-  This Server OS could be hosted as a VM on VMware, Hyper-V, Nutanix, AWS, GCP or bare metal.
-	
-#### Additional:
-  * These servers should be able to reach the internet and Azure.
-  * You need to have full access and admin or root permissions on these Server OS
+* [Plan and deploy Azure Arc-enabled servers](https://learn.microsoft.com/en-us/azure/azure-arc/servers/plan-at-scale-deployment) 
+* [Prerequisites for Connect hybrid machines with Azure Arc-enabled servers](https://learn.microsoft.com/en-us/azure/azure-arc/servers/learn/quick-enable-hybrid-vm#prerequisites) 
+* [Connect hybrid machines with Azure Arc-enabled servers](https://learn.microsoft.com/en-us/azure/azure-arc/servers/learn/quick-enable-hybrid-vm#generate-installation-script) 
+* [Create a service principal for onboarding](https://learn.microsoft.com/en-us/azure/azure-arc/servers/onboard-service-principal#create-a-service-principal-for-onboarding-at-scale) 
 
-* If you need to install and deploy your own server OS from scratch, then, download the following ISO files and save them on your own PC / Environment with your preferred Hypervisor e.g. Hyper-V or Virtualization Client (Windows 10/11 Hyper-V or Virtual Box).
-  * [Ubuntu](https://ubuntu.com/download)
-  * [Windows Server 2022](https://www.microsoft.com/en-us/evalcenter/download-windows-server-2022)
-
-* Install from the downloaded ISO your preferred OS. 
-
-#### Using Azure Arc with Azure VMs
-* In case you want to use an Azure VM for this MicroHack, you need to follow the guidance 
-  * [Evaluate Azure Arc-enabled servers on an Azure virtual machine](https://learn.microsoft.com/en-us/azure/azure-arc/servers/plan-evaluate-on-azure-virtual-machine)
-
-With these prerequisites in place, we can focus on building the differentiated knowledge in the hybrid world with Azure Arc to enable your on-prem, Multi-Cloud environment for the Cloud operations model.
 
 ## Challenge 2 - Azure Monitor integration
 

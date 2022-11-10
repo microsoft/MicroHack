@@ -185,7 +185,7 @@ Managing secrets, credentials or certificates to secure communication between di
 
 ### Success criteria
 
-* Open Microsoft Defender for Cloud with Azure Security Center and view the Secure Score for your Azure arc connected machine.
+* Open Microsoft Defender for Cloud with Azure Security Center and view the Secure Score for your Azure Arc connected machine.
 
 ### Learning resources
 

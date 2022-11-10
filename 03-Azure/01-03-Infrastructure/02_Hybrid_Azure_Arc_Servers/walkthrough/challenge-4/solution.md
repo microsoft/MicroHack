@@ -8,13 +8,18 @@ Duration: 30 minutes
 
 Please ensure that you successfully passed [challenge 2](../../Readme.md#challenge-2) before continuing with this challenge.
 
-### Task 1: Create an Azure Key Vault
+### Task 1: Check and collect the Log Analytics workspace
 
 
+### Task 2: Configure Defender for Cloud
 
-#######
-1. Navigate to *Azure Key Vault* using the top search bar and select *Create* in the top navigation pane.
+Enable Defender for Server
+Configure autodeployment of AMA
 
+### Task 3: Check that the server is visible in the inventory with all checks green.
+
+
+#### following delete
 Notes & Guidance
 Enable Azure Security Center on your Azure Arc connected machines.
 In the Azure portal, navigate to the Security Center blade, select Security solutions, and then in the Add data sources section select Non-Azure servers.

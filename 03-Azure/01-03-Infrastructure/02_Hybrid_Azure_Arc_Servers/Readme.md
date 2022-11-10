@@ -97,6 +97,9 @@ In challenge 1 you will prepare your Azure Environemnt for onboarding of existin
 * [Connect hybrid machines with Azure Arc-enabled servers](https://learn.microsoft.com/en-us/azure/azure-arc/servers/learn/quick-enable-hybrid-vm#generate-installation-script) 
 * [Create a service principal for onboarding](https://learn.microsoft.com/en-us/azure/azure-arc/servers/onboard-service-principal#create-a-service-principal-for-onboarding-at-scale) 
 
+### Solution - Spoilerwarning
+
+[Solution Steps](./walkthrough/challenge-1/solution.md)
 
 ## Challenge 2 - Azure Monitor integration
 

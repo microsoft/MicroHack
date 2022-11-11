@@ -66,4 +66,4 @@ With these prerequisites in place, we can focus on building the differentiated k
 4. Check in the Azure portal that the Server OS is visible.
 
 
-You successfully completed challenge 2! 🚀🚀🚀
+You successfully completed challenge 1! 🚀🚀🚀

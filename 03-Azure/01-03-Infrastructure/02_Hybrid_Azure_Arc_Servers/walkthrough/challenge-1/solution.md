@@ -52,12 +52,18 @@ With these prerequisites in place, we can focus on building the differentiated k
 
 * Onboard the recent installed or prepared Server OS to Azure Arc, by using the documented steps
 1. Generate the installation script from the Azure portal [Link](https://learn.microsoft.com/en-us/azure/azure-arc/servers/onboard-service-principal#generate-the-installation-script-from-the-azure-portal)
-### screenshot
+* Step by step
+![image](./img/1.png)
+![image](./img/2.png)
+![image](./img/3.png)
+![image](./img/4.png)
+![image](./img/5.png)
+![image](./img/6.png)
 2. Add the passphrase for the service principal the downloaded script
-### screenshot
+![image](./img/7.png)
 3. Login into the Server OS on-prem and run the script [Link](https://learn.microsoft.com/en-us/azure/azure-arc/servers/onboard-portal#install-with-the-scripted-method)
-### screenshot
+
 4. Check in the Azure portal that the Server OS is visible.
-### screenshot
+
 
 You successfully completed challenge 2! 🚀🚀🚀

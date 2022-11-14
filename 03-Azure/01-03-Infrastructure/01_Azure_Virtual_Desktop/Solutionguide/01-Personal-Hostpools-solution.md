@@ -1,10 +1,11 @@
-## Exercise 1: Create a host pool for personal desktops
+# Exercise 1: Create a host pool for personal desktops
 
 Duration:  30 minutes
 
 [Previous Challenge Solution](./01-Personal-Hostpools-solution.md) - **[Home](../readme.md)** - [Next Challenge Solution](02-multi-session-Hostpools-solution.md)
 
-In this exercise we will be creating an Azure Virtual Desktop host pool for personal desktops. This is a set of computers or hosts which operate on an as-needed basis. In a pooled configuration we will be hosting multiple non-persistent sessions, with no user profile information stored locally. This is where FSLogix Profile Containers provide the users profile to the host dynamically. This provides the ability for an organization to fully utilize the compute resources on a single host and lower the total overhead, cost, and number of remote workstations.
+In this exercise we will be creating an Azure Virtual Desktop host pool for personal desktops. This is a set of computers or hosts which operate on an as-needed basis. 
+
 
 **Additional Resources**
 
@@ -12,37 +13,37 @@ In this exercise we will be creating an Azure Virtual Desktop host pool for pers
 |----------|:-------------:|
 | Description | Links |
 | Create a host pool with the Azure portal | https://docs.microsoft.com/en-us/azure/virtual-desktop/create-host-pools-azure-marketplace |
-  |              |            | 
+  | Configure the personal desktop host pool assignment type | https://learn.microsoft.com/en-us/azure/virtual-desktop/configure-host-pool-personal-desktop-assignment-type | 
 
-### Task 1: Create a new Host Pool and Workspace
+## Task 1: Create a new Personal Host Pool and Workspace
 
 1.  Sign in to the [Azure Portal](https://portal.azure.com/).
 
 2.  Search for **Azure Virtual Desktop** and select it from the list.
 
-    ![This image shows the Azure portal search bar, and how to search for Azure Virtual Desktop and select the service.](../Images/02-Hostpool_create_multisession_1.png)    
-
 3.  Under Manage, select **Host pools** and select **+ Create**.
    
-    ![This image shows where to select host pools under manage and select add to add a new host pool.](../Images/01-avdHostPool.png "Azure Virtual Desktop blade")
+![This image shows where to select host pools under manage and select add to add a new host pool.](../Images/01-avdHostPool.png "Azure Virtual Desktop blade")
 
 4.  On the Basics page, refer to the following screenshot to fill in the required fields. Select your Subscription, Resource Group and define a Hostpool name. As Location choose **West Europe**. 
 
-:warning: This will only effect Meta data. The Datacenter location for virtual machines will follw. 
+> **Info:** This will only effect metadata. The Datacenter location for virtual machines will follow. 
 
 Change **Validation environment** to **Yes**.
 Once complete, select **Next: Virtual Machines**.
 
-    ![This image shows where you will enter the information for the host pool.](../Images/01-createhostpool.png "Create host pool page")
+![This image shows where you will enter the information for the host pool.](../Images/01-createpersonalhostpool.png "Create host pool page")
 
-5.  On the Virtual Machines page, provision a Virtual machine with the **Windows 10 multi-user + M365 apps**. Once complete, select **Next: Workspace**.
+5.  On the Virtual Machines page, provision a Virtual machine with the **Windows 11 Enterprise**. Once complete, select **Next: Workspace**.
    
-6.  For the **Image**, select **Browse all images and disks** and search to find **Windows 10 Enterprise or Windows 11 Enterprise** and select that image.
+6.  For the **Image**, select **Browse all images and disks** and search to find **Windows 11 Enterprise** and select that image.
     >**Note**: Selecting this image is very important. You will need the Microsoft 365 for assigning apps in this exercise.
 
-    ![This image shows the image that you need for your host pool virtual machine.](../Images/01-vmwith365.png "Host pool Virtual Machine with image")
+    ![This image shows the image that you need for your host pool virtual machine.](../Images/01-vmwith365_1.png "Host pool Virtual Machine with image")
 
-    ![The image shows the blade that you will enter in the information for the host pool name and select next for virtual machines.](../Images/01-nextworkspace5.png "Virtual Machine information")
+    ![This image shows the image that you need for your host pool virtual machine.](../Images/01-vmwith365_2.png "Host pool Virtual Machine with image")
+
+     ![This image shows the image that you need for your host pool virtual machine.](../Images/01-vmwith365_3.png "Host pool Virtual Machine with image")
 
 7.  On the Workspace page, select **Yes** to register a new desktop app group. Select **Create new** and provide a **Workspace name**. Select **OK** and **Review + create**.
 
@@ -50,7 +51,7 @@ Once complete, select **Next: Virtual Machines**.
 
 8.  On the Create a host pool page, select **Create**.
 
-### Task 2: Create a friendly name for the workspace
+## Task 2: Create a friendly name for the workspace
 
 The name of the Workspace is displayed when the user signs in. Available resources are organized by Workspace. For a better user experience, we will provide a friendly name for our new Workspace. 
 
@@ -74,17 +75,13 @@ The name of the Workspace is displayed when the user signs in. Available resourc
 
 6.  Select **Save**.
 
-    ![This image shows how from the workspace properties tab, view the workspace that you created.](../Images/01-workspaceFriendlyName.png "workspace properties tab")
-
-### Task 3: Assign an Azure AD User to the desktop application group
+## Task 3: Assign an Azure AD User to the desktop application group
 
 In the new Azure Virtual Desktop ARM portal, we now can use Azure Active Directory groups to manage access to our host pools.
 
 1.  Sign in to the [Azure Portal](https://portal.azure.com/).
 
 2.  Search for **Azure Virtual Desktop** and select it from the list.
-
-    ![This image shows where to search for Azure Virtual Desktop from the Azure portal search bar.]../Images/01-searchavd.png "Search for Azure Virtual Desktop")
 
 3.  Under Manage, select **Application groups**.
     

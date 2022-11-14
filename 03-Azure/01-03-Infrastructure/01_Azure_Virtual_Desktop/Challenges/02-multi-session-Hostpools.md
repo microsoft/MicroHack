@@ -1,10 +1,8 @@
-# Exercise 2: Multi-Session Hostpools
+# Exercise 2: Multi-Session Host pools
 [Previous Challenge](./01-Personal-Hostpools.md) - **[Home](../readme.md)** - [Next Challenge](./03-Implement-FSLogix-Profile-Solution.md)
 
 ## Introduction
-In this challenge you will create Azure AD DS joined pooled desktops. After deployment you will connect to the session host, deploy Notepad, 
-create an Image and upload the image to the Image gallery. You will deploy a new hostpool and deploy 2 Session hosts from this image. 
-Then you will provide Remote Apps to user
+In this challenge you will create Azure AD DS joined pooled desktops. After deployment you will connect to the session host, deploy Notepad, create an Image and upload the image to the Image gallery. You will deploy a new hostpool and deploy 2 Session hosts from this image. Then you can provide remote apps to your users.
 
 ## Challenge
 Create multi-session Hostpool joined in Azure Active Directory Domain Services
@@ -12,7 +10,7 @@ Create multi-session Hostpool joined in Azure Active Directory Domain Services
 - Metadata located in West Europe
 - Mark as Validation environment
 - Host Pool type: Pooled
-- Add 1 Virtual machine with a Windows 10 Enterprise multi-session Version 20H2 + Microsoft 365 Apps Gallery image  
+- Add 1 Virtual machine with a Windows 11 Enterprise multi-session Version + Microsoft 365 Apps Gallery image  
 - Domain to join: Azure Active Directory (Enroll with Intune “No”)
 - Register desktop app group to new workspace
 - Assign users
@@ -27,20 +25,19 @@ Deploy session host with recently created image
 - Choose your recently created image
 - Deploy Notepad++ as Remote App
 
-
 ## Success Criteria
 1.	Host Pools are created and Session Hosts are showing available
-2.	Users are assigned to the HostPool's appropriate app group
+2.	Users are assigned to the appropriate application group of the host pool
 3.	Able to show the Host Pool settings configured.
 4.	VMs are joined to Azure AD DS
 5.	users can sign in to the VM.
 6.	Notepad++ is installed on all VMs within the pooled Hostpool and can be accessed via RemoteApp
 
 ## Learning Resources
-- [Create Azure Virtual Desktop Hostpool](https://docs.microsoft.com/de-de/azure/virtual-desktop/create-host-pools-azure-marketplace?tabs=azure-portal)
-- [Capture an image of a VM using the portal](https://docs.microsoft.com/en-us/azure/virtual-machines/capture-image-portal)
-- [Manage app groups for Azure Virtual Desktop portal](https://docs.microsoft.com/en-us/azure/virtual-desktop/manage-app-groups)
-- [Connect with the Windows Desktop Client](https://docs.microsoft.com/en-us/azure/virtual-desktop/user-documentation/connect-windows-7-10#install-the-windows-desktop-client)
+- [Create Azure Virtual Desktop Hostpool](https://learn.microsoft.com/en-us/azure/virtual-desktop/create-host-pools-azure-marketplace)
+- [Capture an image of a VM using the portal](hhttps://learn.microsoft.com/en-us/azure/virtual-machines/capture-image-portal)
+- [Manage app groups for Azure Virtual Desktop portal](https://learn.microsoft.com/en-us/azure/virtual-desktop/manage-app-groups)
+- [Connect to Azure Virtual Desktop with the Remote Desktop client for Windows](https://learn.microsoft.com/en-us/azure/virtual-desktop/users/connect-windows?tabs=subscribe#install-the-windows-desktop-client)
 
 
 

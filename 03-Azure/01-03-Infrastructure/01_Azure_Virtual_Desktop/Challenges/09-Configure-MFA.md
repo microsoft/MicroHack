@@ -3,7 +3,9 @@
 [Previous Challenge](./00-xxx.md) - **[Home](../readne.md)** - [Next Challenge](./xxx.md)
 
 ## Introduction
-The Windows client for Azure Virtual Desktop is an excellent option for integrating Azure Virtual Desktop with your local machine. However, when you configure your Azure Virtual Desktop account into the Windows Client, there are certain measures you'll need to take to keep yourself and your users safe.
+The Windows client for Azure Virtual Desktop is an excellent option for integrating Azure Virtual Desktop with your local machine. 
+
+However, when you configure your Azure Virtual Desktop account into the Windows Client, there are certain measures you'll need to take to keep yourself and your users safe.
 Multi Factor Authentication or MFA and conditional access enables you to add an additional layer of security.
 
 ## Challenge 

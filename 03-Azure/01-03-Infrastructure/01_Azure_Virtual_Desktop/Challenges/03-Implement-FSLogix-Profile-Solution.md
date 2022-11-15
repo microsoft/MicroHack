@@ -26,10 +26,9 @@ As a prerequisite for this Microhack, you've already set up an Azure AD DS insta
 In order to use profile containers, you'll need to configure FSLogix on your session host VMs. If you're using a custom image that doesn't have the FSLogix Agent already installed, follow the instructions in [Download and install FSLogix](https://docs.microsoft.com/en-us/fslogix/install-ht). 
 
 - Login into your multi-session VMs
-- mount your fileshare
+- mount your file share and configure NTFS permissions
 - allow your Azure Virtual Desktop users to create their own profile container while blocking access to the profile containers from other users
-- create a prifile container with FSLogix
-       
+- create a profile container with FSLogix     
 
 ## Success Criteria
 - Storage Account and File share is setup correctly
@@ -40,9 +39,9 @@ In order to use profile containers, you'll need to configure FSLogix on your ses
 - Make sure your profile works
 
 ### Learning Resources
-- [Create a storage account for Azure File Shares](https://docs.microsoft.com/en-us/azure/storage/files/storage-how-to-create-file-share?tabs=azure-portal#create-a-storage-account)
-- [Create an Azure file share](https://docs.microsoft.com/en-us/azure/storage/files/storage-how-to-create-file-share?tabs=azure-portal)
-- [Create a profile container with Azure Files and Azure AD DS](https://docs.microsoft.com/en-us/azure/virtual-desktop/create-profile-container-adds)
-- [Configure FSLogix for the Enterprise](https://docs.microsoft.com/en-us/azure/architecture/example-scenario/wvd/windows-virtual-desktop-fslogix)
-- [Circumvent port 445 issues](https://docs.microsoft.com/en-us/azure/storage/files/storage-files-networking-overview#azure-networking)
+- [Create a storage account for Azure File Shares](https://learn.microsoft.com/en-us/azure/storage/files/storage-how-to-create-file-share?tabs=azure-portal#create-a-storage-account)
+- [Create an Azure file share](https://learn.microsoft.com/en-us/azure/storage/files/storage-how-to-create-file-share?tabs=azure-portal)
+- [Create a profile container with Azure Files and Azure AD DS](https://learn.microsoft.com/en-us/azure/virtual-desktop/fslogix-profile-container-configure-azure-files-active-directory?tabs=adds)
+- [Configure FSLogix for the Enterprise](https://learn.microsoft.com/en-us/azure/architecture/example-scenario/wvd/windows-virtual-desktop-fslogix)
+- [Circumvent port 445 issues](https://learn.microsoft.com/en-us/azure/storage/files/storage-files-networking-overview#azure-networking
 

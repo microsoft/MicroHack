@@ -1,6 +1,6 @@
-## Contribute to MicroHacks
+# Contribute to MicroHacks
 
-Thank you for your interest in our MicroHacks! 
+Thank you for your interest in our MicroHacks!
 
 - [Contribute to MicroHacks](#contribute-to-microhacks)
 - [How to contribute 🚀](#how-to-contribute-)
@@ -29,7 +29,6 @@ To contribute to the [MicroHacks](./README.md), you need to fork this repository
 * [Changing a commit message](https://help.github.com/articles/changing-a-commit-message/)
 * [How to squash commits](https://help.github.com/articles/about-pull-request-merges/)
 
-
 ## Contributing guidelines 🚩
 
 This project welcomes contributions and suggestions. Most contributions require you to agree to a
@@ -43,7 +42,6 @@ provided by the bot. You will only need to do this once across all repos using o
 This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
 For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
 contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
-
 
 ## MicroHack intent
 
@@ -99,7 +97,7 @@ For example:
 
 ## Template
 
-In order to bootstrap new MicroHacks we created a [template file](/99-MicroHack-Template/readme.md) for your convenience. Feel free to use it for your new MicroHacks or copy exisiting MicroHacks that better fit your ideas. 
+In order to bootstrap new MicroHacks we created a [template file](/99-MicroHack-Template/readme.md) for your convenience. Feel free to use it for your new MicroHacks or copy exisiting MicroHacks that better fit your ideas.
 
 ## Formatting
 

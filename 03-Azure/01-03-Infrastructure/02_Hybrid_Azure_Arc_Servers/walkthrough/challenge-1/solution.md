@@ -48,9 +48,9 @@ Sign in to the [Azure Portal](https://portal.azure.com/).
 
 With these prerequisites in place, we can focus on building the differentiated knowledge in the hybrid world with Azure Arc to enable your on-prem, Multi-Cloud environment for the Cloud operations model.
 
-### Task 5: Onboard Server OS to Azure Arc
+### Task 5: Onboard Windows Server OS to Azure Arc
 
-* Onboard the recent installed or prepared Server OS to Azure Arc, by using the documented steps
+* Onboard the recent installed or prepared Windows Server OS to Azure Arc, by using the documented steps
 1. Generate the installation script from the Azure portal [Link](https://learn.microsoft.com/en-us/azure/azure-arc/servers/onboard-service-principal#generate-the-installation-script-from-the-azure-portal)
 * Step by step
 ![image](./img/1.png)
@@ -65,5 +65,58 @@ With these prerequisites in place, we can focus on building the differentiated k
 
 4. Check in the Azure portal that the Server OS is visible.
 
+### Task 6: Onboard Linux Server OS to Azure Arc
+
+* Onboard the recent installed or prepared Linux Server OS to Azure Arc, by using the documented steps or create a new VM based on the following steps
+1. Create Hyper-V VM for Linux
+
+* Step by step
+
+![image](./img/8.png)
+![image](./img/9.png)
+![image](./img/10.png)
+![image](./img/11.png)
+![image](./img/12.png)
+![image](./img/13.png)
+* Select the downloaded ISO; here the download [link](https://ubuntu.com/download/server) for Ubuntu 22.04 ISO
+
+![image](./img/14.png)
+![image](./img/15.png)
+![image](./img/16.png)
+* Important step! Change the template for Secure Boot [Reference Link](https://www.thomasmaurer.ch/2018/06/how-to-install-ubuntu-in-a-hyper-v-generation-2-virtual-machine/)
+
+2. Setup of Linux Ubuntu 22.04
+
+![image](./img/17.png)
+![image](./img/18.png)
+![image](./img/19.png)
+![image](./img/20.png)
+![image](./img/21.png)
+![image](./img/22.png)
+![image](./img/23.png)
+![image](./img/24.png)
+![image](./img/25.png)
+![image](./img/26.png)
+* Select OpenSSH
+
+![image](./img/27.png)
+
+3. Generate the installation script from the Azure portal [Link](https://learn.microsoft.com/en-us/azure/azure-arc/servers/onboard-service-principal#generate-the-installation-script-from-the-azure-portal)
+
+![image](./img/28.png)
+![image](./img/29.png)
+![image](./img/30.png)
+![image](./img/31.png)
+![image](./img/32.png)
+4. Add the passphrase for the service principal the downloaded script
+![image](./img/33.png)
+5. Connect to Linux Server via PowerShell SSH [Link] (https://devblogs.microsoft.com/powershell/using-the-openssh-beta-in-windows-10-fall-creators-update-and-windows-server-1709/)
+* Use the account and password from setup
+
+![image](./img/34.png)
+6. run the script [Link](https://learn.microsoft.com/en-us/azure/azure-arc/servers/onboard-portal#install-with-the-scripted-method)
+* Copy step by step the script to the SSH console
+7. Check in the Azure portal that the Server OS is visible.
+![image](./img/35.png)
 
 You successfully completed challenge 1! 🚀🚀🚀

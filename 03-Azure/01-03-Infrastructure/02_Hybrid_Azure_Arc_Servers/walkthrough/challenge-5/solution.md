@@ -1,3 +1,9 @@
+# Walkthrough Challenge 5 - Azure Automanage Machine Configuration
+
+Duration: 30 minutes
+
+[Previous Challenge Solution](../challenge-4/solution.md) - **[Home](../../Readme.md)**
+
 ## Action 1: Create an Azure Policy Guest Configuration for your Azure Arc VMs
 
 ### Setup a Policy that checks if the user "FrodoBaggins" is part of the local administrators group

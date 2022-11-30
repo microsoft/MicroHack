@@ -14,17 +14,17 @@ Please ensure that you successfully passed [challenge 2](../../Readme.md#challen
 
 ![image](./img/1_new_KV.png)
 
-2. Create the Azure Key Vault in your resource group *microhack-arc-servers-rg* with default settings and call it *mh-arc-servers-kv* with a random number at the end as the name needs to be unique across all Azure Key Vaults.
+2. Create the Azure Key Vault in your resource group *mh-arc-servers-rg* with default settings and call it *mh-arc-servers-kv* with a random number at the end as the name needs to be unique across all Azure Key Vaults.
 
-![image](./img/2_KV_settings.png)
+![image](./img/2_KV_settings.jpg)
 
 3. Please wait a few seconds until the creation of the Key Vault is complete. 
 
 ### Task 2: Create a new secret in your Key Vault
 
-1. After the creation navigate to the Azure Key Vault and assign the *Secret Management* template to the managed identity of your Azure Arc-enabled server *microhack-arc-servers-lin01*.
+1. After the creation navigate to the Azure Key Vault and assign the *Secret Management* template to the managed identity of your Linux Azure Arc-enabled server.
 
-![image](./img/3_Assign_KeyVault_permissions.png)
+![image](./img/3_Assign_KeyVault_permissions.jpg)
 
 2. Create a new secret called *kv-secret* and give it a value like *This-is-top-secret!!!*.
 
@@ -40,6 +40,7 @@ Please ensure that you successfully passed [challenge 2](../../Readme.md#challen
 ```
 sudo -i
 ```
+
 
 3. Install your favorite JSON parser. In this example we will use jq.
 
@@ -79,6 +80,6 @@ curl 'https://mh-arc-servers-kv0815.vault.azure.net/secrets/kv-secret?api-versio
 
 ![image](./img/5_result_secret.png)
 
-Congratulations! You retrieved the secret from your Key Vault without providing any credentials.
+Congratulations! You retrieved the secret from your Key Vault without providing any credentials. The resulting possibilities are limitless. You can use it for managing certificates or any secret that is necessary to run your on-premises application. 
 
 You successfully completed challenge 3! 🚀🚀🚀

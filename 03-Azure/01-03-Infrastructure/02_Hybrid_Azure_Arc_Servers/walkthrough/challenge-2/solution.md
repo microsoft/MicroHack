@@ -58,9 +58,9 @@ Please note: The Azure Monitor agent is the successor of the legacy Log Analytic
 
 4. Please wait a few seconds until the creation of the assignment is complete. You should see that the initiative is assigned. Every new Azure Arc Server will now automatically install the necessary agents. 
 
-5. Note: Both machines were already onboarded earlier. As a result, you need to create a remediation task to apply the policy to your Azure Arc Servers. Please select the Policy Assignment and select *Create Remediation Task*.
+5. Important: Both machines were already onboarded earlier. As a result, you need to create a remediation task to apply the policy to your Azure Arc Servers. Please select the Policy Assignment and select *Create Remediation Task*.
 
-![image](./img/26_create_remediation_task.jpg)
+![image](./img/26a_create_remediation_task.jpg)
 
 6. Accept the default values, check *Re-evaluate resource compliance before remediating* and repeat the remediation for the following policies:
  - LogAnalyticsExtension_Windows_HybridVM_Deploy
@@ -68,7 +68,7 @@ Please note: The Azure Monitor agent is the successor of the legacy Log Analytic
  - DependencyAgentExtension_Windows_HybridVM_Deploy
  - DependencyAgentExtension_Linux_HybridVM_Deploy
 
-![image](./img/27_task.jpg)
+![image](./img/26_create_remediation_task.jpg)
 
 7. Verify that all remediation were successful.
 

@@ -1,3 +1,9 @@
+# Walkthrough Challenge 5 - Azure Automanage Machine Configuration
+
+Duration: 30 minutes
+
+[Previous Challenge Solution](../challenge-4/solution.md) - **[Home](../../Readme.md)**
+
 ## Action 1: Create an Azure Policy Guest Configuration for your Azure Arc VMs
 
 ### Setup a Policy that checks if the user "FrodoBaggins" is part of the local administrators group
@@ -11,7 +17,7 @@
 
 3. In this section you can now configure the assignment with the following settings and create the assignment:
 
-- Scope: Please select the resource group called *AzStackHCI-MicroHack-Azure*
+- Scope: Please select the resource group called *mh-arc-servers-rg*
 - Policy Definition: Please search for *administrators group* and select *Audit Windows machines missing any of the specified members in the Administrators group*.
 - Parameters: Please ensure to set *Include Arc connected servers* to *true and *Members to include* to *FrodoBaggins*.
 
@@ -75,7 +81,7 @@ $blob = az storage blob upload --auth-mode login --account-name [StorageAccountN
 $sas = az storage blob generate-sas --account-name [StorageAccountName] --container-name [ContainerName] --name [File] --permissions r --expiry [ExpirationDate format: 2023-01-01T00:00:00Z] --https-only --full-uri
 ```
 
-2. To assign the Machine Configuration we will use a Azure Policy. To create the Policy refer to the following Powershell Block
+2. To assign the Machine Configuration we will use a Azure Policy. To create the Policy refer to the following Powershell Block. The Policy is created at the Tenant Root so that we can assign it to all subscriptions.
 ```powershell
 #Define Policy Parameters
 $id = (New-Guid).guid

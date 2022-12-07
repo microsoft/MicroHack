@@ -1,4 +1,4 @@
-# Walkthrough Challenge 4 - Access Azure resources using Managed Identities from your on-premises servers
+# Walkthrough Challenge 4 - Microsoft Defender for Cloud integration with Azure Arc
 
 Duration: 30 minutes
 

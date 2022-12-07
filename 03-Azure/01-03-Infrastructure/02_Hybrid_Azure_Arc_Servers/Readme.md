@@ -161,7 +161,7 @@ Managing secrets, credentials or certificates to secure communication between di
 
 ### Success Criteria
 
-* You successfully output the secret in the terminal on microhack-arc-servers-lin01 without providing any credentials (except for your SSH login 😊).
+* You successfully output the secret in the terminal on your Linux server without providing any credentials (except for your SSH login 😊).
 
 ### Learning resources
 

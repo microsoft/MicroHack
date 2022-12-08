@@ -2,7 +2,7 @@
 
 Duration:  30 minutes
 
-[Previous Challenge Solution](./01-Personal-Hostpools-solution.md) - **[Home](../readme.md)** - [Next Challenge Solution](02-multi-session-Hostpools-solution.md)
+[Previous Challenge Solution](./01-Personal-Hostpools-solution.md) - **[Home](../Readme.md)** - [Next Challenge Solution](02-multi-session-Hostpools-solution.md)
 
 In this exercise we will be creating an Azure Virtual Desktop host pool for personal desktops. This is a set of computers or hosts which operate on an as-needed basis. 
 

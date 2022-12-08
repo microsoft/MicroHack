@@ -1,6 +1,6 @@
-# Exercise 3: FSLogix Profile Solution
+# Exercise 3: Create FSLogix Profile Solution
 
-[Previous Challenge](./02-multi-session-Hostpools.md) - **[Home](../readme.md)** - **[Next Challenge](04-start-VM-on-connect.md)**
+[Previous Challenge](./02-multi-session-Hostpools.md) - **[Home](../Readme.md)** - **[Next Challenge](04-start-VM-on-connect.md)**
 
 ## Introduction
 The Azure Virtual Desktop service recommends FSLogix profile containers as a user profile solution. FSLogix is designed to roam profiles in Azure Virtual Desktop, mostly needed for multi-session with floating user scenarios. It stores a complete user profile in a single container. At sign in, this container is dynamically attached to the computing environment using natively supported Virtual Hard Disk (VHD) and Hyper-V Virtual Hard disk (VHDX). The user profile is immediately available and appears in the system exactly like a native user profile. 

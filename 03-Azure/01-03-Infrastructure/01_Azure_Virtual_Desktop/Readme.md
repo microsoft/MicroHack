@@ -26,7 +26,7 @@ In this hack you will learn how to set up a Azure Virtual Desktop in a typical s
 - Challenge 4: **[Implement Start VM on Connect Feature](Challenges/04-start-VM-on-connect.md)**
 - Challenge 5: **[Set up a scaling plan](Challenges/05-scaling-plan.md)**
 - Challenge 6: **[Customize RDP Properties](Challenges/06-RDP-properties.md)**
-- Challenge 7 (optional): **[Configure MFA](Challenges/09-Configure-MFA.md)**
+- Challenge 7 (optional): **[Configure MFA](Challenges/07-Configure-MFA.md)**
 
 
 ## Prerequisites
@@ -45,7 +45,7 @@ In this hack you will learn how to set up a Azure Virtual Desktop in a typical s
 - Challenge 4: **[Implement Start VM on Connect Feature](Solutionguide/04-start-VM-on-connect-solution.md)**
 - Challenge 5: **[Set up a scaling plan](Solutionguide/05-scaling-plan-solution.md)**
 - Challenge 6: **[Customize RDP Properties](Solutionguide/06-RDP-properties-solution.md)**
-- Challenge 7: **(optional): [Configure MFA](Solutionguide/07-Configure-MFA)**
+- Challenge 7: **(optional): [Configure MFA](Solutionguide/07-Configure-MFA.md)**
 
 ## Contributor
 - [Ben Martin Baur](https://www.linkedin.com/in/ben-martin-baur/)

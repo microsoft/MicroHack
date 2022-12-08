@@ -1,5 +1,5 @@
-# Exercise 2: Multi-Session Host pools
-[Previous Challenge](./01-Personal-Hostpools.md) - **[Home](../readme.md)** - [Next Challenge](./03-Implement-FSLogix-Profile-Solution.md)
+# Exercise 2: Create a host pool for multi-session desktops
+[Previous Challenge](./01-Personal-Hostpools.md) - **[Home](../Readme.md)** - [Next Challenge](./03-Implement-FSLogix-Profile-Solution.md)
 
 ## Introduction
 In this challenge you will create Azure AD DS joined pooled desktops. After deployment you will connect to the session host, deploy Notepad, create an Image and upload the image to the Image gallery. You will deploy a new hostpool and deploy 2 Session hosts from this image. Then you can provide remote apps to your users.

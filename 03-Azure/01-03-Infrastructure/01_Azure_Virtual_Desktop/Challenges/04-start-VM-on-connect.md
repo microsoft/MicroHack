@@ -1,5 +1,6 @@
-# Exercise 4: Start VM on Connect
-[Previous Challenge](./03-Implement-FSLogix-Profile-Solution.md) - **[Home](../readme.md)** - [Next Challenge](./05-scaling-plan.md)
+# Exercise 4: Implement Start VM on Connect Feature
+
+[Previous Challenge](./03-Implement-FSLogix-Profile-Solution.md) - **[Home](../Readme.md)** - [Next Challenge](./05-scaling-plan.md)
 
 ## Introduction
 

@@ -1,4 +1,4 @@
-# Exercise 2: Create a host pool for multi-session desktops
+# Exercise 2: Create a host pool for multi-session
 [Previous Challenge](./01-Personal-Hostpools.md) - **[Home](../Readme.md)** - [Next Challenge](./03-Implement-FSLogix-Profile-Solution.md)
 
 ## Introduction

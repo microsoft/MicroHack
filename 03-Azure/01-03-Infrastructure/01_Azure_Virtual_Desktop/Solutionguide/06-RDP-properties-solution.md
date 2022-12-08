@@ -3,7 +3,7 @@
 Duration:
 
 
-[Previous Challenge Solution](./05-scaling-plan-solution.md) - **[Home](../readme.md)** - [Next Challenge Solution](06-RDP-properties-solution.md)
+[Previous Challenge Solution](./05-scaling-plan-solution.md) - **[Home](../Readme.md)** - [Next Challenge Solution](06-RDP-properties-solution.md)
 
 In this challenge, you will configure optimal user experience by customizing RDP Properties.
 
@@ -12,6 +12,7 @@ Azure Virtual Desktop enables you to configure and customize Remote Desktop Prot
 Customizing a host pool's Remote Desktop Protocol (RDP) properties, such as multi-monitor experience and audio redirection, lets you deliver an optimal experience for your users based on their needs. 
 
 If you'd like to change the default RDP file properties, you can customize RDP properties in Azure Virtual Desktop by either using the Azure portal or by using the -CustomRdpProperty parameter in the Update-AzWvdHostPool cmdlet.
+
 
 **Additional Resources**
 

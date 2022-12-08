@@ -3,7 +3,7 @@
 Duration:
 
 
-[Previous Challenge Solution](./05-scaling-plan-solution.md) - **[Home](../Readme.md)** - [Next Challenge Solution](06-RDP-properties-solution.md)
+[Previous Challenge Solution](./05-scaling-plan-solution.md) - **[Home](../Readme.md)** - [Next Challenge Solution](07-Configure-MFA.md)
 
 In this challenge, you will configure optimal user experience by customizing RDP Properties.
 

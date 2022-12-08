@@ -1,4 +1,4 @@
-# Exercise 1: Personal Host pools
+# Exercise 1: Create a host pool for personal desktops
 
 [Previous Challenge](./00-Pre-Reqs.md) - **[Home](../readme.md)** - **[Next Challenge](02-multi-session-Hostpools.md)**
 

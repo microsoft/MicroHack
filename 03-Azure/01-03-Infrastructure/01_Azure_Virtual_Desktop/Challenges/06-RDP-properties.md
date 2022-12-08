@@ -1,6 +1,6 @@
-# Exercise 6: RDP Properties
+# Exercise 6: Customize RDP Properties
 
-[Previous Challenge](./05-scaling-plan.md) - **[Home](../readne.md)** - [Next Challenge](./xxx.md)
+[Previous Challenge](./05-scaling-plan.md) - **[Home](../Readne.md)** - [Next Challenge](./xxx.md)
 
 ## Introduction
 Azure Virtual Desktop enables you to configure and customize Remote Desktop Protocol (RDP) properties for a host pool. 

@@ -12,7 +12,7 @@ In this exercise we will be creating an Azure Virtual Desktop host pool for pers
   |              |            |  
 |----------|:-------------:|
 | Description | Links |
-| Create a host pool with the Azure portal | https://docs.microsoft.com/en-us/azure/virtual-desktop/create-host-pools-azure-marketplace |
+| Create a host pool with the Azure portal | https://learn.microsoft.com/en-us/azure/virtual-desktop/create-host-pools-azure-marketplace |
   | Configure the personal desktop host pool assignment type | https://learn.microsoft.com/en-us/azure/virtual-desktop/configure-host-pool-personal-desktop-assignment-type | 
 
 ## Task 1: Create a new Personal Host Pool and Workspace

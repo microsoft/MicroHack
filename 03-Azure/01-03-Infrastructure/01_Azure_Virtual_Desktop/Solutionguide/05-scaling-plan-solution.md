@@ -3,7 +3,7 @@
 Duration:
 
 
-[Previous Challenge Solution](./04-start-VM-on-connect-solution.md) - **[Home](../readme.md)** - [Next Challenge Solution](06-RDP-properties-solution.md)
+[Previous Challenge Solution](./04-start-VM-on-connect-solution.md) - **[Home](../Readme.md)** - [Next Challenge Solution](06-RDP-properties-solution.md)
 
 
 **Additional Resources**

@@ -1,5 +1,6 @@
-# Exercise 5: Scaling plan 
-[Previous Challenge](./04-start-VM-on-connect.md) - **[Home](../readme.md)** - [Next Challenge](./06-RDP-properties.md)
+# Exercise 5: Set up a scaling plan
+
+[Previous Challenge](./04-start-VM-on-connect.md) - **[Home](../Readme.md)** - [Next Challenge](./06-RDP-properties.md)
 
 ## Introduction
 Taking a look at the multi-session usage pattern we recognize that some days are busier than others. Busy days have specific peak hours as well as times where the desktops are not used at all. 

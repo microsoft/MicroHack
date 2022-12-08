@@ -3,7 +3,7 @@
 Duration:
 
 
-[Previous Challenge Solution](./03-Implement-FSLogix-Profile-Solution.md) - **[Home](../readme.md)** - [Next Challenge Solution](05-scaling-plan-solution.md)
+[Previous Challenge Solution](./03-Implement-FSLogix-Profile-Solution.md) - **[Home](../Readme.md)** - [Next Challenge Solution](05-scaling-plan-solution.md)
 
 
 **Additional Resources**

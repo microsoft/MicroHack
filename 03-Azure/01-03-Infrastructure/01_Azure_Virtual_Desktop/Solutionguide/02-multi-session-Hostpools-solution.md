@@ -56,9 +56,7 @@ Once complete, select **Next: Virtual Machines**.
     ![This image shows how from the create a host pool workspace tab, enter the required information.](../Images/02-hostpoolWorkspace.png "Create a host pool workspace tab")
 
 8.  On the Create a host pool page, select **Create**.
-## Task2:
-
-### Assign user access to host pools
+## Task2: Assign user access to host pools
 
 After you've created your host pool, you must assign users access to let them access their resources. To grant access to resources, add each user to the app group. Follow the instructions in Manage app groups to assign user access to apps and desktops. We recommend that you use user groups instead of individual users wherever possible.
 
@@ -85,9 +83,7 @@ To configure Virtual machine Administrator login for **AVDuser3**, follow the fo
 
 ![Assign user access to host pools](../Images/02-assign_user_access_2.png)
 
-## Task 3:
-
-### Create a new imaging VM and install applications
+## Task 3: Create a new imaging VM and install applications
 
 1.  Open the [Azure Virtual Machine site](https://azvm.cmd.ms/) and create new virtual machine for manual creation of a custom image. 
 
@@ -155,7 +151,6 @@ For more information check this [link](https://learn.microsoft.com/en-us/azure/v
 - Target Azure compute gallery: **Select create new, insert a name AVD_multisession_Image_gallery**
 - Operating system state: **Generalized: VMs created from this image require hostname, admin user, and other VM related setup to be completed on first boot**
 
-
 ![Create Image](../Images/02-Create_Image_3.png)
 - Target VM image definition: **Select Create new**
 - Insert name: **AVD_multisession_Image_gallery**
@@ -172,8 +167,7 @@ For more information check this [link](https://learn.microsoft.com/en-us/azure/v
 - Under Replication, select a default replica count and then select any additional regions where you would like your image replicated.
 - When you are done, select **Review + create**.
 
-## Task 4:
-### Create 2 session hosts from your recently created image
+## Task 4: Create 2 session hosts from your recently created image
 
 1. Navigate to your multisession hostpool and select **Session host**
 2. Click **Add**

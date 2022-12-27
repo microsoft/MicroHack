@@ -79,7 +79,7 @@ Azure Virtual Desktop uses Azure AD for identity and access management. Azure AD
 In challenge 3, you need to create an Azure Files share to store FSLogix profiles that can be accessed by hybrid user identities authenticated with Azure Active Directory (Azure AD). Azure AD users can now access an Azure file share using Kerberos authentication. This configuration uses Azure AD to issue the necessary Kerberos tickets to access the file share with the industry-standard SMB protocol. End-users can access Azure file shares over the internet without requiring a line-of-sight to domain controllers from Hybrid Azure AD-joined and Azure AD-joined VMs. Using Azure Files with Azure Active Directory authenticaion. you have to apply the steps from [this guide](https://docs.microsoft.com/en-us/azure/virtual-desktop/create-profile-container-adds)
 
 Important: Cloud-only identities aren't currently supported. Therefore the user identities must be synced once from Active Directory Domain Service to Azure AD 
-(https://learn.microsoft.com/en-us/azure/active-directory/hybrid/whatis-azure-ad-connect)
+[Azure AD Connect](https://learn.microsoft.com/en-us/azure/active-directory/hybrid/whatis-azure-ad-connect)
 
 
 #### Azure Virtual Desktop session hosts:

@@ -14,7 +14,7 @@ The Azure Virtual Desktop service recommends FSLogix profile containers as a use
 | Description | Links |
 | Create a storage account | https://learn.microsoft.com/en-us/azure/storage/common/storage-account-create?tabs=azure-portal |
 | Create an Azure file share | https://learn.microsoft.com/en-us/azure/storage/files/storage-how-to-create-file-share?tabs=azure-portal |
-|Create a profile container with Azure Files and Azure Active Directory Domain Services  |  https://learn.microsoft.com/en-us/azure/virtual-desktop/fslogix-profile-container-configure-azure-files-active-directory?tabs=adds  | 
+|Create a profile container with Azure Files and Azure Active Directory   |  https://learn.microsoft.com/en-us/azure/virtual-desktop/create-profile-container-azure-ad  | 
 | Circumvent port 445 issues | https://learn.microsoft.com/en-us/azure/storage/files/storage-files-networking-overview#azure-networking |
   |              |            | 
 

@@ -13,7 +13,7 @@ The following image shows the overall conceptual reference architecture that dem
 
 ![AVD Architecture](../Images/00-azure-virtual-desktop-architecture.png)
 
-For this MiniHack we simplify the deployment down to Azure AD joined sessionhosts only so there are no dependencies on Domain Controllers.  
+For this MicroHack we simplify the deployment down to Azure AD joined sessionhosts only so there are no dependencies on Domain Controllers.  
 
 The architecture will be like 
 

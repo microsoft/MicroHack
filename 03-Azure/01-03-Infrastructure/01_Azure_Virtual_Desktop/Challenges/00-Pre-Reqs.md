@@ -72,7 +72,7 @@ Customers manage these components of Azure Virtual Desktop solutions:
 ### Azure Virtual Network:
 Azure Virtual Network lets Azure resources like VMs communicate privately with each other and with the internet. By connecting Azure Virtual Desktop host pools to an Active Directory domain, you can define network topology to access virtual desktops and virtual apps from the intranet or internet, based on organizational policy. You can connect an Azure Virtual Desktop to an on-premises network using a virtual private network (VPN), or use Azure ExpressRoute to extend the on-premises network into the Azure cloud over a private connection.
 
-> Important: Make sure that the virtual machines can access [the required AVD URLs.](https://learn.microsoft.com/en-us/azure/virtual-desktop/safe-url-list?tabs=azure)
+> **Note**: Make sure that the virtual machines can access [the required AVD URLs.](https://learn.microsoft.com/en-us/azure/virtual-desktop/safe-url-list?tabs=azure)
 
 ### Azure AD:
 Azure Virtual Desktop uses Azure AD for identity and access management. Azure AD integration applies Azure AD security features like conditional access, multi-factor authentication, and the Intelligent Security Graph, and helps maintain app compatibility in domain-joined VMs.
@@ -80,7 +80,7 @@ Azure Virtual Desktop uses Azure AD for identity and access management. Azure AD
 ### Azure AD and FSLogix (challenge 3):
 In challenge 3, you need to create an Azure Files share to store FSLogix profiles that can be accessed by hybrid user identities authenticated with Azure Active Directory (Azure AD). Azure AD users can now access an Azure file share using Kerberos authentication. This configuration uses Azure AD to issue the necessary Kerberos tickets to access the file share with the industry-standard SMB protocol. End-users can access Azure file shares over the internet without requiring a line-of-sight to domain controllers from Hybrid Azure AD-joined and Azure AD-joined VMs. Using Azure Files with Azure Active Directory authenticaion. you have to apply the steps from [this guide](https://docs.microsoft.com/en-us/azure/virtual-desktop/create-profile-container-adds)
 
-> Important: Cloud-only identities aren't currently supported. Therefore the user identities must be synced once from Active Directory Domain Service to Azure AD 
+> **Note**: Cloud-only identities aren't currently supported. Therefore the user identities must be synced once from Active Directory Domain Service to Azure AD 
 [Azure AD Connect](https://learn.microsoft.com/en-us/azure/active-directory/hybrid/whatis-azure-ad-connect).
 
 ### Azure Virtual Desktop session hosts:

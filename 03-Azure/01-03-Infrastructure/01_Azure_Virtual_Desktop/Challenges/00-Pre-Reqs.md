@@ -22,7 +22,7 @@ The architecture will be like
 
 ## Setup your networking and resource groups structure
 
-You can setup your networking infrastrcuture with this script and jump to directly to the Azure Active Directory Domain Services konfiguration or do it via the Azure Portal see the Azure Active Directory Domain Services guide below.
+You can setup your networking infrastrcuture with this script.
 
 - Open Visual Studio Code and log in to Azure Cloud Shell at https://shell.azure.com/ and select Bash
 

@@ -116,3 +116,5 @@ With the assignment added, you can move on to the resource group and configure t
     ![This image shows how to add and apply RBAC permissions to a resource group.](../Images/01-rbac3.png "Add Permissions")
 
 With this assignment you now can test the first connection to your AVD session host.
+
+> **Note**: If you are trying to access your virtual desktop from Windows devices or other devices that are not connected to Azure AD, add **targetisaadjoined:i:1** as a custom RDP property to the host pool. [More information here](https://learn.microsoft.com/en-us/azure/virtual-desktop/deploy-azure-ad-joined-vm#access-azure-ad-joined-vms)

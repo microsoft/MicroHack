@@ -72,6 +72,8 @@ Customers manage these components of Azure Virtual Desktop solutions:
 ### Azure Virtual Network:
 Azure Virtual Network lets Azure resources like VMs communicate privately with each other and with the internet. By connecting Azure Virtual Desktop host pools to an Active Directory domain, you can define network topology to access virtual desktops and virtual apps from the intranet or internet, based on organizational policy. You can connect an Azure Virtual Desktop to an on-premises network using a virtual private network (VPN), or use Azure ExpressRoute to extend the on-premises network into the Azure cloud over a private connection.
 
+> Important: Make sure that the virtual machines can access [the required AVD URLs.](https://learn.microsoft.com/en-us/azure/virtual-desktop/safe-url-list?tabs=azure)
+
 ### Azure AD:
 Azure Virtual Desktop uses Azure AD for identity and access management. Azure AD integration applies Azure AD security features like conditional access, multi-factor authentication, and the Intelligent Security Graph, and helps maintain app compatibility in domain-joined VMs.
 

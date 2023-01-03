@@ -22,7 +22,7 @@ The architecture will be like
 
 ## Setup your networking and resource groups structure
 
-You can setup your networking infrastrcuture with this script.
+You can setup your networking infrastructure with [this Bicep script](https://github.com/anggerl/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Azure_Virtual_Desktop/main.bicep).
 
 - Open Visual Studio Code and log in to Azure Cloud Shell at https://shell.azure.com/ and select Bash
 
@@ -52,38 +52,36 @@ You can setup your networking infrastrcuture with this script.
 ## Components
 Azure Virtual Desktop service architecture is similar to Windows Server Remote Desktop Services. Microsoft manages the infrastructure and brokering components, while enterprise customers manage their own desktop host virtual machines (VMs), data, and clients.
 
-### Components Microsoft manages
+## Components Microsoft manages
 Microsoft manages the following Azure Virtual Desktop services, as part of Azure:
 
-#### Web Access:
-The Web Access service within Window Virtual Desktop lets users access virtual desktops and remote apps through an HTML5-compatible web browser as they would with a local PC, from anywhere on any device. You can secure Web Access using multifactor authentication in Azure Active Directory.
-#### Gateway:
+### Web Access:
+The Web Access service within Azure Virtual Desktop lets users access virtual desktops and remote apps through an HTML5-compatible web browser as they would with a local PC, from anywhere on any device. You can secure Web Access using multifactor authentication in Azure Active Directory.
+### Gateway:
 The Remote Connection Gateway service connects remote users to Azure Virtual Desktop apps and desktops from any internet-connected device that can run an Azure Virtual Desktop client. The client connects to a gateway, which then orchestrates a connection from a VM back to the same gateway.
-#### Connection Broker:
+### Connection Broker:
 The Connection Broker service manages user connections to virtual desktops and remote apps. The Connection Broker provides load balancing and reconnection to existing sessions.
-#### Diagnostics:
+### Diagnostics:
 Remote Desktop Diagnostics is an event-based aggregator that marks each user or administrator action on the Azure Virtual Desktop deployment as a success or failure. Administrators can query the event aggregation to identify failing components.
-#### Extensibility components:
+### Extensibility components:
 Azure Virtual Desktop includes several extensibility components. You can manage Azure Virtual Desktop using Windows PowerShell or with the provided REST APIs, which also enable support from third-party tools.
 
-### Components you manage
+## Components you manage
 Customers manage these components of Azure Virtual Desktop solutions:
 
-#### Azure Virtual Network:
+### Azure Virtual Network:
 Azure Virtual Network lets Azure resources like VMs communicate privately with each other and with the internet. By connecting Azure Virtual Desktop host pools to an Active Directory domain, you can define network topology to access virtual desktops and virtual apps from the intranet or internet, based on organizational policy. You can connect an Azure Virtual Desktop to an on-premises network using a virtual private network (VPN), or use Azure ExpressRoute to extend the on-premises network into the Azure cloud over a private connection.
 
-#### Azure AD:
+### Azure AD:
 Azure Virtual Desktop uses Azure AD for identity and access management. Azure AD integration applies Azure AD security features like conditional access, multi-factor authentication, and the Intelligent Security Graph, and helps maintain app compatibility in domain-joined VMs.
 
-#### Azure AD and FSLogix (challenge 3):
-
+### Azure AD and FSLogix (challenge 3):
 In challenge 3, you need to create an Azure Files share to store FSLogix profiles that can be accessed by hybrid user identities authenticated with Azure Active Directory (Azure AD). Azure AD users can now access an Azure file share using Kerberos authentication. This configuration uses Azure AD to issue the necessary Kerberos tickets to access the file share with the industry-standard SMB protocol. End-users can access Azure file shares over the internet without requiring a line-of-sight to domain controllers from Hybrid Azure AD-joined and Azure AD-joined VMs. Using Azure Files with Azure Active Directory authenticaion. you have to apply the steps from [this guide](https://docs.microsoft.com/en-us/azure/virtual-desktop/create-profile-container-adds)
 
-Important: Cloud-only identities aren't currently supported. Therefore the user identities must be synced once from Active Directory Domain Service to Azure AD 
-[Azure AD Connect](https://learn.microsoft.com/en-us/azure/active-directory/hybrid/whatis-azure-ad-connect)
+> Important: Cloud-only identities aren't currently supported. Therefore the user identities must be synced once from Active Directory Domain Service to Azure AD 
+[Azure AD Connect](https://learn.microsoft.com/en-us/azure/active-directory/hybrid/whatis-azure-ad-connect).
 
-
-#### Azure Virtual Desktop session hosts:
+### Azure Virtual Desktop session hosts:
 A host pool can run the following operating systems:
 
 - Windows 10 Enterprise
@@ -95,10 +93,10 @@ A host pool can run the following operating systems:
 Custom Windows system images with pre-loaded apps, group policies, or other customizations
 You can choose VM sizes, including GPU-enabled VMs. Each session host has a Azure Virtual Desktop host agent, which registers the VM as part of the Azure Virtual Desktop workspace or tenant. Each host pool can have one or more app groups, which are collections of remote applications or desktop sessions that users can access.
 
-#### Azure Virtual Desktop workspace:
+### Azure Virtual Desktop workspace:
 The Azure Virtual Desktop workspace or tenant is a management construct to manage and publish host pool resources.
 
-#### Personal and pooled desktops
+### Personal and pooled desktops
 Personal desktop solutions, sometimes called persistent desktops, allow users to always connect to the same specific session host. Users can typically modify their desktop experience to meet personal preferences, and save files in the desktop environment. Personal desktop solutions:
 
 Let users customize their desktop environment, including user-installed applications and saving files within the desktop environment.
@@ -106,10 +104,10 @@ Allow assigning dedicated resources to a specific user, which can be helpful for
 
 Pooled desktop solutions, also called non-persistent desktops, assign users to whichever session host is currently available, depending on the load-balancing algorithm. Because the users don't always return to the same session host each time they connect, they have limited ability to customize the desktop environment and don't usually have administrator access.
 
-#### User accounts and groups:
+### User accounts and groups:
 Your users need accounts that are in Azure AD. To successful conduct challenge 3, these accounts will need to be [hybrid identities](https://learn.microsoft.com/en-us/azure/active-directory/hybrid/whatis-hybrid-identity), which means the user account is synchronized. 
-You will use Azure AD with AD DS, therefore you'll need to configure [Azure AD Connect](https://learn.microsoft.com/en-us/azure/active-directory/hybrid/whatis-azure-ad-connect) to synchronize user identity data between AD DS and Azure AD.
 
+You will use Azure AD with AD DS, therefore you'll need to configure [Azure AD Connect](https://learn.microsoft.com/en-us/azure/active-directory/hybrid/whatis-azure-ad-connect) to synchronize user identity data between AD DS and Azure AD.
 
 Create three user accounts and two groups in ADDS and sync them to Azure AD: 
 - AVDUsers
@@ -118,7 +116,7 @@ Create three user accounts and two groups in ADDS and sync them to Azure AD:
 - AVDUser2 is member of AVDUsers
 - AVDUser3 is member of AVDAdmins
 
-#### Role-based Access Control:
+### Role-based Access Control:
 
 You'll need an Azure account with an active subscription to deploy Azure Virtual Desktop. If you don't have one already, you can create an account for free. Your account must be assigned the contributor or owner role on your subscription.
 
@@ -145,6 +143,6 @@ The bracketed numbers relate to the diagram above.
 
 ## Learning resources
 - [Azure Virtual Desktop Prerequisites](https://learn.microsoft.com/en-us/azure/virtual-desktop/prerequisites)
-- The Azure Virtual Desktop construction set from the [Cloud Adoption Framework](https://docs.microsoft.com/en-us/azure/cloud-adoption-framework/scenarios/wvd/enterprise-scale-landing-zone)
-- Azure Virtual Desktop for the enterprise - [Architecture Center](https://docs.microsoft.com/en-us/azure/architecture/example-scenario/wvd/windows-virtual-desktop)
-- Azure Virtual Desktop Documentation - [Doc](https://docs.microsoft.com/en-us/azure/virtual-desktop/)
+- The Azure Virtual Desktop construction set from the [Cloud Adoption Framework](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/scenarios/wvd/enterprise-scale-landing-zone)
+- Azure Virtual Desktop for the enterprise - [Architecture Center](https://learn.microsoft.com/en-us/azure/architecture/example-scenario/wvd/windows-virtual-desktop)
+- Azure Virtual Desktop Documentation - [Doc](https://learn.microsoft.com/en-us/azure/virtual-desktop/)

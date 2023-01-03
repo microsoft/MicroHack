@@ -69,7 +69,7 @@ As we are using Azure Active Directory Kerberos in this Microhack, click on **Az
 
 ![Create Storage account](../Images/03-FSLogix_create-storage-account-8.png)
 
-**click on the check-box** to enable Azure Active Directory Kerberos for this file share. 
+**Click on the check-box** to enable Azure Active Directory Kerberos for this file share. 
 To configure directory and file level permissions through Windows File explorer, you also need to specify domain name and domain GUID for your on-premises AD. 
 You can get this information from your domain admin or from an on-premises AD-joined client. If you prefer to configure using icacls, this step is not required. 
 

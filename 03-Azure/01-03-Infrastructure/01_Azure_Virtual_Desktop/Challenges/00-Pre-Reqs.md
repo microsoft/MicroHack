@@ -77,6 +77,8 @@ Azure Virtual Network lets Azure resources like VMs communicate privately with e
 ### Azure AD:
 Azure Virtual Desktop uses Azure AD for identity and access management. Azure AD integration applies Azure AD security features like conditional access, multi-factor authentication, and the Intelligent Security Graph, and helps maintain app compatibility in domain-joined VMs.
 
+> **Note**: To connect to Azure AD joined virtual machines it's required to use strong authentication like multi-factor-authentication or Windows Hello for Business.  Please make sure you require MFA for the AVD login. Check the following link: [Enforce Azure Active Directory Multi-Factor Authentication for Azure Virtual Desktop using Conditional Access](https://learn.microsoft.com/en-us/azure/virtual-desktop/set-up-mfa#azure-ad-joined-session-host-vms)
+
 ### Azure AD and FSLogix (challenge 3):
 In challenge 3, you need to create an Azure Files share to store FSLogix profiles that can be accessed by hybrid user identities authenticated with Azure Active Directory (Azure AD). Azure AD users can now access an Azure file share using Kerberos authentication. This configuration uses Azure AD to issue the necessary Kerberos tickets to access the file share with the industry-standard SMB protocol. End-users can access Azure file shares over the internet without requiring a line-of-sight to domain controllers from Hybrid Azure AD-joined and Azure AD-joined VMs. Using Azure Files with Azure Active Directory authenticaion. you have to apply the steps from [this guide](https://docs.microsoft.com/en-us/azure/virtual-desktop/create-profile-container-adds)
 

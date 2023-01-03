@@ -65,7 +65,6 @@ After you've created your host pool, you must assign users access to let them ac
 2. Assign administrators who need local administrative privileges the Virtual Machine Administrator Login role.
 To grant users access to Azure AD-joined VMs, you must [configure role assignments for the VM](https://docs.microsoft.com/en-us/azure/active-directory/devices/howto-vm-sign-in-azure-ad-windows#configure-role-assignments-for-the-vm). 
 
-
 ### Add role assignment page in Azure portal
 
 To configure Virtual machine Administrator login for **AVDuser3**, follow the following steps:
@@ -238,3 +237,5 @@ click on your recently created Application group named **RemoteApp**
 - Assign the AVDUsers group to the Application group
 
 Next, start your Remote Desktop Client App, refresh the AVD Workspace and launch the Notepad++ application.
+
+> **Note**: If you are trying to access your virtual desktop from Windows devices or other devices that are not connected to Azure AD, add **targetisaadjoined:i:1** as a custom RDP property to the host pool. [More information here](https://learn.microsoft.com/en-us/azure/virtual-desktop/deploy-azure-ad-joined-vm#access-azure-ad-joined-vms)

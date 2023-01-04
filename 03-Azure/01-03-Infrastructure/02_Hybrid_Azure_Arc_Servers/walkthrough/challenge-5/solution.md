@@ -73,7 +73,9 @@ Find it here [AddKey.zip](https://github.com/microsoft/MicroHack/raw/main/03-Azu
 
 ### Create the Machine Configuration as Azure Policy
 
-1. You will need to upload the zip file to a Storage Account and create a SAS with read permissions. Hint: You will need at least the *Storage Blob Data Contributor* role to be able to upload the file. 
+1. You will need to upload the zip file to a Storage Account and create a SAS with read permissions.  
+Hint: You will need at least the *Storage Blob Data Contributor* role to be able to upload the file.  
+Hint: The expiry date needs be to less than 7 days in the future.
 
 ```powershell
 $blob = az storage blob upload --auth-mode login --account-name [StorageAccountName] --container-name [ContainerName] --file [File] --name [Name] --overwrite

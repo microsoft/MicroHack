@@ -31,7 +31,7 @@ For customers who want to simplify complex and distributed environments across o
 
 This MicroHack scenario walks through the use of Azure Arc with a focus on the best practices and the design principles and some interesting challenges for real world scenarios. Specifically, this builds up to include working with an existing infrastructure in your datacenter.
 
-Further resources - Thomas Maurer & Lior links
+Further resources - Thomas Maurer & Lior Kamrat links
 
 * [Azure Arc Overview Documentation](https://learn.microsoft.com/en-us/azure/azure-arc/overview)
 * [Azure Arc Blog from Microsoft](https://techcommunity.microsoft.com/t5/azure-arc-blog/bg-p/AzureArcBlog)
@@ -152,7 +152,7 @@ In challenge 2 you will successfully onboard your Windows and Linux Virtual Mach
 
 ### Goal
 
-Managing secrets, credentials or certificates to secure communication between different services is a main challenge for developers and administrators. Managed Identities is Azure's answer to all these challenges and eliminates the need to manage and securely store secrets, credentials or certificates on the Virtual Machine. In challenge 4 you will leverage Managed Identities via Azure Arc to securely access an Azure Key Vault secret from your Azure Arc enabled servers without the need of managing any credential. 
+Managing secrets, credentials or certificates to secure communication between different services is a main challenge for developers and administrators. Managed Identities is Azure's answer to all these challenges and eliminates the need to manage and securely store secrets, credentials or certificates on the Virtual Machine. In challenge 3 you will leverage Managed Identities via Azure Arc to securely access an Azure Key Vault secret from your Azure Arc enabled servers without the need of managing any credential. 
 
 ### Actions
 

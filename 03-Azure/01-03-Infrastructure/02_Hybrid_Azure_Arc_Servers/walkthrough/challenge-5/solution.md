@@ -73,7 +73,7 @@ Find it here [AddKey.zip](../../resources/AddKey.zip)
 
 ### Create the Machine Configuration as Azure Policy
 
-1. You will need to upload the zip file to a Storage Account and create a SAS with read permissions
+1. You will need to upload the zip file to a Storage Account and create a SAS with read permissions. Hint: You will need at least the *Storage Blob Data Contributor* role to be able to upload the file. 
 
 ```powershell
 $blob = az storage blob upload --auth-mode login --account-name [StorageAccountName] --container-name [ContainerName] --file [File] --name [Name] --overwrite

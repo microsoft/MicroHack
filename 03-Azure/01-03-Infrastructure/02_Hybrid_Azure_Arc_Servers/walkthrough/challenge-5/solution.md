@@ -45,22 +45,21 @@ Duration: 30 minutes
 
 Find the needed DSC Configuration in the following powershell code block
 
+```powershell
+Configuration AddKey {
+    Import-DscResource -ModuleName 'PSDscResources'
 
-    ```powershell
-    Configuration AddKey {
-        Import-DscResource -ModuleName 'PSDscResources'
-
-        Node localhost {
-            Registry EnvironmentDSCKey {
-                Key       = 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment\EnvironmentKeyDSC'
-                Ensure    = 'Present'
-                ValueName = ''
-            }
+    Node localhost {
+        Registry EnvironmentDSCKey {
+            Key       = 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment\EnvironmentKeyDSC'
+            Ensure    = 'Present'
+            ValueName = ''
         }
     }
+}
 
-    AddKey
-    ```
+AddKey
+```
 
 #### Optional Steps:  
 

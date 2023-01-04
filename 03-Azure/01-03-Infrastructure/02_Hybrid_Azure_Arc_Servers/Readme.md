@@ -65,9 +65,10 @@ This MicroHack has a few but important prerequisites to be understood before sta
 * Your own Azure subscription with Owner RBAC rights at the subscription level
   * [Azure Evaluation free account](https://azure.microsoft.com/en-us/free/search/?OCID=AIDcmmzzaokddl_SEM_0fa7acb99db91c1fb85fcfd489e5ca6e:G:s&ef_id=0fa7acb99db91c1fb85fcfd489e5ca6e:G:s&msclkid=0fa7acb99db91c1fb85fcfd489e5ca6e)
 * You need to have 2 Virtual Machines ready and updated. One with a Linux Operating System (tested with Ubuntu Server 22.04) and one with Windows Server Operating System (tested with Windows Server 2022). You can use Machines in Azure for this following this Guide: [Azure Arc Jumpstart Servers](https://azurearcjumpstart.io/azure_arc_jumpstart/azure_arc_servers/azure/)
-* [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) 
+* [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) (Hint: Make sure to use the lastest version)
+* [Azure PowerShell Guest Configuration Cmdlets](https://learn.microsoft.com/en-us/azure/governance/machine-configuration/machine-configuration-create-setup#install-the-module-from-the-powershell-gallery)
 * [Visual Studio Code](https://code.visualstudio.com/)
-* [Git SCM](https://git-scm.com/download/) 
+* [Git SCM](https://git-scm.com/download/)
 
 ## Challenge 1 - Azure Arc prerequisites & onboarding
 

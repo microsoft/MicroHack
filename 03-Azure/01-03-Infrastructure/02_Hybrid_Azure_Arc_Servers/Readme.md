@@ -210,6 +210,8 @@ Challenge 5 is all about interacting with the Client Operating System. We will h
 
 ### Actions
 
+* Create all necessary Azure Resources
+  * Azure Storage Account
 * Setup a Policy that checks if the user "FrodoBaggins" is part of the local administrators group
 * Setup a Custom Machine Configuration, for the Windows Server, that creates a registry key in ``` HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment\ ```
 

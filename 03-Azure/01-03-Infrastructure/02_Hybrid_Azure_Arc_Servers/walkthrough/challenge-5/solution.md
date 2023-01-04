@@ -90,13 +90,12 @@ Hint: Depending on your machine configuration, this might need to be executed wi
 $id = (New-Guid).guid
 $name = "AddKey Policy"
 $version = "1.0.0"
-$url = $sas #SAS of the Blob in the Storage Account
 $PolicyConfig      = @{
     PolicyId      = $id
-    ContentUri    = $url
+    ContentUri    = $sas
     DisplayName   = $name
     Description   = $name
-    Path          = 'PathToGenerateThePolicyTo'
+    Path          = '.\policies\'
     Platform      = 'Windows'
     PolicyVersion = $version
     Mode          = 'ApplyAndAutoCorrect'

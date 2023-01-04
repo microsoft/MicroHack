@@ -32,7 +32,7 @@ You can setup your networking infrastructure with [this Bicep script](https://gi
 
   `az upgrade --yes`
 
-  `az biceps upgrade ` or `az biceps install` (to install it)
+  `az bicep upgrade ` or `az bicep install` (to install it)
 
 - If necessary select your target subscription:
   

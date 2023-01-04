@@ -69,7 +69,7 @@ AddKey
 3. Create the zip file for the Machine Configuration
 
 As this MicroHack focuses on the Arc and Hybrid those Steps are optional and you can also use the prepared zip file from the repository.  
-Find it here [AddKey.zip](../../resources/AddKey.zip)
+Find it here [AddKey.zip](https://github.com/microsoft/MicroHack/raw/main/03-Azure/01-03-Infrastructure/02_Hybrid_Azure_Arc_Servers/resources/AddKey.zip)
 
 ### Create the Machine Configuration as Azure Policy
 

@@ -13,7 +13,7 @@ Duration: 30 minutes
 
 2. Navigate to *Assignments* in the left navigation pane and select *Assign policy* in the top menu.
 
-![PolicyAssignment.png](./img/PolicyAssignment.png)
+    ![PolicyAssignment.png](./img/PolicyAssignment.png)
 
 3. In this section you can now configure the assignment with the following settings and create the assignment:
 
@@ -21,21 +21,21 @@ Duration: 30 minutes
 - Policy Definition: Please search for *administrators group* and select *Audit Windows machines missing any of the specified members in the Administrators group*.
 - Parameters: Please ensure to set *Include Arc connected servers* to *true and *Members to include* to *FrodoBaggins*.
 
-![PolicyAssignmentBasics.png](./img/PolicyAssignmentBasics.png)
+    ![PolicyAssignmentBasics.png](./img/PolicyAssignmentBasics.png)
 
-![PolicyAssignmentParameters.png](./img/PolicyAssignmentParameters.png)
+    ![PolicyAssignmentParameters.png](./img/PolicyAssignmentParameters.png)
 
-> **Note**  
-> This example does not include remediation. If you want to learn more on how to use guest configuration to remediate the state of your servers please refer to [Remediation options for guest configuration](https://docs.microsoft.com/en-us/azure/governance/policy/concepts/guest-configuration-policy-effects). 
-  
+    > **Note**  
+    > This example does not include remediation. If you want to learn more on how to use guest configuration to remediate the state of your servers please refer to [Remediation options for guest configuration](https://docs.microsoft.com/en-us/azure/governance/policy/concepts/guest-configuration-policy-effects). 
+    
     
 4. On Non-Compliance Message you can create a custom message that may contain additional information like link to internal documentation or just an explaination why this policy is set.
 
-![PolicyAssignmentMessage.png](./img/PolicyAssignmentMessage.png)
+    ![PolicyAssignmentMessage.png](./img/PolicyAssignmentMessage.png)
 
 5. Review the policy assignment and select *Create*.
 
-![PolicyAssignmentReview.png](./img/PolicyAssignmentReview.png)
+    ![PolicyAssignmentReview.png](./img/PolicyAssignmentReview.png)
 
 6. After a few minutes you will be able to see the compliance state of your Windows-based servers.
 
@@ -46,21 +46,21 @@ Duration: 30 minutes
 Find the needed DSC Configuration in the following powershell code block
 
 
-```powershell
-Configuration AddKey {
-    Import-DscResource -ModuleName 'PSDscResources'
+    ```powershell
+    Configuration AddKey {
+        Import-DscResource -ModuleName 'PSDscResources'
 
-    Node localhost {
-        Registry EnvironmentDSCKey {
-            Key       = 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment\EnvironmentKeyDSC'
-            Ensure    = 'Present'
-            ValueName = ''
+        Node localhost {
+            Registry EnvironmentDSCKey {
+                Key       = 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment\EnvironmentKeyDSC'
+                Ensure    = 'Present'
+                ValueName = ''
+            }
         }
     }
-}
 
-AddKey
-```
+    AddKey
+    ```
 
 #### Optional Steps:  
 
@@ -74,41 +74,54 @@ Find it here [AddKey.zip](https://github.com/microsoft/MicroHack/raw/main/03-Azu
 ### Create the Machine Configuration as Azure Policy
 
 1. You will need to upload the zip file to a Storage Account and create a SAS with read permissions.  
-Hint: You will need at least the *Storage Blob Data Contributor* role to be able to upload the file.  
-Hint: The expiry date needs be to less than 7 days in the future.
+    > **Note**  
+    >  You will need at least the *Storage Blob Data Contributor* role to be able to upload the file.   
 
-```powershell
-$blob = az storage blob upload --auth-mode login --account-name [StorageAccountName] --container-name [ContainerName] --file [File] --name [Name] --overwrite
+    > **Note**  
+    >  The expiry date needs be to less than 7 days in the future.
 
-$sas = az storage blob generate-sas --as-user --auth-mode login --account-name [StorageAccountName] --container-name [ContainerName] --name [File] --permissions r --expiry [ExpirationDate format: 2023-01-01T00:00:00Z] --https-only --full-uri --output tsv
-```
+    ```powershell
+    #Define your environment
+    $storageAccountName = "uniquestorageaccname"
+    $containerName = "containername"
+    $fileName = "AddKey.zip"
+    $expiratioNDate = "2023-12-30T00:00:00Z"
+
+    #Upload the file to your storage account
+    $blob = az storage blob upload --auth-mode login --account-name $storageAccountName --container-name $containerName --file $fileName --name $fileName --overwrite
+
+    #Create the SAS to access the file later
+    $sas = az storage blob generate-sas --as-user --auth-mode login --account-name $storageAccountName --container-name $containerName --name $fileName --permissions r --expiry $expiratioNDate --https-only --full-uri --output tsv
+    ```
 
 2. To assign the Machine Configuration we will use a Azure Policy. To create the Policy refer to the following Powershell Block. The Policy is created at the Tenant Root so that we can assign it to all subscriptions.  
-Hint: Depending on your machine configuration, this might need to be executed with local administrative privileges.
-```powershell
-#Define Policy Parameters
-$id = (New-Guid).guid
-$name = "AddKey Policy"
-$version = "1.0.0"
-$PolicyConfig      = @{
-    PolicyId      = $id
-    ContentUri    = $sas
-    DisplayName   = $name
-    Description   = $name
-    Path          = '.\policies\'
-    Platform      = 'Windows'
-    PolicyVersion = $version
-    Mode          = 'ApplyAndAutoCorrect'
-}
+    > **Note**  
+    > Depending on your machine configuration, this might need to be executed with local administrative privileges.
+    ```powershell
+    #Define your environment
+    $name = "AddKey Policy"
+    $tenantId = "" #Tenant ID is the ID of the Root Management Group, or any other Management Group ID of your choice
 
-# Create the policy definition file
-New-GuestConfigurationPolicy @PolicyConfig
+    #Define Policy Parameters
+    $PolicyConfig      = @{
+        PolicyId      = (New-Guid).guid
+        ContentUri    = $sas
+        DisplayName   = $name
+        Description   = $name
+        Path          = '.\policies\'
+        Platform      = 'Windows'
+        PolicyVersion = "1.0.0"
+        Mode          = 'ApplyAndAutoCorrect'
+    }
 
-# Create new policy from definition file
-New-AzPolicyDefinition -Name [Name] -Policy [PathToGenerateThePolicyJSONFile] -ManagementGroupName [TenantID] #Tenant ID is the ID of the Root Management Group
-```
+    # Create the policy definition file
+    $configurationPolicy = New-GuestConfigurationPolicy @PolicyConfig
+
+    # Create new policy from definition file
+    New-AzPolicyDefinition -Name $name -Policy $configurationPolicy.Path -ManagementGroupName $tenantID 
+    ```
 3. Now that the policy definition is created you can assign the policy like in Action 1 but add a remediation like in the screenshot below.
 
-![PolicyAssignmentRemediation.png](./img/PolicyAssignmentRemediation.png)
+    ![PolicyAssignmentRemediation.png](./img/PolicyAssignmentRemediation.png)
 
 4. It takes some minutes for the Machine Configuration to become compliant. If thats the case you can verify the registry key being created by launching ``` regedit.exe ``` and browse to ``` HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment\ ```

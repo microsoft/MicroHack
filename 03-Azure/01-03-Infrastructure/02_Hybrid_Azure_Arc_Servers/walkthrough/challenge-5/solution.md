@@ -83,7 +83,8 @@ $blob = az storage blob upload --auth-mode login --account-name [StorageAccountN
 $sas = az storage blob generate-sas --account-name [StorageAccountName] --container-name [ContainerName] --name [File] --permissions r --expiry [ExpirationDate format: 2023-01-01T00:00:00Z] --https-only --full-uri
 ```
 
-2. To assign the Machine Configuration we will use a Azure Policy. To create the Policy refer to the following Powershell Block. The Policy is created at the Tenant Root so that we can assign it to all subscriptions.
+2. To assign the Machine Configuration we will use a Azure Policy. To create the Policy refer to the following Powershell Block. The Policy is created at the Tenant Root so that we can assign it to all subscriptions.  
+Hint: Depending on your machine configuration, this might need to be executed with local administrative privileges.
 ```powershell
 #Define Policy Parameters
 $id = (New-Guid).guid

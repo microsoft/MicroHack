@@ -25,6 +25,9 @@ Please ensure that you successfully passed [challenge 1](../../Readme.md#challen
 
 1. Navigate to the Log Analytics Workspace and open *Agents configuration* in the left navigation pane.
 
+    > **Note**  
+    >  The screenshots still show the old name *Agents configuration*. Please look for the rebranded item *Legacy agents management*. The screenshots and MicroHack will be updated once the transition from Log Analytics Client to Azure Monitor Agent is complete.
+
 ![image](./img/7_agent_configuration.png)
 
 2. Select *Add windows event log* and add the *System* logs to the workspace. Hit apply.

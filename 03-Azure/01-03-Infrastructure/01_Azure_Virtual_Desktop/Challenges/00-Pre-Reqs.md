@@ -100,12 +100,9 @@ Custom Windows system images with pre-loaded apps, group policies, or other cust
 The Azure Virtual Desktop workspace or tenant is a management construct to manage and publish host pool resources.
 
 ### Personal and pooled desktops
-Personal desktop solutions, sometimes called persistent desktops, allow users to always connect to the same specific session host. Users can typically modify their desktop experience to meet personal preferences and save files in the desktop environment. Personal desktop solutions:
+Personal desktop solutions, sometimes called persistent desktops, allow users to always connect to the same specific session host. Users can typically modify their desktop experience to meet personal preferences and save files in the desktop environment. This scenario allows assigning dedicated resources to a specific user, which can be helpful for some manufacturing or development use cases.
 
-Let users customize their desktop environment, including user-installed applications and saving files within the desktop environment.
-Allow assigning dedicated resources to a specific user, which can be helpful for some manufacturing or development use cases.
-
-Pooled desktop solutions, also called non-persistent desktops, assign users to whichever session host is currently available, depending on the load-balancing algorithm. Because the users don't always return to the same session host each time they connect, they have limited ability to customize the desktop environment and don't usually have administrator access.
+Pooled desktop solutions, also called non-persistent desktops, assign users to whichever session host is currently available, depending on the load-balancing algorithm. Because the users don't always return to the same session host each time they connect, they usually don´t have administrator access.
 
 ### User accounts and groups:
 Your users need accounts that are in Azure AD. To successful conduct challenge 3, these accounts will need to be [hybrid identities](https://learn.microsoft.com/en-us/azure/active-directory/hybrid/whatis-hybrid-identity), which means the user account is synchronized. 
@@ -113,6 +110,7 @@ Your users need accounts that are in Azure AD. To successful conduct challenge 3
 You will use Azure AD with AD DS, therefore you'll need to configure [Azure AD Connect](https://learn.microsoft.com/en-us/azure/active-directory/hybrid/whatis-azure-ad-connect) to synchronize user identity data between AD DS and Azure AD.
 
 Create three user accounts and two groups in ADDS and sync them to Azure AD: 
+(These user names are only suggestions. Use your own naming convention if you have one)
 - AVDUsers
 - AVDAdmins
 - AVDUser1 is member of AVDUsers

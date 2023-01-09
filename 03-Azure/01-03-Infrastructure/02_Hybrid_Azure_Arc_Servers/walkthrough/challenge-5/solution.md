@@ -86,11 +86,21 @@ Find it here [AddKey.zip](https://github.com/microsoft/MicroHack/raw/main/03-Azu
     $fileName = "AddKey.zip"
     $expiratioNDate = "2023-12-30T00:00:00Z"
 
+    #Establish storage account context
+    $ctx = New-AzStorageContext -StorageAccountName $storageAccountName -UseConnectedAccount
+
     #Upload the file to your storage account
-    $blob = az storage blob upload --auth-mode login --account-name $storageAccountName --container-name $containerName --file $fileName --name $fileName --overwrite
+    $Blob1HT = @{
+        File             = $fileName # Change path if your file is not in the same directory as the script
+        Container        = $containerName
+        Blob             = $fileName
+        Context          = $ctx
+        StandardBlobTier = 'Hot'
+    }
+    Set-AzStorageBlobContent @Blob1HT -Force
 
     #Create the SAS to access the file later
-    $sas = az storage blob generate-sas --as-user --auth-mode login --account-name $storageAccountName --container-name $containerName --name $fileName --permissions r --expiry $expiratioNDate --https-only --full-uri --output tsv
+    $sas = New-AzStorageBlobSASToken -Context $ctx -Container $containerName -Blob $fileName -Permission r -ExpiryTime $expiratioNDate -FullUri
     ```
 
 2. To assign the Machine Configuration we will use a Azure Policy. To create the Policy refer to the following Powershell Block. The Policy is created at the Tenant Root so that we can assign it to all subscriptions.  

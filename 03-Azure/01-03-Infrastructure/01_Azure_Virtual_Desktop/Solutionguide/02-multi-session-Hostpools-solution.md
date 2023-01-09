@@ -5,7 +5,7 @@ Duration: 45 min
 
 [Previous Challenge Solution](./01-Personal-Hostpools-solution.md) - **[Home](../readme.md)** - [Next Challenge Solution](03-Implement-FSLogix-Profile-Solution.md)
 
-In this challenge you will create Azure Active Directory Domain Service joined pooled desktops used as a jump box. After deployment you will connect to the jumpbox, deploy Notepad++, 
+In this challenge you will create Azure Active Directory joined pooled desktops used as a jump box. After deployment you will connect to the jumpbox, deploy Notepad++, 
 create an Image and upload the image to the Image gallery. You will deploy a new hostpool from this image and deploy 2 Session hosts. Then you will provide Remote Apps to user
 
 In a pooled configuration we will be hosting multiple non-persistent sessions, with no user profile information stored locally. This is where FSLogix Profile Containers provide the users profile to the host dynamically. This provides the ability for an organization to fully utilize the compute resources on a single host and lower the total overhead, cost, and number of remote workstations.

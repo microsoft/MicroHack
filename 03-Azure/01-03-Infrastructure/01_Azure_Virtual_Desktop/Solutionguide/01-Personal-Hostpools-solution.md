@@ -34,7 +34,7 @@ Once complete, select **Next: Virtual Machines**.
 
 ![This image shows where you will enter the information for the host pool.](../Images/01-createpersonalhostpool.png "Create host pool page")
 
-5.  On the Virtual Machines page, provision a Virtual machine with the **Windows 11 Enterprise**. Once complete, select **Next: Workspace**.
+5.  On the Virtual Machines page, provision a Virtual machine with the **Windows 11 Enterprise**.
    
 6.  For the **Image**, select **Browse all images and disks** and search to find **Windows 11 Enterprise** and select that image.
     >**Note**: Selecting this image is very important. You will need the Microsoft 365 for assigning apps in this exercise.

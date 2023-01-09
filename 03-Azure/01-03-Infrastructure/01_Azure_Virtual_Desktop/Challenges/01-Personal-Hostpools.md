@@ -20,4 +20,5 @@ In this challenge we will be provisioning our first Host Pool and Session Hosts.
 
 ## Learning Resources
 [Create a host pool](https://learn.microsoft.com/en-us/azure/virtual-desktop/create-host-pools-azure-marketplace?tabs=azure-portal)
+
 [Configure the personal desktop host pool assignment type](https://learn.microsoft.com/en-us/azure/virtual-desktop/configure-host-pool-personal-desktop-assignment-type)

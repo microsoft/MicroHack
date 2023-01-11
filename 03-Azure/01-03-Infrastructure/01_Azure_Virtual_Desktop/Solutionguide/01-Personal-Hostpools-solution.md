@@ -2,18 +2,18 @@
 
 Duration:  30 minutes
 
-[Previous Challenge Solution](./01-Personal-Hostpools-solution.md) - **[Home](../Readme.md)** - [Next Challenge Solution](02-multi-session-Hostpools-solution.md)
+**[Home](../Readme.md)** - [Next Challenge Solution](02-multi-session-Hostpools-solution.md)
 
-In this exercise we will be creating an Azure Virtual Desktop host pool for personal desktops. This is a set of computers or hosts which operate on an as-needed basis. 
+In this exercise we will be creating an Azure Virtual Desktop host pool for personal desktops. This is a set of computers or hosts which operate on an as-needed basis. This personal desktop will also function as a jump host in the following exercises.
 
 
 **Additional Resources**
-
-  |              |            |  
-|----------|:-------------:|
+|              |            |  
+|----------|:-------------|
 | Description | Links |
 | Create a host pool with the Azure portal | https://learn.microsoft.com/en-us/azure/virtual-desktop/create-host-pools-azure-marketplace |
-  | Configure the personal desktop host pool assignment type | https://learn.microsoft.com/en-us/azure/virtual-desktop/configure-host-pool-personal-desktop-assignment-type | 
+| Configure the personal desktop host pool assignment type | https://learn.microsoft.com/en-us/azure/virtual-desktop/configure-host-pool-personal-desktop-assignment-type | 
+| Connect with the Windows Desktop Client | https://learn.microsoft.com/en-us/azure/virtual-desktop/users/connect-windows?tabs=subscribe#install-the-windows-desktop-client  | 
 
 ## Task 1: Create a new Personal Host Pool and Workspace
 
@@ -34,7 +34,7 @@ Once complete, select **Next: Virtual Machines**.
 
 ![This image shows where you will enter the information for the host pool.](../Images/01-createpersonalhostpool.png "Create host pool page")
 
-5.  On the Virtual Machines page, provision a Virtual machine with the **Windows 11 Enterprise**. Once complete, select **Next: Workspace**.
+5.  On the Virtual Machines page, provision a Virtual machine with the **Windows 11 Enterprise**.
    
 6.  For the **Image**, select **Browse all images and disks** and search to find **Windows 11 Enterprise** and select that image.
     >**Note**: Selecting this image is very important. You will need the Microsoft 365 for assigning apps in this exercise.

@@ -38,7 +38,12 @@ You can setup your networking infrastructure with [this Bicep script](https://gi
   
   `az account set --subscription <Name or ID of subscription>`
 
-- Update and set the `parameters-aa-join-example.json`
+- Update and set the `parameters-ad-join-example.json`
+
+  Set the "aadjoin" parameter to true, if your session hosts should be AAD joined and not hybrid or traditional domain joined.
+  
+  The parameters "hubVnetName", "hubVnetRgName" and "dnsServer" are only respected if you selected "aadJoin"= false. Otherwise skip them.
+
 - Update and set the `main.bicep` parameters.
 
 - Run the deployment with e.g. 

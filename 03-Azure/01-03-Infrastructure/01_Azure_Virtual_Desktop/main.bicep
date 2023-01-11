@@ -10,10 +10,9 @@ param hubVnetName string = ''
 param hubVnetRgName string = ''
 param dnsServer string = ''
 
-resource resourceGroup 'Microsoft.Resources/resourceGroups@2020-01-01' = {
+resource resourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   name: 'rg-${name}'
   location: location
-  scope: subscription()
   tags: tags
 }
 
@@ -54,10 +53,6 @@ module virtualNetworkPeering1 'modules/virtualNetworkPeering.bicep' = if (!aadJo
     vnetName: hubVnetName
     vnetRsourceGroupName: hubVnetRgName
   }
-
-  dependsOn: [
-    resourceGroup
-  ]
 }
 
 // Creates a VNET peering from the AVD VNET to the hub VNET if we are AD Domain joining the session hosts
@@ -72,8 +67,4 @@ module virtualNetworkPeering2 'modules/virtualNetworkPeering.bicep' = if (!aadJo
     vnetName: virtualNetwork.outputs.name
     vnetRsourceGroupName: resourceGroup.name
   }
-
-  dependsOn: [
-    resourceGroup
-  ]
 }

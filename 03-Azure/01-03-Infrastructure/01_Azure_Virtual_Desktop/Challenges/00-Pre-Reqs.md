@@ -85,7 +85,7 @@ Azure Virtual Desktop uses Azure AD for identity and access management. Azure AD
 > **Note**: To connect to Azure AD joined virtual machines it's required to use strong authentication like multi-factor-authentication or Windows Hello for Business.  Please make sure you require MFA for the AVD login. Check the following link: [Enforce Azure Active Directory Multi-Factor Authentication for Azure Virtual Desktop using Conditional Access](https://learn.microsoft.com/en-us/azure/virtual-desktop/set-up-mfa#azure-ad-joined-session-host-vms)
 
 ### Azure AD and FSLogix (challenge 3):
-In challenge 3, you need to create an Azure Files share to store FSLogix profiles that can be accessed by hybrid user identities authenticated with Azure Active Directory (Azure AD). Azure AD users can now access an Azure file share using Kerberos authentication. This configuration uses Azure AD to issue the necessary Kerberos tickets to access the file share with the industry-standard SMB protocol. End-users can access Azure file shares over the internet without requiring a line-of-sight to domain controllers from Hybrid Azure AD-joined and Azure AD-joined VMs. Using Azure Files with Azure Active Directory authenticaion. you have to apply the steps from [this guide](https://docs.microsoft.com/en-us/azure/virtual-desktop/create-profile-container-adds)
+In challenge 3, you need to create an Azure Files share to store FSLogix profiles that can be accessed by hybrid user identities authenticated with Azure Active Directory (Azure AD). Azure AD users can now access an Azure file share using Kerberos authentication. This configuration uses Azure AD to issue the necessary Kerberos tickets to access the file share with the industry-standard SMB protocol. End-users can access Azure file shares over the internet without requiring a line-of-sight to domain controllers from Hybrid Azure AD-joined and Azure AD-joined VMs. If you want to setup Azure Files with Azure Active Directory authenticaion you have to apply the steps from [this guide](https://learn.microsoft.com/en-us/azure/virtual-desktop/create-profile-container-azure-ad)
 
 > **Note**: Cloud-only identities aren't currently supported. Therefore the user identities must be synced once from Active Directory Domain Service to Azure AD 
 [Azure AD Connect](https://learn.microsoft.com/en-us/azure/active-directory/hybrid/whatis-azure-ad-connect).
@@ -99,19 +99,15 @@ A host pool can run the following operating systems:
 - Windows 11 Enterprise Multi-session
 - Windows Server 2012 R2 and above
 
-Custom Windows system images with pre-loaded apps, group policies, or other customizations
-You can choose VM sizes, including GPU-enabled VMs. Each session host has a Azure Virtual Desktop host agent, which registers the VM as part of the Azure Virtual Desktop workspace or tenant. Each host pool can have one or more app groups, which are collections of remote applications or desktop sessions that users can access.
+Custom Windows system images with pre-loaded apps, group policies, or other customizations are supported as well. You can also choose from a variaty of VM sizes including GPU-enabled VMs. Each session host has a Azure Virtual Desktop host agent, which registers the VM as part of the Azure Virtual Desktop workspace or tenant. Each host pool can have one or more app groups, which are collections of remote applications or desktop sessions that users can access.
 
 ### Azure Virtual Desktop workspace:
 The Azure Virtual Desktop workspace or tenant is a management construct to manage and publish host pool resources.
 
 ### Personal and pooled desktops
-Personal desktop solutions, sometimes called persistent desktops, allow users to always connect to the same specific session host. Users can typically modify their desktop experience to meet personal preferences, and save files in the desktop environment. Personal desktop solutions:
+Personal desktop solutions, sometimes called persistent desktops, allow users to always connect to the same specific session host. Users can typically modify their desktop experience to meet personal preferences and save files in the desktop environment. This scenario allows assigning dedicated resources to a specific user, which can be helpful for some manufacturing or development use cases.
 
-Let users customize their desktop environment, including user-installed applications and saving files within the desktop environment.
-Allow assigning dedicated resources to a specific user, which can be helpful for some manufacturing or development use cases.
-
-Pooled desktop solutions, also called non-persistent desktops, assign users to whichever session host is currently available, depending on the load-balancing algorithm. Because the users don't always return to the same session host each time they connect, they have limited ability to customize the desktop environment and don't usually have administrator access.
+Pooled desktop solutions, also called non-persistent desktops, assign users to whichever session host is currently available, depending on the load-balancing algorithm. Because the users don't always return to the same session host each time they connect, they usually don´t have administrator access.
 
 ### User accounts and groups:
 Your users need accounts that are in Azure AD. To successful conduct challenge 3, these accounts will need to be [hybrid identities](https://learn.microsoft.com/en-us/azure/active-directory/hybrid/whatis-hybrid-identity), which means the user account is synchronized. 
@@ -119,6 +115,7 @@ Your users need accounts that are in Azure AD. To successful conduct challenge 3
 You will use Azure AD with AD DS, therefore you'll need to configure [Azure AD Connect](https://learn.microsoft.com/en-us/azure/active-directory/hybrid/whatis-azure-ad-connect) to synchronize user identity data between AD DS and Azure AD.
 
 Create three user accounts and two groups in ADDS and sync them to Azure AD: 
+(These user names are only suggestions. Use your own naming convention if you have one)
 - AVDUsers
 - AVDAdmins
 - AVDUser1 is member of AVDUsers

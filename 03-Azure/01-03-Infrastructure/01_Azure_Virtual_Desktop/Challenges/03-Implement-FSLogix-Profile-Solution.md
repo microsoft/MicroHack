@@ -7,12 +7,12 @@ The Azure Virtual Desktop service recommends FSLogix profile containers as a use
 
 In this challenge, you'll learn how to:
 
-Setup and configure an Azure storage account for authentication using Azure ADDS.
+Setup and configure an Azure storage account for authentication using Azure AD Kerberos.
 Setup an Azure storage account
 Assign access permissions to an identity
 create a profile container with FSLogix for your session hosts in your multi-session Hostpool 
 
-As a prerequisite for this Microhack, you've already set up an Azure AD DS instance. 
+As a prerequisite for this Microhack, you've already set up hybrid identities. The users and groups must be sourced from a traditional Activate Directory domain.
 
 ### Task 1: Set up an Azure Storage account
 - Setup an Azure Storage account and a File Share
@@ -32,7 +32,7 @@ In order to use profile containers, you'll need to configure FSLogix on your ses
 
 ## Success Criteria
 - Storage Account and File share is setup correctly
-- Azure AD authentication is enabled on the File share
+- Azure AD Kerberos authentication is enabled on the File share
 - Appropriate user access permissions are configured on the file share
 - You are able to connect to your session hosts as an Administrator to configure FSLogix (you need to find a solution for this)
 - A profile container with FS Logix is created successful

@@ -3,7 +3,7 @@
 [Previous Challenge](./00-Pre-Reqs.md) - **[Home](../Readme.md)** - **[Next Challenge](02-multi-session-Hostpools.md)**
 
 ## Introduction
-In this challenge we will be provisioning our first Host Pools and Session Hosts. You will need to create a personal Host Pools based on the Windows 11 Enterprise image. Once you created the Host Pools you will need to add Session Hosts, assign users to the Host Pools.
+In this challenge we will be provisioning our first Host Pool and Session Hosts. You will need to create a personal Host Pool based on the Windows 11 Enterprise image. Once you created the Host Pool you will need to add Session Hosts, assign users to the Host Pool.
 
 ## Challenge 
 - West Europe Region
@@ -20,4 +20,5 @@ In this challenge we will be provisioning our first Host Pools and Session Hosts
 
 ## Learning Resources
 [Create a host pool](https://learn.microsoft.com/en-us/azure/virtual-desktop/create-host-pools-azure-marketplace?tabs=azure-portal)
+
 [Configure the personal desktop host pool assignment type](https://learn.microsoft.com/en-us/azure/virtual-desktop/configure-host-pool-personal-desktop-assignment-type)

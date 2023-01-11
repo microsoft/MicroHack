@@ -1,6 +1,6 @@
 # Exercise 1: Create a host pool for personal desktops
 
-[Previous Challenge](./00-Pre-Reqs.md) - **[Home](../Readme.md)** - **[Next Challenge](02-multi-session-Hostpools.md)**
+[Previous Challenge](./00-Pre-Reqs.md) - **[Home](../Readme.md)** - [Next Challenge](./02-Create-a-custom-golden-image.md)
 
 ## Introduction
 In this challenge we will be provisioning our first Host Pool and Session Hosts. You will need to create a personal Host Pool based on the Windows 11 Enterprise image. Once you created the Host Pool you will need to add Session Hosts, assign users to the Host Pool.

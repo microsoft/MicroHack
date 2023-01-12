@@ -2,7 +2,7 @@
 
 Duration: 45 min
 
-[Previous Challenge Solution](./02-Create-a-custom-golden-image.md) - **[Home](../readme.md)** - [Next Challenge Solution](./03-multi-session-Hostpools-solution.md)
+[Previous Challenge Solution](./01-Personal-Hostpools-solution.md) - **[Home](../readme.md)** - [Next Challenge Solution](./03-multi-session-Hostpools-solution.md)
 
 In this challenge you will create a new virtual machine in Azure which will be used as foundation for the custom golden image. After deployment you will connect to the machine over your previously created personal host pool, deploy Notepad++, create an Image from the Azure VM and upload the image to the Image gallery. 
 

@@ -21,12 +21,13 @@ In this hack you will learn how to set up a Azure Virtual Desktop in a typical s
 
 - Challenge 0: **[Getting started](Challenges/00-Pre-Reqs.md)**
 - Challenge 1: **[Create a host pool for personal desktops](Challenges/01-Personal-Hostpools.md)**
-- Challenge 2: **[Create a host pool for multi-session desktops](Challenges/02-multi-session-Hostpools.md)**
-- Challenge 3: **[Create FSLogix Profile Solution](Challenges/03-Implement-FSLogix-Profile-Solution.md)**
-- Challenge 4: **[Implement Start VM on Connect Feature](Challenges/04-start-VM-on-connect.md)**
-- Challenge 5: **[Set up a scaling plan](Challenges/05-scaling-plan.md)**
-- Challenge 6: **[Customize RDP Properties](Challenges/06-RDP-properties.md)**
-- Challenge 7 (optional): **[Configure MFA](Challenges/07-Configure-MFA.md)**
+- Challenge 2: **[Create a custom golden image](Challenges/02-Create-a-custom-golden-image.md**
+- Challenge 3: **[Create a host pool for multi-session desktops](Challenges/03-multi-session-Hostpools.md)**
+- Challenge 4: **[Create FSLogix Profile Solution](Challenges/04-Implement-FSLogix-Profile-Solution.md)**
+- Challenge 5: **[Implement Start VM on Connect Feature](Challenges/05-start-VM-on-connect.md)**
+- Challenge 6: **[Set up a scaling plan](Challenges/06-scaling-plan.md)**
+- Challenge 7: **[Customize RDP Properties](Challenges/07-RDP-properties.md)**
+- Challenge 8 (optional): **[Configure MFA](Challenges/08-Configure-MFA.md)**
 
 
 ## Prerequisites
@@ -40,12 +41,13 @@ In this hack you will learn how to set up a Azure Virtual Desktop in a typical s
 ## Solution Guide
 
 - Challenge 1: **[Create a host pool for personal desktops](Solutionguide/01-Personal-Hostpools-solution.md)**
-- Challenge 2: **[Create a host pool for multi-session desktops](Solutionguide/02-multi-session-Hostpools-solution.md)**
-- Challenge 3: **[Create FSLogix Profile Solution](Solutionguide/03-Implement-FSLogix-Profile-Solution.md)**
-- Challenge 4: **[Implement Start VM on Connect Feature](Solutionguide/04-start-VM-on-connect-solution.md)**
-- Challenge 5: **[Set up a scaling plan](Solutionguide/05-scaling-plan-solution.md)**
-- Challenge 6: **[Customize RDP Properties](Solutionguide/06-RDP-properties-solution.md)**
-- Challenge 7: **(optional): [Configure MFA](Solutionguide/07-Configure-MFA.md)**
+- Challenge 2: **[Create a custom golden image](Solutionguide/02-Create-a-custom-golden-image.md)**
+- Challenge 3: **[Create a host pool for multi-session desktops](Solutionguide/03-multi-session-Hostpools-solution.md)**
+- Challenge 4: **[Create FSLogix Profile Solution](Solutionguide/04-Implement-FSLogix-Profile-Solution.md)**
+- Challenge 5: **[Implement Start VM on Connect Feature](Solutionguide/03-start-VM-on-connect-solution.md)**
+- Challenge 6: **[Set up a scaling plan](Solutionguide/06-scaling-plan-solution.md)**
+- Challenge 7: **[Customize RDP Properties](Solutionguide/07-RDP-properties-solution.md)**
+- Challenge 8: **(optional): [Configure MFA](Solutionguide/08-Configure-MFA.md)**
 
 ## Contributor
 - [Ben Martin Baur](https://www.linkedin.com/in/ben-martin-baur/)

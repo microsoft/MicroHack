@@ -1,9 +1,9 @@
-# Exercise 7: Configure MFA
+# Exercise 8: Configure MFA
 
 Duration:
 
 
-[Previous Challenge Solution](./06-RDP-properties-solution.md) - **[Home](../Readme.md)**
+[Previous Challenge Solution](./07-RDP-properties-solution.md) - **[Home](../Readme.md)**
 
 In this challenge, you will configure enable Azure multifactor authentication for Azure Virtual Desktop and configure MFA.
 

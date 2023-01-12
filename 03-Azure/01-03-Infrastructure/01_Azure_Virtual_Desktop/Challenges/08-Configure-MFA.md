@@ -1,6 +1,6 @@
-# Exercise 7: Configure MFA
+# Exercise 8: Configure MFA
 
-[Previous Challenge](./06-RDP-properties.md) - **[Home](../Readme.md)**
+[Previous Challenge](./07-RDP-properties.md) - **[Home](../Readme.md)**
 
 ## Introduction
 The Windows client for Azure Virtual Desktop is an excellent option for integrating Azure Virtual Desktop with your local machine. 

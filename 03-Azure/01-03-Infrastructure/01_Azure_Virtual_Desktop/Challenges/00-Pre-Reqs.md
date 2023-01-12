@@ -13,7 +13,7 @@ The following image shows the overall conceptual reference architecture that dem
 
 ![AVD Architecture](../Images/00-azure-virtual-desktop-architecture.png)
 
-For this MicroHack we simplify the deployment down to Azure AD joined sessionhosts only so there are no dependencies on Domain Controllers (except in challenge 3,
+For this MicroHack we simplify the deployment down to Azure AD joined sessionhosts only so there are no dependencies on Domain Controllers (except in challenge 4,
 where you will need hybrid identities for FSLogix profiles).  
 
 The architecture will be like 
@@ -84,8 +84,8 @@ Azure Virtual Desktop uses Azure AD for identity and access management. Azure AD
 
 > **Note**: To connect to Azure AD joined virtual machines it's required to use strong authentication like multi-factor-authentication or Windows Hello for Business.  Please make sure you require MFA for the AVD login. Check the following link: [Enforce Azure Active Directory Multi-Factor Authentication for Azure Virtual Desktop using Conditional Access](https://learn.microsoft.com/en-us/azure/virtual-desktop/set-up-mfa#azure-ad-joined-session-host-vms)
 
-### Azure AD and FSLogix (challenge 3):
-In challenge 3, you need to create an Azure Files share to store FSLogix profiles that can be accessed by hybrid user identities authenticated with Azure Active Directory (Azure AD). Azure AD users can now access an Azure file share using Kerberos authentication. This configuration uses Azure AD to issue the necessary Kerberos tickets to access the file share with the industry-standard SMB protocol. End-users can access Azure file shares over the internet without requiring a line-of-sight to domain controllers from Hybrid Azure AD-joined and Azure AD-joined VMs. If you want to setup Azure Files with Azure Active Directory authenticaion you have to apply the steps from [this guide](https://learn.microsoft.com/en-us/azure/virtual-desktop/create-profile-container-azure-ad)
+### Azure AD and FSLogix (challenge 4):
+In challenge 4, you need to create an Azure Files share to store FSLogix profiles that can be accessed by hybrid user identities authenticated with Azure Active Directory (Azure AD). Azure AD users can now access an Azure file share using Kerberos authentication. This configuration uses Azure AD to issue the necessary Kerberos tickets to access the file share with the industry-standard SMB protocol. End-users can access Azure file shares over the internet without requiring a line-of-sight to domain controllers from Hybrid Azure AD-joined and Azure AD-joined VMs. If you want to setup Azure Files with Azure Active Directory authenticaion you have to apply the steps from [this guide](https://learn.microsoft.com/en-us/azure/virtual-desktop/create-profile-container-azure-ad)
 
 > **Note**: Cloud-only identities aren't currently supported. Therefore the user identities must be synced once from Active Directory Domain Service to Azure AD 
 [Azure AD Connect](https://learn.microsoft.com/en-us/azure/active-directory/hybrid/whatis-azure-ad-connect).
@@ -110,7 +110,7 @@ Personal desktop solutions, sometimes called persistent desktops, allow users to
 Pooled desktop solutions, also called non-persistent desktops, assign users to whichever session host is currently available, depending on the load-balancing algorithm. Because the users don't always return to the same session host each time they connect, they usually don´t have administrator access.
 
 ### User accounts and groups:
-Your users need accounts that are in Azure AD. To successful conduct challenge 3, these accounts will need to be [hybrid identities](https://learn.microsoft.com/en-us/azure/active-directory/hybrid/whatis-hybrid-identity), which means the user account is synchronized. 
+Your users need accounts that are in Azure AD. To successful conduct challenge 4, these accounts will need to be [hybrid identities](https://learn.microsoft.com/en-us/azure/active-directory/hybrid/whatis-hybrid-identity), which means the user account is synchronized. 
 
 You will use Azure AD with AD DS, therefore you'll need to configure [Azure AD Connect](https://learn.microsoft.com/en-us/azure/active-directory/hybrid/whatis-azure-ad-connect) to synchronize user identity data between AD DS and Azure AD.
 

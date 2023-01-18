@@ -1,16 +1,17 @@
-# **MicroHack Azure Arc for Servers**
+# **MicroHack Business Continuity / Disaster Recovery**
 
 - [**MicroHack introduction**](#MicroHack-introduction)
-  - [What is Azure Arc?](#what-is-azure-arc)
+  - [What is Business Continuity?]()
 - [**MicroHack context**](#microhack-context)
 - [**Objectives**](#objectives)
 - [**MicroHack Challenges**](#microhack-challenges)
   - [General prerequisites](#general-prerequisites)
-  - [Challenge 1 - Azure Arc prerequisites & onboarding](#challenge-1---azure-arc-prerequisites--onboarding)
-  - [Challenge 2 - Azure Monitor integration](#challenge-2---azure-monitor-integration)
-  - [Challenge 3 - Access Azure resources using Managed Identities from your on-premises servers](#challenge-3---access-azure-resources-using-managed-identities-from-your-on-premises-servers)
-  - [Challenge 4 - Microsoft Defender for Cloud integration with Azure Arc](#challenge-4---microsoft-defender-for-cloud-integration-with-azure-arc)
-  - [Challenge 5 - Azure Automanage Machine Configuration](#challenge-5---azure-automanage-machine-configuration)
+  - [Challenge 0 - Understand the Disaster Recovery terms and define a strategy](#challenge-0---understand-the-disaster-recovery-terms-and-define-a-strategy)
+  - [Challenge 1 - Prerequisites and landing zone preperation](#challenge-1---prerequisites-and-landing-zone-preperation)
+  - [Challenge 2 - Protect in Azure - Backup / Restore](#challenge-2---protect-in-azure---backup--restore)
+  - [Challenge 3 - Protect in Azure with Disaster Recovery](#challenge-3---protect-in-azure-with-disaster-recovery)
+  - [Challenge 4 - Protect to Azure with Azure Backup & Restore](#challenge-4---protect-to-azure-with-azure-backup--restore)
+  - [Challenge 5 - Protect to Azure with Disaster Recovery](#challenge-5---protect-to-azure-with-disaster-recovery)
 - [**Contributors**](#contributors)
 
 ## MicroHack introduction
@@ -50,6 +51,29 @@ This MicroHack has a few but important prerequisites to be understood before sta
   * [Azure Evaluation free account](https://azure.microsoft.com/en-us/free/search/?OCID=AIDcmmzzaokddl_SEM_0fa7acb99db91c1fb85fcfd489e5ca6e:G:s&ef_id=0fa7acb99db91c1fb85fcfd489e5ca6e:G:s&msclkid=0fa7acb99db91c1fb85fcfd489e5ca6e)
 * 
 
+## Challenge 0 - Understand the Disaster Recovery terms and define a strategy
+
+### Goal
+
+In challenge 0....
+
+### Actions
+
+* 
+
+### Success criteria
+
+* 
+
+### Learning resources
+
+* 
+
+
+### Solution - Spoilerwarning
+
+[Solution Steps](./walkthrough/challenge-0/solution.md)
+
 ## Challenge 1 - Prerequisites and landing zone preperation 
 
 ### Goal
@@ -68,7 +92,6 @@ In challenge 1 you will understand and prepare your environemnt for onboarding o
 
 * 
 
-* 
 
 ### Solution - Spoilerwarning
 

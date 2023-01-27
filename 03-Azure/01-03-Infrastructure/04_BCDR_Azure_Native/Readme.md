@@ -18,7 +18,15 @@
 
 ### What is Business Continuity?
 
-Describe Business Continuity....
+When you design for resiliency, you must understand your availability requirements. 
+- How much downtime is acceptable? 
+- How much will potential downtime cost your business? 
+- How much should you invest in making the application highly available? 
+- You also must define what it means for the application to be available. 
+
+💡 For example, is the application "down" if you can submit an order but the system cannot process it within the normal timeframe? Also consider the probability of an outage occurring and whether a mitigation trategy is cost-effective. Resilience planning starts with business requirements. Here are some approaches for thinking about resiliency in those terms
+
+The following picture describes very well the individual levels / disaster recovery tier levels and gives an overview of which topics we should deal with when talking about disaster recovery. The individual terms, terminologies and categories are explained and this microhack also gives an approach and a few tips on how to deal with them in your own company.
 
 ![image](./img/drcontinuum.png)
 
@@ -28,10 +36,15 @@ This MicroHack scenario walks through the use of building a Business Continuity 
 
 Further resources: 
 
-*[Azure Business Continuity & Disaster Recovery]()
-*[Azure Business Continuity & Disaster Recovery](https://learn.microsoft.com/en-us/azure/azure-arc/overview)
+* [Azure Business Continuity & Disaster Recovery](https://learn.microsoft.com/en-us/azure/site-recovery/site-recovery-overview#what-does-site-recovery-provide)
+* [How does Microsoft ensure business continuity](https://learn.microsoft.com/en-us/compliance/assurance/assurance-resiliency-and-continuity)
+* [Common questions about Azure Site Recovery](https://learn.microsoft.com/en-us/azure/site-recovery/site-recovery-faq)
 
 💡 Optional: Read this after completing this lab to deepen the learned!
+
+* [Overview of the reliability pillar](https://learn.microsoft.com/en-us/azure/architecture/framework/resiliency/overview)
+* [Whitepaper - Resiliency in Azure ](https://azure.microsoft.com/en-us/resources/resilience-in-azure-whitepaper/)
+
 
 ## Objectives
 
@@ -49,13 +62,17 @@ This MicroHack has a few but important prerequisites to be understood before sta
 
 * Your own Azure subscription with Owner RBAC rights at the subscription level
   * [Azure Evaluation free account](https://azure.microsoft.com/en-us/free/search/?OCID=AIDcmmzzaokddl_SEM_0fa7acb99db91c1fb85fcfd489e5ca6e:G:s&ef_id=0fa7acb99db91c1fb85fcfd489e5ca6e:G:s&msclkid=0fa7acb99db91c1fb85fcfd489e5ca6e)
-* 
+* More will be added later if needed
 
 ## Challenge 0 - Understand the Disaster Recovery terms and define a strategy
 
 ### Goal
 
-In challenge 0....
+In challenge 0 to understand the terms and strategy behind BCDR. 
+
+💡  Protect resources across multiple regions globally: If your organization has global operations across North America, Europe, and Asia, and your resources are deployed in East-US, UK West, and East Asia. One of the requirements of Azure Backup is that the vaults are required to be present in the same region as the resource to be backed-up. 
+
+--> Therefore, you should create three separate vaults for each region to protect your resources.
 
 ### Actions
 
@@ -69,23 +86,28 @@ In challenge 0....
 
 * 
 
-
-### Solution - Spoilerwarning
-
-[Solution Steps](./walkthrough/challenge-0/solution.md)
-
 ## Challenge 1 - Prerequisites and landing zone preperation 
 
 ### Goal
 
-In challenge 1 you will understand and prepare your environemnt for onboarding of the infrastructure to enable business continuity with Cloud Native / PaaS Services on Azure
+In challenge 1 you will understand and prepare your environemnt for onboarding of the infrastructure to enable business continuity with Cloud Native / PaaS Services on Azure.
 
 ### Actions
 
+* Create all necessary Azure resources 
+* Region 1 West Europe 
+* Resource Group: Name: mh-bcdr-weu-rg
+* Recovery Services Vault: mh-rsv-weu
+* Region 2 North Europe 
+* Resource Group: Name: mh-bcdr-neu-rg
+* Recovery Services Vault: mh-rsv-neu
 * 
+* Storage Account with GRS 
+* Recovery Services Vault 
 
 ### Success criteria
 
+* You created Azure Resource Groups 
 * 
 
 ### Learning resources

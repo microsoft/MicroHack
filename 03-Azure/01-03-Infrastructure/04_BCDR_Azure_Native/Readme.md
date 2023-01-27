@@ -66,17 +66,24 @@ This MicroHack has a few but important prerequisites to be understood before sta
 
 ## Challenge 0 - Understand the Disaster Recovery terms and define a strategy
 
+If you have already worked at the senior level or have been working in IT for many years, you may be able to skip this intro challenge. These standards should be defined in every IT and the most important thing is that the Business Continuity Management and the necessary steps for disaster recovery are regularly tested.
+
 ### Goal
 
-In challenge 0 to understand the terms and strategy behind BCDR. 
+The goal from this challenge is to understand the challenges in business continuity management and the most important terms. Second dimension is to define strategy and to put yourself into differenzt roles to view the area from different perspectives. 
 
-💡  Protect resources across multiple regions globally: If your organization has global operations across North America, Europe, and Asia, and your resources are deployed in East-US, UK West, and East Asia. One of the requirements of Azure Backup is that the vaults are required to be present in the same region as the resource to be backed-up. 
-
---> Therefore, you should create three separate vaults for each region to protect your resources.
+1. What exaclty is the difference between Disaster Recovery & Business Continuity? 
+2. Who is responsible for BCDR? 
+3. Is there a difference between High availability & Disaster Recovery? 
+4. Do i really need Backup & Disaster Recovery? 
 
 ### Actions
 
-* 
+* Write down the first 3 steps you would go for if you company got attacked ransomware
+* Think about if you every participated in a business continuity test scenario
+* Put yourself in the position of an application owner and define the necessary steps to make sure you application 
+* Who defines the requirements for Business Continuity and what are the necessary KPI´s that and application can reach a good SLA in terms of availability? 
+* Define and write down four different categories of Disaster Recovery Tier Levels that applications can use incl. the availability SLA
 
 ### Success criteria
 
@@ -84,7 +91,9 @@ In challenge 0 to understand the terms and strategy behind BCDR.
 
 ### Learning resources
 
-* 
+### Solution - Spoilerwarning
+
+[Solution Steps](./walkthrough/challenge-0/solution.md)
 
 ## Challenge 1 - Prerequisites and landing zone preperation 
 

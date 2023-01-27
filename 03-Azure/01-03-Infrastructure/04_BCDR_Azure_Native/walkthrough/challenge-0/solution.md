@@ -1,19 +1,27 @@
 # Walkthrough Challenge 0 - Understand the Disaster Recovery terms and define a strategy
 
-Duration: 20 minutes
 
- **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-1/solution.md)
+![image](/03-Azure/01-03-Infrastructure/04_BCDR_Azure_Native/img/DifferentTerms.png)
+
+Duration: 20 minutes
 
 ## Prerequisites
 
 Please ensure that you successfully verified the [General prerequisits](../../Readme.md#general-prerequisites) before continuing with this challenge.
 
-### Task 1: 
+### Task 1: Write down the first 3 steps you would go for if you company got attacked ransomware
 
-Collection for solution.md
-![image](./img/DifferentTerms.png)
-💡  Protect resources across multiple regions globally: If your organization has global operations across North America, Europe, and Asia, and your resources are deployed in East-US, UK West, and East Asia. One of the requirements of Azure Backup is that the vaults are required to be present in the same region as the resource to be backed-up. 
+### Task 2: Think about if you every participated in a business continuity test scenario
 
---> Therefore, you should create three separate vaults for each region to protect your resources.
+### Task 3: Put yourself in the position of an application owner and define the necessary steps to make sure you application 
+
+### Task 3: Who defines the requirements for Business Continuity and what are the necessary KPI´s that and application can reach a good SLA in terms of availability?
+
+### Task 4: Define and write down four different categories of Disaster Recovery Tier Levels that applications can use incl. the availability SLA
+
+### Task 4: Plan the different geographic region you need to use for reaching the highest availability SLA (can also include your datacenter locations)
+.
 
 You successfully completed challenge 1! 🚀🚀🚀
+
+ **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-1/solution.md)

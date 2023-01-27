@@ -84,12 +84,19 @@ The goal from this challenge is to understand the challenges in business continu
 * Put yourself in the position of an application owner and define the necessary steps to make sure you application 
 * Who defines the requirements for Business Continuity and what are the necessary KPI´s that and application can reach a good SLA in terms of availability? 
 * Define and write down four different categories of Disaster Recovery Tier Levels that applications can use incl. the availability SLA
+* Plan the different geographic region you need to use for reaching the highest availability SLA (can also include your datacenter locations)
 
 ### Success criteria
 
-* 
+* Understood the different terms from BCDR 
+* Noted the first three steps after ransomware attack in you company
+* Thought about the last successful disaster recovery of the daily used applications
+* Noted the responsiblities and the roles in the company you are working 
+* Defined four level of disaster recovery categories incl. availability SLA
 
 ### Learning resources
+
+- Will be added later 
 
 ### Solution - Spoilerwarning
 

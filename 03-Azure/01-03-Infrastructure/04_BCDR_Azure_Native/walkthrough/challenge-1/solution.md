@@ -1,4 +1,4 @@
-# Walkthrough Challenge 1 - Azure Arc prerequisites & onboarding
+# Walkthrough Challenge 1 - Prerequisites and landing zone preparation
 
 Duration: 20 minutes
 
@@ -8,115 +8,88 @@ Duration: 20 minutes
 
 Please ensure that you successfully verified the [General prerequisits](../../Readme.md#general-prerequisites) before continuing with this challenge.
 
-### Task 1: Create Azure Resource Group
+### Task 1: Create Azure Resources in region West Europe
 
 Sign in to the [Azure Portal](https://portal.azure.com/).
 
-* [Create Resource Group](https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/manage-resource-groups-portal#create-resource-groups)
+#### Create Resource Group
+[Create Resource Group | Microsoft Learn](https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/manage-resource-groups-portal#create-resource-groups)
+![image](./img/001.png)
+![image](./img/002.png)
+![image](./img/003.png)
 
-### Task 2: Create Service Principal 
+#### Create Recovery Services Vault
+[Create Recovery Services vault | Microsoft Learn](https://learn.microsoft.com/azure/backup/backup-create-recovery-services-vault)
 
-* [Create Service Principal](https://learn.microsoft.com/en-us/azure/azure-arc/servers/onboard-service-principal#create-a-service-principal-for-onboarding-at-scale)
+###### Basics
+![image](./img/004.png)
 
-### Task 3: Enable Service providers
+###### Networking
+![image](./img/005.png)
 
-* Enable Azure Resource Provider 
-  [Azure Arc Azure resource providers](https://learn.microsoft.com/en-us/azure/azure-arc/servers/prerequisites#azure-resource-providers)
+###### Tags
+![image](./img/006.png)
 
-### Task 4: Prepare on-prem Server OS
+###### Review + Create
+![image](./img/007.png)
 
-* Have a server, windows or linux ready, perhaps on your own laptop/notebook 
-* For windows, please use Windows Server 2019 or 2022 with the latest patch level. 💡 ATTENTION: Use Windows Update to apply the latest patch level!!
+#### Create Storage Account
+[Create Storage Account | Microsoft Learn](https://learn.microsoft.com/azure/storage/common/storage-account-create)
 
-  [Supported operating systems @ Connected Machine agent prerequisites - Azure Arc | Microsoft Docs](https://docs.microsoft.com/en-us/azure/azure-arc/servers/prerequisites#supported-operating-systems)
-	
-  This Server OS could be hosted as a VM on VMware, Hyper-V, Nutanix, AWS, GCP or bare metal. We are focused on-prem. 
-	
-#### Additional:
-  * These servers should be able to reach the internet and Azure.
-  * You need to have full access and admin or root permissions on this Server OS.
+###### Basics
+Storage Account Names need to be unique in a region, so please add a suffix to the generic name mhstweu
 
-* If you need to install and deploy your own server OS from scratch, then, download the following ISO files and save them on your own PC / Environment with your preferred Hypervisor e.g. Hyper-V or Virtualization Client (Windows 10/11 Hyper-V or Virtual Box).
-  * [Ubuntu](https://ubuntu.com/download)
-  * [Windows Server 2022](https://www.microsoft.com/en-us/evalcenter/download-windows-server-2022)
+![image](./img/008.png)
 
-* Install from the downloaded ISO your preferred OS. 
+###### Advanced
+Advanced settings don't need to be modified for this Micro Hack
 
-#### Using Azure Arc with Azure VMs
-* In case you want to use an Azure VM for this MicroHack, you need to follow the guidance 
-  * [Evaluate Azure Arc-enabled servers on an Azure virtual machine](https://learn.microsoft.com/en-us/azure/azure-arc/servers/plan-evaluate-on-azure-virtual-machine)
+![image](./img/009.png)
+![image](./img/010.png)
+![image](./img/011.png)
 
-With these prerequisites in place, we can focus on building the differentiated knowledge in the hybrid world with Azure Arc to enable your on-prem, Multi-Cloud environment for the Cloud operations model.
+###### Networking
+![image](./img/012.png)
 
-### Task 5: Onboard Windows Server OS to Azure Arc
+###### Data protection
+![image](./img/013.png)
+![image](./img/014.png)
 
-* Onboard the recent installed or prepared Windows Server OS to Azure Arc, by using the documented steps
-1. Generate the installation script from the Azure portal [Link](https://learn.microsoft.com/en-us/azure/azure-arc/servers/onboard-service-principal#generate-the-installation-script-from-the-azure-portal)
-* Step by step
-![image](./img/1.png)
-![image](./img/2.png)
-![image](./img/3.png)
-![image](./img/4.png)
-![image](./img/5.png)
-![image](./img/6.png)
-2. Add the passphrase for the service principal the downloaded script
-![image](./img/7.png)
-3. Login into the Server OS on-prem and run the script [Link](https://learn.microsoft.com/en-us/azure/azure-arc/servers/onboard-portal#install-with-the-scripted-method)
+###### Encryption
+![image](./img/015.png)
 
-4. Check in the Azure portal that the Server OS is visible.
+###### Tags
+![image](./img/016.png)
 
-### Task 6: Onboard Linux Server OS to Azure Arc
+###### Review
+![image](./img/017.png)
+![image](./img/018.png)
+![image](./img/019.png)
+![image](./img/020.png)
 
-* Onboard the recent installed or prepared Linux Server OS to Azure Arc, by using the documented steps or create a new VM based on the following steps
-1. Create Hyper-V VM for Linux
+### Task 2: Create Azure Resources in region North Europe
+#### Create Resource Group
+[Create Resource Group | Microsoft Learn](https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/manage-resource-groups-portal#create-resource-groups)
+![image](./img/021.png)
+![image](./img/022.png)
+![image](./img/023.png)
 
-* Step by step
+#### Create Recovery Services Vault
 
-![image](./img/8.png)
-![image](./img/9.png)
-![image](./img/10.png)
-![image](./img/11.png)
-![image](./img/12.png)
-![image](./img/13.png)
-* Select the downloaded ISO; here the download [link](https://ubuntu.com/download/server) for Ubuntu 22.04 ISO
+###### Basics
+![image](./img/024.png)
 
-![image](./img/14.png)
-![image](./img/15.png)
-![image](./img/16.png)
-* Important step! Change the template for Secure Boot [Reference Link](https://www.thomasmaurer.ch/2018/06/how-to-install-ubuntu-in-a-hyper-v-generation-2-virtual-machine/)
+###### Networking
+![image](./img/025.png)
 
-2. Setup of Linux Ubuntu 22.04
+###### Tags
+![image](./img/026.png)
 
-![image](./img/17.png)
-![image](./img/18.png)
-![image](./img/19.png)
-![image](./img/20.png)
-![image](./img/21.png)
-![image](./img/22.png)
-![image](./img/23.png)
-![image](./img/24.png)
-![image](./img/25.png)
-![image](./img/26.png)
-* Select OpenSSH
+###### Review + Create
+![image](./img/027.png)
 
-![image](./img/27.png)
-
-3. Generate the installation script from the Azure portal [Link](https://learn.microsoft.com/en-us/azure/azure-arc/servers/onboard-service-principal#generate-the-installation-script-from-the-azure-portal)
-
-![image](./img/28.png)
-![image](./img/29.png)
-![image](./img/30.png)
-![image](./img/31.png)
-![image](./img/32.png)
-4. Add the passphrase for the service principal the downloaded script
-![image](./img/33.png)
-5. Connect to Linux Server via PowerShell SSH [Link] (https://devblogs.microsoft.com/powershell/using-the-openssh-beta-in-windows-10-fall-creators-update-and-windows-server-1709/)
-* Use the account and password from setup
-
-![image](./img/34.png)
-6. run the script [Link](https://learn.microsoft.com/en-us/azure/azure-arc/servers/onboard-portal#install-with-the-scripted-method)
-* Copy step by step the script to the SSH console
-7. Check in the Azure portal that the Server OS is visible.
-![image](./img/35.png)
-
-You successfully completed challenge 1! 🚀🚀🚀
+## You successfully completed challenge 1! 🚀🚀🚀
+###### Resources in region 1
+![image](./img/028.png)
+###### Resources in region 2
+![image](./img/029.png)

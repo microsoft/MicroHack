@@ -18,13 +18,13 @@
 
 ### What is Business Continuity?
 
-When you design for resiliency, you must understand your availability requirements. 
+When you design for resiliency, you must understand your availability requirements.
 - How much downtime is acceptable? 
-- How much will potential downtime cost your business? 
-- How much should you invest in making the application highly available? 
-- You also must define what it means for the application to be available. 
+- How much will potential downtime cost your business?
+- How much should you invest in making the application highly available?
+- You also must define what it means for the application to be available.
 
-💡 For example, is the application "down" if you can submit an order but the system cannot process it within the normal timeframe? Also consider the probability of an outage occurring and whether a mitigation trategy is cost-effective. Resilience planning starts with business requirements. Here are some approaches for thinking about resiliency in those terms
+💡 For example, is the application "down" if you can submit an order but the system cannot process it within the normal timeframe? Also consider the probability of an outage occurring and whether a mitigation strategy is cost-effective. Resilience planning starts with business requirements. Here are some approaches for thinking about resiliency in those terms
 
 The following picture describes very well the individual levels / disaster recovery tier levels and gives an overview of which topics we should deal with when talking about disaster recovery. The individual terms, terminologies and categories are explained and this microhack also gives an approach and a few tips on how to deal with them in your own company.
 
@@ -66,69 +66,73 @@ This MicroHack has a few but important prerequisites to be understood before sta
 
 ## Challenge 0 - Understand the Disaster Recovery terms and define a strategy
 
-If you have already worked at the senior level or have been working in IT for many years, you may be able to skip this intro challenge. These standards should be defined in every IT and the most important thing is that the Business Continuity Management and the necessary steps for disaster recovery are regularly tested.
+If you have already worked at the senior level or have been working in IT for many years, you may be able to skip this intro challenge. These standards should be defined in every organization and the most important thing is that the Business Continuity Management and the necessary steps for disaster recovery are regularly tested.
 
 ### Goal
 
-The goal from this challenge is to understand the challenges in business continuity management and the most important terms. Second dimension is to define strategy and to put yourself into differenzt roles to view the area from different perspectives. 
+The goal from this challenge is to understand the challenges in business continuity management and the most important terms. Second dimension is to define strategy and to put yourself into different roles to view the area from different perspectives.
 
-1. What exaclty is the difference between Disaster Recovery & Business Continuity? 
-2. Who is responsible for BCDR? 
-3. Is there a difference between High availability & Disaster Recovery? 
-4. Do i really need Backup & Disaster Recovery? 
+1. What exactly is the difference between Disaster Recovery & Business Continuity?
+2. Who is responsible for BCDR?
+3. Is there a difference between High availability & Disaster Recovery?
+4. Do I really need Backup & Disaster Recovery?
 
 ### Actions
 
-* Write down the first 3 steps you would go for if you company got attacked ransomware
-* Think about if you every participated in a business continuity test scenario
-* Put yourself in the position of an application owner and define the necessary steps to make sure you application 
-* Who defines the requirements for Business Continuity and what are the necessary KPI´s that and application can reach a good SLA in terms of availability? 
+* Write down the first 3 steps you would go for if your company got attacked by ransomware
+* Think about if you ever participated in a business continuity test scenario
+* Put yourself in the position of an application owner and define the necessary steps to make sure your application stays available in case of a disaster
+* Who defines the requirements for Business Continuity and what are the necessary KPI´s for an application to reach a good SLA in terms of availability?
 * Define and write down four different categories of Disaster Recovery Tier Levels that applications can use incl. the availability SLA
-* Plan the different geographic region you need to use for reaching the highest availability SLA (can also include your datacenter locations)
+* Plan the different geographic regions you need to use for reaching the highest availability SLA (can also include your datacenter locations)
 
 ### Success criteria
 
-* Understood the different terms from BCDR 
+* Understood the different terms from BCDR
 * Noted the first three steps after ransomware attack in you company
 * Thought about the last successful disaster recovery of the daily used applications
-* Noted the responsiblities and the roles in the company you are working 
+* Noted the responsibilities and the roles in the company you are working
 * Defined four level of disaster recovery categories incl. availability SLA
 
 ### Learning resources
 
-- Will be added later 
+* [Business continuity and disaster recovery - Cloud Adoption Framework | Microsoft Learn](https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/management-business-continuity-disaster-recovery)
+* [Build high availability into your BCDR strategy - Azure Architecture Center | Microsoft Learn](https://learn.microsoft.com/azure/architecture/solution-ideas/articles/build-high-availability-into-your-bcdr-strategy)
+* [SMB disaster recovery with Azure Site Recovery - Azure Solution Ideas | Microsoft Learn](https://learn.microsoft.com/azure/architecture/solution-ideas/articles/disaster-recovery-smb-azure-site-recovery)
 
 ### Solution - Spoilerwarning
 
 [Solution Steps](./walkthrough/challenge-0/solution.md)
 
-## Challenge 1 - Prerequisites and landing zone preperation 
+## Challenge 1 - Prerequisites and landing zone preparation
 
 ### Goal
 
-In challenge 1 you will understand and prepare your environemnt for onboarding of the infrastructure to enable business continuity with Cloud Native / PaaS Services on Azure.
+In challenge 1 you will understand and prepare your environment for onboarding of the infrastructure to enable business continuity with Cloud Native / PaaS Services on Azure.
 
 ### Actions
 
-* Create all necessary Azure resources 
-* Region 1 West Europe 
-* Resource Group: Name: mh-bcdr-weu-rg
-* Recovery Services Vault: mh-rsv-weu
-* Region 2 North Europe 
-* Resource Group: Name: mh-bcdr-neu-rg
-* Recovery Services Vault: mh-rsv-neu
-* 
-* Storage Account with GRS 
-* Recovery Services Vault 
+Create all necessary Azure resources
+* Region 1: West Europe
+  * Resource Group: mh-bcdr-weu-rg
+  * Recovery Services Vault: mh-rsv-weu
+  * Storage Account with GRS (geo-redundant storage) redundancy option: mhstweu\<Suffix\>
+* Region 2: North Europe
+  * Resource Group: mh-bcdr-neu-rg
+  * Recovery Services Vault: mh-rsv-neu
+
 
 ### Success criteria
 
-* You created Azure Resource Groups 
-* 
+* You've created Resource Groups in both regions (North & West Europe)
+* Recovery Services Vaults have been created in both regions
+* Geo-redundant Storage Account has been created
 
 ### Learning resources
 
-* 
+* [Manage resource groups - Azure Portal - Azure Resource Manager | Microsoft Learn](https://learn.microsoft.com/azure/azure-resource-manager/management/manage-resource-groups-portal)
+* [Create a storage account - Azure Storage | Microsoft Learn](https://learn.microsoft.com/azure/storage/common/storage-account-create)
+* [Create and configure Recovery Services vaults - Azure Backup | Microsoft Learn](https://learn.microsoft.com/azure/backup/backup-create-recovery-services-vault)
 
 
 ### Solution - Spoilerwarning

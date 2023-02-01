@@ -34,32 +34,47 @@ Please ensure that you successfully verified the [General prerequisits](../../Re
 
 Here it is only a matter of dedicating oneself to the topic and considering whether the emergency plan has ever been tested in the company and who is part of it. It can also be considered whether appropriate measures in case of success or failure were derived to increase the quality next time.
 
+Ask yourself the questions: 
+1. Can i take a active part in the optimization process from the emergency plan? 
+2. Whom should i involve? 
+3. Do i have feedback for application owners for the applications i am working with? 
+4. When was the last succesful failover in my organization? 
+5. Ask internally when the next failover is planned to test the disaster plan? 
+
 ### **Task 3: Put yourself in the position of an application owner and define the necessary steps to make sure your application stays available in case of a disaster**
 
 Here is a small outlook on which topics you should deal with or at least work closely with IT to sharpen the requirements and be prepared in case of errors.
 
-1. Test regulary 
-2. Test for resiliency 
-3. Design a backup strategy 
-4. Design a disaster recovery strategy 
-5. Codify steps to failover and fallback 
-6. Plan for regional failures 
-7. Implement a retry logic 
-8. Configure test and health probes 
-9. Segregate read and write interfaces 
+    1. Test regulary 
+    2. Test for resiliency 
+    3. Design a backup strategy 
+    4. Design a disaster recovery strategy 
+    5. Codify steps to failover and fallback 
+    6. Plan for regional failures 
+    7. Implement a retry logic 
+    8. Configure test and health probes 
+    9. Segregate read and write interfaces 
 
 * [Checklist Testing for reliability](https://learn.microsoft.com/en-us/azure/architecture/framework/resiliency/test-checklist)
 * [Resiliency testing](https://learn.microsoft.com/en-us/azure/architecture/framework/resiliency/testing)
 * [Backup and disaster recovery plan](https://learn.microsoft.com/en-us/azure/architecture/framework/resiliency/backup-and-recovery)
 
-### Task 3: Who defines the requirements for Business Continuity and what are the necessary KPI´s for an application to reach a good SLA in terms of availability?
+### Task 4: Who defines the requirements for Business Continuity and what are the necessary KPI´s for an application to reach a good SLA in terms of availability?
 
-![image](/03-Azure/01-03-Infrastructure/04_BCDR_Azure_Native/walkthrough/challenge-0/img/DR_Tier_Levels.png)
+- Different categories that are often seen as the same 
+- There is a big difference and in most of the infrastructure of traditional it departments there is a 100% mirror from hardware over two datacenters
+  - The 100% mirroring of the hardware ensures that all applications have a fully redundant setup, but in just a few cases this is needed
+  - According to experience, however, only 10-20% of applications really need a classification in Highly Business Critical, the rest are often grouped into Moderate, Low or even just Backup & Restore.
 
 ![image](/03-Azure/01-03-Infrastructure/04_BCDR_Azure_Native/img/DifferentTerms.png)
 
-### Task 4: Plan the different geographic regions you need to use for reaching the highest availability SLA (can also include your datacenter locations)
-.
+![image](/03-Azure/01-03-Infrastructure/04_BCDR_Azure_Native/walkthrough/challenge-0/img/DR_Tier_Levels.png)
+
+
+
+### Task 5: Plan the different geographic regions you need to use for reaching the highest availability SLA (can also include your datacenter locations)
+
+![image](/03-Azure/01-03-Infrastructure/04_BCDR_Azure_Native/walkthrough/challenge-0/img/Customerneeds_RPO_RTO.png)
 
 You successfully completed challenge 0! 🚀🚀🚀
 

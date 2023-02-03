@@ -15,16 +15,14 @@
     "resources": [
         {
             "type": "Microsoft.RecoveryServices/vaults",
-            "apiVersion": "2022-10-01",
+            "apiVersion": "2022-09-10",
             "name": "[parameters('recoveryServicesVaultName')]",
             "location": "westeurope",
             "sku": {
                 "name": "RS0",
                 "tier": "Standard"
             },
-            "properties": {
-                "publicNetworkAccess": "Enabled"
-            }
+            "properties": {}
         },
         {
             "type": "Microsoft.Storage/storageAccounts",
@@ -70,7 +68,7 @@
         },
         {
             "type": "Microsoft.RecoveryServices/vaults/backupPolicies",
-            "apiVersion": "2022-10-01",
+            "apiVersion": "2022-09-10",
             "name": "[concat(parameters('recoveryServicesVaultName'), '/DefaultPolicy')]",
             "dependsOn": [
                 "[resourceId('Microsoft.RecoveryServices/vaults', parameters('recoveryServicesVaultName'))]"
@@ -105,7 +103,7 @@
         },
         {
             "type": "Microsoft.RecoveryServices/vaults/backupPolicies",
-            "apiVersion": "2022-10-01",
+            "apiVersion": "2022-09-10",
             "name": "[concat(parameters('recoveryServicesVaultName'), '/EnhancedPolicy')]",
             "dependsOn": [
                 "[resourceId('Microsoft.RecoveryServices/vaults', parameters('recoveryServicesVaultName'))]"
@@ -142,7 +140,7 @@
         },
         {
             "type": "Microsoft.RecoveryServices/vaults/backupPolicies",
-            "apiVersion": "2022-10-01",
+            "apiVersion": "2022-09-10",
             "name": "[concat(parameters('recoveryServicesVaultName'), '/HourlyLogBackup')]",
             "dependsOn": [
                 "[resourceId('Microsoft.RecoveryServices/vaults', parameters('recoveryServicesVaultName'))]"
@@ -199,7 +197,7 @@
         },
         {
             "type": "Microsoft.RecoveryServices/vaults/replicationAlertSettings",
-            "apiVersion": "2022-10-01",
+            "apiVersion": "2022-09-10",
             "name": "[concat(parameters('recoveryServicesVaultName'), '/defaultAlertSetting')]",
             "dependsOn": [
                 "[resourceId('Microsoft.RecoveryServices/vaults', parameters('recoveryServicesVaultName'))]"
@@ -211,7 +209,7 @@
         },
         {
             "type": "Microsoft.RecoveryServices/vaults/replicationVaultSettings",
-            "apiVersion": "2022-10-01",
+            "apiVersion": "2022-09-10",
             "name": "[concat(parameters('recoveryServicesVaultName'), '/default')]",
             "dependsOn": [
                 "[resourceId('Microsoft.RecoveryServices/vaults', parameters('recoveryServicesVaultName'))]"
@@ -263,12 +261,6 @@
                 "tier": "Standard"
             },
             "properties": {
-                "protocolSettings": {
-                    "smb": {}
-                },
-                "cors": {
-                    "corsRules": []
-                },
                 "shareDeleteRetentionPolicy": {
                     "enabled": true,
                     "days": 7

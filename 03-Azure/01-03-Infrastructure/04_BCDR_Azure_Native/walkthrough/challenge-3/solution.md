@@ -1,4 +1,4 @@
-# Walkthrough Challenge 3 - Access Azure resources using Managed Identities from your on-premises servers
+# Walkthrough Challenge 3 - Protect in Azure with Disaster Recovery
 
 Duration: 30 minutes
 
@@ -10,7 +10,7 @@ Please ensure that you successfully passed [challenge 2](../../Readme.md#challen
 
 In this Challenge, you will learn how to protect Azure VM with Azure Site Recovery, and enable replication to the secondary site. Moreover, you will successfully run the test failover and failback to make sure the solution works as expected.
 
-### Actions
+Actions
 
 * Set up and enable disaster recovery with Azure Site Recovery and monitor the progress
 * Performing a disaster recovery drill, creating recovery plan and test failover 

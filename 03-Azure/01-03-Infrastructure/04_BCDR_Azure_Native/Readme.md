@@ -147,19 +147,27 @@ In challenge 2 you will successfully onboard your Windows and Linux Virtual Mach
 
 ### Actions
 
-* Create all necessary Azure Resources
-*
+* Deploy a Windows Server 2022 VM in West Europe Resource Group
+* Deploy a Ubuntu Server VM in North Europe Resource Group
+* Enable Azure Backup for both VMs
+* Restore a VM in Azure
 
 
 ### Success criteria
 
-* You have an Recovery Services Vault
+* You have deployed two VMs in Azure (one with Window Server 2022, the other one with Ubuntu Server)
 * You successfully enabled Azure Backup on two virtual machines
-* 
+* You have successfully setup Azure Backup Policies for both virtual machines
+* You have successfully restored a VM of your choice to Azure
 
 ### Learning resources
 
-* 
+* https://learn.microsoft.com/en-us/azure/backup/quick-backup-vm-portal
+* https://learn.microsoft.com/en-us/azure/backup/quick-backup-vm-portal#apply-a-backup-policy
+* https://learn.microsoft.com/en-us/azure/backup/tutorial-backup-vm-at-scale
+* https://learn.microsoft.com/en-us/azure/backup/backup-azure-arm-restore-vms
+* https://learn.microsoft.com/en-us/azure/backup/restore-azure-encrypted-virtual-machines
+
 
 
 ### Solution - Spoilerwarning

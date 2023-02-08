@@ -34,7 +34,7 @@ In the deployment notification you could navigate to the Site Recovery Jobs whic
 
 ![image](./img/mh-ch-screenshot-06.png)
 
-You can select in progress jobs to check the in detail the status and the progress.
+You can select in progress jobs to check the status and progress.
 
 ![image](./img/mh-ch-screenshot-07.png)
 

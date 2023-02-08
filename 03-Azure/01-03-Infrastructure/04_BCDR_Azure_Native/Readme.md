@@ -188,7 +188,7 @@ You will learn:
 
 ### Actions
 
-* Set up and enable disaster recovery with Azure Site Recovery and monitor the failover progress
+* Set up and enable disaster recovery with Azure Site Recovery and monitor the progress
 * Performing a disaster recovery drill, creating recovery plan and test failover 
 * Failback to the Europe West region (Source environment) and monitor the progress
 

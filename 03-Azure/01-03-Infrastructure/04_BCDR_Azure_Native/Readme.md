@@ -180,12 +180,6 @@ In challenge 2 you will successfully onboard your Windows and Linux Virtual Mach
 
 In this Challenge, you will learn how to protect Azure VM with Azure Site Recovery, and enable replication to the secondary site. In addition you will successfully  run the test failover and failback to make sure the solution works as expected.
 
-You will learn: 
-
-* How to protect Azure VM with Azure Site Recovery
-* How to perform a disaster recovery drill and make a testfailover
-* How to run a failback from your backup region to the primary region
-
 ### Actions
 
 * Set up and enable disaster recovery with Azure Site Recovery and monitor the progress

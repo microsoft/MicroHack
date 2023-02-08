@@ -8,78 +8,23 @@ Duration: 30 minutes
 
 Please ensure that you successfully passed [challenge 2](../../Readme.md#challenge-2) before continuing with this challenge.
 
-### Task 1: Create an Azure Key Vault
+In this Challenge, you will learn how to protect Azure VM with Azure Site Recovery, and enable replication to the secondary site. Moreover, you will successfully run the test failover and failback to make sure the solution works as expected.
 
-1. Navigate to *Azure Key Vault* using the top search bar and select *Create* in the top navigation pane.
+### Actions
 
-![image](./img/1_new_KV.png)
+* Set up and enable disaster recovery with Azure Site Recovery and monitor the progress
+* Performing a disaster recovery drill, creating recovery plan and test failover 
+* Failback to the Europe West region (Source environment) and monitor the progress
 
-2. Create the Azure Key Vault in your resource group *mh-arc-servers-rg* with default settings and call it *mh-arc-servers-kv* with a random number at the end as the name needs to be unique across all Azure Key Vaults.
+### Task 1: Enable replication with Azure Site recovery for the Virtual Machine in the West Europe Region to the North Europe Region
 
-![image](./img/2_KV_settings.jpg)
+Navigate to Recovery Services Vault in the North Europe (mh-rsv-neu) which we created in the first Challenge. In the Protected Items, select Replicated Items. Then select Replicate and from the dropdown list select Azure virtual machines. The following pan will apprear:
 
-3. Please wait a few seconds until the creation of the Key Vault is complete. 
+![image](./img/mh-ch-screenshot-01.png)
 
-### Task 2: Create a new secret in your Key Vault
-
-1. After the creation navigate to the Azure Key Vault and assign the *Secret Management* template to the managed identity of your Linux Azure Arc-enabled server.
-
-![image](./img/3_Assign_KeyVault_permissions.jpg)
-
-2. Create a new secret called *kv-secret* and give it a value like *This-is-top-secret!!!*.
-
-![image](./img/4_Create_Secret.png)
+![image](./img/mh-ch-screenshot-02.png)
 
 
-### Task 3: Call the secret without providing any credentials
 
-1. Connect via SSH to the Virtual Machine *microhack-arc-servers-lin01*.
-
-2. Elevate your privileges using the following command:
-
-```
-sudo -i
-```
-
-
-3. Install your favorite JSON parser. In this example we will use jq.
-
-```
-apt-get -y install jq
-```
-
-4. Request an access token for the Key Vault using the following command:
-
-```
-ChallengeTokenPath=$(curl -s -D - -H Metadata:true "http://127.0.0.1:40342/metadata/identity/oauth2/token?api-version=2019-11-01&resource=https%3A%2F%2Fmanagement.azure.com" | grep Www-Authenticate | cut -d "=" -f 2 | tr -d "[:cntrl:]")
-ChallengeToken=$(cat $ChallengeTokenPath)
-if [ $? -ne 0 ]; then
-    echo "Could not retrieve challenge token, double check that this command is run with root privileges."
-else
-    AccessToken=$(curl -s -H Metadata:true -H "Authorization: Basic $ChallengeToken" "http://127.0.0.1:40342/metadata/identity/oauth2/token?api-version=2019-11-01&resource=https%3A%2F%2Fvault.azure.net")
-fi
-```
-
-`❗Hint: The above request connects to the Azure Instance Metadata Service to retrieve an access token for the managed identity of your Azure Arc-enabled server. By default, the IMDS is accessible via 169.254.169.254 from Azure VMs. Azure Arc-enabled servers need to use 127.0.0.1 to proxy the request with the Azure Arc agent to Azure.`
-
-4. Verify that you received an access token using the following command:
-
-```
-token=$(echo "$AccessToken" | jq -r '.access_token')
-echo $token
-```
-You should see the access token in the output. In addition, the result is saved in the variable *token* for the next step.
-
-5. Now, it's time to call the Azure Key Vault instance to retrieve the secret from the previous task.
-
-```
-curl 'https://mh-arc-servers-kv0815.vault.azure.net/secrets/kv-secret?api-version=2016-10-01' -H "Authorization: Bearer $token"
-```
-
-`❗Hint: Please make sure to call your instance of Key Vault and adjust the name in the above command accordingly.`
-
-![image](./img/5_result_secret.png)
-
-Congratulations! You retrieved the secret from your Key Vault without providing any credentials. The resulting possibilities are limitless. You can use it for managing certificates or any secret that is necessary to run your on-premises application. 
 
 You successfully completed challenge 3! 🚀🚀🚀

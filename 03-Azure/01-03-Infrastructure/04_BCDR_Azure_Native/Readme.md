@@ -176,13 +176,9 @@ In challenge 2 you will successfully onboard your Windows and Linux Virtual Mach
 
 ## Challenge 3 - Protect in Azure with Disaster Recovery 
 
-Site Recovery helps ensure business continuity by keeping business apps and workloads running during outages. It replicates workloads running on physical and virtual machines (VMs) from a primary site to a secondary location.
-
-By utilizing the organization's Business Continuity and Disaster Recovery (BCDR) plan, we can execute the Site Recovery configurations and initiate a preparation plan that aligns with the BCDR objectives. In this Challenge our current solution is in the West Europe Azure region and we have decided to replicate it in the East Europe region.
-
 ### Goal
 
-In this Challenge, you will learn about Azure Site Recovery, and examine its features relevant to business continuity and disaster recovery (BCDR) plan.
+In this Challenge, you will learn how to protect Azure VM with Azure Site Recovery, and enable replication to the secondary site. In addition you will successfully  run the test failover and failback to make sure the solution works as expected.
 
 You will learn: 
 
@@ -192,24 +188,12 @@ You will learn:
 
 ### Actions
 
-* Create all required Azure resources in Region West Europe (Source environmet)
-  * Virtual Network: mh-vnet-weu
-  * Virtual Machine: mh-vm-weu\<Suffix\>
-
-* Set up and enabling disaster recovery with Azure Site Recovery
-  * Enabling replication for the virtual machine
-  * Monitor the replication process
-
-* Performing a disaster recovery drill and a test failover
-  * Create a recovery plan: mh-dr-drill
-  * Run a test failover
-  * Monitor failover progress
-  
+* Set up and enable disaster recovery with Azure Site Recovery and monitor the failover progress
+* Performing a disaster recovery drill, creating recovery plan and test failover 
 * Failback to the Europe West region (Source environment) and monitor the progress
 
 ### Success Criteria
 
-* You have created the virtual network and virtual machine in the West Europe region.
 * You can enable replication for the virtual machine to the North Europe region.
 * You successfully initiated a Testfailover from Azure Region West Europe to North Europe with a near zero downtime requirement.
 * Failback to the Europe West region has been successfully performed. 

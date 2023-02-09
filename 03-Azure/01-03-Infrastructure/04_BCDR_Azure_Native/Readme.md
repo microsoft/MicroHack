@@ -251,7 +251,7 @@ Thank you for investing the time and see you next time!
 ## Contributors
 * Markus Klein 
 * Bernd Loehlein 
-*Hengameh 
+* Hengameh Bigdeloo 
 * Tara
 * Nils Bankert [GitHub](https://github.com/nilsbankert); [LinkedIn](https://www.linkedin.com/in/nilsbankert/)
 

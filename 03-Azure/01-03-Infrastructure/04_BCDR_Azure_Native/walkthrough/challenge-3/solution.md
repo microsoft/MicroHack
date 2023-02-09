@@ -32,14 +32,13 @@ Navigate to Recovery Services Vault in the North Europe (mh-rsv-neu) which we cr
 
 In the deployment notification you could navigate to the Site Recovery Jobs which lists all Site Recovery Actions you have created in this task.
 
-![image](./img/mh-ch-screenshot-06.png)
 
 You can select in progress jobs to check the status and progress.
 
-![image](./img/mh-ch-screenshot-07.png)
+
 
 This Task can take up to 10 minutes to finish.
 
-![image](./img/mh-ch-screenshot-08.png)
+
 
 You successfully completed challenge 3! 🚀🚀🚀

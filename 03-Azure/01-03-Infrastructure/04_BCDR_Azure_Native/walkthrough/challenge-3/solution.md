@@ -14,7 +14,7 @@ Actions
 
 * Set up and enable disaster recovery with Azure Site Recovery and monitor the progress
 * Performing a disaster recovery drill, creating recovery plan and test failover 
-* Failback to the Europe West region (Source environment) and monitor the progress
+* Run a disaster recovery and test Failback to the Europe West region (Source environment) and monitor the progress
 
 ### Task 1: Enable replication with Azure Site recovery for the Virtual Machine in the West Europe Region to the North Europe Region
 
@@ -76,5 +76,29 @@ Navigate to Site Recovery Jobs and select Test failover job which is in progress
 After all jobs are finished successully, Navigate to Virtual Machines list. New Virtual Machine has been created in the North Europe Region.
 
 ![image](./img/mh-ch-screenshot-16.png)
+
+#### Cleanup test failover
+![image](./img/mh-ch-screenshot-17.png)
+
+![image](./img/mh-ch-screenshot-18.png)
+
+![image](./img/mh-ch-screenshot-19.png)
+
+
+### Task 3: Run the Failback to the Europe West region and monitor the progress
+#### Run the production failover for server01
+![image](./img/mh-ch-screenshot-20.png)
+
+![image](./img/mh-ch-screenshot-21.png)
+
+![image](./img/mh-ch-screenshot-22.png)
+
+Check the virtual machine list. There is a new VM "server01" running in North Europe region.
+![image](./img/mh-ch-screenshot-23.png)
+
+#### Reprotect the VM
+![image](./img/mh-ch-screenshot-24.png)
+
+![image](./img/mh-ch-screenshot-25.png)
 
 You successfully completed challenge 3! 🚀🚀🚀

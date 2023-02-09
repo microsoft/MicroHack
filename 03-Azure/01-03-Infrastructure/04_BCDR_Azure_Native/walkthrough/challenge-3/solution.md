@@ -62,6 +62,7 @@ From the top menu select Test failover.
 
 ![image](./img/mh-ch-screenshot-12.png)
 
+
 ![image](./img/mh-ch-screenshot-13.png)
 
 #### Monitor the progress
@@ -69,9 +70,10 @@ Navigate to Site Recovery Jobs and select Test failover job which is in progress
 
 ![image](./img/mh-ch-screenshot-14.png)
 
+
 ![image](./img/mh-ch-screenshot-15.png)
 
-After all jobs are finished successully, Navigate to Virtual Machines list. Then new Virtual Machine has been created in the North Europe Region.
+After all jobs are finished successully, Navigate to Virtual Machines list. New Virtual Machine has been created in the North Europe Region.
 
 ![image](./img/mh-ch-screenshot-16.png)
 

@@ -42,4 +42,37 @@ This Task can take up to 10 minutes to finish.
 
 ![image](./img/mh-ch-screenshot-08.png)
 
+### Task 2: Create a recovery plan and Run a disaster recovery drill
+
+#### Create a recovery plan
+Navigate to Recovery Services Vault in the North Europe (mh-rsv-neu). Under Manage, select Recovery Plans (Site Recovery) and create a recovery plan.
+
+![image](./img/mh-ch-screenshot-09.png)
+
+Select server01 as the protected source machine and create the recovery plan.
+
+![image](./img/mh-ch-screenshot-10.png)
+
+#### Run the test failover from the West Europe to the North Europe Region
+Navigate to the recovery plan created in the previous task. 
+
+![image](./img/mh-ch-screenshot-11.png)
+
+From the top menu select Test failover.
+
+![image](./img/mh-ch-screenshot-12.png)
+
+![image](./img/mh-ch-screenshot-13.png)
+
+#### Monitor the progress
+Navigate to Site Recovery Jobs and select Test failover job which is in progress.
+
+![image](./img/mh-ch-screenshot-14.png)
+
+![image](./img/mh-ch-screenshot-15.png)
+
+After all jobs are finished successully, Navigate to Virtual Machines list. Then new Virtual Machine has been created in the North Europe Region.
+
+![image](./img/mh-ch-screenshot-16.png)
+
 You successfully completed challenge 3! 🚀🚀🚀

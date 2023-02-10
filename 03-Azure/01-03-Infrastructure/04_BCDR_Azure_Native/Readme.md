@@ -178,23 +178,29 @@ In challenge 2 you will successfully onboard your Windows and Linux Virtual Mach
 
 ### Goal
 
-In this Challenge, you will learn how to protect Azure VM with Azure Site Recovery, and enable replication to the secondary site. In addition you will successfully  run the test failover and failback to make sure the solution works as expected.
+In this Challenge, you will learn how to protect Azure VM with Azure Site Recovery, and enable replication to the secondary site. In addition you will successfully  run the test & production failover from Europe West to North and failback again from Europe North to West.
 
 ### Actions
 
 * Set up and enable disaster recovery with Azure Site Recovery and monitor the progress
-* Performing a disaster recovery drill, creating recovery plan and test failover 
-* Failback to the Europe West region (Source environment) and monitor the progress
+* Perform a disaster recovery drill, create recovery plan and run a test failover 
+* Run a production failover from EU West to EU East region and Failback again to the EU West region (Source environment) and monitor the progress
 
 ### Success Criteria
 
-* You can enable replication for the virtual machine to the North Europe region.
-* You successfully initiated a Testfailover from Azure Region West Europe to North Europe with a near zero downtime requirement.
+* You could enable replication for the virtual machine to the North Europe region.
+* You successfully initiated a Testfailover from Azure Region Europe West to Europe North with a near zero downtime requirement.
+* You run successfully the production failover to the Europe North region.
 * Failback to the Europe West region has been successfully performed. 
 
 ### Learning resources
 
-* Will be added later
+* https://learn.microsoft.com/en-us/azure/site-recovery/azure-to-azure-how-to-enable-replication
+* https://learn.microsoft.com/en-us/azure/site-recovery/site-recovery-create-recovery-plans
+* https://learn.microsoft.com/en-us/azure/site-recovery/site-recovery-test-failover-to-azure
+* https://learn.microsoft.com/en-us/azure/site-recovery/azure-to-azure-how-to-reprotect
+* https://learn.microsoft.com/en-us/azure/site-recovery/azure-to-azure-tutorial-failback
+* https://learn.microsoft.com/en-us/azure/site-recovery/azure-to-azure-tutorial-enable-replication
 
 ### Solution - Spoilerwarning
 

@@ -210,19 +210,33 @@ In this Challenge, you will learn how to protect Azure VM with Azure Site Recove
 
 ### Goal
 
-* 
+In challenge 4, you will successfully protect your on-premise Hyper-V virtual machines with Microsoft Azure Backup Server (MABS).
 
 ### Actions
 
-* 
+* For the purpose of this MicroHack, we are using Nested Virtualization inside Azure as an emulation of the on-Premise environment, using Hyper-V host window inside the Azure 
+* Download and Install the Microsoft Azure Backup Server (MABS) in the on-premise infrastructure
+* Add a Backup Storage to the MABS disk storage
+* Register an on-premise Windows server (Windows server 2016) to the MABS
+* Protect the registered VM with MABS
+* Register the on-premise Hyper-V host to the MABS
+* Protect two Hyper-V's VMs with MABS
+* Recover a VM using the recovered vhdx from MABS
 
 ### Success criteria
 
-* You successfully installed Azure backup Server in you on prem infrastructure and enabled it for two virtual machines 
+* You successfully installed Microsoft Azure Backup Server (MABS) in the on-premise infrastructure
+* You successfully registered two Hyper-V servers to the MABS
+* You successfully protected two virtual machines with MABS
+* You successfully recovered a VM using the vhdx
 
 ### Learning resources
 
-* 
+* https://learn.microsoft.com/en-us/azure/backup/backup-azure-microsoft-azure-backup
+* https://learn.microsoft.com/en-us/azure/backup/back-up-hyper-v-virtual-machines-mabs
+* https://learn.microsoft.com/en-us/system-center/dpm/create-dpm-protection-groups?view=sc-dpm-2022
+* https://learn.microsoft.com/en-us/system-center/dpm/deploy-dpm-protection-agent?view=sc-dpm-2022
+* https://learn.microsoft.com/en-us/azure/backup/backup-mabs-protection-matrix
 
 ### Solution - Spoilerwarning
 

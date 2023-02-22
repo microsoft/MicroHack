@@ -231,7 +231,7 @@ You will be able to check the online protection data inside the Azure Recovery S
 
 ### Task 5: Recover a Virtual Machine
 
-You can recover VM by downloading the vhdx file and create a VM from it.
+You can recover VM by downloading the vhdx file and create a new VM from it.
 
 ![image](./img/mh-ch4-screenshot-59.png)
 

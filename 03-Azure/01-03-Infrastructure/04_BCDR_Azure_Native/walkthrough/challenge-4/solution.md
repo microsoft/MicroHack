@@ -24,20 +24,20 @@ Actions:
 
 ### Download the MABS
 
-As a first step, we will Download the Microsoft Azure Backup Server (MABS) from the Azure Recovery Services Vault that we created in [challenge 1](../../Readme.md#challenge-1). 
+As a first step, we will download the Microsoft Azure Backup Server (MABS) from the Azure Recovery Services Vault that we created in [challenge 1](../../Readme.md#challenge-1). 
 
-To protect on-premises workloads, the MABS server **must be located on-premises**, and **connected to a domain**. You can run the server on a Hyper-V VM, a VMware VM, or a physical host. The recommended minimum requirements for the server hardware are two cores and 8-GB RAM. The supported operating systems are:
+Note, to protect on-premises workloads, the MABS server **must be located on-premises**, and **connected to a domain**. You can run the server on a Hyper-V VM, a VMware VM, or a physical host. The recommended minimum requirements for the server hardware are two cores and 8-GB RAM. The supported operating systems are:
 
 * Windows Server 2019 (Standard, Datacenter, Essentials) - 64 bit
 * Windows Server 2016 and latest SPs (Standard, Datacenter, Essentials) - 64 bit
 
-We will download and install the MABS in a Windows Server 2016 located in the Hyper-v server and joined to "contosomortgage.local" domain (cmMABS). 
+In this challenge, we will download and install the MABS in a Windows Server 2016 located in the Hyper-v server and joined to "contosomortgage.local" domain (cmMABS). 
 
 * Form the server 2016 navigate to **Recovery Services Vault** in the West Europe (mh-rsv-weu) which we created in the first Challenge. Under **Backup**, select **On-Premises** and **Hyper-V Virtual Machine** and **Prepare Infrastructure**. 
 
 ![image](./img/mh-ch4-screenshot-01.png)
 
-* In the Prepare infrastructure pane, select the **Download links for Install Azure Backup Server** and **Download vault credentials** (You will use the vault credentials during registration of Azure Backup Server to the Recovery Services vault).
+* In the **Prepare infrastructure** pane, select the **Download links for Install Azure Backup Server** and **Download vault credentials** (You will use the vault credentials during registration of Azure Backup Server to the Recovery Services vault).
 
 ![image](./img/mh-ch4-screenshot-02.png)
 
@@ -59,7 +59,7 @@ We will download and install the MABS in a Windows Server 2016 located in the Hy
 
 ![image](./img/mh-ch4-screenshot-07.png)
 
-Check the Prerequisite to determine if the hardware and software prerequisites for Azure Backup Server have been met.
+Check the Prerequisites to determine if the hardware and software prerequisites for Azure Backup Server have been met.
 
 ![image](./img/mh-ch4-screenshot-08.png)
 
@@ -164,7 +164,7 @@ You can set up workload-aware storage by using the PowerShell cmdlet Update-DPMD
 
 Each server that you want to protect also needs the MABS agent installed. You can either push this out from the console or install it manually on the workload server from the MABS installation file and then register it with MABS. 
 
-* For the Automatical installaiton:
+* Push the installation from console (Install agent):
 
 ![image](./img/mh-ch4-screenshot-36.png)
 
@@ -178,7 +178,7 @@ Each server that you want to protect also needs the MABS agent installed. You ca
 
 ![image](./img/mh-ch4-screenshot-41.png)
 
-* For the manual instalation, you will need to first install the agent and using the following command to add the server to the MABS: 
+* For the manual instalation (Attach the agent), you will need to first install the agent and using the following command to add the server to the MABS: 
 
 cd "Specify the location of the Microsoft Protection Manager"
 

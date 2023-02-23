@@ -143,7 +143,7 @@ The first backup copy is kept on storage attached to the Azure Backup Server mac
 
 ### Add volumes to Backup Server disk storage
 
-To add a volume to Backup Server, in the **Management pane** of MABS select **Disk Storage** then rescan the storage. After rescaning the disk storage select **Add**. A list of all the volumes available to be added for Backup Server Storage appears. After available volumes are added to the list of selected volumes, you can give them a friendly name to help you manage them. To format these volumes to ReFS so Backup Server can use the benefits of Modern Backup Storage, select OK.
+To add a volume to Backup Server, in the **Management pane** of MABS select **Disk Storage** then rescan the storage. After rescanning the disk storage select **Add**. A list of all the volumes available to be added for Backup Server Storage appears. After available volumes are added to the list of selected volumes, you can give them a friendly name to help you manage them. To format these volumes to ReFS so Backup Server can use the benefits of Modern Backup Storage, select OK.
 
 ![image](./img/mh-ch4-screenshot-33.png)
 
@@ -178,7 +178,7 @@ Each server that you want to protect also needs the MABS agent installed. You ca
 
 ![image](./img/mh-ch4-screenshot-41.png)
 
-* For the manual instalation (Attach the agent), you will need to first install the agent and using the following command to add the server to the MABS: 
+* For the manual installation (Attach the agent), you will need to first install the agent and using the following command to add the server to the MABS: 
 
 cd "Specify the location of the Microsoft Protection Manager"
 
@@ -187,7 +187,7 @@ SetDpmServer.exe -add -dpmservername "FQDN of the MABS server"
 
 ![image](./img/mh-ch4-screenshot-42.png)
 
-You can find the MABS prtection agents in the following path if you used the default path during the instalation of MABS.
+You can find the MABS protection agents in the following path if you used the default path during the instalation of MABS.
 
 ![image](./img/mh-ch4-screenshot-43.png)
   
@@ -231,7 +231,7 @@ You will be able to check the online protection data inside the Azure Recovery S
 
 ### Task 5: Recover a Virtual Machine
 
-You can recover VM by downloading the vhdx file and create a new VM from it.
+You can recover a VM by downloading the .vhdx file and create a new VM from it.
 
 ![image](./img/mh-ch4-screenshot-59.png)
 

@@ -1,4 +1,4 @@
-# Walkthrough Challenge 4 - Microsoft Defender for Cloud integration with Azure Arc
+# Walkthrough Challenge 4 - Protect to Azure with Azure Backup & Restore
 
 Duration: 30 minutes
 
@@ -26,7 +26,7 @@ Actions:
 
 As a first step, we will download the Microsoft Azure Backup Server (MABS) from the Azure Recovery Services Vault that we created in [challenge 1](../../Readme.md#challenge-1). 
 
-Note, to protect on-premises workloads, the MABS server **must be located on-premises**, and **connected to a domain**. You can run the server on a Hyper-V VM, a VMware VM, or a physical host. The recommended minimum requirements for the server hardware are two cores and 8-GB RAM. The supported operating systems are:
+Note: to protect on-premises workloads, the MABS server **must be located on-premises**, and **connected to a domain**. You can run the server on a Hyper-V VM, a VMware VM, or a physical host. The recommended minimum requirements for the server hardware are two cores and 8-GB RAM. The supported operating systems are:
 
 * Windows Server 2019 (Standard, Datacenter, Essentials) - 64 bit
 * Windows Server 2016 and latest SPs (Standard, Datacenter, Essentials) - 64 bit

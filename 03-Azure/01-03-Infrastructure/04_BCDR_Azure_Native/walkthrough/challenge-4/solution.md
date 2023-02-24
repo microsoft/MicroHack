@@ -16,7 +16,7 @@ Actions:
 * Add a Backup Storage to the MABS disk storage
 * Register an on-premise Windows server (Windows server 2016) and the on-premise Hyper-V host to the MABS
 * Protect the registered VM with MABS
-* Recover a VM using the recovered vhdx from MABS
+* Recover a Virtual Machine using MABS backup
 
 ### Task 1: Install the Microsoft Azure Backup Server (MABS)
 
@@ -47,7 +47,7 @@ In this challenge, we will download and install the MABS in a Windows Server 201
 
 ![image](./img/mh-ch4-screenshot-05.png)
 
-### Install the Azure Backup Server
+### Install the Microsoft Azure Backup Server
 
 **Note:** The MABS server must be domain joined and have .NET 3.51 installed. The installer will add .NET 4 during the installation if it’s not present. 
 
@@ -216,7 +216,7 @@ You will be able to check the online protection data inside the Azure Recovery S
 
 ![image](./img/mh-ch4-screenshot-58.png)
 
-### Task 5: Recover a Virtual Machine
+### Task 5: Recover a Virtual Machine using MABS backup
 
 MABS supports three recovery options for a VM backups:
 * Recover to original instance

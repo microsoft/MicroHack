@@ -115,25 +115,25 @@ The first backup copy is kept on storage attached to the Azure Backup Server mac
 
 ![image](./img/mh-ch4-screenshot-21.png)
 
+![image](./img/mh-ch4-screenshot-22.png)
+
 ![image](./img/mh-ch4-screenshot-23.png)
 
 ![image](./img/mh-ch4-screenshot-24.png)
 
 ![image](./img/mh-ch4-screenshot-25.png)
 
-![image](./img/mh-ch4-screenshot-26.png)
-
 ### Add volumes to Backup Server disk storage
 
 To add a volume to Backup Server, in the **Management pane** of MABS select **Disk Storage** then rescan the storage. After rescanning the disk storage, select **Add**. A list of all the volumes available to be added for Backup Server Storage appears. After available volumes are added to the list of selected volumes, you can give them a friendly name to help you manage them. MABS will format these volumes to ReFS so Backup Server can use the benefits of Modern Backup Storage, select OK.
+
+![image](./img/mh-ch4-screenshot-26.png)
 
 ![image](./img/mh-ch4-screenshot-27.png)
 
 ![image](./img/mh-ch4-screenshot-28.png)
 
 ![image](./img/mh-ch4-screenshot-29.png)
-
-![image](./img/mh-ch4-screenshot-30.png)
 
 ### Set up workload-aware storage (Optional)
 
@@ -142,7 +142,7 @@ You can set up workload-aware storage by using the PowerShell cmdlet Update-DPMD
 
 * The following screenshot shows the Update-DPMDiskStorage cmdlet in the PowerShell window. The changes you make by using PowerShell are reflected in the Backup Server Administrator Console.
 
-![image](./img/mh-ch4-screenshot-35.png)
+![image](./img/mh-ch4-screenshot-30.png)
 
 ### Task 3: Register the Hyper-v host and a VM to MABS
 

@@ -147,11 +147,11 @@ You can set up workload-aware storage by using the PowerShell cmdlet Update-DPMD
 
 ### Task 3: Register the Hyper-v host and a VM to MABS
 
+**Note:** Each server that you want to protect also needs the MABS agent installed. You can either push this out from the console or install it manually on the workload server from the MABS installation file and then register it with MABS. 
+
 ### Set up the MABS protection agent on the Hyper-V server
 
-Each server that you want to protect also needs the MABS agent installed. You can either push this out from the console or install it manually on the workload server from the MABS installation file and then register it with MABS. 
-
-* Push the installation from console (Install agent):
+* we will Push the installation from console (Install agents) for the Hyper-v server.
 
 ![image](./img/mh-ch4-screenshot-36.png)
 
@@ -165,18 +165,21 @@ Each server that you want to protect also needs the MABS agent installed. You ca
 
 ![image](./img/mh-ch4-screenshot-41.png)
 
-* For the manual installation (Attach the agent), you will need to first install the agent and using the following command to add the server to the MABS: 
+### Install the MABS protection agent on a Windows Server
 
-cd "Specify the location of the Microsoft Protection Manager"
+For Installing the agent manually (Attach the agents), you will need to first install the agent. 
 
-cd "C:\Program Files\Microsoft Data Protection Manager\DPM\bin"
+* You can find the MABS protection agents in the following path if you used the default path during the instalation of MABS:
+
+![image](./img/mh-ch4-screenshot-43.png)
+
+* When the protection agent is installed use the following commands to add the server to the MABS: 
+
+cd "Specify the location of the Microsoft Protection Manager" 
+
 SetDpmServer.exe -add -dpmservername "FQDN of the MABS server"
 
 ![image](./img/mh-ch4-screenshot-42.png)
-
-You can find the MABS protection agents in the following path if you used the default path during the instalation of MABS.
-
-![image](./img/mh-ch4-screenshot-43.png)
   
 ![image](./img/mh-ch4-screenshot-44.png)
  
@@ -192,7 +195,7 @@ You can find the MABS protection agents in the following path if you used the de
 
 ![image](./img/mh-ch4-screenshot-48.png)
 
-Now you are able to add a VM using the MABS protection agent which you installed in the Hyper-v host or add a server that you have already installed the MABS protection agent for it.
+Now that the MABS protection agent is installed both in the Hyper-v host and a windows server, you can protect the VMs located in the Hyper-v host or the server on which you installed the protection agent independently.
 
 ![image](./img/mh-ch4-screenshot-49.png)
 

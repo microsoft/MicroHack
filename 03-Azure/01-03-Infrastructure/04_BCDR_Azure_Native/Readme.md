@@ -214,21 +214,18 @@ In challenge 4, you will successfully protect your on-premise Hyper-V virtual ma
 
 ### Actions
 
-* For the purpose of this MicroHack, we are using Nested Virtualization inside Azure as an emulation of the on-Premise environment, using Hyper-V host window inside the Azure 
-* Download and Install the Microsoft Azure Backup Server (MABS) in the on-premise infrastructure
+* Install the Microsoft Azure Backup Server (MABS) in the on-premise infrastructure
 * Add a Backup Storage to the MABS disk storage
-* Register an on-premise Windows server (Windows server 2016) to the MABS
+* Register an on-premise Windows server (Windows server 2016) and the on-premise Hyper-V host to the MABS
 * Protect the registered VM with MABS
-* Register the on-premise Hyper-V host to the MABS
-* Protect two Hyper-V's VMs with MABS
-* Recover a VM using the recovered vhdx from MABS
+* Recover a Virtual Machine using MABS backup
 
 ### Success criteria
 
 * You successfully installed Microsoft Azure Backup Server (MABS) in the on-premise infrastructure
 * You successfully registered two Hyper-V servers to the MABS
 * You successfully protected two virtual machines with MABS
-* You successfully recovered a VM using the vhdx
+* You successfully restored a VM of your choice
 
 ### Learning resources
 

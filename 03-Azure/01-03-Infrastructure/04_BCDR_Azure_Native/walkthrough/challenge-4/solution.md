@@ -8,16 +8,14 @@ Duration: 30 minutes
 
 Please ensure that you successfully passed [challenge 3](../../Readme.md#challenge-3) before continuing with this challenge.
 
-In this challenge you will learn how to protect your on-premise Hyper-V virtual machines with Microsoft Azure Backup Server (MABS). For this MicroHack, we are using Nested Virtualization (Windows server with Hyper-V role) in Azure as an emulation of the on-Premise environment (server Name: cmhost).
+In this challenge you will learn how to protect your on-premise Hyper-V virtual machines with Microsoft Azure Backup Server (MABS). For this MicroHack, we are using Nested Virtualization (Windows server with Hyper-V role) in Azure as an emulation of the on-Premise environment (Hyper-v server Name: cmhost).
 
 Actions:
 
 * Install the Microsoft Azure Backup Server (MABS) in the on-premise infrastructure
 * Add a Backup Storage to the MABS disk storage
-* Register an on-premise Windows server (Windows server 2016) to the MABS
+* Register an on-premise Windows server (Windows server 2016) and the on-premise Hyper-V host to the MABS
 * Protect the registered VM with MABS
-* Register the on-premise Hyper-V host to the MABS
-* Protect two Hyper-V's VMs with MABS
 * Recover a VM using the recovered vhdx from MABS
 
 ### Task 1: Install the Microsoft Azure Backup Server (MABS)
@@ -26,14 +24,14 @@ Actions:
 
 As a first step, we will download the Microsoft Azure Backup Server (MABS) from the Azure Recovery Services Vault that we created in [challenge 1](../../Readme.md#challenge-1). 
 
-Note: to protect on-premises workloads, the MABS server **must be located on-premises**, and **connected to a domain**. You can run the server on a Hyper-V VM, a VMware VM, or a physical host. The recommended minimum requirements for the server hardware are two cores and 8-GB RAM. The supported operating systems are:
+**Note:** to protect on-premises workloads, the MABS server **must be located on-premises**, and **connected to a domain**. You can run the MABS server on a Hyper-V VM, a VMware VM, or a physical host. The recommended minimum requirements for the server hardware are two cores and 8-GB RAM. The supported operating systems are:
 
 * Windows Server 2019 (Standard, Datacenter, Essentials) - 64 bit
 * Windows Server 2016 and latest SPs (Standard, Datacenter, Essentials) - 64 bit
 
-In this challenge, we will download and install the MABS in a Windows Server 2016 located in the Hyper-v server and joined to "contosomortgage.local" domain (cmMABS). 
+In this challenge, we will download and install the MABS in a Windows Server 2016 located on the Hyper-v server that is joined to "contosomortgage.local" domain. 
 
-* Form the server 2016 navigate to **Recovery Services Vault** in the West Europe (mh-rsv-weu) which we created in the first Challenge. Under **Backup**, select **On-Premises** and **Hyper-V Virtual Machine** and **Prepare Infrastructure**. 
+* From the server 2016 navigate to **Recovery Services Vault** in the West Europe (mh-rsv-weu) which we created in the first Challenge. Under **Backup**, select **On-Premises** and **Hyper-V Virtual Machine** and **Prepare Infrastructure**. 
 
 ![image](./img/mh-ch4-screenshot-01.png)
 
@@ -51,15 +49,17 @@ In this challenge, we will download and install the MABS in a Windows Server 201
 
 ### Install the Azure Backup Server
 
-* The MABS server must be domain joined and have .NET 3.51 installed. The installer will add .NET 4 during the installation if it’s not present. After you've downloaded all the files, run **System_Center_Microsoft_Azure_Backup_Server_v3.exe**. Select the **Extract** button and then select **Microsoft Azure Backup** to launch the setup wizard.
+**Note:** The MABS server must be domain joined and have .NET 3.51 installed. The installer will add .NET 4 during the installation if it’s not present. 
+
+* After you've downloaded all the files, run **System_Center_Microsoft_Azure_Backup_Server_v3.exe**. Select the **Extract** button and then select **Microsoft Azure Backup** to launch the setup wizard.
 
 ![image](./img/mh-ch4-screenshot-06.png)
 
-* Once the extraction process complete, check the box to launch the freshly extracted setup.exe to begin installing Microsoft Azure Backup Server and select the Finish button.
+* Once the extraction process complete, check the box to launch the freshly extracted setup.exe to begin installing Microsoft Azure Backup Server and select the finish button.
 
 ![image](./img/mh-ch4-screenshot-07.png)
 
-Check the Prerequisites to determine if the hardware and software prerequisites for Azure Backup Server have been met.
+* Check the Prerequisites to determine if the hardware and software prerequisites for Azure Backup Server have been met.
 
 ![image](./img/mh-ch4-screenshot-08.png)
 
@@ -67,21 +67,21 @@ Check the Prerequisites to determine if the hardware and software prerequisites 
 
 * The Azure Backup Server installation package comes bundled with the appropriate SQL Server binaries needed. Select the option **Install new Instance of SQL Server with this Setup** and select the Check and Install button. 
 
-If you wish to use your own SQL server, the supported SQL Server versions are SQL Server 2014 SP1 or higher, 2016 and 2017. All SQL Server versions should be Standard or Enterprise 64-bit. Azure Backup Server won't work with a remote SQL Server instance. The instance being used by Azure Backup Server needs to be local. If you're using an existing SQL server for MABS, the MABS setup only supports the use of named instances of SQL server.
+**Note:** If you wish to use your own SQL server, the supported SQL Server versions are SQL Server 2014 SP1 or higher, 2016 and 2017. All SQL Server versions should be Standard or Enterprise 64-bit. Azure Backup Server won't work with a remote SQL Server instance. The instance being used by Azure Backup Server needs to be local. If you're using an existing SQL server for MABS, the MABS setup only supports the use of named instances of SQL server.
 
 ![image](./img/mh-ch4-screenshot-10.png)
 
 ![image](./img/mh-ch4-screenshot-11.png)
 
-Provide a strong password for restricted local user accounts and select Next.
+* Provide a strong password for restricted local user accounts and select Next.
 
 ![image](./img/mh-ch4-screenshot-12.png)
 
 ![image](./img/mh-ch4-screenshot-13.png)
 
-Then the installation happens in **phases**:
+**Note:** The installation happens in 3 **phases** as follow:
 
-#### First Phase
+* #### First Phase
 
 The Microsoft Azure Recovery Services Agent is installed on the server. The wizard also checks for Internet connectivity. If Internet connectivity is available, you can continue with the installation. If not, you need to provide proxy details to connect to the Internet.
 
@@ -89,7 +89,7 @@ The Microsoft Azure Recovery Services Agent is installed on the server. The wiza
 
 ![image](./img/mh-ch4-screenshot-15.png)
 
-#### Second Phase
+* #### Second Phase
 
 The next step is to configure the Microsoft Azure Recovery Services Agent. As a part of the configuration, you'll have to provide your vault credentials to register the machine to the Recovery Services vault. You'll also provide a passphrase to encrypt/decrypt the data sent between Azure and your premises. You can automatically generate a passphrase or provide your own minimum 16-character passphrase. Continue with the wizard until the agent has been configured.
 
@@ -97,7 +97,7 @@ The next step is to configure the Microsoft Azure Recovery Services Agent. As a 
 
 ![image](./img/mh-ch4-screenshot-17.png)
 
-#### Last Phase
+* #### Last Phase
 
 Once registration of the Microsoft Azure Backup server successfully completes, the overall setup wizard proceeds to the installation and configuration of SQL Server and the Azure Backup Server components. Once the SQL Server component installation completes, the Azure Backup Server components are installed. Lastly, you will need to restart the server.
 
@@ -109,7 +109,7 @@ Once registration of the Microsoft Azure Backup server successfully completes, t
 
 The first backup copy is kept on storage attached to the Azure Backup Server machine. You need to add backup storage even if you plan to send data to Azure. In the current architecture of Azure Backup Server, the Azure Backup vault holds the second copy of the data while the local storage holds the first (and mandatory) backup copy.
 
-### Create an NTFS volume in the MABS server
+### Create an NTFS volume(s) in the MABS server
 
 ![image](./img/mh-ch4-screenshot-20.png)
 
@@ -123,9 +123,9 @@ The first backup copy is kept on storage attached to the Azure Backup Server mac
 
 ![image](./img/mh-ch4-screenshot-25.png)
 
-### Add volumes to Backup Server disk storage
+### Add volume(s) to Backup Server disk storage
 
-To add a volume to Backup Server, in the **Management pane** of MABS select **Disk Storage** then rescan the storage. After rescanning the disk storage, select **Add**. A list of all the volumes available to be added for Backup Server Storage appears. After available volumes are added to the list of selected volumes, you can give them a friendly name to help you manage them. MABS will format these volumes to ReFS so Backup Server can use the benefits of Modern Backup Storage, select OK.
+To add a volume to Backup Server, in the **Management pane** of MABS select **Disk Storage** then rescan the storage. After rescanning the disk storage, select **Add**. A list of all the volume(s) available to be added for Backup Server Storage appears. After available volume(s) are added to the list of selected volume(s), you can give them a friendly name to help you manage them. MABS will format the volume(s) to ReFS so Backup Server can use the benefits of Modern Backup Storage, select OK.
 
 ![image](./img/mh-ch4-screenshot-26.png)
 
@@ -137,7 +137,8 @@ To add a volume to Backup Server, in the **Management pane** of MABS select **Di
 
 ### Set up workload-aware storage (Optional)
 
-With workload-aware storage, you can select the volumes that preferentially store certain kinds of workloads. 
+With workload-aware storage, you can select the volume(s) that preferentially store certain kinds of workloads.
+
 You can set up workload-aware storage by using the PowerShell cmdlet Update-DPMDiskStorage, which updates the properties of a volume in the storage pool on an Azure Backup Server.
 
 * The following screenshot shows the Update-DPMDiskStorage cmdlet in the PowerShell window. The changes you make by using PowerShell are reflected in the Backup Server Administrator Console.

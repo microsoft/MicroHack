@@ -109,25 +109,23 @@ Once registration of the Microsoft Azure Backup server successfully completes, t
 
 The first backup copy is kept on storage attached to the Azure Backup Server machine. You need to add backup storage even if you plan to send data to Azure. In the current architecture of Azure Backup Server, the Azure Backup vault holds the second copy of the data while the local storage holds the first (and mandatory) backup copy.
 
-### Create a volume on a virtual disk in a storage pool
-
-* Add a new disk to the Azure Backup Server VM using Hyper-V manager and then select **Server Manager** of the MABS server, select **File and Storage Services** from left side panel, and select Storage Pools. Create a new **Storage Pool**. 
+### Create an NTFS volume in the MABS server
 
 ![image](./img/mh-ch4-screenshot-20.png)
 
 ![image](./img/mh-ch4-screenshot-21.png)
 
-![image](./img/mh-ch4-screenshot-22.png)
-
 ![image](./img/mh-ch4-screenshot-23.png)
 
 ![image](./img/mh-ch4-screenshot-24.png)
 
-* Create a virtual disk with simple layout, and lastly create volume in the virtual disk.
-
 ![image](./img/mh-ch4-screenshot-25.png)
 
 ![image](./img/mh-ch4-screenshot-26.png)
+
+### Add volumes to Backup Server disk storage
+
+To add a volume to Backup Server, in the **Management pane** of MABS select **Disk Storage** then rescan the storage. After rescanning the disk storage, select **Add**. A list of all the volumes available to be added for Backup Server Storage appears. After available volumes are added to the list of selected volumes, you can give them a friendly name to help you manage them. MABS will format these volumes to ReFS so Backup Server can use the benefits of Modern Backup Storage, select OK.
 
 ![image](./img/mh-ch4-screenshot-27.png)
 
@@ -136,18 +134,6 @@ The first backup copy is kept on storage attached to the Azure Backup Server mac
 ![image](./img/mh-ch4-screenshot-29.png)
 
 ![image](./img/mh-ch4-screenshot-30.png)
-
-![image](./img/mh-ch4-screenshot-31.png)
-
-![image](./img/mh-ch4-screenshot-32.png)
-
-### Add volumes to Backup Server disk storage
-
-To add a volume to Backup Server, in the **Management pane** of MABS select **Disk Storage** then rescan the storage. After rescanning the disk storage select **Add**. A list of all the volumes available to be added for Backup Server Storage appears. After available volumes are added to the list of selected volumes, you can give them a friendly name to help you manage them. To format these volumes to ReFS so Backup Server can use the benefits of Modern Backup Storage, select OK.
-
-![image](./img/mh-ch4-screenshot-33.png)
-
-![image](./img/mh-ch4-screenshot-34.png)
 
 ### Set up workload-aware storage (Optional)
 

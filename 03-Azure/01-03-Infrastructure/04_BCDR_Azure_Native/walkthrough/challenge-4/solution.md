@@ -231,7 +231,12 @@ You will be able to check the online protection data inside the Azure Recovery S
 
 ### Task 5: Recover a Virtual Machine
 
-You can recover a VM by downloading the .vhdx file and create a new VM from it.
+MABS supports three recovery options for a VM backups:
+* Recover to original instance
+* Recover as virtual machine to any host
+* Copy to a network folder
+
+Given that we are using a test environment and there is just one host, we are using the first option.
 
 ![image](./img/mh-ch4-screenshot-59.png)
 
@@ -243,11 +248,7 @@ You can recover a VM by downloading the .vhdx file and create a new VM from it.
 
 ![image](./img/mh-ch4-screenshot-63.png)
 
-![image](./img/mh-ch4-screenshot-64.png)
-
-After the .vhdx file is downloaded, you can create a VM using that. It is essential to choose the same generation for the new VM as the original VM.
-
-![image](./img/mh-ch4-screenshot-65.png)
+The server is now recovered to its original location.
 
 Congratulations! You successfully completed challenge 4! 🚀🚀🚀
 

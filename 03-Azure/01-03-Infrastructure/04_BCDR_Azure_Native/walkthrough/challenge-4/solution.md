@@ -1,6 +1,6 @@
 # Walkthrough Challenge 4 - Protect to Azure with Azure Backup & Restore
 
-Duration: 30 minutes
+Duration: 90 minutes (without setting up Nested Virtualization)
 
 [Previous Challenge Solution](../challenge-3/solution.md) - **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-5/solution.md)
 
@@ -8,7 +8,20 @@ Duration: 30 minutes
 
 Please ensure that you successfully passed [challenge 3](../../Readme.md#challenge-3) before continuing with this challenge.
 
-In this challenge you will learn how to protect your on-premise Hyper-V virtual machines with Microsoft Azure Backup Server (MABS). For this MicroHack, we are using Nested Virtualization (Windows server with Hyper-V role) in Azure as an emulation of the on-Premise environment (Hyper-v server Name: cmhost).
+This challenge is kind of special because it is not in the flow of the other challenges because you are not looking anymore to the cloud native and "protect in Azure" perspective. It is more the view from an existing on-prem environment and you are trying to protect you resources with the perspective "protect to Azure". 
+
+- If you want to setup your own environment with Nested Virtualization you can use the following link: 
+    - [Template virtual machine in Azure Lab Services](https://learn.microsoft.com/en-us/azure/lab-services/how-to-enable-nested-virtualization-template-vm-using-script) 
+- If you are intersted in a more detailed scenario and you want to learn more about Migration in general you can also use the official openhack environment. But this is not part of this MicroHack: 
+    - [Official OpenHack Migration environment](https://github.com/microsoft/OpenHack/blob/main/byos/migration/deployment.md)
+
+
+💡 If there is no time or knowledge to setup Nested Virtualization during this setup of the MicroHack you can also move on to the next challenge and jump back to this challenge after the MicroHack. 
+
+## Goal
+
+* In this challenge you will learn how to protect your on-premise Hyper-V virtual machines with Microsoft Azure Backup Server (MABS). 
+* Understand and leverage the proven tools like Azure Backup Server in you own environment or in a Hyper-V environment that you can create yourself before the MicroHack. For detailed information how to set up Nested Virtualization see [Prerequisites](../challenge-4/solution.md#prerequisites). 
 
 Actions:
 

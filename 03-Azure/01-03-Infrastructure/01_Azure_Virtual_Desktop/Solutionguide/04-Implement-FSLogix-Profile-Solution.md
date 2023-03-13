@@ -112,7 +112,7 @@ Click on **Review + assign**
 ![Create Storage account](../Images/03-FSLogix_create-storage-account-13.png)
 
 > 💡To setup FSLogix on the session Hosts, you need to upload the setupFSLogix.ps1 into a Container in your Storage Account
-[Custom Script Extension Setup FSLogix](01_Azure_Virtual_Desktop/modules/SetupFSLogix.ps1)
+[Custom Script Extension Setup FSLogix](../modules/setupFSLogix.ps1)
 
 - Navigate to **your Storage Account** 
 - Select **Containers**

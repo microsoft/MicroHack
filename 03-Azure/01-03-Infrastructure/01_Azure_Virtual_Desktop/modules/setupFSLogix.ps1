@@ -70,6 +70,14 @@ Set-ItemProperty `
     -Value 1
 Pop-Location
 
+Push-Location 
+Set-Location HKLM:\SYSTEM\
+Set-ItemProperty `
+    -Path HKLM:\SYSTEM\CurrentControlSet\Control\Lsa\Kerberos\Parameters `
+    -Name CloudKerberosTicketRetrievalEnabled `
+    -Type DWord `
+    -Value 1
+Pop-Location
 
 #############
 #    END    #

@@ -103,7 +103,7 @@ In order to bootstrap new MicroHacks we created a [template file](99-MicroHack-T
 
 ### Headings & Right Nav
 
-H2 subheadings `##` end up in the right-hand jump list for the document (the jump list is created by our compile script).  It's a good idea to include H2 subheadings to help users get an overview of the doc and quickly navigate to the major topics.
+H2 subheadings `##` end up in the right-hand jump list for the document (the jump list is created by our compile script).  It's a good idea to include h2 subheadings to help users get an overview of the doc and quickly navigate to the major topics.
 
 ### Text formatting
 

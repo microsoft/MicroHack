@@ -97,13 +97,13 @@ For example:
 
 ## Template
 
-In order to bootstrap new MicroHacks we created a [template file](/99-MicroHack-Template/readme.md) for your convenience. Feel free to use it for your new MicroHacks or copy exisiting MicroHacks that better fit your ideas.
+In order to bootstrap new MicroHacks we created a [template file](99-MicroHack-Template/Readme.md) for your convenience. Feel free to use it for your new MicroHacks or copy exisiting MicroHacks that better fit your ideas.
 
 ## Formatting
 
 ### Headings & Right Nav
 
-H2 subheadings `##` end up in the right-hand jump list for the document (the jump list is created by our compile script).  It's a good idea to include h2 subheadings to help users get an overview of the doc and quickly navigate to the major topics.
+H2 subheadings `##` end up in the right-hand jump list for the document (the jump list is created by our compile script).  It's a good idea to include H2 subheadings to help users get an overview of the doc and quickly navigate to the major topics.
 
 ### Text formatting
 

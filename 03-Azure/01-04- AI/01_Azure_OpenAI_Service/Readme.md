@@ -49,19 +49,24 @@ After completing this MicroHack you will:
 
 In order to use the MicroHack time most effectively, the following tasks should be completed prior to starting the session.
 
-With these pre-requisites in place, we can focus on building the differentiated knowledge in ... that is required when working with the product, rather than spending hours repeating relatively simple tasks such as setting up....
+With these pre-requisites in place, we can focus on building the differentiated knowledge in Azure's OpenAI Service that is required when working with the product, rather than spending hours repeating relatively simple tasks such as setting up a Storage Account.
 
 In summary:
 
-- Azure Subscription 
-- Resource Group 
-- Service 1
-- Service 2  
+- Azure Subscription
+- Resource Group
+- Visual Studio Code + Azure Extension
+- Azure CLI
+- Git
+- Azure Blob Storage
+- Azure Functions
+- Azure ElasticSearch/OpenSearch Service
+- Azure Form Recognizer
+- Azure OpenAI Service
 
-Permissions for the deployment: 
+Permissions for the deployment:
 - Contributor on your Resource Group
-- Other necessary permissions
-
+  
 # Lab environment for this MicroHack
 
 Explain the lab ..

@@ -65,6 +65,7 @@ In summary:
 - Azure OpenAI Service
 
 Permissions for the deployment:
+
 - Contributor on your Resource Group
   
 # Lab environment for this MicroHack

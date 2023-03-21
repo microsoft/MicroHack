@@ -27,31 +27,33 @@
 
 # MicroHack introduction and context
 
-This MicroHack scenario walks through the use of ... with a focus on the best practices and the design principles. Specifically, this builds up to include working with an existing infrastructure.
+This MicroHack scenario walks through the creation of a Q&A bot using the Azure OpenAI service for building a semantic search pipeline. This Hack focuses on setting up the necessary Azure services as the building blocks of a Q&A bot powered by OpenAI's most recent language models and Azure. It guides you through setting up a robust infrastructure that extracts paragraphs from your raw text documents, stores them in a text data base optimized for search use cases and then leverages the power of Natural Language Processing to find the information you are looking for - all from within Microsoft Azure and requiring minimal coding. 
 
-![image](Path to the high level architecture )
+TODO:
+![image](Path to the high level architecture)
 
-This lab is not a full explanation of .... as a technology, please consider the following articles required pre-reading to build foundational knowledge.
+Semantic search is a more informed way of sifting through documents. Traditional search methods relied on finding lexical overlap between a query and the contents of a document. Semantic search foregoes this approach and instead assumes that language exists in a latent semantic space, where words that are similar in meaning reside close to each other - and those that are different are separated by large distances. Deep neural networks facilitate finding the semantic location of words as they can be trained to translate words into numerical representations of their meanings, called word embeddings, and thus enabling us to measure their distance from each other and draw inference about the relationships amongst each other. 
 
-Optional (read this after completing this lab to take your learning even deeper!
+Semantic search uses this technique to find information that is most closely related to a search query, measured as the distance between their respective embeddings. The language models developed by OpenAI are highly proficient at this task. They have been trained on massive amounts of text data from many different contexts, hence they are prodicient at projecting natural language text to a latent, semantic space and are thus well-suited for building AI-powered Q&A applications. 
 
-Describe the scenario here...
+This MicroHack is not an in-depth explanation of word embeddings as a technology, so please consider the following articles as required pre-reading to build foundational knowledge about the technology that enables finding semantic similarity between words, paragraphs and entire documents:
+
+* https://openai.com/blog/introducing-text-and-code-embeddings
+* https://platform.openai.com/docs/guides/embeddings/what-are-embeddings
+* https://learn.microsoft.com/en-us/azure/cognitive-services/openai/concepts/understand-embeddings
+* https://medium.com/@statworx_blog/whats-cooking-at-statworx-ecd863edfabe
 
 # Objectives
 
 After completing this MicroHack you will:
 
-- Know how to build a ...
-- Understand default ..
-- Understand how ..
+- Know how to build an AI-powered Q&A bot using Azure services.
+- Understand how text embeddings can be used to find relevant passages in unstructured text documents.
+- Have an functional Q&A service that takes your own documents as inputs and can be interacted with through a clean UI.
 
 # Prerequisites
 
-In order to use the MicroHack time most effectively, the following tasks should be completed prior to starting the session.
-
-With these pre-requisites in place, we can focus on building the differentiated knowledge in Azure's OpenAI Service that is required when working with the product, rather than spending hours repeating relatively simple tasks such as setting up a Storage Account.
-
-In summary:
+In order to use the MicroHack time most effectively, the following tools and services should be set up prior to starting work on the challenges and their task:
 
 - Azure Subscription
 - Resource Group
@@ -60,23 +62,34 @@ In summary:
 - Git
 - Azure Blob Storage
 - Azure Functions
-- Azure ElasticSearch/OpenSearch Service
+- Azure Elastic Cloud Service
 - Azure Form Recognizer
 - Azure OpenAI Service
 
-Permissions for the deployment:
+Permissions for deployment:
 
 - Contributor on your Resource Group
-  
+
+With these pre-requisites in place, you can focus on building familiarity with Azure's OpenAI Service that facilitates working with the product, rather than spending unnecessary time repeating relatively simple tasks such as setting up a Storage Account.
+
 # Lab environment for this MicroHack
 
-Explain the lab ..
+The challenges of this MicroHack can be completed in any development environment, as long as the following tools are installed properly and fully functional:
+
+- Azure CLI
+- Git
+
+We recommend using (Visual Studio Code)[https://code.visualstudio.com/] as a text editor with the following extensions:
+
+TODO: SPECIFY FINAL EXTENSIONS USED DURING DEV
+- Python extension
+- Azure extensions (which?)
 
 ## Architecture
 
 At the end of this MicroHack your base lab build looks as follows:
 
-![image](Path to the architecture )
+![image](Path to the architecture)
 
 # MicroHack Challenges 
 

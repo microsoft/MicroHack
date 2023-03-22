@@ -53,36 +53,35 @@ After completing this MicroHack you will:
 
 # Prerequisites
 
-In order to use the MicroHack time most effectively, the following tools and services should be set up prior to starting work on the challenges and their task:
+In order to use the MicroHack time most effectively, the following services should be set up and ready for use prior to starting work on the challenges and their task:
 
+- Azure Account 
 - Azure Subscription
-- Resource Group
-- Visual Studio Code + Azure Extension
-- Azure CLI
-- Git
-- Azure Blob Storage
-- Azure Functions
-- Azure Elastic Cloud Service
-- Azure Form Recognizer
-- Azure OpenAI Service
+- Azure Resource Group
 
 Permissions for deployment:
 
 - Contributor on your Resource Group
 
-With these pre-requisites in place, you can focus on building familiarity with Azure's OpenAI Service that facilitates working with the product, rather than spending unnecessary time repeating relatively simple tasks such as setting up a Storage Account.
+With these pre-requisites in place, you only need to set up the lab environment before starting to work on the challenges. These are designed for you to build familiarity with Azure's various services that facilitate implementing NLP-products through the use of services such Azure OpenAI, Azure Storage, Azure Functions and Elastic Cloud. 
 
 # Lab environment for this MicroHack
 
-The challenges of this MicroHack can be completed in any development environment, as long as the following tools are installed properly and fully functional:
+The majority of challenges of this MicroHack are completed in the Azure portal, with only a few tasks requiring any code at all. For the few tasks that do require code we suggest you set up a Lab environment that has access to the following tools:
 
 - Azure CLI
+  - Find detailed information on installing the Azure CLI in the [official documentation.](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli)
+  - `Homebrew` makes it easy to install the Azure CLI on macOS: `brew install azure-cli`
 - Git
+  - Make sure that you have [Git installed on your computer](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git). This also enables you to clone the MicroHack repository to your local machine by executing the following command from your Shell:  
+  `git clone https://github.com/microsoft/MicroHack.git`
 
-We recommend using (Visual Studio Code)[https://code.visualstudio.com/] as a text editor with the following extensions:
+We recommend using [Visual Studio Code](https://code.visualstudio.com/) as a text editor with the following extensions:
 
 TODO: SPECIFY FINAL EXTENSIONS USED DURING DEV
-- Python extension
+
+- Python for Visual Code Studio
+  - [This guide](https://code.visualstudio.com/docs/python/python-tutorial) walks you through installing a Python interpreter and the extension needed for using VSCode for Python development.
 - Azure extensions (which?)
 
 ## Architecture
@@ -93,30 +92,25 @@ At the end of this MicroHack your base lab build looks as follows:
 
 # MicroHack Challenges 
 
-## Challenge 1 - Deploy the Lab environment
+## Challenge 1 - Set up required services and tools
 
-### Goal 
+### Goal
+The goal of this challenge is to set up all the Azure services and tools that are required for building the backend of a fully functional Q&A chatbot. 
 
-The goal of this exercise is to deploy...
+### Task 1: Create a Storage Account
+In this task you will set up a Storage Account in Azure which contains and manages all of your Azure Storage data objects such as blobs.
 
-### Task 1: Deploy Baseline
+### Task 2: Setup Azure Form Recognizer
+In this task you will set up the Azure Form Recognizer service, which extracts text from files and helps you turn your documents into data. 
 
-We are going to use a predefined ARM template to deploy the base environment. It will be deployed in to *your* Azure subscription, with resources running in the your specified Azure region.
+### Task 3: Setup Elastic Cloud
+Elasticsearch acts as the data base for storing our text data for this MicroHack. In this task, you will set up the Elastic Cloud service that makes deploying your own Elasticsearch cluster easier than ever. 
 
-To start the ARM deployment, follow the steps listed below:
+### Task 4: Create the Azure Function
 
-- Login to Azure cloud shell [https://shell.azure.com/](https://shell.azure.com/)
-- Ensure that you are operating within the correct subscription via:
+### Task 5: Write the Python Processing Script
 
-`az account show`
-
-- Clone the following GitHub repository 
-
-`git clone Link to Github Repo `
-
-### Task 2: Verify baseline
-
-Now that we have the base lab deployed, we can progress to the ... challenges!
+### Task 6: Test your Pipeline
 
 
 # Challenge 2 : Name..

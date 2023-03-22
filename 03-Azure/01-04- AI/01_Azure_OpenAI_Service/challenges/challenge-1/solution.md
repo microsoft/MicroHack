@@ -42,7 +42,37 @@ Your newly created container should now be selectable. You can now upload data b
 ![image](./images/storage_account_7.png)
 
 If you want to use the Azure CLI for creating the storage account and uploading files, please refer to the resource at the beginning of the task.
+
 ## Task 2: Setup Azure Form Recognizer
+
+**Resources:**
+
+[Azure Form Recognizer Documentation](https://learn.microsoft.com/en-us/azure/applied-ai-services/form-recognizer/?view=form-recog-3.0.0)\
+[Azure Form Recognizer Pricing](https://azure.microsoft.com/en-us/pricing/details/form-recognizer/#pricing)\
+\
+Azure Form Recognizer is a cloud-based Azure Applied AI Service that uses machine-learning models to extract key-value pairs, text, and tables from your documents. Form Recognizer analyzes your forms and documents, extracts text and data, maps field relationships as key-value pairs, and returns a structured JSON output.\
+\
+Under the MicroHack Resource Group, search for *form recognizer* in the search bar.
+![image](./images/form_recognizer_0.png)
+
+On the Form Recognizer subpage, either click on + Create at the top of the page or on Create form recognizer.
+![image](./images/form_recognizer_1.png)
+
+On the configuration page, the correct Azure Subscription should have been automatically selected under *Project Details*. You need to specify the Resource Group under which you want the Form Recognizer to be situated. Under *Instance Details* you need to name the Form Recognizer Service, select a deployment region and decide on the pricing tier. We once again selected **Germany West Central** and gave the Form Recognizer Service a fitting name. When it comes to the pricing tier, you can decide to use the free tier which lets you process 500 document pages per month with a limit of 20 API calls per minute or the paid tier. Please refer to the pricing page at the top of this task for more details. Since we are exclusively using the Form Recognizer for demonstration purposes, we decided to use the free tier.
+After you have given your Form Recognizer Service a name, selected the right resource group, deployment region and decided on a suitable pricing tier, click on **Review + create**. We once again do not modify the standard selections under the tabs **Network**, **Identity** or **Tags**. If you are handling sensitive data or have specific networking needs, please consult the official Azure resources.
+![image](./images/form_recognizer_2.png)
+
+On the Review page, click on Create if you are happy with your configuration. It should take you to the deployment page of the Form Recognizer Service.
+![image](./images/form_recognizer_3.png)
+
+After the deployment page shows that the deployment was completed, click on Go to resource.
+![image](./images/form_recognizer_4.png)
+
+You are now seeing the main page of your newly created Form Recognizer Service. From the sidebar, under Resource Management, select Keys and Endpoint.
+![image](./images/form_recognizer_5.png)
+
+Copy the key and endpoint values and paste them in a convenient location, such as a Microsoft Notepad, for now. You'll need the key and endpoint values to connect your application to the Form Recognizer API. We will save these values in an Azure Key Vault in the next step. Make sure to keep these values in a private location - API keys are sensitive values and should not be stored in a public place such as a Git repository.
+![image](./images/form_recognizer_6.png)
 
 ## Task 3: Setup ElasticSearch/OpenSearch
 

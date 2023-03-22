@@ -83,7 +83,7 @@ TODO: SPECIFY FINAL EXTENSIONS USED DURING DEV
 
 ## Architecture
 
-At the end of this MicroHack you will have set up your environment to look like this: 
+At the end of this MicroHack you will have set your Azure environment to use the following architecture:
 
 ![architecture](img/qa_architecture.png)
 

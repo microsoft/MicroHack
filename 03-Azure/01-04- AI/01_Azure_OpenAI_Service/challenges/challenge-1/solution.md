@@ -74,12 +74,46 @@ You are now seeing the main page of your newly created Form Recognizer Service. 
 Copy the key and endpoint values and paste them in a convenient location, such as a Microsoft Notepad, for now. You'll need the key and endpoint values to connect your application to the Form Recognizer API. We will save these values in an Azure Key Vault in the next step. Make sure to keep these values in a private location - API keys are sensitive values and should not be stored in a public place such as a Git repository.
 ![image](./images/form_recognizer_6.png)
 
-## Task 3: Setup ElasticSearch/OpenSearch
+## Task 3: Setup Azure Key Vault and Save Form Recognizer Keys
+**Resources:** \
+[About Azure Key Vault](https://learn.microsoft.com/en-us/azure/key-vault/general/overview)\
+[Quickstart: Create a key vault using the Azure CLI](https://learn.microsoft.com/en-us/azure/key-vault/general/quick-create-cli)\
+[Assign a Key Vault access policy](https://learn.microsoft.com/en-us/azure/key-vault/general/assign-access-policy?tabs=azure-portal)
 
-## Task 4: Create the Azure Function
+Azure Key Vault is a cloud service used to manage keys, secrets, and certificates. Key Vault eliminates the need for developers to store security information in their code. It allows you to centralize the storage of your application secrets which greatly reduces the chances that secrets may be leaked.
 
-## Task 5: Write the Python Processing Script
+![image](images/key_vault_0.png)
 
-## Task 6: Test your Pipeline
+![image](images/key_vault_1.png)
+
+![image](images/key_vault_2.png)
+
+![image](images/key_vault_3.png)
+
+![image](images/key_vault_4.png)
+
+![image](images/key_vault_5.png)
+
+![image](images/key_vault_6.png)
+
+![image](images/key_vault_7.png)
+
+![image](images/key_vault_5.png)
+
+![image](images/key_vault_8.png)
+
+![image](images/key_vault_9.png)
+
+![image](images/key_vault_10.png)
+
+![image](images/key_vault_11.png)
+
+## Task 4: Setup ElasticSearch/OpenSearch
+
+## Task 5: Create the Azure Function
+
+## Task 6: Write the Python Processing Script
+
+## Task 7: Test your Pipeline
 
 You successfully completed Challenge 1! 🚀

@@ -14,20 +14,18 @@
     - [Task 3: Setup Azure Key Vault and Save Form Recognizer Keys](#task-3-setup-azure-key-vault-and-save-form-recognizer-keys)
     - [Task 4: Setup Elastic Cloud](#task-4-setup-elastic-cloud)
     - [Task 5: Create the Azure Function](#task-5-create-the-azure-function)
-    - [Task 6: Write the Python Processing Script](#task-6-write-the-python-processing-script)
-    - [Task 7: Test your Pipeline](#task-7-test-your-pipeline)
   - [Challenge 2 : Name..](#challenge-2--name)
-      - [Goal](#goal-1)
-      - [Task 1:](#task-1)
-      - [Task 2:](#task-2)
-      - [Task 3:](#task-3)
-      - [Task 4:](#task-4)
+    - [Goal](#goal-1)
+    - [Task 1: Write the Python Processing Script](#task-1-write-the-python-processing-script)
+    - [Task 2: Test your Pipeline](#task-2-test-your-pipeline)
+    - [Task 3:](#task-3)
+    - [Task 4:](#task-4)
   - [Challenge 3 : Build a Streamlit Frontend](#challenge-3--name-)
-      - [Goal](#goal-2)
-      - [Task 1:](#task-1-1)
-      - [Task 2:](#task-2-1)
-      - [Task 3:](#task-3-1)
-      - [Task 4:](#task-4-1)
+    - [Goal](#goal-2)
+    - [Task 1:](#task-1-1)
+    - [Task 2:](#task-2-1)
+    - [Task 3:](#task-3-1)
+    - [Task 4:](#task-4-1)
 - [Finished? Delete your lab](#finished-delete-your-lab)
 
 ## MicroHack introduction and context
@@ -93,7 +91,7 @@ At the end of this MicroHack you will have set your Azure environment to use the
 
 # MicroHack Challenges 
 
-## Challenge 1 - Set up required services and tools
+## Challenge 1 - Seting up required services and tools
 
 ### Goal
 The goal of this challenge is to set up all the Azure services and tools that are required for building the backend of a fully functional Q&A chatbot. 
@@ -111,18 +109,14 @@ Elasticsearch acts as the data base for storing our text data for this MicroHack
 
 ### Task 5: Create the Azure Function
 
-### Task 6: Write the Python Processing Script
-
-### Task 7: Test your Pipeline
-
 
 ## Challenge 2 : Name..
 
 ### Goal
 
-### Task 1: 
+### Task 1: Write the Python Processing Script
 
-### Task 2: 
+### Task 2: Test your Pipeline
 
 ### Task 3: 
 
@@ -132,7 +126,7 @@ Elasticsearch acts as the data base for storing our text data for this MicroHack
 
 Before proceeding to challenge 3, ...
 
-## Challenge 3 : Name ...
+## Challenge 3 : Building a Streamlit frontend for our Q&A bot
 
 ### Goal
 

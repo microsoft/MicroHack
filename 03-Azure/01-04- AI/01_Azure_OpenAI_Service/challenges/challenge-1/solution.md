@@ -169,8 +169,4 @@ Once finished you will find that both endpoint and key secrets have been stored 
 
 ## Task 5: Create the Azure Function
 
-## Task 6: Write the Python Processing Script
-
-## Task 7: Test your Pipeline
-
 You successfully completed Challenge 1! 🚀

@@ -75,6 +75,7 @@ Copy the key and endpoint values and paste them in a convenient location, such a
 ![image](./images/form_recognizer_6.png)
 
 ## Task 3: Setup Azure Key Vault and Save Form Recognizer Keys
+
 **Resources:** \
 [About Azure Key Vault](https://learn.microsoft.com/en-us/azure/key-vault/general/overview)\
 [Quickstart: Create a key vault using the Azure CLI](https://learn.microsoft.com/en-us/azure/key-vault/general/quick-create-cli)\
@@ -108,7 +109,7 @@ Azure Key Vault is a cloud service used to manage keys, secrets, and certificate
 
 ![image](images/key_vault_11.png)
 
-## Task 4: Setup ElasticSearch/OpenSearch
+## Task 4: Setup Elastic Cloud
 
 ## Task 5: Create the Azure Function
 

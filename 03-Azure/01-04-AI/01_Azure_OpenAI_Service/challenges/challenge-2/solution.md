@@ -1,4 +1,4 @@
-# Walkthrough Challenge 2 -  ???
+# Walkthrough Challenge 2 - Setting up a functional Pipeline
 
 Duration: **TBD**
 
@@ -11,6 +11,8 @@ In order to complete Challenge 2, make sure to complete the Development Setup un
 ## Task 1: Write the Python Processing Script
 
 **Resources:**
+
+[Use Azure Functions and Python to process stored Documents](https://learn.microsoft.com/en-us/azure/applied-ai-services/form-recognizer/tutorial-azure-function?view=form-recog-3.0.0)
 
 After setting up the individual services needed for this MicroHack, we are now movin on to writing the python script that handles the data processing within our defined Azure Function, once the function has been triggered. 
 

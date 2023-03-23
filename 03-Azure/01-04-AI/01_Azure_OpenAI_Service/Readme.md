@@ -110,7 +110,7 @@ Elasticsearch acts as the data base for storing our text data for this MicroHack
 ### Task 5: Create the Azure Function
 
 
-## Challenge 2 : Name..
+## Challenge 2 - Setting up a functional Pipeline
 
 ### Goal
 
@@ -126,7 +126,7 @@ Elasticsearch acts as the data base for storing our text data for this MicroHack
 
 Before proceeding to challenge 3, ...
 
-## Challenge 3 : Building a Streamlit frontend for our Q&A bot
+## Challenge 3 - Building a Streamlit frontend for our Q&A bot
 
 ### Goal
 

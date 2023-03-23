@@ -6,7 +6,7 @@ Duration: **TBD**
 
 ## Prerequisites
 
-In order to complete Challenge 2, make sure to complete the Development Setup under [Link](../../Readme.md) and work through the tasks laid out in Challenge 1. It is assumed that you already created an Azure Storage Account, Form Recognizer, Key Vault, Elastic Cloud and Azure Function. 
+In order to complete Challenge 2, make sure to complete the Development Setup under [Link](../../Readme.md) and work through the tasks laid out in Challenge 1. It is assumed that you already created an Azure Storage Account, Form Recognizer, Key Vault, Elastic Cloud and Azure Function set up. 
 
 ## Task 1: Write the Python Processing Script
 

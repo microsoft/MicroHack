@@ -83,30 +83,43 @@ Copy the key and endpoint values and paste them in a convenient location, such a
 
 Azure Key Vault is a cloud service used to manage keys, secrets, and certificates. Key Vault eliminates the need for developers to store security information in their code. It allows you to centralize the storage of your application secrets which greatly reduces the chances that secrets may be leaked.
 
+- Search for Azure Key Vault
 ![image](images/key_vault_0.png)
 
+- Click on Create
 ![image](images/key_vault_1.png)
 
+- Configure (Resource Group, Region etc.) -> See Task 1 and 2 for Inspiration
 ![image](images/key_vault_2.png)
 
+- Check final configuration and create
 ![image](images/key_vault_3.png)
 
+- If deployment successful, go to resource
 ![image](images/key_vault_4.png)
 
+- Check Access configuration (click on Access Control (IAM) in sidebar)
 ![image](images/key_vault_5.png)
 
+- Check existing roles/users under role assignments
 ![image](images/key_vault_6.png)
 
+- Configure role assignment/add users if neccessary (refer to last link under resources at top of task) 
 ![image](images/key_vault_7.png)
 
+- At main page of Key Vault, click on Secrets in sidebar (under Objects)
 ![image](images/key_vault_5.png)
 
+- Click on Generate/Import to add Form Recognizer Key + Endpoint
 ![image](images/key_vault_8.png)
 
+- Create API Key as secret (copy paste key, give the secret a fitting name)
 ![image](images/key_vault_9.png)
 
+- Same for endpoint
 ![image](images/key_vault_10.png)
 
+- Final image
 ![image](images/key_vault_11.png)
 
 ## Task 4: Setup Elastic Cloud

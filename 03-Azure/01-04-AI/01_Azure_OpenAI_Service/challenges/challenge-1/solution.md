@@ -198,8 +198,6 @@ Once finished you will find that both endpoint and key secrets have been stored 
 
 ![image](./images/azure_function_11.png)
 
-## Task 6: Write the Python Processing Script
-
-## Task 7: Test your Pipeline
+## Task 6: Test your Pipeline
 
 You successfully completed Challenge 1! 🚀

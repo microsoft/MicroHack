@@ -4,6 +4,38 @@ from azure.identity import DefaultAzureCredential
 from azure.ai.formrecognizer import DocumentAnalysisClient
 from azure.core.credentials import AzureKeyCredential
 import azure.functions as func
+from typing import List
+
+
+def chunk_paragraphs(paragraphs: List[str], max_words: int = 100) -> List[str]:
+    """Chunk a list of paragraphs into chunks
+    of approximately equal word count."""
+    # Create a list of dictionaries with the paragraph as the
+    # key and the word count as the value
+    paragraphs = [{p: len(p.split())} for p in paragraphs]
+    # Create a list of lists of paragraphs
+    chunks = []
+    # Iterate over the list of paragraphs
+    for i, p in enumerate(paragraphs):
+        # If the current chunk is empty, add the first paragraph to it
+        if len(chunks) == 0:
+            chunks.append([p])
+        # If the current chunk is not empty, check if adding the
+        # next paragraph will exceed the max word count
+        else:
+            # If adding the next paragraph will exceed the max word count,
+            # start a new chunk
+            if sum(
+                [list(c.values())[0] for c in chunks[-1]]
+            ) + list(p.values())[0] > max_words:
+                chunks.append([p])
+            # If adding the next paragraph will not exceed the max word count,
+            # add it to the current chunk
+            else:
+                chunks[-1].append(p)
+    # Create a list of strings from the list of lists of paragraphs
+    chunks = [" ".join([list(c.keys())[0] for c in chunk]) for chunk in chunks]
+    return chunks
 
 
 def analyze_layout(data, endpoint, key):
@@ -14,57 +46,13 @@ def analyze_layout(data, endpoint, key):
     poller = document_analysis_client.begin_analyze_document(
             "prebuilt-layout", data)
     result = poller.result()
-
-    for idx, style in enumerate(result.styles):
-        print(
-            "Document contains {} content".format(
-                "handwritten" if style.is_handwritten else "no handwritten"
-            )
-        )
-
-    for page in result.pages:
-        print("""----Analyzing layout from page #{}----"""
-              .format(page.page_number))
-        print(
-            "Page has width: {} and height: {}, measured with unit: {}".format(
-                page.width, page.height, page.unit
-            )
-        )
-
-        for line_idx, line in enumerate(page.lines):
-            words = line.get_words()
-            print(
-                """...Line # {} has word count {} and text '{}'"""
-                .format(
-                    line_idx,
-                    len(words),
-                    line.content
-                )
-            )
-
-    for table_idx, table in enumerate(result.tables):
-        print(
-            "Table # {} has {} rows and {} columns".format(
-                table_idx, table.row_count, table.column_count
-            )
-        )
-        for region in table.bounding_regions:
-            print(
-                "Table # {} on page: {}".format(
-                    table_idx,
-                    region.page_number
-                )
-            )
-        for cell in table.cells:
-            print(
-                "...Cell[{}][{}] has content '{}'".format(
-                    cell.row_index,
-                    cell.column_index,
-                    cell.content,
-                )
-            )
-
-    print("----------------------------------------")
+    paragraphs = [
+        p.content for p in result.paragraphs
+        if p.role in ["Title", "sectionHeading", None]
+        ]
+    logging.info("RAW PARAGRAPHS:\n{}".format(paragraphs))
+    paragraphs = chunk_paragraphs(paragraphs)
+    logging.info("CLEANED PARAGRAPHS:\n{}".format(paragraphs))
 
 
 def main(myblob: func.InputStream):

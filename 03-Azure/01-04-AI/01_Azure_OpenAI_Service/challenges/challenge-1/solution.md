@@ -172,6 +172,58 @@ Once finished you will find that both endpoint and key secrets have been stored 
 
 ## Task 4: Setup Elastic Cloud
 
+**Resources** \
+[About the native Elastic integration with Azure](https://azure.microsoft.com/de-de/blog/search-made-simple-native-elastic-integration-with-azure-now-in-preview/)\
+[Deploying and managing Elastic on Azure](https://www.elastic.co/blog/getting-started-with-the-azure-integration-enhancement)\
+
+Elastic Cloud for Azure is a cloud-based hosting service offered by Elastic in partnership with Microsoft Azure. It enables users to deploy and manage Elasticsearch clusters on Azure in a fully-managed environment. Elasticsearch is a powerful search and analytics engine that is often used to support information retrieval use cases by providing a database-like service that is optimized for text retrieval. In our use case of this Microhack, Elasticsearch is used as the backend storage system for the Q&A bot.
+
+In this task, we are setting up an Elasticsearch cluster using Azure's Elastic Cloud service, to store and quickly search through the documents that will make up the knowledge-base of our Q&A bot. 
+
+Under the MicroHack Resource Group, search for *Elastic Cloud* in the search bar.
+
+![image](./images/elastic_cloud_0.png)
+
+On the Elastic Cloud subpage, either click on + Create at the top of the page or on *Create Elasticsearch (Elastic Cloud)*.
+
+![image](./images/elastic_cloud_1.png)
+
+On the configuration page, the correct Azure Subscription should have been automatically selected under *Project Details*. You need to specify the Resource Group you'd like the Elastic resource to be hosted. Under *Instance Details* you need to name the Elastic Resource and select a deployment region. Here we selected **(Europe) West Europe** and gave the Elastic resource a fitting name.
+
+Please note that cluster size cannot be customized during configuration and is thus set to the default values of 16GB RAM and 560GB storage. Since we have no need for such a large Elasticsearch cluster for this use case, we can customize the resource size after deployment, which in turn adjusts the price estimate for this resource. 
+
+After you have given your Elastic resource a name, selected the right resource group and deployment region, click on *Review + create*. We once more do not modify the standard selections under the tabs **Logs & Metrics** or **Tags**. If you are handling sensitive data or have specific networking needs, please consult the official Azure resources.
+
+![image](./images/elastic_cloud_2.png)
+
+On the Review page, click on Create if you are satisfied with your configuration. This deploys your Elastic resource and takes you to its dedicated Overview page.
+
+![image](./images/elastic_cloud_3.png)
+
+Deployment may take up to a few minutes. After the deployment page shows that the deployment was completed, click on *Go to resource*.
+
+![image](./images/elastic_cloud_4.png)
+
+Now that the resource has been deployed, we can head over to the Elastic Cloud configuration page and adjust the size and parameters of our Elastic resource. Click the **Manage changes in Elastic Cloud** button after heading back to the overview page of your newly deployed Elastic resource. This will take you out of the Azure portal and navigate to Elastic's own configuration page
+
+![image](./images/elastic_cloud_5.png)
+
+From here the deployment options of your resource can be edited to your own needs and liking. Navigate to the **Actions** button in the top right and select **Edit deployment**. 
+
+![image](./images/elastic_cloud_6.png)
+
+This opens an interface that allows the editing of your deployment parameters. For the specific use case of this Microhack we selected the smallest possible deployment size and chose 35GB of storage and 1GB of RAM for a single region. 
+
+![image](./images/elastic_cloud_7.png)
+
+After adjusting the deployment options to our needs, we scroll to the bottom of the page to confirm our changes by clicking the **Save** button. The site then prompts us to review our selected changes and updates the price estimate accordingly. 
+
+![image](./images/elastic_cloud_8.png)
+
+The changes to our deploymnet are now visible on the Azure Portal as well, after having taken effect. Our Elastic resource is up and running. The overview page also provides you with the API endpoint that you can now use to interact with your Elasticsearch cluster. 
+
+![image](./images/elastic_cloud_9.png)
+
 ## Task 5: Create the Azure Function
 
 ![image](./images/azure_function_0.png)

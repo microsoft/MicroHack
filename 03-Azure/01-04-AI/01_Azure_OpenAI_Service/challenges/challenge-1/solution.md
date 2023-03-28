@@ -226,27 +226,68 @@ The changes to our deploymnet are now visible on the Azure Portal as well, after
 
 ## Task 5: Create the Azure Function
 
+**Resources:** \
+[Introduction to Azure Functions](https://learn.microsoft.com/en-us/azure/azure-functions/functions-overview)\
+[Getting started with Azure Functions](https://learn.microsoft.com/en-us/azure/azure-functions/functions-get-started?pivots=programming-language-python)
+
+Azure Functions are a so-called serverless compute service. They are used to execute processes based on event-triggered code. This means that the code you write that makes up your Azure function does not run continuously, it is instead initiated by a large range of various trigger events. That is exactly what we need for this use case: every time a new document is added to our knowledge base, it triggers an Azure function that extracts and embeds the content of that document and adds it to the Elastic search index used for providing the Q&A bot with the knowledge needed to answer questions. 
+
+In this task, we are setting up an Azure function that we can later customize to execute the custom code that executes said process. 
+
+For this task, we move away from the Azure portal to VSCode for a change of pace. Make sure that you have the Azure Tools extension installed, as lined out in the [**Lab Requirements**](./readme.md#lab-environment-for-this-microhack) section of this microhack. 
+
+In VSCode, navigate to your Azure extension tab on the toolbar at the left edge of the editor. 
+
 ![image](./images/azure_function_0.png)
+
+Use `Ctrl`+`Shift`+`P` or `⇧⌘P` to bring up the VSCode command palette. Type `>azure functions create new project` into the search bar and select **Azure Functions: Create New Project...**. You will be prompted to either browser to a folder to be used as the project folder, or select a pre-selected folder for the same purpose. Select **Browse...** to open up a file browser. 
 
 ![image](./images/azure_function_1.png)
 
+Use the file browser to navigate to a folder where you want to store the necessary files for your function app. The function app provides an execution context for your function in Azure and is thus the unit of deployment and management for all of your created functions of a project. We choose the root folder of our MicroHack repository as the project folder for our function app. 
+
 ![image](./images/azure_function_2.png)
+
+Next you are prompted to choose a programming language for the function project. This is the programming language that your Azure function is then expected to be written in. We choose python for the purpose of this MicroHack. 
 
 ![image](./images/azure_function_3.png)
 
+The project setup window will then ask you to specify the Python interpreter you would like to use for this project. You can either choose one of the displayed Python interpreters or use a file browser to manually enter the system path to another Python interpreter. 
+
 ![image](./images/azure_function_4.png)
+
+Next the project setup dialogue will ask you to select a project template to use for your Function app project. For the specific use case of this MicroHack, we opt for the **Azure Blob Storage trigger** template. Make sure to take your time and read through [the documentation](https://learn.microsoft.com/en-us/azure/azure-functions/functions-triggers-bindings?tabs=python) for other possible trigger templates depending on your own project needs. If you're just following along, the **Azure Blog Storage trigger** is what we need. 
 
 ![image](./images/azure_function_5.png)
 
+Next we enter a name for our Azure function. This can be anything, but short and expressive names are recommended to make it easier for others to understand the project. 
+
 ![image](./images/azure_function_6.png)
+
+After deciding on a name we can either existing app settings from a JSON-file, or create new local app settings. 
 
 ![image](./images/azure_function_7.png)
 
+As the last step of this long set-up process, we define the Azure Storage account that this function has access to. We choose the Storage Account that we have previously set up in [Task 1](#task-1-create-a-storage-account) of this challenge. 
+
 ![image](./images/azure_function_8.png)
+
+Now we need to specify a path within our Azure Storage account that the trigger will monitor for changes. Here we choose to monitor the documents folder and trigger the Azure function whenever a new file of any given filename is added. 
 
 ![image](./images/azure_function_9.png)
 
+After this, a new python scrypt names `__init__.py` is added to the project folder that we specified earlier. It contains the template for an Azure function script that you can already test. Everytime the trigger is activated, the `main()` function is executed from this script. Currently, we are still missing the `azure.functions` module that this script depends on, since the VSCode creates a new virtual environment for this project when creating the Azure functions. 
+
+This requires two actions to fix: 
+
+- Activate the virtual environment that VSCode has created for this function project:
+    - For this we use VSCode's built-in terminal and execute the following command: `source .venv/bin/activate`
+- Install the needed requirements for this script:
+    - Once the virtual environment has been activated we install all required packages by executing the following command from the terminal: `pip install -r requirements.txt`
+
 ![image](./images/azure_function_10.png)
+
+All required dependencies are now properly installed in the dedicated virtual environment for this project and the script is ready to be executed and tested. 
 
 ![image](./images/azure_function_11.png)
 

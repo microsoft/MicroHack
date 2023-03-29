@@ -91,7 +91,7 @@ At the end of this MicroHack you will have set your Azure environment to use the
 
 # MicroHack Challenges 
 
-## Challenge 1 - Seting up required services and tools
+## Challenge 1 - Setup Azure Services to Process Stored Documents in an Azure Function
 
 ### Goal
 The goal of this challenge is to set up all the Azure services and tools that are required for building the backend of a fully functional Q&A chatbot. 
@@ -108,6 +108,8 @@ In this task you will set up the Azure Form Recognizer service, which extracts t
 Elasticsearch acts as the data base for storing our text data for this MicroHack. In this task, you will set up the Elastic Cloud service that makes deploying your own Elasticsearch cluster easier than ever. 
 
 ### Task 5: Create the Azure Function
+
+### Task 6: Test the Azure Function Locally
 
 
 ## Challenge 2 - Setting up a functional Pipeline

@@ -291,6 +291,6 @@ All required dependencies are now properly installed in the dedicated virtual en
 
 ![image](./images/azure_function_11.png)
 
-## Task 6: Test your Pipeline
+## Task 6: Test the Azure Function Locally
 
 You successfully completed Challenge 1! 🚀

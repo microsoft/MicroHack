@@ -208,7 +208,7 @@ Now that the resource has been deployed, we can head over to the Elastic Cloud c
 
 ![image](./images/elastic_cloud_5.png)
 
-From here the deployment options of your resource can be edited to your own needs and liking. Navigate to the **Actions** button in the top right and select **Edit deployment**. 
+From here the deployment options of your resource can be edited to your own needs and liking. Navigate to the **Actions** button in the top right and select **Edit deployment**.
 
 ![image](./images/elastic_cloud_6.png)
 
@@ -292,5 +292,38 @@ All required dependencies are now properly installed in the dedicated virtual en
 ![image](./images/azure_function_11.png)
 
 ## Task 6: Test the Azure Function Locally
+The created Azure Function has not yet been deployed to the cloud and only lives on your local machine right now. However, you can and very much should run the function locally in order to test if it runs smoothly.
 
-You successfully completed Challenge 1! 🚀
+To do this, press ```F5``` to run the basic function which should print out basic information if someone uploads a file into the specified blob storage.
+
+You might get prompted to select the storage account the function depends on when running it for the first time.
+
+In the terminal you should see the following after a few seconds:
+
+![image](images/test_azure_function_0.png)
+
+This means that the function is now ready to be triggered by a new upload to the specified blob storage.
+
+There are different ways to upload files to a blob storage. For our test, we will do it via the Azure Portal.
+
+For this, navigate to the storage account which you created in Task 1. Select **Containers** in the sidebar.
+
+![image](images/test_azure_function_1.png)
+
+You should now see the blob storage you created. In our case, it is named *documents*. Click on the blob storage.
+
+On the top of the blob storage page, click on **Upload**.
+
+![image](images/test_azure_function_2.png)
+
+Now you can either drag and drop a file into the specified field or browse for files to upload.
+
+![image](images/test_azure_function_3.png)
+
+After clicking on **Upload**, you should see the following in your VSCode terminal:
+
+![image](images/test_azure_function_4.png)
+
+This means that the function has successfully been triggered by the upload of your file.
+
+**Congratulations, you successfully completed Challenge 1! 🚀**

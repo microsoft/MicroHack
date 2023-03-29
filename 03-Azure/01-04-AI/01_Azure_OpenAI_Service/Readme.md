@@ -76,7 +76,7 @@ The majority of challenges of this MicroHack are completed in the Azure portal, 
   - Make sure that you have [Git installed on your computer](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git). This also enables you to clone the MicroHack repository to your local machine by executing the following command from your Shell:  
   `git clone https://github.com/microsoft/MicroHack.git`
 
-We recommend using [Visual Studio Code](https://code.visualstudio.com/) as a text editor with the following extensions:
+We strongly recommend using [Visual Studio Code](https://code.visualstudio.com/) as a code editor with the following extensions:
 
 - Python for Visual Code Studio
   - [This guide](https://code.visualstudio.com/docs/python/python-tutorial) walks you through installing a Python interpreter and the extension needed for using VSCode for Python development.

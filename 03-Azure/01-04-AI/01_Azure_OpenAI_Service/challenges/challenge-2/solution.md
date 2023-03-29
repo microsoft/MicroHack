@@ -8,7 +8,7 @@ Duration: **TBD**
 
 In order to complete Challenge 2, make sure to complete the Development Setup under [Link](../../Readme.md) and work through the tasks laid out in Challenge 1. It is assumed that you already created an Azure Storage Account, Form Recognizer, Key Vault, Elastic Cloud and Azure Function set up. 
 
-## Task 1: Write the Python Processing Script
+## Task 1: Implement the Azure Form Recognizer in the Azure Function
 
 **Resources:**
 
@@ -16,20 +16,25 @@ In order to complete Challenge 2, make sure to complete the Development Setup un
 
 After setting up the individual services needed for this MicroHack, we are now movin on to writing the python script that handles the data processing within our defined Azure Function, once the function has been triggered. 
 
-## Task 2: Test your Pipeline
+## Task 2: Generate Text Embeddings via the Azure OpenAI Service in the Azure Function
 
 **Resources:**
 
-## Task 3: 
+## Task 3: Create the ElasticSearch Index
 
 **Resources:** 
 
-## Task 4: 
+## Task 4: Write the Extracted Paragraphs + Embeddings to the Azure Elastic Service
 
-## Task 5: 
+**Resources:**
 
-## Task 6: 
+## Task 5: Test the Azure Function Locally
 
-## Task 7: 
+**Resources:**
 
-You successfully completed Challenge 1! 🚀
+## Task 6: Deploy the Azure Function
+
+**Resources:**
+
+
+You successfully completed Challenge 2! 🚀

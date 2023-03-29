@@ -1,4 +1,4 @@
-# Walkthrough Challenge 1 -  Use Azure Form Recognizer, Python and Azure Functions to process stored documents
+# Walkthrough Challenge 1 -  Setup Azure Services to Process Stored Documents in an Azure Function
 
 Duration: **TBD**
 

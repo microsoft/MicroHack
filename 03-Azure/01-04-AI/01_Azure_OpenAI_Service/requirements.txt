@@ -13,3 +13,11 @@ azure-identity
 azure-keyvault-secrets
 azure-keyvault-secrets
 azure-ai-formrecognizer
+openai
+num2words
+matplotlib 
+plotly 
+scipy 
+scikit-learn 
+pandas 
+transformers

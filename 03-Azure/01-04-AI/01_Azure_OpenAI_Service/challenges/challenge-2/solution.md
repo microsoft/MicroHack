@@ -42,6 +42,16 @@ On the Review page, click on Create if you are happy with your configuration. It
 
 ![image](./images/openai_4.png)
 
+
+![image](./images/openai_5.png)
+
+![image](./images/openai_6.png)
+
+![image](./images/openai_7.png)
+
+![image](./images/openai_8.png)
+
+![image](./images/openai_9.png)
 ## Task 3: Create the ElasticSearch Index
 
 **Resources:** 

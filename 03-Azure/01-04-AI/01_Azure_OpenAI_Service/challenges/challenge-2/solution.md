@@ -2,23 +2,25 @@
 
 Duration: **TBD**
 
-**[Home](../../Readme.md)** - [Next Challenge Solution](../challenges/challenge-2/solution.md)\
+**[Home](../../Readme.md)** - [Next Challenge Solution](../challenges/challenge-2/solution.md)
 
 ## Prerequisites
 
-In order to complete Challenge 2, make sure to complete the Development Setup under [Link](../../Readme.md) and work through the tasks laid out in Challenge 1. It is assumed that you already created an Azure Storage Account, Form Recognizer, Key Vault, Elastic Cloud and Azure Function set up. 
+In order to complete Challenge 2, make sure to complete the [Development Setup](../../Readme.md) and work through the tasks laid out in Challenge 1. It is assumed that you already created an Azure Storage Account, Form Recognizer, Key Vault, Elastic Cloud and a locally running Azure Function. 
 
 ## Task 1: Implement the Azure Form Recognizer in the Azure Function
 
 **Resources:**
 
-[Use Azure Functions and Python to process stored Documents](https://learn.microsoft.com/en-us/azure/applied-ai-services/form-recognizer/tutorial-azure-function?view=form-recog-3.0.0)\
+[Use Azure Functions and Python to process stored Documents](https://learn.microsoft.com/en-us/azure/applied-ai-services/form-recognizer/tutorial-azure-function?view=form-recog-3.0.0)
 
 After setting up the individual services needed for this MicroHack, we are now moving on to writing the python script that handles the data processing within our defined Azure Function, once the function has been triggered. 
 
 ## Task 2: Generate Text Embeddings via the Azure OpenAI Service in the Azure Function
 
-**Resources:**
+**Resources:** \
+[Azure OpenAI Service Documentation](https://learn.microsoft.com/en-us/azure/cognitive-services/openai/overview)\
+[Create a resource and deploy a model using Azure OpenAI](https://learn.microsoft.com/en-us/azure/cognitive-services/openai/how-to/create-resource?pivots=web-portal)
 
 Under your Resource Group, search for *openai* in the search bar and select the **Azure OpenAI** service.
 
@@ -38,24 +40,34 @@ Next, Azure is prompting us to give the resource some tags that make it easier t
 
 ![image](./images/openai_3.png)
 
-On the Review page, click on Create if you are happy with your configuration. It should take you to the deployment page of the Azure OpenAI service. Deployment might take an unexpectedly long time for this particular resource - do not be surprised if it takes over an hour finish deployment. 
+On the Review page, click on Create if you are happy with your configuration. It should take you to the deployment page of the Azure OpenAI service. Deployment might take an unexpectedly long time for this particular resource - do not be surprised if it takes over an hour to finish deployment.
 
 ![image](./images/openai_4.png)
 
+Before you can generate embeddings or text, you need to deploy a model. You can select from one of several available models in the [Azure OpenAI Studio](https://oai.azure.com/). Select the correct Azure Subscription and the Resource Group under which you created the Azure OpenAI Service.
 
 ![image](./images/openai_5.png)
 
+Since the Service has just been created, on the main page of the Azure OpenAI Studio it will let you know that you have currently no models deployed. Click on *Create new deployment*.
 ![image](./images/openai_6.png)
 
+In the newly opened window, you are asked to select one of several different OpenAI models for deplyoment. These models are dividable by their parameter size (Ada is the smallest models while Davinci is the largest) and their respective use cases. There are different models for creating text embeddings, code embeddings or text/code generation. For a complete list of available models, refer to [Azure OpenAI Service models](https://learn.microsoft.com/en-us/azure/cognitive-services/openai/concepts/models#model-summary-table-and-region-availability).
+
+Since we want to create embeddings of documents and user queries with the goal of retrieving relevant sections of our uploaded documents with regards to the query, we need to deploy two text search embedding models. These models help measure whether long documents are relevant to a short search query. There are two input types supported by this family: **doc**, for embedding the documents to be retrieved, and **query**, for embedding the search query. We select *text-search-curie-doc-001* for the document embeddings and *text-search-curie-query-001* for the query embeddings.
+
+Under *Deployment Name*, give these models a fitting name. Deployment names are the ones we will specify in our code.
 ![image](./images/openai_7.png)
 
 ![image](./images/openai_8.png)
 
+Lastly, we need a text generation model which will output the response to the user query. For this, we chose *text-davinci-003*.
 ![image](./images/openai_9.png)
+
+The three models we just deployed will be usable in our Azure Function now.
 ## Task 3: Create the ElasticSearch Index
 
-**Resources:** 
-[Create Index API](https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-create-index.html)\
+**Resources:** \
+[Create Index API](https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-create-index.html)
 
 In order to write documents to our Elasticsearch service, we need to set up a so-called index first. Think of an index as the elastic version of a database, where our text data is stored in an unstructured way. To interact with our Elasticsearch cluster, we can use HTTP requests to read, create, delete and write to an Elasticsearch index. 
 
@@ -63,7 +75,7 @@ From the overview page of your Elastic Cloud service, navigate to the **Kibana**
 
 ![image](./images/elasticsearch_0.png)
 
-Toggle the menu on the left side of the page and navigate to the **Management** section at the very bottom. From there select the **Dev Tools** rider, which will take you to a developer console that you can use to interact with your elasticsearch cluster. 
+Toggle the menu on the left side of the page and navigate to the **Management** section at the very bottom. From there select the **Dev Tools** rider, which will take you to a developer console that you can use to interact with your Elasticsearch cluster. 
 
 ![image](./images/elasticsearch_1.png)
 

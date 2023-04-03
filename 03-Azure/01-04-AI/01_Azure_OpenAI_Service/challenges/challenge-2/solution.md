@@ -14,7 +14,228 @@ In order to complete Challenge 2, make sure to complete the [Development Setup](
 
 [Use Azure Functions and Python to process stored Documents](https://learn.microsoft.com/en-us/azure/applied-ai-services/form-recognizer/tutorial-azure-function?view=form-recog-3.0.0)
 
-After setting up the individual services needed for this MicroHack, we are now moving on to writing the python script that handles the data processing within our defined Azure Function, once the function has been triggered. 
+[Azure ]
+
+After setting up the individual services needed for this MicroHack, we are now moving on to writing the python script that handles the data processing within our defined Azure Function, once the function has been triggered.
+
+Firstly, we'll add the needed packages to the requirements.txt.
+We will be using
+- ```azure-identity``` to authenticate ourselves
+- ```azure-keyvault-secrets``` to connect to our Azure Key Vault
+- ```azure-ai-formrecognizer``` which is the official Python SDK of the Azure Form Recognizer
+- ```azure-storage-blob``` to connect to the storage account
+- ```cryptography```
+
+Next, we'll install the updated requirements.txt. For this, open the integrated terminal in VSCode. Make sure that the correct virutal environment is active. If it is not, execute the following terminal command inside the *01_Azure_OpenAI_Service* directory:
+
+```source .venv/bin/activate```
+
+We'll execute ```pip install -r requirements.txt``` to install the updated list of packages.
+
+Now we are ready to work on the code of our Azure function.
+Open up the \_\_init\_\_.py file inside the *microhack-function* folder. Import the needed packages at the start of the file:
+
+```Python
+import logging
+import azure.functions as func
+from azure.keyvault.secrets import SecretClient
+from azure.identity import DefaultAzureCredential
+from azure.ai.formrecognizer import DocumentAnalysisClient
+from azure.core.credentials import AzureKeyCredential
+from typing import List, Optional
+```
+
+Next, we'll make sure to authenticate ourselves inside the ```main()``` function and grab the needed secrets from the Azure Key Vault:
+
+```Python
+def main(myblob: func.InputStream):
+    logging.info(f"Python blob trigger function processed blob \n"
+                 f"Name: {myblob.name}\n"
+                 f"Blob Size: {myblob.length} bytes")
+
+    # Azure Credentials
+    credential = DefaultAzureCredential()
+    # Retrieve secrets from Key Vault
+    key_vault_name = "microhack-key-vault"
+    key_vault_uri = f"https://{key_vault_name}.vault.azure.net"
+    client = SecretClient(vault_url=key_vault_uri, credential=credential)
+    logging.info("Retreiving secrets from Azure Key Vault.")
+    fm_api_key = client.get_secret("FORM-RECOGNIZER-KEY").value
+    fm_endpoint = client.get_secret("FORM-RECOGNIZER-ENDPOINT").value
+```
+
+Grabbing the uploaded document is as easy as:
+
+```Python
+# Read document
+data = myblob.read()
+```
+
+Now, we are ready to implement a function which utilizes the Azure Form Recognizer SDK to extract the document's text. The Form Recognizer SDK organizes a document into different granularities: Pages, Paragraphs, Lines and Words. For this, we'll first implement the ```chunk_paragraphs()``` function which - as the name suggests - chunks the list of paragraphs we'll get from the Form Recgonizer into chunks of approximately equal word count with a maximum of 100 words per chunk:
+
+```Python
+def chunk_paragraphs(paragraphs: List[str], max_words: int = 100) -> List[str]:
+    """Chunk a list of paragraphs into chunks
+    of approximately equal word count."""
+    # Create a list of dictionaries with the paragraph as the
+    # key and the word count as the value
+    paragraphs = [{p: len(p.split())} for p in paragraphs]
+    # Create a list of lists of paragraphs
+    chunks = []
+    # Iterate over the list of paragraphs
+    for i, p in enumerate(paragraphs):
+        # If the current chunk is empty, add the first paragraph to it
+        if len(chunks) == 0:
+            chunks.append([p])
+        # If the current chunk is not empty, check if adding the
+        # next paragraph will exceed the max word count
+        else:
+            # If adding the next paragraph will exceed the max word count,
+            # start a new chunk
+            if sum(
+                [list(c.values())[0] for c in chunks[-1]]
+            ) + list(p.values())[0] > max_words:
+                chunks.append([p])
+            # If adding the next paragraph will not exceed the max word 
+            # count, add it to the current chunk
+            else:
+                chunks[-1].append(p)
+    # Create a list of strings from the list of lists of paragraphs
+    chunks = [" ".join([list(c.keys())[0] for c in chunk]) for chunk in chunks]
+    return chunks
+```
+
+Finally, we'll implement a wrapper function around the Form Recognizer which takes the uploaded document as input and returns a list of the extracted (and chunked) paragraphs:
+
+```Python
+def analyze_layout(data: bytes, endpoint: str, key: str) -> List[str]:
+    """Analyze a document with the layout model.
+    
+    Args:
+        data (bytes): Document data.
+        endpoint (str): Endpoint URL.
+        key (str): API key.
+        
+    Returns:
+        List[str]: List of paragraphs.
+    """
+    # Create a client for the form recognizer service
+    document_analysis_client = DocumentAnalysisClient(
+        endpoint=endpoint, credential=AzureKeyCredential(key)
+    )
+    # Analyze the document with the layout model
+    poller = document_analysis_client.begin_analyze_document(
+            "prebuilt-layout", data)
+    # Get the results and extract the paragraphs 
+    # (title, section headings, and body)
+    result = poller.result()
+    paragraphs = [
+        p.content for p in result.paragraphs
+        if p.role in ["Title", "sectionHeading", None]
+        ]
+    # Chunk the paragraphs (max word count = 100)
+    paragraphs = chunk_paragraphs(paragraphs)
+    logging.info("CLEANED PARAGRAPHS:\n{}".format(paragraphs))
+
+    return paragraphs
+```
+
+Now, we'll call the function inside of ```main()```. The complete \_\_init\_\_.py script looks like this now:
+
+```Python
+import logging
+import azure.functions as func
+from azure.keyvault.secrets import SecretClient
+from azure.identity import DefaultAzureCredential
+from azure.ai.formrecognizer import DocumentAnalysisClient
+from azure.core.credentials import AzureKeyCredential
+from typing import List, Optional
+
+
+def chunk_paragraphs(paragraphs: List[str], max_words: int = 100) -> List[str]:
+    """Chunk a list of paragraphs into chunks
+    of approximately equal word count."""
+    # Create a list of dictionaries with the paragraph as the
+    # key and the word count as the value
+    paragraphs = [{p: len(p.split())} for p in paragraphs]
+    # Create a list of lists of paragraphs
+    chunks = []
+    # Iterate over the list of paragraphs
+    for i, p in enumerate(paragraphs):
+        # If the current chunk is empty, add the first paragraph to it
+        if len(chunks) == 0:
+            chunks.append([p])
+        # If the current chunk is not empty, check if adding the
+        # next paragraph will exceed the max word count
+        else:
+            # If adding the next paragraph will exceed the max word count,
+            # start a new chunk
+            if sum(
+                [list(c.values())[0] for c in chunks[-1]]
+            ) + list(p.values())[0] > max_words:
+                chunks.append([p])
+            # If adding the next paragraph will not exceed the max word 
+            # count, add it to the current chunk
+            else:
+                chunks[-1].append(p)
+    # Create a list of strings from the list of lists of paragraphs
+    chunks = [" ".join([list(c.keys())[0] for c in chunk]) for chunk in chunks]
+    return chunks
+
+
+def analyze_layout(data: bytes, endpoint: str, key: str) -> List[str]:
+    """Analyze a document with the layout model.
+    
+    Args:
+        data (bytes): Document data.
+        endpoint (str): Endpoint URL.
+        key (str): API key.
+        
+    Returns:
+        List[str]: List of paragraphs.
+    """
+    # Create a client for the form recognizer service
+    document_analysis_client = DocumentAnalysisClient(
+        endpoint=endpoint, credential=AzureKeyCredential(key)
+    )
+    # Analyze the document with the layout model
+    poller = document_analysis_client.begin_analyze_document(
+            "prebuilt-layout", data)
+    # Get the results and extract the paragraphs 
+    # (title, section headings, and body)
+    result = poller.result()
+    paragraphs = [
+        p.content for p in result.paragraphs
+        if p.role in ["Title", "sectionHeading", None]
+        ]
+    # Chunk the paragraphs (max word count = 100)
+    paragraphs = chunk_paragraphs(paragraphs)
+    logging.info("CLEANED PARAGRAPHS:\n{}".format(paragraphs))
+
+    return paragraphs
+
+
+def main(myblob: func.InputStream):
+    logging.info(f"Python blob trigger function processed blob \n"
+                 f"Name: {myblob.name}\n"
+                 f"Blob Size: {myblob.length} bytes")
+
+    # Azure Credentials
+    credential = DefaultAzureCredential()
+    # Retrieve secrets from Key Vault
+    key_vault_name = "microhack-key-vault"
+    key_vault_uri = f"https://{key_vault_name}.vault.azure.net"
+    client = SecretClient(vault_url=key_vault_uri, credential=credential)
+    logging.info("Retreiving secrets from Azure Key Vault.")
+    fm_api_key = client.get_secret("FORM-RECOGNIZER-KEY").value
+    fm_endpoint = client.get_secret("FORM-RECOGNIZER-ENDPOINT").value
+
+    # Read document
+    data = myblob.read()
+
+    # Get List of paragraphs from document
+    paragraphs = analyze_layout(data, fm_endpoint, fm_api_key)
+```
 
 ## Task 2: Generate Text Embeddings via the Azure OpenAI Service in the Azure Function
 

@@ -174,7 +174,7 @@ Once finished you will find that both endpoint and key secrets have been stored 
 
 **Resources** \
 [About the native Elastic integration with Azure](https://azure.microsoft.com/de-de/blog/search-made-simple-native-elastic-integration-with-azure-now-in-preview/)\
-[Deploying and managing Elastic on Azure](https://www.elastic.co/blog/getting-started-with-the-azure-integration-enhancement)\
+[Deploying and managing Elastic on Azure](https://www.elastic.co/blog/getting-started-with-the-azure-integration-enhancement)
 
 Elastic Cloud for Azure is a cloud-based hosting service offered by Elastic in partnership with Microsoft Azure. It enables users to deploy and manage Elasticsearch clusters on Azure in a fully-managed environment. Elasticsearch is a powerful search and analytics engine that is often used to support information retrieval use cases by providing a database-like service that is optimized for text retrieval. In our use case of this Microhack, Elasticsearch is used as the backend storage system for the Q&A bot.
 
@@ -264,11 +264,11 @@ Next we enter a name for our Azure function. This can be anything, but short and
 
 ![image](./images/azure_function_6.png)
 
-After deciding on a name we can either existing app settings from a JSON-file, or create new local app settings. 
+After deciding on a name we can either select existing app settings from a JSON-file, or create new local app settings. 
 
 ![image](./images/azure_function_7.png)
 
-As the last step of this long set-up process, we define the Azure Storage account that this function has access to. We choose the Storage Account that we have previously set up in [Task 1](#task-1-create-a-storage-account) of this challenge. 
+As the last step of this set-up process, we define the Azure Storage account that this function has access to. We choose the Storage Account that we have previously set up in [Task 1](#task-1-create-a-storage-account) of this challenge. 
 
 ![image](./images/azure_function_8.png)
 
@@ -281,7 +281,7 @@ After this, a new python scrypt names `__init__.py` is added to the project fold
 This requires two actions to fix: 
 
 - Activate the virtual environment that VSCode has created for this function project:
-    - For this we use VSCode's built-in terminal and execute the following command: `source .venv/bin/activate`
+    - For this we use VSCode's built-in terminal and execute the following command inside the Microhack folder: `source .venv/bin/activate`
 - Install the needed requirements for this script:
     - Once the virtual environment has been activated we install all required packages by executing the following command from the terminal: `pip install -r requirements.txt`
 

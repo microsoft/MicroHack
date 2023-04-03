@@ -8,11 +8,14 @@ from typing import List, Optional
 import re
 import openai
 from openai.embeddings_utils import get_embedding
+from elasticsearch import Elasticsearch, helpers
 
 
 def chunk_paragraphs(paragraphs: List[str], max_words: int = 100) -> List[str]:
-    """Chunk a list of paragraphs into chunks
-    of approximately equal word count."""
+    """
+    Chunk a list of paragraphs into chunks
+    of approximately equal word count.
+    """
     # Create a list of dictionaries with the paragraph as the
     # key and the word count as the value
     paragraphs = [{p: len(p.split())} for p in paragraphs]
@@ -42,13 +45,15 @@ def chunk_paragraphs(paragraphs: List[str], max_words: int = 100) -> List[str]:
 
 
 def analyze_layout(data: bytes, endpoint: str, key: str) -> List[str]:
-    """Analyze a document with the layout model.
+    """
+    Analyze a document with the layout model.
+    
     Args:
         data (bytes): Document data.
         endpoint (str): Endpoint URL.
         key (str): API key.
 
- Returns:
+    Returns:
         List[str]: List of paragraphs.
     """
     # Create a client for the form recognizer service
@@ -72,7 +77,8 @@ def analyze_layout(data: bytes, endpoint: str, key: str) -> List[str]:
 
 
 def normalize_text(s: str) -> str:
-    """Clean up a string by removing redundant
+    """
+    Clean up a string by removing redundant
     whitespaces and cleaning up the punctuation.
 
     Args:
@@ -92,7 +98,8 @@ def normalize_text(s: str) -> str:
 
 
 def generate_embedding(s: str, engine: Optional[str] = "microhack-curie-text-search-doc"):
-    """Clean the extracted paragraph before generating its' embedding.
+    """
+    Clean the extracted paragraph before generating its' embedding.
 
     Args:
         s (str): The extracted paragraph.
@@ -108,7 +115,20 @@ def generate_embedding(s: str, engine: Optional[str] = "microhack-curie-text-sea
         "paragraph": cleaned_paragraph,
         "embedding": embedding
         }
+    
     return embedding_dict
+
+
+def doc_generator(docs, index, doc_type):
+    """
+    Generate Elasticsearch-compliant documents from a list of dictionaries
+    """
+    for doc in docs:
+        yield {
+            "_index": index,
+            "_type": doc_type,
+            "_source": doc
+        }
 
 
 def main(myblob: func.InputStream):
@@ -125,12 +145,28 @@ def main(myblob: func.InputStream):
     logging.info("Retreiving secrets from Azure Key Vault.")
     fm_api_key = client.get_secret("FORM-RECOGNIZER-KEY").value
     fm_endpoint = client.get_secret("FORM-RECOGNIZER-ENDPOINT").value
+
+    # openai
     openai_api_key = client.get_secret("OPENAI-KEY").value
     openai_endpoint = client.get_secret("OPENAI-ENDPOINT").value
     openai.api_type = "azure"
     openai.api_key = openai_api_key
     openai.api_base = openai_endpoint
     openai.api_version = "2022-12-01"
+
+    # elasticsearch 
+    es_scheme = "https"
+    es_host = client.get_secret("ELASTICSEARCH-ENDPOINT").value
+    es_port = 9200
+    es_index = "qa-knowledge-base"
+    es_doc_type = "paragraph"
+    es_user = client.get_secret("ELASTICSEARCH-USER").value
+    es_key = client.get_secret("ELASTICSEARCH-KEY").value
+    es_auth = (es_user, es_key)
+    es = Elasticsearch([{"scheme": es_scheme, 
+                         "host": es_host, 
+                         "port": es_port}], 
+                         basic_auth = es_auth)
 
     # Read document
     data = myblob.read()
@@ -141,3 +177,6 @@ def main(myblob: func.InputStream):
     # Generate embeddings
     embeddings_dict = [generate_embedding(p) for p in paragraphs]
     logging.info(embeddings_dict)
+
+    # index documents and embeddings to elasticsearch
+    helpers.bulk(es, doc_generator(embeddings_dict, es_index, es_doc_type))

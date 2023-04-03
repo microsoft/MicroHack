@@ -67,7 +67,6 @@ def analyze_layout(data: bytes, endpoint: str, key: str) -> List[str]:
         ]
     # Chunk the paragraphs (max word count = 100)
     paragraphs = chunk_paragraphs(paragraphs)
-    logging.info("CLEANED PARAGRAPHS:\n{}".format(paragraphs))
 
     return paragraphs
 

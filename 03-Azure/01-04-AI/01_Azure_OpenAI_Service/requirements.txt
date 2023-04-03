@@ -13,6 +13,7 @@ azure-ai-formrecognizer
 openai
 num2words
 matplotlib 
+pandas
 plotly 
 scipy 
 scikit-learn

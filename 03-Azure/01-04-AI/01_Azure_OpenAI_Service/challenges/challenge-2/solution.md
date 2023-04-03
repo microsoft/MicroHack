@@ -555,7 +555,7 @@ If successful, the output window to the right will indicate that your request wa
 
 We can also test the success of your our request manually by requesting the names of all the currently existing indexes of our Elasticsearch cluster. To do so, we use a GET request: `GET /_cat/indices`
 
-This prints the name of all currently existing indexes to the output window and adds some additional information such as the number of currently stored documents per index. It appears that our cluster now hosts multiple indexes: the one that we just created, as well as some default indexes that we do not need to interact with for the time being. 
+This prints the name of all currently existing indexes to the output window and adds some additional information such as the number of currently stored documents per index. It appears that our cluster now hosts multiple indexes: the one that we just created, as well as some default indexes that we do not need to interact with for the time being.
 
 ![image](./images/elasticsearch_3.png)
 
@@ -569,7 +569,45 @@ This prints the name of all currently existing indexes to the output window and 
 
 ## Task 6: Deploy the Azure Function
 
-**Resources:**
+**Resources:**\
+[Develop Azure Functions by using Visual Studio Code](https://learn.microsoft.com/en-us/azure/azure-functions/functions-develop-vs-code?tabs=csharp)\
+[Use Key Vault references for App Service and Azure Functions](https://learn.microsoft.com/en-us/azure/app-service/app-service-key-vault-references?tabs=azure-cli)
 
+
+![image](images/function_deployment_0.png)
+
+![image](images/function_deployment_1.png)
+
+![image](images/function_deployment_2.png)
+
+![image](images/function_deployment_3.png)
+
+![image](images/function_deployment_4.png)
+
+![image](images/function_deployment_5.png)
+
+![image](images/function_deployment_6.png)
+
+![image](images/function_deployment_7.png)
+
+![image](images/function_deployment_8.png)
+
+![image](images/function_deployment_9.png)
+
+![image](images/function_deployment_10.png)
+
+![image](images/function_deployment_11.png)
+
+![image](images/function_deployment_12.png)
+
+![image](images/function_deployment_13.png)
+
+![image](images/function_deployment_14.png)
+
+![image](images/function_deployment_15.png)
+
+![image](images/function_deployment_16.png)
+
+![image](images/function_deployment_17.png)
 
 You successfully completed Challenge 2! 🚀

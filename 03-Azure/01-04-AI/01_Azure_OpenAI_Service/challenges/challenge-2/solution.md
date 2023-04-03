@@ -74,7 +74,7 @@ data = myblob.read()
 Now, we are ready to implement a function which utilizes the Azure Form Recognizer SDK to extract the document's text. The Form Recognizer SDK organizes a document into different granularities: Pages, Paragraphs, Lines and Words. For this, we'll first implement the ```chunk_paragraphs()``` function which - as the name suggests - chunks the list of paragraphs we'll get from the Form Recgonizer into chunks of approximately equal word count with a maximum of 100 words per chunk:
 
 ```Python
-def chunk_paragraphs(paragraphs: List[str], max_words: int = 100) -> List[str]:
+def chunk_paragraphs(paragraphs: List[str], max_words: Optional[int] = 100) -> List[str]:
     """Chunk a list of paragraphs into chunks
     of approximately equal word count."""
     # Create a list of dictionaries with the paragraph as the

@@ -26,7 +26,7 @@ We will be using
 - ```azure-storage-blob``` to connect to the storage account
 - ```cryptography```
 
-Next, we'll install the updated requirements.txt. For this, open the integrated terminal in VSCode. Make sure that the correct virutal environment is active. If it is not, execute the following terminal command inside the *01_Azure_OpenAI_Service* directory:
+Next, we'll install the updated requirements.txt. For this, open the integrated terminal in VSCode. Make sure that the correct virtual environment is active. If it is not, execute the following terminal command inside the *01_Azure_OpenAI_Service* directory:
 
 ```source .venv/bin/activate```
 
@@ -237,11 +237,13 @@ def main(myblob: func.InputStream):
     paragraphs = analyze_layout(data, fm_endpoint, fm_api_key)
 ```
 
-## Task 2: Generate Text Embeddings via the Azure OpenAI Service in the Azure Function
+## Task 2: Setup the Azure OpenAI Service
 
 **Resources:** \
 [Azure OpenAI Service Documentation](https://learn.microsoft.com/en-us/azure/cognitive-services/openai/overview)\
 [Create a resource and deploy a model using Azure OpenAI](https://learn.microsoft.com/en-us/azure/cognitive-services/openai/how-to/create-resource?pivots=web-portal)
+
+In order to work with the GPT models from OpenAI, we need to create the Azure OpenAI service and deploy the models we will be using.
 
 Under your Resource Group, search for *openai* in the search bar and select the **Azure OpenAI** service.
 
@@ -257,7 +259,7 @@ The next step is to click on **Review + create**. We once again do not modify th
 
 ![image](./images/openai_2.png)
 
-Next, Azure is prompting us to give the resource some tags that make it easier to differentiate between multiple instances of the same service. Which tags you want to set and how to name their values is entirely up to you. 
+Next, Azure is prompting us to give the resource some tags that make it easier to differentiate between multiple instances of the same service. Which tags you want to set and how to name their values is entirely up to you.
 
 ![image](./images/openai_3.png)
 
@@ -285,7 +287,12 @@ Lastly, we need a text generation model which will output the response to the us
 ![image](./images/openai_9.png)
 
 The three models we just deployed will be usable in our Azure Function now.
-## Task 3: Create the ElasticSearch Index
+
+## Task 3: Generate Text Embeddings via the Azure OpenAI Service in the Azure Function
+
+Since we now have implemented the text extraction part of our Azure Function, we need to generate embeddings for each of the extracted paragraphs.
+
+## Task 4: Create the ElasticSearch Index
 
 **Resources:** \
 [Create Index API](https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-create-index.html)
@@ -312,7 +319,7 @@ This prints the name of all currently existing indexes to the output window and 
 
 ![image](./images/elasticsearch_3.png)
 
-## Task 4: Write the Extracted Paragraphs + Embeddings to the Azure Elastic Service
+## Task 5: Write the Extracted Paragraphs + Embeddings to the Azure Elastic Service
 
 **Resources:**
 

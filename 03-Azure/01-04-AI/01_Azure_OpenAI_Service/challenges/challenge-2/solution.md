@@ -311,6 +311,7 @@ And add the ones we'll utilize to the imports inside of the \_\_init\_\_.py scri
 
 ```Python
 import re
+import openai
 from openai.embeddings_utils import get_embedding
 ```
 
@@ -392,6 +393,7 @@ from azure.ai.formrecognizer import DocumentAnalysisClient
 from azure.core.credentials import AzureKeyCredential
 from typing import List, Optional
 import re
+import openai
 from openai.embeddings_utils import get_embedding
 
 

@@ -367,9 +367,15 @@ def generate_embedding(s: str, engine: Optional[str] = "microhack-curie-text-sea
     return embedding_dict
 ```
 
-Finally, just add the call to the ```generate_embedding()``` function inside the ```main()``` function:
+Finally, we need to get the OpenAI secrets from our Azure Key Vault and add the call to the ```generate_embedding()``` function inside the ```main()``` function:
 
 ```Python
+openai_api_key = client.get_secret("OPENAI-KEY").value
+openai_endpoint = client.get_secret("OPENAI-ENDPOINT").value
+openai.api_type = "azure"
+openai.api_key = openai_api_key
+openai.api_base = openai_endpoint
+openai.api_version = "2022-12-01"
 # Generate embeddings
 embeddings_dict = [generate_embedding(p) for p in paragraphs]
 logging.info(embeddings_dict)
@@ -506,6 +512,12 @@ def main(myblob: func.InputStream):
     logging.info("Retreiving secrets from Azure Key Vault.")
     fm_api_key = client.get_secret("FORM-RECOGNIZER-KEY").value
     fm_endpoint = client.get_secret("FORM-RECOGNIZER-ENDPOINT").value
+    openai_api_key = client.get_secret("OPENAI-KEY").value
+    openai_endpoint = client.get_secret("OPENAI-ENDPOINT").value
+    openai.api_type = "azure"
+    openai.api_key = openai_api_key
+    openai.api_base = openai_endpoint
+    openai.api_version = "2022-12-01"
 
     # Read document
     data = myblob.read()

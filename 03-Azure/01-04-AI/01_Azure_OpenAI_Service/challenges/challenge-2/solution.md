@@ -375,7 +375,7 @@ embeddings_dict = [generate_embedding(p) for p in paragraphs]
 logging.info(embeddings_dict)
 ```
 
-The ```main()``` function should look like this now:
+The complete \_\_init\_\_.py script looks like this now:
 
 ```Python
 import logging
@@ -512,7 +512,7 @@ def main(myblob: func.InputStream):
 
     # Get List of paragraphs from document
     paragraphs = analyze_layout(data, fm_endpoint, fm_api_key)
-    
+
     # Generate embeddings
     embeddings_dict = [generate_embedding(p) for p in paragraphs]
     logging.info(embeddings_dict)

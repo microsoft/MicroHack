@@ -32,7 +32,7 @@ def chunk_paragraphs(paragraphs: List[str], max_words: int = 100) -> List[str]:
                 [list(c.values())[0] for c in chunks[-1]]
             ) + list(p.values())[0] > max_words:
                 chunks.append([p])
-            # If adding the next paragraph will not exceed the max word 
+            # If adding the next paragraph will not exceed the max word
             # count, add it to the current chunk
             else:
                 chunks[-1].append(p)
@@ -43,13 +43,12 @@ def chunk_paragraphs(paragraphs: List[str], max_words: int = 100) -> List[str]:
 
 def analyze_layout(data: bytes, endpoint: str, key: str) -> List[str]:
     """Analyze a document with the layout model.
-    
     Args:
         data (bytes): Document data.
         endpoint (str): Endpoint URL.
         key (str): API key.
-        
-    Returns:
+
+ Returns:
         List[str]: List of paragraphs.
     """
     # Create a client for the form recognizer service
@@ -59,7 +58,7 @@ def analyze_layout(data: bytes, endpoint: str, key: str) -> List[str]:
     # Analyze the document with the layout model
     poller = document_analysis_client.begin_analyze_document(
             "prebuilt-layout", data)
-    # Get the results and extract the paragraphs 
+    # Get the results and extract the paragraphs
     # (title, section headings, and body)
     result = poller.result()
     paragraphs = [
@@ -74,7 +73,7 @@ def analyze_layout(data: bytes, endpoint: str, key: str) -> List[str]:
 
 
 def normalize_text(s: str) -> str:
-    """Clean up a string by removing redundant 
+    """Clean up a string by removing redundant
     whitespaces and cleaning up the punctuation.
 
     Args:
@@ -101,16 +100,16 @@ def generate_embedding(s: str, engine: Optional[str] = "microhack-curie-text-sea
         engine (str): The name of the embedding model.
 
     Returns:
-        embedding_dict (dict): The cleaned paragraph and embedding 
+        embedding_dict (dict): The cleaned paragraph and embedding
         as key value pairs.
     """
     cleaned_paragraph = normalize_text(s)
     embedding = get_embedding(cleaned_paragraph, engine)
     embedding_dict = {
-        "paragraph": cleaned_paragraph, 
+        "paragraph": cleaned_paragraph,
         "embedding": embedding
         }
-    return embedding_dict    
+    return embedding_dict
 
 
 def main(myblob: func.InputStream):
@@ -143,4 +142,3 @@ def main(myblob: func.InputStream):
     # Generate embeddings
     embeddings_dict = [generate_embedding(p) for p in paragraphs]
     logging.info(embeddings_dict)
-    

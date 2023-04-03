@@ -1,33 +1,13 @@
 import logging
+import azure.functions as func
 from azure.keyvault.secrets import SecretClient
 from azure.identity import DefaultAzureCredential
 from azure.ai.formrecognizer import DocumentAnalysisClient
 from azure.core.credentials import AzureKeyCredential
-import azure.functions as func
 from typing import List, Optional
-import openai
 import re
+import openai
 from openai.embeddings_utils import get_embedding
-
-logging.basicConfig(level=logging.INFO)
-
-def normalize_text(s: str) -> str:
-    s = re.sub(r'\s+', " ", s).strip()
-    s = re.sub(r". ,", "", s)
-    # remove all instances of multiple spaces
-    s = s.replace("..", ".")
-    s = s.replace(". .", ".")
-    s = s.replace("\n", "")
-    s = s.strip()
-
-    return s
-
-
-def generate_embedding(s: str, engine: Optional[str] = "microhack-curie-text-search-doc"):
-    cleaned_paragraph = normalize_text(s)
-    embedding = get_embedding(cleaned_paragraph, engine)
-
-    return {"paragraph": cleaned_paragraph, "embedding": embedding}
 
 
 def chunk_paragraphs(paragraphs: List[str], max_words: int = 100) -> List[str]:
@@ -52,8 +32,8 @@ def chunk_paragraphs(paragraphs: List[str], max_words: int = 100) -> List[str]:
                 [list(c.values())[0] for c in chunks[-1]]
             ) + list(p.values())[0] > max_words:
                 chunks.append([p])
-            # If adding the next paragraph will not exceed the max word count,
-            # add it to the current chunk
+            # If adding the next paragraph will not exceed the max word 
+            # count, add it to the current chunk
             else:
                 chunks[-1].append(p)
     # Create a list of strings from the list of lists of paragraphs
@@ -61,23 +41,76 @@ def chunk_paragraphs(paragraphs: List[str], max_words: int = 100) -> List[str]:
     return chunks
 
 
-def analyze_layout(data, endpoint, key):
+def analyze_layout(data: bytes, endpoint: str, key: str) -> List[str]:
+    """Analyze a document with the layout model.
+    
+    Args:
+        data (bytes): Document data.
+        endpoint (str): Endpoint URL.
+        key (str): API key.
+        
+    Returns:
+        List[str]: List of paragraphs.
+    """
+    # Create a client for the form recognizer service
     document_analysis_client = DocumentAnalysisClient(
         endpoint=endpoint, credential=AzureKeyCredential(key)
     )
-
+    # Analyze the document with the layout model
     poller = document_analysis_client.begin_analyze_document(
             "prebuilt-layout", data)
+    # Get the results and extract the paragraphs 
+    # (title, section headings, and body)
     result = poller.result()
     paragraphs = [
         p.content for p in result.paragraphs
         if p.role in ["Title", "sectionHeading", None]
         ]
-    logging.info("RAW PARAGRAPHS:\n{}".format(paragraphs))
+    # Chunk the paragraphs (max word count = 100)
     paragraphs = chunk_paragraphs(paragraphs)
     logging.info("CLEANED PARAGRAPHS:\n{}".format(paragraphs))
 
     return paragraphs
+
+
+def normalize_text(s: str) -> str:
+    """Clean up a string by removing redundant 
+    whitespaces and cleaning up the punctuation.
+
+    Args:
+        s (str): The string to be cleaned.
+
+    Returns:
+        s (str): The cleaned string.
+    """
+    s = re.sub(r'\s+', " ", s).strip()
+    s = re.sub(r". ,", "", s)
+    s = s.replace("..", ".")
+    s = s.replace(". .", ".")
+    s = s.replace("\n", "")
+    s = s.strip()
+
+    return s
+
+
+def generate_embedding(s: str, engine: Optional[str] = "microhack-curie-text-search-doc"):
+    """Clean the extracted paragraph before generating its' embedding.
+
+    Args:
+        s (str): The extracted paragraph.
+        engine (str): The name of the embedding model.
+
+    Returns:
+        embedding_dict (dict): The cleaned paragraph and embedding 
+        as key value pairs.
+    """
+    cleaned_paragraph = normalize_text(s)
+    embedding = get_embedding(cleaned_paragraph, engine)
+    embedding_dict = {
+        "paragraph": cleaned_paragraph, 
+        "embedding": embedding
+        }
+    return embedding_dict    
 
 
 def main(myblob: func.InputStream):
@@ -87,7 +120,7 @@ def main(myblob: func.InputStream):
 
     # Azure Credentials
     credential = DefaultAzureCredential()
-    # This is the call to the Form Recognizer endpoint
+    # Retrieve secrets from Key Vault
     key_vault_name = "microhack-key-vault"
     key_vault_uri = f"https://{key_vault_name}.vault.azure.net"
     client = SecretClient(vault_url=key_vault_uri, credential=credential)
@@ -110,3 +143,4 @@ def main(myblob: func.InputStream):
     # Generate embeddings
     embeddings_dict = [generate_embedding(p) for p in paragraphs]
     logging.info(embeddings_dict)
+    

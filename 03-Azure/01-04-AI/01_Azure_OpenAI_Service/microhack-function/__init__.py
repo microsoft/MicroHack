@@ -8,7 +8,8 @@ from typing import List, Optional
 import re
 import openai
 from openai.embeddings_utils import get_embedding
-from elasticsearch import Elasticsearch, helpers
+import chromadb
+from chromadb.api.types import Documents, EmbeddingFunction, Embeddings
 
 
 def chunk_paragraphs(paragraphs: List[str], max_words: int = 100) -> List[str]:
@@ -114,16 +115,47 @@ def generate_embedding(
     """
     cleaned_paragraph = normalize_text(s)
     embedding = get_embedding(cleaned_paragraph, engine)
-    embedding_dict = {"paragraph": cleaned_paragraph, "embedding": embedding}
-    return embedding_dict
+    return embedding
 
 
-def doc_generator(docs, index, doc_type):
+class AzureOpenAIEmbeddings(EmbeddingFunction):
+    def __init__(
+        self,
+        openai_api_key: str,
+        openai_endpoint: str,
+        model_name: Optional[str] = "microhack-curie-text-search-doc",
+    ):
+        self.model_name = model_name
+        openai.api_type = "azure"
+        openai.api_key = openai_api_key
+        openai.api_base = openai_endpoint
+        openai.api_version = "2022-12-01"
+
+    def __call__(self, texts: Documents) -> Embeddings:
+        return [generate_embedding(p, self.model_name) for p in texts]
+
+
+def gen_ids(client: chromadb.Client, collection_name: str, documents: List) -> List:
+    """Generate a list of ids for the documents to be inserted into the collection.
+
+    Args:
+        client (chromadb.Client): The client to use to connect to the database.
+        collection_name (str): The name of the collection to insert the documents into.
+        documents (List): The documents to be inserted into the collection.
+
+    Returns:
+        List: A list of ids for the documents to be inserted into the collection.
     """
-    Generate Elasticsearch-compliant documents from a list of dictionaries
-    """
-    for doc in docs:
-        yield {"_index": index, "_type": doc_type, "_source": doc}
+    if collection_name not in [
+        collection.name for collection in client.list_collections()
+    ]:
+        return ["id{}".format(count) for count in range(len(documents))]
+    else:
+        collection = client.get_collection(collection_name)
+        return [
+            "id{}".format(count)
+            for count in range(collection.count(), collection.count() + len(documents))
+        ]
 
 
 def main(myblob: func.InputStream):
@@ -151,17 +183,13 @@ def main(myblob: func.InputStream):
     openai.api_base = openai_endpoint
     openai.api_version = "2022-12-01"
 
-    # elasticsearch
-    es_scheme = "https"
-    es_host = client.get_secret("ELASTICSEARCH-ENDPOINT").value
-    es_port = 9200
-    es_index = "qa-knowledge-base"
-    es_doc_type = "paragraph"
-    es_user = client.get_secret("ELASTICSEARCH-USER").value
-    es_key = client.get_secret("ELASTICSEARCH-KEY").value
-    es_auth = (es_user, es_key)
-    es = Elasticsearch(
-        [{"scheme": es_scheme, "host": es_host, "port": es_port}], basic_auth=es_auth
+    # Chroma Client
+    client = chromadb.Client()
+
+    # Get a Chroma collection or create it if it doesn't exist already
+    collection = client.get_or_create_collection(
+        "microhack-collection",
+        embedding_function=AzureOpenAIEmbeddings(openai_api_key, openai_endpoint),
     )
 
     # Read document
@@ -170,9 +198,7 @@ def main(myblob: func.InputStream):
     # Get List of paragraphs from document
     paragraphs = analyze_layout(data, fm_endpoint, fm_api_key)
 
-    # Generate embeddings
-    embeddings_dict = [generate_embedding(p) for p in paragraphs]
-    logging.info(embeddings_dict)
-
-    # index documents and embeddings to elasticsearch
-    helpers.bulk(es, doc_generator(embeddings_dict, es_index, es_doc_type))
+    # Generate embeddings and save to Chroma
+    collection.add(
+        documents=paragraphs, ids=gen_ids(client, "microhack-collection", paragraphs)
+    )

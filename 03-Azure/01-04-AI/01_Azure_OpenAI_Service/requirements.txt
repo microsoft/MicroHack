@@ -17,4 +17,4 @@ pandas
 plotly 
 scipy 
 scikit-learn
-elasticsearch
+chromadb

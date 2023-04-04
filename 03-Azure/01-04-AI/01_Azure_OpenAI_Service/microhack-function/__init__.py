@@ -31,9 +31,10 @@ def chunk_paragraphs(paragraphs: List[str], max_words: int = 100) -> List[str]:
         else:
             # If adding the next paragraph will exceed the max word count,
             # start a new chunk
-            if sum(
-                [list(c.values())[0] for c in chunks[-1]]
-            ) + list(p.values())[0] > max_words:
+            if (
+                sum([list(c.values())[0] for c in chunks[-1]]) + list(p.values())[0]
+                > max_words
+            ):
                 chunks.append([p])
             # If adding the next paragraph will not exceed the max word
             # count, add it to the current chunk
@@ -47,7 +48,7 @@ def chunk_paragraphs(paragraphs: List[str], max_words: int = 100) -> List[str]:
 def analyze_layout(data: bytes, endpoint: str, key: str) -> List[str]:
     """
     Analyze a document with the layout model.
-    
+
     Args:
         data (bytes): Document data.
         endpoint (str): Endpoint URL.
@@ -61,15 +62,15 @@ def analyze_layout(data: bytes, endpoint: str, key: str) -> List[str]:
         endpoint=endpoint, credential=AzureKeyCredential(key)
     )
     # Analyze the document with the layout model
-    poller = document_analysis_client.begin_analyze_document(
-            "prebuilt-layout", data)
+    poller = document_analysis_client.begin_analyze_document("prebuilt-layout", data)
     # Get the results and extract the paragraphs
     # (title, section headings, and body)
     result = poller.result()
     paragraphs = [
-        p.content for p in result.paragraphs
+        p.content
+        for p in result.paragraphs
         if p.role in ["Title", "sectionHeading", None]
-        ]
+    ]
     # Chunk the paragraphs (max word count = 100)
     paragraphs = chunk_paragraphs(paragraphs)
 
@@ -87,7 +88,7 @@ def normalize_text(s: str) -> str:
     Returns:
         s (str): The cleaned string.
     """
-    s = re.sub(r'\s+', " ", s).strip()
+    s = re.sub(r"\s+", " ", s).strip()
     s = re.sub(r". ,", "", s)
     s = s.replace("..", ".")
     s = s.replace(". .", ".")
@@ -97,7 +98,9 @@ def normalize_text(s: str) -> str:
     return s
 
 
-def generate_embedding(s: str, engine: Optional[str] = "microhack-curie-text-search-doc"):
+def generate_embedding(
+    s: str, engine: Optional[str] = "microhack-curie-text-search-doc"
+):
     """
     Clean the extracted paragraph before generating its' embedding.
 
@@ -111,11 +114,7 @@ def generate_embedding(s: str, engine: Optional[str] = "microhack-curie-text-sea
     """
     cleaned_paragraph = normalize_text(s)
     embedding = get_embedding(cleaned_paragraph, engine)
-    embedding_dict = {
-        "paragraph": cleaned_paragraph,
-        "embedding": embedding
-        }
-    
+    embedding_dict = {"paragraph": cleaned_paragraph, "embedding": embedding}
     return embedding_dict
 
 
@@ -124,17 +123,15 @@ def doc_generator(docs, index, doc_type):
     Generate Elasticsearch-compliant documents from a list of dictionaries
     """
     for doc in docs:
-        yield {
-            "_index": index,
-            "_type": doc_type,
-            "_source": doc
-        }
+        yield {"_index": index, "_type": doc_type, "_source": doc}
 
 
 def main(myblob: func.InputStream):
-    logging.info(f"Python blob trigger function processed blob \n"
-                 f"Name: {myblob.name}\n"
-                 f"Blob Size: {myblob.length} bytes")
+    logging.info(
+        f"Python blob trigger function processed blob \n"
+        f"Name: {myblob.name}\n"
+        f"Blob Size: {myblob.length} bytes"
+    )
 
     # Azure Credentials
     credential = DefaultAzureCredential()
@@ -154,7 +151,7 @@ def main(myblob: func.InputStream):
     openai.api_base = openai_endpoint
     openai.api_version = "2022-12-01"
 
-    # elasticsearch 
+    # elasticsearch
     es_scheme = "https"
     es_host = client.get_secret("ELASTICSEARCH-ENDPOINT").value
     es_port = 9200
@@ -163,10 +160,9 @@ def main(myblob: func.InputStream):
     es_user = client.get_secret("ELASTICSEARCH-USER").value
     es_key = client.get_secret("ELASTICSEARCH-KEY").value
     es_auth = (es_user, es_key)
-    es = Elasticsearch([{"scheme": es_scheme, 
-                         "host": es_host, 
-                         "port": es_port}], 
-                         basic_auth = es_auth)
+    es = Elasticsearch(
+        [{"scheme": es_scheme, "host": es_host, "port": es_port}], basic_auth=es_auth
+    )
 
     # Read document
     data = myblob.read()

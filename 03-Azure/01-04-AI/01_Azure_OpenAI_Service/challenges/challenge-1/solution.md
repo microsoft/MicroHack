@@ -4,6 +4,15 @@ Duration: **TBD**
 
 **[Home](.../../.../../Readme.md)** - [Next Challenge Solution](.../../challenges/challenge-2/solution.md)
 
+- [Walkthrough Challenge 1 -  Setup Azure Services to Process Stored Documents in an Azure Function](#walkthrough-challenge-1----setup-azure-services-to-process-stored-documents-in-an-azure-function)
+  - [Prerequisites](#prerequisites)
+  - [Task 1: Create a Storage Account](#task-1-create-a-storage-account)
+  - [Task 2: Setup Azure Form Recognizer](#task-2-setup-azure-form-recognizer)
+  - [Task 3: Setup Azure Key Vault and Save Form Recognizer Keys](#task-3-setup-azure-key-vault-and-save-form-recognizer-keys)
+  - [Task 4: Setup Elastic Cloud](#task-4-setup-elastic-cloud)
+  - [Task 5: Create the Azure Function](#task-5-create-the-azure-function)
+  - [Task 6: Test the Azure Function Locally](#task-6-test-the-azure-function-locally)
+
 ## Prerequisites
 
 In order to complete Challenge 1, make sure to complete the Development Setup under [Link](.../../.../../Readme.md) and read through the [General Prerequisites](.../../.../../Readme.md#prerequisites). It is assumed that you already created an Azure Account with a valid Azure Subscription and a Resource Group for the MicroHack.

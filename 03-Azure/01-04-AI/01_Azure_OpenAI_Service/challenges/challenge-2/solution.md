@@ -573,40 +573,87 @@ This prints the name of all currently existing indexes to the output window and 
 [Develop Azure Functions by using Visual Studio Code](https://learn.microsoft.com/en-us/azure/azure-functions/functions-develop-vs-code?tabs=csharp)\
 [Use Key Vault references for App Service and Azure Functions](https://learn.microsoft.com/en-us/azure/app-service/app-service-key-vault-references?tabs=azure-cli)
 
+After successfully testing the Azure function locally, it is time to deploy the function to a Azure Function App. To do so, we must first create a Function App resource that we can then deploy to. 
+
+Navigate go the Azure extension on the left side of VSCode and select the **Create Resource...** button (The + next to your list of resources) to start the process. 
 
 ![image](images/function_deployment_0.png)
 
+VSCode will then prompt you to select a resource to create. Out of given option, choose **Create Function App in Azure...** to create your own Function App. 
+
 ![image](images/function_deployment_1.png)
+
+Next give your Function App a globally unique name. Since we're only deploying a single function app for this microhack we choose to call it "microhack-function". Choose your own, more expressive Function App name if needed. 
 
 ![image](images/function_deployment_2.png)
 
+The next prompt asks you to choose a runtime stack, meaning the Python distribution that will be available to execute the Azure function when triggered. Choose the Python distribution that you used to develop your Azure function. 
+
 ![image](images/function_deployment_3.png)
+
+Similar to when setting up resources in the Azure Portal, VSCode also prompts you to choose a deployment region. We once more choose the region that is closest to our location in Frankfurt am Main, Germany West Central. 
 
 ![image](images/function_deployment_4.png)
 
+As a next step, you are prompted to choose the Azure Resource Group to add the Function App service to. We select the Resource Group that we have used for this project all along. 
+
 ![image](images/function_deployment_5.png)
+
+After selecting the Resource Group, the Azure Function App service is then created. This process might take a short while until deployment is finished. 
 
 ![image](images/function_deployment_6.png)
 
+The terminal will notify you once the Function App resource has been created successfully. 
+
 ![image](images/function_deployment_7.png)
+
+Now that the Function App resource has been created, you can deploy the Azure Function next. 
+
+Navigate to the **Deploy to Function App...** button next to the **WORKSPACE** panel. 
+
+![image](images/function_deployment_00.png)
+
+This will open another dialogue that guides you through the deployment process of your Azure Function. 
+
+First you are prompted to select your chosen resource group. 
 
 ![image](images/function_deployment_8.png)
 
+Next you must select the resource you wish to deploy. In this case, it is the Azure Function that you have previously named. Select the function. 
+
 ![image](images/function_deployment_9.png)
+
+You are then prompted to confirm that this is the function you would like to deploy. 
 
 ![image](images/function_deployment_10.png)
 
+After deployment you will find your Function App among the other resources of your Resource Group in the **Overview** tab. 
+
 ![image](images/function_deployment_11.png)
+
+Since the Azure function needs access to the Azure Key Vault to use the stored secrets for authentication and use of different resources, we need to set up secure access. We can do so using a managed identity and access policy. 
+
+Select your deployed **Function App** resource (not the App Service plan) to open up the **Overview** panel of the Function App. 
 
 ![image](images/function_deployment_12.png)
 
+First we create a manged identity. Navigate to the **Identity** panel on the navigation bar and activate a system-assigned identity by setting its status to **On**. Copy and paste the created object to a save place, where you can access it again for the next steps.
+
 ![image](images/function_deployment_13.png)
+
+Next, head back over to the Key Vault and navigate to the **Access Policies** panel. Here you need to create a new access policy for your Function App. To do so, select the **+ Create** button to proceed.
 
 ![image](images/function_deployment_14.png)
 
+On the next page you can select the permissions you would like your Function App to receive. For the purpose of this Microhack, simply getting the secrets from the Key Vault is enough - hence we select **Get** and continue. 
+
 ![image](images/function_deployment_15.png)
 
+Now the Access Policy requires a principal. We select the Microhack function that we just deployed and click on **Next**. 
+
 ![image](images/function_deployment_16.png)
+
+During the review you will see the object ID that was previously created for the managed identity. Double-check if this object ID corresponds to the value you saved earlier. If it does, click on **Create** to create the access policy. 
 
 ![image](images/function_deployment_17.png)
 

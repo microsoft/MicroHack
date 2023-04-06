@@ -182,7 +182,34 @@ Once finished you will find that both endpoint and key secrets have been stored 
 ## Task 4: Setup Chroma DB
 
 **Resources** \
+[Quickstart: Create a Linux virtual machine in the Azure portal](https://learn.microsoft.com/en-us/azure/virtual-machines/linux/quick-create-portal?tabs=ubuntu)\
+[Create a virtual machine with a static public IP address using the Azure portal](https://learn.microsoft.com/en-us/azure/virtual-network/ip-services/virtual-network-deploy-static-pip-arm-portal?context=%2Fazure%2Fvirtual-machines%2Fcontext%2Fcontext)\
+[Run scripts in your Linux VM by using action Run Commands](https://learn.microsoft.com/en-us/azure/virtual-machines/linux/run-command)\
+[Chroma - docker-compose.yml](https://github.com/chroma-core/chroma/blob/main/docker-compose.yml)
 
+![image](images/chroma_vm_0.png)
+
+![image](images/chroma_vm_1.png)
+
+![image](images/chroma_vm_2.png)
+
+![image](images/chroma_vm_3.png)
+
+![image](images/chroma_vm_4.png)
+
+```console
+az vm run-command invoke -g <Resource Group> -n <VM Name> --command-id RunShellScript --scripts @startup.sh
+```
+
+![image](images/chroma_vm_5.png)
+
+![image](images/chroma_vm_6.png)
+
+```console
+ssh -i <Path to private key> microhack-vm-user@<VM IP>
+```
+
+![image](images/chroma_vm_7.png)
 
 ## Task 5: Create the Azure Function
 

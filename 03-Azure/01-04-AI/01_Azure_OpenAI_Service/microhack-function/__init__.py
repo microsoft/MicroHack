@@ -1,4 +1,5 @@
 import logging
+import urllib.request
 import azure.functions as func
 from azure.keyvault.secrets import SecretClient
 from azure.identity import DefaultAzureCredential
@@ -10,6 +11,7 @@ import openai
 from openai.embeddings_utils import get_embedding
 import chromadb
 from chromadb.api.types import Documents, EmbeddingFunction, Embeddings
+from chromadb.config import Settings
 
 
 def chunk_paragraphs(paragraphs: List[str], max_words: int = 100) -> List[str]:
@@ -99,9 +101,7 @@ def normalize_text(s: str) -> str:
     return s
 
 
-def generate_embedding(
-    s: str, engine: Optional[str] = "microhack-curie-text-search-doc"
-):
+def generate_embedding(s: str, engine: Optional[str] = "microhack-ada-text-embedding"):
     """
     Clean the extracted paragraph before generating its' embedding.
 
@@ -125,14 +125,13 @@ class AzureOpenAIEmbeddings(EmbeddingFunction):
         openai_endpoint: str,
         model_name: Optional[str] = "microhack-curie-text-search-doc",
     ):
-        self.model_name = model_name
         openai.api_type = "azure"
         openai.api_key = openai_api_key
         openai.api_base = openai_endpoint
         openai.api_version = "2022-12-01"
 
     def __call__(self, texts: Documents) -> Embeddings:
-        return [generate_embedding(p, self.model_name) for p in texts]
+        return [generate_embedding(p) for p in texts]
 
 
 def gen_ids(client: chromadb.Client, collection_name: str, documents: List) -> List:
@@ -165,7 +164,6 @@ def main(myblob: func.InputStream):
         f"Blob Size: {myblob.length} bytes"
     )
 
-    # Azure Credentials
     credential = DefaultAzureCredential()
     # Retrieve secrets from Key Vault
     key_vault_name = "microhack-key-vault"
@@ -175,30 +173,53 @@ def main(myblob: func.InputStream):
     fm_api_key = client.get_secret("FORM-RECOGNIZER-KEY").value
     fm_endpoint = client.get_secret("FORM-RECOGNIZER-ENDPOINT").value
 
-    # openai
+    # OpenAi
     openai_api_key = client.get_secret("OPENAI-KEY").value
     openai_endpoint = client.get_secret("OPENAI-ENDPOINT").value
-    openai.api_type = "azure"
-    openai.api_key = openai_api_key
-    openai.api_base = openai_endpoint
-    openai.api_version = "2022-12-01"
+
+    # Chroma
+    chroma_address = client.get_secret("CHROMA-DB-ADDRESS").value
 
     # Chroma Client
-    client = chromadb.Client()
+    client = chromadb.Client(
+        Settings(
+            chroma_api_impl="rest",
+            chroma_server_host=chroma_address,
+            chroma_server_http_port="8000",
+        )
+    )
+
+    external_ip = urllib.request.urlopen("https://ident.me").read().decode("utf8")
+    logging.info("Trying to connect to Chroma DB with IP Address %s", external_ip)
+    # Ping Chroma
+    logging.info(
+        "Successfully connected to Chroma DB. Collections found: %s",
+        client.list_collections(),
+    )
 
     # Get a Chroma collection or create it if it doesn't exist already
+    logging.info("Get or create the microhack colletion")
     collection = client.get_or_create_collection(
         "microhack-collection",
         embedding_function=AzureOpenAIEmbeddings(openai_api_key, openai_endpoint),
     )
+    logging.info("""Successfully retrieved microhack collection from Chroma DB.""")
 
     # Read document
+    logging.info("Read in new document")
     data = myblob.read()
 
     # Get List of paragraphs from document
+    logging.info("Retrieve paragraphs from new document")
     paragraphs = analyze_layout(data, fm_endpoint, fm_api_key)
 
     # Generate embeddings and save to Chroma
+    logging.info(
+        """Add paragraphs to chroma collection.
+                 Number of new paragraphs: %s""",
+        len(paragraphs),
+    )
     collection.add(
         documents=paragraphs, ids=gen_ids(client, "microhack-collection", paragraphs)
     )
+    logging.info("Total number of documents in collection: %s", collection.count())

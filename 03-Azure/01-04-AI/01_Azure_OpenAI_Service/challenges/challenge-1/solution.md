@@ -2,7 +2,7 @@
 
 Duration: **TBD**
 
-**[Home](.../../.../../Readme.md)** - [Next Challenge Solution](.../../challenges/challenge-2/solution.md)
+**[Home](../../../01_Azure_OpenAI_Service/Readme.md)** - [Next Challenge Solution](../../../challenge-2/solution.md)
 
 - [Walkthrough Challenge 1 -  Setup Azure Services to Process Stored Documents in an Azure Function](#walkthrough-challenge-1----setup-azure-services-to-process-stored-documents-in-an-azure-function)
   - [Prerequisites](#prerequisites)
@@ -74,7 +74,7 @@ If you want to use the Azure CLI for creating the storage account and uploading 
 \
 Azure Form Recognizer is a cloud-based Azure Applied AI Service that uses machine-learning models to extract key-value pairs, text, and tables from your documents. Form Recognizer analyzes your forms and documents, extracts text and data, maps field relationships as key-value pairs, and returns a structured JSON output.\
 \
-In this task, you will set up an Azure Form Recognizer resource, that can extract text data from unstructured documents. This task concludes with you generating and then storing a secret key and an endpoint string that can later be used to connect your application to the Form Recognizer API. 
+In this task, you will set up an Azure Form Recognizer resource that can extract text data from unstructured documents.
 
 Under the MicroHack Resource Group, search for *form recognizer* in the search bar.
 
@@ -157,7 +157,6 @@ If needed, you can assign new roles to users or even create custom roles tailore
 
 ![image](./images/key_vault_7.png)
 
-At main page of Key Vault, click on Secrets in sidebar (under Objects)
 Head back to the main page of your newly created Key Vault Service. From the sidebar, under Objects, select Secrets.
 
 ![image](./images/key_vault_7.png)
@@ -166,7 +165,7 @@ Click on Generate/Import to store the secret Key + Endpoint of your previously c
 
 ![image](./images/key_vault_8.png)
 
-Next you must give the secret API key a fitting name, before then copy-pasting the previously created Form Recognizer key to the *Secret value* field. If you followed this guide, you stored this key in a local text editor such as Microsoft Notepad.  
+Next you must give the secret API key a fitting name, before copy-pasting the previously created Form Recognizer key to the *Secret value* field. If you followed this guide, you stored this key in a local text editor such as Microsoft Notepad.  
 Click create once you're finished.
 
 ![image](./images/key_vault_9.png)
@@ -188,7 +187,7 @@ Once finished you will find that both endpoint and key secrets have been stored 
 [Chroma](https://docs.trychroma.com/)\
 [Chroma - docker-compose.yml](https://github.com/chroma-core/chroma/blob/main/docker-compose.yml)
 
-Chroma is an open-source database specifically designed to store embeddings. This focus on embeddings makes Chroma a vector database, which differ from relational databases in that they are not designed to be queried for exact matches (or "lexical overlap"). Instead, proximity metrics are used to return the most closely related documents to the query, as evaluated by measuring similarity between query and documents embeddings with the **cosine similarity**. Read more about Chroma in its [official documentation](https://docs.trychroma.com/).
+Chroma is an open-source database specifically designed to store embedding vectors. This focus on embeddings makes Chroma a vector database, which differ from relational databases in that they are not designed to be queried for exact matches (or "lexical overlap"). Instead, proximity metrics are used to return the most closely related documents to the query, as evaluated by measuring similarity between query and documents embeddings with the **cosine similarity**. Read more about Chroma in its [official documentation](https://docs.trychroma.com/).
 
 Chroma is thus an excellent choice for a document storage for our specific use case. Not only does Chroma sport a developer-friendly API and straight-forward implementations for vector-search, it is also open-source and thus does not require any paid subscription. Since Chroma does not come as its own Azure service it requires its own custom deployment on an Azure virtual machine.
 
@@ -201,7 +200,7 @@ In the Azure Portal, search for *virtual machines* in the searchbar. On the VM s
 ![image](images/chroma_vm_0.png)
 
 Under the Basics subpage of the VM configuration, select your Resource Group, give the VM a fitting name and select a deployment region. We chose North Europe since the deployment region has an impact on the costs.
-The image type option let's you the base OS or application of the VM. We chose, and recommend, Debian 11, a Linux OS, as our image.
+The image type option let's you choose the base OS or application of the VM. We chose, and recommend, Debian 11, a Linux OS, as our image.
 
 ![image](images/chroma_vm_1.png)
 
@@ -229,7 +228,7 @@ Navigate to your VMs main page in the Azure Portal and select *Networking* under
 
 ![image](images/chroma_vm_5.png)
 
-Here, you can set inbound port rules. Inbound port rules define who can connect to the VM. For now, we want our own IP to be able to access the VM on specific ports. In Challenge 2, after we deployed our Azure Function and the Frontend Web App, we'll add inbound port roles for their IPs as well.
+Here, you can set inbound port rules. Inbound port rules define who can connect to the VM. For now, we want our own IP to be able to access the VM on specific ports. In Challenge 2, after we deployed our Azure Function and the Frontend Web App, we'll add inbound port rules for their IPs as well.
 
 We'll allow our own IP address to connect to the VM via SSH (for debugging) and on port 8000 (Chroma's port).
 

@@ -2,7 +2,7 @@
 
 Duration: **TBD**
 
-**[Home](.../../.../../Readme.md)** - [Next Challenge Solution](.../../challenges/challenge-2/solution.md)
+**[Home](../../../01_Azure_OpenAI_Service/Readme.md)** - [Next Challenge Solution](../../../challenge-2/solution.md)
 
 - [Walkthrough Challenge 1 -  Setup Azure Services to Process Stored Documents in an Azure Function](#walkthrough-challenge-1----setup-azure-services-to-process-stored-documents-in-an-azure-function)
   - [Prerequisites](#prerequisites)

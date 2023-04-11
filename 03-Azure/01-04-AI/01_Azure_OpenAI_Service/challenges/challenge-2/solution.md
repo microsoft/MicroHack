@@ -717,8 +717,24 @@ Now the Access Policy requires a principal. We select the Microhack function tha
 
 ![image](images/function_deployment_16.png)
 
-During the review you will see the object ID that was previously created for the managed identity. Double-check if this object ID corresponds to the value you saved earlier. If it does, click on **Create** to create the access policy. 
+During the review you will see the object ID that was previously created for the managed identity. Double-check if this object ID corresponds to the value you saved earlier. If it does, click on **Create** to create the access policy.
 
 ![image](images/function_deployment_17.png)
 
-You successfully completed Challenge 2! 🚀
+Finally, we'll find out which outbound IP addresses our Azure Function can use and add these to the inbound port rules of the Azure VM created in Challenge 1. 
+
+For this, execute the following command in your terminal and copy the output:
+
+```console
+az functionapp show --resource-group <Resource Group> --name <Azure Function Name> --query outboundIpAddresses --output tsv
+```
+
+Or navigate to the Networking subpage of your Azure Function in the Azure Portal, click on *Show more* under outbound addresses and copy the IPs from there.
+
+![image](images/vm_networking_0.png)
+
+Add the copied IPs to a new inbound port rule for the Azure VM, allowing these IPs to connect to port 8000:
+
+![image](images/vm_networking_1.png)
+
+**You successfully completed Challenge 2! 🚀**

@@ -187,6 +187,16 @@ Once finished you will find that both endpoint and key secrets have been stored 
 [Run scripts in your Linux VM by using action Run Commands](https://learn.microsoft.com/en-us/azure/virtual-machines/linux/run-command)\
 [Chroma - docker-compose.yml](https://github.com/chroma-core/chroma/blob/main/docker-compose.yml)
 
+Chroma is an open-source database specifically designed to store embeddings. This focus on embeddings makes Chroma a vector database, which differ from relational databases in that they are not designed to be queried for exact matches (or "lexical overlap"). Instead, proximity metrics are used to return the most closely related documents to the query, as evaluated by measuring similarity between query and documents embeddings with the **cosine similarity**. Read more about Chroma in its [official documentation](https://docs.trychroma.com/). 
+
+Chroma is thus an excellent choice for a document storage for our specific use case. Not only does Chroma sport a developer-friendly API and straight-forward implementations for vector-search, it is also open-source and thus does not require any paid subscription. Since Chroma does not come as its own Azure service it requires its own custom deployment on an Azure virtual machine. 
+
+The required workflow looks as follows:
+- Create a Linux virtual machine on Azure
+- Add inbound connection rules to whitelist your IP so you can interact with the VM from your terminal
+- Install ChromaDB on the VM
+- Run Chroma as a Docker container on the VM
+
 ![image](images/chroma_vm_0.png)
 
 ![image](images/chroma_vm_1.png)

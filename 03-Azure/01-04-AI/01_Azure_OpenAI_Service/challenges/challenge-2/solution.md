@@ -324,7 +324,9 @@ Add the following packages:
 - `scikit-learn`
 - `chromadb`
 
-We can create a new Chroma collection directly with a Python script. First we import all the needed libraries and classes:
+We can create a new Chroma collection directly with a Python script. This is **not** part of the \_\_init\_\_.py script and thus belongs in a separate file. We executed this code from a jupyter-notebook which gives an additional degree of interactivity compared to regular python scripts. TODO: ipynb-path
+
+First we import all the needed libraries and classes:
 
 ```Python
 import logging
@@ -347,7 +349,7 @@ client = SecretClient(vault_url=key_vault_uri, credential=credential)
 chroma_address = client.get_secret("CHROMA-DB-ADDRESS").value
 ```
 
-Next, we initialize a Chroma client, test its health and then create an aptly named collection:
+Next, we initialize a Chroma client. Using the `client.heartbeat()`-method, we ping the Chroma API to test its health. Finally, we use the `client.create_collection()`-method to create an aptly named collection for storing our documents and embeddings:
 
 ```Python
 # init chroma client
@@ -368,7 +370,9 @@ collection = chroma_client.create_collection(name="microhack-collection")
 We now have a Chroma collection set up, ready to store our documents and embeddings.
 
 
-Next, we extend our  \_\_init\_\_.py script. First we add the libraries that we need to import:
+Next, we head back to our \_\_init\_\_.py script. We extend the script with a number of helper functions that facilitate our workflow of extracting, cleaning, embedding and storing text data. 
+
+First we add the libraries that we need to import:
 
 ```Python
 import re
@@ -620,7 +624,10 @@ def gen_ids(client: chromadb.Client, collection_name: str, documents: List) -> L
             for count in range(collection.count(), collection.count() + len(documents))
         ]
 ```
-We now have everything in place to embed the extracted paragraphs and write both documents and embeddings to our Chroma collection. We thus extend our `main()` function in \_\_init\_\_.py with the following code section:
+
+We now have everything in place to embed the extracted paragraphs and write both documents and embeddings to our Chroma collection. Chroma's developer-friendly API makes this process quite straight-forward: We just need to connect to our Chroma collection (`client.get_or_create_collection()`, which also creates a collection if it doesn't yet exist), supply it with an embedding function (`AzureOpenAIEmbeddings()`, a class we just wrote ourselves) and then add the documents in question to the collection (`collection.add()`), which are automatically embedded using the embedding function. 
+
+We thus extend our `main()` function in \_\_init\_\_.py with the following code section:
 
 ```Python
     # Chroma
@@ -670,6 +677,7 @@ We now have everything in place to embed the extracted paragraphs and write both
     )
     logging.info("Total number of documents in collection: %s", collection.count())
 ```
+
 Our complete \_\_init\_\_.py script now looks like this: 
 
 ```Python

@@ -124,14 +124,15 @@ class AzureOpenAIEmbeddings(EmbeddingFunction):
         openai_api_key: str,
         openai_endpoint: str,
         model_name: Optional[str] = "microhack-curie-text-search-doc",
-    ):
+    ): 
+        self.model_name = model_name
         openai.api_type = "azure"
         openai.api_key = openai_api_key
         openai.api_base = openai_endpoint
         openai.api_version = "2022-12-01"
 
     def __call__(self, texts: Documents) -> Embeddings:
-        return [generate_embedding(p) for p in texts]
+        return [generate_embedding(p, self.model_name) for p in texts]
 
 
 def gen_ids(client: chromadb.Client, collection_name: str, documents: List) -> List:
@@ -173,7 +174,7 @@ def main(myblob: func.InputStream):
     fm_api_key = client.get_secret("FORM-RECOGNIZER-KEY").value
     fm_endpoint = client.get_secret("FORM-RECOGNIZER-ENDPOINT").value
 
-    # OpenAi
+    # OpenAI
     openai_api_key = client.get_secret("OPENAI-KEY").value
     openai_endpoint = client.get_secret("OPENAI-ENDPOINT").value
 
@@ -181,29 +182,27 @@ def main(myblob: func.InputStream):
     chroma_address = client.get_secret("CHROMA-DB-ADDRESS").value
 
     # Chroma Client
-    client = chromadb.Client(
+    chroma_client = chromadb.Client(
         Settings(
             chroma_api_impl="rest",
             chroma_server_host=chroma_address,
             chroma_server_http_port="8000",
         )
     )
-
-    external_ip = urllib.request.urlopen("https://ident.me").read().decode("utf8")
-    logging.info("Trying to connect to Chroma DB with IP Address %s", external_ip)
     # Ping Chroma
+    chroma_client.heartbeat()
     logging.info(
         "Successfully connected to Chroma DB. Collections found: %s",
-        client.list_collections(),
+        chroma_client.list_collections(),
     )
 
     # Get a Chroma collection or create it if it doesn't exist already
     logging.info("Get or create the microhack colletion")
-    collection = client.get_or_create_collection(
+    collection = chroma_client.get_or_create_collection(
         "microhack-collection",
         embedding_function=AzureOpenAIEmbeddings(openai_api_key, openai_endpoint),
     )
-    logging.info("""Successfully retrieved microhack collection from Chroma DB.""")
+    logging.info("Successfully retrieved microhack collection from Chroma DB.")
 
     # Read document
     logging.info("Read in new document")

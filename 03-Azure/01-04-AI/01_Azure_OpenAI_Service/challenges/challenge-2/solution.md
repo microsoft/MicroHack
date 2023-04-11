@@ -322,13 +322,14 @@ class AzureOpenAIEmbeddings(EmbeddingFunction):
         openai_endpoint: str,
         model_name: Optional[str] = "microhack-ada-text-embedding",
     ):
+        self.model_name = model_name
         openai.api_type = "azure"
         openai.api_key = openai_api_key
         openai.api_base = openai_endpoint
         openai.api_version = "2022-12-01"
 
     def __call__(self, texts: Documents) -> Embeddings:
-        return [generate_embedding(p) for p in texts]
+        return [generate_embedding(p, self.model_name) for p in texts]
 ```
 
 Finally, we use the `client.get_or_create_collection()` method to create an aptly named collection for storing our documents and embeddings - or retrieve it if it already exists:

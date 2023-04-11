@@ -402,6 +402,7 @@ Our complete \_\_init\_\_.py script now looks like this:
 
 ```Python
 import logging
+import urllib.request
 import azure.functions as func
 from azure.keyvault.secrets import SecretClient
 from azure.identity import DefaultAzureCredential
@@ -525,15 +526,16 @@ class AzureOpenAIEmbeddings(EmbeddingFunction):
         self,
         openai_api_key: str,
         openai_endpoint: str,
-        model_name: Optional[str] = "microhack-ada-text-embedding",
-    ):
+        model_name: Optional[str] = "microhack-curie-text-search-doc",
+    ): 
+        self.model_name = model_name
         openai.api_type = "azure"
         openai.api_key = openai_api_key
         openai.api_base = openai_endpoint
         openai.api_version = "2022-12-01"
 
     def __call__(self, texts: Documents) -> Embeddings:
-        return [generate_embedding(p) for p in texts]
+        return [generate_embedding(p, self.model_name) for p in texts]
 
 
 def gen_ids(client: chromadb.Client, collection_name: str, documents: List) -> List:
@@ -590,7 +592,6 @@ def main(myblob: func.InputStream):
             chroma_server_http_port="8000",
         )
     )
-
     # Ping Chroma
     chroma_client.heartbeat()
     logging.info(
@@ -604,7 +605,7 @@ def main(myblob: func.InputStream):
         "microhack-collection",
         embedding_function=AzureOpenAIEmbeddings(openai_api_key, openai_endpoint),
     )
-    logging.info("""Successfully retrieved microhack collection from Chroma DB.""")
+    logging.info("Successfully retrieved microhack collection from Chroma DB.")
 
     # Read document
     logging.info("Read in new document")

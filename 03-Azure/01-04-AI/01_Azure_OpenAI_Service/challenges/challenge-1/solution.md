@@ -11,7 +11,6 @@ Duration: **TBD**
   - [Task 3: Setup Azure Key Vault and Save Form Recognizer Keys](#task-3-setup-azure-key-vault-and-save-form-recognizer-keys)
   - [Task 4: Setup Chroma DB](#task-4-setup-chroma-db)
   - [Task 5: Create the Azure Function](#task-5-create-the-azure-function)
-  - [Task 4: Setup Chroma DB](#task-4-setup-chroma-db-1)
   - [Task 6: Test the Azure Function Locally](#task-6-test-the-azure-function-locally)
 
 ## Prerequisites
@@ -232,7 +231,7 @@ Azure Functions are a so-called serverless compute service. They are used to exe
 
 In this task, we are setting up an Azure function that we can later customize to execute the custom code that executes said process.
 
-For this task, we move away from the Azure portal to VSCode for a change of pace. Make sure that you have the Azure Tools extension installed, as lined out in the [**Lab Requirements**](./readme.md#lab-environment-for-this-microhack) section of this microhack. 
+For this task, we move away from the Azure portal to VSCode for a change of pace. Make sure that you have the Azure Tools extension installed, as lined out in the [**Lab Requirements**](./readme.md#lab-environment-for-this-microhack) section of this microhack.
 
 In VSCode, navigate to your Azure extension tab on the toolbar at the left edge of the editor. 
 
@@ -288,86 +287,6 @@ This requires two actions to fix:
 All required dependencies are now properly installed in the dedicated virtual environment for this project and the script is ready to be executed and tested. 
 
 ![image](./images/azure_function_11.png)
-
-## Task 4: Setup Chroma DB
-
-**Resources** \
-[Quickstart: Create a Linux virtual machine in the Azure portal](https://learn.microsoft.com/en-us/azure/virtual-machines/linux/quick-create-portal?tabs=ubuntu)\
-[Create a virtual machine with a static public IP address using the Azure portal](https://learn.microsoft.com/en-us/azure/virtual-network/ip-services/virtual-network-deploy-static-pip-arm-portal?context=%2Fazure%2Fvirtual-machines%2Fcontext%2Fcontext)\
-[Run scripts in your Linux VM by using action Run Commands](https://learn.microsoft.com/en-us/azure/virtual-machines/linux/run-command)\
-[Chroma](https://docs.trychroma.com/)\
-[Chroma - docker-compose.yml](https://github.com/chroma-core/chroma/blob/main/docker-compose.yml)
-
-Now we need to set up our database in which we will store the Knowledge Base extracted from our uploaded documents and their corresponding embeddings. We decided on using Chroma, an open-source project, as our embedding database. Chroma makes it easy to build LLM apps by making knowledge, facts, and skills pluggable for LLMs. Chroma gives you the tools to store embeddings and their metadata, embed documents and queries and search embeddings. Chroma prioritizes simplicity and developer productivity and computational efficiency.
-
-Chroma has made a docker-compose file for containerizing and deploying Chroma available for developers. We will use this template and deploy it inside of an Azure Virtual Machine which is exposed to the internet.
-
-Azure Virtual Machines (VMs) are on-demand, scalable, and fully customizable virtual machines provided by Microsoft Azure. These VMs allow users to run different operating systems, applications, and services, including Linux and Windows.
-
-In the Azure Portal, search for *virtual machines* in the searchbar. On the VM start page, click on Create/Azure virtual machine.
-
-![image](images/chroma_vm_0.png)
-
-Under the Basics subpage of the VM configuration, select your Resource Group, give the VM a fitting name and select a deployment region. We chose North Europe since the deployment region has an impact on the costs.
-The image type option let's you the base OS or application of the VM. We chose, and recommend, Debian 11, a Linux OS, as our image.
-
-![image](images/chroma_vm_1.png)
-
-The option you select for Size has the main impact on the costs of running your VM. For demonstration purposes, we chose *Standard_B2s* as our size option (2 vCPUs, 4GB RAM, 8GB storage).
-
-For administrative purposes, you need to specify the way you want to interface/authenticate with the VM. The recommended way is to select *SSH public key* here. This option will create key pair for you to authenticate yourself when trying to SSH into the VM.
-
-Since we need to connect our Azure Function and Frontend with the Chroma DB, we need to set the inbound port rules to allow specific ports of the VM to be accessible from the internet. Again, since this VM will only be used for this Microhack, we selected the ports 80 (HTTP), 443 (HTTPS) and 22 (SSH) to be accessible for debugging purposes. We will take some additional security precautions later on in our setup.
-
-![image](images/chroma_vm_2.png)
-
-Under the Networking subpage, we will create a virtual network and a Public IP for our VM. Give the virtual network a name and configure the Address range as well as the subnet's address range of the network. We kept the default configuration for both.
-
-Next, click on Review + create.
-
-![image](images/chroma_vm_3.png)
-
-After reviewing your VMs specifications, click on Create. Deploying the VM will take a few seconds.
-
-![image](images/chroma_vm_4.png)
-
-After the VM has been deployed, we will set some networking security rules to whitelist specific IP addresses for connecting to the VM via the public internet.
-
-Navigate to your VMs main page in the Azure Portal and select *Networking* under Settings in the sidebar.
-
-![image](images/chroma_vm_5.png)
-
-Here, you can set inbound port rules. Inbound port rules define who can connect to the VM. For now, we want our own IP to be able to access the VM on specific ports. In Challenge 2, after we deployed our Azure Function and the Frontend Web App, we'll add inbound port roles for their IPs as well.
-
-We'll allow our own IP address to connect to the VM via SSH (for debugging) and on port 8000 (Chroma's port).
-
-![image](images/chroma_vm_6.png)
-
-![image](images/chroma_vm_7.png)
-
-Now that we are able to connect to the VM locally, we will set up Chroma and check if the container group is running as expected. You can execute the Chroma docker-compose script *startup.sh* by running the following command inside your terminal:
-
-```console
-az vm run-command invoke -g <Resource Group> -n <VM Name> --command-id RunShellScript --scripts @startup.sh
-```
-
-This can take a few minutes. After the script has run successfully, SSH into the VM by executing this command in your terminal:
-
-```console
-ssh -i <Path to private key> <User Name>@<VM IP>
-```
-
-You need to specify the path to the key file which was automatically downloaded when you created the VM and the user name you decided on.
-
-After you are connected to the VM via SSH, check the docker containers on the VM by running:
-
-```console
-sudo docker ps -a
-```
-
-You should see two running containers - one for the Chroma image and one for clickhouse, the backend database.
-
-![image](images/chroma_vm_8.png)
 
 ## Task 6: Test the Azure Function Locally
 

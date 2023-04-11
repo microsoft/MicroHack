@@ -185,41 +185,81 @@ Once finished you will find that both endpoint and key secrets have been stored 
 [Quickstart: Create a Linux virtual machine in the Azure portal](https://learn.microsoft.com/en-us/azure/virtual-machines/linux/quick-create-portal?tabs=ubuntu)\
 [Create a virtual machine with a static public IP address using the Azure portal](https://learn.microsoft.com/en-us/azure/virtual-network/ip-services/virtual-network-deploy-static-pip-arm-portal?context=%2Fazure%2Fvirtual-machines%2Fcontext%2Fcontext)\
 [Run scripts in your Linux VM by using action Run Commands](https://learn.microsoft.com/en-us/azure/virtual-machines/linux/run-command)\
+[Chroma](https://docs.trychroma.com/)\
 [Chroma - docker-compose.yml](https://github.com/chroma-core/chroma/blob/main/docker-compose.yml)
 
-Chroma is an open-source database specifically designed to store embeddings. This focus on embeddings makes Chroma a vector database, which differ from relational databases in that they are not designed to be queried for exact matches (or "lexical overlap"). Instead, proximity metrics are used to return the most closely related documents to the query, as evaluated by measuring similarity between query and documents embeddings with the **cosine similarity**. Read more about Chroma in its [official documentation](https://docs.trychroma.com/). 
+Chroma is an open-source database specifically designed to store embeddings. This focus on embeddings makes Chroma a vector database, which differ from relational databases in that they are not designed to be queried for exact matches (or "lexical overlap"). Instead, proximity metrics are used to return the most closely related documents to the query, as evaluated by measuring similarity between query and documents embeddings with the **cosine similarity**. Read more about Chroma in its [official documentation](https://docs.trychroma.com/).
 
-Chroma is thus an excellent choice for a document storage for our specific use case. Not only does Chroma sport a developer-friendly API and straight-forward implementations for vector-search, it is also open-source and thus does not require any paid subscription. Since Chroma does not come as its own Azure service it requires its own custom deployment on an Azure virtual machine. 
+Chroma is thus an excellent choice for a document storage for our specific use case. Not only does Chroma sport a developer-friendly API and straight-forward implementations for vector-search, it is also open-source and thus does not require any paid subscription. Since Chroma does not come as its own Azure service it requires its own custom deployment on an Azure virtual machine.
 
-The required workflow looks as follows:
-- Create a Linux virtual machine on Azure
-- Add inbound connection rules to whitelist your IP so you can interact with the VM from your terminal
-- Install ChromaDB on the VM
-- Run Chroma as a Docker container on the VM
+Chroma has made a docker-compose file for containerizing and deploying Chroma available for developers. We will use this template and deploy it inside of an Azure Virtual Machine which is exposed to the internet.
+
+Azure Virtual Machines (VMs) are on-demand, scalable, and fully customizable virtual machines provided by Microsoft Azure. These VMs allow users to run different operating systems, applications, and services, including Linux and Windows.
+
+In the Azure Portal, search for *virtual machines* in the searchbar. On the VM start page, click on Create/Azure virtual machine.
 
 ![image](images/chroma_vm_0.png)
 
+Under the Basics subpage of the VM configuration, select your Resource Group, give the VM a fitting name and select a deployment region. We chose North Europe since the deployment region has an impact on the costs.
+The image type option let's you the base OS or application of the VM. We chose, and recommend, Debian 11, a Linux OS, as our image.
+
 ![image](images/chroma_vm_1.png)
+
+The option you select for Size has the main impact on the costs of running your VM. For demonstration purposes, we chose *Standard_B2s* as our size option (2 vCPUs, 4GB RAM, 8GB storage).
+
+For administrative purposes, you need to specify the way you want to interface/authenticate with the VM. The recommended way is to select *SSH public key* here. This option will create key pair for you to authenticate yourself when trying to SSH into the VM.
+
+Since we need to connect our Azure Function and Frontend with the Chroma DB, we need to set the inbound port rules to allow specific ports of the VM to be accessible from the internet. Again, since this VM will only be used for this Microhack, we selected the ports 80 (HTTP), 443 (HTTPS) and 22 (SSH) to be accessible for debugging purposes. We will take some additional security precautions later on in our setup.
 
 ![image](images/chroma_vm_2.png)
 
+Under the Networking subpage, we will create a virtual network and a Public IP for our VM. Give the virtual network a name and configure the Address range as well as the subnet's address range of the network. We kept the default configuration for both.
+
+Next, click on Review + create.
+
 ![image](images/chroma_vm_3.png)
 
+After reviewing your VMs specifications, click on Create. Deploying the VM will take a few seconds.
+
 ![image](images/chroma_vm_4.png)
+
+After the VM has been deployed, we will set some networking security rules to whitelist specific IP addresses for connecting to the VM via the public internet.
+
+Navigate to your VMs main page in the Azure Portal and select *Networking* under Settings in the sidebar.
+
+![image](images/chroma_vm_5.png)
+
+Here, you can set inbound port rules. Inbound port rules define who can connect to the VM. For now, we want our own IP to be able to access the VM on specific ports. In Challenge 2, after we deployed our Azure Function and the Frontend Web App, we'll add inbound port roles for their IPs as well.
+
+We'll allow our own IP address to connect to the VM via SSH (for debugging) and on port 8000 (Chroma's port).
+
+![image](images/chroma_vm_6.png)
+
+![image](images/chroma_vm_7.png)
+
+Now that we are able to connect to the VM locally, we will set up Chroma and check if the container group is running as expected. You can execute the Chroma docker-compose script *startup.sh* by running the following command inside your terminal:
 
 ```console
 az vm run-command invoke -g <Resource Group> -n <VM Name> --command-id RunShellScript --scripts @startup.sh
 ```
 
-![image](images/chroma_vm_5.png)
-
-![image](images/chroma_vm_6.png)
+This can take a few minutes. After the script has run successfully, SSH into the VM by executing this command in your terminal:
 
 ```console
-ssh -i <Path to private key> microhack-vm-user@<VM IP>
+ssh -i <Path to private key> <User Name>@<VM IP>
 ```
 
-![image](images/chroma_vm_7.png)
+You need to specify the path to the key file which was automatically downloaded when you created the VM and the user name you decided on.
+
+After you are connected to the VM via SSH, check the docker containers on the VM by running:
+
+```console
+sudo docker ps -a
+```
+
+You should see two running containers - one for the Chroma image and one for clickhouse, the backend database.
+
+![image](images/chroma_vm_8.png)
 
 ## Task 5: Create the Azure Function
 
@@ -231,7 +271,7 @@ Azure Functions are a so-called serverless compute service. They are used to exe
 
 In this task, we are setting up an Azure function that we can later customize to execute the custom code that executes said process.
 
-For this task, we move away from the Azure portal to VSCode for a change of pace. Make sure that you have the Azure Tools extension installed, as lined out in the [**Lab Requirements**](./readme.md#lab-environment-for-this-microhack) section of this microhack.
+For this task, we move away from the Azure portal to VSCode for a change of pace. Make sure that you have the Azure Tools extension installed, as lined out in the [**Lab Requirements**](./readme.md#lab-environment-for-this-microhack) section of this microhack. 
 
 In VSCode, navigate to your Azure extension tab on the toolbar at the left edge of the editor. 
 

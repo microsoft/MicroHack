@@ -1,14 +1,14 @@
-# Walkthrough Challenge 2 - Setting up a functional Pipeline
+# Walkthrough Challenge 2 - Setting up a Functional Pipeline
 
 Duration: **TBD**
 
 **[Home](../../../01_Azure_OpenAI_Service/Readme.md)** - [Next Challenge Solution](../../../01_Azure_OpenAI_Service/challenges/challenge-3/solution.md)
 
-- [Walkthrough Challenge 2 - Setting up a functional Pipeline](#walkthrough-challenge-2---setting-up-a-functional-pipeline)
+- [Walkthrough Challenge 2 - Setting up a Functional Pipeline](#walkthrough-challenge-2---setting-up-a-functional-pipeline)
   - [Prerequisites](#prerequisites)
   - [Task 1: Setup the Azure OpenAI Service](#task-1-setup-the-azure-openai-service)
   - [Task 2: Implement the Azure Form Recognizer in the Azure Function](#task-2-implement-the-azure-form-recognizer-in-the-azure-function)
-  - [Task 3: Create a Chroma Collection and prepare the Azure Function for creating Text Embeddings](#task-3-create-a-chroma-collection-and-prepare-the-azure-function-for-creating-text-embeddings)
+  - [Task 3: Create a Chroma Collection and Prepare the Azure Function for Creating Text Embeddings](#task-3-create-a-chroma-collection-and-prepare-the-azure-function-for-creating-text-embeddings)
   - [Task 4: Write the Extracted Paragraphs and Embeddings to the Chroma Collection](#task-4-write-the-extracted-paragraphs-and-embeddings-to-the-chroma-collection)
   - [Task 5: Test the Azure Function Locally](#task-5-test-the-azure-function-locally)
   - [Task 6: Deploy the Azure Function](#task-6-deploy-the-azure-function)
@@ -200,7 +200,7 @@ def analyze_layout(data: bytes, endpoint: str, key: str) -> List[str]:
     return paragraphs
 ```
 
-## Task 3: Create a Chroma Collection and prepare the Azure Function for creating Text Embeddings
+## Task 3: Create a Chroma Collection and Prepare the Azure Function for Creating Text Embeddings
 
 **Resources**:\
 [OpenAI Python Library](https://github.com/openai/openai-python)\

@@ -2,7 +2,7 @@
 
 Duration: **TBD**
 
-**[Home](../../../01_Azure_OpenAI_Service/Readme.md)** - [Next Challenge Solution](../../../01_Azure_OpenAI_Service/challenges/challenge-2/solution.md)
+**[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-2/solution.md)
 
 - [Walkthrough Challenge 1 -  Setup Azure Services to Process Stored Documents in an Azure Function](#walkthrough-challenge-1----setup-azure-services-to-process-stored-documents-in-an-azure-function)
   - [Prerequisites](#prerequisites)
@@ -15,7 +15,7 @@ Duration: **TBD**
 
 ## Prerequisites
 
-In order to complete Challenge 1, make sure to complete the Development Setup under [Link](.../../.../../Readme.md) and read through the [General Prerequisites](.../../.../../Readme.md#prerequisites). It is assumed that you already created an Azure Account with a valid Azure Subscription and a Resource Group for the MicroHack.
+In order to complete Challenge 1, make sure to complete the [Development Setup](../../Readme.md#lab-environment-for-this-microhack) and read through the [General Prerequisites](../../Readme.md#prerequisites). It is assumed that you already created an Azure Account with a valid Azure Subscription and a Resource Group for the MicroHack.
 
 ## Task 1: Create a Storage Account
 

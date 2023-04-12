@@ -2,7 +2,7 @@
 
 Duration: **TBD**
 
-**[Home](../../../01_Azure_OpenAI_Service/Readme.md)** - [Next Challenge Solution](../../../01_Azure_OpenAI_Service/challenges/challenge-3/solution.md)
+**[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-3/solution.md)
 
 - [Walkthrough Challenge 2 - Setting up a Functional Pipeline](#walkthrough-challenge-2---setting-up-a-functional-pipeline)
   - [Prerequisites](#prerequisites)
@@ -15,7 +15,7 @@ Duration: **TBD**
 
 ## Prerequisites
 
-In order to complete Challenge 2, make sure to complete the [Development Setup](../../Readme.md) and work through the tasks laid out in Challenge 1. It is assumed that you already created an Azure Storage Account, Form Recognizer, Key Vault, a running Chroma DB inside an Azure VM and a locally running Azure Function.
+In order to complete Challenge 2, make sure to complete the [Development Setup](../../Readme.md#lab-environment-for-this-microhack) and work through the tasks laid out in Challenge 1. It is assumed that you already created an Azure Storage Account, Form Recognizer, Key Vault, a running Chroma DB inside an Azure VM and a locally running Azure Function.
 
 ## Task 1: Setup the Azure OpenAI Service
 

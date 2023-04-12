@@ -90,9 +90,9 @@ response = collection.query(
 completions = openai.Completion.create(
     engine="microhack-davinci-003-text-completion",  # the deployed model
     temperature=0.3,  # level of creativity in the response
-    prompt=create_prompt(
-        response=response,
-        query=query,  # the retrieved paragraphs + query + fixed instructions
+    prompt=create_prompt(  # the retrieved paragraphs + query + fixed instructions
+        response=response,  # the retrieved paragraphs
+        query=query,  # the query
     ),
     max_tokens=n_paragraphs
     * 125,  # maximum tokens in both the prompt and completion, scales with n_paragraphs

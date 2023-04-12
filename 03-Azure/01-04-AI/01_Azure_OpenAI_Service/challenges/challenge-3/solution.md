@@ -23,7 +23,7 @@ In order to complete Challenge 3, make sure that you have successfully completed
 [OpenAI API Completions Endpoint](https://platform.openai.com/docs/api-reference/completions)\
 [OpenAI Text Completion Guide](https://platform.openai.com/docs/guides/completion)
 
-In this Challenge, we will use Streamlit to build a very simple web-based UI where users are able to upload new documents to our blob storage as well as interface with the Q&A system we have built so far.
+In this Challenge, we will use [Streamlit](https://streamlit.io/) to build a very simple web-based UI where users are able to upload new documents to our blob storage as well as interface with the Q&A system we have built so far.
 
 Streamlit is a Python library that allows you to create interactive web applications and dashboards for machine learning and data science projects, without requiring expertise in web development. It is an open-source tool that provides a simple and intuitive way to build and share data-driven applications.
 
@@ -61,7 +61,7 @@ If you follow this link, the Streamlit app should open up in your default browse
 
 **Resources:**
 
-Next, we will start designing the needed widgets. More specifically, our app should feature
+Next, we will start designing the needed widgets. More specifically, our app should feature:
 
 - an upload widget where users can upload files to the blob storage we created in Challenge 1
 - a text box where users can ask their questions which will then be used to retrieve relevant paragraphs from the Chroma DB. The retrieved information, together with the user query, is then fed into the Completions endpoint of the Azure OpenAI Service
@@ -294,13 +294,14 @@ We provided some basic instructions to the model as well as a number of few-shot
 ```Python
 # Generate answer with completion endpoint
 completions = openai.Completion.create(
-    engine="microhack-davinci-003-text-completion",  # the deployed model
-    temperature=0.3,  # level of creativity in the response
-    prompt=create_prompt(
-        response=response, query=query  # the retrieved paragraphs + query + fixed instructions
+    engine="microhack-davinci-003-text-completion",     # the deployed model
+    temperature=0.3,                                    # level of creativity in the response
+    prompt=create_prompt(                               # the retrieved paragraphs + query + fixed instructions
+        response=response,                              # the retrieved paragraphs
+        query=query,                                    # the query
     ),
-    max_tokens=n_paragraphs*125,  # maximum tokens in both the prompt and completion, scales with n_paragraphs
-    n=1,  # number of generated answers
+    max_tokens=n_paragraphs * 125,                      # maximum tokens in both the prompt and completion, scales with n_paragraphs
+    n=1,                                                # number of generated answers
 )
 
 st.write(completions["choices"][0]["text"])

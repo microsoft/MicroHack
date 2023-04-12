@@ -1,6 +1,10 @@
 import streamlit as st
 from azure.keyvault.secrets import SecretClient
 from azure.identity import DefaultAzureCredential
+from azure.storage.blob import BlobServiceClient
+from azure.keyvault.secrets import SecretClient
+from azure.identity import DefaultAzureCredential
+from azure.core.exceptions import ResourceExistsError
 import openai as ai
 from openai.embeddings_utils import get_embedding
 import chromadb
@@ -41,7 +45,8 @@ st.title("Microhack: Semantic Q&A-Bot")
 
 # file upload in sidebar
 doc = st.sidebar.file_uploader(
-    ":page_facing_up: Upload your own documents to the knowledge base here"
+    ":page_facing_up: Upload your own documents to the knowledge base here", 
+    type=["pdf"]
 )
 
 # query free-text window
@@ -83,3 +88,21 @@ st.write(completions["choices"][0]["text"])
 # display sources
 st.markdown(f"### :bulb: This answer was sourced from {n_paragraphs} paragraphs:")
 st.write(list_sources(response))
+
+# blob storage
+account_name = 'microhack'
+account_key = client.get_secret("BLOB-KEY").value
+container_name = 'documents'
+
+blob_service_client = BlobServiceClient(account_url=f"https://{account_name}.blob.core.windows.net", credential=account_key)
+container_client = blob_service_client.get_container_client(container_name)
+
+# upload doc to blob storage and display status banner
+if doc is not None:
+    blob_client = container_client.get_blob_client(doc.name)
+
+    try:
+        blob_client.upload_blob(doc)
+        st.sidebar.success('Document uploaded successfully!', icon="🚀")
+    except ResourceExistsError:
+        st.sidebar.error('Document was already uploaded!', icon="🛑")

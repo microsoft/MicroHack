@@ -12,37 +12,39 @@
     - [Task 1: Create a Storage Account](#task-1-create-a-storage-account)
     - [Task 2: Setup Azure Form Recognizer](#task-2-setup-azure-form-recognizer)
     - [Task 3: Setup Azure Key Vault and save Form Recognizer Keys](#task-3-setup-azure-key-vault-and-save-form-recognizer-keys)
-    - [Task 4: Setup Elastic Cloud](#task-4-setup-elastic-cloud)
+    - [Task 4: Setup Chroma DB](#task-4-setup-chroma-db)
     - [Task 5: Create the Azure Function](#task-5-create-the-azure-function)
     - [Task 6: Test the Azure Function Locally](#task-6-test-the-azure-function-locally)
   - [Challenge 2 - Setting up a functional Pipeline](#challenge-2---setting-up-a-functional-pipeline)
     - [Goal](#goal-1)
-    - [Task 1: Write the Python Processing Script](#task-1-write-the-python-processing-script)
-    - [Task 2: Test your Pipeline](#task-2-test-your-pipeline)
-    - [Task 3:](#task-3)
-    - [Task 4:](#task-4)
+    - [Task 1: Setup the Azure OpenAI Service](#task-1-setup-the-azure-openai-service)
+    - [Task 2: Implement the Azure Form Recognizer in the Azure Function](#task-2-implement-the-azure-form-recognizer-in-the-azure-function)
+    - [Task 3: Create a Chroma Collection and Prepare the Azure Function for Creating Text Embeddings](#task-3-create-a-chroma-collection-and-prepare-the-azure-function-for-creating-text-embeddings)
+    - [Task 4: Write the Extracted Paragraphs and Embeddings to the Chroma Collection](#task-4-write-the-extracted-paragraphs-and-embeddings-to-the-chroma-collection)
+    - [Task 5: Test the Azure Function Locally](#task-5-test-the-azure-function-locally)
+    - [Task 6: Deploy the Azure Function](#task-6-deploy-the-azure-function)
   - [Challenge 3 - Building a Streamlit frontend for our Q\&A bot](#challenge-3---building-a-streamlit-frontend-for-our-qa-bot)
     - [Goal](#goal-2)
-    - [Task 1:](#task-1)
-    - [Task 2:](#task-2)
-    - [Task 3:](#task-3-1)
-    - [Task 4:](#task-4-1)
+    - [Task 1](#task-1)
+    - [Task 2](#task-2)
+    - [Task 3](#task-3)
+    - [Task 4](#task-4)
 - [Finished? Delete your lab](#finished-delete-your-lab)
 
 ## MicroHack Introduction and Context
 
-This MicroHack scenario walks through the creation of a Q&A bot using the Azure OpenAI service for building a semantic search pipeline. This Hack focuses on setting up the necessary Azure services as the building blocks of a Q&A bot powered by OpenAI's most recent language models and Azure. It guides you through setting up a robust infrastructure that extracts paragraphs from your raw text documents, stores them in a text data base optimized for search use cases and then leverages the power of Natural Language Processing to find the information you are looking for - all from within Microsoft Azure and requiring minimal coding. 
+This MicroHack scenario walks through the creation of a Q&A bot using the Azure OpenAI service for building a semantic search pipeline. This Hack focuses on setting up the necessary Azure services as the building blocks of a Q&A bot powered by OpenAI's most recent language models and Azure. It guides you through setting up a robust infrastructure that extracts paragraphs from your raw text documents, stores them in a text data base optimized for search use cases and then leverages the power of Natural Language Processing to find the information you are looking for - all from within Microsoft Azure and requiring minimal coding.
 
 Semantic search is a more informed way of sifting through documents. Traditional search methods relied on finding lexical overlap between a query and the contents of a document. Semantic search foregoes this approach and instead assumes that language exists in a latent semantic space, where words that are similar in meaning reside close to each other - and those that are different are separated by large distances. Deep neural networks facilitate finding the semantic location of words as they can be trained to translate words into numerical representations of their meanings, called word embeddings, and thus enabling us to measure their distance from each other and draw inference about the relationships amongst each other.
 
-Semantic search uses this technique to find information that is most closely related to a search query, measured as the distance between their respective embeddings. The language models developed by OpenAI are highly proficient at this task. They have been trained on massive amounts of text data from many different contexts, hence they are prodicient at projecting natural language text to a latent, semantic space and are thus well-suited for building AI-powered Q&A applications. 
+Semantic search uses this technique to find information that is most closely related to a search query, measured as the distance between their respective embeddings. The language models developed by OpenAI are highly proficient at this task. They have been trained on massive amounts of text data from many different contexts, hence they are prodicient at projecting natural language text to a latent, semantic space and are thus well-suited for building AI-powered Q&A applications.
 
 This MicroHack is not an in-depth explanation of word embeddings as a technology, so please consider the following articles as required pre-reading to build foundational knowledge about the technology that enables finding semantic similarity between words, paragraphs and entire documents:
 
-* https://openai.com/blog/introducing-text-and-code-embeddings
-* https://platform.openai.com/docs/guides/embeddings/what-are-embeddings
-* https://learn.microsoft.com/en-us/azure/cognitive-services/openai/concepts/understand-embeddings
-* https://medium.com/@statworx_blog/whats-cooking-at-statworx-ecd863edfabe
+- <https://openai.com/blog/introducing-text-and-code-embeddings>
+- <https://platform.openai.com/docs/guides/embeddings/what-are-embeddings>
+- <https://learn.microsoft.com/en-us/azure/cognitive-services/openai/concepts/understand-embeddings>
+- <https://medium.com/@statworx_blog/whats-cooking-at-statworx-ecd863edfabe>
 
 ## Objectives
 
@@ -56,7 +58,7 @@ After completing this MicroHack you will:
 
 In order to use the MicroHack time most effectively, the following services should be set up and ready for use prior to starting work on the challenges and their task:
 
-- Azure Account 
+- Azure Account
 - Azure Subscription
 - Azure Resource Group
 
@@ -64,7 +66,7 @@ Permissions for deployment:
 
 - Contributor on your Resource Group
 
-With these pre-requisites in place, you only need to set up the lab environment before starting to work on the challenges. These are designed for you to build familiarity with Azure's various services that facilitate implementing NLP-products through the use of services such Azure OpenAI, Azure Storage, Azure Functions and Elastic Cloud. 
+With these pre-requisites in place, you only need to set up the lab environment before starting to work on the challenges. These are designed for you to build familiarity with Azure's various services that facilitate implementing NLP-products through the use of services such Azure OpenAI, Azure Storage, Azure Functions and Elastic Cloud.
 
 ## Lab environment for this MicroHack
 
@@ -81,8 +83,8 @@ We strongly recommend using [Visual Studio Code](https://code.visualstudio.com/)
 
 - Python for Visual Code Studio
   - [This guide](https://code.visualstudio.com/docs/python/python-tutorial) walks you through installing a Python interpreter and the extension needed for using VSCode for Python development.
-- Azure Tools 
-  - This extension pack contains multiple extensions used for interacting with Azure directly from VSCode. Find more information on the extension pack in the [official resource](https://marketplace.visualstudio.com/items?itemName=ms-vscode.vscode-node-azure-pack). 
+- Azure Tools
+  - This extension pack contains multiple extensions used for interacting with Azure directly from VSCode. Find more information on the extension pack in the [official resource](https://marketplace.visualstudio.com/items?itemName=ms-vscode.vscode-node-azure-pack).
 
 ## Architecture
 
@@ -96,7 +98,7 @@ At the end of this MicroHack you will have set your Azure environment to use the
 
 ### Goal
 
-The goal of this challenge is to set up all the Azure services and tools that are required for building the backend of a fully functional Q&A chatbot.
+The goal of Challenge 1 is to set up a system using Azure services to process stored documents in an Azure function. This involves creating a Storage Account, setting up Azure Form Recognizer, creating an Azure Key Vault and saving Secrets, setting up a vector database, as well as creating an Azure Function to execute custom code every time a new document is added to the blob storage.
 
 ### Task 1: Create a Storage Account
 
@@ -104,19 +106,19 @@ In this task you will set up a Storage Account in Azure which contains and manag
 
 ### Task 2: Setup Azure Form Recognizer
 
-In this task you will set up the Azure Form Recognizer service, which extracts text from files and helps you turn your documents into data.
+Task 2 requires you to set up an Azure Form Recognizer resource to extract text data from unstructured documents. 
 
 ### Task 3: Setup Azure Key Vault and save Form Recognizer Keys
 
 In task 3, you will set up an Azure Key Vault, a secure location to store and manage your application secrets such as your Form Recognizer Keys. Once you have set up the Key Vault, you will save your Form Recognizer Keys in it, which will allow your Azure Function to securely access the keys.
 
-### Task 4: Setup Elastic Cloud
+### Task 4: Setup Chroma DB
 
-Elasticsearch acts as the data base for storing our text data for this MicroHack. In this task, you will set up the Elastic Cloud service that makes deploying your own Elasticsearch cluster easier than ever.
+In task 4, you will set up Chroma DB, an open-source database that is designed to store embedding vectors. Chroma is particularly useful for a document storage for our specific use case since it returns the most closely related documents to the query by evaluating the similarity between query and document embeddings using cosine similarity. You will deploy Chroma inside an Azure Virtual Machine and allow specific ports of the VM to be accessible from the internet to connect your Azure Function and Frontend with the Chroma DB.
 
 ### Task 5: Create the Azure Function
 
-Azure Functions are serverless computing solutions that enable you to run your code on demand. In this task, you will create an Azure Function that will be automatically triggered when a new file is uploaded into the blob storage created in Task 1.
+In task 5, you will create an Azure Function that executes custom code every time a new document is added to the blob storage you created in Task 1. This is achieved using VSCode and the Azure Tools extension.
 
 ### Task 6: Test the Azure Function Locally
 
@@ -126,33 +128,46 @@ In Task 6, you will test your Azure Function locally to ensure it is working pro
 
 ### Goal
 
-### Task 1: Write the Python Processing Script
+The goal of Challenge 2 is to set up a functional pipeline that extracts paragraphs from scanned documents, creates text embeddings, and stores them in a Chroma database. This is achieved by deploying models in Azure OpenAI Service, implementing Azure Form Recognizer and Chroma client in an Azure Function, and deploying the Function to an Azure Function App with secure access using a managed identity and access policy. The pipeline is tested locally before being deployed to Azure.
 
-### Task 2: Test your Pipeline
+### Task 1: Setup the Azure OpenAI Service
 
-### Task 3: 
+In Task 1, you will learn how to create the Azure OpenAI Service and deploy models. Once you have created the service, you will deploy some of the available OpenAI models to use them in your Azure Function and Frontend.
 
-**Explain the background...**
+### Task 2: Implement the Azure Form Recognizer in the Azure Function
 
-### Task 4: 
+Task 2 requires you to implement the Azure Form Recognizer in the Azure Function. You will need to add the necessary packages to the requirements.txt and then install them, after which you will work on the code of your Azure function.
 
-Before proceeding to challenge 3, ...
+### Task 3: Create a Chroma Collection and Prepare the Azure Function for Creating Text Embeddings
+
+Task 3 involves setting up the needed steps for creating text embeddings and writing them to a Chroma database inside the Azure Function. This requires initializing a Chroma client, creating a Chroma collection to store the documents and embeddings, adding helper functions for cleaning and embedding text data, and implementing a wrapper function around the ```get_embedding()``` function.
+
+### Task 4: Write the Extracted Paragraphs and Embeddings to the Chroma Collection
+
+In task 4, you will write the extracted paragraphs and their embeddings to the Chroma collection. To do this, you will use Chroma's API to connect to your collection, supply it with an embedding function and add the documents to the collection.
+
+### Task 5: Test the Azure Function Locally
+
+In this task, you will test the Azure Function locally using VSCode Azure Extensions. This will allow you to make sure that the Function is working as expected before deploying it to Azure.
+
+### Task 6: Deploy the Azure Function
+
+Task 6 involves deploying the Azure Function to a Function App in Azure after creating a Function App resource. To allow the Function App to access the Azure Key Vault for authentication and use of different resources, set up secure access using a managed identity and access policy, and add the outbound IP addresses of the Azure Function to the inbound port rules of the Azure VM created in Challenge 1.
 
 ## Challenge 3 - Building a Streamlit frontend for our Q&A bot
 
 ### Goal
 
-### Task 1: 
+### Task 1
 
-### Task 2: 
+### Task 2
 
-### Task 3: 
+### Task 3
 
 **Explain the background...**
 
-### Task 4: 
+### Task 4
 
 # Finished? Delete your lab
-
 
 Thank you for participating in this MicroHack!

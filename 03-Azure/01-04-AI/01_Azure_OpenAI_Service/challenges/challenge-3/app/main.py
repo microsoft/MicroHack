@@ -26,10 +26,12 @@ ai.api_version = "2022-12-01"
 chroma_address = client.get_secret("CHROMA-DB-ADDRESS").value
 
 chroma_client = chromadb.Client(
-    Settings(chroma_api_impl="rest",
-             chroma_server_host=chroma_address,
-             chroma_server_http_port="8000")
-             )
+    Settings(
+        chroma_api_impl="rest",
+        chroma_server_host=chroma_address,
+        chroma_server_http_port="8000",
+    )
+)
 
 # get collection
 collection = chroma_client.get_collection("microhack-collection")
@@ -38,38 +40,38 @@ collection = chroma_client.get_collection("microhack-collection")
 st.title("Microhack: Semantic Q&A-Bot")
 
 # file upload in sidebar
-doc = st.sidebar.file_uploader(":page_facing_up: Upload your own documents to the knowledge base here")
+doc = st.sidebar.file_uploader(
+    ":page_facing_up: Upload your own documents to the knowledge base here"
+)
 
 # query free-text window
 st.markdown("### :question: Query the bot here:")
-query = st.text_input("query", 
-                      value = "Who are statworx?", 
-                      label_visibility="collapsed"
-                      )
-n_paragraphs = st.slider("Number of paragraphs to retrieve and source answer from:",
-                         min_value = 1, 
-                         max_value = 5, 
-                         value = 3)
+query = st.text_input("query", value="Who are statworx?", label_visibility="collapsed")
+n_paragraphs = st.slider(
+    "Number of paragraphs to retrieve and source answer from:",
+    min_value=1,
+    max_value=5,
+    value=3,
+)
 
 # embed query
 query_embedding = get_embedding(query, engine="microhack-ada-text-embedding")
 
 # query chroma collection
 response = collection.query(
-    query_embeddings=[query_embedding],
-    n_results=n_paragraphs,
-    include=["documents"]
+    query_embeddings=[query_embedding], n_results=n_paragraphs, include=["documents"]
 )
 
 # generate answer with completion endpoint
 completions = ai.Completion.create(
-        engine='microhack-davinci-003-text-completion', # the deployed model
-        temperature=0.3,                                # level of creativity in the response
-        prompt=create_prompt(response=response,         # the retrieved paragraphs
-                            query=query),               # the query
-        max_tokens=300,                                 # maximum tokens in both the prompt and completion
-        n=1,                                            # number of answers to generate
-    )
+    engine="microhack-davinci-003-text-completion",  # the deployed model
+    temperature=0.3,  # level of creativity in the response
+    prompt=create_prompt(
+        response=response, query=query  # the retrieved paragraphs
+    ),  # the query
+    max_tokens=300,  # maximum tokens in both the prompt and completion
+    n=1,  # number of answers to generate
+)
 
 # diplay answer
 st.markdown("### :robot_face: The Q&A-bot answers:")

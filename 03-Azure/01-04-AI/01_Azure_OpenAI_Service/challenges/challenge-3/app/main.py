@@ -51,9 +51,10 @@ collection = chroma_client.get_collection("microhack-collection")
 # App title
 st.title("Microhack: Semantic Q&A-Bot")
 
-# File upload in sidebar
+# File upload in sidebar (only allows PDFs)
 doc = st.sidebar.file_uploader(
-    ":page_facing_up: Upload your own documents to the knowledge base here"
+    ":page_facing_up: Upload your own documents to the knowledge base here",
+    type=["pdf"],
 )
 
 # Upload doc to blob storage and display status banner

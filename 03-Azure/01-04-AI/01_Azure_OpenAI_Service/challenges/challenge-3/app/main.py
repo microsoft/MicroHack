@@ -59,18 +59,21 @@ query_embedding = get_embedding(query, engine="microhack-ada-text-embedding")
 
 # query chroma collection
 response = collection.query(
-    query_embeddings=[query_embedding], n_results=n_paragraphs, include=["documents"]
+    query_embeddings=[query_embedding], 
+    n_results=n_paragraphs, 
+    include=["documents"]
 )
 
 # generate answer with completion endpoint
 completions = ai.Completion.create(
-    engine="microhack-davinci-003-text-completion",  # the deployed model
-    temperature=0.3,  # level of creativity in the response
+    engine="microhack-davinci-003-text-completion",     # the deployed model
+    temperature=0.3,                                    # level of creativity in the response
     prompt=create_prompt(
-        response=response, query=query  # the retrieved paragraphs
-    ),  # the query
-    max_tokens=300,  # maximum tokens in both the prompt and completion
-    n=1,  # number of answers to generate
+        response=response,                              # the retrieved paragraphs
+        query=query                                     # the query
+    ),  
+    max_tokens=300,                                     # maximum tokens in both the prompt and completion
+    n=1,                                                # number of generated answers
 )
 
 # diplay answer

@@ -124,7 +124,7 @@ class AzureOpenAIEmbeddings(EmbeddingFunction):
         openai_api_key: str,
         openai_endpoint: str,
         model_name: Optional[str] = "microhack-curie-text-search-doc",
-    ): 
+    ):
         self.model_name = model_name
         openai.api_type = "azure"
         openai.api_key = openai_api_key

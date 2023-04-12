@@ -1,5 +1,5 @@
-# create prompt based on retrieved passages
-def create_prompt(response: dict, query: str):
+# Create prompt based on retrieved paragraphs
+def create_prompt(response: dict, query: str) -> str:
     """
     Constructs a prompt to be used as input for the OpenAI completion endpoint based on the response from vector document search.
 
@@ -39,8 +39,8 @@ def create_prompt(response: dict, query: str):
     return prompt
 
 
-# list sources used for generating answer
-def list_sources(response: dict):
+# List sources used for generating answer
+def list_sources(response: dict) -> str:
     """
     Constructs a string listing the sources used for generating the bot's answer.
 

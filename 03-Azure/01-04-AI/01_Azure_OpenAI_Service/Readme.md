@@ -8,7 +8,7 @@
   - [Architecture](#architecture)
 - [MicroHack Challenges](#microhack-challenges)
   - [Challenge 1 - Setup Azure Services to Process Stored Documents in an Azure Function](#challenge-1---setup-azure-services-to-process-stored-documents-in-an-azure-function)
-    - [Goal](#goal)
+    - [Goal 1](#goal-1)
     - [Task 1: Create a Storage Account](#task-1-create-a-storage-account)
     - [Task 2: Setup Azure Form Recognizer](#task-2-setup-azure-form-recognizer)
     - [Task 3: Setup Azure Key Vault and save Form Recognizer Keys](#task-3-setup-azure-key-vault-and-save-form-recognizer-keys)
@@ -16,17 +16,18 @@
     - [Task 5: Create the Azure Function](#task-5-create-the-azure-function)
     - [Task 6: Test the Azure Function Locally](#task-6-test-the-azure-function-locally)
   - [Challenge 2 - Setting up a functional Pipeline](#challenge-2---setting-up-a-functional-pipeline)
-    - [Goal](#goal-1)
+    - [Goal 2](#goal-2)
     - [Task 1: Write the Python Processing Script](#task-1-write-the-python-processing-script)
     - [Task 2: Test your Pipeline](#task-2-test-your-pipeline)
     - [Task 3:](#task-3)
     - [Task 4:](#task-4)
   - [Challenge 3 - Building a Streamlit frontend for our Q\&A bot](#challenge-3---building-a-streamlit-frontend-for-our-qa-bot)
-    - [Goal](#goal-2)
-    - [Task 1:](#task-1)
-    - [Task 2:](#task-2)
-    - [Task 3:](#task-3-1)
-    - [Task 4:](#task-4-1)
+    - [Goal 3](#goal-3)
+    - [Task 1: Setup Streamlit App](#task-1-setup-streamlit-app)
+    - [Task 2: Create Streamlit Widgets](#task-2-create-streamlit-widgets)
+    - [Task 3: Connect the Streamlit App to the Blob Storage](#task-3-connect-the-streamlit-app-to-the-blob-storage)
+    - [Task 4: Connect the Streamlit App to the Chroma DB](#task-4-connect-the-streamlit-app-to-the-chroma-db)
+    - [Task 5: Generate Answers via the OpenAI Completions Endpoint](#task-5-generate-answers-via-the-openai-completions-endpoint)
 - [Finished? Delete your lab](#finished-delete-your-lab)
 
 ## MicroHack Introduction and Context
@@ -94,7 +95,7 @@ At the end of this MicroHack you will have set your Azure environment to use the
 
 ## Challenge 1 - Setup Azure Services to Process Stored Documents in an Azure Function
 
-### Goal
+### Goal 1
 
 The goal of this challenge is to set up all the Azure services and tools that are required for building the backend of a fully functional Q&A chatbot.
 
@@ -124,7 +125,7 @@ In Task 6, you will test your Azure Function locally to ensure it is working pro
 
 ## Challenge 2 - Setting up a functional Pipeline
 
-### Goal
+### Goal 2
 
 ### Task 1: Write the Python Processing Script
 
@@ -140,19 +141,24 @@ Before proceeding to challenge 3, ...
 
 ## Challenge 3 - Building a Streamlit frontend for our Q&A bot
 
-### Goal
+### Goal 3
+The goal of this final challenge is the creation of an interactive web application that you can use to query the Q&A-chatbot and upload more documents to your knowledge base. 
 
-### Task 1: 
+### Task 1: Setup Streamlit App
+The first task is dedicated to setting up a simple script that is used to initialize a streamlit web app. 
 
-### Task 2: 
+### Task 2: Create Streamlit Widgets
+In this task you will extend your streamlit template to include multiple widgets that allow users to interact with your app. 
 
-### Task 3: 
+### Task 3: Connect the Streamlit App to the Blob Storage
+Next, you will extend the streamlit script to be able to connect with your Azure Blob storage. This allows the interactive upload of documents to your Blob storage directly from within the streamlit app. 
 
-**Explain the background...**
+### Task 4: Connect the Streamlit App to the Chroma DB
+In this penultimate task of the MicroHack you will extend your streamlit app to also be able to send queries to your ChromaDB deployment. That's how your embedded documents can be retrieved and used for context by the Q&A-bot. 
 
-### Task 4: 
+### Task 5: Generate Answers via the OpenAI Completions Endpoint
+Finally, in this concluding task you will extend your streamlit to use the OpenAI Completions endpoint to generate human-like answers to your queries that include the retrieved documents as sources for the generated answers. With this step, the streamlit app is complete and your Q&A-bot is fully functional. 
 
 # Finished? Delete your lab
-
 
 Thank you for participating in this MicroHack!

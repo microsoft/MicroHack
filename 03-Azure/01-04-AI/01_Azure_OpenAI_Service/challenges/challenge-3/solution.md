@@ -9,7 +9,7 @@ Duration: **TBD**
   - [Task 1: Setup Streamlit App](#task-1-setup-streamlit-app)
   - [Task 2: Create Streamlit Widgets](#task-2-create-streamlit-widgets)
   - [Task 3: Connect the Streamlit App to the Blob Storage](#task-3-connect-the-streamlit-app-to-the-blob-storage)
-  - [Task 4: Connect the Streamlit App to the Chroma DB](#task-4-connect-the-streamlit-app-to-the-chroma-db)
+  - [Task 4: Connect the Streamlit App to the Chroma DB and Retrieve Relevant Paragraphs](#task-4-connect-the-streamlit-app-to-the-chroma-db-and-retrieve-relevant-paragraphs)
   - [Task 5: Generate Answers via the Completions Endpoint](#task-5-generate-answers-via-the-completions-endpoint)
 
 ## Prerequisites
@@ -77,9 +77,10 @@ import streamlit as st
 # App title
 st.title("Microhack: Semantic Q&A-Bot")
 
-# File upload in sidebar
+# File upload in sidebar (only allows PDFs)
 doc = st.sidebar.file_uploader(
-    ":page_facing_up: Upload your own documents to the knowledge base here"
+    ":page_facing_up: Upload your own documents to the knowledge base here",
+    type=["pdf"],
 )
 
 # Query free-text window with default question
@@ -111,11 +112,86 @@ When reloading the web page, the app should now look like this:
 
 **Resources:**
 
-## Task 4: Connect the Streamlit App to the Chroma DB
+Now that we have created the Upload widget, we need to implement the actual upload logic. To do this, we need to connect to the Azure Key Vault and retrieve the blob storage secrets in order to connect to it:
+
+```Python
+from azure.storage.blob import BlobServiceClient
+from azure.keyvault.secrets import SecretClient
+from azure.identity import DefaultAzureCredential
+
+# Connect to key vault
+credential = DefaultAzureCredential()
+key_vault_name = "microhack-key-vault"
+key_vault_uri = f"https://{key_vault_name}.vault.azure.net"
+client = SecretClient(vault_url=key_vault_uri, credential=credential)
+
+# Blob storage
+account_name = "microhack"
+account_key = client.get_secret("BLOB-KEY").value
+container_name = "documents"
+
+blob_service_client = BlobServiceClient(
+    account_url=f"https://{account_name}.blob.core.windows.net", credential=account_key
+)
+container_client = blob_service_client.get_container_client(container_name)
+```
+
+This code snippet creates a container client via the Python Azure SDK. We can use this client to interact with the blob storage, i.e. upload, delete or modify files.
+
+To actually upload a document, we will need to check if a user has supplied us with a file via the upload widget, see if the file does not already exist in the blob storage and if not, upload the file. If the file does already exist, we want to let the user know.
+
+```Python
+from azure.core.exceptions import ResourceExistsError
+
+# Upload doc to blob storage and display status banner
+if doc is not None:
+    blob_client = container_client.get_blob_client(doc.name)
+
+    try:
+        blob_client.upload_blob(doc)
+        st.sidebar.success("Document uploaded successfully!", icon="🚀")
+    except ResourceExistsError:
+        st.sidebar.error("Document was already uploaded!", icon="🛑")
+```
+
+## Task 4: Connect the Streamlit App to the Chroma DB and Retrieve Relevant Paragraphs
 
 **Resources:**
 
-Text here.
+The documents which are uploaded by the user are automatically processed by the Azure Function, paragraphs and embeddings are retrievable from the Chroma DB. We will now connect the Streamlit app to the Chroma DB and retrieve relevant paragraphs with regards to a user query.
+
+First, we need to create the connections to the Chroma DB and the Azure OpenAI Service.
+
+```Python
+import openai 
+import chromadb
+from chromadb.config import Settings
+
+# OpenAI
+openai_api_key = client.get_secret("OPENAI-KEY").value
+openai_endpoint = client.get_secret("OPENAI-ENDPOINT").value
+
+openai.api_type = "azure"
+openai.api_key = openai_api_key
+openai.api_base = openai_endpoint
+openai.api_version = "2022-12-01"
+
+# Chroma
+chroma_address = client.get_secret("CHROMA-DB-ADDRESS").value
+
+chroma_client = chromadb.Client(
+    Settings(
+        chroma_api_impl="rest",
+        chroma_server_host=chroma_address,
+        chroma_server_http_port="8000",
+    )
+)
+
+# Get collection
+collection = chroma_client.get_collection("microhack-collection")
+```
+
+We have now connected to Chroma, retrieved our collection and initialized the Python OpenAI SDK. Next, we'll embed the text the user inputs into the query text box, 
 
 ## Task 5: Generate Answers via the Completions Endpoint
 

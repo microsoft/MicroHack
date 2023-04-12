@@ -159,6 +159,12 @@ In this penultimate task of the MicroHack you will extend your streamlit app to 
 ### Task 5: Generate Answers via the OpenAI Completions Endpoint
 Finally, in this concluding task you will extend your streamlit to use the OpenAI Completions endpoint to generate human-like answers to your queries that include the retrieved documents as sources for the generated answers. With this step, the streamlit app is complete and your Q&A-bot is fully functional. 
 
-# Finished? Delete your lab
+## Finished? Delete your lab
 
 Thank you for participating in this MicroHack!
+
+## Authors
+**[Robin Baudisch](https://www.linkedin.com/in/robin-baudisch-a5091a125/)** is a Data Science consultant at [statworx](https://www.statworx.com/)  
+**[Oliver Guggenbühl](https://www.linkedin.com/in/robin-baudisch-a5091a125/)** is a Data Science consultant at [statworx](https://www.statworx.com/) 
+
+Don't hesitate to reach out if you have any questions!

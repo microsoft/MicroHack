@@ -2,7 +2,7 @@
 
 Duration: **TBD**
 
-**[Home](.../../.../../Readme.md)**
+**[Home](../../Readme.md)**
 
 - [Walkthrough Challenge 3 -  Create a Graphical User Interface with Streamlit](#walkthrough-challenge-3----create-a-graphical-user-interface-with-streamlit)
   - [Prerequisites](#prerequisites)

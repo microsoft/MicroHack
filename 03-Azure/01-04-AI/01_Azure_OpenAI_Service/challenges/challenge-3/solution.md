@@ -191,12 +191,119 @@ chroma_client = chromadb.Client(
 collection = chroma_client.get_collection("microhack-collection")
 ```
 
-We have now connected to Chroma, retrieved our collection and initialized the Python OpenAI SDK. Next, we'll embed the text the user inputs into the query text box, 
+We have now connected to Chroma, retrieved our collection and initialized the Python OpenAI SDK. Next, we'll embed the text the user inputs into the query text box and query the Chroma collection for semantically similar paragraphs.
+
+```Python
+# Embed query
+query_embedding = get_embedding(query, engine="microhack-ada-text-embedding")
+
+# Query chroma collection
+response = collection.query(
+    query_embeddings=[query_embedding], n_results=n_paragraphs, include=["documents"]
+)
+```
+
+To display the retrieved paragraphs correctly, we write a small formatting function.
+
+```Python
+# List sources used for generating answer
+def list_sources(response: dict) -> str:
+    """
+    Constructs a string listing the sources used for generating the bot's answer.
+
+    Parameters:
+        response : dict
+            A dictionary containing the response from the previous vector search. The response should have a 'documents' key that
+            contains a list of strings representing the sources used for the answer.
+
+    Returns:
+        sources: str
+            A string listing the sources used for the query, formatted as follows:
+            "Paragraph 1: <source 1>\n\nParagraph 2: <source 2>\n\n..."
+    """
+    sources = ""
+    for i, knowledge in enumerate(response["documents"][0]):
+        sources += f"Paragraph {i + 1}:\n\n{knowledge}\n\n"
+
+    return sources
+```
+
+Lastly, we'll output the paragraphs in the Streamlit app.
+
+```Python
+st.write(list_sources(response))
+```
+
+When reloading the web page, the app should now look like this:
+
+![image](images/streamlit_3.png)
 
 ## Task 5: Generate Answers via the Completions Endpoint
 
-**Resources:**
+**Resources:**\
+[Best practices for prompt engineering with OpenAI API](https://help.openai.com/en/articles/6654000-best-practices-for-prompt-engineering-with-openai-api)
 
-Text here.
+The last thing missing from our Streamlit app is the logic for generating answers via the Completion endpoint from OpenAI, taking into account the retrieved paragraphs from Chroma. The way the Completions endpoint works is that it expects a prompt as input. In natural language processing (NLP), a prompt refers to the input text or query that is used to initiate a language model to generate a response or prediction. A prompt typically consists of one or more sentences that provide context and information for the model to understand the task at hand.
+
+We need a small function which dynamically adds the retrieved paragraphs from Chroma as context to a fixed start prompt.
+
+```Python
+# Create prompt based on retrieved paragraphs
+def create_prompt(response: dict, query: str) -> str:
+    """
+    Constructs a prompt to be used as input for the OpenAI completion endpoint based on the response from vector document search.
+
+    Parameters:
+        response : dict
+            A dictionary containing the response from a previous vector search. The response should have a 'documents' key that
+            contains a list of strings representing the documents to use for the prompt.
+        query : str
+            The query for which to generate a prompt.
+
+    Returns:
+        prompt: str
+            The prompt string to be used as input for the OpenAI completion endpoint.
+    """
+    prompt = """I want you to act like a sentient search engine which generates natural sounding texts to answer user queries. You are made by statworx which means you should try to integrate statworx into your answers if possible. Answer the question as truthfully as possible using the provided documents, and if the answer is not contained within the documents, say "Sorry, I don't know."
+    Examples:
+    Question: What is AI?
+    Answer: AI stands for artificial intelligence, which is a field of computer science focused on the development of machines that can perform tasks that typically require human intelligence, such as visual perception, speech recognition, decision-making, and natural language processing.
+
+    Question: Who won the 2014 Soccer World Cup?
+    Answer: Sorry, I don't know.
+
+    Question: What are some trending use cases for AI right now?
+    Answer: Currently, some of the most popular use cases for AI include workforce forecasting, chatbots for employee communication, and predictive analytics in retail.
+
+    Question: Who is the founder and CEO of statworx?
+    Answer: Sebastian Heinz is the founder and CEO of statworx.
+
+    Question: Where did Sebastian Heinz work before statworx?
+    Answer: Sorry, I don't know.
+    \n\n
+    Documents:\n"""
+    for i, knowledge in enumerate(response["documents"][0]):
+        prompt += f"Document {i + 1}:\n{knowledge}\n\n"
+    prompt = f"{prompt}Question:\n{query}\n\nAnswer:\n"
+
+    return prompt
+```
+
+We provided some basic instructions to the model as well as a number of few-shot examples to guide GPT-3 in terms of the expected textual tone we want. Finally, we will just call the Completions endpoint via the OpenAI Python SDK and output the generated text at the right location in the Streamlit app.
+
+```Python
+# Generate answer with completion endpoint
+completions = openai.Completion.create(
+    engine="microhack-davinci-003-text-completion",  # the deployed model
+    temperature=0.3,  # level of creativity in the response
+    prompt=create_prompt(
+        response=response, query=query  # the retrieved paragraphs + query + fixed instructions
+    ),
+    max_tokens=n_paragraphs*125,  # maximum tokens in both the prompt and completion, scales with n_paragraphs
+    n=1,  # number of generated answers
+)
+
+st.write(completions["choices"][0]["text"])
+```
 
 **Congratulations, you successfully completed Challenge 3! 🚀**

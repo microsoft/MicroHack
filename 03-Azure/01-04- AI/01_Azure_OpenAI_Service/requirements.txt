@@ -1,0 +1,22 @@
+# DO NOT include azure-functions-worker in this file
+# The Python Worker is managed by Azure Functions platform
+# Manually managing azure-functions-worker may cause unexpected issues
+
+cryptography
+azure-functions
+azure-storage-blob
+azure-identity
+requests
+azure-identity
+azure-keyvault-secrets
+azure-ai-formrecognizer
+openai
+num2words
+matplotlib 
+pandas
+plotly 
+scipy 
+scikit-learn
+http://download.pytorch.org/whl/cpu/torch-2.0.0%2Bcpu-cp38-cp38-linux_x86_64.whl # torch cpu wheel, workaround for torch installation in azure function
+chromadb
+streamlit

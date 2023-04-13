@@ -268,7 +268,7 @@ You should see two running containers - one for the Chroma image and one for cli
 [Introduction to Azure Functions](https://learn.microsoft.com/en-us/azure/azure-functions/functions-overview)\
 [Getting started with Azure Functions](https://learn.microsoft.com/en-us/azure/azure-functions/functions-get-started?pivots=programming-language-python)
 
-Azure Functions are a so-called serverless compute service. They are used to execute processes based on event-triggered code. This means that the code you write that makes up your Azure function does not run continuously, it is instead initiated by a large range of various trigger events. That is exactly what we need for this use case: every time a new document is added to our knowledge base, it triggers an Azure function that extracts and embeds the content of that document and adds it to the Elastic search index used for providing the Q&A bot with the knowledge needed to answer questions.
+Azure Functions are a so-called serverless compute service. They are used to execute processes based on event-triggered code. This means that the code you write that makes up your Azure function does not run continuously, it is instead initiated by a large range of various trigger events. That is exactly what we need for this use case: every time a new document is added to our knowledge base, it triggers an Azure function that extracts and embeds the content of that document and adds it to the Chroma collection used for providing the Q&A bot with the knowledge needed to answer questions.
 
 In this task, we are setting up an Azure function that we can later customize to execute the custom code that executes said process.
 

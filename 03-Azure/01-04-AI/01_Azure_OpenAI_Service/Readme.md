@@ -8,7 +8,7 @@
   - [Architecture](#architecture)
 - [MicroHack Challenges](#microhack-challenges)
   - [Challenge 1 - Setup Azure Services to Process Stored Documents in an Azure Function](#challenge-1---setup-azure-services-to-process-stored-documents-in-an-azure-function)
-    - [Goal 1](#goal-1)
+    - [Goal](#goal)
     - [Task 1: Create a Storage Account](#task-1-create-a-storage-account)
     - [Task 2: Setup Azure Form Recognizer](#task-2-setup-azure-form-recognizer)
     - [Task 3: Setup Azure Key Vault and save Form Recognizer Keys](#task-3-setup-azure-key-vault-and-save-form-recognizer-keys)
@@ -16,7 +16,7 @@
     - [Task 5: Create the Azure Function](#task-5-create-the-azure-function)
     - [Task 6: Test the Azure Function Locally](#task-6-test-the-azure-function-locally)
   - [Challenge 2 - Setting up a functional Pipeline](#challenge-2---setting-up-a-functional-pipeline)
-    - [Goal](#goal)
+    - [Goal](#goal-1)
     - [Task 1: Setup the Azure OpenAI Service](#task-1-setup-the-azure-openai-service)
     - [Task 2: Implement the Azure Form Recognizer in the Azure Function](#task-2-implement-the-azure-form-recognizer-in-the-azure-function)
     - [Task 3: Create a Chroma Collection and Prepare the Azure Function for Creating Text Embeddings](#task-3-create-a-chroma-collection-and-prepare-the-azure-function-for-creating-text-embeddings)
@@ -24,7 +24,7 @@
     - [Task 5: Test the Azure Function Locally](#task-5-test-the-azure-function-locally)
     - [Task 6: Deploy the Azure Function](#task-6-deploy-the-azure-function)
   - [Challenge 3 - Building a Streamlit frontend for our Q\&A bot](#challenge-3---building-a-streamlit-frontend-for-our-qa-bot)
-    - [Goal](#goal-1)
+    - [Goal](#goal-2)
     - [Task 1: Setup Streamlit App](#task-1-setup-streamlit-app)
     - [Task 2: Create Streamlit Widgets](#task-2-create-streamlit-widgets)
     - [Task 3: Connect the Streamlit App to the Blob Storage](#task-3-connect-the-streamlit-app-to-the-blob-storage)
@@ -102,7 +102,9 @@ At the end of this MicroHack you will have set your Azure environment to use the
 
 ## Challenge 1 - Setup Azure Services to Process Stored Documents in an Azure Function
 
-### Goal 1
+[Walkthrough](challenges/challenge-1/solution.md)
+
+### Goal
 
 The goal of Challenge 1 is to set up a system using Azure services to process stored documents in an Azure function. This involves creating a Storage Account, setting up Azure Form Recognizer, creating an Azure Key Vault and saving Secrets, setting up a vector database, as well as creating an Azure Function to execute custom code every time a new document is added to the blob storage.
 
@@ -131,6 +133,8 @@ In task 5, you will create an Azure Function that executes custom code every tim
 In Task 6, you will test your Azure Function locally to ensure it is working properly before deploying it to Azure. This will involve simulating an event trigger by uploading a test file to the blob storage and verifying that the Azure Function is triggered and processes the file correctly.
 
 ## Challenge 2 - Setting up a functional Pipeline
+
+[Walkthrough](challenges/challenge-2/solution.md)
 
 ### Goal
 
@@ -161,6 +165,8 @@ In this task, you will test the Azure Function locally using VSCode Azure Extens
 Task 6 involves deploying the Azure Function to a Function App in Azure after creating a Function App resource. To allow the Function App to access the Azure Key Vault for authentication and use of different resources, set up secure access using a managed identity and access policy, and add the outbound IP addresses of the Azure Function to the inbound port rules of the Azure VM created in Challenge 1.
 
 ## Challenge 3 - Building a Streamlit frontend for our Q&A bot
+
+[Walkthrough](challenges/challenge-3/solution.md)
 
 ### Goal
 

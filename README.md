@@ -25,7 +25,7 @@ MicroHacks are great for building base knowledge for people new to a technical a
 
 ## **What is a MicroHack?**
 
-A MicroHack is a small workshop, less than four hours, where you’ll get hands-on experience and solve different challenges to better understand a certain technology or topic. Let’s say, it’s the mini Version of an OpenHack which focuses on a real-life scenario or transformation.
+A MicroHack is a small workshop, less than six hours, where you’ll get hands-on experience and solve different challenges to better understand a certain technology or topic. Let’s say, it’s the mini Version of an OpenHack which focuses on a real-life scenario or transformation.
 
 ## **How does it work?**
 

@@ -31,9 +31,9 @@ With Streamlit, you can quickly prototype and build interactive data application
 
 Setting up a Streamlit app in Python is a straightforward process. All you need is to install Streamlit in your Python environment, create a Python script where you will define the look and functionality of your UI and run the app via a simple terminal command.
 
-First, add the Streamlit package to the ```environment.txt``` file we used in Challenge 2 and run ```pip install -r requirements.txt``` once again.
+First, add the Streamlit package to the `environment.txt` file we used in Challenge 2 and run `pip install -r requirements.txt` once again.
 
-Now, we can already start working on our UI. Create a Python file ```main.py```, import Streamlit and add your first widget:
+Now, we can already start working on our UI. Create a Python file `main.py`, import Streamlit and add your first widget:
 
 ```Python
 import streamlit as st
@@ -43,7 +43,7 @@ st.title("My Streamlit App")
 ```
 
 
-Running the app is as easy as executing the following code in your terminal:
+Running the app is as easy as executing the following code in your terminal, after navigating to the directory where you `main.py` is located:
 
 ```console
 streamlit run main.py
@@ -289,19 +289,22 @@ def create_prompt(response: dict, query: str) -> str:
     return prompt
 ```
 
-We provided some basic instructions to the model as well as a number of few-shot examples to guide GPT-3 in terms of the expected textual tone we want. Finally, we will just call the Completions endpoint via the OpenAI Python SDK and output the generated text at the right location in the Streamlit app.
+We provided some basic instructions to the model as well as a number of few-shot examples to guide GPT-3 in terms of the expected textual tone we want. Please note that these few-shot examples were chosen to work especially well with the documents we chose to upload in our case. Choose different examples and question-answer pairs that cover the content of your specific documents. 
+
+Finally, we will just call the Completions endpoint via the OpenAI Python SDK and output the generated text at the right location in the Streamlit app.
 
 ```Python
 # Generate answer with completion endpoint
 completions = openai.Completion.create(
-    engine="microhack-davinci-003-text-completion",     # the deployed model
-    temperature=0.3,                                    # level of creativity in the response
-    prompt=create_prompt(                               # the retrieved paragraphs + query + fixed instructions
-        response=response,                              # the retrieved paragraphs
-        query=query,                                    # the query
+    engine="microhack-davinci-003-text-completion",  # the deployed model
+    temperature=0.3,  # level of creativity in the response
+    prompt=create_prompt(  # the retrieved paragraphs + query + fixed instructions
+        response=response,  # the retrieved paragraphs
+        query=query,  # the query
     ),
-    max_tokens=n_paragraphs * 125,                      # maximum tokens in both the prompt and completion, scales with n_paragraphs
-    n=1,                                                # number of generated answers
+    max_tokens=n_paragraphs
+    * 125,  # maximum tokens in both the prompt and completion, scales with n_paragraphs
+    n=1,  # number of generated answers
 )
 
 st.write(completions["choices"][0]["text"])

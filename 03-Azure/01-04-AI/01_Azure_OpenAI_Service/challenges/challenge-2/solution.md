@@ -79,6 +79,7 @@ After setting up the individual services needed for this MicroHack, we are now m
 
 Firstly, we'll add the needed packages to the requirements.txt.
 We will be using
+
 - ```azure-identity``` to authenticate ourselves
 - ```azure-keyvault-secrets``` to connect to our Azure Key Vault
 - ```azure-ai-formrecognizer``` which is the official Python SDK of the Azure Form Recognizer
@@ -381,7 +382,7 @@ def gen_ids(client: chromadb.Client, collection_name: str, documents: List) -> L
         ]
 ```
 
-We now have everything in place to embed the extracted paragraphs and write the extracted paragraphs and their embeddings to our Chroma collection. Chroma's developer-friendly API makes this process quite straight-forward: We just need to connect to our Chroma collection (`client.get_or_create_collection()`, which also creates a collection if it doesn't yet exist), supply it with an embedding function (`AzureOpenAIEmbeddings()`, a class we just wrote ourselves) and then add the documents in question to the collection (`collection.add()`), which are automatically embedded using the embedding function.
+We now have everything in place to embed the extracted paragraphs and write the extracted paragraphs and their embeddings to our Chroma collection. Chroma's developer-friendly API makes this process quite straight-forward: We just need to add the documents in question to the collection (`collection.add()`), which are automatically embedded using the embedding function.
 
 We thus extend our `main()` function in \_\_init\_\_.py with the following code section:
 
@@ -398,238 +399,13 @@ collection.add(
 logging.info("Total number of documents in collection: %s", collection.count())
 ```
 
-Our complete \_\_init\_\_.py script now looks like this:
-
-```Python
-import logging
-import urllib.request
-import azure.functions as func
-from azure.keyvault.secrets import SecretClient
-from azure.identity import DefaultAzureCredential
-from azure.ai.formrecognizer import DocumentAnalysisClient
-from azure.core.credentials import AzureKeyCredential
-from typing import List, Optional
-import re
-import openai
-from openai.embeddings_utils import get_embedding
-import chromadb
-from chromadb.api.types import Documents, EmbeddingFunction, Embeddings
-from chromadb.config import Settings
-
-
-def chunk_paragraphs(paragraphs: List[str], max_words: int = 100) -> List[str]:
-    """
-    Chunk a list of paragraphs into chunks
-    of approximately equal word count.
-    """
-    # Create a list of dictionaries with the paragraph as the
-    # key and the word count as the value
-    paragraphs = [{p: len(p.split())} for p in paragraphs]
-    # Create a list of lists of paragraphs
-    chunks = []
-    # Iterate over the list of paragraphs
-    for i, p in enumerate(paragraphs):
-        # If the current chunk is empty, add the first paragraph to it
-        if len(chunks) == 0:
-            chunks.append([p])
-        # If the current chunk is not empty, check if adding the
-        # next paragraph will exceed the max word count
-        else:
-            # If adding the next paragraph will exceed the max word count,
-            # start a new chunk
-            if (
-                sum([list(c.values())[0] for c in chunks[-1]]) + list(p.values())[0]
-                > max_words
-            ):
-                chunks.append([p])
-            # If adding the next paragraph will not exceed the max word
-            # count, add it to the current chunk
-            else:
-                chunks[-1].append(p)
-    # Create a list of strings from the list of lists of paragraphs
-    chunks = [" ".join([list(c.keys())[0] for c in chunk]) for chunk in chunks]
-    return chunks
-
-
-def analyze_layout(data: bytes, endpoint: str, key: str) -> List[str]:
-    """
-    Analyze a document with the layout model.
-
-    Args:
-        data (bytes): Document data.
-        endpoint (str): Endpoint URL.
-        key (str): API key.
-
-    Returns:
-        List[str]: List of paragraphs.
-    """
-    # Create a client for the form recognizer service
-    document_analysis_client = DocumentAnalysisClient(
-        endpoint=endpoint, credential=AzureKeyCredential(key)
-    )
-    # Analyze the document with the layout model
-    poller = document_analysis_client.begin_analyze_document("prebuilt-layout", data)
-    # Get the results and extract the paragraphs
-    # (title, section headings, and body)
-    result = poller.result()
-    paragraphs = [
-        p.content
-        for p in result.paragraphs
-        if p.role in ["Title", "sectionHeading", None]
-    ]
-    # Chunk the paragraphs (max word count = 100)
-    paragraphs = chunk_paragraphs(paragraphs)
-
-    return paragraphs
-
-
-def normalize_text(s: str) -> str:
-    """
-    Clean up a string by removing redundant
-    whitespaces and cleaning up the punctuation.
-
-    Args:
-        s (str): The string to be cleaned.
-
-    Returns:
-        s (str): The cleaned string.
-    """
-    s = re.sub(r"\s+", " ", s).strip()
-    s = re.sub(r". ,", "", s)
-    s = s.replace("..", ".")
-    s = s.replace(". .", ".")
-    s = s.replace("\n", "")
-    s = s.strip()
-
-    return s
-
-
-def generate_embedding(s: str, engine: Optional[str] = "microhack-ada-text-embedding"):
-    """
-    Clean the extracted paragraph before generating its' embedding.
-
-    Args:
-        s (str): The extracted paragraph.
-        engine (str): The name of the embedding model.
-
-    Returns:
-        embedding_dict (dict): The cleaned paragraph and embedding
-        as key value pairs.
-    """
-    cleaned_paragraph = normalize_text(s)
-    embedding = get_embedding(cleaned_paragraph, engine)
-    return embedding
-
-
-class AzureOpenAIEmbeddings(EmbeddingFunction):
-    def __init__(
-        self,
-        openai_api_key: str,
-        openai_endpoint: str,
-        model_name: Optional[str] = "microhack-curie-text-search-doc",
-    ): 
-        self.model_name = model_name
-        openai.api_type = "azure"
-        openai.api_key = openai_api_key
-        openai.api_base = openai_endpoint
-        openai.api_version = "2022-12-01"
-
-    def __call__(self, texts: Documents) -> Embeddings:
-        return [generate_embedding(p, self.model_name) for p in texts]
-
-
-def gen_ids(client: chromadb.Client, collection_name: str, documents: List) -> List:
-    """Generate a list of ids for the documents to be inserted into the collection.
-
-    Args:
-        client (chromadb.Client): The client to use to connect to the database.
-        collection_name (str): The name of the collection to insert the documents into.
-        documents (List): The documents to be inserted into the collection.
-
-    Returns:
-        List: A list of ids for the documents to be inserted into the collection.
-    """
-    if collection_name not in [
-        collection.name for collection in client.list_collections()
-    ]:
-        return ["id{}".format(count) for count in range(len(documents))]
-    else:
-        collection = client.get_collection(collection_name)
-        return [
-            "id{}".format(count)
-            for count in range(collection.count(), collection.count() + len(documents))
-        ]
-
-
-def main(myblob: func.InputStream):
-    logging.info(
-        f"Python blob trigger function processed blob \n"
-        f"Name: {myblob.name}\n"
-        f"Blob Size: {myblob.length} bytes"
-    )
-
-    credential = DefaultAzureCredential()
-    # Retrieve secrets from Key Vault
-    key_vault_name = "microhack-key-vault"
-    key_vault_uri = f"https://{key_vault_name}.vault.azure.net"
-    client = SecretClient(vault_url=key_vault_uri, credential=credential)
-    logging.info("Retreiving secrets from Azure Key Vault.")
-    fm_api_key = client.get_secret("FORM-RECOGNIZER-KEY").value
-    fm_endpoint = client.get_secret("FORM-RECOGNIZER-ENDPOINT").value
-
-    # OpenAI
-    openai_api_key = client.get_secret("OPENAI-KEY").value
-    openai_endpoint = client.get_secret("OPENAI-ENDPOINT").value
-
-    # Chroma
-    chroma_address = client.get_secret("CHROMA-DB-ADDRESS").value
-
-    # Chroma Client
-    chroma_client = chromadb.Client(
-        Settings(
-            chroma_api_impl="rest",
-            chroma_server_host=chroma_address,
-            chroma_server_http_port="8000",
-        )
-    )
-    # Ping Chroma
-    chroma_client.heartbeat()
-    logging.info(
-        "Successfully connected to Chroma DB. Collections found: %s",
-        chroma_client.list_collections(),
-    )
-
-    # Get a Chroma collection or create it if it doesn't exist already
-    logging.info("Get or create the microhack colletion")
-    collection = chroma_client.get_or_create_collection(
-        "microhack-collection",
-        embedding_function=AzureOpenAIEmbeddings(openai_api_key, openai_endpoint),
-    )
-    logging.info("Successfully retrieved microhack collection from Chroma DB.")
-
-    # Read document
-    logging.info("Read in new document")
-    data = myblob.read()
-
-    # Get List of paragraphs from document
-    logging.info("Retrieve paragraphs from new document")
-    paragraphs = analyze_layout(data, fm_endpoint, fm_api_key)
-
-    # Generate embeddings and save to Chroma
-    logging.info(
-        """Add paragraphs to chroma collection.
-                 Number of new paragraphs: %s""",
-        len(paragraphs),
-    )
-    collection.add(
-        documents=paragraphs, ids=gen_ids(client, "microhack-collection", paragraphs)
-    )
-    logging.info("Total number of documents in collection: %s", collection.count())
-```
+Our Azure Function is now complete.
 
 ## Task 5: Test the Azure Function Locally
 
 **Resources:**
+
+The Azure Function still only lives on our local development machine. Before deploying it to the Azure Cloud, we should test the Function one last time. You can refer to [Challenge 1 Task 6](../challenge-1/solution.md#task-6-test-the-azure-function-locally) on how to test an Azure Function locally.
 
 ## Task 6: Deploy the Azure Function
 
@@ -637,71 +413,71 @@ def main(myblob: func.InputStream):
 [Develop Azure Functions by using Visual Studio Code](https://learn.microsoft.com/en-us/azure/azure-functions/functions-develop-vs-code?tabs=csharp)\
 [Use Key Vault references for App Service and Azure Functions](https://learn.microsoft.com/en-us/azure/app-service/app-service-key-vault-references?tabs=azure-cli)
 
-After successfully testing the Azure function locally, it is time to deploy the function to a Azure Function App. To do so, we must first create a Function App resource that we can then deploy to. 
+After successfully testing the Azure function locally, it is time to deploy the function to an Azure Function App. To do so, we must first create a Function App resource that we can then deploy to.
 
-Navigate go the Azure extension on the left side of VSCode and select the **Create Resource...** button (The + next to your list of resources) to start the process. 
+Navigate to the Azure extension on the left side of VSCode and select the **Create Resource...** button (The + next to your list of resources) to start the process.
 
 ![image](images/function_deployment_0.png)
 
-VSCode will then prompt you to select a resource to create. Out of given option, choose **Create Function App in Azure...** to create your own Function App. 
+VSCode will then prompt you to select a resource to create. Out of the given options, choose **Create Function App in Azure...** to create your own Function App.
 
 ![image](images/function_deployment_1.png)
 
-Next give your Function App a globally unique name. Since we're only deploying a single function app for this microhack we choose to call it "microhack-function". Choose your own, more expressive Function App name if needed. 
+Next give your Function App a globally unique name. Since we're only deploying a single function app for this microhack we choose to call it "microhack-function". Choose your own, more expressive Function App name if needed.
 
 ![image](images/function_deployment_2.png)
 
-The next prompt asks you to choose a runtime stack, meaning the Python distribution that will be available to execute the Azure function when triggered. Choose the Python distribution that you used to develop your Azure function. 
+The next prompt asks you to choose a runtime stack, meaning the Python distribution that will be available to execute the Azure function when triggered. Choose the Python distribution that you used to develop your Azure function.
 
 ![image](images/function_deployment_3.png)
 
-Similar to when setting up resources in the Azure Portal, VSCode also prompts you to choose a deployment region. We once more choose the region that is closest to our location in Frankfurt am Main, Germany West Central. 
+Similar to when setting up resources in the Azure Portal, VSCode also prompts you to choose a deployment region. We once more choose the region that is closest to our location in Frankfurt am Main, Germany West Central.
 
 ![image](images/function_deployment_4.png)
 
-As a next step, you are prompted to choose the Azure Resource Group to add the Function App service to. We select the Resource Group that we have used for this project all along. 
+As a next step, you are prompted to choose the Azure Resource Group to add the Function App service to. We select the Resource Group that we have used for this project all along.
 
 ![image](images/function_deployment_5.png)
 
-After selecting the Resource Group, the Azure Function App service is then created. This process might take a short while until deployment is finished. 
+After selecting the Resource Group, the Azure Function App service is then created. This process might take a short while until deployment is finished.
 
 ![image](images/function_deployment_6.png)
 
-The terminal will notify you once the Function App resource has been created successfully. 
+The terminal will notify you once the Function App resource has been created successfully.
 
 ![image](images/function_deployment_7.png)
 
-Now that the Function App resource has been created, you can deploy the Azure Function next. 
+Now that the Function App resource has been created, you can deploy the Azure Function next.
 
-Navigate to the **Deploy to Function App...** button next to the **WORKSPACE** panel. 
+Navigate to the **Deploy to Function App...** button next to the **WORKSPACE** panel.
 
 ![image](images/function_deployment_00.png)
 
-This will open another dialogue that guides you through the deployment process of your Azure Function. 
+This will open another dialogue that guides you through the deployment process of your Azure Function.
 
-First you are prompted to select your chosen resource group. 
+First you are prompted to select your chosen resource group.
 
 ![image](images/function_deployment_8.png)
 
-Next you must select the resource you wish to deploy. In this case, it is the Azure Function that you have previously named. Select the function. 
+Next you must select the resource you wish to deploy. In this case, it is the Azure Function that you have previously named. Select the function.
 
 ![image](images/function_deployment_9.png)
 
-You are then prompted to confirm that this is the function you would like to deploy. 
+You are then prompted to confirm that this is the function you would like to deploy.
 
 ![image](images/function_deployment_10.png)
 
-After deployment you will find your Function App among the other resources of your Resource Group in the **Overview** tab. 
+After deployment you will find your Function App among the other resources of your Resource Group in the **Overview** tab.
 
 ![image](images/function_deployment_11.png)
 
-Since the Azure function needs access to the Azure Key Vault to use the stored secrets for authentication and use of different resources, we need to set up secure access. We can do so using a managed identity and access policy. 
+Since the Azure function needs access to the Azure Key Vault to use the stored secrets for authentication and use of different resources, we need to set up secure access. We can do so using a managed identity and access policy.
 
-Select your deployed **Function App** resource (not the App Service plan) to open up the **Overview** panel of the Function App. 
+Select your deployed **Function App** resource (not the App Service plan) to open up the **Overview** panel of the Function App.
 
 ![image](images/function_deployment_12.png)
 
-First we create a manged identity. Navigate to the **Identity** panel on the navigation bar and activate a system-assigned identity by setting its status to **On**. Copy and paste the created object to a save place, where you can access it again for the next steps.
+First we create a manged identity. Navigate to the **Identity** panel on the navigation bar and activate a system-assigned identity by setting its status to **On**.
 
 ![image](images/function_deployment_13.png)
 
@@ -709,19 +485,19 @@ Next, head back over to the Key Vault and navigate to the **Access Policies** pa
 
 ![image](images/function_deployment_14.png)
 
-On the next page you can select the permissions you would like your Function App to receive. For the purpose of this Microhack, simply getting the secrets from the Key Vault is enough - hence we select **Get** and continue. 
+On the next page you can select the permissions you would like your Function App to receive. For the purpose of this Microhack, simply getting the secrets from the Key Vault is enough - hence we select **Get** and continue.
 
 ![image](images/function_deployment_15.png)
 
-Now the Access Policy requires a principal. We select the Microhack function that we just deployed and click on **Next**. 
+Now the Access Policy requires a principal. We select the Microhack function that we just deployed and click on **Next**.
 
 ![image](images/function_deployment_16.png)
 
-During the review you will see the object ID that was previously created for the managed identity. Double-check if this object ID corresponds to the value you saved earlier. If it does, click on **Create** to create the access policy.
+During the review you will see the object ID that was previously created for the managed identity. Double-check if this object ID corresponds to the value of the managed identity. If it does, click on **Create** to create the access policy.
 
 ![image](images/function_deployment_17.png)
 
-Finally, we'll find out which outbound IP addresses our Azure Function can use and add these to the inbound port rules of the Azure VM created in Challenge 1. 
+Finally, we'll find out which outbound IP addresses our Azure Function can use and add these to the inbound port rules of the Azure VM created in Challenge 1.
 
 For this, execute the following command in your terminal and copy the output:
 

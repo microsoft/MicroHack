@@ -236,6 +236,8 @@ We'll allow our own IP address to connect to the VM via SSH (for debugging) and 
 
 ![image](images/chroma_vm_7.png)
 
+The Chroma DB will be available via the IP Address next to *NIC Public IP*. Since this is also a sensitive value, we will add the IP to our Key Vault, just as we did for the Form Recognizer secrets in Task 3.
+
 Now that we are able to connect to the VM locally, we will set up Chroma and check if the container group is running as expected. You can execute the Chroma docker-compose script *startup.sh* by running the following command inside your terminal:
 
 ```console

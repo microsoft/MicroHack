@@ -4,7 +4,7 @@ Duration: 90 minutes (without setting up Nested Virtualization)
 
 [Previous Challenge Solution](../challenge-3/solution.md) - **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-5/solution.md)
 
-## Prerequisites (Test)
+## Prerequisites
 
 Please ensure that you successfully passed [challenge 3](../../Readme.md#challenge-3) before continuing with this challenge.
 

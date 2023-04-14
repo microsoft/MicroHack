@@ -1,6 +1,6 @@
 # Walkthrough Challenge 2 - Setting up a Functional Pipeline
 
-Duration: **TBD**
+Duration: **2.5 hours**
 
 **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-3/solution.md)
 

@@ -1,6 +1,6 @@
 # Walkthrough Challenge 3 -  Create a Graphical User Interface with Streamlit
 
-Duration: **TBD**
+Duration: **1 hour**
 
 **[Home](../../Readme.md)**
 

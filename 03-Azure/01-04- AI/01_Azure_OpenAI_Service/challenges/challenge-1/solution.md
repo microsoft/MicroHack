@@ -1,6 +1,6 @@
 # Walkthrough Challenge 1 -  Setup Azure Services to Process Stored Documents in an Azure Function
 
-Duration: **TBD**
+Duration: **1.5 hours**
 
 **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-2/solution.md)
 

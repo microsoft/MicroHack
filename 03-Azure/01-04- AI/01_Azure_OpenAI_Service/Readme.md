@@ -35,7 +35,7 @@
 
 ## MicroHack Introduction and Context
 
-This MicroHack scenario walks through the creation of a Q&A bot using the Azure OpenAI service for building a semantic search pipeline. This Hack focuses on setting up the necessary Azure services as the building blocks of a Q&A bot powered by OpenAI's most recent language models and Azure. It guides you through setting up a robust infrastructure that extracts paragraphs from your raw text documents, stores them in a text data base optimized for search use cases and then leverages the power of Natural Language Processing to find the information you are looking for - all from within Microsoft Azure and requiring minimal coding.
+This MicroHack scenario walks through the creation of a Q&A bot using the Azure OpenAI service for building a semantic search pipeline. This Hack focuses on setting up the necessary Azure services as the building blocks of a Q&A bot powered by OpenAI's most recent language models and Azure. It guides you through setting up a robust infrastructure that extracts paragraphs from your raw text documents, stores them in a text data base optimized for vector search and then leverages the power of Natural Language Processing to find the information you are looking for - all from within Microsoft Azure and requiring minimal coding.
 
 <img src="img/webapp_demo.gif" width="75%" height="75%"/>
 
@@ -60,6 +60,8 @@ After completing this MicroHack you will:
 
 ## Prerequisites
 
+This MicroHack is designed to work with text data that is read from documents to be then processed and stored in Azure. We used our own documents, a collection of whitepapers written and published by statworx. In order to make the most of this MicroHack, we suggest you have a collection of documents in PDF-format at hand that you can then use to test the processing pipeline and inform the Q&A-bot by giving it context for its answers. 
+
 In order to use the MicroHack time most effectively, the following services should be set up and ready for use prior to starting work on the challenges and their task:
 
 - Azure Account
@@ -70,7 +72,7 @@ Permissions for deployment:
 
 - Contributor on your Resource Group
 
-With these pre-requisites in place, you only need to set up the lab environment before starting to work on the challenges. These are designed for you to build familiarity with Azure's various services that facilitate implementing NLP-products through the use of services such Azure OpenAI, Azure Storage, Azure Functions and Elastic Cloud.
+With these pre-requisites in place, you only need to set up the lab environment before starting to work on the challenges. These are designed for you to build familiarity with Azure's various services that facilitate implementing NLP-products through the use of services such Azure OpenAI, Virtual Machines and Azure Functions.
 
 ## Lab environment for this MicroHack
 

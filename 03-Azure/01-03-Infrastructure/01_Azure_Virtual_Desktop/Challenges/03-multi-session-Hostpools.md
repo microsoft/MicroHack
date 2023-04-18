@@ -10,7 +10,7 @@ Create multi-session Hostpool joined in Azure Active Directory
 - Metadata located in West Europe
 - Mark as Validation environment
 - Host Pool type: Pooled
-- Choose Windows 11 Enterprise multi-session Version + Microsoft 365 Apps Gallery image  
+- Choose your Azure Compute Gallery image from the previous challenge
 - Domain to join: Azure Active Directory (Enroll with Intune “No”)
 - Register desktop app group to new workspace
 - Assign users

@@ -97,7 +97,7 @@ For example:
 
 ## Template
 
-In order to bootstrap new MicroHacks we created a [template file](/99-MicroHack-Template/readme.md) for your convenience. Feel free to use it for your new MicroHacks or copy exisiting MicroHacks that better fit your ideas.
+In order to bootstrap new MicroHacks we created a [template file](99-MicroHack-Template/Readme.md) for your convenience. Feel free to use it for your new MicroHacks or copy exisiting MicroHacks that better fit your ideas.
 
 ## Formatting
 

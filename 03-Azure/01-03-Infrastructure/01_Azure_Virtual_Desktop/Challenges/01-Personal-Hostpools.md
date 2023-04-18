@@ -9,7 +9,8 @@ In this challenge we will be provisioning our first Host Pool and Session Hosts.
 - West Europe Region
 - Personal Host Pool via the Azure Portal, with Windows 11 Enterprise from the Gallary
 - Metadata located in West Europe
-- Users should be assigned directly to the session host.
+- Users should be assigned directly to the session host
+- Join session hosts to Azure Active Directory
 - Change the friendly name of the Workspace
 - Change the friendly name of the Application Group
 

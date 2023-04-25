@@ -30,6 +30,12 @@
     - [Task 3: Connect the Streamlit App to the Blob Storage](#task-3-connect-the-streamlit-app-to-the-blob-storage)
     - [Task 4: Connect the Streamlit App to the Chroma DB](#task-4-connect-the-streamlit-app-to-the-chroma-db)
     - [Task 5: Generate Answers via the OpenAI Completions Endpoint](#task-5-generate-answers-via-the-openai-completions-endpoint)
+  - [Challenge 4 - Deploy the Streamlit App to Azure](#challenge-4---deploy-the-streamlit-app-to-azure)
+    - [Goal](#goal-3)
+    - [Task 1: Create the Dockerfile for the Streamlit App](#task-1-create-the-dockerfile-for-the-streamlit-app)
+    - [Task 2: Build and Test the Docker Image](#task-2-build-and-test-the-docker-image)
+    - [Task 3: Build and Store the Docker Image by Using Azure Container Registry](#task-3-build-and-store-the-docker-image-by-using-azure-container-registry)
+    - [Task 4: Setup Azure App Service and Deploy the Streamlit App](#task-4-setup-azure-app-service-and-deploy-the-streamlit-app)
   - [Finished? Delete your lab](#finished-delete-your-lab)
   - [Authors](#authors)
 
@@ -188,11 +194,34 @@ Next, you will extend the streamlit script to be able to connect with your Azure
 
 ### Task 4: Connect the Streamlit App to the Chroma DB
 
-In this penultimate task of the MicroHack you will extend your streamlit app to also be able to send queries to your ChromaDB deployment. That's how your embedded documents can be retrieved and used for context by the Q&A-bot. 
+In this penultimate task of the MicroHack you will extend your streamlit app to also be able to send queries to your ChromaDB deployment. That's how your embedded documents can be retrieved and used for context by the Q&A-bot.
 
 ### Task 5: Generate Answers via the OpenAI Completions Endpoint
 
-Finally, in this concluding task you will extend your streamlit to use the OpenAI Completions endpoint to generate human-like answers to your queries that include the retrieved documents as sources for the generated answers. With this step, the streamlit app is complete and your Q&A-bot is fully functional. 
+Finally, in this concluding task you will extend your streamlit to use the OpenAI Completions endpoint to generate human-like answers to your queries that include the retrieved documents as sources for the generated answers. With this step, the streamlit app is complete and your Q&A-bot is fully functional.
+
+## Challenge 4 - Deploy the Streamlit App to Azure
+
+[Walkthrough](challenges/challenge-4/solution.md)
+
+### Goal
+In this final challenge, we will containerize the Streamlit app with Docker, push it to an Azure Container Registry and deploy it via Azure App Services to make the web app accessible from the internet. You will also learn how to restrict access to the web app to selected IP addresses if you don't want it to be accessible by anybody.
+
+### Task 1: Create the Dockerfile for the Streamlit App
+
+In this task, you will learn how to create a Dockerfile for your Streamlit app. With a Dockerfile, you can easily package and deploy your app to any environment that supports Docker.
+
+### Task 2: Build and Test the Docker Image
+
+Once you've created your Dockerfile, it's time to build and test your Docker image. In this task, you'll learn how to use Docker to build your app and test it locally to ensure it's working as expected.
+
+### Task 3: Build and Store the Docker Image by Using Azure Container Registry
+
+In this task, you'll learn how to build and store your Docker image using Azure Container Registry. This will allow you to easily deploy your app to Azure or any other environment that supports Docker.
+
+### Task 4: Setup Azure App Service and Deploy the Streamlit App
+
+Finally, in this task, you'll learn how to set up an Azure App Service and deploy your Streamlit app. With Azure App Service, you can easily deploy your app to the cloud and scale it as needed to meet the demands of your users.
 
 ## Finished? Delete your lab
 
@@ -201,6 +230,6 @@ Thank you for participating in this MicroHack!
 ## Authors
 
 **[Robin Baudisch](https://www.linkedin.com/in/robin-baudisch-a5091a125/)** is a Data Science consultant at [statworx](https://www.statworx.com/)  
-**[Oliver Guggenbühl](https://www.linkedin.com/in/robin-baudisch-a5091a125/)** is a Data Science consultant at [statworx](https://www.statworx.com/)
+**[Oliver Guggenbühl](https://www.linkedin.com/in/oliver-guggenb%C3%BChl-672146172/)** is a Data Science consultant at [statworx](https://www.statworx.com/)
 
 Don't hesitate to reach out if you have any questions!

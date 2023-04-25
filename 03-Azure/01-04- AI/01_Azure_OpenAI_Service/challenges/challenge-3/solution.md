@@ -2,7 +2,7 @@
 
 Duration: **1 hour**
 
-**[Home](../../Readme.md)**
+**[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-4/solution.md)
 
 - [Walkthrough Challenge 3 -  Create a Graphical User Interface with Streamlit](#walkthrough-challenge-3----create-a-graphical-user-interface-with-streamlit)
   - [Prerequisites](#prerequisites)
@@ -41,7 +41,6 @@ import streamlit as st
 # Add a title to your app
 st.title("My Streamlit App")
 ```
-
 
 Running the app is as easy as executing the following code in your terminal, after navigating to the directory where you `main.py` is located:
 
@@ -289,7 +288,7 @@ def create_prompt(response: dict, query: str) -> str:
     return prompt
 ```
 
-We provided some basic instructions to the model as well as a number of few-shot examples to guide GPT-3 in terms of the expected textual tone we want. Please note that these few-shot examples were chosen to work especially well with the documents we chose to upload in our case. Choose different examples and question-answer pairs that cover the content of your specific documents. 
+We provided some basic instructions to the model as well as a number of few-shot examples to guide GPT-3 in terms of the expected textual tone we want. Please note that these few-shot examples were chosen to work especially well with the documents we chose to upload in our case. Choose different examples and question-answer pairs that cover the content of your specific documents.
 
 Finally, we will just call the Completions endpoint via the OpenAI Python SDK and output the generated text at the right location in the Streamlit app.
 

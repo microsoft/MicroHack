@@ -6,9 +6,6 @@ __pycache__/
 # C extensions
 *.so
 
-# Chroma
-.chroma
-
 # Distribution / packaging
 .Python
 build/
@@ -30,12 +27,6 @@ share/python-wheels/
 *.egg
 MANIFEST
 
-# Exclude all .tfvars files, which are likely to contain sensitive data, such as
-# password, private keys, and other secrets. These should not be part of version
-# control as they are data points which are potentially sensitive and subject
-# to change depending on the environment.
-*.tfvars
-*.tfvars.json
 # PyInstaller
 #  Usually these files are written by a python script from a template
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
@@ -58,9 +49,6 @@ coverage.xml
 *.cover
 .hypothesis/
 .pytest_cache/
-
-# .DS_Store
-.DS_Store
 
 # Translations
 *.mo
@@ -145,6 +133,3 @@ __blobstorage__
 __queuestorage__
 __azurite_db*__.json
 .python_packages
-
-# Ignore local Azure settings
-local.settings.json

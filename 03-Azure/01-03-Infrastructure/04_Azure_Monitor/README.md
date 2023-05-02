@@ -28,11 +28,11 @@
 
 This MicroHack scenario walks through the use of **Azure Monitor** with a focus on the best practices and the design principles. Specifically, this builds up to include working with an existing infrastructure.
 
-![image](Path to the high level architecture )
+![Architecture](./images/architecture.jpg)
 
-This lab is not a full explanation of Kubernetes, Containers etc. as a technology, please consider the following articles required pre-reading to build foundational knowledge.
+This lab is not a full explanation of Kubernetes, Containers Apps etc. as a technology, please consider the following articles required pre-reading to build foundational knowledge.
 
-Optional (read this after completing this lab to take your learning even deeper!
+Optional (read this after completing this lab to take your learning even deeper!)
 
 Describe the scenario here...
 

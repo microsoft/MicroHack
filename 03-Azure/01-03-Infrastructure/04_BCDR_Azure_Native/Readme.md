@@ -241,6 +241,8 @@ In challenge 4, you will successfully protect your on-premise Hyper-V virtual ma
 
 ## Challenge 5 - Protect to Azure with Disaster Recovery 
 
+Challenge is still under construction...
+
 ### Actions
 
 * 

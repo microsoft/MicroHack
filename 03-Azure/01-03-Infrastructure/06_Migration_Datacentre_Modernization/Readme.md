@@ -49,19 +49,24 @@ After completing this MicroHack you will:
 
 # MicroHack challenges
 
-## General prerequisites
+## General prerequisites (Christian)
 
 This MicroHack has a few but important prerequisites
 
 In order to use the MicroHack time most effectively, the following tasks should be completed prior to starting the session.
 
+* External Tenant Setup 
+
 With these pre-requisites in place, we can focus on building the differentiated knowledge in ... that is required when working with the product, rather than spending hours repeating relatively simple tasks such as setting up....
 
-## Challenge 1 - Prerequisites and landing zone preparation 
+## Challenge 1 - Prerequisites and landing zone preparation (Nico)
 
 ### Goal 
 
-The goal of this exercise is to deploy...
+* Deploy at least two VM´s with Bicep
+* One Linux Ubuntu / Windows VM 
+* Use a script to simulate CPU utilization 
+* IIS / Apache as a simple approach to simulate
 
 ### Actions
 

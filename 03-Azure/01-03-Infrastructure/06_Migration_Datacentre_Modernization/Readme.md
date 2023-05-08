@@ -91,11 +91,15 @@ With these pre-requisites in place, we can focus on building the differentiated 
 
 [Solution Steps](./walkthrough/challenge-1/solution.md)
 
-## Challenge 1 - Discover VM´s for the migration
+## Challenge 2 - Discover VM´s for the migration (Hengameh)
 
 ### Goal 
 
 The goal of this exercise is to deploy...
+
+* Setup Azure Migrate Project 
+* Installing / Deploying the necessary setup for discovery 
+* Create a discovery 
 
 ### Actions
 
@@ -117,7 +121,7 @@ The goal of this exercise is to deploy...
 
 [Solution Steps](./walkthrough/challenge-2/solution.md)
 
-## Challenge 2 - Create a Business Case 
+## Challenge 3 - Create a Business Case (Andreas)
 
 ### Goal 
 
@@ -145,11 +149,15 @@ The goal of this exercise is to deploy...
 [Solution Steps](./walkthrough/challenge-2/solution.md)
 
 
-## Challenge 3 - Assess VM´s for the migration
+## Challenge 4 - Assess VM´s for the migration (Nils)
 
 ### Goal 
 
 The goal of this exercise is to deploy...
+
+* As is assesment 
+* Play around and explain a few things (AHB, RI, etc..)
+* 
 
 ### Actions
 
@@ -170,7 +178,7 @@ The goal of this exercise is to deploy...
 * [Create an assessment for SQL](https://learn.microsoft.com/en-us/azure/migrate/tutorial-assess-sql)
 * [Create an assessment for AWS Instances](https://learn.microsoft.com/en-us/azure/migrate/tutorial-assess-aws)
 
-## Challenge 4 - Migrate VM´s
+## Challenge 5 - Testfailover / Migration Migrate VM´s (Christian / Andreas)
 
 ### Goal 
 

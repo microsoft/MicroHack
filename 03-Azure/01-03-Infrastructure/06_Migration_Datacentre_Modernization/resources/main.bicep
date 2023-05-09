@@ -36,7 +36,7 @@ resource destinationRg 'Microsoft.Resources/resourceGroups@2021-01-01' = {
 
 module destination 'destination.bicep' = {
   name: 'destinationModule'
-  scope: sourceRg
+  scope: destinationRg
   params: {
     location: location
   }

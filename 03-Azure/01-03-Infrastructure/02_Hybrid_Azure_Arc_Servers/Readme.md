@@ -67,6 +67,8 @@ This MicroHack has a few but important prerequisites to be understood before sta
 * You need to have 2 Virtual Machines ready and updated. One with a Linux Operating System (tested with Ubuntu Server 22.04) and one with Windows Server Operating System (tested with Windows Server 2022). You can use Machines in Azure for this following this Guide: [Azure Arc Jumpstart Servers](https://azurearcjumpstart.io/azure_arc_jumpstart/azure_arc_servers/azure/)
 * [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) (Hint: Make sure to use the lastest version)
 * [Azure PowerShell Guest Configuration Cmdlets](https://learn.microsoft.com/en-us/azure/governance/machine-configuration/machine-configuration-create-setup#install-the-module-from-the-powershell-gallery)
+  * It is not possible to run those commands from Azure Cloud Shell
+  * Please make sure you have at least Version 3.4.2 installes with the following Command: ```Install-Module -Name GuestConfiguration -RequiredVersion 3.4.2```
 * [Visual Studio Code](https://code.visualstudio.com/)
 * [Git SCM](https://git-scm.com/download/)
 

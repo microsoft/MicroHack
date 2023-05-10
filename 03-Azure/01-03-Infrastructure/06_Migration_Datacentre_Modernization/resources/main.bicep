@@ -21,6 +21,7 @@ module source 'source.bicep' = {
   name: 'sourceModule'
   scope: sourceRg
   params: {
+    location: location
     adminUsername: adminUsername
     currentUserObjectId: currentUserObjectId
   }
@@ -37,4 +38,7 @@ resource destinationRg 'Microsoft.Resources/resourceGroups@2021-01-01' = {
 module destination 'destination.bicep' = {
   name: 'destinationModule'
   scope: destinationRg
+  params: {
+    location: location
+  }
 }

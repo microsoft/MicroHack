@@ -1,6 +1,3 @@
-@description('Location for all resources')
-param location string
-
 @description('Name for VM1')
 param vm1Name string = 'vm1'
 
@@ -10,37 +7,78 @@ param vm2Name string = 'vm2'
 @description('Admin username for all VMs')
 param adminUsername string
 
+@description('Object ID of the current user')
+// https://github.com/Azure/bicep/discussions/9969
+// "There's no function to get the principal ID of the user executing the deployment (though it is planned)."
+param currentUserObjectId string
+
+// Locals
+param location string = resourceGroup().location
+param tenantId string = subscription().tenantId
+param secretsPermissions array = [
+  'all'
+]
 @secure()
-@description('Admin password for all VMs')
-param adminPassword string
+param adminPassword string = newGuid()
+param cloudInit string = '''
+#cloud-config
+package_upgrade: true
+packages:
+  - nginx
+'''
 
-// Network
+/*
+* Secrets
+*/
+resource keyvault 'Microsoft.KeyVault/vaults@2021-11-01-preview' = {
+  name: substring('source-kv-${uniqueString(resourceGroup().id)}', 0, 16)
+  location: location
+  properties: {
+    enabledForDeployment: false
+    enabledForDiskEncryption: false
+    enabledForTemplateDeployment: true
+    tenantId: tenantId
+    enableSoftDelete: true
+    softDeleteRetentionInDays: 90
+    sku: {
+      name: 'standard'
+      family: 'A'
+    }
+    accessPolicies: [
+      {
+        objectId: currentUserObjectId
+        tenantId: tenantId
+        permissions: {
+          secrets: secretsPermissions
+        }
+      }
+    ]
+  }
+}
 
+resource secret 'Microsoft.KeyVault/vaults/secrets@2021-11-01-preview' = {
+  parent: keyvault
+  name: 'adminPassword'
+  properties: {
+    value: adminPassword
+  }
+}
+
+/*
+* Network
+*/
 resource sourceVnetNsg 'Microsoft.Network/networkSecurityGroups@2022-05-01' = {
   name: 'source-vnet-nsg'
   location: location
   properties: {
     securityRules: [
       {
-        name: 'default-allow-3389'
+        name: 'default-allow-80'
         properties: {
           priority: 1000
           access: 'Allow'
           direction: 'Inbound'
-          destinationPortRange: '3389'
-          protocol: 'Tcp'
-          sourcePortRange: '*'
-          sourceAddressPrefix: '*'
-          destinationAddressPrefix: '*'
-        }
-      }
-      {
-        name: 'default-allow-22'
-        properties: {
-          priority: 2000
-          access: 'Allow'
-          direction: 'Inbound'
-          destinationPortRange: '22'
+          destinationPortRange: '80'
           protocol: 'Tcp'
           sourcePortRange: '*'
           sourceAddressPrefix: '*'
@@ -57,7 +95,7 @@ resource sourceVnet 'Microsoft.Network/virtualNetworks@2022-05-01' = {
   properties: {
     addressSpace: {
       addressPrefixes: [
-        '10.1.1.0/24'
+        '10.1.0.0/16'
       ]
     }
     subnets: [
@@ -70,12 +108,53 @@ resource sourceVnet 'Microsoft.Network/virtualNetworks@2022-05-01' = {
           }
         }
       }
+      {
+        name: 'AzureBastionSubnet'
+        properties: {
+          addressPrefix: '10.1.2.0/24'
+        }
+      }
     ]
   }
 }
 
-// VM1 (Windows)
+resource sourceBastionPip 'Microsoft.Network/publicIPAddresses@2022-05-01' = {
+  name: 'source-bastion-pip'
+  location: location
+  sku: {
+    name: 'Standard'
+  }
+  properties: {
+    publicIPAllocationMethod: 'Static'
+  }
+}
 
+resource sourceBastion 'Microsoft.Network/bastionHosts@2022-07-01' = {
+  name: 'source-bastion'
+  location: location
+  sku: {
+    name: 'Basic'
+  }
+  properties: {
+    ipConfigurations: [
+      {
+        name: 'ipconfig1'
+        properties: {
+          publicIPAddress: {
+            id: sourceBastionPip.id
+          }
+          subnet: {
+            id: sourceVnet.properties.subnets[1].id
+          }
+        }
+      }
+    ]
+  }
+}
+
+/*
+* VM1 (Windows)
+*/
 resource vm1Pip 'Microsoft.Network/publicIPAddresses@2022-05-01' = {
   name: '${vm1Name}-pip'
   location: location
@@ -150,9 +229,9 @@ resource vm1 'Microsoft.Compute/virtualMachines@2022-03-01' = {
 }
 
 /*
-* Custom Script Extension (might be useful for later to generate load on VM)
-* TODO: To be tested
-*
+Custom Script Extension (might be useful for later to generate load on VM)
+TODO: To be tested
+
 resource vm1Extension 'Microsoft.Compute/virtualMachines/extensions@2022-03-01' = {
   parent: vm1
   name: '${vm1Name}-customScriptExtension'
@@ -177,8 +256,9 @@ resource vm1Extension 'Microsoft.Compute/virtualMachines/extensions@2022-03-01' 
   }
 } */
 
-// VM2 (Linux)
-
+/*
+* VM2 (Linux)
+*/
 resource vm2Pip 'Microsoft.Network/publicIPAddresses@2022-05-01' = {
   name: '${vm2Name}-pip'
   location: location
@@ -222,6 +302,7 @@ resource vm2 'Microsoft.Compute/virtualMachines@2022-03-01' = {
       computerName: vm2Name
       adminUsername: adminUsername
       adminPassword: adminPassword
+      customData: base64(cloudInit)
     }
     storageProfile: {
       imageReference: {
@@ -253,9 +334,9 @@ resource vm2 'Microsoft.Compute/virtualMachines@2022-03-01' = {
 }
 
 /*
-* Custom Script Extension (might be useful for later to generate load on VM)
-* TODO: To be tested
-*
+Custom Script Extension (might be useful for later to generate load on VM)
+TODO: To be tested
+
 resource vm2Extension 'Microsoft.Compute/virtualMachines/extensions@2022-03-01' = {
   parent: vm2
   name: '${vm2Name}-customScriptExtension'

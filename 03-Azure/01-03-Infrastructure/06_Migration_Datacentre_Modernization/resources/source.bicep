@@ -1,9 +1,3 @@
-@description('Name for VM1')
-param vm1Name string = 'vm1'
-
-@description('Name for VM2')
-param vm2Name string = 'vm2'
-
 @description('Admin username for all VMs')
 param adminUsername string
 
@@ -13,6 +7,8 @@ param adminUsername string
 param currentUserObjectId string
 
 // Locals
+param vm1Name string = 'vm1'
+param vm2Name string = 'vm2'
 param location string = resourceGroup().location
 param tenantId string = subscription().tenantId
 param secretsPermissions array = [
@@ -30,7 +26,7 @@ packages:
 /*
 * Secrets
 */
-resource keyvault 'Microsoft.KeyVault/vaults@2021-11-01-preview' = {
+resource sourceKeyvault 'Microsoft.KeyVault/vaults@2021-11-01-preview' = {
   name: substring('source-kv-${uniqueString(resourceGroup().id)}', 0, 16)
   location: location
   properties: {
@@ -56,8 +52,8 @@ resource keyvault 'Microsoft.KeyVault/vaults@2021-11-01-preview' = {
   }
 }
 
-resource secret 'Microsoft.KeyVault/vaults/secrets@2021-11-01-preview' = {
-  parent: keyvault
+resource adminPasswordSecret 'Microsoft.KeyVault/vaults/secrets@2021-11-01-preview' = {
+  parent: sourceKeyvault
   name: 'adminPassword'
   properties: {
     value: adminPassword

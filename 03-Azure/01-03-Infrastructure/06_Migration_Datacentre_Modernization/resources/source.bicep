@@ -1,6 +1,3 @@
-@description('Admin username for all VMs')
-param adminUsername string
-
 @description('Object ID of the current user')
 // https://github.com/Azure/bicep/discussions/9969
 // "There's no function to get the principal ID of the user executing the deployment (though it is planned)."
@@ -9,6 +6,7 @@ param currentUserObjectId string
 // Locals
 param vm1Name string = 'vm1'
 param vm2Name string = 'vm2'
+param adminUsername string = 'microhackadmin'
 param location string = resourceGroup().location
 param tenantId string = subscription().tenantId
 param secretsPermissions array = [

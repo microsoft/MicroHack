@@ -61,31 +61,24 @@ With these pre-requisites in place, we can focus on building the differentiated 
 
 ## Challenge 1 - Prerequisites and landing zone preparation (Nico)
 
-### Goal 
+### Goal
 
-* Deploy at least two VM´s with Bicep
-* One Linux Ubuntu / Windows VM 
-* Use a script to simulate CPU utilization 
-* IIS / Apache as a simple approach to simulate
+- Deploy a *source* resource group with two VMs and their dependencies that act as our physical on-premise servers that will be migrated to Azure.
+- Deploy a *destination* resource group to which the servers will be migrated.
 
 ### Actions
 
-* A1
-* A2
-* A3
+- Deploy the [Bicep configuration](./resources/README.md) of the Micro Hack.
 
 ### Success criteria
 
-* You have deployed Azure Migrate in you subscription
-* You successfully downloaded, installed and connected you infrastructure to Azure Migrate
-* You have understood the concept and architecture for the MicroHack
+- You have understood the concept and architecture for the MicroHack.
+- The Bicep deployment command exits successfully.
+- The *source* and *destination* resource group is visible in the Azure Portal.
 
 ### Learning resources
-* [Create and managed Azure Migrate projects](https://learn.microsoft.com/en-us/azure/migrate/create-manage-projects)
-* [Setup and appliance on VMWare](https://learn.microsoft.com/en-us/azure/migrate/how-to-set-up-appliance-vmware)
-* [Setup and appliance on Hyper-V](https://learn.microsoft.com/en-us/azure/migrate/how-to-set-up-appliance-hyper-v)
-* [Steup an appliance via script](https://learn.microsoft.com/en-us/azure/migrate/deploy-appliance-script)
-* [Before you start / general prerequisites](https://learn.microsoft.com/en-us/azure/migrate/how-to-discover-applications#before-you-start)
+
+- [What is Bicep?](https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/overview?tabs=bicep)
 
 ### Solution - Spoilerwarning
 
@@ -116,6 +109,11 @@ The goal of this exercise is to deploy...
 
 ### Learning resources
 * [Create an assessment on Hyper-V]([You have successfully verified servers in the portal](https://learn.microsoft.com/en-us/azure/migrate/how-to-set-up-appliance-hyper-v#verify-servers-in-the-portal))
+* [Create and managed Azure Migrate projects](https://learn.microsoft.com/en-us/azure/migrate/create-manage-projects)
+* [Setup and appliance on VMWare](https://learn.microsoft.com/en-us/azure/migrate/how-to-set-up-appliance-vmware)
+* [Setup and appliance on Hyper-V](https://learn.microsoft.com/en-us/azure/migrate/how-to-set-up-appliance-hyper-v)
+* [Steup an appliance via script](https://learn.microsoft.com/en-us/azure/migrate/deploy-appliance-script)
+* [Before you start / general prerequisites](https://learn.microsoft.com/en-us/azure/migrate/how-to-discover-applications#before-you-start)
 
 ### Solution - Spoilerwarning
 

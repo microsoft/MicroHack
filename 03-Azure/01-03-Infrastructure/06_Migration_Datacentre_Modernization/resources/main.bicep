@@ -1,8 +1,5 @@
 targetScope = 'subscription'
 
-@description('Admin username for all VMs')
-param adminUsername string
-
 @description('Object ID of the current user')
 param currentUserObjectId string
 
@@ -22,7 +19,6 @@ module source 'source.bicep' = {
   scope: sourceRg
   params: {
     location: location
-    adminUsername: adminUsername
     currentUserObjectId: currentUserObjectId
   }
 }

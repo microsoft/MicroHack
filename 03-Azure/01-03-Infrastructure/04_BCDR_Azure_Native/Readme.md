@@ -184,7 +184,7 @@ In this Challenge, you will learn how to protect Azure VM with Azure Site Recove
 
 * Set up and enable disaster recovery with Azure Site Recovery and monitor the progress
 * Perform a disaster recovery drill, create recovery plan and run a test failover 
-* Run a production failover from EU West to EU East region and Failback again to the EU West region (Source environment) and monitor the progress
+* Run a production failover from EU West to EU North region and Failback again to the EU West region (Source environment) and monitor the progress
 
 ### Success Criteria
 

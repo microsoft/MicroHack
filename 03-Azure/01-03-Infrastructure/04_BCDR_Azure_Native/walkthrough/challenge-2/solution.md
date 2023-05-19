@@ -41,7 +41,7 @@ Please don't forget to put the VM into the public network and open up Port 3389 
 ### Task 2: Deploy a Ubuntu Server VM in Norh Europe Resource Group
 The steps for the Ubunutu Server VM are similar to this and will not be included here.
 
-### Task 3: Enable Azure Backup for both BMs
+### Task 3: Enable Azure Backup for both VMs
 
 ### Enable Azure Backup
 ![image](./img/mh-ch2-screenshot-10.png)

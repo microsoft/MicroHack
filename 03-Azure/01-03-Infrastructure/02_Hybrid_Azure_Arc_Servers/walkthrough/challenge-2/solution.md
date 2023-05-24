@@ -106,7 +106,11 @@ Please ensure that you successfully passed [challenge 1](../../Readme.md#challen
 
 10. Select Updates and click on One-time Update or create a Scheduled Update, if you like to postpone the installation to a later point in time. (follow the wizzard).
 
+![image](./img/4.10_Update_Management.png)
+
 11. After applying the updates point-in-time or via scheduler you should see the updates beeing installed on the system.
+
+![image](./img/4.11_Update_Management.png)
 
 ### Task 5: Enable Inventory and Change Tracking for Azure Arc enabled Servers
 
@@ -130,8 +134,9 @@ Please ensure that you successfully passed [challenge 1](../../Readme.md#challen
 
 8. Verify that all remediation were successful.
 
-9. Navigate to Azure Arc, select Servers, followed by selecting your Windows Server.
+9. Navigate to Azure Arc, select Servers, followed by selecting your Windows Server. Select Inventory. Please be aware that generating the initial inventory takes multiple Minutes/hours. After a while the white page should show values.
 
+![image](./img/5.9_Inventory.png)
 
 ### Task 6: Analyze data in VM Insights
 

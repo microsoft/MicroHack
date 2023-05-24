@@ -8,125 +8,117 @@ Duration: 30 minutes
 
 Please ensure that you successfully passed [challenge 1](../../Readme.md#challenge-1) before continuing with this challenge.
 
+
 ### Task 1: Create necessary Azure resources
 
 1. Sign in to the [Azure Portal](https://portal.azure.com/).
 
-2. Create a new Azure Automation Account called *mh-arc-servers-automation* with default settings in the Resource Group *mh-arc-servers-rg*.
-
-![image](./img/2_CreateAutomationAccount.jpg)
-![image](./img/3_CreateAutomationAccount.png)
-
-3. Create a new Log Analytics Workspace called *mh-arc-servers-automation-law* with default settings in the same Resource Group.
+2. Create a new Log Analytics Workspace called *mh-arc-servers-automation-law* with default settings in the same Resource Group.
 
 ![image](./img/5_CreateLAW.jpg)
 
+
 ### Task 2: Configure Log Analytics
 
-1. Navigate to the Log Analytics Workspace and open *Agents configuration* in the left navigation pane.
+1. Navigate to the Log Analytics Workspace and open *Agents* in the left navigation pane.
 
-    > **Note**  
-    >  The screenshots still show the old name *Agents configuration*. Please look for the rebranded item *Legacy agents management*. The screenshots and MicroHack will be updated once the transition from Log Analytics Client to Azure Monitor Agent is complete.
+2. Select *Data Collection Rules* followed by a click on *Create* to create Data collection rules. 
 
-![image](./img/7_agent_configuration.png)
+3. Name the Data Collection Rule *mh-windows* select your subscription and *mh-rg* as ressource group and change the Region to *West Europe*. Keep the Platform Type *Windows* and click *Next: Resources* to continue.
 
-2. Select *Add windows event log* and add the *System* logs to the workspace. Hit apply.
+4. Click on *Next: Collect and deliver* as we gonna set the scope of Ressources later on via Azure Policy. Check the boxes of the log Levels you like to collect. 
 
-![image](./img/8_win_system.png)
+5. Continue on the second ribbon and configure the Destination for the Logs
 
-3. Navigate to Syslog in the top navigation pane, select *Add facility* and add *syslog* logs to the workspace. Hit apply.
+6. Repeat step 1 to 5 and create another Data Collection Rule for Linux Systems. This Time Name the Rule *mh-Linux* and change the Platform Type to *Linux*. As Data Sources, use *Syslog*.
 
-![image](./img/9_syslog.png)
 
 ### Task 3: Assign Azure Policy Initiative to your Azure Arc resource group
 
 1. Navigate to *Policy* using the top search bar and select *Assignments* in the left navigation pane.
 
-![image](./img/23_azure_policy.png)
-
 2. Select *Assignments* in the left navigation pane and go to *Assign initiative*
-
-![image](./img/24_assignments.png)
 
 3. In this section you can now configure the assignment with the following settings and create the assignment:
 
 - Scope: Please select the resource group called *mh-arc-servers-rg*
-- Basics: Please search for *Legacy - Enable Azure Monitor for VMs* and select the initiative.
+- Basics: Please search for *[Preview]: Enable Azure Monitor for Hybrid VMs with AMA* and select the initiative.
 - Parameters: Please select your Log Analytics workspace. 
 - Remediation: Please select the System assigned identity location according to your resources, e.g. West Europe. 
 
-![image](./img/25_basic_settings_initiative.jpg)
-
-Please note: The Azure Monitor agent is the successor of the legacy Log Analytics agent and usually the recommended agent. There are still some scenarios that are not yet supported with the new agent. As a result, the MicroHack will leverage the Log Analytics agent for demo purposes. Please verify the latest information in the [Azure Monitor agent overview](https://learn.microsoft.com/en-us/azure/azure-monitor/agents/agents-overview).
-
-4. Please wait a few seconds until the creation of the assignment is complete. You should see that the initiative is assigned. Every new Azure Arc Server will now automatically install the necessary agents. 
+4. Please wait a few seconds until the creation of the assignment is complete. You should see that the initiative is assigned. Every new Azure Arc Server will now automatically install the necessary agents. Be aware that Agent installation can take up to 60 Minutes.
 
 5. Important: Both machines were already onboarded earlier. As a result, you need to create a remediation task to apply the policy to your Azure Arc Servers. Please select the Policy Assignment and select *Create Remediation Task*.
 
-![image](./img/26a_create_remediation_task.jpg)
-
 6. Accept the default values, check *Re-evaluate resource compliance before remediating* and repeat the remediation for the following policies:
- - LogAnalyticsExtension_Windows_HybridVM_Deploy
- - LogAnalyticsExtension_Linux_HybridVM_Deploy
- - DependencyAgentExtension_Windows_HybridVM_Deploy
+ - AzureMonitorAgent_Windows_HybridVM_Deploy
+ - AzureMonitorAgent_Linux_HybridVM_Deploy
+ - DependencyAgentExtension_AMA_Windows_HybridVM_Deploy
  - DependencyAgentExtension_Linux_HybridVM_Deploy
-
-![image](./img/26_create_remediation_task.jpg)
+ - VMInsightsDCR_DCRA_HybridVM_Deploy
 
 7. Verify that all remediation were successful.
 
-![image](./img/28_validate_tasks.jpg)
 
-### Task 4: Enable Update Management for Azure Arc enabled Servers
+### Task 4: Enable Update Management for Azure Arc enabled Servers via Azure Policy
 
-1. Sign in to the [Azure Portal](https://portal.azure.com/).
+1. Navigate to *Policy* using the top search bar and select *Assignments* in the left navigation pane.
 
-2. Navigate to your Azure Automation Account *mh-arc-servers-automation*
+2. Select *Assignments* in the left navigation pane and go to *Assign Policy*
 
-3. Select *Update Management* in the left navigation pane and enable the Update Management. Please make sure to select the Log Analytics workspace that was created earlier. 
+3. In this section you can now configure the assignment with the following settings and create the assignment:
 
-![image](./img/4_enable_update_mgmt.jpg)
+- Scope: Please select the resource group called *mh-arc-servers-rg*
+- Basics: Please search for *[Preview]: Configure periodic checking for missing system updates on azure Arc-enabled servers* and select the policy.
+- Parameters: Skip, and keep defaults. 
+- Remediation: Please select the System assigned identity location according to your resources, e.g. West Europe. 
 
-4. Once the deployment of Update Management is complete, you can onboard existing and future machines by hitting *Manage machines* and selecting *Enable on all available machines and future machines*.
+4. Please wait a few seconds until the creation of the assignment is complete. You should see that the policy is assigned.
 
-![image](./img/5_manage_machines.jpg)
+5. Repeat Step 3 and 4 for the Policy definition *[Preview]: Configure periodic checking for missing system updates on azure Arc-enabled servers*, this time unselecting the Checkbox at Parameters, shifting OS Type to Linux.
 
-Coffee Break of 10 minutes to let Azure Update Management propagate the configuration changes to the Log Analytics Workspace. 
+6. Important: Both machines were already onboarded earlier. As a result, you need to create a remediation task to apply the policy to your Azure Arc Servers. Please select the Policy Assignment and select *Create Remediation Task*.
 
-5. Now, it's time to create a schedule for each OS platforms. First, go to your Log Analytics Workspace *mh-arc-servers-automation-law* and select *Logs* in the left navigation pane. Now create the following Kusto query:
+7. Accept the default values, check *Re-evaluate resource compliance before remediating* and repeat the remediation for the following policies:
+ - Configure periodic checking for missing system updates on azure Arc-enabled servers_1
+ - Configure periodic checking for missing system updates on azure Arc-enabled servers_2
 
-```
-Update | distinct Computer
-```
+8. Verify that all remediation were successful.
 
-6. Select *Save as..* and name the function *GetAllArcVMs*. Please make sure to check *Save as computer group* and hit *Save*
+9. Navigate to Azure Arc, select Servers, followed by selecting your Windows or Linux Server.
 
-![image](./img/6_create_function.jpg)
+10. Select Updates and click on One-time Update or create a Scheduled Update, if you like to postpone the installation to a later point in time. (follow the wizzard).
 
-7. Go back to *Update Management* in the automation account and select *Schedule update deployment*. Please create an update schedule for Windows with the following settings:
+11. After applying the updates point-in-time or via scheduler you should see the updates beeing installed on the system.
 
-- Name: Update Windows
-- Groups to update: Non-Azure -> add *GetAllArcVMs*
-- Schedule Settings: Your local time plus 7 minutes; Recurring
+### Task 4: Enable Inventory and Change Tracking for Azure Arc enabled Servers
 
-![image](./img/7_schedule.png)
+1. Navigate to *Policy* using the top search bar and select *Assignments* in the left navigation pane.
 
-8. Repeat step 7 for Linux.
+2. Select *Assignments* in the left navigation pane and go to *Assign Policy*
 
-### Task 4: Enable Inventory for Azure Arc enabled Servers
+3. In this section you can now configure the assignment with the following settings and create the assignment:
 
-1. Navigate to your Azure Automation Account, select *Inventory* in the left navigation pane and enable *Inventory*.
+- Scope: Please select the resource group called *mh-arc-servers-rg*
+- Basics: Please search for *[Preview]: Configure Windows Arc-enabled machines to install AMA for ChangeTracking and Inventory* and select the policy.
+- Parameters: Skip, and keep defaults. 
+- Remediation: Please select the System assigned identity location according to your resources, e.g. West Europe. 
 
-![image](./img/8_enable_inventory.jpg)
+4. Please wait a few seconds until the creation of the assignment is complete. You should see that the policy is assigned.
 
-2. Select *Manage Machines* and select *Enable on all available and future machines* to onboard existing and new machines to the inventory feature. 
+5. Important: Both machines were already onboarded earlier. As a result, you need to create a remediation task to apply the policy to your Azure Arc Servers. Please select the Policy Assignment and select *Create Remediation Task*.
+
+6. Accept the default values, check *Re-evaluate resource compliance before remediating* and repeat the remediation for the following policies:
+ - [Preview]: Configure Windows Arc-enabled machines to install AMA for ChangeTracking and Inventory
+
+8. Verify that all remediation were successful.
+
+9. Navigate to Azure Arc, select Servers, followed by selecting your Windows Server.
 
 
 ### Task 5: Analyze data in VM Insights
 
-1. Navigate to your Virtual Machines, select VM Insights in the left navigation pane and enable Insights. Please use the *Log Analytics agent*.
-
-![image](./img/9_Enable_VM_Insights.png)
+1. Navigate to your Virtual Machines, select VM Insights in the left navigation pane and enable Insights.
 
 
 ### Coffee Break of 10 minutes to let the data flow between your Virtual Machines and Azure

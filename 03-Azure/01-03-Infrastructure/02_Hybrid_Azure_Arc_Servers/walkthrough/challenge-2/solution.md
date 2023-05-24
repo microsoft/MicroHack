@@ -58,7 +58,11 @@ Please ensure that you successfully passed [challenge 1](../../Readme.md#challen
 
 4. Please wait a few seconds until the creation of the assignment is complete. You should see that the initiative is assigned. Every new Azure Arc Server will now automatically install the necessary agents. Be aware that Agent installation can take up to 60 Minutes.
 
+![image](./img/3.4_Assign_Policy_Monitor_AMA.png)
+
 5. Important: Both machines were already onboarded earlier. As a result, you need to create a remediation task to apply the policy to your Azure Arc Servers. Please select the Policy Assignment and select *Create Remediation Task*.
+
+![image](./img/3.5_Assign_Policy_Monitor_AMA_remidiate.png)
 
 6. Accept the default values, check *Re-evaluate resource compliance before remediating* and repeat the remediation for the following policies:
  - AzureMonitorAgent_Windows_HybridVM_Deploy
@@ -67,8 +71,11 @@ Please ensure that you successfully passed [challenge 1](../../Readme.md#challen
  - DependencyAgentExtension_Linux_HybridVM_Deploy
  - VMInsightsDCR_DCRA_HybridVM_Deploy
 
+![image](./img/3.6_Assign_Policy_Monitor_AMA_remidiate.png)
+
 7. Verify that all remediation were successful.
 
+![image](./img/3.7_Assign_Policy_Monitor_AMA_remidiate.png)
 
 ### Task 4: Enable Update Management for Azure Arc enabled Servers via Azure Policy
 
@@ -101,7 +108,7 @@ Please ensure that you successfully passed [challenge 1](../../Readme.md#challen
 
 11. After applying the updates point-in-time or via scheduler you should see the updates beeing installed on the system.
 
-### Task 4: Enable Inventory and Change Tracking for Azure Arc enabled Servers
+### Task 5: Enable Inventory and Change Tracking for Azure Arc enabled Servers
 
 1. Navigate to *Policy* using the top search bar and select *Assignments* in the left navigation pane.
 
@@ -126,7 +133,7 @@ Please ensure that you successfully passed [challenge 1](../../Readme.md#challen
 9. Navigate to Azure Arc, select Servers, followed by selecting your Windows Server.
 
 
-### Task 5: Analyze data in VM Insights
+### Task 6: Analyze data in VM Insights
 
 1. Navigate to your Virtual Machines, select VM Insights in the left navigation pane and enable Insights.
 

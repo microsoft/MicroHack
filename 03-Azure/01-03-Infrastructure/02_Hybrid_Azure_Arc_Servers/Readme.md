@@ -111,14 +111,13 @@ In challenge 1 you will prepare your Azure Environemnt for onboarding of existin
 
 ### Goal
 
-In challenge 2 you will successfully onboard your Windows and Linux Virtual Machines to a centralized Log Analytics Workspace to leverage Azure Monitor, Azure Update Management, Change Tracking and Inventory. 
+In challenge 2 you will successfully onboard your Windows and Linux Virtual Machines to Azure Monitor using the Azure Monitoring Agent to leverage Azure Update Management, Change Tracking, Inventory and more. Be aware that Microsoft curently shifts from the retiering Log Analytics Agent to Azure Monitoring Agent. By that some of the features used in challange 2 are currently in preview.
 
 ### Actions
 
 * Create all necessary Azure Resources
-  * Azure Automation Account (Name: mh-arc-servers-automation)
   * Log Analytics Workspace (Name: mh-arc-servers-kv-law)
-* Configure Log Analytics to collect Windows event logs and Linux syslog
+* Configure Data Collection Rules in Log Analytics to collect Windows event logs and Linux syslog
 * Enable Azure Monitor for Azure Arc enabled Servers with Azure Policy initiative
 * Enable and configure Update Management
 * Enable Change Tracking and Inventory
@@ -127,7 +126,7 @@ In challenge 2 you will successfully onboard your Windows and Linux Virtual Mach
 
 ### Success criteria
 
-* You have an Azure Automation Account and a Log Analytics Workspace
+* You have a Log Analytics Workspace
 * You successfully linked the necessary Azure Policy initiative to the Azure resource group
 * You can query the Log Analytics Workspace for events of your Virtual Machines
 * All Virtual Machines have the latest Windows and Linux updates installed
@@ -136,15 +135,12 @@ In challenge 2 you will successfully onboard your Windows and Linux Virtual Mach
 
 ### Learning resources
 
-* [Create an Automation account using the Azure portal](https://learn.microsoft.com/en-us/azure/automation/quickstarts/create-azure-automation-account-portal)
 * [Create a Log Analytics workspace in the Azure portal](https://docs.microsoft.com/en-us/azure/azure-monitor/logs/quick-create-workspace)
-* [Collect Windows event log data sources with Log Analytics agent](https://docs.microsoft.com/en-us/azure/azure-monitor/agents/data-sources-windows-events#configuring-windows-event-logs)
-* [Collect Syslog data sources with Log Analytics agent](https://docs.microsoft.com/en-us/azure/azure-monitor/agents/data-sources-syslog#configure-syslog-in-the-azure-portal)
-* [Understand deployment options for the Log Analytics agent on Azure Arc-enabled servers](https://docs.microsoft.com/en-us/azure/azure-arc/servers/concept-log-analytics-extension-deployment)
+* [Deployment options for Azure Monitor agent on Azure Arc-enabled servers](https://learn.microsoft.com/en-us/azure/azure-arc/servers/concept-log-analytics-extension-deployment)
+* [Data collection rules in Azure Monitor](https://learn.microsoft.com/en-us/azure/azure-monitor/essentials/data-collection-rule-overview)
 * [Azure Policy built-in definitions for Azure Arc-enabled servers](https://docs.microsoft.com/en-us/azure/azure-arc/servers/policy-reference)
-* [Enable Update Management from an Automation account](https://docs.microsoft.com/en-us/azure/automation/update-management/enable-from-automation-account)
-* [How to deploy updates and review results](https://docs.microsoft.com/en-us/azure/automation/update-management/deploy-updates)
-* [Enable Change Tracking and Inventory from an Automation account](https://docs.microsoft.com/en-us/azure/automation/change-tracking/enable-from-automation-account)
+* [Azure Update Management Center](https://learn.microsoft.com/en-us/azure/update-center/overview)
+* [Enable Change Tracking and Inventory using Azure Monitoring Agent (Preview)](https://learn.microsoft.com/en-us/azure/automation/change-tracking/enable-vms-monitoring-agent?tabs=singlevm)
 * [Monitor a hybrid machine with VM insights](https://docs.microsoft.com/en-us/azure/azure-arc/servers/learn/tutorial-enable-vm-insights)
 
 

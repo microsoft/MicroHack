@@ -1,4 +1,4 @@
-# **Migration & Datacentre Modernization MicroHack**
+# **Migration & Datacenter Modernization MicroHack**
 
 - [**MicroHack introduction**](#MicroHack-introduction)
 - [**MicroHack context**](#microhack-context)
@@ -8,7 +8,7 @@
 
 # MicroHack introduction
 
-This MicroHack scenario walks through the process how to optimize and modernize you datacentre. The assessment, the tooling and processes are global best practices and with a focus on the real world scenarios, cost optimization and the best customer recommended design principles. Specifically, this builds up to include working with an existing infrastructure.
+This MicroHack scenario walks through the process how to optimize and modernize you datacenter. The assessment, the tooling and processes are global best practices and with a focus on the real world scenarios, cost optimization and the best customer recommended design principles. Specifically, this builds up to include working with an existing infrastructure.
 
 ![image](./img/azuremigratebusinesscase.png)
 ![image](./img/migration-assessment-architecture.png)
@@ -30,7 +30,7 @@ Optional (read this after completing this lab to take your learning even deeper!
 * [Troubleshooting guide](https://learn.microsoft.com/en-us/azure/migrate/troubleshoot-general)
 
 # MicroHack context
-This MicroHack scenario walks through the use of Azure Migrate to support the process and the different phases of datacentre modernization: 
+This MicroHack scenario walks through the use of Azure Migrate to support the process and the different phases of datacenter modernization: 
 
 - Discover
 - Decide

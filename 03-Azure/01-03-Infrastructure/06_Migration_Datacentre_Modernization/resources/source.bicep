@@ -4,8 +4,8 @@
 param currentUserObjectId string
 
 // Locals
-param vm1Name string = 'vm1'
-param vm2Name string = 'vm2'
+param vm1Name string = 'Frontend'
+param vm2Name string = 'Backend'
 param adminUsername string = 'microhackadmin'
 param location string = resourceGroup().location
 param tenantId string = subscription().tenantId
@@ -55,6 +55,14 @@ resource adminPasswordSecret 'Microsoft.KeyVault/vaults/secrets@2021-11-01-previ
   name: 'adminPassword'
   properties: {
     value: adminPassword
+  }
+}
+
+resource adminUsernameSecret 'Microsoft.KeyVault/vaults/secrets@2021-11-01-preview' = {
+  parent: sourceKeyvault
+  name: 'adminUsername'
+  properties: {
+    value: adminUsername
   }
 }
 
@@ -149,6 +157,8 @@ resource sourceBastion 'Microsoft.Network/bastionHosts@2022-07-01' = {
 /*
 * VM1 (Windows)
 */
+
+/*
 resource vm1Pip 'Microsoft.Network/publicIPAddresses@2022-05-01' = {
   name: '${vm1Name}-pip'
   location: location
@@ -159,6 +169,7 @@ resource vm1Pip 'Microsoft.Network/publicIPAddresses@2022-05-01' = {
     publicIPAllocationMethod: 'Dynamic'
   }
 }
+*/
 
 resource vm1Nic 'Microsoft.Network/networkInterfaces@2022-05-01' = {
   name: '${vm1Name}-nic'
@@ -170,7 +181,7 @@ resource vm1Nic 'Microsoft.Network/networkInterfaces@2022-05-01' = {
         properties: {
           privateIPAllocationMethod: 'Dynamic'
           publicIPAddress: {
-            id: vm1Pip.id
+          // id: vm1Pip.id
           }
           subnet: {
             id: sourceVnet.properties.subnets[0].id
@@ -222,9 +233,9 @@ resource vm1 'Microsoft.Compute/virtualMachines@2022-03-01' = {
   }
 }
 
-/*
-Custom Script Extension (might be useful for later to generate load on VM)
-TODO: To be tested
+
+//Custom Script Extension (might be useful for later to generate load on VM)
+//TODO: To be tested
 
 resource vm1Extension 'Microsoft.Compute/virtualMachines/extensions@2022-03-01' = {
   parent: vm1
@@ -236,23 +247,17 @@ resource vm1Extension 'Microsoft.Compute/virtualMachines/extensions@2022-03-01' 
     typeHandlerVersion: '1.10'
     autoUpgradeMinorVersion: true
     settings: {
-      timestamp: 123456789
+            commandToExecute: 'powershell -ExecutionPolicy Unrestricted Add-WindowsFeature Web-Server; powershell -ExecutionPolicy Unrestricted Add-Content -Path "C:\\inetpub\\wwwroot\\Default.htm" -Value $($env:computername)'
     }
     protectedSettings: {
-      commandToExecute: 'myExecutionCommand'
-      storageAccountName: 'myStorageAccountName'
-      storageAccountKey: 'myStorageAccountKey'
-      managedIdentity: {}
-      fileUris: [
-        'script location'
-      ]
-    }
+          }
   }
-} */
+} 
 
 /*
 * VM2 (Linux)
 */
+/*
 resource vm2Pip 'Microsoft.Network/publicIPAddresses@2022-05-01' = {
   name: '${vm2Name}-pip'
   location: location
@@ -263,6 +268,7 @@ resource vm2Pip 'Microsoft.Network/publicIPAddresses@2022-05-01' = {
     publicIPAllocationMethod: 'Dynamic'
   }
 }
+*/
 
 resource vm2Nic 'Microsoft.Network/networkInterfaces@2022-05-01' = {
   name: '${vm2Name}-nic'
@@ -274,7 +280,7 @@ resource vm2Nic 'Microsoft.Network/networkInterfaces@2022-05-01' = {
         properties: {
           privateIPAllocationMethod: 'Dynamic'
           publicIPAddress: {
-            id: vm2Pip.id
+            //id: vm2Pip.id
           }
           subnet: {
             id: sourceVnet.properties.subnets[0].id

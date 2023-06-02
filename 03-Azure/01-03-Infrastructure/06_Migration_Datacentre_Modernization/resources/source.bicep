@@ -4,8 +4,8 @@
 param currentUserObjectId string
 
 // Locals
-param vm1Name string = 'Frontend'
-param vm2Name string = 'Backend'
+param vm1Name string = 'frontend'
+param vm2Name string = 'backend'
 param adminUsername string = 'microhackadmin'
 param location string = resourceGroup().location
 param tenantId string = subscription().tenantId
@@ -180,12 +180,22 @@ resource vm1Nic 'Microsoft.Network/networkInterfaces@2022-05-01' = {
         name: 'ipconfig1'
         properties: {
           privateIPAllocationMethod: 'Dynamic'
-          publicIPAddress: {
+          //publicIPAddress: {
           // id: vm1Pip.id
-          }
+          //}
           subnet: {
             id: sourceVnet.properties.subnets[0].id
           }
+          loadBalancerBackendAddressPools: [
+            {
+              id: lb.properties.backendAddressPools[0].id
+              name: 'LoadBalancerBackEndPool'
+            }
+            {
+              id: lb.properties.backendAddressPools[1].id
+              name: 'LoadBalancerBackEndPoolOutbound'
+            }
+          ]          
         }
       }
     ]
@@ -279,9 +289,9 @@ resource vm2Nic 'Microsoft.Network/networkInterfaces@2022-05-01' = {
         name: 'ipconfig1'
         properties: {
           privateIPAllocationMethod: 'Dynamic'
-          publicIPAddress: {
+          //publicIPAddress: {
             //id: vm2Pip.id
-          }
+          //}
           subnet: {
             id: sourceVnet.properties.subnets[0].id
           }
@@ -360,3 +370,120 @@ resource vm2Extension 'Microsoft.Compute/virtualMachines/extensions@2022-03-01' 
     }
   }
 } */
+
+
+//Public Load Balancer for Frontend VM
+resource lb 'Microsoft.Network/loadBalancers@2021-08-01' = {
+  name: 'plb-frontend'
+  location: location
+  sku: {
+    name: 'Standard'
+  }
+  properties: {
+    frontendIPConfigurations: [
+      {
+        name: 'LoadBalancerFrontEnd'
+        properties: {
+          publicIPAddress: {
+            id: lbPublicIPAddress.id
+          }
+        }
+      }
+      {
+        name: 'LoadBalancerFrontEndOutbound'
+        properties: {
+          publicIPAddress: {
+            id: lbPublicIPAddressOutbound.id
+          }
+        }
+      }
+    ]
+    backendAddressPools: [
+      {
+        name: 'LoadBalancerBackEndPool'
+
+      }
+      {
+        name: 'LoadBalancerBackEndPoolOutbound'
+      }
+    ]
+    loadBalancingRules: [
+      {
+        name: 'myHTTPRule'
+        properties: {
+          frontendIPConfiguration: {
+            id: resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', 'plb-frontend', 'LoadBalancerFrontEnd')
+          }
+          backendAddressPool: {
+            id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', 'plb-frontend', 'LoadBalancerBackEndPool')
+          }
+          frontendPort: 80
+          backendPort: 80
+          enableFloatingIP: false
+          idleTimeoutInMinutes: 15
+          protocol: 'Tcp'
+          enableTcpReset: true
+          loadDistribution: 'Default'
+          disableOutboundSnat: true
+          probe: {
+            id: resourceId('Microsoft.Network/loadBalancers/probes', 'plb-frontend', 'loadBalancerHealthProbe')
+          }
+        }
+      }
+    ]
+    probes: [
+      {
+        name: 'loadBalancerHealthProbe'
+        properties: {
+          protocol: 'Tcp'
+          port: 80
+          intervalInSeconds: 5
+          numberOfProbes: 2
+        }
+      }
+    ]
+    outboundRules: [
+      {
+        name: 'myOutboundRule'
+        properties: {
+          allocatedOutboundPorts: 10000
+          protocol: 'All'
+          enableTcpReset: false
+          idleTimeoutInMinutes: 15
+          backendAddressPool: {
+            id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', 'plb-frontend', 'LoadBalancerBackEndPoolOutbound')
+          }
+          frontendIPConfigurations: [
+            {
+              id: resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', 'plb-frontend', 'LoadBalancerFrontEndOutbound')
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
+
+resource lbPublicIPAddress 'Microsoft.Network/publicIPAddresses@2021-08-01' = {
+  name: 'lbPublicIP'
+  location: location
+  sku: {
+    name: 'Standard'
+  }
+  properties: {
+    publicIPAddressVersion: 'IPv4'
+    publicIPAllocationMethod: 'Static'
+  }
+}
+
+resource lbPublicIPAddressOutbound 'Microsoft.Network/publicIPAddresses@2021-08-01' = {
+  name: 'lbPublicIPOutbound'
+  location: location
+  sku: {
+    name: 'Standard'
+  }
+  properties: {
+    publicIPAddressVersion: 'IPv4'
+    publicIPAllocationMethod: 'Static'
+  }
+}

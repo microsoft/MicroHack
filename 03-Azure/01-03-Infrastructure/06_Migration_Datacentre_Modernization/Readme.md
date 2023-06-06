@@ -49,17 +49,19 @@ After completing this MicroHack you will:
 
 # MicroHack challenges
 
-## General prerequisites (Christian)
+## General prerequisites
 
 This MicroHack has a few but important prerequisites
 
-In order to use the MicroHack time most effectively, the following tasks should be completed prior to starting the session.
+In order to use the MicroHack time most effectively, the following prerequisites should be completed prior to starting the session.
 
-* External Tenant Setup 
+* Azure Active Directory Tenant
+* At least one Azure Subscription
+* Azure Active Directory user with Contributor or Owner permissions on the Azure Subscription
 
-With these pre-requisites in place, we can focus on building the differentiated knowledge in ... that is required when working with the product, rather than spending hours repeating relatively simple tasks such as setting up....
+With these pre-requisites in place, we can focus on building the differentiated knowledge in Azure Migrate that is required when working with the product.
 
-## Challenge 1 - Prerequisites and landing zone preparation (Nico)
+## Challenge 1 - Prerequisites and landing zone preparation
 
 ### Goal
 

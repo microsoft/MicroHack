@@ -70,7 +70,7 @@ With these pre-requisites in place, we can focus on building the differentiated 
 
 ### Actions
 
-- Deploy the [Bicep configuration](./resources/README.md) of the Micro Hack.
+- Deploy the [Bicep configuration](./resources) of the Micro Hack.
 
 ### Success criteria
 

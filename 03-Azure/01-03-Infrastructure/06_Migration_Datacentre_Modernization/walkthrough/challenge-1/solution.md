@@ -6,6 +6,7 @@ Duration: 20 minutes
 
 - Please ensure that you successfully verified the [General prerequisits](../../Readme.md#general-prerequisites) before continuing with this challenge.
 - The Azure CLI is required to deploy the Bicep configuration of the Micro Hack.
+- Download the *.bicep files from the [Resources](../../resources) to your local PC.
 
 ### **Task 1: Deploy the Landing Zone for the Micro Hack**
 
@@ -21,8 +22,29 @@ Duration: 20 minutes
 ### **Task 2: Verify the deployed resources**
 The bicep deployment should have created the following resources
 
-![image](Link to image)
+- source-rg Resource Group containing the follwing resources
+    + Virtual Network *source-vnet*
+    + Virtual Machine *frontend* with installed web server
+    + Virtual Machine *backend* 
+    + Public Load Balancer *plb-frontend* with configured backend pool containing *frontend* VM
+    + Azure Bastion *source-bastion*
+    + Azure Key Vault *source-kv-* containing username and password for VM login
+   
+- source-rg Resource Group containing the follwing resources
+    + Virtual Network *destination-vnet*
+    + Azure Bastion *destination-bastion*
+    
+The deployed architecture looks like following diagram:
+![image](../../img/Challenge-1.jpg)
 
+### **Task 3: Verify Web Server availability**
+
+- Open *source-rg* Resource Group
+- Select *plb-frontend* Load Balancer
+- Navigate to *Frontend IP configuration* under *Settings* section on the left
+- Note and copy public IP address of *LoadBalancerFrontEnd*
+- Open web browser and navigate to http://LoadBalancerFrontEnd-IP-Address
+- A simple website containing the server name of the frontend VM should be displayed
 
 You successfully completed challenge 1! 🚀🚀🚀
 

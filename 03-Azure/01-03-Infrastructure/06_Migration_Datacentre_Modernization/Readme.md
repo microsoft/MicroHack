@@ -38,11 +38,17 @@ This MicroHack scenario walks through the use of Azure Migrate to support the pr
 - Migrate
 - Modernize
 
+As part of the MicroHack, we will simulate the discovery and migration of physical servers to Azure. We will create the source systems as Azure Virtual Machines within a dedicated source Resource Group in Azure to simulate the on-prem datacenter. We will use Azure Migrate to discover, assess and migrate the systems into a destination Resource Group that simulates the target Azure environment.
+
+The concept behind physical server discovery and migration is described in detail under the following links:
+* [Physical Server discovery](https://learn.microsoft.com/en-us/azure/migrate/migrate-support-matrix-physical)
+* [Physical Server migration](https://learn.microsoft.com/en-us/azure/migrate/migrate-support-matrix-physical-migration)
+
 # Objectives
 
 After completing this MicroHack you will:
 
-- Know how to build a an assessment & business case for you datecentre transformation 
+- Know how to build an assessment & business case for you datacenter transformation 
 - Understand the default and best practices how to quickly migrate workloads and safe with right sizing
 - Understand how to use the tools and best practices to optimize and safe time
 - Know how to not only use the tools to Lift & Shift, you will also understand how to modernize to cloud native services

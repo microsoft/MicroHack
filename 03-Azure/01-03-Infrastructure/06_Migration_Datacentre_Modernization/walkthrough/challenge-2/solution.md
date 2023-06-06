@@ -6,7 +6,7 @@ Duration: XX minutes
 
 Please make sure thet you successfully completed [Challenge 1](../challenge-1/solution.md) before continuing with this challange.
 
-### **Task 1: Write down...**
+### **Task 1: Create a Azure Migrate Project**
 
 💡 The first....
 
@@ -31,6 +31,6 @@ Please make sure thet you successfully completed [Challenge 1](../challenge-1/so
 ![image](Link to image)
 
 
-You successfully completed challenge 1! 🚀🚀🚀
+You successfully completed challenge 2! 🚀🚀🚀
 
  **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-3/solution.md)

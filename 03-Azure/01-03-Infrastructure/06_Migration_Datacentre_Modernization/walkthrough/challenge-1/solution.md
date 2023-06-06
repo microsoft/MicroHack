@@ -35,7 +35,7 @@ The bicep deployment should have created the following resources
     + Azure Bastion *destination-bastion*
     
 The deployed architecture looks like following diagram:
-![image](../../img/Challenge-1.jpg)
+![image](./img/Challenge-1.jpg)
 
 ### **Task 3: Verify Web Server availability**
 

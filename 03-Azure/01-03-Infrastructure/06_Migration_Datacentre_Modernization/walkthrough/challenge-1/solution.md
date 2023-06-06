@@ -4,29 +4,22 @@ Duration: 20 minutes
 
 ## Prerequisites
 
-Please ensure that you successfully verified the [General prerequisits](../../Readme.md#general-prerequisites) before continuing with this challenge.
+- Please ensure that you successfully verified the [General prerequisits](../../Readme.md#general-prerequisites) before continuing with this challenge.
+- The Azure CLI is required to deploy the Bicep configuration of the Micro Hack.
 
-### **Task 1: Write down...**
+### **Task 1: Deploy the Landing Zone for the Micro Hack**
 
-💡 The first....
+- Install the [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) on your local PC
+- Open a PowerShell (Windows) or Bash (Linux and macOS) terminal window
+- Execute `az login` and sign in with your Azure AD account
+- Execute `az ad signed-in-user show`
+- Copy the property *id* to the clipboard (e.g., b0b34544-d61f-46f3-92c8-0da38137f623)
+- Execute `az deployment sub create --location westeurope --template-file .\main.bicep`
+- Paste the previously copied *id* as *currentUserObjectId*
+- Wait for the deployment to finish
 
-💥 **Here are the first three general steps that are typically happen:** 
-1. Everybody struggles with finding the right person....
-2. If somebody finds the plan, the first three actions...
-3. Do not sress to much we have a...
-
-🔑 **Key to a successful strategy....**
-- The key to success is not a technical consideration of....
-
-### **Task 2: Think about if...**
-
-
-### **Task 3: Put yourself in the position...**
-
-* [Checklist Testing for...](Link to checklist or microsoft docs)
-
-### Task 4: Who defines the requirements...
-
+### **Task 2: Verify the deployed resources**
+The bicep deployment should have created the following resources
 
 ![image](Link to image)
 

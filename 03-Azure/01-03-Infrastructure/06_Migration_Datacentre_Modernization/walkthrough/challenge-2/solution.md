@@ -8,15 +8,21 @@ Please make sure thet you successfully completed [Challenge 1](../challenge-1/so
 
 ### **Task 1: Create a Azure Migrate Project**
 
-💡 The first....
+Open the [Azure Portal](https://portal.azure.com) and login using a user account with at least Contributor permissions on a Azure Subscription.
 
-💥 **Here are the first three general steps that are typically happen:** 
-1. Everybody struggles with finding the right person....
-2. If somebody finds the plan, the first three actions...
-3. Do not sress to much we have a...
+In the search bar enter *Azure Migrate* and select Azure Migrate from the list of services
+[image](./img/AzMig1.png)
 
-🔑 **Key to a successful strategy....**
-- The key to success is not a technical consideration of....
+Select *Servers, databases and web app* from the navigation pane on the left and click on *Create project*
+[image](./img/AzMig2.png)
+
+Select the *destination-rg* Resource Group, specify a name for the Azure Migrate Project and also select a geograpy where the data will be stored.
+[image](./img/AzMig3.png)
+
+Wait until the Azure Migrate Project has been created. Select *Servers, databases and web apps* from the navigation pane on the left.
+Your previousley created Azure Migrate project should be preselected.
+[image](./img/AzMig4.png)
+
 
 ### **Task 2: Think about if...**
 

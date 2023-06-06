@@ -92,36 +92,36 @@ With these pre-requisites in place, we can focus on building the differentiated 
 
 [Solution Steps](./walkthrough/challenge-1/solution.md)
 
-## Challenge 2 - Discover VM´s for the migration (Hengameh)
+## Challenge 2 - Discover physical servers for the migration
 
 ### Goal 
 
-The goal of this exercise is to deploy...
+The goal of this exercise is to...
 
-* Setup Azure Migrate Project 
+* Setup Azure Migrate Project in Azure
 * Installing / Deploying the necessary setup for discovery 
 * Create a discovery 
 
 ### Actions
 
-* A1
-* A2
-* A3
+* Create a Azure Migrate Project
+* Deploy a Azure Migrate Appliance
+* Create a continous disvovery of your source environment
 
 ### Success criteria
 
-* You have deployed ....
-* You successfully enabled ...
-* You have successfully setup ....
-* You have successfully ....
+* You have created a Azure Migrate Project
+* You have successfully deployed the Azure Migrate Appliance
+* You successfully registerd the Azure Migrate Appliance with the Azure Migrate Project
+* You have successfully setup a continuous discovery for the physical servers.
+* You have successfully verified the discovered servers in the portal
 
 ### Learning resources
-* [Create an assessment on Hyper-V]([You have successfully verified servers in the portal](https://learn.microsoft.com/en-us/azure/migrate/how-to-set-up-appliance-hyper-v#verify-servers-in-the-portal))
 * [Create and managed Azure Migrate projects](https://learn.microsoft.com/en-us/azure/migrate/create-manage-projects)
 * [Setup and appliance on VMWare](https://learn.microsoft.com/en-us/azure/migrate/how-to-set-up-appliance-vmware)
 * [Setup and appliance on Hyper-V](https://learn.microsoft.com/en-us/azure/migrate/how-to-set-up-appliance-hyper-v)
-* [Steup an appliance via script](https://learn.microsoft.com/en-us/azure/migrate/deploy-appliance-script)
-* [Before you start / general prerequisites](https://learn.microsoft.com/en-us/azure/migrate/how-to-discover-applications#before-you-start)
+* [Steup an appliance for physical servers](https://learn.microsoft.com/en-us/azure/migrate/how-to-set-up-appliance-physical)
+* [Before you start / general prerequisites](https://learn.microsoft.com/en-us/azure/migrate/how-to-discover-applications#before-you-start) 
 
 ### Solution - Spoilerwarning
 

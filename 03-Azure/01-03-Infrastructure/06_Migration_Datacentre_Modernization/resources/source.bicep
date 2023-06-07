@@ -258,7 +258,7 @@ resource vm1Extension 'Microsoft.Compute/virtualMachines/extensions@2022-03-01' 
     typeHandlerVersion: '1.10'
     autoUpgradeMinorVersion: true
     settings: {
-            commandToExecute: 'powershell -ExecutionPolicy Unrestricted Add-WindowsFeature Web-Server; powershell -ExecutionPolicy Unrestricted Add-Content -Path "C:\\inetpub\\wwwroot\\Default.htm" -Value $($env:computername)'
+            commandToExecute: 'powershell -ExecutionPolicy Unrestricted Add-WindowsFeature Web-Server -IncludeManagementTools; powershell -ExecutionPolicy Unrestricted Add-Content -Path "C:\\inetpub\\wwwroot\\Default.htm" -Value $($env:computername)'
     }
     protectedSettings: {
           }

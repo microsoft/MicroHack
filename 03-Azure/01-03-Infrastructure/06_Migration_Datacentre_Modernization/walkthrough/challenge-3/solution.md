@@ -29,10 +29,10 @@ Wait for the business case creation to complete and click on the business case n
 There are four major reports that you need to review:
 
 - Overview: This report is an executive summary of the business case and covers:
-        + Potential savings (TCO).
-        + Estimated year on year cashflow savings based on the estimated migration completed that year.
-        + Savings from unique Azure benefits like Azure Hybrid Benefit.
-        + Discovery insights covering the scope of the business case.
+  + Potential savings (TCO).
+  + Estimated year on year cashflow savings based on the estimated migration completed that year.
+  + Savings from unique Azure benefits like Azure Hybrid Benefit.
+  + Discovery insights covering the scope of the business case.
 
 ![image](./img/bc4.png)
 

@@ -4,7 +4,7 @@ Duration: 50 minutes
 
 ## Prerequisites
 
-Please make sure thet you successfully completed [Challenge 1](../challenge-1/solution.md) before continuing with this challange.
+Please make sure thet you successfully completed [Challenge 1](../challenge-1/solution.md) before continuing with this challenge.
 
 ### **Task 1: Create a Azure Migrate Project**
 

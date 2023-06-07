@@ -7,7 +7,7 @@ Duration: 30 minutes
 Please make sure thet you successfully completed [Challenge 2](../challenge-2/solution.md) before continuing with this challenge.
 Please also make sure to review the [prerequisites](https://learn.microsoft.com/en-us/azure/migrate/how-to-build-a-business-case#prerequisites) for the business case.
 
-### **Task 1: Build a business case 
+### **Task 1: Build a business case**
 
 Open the [Azure Portal](https://portal.azure.com) and navigate to the previousley created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click *Build business case*.
 
@@ -24,7 +24,7 @@ Wait for the business case creation to complete and click on the business case n
 ![image](./img/bc3.png)
 
 
-### **Task 2: Review a business case 
+### **Task 2: Review a business case**
 
 There are four major reports that you need to review:
 
@@ -48,7 +48,7 @@ There are four major reports that you need to review:
 
 ![image](./img/bc7.png)
 
-### **Task 3: Adjust business case assumptions
+### **Task 3: Adjust business case assumptions**
 
 The business case is calculated based on some [assumptions](https://learn.microsoft.com/en-us/azure/migrate/concepts-business-case-calculation#total-cost-of-ownership-steady-state). To better fit your current scenario, you can adjust those assumptions.
 

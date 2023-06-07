@@ -62,7 +62,7 @@ Select *Bastion* from the navigation pane on the left, provide the credentials t
 
 💡 You can also select *Password from Azure KeyVault* under *Authentication Type* if you set the password during VM creation to match the secret stored in the KeyVault.
 
-### **Task 2: Deploy the Azure Migrate Appliance**
+### **Task 3: Deploy the Azure Migrate Appliance**
 
 Open Microsoft Edge on the Windows Server 2019 system and navigate and login to the [Azure Portal](https://portal.azure.com).
 
@@ -107,8 +107,7 @@ Select *N* for IE11 uninstallation.
 
 ![image](./img/Discover8.png)
 
-
-### **Task 3: Configure the Azure Migrate Appliance**
+### **Task 4: Configure the Azure Migrate Appliance**
 
 Open Azure Migrate Appliance Configuration Manager using Microsoft Edge and agree the terms of use.
 
@@ -152,7 +151,6 @@ After discovery has been successfully initiated, go to the Azure portal to revie
 You can click *Overview* to get more insights on what information were discovered.
 
 💡 If no inventory data is available, click Refresh to refresh inventory data.
-
 
 You successfully completed challenge 2! 🚀🚀🚀
 

@@ -346,6 +346,7 @@ resource vm2 'Microsoft.Compute/virtualMachines@2022-03-01' = {
 /*
 Custom Script Extension (might be useful for later to generate load on VM)
 TODO: To be tested
+*/
 
 resource vm2Extension 'Microsoft.Compute/virtualMachines/extensions@2022-03-01' = {
   parent: vm2
@@ -358,18 +359,12 @@ resource vm2Extension 'Microsoft.Compute/virtualMachines/extensions@2022-03-01' 
     autoUpgradeMinorVersion: true
     settings: {
       skipDos2Unix: false
-      timestamp: 123456789
+      commandToExecute: 'apt-get -y update && apt-get install net-tools'
     }
     protectedSettings: {
-      commandToExecute: 'xxx'
-      script: 'xxx'
-      storageAccountName: 'xxx'
-      storageAccountKey: 'xxx'
-      fileUris: [ 'xxx' ]
-      managedIdentity: 'xxx'
     }
   }
-} */
+} 
 
 
 //Public Load Balancer for Frontend VM

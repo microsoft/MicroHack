@@ -36,15 +36,29 @@ There are four major reports that you need to review:
 
 ![image](./img/bc4.png)
 
-
 - On-premises vs Azure: This report covers the breakdown of the total cost of ownership by cost categories and insights on savings.
+
+![image](./img/bc5.png)
+
 - Azure IaaS: This report covers the Azure and on-premises footprint of the servers and workloads recommended for migrating to Azure IaaS.
+
+![image](./img/bc6.png)
+
 - Azure PaaS: This report covers the Azure and on-premises footprint of the workloads recommended for migrating to Azure PaaS.
 
-
-
+![image](./img/bc7.png)
 
 ### **Task 3: Adjust business case assumptions
+
+The business case is calculated based on some [assumptions](https://learn.microsoft.com/en-us/azure/migrate/concepts-business-case-calculation#total-cost-of-ownership-steady-state). To better fit your current scenario, you can adjust those assumptions.
+
+**Azure cost
+![image](./img/bc8.png)
+
+**On-premises cost
+![image](./img/bc9.png)
+
+
 
 You successfully completed challenge 3! 🚀🚀🚀
 

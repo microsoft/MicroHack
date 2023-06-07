@@ -1,6 +1,6 @@
 # Walkthrough Challenge 2 - Discover physical servers for the migration
 
-Duration: XX minutes
+Duration: 50 minutes
 
 ## Prerequisites
 
@@ -65,9 +65,11 @@ Open Microsoft Edge on the Windows Server 2019 system and navigate and login to 
 ![image](./img/AzMigApp7.png)
 
 In the search bar enter *Azure Migrate* and select Azure Migrate from the list of services
+
 ![image](./img/AzMig1.png)
 
 Select *Servers, databases and web apps*, make sure that the previousley created Azure Migrate project is selected and klick *Discover*
+
 ![image](./img/Discover1.png)
 
 Select *Physical or other (AWS, GCP,Xen, etc.)* from the *Are your servers virtualized* drop down. Enter a name into the *Name your appliance* field and clicke *Generate*. Wait until the Project key has been created. Copy the Project key and klick *Download*, to download the ZIP file containing the PowerShell script to install the Azure Migrate Appliance.
@@ -91,22 +93,67 @@ Select Option 1 for *Azure Public*
 
 ![image](./img/Discover6.png)
 
-Select Option 1 for *public endpoint* and confirm you selection.
+Select Option 1 for *public endpoint* and confirm you selection to start the installation.
 
 ![image](./img/Discover7.png)
 
+Select *N* for IE11 uninstallation. 
+
+💡 Please note the Warning that IE11 is incompatible with latest Azure Migrate Appliance configuration manager and make sure using Microsoft Edge to configure the Azure Migrate appliance
+
+![image](./img/Discover8.png)
 
 
-### **Task 3: Put yourself in the position...**
+### **Task 3: Configure the Azure Migrate Appliance**
 
-* [Checklist Testing for...](Link to checklist or microsoft docs)
+Open Azure Migrate Appliance Configuration Manager using Microsoft Edge and agree the terms of use.
 
-### Task 4: Who defines the requirements...
+![image](./img/Discover9.png)
 
+Paste the previously copied Azure Migrate project key and click *Verify*. Once successfully verified the latest appliance updates will be installed.
 
-![image](Link to image)
+![image](./img/Discover10.png)
+
+Next log in to Azure using the provieded code.
+
+![image](./img/Discover11.png)
+
+![image](./img/Discover12.png)
+
+![image](./img/Discover13.png)
+
+After successfull authentication, appliance will be registered with the Azure Migrate project.
+
+![image](./img/Discover14.png)
+
+Next you need to specify the credentials that will be used to connect to the source server for discovery.
+Add one entry for Windows and for Linux devices. The friendly name will be used later on when specifiying the individual systems.
+
+💡 For the Username and Password check the secrets within the KeyVault.
+
+![image](./img/Discover15.png)
+
+Next you need to provide the individual source server details and map them to a specific set of credentials. Make sure that validation is successfull.
+
+![image](./img/Discover16.png)
+
+The last step is to provide additional credentials if you want to perform software inventory to additionaly collect information about installed web server or SQL server. To start discovery click *Start discovery*.
+
+![image](./img/Discover17.png)
+
+After discovery has been successfully initiated, go to the Azure portal to review the discovered inventory.
+
+![image](./img/Discover18.png)
+
+You can click *Overview* to get more insights on what information were discovered.
+
+💡 If no inventory data is available, click Refresh to refresh inventory data.
 
 
 You successfully completed challenge 2! 🚀🚀🚀
+
+The deployed architecture now looks like the following diagram.
+
+![image](./img/Challenge-2.jpg)
 
  **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-3/solution.md)

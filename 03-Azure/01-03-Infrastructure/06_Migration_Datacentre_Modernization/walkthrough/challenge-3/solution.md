@@ -1,6 +1,6 @@
 # Walkthrough Challenge 3 - Create a Business Case
 
-Duration: 30 minutes
+Duration: 40 minutes
 
 ## Prerequisites
 

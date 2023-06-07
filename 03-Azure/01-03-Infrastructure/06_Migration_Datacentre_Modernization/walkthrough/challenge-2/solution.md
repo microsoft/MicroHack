@@ -1,6 +1,6 @@
 # Walkthrough Challenge 2 - Discover physical servers for the migration
 
-Duration: 50 minutes
+Duration: 60 minutes
 
 ## Prerequisites
 

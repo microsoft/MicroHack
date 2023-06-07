@@ -1,6 +1,6 @@
 # Walkthrough Challenge 1 - Prerequisites and Landing Zone
 
-Duration: 20 minutes
+Duration: 30 minutes
 
 ## Prerequisites
 

@@ -127,32 +127,40 @@ The goal of this exercise is to...
 
 [Solution Steps](./walkthrough/challenge-2/solution.md)
 
-## Challenge 3 - Create a Business Case (Andreas)
+## Challenge 3 - Create a Business Case
 
 ### Goal 
 
-The goal of this exercise is to deploy...
+The goal of this exercise is to create a business case. The Business case capability helps you build a business proposal to understand how Azure can bring the most value to your business. It highlights:
+
+- On-premises vs Azure total cost of ownership.
+- Year on year cashflow analysis.
+- Resource utilization based insights to identify servers and workloads that are ideal for cloud.
+- Quick wins for migration and modernization including end of support Windows OS and SQL versions.
+- Long term cost savings by moving from a capital expenditure model to an Operating expenditure model, by paying for only what you use.
+
+💥 **The Business case capability is currently in public preview** 
 
 ### Actions
 
-* A1
-* A2
-* A3
+* Builde a business case 
+* Review a business case
+* Adjust business case assumptions
 
 ### Success criteria
 
-* You have deployed ....
-* You successfully enabled ...
-* You have successfully setup ....
-* You have successfully ....
+* You successfully build a business case
+* You have successfully reviewed the business case
+* You understand how to adjust the business case assumptions
 
 ### Learning resources
-* [Create a Business Case](https://learn.microsoft.com/en-us/azure/migrate/how-to-build-a-business-case)
-
+* [Business case overview](https://learn.microsoft.com/en-us/azure/migrate/concepts-business-case-calculation)
+* [Build a business case](https://learn.microsoft.com/en-us/azure/migrate/how-to-build-a-business-case)
+* [Review a business case](https://learn.microsoft.com/en-us/azure/migrate/how-to-view-a-business-case)
 
 ### Solution - Spoilerwarning
 
-[Solution Steps](./walkthrough/challenge-2/solution.md)
+[Solution Steps](./walkthrough/challenge-3/solution.md)
 
 
 ## Challenge 4 - Assess VM´s for the migration (Nils)

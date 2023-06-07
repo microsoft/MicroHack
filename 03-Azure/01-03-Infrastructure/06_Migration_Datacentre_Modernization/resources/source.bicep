@@ -19,6 +19,7 @@ param cloudInit string = '''
 package_upgrade: true
 packages:
   - nginx
+  - net-tools
 '''
 
 /*
@@ -346,7 +347,7 @@ resource vm2 'Microsoft.Compute/virtualMachines@2022-03-01' = {
 /*
 Custom Script Extension (might be useful for later to generate load on VM)
 TODO: To be tested
-*/
+
 
 resource vm2Extension 'Microsoft.Compute/virtualMachines/extensions@2022-03-01' = {
   parent: vm2
@@ -365,7 +366,7 @@ resource vm2Extension 'Microsoft.Compute/virtualMachines/extensions@2022-03-01' 
     }
   }
 } 
-
+*/
 
 //Public Load Balancer for Frontend VM
 resource lb 'Microsoft.Network/loadBalancers@2021-08-01' = {

@@ -24,41 +24,76 @@ Your previousley created Azure Migrate project should be preselected.
 [image](./img/AzMig4.png)
 
 
-### **Task 2: Deploy Azure Migrate Appliance**
+### **Task 2: Create and prepare Windows Server 2019 for the Azure Migrate Appliance**
 
-To start physical server discovery you must install the Azure Migrate Appliance on your on-premises. The Azure Migrate Appliance can be downloaded as a OVA or VHD template or you can download a ZIP file containing a PowerShell script to install it on a already existing server. For the purpose of this MicroHack we will install the Azure Migrate Appliance via the PowerShell script on a Windows Server 2022 system.
+To start physical server discovery you must install the Azure Migrate Appliance on your on-premises. The Azure Migrate Appliance can be downloaded as a OVA or VHD template or you can download a ZIP file containing a PowerShell script to install it on a already existing server. For the purpose of this MicroHack we will install the Azure Migrate Appliance via the PowerShell script on a Windows Server 2019 system.
 
 💡 Please make sure to check the [prerequisites](https://learn.microsoft.com/en-us/azure/migrate/tutorial-discover-physical#prerequisites) of the Azure Migrate Appliance.
 
 In the Azure Portal select *Virtual machines* from the navigation pane on the left. Select *Create -> Azure virtual machine*
+
 ![image](./img/AzMigApp1.png)
 
-Under Basics select the *source-rg* Resource Group and provide a name for the server. Select *Windows Server 2022 Datacenter - x64 Gen2* for the Image.
+Under Basics select the *source-rg* Resource Group and provide a name for the server. Select *Windows Server 2019 Datacenter - x64 Gen2* for the Image.
+
 ![image](./img/AzMigApp2.png)
 
 💡 For the Username and Password you can either select a combination of your choice or check the secrets within the KeyVault.
 
 Accept the default disk settings and click next to select the *Networking* tab. Select the *source-vnet* Virtual Network, select the *source-subnet* Subnet and make sure to select *None* for the Public IP and NIC network security group.
+
 ![image](./img/AzMigApp3.png)
 
 Accept the default settings for the remaining tabs, select *Review + create* and click *Create*.
+
 ![image](./img/AzMigApp4.png)
 
 Wait until the deployment has been successfully completed and select *Go to resource*
+
 ![image](./img/AzMigApp5.png)
 
-Select *Bastion* from the navigation pane on the left, provide the credentials to login to the Azure Migrate Appliance VM and select *Connect*. A new browser tab should open with a remote session to the Windows Server 2022 system.
+Select *Bastion* from the navigation pane on the left, provide the credentials to login to the Azure Migrate Appliance VM and select *Connect*. A new browser tab should open with a remote session to the Windows Server 2019 system.
+
 ![image](./img/AzMigApp6.png)
 
 💡 You can also select *Password from Azure KeyVault* under *Authentication Type* if you set the password during VM creation to match the secret stored in the KeyVault.
 
-Open Microsoft Edge on the Windows Server 2022 system and navigate and login to the [Azure Portal](https://portal.azure.com).
+### **Task 2: Deploy the Azure Migrate Appliance**
+
+Open Microsoft Edge on the Windows Server 2019 system and navigate and login to the [Azure Portal](https://portal.azure.com).
+
 ![image](./img/AzMigApp7.png)
 
+In the search bar enter *Azure Migrate* and select Azure Migrate from the list of services
+![image](./img/AzMig1.png)
 
+Select *Servers, databases and web apps*, make sure that the previousley created Azure Migrate project is selected and klick *Discover*
+![image](./img/Discover1.png)
 
+Select *Physical or other (AWS, GCP,Xen, etc.)* from the *Are your servers virtualized* drop down. Enter a name into the *Name your appliance* field and clicke *Generate*. Wait until the Project key has been created. Copy the Project key and klick *Download*, to download the ZIP file containing the PowerShell script to install the Azure Migrate Appliance.
 
+![image](./img/Discover2.png)
 
+Open the folder containing the download and extract the ZIP file.
+
+![image](./img/Discover3.png)
+
+Start an evelvated PowerShell session and change the PowerShell directory to the folder where the contents have been extraceted.
+Run the script named AzureMigrateInstaller.ps1 and select *A* to confirm script execution.
+
+![image](./img/Discover4.png)
+
+Select Option 3 for *Physical or other (AWS, GCP, Xen, etc.)*
+
+![image](./img/Discover5.png)
+
+Select Option 1 for *Azure Public*
+
+![image](./img/Discover6.png)
+
+Select Option 1 for *public endpoint* and confirm you selection.
+
+![image](./img/Discover7.png)
 
 
 

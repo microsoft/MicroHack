@@ -52,15 +52,16 @@ There are four major reports that you need to review:
 
 The business case is calculated based on some [assumptions](https://learn.microsoft.com/en-us/azure/migrate/concepts-business-case-calculation#total-cost-of-ownership-steady-state). To better fit your current scenario, you can adjust those assumptions.
 
-**Azure cost
+**Azure cost**
 ![image](./img/bc8.png)
 
-**On-premises cost
+**On-premises cost**
 ![image](./img/bc9.png)
 
+You can adjust those parameters what would recalculate the business case.
 
+![image](./img/bc10.png)
 
 You successfully completed challenge 3! 🚀🚀🚀
-
 
  **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-4/solution.md)

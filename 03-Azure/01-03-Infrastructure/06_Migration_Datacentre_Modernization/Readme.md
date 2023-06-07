@@ -10,6 +10,7 @@
 
 This MicroHack scenario walks through the process how to optimize and modernize you datacenter. The assessment, the tooling and processes are global best practices and with a focus on the real world scenarios, cost optimization and the best customer recommended design principles. Specifically, this builds up to include working with an existing infrastructure.
 
+![image](./img/MigrateModernize.png)
 <!--![image](./img/azuremigratebusinesscase.png)-->
 <!--![image](./img/migration-assessment-architecture.png)-->
 

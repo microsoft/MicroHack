@@ -13,7 +13,8 @@ param secretsPermissions array = [
   'all'
 ]
 @secure()
-param adminPassword string = newGuid()
+param guidValue string = newGuid()
+var adminPassword = '${toUpper(uniqueString(resourceGroup().id))}-${guidValue}'
 param cloudInit string = '''
 #cloud-config
 package_upgrade: true

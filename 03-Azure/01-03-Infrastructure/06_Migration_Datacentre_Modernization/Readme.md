@@ -164,7 +164,7 @@ The goal of this exercise is to create a business case. The Business case capabi
 [Solution Steps](./walkthrough/challenge-3/solution.md)
 
 
-## Challenge 4 - Assess VM´s for the migration (Nils)
+## Challenge 4 - Assess VM´s for the migration
 
 ### Goal 
 
@@ -178,24 +178,19 @@ The goal of this exercise is to ...
 
 * Group machines for the assessment
 * Create an Azure VM assessment
-* Create an Azure App Service assessment
 * Review assessment output and reccomendations
 
 ### Success criteria
 
 * You created a machine group
 * You successfully created an Azure VM assessment
-* You successfully created an Azure App Service assessment
 * You reviewed the assessment output and reccomendations
-
 
 ### Learning resources
 * [Assessment overview - To Azure VMs](https://learn.microsoft.com/en-us/azure/migrate/concepts-assessment-calculation)
-* [Assessment Overview - To Azure App Service](https://learn.microsoft.com/en-us/azure/migrate/concepts-azure-webapps-assessment-calculation)
 * [Select assessment tools](https://learn.microsoft.com/en-us/azure/migrate/how-to-assess)
 * [Create a group for assessment](https://learn.microsoft.com/en-us/azure/migrate/how-to-create-a-group)
 * [Create an Azure VM assessment](https://learn.microsoft.com/en-us/azure/migrate/how-to-create-assessment)
-* [Create an Azure App Service assessment](https://learn.microsoft.com/en-us/azure/migrate/how-to-create-azure-app-service-assessment)
 * [Customize an assessment](https://learn.microsoft.com/en-us/azure/migrate/how-to-modify-assessment)
 
 ### Solution - Spoilerwarning
@@ -227,3 +222,4 @@ Thank you for investing the time and see you next time!
 
 ## Contributors
 * Nils Bankert [GitHub](https://github.com/nilsbankert); [LinkedIn](https://www.linkedin.com/in/nilsbankert/)
+* Andreas Schwarz [LinkedIn](https://www.linkedin.com/in/andreas-schwarz-7518a818b/)

@@ -10,7 +10,7 @@ Please make sure thet you successfully completed [Challenge 3](../challenge-3/so
 
 Open the [Azure Portal](https://portal.azure.com) and navigate to the previousley created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click *Overview*.
 
-![image](./img/assess1.png)
+![image](./img/Assess1.png)
 
 
 

@@ -79,6 +79,19 @@ The *Cost details* view shows the estimated compute and storage cost of running 
 
 ![image](./img/Assess14.png)
 
+To adjust the assessment settings, select *Settings* from the Menu bar on the top.
+
+![image](./img/Assess15.png)
+
+You can change certain parameters e.g, Storage type, Saving Options, Sizing criteria, Comfort factor and License settings.
+
+![image](./img/Assess16.png)
+
+The assessment will be automatically be updated.
+
+![image](./img/Assess17.png)
+
+
 ### **Task 3: Create an Azure App Service assessment**
 
 

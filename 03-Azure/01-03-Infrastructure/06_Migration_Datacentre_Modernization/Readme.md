@@ -171,8 +171,7 @@ The goal of this exercise is to create a business case. The Business case capabi
 The goal of this exercise is to ...
 
 * measure the readiness and estimates the effect of migrating on-premises servers to Azure
-* create different assessment types and understand how they differentiate
-* review the assessment output to understand teh readiness and sizing recommendations
+* review the assessment output to understand the readiness and sizing recommendations
 
 ### Actions
 
@@ -197,24 +196,44 @@ The goal of this exercise is to ...
 
 [Solution Steps](./walkthrough/challenge-4/solution.md)
 
-## Challenge 5 - Testfailover / Migration Migrate VM´s (Christian / Andreas)
+## Challenge 5 - Migrate machines to Azure
 
 ### Goal 
 
+The goal of this exercise is to ...
+
+* understand the different migration options and prerequisites provided by Azure Migrate
+* perfrom a test migration of the desired workload
+* perform the final migration towards Azure
+
 ### Actions
+
+* Setup the Azure Replication Appliance
+* Deploy the Mobility Service Agent
+* Replicate the machines to Azure
+* Perform a Test Migration
+* Migrate the workload to Azure
 
 ### Success criteria
 
+* All the soruce machines are successfully migrated to and running in Azure
+* The Web Server is accessable using the Load Balancer public IP
+
 ### Learning resources
+* [Support matrix for migration of physical servers, AWS VMs, and GCP VMs](https://learn.microsoft.com/en-us/azure/migrate/migrate-support-matrix-physical-migration)
 * [Migrate Hyper-V VM´s to Azure](https://learn.microsoft.com/en-us/azure/migrate/tutorial-migrate-hyper-v)
 * [Migrate options for VMWare to Azure](https://learn.microsoft.com/en-us/azure/migrate/server-migrate-overview)
 * [Migrate Physical Servers](https://learn.microsoft.com/en-us/azure/migrate/tutorial-migrate-physical-virtual-machines)
 * [Migrate AWS Instances to Azure](https://learn.microsoft.com/en-us/azure/migrate/tutorial-migrate-aws-virtual-machines)
 * [Migrate GCP Instances to Azure](https://learn.microsoft.com/en-us/azure/migrate/tutorial-migrate-gcp-virtual-machines)
 
+### Solution - Spoilerwarning
+
+[Solution Steps](./walkthrough/challenge-5/solution.md)
+
 ## Finish
 
-Congratulations! You finished the MicroHack for Migration and Modernization. We hope you had the chance to learn about the how to implement a successful...
+Congratulations! You finished the MicroHack for Migration and Modernization. We hope you had the chance to learn about the how to implement a successful migration strategy using Azure Migrate.
 If you want to give feedback please dont hesitate to open an Issue on the repository or get in touch with one of us directly.
 
 Thank you for investing the time and see you next time!

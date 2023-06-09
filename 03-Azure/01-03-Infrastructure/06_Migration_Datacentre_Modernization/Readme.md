@@ -168,30 +168,39 @@ The goal of this exercise is to create a business case. The Business case capabi
 
 ### Goal 
 
-The goal of this exercise is to deploy...
+The goal of this exercise is to ...
 
-* As is assesment 
-* Play around and explain a few things (AHB, RI, etc..)
-* 
+* measure the readiness and estimates the effect of migrating on-premises servers to Azure
+* create different assessment types and understand how they differentiate
+* review the assessment output to understand teh readiness and sizing recommendations
 
 ### Actions
 
-* A1
-* A2
-* A3
+* Group machines for the assessment
+* Create an Azure VM assessment
+* Create an Azure App Service assessment
+* Review assessment output and reccomendations
 
 ### Success criteria
 
-* You have deployed ....
-* You successfully enabled ...
-* You have successfully setup ....
-* You have successfully ....
+* You created a machine group
+* You successfully created an Azure VM assessment
+* You successfully created an Azure App Service assessment
+* You reviewed the assessment output and reccomendations
+
 
 ### Learning resources
-* [Create an assessment on Hyper-V](https://learn.microsoft.com/en-us/azure/migrate/tutorial-assess-hyper-v)
-* [Create an assessment on VMWare](https://learn.microsoft.com/en-us/azure/migrate/tutorial-assess-vmware-azure-vm)
-* [Create an assessment for SQL](https://learn.microsoft.com/en-us/azure/migrate/tutorial-assess-sql)
-* [Create an assessment for AWS Instances](https://learn.microsoft.com/en-us/azure/migrate/tutorial-assess-aws)
+* [Assessment overview - To Azure VMs](https://learn.microsoft.com/en-us/azure/migrate/concepts-assessment-calculation)
+* [Assessment Overview - To Azure App Service](https://learn.microsoft.com/en-us/azure/migrate/concepts-azure-webapps-assessment-calculation)
+* [Select assessment tools](https://learn.microsoft.com/en-us/azure/migrate/how-to-assess)
+* [Create a group for assessment](https://learn.microsoft.com/en-us/azure/migrate/how-to-create-a-group)
+* [Create an Azure VM assessment](https://learn.microsoft.com/en-us/azure/migrate/how-to-create-assessment)
+* [Create an Azure App Service assessment](https://learn.microsoft.com/en-us/azure/migrate/how-to-create-azure-app-service-assessment)
+* [Customize an assessment](https://learn.microsoft.com/en-us/azure/migrate/how-to-modify-assessment)
+
+### Solution - Spoilerwarning
+
+[Solution Steps](./walkthrough/challenge-4/solution.md)
 
 ## Challenge 5 - Testfailover / Migration Migrate VM´s (Christian / Andreas)
 

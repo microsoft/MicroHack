@@ -118,6 +118,22 @@ Wait until the installation progress is finished.
 
 ![image](./img/mig15.png)
 
+After the successfull installation a configuration server connection passphrase will be displayed. Copy the passphrase and save it as a new secret in the source-rg Resource Group KeyVault.
+
+![image](./img/mig17.png)
+
+After the installation completes, the Appliance configuration wizard will be launched automatically.
+You can add the local administrator account credentials of the source servers (stored secrets in the source KeyVault).
+
+![image](./img/mig17-1.png)
+
+The last step is to finalize the registration. Refresh the Azure Portal page where you've downloaded the installer and registration keys and select the *azreplappliance* from the drop down list and click on *Finalize registration*.
+
+![image](./img/mig18.png)
+
+### **Task 3: Install the Mobility service on the source server**
+
+
 
 
 You successfully completed challenge 5! 🚀🚀🚀

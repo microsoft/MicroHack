@@ -2,8 +2,8 @@
 resource "azurerm_public_ip" "mh_pip_apgw" {
   name                = "mh-pip-apgw"
   sku                 = "Standard"
-  resource_group_name = var.rg_name
-  location            = var.location
+  resource_group_name = azurerm_resource_group.microhack_monitoring.name
+  location            = azurerm_resource_group.microhack_monitoring.location
   allocation_method   = "Static"
 }
 
@@ -21,8 +21,8 @@ locals {
 
 resource "azurerm_application_gateway" "apgw" {
   name                = "mh-apgw"
-  resource_group_name = var.rg_name
-  location            = var.location
+  resource_group_name = azurerm_resource_group.microhack_monitoring.name
+  location            = azurerm_resource_group.microhack_monitoring.location
 
   sku {
     name     = "Standard_v2"
@@ -53,7 +53,7 @@ resource "azurerm_application_gateway" "apgw" {
     name                                 = "mh-${local.frontend_ip_configuration_name}-private"
     subnet_id                            = azurerm_subnet.microhack_subnet[1].id
     private_ip_address_allocation        = "Static"
-    private_ip_address                   = "10.3.2.50"
+    private_ip_address                   = "10.0.1.50"
   }
 
   backend_address_pool {

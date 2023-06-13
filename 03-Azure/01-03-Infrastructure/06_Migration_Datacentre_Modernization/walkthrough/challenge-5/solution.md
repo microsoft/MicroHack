@@ -8,7 +8,7 @@ Please make sure thet you successfully completed [Challenge 4](../challenge-4/so
 
 ### **Task 1: Create and prepare Windows Server 2019 for the Azure Replication Appliance**
 
-To start physical server migration you must install the Azure Replication Appliance on your on-premises. The Azure Replication Appliance can be downloaded as a OVA template or you can download the appliance installer to install it on a already existing server. For the purpose of this MicroHack we will install the Azure Replication Appliance via the PowerShell script on a new Windows Server 2019 system.
+To start physical server migration you must install the Azure Replication Appliance on your on-premises. The Azure Replication Appliance can be downloaded as a OVA template or you can download the appliance installer to install it on a already existing server. For the purpose of this MicroHack we will install the Azure Replication Appliance via the installer on a new Windows Server 2019 system.
 
 💡 Please make sure to check the [prerequisites](https://learn.microsoft.com/en-us/azure/migrate/migrate-replication-appliance) of the Azure 
 Replication Appliance.
@@ -25,7 +25,13 @@ Under Basics select the *source-rg* Resource Group and provide a name for the se
 
 💡 For the Username and Password you can either select a combination of your choice or check the secrets within the KeyVault.
 
-Accept the default disk settings and click next to select the *Networking* tab. Select the *source-vnet* Virtual Network, select the *source-subnet* Subnet and make sure to select *None* for the Public IP and NIC network security group.
+Add an additional 1024GiB Standard HDD LRS data disk to the Virtual Machine and click *Next*
+
+![image](./img/azreplapl2-1.png)
+
+![image](./img/azreplapl2-2.png)
+
+In the *Networking* tab, select the *source-vnet* Virtual Network and the *source-subnet* Subnet and make sure to select *None* for the Public IP and NIC network security group.
 
 ![image](./img/azreplapl3.png)
 
@@ -66,12 +72,51 @@ Next start the installation of the Azure Migrate Replication Appliance by double
 
 ![image](./img/mig4.png)
 
+Select *Install the configuration server and process server* and click *Next*
 
+![image](./img/mig5.png)
 
+Check the *I acceppt...* checkbox and click *Next*
 
+![image](./img/mig6.png)
 
+Browse and select the previousley downloaded registration key and click *Next*
 
+![image](./img/mig7.png)
 
+Accept the default *Internet connection* configuration
+
+![image](./img/mig8.png)
+
+Review the prerequisites check of the installer. Note that you can safely ignore the static IP warning.
+
+![image](./img/mig9.png)
+
+Specify the required passwords and note the password requirements. 
+
+💡 For the Passwords you can either select your choice or check the secrets within the KeyVault to reuse the password.
+
+![image](./img/mig10.png)
+
+Select *No* for *Do you want to protect VMware virtual machines* and click *Next*
+
+![image](./img/mig11.png)
+
+Verify the *Install location*. The installer should automatically pre-select the largest disk, in our case the 1024 GiB data disk that was created during VM creation.
+
+![image](./img/mig12.png)
+
+Select the appropriate NICs (We only have 1 in our case).
+
+![image](./img/mig13.png)
+
+Verify the installation summary and click *Install* to start the installation.
+
+![image](./img/mig14.png)
+
+Wait until the installation progress is finished.
+
+![image](./img/mig15.png)
 
 
 

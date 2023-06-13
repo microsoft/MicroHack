@@ -16,3 +16,9 @@ resource "azurerm_log_analytics_workspace" "microhack_law" {
   sku                 = "PerGB2018"
   retention_in_days   = 30
 }
+
+module "name" {
+  source = "./modules/vms"
+  subnet_id = azurerm_subnet.microhack_subnet[0].id
+}
+  

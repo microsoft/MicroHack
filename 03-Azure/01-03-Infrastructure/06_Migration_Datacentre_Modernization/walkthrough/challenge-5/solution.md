@@ -134,21 +134,30 @@ The last step is to finalize the registration. Refresh the Azure Portal page whe
 ### **Task 3: Install the Mobility service on the source server**
 
 On machines you want to migrate, you need to install the Mobility service agent. The agent installers are available on the replication appliance in the *%ProgramData%\ASR\home\svsystems\pushinstallsvc\repository* directory.
-
-#### **Task 3.1: Install the Mobility service on the Windows VM**
-
 To install the Mobility service agent on the Windows machne follow the following steps
 
 1. Sign in to the replication appliance.
 2. Navigate to %ProgramData%\ASR\home\svsystems\pushinstallsvc\repository.
-3. Find the installer for the machine operating system and version. Review supported operating systems.
+3. Find the installer for the machine operating system and version. Review [supported operating systems](https://learn.microsoft.com/en-us/azure/site-recovery/vmware-physical-azure-support-matrix#replicated-machines).
 4. Copy the installer file to the machine you want to migrate.
 5. Make sure that you have the passphrase that was generated when you deployed the appliance (You should have saved it as a KeyVault secret).
-  * Store the file in a temporary text file on the machine.
-  * You can obtain the passphrase on the replication appliance. From the command line, run the following command to viewv the passphrase
-    C:\ProgramData\ASR\home\svsystems\bin\genpassphrase.exe -v .
+  * Store the key in a temporary text file on the machine.
+  * You can obtain the passphrase on the replication appliance. From the command line, run the following command to view the passphrase
+     C:\ProgramData\ASR\home\svsystems\bin\genpassphrase.exe -v
   * Don't regenerate the passphrase. This will break connectivity and you will have to reregister the replication appliance.
 
+#### **Task 3.1: Install the Mobility service on the Windows VM**
+
+1. Extract the contents of installer file to a local folder (for example C:\Temp) on the machine, as follows:
+     ren Microsoft-ASR_UA*Windows*release.exe MobilityServiceInstaller.exe
+     MobilityServiceInstaller.exe /q /x:C:\Temp\Extracted
+     cd C:\Temp\Extracted
+2. Run the Mobility Service Installer:
+     UnifiedAgent.exe /Role "MS" /Platform "VmWare" /Silent
+3. Register the agent with the replication appliance:
+     cd C:\Program Files (x86)\Microsoft Azure Site Recovery\agent
+     UnifiedAgentConfigurator.exe  /CSEndPoint <replication appliance IP address> /PassphraseFilePath <Passphrase File Path>
+     
 
 
 You successfully completed challenge 5! 🚀🚀🚀

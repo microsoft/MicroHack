@@ -1,28 +1,18 @@
 # **MicroHack Azure Monitor**
 
+- [**MicroHack Azure Monitor**](#microhack-azure-monitor)
 - [MicroHack introduction and context](#microhack-introduction-and-context)
 - [Objectives](#objectives)
 - [Prerequisites](#prerequisites)
+  - [Deployment](#deployment)
+    - [Azure Portal Method](#azure-portal-method)
+    - [Terraform Method](#terraform-method)
 - [Lab environment for this MicroHack](#lab-environment-for-this-microhack)
   - [Architecture](#architecture)
 - [MicroHack Challenges](#microhack-challenges)
-  - [Challenge 1 - Deploy the Lab environment](#challenge-1---deploy-the-lab-environment)
-    - [Goal](#goal)
-    - [Task 1: Deploy Baseline](#task-1-deploy-baseline)
-    - [Task 2: Verify baseline](#task-2-verify-baseline)
-- [Challenge 2 : Name..](#challenge-2--name)
-    - [Goal](#goal-1)
-    - [Task 1:](#task-1)
-    - [Task 2:](#task-2)
-    - [Task 3:](#task-3)
-    - [Task 4:](#task-4)
-- [Challenge 3 : Name ...](#challenge-3--name-)
-    - [Goal](#goal-2)
-    - [Task 1:](#task-1-1)
-    - [Task 2:](#task-2-1)
-    - [Task 3:](#task-3-1)
-    - [Task 4:](#task-4-1)
+- [Solution Guide](#solution-guide)
 - [Finished? Delete your lab](#finished-delete-your-lab)
+- [Contributor](#contributor)
 
 # MicroHack introduction and context
 
@@ -73,7 +63,7 @@ In order to use the MicroHack time most effectively, the following tasks should 
 - Ensure that you have the necessary permissions to create resources in your Azure subscription. If you do not have the necessary permissions, please contact your Azure subscription administrator.
 
 ## Deployment
-There are actually two different ways to deploy the lab environment. The first is to use the Azure Portal and the second is to use the the provided terraform scripts. The terraform method is the preferred method as it is faster and more reliable. However, if you are not familiar with terraform, you can use the Azure Portal method.
+There are two different ways to deploy the lab environment. The first is to use the **Azure Portal** and the second is to use the provided **terraform** scripts. The terraform method is the preferred method as it is faster and more reliable. However, if you are not familiar with terraform, you can use the Azure Portal method.
 
 ### Azure Portal Method
 To deploy the lab environment using the **Azure Portal**, click the link below.
@@ -87,71 +77,20 @@ To deploy the lab environment using **terraform**, click the link below.
 
 # Lab environment for this MicroHack
 
-
-
 ## Architecture
 <br></br>
 ![Architecture](./images/architecture.jpg)
 
 # MicroHack Challenges 
 
-## Challenge 1 - Deploy the Lab environment
+- Challenge 1: **[Challenge 01](challenges/01_challenge.md)**
+- Challenge 2: **[Challenge 02](challenges/02_challenge.md)**
+- Challenge 3: **[Challenge 03](challenges/03_challenge.md)**
 
-### Goal 
-
-The goal of this exercise is to deploy...
-
-### Task 1: Deploy Baseline
-
-We are going to use a predefined ARM template to deploy the base environment. It will be deployed in to *your* Azure subscription, with resources running in the your specified Azure region.
-
-To start the ARM deployment, follow the steps listed below:
-
-- Login to Azure cloud shell [https://shell.azure.com/](https://shell.azure.com/)
-- Ensure that you are operating within the correct subscription via:
-
-`az account show`
-
-- Clone the following GitHub repository 
-
-`git clone Link to Github Repo `
-
-### Task 2: Verify baseline
-
-Now that we have the base lab deployed, we can progress to the ... challenges!
-
-
-# Challenge 2 : Name..
-
-### Goal
-
-### Task 1: 
-
-### Task 2: 
-
-### Task 3: 
-
-**Explain the background...**
-
-### Task 4: 
-
-Before proceeding to challenge 3, ...
-
-# Challenge 3 : Name ...
-
-### Goal
-
-### Task 1: 
-
-### Task 2: 
-
-### Task 3: 
-
-**Explain the background...**
-
-### Task 4: 
+# Solution Guide
 
 # Finished? Delete your lab
 
-
-Thank you for participating in this MicroHack!
+# Contributor
+- [Manuel Kutscher](https://www.linkedin.com/in/manuel-soelch)
+- [Judith Freiberger](https://www.linkedin.com/in/judithfreiberger)

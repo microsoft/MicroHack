@@ -21,6 +21,7 @@ package_upgrade: true
 packages:
   - nginx
   - net-tools
+  - smbclient
 '''
 
 /*

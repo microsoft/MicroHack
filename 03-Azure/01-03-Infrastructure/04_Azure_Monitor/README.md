@@ -97,4 +97,5 @@ To deploy the lab environment using **terraform**, click the link below.
 ## Contributor
 
 - [Manuel Kutscher](https://www.linkedin.com/in/manuel-soelch)
+- [Lisa Rosenthaler](https://www.linkedin.com/in/lisa-rosenthaler-305702203)
 - [Judith Freiberger](https://www.linkedin.com/in/judithfreiberger)

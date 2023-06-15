@@ -1,20 +1,20 @@
 # **MicroHack Azure Monitor**
 
 - [**MicroHack Azure Monitor**](#microhack-azure-monitor)
-- [MicroHack introduction and context](#microhack-introduction-and-context)
-- [Objectives](#objectives)
-- [Prerequisites](#prerequisites)
-  - [Deployment](#deployment)
-    - [Azure Portal Method](#azure-portal-method)
-    - [Terraform Method](#terraform-method)
-- [Lab environment for this MicroHack](#lab-environment-for-this-microhack)
-  - [Architecture](#architecture)
-- [MicroHack Challenges](#microhack-challenges)
-- [Solution Guide](#solution-guide)
-- [Finished? Delete your lab](#finished-delete-your-lab)
-- [Contributor](#contributor)
+  - [MicroHack introduction and context](#microhack-introduction-and-context)
+  - [Objectives](#objectives)
+  - [Prerequisites](#prerequisites)
+    - [Deployment](#deployment)
+      - [Azure Portal Method](#azure-portal-method)
+      - [Terraform Method](#terraform-method)
+  - [Lab environment for this MicroHack](#lab-environment-for-this-microhack)
+    - [Architecture](#architecture)
+  - [MicroHack Challenges](#microhack-challenges)
+  - [Solution Guide](#solution-guide)
+  - [Finished? Delete your lab](#finished-delete-your-lab)
+  - [Contributor](#contributor)
 
-# MicroHack introduction and context
+## MicroHack introduction and context
 
 Monitoring your infrastructure and applications is important because it provides visibility into the health of backend components that run your applications, allowing you to ensure that critical services are available for users and that they work as expected. Infrastructure monitoring is at the core of the operation, and it boosts reliability by helping you discover current issues and quickly resolving them. It also reduces end-user complaints and keeps you out of trouble.
 
@@ -46,7 +46,7 @@ You can also export monitoring data from Azure Monitor into other systems so you
 
 Please be aware that this lab is not a full explanation of Kubernetes (AKS), Containers Apps etc. as a technology. Please consider the following articles required pre-reading to build foundational knowledge.
 
-# Objectives
+## Objectives
 
 After completing this MicroHack you will:
 
@@ -54,7 +54,7 @@ After completing this MicroHack you will:
 - Understand default monitoring capabilities of Azure Monitor
 - Understand how to use Azure Monitor to monitor your infrastructure and applications
 
-# Prerequisites
+## Prerequisites
 
 In order to use the MicroHack time most effectively, the following tasks should be completed prior to starting the session:
 
@@ -62,35 +62,39 @@ In order to use the MicroHack time most effectively, the following tasks should 
 
 - Ensure that you have the necessary permissions to create resources in your Azure subscription. If you do not have the necessary permissions, please contact your Azure subscription administrator.
 
-## Deployment
+### Deployment
+
 There are two different ways to deploy the lab environment. The first is to use the **Azure Portal** and the second is to use the provided **terraform** scripts. The terraform method is the preferred method as it is faster and more reliable. However, if you are not familiar with terraform, you can use the Azure Portal method.
 
-### Azure Portal Method
+#### Azure Portal Method
+
 To deploy the lab environment using the **Azure Portal**, click the link below.
 
 - [Deploy to Azure (Portal)](./prerequisites/portal/README.md)
 
-### Terraform Method
+#### Terraform Method
+
 To deploy the lab environment using **terraform**, click the link below.
 
 - [Deploy to Azure (terraform)](./prerequisites/terraform/README.md)
 
-# Lab environment for this MicroHack
+## Lab environment for this MicroHack
 
-## Architecture
-<br></br>
+### Architecture
+
 ![Architecture](./images/architecture.jpg)
 
-# MicroHack Challenges 
+## MicroHack Challenges
 
 - Challenge 1: **[Challenge 01](challenges/01_challenge.md)**
 - Challenge 2: **[Challenge 02](challenges/02_challenge.md)**
 - Challenge 3: **[Challenge 03](challenges/03_challenge.md)**
 
-# Solution Guide
+## Solution Guide
 
-# Finished? Delete your lab
+## Finished? Delete your lab
 
-# Contributor
+## Contributor
+
 - [Manuel Kutscher](https://www.linkedin.com/in/manuel-soelch)
 - [Judith Freiberger](https://www.linkedin.com/in/judithfreiberger)

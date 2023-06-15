@@ -82,7 +82,7 @@ To deploy the lab environment using **terraform**, click the link below.
 
 ### Architecture
 
-![Architecture](./images/architecture.jpg)
+![Architecture](./images/architecture_01.png)
 
 ## MicroHack Challenges
 

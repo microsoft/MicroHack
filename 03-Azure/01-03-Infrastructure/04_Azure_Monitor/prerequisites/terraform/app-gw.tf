@@ -1,6 +1,6 @@
 #### Enable public IP if needed ######
 resource "azurerm_public_ip" "mh_pip_apgw" {
-  name                = "mh-pip-apgw"
+  name                = "pip-appgw-microhack"
   sku                 = "Standard"
   resource_group_name = azurerm_resource_group.microhack_monitoring.name
   location            = azurerm_resource_group.microhack_monitoring.location
@@ -10,17 +10,17 @@ resource "azurerm_public_ip" "mh_pip_apgw" {
 
 # local block for variables
 locals {
-  backend_address_pool_name      = "mh-apgw-beap"
-  frontend_port_name             = "mh-apgw-feport"
-  frontend_ip_configuration_name = "mh-apgw-feip"
-  http_setting_name              = "mh-apgw-be-htst"
-  listener_name                  = "mh-apgw-httplstn"
-  request_routing_rule_name      = "mh-apgw-rqrt"
+  backend_address_pool_name      = "beap-appgw-microhack"
+  frontend_port_name             = "feport-appgw-microhack"
+  frontend_ip_configuration_name = "feip-appgw-microhack"
+  http_setting_name              = "be-htst-appgw-microhack"
+  listener_name                  = "httplstn-appgw-microhack"
+  request_routing_rule_name      = "rqrt-appgw-microhack"
 }
 
 
 resource "azurerm_application_gateway" "apgw" {
-  name                = "mh-apgw"
+  name                = "appgw-microhack"
   resource_group_name = azurerm_resource_group.microhack_monitoring.name
   location            = azurerm_resource_group.microhack_monitoring.location
 
@@ -35,7 +35,7 @@ resource "azurerm_application_gateway" "apgw" {
   }
 
   gateway_ip_configuration {
-    name      = "mh-apgw-ip-configuration"
+    name      = "appgw-mh-ip-configuration"
     subnet_id = azurerm_subnet.microhack_subnet[1].id
   }
 
@@ -50,7 +50,7 @@ resource "azurerm_application_gateway" "apgw" {
   }
 
    frontend_ip_configuration {
-    name                                 = "mh-${local.frontend_ip_configuration_name}-private"
+    name                                 = "${local.frontend_ip_configuration_name}-private"
     subnet_id                            = azurerm_subnet.microhack_subnet[1].id
     private_ip_address_allocation        = "Static"
     private_ip_address                   = "10.0.1.50"

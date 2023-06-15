@@ -1,16 +1,10 @@
-provider "azurerm" {
-  features {}
-}
-
-// Create a resource group
 resource "azurerm_resource_group" "microhack_monitoring" {
   name     = var.rg_name
   location = var.location
 }
 
-// Creat Log Analytics Workspace
 resource "azurerm_log_analytics_workspace" "microhack_law" {
-  name                = "microhack-law"
+  name                = "law-microhack"
   location            = azurerm_resource_group.microhack_monitoring.location
   resource_group_name = azurerm_resource_group.microhack_monitoring.name
   sku                 = "PerGB2018"
@@ -19,7 +13,7 @@ resource "azurerm_log_analytics_workspace" "microhack_law" {
   depends_on = [ azurerm_resource_group.microhack_monitoring ]
 }
 
-module "name" {
+module "virtual_machines" {
   source = "./modules/vms"
   subnet_id = azurerm_subnet.microhack_subnet[0].id
 

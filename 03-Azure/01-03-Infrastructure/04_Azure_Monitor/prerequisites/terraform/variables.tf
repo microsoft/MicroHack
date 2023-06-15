@@ -1,5 +1,5 @@
 variable "rg_name" {
-  default = "MicroHack-Monitoring"
+  default = "rg-microhack-monitoring"
 }
 
 variable "location" {

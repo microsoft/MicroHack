@@ -70,7 +70,7 @@ Below an architecure diagram displays the setup. Tutorials and documentation tha
 
 ### Architecture
 
-![Architecture](./images/architecture_01.png)
+<img src="./images/architecture_01.png" alt="Carchitecture" width-"50%" height="50%" title-"Architecture diagram">
 
 ### Deployment
 

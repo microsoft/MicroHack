@@ -4,11 +4,11 @@
   - [MicroHack introduction and context](#microhack-introduction-and-context)
   - [Objectives](#objectives)
   - [Prerequisites](#prerequisites)
+  - [Lab environment for this MicroHack](#lab-environment-for-this-microhack)
+    - [Architecture](#architecture)
     - [Deployment](#deployment)
       - [Azure Portal Method](#azure-portal-method)
       - [Terraform Method](#terraform-method)
-  - [Lab environment for this MicroHack](#lab-environment-for-this-microhack)
-    - [Architecture](#architecture)
   - [MicroHack Challenges](#microhack-challenges)
   - [Solution Guide](#solution-guide)
   - [Finished? Delete your lab](#finished-delete-your-lab)
@@ -62,6 +62,16 @@ In order to use the MicroHack time most effectively, the following tasks should 
 
 - Ensure that you have the necessary permissions to create resources in your Azure subscription. If you do not have the necessary permissions, please contact your Azure subscription administrator.
 
+## Lab environment for this MicroHack
+
+To experiment with Azure Monitor and learn how to use it, a lab environment is provided. This includes a sample application, virtual machines and other Azure services to generate telemetry data.
+
+Below an architecure diagram displays the setup. Tutorials and documentation that provide step-by-step guidance on how to deploy the enviornment comes along.
+
+### Architecture
+
+![Architecture](./images/architecture_01.png)
+
 ### Deployment
 
 There are two different ways to deploy the lab environment. The first is to use the **Azure Portal** and the second is to use the provided **terraform** scripts. The terraform method is the preferred method as it is faster and more reliable. However, if you are not familiar with terraform, you can use the Azure Portal method.
@@ -77,12 +87,6 @@ To deploy the lab environment using the **Azure Portal**, click the link below.
 To deploy the lab environment using **terraform**, click the link below.
 
 - [Deploy to Azure (terraform)](./prerequisites/terraform/README.md)
-
-## Lab environment for this MicroHack
-
-### Architecture
-
-![Architecture](./images/architecture_01.png)
 
 ## MicroHack Challenges
 

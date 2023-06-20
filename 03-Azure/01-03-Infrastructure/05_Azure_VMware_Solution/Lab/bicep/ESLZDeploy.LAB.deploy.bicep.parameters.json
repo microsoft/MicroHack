@@ -1,0 +1,41 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "NumberOfAVSInstances": {
+            "value": 4
+        },
+        "NumberOfNestedLabsInAVS":{
+            "value": 1
+        },
+        "Prefix": {
+            "value": "<--prefix-->"
+        },
+        "Location": {
+            "value": "<--region-->"
+        },
+        "AlertEmails": {
+            "value": [
+                "<--email-address-->"
+            ]
+        },
+        "JumpboxSku": {
+            "value": "Standard_D2ds_v5"
+        },
+        "Bootstrap": {
+            "value": true
+        },
+        "BootstrapPath": {
+            "value": "https://raw.githubusercontent.com/Azure/avslabs/main/scripts/bootstrap.ps1"
+        },
+        "ESLZTemplate": {
+            "value": "https://raw.githubusercontent.com/husamhilal/Enterprise-Scale-for-AVS/main/AVS-Landing-Zone/GreenField/ARM/ESLZDeploy.deploy.json"
+        },
+        "DeployHCX":{
+            "value": false
+        },
+        "DeploySRM":{
+            "value": false
+        }
+    }
+}

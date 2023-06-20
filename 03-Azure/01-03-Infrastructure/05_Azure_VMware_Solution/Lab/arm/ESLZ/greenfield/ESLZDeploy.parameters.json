@@ -1,0 +1,47 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "Prefix": {
+            "value": "ESLZ"
+        },
+        "PrivateCloudAddressSpace": {
+            "value": "10.0.0.0/22"
+        },
+        "PrivateCloudSKU": {
+            "value": "AV36"
+        },
+        "PrivateCloudHostCount": {
+            "value": 3
+        },
+        "VNetAddressSpace": {
+            "value": "10.1.0.0/16"
+        },
+        "VNetGatewaySubnet": {
+            "value": "10.1.0.0/24"
+        },
+        "AlertEmails": {
+            "value": [
+                "example@microsoft.com"
+            ]
+        },
+        "DeployJumpbox": {
+            "value": true
+        },
+        "JumpboxUsername": {
+            "value": "avsjump"
+        },
+        "JumpboxPassword": {
+            "value": "ChangeM3!"
+        },
+        "JumpboxSubnet": {
+            "value": "10.1.1.0/25"
+        },
+        "BastionSubnet": {
+            "value": "10.1.1.128/25"
+        },
+        "VNetExists": {
+            "value": false
+        }
+    }
+}

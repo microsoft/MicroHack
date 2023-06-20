@@ -43,18 +43,18 @@ After completing this MicroHack you will:
 
 In order to use the MicroHack time most effectively, the following tasks should be completed prior to starting the session.
 
-With these pre-requisites in place, we can focus on building the differentiated knowledge in ... that is required when working with the product, rather than spending hours repeating relatively simple tasks such as setting up....
+With these pre-requisites in place, we can focus on building the differentiated knowledge in Azure VMware Solution that is required when working with the product, rather than spending hours repeating relatively simple tasks such as setting up the lab environment.
 
 In summary:
 
+To setup the lab needed for this Microhack you will need to have the following in place:
+
 - Azure Subscription 
-- Resource Group 
-- Service 1
-- Service 2  
 
 Permissions for the deployment: 
-- Contributor on your Resource Group
-- Other necessary permissions
+- Contributor on the subscription
+
+The automated script to setup the lab environment can be found under the following link: [AVS Lab Setup](/Lab/Readme.md).
 
 ## Solution Guide
 

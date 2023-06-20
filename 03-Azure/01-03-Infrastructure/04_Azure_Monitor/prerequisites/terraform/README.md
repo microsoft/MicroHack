@@ -7,8 +7,8 @@ This Terraform code deploys all Azure services, including virtual machines, netw
 Before you begin, you must have the following:
 
 - An active Azure subscription
-- Terraform installed on your local machine
-- Azure CLI installed on your local machine
+- Terraform installed on your local machine (version 1.3.7 or later). The guide how to install Terraform on all OS can be found [here](https://learn.hashicorp.com/tutorials/terraform/install-cli).
+- Azure CLI installed on your local machine (version 2.46.0 or later). The guide how to install Azure CLI on all OS can be found [here](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli).
 
 ## Getting Started
 

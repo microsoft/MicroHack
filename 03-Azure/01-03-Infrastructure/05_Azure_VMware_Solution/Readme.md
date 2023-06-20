@@ -54,7 +54,7 @@ To setup the lab needed for this Microhack you will need to have the following i
 Permissions for the deployment: 
 - Contributor on the subscription
 
-The automated script to setup the lab environment can be found under the following link: [AVS Lab Setup](/Lab/Readme.md).
+The automated script to setup the lab environment can be found under the following link: [AVS Lab Setup](./Lab/Readme.md).
 
 ## Solution Guide
 

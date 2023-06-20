@@ -86,11 +86,9 @@ resource "azurerm_application_gateway" "appgw" {
   }
 }
 
-# TODO: Add nic assocation to app gateway
 # Connect the VMs to the App Gateway
-# resource "azurerm_network_interface_application_gateway_backend_address_pool_association" "nic-assoc" {
-#   count                   = 2
-#   network_interface_id    = azurerm_network_interface.nic[count.index].id
-#   ip_configuration_name   = "nic-ipconfig-${count.index+1}"
-#   backend_address_pool_id = one(azurerm_application_gateway.main.backend_address_pool).id
-# }
+resource "azurerm_network_interface_application_gateway_backend_address_pool_association" "nic-assoc" {
+  network_interface_id    = module.virtual_machines.windows_vm.nic_id
+  ip_configuration_name   = "nic-ipconfig-vm-windows"
+  backend_address_pool_id = azurerm_application_gateway.appgw.backend_address_pool[0].id
+}

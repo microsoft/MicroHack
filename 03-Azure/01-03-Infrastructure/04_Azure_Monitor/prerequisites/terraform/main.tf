@@ -19,10 +19,3 @@ module "virtual_machines" {
 
   depends_on = [ azurerm_resource_group.microhack_monitoring ]
 }
-
-
-resource "azurerm_network_interface_application_gateway_backend_address_pool_association" "nic-assoc" {
-  network_interface_id    = module.virtual_machines.vm_windows_nic_id
-  ip_configuration_name   = "ipconfig-vm-windows"
-  backend_address_pool_id = one(azurerm_application_gateway.appgw.backend_address_pool).id
-}

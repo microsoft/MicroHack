@@ -1,5 +1,5 @@
 #### Enable public IP if needed ######
-resource "azurerm_public_ip" "mh_pip_apgw" {
+resource "azurerm_public_ip" "mh_pip_appgw" {
   name                = "pip-appgw-microhack"
   sku                 = "Standard"
   resource_group_name = azurerm_resource_group.microhack_monitoring.name
@@ -19,7 +19,7 @@ locals {
 }
 
 
-resource "azurerm_application_gateway" "apgw" {
+resource "azurerm_application_gateway" "appgw" {
   name                = "appgw-microhack"
   resource_group_name = azurerm_resource_group.microhack_monitoring.name
   location            = azurerm_resource_group.microhack_monitoring.location
@@ -46,7 +46,7 @@ resource "azurerm_application_gateway" "apgw" {
 
   frontend_ip_configuration {
     name                 = local.frontend_ip_configuration_name
-    public_ip_address_id = azurerm_public_ip.mh_pip_apgw.id
+    public_ip_address_id = azurerm_public_ip.mh_pip_appgw.id
   }
 
    frontend_ip_configuration {
@@ -85,3 +85,12 @@ resource "azurerm_application_gateway" "apgw" {
     priority                   = 10
   }
 }
+
+# TODO: Add nic assocation to app gateway
+# Connect the VMs to the App Gateway
+# resource "azurerm_network_interface_application_gateway_backend_address_pool_association" "nic-assoc" {
+#   count                   = 2
+#   network_interface_id    = azurerm_network_interface.nic[count.index].id
+#   ip_configuration_name   = "nic-ipconfig-${count.index+1}"
+#   backend_address_pool_id = one(azurerm_application_gateway.main.backend_address_pool).id
+# }

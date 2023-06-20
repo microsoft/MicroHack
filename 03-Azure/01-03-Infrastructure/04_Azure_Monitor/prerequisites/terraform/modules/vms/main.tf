@@ -87,3 +87,21 @@ resource "azurerm_network_interface" "nic_vm_windows" {
     private_ip_address_allocation = "Dynamic"
   }
 }
+
+# TODO: Add Windows VM Extension
+#----------------------------------------------------------------------------
+# Install IIS on Windows VM
+#----------------------------------------------------------------------------
+# resource "azurerm_virtual_machine_extension" "vm-extensions" {
+#   name                 = "vm-windows-ext"
+#   virtual_machine_id   = azurerm_windows_virtual_machine.vm-windows.id
+#   publisher            = "Microsoft.Compute"
+#   type                 = "CustomScriptExtension"
+#   type_handler_version = "1.10"
+
+#   settings = <<SETTINGS
+#     {
+#         "commandToExecute": "powershell Add-WindowsFeature Web-Server; powershell Add-Content -Path \"C:\\inetpub\\wwwroot\\Default.htm\" -Value $($env:computername)"
+#     }
+# SETTINGS
+# }

@@ -34,7 +34,7 @@ Here are the steps you need to take to deploy AVS Lab with nested VMware lab env
 1. [Clone](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) this repository.
 
    ```powershell
-   git clone https://github.com/Azure/avslabs.git
+   git clone https://github.com/microsoft/MicroHack.git
    ```
 
 2. Change directory to 'bicep' directory.

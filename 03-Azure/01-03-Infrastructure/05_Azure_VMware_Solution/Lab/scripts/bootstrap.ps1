@@ -17,8 +17,8 @@ param (
 # constant variables
 $Logfile = "C:\temp\bootstrap.log"
 $TempPath = "C:\temp"
-$MainBootstrapScriptURL = "https://raw.githubusercontent.com/Azure/avslabs/main/scripts/bootstrap.ps1"
-$BootstrapScriptURL = "https://raw.githubusercontent.com/Azure/avslabs/main/scripts/bootstrap-nestedlabs.ps1"
+$MainBootstrapScriptURL = "https://raw.githubusercontent.com/microsoft/MicroHack/AzureVMWareSolutionMicroHack/03-Azure/01-03-Infrastructure/05_Azure_VMware_Solution/Lab/scripts/bootstrap.ps1"
+$BootstrapScriptURL = "https://raw.githubusercontent.com/microsoft/MicroHack/AzureVMWareSolutionMicroHack/03-Azure/01-03-Infrastructure/05_Azure_VMware_Solution/Lab/scripts/bootstrap-nestedlabs.ps1"
 $PackageURL = "https://csuavsmicrohack.blob.core.windows.net/csuavsmicrohack/avs-embedded-labs-auto.zip"
 #$NumberOfNestedLabs = 6
 

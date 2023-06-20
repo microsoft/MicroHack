@@ -4,7 +4,7 @@ targetScope = 'subscription'
 param AVSLabInstanceNumber int = 1
 
 @description('Number Nested Labs inside of each AVS SDDC')
-param NumberOfNestedLabsInAVS int = 6
+param NumberOfNestedLabsInAVS int = 1
 
 @description('The prefix to use on resources inside this template')
 @minLength(1)

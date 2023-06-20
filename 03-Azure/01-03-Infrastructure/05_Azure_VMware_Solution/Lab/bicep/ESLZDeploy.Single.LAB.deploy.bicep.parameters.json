@@ -25,11 +25,10 @@
             "value": true
         },
         "BootstrapPath": {
-            "value": "https://raw.githubusercontent.com/Azure/avslabs/main/scripts/bootstrap.ps1"
+            "value": "https://raw.githubusercontent.com/microsoft/MicroHack/AzureVMWareSolutionMicroHack/03-Azure/01-03-Infrastructure/05_Azure_VMware_Solution/Lab/scripts/bootstrap.ps1"
         },
         "ESLZTemplate": {
-            "value": "https://raw.githubusercontent.com/husamhilal/Enterprise-Scale-for-AVS/main/AVS-Landing-Zone/GreenField/ARM/ESLZDeploy.deploy.json"
-            "value": "https://raw.githubusercontent.com/Azure/Enterprise-Scale-for-AVS/main/AVS-Landing-Zone/GreenField/ARM/ESLZDeploy.deploy.json"
+            "value": "https://raw.githubusercontent.com/microsoft/MicroHack/AzureVMWareSolutionMicroHack/03-Azure/01-03-Infrastructure/05_Azure_VMware_Solution/Lab/arm/ESLZ/greenfield/ESLZDeploy.deploy.json"
         },
         "DeployHCX":{
             "value": false

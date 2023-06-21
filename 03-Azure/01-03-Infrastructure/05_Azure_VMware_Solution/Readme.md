@@ -17,7 +17,7 @@ This MicroHack scenario walks through the use of AVs with a focus on the best pr
 After completing this MicroHack you will:
 
 - Know how to build an AVS environment.
-- Understand settings for NSX, HCX and the feauters AVS offers.
+- Understand settings for NSX, HCX and the features AVS offers.
 - Understand how to migrate workloads from on-premises to Azure.
 
 ## Content and Challenges

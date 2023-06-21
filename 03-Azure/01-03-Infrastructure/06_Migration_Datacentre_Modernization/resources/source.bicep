@@ -4,8 +4,8 @@
 param currentUserObjectId string
 
 // Locals
-param vm1Name string = 'frontend'
-param vm2Name string = 'backend'
+param vm1Name string = 'frontend1'
+param vm2Name string = 'frontend2'
 param adminUsername string = 'microhackadmin'
 param location string = resourceGroup().location
 param tenantId string = subscription().tenantId
@@ -298,6 +298,16 @@ resource vm2Nic 'Microsoft.Network/networkInterfaces@2022-05-01' = {
           subnet: {
             id: sourceVnet.properties.subnets[0].id
           }
+          loadBalancerBackendAddressPools: [
+            {
+              id: lb.properties.backendAddressPools[0].id
+              name: 'LoadBalancerBackEndPool'
+            }
+            {
+              id: lb.properties.backendAddressPools[1].id
+              name: 'LoadBalancerBackEndPoolOutbound'
+            }
+          ] 
         }
       }
     ]
@@ -319,9 +329,9 @@ resource vm2 'Microsoft.Compute/virtualMachines@2022-03-01' = {
     }
     storageProfile: {
       imageReference: {
-        publisher: 'Canonical'
-        offer: '0001-com-ubuntu-server-focal'
-        sku: '20_04-lts-gen2'
+        publisher: 'MicrosoftWindowsServer'
+        offer: 'WindowsServer'
+        sku: '2022-datacenter-smalldisk-g2'
         version: 'latest'
       }
       osDisk: {
@@ -331,6 +341,7 @@ resource vm2 'Microsoft.Compute/virtualMachines@2022-03-01' = {
         }
       }
     }
+    
     networkProfile: {
       networkInterfaces: [
         {
@@ -346,29 +357,22 @@ resource vm2 'Microsoft.Compute/virtualMachines@2022-03-01' = {
   }
 }
 
-/*
-Custom Script Extension (might be useful for later to generate load on VM)
-TODO: To be tested
-
-
 resource vm2Extension 'Microsoft.Compute/virtualMachines/extensions@2022-03-01' = {
   parent: vm2
   name: '${vm2Name}-customScriptExtension'
   location: location
   properties: {
-    publisher: 'Microsoft.Azure.Extensions'
-    type: 'CustomScript'
-    typeHandlerVersion: '2.1'
+    publisher: 'Microsoft.Compute'
+    type: 'CustomScriptExtension'
+    typeHandlerVersion: '1.10'
     autoUpgradeMinorVersion: true
     settings: {
-      skipDos2Unix: false
-      commandToExecute: 'apt-get -y update && apt-get install net-tools'
+            commandToExecute: 'powershell -ExecutionPolicy Unrestricted Add-WindowsFeature Web-Server -IncludeManagementTools; powershell -ExecutionPolicy Unrestricted Add-Content -Path "C:\\inetpub\\wwwroot\\Default.htm" -Value $($env:computername)'
     }
     protectedSettings: {
-    }
+          }
   }
 } 
-*/
 
 //Public Load Balancer for Frontend VM
 resource lb 'Microsoft.Network/loadBalancers@2021-08-01' = {

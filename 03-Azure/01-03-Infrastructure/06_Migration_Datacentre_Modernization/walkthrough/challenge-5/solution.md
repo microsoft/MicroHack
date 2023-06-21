@@ -145,11 +145,6 @@ To install the Mobility service agent on the Windows machne follow the following
 
 ![image](./img/maw1.png)
 
-**Linux**
-
-![image](./img/mal1.png)
-
-     scp <source-file> <username>@<Ubuntu-Server-IP-Address>:/tmp/installer.tar.gz
 
 5. Make sure that you have the passphrase that was generated when you deployed the appliance (You should have saved it as a KeyVault secret).
   * Store the key in a temporary text file and copy the file into the same direcotry on the source machines.
@@ -160,7 +155,7 @@ To install the Mobility service agent on the Windows machne follow the following
 
   * 💥 Don't regenerate the passphrase. This will break connectivity and you will have to reregister the replication appliance.
 
-#### **Task 3.1: Install the Mobility service on the Windows VM**
+#### **Task 3.1: Install the Mobility service on the Windows VMs**
 
 1. Extract the contents of installer file to a local folder (for example C:\Temp) on the machine, as follows:
 
@@ -184,29 +179,9 @@ To install the Mobility service agent on the Windows machne follow the following
 
 ![image](./img/maw3.png)     
 
-#### **Task 3.2: Install the Mobility service on the Linux VM**
+**💥 Repeat the above steps for the second Windows Server**
 
-1. Extract the contents of installer file to a local folder (for example /tmp) on the machine, as follows:
 
-     cd /tmp
-
-     tar -xvf installer.tar.gz
-
-![image](./img/mal2.png)    
-
-2. Run the Mobility Service Installer:
-
-     sudo ./install -r MS -v VmWare -q
-
-![image](./img/mal3.png) 
-
-💡 You need to specify *VmWare* for the *Platform* parameter also for physical servers.
-
-3. Register the agent with the replication appliance:
-
-     sudo /usr/local/ASR/Vx/bin/UnifiedAgentConfigurator.sh -i 10.1.1.7 -P passphrase 
-
-![image](./img/mal4.png)     
 
 
 You successfully completed challenge 5! 🚀🚀🚀

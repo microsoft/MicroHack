@@ -152,7 +152,7 @@ To install the Mobility service agent on the Windows machne follow the following
      scp <source-file> <username>@<Ubuntu-Server-IP-Address>:/tmp/installer.tar.gz
 
 5. Make sure that you have the passphrase that was generated when you deployed the appliance (You should have saved it as a KeyVault secret).
-  * Store the key in a temporary text file on the machine.
+  * Store the key in a temporary text file and copy the file into the same direcotry on the source machines.
   * You can obtain the passphrase on the replication appliance. From the command line, run the following command to view the passphrase
      C:\ProgramData\ASR\home\svsystems\bin\genpassphrase.exe -v
 
@@ -172,15 +172,15 @@ To install the Mobility service agent on the Windows machne follow the following
 
 2. Run the Mobility Service Installer:
 
-    UnifiedAgent.exe /Role "MS" /Platform "VmWare" /Silent
+     UnifiedAgent.exe /Role "MS" /Platform "VmWare" /Silent
 
 💡 You need to specify *VmWare* for the *Platform* parameter also for physical servers.
 
 3. Register the agent with the replication appliance:
 
-    cd C:\Program Files (x86)\Microsoft Azure Site Recovery\agent
+     cd C:\Program Files (x86)\Microsoft Azure Site Recovery\agent
 
-    UnifiedAgentConfigurator.exe /CSEndPoint \<replication appliance IP address\> /PassphraseFilePath \<Passphrase File Path\>
+     UnifiedAgentConfigurator.exe /CSEndPoint <replication appliance IP address> /PassphraseFilePath <Passphrase File Path>
 
 ![image](./img/maw3.png)     
 
@@ -188,25 +188,25 @@ To install the Mobility service agent on the Windows machne follow the following
 
 1. Extract the contents of installer file to a local folder (for example /tmp) on the machine, as follows:
 
-     ren Microsoft-ASR_UA\*Windows\*release.exe MobilityServiceInstaller.exe
-     
-     MobilityServiceInstaller.exe /q /x:C:\Temp\Extracted
+     cd /tmp
 
-     cd C:\Temp\Extracted
+     tar -xvf installer.tar.gz
+
+![image](./img/mal2.png)    
 
 2. Run the Mobility Service Installer:
 
-    UnifiedAgent.exe /Role "MS" /Platform "VmWare" /Silent
+     sudo ./install -r MS -v VmWare -q
+
+![image](./img/mal3.png) 
 
 💡 You need to specify *VmWare* for the *Platform* parameter also for physical servers.
 
 3. Register the agent with the replication appliance:
 
-    cd C:\Program Files (x86)\Microsoft Azure Site Recovery\agent
+     sudo /usr/local/ASR/Vx/bin/UnifiedAgentConfigurator.sh -i 10.1.1.7 -P passphrase 
 
-    UnifiedAgentConfigurator.exe /CSEndPoint \<replication appliance IP address\> /PassphraseFilePath \<Passphrase File Path\>
-
-![image](./img/maw3.png)     
+![image](./img/mal4.png)     
 
 
 You successfully completed challenge 5! 🚀🚀🚀

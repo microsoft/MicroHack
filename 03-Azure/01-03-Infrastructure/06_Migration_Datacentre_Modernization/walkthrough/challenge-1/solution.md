@@ -24,9 +24,9 @@ The bicep deployment should have created the following resources
 
 - source-rg Resource Group containing the follwing resources
     + Virtual Network *source-vnet*
-    + Virtual Machine *frontend* with installed web server
-    + Virtual Machine *backend* 
-    + Public Load Balancer *plb-frontend* with configured backend pool containing *frontend* VM
+    + Virtual Machine *frontend1* with installed web server
+    + Virtual Machine *frontend2* with installed web server
+    + Public Load Balancer *plb-frontend* with configured backend pool containing *frontend1* and *frontend2* VM
     + Azure Bastion *source-bastion*
     + Azure Key Vault *source-kv-* containing username and password for VM login
    
@@ -44,7 +44,7 @@ The deployed architecture looks like following diagram:
 - Navigate to *Frontend IP configuration* under *Settings* section on the left
 - Note and copy public IP address of *LoadBalancerFrontEnd*
 - Open web browser and navigate to http://LoadBalancerFrontEnd-IP-Address
-- A simple website containing the server name of the frontend VM should be displayed
+- A simple website containing the server name of the frontend1 or frontend2 VM should be displayed
 
 You successfully completed challenge 1! 🚀🚀🚀
 

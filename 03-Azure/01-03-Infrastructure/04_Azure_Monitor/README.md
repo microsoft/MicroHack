@@ -1,30 +1,20 @@
 # **MicroHack Azure Monitor**
 
-- [MicroHack introduction and context](#microhack-introduction-and-context)
-- [Objectives](#objectives)
-- [Prerequisites](#prerequisites)
-- [Lab environment for this MicroHack](#lab-environment-for-this-microhack)
-  - [Architecture](#architecture)
-- [MicroHack Challenges](#microhack-challenges)
-  - [Challenge 1 - Deploy the Lab environment](#challenge-1---deploy-the-lab-environment)
-    - [Goal](#goal)
-    - [Task 1: Deploy Baseline](#task-1-deploy-baseline)
-    - [Task 2: Verify baseline](#task-2-verify-baseline)
-- [Challenge 2 : Name..](#challenge-2--name)
-    - [Goal](#goal-1)
-    - [Task 1:](#task-1)
-    - [Task 2:](#task-2)
-    - [Task 3:](#task-3)
-    - [Task 4:](#task-4)
-- [Challenge 3 : Name ...](#challenge-3--name-)
-    - [Goal](#goal-2)
-    - [Task 1:](#task-1-1)
-    - [Task 2:](#task-2-1)
-    - [Task 3:](#task-3-1)
-    - [Task 4:](#task-4-1)
-- [Finished? Delete your lab](#finished-delete-your-lab)
+- [**MicroHack Azure Monitor**](#microhack-azure-monitor)
+  - [MicroHack introduction and context](#microhack-introduction-and-context)
+  - [Objectives](#objectives)
+  - [Prerequisites](#prerequisites)
+  - [Lab environment for this MicroHack](#lab-environment-for-this-microhack)
+    - [Architecture](#architecture)
+    - [Deployment](#deployment)
+      - [Azure Portal Method](#azure-portal-method)
+      - [Terraform Method](#terraform-method)
+  - [MicroHack Challenges](#microhack-challenges)
+  - [Solution Guide](#solution-guide)
+  - [Finished? Delete your lab](#finished-delete-your-lab)
+  - [Contributor](#contributor)
 
-# MicroHack introduction and context
+## MicroHack introduction and context
 
 Monitoring your infrastructure and applications is important because it provides visibility into the health of backend components that run your applications, allowing you to ensure that critical services are available for users and that they work as expected. Infrastructure monitoring is at the core of the operation, and it boosts reliability by helping you discover current issues and quickly resolving them. It also reduces end-user complaints and keeps you out of trouble.
 
@@ -56,7 +46,7 @@ You can also export monitoring data from Azure Monitor into other systems so you
 
 Please be aware that this lab is not a full explanation of Kubernetes (AKS), Containers Apps etc. as a technology. Please consider the following articles required pre-reading to build foundational knowledge.
 
-# Objectives
+## Objectives
 
 After completing this MicroHack you will:
 
@@ -64,7 +54,7 @@ After completing this MicroHack you will:
 - Understand default monitoring capabilities of Azure Monitor
 - Understand how to use Azure Monitor to monitor your infrastructure and applications
 
-# Prerequisites
+## Prerequisites
 
 In order to use the MicroHack time most effectively, the following tasks should be completed prior to starting the session:
 
@@ -72,86 +62,44 @@ In order to use the MicroHack time most effectively, the following tasks should 
 
 - Ensure that you have the necessary permissions to create resources in your Azure subscription. If you do not have the necessary permissions, please contact your Azure subscription administrator.
 
-## Deployment
-There are actually two different ways to deploy the lab environment. The first is to use the Azure Portal and the second is to use the the provided terraform scripts. The terraform method is the preferred method as it is faster and more reliable. However, if you are not familiar with terraform, you can use the Azure Portal method.
+## Lab environment for this MicroHack
 
-### Azure Portal Method
+To experiment with Azure Monitor and learn how to use it, a lab environment is provided. This includes a sample application, virtual machines and other Azure services to generate telemetry data.
+
+Below an architecure diagram displays the setup. Tutorials and documentation that provide step-by-step guidance on how to deploy the enviornment comes along.
+
+### Architecture
+
+![Architecture](./images/architecture_01.png)
+
+### Deployment
+
+There are two different ways to deploy the lab environment. The first is to use the **Azure Portal** and the second is to use the provided **terraform** scripts. The terraform method is the preferred method as it is faster and more reliable. However, if you are not familiar with terraform, you can use the Azure Portal method.
+
+#### Azure Portal Method
+
 To deploy the lab environment using the **Azure Portal**, click the link below.
 
 - [Deploy to Azure (Portal)](./prerequisites/portal/README.md)
 
-### Terraform Method
+#### Terraform Method
+
 To deploy the lab environment using **terraform**, click the link below.
 
 - [Deploy to Azure (terraform)](./prerequisites/terraform/README.md)
 
-# Lab environment for this MicroHack
+## MicroHack Challenges
 
+- Challenge 1: **[Challenge 01](challenges/01_challenge.md)**
+- Challenge 2: **[Challenge 02](challenges/02_challenge.md)**
+- Challenge 3: **[Challenge 03](challenges/03_challenge.md)**
 
+## Solution Guide
 
-## Architecture
-<br></br>
-![Architecture](./images/architecture.jpg)
+## Finished? Delete your lab
 
-# MicroHack Challenges 
+## Contributor
 
-## Challenge 1 - Deploy the Lab environment
-
-### Goal 
-
-The goal of this exercise is to deploy...
-
-### Task 1: Deploy Baseline
-
-We are going to use a predefined ARM template to deploy the base environment. It will be deployed in to *your* Azure subscription, with resources running in the your specified Azure region.
-
-To start the ARM deployment, follow the steps listed below:
-
-- Login to Azure cloud shell [https://shell.azure.com/](https://shell.azure.com/)
-- Ensure that you are operating within the correct subscription via:
-
-`az account show`
-
-- Clone the following GitHub repository 
-
-`git clone Link to Github Repo `
-
-### Task 2: Verify baseline
-
-Now that we have the base lab deployed, we can progress to the ... challenges!
-
-
-# Challenge 2 : Name..
-
-### Goal
-
-### Task 1: 
-
-### Task 2: 
-
-### Task 3: 
-
-**Explain the background...**
-
-### Task 4: 
-
-Before proceeding to challenge 3, ...
-
-# Challenge 3 : Name ...
-
-### Goal
-
-### Task 1: 
-
-### Task 2: 
-
-### Task 3: 
-
-**Explain the background...**
-
-### Task 4: 
-
-# Finished? Delete your lab
-
-
-Thank you for participating in this MicroHack!
+- [Manuel Kutscher](https://www.linkedin.com/in/manuel-soelch)
+- [Lisa Rosenthaler](https://www.linkedin.com/in/lisa-rosenthaler-305702203)
+- [Judith Freiberger](https://www.linkedin.com/in/judithfreiberger)

@@ -1,4 +1,5 @@
-# NSX DHCP
+# NSX Add Firewall
+
 [Previous Challenge](./03-NSX-Add-DNS-Forwarder.md) - **[Home](../Readme.md)** - [Next Challenge](./05-HCX-Manager-Appliance.md)
 
 ## Introduction

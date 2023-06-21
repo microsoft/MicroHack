@@ -1,4 +1,5 @@
-# NSX DHCP
+# HCX Network Profiles
+
 [Previous Challenge](./06-HCX-Site-Pair.md) - **[Home](../Readme.md)** - [Next Challenge](./08-HCX-Compute-Profiles.md)
 
 ## Introduction

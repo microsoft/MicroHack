@@ -1,4 +1,5 @@
-# NSX DHCP
+# NSX Add Segment
+
 [Previous Challenge](./02-NSX-Add-Segment.md) - **[Home](../Readme.md)** - [Next Challenge](./04-NSX-Firewall.md)
 
 ## Introduction

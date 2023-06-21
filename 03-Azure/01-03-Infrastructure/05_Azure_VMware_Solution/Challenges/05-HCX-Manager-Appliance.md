@@ -1,4 +1,4 @@
-# NSX DHCP
+# HCX Manager Appliance
 
 [Previous Challenge](./04-NSX-Firewall.md) - **[Home](../Readme.md)** - [Next Challenge](./06-HCX-Site-Pair.md)
 

@@ -141,7 +141,15 @@ To install the Mobility service agent on the Windows machne follow the following
 3. Find the installer for the machine operating system and version. Review [supported operating systems](https://learn.microsoft.com/en-us/azure/site-recovery/vmware-physical-azure-support-matrix#replicated-machines).
 4. Copy the installer file to the machine you want to migrate.
 
+**Windows**
+
 ![image](./img/maw1.png)
+
+**Linux**
+
+![image](./img/mal1.png)
+
+     scp \<source-file\> \<username\>\@\<Ubuntu-Server-IP-Address\>:\/tmp\/installer.tar.gz
 
 5. Make sure that you have the passphrase that was generated when you deployed the appliance (You should have saved it as a KeyVault secret).
   * Store the key in a temporary text file on the machine.
@@ -178,7 +186,7 @@ To install the Mobility service agent on the Windows machne follow the following
 
 #### **Task 3.2: Install the Mobility service on the Linux VM**
 
-1. Extract the contents of installer file to a local folder (for example C:\Temp) on the machine, as follows:
+1. Extract the contents of installer file to a local folder (for example /tmp) on the machine, as follows:
 
      ren Microsoft-ASR_UA\*Windows\*release.exe MobilityServiceInstaller.exe
      

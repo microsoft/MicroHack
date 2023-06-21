@@ -134,7 +134,7 @@ The last step is to finalize the registration. Refresh the Azure Portal page whe
 ### **Task 3: Install the Mobility service on the source server**
 
 On machines you want to migrate, you need to install the Mobility service agent. The agent installers are available on the replication appliance in the *%ProgramData%\ASR\home\svsystems\pushinstallsvc\repository* directory.
-To install the Mobility service agent on the Windows machne follow the following steps
+To install the Mobility service agent on the Windows machines follow the following steps
 
 1. Sign in to the replication appliance.
 2. Navigate to %ProgramData%\ASR\home\svsystems\pushinstallsvc\repository.
@@ -185,5 +185,10 @@ To install the Mobility service agent on the Windows machne follow the following
 
 
 You successfully completed challenge 5! 🚀🚀🚀
+
+The deployed architecture now looks like the following diagram.
+
+![image](./img/Challenge-5.jpg)
+
 
  **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-5/solution.md)

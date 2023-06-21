@@ -149,7 +149,7 @@ To install the Mobility service agent on the Windows machne follow the following
 
 ![image](./img/mal1.png)
 
-     scp \<source-file\> \<username\>\@\<Ubuntu-Server-IP-Address\>:\/tmp\/installer.tar.gz
+     scp <source-file> <username>@<Ubuntu-Server-IP-Address>:/tmp/installer.tar.gz
 
 5. Make sure that you have the passphrase that was generated when you deployed the appliance (You should have saved it as a KeyVault secret).
   * Store the key in a temporary text file on the machine.

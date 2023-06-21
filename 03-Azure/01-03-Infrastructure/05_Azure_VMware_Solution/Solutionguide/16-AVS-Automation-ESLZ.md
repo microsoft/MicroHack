@@ -1,5 +1,5 @@
 # NSX DHCP
-[Previous Challenge](./14-AVS-Placement-Policy.md) - **[Home](../Readme.md)**
+[Previous Challenge Solution](./15-AVS-Managed-SNAT.md) - **[Home](../Readme.md)**
 
 ## Introduction
 

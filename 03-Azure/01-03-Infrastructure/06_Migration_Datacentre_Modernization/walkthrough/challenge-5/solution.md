@@ -215,6 +215,10 @@ Acceppt the defaults for *Tags* and proceed to *Review + Start Replication*. Cli
 
 ![image](./img/repl8.png)
 
+Wait until the replication has been successfully initiated.
+
+![image](./img/repl9.png)
+
 
 
 You successfully completed challenge 5! 🚀🚀🚀

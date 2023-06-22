@@ -93,6 +93,47 @@ The assessment will be automatically be updated.
 
 Once finished you can click again on the assessment and review how your changes changed the sizing and pricing recomendations.
 
+### **Task 4: Enable Dependency Analysis**
+
+Dependency analysis identifies dependencies between discovered on-premises servers. It provides these advantages:
+
+* You can gather servers into groups for assessment, more accurately, with greater confidence.
+* You can identify servers that must be migrated together. This is especially useful if you're not sure which servers are part of an app deployment that you want to migrate to Azure.
+* You can identify whether servers are in use, and which servers can be decommissioned instead of migrated.
+* Analyzing dependencies helps ensure that nothing is left behind, and thus avoids surprise outages after migration.
+
+Agentless dependency analysis works by capturing TCP connection data from servers for which it's enabled. No agents are installed on servers. Connections with the same source server and process, and destination server, process, and port are grouped logically into a dependency. You can visualize captured dependency data in a map view, or export it as a CSV. No agents are installed on servers you want to analyze.
+
+Open the [Azure Portal](https://portal.azure.com) and navigate to the previousley created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click *Overview*.
+
+![image](./img/Assess1.png)
+
+Within the *Azure Migrate: Discovery and assessment* screen click on the discovered servers.
+
+![image](./img/Depend1.png)
+
+Within the *Discovered Server* screen click on the *Dependency Analysis* button on the top bar and select *Add Servers*.
+
+![image](./img/Depend2.png)
+
+Select the *azmigappliance* as the Azure Migrate Appliance, check the checkbox for the 2 discovered servers and click *Add servers*
+
+![image](./img/Depend3.png)
+
+Wait until the process of adding the servers to Dependency Analysis is finished.
+
+![image](./img/Depend4.png)
+
+Within the *Discovered servers* scrren click on *Refresh*. You should now be able to view the dependencies of the different servers.
+
+![image](./img/Depend5.png)
+
+💡 Please note that it could take some time for the dependency data to show up. 
+
+Once the dependency data has been uploaded to Azure Migrate, you should be able to show the different dependencies of the discovered servers.
+
+![image](./img/Depend6.png)
+
 You successfully completed challenge 4! 🚀🚀🚀
 
  **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-5/solution.md)

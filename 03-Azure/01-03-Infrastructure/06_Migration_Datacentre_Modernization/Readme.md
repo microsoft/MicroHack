@@ -172,18 +172,21 @@ The goal of this exercise is to ...
 
 * measure the readiness and estimates the effect of migrating on-premises servers to Azure
 * review the assessment output to understand the readiness and sizing recommendations
+* review the dependencies between the discovered servers
 
 ### Actions
 
 * Group machines for the assessment
 * Create an Azure VM assessment
 * Review assessment output and reccomendations
+* Enable and review dependency analysis
 
 ### Success criteria
 
 * You created a machine group
 * You successfully created an Azure VM assessment
 * You reviewed the assessment output and reccomendations
+* You enabled and reviewed the dependencies of the discovered server
 
 ### Learning resources
 * [Assessment overview - To Azure VMs](https://learn.microsoft.com/en-us/azure/migrate/concepts-assessment-calculation)

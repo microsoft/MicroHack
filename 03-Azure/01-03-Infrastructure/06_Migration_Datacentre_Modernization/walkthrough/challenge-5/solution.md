@@ -181,6 +181,19 @@ To install the Mobility service agent on the Windows machines follow the followi
 
 **💥 Repeat the above steps for the second Windows Server**
 
+### **Task 4: Enable Replication**
+
+Open the [Azure Portal](https://portal.azure.com) and navigate to the previousley created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click *Replicate* under *Migration Tools*.
+
+![image](./img/repl1.png) 
+
+Select *Servers or virtual machines (VM)* and *Azure VM* and click *Continue*.
+
+![image](./img/repl2.png) 
+
+In the *Basics* page select the previousley created Azure Migrate Replication appliance and specify the Guest Credentials and click next:
+
+![image](./img/repl3.png)
 
 
 

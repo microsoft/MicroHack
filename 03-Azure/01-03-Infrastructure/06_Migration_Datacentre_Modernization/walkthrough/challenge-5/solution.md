@@ -175,7 +175,7 @@ To install the Mobility service agent on the Windows machines follow the followi
 
      cd C:\Program Files (x86)\Microsoft Azure Site Recovery\agent
 
-     UnifiedAgentConfigurator.exe /CSEndPoint <replication appliance IP address> /PassphraseFilePath <Passphrase File Path>
+     UnifiedAgentConfigurator.exe /CSEndPoint \<replication appliance IP address\> /PassphraseFilePath \<Passphrase File Path\>
 
 ![image](./img/maw3.png)     
 

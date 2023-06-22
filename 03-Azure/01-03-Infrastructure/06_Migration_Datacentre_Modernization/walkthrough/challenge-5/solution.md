@@ -219,6 +219,13 @@ Wait until the replication has been successfully initiated.
 
 ![image](./img/repl9.png)
 
+Under *Migration Tools* you should know see that 2 Server are beeing repölicated. Click on *Overview* to see more details.
+
+![image](./img/repl10.png)
+
+Select *Replicating Machines* from the navigation pane on the left. You should now see the 2 servers and their status.
+
+![image](./img/repl11.png)
 
 
 You successfully completed challenge 5! 🚀🚀🚀

@@ -195,6 +195,26 @@ In the *Basics* page select the previousley created Azure Migrate Replication ap
 
 ![image](./img/repl3.png)
 
+Under *Virtual Machines* select *No I'll specify the migration settings manually* and select the *frontend1* and *frontend2* server from the list.
+
+![image](./img/repl4.png)
+
+Under *Traget Settings* select the *destination-rg* Resource Group and the *destination-vnet* vNet and select next.
+
+![image](./img/repl5.png)
+
+Under *Compute* acceppt the defaults and click next.
+
+![image](./img/repl6.png)
+
+Under *Disks* change the Disk Type to *Standard SSD* and click next.
+
+![image](./img/repl7.png)
+
+Acceppt the defaults for *Tags* and proceed to *Review + Start Replication*. Click *Replicate* to start the replication.
+
+![image](./img/repl8.png)
+
 
 
 You successfully completed challenge 5! 🚀🚀🚀

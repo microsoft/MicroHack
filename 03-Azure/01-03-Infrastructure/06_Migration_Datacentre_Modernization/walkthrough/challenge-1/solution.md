@@ -19,6 +19,8 @@ Duration: 30 minutes
 - Paste the previously copied *id* as *currentUserObjectId*
 - Wait for the deployment to finish
 
+💡 Please note that the deployment may take up to 10 minutes
+
 ### **Task 2: Verify the deployed resources**
 The bicep deployment should have created the following resources
 

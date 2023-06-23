@@ -106,6 +106,7 @@ The goal of this exercise is to...
 ### Actions
 
 * Create a Azure Migrate Project
+💥 **To be able to create a Business Case, make sure to select Europe as the Geography for the Azure Migrate Project** 
 * Deploy a Azure Migrate Appliance
 * Create a continous disvovery of your source environment
 

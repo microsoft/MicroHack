@@ -22,7 +22,7 @@ The architecture will be like
 
 ## Setup your networking and resource groups structure
 
-You can setup your networking infrastructure with [this Bicep script](https://github.com/anggerl/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Azure_Virtual_Desktop/main.bicep).
+You can setup your networking infrastructure with [this Bicep script](https://github.com/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Azure_Virtual_Desktop/main.bicep).
 
 - Open Visual Studio Code and log in to Azure Cloud Shell at https://shell.azure.com/ and select Bash
 

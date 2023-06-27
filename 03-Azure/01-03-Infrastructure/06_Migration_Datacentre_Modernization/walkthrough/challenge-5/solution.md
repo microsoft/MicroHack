@@ -227,6 +227,128 @@ Select *Replicating Machines* from the navigation pane on the left. You should n
 
 ![image](./img/repl11.png)
 
+### **Task 4: Perform Test Migration**
+
+When delta replication begins, you can run a test migration for the VMs, before running a full migration to Azure. We highly recommend that you do this at least once for each machine, before you migrate it.
+
+* Running a test migration checks that migration will work as expected, without impacting the on-premises machines, which remain operational, and continue replicating.
+* Test migration simulates the migration by creating an Azure VM using replicated data (usually migrating to a non-production VNet in your Azure subscription).
+* You can use the replicated test Azure VM to validate the migration, perform app testing, and address any issues before full migration.
+
+Open the [Azure Portal](https://portal.azure.com) and navigate to the previousley created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click *Overview* in the *Migration tools* box.
+
+![image](./img/test1.png)
+
+Select *Perform more test migrations* under *Step 2: Test migration*.
+
+![image](./img/test2.png)
+
+Click on the 3 dots on the right corner of each server and select *Test migration* from the drop down.
+
+![image](./img/test3.png)
+
+Select the *destination-vnet* and click on *Test migration*.
+
+![image](./img/test4.png)
+
+Repeat the above steps for the remaining server and wait until the test migration has been successfully finished.
+
+![image](./img/test5.png)
+
+Switch back to the *Overview* section of the *Azure Migrate: Migration and modernization* page. The Cleanup should be pending for the 2 servers.
+
+![image](./img/test6.png)
+
+Select *Virtual machines* from the navigation pane on the left. There will be 2 additional servers *frontend1-test* and *frontend2-test*. Those servers were created during test migration.
+
+![image](./img/test7.png)
+
+Click on the *frontend1-test* server, select *Bastion* and provide the login credentials for the server. Select *Connect* to initiate the connection.
+
+![image](./img/test8.png)
+
+Open the Microsoft Edge browser on the server, enter *localhost* in the address bar and make sure that the web server is running.
+
+![image](./img/test9.png)
+
+Repeat the above steps for the *frontend2-test* system. Once you've confirmed that the applications on the systems are running as expected you can perfom a cleanup for the test migration. Change back to the *Azure Migrate: Migration and modernization* overview page, click on the 3 dots on the end of each row of the replicating servers and select *Clean up test migration*.
+
+![image](./img/test10.png)
+
+Select *Testing complete. Delete test virtual machine* and select *Cleanup Test*. Reapeat the step for the remainig server and wait until the cleanup has been successfully processed.
+
+![image](./img/test11.png)
+
+### **Task 4: Prepare Final Migration**
+
+Currently the two frontend servers are published via an Azure Public Load Balancer. After the migration, the original server will be turned off. Therefore the access to the system via the Azure Public Load Balancer will be broken. To prepare for the migration and to keep downtime as short as possible some pre-migration steps should be performed.
+
+#### **Task 4.1: Create a new Azure Public Load Balancer in the destination environment**
+
+From the Azure Portal open the Load Balancing blade, select Load Balancer on the Navigation pane on the left and click *Create*.
+
+![image](./img/prep1.png)
+
+Under *Basics* select the *destination-rg* Resource Group and provide a name for the new Load Balancer.
+
+![image](./img/prep2.png)
+
+Under *Frontend IP configuration*, click *Add a frontend IP configuration* and create a new Public IP address.
+
+![image](./img/prep3.png)
+
+Under *Backend Pools*, select *Add a backend Pool*. Provide a name and select the *destination-vnet* as the Virtual Network.
+Add *10.2.1.4* and *10.2.1.5* as the IP addresses.
+
+💡 Please note: Azure reserves the first four addresses (0-3) in each subnet address range, and doesn't assign the addresses. Azure assigns the next available address to a resource from the subnet address range. So it is predictable which IP addresses will be assigned to the destination VMs after the migration.
+
+![image](./img/prep4.png)
+
+Under *Inbound rules* click on *Add a load balancing rule* and create the load balancing rule as illustrated on the following diagram.
+
+![image](./img/prep5.png)
+
+Under *Outbound rules* click *Add an outbound rule* and create the outbound rule as illustrated on the following diagram.
+
+![image](./img/prep6.png)
+
+Proceed to the *Review + create* section, review your configuration and click *Create*
+
+![image](./img/prep7.png)
+
+Wait until the load balancer has been created, cahnge back to the *Load balancing* section, select the *plb-frontend* Load Balancer and click *Frontend IP configuration* from the navigation pane on the left. Note down the Public IP of the *LoadBalancerFrontEnd* configuration. Repeat the step for the *plb-frontend-dest* Load Balancer.
+
+![image](./img/prep8.png)
+
+#### **Task 4.2: Create a new Azure Traffic Manager Profile**
+
+Azure Traffic Manager is a DNS-based traffic load balancer. It allows us to distribute traffic to public facing endpoints like our two Public Load Balancer. Traffic Manager can be created in advance to distribute traffic among the old and new load balancer. The DNS conbfiguration of the application can be changed in advance to point to the Traffic Manager Profile instead to the Public IP of the Load Balancer. Using this approach makes sure that Traffic Manager automatically removes the old Load Balancer after the frontend servers were migrated.
+
+From the Azure Portal open the Load Balancing blade, select Traffic Manager on the Navigation pane on the left and click *Create*.
+
+![image](./img/prep9.png)
+
+Select a name for the Traffic Manager profile and select the *destination-rg* as the Resourec Group.
+
+![image](./img/prep10.png)
+
+From the Load Balancing overview page select *Traffic Manager* and select the previously created Traffic Manager profile. 
+Select *Endpoints* and click *Add*. Add each public IP of the source and destination Load Balancer as separate endpoints.
+
+![image](./img/prep11.png)
+
+💡 Please note: To be able to add the public IP addresses they need to be configured with an [DNS name lable](https://learn.microsoft.com/en-us/azure/dns/dns-custom-domain?toc=%2Fazure%2Fvirtual-network%2Ftoc.json#public-ip-address).
+
+Check the Overview section under the navigation pane and note that the source load balancer is shown as *online* whereas the 
+destination load balancer is shown as *degraded*. If you copy the DNS name of the Traffic Manager profile and paste it into your browser, you should be able to browse the source web servers through the Traffic Manager Profile.
+
+![image](./img/prep12.png)
+
+![image](./img/prep13.png)
+
+### **Task 4: Perform Final Migration**
+
+
 
 You successfully completed challenge 5! 🚀🚀🚀
 

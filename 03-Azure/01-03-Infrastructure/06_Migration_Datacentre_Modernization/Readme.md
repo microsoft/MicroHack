@@ -209,6 +209,7 @@ The goal of this exercise is to ...
 
 * understand the different migration options and prerequisites provided by Azure Migrate
 * perfrom a test migration of the desired workload
+* keep downtime as short as possible
 * perform the final migration towards Azure
 
 ### Actions
@@ -217,12 +218,13 @@ The goal of this exercise is to ...
 * Deploy the Mobility Service Agent
 * Replicate the machines to Azure
 * Perform a Test Migration
+* Prepare the final Migration
 * Migrate the workload to Azure
 
 ### Success criteria
 
 * All the soruce machines are successfully migrated to and running in Azure
-* The Web Server is accessable using the Load Balancer public IP
+* The Web Servers are seamlessley accessable using a Traffic Manager profile via dedicated Public Load Balancer.
 
 ### Learning resources
 * [Support matrix for migration of physical servers, AWS VMs, and GCP VMs](https://learn.microsoft.com/en-us/azure/migrate/migrate-support-matrix-physical-migration)

@@ -1,6 +1,6 @@
 # Walkthrough Challenge 5 - Migrate machines to Azure
 
-Duration: 40 minutes
+Duration: 90 minutes
 
 ## Prerequisites
 

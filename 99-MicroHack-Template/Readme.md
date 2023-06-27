@@ -1,31 +1,12 @@
 # **Master Template MicroHack**
+# **MicroHack Template**
 
-- [**Master Template MicroHack**](#master-template-microhack)
-- [MicroHack introduction and context](#microhack-introduction-and-context)
-- [Objectives](#objectives)
-- [Prerequisites](#prerequisites)
-- [Lab environment for this MicroHack](#lab-environment-for-this-microhack)
-  - [Architecture](#architecture)
-- [MicroHack Challenges](#microhack-challenges)
-  - [Challenge 1 - Deploy the Lab environment](#challenge-1---deploy-the-lab-environment)
-    - [Goal](#goal)
-    - [Task 1: Deploy Baseline](#task-1-deploy-baseline)
-    - [Task 2: Verify baseline](#task-2-verify-baseline)
-- [Challenge 2 : Name..](#challenge-2--name)
-    - [Goal](#goal-1)
-    - [Task 1:](#task-1)
-    - [Task 2:](#task-2)
-    - [Task 3:](#task-3)
-    - [Task 4:](#task-4)
-- [Challenge 3 : Name ...](#challenge-3--name-)
-    - [Goal](#goal-2)
-    - [Task 1:](#task-1-1)
-    - [Task 2:](#task-2-1)
-    - [Task 3:](#task-3-1)
-    - [Task 4:](#task-4-1)
-- [Finished? Delete your lab](#finished-delete-your-lab)
-
-# MicroHack introduction and context
+- [**MicroHack introduction**](#MicroHack-introduction)
+- [**MicroHack context**](#microhack-context)
+- [**Objectives**](#objectives)
+- [**MicroHack Challenges**](#microhack-challenges)
+- [**Contributors**](#contributors)
+# MicroHack introduction
 
 This MicroHack scenario walks through the use of ... with a focus on the best practices and the design principles. Specifically, this builds up to include working with an existing infrastructure.
 
@@ -33,9 +14,12 @@ This MicroHack scenario walks through the use of ... with a focus on the best pr
 
 This lab is not a full explanation of .... as a technology, please consider the following articles required pre-reading to build foundational knowledge.
 
-Optional (read this after completing this lab to take your learning even deeper!
+Optional (read this after completing this lab to take your learning even deeper!)
 
 Describe the scenario here...
+
+# MicroHack context
+This MicroHack scenario walks through the use of....
 
 # Objectives
 
@@ -45,7 +29,11 @@ After completing this MicroHack you will:
 - Understand default ..
 - Understand how ..
 
-# Prerequisites
+# MicroHack challenges
+
+## General prerequisites
+
+This MicroHack has a few but important prerequisites
 
 In order to use the MicroHack time most effectively, the following tasks should be completed prior to starting the session.
 
@@ -62,75 +50,65 @@ Permissions for the deployment:
 - Contributor on your Resource Group
 - Other necessary permissions
 
-# Lab environment for this MicroHack
-
-Explain the lab ..
-
-## Architecture
-
-At the end of this MicroHack your base lab build looks as follows:
-
-![image](Path to the architecture )
-
-# MicroHack Challenges 
-
-## Challenge 1 - Deploy the Lab environment
+## Challenge 1 - Prerequisites and landing zone preparation 
 
 ### Goal 
 
 The goal of this exercise is to deploy...
 
-### Task 1: Deploy Baseline
+### Actions
 
-We are going to use a predefined ARM template to deploy the base environment. It will be deployed in to *your* Azure subscription, with resources running in the your specified Azure region.
+* Write down the first 3 steps....
+* Set up and enable...
+* Perform and monitor....
 
-To start the ARM deployment, follow the steps listed below:
+### Success criteria
 
-- Login to Azure cloud shell [https://shell.azure.com/](https://shell.azure.com/)
-- Ensure that you are operating within the correct subscription via:
+* You have deployed ....
+* You successfully enabled ...
+* You have successfully setup ....
+* You have successfully ....
 
-`az account show`
+### Learning resources
+* Link to https://learn.microsoft.com/en-us/azure/....
 
-- Clone the following GitHub repository 
+### Solution - Spoilerwarning
 
-`git clone Link to Github Repo `
+[Solution Steps](./walkthrough/challenge-1/solution.md)
 
-### Task 2: Verify baseline
+## Challenge 2 - ...
 
-Now that we have the base lab deployed, we can progress to the ... challenges!
+### Goal 
 
+The goal of this exercise is to deploy...
 
-# Challenge 2 : Name..
+### Actions
 
-### Goal
+* Write down the first 3 steps....
+* Set up and enable...
+* Perform and monitor....
 
-### Task 1: 
+### Success criteria
 
-### Task 2: 
+* You have deployed ....
+* You successfully enabled ...
+* You have successfully setup ....
+* You have successfully ....
 
-### Task 3: 
+### Learning resources
+* Link to https://learn.microsoft.com/en-us/azure/....
 
-**Explain the background...**
+### Solution - Spoilerwarning
 
-### Task 4: 
+[Solution Steps](./walkthrough/challenge-2/solution.md)
 
-Before proceeding to challenge 3, ...
+## Finish
 
-# Challenge 3 : Name ...
+Congratulations! You finished the MicroHack *Name*. We hope you had the chance to learn about the how to implement a successful...
+If you want to give feedback please dont hesitate to open an Issue on the repository or get in touch with one of us directly.
 
-### Goal
-
-### Task 1: 
-
-### Task 2: 
-
-### Task 3: 
-
-**Explain the background...**
-
-### Task 4: 
-
-# Finished? Delete your lab
+Thank you for investing the time and see you next time!
 
 
-Thank you for participating in this MicroHack!
+## Contributors
+* Nils Bankert [GitHub](https://github.com/nilsbankert); [LinkedIn](https://www.linkedin.com/in/nilsbankert/)

@@ -378,6 +378,20 @@ From a user perspective nothing changed. You're still able to browse the Traffic
 
 🚀🚀🚀🚀🚀🚀 Congratulations, you've successfully migrated the frontend application to Azure.🚀🚀🚀🚀🚀🚀
 
+### **Task 6: Cleanup**
+
+After the successfull migration you can now stop replicating the source virtual machines. Open the [Azure Portal](https://portal.azure.com) and navigate to the previousley created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click *Overview* in the *Migration tools* box. In the *Azure Migrate: Migration and modernization* pane, select *Replicating machines* from the navigation pane on the left, click on the 3 dots on the end of each row of the replicating servers and select *Stop replicating*.
+
+![image](./img/finalmig8.png)
+
+Select *Stop replication and remove replication settings* from the drop down list and click *OK*. Repeat this step for the remaining Server.
+
+![image](./img/finalmig9.png)
+
+From the Traffic Manager Profile you can now also safley remove the endpoint for the source load balancer.
+
+![image](./img/finalmig10.png)
+
 You successfully completed challenge 5! 🚀🚀🚀
 
 The deployed architecture now looks like the following diagram.

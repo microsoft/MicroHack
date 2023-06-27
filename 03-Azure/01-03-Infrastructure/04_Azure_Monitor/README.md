@@ -1,17 +1,17 @@
 # **MicroHack Azure Monitor**
 
-  - [MicroHack introduction and context](#microhack-introduction-and-context)
-  - [Objectives](#objectives)
-  - [Prerequisites](#prerequisites)
-  - [Lab environment for this MicroHack](#lab-environment-for-this-microhack)
-    - [Architecture](#architecture)
+- [**MicroHack Azure Monitor**](#microhack-azure-monitor)
+  - [**MicroHack introduction and context**](#microhack-introduction-and-context)
+  - [**Objectives**](#objectives)
+  - [**Prerequisites**](#prerequisites)
+  - [**Lab environment for this MicroHack**](#lab-environment-for-this-microhack)
     - [Deployment](#deployment)
       - [Azure Portal Method](#azure-portal-method)
       - [Terraform Method](#terraform-method)
-  - [MicroHack Challenges](#microhack-challenges)
-  - [Solution Guide](#solution-guide)
-  - [Finished? Delete your lab](#finished-delete-your-lab)
-  - [Contributor](#contributor)
+  - [**MicroHack Challenges**](#microhack-challenges)
+  - [**Solution Guide**](#solution-guide)
+  - [**Finished? Delete your lab**](#finished-delete-your-lab)
+  - [**Contributor**](#contributor)
 
 ## **MicroHack introduction and context**
 
@@ -87,6 +87,7 @@ To deploy the lab environment using **terraform**, click the link below.
 
 ## **MicroHack Challenges**
 
+- Challenge 0: **[Create Azure Log Analytics Workspace](challenges/00_challenge.md)**
 - Challenge 1: **[Challenge 01](challenges/01_challenge.md)**
 - Challenge 2: **[Challenge 02](challenges/02_challenge.md)**
 - Challenge 3: **[Challenge 03](challenges/03_challenge.md)**

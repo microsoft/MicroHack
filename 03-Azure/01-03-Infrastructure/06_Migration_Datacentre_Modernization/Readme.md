@@ -244,18 +244,26 @@ The goal of this exercise is to ...
 
 The goal of this exercise is to ...
 
-* tbd
+* modernize the Web App running on the frontend Servers to be hosted on PaaS instead of IaaS (Lift & Shift)
+* understand the options that ware avaiulable for App Sevrice assessment & migration
 
 ### Actions
 
-* tbd
+* Create an web app assessment using Azure Migrate
+* Perfom a web app migration using Azure Migrate towards Azure App Services
 
 ### Success criteria
 
-* tbd
+* An assessment has been performed using the already deployed infrastructre
+* An migration has been performed towards PaaS instead of IaaS
+* The App Services are accessible using the source Load Balancer.
+
+💥 **The new App Service migration capability is currently in public preview** 
 
 ### Learning resources
-tbd
+[App Service assessment overview](https://learn.microsoft.com/en-us/azure/migrate/concepts-azure-webapps-assessment-calculation)
+[Web App migration support](https://learn.microsoft.com/en-us/azure/migrate/concepts-migration-webapps)
+[Public preview: App Service new migration capabilities](https://azure.microsoft.com/en-us/updates/public-preview-app-service-new-migration-capabilities/)
 
 ### Solution - Spoilerwarning
 

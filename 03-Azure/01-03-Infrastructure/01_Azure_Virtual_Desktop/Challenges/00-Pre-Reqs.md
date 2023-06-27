@@ -20,40 +20,6 @@ The architecture will be like
 
 ![AVD Architecture MicroHack](../Images/00_AVD_Microhack.png)
 
-## Setup your networking and resource groups structure
-
-You can setup your networking infrastructure with [this Bicep script](https://github.com/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Azure_Virtual_Desktop/main.bicep).
-
-- Open Visual Studio Code and log in to Azure Cloud Shell at https://shell.azure.com/ and select Bash
-
-  `az login`
-
-- Ensure Azure CLI and extensions are up to date:
-
-  `az upgrade --yes`
-
-  `az bicep upgrade ` or `az bicep install` (to install it)
-
-- If necessary select your target subscription:
-  
-  `az account set --subscription <Name or ID of subscription>`
-
-- Update and set the `parameters-ad-join-example.json`
-
-  Set the "aadjoin" parameter to true, if your session hosts should be AAD joined and not hybrid or traditional domain joined.
-  
-  The parameters "hubVnetName", "hubVnetRgName" and "dnsServer" are only respected if you selected "aadJoin"= false. Otherwise skip them.
-
-- Update and set the `main.bicep` parameters.
-
-- Run the deployment with e.g. 
-
-`$location = "WestEurope"`
-
-`$name="<your name>"`
-
-`az deployment sub create --location $location -f ./main.bicep --parameters name=$name --parameters @parameters-ad-join-example.json -c`
-
 ## Components
 Azure Virtual Desktop service architecture is similar to Windows Server Remote Desktop Services. Microsoft manages the infrastructure and brokering components, while enterprise customers manage their own desktop host virtual machines (VMs), data, and clients.
 
@@ -77,12 +43,8 @@ Customers manage these components of Azure Virtual Desktop solutions:
 ### Azure Virtual Network:
 Azure Virtual Network lets Azure resources like VMs communicate privately with each other and with the internet. By connecting Azure Virtual Desktop host pools to an Active Directory domain, you can define network topology to access virtual desktops and virtual apps from the intranet or internet, based on organizational policy. You can connect an Azure Virtual Desktop to an on-premises network using a virtual private network (VPN), or use Azure ExpressRoute to extend the on-premises network into the Azure cloud over a private connection.
 
-> **Note**: Make sure that the virtual machines can access [the required AVD URLs.](https://learn.microsoft.com/en-us/azure/virtual-desktop/safe-url-list?tabs=azure)
-
 ### Azure AD:
 Azure Virtual Desktop uses Azure AD for identity and access management. Azure AD integration applies Azure AD security features like conditional access, multi-factor authentication, and the Intelligent Security Graph, and helps maintain app compatibility in domain-joined VMs.
-
-> **Note**: To connect to Azure AD joined virtual machines it's required to use strong authentication like multi-factor-authentication or Windows Hello for Business.  Please make sure you require MFA for the AVD login. Check the following link: [Enforce Azure Active Directory Multi-Factor Authentication for Azure Virtual Desktop using Conditional Access](https://learn.microsoft.com/en-us/azure/virtual-desktop/set-up-mfa#azure-ad-joined-session-host-vms)
 
 ### Azure AD and FSLogix (challenge 4):
 In challenge 4, you need to create an Azure Files share to store FSLogix profiles that can be accessed by hybrid user identities authenticated with Azure Active Directory (Azure AD). Azure AD users can now access an Azure file share using Kerberos authentication. This configuration uses Azure AD to issue the necessary Kerberos tickets to access the file share with the industry-standard SMB protocol. End-users can access Azure file shares over the internet without requiring a line-of-sight to domain controllers from Hybrid Azure AD-joined and Azure AD-joined VMs. If you want to setup Azure Files with Azure Active Directory authenticaion you have to apply the steps from [this guide](https://learn.microsoft.com/en-us/azure/virtual-desktop/create-profile-container-azure-ad)
@@ -112,15 +74,6 @@ Pooled desktop solutions, also called non-persistent desktops, assign users to w
 ### User accounts and groups:
 Your users need accounts that are in Azure AD. To successful conduct challenge 4, these accounts will need to be [hybrid identities](https://learn.microsoft.com/en-us/azure/active-directory/hybrid/whatis-hybrid-identity), which means the user account is synchronized. 
 
-You will use Azure AD with AD DS, therefore you'll need to configure [Azure AD Connect](https://learn.microsoft.com/en-us/azure/active-directory/hybrid/whatis-azure-ad-connect) to synchronize user identity data between AD DS and Azure AD.
-
-Create three user accounts and two groups in ADDS and sync them to Azure AD: 
-(These user names are only suggestions. Use your own naming convention if you have one)
-- AVDUsers
-- AVDAdmins
-- AVDUser1 is member of AVDUsers
-- AVDUser2 is member of AVDUsers
-- AVDUser3 is member of AVDAdmins
 
 ### Role-based Access Control:
 

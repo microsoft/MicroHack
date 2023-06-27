@@ -346,15 +346,42 @@ destination load balancer is shown as *degraded*. If you copy the DNS name of th
 
 ![image](./img/prep13.png)
 
-### **Task 4: Perform Final Migration**
+### **Task 5: Perform Final Migration**
 
+Open the [Azure Portal](https://portal.azure.com) and navigate to the previousley created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click *Overview* in the *Migration tools* box. From the Overview section click in *Migrate* under *Step 3: Migrate*.
 
+![image](./img/finalmig1.png)
+
+Select *Yes* to shutdown the source machines, select the two servers and click *Migrate*.
+
+![image](./img/finalmig2.png)
+
+You can check the progress of the migration under the *Jobs* section within the navigation pane.
+
+![image](./img/finalmig3.png)
+
+After a few minutes the migration should be successfully completed.
+
+![image](./img/finalmig4.png)
+
+When you change to the *Virtual machine* section within the Azure Portal you should now see 2 additional serves in the *destination-rg* Resource Group.
+
+![image](./img/finalmig5.png)
+
+Change to the Azure Traffic Manager profile you've created previousley and look at the endpoints. Please note that the *fe-source* endpoint is now shown as degraded and that the *fe-dest* endpoint is shown as online.
+
+![image](./img/finalmig6.png)
+
+From a user perspective nothing changed. You're still able to browse the Traffic Manager profile DNS name and you will be transparently redirected to the web servers that are know running in Azure.
+
+![image](./img/finalmig7.png)
+
+🚀🚀🚀🚀🚀🚀 Congratulations, you've successfully migrated the frontend application to Azure.🚀🚀🚀🚀🚀🚀
 
 You successfully completed challenge 5! 🚀🚀🚀
 
 The deployed architecture now looks like the following diagram.
 
 ![image](./img/Challenge-5.jpg)
-
 
  **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-6/solution.md)

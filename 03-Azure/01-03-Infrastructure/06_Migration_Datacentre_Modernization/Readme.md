@@ -261,9 +261,9 @@ The goal of this exercise is to ...
 💥 **The new App Service migration capability is currently in public preview** 
 
 ### Learning resources
-[App Service assessment overview](https://learn.microsoft.com/en-us/azure/migrate/concepts-azure-webapps-assessment-calculation)
-[Web App migration support](https://learn.microsoft.com/en-us/azure/migrate/concepts-migration-webapps)
-[Public preview: App Service new migration capabilities](https://azure.microsoft.com/en-us/updates/public-preview-app-service-new-migration-capabilities/)
+* [App Service assessment overview](https://learn.microsoft.com/en-us/azure/migrate/concepts-azure-webapps-assessment-calculation)
+* [Web App migration support](https://learn.microsoft.com/en-us/azure/migrate/concepts-migration-webapps)
+* [Public preview: App Service new migration capabilities](https://azure.microsoft.com/en-us/updates/public-preview-app-service-new-migration-capabilities/)
 
 ### Solution - Spoilerwarning
 

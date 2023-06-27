@@ -236,6 +236,29 @@ The goal of this exercise is to ...
 
 [Solution Steps](./walkthrough/challenge-5/solution.md)
 
+## Challenge 6 - Modernize with Azure
+
+### Goal 
+
+The goal of this exercise is to ...
+
+* tbd
+
+### Actions
+
+* tbd
+
+### Success criteria
+
+* tbd
+
+### Learning resources
+tbd
+
+### Solution - Spoilerwarning
+
+[Solution Steps](./walkthrough/challenge-6/solution.md)
+
 ## Finish
 
 Congratulations! You finished the MicroHack for Migration and Modernization. We hope you had the chance to learn about the how to implement a successful migration strategy using Azure Migrate.
@@ -247,3 +270,4 @@ Thank you for investing the time and see you next time!
 ## Contributors
 * Nils Bankert [GitHub](https://github.com/nilsbankert); [LinkedIn](https://www.linkedin.com/in/nilsbankert/)
 * Andreas Schwarz [LinkedIn](https://www.linkedin.com/in/andreas-schwarz-7518a818b/)
+* Christian Thönes [Github](https://github.com/cthoenes); [LinkedIn](https://www.linkedin.com/in/christian-t-510b7522/)

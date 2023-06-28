@@ -8,7 +8,7 @@ Please make sure thet you successfully completed [Challenge 5](../challenge-5/so
 
 ### **Task 1: Create an App Service Assessment**
 
-The Azure Migrate tool offers additional capabilities that make it easier for you to move applications from on-premises environments to Azure App Service and Azure Kubernetes Service.
+The Azure Migrate tool now offers additional capabilities that make it easier for you to move applications from on-premises environments to Azure App Service and Azure Kubernetes Service.
 
 Azure App Service bulk migration capabilities are now in public preview through the Azure Migrate feature:
 
@@ -16,8 +16,6 @@ Azure App Service bulk migration capabilities are now in public preview through 
 * Suggest a destination for migration and provide a guided content and configuration experience for ASP.NET web apps to Azure App Service.
 * Discover and migrate with Java Tomcat applications to App Service Linux and to Azure Kubernetes Service.
 * Containerize your ASP.NET web apps and move them to either Windows Containers on App Service or to Azure Kubernetes Service.
-
-**💥 Currently this feature has a few [limitations](https://learn.microsoft.com/en-us/azure/migrate/concepts-migration-webapps#limitations) and therefore it can't be used to migrate web apps directly from physical servers. However, we can use it at least to perform the assessment of our web apps and use the [App Service migration assistant tool](https://learn.microsoft.com/en-us/azure/app-service/app-service-asp-net-migration) for the migration.**
 
 Open the [Azure Portal](https://portal.azure.com) and navigate to the previousley created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click on *Assess* and select *Azure App Service (Preview)* from the drop down list.
 
@@ -48,8 +46,6 @@ Review the output of the assessment to see if the web app currently running on W
 ![image](./img/appservice7.png)
 
 ### **Task 2: Modernize web app to Azure App Service Code**
-
-**💥 As mentioned ubove, the current [limitations](https://learn.microsoft.com/en-us/azure/migrate/concepts-migration-webapps#limitations) will not allow the direct migration of web apps running on physical machines. Therefore, we will use the [App Service migration assistant tool](https://learn.microsoft.com/en-us/azure/app-service/app-service-asp-net-migration) for the migration.**
 
 Open the [Azure Portal](https://portal.azure.com) and navigate to the previousley created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click on *Replicate* within the *Migration tools* box.
 

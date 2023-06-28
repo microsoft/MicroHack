@@ -4,14 +4,14 @@
 
 The goal of this challenge is to explore the lab environment and understand the components that have been deployed.
 
-After completing this challenge, you have successfully deployed a Log Analytics workspace.
+After completing this challenge, you have successfully deployed a Log Analytics Workspace.
 
 ## Task 1: Explore and ensure successful deployment
 
 - Go to the Azure Portal and navigate to the resource group `rg-microhack`. Look at the resources that have been deployed and think about possbile monitoring scenarios.
     - How would you monitor the resources?
     - What are the different types of resources (IaaS, PaaS etc.)? 
-- Ensure Application Gateway `appgw-microhack` and respective Backend Pool respond to port `80`.
+- Ensure Application Gateway `appgw-microhack` and respective Backend Pool respond to port `80` (you should see the nginx welcome page).
 - Ensure Virtual Machine `vm-windows` responds to port `80`.
 
 ## Task 2: Create Log Analytics workspace

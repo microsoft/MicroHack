@@ -8,6 +8,9 @@ The AMA we are targets the IaaS where you have the control to install somehting.
 
 Azure Monitor Agent (AMA) collects monitoring data from the guest operating system of Azure and hybrid virtual machines and delivers it to Azure Monitor for use by features, insights, and other services, such as Microsoft Sentinel and Microsoft Defender for Cloud. Azure Monitor Agent replaces all of Azure Monitor's legacy monitoring agents. This article provides an overview of Azure Monitor Agent's capabilities and supported use cases.
 
+![](https://learn.microsoft.com/de-de/azure/azure-monitor/agents/media/azure-monitor-agent-overview/azure-monitor-agent-benefits.png)
+
+
 Therefore the AMA is a key component to collect data from your infrasracture (IaaS) like virtual machines, on-premises servers (Arc enabled servers).
 
 **NOTE**: The Log Anayltic agent will be replaced by the AMA in the future. Therefore, we will not cover the Log Anayltic agent in this MicroHack.
@@ -31,3 +34,5 @@ Can you answer the following questions?
 
 ## Taks 2: Install Azure Monitoring Agent (AMA) on Linux VM
 
+## FAQ
+- How much log data is being produced by a single VM? About 1 to 3 GB per month.

@@ -95,12 +95,13 @@ $NestedESXiApplianceOVA = "${mypath}\Templates\Nested_ESXi7.0u3c.ova"
 $VCSAInstallerPath = "${mypath}\Templates\VCSA7-Install"
 $PhotonNFSOVA = "${mypath}\Templates\PhotonOS_NFS_Appliance_0.1.0.ova"
 $PhotonOSOVA = "${mypath}\Templates\app-a-standalone.ova"
+$HCXOVA = "${mypath}\VMware-HCX-Connector-4.6.2.0-21779229.ova"
 
 # Nested ESXi VMs to deploy
 $NestedESXiHostnameToIPs = @{
-    "esxi-${groupNumber}-${labNumber}" = "10.${groupNumber}.${labNumber}.3"
-    #"esxi-${groupNumber}-${labNumber}" = "10.${groupNumber}.${labNumber}.4"
-    #"esxi-${groupNumber}-${labNumber}" = "10.${groupNumber}.${labNumber}.5"
+    "esxi-${groupNumber}-${labNumber}-1" = "10.${groupNumber}.${labNumber}.3";
+    "esxi-${groupNumber}-${labNumber}-2" = "10.${groupNumber}.${labNumber}.4";
+    "esxi-${groupNumber}-${labNumber}-3" = "10.${groupNumber}.${labNumber}.5"
 }
 
 # Nested ESXi VM Resources
@@ -128,6 +129,14 @@ $VCSASSODomainName = "avs.lab"
 $VCSASSOPassword = "MSFTavs1!"
 $VCSARootPassword = "MSFTavs1!"
 $VCSASSHEnable = "true"
+
+# HCX Deployment Configuration
+$HCXVMDisplayName = "hcx-mgr-${groupNumber}-${labNumber}"
+$HCXIPAddress = "10.${groupNumber}.${LabNumber}.9"
+$HCXVMPrefix = "24"
+$HCXRootPassword = "MSFTavs1!"
+$HCXAdminPassword = "MSFTavs1!"
+$HCXSSHEnable = "true"
 
 # General Deployment Configuration for Nested ESXi, VCSA & NSX VMs
 $VMDatacenter = "SDDC-Datacenter"
@@ -173,6 +182,7 @@ $VAppName = "Nested-SDDC-Lab-${groupNumber}-${labNumber}"
 $preCheck = 1
 $confirmDeployment = 1
 $deployNFSVM = 1
+$deployHCXVM = 1
 $deployNestedESXiVMs = 1
 $deployVCSA = 1
 $setupNewVC = 1
@@ -199,11 +209,16 @@ $supportedStorageType = @{
     "Microsoft" = "NFS";
 }
 
-$esxiTotalCPU = 12
-$vcsaTotalCPU = 0
-$esxiTotalMemory = 48
-$vcsaTotalMemory = 0
-$esxiTotalStorage = 0
+$esxiTotalCPU = $NestedESXiHostnameToIPs.Count * $NestedESXivCPU
+$vcsaTotalCPU = $vcsaSize2MemoryStorageMap[$VCSADeploymentSize].cpu
+$hcxTotalCPU = 4
+$esxiTotalMemory = $NestedESXiHostnameToIPs.Count * $NestedESXivMEM
+$vcsaTotalMemory = $vcsaSize2MemoryStorageMap[$VCSADeploymentSize].mem
+$hcxTotalMemory = 12
+$esxiTotalStorage = $NestedESXiHostnameToIPs.Count * ($NestedESXiCachingvDisk + $NestedESXiCapacityvDisk)
+$vcsaTotalStorage = $vcsaSize2MemoryStorageMap[$VCSADeploymentSize].disk
+$hcxTotalStorage = 65
+
 
 $StartTime = Get-Date
 
@@ -256,6 +271,8 @@ if ($confirmDeployment -eq 1) {
     Write-Host -ForegroundColor White $NestedESXiApplianceOVA
     Write-Host -NoNewline -ForegroundColor Green "VCSA Image Path: "
     Write-Host -ForegroundColor White $VCSAInstallerPath
+    Write-Host -NoNewline -ForegroundColor Green "HCX Image Path: "
+    Write-Host -ForegroundColor White $HCXOVA
 
     if ($supportedStorageType.$SddcProvider -eq "NFS") {
         Write-Host -NoNewline -ForegroundColor Green "NFS Image Path: "
@@ -332,14 +349,19 @@ if ($confirmDeployment -eq 1) {
     Write-Host -NoNewline -ForegroundColor Green "Gateway: "
     Write-Host -ForegroundColor White $VMGateway
 
+    Write-Host -ForegroundColor Yellow "`n---- HCX Configuration ----"
+    Write-Host -NoNewline -ForegroundColor Green "IP Address: "
+    Write-Host -ForegroundColor White $HCXIPAddress
+    Write-Host -NoNewline -ForegroundColor Green "Netmask "
+    Write-Host -ForegroundColor White $VMNetmask
+    Write-Host -NoNewline -ForegroundColor Green "Gateway: "
+    Write-Host -ForegroundColor White $VMGateway
+    Write-Host -NoNewline -ForegroundColor Green "Enable SSH: "
+    Write-Host -ForegroundColor White $HCXSSHEnable
+
     $esxiTotalCPU = $NestedESXiHostnameToIPs.count * [int]$NestedESXivCPU
     $esxiTotalMemory = $NestedESXiHostnameToIPs.count * [int]$NestedESXivMEM
-    if ($SddcProvider -eq "AWS" -or $SddcProvider -eq "Microsoft") {
-        $esxiTotalStorage = [int]$NFSCapacity
-    }
-    else {
-        $esxiTotalStorage = ($NestedESXiHostnameToIPs.count * [int]$NestedESXiCachingvDisk) + ($NestedESXiHostnameToIPs.count * [int]$NestedESXiCapacityvDisk)
-    }
+    $esxiTotalStorage = ($NestedESXiHostnameToIPs.count * [int]$NestedESXiCachingvDisk) + ($NestedESXiHostnameToIPs.count * [int]$NestedESXiCapacityvDisk)
     $vcsaTotalCPU = $vcsaSize2MemoryStorageMap.$VCSADeploymentSize.cpu
     $vcsaTotalMemory = $vcsaSize2MemoryStorageMap.$VCSADeploymentSize.mem
     $vcsaTotalStorage = $vcsaSize2MemoryStorageMap.$VCSADeploymentSize.disk
@@ -347,28 +369,34 @@ if ($confirmDeployment -eq 1) {
     Write-Host -ForegroundColor Yellow "`n---- Resource Requirements ----"
     Write-Host -NoNewline -ForegroundColor Green "ESXi     VM CPU: "
     Write-Host -NoNewline -ForegroundColor White $esxiTotalCPU
-    Write-Host -NoNewline -ForegroundColor Green " ESXi     VM Memory: "
+    Write-Host -NoNewline -ForegroundColor Green " ESXi    VM Memory: "
     Write-Host -NoNewline -ForegroundColor White $esxiTotalMemory "GB "
     Write-Host -NoNewline -ForegroundColor Green "ESXi     VM Storage: "
     Write-Host -ForegroundColor White $esxiTotalStorage "GB"
-    Write-Host -NoNewline -ForegroundColor Green "VCSA     VM CPU: "
+    Write-Host -NoNewline -ForegroundColor Green "VCSA     VM CPU:  "
     Write-Host -NoNewline -ForegroundColor White $vcsaTotalCPU
-    Write-Host -NoNewline -ForegroundColor Green " VCSA     VM Memory: "
+    Write-Host -NoNewline -ForegroundColor Green " VCSA    VM Memory:  "
     Write-Host -NoNewline -ForegroundColor White $vcsaTotalMemory "GB "
     Write-Host -NoNewline -ForegroundColor Green "VCSA     VM Storage: "
     Write-Host -ForegroundColor White $vcsaTotalStorage "GB"
+    Write-Host -NoNewline -ForegroundColor Green "HCX      VM CPU:  "
+    Write-Host -NoNewline -ForegroundColor White $hcxTotalCPU
+    Write-Host -NoNewline -ForegroundColor Green " HCX     VM Memory:  "
+    Write-Host -NoNewline -ForegroundColor White $hcxTotalMemory "GB "
+    Write-Host -NoNewline -ForegroundColor Green "HCX      VM Storage:  "
+    Write-Host -ForegroundColor White $hcxTotalStorage "GB"
 
     if ($supportedStorageType.$SddcProvider -eq "NFS") {
-        Write-Host -NoNewline -ForegroundColor Green "NFS      VM CPU: "
+        Write-Host -NoNewline -ForegroundColor Green "NFS      VM CPU:  "
         Write-Host -NoNewline -ForegroundColor White "2"
-        Write-Host -NoNewline -ForegroundColor Green " NFS      VM Memory: "
+        Write-Host -NoNewline -ForegroundColor Green " NFS     VM Memory:   "
         Write-Host -NoNewline -ForegroundColor White "4 GB "
         Write-Host -NoNewline -ForegroundColor Green "NFS      VM Storage: "
         Write-Host -ForegroundColor White $NFSVMCapacity "GB"
 
         $nfsCPU = 2
         $nfsMemory = 4
-        $nfsStorage = $NFSCapacity
+        $nfsStorage = $NFSVMCapacity
     }
     else {
         $nfsCPU = 0
@@ -378,11 +406,11 @@ if ($confirmDeployment -eq 1) {
 
     Write-Host -ForegroundColor White "---------------------------------------------"
     Write-Host -NoNewline -ForegroundColor Green "Total CPU: "
-    Write-Host -ForegroundColor White ($esxiTotalCPU + $vcsaTotalCPU + $nsxManagerTotalCPU + $nsxEdgeTotalCPU + $nfsCPU)
+    Write-Host -ForegroundColor White ($esxiTotalCPU + $vcsaTotalCPU + $hcxTotalCPU + $nsxManagerTotalCPU + $nsxEdgeTotalCPU + $nfsCPU)
     Write-Host -NoNewline -ForegroundColor Green "Total Memory: "
-    Write-Host -ForegroundColor White ($esxiTotalMemory + $vcsaTotalMemory + $nsxManagerTotalMemory + $nsxEdgeTotalMemory + $nfsMemory) "GB"
+    Write-Host -ForegroundColor White ($esxiTotalMemory + $vcsaTotalMemory + $hcxTotalMemory + $nsxManagerTotalMemory + $nsxEdgeTotalMemory + $nfsMemory) "GB"
     Write-Host -NoNewline -ForegroundColor Green "Total Storage: "
-    Write-Host -ForegroundColor White ($esxiTotalStorage + $vcsaTotalStorage + $nsxManagerTotalStorage + $nsxEdgeTotalStorage + $nfsStorage) "GB"
+    Write-Host -ForegroundColor White ($esxiTotalStorage + $vcsaTotalStorage + $hcxTotalStorage + $nsxManagerTotalStorage + $nsxEdgeTotalStorage + $nfsStorage) "GB"
     Write-Host -ForegroundColor White "---------------------------------------------"
     Write-Host -ForegroundColor Magenta "`nWould you like to proceed with this deployment?`n"
     if (-Not $automated) {
@@ -799,6 +827,35 @@ if ($deployVCSA -eq 1) {
     }
 }
 
+if ($deployHCXVM -eq 1) {
+    if ($HCXSSHEnable -eq "true") {
+        $HCXSSHEnableVar = $true
+    } else {
+        $HCXSSHEnableVar = $false
+    }
+
+    $ovfconfig = Get-OvfConfiguration $HCXOVA
+    $ovfNetworkLabel = ($ovfconfig.NetworkMapping | Get-Member -MemberType Properties).Name
+    $ovfconfig.NetworkMapping.$ovfNetworkLabel.value = $VMNetwork
+    Sleep 15
+    
+    $ovfconfig.Common.mgr_cli_passwd.Value = $HCXAdminPassword
+    $ovfconfig.Common.mgr_root_passwd.Value = $HCXRootPassword
+    $ovfconfig.Common.hostname.Value = $HCXVMDisplayName
+    $ovfconfig.Common.mgr_ip_0.Value = $HCXIPAddress
+    $ovfconfig.Common.mgr_prefix_ip_0.Value = $HCXVMPrefix
+    $ovfconfig.Common.mgr_gateway_0.Value = $VMGateway
+    $ovfconfig.Common.mgr_dns_list.Value = $VMDNS
+    $ovfconfig.Common.mgr_domain_search_list.Value = $VMDomain
+    $ovfconfig.Common.mgr_isSSHEnabled.Value = $HCXSSHEnableVar
+    
+    Write-Log "Deploying HCX Manager VM $HCXVMDisplayName ..."
+    $vm = Import-VApp -Source $HCXOVA -OvfConfiguration $ovfconfig -Name $HCXVMDisplayName -Location $resourcepool -VMHost $vmhost -Datastore $datastore -DiskStorageFormat thin -Force
+
+    Write-Log "Powering On $vmname ..."
+    $vm | Start-Vm -RunAsync | Out-Null
+}
+
 Write-Log "Disconnecting from $VIServer ..."
 Disconnect-VIServer -Server $viConnection -Confirm:$false
 Write-Log "Reconnecting $VIServer"
@@ -831,6 +888,12 @@ if ($moveVMsIntovApp -eq 1) {
         $vcsaVM = Get-VM -Name $VCSADisplayName -Server $viConnection
         Write-Log "Moving $VCSADisplayName into $VAppName vApp ..."
         Move-VM -VM $vcsaVM -Server $viConnection -Destination $VApp -Confirm:$false | Out-File -Append -LiteralPath $verboseLogFile
+    }
+
+    if ($deployHCXVM -eq 1) {
+        $hcxVM = Get-VM -Name $HCXVMDisplayName -Server $viConnection
+        Write-Log "Moving $HCXVMDisplayName into $VAppName vApp ..."
+        Move-VM -VM $hcxVM -Server $viConnection -Destination $VApp -Confirm:$false | Out-File -Append -LiteralPath $verboseLogFile
     }
 
     Write-Log "Moving $VAppName to VM Folder $VMFolder ..."

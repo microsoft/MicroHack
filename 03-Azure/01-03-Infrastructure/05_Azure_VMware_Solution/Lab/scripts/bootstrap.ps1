@@ -20,6 +20,8 @@ $TempPath = "C:\temp"
 $MainBootstrapScriptURL = "https://raw.githubusercontent.com/microsoft/MicroHack/AzureVMWareSolutionMicroHack/03-Azure/01-03-Infrastructure/05_Azure_VMware_Solution/Lab/scripts/bootstrap.ps1"
 $BootstrapScriptURL = "https://raw.githubusercontent.com/microsoft/MicroHack/AzureVMWareSolutionMicroHack/03-Azure/01-03-Infrastructure/05_Azure_VMware_Solution/Lab/scripts/bootstrap-nestedlabs.ps1"
 $PackageURL = "https://csuavsmicrohack.blob.core.windows.net/csuavsmicrohack/avs-embedded-labs-auto.zip"
+$HcxPackageURL = "https://csuavsmicrohack.blob.core.windows.net/csuavsmicrohack/VMware-HCX-Connector-4.6.2.0-21779229.ova"
+
 #$NumberOfNestedLabs = 6
 
 # initializing
@@ -158,6 +160,29 @@ function Get-NestedLabPackage {
     }
 }
 
+function Get-HCXPackage {
+ 
+    $OvaPackagePath = $TempPath + "\" + $HcxPackageURL.Split('/')[-1]
+
+    if (Test-Path $OvaPackagePath -PathType Leaf) {
+        Write-Log "|--Get-HCXPackage - HCX Manager OVA package already exists"
+        return $true
+    }
+    else { 
+
+        Start-BitsTransfer -Source $HcxPackageURLHcxPackageURL -Destination $TempPath -Priority High
+
+        if (Test-Path $OvaPackagePath -PathType Leaf) {
+            Write-Log "|--Get-HCXPackage - HCX Manager OVA package downloaded successfully"
+            return $true
+        }
+        else {
+            Write-Log "|--Get-HCXPackage - HCX Manager OVA package package. Please run bootstrap.ps1 again to make sure package is downloaded properly before you proceed"
+            return $false
+        }
+    }
+}
+
 function Set-Jumpbox {
     Restart-Computer
 }
@@ -188,6 +213,12 @@ Set-BootstrapScheduledTask
 
 Write-Log "Downloading nested labs Zip package"
 if (Get-NestedLabPackage) {
+    Write-Log "Rebooting Jumpbox VM"
+    Set-Jumpbox
+}
+
+Write-Log "Downloading HCX Manager OVA package"
+if (Get-HCXPackage) {
     Write-Log "Rebooting Jumpbox VM"
     Set-Jumpbox
 }

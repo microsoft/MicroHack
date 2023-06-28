@@ -1,6 +1,6 @@
 targetScope = 'subscription'
 
-@description('Object ID of the current user')
+@description('Object ID of the current user (az ad signed-in-user show --query id)')
 param currentUserObjectId string
 
 @description('Azure region for the deployment')

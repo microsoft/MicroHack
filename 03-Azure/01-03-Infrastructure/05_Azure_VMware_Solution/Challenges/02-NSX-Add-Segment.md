@@ -1,4 +1,5 @@
 # NSX Add Segment
+
 [Previous Challenge](./01-NSX-DHCP.md) - **[Home](../Readme.md)** - [Next Challenge](./03-NSX-Add-DNS-Forwarder.md)
 
 ## Introduction
@@ -29,5 +30,7 @@ Please carefully follow the instructions provided by your facilitator.
 Work with the instructor to ensure your VMware environment has the required permissions to access your AVS vCenter Server and the NSX Manager.
 
 ## Success Criteria
+
+The virtual machine attached to the segments should be getting an IP from the DHCP.
 
 ## Learning resources

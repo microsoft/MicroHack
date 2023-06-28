@@ -1,6 +1,6 @@
 # Getting started
 
-**[Home](../readme.md)** - [Challenge One](./01-NSX-DHCP.md)
+**[Home](../Readme.md)** - [Challenge One](./01-NSX-DHCP.md)
 
 ## Introduction
 

@@ -112,13 +112,36 @@ You should now see the web site content that was previously running on Windows S
 
 **Repeat the above steps for the frontend2 VM**
 
+### **Task 3: Update Traffic Manager profile**
 
+The Traffic Manager profile is still pointing to the previousley migrated Virtual Machines. You can now update the endpoints within the profile to point to the App Services instead of the VMs.
+
+From the Azure Portal open the Load Balancing blade, select Traffic Manager on the navigation pane and select the previously created *tfp-frontend* Traffic Manager profile. Select *Endpoints* and click *Add*.
+
+![image](./img/tfupdate1.png)
+
+Select *Azure endpoint*, provide a name, select *App Service* and select the previousley created App Service.
+
+![image](./img/tfupdate2.png)
+
+**Repeat the above step for the frontend2 App Service**
+
+Next delete the endpoints for the Virtual Machines.
+
+![image](./img/tfupdate3.png)
+
+You can now browse to the Traffic Manager profile. Again, from a user perspective nothing changed but you are now browsing the web site content that is hosted on Azure App Service instead of Virtual Machines.
+
+![image](./img/tfupdate4.png)
 
 You successfully completed challenge 6! 🚀🚀🚀
 
 The deployed architecture now looks like the following diagram.
 
 ![image](./img/Challenge-6.jpg)
+
+
+🚀🚀🚀 **!!!Congratulations!!! - You successfully completed the MicroHack. You can now safley remove the *source-rg* and *destination-rg* Resource Groups.** 🚀🚀🚀
 
 
  **[Home](../../Readme.md)** -

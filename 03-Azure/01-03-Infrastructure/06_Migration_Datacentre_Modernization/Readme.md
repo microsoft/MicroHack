@@ -260,6 +260,8 @@ The goal of this exercise is to ...
 
 💥 **The new App Service migration capability is currently in public preview** 
 
+💥 **For the current version (June 2023) of the App Service migration scripts Basic Authentication on Azure Web Apps is a hard requirement. Make sure that no Azure Policy restrictions are in place that prohibit the use of Basic Authentication for Azure App Services**
+
 ### Learning resources
 * [App Service assessment overview](https://learn.microsoft.com/en-us/azure/migrate/concepts-azure-webapps-assessment-calculation)
 * [Web App migration support](https://learn.microsoft.com/en-us/azure/migrate/concepts-migration-webapps)

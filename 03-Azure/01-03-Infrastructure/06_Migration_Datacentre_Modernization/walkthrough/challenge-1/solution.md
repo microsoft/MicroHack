@@ -13,10 +13,11 @@ Duration: 30 minutes
 - Install the [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) on your local PC
 - Open a PowerShell (Windows) or Bash (Linux and macOS) terminal window
 - Execute `az login` and sign in with your Azure AD account
-- Execute `az ad signed-in-user show`
-- Copy the property *id* to the clipboard (e.g., b0b34544-d61f-46f3-92c8-0da38137f623)
+- Execute `az ad signed-in-user show --query id `
+- Copy the value to the clipboard
 - Execute `az deployment sub create --location westeurope --template-file .\main.bicep`
-- Paste the previously copied *id* as *currentUserObjectId*
+- Paste the previously copied value as *currentUserObjectId*
+- Select a region
 - Wait for the deployment to finish
 
 💡 Please note that the deployment may take up to 10 minutes

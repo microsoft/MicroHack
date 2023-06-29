@@ -51,34 +51,66 @@ Review the output of the assessment to see if the web app currently running on W
 
 **💥 As mentioned ubove, the current [limitations](https://learn.microsoft.com/en-us/azure/migrate/concepts-migration-webapps#limitations) will not allow the direct migration of web apps running on physical machines. Therefore, we will use the [App Service migration assistant tool](https://learn.microsoft.com/en-us/azure/app-service/app-service-asp-net-migration) for the migration.**
 
-Open the [Azure Portal](https://portal.azure.com) and navigate to the previousley created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click on *Replicate* within the *Migration tools* box.
+
+Login to the Virtual Machine *frontend1* in the *source-rg* Resource Group via Azure Bastion, open the [Azure Portal](https://portal.azure.com) from the *frontend1* VM and navigate to the previousley created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click on *Replicate* within the *Migration tools* box.
 
 ![image](./img/modernize1.png)
 
-Specify the required parameters as illustrated in the next diagram and click *Continue*.
+On the next page select *ASP.NET web apps*, *Azure App Service code*, *Pyhsical or others (AWS, GCP, Xen, etc)* and click on the link below to be redirected to the [App Service migration assistant tool](https://learn.microsoft.com/en-us/azure/app-service/app-service-asp-net-migration).
 
 ![image](./img/modernize2.png)
 
-Under *Basics* make sure to select the *destination-rg* Resource Group and proceed to the next step.
+Navigate to *Migrate from an IIS server* and click on the link to download the [PowerShell scripts](https://appmigration.microsoft.com/api/download/psscriptpreview/AppServiceMigrationScripts.zip) (1) and after the script was downloaded click on the link to be redirectioed to the [documentation](https://github.com/Azure/App-Service-Migration-Assistant/wiki/PowerShell-Scripts) (2) for the scripts.
 
 ![image](./img/modernize3.png)
 
-Under *Web Apps* select the web apps that are currently running on the virtual machines and proceed to the next step. Please note that you could adjust the settings by clicking on *Edit*.
+Extract the downloaded ZIP file to e.g. \<userprofile\>\\Downloads\\AppServiceMigrationScripts. Open an elevated PowerShell and change into the directory.
 
 ![image](./img/modernize4.png)
 
-Under *App Service Plans* select the Plan, where the Web Apps will be migrated to. Please note that you could adjust the settings by clicking on *Edit*.
+Install the Azure PowerShell modules using the *install-module az* command.
 
 ![image](./img/modernize5.png)
 
-Under *Review + create* review your selection and click *Migrate*.
+Execute the *Get-SiteReadiness.ps1* script.
 
 ![image](./img/modernize6.png)
 
-A new deployment will be triggered that deploys the required resources.
+Execute the *Get-SitePackage.ps1 -ReadinessResultsFilePath .\\ReadinessResults.json* script.
 
 ![image](./img/modernize7.png)
 
+Execute the *Generate-MigrationSettings.ps1 -SitePackageResultsPath .\packagedsites\PackageResults.json -Region WestEurope -SubscriptionId \<SubscriptionID\> -ResourceGroup destination-rg* script. and login using your Azure credentials.
+
+![image](./img/modernize8.png)
+
+Open *MigrationSettings.json* file using notedpad.
+
+![image](./img/modernize9.png)
+
+Make sure to remove any blanks for the AzureSiteName parameter as this is not supported in Azure Web Apps.
+
+![image](./img/modernize10.png)
+
+Execute the *Invoke-SiteMigration.ps1 -MigrationSettingsFilePath .\\MigrationSettings.json* script.
+
+**💥 If you receive a 401 Unauthorized error it could be that Basic Authentication is disabled on the App Service due to Azure Policy enforcement in your environment. For the current version (June 2023) of the App Service migration scripts this is a requirement**
+
+![image](./img/modernize11.png)
+
+Change back to the Azure Portal and open the Resource Group *destination-rg*. You should now see a App Service called *DefaultWebSite-fe1*.
+
+![image](./img/modernize12.png)
+
+Open the App Service and click on the default domain link.
+
+![image](./img/modernize13.png)
+
+You should now see the web site content that was previously running on Windows Server IIS.
+
+![image](./img/modernize14.png)
+
+**Repeat the above steps for the frontend2 VM**
 
 
 

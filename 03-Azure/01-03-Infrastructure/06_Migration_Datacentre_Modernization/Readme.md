@@ -264,6 +264,7 @@ The goal of this exercise is to ...
 * [App Service assessment overview](https://learn.microsoft.com/en-us/azure/migrate/concepts-azure-webapps-assessment-calculation)
 * [Web App migration support](https://learn.microsoft.com/en-us/azure/migrate/concepts-migration-webapps)
 * [Public preview: App Service new migration capabilities](https://azure.microsoft.com/en-us/updates/public-preview-app-service-new-migration-capabilities/)
+* [App Service migration PowerShell scripts](https://github.com/Azure/App-Service-Migration-Assistant/wiki/PowerShell-Scripts)
 
 ### Solution - Spoilerwarning
 

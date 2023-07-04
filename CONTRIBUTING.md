@@ -53,8 +53,6 @@ The content in this repository follows the different solution areas in Azure and
 
 This repository contains the following folders:
 
-`NOCHMAL anpassen`
-
 * \01-Identity and Access Management
 * \02-Security
 * \03-Azure
@@ -77,7 +75,8 @@ We recommend that you create local working branches that target a specific scope
 
 ## IaC Tools
 
-In case that you need to deploy Azure services as a prerequisite for the MicroHack please use well-known solutions like ARM-, Bicep- or Terraform templates or Azure CLI.
+In case that you need to deploy Azure services as a prerequisite for the MicroHack please use well-known solutions like ARM-, Bicep- or Terraform templates or Azure CLI.  
+Please also include deployment instructions in your walkthrough.
 
 ## How to use Markdown to format your topic
 
@@ -106,8 +105,6 @@ In order to bootstrap new MicroHacks we created a [template file](99-MicroHack-T
 H2 subheadings `##` end up in the right-hand jump list for the document (the jump list is created by our compile script).  It's a good idea to include h2 subheadings to help users get an overview of the doc and quickly navigate to the major topics.
 
 ### Text formatting
-
-...
 
 ### Links
 

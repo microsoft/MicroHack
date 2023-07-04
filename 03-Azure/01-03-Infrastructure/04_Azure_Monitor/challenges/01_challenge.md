@@ -17,14 +17,14 @@ Therefore the AMA is a key component to collect data from your infrasracture (Ia
 
 It´s totally worth it to read more about the AMA and it`s benefits [here](https://docs.microsoft.com/en-us/azure/azure-monitor/agents/azure-monitor-agent-overview).
 
-
-## Goal 
+## Goal
 
 - AMA is installed on both virtual machines (Windows and Linux).
 
 - Logs and metrics are collected from both virtual machines (Windows and Linux) and are available in the `Log Analytics Workspace`.
 
 After the challenge you should be able to answer the following questions:
+
 - What are the different ways to install the `AMA`?
 - What are the different ways to configure the `AMA`?
 - What is a `Data Collection Rule`?
@@ -36,7 +36,17 @@ After the challenge you should be able to answer the following questions:
 
 ## Taks 2: Install Azure Monitoring Agent (AMA) on Linux VM
 
-## Task 3: Write a Log Kusto Query which groups the heartbeat events by the VM name
+## Taks 3: Install Azure Monitoring Agent (AMA) on Linux Vitual Machine Scale Selt
+
+## Task 4: Write a Log Kusto Query which groups the heartbeat events by the VM name
+
+## Learning Resources
+
+- [Manage Azure Monitor Agent](https://learn.microsoft.com/en-us/azure/azure-monitor/agents/azure-monitor-agent-manage?tabs=azure-portal)
+- [Data collection rules in Azure Monitor](https://learn.microsoft.com/en-us/azure/azure-monitor/essentials/data-collection-rule-overview)
+- [Collect events and performance counters from virtual machines with Azure Monitor Agent](https://learn.microsoft.com/en-us/azure/azure-monitor/agents/data-collection-rule-azure-monitor-agent?tabs=portal)
+- [Get started with log queries in Azure Monitor](https://learn.microsoft.com/en-us/azure/azure-monitor/logs/get-started-queries)
 
 ## FAQ
+
 - How much log data is being produced by a single VM? About 1 to 3 GB per month.

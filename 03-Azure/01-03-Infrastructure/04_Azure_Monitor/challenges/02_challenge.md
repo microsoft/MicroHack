@@ -14,8 +14,11 @@ VM insights supports Windows and Linux operating systems on:
 
 VM insights provides a set of predefined workbooks that allow you to view trending of collected performance data over time. You can view this data in a single VM from the virtual machine directly, or you can use Azure Monitor to deliver an aggregated view of multiple VMs.
 
-### Goal
+## **Goal**
+
 After completing this challenge you should be able to enable VM Inisghts on you virtual machines.
+
+## **Tasks**
 
 ### Task 1: Enable VM Insights for `vm-windows`
 
@@ -27,6 +30,6 @@ Although it may take a few minutes to view data in VM Insights, we can check the
 
 **Explain the background...**
 
-### Task 4: 
+### Task 4
 
 Before proceeding to challenge 3, ...

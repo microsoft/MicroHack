@@ -76,6 +76,11 @@ Find it here [AddKey.zip](https://github.com/microsoft/MicroHack/raw/main/03-Azu
 
     > **Warning**  
     >  The following commands cannot be run from Azure Cloud Shell! Please use a local Powershell.
+    >  To install the required modules use:
+    >  ```powershell
+    >  Install-Module -Name Az -Repository PSGallery -Force
+    >  Install-Module -Name GuestConfiguration -Repository PSGallery -Force
+    >  ```
     
     
     > **Note**  

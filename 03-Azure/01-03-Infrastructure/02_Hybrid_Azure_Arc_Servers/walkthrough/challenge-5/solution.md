@@ -72,7 +72,12 @@ Find it here [AddKey.zip](https://github.com/microsoft/MicroHack/raw/main/03-Azu
 
 ### Create the Machine Configuration as Azure Policy
 
-1. You will need to upload the zip file to a Storage Account and create a SAS with read permissions.  
+1. You will need to upload the zip file to a Storage Account and create a SAS with read permissions.
+
+    > **Warning**  
+    >  The following commands cannot be run from Azure Cloud Shell! Please use a local Powershell.
+    
+    
     > **Note**  
     >  You will need at least the *Storage Blob Data Contributor* role to be able to upload the file.   
 
@@ -103,7 +108,7 @@ Find it here [AddKey.zip](https://github.com/microsoft/MicroHack/raw/main/03-Azu
     $sas = New-AzStorageBlobSASToken -Context $ctx -Container $containerName -Blob $fileName -Permission r -ExpiryTime $expiratioNDate -FullUri
     ```
 
-2. To assign the Machine Configuration we will use a Azure Policy. To create the Policy refer to the following Powershell Block. The Policy is created at the Tenant Root so that we can assign it to all subscriptions.  
+3. To assign the Machine Configuration we will use a Azure Policy. To create the Policy refer to the following Powershell Block. The Policy is created at the Tenant Root so that we can assign it to all subscriptions.  
     > **Note**  
     > Depending on your machine configuration, this might need to be executed with local administrative privileges.
     ```powershell
@@ -129,8 +134,8 @@ Find it here [AddKey.zip](https://github.com/microsoft/MicroHack/raw/main/03-Azu
     # Create new policy from definition file
     New-AzPolicyDefinition -Name $name -Policy $configurationPolicy.Path -ManagementGroupName $tenantID 
     ```
-3. Now that the policy definition is created you can assign the policy like in Action 1 but add a remediation like in the screenshot below.
+4. Now that the policy definition is created you can assign the policy like in Action 1 but add a remediation like in the screenshot below.
 
     ![PolicyAssignmentRemediation.png](./img/PolicyAssignmentRemediation.png)
 
-4. It takes some minutes for the Machine Configuration to become compliant. If thats the case you can verify the registry key being created by launching ``` regedit.exe ``` and browse to ``` HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment\ ```
+5. It takes some minutes for the Machine Configuration to become compliant. If thats the case you can verify the registry key being created by launching ``` regedit.exe ``` and browse to ``` HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment\ ```

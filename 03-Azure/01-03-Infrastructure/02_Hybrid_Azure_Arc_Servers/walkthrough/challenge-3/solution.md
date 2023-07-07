@@ -60,12 +60,9 @@ fi
 ```
 
    > **Note**  
-    > For Windows machines the recommended command is the following
+   >  For Windows machines you can use the following command:
 
 ```powershell
-
-        # First Script to execute: 
-
         Function Get-AzureArcToken {
             [cmdletbinding()]
             param(
@@ -91,27 +88,11 @@ fi
             # Acquire and return Access Token
             Invoke-RestMethod -UseBasicParsing -Uri $uri -Headers @{ Metadata = "true"; Authorization = "Basic $token" }
         }
-
-        # Second Script to execute: 
-
-        # Get an Azure KeyVault Access Token with new Function
-        $AccessToken = Get-AzureArcToken -ResourceURI 'https://vault.azure.net'
-        # Setup Query Attributes
-        $Query = @{
-            # URI of the specific secret we want
-            Uri     = "https://mh-arc-servers-kv2212.vault.azure.net/secrets/test?api-version=7.1"
-            Method  = "Get"
-            Headers = @{
-                Authorization = "Bearer $($AccessToken.access_token)"
-            }
-        }
-        
-        # Retrieve Secrets
-        Invoke-RestMethod @Query | Select-Object -ExpandProperty Value | fl *
 ```
 
 
-❗Hint: The above request connects to the Azure Instance Metadata Service to retrieve an access token for the managed identity of your Azure Arc-enabled server. By default, the IMDS is accessible via 169.254.169.254 from Azure VMs. Azure Arc-enabled servers need to use 127.0.0.1 to proxy the request with the Azure Arc agent to Azure.`
+> **❗Hint:**  
+> The above request connects to the Azure Instance Metadata Service to retrieve an access token for the managed identity of your Azure Arc-enabled server. By default, the IMDS is accessible via 169.254.169.254 from Azure VMs. Azure Arc-enabled servers need to use 127.0.0.1 to proxy the request with the Azure Arc agent to Azure.`
 
 4. Verify that you received an access token using the following command:
 
@@ -127,9 +108,30 @@ You should see the access token in the output. In addition, the result is saved 
 curl 'https://mh-arc-servers-kv0815.vault.azure.net/secrets/kv-secret?api-version=2016-10-01' -H "Authorization: Bearer $token"
 ```
 
-`❗Hint: Please make sure to call your instance of Key Vault and adjust the name in the above command accordingly.`
+> **❗Hint:**  
+> Please make sure to call your instance of Key Vault and adjust the name in the above command accordingly.
 
 ![image](./img/5_result_secret.png)
+
+   > **Note**  
+   >  For Windows machines you can use the following command:
+
+```powershell
+        # Get an Azure KeyVault Access Token with new Function
+        $AccessToken = Get-AzureArcToken -ResourceURI 'https://vault.azure.net'
+        # Setup Query Attributes
+        $Query = @{
+            # URI of the specific secret we want
+            Uri     = "https://mh-arc-servers-kv2212.vault.azure.net/secrets/test?api-version=7.1"
+            Method  = "Get"
+            Headers = @{
+                Authorization = "Bearer $($AccessToken.access_token)"
+            }
+        }
+        
+        # Retrieve Secrets
+        Invoke-RestMethod @Query | Select-Object -ExpandProperty Value | fl *
+```
 
 Congratulations! You retrieved the secret from your Key Vault without providing any credentials. The resulting possibilities are limitless. You can use it for managing certificates or any secret that is necessary to run your on-premises application. 
 

@@ -132,6 +132,22 @@ The goal of this exercise is to...
 
 ## Challenge 3 - Create a Business Case
 
+The Business case capability helps you build a business proposal to understand how Azure can bring the most value to your business. 
+
+It highlights:
+
+- On-premises vs Azure total cost of ownership.
+- Year on year cashflow analysis.
+- Resource utilization based insights to identify servers and workloads that are ideal for cloud.
+- Quick wins for migration and modernization including end of support Windows OS and SQL versions.
+- Long term cost savings by moving from a capital expenditure model to an Operating expenditure model, by paying for only what you use.
+
+Other key features:
+
+- Helps remove guess work in your cost planning process and adds data insights driven calculations.
+- It can be generated in just a few clicks after you have performed discovery using the Azure Migrate appliance.
+- The feature is automatically enabled for existing Azure Migrate projects.
+
 ### Goal 
 
 The goal of this exercise is to create a business case. The Business case capability helps you build a business proposal to understand how Azure can bring the most value to your business. It highlights:
@@ -167,6 +183,8 @@ The goal of this exercise is to create a business case. The Business case capabi
 
 
 ## Challenge 4 - Assess VM´s for the migration
+
+In most cases, you don't want to migrate all machines at once, but want to prioritize workload by workload and even understand what the dependencies between workloads are. You then look at each phase or wave of migration and break down the risks and workloads.
 
 ### Goal 
 

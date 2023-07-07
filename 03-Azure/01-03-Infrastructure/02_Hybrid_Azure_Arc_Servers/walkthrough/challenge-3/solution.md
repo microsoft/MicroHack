@@ -31,7 +31,7 @@ Please ensure that you successfully passed [challenge 2](../../Readme.md#challen
 ![image](./img/4_Create_Secret.png)
 
 
-### Task 3 (Linux): Call the secret without providing any credentials
+### Task 3: Call the secret without providing any credentials
 
 1. Connect via SSH to the Virtual Machine *microhack-arc-servers-lin01*.
 

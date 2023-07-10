@@ -108,14 +108,14 @@ The goal of this exercise is to...
 * Create a Azure Migrate Project
     - 💥 **To be able to create a Business Case, make sure to select Europe as the Geography for the Azure Migrate Project** 
 * Deploy a Azure Migrate Appliance
-    - 💥 **Carfully select the appropriate OS for the Azure Migrate Appliance. Windows Server 2016 is officially supported. Windows Server 2019 will work as well. Windows Server 2022 does not work yet.**
-* Create a continous disvovery of your source environment
+    - 💥 **Carefully select the appropriate OS for the Azure Migrate Appliance. Windows Server 2016 is officially supported. Windows Server 2019 will work as well. Windows Server 2022 does not work yet.**
+* Create a continuous discovery of your source environment
 
 ### Success criteria
 
 * You have created a Azure Migrate Project
 * You have successfully deployed the Azure Migrate Appliance
-* You successfully registerd the Azure Migrate Appliance with the Azure Migrate Project
+* You successfully registered the Azure Migrate Appliance with the Azure Migrate Project
 * You have successfully setup a continuous discovery for the physical servers.
 * You have successfully verified the discovered servers in the portal
 
@@ -162,7 +162,7 @@ The goal of this exercise is to create a business case. The Business case capabi
 
 ### Actions
 
-* Builde a business case 
+* Build a business case 
 * Review a business case
 * Adjust business case assumptions
 
@@ -198,14 +198,14 @@ The goal of this exercise is to ...
 
 * Group machines for the assessment
 * Create an Azure VM assessment
-* Review assessment output and reccomendations
+* Review assessment output and recommendations
 * Enable and review dependency analysis
 
 ### Success criteria
 
 * You created a machine group
 * You successfully created an Azure VM assessment
-* You reviewed the assessment output and reccomendations
+* You reviewed the assessment output and recommendations
 * You enabled and reviewed the dependencies of the discovered server
 
 ### Learning resources
@@ -226,7 +226,7 @@ The goal of this exercise is to ...
 The goal of this exercise is to ...
 
 * understand the different migration options and prerequisites provided by Azure Migrate
-* perfrom a test migration of the desired workload
+* perform a test migration of the desired workload
 * keep downtime as short as possible
 * perform the final migration towards Azure
 
@@ -241,8 +241,8 @@ The goal of this exercise is to ...
 
 ### Success criteria
 
-* All the soruce machines are successfully migrated to and running in Azure
-* The Web Servers are seamlessley accessable using a Traffic Manager profile via dedicated Public Load Balancer.
+* All the source machines are successfully migrated to and running in Azure
+* The Web Servers are seamlessly accessible using a Traffic Manager profile via dedicated Public Load Balancer.
 
 ### Learning resources
 * [Support matrix for migration of physical servers, AWS VMs, and GCP VMs](https://learn.microsoft.com/en-us/azure/migrate/migrate-support-matrix-physical-migration)
@@ -263,22 +263,22 @@ The goal of this exercise is to ...
 The goal of this exercise is to ...
 
 * modernize the Web App running on the frontend Servers to be hosted on PaaS instead of IaaS (Lift & Shift)
-* understand the options that ware avaiulable for App Sevrice assessment & migration
+* understand the options that are available for App Services assessment & migration
 
 ### Actions
 
-* Create an web app assessment using Azure Migrate
-* Perfom a web app migration using Azure Migrate towards Azure App Services
+* Create a web app assessment using Azure Migrate
+* Preform a web app migration using Azure Migrate towards Azure App Services
 
 ### Success criteria
 
-* An assessment has been performed using the already deployed infrastructre
-* An migration has been performed towards PaaS instead of IaaS
+* An assessment has been performed using the already deployed infrastructure.
+* An migration has been performed towards PaaS instead of IaaS.
 * The App Services are accessible using the source Load Balancer.
 
 💥 **The new App Service migration capability is currently in public preview** 
 
-💥 **For the current version (June 2023) of the App Service migration scripts Basic Authentication on Azure Web Apps is a hard requirement. Make sure that no Azure Policy restrictions are in place that prohibit the use of Basic Authentication for Azure App Services**
+💥 **For the current version (June 2023) of the App Service migration scripts, Basic Authentication on Azure Web Apps is a hard requirement. Make sure that no Azure Policy restrictions are in place that prohibit the use of Basic Authentication for Azure App Services**
 
 ### Learning resources
 * [App Service assessment overview](https://learn.microsoft.com/en-us/azure/migrate/concepts-azure-webapps-assessment-calculation)
@@ -293,10 +293,9 @@ The goal of this exercise is to ...
 ## Finish
 
 Congratulations! You finished the MicroHack for Migration and Modernization. We hope you had the chance to learn about the how to implement a successful migration strategy using Azure Migrate.
-If you want to give feedback please dont hesitate to open an Issue on the repository or get in touch with one of us directly.
+If you want to give feedback please don’t hesitate to open an Issue on the repository or get in touch with one of us directly.
 
 Thank you for investing the time and see you next time!
-
 
 ## Contributors
 * Nils Bankert [GitHub](https://github.com/nilsbankert); [LinkedIn](https://www.linkedin.com/in/nilsbankert/)

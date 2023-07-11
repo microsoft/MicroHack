@@ -48,7 +48,15 @@ Check if the `AMA` was installed  on the virtal machine blade under "Extensions 
 
 Check if the `AMA` was installed  on the virtal machine blade under "Extensions & applications"
 
-### Task 4: Write a Log Kusto Query which counts the heartbeat events grouped by the VM name
+### Task 4: Create an alert for not responding virtual machines
+
+Create an alert for not responding virtual machines. The alert should be triggered if the virtual machine is not responding for 5 minutes.
+
+Test the alert by stopping one of the virtual machines.
+
+**Important**: Start the machine aftewards again.
+
+### Task 5: Write a Log Kusto Query which counts the heartbeat events grouped by the VM name
 
 ## **Learning Resources**
 

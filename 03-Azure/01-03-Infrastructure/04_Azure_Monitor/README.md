@@ -96,8 +96,9 @@ To deploy the lab environment using **terraform**, click the link below.
 
 ## **Finished? Delete your lab**
 
+If you used you own subscription to deploy the lab, you can delete the lab environment by just deleting the resource group you created. If you used the provided subscription no action is required.
+
 ## **Contributor**
 
 - [Manuel Kutscher](https://www.linkedin.com/in/manuel-soelch)
-- [Lisa Rosenthaler](https://www.linkedin.com/in/lisa-rosenthaler-305702203)
 - [Judith Freiberger](https://www.linkedin.com/in/judithfreiberger)

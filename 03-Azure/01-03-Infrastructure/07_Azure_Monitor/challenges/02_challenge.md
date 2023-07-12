@@ -10,26 +10,56 @@ VM insights supports Windows and Linux operating systems on:
 - On-premises virtual machines.
 - Virtual machines hosted in another cloud environment.
 
-![VM Insights](./../images/vminsights-azmon-directvm.png)
+![VM Insights](./../img/vminsights-azmon-directvm.png)
 
 VM insights provides a set of predefined workbooks that allow you to view trending of collected performance data over time. You can view this data in a single VM from the virtual machine directly, or you can use Azure Monitor to deliver an aggregated view of multiple VMs.
 
 ## **Goal**
 
-After completing this challenge you should be able to enable VM Inisghts on you virtual machines.
+After completing this challenge you should be able to enable VM Inisghts on your virtual machines.
 
-## **Tasks**
+VM Insights can be set up in different ways. After the tutorial, you can activate it both manually in the Azure Portal and automatically with Azure Policy.
+
+## Actions
 
 ### Task 1: Enable VM Insights for `vm-windows`
 
-### Task 2: Enable VM Insights for `vm-linux`
+- Enable VM Insights on monitored machines
+- Create a Data Collection Rule and configure to use the Log Analytics Workspace
+- Enable processes and dependencies (Map)
 
-### Task 3: Validate that configuration is correct
+#### Task 1 - Learning Resources
+
+- [Enable Azure Monitor Agent on monitored machines](https://learn.microsoft.com/en-us/azure/azure-monitor/vm/vminsights-enable-portal#enable-azure-monitor-agent-on-monitored-machines)
+
+### Task 2: Enable VM Insights on unmonitored `vm-linux`
+
+- From Azure Monitor blade there is a way to enable VM Insights, too.
+- From the Monitor menu in the Azure portal, select Virtual Machines > Overview > Not Monitored.
+
+#### Task 2 - Learning Resources
+
+- [Enable VM insights for Log Analytics agent](https://learn.microsoft.com/en-us/azure/azure-monitor/vm/vminsights-enable-portal#enable-vm-insights-for-log-analytics-agent)
+
+### Task 3: Enable VM Insights for `vmss-linux-nginx` automatically
+
+- Enable VM Insights for th VMSS by using Azure Policy
+- VM insights policy initiatives install Azure Monitor Agent and the Dependency agent on new virtual machine scale set in your Azure environment.
+- Assign these initiatives to the resource group `rg-monitoring-microhack` to install the agents on the virtual machines in the defined scope automatically.
+
+#### Task 3 - Learning Resources
+
+- [Enable VM insights by using Azure Policy](https://learn.microsoft.com/en-us/azure/azure-monitor/vm/vminsights-enable-policy)
+
+### Task 4: Validate that configuration is correct
 
 Although it may take a few minutes to view data in VM Insights, we can check the configuration by looking at the data collection rule.
 
-**Explain the background...**
+## Success Criteria
 
-### Task 4
+- VM Insights was successfully enabled on all virtual machines.
 
-Before proceeding to challenge 3, ...
+### Congrats :partying_face:
+
+ Move on to [Challenge 3](03_challenge.md).
+  

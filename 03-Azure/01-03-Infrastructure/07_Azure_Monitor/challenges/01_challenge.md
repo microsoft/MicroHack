@@ -28,7 +28,8 @@ After the challenge you should be able to answer the following questions:
 - What is a `Data Collection Rule`?
 - What is the relation between the `AMA` and the `Data Collection Rule`?
 
-**Hint**: There are different ways to install the `AMA` on a virtual machine. We recommand deploying the AMA through a DCR (Data Collection Rule) because it is the most flexible way to configure the `AMA` and it is the future of the `AMA` deployment. Consider this while working on the challenge.
+> **Hint**
+> There are different ways to install the `AMA` on a virtual machine. We recommand deploying the AMA through a DCR (Data Collection Rule) because it is the most flexible way to configure the `AMA` and it is the future of the `AMA` deployment. Consider this while working on the challenge.
 
 ## Actions
 
@@ -75,6 +76,6 @@ Create a query inside log analytics and excute the query to see the results.
 - An alert for non reporting VMs has been created and triggered at least once for a machine that was shut down.
 - You may have written and run your first Kusto Query and have an overview of the availability rate of your virtual machines.
 
-### :partying_face: Congrats
+### Congrats :partying_face:
 
  Move on to [Challenge 2 : Enable Virtual Machine Insights](02_challenge.md).

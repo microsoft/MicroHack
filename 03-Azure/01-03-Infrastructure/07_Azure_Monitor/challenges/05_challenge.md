@@ -1,4 +1,4 @@
-# Challenge 3 : Create alerts
+# Challenge 3 : Workbooks
 
 ### Goal
 
@@ -18,5 +18,4 @@ TBD
 
 ### Congrats :partying_face:
 
-Move on to [Challenge 4 : Create a dashboard and add tiles](04_challenge.md).
-  
+Move on to [Challenge 5 : Workbooks](05_challenge.md).

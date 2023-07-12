@@ -10,11 +10,12 @@ After completing this challenge, you have successfully deployed a `Log Analytics
 
 ### Task 1: Explore and ensure successful deployment
 
-- Go to the Azure Portal and navigate to the resource group `rg-microhack-monitoring`. Look at the resources that have been deployed and think about possbile monitoring scenarios:
-  - What kind of resources have been deployed (IaaS, PaaS)?
-  - How would you monitor the resources?
-  - What kind of logs and metrics have you in mind to monitor?
-  - How do I get informed about downtime and failures?
+Go to the Azure Portal and navigate to the resource group `rg-microhack-monitoring`. Look at the resources that have been deployed and think about possbile monitoring scenarios:
+
+- What kind of resources have been deployed (IaaS, PaaS)?
+- How would you monitor the resources?
+- What kind of logs and metrics have you in mind to monitor?
+- How do I get informed about downtime and failures?
 
 ### Task 2: Create Log Analytics workspace
 

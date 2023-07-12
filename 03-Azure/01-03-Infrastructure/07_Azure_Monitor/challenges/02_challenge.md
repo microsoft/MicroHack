@@ -55,11 +55,15 @@ VM Insights can be set up in different ways. After the tutorial, you can activat
 
 Although it may take a few minutes to view data in VM Insights, we can check the configuration by looking at the data collection rule.
 
+### Task 5: Log search and visualize
+
+TBD
+
 ## Success Criteria
 
 - VM Insights was successfully enabled on all virtual machines.
 
 ### Congrats :partying_face:
 
- Move on to [Challenge 3](03_challenge.md).
+Move on to [Challenge 3: Create alerts](03_challenge.md).
   

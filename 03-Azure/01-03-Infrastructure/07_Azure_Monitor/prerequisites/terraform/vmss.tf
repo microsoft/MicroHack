@@ -20,6 +20,9 @@ resource "azurerm_linux_virtual_machine_scale_set" "nginx_vmss" {
     version   = "latest"
   }
 
+  identity {
+    type = "SystemAssigned"
+  }
 
   os_disk {
     storage_account_type = "Standard_LRS"

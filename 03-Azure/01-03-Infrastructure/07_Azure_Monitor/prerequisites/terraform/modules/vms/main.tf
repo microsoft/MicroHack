@@ -16,6 +16,10 @@ resource "azurerm_linux_virtual_machine" vm-linux {
     public_key = file("~/.ssh/id_rsa.pub")
   }
 
+  identity {
+    type = "SystemAssigned"
+  }
+
   os_disk {
     caching              = "ReadWrite"
     storage_account_type = "Standard_LRS"
@@ -59,6 +63,10 @@ resource "azurerm_windows_virtual_machine" "vm-windows" {
     network_interface_ids = [
       azurerm_network_interface.nic_vm_windows.id,
     ]
+
+    identity {
+      type = "SystemAssigned"
+    }
 
     os_disk {
       caching              = "ReadWrite"

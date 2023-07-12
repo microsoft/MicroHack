@@ -41,7 +41,7 @@ You can also export monitoring data from Azure Monitor into other systems so you
 - Integrate with other third-party and open-source monitoring and visualization tools
 - Integrate with ticketing and other ITSM systems
 
-![Architecture](./images/azure_monitor.png)
+![Architecture](./img/azure_monitor.png)
 
 Please be aware that this lab is not a full explanation of Kubernetes (AKS), Containers Apps etc. as a technology. Please consider the following articles required pre-reading to build foundational knowledge.
 
@@ -67,7 +67,7 @@ To experiment with Azure Monitor and learn how to use it, a lab environment is p
 
 Below an architecure diagram displays the setup. Tutorials and documentation that provide step-by-step guidance on how to deploy the enviornment comes along.
 
-![Architecture](./images/architecture_01.png)
+![Architecture](./img/architecture_01.png)
 
 ### Deployment
 
@@ -77,13 +77,13 @@ There are **two different ways** to deploy the lab environment. The first is to 
 
 To deploy the lab environment using the **Azure Portal**, click the link below.
 
-- [Deploy to Azure (Portal)](./prerequisites/portal/README.md)
+- [Deploy to Azure (Portal)](./resources/portal/README.md)
 
 #### Terraform Method
 
 To deploy the lab environment using **terraform**, click the link below.
 
-- [Deploy to Azure (terraform)](./prerequisites/terraform/README.md)
+- [Deploy to Azure (terraform)](./resources/terraform/README.md)
 
 ## **MicroHack Challenges**
 

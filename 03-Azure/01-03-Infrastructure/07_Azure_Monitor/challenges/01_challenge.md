@@ -4,16 +4,16 @@ First of all and before we start, it's important to understand that monitoring I
 
 ![Architecture](https://www.artifakt.com/content/uploads/2021/07/Blog-Image-CirclesGraph-1200x627-%E2%80%93-1.png)
 
-The Azure Monitor Agent (AMA) targets the IaaS where you have the control to install the agent. But what is the AMA doing then? 
+The Azure Monitor Agent (AMA) targets the IaaS where you have the control to install the agent. But what is the AMA doing then?
 
 Azure Monitor Agent (AMA) collects monitoring data from the guest operating system of Azure and hybrid virtual machines and delivers it to Azure Monitor for use by features, insights, and other services, such as Microsoft Sentinel and Microsoft Defender for Cloud. Azure Monitor Agent replaces all of Azure Monitor's legacy monitoring agents. This article provides an overview of `Azure Monitor Agent's` capabilities and supported use cases.
 
 ![AMA Benefits](https://learn.microsoft.com/de-de/azure/azure-monitor/agents/media/azure-monitor-agent-overview/azure-monitor-agent-benefits.png)
 
-
 Therefore the AMA is a key component to collect data from your infrasracture (IaaS) like virtual machines and on-premises servers (Arc enabled servers).
 
-**Note**: The Log Anayltic agent will be replaced by the AMA in the future. Therefore, we will not cover the Log Anayltic agent in this MicroHack.
+> **Note**
+> The Log Anayltic agent will be replaced by the AMA in the future. Therefore, we will not cover the Log Anayltic agent in this MicroHack.
 
 It´s totally worth it to read more about the AMA and it`s benefits [here](https://docs.microsoft.com/en-us/azure/azure-monitor/agents/azure-monitor-agent-overview).
 
@@ -59,6 +59,8 @@ Test the alert by stopping one of the virtual machines.
 > **Note**
 > After that, start the machine again.
 
+#### Task 4 - Learning Resources
+
 - [Azure Monitor Alerts](https://learn.microsoft.com/en-us/azure/azure-monitor/alerts/alerts-overview)
 - [Create or edit an alert rule](https://learn.microsoft.com/en-us/azure/azure-monitor/alerts/alerts-create-new-alert-rule?tabs=metric)
 - [Get started with log queries in Azure Monitor](https://learn.microsoft.com/en-us/azure/azure-monitor/logs/get-started-queries)
@@ -66,6 +68,8 @@ Test the alert by stopping one of the virtual machines.
 ### Task 5: Availability rate check: calculation of the availability rate of each connected computer
 
 Create a query inside log analytics and excute the query to see the results.
+
+#### Task 5 - Learning Resources
 
 - [Get started with log queries in Azure Monitor](https://learn.microsoft.com/en-us/azure/azure-monitor/logs/get-started-queries)
 - [Kusto Query Language](https://learn.microsoft.com/en-us/azure/data-explorer/kusto/query/tutorials/learn-common-operators)

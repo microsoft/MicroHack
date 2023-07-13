@@ -87,10 +87,12 @@ To deploy the lab environment using **terraform**, click the link below.
 
 ## **MicroHack Challenges**
 
-- Challenge 0: **[Create Azure Log Analytics Workspace](challenges/00_challenge.md)**
-- Challenge 1: **[Challenge 01](challenges/01_challenge.md)**
-- Challenge 2: **[Challenge 02](challenges/02_challenge.md)**
-- Challenge 3: **[Challenge 03](challenges/03_challenge.md)**
+- Challenge 0: **[Create Azure Log Analytics Workspace and explore the lab environment](challenges/00_challenge.md)**
+- Challenge 1: **[Configure Virtual Machine Logs](challenges/01_challenge.md)**
+- Challenge 2: **[Enable Virtual Machine Insights](challenges/02_challenge.md)**
+- Challenge 3: **[Create alerts](challenges/03_challenge.md)**
+- Challenge 4: **[Create a dashboard and add tiles](challenges/04_challenge.md)**
+- Challenge 5: **[Workbooks](challenges/05_challenge.md)**
 
 ## **Solution Guide**
 

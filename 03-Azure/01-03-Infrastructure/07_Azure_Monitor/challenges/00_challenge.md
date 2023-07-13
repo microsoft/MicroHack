@@ -21,7 +21,7 @@ Go to the Azure Portal and navigate to the resource group `rg-microhack-monitori
 
 Azure Log Analytics is a tool in the Azure portal that's used to edit and run log queries against data in the Azure Monitor Logs store. You might write a simple query that returns a set of records and then use features of Log Analytics to sort, filter, and analyze them. It is used for collecting and analyzing log data, monitoring availability via web tests, exporting platform logs data from Azure resources, collecting metrics, alerts, and notifications.
 
-- Create a Log Analytics workspace `law-microhack` in the same resource group as the other resources. Use the same Azure region as the other resources.
+- Create a Log Analytics workspace `law-microhack` in the same resource group as the other resources. **Use the same Azure region as the other resources.**
 - Ensure the workspace is created successfully.
 
 #### Task 2 - Learning Resources

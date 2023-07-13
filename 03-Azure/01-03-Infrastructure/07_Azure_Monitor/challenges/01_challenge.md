@@ -29,7 +29,10 @@ After the challenge you should be able to answer the following questions:
 - What is the relation between the `AMA` and the `Data Collection Rule`?
 
 > **Hint**
+> 
 > There are different ways to install the `AMA` on a virtual machine. We recommand deploying the AMA through a DCR (Data Collection Rule) because it is the most flexible way to configure the `AMA` and it is the future of the `AMA` deployment. Consider this while working on the challenge.
+> 
+> If `AMA` is already installed in your environment. Don't worry, there are several automatic ways to get the agent onto a machine - e.g. with [Microsoft Defender for Cloud](https://learn.microsoft.com/en-us/azure/defender-for-cloud/auto-deploy-azure-monitoring-agent#deploy-the-azure-monitor-agent-with-defender-for-cloud) or with `Azure Policy` which we will cover later.
 
 ## Actions
 
@@ -50,34 +53,25 @@ Check if the `AMA` was installed  on the virtal machine blade under "Extensions 
 
 Check if the `AMA` was installed  on the virtal machine blade under "Extensions & applications"
 
-### Task 4: Create an alert for not reporting virtual machines
+### Task 4: Validate tables in Log Analytics Workspace
 
-Create an alert for unresponsive virtual machines. The alert should be triggered when the virtual machine is not reporting for 5 minutes.
-
-Test the alert by stopping one of the virtual machines.
-
-> **Note**
-> After that, start the machine again.
-
-#### Task 4 - Learning Resources
-
-- [Azure Monitor Alerts](https://learn.microsoft.com/en-us/azure/azure-monitor/alerts/alerts-overview)
-- [Create or edit an alert rule](https://learn.microsoft.com/en-us/azure/azure-monitor/alerts/alerts-create-new-alert-rule?tabs=metric)
-- [Get started with log queries in Azure Monitor](https://learn.microsoft.com/en-us/azure/azure-monitor/logs/get-started-queries)
+- Which table includes Windows Events?
+- Which table includes Linux Logs?
+- Which table shows AMA reporting status?
 
 ### Task 5: Availability rate check: calculation of the availability rate of each connected computer
 
 Create a query inside log analytics and excute the query to see the results.
 
-#### Task 5 - Learning Resources
+### Learning Resources
 
+- [Azure Monitor Logs table reference organized by category](https://learn.microsoft.com/en-us/azure/azure-monitor/reference/tables/tables-category)
 - [Get started with log queries in Azure Monitor](https://learn.microsoft.com/en-us/azure/azure-monitor/logs/get-started-queries)
 - [Kusto Query Language](https://learn.microsoft.com/en-us/azure/data-explorer/kusto/query/tutorials/learn-common-operators)
 
 ## Success Criteria
 
 - Windows Events and Syslog from all virtual machines (`vm-windows`, `vm-linux` and `vmss-linux-nginx`) are collected in your Log Analytics Workspace.
-- An alert for non reporting VMs has been created and triggered at least once for a machine that was shut down.
 - You may have written and run your first Kusto Query and have an overview of the availability rate of your virtual machines.
 
 ### Congrats :partying_face:

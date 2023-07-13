@@ -14,7 +14,7 @@ VM insights supports Windows and Linux operating systems on:
 
 VM insights provides a set of predefined workbooks that allow you to view trending of collected performance data over time. You can view this data in a single VM from the virtual machine directly, or you can use Azure Monitor to deliver an aggregated view of multiple VMs.
 
-## **Goal**
+## Goal
 
 After completing this challenge you should be able to enable VM Inisghts on your virtual machines.
 
@@ -28,18 +28,10 @@ VM Insights can be set up in different ways. After the tutorial, you can activat
 - Create a Data Collection Rule and configure to use the Log Analytics Workspace
 - Enable processes and dependencies (Map)
 
-#### Task 1 - Learning Resources
-
-- [Enable Azure Monitor Agent on monitored machines](https://learn.microsoft.com/en-us/azure/azure-monitor/vm/vminsights-enable-portal#enable-azure-monitor-agent-on-monitored-machines)
-
 ### Task 2: Enable VM Insights on unmonitored `vm-linux`
 
 - From Azure Monitor blade there is a way to enable VM Insights, too.
 - From the Monitor menu in the Azure portal, select Virtual Machines > Overview > Not Monitored.
-
-#### Task 2 - Learning Resources
-
-- [Enable VM insights for Log Analytics agent](https://learn.microsoft.com/en-us/azure/azure-monitor/vm/vminsights-enable-portal#enable-vm-insights-for-log-analytics-agent)
 
 ### Task 3: Enable VM Insights for `vmss-linux-nginx` automatically
 
@@ -47,17 +39,16 @@ VM Insights can be set up in different ways. After the tutorial, you can activat
 - VM insights policy initiatives install Azure Monitor Agent and the Dependency agent on new virtual machine scale set in your Azure environment.
 - Assign these initiatives to the resource group `rg-monitoring-microhack` to install the agents on the virtual machines in the defined scope automatically.
 
-#### Task 3 - Learning Resources
+### Task 4: Log search and visualize
 
+- Create a chart with CPU usage trends by computer. Calculate CPU usage patterns over the last hour, chart by percentiles.
+
+### Learning Resources
+
+- [Enable Azure Monitor Agent on monitored machines](https://learn.microsoft.com/en-us/azure/azure-monitor/vm/vminsights-enable-portal#enable-azure-monitor-agent-on-monitored-machines)
+- [Enable VM insights for Log Analytics agent](https://learn.microsoft.com/en-us/azure/azure-monitor/vm/vminsights-enable-portal#enable-vm-insights-for-log-analytics-agent)
 - [Enable VM insights by using Azure Policy](https://learn.microsoft.com/en-us/azure/azure-monitor/vm/vminsights-enable-policy)
-
-### Task 4: Validate that configuration is correct
-
-Although it may take a few minutes to view data in VM Insights, we can check the configuration by looking at the data collection rule.
-
-### Task 5: Log search and visualize
-
-TBD
+- [How to query logs from VM insights](https://learn.microsoft.com/en-us/azure/azure-monitor/vm/vminsights-log-query)
 
 ## Success Criteria
 

@@ -21,6 +21,7 @@ This lab is not a full explanation of building up a migration factory or a progr
 * [Assessment overview VM´s](https://learn.microsoft.com/en-us/azure/migrate/concepts-assessment-calculation)
 * [Assessment overview App Service](https://learn.microsoft.com/en-us/azure/migrate/concepts-azure-webapps-assessment-calculation)
 * [Assessment overview SQL](https://learn.microsoft.com/en-us/azure/migrate/concepts-azure-sql-assessment-calculation)
+* [Azure Arc Enabled Extended Security Updates](https://learn.microsoft.com/en-us/windows-server/get-started/extended-security-updates-deploy)
 
 Optional (read this after completing this lab to take your learning even deeper!)
 * [Web apps migration support](https://learn.microsoft.com/en-us/azure/migrate/concepts-migration-webapps)

@@ -35,6 +35,7 @@ Further resources - Thomas Maurer & Lior Kamrat links
 
 * [Azure Arc Overview Documentation](https://learn.microsoft.com/en-us/azure/azure-arc/overview)
 * [Azure Arc Blog from Microsoft](https://techcommunity.microsoft.com/t5/azure-arc-blog/bg-p/AzureArcBlog)
+* [Azure Arc Enabled Extended Security Updates](https://learn.microsoft.com/en-us/windows-server/get-started/extended-security-updates-deploy)
 * [Azure Arc Jumpstart Scenarios](https://azurearcjumpstart.io/azure_arc_jumpstart/)
 * [Azure Arc Jumpstart HCIBox](https://azurearcjumpstart.io/azure_jumpstart_hcibox/)
 * [Azure Arc Jumpstart ArcBox](https://azurearcjumpstart.io/azure_jumpstart_arcbox/)

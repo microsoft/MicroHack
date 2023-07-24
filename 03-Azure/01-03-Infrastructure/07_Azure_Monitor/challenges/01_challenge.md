@@ -65,9 +65,11 @@ Check if the `AMA` was installed  on the virtal machine blade under "Extensions 
 - Which table includes Linux Logs?
 - Which table shows AMA reporting status?
 
-### Task 5: Availability rate check: calculation of the availability rate of each connected computer
+### Task 5: Availability rate check
 
-Create a query inside log analytics and excute the query to see the results.
+- Calculuate the availability rate of each connected computer. Create a query inside log analytics and excute the query to see the results
+
+- Add a chart to your dashboard that shows the availability rate of each connected computer
 
 ### Learning Resources
 

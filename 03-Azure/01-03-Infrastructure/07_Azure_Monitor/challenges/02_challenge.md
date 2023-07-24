@@ -43,6 +43,8 @@ VM Insights can be set up in different ways. After the tutorial, you can activat
 
 - Create a chart with CPU usage trends by computer. Calculate CPU usage patterns over the last hour, chart by percentiles.
 
+- Add the chart to your dashboard.
+
 ### Learning Resources
 
 - [Enable Azure Monitor Agent on monitored machines](https://learn.microsoft.com/en-us/azure/azure-monitor/vm/vminsights-enable-portal#enable-azure-monitor-agent-on-monitored-machines)

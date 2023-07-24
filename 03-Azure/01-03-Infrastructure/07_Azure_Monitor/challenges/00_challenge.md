@@ -29,6 +29,13 @@ Azure Log Analytics is a tool in the Azure portal that's used to edit and run lo
 - [Overview of Log Analytics in Azure Monitor - Azure Monitor.](https://learn.microsoft.com/en-us/azure/azure-monitor/logs/log-analytics-overview)
 - [Pricing - Azure Monitor | Microsoft Azure.](https://azure.microsoft.com/en-in/pricing/details/monitor/)
 
+### Task 3: Create an empty Azure Dashboard
+
+- Create an empty Azure Dashboard `dashboard-microhack`
+- We will use this dashboard in the upcoming challenges to visualize our data.
+
+Azure Dashboards are customizable workspaces for monitoring your Azure resources. You can monitor the health and status of your Azure resources in a single, customized dashboard. Dashboards are useful for troubleshooting and identifying issues with your Azure resources.
+
 ## Success Criteria
 
 - The lab environment has been succesfully deployed and expolored. You are aware of all virtual machines (`vm-windows`, `vm-linux` and `vmss-linux-nginx`).

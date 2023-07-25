@@ -1,16 +1,10 @@
 # Challenge 5: Workbooks
 
-### Goal
+## Goal
 
-### Task 1: 
+## Actions
 
-### Task 2: 
-
-### Task 3: 
-
-**Explain the background...**
-
-### Task 4: 
+### Task 1
 
 ## Success Criteria
 

@@ -3,8 +3,13 @@ resource "azurerm_resource_group" "microhack_monitoring" {
   location = var.location
 }
 
+resource "random_integer" "random_id" {
+  min = 1000
+  max = 9999
+}
+
 resource "azurerm_log_analytics_workspace" "microhack_law" {
-  name                = "law-microhack"
+  name                = "law-microhack-${random_integer.random_id.result}"
   location            = azurerm_resource_group.microhack_monitoring.location
   resource_group_name = azurerm_resource_group.microhack_monitoring.name
   sku                 = "PerGB2018"

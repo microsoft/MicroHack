@@ -27,8 +27,8 @@ The simplicity provided by Flow Virtual Networking can be seen in the way it all
 
 This lab is not a full explanation of Nutanix Clusters(NC2) as a technology, please consider the following articles required pre-reading to build foundational knowledge.
 
-- [NC2 on Azure Technote ](https://portal.nutanix.com/page/documents/solutions/details?targetId=TN-2156-NC2-on-Azure:TN-2156-NC2-on-Azure)
-- [Nutanix Cloud Clusters on Azure Deployment and User Guide](https://portal.nutanix.com/page/documents/details?targetId=Nutanix-Cloud-Clusters-Azure:Nutanix-Cloud-Clusters-Azure)
+- <a href="https://portal.nutanix.com/page/documents/solutions/details?targetId=TN-2156-NC2-on-Azure:TN-2156-NC2-on-Azure" target="_blank">NC2 on Azure Technote</a>
+- <a href="https://portal.nutanix.com/page/documents/details?targetId=Nutanix-Cloud-Clusters-Azure:Nutanix-Cloud-Clusters-Azure" target="_blank">Nutanix Cloud Clusters on Azure Deployment and User Guide</a>
 
 
 # MicroHack context
@@ -60,7 +60,7 @@ The goal of this exercise is to deploy a NC2 cluster on Azure BareMetal.
 
 ### Actions
 
-Follow Step 1 of the guided <a href="https://nutanix.storylane.io/share/tryvhlejcb6g" target="_blank"> Simple Provisioning - step 1</a>
+Follow Step 1 of the guided <a href="https://nutanix.storylane.io/share/4vvvcvdwohxd" target="_blank"> Simple Provisioning - step 1</a>
 
 ### Success criteria
 
@@ -74,7 +74,7 @@ The goal of this exercise is to view the deployed resource in our Azure portal a
 
 ### Actions
 
-Follow Step 2 of the guided <a href="https://nutanix.storylane.io/share/tryvhlejcb6g" target="_blank">Cluster Configuration - step 2</a>
+Follow Step 2 of the guided <a href="https://nutanix.storylane.io/share/4vvvcvdwohxd" target="_blank">Cluster Configuration - step 2</a>
 
 
 ### Success criteria
@@ -92,7 +92,7 @@ The goal of this exercise is to use Nutanix Prism Central Data Protection capabi
 
 ### Actions
 
-* Follow Step 3 of the guided <a href="https://nutanix.storylane.io/share/tryvhlejcb6g" target="_blank">Nutanix DR - step 3</a>
+* Follow Step 3 of the guided <a href="https://nutanix.storylane.io/share/4vvvcvdwohxd" target="_blank">Nutanix DR - step 3</a>
 
 
 ### Success criteria

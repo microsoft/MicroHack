@@ -59,6 +59,9 @@ Check if the `AMA` was installed  on the virtal machine blade under "Extensions 
 
 Check if the `AMA` was installed  on the virtal machine blade under "Extensions & applications"
 
+> **Note**
+> Check if you VMSS istances running on the latest model. If not, update the model to the latest version manually. Otherwise no logs will be pushed to the Log Analytics Workspace.
+
 ### Task 4: Validate tables in Log Analytics Workspace
 
 - Which table includes Windows Events?

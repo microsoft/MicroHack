@@ -56,5 +56,5 @@ Create a Resource Health alert for all resources wihtin your resource group.
 
 ### Congrats
 
-Move on to [Challenge 4 : Create a dashboard and add tiles](04_challenge.md).
+Move on to [Challenge 4 : Create Workbooks](03_challenge.md).
   

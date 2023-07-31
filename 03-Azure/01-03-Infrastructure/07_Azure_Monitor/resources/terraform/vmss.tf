@@ -2,7 +2,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "nginx_vmss" {
   name                = "vmss-linux-nginx"
   resource_group_name = var.rg_name
   location            = var.location
-  sku                 = "Standard_F2"
+  sku                 = "Standard_DS1_v2"
   instances           = 2
   admin_username      = "adminuser"
 

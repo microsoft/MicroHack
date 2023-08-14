@@ -91,8 +91,7 @@ To deploy the lab environment using **terraform**, click the link below.
 - Challenge 1: **[Configure Virtual Machine Logs](challenges/01_challenge.md)**
 - Challenge 2: **[Enable Virtual Machine Insights](challenges/02_challenge.md)**
 - Challenge 3: **[Create alerts](challenges/03_challenge.md)**
-- Challenge 4: **[Create a dashboard and add tiles](challenges/04_challenge.md)**
-- Challenge 5: **[Workbooks](challenges/05_challenge.md)**
+- Challenge 4: **[Workbooks](challenges/04_challenge.md)**
 
 ## **Solution Guide**
 

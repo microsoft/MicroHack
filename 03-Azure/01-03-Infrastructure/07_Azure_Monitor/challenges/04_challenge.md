@@ -1,4 +1,4 @@
-# Challenge 5: Workbooks
+# Challenge 4: Workbooks
 
 Workbooks provide a flexible canvas for data analysis and the creation of rich visual reports within the Azure portal. They allow you to tap into multiple data sources from across Azure and combine them into unified interactive experiences. Workbooks let you combine multiple kinds of visualizations and analyses, making them great for freeform exploration.
 
@@ -26,18 +26,26 @@ After completing this challenge you should be able to create a workbook and add 
 
 ### Task 2
 
-- Wihtin you workbook, create a "Traffic Light" for your virtual machines `vm-windows` and `vm-linux` and the virtual machine scale set `vmss-linux-nginx`.
+- Wihtin your workbook, create a "Traffic Light" for your virtual machines `vm-windows` and `vm-linux` and the virtual machine scale set `vmss-linux-nginx`.
 Categorize your computers by CPU utilization as cold, warm, or hot and categorize performance as satisfied, tolerated, or frustrated. You can use an indicator or icon that represents the status next to the underlying metric.
 
 ![workbook](https://learn.microsoft.com/en-us/azure/azure-monitor/visualize/media/workbooks-commonly-used-components/workbooks-traffic-light-sample.png)
 
-Solution: https://learn.microsoft.com/en-us/azure/azure-monitor/visualize/workbooks-commonly-used-components#traffic-light-icons
+### Task 3
 
-- Add the workbook to your dashboard.
+- Add the workbook to your dashboard `Dashboard Monitoring Microhack`.
+
+### Learning Resources
+
+- [Create a new workbook](https://learn.microsoft.com/en-us/azure/azure-monitor/visualize/workbooks-create-workbook)
+- [Add parameters](https://learn.microsoft.com/en-us/azure/azure-monitor/visualize/workbooks-create-workbook#add-parameters)
+- [Workbook time parameters](https://learn.microsoft.com/en-us/azure/azure-monitor/visualize/workbooks-time)
+- [Traffic light icons](https://learn.microsoft.com/en-us/azure/azure-monitor/visualize/workbooks-commonly-used-components#traffic-light-icons)
 
 ## Success Criteria
 
-TBD
+- A customized workbook was created.
+- The grid was added to the dashboard `Dashboard Monitoring Microhack`.
 
 ### Congrats :partying_face:
 

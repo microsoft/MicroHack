@@ -36,11 +36,13 @@ Create a Resource Health alert for all resources wihtin your resource group.
 
 ### Task 4: Create an alert which notifies you when the `vm-linux` gets restarted
 
+Create an Activity log alert to track the reboot activity of the linux vm.
+
 ### Task 5: Knowledge Questions
 
 - Can you explain the difference between a metric alert and a log alert?
 - Can you explain the difference between a Service Health alert and a Resource Health alert?
-- On which official Microsoft website can you find information about Azure Service Health for every single region worldwide? (https://learn.microsoft.com/en-us/azure/service-health/overview)
+- On which official Microsoft website can you find information about Azure Service Health for every single region worldwide?
 
 ### Learning Resources
 
@@ -49,10 +51,10 @@ Create a Resource Health alert for all resources wihtin your resource group.
 - [Get started with log queries in Azure Monitor](https://learn.microsoft.com/en-us/azure/azure-monitor/logs/get-started-queries)
 - [Azure Service Health](https://learn.microsoft.com/en-us/azure/service-health/overview)
 
-
-
 ## Success Criteria
 
+- Create alert rules for the signal types listed above.
+- Understand and explain the differences of the alert types to your team members and coaches.
 
 ### Congrats
 

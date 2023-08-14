@@ -49,4 +49,4 @@ Categorize your computers by CPU utilization as cold, warm, or hot and categoriz
 
 ### Congrats :partying_face:
 
-Move on to [Challenge 5 : Workbooks](05_challenge.md).
+You finished the MicroHack for monitoring virutal machines in Azure Monitor.

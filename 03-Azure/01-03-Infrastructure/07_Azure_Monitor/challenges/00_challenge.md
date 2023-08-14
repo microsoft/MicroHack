@@ -1,4 +1,4 @@
-# Challenge 0 - Create Azure Log Analytics Workspace and explore the lab environment
+# Challenge 0 - Explore the lab environment, create an Azure Log Analytics Workspace and an empty Dashboard
 
 ## **Goal**
 

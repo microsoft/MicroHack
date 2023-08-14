@@ -1,6 +1,6 @@
-# **MicroHack Azure Monitor**
+# **MicroHack Azure Monitor for virtual machines**
 
-- [**MicroHack Azure Monitor**](#microhack-azure-monitor)
+- [**MicroHack Azure Monitor for virtual machines**](#microhack-azure-monitor-for-virtual-machines)
   - [**MicroHack introduction and context**](#microhack-introduction-and-context)
   - [**Objectives**](#objectives)
   - [**Prerequisites**](#prerequisites)
@@ -10,7 +10,8 @@
       - [Terraform Method](#terraform-method)
   - [**MicroHack Challenges**](#microhack-challenges)
   - [**Solution Guide**](#solution-guide)
-  - [**Finished? Delete your lab**](#finished-delete-your-lab)
+  - [**Finished?**](#finished)
+    - [Delete your lab](#delete-your-lab)
   - [**Contributor**](#contributor)
 
 ## **MicroHack introduction and context**
@@ -87,7 +88,7 @@ To deploy the lab environment using **terraform**, click the link below.
 
 ## **MicroHack Challenges**
 
-- Challenge 0: **[Create Azure Log Analytics Workspace and explore the lab environment](challenges/00_challenge.md)**
+- Challenge 0: **[Explore the lab environment, create an Azure Log Analytics Workspace and an empty Dashboard](challenges/00_challenge.md)**
 - Challenge 1: **[Configure Virtual Machine Logs](challenges/01_challenge.md)**
 - Challenge 2: **[Enable Virtual Machine Insights](challenges/02_challenge.md)**
 - Challenge 3: **[Create alerts](challenges/03_challenge.md)**
@@ -95,9 +96,21 @@ To deploy the lab environment using **terraform**, click the link below.
 
 ## **Solution Guide**
 
-## **Finished? Delete your lab**
+tbd
 
-If you used you own subscription to deploy the lab, you can delete the lab environment by just deleting the resource group you created. If you used the provided subscription no action is required.
+## **Finished?**
+
+Congratulations! :partying_face: You finished the MicroHack for monitoring virutal machines in Azure Monitor.
+
+We hope you've had the opportunity to experience Azure's Monitoring features.
+
+If you would like to give us feedback, please don't hesitate to open an issue in the repository or contact one of us directly.
+
+Thank you for taking the time and see you next time!
+
+### Delete your lab
+
+If you have used your own subscription to provision the lab, you can delete the lab environment by simply deleting the resource group you created. If you have used the provisioned subscription, no action is required.
 
 ## **Contributor**
 

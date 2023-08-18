@@ -5,6 +5,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "nginx_vmss" {
   sku                 = "Standard_DS1_v2"
   instances           = 2
   admin_username      = "adminuser"
+  // upgrade_mode        = "Automatic"
 
   custom_data = base64encode(file("./web.conf"))
 

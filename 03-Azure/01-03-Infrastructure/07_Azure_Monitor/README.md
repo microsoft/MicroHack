@@ -68,7 +68,7 @@ To experiment with Azure Monitor and learn how to use it, a lab environment is p
 
 Below an architecure diagram displays the setup. Tutorials and documentation that provide step-by-step guidance on how to deploy the enviornment comes along.
 
-![Architecture](./img/architecture_01.png)
+![Architecture](./img/architecture.png)
 
 ### Deployment
 

@@ -36,6 +36,6 @@ After completing this challenge, you should be able to capture custom logs from 
 - Data Collection Rule gathers custom text logs from `vm-windows`
 - Run example query in `law-microhack` demonstrating succesfull collection of custom logs.
 
-### Congrats :partying_face:s
+### Congrats :partying_face:
 
 You finished the MicroHack for monitoring virutal machines in Azure Monitor.

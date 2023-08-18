@@ -6,10 +6,7 @@
 
 Go to the Azure Portal and navigate to the resource group `rg-microhack-monitoring`. Look at the resources that have been deployed and think about possbile monitoring scenarios:
 
-- What kind of resources have been deployed (IaaS, PaaS)?
-- How would you monitor the resources?
-- What kind of logs and metrics have you in mind to monitor?
-- How do I get informed about downtime and failures?
+![Create LAW](./img/task_01.png)
 
 ## Task 2: Create Log Analytics workspace
 
@@ -39,6 +36,6 @@ Go to the Azure Portal and navigate to the resource group `rg-microhack-monitori
 
     ![Create Dashboard](./img/task_03_e.png)
 
-- [Optional] Publish it and share it with other users in your organization
+- [***Optional***] Publish it and share it with other users in your organization
 
     ![Share Dashboard](./img/task_03_f.png)

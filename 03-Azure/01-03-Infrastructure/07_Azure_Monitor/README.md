@@ -93,10 +93,16 @@ To deploy the lab environment using **terraform**, click the link below.
 - Challenge 2: **[Enable Virtual Machine Insights](challenges/02_challenge.md)**
 - Challenge 3: **[Create alerts](challenges/03_challenge.md)**
 - Challenge 4: **[Workbooks](challenges/04_challenge.md)**
+- Challenge 5: **[Collect custom text logs with Azure Monitor Agent](challenges/05_challenge.md)**
 
 ## **Solution Guide**
 
-tbd
+- Walkthrough Challenge 0: **[Explore the lab environment, create an Azure Log Analytics Workspace and an empty Dashboard](walkthrough/challenge-0/solution.md)**
+- Walkthrough Challenge 1: **[Configure Virtual Machine Logs](walkthrough/challenge-1/solution.md)**
+- Walkthrough Challenge 2: **[Enable Virtual Machine Insights](walkthrough/challenge-2/solution.md)**
+- Walkthrough Challenge 3: **[Create alerts](walkthrough/challenge-3/solution.md)**
+- Walkthrough Challenge 4: **[Workbooks](walkthrough/challenge-4/solution.md)**
+- Walkthrough Challenge 5: **[Collect custom text logs with Azure Monitor Agent](walkthrough/challenge-5/solution.md)**
 
 ## **Finished?**
 

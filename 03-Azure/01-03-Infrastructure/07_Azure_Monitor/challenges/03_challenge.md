@@ -56,7 +56,7 @@ Create an Activity log alert to track the reboot activity of the linux vm.
 - Create alert rules for the signal types listed above.
 - Understand and explain the differences of the alert types to your team members and coaches.
 
-### Congrats
+### Congrats :partying_face:
 
-Move on to [Challenge 4 : Create Workbooks](03_challenge.md).
+Move on to [Challenge 4 : Create Workbooks](04_challenge.md).
   

@@ -25,6 +25,8 @@ In this challenge, you will learn about creating a customized Azure Virtual Desk
 
 
 ## Learning Resources
-[Create a golden image in Azure](https://learn.microsoft.com/en-us/azure/virtual-desktop/set-up-golden-image)
-
-[Custom image templates in Azure Virtual Desktop (preview)](https://learn.microsoft.com/en-us/azure/virtual-desktop/custom-image-templates)
+- [Create an Azure Virtual Desktop image by using VM Image Builder and PowerShell](https://learn.microsoft.com/en-us/azure/virtual-machines/windows/image-builder-virtual-desktop)
+- [Custom image templates in Azure Virtual Desktop (preview)](https://learn.microsoft.com/en-us/azure/virtual-desktop/custom-image-templates)
+- [Use Custom image templates to create custom images in Azure Virtual Desktop (preview)](https://learn.microsoft.com/en-us/azure/virtual-desktop/create-custom-image-templates)
+- [Manage user-assigned managed identities](https://learn.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/how-manage-user-assigned-managed-identities?pivots=identity-mi-methods-azp)
+- [Azure VM Image Builder overview](https://learn.microsoft.com/en-us/azure/virtual-machines/image-builder-overview?tabs=azure-powershell)

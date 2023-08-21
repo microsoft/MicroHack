@@ -6,354 +6,229 @@ Duration: 45 min
 
 In this challenge, you will learn about creating a customized Azure Virtual Desktop image using the Azure VM Image Builder and then offering that image through the Azure Compute Gallery. There are several ways to create a custom golden image. This can be done manually by first creating an Azure VM and then generalizing and capturing it. Alternatively, PowerShell commands, ARM templates, or the Custom Image Template feature accessible from the Azure Portal GUI can be used. This feature guides you through the prerequisites and process of using Azure Image Builder. You should use the Custom Image Template in this challenge. 
 
-
 **Additional Resources**
 |              |            |  
 |----------|:-------------|
 | Description | Links |
-| Azure VM Image Builder overview | https://learn.microsoft.com/en-us/azure/virtual-machines/image-builder-overview?tabs=azure-powershell |
 | Create an Azure Virtual Desktop image by using VM Image Builder and PowerShell |  https://learn.microsoft.com/en-us/azure/virtual-machines/windows/image-builder-virtual-desktop | 
 | Custom image templates in Azure Virtual Desktop (preview) | https://learn.microsoft.com/en-us/azure/virtual-desktop/custom-image-templates |
+| Use Custom image templates to create custom images in Azure Virtual Desktop (preview) | https://learn.microsoft.com/en-us/azure/virtual-desktop/create-custom-image-templates |
+| Manage user-assigned managed identities | https://learn.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/how-manage-user-assigned-managed-identities?pivots=identity-mi-methods-azp |
+| Create or update Azure custom roles using the Azure portal | https://learn.microsoft.com/en-us/azure/role-based-access-control/custom-roles-portal |
+| Azure VM Image Builder overview | https://learn.microsoft.com/en-us/azure/virtual-machines/image-builder-overview?tabs=azure-powershell |
 
-# Task 1 - Register the Azure VM Image Builder Features and create a Custom Image 
-
-
-Azure Image Builder is generally available. In this task, you will learn how to register this feature.
-
-1. Logon to **Windows Client 01** using the provided credentials under **Resources** in the right pane.
-
-2. Open a **PowerShell Core** terminal on your **Windows Client 01** as administrator.
-
->[!important]**PowerShell Core** is installed, configured, and executed **separately** from Windows PowerShell. It does not replace your default PowerShell instance. To run PowerShell Core open your start menu and type **pwsh**.
-
->[!hint]The PowerShell modules **Az.ImageBuilder** and **Az.ManagedServiceIdentity** are required for building an Azure Image. These modules are pre-installed on your **Windows Client 01**. 
-
-3. Update *Azure Image Builder* and *Managed Service Identity* PowerShell modules to the latest version, if needed. 
-
-```PowerShellCore-wrap
-Update-Module Az.ImageBuilder
-Update-Module Az.ManagedServiceIdentity
-```
-4. Connect to the Azure Virtual Desktop service with following command.
-
-```PowerShellCore-wrap
-# Connect to Azure with a browser sign in token
-Connect-AzAccount
-```
-
-The browser "Sign in to your account" page should open. Login with your global admin account.
-
-![Powershell01.png](../Images/Powershell01.png)
-
-You can return to the application. Feel free to close the browser tab. You are signed directly into the subscription that is default for your admin credentials in the Powershell session.
-Sign in using your Azure admin credentials.
-
-```Output-nocopy
-Account                           SubscriptionName         TenantId                             Environment
--------                           ----------------         --------                             -----------
-admin@M365xxxxxxx.onmicrosoft.com Azure Pass - Sponsorship xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx AzureCloud
-```
-
->[!alert] You may get an output as showcased below (i.e. an empty SubscriptionName). If the SubscriptionName is filled with your **Azure Pass** subscription name, skip this alert box. The missing name implies that the authentication information for cmdlets is not set correctly in your current session: 
->
->```Output-nocopy
->Account                           SubscriptionName         TenantId                             Environment
->-------                           ----------------         --------                             -----------
->admin@M365xxxxxxx.onmicrosoft.com                          xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx AzureCloud
->```
->To select your subscription run the following commands:
->
->```Powershell
->$AzSub = Get-AzSubscription
->Set-AzContext -SubscriptionId $AzSub.SubscriptionId
->```
->Your output should look like this:
->
->```Output-nocopy
->Account                           SubscriptionName         TenantId                             Environment
->-------                           ----------------         --------                             -----------
->admin@M365xxxxxxx.onmicrosoft.com Azure Pass - Sponsorship xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx AzureCloud
->```
-
-5. To use Azure Image Builder, you have to register for the providers and to ensure that **RegistrationState** will be set to **Registered**.
-
-```PowerShellCore-wrap
-Register-AzResourceProvider -ProviderNamespace Microsoft.VirtualMachineImages
-Register-AzResourceProvider -ProviderNamespace Microsoft.Storage
-Register-AzResourceProvider -ProviderNamespace Microsoft.Compute
-Register-AzResourceProvider -ProviderNamespace Microsoft.KeyVault
-Register-AzResourceProvider -ProviderNamespace Microsoft.ManagedIdentity
-```
-Run the following commands from time to time to verify that the state of the provider registration process changed to **Registered** for all providers.
-
-```PowerShellCore-wrap
-Get-AzResourceProvider -ProviderNamespace Microsoft.VirtualMachineImages | Where RegistrationState -ne Registered
-Get-AzResourceProvider -ProviderNamespace Microsoft.Storage | Where RegistrationState -ne Registered 
-Get-AzResourceProvider -ProviderNamespace Microsoft.Compute | Where RegistrationState -ne Registered
-Get-AzResourceProvider -ProviderNamespace Microsoft.KeyVault | Where RegistrationState -ne Registered
-Get-AzResourceProvider -ProviderNamespace Microsoft.ManagedIdentity | Where RegistrationState -ne Registered
-```
->[!alert]**Important**: Wait until **RegistrationState** is set to **Registered**. In the meantime, feel free to grab a cup of coffee or visit [Azure Image Builder overview](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-overview) docs page to familiarize yourself with the intricate features of the Azure VM Image Builder service.
-
-**Important**: Do not proceed with the next step, unless the output does not yield any results! 
-
-6. Next, you will set several variables because you will be using several pieces of information repeatedly and create a resource group:
-
->[!alert] The Azure Image Builder is available and supported in the following regions:
->- East US
->- East US 2
->- West Central US
->- West US
->- West US 2
->- West US 3
->- South Central US
->- North Europe
->- West Europe
->- South East Asia
->- Australia Southeast
->- Australia East
->- UK South
->- UK West
->- Brazil South
->- Canada Central
->- Central India
->- Central US
->- France Central
->- Germany West Central
->- Japan East
->- North Central US
->- Norway East
->- Switzerland North
->- Jio India West
->- UAE North
->- East Asia
->- Korea Central
->- South Africa North
->- Qatar Central
->- USGov Arizona (public preview)
->- USGov Virginia (public preview)
->
->The location variable below must reflect one of these regions. If you are NOT deploying your AVD host pools in one of these regions you will need to use the **Azure Compute Gallery** to distribute the resulting managed image to your location to be able to use it for host pool deployment. If you are deploying your AVD host pools in one of these regions you will need to use the **Azure Compute Gallery** as well, but not for the distribution of the images to other locations. In that case **SIG** is used as your company controlled gallery. Here you will find the latest information about the region: [Azure Image Builder Regions](https://docs.microsoft.com/en-us/azure/virtual-machines/image-builder-overview#regions)
-
-```PowerShell-linenums-notab
-# get existing context
-$currentAzContext = Get-AzContext
-
-# destination image resource group
-$imageResourceGroup="rg-avd-azimg"
-
-# location
-$location="EastUS"
-
-# get your current subscription
-$subscriptionID=$currentAzContext.Subscription.Id
-
-# create resource group
-New-AzResourceGroup -Name $imageResourceGroup -Location $location
-```
-
-```Output-nocopy
-ResourceGroupName : rg-avd-azimg
-Location          : eastus
-ProvisioningState : Succeeded
-Tags              :
-ResourceId        : /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx/resourceGroups/rg-avd-azimg
-```
-
-7. Create a user identity and role for AIB.
+# Task 1 - Create user-managed identities and assign minimum permissions
 
 >[!note]By default, Image Builder supports using scripts, or copying files from multiple locations, such as GitHub and Azure storage. To use these, they must be publicly accessible. Beginning of June 2020 you need to use an Azure User-Assigned Managed Identity, defined by you, to allow Image Builder access Azure Storage, as long as the identity has been granted a minimum of **Storage Blob Data Reader*** on the Azure storage account. This means you do not need to make the storage blobs externally accessible, or setup SAS Tokens.
 
-```PowerShell-linenums-notab
-# setup role def names, these need to be unique
-$timeInt=(Get-Date -UFormat "%s").Split(".")[0]
-$imageRoleDefName="Azure Image Builder Image Def"+$timeInt
-$identityName="aibIdentity"+$timeInt
+1. Open the [Azure managed identity site](https://azmi.cmd.ms/) and select **Create** to create a new managed identity.
 
-# create identity
-New-AzUserAssignedIdentity -ResourceGroupName $imageResourceGroup -Name $identityName -Location $location 
+![02-CustomImageTemplateReq-0.png](../Images/02-CustomImageTemplateReq-0.png)
 
-$identityNameResourceId=$(Get-AzUserAssignedIdentity -ResourceGroupName $imageResourceGroup -Name $identityName).Id
-$identityNamePrincipalId=$(Get-AzUserAssignedIdentity -ResourceGroupName $imageResourceGroup -Name $identityName).PrincipalId
+2. In the **Basics** tab, enter the following information.
+
+| Field | Value | Notes
+|:---------|:---------|:---------|
+| Subscription | ME-AVDMicrohack-1 |
+| Resource Group | RG-MicroHack | Select your own resource group.
+| Region | West Europe | 
+| Name | ID-AIB-MicroHack | Select your own managed identity.
+
+![02-CustomImageTemplateReq-1.png](../Images/02-CustomImageTemplateReq-1.png)
+
+And then click **Review + create**.
+
+3. Then review your managed identity settings and confirm with **Create**.
+
+![02-CustomImageTemplateReq-2.png](../Images/02-CustomImageTemplateReq-2.png)
+
+4. Next, open the [Azure Resource groups blade](https://azrg.cmd.ms/) and select your resource group.
+
+5. Select **Access control (IAM)** to create and assign a new custom role. 
+
+![02-CustomImageTemplateReq-3.png](../Images/02-CustomImageTemplateReq-3.png)
+
+6. Then select **+ Add** and **Add custom role**.
+
+![02-CustomImageTemplateReq-4.png](../Images/02-CustomImageTemplateReq-4.png)
+
+7. Enter a **customer role name**, e.g. "Azure Image Builder Role" and select **Start from scratch** then click **Next**.
+
+![02-CustomImageTemplateReq-5.png](../Images/02-CustomImageTemplateReq-5.png)
+
+8. Now you can skip the Permissions and Assignable Scopes tab and move on to the JSON tab. Select **Edit** to add some permission actions to the empty JSON file.
+
+![02-CustomImageTemplateReq-6.png](../Images/02-CustomImageTemplateReq-6.png)
+
+9. Enter the **following permissions as actions** and then save your changes.
+
 ```
-
-You should get similar result back:
-
-```Output-nocopy
-Location Name                  ResourceGroupName
--------- ----                  -----------------
-eastus   aibIdentity1649143235 rg-avd-azimg
+"Microsoft.Compute/galleries/read",
+"Microsoft.Compute/galleries/images/read",
+"Microsoft.Compute/galleries/images/versions/read",
+"Microsoft.Compute/galleries/images/versions/write",
+"Microsoft.Compute/images/write",
+"Microsoft.Compute/images/read",
+"Microsoft.Compute/images/delete"
 ```
+![02-CustomImageTemplateReq-7.png](../Images/02-CustomImageTemplateReq-7.png)
 
-8. Assign permissions for the recently created managed identity to distribute images.
+Click **Review + create** to continue. 
 
-```PowerShell-linenums-notab
-# create temp folder 
-$FolderPath = "C:\temp\"
-New-Item -Path $FolderPath -ItemType Directory -Force
+![02-CustomImageTemplateReq-8.png](../Images/02-CustomImageTemplateReq-8.png)
 
-$aibRoleImageCreationUrl="https://raw.githubusercontent.com/PeterR-msft/M365AVDWS/master/Azure%20Image%20Builder/aibRoleImageCreation.json"
-$aibRoleImageCreationPath = $FolderPath + "aibRoleImageCreation.json"
+10. Select **Create** to create your new custom role. 
 
-# download config
-Invoke-WebRequest -Uri $aibRoleImageCreationUrl -OutFile $aibRoleImageCreationPath -UseBasicParsing
+![02-CustomImageTemplateReq-9.png](../Images/02-CustomImageTemplateReq-9.png)
 
-((Get-Content -path $aibRoleImageCreationPath -Raw) -replace '<subscriptionID>',$subscriptionID) | Set-Content -Path $aibRoleImageCreationPath
-((Get-Content -path $aibRoleImageCreationPath -Raw) -replace '<rgName>', $imageResourceGroup) | Set-Content -Path $aibRoleImageCreationPath
-((Get-Content -path $aibRoleImageCreationPath -Raw) -replace 'Azure Image Builder Service Image Creation Role', $imageRoleDefName) | Set-Content -Path $aibRoleImageCreationPath
+If the custome rule is created successfully, you will see the following pop-up information:
 
-# create role definition
-New-AzRoleDefinition -InputFile $aibRoleImageCreationPath
+![02-CustomImageTemplateReq-10.png](../Images/02-CustomImageTemplateReq-10.png)
 
-# wait for role creation
-Start-Sleep 10
+11. Next, we need to assign this custom role to your previously created managed identity. Select **+Add** and then **Add Role Assignment**:
 
-# grant role definition to image builder service principal
-New-AzRoleAssignment -ObjectId $identityNamePrincipalId -RoleDefinitionName $imageRoleDefName -Scope "/subscriptions/$subscriptionID/resourceGroups/$imageResourceGroup"
-```
+![02-CustomImageTemplateReq-11.png](../Images/02-CustomImageTemplateReq-11.png)
 
->[!important]**Note:** Should you experience the following error *New-AzRoleDefinition: Role definition limit exceeded. No more role definitions can be created.*, then follow the steps in this document:
-`https://docs.microsoft.com/en-us/azure/role-based-access-control/troubleshooting`
+12. Search for your custom role, such as Azure Image Builder, and **select your role**, and then click **Next**.
 
-```Output-nocopy
-    Directory: C:\
+![02-CustomImageTemplateReq-12.png](../Images/02-CustomImageTemplateReq-12.png)
 
-Mode                 LastWriteTime         Length Name
-----                 -------------         ------ ----
-d----            6/8/2020  9:33 AM                temp
+13. On the Members tab, select **Managed Identity** to assign access and click **+ Select Members**.
 
-Name             : Azure Image Builder Image Def1591779867
-Id               : 29b591b5-6dd8-482c-9f4f-3ec4caed73e9
-IsCustom         : True
-Description      : Image Builder access to create resources for the image build, you should delete or split out as
-                   appropriate
-Actions          : {Microsoft.Compute/galleries/read, Microsoft.Compute/galleries/images/read,
-                   Microsoft.Compute/galleries/images/versions/read,
-                   Microsoft.Compute/galleries/images/versions/write???}
-NotActions       : {}
-DataActions      : {}
-NotDataActions   : {}
-AssignableScopes : {/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx/resourceGroups/rg-avd-azimg}
+![02-CustomImageTemplateReq-13.png](../Images/02-CustomImageTemplateReq-13.png)
 
+14. Next, you select the subscription and then you have the option to find your managed identity. You can **search for it by name** or **select your managed identity from the drop-down list**.
 
-RoleAssignmentId   : /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx/resourceGroups/rg-avd-azimg/providers/Microsof
-                     t.Authorization/roleAssignments/ccba0b29-4420-4340-a646-8d8a195dd749
-Scope              : /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx/resourceGroups/rg-avd-azimg
-DisplayName        : aibIdentity1591779867
-SignInName         :
-RoleDefinitionName : Azure Image Builder Image Def1591779867
-RoleDefinitionId   : 29b591b5-6dd8-482c-9f4f-3ec4caed73e9
-ObjectId           : ef57ff40-337e-49cb-8058-8d082b58e357
-ObjectType         : ServicePrincipal
-CanDelegate        : False
-```
+![02-CustomImageTemplateReq-14.png](../Images/02-CustomImageTemplateReq-14.png)
 
-9. Create a Azure Compute Gallery using **New-AzGallery**. An image gallery is the primary resource used for enabling image sharing. Allowed characters for Gallery name are uppercase or lowercase letters, digits, dots, and periods. The gallery name cannot contain dashes. Gallery names must be unique within your subscription.
+15. When you have selected your managed identity, click **Select**.
 
-```PowerShell-linenums-notab
-# Azure Compute Gallery properties
-$sigGalleryName= "AVDSIG"
-$imageDefName ="AVD-Img-Definitions"
+![02-CustomImageTemplateReq-15.png](../Images/02-CustomImageTemplateReq-15.png)
 
-# create SIG
-New-AzGallery -GalleryName $sigGalleryName -ResourceGroupName $imageResourceGroup -Location $location
+16. In the last step, select **Check + Assign**.
 
-# create gallery definition
-$GalleryParams = @{
-  GalleryName = $sigGalleryName
-  ResourceGroupName = $imageResourceGroup
-  Location = $location
-  Name = $imageDefName
-  OsState = 'generalized'
-  OsType = 'Windows'
-  Publisher = 'Contoso'
-  Offer = 'Windows'
-  Sku = 'Win11WVD'
-  HyperVGeneration = 'V2'
-}
-New-AzGalleryImageDefinition @GalleryParams
-```
+![02-CustomImageTemplateReq-16.png](../Images/02-CustomImageTemplateReq-16.png)
+
+If the custome rule is assign successfully, you will see something like this pop-up information:
+
+![02-CustomImageTemplateReq-17.png](../Images/02-CustomImageTemplateReq-17.png)
+
+**Task 1 has been completed** 
+# Task 2 - Create Azure Compute Gallery
 
 >[!hint]There is no extra charge for using the Azure Compute Gallery service. You will be charged for the following resources:
 >
 >- Storage costs of storing the Shared Image versions. Cost depends on the number of replicas of the image version and the number of regions the version is replicated to. For example, if you have 2 images and both are replicated to 3 regions, then you will be charged for 6 managed disks based on their size. For more information, see [Managed Disks pricing](https://azure.microsoft.com/en-us/pricing/details/managed-disks/).
 >- Network egress charges for replication of the first image version from the source region to the replicated regions. Subsequent replicas are handled within the region, so there are no additional charges.
 
-```Output-nocopy
-ResourceGroupName : rg-avd-azimg
-  UniqueName      : xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx-AVDSIG
-ProvisioningState : Succeeded
-Id                : /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx/resourceGroups/rg-avd-azimg/providers/Microsoft.Compute/galleries/AVDSIG
-Name              : AVDSIG
-Type              : Microsoft.Compute/galleries
-Location          : eastus
-Tags              : {}
+1. Open the [Azure portal site](https://portal.azure.com/) and search for **Azure Compute Gallery**. 
 
-ResourceGroupName : rg-avd-azimg
-OsType            : Windows
-OsState           : Generalized
-HyperVGeneration  : V2
-Identifier        :
-  Publisher       : Contoso
-  Offer           : Windows
-  Sku             : Win11WVD
-ProvisioningState : Succeeded
-Id                : /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx/resourceGroups/rg-avd-azimg/providers/Microsoft
-.Compute/galleries/AVDSIG/images/AVD-Img-Definitions
-Name              : AVD-Img-Definitions
-Type              : Microsoft.Compute/galleries/images
-Location          : eastus
-Tags              : {}
-```
+![02-CustomImageTemplateReq-18.png](../Images/02-CustomImageTemplateReq-18.png)
 
-10. To allow Azure VM Image Builder to distribute images to either the managed images or to a Azure Compute Gallery, you will need to provide **Contributor** permissions for the service "**Azure Virtual Machine Image Builder**" (ApplicationId: **cf32a0cc-373c-47c9-9156-0db11f6a6dfc**) on the resource group.
+2. Select **+Create** to create a new Azure Compute Gallery.
+![02-CustomImageTemplateReq-19.png](../Images/02-CustomImageTemplateReq-19.png)
 
-```PowerShellCore-wrap
-# assign permissions for the resource group, so that AIB can distribute the image to it
-New-AzRoleAssignment -ApplicationId cf32a0cc-373c-47c9-9156-0db11f6a6dfc -Scope /subscriptions/$subscriptionID/resourceGroups/$imageResourceGroup -RoleDefinitionName Contributor
-```
-
-```Output-nocopy-nocolor
-RoleAssignmentId   : /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/vwd-master-image/providers/Microsoft.Authorization/ro
-                     leAssignments/cefb7489-5c95-4644-b623-7ec19fad78ad
-Scope              : /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/vwd-master-image
-DisplayName        : Azure Virtual Machine Image Builder
-SignInName         : 
-RoleDefinitionName : Contributor
-RoleDefinitionId   : cefb7489-5c95-4644-b623-7ec19fad78ad
-ObjectId           : ef511139-6170-438e-a6e1-763dc31bdf74
-ObjectType         : ServicePrincipal
-CanDelegate        : False
-```
-
->[!hint]If the service account is not found, that may mean that the subscription where you are adding the role assignment has not yet completed the resource provider registration.
-
-11. Open the [Azure Virtual Desktop site](https://azavd.cmd.ms/).
-
-12. Next, select **Custom image templates** in the menu on the left side of the screen.
-
-![02-CustomImageTemplate-0.png](../Images/02-CustomImageTemplate-0.png)
-
-13. Select **Add custom image template**.
-
-![02-CustomImageTemplate-1.png](../Images/02-CustomImageTemplate-1.png)
-
-14. In the **Basics** tab, enter the following information.
+3. In the **Basics** tab, enter the following information.
 
 | Field | Value | Notes
 |:---------|:---------|:---------|
-| Template name | `avd-win11-img-template` |
+| Subscription | ME-AVDMicrohack-1 |
+| Resource Group | RG-MicroHack | Select your own resource group.
+| Name | WIN11AVDCoreApps | Enter a custom gallery name.
+| Region | West Europe | 
+
+![02-CustomImageTemplateReq-20.png](../Images/02-CustomImageTemplateReq-20.png)
+
+Then, click **Review + create**.
+
+4. Select **Create**. 
+
+![02-CustomImageTemplateReq-21.png](../Images/02-CustomImageTemplateReq-21.png)
+
+5. Once the Azure Compute gallery is successfully created, click **Go to Resource** as we also need to add an image definition.
+
+![02-CustomImageTemplateReq-22.png](../Images/02-CustomImageTemplateReq-22.png)
+
+6. In your Azure compute gallery, select **+Add** and then **VM image definition**.
+
+![02-CustomImageTemplateReq-23.png](../Images/02-CustomImageTemplateReq-23.png)
+
+7. In the **Basics** tab, enter the following information.
+
+| Field | Value | Notes
+|:---------|:---------|:---------|
+| Region | West Europe | 
+| VM image definition name | WIN11AVDCoreAppsDefinition | Enter an image definition name.
+| OS Type | Windows | 
+| Security Type | Standard | 
+| VM generation | Gen 2 | 
+| VM architecture | x64 | 
+| OS state | Generalized | 
+| Publisher | MicroHack| Enter a publisher name.
+| Offer | CoreApps | Enter an offer name.
+| SKU | WIN11-AVD-M365-CoreApps | Enter a SKU name.
+
+![02-CustomImageTemplateReq-24.png](../Images/02-CustomImageTemplateReq-24.png)
+
+![02-CustomImageTemplateReq-25.png](../Images/02-CustomImageTemplateReq-25.png)
+
+Then, select **Review + create**.
+
+8. Review your details and click **Create**.
+
+![02-CustomImageTemplateReq-26.png](../Images/02-CustomImageTemplateReq-26.png)
+
+To allow Azure VM Image Builder to distribute images to either the managed images or to a Azure Compute Gallery, you will need to provide **Contributor** permissions for the service "**Azure Virtual Machine Image Builder**" (ApplicationId: **cf32a0cc-373c-47c9-9156-0db11f6a6dfc**) on the resource group.
+
+9. Open the **Access Control (IAM)** menu for your resource group again and select **+Add** and then **Add Role Assignment**.
+
+10. In the **Role** tab, select **Privileged administrator roles** then **Contributor** and click **Next**.
+
+![02-CustomImageTemplateReq-27.png](../Images/02-CustomImageTemplateReq-27.png)
+
+11. Click **+Select members** to find the Azure Virtual Machine Image Builder service.
+
+![02-CustomImageTemplateReq-28.png](../Images/02-CustomImageTemplateReq-28.png)
+
+12. Search for **Azure Virtual Machine Image Builder** and select this service, then click **Select**.
+
+![02-CustomImageTemplateReq-29.png](../Images/02-CustomImageTemplateReq-29.png)
+
+ 13. Click **Review + assign**.
+
+![02-CustomImageTemplateReq-30.png](../Images/02-CustomImageTemplateReq-30.png)
+
+14. Check your details and click **Review + assign** again. 
+
+**Task 2 has been completed** 
+
+# Task 3 - Use AVD Custome Image Template to create new Golden Master Image
+
+1. Open the [Azure Portal site](https://portal.azure.com/) and search for **Create** to create a new managed identity.
+
+2. Next, select **Custom image templates** in the menu on the left side of the screen.
+
+![02-CustomImageTemplate-0.png](../Images/02-CustomImageTemplate-0.png)
+
+3. Select **Add custom image template**.
+
+![02-CustomImageTemplate-1.png](../Images/02-CustomImageTemplate-1.png)
+
+4. In the **Basics** tab, enter the following information.
+
+| Field | Value | Notes
+|:---------|:---------|:---------|
+| Template name | CIT-WIN11-AVD-CoreApps | Enter a template name.
 | Import from existing template | No  | 
-| Subscription | Azure Pass - Sponsorship |
-| Resource Group | rg-avd-azimg | You created this RG in an earlier task.
-| Location | (US) East US |
-| Managed identity | aibIdentityXXXXXXXX | You created this managed identity in an earlier task.
+| Subscription | ME-AVDMicrohack-1 |
+| Resource Group | RG-MicroHack | Choose your own resource group.
+| Managed identity | ID-AIB-MicroHack | Choose your own managed identity.
 
 ![02-CustomImageTemplate-2.png](../Images/02-CustomImageTemplate-2.png)
 
 Select **Next**.
 
-14. Then select the following **Source image information**:
+5. Then select the following **Source image information**:
 
 | Field | Value | Notes
 |:---------|:---------|:---------|
@@ -364,7 +239,7 @@ Select **Next**.
 
 Select **Next**.
 
-15. In the distibution targets tag, select **Azure Compute Gallery** and enter the following information:
+6. In the distibution targets tag, select **Azure Compute Gallery** and enter the following information:
 
 >[!alert]If you want to deploy your session hosts to one of the regions currently not supported by Azure Image Builder (or if you just want to have your image made available in other regions) we recommend to use the Azure Compute Gallery to distribute your managed image to other locations. The primary purpose of using the Azure Compute Gallery is to replicate your master image to other Azure regions automatically. You can accomplish that by appending a second region to the Replication regions list. 
 
@@ -372,10 +247,10 @@ Select **Next**.
 
 | Field | Value | Notes
 |:---------|:---------|:---------|
-| Gallery name | AVDSIG |
-| Gallery image definition | AVD-Img-Definitions  | 
-| Gallery Image version | `0.0.1` | It's optional.
-| Run output name | `winclientR01` | This value can be anything, it is just the name for the temporary resource group
+| Gallery name | WIN11AVDCoreApps |
+| Gallery image definition | WIN11AVDCoreAppsDefinitions  | 
+| Gallery Image version | 0.0.1 | It's optional.
+| Run output name | WIN11AVDCoreApps | This value can be anything, it is just the name for the temporary resource group
 | Replication regions | East US | 
 | Exclude from latest | No | It's the first version.
 | Storage account type | Standard_LRS |
@@ -384,13 +259,13 @@ Select **Next**.
 
 Select **Next**.
 
-16. Next, you can change some build properties, but you can skip that for now and click **Next**.
+7. Next, you can change some build properties, but you can skip that for now and click **Next**.
 
-17. On the Customizations tab, click **Add built-in Script**.
+8. On the Customizations tab, click **Add built-in Script**.
 
 ![02-CustomImageTemplate-5.png](../Images/02-CustomImageTemplate-5.png)
 
-18. Next, you can add some built-in scripts to customize your Azure image and select the following scripts and customizations here.
+9. Next, you can add some built-in scripts to customize your Azure image and select the following scripts and customizations here.
 
 **Operating system specific scripts:**
 
@@ -413,33 +288,33 @@ Select **Next**.
 
 Select **Save**.
 
-19. Then select **Add Custom Script** to add your automation script, for example, to install Visual Studio Code in your custom image.
+10. Then select **Add Custom Script** to add your automation script, for example, to install Visual Studio Code in your custom image.
 
 ![02-CustomImageTemplate-8.png](../Images/02-CustomImageTemplate-8.png)
 
 
-20. Enter the following information:
+11. Enter the following information:
 
 | Field | Value | Notes
 |:---------|:---------|:---------|
-| Script name | `winclientR01` |
-| URI | `https://raw.githubusercontent.com/dweppeler-msft/AVD/main/AIB%20Template/InstallVSCode.ps1` |
+| Script name | InstallApps.ps1 | Enter your custom script name.
+| URI | https://raw.githubusercontent.com/dweppeler-msft/AVD/main/InstallApps.ps1 | Enter your custom script URL.
 
 ![02-CustomImageTemplate-9.png](../Images/02-CustomImageTemplate-9.png)
 
 Select **Save**.
 
-21.  Click **Next** to go to the Tags tab, which can be skipped, so **Next** again to the last tab **Check and Create**.
+12.  Click **Next** to go to the Tags tab, which can be skipped, so **Next** again to the last tab **Check and Create**.
 
 ![02-CustomImageTemplate-10.png](../Images/02-CustomImageTemplate-10.png)
 
 
-22. The last step is to click **Create** to create this custom image template, but this does not start the creation process yet.
+13. The last step is to click **Create** to create this custom image template, but this does not start the creation process yet.
 
 ![02-CustomImageTemplate-11.png](../Images/02-CustomImageTemplate-11.png)
 
 
-23. When the customer image template is successfully created, you can start the image creation process by clicking **Start build**.
+14. When the customer image template is successfully created, you can start the image creation process by clicking **Start build**.
 
 ![02-CustomImageTemplate-12.png](../Images/02-CustomImageTemplate-12.png)
 
@@ -459,4 +334,4 @@ https://portal.azure.com/
 
 >[!knowledge]The time it takes to replicate to different regions depends on the amount of data being copied and the number of regions the version is replicated to. This can take a few hours in some cases. While the replication is happening, you can view the status of replication per region. Once the image replication is complete in a region, you can then deploy a VM or scale-set using that image version in the region.
 
-**Task 1 has been completed** 
+**Task 3 has been completed** 

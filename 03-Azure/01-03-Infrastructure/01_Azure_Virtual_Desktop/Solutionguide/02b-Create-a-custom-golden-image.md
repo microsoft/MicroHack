@@ -17,7 +17,7 @@ In this challenge, you will learn about creating a customized Azure Virtual Desk
 | Create or update Azure custom roles using the Azure portal | https://learn.microsoft.com/en-us/azure/role-based-access-control/custom-roles-portal |
 | Azure VM Image Builder overview | https://learn.microsoft.com/en-us/azure/virtual-machines/image-builder-overview?tabs=azure-powershell |
 
-# Task 1 - Create user-managed identities and assign minimum permissions
+# Task 1 - Create user-managed identity and assign minimum permissions
 
 >[!note]By default, Image Builder supports using scripts, or copying files from multiple locations, such as GitHub and Azure storage. To use these, they must be publicly accessible. Beginning of June 2020 you need to use an Azure User-Assigned Managed Identity, defined by you, to allow Image Builder access Azure Storage, as long as the identity has been granted a minimum of **Storage Blob Data Reader*** on the Azure storage account. This means you do not need to make the storage blobs externally accessible, or setup SAS Tokens.
 
@@ -202,7 +202,7 @@ To allow Azure VM Image Builder to distribute images to either the managed image
 
 **Task 2 has been completed** 
 
-# Task 3 - Use AVD Custome Image Template to create new Golden Master Image
+# Task 3 - Use AVD Custom Image Template to create new Golden Master Image
 
 1. Open the [Azure Portal site](https://portal.azure.com/) and search for **Create** to create a new managed identity.
 

@@ -22,13 +22,13 @@ VM Insights can be set up in different ways. After the tutorial, you can activat
 
 ## Actions
 
-### Task 1: Enable VM Insights for `vm-windows`
+### Task 1: Enable VM Insights for `vm-linux`
 
 - Enable VM Insights on monitored machines
 - Create a Data Collection Rule and configure to use the Log Analytics Workspace
 - Enable processes and dependencies (Map)
 
-### Task 2: Enable VM Insights on unmonitored `vm-linux`
+### Task 2: Enable VM Insights on unmonitored `vm-windows`
 
 - From Azure Monitor blade there is a way to enable VM Insights, too.
 - From the Monitor menu in the Azure portal, select Virtual Machines > Overview > Not Monitored.

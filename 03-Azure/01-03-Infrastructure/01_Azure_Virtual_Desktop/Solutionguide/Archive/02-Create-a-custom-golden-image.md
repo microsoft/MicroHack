@@ -23,24 +23,24 @@ In this challenge you will create a new virtual machine in Azure which will be u
 
 2. **Select your subscription, the resource group, and define a temporary name for the virtual machine** that will be deleted after the custom image is captured. The region is filled automatically based on the resource group region. The availability options and security type do not need to be changed. 
 
-![Create Custom Image](../Images/02-Create_CustomImage_1.png)
+![Create Custom Image](../../Images/02-Create_CustomImage_1.png)
 
 3. For the image, you need to find the **Windows 11 Enterprise Multi-Session + Microsoft 365 Apps** via the **Show all images** link.
     >**Note**: Selecting an image with Microsoft 365 Apps is very important. You will need the apps for assigning them in a later challenge.
 
-![Create Custom Image](../Images/02-Create_CustomImage_2.png)
+![Create Custom Image](../../Images/02-Create_CustomImage_2.png)
 
-![Create Custom Image](../Images/02-Create_CustomImage_3.png)
+![Create Custom Image](../../Images/02-Create_CustomImage_3.png)
 
 > The VM architecture is automatically filled in based on the selected image.
 
 Please leave the **Run with Azure Spot discount** option disabled. 
 
-![Create Custom Image](../Images/02-Create_CustomImage_4.png)
+![Create Custom Image](../../Images/02-Create_CustomImage_4.png)
 
 4. Select the VM size, enter your preferred local administrator credentials, select **None** for public incoming ports, and answer the license questions.  
 
-![Create Custom Image](../Images/02-Create_CustomImage_5.png)
+![Create Custom Image](../../Images/02-Create_CustomImage_5.png)
 
 5. Click **Next : Disk >** and change the disk settings if you want, otherwise click **Next : Network >** so we can **disable the Public IP** creation.  
 
@@ -48,7 +48,7 @@ Select **None** for the public IP and the network security group NIC and enable 
 
 >Note: The imaging VM should be accessible from the AVD session hosts. You can deploy the imaging VM on the same virtual network, because the VM will be deleted after the image is created. 
 
-![Create Custom Image](../Images/02-Create_CustomImage_6.png)
+![Create Custom Image](../../Images/02-Create_CustomImage_6.png)
 
 6. Next click **Review + Create** and then click **Create**.
 
@@ -76,24 +76,24 @@ For more information check this [link](https://learn.microsoft.com/en-us/azure/v
 
 1. Navigate to [Azure Virtual Machine site](https://azvm.cmd.ms/) and select the imaging VM, where you installed your applications. Then select **Capture**.
 
-![Create Custom Image](../Images/02-Create_CustomImage_7.png)
+![Create Custom Image](../../Images/02-Create_CustomImage_7.png)
 
 2. Select the **Subscription and Resource group details**. Then enter the information for the shared image as in the screenshots below.  
 
-![Create Image](../Images/02-Create_Image_2.png)
+![Create Image](../../Images/02-Create_Image_2.png)
 
 - Share image to Azure compute gallery: **Yes, share it to a gallery as a VM image version**
 - Target Azure compute gallery: **Select create new, insert a name AVD_multisession_Image_gallery**
 - Operating system state: **Generalized: VMs created from this image require hostname, admin user, and other VM related setup to be completed on first boot**
 
-![Create Image](../Images/02-Create_Image_3.png)
+![Create Image](../../Images/02-Create_Image_3.png)
 - Target VM image definition: **Select Create new**
 - Insert name: **AVD_multisession_Image_gallery**
 - Publisher: **microsoftwindowsdesktop**
 - Offer: **office-365**
 - SKU: **win11-21h2-avd-m365pp**
 
-![Create Image](../Images/02-Create_Image_4.png)
+![Create Image](../../Images/02-Create_Image_4.png)
 
 - Select your recently created Target VM image definition **AVD_multisession_Image_gallery**
 - Enter an image version number, type **0.0.1**

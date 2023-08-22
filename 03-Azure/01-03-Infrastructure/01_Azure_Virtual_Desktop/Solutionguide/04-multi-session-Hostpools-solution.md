@@ -1,9 +1,9 @@
-# Exercise 3: Create a host pool for multi-session desktops
+# Exercise 4: Create a host pool for multi-session desktops
 
 Duration: 45 min
 
 
-[Previous Challenge Solution](./02-Create-a-custom-golden-image.md) - **[Home](../Readme.md)** - [Next Challenge Solution](04-Implement-FSLogix-Profile-Solution.md)
+[Previous Challenge Solution](./03-start-VM-on-connect-solution.md) - **[Home](../Readme.md)** - [Next Challenge Solution](./05-Implement-FSLogix-Profile-Solution.md)
 
 You will deploy a new pooled hostpool from the custom golden image from [Challenge 2](./02-Create-a-custom-golden-image.md) and deploy two session hosts from it. After that you will be able to logon to the host pool with multiple people from your organization. To test the RemoteApp capabilities in AVD you will also create a remote application group and assign it as well to users from your organization.
 

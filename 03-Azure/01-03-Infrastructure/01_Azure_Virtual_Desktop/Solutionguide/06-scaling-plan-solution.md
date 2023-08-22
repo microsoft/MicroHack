@@ -3,7 +3,7 @@
 Duration:
 
 
-[Previous Challenge Solution](./05-start-VM-on-connect-solution.md) - **[Home](../Readme.md)** - [Next Challenge Solution](07-RDP-properties-solution.md)
+[Previous Challenge Solution](./05-Implement-FSLogix-Profile-Solution.md) - **[Home](../Readme.md)** - [Next Challenge Solution](./07-RDP-properties-solution.md)
 
 
 **Additional Resources**

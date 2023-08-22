@@ -1,5 +1,5 @@
-# Exercise 3: Create a host pool for multi-session
-[Previous Challenge](./02-Create-a-custom-golden-image.md) - **[Home](../Readme.md)** - [Next Challenge](./04-Implement-FSLogix-Profile-Solution.md)
+# Exercise 4: Create a host pool for multi-session
+[Previous Challenge](./03-start-VM-on-connect.md) - **[Home](../Readme.md)** - [Next Challenge](./05-Implement-FSLogix-Profile-Solution.md)
 
 ## Introduction
 In this challenge you will create Azure AD joined pooled desktops from a custom golden image created in Challenge 2. For higher sophistication we use the Azure Compute Gallery to provide the golden image and after deployment you will connect to the session host with multiple user and verify if the changes you included in the golden image are in place. Then you will also provide remote apps to your users.

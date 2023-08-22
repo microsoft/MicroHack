@@ -21,12 +21,13 @@ If you'd like to change the default RDP file properties, you can customize RDP p
 | Description | Links |
 | Customize RDP Properties | https://learn.microsoft.com/en-us/azure/virtual-desktop/customize-rdp-properties |
 | Supported RDP Properties | https://learn.microsoft.com/en-us/windows-server/remote/remote-desktop-services/clients/rdp-files |
+| Configure single sign-on for Azure Virtual Desktop using Azure AD Authentication | https://learn.microsoft.com/en-us/azure/virtual-desktop/configure-single-sign-on |
   |              |            | 
 
-## Task1:
-Personal Hostpool
--	Deny Storage, networkdrive and printers redirection.
+## Task 1- Personal AVD Host Pool
+-	Deny Storage, networkdrive and printers redirection
 -	Allow Camera, Microphone and Copy&Paste
+- Configure single sign-on using Azure AD Authentication
 
 In your Personal Hostpool, navigate to **RDP Properties**
 
@@ -41,12 +42,18 @@ In your Personal Hostpool, navigate to **RDP Properties**
 - Printer Redirection: **The printers on the local computer are not available in the remote session**
 
 ![RDP Property](../Images/06-RDPProperty_2.png)
+
+#### Connection information
+
+- Azure AD single sign-on: **Connections will use Azure AD authentication to provide single sign-on** 
+
+![RDP Property](../Images/06-RDPProperty_5.png)
  
 ### Add or edit multiple custom RDP properties with Powershell
 To add or edit multiple custom RDP properties, run the following PowerShell cmdlets by providing the custom RDP properties as a semicolon-separated string:
 
 ```
-$properties="audiocapturemode:i:1; camerastoredirect:s:*; drivestoredirect:s:; redirectclipboard:i:1;redirectprinters:i:0"
+$properties="audiocapturemode:i:1; camerastoredirect:s:*; drivestoredirect:s:; redirectclipboard:i:1;redirectprinters:i:0;enablerdsaadauth:i:1"
 
 Update-AzWvdHostPool -ResourceGroupName <resourcegroupname> -Name <hostpoolname> -CustomRdpProperty $properties
 ```
@@ -55,13 +62,15 @@ You can check to make sure the RDP property was added by running the following c
 ```
 Get-AzWvdHostPool -ResourceGroupName <resourcegroupname> -Name <hostpoolname> | format-list Name, CustomRdpProperty
 ```
+**Task 1 has been completed** 
 
-## Task2:
-Remote App Pool
+## Task 2 - Pooled AVD Host Pool (Remote Apps)
+
 - Allow Multiple Displays
 - Smart Sizing should be enabled
 - Deny Camera, Microphone and Copy&Paste.
 - Allow Storage and networkdrive and printer redirection.
+- Configure single sign-on using Azure AD Authentication
 
  In your Remote App Host pool, navigate to **RDP Properties**
 
@@ -83,12 +92,19 @@ Remote App Pool
 - Printer Redirection: **The printers on the local computer are available in the remote session**
 
 ![RDP Property](../Images/06-RDPProperty_4.png)
+
+#### Connection information
+
+- Azure AD single sign-on: **Connections will use Azure AD authentication to provide single sign-on** 
+
+![RDP Property](../Images/06-RDPProperty_5.png)
+
  
 ### Add or edit multiple custom RDP properties with Powershell
 To add or edit multiple custom RDP properties, run the following PowerShell cmdlets by providing the custom RDP properties as a semicolon-separated string:
 
 ```
-$properties="audiocapturemode:i:0; camerastoredirect:s:0; drivestoredirect:s:; redirectclipboard:i:1;redirectprinters:i:1"
+$properties="audiocapturemode:i:0; camerastoredirect:s:0; drivestoredirect:s:; redirectclipboard:i:1;redirectprinters:i:1;enablerdsaadauth:i:1"
 
 Update-AzWvdHostPool -ResourceGroupName <resourcegroupname> -Name <hostpoolname> -CustomRdpProperty $properties
 ```
@@ -97,3 +113,4 @@ You can check to make sure the RDP property was added by running the following c
 ```
 Get-AzWvdHostPool -ResourceGroupName <resourcegroupname> -Name <hostpoolname> | format-list Name, CustomRdpProperty
 ```
+**Task 2 has been completed** 

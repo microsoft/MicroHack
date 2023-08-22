@@ -7,7 +7,7 @@ Duration: 45 min
 
 You will deploy a new pooled hostpool from the custom golden image from [Challenge 2](./02-Create-a-custom-golden-image.md) and deploy two session hosts from it. After that you will be able to logon to the host pool with multiple people from your organization. To test the RemoteApp capabilities in AVD you will also create a remote application group and assign it as well to users from your organization.
 
-In a pooled configuration we will be hosting multiple non-persistent sessions, with no user profile information stored locally. This is where FSLogix Profile Containers provide the users profile to the host dynamically. This provides the ability for an organization to fully utilize the compute resources on a single host and lower the total overhead, cost, and number of remote workstations. Have a look at [Challenge 4](04-Implement-FSLogix-Profile-Solution.md) if you want to implement a persistent user-experience in a non-persistent pooled desktop scenario
+In a pooled configuration we will be hosting multiple non-persistent sessions, with no user profile information stored locally. This is where FSLogix Profile Containers provide the users profile to the host dynamically. This provides the ability for an organization to fully utilize the compute resources on a single host and lower the total overhead, cost, and number of remote workstations. Have a look at [Challenge 5](05-Implement-FSLogix-Profile-Solution.md) if you want to implement a persistent user-experience in a non-persistent pooled desktop scenario
 
 **Additional Resources**
 |              |            |  

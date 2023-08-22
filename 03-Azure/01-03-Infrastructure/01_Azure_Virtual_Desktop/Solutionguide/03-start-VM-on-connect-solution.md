@@ -1,10 +1,9 @@
-# Exercise 5: Implement Start VM on Connect Feature
+# Exercise 3: Implement Start VM on Connect
 
 Duration: 15mins
 
 
-[Previous Challenge Solution](./04-Implement-FSLogix-Profile-Solution.md) - **[Home](../Readme.md)** - [Next Challenge Solution](06-scaling-plan-solution.md)
-
+[Previous Challenge Solution](./02-Create-a-custom-golden-image-solution.md) - **[Home](../Readme.md)** - [Next Challenge Solution](./04-multi-session-Hostpools-solution.md)
 
 **Additional Resources**
 

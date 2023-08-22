@@ -1,6 +1,6 @@
 # Exercise 6: Set up a scaling plan
 
-[Previous Challenge](./05-start-VM-on-connect.md) - **[Home](../Readme.md)** - [Next Challenge](./07-RDP-properties.md)
+[Previous Challenge](./05-Implement-FSLogix-Profile-Solution.md) - **[Home](../Readme.md)** - [Next Challenge](./07-RDP-properties.md)
 
 ## Introduction
 Taking a look at the multi-session usage pattern we recognize that some days are busier than others. Busy days have specific peak hours as well as times where the desktops are not used at all. 

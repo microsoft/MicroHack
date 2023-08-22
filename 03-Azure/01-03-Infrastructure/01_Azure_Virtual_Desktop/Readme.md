@@ -17,6 +17,11 @@ This hack covers all essential artifacts of AVD and starts off by covering the b
 
 In this hack, you will learn how to set up an Azure Virtual Desktop in a typical scenario and build it in the MicroHack environment. Once your AVD environment is built, you will learn how to scale, monitor, and manage the environment with other Azure resources.
 
+## Requirements
+
+- Basic Azure knowledge [(Azure Monitor fundamentals)](https://learn.microsoft.com/en-us/training/paths/monitor-usage-performance-availability-resources-azure-monitor/)
+- Microsoft Teams Desktop Sharing should be allowed to collaborate with other participants.
+
 ## Content and Challenges
 
 - Challenge 0: **[Getting started](Challenges/00-Pre-Reqs.md)**

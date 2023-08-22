@@ -298,7 +298,7 @@ Select **Save**.
 | Field | Value | Notes
 |:---------|:---------|:---------|
 | Script name | InstallApps.ps1 | Enter your custom script name.
-| URI | https://raw.githubusercontent.com/dweppeler-msft/AVD/main/InstallApps.ps1 | Enter your custom script URL.
+| URI | **GITHUB URL TBD** | Enter your custom script URL.
 
 ![02-CustomImageTemplate-9.png](../Images/02-CustomImageTemplate-9.png)
 

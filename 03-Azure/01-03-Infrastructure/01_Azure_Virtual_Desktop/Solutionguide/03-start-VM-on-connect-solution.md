@@ -1,4 +1,4 @@
-# Exercise 3: Implement Start VM on Connect Feature
+# Exercise 3: Implement Start VM on Connect
 
 Duration: 15mins
 

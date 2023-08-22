@@ -1,4 +1,4 @@
-# Exercise 3: Implement Start VM on Connect Feature
+# Exercise 3: Implement Start VM on Connect
 
 [Previous Challenge](./02-Create-a-custom-golden-image.md) - **[Home](../Readme.md)** - [Next Challenge](./04-multi-session-Hostpools.md)
 

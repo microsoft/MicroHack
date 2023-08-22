@@ -251,7 +251,7 @@ Select **Next**.
 | Gallery image definition | WIN11AVDCoreAppsDefinitions  | 
 | Gallery Image version | 0.0.1 | It's optional.
 | Run output name | WIN11AVDCoreApps | This value can be anything, it is just the name for the temporary resource group
-| Replication regions | East US | 
+| Replication regions | West Europe | 
 | Exclude from latest | No | It's the first version.
 | Storage account type | Standard_LRS |
 
@@ -313,6 +313,7 @@ Select **Save**.
 
 ![02-CustomImageTemplate-11.png](../Images/02-CustomImageTemplate-11.png)
 
+>**Info:** If the template creation fails because of the West Europe region, you need to recreate the template and use North Europe as the region, but for the replication region both (West Europe and North Europe).
 
 14. When the customer image template is successfully created, you can start the image creation process by clicking **Start build**.
 
@@ -321,7 +322,7 @@ Select **Save**.
 
 In the background, Azure Image Builder will create a staging resource group in your subscription. This resource group is used for the image build. It's in the format: **IT_%DestinationResourceGroup%_%TemplateName%**.
 
->[!alert]Do not delete the staging resource group directly. Delete the image template artifact, this will cause the staging resource group to be deleted. Task 3 will introduce the concept of cleanup.
+>**Warning:** Do not delete the staging resource group directly. Delete the image template artifact, this will cause the staging resource group to be deleted.
 
 In the meantime, open with a browser the Azure portal and navigate to the **All resources** view. You should see - depending on the build task's progress - the staging resource group, a storage account and the new VM image.
 

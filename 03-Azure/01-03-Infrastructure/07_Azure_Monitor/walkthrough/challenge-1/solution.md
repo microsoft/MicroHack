@@ -1,11 +1,10 @@
 # Walkthrough Challenge  1
 
-*Duration: 40 Minutes*
+*Duration: 45 Minutes*
 
 ## Task 1 & 2 & 3
 
 - Create a data collection rule
-- For detailed information check [documenation page](https://learn.microsoft.com/en-us/azure/azure-monitor/agents/data-collection-rule-azure-monitor-agent?tabs=portal)
 
     ![Create DCR](./img/task_01_a.png)
 
@@ -42,13 +41,21 @@
     *VM Extensions + applications*
     ![Create DCR](./img/task_01_i.png)
 
-### Task 4: Validate tables in Log Analytics Workspace
+## Task 4: Validate tables in Log Analytics Workspace
 
 - Which table includes Windows Events?
+
+    ![Windows Events](./img/task_04_a.png)
+
 - Which table includes Linux Logs?
+
+    ![Linux Logs](./img/task_04_b.png)
+
 - Which table shows AMA reporting status?
 
-### Task 5: Availability rate check
+    ![Heartbeat](./img/task_04_c.png)
+
+## Task 5: Availability rate check
 
 ```powershell
 Heartbeat
@@ -58,3 +65,7 @@ Heartbeat
 | extend availabilityRate = totalAvailableHours*100/24
 | project-rename Availability_in_Percent=availabilityRate
 ```
+
+## Links
+
+For detailed information check [documenation page](https://learn.microsoft.com/en-us/azure/azure-monitor/agents/data-collection-rule-azure-monitor-agent?tabs=portal)

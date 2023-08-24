@@ -1,10 +1,18 @@
 # Challenge 3 : Create alerts
 
+Alerts help you identify and fix problems before users notice them by proactively notifying you when Azure Monitor data indicates a problem with your infrastructure or application.
+
+You can create alerts for any metric or log data source in the Azure Monitor data platform.
+
+This diagram shows you how alerts work:
+
+![Alerts](https://learn.microsoft.com/en-us/azure/azure-monitor/alerts/media/alerts-overview/alerts.png)
+
 ## Goal
 
 Every monitoring solution needs to have a way to notify the user about issues. Azure Monitor provides a way to create alerts based on metrics and logs. In this challenge, you will create an alert for, e.g, unresponsive virtual machines.
 
-Import to understand here are the different types of alerts that can be created:
+Important here are the different types of alert types that can be created:
 
 - Metric alerts
 - Log alerts

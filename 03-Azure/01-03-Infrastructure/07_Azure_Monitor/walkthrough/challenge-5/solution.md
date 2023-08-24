@@ -1,10 +1,8 @@
 # Walkthrough Challenge 5
 
-*Duration: 35 Minutes*
+*Duration: 45 Minutes*
 
-See detailed information - [Collect text logs with Azure Monitor Agent](https://learn.microsoft.com/en-us/azure/azure-monitor/agents/data-collection-text-log?tabs=portal)
-
-### Task 1
+## Task 1
 
 - Create a `Data Collection Endpoint`
 
@@ -51,7 +49,7 @@ Invoke-AzRestMethod -Path "/subscriptions/{subscription id}/resourcegroups/rg-mi
 
 ![Create Table](./img/task_01_e.png)
 
-### Task 2
+## Task 2
 
 - Generate sample logs on your virutal machine.
 - Find a sample script in `./script/generate-logs.ps1`
@@ -90,7 +88,7 @@ do
 while ($true)
 ```
 
-### Task 3
+## Task 3
 
 - Create a `Data Collection Endpoint` and a `Data Collection Rule` to gather text logs from the virtual machine `vm-windows`
 
@@ -100,8 +98,12 @@ while ($true)
 
     ![Create DCR](./img/task_02_c.png)
 
-### Task 4
+## Task 4
 
 - Verify custom table `MH_MONITORING_CL` and logs are gather in Log Analytics workspace `law-microhack`.
   
     ![Verify](./img/task_03_a.png)
+
+## Links
+
+For detailed information check the [documenation page](https://learn.microsoft.com/en-us/azure/azure-monitor/agents/data-collection-text-log?tabs=portal)

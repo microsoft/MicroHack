@@ -11,7 +11,6 @@ Go to the Azure Portal and navigate to the resource group `rg-microhack-monitori
 ## Task 2: Create Log Analytics workspace
 
 - *Create a Log Analytics workspace `law-microhack` in the same resource group as the other resources. **Use the same Azure region as the other resources.***
-- See documentation [Create a Log Analytics workspace](https://learn.microsoft.com/en-us/azure/azure-monitor/logs/quick-create-workspace?tabs=azure-portal)
 
     ![Create LAW](./img/task_02.png)
 
@@ -39,3 +38,7 @@ Go to the Azure Portal and navigate to the resource group `rg-microhack-monitori
 - [***Optional***] Publish it and share it with other users in your organization
 
     ![Share Dashboard](./img/task_03_f.png)
+
+## Links
+
+For detailed information check the [documenation page](https://learn.microsoft.com/en-us/azure/azure-monitor/logs/quick-create-workspace?tabs=azure-portal)

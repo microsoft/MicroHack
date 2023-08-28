@@ -19,7 +19,7 @@ In this hack, you will learn how to set up an Azure Virtual Desktop in a typical
 
 ## Requirements
 
-- Basic Azure knowledge [(Azure Monitor fundamentals)](https://learn.microsoft.com/en-us/training/paths/monitor-usage-performance-availability-resources-azure-monitor/)
+- Basic Azure knowledge [(Azure fundamentals)](https://learn.microsoft.com/en-us/training/paths/azure-fundamentals-describe-azure-architecture-services/)
 - Microsoft Teams Desktop Sharing should be allowed to collaborate with other participants.
 
 ## Content and Challenges

@@ -72,13 +72,17 @@ Below an architecure diagram displays the setup. Tutorials and documentation tha
 
 ### Deployment
 
-There are **two different ways** to deploy the lab environment. The first is to use the **Azure Portal** and the second is to use the provided **terraform** scripts. The terraform method is the preferred method as it is faster and more reliable. However, if you are not familiar with terraform, you can use the Azure Portal method.
+There are **three different ways** to deploy the lab environment. The first is to use the **Azure Portal**, the second using ARM via `Deploy to Azure`-Button and the third is to use the provided **terraform** scripts. The terraform method is the preferred method as it is faster and more reliable. However, if you are not familiar with terraform, you can use the Azure Portal method.
 
 #### Azure Portal Method
 
 To deploy the lab environment using the **Azure Portal**, click the link below.
 
 - [Deploy to Azure (Portal)](./resources/portal/README.md)
+
+#### ARM Method
+
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://raw.githubusercontent.com/infracsademos/MicroHack/main/03-Azure/01-03-Infrastructure/07_Azure_Monitor/resources/ARM/template.json)
 
 #### Terraform Method
 

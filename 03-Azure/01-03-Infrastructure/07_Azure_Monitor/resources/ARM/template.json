@@ -10,6 +10,12 @@
             "defaultValue": "vm-windows",
             "type": "String"
         },
+        "vm_windows_admin_password": {
+            "type": "securestring"
+        },
+        "ssh_key": {
+            "type": "securestring"
+        },
         "publicIPAddresses_pip_bastion_name": {
             "defaultValue": "pip-bastion",
             "type": "String"
@@ -206,10 +212,10 @@
                         "createOption": "FromImage",
                         "caching": "ReadWrite",
                         "writeAcceleratorEnabled": false,
-                        "managedDisk": {
-                            "storageAccountType": "Standard_LRS",
-                            "id": "[resourceId('Microsoft.Compute/disks', concat(parameters('virtualMachines_vm_linux_name'), '_OsDisk_1_c152f0c0b5cb48de917f59ec55d6f17e'))]"
-                        },
+                        // "managedDisk": {
+                        //     "storageAccountType": "Standard_LRS",
+                        //     "id": "[resourceId('Microsoft.Compute/disks', concat(parameters('virtualMachines_vm_linux_name'), '_OsDisk_1_c152f0c0b5cb48de917f59ec55d6f17e'))]"
+                        // },
                         "deleteOption": "Detach",
                         "diskSizeGB": 30
                     },
@@ -224,7 +230,7 @@
                             "publicKeys": [
                                 {
                                     "path": "/home/vmuser/.ssh/authorized_keys",
-                                    "keyData": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDDTotdzh7FzHwjZfNAoIsmc30Uce08BecPg0k1P/96kVip2Syhq04I7yExjLB3Vvu7dpbRJFZV6WPVaeUufeKuucteOC8Q+5qFDYHUw0oNWqrf5p+uJTr+279+vgh7zgXVqpcdbwctnQbykzMdcqmF4MCswQvHnMiCffdt29P6QuY05wNOC2t/XxRFut9lIXxw3xwiJAmBvVjdC66AbNE3FwNXaHnZs8VOsCf82GIGRIGYwYciWRR5tTDLN8dGkpRJgS/u8zcJQDxMS6ZnTrxQ9WYesk0OBYusd8rp8uhj9FU96ZTQST7Bl/bCiyyok+zaIVZ2iqKMZB5cW2bfoRao287e6Xk+I+myGNXY0pnj2c4C3Ey28+z3joV5popfw1fh6oiddhWHUq6BXwsJn4LqyVp3d8RN874N4Mff4y0K7MB4NhV0AGOhBcFofx5TH1JtRbrsKW2R7F0ZSSRdXce7OzkvQSE4t8uvaFkpWec9wtwxjFLv57kArvwtUY2SVRs= soelchma@LAPTOP-O75VPO9T\n"
+                                    "keyData": "[parameters('ssh_key')]"
                                 }
                             ]
                         },
@@ -236,8 +242,8 @@
                         "enableVMAgentPlatformUpdates": false
                     },
                     "secrets": [],
-                    "allowExtensionOperations": true,
-                    "requireGuestProvisionSignal": true
+                    "allowExtensionOperations": true
+                    // "requireGuestProvisionSignal": true
                 },
                 "networkProfile": {
                     "networkInterfaces": [
@@ -286,10 +292,10 @@
                         "createOption": "FromImage",
                         "caching": "ReadWrite",
                         "writeAcceleratorEnabled": false,
-                        "managedDisk": {
-                            "storageAccountType": "Standard_LRS",
-                            "id": "[resourceId('Microsoft.Compute/disks', concat(parameters('virtualMachines_vm_windows_name'), '_OsDisk_1_1e3d21166c5443a59e3bb6db2f525f7a'))]"
-                        },
+                        // "managedDisk": {
+                        //     "storageAccountType": "Standard_LRS",
+                        //     "id": "[resourceId('Microsoft.Compute/disks', concat(parameters('virtualMachines_vm_windows_name'), '_OsDisk_1_1e3d21166c5443a59e3bb6db2f525f7a'))]"
+                        // },
                         "deleteOption": "Detach",
                         "diskSizeGB": 127
                     },
@@ -298,6 +304,7 @@
                 "osProfile": {
                     "computerName": "[parameters('virtualMachines_vm_windows_name')]",
                     "adminUsername": "vmuser",
+                    "adminPassword": "[parameters('vm_windows_admin_password')]",
                     "windowsConfiguration": {
                         "provisionVMAgent": true,
                         "enableAutomaticUpdates": true,
@@ -312,8 +319,8 @@
                         "enableVMAgentPlatformUpdates": false
                     },
                     "secrets": [],
-                    "allowExtensionOperations": true,
-                    "requireGuestProvisionSignal": true
+                    "allowExtensionOperations": true
+                    // "requireGuestProvisionSignal": true
                 },
                 "networkProfile": {
                     "networkInterfaces": [
@@ -559,8 +566,8 @@
                             "enableVMAgentPlatformUpdates": false
                         },
                         "secrets": [],
-                        "allowExtensionOperations": true,
-                        "requireGuestProvisionSignal": true
+                        "allowExtensionOperations": true
+                        // "requireGuestProvisionSignal": true
                     },
                     "storageProfile": {
                         "osDisk": {
@@ -826,224 +833,224 @@
                 "privateLinkServiceNetworkPolicies": "Enabled"
             }
         },
-        {
-            "type": "Microsoft.Compute/virtualMachineScaleSets/virtualMachines",
-            "apiVersion": "2023-03-01",
-            "name": "[concat(parameters('virtualMachineScaleSets_vmss_linux_nginx_name'), '/1')]",
-            "location": "westeurope",
-            "dependsOn": [
-                "[resourceId('Microsoft.Compute/virtualMachineScaleSets', parameters('virtualMachineScaleSets_vmss_linux_nginx_name'))]",
-                "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_vnet_microhack_name'), 'subnet-microhack-0')]",
-                "[resourceId('Microsoft.Network/applicationGateways', parameters('applicationGateways_appgw_microhack_name'))]"
-            ],
-            "sku": {
-                "name": "Standard_DS1_v2",
-                "tier": "Standard"
-            },
-            "identity": {
-                "type": "SystemAssigned"
-            },
-            "properties": {
-                "networkProfileConfiguration": {
-                    "networkInterfaceConfigurations": [
-                        {
-                            "name": "example",
-                            "properties": {
-                                "primary": true,
-                                "enableAcceleratedNetworking": false,
-                                "disableTcpStateTracking": false,
-                                "dnsSettings": {
-                                    "dnsServers": []
-                                },
-                                "enableIPForwarding": false,
-                                "ipConfigurations": [
-                                    {
-                                        "name": "internal",
-                                        "properties": {
-                                            "primary": true,
-                                            "subnet": {
-                                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_vnet_microhack_name'), 'subnet-microhack-0')]"
-                                            },
-                                            "privateIPAddressVersion": "IPv4",
-                                            "applicationGatewayBackendAddressPools": [
-                                                {
-                                                    "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('applicationGateways_appgw_microhack_name')), '/backendAddressPools/beap-appgw-microhack')]"
-                                                }
-                                            ]
-                                        }
-                                    }
-                                ]
-                            }
-                        }
-                    ]
-                },
-                "hardwareProfile": {
-                    "vmSize": "Standard_DS1_v2"
-                },
-                "storageProfile": {
-                    "imageReference": {
-                        "publisher": "Canonical",
-                        "offer": "UbuntuServer",
-                        "sku": "18.04-LTS",
-                        "version": "latest"
-                    },
-                    "osDisk": {
-                        "osType": "Linux",
-                        "name": "vmss-linux-nginx_vmss-linux-nginx_1_OsDisk_1_b4479adeda41487b95ee119eb6a26dec",
-                        "createOption": "FromImage",
-                        "caching": "ReadWrite",
-                        "writeAcceleratorEnabled": false,
-                        "managedDisk": {
-                            "storageAccountType": "Standard_LRS",
-                            "id": "[parameters('disks_vmss_linux_nginx_vmss_linux_nginx_1_OsDisk_1_b4479adeda41487b95ee119eb6a26dec_externalid')]"
-                        },
-                        "diskSizeGB": 30
-                    },
-                    "dataDisks": []
-                },
-                "osProfile": {
-                    "computerName": "vmss-linux-nginx000001",
-                    "adminUsername": "adminuser",
-                    "linuxConfiguration": {
-                        "disablePasswordAuthentication": true,
-                        "ssh": {
-                            "publicKeys": [
-                                {
-                                    "path": "/home/adminuser/.ssh/authorized_keys",
-                                    "keyData": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDDTotdzh7FzHwjZfNAoIsmc30Uce08BecPg0k1P/96kVip2Syhq04I7yExjLB3Vvu7dpbRJFZV6WPVaeUufeKuucteOC8Q+5qFDYHUw0oNWqrf5p+uJTr+279+vgh7zgXVqpcdbwctnQbykzMdcqmF4MCswQvHnMiCffdt29P6QuY05wNOC2t/XxRFut9lIXxw3xwiJAmBvVjdC66AbNE3FwNXaHnZs8VOsCf82GIGRIGYwYciWRR5tTDLN8dGkpRJgS/u8zcJQDxMS6ZnTrxQ9WYesk0OBYusd8rp8uhj9FU96ZTQST7Bl/bCiyyok+zaIVZ2iqKMZB5cW2bfoRao287e6Xk+I+myGNXY0pnj2c4C3Ey28+z3joV5popfw1fh6oiddhWHUq6BXwsJn4LqyVp3d8RN874N4Mff4y0K7MB4NhV0AGOhBcFofx5TH1JtRbrsKW2R7F0ZSSRdXce7OzkvQSE4t8uvaFkpWec9wtwxjFLv57kArvwtUY2SVRs= soelchma@LAPTOP-O75VPO9T\n"
-                                }
-                            ]
-                        },
-                        "provisionVMAgent": true,
-                        "enableVMAgentPlatformUpdates": false
-                    },
-                    "secrets": [],
-                    "allowExtensionOperations": true,
-                    "requireGuestProvisionSignal": true
-                },
-                "networkProfile": {
-                    "networkInterfaces": [
-                        {
-                            "id": "[concat(resourceId('Microsoft.Compute/virtualMachineScaleSets/virtualMachines', parameters('virtualMachineScaleSets_vmss_linux_nginx_name'), '1'), '/networkInterfaces/example')]"
-                        }
-                    ]
-                },
-                "diagnosticsProfile": {
-                    "bootDiagnostics": {
-                        "enabled": false
-                    }
-                }
-            }
-        },
-        {
-            "type": "Microsoft.Compute/virtualMachineScaleSets/virtualMachines",
-            "apiVersion": "2023-03-01",
-            "name": "[concat(parameters('virtualMachineScaleSets_vmss_linux_nginx_name'), '/2')]",
-            "location": "westeurope",
-            "dependsOn": [
-                "[resourceId('Microsoft.Compute/virtualMachineScaleSets', parameters('virtualMachineScaleSets_vmss_linux_nginx_name'))]",
-                "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_vnet_microhack_name'), 'subnet-microhack-0')]",
-                "[resourceId('Microsoft.Network/applicationGateways', parameters('applicationGateways_appgw_microhack_name'))]"
-            ],
-            "sku": {
-                "name": "Standard_DS1_v2",
-                "tier": "Standard"
-            },
-            "identity": {
-                "type": "SystemAssigned"
-            },
-            "properties": {
-                "networkProfileConfiguration": {
-                    "networkInterfaceConfigurations": [
-                        {
-                            "name": "example",
-                            "properties": {
-                                "primary": true,
-                                "enableAcceleratedNetworking": false,
-                                "disableTcpStateTracking": false,
-                                "dnsSettings": {
-                                    "dnsServers": []
-                                },
-                                "enableIPForwarding": false,
-                                "ipConfigurations": [
-                                    {
-                                        "name": "internal",
-                                        "properties": {
-                                            "primary": true,
-                                            "subnet": {
-                                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_vnet_microhack_name'), 'subnet-microhack-0')]"
-                                            },
-                                            "privateIPAddressVersion": "IPv4",
-                                            "applicationGatewayBackendAddressPools": [
-                                                {
-                                                    "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('applicationGateways_appgw_microhack_name')), '/backendAddressPools/beap-appgw-microhack')]"
-                                                }
-                                            ]
-                                        }
-                                    }
-                                ]
-                            }
-                        }
-                    ]
-                },
-                "hardwareProfile": {
-                    "vmSize": "Standard_DS1_v2"
-                },
-                "storageProfile": {
-                    "imageReference": {
-                        "publisher": "Canonical",
-                        "offer": "UbuntuServer",
-                        "sku": "18.04-LTS",
-                        "version": "latest"
-                    },
-                    "osDisk": {
-                        "osType": "Linux",
-                        "name": "vmss-linux-nginx_vmss-linux-nginx_2_OsDisk_1_d209bc2f9b7b450eb41b60aa618c8f98",
-                        "createOption": "FromImage",
-                        "caching": "ReadWrite",
-                        "writeAcceleratorEnabled": false,
-                        "managedDisk": {
-                            "storageAccountType": "Standard_LRS",
-                            "id": "[parameters('disks_vmss_linux_nginx_vmss_linux_nginx_2_OsDisk_1_d209bc2f9b7b450eb41b60aa618c8f98_externalid')]"
-                        },
-                        "diskSizeGB": 30
-                    },
-                    "dataDisks": []
-                },
-                "osProfile": {
-                    "computerName": "vmss-linux-nginx000002",
-                    "adminUsername": "adminuser",
-                    "linuxConfiguration": {
-                        "disablePasswordAuthentication": true,
-                        "ssh": {
-                            "publicKeys": [
-                                {
-                                    "path": "/home/adminuser/.ssh/authorized_keys",
-                                    "keyData": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDDTotdzh7FzHwjZfNAoIsmc30Uce08BecPg0k1P/96kVip2Syhq04I7yExjLB3Vvu7dpbRJFZV6WPVaeUufeKuucteOC8Q+5qFDYHUw0oNWqrf5p+uJTr+279+vgh7zgXVqpcdbwctnQbykzMdcqmF4MCswQvHnMiCffdt29P6QuY05wNOC2t/XxRFut9lIXxw3xwiJAmBvVjdC66AbNE3FwNXaHnZs8VOsCf82GIGRIGYwYciWRR5tTDLN8dGkpRJgS/u8zcJQDxMS6ZnTrxQ9WYesk0OBYusd8rp8uhj9FU96ZTQST7Bl/bCiyyok+zaIVZ2iqKMZB5cW2bfoRao287e6Xk+I+myGNXY0pnj2c4C3Ey28+z3joV5popfw1fh6oiddhWHUq6BXwsJn4LqyVp3d8RN874N4Mff4y0K7MB4NhV0AGOhBcFofx5TH1JtRbrsKW2R7F0ZSSRdXce7OzkvQSE4t8uvaFkpWec9wtwxjFLv57kArvwtUY2SVRs= soelchma@LAPTOP-O75VPO9T\n"
-                                }
-                            ]
-                        },
-                        "provisionVMAgent": true,
-                        "enableVMAgentPlatformUpdates": false
-                    },
-                    "secrets": [],
-                    "allowExtensionOperations": true,
-                    "requireGuestProvisionSignal": true
-                },
-                "networkProfile": {
-                    "networkInterfaces": [
-                        {
-                            "id": "[concat(resourceId('Microsoft.Compute/virtualMachineScaleSets/virtualMachines', parameters('virtualMachineScaleSets_vmss_linux_nginx_name'), '2'), '/networkInterfaces/example')]"
-                        }
-                    ]
-                },
-                "diagnosticsProfile": {
-                    "bootDiagnostics": {
-                        "enabled": false
-                    }
-                }
-            }
-        },
+        // {
+        //     "type": "Microsoft.Compute/virtualMachineScaleSets/virtualMachines",
+        //     "apiVersion": "2023-03-01",
+        //     "name": "[concat(parameters('virtualMachineScaleSets_vmss_linux_nginx_name'), '1')]",
+        //     "location": "westeurope",
+        //     "dependsOn": [
+        //         "[resourceId('Microsoft.Compute/virtualMachineScaleSets', parameters('virtualMachineScaleSets_vmss_linux_nginx_name'))]",
+        //         "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_vnet_microhack_name'), 'subnet-microhack-0')]",
+        //         "[resourceId('Microsoft.Network/applicationGateways', parameters('applicationGateways_appgw_microhack_name'))]"
+        //     ],
+        //     "sku": {
+        //         "name": "Standard_DS1_v2",
+        //         "tier": "Standard"
+        //     },
+        //     "identity": {
+        //         "type": "SystemAssigned"
+        //     },
+        //     "properties": {
+        //         "networkProfileConfiguration": {
+        //             "networkInterfaceConfigurations": [
+        //                 {
+        //                     "name": "example",
+        //                     "properties": {
+        //                         "primary": true,
+        //                         "enableAcceleratedNetworking": false,
+        //                         "disableTcpStateTracking": false,
+        //                         "dnsSettings": {
+        //                             "dnsServers": []
+        //                         },
+        //                         "enableIPForwarding": false,
+        //                         "ipConfigurations": [
+        //                             {
+        //                                 "name": "internal",
+        //                                 "properties": {
+        //                                     "primary": true,
+        //                                     "subnet": {
+        //                                         "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_vnet_microhack_name'), 'subnet-microhack-0')]"
+        //                                     },
+        //                                     "privateIPAddressVersion": "IPv4",
+        //                                     "applicationGatewayBackendAddressPools": [
+        //                                         {
+        //                                             "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('applicationGateways_appgw_microhack_name')), '/backendAddressPools/beap-appgw-microhack')]"
+        //                                         }
+        //                                     ]
+        //                                 }
+        //                             }
+        //                         ]
+        //                     }
+        //                 }
+        //             ]
+        //         },
+        //         "hardwareProfile": {
+        //             "vmSize": "Standard_DS1_v2"
+        //         },
+        //         "storageProfile": {
+        //             "imageReference": {
+        //                 "publisher": "Canonical",
+        //                 "offer": "UbuntuServer",
+        //                 "sku": "18.04-LTS",
+        //                 "version": "latest"
+        //             },
+        //             "osDisk": {
+        //                 "osType": "Linux",
+        //                 // "name": "vmss-linux-nginx_vmss-linux-nginx_1_OsDisk_1_b4479adeda41487b95ee119eb6a26dec",
+        //                 "createOption": "FromImage",
+        //                 "caching": "ReadWrite",
+        //                 "writeAcceleratorEnabled": false,
+        //                 "managedDisk": {
+        //                     "storageAccountType": "Standard_LRS",
+        //                     "id": "[parameters('disks_vmss_linux_nginx_vmss_linux_nginx_1_OsDisk_1_b4479adeda41487b95ee119eb6a26dec_externalid')]"
+        //                 },
+        //                 "diskSizeGB": 30
+        //             },
+        //             "dataDisks": []
+        //         },
+        //         "osProfile": {
+        //             "computerName": "vmss-linux-nginx000001",
+        //             "adminUsername": "adminuser",
+        //             "linuxConfiguration": {
+        //                 "disablePasswordAuthentication": true,
+        //                 "ssh": {
+        //                     "publicKeys": [
+        //                         {
+        //                             "path": "/home/adminuser/.ssh/authorized_keys",
+        //                             "keyData": "[parameters('ssh_key')]"
+        //                         }
+        //                     ]
+        //                 },
+        //                 "provisionVMAgent": true,
+        //                 "enableVMAgentPlatformUpdates": false
+        //             },
+        //             "secrets": [],
+        //             "allowExtensionOperations": true
+        //             // "requireGuestProvisionSignal": true
+        //         },
+        //         "networkProfile": {
+        //             "networkInterfaces": [
+        //                 {
+        //                     "id": "[concat(resourceId('Microsoft.Compute/virtualMachineScaleSets/virtualMachines', parameters('virtualMachineScaleSets_vmss_linux_nginx_name'), '1'), '/networkInterfaces/example')]"
+        //                 }
+        //             ]
+        //         },
+        //         "diagnosticsProfile": {
+        //             "bootDiagnostics": {
+        //                 "enabled": false
+        //             }
+        //         }
+        //     }
+        // },
+        // {
+        //     "type": "Microsoft.Compute/virtualMachineScaleSets/virtualMachines",
+        //     "apiVersion": "2023-03-01",
+        //     "name": "[concat(parameters('virtualMachineScaleSets_vmss_linux_nginx_name'), '/2')]",
+        //     "location": "westeurope",
+        //     "dependsOn": [
+        //         "[resourceId('Microsoft.Compute/virtualMachineScaleSets', parameters('virtualMachineScaleSets_vmss_linux_nginx_name'))]",
+        //         "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_vnet_microhack_name'), 'subnet-microhack-0')]",
+        //         "[resourceId('Microsoft.Network/applicationGateways', parameters('applicationGateways_appgw_microhack_name'))]"
+        //     ],
+        //     "sku": {
+        //         "name": "Standard_DS1_v2",
+        //         "tier": "Standard"
+        //     },
+        //     "identity": {
+        //         "type": "SystemAssigned"
+        //     },
+        //     "properties": {
+        //         "networkProfileConfiguration": {
+        //             "networkInterfaceConfigurations": [
+        //                 {
+        //                     "name": "example",
+        //                     "properties": {
+        //                         "primary": true,
+        //                         "enableAcceleratedNetworking": false,
+        //                         "disableTcpStateTracking": false,
+        //                         "dnsSettings": {
+        //                             "dnsServers": []
+        //                         },
+        //                         "enableIPForwarding": false,
+        //                         "ipConfigurations": [
+        //                             {
+        //                                 "name": "internal",
+        //                                 "properties": {
+        //                                     "primary": true,
+        //                                     "subnet": {
+        //                                         "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_vnet_microhack_name'), 'subnet-microhack-0')]"
+        //                                     },
+        //                                     "privateIPAddressVersion": "IPv4",
+        //                                     "applicationGatewayBackendAddressPools": [
+        //                                         {
+        //                                             "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('applicationGateways_appgw_microhack_name')), '/backendAddressPools/beap-appgw-microhack')]"
+        //                                         }
+        //                                     ]
+        //                                 }
+        //                             }
+        //                         ]
+        //                     }
+        //                 }
+        //             ]
+        //         },
+        //         "hardwareProfile": {
+        //             "vmSize": "Standard_DS1_v2"
+        //         },
+        //         "storageProfile": {
+        //             "imageReference": {
+        //                 "publisher": "Canonical",
+        //                 "offer": "UbuntuServer",
+        //                 "sku": "18.04-LTS",
+        //                 "version": "latest"
+        //             },
+        //             "osDisk": {
+        //                 "osType": "Linux",
+        //                 // "name": "vmss-linux-nginx_vmss-linux-nginx_2_OsDisk_1_d209bc2f9b7b450eb41b60aa618c8f98",
+        //                 "createOption": "FromImage",
+        //                 "caching": "ReadWrite",
+        //                 "writeAcceleratorEnabled": false,
+        //                 "managedDisk": {
+        //                     "storageAccountType": "Standard_LRS",
+        //                     "id": "[parameters('disks_vmss_linux_nginx_vmss_linux_nginx_2_OsDisk_1_d209bc2f9b7b450eb41b60aa618c8f98_externalid')]"
+        //                 },
+        //                 "diskSizeGB": 30
+        //             },
+        //             "dataDisks": []
+        //         },
+        //         "osProfile": {
+        //             "computerName": "vmss-linux-nginx000002",
+        //             "adminUsername": "adminuser",
+        //             "linuxConfiguration": {
+        //                 "disablePasswordAuthentication": true,
+        //                 "ssh": {
+        //                     "publicKeys": [
+        //                         {
+        //                             "path": "/home/adminuser/.ssh/authorized_keys",
+        //                             "keyData": "[parameters('ssh_key')]"
+        //                         }
+        //                     ]
+        //                 },
+        //                 "provisionVMAgent": true,
+        //                 "enableVMAgentPlatformUpdates": false
+        //             },
+        //             "secrets": [],
+        //             "allowExtensionOperations": true
+        //             // "requireGuestProvisionSignal": true
+        //         },
+        //         "networkProfile": {
+        //             "networkInterfaces": [
+        //                 {
+        //                     "id": "[concat(resourceId('Microsoft.Compute/virtualMachineScaleSets/virtualMachines', parameters('virtualMachineScaleSets_vmss_linux_nginx_name'), '2'), '/networkInterfaces/example')]"
+        //                 }
+        //             ]
+        //         },
+        //         "diagnosticsProfile": {
+        //             "bootDiagnostics": {
+        //                 "enabled": false
+        //             }
+        //         }
+        //     }
+        // },
         {
             "type": "Microsoft.Network/virtualNetworks",
             "apiVersion": "2023-04-01",
@@ -1051,8 +1058,7 @@
             "location": "westeurope",
             "dependsOn": [
                 "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_nsg_subnet_1_name'))]",
-                "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_nsg_subnet_2_name'))]",
-                "[resourceId('Microsoft.Network/applicationGateways', parameters('applicationGateways_appgw_microhack_name'))]"
+                "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_nsg_subnet_2_name'))]"
             ],
             "properties": {
                 "addressSpace": {
@@ -1090,27 +1096,27 @@
                             "privateLinkServiceNetworkPolicies": "Enabled"
                         },
                         "type": "Microsoft.Network/virtualNetworks/subnets"
-                    },
-                    {
-                        "name": "subnet-microhack-1",
-                        "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_vnet_microhack_name'), 'subnet-microhack-1')]",
-                        "properties": {
-                            "addressPrefix": "10.0.1.0/24",
-                            "networkSecurityGroup": {
-                                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_nsg_subnet_2_name'))]"
-                            },
-                            "applicationGatewayIPConfigurations": [
-                                {
-                                    "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('applicationGateways_appgw_microhack_name')), '/gatewayIPConfigurations/appgw-mh-ip-configuration')]"
-                                }
-                            ],
-                            "serviceEndpoints": [],
-                            "delegations": [],
-                            "privateEndpointNetworkPolicies": "Enabled",
-                            "privateLinkServiceNetworkPolicies": "Enabled"
-                        },
-                        "type": "Microsoft.Network/virtualNetworks/subnets"
                     }
+                    // {
+                    //     "name": "subnet-microhack-1",
+                    //     "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_vnet_microhack_name'), 'subnet-microhack-1')]",
+                    //     "properties": {
+                    //         "addressPrefix": "10.0.1.0/24",
+                    //         "networkSecurityGroup": {
+                    //             "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_nsg_subnet_2_name'))]"
+                    //         },
+                    //         "applicationGatewayIPConfigurations": [
+                    //             {
+                    //                 "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('applicationGateways_appgw_microhack_name')), '/gatewayIPConfigurations/appgw-mh-ip-configuration')]"
+                    //             }
+                    //         ],
+                    //         "serviceEndpoints": [],
+                    //         "delegations": [],
+                    //         "privateEndpointNetworkPolicies": "Enabled",
+                    //         "privateLinkServiceNetworkPolicies": "Enabled"
+                    //     },
+                    //     "type": "Microsoft.Network/virtualNetworks/subnets"
+                    // }
                 ],
                 "virtualNetworkPeerings": [],
                 "enableDdosProtection": false
@@ -1122,8 +1128,7 @@
             "name": "[concat(parameters('virtualNetworks_vnet_microhack_name'), '/subnet-microhack-1')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_vnet_microhack_name'))]",
-                "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_nsg_subnet_2_name'))]",
-                "[resourceId('Microsoft.Network/applicationGateways', parameters('applicationGateways_appgw_microhack_name'))]"
+                "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_nsg_subnet_2_name'))]"
             ],
             "properties": {
                 "addressPrefix": "10.0.1.0/24",

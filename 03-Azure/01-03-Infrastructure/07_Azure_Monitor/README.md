@@ -82,7 +82,7 @@ To deploy the lab environment using the **Azure Portal**, click the link below.
 
 #### ARM Method
 
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://raw.githubusercontent.com/infracsademos/MicroHack/main/03-Azure/01-03-Infrastructure/07_Azure_Monitor/resources/ARM/template.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https%3A%2F%2Fraw.githubusercontent.com%2Finfracsademos%2FMicroHack%2Fmain%2F03-Azure%2F01-03-Infrastructure%2F07_Azure_Monitor%2Fresources%2FARM%2Ftemplate.json)
 
 #### Terraform Method
 

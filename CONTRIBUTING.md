@@ -94,9 +94,14 @@ For example:
 * `/02-azure/02-data/01-azure-sql-mi/readme.md`
 * `/03-microsoft365/01-exchange-online/readme.md`
 
-## Template
+## Templates
+### New MicroHack
 
-In order to bootstrap new MicroHacks we created a [template file](99-MicroHack-Template/Readme.md) for your convenience. Feel free to use it for your new MicroHacks or copy exisiting MicroHacks that better fit your ideas.
+In order to bootstrap new MicroHacks we created a [template](99-MicroHack-Template/Readme.md) for your convenience. Please use this template to make sure your microhack fits into the structure of the current microhacks. Contributions/Enhancements to the template are also welcome.
+
+### Linked MicroHack
+
+We are aware that the Format of MicroHack is not exclusive to this repository. In order to give you the chance to promote your MicroHack and make it easily discoverable you can use the [template link](99-MicroHack-TemplateLink/Readme.md) to link your Microhack.
 
 ## Formatting
 

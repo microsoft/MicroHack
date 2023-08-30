@@ -558,7 +558,7 @@
                                 "publicKeys": [
                                     {
                                         "path": "/home/adminuser/.ssh/authorized_keys",
-                                        "keyData": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDDTotdzh7FzHwjZfNAoIsmc30Uce08BecPg0k1P/96kVip2Syhq04I7yExjLB3Vvu7dpbRJFZV6WPVaeUufeKuucteOC8Q+5qFDYHUw0oNWqrf5p+uJTr+279+vgh7zgXVqpcdbwctnQbykzMdcqmF4MCswQvHnMiCffdt29P6QuY05wNOC2t/XxRFut9lIXxw3xwiJAmBvVjdC66AbNE3FwNXaHnZs8VOsCf82GIGRIGYwYciWRR5tTDLN8dGkpRJgS/u8zcJQDxMS6ZnTrxQ9WYesk0OBYusd8rp8uhj9FU96ZTQST7Bl/bCiyyok+zaIVZ2iqKMZB5cW2bfoRao287e6Xk+I+myGNXY0pnj2c4C3Ey28+z3joV5popfw1fh6oiddhWHUq6BXwsJn4LqyVp3d8RN874N4Mff4y0K7MB4NhV0AGOhBcFofx5TH1JtRbrsKW2R7F0ZSSRdXce7OzkvQSE4t8uvaFkpWec9wtwxjFLv57kArvwtUY2SVRs= soelchma@LAPTOP-O75VPO9T\n"
+                                        "keyData": "[parameters('ssh_key')]"
                                     }
                                 ]
                             },

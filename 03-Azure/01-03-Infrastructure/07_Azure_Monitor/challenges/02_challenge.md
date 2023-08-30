@@ -33,11 +33,9 @@ VM Insights can be set up in different ways. After the tutorial, you can activat
 - From Azure Monitor blade there is a way to enable VM Insights, too.
 - From the Monitor menu in the Azure portal, select Virtual Machines > Overview > Not Monitored.
 
-### Task 3: Enable VM Insights for `vmss-linux-nginx` automatically
+### *[Optional]* Task 3: Enable VM Insights for `vmss-linux-nginx` automatically
 
-- Enable VM Insights for th VMSS by using Azure Policy
-- VM insights policy initiatives install Azure Monitor Agent and the Dependency agent on new virtual machine scale set in your Azure environment.
-- Assign these initiatives to the resource group `rg-monitoring-microhack` to install the agents on the virtual machines in the defined scope automatically.
+- Run remmediation task to install the Dependency agent on new virtual machine scale set in your Azure environment.
 
 ### Task 4: Log search and visualize
 

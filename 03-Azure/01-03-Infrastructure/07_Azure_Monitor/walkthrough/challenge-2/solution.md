@@ -32,15 +32,11 @@
 
     ![Verify](./img/task_02_d.png)
 
-## Task 3: Enable VM Insights for `vmss-linux-nginx` automatically
+## *[Optional]* Task 3: Enable VM Insights for `vmss-linux-nginx` automatically
 
-> :warning: **RBAC and Permissions Requirement**: Based on the policy definition, it requires managed identity to have “Contributor” and “User Access Administrator” role on **subscription level** to execute the remediation task for Policy `Assign Built-In User-Assigned Managed Identity to Virtual Machine Scale Sets`.
+- Run remmediation task to install the Dependency agent on new virtual machine scale set in your Azure environment.
 
-- Enable VM Insights for th VMSS by using Azure Policy
-- VM insights policy initiatives install Azure Monitor Agent and the Dependency agent on new virtual machine scale set in your Azure environment.
-- Assign these initiatives to the resource group `rg-monitoring-microhack` to install the agents on the virtual machines in the defined scope automatically.
-
-
+    ![Create Remmediation Task](./img/task_03_a.png)
 
 ## Task 4: Log search and visualize
 

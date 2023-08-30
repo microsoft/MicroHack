@@ -2,7 +2,7 @@
 
 *Duration: 45 Minutes*
 
-## Task 1 & 2 & 3
+## Task 1 & 2
 
 - Create a data collection rule
 
@@ -40,6 +40,45 @@
 
     *VM Extensions + applications*
     ![Create DCR](./img/task_01_i.png)
+
+## *[Optional]* Task 3: Enable VM Insights for `vmss-linux-nginx` automatically
+
+> :warning: **RBAC and Permissions Requirement**: Based on the policy definition, it requires managed identity to have “Contributor” and “User Access Administrator” role on **subscription level** to execute the remediation task for Policy `Assign Built-In User-Assigned Managed Identity to Virtual Machine Scale Sets`.
+
+- Enable Azure Monitor for VMSS with Azure Monitoring Agent(AMA) on new virtual machine scale set in your Azure environment.
+- Assign the initiative to the resource group `rg-monitoring-microhack` to install the agents on the virtual machines in the defined scope automatically.
+- Please be patient, it takes a while for the policies to synchronise all dependencies and show resources in the remmediation section.
+
+> :warning:
+> Check if you VMSS istances running on the latest model. If not, update the model to the latest version manually. Otherwise no logs will be pushed to the Log Analytics Workspace.
+
+--------
+
+- Assign the initiative to the resource group `rg-monitoring-microhack` to install the agents on the virtual machines in the defined scope automatically.
+
+    ![Create Assignment](./img/task_03_a.png)
+
+    ![Create Assignment](./img/task_03_b.png)
+
+    ![Create Assignment](./img/task_03_c.png)
+
+    ![Create Assignment](./img/task_03_d.png)
+
+    ![Create Assignment](./img/task_03_e.png)
+
+- Assign the managed identity of the initiative “Contributor” and “User Access Administrator” role on **subscription level**
+
+    ![Permissions](./img/task_03_i.png)
+
+- Create remmediation task for the following policies
+
+    ![Remmediation Task](./img/task_03_h.png)
+
+    ![Remmediation Task](./img/task_03_f.png)
+
+    ![Remmediation Task](./img/task_03_g.png)
+
+- Verify Data Collection Rule configuration and check tables if logs are showing up vor `vmss-linux-nginx`
 
 ## Task 4: Validate tables in Log Analytics Workspace
 

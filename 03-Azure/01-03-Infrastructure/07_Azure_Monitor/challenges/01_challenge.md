@@ -42,7 +42,7 @@ After the challenge you should be able to answer the following questions:
 
 ## Actions
 
-Before you start working on the `Tasks 1, 2, 3`, you should have a look at the following resources:
+Before you start working on the `Tasks 1 and 2`, you should have a look at the following resources:
 
 - [Data collection rules in Azure Monitor](https://learn.microsoft.com/en-us/azure/azure-monitor/essentials/data-collection-rule-overview)
 - [Collect events and performance counters from virtual machines with Azure Monitor Agent](https://learn.microsoft.com/en-us/azure/azure-monitor/agents/data-collection-rule-azure-monitor-agent?tabs=portal)
@@ -51,15 +51,19 @@ Before you start working on the `Tasks 1, 2, 3`, you should have a look at the f
 
 Check if the `AMA` was installed  on the virtal machine blade under "Extensions & applications"
 
-### Taks 2: Install Azure Monitoring Agent (AMA) on Linux VM
+### Task 2: Install Azure Monitoring Agent (AMA) on Linux VM
 
 Check if the `AMA` was installed  on the virtal machine blade under "Extensions & applications"
 
-### Taks 3: Install Azure Monitoring Agent (AMA) on Linux Vitual Machine Scale Set
+### *[Optional]* Taks 3: Install Azure Monitoring Agent (AMA) on Linux Vitual Machine Scale Set automatically with Azure Policy
 
-Check if the `AMA` was installed  on the virtal machine blade under "Extensions & applications"
+> :warning: **RBAC and Permissions Requirement**: Based on the policy definition, it requires managed identity to have “Contributor” and “User Access Administrator” role on **subscription level** to execute the remediation task for Policy `Assign Built-In User-Assigned Managed Identity to Virtual Machine Scale Sets`.
 
-> **Note**
+- Enable Azure Monitor for VMSS with Azure Monitoring Agent(AMA) on new virtual machine scale set in your Azure environment.
+- Assign the initiative to the resource group `rg-monitoring-microhack` to install the agents on the virtual machines in the defined scope automatically.
+- Please be patient, it takes a while for the policies to synchronise all dependencies and show resources in the remmediation section.
+
+> :warning:
 > Check if you VMSS istances running on the latest model. If not, update the model to the latest version manually. Otherwise no logs will be pushed to the Log Analytics Workspace.
 
 ### Task 4: Validate tables in Log Analytics Workspace

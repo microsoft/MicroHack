@@ -6,7 +6,7 @@
   - [**Prerequisites**](#prerequisites)
   - [**Lab environment for this MicroHack**](#lab-environment-for-this-microhack)
     - [Deployment](#deployment)
-      - [Azure Portal Method](#azure-portal-method)
+      - [ARM Deployment](#arm-deployment)
       - [Terraform Method](#terraform-method)
   - [**MicroHack Challenges**](#microhack-challenges)
   - [**Solution Guide**](#solution-guide)
@@ -74,7 +74,7 @@ Below an architecure diagram displays the setup. Tutorials and documentation tha
 
 There are **two different ways** to deploy the lab environment. The first is using ARM via **Deploy to Azure-Button** and the second is to use the provided **terraform** scripts. The terraform method is the preferred method as it is faster and more reliable. However, if you are not familiar with terraform, you can use the Azure Portal method.
 
-#### ARM Method
+#### ARM Deployment
 
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Finfracsademos%2FMicroHack%2Fmain%2F03-Azure%2F01-03-Infrastructure%2F07_Azure_Monitor%2Fresources%2FARM%2Ftemplate.json)
 

@@ -14,9 +14,21 @@
 
 ![Task1](./img/task_01_c.png)
 
-- Add a Query to the workbook
+- Add a Query to the workbook and write the following query:
 
-![Task1](./img/task_01_d.png)
+```kusto
+Perf
+| where ObjectName == 'Processor' and CounterName == '% Processor Time'
+| summarize Cpu = percentile(CounterValue, 95) by Computer
+| join kind = inner (Perf
+    | where ObjectName == 'Processor' and CounterName == '% Processor Time'
+    | make-series Trend = percentile(CounterValue, 95) default = 0 on TimeGenerated from {TimeRange:start} to {TimeRange:end} step {TimeRange:grain} by Computer
+    ) on Computer
+| project-away Computer1, TimeGenerated
+| order by Cpu desc
+```
+
+![Task1](./img/task_01_e.png)
 
 In the **Columns Settings**, set:
 
@@ -41,7 +53,6 @@ Click **Save and close** to commit the changes.
 
 ## Task 3
 
-![Task1](./img/task_01_e.png)
 
 - Pin the workbook to the dashboard. Choose **Pin All** to pin all the tiles to the dashboard.
 

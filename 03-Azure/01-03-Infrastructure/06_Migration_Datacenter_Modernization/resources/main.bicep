@@ -18,14 +18,13 @@ param deploymentCount int = 1
 ])
 param location string
 
-/*
-* Source Module
-*/
+@description('Source Resouce Groups.')
 resource sourceRg 'Microsoft.Resources/resourceGroups@2021-01-01' = [for i in range(0, deploymentCount): {
   name: 'source-rg-${(i+1)}'
   location: location
 }]
 
+@description('Source Module to deploy initial demo resources for migration')
 module source 'source.bicep' = [for i in range(0, deploymentCount):  {
   name: 'sourceModule${(i+1)}'
   scope: sourceRg[i]
@@ -39,14 +38,13 @@ module source 'source.bicep' = [for i in range(0, deploymentCount):  {
   }
 }]
 
-/*
-* Destination Module
-*/
+@description('Destination Resouce Groups.')
 resource destinationRg 'Microsoft.Resources/resourceGroups@2021-01-01' = [for i in range(0, deploymentCount): {
   name: 'destination-rg-${(i+1)}'
   location: location
 }]
 
+@description('Destination Module to deploy the destination resources')
 module destination 'destination.bicep' = [for i in range(0, deploymentCount): {
   name: 'destinationModule${(i+1)}'
   scope: destinationRg[i]

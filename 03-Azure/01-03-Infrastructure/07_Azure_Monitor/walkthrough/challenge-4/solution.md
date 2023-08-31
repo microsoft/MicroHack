@@ -53,7 +53,6 @@ Click **Save and close** to commit the changes.
 
 ## Task 3
 
-
 - Pin the workbook to the dashboard. Choose **Pin All** to pin all the tiles to the dashboard.
 
 ![Task1](./img/task_01_g.png)

@@ -4,9 +4,9 @@
 param currentUserObjectId string
 
 // Locals
-param vm1Name string = 'frontend1'
-param vm2Name string = 'frontend2'
-param adminUsername string = 'microhackadmin'
+param vm1Name string 
+param vm2Name string 
+param adminUsername string
 param deployment int
 param location string = resourceGroup().location
 param tenantId string = subscription().tenantId

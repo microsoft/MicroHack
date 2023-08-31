@@ -7,6 +7,7 @@ param currentUserObjectId string
 param vm1Name string 
 param vm2Name string 
 param adminUsername string
+param prefix string
 param deployment int
 param location string = resourceGroup().location
 param tenantId string = subscription().tenantId
@@ -29,7 +30,7 @@ packages:
 * Secrets
 */
 resource sourceKeyvault 'Microsoft.KeyVault/vaults@2021-11-01-preview' = {
-  name: substring('source-kv-${deployment}-${uniqueString(resourceGroup().id)}', 0, 16)
+  name: substring('${prefix}${deployment}-source-kv-${uniqueString(resourceGroup().id)}', 0, 16)
   location: location
   properties: {
     enabledForDeployment: false
@@ -74,7 +75,7 @@ resource adminUsernameSecret 'Microsoft.KeyVault/vaults/secrets@2021-11-01-previ
 * Network
 */
 resource sourceVnetNsg 'Microsoft.Network/networkSecurityGroups@2022-05-01' = {
-  name: 'source-vnet-nsg-${deployment}'
+  name: '${prefix}${deployment}-source-vnet-nsg'
   location: location
   properties: {
     securityRules: [
@@ -96,7 +97,7 @@ resource sourceVnetNsg 'Microsoft.Network/networkSecurityGroups@2022-05-01' = {
 }
 
 resource sourceVnet 'Microsoft.Network/virtualNetworks@2022-05-01' = {
-  name: 'source-vnet-${deployment}'
+  name: '${prefix}${deployment}-source-vnet'
   location: location
   properties: {
     addressSpace: {
@@ -125,7 +126,7 @@ resource sourceVnet 'Microsoft.Network/virtualNetworks@2022-05-01' = {
 }
 
 resource sourceBastionPip 'Microsoft.Network/publicIPAddresses@2022-05-01' = {
-  name: 'source-bastion-pip-${deployment}'
+  name: '${prefix}${deployment}-source-bastion-pip'
   location: location
   sku: {
     name: 'Standard'
@@ -136,7 +137,7 @@ resource sourceBastionPip 'Microsoft.Network/publicIPAddresses@2022-05-01' = {
 }
 
 resource sourceBastion 'Microsoft.Network/bastionHosts@2022-07-01' = {
-  name: 'source-bastion-${deployment}'
+  name: '${prefix}${deployment}-source-bastion'
   location: location
   sku: {
     name: 'Basic'
@@ -377,7 +378,7 @@ resource vm2Extension 'Microsoft.Compute/virtualMachines/extensions@2022-03-01' 
 
 //Public Load Balancer for Frontend VM
 resource lb 'Microsoft.Network/loadBalancers@2021-08-01' = {
-  name: 'plb-frontend-${deployment}'
+  name: '${prefix}${deployment}-plb-frontend'
   location: location
   sku: {
     name: 'Standard'
@@ -415,10 +416,10 @@ resource lb 'Microsoft.Network/loadBalancers@2021-08-01' = {
         name: 'myHTTPRule'
         properties: {
           frontendIPConfiguration: {
-            id: resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', 'plb-frontend-${deployment}', 'LoadBalancerFrontEnd')
+            id: resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', '${prefix}${deployment}-plb-frontend', 'LoadBalancerFrontEnd')
           }
           backendAddressPool: {
-            id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', 'plb-frontend-${deployment}', 'LoadBalancerBackEndPool')
+            id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', '${prefix}${deployment}-plb-frontend', 'LoadBalancerBackEndPool')
           }
           frontendPort: 80
           backendPort: 80
@@ -429,7 +430,7 @@ resource lb 'Microsoft.Network/loadBalancers@2021-08-01' = {
           loadDistribution: 'Default'
           disableOutboundSnat: true
           probe: {
-            id: resourceId('Microsoft.Network/loadBalancers/probes', 'plb-frontend-${deployment}', 'loadBalancerHealthProbe')
+            id: resourceId('Microsoft.Network/loadBalancers/probes', '${prefix}${deployment}-plb-frontend', 'loadBalancerHealthProbe')
           }
         }
       }
@@ -454,11 +455,11 @@ resource lb 'Microsoft.Network/loadBalancers@2021-08-01' = {
           enableTcpReset: false
           idleTimeoutInMinutes: 15
           backendAddressPool: {
-            id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', 'plb-frontend-${deployment}', 'LoadBalancerBackEndPoolOutbound')
+            id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', '${prefix}${deployment}-plb-frontend', 'LoadBalancerBackEndPoolOutbound')
           }
           frontendIPConfigurations: [
             {
-              id: resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', 'plb-frontend-${deployment}', 'LoadBalancerFrontEndOutbound')
+              id: resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', '${prefix}${deployment}-plb-frontend', 'LoadBalancerFrontEndOutbound')
             }
           ]
         }
@@ -468,7 +469,7 @@ resource lb 'Microsoft.Network/loadBalancers@2021-08-01' = {
 }
 
 resource lbPublicIPAddress 'Microsoft.Network/publicIPAddresses@2021-08-01' = {
-  name: 'lbPublicIP-${deployment}'
+  name: '${prefix}${deployment}-lbPublicIP'
   location: location
   sku: {
     name: 'Standard'
@@ -480,7 +481,7 @@ resource lbPublicIPAddress 'Microsoft.Network/publicIPAddresses@2021-08-01' = {
 }
 
 resource lbPublicIPAddressOutbound 'Microsoft.Network/publicIPAddresses@2021-08-01' = {
-  name: 'lbPublicIPOutbound-${deployment}'
+  name: '${prefix}${deployment}-lbPublicIPOutbound'
   location: location
   sku: {
     name: 'Standard'

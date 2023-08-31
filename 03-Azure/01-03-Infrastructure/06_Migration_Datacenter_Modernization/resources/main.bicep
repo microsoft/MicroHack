@@ -37,6 +37,7 @@ module source 'source.bicep' = [for i in range(0, deploymentCount):  {
     vm1Name: '${prefix}${(i+1)}-frontend-1'
     vm2Name: '${prefix}${(i+1)}-frontend-2'
     adminUsername: '${prefix}${(i+1)}-microhackadmin'
+    prefix: prefix
     deployment: (i+1)
   }
 }]
@@ -53,6 +54,7 @@ module destination 'destination.bicep' = [for i in range(0, deploymentCount): {
   scope: destinationRg[i]
   params: {
     location: location
+    prefix: prefix
     deployment: (i+1)
   }
 }]

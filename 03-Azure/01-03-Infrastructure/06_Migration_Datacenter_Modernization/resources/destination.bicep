@@ -1,12 +1,13 @@
 // Locals
 param location string = resourceGroup().location
+param prefix string
 param deployment int
 
 /*
 * Network
 */
 resource destinationVnetNsg 'Microsoft.Network/networkSecurityGroups@2022-05-01' = {
-  name: 'destination-vnet-nsg-${deployment}'
+  name: '${prefix}${deployment}-destination-vnet-nsg'
   location: location
   properties: {
     securityRules: [
@@ -28,7 +29,7 @@ resource destinationVnetNsg 'Microsoft.Network/networkSecurityGroups@2022-05-01'
 }
 
 resource destinationVnet 'Microsoft.Network/virtualNetworks@2022-05-01' = {
-  name: 'destination-vnet-${deployment}'
+  name: '${prefix}${deployment}-destination-vnet'
   location: location
   properties: {
     addressSpace: {
@@ -57,7 +58,7 @@ resource destinationVnet 'Microsoft.Network/virtualNetworks@2022-05-01' = {
 }
 
 resource destinationBastionPip 'Microsoft.Network/publicIPAddresses@2022-05-01' = {
-  name: 'destination-bastion-pip-${deployment}'
+  name: '${prefix}${deployment}-destination-bastion-pip'
   location: location
   sku: {
     name: 'Standard'
@@ -67,8 +68,8 @@ resource destinationBastionPip 'Microsoft.Network/publicIPAddresses@2022-05-01' 
   }
 }
 
-resource sourceBastion 'Microsoft.Network/bastionHosts@2022-07-01' = {
-  name: 'destination-bastion-${deployment}'
+resource destinationBastion 'Microsoft.Network/bastionHosts@2022-07-01' = {
+  name: '${prefix}${deployment}-destination-bastion'
   location: location
   sku: {
     name: 'Basic'

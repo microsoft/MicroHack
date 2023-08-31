@@ -50,3 +50,7 @@ Click **Save and close** to commit the changes.
 - Choose your Dashboard and verify that the workbook is pinned.
 
 ![Task1](./img/task_01_f.png)
+
+- End result
+
+![Task3](./img/task_3_dashboard.png)

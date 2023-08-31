@@ -1,11 +1,16 @@
-// Locals
-param location string = resourceGroup().location
+// Module Paramaters
+@description('Location to deploy all resources')
+param location string
+
+@description('Prefix used in the Naming for multiple Deployments in the same Subscription')
 param prefix string
+
+@description('Number of the deployment used for multiple Deployments in the same Subscription')
 param deployment int
 
-/*
-* Network
-*/
+// Resources
+// https://learn.microsoft.com/en-us/azure/templates/microsoft.network/networksecuritygroups?pivots=deployment-language-bicep
+@description('Network security group in destination network')
 resource destinationVnetNsg 'Microsoft.Network/networkSecurityGroups@2022-05-01' = {
   name: '${prefix}${deployment}-destination-vnet-nsg'
   location: location
@@ -28,6 +33,8 @@ resource destinationVnetNsg 'Microsoft.Network/networkSecurityGroups@2022-05-01'
   }
 }
 
+// https://learn.microsoft.com/en-us/azure/templates/Microsoft.Network/virtualNetworks?pivots=deployment-language-bicep
+@description('Virtual network for the destination resources')
 resource destinationVnet 'Microsoft.Network/virtualNetworks@2022-05-01' = {
   name: '${prefix}${deployment}-destination-vnet'
   location: location
@@ -57,6 +64,8 @@ resource destinationVnet 'Microsoft.Network/virtualNetworks@2022-05-01' = {
   }
 }
 
+// https://learn.microsoft.com/en-us/azure/templates/microsoft.network/publicipaddresses?pivots=deployment-language-bicep
+@description('Destination Bastion Public IP')
 resource destinationBastionPip 'Microsoft.Network/publicIPAddresses@2022-05-01' = {
   name: '${prefix}${deployment}-destination-bastion-pip'
   location: location
@@ -68,6 +77,8 @@ resource destinationBastionPip 'Microsoft.Network/publicIPAddresses@2022-05-01' 
   }
 }
 
+// https://learn.microsoft.com/en-us/azure/templates/microsoft.network/bastionhosts?pivots=deployment-language-bicep
+@description('Destination Network Bastion to access the destination Servers')
 resource destinationBastion 'Microsoft.Network/bastionHosts@2022-07-01' = {
   name: '${prefix}${deployment}-destination-bastion'
   location: location

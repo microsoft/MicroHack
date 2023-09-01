@@ -3,7 +3,7 @@ targetScope = 'subscription'
 @description('Object ID of the current user (az ad signed-in-user show --query id)')
 param currentUserObjectId string
 
-@description('The Number of deployments per subscription')
+@description('Prefix for multiple deployments per subscription')
 param prefix string = 'mh'
 
 @description('The Number of deployments per subscription')

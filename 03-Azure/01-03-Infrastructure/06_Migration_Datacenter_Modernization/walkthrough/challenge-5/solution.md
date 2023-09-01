@@ -160,26 +160,27 @@ To install the Mobility service agent on the Windows machines follow the followi
 #### **Task 3.1: Install the Mobility service on the Windows VMs**
 
 1. Extract the contents of installer file to a local folder (for example C:\Temp) on the machine, as follows:
-
-     ren Microsoft-ASR_UA\*Windows\*release.exe MobilityServiceInstaller.exe
+```shell
+ren Microsoft-ASR_UA\*Windows\*release.exe MobilityServiceInstaller.exe
      
-     MobilityServiceInstaller.exe /q /x:C:\Temp\Extracted
+MobilityServiceInstaller.exe /q /x:C:\Temp\Extracted
 
-     cd C:\Temp\Extracted
-
+cd C:\Temp\Extracted
+```
 2. Run the Mobility Service Installer:
-
-     UnifiedAgent.exe /Role "MS" /Platform "VmWare" /Silent
-
+```shell
+UnifiedAgent.exe /Role "MS" /Platform "VmWare" /Silent /CSType CSLegacy
+```
+![image](./img/maw3-1.png)     
 💡 You need to specify *VmWare* for the *Platform* parameter also for physical servers.
 
 3. Register the agent with the replication appliance:
+```shell
+cd C:\Program Files (x86)\Microsoft Azure Site Recovery\agent
 
-     cd C:\Program Files (x86)\Microsoft Azure Site Recovery\agent
-
-     UnifiedAgentConfigurator.exe /CSEndPoint \<replication appliance IP address\> /PassphraseFilePath \<Passphrase File Path\>
-
-![image](./img/maw3.png)     
+UnifiedAgentConfigurator.exe /CSEndPoint \<replication appliance IP address\> /PassphraseFilePath \<Passphrase File Path\>
+```
+![image](./img/maw3-2.png)     
 
 **💥 Repeat the above steps for the second Windows Server**
 

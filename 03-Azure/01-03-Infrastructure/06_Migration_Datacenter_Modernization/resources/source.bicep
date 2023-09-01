@@ -3,32 +3,46 @@
 // "There's no function to get the principal ID of the user executing the deployment (though it is planned)."
 param currentUserObjectId string
 
-// Locals
-param vm1Name string = 'frontend1'
-param vm2Name string = 'frontend2'
-param adminUsername string = 'microhackadmin'
-param location string = resourceGroup().location
-param tenantId string = subscription().tenantId
+// Module Paramaters
+@description('Location to deploy all resources')
+param location string
+
+@description('Prefix used in the Naming for multiple Deployments in the same Subscription')
+param prefix string
+
+@description('Number of the deployment used for multiple Deployments in the same Subscription')
+param deployment int
+
+@description('Permission Array to be used with Keyvault')
 param secretsPermissions array = [
   'all'
 ]
-@secure()
-param guidValue string = newGuid()
-var adminPassword = '${toUpper(uniqueString(resourceGroup().id))}-${guidValue}'
-param cloudInit string = '''
-#cloud-config
-package_upgrade: true
-packages:
-  - nginx
-  - net-tools
-  - smbclient
-'''
 
-/*
-* Secrets
-*/
+@secure()
+@description('GUID to be used in Password creation')
+param guidValue string = newGuid()
+
+// Variables
+@description('Admin user variable')
+var adminUsername = '${prefix}${deployment}-microhackadmin'
+
+@description('Admin password variable')
+var adminPassword = '${toUpper(uniqueString(resourceGroup().id))}-${guidValue}'
+
+@description('Create Name for VM1')
+var vm1Name = '${prefix}${deployment}-frontend-1'
+
+@description('Create Name for VM2')
+var vm2Name = '${prefix}${deployment}-frontend-2'
+
+@description('Tenant ID used by Keyvault')
+var tenantId  = subscription().tenantId
+
+// Resources
+// https://learn.microsoft.com/en-us/azure/templates/microsoft.keyvault/vaults?pivots=deployment-language-bicep
+@description('Source Keyvault')
 resource sourceKeyvault 'Microsoft.KeyVault/vaults@2021-11-01-preview' = {
-  name: substring('source-kv-${uniqueString(resourceGroup().id)}', 0, 16)
+  name: substring('${prefix}${deployment}-source-kv-${uniqueString(resourceGroup().id)}', 0, 16)
   location: location
   properties: {
     enabledForDeployment: false
@@ -53,6 +67,8 @@ resource sourceKeyvault 'Microsoft.KeyVault/vaults@2021-11-01-preview' = {
   }
 }
 
+// https://learn.microsoft.com/en-us/azure/templates/microsoft.keyvault/vaults/secrets?pivots=deployment-language-bicep
+@description('Secret to store Admin Password')
 resource adminPasswordSecret 'Microsoft.KeyVault/vaults/secrets@2021-11-01-preview' = {
   parent: sourceKeyvault
   name: 'adminPassword'
@@ -61,6 +77,8 @@ resource adminPasswordSecret 'Microsoft.KeyVault/vaults/secrets@2021-11-01-previ
   }
 }
 
+// https://learn.microsoft.com/en-us/azure/templates/microsoft.keyvault/vaults/secrets?pivots=deployment-language-bicep
+@description('Secret to store Admin Username')
 resource adminUsernameSecret 'Microsoft.KeyVault/vaults/secrets@2021-11-01-preview' = {
   parent: sourceKeyvault
   name: 'adminUsername'
@@ -69,11 +87,10 @@ resource adminUsernameSecret 'Microsoft.KeyVault/vaults/secrets@2021-11-01-previ
   }
 }
 
-/*
-* Network
-*/
+// https://learn.microsoft.com/en-us/azure/templates/microsoft.network/networksecuritygroups?pivots=deployment-language-bicep
+@description('Network security group in source network')
 resource sourceVnetNsg 'Microsoft.Network/networkSecurityGroups@2022-05-01' = {
-  name: 'source-vnet-nsg'
+  name: '${prefix}${deployment}-source-vnet-nsg'
   location: location
   properties: {
     securityRules: [
@@ -94,8 +111,10 @@ resource sourceVnetNsg 'Microsoft.Network/networkSecurityGroups@2022-05-01' = {
   }
 }
 
+// https://learn.microsoft.com/en-us/azure/templates/Microsoft.Network/virtualNetworks?pivots=deployment-language-bicep
+@description('Virtual network for the source resources')
 resource sourceVnet 'Microsoft.Network/virtualNetworks@2022-05-01' = {
-  name: 'source-vnet'
+  name: '${prefix}${deployment}-source-vnet'
   location: location
   properties: {
     addressSpace: {
@@ -123,8 +142,10 @@ resource sourceVnet 'Microsoft.Network/virtualNetworks@2022-05-01' = {
   }
 }
 
+// https://learn.microsoft.com/en-us/azure/templates/microsoft.network/publicipaddresses?pivots=deployment-language-bicep
+@description('Source Bastion Public IP')
 resource sourceBastionPip 'Microsoft.Network/publicIPAddresses@2022-05-01' = {
-  name: 'source-bastion-pip'
+  name: '${prefix}${deployment}-source-bastion-pip'
   location: location
   sku: {
     name: 'Standard'
@@ -134,8 +155,10 @@ resource sourceBastionPip 'Microsoft.Network/publicIPAddresses@2022-05-01' = {
   }
 }
 
+// https://learn.microsoft.com/en-us/azure/templates/microsoft.network/bastionhosts?pivots=deployment-language-bicep
+@description('Source Network Bastion to access the source Servers')
 resource sourceBastion 'Microsoft.Network/bastionHosts@2022-07-01' = {
-  name: 'source-bastion'
+  name: '${prefix}${deployment}-source-bastion'
   location: location
   sku: {
     name: 'Basic'
@@ -157,23 +180,8 @@ resource sourceBastion 'Microsoft.Network/bastionHosts@2022-07-01' = {
   }
 }
 
-/*
-* VM1 (Windows)
-*/
-
-/*
-resource vm1Pip 'Microsoft.Network/publicIPAddresses@2022-05-01' = {
-  name: '${vm1Name}-pip'
-  location: location
-  sku: {
-    name: 'Basic'
-  }
-  properties: {
-    publicIPAllocationMethod: 'Dynamic'
-  }
-}
-*/
-
+// https://learn.microsoft.com/en-us/azure/templates/microsoft.network/networkinterfaces?pivots=deployment-language-bicep
+@description('Windows VM NIC')
 resource vm1Nic 'Microsoft.Network/networkInterfaces@2022-05-01' = {
   name: '${vm1Name}-nic'
   location: location
@@ -205,6 +213,8 @@ resource vm1Nic 'Microsoft.Network/networkInterfaces@2022-05-01' = {
   }
 }
 
+// https://learn.microsoft.com/en-us/azure/templates/microsoft.compute/virtualmachines?pivots=deployment-language-bicep
+@description('Windows Virtual Machine')
 resource vm1 'Microsoft.Compute/virtualMachines@2022-03-01' = {
   name: vm1Name
   location: location
@@ -246,10 +256,8 @@ resource vm1 'Microsoft.Compute/virtualMachines@2022-03-01' = {
   }
 }
 
-
-//Custom Script Extension (might be useful for later to generate load on VM)
-//TODO: To be tested
-
+// https://learn.microsoft.com/en-us/azure/templates/microsoft.compute/virtualmachines/extensions?pivots=deployment-language-bicep
+@description('Windows VM Extension')
 resource vm1Extension 'Microsoft.Compute/virtualMachines/extensions@2022-03-01' = {
   parent: vm1
   name: '${vm1Name}-customScriptExtension'
@@ -267,22 +275,8 @@ resource vm1Extension 'Microsoft.Compute/virtualMachines/extensions@2022-03-01' 
   }
 } 
 
-/*
-* VM2 (Linux)
-*/
-/*
-resource vm2Pip 'Microsoft.Network/publicIPAddresses@2022-05-01' = {
-  name: '${vm2Name}-pip'
-  location: location
-  sku: {
-    name: 'Basic'
-  }
-  properties: {
-    publicIPAllocationMethod: 'Dynamic'
-  }
-}
-*/
-
+// https://learn.microsoft.com/en-us/azure/templates/microsoft.network/networkinterfaces?pivots=deployment-language-bicep
+@description('2nd Windows VM NIC')
 resource vm2Nic 'Microsoft.Network/networkInterfaces@2022-05-01' = {
   name: '${vm2Name}-nic'
   location: location
@@ -314,6 +308,8 @@ resource vm2Nic 'Microsoft.Network/networkInterfaces@2022-05-01' = {
   }
 }
 
+// https://learn.microsoft.com/en-us/azure/templates/microsoft.compute/virtualmachines?pivots=deployment-language-bicep
+@description('2nd Windows Virtual Machine')
 resource vm2 'Microsoft.Compute/virtualMachines@2022-03-01' = {
   name: vm2Name
   location: location
@@ -325,7 +321,6 @@ resource vm2 'Microsoft.Compute/virtualMachines@2022-03-01' = {
       computerName: vm2Name
       adminUsername: adminUsername
       adminPassword: adminPassword
-      customData: base64(cloudInit)
     }
     storageProfile: {
       imageReference: {
@@ -357,6 +352,8 @@ resource vm2 'Microsoft.Compute/virtualMachines@2022-03-01' = {
   }
 }
 
+// https://learn.microsoft.com/en-us/azure/templates/microsoft.compute/virtualmachines/extensions?pivots=deployment-language-bicep
+@description('2nd Windows VM Extension')
 resource vm2Extension 'Microsoft.Compute/virtualMachines/extensions@2022-03-01' = {
   parent: vm2
   name: '${vm2Name}-customScriptExtension'
@@ -374,9 +371,10 @@ resource vm2Extension 'Microsoft.Compute/virtualMachines/extensions@2022-03-01' 
   }
 } 
 
-//Public Load Balancer for Frontend VM
+// https://learn.microsoft.com/en-us/azure/templates/microsoft.network/loadbalancers?pivots=deployment-language-bicep
+@description('Loadbalancer for VMs')
 resource lb 'Microsoft.Network/loadBalancers@2021-08-01' = {
-  name: 'plb-frontend'
+  name: '${prefix}${deployment}-plb-frontend'
   location: location
   sku: {
     name: 'Standard'
@@ -414,10 +412,10 @@ resource lb 'Microsoft.Network/loadBalancers@2021-08-01' = {
         name: 'myHTTPRule'
         properties: {
           frontendIPConfiguration: {
-            id: resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', 'plb-frontend', 'LoadBalancerFrontEnd')
+            id: resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', '${prefix}${deployment}-plb-frontend', 'LoadBalancerFrontEnd')
           }
           backendAddressPool: {
-            id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', 'plb-frontend', 'LoadBalancerBackEndPool')
+            id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', '${prefix}${deployment}-plb-frontend', 'LoadBalancerBackEndPool')
           }
           frontendPort: 80
           backendPort: 80
@@ -428,7 +426,7 @@ resource lb 'Microsoft.Network/loadBalancers@2021-08-01' = {
           loadDistribution: 'Default'
           disableOutboundSnat: true
           probe: {
-            id: resourceId('Microsoft.Network/loadBalancers/probes', 'plb-frontend', 'loadBalancerHealthProbe')
+            id: resourceId('Microsoft.Network/loadBalancers/probes', '${prefix}${deployment}-plb-frontend', 'loadBalancerHealthProbe')
           }
         }
       }
@@ -453,11 +451,11 @@ resource lb 'Microsoft.Network/loadBalancers@2021-08-01' = {
           enableTcpReset: false
           idleTimeoutInMinutes: 15
           backendAddressPool: {
-            id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', 'plb-frontend', 'LoadBalancerBackEndPoolOutbound')
+            id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', '${prefix}${deployment}-plb-frontend', 'LoadBalancerBackEndPoolOutbound')
           }
           frontendIPConfigurations: [
             {
-              id: resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', 'plb-frontend', 'LoadBalancerFrontEndOutbound')
+              id: resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', '${prefix}${deployment}-plb-frontend', 'LoadBalancerFrontEndOutbound')
             }
           ]
         }
@@ -466,8 +464,10 @@ resource lb 'Microsoft.Network/loadBalancers@2021-08-01' = {
   }
 }
 
+// https://learn.microsoft.com/en-us/azure/templates/microsoft.network/publicipaddresses?pivots=deployment-language-bicep
+@description('Load Balancer Public IP')
 resource lbPublicIPAddress 'Microsoft.Network/publicIPAddresses@2021-08-01' = {
-  name: 'lbPublicIP'
+  name: '${prefix}${deployment}-lbPublicIP'
   location: location
   sku: {
     name: 'Standard'
@@ -478,8 +478,10 @@ resource lbPublicIPAddress 'Microsoft.Network/publicIPAddresses@2021-08-01' = {
   }
 }
 
+// https://learn.microsoft.com/en-us/azure/templates/microsoft.network/publicipaddresses?pivots=deployment-language-bicep
+@description('Load Balancer Outbound Public IP')
 resource lbPublicIPAddressOutbound 'Microsoft.Network/publicIPAddresses@2021-08-01' = {
-  name: 'lbPublicIPOutbound'
+  name: '${prefix}${deployment}-lbPublicIPOutbound'
   location: location
   sku: {
     name: 'Standard'

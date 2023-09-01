@@ -22,15 +22,6 @@ param secretsPermissions array = [
 @description('GUID to be used in Password creation')
 param guidValue string = newGuid()
 
-@description('Cloud init to prepare Linux Webserver')
-param cloudInit string = '''
-#cloud-config
-package_upgrade: true
-packages:
-  - nginx
-  - net-tools
-  - smbclient
-'''
 // Variables
 @description('Admin user variable')
 var adminUsername = '${prefix}${deployment}-microhackadmin'
@@ -285,7 +276,7 @@ resource vm1Extension 'Microsoft.Compute/virtualMachines/extensions@2022-03-01' 
 } 
 
 // https://learn.microsoft.com/en-us/azure/templates/microsoft.network/networkinterfaces?pivots=deployment-language-bicep
-@description('Linux VM NIC')
+@description('2nd Windows VM NIC')
 resource vm2Nic 'Microsoft.Network/networkInterfaces@2022-05-01' = {
   name: '${vm2Name}-nic'
   location: location
@@ -318,7 +309,7 @@ resource vm2Nic 'Microsoft.Network/networkInterfaces@2022-05-01' = {
 }
 
 // https://learn.microsoft.com/en-us/azure/templates/microsoft.compute/virtualmachines?pivots=deployment-language-bicep
-@description('Linux Virtual Machine')
+@description('2nd Windows Virtual Machine')
 resource vm2 'Microsoft.Compute/virtualMachines@2022-03-01' = {
   name: vm2Name
   location: location
@@ -330,7 +321,6 @@ resource vm2 'Microsoft.Compute/virtualMachines@2022-03-01' = {
       computerName: vm2Name
       adminUsername: adminUsername
       adminPassword: adminPassword
-      customData: base64(cloudInit)
     }
     storageProfile: {
       imageReference: {
@@ -363,7 +353,7 @@ resource vm2 'Microsoft.Compute/virtualMachines@2022-03-01' = {
 }
 
 // https://learn.microsoft.com/en-us/azure/templates/microsoft.compute/virtualmachines/extensions?pivots=deployment-language-bicep
-@description('Linux VM Extension')
+@description('2nd Windows VM Extension')
 resource vm2Extension 'Microsoft.Compute/virtualMachines/extensions@2022-03-01' = {
   parent: vm2
   name: '${vm2Name}-customScriptExtension'

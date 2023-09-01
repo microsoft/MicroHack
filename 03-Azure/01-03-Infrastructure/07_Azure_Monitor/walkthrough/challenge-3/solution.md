@@ -2,6 +2,14 @@
 
 *Duration: 45 Minutes*
 
+- [Walkthrough Challenge 3](#walkthrough-challenge-3)
+  - [Prerequiste](#prerequiste)
+  - [Task 1: Create an alert for not reporting virtual machines](#task-1-create-an-alert-for-not-reporting-virtual-machines)
+  - [Task 2: Create a Service Health Alert](#task-2-create-a-service-health-alert)
+  - [Task 3: Create a Resource Health Alert](#task-3-create-a-resource-health-alert)
+  - [Task 4: Create an alert which notifies you when the `vm-linux` gets restarted](#task-4-create-an-alert-which-notifies-you-when-the-vm-linux-gets-restarted)
+  - [Task 5: Knowledge Questions](#task-5-knowledge-questions)
+
 ## Prerequiste
 
 - Before starting the tasks create an `Action Group` to send Emails.

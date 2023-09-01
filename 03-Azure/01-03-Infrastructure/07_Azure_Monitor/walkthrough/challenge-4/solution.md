@@ -1,5 +1,12 @@
 # Walkthrough Challenge 4
 
+*Duration: 45 Minutes*
+
+- [Walkthrough Challenge 4](#walkthrough-challenge-4)
+  - [Task 1](#task-1)
+  - [Task 2](#task-2)
+  - [Task 3](#task-3)
+
 ## Task 1
 
 - Create a new Monitoring Workbook named `Monitor Microhack`

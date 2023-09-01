@@ -2,6 +2,13 @@
 
 *Duration: 45 Minutes*
 
+- [Walkthrough Challenge  1](#walkthrough-challenge--1)
+  - [Task 1 \& 2](#task-1--2)
+  - [*\[Optional\]* Task 3: Enable VM Insights for `vmss-linux-nginx` automatically](#optional-task-3-enable-vm-insights-for-vmss-linux-nginx-automatically)
+  - [Task 4: Validate tables in Log Analytics Workspace](#task-4-validate-tables-in-log-analytics-workspace)
+  - [Task 5: Availability rate check](#task-5-availability-rate-check)
+  - [Links](#links)
+
 ## Task 1 & 2
 
 - Create a data collection rule

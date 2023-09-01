@@ -2,6 +2,13 @@
 
 *Duration: 45 Minutes*
 
+- [Walkthrough Challenge 5](#walkthrough-challenge-5)
+  - [Task 1](#task-1)
+  - [Task 2](#task-2)
+  - [Task 3](#task-3)
+  - [Task 4](#task-4)
+  - [Links](#links)
+
 ## Task 1
 
 - Create a `Data Collection Endpoint`

@@ -2,6 +2,12 @@
 
 *Duration: 30 Minutes*
 
+- [Walkthrough Challenge 2](#walkthrough-challenge-2)
+  - [Task 1: Enable VM Insights for `vm-linux`](#task-1-enable-vm-insights-for-vm-linux)
+  - [Task 2: Enable VM Insights on unmonitored `vm-windows`](#task-2-enable-vm-insights-on-unmonitored-vm-windows)
+  - [*\[Optional\]* Task 3: Enable VM Insights for `vmss-linux-nginx` automatically](#optional-task-3-enable-vm-insights-for-vmss-linux-nginx-automatically)
+  - [Task 4: Log search and visualize](#task-4-log-search-and-visualize)
+
 ## Task 1: Enable VM Insights for `vm-linux`
 
 - Enable VM Insights on monitored machines

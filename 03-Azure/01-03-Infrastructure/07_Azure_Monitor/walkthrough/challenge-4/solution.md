@@ -71,3 +71,13 @@ Click **Save and close** to commit the changes.
 - End result
 
 ![Task3](./img/task_3_dashboard.png)
+
+## Task 4
+
+- Add the query to the workbook
+
+![Task3](./img/task_4_a.png)
+
+- Configure the columns under **Column Settings**
+
+![Task3](./img/task_4_b.png)

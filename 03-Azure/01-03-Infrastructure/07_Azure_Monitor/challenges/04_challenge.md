@@ -22,26 +22,27 @@ After completing this challenge you should be able to create a workbook and add 
 
 ### Task 1
 
-Create a new workbook called `Monitor Microhack` and save it in the resource group `rg-monitoring-microhack` and the the same region as the other resources.
-
-### Task 2
-
 Wihtin your workbook, create a "Traffic Light" for your virtual machines `vm-windows` and `vm-linux` and the virtual machine scale set `vmss-linux-nginx`.
 Categorize your computers by CPU utilization as cold, warm, or hot and categorize performance as satisfied, tolerated, or frustrated. You can use an indicator or icon that represents the status next to the underlying metric.
 
 ![workbook](https://learn.microsoft.com/en-us/azure/azure-monitor/visualize/media/workbooks-commonly-used-components/workbooks-traffic-light-sample.png)
 
-### Task 3
+### Task 2
 
 Add the workbook (tiles) to your dashboard `Dashboard Monitoring Microhack`.
 
-### Task 4
+### Task 3
 
-Repeat the task 2 and 3 for the virtual machines `vm-windows`.
+Repeat the task 1 and 2 for the virtual machines `vm-windows`.
 
 Since the Windows VMs won't be covered with the query, you need to clone the tile and change the query to the Windows VMs.
 
 **Hint**: You need to change the `Processor` attribute in the query only because it is different to linux (look at the `Perf` table)
+
+### Task 4
+
+In challenge 1 you have created a query to calculate the availability rate of each connected computer. Add this query to your workbook and add a tile to your dashboard `Dashboard Monitoring Microhack`.
+Set a threshold for the availability rate and add a traffic light icon to the table: green for availability rate > 99%, yellow for availability rate > 95% and red for availability rate < 95%.
 
 ### Learning Resources
 

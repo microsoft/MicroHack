@@ -76,7 +76,7 @@ Check if the `AMA` was installed  on the virtal machine blade under "Extensions 
 
 - Calculuate the availability rate of each connected computer. Create a query inside log analytics and excute the query to see the results
 
-- Add a chart to your dashboard that shows the availability rate of each connected computer
+- Pin the tile (table) to your dashboard `Dashboard Monitoring Microhack`
 
 ### Learning Resources
 

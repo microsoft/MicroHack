@@ -32,6 +32,10 @@ Azure Log Analytics is a tool in the Azure portal that's used to edit and run lo
 
 Azure Dashboards are customizable workspaces for monitoring your Azure resources. You can monitor the health and status of your Azure resources in a single, customized dashboard. Dashboards are useful for troubleshooting and identifying issues with your Azure resources.
 
+## Taks 4: Create an emptpy Monitoring Workbook
+
+- Create an empty Monitoring Workbook `Workbook Monitoring Microhack` in the same region as the other resources and save it in the resource group `rg-microhack-monitoring`.
+
 ### Learning Resources
 
 - [Overview of Log Analytics in Azure Monitor - Azure Monitor.](https://learn.microsoft.com/en-us/azure/azure-monitor/logs/log-analytics-overview)

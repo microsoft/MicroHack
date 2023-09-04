@@ -124,19 +124,21 @@ Before the application can be deployed to a Container App, it needs to be contai
 
 [Solution Steps](./walkthrough/challenge-2/solution.md)
 
-## Challenge 3 - Set up and configure the landing zone
+## Challenge 3 - Create the Container App
 
 ### Goal
 
-Managing secrets, credentials or certificates...
+Now that you have a deployable container image, you can setup the Container App to host you web app. As described above, you will use the Container Apps because it is a simple, scalable and straight-forward service that is perfectly suitable for this use case. However, the container image is highly portable and could be deployed into other container services as well.
 
 ### Actions
 
-* Create ..
+* Create an Azure Container App
+* Add a step to the GitHub Actions workflow to deploy the container image to the Container App
 
 ### Success Criteria
 
-* You successfully output ...
+* You successfully deployed the container image to the Container App
+* You can access the newly hosted web app
 
 ### Learning resources
 

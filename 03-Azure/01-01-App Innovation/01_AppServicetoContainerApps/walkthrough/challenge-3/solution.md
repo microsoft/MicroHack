@@ -1,66 +1,32 @@
-# Walkthrough Challenge 3 - Create a Business Case
+# Walkthrough Challenge 3 - Create the Container App
 
-Duration: 40 minutes
+Duration: 60 minutes
 
 ## Prerequisites
 
 Please make sure thet you successfully completed [Challenge 2](../challenge-2/solution.md) before continuing with this challenge.
-Please also make sure to review the [prerequisites](https://learn.microsoft.com/en-us/azure/migrate/how-to-build-a-business-case#prerequisites) for the business case.
 
-### **Task 1: Build a business case**
+### **Task 1: Create the Container App and the Environment**
 
-Open the [Azure Portal](https://portal.azure.com) and navigate to the previousley created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click *Build business case*.
+Open the [Azure Portal](https://portal.azure.com) and navigate to the resource group that you deployed the Container Registry to.  Click *Create* in the top left corner and search for *Container App*, select the *Container App* resource and hit *Create*. 
 
-![image](./img/bc1.png)
+You are now in the wizzard to create both a Container App Environment and the Container App itself. The Environment is comparable to an App Service and is used as a runtime to manage resources that are shared by multiple apps. The Container Apps itself are comparable to a Web App, they host the workloads.
 
-Provide a name for the business case and select a target location. For the migration strategy select *Azure recommended approach to minimize cost*. You can select your desired saving options and discounts that may apply to your Azure Subscription.
+Give yor container app a name, e.g. *microhack-containerapp*. 
+Next, you will configure the environment by clicking *Create* under the *Container Apps Environment* field:
 
-![image](./img/bc2.png)
+![image](./img/challenge-3-appbasics.jpg)
 
-Wait for the business case creation to complete and click on the business case name to open it.
+Give your environment a name, e.g. *microhack-containerenvironment*, select *Consumption only* and keep the *Zone redundancy* disabled.
 
-💡 Please note that business case creation can take up to 30 minutes.
+![image](./img/challenge-3-environmentbasics.jpg)
 
-![image](./img/bc3.png)
+In the *Monitoring* tab you can add a Log Analytics workspace to gather monitoring and logging data.
 
+![image](./img/challenge-3-environmentmonitoring.jpg)
 
-### **Task 2: Review a business case**
-
-There are four major reports that you need to review:
-
-- Overview: This report is an executive summary of the business case and covers:
-  + Potential savings (TCO).
-  + Estimated year on year cashflow savings based on the estimated migration completed that year.
-  + Savings from unique Azure benefits like Azure Hybrid Benefit.
-  + Discovery insights covering the scope of the business case.
-
-![image](./img/bc4.png)
-
-- On-premises vs Azure: This report covers the breakdown of the total cost of ownership by cost categories and insights on savings.
-
-![image](./img/bc5.png)
-
-- Azure IaaS: This report covers the Azure and on-premises footprint of the servers and workloads recommended for migrating to Azure IaaS.
-
-![image](./img/bc6.png)
-
-- Azure PaaS: This report covers the Azure and on-premises footprint of the workloads recommended for migrating to Azure PaaS.
-
-![image](./img/bc7.png)
-
-### **Task 3: Adjust business case assumptions**
-
-The business case is calculated based on some [assumptions](https://learn.microsoft.com/en-us/azure/migrate/concepts-business-case-calculation#total-cost-of-ownership-steady-state). To better fit your current scenario, you can adjust those assumptions.
-
-**Azure cost**
-![image](./img/bc8.png)
-
-**On-premises cost**
-![image](./img/bc9.png)
-
-You can adjust those parameters what would recalculate the business case.
-
-![image](./img/bc10.png)
+You can leave the *Networking* tab as is. Now hit *Create* in the bottom left.
+Now we are back to the Container App itself. Switch to the *Container* tab. Here you have the possibilty to select a container image that you want to deploy. Since you want to setup the deployment with a GitHub Actions pipeline to deploy newer versions of the app automatically, select a quick start image and chose the *Simple hello world container*. Leave the other settings as is and hit *Review + create*, then *Create*.
 
 You successfully completed challenge 3! 🚀🚀🚀
 

@@ -19,7 +19,8 @@ Provide a name for the business case and select a target location. For the migra
 
 Wait for the business case creation to complete and click on the business case name to open it.
 
-💡 Please note that business case creation can take up to 30 minutes.
+> [!NOTE]
+> Please note that business case creation can take up to 30 minutes.
 
 ![image](./img/bc3.png)
 

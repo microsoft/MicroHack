@@ -406,7 +406,7 @@ From the Traffic Manager Profile you can now also safley remove the endpoint for
 ![image](./img/finalmig10.png)
 
 > [!WARNING]
-> **Please note: Normaly it would be safe now to completley remove the *source-rg* Resource Group. However, we will reuse the source environment in [Challenge 6](https://github.com/microsoft/MicroHack/tree/MigrationModernizationMicroHack/03-Azure/01-03-Infrastructure/06_Migration_Datacentre_Modernization#challenge-6---modernize-with-azure) to see how Azure Migrate will help to modernize our infrastructure.**
+> **Please note: Normally it would be safe now to completley remove the *source-rg* Resource Group. However, we will reuse the source environment in [Challenge 6](https://github.com/microsoft/MicroHack/tree/MigrationModernizationMicroHack/03-Azure/01-03-Infrastructure/06_Migration_Datacentre_Modernization#challenge-6---modernize-with-azure) to see how Azure Migrate will help to modernize our infrastructure.**
 
 You successfully completed challenge 5! 🚀🚀🚀
 

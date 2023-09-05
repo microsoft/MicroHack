@@ -20,7 +20,8 @@ Duration: 30 minutes
 - Select a region
 - Wait for the deployment to finish
 
-💡 Please note that the deployment may take up to 10 minutes
+> [!NOTE]
+> Please note that the deployment may take up to 10 minutes
 
 ### **Task 2: Verify the deployed resources**
 The bicep deployment should have created the following resources

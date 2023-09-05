@@ -33,7 +33,7 @@ The bicep deployment should have created the following resources
     + Azure Bastion *source-bastion*
     + Azure Key Vault *source-kv-* containing username and password for VM login
    
-- source-rg Resource Group containing the follwing resources
+- destination-rg Resource Group containing the follwing resources
     + Virtual Network *destination-vnet*
     + Azure Bastion *destination-bastion*
     

@@ -49,7 +49,8 @@ Review your selection and click on *Create assessment*.
 
 ![image](./img/Assess9.png)
 
-💡 Please note that the computation of the assessment can take a few minutes.
+> [!NOTE]
+> Please note that the computation of the assessment can take a few minutes.
 
 When finished the assessment will show up with the status *Ready*.
 
@@ -67,7 +68,8 @@ The Azure VM assessment overview provides details about:
 * Monthly cost estimation: The estimated monthly compute and storage costs for running the VMs in Azure.
 * Monthly storage cost estimation: Estimated costs for disk storage after migration.
 
-💡 Please note that confidence rating for the assessment is marked as low. This is due to missing or to less performance data. It is recommended that you collect performance data via the Azure Migrate appliance at least on day before creating the assessment.
+> [!IMPORTANT]
+> Please note that confidence rating for the assessment is marked as low. This is due to missing or to less performance data. It is recommended that you collect performance data via the Azure Migrate appliance at least on day before creating the assessment..
 
 ![image](./img/Assess12.png)
 
@@ -128,7 +130,8 @@ Within the *Discovered servers* scrren click on *Refresh*. You should now be abl
 
 ![image](./img/Depend5.png)
 
-💡 Please note that it could take some time for the dependency data to show up. 
+> [!NOTE]
+> Please note that it could take some time for the dependency data to show up. 
 
 Once the dependency data has been uploaded to Azure Migrate, you should be able to show the different dependencies of the discovered servers.
 

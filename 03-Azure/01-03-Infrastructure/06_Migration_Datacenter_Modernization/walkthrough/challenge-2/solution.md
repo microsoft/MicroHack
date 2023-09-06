@@ -32,7 +32,8 @@ Your previousley created Azure Migrate project should be preselected.
 
 To start physical server discovery you must install the Azure Migrate Appliance on your on-premises. The Azure Migrate Appliance can be downloaded as a OVA or VHD template or you can download a ZIP file containing a PowerShell script to install it on a already existing server. For the purpose of this MicroHack we will install the Azure Migrate Appliance via the PowerShell script on a Windows Server 2019 system.
 
-💡 Please make sure to check the [prerequisites](https://learn.microsoft.com/en-us/azure/migrate/tutorial-discover-physical#prerequisites) of the Azure Migrate Appliance.
+> [!IMPORTANT]
+> Please make sure to check the [prerequisites](https://learn.microsoft.com/en-us/azure/migrate/tutorial-discover-physical#prerequisites) of the Azure Migrate Appliance.
 
 In the Azure Portal select *Virtual machines* from the navigation pane on the left. Select *Create -> Azure virtual machine*
 
@@ -42,7 +43,8 @@ Under Basics select the *source-rg* Resource Group and provide a name for the se
 
 ![image](./img/AzMigApp2.png)
 
-💡 For the Username and Password you can either select a combination of your choice or check the secrets within the KeyVault.
+> [!NOTE]
+> For the Username and Password you can either select a combination of your choice or check the secrets within the KeyVault.
 
 Accept the default disk settings and click next to select the *Networking* tab. Select the *source-vnet* Virtual Network, select the *source-subnet* Subnet and make sure to select *None* for the Public IP and NIC network security group.
 
@@ -60,7 +62,9 @@ Select *Bastion* from the navigation pane on the left, provide the credentials t
 
 ![image](./img/AzMigApp6.png)
 
-💡 You can also select *Password from Azure KeyVault* under *Authentication Type* if you set the password during VM creation to match the secret stored in the KeyVault.
+> [!NOTE]
+> You can also select *Password from Azure KeyVault* under *Authentication Type* if you set the password during VM creation to match the secret stored in the KeyVault.
+
 
 ### **Task 3: Deploy the Azure Migrate Appliance**
 
@@ -103,7 +107,8 @@ Select Option 1 for *public endpoint* and confirm you selection to start the ins
 
 Select *N* for IE11 uninstallation. 
 
-💡 Please note the Warning that IE11 is incompatible with latest Azure Migrate Appliance configuration manager and make sure using Microsoft Edge to configure the Azure Migrate appliance
+> [!WARNING]
+> Please note the Warning that IE11 is incompatible with latest Azure Migrate Appliance configuration manager and make sure using Microsoft Edge to configure the Azure Migrate appliance
 
 ![image](./img/Discover8.png)
 
@@ -132,7 +137,8 @@ After successfull authentication, appliance will be registered with the Azure Mi
 Next you need to specify the credentials that will be used to connect to the source server for discovery.
 Add one entry for Windows and for Linux devices. The friendly name will be used later on when specifiying the individual systems.
 
-💡 For the Username and Password check the secrets within the KeyVault.
+> [!NOTE]
+> For the Username and Password check the secrets within the KeyVault.
 
 ![image](./img/Discover15.png)
 
@@ -150,7 +156,8 @@ After discovery has been successfully initiated, go to the Azure portal to revie
 
 You can click *Overview* to get more insights on what information were discovered.
 
-💡 If no inventory data is available, click Refresh to refresh inventory data.
+> [!NOTE]
+> If no inventory data is available, click Refresh to refresh inventory data.
 
 You successfully completed challenge 2! 🚀🚀🚀
 

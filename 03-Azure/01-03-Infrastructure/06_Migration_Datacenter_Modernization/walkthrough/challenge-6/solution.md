@@ -17,7 +17,9 @@ Azure App Service bulk migration capabilities are now in public preview through 
 * Discover and migrate with Java Tomcat applications to App Service Linux and to Azure Kubernetes Service.
 * Containerize your ASP.NET web apps and move them to either Windows Containers on App Service or to Azure Kubernetes Service.
 
-**💥 Currently this feature has a few [limitations](https://learn.microsoft.com/en-us/azure/migrate/concepts-migration-webapps#limitations) and therefore it can't be used to migrate web apps directly from physical servers. However, we can use it at least to perform the assessment of our web apps and use the [App Service migration assistant tool](https://learn.microsoft.com/en-us/azure/app-service/app-service-asp-net-migration) for the migration.**
+> [!WARNING]
+> **Currently this feature has a few [limitations](https://learn.microsoft.com/en-us/azure/migrate/concepts-migration-webapps#limitations) and therefore it can't be used to migrate web apps directly from physical servers. However, we can use it at least to perform the assessment of our web apps and use the [App Service migration assistant tool](https://learn.microsoft.com/en-us/azure/app-service/app-service-asp-net-migration) for the migration.**
+
 
 Open the [Azure Portal](https://portal.azure.com) and navigate to the previousley created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click on *Assess* and select *Azure App Service (Preview)* from the drop down list.
 
@@ -49,7 +51,8 @@ Review the output of the assessment to see if the web app currently running on W
 
 ### **Task 2: Modernize web app to Azure App Service Code**
 
-**💥 As mentioned ubove, the current [limitations](https://learn.microsoft.com/en-us/azure/migrate/concepts-migration-webapps#limitations) will not allow the direct migration of web apps running on physical machines. Therefore, we will use the [App Service migration assistant tool](https://learn.microsoft.com/en-us/azure/app-service/app-service-asp-net-migration) for the migration.**
+> [!WARNING]
+> **As mentioned ubove, the current [limitations](https://learn.microsoft.com/en-us/azure/migrate/concepts-migration-webapps#limitations) will not allow the direct migration of web apps running on physical machines. Therefore, we will use the [App Service migration assistant tool](https://learn.microsoft.com/en-us/azure/app-service/app-service-asp-net-migration) for the migration.**
 
 
 Login to the Virtual Machine *frontend1* in the *source-rg* Resource Group via Azure Bastion, open the [Azure Portal](https://portal.azure.com) from the *frontend1* VM and navigate to the previousley created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click on *Replicate* within the *Migration tools* box.
@@ -94,7 +97,10 @@ Make sure to remove any blanks for the AzureSiteName parameter as this is not su
 
 Execute the *Invoke-SiteMigration.ps1 -MigrationSettingsFilePath .\\MigrationSettings.json* script.
 
-**💥 If you receive a 401 Unauthorized error it could be that Basic Authentication is disabled on the App Service due to Azure Policy enforcement in your environment. For the current version (June 2023) of the App Service migration scripts this is a requirement**
+> [!WARNING]
+> **If you receive a 401 Unauthorized error it could be that Basic Authentication is disabled on the App Service due to Azure Policy enforcement in your environment. For the current version (June 2023) of the App Service migration scripts this is a requirement**
+
+
 
 ![image](./img/modernize11.png)
 

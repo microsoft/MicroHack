@@ -107,9 +107,11 @@ The goal of this exercise is to...
 ### Actions
 
 * Create a Azure Migrate Project
-    - 💥 **To be able to create a Business Case, make sure to select Europe as the Geography for the Azure Migrate Project** 
+> [!IMPORTANT]
+> To be able to create a Business Case, make sure to select Europe as the Geography for the Azure Migrate Project
 * Deploy a Azure Migrate Appliance
-    - 💥 **Carefully select the appropriate OS for the Azure Migrate Appliance. Windows Server 2016 is officially supported. Windows Server 2019 will work as well. Windows Server 2022 does not work yet.**
+> [!IMPORTANT]
+> Carefully select the appropriate OS for the Azure Migrate Appliance. Windows Server 2016 is officially supported. Windows Server 2019 will work as well. Windows Server 2022 does not work yet.
 * Create a continuous discovery of your source environment
 
 ### Success criteria
@@ -159,7 +161,8 @@ The goal of this exercise is to create a business case. The Business case capabi
 - Quick wins for migration and modernization including end of support Windows OS and SQL versions.
 - Long term cost savings by moving from a capital expenditure model to an Operating expenditure model, by paying for only what you use.
 
-💥 **The Business case capability is currently in public preview** 
+> [!WARNING]
+> The Business case capability is currently in public preview
 
 ### Actions
 
@@ -277,9 +280,11 @@ The goal of this exercise is to ...
 * An migration has been performed towards PaaS instead of IaaS.
 * The App Services are accessible using the source Load Balancer.
 
-💥 **The new App Service migration capability is currently in public preview** 
+> [!WARNING]
+> The new App Service migration capability is currently in public preview
 
-💥 **For the current version (June 2023) of the App Service migration scripts, Basic Authentication on Azure Web Apps is a hard requirement. Make sure that no Azure Policy restrictions are in place that prohibit the use of Basic Authentication for Azure App Services**
+> [!IMPORTANT]
+> For the current version (June 2023) of the App Service migration scripts, Basic Authentication on Azure Web Apps is a hard requirement. Make sure that no Azure Policy restrictions are in place that prohibit the use of Basic Authentication for Azure App Services
 
 ### Learning resources
 * [App Service assessment overview](https://learn.microsoft.com/en-us/azure/migrate/concepts-azure-webapps-assessment-calculation)

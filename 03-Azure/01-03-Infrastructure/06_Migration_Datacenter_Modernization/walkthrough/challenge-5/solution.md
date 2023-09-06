@@ -10,10 +10,12 @@ Please make sure thet you successfully completed [Challenge 4](../challenge-4/so
 
 To start physical server migration you must install the Azure Replication Appliance on your on-premises. The Azure Replication Appliance can be downloaded as a OVA template or you can download the appliance installer to install it on a already existing server. For the purpose of this MicroHack we will install the Azure Replication Appliance via the installer on a new Windows Server 2019 system.
 
-💡 Please make sure to check the [prerequisites](https://learn.microsoft.com/en-us/azure/migrate/migrate-replication-appliance) of the Azure 
+> [!IMPORTANT]
+> Please make sure to check the [prerequisites](https://learn.microsoft.com/en-us/azure/migrate/migrate-replication-appliance) of the Azure 
 Replication Appliance.
 
-💡 Please note that it is currently [not supported](https://learn.microsoft.com/en-us/azure/migrate/common-questions-appliance#can-the-azure-migrate-appliancereplication-appliance-connect-to-the-same-vcenter) to install the Azure Migrate Replication Appliance on the same system as the Azure Migrate Appliance.
+> [!IMPORTANT]
+> Please note that it is currently [not supported](https://learn.microsoft.com/en-us/azure/migrate/common-questions-appliance#can-the-azure-migrate-appliancereplication-appliance-connect-to-the-same-vcenter) to install the Azure Migrate Replication Appliance on the same system as the Azure Migrate Appliance.
 
 In the Azure Portal select *Virtual machines* from the navigation pane on the left. Select *Create -> Azure virtual machine*
 
@@ -23,7 +25,8 @@ Under Basics select the *source-rg* Resource Group and provide a name for the se
 
 ![image](./img/azreplapl2.png)
 
-💡 For the Username and Password you can either select a combination of your choice or check the secrets within the KeyVault.
+> [!NOTE]
+> For the Username and Password you can either select a combination of your choice or check the secrets within the KeyVault.
 
 Add an additional 1024GiB Standard HDD LRS data disk to the Virtual Machine and click *Next*
 
@@ -47,8 +50,8 @@ Select *Bastion* from the navigation pane on the left, provide the credentials t
 
 ![image](./img/azreplapl6.png)
 
-💡 You can also select *Password from Azure KeyVault* under *Authentication Type* if you set the password during VM creation to match the secret stored in the KeyVault.
-
+> [!NOTE]
+> You can also select *Password from Azure KeyVault* under *Authentication Type* if you set the password during VM creation to match the secret stored in the KeyVault.
 
 ### **Task 2: Setup the Azure Replication Appliance**
 
@@ -94,7 +97,8 @@ Review the prerequisites check of the installer. Note that you can safely ignore
 
 Specify the required passwords and note the password requirements. 
 
-💡 For the Passwords you can either select your choice or check the secrets within the KeyVault to reuse the password.
+> [!NOTE]
+> For the Username and Password you can either select a combination of your choice or check the secrets within the KeyVault.
 
 ![image](./img/mig10.png)
 
@@ -104,7 +108,8 @@ Select *No* for *Do you want to protect VMware virtual machines* and click *Next
 
 Verify the *Install location*. The installer should automatically pre-select the largest disk, in our case the 1024 GiB data disk that was created during VM creation.
 
-💡 The additional data disk needs to be initialized first using the [Windows Disk Management tool](https://learn.microsoft.com/en-us/windows-server/storage/disk-management/initialize-new-disks#initialize-a-new-disk)
+> [!IMPORTANT]
+> The additional data disk needs to be initialized first using the [Windows Disk Management tool](https://learn.microsoft.com/en-us/windows-server/storage/disk-management/initialize-new-disks#initialize-a-new-disk)
 
 ![image](./img/mig12.png)
 
@@ -155,7 +160,8 @@ To install the Mobility service agent on the Windows machines follow the followi
 
 ![image](./img/maw2.png)
 
-  * 💥 Don't regenerate the passphrase. This will break connectivity and you will have to reregister the replication appliance.
+> [!WARNING]
+> Don't regenerate the passphrase. This will break connectivity and you will have to reregister the replication appliance.
 
 #### **Task 3.1: Install the Mobility service on the Windows VMs**
 
@@ -171,8 +177,9 @@ cd C:\Temp\Extracted
 ```shell
 UnifiedAgent.exe /Role "MS" /Platform "VmWare" /Silent /CSType CSLegacy
 ```
-![image](./img/maw3-1.png)     
-💡 You need to specify *VmWare* for the *Platform* parameter also for physical servers.
+![image](./img/maw3-1.png)   
+> [!IMPORTANT]
+> You need to specify *VmWare* for the *Platform* parameter also for physical servers.
 
 3. Register the agent with the replication appliance:
 ```shell
@@ -182,7 +189,8 @@ UnifiedAgentConfigurator.exe /CSEndPoint \<replication appliance IP address\> /P
 ```
 ![image](./img/maw3-2.png)     
 
-**💥 Repeat the above steps for the second Windows Server**
+> [!IMPORTANT]
+> Repeat the above steps for the second Windows Server
 
 ### **Task 4: Enable Replication**
 
@@ -303,7 +311,8 @@ Under *Frontend IP configuration*, click *Add a frontend IP configuration* and c
 Under *Backend Pools*, select *Add a backend Pool*. Provide a name and select the *destination-vnet* as the Virtual Network.
 Add *10.2.1.4* and *10.2.1.5* as the IP addresses.
 
-💡 Please note: Azure reserves the first four addresses (0-3) in each subnet address range, and doesn't assign the addresses. Azure assigns the next available address to a resource from the subnet address range. So it is predictable which IP addresses will be assigned to the destination VMs after the migration.
+> [!NOTE]
+> Please note: Azure reserves the first four addresses (0-3) in each subnet address range, and doesn't assign the addresses. Azure assigns the next available address to a resource from the subnet address range. So it is predictable which IP addresses will be assigned to the destination VMs after the migration.
 
 ![image](./img/prep4.png)
 
@@ -340,7 +349,8 @@ Select *Endpoints* and click *Add*. Add each public IP of the source and destina
 
 ![image](./img/prep11.png)
 
-💡 Please note: To be able to add the public IP addresses they need to be configured with an [DNS name lable](https://learn.microsoft.com/en-us/azure/dns/dns-custom-domain?toc=%2Fazure%2Fvirtual-network%2Ftoc.json#public-ip-address).
+> [!NOTE]
+> Please note: To be able to add the public IP addresses they need to be configured with an [DNS name lable](https://learn.microsoft.com/en-us/azure/dns/dns-custom-domain?toc=%2Fazure%2Fvirtual-network%2Ftoc.json#public-ip-address).
 
 Check the Overview section under the navigation pane and note that the source load balancer is shown as *online* whereas the 
 destination load balancer is shown as *degraded*. If you copy the DNS name of the Traffic Manager profile and paste it into your browser, you should be able to browse the source web servers through the Traffic Manager Profile.
@@ -395,7 +405,8 @@ From the Traffic Manager Profile you can now also safley remove the endpoint for
 
 ![image](./img/finalmig10.png)
 
-💡 **Please note: Normaly it would be safe now to completley remove the *source-rg* Resource Group. However, we will reuse the source environment in [Challenge 6](https://github.com/microsoft/MicroHack/tree/MigrationModernizationMicroHack/03-Azure/01-03-Infrastructure/06_Migration_Datacentre_Modernization#challenge-6---modernize-with-azure) to see how Azure Migrate will help to modernize our infrastructure.**
+> [!WARNING]
+> **Please note: Normally it would be safe now to completley remove the *source-rg* Resource Group. However, we will reuse the source environment in [Challenge 6](https://github.com/microsoft/MicroHack/tree/MigrationModernizationMicroHack/03-Azure/01-03-Infrastructure/06_Migration_Datacentre_Modernization#challenge-6---modernize-with-azure) to see how Azure Migrate will help to modernize our infrastructure.**
 
 You successfully completed challenge 5! 🚀🚀🚀
 

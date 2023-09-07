@@ -55,6 +55,10 @@ A: Azure Monitor, Azure Alerts
 
     ![Share Dashboard](./img/task_03_f.png)
 
+## Task 4: Create an emptpy Monitoring Workbook
+
+![Create Workbook](./img/task_4_a.png)
+
 ## Links
 
 For detailed information check the [documenation page](https://learn.microsoft.com/en-us/azure/azure-monitor/logs/quick-create-workspace?tabs=azure-portal)

@@ -32,7 +32,7 @@ Azure Log Analytics is a tool in the Azure portal that's used to edit and run lo
 
 Azure Dashboards are customizable workspaces for monitoring your Azure resources. You can monitor the health and status of your Azure resources in a single, customized dashboard. Dashboards are useful for troubleshooting and identifying issues with your Azure resources.
 
-## Taks 4: Create an emptpy Monitoring Workbook
+### Taks 4: Create an emptpy Monitoring Workbook
 
 - Create an empty Monitoring Workbook `Workbook Monitoring Microhack` in the same region as the other resources and save it in the resource group `rg-microhack-monitoring`.
 
@@ -42,12 +42,14 @@ Azure Dashboards are customizable workspaces for monitoring your Azure resources
 - [Pricing - Azure Monitor | Microsoft Azure.](https://azure.microsoft.com/en-in/pricing/details/monitor/)
 - [Create a dashboard in the Azure Portal](https://learn.microsoft.com/en-us/azure/azure-portal/azure-portal-dashboards)
 - [Share Azure dashboards by using Azure role-based access control](https://learn.microsoft.com/en-us/azure/azure-portal/azure-portal-dashboard-share-access)
+- [Create a workbook in Azure Monitor](https://learn.microsoft.com/en-us/azure/azure-monitor/visualize/workbooks-create-workbook)
 
 ## Success Criteria
 
 - The lab environment has been succesfully deployed and expolored. You are aware of all virtual machines (`vm-windows`, `vm-linux` and `vmss-linux-nginx`).
 - A Log Analytices Workspace was deployed.
 - A (shared) dashboard was created in the Azure portal.
+- A workbook was created in the Azure portal.
 - You are ready and equipped to dive into Azure Monitor.
 
 ### Congrats :partying_face:

@@ -8,6 +8,22 @@ Go to the Azure Portal and navigate to the resource group `rg-microhack-monitori
 
 ![Create LAW](./img/task_01.png)
 
+Q: What kind of resources have been deployed (IaaS, PaaS)?
+
+A: IaaS: VMs, VMSS PaaS: Application Gateway, Bastion Host 
+
+Q: How would you monitor the resources?
+
+A: Log Analytics, Azure Monitor, Azure Diagnostics, Azure Metrics
+
+Q: What kind of logs and metrics have you in mind to monitor?
+
+A: Application logs, OS logs, Azure Diagnostics, Azure Metrics
+
+Q: How do I get informed about downtime and failures?
+
+A: Azure Monitor, Azure Alerts
+
 ## Task 2: Create Log Analytics workspace
 
 - *Create a Log Analytics workspace `law-microhack` in the same resource group as the other resources. **Use the same Azure region as the other resources.***

@@ -2,6 +2,13 @@
 
 *Duration: 20 Minutes*
 
+- [Walkthrough Challenge 0](#walkthrough-challenge-0)
+  - [Task 1: Explore and ensure successful deployment](#task-1-explore-and-ensure-successful-deployment)
+  - [Task 2: Create Log Analytics workspace](#task-2-create-log-analytics-workspace)
+  - [Task 3: Create an empty Azure Dashboard](#task-3-create-an-empty-azure-dashboard)
+  - [Task 4: Create an emptpy Monitoring Workbook](#task-4-create-an-emptpy-monitoring-workbook)
+  - [Links](#links)
+
 ## Task 1: Explore and ensure successful deployment
 
 Go to the Azure Portal and navigate to the resource group `rg-microhack-monitoring`. Look at the resources that have been deployed and think about possbile monitoring scenarios:

@@ -41,7 +41,7 @@ Since the Windows VMs won't be covered with the query, you need to clone the til
 
 ### Task 4
 
-In challenge 1 you have created a query to calculate the availability rate of each connected computer. Add this query to your workbook and add a tile to your dashboard `Dashboard Monitoring Microhack`.
+In challenge 1 you have created a query to calculate the availability rate of each connected computer.
 Set a threshold for the availability rate and add a traffic light icon to the table: green for availability rate > 99%, yellow for availability rate > 95% and red for availability rate < 95%.
 
 ### Learning Resources

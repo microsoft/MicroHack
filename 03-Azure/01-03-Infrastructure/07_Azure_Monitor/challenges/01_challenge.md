@@ -47,6 +47,10 @@ Before you start working on the `Tasks 1 and 2`, you should have a look at the f
 - [Data collection rules in Azure Monitor](https://learn.microsoft.com/en-us/azure/azure-monitor/essentials/data-collection-rule-overview)
 - [Collect events and performance counters from virtual machines with Azure Monitor Agent](https://learn.microsoft.com/en-us/azure/azure-monitor/agents/data-collection-rule-azure-monitor-agent?tabs=portal)
 
+>**Hint**
+>
+> When creating the Data Collection rule for the VMs **only add Events and Syslog** to the rule. You will add **Performance Counters** later.
+
 ### Task 1: Install Azure Monitoring Agent (AMA) on Windows VM
 
 Check if the `AMA` was installed  on the virtal machine blade under "Extensions & applications"

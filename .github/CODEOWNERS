@@ -1,5 +1,28 @@
 # These owners will be the default owners for everything in
 # the repo. Unless a later match takes precedence,
-# @microsoft/microhack will be requested for
+# @microsoft/microhack-repository will be requested for
 # review when someone opens a pull request.
-*       @microsoft/microhack
+*       @microsoft/microhack-repository
+
+# Owners per Microhack
+
+# 03-Azure/01-03-Infrastructure/01_Azure_Virtual_Desktop
+/03-Azure/01-03-Infrastructure/01_Azure_Virtual_Desktop/ @microsoft/microhack-avd
+
+# 03-Azure/01-03-Infrastructure/02_Hybrid_Azure_Arc_Servers
+/03-Azure/01-03-Infrastructure/02_Hybrid_Azure_Arc_Servers/ @microsoft/microhack-hybrid
+
+# 03-Azure/01-03-Infrastructure/03_Hybrid_Azure_Arc_Kubernetes
+/03-Azure/01-03-Infrastructure/03_Hybrid_Azure_Arc_Kubernetes/ @microsoft/microhack-hybrid
+
+# 03-Azure/01-03-Infrastructure/04_BCDR_Azure_Native
+/03-Azure/01-03-Infrastructure/04_BCDR_Azure_Native/ @microsoft/microhack-bcdr
+
+# 03-Azure/01-03-Infrastructure/05_Azure_VMware_Solution
+/03-Azure/01-03-Infrastructure/05_Azure_VMware_Solution/ @microsoft/microhack-avs
+
+# 03-Azure/01-03-Infrastructure/06_Migration_Datacenter_Modernization
+/03-Azure/01-03-Infrastructure/06_Migration_Datacenter_Modernization/ @microsoft/microhack-migration
+
+# 03-Azure/01-03-Infrastructure/07_Azure_Monitor
+/03-Azure/01-03-Infrastructure/07_Azure_Monitor/ @microsoft/microhack-monitoring

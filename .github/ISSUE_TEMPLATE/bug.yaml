@@ -24,12 +24,14 @@ body:
       - 03-Azure/01-01-App Innovation/01_AppServicetoContainerApps
       - 03-Azure/01-02 Data/01-MicroHack-SAP-Cashflow-Prediction
       - 03-Azure/01-02 Data/02-ADX-Microhack
+      - 03-Azure/01-02 Data/03-SQL-Migration
       - 03-Azure/01-03-Infrastructure/01_Azure_Virtual_Desktop
       - 03-Azure/01-03-Infrastructure/02_Hybrid_Azure_Arc_Servers
       - 03-Azure/01-03-Infrastructure/03_Hybrid_Azure_Arc_Kubernetes
       - 03-Azure/01-03-Infrastructure/04_BCDR_Azure_Native
       - 03-Azure/01-03-Infrastructure/05_Azure_VMware_Solution
       - 03-Azure/01-03-Infrastructure/06_Migration_Datacenter_Modernization
+      - 03-Azure/01-03-Infrastructure/07_Azure_Monitor
       - 03-Azure/01-04- AI/01_Azure_OpenAI_Service
       - 04-Microsoft-365
   validations:

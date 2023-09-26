@@ -19,7 +19,7 @@ In this hack, you will learn how to set up an Azure Virtual Desktop in a typical
 
 ## Requirements
 
-- Basic Azure knowledge [(Azure Monitor fundamentals)](https://learn.microsoft.com/en-us/training/paths/monitor-usage-performance-availability-resources-azure-monitor/)
+- Basic Azure knowledge [(Azure fundamentals)](https://learn.microsoft.com/en-us/training/paths/azure-fundamentals-describe-azure-architecture-services/)
 - Microsoft Teams Desktop Sharing should be allowed to collaborate with other participants.
 
 ## Content and Challenges
@@ -37,7 +37,7 @@ In this hack, you will learn how to set up an Azure Virtual Desktop in a typical
 ## Solution Guide
 
 - Challenge 1: **[Create a host pool for personal desktops](Solutionguide/01-Personal-Hostpools-solution.md)**
-- Challenge 2: **[Create a custom golden image](Solutionguide/02-Create-a-custom-golden-image.md)**
+- Challenge 2: **[Create a custom golden image](Solutionguide/02-Create-a-custom-golden-image-solution.md)**
 - Challenge 3: **[Implement Start VM on Connect Feature](Solutionguide/03-start-VM-on-connect-solution.md)**
 - Challenge 4: **[Create a host pool for multi-session desktops](Solutionguide/04-multi-session-Hostpools-solution.md)**
 - Challenge 5: **[Create FSLogix Profile Solution](Solutionguide/05-Implement-FSLogix-Profile-Solution.md)**

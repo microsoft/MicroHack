@@ -1,6 +1,6 @@
 # Exercise 2: Create a custom golden image
 
-[Previous Challenge](./01-Personal-Hostpools.md) - **[Home](../Readme.md)** - [Next Challenge](./03-multi-session-Hostpools.md)
+[Previous Challenge](./01-Personal-Hostpools.md) - **[Home](../Readme.md)** - [Next Challenge](./03-start-VM-on-connect.md)
 
 ## Introduction
 In this challenge we will create a custom golden image from a plain Azure VM. Before we generalize the Azure VM you will connect to it from your personal host pool as it sits in the same vnet and access over the private IP should be possible. Afterwards applications are installed and configuration changes are made. Then you will generalize the image and upload the image to the Azure Compute Gallery from which you can deploy new host pools in the following challenges.

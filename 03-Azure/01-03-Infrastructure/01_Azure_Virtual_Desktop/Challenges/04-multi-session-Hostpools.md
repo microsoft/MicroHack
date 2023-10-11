@@ -5,13 +5,13 @@
 In this challenge you will create Azure AD joined pooled desktops from a custom golden image created in [Challenge 2](./02-Create-a-custom-golden-image.md). For higher sophistication we use the Azure Compute Gallery to provide the golden image and after deployment you will connect to the session host with multiple user and verify if the changes you included in the golden image are in place. Then you will also provide remote apps to your users.
 
 ## Challenge
-Create multi-session Hostpool joined in Azure Active Directory
+Create multi-session Hostpool joined in Microsoft Entra ID
 - West Europe Region
 - Metadata located in West Europe
 - Mark as Validation environment
 - Host Pool type: Pooled
 - Choose your Azure Compute Gallery image from the previous challenge
-- Domain to join: Azure Active Directory (Enroll with Intune “No”)
+- Domain to join: Microsoft Entra ID (Enroll with Intune “No”)
 - Register desktop app group to new workspace
 - Assign users
 

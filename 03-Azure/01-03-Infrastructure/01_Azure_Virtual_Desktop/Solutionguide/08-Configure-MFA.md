@@ -17,7 +17,7 @@ In this challenge, you will configure enable Azure multifactor authentication fo
   |              |            | 
 
 ## Task1:
-Assign your users an Azure Active Directory P1 or P2 license that enables the MFA feature with Conditional Access.
+Assign your users an Microsoft Entra ID P1 or P2 license that enables the MFA feature with Conditional Access.
 
 Open your AAD tenant and select **Licenses**. If you do not have Enterprise Mobility + Security licenses available, you can activate the time-limited trial. 
 
@@ -30,9 +30,9 @@ In this task we will create an Conditional Access policy.
 
 You need to be signed in as a **global administrator, security administrator, or conditional access administrator**.
 
-In Azure Active Directory **create a group and add your AVD users** to that group.
+In Microsoft Entra ID **create a group and add your AVD users** to that group.
 
-Now browse to Security within the Azure Active Directory and then to **Security > Conditional Access** within the Azure Portal and create a **new policy**.
+Now browse to Security within the Microsoft Entra ID and then to **Security > Conditional Access** within the Azure Portal and create a **new policy**.
 
 ![Configure MFA](../Images/09-Create_CA_Policy_1.png)
 

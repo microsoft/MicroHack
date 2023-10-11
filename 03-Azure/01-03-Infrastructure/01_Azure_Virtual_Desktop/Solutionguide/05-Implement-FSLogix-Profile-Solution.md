@@ -14,7 +14,7 @@ The Azure Virtual Desktop service recommends FSLogix profile containers as a use
 | Description | Links |
 | Create a storage account | https://learn.microsoft.com/en-us/azure/storage/common/storage-account-create?tabs=azure-portal |
 | Create an Azure file share | https://learn.microsoft.com/en-us/azure/storage/files/storage-how-to-create-file-share?tabs=azure-portal |
-|Create a profile container with Azure Files and Azure Active Directory   |  https://learn.microsoft.com/en-us/azure/virtual-desktop/create-profile-container-azure-ad  | 
+| Create a profile container with Azure Files and Microsoft Entra ID   |  https://learn.microsoft.com/en-us/azure/virtual-desktop/create-profile-container-azure-ad  | 
 | Circumvent port 445 issues | https://learn.microsoft.com/en-us/azure/storage/files/storage-files-networking-overview#azure-networking |
   |              |            | 
 
@@ -63,11 +63,11 @@ We need to enable Identity-based access for the file share in this storage accou
 
 ![Create Storage account](../Images/03-FSLogix_create-storage-account-6.png)
 
-As we are using Azure Active Directory Kerberos in this Microhack, click on **Azure Active Directory Kerberos**.
+As we are using Microsoft Entra ID Kerberos in this Microhack, click on **Azure AD Kerberos**.
 
 ![Create Storage account](../Images/03-FSLogix_create-storage-account-7.png)
 
-**Click on the check-box** to enable Azure Active Directory Kerberos for this file share. 
+**Click on the check-box** to enable Azure AD Kerberos for this file share. 
 To configure directory and file level permissions through Windows File explorer, you also need to specify domain name and domain GUID for your on-premises AD. 
 You can get this information from your domain admin or from an on-premises AD-joined client. If you prefer to configure using icacls, this step is not required. 
 
@@ -101,8 +101,8 @@ To assign users access permissions:
 
 ![Create Storage account](../Images/03-FSLogix_create-storage-account-11.png)
 
-- For Assign access to, select **Azure Active Directory user, group, or service principal**.
-- **Select a name or email address for the target Azure Active Directory identity**.
+- For Assign access to, select **Microsoft Entra ID user, group, or service principal**.
+- **Select a name or email address for the target Microsoft Entra ID identity**.
 - Select **Save**.
 
 ![Create Storage account](../Images/03-FSLogix_create-storage-account-12.png)

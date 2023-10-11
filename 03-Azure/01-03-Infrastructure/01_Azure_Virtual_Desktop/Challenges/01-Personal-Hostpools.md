@@ -9,7 +9,7 @@ In this challenge we will be provisioning our first Host Pool and Session Hosts.
 - West Europe Region
 - Personal Host Pool via the Azure Portal, with Windows 11 Enterprise from the Gallary
 - Metadata located in West Europe
-- Domain to join: Azure Active Directory (Enroll with Intune “No”)
+- Domain to join: Microsoft Entra ID (Enroll with Intune “No”)
 - Users should be assigned directly to the session host.
 - Change the friendly name of the Workspace
 - Change the friendly name of the Application Group

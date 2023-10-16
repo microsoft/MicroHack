@@ -18,7 +18,7 @@ In this challenge, you will learn about creating a customized Azure Virtual Desk
 | Replication Region | West Europe |
 | Time zone redirection | Enabled |
 | Remove Appx packages | Microsoft.GamingApp; Microsoft.XboxApp; Microsoft.Xbox.TCUI; Microsoft.XboxGameOverlay; Microsoft.XboxGamingOverlay; Microsoft.XboxIdentityProvider; Microsoft.XboxSpeechToTextOverlay; Microsoft.ZuneMusic; Microsoft.ZuneVideo |
-| Install Visual Studio Code and Notepad++ | Via own automation script |  
+| Install Visual Studio Code and Notepad++ | Via own automation script |  [Example](https://raw.githubusercontent.com/dweppeler-msft/MicroHack/main/03-Azure/01-03-Infrastructure/01_Azure_Virtual_Desktop/modules/InstallApps.ps1)
 
 ## Success Criteria
 - Custom Image is available in the Azure Compute Gallery

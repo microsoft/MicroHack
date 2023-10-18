@@ -6,7 +6,7 @@ param currentUserObjectId string
 @description('Prefix for multiple deployments per subscription')
 param prefix string = 'mh'
 
-@description('The Number of deployments per subscription')
+@description('The Number of deployments per subscription. This parameter is to be used it the deployment gets precreated for the users.')
 param deploymentCount int = 1
 
 @description('Azure region for the deployment')
@@ -21,9 +21,11 @@ param deploymentCount int = 1
 ])
 param location string
 
+var suffix = substring(uniqueString(currentUserObjectId), 0, 4) 
+
 @description('Source Resouce Groups.')
 resource sourceRg 'Microsoft.Resources/resourceGroups@2021-01-01' = [for i in range(0, deploymentCount): {
-  name: '${prefix}${(i+1)}-source-rg'
+  name: '${prefix}${(i+1)}-${suffix}-source-rg'
   location: location
 }]
 
@@ -35,13 +37,14 @@ module source 'source.bicep' = [for i in range(0, deploymentCount):  {
     location: location
     currentUserObjectId: currentUserObjectId
     prefix: prefix
+    suffix: suffix
     deployment: (i+1)
   }
 }]
 
 @description('Destination Resouce Groups.')
 resource destinationRg 'Microsoft.Resources/resourceGroups@2021-01-01' = [for i in range(0, deploymentCount): {
-  name: '${prefix}${(i+1)}-destination-rg'
+  name: '${prefix}${(i+1)}-${suffix}-destination-rg'
   location: location
 }]
 
@@ -52,6 +55,7 @@ module destination 'destination.bicep' = [for i in range(0, deploymentCount): {
   params: {
     location: location
     prefix: prefix
+    suffix: suffix
     deployment: (i+1)
   }
 }]

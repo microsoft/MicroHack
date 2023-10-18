@@ -5,6 +5,9 @@ param location string
 @description('Prefix used in the Naming for multiple Deployments in the same Subscription')
 param prefix string
 
+@description('Suffix used in the Naming for multiple Deployments in the same Subscription')
+param suffix string
+
 @description('Number of the deployment used for multiple Deployments in the same Subscription')
 param deployment int
 
@@ -12,7 +15,7 @@ param deployment int
 // https://learn.microsoft.com/en-us/azure/templates/microsoft.network/networksecuritygroups?pivots=deployment-language-bicep
 @description('Network security group in destination network')
 resource destinationVnetNsg 'Microsoft.Network/networkSecurityGroups@2022-05-01' = {
-  name: '${prefix}${deployment}-destination-vnet-nsg'
+  name: '${prefix}${deployment}${suffix}-destination-vnet-nsg'
   location: location
   properties: {
     securityRules: [
@@ -36,7 +39,7 @@ resource destinationVnetNsg 'Microsoft.Network/networkSecurityGroups@2022-05-01'
 // https://learn.microsoft.com/en-us/azure/templates/Microsoft.Network/virtualNetworks?pivots=deployment-language-bicep
 @description('Virtual network for the destination resources')
 resource destinationVnet 'Microsoft.Network/virtualNetworks@2022-05-01' = {
-  name: '${prefix}${deployment}-destination-vnet'
+  name: '${prefix}${deployment}${suffix}-destination-vnet'
   location: location
   properties: {
     addressSpace: {
@@ -67,7 +70,7 @@ resource destinationVnet 'Microsoft.Network/virtualNetworks@2022-05-01' = {
 // https://learn.microsoft.com/en-us/azure/templates/microsoft.network/publicipaddresses?pivots=deployment-language-bicep
 @description('Destination Bastion Public IP')
 resource destinationBastionPip 'Microsoft.Network/publicIPAddresses@2022-05-01' = {
-  name: '${prefix}${deployment}-destination-bastion-pip'
+  name: '${prefix}${deployment}${suffix}-destination-bastion-pip'
   location: location
   sku: {
     name: 'Standard'
@@ -80,7 +83,7 @@ resource destinationBastionPip 'Microsoft.Network/publicIPAddresses@2022-05-01' 
 // https://learn.microsoft.com/en-us/azure/templates/microsoft.network/bastionhosts?pivots=deployment-language-bicep
 @description('Destination Network Bastion to access the destination Servers')
 resource destinationBastion 'Microsoft.Network/bastionHosts@2022-07-01' = {
-  name: '${prefix}${deployment}-destination-bastion'
+  name: '${prefix}${deployment}${suffix}-destination-bastion'
   location: location
   sku: {
     name: 'Basic'

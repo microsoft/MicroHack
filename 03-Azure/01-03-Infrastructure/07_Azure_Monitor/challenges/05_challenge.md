@@ -10,18 +10,34 @@ After completing this challenge, you should be able to capture custom logs from 
 
 ### Task 1
 
-- Create a custom table named `MH_MONITORING_CL` inside Azure Log Analytics workspace `law-microhack`.
+- Create a `Data Collection Endpoint` in the `West Europe` region
+- and a `Data Collection Rule` to gather text logs from the virtual machine `vm-windows`
+  - Consider the following configuation parameters
+    - `Data Collection Rule Name`: `dcr-custom-vm-windows`
+    - `Data Source Type`: `Custom Logs`
+    - `File pattern`: `C:\JavaLogs\TestLog-*.log` - Identifies where the log files are located on the local disk.
+    - `Table Name`: `MH_MONITORING_CL`
 
 ### Task 2
 
-- Generate sample logs on your virutal machine.
-- Find a sample script in `./resources/scripts/generate-logs.ps1`
+- Create a custom table named `MH_MONITORING` inside Azure Log Analytics workspace `law-microhack`. 
+- Either using
+  - the **Azure Portal** - [Create or edit a custom log table](https://docs.microsoft.com/en-us/azure/azure-monitor/logs/data-platform-logs#custom-tables)
+    - The `_CL` suffix is added automatically to the name you specify.
+    - A JSON schema with sample logs for the custom table is provided in `./resources/scripts/sample.json`
+  - the **PowerShell** script `./resources/scripts/create-custom-table.ps1`
+    - You need to provide the `subscriptionId` inside the script.
 
 ### Task 3
 
-- Create a `Data Collection Endpoint` and a `Data Collection Rule` to gather text logs from the virtual machine `vm-windows`
+- Add `vm-windows` to the `dcr-custom-vm-windows` Data Collection Rule
 
 ### Task 4
+
+- Generate sample logs on your virutal machine.
+- Find a sample script in `./resources/scripts/generate-logs.ps1` which you can execute on `vm-windows`. Connect via RDP and run the script in PowerShell.
+
+### Task 5
 
 - Verify custom table `MH_MONITORING_CL` and logs are gather in Log Analytics workspace `law-microhack`.
 

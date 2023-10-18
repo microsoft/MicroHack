@@ -16,7 +16,7 @@ VM insights provides a set of predefined workbooks that allow you to view trendi
 
 ## Goal
 
-After completing this challenge you should be able to enable VM Inisghts on your virtual machines.
+After completing this challenge you should be able to enable VM Insights on your virtual machines.
 
 VM Insights can be set up in different ways. After the tutorial, you can activate it both manually in the Azure Portal and automatically with Azure Policy.
 

@@ -40,7 +40,7 @@ Create a Service Health alert for the services `Virtual Machines` and `Virtual M
 
 ### Task 3: Create a Resource Health Alert
 
-Create a Resource Health alert for all resources wihtin your resource group.
+Create a Resource Health alert for all resources within your resource group.
 
 ### Task 4: Create an alert which notifies you when the `vm-linux` gets restarted
 

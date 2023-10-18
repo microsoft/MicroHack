@@ -27,7 +27,7 @@ param guidValue string = newGuid()
 
 // Variables
 @description('Admin user variable')
-var adminUsername = '${prefix}${deployment}${suffix}-microhackadmin'
+var adminUsername = '${prefix}${deployment}-microhackadmin'
 
 @description('Admin password variable')
 var adminPassword = '${toUpper(uniqueString(resourceGroup().id))}-${guidValue}'

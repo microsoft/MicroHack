@@ -33,10 +33,10 @@ var adminUsername = '${prefix}${deployment}${suffix}-microhackadmin'
 var adminPassword = '${toUpper(uniqueString(resourceGroup().id))}-${guidValue}'
 
 @description('Create Name for VM1')
-var vm1Name = '${prefix}${deployment}${suffix}-frontend-1'
+var vm1Name = '${prefix}${deployment}${suffix}-fe-1'
 
 @description('Create Name for VM2')
-var vm2Name = '${prefix}${deployment}${suffix}-frontend-2'
+var vm2Name = '${prefix}${deployment}${suffix}-fe-2'
 
 @description('Tenant ID used by Keyvault')
 var tenantId  = subscription().tenantId

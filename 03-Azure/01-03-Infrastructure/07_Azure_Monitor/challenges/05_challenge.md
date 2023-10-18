@@ -40,7 +40,7 @@ After completing this challenge, you should be able to capture custom logs from 
 
 ### Task 5
 
-- Verify custom table `MH_MONITORING_CL` and logs are gather in Log Analytics workspace `law-microhack`.
+- Verify custom table `MH_MONITORING_CL` and logs are gathered in Log Analytics workspace `law-microhack`.
 
 ### Learning Resources
 

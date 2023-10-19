@@ -18,11 +18,14 @@ After completing this challenge, you should be able to capture custom logs from 
 - Either using
   - the **Azure Portal** - [Create or edit a custom log table](https://docs.microsoft.com/en-us/azure/azure-monitor/logs/data-platform-logs#custom-tables)
     - The `_CL` suffix is added automatically to the name you specify.
-    - Create a new `Data Collection Rule` or use the existing one from challenge one. Fill in parameters from the following section.
+    - Create a new `Data Collection Rule`. Fill in parameters from the following section.
     - A JSON schema with sample logs for the custom table is provided in `./resources/scripts/sample.json`
   - the **PowerShell** script `./resources/scripts/create-custom-table.ps1`
     - You need to provide the `subscriptionId` inside the script.
     - Create a new `Data Collection Rule`. Fill in parameters from the following section.
+
+#### Data Collection Rule
+
 - Consider the following configuation parameters when creating or updating the `Data Collection Rule`
   - `Data Collection Rule Name`: `dcr-custom-vm-windows`
   - `Data Source Type`: `Custom Logs`

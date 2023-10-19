@@ -50,8 +50,8 @@ Please ensure that you successfully passed [challenge 1](../../Readme.md#challen
 3. In this section you can now configure the assignment with the following settings and create the assignment:
 
 - Scope: Please select the resource group called *mh-arc-servers-rg*
-- Basics: Please search for *[Preview]: Enable Azure Monitor for Hybrid VMs with AMA* and select the initiative.
-- Parameters: Please select your Log Analytics workspace. 
+- Basics: Please search for *Enable Azure Monitor for Hybrid VMs with AMA* and select the initiative.
+- Parameters: Please insert the Resource ID of the Data Collection Rule from Task 2. 
 - Remediation: Please select the System assigned identity location according to your resources, e.g. West Europe. 
 
 4. Please wait a few seconds until the creation of the assignment is complete. You should see that the initiative is assigned. Every new Azure Arc Server will now automatically install the necessary agents. Be aware that Agent installation can take up to 60 Minutes.

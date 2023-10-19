@@ -84,13 +84,13 @@ Please ensure that you successfully passed [challenge 1](../../Readme.md#challen
 3. In this section you can now configure the assignment with the following settings and create the assignment:
 
 - Scope: Please select the resource group called *mh-arc-servers-rg*
-- Basics: Please search for *[Preview]: Configure periodic checking for missing system updates on azure Arc-enabled servers* and select the policy.
+- Basics: Please search for *Configure periodic checking for missing system updates on azure Arc-enabled servers* and select the policy.
 - Parameters: Skip, and keep defaults. 
 - Remediation: Please select the System assigned identity location according to your resources, e.g. West Europe. 
 
 4. Please wait a few seconds until the creation of the assignment is complete. You should see that the policy is assigned.
 
-5. Repeat Step 3 and 4 for the Policy definition *[Preview]: Configure periodic checking for missing system updates on azure Arc-enabled servers*, this time unselecting the Checkbox at Parameters, shifting OS Type to Linux.
+5. Repeat Step 3 and 4 for the Policy definition *Configure periodic checking for missing system updates on azure Arc-enabled servers*, this time unselecting the Checkbox at Parameters, shifting OS Type to Linux.
 
 6. Important: Both machines were already onboarded earlier. As a result, you need to create a remediation task to apply the policy to your Azure Arc Servers. Please select the Policy Assignment and select *Create Remediation Task*.
 

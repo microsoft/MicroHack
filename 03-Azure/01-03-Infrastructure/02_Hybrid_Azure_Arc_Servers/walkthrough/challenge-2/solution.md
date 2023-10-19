@@ -38,6 +38,8 @@ Please ensure that you successfully passed [challenge 1](../../Readme.md#challen
 
 6. Repeat step 4 & 5 for Linux Syslog and accept the defaults.
 
+7. Create the Data Collection Rule. 
+
 
 ### Task 3: Assign Azure Policy Initiative to your Azure Arc resource group
 

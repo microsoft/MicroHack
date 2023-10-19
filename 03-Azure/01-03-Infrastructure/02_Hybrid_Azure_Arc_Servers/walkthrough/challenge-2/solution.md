@@ -26,21 +26,17 @@ Please ensure that you successfully passed [challenge 1](../../Readme.md#challen
 
 ![image](./img/2.2_Create_Data_Collection_Rule.png)
 
-3. Name the Data Collection Rule *mh-windows* select your subscription and *mh-rg* as ressource group and change the Region to *West Europe*. Keep the Platform Type *Windows* and click *Next: Resources* to continue.
+3. Name the Data Collection Rule *mh-dcr* select your subscription and *mh-rg* as ressource group and change the Region to *West Europe*. Change Platform Type to *All* and click *Next: Resources* to continue.
 
 ![image](./img/2.3_Create_Data_Collection_Rule_Basics.png)
 
-4. Click on *Next: Collect and deliver* as we gonna set the scope of Ressources later on via Azure Policy. Check the boxes of the log Levels you like to collect. 
+4. Click on *Next: Collect and deliver* as we going to set the scope of resources later on via Azure Policy. Select *Windows Event Logs* and check the boxes of the log levels you like to collect.
 
-![image](./img/2.4_Create_Data_Collection_Rule_Collect.png)
-
-5. Continue on the second ribbon and configure the Destination for the Logs
+5. Continue on the second ribbon and configure the Destination for the Logs.
 
 ![image](./img/2.5_Create_Data_Collection_Rule_Destination.png)
 
-6. Repeat step 1 to 5 and create another Data Collection Rule for Linux Systems. This Time Name the Rule *mh-Linux* and change the Platform Type to *Linux*. As Data Sources, use *Syslog*.
-
-![image](./img/2.6_Create_Data_Collection_Rule_Datasource.png)
+6. Repeat step 4 & 5 for Linux Syslog and accept the defaults.
 
 
 ### Task 3: Assign Azure Policy Initiative to your Azure Arc resource group

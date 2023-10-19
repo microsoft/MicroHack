@@ -5,15 +5,16 @@ resource "azurerm_linux_virtual_machine" vm-linux {
   name                  = "vm-linux"
   location              = var.location
   resource_group_name   = var.rg_name
-  size                = "Standard_F2"
-  admin_username      = "vmuser"
+  size                  = var.vm_sku
+  admin_username        = var.vmuser
+  // zone                  = "2"
   network_interface_ids = [
     azurerm_network_interface.nic_vm_linux.id,
   ]
 
   admin_ssh_key {
     username   = "vmuser"
-    public_key = file("~/.ssh/id_rsa.pub")
+    public_key = file("${path.module}/.ssh/id_rsa.pub")
   }
 
   identity {
@@ -57,9 +58,10 @@ resource "azurerm_windows_virtual_machine" "vm-windows" {
     name                = "vm-windows"
     location            = var.location
     resource_group_name = var.rg_name
-    size                = "Standard_F2"
-    admin_username      = "vmuser"
-    admin_password      = "P@ssw0rd1234!"
+    size                = var.vm_sku
+    admin_username      = var.vmuser
+    admin_password      = var.vmpassword
+    // zone                = "2"
     network_interface_ids = [
       azurerm_network_interface.nic_vm_windows.id,
     ]

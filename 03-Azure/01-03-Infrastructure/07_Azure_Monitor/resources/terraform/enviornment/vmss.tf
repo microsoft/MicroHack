@@ -2,16 +2,16 @@ resource "azurerm_linux_virtual_machine_scale_set" "nginx_vmss" {
   name                = "vmss-linux-nginx"
   resource_group_name = var.rg_name
   location            = var.location
-  sku                 = "Standard_DS1_v2"
-  instances           = 2
-  admin_username      = "adminuser"
+  sku                 = var.vm_sku
+  instances           = 1
+  admin_username      = "vmuser"
   // upgrade_mode        = "Automatic"
 
-  custom_data = base64encode(file("./web.conf"))
+  custom_data = base64encode(file("${path.module}/web.conf"))
 
   admin_ssh_key {
-    username   = "adminuser"
-    public_key = file("~/.ssh/id_rsa.pub")
+    username   = "vmuser"
+    public_key = file("${path.module}/modules/vms/.ssh/id_rsa.pub")
   }
 
   source_image_reference {
@@ -38,7 +38,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "nginx_vmss" {
       name      = "internal"
       primary   = true
       subnet_id = azurerm_subnet.microhack_subnet[0].id
-      #application_gateway_backend_address_pool_ids = azurerm_application_gateway.appgw.backend_address_pool_ids
+      # application_gateway_backend_address_pool_ids = azurerm_application_gateway.appgw.backend_address_pool_ids
       application_gateway_backend_address_pool_ids = azurerm_application_gateway.appgw.backend_address_pool[*].id
     }
   }

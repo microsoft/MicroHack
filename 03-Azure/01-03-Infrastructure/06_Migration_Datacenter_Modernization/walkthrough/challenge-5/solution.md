@@ -238,7 +238,7 @@ Select *Replicating Machines* from the navigation pane on the left. You should n
 
 ![image](./img/repl11.png)
 
-### **Task 4: Perform Test Migration**
+### **Task 5: Perform Test Migration**
 
 When delta replication begins, you can run a test migration for the VMs, before running a full migration to Azure. We highly recommend that you do this at least once for each machine, before you migrate it.
 
@@ -290,11 +290,11 @@ Select *Testing complete. Delete test virtual machine* and select *Cleanup Test*
 
 ![image](./img/test11.png)
 
-### **Task 4: Prepare Final Migration**
+### **Task 6: Prepare Final Migration**
 
 Currently the two frontend servers are published via an Azure Public Load Balancer. After the migration, the original server will be turned off. Therefore the access to the system via the Azure Public Load Balancer will be broken. To prepare for the migration and to keep downtime as short as possible some pre-migration steps should be performed.
 
-#### **Task 4.1: Create a new Azure Public Load Balancer in the destination environment**
+#### **Task 6.1: Create a new Azure Public Load Balancer in the destination environment**
 
 From the Azure Portal open the Load Balancing blade, select Load Balancer on the Navigation pane on the left and click *Create*.
 
@@ -332,7 +332,7 @@ Wait until the load balancer has been created, cahnge back to the *Load balancin
 
 ![image](./img/prep8.png)
 
-#### **Task 4.2: Create a new Azure Traffic Manager Profile**
+#### **Task 6.2: Create a new Azure Traffic Manager Profile**
 
 Azure Traffic Manager is a DNS-based traffic load balancer. It allows us to distribute traffic to public facing endpoints like our two Public Load Balancer. Traffic Manager can be created in advance to distribute traffic among the old and new load balancer. The DNS conbfiguration of the application can be changed in advance to point to the Traffic Manager Profile instead to the Public IP of the Load Balancer. Using this approach makes sure that Traffic Manager automatically removes the old Load Balancer after the frontend servers were migrated.
 
@@ -359,7 +359,7 @@ destination load balancer is shown as *degraded*. If you copy the DNS name of th
 
 ![image](./img/prep13.png)
 
-### **Task 5: Perform Final Migration**
+### **Task 7: Perform Final Migration**
 
 Open the [Azure Portal](https://portal.azure.com) and navigate to the previousley created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click *Overview* in the *Migration tools* box. From the Overview section click in *Migrate* under *Step 3: Migrate*.
 
@@ -391,7 +391,7 @@ From a user perspective nothing changed. You're still able to browse the Traffic
 
 🚀🚀🚀🚀🚀🚀 Congratulations, you've successfully migrated the frontend application to Azure.🚀🚀🚀🚀🚀🚀
 
-### **Task 6: Cleanup**
+### **Task 8: Cleanup**
 
 After the successfull migration you can now stop replicating the source virtual machines. Open the [Azure Portal](https://portal.azure.com) and navigate to the previousley created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click *Overview* in the *Migration tools* box. In the *Azure Migrate: Migration and modernization* pane, select *Replicating machines* from the navigation pane on the left, click on the 3 dots on the end of each row of the replicating servers and select *Stop replicating*.
 

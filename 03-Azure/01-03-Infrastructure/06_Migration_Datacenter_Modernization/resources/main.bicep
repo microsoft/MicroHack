@@ -59,3 +59,7 @@ module destination 'destination.bicep' = [for i in range(0, deploymentCount): {
     deployment: (i+1)
   }
 }]
+
+
+output identifier string = suffix
+

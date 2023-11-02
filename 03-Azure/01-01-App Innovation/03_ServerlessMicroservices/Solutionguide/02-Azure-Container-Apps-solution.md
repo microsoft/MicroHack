@@ -93,3 +93,7 @@ Or you can just enable it in the portal:
 
 For more dapr configurations look [here](https://learn.microsoft.com/en-us/azure/container-apps/dapr-overview?tabs=bicep1%2Cyaml).
 With this you should be able to access the Frontend Web App and call the backend API app using dapr. This is a Service-to-Service invocation.
+
+## Next Challenge
+
+Challenge 3: [Deploy Microservices to Azure Container App via GitHub Actions](./Challenges/03-GitHub-Actions.md)

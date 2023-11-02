@@ -4,11 +4,11 @@
 
 ## Introduction
 
-Kubernetes is the de facto standard for big, scalable containerized platforms today and AKS is the solution on Azure. So in this challenge we will take a look at some basic concepts of AKS and K8s in general and what can happen during daily business operating an AKS.
+Kubernetes has emerged as the common standard for sizable and scalable containerized platforms, with Azure Kubernetes Service (AKS) representing Azure's tailored solution in this realm. In this tutorial, we're going to delve into the essential concepts of AKS, alongside an overview of Kubernetes (K8s) fundamentals. We'll also uncover typical scenarios and operational insights that one may encounter while managing an AKS environment in day-to-day operations.
 
 ## Architecture
 
-To have a relateable scenario, we will create a basic AKS cluster setup and use some common services. They will all be pulled directly from upstream sources.
+To have a relateable scenario, we will create a basic AKS cluster setup and use some common services.
 
 ## Components
 

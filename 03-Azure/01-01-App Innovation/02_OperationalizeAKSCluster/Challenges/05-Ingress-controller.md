@@ -25,3 +25,13 @@ To now access our services from outside the cluster, we will deploy and configur
 - [Ingress controller upstream source](https://docs.nginx.com/nginx-ingress-controller/installation/installation-with-manifests/)
 - [Ingress controller documentation](https://docs.nginx.com/nginx-ingress-controller/)
 - [Ingress in AKS documentation](https://learn.microsoft.com/en-us/azure/aks/ingress-basic?tabs=azure-cli)
+
+## Solution - Spoilerwarning
+
+Challenge 5: [Access your services via an ingress controller](./Solutionguide/05-Ingress-controller-solution.md)
+
+# Finish
+
+Congratulations! You finished the MicroHack Operationalize AKS Cluster. We hope you had the chance to learn about Kubernetes Clusters and how to implement them using Azure. If you want to give feedback please dont hesitate to open an Issue on the repository or get in touch with one of us directly.
+
+Thank you for investing the time and see you next time!

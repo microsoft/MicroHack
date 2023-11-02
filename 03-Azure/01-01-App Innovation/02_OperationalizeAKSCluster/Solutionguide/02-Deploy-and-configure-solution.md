@@ -34,3 +34,7 @@ To access your freshly deployed container, you can use the following command:
 ```bash
 kubectl exec -it (pod-name) /bin/sh
 ```
+
+## Next Challenge
+
+Challenge 3: [Add Azure Monitor to your environment](./Challenges/03-Azure-Monitor.md)

@@ -33,3 +33,7 @@ We also want to enable dapr in our Azure Container Apps, so we can use it for Se
 - [Benefits of Container Apps](https://docs.microsoft.com/en-us/azure/container-apps/compare-options)
 - [dapr](https://docs.dapr.io/concepts/overview/)
 - [dapr Service Invocation](https://learn.microsoft.com/en-us/dotnet/architecture/dapr-for-net-developers/service-invocation)
+
+## Solution - Spoilerwarning
+
+Challenge 2: [Deploy Microservices to Azure Container App](./Solutionguide/02-Azure-Container-Apps-solution.md)

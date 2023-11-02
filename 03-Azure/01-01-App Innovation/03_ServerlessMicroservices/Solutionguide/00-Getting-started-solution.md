@@ -35,3 +35,7 @@ az containerapp env create `
 ```
 
 In this example we used $ACR_NAME=flightbookeracr,$RESOURCE_GROUP=ServerlessMicroservices and $ENVIRONMENT=Flightbooker-env but you are free to choose your own names.
+
+## Next Challenge
+
+Challenge 1: [Build and push Microservice Images locally](./Challenges/01-Build-and-push-locally.md)

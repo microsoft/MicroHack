@@ -48,3 +48,9 @@ kubectl get ingress
 ```
 
 Use the public IP from this info and check if $YOUR_PUBLIC_ID/wp-admin returns the Wordpress login page.
+
+# Finish
+
+Congratulations! You finished the MicroHack Operationalize AKS Cluster. We hope you had the chance to learn about Kubernetes Clusters and how to implement them using Azure. If you want to give feedback please dont hesitate to open an Issue on the repository or get in touch with one of us directly.
+
+Thank you for investing the time and see you next time!

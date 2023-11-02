@@ -86,3 +86,9 @@ Enter a name for your Diagnostic setting, then select the log from FrontDoorAcce
 You can select destination details to "Send to Log Analytics" and save. <br>
 
 For more information about the different logs, go [here](https://learn.microsoft.com/en-us/azure/frontdoor/standard-premium/how-to-logs).
+
+# Finish
+
+Congratulations! You finished the MicroHack Serverless Microservices. We hope you had the chance to learn about Microservices and how to implement them using Azure. If you want to give feedback please dont hesitate to open an Issue on the repository or get in touch with one of us directly.
+
+Thank you for investing the time and see you next time!

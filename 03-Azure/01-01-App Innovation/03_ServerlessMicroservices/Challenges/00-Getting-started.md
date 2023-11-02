@@ -95,3 +95,7 @@ az provider register --namespace Microsoft.OperationalInsights
 - [Microservices with Azure Container Apps](https://docs.microsoft.com/en-us/azure/container-apps/microservices)
 - [Container Registry](https://docs.microsoft.com/en-us/azure/container-registry/container-registry-get-started-azure-cli)
 - [Container App Environment](https://docs.microsoft.com/en-us/azure/container-apps/environment)
+
+## Solution - Spoilerwarning
+
+Challenge 0: [Getting started and setting up the environment](./Solutionguide/00-Getting-started-solution.md)

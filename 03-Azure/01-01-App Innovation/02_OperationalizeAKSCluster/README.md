@@ -4,10 +4,7 @@
 
 In this MicroHack we are going to cover some basic tasks you are facing when running an AKS cluster.
 
-AKS - Azure Kubernetes Service (AKS) simplifies deploying a managed Kubernetes cluster in Azure by offloading the operational overhead to Azure.
-As a hosted Kubernetes service, Azure handles critical tasks, like health monitoring and maintenance.
-Since Kubernetes masters are managed by Azure, you only manage and maintain the agent nodes.
-Thus, AKS is free; you only pay for the agent nodes within your clusters, not for the masters.
+Kubernetes is a technology for container orchestration, enabling efficient deployment, scaling, and management of applications in a cloud environment. It offers benefits like scalability, flexibility across various clouds, high availability, and automated updates. Microsoft Azure's Azure Kubernetes Service (AKS) enhances the capabilities of Kubernetes by integrating it seamlessly into the Azure ecosystem, simplifying cluster management and ensuring high security and compliance. With AKS, users get an environment that is not only easy to manage but also cost-effective, as it charges only for the resources used without additional fees for the Kubernetes management infrastructure. This makes AKS a great platform choice for both small and large enterprises seeking to optimize containerized applications with minimal overhead and maximum efficiency.
 
 We will take some insights in fundamental operational tasks like scaling and learn how to observe our cluster with Azure Monitor.
 

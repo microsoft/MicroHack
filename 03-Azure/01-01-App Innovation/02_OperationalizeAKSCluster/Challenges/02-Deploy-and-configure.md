@@ -23,3 +23,7 @@ Now it is time to deploy some pods in our newly deployed cluster. Therefor you w
 - [Connect to AKS via CLI](https://learn.microsoft.com/en-us/azure/aks/learn/quick-kubernetes-deploy-cli)
 - [Kubernetes Cheatsheet](https://kubernetes.io/docs/reference/kubectl/cheatsheet/)
 - [Busybox upstream source](https://hub.docker.com/_/busybox)
+
+## Solution - Spoilerwarning
+
+Challenge 2: [Deploy and configure your first pods](./Solutionguide/02-Deploy-and-configure-solution.md)

@@ -22,3 +22,7 @@ Here is a solution guide directly from Microsoft for creating Azure Monitor and 
 
 - [Azure Monitor setup](https://learn.microsoft.com/en-us/windows-server/storage/storage-spaces/configure-azure-monitor)
 - [Configure Container Insights](https://learn.microsoft.com/en-us/azure/azure-monitor/containers/container-insights-onboard)
+
+## Next Challenge
+
+Challenge 4: [Scale up your services](./Challenges/04-Scale-up.md)

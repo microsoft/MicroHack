@@ -22,3 +22,7 @@ To later be able to deploy them in Container Apps we first have to build images 
 ## Learning Resources
 
 - [Push to Container Registries](https://docs.microsoft.com/en-us/azure/container-registry/container-registry-get-started-docker-cli?tabs=azure-cli)
+
+## Solution - Spoilerwarning
+
+Challenge 1: [Build and push Microservice Images locally](./Solutionguide/01-Build-and-push-locally-solution.md)

@@ -174,3 +174,7 @@ In our Docker explorer there should now be two images with the registry name in 
 If the output displays "Authentication required" run az acr login --name $REGISTRY_NAME in the terminal.
 
 Now you can check in your Azure portal if the Images got pushed to the registry by going to the registry and from there to Repositories under Services. Alternatively they should also be visible in the Docker extension explorer under the <b>Registries</b> node.
+
+## Next Challenge
+
+Challenge 2: [Deploy Microservices to Azure Container App](./Challenges/02-Azure-Container-Apps.md)

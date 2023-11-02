@@ -26,3 +26,7 @@ In this challenge we will setup the basic Azure resources we need to fulfill our
 
 - [AKS documentation](https://learn.microsoft.com/en-us/azure/aks/)
 - [AKS best practices](https://learn.microsoft.com/en-us/azure/aks/best-practices)
+
+## Solution - Spoilerwarning
+
+Challenge 1: [Setup the environment](./Solutionguide/01-Setup-Environment-solution.md)

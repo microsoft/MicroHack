@@ -188,3 +188,7 @@ What exactly is happening in the deploy:
 - step 2: Uses azure CLI to deploy/update the Azure Container App and deploy a new revision
 
 With this in place, you can commit your work and the GitHub action should be triggered, if all is configured correctly. You should also be able to see the results in the GitHub Actions workflows tab as well and the Azure Container App should be updated which you can see in the logs.
+
+## Next Challenge
+
+Challenge 4: [Integrate Azure Front Door](./Challenges/04-FrontDoor.md)

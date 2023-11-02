@@ -49,3 +49,7 @@ Network:
 
 Azure offers various methods to access resources, such as through the Portal or CLI. Therefore, it is crucial to implement a well-defined permission concept. You can find some best practices related to permissions at the following link:
 [Security Design Considerations](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/landing-zone/design-area/security)
+
+## Next Challenge
+
+Challenge 2: [Deploy and configure your first pods](./Challenges/02-Deploy-and-configure.md)

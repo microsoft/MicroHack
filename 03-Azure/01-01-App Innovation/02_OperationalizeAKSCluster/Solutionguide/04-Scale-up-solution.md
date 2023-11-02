@@ -30,3 +30,7 @@ Next, you can specify the number of replicas, e.g. 5:
 ```bash
 kubectl scale --replicas=5 deployment/redis
 ```
+
+## Next Challenge
+
+Challenge 5: [Access your services via an ingress controller](./Challenges/05-Ingress-controller.md)

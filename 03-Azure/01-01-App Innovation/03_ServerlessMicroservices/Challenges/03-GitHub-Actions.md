@@ -30,3 +30,7 @@ GitHub Actions is designed to help simplify workflows with flexible automation a
 
 - [GitHub Actions](https://resources.github.com/devops/tools/automation/actions/)
 - [CI/CD pipeline with GitHub Actions](https://github.blog/2022-02-02-build-ci-cd-pipeline-github-actions-four-steps/)
+
+## Solution - Spoilerwarning
+
+Challenge 3: [Deploy Microservices to Azure Container App via GitHub Actions](./Solutionguide/03-GitHub-Actions-solution.md)

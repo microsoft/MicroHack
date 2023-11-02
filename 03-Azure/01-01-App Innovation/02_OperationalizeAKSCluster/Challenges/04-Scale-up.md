@@ -26,3 +26,7 @@ Since kubernetes is a hyperscaler, we need to use it as such and deploy more ser
 - [Kubernetes Daemonsets](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/)
 - [Redis upstream source](https://hub.docker.com/_/redis)
 - [Wordpress upstream source](https://hub.docker.com/_/wordpress)
+
+## Solution - Spoilerwarning
+
+Challenge 4: [Scale up your services](./Solutionguide/04-Scale-up-solution.md)

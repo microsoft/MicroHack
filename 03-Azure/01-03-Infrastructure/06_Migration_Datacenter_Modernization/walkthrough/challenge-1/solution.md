@@ -15,7 +15,7 @@ Duration: 30 minutes
 - Execute `az login` and sign in with your Azure AD account
 - Execute `az ad signed-in-user show --query id `
 - Copy the value to the clipboard
-- Execute `az deployment sub create --location westeurope --template-file .\main.bicep`
+- Execute `az deployment sub create --location germanywestcentral --template-file .\main.bicep`
 - Paste the previously copied value as *currentUserObjectId*
 - Select a region
 - Wait for the deployment to finish

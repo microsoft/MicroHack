@@ -26,3 +26,6 @@
 
 # 03-Azure/01-03-Infrastructure/07_Azure_Monitor
 /03-Azure/01-03-Infrastructure/07_Azure_Monitor/ @microsoft/microhack-monitoring
+
+# 03-Azure/01-03-Infrastructure/08_Migration_Datacenter_Linux
+/03-Azure/01-03-Infrastructure/07_Azure_Monitor/ @microsoft/microhack-linux-migration

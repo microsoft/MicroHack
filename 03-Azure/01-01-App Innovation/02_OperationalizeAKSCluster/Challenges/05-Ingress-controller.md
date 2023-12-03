@@ -28,7 +28,7 @@ To now access our services from outside the cluster, we will deploy and configur
 
 ## Solution - Spoilerwarning
 
-Challenge 5: [Access your services via an ingress controller](./Solutionguide/05-Ingress-controller-solution.md)
+Challenge 5: [Access your services via an ingress controller](../Solutionguide/05-Ingress-controller-solution.md)
 
 # Finish
 

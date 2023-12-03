@@ -25,4 +25,4 @@ To later be able to deploy them in Container Apps we first have to build images 
 
 ## Solution - Spoilerwarning
 
-Challenge 1: [Build and push Microservice Images locally](./Solutionguide/01-Build-and-push-locally-solution.md)
+Challenge 1: [Build and push Microservice Images locally](../Solutionguide/01-Build-and-push-locally-solution.md)

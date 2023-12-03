@@ -98,4 +98,4 @@ az provider register --namespace Microsoft.OperationalInsights
 
 ## Solution - Spoilerwarning
 
-Challenge 0: [Getting started and setting up the environment](./Solutionguide/00-Getting-started-solution.md)
+Challenge 0: [Getting started and setting up the environment](../Solutionguide/00-Getting-started-solution.md)

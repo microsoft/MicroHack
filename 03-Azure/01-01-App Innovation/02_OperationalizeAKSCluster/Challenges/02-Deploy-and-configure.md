@@ -26,4 +26,4 @@ Now it is time to deploy some pods in our newly deployed cluster. Therefor you w
 
 ## Solution - Spoilerwarning
 
-Challenge 2: [Deploy and configure your first pods](./Solutionguide/02-Deploy-and-configure-solution.md)
+Challenge 2: [Deploy and configure your first pods](../Solutionguide/02-Deploy-and-configure-solution.md)

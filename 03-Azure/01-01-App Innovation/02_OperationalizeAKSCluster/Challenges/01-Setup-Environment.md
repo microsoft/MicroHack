@@ -29,4 +29,4 @@ In this challenge we will setup the basic Azure resources we need to fulfill our
 
 ## Solution - Spoilerwarning
 
-Challenge 1: [Setup the environment](./Solutionguide/01-Setup-Environment-solution.md)
+Challenge 1: [Setup the environment](../Solutionguide/01-Setup-Environment-solution.md)

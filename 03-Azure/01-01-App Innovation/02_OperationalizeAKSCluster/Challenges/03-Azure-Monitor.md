@@ -24,4 +24,4 @@ To observe our cluster we now add Azure Monitor to our environment. This is the 
 
 ## Solution - Spoilerwarning
 
-Challenge 3: [Add Azure Monitor to your environment](./Solutionguide/03-Azure-Monitor-solution.md)
+Challenge 3: [Add Azure Monitor to your environment](../Solutionguide/03-Azure-Monitor-solution.md)

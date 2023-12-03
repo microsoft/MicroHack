@@ -33,7 +33,7 @@ To be able to use the full potential of Azure for our new application, we want t
 
 ## Solution - Spoilerwarning
 
-Challenge 4: [Integrate Azure Front Door](./Solutionguide/04-FrontDoor-solution.md)
+Challenge 4: [Integrate Azure Front Door](../Solutionguide/04-FrontDoor-solution.md)
 
 # Finish
 

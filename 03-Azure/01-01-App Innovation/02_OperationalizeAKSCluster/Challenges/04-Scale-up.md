@@ -29,4 +29,4 @@ Since kubernetes is a hyperscaler, we need to use it as such and deploy more ser
 
 ## Solution - Spoilerwarning
 
-Challenge 4: [Scale up your services](./Solutionguide/04-Scale-up-solution.md)
+Challenge 4: [Scale up your services](../Solutionguide/04-Scale-up-solution.md)

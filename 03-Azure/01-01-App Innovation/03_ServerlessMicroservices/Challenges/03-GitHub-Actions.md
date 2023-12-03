@@ -33,4 +33,4 @@ GitHub Actions is designed to help simplify workflows with flexible automation a
 
 ## Solution - Spoilerwarning
 
-Challenge 3: [Deploy Microservices to Azure Container App via GitHub Actions](./Solutionguide/03-GitHub-Actions-solution.md)
+Challenge 3: [Deploy Microservices to Azure Container App via GitHub Actions](../Solutionguide/03-GitHub-Actions-solution.md)

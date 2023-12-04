@@ -5,29 +5,24 @@ Duration: 30 minutes
 ### **Familiarize yourself with the app/environment**
 
 * In which framework and version is the application written?
-	<p>
+
     The application was written in C# in .NET version 7. You can find this information in the Web App `microhack-webapp-xyz` resource in the Azure portal in the `Configuration` tab under `General Settings`:
     
     ![image](./img/challenge-1-runtimestack.jpg)
-    </p>
 
 * On which operating system (Windows or Linux) is the application currently running?
-	<p>
+
     The application is currently running on Linux. You can find this information in the App Service Resource `microhack-appservice` resource in the Azure portal in the `Overview` tab under `Operating System` setting:
     
     ![image](./img/challenge-1-operatingsystem.jpg)
-    </p>
 
 * What message does the application state when you open in the browser?
-	<p>
+
     "This line here is the message you are looking for"
     
-    You can start the application by accessing the URL (https://<name-of-your-webapp>.azurewebsites.net). You can find the URL in the portal in the Web App `microhack-webapp-xyz` in the `Overview` tab under the `Default Domain` setting:
+    You can start the application by accessing the URL (https://`name-of-your-webapp`.azurewebsites.net). You can find the URL in the portal in the Web App `microhack-webapp-xyz` in the `Overview` tab under the `Default Domain` setting:
     
     ![image](./img/challenge-1-url.jpg)
-    </p>
-
-💡 Please note that the deployment may take up to 10 minutes
 
 ### **Read through the learning resources**
 The bicep deployment should have created the following resources

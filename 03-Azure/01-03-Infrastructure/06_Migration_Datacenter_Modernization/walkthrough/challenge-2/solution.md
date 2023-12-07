@@ -9,7 +9,7 @@ Please make sure thet you successfully completed [Challenge 1](../challenge-1/so
 ### **Task 1: Create a Azure Migrate Project**
 
 > [!IMPORTANT]
-> To be able to create a Business Case, make sure to select Europe as the Geography for the Azure Migrate Project
+> To be able to create a Business Case, make sure to select **Europe** as the Geography for the Azure Migrate Project
 
 Open the [Azure Portal](https://portal.azure.com) and login using a user account with at least Contributor permissions on a Azure Subscription.
 

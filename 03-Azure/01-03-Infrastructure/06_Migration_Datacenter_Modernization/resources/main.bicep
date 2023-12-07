@@ -11,13 +11,13 @@ param deploymentCount int = 1
 
 @description('Azure region for the deployment')
 @allowed([
+  'Germany West Central'
   'West Europe'
   'North Europe'
   'East US'
   'East US 2'
   'Southeast Asia'
   'East Asia'
-  'Germany West Central'
 ])
 param location string
 

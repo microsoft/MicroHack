@@ -1,5 +1,19 @@
 # Walkthrough Challenge 4 - Assess VM´s for the migration
 
+~~~mermaid
+flowchart LR
+    task1["Task#1
+    Create Azure Migrate Machine Group"]
+    task2["Task#2
+    Create Azure VM Assessment"]
+    task3["Task#3
+    Review and adjust assessment"]
+    task4["Task#4
+    Azure Migrate Dependency Analysis"]
+    task1 --> task2
+    task2 --> task3
+    task3 --> task4
+~~~
 Duration: 40 minutes
 
 ## Prerequisites

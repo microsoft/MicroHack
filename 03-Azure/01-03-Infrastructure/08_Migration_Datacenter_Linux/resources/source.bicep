@@ -53,6 +53,8 @@ var subnetName = 'source-subnet'
 
 @description('Public Loadbalancer Name')
 var lbName = '${prefix}${deployment}${suffix}-source-plb-frontend'
+var lbPublicIPName = '${prefix}${deployment}${suffix}-source-lbPublicIP'
+var lbPublicIPOutboundName = '${prefix}${deployment}${suffix}-source-lbPublicIPOutbound'
 
 @description('Image Reference')
 param imageReference object
@@ -194,128 +196,21 @@ module vm2 'vm.bicep' = {
   ]
 }
 
-// https://learn.microsoft.com/en-us/azure/templates/microsoft.network/loadbalancers?pivots=deployment-language-bicep
-@description('Loadbalancer for VMs')
-resource lb 'Microsoft.Network/loadBalancers@2021-08-01' = {
+module lb 'loadbalancer.bicep' = {
   name: lbName
-  location: location
-  sku: {
-    name: 'Standard'
+  params: {
+    location: location
+    lbName: lbName
+    lbPublicIPName: lbPublicIPName
+    lbPublicIPOutboundName: lbPublicIPOutboundName
   }
-  properties: {
-    frontendIPConfigurations: [
-      {
-        name: 'LoadBalancerFrontEnd'
-        properties: {
-          publicIPAddress: {
-            id: lbPublicIPAddress.id
-          }
-        }
-      }
-      {
-        name: 'LoadBalancerFrontEndOutbound'
-        properties: {
-          publicIPAddress: {
-            id: lbPublicIPAddressOutbound.id
-          }
-        }
-      }
-    ]
-    backendAddressPools: [
-      {
-        name: 'LoadBalancerBackEndPool'
-
-      }
-      {
-        name: 'LoadBalancerBackEndPoolOutbound'
-      }
-    ]
-    loadBalancingRules: [
-      {
-        name: 'myHTTPRule'
-        properties: {
-          frontendIPConfiguration: {
-            id: resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', '${prefix}${deployment}${suffix}-plb-frontend', 'LoadBalancerFrontEnd')
-          }
-          backendAddressPool: {
-            id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', '${prefix}${deployment}${suffix}-plb-frontend', 'LoadBalancerBackEndPool')
-          }
-          frontendPort: 80
-          backendPort: 80
-          enableFloatingIP: false
-          idleTimeoutInMinutes: 15
-          protocol: 'Tcp'
-          enableTcpReset: true
-          loadDistribution: 'Default'
-          disableOutboundSnat: true
-          probe: {
-            id: resourceId('Microsoft.Network/loadBalancers/probes', '${prefix}${deployment}${suffix}-plb-frontend', 'loadBalancerHealthProbe')
-          }
-        }
-      }
-    ]
-    probes: [
-      {
-        name: 'loadBalancerHealthProbe'
-        properties: {
-          protocol: 'Tcp'
-          port: 80
-          intervalInSeconds: 5
-          numberOfProbes: 2
-        }
-      }
-    ]
-    outboundRules: [
-      {
-        name: 'myOutboundRule'
-        properties: {
-          allocatedOutboundPorts: 10000
-          protocol: 'All'
-          enableTcpReset: false
-          idleTimeoutInMinutes: 15
-          backendAddressPool: {
-            id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', '${prefix}${deployment}${suffix}-plb-frontend', 'LoadBalancerBackEndPoolOutbound')
-          }
-          frontendIPConfigurations: [
-            {
-              id: resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', '${prefix}${deployment}${suffix}-plb-frontend', 'LoadBalancerFrontEndOutbound')
-            }
-          ]
-        }
-      }
-    ]
-  }
+  dependsOn: [
+    sourceVnet
+  ]
 }
 
-// https://learn.microsoft.com/en-us/azure/templates/microsoft.network/publicipaddresses?pivots=deployment-language-bicep
-@description('Load Balancer Public IP')
-resource lbPublicIPAddress 'Microsoft.Network/publicIPAddresses@2021-08-01' = {
-  name: '${prefix}${deployment}${suffix}-source-lbPublicIP'
-  location: location
-  sku: {
-    name: 'Standard'
-  }
-  properties: {
-    publicIPAddressVersion: 'IPv4'
-    publicIPAllocationMethod: 'Static'
-  }
-}
 
-// https://learn.microsoft.com/en-us/azure/templates/microsoft.network/publicipaddresses?pivots=deployment-language-bicep
-@description('Load Balancer Outbound Public IP')
-resource lbPublicIPAddressOutbound 'Microsoft.Network/publicIPAddresses@2021-08-01' = {
-  name: '${prefix}${deployment}${suffix}-lbPublicIPOutbound'
-  location: location
-  sku: {
-    name: 'Standard'
-  }
-  properties: {
-    publicIPAddressVersion: 'IPv4'
-    publicIPAllocationMethod: 'Static'
-  }
-}
-
-output publicip string = lbPublicIPAddress.properties.ipAddress
+output publicip string = lb.outputs.publicip
 output vm1id string = vm1.outputs.vmId
 output vm2id string = vm2.outputs.vmId
 

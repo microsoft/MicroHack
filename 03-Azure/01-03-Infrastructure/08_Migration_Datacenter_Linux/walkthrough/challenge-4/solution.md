@@ -144,4 +144,4 @@ Once the dependency data has been uploaded to Azure Migrate, you should be able 
 
 You successfully completed challenge 4! 🚀🚀🚀
 
- **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-5/solution.md)
+ **[Home](../../README.md)** - [Next Challenge Solution](../challenge-5/solution.md)

@@ -691,4 +691,4 @@ The deployed architecture now looks like the following diagram.
 
 ![image](./img/Challenge-5.jpg)
 
- **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-6/solution.md)
+ **[Home](../../README.md)** - [Next Challenge Solution](../challenge-6/solution.md)

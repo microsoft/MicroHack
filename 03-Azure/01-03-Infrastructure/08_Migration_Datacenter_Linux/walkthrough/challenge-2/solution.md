@@ -267,4 +267,4 @@ The deployed architecture now looks like the following diagram.
 
 ![image](./img/Challenge-2.jpg)
 
- **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-3/solution.md)
+ **[Home](../../README.md)** - [Next Challenge Solution](../challenge-3/solution.md)

@@ -120,4 +120,4 @@ az vm get-instance-view --ids $sourceVmMigId -o tsv --query licenseType # Result
 
 You successfully completed challenge 3! 🚀🚀🚀
 
- **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-4/solution.md)
+ **[Home](../../README.md)** - [Next Challenge Solution](../challenge-4/solution.md)

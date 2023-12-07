@@ -37,7 +37,7 @@ Rename the workflow YAML file to *pipeline-containerapp.yml*. As you can see, th
 * From line 9 onwards the jobs are defined and steps are defined.
 * Line 12 tells GitHub to run the workflow on a Ubuntu Linux machine with the latest available version
 * Line 15 checkous the repository
-* Line 16 to 20 set up the required .NET tools for the workflow. Change the *dotnet-version* in line 19 to *7.x*
+* Line 16 to 20 set up the required .NET tools for the workflow. Change the *dotnet-version* in line 19 to *6.x*
 * Line 22 performs the build
 * Line 23 performs some automated tests. This line can be removed for now since this is not part of this MicroHack.
 
@@ -63,7 +63,7 @@ Feel free to name all steps and format the code as you like. Your workflow shoul
           - name: Set up .NET Core
             uses: actions/setup-dotnet@v1
             with:
-              dotnet-version: '7.x'
+              dotnet-version: '6.x'
               include-prerelease: true
     
           - name: Restore dependencies

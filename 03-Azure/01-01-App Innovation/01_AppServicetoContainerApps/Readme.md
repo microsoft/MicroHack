@@ -98,20 +98,20 @@ When migrating from the App Service to a containerized hosting, which service wo
 ## Challenge 2 - Containerize the Application
 
 ### Goal
-Before the application can be deployed to a Container App, it needs to be containerized. As you already know, this means encapsulating the application code with all dependencies and required software into a container image. The images are typically stored ("pushed") in a container registry, from which they can loaded ("pulled") to be deployed into a container hosting service. 
+Before the application can be deployed to a Container App, it needs to be containerized. As you already know, this means encapsulating the application code with all dependencies and required software into a container image. The images are typically stored ("pushed") in a container registry, from which they can loaded ("pulled") to be deployed into a container hosting service.
 
 ### Actions
 
 * Create an Azure Container Registry
-* Setup a new GitHub Actions pipeline in the repository to build the application
+* Setup a new GitHub Actions workflow in the repository to build the application <br> While we will stick to the GitHub terminology and call it a workflow, in CI/CD and DevOps terms this is also known as a pipeline
 * Create a Dockerfile and add it into the repository
-* Add steps to the GitHub Actions pipeline to containerize the application and push the image into the container registry
+* Add steps to the GitHub Actions workflow to containerize the application and push the image into the container registry
 
 ### Success criteria
 
 * You have created the Azure Container Registry
-* You created a new GitHub Action pipeline
-* The pipeline that pushes a deployable container image to the registry
+* You created a new GitHub Actions workflow
+* The workflow that pushes a deployable container image to the registry
 
 ### Learning resources
 

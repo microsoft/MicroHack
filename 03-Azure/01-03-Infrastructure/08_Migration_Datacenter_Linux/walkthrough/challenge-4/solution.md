@@ -14,6 +14,7 @@ flowchart LR
     task2 --> task3
     task3 --> task4
 ~~~
+
 Duration: 40 minutes
 
 ## Prerequisites

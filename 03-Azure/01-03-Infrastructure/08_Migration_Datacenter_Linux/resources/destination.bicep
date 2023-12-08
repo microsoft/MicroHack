@@ -15,8 +15,10 @@ var nsgName = '${prefix}${deployment}${suffix}-destination-nsg'
 var vnetName = '${prefix}${deployment}${suffix}-destination-vnet'
 var bastionName = '${prefix}${deployment}${suffix}-destination-bastion'
 var bastionPipName = '${prefix}${deployment}${suffix}-destination-bastion-pip'
+@description('Public Loadbalancer Name')
 var lbName = '${prefix}${deployment}${suffix}-destination-plb-frontend'
-var lbPublicIPAddressName = '${prefix}${deployment}${suffix}-destination-plb-frontend-pip'
+var lbPublicIPName = '${prefix}${deployment}${suffix}-destination-lbPublicIP'
+var lbPublicIPOutboundName = '${prefix}${deployment}${suffix}-destination-lbPublicIPOutbound'
 
 // Resources
 // https://learn.microsoft.com/en-us/azure/templates/microsoft.network/networksecuritygroups?pivots=deployment-language-bicep
@@ -113,107 +115,17 @@ resource destinationBastion 'Microsoft.Network/bastionHosts@2022-07-01' = {
   }
 }
 
-// https://learn.microsoft.com/en-us/azure/templates/microsoft.network/loadbalancers?pivots=deployment-language-bicep
-@description('Loadbalancer for VMs')
-resource lb 'Microsoft.Network/loadBalancers@2021-08-01' = {
+module lb 'loadbalancer.bicep' = {
   name: lbName
-  location: location
-  sku: {
-    name: 'Standard'
+  params: {
+    location: location
+    lbName: lbName
+    lbPublicIPName: lbPublicIPName
+    lbPublicIPOutboundName: lbPublicIPOutboundName
   }
-  properties: {
-    frontendIPConfigurations: [
-      {
-        name: 'LoadBalancerFrontEnd'
-        properties: {
-          publicIPAddress: {
-            id: lbPublicIPAddress.id
-          }
-        }
-      }
-    ]
-    backendAddressPools: [
-      {
-        name: 'LoadBalancerBackEndPool'
-        properties: {
-          loadBalancerBackendAddresses: [
-            {
-              name: 'linuxVmDestination1'
-              properties: {
-                ipAddress: '10.2.1.4'
-                subnet: {
-                  id: destinationVnet.properties.subnets[0].id
-                }
-                // virtualNetwork: {
-                //   id: destinationVnet.id
-                // }
-              }
-            }
-            {
-              name: 'linuxVmDestination2'
-              properties: {
-                ipAddress: '10.2.1.5'
-                subnet: {
-                  id: destinationVnet.properties.subnets[0].id
-                }
-                // virtualNetwork: {
-                //   id: destinationVnet.id
-                // }
-              }
-            }
-          ]
-        }
-      }
-    ]
-    loadBalancingRules: [
-      {
-        name: 'myHTTPRule'
-        properties: {
-          frontendIPConfiguration: {
-            id: resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', lbName, 'LoadBalancerFrontEnd')
-          }
-          backendAddressPool: {
-            id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', lbName, 'LoadBalancerBackEndPool')
-          }
-          frontendPort: 80
-          backendPort: 80
-          enableFloatingIP: false
-          idleTimeoutInMinutes: 15
-          protocol: 'Tcp'
-          enableTcpReset: true
-          loadDistribution: 'Default'
-          disableOutboundSnat: true
-          probe: {
-            id: resourceId('Microsoft.Network/loadBalancers/probes', lbName, 'loadBalancerHealthProbe')
-          }
-        }
-      }
-    ]
-    probes: [
-      {
-        name: 'loadBalancerHealthProbe'
-        properties: {
-          protocol: 'Tcp'
-          port: 80
-          intervalInSeconds: 5
-          numberOfProbes: 2
-        }
-      }
-    ]
-    outboundRules: []
-  }
+  dependsOn: [
+    destinationVnet
+  ]
 }
 
-// https://learn.microsoft.com/en-us/azure/templates/microsoft.network/publicipaddresses?pivots=deployment-language-bicep
-@description('Load Balancer Public IP')
-resource lbPublicIPAddress 'Microsoft.Network/publicIPAddresses@2021-08-01' = {
-  name: lbPublicIPAddressName
-  location: location
-  sku: {
-    name: 'Standard'
-  }
-  properties: {
-    publicIPAddressVersion: 'IPv4'
-    publicIPAllocationMethod: 'Static'
-  }
-}
+output publicip string = lb.outputs.publicip

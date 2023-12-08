@@ -55,6 +55,24 @@ After completing this MicroHack you will:
 
 # MicroHack challenges
 
+~~~mermaid
+flowchart LR
+    challenge1["Challange#1
+    Landing zone"]
+    challenge2["Challange#2
+    Discover physical servers for the migration"]
+    challenge3["Challange#3
+    Create a Business Case"]
+    challenge4["Challange#4
+    Assess VM´s for the migration"]
+    challenge5["Challange#5
+    Migrate machines to Azure"]
+    challenge1-->challenge2
+    challenge2-->challenge3
+    challenge3-->challenge4
+    challenge4-->challenge5
+~~~
+
 ## General prerequisites
 
 This MicroHack has a few but important prerequisites

@@ -150,4 +150,4 @@ The deployed architecture now looks like the following diagram.
 🚀🚀🚀 **!!!Congratulations!!! - You successfully completed the MicroHack. You can now safley remove the *source-rg* and *destination-rg* Resource Groups.** 🚀🚀🚀
 
 
- **[Home](../../Readme.md)** -
+ **[Home](../../README.md)** -

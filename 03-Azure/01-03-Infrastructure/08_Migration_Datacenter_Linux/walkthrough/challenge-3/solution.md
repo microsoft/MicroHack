@@ -1,5 +1,17 @@
 # Walkthrough Challenge 3 - Create a Business Case
 
+~~~mermaid
+flowchart LR
+    task1["Task#1
+    Azure Migrate Business Case"]
+    task2["Task#2
+    Review Business Case"]
+    task3["Task#3
+    Adjust Business Case"]
+    task1 --> task2
+    task2 --> task3
+~~~
+
 Duration: 40 minutes
 
 ## Prerequisites
@@ -120,4 +132,4 @@ az vm get-instance-view --ids $sourceVmMigId -o tsv --query licenseType # Result
 
 You successfully completed challenge 3! 🚀🚀🚀
 
- **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-4/solution.md)
+ **[Home](../../README.md)** - [Next Challenge Solution](../challenge-4/solution.md)

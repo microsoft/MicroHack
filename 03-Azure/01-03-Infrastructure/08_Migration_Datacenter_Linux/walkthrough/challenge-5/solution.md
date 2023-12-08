@@ -1,5 +1,32 @@
 # Walkthrough Challenge 5 - Migrate machines to Azure
 
+~~~mermaid
+flowchart LR
+    task1["Task#1
+    Create Windows Server"]
+    task2["Task#2
+    Setup Azure Replication Appliance"]
+    task3["Task#3
+    Install Mobility Service"]
+    task4["Task#4
+    Enable Replication"]
+    task5["Task#5
+    Perform Test Migration"]
+    task6["Task#6
+    Prepare migration"]
+    task7["Task#7
+    Perform migration"]
+    task8["Task#8
+    Cleanup"]
+    task1 --> task2
+    task2 --> task3
+    task3 --> task4
+    task4 --> task5
+    task5 --> task6
+    task6 --> task7
+    task7 --> task8
+~~~
+
 Duration: 90 minutes
 
 ## Prerequisites
@@ -691,4 +718,4 @@ The deployed architecture now looks like the following diagram.
 
 ![image](./img/Challenge-5.jpg)
 
- **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-6/solution.md)
+ **[Home](../../README.md)** - [Next Challenge Solution](../challenge-6/solution.md)

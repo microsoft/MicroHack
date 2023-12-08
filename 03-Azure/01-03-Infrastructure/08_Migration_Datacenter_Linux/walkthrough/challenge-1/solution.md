@@ -1,10 +1,25 @@
 # Walkthrough Challenge 1 - Prerequisites and Landing Zone
 
+~~~mermaid
+flowchart LR
+    task1["Task#1
+    Get your enironment ready"]
+    task2["Task#2
+    Deploy Azure Landing Zone"]
+    task3["Task#3
+    Verify the Azure deployment"]
+    task4["Task#4
+    Verify Web Server availability"]
+    task1 --> task2
+    task2 --> task3
+    task3 --> task4
+~~~
+
 Duration: 30 minutes
 
 ## Prerequisites
 
-- Please ensure that you successfully verified the [General prerequisits](../../Readme.md#general-prerequisites) before continuing with this challenge.
+- Please ensure that you successfully verified the [General prerequisits](../../README.md#general-prerequisites) before continuing with this challenge.
 - The Azure CLI is required to deploy the Bicep configuration of the Micro Hack.
 
 
@@ -53,6 +68,9 @@ az account set --subscription '<REPLACE-WITH-YOUR-SUBSCRIPTION-NAME>'
 az login
 az login --use-device-code # If you are using a browser on a different machine
 ~~~
+
+![Login from remote shell with device code](./img/mh.linux.login.gif)
+
 - List subscriptions you have access to with Azure CLI.
 ~~~bash
 az account list
@@ -70,14 +88,14 @@ The following command will deploy the landing zone for the Micro Hack. The landi
 
 ~~~bash
 # Define prefix and suffix for all azure resources
-prefix=sm
-suffix=a
+prefix="51" # replace sm with your own prefix
+suffix=a # replace a with your own suffix
 # Have a look at all possible azure location with Azure CLI
 az account list-locations -o table # List all possible Azure locations
 # Define location for all azure resources
 location=germanywestcentral
 # Get our Entra ID Object ID, will be needed to assign us Admin rights to the azure VMs
-currentUserObjectId=$(az ad signed-in-user show --query id -o tsv) # 
+currentUserObjectId=$(az ad signed-in-user show --query id -o tsv)
 # Define VM admin password and username
 adminPassword='demo!pass123'
 adminUsername='microhackadmin'
@@ -146,6 +164,8 @@ curl http://10.1.1.5 -v # expect 200 OK from remote server
 logout
 ~~~
 
+![image](./img/mh.linux.webserver.test.gif)
+
 ### **Task 4: Verify Web Server availability**
 
 The following instruction will guide you through the verification of the deployed web servers via the Azure Portal
@@ -154,7 +174,9 @@ The following instruction will guide you through the verification of the deploye
 - Navigate to *Frontend IP configuration* under *Settings* section on the left
 - Note and copy public IP address of *LoadBalancerFrontEnd*
 - Open web browser and navigate to http://LoadBalancerFrontEnd-IP-Address
-- A simple website containing the server name of the frontend1 or frontend2 VM should be displayed
+- A simple website containing details about the request and response should be displayed
+
+![image](./img/mh.linux.lb.test.gif)
 
 You can verify things direclty via azure cli if you want to:
 
@@ -213,4 +235,4 @@ resh:{
 
 You successfully completed challenge 1! 🚀🚀🚀
 
- **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-2/solution.md)
+ **[Home](../../README.md)** - [Next Challenge Solution](../challenge-2/solution.md)

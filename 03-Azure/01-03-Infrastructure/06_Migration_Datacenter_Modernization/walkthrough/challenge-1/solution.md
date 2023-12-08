@@ -10,12 +10,12 @@ Duration: 30 minutes
 
 ### **Task 1: Deploy the Landing Zone for the Micro Hack**
 
-- Install the [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) on your local PC
+- Install the [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) on your local PC. You can also use Azure Cloud Shell.
 - Open a PowerShell (Windows) or Bash (Linux and macOS) terminal window
 - Execute `az login` and sign in with your Azure AD account
 - Execute `az ad signed-in-user show --query id `
 - Copy the value to the clipboard
-- Execute `az deployment sub create --location germanywestcentral --template-file ./main.bicep`
+- Execute `az deployment sub create --name $(az ad signed-in-user show --query displayName -o tsv) --location germanywestcentral --template-file ./main.bicep` 
 - Paste the previously copied value as *currentUserObjectId*
 - Select a region
 - Wait for the deployment to finish

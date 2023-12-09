@@ -70,6 +70,7 @@ az login --use-device-code # If you are using a browser on a different machine
 ~~~
 
 ![Login from remote shell with device code](./img/mh.linux.login.gif)
+
 - List subscriptions you have access to with Azure CLI.
 ~~~bash
 az account list

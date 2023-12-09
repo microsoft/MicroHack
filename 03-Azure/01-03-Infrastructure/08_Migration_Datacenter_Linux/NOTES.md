@@ -74,20 +74,31 @@ Per Table
 ### screen capture and mp4 to animated gif
 
 Screen capture with Microsoft [Clipchamp](https://clipchamp.com/en/screen-recorder/)
-~~~bash
 
+~~~bash
 # Install ffmpeg on Ubuntu
 sudo apt install ffmpeg -y
 # Install imagemagick
 sudo apt install imagemagick -y
 cd resources
+
+# verify video size
+ffprobe -v error -select_streams v:0 -show_entries stream=width -of csv=s=x:p=0 ./media/mh.linux.login.mp4 # 1280x720
+# increase imagemagick memory limit
+free -h # 2.0G
+sudo nano /etc/ImageMagick-6/policy.xml
+sudo sed -i 's/<policy domain="resource" name="memory" value="256MiB"\/>/<policy domain="resource" name="memory" value="2GiB"\/>/g' /etc/ImageMagick-6/policy.xml
+
+
 chmod +x ./resources/mp4togif.sh
 ./mp4togif.sh ./media/mh.linux.login.mp4 ./media/mh.linux.login.gif
 mv ./media/mh.linux.login.gif ../walkthrough/challenge-1/img/mh.linux.login.gif
 
+./mp4togif.sh ./media/mh.linux.lb.test.mp4 ./media/mh.linux.lb.test.gif
+mv ./media/mh.linux.lb.test.gif ../walkthrough/challenge-1/img/mh.linux.lb.test.gif
+
 ./mp4togif.sh ./media/mh.linux.webserver.test.mp4 ./media/mh.linux.webserver.test.gif
 mv ./media/mh.linux.webserver.test.gif ../walkthrough/challenge-1/img/mh.linux.webserver.test.gif
-
 ~~~
 
 

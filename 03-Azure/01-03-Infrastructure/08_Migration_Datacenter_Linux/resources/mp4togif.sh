@@ -39,7 +39,9 @@ if ! command -v convert >/dev/null 2>&1; then
     exit 1
 fi
 
-ffmpeg -i $inputFileName -vf scale=320:-1 -r 10 -f image2pipe -vcodec ppm - >> ./mp4tgif.tmp
+width=$(ffprobe -v error -select_streams v:0 -show_entries stream=width -of csv=s=x:p=0 $inputFileName)
+
+ffmpeg -i $inputFileName -vf scale=$width:-1 -r 10 -f image2pipe -vcodec ppm - > ./mp4tgif.tmp
 cat ./mp4tgif.tmp | convert +dither -delay 5 -loop 0 - $outputFileName
 rm ./mp4tgif.tmp
 

@@ -81,6 +81,8 @@ sudo apt install ffmpeg -y
 # Install imagemagick
 sudo apt install imagemagick -y
 cd resources
+# Install gifsicle
+sudo apt install gifsicle -y
 
 # verify video size
 ffprobe -v error -select_streams v:0 -show_entries stream=width -of csv=s=x:p=0 ./media/mh.linux.login.mp4 # 1280x720
@@ -88,7 +90,6 @@ ffprobe -v error -select_streams v:0 -show_entries stream=width -of csv=s=x:p=0 
 free -h # 2.0G
 sudo nano /etc/ImageMagick-6/policy.xml
 sudo sed -i 's/<policy domain="resource" name="memory" value="256MiB"\/>/<policy domain="resource" name="memory" value="2GiB"\/>/g' /etc/ImageMagick-6/policy.xml
-
 
 chmod +x ./resources/mp4togif.sh
 ./mp4togif.sh ./media/mh.linux.login.mp4 ./media/mh.linux.login.gif

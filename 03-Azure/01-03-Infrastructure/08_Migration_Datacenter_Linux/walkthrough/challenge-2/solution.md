@@ -42,6 +42,10 @@ Select *Servers, databases and web app* from the navigation pane on the left and
 
 Select the *destination-rg* Resource Group, specify a name for the Azure Migrate Project and also select a geograpy where the data will be stored.
 
+> [!IMPORTANT]
+> Make sure to select the right subscription. In case there are several subscriptions available, please select the subscription that was used to deploy the Azure Landing Zone.
+
+
 ![image](./img/AzMig3.png)
 
 Wait until the Azure Migrate Project has been created. Select *Servers, databases and web apps* from the navigation pane on the left.

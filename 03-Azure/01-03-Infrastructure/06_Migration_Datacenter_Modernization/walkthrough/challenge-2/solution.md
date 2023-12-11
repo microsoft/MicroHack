@@ -71,6 +71,9 @@ Select *Bastion* from the navigation pane on the left, provide the credentials t
 
 ### **Task 3: Deploy the Azure Migrate Appliance**
 
+> [!IMPORTANT]
+> Please make sure to run the following commands inside of the virtual machine you created for the mirgration appliance
+
 Open Microsoft Edge on the Windows Server 2019 system and navigate and login to the [Azure Portal](https://portal.azure.com).
 
 ![image](./img/AzMigApp7.png)

@@ -56,7 +56,7 @@ Select *Azure VM* for the assessment type and *Servers discovered from the Azure
 You can adjust the target environment settings like the target location, the VM size and pricing options.
 When finished click on *Save* and select *Next: Select servers to assess* to continue.
 
-![image](./img/Assess7.png)
+![image](./img/Assess7_1.png)
 
 Provide a name for the assessment and select the previousley created machine group. Note that the servers are automatically selected based on the machine group. Click on *Next: Review + create assessment" to continue.
 

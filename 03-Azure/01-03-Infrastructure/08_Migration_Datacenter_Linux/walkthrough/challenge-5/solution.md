@@ -211,6 +211,8 @@ In case you did install the replication appliance under "F:\azure" you can fint 
 F:\azure\home\svsystems\pushinstallsvc\repository
 
 ~~~powershell
+Windows PowerShell
+Copyright (C) Microsoft Corporation. All rights reserved.
 ls F:\azure\home\svsystems\pushinstallsvc\repository *ASR*RHEL7*
 
     Directory: F:\azure\home\svsystems\pushinstallsvc\repository
@@ -224,7 +226,11 @@ Mode                LastWriteTime         Length Name
 
 Because our VMs are all running inside the same Azure Virtual Network [VNet] and we did not restrict access betweem the VMs inside the VNet we can use scp to upload the Mobility service agent installer via scp to Linux VMs.
 
+Execute the following powershell command on the new Windows Server 2019 VM to copy the Mobility service agent installer to the two Linux VMs.
+
 ~~~powershell
+Windows PowerShell
+Copyright (C) Microsoft Corporation. All rights reserved.
 # connect via ssh to the source VM 10.1.1.4 with the user azuremigrateadmin and password demo!p12
 $rhelmobi="F:\azure\home\svsystems\pushinstallsvc\repository\Microsoft-ASR_UA_9.55.0.0_RHEL7-64_GA_11Jul2023_Release.tar.gz"
 scp $rhelmobi microhackadmin@10.1.1.4:/home/microhackadmin/
@@ -280,6 +286,8 @@ logout
 > [!NOTE]
 > If you forgot to copy the Password you can obtain it from inside the Replication Appliance via the following Powershell command. 
 > ~~~powershell
+> Windows PowerShell
+> Copyright (C) Microsoft Corporation. All rights > reserved.
 > C:\ProgramData\ASR\home\svsystems\bin\genpassphrase.exe -v
 > ~~~
 

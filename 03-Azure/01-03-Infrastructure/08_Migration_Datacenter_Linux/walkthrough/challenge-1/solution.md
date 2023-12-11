@@ -95,7 +95,7 @@ location=germanywestcentral
 # Get our Entra ID Object ID, will be needed to assign us Admin rights to the azure VMs
 currentUserObjectId=$(az ad signed-in-user show --query id -o tsv)
 # Define VM admin password and username
-adminPassword='demo!pass123'
+adminPassword='demo!pass123!'
 adminUsername='microhackadmin'
 # Create Azure Resources with Azure Bicep Resource Templates and Azure CLI 
 az deployment sub create --location $location --template-file ./resources/main.bicep --parameters prefix=$prefix currentUserObjectId=$currentUserObjectId location=$location adminPassword=$adminPassword suffix=$suffix adminUsername=$adminUsername

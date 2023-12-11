@@ -168,6 +168,8 @@ Change the PowerShell directory to the folder where the contents have been extra
 Run the script named AzureMigrateInstaller.ps1 and select *A* to confirm script execution.
 
 ~~~powershell
+Windows PowerShell
+Copyright (C) Microsoft Corporation. All rights reserved.
 cd .\AzureMigrateInstaller\
 .\AzureMigrateInstaller.ps1
 ~~~

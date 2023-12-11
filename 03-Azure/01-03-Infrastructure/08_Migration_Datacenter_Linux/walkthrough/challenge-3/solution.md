@@ -101,6 +101,7 @@ In case you own SUSE or RHEL licenses Azure Hybrid Benefit (AHB) for Linux lets 
 You can verify your current license type at Azure VMs by running the following commands:
 ~~~bash
 # Get the name of the source resoure group which does end on source-rg
+# Get the name of the source resource group which does end on source-rg
 sourceRgName=$(az group list --query "[?starts_with(name, '$prefix') && ends_with(name, 'source-rg')].name" -o tsv)
 # Get the name of the source vm
 sourceVmIds=$(az vm list --resource-group $sourceRgName --query "[].id" -o tsv)

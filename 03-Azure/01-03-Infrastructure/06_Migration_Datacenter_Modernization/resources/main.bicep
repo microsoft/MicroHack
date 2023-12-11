@@ -12,12 +12,22 @@ param deploymentCount int = 1
 @description('Azure region for the deployment. Defaulting to the Location of the Deployment.')
 param location string = deployment().location
 
+@description('User Name for the Tags')
+param userName string 
+
+@description('Suffix used to make resource names unique')
 var suffix = substring(uniqueString(currentUserObjectId), 0, 4) 
+
+@description('Tags to identify user resources')
+var tags = {
+  User: userName
+}
 
 @description('Source Resouce Groups.')
 resource sourceRg 'Microsoft.Resources/resourceGroups@2021-01-01' = [for i in range(0, deploymentCount): {
   name: '${prefix}${(i+1)}-${suffix}-source-rg'
   location: location
+  tags: tags
 }]
 
 @description('Source Module to deploy initial demo resources for migration')

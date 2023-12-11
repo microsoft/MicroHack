@@ -9,8 +9,8 @@ Tips and trick for maintaining the linux microhack.
 az group list --query [].name -o tsv
 
 # List all resources inside a resource group
-sourceRgName=$(az group list --query "[?ends_with(name, 'source-rg')].name" -o tsv)
-destinationRgName=$(az group list --query "[?ends_with(name, 'destination-rg')].name" -o tsv)
+sourceRgName=$(az group list --query "[?starts_with(name, '$prefix') && ends_with(name, 'source-rg')].name" -o tsv)
+destinationRgName=$(az group list --query "[?starts_with(name, '$prefix') && ends_with(name, 'destination-rg')].name"
 az resource list -g $sourceRgName -o table
 
 # Login to Azure with local user

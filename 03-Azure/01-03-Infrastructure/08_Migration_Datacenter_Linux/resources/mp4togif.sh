@@ -49,6 +49,13 @@ ffmpeg -i $inputFileName -vf scale=$width:-1:flags=lanczos -r $fps  -f image2pip
 cat ./media/mp4tgif.ppm | convert +dither -delay $delay -loop 0 - ./media/mp4tgif.large.gif
 gifsicle --optimize=3 --use-colormap web ./media/mp4tgif.large.gif > $outputFileName
 
+
+# Convert the video to frames
+ffmpeg -i $inputFileName -vf "fps=$fps,scale=$width:-1:flags=lanczos" -c:v pam -f image2 ./media/output/frame%03d.pam
+
+# Convert the frames to an animated GIF
+convert -layers Optimize -delay 10 -loop 0 ./media/output/frame*.pam output.gif
+
 # # First pass: generate palette
 # ffmpeg -y -i $inputFileName -vf "fps=10,scale=$width:-1:flags=lanczos,palettegen" ./media/palette.png
 # # Second pass: use palette to create GIF

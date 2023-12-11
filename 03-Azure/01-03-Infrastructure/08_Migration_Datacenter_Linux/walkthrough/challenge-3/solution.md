@@ -21,21 +21,18 @@ Please also make sure to review the [prerequisites](https://learn.microsoft.com/
 
 ### **Task 1: Build a business case**
 
-Open the [Azure Portal](https://portal.azure.com) and navigate to the previousley created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click *Build business case*.
+Open the [Azure Portal](https://portal.azure.com) and navigate to the previously created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click *Build business case*.
 
 ![image](./img/bc1_1.png)
 
 Provide a name for the business case and select a target location. For the migration strategy select *Azure recommended approach to minimize cost*. You can select your desired saving options and discounts that may apply to your Azure Subscription.
 
-![image](./img/bc2_1.png)
+![image](./img/bc2_2.png)
 
 Wait for the business case creation to complete and click on the business case name to open it.
 
 > [!NOTE]
 > Please note that business case creation can take up to 30 minutes.
-
-
-
 
 ![image](./img/bc3.png)
 
@@ -44,7 +41,7 @@ Wait for the business case creation to complete and click on the business case n
 # assign variables subid the current azure subscription id
 subid=$(az account show --query id -o tsv)
 # assign the variable destinationRgName the name of the resource group which does end on destination-rg
-destinationRgName=$(az group list --query "[?ends_with(name, 'destination-rg')].name" -o tsv)
+destinationRgName=$(az group list --query "[?starts_with(name, '$prefix') && ends_with(name, 'destination-rg')].name"
 az rest --method get --uri "/subscriptions/$subid/resourceGroups/$destinationRgName/providers/Microsoft.Migrate/projects?api-version=2019-10-01"
 ~~~
 
@@ -81,7 +78,7 @@ In case we would have been runnig an .NET application we would see the following
 The business case is calculated based on some [assumptions](https://learn.microsoft.com/en-us/azure/migrate/concepts-business-case-calculation#total-cost-of-ownership-steady-state). To better fit your current scenario, you can adjust those assumptions. In our case let us modify the Cost mdelling Percentage of migration completed per year to 100% for the first year.
 
 **Azure cost**
-![image](./img/bc8_1.png)
+![image](./img/bc8_1_1.png)
 
 You can adjust those parameters what would recalculate the business case.
 
@@ -104,7 +101,8 @@ In case you own SUSE or RHEL licenses Azure Hybrid Benefit (AHB) for Linux lets 
 You can verify your current license type at Azure VMs by running the following commands:
 ~~~bash
 # Get the name of the source resoure group which does end on source-rg
-sourceRgName=$(az group list --query "[?ends_with(name, 'source-rg')].name" -o tsv)
+# Get the name of the source resource group which does end on source-rg
+sourceRgName=$(az group list --query "[?starts_with(name, '$prefix') && ends_with(name, 'source-rg')].name" -o tsv)
 # Get the name of the source vm
 sourceVmIds=$(az vm list --resource-group $sourceRgName --query "[].id" -o tsv)
 # Get the license type of the source VMs

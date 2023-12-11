@@ -49,7 +49,7 @@ Select the *destination-rg* Resource Group, specify a name for the Azure Migrate
 ![image](./img/AzMig3.png)
 
 Wait until the Azure Migrate Project has been created. Select *Servers, databases and web apps* from the navigation pane on the left.
-Your previousley created Azure Migrate project should be preselected.
+Your previously created Azure Migrate project should be preselected.
 
 ![image](./img/AzMig4.png)
 
@@ -67,7 +67,7 @@ In the Azure Portal select *Virtual machines* from the navigation pane on the le
 
 Under Basics select the *source-rg* Resource Group and provide a name for the server. Select *Windows Server 2019 Datacenter - x64 Gen2* for the Image.
 
-![image](./img/AzMigApp2_1.png)
+![image](./img/AzMigApp2_2.png)
 
 Accept the default disk settings and click next to select the *Networking* tab. Select the *source-vnet* Virtual Network, select the *source-subnet* Subnet and make sure to select *None* for the Public IP and NIC network security group.
 
@@ -92,7 +92,7 @@ You can also create the Azure Migrate Appliance VM via Azure Resource Manager Te
 # Define a name for the VM which will be used for the Azure Migrate Appliance
 migVmName=${prefix}1${suffix}Mig
 # Get the name of the resource group that ends with 'source-rg'
-sourceRgName=$(az group list --query "[?ends_with(name, 'source-rg')].name" -o tsv)
+sourceRgName=$(az group list --query "[?starts_with(name, '$prefix') && ends_with(name, 'source-rg')].name" -o tsv)
 # Get the name of the source vnet via Azure CLI
 sourceVnetName=$(az network vnet list --query "[?ends_with(name, 'source-vnet')].name" -o tsv)
 # Get the name of the source subnet
@@ -127,6 +127,9 @@ Select *Bastion* from the navigation pane on the left, provide the credentials t
 
 ### **Task 3: Install the Azure Migrate Appliance**
 
+> [!IMPORTANT] You will need to install Microsof Edge Browser or Chrome on the Azure Migrate Appliance VM. Internet Explorer 11 is not supported.
+> - [New Windows 2019 server, how to install Microsoft Edge browser](https://learn.microsoft.com/en-us/answers/questions/937532/new-windows-2019-server-how-to-install-microsoft-e)
+
 Open Microsoft Edge on the Windows Server 2019 system and navigate and login to the [Azure Portal](https://portal.azure.com).
 
 ![image](./img/AzMigApp7.png)
@@ -135,7 +138,7 @@ In the search bar enter *Azure Migrate* and select Azure Migrate from the list o
 
 ![image](./img/AzMig1.png)
 
-Select *Servers, databases and web apps*, make sure that the previousley created Azure Migrate project is selected and klick *Discover*
+Select *Servers, databases and web apps*, make sure that the previously created Azure Migrate project is selected and klick *Discover*
 
 ![image](./img/Discover1.png)
 
@@ -165,6 +168,8 @@ Change the PowerShell directory to the folder where the contents have been extra
 Run the script named AzureMigrateInstaller.ps1 and select *A* to confirm script execution.
 
 ~~~powershell
+Windows PowerShell
+Copyright (C) Microsoft Corporation. All rights reserved.
 cd .\AzureMigrateInstaller\
 .\AzureMigrateInstaller.ps1
 ~~~
@@ -252,15 +257,12 @@ The friendly name will be used later on when specifiying the individual systems.
 
 Next you need to provide the individual source server details and map them to a specific set of credentials. Make sure that validation is successfull.
 
-~~~bash
 # list all IPs of resource group source-rg
+
+~~~bash
+sourceRgName=$(az group list --query "[?starts_with(name, '$prefix') && ends_with(name, 'source-rg')].name" -o tsv)
+az vm list-ip-addresses -g $sourceRgName -o table
 ~~~
-> [!NOTE]
-> List all IPs of resource group source-rg via Azure CLI
->
-> ~~~bash
-> az vm list-ip-addresses -g $(az group list --query "[?ends_with(name, 'source-rg')].name" -o tsv) -o table
-> ~~~
 
 
 ![image](./img/Discover15_1.png)

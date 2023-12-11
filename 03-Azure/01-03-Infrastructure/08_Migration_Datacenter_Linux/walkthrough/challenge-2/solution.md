@@ -67,8 +67,6 @@ In the Azure Portal select *Virtual machines* from the navigation pane on the le
 
 Under Basics select the *source-rg* Resource Group and provide a name for the server. Select *Windows Server 2019 Datacenter - x64 Gen2* for the Image.
 
-> [!IMPORTANT] The screenshot does not show all settings
-
 ![image](./img/AzMigApp2_2.png)
 
 Accept the default disk settings and click next to select the *Networking* tab. Select the *source-vnet* Virtual Network, select the *source-subnet* Subnet and make sure to select *None* for the Public IP and NIC network security group.

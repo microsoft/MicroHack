@@ -27,15 +27,12 @@ Open the [Azure Portal](https://portal.azure.com) and navigate to the previousle
 
 Provide a name for the business case and select a target location. For the migration strategy select *Azure recommended approach to minimize cost*. You can select your desired saving options and discounts that may apply to your Azure Subscription.
 
-![image](./img/bc2_1.png)
+![image](./img/bc2_2.png)
 
 Wait for the business case creation to complete and click on the business case name to open it.
 
 > [!NOTE]
 > Please note that business case creation can take up to 30 minutes.
-
-
-
 
 ![image](./img/bc3.png)
 
@@ -81,7 +78,7 @@ In case we would have been runnig an .NET application we would see the following
 The business case is calculated based on some [assumptions](https://learn.microsoft.com/en-us/azure/migrate/concepts-business-case-calculation#total-cost-of-ownership-steady-state). To better fit your current scenario, you can adjust those assumptions. In our case let us modify the Cost mdelling Percentage of migration completed per year to 100% for the first year.
 
 **Azure cost**
-![image](./img/bc8_1.png)
+![image](./img/bc8_1_1.png)
 
 You can adjust those parameters what would recalculate the business case.
 

@@ -21,21 +21,19 @@ Duration: 30 minutes
 
 - Please ensure that you successfully verified the [General prerequisits](../../README.md#general-prerequisites) before continuing with this challenge.
 - The Azure CLI is required to deploy the Bicep configuration of the Micro Hack.
-
-
 - Download the *.bicep files from the [Resources](../../resources) to your local PC.
 
 ### ***Task 1: Get youre environment ready***
+
 - Ensure you have access to the Azure Portal at https://portal.azure.com.
 
 #### Start Cloud Shell
+
 - Login to the Azure Portal at https://portal.azure.com.
 - Launch **Cloud Shell** from the top navigation of the Azure portal.
-   
    ![Screenshot showing how to start Azure Cloud Shell in the Azure portal.](./img/AzMigCloudShell1.png)
 - The first time you start Cloud Shell you're prompted to create an Azure Storage account for the Azure file share.
    ![Screenshot showing the create storage prompt.](./img/AzMigCloudShell2.png)
-
 - Select the **Subscription** used to create the storage account and file share.
 - Select **Create storage**.
 
@@ -80,13 +78,12 @@ az account list
 az account set --subscription '<REPLACE-WITH-YOUR-SUBSCRIPTION-NAME>'
 ~~~
 
-
-
 ### **Task 2: Deploy the Landing Zone for the Micro Hack**
 
 The following command will deploy the landing zone for the Micro Hack. The landing zone contains all resources required for the Micro Hack. The deployment will take about 10 minutes.
 
 > [!IMPORTANT] The following variables value should be changed to avoid conflicts with other deployments in your Azure subscription.
+
 ~~~bash
 # Define prefix and suffix for all azure resources
 prefix="1Team" # replace sm with your own prefix
@@ -105,6 +102,7 @@ az deployment sub create --location $location --template-file ./resources/main.b
 ~~~
 
 ### **Task 3: Verify the deployed resources**
+
 The bicep deployment should have created the following resources
 
 - source-rg Resource Group containing the follwing resources

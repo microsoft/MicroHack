@@ -527,9 +527,9 @@ Under *Frontend IP configuration*, click *Add a frontend IP configuration* and c
 
 ![image](./img/prep3.png) -->
 
-Under *Backend Pools*, select *Add*. 
+Under *Backend Pools*, select the existing Backend link "LoadBalancerBackEndPool (1)". 
 
-![image](./img/prep3_2.png)
+![image](./img/prep0_1_1.png)
 
 Add the following name *LoadBalancerBackEndPool* and select the *destination-vnet* as the Virtual Network.
 Select "IP address" as the "Backend Pool Configuration.

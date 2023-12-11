@@ -687,7 +687,11 @@ migsource  Online
 migdest    Online
 ~~~
 
-As a final step we need to shut down the VMs in the source environment. 
+In case we would have done the migration from VMWare or Hyper-V the source VMs would be automatically shut down. However, because we did the migration from Azure to Azure the source VMs are still running. This can be seen in the Azure Portal:
+
+![image](./img/finalmig5_1.png)
+
+Therefore as a final step we need to shut down the VMs in the source environment. 
 
 ~~~bash
 # Get the Azure Resource ID of Linux VM 1 in the source resource group

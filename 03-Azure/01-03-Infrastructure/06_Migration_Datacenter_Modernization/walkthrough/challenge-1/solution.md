@@ -15,7 +15,7 @@ Duration: 30 minutes
 - Execute `az login` and sign in with your Azure AD account
 - Execute `az ad signed-in-user show --query id `
 - Copy the value to the clipboard
-- Execute `az deployment sub create --name $(az ad signed-in-user show --query id -o tsv) --location germanywestcentral --template-file ./main.bicep -c --parameters currentUserObjectId=$(az ad signed-in-user show --query id -o tsv) --parameters userName=$(az ad signed-in-user show --query displayName -o tsv)`
+- Execute `az deployment sub create --name $(az ad signed-in-user show --query id -o tsv) --location germanywestcentral --template-file ./main.bicep --parameters currentUserObjectId=$(az ad signed-in-user show --query id -o tsv) --parameters userName="$(az ad signed-in-user show --query displayName -o tsv)"`
 - Paste the previously copied value as *currentUserObjectId*
 - Select a region
 - Wait for the deployment to finish

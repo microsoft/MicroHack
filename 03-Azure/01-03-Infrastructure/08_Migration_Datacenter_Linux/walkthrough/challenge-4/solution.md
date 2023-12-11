@@ -25,7 +25,7 @@ Please make sure thet you successfully completed [Challenge 3](../challenge-3/so
 
 You group servers together to assess whether they are suitable for migration to Azure and to get size and cost estimates for Azure.
 
-Open the [Azure Portal](https://portal.azure.com) and navigate to the previousley created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click *Overview*.
+Open the [Azure Portal](https://portal.azure.com) and navigate to the previously created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click *Overview*.
 
 ![image](./img/Assess1_1.png)
 
@@ -58,7 +58,7 @@ When finished click on *Save* and select *Next: Select servers to assess* to con
 
 ![image](./img/Assess7_1.png)
 
-Provide a name for the assessment and select the previousley created machine group. Note that the servers are automatically selected based on the machine group. Click on *Next: Review + create assessment" to continue.
+Provide a name for the assessment and select the previously created machine group. Note that the servers are automatically selected based on the machine group. Click on *Next: Review + create assessment" to continue.
 
 ![image](./img/Assess8_1.png)
 
@@ -123,7 +123,7 @@ Dependency analysis identifies dependencies between discovered on-premises serve
 
 Agentless dependency analysis works by capturing TCP connection data from servers for which it's enabled. No agents are installed on servers. Connections with the same source server and process, and destination server, process, and port are grouped logically into a dependency. You can visualize captured dependency data in a map view, or export it as a CSV. No agents are installed on servers you want to analyze.
 
-Open the [Azure Portal](https://portal.azure.com) and navigate to the previousley created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click *Overview*.
+Open the [Azure Portal](https://portal.azure.com) and navigate to the previously created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click *Overview*.
 
 ![image](./img/Assess1_2.png)
 

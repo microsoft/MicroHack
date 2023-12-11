@@ -108,7 +108,7 @@ To prepare for physical server migration, you need to verify the physical server
 
 ![image](./img/azreplapl6_3.png)
 
-After finishing the Edge Browser installation open the Azure Portal (https://portal.azure.com). Navigate to the previousley created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click *Discover* in the *Migration tools* box.
+After finishing the Edge Browser installation open the Azure Portal (https://portal.azure.com). Navigate to the previously created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click *Discover* in the *Migration tools* box.
 
 ![image](./img/mig1_1.png)
 
@@ -134,7 +134,7 @@ Check the *I acceppt...* checkbox and click *Next*
 
 ![image](./img/mig6.png)
 
-Browse and select the previousley downloaded registration key and click *Next*
+Browse and select the previously downloaded registration key and click *Next*
 
 ![image](./img/mig7.png)
 
@@ -356,7 +356,7 @@ UnifiedAgentConfigurator.exe /CSEndPoint \<replication appliance IP address\> /P
 
 ### **Task 4: Enable Replication**
 
-Open the [Azure Portal](https://portal.azure.com) and navigate to the previousley created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click *Replicate* under *Migration Tools*.
+Open the [Azure Portal](https://portal.azure.com) and navigate to the previously created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click *Replicate* under *Migration Tools*.
 
 ![image](./img/repl1.png) 
 
@@ -364,7 +364,7 @@ Select *Servers or virtual machines (VM)* and *Azure VM* and click *Continue*.
 
 ![image](./img/repl2.png) 
 
-In the *Basics* page select the previousley created Azure Migrate Replication appliance and specify the Guest Credentials and click next:
+In the *Basics* page select the previously created Azure Migrate Replication appliance and specify the Guest Credentials and click next:
 
 ![image](./img/repl3_1.png)
 
@@ -392,7 +392,7 @@ Wait until the replication has been successfully initiated.
 
 ![image](./img/repl9.png)
 
-Under *Migration Tools* you should know see that 2 Server are beeing repölicated. Click on *Overview* to see more details.
+Under *Migration Tools* you should know see that 2 Server are being replicated. Click on *Overview* to see more details.
 
 ![image](./img/repl10.png)
 
@@ -408,7 +408,7 @@ When delta replication begins, you can run a test migration for the VMs, before 
 * Test migration simulates the migration by creating an Azure VM using replicated data (usually migrating to a non-production VNet in your Azure subscription).
 * You can use the replicated test Azure VM to validate the migration, perform app testing, and address any issues before full migration.
 
-Open the [Azure Portal](https://portal.azure.com) and navigate to the previousley created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click *Overview* in the *Migration tools* box.
+Open the [Azure Portal](https://portal.azure.com) and navigate to the previously created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click *Overview* in the *Migration tools* box.
 
 ![image](./img/test1.png)
 
@@ -633,7 +633,7 @@ curl $trafficManagerFqdn -v
 
 ### **Task 7: Perform Final Migration**
 
-Open the [Azure Portal](https://portal.azure.com) and navigate to the previousley created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click *Overview* in the *Migration tools* box. From the Overview section click in *Migrate* under *Step 3: Migrate*.
+Open the [Azure Portal](https://portal.azure.com) and navigate to the previously created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click *Overview* in the *Migration tools* box. From the Overview section click in *Migrate* under *Step 3: Migrate*.
 
 ![image](./img/finalmig1.png)
 
@@ -700,7 +700,7 @@ az network traffic-manager endpoint list -g $destinationRgName --profile-name $t
 ~~~
 
 
-You can also see the same result via the Azure Portal. Change to the Azure Traffic Manager profile you've created previousley and look at the endpoints. 
+You can also see the same result via the Azure Portal. Change to the Azure Traffic Manager profile you've created previously and look at the endpoints. 
 
 
 
@@ -716,7 +716,7 @@ From a user perspective nothing changed. You're still able to browse the Traffic
 
 ### **Task 8: Cleanup**
 
-After the successfull migration you can now stop replicating the source virtual machines. Open the [Azure Portal](https://portal.azure.com) and navigate to the previousley created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click *Overview* in the *Migration tools* box. In the *Azure Migrate: Migration and modernization* pane, select *Replicating machines* from the navigation pane on the left, click on the 3 dots on the end of each row of the replicating servers and select *Stop replicating*.
+After the successfull migration you can now stop replicating the source virtual machines. Open the [Azure Portal](https://portal.azure.com) and navigate to the previously created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click *Overview* in the *Migration tools* box. In the *Azure Migrate: Migration and modernization* pane, select *Replicating machines* from the navigation pane on the left, click on the 3 dots on the end of each row of the replicating servers and select *Stop replicating*.
 
 ![image](./img/finalmig8.png)
 

@@ -49,7 +49,7 @@ Select the *destination-rg* Resource Group, specify a name for the Azure Migrate
 ![image](./img/AzMig3.png)
 
 Wait until the Azure Migrate Project has been created. Select *Servers, databases and web apps* from the navigation pane on the left.
-Your previousley created Azure Migrate project should be preselected.
+Your previously created Azure Migrate project should be preselected.
 
 ![image](./img/AzMig4.png)
 
@@ -138,7 +138,7 @@ In the search bar enter *Azure Migrate* and select Azure Migrate from the list o
 
 ![image](./img/AzMig1.png)
 
-Select *Servers, databases and web apps*, make sure that the previousley created Azure Migrate project is selected and klick *Discover*
+Select *Servers, databases and web apps*, make sure that the previously created Azure Migrate project is selected and klick *Discover*
 
 ![image](./img/Discover1.png)
 

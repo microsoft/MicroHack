@@ -21,7 +21,7 @@ Please also make sure to review the [prerequisites](https://learn.microsoft.com/
 
 ### **Task 1: Build a business case**
 
-Open the [Azure Portal](https://portal.azure.com) and navigate to the previousley created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click *Build business case*.
+Open the [Azure Portal](https://portal.azure.com) and navigate to the previously created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click *Build business case*.
 
 ![image](./img/bc1_1.png)
 

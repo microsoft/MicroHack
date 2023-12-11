@@ -580,7 +580,7 @@ Select a name for the Traffic Manager profile and select the *destination-rg* as
 > [!NOTE]
 > Use routing method *Priority*, so we can make sure the traffic is only routed to the destination Load Balancer after the migration.
 
-![image](./img/prep10_1.png)
+![image](./img/prep10_1_1.png)
 
 From the Load Balancing overview page select *Traffic Manager* and select the previously created Traffic Manager profile. 
 Select *Endpoints* and click *Add*. Add each public IP of the source and destination Load Balancer as separate endpoints.

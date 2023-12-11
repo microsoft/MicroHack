@@ -261,6 +261,12 @@ mkdir MobSvcInstaller
 tar -C ./MobSvcInstaller -xvf Microsoft-ASR_UA_9.55.0.0_RHEL7-64_GA_11Jul2023_Release.tar.gz
 cd MobSvcInstaller
 sudo ./install -r MS -v VmWare -q -c CSLegacy # You need to specify VmWare as the platform also for physical servers.
+~~~
+
+> [!NOTE] Next you will need to make use of the password which you received during the installation of the Azure Replication Appliance. If you forgot to copy the Password you can obtain it from inside the Replication Appliance via the following Powershell command.
+
+
+~~~bash
 echo mbe711ujGFLmN9N6 > password.txt # This is the password you received during the installation of the Azure Replication Appliance, replace it with your password.
 sudo /usr/local/ASR/Vx/bin/UnifiedAgentConfigurator.sh -i 10.1.1.7 -P password.txt -c CSLegacy # IP 10.1.1.7 is the IP of the Azure Replication Appliance Windows VM you created.
 logout
@@ -278,6 +284,11 @@ mkdir MobSvcInstaller
 tar -C ./MobSvcInstaller -xvf Microsoft-ASR_UA_9.55.0.0_RHEL7-64_GA_11Jul2023_Release.tar.gz
 cd MobSvcInstaller
 sudo ./install -r MS -v VmWare -q -c CSLegacy # You need to specify VmWare as the platform also for physical servers.
+~~~
+
+> [!NOTE] Next you will need to make use of the password which you received during the installation of the Azure Replication Appliance. If you forgot to copy the Password you can obtain it from inside the Replication Appliance via the following Powershell command.
+
+~~~bash
 echo mbe711ujGFLmN9N6 > password.txt # This is the password you received during the installation of the Azure Replication Appliance, replace it with your password.
 sudo /usr/local/ASR/Vx/bin/UnifiedAgentConfigurator.sh -i 10.1.1.7 -P password.txt -c CSLegacy # IP 10.1.1.7 = replication appliance IP addressis the IP of the Azure Replication Appliance Windows VM you created.
 logout

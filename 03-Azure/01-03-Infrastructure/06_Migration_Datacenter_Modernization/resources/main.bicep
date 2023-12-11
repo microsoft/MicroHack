@@ -9,17 +9,8 @@ param prefix string = 'mh'
 @description('The Number of deployments per subscription. This parameter is to be used it the deployment gets precreated for the users.')
 param deploymentCount int = 1
 
-@description('Azure region for the deployment')
-@allowed([
-  'Germany West Central'
-  'West Europe'
-  'North Europe'
-  'East US'
-  'East US 2'
-  'Southeast Asia'
-  'East Asia'
-])
-param location string
+@description('Azure region for the deployment. Defaulting to the Location of the Deployment.')
+param location string = deployment().location
 
 var suffix = substring(uniqueString(currentUserObjectId), 0, 4) 
 

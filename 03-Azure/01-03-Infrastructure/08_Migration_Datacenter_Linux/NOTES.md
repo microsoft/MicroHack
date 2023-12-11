@@ -127,4 +127,10 @@ mv ./media/mh.linux.webserver.test.gif ../walkthrough/challenge-1/img/mh.linux.w
 ~~~
 
 
+### Git
 
+~~~bash
+git remote show
+git remote show origin
+gh pr create -h
+~~~

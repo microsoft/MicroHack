@@ -92,7 +92,7 @@ You can also create the Azure Migrate Appliance VM via Azure Resource Manager Te
 # Define a name for the VM which will be used for the Azure Migrate Appliance
 migVmName=${prefix}1${suffix}Mig
 # Get the name of the resource group that ends with 'source-rg'
-sourceRgName=$(az group list --query "[?ends_with(name, 'source-rg')].name" -o tsv)
+sourceRgName=$(az group list --query "[?starts_with(name, '$prefix') && ends_with(name, 'source-rg')].name" -o tsv)
 # Get the name of the source vnet via Azure CLI
 sourceVnetName=$(az network vnet list --query "[?ends_with(name, 'source-vnet')].name" -o tsv)
 # Get the name of the source subnet

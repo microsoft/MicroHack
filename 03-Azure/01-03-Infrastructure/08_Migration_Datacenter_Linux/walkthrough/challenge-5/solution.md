@@ -238,7 +238,7 @@ Now you need to log in to the source Linux VMs to finish the installation of the
 
 ~~~bash
 # Get the name of the resource group that ends with 'source-rg'
-sourceRgName=$(az group list --query "[?ends_with(name, 'source-rg')].name" -o tsv)
+sourceRgName=$(az group list --query "[?starts_with(name, '$prefix') && ends_with(name, 'source-rg')].name" -o tsv)
 # Name of the Azure Bastion in the source resource group
 sourceBastionName=${prefix}1$suffix-source-bastion
 ~~~
@@ -422,7 +422,7 @@ You can list the new test VMs via azure cli.
 
 ~~~bash
 # Get the name of the resource group that ends with 'destination-rg'
-destinationRgName=$(az group list --query "[?ends_with(name, 'destination-rg')].name" -o tsv)
+destinationRgName=$(az group list --query "[?starts_with(name, '$prefix') && ends_with(name, 'destination-rg')].name"
 # list the new VMs in the destination resource group
 az vm list -g $destinationRgName -o table
 ~~~
@@ -640,7 +640,7 @@ You can list the new test VMs via azure cli.
 
 ~~~bash
 # Get the name of the resource group that ends with 'destination-rg'
-destinationRgName=$(az group list --query "[?ends_with(name, 'destination-rg')].name" -o tsv)
+destinationRgName=$(az group list --query "[?starts_with(name, '$prefix') && ends_with(name, 'destination-rg')].name"
 # list the new VMs in the destination resource group
 az vm list -g $destinationRgName -o table
 ~~~

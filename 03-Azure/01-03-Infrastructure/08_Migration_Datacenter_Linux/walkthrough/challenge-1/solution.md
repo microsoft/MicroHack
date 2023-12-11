@@ -86,9 +86,10 @@ az account set --subscription '<REPLACE-WITH-YOUR-SUBSCRIPTION-NAME>'
 
 The following command will deploy the landing zone for the Micro Hack. The landing zone contains all resources required for the Micro Hack. The deployment will take about 10 minutes.
 
+> [!IMPORTANT] The following variables value should be changed to avoid conflicts with other deployments in your Azure subscription.
 ~~~bash
 # Define prefix and suffix for all azure resources
-prefix="51" # replace sm with your own prefix
+prefix="1Team" # replace sm with your own prefix
 suffix=a # replace a with your own suffix
 # Have a look at all possible azure location with Azure CLI
 az account list-locations -o table # List all possible Azure locations
@@ -117,7 +118,8 @@ The bicep deployment should have created the following resources
 You can get a list of all resources in the resource group with the following Azure CLI command:
 ~~~bash
 # List all resource in the resource group
-az resource list -g $(az group list --query "[?ends_with(name, 'source-rg')].name" -o tsv) -o table
+sourceRgName=$(az group list --query "[?starts_with(name, '$prefix') && ends_with(name, 'source-rg')].name" -o tsv)
+az resource list -g $sourceRgName --output table
 ~~~
 
 - destination-rg Resource Group containing the follwing resources
@@ -127,7 +129,8 @@ az resource list -g $(az group list --query "[?ends_with(name, 'source-rg')].nam
 You can get a list of all resources in the resource group with the following Azure CLI command:
 ~~~bash
 # List all resource in the resource group
-az resource list -g $(az group list --query "[?ends_with(name, 'destination-rg')].name" -o tsv) -o table
+destinationRgName=$(az group list --query "[?starts_with(name, '$prefix') && ends_with(name, 'destination-rg')].name" -o tsv)
+az resource list -g $destinationRgName -o table
 ~~~
 
 The deployed architecture looks like following diagram:
@@ -145,15 +148,16 @@ Log into the first VM in the resource group with Azure Bastion and install the m
 
 ~~~bash
 # Get the name of the resource group that ends with 'source-rg'
-sourceRgName=$(az group list --query "[?ends_with(name, 'source-rg')].name" -o tsv)
+sourceRgName=$(az group list --query "[?starts_with(name, '$prefix') && ends_with(name, 'source-rg')].name" -o tsv)
 # Get the Azure Resource ID of the VMs in the source resource group
 sourceVm1Id=$(az vm list -g $sourceRgName --query "[?ends_with(name, '${suffix}1')].id" -o tsv)
 sourceVm2Id=$(az vm list -g $sourceRgName --query "[?ends_with(name, '${suffix}2')].id" -o tsv)
 # Name of the Azure Bastion in the source resource group
+TODO: Try to get the bastion name from the deployment output instead of hardcoding it.
 sourceBastionName=${prefix}1$suffix-source-bastion
 # Login to the first VM in the resource group with Azure Bastion
+# IMPORTANT 
 az network bastion ssh -n $sourceBastionName -g $sourceRgName --target-resource-id $sourceVm1Id --auth-type password --username $adminUsername
-
 # Inside the VM check if cloud-init is running
 sudo cloud-init status # should return 'status: done', if not wait a few minutes and try again
 # check if server is running

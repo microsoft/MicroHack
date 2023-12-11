@@ -44,7 +44,7 @@ Wait for the business case creation to complete and click on the business case n
 # assign variables subid the current azure subscription id
 subid=$(az account show --query id -o tsv)
 # assign the variable destinationRgName the name of the resource group which does end on destination-rg
-destinationRgName=$(az group list --query "[?ends_with(name, 'destination-rg')].name" -o tsv)
+destinationRgName=$(az group list --query "[?starts_with(name, '$prefix') && ends_with(name, 'destination-rg')].name"
 az rest --method get --uri "/subscriptions/$subid/resourceGroups/$destinationRgName/providers/Microsoft.Migrate/projects?api-version=2019-10-01"
 ~~~
 
@@ -104,7 +104,7 @@ In case you own SUSE or RHEL licenses Azure Hybrid Benefit (AHB) for Linux lets 
 You can verify your current license type at Azure VMs by running the following commands:
 ~~~bash
 # Get the name of the source resoure group which does end on source-rg
-sourceRgName=$(az group list --query "[?ends_with(name, 'source-rg')].name" -o tsv)
+sourceRgName=$(az group list --query "[?starts_with(name, '$prefix') && ends_with(name, 'source-rg')].name" -o tsv)
 # Get the name of the source vm
 sourceVmIds=$(az vm list --resource-group $sourceRgName --query "[].id" -o tsv)
 # Get the license type of the source VMs

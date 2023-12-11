@@ -127,6 +127,9 @@ Select *Bastion* from the navigation pane on the left, provide the credentials t
 
 ### **Task 3: Install the Azure Migrate Appliance**
 
+> [!IMPORTANT] You will need to install Microsof Edge Browser or Chrome on the Azure Migrate Appliance VM. Internet Explorer 11 is not supported.
+> - [New Windows 2019 server, how to install Microsoft Edge browser](https://learn.microsoft.com/en-us/answers/questions/937532/new-windows-2019-server-how-to-install-microsoft-e)
+
 Open Microsoft Edge on the Windows Server 2019 system and navigate and login to the [Azure Portal](https://portal.azure.com).
 
 ![image](./img/AzMigApp7.png)

@@ -132,66 +132,69 @@ Now that you have a deployable container image, you can setup the Container App 
 
 ### Actions
 
-* Create an Azure Container App
-* Add a step to the GitHub Actions workflow to deploy the container image to the Container App
+* Create an Azure Container App and the Environment
+* Automate the deployment with GitHub Actions
+* Make a change and deploy it
+
+Hint: Use this workflow task to get the latest container image tag from the registry. You can insert the task after the login to Azure and then use the variable `image_tag`:
+
+      - name: Get Latest Container Image Tag
+        id: get_tag
+        run: |
+          TAG=$(az acr repository show-tags --name microhackregistry --repository microhackapp --orderby time_desc --output tsv --detail | head -n 1 | awk '{print $4}')
+          NUMERIC_TAG=$(echo "$TAG" | grep -oE '[0-9]+')
+          INCREMENTED_TAG=$((NUMERIC_TAG + 1))
+          UPDATED_TAG=$(echo "$TAG" | sed "s/$NUMERIC_TAG/$INCREMENTED_TAG/")
+          echo "::set-output name=image_tag::$UPDATED_TAG"
 
 ### Success Criteria
 
 * You successfully deployed the container image to the Container App
 * You can access the newly hosted web app
+* You can make changes to the web app and deploy them into the Container App
 
 ### Learning resources
+
+* [Creating an Azure Container App](https://learn.microsoft.com/en-us/azure/container-apps/quickstart-portal)
+* [Assigning GitHub Actions workflows permissions on Azure](https://learn.microsoft.com/en-us/azure/developer/github/connect-from-azure?tabs=azure-portal%2Cwindows)
+* [Deploying Azure Container Apps with GitHub 1](https://learn.microsoft.com/en-us/azure/container-apps/github-actions)
+* [Deploying Azure Container Apps with GitHub 2](https://github.com/Azure/container-apps-deploy-action)
 
 ### Solution - Spoilerwarning
 
 [Solution Steps](./walkthrough/challenge-3/solution.md)
 
-## Challenge 4 - Post-deployment tasks and todo´s
+## Challenge 4 - Make the Container App Production Ready
 
 ### Goal
 
-* In this challenge, we will ..
+Now that the app is up and running and you can deploy changes quickly, it is time to make some enhancements to make your application ready for production.
+
 ### Actions
 
-* Enable M...
+* Enable authentication with Azure Entra ID
+* Enable monitoring and logging
 
 ### Success criteria
 
-* Open ...
+* You have enabled authentication with Azure Entra ID
+* You can check the logs in the Log Analytics workspace
 
 ### Learning resources
 
-...
+*[Enable Authentication on Azure Container Apps](https://learn.microsoft.com/en-us/azure/container-apps/authentication-azure-active-directory)
+*[Monitoring with Azure Container Apps](https://learn.microsoft.com/en-us/azure/container-apps/log-monitoring?tabs=bash)
+*[Loggin with Azure Container Apps](https://learn.microsoft.com/en-us/azure/container-apps/log-options)
 
 ### Solution - Spoilerwarning
 
 [Solution Steps](./walkthrough/challenge-4/solution.md)
-
-## Challenge 5 - Bring it to the end user 
-
-### Goal
-
-Challenge 5 is all about interacting with...
-
-### Actions
-
-* Create all ...`
-
-### Success criteria
-
-* You ca...
-### Learning resources
-
-### Solution - Spoilerwarning
-
-[Solution Steps](./walkthrough/challenge-5/solution.md)
 
 ## Finish
 
 Congratulations! You finished ....
 
 Thank you for investing the time and see you next time!
-
 
 ## Contributors
 * Nils Bankert [GitHub](https://github.com/nilsbankert); [LinkedIn](https://www.linkedin.com/in/nilsbankert/)

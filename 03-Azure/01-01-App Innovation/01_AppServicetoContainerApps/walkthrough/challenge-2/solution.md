@@ -154,52 +154,43 @@ Since you only want the application code (not the git files etc.) in your contai
 
 ### **Task 4: Add steps to the GitHub Actions workflow to containerize the application and push the image into the container registry**
 
-There are multiple ways to achieve that, this is only one solution. You can use the [azure/acr-build](https://github.com/marketplace/actions/azure-container-registry-build) step to build and push an image to the Container Registry. First of all, you need to create a service principal that will be used by the workflow step to authenticate and access the Container Registry. Therefore, open the Azure CLI in the portal: https://portal.azure.com/#cloudshell/
+There are multiple ways to achieve that, this is only one solution. You can use the console commands to build and push a container image to the Azure container registry.
 
-You need to execute two commands. Keep in mind that you need information from the output of the commands. Some information (like passwords) will only be visible once, immediately after the command execution and cannot be retrieved afterwards. Please copy and keep this information since it will be lost once the console is closed or refreshes it self (which may happen from time to time). If you happen to lose this information, you can repeat the following two steps with different names.
+Before we can add the workflow tasks, we need to make some preparations. The workflow will need to login into the Container Regsitry with name and password. Ideally, you should always avoid credentials in plain text in your YAML files, instead you can save the credentials as secrets and use them instead. You can find the username and password of the Container Registry in the Azure portal under the *Access keys* tab. Make sure that the *Admin user* is ticked:
 
-Firstly, create the service principal with this command:
-`az ad sp create-for-rbac -n "microhack-sp" --skip-assignment`
+![image](./img/challenge-2-acrkeys.jpg)
 
-Then assign the contributor role for the container registry to the service principal:
-`az role assignment create --assignee <appId from previous command> --scope <resource ID of the container registry, see hint below> --role "Contributor"`
+To add a secret in GitHub, open the *Settings* tab of the repository and go the the *Secrets and variables* -> *Actions* tab. Hit *New respository secret*:
 
-![image](./img/challenge-2-sp.jpg)
+![image](./img/challenge-2-createsecret.jpg)
 
-You can get the resource ID of the container registry in the portal. Open the registry and open the JSON view, you can copy it from the top:
+Create two secrets, *ACR_USERNAME* and *ACR_PASSWORD* to save the credentials:
 
-![image](./img/challenge-2-acr-json.jpg)
+![image](./img/challenge-2-createsecret2.jpg)
 
-![image](./img/challenge-2-acr-json-id.jpg)
+You can now access these secrets via *${{ secrets.<SECRET_NAME> }}* in the GitHub Actions workflow.
 
-Next you need to store some information as secrets in GitHub. You could in theory store secret information like password directly in the workflow YAML file but for security reasons you should avoid this in every case. Instead, create secrets by going to the *Settings* tab, on the left side to *Secrets and variables* -> *Actions* and hit *New repository secret*:
+Add this snippet as a task in your GitHub Actions workflow:
 
-![image](./img/challenge-2-secret.jpg)
 
-![image](./img/challenge-2-secret-password.jpg)
+      - name: Build and Push Image
+        run: |
+          echo "${{ secrets.ACR_PASSWORD }}" | docker login -u "${{ secrets.ACR_USERNAME }}" --password-stdin microhackregistry.azurecr.io &&
+          docker build -t microhackregistry.azurecr.io/microhackapp:1 -f Dockerfile . &&
+          docker push microhackregistry.azurecr.io/microhackapp:1
 
-Add the following secrets. You can find the password and tenant in the output of the first command you just ran (see above):
+Via the `run` task you can execute console commands:
+* `docker login` is used to login to the Azure Container Registry with the `ACR_USERNAME` and the `ACR_PASSWORD`.
+* `docker build` is used to build the container image. The `-t` parameter sets the name of the image, the part after the `:` indicates the version (also called tag), in this case we simply use `1`. The `-f` parameter indicates the location of the Dockerfile (remember, this file includes the commands to build the container image), the `.` indicates that the file is in the repository.
+* `docker push` is then used to upload the container image into the Azure Container Registry.
 
-* service_principal (in Azure this is named appID in the command output)
-* service_principal_password
-* tenant
+Save the changes and commit the file, then run the workflow:
 
-Now you can add the step to build and push the container image to the *pipeline-containerapp.yml* file in your repository:
+![image](./img/challenge-2-runworkflow2.jpg)
 
-    - name: Build and push image
-            uses: azure/acr-build@v1
-            with:
-              tenant: ${{ secrets.tenant }}
-              registry: microhackregistry
-              service_principal: ${{ secrets.service_principal }}
-              service_principal_password: ${{ secrets.service_principal_password }}
-              dockerfile: ./Dockerfile
-              repository: microhackapp
-              image: microhackapp-containerimage
+Check the container repository in the Azure Container Registry to make sure that the container image was pushed successfully:
 
-You need to give the tenant ID, the name of the container registry and the service principal + password to access it. Then you define the location of the Dockerfile. The container image will be stored in a container registry repository (comparable to a folder) named *microhackapp* under the name *microhackapp-containerimage*. 
-Save and commit the changes and run the workflow to check if everything works. After the workflow completed, open the container registry, under the tab *Repositories* you should see the "microhackapp" repository, open it to see your container images:
-
+![image](./img/challenge-2-acrimage.jpg)
 
 You successfully completed challenge 2! 🚀🚀🚀
 

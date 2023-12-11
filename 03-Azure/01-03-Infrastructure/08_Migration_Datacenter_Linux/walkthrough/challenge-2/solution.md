@@ -255,15 +255,12 @@ The friendly name will be used later on when specifiying the individual systems.
 
 Next you need to provide the individual source server details and map them to a specific set of credentials. Make sure that validation is successfull.
 
-~~~bash
 # list all IPs of resource group source-rg
+
+~~~bash
+sourceRgName=$(az group list --query "[?starts_with(name, '$prefix') && ends_with(name, 'source-rg')].name" -o tsv)
+az vm list-ip-addresses -g $sourceRgName -o table
 ~~~
-> [!NOTE]
-> List all IPs of resource group source-rg via Azure CLI
->
-> ~~~bash
-> az vm list-ip-addresses -g $(az group list --query "[?ends_with(name, 'source-rg')].name" -o tsv) -o table
-> ~~~
 
 
 ![image](./img/Discover15_1.png)

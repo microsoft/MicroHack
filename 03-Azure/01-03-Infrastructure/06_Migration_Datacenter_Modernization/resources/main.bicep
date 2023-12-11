@@ -47,6 +47,7 @@ module source 'source.bicep' = [for i in range(0, deploymentCount):  {
 resource destinationRg 'Microsoft.Resources/resourceGroups@2021-01-01' = [for i in range(0, deploymentCount): {
   name: '${prefix}${(i+1)}-${suffix}-destination-rg'
   location: location
+  tags: tags
 }]
 
 @description('Destination Module to deploy the destination resources')

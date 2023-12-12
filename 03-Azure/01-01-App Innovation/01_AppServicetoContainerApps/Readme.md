@@ -7,10 +7,9 @@
 - [**MicroHack Challenges**](#microhack-challenges)
   - [General prerequisites](#general-prerequisites)
   - [Challenge 1 - Understand the migratable estate](#challenge-1---understand-the-migratable-estate)
-  - [Challenge 2 - Prepare the deployment worklfow](#challenge-2---prepare-the-deployment-workflow)
-  - [Challenge 3 - Set up the landing zone](#challenge-3---set-up-and-configure-the-landing-zone)
-  - [Challenge 4 - Post deployment actions and ToDo´s](#challenge-4---post-deployment-tasks-and-todo´s)
-  - [Challenge 5 - Bring it to the end user with secure authentication](#challenge-5---bring-it-to-the-end-usern)
+  - [Challenge 2 - Containerize the Application](#challenge-2---containerize-the-application)
+  - [Challenge 3 - Create the Container App](#challenge-3---create-the-container-app)
+  - [Challenge 4 - Make the Container App Production Ready](#challenge-4---make-the-container-app-production-ready)
 - [**Contributors**](#contributors)
 
 ## MicroHack Introduction
@@ -52,6 +51,18 @@ This MicroHack has a few but important prerequisites to be understood before sta
   * Please make sure you have at least Version 3.4.2 installes with the following Command: ```Install-Module -Name GuestConfiguration -RequiredVersion 3.4.2```
 * [Visual Studio Code](https://code.visualstudio.com/)
 * [Git SCM](https://git-scm.com/download/)
+
+You need to execute this script in the Azure Cloud Shell to deploy the initial App Service resource that we will start with in a resource group named "MicroHack-AppServiceToContainerApp"
+
+`az group create --name "MicroHack-AppServiceToContainerApp" --location "westeurope"`
+
+`az appservice plan create --name "microhack-appserviceplan" --resource-group "MicroHack-AppServiceToContainerApp" --location "westeurope" --is-linux --sku "FREE"`
+
+`az webapp create --name "microhack-webapp" --resource-group "MicroHack-AppServiceToContainerApp" --plan "microhack-appserviceplan" --runtime "DOTNETCORE:6.0" --deployment-source-url "https://github.com/ArneDecker3v08mk/MicroHack-AppServiceToContainerAppStart" --deployment-source-branch "main"`
+
+It may take up to 5 minutes for the web app to start in the backgroud.
+
+You also need to fork this GitHub repository that you will work with: https://github.com/ArneDecker3v08mk/MicroHack-AppServiceToContainerAppStart 
 
 ## Challenge 1 - Understand the migratable estate 
 
@@ -173,18 +184,21 @@ Now that the app is up and running and you can deploy changes quickly, it is tim
 ### Actions
 
 * Enable authentication with Azure Entra ID
+* Configure Autoscaling to 200 concurrent connections with 1 to 10 replicas
 * Enable monitoring and logging
 
 ### Success criteria
 
 * You have enabled authentication with Azure Entra ID
+* You have configured the autoscaling rules
 * You can check the logs in the Log Analytics workspace
 
 ### Learning resources
 
-*[Enable Authentication on Azure Container Apps](https://learn.microsoft.com/en-us/azure/container-apps/authentication-azure-active-directory)
-*[Monitoring with Azure Container Apps](https://learn.microsoft.com/en-us/azure/container-apps/log-monitoring?tabs=bash)
-*[Loggin with Azure Container Apps](https://learn.microsoft.com/en-us/azure/container-apps/log-options)
+* [Enable Authentication on Azure Container Apps](https://learn.microsoft.com/en-us/azure/container-apps/authentication-azure-active-directory)
+* [Scaling Azure Container Apps](https://learn.microsoft.com/en-us/azure/container-apps/scale-app?pivots=azure-portal)
+* [Monitoring with Azure Container Apps](https://learn.microsoft.com/en-us/azure/container-apps/log-monitoring?tabs=bash)
+* [Loggin with Azure Container Apps](https://learn.microsoft.com/en-us/azure/container-apps/log-options)
 
 ### Solution - Spoilerwarning
 
@@ -192,7 +206,8 @@ Now that the app is up and running and you can deploy changes quickly, it is tim
 
 ## Finish
 
-Congratulations! You finished ....
+Congratulations! You finished!
+As you saw, containerizing and deploying an application is no rocket science. The Azure Container Apps will take over most of the work so you can focus on your application instead of the hosting.
 
 Thank you for investing the time and see you next time!
 

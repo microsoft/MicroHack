@@ -13,7 +13,7 @@ The following image shows the overall conceptual reference architecture that dem
 
 ![AVD Architecture](../Images/00-azure-virtual-desktop-architecture.png)
 
-For this MicroHack we simplify the deployment down to Microsoft Entra ID joined sessionhosts only so there are no dependencies on Domain Controllers (except in challenge 4,
+For this MicroHack we simplify the deployment down to Microsoft Entra ID joined sessionhosts only so there are no dependencies on Domain Controllers (except in challenge 5,
 where you will need hybrid identities for FSLogix profiles).  
 
 The architecture will be like 
@@ -63,15 +63,32 @@ A host pool can run the following operating systems:
 
 Custom Windows system images with pre-loaded apps, group policies, or other customizations are supported as well. You can also choose from a variaty of VM sizes including GPU-enabled VMs. Each session host has a Azure Virtual Desktop host agent, which registers the VM as part of the Azure Virtual Desktop workspace or tenant. Each host pool can have one or more app groups, which are collections of remote applications or desktop sessions that users can access.
 
-### Azure Virtual Desktop workspace:
-The Azure Virtual Desktop workspace or tenant is a management construct to manage and publish host pool resources.
+### Azure Virtual Desktop workspaces:
 
-### Personal and pooled desktops
-Personal desktop solutions, sometimes called persistent desktops, allow users to always connect to the same specific session host. Users can typically modify their desktop experience to meet personal preferences and save files in the desktop environment. This scenario allows assigning dedicated resources to a specific user, which can be helpful for some manufacturing or development use cases.
+A workspace is a logical grouping of application groups in Azure Virtual Desktop. Each Azure Virtual Desktop application group must be associated with a workspace for users to see the desktops and applications published to them.
 
-Pooled desktop solutions, also called non-persistent desktops, assign users to whichever session host is currently available, depending on the load-balancing algorithm. Because the users don't always return to the same session host each time they connect, they usually don´t have administrator access.
+### Azure Virtual Desktop host pools:
+
+A host pool is a collection of Azure virtual machines that register to Azure Virtual Desktop as session hosts when you run the Azure Virtual Desktop agent. All session host virtual machines in a host pool should be sourced from the same image for a consistent user experience. You control the resources published to users through application groups.
+
+A host pool can be one of two types:
+
+- Personal, sometimes called persistent desktops, where each session host is assigned to an individual user. Personal host pools provide dedicated desktops to end-users that optimize environments for performance and data separation.
+
+- Pooled, also called non-persistent desktops, where user sessions can be load balanced to any session host in the host pool. There can be multiple different users on a single session host at the same time. Pooled host pools provide a shared remote experience to end-users, which ensures lower costs and greater efficiency.
+
+### Azure Virtual Desktop application groups:
+
+An application group is a logical grouping of applications installed on session hosts in the host pool.
+
+An application group can be one of two types:
+
+- RemoteApp, where users access the applications you individually select and publish to the application group. Available with pooled host pools only.
+
+- Desktop, where users access the full desktop. Available with pooled or personal host pools.
 
 ### User accounts and groups:
+
 Your users need accounts that are in Microsoft Entra ID. To successful conduct challenge 4, these accounts will need to be [hybrid identities](https://learn.microsoft.com/en-us/azure/active-directory/hybrid/whatis-hybrid-identity), which means the user account is synchronized. 
 
 
@@ -101,6 +118,7 @@ The bracketed numbers relate to the diagram above.
 - 7. Finally AVD session hosts can, instead, be members of an Microsoft Entra ID DS (Microsoft Entra ID Domain Services) domain and in this situation the AVD published applications and desktop sessions will be launched and run (but not assigned) using Microsoft Entra ID DS accounts. Microsoft Entra ID is automatically synchronized with Microsoft Entra ID DS, one way from Microsoft Entra ID to Microsoft Entra ID DS only.
 
 ## Learning resources
+- [Azure Virtual Desktop terminology](https://learn.microsoft.com/en-us/azure/virtual-desktop/terminology#host-pools)
 - [Azure Virtual Desktop Prerequisites](https://learn.microsoft.com/en-us/azure/virtual-desktop/prerequisites)
 - The Azure Virtual Desktop construction set from the [Cloud Adoption Framework](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/scenarios/wvd/enterprise-scale-landing-zone)
 - Azure Virtual Desktop for the enterprise - [Architecture Center](https://learn.microsoft.com/en-us/azure/architecture/example-scenario/wvd/windows-virtual-desktop)

@@ -77,7 +77,7 @@ The name of the Workspace is displayed when the user signs in. Available resourc
 
 ## Task 3: Assign an Azure AD User to the desktop application group
 
-In the new Azure Virtual Desktop ARM portal, we now can use Azure Active Directory groups to manage access to our host pools.
+In the new Azure Virtual Desktop ARM portal, we now can use Microsoft Entra ID groups to manage access to our host pools.
 
 1.  Sign in to the [Azure Portal](https://portal.azure.com/).
 

@@ -22,7 +22,7 @@ In this first part of the challenge we have to assign an Azure builtin role **De
 
 ### Assign custom role:
 
-- Make sure you are still working in the subscription where you AVD virtual machines are stored.
+- Make sure you are still working in the resource group where you AVD virtual machines are stored.
 - Navigate again to Access Control (IAM) on the left side menu and click on Add on the top left and then Add Role Assignment (compare image below)
 
 ![Assign Custom Role](../Images/03-startvmonconnect-rbac-assignment-0.png)

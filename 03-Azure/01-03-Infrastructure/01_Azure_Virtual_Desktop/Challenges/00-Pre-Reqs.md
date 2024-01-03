@@ -1,6 +1,6 @@
 # Getting started
 
-**[Home](../readme.md)** - [Challenge One](./01-Personal-Hostpools.md)
+**[Home](../Readme.md)** - [Challenge One](./01-Personal-Hostpools.md)
 
 ## Introduction
 

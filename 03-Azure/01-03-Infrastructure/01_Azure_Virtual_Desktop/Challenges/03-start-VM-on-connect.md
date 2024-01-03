@@ -22,8 +22,8 @@ In the following sessions you will enable that machines are started once the end
 
 ## Challenge 
 
-1.	Assign the built-in Azure permission role **Desktop Virtualization Power On Contributor** in the subscription where the VMs are located, which allows **Azure Virtual Desktop or Windows Virtual Desktop** to turn on VMs
-2.	Enable the **Start VM on Connect** feature in the single session host pool, which you created in previous challenges
+1.	Assign the built-in Azure permission role **Desktop Virtualization Power On Contributor** in the resource group where the VMs are located, which allows **Azure Virtual Desktop or Windows Virtual Desktop** to turn on VMs.
+2.	Enable the **Start VM on Connect** feature in the single session host pool, which you created in previous challenges.
 
 ## Success Criteria
 AVD user can connect to a single session when any VM in the host pool is turned off. Once the connection was successful, one VM from the single session host pool should be turned on. (Turning on the VM might take some time, so be patient with connecting)

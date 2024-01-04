@@ -52,4 +52,4 @@ Azure offers various methods to access resources, such as through the Portal or 
 
 ## Next Challenge
 
-Challenge 2: [Deploy and configure your first pods](./Challenges/02-Deploy-and-configure.md)
+Challenge 2: [Deploy and configure your first pods](../Challenges/02-Deploy-and-configure.md)

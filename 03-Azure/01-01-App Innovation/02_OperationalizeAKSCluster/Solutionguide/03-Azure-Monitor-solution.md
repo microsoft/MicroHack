@@ -25,4 +25,4 @@ Here is a solution guide directly from Microsoft for creating Azure Monitor and 
 
 ## Next Challenge
 
-Challenge 4: [Scale up your services](./Challenges/04-Scale-up.md)
+Challenge 4: [Scale up your services](../Challenges/04-Scale-up.md)

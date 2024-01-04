@@ -38,4 +38,4 @@ In this example we used $ACR_NAME=flightbookeracr,$RESOURCE_GROUP=ServerlessMicr
 
 ## Next Challenge
 
-Challenge 1: [Build and push Microservice Images locally](./Challenges/01-Build-and-push-locally.md)
+Challenge 1: [Build and push Microservice Images locally](../Challenges/01-Build-and-push-locally.md)

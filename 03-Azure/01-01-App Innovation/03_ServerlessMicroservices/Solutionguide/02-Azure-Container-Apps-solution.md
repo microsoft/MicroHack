@@ -96,4 +96,4 @@ With this you should be able to access the Frontend Web App and call the backend
 
 ## Next Challenge
 
-Challenge 3: [Deploy Microservices to Azure Container App via GitHub Actions](./Challenges/03-GitHub-Actions.md)
+Challenge 3: [Deploy Microservices to Azure Container App via GitHub Actions](../Challenges/03-GitHub-Actions.md)

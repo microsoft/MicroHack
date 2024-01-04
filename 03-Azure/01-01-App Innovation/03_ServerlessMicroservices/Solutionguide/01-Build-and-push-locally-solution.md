@@ -177,4 +177,4 @@ Now you can check in your Azure portal if the Images got pushed to the registry 
 
 ## Next Challenge
 
-Challenge 2: [Deploy Microservices to Azure Container App](./Challenges/02-Azure-Container-Apps.md)
+Challenge 2: [Deploy Microservices to Azure Container App](../Challenges/02-Azure-Container-Apps.md)

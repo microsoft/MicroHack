@@ -33,4 +33,4 @@ kubectl scale --replicas=5 deployment/redis
 
 ## Next Challenge
 
-Challenge 5: [Access your services via an ingress controller](./Challenges/05-Ingress-controller.md)
+Challenge 5: [Access your services via an ingress controller](../Challenges/05-Ingress-controller.md)

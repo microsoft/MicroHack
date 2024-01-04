@@ -191,4 +191,4 @@ With this in place, you can commit your work and the GitHub action should be tri
 
 ## Next Challenge
 
-Challenge 4: [Integrate Azure Front Door](./Challenges/04-FrontDoor.md)
+Challenge 4: [Integrate Azure Front Door](../Challenges/04-FrontDoor.md)

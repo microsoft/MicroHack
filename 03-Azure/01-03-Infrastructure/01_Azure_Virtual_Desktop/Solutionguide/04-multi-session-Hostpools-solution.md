@@ -31,10 +31,9 @@ In a pooled configuration we will be hosting multiple non-persistent sessions, w
 
 > **Info:** This will only effect metadata. The Datacenter location for virtual machines will follow. 
 
-Change **Validation environment** to **Yes**.
-Once complete, select **Next: Virtual Machines**.
-
 ![This image shows where you will enter the information for the host pool.](../Images/02-Hostpool_create_multisession_2.png "Create pooled host pool page")
+
+Once complete, select **Next: Virtual Machines**.
 
 5. Navigate to **Virtual Machines** at the top and select **Show All Images** to find your recently created image. 
 

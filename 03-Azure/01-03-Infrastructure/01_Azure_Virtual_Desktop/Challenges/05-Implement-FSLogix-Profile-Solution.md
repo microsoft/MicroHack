@@ -44,7 +44,7 @@ In order to use profile containers, you'll need to configure FSLogix on your ses
 ### Learning Resources
 - [Create a storage account for Azure File Shares](https://learn.microsoft.com/en-us/azure/storage/files/storage-how-to-create-file-share?tabs=azure-portal#create-a-storage-account)
 - [Create an Azure file share](https://learn.microsoft.com/en-us/azure/storage/files/storage-how-to-create-file-share?tabs=azure-portal)
-- [Create a profile container with Azure Files and Microsoft Entra Domain Services](https://learn.microsoft.com/en-us/azure/virtual-desktop/fslogix-profile-container-configure-azure-files-active-directory?tabs=adds)
+- [Create a profile container with Azure Files and Active Directory Domain Services or Microsoft Entra Domain Services](https://learn.microsoft.com/en-us/azure/virtual-desktop/fslogix-profile-container-configure-azure-files-active-directory?tabs=adds)
 - [Configure FSLogix for the Enterprise](https://learn.microsoft.com/en-us/azure/architecture/example-scenario/wvd/windows-virtual-desktop-fslogix)
 - [Circumvent port 445 issues](https://learn.microsoft.com/en-us/azure/storage/files/storage-files-networking-overview#azure-networking)
 

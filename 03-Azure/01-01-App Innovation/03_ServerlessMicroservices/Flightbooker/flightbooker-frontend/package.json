@@ -5,14 +5,12 @@
     "dev": "vite --host",
     "build": "vite build",
     "preview": "vite preview --port 4173",
-    "start": "vite --port 5173"
+    "start": "vite --host --port 5173"
   },
   "dependencies": {
     "axios": "^0.27.2",
     "vue": "^3.2.38",
-    "vuex": "^4.0.2"
-  },
-  "devDependencies": {
+    "vuex": "^4.0.2",
     "@vitejs/plugin-vue": "^3.0.3",
     "vite": "^3.0.9"
   }

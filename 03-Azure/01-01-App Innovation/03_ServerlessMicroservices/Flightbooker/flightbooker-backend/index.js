@@ -100,8 +100,12 @@ app.get('/api/seats', (req, res) => {
 })
 
 app.post('/api/seat', (req, res) => {
-    console.log(req.body);
-    seatList = req.body["seat"];
+    if (req.body && typeof req.body === 'object') {
+        seatList = req.body.map(seat => ({
+            name: String(seat.name),
+            status: String(seat.status),
+        }));
+    }
     res.send(seatList)
 })
 

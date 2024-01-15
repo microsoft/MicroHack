@@ -57,7 +57,7 @@ To be able to push the image to the azure registry, you must tag it with the reg
 ```
 {
     "type": "docker-build",
-    "label": "docker-build",
+    "label": "docker-build-backend",
     "platform": "node",
     "dockerBuild": {
         "dockerfile": "${workspaceFolder}/Dockerfile",
@@ -76,7 +76,7 @@ Since we need this for both frontend and backend we need this and all docker tas
 	"tasks": [
 		{
 			"type": "docker-build",
-			"label": "docker-build",
+			"label": "docker-build-frontend",
 			"platform": "node",
 			"dockerBuild": {
 				"dockerfile": "${workspaceFolder}/Flightbooker/flightbooker-frontend/Dockerfile",
@@ -92,7 +92,7 @@ Since we need this for both frontend and backend we need this and all docker tas
 			"type": "docker-run",
 			"label": "docker-run: release",
 			"dependsOn": [
-				"docker-build"
+				"docker-build-frontend"
 			],
 			"platform": "node",
 			"node": {
@@ -103,7 +103,7 @@ Since we need this for both frontend and backend we need this and all docker tas
 			"type": "docker-run",
 			"label": "docker-run: debug",
 			"dependsOn": [
-				"docker-build"
+				"docker-build-frontend"
 			],
 			"dockerRun": {
 				"env": {
@@ -119,7 +119,7 @@ Since we need this for both frontend and backend we need this and all docker tas
 
 		{
 			"type": "docker-build",
-			"label": "docker-build",
+			"label": "docker-build-backend",
 			"platform": "node",
 			"dockerBuild": {
 				"dockerfile": "${workspaceFolder}/Flightbooker/flightbooker-backend/Dockerfile",
@@ -135,7 +135,7 @@ Since we need this for both frontend and backend we need this and all docker tas
 			"type": "docker-run",
 			"label": "docker-run: release",
 			"dependsOn": [
-				"docker-build"
+				"docker-build-backend"
 			],
 			"platform": "node",
 			"node": {
@@ -146,7 +146,7 @@ Since we need this for both frontend and backend we need this and all docker tas
 			"type": "docker-run",
 			"label": "docker-run: debug",
 			"dependsOn": [
-				"docker-build"
+				"docker-build-backend"
 			],
 			"dockerRun": {
 				"env": {

@@ -10,56 +10,48 @@
       <SeatMap></SeatMap>
     </div>
     <div>
-      <Button @click="showModal" ></Button>
-      <Modal v-show="isModalVisible"
-      @close="closeModal" />
-
+      <Button @click="showModal"></Button>
+      <Modal v-show="isModalVisible" @close="closeModal" />
     </div>
-    
-    
   </main>
-
 </template>
 
 <script setup>
-import Title from './components/Title.vue';
-import SeatMap from './components/SeatMap.vue';
-import Button from './components/Button.vue';
+import Button from "./components/Button.vue";
+import SeatMap from "./components/SeatMap.vue";
+import Title from "./components/Title.vue";
 </script>
 
 <script>
-import Modal from './components/Modal.vue';
-import {getAllSeats, bookSeat} from './services/BookingService.js';
-  export default { 
-    components: {
-      Modal,
+import Modal from "./components/Modal.vue";
+import { bookSeat } from "./services/BookingService.js";
+export default {
+  components: {
+    Modal,
+  },
+  data() {
+    return {
+      isModalVisible: false,
+      message: [],
+    };
+  },
+  methods: {
+    showModal() {
+      this.isModalVisible = true;
     },
-    data() {
-      return{
-        isModalVisible: false,
-        message: [],
-      };
+    closeModal() {
+      this.isModalVisible = false;
+      this.$store.state.seatList.forEach((seat) => {
+        if (seat.status == "selected") {
+          seat.status = "booked";
+        }
+      });
+      this.$store.dispatch("resetCount");
+      bookSeat(this.$store.state.seatList);
     },
-    methods: {
-      showModal() {
-        this.isModalVisible=true;
-      },
-      closeModal(){
-        this.isModalVisible = false;
-        this.$store.state.seatList.forEach(seat => {
-          if (seat.status == "selected"){
-            seat.status="booked"
-          }
-        });
-        this.$store.dispatch('resetCount');
-        bookSeat(this.$store.state.seatList);
-      },
-
-    }
-
-  }
+  },
+};
 </script>
-
 
 <style scoped>
 header {
@@ -69,11 +61,11 @@ main {
   padding-top: 10px;
   padding-bottom: 10px;
 }
-.seatmap{
+.seatmap {
   padding-bottom: 10px;
 }
 
- @media (min-width: 1024px) {
+@media (min-width: 1024px) {
   header {
     display: flex;
     place-items: top;
@@ -83,13 +75,15 @@ main {
   header .wrapper {
     display: flex;
     place-items: flex-start;
-    flex-wrap: wrap; 
+    flex-wrap: wrap;
   }
 }
 </style>
 
 <style>
-  html,body,button {
-    font-family: Verdana, sans-serif;
-  }
+html,
+body,
+button {
+  font-family: Verdana, sans-serif;
+}
 </style>

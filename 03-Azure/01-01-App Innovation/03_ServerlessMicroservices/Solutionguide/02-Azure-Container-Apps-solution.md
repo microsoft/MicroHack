@@ -92,7 +92,7 @@ Or you can just enable it in the portal:
 ![dapr-enabled](../Images/dapr-enabled.png)
 
 For more dapr configurations look [here](https://learn.microsoft.com/en-us/azure/container-apps/dapr-overview?tabs=bicep1%2Cyaml).
-With this you should be able to access the Frontend Web App and call the backend API app using dapr. This is a Service-to-Service invocation.
+With this you should be able to access the Frontend Web App and call the backend API app using dapr. This is a [Service-to-Service invocation](https://learn.microsoft.com/en-us/azure/container-apps/microservices-dapr-service-invoke?pivots=nodejs).
 
 ## Next Challenge
 

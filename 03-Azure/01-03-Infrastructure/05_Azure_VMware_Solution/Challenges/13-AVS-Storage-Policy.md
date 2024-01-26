@@ -15,3 +15,7 @@ The Run command lets authorized users change the default or existing VM storage 
 ## Success Criteria
 
 ## Learning resources
+
+### Solution - Spoilerwarning
+
+[Solution Steps](../Solutionguide/13-AVS-Storage-Policy.md)

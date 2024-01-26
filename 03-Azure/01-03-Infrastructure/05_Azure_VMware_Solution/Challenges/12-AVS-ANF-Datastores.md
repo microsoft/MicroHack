@@ -21,3 +21,7 @@ The following diagram demonstrates a typical architecture of Azure NetApp Files 
 ## Success Criteria
 
 ## Learning resources
+
+### Solution - Spoilerwarning
+
+[Solution Steps](../Solutionguide/12-AVS-ANF-Datastores.md)

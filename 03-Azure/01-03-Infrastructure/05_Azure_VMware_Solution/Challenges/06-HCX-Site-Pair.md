@@ -27,3 +27,8 @@ Now you're ready to add a site pairing, create a network and compute profile, an
 The VMware HCX Cloud Manager in AVS and the On-Prem VMware HCX Connector are connected (paired).
 
 ## Learning resources
+
+### Solution - Spoilerwarning
+
+[Solution Steps](../Solutionguide/06-HCX-Site-Pair.md)
+

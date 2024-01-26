@@ -17,3 +17,7 @@ Your requirements for security controls, visibility, capacity, and operations dr
 ## Success Criteria
 
 ## Learning resources
+
+### Solution - Spoilerwarning
+
+[Solution Steps](../Solutionguide/15-AVS-Managed-SNAT.md)

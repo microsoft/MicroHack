@@ -37,3 +37,7 @@ Work with the instructor to ensure your VMware environment has the required perm
 The Compute Profile is created and can be used.
 
 ## Learning resources
+
+### Solution - Spoilerwarning
+
+[Solution Steps](../Solutionguide/08-HCX-Compute-Profiles.md)

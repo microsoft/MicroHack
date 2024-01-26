@@ -35,3 +35,7 @@ You can ask your coach to show you how this step was done
 You can login to the HCX Manager UI and see the HCX Manager Appliance is up and running.
 
 ## Learning resources
+
+### Solution - Spoilerwarning
+
+[Solution Steps](../Solutionguide/05-HCX-Manager-Appliance.md)

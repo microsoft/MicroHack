@@ -49,3 +49,7 @@ Work with the instructor to ensure your VMware environment has the required perm
 The created network profiles will be avaiable to be used by Interconnect and Network Enxtension appliances within the Service Mesh.
 
 ## Learning resources
+
+### Solution - Spoilerwarning
+
+[Solution Steps](../Solutionguide/07-HCX-Network-Profiles.md)

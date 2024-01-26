@@ -21,3 +21,7 @@ Work with the instructor to ensure your VMware environment has the required perm
 The network extension is established and functional.
 
 ## Learning resources
+
+### Solution - Spoilerwarning
+
+[Solution Steps](../Solutionguide/10-HCX-Network-Extension.md)

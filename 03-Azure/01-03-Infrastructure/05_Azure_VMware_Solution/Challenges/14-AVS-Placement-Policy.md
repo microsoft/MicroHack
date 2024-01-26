@@ -47,3 +47,7 @@ VM-Host Anti-Affinity policies instruct DRS to try running the specified VMs on 
 ## Success Criteria
 
 ## Learning resources
+
+### Solution - Spoilerwarning
+
+[Solution Steps](../Solutionguide/14-AVS-Placement-Policy.md)

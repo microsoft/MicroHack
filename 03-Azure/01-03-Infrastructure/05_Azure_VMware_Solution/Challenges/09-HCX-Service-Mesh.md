@@ -23,3 +23,7 @@ Work with the instructor to ensure your VMware environment has the required perm
 The service mesh between AVS and On-Prem is established.
 
 ## Learning resources
+
+### Solution - Spoilerwarning
+
+[Solution Steps](../Solutionguide/09-HCX-Service-Mesh.md)

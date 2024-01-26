@@ -25,3 +25,7 @@ As a part of this challenge you are also expected to <u>log on to the AVS Privat
 A firewall rule is created between two application groups is created and ping is either successful or blocked respectively.
 
 ## Learning resources
+
+### Solution - Spoilerwarning
+
+[Solution Steps](../Solutionguide/04-NSX-Firewall.md)

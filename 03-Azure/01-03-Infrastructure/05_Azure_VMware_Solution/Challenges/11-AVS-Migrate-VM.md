@@ -18,3 +18,7 @@ Work with the instructor to ensure your VMware environment has the required perm
 The VM is successfully migrated and retains the IP address from the On-Prem network.
 
 ## Learning resources
+
+### Solution - Spoilerwarning
+
+[Solution Steps](../Solutionguide/11-AVS-Migrate-VM.md)

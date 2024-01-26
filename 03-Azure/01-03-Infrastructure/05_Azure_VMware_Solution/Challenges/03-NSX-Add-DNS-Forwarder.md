@@ -29,3 +29,7 @@ By the end of this challenge you should independantly be able to answer the foll
 3. How will you go about configuring LDAP integration for NSX? 
 
 ## Learning resources
+
+### Solution - Spoilerwarning
+
+[Solution Steps](../Solutionguide/03-NSX-Add-DNS-Forwarder.md)

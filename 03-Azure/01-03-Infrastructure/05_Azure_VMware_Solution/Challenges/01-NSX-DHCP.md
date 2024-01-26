@@ -35,3 +35,7 @@ Applications and workloads running in an Azure VMware Solution private cloud env
 When you login to the NSX Manager in AVS the DHCP server should be configured and running. It should be attached to the Tier 1 gateway.
 
 ## Learning resources
+
+### Solution - Spoilerwarning
+
+[Solution Steps](../Solutionguide/01-NSX-DHCP.md)

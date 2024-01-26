@@ -34,3 +34,7 @@ Work with the instructor to ensure your VMware environment has the required perm
 The virtual machine attached to the segments should be getting an IP from the DHCP.
 
 ## Learning resources
+
+### Solution - Spoilerwarning
+
+[Solution Steps](../Solutionguide/02-NSX-Add-Segment.md)

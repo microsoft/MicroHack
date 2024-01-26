@@ -16,3 +16,7 @@
 ## Success Criteria
 
 ## Learning resources
+
+### Solution - Spoilerwarning
+
+[Solution Steps](../Solutionguide/16-AVS-Automation-ESLZ.md)

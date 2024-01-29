@@ -83,47 +83,46 @@ Right after this step you can insert the step from the hints to get the latest c
 
 name: Build and Deploy to Container App
 
-on:
-  workflow_dispatch:
+	on:
+	  workflow_dispatch:
 
-jobs:
-  build:
-    name: Build and Test Solution
-    runs-on: ubuntu-latest
+	jobs:
+	  build:
+		name: Build and Test Solution
+		runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v2
+		steps:
+		  - name: Checkout Repository
+			uses: actions/checkout@v2
 
-      - name: Set up .NET Core
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: '6.x'
-          include-prerelease: true
+		  - name: Set up .NET Core
+			uses: actions/setup-dotnet@v1
+			with:
+			  dotnet-version: '6.x'
 
-      - name: Restore dependencies
-        run: dotnet restore
+		  - name: Restore dependencies
+			run: dotnet restore
 
-      - name: Build with dotnet
-        run: dotnet build --configuration Release
+		  - name: Build with dotnet
+			run: dotnet build --configuration Release
 
-      - name: Login to Azure
-        run: az login --service-principal --username ${{ secrets.SERVICE_PRINCIPAL }} --password ${{ secrets.SERVICE_PRINCIPAL_PASSWORD }} --tenant ${{ secrets.TENANT }}
+		  - name: Login to Azure
+			run: az login --service-principal --username ${{ secrets.SERVICE_PRINCIPAL }} --password ${{ secrets.SERVICE_PRINCIPAL_PASSWORD }} --tenant ${{ secrets.TENANT }}
 
-      - name: Get Latest Container Image Tag
-        id: get_tag
-        run: |
-          TAG=$(az acr repository show-tags --name microhackregistry --repository microhackapp --orderby time_desc --output tsv --detail | head -n 1 | awk '{print $4}')
-          NUMERIC_TAG=$(echo "$TAG" | grep -oE '[0-9]+')
-          INCREMENTED_TAG=$((NUMERIC_TAG + 1))
-          UPDATED_TAG=$(echo "$TAG" | sed "s/$NUMERIC_TAG/$INCREMENTED_TAG/")
-          echo "::set-output name=image_tag::$UPDATED_TAG"
-        
-      - name: Build and Push Image
-        run: |
-          echo "${{ secrets.ACR_PASSWORD }}" | docker login -u "${{ secrets.ACR_USERNAME }}" --password-stdin microhackregistry.azurecr.io &&
-          docker build -t microhackregistry.azurecr.io/microhackapp:${{ steps.get_tag.outputs.image_tag }} -f Dockerfile . &&
-          docker push microhackregistry.azurecr.io/microhackapp:${{ steps.get_tag.outputs.image_tag }}
+		  - name: Get Latest Container Image Tag
+			id: get_tag
+			run: |
+			  TAG=$(az acr repository show-tags --name microhackregistry --repository microhackapp --orderby time_desc --output tsv --detail | head -n 1 | awk '{print $4}')
+			  NUMERIC_TAG=$(echo "$TAG" | grep -oE '[0-9]+')
+			  INCREMENTED_TAG=$((NUMERIC_TAG + 1))
+			  UPDATED_TAG=$(echo "$TAG" | sed "s/$NUMERIC_TAG/$INCREMENTED_TAG/")
+			  echo "::set-output name=image_tag::$UPDATED_TAG"
+
+		  - name: Build and Push Image
+			run: |
+			  echo "${{ secrets.ACR_PASSWORD }}" | docker login -u "${{ secrets.ACR_USERNAME }}" --password-stdin microhackregistry.azurecr.io &&
+			  docker build -t microhackregistry.azurecr.io/microhackapp:${{ steps.get_tag.outputs.image_tag }} -f Dockerfile . &&
+			  docker push microhackregistry.azurecr.io/microhackapp:${{ steps.get_tag.outputs.image_tag }}
 
 To deploy a new image to the Container App, you can use this built-in setp: https://github.com/Azure/container-apps-deploy-action
 
@@ -143,6 +142,8 @@ The step takes some parameters, let's have a closer look:
 * `acrUsername` and `acrPassword` are used to authenticate to the Azure Container Registry
 * `resourceGroup`, `containerAppEnvironment` and `containerAppName` are used to identify the Container App
 * `targetPort` should be the same you defined in the Dockerfile
+
+Keep in mind that the registry must match the name you gave in challenge 2.
 
 You can now make a change to the app and then deploy it to the Container App. Open the `index.cshtml` file in the repository (on *Code* tab in the *Pages* folder) and make add a new line to the landing page of the app, then commit the change and run the workflow again:
 

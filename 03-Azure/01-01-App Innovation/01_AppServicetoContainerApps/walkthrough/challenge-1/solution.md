@@ -25,7 +25,7 @@ Duration: 30 minutes
     ![image](./img/challenge-1-url.jpg)
 
 ### **Read through the learning resources**
-The bicep deployment should have created the following resources
+
 
 * What is containerization and what is a container?
 	<p>
@@ -54,13 +54,11 @@ The bicep deployment should have created the following resources
     * Resource efficiency and scaling (the App Service is based on instances which comparable to managed VMs, quite often they don't scale as fast and are more expensive compared to hosting containers on shared infrastructure.
     </p>
 * Which container services are available on Azure?
-	<p>
     Common container services are:
-    * [Azure Kubernetes Service](https://learn.microsoft.com/en-us/azure/aks/intro-kubernetes) is Microsoft's managed Kubernetes cluster offering, a very common container orchestration platform used to manage large containerized applications. Compared to on-premises clusters it takes away the infrastructure management and is the most powerful container service.
-    * [Azure Container Apps](https://learn.microsoft.com/en-us/azure/container-apps/overview) is an serverless hosting option that takes away a lot of management/complexity away (compared to Kubernetes). It is a simple way to host scalbale containerized applications.
-    * [Azure Container Instances](https://learn.microsoft.com/en-us/azure/container-instances/container-instances-overview) is the most simple container service. It is highly efficient and fast but only allows you to host a single container (no scalability).
-    * And a lot more than we can focus on here ([Azure Service Fabric](https://azure.microsoft.com/en-us/products/service-fabric), [Azure Red Hat OpenShift](https://azure.microsoft.com/en-us/products/openshift) etc.)
-    </p>
+    - [Azure Kubernetes Service](https://learn.microsoft.com/en-us/azure/aks/intro-kubernetes) is Microsoft's managed Kubernetes cluster offering, a very common container orchestration platform used to manage large containerized applications. Compared to on-premises clusters it takes away the infrastructure management and is the most powerful container service.
+    - [Azure Container Apps](https://learn.microsoft.com/en-us/azure/container-apps/overview) is an serverless hosting option that takes away a lot of management/complexity away (compared to Kubernetes). It is a simple way to host scalbale containerized applications.
+    - [Azure Container Instances](https://learn.microsoft.com/en-us/azure/container-instances/container-instances-overview) is the most simple container service. It is highly efficient and fast but only allows you to host a single container (no scalability).
+    - And a lot more than we can focus on here ([Azure Service Fabric](https://azure.microsoft.com/en-us/products/service-fabric), [Azure Red Hat OpenShift](https://azure.microsoft.com/en-us/products/openshift) etc.)
 
 And the bonus question:
 

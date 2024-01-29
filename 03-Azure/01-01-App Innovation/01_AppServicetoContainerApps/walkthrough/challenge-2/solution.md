@@ -71,7 +71,6 @@ Feel free to name all steps and format the code as you like. Your workflow shoul
             uses: actions/setup-dotnet@v1
             with:
               dotnet-version: '6.x'
-              include-prerelease: true
     
           - name: Restore dependencies
             run: dotnet restore

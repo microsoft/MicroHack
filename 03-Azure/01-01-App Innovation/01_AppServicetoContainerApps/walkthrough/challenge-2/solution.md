@@ -13,7 +13,7 @@ Open the [Azure Portal](https://portal.azure.com) and login using a user account
 Search for *Container Registries* and click *Create*
 
 In the *Basics* tab, select the resource group you want to deploy your new resources to (it can be the one with the app service or a new one).
-You need to give the container registry a name which needs to be globally unique since it will be accessible via a URL with the name in it, so you can use something like "microhack-registry-xyz". Chose your preferred location. Select *Basic* as *SKU* and leave the other settings/tabs as is, then hit *Review + create* and again *Create*:
+You need to give the container registry a name which needs to be globally unique since it will be accessible via a URL with the name in it (just like the web app), so you can use something like "microhackregistryxyz" (only alphanumeric characters are allowed). Chose your preferred location. Select *Basic* as *Pricing plan* and leave the other settings/tabs as is, then hit *Review + create* and again *Create*:
 
 ![image](./img/challenge-2-createregistry.jpg)
 
@@ -27,19 +27,26 @@ Search for *.NET* in the search bar to create the workflow from a template. Chos
 
 ![image](./img/challenge-2-createworkflow.jpg)
 
+Your workflow file should look like this:
+
+![image](./img/challenge-2-blankworkflow.jpg)
+
 Rename the workflow YAML file to *pipeline-containerapp.yml*. As you can see, the template is already filled with some settings and steps. Let's go through them line by line and make some first changes:
 
-* In line 4 the name of the workflow is set. Let's rename it to *Build and Deploy to App Service*
+* In line 4 the name of the workflow is set. Let's rename it to *Build and Deploy to Container App*
 * In line 6 to 10 the triggers when the workflow should run are defined. Currently, every time someone pushes something into the repository or someone makes a pull request the workflow will run. Since you will for the sake of simplicity only work with the main branch in GitHub directly, you should avoid automatically running the workflow. Replace the triggers simply with:
         on:
           workflow_dispatch:
 
+(This will move everything below three lines up)
+
 * From line 9 onwards the jobs are defined and steps are defined.
 * Line 12 tells GitHub to run the workflow on a Ubuntu Linux machine with the latest available version
 * Line 15 checkous the repository
-* Line 16 to 20 set up the required .NET tools for the workflow. Change the *dotnet-version* in line 19 to *6.x*
-* Line 22 performs the build
-* Line 23 performs some automated tests. This line can be removed for now since this is not part of this MicroHack.
+* Line 16 to 19 set up the required .NET tools for the workflow. Change the *dotnet-version* in line 19 to *6.x*
+* Line 21 to 22 restores (loads) dependencies in the project
+* Line 22 to 23 performs the build
+* Line 24 to 25 performs some automated tests. This line can be removed for now since this is not part of this MicroHack.
 
 Feel free to name all steps and format the code as you like. Your workflow should in the end look something like this:
 
@@ -170,7 +177,7 @@ Create two secrets, *ACR_USERNAME* and *ACR_PASSWORD* to save the credentials:
 
 You can now access these secrets via *${{ secrets.<SECRET_NAME> }}* in the GitHub Actions workflow.
 
-Add this snippet as a task in your GitHub Actions workflow:
+Add this snippet as a task in your GitHub Actions workflow. The name of the container registry must match the name you chose in task 1:
 
 
       - name: Build and Push Image

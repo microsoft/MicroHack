@@ -20,13 +20,6 @@
 
 This MicroHack scenario walks through the modernization from an application what was hosted on [Azure Virtual Machines](https://azure.microsoft.com/en-us/products/virtual-machines) or in an [Azure App Service](https://azure.microsoft.com/en-us/products/app-service) to completely managed container based infrastructure, with a focus on the best practices and the design principles and some interesting challenges for real world scenarios. Specifically, this builds up to include working with an existing infrastructure in your datacenter.
 
-Further resources:_
-
-* [tbd](link)
-
-
-💡 Optional: Read this after completing this lab to deepen the learned!
-
 ## MicroHack Objectives
 
 After completing this MicroHack you will:
@@ -58,7 +51,14 @@ You need to execute this script in the Azure Cloud Shell to deploy the initial A
 
 `az appservice plan create --name "microhack-appserviceplan" --resource-group "MicroHack-AppServiceToContainerApp" --location "westeurope" --is-linux --sku "FREE"`
 
-`az webapp create --name "microhack-webapp" --resource-group "MicroHack-AppServiceToContainerApp" --plan "microhack-appserviceplan" --runtime "DOTNETCORE:6.0" --deployment-source-url "https://github.com/ArneDecker3v08mk/MicroHack-AppServiceToContainerAppStart" --deployment-source-branch "main"`
+To create the web app, you need to run this command. Web app names must be globally unique, since the name will be used in the URL. You can name the web app something like "microhack-webapp-" and then append some random characters, e.g. "microhack-webapp-johndoe22" or "microhack-webapp-jdkas":
+
+`az webapp create --name "<your_globally_unique_webapp_name>" --resource-group "MicroHack-AppServiceToContainerApp" --plan "microhack-appserviceplan" --runtime "DOTNETCORE:6.0" --deployment-source-url "https://github.com/ArneDecker3v08mk/MicroHack-AppServiceToContainerAppStart" --deployment-source-branch "main"`
+
+ **Troubleshooting:**
+ If you see this error, then the name of the web app was already used and you need to try another name:
+
+`Error Message: Webapp 'microhack-webapp-...' already exists. The command will use the existing app's settings. Unable to retrieve details of the existing app 'microhack-webapp-...'. Please check that the app is a part of the current subscription`
 
 It may take up to 5 minutes for the web app to start in the backgroud.
 

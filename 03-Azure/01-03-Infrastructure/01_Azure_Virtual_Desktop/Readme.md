@@ -1,4 +1,4 @@
-![image](Images/MicroHack_Logo_1.png)
+![image](Images/AVD-Header.png)
 
 # Azure Virtual Desktop - Micro Hack
 

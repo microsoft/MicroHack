@@ -48,6 +48,4 @@ In this hack, you will learn how to set up an Azure Virtual Desktop in a typical
 ## Contributor
 - [Ben Martin Baur](https://www.linkedin.com/in/ben-martin-baur/)
 - [Angelika Gerl](https://www.linkedin.com/in/angelika-gerl/)
-- Leonie Mueller
-- Steffen Krause
 - [Daniel Weppeler](https://www.linkedin.com/in/daniel-weppeler/)

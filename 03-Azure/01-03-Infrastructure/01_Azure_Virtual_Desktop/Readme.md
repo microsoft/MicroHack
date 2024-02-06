@@ -1,6 +1,6 @@
-![image](Images/MicroHack_Logo_1.png)
+![image](Images/AVD-Header.png)
 
-# Azure Virtual Desktop - Micro Hack
+# Azure Virtual Desktop - MicroHack
 
 ## Introduction
 
@@ -48,6 +48,5 @@ In this hack, you will learn how to set up an Azure Virtual Desktop in a typical
 ## Contributor
 - [Ben Martin Baur](https://www.linkedin.com/in/ben-martin-baur/)
 - [Angelika Gerl](https://www.linkedin.com/in/angelika-gerl/)
-- Leonie Mueller
-- Steffen Krause
 - [Daniel Weppeler](https://www.linkedin.com/in/daniel-weppeler/)
+- [Peter Riedelsdorf](https://www.linkedin.com/in/peter-riedelsdorf-485a09115)

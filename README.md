@@ -1,6 +1,6 @@
-![image](img/MicroHack_Logo_1.png)
+![image](img/1920x300_EventBanner_MicroHack_General_wText.jpg)
 
-# **Microsoft MicroHacks**
+# Microsoft MicroHacks
 
 - [**Microsoft MicroHacks**](#microsoft-microhacks)
 - [**MicroHack Overview**](#microhack-overview)

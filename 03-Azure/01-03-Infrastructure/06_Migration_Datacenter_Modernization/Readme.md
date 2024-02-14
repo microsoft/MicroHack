@@ -1,4 +1,6 @@
-# **Migration & Datacenter Modernization MicroHack**
+![image](img/1920x300_EventBanner_MicroHack_CopilotForMigration_wText.jpg)
+
+# MicroHack - Copilot for Migration
 
 - [**MicroHack introduction**](#MicroHack-introduction)
 - [**MicroHack context**](#microhack-context)
@@ -9,10 +11,6 @@
 # MicroHack introduction
 
 This MicroHack scenario walks through the process how to optimize and modernize you datacenter. The assessment, the tooling and processes are global best practices and with a focus on the real world scenarios, cost optimization and the best customer recommended design principles. Specifically, this builds up to include working with an existing infrastructure.
-
-![image](./img/MigrateModernize.png)
-<!--![image](./img/azuremigratebusinesscase.png)-->
-<!--![image](./img/migration-assessment-architecture.png)-->
 
 This lab is not a full explanation of building up a migration factory or a program to modernize your processes and dependencies. Please consider the following articles required pre-reading to build foundational knowledge.
 

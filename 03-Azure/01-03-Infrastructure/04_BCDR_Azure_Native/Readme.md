@@ -1,4 +1,6 @@
-# **MicroHack Business Continuity / Disaster Recovery**
+![image](img/1920x300_EventBanner_MicroHack_BusinessContinuity_wText.jpg)
+
+# MicroHack - Business Continuity on Azure
 
 - [**MicroHack introduction**](#MicroHack-introduction)
   - [What is Business Continuity?]()

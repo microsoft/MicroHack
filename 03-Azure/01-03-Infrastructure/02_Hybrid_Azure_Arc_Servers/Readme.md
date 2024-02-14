@@ -1,4 +1,6 @@
-# **MicroHack Azure Arc for Servers**
+![image](img/1920x300_EventBanner_MicroHack_Arc_wText.jpg)
+
+# MicroHack Azure Arc for Servers
 
 - [**MicroHack introduction**](#MicroHack-introduction)
   - [What is Azure Arc?](#what-is-azure-arc)

@@ -1,4 +1,6 @@
-# **MicroHack Azure Monitor for virtual machines**
+![image](img/1920x300_EventBanner_MicroHack_Monitor_wText.jpg)
+
+# MicroHack - Azure Monitor for virtual machines
 
 - [**MicroHack Azure Monitor for virtual machines**](#microhack-azure-monitor-for-virtual-machines)
   - [**MicroHack introduction and context**](#microhack-introduction-and-context)

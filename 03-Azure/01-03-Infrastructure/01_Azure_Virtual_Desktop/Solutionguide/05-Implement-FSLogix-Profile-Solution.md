@@ -39,7 +39,7 @@ FileStorage storage accounts: FileStorage storage accounts allow you to deploy A
 Create a general-purposev2 storage account with the following settings:
 - Resource group: **select your Resource group**
 - Storage account name: **fslogixprofilefs (or something similar)**
-- Region: **West Europe**
+- Region: **Sweden Central **
 - Performance: **Standard**
 - Redundancy: **Locally-redundant storage (LRS)**
 - Click **Review** and then **Create**

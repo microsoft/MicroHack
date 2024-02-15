@@ -35,7 +35,7 @@ This feature guides you through the prerequisites and process of using Azure Ima
 |:---------|:---------|:---------|
 | Subscription | ME-AVDMicrohack-1 |
 | Resource Group | RG-MicroHack | Select your own resource group.
-| Region | West Europe | 
+| Region | Sweden Central  | 
 | Name | ID-AIB-MicroHack | Select your own managed identity.
 
 ![02-CustomImageTemplateReq-1.png](../Images/02-CustomImageTemplateReq-1.png)
@@ -139,7 +139,7 @@ If the custome rule is assign successfully, you will see something like this pop
 | Subscription | ME-AVDMicrohack-1 |
 | Resource Group | RG-MicroHack | Select your own resource group.
 | Name | WIN11AVDCoreApps | Enter a custom gallery name.
-| Region | West Europe | 
+| Region | Sweden Central  | 
 
 ![02-CustomImageTemplateReq-20.png](../Images/02-CustomImageTemplateReq-20.png)
 
@@ -161,7 +161,7 @@ Then, click **Review + create**.
 
 | Field | Value | Notes
 |:---------|:---------|:---------|
-| Region | West Europe | 
+| Region | Sweden Central  | 
 | VM image definition name | WIN11AVDCoreAppsDefinition | Enter an image definition name.
 | OS Type | Windows | 
 | Security Type | Standard | 
@@ -255,7 +255,7 @@ Select **Next**.
 | Gallery image definition | WIN11AVDCoreAppsDefinitions  | 
 | Gallery Image version | 0.0.1 | It's optional.
 | Run output name | WIN11AVDCoreApps | This value can be anything, it is just the name for the temporary resource group
-| Replication regions | West Europe | 
+| Replication regions | Sweden Central  | 
 | Exclude from latest | No | It's the first version.
 | Storage account type | Standard_LRS |
 
@@ -317,7 +317,7 @@ Select **Save**.
 
 ![02-CustomImageTemplate-11.png](../Images/02-CustomImageTemplate-11.png)
 
->**Note:** If the template creation fails because of the West Europe region, you need to recreate the template and use North Europe as the region, but for the replication region both (West Europe and North Europe).
+>**Note:** If the template creation fails because of the Sweden Central  region, you need to recreate the template and use North Europe as the region, but for the replication region both (Sweden Central  and North Europe).
 
 14. When the customer image template is successfully created, you can start the image creation process by clicking **Start build**.
 

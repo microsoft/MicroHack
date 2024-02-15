@@ -11,7 +11,7 @@ This feature guides you through the prerequisites and process of using Azure Ima
 
 
 ## Challenge 
-- Region: West Europe 
+- Region: Sweden Central  
 - Create a managed identity that has enough privileges to create a custom image
 - Create new Azure Compute Gallery & Definition
 - Create a Custom Image Template with the followingen requirements
@@ -19,7 +19,7 @@ This feature guides you through the prerequisites and process of using Azure Ima
 | Field | Value | Notes
 |:---------|:---------|:---------|
 | Source Image | Windows 11 Multi-Session 23H2 + M365 Apps Gen 2 |
-| Replication Region | West Europe |
+| Replication Region | Sweden Central  |
 | Time zone redirection | Enabled |
 | Remove Appx packages | Microsoft.GamingApp; Microsoft.XboxApp; Microsoft.Xbox.TCUI; Microsoft.XboxGameOverlay; Microsoft.XboxGamingOverlay; Microsoft.XboxIdentityProvider; Microsoft.XboxSpeechToTextOverlay; Microsoft.ZuneMusic; Microsoft.ZuneVideo |
 | Install Visual Studio Code and Notepad++ | Via own automation script |  [Example](https://raw.githubusercontent.com/microsoft/MicroHack/main/03-Azure/01-03-Infrastructure/01_Azure_Virtual_Desktop/modules/InstallApps.ps1)

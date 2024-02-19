@@ -116,12 +116,12 @@ In challenge 1 you will understand and prepare your environment for onboarding o
 
 Create all necessary Azure resources
 * Region 1: Germany West Central (Source enviroment)
-  * Resource Group: mh-bcdr-weu-rg
-  * Recovery Services Vault: mh-rsv-weu
+  * Resource Group: mh-bcdr-gwc-rg<your assigned number>
+  * Recovery Services Vault: mh-rsv-gwc
   * Storage Account with GRS (geo-redundant storage) redundancy option: mhstweu\<Suffix\>
 * Region 2: Sweden Central (Target environment)
-  * Resource Group: mh-bcdr-neu-rg
-  * Recovery Services Vault: mh-rsv-neu
+  * Resource Group: mh-bcdr-sc-rg<your assigned number>
+  * Recovery Services Vault: mh-rsv-sc
 
 
 ### Success criteria

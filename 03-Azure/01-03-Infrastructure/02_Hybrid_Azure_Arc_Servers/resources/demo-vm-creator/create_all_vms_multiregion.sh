@@ -16,8 +16,8 @@ do
     publicIpAddressName="pip-win-mh$i"
     networkSecurityGroupName="nsg-win-mh$i"
     virtualNetworkName="vnet-win-mh$i"
-    virtualMachineComputerName=vmName
-    virtualMachineRG=resourceGroupName
+    virtualMachineComputerName=$vmName
+    virtualMachineRG=$resourceGroupName
     virtualMachineSize="Standard_D2ads_v5"
     deploymentName="MHWinDeploy$1"
     # Define parameters
@@ -53,8 +53,8 @@ do
     publicIpAddressName="pip-win-mh$i"
     networkSecurityGroupName="nsg-win-mh$i"
     virtualNetworkName="vnet-win-mh$i"
-    virtualMachineComputerName=vmName
-    virtualMachineRG=resourceGroupName
+    virtualMachineComputerName=$vmName
+    virtualMachineRG=$resourceGroupName
     virtualMachineSize="Standard_D2ads_v5"
     deploymentName="MHWinDeploy$1"
     # Define parameters
@@ -90,8 +90,8 @@ do
     publicIpAddressName="pip-lnx-mh$i"
     networkSecurityGroupName="nsg-lnx-mh$i"
     virtualNetworkName="vnet-lnx-mh$i"
-    virtualMachineComputerName=vmName
-    virtualMachineRG=resourceGroupName
+    virtualMachineComputerName=$vmName
+    virtualMachineRG=$resourceGroupName
     virtualMachineSize="Standard_D2ads_v5"
     deploymentName="MHLnxDeploy$1"
     # Define parameters
@@ -127,8 +127,8 @@ do
     publicIpAddressName="pip-lnx-mh$i"
     networkSecurityGroupName="nsg-lnx-mh$i"
     virtualNetworkName="vnet-lnx-mh$i"
-    virtualMachineComputerName=vmName
-    virtualMachineRG=resourceGroupName
+    virtualMachineComputerName=$vmName
+    virtualMachineRG=$resourceGroupName
     virtualMachineSize="Standard_D2ads_v5"
     deploymentName="MHLnxDeploy$1"
     # Define parameters

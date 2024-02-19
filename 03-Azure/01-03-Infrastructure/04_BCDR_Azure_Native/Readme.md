@@ -115,18 +115,18 @@ In challenge 1 you will understand and prepare your environment for onboarding o
 ### Actions
 
 Create all necessary Azure resources
-* Region 1: West Europe (Source enviroment)
+* Region 1: Germany West Central (Source enviroment)
   * Resource Group: mh-bcdr-weu-rg
   * Recovery Services Vault: mh-rsv-weu
   * Storage Account with GRS (geo-redundant storage) redundancy option: mhstweu\<Suffix\>
-* Region 2: North Europe (Target environment)
+* Region 2: Sweden Central (Target environment)
   * Resource Group: mh-bcdr-neu-rg
   * Recovery Services Vault: mh-rsv-neu
 
 
 ### Success criteria
 
-* You've created Resource Groups in both regions (North & West Europe)
+* You've created Resource Groups in both regions (Germany West Central & Sweden Central)
 * Recovery Services Vaults have been created in both regions
 * Geo-redundant Storage Account has been created
 
@@ -149,8 +149,8 @@ In challenge 2 you will successfully onboard your Windows and Linux Virtual Mach
 
 ### Actions
 
-* Deploy a Windows Server 2022 VM in West Europe Resource Group
-* Deploy a Ubuntu Server VM in North Europe Resource Group
+* Deploy a Windows Server 2022 VM in Germany West Central Resource Group
+* Deploy a Ubuntu Server VM in Sweden Central Resource Group
 * Enable Azure Backup for both VMs
 * Restore a VM in Azure
 
@@ -180,7 +180,7 @@ In challenge 2 you will successfully onboard your Windows and Linux Virtual Mach
 
 ### Goal
 
-In this Challenge, you will learn how to protect Azure VM with Azure Site Recovery, and enable replication to the secondary site. In addition you will successfully  run the test & production failover from Europe West to North and failback again from Europe North to West.
+In this Challenge, you will learn how to protect Azure VM with Azure Site Recovery, and enable replication to the secondary site. In addition you will successfully  run the test & production failover from Germany West Central to Sweden Central and failback again from Sweden to Germany.
 
 ### Actions
 
@@ -190,10 +190,10 @@ In this Challenge, you will learn how to protect Azure VM with Azure Site Recove
 
 ### Success Criteria
 
-* You could enable replication for the virtual machine to the North Europe region.
-* You successfully initiated a Testfailover from Azure Region Europe West to Europe North with a near zero downtime requirement.
-* You run successfully the production failover to the Europe North region.
-* Failback to the Europe West region has been successfully performed. 
+* You could enable replication for the virtual machine to the Sweden Central region.
+* You successfully initiated a Testfailover from Azure Region Germany West Central to Sweden Central with a near zero downtime requirement.
+* You run successfully the production failover to the Sweden Central region.
+* Failback to the Germany West Central region has been successfully performed. 
 
 ### Learning resources
 

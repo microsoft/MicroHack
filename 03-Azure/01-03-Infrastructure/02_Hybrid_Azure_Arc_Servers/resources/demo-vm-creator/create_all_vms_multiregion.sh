@@ -34,7 +34,7 @@ do
     --parameters @parameters-win.json \
     --parameters virtualMachineName=$vmName adminUsername=$adminUsername adminPassword=$adminPassword networkInterfaceName=$networkInterfaceName publicIpAddressName=$publicIpAddressName networkSecurityGroupName=$networkSecurityGroupName virtualNetworkName=$virtualNetworkName virtualMachineComputerName=$virtualMachineComputerName virtualMachineRG=$virtualMachineRG virtualMachineSize=$virtualMachineSize location=$resourceGroupLocation
 
-    az vm run-command create --name reconfigWin$i --vm-name $vmName -g $resourceGroupName --script @reconfig-win.ps1 --async-execution
+    az vm run-command create --name reconfigWin$i --vm-name $vmName -g $resourceGroupName --location $resourceGroupLocation --script @reconfig-win.ps1 --async-execution
 done
 
 # Loop to create 5 Windows VMs in NEU
@@ -71,7 +71,7 @@ do
     --parameters @parameters-win.json \
     --parameters virtualMachineName=$vmName adminUsername=$adminUsername adminPassword=$adminPassword networkInterfaceName=$networkInterfaceName publicIpAddressName=$publicIpAddressName networkSecurityGroupName=$networkSecurityGroupName virtualNetworkName=$virtualNetworkName virtualMachineComputerName=$virtualMachineComputerName virtualMachineRG=$virtualMachineRG virtualMachineSize=$virtualMachineSize location=$resourceGroupLocation
 
-    az vm run-command create --name reconfigWin$i --vm-name $vmName -g $resourceGroupName --script @reconfig-win.ps1 --async-execution
+    az vm run-command create --name reconfigWin$i --vm-name $vmName -g $resourceGroupName --location $resourceGroupLocation --script @reconfig-win.ps1 --async-execution
 done
 
 
@@ -108,7 +108,7 @@ do
     --parameters @parameters-lnx.json \
     --parameters virtualMachineName=$vmName adminUsername=$adminUsername adminPassword=$adminPassword networkInterfaceName=$networkInterfaceName publicIpAddressName=$publicIpAddressName networkSecurityGroupName=$networkSecurityGroupName virtualNetworkName=$virtualNetworkName virtualMachineComputerName=$virtualMachineComputerName virtualMachineRG=$virtualMachineRG virtualMachineSize=$virtualMachineSize location=$resourceGroupLocation
 
-    az vm run-command invoke -g $resourceGroupName -n $vmName --command-id RunShellScript --scripts @reconfig-ubuntu.sh --no-wait
+    az vm run-command invoke -g $resourceGroupName -n $vmName -l $resourceGroupLocation --command-id RunShellScript --scripts @reconfig-ubuntu.sh --no-wait
 done
 
 
@@ -145,5 +145,5 @@ do
     --parameters @parameters-lnx.json \
     --parameters virtualMachineName=$vmName adminUsername=$adminUsername adminPassword=$adminPassword networkInterfaceName=$networkInterfaceName publicIpAddressName=$publicIpAddressName networkSecurityGroupName=$networkSecurityGroupName virtualNetworkName=$virtualNetworkName virtualMachineComputerName=$virtualMachineComputerName virtualMachineRG=$virtualMachineRG virtualMachineSize=$virtualMachineSize location=$resourceGroupLocation
 
-    az vm run-command invoke -g $resourceGroupName -n $vmName --command-id RunShellScript --scripts @reconfig-ubuntu.sh --no-wait
+    az vm run-command invoke -g $resourceGroupName -n $vmName -l $resourceGroupLocation --command-id RunShellScript --scripts @reconfig-ubuntu.sh --no-wait
 done

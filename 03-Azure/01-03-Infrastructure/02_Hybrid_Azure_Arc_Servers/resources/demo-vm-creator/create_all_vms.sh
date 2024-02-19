@@ -34,6 +34,8 @@ do
     --template-file ./template-win.json \
     --parameters @parameters-win.json \
     --parameters virtualMachineName=$vmName adminUsername=$adminUsername adminPassword=$adminPassword networkInterfaceName=$networkInterfaceName publicIpAddressName=$publicIpAddressName networkSecurityGroupName=$networkSecurityGroupName virtualNetworkName=$virtualNetworkName virtualMachineComputerName=$virtualMachineComputerName virtualMachineRG=$virtualMachineRG virtualMachineSize=$virtualMachineSize location=$resourceGroupLocation
+
+    az vm run-command create --name reconfigWin$i --vm-name $vmName -g $resourceGroupName --script @reconfig-win.ps1 --async-execution
 done
 
 
@@ -69,5 +71,7 @@ do
     --template-file ./template-lnx.json \
     --parameters @parameters-lnx.json \
     --parameters virtualMachineName=$vmName adminUsername=$adminUsername adminPassword=$adminPassword networkInterfaceName=$networkInterfaceName publicIpAddressName=$publicIpAddressName networkSecurityGroupName=$networkSecurityGroupName virtualNetworkName=$virtualNetworkName virtualMachineComputerName=$virtualMachineComputerName virtualMachineRG=$virtualMachineRG virtualMachineSize=$virtualMachineSize location=$resourceGroupLocation
+
+    az vm run-command invoke -g $resourceGroupName -n $vmName --command-id RunShellScript --scripts @reconfig-ubuntu.sh --no-wait
 done
 

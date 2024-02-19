@@ -8,7 +8,7 @@ do
     # Define unique names for resource group and VM
     resourceGroupLocation="francecentral"
     adminUsername="MHAdmin"
-    adminPassword=""
+    adminPassword="REPLACEME"
     myResourceGroup="rg-onpremvms"
     
     resourceGroupName="rg-onpremvms"
@@ -17,8 +17,8 @@ do
     publicIpAddressName="pip-win-mh$i"
     networkSecurityGroupName="nsg-win-mh$i"
     virtualNetworkName="vnet-win-mh$i"
-    virtualMachineComputerName=vmName
-    virtualMachineRG=resourceGroupName
+    virtualMachineComputerName=$vmName
+    virtualMachineRG=$resourceGroupName
     virtualMachineSize="Standard_D2ads_v5"
     deploymentName="MHWinDeploy$1"
     # Define parameters

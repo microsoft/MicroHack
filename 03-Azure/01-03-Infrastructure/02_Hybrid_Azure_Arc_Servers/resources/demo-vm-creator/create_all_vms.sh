@@ -35,7 +35,7 @@ do
     --parameters @parameters-win.json \
     --parameters virtualMachineName=$vmName adminUsername=$adminUsername adminPassword=$adminPassword networkInterfaceName=$networkInterfaceName publicIpAddressName=$publicIpAddressName networkSecurityGroupName=$networkSecurityGroupName virtualNetworkName=$virtualNetworkName virtualMachineComputerName=$virtualMachineComputerName virtualMachineRG=$virtualMachineRG virtualMachineSize=$virtualMachineSize location=$resourceGroupLocation
 
-    az vm run-command create --name reconfigWin$i --vm-name $vmName -g $resourceGroupName --script @reconfig-win.ps1 --async-execution
+    az vm run-command create --name reconfigWin$i --vm-name $vmName -g $resourceGroupName --location $resourceGroupLocation --script @reconfig-win.ps1 --async-execution
 done
 
 
@@ -45,7 +45,7 @@ do
     # Define unique names for resource group and VM
     resourceGroupLocation="francecentral"
     adminUsername="MHAdmin"
-    adminPassword=""
+    adminPassword="REPLACEME"
     myResourceGroup="rg-onpremmachines"
     
     resourceGroupName="rg-onpremvms"
@@ -54,8 +54,8 @@ do
     publicIpAddressName="pip-lnx-mh$i"
     networkSecurityGroupName="nsg-lnx-mh$i"
     virtualNetworkName="vnet-lnx-mh$i"
-    virtualMachineComputerName=vmName
-    virtualMachineRG=resourceGroupName
+    virtualMachineComputerName=$vmName
+    virtualMachineRG=$resourceGroupName
     virtualMachineSize="Standard_D2ads_v5"
     deploymentName="MHLnxDeploy$1"
     # Define parameters

@@ -1,149 +1,73 @@
-az group create --name "rg-onpremvms" --location "swedencentral"
-
-
-# Loop to create 5 Windows VMs in GWC
-for i in {1..5}
-do
-    # Define unique names for resource group and VM
-    resourceGroupLocation="germanywestcentral"
-    adminUsername="MHAdmin"
-    adminPassword="REPLACEME"
-    myResourceGroup="rg-onpremvms"
+# adjust parameters with your own values as needed
+resourceGroupName="rg-on-prem"
+resourceGroupLocation="germanywestcentral"
+adminUsername="MHAdmin"
+adminPassword="REPLACEME"
     
-    resourceGroupName="rg-onpremvms"
-    vmName="vm-win-mh$i"
-    networkInterfaceName="vm-win-mh$i"
-    publicIpAddressName="pip-win-mh$i"
-    networkSecurityGroupName="nsg-win-mh$i"
-    virtualNetworkName="vnet-win-mh$i"
+# in a sponsored subscription there is a core limit of 10 cores per VM-series per region. Therefore, the script will distribute the VMs to different regions
+# assuming you stick to the Standard_D2ads_v5, max 5 VMs per region can be deployed. As each participant should have one windows and one linux machine,
+# we are deploying always 2 VMs (1 linux and 1 windows) per user. This means we can fit 2 participants into one region. So make your that you add enough regions
+# to the regions array to fit all participants.
+
+number_of_participants=10
+regions=("germanywestcentral" "northeurope" "swedencentral" "francecentral" "westeurope")
+
+
+# create a resource group
+az group create --name $resourceGroupName --location $resourceGroupLocation
+number_of_regions=${#regions[@]}
+echo "Number of regions: $number_of_regions"
+number_of_loops=$((number_of_participants * 2 - 1 ))
+echo "Number of loops: $number_of_loops"
+    
+for j in $(eval echo {0..$number_of_loops})
+do
+    # i++ for every second iteration, so we have win-0 and lnx-0 in the same region
+    i=$(($j / 2))
+    region_index=$((i % number_of_regions))
+    location=${regions[($i % $number_of_regions)]}
+    
+    # every loop we switch between creating a linux and a windows VM
+    if (( $j % 2 == 0 )); then
+        type="lnx"   
+    else
+        type="win"
+    fi
+
+    vmName="vm-$type-mh$i"
+    echo "Creating VM $vmName in $location"
+
+    networkInterfaceName="$vmName-nic"
+    publicIpAddressName="$vmName-pip"
+    networkSecurityGroupName="$vmName-nsg"
+    virtualNetworkName="$vmName-vnet"
     virtualMachineComputerName=$vmName
-    virtualMachineRG=$resourceGroupName
     virtualMachineSize="Standard_D2ads_v5"
-    deploymentName="MHWinDeploy$1"
-    # Define parameters
-
-
-    # Create a resource group
-    # az group create --name $resourceGroupName --location $resourceGroupLocation
-
+    deploymentName="$vmName-Deploy"
+    
     # Create a VM
     az deployment group create \
     --resource-group $resourceGroupName \
     --name $deploymentName \
-    --template-file ./template-win.json \
-    --parameters @parameters-win.json \
-    --parameters virtualMachineName=$vmName adminUsername=$adminUsername adminPassword=$adminPassword networkInterfaceName=$networkInterfaceName publicIpAddressName=$publicIpAddressName networkSecurityGroupName=$networkSecurityGroupName virtualNetworkName=$virtualNetworkName virtualMachineComputerName=$virtualMachineComputerName virtualMachineRG=$virtualMachineRG virtualMachineSize=$virtualMachineSize location=$resourceGroupLocation
+    --template-file ./template-$type.json \
+    --parameters @parameters-$type.json \
+    --parameters virtualMachineName=$vmName \
+        adminUsername=$adminUsername \
+        adminPassword=$adminPassword \
+        networkInterfaceName=$networkInterfaceName \
+        publicIpAddressName=$publicIpAddressName \
+        networkSecurityGroupName=$networkSecurityGroupName \
+        virtualNetworkName=$virtualNetworkName \
+        virtualMachineComputerName=$virtualMachineComputerName \
+        virtualMachineRG=$resourceGroupName \
+        virtualMachineSize=$virtualMachineSize \
+        location=$location
 
-    az vm run-command create --name reconfigWin$i --vm-name $vmName -g $resourceGroupName --location $resourceGroupLocation --script @reconfig-win.ps1 --async-execution
-done
+    # Run the reconfig script to disable the Azure Guest Agent
+    if [ $type == "win" ]; then
+        az vm run-command create --name reconfigWin$i --vm-name $vmName -g $resourceGroupName --location $location --script @reconfig-win.ps1 --async-execution
+    else
+        az vm run-command invoke -g $resourceGroupName -n $vmName --command-id RunShellScript --scripts @reconfig-ubuntu.sh --no-wait
+    fi
 
-# Loop to create 5 Windows VMs in NEU
-for i in {6..10}
-do
-   
-    # Define unique names for resource group and VM
-    resourceGroupLocation="northeurope"
-    adminUsername="MHAdmin"
-    adminPassword="REPLACEME"
-    myResourceGroup="rg-onpremvms"
-    
-    resourceGroupName="rg-onpremvms"
-    vmName="vm-win-mh$i"
-    networkInterfaceName="vm-win-mh$i"
-    publicIpAddressName="pip-win-mh$i"
-    networkSecurityGroupName="nsg-win-mh$i"
-    virtualNetworkName="vnet-win-mh$i"
-    virtualMachineComputerName=$vmName
-    virtualMachineRG=$resourceGroupName
-    virtualMachineSize="Standard_D2ads_v5"
-    deploymentName="MHWinDeploy$1"
-    # Define parameters
-
-
-    # Create a resource group
-    # az group create --name $resourceGroupName --location $resourceGroupLocation
-
-    # Create a VM
-    az deployment group create \
-    --resource-group $resourceGroupName \
-    --name $deploymentName \
-    --template-file ./template-win.json \
-    --parameters @parameters-win.json \
-    --parameters virtualMachineName=$vmName adminUsername=$adminUsername adminPassword=$adminPassword networkInterfaceName=$networkInterfaceName publicIpAddressName=$publicIpAddressName networkSecurityGroupName=$networkSecurityGroupName virtualNetworkName=$virtualNetworkName virtualMachineComputerName=$virtualMachineComputerName virtualMachineRG=$virtualMachineRG virtualMachineSize=$virtualMachineSize location=$resourceGroupLocation
-
-    az vm run-command create --name reconfigWin$i --vm-name $vmName -g $resourceGroupName --location $resourceGroupLocation --script @reconfig-win.ps1 --async-execution
-done
-
-
-# Loop to create 5 Linux VMs in Sweden Central
-for i in {1..5}
-do
-    # Define unique names for resource group and VM
-    resourceGroupLocation="swedencentral"
-    adminUsername="MHAdmin"
-    adminPassword="REPLACEME"
-    myResourceGroup="rg-onpremmachines"
-    
-    resourceGroupName="rg-onpremvms"
-    vmName="vm-lnx-mh$i"
-    networkInterfaceName="vm-lnx-mh$i"
-    publicIpAddressName="pip-lnx-mh$i"
-    networkSecurityGroupName="nsg-lnx-mh$i"
-    virtualNetworkName="vnet-lnx-mh$i"
-    virtualMachineComputerName=$vmName
-    virtualMachineRG=$resourceGroupName
-    virtualMachineSize="Standard_D2ads_v5"
-    deploymentName="MHLnxDeploy$1"
-    # Define parameters
-
-
-    # Create a resource group
-    # az group create --name $resourceGroupName --location $resourceGroupLocation
-
-    # Create a VM
-    az deployment group create \
-    --resource-group $resourceGroupName \
-    --name $deploymentName \
-    --template-file ./template-lnx.json \
-    --parameters @parameters-lnx.json \
-    --parameters virtualMachineName=$vmName adminUsername=$adminUsername adminPassword=$adminPassword networkInterfaceName=$networkInterfaceName publicIpAddressName=$publicIpAddressName networkSecurityGroupName=$networkSecurityGroupName virtualNetworkName=$virtualNetworkName virtualMachineComputerName=$virtualMachineComputerName virtualMachineRG=$virtualMachineRG virtualMachineSize=$virtualMachineSize location=$resourceGroupLocation
-
-    az vm run-command invoke -g $resourceGroupName -n $vmName --command-id RunShellScript --scripts @reconfig-ubuntu.sh --no-wait
-done
-
-
-# Loop to create 5 Linux VMs in France Central
-for i in {6..10}
-do
-    # Define unique names for resource group and VM
-    resourceGroupLocation="francecentral"
-    adminUsername="MHAdmin"
-    adminPassword="REPLACEME"
-    myResourceGroup="rg-onpremmachines"
-    
-    resourceGroupName="rg-onpremvms"
-    vmName="vm-lnx-mh$i"
-    networkInterfaceName="vm-lnx-mh$i"
-    publicIpAddressName="pip-lnx-mh$i"
-    networkSecurityGroupName="nsg-lnx-mh$i"
-    virtualNetworkName="vnet-lnx-mh$i"
-    virtualMachineComputerName=$vmName
-    virtualMachineRG=$resourceGroupName
-    virtualMachineSize="Standard_D2ads_v5"
-    deploymentName="MHLnxDeploy$1"
-    # Define parameters
-
-
-    # Create a resource group
-    # az group create --name $resourceGroupName --location $resourceGroupLocation
-
-    # Create a VM
-    az deployment group create \
-    --resource-group $resourceGroupName \
-    --name $deploymentName \
-    --template-file ./template-lnx.json \
-    --parameters @parameters-lnx.json \
-    --parameters virtualMachineName=$vmName adminUsername=$adminUsername adminPassword=$adminPassword networkInterfaceName=$networkInterfaceName publicIpAddressName=$publicIpAddressName networkSecurityGroupName=$networkSecurityGroupName virtualNetworkName=$virtualNetworkName virtualMachineComputerName=$virtualMachineComputerName virtualMachineRG=$virtualMachineRG virtualMachineSize=$virtualMachineSize location=$resourceGroupLocation
-
-    az vm run-command invoke -g $resourceGroupName -n $vmName --command-id RunShellScript --scripts @reconfig-ubuntu.sh --no-wait
 done

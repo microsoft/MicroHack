@@ -33,7 +33,9 @@
 ![](./Images/04-HCX-Manager-Appliance/HCX_OVA9.png)
 ![](./Images/04-HCX-Manager-Appliance/HCX_OVA10.png)
 
-Make sure to select the correct network for the HCX Manager Appliance
+Make sure to select the correct network for the HCX Manager Appliance:
+
+OnPrem-management-1-1
  
 ![](./Images/04-HCX-Manager-Appliance/HCX_OVA11.png)
 
@@ -42,11 +44,13 @@ Set the password for the HCX Manager Appliance
 ![](./Images/04-HCX-Manager-Appliance/HCX_OVA12.png)
 
 Make sure to set the correct IP for the HCX Manager Appliance: 10.1.1.9
+
 Prefix Length: 27
 
 Set the correct DNS and Gateway for the HCX Manager Appliance: 
 
 Gateway: 1.1.1.3
+
 DNS: 1.1.1.1
 
 ![](./Images/04-HCX-Manager-Appliance/HCX_OVA13.png)
@@ -106,7 +110,9 @@ VMware HCX Manager must have open internet access or a proxy configured.
 
 ![](./Images/04-HCX-Manager-Appliance/HCX_OVA27.png)
 
-9. In Configure SSO/PSC, provide the FQDN or IP address of your Platform Services Controller (PSC), and then select Continue. In this case the the PSC is the same as the On-Prem vCenter server. The URL is : https://10.1.1.2
+9. In Configure SSO/PSC, provide the FQDN or IP address of your Platform Services Controller (PSC), and then select Continue. In this case the the PSC is the same as the On-Prem vCenter server. The URL is: 
+
+https://10.1.1.2
 
 ![](./Images/04-HCX-Manager-Appliance/HCX_OVA28.png)
 

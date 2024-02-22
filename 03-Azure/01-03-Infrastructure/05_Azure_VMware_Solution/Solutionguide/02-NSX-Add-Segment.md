@@ -24,7 +24,8 @@
 ### Note
 The IP address needs to be on a non-overlapping RFC1918 address block, which ensures connection to the VMs on the new segment.
 
-7. Once the segment is created  refer to the “Credentials&IP” document to attach the respective virtual machine listed there to the new segment that has been created and verify that the virtual machine is getting an IP from the DHCP
+7. Create a VM from the ISO file in the Content Library (SERVER_EVAL_x64FRE_en-us.iso) and attach it to the segment you just created.
+8. Power on the VM and verify that it has received an IP address from the DHCP server.
 
 ### Hint
 

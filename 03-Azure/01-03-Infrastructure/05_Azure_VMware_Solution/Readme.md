@@ -1,4 +1,4 @@
-![image](Images/MicroHack_Logo_1.png)
+![image](Images/1920x300_EventBanner_MicroHack_AVS_wText.jpg)
 
 # **Azure VMware Solution - Micro Hack**
 
@@ -26,18 +26,20 @@ After completing this MicroHack you will:
 - Challenge 1: **[NSX DHCP](Challenges/01-NSX-DHCP.md)**
 - Challenge 2: **[NSX Add Segment](Challenges/02-NSX-Add-Segment.md)**
 - Challenge 3: **[NSX Add DNS Forwarder](Challenges/03-NSX-Add-DNS-Forwarder.md)**
-- Challenge 4: **[NSX Firewall](Challenges/04-NSX-Firewall.md)**
-- Challenge 5: **[HCX Manager Appliance](Challenges/05-HCX-Manager-Appliance.md)**
-- Challenge 6: **[HCX Site Pair](Challenges/06-HCX-Site-Pair.md)**
-- Challenge 7: **[HCX Network Profile](Challenges/07-HCX-Network-Profile.md)**
-- Challenge 8: **[HCX Compute Profile](Challenges/08-HCX-Compute-Profile.md)**
-- Challenge 9: **[HCX Service Mesh](Challenges/09-HCX-Service-Mesh.md)**
-- Challenge 10: **[HCX Network Extension](Challenges/10-HCX-Network-Extension.md)**
-- Challenge 11: **[AVS Migrate VM](Challenges/11-AVS-Migrate-VM.md)**
+- Challenge 4: **[HCX Manager Appliance](Challenges/04-HCX-Manager-Appliance.md)**
+- Challenge 5: **[HCX Site Pair](Challenges/05-HCX-Site-Pair.md)**
+- Challenge 6: **[HCX Network Profile](Challenges/06-HCX-Network-Profile.md)**
+- Challenge 7: **[HCX Compute Profile](Challenges/07-HCX-Compute-Profile.md)**
+- Challenge 8: **[HCX Service Mesh](Challenges/08-HCX-Service-Mesh.md)**
+- Challenge 9: **[HCX Network Extension](Challenges/09-HCX-Network-Extension.md)**
+- Challenge 10: **[AVS Migrate VM](Challenges/10-AVS-Migrate-VM.md)**
+- Challenge 11: **[NSX Firewall](Challenges/11-NSX-Firewall.md)**
+
+### Optional Challenges
 - Challenge 12: **[AVS ANF Datastores](Challenges/12-AVS-ANF-Datastores.md)**
 - Challenge 13: **[AVS Storage Policy](Challenges/13-AVS-Storage-Policy.md)**
 - Challenge 14: **[AVS Placement Policy](Challenges/14-AVS-Placement-Policy.md)**
-- Challenge 15: **[AVS Automation ESLZ](Challenges/15-AVS-Automation-ESLZ.md)**
+- Challenge 15: **[AVS Managed SNAT](Challenges/15-AVS-Managed-SNAT.md)**
 
 ## Prerequisites
 
@@ -58,25 +60,31 @@ The automated script to setup the lab environment can be found under the followi
 
 ## Solution Guide
 
+- General Overview: **[Overview](Solutionguide/00-Overview.md)**
 - Challenge 1: **[NSX DHCP](Solutionguide/01-NSX-DHCP.md)**
 - Challenge 2: **[NSX Add Segment](Solutionguide/02-NSX-Add-Segment.md)**
 - Challenge 3: **[NSX Add DNS Forwarder](Solutionguide/03-NSX-Add-DNS-Forwarder.md)**
-- Challenge 4: **[NSX Firewall](Solutionguide/04-NSX-Firewall.md)**
-- Challenge 5: **[HCX Manager Appliance](Solutionguide/05-HCX-Manager-Appliance.md)**
-- Challenge 6: **[HCX Site Pair](Solutionguide/06-HCX-Site-Pair.md)**
-- Challenge 7: **[HCX Network Profile](Solutionguide/07-HCX-Network-Profile.md)**
-- Challenge 8: **[HCX Compute Profile](Solutionguide/08-HCX-Compute-Profile.md)**
-- Challenge 9: **[HCX Service Mesh](Solutionguide/09-HCX-Service-Mesh.md)**
-- Challenge 10: **[HCX Network Extension](Solutionguide/10-HCX-Network-Extension.md)**
-- Challenge 11: **[AVS Migrate VM](Solutionguide/11-AVS-Migrate-VM.md)**
+- Challenge 4: **[HCX Manager Appliance](Solutionguide/04-HCX-Manager-Appliance.md)**
+- Challenge 5: **[HCX Site Pair](Solutionguide/05-HCX-Site-Pair.md)**
+- Challenge 6: **[HCX Network Profile](Solutionguide/06-HCX-Network-Profile.md)**
+- Challenge 7: **[HCX Compute Profile](Solutionguide/07-HCX-Compute-Profile.md)**
+- Challenge 8: **[HCX Service Mesh](Solutionguide/08-HCX-Service-Mesh.md)**
+- Challenge 9: **[HCX Network Extension](Solutionguide/09-HCX-Network-Extension.md)**
+- Challenge 10: **[AVS Migrate VM](Solutionguide/10-AVS-Migrate-VM.md)**
+- Challenge 11: **[NSX Firewall](Solutionguide/11-NSX-Firewall.md)**
+
+### Optional Challenges
 - Challenge 12: **[AVS ANF Datastores](Solutionguide/12-AVS-ANF-Datastores.md)**
 - Challenge 13: **[AVS Storage Policy](Solutionguide/13-AVS-Storage-Policy.md)**
 - Challenge 14: **[AVS Placement Policy](Solutionguide/14-AVS-Placement-Policy.md)**
-- Challenge 15: **[AVS Automation ESLZ](Solutionguide/15-AVS-Automation-ESLZ.md)**
+- Challenge 15: **[AVS Managed SNAT](Solutionguide/15-AVS-Managed-SNAT.md)**
 
 ## Contributors
 - [Frank Oltmanns-Mack]()
 - [Bernd Loehlein]()
+- [Andreas Schwarz]()
+- [Sven Forstreuter]()
+- [Sarah Tabet]()
 
 
 Thank you for participating in this MicroHack!

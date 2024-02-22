@@ -1,6 +1,6 @@
 # Exercise 3: Lets explore NSX - So we need to add a DNS Forwarder
 
-[Previous Challenge Solution](./02-NSX-Add-Segment.md) - **[Home](../Readme.md)** - [Next Challenge Solution](./04-NSX-Firewall.md)
+[Previous Challenge Solution](./02-NSX-Add-Segment.md) - **[Home](../Readme.md)** - [Next Challenge Solution](./04-HCX-Manager-Appliance.md)
 
 ## Configure a DNS forwarder
 
@@ -16,23 +16,16 @@
 
 ![](./Images/03-NSX-Add-DNS-Forwarder/DNS3.png)
 
-4.  Now create a content library within the On Prem vCenter Server by providing the relavant details on the content library
-
 ![](./Images/03-NSX-Add-DNS-Forwarder/DNS4.png)
 
-5.  For the new content library, select local content library and enable publishing
+4.  For this Microhack there was also a nested VMware cluster deployed which is running inside the AVS cluster. This nested cluster is reachable from the Jumbox-VM under https://10.1.1.2/ and the credentials are availble in the provided Azure Key Vault.
 
-![](./Images/03-NSX-Add-DNS-Forwarder/DNS5.png)
+5. In the on-premise VMware clusters there are two VMs running. One is a Windows 2022 Domain Controller and the other is a domain-joined Windows 2022 server. 
 
-6.  In order to obtain the link of the content library, right click the newly created content library and copy link
+6. Find the hostname of the domain-joined server.
 
-![](./Images/03-NSX-Add-DNS-Forwarder/DNS6.png)
+7. Verify from the VM created in last challenge that it can resolve the hostname of the domain-joined on-prem server.
 
-5.  Now proceed to the AVS side and create a new content library and select subscribed content library and paste the content library link from On-Prem side.  
-
-![](./Images/03-NSX-Add-DNS-Forwarder/DNS7.png)
-
-It important to note if AVS didnt have the ON-Prem FQDN configured within the DNS zones of AVS, you wouldnt add the content library from On-Prem to AVS.
 
 ### Note : 
 

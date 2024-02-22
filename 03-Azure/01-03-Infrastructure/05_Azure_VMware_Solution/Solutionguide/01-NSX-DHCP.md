@@ -22,3 +22,5 @@ Here you will be using NSX-T to host your DHCP server and you will create a DHCP
 This DHCP server automatically gets connected to the default Tier 1 Gateway
 
 3.	You can now log on to NSX Manager in AVS and verify that the DHCP server is attached to the Tier1 Gateway
+
+![](./Images/01-NSX-DHCP/NSX_image4.png)

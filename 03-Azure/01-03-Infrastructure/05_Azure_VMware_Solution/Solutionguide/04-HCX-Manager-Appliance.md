@@ -49,7 +49,7 @@ Prefix Length: 27
 
 Set the correct DNS and Gateway for the HCX Manager Appliance: 
 
-Gateway: 1.1.1.3
+Gateway: 10.1.1.1
 
 DNS: 1.1.1.1
 

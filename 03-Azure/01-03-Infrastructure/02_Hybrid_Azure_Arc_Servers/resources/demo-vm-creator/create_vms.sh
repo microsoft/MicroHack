@@ -11,7 +11,7 @@ adminPassword="REPLACEME"
 
 number_of_participants=10
 regions=("germanywestcentral" "northeurope" "swedencentral" "francecentral" "westeurope")
-
+virtualMachineSize="Standard_D2ads_v5"
 
 # create a resource group
 az group create --name $resourceGroupName --location $resourceGroupLocation
@@ -42,7 +42,6 @@ do
     networkSecurityGroupName="$vmName-nsg"
     virtualNetworkName="$vmName-vnet"
     virtualMachineComputerName=$vmName
-    virtualMachineSize="Standard_D2ads_v5"
     deploymentName="$vmName-Deploy"
     
     # Create a VM

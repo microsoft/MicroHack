@@ -164,7 +164,20 @@ Check whether the change tracking data collection rule as been created successfu
 
 ### Task 6: Enable VM Insights
 
-1. Navigate to your Virtual Machines, select VM Insights in the left navigation pane and enable Insights.
+1. Navigate to your Virtual Machines, in section *Monitoring* select *Insights* in the left navigation pane.
+
+2. In the *Insights* tab, click the *Enable* button.
+
+3. In the *Monitoring Configuration* form, for *Data collection rule* click the *Create New* link
+
+4. Fill in the *Create new rule* form
+- Data collection rule name: Provide a name (MSVMI for VMInsights will be appended automatically) - i.e. *DCR-MicroHack*
+- Enable process and dependencies (Map): Check the box
+- Subscription: Keep the default
+- Log Analytics workspace: Choose the workspace you created in task 1
+- Click *Create* button. Then click *Configure* button.
+
+5. Wait for the deployment of the data collection rule to finish. This might take several minutes.
 
 
 ### Coffee Break of 10 minutes to let the data flow between your Virtual Machines and Azure

@@ -1,0 +1,74 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "dataCollectionRules_name": {
+            "defaultValue": "DCR-ChangeTracking",
+            "type": "String"
+        },
+        "location": {
+            "defaultValue": "westeurope",
+            "type": "String"
+        },
+        "logAnalytics_workspaces_ResourceId": {
+            "defaultValue": "",
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Insights/dataCollectionRules",
+            "apiVersion": "2022-06-01",
+            "name": "[parameters('dataCollectionRules_name')]",
+            "location": "[parameters('location')]",
+            "properties": {
+                "description": "Data collection rule for ChangeTracking.",
+                "dataSources": {
+                    "extensions": [
+                        {
+                            "streams": [
+                                "Microsoft-ConfigurationChange",
+                                "Microsoft-ConfigurationChangeV2",
+                                "Microsoft-ConfigurationData"
+                            ],
+                            "extensionName": "ChangeTracking-Windows",
+                            "extensionSettings": {},
+                            "name": "CTDataSource-Windows"
+                        },
+                        {
+                            "streams": [
+                                "Microsoft-ConfigurationChange",
+                                "Microsoft-ConfigurationChangeV2",
+                                "Microsoft-ConfigurationData"
+                            ],
+                            "extensionName": "ChangeTracking-Linux",
+                            "extensionSettings": {},
+                            "name": "CTDataSource-Linux"
+                        }
+                    ]
+                },
+                "destinations": {
+                    "logAnalytics": [
+                        {
+                            "workspaceResourceId": "[parameters('logAnalytics_workspaces_ResourceId')]",
+                            "name": "Microsoft-CT-Dest"
+                        }
+                    ]
+                },
+                "dataFlows": [
+                    {
+                        "streams": [
+                            "Microsoft-ConfigurationChange",
+                            "Microsoft-ConfigurationChangeV2",
+                            "Microsoft-ConfigurationData"
+                        ],
+                        "destinations": [
+                            "Microsoft-CT-Dest"
+                        ]
+                    }
+                ]
+            }
+        }
+    ]
+}

@@ -52,4 +52,4 @@ The created network profiles will be avaiable to be used by Interconnect and Net
 
 ### Solution - Spoilerwarning
 
-[Solution Steps](../Solutionguide/07-HCX-Network-Profiles.md)
+[Solution Steps](../Solutionguide/06-HCX-Network-Profiles.md)

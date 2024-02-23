@@ -117,7 +117,7 @@ Please ensure that you successfully passed [challenge 1](../../Readme.md#challen
 
 ### Task 5: Enable Change Tracking and Inventory
 
-[![Deploy To Azure](https://learn.microsoft.com/en-us/azure/templates/media/deploy-to-azure.svg)](https://portal.azure.com/#view/Microsoft_Azure_CreateUIDef/CustomDeploymentBlade/uri/)
+[![Deploy To Azure](https://learn.microsoft.com/en-us/azure/templates/media/deploy-to-azure.svg)](https://portal.azure.com/#view/Microsoft_Azure_CreateUIDef/CustomDeploymentBlade/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fskiddder%2FMicroHack%2Fmain%2F03-Azure%2F01-03-Infrastructure%2F02_Hybrid_Azure_Arc_Servers%2Fresources%2FChangeTracking%2Ftemplate-DCR-ChangeTracking.json)
 
 1. Navigate to *Policy* using the top search bar and select *Assignments* in the left navigation pane.
 

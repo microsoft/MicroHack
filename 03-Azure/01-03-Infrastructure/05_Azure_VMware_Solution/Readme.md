@@ -66,8 +66,8 @@ The automated script to setup the lab environment can be found under the followi
 - Challenge 3: **[NSX Add DNS Forwarder](Solutionguide/03-NSX-Add-DNS-Forwarder.md)**
 - Challenge 4: **[HCX Manager Appliance](Solutionguide/04-HCX-Manager-Appliance.md)**
 - Challenge 5: **[HCX Site Pair](Solutionguide/05-HCX-Site-Pair.md)**
-- Challenge 6: **[HCX Network Profile](Solutionguide/06-HCX-Network-Profile.md)**
-- Challenge 7: **[HCX Compute Profile](Solutionguide/07-HCX-Compute-Profile.md)**
+- Challenge 6: **[HCX Network Profile](Solutionguide/06-HCX-Network-Profiles.md)**
+- Challenge 7: **[HCX Compute Profile](Solutionguide/07-HCX-Compute-Profiles.md)**
 - Challenge 8: **[HCX Service Mesh](Solutionguide/08-HCX-Service-Mesh.md)**
 - Challenge 9: **[HCX Network Extension](Solutionguide/09-HCX-Network-Extension.md)**
 - Challenge 10: **[AVS Migrate VM](Solutionguide/10-AVS-Migrate-VM.md)**

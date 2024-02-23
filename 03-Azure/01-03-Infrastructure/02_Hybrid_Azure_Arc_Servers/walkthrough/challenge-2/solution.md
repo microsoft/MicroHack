@@ -122,10 +122,14 @@ In order to use the built-in policy initiative to enable *Change Tracking and In
 [![Deploy To Azure](https://learn.microsoft.com/en-us/azure/templates/media/deploy-to-azure.svg)](https://portal.azure.com/#view/Microsoft_Azure_CreateUIDef/CustomDeploymentBlade/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fskiddder%2FMicroHack%2Fmain%2F03-Azure%2F01-03-Infrastructure%2F02_Hybrid_Azure_Arc_Servers%2Fresources%2FChangeTracking%2Ftemplate-DCR-ChangeTracking.json)
 
 In the custom ARM template, provide the following parameters:
-| Resource group        |  mh-arc-servers-rg        |
-| Region                | i.e. West Europe          |
-| Data Collection Rule  | leave the Default         |
-| 
+| *Parameter*                           | *Value*                   |
+|---------------------------------------|---------------------------|
+| Resource group                        |  mh-arc-servers-rg        |
+| Region                                | i.e. West Europe          |
+| Data Collection Rule                  | leave the Default         |
+| Log Analytics_workspace_ResourceId    | <paste the full resource id of the Log Analytics workspace you created in Task 1><br> i.e. /subscriptions/<*your-subscription-guid*>/resourcegroups/mh-arc-servers-rg/providers/microsoft.operationalinsights/workspaces/mh-arc-la|
+
+Check whether the change tracking data collection rule as been created successfully and note the resource id (you will need it during the policy initiative assignemtn).
 
 1. Navigate to *Policy* using the top search bar and select *Assignments* in the left navigation pane.
 
@@ -135,17 +139,24 @@ In the custom ARM template, provide the following parameters:
 
 - Scope: Please select the resource group called *mh-arc-servers-rg*
 - Basics: Please search for *[Preview]: Enable ChangeTracking and Inventory for Arc-enabled virtual machines* and select the initiative.
-- Parameters: As *Data Collection Rule Resource Id* provide the resourceId of the built-in DCR */subscriptions/2b39ba29-b5d3-4d90-8848-c9c79ad321a9/resourceGroups/rg-onpremvms/providers/Microsoft.Insights/dataCollectionRules/ct-dcr643694777*
+- Parameters: As *Data Collection Rule Resource Id* provide the resourceId of the data collection rule you just created in the beginning of this task - i.e. */subscriptions/<*your-subscription-guid*>/resourceGroups/mh-arc-servers-rg/providers/Microsoft.Insights/dataCollectionRules/DCR-ChangeTracking*.
 - Remediation: Please select the System assigned identity location according to your resources, e.g. West Europe. 
 
 4. Please wait a few seconds until the creation of the assignment is complete. You should see that the policy is assigned.
 
-5. Important: Both machines were already onboarded earlier. As a result, you need to create a remediation task to apply the policy to your Azure Arc Servers. Please select the Policy Assignment and select *Create Remediation Task*.
+5. Important: Both machines were already onboarded earlier. As a result, you need to create a remediation tasks to apply all policies within the initiative to your Azure Arc Servers. Please select the Initiative Assignment and select *Create Remediation Task* for each policy.
+
+![image](./img/5.1_remediation_tasks.png)
 
 6. Accept the default values, check *Re-evaluate resource compliance before remediating* and repeat the remediation for the following policies:
- - [Preview]: Configure Windows Arc-enabled machines to install AMA for ChangeTracking and Inventory
+ - DeployAMALinuxHybridVMWithUAIChangeTrackingAndInventory
+ - DCRALinuxHybridVMChangeTrackingAndInventory
+ - DeployChangeTrackingExtensionLinuxHybridVM
+ - DeployChangeTrackingExtensionWindowsHybridVM
+ - DeployAMAWindowsHybridVMWithUAIChangeTrackingAndInventory
+ - DCAWindowsHybridVMChangeTrackingAndInventory
 
-8. Verify that all remediation were successful.
+8. Verify that all remediation were successful. This might take multiple minutes (or even hours).
 
 9. Navigate to Azure Arc, select Servers, followed by selecting your Windows Server. Select Inventory. Please be aware that generating the initial inventory takes multiple Minutes/hours. After a while the white page should show values.
 

@@ -28,7 +28,7 @@ After completing this MicroHack you will:
 - Challenge 3: **[NSX Add DNS Forwarder](Challenges/03-NSX-Add-DNS-Forwarder.md)**
 - Challenge 4: **[HCX Manager Appliance](Challenges/04-HCX-Manager-Appliance.md)**
 - Challenge 5: **[HCX Site Pair](Challenges/05-HCX-Site-Pair.md)**
-- Challenge 6: **[HCX Network Profile](Challenges/06-HCX-Network-Profile.md)**
+- Challenge 6: **[HCX Network Profile](Challenges/06-HCX-Network-Profiles.md)**
 - Challenge 7: **[HCX Compute Profile](Challenges/07-HCX-Compute-Profile.md)**
 - Challenge 8: **[HCX Service Mesh](Challenges/08-HCX-Service-Mesh.md)**
 - Challenge 9: **[HCX Network Extension](Challenges/09-HCX-Network-Extension.md)**

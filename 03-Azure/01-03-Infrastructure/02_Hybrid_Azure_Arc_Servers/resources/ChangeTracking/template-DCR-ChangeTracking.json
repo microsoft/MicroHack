@@ -6,10 +6,6 @@
             "defaultValue": "DCR-ChangeTracking",
             "type": "String"
         },
-        "location": {
-            "defaultValue": "westeurope",
-            "type": "String"
-        },
         "logAnalytics_workspaces_ResourceId": {
             "defaultValue": "",
             "type": "String"
@@ -21,7 +17,7 @@
             "type": "Microsoft.Insights/dataCollectionRules",
             "apiVersion": "2022-06-01",
             "name": "[parameters('dataCollectionRules_name')]",
-            "location": "[parameters('location')]",
+            "location": "[resourceGroup().location]",
             "properties": {
                 "description": "Data collection rule for ChangeTracking.",
                 "dataSources": {

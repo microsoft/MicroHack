@@ -117,7 +117,15 @@ Please ensure that you successfully passed [challenge 1](../../Readme.md#challen
 
 ### Task 5: Enable Change Tracking and Inventory
 
+In order to use the built-in policy initiative to enable *Change Tracking and Inventory* feature, we first need to create a special data collection rule. At the time of authoring this solution walkthrough, this is not possible using the Azure portal. But you can use the ARM template here: /03-Azure/01-03-Infrastructure/02_Hybrid_Azure_Arc_Servers/resources/ChangeTracking/template-DCR-ChangeTracking.json. Or you can click the Deploy To Azure button to open that custom ARM template in the Azure portal.
+
 [![Deploy To Azure](https://learn.microsoft.com/en-us/azure/templates/media/deploy-to-azure.svg)](https://portal.azure.com/#view/Microsoft_Azure_CreateUIDef/CustomDeploymentBlade/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fskiddder%2FMicroHack%2Fmain%2F03-Azure%2F01-03-Infrastructure%2F02_Hybrid_Azure_Arc_Servers%2Fresources%2FChangeTracking%2Ftemplate-DCR-ChangeTracking.json)
+
+In the custom ARM template, provide the following parameters:
+| Resource group        |  mh-arc-servers-rg        |
+| Region                | i.e. West Europe          |
+| Data Collection Rule  | leave the Default         |
+| 
 
 1. Navigate to *Policy* using the top search bar and select *Assignments* in the left navigation pane.
 

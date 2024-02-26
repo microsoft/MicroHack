@@ -8,9 +8,9 @@ This hack is designed to get you hands-on experience with Azure VMWare Solution 
 
 AVS is a first-party Azure service that enables you to run your VMware workloads natively on Azure. AVS is a fully managed service from Microsoft that includes the VMware software-defined data center (SDDC) stack. This includes vSphere, vCenter, vSAN, NSX-T, and HCX. AVS is delivered on dedicated bare-metal Azure infrastructure that is not shared with other Azure services. AVS is a first-party Azure service that is owned, operated, and supported by Microsoft. 
 
-This MicroHack scenario walks through the use of AVs with a focus on the best practices and the design principles. It covers the basic hybrid backup and enables you to migrate workloads from on-premises to Azure.
+This MicroHack scenario walks through the use of AVS with a focus on the best practices and the design principles. It covers the basic hybrid backup and enables you to migrate workloads from on-premises to Azure.
 
-![image](Path to the high level architecture )
+![image](Solutionguide/Images/00-Overview/Architecture.png)
 
 ## Learning Objectives
 

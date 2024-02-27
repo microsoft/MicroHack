@@ -1,4 +1,4 @@
-# Exercise 8: What Network will be used by Interconnect Appliances? - Configure Network Profile
+# Exercise 7: What Network will be used by Interconnect Appliances? - Configure Network Profile
 
 [Previous Challenge Solution](./06-HCX-Network-Profiles.md) - **[Home](../Readme.md)** - [Next Challenge Solution](./08-HCX-Service-Mesh.md)
 

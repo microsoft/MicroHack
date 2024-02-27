@@ -1,4 +1,4 @@
-# Exercise 9: Deployment of Interconnect Appliances? Create a Service Mesh
+# Exercise 8: Deployment of Interconnect Appliances? Create a Service Mesh
 
 [Previous Challenge Solution](./07-HCX-Compute-Profiles.md) - **[Home](../Readme.md)** - [Next Challenge Solution](./09-HCX-Network-Extension.md)
 

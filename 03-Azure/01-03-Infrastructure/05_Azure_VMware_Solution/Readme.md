@@ -51,12 +51,15 @@ In summary:
 
 To setup the lab needed for this Microhack you will need to have the following in place:
 
-1. Azure Subscription 
+- Azure Subscription 
 
 Permissions for the deployment: 
-2. Contributor on the subscription
+- Contributor on the subscription
 
 The automated script to setup the lab environment can be found under the following link: [AVS Lab Setup](./Lab/Readme.md).
+
+
+**Note: To best benefit from this Microhack, prior VMware knowledge and basic AVS knowledge are preferred.**
 
 ## Solution Guide
 

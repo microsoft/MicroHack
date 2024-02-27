@@ -1,4 +1,4 @@
-# Exercise 6: So how do we connect On Prem to AVS? - Configure Site Pairing
+# Exercise 5: So how do we connect On Prem to AVS? - Configure Site Pairing
 
 [Previous Challenge Solution](./04-HCX-Manager-Appliance.md) - **[Home](../Readme.md)** - [Next Challenge Solution](./06-HCX-Network-Profiles.md)
 

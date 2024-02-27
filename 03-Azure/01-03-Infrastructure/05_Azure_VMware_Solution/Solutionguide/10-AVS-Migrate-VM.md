@@ -1,4 +1,4 @@
-# Exercise 11: YAY - Its Migration Time - Finally!!!
+# Exercise 10: YAY - Its Migration Time - Finally!!!
 
 [Previous Challenge Solution](./09-HCX-Network-Extension.md) - **[Home](../Readme.md)** - [Next Challenge Solution](./11-NSX-Firewall.md)
 

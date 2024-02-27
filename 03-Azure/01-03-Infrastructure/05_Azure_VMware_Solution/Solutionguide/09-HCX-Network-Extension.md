@@ -1,4 +1,4 @@
-# Exercise 10: Want to retain your VM's IP address? - Lets Extend the On-Prem Network
+# Exercise 9: Want to retain your VM's IP address? - Lets Extend the On-Prem Network
 
 [Previous Challenge Solution](./08-HCX-Service-Mesh.md) - **[Home](../Readme.md)** - [Next Challenge Solution](./10-AVS-Migrate-VM.md)
 

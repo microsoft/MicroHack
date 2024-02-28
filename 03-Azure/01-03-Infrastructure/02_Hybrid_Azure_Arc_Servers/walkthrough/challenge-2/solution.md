@@ -117,9 +117,7 @@ Please ensure that you successfully passed [challenge 1](../../Readme.md#challen
 
 ### Task 5: Enable Change Tracking and Inventory
 
-In order to use the built-in policy initiative to enable *Change Tracking and Inventory* feature, we first need to create a special data collection rule. At the time of authoring this solution walkthrough, this is not possible using the Azure portal. But you can use the ARM template here: /03-Azure/01-03-Infrastructure/02_Hybrid_Azure_Arc_Servers/resources/ChangeTracking/template-DCR-ChangeTracking.json. Or you can click the Deploy To Azure button to open that custom ARM template in the Azure portal.
-
-[![Deploy To Azure](https://learn.microsoft.com/en-us/azure/templates/media/deploy-to-azure.svg)](https://portal.azure.com/#view/Microsoft_Azure_CreateUIDef/CustomDeploymentBlade/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fskiddder%2FMicroHack%2Fmain%2F03-Azure%2F01-03-Infrastructure%2F02_Hybrid_Azure_Arc_Servers%2Fresources%2FChangeTracking%2Ftemplate-DCR-ChangeTracking.json)
+In order to use the built-in policy initiative to enable *Change Tracking and Inventory* feature, we first need to create a special data collection rule. At the time of authoring this solution walkthrough, this is not possible using the Azure portal. But you can use the ARM template here: [/03-Azure/01-03-Infrastructure/02_Hybrid_Azure_Arc_Servers/resources/ChangeTracking/template-DCR-ChangeTracking.json](../../resources/ChangeTracking/template-DCR-ChangeTracking.json) to create this data collection rule.
 
 In the custom ARM template, provide the following parameters:
 | *Parameter*                           | *Value*                   |
@@ -129,7 +127,13 @@ In the custom ARM template, provide the following parameters:
 | Data Collection Rule                  | leave the Default         |
 | Log Analytics_workspace_ResourceId    | <paste the full resource id of the Log Analytics workspace you created in Task 1><br> i.e. /subscriptions/<*your-subscription-guid*>/resourcegroups/mh-arc-servers-rg/providers/microsoft.operationalinsights/workspaces/mh-arc-la|
 
-Check whether the change tracking data collection rule as been created successfully and note the resource id (you will need it during the policy initiative assignemtn).
+In your command shell, navigate to the folder where the template is located and execute the following command:
+
+```
+ az deployment group create -g 'mh-arc-servers-rg' --template-file template-DCR-ChangeTracking.json --parameters logAnalytics_workspaces_ResourceId='/subscriptions/<your-subscription-guid>/resourcegroups/<your-resource-group-name>/providers/microsoft.operationalinsights/workspaces/<your-logAnalyticsWorkspace-name>'
+```
+
+Check whether the change tracking data collection rule as been created successfully and note the resource id (you will need it during the policy initiative assignment). Then create the policy assignment following these steps:
 
 1. Navigate to *Policy* using the top search bar and select *Assignments* in the left navigation pane.
 

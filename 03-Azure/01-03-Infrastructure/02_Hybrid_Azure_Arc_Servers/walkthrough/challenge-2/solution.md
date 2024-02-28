@@ -61,21 +61,7 @@ Please ensure that you successfully passed [challenge 1](../../Readme.md#challen
 
 ![image](./img/3.4_Assign_Policy_Monitor_AMA.png)
 
-5. Important: Both machines were already onboarded earlier. As a result, you need to create a remediation task for each policy in the initiative to apply the policy to your existing Azure Arc Servers. Please select the Policy Assignment and select *Create Remediation Task*.
-
-![image](./img/3.5_Assign_Policy_Monitor_AMA_remidiate.png)
-
-6. Accept the default values, check *Re-evaluate resource compliance before remediating* and repeat the remediation for the following policies:
- - AzureMonitorAgent_Windows_HybridVM_Deploy
- - AzureMonitorAgent_Linux_HybridVM_Deploy
- - DependencyAgentExtension_AMA_Windows_HybridVM_Deploy
- - DependencyAgentExtension_AMA_Linux_HybridVM_Deploy
- - DataCollectionRuleAssociation_Windows
- - DataCollectionRuleAssociation_Linux
-
-![image](./img/3.6_Assign_Policy_Monitor_AMA_remidiate.png)
-
-7. In Policy > Remediation > Remediation Task, verify that all remediation completed successfully:
+5. In Policy > Remediation > Remediation Task, verify that all remediation completed successfully:
 
 ![image](./img/3.7_Assign_Policy_Monitor_AMA_remidiate.png)
 
@@ -97,21 +83,15 @@ Please ensure that you successfully passed [challenge 1](../../Readme.md#challen
 
 5. Repeat step 3 and 4 for the policy definition *Configure periodic checking for missing system updates on azure Arc-enabled servers*, apply the same configuration as in step 3 but this time unselect the checkbox at *Only show parameters that need input or review*, and change OS Type to *Linux*. Also append *(Linux)* in the *Assignment name* field.
 
-6. Important: Both machines were already onboarded earlier. As a result, you need to create a remediation task to trigger the DeployIfNotExists effect of the policy to your Azure Arc Servers. Please select the policy assignment and select *Create Remediation Task*.
+6. Verify that all remediation were successful.
 
-7. Accept the default values, check *Re-evaluate resource compliance before remediating* and repeat the remediation for the following policies:
- - Configure periodic checking for missing system updates on azure Arc-enabled servers (Windows)
- - Configure periodic checking for missing system updates on azure Arc-enabled servers (Linux)
+7. Navigate to Azure Arc, select Servers, repeat step 10 for your your Windows and Linux Server.
 
-8. Verify that all remediation were successful.
-
-9. Navigate to Azure Arc, select Servers, repeat step 10 for your your Windows and Linux Server.
-
-10. Select Updates. If there are no update information dispayed yet, click *Check for updates* and wait until missing updates appear. Then click on *One-time update* or *Schedule updates* if you would like to postpone the installation to a later point in time. (follow the wizzard).
+8. Select Updates. If there are no update information dispayed yet, click *Check for updates* and wait until missing updates appear. Then click on *One-time update* or *Schedule updates* if you would like to postpone the installation to a later point in time. (follow the wizzard).
 
 ![image](./img/4.10_Update_Management.png)
 
-11. After applying the updates point-in-time or via scheduler you should see the updates beeing installed on the system.
+9. After applying the updates point-in-time or via scheduler you should see the updates beeing installed on the system.
 
 ![image](./img/4.11_Update_Management.png)
 
@@ -148,21 +128,9 @@ Check whether the change tracking data collection rule as been created successfu
 
 4. Please wait a few seconds until the creation of the assignment is complete. You should see that the policy is assigned.
 
-5. Important: Both machines were already onboarded earlier. As a result, you need to create a remediation tasks to apply all policies within the initiative to your Azure Arc Servers. Please select the Initiative Assignment and select *Create Remediation Task* for each policy.
+5. Verify that all remediation were successful. This might take multiple minutes (or even hours).
 
-![image](./img/5.1_remediation_tasks.png)
-
-6. Accept the default values, check *Re-evaluate resource compliance before remediating* and repeat the remediation for the following policies:
- - DeployAMALinuxHybridVMWithUAIChangeTrackingAndInventory
- - DCRALinuxHybridVMChangeTrackingAndInventory
- - DeployChangeTrackingExtensionLinuxHybridVM
- - DeployChangeTrackingExtensionWindowsHybridVM
- - DeployAMAWindowsHybridVMWithUAIChangeTrackingAndInventory
- - DCAWindowsHybridVMChangeTrackingAndInventory
-
-8. Verify that all remediation were successful. This might take multiple minutes (or even hours).
-
-9. Navigate to Azure Arc, select Servers, followed by selecting your Windows Server. Select Inventory. Please be aware that generating the initial inventory takes multiple Minutes/hours. After a while the white page should show values.
+6. Navigate to Azure Arc, select Servers, followed by selecting your Windows Server. Select Inventory. Please be aware that generating the initial inventory takes multiple Minutes/hours. After a while the white page should show values.
 
 ![image](./img/5.9_Inventory.png)
 

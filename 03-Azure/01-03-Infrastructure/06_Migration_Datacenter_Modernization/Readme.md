@@ -1,6 +1,6 @@
 ![image](img/1920x300_EventBanner_MicroHack_MigrateAndModernize_wText.jpg)
 
-# MicroHack - Migration and Modernize
+# MicroHack - Migrate and Modernize
 
 - [**MicroHack introduction**](#MicroHack-introduction)
 - [**MicroHack context**](#microhack-context)

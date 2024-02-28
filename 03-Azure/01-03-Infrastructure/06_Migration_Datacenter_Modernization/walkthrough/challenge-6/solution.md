@@ -21,7 +21,7 @@ Azure App Service bulk migration capabilities are now available as an Azure Migr
 > **Currently this feature has a few [limitations](https://learn.microsoft.com/en-us/azure/migrate/concepts-migration-webapps#limitations) and therefore it can't be used to migrate web apps directly from physical servers. However, we can use it at least to perform the assessment of our web apps and use the [App Service migration assistant tool](https://learn.microsoft.com/en-us/azure/app-service/app-service-asp-net-migration) for the migration.**
 
 
-Open the [Azure Portal](https://portal.azure.com) and navigate to the previousley created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click on *Assess* and select *Web Apps on Azure* from the drop down list.
+Open the [Azure Portal](https://portal.azure.com) and navigate to the previousley created Azure Migrate project. Select *Servers, databases and web apps*, **make sure that the right Azure Migrate Project is selected** and click on *Assess* and select *Web Apps on Azure* from the drop down list.
 
 ![image](./img/appservice1.png)
 
@@ -41,11 +41,11 @@ From the *Azure Migrate:Discovery and assessment* page select the *Web apps on A
 
 ![image](./img/appservice5.png)
 
-On the next page click on the previousley created assessment.
+On the next page click on the previously created assessment.
 
 ![image](./img/appservice6.png)
 
-Review the output of the assessment to see if the web app currently running on Windows Server IIS is suitable and readyfor Azure App Services.
+Review the output of the assessment to see if the web app currently running on Windows Server IIS is suitable and ready for Azure App Services.
 
 ![image](./img/appservice7.png)
 

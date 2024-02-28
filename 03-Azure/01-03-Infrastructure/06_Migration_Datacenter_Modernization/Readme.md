@@ -1,6 +1,6 @@
 ![image](img/1920x300_EventBanner_MicroHack_MigrateAndModernize_wText.jpg)
 
-# MicroHack - Copilot for Migration
+# MicroHack - Migration and Modernize
 
 - [**MicroHack introduction**](#MicroHack-introduction)
 - [**MicroHack context**](#microhack-context)

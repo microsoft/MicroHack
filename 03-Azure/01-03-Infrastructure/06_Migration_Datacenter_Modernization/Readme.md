@@ -1,4 +1,4 @@
-![image](img/1920x300_EventBanner_MicroHack_CopilotForMigration_wText.jpg)
+![image](img/1920x300_EventBanner_MicroHack_MigrateAndModernize_wText.jpg)
 
 # MicroHack - Copilot for Migration
 

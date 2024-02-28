@@ -278,17 +278,14 @@ The goal of this exercise is to ...
 * An migration has been performed towards PaaS instead of IaaS.
 * The App Services are accessible using the source Load Balancer.
 
-> [!WARNING]
-> The new App Service migration capability is currently in public preview
-
 > [!IMPORTANT]
-> For the current version (June 2023) of the App Service migration scripts, Basic Authentication on Azure Web Apps is a hard requirement. Make sure that no Azure Policy restrictions are in place that prohibit the use of Basic Authentication for Azure App Services
+> Currently [Feb. 2024], At-Scale Discovery, Assessment and Migration is supported for ASP.NET web apps deployed to on-premises IIS servers hosted on VMware Environment.
 
 ### Learning resources
 * [App Service assessment overview](https://learn.microsoft.com/en-us/azure/migrate/concepts-azure-webapps-assessment-calculation)
 * [Web App migration support](https://learn.microsoft.com/en-us/azure/migrate/concepts-migration-webapps)
-* [Public preview: App Service new migration capabilities](https://azure.microsoft.com/en-us/updates/public-preview-app-service-new-migration-capabilities/)
-* [App Service migration PowerShell scripts](https://github.com/Azure/App-Service-Migration-Assistant/wiki/PowerShell-Scripts)
+* [App Service Migration Assistant](https://github.com/Azure/App-Service-Migration-Assistant/wiki)
+* [App Service migration tools and resources](https://learn.microsoft.com/en-us/azure/app-service/app-service-asp-net-migration#app-service-migration-tools-and-resources)
 
 ### Solution - Spoilerwarning
 

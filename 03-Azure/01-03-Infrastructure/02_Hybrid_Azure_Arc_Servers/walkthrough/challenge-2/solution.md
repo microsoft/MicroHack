@@ -54,7 +54,7 @@ Please ensure that you successfully passed [challenge 1](../../Readme.md#challen
 - Scope: Please select the resource group called *mh-arc-servers-rg*
 - Basics: Please search for *Enable Azure Monitor for Hybrid VMs with AMA* and select the initiative.
 - Parameters: Please insert the Resource ID of the Data Collection Rule from Task 2. 
-- Remediation: Please select the System assigned identity location according to your resources, e.g. West Europe. You do check the box for "Create a remediation task" at this point in time, as it would only create one of the six required. We will do this in one of the next steps.
+- Remediation: Please select the System assigned identity location according to your resources, e.g. West Europe. Don't check the box for "Create a remediation task" here, as it would only create a remediation task for the first policy within the policy initiative. We will do this in one of the next steps for all policies.
 - Click *Review + create* and then *Create*
 
 4. Please wait around 30 seconds until the creation of the assignment is complete. You should see that the initiative is assigned. Every new Azure Arc server will now automatically install the AMA and Dependency agents as well the necessary association with the data collection rule we created in task 2. Be aware that agent installation can take up to 60 Minutes.
@@ -122,8 +122,7 @@ In order to use the built-in policy initiative to enable *Change Tracking and In
 In the custom ARM template, provide the following parameters:
 | *Parameter*                           | *Value*                   |
 |---------------------------------------|---------------------------|
-| Resource group                        |  mh-arc-servers-rg        |
-| Region                                | i.e. West Europe          |
+| Resource group                        | mh-arc-servers-rg         |
 | Data Collection Rule                  | leave the Default         |
 | Log Analytics_workspace_ResourceId    | <paste the full resource id of the Log Analytics workspace you created in Task 1><br> i.e. /subscriptions/<*your-subscription-guid*>/resourcegroups/mh-arc-servers-rg/providers/microsoft.operationalinsights/workspaces/mh-arc-la|
 
@@ -181,7 +180,9 @@ Check whether the change tracking data collection rule as been created successfu
 - Log Analytics workspace: Choose the workspace you created in task 1
 - Click *Create* button. Then click *Configure* button.
 
-5. Wait for the deployment of the data collection rule to finish. This might take several minutes.
+5. For all other VMs you want to enable for VM Insights in that region, repeat step 1 and 2. Then, in the *Monitoring configuration* form, make sure your newly created data collection rule is selected and click configure.
+
+6. Wait for the deployment of the data collection rule to finish. This might take several minutes.
 
 
 ### Coffee Break of 10 minutes to let the data flow between your Virtual Machines and Azure

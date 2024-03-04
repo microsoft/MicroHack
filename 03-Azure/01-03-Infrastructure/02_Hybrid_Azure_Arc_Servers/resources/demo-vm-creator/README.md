@@ -1,5 +1,5 @@
 # Overview
-As a coach (or participant) you might need to have some VMs available which you can use in this microhack to onboard via Arc to Azure. This folder provides scripts and templates to quickly create such VMs. As deployment platform Azure IaaS will be used. Azure VMs need to be [reconfigured](https://learn.microsoft.com/en-us/azure/azure-arc/servers/plan-evaluate-on-azure-virtual-machine) in order to simulate on-prem VMs, so that the Azure Guest agent does not interfere with the Azure Arc agent. The scripts already include this reconfiguration. 
+As a coach (or participant) you might need to have some VMs available which you can use in this microhack to onboard via Arc to Azure. This folder provides scripts and templates to quickly create such VMs. As deployment platform Azure IaaS will be used. Azure VMs need to be [reconfigured](https://learn.microsoft.com/en-us/azure/azure-arc/servers/plan-evaluate-on-azure-virtual-machine) in order to simulate on-prem VMs, so that the Azure Guest agent does not interfere with the Azure Arc agent. The scripts to reconfigure this are included in the ```create_vms.sh```. 
 
 For each partipant, you will need one Windows and one Linux VM. You can provide the number of participants in the script. The script will then create 1 Windows 2019-datacenter-gensecond and 1 Ubuntu 20_04-lts-gen2 VM for each participant. 
 

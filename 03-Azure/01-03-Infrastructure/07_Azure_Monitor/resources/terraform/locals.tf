@@ -1,32 +1,36 @@
 locals {
   envs = {
     "01" : {
-      location = "westeurope",
-      vm_sku   = "Standard_B2als_v2"
+      location = "germanywestcentral",
+      vm_sku   = "Standard_B1ls"
     },
     "02" : {
-      location = "westeurope",
-      vm_sku   = "Standard_B2ls_v2"
+      location = "germanywestcentral",
+      vm_sku   = "Standard_B1ls"
     },
     "03" : {
-      location = "westeurope",
-      vm_sku   = "Standard_D2ls_v5"
+      location = "germanywestcentral",
+      vm_sku   = "Standard_B1ls"
     },
     "04" : {
-      location = "westeurope",
-      vm_sku   = "Standard_D2ls_v5"
+      location = "germanywestcentral",
+      vm_sku   = "Standard_B1ls"
     },
-    "05" : {
-      location = "westeurope",
-      vm_sku   = "Standard_D2ls_v5"
-    },
-    "06" : {
-      location = "westeurope",
-      vm_sku   = "Standard_D2ls_v5"
-    },
-    "07" : {
-      location = "westeurope",
-      vm_sku   = "Standard_D2ls_v5"
-    }
+    # "05" : {
+    #   location = "swedencentral",
+    #   vm_sku   = "Standard_B1ls"
+    # },
+    # "06" : {
+    #   location = "swedencentral",
+    #   vm_sku   = "Standard_B1ls"
+    # },
+    # "07" : {
+    #   location = "swedencentral",
+    #   vm_sku   = "Standard_B1ls"
+    # },
+    # "08" : {
+    #   location = "swedencentral",
+    #   vm_sku   = "Standard_B1ls"
+    # }
   }
 }

@@ -2,7 +2,7 @@
 # Create VM
 #----------------------------------------------------------------------------
 resource "azurerm_linux_virtual_machine" vm-linux {
-  name                  = "vm-linux"
+  name                  = var.vm_linux_name
   location              = var.location
   resource_group_name   = var.rg_name
   size                  = var.vm_sku
@@ -55,7 +55,7 @@ resource "azurerm_network_interface" "nic_vm_linux" {
 # Create Windows VM
 #----------------------------------------------------------------------------
 resource "azurerm_windows_virtual_machine" "vm-windows" {
-    name                = "vm-windows"
+    name                = var.vm_win_name
     location            = var.location
     resource_group_name = var.rg_name
     size                = var.vm_sku

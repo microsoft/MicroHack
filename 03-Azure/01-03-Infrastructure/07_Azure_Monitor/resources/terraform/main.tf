@@ -3,7 +3,8 @@ module "resource_groups" {
 
   source    = "./enviornment"
 
-  rg_name   = "${var.rg_name}-${each.key}"
+  rg_name   = "${var.rg_name}-u${each.key}"
   location  = "${each.value.location}"
   vm_sku    = "${each.value.vm_sku}"
+  prefix    = "u${each.key}"
 }

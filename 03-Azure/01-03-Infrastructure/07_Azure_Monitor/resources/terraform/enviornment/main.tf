@@ -25,5 +25,8 @@ module "virtual_machines" {
   subnet_id   = azurerm_subnet.microhack_subnet[0].id
   vm_sku      = var.vm_sku
 
+  vm_win_name = local.vm_win_name
+  vm_linux_name = local.vm_linux_name
+
   depends_on  = [ azurerm_resource_group.microhack_monitoring ]
 }

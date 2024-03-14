@@ -10,9 +10,20 @@ Duration: 30 minutes
 
 ### **Task 1: Deploy the Landing Zone for the Micro Hack**
 
-- Install the [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) on your local PC. You can also use Azure Cloud Shell.
-- Open a PowerShell (Windows) or Bash (Linux and macOS) terminal window
-- Execute `az login` and sign in with your Azure AD account
+- Open the [Azure Portal](https://portal.azure.com) and login using a user account with at least Contributor permissions on a Azure Subscription.
+![image](./img/CS1.png)
+
+> [!NOTE]
+> You can also use your local PC but make sure to install [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli).
+
+- If this is the first time that Cloud Shell is beeing started, create the required Storage Account by clicking on *Create storage* and wait until the Storage Accounts has been created.
+![image](./img/CS2.png)
+- Make sure to select *Bash*
+![image](./img/CS3.png)
+- Clone the MicroHack Github repository using the `git clone https://github.com/microsoft/MicroHack.git` command
+![image](./img/CS4.png)
+
+
 - Execute `az deployment sub create --name "$(az ad signed-in-user show --query displayName -o tsv)-$(az ad signed-in-user show --query id -o tsv)" --location germanywestcentral --template-file ./main.bicep --parameters currentUserObjectId=$(az ad signed-in-user show --query id -o tsv) --parameters userName="$(az ad signed-in-user show --query displayName -o tsv)"`
 - Wait for the deployment to finish
 

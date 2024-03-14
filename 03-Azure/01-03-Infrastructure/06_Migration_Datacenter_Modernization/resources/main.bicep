@@ -25,7 +25,8 @@ var tags = {
 
 @description('Source Resouce Groups.')
 resource sourceRg 'Microsoft.Resources/resourceGroups@2021-01-01' = [for i in range(0, deploymentCount): {
-  name: '${prefix}${(i+1)}-${suffix}-source-rg'
+  //name: '${prefix}${(i+1)}-${suffix}-source-rg'
+  name: '${prefix}${(i+1)}-${userName}-${suffix}-source-rg'
   location: location
   tags: tags
 }]
@@ -40,12 +41,14 @@ module source 'source.bicep' = [for i in range(0, deploymentCount):  {
     prefix: prefix
     suffix: suffix
     deployment: (i+1)
+    userName: userName    
   }
 }]
 
 @description('Destination Resouce Groups.')
 resource destinationRg 'Microsoft.Resources/resourceGroups@2021-01-01' = [for i in range(0, deploymentCount): {
-  name: '${prefix}${(i+1)}-${suffix}-destination-rg'
+  //name: '${prefix}${(i+1)}-${suffix}-destination-rg'
+  name: '${prefix}${(i+1)}-${userName}-${suffix}-destination-rg'
   location: location
   tags: tags
 }]
@@ -59,6 +62,7 @@ module destination 'destination.bicep' = [for i in range(0, deploymentCount): {
     prefix: prefix
     suffix: suffix
     deployment: (i+1)
+    userName: userName
   }
 }]
 

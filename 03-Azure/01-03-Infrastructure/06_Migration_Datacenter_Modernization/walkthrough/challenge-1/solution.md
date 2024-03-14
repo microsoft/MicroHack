@@ -37,7 +37,9 @@ Duration: 30 minutes
 
 ![image](./img/CS6.png)
 
-- Wait for the deployment to finish.
+- Wait for the deployment to finish. You can view the deployment from the Azure portal by selecting the Azure Subscription and click on *Deployments* from the navigation pane on the left.
+
+![image](./img/CS7.png)
 
 > [!NOTE]
 > Please note that the deployment may take up to 10 minutes.

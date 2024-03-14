@@ -15,9 +15,6 @@ param location string = deployment().location
 @description('User Name for the Tags')
 param userName string 
 
-@description('Suffix used to make resource names unique')
-var suffix = substring(uniqueString(currentUserObjectId), 0, 4) 
-
 @description('Tags to identify user resources')
 var tags = {
   User: userName
@@ -26,7 +23,7 @@ var tags = {
 @description('Source Resouce Groups.')
 resource sourceRg 'Microsoft.Resources/resourceGroups@2021-01-01' = [for i in range(0, deploymentCount): {
   //name: '${prefix}${(i+1)}-${suffix}-source-rg'
-  name: '${prefix}${(i+1)}-${userName}-${suffix}-source-rg'
+  name: '${prefix}${(i+1)}-${userName}-source-rg'
   location: location
   tags: tags
 }]
@@ -39,7 +36,6 @@ module source 'source.bicep' = [for i in range(0, deploymentCount):  {
     location: location
     currentUserObjectId: currentUserObjectId
     prefix: prefix
-    suffix: suffix
     deployment: (i+1)
     userName: userName    
   }
@@ -48,7 +44,7 @@ module source 'source.bicep' = [for i in range(0, deploymentCount):  {
 @description('Destination Resouce Groups.')
 resource destinationRg 'Microsoft.Resources/resourceGroups@2021-01-01' = [for i in range(0, deploymentCount): {
   //name: '${prefix}${(i+1)}-${suffix}-destination-rg'
-  name: '${prefix}${(i+1)}-${userName}-${suffix}-destination-rg'
+  name: '${prefix}${(i+1)}-${userName}-destination-rg'
   location: location
   tags: tags
 }]
@@ -60,12 +56,11 @@ module destination 'destination.bicep' = [for i in range(0, deploymentCount): {
   params: {
     location: location
     prefix: prefix
-    suffix: suffix
     deployment: (i+1)
     userName: userName
   }
 }]
 
 
-output identifier string = suffix
+output identifier string = userName
 

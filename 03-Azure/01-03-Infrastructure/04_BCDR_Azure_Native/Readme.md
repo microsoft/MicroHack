@@ -149,8 +149,9 @@ In challenge 2 you will successfully onboard your Windows and Linux Virtual Mach
 
 ### Actions
 
-* Deploy a Windows Server 2022 VM in Germany West Central Resource Group
+* Deploy a Windows Server 2022 VM in Germany West Central Resource Group. Please use the "Data Science Virtual Machine - Windows 2022" image from the market place.
 * Deploy a Ubuntu Server VM in Sweden Central Resource Group
+* Deploy a azure sql database server with a database containing the sample data of AdventureWorksLT.
 * Enable Azure Backup for both VMs
 * Restore a VM in Azure
 
@@ -208,7 +209,7 @@ In this Challenge, you will learn how to protect Azure VM with Azure Site Recove
 
 [Solution Steps](./walkthrough/challenge-3/solution.md)
 
-## Challenge 4 - Protect to Azure with Azure Backup & Restore 
+## Challenge 4 - Protect to Azure SQL Database with Failover Groups
 
 ### Goal
 
@@ -241,25 +242,6 @@ In challenge 4, you will successfully protect your on-premise Hyper-V virtual ma
 
 [Solution Steps](./walkthrough/challenge-4/solution.md)
 
-## Challenge 5 - Protect to Azure with Disaster Recovery 
-
-Challenge is still under construction...
-
-### Actions
-
-* 
-
-### Success criteria
-
-*
-
-### Learning resources
-
-* 
-
-### Solution - Spoilerwarning
-
-[Solution Steps](./walkthrough/challenge-5/solution.md)
 
 ## Finish
 
@@ -275,5 +257,7 @@ Thank you for investing the time and see you next time!
 * Hengameh Bigdeloo 
 * Tara
 * Nils Bankert [GitHub](https://github.com/nilsbankert); [LinkedIn](https://www.linkedin.com/in/nilsbankert/)
+* Herman Diessongo
+* Demir Senturk
 
 

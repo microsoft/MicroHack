@@ -10,7 +10,7 @@ Duration: 30 minutes
 
 ### **Task 1: Deploy the Landing Zone for the Micro Hack**
 
-- Open the [Azure Portal](https://portal.azure.com) and login using a user account with at least Contributor permissions on a Azure Subscription.
+- Open the [Azure Portal](https://portal.azure.com) and login using a user account with at least Contributor permissions on a Azure Subscription. Start the Azure Cloud Shell from the Menu bar on the top.
 
 ![image](./img/CS1.png)
 

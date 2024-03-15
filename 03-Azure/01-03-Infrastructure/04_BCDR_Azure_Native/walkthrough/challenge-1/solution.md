@@ -24,14 +24,23 @@ Sign in to the [Azure Portal](https://portal.azure.com/).
 ###### Basics
 ![image](./img/004.png)
 
-###### Networking
+###### Redundancy
 ![image](./img/005.png)
 
-###### Tags
+###### Encryption
 ![image](./img/006.png)
 
-###### Review + Create
+###### Vault properties
 ![image](./img/007.png)
+
+###### Networking
+![image](./img/008.png)
+
+###### Tags
+![image](./img/009.png)
+
+###### Review + Create
+![image](./img/010.png)
 
 #### Create Storage Account
 [Create Storage Account | Microsoft Learn](https://learn.microsoft.com/azure/storage/common/storage-account-create)
@@ -39,57 +48,62 @@ Sign in to the [Azure Portal](https://portal.azure.com/).
 ###### Basics
 Storage Account Names need to be unique in a region, so please add a suffix to the generic name mhstweu
 
-![image](./img/008.png)
+![image](./img/011.png)
 
 ###### Advanced
 Advanced settings don't need to be modified for this Micro Hack
 
-![image](./img/009.png)
-![image](./img/010.png)
-![image](./img/011.png)
+![image](./img/012.png)
+![image](./img/013.png)
 
 ###### Networking
-![image](./img/012.png)
-
-###### Data protection
-![image](./img/013.png)
 ![image](./img/014.png)
 
-###### Encryption
+###### Data protection
 ![image](./img/015.png)
 
-###### Tags
+###### Encryption
 ![image](./img/016.png)
 
-###### Review
+###### Tags
 ![image](./img/017.png)
+
+###### Review
 ![image](./img/018.png)
 ![image](./img/019.png)
-![image](./img/020.png)
 
 ### Task 2: Create Azure Resources in region North Europe
 #### Create Resource Group
 [Create Resource Group | Microsoft Learn](https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/manage-resource-groups-portal#create-resource-groups)
+![image](./img/020.png)
 ![image](./img/021.png)
 ![image](./img/022.png)
-![image](./img/023.png)
 
 #### Create Recovery Services Vault
 
 ###### Basics
+![image](./img/023.png)
+
+###### Redundancy
 ![image](./img/024.png)
 
-###### Networking
+###### Encryption
 ![image](./img/025.png)
 
-###### Tags
+###### Vault properties
 ![image](./img/026.png)
 
-###### Review + Create
+###### Networking
 ![image](./img/027.png)
+
+###### Tags
+![image](./img/028.png)
+
+###### Review + Create
+![image](./img/029.png)
 
 ## You successfully completed challenge 1! 🚀🚀🚀
 ###### Resources in region 1
-![image](./img/028.png)
+![image](./img/030.png)
 ###### Resources in region 2
-![image](./img/029.png)
+![image](./img/031.png)

@@ -10,9 +10,6 @@ param location string
 @description('Prefix used in the Naming for multiple Deployments in the same Subscription')
 param prefix string
 
-@description('Suffix used in the Naming for multiple Deployments in the same Subscription')
-param suffix string
-
 @description('Number of the deployment used for multiple Deployments in the same Subscription')
 param deployment int
 
@@ -27,25 +24,29 @@ param guidValue string = newGuid()
 
 // Variables
 @description('Admin user variable')
-var adminUsername = '${prefix}${deployment}-microhackadmin'
+var adminUsername = '${prefix}${deployment}-${userName}'
 
 @description('Admin password variable')
 var adminPassword = '${toUpper(uniqueString(resourceGroup().id))}-${guidValue}'
 
 @description('Create Name for VM1')
-var vm1Name = '${prefix}${deployment}${suffix}-fe-1'
+var vm1Name = '${prefix}${deployment}-${userName}-fe1'
 
 @description('Create Name for VM2')
-var vm2Name = '${prefix}${deployment}${suffix}-fe-2'
+var vm2Name = '${prefix}${deployment}-${userName}-fe2'
 
 @description('Tenant ID used by Keyvault')
 var tenantId  = subscription().tenantId
+
+@description('User Name for the Tags')
+param userName string 
+
 
 // Resources
 // https://learn.microsoft.com/en-us/azure/templates/microsoft.keyvault/vaults?pivots=deployment-language-bicep
 @description('Source Keyvault')
 resource sourceKeyvault 'Microsoft.KeyVault/vaults@2021-11-01-preview' = {
-  name: substring('${prefix}${deployment}${suffix}-source-kv-${uniqueString(resourceGroup().id)}', 0, 22)
+  name: substring('${prefix}${deployment}-${userName}-source-kv-${uniqueString(resourceGroup().id)}', 0, 22)
   location: location
   properties: {
     enabledForDeployment: false
@@ -93,7 +94,7 @@ resource adminUsernameSecret 'Microsoft.KeyVault/vaults/secrets@2021-11-01-previ
 // https://learn.microsoft.com/en-us/azure/templates/microsoft.network/networksecuritygroups?pivots=deployment-language-bicep
 @description('Network security group in source network')
 resource sourceVnetNsg 'Microsoft.Network/networkSecurityGroups@2022-05-01' = {
-  name: '${prefix}${deployment}${suffix}-source-vnet-nsg'
+  name: '${prefix}${deployment}-${userName}-source-vnet-nsg'
   location: location
   properties: {
     securityRules: [
@@ -117,7 +118,7 @@ resource sourceVnetNsg 'Microsoft.Network/networkSecurityGroups@2022-05-01' = {
 // https://learn.microsoft.com/en-us/azure/templates/Microsoft.Network/virtualNetworks?pivots=deployment-language-bicep
 @description('Virtual network for the source resources')
 resource sourceVnet 'Microsoft.Network/virtualNetworks@2022-05-01' = {
-  name: '${prefix}${deployment}${suffix}-source-vnet'
+  name: '${prefix}${deployment}-${userName}-source-vnet'
   location: location
   properties: {
     addressSpace: {
@@ -148,7 +149,7 @@ resource sourceVnet 'Microsoft.Network/virtualNetworks@2022-05-01' = {
 // https://learn.microsoft.com/en-us/azure/templates/microsoft.network/publicipaddresses?pivots=deployment-language-bicep
 @description('Source Bastion Public IP')
 resource sourceBastionPip 'Microsoft.Network/publicIPAddresses@2022-05-01' = {
-  name: '${prefix}${deployment}${suffix}-source-bastion-pip'
+  name: '${prefix}${deployment}-${userName}-source-bastion-pip'
   location: location
   sku: {
     name: 'Standard'
@@ -161,7 +162,7 @@ resource sourceBastionPip 'Microsoft.Network/publicIPAddresses@2022-05-01' = {
 // https://learn.microsoft.com/en-us/azure/templates/microsoft.network/bastionhosts?pivots=deployment-language-bicep
 @description('Source Network Bastion to access the source Servers')
 resource sourceBastion 'Microsoft.Network/bastionHosts@2022-07-01' = {
-  name: '${prefix}${deployment}${suffix}-source-bastion'
+  name: '${prefix}${deployment}-${userName}-source-bastion'
   location: location
   sku: {
     name: 'Basic'
@@ -377,7 +378,7 @@ resource vm2Extension 'Microsoft.Compute/virtualMachines/extensions@2022-03-01' 
 // https://learn.microsoft.com/en-us/azure/templates/microsoft.network/loadbalancers?pivots=deployment-language-bicep
 @description('Loadbalancer for VMs')
 resource lb 'Microsoft.Network/loadBalancers@2021-08-01' = {
-  name: '${prefix}${deployment}${suffix}-plb-frontend'
+  name: '${prefix}${deployment}-${userName}-plb-frontend'
   location: location
   sku: {
     name: 'Standard'
@@ -415,10 +416,10 @@ resource lb 'Microsoft.Network/loadBalancers@2021-08-01' = {
         name: 'myHTTPRule'
         properties: {
           frontendIPConfiguration: {
-            id: resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', '${prefix}${deployment}${suffix}-plb-frontend', 'LoadBalancerFrontEnd')
+            id: resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', '${prefix}${deployment}-${userName}-plb-frontend', 'LoadBalancerFrontEnd')
           }
           backendAddressPool: {
-            id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', '${prefix}${deployment}${suffix}-plb-frontend', 'LoadBalancerBackEndPool')
+            id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', '${prefix}${deployment}-${userName}-plb-frontend', 'LoadBalancerBackEndPool')
           }
           frontendPort: 80
           backendPort: 80
@@ -429,7 +430,7 @@ resource lb 'Microsoft.Network/loadBalancers@2021-08-01' = {
           loadDistribution: 'Default'
           disableOutboundSnat: true
           probe: {
-            id: resourceId('Microsoft.Network/loadBalancers/probes', '${prefix}${deployment}${suffix}-plb-frontend', 'loadBalancerHealthProbe')
+            id: resourceId('Microsoft.Network/loadBalancers/probes', '${prefix}${deployment}-${userName}-plb-frontend', 'loadBalancerHealthProbe')
           }
         }
       }
@@ -454,11 +455,11 @@ resource lb 'Microsoft.Network/loadBalancers@2021-08-01' = {
           enableTcpReset: false
           idleTimeoutInMinutes: 15
           backendAddressPool: {
-            id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', '${prefix}${deployment}${suffix}-plb-frontend', 'LoadBalancerBackEndPoolOutbound')
+            id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', '${prefix}${deployment}-${userName}-plb-frontend', 'LoadBalancerBackEndPoolOutbound')
           }
           frontendIPConfigurations: [
             {
-              id: resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', '${prefix}${deployment}${suffix}-plb-frontend', 'LoadBalancerFrontEndOutbound')
+              id: resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', '${prefix}${deployment}-${userName}-plb-frontend', 'LoadBalancerFrontEndOutbound')
             }
           ]
         }
@@ -470,7 +471,7 @@ resource lb 'Microsoft.Network/loadBalancers@2021-08-01' = {
 // https://learn.microsoft.com/en-us/azure/templates/microsoft.network/publicipaddresses?pivots=deployment-language-bicep
 @description('Load Balancer Public IP')
 resource lbPublicIPAddress 'Microsoft.Network/publicIPAddresses@2021-08-01' = {
-  name: '${prefix}${deployment}${suffix}-lbPublicIP'
+  name: '${prefix}${deployment}-${userName}-lbPublicIP'
   location: location
   sku: {
     name: 'Standard'
@@ -484,7 +485,7 @@ resource lbPublicIPAddress 'Microsoft.Network/publicIPAddresses@2021-08-01' = {
 // https://learn.microsoft.com/en-us/azure/templates/microsoft.network/publicipaddresses?pivots=deployment-language-bicep
 @description('Load Balancer Outbound Public IP')
 resource lbPublicIPAddressOutbound 'Microsoft.Network/publicIPAddresses@2021-08-01' = {
-  name: '${prefix}${deployment}${suffix}-lbPublicIPOutbound'
+  name: '${prefix}${deployment}-${userName}-lbPublicIPOutbound'
   location: location
   sku: {
     name: 'Standard'

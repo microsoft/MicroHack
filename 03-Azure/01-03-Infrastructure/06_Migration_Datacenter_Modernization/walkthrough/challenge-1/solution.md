@@ -10,14 +10,41 @@ Duration: 30 minutes
 
 ### **Task 1: Deploy the Landing Zone for the Micro Hack**
 
-- Install the [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) on your local PC. You can also use Azure Cloud Shell.
-- Open a PowerShell (Windows) or Bash (Linux and macOS) terminal window
-- Execute `az login` and sign in with your Azure AD account
-- Execute `az deployment sub create --name "$(az ad signed-in-user show --query displayName -o tsv)-$(az ad signed-in-user show --query id -o tsv)" --location germanywestcentral --template-file ./main.bicep --parameters currentUserObjectId=$(az ad signed-in-user show --query id -o tsv) --parameters userName="$(az ad signed-in-user show --query displayName -o tsv)"`
-- Wait for the deployment to finish
+- Open the [Azure Portal](https://portal.azure.com) and login using a user account with at least Contributor permissions on a Azure Subscription. Start the Azure Cloud Shell from the Menu bar on the top.
+
+![image](./img/CS1.png)
 
 > [!NOTE]
-> Please note that the deployment may take up to 10 minutes
+> You can also use your local PC but make sure to install [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli).
+
+- If this is the first time that Cloud Shell is beeing started, create the required Storage Account by selecting *Bash* and clicking on *Create storage* and wait until the Storage Accounts has been created.
+
+![image](./img/CS1-1.png)
+
+![image](./img/CS2.png)
+
+- Make sure to select *Bash*.
+
+![image](./img/CS3.png)
+
+- Clone the MicroHack Github repository using the `git clone https://github.com/microsoft/MicroHack.git` command.
+
+![image](./img/CS4.png)
+
+- Change into to Migrate & Modernize Microhack directory of the cloned repository using the `cd MicroHack/03-Azure/01-03-Infrastructure/06_Migration_Datacenter_Modernization/resources` command.
+
+![image](./img/CS5.png)
+
+- Execute `az deployment sub create --name "$(az ad signed-in-user show --query displayName -o tsv)-$(uuidgen)" --location germanywestcentral --template-file ./main.bicep --parameters currentUserObjectId=$(az ad signed-in-user show --query id -o tsv) --parameters userName="$(az ad signed-in-user show --query displayName -o tsv)"`
+
+![image](./img/CS6.png)
+
+- Wait for the deployment to finish. You can view the deployment from the Azure portal by selecting the Azure Subscription and click on *Deployments* from the navigation pane on the left.
+
+![image](./img/CS7.png)
+
+> [!NOTE]
+> Please note that the deployment may take up to 10 minutes.
 
 ### **Task 2: Verify the deployed resources**
 The bicep deployment should have created the following resources

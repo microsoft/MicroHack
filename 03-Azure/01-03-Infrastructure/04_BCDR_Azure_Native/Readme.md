@@ -171,8 +171,6 @@ In challenge 2 you will successfully onboard your Windows and Linux Virtual Mach
 * https://learn.microsoft.com/en-us/azure/backup/backup-azure-arm-restore-vms
 * https://learn.microsoft.com/en-us/azure/backup/restore-azure-encrypted-virtual-machines
 
-
-
 ### Solution - Spoilerwarning
 
 [Solution Steps](./walkthrough/challenge-2/solution.md)
@@ -234,9 +232,6 @@ In challenge 4, you will focus on implementing disaster recovery strategies for 
 * [Disaster recovery and storage account failover](https://learn.microsoft.com/en-us/azure/storage/common/storage-disaster-recovery-guidance)
 * [Testing for disaster recovery](https://learn.microsoft.com/en-us/azure/site-recovery/site-recovery-test-failover-to-azure)
 	
-#### Solution - Spoiler Warning![image](https://github.com/microsoft/MicroHack/assets/1276010/79e5ec8a-5ca7-47ef-93a0-a2f582b02dbe)
-
-
 ### Solution - Spoilerwarning
 
 [Solution Steps](./walkthrough/challenge-4/solution.md)

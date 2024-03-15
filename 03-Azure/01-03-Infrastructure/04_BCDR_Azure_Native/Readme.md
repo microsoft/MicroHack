@@ -150,26 +150,38 @@ In challenge 2 you will successfully onboard your Windows and Linux Virtual Mach
 ### Actions
 
 * Deploy a Windows Server 2022 VM in Germany West Central Resource Group. Please use the "Data Science Virtual Machine - Windows 2022" image from the market place.
+> **Note:** The 'Data Science Virtual Machine (DSVM)' is a 'Windows Server 2022 with Containers' VM that has several popular tools for data exploration, analysis, modeling & development pre installed.
+> You will to use Microsoft SQL Server Management Studio to connect to the database and Storage Explorer to the storage Account.
 * Deploy a Ubuntu Server VM in Sweden Central Resource Group
 * Deploy a azure sql database server with a database containing the sample data of AdventureWorksLT.
+* From the Data Science Windows Server VM, connect to the database  and to the storage account.
+* Create a blob container and upload a sample file to it
 * Enable Azure Backup for both VMs
+* Enable Azure Backup for blobs on the storage account.
 * Restore a VM in Azure
+* Delete and restore the sample blob file
 
 
 ### Success criteria
 
 * You have deployed two VMs in Azure (one with Window Server 2022, the other one with Ubuntu Server)
+* You have deployed a azure sql database with sample data (AdventureWorksLT) and can access the database for the windows Server (Data Science Edition)
+* You successfully connect to the database and the storage account
 * You successfully enabled Azure Backup on two virtual machines
 * You have successfully setup Azure Backup Policies for both virtual machines
+* You successfully enabled Azure Backup for blob
 * You have successfully restored a VM of your choice to Azure
+* You have successfully restored blobs
 
 ### Learning resources
 
+* https://learn.microsoft.com/en-us/azure/azure-sql/database/single-database-create-quickstart?view=azuresql&tabs=azure-portal
 * https://learn.microsoft.com/en-us/azure/backup/quick-backup-vm-portal
 * https://learn.microsoft.com/en-us/azure/backup/quick-backup-vm-portal#apply-a-backup-policy
 * https://learn.microsoft.com/en-us/azure/backup/tutorial-backup-vm-at-scale
 * https://learn.microsoft.com/en-us/azure/backup/backup-azure-arm-restore-vms
 * https://learn.microsoft.com/en-us/azure/backup/restore-azure-encrypted-virtual-machines
+* https://learn.microsoft.com/en-us/azure/backup/blob-backup-overview
 
 ### Solution - Spoilerwarning
 
@@ -199,9 +211,7 @@ In this Challenge, you will learn how to protect Azure VM with Azure Site Recove
 * https://learn.microsoft.com/en-us/azure/site-recovery/azure-to-azure-how-to-enable-replication
 * https://learn.microsoft.com/en-us/azure/site-recovery/site-recovery-create-recovery-plans
 * https://learn.microsoft.com/en-us/azure/site-recovery/site-recovery-test-failover-to-azure
-* https://learn.microsoft.com/en-us/azure/site-recovery/azure-to-azure-how-to-reprotect
-* https://learn.microsoft.com/en-us/azure/site-recovery/azure-to-azure-tutorial-failback
-* https://learn.microsoft.com/en-us/azure/site-recovery/azure-to-azure-tutorial-enable-replication
+
 
 ### Solution - Spoilerwarning
 
@@ -225,6 +235,7 @@ In challenge 4, you will focus on implementing disaster recovery strategies for 
 * You have successfully created and configured a Failover Group for Azure SQL Database, ensuring data is replicated and accessible across regions.
 * You have implemented disaster recovery for an Azure Storage Account using GRS or GZRS, protecting against regional outages.
 * You have conducted failover tests for both the Azure SQL Database and Azure Storage Account, demonstrating the effectiveness of your disaster recovery strategy.
+* You should be able the connect to failed over Azure SQL database and the storage from the failVM 
 
 ### Learning resources
 * [Azure SQL Database Failover Groups and Active Geo-Replication](https://learn.microsoft.com/en-us/azure/azure-sql/database/auto-failover-group-overview)
@@ -235,6 +246,31 @@ In challenge 4, you will focus on implementing disaster recovery strategies for 
 ### Solution - Spoilerwarning
 
 [Solution Steps](./walkthrough/challenge-4/solution.md)
+
+## Challenge 5 -Failback to the primary region (Germany West Central)
+
+### Goal
+
+In this Challenge, you will have failback again the VM, SQL DB from Sweden central to Germany West Central. The storage account should be failed back as well to Germany
+
+### Actions
+
+* Failback the VM to again from Sweden to Germany region (Source environment) and monitor the progress
+* Failback Azure SQL DB to Germany West Central
+* Failback Storage Account to Germany West Central
+
+### Success Criteria
+
+* Failback to the Germany West Central region has been successfully performed. 
+
+### Learning resources
+* https://learn.microsoft.com/en-us/azure/site-recovery/azure-to-azure-how-to-reprotect
+* https://learn.microsoft.com/en-us/azure/site-recovery/azure-to-azure-tutorial-failback
+* https://learn.microsoft.com/en-us/azure/site-recovery/azure-to-azure-tutorial-enable-replication
+
+### Solution - Spoilerwarning
+
+[Solution Steps](./walkthrough/challenge-3/solution.md)
 
 
 ## Finish

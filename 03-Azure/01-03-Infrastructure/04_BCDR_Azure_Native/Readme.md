@@ -187,7 +187,7 @@ In this Challenge, you will learn how to protect Azure VM with Azure Site Recove
 
 * Set up and enable disaster recovery with Azure Site Recovery and monitor the progress
 * Perform a disaster recovery drill, create recovery plan and run a test failover 
-* Run a production failover from EU West to EU East region and Failback again to the EU West region (Source environment) and monitor the progress
+* Run a production failover from Germany West Central to Sweden Central and failback again from Sweden to Germany region (Source environment) and monitor the progress
 
 ### Success Criteria
 
@@ -209,34 +209,33 @@ In this Challenge, you will learn how to protect Azure VM with Azure Site Recove
 
 [Solution Steps](./walkthrough/challenge-3/solution.md)
 
-## Challenge 4 - Protect to Azure SQL Database with Failover Groups
+## Challenge 4 - Protect your Azure PaaS (Azure SQL Database and Storage Account) with Disaster recovery
 
 ### Goal
 
-In challenge 4, you will successfully protect your on-premise Hyper-V virtual machines with Microsoft Azure Backup Server (MABS).
+In challenge 4, you will focus on implementing disaster recovery strategies for Azure SQL databases using Failover Groups and for Azure storage accounts. The primary objective is to ensure business continuity by protecting critical data stored in Azure SQL databases and Azure storage accounts against potential disasters.
 
 ### Actions
+* Implement Failover Groups for Azure SQL Database:
+  * Create a Failover Group between two Azure SQL databases located in different Azure regions (Germany West central and Sweden Central).
+  * Configure automatic failover policies and test the failover mechanism to ensure seamless transition in case of a disaster.
+* Disaster Recovery for Azure Storage Account:
+  * Set up and configure Azure Storage Account replication to another region using Geo-redundant storage (GRS) or Geo-zone-redundant storage (GZRS) to ensure data availability in case of regional outages.
+  * Perform a failover test for the storage account to validate the disaster recovery setup.
 
-* Install the Microsoft Azure Backup Server (MABS) in the on-premise infrastructure
-* Add a Backup Storage to the MABS disk storage
-* Register an on-premise Windows server (Windows server 2016) and the on-premise Hyper-V host to the MABS
-* Protect the registered VM with MABS
-* Recover a Virtual Machine using MABS backup
-
-### Success criteria
-
-* You successfully installed Microsoft Azure Backup Server (MABS) in the on-premise infrastructure
-* You successfully registered two Hyper-V servers to the MABS
-* You successfully protected two virtual machines with MABS
-* You successfully restored a VM of your choice
+### Success Criteria
+* You have successfully created and configured a Failover Group for Azure SQL Database, ensuring data is replicated and accessible across regions.
+* You have implemented disaster recovery for an Azure Storage Account using GRS or GZRS, protecting against regional outages.
+* You have conducted failover tests for both the Azure SQL Database and Azure Storage Account, demonstrating the effectiveness of your disaster recovery strategy.
 
 ### Learning resources
+* [Azure SQL Database Failover Groups and Active Geo-Replication](https://learn.microsoft.com/en-us/azure/azure-sql/database/auto-failover-group-overview)
+* [Geo-redundant storage (GRS) for cross-regional durability](https://learn.microsoft.com/en-us/azure/storage/common/storage-redundancy-grs)
+* [Disaster recovery and storage account failover](https://learn.microsoft.com/en-us/azure/storage/common/storage-disaster-recovery-guidance)
+* [Testing for disaster recovery](https://learn.microsoft.com/en-us/azure/site-recovery/site-recovery-test-failover-to-azure)
+	
+#### Solution - Spoiler Warning![image](https://github.com/microsoft/MicroHack/assets/1276010/79e5ec8a-5ca7-47ef-93a0-a2f582b02dbe)
 
-* https://learn.microsoft.com/en-us/azure/backup/backup-azure-microsoft-azure-backup
-* https://learn.microsoft.com/en-us/azure/backup/back-up-hyper-v-virtual-machines-mabs
-* https://learn.microsoft.com/en-us/system-center/dpm/create-dpm-protection-groups?view=sc-dpm-2022
-* https://learn.microsoft.com/en-us/system-center/dpm/deploy-dpm-protection-agent?view=sc-dpm-2022
-* https://learn.microsoft.com/en-us/azure/backup/backup-mabs-protection-matrix
 
 ### Solution - Spoilerwarning
 

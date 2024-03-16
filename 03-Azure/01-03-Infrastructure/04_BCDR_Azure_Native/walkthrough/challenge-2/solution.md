@@ -8,35 +8,43 @@ Duration: 30 minutes
 
 Please ensure that you successfully passed [challenge 1](../../Readme.md#challenge-1) before continuing with this challenge.
 
-In this challenge you will learn how to setup Azure Backup to Protect a Virtual Machine in Azure. In addition we will have a look on the configuration and necessary Backup Policies that are available.
+In this challenge you will successfully onboard your Windows and Linux Virtual Machines to a centralized Recovery Services Vault and leverage Azure Backup Center to Protect with Backup in Azure. 
 
-Actions:
+### Actions
 
-- Deploy a Windows Server 2022 VM in West Europe Resource Group
-- Deploy a Ubuntu Server VM in North Europe Resource Group
-- Enable Azure Backup for both VMs
-- Restore a VM in Azure
+* Deploy a Windows Server 2022 VM in Germany West Central Resource Group. Please use the "Data Science Virtual Machine - Windows 2022" image from the market place.
+> **Note:** The 'Data Science Virtual Machine (DSVM)' is a 'Windows Server 2022 with Containers' VM that has several popular tools for data exploration, analysis, modeling & development pre installed.
+> You will to use Microsoft SQL Server Management Studio to connect to the database and Storage Explorer to the storage Account.
+* Deploy a Ubuntu Server VM in Sweden Central Resource Group
+* Deploy a azure sql database server with a database containing the sample data of AdventureWorksLT.
+* From the Data Science Windows Server VM, connect to the database  and to the storage account.
+* Create a blob container and upload a sample file to it
+* Enable Azure Backup for both VMs
+* Enable Azure Backup for blobs on the storage account.
+* Restore a VM in Azure
+* Delete and restore the sample blob file
 
 
-### Task 1: Create a new Virtual Machine in Azure Region Western Europe
+### Task 1: Create a new Virtual Machine in Azure Region Germany West Central
 
-As a first step, we will create a VM (Name: server01) in Azure in the resource group "mh-bcdr-weu-rg" that we created in the last challenge. This should be a Windows Server 2022 (Azure Edition) using a VM Type of Standard DS1v2. 
+As a first step, we will create a VM (Name: ds-vm-win-serverl) in Azure in the resource group "mh-bcdr-gwc-rg" that we created in the last challenge. This should be a Data Science Virtual Machine - Windows 2022 using a VM Type of Standard DS3v2. 
 
 ### Choose OS
-![image](./img/mh-ch2-screenshot-01.png)
+![image](./img/001.png)
 
-### Configure Details
-![image](./img/mh-ch2-screenshot-02.png)
+### Configure Details - Basics
+![image](./img/002.png)
 
-### Configure Details (part 2)
-![image](./img/mh-ch2-screenshot-02.png)
+### Configure Details - Basics (option 2)
+![image](./img/003.png)
 
 Please don't forget to put the VM into the public network and open up Port 3389 to connect to it (or alternatively use Azure Bastion to access it). 
 ### Enable RDP Port
-![image](./img/mh-ch2-screenshot-03.png)
+![image](./img/004.png)
 
 ### Review deployed VM
-![image](./img/mh-ch2-screenshot-09.png)
+![image](./img/005.png)
+![image](./img/005a.png)
 
 ### Task 2: Deploy a Ubuntu Server VM in Norh Europe Resource Group
 The steps for the Ubunutu Server VM are similar to this and will not be included here.

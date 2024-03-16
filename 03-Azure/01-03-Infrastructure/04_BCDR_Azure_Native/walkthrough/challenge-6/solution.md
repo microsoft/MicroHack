@@ -1,4 +1,4 @@
-# Walkthrough Challenge 4 - Protect to Azure with Azure Backup & Restore
+# Walkthrough Extra Challenge 6 - Protect to Azure with Azure Backup & Restore
 
 Duration: 90 minutes (without setting up Nested Virtualization)
 

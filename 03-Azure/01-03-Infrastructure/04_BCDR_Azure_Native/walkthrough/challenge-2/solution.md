@@ -141,6 +141,7 @@ Choose Storage account or service
 
 ### Enable Azure Backup
 ![image](./img/030.png)
+![image](./img/36.png)
 
 ### Create a new Custom Policy
 ![image](./img/mh-ch2-screenshot-11.png)
@@ -169,7 +170,7 @@ The steps for the Ubuntu Server VM are similar to this and will not be included 
 ### Task 8: Restore a VM in Azure
 
 ### Start Restore Procedure
-![image](./img/35)
+![image](./img/35.png)
 
 ### Select restore Point
 ![image](./img/mh-ch2-screenshot-30.png)

@@ -85,7 +85,9 @@ Please don't forget to put the VM into the public network and open up Port 3389 
 ### Configure Details - Additional settings
 Use existing data -> select the sample data of AdventureWorksLT
 ![image](./img/013.png)
+
 ## Review + Create
+
 
 ### Task 4: From the Data Science Windows Server VM, connect to the database and to the storage account.
 
@@ -105,14 +107,16 @@ wait until the pre-configured VM to be installed.
 ### Task 5: Create a blob container and upload a sample file to it
 ### Go to the storage account in mh-bcdr-gwc-rg Resource Group.
 Under the tab Containers:
+
 ![image](./img/019.png)
 
 ### Create a Shared access signature (SAS).
 ![image](./img/020.png)
 
 ### Connect to the "Data Science Windows Server VM" and open "Microsoft Azure Storage Explorer"
-![image](./img/022.png)
 Choose Storage account or service
+
+![image](./img/022.png)
 
 ### Select Shared access signature URL (SAS) as connection method.
 ![image](./img/023.png)
@@ -165,7 +169,7 @@ The steps for the Ubuntu Server VM are similar to this and will not be included 
 ### Task 8: Restore a VM in Azure
 
 ### Start Restore Procedure
-![image](./img/mh-ch2-screenshot-29.png)
+![image](./img/35)
 
 ### Select restore Point
 ![image](./img/mh-ch2-screenshot-30.png)

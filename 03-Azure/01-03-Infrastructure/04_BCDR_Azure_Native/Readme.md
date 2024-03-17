@@ -270,7 +270,7 @@ In this Challenge, you will have failback again the VM, SQL DB from Sweden centr
 
 ### Solution - Spoilerwarning
 
-[Solution Steps](./walkthrough/challenge-3/solution.md)
+[Solution Steps](./walkthrough/challenge-5/solution.md)
 
 
 ## Finish

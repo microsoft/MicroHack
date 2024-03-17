@@ -28,16 +28,33 @@ In challenge 4, you will focus on implementing disaster recovery strategies for 
 
 ## Task 1: Create a Failover Group between two Azure SQL databases located in different Azure regions (Germany West central and Sweden Central)
 
+Navigate to the **SQL Server** in the Germany West Central Region. Open the tab **Failover groups**:
+![image](./img/03.png)
 
+### Select your **SQL Server** in the Sweden Central Region
+![image](./img/04.png)
 
 ## Task 2: Configure automatic failover policies and test the failover mechanism to ensure seamless transition in case of a disaster.
+Open the created **Failover groups**
+![image](./img/05.png)
 
+### Test failover
+![image](./img/06.png)
 
-### Disaster Recovery for Azure Storage Account
+### When the failover is complete, you should see **SQL Server** in Sweden Central as the Primary server.
+![image](./img/07.png)
+
+### Open the Data Science Virtual Machine, and test the connection to the Server using the new **fail over group listener endpoint**:
+![image](./img/08.png)
+
+### Connection established! 
+![image](./img/09.png)
 
 ### Learning resources
 * [Geo-redundant storage (GRS) for cross-regional durability](https://learn.microsoft.com/en-us/azure/storage/common/storage-redundancy-grs)
 * [Disaster recovery and storage account failover](https://learn.microsoft.com/en-us/azure/storage/common/storage-disaster-recovery-guidance)
+
+### Disaster Recovery for Azure Storage Account
 
 ## Task 1: Set up and configure Azure Storage Account replication to another region using Geo-redundant storage (GRS) or Geo-zone-redundant storage (GZRS) to ensure data availability in case of regional outages.
 

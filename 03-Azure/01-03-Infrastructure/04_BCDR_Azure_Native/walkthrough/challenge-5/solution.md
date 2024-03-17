@@ -15,9 +15,9 @@ In this challenge, you will have failback again the VM, SQL DB from Sweden centr
 * Task 2: Failback Azure SQL DB to Germany West Central
 * Task 3: Failback Storage Account to Germany West Central
 
-### Solution
+# Solution
 
-### Disaster Recovery for Azure Virtual Machines
+## Disaster Recovery for Azure Virtual Machines
 
 ### Task 1: Failback the VM from Sweden to Germany region (Source environment) and monitor the progress
 
@@ -25,7 +25,7 @@ In this challenge, you will have failback again the VM, SQL DB from Sweden centr
 
 Reader can refer to the [Previous Challenge Solution](../challenge-3/solution.md) to remember how to failover.
 
-### Disaster Recovery for Azure SQL Database
+## Disaster Recovery for Azure SQL Database
 
 ## Task 2: Failback to Germany West Central Region
 
@@ -44,7 +44,7 @@ Reader can refer to the [Previous Challenge Solution](../challenge-3/solution.md
 ### Connection secured! 
 ![image](./img/09.png)
 
-### Disaster Recovery for Azure Storage Account
+## Disaster Recovery for Azure Storage Account
 
 ## Task 3: Failback Storage Account to Germany West Central
 

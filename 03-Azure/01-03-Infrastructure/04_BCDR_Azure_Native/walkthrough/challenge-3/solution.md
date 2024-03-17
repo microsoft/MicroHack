@@ -42,6 +42,13 @@ This Task can take up to 10 minutes to finish.
 
 ![image](./img/mh-ch-screenshot-08.png)
 
+## Task 1 Ubuntu VM Version: Enable replication with Azure Site recovery for the Virtual Machine in the Sweden Central Region to the Germany West Central Region
+
+![image](./img/01.png)
+![image](./img/02.png)
+![image](./img/03.png)
+![image](./img/04.png)
+![image](./img/05.png)
 
 ## Task 2: Create a recovery plan and Run a disaster recovery drill
 

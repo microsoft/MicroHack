@@ -2,7 +2,7 @@
 
 Duration: 50 minutes
 
-[Previous Challenge Solution](../challenge-3/solution.md) - **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-5/solution.md)
+[Previous Challenge Solution](../challenge-4/solution.md) - **[Home](../../Readme.md)**
 
 ## Prerequisites
 
@@ -19,9 +19,11 @@ In this challenge, you will have failback again the VM, SQL DB from Sweden centr
 
 ### Disaster Recovery for Azure Virtual Machines
 
-### Task 1: Failback the VM to again from Sweden to Germany region (Source environment) and monitor the progress
+### Task 1: Failback the VM from Sweden to Germany region (Source environment) and monitor the progress
 
+![image](./img/01.png)
 
+Reader can refer to the [Previous Challenge Solution](../challenge-3/solution.md) to remember how to failover.
 
 ### Disaster Recovery for Azure SQL Database
 

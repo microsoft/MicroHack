@@ -21,7 +21,13 @@ In this challenge, you will have failback again the VM, SQL DB from Sweden centr
 
 ### Task 1: Failback the VM from Sweden to Germany region (Source environment) and monitor the progress
 
+## Navigate to the **Disaster Recovery** Section from the Data Science Windows VM.
+## Re-protect
 ![image](./img/01.png)
+
+* [Azure Site Recovery - How to reprotect](https://learn.microsoft.com/en-us/azure/site-recovery/azure-to-azure-how-to-reprotect)
+
+## Connect to the Virtual Machine in order to test connection to SQL Database and storage container in the upcoming tasks.
 
 Reader can refer to the [Previous Challenge Solution](../challenge-3/solution.md) to remember how to failover.
 
@@ -29,7 +35,7 @@ Reader can refer to the [Previous Challenge Solution](../challenge-3/solution.md
 
 ## Task 2: Failback to Germany West Central Region
 
-## Navigate to the **SQL Server**. Open the created **Failover group**:
+### Navigate to the **SQL Server**. Open the created **Failover group**:
 ![image](./img/20.png)
 
 ### Failback to Germany West Central Region
@@ -48,10 +54,10 @@ Reader can refer to the [Previous Challenge Solution](../challenge-3/solution.md
 
 ## Task 3: Failback Storage Account to Germany West Central
 
-Navigate to the **Azure Storage Account**
+### Navigate to the **Azure Storage Account**
 ![image](./img/17.png)
 
-## Open the tab **Redundancy**:
+### Open the tab **Redundancy**:
 ![image](./img/18.png)
 
 ### If not configured, choose Geo-redundant storage (GRS) as redundancy option. This will enable cross-replication of your storage account with the paired region Germany West Central. 
@@ -79,6 +85,6 @@ Navigate to the **Azure Storage Account**
 ### Learning resources
 * [Azure Site Recovery - How to reprotect](https://learn.microsoft.com/en-us/azure/site-recovery/azure-to-azure-how-to-reprotect)
 * [Azure Site Recovery - Failback](https://learn.microsoft.com/en-us/azure/site-recovery/azure-to-azure-tutorial-failback)
-* [Azure Site Recovery - Failback](https://learn.microsoft.com/en-us/azure/site-recovery/azure-to-azure-tutorial-enable-replication)
+* [Azure Site Recovery - Enable Replication](https://learn.microsoft.com/en-us/azure/site-recovery/azure-to-azure-tutorial-enable-replication)
 * [Testing for disaster recovery](https://learn.microsoft.com/en-us/azure/site-recovery/site-recovery-test-failover-to-azure)
 

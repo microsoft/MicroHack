@@ -1,4 +1,4 @@
-# Walkthrough Challenge 5 - Protect your Azure PaaS (Azure SQL Database and Storage Account) with Disaster recovery
+# Walkthrough Challenge 5 - Failback to the primary region (Germany West Central)
 
 Duration: 50 minutes
 
@@ -6,9 +6,9 @@ Duration: 50 minutes
 
 ## Prerequisites
 
-Please ensure that you successfully passed [challenge 3](../../Readme.md#challenge-3) before continuing with this challenge.
+Please ensure that you successfully passed [challenge 4](../../Readme.md#challenge-4) before continuing with this challenge.
 
-In challenge 4, you will focus on implementing disaster recovery strategies for Azure SQL databases using Failover Groups and for Azure storage accounts. The primary objective is to ensure business continuity by protecting critical data stored in Azure SQL databases and Azure storage accounts against potential disasters.
+In this challenge, you will have failback again the VM, SQL DB from Sweden central to Germany West Central. The storage account should be failed back to Germany West Central as well.
 
 ### Actions
 * Task 1: Failback the VM to again from Sweden to Germany region (Source environment) and monitor the progress

@@ -31,11 +31,11 @@ In challenge 4, you will focus on implementing disaster recovery strategies for 
 Navigate to the **SQL Server** in the Germany West Central Region. Open the tab **Failover groups**:
 ![image](./img/03.png)
 
-### Select your **SQL Server** in the Sweden Central Region
+### Create a Failover Group and select your **SQL Server** in the Sweden Central Region
 ![image](./img/04.png)
 
 ## Task 2: Configure automatic failover policies and test the failover mechanism to ensure seamless transition in case of a disaster.
-Open the created **Failover groups**
+Open the created **Failover group**
 ![image](./img/05.png)
 
 ### Test failover
@@ -64,11 +64,22 @@ Navigate to the **Azure Storage Account** in the Germany West Central Region. Op
 ### Choose Geo-redundant storage (GRS) as redundancy option. This will enable cross-replication of your storage account with the paired region Germany North. 
 ![image](./img/02.png)
 
+### You can see now Germany North as the Secondary Region of the Storage Account:
+![image](./img/11.png)
+
 ![Microsoft Learn - Azure Cross-region replication](https://learn.microsoft.com/en-us/azure/reliability/cross-region-replication-azure#cross-region-replication)
 
 ## Task 2: Perform a failover test for the storage account to validate the disaster recovery setup.
 
 ### Run the test failover from Germany West Central to the Sweden Central Region
+![image](./img/12.png)
 
+### Failover Completed
+![image](./img/13.png)
+
+## Check connection and restore your sample file.
+
+### From the Data Science Virtual Machine, use **Microsoft Azure Storage Explorer** to restore your file:
+![image](./img/16.png)
 
 **You successfully completed challenge 4!** 🚀🚀🚀

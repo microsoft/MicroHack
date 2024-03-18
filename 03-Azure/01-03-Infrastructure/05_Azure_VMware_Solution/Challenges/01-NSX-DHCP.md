@@ -10,7 +10,8 @@ In this challenge we will configure a NSX-T DHCP server.
 
 In this challenge, you will perform the following tasks:
 
-1.	Use NSX-T DHCP server
+1. Create a DHCP server
+2. Check the DHCP configuration in NSX-T
 
 As a part of this challenge you are expected to <u>log on to the AVS Private cloud within Azure Portal</u> assigned to your team and to deploy a DHCP server, such that we can provide dynamic IPs to VMs when they need.  
 
@@ -35,6 +36,8 @@ Applications and workloads running in an Azure VMware Solution private cloud env
 When you login to the NSX Manager in AVS the DHCP server should be configured and running. It should be attached to the Tier 1 gateway.
 
 ## Learning resources
+
+[Configure DHCP for Azure VMware Solution](https://learn.microsoft.com/en-us/azure/azure-vmware/configure-dhcp-azure-vmware-solution)
 
 ### Solution - Spoilerwarning
 

@@ -2,7 +2,10 @@
 
 **[Home](../Readme.md)** - [Challenge One](./01-NSX-DHCP.md)
 
-## Introduction
+## Pre-requisites for Challenges
+
+### 1. Deploying AVS
+
 
 Azure VMware Solution delivers VMware-based private clouds in Azure and is available for EA and CSP customers. Customers need to request a quota and register the Microsoft.AVS resource provider prior to deploying:
 
@@ -18,6 +21,18 @@ Each private cloud will have a minimum of one vSAN cluster that consists of thre
 
 There is also the option of a trial cluster, these are limited to three hosts and one month duration. After the trial period those hosts will be converted to regular AVS hosts.
 
-[Concepts - Private clouds and clusters - Azure VMware Solution | Microsoft Docs](https://docs.microsoft.com/en-us/azure/azure-vmware/concepts-private-clouds-clusters)
+
+### 2. Setting up the environment
+
+#### Connecting to Jumpbox
+
+To connect to NSX-T you need to connect to the Jumpbox virutal machine using Bastion.
+
+- Jumpbox VM: AVS-SDDC-FOM-Jumpbox
+- VM username: avsjump
+- VM password: can be found in Key Vault
+
 
 ## Learning resources
+
+[Concepts - Private clouds and clusters - Azure VMware Solution | Microsoft Docs](https://docs.microsoft.com/en-us/azure/azure-vmware/concepts-private-clouds-clusters)

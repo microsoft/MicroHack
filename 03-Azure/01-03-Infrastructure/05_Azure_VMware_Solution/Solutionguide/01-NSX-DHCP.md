@@ -10,17 +10,17 @@ Here you will be using NSX-T to host your DHCP server and you will create a DHCP
 
 ![](./Images/01-NSX-DHCP/NSX_image1.png)
 
-1.	Select DHCP for the Server Type, provide the server name and IP address CIDR, and then select OK.
+2.	Select DHCP for the Server Type, provide the server name and IP address CIDR, and then select OK.
  
 ![](./Images/01-NSX-DHCP/NSX_image2.png)
  
-2.	Once done, the DHCP server will be listed in the DHCP tab 
+3.	Once done, the DHCP server will be listed in the DHCP tab 
  
 ![](./Images/01-NSX-DHCP/NSX_image3.png)
 
 ### Note
 This DHCP server automatically gets connected to the default Tier 1 Gateway
 
-3.	You can now log on to NSX Manager in AVS and verify that the DHCP server is attached to the Tier1 Gateway
+4.	You can now log on to NSX Manager in AVS and verify that the DHCP server is attached to the Tier1 Gateway
 
 ![](./Images/01-NSX-DHCP/NSX_image4.png)

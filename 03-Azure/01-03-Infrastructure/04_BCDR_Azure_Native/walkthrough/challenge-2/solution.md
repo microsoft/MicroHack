@@ -20,9 +20,8 @@ In this challenge, you will successfully onboard your Windows and Linux Virtual 
 * Task 4: From the Data Science Windows Server VM, connect to the database  and to the storage account.
 * Task 5: Create a blob container and upload a sample file to it.
 * Task 6: Enable Azure Backup for both VMs.
-* Task 7: Restore a VM in Azure.
-* Delete and restore the sample blob file.
-
+* Task 7: Enable Azure Backup for Blobs
+* Task 8: Restore a VM in Azure.
 
 ### Task 1: Create a new Virtual Machine in Azure Region Germany West Central
 
@@ -160,7 +159,9 @@ The steps for the Ubuntu Server VM are similar to this and will not be included 
 
 ![Microsoft Learn - Azure Cross-region replication](https://learn.microsoft.com/en-us/azure/reliability/cross-region-replication-azure#cross-region-replication)
 
-### Task 7: Restore a VM in Azure
+### Task 7: Enable Azure backup for blobs
+
+### Task 8: Restore a VM in Azure
 
 ### Start Restore Procedure
 ![image](./img/35.png)

@@ -87,6 +87,8 @@ Use existing data -> select the sample data of AdventureWorksLT
 
 ### Review + Create
 
+> **Note:**  "It's important to ensure that there are no connection blockers preventing access to the SQL Database. If necessary, you may need to set up a firewall rule that allows the IP address of the virtual machine to connect.
+![image](./img/FWrule.png)
 
 ### Task 4: From the Data Science Windows Server VM, connect to the database and to the storage account.
 

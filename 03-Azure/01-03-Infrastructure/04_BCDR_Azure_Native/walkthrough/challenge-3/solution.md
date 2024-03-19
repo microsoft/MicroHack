@@ -112,16 +112,4 @@ Check the virtual machine list. There is a new virtual machine running in Sweden
 
 ![image](./img/mh-ch-screenshot-26.png)
 
-### Run the failback for server01 from Sweden Central Region to Germany West Central
-You can't fail back the VM until the replication has completed, and synchronization is 100% completed. The synchronization process can take several minutes to complete.
-After the Synchronization completes, select **Failover**.
-
-![image](./img/mh-ch-screenshot-27.png)
-
-![image](./img/mh-ch-screenshot-28.png)
-
-Check the Virtual machine list. Server01 is running again in the Germany West Central region.
-
-![image](./img/mh-ch-screenshot-29.png)
-
 **You successfully completed challenge 3!** 🚀🚀🚀

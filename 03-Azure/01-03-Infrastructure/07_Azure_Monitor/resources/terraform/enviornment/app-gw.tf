@@ -1,6 +1,6 @@
 #### Enable public IP if needed ######
 resource "azurerm_public_ip" "mh_pip_appgw" {
-  name                = "pip-appgw-microhack"
+  name                = local.appgw_pip_name
   sku                 = "Standard"
   resource_group_name = azurerm_resource_group.microhack_monitoring.name
   location            = azurerm_resource_group.microhack_monitoring.location
@@ -20,7 +20,7 @@ locals {
 
 
 resource "azurerm_application_gateway" "appgw" {
-  name                = "appgw-microhack"
+  name                = local.appgw_name
   resource_group_name = azurerm_resource_group.microhack_monitoring.name
   location            = azurerm_resource_group.microhack_monitoring.location
 

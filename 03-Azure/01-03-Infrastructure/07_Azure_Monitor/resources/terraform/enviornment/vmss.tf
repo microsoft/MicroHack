@@ -1,5 +1,5 @@
 resource "azurerm_linux_virtual_machine_scale_set" "nginx_vmss" {
-  name                = "vmss-linux-nginx"
+  name                = local.vmss_name
   resource_group_name = var.rg_name
   location            = var.location
   sku                 = var.vm_sku
@@ -31,7 +31,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "nginx_vmss" {
   }
 
   network_interface {
-    name    = "example"
+    name    = "vmsslinux"
     primary = true
 
     ip_configuration {

@@ -9,3 +9,7 @@ variable "location" {
 variable "vm_sku" {
   type = string
 }
+
+variable "prefix" {
+  type = string
+}

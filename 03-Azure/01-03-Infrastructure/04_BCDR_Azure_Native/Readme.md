@@ -198,14 +198,14 @@ In Challenge 3, you will learn how to protect Azure VM with Azure Site Recovery,
 
 * Set up and enable disaster recovery with Azure Site Recovery and monitor the progress.
 * Perform a disaster recovery drill, create recovery plan and run a test failover.
-* Run a production failover from Germany West Central to Sweden Central, and failback again from Sweden to Germany region (Source environment) and monitor the progress.
+* Run a production failover from Germany West Central to Sweden Central and monitor the progress.
 
 ### Success Criteria
 
 * You enabled the replication for the virtual machine to the Sweden Central region.
 * You successfully initiated a Testfailover from Azure Region Germany West Central to Sweden Central with a near zero downtime requirement.
 * You ran successfully the production failover to the Sweden Central region.
-* The failback to the Germany West Central region has been successfully performed. 
+
 
 ### Learning resources
 

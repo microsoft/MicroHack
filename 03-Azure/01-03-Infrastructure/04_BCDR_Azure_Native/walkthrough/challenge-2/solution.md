@@ -22,6 +22,7 @@ In this challenge, you will successfully onboard your Windows and Linux Virtual 
 * Task 6: Enable Azure Backup for both VMs.
 * Task 7: Enable Azure Backup for Blobs
 * Task 8: Restore a VM in Azure.
+* Task 9: Delete a file in a
 
 ### Task 1: Create a new Virtual Machine in Azure Region Germany West Central
 
@@ -160,6 +161,22 @@ The steps for the Ubuntu Server VM are similar to this and will not be included 
 ![Microsoft Learn - Azure Cross-region replication](https://learn.microsoft.com/en-us/azure/reliability/cross-region-replication-azure#cross-region-replication)
 
 ### Task 7: Enable Azure backup for blobs
+### create a backup vault (not a recovery service vault)
+![image](./img/mh-ch2-screenshot-71.png)
+
+### Enable system managed Identity for the backup vault and clipboard the MI object ID
+![image](./img/mh-ch2-screenshot-72.png)
+
+### Assign the "Backup Contributor" role to Backup vault managed identity
+![image](./img/mh-ch2-screenshot-73.png)
+![image](./img/mh-ch2-screenshot-74.png)
+![image](./img/mh-ch2-screenshot-75.png)
+
+### Enable Azure Backup for Blobs. This will require to create a new backup policy.
+![image](./img/mh-ch2-screenshot-76.png)
+![image](./img/mh-ch2-screenshot-77.png)
+![image](./img/mh-ch2-screenshot-78.png)
+![image](./img/mh-ch2-screenshot-79.png)
 
 ### Task 8: Restore a VM in Azure
 
@@ -171,5 +188,22 @@ The steps for the Ubuntu Server VM are similar to this and will not be included 
 
 ### Set Restore Properties
 ![image](./img/mh-ch2-screenshot-31.png)
+
+### Task 9: Trigger a restore for the blob
+
+### Delete a file in your blob container
+
+### Go to the backup vault and select the backup instance
+![image](./img/mh-ch2-screenshot-710.png)
+![image](./img/mh-ch2-screenshot-711.png)
+
+### Restore the blob container 
+![image](./img/mh-ch2-screenshot-712.png)
+![image](./img/mh-ch2-screenshot-713.png)
+![image](./img/mh-ch2-screenshot-714.png)
+![image](./img/mh-ch2-screenshot-715.png)
+![image](./img/mh-ch2-screenshot-716.png)
+![image](./img/mh-ch2-screenshot-717.png)
+
 
 You successfully completed challenge 2! 🚀🚀🚀

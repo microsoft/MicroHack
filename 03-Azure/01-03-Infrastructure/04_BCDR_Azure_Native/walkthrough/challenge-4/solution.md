@@ -8,7 +8,7 @@ Duration: 50 minutes
 
 Please ensure that you successfully passed [challenge 3](../../Readme.md#challenge-3) before continuing with this challenge.
 
-In challenge 4, you will focus on implementing disaster recovery strategies for Azure SQL databases using Failover Groups and for Azure storage accounts. The primary objective is to ensure business continuity by protecting critical data stored in Azure SQL databases and Azure storage accounts against potential disasters.
+In challenge 4, you will focus on implementing disaster recovery strategies for Azure SQL databases using Failover Groups, and for Azure storage accounts using replication. The primary objective is to ensure business continuity by protecting critical data stored in Azure SQL databases and Azure storage accounts against potential disasters.
 
 ### Actions
 * Implement Failover Groups for Azure SQL Database:

@@ -11,15 +11,15 @@ Please ensure that you successfully passed [challenge 4](../../Readme.md#challen
 In this challenge, you will have failback again the VM, SQL DB from Sweden central to Germany West Central. The storage account should be failed back to Germany West Central as well.
 
 ### Actions
-* Task 1: Failback the VM to again from Sweden to Germany region (Source environment) and monitor the progress
-* Task 2: Failback Azure SQL DB to Germany West Central
-* Task 3: Failback Storage Account to Germany West Central
+* Task 1: Failback the VM from Sweden Central to Germany West Central region (Source environment) and monitor the progress.
+* Task 2: Failback Azure SQL DB to Germany West Central.
+* Task 3: Failback Storage Account to Germany West Central.
 
 # Solution
 
 ## Disaster Recovery for Azure Virtual Machines
 
-### Task 1: Failback the VM from Sweden to Germany region (Source environment) and monitor the progress
+## Task 1: Failback the VM from Sweden to Germany region (Source environment) and monitor the progress
 
 ## Navigate to the **Disaster Recovery** Section from the Data Science Windows VM.
 ## Re-protect

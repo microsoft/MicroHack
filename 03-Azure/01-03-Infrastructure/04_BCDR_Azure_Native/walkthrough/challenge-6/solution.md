@@ -8,7 +8,7 @@ Duration: 90 minutes (without setting up Nested Virtualization)
 
 Please ensure that you successfully passed [challenge 3](../../Readme.md#challenge-3) before continuing with this challenge.
 
-This challenge is kind of special because it is not in the flow of the other challenges because you are not looking anymore to the cloud native and "protect in Azure" perspective. It is more the view from an existing on-prem environment and you are trying to protect you resources with the perspective "protect to Azure". 
+This challenge is kind of special because it is not in the flow of the other challenges since you are not looking anymore to the cloud native and "protect in Azure" perspective. It is more the view from an existing on-prem environment and you are trying to protect your resources with the perspective "protect to Azure". 
 
 - If you want to setup your own environment with Nested Virtualization you can use the following link: 
     - [Template virtual machine in Azure Lab Services](https://learn.microsoft.com/en-us/azure/lab-services/how-to-enable-nested-virtualization-template-vm-using-script) 
@@ -20,16 +20,16 @@ This challenge is kind of special because it is not in the flow of the other cha
 
 ## Goal
 
-* In this challenge you will learn how to protect your on-premise Hyper-V virtual machines with Microsoft Azure Backup Server (MABS). 
+* In this challenge, you will learn how to protect your on-premise Hyper-V virtual machines with Microsoft Azure Backup Server (MABS). 
 * Understand and leverage the proven tools like Azure Backup Server in you own environment or in a Hyper-V environment that you can create yourself before the MicroHack. For detailed information how to set up Nested Virtualization see [Prerequisites](../challenge-4/solution.md#prerequisites). 
 
 Actions:
 
-* Install the Microsoft Azure Backup Server (MABS) in the on-premise infrastructure
-* Add a Backup Storage to the MABS disk storage
-* Register an on-premise Windows server (Windows server 2016) and the on-premise Hyper-V host to the MABS
-* Protect the registered VM with MABS
-* Recover a Virtual Machine using MABS backup
+* Install the Microsoft Azure Backup Server (MABS) in the on-premise infrastructure.
+* Add a Backup Storage to the MABS disk storage.
+* Register an on-premise Windows server (Windows server 2016) and the on-premise Hyper-V host to the MABS.
+* Protect the registered VM with MABS.
+* Recover a Virtual Machine using MABS backup.
 
 ### Task 1: Install the Microsoft Azure Backup Server (MABS)
 

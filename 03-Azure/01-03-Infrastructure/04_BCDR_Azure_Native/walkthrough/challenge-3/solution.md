@@ -8,12 +8,12 @@ Duration: 50 minutes
 
 Please ensure that you successfully passed [challenge 2](../../Readme.md#challenge-2) before continuing with this challenge.
 
-In this Challenge, you will learn how to protect Azure VM with Azure Site Recovery, and enable replication to the secondary site. Moreover, you will successfully run the test & production failover and failback between two regions.
+In this challenge, you will learn how to protect Azure VM with Azure Site Recovery, and enable replication to the secondary site. Moreover, you will successfully run the test & production failover and failback between two regions.
 
 Actions
 
-* Set up and enable disaster recovery with Azure Site Recovery and monitor the progress
-* Perform a disaster recovery drill, create recovery plan and run a test failover 
+* Set up and enable disaster recovery with Azure Site Recovery and monitor the progress.
+* Perform a disaster recovery drill, create recovery plan and run a test failover.
 * Run a production failover from Germany West Central to Sweden Central region and failback again from Sweden to Germany.
 
 ## Task 1: Enable replication with Azure Site recovery for the Virtual Machine in the Germany West Central Region to the Sweden Central Region
@@ -93,7 +93,7 @@ After all jobs are finished successully, Navigate to the Virtual Machines list. 
 ![image](./img/mh-ch-screenshot-19.png)
 
 
-## Task 3: Run a production failover from Germany West Central to Sweden Central and failback again from Sweden to Germany region (Source environment) and monitor the progres
+## Task 3: Run a production failover from Germany West Central to Sweden Central and failback again from Sweden to Germany region (Source environment) and monitor the progress
 ### Run the production failover for server01 from Germany West Central to Sweden Central
 ![image](./img/mh-ch-screenshot-20.png)
 

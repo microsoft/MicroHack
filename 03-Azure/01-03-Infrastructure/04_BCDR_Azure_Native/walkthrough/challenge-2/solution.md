@@ -8,20 +8,20 @@ Duration: 30 minutes
 
 Please ensure that you successfully passed [challenge 1](../../Readme.md#challenge-1) before continuing with this challenge.
 
-In this challenge you will successfully onboard your Windows and Linux Virtual Machines to a centralized Recovery Services Vault and leverage Azure Backup Center to Protect with Backup in Azure. 
+In this challenge, you will successfully onboard your Windows and Linux Virtual Machines to a centralized Recovery Services Vault and leverage Azure Backup Center to Protect with Backup in Azure. 
 
 ### Actions
 
 * Task 1: Deploy a Windows Server 2022 VM in Germany West Central Resource Group. Please use the "Data Science Virtual Machine - Windows 2022" image from the market place.
 > **Note:** The 'Data Science Virtual Machine (DSVM)' is a 'Windows Server 2022 with Containers' VM that has several popular tools for data exploration, analysis, modeling & development pre installed.
 > You will to use Microsoft SQL Server Management Studio to connect to the database and Storage Explorer to the storage Account.
-* Task 2: Deploy a Ubuntu Server VM in Sweden Central Resource Group
+* Task 2: Deploy a Ubuntu Server VM in Sweden Central Resource Group.
 * Task 3: Deploy a azure sql database server with a database containing the sample data of AdventureWorksLT.
 * Task 4: From the Data Science Windows Server VM, connect to the database  and to the storage account.
-* Task 5: Create a blob container and upload a sample file to it
-* Task 6: Enable Azure Backup for both VMs
-* Task 7: Restore a VM in Azure
-* Delete and restore the sample blob file
+* Task 5: Create a blob container and upload a sample file to it.
+* Task 6: Enable Azure Backup for both VMs.
+* Task 7: Restore a VM in Azure.
+* Delete and restore the sample blob file.
 
 
 ### Task 1: Create a new Virtual Machine in Azure Region Germany West Central
@@ -85,7 +85,7 @@ Please don't forget to put the VM into the public network and open up Port 3389 
 Use existing data -> select the sample data of AdventureWorksLT
 ![image](./img/013.png)
 
-## Review + Create
+### Review + Create
 
 
 ### Task 4: From the Data Science Windows Server VM, connect to the database and to the storage account.

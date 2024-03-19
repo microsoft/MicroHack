@@ -8,7 +8,7 @@ Duration: 20 minutes
 
 Please ensure that you successfully verified the [General prerequisits](../../Readme.md#general-prerequisites) before continuing with this challenge.
 
-### Task 1: Create Azure Resources in region West Europe
+### Task 1: Create Azure Resources in region Germany West Central
 
 Sign in to the [Azure Portal](https://portal.azure.com/).
 
@@ -72,7 +72,7 @@ Advanced settings don't need to be modified for this Micro Hack
 ![image](./img/018.png)
 ![image](./img/019.png)
 
-### Task 2: Create Azure Resources in region North Europe
+### Task 2: Create Azure Resources in region Sweden Central
 #### Create Resource Group
 [Create Resource Group | Microsoft Learn](https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/manage-resource-groups-portal#create-resource-groups)
 ![image](./img/020.png)

@@ -21,11 +21,23 @@ In this challenge, you will have failback again the VM, SQL DB from Sweden centr
 
 ## Task 1: Failback the VM from Sweden to Germany region (Source environment) and monitor the progress
 
-## Navigate to the **Disaster Recovery** Section from the Data Science Windows VM.
-## Re-protect
+### Ensure the VM has been  Re-protected (this is done in challenge 3)
 ![image](./img/01.png)
 
 * [Azure Site Recovery - How to reprotect](https://learn.microsoft.com/en-us/azure/site-recovery/azure-to-azure-how-to-reprotect)
+
+### Run the failback for the VM from Sweden Central Region to Germany West Central
+You can't fail back the VM until the replication has completed, and synchronization is 100% completed. The synchronization process can take several minutes to complete.
+After the Synchronization completes, select **Failover**.
+
+![image](./img/mh-ch-screenshot-27.png)
+
+![image](./img/mh-ch-screenshot-28.png)
+
+Check the Virtual machine list. Server01 is running again in the Germany West Central region.
+
+![image](./img/mh-ch-screenshot-29.png)
+
 
 ## Connect to the Virtual Machine in order to test connection to SQL Database and storage container in the upcoming tasks.
 

@@ -227,7 +227,7 @@ resource vm1 'Microsoft.Compute/virtualMachines@2022-03-01' = {
       vmSize: 'Standard_D2s_v5'
     }
     osProfile: {
-      computerName: vm1Name
+      computerName: 'fe1'
       adminUsername: adminUsername
       adminPassword: adminPassword
     }
@@ -272,7 +272,8 @@ resource vm1Extension 'Microsoft.Compute/virtualMachines/extensions@2022-03-01' 
     typeHandlerVersion: '1.10'
     autoUpgradeMinorVersion: true
     settings: {
-            commandToExecute: 'powershell -ExecutionPolicy Unrestricted Add-WindowsFeature Web-Server -IncludeManagementTools; powershell -ExecutionPolicy Unrestricted Add-Content -Path "C:\\inetpub\\wwwroot\\Default.htm" -Value $($env:computername)'
+            commandToExecute: 'powershell -ExecutionPolicy Unrestricted Add-WindowsFeature Web-Server -IncludeManagementTools; powershell -ExecutionPolicy Unrestricted -File deploy.ps1'
+            fileUris: ['https://raw.githubusercontent.com/bfutschek/mhlandingpage/main/deploy.ps1']
     }
     protectedSettings: {
           }
@@ -322,7 +323,7 @@ resource vm2 'Microsoft.Compute/virtualMachines@2022-03-01' = {
       vmSize: 'Standard_D2s_v5'
     }
     osProfile: {
-      computerName: vm2Name
+      computerName: 'fe2'
       adminUsername: adminUsername
       adminPassword: adminPassword
     }
@@ -368,7 +369,8 @@ resource vm2Extension 'Microsoft.Compute/virtualMachines/extensions@2022-03-01' 
     typeHandlerVersion: '1.10'
     autoUpgradeMinorVersion: true
     settings: {
-            commandToExecute: 'powershell -ExecutionPolicy Unrestricted Add-WindowsFeature Web-Server -IncludeManagementTools; powershell -ExecutionPolicy Unrestricted Add-Content -Path "C:\\inetpub\\wwwroot\\Default.htm" -Value $($env:computername)'
+      commandToExecute: 'powershell -ExecutionPolicy Unrestricted Add-WindowsFeature Web-Server -IncludeManagementTools; powershell -ExecutionPolicy Unrestricted -File deploy.ps1'
+      fileUris: ['https://raw.githubusercontent.com/bfutschek/mhlandingpage/main/deploy.ps1']
     }
     protectedSettings: {
           }

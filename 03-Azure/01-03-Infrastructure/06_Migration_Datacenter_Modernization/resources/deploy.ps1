@@ -1,4 +1,4 @@
-$pathToRepo = "https://raw.githubusercontent.com/microsoft/MicroHack/cth-updateDemoPage-MM/03-Azure/01-03-Infrastructure/06_Migration_Datacenter_Modernization/resources"
+$pathToRepo = "https://raw.githubusercontent.com/microsoft/MicroHack/cth-updateDemoPage-MM/03-Azure/01-03-Infrastructure/06_Migration_Datacenter_Modernization/resources/demopage"
 $pathToIndex = "C:\inetpub\wwwroot\index.html"
 $replaceText = "<HOSTNAME>"
 $hostname = $env:computername

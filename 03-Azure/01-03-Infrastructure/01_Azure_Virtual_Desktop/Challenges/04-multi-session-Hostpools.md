@@ -6,7 +6,7 @@ In this challenge you will create Microsoft Entra ID joined pooled desktops from
 
 ## Challenge
 Create multi-session Hostpool joined in Microsoft Entra ID
-- Region: Sweden Central  
+- Region: West Europe  
 - Metadata located in Sweden Central 
 - Host Pool type: Pooled
 - Choose your Azure Compute Gallery image from the previous challenge

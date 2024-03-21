@@ -273,7 +273,7 @@ resource vm1Extension 'Microsoft.Compute/virtualMachines/extensions@2022-03-01' 
     autoUpgradeMinorVersion: true
     settings: {
             commandToExecute: 'powershell -ExecutionPolicy Unrestricted Add-WindowsFeature Web-Server -IncludeManagementTools; powershell -ExecutionPolicy Unrestricted -File deploy.ps1'
-            fileUris: ['https://raw.githubusercontent.com/bfutschek/mhlandingpage/main/deploy.ps1']
+            fileUris: ['https://raw.githubusercontent.com/microsoft/MicroHack/cth-updateDemoPage-MM/03-Azure/01-03-Infrastructure/06_Migration_Datacenter_Modernization/resources/deploy.ps1']
     }
     protectedSettings: {
           }
@@ -370,7 +370,7 @@ resource vm2Extension 'Microsoft.Compute/virtualMachines/extensions@2022-03-01' 
     autoUpgradeMinorVersion: true
     settings: {
       commandToExecute: 'powershell -ExecutionPolicy Unrestricted Add-WindowsFeature Web-Server -IncludeManagementTools; powershell -ExecutionPolicy Unrestricted -File deploy.ps1'
-      fileUris: ['https://raw.githubusercontent.com/bfutschek/mhlandingpage/main/deploy.ps1']
+      fileUris: ['https://raw.githubusercontent.com/microsoft/MicroHack/cth-updateDemoPage-MM/03-Azure/01-03-Infrastructure/06_Migration_Datacenter_Modernization/resources/deploy.ps1']
     }
     protectedSettings: {
           }

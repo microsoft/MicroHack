@@ -46,7 +46,7 @@ param userName string
 // https://learn.microsoft.com/en-us/azure/templates/microsoft.keyvault/vaults?pivots=deployment-language-bicep
 @description('Source Keyvault')
 resource sourceKeyvault 'Microsoft.KeyVault/vaults@2021-11-01-preview' = {
-  name: substring('${prefix}${deployment}-${userName}-source-kv-${uniqueString(resourceGroup().id)}', 0, 22)
+  name: substring('${prefix}${deployment}${userName}sourcekv${uniqueString(resourceGroup().id)}', 0, 22)
   location: location
   properties: {
     enabledForDeployment: false

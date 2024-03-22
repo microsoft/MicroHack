@@ -15,26 +15,10 @@ flowchart LR
     task3 --> task4
 ~~~
 
-~~~mermaid
-flowchart LR
-    task1["Task#1
-    Get your enironment ready"]
-    task2["Task#2
-    Deploy Azure Landing Zone"]
-    task3["Task#3
-    Verify the Azure deployment"]
-    task4["Task#4
-    Verify Web Server availability"]
-    task1 --> task2
-    task2 --> task3
-    task3 --> task4
-~~~
-
 Duration: 30 minutes
 
 ## Prerequisites
 
-- Please ensure that you successfully verified the [General prerequisits](../../README.md#general-prerequisites) before continuing with this challenge.
 - Please ensure that you successfully verified the [General prerequisits](../../README.md#general-prerequisites) before continuing with this challenge.
 - The Azure CLI is required to deploy the Bicep configuration of the Micro Hack.
 - Download the *.bicep files from the [Resources](../../resources) to your local PC.
@@ -85,9 +69,6 @@ az login --use-device-code # If you are using a browser on a different machine
 
 ![Login from remote shell with device code](./img/mh.linux.login.gif)
 
-
-![Login from remote shell with device code](./img/mh.linux.login.gif)
-
 - List subscriptions you have access to with Azure CLI.
 ~~~bash
 az account list
@@ -112,7 +93,6 @@ az account list-locations -o table # List all possible Azure locations
 # Define location for all azure resources
 location=germanywestcentral
 # Get our Entra ID Object ID, will be needed to assign us Admin rights to the azure VMs
-currentUserObjectId=$(az ad signed-in-user show --query id -o tsv)
 currentUserObjectId=$(az ad signed-in-user show --query id -o tsv)
 # Define VM admin password and username
 adminPassword='demo!pass123!'

@@ -150,7 +150,7 @@ git stash apply
 git status 
 git add .
 git commit -m "several fixes including changing Region"
-git push --set-upstream origin typofix202403
+git push --set-upstream msft typofix202403
 gh pr create --title "typofix202403" --body "several fixes including changing Region" --base msft
 
 

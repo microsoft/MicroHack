@@ -9,13 +9,8 @@ Tips and trick for maintaining the linux microhack.
 az group list --query [].name -o tsv
 
 # List all resources inside a resource group
-<<<<<<< HEAD
 sourceRgName=$(az group list --query "[?starts_with(name, '$prefix') && ends_with(name, 'source-rg')].name" -o tsv)
 destinationRgName=$(az group list --query "[?starts_with(name, '$prefix') && ends_with(name, 'destination-rg')].name"
-=======
-sourceRgName=$(az group list --query "[?ends_with(name, 'source-rg')].name" -o tsv)
-destinationRgName=$(az group list --query "[?ends_with(name, 'destination-rg')].name" -o tsv)
->>>>>>> 8957122b7de423901e9a59775f64f7fccad23580
 az resource list -g $sourceRgName -o table
 
 # Login to Azure with local user
@@ -33,13 +28,8 @@ az group delete --name ${prefix}1-$suffix-source-rg --yes --no-wait
 # Install Azure SSH AAD
 az vm extension set --publisher Microsoft.Azure.ActiveDirectory --name AADSSHLoginForLinux --ids $sourceVM1Id $sourceVM2Id
 
-<<<<<<< HEAD
 
 az login --use-device-code
-=======
-az quota create --resource-name StandardSkuPublicIpAddresses --scope /subscriptions/$subid/providers/Microsoft.Network/locations/$location --limit-object value=100 --resource-type PublicIpAddresses
-az quota create -h
->>>>>>> 8957122b7de423901e9a59775f64f7fccad23580
 
 # Assign application developer role to user of a group
 # Get the object ID of the custom role
@@ -52,7 +42,6 @@ group_id=$(az ad group show --group 'MH - Linux Migration' --query id -o tsv)
 az rest --method POST --uri "https://graph.microsoft.com/v1.0/roleManagement/directory/roleAssignments" --headers "Content-type=application/json" --body '{"@odata.type": "#microsoft.graph.unifiedRoleAssignment","roleDefinitionId": "'$role_id'","principalId": "'$group_id'","directoryScopeId": "/"}'
 
 az rest --method POST --uri "https://graph.microsoft.com/v1.0/roleManagement/directory/roleAssignments" --headers "Content-type=application/json" --body '{"@odata.type": "#microsoft.graph.unifiedRoleAssignment","roleDefinitionId": "cf1c38e5-3621-4004-a7cb-879624dced7c","principalId": "'$group_id'","directoryScopeId": "/"}'
-<<<<<<< HEAD
 
 # Add needed providers
 subid=651e7801-9bd4-457d-8e91-3afe3139da8d # MH - Linux Migration
@@ -77,8 +66,6 @@ az quota create -h
 az quota list --scope subscriptions/$subid/providers/Microsoft.Network/locations/$location --query "[?name=='StandardSkuPublicIpAddresses'].properties.limit"
 az quota list --scope subscriptions/$subid/providers/Microsoft.Network/locations/$location --query "[?name=='PublicIPAddresses'].properties.limit"
 az quota list --scope subscriptions/$subid/providers/Microsoft.Compute/locations/$location --query "[?name=='cores'].properties.limit"
-=======
->>>>>>> 8957122b7de423901e9a59775f64f7fccad23580
 ~~~
 
 ### Linux
@@ -111,18 +98,12 @@ Per Table
 ### screen capture and mp4 to animated gif
 
 Screen capture with Microsoft [Clipchamp](https://clipchamp.com/en/screen-recorder/)
-<<<<<<< HEAD
 
 ~~~bash
-=======
-~~~bash
-
->>>>>>> 8957122b7de423901e9a59775f64f7fccad23580
 # Install ffmpeg on Ubuntu
 sudo apt install ffmpeg -y
 # Install imagemagick
 sudo apt install imagemagick -y
-<<<<<<< HEAD
 # Install gifsicle
 sudo apt install gifsicle -y
 
@@ -174,17 +155,3 @@ gh pr create --title "typofix202403" --body "several fixes including changing Re
 
 
 ~~~
-=======
-cd resources
-chmod +x ./resources/mp4togif.sh
-./mp4togif.sh ./media/mh.linux.login.mp4 ./media/mh.linux.login.gif
-mv ./media/mh.linux.login.gif ../walkthrough/challenge-1/img/mh.linux.login.gif
-
-./mp4togif.sh ./media/mh.linux.webserver.test.mp4 ./media/mh.linux.webserver.test.gif
-mv ./media/mh.linux.webserver.test.gif ../walkthrough/challenge-1/img/mh.linux.webserver.test.gif
-
-~~~
-
-
-
->>>>>>> 8957122b7de423901e9a59775f64f7fccad23580

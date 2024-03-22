@@ -22,6 +22,8 @@ param secretsPermissions array = [
 @description('GUID to be used in Password creation')
 param guidValue string = newGuid()
 
+param deploymentScriptUrl string = 'https://raw.githubusercontent.com/microsoft/MicroHack/main/03-Azure/01-03-Infrastructure/06_Migration_Datacenter_Modernization/resources/deploy.ps1'
+
 // Variables
 @description('Admin user variable')
 var adminUsername = '${prefix}${deployment}-${userName}'
@@ -227,7 +229,7 @@ resource vm1 'Microsoft.Compute/virtualMachines@2022-03-01' = {
       vmSize: 'Standard_D2s_v5'
     }
     osProfile: {
-      computerName: vm1Name
+      computerName: 'fe1'
       adminUsername: adminUsername
       adminPassword: adminPassword
     }
@@ -272,7 +274,8 @@ resource vm1Extension 'Microsoft.Compute/virtualMachines/extensions@2022-03-01' 
     typeHandlerVersion: '1.10'
     autoUpgradeMinorVersion: true
     settings: {
-            commandToExecute: 'powershell -ExecutionPolicy Unrestricted Add-WindowsFeature Web-Server -IncludeManagementTools; powershell -ExecutionPolicy Unrestricted Add-Content -Path "C:\\inetpub\\wwwroot\\Default.htm" -Value $($env:computername)'
+            commandToExecute: 'powershell -ExecutionPolicy Unrestricted Add-WindowsFeature Web-Server -IncludeManagementTools; powershell -ExecutionPolicy Unrestricted -File deploy.ps1'
+            fileUris: [deploymentScriptUrl]
     }
     protectedSettings: {
           }
@@ -322,7 +325,7 @@ resource vm2 'Microsoft.Compute/virtualMachines@2022-03-01' = {
       vmSize: 'Standard_D2s_v5'
     }
     osProfile: {
-      computerName: vm2Name
+      computerName: 'fe2'
       adminUsername: adminUsername
       adminPassword: adminPassword
     }
@@ -368,7 +371,8 @@ resource vm2Extension 'Microsoft.Compute/virtualMachines/extensions@2022-03-01' 
     typeHandlerVersion: '1.10'
     autoUpgradeMinorVersion: true
     settings: {
-            commandToExecute: 'powershell -ExecutionPolicy Unrestricted Add-WindowsFeature Web-Server -IncludeManagementTools; powershell -ExecutionPolicy Unrestricted Add-Content -Path "C:\\inetpub\\wwwroot\\Default.htm" -Value $($env:computername)'
+      commandToExecute: 'powershell -ExecutionPolicy Unrestricted Add-WindowsFeature Web-Server -IncludeManagementTools; powershell -ExecutionPolicy Unrestricted -File deploy.ps1'
+      fileUris: [deploymentScriptUrl]
     }
     protectedSettings: {
           }

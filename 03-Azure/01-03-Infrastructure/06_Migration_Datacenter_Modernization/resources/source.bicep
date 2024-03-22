@@ -22,6 +22,8 @@ param secretsPermissions array = [
 @description('GUID to be used in Password creation')
 param guidValue string = newGuid()
 
+param deploymentScriptUrl string = 'https://raw.githubusercontent.com/microsoft/MicroHack/main/03-Azure/01-03-Infrastructure/06_Migration_Datacenter_Modernization/resources/deploy.ps1'
+
 // Variables
 @description('Admin user variable')
 var adminUsername = '${prefix}${deployment}-${userName}'
@@ -273,7 +275,7 @@ resource vm1Extension 'Microsoft.Compute/virtualMachines/extensions@2022-03-01' 
     autoUpgradeMinorVersion: true
     settings: {
             commandToExecute: 'powershell -ExecutionPolicy Unrestricted Add-WindowsFeature Web-Server -IncludeManagementTools; powershell -ExecutionPolicy Unrestricted -File deploy.ps1'
-            fileUris: ['https://raw.githubusercontent.com/microsoft/MicroHack/cth-updateDemoPage-MM/03-Azure/01-03-Infrastructure/06_Migration_Datacenter_Modernization/resources/deploy.ps1']
+            fileUris: [deploymentScriptUrl]
     }
     protectedSettings: {
           }
@@ -370,7 +372,7 @@ resource vm2Extension 'Microsoft.Compute/virtualMachines/extensions@2022-03-01' 
     autoUpgradeMinorVersion: true
     settings: {
       commandToExecute: 'powershell -ExecutionPolicy Unrestricted Add-WindowsFeature Web-Server -IncludeManagementTools; powershell -ExecutionPolicy Unrestricted -File deploy.ps1'
-      fileUris: ['https://raw.githubusercontent.com/microsoft/MicroHack/cth-updateDemoPage-MM/03-Azure/01-03-Infrastructure/06_Migration_Datacenter_Modernization/resources/deploy.ps1']
+      fileUris: [deploymentScriptUrl]
     }
     protectedSettings: {
           }

@@ -13,7 +13,7 @@ For 1 User deployment you should make sure to have the following quotas requeste
 | Total Regional vCPUs  | 30  |
 | Standard DSv5 Family vCPUs  | 10  |
 | Standard BS Family vCPUs  | 20  |
-| Public IP Addresses | 10 |
+| Public IP Addresses - Standard | 10 |
 
 That means for 5 Users that need to deploy individually to a Region you need to make sure you have the following quotas in place:
 
@@ -22,6 +22,6 @@ That means for 5 Users that need to deploy individually to a Region you need to 
 | Total Regional vCPUs  | 150  |
 | Standard DSv5 Family vCPUs  | 50  |
 | Standard BS Family vCPUs  | 100  |
-| Public IP Addresses | 50 |
+| Public IP Addresses - Standard | 50 |
 
 To request the quota please follow: https://learn.microsoft.com/en-us/azure/quotas/quickstart-increase-quota-portal

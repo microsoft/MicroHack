@@ -4,8 +4,7 @@ Duration:  30 minutes
 
 **[Home](../Readme.md)** - [Next Challenge Solution](./02-Create-a-custom-golden-image-solution.md)
 
-In this exercise we will be creating an Azure Virtual Desktop host pool for personal desktops. This is a set of computers or hosts which operate on an as-needed basis. This personal desktop will also function as a jump host in the following exercises.
-
+In this exercise we will be creating an Azure Virtual Desktop host pool for personal desktops. This  hosts which operate on an as-needed basis. This personal desktop can also be used as a jump host in the following exercises.
 
 **Additional Resources**
 |              |            |  
@@ -25,31 +24,39 @@ In this exercise we will be creating an Azure Virtual Desktop host pool for pers
    
 ![This image shows where to select host pools under manage and select add to add a new host pool.](../Images/01-avdHostPool.png "Azure Virtual Desktop blade")
 
-4.  On the Basics page, refer to the following screenshot to fill in the required fields. Select your Subscription, Resource Group and define a Hostpool name. As Location choose **West Europe**. 
+4.  On the Basics page, refer to the following screenshot to fill in the required fields. Select your Subscription, Resource Group and define a Hostpool name. As Location choose **Sweden Central **. 
 
 > **Info:** This will only effect metadata. The Datacenter location for virtual machines will follow. 
 
-Change **Validation environment** to **Yes**.
+Change **Validation environment** to **No**.
+
 Once complete, select **Next: Virtual Machines**.
 
-![This image shows where you will enter the information for the host pool.](../Images/01-createpersonalhostpool.png "Create host pool page")
+![This image shows where you will enter the information for the host pool.](../Images/01-personal-hostpool-creation_0.png "Create host pool page")
 
-5.  On the Virtual Machines page, provision a Virtual machine with the **Windows 11 Enterprise**.
-   
-6.  For the **Image**, select **Browse all images and disks** and search to find **Windows 11 Enterprise** and select that image.
-    >**Note**: Selecting this image is very important. You will need the Microsoft 365 for assigning apps in this exercise.
+5.  On the Virtual Machines page, provision a Virtual machine with the **Windows 11 Enterprise** and follow the example values from the following screenshots.
 
-    ![This image shows the image that you need for your host pool virtual machine.](../Images/01-vmwith365_1.png "Host pool Virtual Machine with image")
+>**Note**: The name prefix is used for the virtual machines, followed by a number, e.g. VM-T0-PERS-1, and is limited to 11 characters in this wizard.
+ 
+For the **Image**, select **Browse all images and disks** and search to find **Windows 11 Enterprise** and select that image.
 
-    ![This image shows the image that you need for your host pool virtual machine.](../Images/01-vmwith365_2.png "Host pool Virtual Machine with image")
+![This image shows the image that you need for your host pool virtual machine.](../Images/01-personal-vmcreation_2.png "Host pool Virtual Machine with image")
 
-     ![This image shows the image that you need for your host pool virtual machine.](../Images/01-vmwith365_3.png "Host pool Virtual Machine with image")
+**Select your virtual network and subnet** for the network settings. You should only see one virtual network. 
 
-7.  On the Workspace page, select **Yes** to register a new desktop app group. Select **Create new** and provide a **Workspace name**. Select **OK** and **Review + create**.
+For the directory option select **Microsoft Entra ID** and for the Intune question please select **No**.
 
-    ![This image shows how from the create a host pool workspace tab, enter the required information.](../Images/01-hostpoolWorkspace.png "Create a host pool workspace tab")
+![This image shows the image that you need for your host pool virtual machine.](../Images/01-personal-vmcreation_3.png "Host pool Virtual Machine with image")
 
-8.  On the Create a host pool page, select **Create**.
+Next, click **Next: Workspace**. 
+
+6.  On the Workspace page, select **Yes** to register a new desktop app group. Select **Create new** and provide a **Workspace name**. Select **OK** and **Review + create**.
+
+![This image shows how from the create a host pool workspace tab, enter the required information.](../Images/01-hostpoolWorkspace.png "Create a host pool workspace tab")
+
+You can skip the "Advanced" and "Tags" tab and continue with the **Review + Create** step.
+
+7.  Finally, select **Check + Create** and if the check was successful, click **Create**.
 
 ## Task 2: Create a friendly name for the workspace
 
@@ -77,7 +84,7 @@ The name of the Workspace is displayed when the user signs in. Available resourc
 
 ## Task 3: Assign an Azure AD User to the desktop application group
 
-In the new Azure Virtual Desktop ARM portal, we now can use Azure Active Directory groups to manage access to our host pools.
+In the new Azure Virtual Desktop ARM portal, we now can use Microsoft Entra ID groups to manage access to our host pools.
 
 1.  Sign in to the [Azure Portal](https://portal.azure.com/).
 
@@ -91,29 +98,31 @@ In the new Azure Virtual Desktop ARM portal, we now can use Azure Active Directo
 
 5.  Under Manage, select **Assignments** and select **+ Add**.
 
-    ![This image shows where to find manage in the menu and select assignments and add.](../Images/01-addassignments.png)
+    ![This image shows where to find manage in the menu and select assignments and add.](../Images/01-personal-user-assignment_0.png)
 
-6.  In the fly out, enter **AAD Username or AAD Group** in the search to find the name of your Azure AD group. In this exercise we will select **Alex Wilber**.
+6.  In the fly out, enter **Your Entra ID Group** in the search to find your Microsoft Entra ID group, e.g. **GRP-T0-Users**.
 
-    ![In this image, you can view the groups that you need to select and save.](../Images/01-avdpooleduseradd.png "Add Pooled Desktop user")
+    ![In this image, you can view the groups that you need to select and save.](../Images/01-personal-user-assignment_1.png "Add Pooled Desktop user")
 
 7.  Choose **Select** to save your changes.
 
-    ![This image shows how to find and select the AVD Pooled desktop users in the list of users and groups.](../Images/01-hostpoolusers.png "Host pool users for AVD")
+    ![This image shows how to find and select the AVD Pooled desktop users in the list of users and groups.](../Images/01-personal-user-assignment_2.png "Host pool users for AVD")
 
 With the assignment added, you can move on to the resource group and configure the RBAC permission so the selected user can access the desktop via AAD only.
 
-1.  Go to the resource group e.g. **rg-microhack** and select **Access Control (IAM)**.
+1.  Go to the resource group, e.g. **RG-AVD-TEAM0** and select **Access Control (IAM)**.
 
-    ![This image shows how to add and apply RBAC permissions to a resource group.](../Images/01-rbac1.png "Add Permissions")
+    ![This image shows how to add and apply RBAC permissions to a resource group.](../Images/01-personal-user-assignment_3.png "Add Permissions")
 
-2. Select **Add** and search for **Virtual Machine User Login** or **Virtual Machine Administator Login** to access the session with local admin rights.
+2. Select **Add role assignment** and search for **Virtual Machine User Login** or **Virtual Machine Administator Login** to access the session with local admin rights.
 
-     ![This image shows how to add and apply RBAC permissions to a resource group.](../Images/01-rbac2.png "Add Permissions")
+     ![This image shows how to add and apply RBAC permissions to a resource group.](../Images/01-personal-user-assignment_4.png "Add Permissions")
 
-3. Select and add the **User or Group** and apply the Role assignment. 
+Click **Next**.
 
-    ![This image shows how to add and apply RBAC permissions to a resource group.](../Images/01-rbac3.png "Add Permissions")
+3. Under the members tab, add your **Microsoft Entra ID Group**, e.g. **GRP-T0-Users** and apply the Role assignment. 
+
+    ![This image shows how to add and apply RBAC permissions to a resource group.](../Images/01-personal-user-assignment_5.png "Add Permissions")
 
 With this assignment you now can test the first connection to your AVD session host.
 

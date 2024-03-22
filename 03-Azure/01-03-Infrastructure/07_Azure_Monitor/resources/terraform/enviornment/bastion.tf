@@ -1,5 +1,5 @@
 resource "azurerm_public_ip" "pip_bastion" {
-  name                = "pip-bastion"
+  name                = local.bastion_pip_name
   location            = var.location
   resource_group_name = var.rg_name
   allocation_method   = "Static"
@@ -9,7 +9,7 @@ resource "azurerm_public_ip" "pip_bastion" {
 }
 
 resource "azurerm_bastion_host" "bastion" {
-  name                = "bastion-microhack"
+  name                = local.bastion_name
   location            = var.location
   resource_group_name = var.rg_name
 

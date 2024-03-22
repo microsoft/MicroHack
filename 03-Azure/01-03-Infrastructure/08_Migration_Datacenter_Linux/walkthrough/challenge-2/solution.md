@@ -15,6 +15,21 @@ flowchart LR
     task3 --> task4
 ~~~
 
+~~~mermaid
+flowchart LR
+    task1["Task#1
+    Create Azure Migrate Project"]
+    task2["Task#2
+    Deploy Azure Windows VM"]
+    task3["Task#3
+    Install Azure Migration Appliance"]
+    task4["Task#4
+    Configure Azure Migration Appliance"]
+    task1 --> task2
+    task2 --> task3
+    task3 --> task4
+~~~
+
 Duration: 60 minutes
 
 ## Prerequisites
@@ -82,6 +97,7 @@ Wait until the deployment has been successfully completed and select *Go to reso
 ![image](./img/AzMigApp5.png)
 
 #### [OPTIONAL] Create the Azure Migrate Appliance VM via Azure Resource Manager Template (Bicep) instead of the Azure Portal
+#### [OPTIONAL] Create the Azure Migrate Appliance VM via Azure Resource Manager Template (Bicep) instead of the Azure Portal
 
 You can also create the Azure Migrate Appliance VM via Azure Resource Manager Template (Bicep) instead of the Azure Portal. The following Bicep template can be used to create the Azure Migrate Appliance VM.
 
@@ -116,6 +132,7 @@ userObjectId=$currentUserObjectId \
 imageReference="$migVmImageReference"
 ~~~
 
+#### Log into the Azure Migrate Appliance VM via Azure Bastion
 #### Log into the Azure Migrate Appliance VM via Azure Bastion
 
 Select *Bastion* from the navigation pane on the left, provide the credentials to login to the Azure Migrate Appliance VM and select *Connect*. A new browser tab should open with a remote session to the Windows Server 2019 system.
@@ -288,4 +305,5 @@ The deployed architecture now looks like the following diagram.
 
 ![image](./img/Challenge-2.jpg)
 
+ **[Home](../../README.md)** - [Next Challenge Solution](../challenge-3/solution.md)
  **[Home](../../README.md)** - [Next Challenge Solution](../challenge-3/solution.md)

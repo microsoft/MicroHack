@@ -33,7 +33,7 @@ Azure Virtual Desktop requires a built-in Azure role permission **Desktop Virtua
 In this Challenge you will set up a scaling plan based on certain insights from previous usage and management requirements on cost savings. In order to do so, you will need to assign the Azure permission role for Azure Virtual Desktop first. 
 
 ## Challenge
-1.	Assign the built-in Azure permission role **Desktop Virtualization Power On Off Contributor** in the subscription where the VMs are located, which allows **Azure Virtual Desktop or Windows Virtual Desktop**  to shut down and power on VMs.
+1.	Assign the built-in Azure permission role **Desktop Virtualization Power On Off Contributor** in the resource group where the VMs are located, which allows **Azure Virtual Desktop or Windows Virtual Desktop**  to shut down and power on VMs.
 
 2.	Set up a scaling automation and assign it to the multi-session host pool with respect to the following requirements: 
     - Standard office hours are from 8 am to 6 pm from Monday to Friday

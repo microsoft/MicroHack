@@ -2,7 +2,7 @@
 
 // Create a virtual network
 resource "azurerm_virtual_network" "microhack_vnet" {
-  name                = "vnet-microhack"
+  name                = local.virtual_network_name
   address_space       = ["10.0.0.0/16"]
   location            = azurerm_resource_group.microhack_monitoring.location
   resource_group_name = azurerm_resource_group.microhack_monitoring.name
@@ -11,7 +11,7 @@ resource "azurerm_virtual_network" "microhack_vnet" {
 // Create subnets
 resource "azurerm_subnet" "microhack_subnet" {
   count                 = 2
-  name                  = "subnet-microhack-${count.index}"
+  name                  = "${local.subnet_name}-${count.index}"
   address_prefixes      = ["10.0.${count.index}.0/24"]
   virtual_network_name  = azurerm_virtual_network.microhack_vnet.name  
   resource_group_name   = azurerm_resource_group.microhack_monitoring.name
@@ -19,7 +19,7 @@ resource "azurerm_subnet" "microhack_subnet" {
 
 // Create NSGs
 resource "azurerm_network_security_group" "nsg_subnet_1" {
-    name                           = "nsg-subnet-1"
+    name                           = "${local.nsg_name}-1"
     location                       = azurerm_resource_group.microhack_monitoring.location
     resource_group_name            = azurerm_resource_group.microhack_monitoring.name
 
@@ -43,7 +43,7 @@ resource "azurerm_subnet_network_security_group_association" "nsg_association_su
 
 
 resource "azurerm_network_security_group" "nsg_subnet_2" {
-    name                           = "nsg-subnet-2"
+    name                           = "${local.nsg_name}-2"
     location                       = azurerm_resource_group.microhack_monitoring.location
     resource_group_name            = azurerm_resource_group.microhack_monitoring.name
 

@@ -4,7 +4,11 @@ Duration: 45 min
 
 [Previous Challenge Solution](./01-Personal-Hostpools-solution.md) - **[Home](../Readme.md)** - [Next Challenge Solution](./03-start-VM-on-connect-solution.md)
 
-In this challenge, you will learn about creating a customized Azure Virtual Desktop image using the Azure VM Image Builder and then offering that image through the Azure Compute Gallery. There are several ways to create a custom golden image. This can be done manually by first creating an Azure VM and then generalizing and capturing it. Alternatively, PowerShell commands, ARM templates, or the Custom Image Template feature accessible from the Azure Portal GUI can be used. This feature guides you through the prerequisites and process of using Azure Image Builder. You should use the Custom Image Template in this challenge. 
+In this challenge, you will learn about creating a customized Azure Virtual Desktop image using the Azure VM Image Builder and then offering that image through the Azure Compute Gallery. 
+
+There are several ways to create a custom golden image. This can be done manually by first creating an Azure VM and then generalizing and capturing it. Alternatively, PowerShell commands, ARM templates, or the Custom Image Template feature accessible from the Azure Portal GUI can be used. 
+
+This feature guides you through the prerequisites and process of using Azure Image Builder. You should use the Custom Image Template in this challenge. 
 
 **Additional Resources**
 |              |            |  
@@ -19,7 +23,7 @@ In this challenge, you will learn about creating a customized Azure Virtual Desk
 
 # Task 1 - Create user-managed identity and assign minimum permissions
 
->[!note]By default, Image Builder supports using scripts, or copying files from multiple locations, such as GitHub and Azure storage. To use these, they must be publicly accessible. Beginning of June 2020 you need to use an Azure User-Assigned Managed Identity, defined by you, to allow Image Builder access Azure Storage, as long as the identity has been granted a minimum of **Storage Blob Data Reader*** on the Azure storage account. This means you do not need to make the storage blobs externally accessible, or setup SAS Tokens.
+>**Note:** By default, Image Builder supports using scripts, or copying files from multiple locations, such as GitHub and Azure storage. To use these, they must be publicly accessible. Beginning of June 2020 you need to use an Azure User-Assigned Managed Identity, defined by you, to allow Image Builder access Azure Storage, as long as the identity has been granted a minimum of **Storage Blob Data Reader*** on the Azure storage account. This means you do not need to make the storage blobs externally accessible, or setup SAS Tokens.
 
 1. Open the [Azure managed identity site](https://azmi.cmd.ms/) and select **Create** to create a new managed identity.
 
@@ -31,7 +35,7 @@ In this challenge, you will learn about creating a customized Azure Virtual Desk
 |:---------|:---------|:---------|
 | Subscription | ME-AVDMicrohack-1 |
 | Resource Group | RG-MicroHack | Select your own resource group.
-| Region | West Europe | 
+| Region | Sweden Central  | 
 | Name | ID-AIB-MicroHack | Select your own managed identity.
 
 ![02-CustomImageTemplateReq-1.png](../Images/02-CustomImageTemplateReq-1.png)
@@ -116,7 +120,7 @@ If the custome rule is assign successfully, you will see something like this pop
 **Task 1 has been completed** 
 # Task 2 - Create Azure Compute Gallery
 
->[!hint]There is no extra charge for using the Azure Compute Gallery service. You will be charged for the following resources:
+>**Note:** There is no extra charge for using the Azure Compute Gallery service. You will be charged for the following resources:
 >
 >- Storage costs of storing the Shared Image versions. Cost depends on the number of replicas of the image version and the number of regions the version is replicated to. For example, if you have 2 images and both are replicated to 3 regions, then you will be charged for 6 managed disks based on their size. For more information, see [Managed Disks pricing](https://azure.microsoft.com/en-us/pricing/details/managed-disks/).
 >- Network egress charges for replication of the first image version from the source region to the replicated regions. Subsequent replicas are handled within the region, so there are no additional charges.
@@ -135,7 +139,7 @@ If the custome rule is assign successfully, you will see something like this pop
 | Subscription | ME-AVDMicrohack-1 |
 | Resource Group | RG-MicroHack | Select your own resource group.
 | Name | WIN11AVDCoreApps | Enter a custom gallery name.
-| Region | West Europe | 
+| Region | Sweden Central  | 
 
 ![02-CustomImageTemplateReq-20.png](../Images/02-CustomImageTemplateReq-20.png)
 
@@ -157,7 +161,7 @@ Then, click **Review + create**.
 
 | Field | Value | Notes
 |:---------|:---------|:---------|
-| Region | West Europe | 
+| Region | Sweden Central  | 
 | VM image definition name | WIN11AVDCoreAppsDefinition | Enter an image definition name.
 | OS Type | Windows | 
 | Security Type | Standard | 
@@ -241,7 +245,7 @@ Select **Next**.
 
 6. In the distibution targets tag, select **Azure Compute Gallery** and enter the following information:
 
->[!alert]If you want to deploy your session hosts to one of the regions currently not supported by Azure Image Builder (or if you just want to have your image made available in other regions) we recommend to use the Azure Compute Gallery to distribute your managed image to other locations. The primary purpose of using the Azure Compute Gallery is to replicate your master image to other Azure regions automatically. You can accomplish that by appending a second region to the Replication regions list. 
+>**Note:** If you want to deploy your session hosts to one of the regions currently not supported by Azure Image Builder (or if you just want to have your image made available in other regions) we recommend to use the Azure Compute Gallery to distribute your managed image to other locations. The primary purpose of using the Azure Compute Gallery is to replicate your master image to other Azure regions automatically. You can accomplish that by appending a second region to the Replication regions list. 
 
 >If you are building your master image in the same region as your CONTOSODC AND if the Azure Image Builder service is available there ([Azure Image Builder Regions](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-overview?toc=/azure/virtual-machines/windows/toc.json&bc=/azure/virtual-machines/windows/breadcrumb/toc.json#regions)), then you may leave the Replication region parameter in the table below. Remember that the managed image has to be available in the Azure region you are planning to create session hosts. Additionally, session host VM require a direct line of sight to your DC.
 
@@ -251,7 +255,7 @@ Select **Next**.
 | Gallery image definition | WIN11AVDCoreAppsDefinitions  | 
 | Gallery Image version | 0.0.1 | It's optional.
 | Run output name | WIN11AVDCoreApps | This value can be anything, it is just the name for the temporary resource group
-| Replication regions | West Europe | 
+| Replication regions | Sweden Central  | 
 | Exclude from latest | No | It's the first version.
 | Storage account type | Standard_LRS |
 
@@ -313,7 +317,7 @@ Select **Save**.
 
 ![02-CustomImageTemplate-11.png](../Images/02-CustomImageTemplate-11.png)
 
->**Info:** If the template creation fails because of the West Europe region, you need to recreate the template and use North Europe as the region, but for the replication region both (West Europe and North Europe).
+>**Note:** If the template creation fails because of the Sweden Central  region, you need to recreate the template and use North Europe as the region, but for the replication region both (Sweden Central  and North Europe).
 
 14. When the customer image template is successfully created, you can start the image creation process by clicking **Start build**.
 
@@ -331,8 +335,8 @@ https://portal.azure.com/
 ```
 ![02-CustomImageTemplate-13.png](../Images/02-CustomImageTemplate-13.png)
 
->[!important]The distribution process may take some time (approx. 60-90 minutes) to complete. You will not be able to complete exercise 2 before your custom image is available in your replication region. 
+>**Note:** The distribution process may take some time (approx. 60-90 minutes) to complete. You will not be able to complete exercise 2 before your custom image is available in your replication region. 
 
->[!knowledge]The time it takes to replicate to different regions depends on the amount of data being copied and the number of regions the version is replicated to. This can take a few hours in some cases. While the replication is happening, you can view the status of replication per region. Once the image replication is complete in a region, you can then deploy a VM or scale-set using that image version in the region.
+>**Note:** The time it takes to replicate to different regions depends on the amount of data being copied and the number of regions the version is replicated to. This can take a few hours in some cases. While the replication is happening, you can view the status of replication per region. Once the image replication is complete in a region, you can then deploy a VM or scale-set using that image version in the region.
 
 **Task 3 has been completed** 

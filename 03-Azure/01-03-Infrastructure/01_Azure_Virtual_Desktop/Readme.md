@@ -1,6 +1,6 @@
-![image](Images/MicroHack_Logo_1.png)
+![image](Images/AVD-Header.png)
 
-# Azure Virtual Desktop - Micro Hack
+# Azure Virtual Desktop - MicroHack
 
 ## Introduction
 
@@ -34,20 +34,8 @@ In this hack, you will learn how to set up an Azure Virtual Desktop in a typical
 - Challenge 7: **[Customize RDP Properties](Challenges/07-RDP-properties.md)**
 - Challenge 8 (optional): **[Configure MFA](Challenges/08-Configure-MFA.md)**
 
-## Solution Guide
-
-- Challenge 1: **[Create a host pool for personal desktops](Solutionguide/01-Personal-Hostpools-solution.md)**
-- Challenge 2: **[Create a custom golden image](Solutionguide/02-Create-a-custom-golden-image.md)**
-- Challenge 3: **[Implement Start VM on Connect Feature](Solutionguide/03-start-VM-on-connect-solution.md)**
-- Challenge 4: **[Create a host pool for multi-session desktops](Solutionguide/04-multi-session-Hostpools-solution.md)**
-- Challenge 5: **[Create FSLogix Profile Solution](Solutionguide/05-Implement-FSLogix-Profile-Solution.md)**
-- Challenge 6: **[Set up a scaling plan](Solutionguide/06-scaling-plan-solution.md)**
-- Challenge 7: **[Customize RDP Properties](Solutionguide/07-RDP-properties-solution.md)**
-- Challenge 8: **(optional): [Configure MFA](Solutionguide/08-Configure-MFA.md)**
-
 ## Contributor
 - [Ben Martin Baur](https://www.linkedin.com/in/ben-martin-baur/)
 - [Angelika Gerl](https://www.linkedin.com/in/angelika-gerl/)
-- Leonie Mueller
-- Steffen Krause
 - [Daniel Weppeler](https://www.linkedin.com/in/daniel-weppeler/)
+- [Peter Riedelsdorf](https://www.linkedin.com/in/peter-riedelsdorf-485a09115)

@@ -1,4 +1,6 @@
-# **Azure Linux Migration MicroHack**
+![image](img/1920x300_EventBanner_MicroHack_Linux_wText.jpg)
+
+# MicroHack - Migrating Linux Workloads 
 
 - [**MicroHack introduction**](#MicroHack-introduction)
 - [**MicroHack context**](#microhack-context)

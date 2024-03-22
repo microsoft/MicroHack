@@ -9,24 +9,23 @@ param prefix string = 'mh'
 @description('The Number of deployments per subscription. This parameter is to be used it the deployment gets precreated for the users.')
 param deploymentCount int = 1
 
-@description('Azure region for the deployment')
-@allowed([
-  'Germany West Central'
-  'West Europe'
-  'North Europe'
-  'East US'
-  'East US 2'
-  'Southeast Asia'
-  'East Asia'
-])
-param location string
+@description('Azure region for the deployment. Defaulting to the Location of the Deployment.')
+param location string = deployment().location
 
-var suffix = substring(uniqueString(currentUserObjectId), 0, 4) 
+@description('User Name for the Tags')
+param userName string 
+
+@description('Tags to identify user resources')
+var tags = {
+  User: userName
+}
 
 @description('Source Resouce Groups.')
 resource sourceRg 'Microsoft.Resources/resourceGroups@2021-01-01' = [for i in range(0, deploymentCount): {
-  name: '${prefix}${(i+1)}-${suffix}-source-rg'
+  //name: '${prefix}${(i+1)}-${suffix}-source-rg'
+  name: '${prefix}${(i+1)}-${userName}-source-rg'
   location: location
+  tags: tags
 }]
 
 @description('Source Module to deploy initial demo resources for migration')
@@ -37,15 +36,17 @@ module source 'source.bicep' = [for i in range(0, deploymentCount):  {
     location: location
     currentUserObjectId: currentUserObjectId
     prefix: prefix
-    suffix: suffix
     deployment: (i+1)
+    userName: userName    
   }
 }]
 
 @description('Destination Resouce Groups.')
 resource destinationRg 'Microsoft.Resources/resourceGroups@2021-01-01' = [for i in range(0, deploymentCount): {
-  name: '${prefix}${(i+1)}-${suffix}-destination-rg'
+  //name: '${prefix}${(i+1)}-${suffix}-destination-rg'
+  name: '${prefix}${(i+1)}-${userName}-destination-rg'
   location: location
+  tags: tags
 }]
 
 @description('Destination Module to deploy the destination resources')
@@ -55,11 +56,11 @@ module destination 'destination.bicep' = [for i in range(0, deploymentCount): {
   params: {
     location: location
     prefix: prefix
-    suffix: suffix
     deployment: (i+1)
+    userName: userName
   }
 }]
 
 
-output identifier string = suffix
+output identifier string = userName
 

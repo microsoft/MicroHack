@@ -6,13 +6,13 @@
 In this challenge we will be provisioning our first Host Pool and Session Hosts. You will need to create a personal Host Pool based on the Windows 11 Enterprise image. Once you created the Host Pool you will need to add Session Hosts, assign users to the Host Pool.
 
 ## Challenge 
-- West Europe Region
+- Region: Sweden Central 
 - Personal Host Pool via the Azure Portal, with Windows 11 Enterprise from the Gallary
 - Metadata located in West Europe
 - Domain to join: Microsoft Entra ID (Enroll with Intune “No”)
 - Users should be assigned directly to the session host.
 - Change the friendly name of the Workspace
-- Change the friendly name of the Application Group
+- Change the friendly name of the Desktop Application
 
 ## Success Criteria
 - Host Pools are created and Session Hosts showing available

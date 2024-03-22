@@ -5,7 +5,9 @@ Duration: 45 minutes
 [Previous Challenge Solution](./04-multi-session-Hostpools-solution.md) - **[Home](../Readme.md)** - [Next Challenge Solution](./06-scaling-plan-solution.md)
 
 In this challenge you will learn how to implement the FSLogix profile solution for multi-session hostpools.
-The Azure Virtual Desktop service recommends FSLogix profile containers as a user profile solution. FSLogix is designed to roam profiles in remote computing environments, such as Azure Virtual Desktop. It stores a complete user profile in a single container. At sign in, this container is dynamically attached to the computing environment using natively supported Virtual Hard Disk (VHD) and Hyper-V Virtual Hard disk (VHDX). The user profile is immediately available and appears in the system exactly like a native user profile.
+The Azure Virtual Desktop service recommends FSLogix profile containers as a user profile solution. FSLogix is designed to roam profiles in remote computing environments, such as Azure Virtual Desktop. 
+
+It stores a complete user profile in a single container. At sign in, this container is dynamically attached to the computing environment using natively supported Virtual Hard Disk (VHD) and Hyper-V Virtual Hard disk (VHDX). The user profile is immediately available and appears in the system exactly like a native user profile.
 
 **Additional Resources**
 
@@ -28,14 +30,16 @@ General purpose version 2 (GPv2) storage accounts: GPv2 storage accounts allow y
 
 ![Create Storage account](../Images/03-FSLogix_create-storage-account-0.png)
 
-To create a storage account via the Azure portal, select + Create a resource from the dashboard. In the resulting Azure Marketplace search window, search for storage account and select the resulting search result. This will lead to an overview page for storage accounts; select Create to proceed with the storage account creation wizard.
+To create a storage account via the Azure portal, search for **Storage accounts** and select the resulting search result. This will lead to an overview page for storage accounts. 
+
+Select **Create** to proceed with the storage account creation wizard.
 
 FileStorage storage accounts: FileStorage storage accounts allow you to deploy Azure file shares on premium/solid-state disk-based (SSD-based) hardware. FileStorage accounts can only be used to store Azure file shares; no other storage resources (blob containers, queues, tables, etc.) can be deployed in a FileStorage account.
 
 Create a general-purposev2 storage account with the following settings:
 - Resource group: **select your Resource group**
 - Storage account name: **fslogixprofilefs (or something similar)**
-- Region: **West Europe**
+- Region: **Sweden Central **
 - Performance: **Standard**
 - Redundancy: **Locally-redundant storage (LRS)**
 - Click **Review** and then **Create**
@@ -51,10 +55,16 @@ Click on **+ File share** on the top.
 
 ![Create Storage account](../Images/03-FSLogix_create-storage-account-3.png)
 
-Create a file share 
-- Name: **fslogixfs (or something similar)**
+Create a file share with the following specs:
+- Name: **profiles (or something similar)**
 - Tier: **Transaction optimized**
-- click **create**
+- Click **create**
+
+Click on **Next:Backup** and please deactivate the Azure backup functionality.
+
+![Create Storage account](../Images/03-FSLogix_create-storage-account-3-1.png)
+
+Next, **Review + create** to create the Azure file share. 
 
 > Note: To use SMB protocol with this share, you need to check if you can communicate over port 445. [Script for Windows Client](https://github.com/Azure-Samples/azure-files-samples/tree/master/AzFileDiagnostics/Windows)
 
@@ -109,8 +119,6 @@ To assign users access permissions:
 
 Click on **Review + assign**
 
-![Create Storage account](../Images/03-FSLogix_create-storage-account-13.png)
-
 > 💡To setup FSLogix on the session Hosts, you need to upload the setupFSLogix.ps1 into a Container in your Storage Account
 [Custom Script Extension Setup FSLogix](../modules/setupFSLogix.ps1)
 
@@ -136,8 +144,8 @@ Click on **Review + assign**
 
 ![Custom Script Extension](../Images/03-FSLogix_customscriptextension-4.png)
 
-- **Script file** -> browse for the **setupFSLogix.ps1 Script**
-- Arguments: type the UNC Path of your fileshare, e. g. \\uniquesamicroh.file.core.windows.net\fslogixfs
+- For the **script file**, search for the script **setupFSLogix.ps1** in your container.
+- Arguments: type the **UNC Path of your fileshare**, e. g. \\uniquesamicroh.file.core.windows.net\fslogixfs
 - Click on **Review + create**
 
 ![Custom Script Extension](../Images/03-FSLogix_customscriptextension-5.png)

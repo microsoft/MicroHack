@@ -10,7 +10,7 @@ Please make sure thet you successfully completed [Challenge 5](../challenge-5/so
 
 The Azure Migrate tool offers additional capabilities that make it easier for you to move applications from on-premises environments to Azure App Service and Azure Kubernetes Service.
 
-Azure App Service bulk migration capabilities are now in public preview through the Azure Migrate feature:
+Azure App Service bulk migration capabilities are now available as an Azure Migrate feature:
 
 * Discover and assess ASP.NET web apps in addition to categorizing which apps are ready for migration.
 * Suggest a destination for migration and provide a guided content and configuration experience for ASP.NET web apps to Azure App Service.
@@ -21,15 +21,15 @@ Azure App Service bulk migration capabilities are now in public preview through 
 > **Currently this feature has a few [limitations](https://learn.microsoft.com/en-us/azure/migrate/concepts-migration-webapps#limitations) and therefore it can't be used to migrate web apps directly from physical servers. However, we can use it at least to perform the assessment of our web apps and use the [App Service migration assistant tool](https://learn.microsoft.com/en-us/azure/app-service/app-service-asp-net-migration) for the migration.**
 
 
-Open the [Azure Portal](https://portal.azure.com) and navigate to the previousley created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click on *Assess* and select *Azure App Service (Preview)* from the drop down list.
+Open the [Azure Portal](https://portal.azure.com) and navigate to the previousley created Azure Migrate project. Select *Servers, databases and web apps*, **make sure that the right Azure Migrate Project is selected** and click on *Assess* and select *Web Apps on Azure* from the drop down list.
 
 ![image](./img/appservice1.png)
 
-Under *Basics* select *Azure App Service (Preview)* and provide your desired assessment settings.
+Under *Basics* select *Web Apps on Azure* and *Web apps to App Service* and provide your desired assessment settings.
 
 ![image](./img/appservice2.png)
 
-Under *Select servers to assess*, create a new Assessment group and provide a name for the group and the assessment. Make sure to select both servers.
+Under *Select servers to assess*, provide a Assessment name and select the previously created Group.
 
 ![image](./img/appservice3.png)
 
@@ -37,25 +37,25 @@ Proceed to the last section *Review + create assessment* and click *Create asses
 
 ![image](./img/appservice4.png)
 
-From the *Azure Migrate:Discovery and assessment* page select the *Azure App Service (Preview)* assessment.
+From the *Azure Migrate:Discovery and assessment* page select the *Web apps on Azure* assessment.
 
 ![image](./img/appservice5.png)
 
-On the next page click on the previousley created assessment.
+On the next page click on the previously created assessment.
 
 ![image](./img/appservice6.png)
 
-Review the output of the assessment to see if the web app currently running on Windows Server IIS is suitable and readyfor Azure App Services.
+Review the output of the assessment to see if the web app currently running on Windows Server IIS is suitable and ready for Azure App Services.
 
 ![image](./img/appservice7.png)
 
 ### **Task 2: Modernize web app to Azure App Service Code**
 
 > [!WARNING]
-> **As mentioned ubove, the current [limitations](https://learn.microsoft.com/en-us/azure/migrate/concepts-migration-webapps#limitations) will not allow the direct migration of web apps running on physical machines. Therefore, we will use the [App Service migration assistant tool](https://learn.microsoft.com/en-us/azure/app-service/app-service-asp-net-migration) for the migration.**
+> **As mentioned above, the current [limitations](https://learn.microsoft.com/en-us/azure/migrate/concepts-migration-webapps#limitations) will not allow the direct migration of web apps running on physical machines. Therefore, we will use the [App Service migration assistant tool](https://learn.microsoft.com/en-us/azure/app-service/app-service-asp-net-migration) for the migration.**
 
 
-Login to the Virtual Machine *frontend1* in the *source-rg* Resource Group via Azure Bastion, open the [Azure Portal](https://portal.azure.com) from the *frontend1* VM and navigate to the previousley created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click on *Replicate* within the *Migration tools* box.
+Login to the Virtual Machine *frontend1* in the *destination-rg* Resource Group via Azure Bastion, open the [Azure Portal](https://portal.azure.com) from the *frontend1* VM and navigate to the previousley created Azure Migrate project. Select *Servers, databases and web apps*, **make sure that the right Azure Migrate Project is selected** and click on *Replicate* within the *Migration tools* box.
 
 ![image](./img/modernize1.png)
 
@@ -63,54 +63,51 @@ On the next page select *ASP.NET web apps*, *Azure App Service code*, *Pyhsical 
 
 ![image](./img/modernize2.png)
 
-Navigate to *Migrate from an IIS server* and click on the link to download the [PowerShell scripts](https://appmigration.microsoft.com/api/download/psscriptpreview/AppServiceMigrationScripts.zip) (1) and after the script was downloaded click on the link to be redirectioed to the [documentation](https://github.com/Azure/App-Service-Migration-Assistant/wiki/PowerShell-Scripts) (2) for the scripts.
+Navigate to *App Service migration tools and resources* and click on the link to download the [App Service Migration Assistant](https://appmigration.microsoft.com/api/download/windows/AppServiceMigrationAssistant.msi) (1) and after the file was downloaded click on the link to be redirectioed to the [documentation](https://github.com/Azure/App-Service-Migration-Assistant/wiki/PowerShell-Scripts) (2) for the App Service Migration Assistant.
 
 ![image](./img/modernize3.png)
 
-Extract the downloaded ZIP file to e.g. \<userprofile\>\\Downloads\\AppServiceMigrationScripts. Open an elevated PowerShell and change into the directory.
+Change to your download location e.g. \<userprofile\>\\Downloads and double-click the AppServiceMigrationAssistant.msi file.
 
 ![image](./img/modernize4.png)
 
-Install the Azure PowerShell modules using the *install-module az* command.
+The installation should finish without any input requirements. After the installation you will find a shortcut on the Desktop to start the App Service Migration Assistant. Double-click on the shortcut to start the App Service Migration Assistant.
 
 ![image](./img/modernize5.png)
 
-Execute the *Get-SiteReadiness.ps1* script.
+Under *Choose a Site* select *Default Web Site* and click next.
 
 ![image](./img/modernize6.png)
 
-Execute the *Get-SitePackage.ps1 -ReadinessResultsFilePath .\\ReadinessResults.json* script.
+Wait until the assessment report is finished and click next under *Assessment Report*
 
 ![image](./img/modernize7.png)
 
-Execute the *Generate-MigrationSettings.ps1 -SitePackageResultsPath .\packagedsites\PackageResults.json -Region WestEurope -SubscriptionId \<SubscriptionID\> -ResourceGroup destination-rg* script. and login using your Azure credentials.
+Under *Login to Azure*, click on *Copy Code & Open Browser* and login to Azure using your credentials.
 
 ![image](./img/modernize8.png)
 
-Open *MigrationSettings.json* file using notedpad.
+Select *Continue* when prompted to allow to sign in to the *Azure App Service Migration Assistant* application. You can then close the browser.
 
 ![image](./img/modernize9.png)
 
-Make sure to remove any blanks for the AzureSiteName parameter as this is not supported in Azure Web Apps.
+Select the correct Azure Migrate project and click next.
 
 ![image](./img/modernize10.png)
 
-Execute the *Invoke-SiteMigration.ps1 -MigrationSettingsFilePath .\\MigrationSettings.json* script.
-
-> [!WARNING]
-> **If you receive a 401 Unauthorized error it could be that Basic Authentication is disabled on the App Service due to Azure Policy enforcement in your environment. For the current version (June 2023) of the App Service migration scripts this is a requirement**
-
-
+Under *Azure Options*, select the correct Azure Subscription and Resource Group. Next specify a unique name for your web app. Select to create a new App Service Plan and choose the region of your choise. Click *Migrate* to start the migration.
 
 ![image](./img/modernize11.png)
 
-Change back to the Azure Portal and open the Resource Group *destination-rg*. You should now see a App Service called *DefaultWebSite-fe1*.
+The migration should complete successfully. You can now click on *Go to your website* to open the migrated web app now running on Azure App Services.
 
 ![image](./img/modernize12.png)
 
-Open the App Service and click on the default domain link.
+Change back to the Azure Portal and open the Resource Group *destination-rg*. You should now see a App Service and a App Service Plan resource. Click on the App Service and select *Browse* to open your web app again.
 
 ![image](./img/modernize13.png)
+
+![image](./img/modernize13-1.png)
 
 You should now see the web site content that was previously running on Windows Server IIS.
 

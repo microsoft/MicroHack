@@ -14,6 +14,8 @@ Sign in to the [Azure Portal](https://portal.azure.com/).
 
 * [Create Resource Group](https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/manage-resource-groups-portal#create-resource-groups)
 
+*Please note: At the time of writing this solution, not all Azure Arc features are fully supported in all regions. We tested this solution in region West Europe.*
+
 ### Task 2: Create Service Principal 
 
 * [Create Service Principal](https://learn.microsoft.com/en-us/azure/azure-arc/servers/onboard-service-principal#create-a-service-principal-for-onboarding-at-scale)

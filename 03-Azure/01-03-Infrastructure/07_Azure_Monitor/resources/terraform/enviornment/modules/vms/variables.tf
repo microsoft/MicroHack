@@ -23,3 +23,11 @@ variable "vmpassword" {
 variable "vm_sku" {
 
 }
+
+variable "vm_win_name" {
+  
+}
+
+variable "vm_linux_name" {
+  
+}

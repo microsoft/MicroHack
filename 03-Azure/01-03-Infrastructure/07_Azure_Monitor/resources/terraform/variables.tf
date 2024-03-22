@@ -5,3 +5,7 @@ variable "rg_name" {
 variable "location" {
   default = "West Europe"
 }
+
+variable "prefix" {
+  default = "u1"
+}

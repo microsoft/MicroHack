@@ -21,21 +21,19 @@ Duration: 30 minutes
 
 - Please ensure that you successfully verified the [General prerequisits](../../README.md#general-prerequisites) before continuing with this challenge.
 - The Azure CLI is required to deploy the Bicep configuration of the Micro Hack.
-
-
 - Download the *.bicep files from the [Resources](../../resources) to your local PC.
 
 ### ***Task 1: Get youre environment ready***
+
 - Ensure you have access to the Azure Portal at https://portal.azure.com.
 
 #### Start Cloud Shell
+
 - Login to the Azure Portal at https://portal.azure.com.
 - Launch **Cloud Shell** from the top navigation of the Azure portal.
-   
    ![Screenshot showing how to start Azure Cloud Shell in the Azure portal.](./img/AzMigCloudShell1.png)
 - The first time you start Cloud Shell you're prompted to create an Azure Storage account for the Azure file share.
    ![Screenshot showing the create storage prompt.](./img/AzMigCloudShell2.png)
-
 - Select the **Subscription** used to create the storage account and file share.
 - Select **Create storage**.
 
@@ -80,15 +78,15 @@ az account list
 az account set --subscription '<REPLACE-WITH-YOUR-SUBSCRIPTION-NAME>'
 ~~~
 
-
-
 ### **Task 2: Deploy the Landing Zone for the Micro Hack**
 
 The following command will deploy the landing zone for the Micro Hack. The landing zone contains all resources required for the Micro Hack. The deployment will take about 10 minutes.
 
+> [!IMPORTANT] The following variables value should be changed to avoid conflicts with other deployments in your Azure subscription.
+
 ~~~bash
 # Define prefix and suffix for all azure resources
-prefix="51" # replace sm with your own prefix
+prefix="1Team" # replace sm with your own prefix
 suffix=a # replace a with your own suffix
 # Have a look at all possible azure location with Azure CLI
 az account list-locations -o table # List all possible Azure locations
@@ -97,13 +95,14 @@ location=germanywestcentral
 # Get our Entra ID Object ID, will be needed to assign us Admin rights to the azure VMs
 currentUserObjectId=$(az ad signed-in-user show --query id -o tsv)
 # Define VM admin password and username
-adminPassword='demo!pass123'
+adminPassword='demo!pass123!'
 adminUsername='microhackadmin'
 # Create Azure Resources with Azure Bicep Resource Templates and Azure CLI 
 az deployment sub create --location $location --template-file ./resources/main.bicep --parameters prefix=$prefix currentUserObjectId=$currentUserObjectId location=$location adminPassword=$adminPassword suffix=$suffix adminUsername=$adminUsername
 ~~~
 
 ### **Task 3: Verify the deployed resources**
+
 The bicep deployment should have created the following resources
 
 - source-rg Resource Group containing the follwing resources
@@ -117,7 +116,8 @@ The bicep deployment should have created the following resources
 You can get a list of all resources in the resource group with the following Azure CLI command:
 ~~~bash
 # List all resource in the resource group
-az resource list -g $(az group list --query "[?ends_with(name, 'source-rg')].name" -o tsv) -o table
+sourceRgName=$(az group list --query "[?starts_with(name, '$prefix') && ends_with(name, 'source-rg')].name" -o tsv)
+az resource list -g $sourceRgName --output table
 ~~~
 
 - destination-rg Resource Group containing the follwing resources
@@ -127,7 +127,8 @@ az resource list -g $(az group list --query "[?ends_with(name, 'source-rg')].nam
 You can get a list of all resources in the resource group with the following Azure CLI command:
 ~~~bash
 # List all resource in the resource group
-az resource list -g $(az group list --query "[?ends_with(name, 'destination-rg')].name" -o tsv) -o table
+destinationRgName=$(az group list --query "[?starts_with(name, '$prefix') && ends_with(name, 'destination-rg')].name" -o tsv)
+az resource list -g $destinationRgName -o table
 ~~~
 
 The deployed architecture looks like following diagram:
@@ -145,15 +146,16 @@ Log into the first VM in the resource group with Azure Bastion and install the m
 
 ~~~bash
 # Get the name of the resource group that ends with 'source-rg'
-sourceRgName=$(az group list --query "[?ends_with(name, 'source-rg')].name" -o tsv)
+sourceRgName=$(az group list --query "[?starts_with(name, '$prefix') && ends_with(name, 'source-rg')].name" -o tsv)
 # Get the Azure Resource ID of the VMs in the source resource group
 sourceVm1Id=$(az vm list -g $sourceRgName --query "[?ends_with(name, '${suffix}1')].id" -o tsv)
 sourceVm2Id=$(az vm list -g $sourceRgName --query "[?ends_with(name, '${suffix}2')].id" -o tsv)
 # Name of the Azure Bastion in the source resource group
+TODO: Try to get the bastion name from the deployment output instead of hardcoding it.
 sourceBastionName=${prefix}1$suffix-source-bastion
 # Login to the first VM in the resource group with Azure Bastion
+# IMPORTANT 
 az network bastion ssh -n $sourceBastionName -g $sourceRgName --target-resource-id $sourceVm1Id --auth-type password --username $adminUsername
-
 # Inside the VM check if cloud-init is running
 sudo cloud-init status # should return 'status: done', if not wait a few minutes and try again
 # check if server is running
@@ -166,6 +168,8 @@ logout
 
 ![image](./img/mh.linux.webserver.test.gif)
 
+![image](./img/mh.linux.webserver.test.gif)
+
 ### **Task 4: Verify Web Server availability**
 
 The following instruction will guide you through the verification of the deployed web servers via the Azure Portal
@@ -174,6 +178,9 @@ The following instruction will guide you through the verification of the deploye
 - Navigate to *Frontend IP configuration* under *Settings* section on the left
 - Note and copy public IP address of *LoadBalancerFrontEnd*
 - Open web browser and navigate to http://LoadBalancerFrontEnd-IP-Address
+- A simple website containing details about the request and response should be displayed
+
+![image](./img/mh.linux.lb.test.gif)
 - A simple website containing details about the request and response should be displayed
 
 ![image](./img/mh.linux.lb.test.gif)
@@ -235,4 +242,5 @@ resh:{
 
 You successfully completed challenge 1! 🚀🚀🚀
 
+ **[Home](../../README.md)** - [Next Challenge Solution](../challenge-2/solution.md)
  **[Home](../../README.md)** - [Next Challenge Solution](../challenge-2/solution.md)

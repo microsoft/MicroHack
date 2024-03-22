@@ -21,7 +21,7 @@ Azure App Service bulk migration capabilities are now in public preview through 
 > **Currently this feature has a few [limitations](https://learn.microsoft.com/en-us/azure/migrate/concepts-migration-webapps#limitations) and therefore it can't be used to migrate web apps directly from physical servers. However, we can use it at least to perform the assessment of our web apps and use the [App Service migration assistant tool](https://learn.microsoft.com/en-us/azure/app-service/app-service-asp-net-migration) for the migration.**
 
 
-Open the [Azure Portal](https://portal.azure.com) and navigate to the previousley created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click on *Assess* and select *Azure App Service (Preview)* from the drop down list.
+Open the [Azure Portal](https://portal.azure.com) and navigate to the previously created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click on *Assess* and select *Azure App Service (Preview)* from the drop down list.
 
 ![image](./img/appservice1.png)
 
@@ -41,7 +41,7 @@ From the *Azure Migrate:Discovery and assessment* page select the *Azure App Ser
 
 ![image](./img/appservice5.png)
 
-On the next page click on the previousley created assessment.
+On the next page click on the previously created assessment.
 
 ![image](./img/appservice6.png)
 
@@ -55,7 +55,7 @@ Review the output of the assessment to see if the web app currently running on W
 > **As mentioned ubove, the current [limitations](https://learn.microsoft.com/en-us/azure/migrate/concepts-migration-webapps#limitations) will not allow the direct migration of web apps running on physical machines. Therefore, we will use the [App Service migration assistant tool](https://learn.microsoft.com/en-us/azure/app-service/app-service-asp-net-migration) for the migration.**
 
 
-Login to the Virtual Machine *frontend1* in the *source-rg* Resource Group via Azure Bastion, open the [Azure Portal](https://portal.azure.com) from the *frontend1* VM and navigate to the previousley created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click on *Replicate* within the *Migration tools* box.
+Login to the Virtual Machine *frontend1* in the *source-rg* Resource Group via Azure Bastion, open the [Azure Portal](https://portal.azure.com) from the *frontend1* VM and navigate to the previously created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click on *Replicate* within the *Migration tools* box.
 
 ![image](./img/modernize1.png)
 
@@ -120,13 +120,13 @@ You should now see the web site content that was previously running on Windows S
 
 ### **Task 3: Update Traffic Manager profile**
 
-The Traffic Manager profile is still pointing to the previousley migrated Virtual Machines. You can now update the endpoints within the profile to point to the App Services instead of the VMs.
+The Traffic Manager profile is still pointing to the previously migrated Virtual Machines. You can now update the endpoints within the profile to point to the App Services instead of the VMs.
 
 From the Azure Portal open the Load Balancing blade, select Traffic Manager on the navigation pane and select the previously created *tfp-frontend* Traffic Manager profile. Select *Endpoints* and click *Add*.
 
 ![image](./img/tfupdate1.png)
 
-Select *Azure endpoint*, provide a name, select *App Service* and select the previousley created App Service.
+Select *Azure endpoint*, provide a name, select *App Service* and select the previously created App Service.
 
 ![image](./img/tfupdate2.png)
 

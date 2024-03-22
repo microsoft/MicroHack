@@ -104,18 +104,19 @@ Screen capture with Microsoft [Clipchamp](https://clipchamp.com/en/screen-record
 sudo apt install ffmpeg -y
 # Install imagemagick
 sudo apt install imagemagick -y
-cd resources
 # Install gifsicle
 sudo apt install gifsicle -y
 
+cd resources
 # verify video size
 ffprobe -v error -select_streams v:0 -show_entries stream=width -of csv=s=x:p=0 ./media/mh.linux.login.mp4 # 1280x720
 # increase imagemagick memory limit
 free -h # 2.0G
 sudo nano /etc/ImageMagick-6/policy.xml
 sudo sed -i 's/<policy domain="resource" name="memory" value="256MiB"\/>/<policy domain="resource" name="memory" value="2GiB"\/>/g' /etc/ImageMagick-6/policy.xml
-
 chmod +x ./resources/mp4togif.sh
+
+# convert mp4 to gif
 ./mp4togif.sh ./media/mh.linux.login.mp4 ./media/mh.linux.login.gif
 mv ./media/mh.linux.login.gif ../walkthrough/challenge-1/img/mh.linux.login.gif
 
@@ -129,8 +130,28 @@ mv ./media/mh.linux.webserver.test.gif ../walkthrough/challenge-1/img/mh.linux.w
 
 ### Git
 
+The `git stash` command allows you to temporarily save changes that you have made to your working directory but do not want to commit yet. It takes your modified tracked files and staged changes, saves them away for later use, and then reverts them to the state of the last commit.
+
+The changes stashed away by this command can be listed with `git stash list`, inspected with `git stash show`, and restored (potentially on top of a different commit) with `git stash apply`. Calling `git stash` without any arguments is equivalent to `git stash push`. A stash is by default listed as "WIP on branchname …", but you can give a more descriptive message on the command line when you create one.
+
+The modifications stashed away by this command can be reapplied using `git stash apply` or `git stash pop`. You can also drop a stash with `git stash drop` after you are done with it.
+
 ~~~bash
 git remote show
+git remote -v
 git remote show origin
-gh pr create -h
+git remote add msft https://github.com/microsoft/MicroHack.git
+# store uncommited changes via stash
+git stash
+# create new branch to add changes
+git checkout -b typofix202403
+# apply stashed changes
+git stash apply
+git status 
+git add .
+git commit -m "several fixes including changing Region"
+git push --set-upstream origin typofix202403
+gh pr create --title "typofix202403" --body "several fixes including changing Region" --base msft
+
+
 ~~~

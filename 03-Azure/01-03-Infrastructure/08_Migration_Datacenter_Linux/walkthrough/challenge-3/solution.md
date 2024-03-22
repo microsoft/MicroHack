@@ -75,7 +75,7 @@ In case we would have been runnig an .NET application we would see the following
 
 ### **Task 3: Adjust business case assumptions**
 
-The business case is calculated based on some [assumptions](https://learn.microsoft.com/en-us/azure/migrate/concepts-business-case-calculation#total-cost-of-ownership-steady-state). To better fit your current scenario, you can adjust those assumptions. In our case let us modify the Cost mdelling Percentage of migration completed per year to 100% for the first year.
+The business case is calculated based on some [assumptions](https://learn.microsoft.com/en-us/azure/migrate/concepts-business-case-calculation#total-cost-of-ownership-steady-state). To better fit your current scenario, you can adjust those assumptions. In our case let us modify the Cost Percentage of migration completed per year to 100% for the first year.
 
 **Azure cost**
 ![image](./img/bc8_1_1.png)

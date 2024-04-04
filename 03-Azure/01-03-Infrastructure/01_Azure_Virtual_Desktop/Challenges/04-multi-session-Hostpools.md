@@ -7,7 +7,7 @@ In this challenge you will create Microsoft Entra ID joined pooled desktops from
 ## Challenge
 Create multi-session Hostpool joined in Microsoft Entra ID
 - Region: Sweden Central  
-- Metadata located in Sweden Central 
+- Metadata located in West Europe
 - Host Pool type: Pooled
 - Choose your Azure Compute Gallery image from the previous challenge
 - Domain to join: Microsoft Entra ID (Enroll with Intune “No”)
@@ -32,4 +32,5 @@ Deploy Notepad++ and VSCode as Remote App
 - [Create Azure Virtual Desktop Hostpool](https://learn.microsoft.com/en-us/azure/virtual-desktop/create-host-pools-azure-marketplace)
 - [Capture an image of a VM using the portal](https://learn.microsoft.com/en-us/azure/virtual-machines/capture-image-portal)
 - [Manage app groups for Azure Virtual Desktop portal](https://learn.microsoft.com/en-us/azure/virtual-desktop/manage-app-groups)
+- [Deploy Microsoft Entra joined VMs](https://learn.microsoft.com/en-us/azure/virtual-desktop/azure-ad-joined-session-hosts#deploy-microsoft-entra-joined-vms)
 - [Connect to Azure Virtual Desktop with the Remote Desktop client for Windows](https://learn.microsoft.com/en-us/azure/virtual-desktop/users/connect-windows?tabs=subscribe#install-the-windows-desktop-client)

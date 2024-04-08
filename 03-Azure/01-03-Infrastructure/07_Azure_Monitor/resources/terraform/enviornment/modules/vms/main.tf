@@ -39,7 +39,7 @@ resource "azurerm_linux_virtual_machine" vm-linux {
 # Create nic (Linux)
 #----------------------------------------------------------------------------
 resource "azurerm_network_interface" "nic_vm_linux" {
-  name                = "nic-vm-linux"
+  name                = "nic-vm-linux-${var.user_suffix}"
   location            = var.location
   resource_group_name = var.rg_name
 
@@ -87,7 +87,7 @@ resource "azurerm_windows_virtual_machine" "vm-windows" {
 # Create NIC (Windows)
 #----------------------------------------------------------------------------
 resource "azurerm_network_interface" "nic_vm_windows" {
-  name                = "nic-vm-windows"
+  name                = "nic-vm-windows-${var.user_suffix}"
   location            = var.location
   resource_group_name = var.rg_name
 

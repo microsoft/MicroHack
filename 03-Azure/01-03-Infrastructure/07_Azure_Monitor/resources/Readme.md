@@ -9,17 +9,17 @@ For 1 User deployment you should make sure to have the following quotas requeste
 
 | Quota name  | needed Quantity |
 | ------------- | ------------- |
-| Total Regional vCPUs  | tbd  |
-| Standard BS Family vCPUs  | tbd  |
-| Public IP Addresses | tbd |
+| Virtual Machine Scale Sets | 5  |
+| Standard BS Family vCPUs  | 15  |
+| Public IP Addresses | 10 |
 
 That means for 5 Users that need to deploy individually to a Region you need to make sure you have the following quotas in place:
 
 | Quota name  | needed Quantity |
 | ------------- | ------------- |
-| Total Regional vCPUs  | tbd  |
-| Standard BS Family vCPUs  | tbd  |
-| Public IP Addresses | tbd |
+| Virtual Machine Scale Sets | 1  |
+| Standard BS Family vCPUs  | 3  |
+| Public IP Addresses | 2 |
 
 To request the quota please follow: https://learn.microsoft.com/en-us/azure/quotas/quickstart-increase-quota-portal
 
@@ -39,3 +39,4 @@ To request the quota please follow: https://learn.microsoft.com/en-us/azure/quot
 - Microsoft.Network
 - Microsoft.Compute
 - Microsoft.OperationsManagement
+- Microsoft.KeyVault

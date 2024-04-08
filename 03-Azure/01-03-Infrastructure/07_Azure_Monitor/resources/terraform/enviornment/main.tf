@@ -27,6 +27,7 @@ module "virtual_machines" {
 
   vm_win_name = local.vm_win_name
   vm_linux_name = local.vm_linux_name
+  user_suffix = var.prefix
 
   depends_on  = [ azurerm_resource_group.microhack_monitoring ]
 }

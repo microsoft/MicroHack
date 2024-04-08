@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# https://github.com/jclem/gifify
 # Bash script which does make use of ffmpeg and imagemagick to create an animated gif from a mpf4 video file.
 # Usage: ./mp4togif.sh <input file> <output file>
 # Example: ./mp4togif.sh input.mp4 output.gif
@@ -39,7 +40,29 @@ if ! command -v convert >/dev/null 2>&1; then
     exit 1
 fi
 
-ffmpeg -i $inputFileName -vf scale=320:-1 -r 10 -f image2pipe -vcodec ppm - >> ./mp4tgif.tmp
-cat ./mp4tgif.tmp | convert +dither -delay 5 -loop 0 - $outputFileName
-rm ./mp4tgif.tmp
+width=$(ffprobe -v error -select_streams v:0 -show_entries stream=width -of csv=s=x:p=0 $inputFileName)
+fps=10
+speed=1
+delay=$(bc -l <<< "100/$fps/$speed")
+
+ffmpeg -i $inputFileName -vf scale=$width:-1:flags=lanczos -r $fps  -f image2pipe -vcodec ppm - > ./media/mp4tgif.ppm
+cat ./media/mp4tgif.ppm | convert +dither -delay $delay -loop 0 - ./media/mp4tgif.large.gif
+gifsicle --optimize=3 --use-colormap web ./media/mp4tgif.large.gif > $outputFileName
+
+
+# Convert the video to frames
+# ffmpeg -i $inputFileName -vf "fps=$fps,scale=$width:-1:flags=lanczos" -c:v pam -f image2 ./media/output/frame%03d.pam
+# convert -layers Optimize -delay 10 -loop 0 ./media/output/frame*.pam ./media/mp4tgif.large.gif
+# gifsicle --optimize=3 --use-colormap web ./media/mp4tgif.large.gif > $outputFileName
+
+######
+# First pass: generate palette
+# ffmpeg -y -i $inputFileName -vf "fps=10,scale=$width:-1:flags=lanczos,palettegen" ./media/palette.png
+# # Second pass: use palette to create GIF
+# ffmpeg -i $inputFileName -i ./media/palette.png -filter_complex "fps=10,scale=$width:-1:flags=lanczos[x];[x][1:v]paletteuse" ./media/output.large.gif
+# # Optimize GIF
+# gifsicle --optimize=3 --colors 512 ./media/output.large.gif > ./media/output.small.gif 
+######
+# rm ./media/mp4tgif.ppm
+# rm ./media/mp4tgif.large.gif
 

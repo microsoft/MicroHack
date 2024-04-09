@@ -20,9 +20,13 @@ This feature guides you through the prerequisites and process of using Azure Ima
 |:---------|:---------|:---------|
 | Source Image | Windows 11 Multi-Session 23H2 + M365 Apps Gen 2 |
 | Replication Region | Sweden Central  |
+| Staging Group | None | A temporary resource group will be created
+| VNet | None | A temporary virtual network will be used
 | Time zone redirection | Enabled |
 | Remove Appx packages | Microsoft.GamingApp; Microsoft.XboxApp; Microsoft.Xbox.TCUI; Microsoft.XboxGameOverlay; Microsoft.XboxGamingOverlay; Microsoft.XboxIdentityProvider; Microsoft.XboxSpeechToTextOverlay; Microsoft.ZuneMusic; Microsoft.ZuneVideo |
 | Install Visual Studio Code and Notepad++ | Via own automation script |  [Example](https://raw.githubusercontent.com/microsoft/MicroHack/main/03-Azure/01-03-Infrastructure/01_Azure_Virtual_Desktop/modules/InstallApps.ps1)
+
+>**Note:** Your coach gives you access permission to the temporary resource group.
 
 ## Success Criteria
 - Custom Image is available in the Azure Compute Gallery

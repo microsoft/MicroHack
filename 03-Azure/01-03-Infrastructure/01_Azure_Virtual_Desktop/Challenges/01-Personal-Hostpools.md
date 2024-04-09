@@ -20,6 +20,7 @@ In this challenge we will be provisioning our first Host Pool and Session Hosts.
 
 
 ## Learning Resources
-[Create a host pool](https://learn.microsoft.com/en-us/azure/virtual-desktop/create-host-pools-azure-marketplace?tabs=azure-portal)
-
-[Configure the personal desktop host pool assignment type](https://learn.microsoft.com/en-us/azure/virtual-desktop/configure-host-pool-personal-desktop-assignment-type)
+- [Create a host pool](https://learn.microsoft.com/en-us/azure/virtual-desktop/create-host-pools-azure-marketplace?tabs=azure-portal)
+- [Configure the personal desktop host pool assignment type](https://learn.microsoft.com/en-us/azure/virtual-desktop/configure-host-pool-personal-desktop-assignment-type)
+- [Deploy Microsoft Entra joined VMs](https://learn.microsoft.com/en-us/azure/virtual-desktop/azure-ad-joined-session-hosts#deploy-microsoft-entra-joined-vms)
+- [Connect to Azure Virtual Desktop with the Remote Desktop client for Windows](https://learn.microsoft.com/en-us/azure/virtual-desktop/users/connect-windows?tabs=subscribe&pivots=remote-desktop-msi#install-the-windows-desktop-client)

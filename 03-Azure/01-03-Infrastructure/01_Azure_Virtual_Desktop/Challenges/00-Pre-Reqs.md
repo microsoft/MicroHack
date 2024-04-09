@@ -1,6 +1,6 @@
 # Getting started
 
-**[Home](../readme.md)** - [Challenge One](./01-Personal-Hostpools.md)
+**[Home](../Readme.md)** - [Challenge One](./01-Personal-Hostpools.md)
 
 ## Introduction
 
@@ -13,46 +13,12 @@ The following image shows the overall conceptual reference architecture that dem
 
 ![AVD Architecture](../Images/00-azure-virtual-desktop-architecture.png)
 
-For this MicroHack we simplify the deployment down to Azure AD joined sessionhosts only so there are no dependencies on Domain Controllers (except in challenge 4,
+For this MicroHack we simplify the deployment down to Microsoft Entra ID joined sessionhosts only so there are no dependencies on Domain Controllers (except in challenge 5,
 where you will need hybrid identities for FSLogix profiles).  
 
 The architecture will be like 
 
 ![AVD Architecture MicroHack](../Images/00_AVD_Microhack.png)
-
-## Setup your networking and resource groups structure
-
-You can setup your networking infrastructure with [this Bicep script](https://github.com/anggerl/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Azure_Virtual_Desktop/main.bicep).
-
-- Open Visual Studio Code and log in to Azure Cloud Shell at https://shell.azure.com/ and select Bash
-
-  `az login`
-
-- Ensure Azure CLI and extensions are up to date:
-
-  `az upgrade --yes`
-
-  `az bicep upgrade ` or `az bicep install` (to install it)
-
-- If necessary select your target subscription:
-  
-  `az account set --subscription <Name or ID of subscription>`
-
-- Update and set the `parameters-ad-join-example.json`
-
-  Set the "aadjoin" parameter to true, if your session hosts should be AAD joined and not hybrid or traditional domain joined.
-  
-  The parameters "hubVnetName", "hubVnetRgName" and "dnsServer" are only respected if you selected "aadJoin"= false. Otherwise skip them.
-
-- Update and set the `main.bicep` parameters.
-
-- Run the deployment with e.g. 
-
-`$location = "WestEurope"`
-
-`$name="<your name>"`
-
-`az deployment sub create --location $location -f ./main.bicep --parameters name=$name --parameters @parameters-ad-join-example.json -c`
 
 ## Components
 Azure Virtual Desktop service architecture is similar to Windows Server Remote Desktop Services. Microsoft manages the infrastructure and brokering components, while enterprise customers manage their own desktop host virtual machines (VMs), data, and clients.
@@ -60,37 +26,33 @@ Azure Virtual Desktop service architecture is similar to Windows Server Remote D
 ## Components Microsoft manages
 Microsoft manages the following Azure Virtual Desktop services, as part of Azure:
 
-### Web Access:
-The Web Access service within Azure Virtual Desktop lets users access virtual desktops and remote apps through an HTML5-compatible web browser as they would with a local PC, from anywhere on any device. You can secure Web Access using multifactor authentication in Azure Active Directory.
-### Gateway:
+### Web Access
+The Web Access service within Azure Virtual Desktop lets users access virtual desktops and remote apps through an HTML5-compatible web browser as they would with a local PC, from anywhere on any device. You can secure Web Access using multifactor authentication in Microsoft Entra ID.
+### Gateway
 The Remote Connection Gateway service connects remote users to Azure Virtual Desktop apps and desktops from any internet-connected device that can run an Azure Virtual Desktop client. The client connects to a gateway, which then orchestrates a connection from a VM back to the same gateway.
-### Connection Broker:
+### Connection Broker
 The Connection Broker service manages user connections to virtual desktops and remote apps. The Connection Broker provides load balancing and reconnection to existing sessions.
-### Diagnostics:
+### Diagnostics
 Remote Desktop Diagnostics is an event-based aggregator that marks each user or administrator action on the Azure Virtual Desktop deployment as a success or failure. Administrators can query the event aggregation to identify failing components.
-### Extensibility components:
+### Extensibility components
 Azure Virtual Desktop includes several extensibility components. You can manage Azure Virtual Desktop using Windows PowerShell or with the provided REST APIs, which also enable support from third-party tools.
 
 ## Components you manage
 Customers manage these components of Azure Virtual Desktop solutions:
 
-### Azure Virtual Network:
+### Azure Virtual Network
 Azure Virtual Network lets Azure resources like VMs communicate privately with each other and with the internet. By connecting Azure Virtual Desktop host pools to an Active Directory domain, you can define network topology to access virtual desktops and virtual apps from the intranet or internet, based on organizational policy. You can connect an Azure Virtual Desktop to an on-premises network using a virtual private network (VPN), or use Azure ExpressRoute to extend the on-premises network into the Azure cloud over a private connection.
 
-> **Note**: Make sure that the virtual machines can access [the required AVD URLs.](https://learn.microsoft.com/en-us/azure/virtual-desktop/safe-url-list?tabs=azure)
+### Microsoft Entra ID
+Azure Virtual Desktop uses Microsoft Entra ID for identity and access management. Microsoft Entra ID integration applies Microsoft Entra ID security features like conditional access, multi-factor authentication, and the Intelligent Security Graph, and helps maintain app compatibility in domain-joined VMs.
 
-### Azure AD:
-Azure Virtual Desktop uses Azure AD for identity and access management. Azure AD integration applies Azure AD security features like conditional access, multi-factor authentication, and the Intelligent Security Graph, and helps maintain app compatibility in domain-joined VMs.
+### Microsoft Entra ID and FSLogix (challenge 5)
+In challenge 5, you need to create an Azure Files share to store FSLogix profiles that can be accessed by hybrid user identities authenticated with Microsoft Entra ID (Microsoft Entra ID). Microsoft Entra ID users can now access an Azure file share using Kerberos authentication. This configuration uses Microsoft Entra ID to issue the necessary Kerberos tickets to access the file share with the industry-standard SMB protocol. End-users can access Azure file shares over the internet without requiring a line-of-sight to domain controllers from Hybrid Microsoft Entra ID-joined and Microsoft Entra ID-joined VMs. If you want to setup Azure Files with Microsoft Entra ID authenticaion you have to apply the steps from [this guide](https://learn.microsoft.com/en-us/azure/virtual-desktop/create-profile-container-azure-ad)
 
-> **Note**: To connect to Azure AD joined virtual machines it's required to use strong authentication like multi-factor-authentication or Windows Hello for Business.  Please make sure you require MFA for the AVD login. Check the following link: [Enforce Azure Active Directory Multi-Factor Authentication for Azure Virtual Desktop using Conditional Access](https://learn.microsoft.com/en-us/azure/virtual-desktop/set-up-mfa#azure-ad-joined-session-host-vms)
+> **Note**: Cloud-only identities aren't currently supported. Therefore the user identities must be synced once from Active Directory Domain Service to Microsoft Entra ID 
+[Microsoft Entra ID Connect](https://learn.microsoft.com/en-us/azure/active-directory/hybrid/whatis-azure-ad-connect).
 
-### Azure AD and FSLogix (challenge 4):
-In challenge 4, you need to create an Azure Files share to store FSLogix profiles that can be accessed by hybrid user identities authenticated with Azure Active Directory (Azure AD). Azure AD users can now access an Azure file share using Kerberos authentication. This configuration uses Azure AD to issue the necessary Kerberos tickets to access the file share with the industry-standard SMB protocol. End-users can access Azure file shares over the internet without requiring a line-of-sight to domain controllers from Hybrid Azure AD-joined and Azure AD-joined VMs. If you want to setup Azure Files with Azure Active Directory authenticaion you have to apply the steps from [this guide](https://learn.microsoft.com/en-us/azure/virtual-desktop/create-profile-container-azure-ad)
-
-> **Note**: Cloud-only identities aren't currently supported. Therefore the user identities must be synced once from Active Directory Domain Service to Azure AD 
-[Azure AD Connect](https://learn.microsoft.com/en-us/azure/active-directory/hybrid/whatis-azure-ad-connect).
-
-### Azure Virtual Desktop session hosts:
+### Azure Virtual Desktop session hosts
 A host pool can run the following operating systems:
 
 - Windows 10 Enterprise
@@ -101,28 +63,36 @@ A host pool can run the following operating systems:
 
 Custom Windows system images with pre-loaded apps, group policies, or other customizations are supported as well. You can also choose from a variaty of VM sizes including GPU-enabled VMs. Each session host has a Azure Virtual Desktop host agent, which registers the VM as part of the Azure Virtual Desktop workspace or tenant. Each host pool can have one or more app groups, which are collections of remote applications or desktop sessions that users can access.
 
-### Azure Virtual Desktop workspace:
-The Azure Virtual Desktop workspace or tenant is a management construct to manage and publish host pool resources.
+### Azure Virtual Desktop workspaces
 
-### Personal and pooled desktops
-Personal desktop solutions, sometimes called persistent desktops, allow users to always connect to the same specific session host. Users can typically modify their desktop experience to meet personal preferences and save files in the desktop environment. This scenario allows assigning dedicated resources to a specific user, which can be helpful for some manufacturing or development use cases.
+A workspace is a logical grouping of application groups in Azure Virtual Desktop. Each Azure Virtual Desktop application group must be associated with a workspace for users to see the desktops and applications published to them.
 
-Pooled desktop solutions, also called non-persistent desktops, assign users to whichever session host is currently available, depending on the load-balancing algorithm. Because the users don't always return to the same session host each time they connect, they usually don´t have administrator access.
+### Azure Virtual Desktop host pools
 
-### User accounts and groups:
-Your users need accounts that are in Azure AD. To successful conduct challenge 4, these accounts will need to be [hybrid identities](https://learn.microsoft.com/en-us/azure/active-directory/hybrid/whatis-hybrid-identity), which means the user account is synchronized. 
+A host pool is a collection of Azure virtual machines that register to Azure Virtual Desktop as session hosts when you run the Azure Virtual Desktop agent. All session host virtual machines in a host pool should be sourced from the same image for a consistent user experience. You control the resources published to users through application groups.
 
-You will use Azure AD with AD DS, therefore you'll need to configure [Azure AD Connect](https://learn.microsoft.com/en-us/azure/active-directory/hybrid/whatis-azure-ad-connect) to synchronize user identity data between AD DS and Azure AD.
+A host pool can be one of two types:
 
-Create three user accounts and two groups in ADDS and sync them to Azure AD: 
-(These user names are only suggestions. Use your own naming convention if you have one)
-- AVDUsers
-- AVDAdmins
-- AVDUser1 is member of AVDUsers
-- AVDUser2 is member of AVDUsers
-- AVDUser3 is member of AVDAdmins
+- Personal, sometimes called persistent desktops, where each session host is assigned to an individual user. Personal host pools provide dedicated desktops to end-users that optimize environments for performance and data separation.
 
-### Role-based Access Control:
+- Pooled, also called non-persistent desktops, where user sessions can be load balanced to any session host in the host pool. There can be multiple different users on a single session host at the same time. Pooled host pools provide a shared remote experience to end-users, which ensures lower costs and greater efficiency.
+
+### Azure Virtual Desktop application groups
+
+An application group is a logical grouping of applications installed on session hosts in the host pool.
+
+An application group can be one of two types:
+
+- RemoteApp, where users access the applications you individually select and publish to the application group. Available with pooled host pools only.
+
+- Desktop, where users access the full desktop. Available with pooled or personal host pools.
+
+### User accounts and groups
+
+Your users need accounts that are in Microsoft Entra ID. To successful conduct challenge 4, these accounts will need to be [hybrid identities](https://learn.microsoft.com/en-us/azure/active-directory/hybrid/whatis-hybrid-identity), which means the user account is synchronized. 
+
+
+### Role-based Access Control
 
 You'll need an Azure account with an active subscription to deploy Azure Virtual Desktop. If you don't have one already, you can create an account for free. Your account must be assigned the contributor or owner role on your subscription.
 
@@ -139,15 +109,16 @@ The bracketed numbers relate to the diagram above.
 
 1. An application group that contains a published desktop cannot contain any other published resources and is called a desktop application group.
 2. Application groups assigned to the same host pool must be members of the same workspace.
-3. A user account can be assigned to an application group either directly or via an Azure AD group. It's possible to assign no users to an application group but then it cannot service any.
+3. A user account can be assigned to an application group either directly or via an Microsoft Entra ID group. It's possible to assign no users to an application group but then it cannot service any.
 4. It's possible to have an empty workspace but it cannot service users.
 5. It's possible to have an empty host pool but it cannot service users.
 6. It's possible for a host pool not to have any application groups assigned to it but it cannot service users.
-7. Azure AD is required for AVD. This is because Azure AD user accounts and groups must always be used to assign users to AVD application groups. Azure AD is also used to authenticate users into the AVD service. AVD session hosts can also be members of an Azure AD domain and in this situation the AVD published applications and desktop sessions will also be launched and run (not just assigned) using Azure AD accounts.
-- 7. Alternatively AVD session hosts can be members of an AD DS (Active Directory Domain Services) domain and in this situation the AVD published applications and desktop sessions will be launched and run (but not assigned) using AD DS accounts. To reduce user and administrative overhead AD DS can be synchronized with Azure AD using Azure AD Connect.
-- 7. Finally AVD session hosts can, instead, be members of an Azure AD DS (Azure Active Directory Domain Services) domain and in this situation the AVD published applications and desktop sessions will be launched and run (but not assigned) using Azure AD DS accounts. Azure AD is automatically synchronized with Azure AD DS, one way from Azure AD to Azure AD DS only.
+7. Microsoft Entra ID is required for AVD. This is because Microsoft Entra ID user accounts and groups must always be used to assign users to AVD application groups. Microsoft Entra ID is also used to authenticate users into the AVD service. AVD session hosts can also be members of an Microsoft Entra ID domain and in this situation the AVD published applications and desktop sessions will also be launched and run (not just assigned) using Microsoft Entra ID accounts.
+- 7. Alternatively AVD session hosts can be members of an AD DS (Active Directory Domain Services) domain and in this situation the AVD published applications and desktop sessions will be launched and run (but not assigned) using AD DS accounts. To reduce user and administrative overhead AD DS can be synchronized with Microsoft Entra ID using Microsoft Entra ID Connect.
+- 7. Finally AVD session hosts can, instead, be members of an Microsoft Entra ID DS (Microsoft Entra ID Domain Services) domain and in this situation the AVD published applications and desktop sessions will be launched and run (but not assigned) using Microsoft Entra ID DS accounts. Microsoft Entra ID is automatically synchronized with Microsoft Entra ID DS, one way from Microsoft Entra ID to Microsoft Entra ID DS only.
 
 ## Learning resources
+- [Azure Virtual Desktop terminology](https://learn.microsoft.com/en-us/azure/virtual-desktop/terminology#host-pools)
 - [Azure Virtual Desktop Prerequisites](https://learn.microsoft.com/en-us/azure/virtual-desktop/prerequisites)
 - The Azure Virtual Desktop construction set from the [Cloud Adoption Framework](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/scenarios/wvd/enterprise-scale-landing-zone)
 - Azure Virtual Desktop for the enterprise - [Architecture Center](https://learn.microsoft.com/en-us/azure/architecture/example-scenario/wvd/windows-virtual-desktop)

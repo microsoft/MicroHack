@@ -1,4 +1,6 @@
-# **MicroHack Azure Arc for Servers**
+![image](img/1920x300_EventBanner_MicroHack_Arc_wText.jpg)
+
+# MicroHack Azure Arc for Servers
 
 - [**MicroHack introduction**](#MicroHack-introduction)
   - [What is Azure Arc?](#what-is-azure-arc)
@@ -35,6 +37,7 @@ Further resources - Thomas Maurer & Lior Kamrat links
 
 * [Azure Arc Overview Documentation](https://learn.microsoft.com/en-us/azure/azure-arc/overview)
 * [Azure Arc Blog from Microsoft](https://techcommunity.microsoft.com/t5/azure-arc-blog/bg-p/AzureArcBlog)
+* [Azure Arc Enabled Extended Security Updates](https://learn.microsoft.com/en-us/windows-server/get-started/extended-security-updates-deploy)
 * [Azure Arc Jumpstart Scenarios](https://azurearcjumpstart.io/azure_arc_jumpstart/)
 * [Azure Arc Jumpstart HCIBox](https://azurearcjumpstart.io/azure_jumpstart_hcibox/)
 * [Azure Arc Jumpstart ArcBox](https://azurearcjumpstart.io/azure_jumpstart_arcbox/)
@@ -65,8 +68,12 @@ This MicroHack has a few but important prerequisites to be understood before sta
 * Your own Azure subscription with Owner RBAC rights at the subscription level
   * [Azure Evaluation free account](https://azure.microsoft.com/en-us/free/search/?OCID=AIDcmmzzaokddl_SEM_0fa7acb99db91c1fb85fcfd489e5ca6e:G:s&ef_id=0fa7acb99db91c1fb85fcfd489e5ca6e:G:s&msclkid=0fa7acb99db91c1fb85fcfd489e5ca6e)
 * You need to have 2 Virtual Machines ready and updated. One with a Linux Operating System (tested with Ubuntu Server 22.04) and one with Windows Server Operating System (tested with Windows Server 2022). You can use Machines in Azure for this following this Guide: [Azure Arc Jumpstart Servers](https://azurearcjumpstart.io/azure_arc_jumpstart/azure_arc_servers/azure/)
+    > **Note**  
+    >  When using the Jumpstart the Virtual Machines will already be onboarded to Azure Arc and therefore "Challenge 1 - Azure Arc prerequisites & onboarding" is not needed.
 * [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) (Hint: Make sure to use the lastest version)
 * [Azure PowerShell Guest Configuration Cmdlets](https://learn.microsoft.com/en-us/azure/governance/machine-configuration/machine-configuration-create-setup#install-the-module-from-the-powershell-gallery)
+  * It is not possible to run those commands from Azure Cloud Shell
+  * Please make sure you have at least Version 3.4.2 installes with the following Command: ```Install-Module -Name GuestConfiguration -RequiredVersion 3.4.2```
 * [Visual Studio Code](https://code.visualstudio.com/)
 * [Git SCM](https://git-scm.com/download/)
 
@@ -107,14 +114,13 @@ In challenge 1 you will prepare your Azure Environemnt for onboarding of existin
 
 ### Goal
 
-In challenge 2 you will successfully onboard your Windows and Linux Virtual Machines to a centralized Log Analytics Workspace to leverage Azure Monitor, Azure Update Management, Change Tracking and Inventory. 
+In challenge 2 you will successfully onboard your Windows and Linux Virtual Machines to Azure Monitor using the Azure Monitoring Agent to leverage Azure Update Management, Change Tracking, Inventory and more. Be aware that Microsoft curently shifts from the retiering Log Analytics Agent to Azure Monitoring Agent. By that some of the features used in challange 2 are currently in preview.
 
 ### Actions
 
 * Create all necessary Azure Resources
-  * Azure Automation Account (Name: mh-arc-servers-automation)
   * Log Analytics Workspace (Name: mh-arc-servers-kv-law)
-* Configure Log Analytics to collect Windows event logs and Linux syslog
+* Configure Data Collection Rules in Log Analytics to collect Windows event logs and Linux syslog
 * Enable Azure Monitor for Azure Arc enabled Servers with Azure Policy initiative
 * Enable and configure Update Management
 * Enable Change Tracking and Inventory
@@ -123,7 +129,7 @@ In challenge 2 you will successfully onboard your Windows and Linux Virtual Mach
 
 ### Success criteria
 
-* You have an Azure Automation Account and a Log Analytics Workspace
+* You have a Log Analytics Workspace
 * You successfully linked the necessary Azure Policy initiative to the Azure resource group
 * You can query the Log Analytics Workspace for events of your Virtual Machines
 * All Virtual Machines have the latest Windows and Linux updates installed
@@ -132,15 +138,12 @@ In challenge 2 you will successfully onboard your Windows and Linux Virtual Mach
 
 ### Learning resources
 
-* [Create an Automation account using the Azure portal](https://learn.microsoft.com/en-us/azure/automation/quickstarts/create-azure-automation-account-portal)
 * [Create a Log Analytics workspace in the Azure portal](https://docs.microsoft.com/en-us/azure/azure-monitor/logs/quick-create-workspace)
-* [Collect Windows event log data sources with Log Analytics agent](https://docs.microsoft.com/en-us/azure/azure-monitor/agents/data-sources-windows-events#configuring-windows-event-logs)
-* [Collect Syslog data sources with Log Analytics agent](https://docs.microsoft.com/en-us/azure/azure-monitor/agents/data-sources-syslog#configure-syslog-in-the-azure-portal)
-* [Understand deployment options for the Log Analytics agent on Azure Arc-enabled servers](https://docs.microsoft.com/en-us/azure/azure-arc/servers/concept-log-analytics-extension-deployment)
+* [Deployment options for Azure Monitor agent on Azure Arc-enabled servers](https://learn.microsoft.com/en-us/azure/azure-arc/servers/concept-log-analytics-extension-deployment)
+* [Data collection rules in Azure Monitor](https://learn.microsoft.com/en-us/azure/azure-monitor/essentials/data-collection-rule-overview)
 * [Azure Policy built-in definitions for Azure Arc-enabled servers](https://docs.microsoft.com/en-us/azure/azure-arc/servers/policy-reference)
-* [Enable Update Management from an Automation account](https://docs.microsoft.com/en-us/azure/automation/update-management/enable-from-automation-account)
-* [How to deploy updates and review results](https://docs.microsoft.com/en-us/azure/automation/update-management/deploy-updates)
-* [Enable Change Tracking and Inventory from an Automation account](https://docs.microsoft.com/en-us/azure/automation/change-tracking/enable-from-automation-account)
+* [Azure Update Management Center](https://learn.microsoft.com/en-us/azure/update-center/overview)
+* [Enable Change Tracking and Inventory using Azure Monitoring Agent (Preview)](https://learn.microsoft.com/en-us/azure/automation/change-tracking/enable-vms-monitoring-agent?tabs=singlevm)
 * [Monitor a hybrid machine with VM insights](https://docs.microsoft.com/en-us/azure/azure-arc/servers/learn/tutorial-enable-vm-insights)
 
 
@@ -245,4 +248,3 @@ Thank you for investing the time and see you next time!
 * Christian Thönes [Github](https://github.com/cthoenes); [LinkedIn](https://www.linkedin.com/in/christian-t-510b7522/)
 * Nils Bankert [GitHub](https://github.com/nilsbankert); [LinkedIn](https://www.linkedin.com/in/nilsbankert/)
 * Alexander Ortha [GitHub](https://github.com/alexor-ms/); [LinkedIn](https://www.linkedin.com/in/alexanderortha/)
-

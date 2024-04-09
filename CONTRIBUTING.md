@@ -53,8 +53,6 @@ The content in this repository follows the different solution areas in Azure and
 
 This repository contains the following folders:
 
-`NOCHMAL anpassen`
-
 * \01-Identity and Access Management
 * \02-Security
 * \03-Azure
@@ -71,18 +69,6 @@ We recommend that you create local working branches that target a specific scope
 * Spelling and grammar edits on a topic.
 * Applying a single formatting change across a large set of topics.
 
-## Authoring tools
-
-[Visual Studio Code](https://code.visualstudio.com) is a great editor for Markdown!
-
-## IaC Tools
-
-In case that you need to deploy Azure services as a prerequisite for the MicroHack please use well-known solutions like ARM-, Bicep- or Terraform templates or Azure CLI.
-
-## How to use Markdown to format your topic
-
-The topics in this repository use Markdown.  Here is a good overview of [Markdown basics](https://help.github.com/articles/markdown-basics/).
-
 ## File and Folder names
 
 Use lowercase for file and folder names and dashes `-` as separators.
@@ -95,9 +81,28 @@ For example:
 * `/02-azure/02-data/01-azure-sql-mi/readme.md`
 * `/03-microsoft365/01-exchange-online/readme.md`
 
-## Template
+## How to use Markdown to format your topic
 
-In order to bootstrap new MicroHacks we created a [template file](/99-MicroHack-Template/readme.md) for your convenience. Feel free to use it for your new MicroHacks or copy exisiting MicroHacks that better fit your ideas.
+The topics in this repository use Markdown.  Here is a good overview of [Markdown basics](https://help.github.com/articles/markdown-basics/).
+
+## Authoring tools
+
+[Visual Studio Code](https://code.visualstudio.com) is a great editor for Markdown!
+
+## IaC Tools
+
+In case that you need to deploy Azure services as a prerequisite for the MicroHack please use well-known solutions like ARM-, Bicep- or Terraform templates or Azure CLI.  
+Please also include deployment instructions in your walkthrough.
+
+## Templates
+### New MicroHack
+
+In order to bootstrap new MicroHacks we created a [template](99-MicroHack-Template/Readme.md) for your convenience. Please use this template to make sure your microhack fits into the structure of the current microhacks. Contributions/Enhancements to the template are also welcome.   
+To initiate a new MicroHack please create a corresponding issue [here](https://github.com/microsoft/MicroHack/issues).
+
+### Linked MicroHack
+
+We are aware that the Format of MicroHack is not exclusive to this repository. In order to give you the chance to promote your MicroHack and make it easily discoverable you can use the [link template](99-MicroHack-TemplateLink/Readme.md) to link your Microhack.
 
 ## Formatting
 
@@ -105,9 +110,6 @@ In order to bootstrap new MicroHacks we created a [template file](/99-MicroHack-
 
 H2 subheadings `##` end up in the right-hand jump list for the document (the jump list is created by our compile script).  It's a good idea to include h2 subheadings to help users get an overview of the doc and quickly navigate to the major topics.
 
-### Text formatting
-
-...
 
 ### Links
 
@@ -133,3 +135,27 @@ For images you're adding to the repo, store them in the `images` subfolder of th
 When you link to an image, the path and filename are case-sensitive. The convention is for image filenames to be all lowercase and use dashes `-` for separators.
 
 >For example: `![Screenshot](images/step1-create-vm.png)`
+
+### Alerts
+
+Please use the Github defaults to emphasize critical information
+
+```
+> [!NOTE]
+> Highlights information that users should take into account, even when skimming.
+
+> [!IMPORTANT]
+> Crucial information necessary for users to succeed.
+
+> [!WARNING]
+> Critical content demanding immediate user attention due to potential risks.
+```
+Which will result in great visualization:
+> [!NOTE]
+> Highlights information that users should take into account, even when skimming.
+
+> [!IMPORTANT]
+> Crucial information necessary for users to succeed.
+
+> [!WARNING]
+> Critical content demanding immediate user attention due to potential risks.

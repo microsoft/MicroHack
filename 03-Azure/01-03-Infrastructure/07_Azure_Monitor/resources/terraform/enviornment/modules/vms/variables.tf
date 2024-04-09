@@ -31,3 +31,7 @@ variable "vm_win_name" {
 variable "vm_linux_name" {
   
 }
+
+variable "user_suffix" {
+  
+}

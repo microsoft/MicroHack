@@ -108,7 +108,7 @@ To prepare for physical server migration, you need to verify the physical server
 
 ![image](./img/azreplapl6_3.png)
 
-After finishing the Edge Browser installation open the Azure Portal (https://portal.azure.com). Navigate to the previousley created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click *Discover* in the *Migration tools* box.
+After finishing the Edge Browser installation open the Azure Portal (https://portal.azure.com). Navigate to the previously created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click *Discover* in the *Migration tools* box.
 
 ![image](./img/mig1_1.png)
 
@@ -134,7 +134,7 @@ Check the *I acceppt...* checkbox and click *Next*
 
 ![image](./img/mig6.png)
 
-Browse and select the previousley downloaded registration key and click *Next*
+Browse and select the previously downloaded registration key and click *Next*
 
 ![image](./img/mig7.png)
 
@@ -211,6 +211,8 @@ In case you did install the replication appliance under "F:\azure" you can fint 
 F:\azure\home\svsystems\pushinstallsvc\repository
 
 ~~~powershell
+Windows PowerShell
+Copyright (C) Microsoft Corporation. All rights reserved.
 ls F:\azure\home\svsystems\pushinstallsvc\repository *ASR*RHEL7*
 
     Directory: F:\azure\home\svsystems\pushinstallsvc\repository
@@ -224,7 +226,11 @@ Mode                LastWriteTime         Length Name
 
 Because our VMs are all running inside the same Azure Virtual Network [VNet] and we did not restrict access betweem the VMs inside the VNet we can use scp to upload the Mobility service agent installer via scp to Linux VMs.
 
+Execute the following powershell command on the new Windows Server 2019 VM to copy the Mobility service agent installer to the two Linux VMs.
+
 ~~~powershell
+Windows PowerShell
+Copyright (C) Microsoft Corporation. All rights reserved.
 # connect via ssh to the source VM 10.1.1.4 with the user azuremigrateadmin and password demo!p12
 $rhelmobi="F:\azure\home\svsystems\pushinstallsvc\repository\Microsoft-ASR_UA_9.55.0.0_RHEL7-64_GA_11Jul2023_Release.tar.gz"
 scp $rhelmobi microhackadmin@10.1.1.4:/home/microhackadmin/
@@ -238,7 +244,7 @@ Now you need to log in to the source Linux VMs to finish the installation of the
 
 ~~~bash
 # Get the name of the resource group that ends with 'source-rg'
-sourceRgName=$(az group list --query "[?ends_with(name, 'source-rg')].name" -o tsv)
+sourceRgName=$(az group list --query "[?starts_with(name, '$prefix') && ends_with(name, 'source-rg')].name" -o tsv)
 # Name of the Azure Bastion in the source resource group
 sourceBastionName=${prefix}1$suffix-source-bastion
 ~~~
@@ -255,6 +261,12 @@ mkdir MobSvcInstaller
 tar -C ./MobSvcInstaller -xvf Microsoft-ASR_UA_9.55.0.0_RHEL7-64_GA_11Jul2023_Release.tar.gz
 cd MobSvcInstaller
 sudo ./install -r MS -v VmWare -q -c CSLegacy # You need to specify VmWare as the platform also for physical servers.
+~~~
+
+> [!NOTE] Next you will need to make use of the password which you received during the installation of the Azure Replication Appliance. If you forgot to copy the Password you can obtain it from inside the Replication Appliance via the following Powershell command.
+
+
+~~~bash
 echo mbe711ujGFLmN9N6 > password.txt # This is the password you received during the installation of the Azure Replication Appliance, replace it with your password.
 sudo /usr/local/ASR/Vx/bin/UnifiedAgentConfigurator.sh -i 10.1.1.7 -P password.txt -c CSLegacy # IP 10.1.1.7 is the IP of the Azure Replication Appliance Windows VM you created.
 logout
@@ -272,6 +284,11 @@ mkdir MobSvcInstaller
 tar -C ./MobSvcInstaller -xvf Microsoft-ASR_UA_9.55.0.0_RHEL7-64_GA_11Jul2023_Release.tar.gz
 cd MobSvcInstaller
 sudo ./install -r MS -v VmWare -q -c CSLegacy # You need to specify VmWare as the platform also for physical servers.
+~~~
+
+> [!NOTE] Next you will need to make use of the password which you received during the installation of the Azure Replication Appliance. If you forgot to copy the Password you can obtain it from inside the Replication Appliance via the following Powershell command.
+
+~~~bash
 echo mbe711ujGFLmN9N6 > password.txt # This is the password you received during the installation of the Azure Replication Appliance, replace it with your password.
 sudo /usr/local/ASR/Vx/bin/UnifiedAgentConfigurator.sh -i 10.1.1.7 -P password.txt -c CSLegacy # IP 10.1.1.7 = replication appliance IP addressis the IP of the Azure Replication Appliance Windows VM you created.
 logout
@@ -280,6 +297,8 @@ logout
 > [!NOTE]
 > If you forgot to copy the Password you can obtain it from inside the Replication Appliance via the following Powershell command. 
 > ~~~powershell
+> Windows PowerShell
+> Copyright (C) Microsoft Corporation. All rights > reserved.
 > C:\ProgramData\ASR\home\svsystems\bin\genpassphrase.exe -v
 > ~~~
 
@@ -337,7 +356,7 @@ UnifiedAgentConfigurator.exe /CSEndPoint \<replication appliance IP address\> /P
 
 ### **Task 4: Enable Replication**
 
-Open the [Azure Portal](https://portal.azure.com) and navigate to the previousley created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click *Replicate* under *Migration Tools*.
+Open the [Azure Portal](https://portal.azure.com) and navigate to the previously created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click *Replicate* under *Migration Tools*.
 
 ![image](./img/repl1.png) 
 
@@ -345,7 +364,7 @@ Select *Servers or virtual machines (VM)* and *Azure VM* and click *Continue*.
 
 ![image](./img/repl2.png) 
 
-In the *Basics* page select the previousley created Azure Migrate Replication appliance and specify the Guest Credentials and click next:
+In the *Basics* page select the previously created Azure Migrate Replication appliance and specify the Guest Credentials and click next:
 
 ![image](./img/repl3_1.png)
 
@@ -373,7 +392,7 @@ Wait until the replication has been successfully initiated.
 
 ![image](./img/repl9.png)
 
-Under *Migration Tools* you should know see that 2 Server are beeing repölicated. Click on *Overview* to see more details.
+Under *Migration Tools* you should know see that 2 Server are being replicated. Click on *Overview* to see more details.
 
 ![image](./img/repl10.png)
 
@@ -389,7 +408,7 @@ When delta replication begins, you can run a test migration for the VMs, before 
 * Test migration simulates the migration by creating an Azure VM using replicated data (usually migrating to a non-production VNet in your Azure subscription).
 * You can use the replicated test Azure VM to validate the migration, perform app testing, and address any issues before full migration.
 
-Open the [Azure Portal](https://portal.azure.com) and navigate to the previousley created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click *Overview* in the *Migration tools* box.
+Open the [Azure Portal](https://portal.azure.com) and navigate to the previously created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click *Overview* in the *Migration tools* box.
 
 ![image](./img/test1.png)
 
@@ -422,7 +441,7 @@ You can list the new test VMs via azure cli.
 
 ~~~bash
 # Get the name of the resource group that ends with 'destination-rg'
-destinationRgName=$(az group list --query "[?ends_with(name, 'destination-rg')].name" -o tsv)
+destinationRgName=$(az group list --query "[?starts_with(name, '$prefix') && ends_with(name, 'destination-rg')].name"
 # list the new VMs in the destination resource group
 az vm list -g $destinationRgName -o table
 ~~~
@@ -508,9 +527,9 @@ Under *Frontend IP configuration*, click *Add a frontend IP configuration* and c
 
 ![image](./img/prep3.png) -->
 
-Under *Backend Pools*, select *Add*. 
+Under *Backend Pools*, select the existing Backend link "LoadBalancerBackEndPool (1)". 
 
-![image](./img/prep3_2.png)
+![image](./img/prep0_1_1.png)
 
 Add the following name *LoadBalancerBackEndPool* and select the *destination-vnet* as the Virtual Network.
 Select "IP address" as the "Backend Pool Configuration.
@@ -561,7 +580,7 @@ Select a name for the Traffic Manager profile and select the *destination-rg* as
 > [!NOTE]
 > Use routing method *Priority*, so we can make sure the traffic is only routed to the destination Load Balancer after the migration.
 
-![image](./img/prep10_1.png)
+![image](./img/prep10_1_1.png)
 
 From the Load Balancing overview page select *Traffic Manager* and select the previously created Traffic Manager profile. 
 Select *Endpoints* and click *Add*. Add each public IP of the source and destination Load Balancer as separate endpoints.
@@ -614,7 +633,7 @@ curl $trafficManagerFqdn -v
 
 ### **Task 7: Perform Final Migration**
 
-Open the [Azure Portal](https://portal.azure.com) and navigate to the previousley created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click *Overview* in the *Migration tools* box. From the Overview section click in *Migrate* under *Step 3: Migrate*.
+Open the [Azure Portal](https://portal.azure.com) and navigate to the previously created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click *Overview* in the *Migration tools* box. From the Overview section click in *Migrate* under *Step 3: Migrate*.
 
 ![image](./img/finalmig1.png)
 
@@ -640,7 +659,7 @@ You can list the new test VMs via azure cli.
 
 ~~~bash
 # Get the name of the resource group that ends with 'destination-rg'
-destinationRgName=$(az group list --query "[?ends_with(name, 'destination-rg')].name" -o tsv)
+destinationRgName=$(az group list --query "[?starts_with(name, '$prefix') && ends_with(name, 'destination-rg')].name"
 # list the new VMs in the destination resource group
 az vm list -g $destinationRgName -o table
 ~~~
@@ -668,7 +687,11 @@ migsource  Online
 migdest    Online
 ~~~
 
-As a final step we need to shut down the VMs in the source environment. 
+In case we would have done the migration from VMWare or Hyper-V the source VMs would be automatically shut down. However, because we did the migration from Azure to Azure the source VMs are still running. This can be seen in the Azure Portal:
+
+![image](./img/finalmig5_1.png)
+
+Therefore as a final step we need to shut down the VMs in the source environment. 
 
 ~~~bash
 # Get the Azure Resource ID of Linux VM 1 in the source resource group
@@ -681,7 +704,7 @@ az network traffic-manager endpoint list -g $destinationRgName --profile-name $t
 ~~~
 
 
-You can also see the same result via the Azure Portal. Change to the Azure Traffic Manager profile you've created previousley and look at the endpoints. 
+You can also see the same result via the Azure Portal. Change to the Azure Traffic Manager profile you've created previously and look at the endpoints. 
 
 
 
@@ -697,7 +720,7 @@ From a user perspective nothing changed. You're still able to browse the Traffic
 
 ### **Task 8: Cleanup**
 
-After the successfull migration you can now stop replicating the source virtual machines. Open the [Azure Portal](https://portal.azure.com) and navigate to the previousley created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click *Overview* in the *Migration tools* box. In the *Azure Migrate: Migration and modernization* pane, select *Replicating machines* from the navigation pane on the left, click on the 3 dots on the end of each row of the replicating servers and select *Stop replicating*.
+After the successfull migration you can now stop replicating the source virtual machines. Open the [Azure Portal](https://portal.azure.com) and navigate to the previously created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click *Overview* in the *Migration tools* box. In the *Azure Migrate: Migration and modernization* pane, select *Replicating machines* from the navigation pane on the left, click on the 3 dots on the end of each row of the replicating servers and select *Stop replicating*.
 
 ![image](./img/finalmig8.png)
 

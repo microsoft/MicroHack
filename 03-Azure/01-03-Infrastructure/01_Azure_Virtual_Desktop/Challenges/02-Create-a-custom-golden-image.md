@@ -14,7 +14,7 @@ This feature guides you through the prerequisites and process of using Azure Ima
 - Region: Sweden Central  
 - Create a managed identity that has enough privileges to create a custom image
 - Create new Azure Compute Gallery & Definition
-- Create a Custom Image Template with the followingen requirements
+- Create a Custom Image Template with the following requirements
 
 | Field | Value | Notes
 |:---------|:---------|:---------|

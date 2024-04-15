@@ -38,14 +38,14 @@ Please make sure thet you successfully completed [Challenge 4](../challenge-4/so
 To start physical server migration you must we will need another tool from the azure migrate tool box called Azure Replication Appliance.
 
 
-You will need to install the Azure Replication Appliance on your on-premises, in our case the source resoure group.  The Azure Replication Appliance can be downloaded as a OVA template or you can download the appliance installer to install it on a already existing server. For the purpose of this MicroHack we will install the Azure Replication Appliance via the installer on a new Windows Server 2019 system.
+You will need to install the Azure Replication Appliance on your on-premises, in our case the source resource group.  The Azure Replication Appliance can be downloaded as a OVA template or you can download the appliance installer to install it on a already existing server. For the purpose of this MicroHack we will install the Azure Replication Appliance via the installer on a new Windows Server 2019 system.
 
 If you like to learn more about how the Azure Replication Appliance works, please check the following [link](https://learn.microsoft.com/en-us/azure/migrate/agent-based-migration-architecture).
 ![image](./img/az.migration.replication.architecture.png)
 
 
 > [!IMPORTANT]
-> Please make sure to check the [prerequisites](https://learn.microsoft.com/en-us/azure/migrate/migrate-replication-appliance) of the Azure 
+> Please make sure to check the [prerequisites](https://learn.microsoft.com/en-us/azure/migrate/migrate-replication-appliance) of the Azure
 Replication Appliance.
 
 > [!IMPORTANT]
@@ -94,11 +94,11 @@ To prepare for physical server migration, you need to verify the physical server
 > [!NOTE]
 > You will need to install the Microsoft Edge Browser on the new VM manually. You can download the installer from https://www.microsoft.com/en-us/edge/business/download.
 
-- In the VM the Server Manager will open automatically, please navigate to “Local Server” and klick on “ON” under “IE Enhanced Security Configuration” .  
+- In the VM the Server Manager will open automatically, please navigate to “Local Server” and click on “ON” under “IE Enhanced Security Configuration” .
 
 ![image](./img/azreplapl6_1.png)
 
-- Open Internet Explorer 11 and just hit OK when prompted 
+- Open Internet Explorer 11 and just hit OK when prompted
 
 ![image](./img/azreplapl6_2.png)
 
@@ -113,16 +113,16 @@ After finishing the Edge Browser installation open the Azure Portal (https://por
 ![image](./img/mig1_1.png)
 
 Select *Physical or other...* in the *Are your machines virtualized* drop down and select *West Europe* as the *Target Region*.
-Make sure to check the confirmation checkbox and click *Create resources*. 
+Make sure to check the confirmation checkbox and click *Create resources*.
 @myedge.org
 ![image](./img/mig2.png)
 
-Wait until the deployment has been successfully completed. Next under *1. Download and install the repliaction appliance software* click *Download* to download the Azure Migrate Repplication Appliance installer. 
+Wait until the deployment has been successfully completed. Next under *1. Download and install the replication appliance software* click *Download* to download the Azure Migrate Replication Appliance installer.
 You also need to download the registration key that is required to register the replication appliance under *2. Configure the replication appliance and register it to the project*.
 
 ![image](./img/mig3.png)
 
-Next start the installation of the Azure Migrate Replication Appliance by double cklicking the *MicrosoftAzureSiteRecoveryUnifiedSetup.exe*
+Next start the installation of the Azure Migrate Replication Appliance by double clicking the *MicrosoftAzureSiteRecoveryUnifiedSetup.exe*
 
 ![image](./img/mig4.png)
 
@@ -130,7 +130,7 @@ Select *Install the configuration server and process server* and click *Next*
 
 ![image](./img/mig5.png)
 
-Check the *I acceppt...* checkbox and click *Next*
+Check the *I accept...* checkbox and click *Next*
 
 ![image](./img/mig6.png)
 
@@ -146,7 +146,7 @@ Review the prerequisites check of the installer. Note that you can safely ignore
 
 ![image](./img/mig9.png)
 
-Specify the required passwords and note the password requirements. 
+Specify the required passwords and note the password requirements.
 
 > [!NOTE]
 > For the Username and Password you can either select a combination of your choice or check the secrets within the KeyVault.
@@ -176,7 +176,7 @@ Wait until the installation progress is finished.
 
 ![image](./img/mig15.png)
 
-After the successfull installation a configuration server connection passphrase will be displayed. Copy the passphrase and save it for later use.
+After the successful installation a configuration server connection passphrase will be displayed. Copy the passphrase and save it for later use.
 
 ![image](./img/mig15_1.png)
 
@@ -207,7 +207,7 @@ based on https://learn.microsoft.com/en-us/azure/migrate/tutorial-migrate-physic
 
 On machines you want to migrate, you need to install the Mobility service agent. The agent installers are available on the replication appliance in the *%ProgramData%\ASR\home\svsystems\pushinstallsvc\repository* directory.
 
-In case you did install the replication appliance under "F:\azure" you can fint the RHEL 7 Mobility service agent installers under the following path:
+In case you did install the replication appliance under "F:\azure" you can find the RHEL 7 Mobility service agent installers under the following path:
 F:\azure\home\svsystems\pushinstallsvc\repository
 
 ~~~powershell
@@ -224,7 +224,7 @@ Mode                LastWriteTime         Length Name
 ~~~
 
 
-Because our VMs are all running inside the same Azure Virtual Network [VNet] and we did not restrict access betweem the VMs inside the VNet we can use scp to upload the Mobility service agent installer via scp to Linux VMs.
+Because our VMs are all running inside the same Azure Virtual Network [VNet] and we did not restrict access between the VMs inside the VNet we can use scp to upload the Mobility service agent installer via scp to Linux VMs.
 
 Execute the following powershell command on the new Windows Server 2019 VM to copy the Mobility service agent installer to the two Linux VMs.
 
@@ -272,7 +272,7 @@ sudo /usr/local/ASR/Vx/bin/UnifiedAgentConfigurator.sh -i 10.1.1.7 -P password.t
 logout
 ~~~
 
-Log into the secound VM in the resource group with Azure Bastion and install the mobility service agent.
+Log into the second VM in the resource group with Azure Bastion and install the mobility service agent.
 
 ~~~bash
 # Get the Azure Resource ID of Linux VM 2 in the source resource group
@@ -290,12 +290,12 @@ sudo ./install -r MS -v VmWare -q -c CSLegacy # You need to specify VmWare as th
 
 ~~~bash
 echo mbe711ujGFLmN9N6 > password.txt # This is the password you received during the installation of the Azure Replication Appliance, replace it with your password.
-sudo /usr/local/ASR/Vx/bin/UnifiedAgentConfigurator.sh -i 10.1.1.7 -P password.txt -c CSLegacy # IP 10.1.1.7 = replication appliance IP addressis the IP of the Azure Replication Appliance Windows VM you created.
+sudo /usr/local/ASR/Vx/bin/UnifiedAgentConfigurator.sh -i 10.1.1.7 -P password.txt -c CSLegacy # IP 10.1.1.7 = replication appliance IP addresses the IP of the Azure Replication Appliance Windows VM you created.
 logout
 ~~~
 
 > [!NOTE]
-> If you forgot to copy the Password you can obtain it from inside the Replication Appliance via the following Powershell command. 
+> If you forgot to copy the Password you can obtain it from inside the Replication Appliance via the following Powershell command.
 > ~~~powershell
 > Windows PowerShell
 > Copyright (C) Microsoft Corporation. All rights > reserved.
@@ -316,21 +316,21 @@ logout
 
 
 5. Make sure that you have the passphrase that was generated when you deployed the appliance (You should have saved it as a KeyVault secret).
-  * Store the key in a temporary text file and copy the file into the same direcotry on the source machines.
+  * Store the key in a temporary text file and copy the file into the same directory on the source machines.
   * You can obtain the passphrase on the replication appliance. From the command line, run the following command to view the passphrase
      C:\ProgramData\ASR\home\svsystems\bin\genpassphrase.exe -v
 
 ![image](./img/maw2.png) -->
 
 > [!WARNING]
-> Don't regenerate the passphrase. This will break connectivity and you will have to reregister the replication appliance.
+> Don't regenerate the passphrase. This will break connectivity and you will have to re-register the replication appliance.
 
 <!-- #### **Task 3.1: Install the Mobility service on the Windows VMs**
 
 1. Extract the contents of installer file to a local folder (for example C:\Temp) on the machine, as follows:
 ```shell
 ren Microsoft-ASR_UA\*Windows\*release.exe MobilityServiceInstaller.exe
-     
+
 MobilityServiceInstaller.exe /q /x:C:\Temp\Extracted
 
 cd C:\Temp\Extracted
@@ -339,7 +339,7 @@ cd C:\Temp\Extracted
 ```shell
 UnifiedAgent.exe /Role "MS" /Platform "VmWare" /Silent /CSType CSLegacy
 ```
-![image](./img/maw3-1.png)   
+![image](./img/maw3-1.png)
 > [!IMPORTANT]
 > You need to specify *VmWare* for the *Platform* parameter also for physical servers.
 
@@ -349,7 +349,7 @@ cd C:\Program Files (x86)\Microsoft Azure Site Recovery\agent
 
 UnifiedAgentConfigurator.exe /CSEndPoint \<replication appliance IP address\> /PassphraseFilePath \<Passphrase File Path\>
 ```
-![image](./img/maw3-2.png)     
+![image](./img/maw3-2.png)
 
 > [!IMPORTANT]
 > Repeat the above steps for the second Windows Server -->
@@ -358,11 +358,11 @@ UnifiedAgentConfigurator.exe /CSEndPoint \<replication appliance IP address\> /P
 
 Open the [Azure Portal](https://portal.azure.com) and navigate to the previously created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click *Replicate* under *Migration Tools*.
 
-![image](./img/repl1.png) 
+![image](./img/repl1.png)
 
 Select *Servers or virtual machines (VM)* and *Azure VM* and click *Continue*.
 
-![image](./img/repl2.png) 
+![image](./img/repl2.png)
 
 In the *Basics* page select the previously created Azure Migrate Replication appliance and specify the Guest Credentials and click next:
 
@@ -433,7 +433,7 @@ Switch back to the *Overview* section of the *Azure Migrate: Migration and moder
 ![image](./img/test6.png)
 
 
-Test migration will create two corresponding VMs in the destination resource group. 
+Test migration will create two corresponding VMs in the destination resource group.
 You can list the new test VMs via azure cli.
 
 > [!IMPORTANT]
@@ -488,19 +488,19 @@ Open the Microsoft Edge browser on the server, enter *localhost* in the address 
 
 <!-- Repeat the above steps for the *frontend2-test* system.  -->
 
-Once you've confirmed that the applications on the systems are running as expected you can perfom a cleanup for the test migration. Change back to the *Azure Migrate: Migration and modernization* overview page, click on the 3 dots on the end of each row of the replicating servers and select *Clean up test migration*.
+Once you've confirmed that the applications on the systems are running as expected you can perform a cleanup for the test migration. Change back to the *Azure Migrate: Migration and modernization* overview page, click on the 3 dots on the end of each row of the replicating servers and select *Clean up test migration*.
 
 ![image](./img/test10_1.png)
 
-Select *Testing complete. Delete test virtual machine* and select *Cleanup Test*. Reapeat the step for the remainig server and wait until the cleanup has been successfully processed.
+Select *Testing complete. Delete test virtual machine* and select *Cleanup Test*. Repeat the step for the remaining server and wait until the cleanup has been successfully processed.
 
 ![image](./img/test11.png)
 
 ### **Task 6: Prepare Final Migration**
 
-Currently the two frontend servers under the source Resource Group are published via an Azure Public Load Balancer. After the migration, we would like to serve the traffic via the two Linux VMs created under the destination Resource Group. Therefore we already created an Azure Public Load Balancer under the destination Resource group. The destination Public Loadbalancer does expect to serve Traffic via the two new Linux VMs via the IPs 10.2.1.4 and 10.2.1.5. 
+Currently the two frontend servers under the source Resource Group are published via an Azure Public Load Balancer. After the migration, we would like to serve the traffic via the two Linux VMs created under the destination Resource Group. Therefore we already created an Azure Public Load Balancer under the destination Resource group. The destination Public Loadbalancer does expect to serve Traffic via the two new Linux VMs via the IPs 10.2.1.4 and 10.2.1.5.
 
-Azure Migrate is going to create the new VMs with the next two free IPs under the destination virtual network, which will be exactly 10.2.1.4 and 10.2.1.5. 
+Azure Migrate is going to create the new VMs with the next two free IPs under the destination virtual network, which will be exactly 10.2.1.4 and 10.2.1.5.
 
 > [!NOTE]
 > Please note: Azure reserves the first four addresses (0-3) in each subnet address range, and doesn't assign the addresses. Azure assigns the next available address to a resource from the subnet address range. So it is predictable which IP addresses will be assigned to the destination VMs after the migration.
@@ -508,7 +508,7 @@ Azure Migrate is going to create the new VMs with the next two free IPs under th
 
 #### **Task 6.1: Create a new Azure Public Load Balancer in the destination environment**
 
-If you like to see the already existing public Load balancer from the Azure Portal go to the destination Resource Group and select the already existiing Azure Loadbalancer.
+If you like to see the already existing public Load balancer from the Azure Portal go to the destination Resource Group and select the already existing Azure Loadbalancer.
 
 > [!NOTE]
 > You can use the Filter to look for "load*"
@@ -527,7 +527,7 @@ Under *Frontend IP configuration*, click *Add a frontend IP configuration* and c
 
 ![image](./img/prep3.png) -->
 
-Under *Backend Pools*, select the existing Backend link "LoadBalancerBackEndPool (1)". 
+Under *Backend Pools*, select the existing Backend link "LoadBalancerBackEndPool (1)".
 
 ![image](./img/prep0_1_1.png)
 
@@ -550,7 +550,7 @@ Add *10.2.1.4* and *10.2.1.5* as the IP addresses.
 
 
 
-<!-- 
+<!--
 Under *Inbound rules* click on *Add a load balancing rule* and create the load balancing rule as illustrated on the following diagram.
 
 ![image](./img/prep5.png)
@@ -563,26 +563,26 @@ Proceed to the *Review + create* section, review your configuration and click *C
 
 ![image](./img/prep7.png)
 
-Wait until the load balancer has been created, cahnge back to the *Load balancing* section, select the *plb-frontend* Load Balancer and click *Frontend IP configuration* from the navigation pane on the left. Note down the Public IP of the *LoadBalancerFrontEnd* configuration. Repeat the step for the *plb-frontend-dest* Load Balancer.
+Wait until the load balancer has been created, change back to the *Load balancing* section, select the *plb-frontend* Load Balancer and click *Frontend IP configuration* from the navigation pane on the left. Note down the Public IP of the *LoadBalancerFrontEnd* configuration. Repeat the step for the *plb-frontend-dest* Load Balancer.
 
 ![image](./img/prep8.png) -->
 
 #### **Task 6.2: Create a new Azure Traffic Manager Profile**
 
-Azure Traffic Manager is a DNS-based traffic load balancer. It allows us to distribute traffic to public facing endpoints like our two Public Load Balancer. Traffic Manager can be created in advance to distribute traffic among the old and new load balancer. The DNS conbfiguration of the application can be changed in advance to point to the Traffic Manager Profile instead to the Public IP of the Load Balancer. Using this approach makes sure that Traffic Manager automatically removes the old Load Balancer after the frontend servers were migrated.
+Azure Traffic Manager is a DNS-based traffic load balancer. It allows us to distribute traffic to public facing endpoints like our two Public Load Balancer. Traffic Manager can be created in advance to distribute traffic among the old and new load balancer. The DNS configuration of the application can be changed in advance to point to the Traffic Manager Profile instead to the Public IP of the Load Balancer. Using this approach makes sure that Traffic Manager automatically removes the old Load Balancer after the frontend servers were migrated.
 
 From the Azure Portal open the Load Balancing blade, select Traffic Manager on the Navigation pane on the left and click *Create*.
 
 ![image](./img/prep9.png)
 
-Select a name for the Traffic Manager profile and select the *destination-rg* as the Resourec Group.
+Select a name for the Traffic Manager profile and select the *destination-rg* as the Resource Group.
 
 > [!NOTE]
 > Use routing method *Priority*, so we can make sure the traffic is only routed to the destination Load Balancer after the migration.
 
 ![image](./img/prep10_1_1.png)
 
-From the Load Balancing overview page select *Traffic Manager* and select the previously created Traffic Manager profile. 
+From the Load Balancing overview page select *Traffic Manager* and select the previously created Traffic Manager profile.
 Select *Endpoints* and click *Add*. Add each public IP of the source and destination Load Balancer as separate endpoints.
 
 > [!NOTE]
@@ -597,13 +597,13 @@ az network public-ip list -g $sourceRgName --query "[?ends_with(name, 'lbPublicI
 ![image](./img/prep11_1.png)
 
 <!-- > [!NOTE]
-> Please note: To be able to add the public IP addresses they need to be configured with an [DNS name lable](https://learn.microsoft.com/en-us/azure/dns/dns-custom-domain?toc=%2Fazure%2Fvirtual-network%2Ftoc.json#public-ip-address). -->
+> Please note: To be able to add the public IP addresses they need to be configured with an [DNS name label](https://learn.microsoft.com/en-us/azure/dns/dns-custom-domain?toc=%2Fazure%2Fvirtual-network%2Ftoc.json#public-ip-address). -->
 
 Repeat the step for the destination Load Balancer and set the *Priority* value to 2.
 
 > [!NOTE]
 > Make sure to set *Priority* value to 1 at the source load balancer.
-> 
+>
 
 Get the public ip of the load balancer in the destination resource group via azure cli.
 ~~~bash
@@ -613,7 +613,7 @@ az network public-ip list -g $destinationRgName --query "[?ends_with(name, 'lbPu
 
 ![image](./img/prep11_2.png)
 
-Check the Overview section under the navigation pane and note that the source load balancer is shown as *online* whereas the 
+Check the Overview section under the navigation pane and note that the source load balancer is shown as *online* whereas the
 destination load balancer is shown as *degraded*. If you copy the DNS name of the Traffic Manager profile and paste it into your browser, you should be able to browse the source web servers through the Traffic Manager Profile.
 
 ![image](./img/prep12.png)
@@ -651,7 +651,7 @@ After a few minutes the migration should be successfully completed.
 
 ![image](./img/finalmig4_1.png)
 
-Migration will create two corresponding VMs in the destination resource group. 
+Migration will create two corresponding VMs in the destination resource group.
 You can list the new test VMs via azure cli.
 
 > [!IMPORTANT]
@@ -691,7 +691,7 @@ In case we would have done the migration from VMWare or Hyper-V the source VMs w
 
 ![image](./img/finalmig5_1.png)
 
-Therefore as a final step we need to shut down the VMs in the source environment. 
+Therefore as a final step we need to shut down the VMs in the source environment.
 
 ~~~bash
 # Get the Azure Resource ID of Linux VM 1 in the source resource group
@@ -704,7 +704,7 @@ az network traffic-manager endpoint list -g $destinationRgName --profile-name $t
 ~~~
 
 
-You can also see the same result via the Azure Portal. Change to the Azure Traffic Manager profile you've created previously and look at the endpoints. 
+You can also see the same result via the Azure Portal. Change to the Azure Traffic Manager profile you've created previously and look at the endpoints.
 
 
 
@@ -728,7 +728,7 @@ Select *Stop replication and remove replication settings* from the drop down lis
 
 ![image](./img/finalmig9.png)
 
-From the Traffic Manager Profile you can now also safley remove the endpoint for the source load balancer.
+From the Traffic Manager Profile you can now also safely remove the endpoint for the source load balancer.
 
 ![image](./img/finalmig10.png)
 

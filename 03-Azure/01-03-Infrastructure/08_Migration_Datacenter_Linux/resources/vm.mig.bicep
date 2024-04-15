@@ -22,11 +22,9 @@ param userObjectId string
 @description('VM Image Reference')
 // add 
 param imageReference object =  {
-  publisher: 'RedHat'
-  offer: 'RHEL'
-  // sku: '81-ci-gen2' https://github.com/MicrosoftDocs/azure-docs/issues/84430
-  // sku: '8-gen2'
-  sku: '7_9'
+  publisher: 'MicrosoftWindowsServer'
+  offer: 'WindowsServer'
+  sku: '2022-datacenter-azure-edition'
   version: 'latest'
 }
 // @description('VM Image Plan')

@@ -49,7 +49,7 @@ To create an assessment select *Assessment* from the navigation pane on the left
 
 ![image](./img/Assess5.png)
 
-Select *Azure VM* for the assessment type and *Servers discovered from the Azure Migrate appliance* for the disvovery source. Note the predefined assessment settings on the bottom. Click on *Edit* to adjust the assessment settings to your needs.
+Select *Azure VM* for the assessment type and *Servers discovered from the Azure Migrate appliance* for the discovery source. Note the predefined assessment settings on the bottom. Click on *Edit* to adjust the assessment settings to your needs.
 
 ![image](./img/Assess6.png)
 
@@ -73,7 +73,7 @@ When finished the assessment will show up with the status *Ready*.
 
 ![image](./img/Assess10_1.png)
 
-### **Task 3: Review and adjust assessment output and reccomendations**
+### **Task 3: Review and adjust assessment output and recommendations**
 
 Click on the assessment name to open it.
 
@@ -110,7 +110,7 @@ The assessment will be automatically be updated.
 
 ![image](./img/Assess17.png)
 
-Once finished you can click again on the assessment and review how your changes changed the sizing and pricing recomendations.
+Once finished you can click again on the assessment and review how your changes changed the sizing and pricing recommendations.
 
 ### **Task 4: Enable Dependency Analysis**
 
@@ -151,7 +151,7 @@ Within the *Discovered servers* screen click on *Refresh*. You should now be abl
 ![image](./img/Depend5_1.png)
 
 > [!NOTE]
-> Please note that it could take some time for the dependency data to show up. 
+> Please note that it could take some time for the dependency data to show up.
 
 Once the dependency data has been uploaded to Azure Migrate, you should be able to show the different dependencies of the discovered servers.
 

@@ -19,7 +19,7 @@ Duration: 60 minutes
 
 ## Prerequisites
 
-Please make sure 
+Please make sure
 - That you successfully completed [Challenge 1](../challenge-1/solution.md) before continuing with this challenge.
 - Microsoft Azure RBAC Role [Contributor](https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#contributor) on your current Subscription
 - Microsoft Entra Role [Application Developer](https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/permissions-reference#application-developer) to have sufficient permissions to register an application with your Microsoft Entra tenant, and assign to the application a role in your Azure subscription.
@@ -40,7 +40,7 @@ Select *Servers, databases and web app* from the navigation pane on the left and
 
 ![image](./img/AzMig2.png)
 
-Select the *destination-rg* Resource Group, specify a name for the Azure Migrate Project and also select a geograpy where the data will be stored.
+Select the *destination-rg* Resource Group, specify a name for the Azure Migrate Project and also select a geography where the data will be stored.
 
 > [!IMPORTANT]
 > Make sure to select the right subscription. In case there are several subscriptions available, please select the subscription that was used to deploy the Azure Landing Zone.
@@ -127,8 +127,8 @@ Select *Bastion* from the navigation pane on the left, provide the credentials t
 
 ### **Task 3: Install the Azure Migrate Appliance**
 
-> [!IMPORTANT] 
-You will need to install Microsof Edge Browser or Chrome on the Azure Migrate Appliance VM. Internet Explorer 11 is not supported.
+> [!IMPORTANT]
+You will need to install Microsoft Edge Browser or Chrome on the Azure Migrate Appliance VM. Internet Explorer 11 is not supported.
 > - [New Windows 2019 server, how to install Microsoft Edge browser](https://learn.microsoft.com/en-us/answers/questions/937532/new-windows-2019-server-how-to-install-microsoft-e)
 
 Open Microsoft Edge on the Windows Server 2019 system and navigate and login to the [Azure Portal](https://portal.azure.com).
@@ -139,13 +139,13 @@ In the search bar enter *Azure Migrate* and select Azure Migrate from the list o
 
 ![image](./img/AzMig1.png)
 
-Select *Servers, databases and web apps*, make sure that the previously created Azure Migrate project is selected and klick *Discover*
+Select *Servers, databases and web apps*, make sure that the previously created Azure Migrate project is selected and click *Discover*
 
 ![image](./img/Discover1.png)
 
-- Select *Physical or other (AWS, GCP,Xen, etc.)* from the *Are your servers virtualized* drop down. 
-- Enter a name into the *Name your appliance* field and clicke *Generate*. 
-- Wait until the Project key has been created. 
+- Select *Physical or other (AWS, GCP,Xen, etc.)* from the *Are your servers virtualized* drop down.
+- Enter a name into the *Name your appliance* field and click *Generate*.
+- Wait until the Project key has been created.
 - Copy the Project key
 - click *Download*, to download the ZIP file containing the PowerShell script to install the Azure Migrate Appliance.
 
@@ -158,14 +158,14 @@ Open the folder containing the download and extract the ZIP file.
 
 ![image](./img/Discover3.png)
 
-Start an evelvated PowerShell session, 
-- type "powershell" at the taskbar input field 
+Start an elevated PowerShell session,
+- type "powershell" at the taskbar input field
 - right click the Windows PowerShell Icon
-- select "Run as adminstrator" 
+- select "Run as administrator"
 
 ![image](./img/Discover3_1.png)
 
-Change the PowerShell directory to the folder where the contents have been extraceted.
+Change the PowerShell directory to the folder where the contents have been extracted.
 Run the script named AzureMigrateInstaller.ps1 and select *A* to confirm script execution.
 
 ~~~powershell
@@ -189,7 +189,7 @@ Select Option 1 for *public endpoint* and confirm you selection to start the ins
 
 ![image](./img/Discover7.png)
 
-Select *N* for IE11 uninstallation. 
+Select *N* for IE11 de-install.
 
 > [!WARNING]
 > Please note the Warning that IE11 is incompatible with latest Azure Migrate Appliance configuration manager and make sure using Microsoft Edge to configure the Azure Migrate appliance
@@ -216,7 +216,7 @@ Paste the previously copied Azure Migrate project key and click *Verify*. Once s
 
 ![image](./img/Discover10.png)
 
-Next log in to Azure using the provieded code.
+Next log in to Azure using the provided code.
 
 ![image](./img/Discover11.png)
 
@@ -224,7 +224,7 @@ Next log in to Azure using the provieded code.
 
 ![image](./img/Discover13.png)
 
-After successfull authentication, appliance will be registered with the Azure Migrate project.
+After successful authentication, appliance will be registered with the Azure Migrate project.
 
 ![image](./img/Discover14.png)
 
@@ -235,16 +235,16 @@ Click on *Add Credentials* in the navigation pane on the left.
 
 In our case the two source VMS have been setup with password-based authentication for Linux server.
 
-- Therefore select the source type as "Linux Server (Password-based)". 
+- Therefore select the source type as "Linux Server (Password-based)".
 - Specify a friendly name for credentials.
 - Add the username used during the creation of the source VMs.
 - Add the password used during the creation of the source VMs.
 - Click on Save.
-The friendly name will be used later on when specifiying the individual systems.
+The friendly name will be used later on when specifying the individual systems.
 
 
 > [!NOTE]
-> For the Username and Password check the the enviroment parameter.
+> For the Username and Password check the the environment parameter.
 >
 > ~~~bash
 > echo $adminPassword
@@ -256,7 +256,7 @@ The friendly name will be used later on when specifiying the individual systems.
 
 <!-- ![image](./img/Discover15.png) -->
 
-Next you need to provide the individual source server details and map them to a specific set of credentials. Make sure that validation is successfull.
+Next you need to provide the individual source server details and map them to a specific set of credentials. Make sure that validation is successful.
 
 # list all IPs of resource group source-rg
 

@@ -31,7 +31,7 @@ Duration: 90 minutes
 
 ## Prerequisites
 
-Please make sure thet you successfully completed [Challenge 4](../challenge-4/solution.md) before continuing with this challenge.
+Please make sure that you successfully completed [Challenge 4](../challenge-4/solution.md) before continuing with this challenge.
 
 ### **Task 1: Create and prepare Windows Server 2019 for the Azure Replication Appliance**
 
@@ -590,7 +590,7 @@ Select *Endpoints* and click *Add*. Add each public IP of the source and destina
 
 Get the public ip of the load balancer in the destination resource group via azure cli.
 ~~~bash
-# get public IP of the loadbalancer in the source resource group
+# get public IP of the load balancer in the source resource group
 az network public-ip list -g $sourceRgName --query "[?ends_with(name, 'lbPublicIP')].ipAddress" -o tsv # should return a public IP address
 ~~~
 
@@ -607,7 +607,7 @@ Repeat the step for the destination Load Balancer and set the *Priority* value t
 
 Get the public ip of the load balancer in the destination resource group via azure cli.
 ~~~bash
-# get public IP of the loadbalancer in the source resource group
+# get public IP of the load balancer in the source resource group
 az network public-ip list -g $destinationRgName --query "[?ends_with(name, 'lbPublicIP')].ipAddress" -o tsv # should return a public IP address
 ~~~
 
@@ -720,7 +720,7 @@ From a user perspective nothing changed. You're still able to browse the Traffic
 
 ### **Task 8: Cleanup**
 
-After the successfull migration you can now stop replicating the source virtual machines. Open the [Azure Portal](https://portal.azure.com) and navigate to the previously created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click *Overview* in the *Migration tools* box. In the *Azure Migrate: Migration and modernization* pane, select *Replicating machines* from the navigation pane on the left, click on the 3 dots on the end of each row of the replicating servers and select *Stop replicating*.
+After the successful migration you can now stop replicating the source virtual machines. Open the [Azure Portal](https://portal.azure.com) and navigate to the previously created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click *Overview* in the *Migration tools* box. In the *Azure Migrate: Migration and modernization* pane, select *Replicating machines* from the navigation pane on the left, click on the 3 dots on the end of each row of the replicating servers and select *Stop replicating*.
 
 ![image](./img/finalmig8.png)
 

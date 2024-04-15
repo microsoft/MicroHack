@@ -4,7 +4,7 @@ Duration: 40 minutes
 
 ## Prerequisites
 
-Please make sure thet you successfully completed [Challenge 5](../challenge-5/solution.md) before continuing with this challenge.
+Please make sure that you successfully completed [Challenge 5](../challenge-5/solution.md) before continuing with this challenge.
 
 ### **Task 1: Create an App Service Assessment**
 
@@ -87,7 +87,7 @@ Execute the *Generate-MigrationSettings.ps1 -SitePackageResultsPath .\packagedsi
 
 ![image](./img/modernize8.png)
 
-Open *MigrationSettings.json* file using notedpad.
+Open *MigrationSettings.json* file using notepad.
 
 ![image](./img/modernize9.png)
 

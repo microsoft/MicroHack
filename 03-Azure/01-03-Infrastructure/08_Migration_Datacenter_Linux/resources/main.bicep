@@ -11,12 +11,14 @@ param deploymentCount int = 1
 
 @description('Azure region for the deployment')
 param location string
+@description('Azure region for the destination deployment. In case you want to deploy to a different region than the source.')
+param destinationLocation string = location
 
 @secure()
 @description('Admin password variable')
 param adminPassword string
 
-param suffix string = substring(uniqueString(currentUserObjectId), 0, 4) 
+param suffix string = substring(uniqueString(currentUserObjectId), 0, 4)
 
 param imageReference object = {
   publisher: 'RedHat'
@@ -56,7 +58,7 @@ module source 'source.bicep' = [for i in range(0, deploymentCount):  {
 @description('Destination Resouce Groups.')
 resource destinationRg 'Microsoft.Resources/resourceGroups@2021-01-01' = [for i in range(0, deploymentCount): {
   name: '${prefix}${(i+1)}-${suffix}-destination-rg'
-  location: location
+  location: destinationLocation
 }]
 
 @description('Destination Module to deploy the destination resources')
@@ -64,7 +66,7 @@ module destination 'destination.bicep' = [for i in range(0, deploymentCount): {
   name: '${prefix}${(i+1)}-destinationModule'
   scope: destinationRg[i]
   params: {
-    location: location
+    location: destinationLocation
     prefix: prefix
     suffix: suffix
     deployment: (i+1)

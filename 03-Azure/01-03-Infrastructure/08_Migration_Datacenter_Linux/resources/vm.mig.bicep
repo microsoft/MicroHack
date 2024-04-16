@@ -24,7 +24,7 @@ param userObjectId string
 param imageReference object =  {
   publisher: 'MicrosoftWindowsServer'
   offer: 'WindowsServer'
-  sku: '2022-datacenter-azure-edition'
+  sku: '2019-datacenter-gensecond'
   version: 'latest'
 }
 // @description('VM Image Plan')

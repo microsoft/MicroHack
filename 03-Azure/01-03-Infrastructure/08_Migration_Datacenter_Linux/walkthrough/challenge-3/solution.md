@@ -16,7 +16,7 @@ Duration: 40 minutes
 
 ## Prerequisites
 
-Please make sure thet you successfully completed [Challenge 2](../challenge-2/solution.md) before continuing with this challenge.
+Please make sure that you successfully completed [Challenge 2](../challenge-2/solution.md) before continuing with this challenge.
 Please also make sure to review the [prerequisites](https://learn.microsoft.com/en-us/azure/migrate/how-to-build-a-business-case#prerequisites) for the business case.
 
 ### **Task 1: Build a business case**
@@ -69,7 +69,7 @@ There are four major reports that you need to review:
 - Azure PaaS: This report covers the Azure and on-premises footprint of the workloads recommended for migrating to Azure PaaS.
 In our case our application is based on Node.js. If our application would be based on .NET, Java or PHP we would see the recommendation to migrate to Azure App Service via the corresponding [Azure App Service Migration Assistant tool](https://azure.microsoft.com/en-us/products/app-service/migration-tools/).
 
-In case we would have been runnig an .NET application we would see the following recommendation:
+In case we would have been running an .NET application we would see the following recommendation:
 
 ![image](./img/bc7.png)
 
@@ -100,7 +100,7 @@ In case you own SUSE or RHEL licenses Azure Hybrid Benefit (AHB) for Linux lets 
 
 You can verify your current license type at Azure VMs by running the following commands:
 ~~~bash
-# Get the name of the source resoure group which does end on source-rg
+# Get the name of the source resource group which does end on source-rg
 # Get the name of the source resource group which does end on source-rg
 sourceRgName=$(az group list --query "[?starts_with(name, '$prefix') && ends_with(name, 'source-rg')].name" -o tsv)
 # Get the name of the source vm
@@ -118,7 +118,7 @@ We can set the license type of the Windows Server which does run the Azure Migra
 # Get the id of the vm where the name end on Mig under the resource group sourceRgName
 sourceVmMigId=$(az vm list --resource-group $sourceRgName --query "[?ends_with(name, 'Mig')].id" -o tsv)
 # Set the license type of the source Migration Appliance Windows VM
-az vm update --ids $sourceVmMigId --set licenseType=Windows_Server 
+az vm update --ids $sourceVmMigId --set licenseType=Windows_Server
 # Get the license type of the source vm
 az vm get-instance-view --ids $sourceVmMigId -o tsv --query licenseType # Result should be Windows_Server
 ~~~

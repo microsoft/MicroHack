@@ -20,17 +20,17 @@ param customData string = base64('start process -windowstyle hidden -filepath $(
 @description('object id of the user which will be assigned as virtual machine administrator role')
 param userObjectId string
 @description('VM Image Reference')
-// add 
+// add
 param imageReference object =  {
-  publisher: 'RedHat'
-  offer: 'RHEL'
-  // sku: '81-ci-gen2' https://github.com/MicrosoftDocs/azure-docs/issues/84430
-  // sku: '8-gen2'
-  sku: '7_9'
+  publisher: 'MicrosoftWindowsServer'
+  offer: 'WindowsServer'
+  sku: '2019-datacenter-gensecond'
   version: 'latest'
 }
 // @description('VM Image Plan')
 // param imagePlan object
+
+param vmSize string = 'Standard_D2s_v3'
 
 resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' existing = {
   name: vnetName
@@ -71,7 +71,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-07-01' = {
   // plan: imagePlan
   properties: {
     hardwareProfile: {
-      vmSize: 'Standard_D2s_v3'
+      vmSize: vmSize
     }
     storageProfile: {
       osDisk: {

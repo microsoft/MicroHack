@@ -19,7 +19,7 @@ Duration: 30 minutes
 
 ## Prerequisites
 
-- Please ensure that you successfully verified the [General prerequisits](../../README.md#general-prerequisites) before continuing with this challenge.
+- Please ensure that you successfully verified the [General prerequisites](../../README.md#general-prerequisites) before continuing with this challenge.
 - The Azure CLI is required to deploy the Bicep configuration of the Micro Hack.
 - Download the *.bicep files from the [Resources](../../resources) to your local PC.
 
@@ -43,7 +43,7 @@ Duration: 30 minutes
    > storage account and file share to use. If you use a Premium storage account, Cloud Shell
    > allocates 100 GB of storage for the file share.
 - Select your Bash shell environment
-    Cloud Shell allows you to select either **Bash** or **PowerShell** for your command-line experience. Please selecte Bash for this MicroHack.
+    Cloud Shell allows you to select either **Bash** or **PowerShell** for your command-line experience. Please select Bash for this MicroHack.
 
     ![Screenshot showing the shell selector.](./img/AzMigCloudShell3.png)
 - Set your subscription
@@ -97,7 +97,7 @@ currentUserObjectId=$(az ad signed-in-user show --query id -o tsv)
 # Define VM admin password and username
 adminPassword='demo!pass123!'
 adminUsername='microhackadmin'
-# Create Azure Resources with Azure Bicep Resource Templates and Azure CLI 
+# Create Azure Resources with Azure Bicep Resource Templates and Azure CLI
 az deployment sub create --location $location --template-file ./resources/main.bicep --parameters prefix=$prefix currentUserObjectId=$currentUserObjectId location=$location adminPassword=$adminPassword suffix=$suffix adminUsername=$adminUsername
 ~~~
 
@@ -105,7 +105,7 @@ az deployment sub create --location $location --template-file ./resources/main.b
 
 The bicep deployment should have created the following resources
 
-- source-rg Resource Group containing the follwing resources
+- source-rg Resource Group containing the following resources
     + Virtual Network *source-vnet*
     + 2 Virtual Machines with installed Node.js web App listing on port 80
     + 1 Azure Load Balancer *plb-frontend with configured backend pool containing both Virtual Machines.
@@ -120,7 +120,7 @@ sourceRgName=$(az group list --query "[?starts_with(name, '$prefix') && ends_wit
 az resource list -g $sourceRgName --output table
 ~~~
 
-- destination-rg Resource Group containing the follwing resources
+- destination-rg Resource Group containing the following resources
     + 1 Virtual Network *destination-vnet*
     + 1 Azure Bastion *destination-bastion* which will be used to login to the VMs via SSH.
 
@@ -154,7 +154,7 @@ sourceVm2Id=$(az vm list -g $sourceRgName --query "[?ends_with(name, '${suffix}2
 TODO: Try to get the bastion name from the deployment output instead of hardcoding it.
 sourceBastionName=${prefix}1$suffix-source-bastion
 # Login to the first VM in the resource group with Azure Bastion
-# IMPORTANT 
+# IMPORTANT
 az network bastion ssh -n $sourceBastionName -g $sourceRgName --target-resource-id $sourceVm1Id --auth-type password --username $adminUsername
 # Inside the VM check if cloud-init is running
 sudo cloud-init status # should return 'status: done', if not wait a few minutes and try again
@@ -185,7 +185,7 @@ The following instruction will guide you through the verification of the deploye
 
 ![image](./img/mh.linux.lb.test.gif)
 
-You can verify things direclty via azure cli if you want to:
+You can verify things directly via azure cli if you want to:
 
 #### Verify Web Server availability via Azure CLI
 
@@ -208,7 +208,7 @@ Result should look similar to this:
 > Host: 172.201.72.62
 > User-Agent: curl/7.68.0
 > Accept: */*
-> 
+>
 * Mark bundle as not supporting multiuse
 < HTTP/1.1 200 OK
 < server: red
@@ -216,7 +216,7 @@ Result should look similar to this:
 < Connection: keep-alive
 < Keep-Alive: timeout=5
 < Transfer-Encoding: chunked
-< 
+<
 <body bgcolor="red">
 Incoming Request URL: /
 reqh:{
@@ -234,7 +234,7 @@ resh:{
         "rport": 61516
 }
 </body>
-* Connection #0 to host 172.201.72.62 left intac
+* Connection #0 to host 172.201.72.62 left intact
 ~~~
 
 ### Useful Links

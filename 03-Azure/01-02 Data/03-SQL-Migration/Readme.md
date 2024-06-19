@@ -8,7 +8,15 @@
 - [**Contributors**](#contributors)
 # MicroHack introduction
 
-This MicroHack scenario walks through the use of ... with a focus on the best practices and the design principles. Specifically, this builds up to include working with an existing infrastructure.
+
+This MicroHack scenario walks through the use of database migration with a focus on the best practices and the design principles. Specifically, this builds up to include working with an existing infrastructure.
+
+This MicroHack will enhance your understanding of SQL modernization and migration paths, including how to assess and migrate SQL Server databases to Azure SQL, administer and monitor Azure SQL Managed Instance, and ensure the security of Azure SQL Managed Instance services. Specifically, to bring Azure SQL family closer to the participants, making the value of platform services more concrete and understandable through hands-on labs and presentations.
+
+Migrate to Innovate 
+
+The workshop provided a comprehensive learning experience for modernizing SQL Server workloads to Azure, with a focus on hands-on practice and understanding the benefits of migrating to Azure, such as cost optimization, increased flexibility and scalability, improved security and compliance, and simplified management and monitoring.
+
 
 ![image](Path to the high level architecture )
 

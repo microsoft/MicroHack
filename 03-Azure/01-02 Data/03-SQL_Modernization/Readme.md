@@ -1,21 +1,19 @@
-# **Master Template MicroHack**
-# **MicroHack Template**
+
+![image](./Images/SQLMicroHack.png)
+
+# MicroHack - SQL modernization 
 
 - [**MicroHack introduction**](#MicroHack-introduction)
 - [**MicroHack context**](#microhack-context)
 - [**Objectives**](#objectives)
 - [**MicroHack Challenges**](#microhack-challenges)
 - [**Contributors**](#contributors)
+
 # MicroHack introduction
-
-Migrate to Innovate 
-
-![image](./Images/SQLMicroHack.png)
 
 This MicroHack scenario walks through the use of database migration with a focus on the best practices and the design principles. Specifically, this builds up to include working with an existing infrastructure.
 
 This MicroHack will enhance your understanding of SQL modernization and migration paths, including how to assess and migrate SQL Server databases to Azure SQL, administer and monitor Azure SQL Managed Instance, and ensure the security of Azure SQL Managed Instance services. Specifically, to bring Azure SQL family closer to the participants, making the value of platform services more concrete and understandable through hands-on labs and presentations.
-
 
 
 # MicroHack context
@@ -25,11 +23,11 @@ This MicroHack scenario walks through modernizing SQL Server workloads to Azure,
 
 After completing this MicroHack you will be able to:
 
-• Implement a proof-of-concept (PoC) for migrating an on-premises SQL Server 2012 or SQL Server 2016 database into Azure SQL Database Managed Instance  (SQL MI).
-• Perform assessments to reveal any feature parity and compatibility issues between the on-premises SQL Server database and the managed database offerings in Azure
-• Migrate the on-premises databases into Azure, using migration services 
-• Enable some of the advanced SQL features available in SQL MI to improve security and performance in the customer's application. 
-• Understand how to to implement a cloud migration solution for business-critical applications and databases.
+* Implement a proof-of-concept (PoC) for migrating an on-premises SQL Server 2012 or SQL Server 2016 database into Azure SQL Database Managed Instance  (SQL MI).  
+* Perform assessments to reveal any feature parity and compatibility issues between the on-premises SQL Server database and the managed database offerings in Azure  
+* Migrate the on-premises databases into Azure, using migration services  
+* Enable some of the advanced SQL features available in SQL MI to improve security and performance in the customer's application.  
+* Understand how to to implement a cloud migration solution for business-critical applications and databases.  
 
 # MicroHack challenges
 
@@ -37,9 +35,9 @@ After completing this MicroHack you will be able to:
 
 This MicroHack has a few but important prerequisites
 
-- Basic Azure knowledge [(Azure fundamentals)](https://learn.microsoft.com/en-us/training/paths/azure-fundamentals-describe-azure-architecture-services/)
-- Basic database knowledge 
-- Microsoft Teams Desktop Sharing should be allowed to collaborate with other participants (only for remote deliveries)
+* Basic Azure knowledge [(Azure fundamentals)](https://learn.microsoft.com/en-us/training/paths/azure-fundamentals-describe-azure-architecture-services/)  
+* Basic database knowledge  
+* Microsoft Teams Desktop Sharing should be allowed to collaborate with other participants (only for remote deliveries)  
 
 ## Challenge 1 - Prerequisites and landing zone preparation 
 
@@ -65,7 +63,7 @@ The goal of this exercise is to migrate an on-premises SQL Server 2012 database 
 
 ### Solution steps 
 
-[Solution Steps](./Challenges/01 - MicroHack - database assessment and migration with Azure Data Studio.pdf)
+[Solution Steps](./Challenges/01_MicroHack_challenge1.pdf)
 
 ## Challenge 2 - Monitoring and Performance on Azure SQL Managed Instance
 
@@ -90,7 +88,7 @@ The goal of this exercise is to understand monitoring and perfomance optimzation
 
 ### Solution steps
 
-[Solution Steps]( ./Challenges/02 - MicroHack - monitoring and performance on Azure SQL Managed Instance.pdf)
+[Solution Steps](./Challenges/02_MicroHack_challenge2.pdf)
 
 ## Challenge 3 - Security on Azure SQL Managed Instance
 
@@ -115,7 +113,7 @@ The goal of this exercise is to understand the layered security model available 
 
 ### Solution steps
 
-[Solution Steps](./Challenges/03 - MicroHack - security on Azure SQL Managed Instance.pdf)
+[Solution Steps](./Challenges/03_MicroHack_challenge3.pdf)
 
 
 ## Finish
@@ -128,5 +126,5 @@ Thank you for investing the time and see you next time!
 
 ## Contributors
 * Cornel Sukalla [LinkedIn](https://www.linkedin.com/in/cornelsukalla/)
-* Mert Següner [LinkedIn] (https://www.linkedin.com/in/mertsenguner/)
-* Sean Cowburn [LinkedIn] (https://www.linkedin.com/in/sean-cowburn/)
+* Mert Següner [LinkedIn](https://www.linkedin.com/in/mertsenguner/)
+* Sean Cowburn [LinkedIn](https://www.linkedin.com/in/sean-cowburn/)

@@ -74,7 +74,7 @@ In this section we will use the Azure Data Studio (ADS) to assess the applicatio
 |In SSMS connect to: **legacysql2012**<br> Use the credentials:<br>  **User**: **_Will be provided during hack_**<br> **Password**:    **_Will be provided during hack_**|![](../Images/25bce50ae5aedc9358b1c09cddbdd9e5.png)||
 |**DO NOT EXECUTE THIS STEP**  This is for reference only, as only a single credential is required!  In SSMS open new query and create the credential using the following script: *USE [master]* *GO* *CREATE CREDENTIAL [Azurebackupstorage] WITH IDENTITY = '\<your storage account name\>'* *,SECRET = '\<your storage account access key \>'*|![](../Images/289bd8ec4d83a70c8290893a42e7c2a3.png)| _**This should be only done only by the trainer.**_|
 |Backup your team databases: Select your 3 team databases and create a full back to URL for each database<br> **TEAMXX_TenantDataDB** **TEAMXX_LocalMasterDataDB**<br> **TEAMXX_SharedMasterDataDB**|![](../Images/47cdd668bd3f86a4d89336bd93c8eea7.png)| This is the wizard experience in SSMS, you can also take backups using T-SQL scripts. There are some samples below, for this. |
-|Backup database:  Select Backup to URL  Select the credential "Azurebackupstorage"  Make sure you enter the Azure container name as follows:  **migration/team\<XX\>_\<databasename\>**  e.g. for team01  **migration\\team01_localmasterdatadb**. Repeat this process for the remaining 2 databases: **TEAMXX_LocalMasterDataDB**  **TEAMXX_SharedMasterDataDB**  Use SSMS like above or use TSQL commands in the right hand side.|![](../Images/c8e2b67d79caf6a59890bee57dba263d.png)![](../Images/50d6aabc1ac11857c2a5ff2f7d6961fb.png) | **You can also directly use TSQL to BackUp your Databases:**<br> *BACKUP DATABASE [TEAM01_LocalMasterDataDB]* *TO URL = N'https://sqlhacksavxrtdxsgia4gc.blob.core.windows.net/migration/team01_localmasterdatadb/TEAM01_LocalMasterDataDB_backup_2023_09_07_092209.bak'*<br> *WITH CREDENTIAL = N'Azurebackupstorage',<br> NOFORMAT, NOINIT,<br> NAME = N'TEAM01_LocalMasterDataDB-Full Database Backup',<br> NOSKIP, NOREWIND, NOUNLOAD, STATS = 10* <br> *GO*<br><br> *BACKUP DATABASE [TEAM01_SharedMasterDataDB]<br> TO URL = N'https://sqlhacksavxrtdxsgia4gc.blob.core.windows.net/migration/team01_shareddatadb/TEAM01_SharedMasterDataDB_backup_2023_09_07_092209.bak'*<br> *WITH CREDENTIAL = N'Azurebackupstorage',<br> NOFORMAT, NOINIT,<br> NAME = N'TEAM01_SharedMasterDataDB-Full Database Backup',<br> NOSKIP, NOREWIND, NOUNLOAD, STATS = 10*<br> *GO*<br><br>  *BACKUP DATABASE [TEAM01_TenantDataDB]  TO URL = N'https://sqlhacksavxrtdxsgia4gc.blob.core.windows.net/migration/team01_tenantdatadb/TEAM01_TenantDataDB_backup_2023_09_07_092209.bak'*<br>  *WITH CREDENTIAL = N'Azurebackupstorage',<br> NOFORMAT, NOINIT,<br> NAME = N'TEAM01_TenantDataDB-Full Database Backup',<br> NOSKIP, NOREWIND, NOUNLOAD, STATS = 10*<br> *GO* |
+|Backup database:  Select Backup to URL  Select the credential "Azurebackupstorage"  Make sure you enter the Azure container name as follows:  **migration/team\<XX\>_\<databasename\>**  e.g. for team01  **migration\\team01_localmasterdatadb**. Repeat this process for the remaining 2 databases: **TEAMXX_LocalMasterDataDB**  **TEAMXX_SharedMasterDataDB**  Use SSMS like above or use TSQL commands in the right hand side.|![](../Images/c8e2b67d79caf6a59890bee57dba263d.png)![](../Images/50d6aabc1ac11857c2a5ff2f7d6961fb.png) | [**You can also directly use TSQL to BackUp your Databases**](#t-sql-backup-code) |
 |Switch to Azure portal on your web browser. Review and check that the **full backup** exists in each folder in the Azure Storage account.|  *![](../Images/bc48ffffb341a8f7288bab66aa51c224.png)*||
 |In Azure Data Studio on your Team VM  Connect to legacy SQL Server 2012 using "**New Connection**" |   ![](../Images/d20118abebd0f983cb4c31db10098012.png)||
 | Enter server name and credentials.<br>  Connection string: legacysql2012<br>  **User**: **_Will be provided during hack_**<br> **Password**: **_Will be provided during hack_**.<br> Click Connect    |![](../Images/e606818baf281ade6ac7bc84885c904a.png)||
@@ -92,3 +92,30 @@ In this section we will use the Azure Data Studio (ADS) to assess the applicatio
 | Review progress in Azure Data Studio  Click on Refresh from time to time to check the latest status of the migration until it succeeds.|![](../Images/4a12363cf88d0a17e353598df4caee28.png)![](../Images/9f8c3cb1370893365f91d97b69a8dc55.png)![](../Images/2991c3b319d8b486cf78d26782d3f740.png)||
 
 # Confirm application databases have been migrated to Azure SQL Managed Instance
+
+# Annotations
+### T-SQL Backup Code
+``` SQL 
+BACKUP DATABASE [TEAM01_LocalMasterDataDB] 
+TO URL = N'https://<storageaccount>].blob.core.windows.net/migration/team01_localmasterdatadb/TEAM01_LocalMasterDataDB.bak'
+WITH CREDENTIAL = N'Azurebackupstorage',
+NOFORMAT, NOINIT,
+NAME = N'TEAM01_LocalMasterDataDB-Full Database Backup',
+NOSKIP, NOREWIND, NOUNLOAD, STATS = 10
+GO
+
+BACKUP DATABASE [TEAM01_SharedMasterDataDB]
+TO URL = N'https://<storageaccount>.blob.core.windows.net/migration/team01_shareddatadb/TEAM01_SharedMasterDataDB.bak'
+WITH CREDENTIAL = N'Azurebackupstorage',
+NOFORMAT, NOINIT,
+NAME = N'TEAM01_SharedMasterDataDB-Full Database Backup',
+NOSKIP, NOREWIND, NOUNLOAD, STATS = 10
+GO
+
+BACKUP DATABASE [TEAM01_TenantDataDB] TO URL = N'https://<storageaccount>.blob.core.windows.net/migration/team01_tenantdatadb/TEAM01_TenantDataDB.bak'
+WITH CREDENTIAL = N'Azurebackupstorage',
+NOFORMAT, NOINIT,
+NAME = N'TEAM01_TenantDataDB-Full Database Backup',
+NOSKIP, NOREWIND, NOUNLOAD, STATS = 10
+GO
+````

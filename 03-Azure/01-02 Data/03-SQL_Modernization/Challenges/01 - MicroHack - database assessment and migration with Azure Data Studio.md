@@ -1,10 +1,8 @@
-MicroHack challenge 1
+# MicroHack Challenge 1
 
-Assessment and migration with Azure Data Studio
+## Assessment and migration with Azure Data Studio
 
-V3.0
-
-Contents
+### Contents
 
 [Migration architecture and Azure components](#_Toc146707477)
 

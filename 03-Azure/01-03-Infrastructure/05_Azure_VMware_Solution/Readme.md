@@ -89,6 +89,7 @@ The automated script to setup the lab environment can be found under the followi
 
 ## Contributors
 - [Frank Oltmanns-Mack]()
+- [Husam Hilal](https://github.com/husamhilal)
 - [Bernd Loehlein]()
 - [Andreas Schwarz]()
 - [Sven Forstreuter]()

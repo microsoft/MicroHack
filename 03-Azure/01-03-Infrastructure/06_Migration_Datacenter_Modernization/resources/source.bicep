@@ -35,10 +35,10 @@ var adminUsername = '${prefix}${deployment}-${userName}'
 var adminPassword = '${toUpper(uniqueString(resourceGroup().id))}-${guidValue}'
 
 @description('Create Name for VM1')
-var vm1Name = '${prefix}${deployment}-${userName}-fe1'
+var vm1Name = '${prefix}${deployment}-${userName}-Win-fe1'
 
 @description('Create Name for VM2')
-var vm2Name = '${prefix}${deployment}-${userName}-fe2'
+var vm2Name = '${prefix}${deployment}-${userName}-Lx-fe2'
 
 @description('Tenant ID used by Keyvault')
 var tenantId  = subscription().tenantId
@@ -235,7 +235,7 @@ resource vm1 'Microsoft.Compute/virtualMachines@2022-03-01' = {
       vmSize: 'Standard_D2s_v5'
     }
     osProfile: {
-      computerName: 'fe1Win'
+      computerName: 'Winfe1'
       adminUsername: adminUsername
       adminPassword: adminPassword
     }
@@ -341,7 +341,7 @@ resource vm2 'Microsoft.Compute/virtualMachines@2022-03-01' = {
       vmSize: 'Standard_D2s_v5'
     }
     osProfile: {
-      computerName: 'fe2lx'
+      computerName: 'Lxfe2'
       adminUsername: adminUsername
       adminPassword: adminPassword
       customData: !empty(customData) ? base64(customData) : null      

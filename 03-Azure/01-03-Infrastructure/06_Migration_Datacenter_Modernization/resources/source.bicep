@@ -24,6 +24,9 @@ param guidValue string = newGuid()
 
 param deploymentScriptUrl string = 'https://raw.githubusercontent.com/microsoft/MicroHack/main/03-Azure/01-03-Infrastructure/06_Migration_Datacenter_Modernization/resources/deploy.ps1'
 
+@description('cloud-init script to be executed on the virtual machine')
+param customData string = ''
+
 // Variables
 @description('Admin user variable')
 var adminUsername = '${prefix}${deployment}-${userName}'
@@ -42,6 +45,9 @@ var tenantId  = subscription().tenantId
 
 @description('User Name for the Tags')
 param userName string 
+
+@description('GUID of Virtual Machine Administrator Login role')
+var roleVirtualMachineAdministratorName = '1c0163c0-47e6-4577-8991-ea5c82e286e4' //Virtual Machine Administrator Login
 
 
 // Resources
@@ -229,7 +235,7 @@ resource vm1 'Microsoft.Compute/virtualMachines@2022-03-01' = {
       vmSize: 'Standard_D2s_v5'
     }
     osProfile: {
-      computerName: 'fe1'
+      computerName: 'fe1Win'
       adminUsername: adminUsername
       adminPassword: adminPassword
     }
@@ -282,8 +288,18 @@ resource vm1Extension 'Microsoft.Compute/virtualMachines/extensions@2022-03-01' 
   }
 } 
 
+// Assign the Virtual Machine Administrator Login role to the current user
+resource raMe2VMWindows 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(resourceGroup().id,vm1Name)
+  scope: vm1
+  properties: {
+    principalId: currentUserObjectId
+    roleDefinitionId: tenantResourceId('Microsoft.Authorization/roleDefinitions',roleVirtualMachineAdministratorName)
+  }
+}
+
 // https://learn.microsoft.com/en-us/azure/templates/microsoft.network/networkinterfaces?pivots=deployment-language-bicep
-@description('2nd Windows VM NIC')
+@description('Linux VM NIC')
 resource vm2Nic 'Microsoft.Network/networkInterfaces@2022-05-01' = {
   name: '${vm2Name}-nic'
   location: location
@@ -316,7 +332,7 @@ resource vm2Nic 'Microsoft.Network/networkInterfaces@2022-05-01' = {
 }
 
 // https://learn.microsoft.com/en-us/azure/templates/microsoft.compute/virtualmachines?pivots=deployment-language-bicep
-@description('2nd Windows Virtual Machine')
+@description('Linux Virtual Machine')
 resource vm2 'Microsoft.Compute/virtualMachines@2022-03-01' = {
   name: vm2Name
   location: location
@@ -325,15 +341,21 @@ resource vm2 'Microsoft.Compute/virtualMachines@2022-03-01' = {
       vmSize: 'Standard_D2s_v5'
     }
     osProfile: {
-      computerName: 'fe2'
+      computerName: 'fe2lx'
       adminUsername: adminUsername
       adminPassword: adminPassword
+      customData: !empty(customData) ? base64(customData) : null      
+      linuxConfiguration: {
+        disablePasswordAuthentication: false
+      }
     }
     storageProfile: {
       imageReference: {
-        publisher: 'MicrosoftWindowsServer'
-        offer: 'WindowsServer'
-        sku: '2022-datacenter-smalldisk-g2'
+        publisher: 'RedHat'
+        offer: 'RHEL'
+        // sku: '81-ci-gen2' https://github.com/MicrosoftDocs/azure-docs/issues/84430
+        // sku: '8-gen2'
+        sku: '7_9'
         version: 'latest'
       }
       osDisk: {
@@ -360,24 +382,31 @@ resource vm2 'Microsoft.Compute/virtualMachines@2022-03-01' = {
 }
 
 // https://learn.microsoft.com/en-us/azure/templates/microsoft.compute/virtualmachines/extensions?pivots=deployment-language-bicep
-@description('2nd Windows VM Extension')
+@description('Linux VM Extension')
 resource vm2Extension 'Microsoft.Compute/virtualMachines/extensions@2022-03-01' = {
   parent: vm2
   name: '${vm2Name}-customScriptExtension'
   location: location
   properties: {
-    publisher: 'Microsoft.Compute'
-    type: 'CustomScriptExtension'
-    typeHandlerVersion: '1.10'
+    publisher: 'Microsoft.Azure.Extensions'
+    type: 'CustomScript'
+    typeHandlerVersion: '2.1'
     autoUpgradeMinorVersion: true
     settings: {
-      commandToExecute: 'powershell -ExecutionPolicy Unrestricted Add-WindowsFeature Web-Server -IncludeManagementTools; powershell -ExecutionPolicy Unrestricted -File deploy.ps1'
-      fileUris: [deploymentScriptUrl]
+      commandToExecute: 'sudo systemctl stop firewalld && sudo systemctl disable firewalld'
     }
-    protectedSettings: {
-          }
   }
 } 
+
+// Assign the Virtual Machine Administrator Login role to the current user
+resource raMe2VMLinux 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(resourceGroup().id,vm2Name)
+  scope: vm2
+  properties: {
+    principalId: currentUserObjectId
+    roleDefinitionId: tenantResourceId('Microsoft.Authorization/roleDefinitions',roleVirtualMachineAdministratorName)
+  }
+}
 
 // https://learn.microsoft.com/en-us/azure/templates/microsoft.network/loadbalancers?pivots=deployment-language-bicep
 @description('Loadbalancer for VMs')

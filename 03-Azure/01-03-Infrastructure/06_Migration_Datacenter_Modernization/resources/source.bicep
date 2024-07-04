@@ -355,7 +355,8 @@ resource vm2 'Microsoft.Compute/virtualMachines@2022-03-01' = {
         offer: 'RHEL'
         // sku: '81-ci-gen2' https://github.com/MicrosoftDocs/azure-docs/issues/84430
         // sku: '8-gen2'
-        sku: '7_9'
+        // sku: '7_9'
+        sku: '81gen2'
         version: 'latest'
       }
       osDisk: {

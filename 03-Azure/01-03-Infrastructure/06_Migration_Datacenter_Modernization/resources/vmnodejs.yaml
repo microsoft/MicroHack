@@ -1,26 +1,20 @@
 #cloud-config
-# package_upgrade: true
-
-# bootcmd:
-#   # Because of https://github.com/MicrosoftDocs/azure-docs/issues/82500
-#   - systemctl mask waagent-apt.service
-
+package_update: true
+package_upgrade: true
 packages:
-  # - apache2-utils
-  # - git
+  - httpd
 
 runcmd:
-  # Install node js
-  # Based on https://github.com/nodesource/distributions#enterprise-linux-based-distributions
-  - 'sudo yum install git -y'
-  - 'sudo yum install https://rpm.nodesource.com/pub_16.x/nodistro/repo/nodesource-release-nodistro-1.noarch.rpm -y'
-  - 'sudo yum install nodejs -y --setopt=nodesource-nodejs.module_hotfixes=1'
-  # Implement Node.js Server to run as service via pm2
-  - 'git clone https://github.com/cpinotossi/cptdjsserver.git'
-  - 'cd cptdjsserver'
-  - 'npm install'
-  - 'npm install pm2 -g'
-  - 'pm2 start server.js'
-  # - [firewall-cmd, --add-port=80/tcp, --permanent]
-  # - [firewall-cmd, --reload]
-  - [systemctl, disable, firewalld]
+  - systemctl start httpd.service
+  - systemctl enable httpd.service
+  - |
+    echo "<html>
+    <head>
+    <title>Welcome to my site</title>
+    </head>
+    <body>
+    <h1>Hello, World!</h1>
+    <p>This is a static web page hosted on Apache on RHEL.</p>
+    </body>
+    </html>" > /var/www/html/index.html
+  - systemctl restart httpd.service

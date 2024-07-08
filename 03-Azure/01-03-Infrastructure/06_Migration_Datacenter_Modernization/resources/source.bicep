@@ -22,10 +22,11 @@ param secretsPermissions array = [
 @description('GUID to be used in Password creation')
 param guidValue string = newGuid()
 
-param deploymentScriptUrl string = 'https://raw.githubusercontent.com/microsoft/MicroHack/main/03-Azure/01-03-Infrastructure/06_Migration_Datacenter_Modernization/resources/deploy.ps1'
+@description('Deployment Script URL for Windows Machines.')
+var deploymentScriptUrl = 'https://raw.githubusercontent.com/microsoft/MicroHack/main/03-Azure/01-03-Infrastructure/06_Migration_Datacenter_Modernization/resources/deploy.ps1'
 
-@description('cloud-init script to be executed on the virtual machine')
-param customData string = ''
+@description('Cloud Init Data for Linux Machines.')
+var customData = loadTextContent('cloud-init.txt')  
 
 // Variables
 @description('Admin user variable')

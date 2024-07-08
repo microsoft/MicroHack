@@ -38,7 +38,6 @@ module source 'source.bicep' = [for i in range(0, deploymentCount):  {
     prefix: prefix
     deployment: (i+1)
     userName: userName
-    customData: loadTextContent('vmnodejs.yaml')        
   }
 }]
 

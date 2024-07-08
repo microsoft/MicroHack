@@ -26,7 +26,7 @@ param guidValue string = newGuid()
 var deploymentScriptUrl = 'https://raw.githubusercontent.com/microsoft/MicroHack/main/03-Azure/01-03-Infrastructure/06_Migration_Datacenter_Modernization/resources/deploy.ps1'
 
 @description('Cloud Init Data for Linux Machines.')
-var customData = loadTextContent('cloud-init.txt')  
+var customData = loadTextContent('vmnodejs.yaml')  
 
 // Variables
 @description('Admin user variable')
@@ -47,8 +47,7 @@ var tenantId  = subscription().tenantId
 @description('User Name for the Tags')
 param userName string 
 
-@description('GUID of Virtual Machine Administrator Login role')
-var roleVirtualMachineAdministratorName = '1c0163c0-47e6-4577-8991-ea5c82e286e4' //Virtual Machine Administrator Login
+
 
 
 // Resources
@@ -289,15 +288,6 @@ resource vm1Extension 'Microsoft.Compute/virtualMachines/extensions@2022-03-01' 
   }
 } 
 
-// Assign the Virtual Machine Administrator Login role to the current user
-resource raMe2VMWindows 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(resourceGroup().id,vm1Name)
-  scope: vm1
-  properties: {
-    principalId: currentUserObjectId
-    roleDefinitionId: tenantResourceId('Microsoft.Authorization/roleDefinitions',roleVirtualMachineAdministratorName)
-  }
-}
 
 // https://learn.microsoft.com/en-us/azure/templates/microsoft.network/networkinterfaces?pivots=deployment-language-bicep
 @description('Linux VM NIC')
@@ -357,7 +347,7 @@ resource vm2 'Microsoft.Compute/virtualMachines@2022-03-01' = {
         // sku: '81-ci-gen2' https://github.com/MicrosoftDocs/azure-docs/issues/84430
         // sku: '8-gen2'
         // sku: '7_9'
-        sku: '81gen2'
+        sku: '86-gen2'
         version: 'latest'
       }
       osDisk: {
@@ -400,15 +390,7 @@ resource vm2Extension 'Microsoft.Compute/virtualMachines/extensions@2022-03-01' 
   }
 } 
 
-// Assign the Virtual Machine Administrator Login role to the current user
-resource raMe2VMLinux 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(resourceGroup().id,vm2Name)
-  scope: vm2
-  properties: {
-    principalId: currentUserObjectId
-    roleDefinitionId: tenantResourceId('Microsoft.Authorization/roleDefinitions',roleVirtualMachineAdministratorName)
-  }
-}
+
 
 // https://learn.microsoft.com/en-us/azure/templates/microsoft.network/loadbalancers?pivots=deployment-language-bicep
 @description('Loadbalancer for VMs')

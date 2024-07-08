@@ -26,7 +26,7 @@ param guidValue string = newGuid()
 var deploymentScriptUrl = 'https://raw.githubusercontent.com/microsoft/MicroHack/main/03-Azure/01-03-Infrastructure/06_Migration_Datacenter_Modernization/resources/deploy.ps1'
 
 @description('Cloud Init Data for Linux Machines.')
-var customData = loadTextContent('vmnodejs.yaml')  
+var customData = loadTextContent('cloud.cfg')  
 
 // Variables
 @description('Admin user variable')

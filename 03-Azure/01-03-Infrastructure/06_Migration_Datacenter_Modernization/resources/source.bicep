@@ -338,8 +338,8 @@ resource vm2 'Microsoft.Compute/virtualMachines@2022-03-01' = {
       customData: !empty(customData) ? base64(customData) : null      
       linuxConfiguration: {
         disablePasswordAuthentication: false
-      }
-    }
+      }      
+    }        
     storageProfile: {
       imageReference: {
         publisher: 'RedHat'
@@ -367,7 +367,7 @@ resource vm2 'Microsoft.Compute/virtualMachines@2022-03-01' = {
     }
     diagnosticsProfile: {
       bootDiagnostics: {
-        enabled: false
+        enabled: true
       }
     }
   }

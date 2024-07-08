@@ -2,7 +2,7 @@
 package_update: true
 package_upgrade: true
 packages:
-  - nginx
+  - httpd
 write_files:
   - owner: www-data:www-data
     path: /etc/nginx/sites-available/default

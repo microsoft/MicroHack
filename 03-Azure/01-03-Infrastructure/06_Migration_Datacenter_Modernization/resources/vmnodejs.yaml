@@ -12,14 +12,14 @@ write_files:
       export hostname=$(hostname) 
 
 runcmd:
-  - [ mkdir /var/www/html ]
-  #- [ rm -rf /var/www/html/* ]
-  - [ wget "$pathToRepo/index.html" -O $pathToIndex ]
-  - [ wget "$pathToRepo/GitHub_Logo.png" -O /var/www/html/GitHub_Logo.png ]
-  - [ wget "$pathToRepo/MSLogo.png" -O /var/www/html/MSLogo.png ]
-  - [ wget "$pathToRepo/MSicon.png" -O /var/www/html/MSicon.png ]
-  - [ wget "$pathToRepo/github-mark.png" -O /var/www/html/github-mark.png ]
-  - [ wget "$pathToRepo/stylesheet.css" -O /var/www/html/stylesheet.css ]
+  
+  - [ rm, -rf, /var/www/html/* ]
+  - [ wget, "$pathToRepo/index.html" , -O ,  $pathToIndex ]
+  - [ wget, "$pathToRepo/GitHub_Logo.png" , -O ,  /var/www/html/GitHub_Logo.png ]
+  - [ wget, "$pathToRepo/MSLogo.png" , -O ,  /var/www/html/MSLogo.png ]
+  - [ wget, "$pathToRepo/MSicon.png" , -O ,  /var/www/html/MSicon.png ]
+  - [ wget, "$pathToRepo/github-mark.png" , -O ,  /var/www/html/github-mark.png ]
+  - [ wget, "$pathToRepo/stylesheet.css" , -O ,  /var/www/html/stylesheet.css ]
   - [ sed -i "s|$replaceText|$hostname|g" $pathToIndex ]
   - [ systemctl, enable, httpd.service ]
   - [ systemctl, start, httpd.service ]

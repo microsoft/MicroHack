@@ -5,5 +5,17 @@ packages:
 
 runcmd:
   - [ sh, -c, 'echo "<html><head><title>Welcome</title></head><body><h1>Hello from RHEL on Azure!</h1></body></html>" > /var/www/html/index.html' ]
+  - [ pathToRepo="https://raw.githubusercontent.com/microsoft/MicroHack/main/03-Azure/01-03-Infrastructure/06_Migration_Datacenter_Modernization/resources/demopage" ]
+  - [ pathToIndex="/var/www/html/index.html" ]
+  - [ replaceText="<HOSTNAME>" ]
+  - [ hostname=$(hostname) ]
+  - [ rm -rf /var/www/html/* ]
+  - [ wget "$pathToRepo/index.html" -O $pathToIndex ]
+  - [ wget "$pathToRepo/GitHub_Logo.png" -O /var/www/html/GitHub_Logo.png ]
+  - [ wget "$pathToRepo/MSLogo.png" -O /var/www/html/MSLogo.png ]
+  - [ wget "$pathToRepo/MSicon.png" -O /var/www/html/MSicon.png ]
+  - [ wget "$pathToRepo/github-mark.png" -O /var/www/html/github-mark.png ]
+  - [ wget "$pathToRepo/stylesheet.css" -O /var/www/html/stylesheet.css ]
+  - [ sed -i "s|$replaceText|$hostname|g" $pathToIndex ]
   - [ systemctl, enable, httpd.service ]
   - [ systemctl, start, httpd.service ]

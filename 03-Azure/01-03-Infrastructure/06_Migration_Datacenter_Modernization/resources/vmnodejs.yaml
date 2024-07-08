@@ -12,7 +12,8 @@ write_files:
       export hostname=$(hostname) 
 
 runcmd:
-  - [ rm -rf /var/www/html/* ]
+  - [ mkdir /var/www/html ]
+  #- [ rm -rf /var/www/html/* ]
   - [ wget "$pathToRepo/index.html" -O $pathToIndex ]
   - [ wget "$pathToRepo/GitHub_Logo.png" -O /var/www/html/GitHub_Logo.png ]
   - [ wget "$pathToRepo/MSLogo.png" -O /var/www/html/MSLogo.png ]

@@ -2,13 +2,16 @@
 package_update: true
 packages:
   - httpd
+write_files:
+  - path: /etc/profile.d/variables.sh
+    content: |
+      #!/bin/bash
+      export pathToRepo="https://raw.githubusercontent.com/microsoft/MicroHack/main/03-Azure/01-03-Infrastructure/06_Migration_Datacenter_Modernization/resources/demopage"
+      export pathToIndex="/var/www/html/index.html"
+      export replaceText="<HOSTNAME>"
+      export hostname=$(hostname) 
 
 runcmd:
-  - [ sh, -c, 'echo "<html><head><title>Welcome</title></head><body><h1>Hello from RHEL on Azure!</h1></body></html>" > /var/www/html/index.html' ]
-  - [ pathToRepo="https://raw.githubusercontent.com/microsoft/MicroHack/main/03-Azure/01-03-Infrastructure/06_Migration_Datacenter_Modernization/resources/demopage" ]
-  - [ pathToIndex="/var/www/html/index.html" ]
-  - [ replaceText="<HOSTNAME>" ]
-  - [ hostname=$(hostname) ]
   - [ rm -rf /var/www/html/* ]
   - [ wget "$pathToRepo/index.html" -O $pathToIndex ]
   - [ wget "$pathToRepo/GitHub_Logo.png" -O /var/www/html/GitHub_Logo.png ]

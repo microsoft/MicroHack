@@ -19,8 +19,8 @@ param secretsPermissions array = [
 ]
 
 @secure()
-@description('GUID to be used in Password creation')
-param guidValue string = newGuid()
+@description('Admin Password')
+param adminPassword string
 
 @description('Deployment Script URL for Windows Machines.')
 var deploymentScriptUrl = 'https://raw.githubusercontent.com/microsoft/MicroHack/main/03-Azure/01-03-Infrastructure/06_Migration_Datacenter_Modernization/resources/deploy.ps1'
@@ -28,12 +28,11 @@ var deploymentScriptUrl = 'https://raw.githubusercontent.com/microsoft/MicroHack
 @description('Cloud Init Data for Linux Machines.')
 var customData = loadTextContent('cloud.cfg')  
 
-// Variables
 @description('Admin user variable')
 var adminUsername = '${prefix}${deployment}-${userName}'
 
-@description('Admin password variable')
-var adminPassword = '${toUpper(uniqueString(resourceGroup().id))}-${guidValue}'
+//@description('Admin password variable')
+//var adminPassword = '${toUpper(uniqueString(resourceGroup().id))}-${guidValue}'
 
 @description('Create Name for VM1')
 var vm1Name = '${prefix}${deployment}-${userName}-Win-fe1'
@@ -46,9 +45,6 @@ var tenantId  = subscription().tenantId
 
 @description('User Name for the Tags')
 param userName string 
-
-
-
 
 // Resources
 // https://learn.microsoft.com/en-us/azure/templates/microsoft.keyvault/vaults?pivots=deployment-language-bicep
@@ -374,21 +370,21 @@ resource vm2 'Microsoft.Compute/virtualMachines@2022-03-01' = {
 }
 
 // https://learn.microsoft.com/en-us/azure/templates/microsoft.compute/virtualmachines/extensions?pivots=deployment-language-bicep
-@description('Linux VM Extension')
-resource vm2Extension 'Microsoft.Compute/virtualMachines/extensions@2022-03-01' = {
-  parent: vm2
-  name: '${vm2Name}-customScriptExtension'
-  location: location
-  properties: {
-    publisher: 'Microsoft.Azure.Extensions'
-    type: 'CustomScript'
-    typeHandlerVersion: '2.1'
-    autoUpgradeMinorVersion: true
-    settings: {
-      commandToExecute: 'sudo systemctl stop firewalld && sudo systemctl disable firewalld'
-    }
-  }
-} 
+//@description('Linux VM Extension')
+//resource vm2Extension 'Microsoft.Compute/virtualMachines/extensions@2022-03-01' = {
+//  parent: vm2
+//  name: '${vm2Name}-customScriptExtension'
+//  location: location
+//  properties: {
+//    publisher: 'Microsoft.Azure.Extensions'
+//    type: 'CustomScript'
+//    typeHandlerVersion: '2.1'
+//    autoUpgradeMinorVersion: true
+//    settings: {
+//      commandToExecute: 'sudo systemctl stop firewalld && sudo systemctl disable firewalld'
+//   }
+//  }
+//} 
 
 
 

@@ -138,17 +138,18 @@ The last step is to finalize the registration. Refresh the Azure Portal page whe
 
 ![image](./img/mig18.png)
 
-### **Task 3: Install the Mobility service on the source server**
+### **Task 3: Copy the Mobility Service Agent to the source server**
 
 On machines you want to migrate, you need to install the Mobility service agent. The agent installers are available on the replication appliance in the *%ProgramData%\ASR\home\svsystems\pushinstallsvc\repository* directory.
-To install the Mobility service agent on the Windows machines follow the following steps
+
+**Windows**
+To copy the Mobility service agent to the Windows machine follow the following steps
 
 1. Sign in to the replication appliance.
 2. Navigate to %ProgramData%\ASR\home\svsystems\pushinstallsvc\repository.
 3. Find the installer for the machine operating system and version. Review [supported operating systems](https://learn.microsoft.com/en-us/azure/site-recovery/vmware-physical-azure-support-matrix#replicated-machines).
 4. Copy the installer file to the machine you want to migrate.
 
-**Windows**
 
 ![image](./img/maw1.png)
 
@@ -163,6 +164,35 @@ To install the Mobility service agent on the Windows machines follow the followi
 > [!WARNING]
 > Don't regenerate the passphrase. This will break connectivity and you will have to reregister the replication appliance.
 
+**Linux**
+To copy the Mobility service agent to the Linux machine follow the following steps
+
+~~~powershell
+Windows PowerShell
+Copyright (C) Microsoft Corporation. All rights reserved.
+ls $env:ProgramData\ASR\home\svsystems\pushinstallsvc\repository *ASR*RHEL8*
+
+    Directory: C:\ProgramData\ASR\home\svsystems\pushinstallsvc\repository
+
+
+Mode                LastWriteTime         Length Name
+----                -------------         ------ ----
+-a----        3/18/2024   5:44 AM      124434847 Microsoft-ASR_UA_9.61.0.0_RHEL8-64_GA_18Mar2024_Release.tar.gz
+~~~
+
+
+Because our VMs are all running inside the same Azure Virtual Network [VNet] and we did not restrict access betweem the VMs inside the VNet we can use scp to upload the Mobility service agent installer via scp to Linux VMs.
+
+Execute the following powershell command on the new Windows Server 2019 VM to copy the Mobility service agent installer to the two Linux VMs.
+
+~~~powershell
+Windows PowerShell
+Copyright (C) Microsoft Corporation. All rights reserved.
+# connect via ssh to the source VM 10.1.1.4 with the user azuremigrateadmin and password demo!p12
+$rhelmobi="$env:ProgramData\ASR\home\svsystems\pushinstallsvc\repository\Microsoft-ASR_UA_9.61.0.0_RHEL8-64_GA_18Mar2024_Release.tar.gz"
+scp $rhelmobi <ReplaceWIthAdminUserName>@10.1.1.4:/home/<ReplaceWIthAdminUserName>/
+~~~
+
 #### **Task 3.1: Install the Mobility service on the Windows VM**
 
 1. Extract the contents of installer file to a local folder (for example C:\Temp) on the machine, as follows:
@@ -175,7 +205,7 @@ cd C:\Temp\Extracted
 ```
 2. Run the Mobility Service Installer:
 ```shell
-UnifiedAgent.exe /Role "MS" /Platform "VmWare" /Silent /CSType CSLegacy
+.\UnifiedAgent.exe /Role "MS" /Platform "VmWare" /Silent /CSType CSLegacy
 ```
 ![image](./img/maw3-1.png)   
 > [!IMPORTANT]
@@ -183,101 +213,33 @@ UnifiedAgent.exe /Role "MS" /Platform "VmWare" /Silent /CSType CSLegacy
 
 3. Register the agent with the replication appliance:
 ```shell
-cd C:\Program Files (x86)\Microsoft Azure Site Recovery\agent
+cd "C:\Program Files (x86)\Microsoft Azure Site Recovery\agent"
 
-UnifiedAgentConfigurator.exe /CSEndPoint \<replication appliance IP address\> /PassphraseFilePath \<Passphrase File Path\>
+echo mbe711ujGFLmN9N6 > password.txt # This is the password you received during the installation of the Azure Replication Appliance, replace it with your password.
+
+.\UnifiedAgentConfigurator.exe /CSEndPoint 10.1.1.7 /PassphraseFilePath 'C:\Program Files (x86)\Microsoft Azure Site Recovery\agent\password.txt'
 ```
 ![image](./img/maw3-2.png)     
 
 #### **Task 3.2: Install the Mobility service on the Linux VM**
-Based on https://learn.microsoft.com/en-us/azure/migrate/tutorial-migrate-physical-virtual-machines#install-the-mobility-service-agent
+Now you need to log in to the source Linux VM to finish the installation of the mobility service agent.
 
-On machines you want to migrate, you need to install the Mobility service agent. The agent installers are available on the replication appliance in the *%ProgramData%\ASR\home\svsystems\pushinstallsvc\repository* directory.
+Log into the Linux VM with Azure Bastion and install the mobility service agent.
 
-In case you did install the replication appliance under "F:\azure" you can find the RHEL 8 Mobility service agent installers under the following path:
-F:\azure\home\svsystems\pushinstallsvc\repository
-
-~~~powershell
-Windows PowerShell
-Copyright (C) Microsoft Corporation. All rights reserved.
-ls F:\azure\home\svsystems\pushinstallsvc\repository *ASR*RHEL7*
-
-    Directory: F:\azure\home\svsystems\pushinstallsvc\repository
-
-
-Mode                LastWriteTime         Length Name
-----                -------------         ------ ----
--a----        7/11/2023   6:35 PM      115643359 Microsoft-ASR_UA_9.55.0.0_RHEL7-64_GA_11Jul2023_Release.tar.gz
-~~~
-
-
-Because our VMs are all running inside the same Azure Virtual Network [VNet] and we did not restrict access betweem the VMs inside the VNet we can use scp to upload the Mobility service agent installer via scp to Linux VMs.
-
-Execute the following powershell command on the new Windows Server 2019 VM to copy the Mobility service agent installer to the two Linux VMs.
-
-~~~powershell
-Windows PowerShell
-Copyright (C) Microsoft Corporation. All rights reserved.
-# connect via ssh to the source VM 10.1.1.4 with the user azuremigrateadmin and password demo!p12
-$rhelmobi="F:\azure\home\svsystems\pushinstallsvc\repository\Microsoft-ASR_UA_9.55.0.0_RHEL7-64_GA_11Jul2023_Release.tar.gz"
-scp $rhelmobi microhackadmin@10.1.1.4:/home/microhackadmin/
-scp $rhelmobi microhackadmin@10.1.1.5:/home/microhackadmin/
-~~~
-
-Now you need to log in to the source Linux VMs to finish the installation of the mobility service agent.
-
-> [!IMPORTANT]
-> Please ensure that you already defined the Environment Variables from Task 2 before executing the following commands.
+![image](./img/mal1.png)
 
 ~~~bash
-# Get the name of the resource group that ends with 'source-rg'
-sourceRgName=$(az group list --query "[?starts_with(name, '$prefix') && ends_with(name, 'source-rg')].name" -o tsv)
-# Name of the Azure Bastion in the source resource group
-sourceBastionName=${prefix}1$suffix-source-bastion
-~~~
-
-Log into the first VM in the resource group with Azure Bastion and install the mobility service agent.
-
-~~~bash
-# Get the Azure Resource ID of Linux VM 1 in the source resource group
-sourceVm1Id=$(az vm list -g $sourceRgName --query "[?ends_with(name, '${suffix}1')].id" -o tsv)
-# Login to the 2. VM in the resource group with Azure Bastion
-az network bastion ssh -n $sourceBastionName -g $sourceRgName --target-resource-id $sourceVm1Id --auth-type password --username $adminUsername
-demo!pass123
 mkdir MobSvcInstaller
-tar -C ./MobSvcInstaller -xvf Microsoft-ASR_UA_9.55.0.0_RHEL7-64_GA_11Jul2023_Release.tar.gz
+tar -C ./MobSvcInstaller -xvf Microsoft-ASR_UA_9.61.0.0_RHEL8-64_GA_18Mar2024_Release.tar.gz
 cd MobSvcInstaller
 sudo ./install -r MS -v VmWare -q -c CSLegacy # You need to specify VmWare as the platform also for physical servers.
 ~~~
 
 > [!NOTE] Next you will need to make use of the password which you received during the installation of the Azure Replication Appliance. If you forgot to copy the Password you can obtain it from inside the Replication Appliance via the following Powershell command.
-
 
 ~~~bash
 echo mbe711ujGFLmN9N6 > password.txt # This is the password you received during the installation of the Azure Replication Appliance, replace it with your password.
 sudo /usr/local/ASR/Vx/bin/UnifiedAgentConfigurator.sh -i 10.1.1.7 -P password.txt -c CSLegacy # IP 10.1.1.7 is the IP of the Azure Replication Appliance Windows VM you created.
-logout
-~~~
-
-Log into the secound VM in the resource group with Azure Bastion and install the mobility service agent.
-
-~~~bash
-# Get the Azure Resource ID of Linux VM 2 in the source resource group
-sourceVm2Id=$(az vm list -g $sourceRgName --query "[?ends_with(name, '${suffix}2')].id" -o tsv)
-# Login to the 2. VM in the resource group with Azure Bastion
-az network bastion ssh -n $sourceBastionName -g $sourceRgName --target-resource-id $sourceVm2Id --auth-type password --username $adminUsername
-demo!pass123
-mkdir MobSvcInstaller
-tar -C ./MobSvcInstaller -xvf Microsoft-ASR_UA_9.55.0.0_RHEL7-64_GA_11Jul2023_Release.tar.gz
-cd MobSvcInstaller
-sudo ./install -r MS -v VmWare -q -c CSLegacy # You need to specify VmWare as the platform also for physical servers.
-~~~
-
-> [!NOTE] Next you will need to make use of the password which you received during the installation of the Azure Replication Appliance. If you forgot to copy the Password you can obtain it from inside the Replication Appliance via the following Powershell command.
-
-~~~bash
-echo mbe711ujGFLmN9N6 > password.txt # This is the password you received during the installation of the Azure Replication Appliance, replace it with your password.
-sudo /usr/local/ASR/Vx/bin/UnifiedAgentConfigurator.sh -i 10.1.1.7 -P password.txt -c CSLegacy # IP 10.1.1.7 = replication appliance IP addressis the IP of the Azure Replication Appliance Windows VM you created.
 logout
 ~~~
 

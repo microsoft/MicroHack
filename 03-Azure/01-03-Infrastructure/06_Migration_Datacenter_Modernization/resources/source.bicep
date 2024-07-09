@@ -31,9 +31,6 @@ var customData = loadTextContent('cloud.cfg')
 @description('Admin user variable')
 var adminUsername = '${prefix}${deployment}-${userName}'
 
-//@description('Admin password variable')
-//var adminPassword = '${toUpper(uniqueString(resourceGroup().id))}-${guidValue}'
-
 @description('Create Name for VM1')
 var vm1Name = '${prefix}${deployment}-${userName}-Win-fe1'
 

@@ -198,10 +198,8 @@ resource vm1Nic 'Microsoft.Network/networkInterfaces@2022-05-01' = {
       {
         name: 'ipconfig1'
         properties: {
-          privateIPAllocationMethod: 'Dynamic'
-          //publicIPAddress: {
-          // id: vm1Pip.id
-          //}
+          privateIPAllocationMethod: 'Static'
+          privateIPAddress: '10.1.1.5'
           subnet: {
             id: sourceVnet.properties.subnets[0].id
           }
@@ -295,10 +293,8 @@ resource vm2Nic 'Microsoft.Network/networkInterfaces@2022-05-01' = {
       {
         name: 'ipconfig1'
         properties: {
-          privateIPAllocationMethod: 'Dynamic'
-          //publicIPAddress: {
-            //id: vm2Pip.id
-          //}
+          privateIPAllocationMethod: 'Static'
+          privateIPAddress: '10.1.1.4'
           subnet: {
             id: sourceVnet.properties.subnets[0].id
           }

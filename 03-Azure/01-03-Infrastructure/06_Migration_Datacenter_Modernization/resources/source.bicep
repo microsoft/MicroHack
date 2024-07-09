@@ -31,9 +31,6 @@ var customData = loadTextContent('cloud.cfg')
 @description('Admin user variable')
 var adminUsername = '${prefix}${deployment}-${userName}'
 
-//@description('Admin password variable')
-//var adminPassword = '${toUpper(uniqueString(resourceGroup().id))}-${guidValue}'
-
 @description('Create Name for VM1')
 var vm1Name = '${prefix}${deployment}-${userName}-Win-fe1'
 
@@ -198,10 +195,8 @@ resource vm1Nic 'Microsoft.Network/networkInterfaces@2022-05-01' = {
       {
         name: 'ipconfig1'
         properties: {
-          privateIPAllocationMethod: 'Dynamic'
-          //publicIPAddress: {
-          // id: vm1Pip.id
-          //}
+          privateIPAllocationMethod: 'Static'
+          privateIPAddress: '10.1.1.5'
           subnet: {
             id: sourceVnet.properties.subnets[0].id
           }
@@ -295,10 +290,8 @@ resource vm2Nic 'Microsoft.Network/networkInterfaces@2022-05-01' = {
       {
         name: 'ipconfig1'
         properties: {
-          privateIPAllocationMethod: 'Dynamic'
-          //publicIPAddress: {
-            //id: vm2Pip.id
-          //}
+          privateIPAllocationMethod: 'Static'
+          privateIPAddress: '10.1.1.4'
           subnet: {
             id: sourceVnet.properties.subnets[0].id
           }

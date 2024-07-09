@@ -370,21 +370,21 @@ resource vm2 'Microsoft.Compute/virtualMachines@2022-03-01' = {
 }
 
 // https://learn.microsoft.com/en-us/azure/templates/microsoft.compute/virtualmachines/extensions?pivots=deployment-language-bicep
-//@description('Linux VM Extension')
-//resource vm2Extension 'Microsoft.Compute/virtualMachines/extensions@2022-03-01' = {
-//  parent: vm2
-//  name: '${vm2Name}-customScriptExtension'
-//  location: location
-//  properties: {
-//    publisher: 'Microsoft.Azure.Extensions'
-//    type: 'CustomScript'
-//    typeHandlerVersion: '2.1'
-//    autoUpgradeMinorVersion: true
-//    settings: {
-//      commandToExecute: 'sudo systemctl stop firewalld && sudo systemctl disable firewalld'
-//   }
-//  }
-//} 
+@description('Linux VM Extension')
+resource vm2Extension 'Microsoft.Compute/virtualMachines/extensions@2022-03-01' = {
+ parent: vm2
+ name: '${vm2Name}-customScriptExtension'
+ location: location
+ properties: {
+   publisher: 'Microsoft.Azure.Extensions'
+   type: 'CustomScript'
+   typeHandlerVersion: '2.1'
+   autoUpgradeMinorVersion: true
+   settings: {
+     commandToExecute: 'sudo firewall-cmd --zone=public --add-port=80/tcp --permanent && firewall-cmd --reload'
+  }
+ }
+} 
 
 
 

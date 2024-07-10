@@ -145,83 +145,88 @@ On machines you want to migrate, you need to install the Mobility service agent.
 **Windows**
 To copy the Mobility service agent to the Windows machine follow the following steps
 
-1. Sign in to the replication appliance.
-2. Navigate to %ProgramData%\ASR\home\svsystems\pushinstallsvc\repository.
-3. Find the installer for the machine operating system and version. Review [supported operating systems](https://learn.microsoft.com/en-us/azure/site-recovery/vmware-physical-azure-support-matrix#replicated-machines).
-4. Copy the installer file to the machine you want to migrate.
+1. Sign in to the Windows Server source VM.
+2. Open Powershell and run the following command
 
-
-![image](./img/maw1.png)
-
-
-5. Make sure that you have the passphrase that was generated when you deployed the appliance (You should have saved it as a KeyVault secret).
-  * Store the key in a temporary text file and copy the file into the same direcotry on the source machines.
-  * You can obtain the passphrase on the replication appliance. From the command line, run the following command to view the passphrase
-     C:\ProgramData\ASR\home\svsystems\bin\genpassphrase.exe -v
-
-![image](./img/maw2.png)
-
-> [!WARNING]
-> Don't regenerate the passphrase. This will break connectivity and you will have to reregister the replication appliance.
+~~~powershell
+Windows PowerShell
+Copyright (C) Microsoft Corporation. All rights reserved.
+Copy-Item \\10.1.1.7\C$\ProgramData\ASR\home\svsystems\pushinstallsvc\repository\Microsoft-ASR_UA*Windows*_Release.exe $env:USERPROFILE\Downloads\ -Force
+~~~
 
 **Linux**
 To copy the Mobility service agent to the Linux machine follow the following steps
 
-~~~powershell
-Windows PowerShell
-Copyright (C) Microsoft Corporation. All rights reserved.
-ls $env:ProgramData\ASR\home\svsystems\pushinstallsvc\repository *ASR*RHEL8*
+1. Sign in to the Linux Server source VM.
+2. Run the following command. Replace the Username and the correct filename.
 
-    Directory: C:\ProgramData\ASR\home\svsystems\pushinstallsvc\repository
-
-
-Mode                LastWriteTime         Length Name
-----                -------------         ------ ----
--a----        3/18/2024   5:44 AM      124434847 Microsoft-ASR_UA_9.61.0.0_RHEL8-64_GA_18Mar2024_Release.tar.gz
-~~~
-
-
-Because our VMs are all running inside the same Azure Virtual Network [VNet] and we did not restrict access betweem the VMs inside the VNet we can use scp to upload the Mobility service agent installer via scp to Linux VMs.
-
-Execute the following powershell command on the new Windows Server 2019 VM to copy the Mobility service agent installer to the two Linux VMs.
-
-~~~powershell
-Windows PowerShell
-Copyright (C) Microsoft Corporation. All rights reserved.
-# connect via ssh to the source VM 10.1.1.4 with the user azuremigrateadmin and password demo!p12
-$rhelmobi="$env:ProgramData\ASR\home\svsystems\pushinstallsvc\repository\Microsoft-ASR_UA_9.61.0.0_RHEL8-64_GA_18Mar2024_Release.tar.gz"
-scp $rhelmobi <ReplaceWIthAdminUserName>@10.1.1.4:/home/<ReplaceWIthAdminUserName>/
+~~~bash
+#List the correct file
+smbclient -U <ReplaceWIthAdminUserName> //10.1.1.7/c$ -c "dir ProgramData\ASR\home\svsystems\pushinstallsvc\repository\*ASR*RHEL8*"
+#Copy the filename to next command and copy it to tmp directory
+smbclient '//10.1.1.7/c$' -c 'lcd /tmp; cd ProgramData\ASR\home\svsystems\pushinstallsvc\repository; get Microsoft-ASR_UA_9.61.0.0_RHEL8-64_GA_18Mar2024_Release.tar.gz' -U <ReplaceWIthAdminUserName>
+cd /tmp
+ls
 ~~~
 
 #### **Task 3.1: Install the Mobility service on the Windows VM**
 
-1. Extract the contents of installer file to a local folder (for example C:\Temp) on the machine, as follows:
-```shell
-ren Microsoft-ASR_UA\*Windows\*release.exe MobilityServiceInstaller.exe
-     
-MobilityServiceInstaller.exe /q /x:C:\Temp\Extracted
+> [!NOTE]
+> During the installation you need to provide the passphrase that was created during the Replication Appliance installation.
+> If you forgot to copy the passphrase you can obtain it from inside the Replication Appliance via the following Powershell command. 
+> ~~~powershell
+> Windows PowerShell
+> Copyright (C) Microsoft Corporation. All rights > reserved.
+> C:\ProgramData\ASR\home\svsystems\bin\genpassphrase.exe -v
+> ~~~
 
+> [!WARNING]
+> Don't regenerate the passphrase. This will break connectivity and you will have to reregister the replication appliance.
+
+1. Extract the contents of installer file to a local folder (for example C:\Temp) on the machine, as follows:
+
+~~~powershell
+Windows PowerShell
+Copyright (C) Microsoft Corporation. All rights reserved.
+cd $env:USERPROFILE\Downloads\
+Rename-Item .\Microsoft-ASR_UA_9.61.0.0_Windows_GA_18Mar2024_Release.exe MobilityServiceInstaller.exe
+.\MobilityServiceInstaller.exe /q /x:C:\Temp\Extracted
 cd C:\Temp\Extracted
-```
+~~~
+
 2. Run the Mobility Service Installer:
-```shell
+~~~powershell
+Windows PowerShell
+Copyright (C) Microsoft Corporation. All rights reserved.
 .\UnifiedAgent.exe /Role "MS" /Platform "VmWare" /Silent /CSType CSLegacy
-```
-![image](./img/maw3-1.png)   
+~~~
+
 > [!IMPORTANT]
 > You need to specify *VmWare* for the *Platform* parameter also for physical servers.
 
 3. Register the agent with the replication appliance:
-```shell
+~~~powershell
+Windows PowerShell
+Copyright (C) Microsoft Corporation. All rights reserved.
 cd "C:\Program Files (x86)\Microsoft Azure Site Recovery\agent"
-
-echo mbe711ujGFLmN9N6 > password.txt # This is the password you received during the installation of the Azure Replication Appliance, replace it with your password.
-
-.\UnifiedAgentConfigurator.exe /CSEndPoint 10.1.1.7 /PassphraseFilePath 'C:\Program Files (x86)\Microsoft Azure Site Recovery\agent\password.txt'
-```
-![image](./img/maw3-2.png)     
-
+set-Content .\password.txt <REPLACE WITH PASSPHRASE> -Force # This is the password you received during the installation of the Azure Replication Appliance, replace it with your password.
+.\UnifiedAgentConfigurator.exe /CSEndPoint 10.1.1.7 /PassphraseFilePath "C:\Program Files (x86)\Microsoft Azure Site Recovery\agent\password.txt"
+~~~
+ 
 #### **Task 3.2: Install the Mobility service on the Linux VM**
+
+> [!NOTE]
+> During the installation you need to provide the passphrase that was created during the Replication Appliance installation.
+> If you forgot to copy the passphrase you can obtain it from inside the Replication Appliance via the following Powershell command. 
+> ~~~powershell
+> Windows PowerShell
+> Copyright (C) Microsoft Corporation. All rights > reserved.
+> C:\ProgramData\ASR\home\svsystems\bin\genpassphrase.exe -v
+> ~~~
+
+> [!WARNING]
+> Don't regenerate the passphrase. This will break connectivity and you will have to reregister the replication appliance.
+
 Now you need to log in to the source Linux VM to finish the installation of the mobility service agent.
 
 Log into the Linux VM with Azure Bastion and install the mobility service agent.
@@ -230,27 +235,16 @@ Log into the Linux VM with Azure Bastion and install the mobility service agent.
 
 ~~~bash
 mkdir MobSvcInstaller
-tar -C ./MobSvcInstaller -xvf Microsoft-ASR_UA_9.61.0.0_RHEL8-64_GA_18Mar2024_Release.tar.gz
+tar -C ./MobSvcInstaller -xvf /tmp/Microsoft-ASR_UA_9.61.0.0_RHEL8-64_GA_18Mar2024_Release.tar.gz
 cd MobSvcInstaller
 sudo ./install -r MS -v VmWare -q -c CSLegacy # You need to specify VmWare as the platform also for physical servers.
 ~~~
 
-> [!NOTE] Next you will need to make use of the password which you received during the installation of the Azure Replication Appliance. If you forgot to copy the Password you can obtain it from inside the Replication Appliance via the following Powershell command.
-
 ~~~bash
-echo mbe711ujGFLmN9N6 > password.txt # This is the password you received during the installation of the Azure Replication Appliance, replace it with your password.
+echo <REPLACE WITH PASSPHRASE> > password.txt # This is the password you received during the installation of the Azure Replication Appliance, replace it with your password.
 sudo /usr/local/ASR/Vx/bin/UnifiedAgentConfigurator.sh -i 10.1.1.7 -P password.txt -c CSLegacy # IP 10.1.1.7 is the IP of the Azure Replication Appliance Windows VM you created.
 logout
 ~~~
-
-> [!NOTE]
-> If you forgot to copy the Password you can obtain it from inside the Replication Appliance via the following Powershell command. 
-> ~~~powershell
-> Windows PowerShell
-> Copyright (C) Microsoft Corporation. All rights > reserved.
-> C:\ProgramData\ASR\home\svsystems\bin\genpassphrase.exe -v
-> ~~~
-
 
 ### **Task 4: Enable Replication**
 
@@ -297,6 +291,9 @@ Under *Migration Tools* you should know see that 2 Server are beeing repölicate
 Select *Replicating Machines* from the navigation pane on the left. You should now see the 2 servers and their status.
 
 ![image](./img/repl11.png)
+
+> [!IMPORTANT]
+> Please note that the initial replication might take some time. Within the MicroHack environment it should not take longer than 30 minutes.
 
 ### **Task 5: Perform Test Migration**
 

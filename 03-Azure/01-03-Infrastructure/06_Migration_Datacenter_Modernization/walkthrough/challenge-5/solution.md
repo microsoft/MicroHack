@@ -284,16 +284,16 @@ Wait until the replication has been successfully initiated.
 
 ![image](./img/repl9.png)
 
-Under *Migration Tools* you should know see that 2 Server are beeing repölicated. Click on *Overview* to see more details.
+Under *Migration Tools* you should know see that 2 Server are beeing replicated. Click on *Overview* to see more details.
 
 ![image](./img/repl10.png)
 
 Select *Replicating Machines* from the navigation pane on the left. You should now see the 2 servers and their status.
 
-![image](./img/repl11.png)
-
 > [!IMPORTANT]
 > Please note that the initial replication might take some time. Within the MicroHack environment it should not take longer than 30 minutes.
+
+![image](./img/repl11.png)
 
 ### **Task 5: Perform Test Migration**
 
@@ -339,7 +339,7 @@ Open the Microsoft Edge browser on the server, enter *localhost* in the address 
 
 ![image](./img/test9.png)
 
-Repeat the above steps for the *frontend2-test* system. Once you've confirmed that the applications on the systems are running as expected you can perfom a cleanup for the test migration. Change back to the *Azure Migrate: Migration and modernization* overview page, click on the 3 dots on the end of each row of the replicating servers and select *Clean up test migration*.
+Repeat the above steps for the *Lxfe2-test* system. Once you've confirmed that the applications on the systems are running as expected you can perfom a cleanup for the test migration. Change back to the *Azure Migrate: Migration and modernization* overview page, click on the 3 dots on the end of each row of the replicating servers and select *Clean up test migration*.
 
 ![image](./img/test10.png)
 
@@ -409,6 +409,8 @@ Select *Endpoints* and click *Add*. Add each public IP of the source and destina
 > [!NOTE]
 > Please note: To be able to add the public IP addresses they need to be configured with an [DNS name lable](https://learn.microsoft.com/en-us/azure/dns/dns-custom-domain?toc=%2Fazure%2Fvirtual-network%2Ftoc.json#public-ip-address).
 
+![image](./img/prep11-1.png)
+
 Check the Overview section under the navigation pane and note that the source load balancer is shown as *online* whereas the 
 destination load balancer is shown as *degraded*. If you copy the DNS name of the Traffic Manager profile and paste it into your browser, you should be able to browse the source web servers through the Traffic Manager Profile.
 
@@ -422,7 +424,11 @@ Open the [Azure Portal](https://portal.azure.com) and navigate to the previousle
 
 ![image](./img/finalmig1.png)
 
-Select *Yes* to shutdown the source machines, select the two servers and click *Migrate*.
+Select *AzureVM* and click *Continue*.
+
+![image](./img/finalmig1-2.png)
+
+Select *No* because shutdown of source machines is only supported for HyperVisor based migrations, select the two servers and click *Migrate*.
 
 ![image](./img/finalmig2.png)
 
@@ -435,6 +441,7 @@ After a few minutes the migration should be successfully completed.
 ![image](./img/finalmig4.png)
 
 When you change to the *Virtual machine* section within the Azure Portal you should now see 2 additional serves in the *destination-rg* Resource Group.
+Please select the original source Virtual Machines and click on *Stop* to shutdown the source VMs.
 
 ![image](./img/finalmig5.png)
 

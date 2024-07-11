@@ -18,8 +18,10 @@ Azure App Service bulk migration capabilities are now available as an Azure Migr
 * Containerize your ASP.NET web apps and move them to either Windows Containers on App Service or to Azure Kubernetes Service.
 
 > [!WARNING]
-> **Currently this feature has a few [limitations](https://learn.microsoft.com/en-us/azure/migrate/concepts-migration-webapps#limitations) and therefore it can't be used to migrate web apps directly from physical servers. However, we can use it at least to perform the assessment of our web apps and use the [App Service migration assistant tool](https://learn.microsoft.com/en-us/azure/app-service/app-service-asp-net-migration) for the migration.**
+> **Currently this feature has a few [limitations](https://learn.microsoft.com/en-us/azure/migrate/concepts-migration-webapps#limitations) and therefore it can't be used to migrate web apps directly from physical servers. However, we can use it at least to perform the assessment of our web apps and use the [App Service migration assistant tool](https://learn.microsoft.com/en-us/azure/app-service/app-service-asp-net-migration) for the migration. Please note that this will only work for the migrated Windows VM**
 
+> [!WARNING]
+> **Please note that this challenge will only work for the migrated Windows VM. Currently we do not support direct migrations from Linux VMs**
 
 Open the [Azure Portal](https://portal.azure.com) and navigate to the previousley created Azure Migrate project. Select *Servers, databases and web apps*, **make sure that the right Azure Migrate Project is selected** and click on *Assess* and select *Web Apps on Azure* from the drop down list.
 
@@ -127,8 +129,6 @@ Select *Azure endpoint*, provide a name, select *App Service* and select the pre
 
 ![image](./img/tfupdate2.png)
 
-**Repeat the above step for the frontend2 App Service**
-
 Next delete the endpoints for the Virtual Machines.
 
 ![image](./img/tfupdate3.png)
@@ -143,8 +143,6 @@ The deployed architecture now looks like the following diagram.
 
 ![image](./img/Challenge-6.jpg)
 
-
 🚀🚀🚀 **!!!Congratulations!!! - You successfully completed the MicroHack. You can now safley remove the *source-rg* and *destination-rg* Resource Groups.** 🚀🚀🚀
-
 
  **[Home](../../Readme.md)** -

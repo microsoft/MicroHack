@@ -470,14 +470,15 @@ From the Traffic Manager Profile you can now also safley remove the endpoint for
 ![image](./img/finalmig10.png)
 
 > [!WARNING]
-> **Please note: Normally it would be safe now to completley remove the *source-rg* Resource Group. However, we will reuse the source environment in [[Optional] Challenge 6](https://github.com/microsoft/MicroHack/tree/MigrationModernizationMicroHack/03-Azure/01-03-Infrastructure/06_Migration_Datacentre_Modernization#challenge-6---modernize-with-azure) to see how Azure Migrate will help to modernize our infrastructure.**
+> **Please note: Normally it would be safe now to completley remove the *source-rg* Resource Group. However, we will reuse the source environment in [Bonus Challenge 6 solution](../challenge-6/solution.md) OR [Bonus Challenge 7 solution](../challenge-7/solution.md) to see how Azure Migrate will help to modernize and secure our infrastructure.**
 
-🚀🚀🚀 You successfully completed challenge 5 and this MicroHack! 🚀🚀🚀
+🚀🚀🚀 You successfully completed challenge 5! 🚀🚀🚀
 
 The deployed architecture now looks like the following diagram.
 
 ![image](./img/Challenge-5.jpg)
 
-If you still want to continoue we have 2 additional bonus challenges to modernize OR secure the migrated environment.
+🚀🚀🚀 **!!!Congratulations!!! - You successfully completed the MicroHack. You can now safley remove the *source-rg* and *destination-rg* Resource Groups.** 🚀🚀🚀
+🚀🚀🚀 **If you still want to continoue we have 2 additional bonus challenges to modernize OR secure the migrated environment.**🚀🚀🚀
 
- **[Home](../../Readme.md)** - Continou with either [[Optional]Challenge 6 solution](../challenge-6/solution.md) OR [[Optional]Challenge 7 solution](../challenge-7/solution.md)
+ **[Home](../../Readme.md)** - Continoue with either [Bonus Challenge 6 solution](../challenge-6/solution.md) OR [Bonus Challenge 7 solution](../challenge-7/solution.md)

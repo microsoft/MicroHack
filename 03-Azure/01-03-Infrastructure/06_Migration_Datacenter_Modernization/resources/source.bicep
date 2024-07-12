@@ -19,30 +19,29 @@ param secretsPermissions array = [
 ]
 
 @secure()
-@description('GUID to be used in Password creation')
-param guidValue string = newGuid()
+@description('Admin Password')
+param adminPassword string
 
-param deploymentScriptUrl string = 'https://raw.githubusercontent.com/microsoft/MicroHack/main/03-Azure/01-03-Infrastructure/06_Migration_Datacenter_Modernization/resources/deploy.ps1'
+@description('Deployment Script URL for Windows Machines.')
+var deploymentScriptUrl = 'https://raw.githubusercontent.com/microsoft/MicroHack/main/03-Azure/01-03-Infrastructure/06_Migration_Datacenter_Modernization/resources/deploy.ps1'
 
-// Variables
+@description('Cloud Init Data for Linux Machines.')
+var customData = loadTextContent('cloud.cfg')  
+
 @description('Admin user variable')
 var adminUsername = '${prefix}${deployment}-${userName}'
 
-@description('Admin password variable')
-var adminPassword = '${toUpper(uniqueString(resourceGroup().id))}-${guidValue}'
-
 @description('Create Name for VM1')
-var vm1Name = '${prefix}${deployment}-${userName}-fe1'
+var vm1Name = '${prefix}${deployment}-${userName}-Win-fe1'
 
 @description('Create Name for VM2')
-var vm2Name = '${prefix}${deployment}-${userName}-fe2'
+var vm2Name = '${prefix}${deployment}-${userName}-Lx-fe2'
 
 @description('Tenant ID used by Keyvault')
 var tenantId  = subscription().tenantId
 
 @description('User Name for the Tags')
 param userName string 
-
 
 // Resources
 // https://learn.microsoft.com/en-us/azure/templates/microsoft.keyvault/vaults?pivots=deployment-language-bicep
@@ -196,10 +195,8 @@ resource vm1Nic 'Microsoft.Network/networkInterfaces@2022-05-01' = {
       {
         name: 'ipconfig1'
         properties: {
-          privateIPAllocationMethod: 'Dynamic'
-          //publicIPAddress: {
-          // id: vm1Pip.id
-          //}
+          privateIPAllocationMethod: 'Static'
+          privateIPAddress: '10.1.1.5'
           subnet: {
             id: sourceVnet.properties.subnets[0].id
           }
@@ -229,7 +226,7 @@ resource vm1 'Microsoft.Compute/virtualMachines@2022-03-01' = {
       vmSize: 'Standard_D2s_v5'
     }
     osProfile: {
-      computerName: 'fe1'
+      computerName: 'Winfe1'
       adminUsername: adminUsername
       adminPassword: adminPassword
     }
@@ -282,8 +279,9 @@ resource vm1Extension 'Microsoft.Compute/virtualMachines/extensions@2022-03-01' 
   }
 } 
 
+
 // https://learn.microsoft.com/en-us/azure/templates/microsoft.network/networkinterfaces?pivots=deployment-language-bicep
-@description('2nd Windows VM NIC')
+@description('Linux VM NIC')
 resource vm2Nic 'Microsoft.Network/networkInterfaces@2022-05-01' = {
   name: '${vm2Name}-nic'
   location: location
@@ -292,10 +290,8 @@ resource vm2Nic 'Microsoft.Network/networkInterfaces@2022-05-01' = {
       {
         name: 'ipconfig1'
         properties: {
-          privateIPAllocationMethod: 'Dynamic'
-          //publicIPAddress: {
-            //id: vm2Pip.id
-          //}
+          privateIPAllocationMethod: 'Static'
+          privateIPAddress: '10.1.1.4'
           subnet: {
             id: sourceVnet.properties.subnets[0].id
           }
@@ -316,7 +312,7 @@ resource vm2Nic 'Microsoft.Network/networkInterfaces@2022-05-01' = {
 }
 
 // https://learn.microsoft.com/en-us/azure/templates/microsoft.compute/virtualmachines?pivots=deployment-language-bicep
-@description('2nd Windows Virtual Machine')
+@description('Linux Virtual Machine')
 resource vm2 'Microsoft.Compute/virtualMachines@2022-03-01' = {
   name: vm2Name
   location: location
@@ -325,15 +321,19 @@ resource vm2 'Microsoft.Compute/virtualMachines@2022-03-01' = {
       vmSize: 'Standard_D2s_v5'
     }
     osProfile: {
-      computerName: 'fe2'
+      computerName: 'Lxfe2'
       adminUsername: adminUsername
       adminPassword: adminPassword
-    }
+      customData: !empty(customData) ? base64(customData) : null      
+      linuxConfiguration: {
+        disablePasswordAuthentication: false
+      }      
+    }        
     storageProfile: {
       imageReference: {
-        publisher: 'MicrosoftWindowsServer'
-        offer: 'WindowsServer'
-        sku: '2022-datacenter-smalldisk-g2'
+        publisher: 'RedHat'
+        offer: 'RHEL'
+        sku: '86-gen2'
         version: 'latest'
       }
       osDisk: {
@@ -353,31 +353,30 @@ resource vm2 'Microsoft.Compute/virtualMachines@2022-03-01' = {
     }
     diagnosticsProfile: {
       bootDiagnostics: {
-        enabled: false
+        enabled: true
       }
     }
   }
 }
 
 // https://learn.microsoft.com/en-us/azure/templates/microsoft.compute/virtualmachines/extensions?pivots=deployment-language-bicep
-@description('2nd Windows VM Extension')
+@description('Linux VM Extension')
 resource vm2Extension 'Microsoft.Compute/virtualMachines/extensions@2022-03-01' = {
-  parent: vm2
-  name: '${vm2Name}-customScriptExtension'
-  location: location
-  properties: {
-    publisher: 'Microsoft.Compute'
-    type: 'CustomScriptExtension'
-    typeHandlerVersion: '1.10'
-    autoUpgradeMinorVersion: true
-    settings: {
-      commandToExecute: 'powershell -ExecutionPolicy Unrestricted Add-WindowsFeature Web-Server -IncludeManagementTools; powershell -ExecutionPolicy Unrestricted -File deploy.ps1'
-      fileUris: [deploymentScriptUrl]
-    }
-    protectedSettings: {
-          }
+ parent: vm2
+ name: '${vm2Name}-customScriptExtension'
+ location: location
+ properties: {
+   publisher: 'Microsoft.Azure.Extensions'
+   type: 'CustomScript'
+   typeHandlerVersion: '2.1'
+   autoUpgradeMinorVersion: true
+   settings: {
+     commandToExecute: 'sudo firewall-cmd --zone=public --add-port=80/tcp --permanent && firewall-cmd --reload'
   }
+ }
 } 
+
+
 
 // https://learn.microsoft.com/en-us/azure/templates/microsoft.network/loadbalancers?pivots=deployment-language-bicep
 @description('Loadbalancer for VMs')

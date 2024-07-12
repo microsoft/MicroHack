@@ -37,7 +37,8 @@ module source 'source.bicep' = [for i in range(0, deploymentCount):  {
     currentUserObjectId: currentUserObjectId
     prefix: prefix
     deployment: (i+1)
-    userName: userName    
+    userName: userName
+    adminPassword: '${toUpper(uniqueString(subscription().id, deployment().name))}${deployment().name}'
   }
 }]
 

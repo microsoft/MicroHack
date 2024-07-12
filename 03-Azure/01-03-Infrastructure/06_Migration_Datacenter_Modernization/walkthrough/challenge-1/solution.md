@@ -35,7 +35,7 @@ Duration: 30 minutes
 
 ![image](./img/CS5.png)
 
-- Execute `az deployment sub create --name "$(az ad signed-in-user show --query displayName -o tsv | tr -dc '[:alnum:]\\n\\r' | tr '[:upper:]' '[:lower:]')-$(uuidgen)" --location germanywestcentral --template-file ./main.bicep --parameters currentUserObjectId=$(az ad signed-in-user show --query id -o tsv) --parameters userName="$(az ad signed-in-user show --query displayName -o tsv | tr -dc '[:alnum:]\\n\\r' | tr '[:upper:]' '[:lower:]')"`
+- Execute `az deployment sub create --name "$(az ad signed-in-user show --query userPrincipalName -o tsv | cut -d "@" -f 1 | tr '[:upper:]' '[:lower:]')-$(cat /proc/sys/kernel/random/uuid)" --location germanywestcentral --template-file ./main.bicep --parameters currentUserObjectId=$(az ad signed-in-user show --query id -o tsv) --parameters userName="$(az ad signed-in-user show --query userPrincipalName -o tsv | cut -d "@" -f 1 | tr '[:upper:]' '[:lower:]')"`
 
 ![image](./img/CS6.png)
 
@@ -51,8 +51,8 @@ The bicep deployment should have created the following resources
 
 - source-rg Resource Group containing the follwing resources
     + Virtual Network *source-vnet*
-    + Virtual Machine *frontend1* with installed web server
-    + Virtual Machine *frontend2* with installed web server
+    + Virtual Machine *Win-fe1* with installed web server on a Windows Server System
+    + Virtual Machine *Lx-fe2* with installed web server on a REHL System
     + Public Load Balancer *plb-frontend* with configured backend pool containing *frontend1* and *frontend2* VM
     + Azure Bastion *source-bastion*
     + Azure Key Vault *source-kv-* containing username and password for VM login

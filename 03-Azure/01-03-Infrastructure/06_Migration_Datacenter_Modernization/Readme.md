@@ -258,7 +258,7 @@ The goal of this exercise is to ...
 
 [Solution Steps](./walkthrough/challenge-5/solution.md)
 
-## Challenge 6 - Modernize with Azure
+## Optional Bonus Challenge 6 - Modernize with Azure
 
 ### Goal 
 
@@ -279,7 +279,7 @@ The goal of this exercise is to ...
 * The App Services are accessible using the source Load Balancer.
 
 > [!IMPORTANT]
-> Currently [Feb. 2024], At-Scale Discovery, Assessment and Migration is supported for ASP.NET web apps deployed to on-premises IIS servers hosted on VMware Environment.
+> Currently [July 2024], At-Scale Discovery, Assessment and Migration is supported for ASP.NET web apps deployed to on-premises IIS servers hosted on VMware Environment.
 
 ### Learning resources
 * [App Service assessment overview](https://learn.microsoft.com/en-us/azure/migrate/concepts-azure-webapps-assessment-calculation)
@@ -290,6 +290,34 @@ The goal of this exercise is to ...
 ### Solution - Spoilerwarning
 
 [Solution Steps](./walkthrough/challenge-6/solution.md)
+
+## Optional Bonus Challenge 7 - Secure on Azure
+
+### Goal 
+
+The goal of this exercise is to ...
+
+* secure the migrated Virtual Machines by enabling Defender for Cloud for Server
+* add an addtional Layer of protection to the web applications by replacing the Traffic Manager profile with an Azure Front Door instance and enable a Web Application Firewall.
+
+### Actions
+
+* Enable Defender for Cloud
+* Deploy Azure Front Door with an Azure WAF and replace the Traffic Manager Profile
+
+### Success criteria
+
+* The migrated Servers are protected by Defender for Cloud for Servers
+* The web app running on the migrated servers is published via the Azure Front Door instanc and protected by an Web Application Firewall
+
+### Learning resources
+* [Deploy Defender for Servers](https://learn.microsoft.com/en-us/azure/defender-for-cloud/tutorial-enable-servers-plan)
+* [Create a Front Door](https://learn.microsoft.com/en-us/azure/frontdoor/quickstart-create-front-door)
+* [Create a WAF policy on Azure Front Door](https://learn.microsoft.com/en-us/azure/web-application-firewall/afds/waf-front-door-create-portal?toc=%2Fazure%2Ffrontdoor%2Ftoc.json)
+
+### Solution - Spoilerwarning
+
+[Solution Steps](./walkthrough/challenge-7/solution.md)
 
 ## Finish
 

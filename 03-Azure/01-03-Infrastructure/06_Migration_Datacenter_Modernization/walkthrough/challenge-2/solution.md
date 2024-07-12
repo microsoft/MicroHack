@@ -156,6 +156,8 @@ The last step is to provide additional credentials if you want to perform softwa
 
 ![image](./img/Discover17.png)
 
+![image](./img/Discover17-1.png.png)
+
 After discovery has been successfully initiated, go to the Azure portal to review the discovered inventory.
 
 ![image](./img/Discover18.png)

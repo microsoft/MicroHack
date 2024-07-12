@@ -138,59 +138,113 @@ The last step is to finalize the registration. Refresh the Azure Portal page whe
 
 ![image](./img/mig18.png)
 
-### **Task 3: Install the Mobility service on the source server**
+### **Task 3: Copy the Mobility Service Agent to the source server**
 
 On machines you want to migrate, you need to install the Mobility service agent. The agent installers are available on the replication appliance in the *%ProgramData%\ASR\home\svsystems\pushinstallsvc\repository* directory.
-To install the Mobility service agent on the Windows machines follow the following steps
-
-1. Sign in to the replication appliance.
-2. Navigate to %ProgramData%\ASR\home\svsystems\pushinstallsvc\repository.
-3. Find the installer for the machine operating system and version. Review [supported operating systems](https://learn.microsoft.com/en-us/azure/site-recovery/vmware-physical-azure-support-matrix#replicated-machines).
-4. Copy the installer file to the machine you want to migrate.
 
 **Windows**
+To copy the Mobility service agent to the Windows machine follow the following steps
 
-![image](./img/maw1.png)
+1. Sign in to the Windows Server source VM.
+2. Open Powershell and run the following command
 
+~~~powershell
+Windows PowerShell
+Copyright (C) Microsoft Corporation. All rights reserved.
+Copy-Item \\10.1.1.7\C$\ProgramData\ASR\home\svsystems\pushinstallsvc\repository\Microsoft-ASR_UA*Windows*_Release.exe $env:USERPROFILE\Downloads\ -Force
+~~~
 
-5. Make sure that you have the passphrase that was generated when you deployed the appliance (You should have saved it as a KeyVault secret).
-  * Store the key in a temporary text file and copy the file into the same direcotry on the source machines.
-  * You can obtain the passphrase on the replication appliance. From the command line, run the following command to view the passphrase
-     C:\ProgramData\ASR\home\svsystems\bin\genpassphrase.exe -v
+**Linux**
+To copy the Mobility service agent to the Linux machine follow the following steps
 
-![image](./img/maw2.png)
+1. Sign in to the Linux Server source VM.
+2. Run the following command. Replace the Username and the correct filename.
+
+~~~bash
+#List the correct file
+smbclient -U <ReplaceWIthAdminUserName> //10.1.1.7/c$ -c "dir ProgramData\ASR\home\svsystems\pushinstallsvc\repository\*ASR*RHEL8*"
+#Copy the filename to next command and copy it to tmp directory
+smbclient '//10.1.1.7/c$' -c 'lcd /tmp; cd ProgramData\ASR\home\svsystems\pushinstallsvc\repository; get Microsoft-ASR_UA_9.61.0.0_RHEL8-64_GA_18Mar2024_Release.tar.gz' -U <ReplaceWIthAdminUserName>
+cd /tmp
+ls
+~~~
+
+#### **Task 3.1: Install the Mobility service on the Windows VM**
+
+> [!NOTE]
+> During the installation you need to provide the passphrase that was created during the Replication Appliance installation.
+> If you forgot to copy the passphrase you can obtain it from inside the Replication Appliance via the following Powershell command. 
+> ~~~powershell
+> Windows PowerShell
+> Copyright (C) Microsoft Corporation. All rights > reserved.
+> C:\ProgramData\ASR\home\svsystems\bin\genpassphrase.exe -v
+> ~~~
 
 > [!WARNING]
 > Don't regenerate the passphrase. This will break connectivity and you will have to reregister the replication appliance.
 
-#### **Task 3.1: Install the Mobility service on the Windows VMs**
-
 1. Extract the contents of installer file to a local folder (for example C:\Temp) on the machine, as follows:
-```shell
-ren Microsoft-ASR_UA\*Windows\*release.exe MobilityServiceInstaller.exe
-     
-MobilityServiceInstaller.exe /q /x:C:\Temp\Extracted
 
+~~~powershell
+Windows PowerShell
+Copyright (C) Microsoft Corporation. All rights reserved.
+cd $env:USERPROFILE\Downloads\
+Rename-Item .\Microsoft-ASR_UA_9.61.0.0_Windows_GA_18Mar2024_Release.exe MobilityServiceInstaller.exe
+.\MobilityServiceInstaller.exe /q /x:C:\Temp\Extracted
 cd C:\Temp\Extracted
-```
+~~~
+
 2. Run the Mobility Service Installer:
-```shell
-UnifiedAgent.exe /Role "MS" /Platform "VmWare" /Silent /CSType CSLegacy
-```
-![image](./img/maw3-1.png)   
+~~~powershell
+Windows PowerShell
+Copyright (C) Microsoft Corporation. All rights reserved.
+.\UnifiedAgent.exe /Role "MS" /Platform "VmWare" /Silent /CSType CSLegacy
+~~~
+
 > [!IMPORTANT]
 > You need to specify *VmWare* for the *Platform* parameter also for physical servers.
 
 3. Register the agent with the replication appliance:
-```shell
-cd C:\Program Files (x86)\Microsoft Azure Site Recovery\agent
+~~~powershell
+Windows PowerShell
+Copyright (C) Microsoft Corporation. All rights reserved.
+cd "C:\Program Files (x86)\Microsoft Azure Site Recovery\agent"
+set-Content .\password.txt <REPLACE WITH PASSPHRASE> -Force # This is the password you received during the installation of the Azure Replication Appliance, replace it with your password.
+.\UnifiedAgentConfigurator.exe /CSEndPoint 10.1.1.7 /PassphraseFilePath "C:\Program Files (x86)\Microsoft Azure Site Recovery\agent\password.txt"
+~~~
+ 
+#### **Task 3.2: Install the Mobility service on the Linux VM**
 
-UnifiedAgentConfigurator.exe /CSEndPoint \<replication appliance IP address\> /PassphraseFilePath \<Passphrase File Path\>
-```
-![image](./img/maw3-2.png)     
+> [!NOTE]
+> During the installation you need to provide the passphrase that was created during the Replication Appliance installation.
+> If you forgot to copy the passphrase you can obtain it from inside the Replication Appliance via the following Powershell command. 
+> ~~~powershell
+> Windows PowerShell
+> Copyright (C) Microsoft Corporation. All rights > reserved.
+> C:\ProgramData\ASR\home\svsystems\bin\genpassphrase.exe -v
+> ~~~
 
-> [!IMPORTANT]
-> Repeat the above steps for the second Windows Server
+> [!WARNING]
+> Don't regenerate the passphrase. This will break connectivity and you will have to reregister the replication appliance.
+
+Now you need to log in to the source Linux VM to finish the installation of the mobility service agent.
+
+Log into the Linux VM with Azure Bastion and install the mobility service agent.
+
+![image](./img/mal1.png)
+
+~~~bash
+mkdir MobSvcInstaller
+tar -C ./MobSvcInstaller -xvf /tmp/Microsoft-ASR_UA_9.61.0.0_RHEL8-64_GA_18Mar2024_Release.tar.gz
+cd MobSvcInstaller
+sudo ./install -r MS -v VmWare -q -c CSLegacy # You need to specify VmWare as the platform also for physical servers.
+~~~
+
+~~~bash
+echo <REPLACE WITH PASSPHRASE> > password.txt # This is the password you received during the installation of the Azure Replication Appliance, replace it with your password.
+sudo /usr/local/ASR/Vx/bin/UnifiedAgentConfigurator.sh -i 10.1.1.7 -P password.txt -c CSLegacy # IP 10.1.1.7 is the IP of the Azure Replication Appliance Windows VM you created.
+logout
+~~~
 
 ### **Task 4: Enable Replication**
 
@@ -230,11 +284,14 @@ Wait until the replication has been successfully initiated.
 
 ![image](./img/repl9.png)
 
-Under *Migration Tools* you should know see that 2 Server are beeing repölicated. Click on *Overview* to see more details.
+Under *Migration Tools* you should know see that 2 Server are beeing replicated. Click on *Overview* to see more details.
 
 ![image](./img/repl10.png)
 
 Select *Replicating Machines* from the navigation pane on the left. You should now see the 2 servers and their status.
+
+> [!IMPORTANT]
+> Please note that the initial replication might take some time. Within the MicroHack environment it should not take longer than 30 minutes.
 
 ![image](./img/repl11.png)
 
@@ -282,7 +339,7 @@ Open the Microsoft Edge browser on the server, enter *localhost* in the address 
 
 ![image](./img/test9.png)
 
-Repeat the above steps for the *frontend2-test* system. Once you've confirmed that the applications on the systems are running as expected you can perfom a cleanup for the test migration. Change back to the *Azure Migrate: Migration and modernization* overview page, click on the 3 dots on the end of each row of the replicating servers and select *Clean up test migration*.
+Repeat the above steps for the *Lxfe2-test* system. Once you've confirmed that the applications on the systems are running as expected you can perfom a cleanup for the test migration. Change back to the *Azure Migrate: Migration and modernization* overview page, click on the 3 dots on the end of each row of the replicating servers and select *Clean up test migration*.
 
 ![image](./img/test10.png)
 
@@ -352,6 +409,8 @@ Select *Endpoints* and click *Add*. Add each public IP of the source and destina
 > [!NOTE]
 > Please note: To be able to add the public IP addresses they need to be configured with an [DNS name lable](https://learn.microsoft.com/en-us/azure/dns/dns-custom-domain?toc=%2Fazure%2Fvirtual-network%2Ftoc.json#public-ip-address).
 
+![image](./img/prep11-1.png)
+
 Check the Overview section under the navigation pane and note that the source load balancer is shown as *online* whereas the 
 destination load balancer is shown as *degraded*. If you copy the DNS name of the Traffic Manager profile and paste it into your browser, you should be able to browse the source web servers through the Traffic Manager Profile.
 
@@ -365,7 +424,11 @@ Open the [Azure Portal](https://portal.azure.com) and navigate to the previousle
 
 ![image](./img/finalmig1.png)
 
-Select *Yes* to shutdown the source machines, select the two servers and click *Migrate*.
+Select *AzureVM* and click *Continue*.
+
+![image](./img/finalmig1-2.png)
+
+Select *No* because shutdown of source machines is only supported for HyperVisor based migrations, select the two servers and click *Migrate*.
 
 ![image](./img/finalmig2.png)
 
@@ -378,6 +441,7 @@ After a few minutes the migration should be successfully completed.
 ![image](./img/finalmig4.png)
 
 When you change to the *Virtual machine* section within the Azure Portal you should now see 2 additional serves in the *destination-rg* Resource Group.
+Please select the original source Virtual Machines and click on *Stop* to shutdown the source VMs.
 
 ![image](./img/finalmig5.png)
 
@@ -405,13 +469,14 @@ From the Traffic Manager Profile you can now also safley remove the endpoint for
 
 ![image](./img/finalmig10.png)
 
-> [!WARNING]
-> **Please note: Normally it would be safe now to completley remove the *source-rg* Resource Group. However, we will reuse the source environment in [Challenge 6](https://github.com/microsoft/MicroHack/tree/MigrationModernizationMicroHack/03-Azure/01-03-Infrastructure/06_Migration_Datacentre_Modernization#challenge-6---modernize-with-azure) to see how Azure Migrate will help to modernize our infrastructure.**
-
-You successfully completed challenge 5! 🚀🚀🚀
+🚀🚀🚀 You successfully completed challenge 5! 🚀🚀🚀
 
 The deployed architecture now looks like the following diagram.
 
 ![image](./img/Challenge-5.jpg)
 
- **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-6/solution.md)
+🚀🚀🚀 **!!!Congratulations!!! - You successfully completed the MicroHack. You can now safley remove the *source-rg* and *destination-rg* Resource Groups.** 🚀🚀🚀
+
+🚀🚀🚀 **If you still want to continue we have 2 additional bonus challenges to modernize OR secure the migrated environment.**🚀🚀🚀
+
+ **[Home](../../Readme.md)** - Continue with either [Bonus Challenge 6 solution](../challenge-6/solution.md) OR [Bonus Challenge 7 solution](../challenge-7/solution.md)

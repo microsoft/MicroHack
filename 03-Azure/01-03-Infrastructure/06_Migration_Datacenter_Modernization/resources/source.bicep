@@ -333,9 +333,6 @@ resource vm2 'Microsoft.Compute/virtualMachines@2022-03-01' = {
       imageReference: {
         publisher: 'RedHat'
         offer: 'RHEL'
-        // sku: '81-ci-gen2' https://github.com/MicrosoftDocs/azure-docs/issues/84430
-        // sku: '8-gen2'
-        // sku: '7_9'
         sku: '86-gen2'
         version: 'latest'
       }

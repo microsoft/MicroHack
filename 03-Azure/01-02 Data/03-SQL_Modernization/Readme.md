@@ -63,7 +63,7 @@ The goal of this exercise is to migrate an on-premises SQL Server 2012 database 
 
 ### Solution steps 
 
-* [MicroHack Challenge 1]("./Challenges/01-MicroHack-database_assessment_and_migration_with_Azure_Data_Studio.md")
+* [MicroHack Challenge 1](./Challenges/01-MicroHack-database_assessment_and_migration_with_Azure_Data_Studio.md)
 
 ## Challenge 2 - Monitoring and Performance on Azure SQL Managed Instance
 

@@ -1,5 +1,5 @@
 
-![image](./Images/SQLMicroHack.png)
+![image](./Images/SQLMicroHack.jpg)
 
 # MicroHack - SQL modernization 
 
@@ -63,7 +63,7 @@ The goal of this exercise is to migrate an on-premises SQL Server 2012 database 
 
 ### Solution steps 
 
-* [MicroHack Challenge 1](./Challenges/01_MicroHack_challenge1.pdf)
+* [MicroHack Challenge 1]("./Challenges/01-MicroHack-database_assessment_and_migration_with_Azure_Data_Studio.md")
 
 ## Challenge 2 - Monitoring and Performance on Azure SQL Managed Instance
 
@@ -88,7 +88,7 @@ The goal of this exercise is to understand monitoring and perfomance optimzation
 
 ### Solution steps
 
-* [MicroHack Challenge 2](./Challenges/02_MicroHack_challenge2.pdf)
+* [MicroHack Challenge 2](./Challenges/02-MicroHack-monitoring_and_performance_on_Azure_SQL_Managed_Instance.md)
 
 ## Challenge 3 - Security on Azure SQL Managed Instance
 
@@ -113,7 +113,7 @@ The goal of this exercise is to understand the layered security model available 
 
 ### Solution steps
 
-* [MicroHack Challenge 3](./Challenges/03_MicroHack_challenge3.pdf)
+* [MicroHack Challenge 3](./Challenges/03-MicroHack-security_on_Azure_SQL_Managed_Instance.md)
 
 ## Finish
 

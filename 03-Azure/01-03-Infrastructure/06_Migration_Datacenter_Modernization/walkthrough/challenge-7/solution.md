@@ -6,7 +6,13 @@ Duration: 40 minutes
 
 Please make sure thet you successfully completed [Challenge 5](../challenge-5/solution.md) before continuing with this challenge.
 
-### **Task 1: Create an App Service Assessment**
+### **Task 1: Enable Defender for Cloud for Server**
+
+tbd
+
+### **Task 2: Create an Azure Front Door profile and WAF policy**
+
+tbd
 
 
 You successfully completed challenge 7! 🚀🚀🚀

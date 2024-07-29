@@ -8,7 +8,7 @@ Please make sure thet you successfully completed [Challenge 5](../challenge-5/so
 
 ### **Task 1: Enable Defender for Cloud for Server**
 
-tbd
+tbd teststg
 
 ### **Task 2: Create an Azure Front Door profile and WAF policy**
 

@@ -56,7 +56,7 @@ The European Institute for Computer Antivirus Research (EICAR) and Computer Anti
 
 Scroll down a bit until you can see the 68 character long EICAR string.  
 
-![image](./img/vmeicarstring.png)
+![image](./img/vm-eicarstring.png)
 
 We will not try to download a test file  from the website, because this will be blocked by the browser already. Instead we will create a new file on the virtual machine and paste the EICAR string into and try to safe the file. 
 
@@ -64,11 +64,11 @@ Select the EICAR String and copy it into the clipboard. Create a new file on the
 
 ![image](./img/vmnewfile.png)
 
-![image](./img/vmnfile.png)
+![image](./img/vmfile.png)
 
 Try to safe the file. Defender for Endpoint will trigger - it'll quarantine the file and and display a warning on the local server.
 
-![image](./img/vmnthreat.png)
+![image](./img/vmthreat.png)
 
 Next we will double-check if this alert was forwared to Azure. Open the portal and select *Defender for Cloud* and select *Security Alerts*. EICAR malware detections are reported with severity "Informational" - in order to include these alerts in the view you need to change the filter: Add severity "informational" in the filter settings - and the security alerts will be displayed.
 

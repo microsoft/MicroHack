@@ -6,7 +6,7 @@ Duration: 40 minutes
 
 Please make sure thet you successfully completed [Challenge 5](../challenge-5/solution.md) before continuing with this challenge.
 
-### **Task 1: Enable Defender for Cloud for Server**
+## **Task 1: Enable Defender for Cloud for Server**
 
 In [Challenge 5](../challenge-5/solution.md) we migrated two servers to Azure. The servers are already protected by the basic services of Defender for Cloud. In this challenge, we'll improove significantly the protection level by activating advanced services such as "Cloud Security Posture Management (CSPM)" and "Cloud Workload Protection (CWP)" (Defender for Server).
 
@@ -29,7 +29,7 @@ In Settings settings, enable *Defender CSPM* and *Defender for Server* plans to 
 > [!NOTE]
 > It takes a few minutes for the new settings to be applied and for more agents to be installed on the servers.
 
-### **Task 2: Check if Defender for Endpoint is active on the virtual machines **
+## **Task 2: Check if Defender for Endpoint is active on the virtual machines**
 
 To check if *Defender for Server* was successfully activated on the virtual machines, open the portal and select *Virtual Machines* and select a Windows Server. Under *Operations'* select to run a command and chose to run a PowerShell script/command.
 
@@ -44,7 +44,7 @@ On a linux machine you run a shell script instead of PowerShell - the commandlin
 ![image](./img/vmlinuxatpstatus.png)
 
 
-### **Task 3: Check if a virus attack is reported in Azure**
+## **Task 3: Check if a virus attack is reported in Azure**
 
 In the next step, we check whether the infection with malware is reported to Azure, so that appropriate reactions can be triggered there on the basis of an alert to inform administrators, open an incident or follow up on the problem and initiate appropriate measures or react to such incidents with automatic rules.
 
@@ -76,7 +76,7 @@ Next we will double-check if this alert was forwared to Azure. Open the portal a
 
 
 
-### **Task 4: Explore *Defender for Cloud* proactive security advice**
+## **Task 4: Explore *Defender for Cloud* proactive security advice**
 
 
 

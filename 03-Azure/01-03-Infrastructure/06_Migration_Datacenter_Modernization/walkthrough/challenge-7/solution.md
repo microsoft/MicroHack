@@ -8,7 +8,7 @@ Please make sure thet you successfully completed [Challenge 5](../challenge-5/so
 
 ### **Task 1: Enable Defender for Cloud for Server**
 
-In [Challenge 5](../challenge-5/solution.md) we migrated two servers into Azure. The servers are already protected by the basic services of Defender for Cloud. In this challenge, basic protection is to be better protected by activating advanced services such as "Cloud Security Posture Management (CSPM)" and "Cloud Workload Protection (CWP)" (Defender for Server).
+In [Challenge 5](../challenge-5/solution.md) we migrated two servers to Azure. The servers are already protected by the basic services of Defender for Cloud. In this challenge, we'll improove significantly the protection level by activating advanced services such as "Cloud Security Posture Management (CSPM)" and "Cloud Workload Protection (CWP)" (Defender for Server).
 
 To enable the advanced Defender for Cloud components, open the portal and select *Defender for Cloud*.  Under *Management*, select the *Environment Settings* to define the Defender for Cloud setting for the subscription.
 

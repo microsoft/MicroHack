@@ -4,17 +4,17 @@ Duration: 40 minutes
 
 ## Prerequisites
 
-Please make sure thet you successfully completed [Challenge 5](../challenge-5/solution.md) before continuing with this challenge.
+Please make sure that you successfully completed [Challenge 5](../challenge-5/solution.md) before continuing with this challenge.
 
 ## **Task 1: Enable Defender for Cloud for Server**
 
-In [Challenge 5](../challenge-5/solution.md) we migrated two servers to Azure. The servers are already protected by the basic services of Defender for Cloud. In this challenge, we'll improove significantly the protection level by activating advanced services such as "Cloud Security Posture Management (CSPM)" and "Cloud Workload Protection (CWP)" (Defender for Server).
+In [Challenge 5](../challenge-5/solution.md) we migrated two servers to Azure. The servers are already protected by the basic services of Defender for Cloud. In this challenge, we'll improve significantly the protection level by activating advanced services such as "Cloud Security Posture Management (CSPM)" and "Cloud Workload Protection (CWP)" (Defender for Server).
 
 To enable the advanced Defender for Cloud components, open the portal and select *Defender for Cloud*.  Under *Management*, select the *Environment Settings* to define the Defender for Cloud setting for the subscription.
 
 ![image](./img/Def-environment-settings.jpg)
 
-In Settings settings, enable *Defender CSPM* and *Defender for Server* plans to better protect the migrated servers from threats. After enabling the plans, use the "Settings" link for both plans and verify that all features are enabled. Finally *Save* the new configuration.
+In the settings, enable *Defender CSPM* and *Defender for Server* plans to better protect the migrated servers from threats. After enabling the plans, use the "Settings" link for both plans and verify that all features are enabled. Finally *Save* the new configuration.
 
 ![image](./img/Def-environment-settings.jpg)
 
@@ -39,14 +39,14 @@ Run the *Get-MpComputerStatus* cmdlet to get the status of antimalware software 
 
 ![image](./img/vmatpstatus.png)
 
-On a linux machine you run a shell script instead of PowerShell - the commandline *mdatp health* will return the health of the *Defender for Endpoint* on a linux box.
+On a Linux machine you run a shell script instead of PowerShell - the commandline *mdatp health* will return the health of the *Defender for Endpoint* on a Linux box.
 
 ![image](./img/vmlinuxatpstatus.png)
 
 
 ## **Task 3: Check if a virus attack is reported in Azure**
 
-In the next step, we check whether the infection with malware is reported to Azure, so that appropriate reactions can be triggered there on the basis of an alert to inform administrators, open an incident or follow up on the problem and initiate appropriate measures or react to such incidents with automatic rules.
+In the next step, we check whether the infection with malware is reported to Azure, so that appropriate reactions can be triggered based on an alert - e.g. inform administrators, open an incident or follow up on the problem and initiate appropriate measures or react to such incidents with automatic rules.
 
 Open the portal and select *Virtual Machines* and select a Windows Server. Select *Connect* and establish a connection with the virtual machines using *Bastion*.
 
@@ -58,9 +58,9 @@ Scroll down a bit until you can see the 68 character long EICAR string.
 
 ![image](./img/vm-eicarstring.png)
 
-We will not try to download a test file  from the website, because this will be blocked by the browser already. Instead we will create a new file on the virtual machine and paste the EICAR string into and try to safe the file. 
+We will not try to download a test-file from the website, because this will be blocked by the browser already. Instead, we will create a new file on the virtual machine and paste the EICAR string into and try to safe the file. 
 
-Select the EICAR String and copy it into the clipboard. Create a new file on the desktop and pase the EICAR string into the file.
+Select the EICAR String and copy it into the clipboard. Create a new file on the desktop and paste the EICAR string into the file.
 
 ![image](./img/vmnewfile.png)
 
@@ -70,30 +70,30 @@ Try to safe the file. Defender for Endpoint will trigger - it'll quarantine the 
 
 ![image](./img/vmthreat.png)
 
-Next we will double-check if this alert was forwared to Azure. Open the portal and select *Defender for Cloud* and select *Security Alerts*. EICAR malware detections are reported with severity "Informational" - in order to include these alerts in the view you need to change the filter: Add severity "informational" in the filter settings - and the security alerts will be displayed.
+Next, we will double-check if this alert was forwarded to Azure. Open the portal and select *Defender for Cloud* and select *Security Alerts*. EICAR malware detections are reported with severity "Informational" - to include these alerts in the view you need to change the filter: Add severity "informational" in the filter settings - and the security alerts will be displayed.
 
 ![image](./img/DefSecAlert.png)
 
 ## **Task 4: Explore *Defender for Cloud* proactive security advice**
 
-The challenges in this microhack were designed to be simple and implemented straight forward as simple, virtual servers in a single subscription. The implementation of a secure and scalable landing zone according to the best practices from the *Cloud Adaption Framework* was waived ([What is an Azure landing zone? - Cloud Adoption Framework | Microsoft Learn](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/landing-zone/)). 
+The challenges in this Microhack were designed to be simple and implemented straight forward as virtual machines in a single subscription. The implementation of a secure and scalable landing zone according to the best practices from the *Cloud Adaption Framework* ([What is an Azure landing zone? - Cloud Adoption Framework | Microsoft Learn](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/landing-zone/)) was waived for the sake of simplicity. 
 
-In this case, this leads to *Defender for Cloud* making a number of recommendations on how to proactively improve the security of the environment.
- To view general security recommendations for the managed virtual machines, please open the portal and select Defender for Cloud. Under Security Posture, you can view the recommendations in detail.
+On the other hand, this now causes *Defender for Cloud* making a number of recommendations on how to proactively improve the security of the environment.
+To view general security recommendations for the managed virtual machines, please open the portal and select Defender for Cloud. Under Security Posture, you can view the recommendations in detail.
 
- ![image](./img/secpost01.png)
+![image](./img/secpost01.png)
 
- Click on Security Posture to viel a list of recommendations for the various resource being used.
+Click on Security Posture to view a list of recommendations for the various resource being used.
 
- ![image](./img/secpost02.png)
+![image](./img/secpost02.png)
 
- The list of recommendations for your environment will loiok slighly different than in this screenshot, because the resource that you've installed might expereience different vulnerabilities. Review the recommendations and click them to view the details. In the details for each recommendation, you'll find a description, you can assign the recommendation to a user for implementation or you can create an exempt. 
+The list of recommendations for your environment will look slightly different than in this screenshot, because the resource that you've installed might experience different vulnerabilities. Review the recommendations and click them to view the details. In the details for each recommendation, you'll find a description, you can assign the recommendation to a user for implementation or you can create an exempt. 
 
- Go back to *Defender for Cloud* and click on *Attack path analysis* - this will provide you an overview about specific vulnerabilities in your environment and how they can be utilized by attackers to compromize your enviornment. 
+Go back to *Defender for Cloud* and click on *Attack path analysis* - this will provide you an overview about specific vulnerabilities in your environment and how they can be utilized by attackers to compromise your environment. 
 
- ![image](./img/secpost03.png)
+![image](./img/secpost03.png)
 
- In this Microhack, we deployeed virtual machines that use public IP addresses and are directly exposed to the internet - this is simple but definitivley not a best practice. Click on one of the *Attack paths* to learn more about the details of this attack vector.
+In this Microhack, we deployed virtual machines that use public IP addresses and are directly exposed to the internet - this is straight forward, but for sure not a best practice. Click on one of the *Attack paths* to learn more about the details of this attack vector.
 
 ![image](./img/secpost04.png)
 

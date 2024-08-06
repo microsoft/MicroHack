@@ -18,11 +18,11 @@ In Settings settings, enable *Defender CSPM* and *Defender for Server* plans to 
 
 ![image](./img/Def-environment-settings.jpg)
 
-*Defender CSPM* Settings & monitoring details
+Verify the *Defender CSPM* Settings & monitoring details
 
 ![image](./img/Def-CSPM-monitoring.png)
 
-*Defender for Server* Settings & monitoring details 
+Verify the *Defender for Server* Settings & monitoring details 
 
 ![image](./img/Def-DefenderServerSettings.png)
 
@@ -74,9 +74,33 @@ Next we will double-check if this alert was forwared to Azure. Open the portal a
 
 ![image](./img/DefSecAlert.png)
 
-
-
 ## **Task 4: Explore *Defender for Cloud* proactive security advice**
+
+The challenges in this microhack were designed to be simple and implemented straight forward as simple, virtual servers in a single subscription. The implementation of a secure and scalable landing zone according to the best practices from the *Cloud Adaption Framework* was waived ([What is an Azure landing zone? - Cloud Adoption Framework | Microsoft Learn](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/landing-zone/)). 
+
+In this case, this leads to *Defender for Cloud* making a number of recommendations on how to proactively improve the security of the environment.
+ To view general security recommendations for the managed virtual machines, please open the portal and select Defender for Cloud. Under Security Posture, you can view the recommendations in detail.
+
+ ![image](./img/secpost01.png)
+
+ Click on Security Posture to viel a list of recommendations for the various resource being used.
+
+ ![image](./img/secpost02.png)
+
+ The list of recommendations for your environment will loiok slighly different than in this screenshot, because the resource that you've installed might expereience different vulnerabilities. Review the recommendations and click them to view the details. In the details for each recommendation, you'll find a description, you can assign the recommendation to a user for implementation or you can create an exempt. 
+
+ Go back to *Defender for Cloud* and click on *Attack path analysis* - this will provide you an overview about specific vulnerabilities in your environment and how they can be utilized by attackers to compromize your enviornment. 
+
+ ![image](./img/secpost03.png)
+
+ In this Microhack, we deployeed virtual machines that use public IP addresses and are directly exposed to the internet - this is simple but definitivley not a best practice. Click on one of the *Attack paths* to learn more about the details of this attack vector.
+
+![image](./img/secpost04.png)
+
+
+## **Task 4: Enable and configure Copilot for Security**
+
+Sign in to Copilot for Security (https://securitycopilot.microsoft.com).
 
 
 

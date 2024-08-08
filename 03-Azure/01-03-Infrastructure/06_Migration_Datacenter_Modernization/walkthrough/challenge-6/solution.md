@@ -1,148 +1,112 @@
-# Walkthrough Challenge 6 - Modernize with Azure
+# Walkthrough Optional Challenge 6 - Secure on Azure
 
 Duration: 40 minutes
 
 ## Prerequisites
 
-Please make sure thet you successfully completed [Challenge 5](../challenge-5/solution.md) before continuing with this challenge.
+Please make sure that you successfully completed [Challenge 5](../challenge-5/solution.md) before continuing with this challenge.
 
-### **Task 1: Create an App Service Assessment**
+## **Task 1: Enable Defender for Cloud for Server**
 
-The Azure Migrate tool offers additional capabilities that make it easier for you to move applications from on-premises environments to Azure App Service and Azure Kubernetes Service.
+In [Challenge 5](../challenge-5/solution.md) we migrated two servers to Azure. The servers are already protected by the basic services of Defender for Cloud. In this challenge, we'll improve significantly the protection level by activating advanced services such as "Cloud Security Posture Management (CSPM)" and "Cloud Workload Protection (CWP)" (Defender for Server).
 
-Azure App Service bulk migration capabilities are now available as an Azure Migrate feature:
+To enable the advanced Defender for Cloud components, open the portal and select *Defender for Cloud*.  Under *Management*, select the *Environment Settings* to define the Defender for Cloud setting for the subscription.
 
-* Discover and assess ASP.NET web apps in addition to categorizing which apps are ready for migration.
-* Suggest a destination for migration and provide a guided content and configuration experience for ASP.NET web apps to Azure App Service.
-* Discover and migrate with Java Tomcat applications to App Service Linux and to Azure Kubernetes Service.
-* Containerize your ASP.NET web apps and move them to either Windows Containers on App Service or to Azure Kubernetes Service.
+![image](./img/Def-environment-settings.jpg)
 
-> [!WARNING]
-> **Currently this feature has a few [limitations](https://learn.microsoft.com/en-us/azure/migrate/concepts-migration-webapps#limitations) and therefore it can't be used to migrate web apps directly from physical servers. However, we can use it at least to perform the assessment of our web apps and use the [App Service migration assistant tool](https://learn.microsoft.com/en-us/azure/app-service/app-service-asp-net-migration) for the migration. Please note that this will only work for the migrated Windows VM**
+In the settings, enable *Defender CSPM* and *Defender for Server* plans to better protect the migrated servers from threats. After enabling the plans, use the "Settings" link for both plans and verify that all features are enabled. Finally *Save* the new configuration.
 
-> [!WARNING]
-> **Please note that this challenge will only work for the migrated Windows VM. Currently we do not support direct migrations from Linux VMs**
+![image](./img/Def-environment-settings.jpg)
 
-Open the [Azure Portal](https://portal.azure.com) and navigate to the previousley created Azure Migrate project. Select *Servers, databases and web apps*, **make sure that the right Azure Migrate Project is selected** and click on *Assess* and select *Web Apps on Azure* from the drop down list.
+Verify the *Defender CSPM* Settings & monitoring details
 
-![image](./img/appservice1.png)
+![image](./img/Def-CSPM-monitoring.png)
 
-Under *Basics* select *Web Apps on Azure* and *Web apps to App Service* and provide your desired assessment settings.
+Verify the *Defender for Server* Settings & monitoring details 
 
-![image](./img/appservice2.png)
+![image](./img/Def-DefenderServerSettings.png)
 
-Under *Select servers to assess*, provide a Assessment name and select the previously created Group.
+> [!NOTE]
+> It takes a few minutes for the new settings to be applied and for more agents to be installed on the servers.
 
-![image](./img/appservice3.png)
+## **Task 2: Check if Defender for Endpoint is active on the virtual machines**
 
-Proceed to the last section *Review + create assessment* and click *Create assessment*
+To check if *Defender for Server* was successfully activated on the virtual machines, open the portal and select *Virtual Machines* and select a Windows Server. Under *Operations'* select to run a command and chose to run a PowerShell script/command.
 
-![image](./img/appservice4.png)
+![image](./img/VM-runps.png)
 
-From the *Azure Migrate:Discovery and assessment* page select the *Web apps on Azure* assessment.
+Run the *Get-MpComputerStatus* cmdlet to get the status of antimalware software installed on the virtual machine.
 
-![image](./img/appservice5.png)
+![image](./img/vmatpstatus.png)
 
-On the next page click on the previously created assessment.
+On a Linux machine you run a shell script instead of PowerShell - the commandline *mdatp health* will return the health of the *Defender for Endpoint* on a Linux box.
 
-![image](./img/appservice6.png)
-
-Review the output of the assessment to see if the web app currently running on Windows Server IIS is suitable and ready for Azure App Services.
-
-![image](./img/appservice7.png)
-
-### **Task 2: Modernize web app to Azure App Service Code**
-
-> [!WARNING]
-> **As mentioned above, the current [limitations](https://learn.microsoft.com/en-us/azure/migrate/concepts-migration-webapps#limitations) will not allow the direct migration of web apps running on physical machines. Therefore, we will use the [App Service migration assistant tool](https://learn.microsoft.com/en-us/azure/app-service/app-service-asp-net-migration) for the migration.**
+![image](./img/vmlinuxatpstatus.png)
 
 
-Login to the Virtual Machine *frontend1* in the *destination-rg* Resource Group via Azure Bastion, open the [Azure Portal](https://portal.azure.com) from the *frontend1* VM and navigate to the previousley created Azure Migrate project. Select *Servers, databases and web apps*, **make sure that the right Azure Migrate Project is selected** and click on *Replicate* within the *Migration tools* box.
+## **Task 3: Check if a virus attack is reported in Azure**
 
-![image](./img/modernize1.png)
+In the next step, we check whether the infection with malware is reported to Azure, so that appropriate reactions can be triggered based on an alert - e.g. inform administrators, open an incident or follow up on the problem and initiate appropriate measures or react to such incidents with automatic rules.
 
-On the next page select *ASP.NET web apps*, *Azure App Service code*, *Pyhsical or others (AWS, GCP, Xen, etc)* and click on the link below to be redirected to the [App Service migration assistant tool](https://learn.microsoft.com/en-us/azure/app-service/app-service-asp-net-migration).
+Open the portal and select *Virtual Machines* and select a Windows Server. Select *Connect* and establish a connection with the virtual machines using *Bastion*.
 
-![image](./img/modernize2.png)
+![image](./img/vmconnect.png)
 
-Navigate to *App Service migration tools and resources* and click on the link to download the [App Service Migration Assistant](https://appmigration.microsoft.com/api/download/windows/AppServiceMigrationAssistant.msi) (1) and after the file was downloaded click on the link to be redirectioed to the [documentation](https://github.com/Azure/App-Service-Migration-Assistant/wiki/PowerShell-Scripts) (2) for the App Service Migration Assistant.
+The European Institute for Computer Antivirus Research (EICAR) and Computer Antivirus Research Organization (CARO), provide a harmless test file to test the response of computer antivirus programs. Instead of using real malware, which could cause real damage, this test file allows people to test anti-virus software without having to use a real computer virus. Open the following UIRL in a browser in the virtual machine: https://www.eicar.org/download-anti-malware-testfile/ 
 
-![image](./img/modernize3.png)
+Scroll down a bit until you can see the 68 character long EICAR string.  
 
-Change to your download location e.g. \<userprofile\>\\Downloads and double-click the AppServiceMigrationAssistant.msi file.
+![image](./img/vm-eicarstring.png)
 
-![image](./img/modernize4.png)
+We will not try to download a test-file from the website, because this will be blocked by the browser already. Instead, we will create a new file on the virtual machine and paste the EICAR string into and try to safe the file. 
 
-The installation should finish without any input requirements. After the installation you will find a shortcut on the Desktop to start the App Service Migration Assistant. Double-click on the shortcut to start the App Service Migration Assistant.
+Select the EICAR String and copy it into the clipboard. Create a new file on the desktop and paste the EICAR string into the file.
 
-![image](./img/modernize5.png)
+![image](./img/vmnewfile.png)
 
-Under *Choose a Site* select *Default Web Site* and click next.
+![image](./img/vmfile.png)
 
-![image](./img/modernize6.png)
+Try to safe the file. Defender for Endpoint will trigger - it'll quarantine the file and and display a warning on the local server.
 
-Wait until the assessment report is finished and click next under *Assessment Report*
+![image](./img/vmthreat.png)
 
-![image](./img/modernize7.png)
+Next, we will double-check if this alert was forwarded to Azure. Open the portal and select *Defender for Cloud* and select *Security Alerts*. EICAR malware detections are reported with severity "Informational" - to include these alerts in the view you need to change the filter: Add severity "informational" in the filter settings - and the security alerts will be displayed.
 
-Under *Login to Azure*, click on *Copy Code & Open Browser* and login to Azure using your credentials.
+![image](./img/DefSecAlert.png)
 
-![image](./img/modernize8.png)
+## **Task 4: Explore *Defender for Cloud* proactive security advice**
 
-Select *Continue* when prompted to allow to sign in to the *Azure App Service Migration Assistant* application. You can then close the browser.
+The challenges in this Microhack were designed to be simple and implemented straight forward as virtual machines in a single subscription. The implementation of a secure and scalable landing zone according to the best practices from the *Cloud Adaption Framework* ([What is an Azure landing zone? - Cloud Adoption Framework | Microsoft Learn](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/landing-zone/)) was waived for the sake of simplicity. 
 
-![image](./img/modernize9.png)
+On the other hand, this now causes *Defender for Cloud* making a number of recommendations on how to proactively improve the security of the environment.
+To view general security recommendations for the managed virtual machines, please open the portal and select Defender for Cloud. Under Security Posture, you can view the recommendations in detail.
 
-Select the correct Azure Migrate project and click next.
+![image](./img/secpost01.png)
 
-![image](./img/modernize10.png)
+Click on Security Posture to view a list of recommendations for the various resource being used.
 
-Under *Azure Options*, select the correct Azure Subscription and Resource Group. Next specify a unique name for your web app. Select to create a new App Service Plan and choose the region of your choise. Click *Migrate* to start the migration.
+![image](./img/secpost02.png)
 
-![image](./img/modernize11.png)
+The list of recommendations for your environment will look slightly different than in this screenshot, because the resource that you've installed might experience different vulnerabilities. Review the recommendations and click them to view the details. In the details for each recommendation, you'll find a description, you can assign the recommendation to a user for implementation or you can create an exempt. 
 
-The migration should complete successfully. You can now click on *Go to your website* to open the migrated web app now running on Azure App Services.
+Go back to *Defender for Cloud* and click on *Attack path analysis* - this will provide you an overview about specific vulnerabilities in your environment and how they can be utilized by attackers to compromise your environment. 
 
-![image](./img/modernize12.png)
+![image](./img/secpost03.png)
 
-Change back to the Azure Portal and open the Resource Group *destination-rg*. You should now see a App Service and a App Service Plan resource. Click on the App Service and select *Browse* to open your web app again.
+In this Microhack, we deployed virtual machines that use public IP addresses and are directly exposed to the internet - this is straight forward, but for sure not a best practice. Click on one of the *Attack paths* to learn more about the details of this attack vector.
 
-![image](./img/modernize13.png)
+![image](./img/secpost04.png)
 
-![image](./img/modernize13-1.png)
 
-You should now see the web site content that was previously running on Windows Server IIS.
+## **Task 4: Enable and configure Copilot for Security**
 
-![image](./img/modernize14.png)
+Sign in to Copilot for Security (https://securitycopilot.microsoft.com).
 
-**Repeat the above steps for the frontend2 VM**
 
-### **Task 3: Update Traffic Manager profile**
 
-The Traffic Manager profile is still pointing to the previousley migrated Virtual Machines. You can now update the endpoints within the profile to point to the App Services instead of the VMs.
-
-From the Azure Portal open the Load Balancing blade, select Traffic Manager on the navigation pane and select the previously created *tfp-frontend* Traffic Manager profile. Select *Endpoints* and click *Add*.
-
-![image](./img/tfupdate1.png)
-
-Select *Azure endpoint*, provide a name, select *App Service* and select the previousley created App Service.
-
-![image](./img/tfupdate2.png)
-
-Next delete the endpoints for the Virtual Machines.
-
-![image](./img/tfupdate3.png)
-
-You can now browse to the Traffic Manager profile. Again, from a user perspective nothing changed but you are now browsing the web site content that is hosted on Azure App Service instead of Virtual Machines.
-
-![image](./img/tfupdate4.png)
 
 You successfully completed challenge 6! 🚀🚀🚀
 
-The deployed architecture now looks like the following diagram.
-
-![image](./img/Challenge-6.jpg)
-
 🚀🚀🚀 **!!!Congratulations!!! - You successfully completed the MicroHack. You can now safley remove the *source-rg* and *destination-rg* Resource Groups.** 🚀🚀🚀
 
- **[Home](../../Readme.md)** -
+ **[Home](../../Readme.md)** 

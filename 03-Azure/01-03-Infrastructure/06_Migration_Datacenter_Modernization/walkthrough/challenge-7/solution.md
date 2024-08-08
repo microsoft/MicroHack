@@ -1,4 +1,4 @@
-# Walkthrough Challenge 7 - Secure on Azure
+# Walkthrough Optional Challenge 7 - Secure on Azure
 
 Duration: 40 minutes
 

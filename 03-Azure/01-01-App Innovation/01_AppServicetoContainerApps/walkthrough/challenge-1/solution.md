@@ -6,7 +6,7 @@ Duration: 30 minutes
 
 * In which framework and version is the application written?
 
-    The application was written in C# in .NET version 6. You can find this information in the Web App `microhack-webapp-xyz` resource in the Azure portal in the `Configuration` tab under `General Settings`:
+    The application was written in C# in .NET version 8. You can find this information in the Web App `microhack-webapp-xyz` resource in the Azure portal in the `Configuration` tab under `Settings`:
     
     ![image](./img/challenge-1-runtimestack.jpg)
 

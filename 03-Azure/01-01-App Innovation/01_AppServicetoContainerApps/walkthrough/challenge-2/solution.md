@@ -13,7 +13,7 @@ Open the [Azure Portal](https://portal.azure.com) and login using a user account
 Search for *Container Registries* and click *Create*
 
 In the *Basics* tab, select the resource group you want to deploy your new resources to (it can be the one with the app service or a new one).
-You need to give the container registry a name which needs to be globally unique since it will be accessible via a URL with the name in it (just like the web app), so you can use something like "microhackregistryxyz" (only alphanumeric characters are allowed). Chose your preferred location. Select *Basic* as *Pricing plan* and leave the other settings/tabs as is, then hit *Review + create* and again *Create*:
+You need to give the container registry a name which needs to be globally unique since it will be accessible via a URL with the name in it (just like the web app), so you can use something like "microhackregistryxyz" (only alphanumeric characters are allowed). Choose your preferred location. Select *Basic* as *Pricing plan* and leave the other settings/tabs as is, then hit *Review + create* and again *Create*:
 
 ![image](./img/challenge-2-createregistry.jpg)
 
@@ -23,7 +23,7 @@ Go to your GitHub repository and open the *Actions* tab. As you can see, there i
 
 ![image](./img/challenge-2-newworkflow.jpg)
 
-Search for *.NET* in the search bar to create the workflow from a template. Chose the *.NET* template (not to be confused with the *.NET Desktop*) and click *configure*:
+Search for *.NET* in the search bar to create the workflow from a template. Choose the *.NET* template (not to be confused with the *.NET Desktop*) and click *configure*:
 
 ![image](./img/challenge-2-createworkflow.jpg)
 
@@ -31,19 +31,25 @@ Your workflow file should look like this:
 
 ![image](./img/challenge-2-blankworkflow.jpg)
 
-Rename the workflow YAML file to *pipeline-containerapp.yml*. As you can see, the template is already filled with some settings and steps. Let's go through them line by line and make some first changes:
+The file is currently named *dotnet.yml*. Rename the workflow YAML file to *workflow_containerapp.yml*. As you can see, the template is already filled with some settings and steps. Let's go through them line by line and make some first changes:
 
 * In line 4 the name of the workflow is set. Let's rename it to *Build and Deploy to Container App*
-* In line 6 to 10 the triggers when the workflow should run are defined. Currently, every time someone pushes something into the repository or someone makes a pull request the workflow will run. Since you will for the sake of simplicity only work with the main branch in GitHub directly, you should avoid automatically running the workflow. Replace the triggers simply with:
-        on:
-          workflow_dispatch:
+* In line 6 to 10 the triggers when the workflow should run are defined. Currently, every time someone pushes something into the repository or someone makes a pull request the workflow will run. Since you will for the sake of simplicity only work with the main branch in GitHub directly, you should avoid automatically running the workflow. Replace the triggers simply with:<br>
+```
+on:
+  workflow_dispatch:
+```
 
 (This will move everything below three lines up)
 
 * From line 9 onwards the jobs are defined and steps are defined.
 * Line 12 tells GitHub to run the workflow on a Ubuntu Linux machine with the latest available version
+* From line 14 onwards the steps (sometimes called tasks) in the workflow are defined
+  * Each step invokes a command/script (indicated by *run*) or a pre-defined task (indicated by *uses*)
+  * Steps can have additional attributed like a name (for better readability)
+  * Some steps require inputs/configuration details that are listed under *with:*
 * Line 15 checkous the repository
-* Line 16 to 19 set up the required .NET tools for the workflow. Change the *dotnet-version* in line 19 to *6.x*
+* Line 16 to 19 set up the required .NET tools for the workflow. The *dotnet-version* should be *8.0.x*
 * Line 21 to 22 restores (loads) dependencies in the project
 * Line 22 to 23 performs the build
 * Line 24 to 25 performs some automated tests. This line can be removed for now since this is not part of this MicroHack.
@@ -52,37 +58,38 @@ Feel free to name all steps and format the code as you like. Your workflow shoul
 
     # This workflow will build a .NET project
     # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
-    
+
     name: Build and Deploy to Container App
-    
+
     on:
       workflow_dispatch:
-    
+
     jobs:
+
       build:
-        name: Build and Test Solution
+        name: Build and test solution
         runs-on: ubuntu-latest
-    
+
         steps:
-          - name: Checkout Repository
-            uses: actions/checkout@v2
-    
-          - name: Set up .NET Core
-            uses: actions/setup-dotnet@v1
-            with:
-              dotnet-version: '6.x'
-    
-          - name: Restore dependencies
-            run: dotnet restore
-    
-          - name: Build with dotnet
-            run: dotnet build --configuration Release
+        - name: Checkout repository
+          uses: actions/checkout@v4
+          
+        - name: Setup .NET
+          uses: actions/setup-dotnet@v4
+          with:
+            dotnet-version: 8.0.x
+            
+        - name: Restore dependencies
+          run: dotnet restore
+          
+        - name: Build with dotnet
+          run: dotnet build --no-restore
 
 Now hit *Commit changes* to save the workflow. In the dialoge, leave the fields as is and hit *Commit changes*.
 
 ![image](./img/challenge-2-commitworkflow.jpg)
 
-Go to the *Actions* tab. As you can see, the new workflow appears in the list. Chose the *Build and Deploy to Container App* workflow and click *Run workflow* to test it.
+Go to the *Actions* tab. As you can see, the new workflow appears in the list. Choose the *Build and Deploy to Container App* workflow and click *Run workflow* to test it.
 
 ![image](./img/challenge-2-runworkflow.jpg)
 
@@ -102,7 +109,7 @@ Simply name it *Dockerfile* (without a file extension). This file will contain s
     
     FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS base
     WORKDIR /app
-    EXPOSE 80
+    EXPOSE 8080
     
     FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
     WORKDIR /src
@@ -121,7 +128,7 @@ Simply name it *Dockerfile* (without a file extension). This file will contain s
     ENTRYPOINT ["dotnet", "MicroHackApp.dll"]
 
 Let's quickly go over what happens in the Dockerfile:
-* Line 3 to 5 copy a base image that already contains a .NET runtime environment, a web server and some more dependencies so that you do not have to create everything from scratch. The working directory to store files is set to */app* and port 80 is opened.
+* Line 3 to 5 copy a base image that already contains a .NET runtime environment, a web server and some more dependencies so that you do not have to create everything from scratch. The working directory to store files is set to */app*. Port 8080 is opened, so your application will listen on this port for incoming requests.
 * Line 7 to 13 are used to compile to application code from the repository.
 * Line 15 to 16 are used to publish the ready-to-run application
 * Finally line 18 to 21 are used to create the final image that will later be deployed.
@@ -176,14 +183,14 @@ Create two secrets, *ACR_USERNAME* and *ACR_PASSWORD* to save the credentials:
 
 You can now access these secrets via *${{ secrets.<SECRET_NAME> }}* in the GitHub Actions workflow.
 
-Add this snippet as a task in your GitHub Actions workflow. The name of the container registry must match the name you chose in task 1:
+Add this snippet as a task in your GitHub Actions workflow. The name of the container registry must match the name you choose in task 1:
 
 
-      - name: Build and Push Image
-        run: |
-          echo "${{ secrets.ACR_PASSWORD }}" | docker login -u "${{ secrets.ACR_USERNAME }}" --password-stdin microhackregistry.azurecr.io &&
-          docker build -t microhackregistry.azurecr.io/microhackapp:1 -f Dockerfile . &&
-          docker push microhackregistry.azurecr.io/microhackapp:1
+    - name: Build and Push Image
+      run: |
+        az acr login --name microhackregistry --username ${{ secrets.ACR_USERNAME }} --password ${{ secrets.ACR_PASSWORD }} &&
+        docker build -t microhackregistry.azurecr.io/microhackapp:1 -f Dockerfile . &&
+        docker push microhackregistry.azurecr.io/microhackapp:1
 
 Via the `run` task you can execute console commands:
 * `docker login` is used to login to the Azure Container Registry with the `ACR_USERNAME` and the `ACR_PASSWORD`.

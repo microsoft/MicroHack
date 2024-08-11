@@ -258,7 +258,30 @@ The goal of this exercise is to ...
 
 [Solution Steps](./walkthrough/challenge-5/solution.md)
 
-## Optional Bonus Challenge 6 - Modernize with Azure
+## Optional Bonus Challenge 6 - Secure on Azure
+
+### Goal 
+
+The goal of this exercise is to ...
+
+* secure the migrated Virtual Machines by enabling Defender for Cloud for Server
+
+### Actions
+
+* Enable Defender for Cloud
+
+### Success criteria
+
+* The migrated Servers are protected by Defender for Cloud for Servers
+
+### Learning resources
+* [Deploy Defender for Servers](https://learn.microsoft.com/en-us/azure/defender-for-cloud/tutorial-enable-servers-plan)
+
+### Solution - Spoilerwarning
+
+[Solution Steps](./walkthrough/challenge-6/solution.md)
+
+## Optional Bonus Challenge 7 - Modernize with Azure
 
 ### Goal 
 
@@ -289,34 +312,6 @@ The goal of this exercise is to ...
 
 ### Solution - Spoilerwarning
 
-[Solution Steps](./walkthrough/challenge-6/solution.md)
-
-## Optional Bonus Challenge 7 - Secure on Azure
-
-### Goal 
-
-The goal of this exercise is to ...
-
-* secure the migrated Virtual Machines by enabling Defender for Cloud for Server
-* add an addtional Layer of protection to the web applications by replacing the Traffic Manager profile with an Azure Front Door instance and enable a Web Application Firewall.
-
-### Actions
-
-* Enable Defender for Cloud
-* Deploy Azure Front Door with an Azure WAF and replace the Traffic Manager Profile
-
-### Success criteria
-
-* The migrated Servers are protected by Defender for Cloud for Servers
-* The web app running on the migrated servers is published via the Azure Front Door instanc and protected by an Web Application Firewall
-
-### Learning resources
-* [Deploy Defender for Servers](https://learn.microsoft.com/en-us/azure/defender-for-cloud/tutorial-enable-servers-plan)
-* [Create a Front Door](https://learn.microsoft.com/en-us/azure/frontdoor/quickstart-create-front-door)
-* [Create a WAF policy on Azure Front Door](https://learn.microsoft.com/en-us/azure/web-application-firewall/afds/waf-front-door-create-portal?toc=%2Fazure%2Ffrontdoor%2Ftoc.json)
-
-### Solution - Spoilerwarning
-
 [Solution Steps](./walkthrough/challenge-7/solution.md)
 
 ## Finish
@@ -330,3 +325,4 @@ Thank you for investing the time and see you next time!
 * Nils Bankert [GitHub](https://github.com/nilsbankert); [LinkedIn](https://www.linkedin.com/in/nilsbankert/)
 * Andreas Schwarz [LinkedIn](https://www.linkedin.com/in/andreas-schwarz-7518a818b/)
 * Christian Thönes [Github](https://github.com/cthoenes); [LinkedIn](https://www.linkedin.com/in/christian-t-510b7522/)
+* Stefan Geisler [Github](https://github.com/StefanGeislerMS); [LinkedIn](https://www.linkedin.com/in/stefan-geisler-7b7363139/)

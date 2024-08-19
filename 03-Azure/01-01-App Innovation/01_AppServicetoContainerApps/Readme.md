@@ -26,7 +26,7 @@ After completing this MicroHack you will:
 
 * Understand containerization and hosting options on Azure
 * Know how to use the right tools for containerization from an existing application / workload in your environment, on-prem or Multi-cloud
-* Understand use cases and possible scenarios in your particular inrastructure to modernize your infrastructure estate 
+* Understand use cases and possible scenarios in your particular infrastructure to modernize your infrastructure estate 
 * Get insights into real world challenges and scenarios
 
 ## MicroHack Challenges
@@ -41,7 +41,7 @@ This MicroHack has a few but important prerequisites to be understood before sta
 * [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) (Hint: Make sure to use the lastest version)
 * [Azure PowerShell Guest Configuration Cmdlets](https://learn.microsoft.com/en-us/azure/governance/machine-configuration/machine-configuration-create-setup#install-the-module-from-the-powershell-gallery)
   * It is not possible to run those commands from Azure Cloud Shell
-  * Please make sure you have at least Version 3.4.2 installes with the following Command: ```Install-Module -Name GuestConfiguration -RequiredVersion 3.4.2```
+  * Please make sure you have at least Version 3.4.2 installs with the following Command: ```Install-Module -Name GuestConfiguration -RequiredVersion 3.4.2```
 * [Visual Studio Code](https://code.visualstudio.com/)
 * [Git SCM](https://git-scm.com/download/)
 
@@ -51,16 +51,16 @@ You need to execute this script in the Azure Cloud Shell to deploy the initial A
 
 `az appservice plan create --name "microhack-appserviceplan" --resource-group "MicroHack-AppServiceToContainerApp" --location "westeurope" --is-linux --sku "FREE"`
 
-To create the web app, you need to run this command. Web app names must be globally unique, since the name will be used in the URL. You can name the web app something like "microhack-webapp-" and then append some random characters, e.g. "microhack-webapp-johndoe22" or "microhack-webapp-jdkas":
+To create the web app, you need to run this command. Web app names must be globally unique, since the name will be used in the URL. You can name the web app something like "microhack-webapp-" and then append a name or some random characters, e.g. "microhack-webapp-johndoe22" or "microhack-webapp-jdkas":
 
-`az webapp create --name "<your_globally_unique_webapp_name>" --resource-group "MicroHack-AppServiceToContainerApp" --plan "microhack-appserviceplan" --runtime "DOTNETCORE:6.0" --deployment-source-url "https://github.com/ArneDecker3v08mk/MicroHack-AppServiceToContainerAppStart" --deployment-source-branch "main"`
+`az webapp create --name "<your_globally_unique_webapp_name>" --resource-group "MicroHack-AppServiceToContainerApp" --plan "microhack-appserviceplan" --runtime "DOTNETCORE:8.0" --deployment-source-url "https://github.com/ArneDecker3v08mk/MicroHack-AppServiceToContainerAppStart" --deployment-source-branch "main"`
 
  **Troubleshooting:**
  If you see this error, then the name of the web app was already used and you need to try another name:
 
 `Error Message: Webapp 'microhack-webapp-...' already exists. The command will use the existing app's settings. Unable to retrieve details of the existing app 'microhack-webapp-...'. Please check that the app is a part of the current subscription`
 
-It may take up to 5 minutes for the web app to start in the backgroud.
+It may take up to 5 minutes for the web app to start in the background.
 
 You also need to fork this GitHub repository that you will work with: https://github.com/ArneDecker3v08mk/MicroHack-AppServiceToContainerAppStart 
 
@@ -149,14 +149,14 @@ Now that you have a deployable container image, you can setup the Container App 
 
 Hint: Use this workflow task to get the latest container image tag from the registry. You can insert the task after the login to Azure and then use the variable `image_tag`:
 
-      - name: Get Latest Container Image Tag
-        id: get_tag
-        run: |
-          TAG=$(az acr repository show-tags --name microhackregistry --repository microhackapp --orderby time_desc --output tsv --detail | head -n 1 | awk '{print $4}')
-          NUMERIC_TAG=$(echo "$TAG" | grep -oE '[0-9]+')
-          INCREMENTED_TAG=$((NUMERIC_TAG + 1))
-          UPDATED_TAG=$(echo "$TAG" | sed "s/$NUMERIC_TAG/$INCREMENTED_TAG/")
-          echo "::set-output name=image_tag::$UPDATED_TAG"
+    - name: Get Latest Container Image Tag
+      id: get_tag
+      run: |
+        TAG=$(az acr repository show-tags --name microhackregistry --repository microhackapp --orderby time_desc --output tsv --detail | head -n 1 | awk '{print $4}')
+        NUMERIC_TAG=$(echo "$TAG" | grep -oE '[0-9]+')
+        INCREMENTED_TAG=$((NUMERIC_TAG + 1))
+        UPDATED_TAG=$(echo "$TAG" | sed "s/$NUMERIC_TAG/$INCREMENTED_TAG/")
+        echo "image_tag=$UPDATED_TAG" >> $GITHUB_OUTPUT
 
 ### Success Criteria
 
@@ -167,7 +167,7 @@ Hint: Use this workflow task to get the latest container image tag from the regi
 ### Learning resources
 
 * [Creating an Azure Container App](https://learn.microsoft.com/en-us/azure/container-apps/quickstart-portal)
-* [Assigning GitHub Actions workflows permissions on Azure](https://learn.microsoft.com/en-us/azure/developer/github/connect-from-azure?tabs=azure-portal%2Cwindows)
+* [Connection Azure and GitHub (use option 2)](https://learn.microsoft.com/en-us/azure/developer/github/connect-from-azure-openid-connect)
 * [Deploying Azure Container Apps with GitHub 1](https://learn.microsoft.com/en-us/azure/container-apps/github-actions)
 * [Deploying Azure Container Apps with GitHub 2](https://github.com/Azure/container-apps-deploy-action)
 
@@ -186,12 +186,14 @@ Now that the app is up and running and you can deploy changes quickly, it is tim
 * Enable authentication with Azure Entra ID
 * Configure Autoscaling to 200 concurrent connections with 1 to 10 replicas
 * Enable monitoring and logging
+* Configure encryption
 
 ### Success criteria
 
 * You have enabled authentication with Azure Entra ID
 * You have configured the autoscaling rules
 * You can check the logs in the Log Analytics workspace
+* All traffic to/from the Container App is encrypted
 
 ### Learning resources
 

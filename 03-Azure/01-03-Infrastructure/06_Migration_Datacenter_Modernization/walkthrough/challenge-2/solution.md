@@ -31,9 +31,9 @@ Your previousley created Azure Migrate project should be preselected.
 ![image](./img/AzMig4.png)
 
 
-### **Task 2: Create and prepare Windows Server 2019 for the Azure Migrate Appliance**
+### **Task 2: Create and prepare Windows Server 2022 for the Azure Migrate Appliance**
 
-To start physical server discovery you must install the Azure Migrate Appliance on your on-premises. The Azure Migrate Appliance can be downloaded as a OVA or VHD template or you can download a ZIP file containing a PowerShell script to install it on a already existing server. For the purpose of this MicroHack we will install the Azure Migrate Appliance via the PowerShell script on a Windows Server 2019 system.
+To start physical server discovery you must install the Azure Migrate Appliance on your on-premises. The Azure Migrate Appliance can be downloaded as a OVA or VHD template or you can download a ZIP file containing a PowerShell script to install it on a already existing server. For the purpose of this MicroHack we will install the Azure Migrate Appliance via the PowerShell script on a Windows Server 2022 system.
 
 > [!IMPORTANT]
 > Please make sure to check the [prerequisites](https://learn.microsoft.com/en-us/azure/migrate/tutorial-discover-physical#prerequisites) of the Azure Migrate Appliance.
@@ -42,7 +42,7 @@ In the Azure Portal select *Virtual machines* from the navigation pane on the le
 
 ![image](./img/AzMigApp1.png)
 
-Under Basics select the *source-rg* Resource Group and provide a name for the server. Select *Windows Server 2019 Datacenter - x64 Gen2* for the Image.
+Under Basics select the *source-rg* Resource Group and provide a name for the server. Select *Windows Server 2022 Datacenter - x64 Gen2* for the Image.
 
 ![image](./img/AzMigApp2.png)
 
@@ -61,7 +61,7 @@ Wait until the deployment has been successfully completed and select *Go to reso
 
 ![image](./img/AzMigApp5.png)
 
-Select *Bastion* from the navigation pane on the left, provide the credentials to login to the Azure Migrate Appliance VM and select *Connect*. A new browser tab should open with a remote session to the Windows Server 2019 system.
+Select *Bastion* from the navigation pane on the left, provide the credentials to login to the Azure Migrate Appliance VM and select *Connect*. A new browser tab should open with a remote session to the Windows Server 2022 system.
 
 ![image](./img/AzMigApp6.png)
 
@@ -74,7 +74,7 @@ Select *Bastion* from the navigation pane on the left, provide the credentials t
 > [!IMPORTANT]
 > Please make sure to run the following commands inside of the virtual machine you created for the mirgration appliance
 
-Open Microsoft Edge on the Windows Server 2019 system and navigate and login to the [Azure Portal](https://portal.azure.com).
+Open Microsoft Edge on the Windows Server 2022 system and navigate and login to the [Azure Portal](https://portal.azure.com).
 
 ![image](./img/AzMigApp7.png)
 
@@ -107,20 +107,31 @@ Select Option 1 for *Azure Public*
 
 ![image](./img/Discover6.png)
 
-Select Option 1 for *public endpoint* and confirm you selection to start the installation.
+Select Option 1 for *public endpoint* and confirm your selection to start the installation.
 
 ![image](./img/Discover7.png)
 
-Select *N* for IE11 uninstallation. 
+Select *A* again and continue the installation.
 
-> [!WARNING]
-> Please note the Warning that IE11 is incompatible with latest Azure Migrate Appliance configuration manager and make sure using Microsoft Edge to configure the Azure Migrate appliance
+![image](./img/Discover8-1.png)
 
-![image](./img/Discover8.png)
+Select *Y* again to uninstall IE11 and continue the installation.
+
+![image](./img/Discover8-2.png)
+
+The system will reboot automatically. Installation is now complete.
+
+![image](./img/Discover8-3.png)
+
+Wait for the reboot to complete, log-in again and proceed to Task 4.
 
 ### **Task 4: Configure the Azure Migrate Appliance**
 
-Open Azure Migrate Appliance Configuration Manager using Microsoft Edge and agree the terms of use.
+Open Azure Migrate Appliance Configuration Manager using the icon on the Desktop.
+
+![image](./img/Discover9-0.png)
+
+Agree the terms of use.
 
 ![image](./img/Discover9.png)
 
@@ -156,7 +167,7 @@ The last step is to provide additional credentials if you want to perform softwa
 
 ![image](./img/Discover17.png)
 
-![image](./img/Discover17-1.png.png)
+![image](./img/Discover17-1.png)
 
 After discovery has been successfully initiated, go to the Azure portal to review the discovered inventory.
 

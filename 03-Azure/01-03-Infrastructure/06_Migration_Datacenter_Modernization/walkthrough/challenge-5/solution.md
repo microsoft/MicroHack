@@ -61,7 +61,10 @@ Open the [Azure Portal](https://portal.azure.com) on the Azure Replication Appli
 
 ![image](./img/mig1.png)
 
-Select *Physical or other...* in the *Are your machines virtualized* drop down and select *West Europe* as the *Target Region*.
+> [!IMPORTANT]
+> Please double check your preferred target region as this cannot be changed afterwards. In doubt check the region of your destination Resource Group and vNet.
+
+Select *Physical or other...* in the *Are your machines virtualized* drop down and select *Your Target Region* as the *Target Region*.
 Make sure to check the confirmation checkbox and click *Create resources*. 
 
 ![image](./img/mig2.png)

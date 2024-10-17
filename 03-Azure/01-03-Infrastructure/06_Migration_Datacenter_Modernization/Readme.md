@@ -108,8 +108,6 @@ The goal of this exercise is to...
 > [!IMPORTANT]
 > To be able to create a Business Case, make sure to select Europe as the Geography for the Azure Migrate Project
 * Deploy a Azure Migrate Appliance
-> [!IMPORTANT]
-> Carefully select the appropriate OS for the Azure Migrate Appliance. Windows Server 2016 is officially supported. Windows Server 2019 will work as well. Windows Server 2022 does not work yet.
 * Create a continuous discovery of your source environment
 
 ### Success criteria

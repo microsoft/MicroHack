@@ -1,5 +1,10 @@
 # Microhack - Intro To Oracle DB Migration to Azure
 
+## Important Notice
+
+This project is currently under development and is subject to change until the first official release, which is expected by the end of 2024. Please note that all content, including instructions and resources, may be updated or modified as the project progresses.
+
+
 ## Introduction
 
 This intro level microhack (hackathon) will help you get hands-on experience migrating Oracle databases from on-premises to different Azure Services.

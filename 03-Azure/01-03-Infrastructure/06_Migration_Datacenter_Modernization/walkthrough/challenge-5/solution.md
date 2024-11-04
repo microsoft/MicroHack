@@ -57,11 +57,35 @@ Select *Bastion* from the navigation pane on the left, provide the credentials t
 
 To prepare for physical server migration, you need to verify the physical server settings, and prepare to deploy a replication appliance.
 
+First we need to initialize and format the data disk that was attached during the VM creation. 
+Open Windows Disk Management using the *diskmgmt.msc* command.
+
+![image](./img/disk1.png)
+
+A popup should arise to initialize the disk.
+
+![image](./img/disk2.png)
+
+Select the initialized disk and create a new simple vplume on it.
+
+![image](./img/disk3.png)
+
+Acceppt the default values, name the Volume *ASR* and click *Finish* to format the disk.
+
+![image](./img/disk4.png)
+
+Wait until the operation is completed successfully.
+
+![image](./img/disk5.png)
+
 Open the [Azure Portal](https://portal.azure.com) on the Azure Replication Appliance using the Microsoft Edge browser and navigate to the previousley created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click *Discover* in the *Migration tools* box.
 
 ![image](./img/mig1.png)
 
-Select *Physical or other...* in the *Are your machines virtualized* drop down and select *West Europe* as the *Target Region*.
+> [!IMPORTANT]
+> Please double check your preferred target region as this cannot be changed afterwards. In doubt check the region of your destination Resource Group and vNet.
+
+Select *Physical or other...* in the *Are your machines virtualized* drop down and select *Your Target Region* as the *Target Region*.
 Make sure to check the confirmation checkbox and click *Create resources*. 
 
 ![image](./img/mig2.png)

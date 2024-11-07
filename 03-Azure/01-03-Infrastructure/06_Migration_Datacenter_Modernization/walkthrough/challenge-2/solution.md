@@ -21,7 +21,7 @@ Select *Servers, databases and web app* from the navigation pane on the left and
 
 ![image](./img/AzMig2.png)
 
-Select the *destination-rg* Resource Group, specify a name for the Azure Migrate Project and also select a geograpy where the data will be stored.
+Select the *destination-rg* Resource Group, specify a name for the Azure Migrate Project and also select a geograpy where the data will be stored. *Please select b4as_v2 as VM size.*
 
 ![image](./img/AzMig3.png)
 

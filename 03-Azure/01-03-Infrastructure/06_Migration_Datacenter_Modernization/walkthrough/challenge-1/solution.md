@@ -35,7 +35,7 @@ Duration: 30 minutes
 
 ![image](./img/CS5.png)
 
-- Execute `az deployment sub create --name "$(az ad signed-in-user show --query userPrincipalName -o tsv | cut -d "@" -f 1 | tr '[:upper:]' '[:lower:]')-$(cat /proc/sys/kernel/random/uuid)" --location germanywestcentral --template-file ./main.bicep --parameters currentUserObjectId=$(az ad signed-in-user show --query id -o tsv) --parameters userName="$(az ad signed-in-user show --query userPrincipalName -o tsv | cut -d "@" -f 1 | tr '[:upper:]' '[:lower:]')"`
+- Execute `az deployment sub create --name "$(az ad signed-in-user show --query userPrincipalName -o tsv | cut -d "@" -f 1 | tr '[:upper:]' '[:lower:]')-$(cat /proc/sys/kernel/random/uuid)" --location swedencentral --template-file ./main.bicep --parameters currentUserObjectId=$(az ad signed-in-user show --query id -o tsv) --parameters userName="$(az ad signed-in-user show --query userPrincipalName -o tsv | cut -d "@" -f 1 | tr '[:upper:]' '[:lower:]')"`
 
 ![image](./img/CS6.png)
 

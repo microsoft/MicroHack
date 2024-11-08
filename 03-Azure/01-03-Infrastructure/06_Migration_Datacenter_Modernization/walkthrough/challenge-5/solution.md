@@ -188,7 +188,7 @@ To copy the Mobility service agent to the Linux machine follow the following ste
 #List the correct file
 smbclient -U <ReplaceWIthAdminUserName> //10.1.1.7/c$ -c "dir ProgramData\ASR\home\svsystems\pushinstallsvc\repository\*ASR*RHEL8*"
 #Copy the filename to next command and copy it to tmp directory
-smbclient '//10.1.1.7/c$' -c 'lcd /tmp; cd ProgramData\ASR\home\svsystems\pushinstallsvc\repository; get Microsoft-ASR_UA_9.61.0.0_RHEL8-64_GA_18Mar2024_Release.tar.gz' -U <ReplaceWIthAdminUserName>
+smbclient '//10.1.1.7/c$' -c 'lcd /tmp; cd ProgramData\ASR\home\svsystems\pushinstallsvc\repository; get Microsoft-ASR_UA_9.63.0.0_RHEL8-64_GA_21Oct2024_Release.tar.gz' -U <ReplaceWIthAdminUserName>
 cd /tmp
 ls
 ~~~
@@ -213,7 +213,7 @@ ls
 Windows PowerShell
 Copyright (C) Microsoft Corporation. All rights reserved.
 cd $env:USERPROFILE\Downloads\
-Rename-Item .\Microsoft-ASR_UA_9.61.0.0_Windows_GA_18Mar2024_Release.exe MobilityServiceInstaller.exe
+Rename-Item .\Microsoft-ASR_UA_9.63.0.0_Windows_GA_21Oct2024_Release.exe MobilityServiceInstaller.exe
 .\MobilityServiceInstaller.exe /q /x:C:\Temp\Extracted
 cd C:\Temp\Extracted
 ~~~

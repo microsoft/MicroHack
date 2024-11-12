@@ -259,7 +259,7 @@ Log into the Linux VM with Azure Bastion and install the mobility service agent.
 
 ~~~bash
 mkdir MobSvcInstaller
-tar -C ./MobSvcInstaller -xvf /tmp/Microsoft-ASR_UA_9.61.0.0_RHEL8-64_GA_18Mar2024_Release.tar.gz
+tar -C ./MobSvcInstaller -xvf /tmp/Microsoft-ASR_UA_9.63.0.0_RHEL8-64_GA_21Oct2024_Release.tar.gz
 cd MobSvcInstaller
 sudo ./install -r MS -v VmWare -q -c CSLegacy # You need to specify VmWare as the platform also for physical servers.
 ~~~

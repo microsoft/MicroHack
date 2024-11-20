@@ -4,8 +4,8 @@
 This Microhack scenario walks through the use of AI to optimize SAP workflows within Microsoft Teams. This solution is particularly advantageous for mobile users or those with limited SAP experience, enabling them to efficiently manage even complex, repetitive SAP tasks.
 
 **Example: Product Specification Updates**
-•	**Scenario:** Product Managers at Contoso need to review and update product information in their SAP system on a regular basis.
-•	**Solution:** With the SAP and Teams integration provided by Copilot Studio, the product manager at Contoso can easily get the current product information from SAP and update specifications conveniently in an adaptive card.  
+* **Scenario:** Product Managers at Contoso need to review and update product information in their SAP system on a regular basis.
+* **Solution:** With the SAP and Teams integration provided by Copilot Studio, the product manager at Contoso can easily get the current product information from SAP and update specifications conveniently in an adaptive card.  
 
 By integrating SAP with Microsoft Teams using Copilot Studio and Generative AI, you can significantly enhance productivity and streamline workflows. This blog will take you through the entire process of setting up a Copilot to interact with SAP data in Teams. We'll utilize the Power Platform and SAP OData Connector to achieve this integration. By following along you will create and configure a Copilot, test and deploy it within Teams, enable Generative AI, build automation flows, and create adaptive cards for dynamic data representation and even change data in SAP. 
 

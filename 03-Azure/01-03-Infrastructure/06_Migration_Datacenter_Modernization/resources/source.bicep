@@ -223,7 +223,7 @@ resource vm1 'Microsoft.Compute/virtualMachines@2022-03-01' = {
   location: location
   properties: {
     hardwareProfile: {
-      vmSize: 'Standard_D2s_v5'
+      vmSize: 'Standard_D2as_v5'
     }
     osProfile: {
       computerName: 'Winfe1'
@@ -318,7 +318,7 @@ resource vm2 'Microsoft.Compute/virtualMachines@2022-03-01' = {
   location: location
   properties: {
     hardwareProfile: {
-      vmSize: 'Standard_D2s_v5'
+      vmSize: 'Standard_D2as_v5'
     }
     osProfile: {
       computerName: 'Lxfe2'

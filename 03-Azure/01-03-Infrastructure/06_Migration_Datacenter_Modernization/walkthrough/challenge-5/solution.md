@@ -57,11 +57,35 @@ Select *Bastion* from the navigation pane on the left, provide the credentials t
 
 To prepare for physical server migration, you need to verify the physical server settings, and prepare to deploy a replication appliance.
 
+First we need to initialize and format the data disk that was attached during the VM creation. 
+Open Windows Disk Management using the *diskmgmt.msc* command.
+
+![image](./img/disk1.png)
+
+A popup should arise to initialize the disk.
+
+![image](./img/disk2.png)
+
+Select the initialized disk and create a new simple vplume on it.
+
+![image](./img/disk3.png)
+
+Acceppt the default values, name the Volume *ASR* and click *Finish* to format the disk.
+
+![image](./img/disk4.png)
+
+Wait until the operation is completed successfully.
+
+![image](./img/disk5.png)
+
 Open the [Azure Portal](https://portal.azure.com) on the Azure Replication Appliance using the Microsoft Edge browser and navigate to the previousley created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click *Discover* in the *Migration tools* box.
 
 ![image](./img/mig1.png)
 
-Select *Physical or other...* in the *Are your machines virtualized* drop down and select *West Europe* as the *Target Region*.
+> [!IMPORTANT]
+> Please double check your preferred target region as this cannot be changed afterwards. In doubt check the region of your destination Resource Group and vNet.
+
+Select *Physical or other...* in the *Are your machines virtualized* drop down and select *Your Target Region* as the *Target Region*.
 Make sure to check the confirmation checkbox and click *Create resources*. 
 
 ![image](./img/mig2.png)
@@ -164,7 +188,7 @@ To copy the Mobility service agent to the Linux machine follow the following ste
 #List the correct file
 smbclient -U <ReplaceWIthAdminUserName> //10.1.1.7/c$ -c "dir ProgramData\ASR\home\svsystems\pushinstallsvc\repository\*ASR*RHEL8*"
 #Copy the filename to next command and copy it to tmp directory
-smbclient '//10.1.1.7/c$' -c 'lcd /tmp; cd ProgramData\ASR\home\svsystems\pushinstallsvc\repository; get Microsoft-ASR_UA_9.61.0.0_RHEL8-64_GA_18Mar2024_Release.tar.gz' -U <ReplaceWIthAdminUserName>
+smbclient '//10.1.1.7/c$' -c 'lcd /tmp; cd ProgramData\ASR\home\svsystems\pushinstallsvc\repository; get Microsoft-ASR_UA_9.63.0.0_RHEL8-64_GA_21Oct2024_Release.tar.gz' -U <ReplaceWIthAdminUserName>
 cd /tmp
 ls
 ~~~
@@ -189,7 +213,7 @@ ls
 Windows PowerShell
 Copyright (C) Microsoft Corporation. All rights reserved.
 cd $env:USERPROFILE\Downloads\
-Rename-Item .\Microsoft-ASR_UA_9.61.0.0_Windows_GA_18Mar2024_Release.exe MobilityServiceInstaller.exe
+Rename-Item .\Microsoft-ASR_UA_9.63.0.0_Windows_GA_21Oct2024_Release.exe MobilityServiceInstaller.exe
 .\MobilityServiceInstaller.exe /q /x:C:\Temp\Extracted
 cd C:\Temp\Extracted
 ~~~
@@ -235,7 +259,7 @@ Log into the Linux VM with Azure Bastion and install the mobility service agent.
 
 ~~~bash
 mkdir MobSvcInstaller
-tar -C ./MobSvcInstaller -xvf /tmp/Microsoft-ASR_UA_9.61.0.0_RHEL8-64_GA_18Mar2024_Release.tar.gz
+tar -C ./MobSvcInstaller -xvf /tmp/Microsoft-ASR_UA_9.63.0.0_RHEL8-64_GA_21Oct2024_Release.tar.gz
 cd MobSvcInstaller
 sudo ./install -r MS -v VmWare -q -c CSLegacy # You need to specify VmWare as the platform also for physical servers.
 ~~~

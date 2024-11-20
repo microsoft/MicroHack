@@ -17,6 +17,8 @@ Provide a name for the business case and select a target location. For the migra
 
 ![image](./img/bc2.png)
 
+> [!IMPORTANT]
+> Please set location as "Sweden Central" instead of "West Europe"
 Wait for the business case creation to complete and click on the business case name to open it.
 
 > [!NOTE]

@@ -9,7 +9,7 @@ This Microhack scenario walks through the use of AI to optimize SAP workflows wi
 
 By integrating SAP with Microsoft Teams using Copilot Studio and Generative AI, you can significantly enhance productivity and streamline workflows. This blog will take you through the entire process of setting up a Copilot to interact with SAP data in Teams. We'll utilize the Power Platform and SAP OData Connector to achieve this integration. By following along you will create and configure a Copilot, test and deploy it within Teams, enable Generative AI, build automation flows, and create adaptive cards for dynamic data representation and even change data in SAP. 
 
-You can check the [Blog Post](https://techcommunity.microsoft.com/gxcuf89792/attachments/gxcuf89792/SAPApplications/1042/5/sap_product_adaptive_card_with_action.docx) for further details.
+This MicroHack is based on the Blog Post [SAP & Teams Integration with Copilot Studio and Generative AI](https://techcommunity.microsoft.com/blog/sapapplications/sap--teams-integration-with-copilot-studio-and-generative-ai/4213260), which you can check for further resources.
 
 ## **MicroHack Context**
 The solution consists of three main components: Copilot Studio, Power Automate Flow and SAP OData Connector.
@@ -19,10 +19,6 @@ The solution consists of three main components: Copilot Studio, Power Automate F
 The following diagram illustrates how these components work together to provide a seamless SAP and Teams integration experience.
 
 ![image](Images/architecture.png)
-
-Further resources:<BR>
-This MicroHack is based on the Blog Post [SAP & Teams Integration with Copilot Studio and Generative AI](https://techcommunity.microsoft.com/blog/sapapplications/sap--teams-integration-with-copilot-studio-and-generative-ai/4213260), which you can find further resources!
-
 
 ## **Objectives:**
 After completing this MicroHack you will:

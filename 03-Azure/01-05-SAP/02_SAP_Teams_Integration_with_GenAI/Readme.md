@@ -20,11 +20,9 @@ The following diagram illustrates how these components work together to provide 
 
 ![image](Images/architecture.png)
 
-Further resources:
-[sap_product_adaptive_card_draft.docx](https://techcommunity.microsoft.com/gxcuf89792/attachments/gxcuf89792/SAPApplications/1042/1/sap_product_adaptive_card_draft.docx) 
-[sap_product_adaptive_card.docx](https://techcommunity.microsoft.com/gxcuf89792/attachments/gxcuf89792/SAPApplications/1042/2/sap_product_adaptive_card.docx)
-[sap_product_adaptive_card_with_action.docx](https://techcommunity.microsoft.com/gxcuf89792/attachments/gxcuf89792/SAPApplications/1042/5/sap_product_adaptive_card_with_action.docx)
-[sap_product_adaptive_card.zip](https://techcommunity.microsoft.com/gxcuf89792/attachments/gxcuf89792/SAPApplications/1042/6/sap_product_adaptive_card.zip)
+Further resources:<BR>
+This MicroHack is based on the Blog Post [SAP & Teams Integration with Copilot Studio and Generative AI](https://techcommunity.microsoft.com/blog/sapapplications/sap--teams-integration-with-copilot-studio-and-generative-ai/4213260), which you can find further resources!
+
 
 ## **Objectives:**
 After completing this MicroHack you will:
@@ -122,7 +120,7 @@ Congratulations! You finished the MicroHack for SAP & Teams Integration with Cop
 Thank you for investing the time and see you next time!
 
 ## **Contributors**
-Michael Mergell [Github](https://github.com/mimergel) [Linkedin](https://de.linkedin.com/in/michaelmergell)
+Michael Mergell [Github](https://github.com/mimergel) [Linkedin](https://de.linkedin.com/in/michaelmergell) <BR>
 Maral Demirsecen [Github](https://github.com/marald44/) [Linkedin](https://de.linkedin.com/in/maral-demirsecen)
 
 

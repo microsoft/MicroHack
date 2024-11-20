@@ -13,9 +13,9 @@ You can check the [Blog Post](https://techcommunity.microsoft.com/gxcuf89792/att
 
 ## **MicroHack Context**
 The solution consists of three main components: Copilot Studio, Power Automate Flow and SAP OData Connector.
-•	Copilot Studio: is a web-based tool that allows you to create and manage conversational AI agents, called Copilots, that can interact with users through Microsoft Teams.
-•	 Power Automate Flow: is a tool that allows you to automate workflows between your applications.
-•	 SAP OData Connector: is a custom connector that enables you to connect to SAP systems using the OData protocol.
+* Copilot Studio: is a web-based tool that allows you to create and manage conversational AI agents, called Copilots, that can interact with users through Microsoft Teams.
+* Power Automate Flow: is a tool that allows you to automate workflows between your applications.
+* SAP OData Connector: is a custom connector that enables you to connect to SAP systems using the OData protocol.
 The following diagram illustrates how these components work together to provide a seamless SAP and Teams integration experience.
 
 ![image](Images/architecture.png)
@@ -28,48 +28,48 @@ Further resources:
 
 ## **Objectives:**
 After completing this MicroHack you will:
-•	Know how to build a custom Copilot.
-•	Understand the differences between actions and topics of Copilot.
-•	Know to connect Copilot with SAP OData system.
-•	Leverage Power Automate Flow and the SAP OData Connector to build a robust automated workflow. 
-•	Able to have a Copilot within Microsoft Teams.
-•	Able to access and update data in the SAP system from Microsoft Teams.
+* Know how to build a custom Copilot.
+* Understand the differences between actions and topics of Copilot.
+* Know to connect Copilot with SAP OData system.
+* Leverage Power Automate Flow and the SAP OData Connector to build a robust automated workflow. 
+* Able to have a Copilot within Microsoft Teams.
+* Able to access and update data in the SAP system from Microsoft Teams.
 
 ## **Challenges:**
 
 ### **Challenge 1 - Prerequisites and landing zone preparation**
 #### Goal
-•	To ensure you have access to the Power Platform and to an SAP system.
+* To ensure you have access to the Power Platform and to an SAP system.
 
 #### Actions
 You can leverage the licenses and SAP systems that are available in your company, or alternatively you can use a trial license for the Power Platform and a public SAP demo system.
 
 #### Success criteria
-•	You have successfully accessed both the Power Platform and to an SAP system
+* You have successfully accessed both the Power Platform and to an SAP system
 
 #### Learning resources
-•	[What is Power Platform?](https://learn.microsoft.com/en-us/power-platform/)
-•	[Creating SAP Gateway Demo System](https://developers.sap.com/tutorials/gateway-demo-signup.html)
+* [What is Power Platform?](https://learn.microsoft.com/en-us/power-platform/)
+* [Creating SAP Gateway Demo System](https://developers.sap.com/tutorials/gateway-demo-signup.html)
 
 #### Solution
-•	Power Platform Access: [Power Platform Access Trial license](https://learn.microsoft.com/en-us/power-apps/maker/signup-for-powerapps)
-•	SAP System Access: [Request SAP Gateway Demo System ES5 Login](https://developers.sap.com/tutorials/gateway-demo-signup.html) 
+* Power Platform Access: [Power Platform Access Trial license](https://learn.microsoft.com/en-us/power-apps/maker/signup-for-powerapps)
+* SAP System Access: [Request SAP Gateway Demo System ES5 Login](https://developers.sap.com/tutorials/gateway-demo-signup.html) 
 
 ### **Challenge 2 – Create a Copilot**
 #### Goal
-•	To have a custom Copilot connected to SAP system and is accessible within the Microsoft Teams.
+* To have a custom Copilot connected to SAP system and is accessible within the Microsoft Teams.
 
 #### Actions
-•	Create a Copilot
-•	Setup Flow + Connector
-•	Test the flow
-•	Connect the Copilot with the Flow.
-•	Test the Copilot in the test pane
-•	Add the Copilot to Teams
+* Create a Copilot
+* Setup Flow + Connector
+* Test the flow
+* Connect the Copilot with the Flow.
+* Test the Copilot in the test pane
+* Add the Copilot to Teams
 
 #### Success criteria
-•	A working Copilot is created that can interact with your SAP system and performing actions as instructed.
-•	The Copilot is available in Teams, and users can interact with it directly within a Teams channel.
+* A working Copilot is created that can interact with your SAP system and performing actions as instructed.
+* The Copilot is available in Teams, and users can interact with it directly within a Teams channel.
 
 #### Learning resources
 [How to Build a Custom Copilot](https://learn.microsoft.com/en-us/power-virtual-agents/)
@@ -80,18 +80,18 @@ You can leverage the licenses and SAP systems that are available in your company
 
 ### **Challenge 3 – Use Adaptive Cards to present SAP information**
 #### Goal
-•	Design and implement adaptive cards that display dynamic content.
+* Design and implement adaptive cards that display dynamic content.
 
 #### Actions
-•	Create a Topic “SAP Product Data”
-•	Create a Flow to get SAP product details
-•	Call the Flow from the Topic
-•	Add error handling when no data is found
-•	“Parse value” the Flow Output
-•	Adaptive Card with SAP Data
+* Create a Topic “SAP Product Data”
+* Create a Flow to get SAP product details
+* Call the Flow from the Topic
+* Add error handling when no data is found
+* “Parse value” the Flow Output
+* Adaptive Card with SAP Data
 
 #### Success criteria
-•	Adaptive cards are integrated with the Copilot in Teams, and users can interact with them to update or view SAP data.
+* Adaptive cards are integrated with the Copilot in Teams, and users can interact with them to update or view SAP data.
 
 #### Learning resources
 [Designing Adaptive Cards in Teams](https://learn.microsoft.com/en-us/microsoftteams/platform/task-modules-and-cards/cards/design-effective-cards?tabs=design)
@@ -101,15 +101,15 @@ You can leverage the licenses and SAP systems that are available in your company
 
 ### **Challenge 4 – Change Data within SAP**
 #### Goal
-•	To modify data within SAP based on user input from Teams.
+* To modify data within SAP based on user input from Teams.
 
 #### Actions
-•	Add “Ask with adaptive card” Node
-•	Create “Update SAP Product Details” Flow
-•	Update the Copilot Topic to call the update flow
+* Add “Ask with adaptive card” Node
+* Create “Update SAP Product Details” Flow
+* Update the Copilot Topic to call the update flow
 
 #### Success criteria
-•	The Copilot can successfully update specific SAP data fields as directed by users through Teams.
+* The Copilot can successfully update specific SAP data fields as directed by users through Teams.
 
 #### Learning resources
 [SAP on Power Platform](https://learn.microsoft.com/en-us/power-platform/sap/overview)

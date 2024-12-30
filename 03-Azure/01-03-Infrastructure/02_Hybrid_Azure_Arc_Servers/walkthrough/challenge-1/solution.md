@@ -28,7 +28,7 @@ Sign in to the [Azure Portal](https://portal.azure.com/).
 ### Task 4: Prepare on-prem Server OS
 
 * Have a server, windows or linux ready, perhaps on your own laptop/notebook 
-* For windows, please use Windows Server 2019 or 2022 with the latest patch level. 💡 ATTENTION: Use Windows Update to apply the latest patch level!!
+* For windows, please use Windows Server 2025 with the latest patch level. 💡 ATTENTION: Use Windows Update to apply the latest patch level!!
 
   [Supported operating systems @ Connected Machine agent prerequisites - Azure Arc | Microsoft Docs](https://docs.microsoft.com/en-us/azure/azure-arc/servers/prerequisites#supported-operating-systems)
 	
@@ -54,11 +54,12 @@ With these prerequisites in place, we can focus on building the differentiated k
 
 * Onboard the recent installed or prepared Windows Server OS to Azure Arc, by using the documented steps
 1. Generate the installation script from the Azure portal [Link](https://learn.microsoft.com/en-us/azure/azure-arc/servers/onboard-service-principal#generate-the-installation-script-from-the-azure-portal)
+
+*Please note: As not all Azure Arc features are implemented in Germany West Central region, we highly recommended to use West Europe region to onboard your VMs at the time of writing!*
+
 * Step by step
 ![image](./img/1.png)
 ![image](./img/2.png)
-![image](./img/3.png)
-![image](./img/4.png)
 ![image](./img/5.png)
 ![image](./img/6.png)
 2. Add the passphrase for the service principal the downloaded script
@@ -106,18 +107,26 @@ With these prerequisites in place, we can focus on building the differentiated k
 3. Generate the installation script from the Azure portal [Link](https://learn.microsoft.com/en-us/azure/azure-arc/servers/onboard-service-principal#generate-the-installation-script-from-the-azure-portal)
 
 ![image](./img/28.png)
-![image](./img/29.png)
-![image](./img/30.png)
 ![image](./img/31.png)
 ![image](./img/32.png)
-4. Add the passphrase for the service principal the downloaded script
-![image](./img/33.png)
-5. Connect to Linux Server via PowerShell SSH [Link] (https://devblogs.microsoft.com/powershell/using-the-openssh-beta-in-windows-10-fall-creators-update-and-windows-server-1709/)
-* Use the account and password from setup
 
-![image](./img/34.png)
+4. Connect to Linux server via SSH [Link] (https://devblogs.microsoft.com/powershell/using-the-openssh-beta-in-windows-10-fall-creators-update-and-windows-server-1709/)
+
+* Use the account and password from setup:
+
+![image](./img/33.png)
+
+5. Open your favorite editor in Linux (i.e. sudo vim onboarding.sh) and paste the downloaded onboarding script for linux, replace the service principal secret according to your own service principal secret and save the script:
+```shell
+sudo vim onboarding.sh
+sudo chmod +x ./onboarding.sh
+```
+
 6. run the script [Link](https://learn.microsoft.com/en-us/azure/azure-arc/servers/onboard-portal#install-with-the-scripted-method)
-* Copy step by step the script to the SSH console
+```shell
+sudo ./onboarding.sh
+```
+
 7. Check in the Azure portal that the Server OS is visible.
 ![image](./img/35.png)
 

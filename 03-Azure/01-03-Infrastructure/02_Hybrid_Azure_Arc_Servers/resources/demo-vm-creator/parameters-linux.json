@@ -77,7 +77,7 @@
             "value": "Delete"
         },
         "virtualMachineSize": {
-            "value": "Standard_D2s_v3"
+            "value": "Standard_DS1_v2"
         },
         "nicDeleteOption": {
             "value": "Delete"
@@ -86,7 +86,7 @@
             "value": false
         },
         "adminUsername": {
-            "value": "mhadminyes"
+            "value": "mhadmin"
         },
         "adminPassword": {
             "value": null

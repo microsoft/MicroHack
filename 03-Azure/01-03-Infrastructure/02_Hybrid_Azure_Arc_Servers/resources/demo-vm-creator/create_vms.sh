@@ -70,8 +70,10 @@ do
 
     # Run the reconfig script to disable the Azure Guest Agent
     if [ $type != "linux" ]; then
+        echo "Running reconfig-win.ps1 on $vmName"
         az vm run-command create --name reconfigWin$i --vm-name $vmName -g $resourceGroupName --location $location --script @reconfig-win.ps1 --async-execution
     else
+        echo "Running reconfig-ubuntu.sh on $vmName"
         az vm run-command invoke -g $resourceGroupName -n $vmName --command-id RunShellScript --scripts @reconfig-ubuntu.sh --no-wait
     fi
 

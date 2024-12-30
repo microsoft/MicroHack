@@ -40,7 +40,7 @@ Sign in to the [Azure Portal](https://portal.azure.com/).
 
 * If you need to install and deploy your own server OS from scratch, then, download the following ISO files and save them on your own PC / Environment with your preferred Hypervisor e.g. Hyper-V or Virtualization Client (Windows 10/11 Hyper-V or Virtual Box).
   * [Ubuntu](https://ubuntu.com/download)
-  * [Windows Server 2022](https://www.microsoft.com/en-us/evalcenter/download-windows-server-2022)
+  * [Windows Server 2025](https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2025)
 
 * Install from the downloaded ISO your preferred OS. 
 
@@ -69,7 +69,7 @@ With these prerequisites in place, we can focus on building the differentiated k
 
 ### Task 6: Onboard Linux Server OS to Azure Arc
 
-* Onboard the recent installed or prepared Linux Server OS to Azure Arc, by using the documented steps or create a new VM based on the following steps
+* Onboard the recently installed or prepared Linux Server OS to Azure Arc, by using the documented steps or create a new VM based on the following steps
 1. Create Hyper-V VM for Linux
 
 * Step by step

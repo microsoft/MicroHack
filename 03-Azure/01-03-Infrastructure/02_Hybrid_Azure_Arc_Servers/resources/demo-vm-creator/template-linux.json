@@ -67,12 +67,6 @@
         },
         "adminPassword": {
             "type": "secureString"
-        },
-        "patchMode": {
-            "type": "string"
-        },
-        "enableHotpatching": {
-            "type": "bool"
         }
     },
     "variables": {
@@ -169,9 +163,9 @@
                         "deleteOption": "[parameters('osDiskDeleteOption')]"
                     },
                     "imageReference": {
-                        "publisher": "MicrosoftWindowsServer",
-                        "offer": "WindowsServer",
-                        "sku": "2019-datacenter-gensecond",
+                        "publisher": "canonical",
+                        "offer": "ubuntu-24_04-lts", 
+                        "sku": "server",
                         "version": "latest"
                     }
                 },
@@ -192,16 +186,12 @@
                     "computerName": "[parameters('virtualMachineComputerName')]",
                     "adminUsername": "[parameters('adminUsername')]",
                     "adminPassword": "[parameters('adminPassword')]",
-                    "windowsConfiguration": {
-                        "enableAutomaticUpdates": true,
-                        "provisionVmAgent": true,
+                    "linuxConfiguration": {
                         "patchSettings": {
-                            "enableHotpatching": "[parameters('enableHotpatching')]",
-                            "patchMode": "[parameters('patchMode')]"
+                            "patchMode": "ImageDefault"
                         }
                     }
-                },
-                "licenseType": "Windows_Server"
+                }
             }
         }
     ],

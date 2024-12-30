@@ -12,7 +12,10 @@
   - [Challenge 2 - Azure Monitor integration](#challenge-2---azure-monitor-integration)
   - [Challenge 3 - Access Azure resources using Managed Identities from your on-premises servers](#challenge-3---access-azure-resources-using-managed-identities-from-your-on-premises-servers)
   - [Challenge 4 - Microsoft Defender for Cloud integration with Azure Arc](#challenge-4---microsoft-defender-for-cloud-integration-with-azure-arc)
-  - [Challenge 5 - Azure Automanage Machine Configuration](#challenge-5---azure-automanage-machine-configuration)
+  - [Challenge 5 - Best Practices assessment for Windows Server](#challenge-5---best-practices-assessment-for-windows-server)
+  - [Challenge 6 - Activate ESU for Windows Server 2012 R2 via Arc (optional)](#challenge-6---activate-esu-for-windows-server-2012-r2-via-arc---optional)
+  - [Challenge 7 - Azure Automanage Machine Configuration (optional)](#challenge-7---azure-automanage-machine-configuration---optional)
+  
 - [**Contributors**](#contributors)
 
 ## MicroHack introduction
@@ -205,16 +208,32 @@ Managing secrets, credentials or certificates to secure communication between di
 
 [Solution Steps](./walkthrough/challenge-4/solution.md)
 
-## Challenge 5 - Azure Automanage Machine Configuration
+## Challenge 5 - Best Practices assessment for Windows Server
+
+### Goal
+### Actions
+### Success criteria
+### Learning resources
+### Solution - Spoilerwarning
+
+## Challenge 6 - Activate ESU for Windows Server 2012 R2 via Arc - optional
+
+### Goal
+### Actions
+### Success criteria
+### Learning resources
+### Solution - Spoilerwarning
+
+## Challenge 7 - Azure Automanage Machine Configuration - optional
 
 ### Goal
 
-Challenge 5 is all about interacting with the Client Operating System. We will have a look at Machine Configurations as the final step of this journey.
+This challenge is about interacting with the client operating system. We will have a look at Machine Configurations as the final step of this journey.
 
 ### Actions
 
-* Create all necessary Azure Resources
-  * Azure Storage Account
+* Create all necessary Azure resources
+  * Azure Storage account
 * Setup a Policy that checks if the user "FrodoBaggins" is part of the local administrators group
 * Setup a Custom Machine Configuration, for the Windows Server, that creates a registry key in ``` HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment\ ```
 
@@ -233,7 +252,7 @@ Challenge 5 is all about interacting with the Client Operating System. We will h
 
 ### Solution - Spoilerwarning
 
-[Solution Steps](./walkthrough/challenge-5/solution.md)
+[Solution Steps](./walkthrough/challenge-7/solution.md)
 
 ## Finish
 

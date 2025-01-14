@@ -1,49 +1,180 @@
-# Microhack - Intro To Oracle DB Migration to Azure
+# **Microhack - Intro To Oracle DB Migration to Azure**
 
-## Important Notice
+- [**MicroHack introduction**](#MicroHack-introduction)
+- [**MicroHack context**](#microhack-context)
+- [**Objectives**](#objectives)
+- [**MicroHack Challenges**](#microhack-challenges)
+- [**Contributors**](#contributors)
+# MicroHack introduction
 
-This project is currently under development and is subject to change until the first official release, which is expected by the end of 2024. Please note that all content, including instructions and resources, may be updated or modified as the project progresses.
+This MicroHack scenario will help you get hands-on experience migrating Oracle databases from on-premises to different Azure Services.
 
+![image](Path to the high level architecture )
 
-## Introduction
+This lab is not a full explanation of .... as a technology, please consider the following articles required pre-reading to build foundational knowledge.
 
-This intro level microhack (hackathon) will help you get hands-on experience migrating Oracle databases from on-premises to different Azure Services.
+Optional (read this after completing this lab to take your learning even deeper!)
 
-## Learning Objectives
-In this microhack you will solve a common challenge for companies migrating to the cloud: migrating Oracle databases to Azure. The application using the database is a sample e-commerce [application](https://github.com/pzinsta/pizzeria) written in JavaScript. It will be configured to use Oracle Database Express Edition [Oracle XE]. 
+Describe the scenario here...
 
-The participants will learn how to:
+# MicroHack context
 
-1. Perform a pre-migration assessment of the databases looking at size, database engine type, database version, etc.
-1. Use offline tools to copy the databases to Azure OSS databases
-1. Use the Azure Database Migration Service to perform an online migration (if applicable)
-1. Do cutover and validation to ensure the application is working properly with the new configuration
-1. Use a private endpoint for Azure OSS databases instead of a public IP address for the database
-1. Configure a read replica for the Azure OSS databases
+In this microhack you will solve a common challenge for companies migrating to the cloud: migrating Oracle databases to Azure.  
 
-## Challenges
-- Challenge 0: **[Pre-requisites - Setup Environment and Prerequisites!](Student/00-prereqs.md)**
-   - Prepare your environment to run the sample application
-- Challenge 1: **[Discovery and assessment](Student/01-discovery.md)**
-   - Discover and assess the application's PostgreSQL/MySQL/Oracle databases
-- Challenge 2: Oracle to IaaS migration
-- Challenge 3: Oracle to PaaS migration
-- Challenge 4: Oracle to Azure OCI migration
-- Challenge 5: Oracle to Oracle Database on Azure migration
+# Objectives
 
-## Prerequisites
+After completing this MicroHack you will:
+
+- Perform a pre-migration assessment of the databases looking at size, database engine type, database version, etc.
+- Use Tools to perform an online migration
+- Do cutover and validation to ensure the application is working properly with the new configuration
+ 
+# MicroHack challenges
+
+## General prerequisites
+
+This MicroHack has a few but important prerequisites
+
+In order to use the MicroHack time most effectively, the following tasks should be completed prior to starting the session.
+
+With these pre-requisites in place, we can focus on building the differentiated knowledge in ... that is required when working with the product, rather than spending hours repeating relatively simple tasks such as setting up....
+
+In summary:
+
+- Azure Subscription 
+- Resource Group 
+- Service 1
+- Service 2  
+
+Permissions for the deployment: 
+- Contributor on your Resource Group
+- Other necessary permissions
+- 
 
 - Access to an Azure subscription with Owner access
    - If you don't have one, [Sign Up for Azure HERE](https://azure.microsoft.com/en-us/free/)
    - Familiarity with Azure Cloud Shell
 - [**Visual Studio Code**](https://code.visualstudio.com/) (optional)
+- 
+- 
 
-## Repository Contents
-- `../Coach`
-  - [Lecture presentation](Coach/OSS-DB-What-the-Hack-Lecture.pptx?raw=true) with short presentations to introduce each challenge
-  - Example solutions and coach tips to the challenges (If you're a student, don't cheat yourself out of an education!)
-- `../Student/Resources`
-   - Pizzeria application environment setup
+
+## Challenge 0: **[Pre-requisites - Setup Environment and Prerequisites!](Student/00-prereqs.md)**
+
+Prepare your environment to run the sample application
+
+## Challenge 1: **[Discovery and assessment](Student/01-discovery.md)**
+
+### Goal 
+
+Discover and assess the application's PostgreSQL/MySQL/Oracle databases
+
+### Actions
+
+* Write down the first 3 steps....
+* Set up and enable...
+* Perform and monitor....
+
+### Success criteria
+
+* You have deployed ....
+* You successfully enabled ...
+* You have successfully setup ....
+* You have successfully ....
+
+### Learning resources
+* Link to https://learn.microsoft.com/en-us/azure/....
+
+### Solution - Spoilerwarning
+
+[Solution Steps](./walkthrough/challenge-1/solution.md)
+
+
+## Challenge 2: Oracle to IaaS migration
+
+### Goal
+
+Migrate the Oracle database to an Azure VM
+
+### Actions
+
+* Write down the first 3 steps....
+* Set up and enable...
+* Perform and monitor....
+
+### Success criteria
+
+* You have deployed ....
+* You successfully enabled ...
+* You have successfully setup ....
+* You have successfully ....
+
+### Learning resources
+* Link to https://learn.microsoft.com/en-us/azure/....
+
+### Solution - Spoilerwarning
+
+[Solution Steps](./walkthrough/challenge-1/solution.md)
+
+## Challenge 3: Oracle to PaaS migration
+
+### Goal
+
+Migrate the Oracle database to an Azure PaaS service
+
+### Actions
+
+* Write down the first 3 steps....
+* Set up and enable...
+* Perform and monitor....
+
+### Success criteria
+
+* You have deployed ....
+* You successfully enabled ...
+* You have successfully setup ....
+* You have successfully ....
+
+### Learning resources
+* Link to https://learn.microsoft.com/en-us/azure/....
+
+### Solution - Spoilerwarning
+
+[Solution Steps](./walkthrough/challenge-1/solution.md)
+
+## Challenge 4: Oracle to Oracle Database at Azure migration
+
+### Goal
+
+Migrate the Oracle database to an Oracle Database at Azure
+
+### Actions
+
+* Write down the first 3 steps....
+* Set up and enable...
+* Perform and monitor....
+
+### Success criteria
+
+* You have deployed ....
+* You successfully enabled ...
+* You have successfully setup ....
+* You have successfully ....
+
+### Learning resources
+* Link to https://learn.microsoft.com/en-us/azure/....
+
+### Solution - Spoilerwarning
+
+[Solution Steps](./walkthrough/challenge-1/solution.md)
+
+## Finish
+
+Congratulations! You finished the MicroHack *Oracle DB Migration to Azure*. We hope you had the chance to learn about the how to implement a successful...
+If you want to give feedback please dont hesitate to open an Issue on the repository or get in touch with one of us directly.
+
+Thank you for investing the time and see you next time!
 
 ## Contributors
-
+* Christian Pino  [GitHub](https://github.com/nilsbankert); [LinkedIn](https://www.linkedin.com/in/nilsbankert/)
+* Maik Sandman

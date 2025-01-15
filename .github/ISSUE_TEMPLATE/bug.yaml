@@ -32,6 +32,7 @@ body:
       - 03-Azure/01-03-Infrastructure/05_Azure_VMware_Solution
       - 03-Azure/01-03-Infrastructure/06_Migration_Datacenter_Modernization
       - 03-Azure/01-03-Infrastructure/07_Azure_Monitor
+      - 03-Azure/01-03-Infrastructure/10_Oracle_on_Azure
       - 03-Azure/01-04- AI/01_Azure_OpenAI_Service
       - 04-Microsoft-365
   validations:

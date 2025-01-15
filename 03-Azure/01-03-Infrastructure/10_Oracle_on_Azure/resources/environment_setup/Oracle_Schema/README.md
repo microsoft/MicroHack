@@ -12,9 +12,9 @@ __order and purpose of the scripts__
 1. data_management_queries.sql  - consist different queries to cleanup the database schema if required
                                 - calculate database volume
                                 - list changed data inside the tables executed by start_datagenerator.sql
-2. microhack_schema.sql         - create the data model inside the Oracle database for the migration tests
-3. initial_dataload.sql         - create a test dataset of 10000 records. The number of records can be changed in the loop (FOR i IN 1..10000 LOOP)
-4. start_datagenerator.sql      - to start the random changes (insert,update,delete) inside the database schema with an frequence of 2 minutes
+2. setup01_schema.sql         - create the data model inside the Oracle database for the migration tests
+3. setup02_initial_dataload.sql         - create a test dataset of 10000 records. The number of records can be changed in the loop (FOR i IN 1..10000 LOOP)
+4. setup03_start_datagenerator.sql      - to start the random changes (insert,update,delete) inside the database schema with an frequence of 2 minutes
  
 
 

@@ -35,7 +35,6 @@ module "avm-res-compute-virtualmachine" {
 
   managed_identities = {
     system_assigned            = var.aad_system_assigned_identity
-    user_assigned_resource_ids = [each.value.user_assigned_identity_id]
   }
 
   role_assignments = each.value.role_assignments

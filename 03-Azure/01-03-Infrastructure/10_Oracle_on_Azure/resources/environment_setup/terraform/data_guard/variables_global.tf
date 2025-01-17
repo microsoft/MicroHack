@@ -74,10 +74,6 @@ variable "vm_os_disk" {
   }
 }
 
-variable "vm_user_assigned_identity_id" {
-  description = "The ID of the user assigned identity to be used for the virtual machine"
-}
-
 variable "jit_wait_for_vm_creation" {
   description = "The duration to wait for the virtual machine to be created before creating the JIT policy"
   default     = "60s"

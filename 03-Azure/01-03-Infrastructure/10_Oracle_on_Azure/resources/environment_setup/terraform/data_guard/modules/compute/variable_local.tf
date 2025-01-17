@@ -77,7 +77,6 @@ locals {
       os_disk                          = var.vm_os_disk
       availability_zone                = var.availability_zone
       enable_telemetry                 = var.enable_telemetry
-      user_assigned_identity_id        = var.vm_user_assigned_identity_id
       role_assignments                 = var.role_assignments
       skip_service_principal_aad_check = var.skip_service_principal_aad_check
 

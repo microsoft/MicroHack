@@ -273,10 +273,6 @@ variable "public_key" {
   type        = string
 }
 
-variable "vm_user_assigned_identity_id" {
-  description = "The resource id of the user assigned identity"
-  type        = string
-}
 
 variable "enable_ultradisk" {
   description = "Enable Ultra Disk"

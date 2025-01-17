@@ -43,9 +43,6 @@ module "vm_primary" {
   availability_zone = 1
 
 
-
-  vm_user_assigned_identity_id = var.vm_user_assigned_identity_id
-
   vm_os_disk = {
     name                   = "osdisk-primary"
     caching                = "ReadWrite"
@@ -97,7 +94,6 @@ module "vm_secondary" {
   vm_sku              = var.vm_sku
 
   vm_source_image_reference     = var.vm_source_image_reference
-  vm_user_assigned_identity_id  = var.vm_user_assigned_identity_id
   aad_system_assigned_identity  = true
   public_ip_address_resource_id = module.network.db_server_puplic_ip_resources[1].id
 

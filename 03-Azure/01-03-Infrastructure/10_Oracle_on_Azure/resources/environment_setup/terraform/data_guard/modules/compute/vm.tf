@@ -37,6 +37,7 @@ module "avm-res-compute-virtualmachine" {
     system_assigned            = var.aad_system_assigned_identity
   }
 
+
   role_assignments = each.value.role_assignments
 }
 

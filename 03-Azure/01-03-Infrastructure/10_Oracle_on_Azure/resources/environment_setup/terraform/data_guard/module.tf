@@ -76,6 +76,17 @@ module "vm_primary" {
       auto_upgrade_minor_version = true
       automatic_upgrade_enabled  = true
       settings                   = null
+    },
+    custom_script_extension_linux = {
+      name = "CustomScriptExtension"
+      publisher = "Microsoft.Azure.Extensions"
+      type = "CustomScript"
+      type_handler_version = "2.0"
+      settings =<<SETTINGS
+      {
+        "commandToExecute": "sudo yum install -y gcc openssl-devel libffi-devel bzip2-devel wget && cd /opt && sudo wget https://www.python.org/ftp/python/3.8.9/Python-3.8.9.tgz && sudo tar xzvf Python-3.8.9.tgz && cd Python-3.8.9/ && sudo ./configure --enable-optimizations && sudo make altinstall"
+      }
+      SETTINGS
     }
   }
 
@@ -138,6 +149,17 @@ module "vm_secondary" {
       auto_upgrade_minor_version = true
       automatic_upgrade_enabled  = true
       settings                   = null
+    },
+    custom_script_extension_linux = {
+      name = "CustomScriptExtension"
+      publisher = "Microsoft.Azure.Extensions"
+      type = "CustomScript"
+      type_handler_version = "2.0"
+      settings =<<SETTINGS
+      {
+        "commandToExecute": "sudo yum install -y gcc openssl-devel libffi-devel bzip2-devel wget && cd /opt && sudo wget https://www.python.org/ftp/python/3.8.9/Python-3.8.9.tgz && sudo tar xzvf Python-3.8.9.tgz && cd Python-3.8.9/ && sudo ./configure --enable-optimizations && sudo make altinstall"
+      }
+      SETTINGS
     }
   }
   #ToDo: Pending

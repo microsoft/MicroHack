@@ -8,7 +8,8 @@
 - [**Objectives**](#objectives)
 - [**MicroHack Challenges**](#microhack-challenges)
   - [General prerequisites](#general-prerequisites)
-  - [Challenge 0 - Understand the Disaster Recovery terms and define a strategy](#challenge-0---understand-the-disaster-recovery-terms-and-define-a-strategy)
+  - [General Prerequisites & Setup](./challenges/00_challenge.md)
+  - [Challenge 0 - Understand the Disaster Recovery terms and define a strategy](#challenge-0---understand-the-disaster-recovery-dr-terms-and-define-a-dr-strategy)
   - [Challenge 1 - Prerequisites and landing zone preperation](#challenge-1---prerequisites-and-landing-zone-preperation)
   - [Challenge 2 - Protect in Azure - Backup / Restore](#challenge-2---protect-in-azure---backup--restore)
   - [Challenge 3 - Protect in Azure with Disaster Recovery](#challenge-3---protect-in-azure-with-disaster-recovery)
@@ -67,18 +68,41 @@ This MicroHack has a few but important prerequisites to be understood before sta
 
 ## Challenge 0 - Understand the Disaster Recovery (DR) terms and define a DR strategy
 
-If you have already worked at a senior level or have been working in IT for many years, you may be able to skip this intro challenge.
+# Contoso Ltd - Business Continuity and Disaster Recovery (BCDR) Strategy
 
-The DR terms and strategy should be defined in every organization, and most importantly, is that the Business Continuity Management and all the necessary steps for disaster recovery are regularly tested.
+## Background
+Contoso Ltd is a global company that relies on advanced technology to manage its operations efficiently. Their business applications, all hosted in the Azure cloud, are crucial to their daily functions and overall success. These applications power a wide range of essential business processes:
+- **App 1:** [describe app functionality]
+- **App 2:** [describe app functionality]
+- **App 3:** [describe app functionality]
 
-### Goal
+Leaders at Contoso Ltd understand that any downtime can result in significant financial losses and operational disruptions. Therefore, the company has mandated a thorough review of its Business Continuity and Disaster Recovery (BCDR) strategies to strike a balance between business continuity, customer satisfaction, and operational costs. The goal is to design and implement recovery plans that can swiftly restore services and minimize downtime in the event of unforeseen disasters.
 
-The goal from this challenge is to help you comprehend the complexities of business continuity management and familiarize yourself with its key terms. In second place, it is to support you to define a strategy and to put yourself into different roles to view the requirements from different perspectives.
+## Scenario Overview
+A natural disaster struck the region hosting Contoso applications on Azure one Friday evening, causing outages in many services and leading to a cascading failure of all Contoso applications. The sudden disruption impacted essential business functions, leaving the company to grapple with significant financial losses and operational chaos. Customers and stakeholders were left in a state of uncertainty as they awaited updates on service restoration. The IT team faced immense pressure to rapidly deploy recovery strategies to minimize downtime, restore critical operations, and ensure that such an incident would not recur in the future.
 
-1. What exactly is the difference between Disaster Recovery & Business Continuity?
-2. Who is responsible for BCDR?
-3. Is there a difference between High Availability & Disaster Recovery?
-4. Do I really need Backup & Disaster Recovery?
+Participants must design and implement recovery strategies to meet business targets while considering costs for high availability.
+
+## Application Overview
+| Application | Business Function | Criticality | SLA | RTO | RPO | Downtime Cost |
+|-------------|-------------------|-------------|-----|-----|-----|---------------|
+| App1        | TBD               | Critical    | 99.995% | 1 hour | 10 minutes | $50,000/hour |
+| App2        | TBD               | High        | 99.95%  | 2 hours | 15 minutes | $25,000/hour |
+| App3        | TBD               | Medium      | 99.9%   | 6 hours | 4 hours    | $10,000/hour |
+
+## Recovery Costs for High Availability
+| Application | Cost of RTO Compliance | Cost of RPO Compliance | Cost of SLA Compliance | Fully Highly Available Cost |
+|-------------|------------------------|------------------------|------------------------|-----------------------------|
+| App1        | $100,000               | $50,000                | $75,000                | $200,000                    |
+| App2        | $75,000                | $35,000                | $50,000                | $125,000                    |
+| App3        | $50,000                | $20,000                | $25,000                | $75,000                     |
+
+## Challenge Objective
+### Actions
+Participants must:
+1. Prioritize recovery of applications based on their criticality and business impact.
+2. Decide which parts of the system to make highly available (HA) based on financial constraints.
+3. Calculate the trade-offs between downtime costs and HA investments.
 
 ### Actions
 

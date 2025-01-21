@@ -55,7 +55,7 @@ Below an architecure diagram displays the setup. Tutorials and documentation tha
 
 # Lab Environment with Virtual Machines
 
-![Architecture](../img/architecture_01.png)
+![Architecture](../img/architecture01.png)
 
 ### Deployment
 

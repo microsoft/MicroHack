@@ -1,0 +1,100 @@
+# defaults for oracle installation
+
+#
+# oracle connection settings
+#
+
+# ORACLE_BASE parent, {{ oracle_path }}/oracle
+oracle_path: /u01/app
+
+# ORACLE_SID
+oracle_db_name: ORCL
+
+
+#
+# oracle system user
+#
+
+# oracle user username
+oracle_user: oracle
+
+# hashed password for the oracle user
+# python -c 'import crypt; print crypt.crypt("oracle", "$1$salt$")'
+oracle_pass: $1$salt$6hY7SFGTovD5BRJ.4zYAd1
+oracle_pass_raw: oracle
+
+# primary oracle group
+oracle_group: oinstall
+
+# DBA group
+oracle_dba_group: dba
+oracle_backupdba_group: backupdba
+oracle_oper_group: oper
+oracle_dgdba_group: dgdba
+oracle_kmdba_group: kmdba
+oracle_racdba_group: racdba
+
+oracle_groups: wheel,dba,backupdba,oper,dgdba,kmdba,racdba
+
+oracle_patch_number: 35319490
+
+
+
+oracle_db_home: /u01/app/oracle/product/19.0.0/dbhome_1
+oracle_user: oracle
+createAsContainerDatabase: "FALSE"
+
+databaseConfigType:
+RACOneNodeServiceName:
+policyManaged:
+createServerPool:
+serverPoolName:
+cardinality:
+force:
+pqPoolName:
+pqCardinality:
+numberOfPDBs:
+pdbName:
+useLocalUndoForPDBs:
+pdbAdminPassword:
+nodelist:
+templateName: General_Purpose.dbc
+
+oracleHomeUserPassword:
+emConfiguration: DBEXPRESS
+emExpressPort: 5500
+runCVUChecks:
+
+omsHost:
+omsPort:
+emUser:
+emPassword:
+dvConfiguration:
+dvUserName:
+dvUserPassword:
+dvAccountManagerName:
+dvAccountManagerPassword:
+olsConfiguration:
+datafileJarLocation:
+
+datafileDestination:     #TODO: set et sunu default degerleri al
+recoveryAreaDestination: /u01/app/oracle/fast_recovery_area/{{ sid }}
+
+storageType: FS
+diskGroupName: #DATA
+asmsnmpPassword:
+recoveryGroupName: #ASM #RECO degistir
+characterSet: AL32UTF8
+nationalCharacterSet: UTF8
+registerWithDirService:
+dirServiceUserName:
+dirServicePassword:
+walletPassword:
+listeners:
+variablesFile:
+initParams:
+sampleSchema: "TRUE"
+memoryPercentage:
+databaseType: MULTIPURPOSE
+automaticMemoryManagement: "FALSE"
+totalMemory:

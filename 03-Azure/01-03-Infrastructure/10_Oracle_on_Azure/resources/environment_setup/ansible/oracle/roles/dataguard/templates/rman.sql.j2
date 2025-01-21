@@ -1,0 +1,22 @@
+ run {
+allocate channel prmy1 type disk;
+allocate channel prmy2 type disk;
+allocate channel prmy3 type disk;
+allocate channel prmy4 type disk;
+allocate auxiliary channel stby type disk;
+ 
+duplicate target database for standby from active database nofilenamecheck
+spfile
+  set db_unique_name='{{ sid }}DG1'
+  set control_files='{{ redo_log_filepath }}/{{ sid }}DG1/control01.ctl'
+  set audit_file_dest='/u01/app/oracle/admin/{{ sid }}DG1/adump'
+  set log_archive_max_processes='5'
+  set fal_server='{{ sid }}'
+  set log_archive_config='dg_config=({{ sid }},{{ sid }}DG1)'
+  set log_archive_dest_2='service={{ sid }} ASYNC valid_for=(ONLINE_LOGFILE,PRIMARY_ROLE) db_unique_name={{ sid }}'
+  set db_file_name_convert='{{ redo_log_filepath }}/{{ sid }}/','{{ redo_log_filepath }}/{{ sid }}DG1/'
+  set log_file_name_convert='{{ redo_log_filepath }}/{{ sid }}/','{{ redo_log_filepath }}/{{ sid }}DG1/'
+  set LOG_ARCHIVE_DEST_1='LOCATION=USE_DB_RECOVERY_FILE_DEST VALID_FOR=(ALL_LOGFILES,ALL_ROLES) DB_UNIQUE_NAME={{ sid }}DG1'
+;
+}
+

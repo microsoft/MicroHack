@@ -71,6 +71,78 @@ CREATE TABLE transformed_employees (
     bonus NUMBER(10, 2)
 );
 
+------------------------------------------------------------------------
+-- To achieve data replication with Change Data Capture (CDC) from Oracle Express Edition 21c 
+--to an Azure PostgreSQL Flexible Server, you can use a combination of Oracle 
+--triggers and a custom script to capture changes and replicate them to the 
+--PostgreSQL server. Since Oracle XE does not support built-in CDC, we will 
+--use triggers to capture changes and a script to apply these changes to the PostgreSQL server.
+--Step-by-Step Guide:
+--Create Audit Tables in Oracle XE: Create audit tables to capture changes 
+--(INSERT, UPDATE, DELETE) in the source tables.
+--
+--Create Triggers in Oracle XE: Create triggers on the source tables to log 
+--changes into the audit tables.
+--
+--Create a Script to Replicate Changes: Create a script to read changes from 
+--the audit tables and apply them to the PostgreSQL server.
+--
+--Schedule the Script: Schedule the script to run at regular intervals to 
+--ensure continuous replication.
+-- Create an audit table for employees
+CREATE TABLE employees_audit (
+    audit_id NUMBER,
+    operation VARCHAR2(10),
+    employee_id NUMBER,
+    first_name VARCHAR2(50),
+    last_name VARCHAR2(50),
+    email VARCHAR2(100),
+    hire_date DATE,
+    salary NUMBER(10, 2),
+    change_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (audit_id)
+);
+
+CREATE SEQUENCE employees_audit_seq
+START WITH 1
+INCREMENT BY 1
+NOCACHE
+NOCYCLE;
+
+
+-- Create a trigger to populate the audit_id using the sequence
+CREATE OR REPLACE TRIGGER trg_employees_audit_id
+BEFORE INSERT ON employees_audit
+FOR EACH ROW
+BEGIN
+    IF :NEW.audit_id IS NULL THEN
+        SELECT employees_audit_seq.NEXTVAL INTO :NEW.audit_id FROM dual;
+    END IF;
+END;
+/
+
+
+-- Create or replace the trigger for auditing changes in the employees table
+CREATE OR REPLACE TRIGGER trg_employees_audit
+AFTER INSERT OR UPDATE OR DELETE ON employees
+FOR EACH ROW
+BEGIN
+    IF INSERTING THEN
+        INSERT INTO employees_audit (operation, employee_id, first_name, last_name, email, hire_date, salary, change_time)
+        VALUES ('INSERT', :NEW.employee_id, :NEW.first_name, :NEW.last_name, :NEW.email, :NEW.hire_date, :NEW.salary, SYSTIMESTAMP);
+    ELSIF UPDATING THEN
+        INSERT INTO employees_audit (operation, employee_id, first_name, last_name, email, hire_date, salary, change_time)
+        VALUES ('UPDATE', :NEW.employee_id, :NEW.first_name, :NEW.last_name, :NEW.email, :NEW.hire_date, :NEW.salary, SYSTIMESTAMP);
+    ELSIF DELETING THEN
+        INSERT INTO employees_audit (operation, employee_id, first_name, last_name, email, hire_date, salary, change_time)
+        VALUES ('DELETE', :OLD.employee_id, :OLD.first_name, :OLD.last_name, :OLD.email, :OLD.hire_date, :OLD.salary, SYSTIMESTAMP);
+    END IF;
+END;
+/
+------------------------------------------------------------------------
+
+
+
 -- Table to store audit logs of changes to the departments and employees tables
 CREATE TABLE audit_log (
     audit_id NUMBER PRIMARY KEY,
@@ -237,7 +309,6 @@ END data_transform_pkg;
 commit;
 
 
-
 CREATE OR REPLACE PROCEDURE ingest_1_million_records IS
     v_employee_id NUMBER;
     v_first_name VARCHAR2(50);
@@ -345,6 +416,9 @@ BEGIN
 END;
 /
 
+-- Define a collection type
+CREATE OR REPLACE TYPE name_array AS TABLE OF VARCHAR2(50);
+/
 
 -- Create a procedure to randomly insert, update, and delete data records
 CREATE OR REPLACE PROCEDURE data_generator IS
@@ -368,7 +442,7 @@ CREATE OR REPLACE PROCEDURE data_generator IS
     v_iban VARCHAR2(34);
     v_swift_code VARCHAR2(11);
 
-    TYPE name_array IS TABLE OF VARCHAR2(50);
+    --TYPE name_array IS TABLE OF VARCHAR2(50);
    
     first_names name_array := name_array('John', 'Jane', 'Michael', 'Emily', 'Chris', 'Jessica', 'David', 'Sarah', 'James', 'Laura', 'Robert', 'Mary', 'William', 'Patricia', 'Linda', 'Barbara', 'Elizabeth', 'Jennifer', 'Maria', 'Susan');
     last_names name_array := name_array('Smith', 'Johnson', 'Williams', 'Jones', 'Brown', 'Davis', 'Miller', 'Wilson', 'Moore', 'Taylor', 'Anderson', 'Thomas', 'Jackson', 'White', 'Harris', 'Martin', 'Thompson', 'Garcia', 'Martinez', 'Robinson');

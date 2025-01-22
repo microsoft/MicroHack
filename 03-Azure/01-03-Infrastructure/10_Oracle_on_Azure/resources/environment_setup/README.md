@@ -72,6 +72,43 @@ You can connect to the virtual machine with ssh private key. While deploying res
 $ ssh -i ~/.ssh/mh-oracle-data-guard  oracle@<PUBLIC_IP_ADDRESS>
 
 
+# Configure Oracle Data Guard via Ansible
+
+On the compute source running Ubuntu or on Azure Cloud Shell, follow the steps given below:
+
+1. Switch to the oracle subdirectory:
+
+```bash
+cd ~/ansible/oracle
+```
+
+1. Create a new file called inventory and populate it with the following content. Replace `<hostname>` and `<Public IP address of the Azure VM created via terraform>` with the appropriate values before running the command:
+
+```bash
+cat > inventory <<EOF
+[ora-x1]
+vm-primary-0 ansible_host=<Public IP address of the primary node created via terraform or Bicep>  ansible_ssh_private_key_file=~/.ssh/mh-oracle-data-guard ansible_user=oracle
+[ora-x2]
+vm-secondary-0 ansible_host=<Public IP address of the secondary node created via terraform or Bicep>   ansible_ssh_private_key_file=~/.ssh/mh-oracle-data-guard ansible_user=oracle
+EOF
+```
+
+1. Start the ansible playbook
+
+```bash
+ansible-playbook playbook_dg.yml -i inventory --extra-vars "data_guard=yes"
+```
+
+(If you are prompted for "are you sure you want to continue connecting?", enter "yes")
+
+(If using Azure Cloud Shell, remember to refresh your browser by scrolling up or down, every 15 minutes or so since the shell times out after 20 minutes of inaction.)
+
+It is acceptable to see warnings highlighted in red.
+
+
+1. Once the installation and configuration completes, you will see a screen similar to the one below.
+
+
 
 ## Trademarks
 

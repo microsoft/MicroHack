@@ -1,0 +1,9 @@
+---
+- hosts: all
+  gather_facts: false
+  become: true
+  roles:
+  #- common
+  - dbca
+  - dataguard
+

@@ -32,4 +32,4 @@ Thank you for investing the time and see you next time!
 
 ---
 
-**[< BCDR Micro Hack - Home Page](../Readme.md)** | **[< Challenge 4 - Protect your Azure PaaS (Azure SQL Database and Storage Account) with Disaster Recovery](./03_challange.md)**
+**[< BCDR Micro Hack - Home Page](../Readme.md)** | **[< Challenge 4 - Protect your Azure PaaS with Disaster Recovery](./04_challenge.md)**

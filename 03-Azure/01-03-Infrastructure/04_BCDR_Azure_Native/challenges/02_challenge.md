@@ -44,6 +44,6 @@ In challenge 2, you will successfully onboard your Windows and Linux Virtual Mac
 
 ---
 
-**[> Next Challenge 3 - Protect in Azure with Disaster Recovery](./03_challange.md)** |
+**[> Next Challenge 3 - Protect in Azure with Disaster Recovery](./03_challenge.md)** |
 
 **[< Previous Challenge 1 - Prerequisites and landing zone preparation](./01_challenge.md)** 

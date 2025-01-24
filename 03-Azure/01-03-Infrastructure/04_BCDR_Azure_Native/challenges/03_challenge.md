@@ -28,6 +28,6 @@ In Challenge 3, you will learn how to protect Azure VMs with Azure Site Recovery
 
 ---
 
-**[> Next Challenge 4 - Protect in Azure with Disaster Recovery](./03_challange.md)** |
+**[> Next Challenge 4 - Protect your Azure PaaS with Disaster recovery](./04_challenge.md)** |
 
 **[< Previous Challenge 2 - Protect in Azure - Backup / Restore](./02_challenge.md)** 

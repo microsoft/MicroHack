@@ -32,4 +32,4 @@ In challenge 4, you will focus on implementing disaster recovery strategies for 
 
 **[> Next Challenge 5 - Failback to the primary region](./05_challenge.md)** |
 
-**[< Previous Challenge 3 - Protect in Azure with Disaster Recovery](./03_challange.md)** 
+**[< Previous Challenge 3 - Protect in Azure with Disaster Recovery](./03_challenge.md)** 

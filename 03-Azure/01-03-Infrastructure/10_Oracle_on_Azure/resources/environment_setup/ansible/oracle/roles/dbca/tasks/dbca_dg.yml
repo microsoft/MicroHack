@@ -92,7 +92,9 @@
     when: inventory_hostname in groups['ora-x1']
     template: src=dbca.rsp.j2 dest=/home/{{ oracle_user }}/dbca.rsp
 
-  - name: dbca
+  - name: Use dbca to create the database
+    become: true
+    become_user: oracle
     when: inventory_hostname in groups['ora-x1']
     command: bin/dbca -silent -createDatabase -responseFile /home/{{ oracle_user }}/dbca.rsp -ignorePreReqs
     ignore_errors: true
@@ -128,12 +130,9 @@
     become: true
     become_user: root
 
-  become: true
-  become_user: "{{ oracle_user }}"
-
 - name: Execute SQL script on remote Oracle database
   when: inventory_hostname in groups['ora-x1']
-  become: yes
+  become: true
   become_user: oracle
   block:
     - name: Copy SQL script to remote server
@@ -146,58 +145,34 @@
     
     - name: Set Oracle environment variables and run SQL setup01_oracle_schema
       shell: |
-        export ORACLE_HOME=/u01/app/oracle/product/19.0.0/dbhome_1
-        export ORACLE_SID=orcl
-        export PATH=$ORACLE_HOME/bin:$PATH
-        sqlplus -S / as sysdba <<EOF
-        SET DEFINE OFF;
-        @/home/oracle/setup01_oracle_schema.sql
-        EXIT;
-        EOF
+        echo -e "SET DEFINE OFF;\n@/home/oracle/setup01_oracle_schema.sql\nEXIT;" | sqlplus -S / as sysdba
       args:
         chdir: /home/oracle
-      environment:
-        ORACLE_HOME: /u01/app/oracle/product/19.0.0/dbhome_1
-        ORACLE_SID: orcl
-        PATH: /u01/app/oracle/product/19.0.0/dbhome_1/bin:{{ ansible_env.PATH }}
       register: sql_output
 
     - name: Print SQL script output
       debug:
         var: sql_output.stdout_lines
 
-  block:
     - name: Copy SQL setup02_initial_dataload to remote server
       ansible.builtin.copy:
-        src: ../../../../Oracle_Schema/setup02_oracle_schema.sql
-        dest: /home/oracle/setup02_oracle_schema.sql
+        src: ../../../../Oracle_Schema/setup02_initial_dataload.sql
+        dest: /home/oracle/setup02_initial_dataload.sql
         owner: oracle
         group: oinstall
         mode: '0644'
     
     - name: Set Oracle environment variables and run SQL setup02_initial_dataload
       shell: |
-        export ORACLE_HOME=/u01/app/oracle/product/19.0.0/dbhome_1
-        export ORACLE_SID=orcl
-        export PATH=$ORACLE_HOME/bin:$PATH
-        sqlplus -S / as sysdba <<EOF
-        SET DEFINE OFF;
-        @/home/oracle/setup02_initial_dataload.sql
-        EXIT;
-        EOF
+        echo -e "SET DEFINE OFF;\n@/home/oracle/setup02_initial_dataload.sql\nEXIT;" | sqlplus / as sysdba
       args:
         chdir: /home/oracle
-      environment:
-        ORACLE_HOME: /u01/app/oracle/product/19.0.0/dbhome_1
-        ORACLE_SID: orcl
-        PATH: /u01/app/oracle/product/19.0.0/dbhome_1/bin:{{ ansible_env.PATH }}
       register: sql_output
 
     - name: Print SQL script output
       debug:
         var: sql_output.stdout_lines
   
-  block:
     - name: Copy SQL setup03_start_datagenerator to remote server
       ansible.builtin.copy:
         src: ../../../../Oracle_Schema/setup03_start_datagenerator.sql
@@ -208,23 +183,11 @@
     
     - name: Set Oracle environment variables and run SQL setup03_start_datagenerator
       shell: |
-        export ORACLE_HOME=/u01/app/oracle/product/19.0.0/dbhome_1
-        export ORACLE_SID=orcl
-        export PATH=$ORACLE_HOME/bin:$PATH
-        sqlplus -S / as sysdba <<EOF
-        SET DEFINE OFF;
-        @/home/oracle/setup03_start_datagenerator.sql
-        EXIT;
-        EOF
+        echo -e "SET DEFINE OFF;\n@/home/oracle/setup03_start_datagenerator.sql\nEXIT;" | sqlplus -S / as sysdba
       args:
         chdir: /home/oracle
-      environment:
-        ORACLE_HOME: /u01/app/oracle/product/19.0.0/dbhome_1
-        ORACLE_SID: orcl
-        PATH: /u01/app/oracle/product/19.0.0/dbhome_1/bin:{{ ansible_env.PATH }}
       register: sql_output
 
     - name: Print SQL setup03_start_datagenerator script output
       debug:
         var: sql_output.stdout_lines
-

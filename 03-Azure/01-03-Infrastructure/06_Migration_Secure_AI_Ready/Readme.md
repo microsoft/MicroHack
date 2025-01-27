@@ -1,6 +1,6 @@
-![image](img/1920x300_EventBanner_MicroHack_MigrateAndModernize_wText.jpg)
+![image](img/1920x300_EventBanner_MicroHack_Migrate_wText.jpg)
 
-# MicroHack - Migrate and Modernize
+# MicroHack - Migrate and Secure to be AI Ready
 
 - [**MicroHack introduction**](#MicroHack-introduction)
 - [**MicroHack context**](#microhack-context)
@@ -61,9 +61,9 @@ This MicroHack has a few but important prerequisites
 
 In order to use the MicroHack time most effectively, the following prerequisites should be completed prior to starting the session.
 
-* Azure Active Directory Tenant
+* Entra ID Tenant
 * At least one Azure Subscription
-* Azure Active Directory user with Contributor or Owner permissions on the Azure Subscription
+* Entra ID user with Contributor or Owner permissions on the Azure Subscription
 
 With these pre-requisites in place, we can focus on building the differentiated knowledge in Azure Migrate that is required when working with the product.
 
@@ -314,7 +314,7 @@ The goal of this exercise is to ...
 
 ## Finish
 
-Congratulations! You finished the MicroHack for Migration and Modernization. We hope you had the chance to learn about the how to implement a successful migration strategy using Azure Migrate.
+Congratulations! You finished the Migrate and Secure to be AI Ready Microhack. We hope you had the chance to learn about the how to implement a successful migration strategy using Azure Migrate.
 If you want to give feedback please don’t hesitate to open an Issue on the repository or get in touch with one of us directly.
 
 Thank you for investing the time and see you next time!

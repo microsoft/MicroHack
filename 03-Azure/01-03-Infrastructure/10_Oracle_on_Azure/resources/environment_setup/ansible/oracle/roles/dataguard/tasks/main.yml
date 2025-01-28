@@ -1,20 +1,21 @@
 ---
+
+- name: copy archive log mode sql 
+  template: src=archieve.sql.j2 dest=/tmp/archieve.sql
+  when: inventory_hostname in groups['ora-x1']
+  become_user: "{{ oracle_user }}"
+
+- name: Create_standbyDB | execute postsql from the standby database
+  shell: |
+    echo -e "@/tmp/archieve.sql;" | sqlplus / as sysdba
+  when: inventory_hostname in groups['ora-x1']
+  become_user: "{{ oracle_user }}"
+  args:
+    chdir: /home/oracle
+  register: out 
+
+- debug: var=out.stdout_lines
 - block:
-
-  - name: copy archive log mode sql 
-    template: src=archieve.sql.j2 dest=/tmp/archieve.sql
-    when: inventory_hostname in groups['ora-x1']
-    become_user: "{{ oracle_user }}"
-
-  - name: Create_standbyDB | execute postsql from the standby database
-    become_user: "{{ oracle_user }}"
-    shell: |
-      export ORACLE_HOME=/u01/app/oracle/product/19.0.0/dbhome_1
-      export ORACLE_SID=orcl
-      export PATH=$ORACLE_HOME/bin:$PATH
-      echo "@{{ stage_dir }}/archieve.sql;" | sqlplus / as sysdba
-    when: inventory_hostname in groups['ora-x1']
-    register: out
 
   - debug: var=out.stdout_lines
   - name: copy TNS NAMES FILE to primary
@@ -87,7 +88,6 @@
     become_user: "{{ oracle_user }}"
     shell: echo @"/tmp/standby_start.sql;" | sqlplus / as sysdba
     register: out
-
   - debug: var=out.stdout_lines
 
   - name: Stop Listener
@@ -95,6 +95,7 @@
     command: lsnrctl stop
     ignore_errors: true
     register: out
+    become: true
     become_user: "{{ oracle_user }}"
   - debug: var=out.stdout_lines
   
@@ -102,9 +103,9 @@
   - name: Start  Listener
     when: inventory_hostname in groups['ora-x2']
     command: lsnrctl start
-    register: out
+    become: true
     become_user: "{{ oracle_user }}"
-
+    register: out
   - debug: var=out.stdout_lines
   
   - name: Copy RMAN Script
@@ -114,10 +115,12 @@
 
   - name: Start RMAN Process
     when: inventory_hostname in groups['ora-x1']
-    shell: echo @"/u01/app/rman.sql" | rman TARGET sys/{{ sysPassword }}@{{ sid }} AUXILIARY sys/{{ sysPassword }}@{{ sid }}DG1
-    register: out
+    shell: |
+      echo @"/u01/app/rman.sql" | rman TARGET sys/{{ sysPassword }}@{{ sid }} AUXILIARY sys/{{ sysPassword }}@{{ sid }}DG1
+    args:
+      chdir: /home/oracle
     become_user: "{{ oracle_user }}"
-
+    register: out
   - debug: var=out.stdout_lines
 
 
@@ -141,11 +144,17 @@
     become_user: "{{ oracle_user }}"
   
   - name: Execute standbydatabasedisconnect.sql
-    become_user: "{{ oracle_user }}"
-    shell: echo "@{{ stage_dir }}/standbydatabasedisconnect.sql;" | sqlplus / as sysdba
+    become_user: oracle
+    shell: |
+      export ORACLE_HOME=/u01/app/oracle/product/19.0.0/dbhome_1
+      export ORACLE_SID=orcl
+      export PATH=$ORACLE_HOME/bin:$PATH
+      echo -e "@/tmp/standbydatabasedisconnect.sql;" | sqlplus / as sysdba
     when: inventory_hostname in groups['ora-x2']
+    args:
+      chdir: /home/oracle
     register: out
 
   - debug: var=out.stdout_lines
-  become: true
-  become_user: "{{ oracle_user }}"
+#  become: true
+#  become_user: "{{ oracle_user }}"

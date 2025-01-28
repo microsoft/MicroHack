@@ -1,9 +1,9 @@
 ---
 - hosts: all
+  vars_files:
+    - vars.yml
   gather_facts: false
   become: true
   roles:
-  #- common
-  - dbca
-  - dataguard
-
+   - dbca
+   - dataguard

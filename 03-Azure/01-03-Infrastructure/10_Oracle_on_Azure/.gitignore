@@ -2,7 +2,10 @@
 NOTES.md
 **/misc/*
 .ssh/*
+**/.ssh/*
 
+# ignore terraform plan files
+**/plan*.out
 #-------- Terraform --------
 # Local .terraform directories
 **/.terraform/*

@@ -97,6 +97,13 @@ EOF
 
 1. Start the ansible playbook
 
+> NOTE: if you need to install ansible on windows follow this instructions:
+>
+> ~~~powershell
+> scoop install pipx
+> pipx install --include-deps ansible
+> ~~~
+
 ```bash
 ansible-playbook playbook_dg.yml -i inventory --extra-vars "data_guard=yes"
 ```

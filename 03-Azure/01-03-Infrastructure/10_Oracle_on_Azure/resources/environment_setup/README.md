@@ -68,6 +68,8 @@ $ terraform apply -var-file=fixtures.tfvars
 
 You can connect to the virtual machine with ssh private key. While deploying resources, a public ip address is generated and attached to the virtual machine, so that you can connect to the virtual machine with this IP address. The username is `oracle`, which is fixed in `terraform/data_guard/module.tf`.
 
+> NOTE: If you are using your own MCAPs Tenant you maybe will need to turn on JIT (Cloud Defender) to be able to SSH into the VM
+
 ```
 $ ssh -i ~/.ssh/mh-oracle-data-guard  oracle@<PUBLIC_IP_ADDRESS>
 

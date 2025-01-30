@@ -40,7 +40,7 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: ./03-Azure/01-03-Infrastructure/10_Oracle_on_Azure/resources/environment_setup/terraform
+        working-directory: ./03-Azure/01-03-Infrastructure/10_Oracle_on_Azure/resources/environment_setup/terraform/data_guard
     steps:
 
     # Checkout the repository to the GitHub Actions runner

@@ -1,22 +1,12 @@
 # Deploy App1
 
 ```
-$timestamp = (Get-Date).ToString("yyyyMMddTHHmmss")
-Write-Output $timestamp
-
-$deploymentName = "MH-Env-Deployment-$timestamp"
-$location = "germanywestcentral"
-$DeploymentPrefix = "mh-dth"
-$templateFile = ".\deploy.bicep"
-$parametersFile = ".\main.parameters.json"
-
+# e.g. deployment command
 New-AzSubscriptionDeployment `
-    -Name "$deploymentName" `
-    -Location "$location"  `
-    -parDeploymentPrefix "$DeploymentPrefix" `
-    -TemplateFile $templateFile `
-    -TemplateParameterFile $parametersFile `
+    -Name "MH-Demo-Env-Deployment" `
+    -Location "germanywestcentral" `
+    -TemplateFile ".\deploy.bicep" `
+    -parDeploymentPrefix "mh" `
+    -TemplateParameterFile ".\main.parameters.json" `
     -WarningAction Ignore
-
-Write-Output $cmd
 ```

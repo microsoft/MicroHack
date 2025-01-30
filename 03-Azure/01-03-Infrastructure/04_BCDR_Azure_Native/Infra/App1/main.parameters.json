@@ -1,0 +1,136 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "parDeploymentPrefix": {
+      "value": "mh"
+    },
+    "sourceLocation": {
+      "value": "germanywestcentral"
+    },
+    "targetLocation": {
+      "value": "swedencentral"
+    },
+    "vmAdminPassword": {
+      "value": "P@ssw0rd1234"
+    },
+    
+    "hubVnetConfig": {
+      "value": {
+        "addressSpace": {
+          "addressPrefixes": ["10.0.0.0/16"]
+        },
+        "subnets": [
+          {
+            "name": "default",
+            "addressPrefix": "10.0.0.0/24"
+          },
+          {
+            "name": "AzureBastionSubnet",
+            "addressPrefix": "10.0.1.0/24"
+          }
+        ]
+      }
+    },
+    "sourceVnetConfig": {
+      "value": {
+        "addressSpace": {
+          "addressPrefixes": ["10.1.0.0/16"]
+        },
+        "subnets": [
+          {
+            "name": "default",
+            "addressPrefix": "10.1.0.0/24"
+          }
+        ]
+      }
+    },
+    "targetVnetConfig": {
+      "value": {
+        "addressSpace": {
+          "addressPrefixes": ["10.2.0.0/16"]
+        },
+        "subnets": [
+          {
+            "name": "default",
+            "addressPrefix": "10.2.0.0/24"
+          }
+        ]
+      }
+    },
+    "testVnetConfig": {
+      "value": {
+        "addressSpace": {
+          "addressPrefixes": ["10.3.0.0/16"]
+        },
+        "subnets": [
+          {
+            "name": "default",
+            "addressPrefix": "10.3.0.0/24"
+          }
+        ]
+      }
+    },
+    "vmConfigs": {
+      "value": [
+        {
+          "purpose": "web",
+          "deploy": true,
+          "nameSuffix": "web1",
+          "vmSize": "Standard_D2as_v5",
+          "osDiskSize": 127,
+          "dataDiskSize": 0,
+          "osType": "Windows",
+          "imagePublisher": "MicrosoftWindowsServer",
+          "imageOffer": "WindowsServer",
+          "imageSku": "2019-Datacenter",
+          "imageVersion": "latest",
+          "publicIp": false
+        },
+        {
+          "purpose": "web",
+          "deploy": true,
+          "nameSuffix": "web2",
+          "vmSize": "Standard_D2as_v5",
+          "osDiskSize": 127,
+          "dataDiskSize": 0,
+          "osType": "Windows",
+          "imagePublisher": "MicrosoftWindowsServer",
+          "imageOffer": "WindowsServer",
+          "imageSku": "2019-Datacenter",
+          "imageVersion": "latest",
+          "publicIp": false
+        },
+        {
+          "purpose": "sql",
+          "deploy": true,
+          "nameSuffix": "sql",
+          "vmSize": "Standard_D4as_v5",
+          "osDiskSize": 127,
+          "dataDiskSize": 1024,
+          "osType": "Windows",
+          "imagePublisher": "MicrosoftSQLServer",
+          "imageOffer": "SQL2019-WS2019",
+          "imageSku": "Standard",
+          "imageVersion": "latest",
+          "publicIp": false
+        },
+        {
+          "purpose": "linux",
+          "deploy": true,
+          "nameSuffix": "linux",
+          "vmSize": "Standard_D2as_v5",
+          "osDiskSize": 127,
+          "dataDiskSize": 1024,
+          "osType": "Linux",
+          "imagePublisher": "Canonical",
+          "imageOffer": "UbuntuServer",
+          "imageSku": "18.04-LTS",
+          "imageVersion": "latest",
+          "publicIp": false
+        }
+      ]
+    }
+  }
+}
+

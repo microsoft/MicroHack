@@ -24,26 +24,17 @@ permissions:
   contents: read
   issues: write
   pull-requests: write
-  
-jobs:
-  terraform:
-    name: '🔧 Terraform'
-    runs-on: ubuntu-latest
-    environment: test-deploy
-    strategy:
-      fail-fast: false
-  
-
 
 ##############################################################################################################################################
 #                                     SSH Keys and parameter preparation for Ansible                                                         #
 ##############################################################################################################################################
-  ssh-keys:
-    needs: terraform
+ 
+  
+jobs:
+ ssh-keys:
     name: '🧮 Prepare and run Ansible Playbook'
     runs-on: ubuntu-20.04
     environment: test-deploy
-
     defaults:
       run:
         shell: bash

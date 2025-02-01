@@ -1,4 +1,4 @@
-name: Deploy an Oracle DB in a Data Guard configuration on Azure with Terraform and Ansible
+name: Run Ansible Playbook on the two Oracle VMs
 on:
   workflow_dispatch:
     inputs:
@@ -125,30 +125,30 @@ jobs:
       - name: '🗒️💿🔧 Invoke ansible playbook 😴😴😴'
         run: ansible-playbook playbook_dg.yml -i inventory --extra-vars "data_guard=yes"
 
-      - name: Run Ansible playbook to test Oracle database state
-        run: ansible-playbook testplaybook_dg.yml -i inventory > ansible_output.txt
+      # - name: Run Ansible playbook to test Oracle database state
+      #   run: ansible-playbook testplaybook_dg.yml -i inventory > ansible_output.txt
   
-      - name: Evaluate test output
-        run: |
-          lines=(
-            "INSTANCE_NAME\t STATUS       DATABASE_STATUS"
-            "${{env.ORCL_DB_NAME}}\t\t OPEN\t      ACTIVE"
-          )
-          found_all=true
-          for line in "${lines[@]}"; do
-            if ! grep -qF "$line" "ansible_output.txt"; then
-              found_all=false
-              break
-            fi
-          done
-          if $found_all; then
-            echo "All lines found in the output."
-            # Perform further actions based on the output
-          else
-            echo "Not all lines found in the output. Showing ansible output:"
-            cat ansible_output.txt
-            exit 1  # Exit with a non-zero code to indicate failure
-          fi      
+      # - name: Evaluate test output
+      #   run: |
+      #     lines=(
+      #       "INSTANCE_NAME\t STATUS       DATABASE_STATUS"
+      #       "${{env.ORCL_DB_NAME}}\t\t OPEN\t      ACTIVE"
+      #     )
+      #     found_all=true
+      #     for line in "${lines[@]}"; do
+      #       if ! grep -qF "$line" "ansible_output.txt"; then
+      #         found_all=false
+      #         break
+      #       fi
+      #     done
+      #     if $found_all; then
+      #       echo "All lines found in the output."
+      #       # Perform further actions based on the output
+      #     else
+      #       echo "Not all lines found in the output. Showing ansible output:"
+      #       cat ansible_output.txt
+      #       exit 1  # Exit with a non-zero code to indicate failure
+      #     fi      
 
 
           

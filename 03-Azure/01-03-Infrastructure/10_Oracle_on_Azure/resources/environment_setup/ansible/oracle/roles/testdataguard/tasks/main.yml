@@ -1,0 +1,28 @@
+---
+- block:
+
+  - name: copy single instance check script
+    when: inventory_hostname in groups['ora-x1']
+    template: src=sicheck.sql.j2 dest=/tmp/sicheck.sql
+    become_user: "{{ oracle_user }}"
+ 
+#    #TODO: https://vjdba.wordpress.com/tag/rman-05537/
+#  
+  - name: check primary database state
+    when: inventory_hostname in groups['ora-x1']
+    become_user: "{{ oracle_user }}"
+    shell: echo @"/tmp/sicheck.sql;" | sqlplus / as sysdba
+    register: sql_output
+
+  - debug: var=sql_output.stdout_lines
+  become: true
+  become_user: "{{ oracle_user }}"
+
+- name: Ensure database state is as expected
+  when: inventory_hostname in groups['ora-x1']
+  assert:
+    that:
+      - "'OPEN' in sql_output.stdout"
+      - "'ACTIVE' in sql_output.stdout"
+    success_msg: "The database is up and running"
+    fail_msg: "The SQL query did not return the expected output"

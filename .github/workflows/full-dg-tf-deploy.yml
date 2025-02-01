@@ -1,17 +1,21 @@
 name: Deploy an Oracle DB in a Data Guard configuration on Azure with Terraform and Ansible
 on:
-  workflow_dispatch: {}
-  push:
-    branches: [ main ]
-    paths:
-      - ".github/workflows/full-dg-tf-deploy.yml"
-      - "./03-Azure/01-03-Infrastructure/10_Oracle_on_Azure/resources/environment_setup/**"
-      - "ansible/bootstrap/oracle/**"
-  pull_request:
-    branches: [ main ]
-    paths:
-      - ".github/workflows/full-dg-tf-deploy.yml"
-      - "./03-Azure/01-03-Infrastructure/10_Oracle_on_Azure/resources/environment_setup/**"
+  workflow_dispatch:
+    inputs:
+      example_input:
+        description: "Example input"
+        required: false
+  # push:
+  #   branches: [ main ]
+  #   paths:
+  #     - ".github/workflows/full-dg-tf-deploy.yml"
+  #     - "./03-Azure/01-03-Infrastructure/10_Oracle_on_Azure/resources/environment_setup/**"
+  #     - "ansible/bootstrap/oracle/**"
+  # pull_request:
+  #   branches: [ main ]
+  #   paths:
+  #     - ".github/workflows/full-dg-tf-deploy.yml"
+  #     - "./03-Azure/01-03-Infrastructure/10_Oracle_on_Azure/resources/environment_setup/**"
     
 env:
   TF_LOG: ${{ secrets.TF_LOG != '' && secrets.TF_LOG || 'INFO' }}                                                     #"INFO"

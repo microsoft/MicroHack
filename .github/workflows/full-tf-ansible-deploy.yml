@@ -1,0 +1,331 @@
+name: Deploy an Oracle DB in a Data Guard configuration on Azure with Terraform and Ansible
+on:
+  workflow_dispatch:
+    inputs:
+      rg-list:
+        description: "Comma-separated list of Resource Groups for Ansible"
+        required: true
+        default: "rg-mh-oracle-1,rg-mh-oracle-2"
+  
+  # push:
+  #   branches: [ main ]
+  #   paths:
+  #     - ".github/workflows/full-dg-tf-deploy.yml"
+  #     - "./03-Azure/01-03-Infrastructure/10_Oracle_on_Azure/resources/environment_setup/**"
+  #     - "ansible/bootstrap/oracle/**"
+  # pull_request:
+  #   branches: [ main ]
+  #   paths:
+  #     - ".github/workflows/full-dg-tf-deploy.yml"
+  #     - "./03-Azure/01-03-Infrastructure/10_Oracle_on_Azure/resources/environment_setup/**"
+    
+env:
+  TF_LOG: ${{ secrets.TF_LOG != '' && secrets.TF_LOG || 'INFO' }}                                                     #"INFO"
+  AZ_LOCATION: ${{ secrets.AZ_LOCATION != '' && secrets.AZ_LOCATION || 'germanywestcentral' }}                             #"swedencentral" # can be parameterized
+  AZ_RG_BASENAME: ${{ secrets.AZ_RG_BASENAME != '' && secrets.AZ_RG_BASENAME || 'rg-mh-oracle' }}  
+  VM_PRIMARY_NAME: ${{ secrets.VM_PRIMARY_NAME != '' && secrets.VM_PRIMARY_NAME || 'vm-primary-0' }}                  # can be parameterized
+  VM_SECONDARY_NAME: ${{ secrets.VM_SECONDARY_NAME != '' && secrets.VM_SECONDARY_NAME || 'vm-secondary-0' }}          # can be parameterized
+  ORCL_DB_NAME: ${{ secrets.ORCL_DB_NAME != '' && secrets.ORCL_DB_NAME || 'ORCL' }}                                   #"ORCL" # can be parameterized
+  SOFTWARE_RG:  ${{ secrets.SOFTWARE_RG != '' && secrets.SOFTWARE_RG || 'binaryresource' }}                           #"binaryresource"
+  AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+
+permissions:
+  id-token: write
+  contents: read
+  issues: write
+  pull-requests: write
+  
+jobs:
+  terraform:
+    name: '🔧 Terraform'
+    runs-on: ubuntu-latest
+    environment: test-deploy
+    strategy:
+      matrix:
+        resource_group: ${{ split(github.event.inputs.rg_list, ',') }}
+  
+    defaults:
+      run:
+        shell: bash
+        working-directory: ./03-Azure/01-03-Infrastructure/10_Oracle_on_Azure/resources/environment_setup/terraform/data_guard
+    steps:
+
+    # Checkout the repository to the GitHub Actions runner
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    # Install the preferred version of Terraform CLI 
+    - name: 📦 Setup Terraform Cli
+      uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_version: 1.10.3
+        terraform_wrapper: false # keep it false to be able to read the outputs values of terraform
+
+    #Check if the SSH key is empty
+    - name: 🔎 Validate SSH Key is not empty
+      run: |
+        if [ -z "${{ secrets.SSH_PRIVATE_KEY }}" ]
+        then
+          echo "SSH_PRIVATE_KEY is empty, you should add a SSH key to the repository secrets. Name of the secret should be SSH_PRIVATE_KEY"
+          exit 1
+        else
+          echo "SSH_PRIVATE_KEY is not empty"
+        fi
+    
+
+    - name: 🗒️ Create the SSH public key for VM
+      run: |
+        cat > temp_ssh_key <<EOF
+        ${{ secrets.SSH_PRIVATE_KEY }}
+        EOF
+        
+        chmod 400 temp_ssh_key
+        ssh-keygen -f temp_ssh_key -y > temp_ssh_key.pub
+
+        echo "SSH_KEY=$(cat temp_ssh_key.pub)" >> $GITHUB_ENV
+        echo "SSH_KEY=${{env.SSH_KEY}}"
+
+        echo "currentDate=$(date)" >> $GITHUB_ENV
+        echo "currentDate=${{env.currentDate}}"
+
+    #   # Generate random string for suffix
+    # - name: 🔎 Generate Random String for Resource Group Name
+    #   id: resourcegroup-generator
+    #   run: echo random=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 8; echo) >> $GITHUB_ENV
+    # - run: echo ResourceGroupName=${{env.AZ_RG_BASENAME}}-${{ matrix.resource_group }}-${{env.random}} >> $GITHUB_ENV 
+    # - run: echo ${{env.ResourceGroupName}}
+    
+    #Login to Azure
+    # Check https://github.com/Azure/login?tab=readme-ov-file#login-with-openid-connect-oidc-recommended
+    - name: 🔑 Login via Azure CLI
+      uses: azure/login@v1
+      with:
+        client-id: ${{ secrets.AZURE_CLIENT_ID }}
+        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+    - name: 🗒️ Create a tfvars file for terraform
+      run: |
+        cat > terraform.tfvars <<EOF
+        location = "${{env.AZ_LOCATION}}"
+        resourcegroup_name = "${{ matrix.resource_group }}"
+        resourcegroup_tags = {
+          "environment" = "dev"
+          "project"     = "oracle"
+          "created"     = "${{env.currentDate}}"
+          "GITHUB_ACTOR" = "${{ github.actor }}"
+          "GITHUB_ACTION_REPOSITORY" = "${{ github.repository }}"
+          "GITHUB_ACTION_REF" = "${{ github.ref }}"
+          "GITHUB_RUN_ID" = "${{ github.run_id }}"
+          "GITHUB_WORKFLOW" = "${{ github.workflow }}"
+        }
+        #is_resource_lock_enabled = false
+        #is_diagnostic_settings_enabled = true
+        #diagnostic_target              = "Log_Analytics_Workspace"
+        
+        ssh_key = "${{env.SSH_KEY}}"
+        EOF
+
+      # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
+    - name: 📦 Terraform Init
+      id: init
+      env:
+        RESOURCE_GROUP: ${{ matrix.resource_group }}
+      run: terraform init
+
+
+      # Run a terraform validate
+    - name: 🔎 Terraform Validate
+      id: validate
+      if: github.ref != 'refs/heads/main'
+      continue-on-error: true
+      run: terraform validate -no-color
+      
+
+      # Run a terraform plan for pull requests only and add a comment 
+    - name: 💻 Terraform Plan
+      id: plan
+      continue-on-error: true
+      run: terraform plan  -var "resourcegroup_name=${{ env.ResourceGroupName }}" -no-color
+
+
+    - name: "Add a comment to pull requests with plan resutls"
+      id: comment
+      uses: actions/github-script@v6
+      if: (github.event_name == 'pull_request' || github.event_name == 'push')
+      env:
+        PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+            const output = `
+            #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
+            #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
+            #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
+
+            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Workflow: \`${{ github.workflow }}\`*`;
+
+            await github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: output
+            })
+            
+
+
+    - name: "◻️ Terraform Plan Status ⁉️"
+      if: steps.plan.outcome == 'failure'
+      run: exit 1
+
+          # On push to main, build or change infrastructure according to Terraform configuration files
+      # On push to main, build or change infrastructure according to Terraform configuration files
+    - name: 💻 Terraform Apply
+    #  if: github.ref == 'refs/heads/main' && github.event_name == 'push' # Remove when I am ready
+      run: terraform apply -auto-approve 
+    
+    - name: 🔃 Terraform Refresh State
+      run: terraform  apply -refresh-only -auto-approve
+
+    # - run: echo "vm_public_ip_address=$(terraform output vm_public_ip_address)" >> $GITHUB_ENV
+    # - run: echo ${{env.vm_public_ip_address}}
+
+
+    outputs:
+      ResourceGroupName: ${{ matrix.resource_group }}
+      # VM_Public_IP_Address: ${{ env.vm_public_ip_address }}
+
+#
+
+# ##############################################################################################################################################
+# #                                     SSH Keys and parameter preparation for Ansible                                                         #
+# ##############################################################################################################################################
+#   ssh-keys:
+#     needs: terraform
+#     name: '🧮 Prepare and run Ansible Playbook'
+#     runs-on: ubuntu-20.04
+#     environment: test-deploy
+
+#     defaults:
+#       run:
+#         shell: bash
+#         working-directory: ansible/bootstrap/oracle
+#     steps:
+#       - name: 🛒 Checkout
+#         uses: actions/checkout@v4
+
+#       - name: 🔎 Check IP
+#         run: echo "currentRunnerIP=$(curl https://api.ipify.org)" >> $GITHUB_ENV
+#       - run: echo "currentRunnerIP=${{env.currentRunnerIP}}"
+      
+#       - name: 'Install SSH Key'
+#         uses: shimataro/ssh-key-action@v2
+#         with: 
+#           key: ${{ secrets.SSH_PRIVATE_KEY }}
+#           name: 'github_actions_id_rsa'
+#           known_hosts: "sometin"
+      
+#       # Login to Azure CLI
+#       - name: 🔑 Login via Azure CLI
+#         uses: azure/login@v1
+#         with:
+#           client-id: ${{ secrets.AZURE_CLIENT_ID }}
+#           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+#           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+#       # Get Subscription ID
+#       - name: 🔎 Get Subscription ID
+#         id: subid
+#         run: echo "SubscriptionID=$(az account show --query id -o tsv)" >> $GITHUB_ENV
+#       - run: echo ${{env.SubscriptionID}} 
+
+#       - name: Get the ID of the user-assigned managed identity
+#         run: |
+#           usId=$(az identity show --name ${{ env.USER_ASSIGNED_IDENTITY }} --resource-group ${{ env.SOFTWARE_RG }} --query id --output tsv) 
+#           usId_modified=$(echo "$usId" | sed 's/resourcegroups/resourceGroups/g')
+#           echo "usId=${usId_modified}" >> $GITHUB_ENV      
+      
+#       - name: ⌛ Calculate endTimeUTC for JIT request 
+#         run: echo "endTimeUtc=$(date -d '+2 hour' '+%FT%T')" >> $GITHUB_ENV
+#       - run: echo "endTimeUtc=${{env.endTimeUtc}}"
+#       - run: echo "ResourceGroupName=${{needs.terraform.outputs.ResourceGroupName}}" >> $GITHUB_ENV
+#       - run: echo "ResourceGroupName=${{ matrix.resource_group }}"
+      
+#       - name: 🔑 Login via Az Module
+#         uses: azure/login@v1
+#         with:
+#           client-id: ${{ secrets.AZURE_CLIENT_ID }}
+#           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+#           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+#           enable-AzPSSession: true 
+
+#       - name: ✅ Enable JIT on VM
+#         uses: azure/powershell@v1
+#         with:
+#           inlineScript: |
+#             $JitPolicyVm1 = (@{id="/subscriptions/${{env.SubscriptionID}}/resourceGroups/${{env.ResourceGroupName}}/providers/Microsoft.Compute/virtualMachines/${{env.VM_PRIMARY_NAME}}"; ports=(@{number=22;endTimeUtc="${{env.endTimeUtc}}";allowedSourceAddressPrefix=@("${{env.currentRunnerIP}}")})})
+#             $JitPolicyVm2 = (@{id="/subscriptions/${{env.SubscriptionID}}/resourceGroups/${{env.ResourceGroupName}}/providers/Microsoft.Compute/virtualMachines/${{env.VM_SECONDARY_NAME}}"; ports=(@{number=22;endTimeUtc="${{env.endTimeUtc}}";allowedSourceAddressPrefix=@("${{env.currentRunnerIP}}")})})
+#             $JitPolicyArr1=@($JitPolicyVm1)
+#             $JitPolicyArr2=@($JitPolicyVm2)
+#             Start-AzJitNetworkAccessPolicy -ResourceId "/subscriptions/${{env.SubscriptionID}}/resourceGroups/${{env.ResourceGroupName}}/providers/Microsoft.Security/locations/${{env.AZ_LOCATION}}/jitNetworkAccessPolicies/JIT-SSH-Policy-primary" -VirtualMachine $JitPolicyArr1
+#             Start-AzJitNetworkAccessPolicy -ResourceId "/subscriptions/${{env.SubscriptionID}}/resourceGroups/${{env.ResourceGroupName}}/providers/Microsoft.Security/locations/${{env.AZ_LOCATION}}/jitNetworkAccessPolicies/JIT-SSH-Policy-secondary" -VirtualMachine $JitPolicyArr2
+#           azPSVersion: "latest"
+
+#       - name: 🔎 Get VM Public IP Addresses
+#         run: |
+#             echo "VM_Primary_IP_Address=$(az vm list-ip-addresses --resource-group ${{env.ResourceGroupName}} --name ${{env.VM_PRIMARY_NAME}} --query [0].virtualMachine.network.publicIpAddresses[0].ipAddress -o tsv)" >> $GITHUB_ENV
+#             echo "VM_Secondary_IP_Address=$(az vm list-ip-addresses --resource-group ${{env.ResourceGroupName}} --name ${{env.VM_SECONDARY_NAME}} --query [0].virtualMachine.network.publicIpAddresses[0].ipAddress -o tsv)" >> $GITHUB_ENV
+#       - run: echo ${{env.VM_Primary_IP_Address}}
+#       - run: echo ${{env.VM_Secondary_IP_Address}}
+
+#       - name: 🧮 Get Known Hosts parameter using ssh-keyscan
+#         run: |
+#           ssh-keyscan -T 300 -H ${{env.VM_Primary_IP_Address}} >> /home/runner/.ssh/known_hosts
+#           ssh-keyscan -T 300 -H ${{env.VM_Secondary_IP_Address}} >> /home/runner/.ssh/known_hosts
+
+#       - name: 🗒️ Create the inventory file
+#         run: |
+#           cat > inventory <<EOF
+#           [ora-x1]
+#           ${{env.VM_PRIMARY_NAME}} ansible_host=${{env.VM_Primary_IP_Address}} ansible_ssh_private_key_file=/home/runner/.ssh/github_actions_id_rsa ansible_user=oracle
+
+#           [ora-x2]
+#           ${{env.VM_SECONDARY_NAME}} ansible_host=${{env.VM_Secondary_IP_Address}} ansible_ssh_private_key_file=/home/runner/.ssh/github_actions_id_rsa ansible_user=oracle
+#           EOF
+
+#       - name: 🗒️ Show the inventory file
+#         run: cat inventory
+
+# ##############################################################################################################################################
+# #                                    Ansible                                                                                                 #
+# ##############################################################################################################################################
+#       - name: '🗒️💿🔧 Invoke ansible playbook 😴😴😴'
+#         run: ansible-playbook playbook_dg.yml -i inventory --extra-vars "data_guard=yes vm_user_assigned_identity_id=${{env.usId}}"
+
+#       - name: Run Ansible playbook to test Oracle database state
+#         run: ansible-playbook testplaybook_dg.yml -i inventory > ansible_output.txt
+  
+#       - name: Evaluate test output
+#         run: |
+#           lines=(
+#             "INSTANCE_NAME\t STATUS       DATABASE_STATUS"
+#             "${{env.ORCL_DB_NAME}}\t\t OPEN\t      ACTIVE"
+#           )
+#           found_all=true
+#           for line in "${lines[@]}"; do
+#             if ! grep -qF "$line" "ansible_output.txt"; then
+#               found_all=false
+#               break
+#             fi
+#           done
+#           if $found_all; then
+#             echo "All lines found in the output."
+#             # Perform further actions based on the output
+#           else
+#             echo "Not all lines found in the output. Showing ansible output:"
+#             cat ansible_output.txt
+#             exit 1  # Exit with a non-zero code to indicate failure
+#           fi      
+
+
+          

@@ -15,7 +15,7 @@ env:
   ORCL_DB_NAME: ${{ secrets.ORCL_DB_NAME != '' && secrets.ORCL_DB_NAME || 'ORCL' }}                                   #"ORCL" # can be parameterized
   SOFTWARE_RG:  ${{ secrets.SOFTWARE_RG != '' && secrets.SOFTWARE_RG || 'binaryresource' }}                           #"binaryresource"
   AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-  ResourceGroupName: ${{ secrets.AZ_RG_NAME != '' && secrets.AZ_RG_NAME || 'rg-mh-oracle2-cvotcaaj' }}  
+  # ResourceGroupName: ${{ secrets.AZ_RG_NAME != '' && secrets.AZ_RG_NAME || 'rg-mh-oracle2-cvotcaaj' }}  
 
 
 
@@ -35,6 +35,9 @@ jobs:
     name: '🧮 Prepare and run Ansible Playbook'
     runs-on: ubuntu-20.04
     environment: test-deploy
+    strategy:
+      matrix:
+        resource_group: [rg-mh-oracle-1, rg-mh-oracle-2]
     defaults:
       run:
         shell: bash
@@ -72,7 +75,7 @@ jobs:
       - name: ⌛ Calculate endTimeUTC for JIT request 
         run: echo "endTimeUtc=$(date -d '+2 hour' '+%FT%T')" >> $GITHUB_ENV
       - run: echo "endTimeUtc=${{env.endTimeUtc}}"
-      - run: echo "ResourceGroupName=${{env.ResourceGroupName}}"
+      - run: echo "ResourceGroupName=${{ matrix.resource_group }}"
       
       - name: 🔑 Login via Az Module
         uses: azure/login@v1
@@ -86,18 +89,18 @@ jobs:
         uses: azure/powershell@v1
         with:
           inlineScript: |
-            $JitPolicyVm1 = (@{id="/subscriptions/${{env.SubscriptionID}}/resourceGroups/${{env.ResourceGroupName}}/providers/Microsoft.Compute/virtualMachines/${{env.VM_PRIMARY_NAME}}"; ports=(@{number=22;endTimeUtc="${{env.endTimeUtc}}";allowedSourceAddressPrefix=@("${{env.currentRunnerIP}}")})})
-            $JitPolicyVm2 = (@{id="/subscriptions/${{env.SubscriptionID}}/resourceGroups/${{env.ResourceGroupName}}/providers/Microsoft.Compute/virtualMachines/${{env.VM_SECONDARY_NAME}}"; ports=(@{number=22;endTimeUtc="${{env.endTimeUtc}}";allowedSourceAddressPrefix=@("${{env.currentRunnerIP}}")})})
+            $JitPolicyVm1 = (@{id="/subscriptions/${{env.SubscriptionID}}/resourceGroups/${{ matrix.resource_group }}/providers/Microsoft.Compute/virtualMachines/${{env.VM_PRIMARY_NAME}}"; ports=(@{number=22;endTimeUtc="${{env.endTimeUtc}}";allowedSourceAddressPrefix=@("${{env.currentRunnerIP}}")})})
+            $JitPolicyVm2 = (@{id="/subscriptions/${{env.SubscriptionID}}/resourceGroups/${{ matrix.resource_group }}/providers/Microsoft.Compute/virtualMachines/${{env.VM_SECONDARY_NAME}}"; ports=(@{number=22;endTimeUtc="${{env.endTimeUtc}}";allowedSourceAddressPrefix=@("${{env.currentRunnerIP}}")})})
             $JitPolicyArr1=@($JitPolicyVm1)
             $JitPolicyArr2=@($JitPolicyVm2)
-            Start-AzJitNetworkAccessPolicy -ResourceId "/subscriptions/${{env.SubscriptionID}}/resourceGroups/${{env.ResourceGroupName}}/providers/Microsoft.Security/locations/${{env.AZ_LOCATION}}/jitNetworkAccessPolicies/JIT-SSH-Policy-primary" -VirtualMachine $JitPolicyArr1
-            Start-AzJitNetworkAccessPolicy -ResourceId "/subscriptions/${{env.SubscriptionID}}/resourceGroups/${{env.ResourceGroupName}}/providers/Microsoft.Security/locations/${{env.AZ_LOCATION}}/jitNetworkAccessPolicies/JIT-SSH-Policy-secondary" -VirtualMachine $JitPolicyArr2
+            Start-AzJitNetworkAccessPolicy -ResourceId "/subscriptions/${{env.SubscriptionID}}/resourceGroups/${{ matrix.resource_group }}/providers/Microsoft.Security/locations/${{env.AZ_LOCATION}}/jitNetworkAccessPolicies/JIT-SSH-Policy-primary" -VirtualMachine $JitPolicyArr1
+            Start-AzJitNetworkAccessPolicy -ResourceId "/subscriptions/${{env.SubscriptionID}}/resourceGroups/${{ matrix.resource_group }}/providers/Microsoft.Security/locations/${{env.AZ_LOCATION}}/jitNetworkAccessPolicies/JIT-SSH-Policy-secondary" -VirtualMachine $JitPolicyArr2
           azPSVersion: "latest"
 
       - name: 🔎 Get VM Public IP Addresses
         run: |
-            echo "VM_Primary_IP_Address=$(az vm list-ip-addresses --resource-group ${{env.ResourceGroupName}} --name ${{env.VM_PRIMARY_NAME}} --query [0].virtualMachine.network.publicIpAddresses[0].ipAddress -o tsv)" >> $GITHUB_ENV
-            echo "VM_Secondary_IP_Address=$(az vm list-ip-addresses --resource-group ${{env.ResourceGroupName}} --name ${{env.VM_SECONDARY_NAME}} --query [0].virtualMachine.network.publicIpAddresses[0].ipAddress -o tsv)" >> $GITHUB_ENV
+            echo "VM_Primary_IP_Address=$(az vm list-ip-addresses --resource-group ${{ matrix.resource_group }} --name ${{env.VM_PRIMARY_NAME}} --query [0].virtualMachine.network.publicIpAddresses[0].ipAddress -o tsv)" >> $GITHUB_ENV
+            echo "VM_Secondary_IP_Address=$(az vm list-ip-addresses --resource-group ${{ matrix.resource_group }} --name ${{env.VM_SECONDARY_NAME}} --query [0].virtualMachine.network.publicIpAddresses[0].ipAddress -o tsv)" >> $GITHUB_ENV
       - run: echo ${{env.VM_Primary_IP_Address}}
       - run: echo ${{env.VM_Secondary_IP_Address}}
 

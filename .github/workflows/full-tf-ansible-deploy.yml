@@ -1,4 +1,4 @@
-name: Deploy an Oracle DB in a Data Guard configuration on Azure with Terraform and Ansible
+name: Full Deployment an Oracle DB in a Data Guard configuration on Azure with Terraform and Ansible
 on:
   workflow_dispatch:
     inputs:

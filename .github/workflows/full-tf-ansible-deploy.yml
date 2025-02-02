@@ -46,7 +46,7 @@ jobs:
       run: |
         list="${{ github.event.inputs.rg-list-input }}"
         echo "rg-list=[\"${list//', '/\",\"}\"]" >> $GITHUB_OUTPUT
-        echo ${list}
+        echo $rg-list
 
   
   terraform:

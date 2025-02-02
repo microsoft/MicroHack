@@ -31,6 +31,7 @@ permissions:
  
   
 jobs:
+
  ssh-keys:
     name: '🧮 Prepare and run Ansible Playbook'
     runs-on: ubuntu-20.04

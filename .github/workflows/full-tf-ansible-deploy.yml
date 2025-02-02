@@ -2,7 +2,7 @@ name: Full Deployment an Oracle DB in a Data Guard configuration on Azure with T
 on:
   workflow_dispatch:
     inputs:
-      rg-list:
+      rg-list-input:
         description: "Comma-separated list of Resource Groups for Ansible"
         required: true
         default: "rg-mh-oracle-1,rg-mh-oracle-2"
@@ -36,13 +36,27 @@ permissions:
   pull-requests: write
   
 jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      rg-list: ${{ steps.set-rg-list.outputs.rg-list }}
+    steps:
+    - uses: actions/checkout@v2
+    - id: set-rg-list
+      run: |
+        list="${{ github.event.inputs.rg-list-input }}"
+        echo "::set-output name=rg-list::[\"${list//', '/\",\"}\"]"
+        echo "[\"${list}\"]"
+
+  
   terraform:
+    needs: setup
     name: '🔧 Terraform'
     runs-on: ubuntu-latest
     environment: test-deploy
     strategy:
       matrix:
-        resource_group: ${{ split(github.event.inputs.rg_list, ',') }}
+        resource_group: ${{ fromJson(needs.setup.outputs.rg-list) }}
   
     defaults:
       run:

@@ -61,7 +61,9 @@ nodelist:
 templateName: General_Purpose.dbc
 
 oracleHomeUserPassword:
-emConfiguration: DBEXPRESS
+emConfiguration: NONE
+#emConfiguration: DBEXPRESS
+
 emExpressPort: 5500
 runCVUChecks:
 
@@ -93,7 +95,8 @@ walletPassword:
 listeners:
 variablesFile:
 initParams:
-sampleSchema: "TRUE"
+#sampleSchema: "TRUE"
+sampleSchema: "FALSE"
 memoryPercentage:
 databaseType: MULTIPURPOSE
 automaticMemoryManagement: "FALSE"

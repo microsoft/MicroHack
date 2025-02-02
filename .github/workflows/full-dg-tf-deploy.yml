@@ -20,7 +20,7 @@ on:
 env:
   TF_LOG: ${{ secrets.TF_LOG != '' && secrets.TF_LOG || 'INFO' }}                                                     #"INFO"
   AZ_LOCATION: ${{ secrets.AZ_LOCATION != '' && secrets.AZ_LOCATION || 'germanywestcentral' }}                             #"swedencentral" # can be parameterized
-  AZ_RG_BASENAME: ${{ secrets.AZ_RG_BASENAME != '' && secrets.AZ_RG_BASENAME || 'rg-mh-oracle2' }}  
+  AZ_RG_BASENAME: ${{ secrets.AZ_RG_BASENAME != '' && secrets.AZ_RG_BASENAME || 'rg-mh-oracle' }}  
   VM_PRIMARY_NAME: ${{ secrets.VM_PRIMARY_NAME != '' && secrets.VM_PRIMARY_NAME || 'vm-primary-0' }}                  # can be parameterized
   VM_SECONDARY_NAME: ${{ secrets.VM_SECONDARY_NAME != '' && secrets.VM_SECONDARY_NAME || 'vm-secondary-0' }}          # can be parameterized
   ORCL_DB_NAME: ${{ secrets.ORCL_DB_NAME != '' && secrets.ORCL_DB_NAME || 'ORCL' }}                                   #"ORCL" # can be parameterized
@@ -39,7 +39,8 @@ jobs:
     runs-on: ubuntu-latest
     environment: test-deploy
     strategy:
-      fail-fast: false
+      matrix:
+        resource_group: [1, 2]
   
     defaults:
       run:
@@ -89,7 +90,7 @@ jobs:
     - name: 🔎 Generate Random String for Resource Group Name
       id: resourcegroup-generator
       run: echo random=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 8; echo) >> $GITHUB_ENV
-    - run: echo ResourceGroupName=${{env.AZ_RG_BASENAME}}-${{env.random}} >> $GITHUB_ENV 
+    - run: echo ResourceGroupName=${{env.AZ_RG_BASENAME}}-${{ matrix.resource_group }}-${{env.random}} >> $GITHUB_ENV 
     - run: echo ${{env.ResourceGroupName}}
     
     #Login to Azure

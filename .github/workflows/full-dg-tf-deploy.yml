@@ -144,7 +144,7 @@ jobs:
     - name: 💻 Terraform Plan
       id: plan
       continue-on-error: true
-      run: terraform plan -no-color
+      run: terraform plan  -var "resourcegroup_name=${{ env.ResourceGroupName }}" -no-color
 
 
     - name: "Add a comment to pull requests with plan resutls"
@@ -183,7 +183,7 @@ jobs:
       run: terraform apply -auto-approve 
     
     - name: 🔃 Terraform Refresh State
-      run: terraform  apply -refresh-only -auto-approve
+      run: terraform  apply -var "resourcegroup_name=${{ env.ResourceGroupName }}" -refresh-only -auto-approve
 
     # - run: echo "vm_public_ip_address=$(terraform output vm_public_ip_address)" >> $GITHUB_ENV
     # - run: echo ${{env.vm_public_ip_address}}

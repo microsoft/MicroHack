@@ -183,7 +183,7 @@ jobs:
       run: terraform apply -auto-approve 
     
     - name: 🔃 Terraform Refresh State
-      run: terraform  apply -var "resourcegroup_name=${{ env.ResourceGroupName }}" -refresh-only -auto-approve
+      run: terraform  apply -refresh-only -auto-approve
 
     # - run: echo "vm_public_ip_address=$(terraform output vm_public_ip_address)" >> $GITHUB_ENV
     # - run: echo ${{env.vm_public_ip_address}}

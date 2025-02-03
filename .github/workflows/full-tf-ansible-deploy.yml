@@ -39,15 +39,14 @@ jobs:
   setup:
     runs-on: ubuntu-latest
     outputs:
-      rg-list: ${{ steps.set-rg-list.outputs.rg-list }}
+      rg-list: ${{ github.event.inputs.rg-list }}
     steps:
     - uses: actions/checkout@v2
     - id: set-rg-list
       run: |
         list="${{ github.event.inputs.rg-list-input }}"
         echo "rg-list=[\"${list//', '/\",\"}\"]" >> $GITHUB_OUTPUT
-        echo ${rg-list}
-        echo "RG List JSON: ${{ steps.set-rg-list.outputs.rg-list }}"
+        echo "RG List JSON: ${{env.list }}"
   
   terraform:
     needs: setup
@@ -57,13 +56,13 @@ jobs:
     strategy:
       matrix:
         resource_group: ${{ fromJson(needs.setup.outputs.rg-list) }}
-  
+
     defaults:
       run:
         shell: bash
         working-directory: ./03-Azure/01-03-Infrastructure/10_Oracle_on_Azure/resources/environment_setup/terraform/data_guard
     steps:
-
+     
     # Checkout the repository to the GitHub Actions runner
     - name: Checkout
       uses: actions/checkout@v4
@@ -78,6 +77,7 @@ jobs:
     #Check if the SSH key is empty
     - name: 🔎 Validate SSH Key is not empty
       run: |
+        echo "Resource Group: ${{ matrix.resource_group }}"
         if [ -z "${{ secrets.SSH_PRIVATE_KEY }}" ]
         then
           echo "SSH_PRIVATE_KEY is empty, you should add a SSH key to the repository secrets. Name of the secret should be SSH_PRIVATE_KEY"

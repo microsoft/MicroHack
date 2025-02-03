@@ -45,7 +45,7 @@ jobs:
     - id: set-rg-list
       run: |
         list="${{  github.event.inputs['rg-list-input'] }}"
-        json="[\"${list//, /\",\"}\"]"
+        json="[\"${list//', '/\",\"}\"]"
         echo "::set-output name=rg-list::${json}"
         echo "rg-list output is: ${json}"
   

@@ -48,7 +48,7 @@ jobs:
         list="${{ github.event.inputs['rg-list-input'] }}"
         trimmed=$(echo "$list" | sed 's/, */,/g')
         json=$(echo "$list" | sed 's/^/["/; s/$/"]/; s/,/","/g')
-        echo "::set-output name=rg-list::${json}"
+        echo "{rg-list}={json}" >> $GITHUB_OUTPUT
         echo "rg-list output: ${json}"
   
   terraform:
@@ -217,9 +217,9 @@ jobs:
 #                                     SSH Keys and parameter preparation for Ansible                                                         #
 ##############################################################################################################################################
  
-  ssh-keys:
+  ansible:
      name: '🧮 Prepare and run Ansible Playbook'
-     needs: terraform
+     needs: [terraform, setup]
      runs-on: ubuntu-20.04
      environment: test-deploy
      strategy:

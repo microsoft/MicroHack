@@ -219,11 +219,12 @@ jobs:
  
   ssh-keys:
      name: '🧮 Prepare and run Ansible Playbook'
+     needs: terraform
      runs-on: ubuntu-20.04
      environment: test-deploy
      strategy:
        matrix:
-         resource_group: [rg-mh-oracle-1, rg-mh-oracle-2]
+         resource_group: ${{ fromJson(needs.setup.outputs.rg-list) }}
      defaults:
        run:
          shell: bash

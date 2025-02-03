@@ -44,10 +44,12 @@ jobs:
     - uses: actions/checkout@v2
     - id: set-rg-list
       run: |
-        list="${{  github.event.inputs['rg-list-input'] }}"
-        json="[\"${list//', '/\",\"}\"]"
+        # Get the input value (example: "rg1, rg2")
+        list="${{ github.event.inputs['rg-list-input'] }}"
+        trimmed=$(echo "$list" | sed 's/, */,/g')
+        json=$(echo "$list" | sed 's/^/["/; s/$/"]/; s/,/","/g')
         echo "::set-output name=rg-list::${json}"
-        echo "[\"${json}\"]"
+        echo "rg-list output: ${json}"
   
   terraform:
     needs: setup
@@ -56,7 +58,7 @@ jobs:
     environment: test-deploy
     strategy:
       matrix:
-        resource_group: ${{fromJson('["rg-mh-oracle-1", "rg-mh-oracle-2"]') }}
+        resource_group: ${{ fromJson(needs.setup.outputs.rg-list) }}
   
     defaults:
       run:

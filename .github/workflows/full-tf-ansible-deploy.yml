@@ -45,9 +45,9 @@ jobs:
     - id: set-rg-list
       run: |
         list="${{  github.event.inputs['rg-list-input'] }}"
-        echo "rg-list=[\"${list//', '/\",\"}\"]" >> $GITHUB_OUTPUT
-        echo ${rg-list}
-        echo "RG List JSON: ${{ github.event.inputs['rg-list-input'] }}"
+        json="[\"${list//, /\",\"}\"]"
+        echo "::set-output name=rg-list::${json}"
+        echo "rg-list output is: ${json}"
   
   terraform:
     needs: setup

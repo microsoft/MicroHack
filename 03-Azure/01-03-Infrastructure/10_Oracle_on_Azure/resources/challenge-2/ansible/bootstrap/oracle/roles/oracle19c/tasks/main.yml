@@ -1,0 +1,136 @@
+---
+
+- name: set oracle user environment for standalone
+  when: data_guard == "no"
+  lineinfile: dest=/home/{{ oracle_user }}/.bashrc state=present line="{{ item }}"
+  with_items:
+    - "export ORACLE_BASE={{ ora_user_env.ORACLE_BASE }}"
+    - "export ORACLE_SID={{ ora_user_env.ORACLE_SID }}"
+    - "export ORACLE_HOME={{ ora_user_env.ORACLE_HOME }}"
+    - "export PATH=$PATH:$ORACLE_HOME/bin"
+    - "export NLS_LANG={{ ora_user_env.NLS_LANG }}"
+
+- name: set oracle user environment for primary
+  when: data_guard == "yes" and inventory_hostname in groups['ora-x1']
+  lineinfile: dest=/home/{{ oracle_user }}/.bashrc state=present line="{{ item }}"
+  with_items:
+    - "export ORACLE_BASE={{ ora_user_env.ORACLE_BASE }}"
+    - "export ORACLE_SID={{ ora_user_env.ORACLE_SID }}"
+    - "export ORACLE_HOME={{ ora_user_env.ORACLE_HOME }}"
+    - "export PATH=$PATH:$ORACLE_HOME/bin"
+    - "export NLS_LANG={{ ora_user_env.NLS_LANG }}"
+
+- name: set oracle user environment for secondary
+  when: data_guard == "yes" and inventory_hostname in groups['ora-x2']
+  lineinfile: dest=/home/{{ oracle_user }}/.bashrc state=present line="{{ item }}"
+  with_items:
+    - "export ORACLE_BASE={{ ora_user_env.ORACLE_BASE }}"
+    - "export ORACLE_SID={{ ora_user_env.ORACLE_SID }}DG1"
+    - "export ORACLE_HOME={{ ora_user_env.ORACLE_HOME }}"
+    - "export PATH=$PATH:$ORACLE_HOME/bin"
+    - "export NLS_LANG={{ ora_user_env.NLS_LANG }}"
+
+- name: disable firewalld
+  systemd:
+    name: firewalld
+    state: stopped
+    enabled: false
+
+- name: disable transparent_hugepage
+  replace:
+    path: /etc/default/grub
+    regexp: '^GRUB_CMDLINE_LINUX="(.*)"$'
+    replace: 'GRUB_CMDLINE_LINUX="\1 transparent_hugepage=never"' 
+
+- name: make grub.cfg
+  command: grub2-mkconfig -o /boot/grub2/grub.cfg
+
+- name: reboot
+  shell: "sleep 5 && reboot"
+  async: 1
+  poll: 0
+
+- name: wait for rebooting
+  wait_for_connection: 
+    connect_timeout: 5
+    sleep: 5
+    delay: 20
+    timeout: 240
+
+- name: check transparent_hugepage
+  shell: "cat /sys/kernel/mm/transparent_hugepage/enabled"
+  register: result_hugepage
+
+- name: debug
+  debug:
+    var: result_hugepage
+ 
+#
+# install Oracle Database software
+#
+
+- name: create the oracle installation path
+  file:
+    mode: 0755
+    path: "{{ oracle_path }}"
+    state: directory
+    group: "{{ oracle_group }}"
+    owner: "{{ oracle_user }}"
+
+- name: create $ORACLE_HOME directory
+  file:
+    mode: 0755
+    path: "{{ oracle_db_home }}"
+    state: directory
+    group: "{{ oracle_group }}"
+    owner: "{{ oracle_user }}"
+
+- name: create $ORACLE_HOME/patch directory
+  file:
+    mode: 0755
+    path: "{{ oracle_db_home }}/patch"
+    state: directory
+    group: "{{ oracle_group }}"
+    owner: "{{ oracle_user }}"
+
+- block:
+  - name: copy response file for silent install
+    template:
+      src: db_install.rsp.j2
+      dest: /home/{{ oracle_user }}/db_install.rsp
+
+  # Code to get user assigned identity access token and save to access_token variable then use it to download Oracle Binaries zip file from storage account
+  - name: Download Oracle binaries from storage account
+    shell: |
+      access_token=$(curl "http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https%3A%2F%2Fstorage.azure.com/" -H Metadata:true | jq -r '.access_token')
+      curl "https://{{ storage_account }}.blob.core.windows.net/{{ storage_container }}/{{ storage_blob }}" -H "x-ms-version: 2017-11-09" -H "Authorization: Bearer $access_token" -o /home/{{ oracle_user }}/{{ storage_blob }}
+
+  - name: extract the installation media to $ORACLE_HOME
+    unarchive:
+      src: /home/oracle/{{ storage_blob }}
+      dest: "{{ oracle_db_home }}"
+      remote_src: yes
+
+  - name: Workaround Unsupported OS version
+    lineinfile: 
+      path: "{{ oracle_db_home }}/cv/admin/cvu_config"
+      regexp: "^CV_ASSUME_DISTID="
+      line: "CV_ASSUME_DISTID=OEL7.8"
+      state: present
+
+  - name: Install Oracle Database software      
+    shell: echo "{{ oracle_pass_raw }}" | ./runInstaller -responseFile /home/{{ oracle_user }}/db_install.rsp -silent #-applyRU {{ oracle_db_home }}/patch/{{ oracle_patch_number }}
+    ignore_errors: true
+    args:
+      chdir: "{{ oracle_db_home }}"
+  
+  - name: start listener
+    when: data_guard == "no" or inventory_hostname in groups['ora-x1']
+    shell: |
+            source ~/.bashrc
+            lsnrctl start
+    ignore_errors: true
+    tags: start_listener
+
+  become: true
+  become_user: "{{ oracle_user }}"

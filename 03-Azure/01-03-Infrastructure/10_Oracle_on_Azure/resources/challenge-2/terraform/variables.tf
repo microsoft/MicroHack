@@ -9,7 +9,7 @@ variable "location" {
 variable "resource_group_name" {
   description = "The name of the resource group"
   type        = string
-  default     = "challenge-1" # you should add a unique prefix (i.e. your name) here to avoid name collisions with your co-participants
+  default     = "challenge-2" # you should add a unique prefix (i.e. your name) here to avoid name collisions with your co-participants
 }
 
 variable "vm_size" {
@@ -25,7 +25,7 @@ variable "path_to_ssh_key_file" {
 }
 
 # change the size, IOPS and throughput of each disk according to the requirements.
-# Please note: It's recommended to separate at least the disks or database files, redo logs and other files.
+# Please note: It's recommended to separate at least the disks for database files, redo logs.
 variable "data_disk_config" {
   description = "The configuration for the data disks"
   type        = map(object({
@@ -43,13 +43,6 @@ variable "data_disk_config" {
       throughput = 150
       caching   = "None"
     }
-    asm_disk = {
-      name      = "asm_disk"
-      size_gb   = 128
-      iops      = 5000
-      throughput = 150
-      caching   = "None"
-    }
     redo_disk = {
       name      = "redo_disk"
       size_gb   = 128
@@ -61,6 +54,14 @@ variable "data_disk_config" {
 }
 
 # no need to change the below parameters for the microhack
+
+variable "user_assigned_identity" {
+  description = "The user assigned identity for the virtual machine, to authorize access to be oracle binaries stored on Azure Blob Storage"
+  type        = object({
+    name           = string
+    resource_group = string
+  })
+}
 
 variable "availability_zone" {
   description = "The availability zone for the virtual machine"
@@ -78,4 +79,19 @@ variable "vm_username" {
   description = "The admin username for the virtual machine"
   type        = string
   default     = "adminuser"
+}
+
+variable "vm_image" {
+  type        = object({
+    publisher = string
+    offer     = string
+    sku       = string
+    version   = string
+  })
+  default = {
+    publisher = "Oracle"                # "oracle"
+    offer     = "Oracle-Linux"          # "oracle-database-19-3"
+    sku       = "ol810-lvm-gen2"               # "oracle-database-19-0904"
+    version   = "latest"
+  }
 }

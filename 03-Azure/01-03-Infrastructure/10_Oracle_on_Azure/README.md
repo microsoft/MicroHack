@@ -110,11 +110,11 @@ Migrate the Oracle database to an Azure VM
 * You have successfully ....
 
 ### Learning resources
-* Link to https://learn.microsoft.com/en-us/azure/....
+* [Create an Oracle Database in an Azure VM](https://learn.microsoft.com/en-us/azure/virtual-machines/workloads/oracle/oracle-database-quick-create)
 
 ### Solution - Spoilerwarning
 
-[Solution Steps](./walkthrough/challenge-1/solution.md)
+[Solution Steps](./walkthrough/challenge-2/solution.md)
 
 ## Challenge 3: Oracle to PaaS migration
 

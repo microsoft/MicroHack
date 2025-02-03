@@ -60,6 +60,7 @@ jobs:
   
     defaults:
       run:
+        
         shell: bash
         working-directory: ./03-Azure/01-03-Infrastructure/10_Oracle_on_Azure/resources/environment_setup/terraform/data_guard
     steps:
@@ -120,6 +121,7 @@ jobs:
 
     - name: 🗒️ Create a tfvars file for terraform
       run: |
+        echo "matrix rg is output is: ${{ matrix.resource_group }}"
         cat > terraform.tfvars <<EOF
         location = "${{env.AZ_LOCATION}}"
         resourcegroup_name = "${{ matrix.resource_group }}"

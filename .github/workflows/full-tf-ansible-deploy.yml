@@ -48,7 +48,7 @@ jobs:
         list="${{ github.event.inputs['rg-list-input'] }}"
         trimmed=$(echo "$list" | sed 's/, */,/g')
         json=$(echo "$list" | sed 's/^/["/; s/$/"]/; s/,/","/g')
-        echo "{rg-list}={json}" >> $GITHUB_OUTPUT
+        echo "::set-output name=rg-list::${json}"
         echo "rg-list output: ${json}"
   
   terraform:

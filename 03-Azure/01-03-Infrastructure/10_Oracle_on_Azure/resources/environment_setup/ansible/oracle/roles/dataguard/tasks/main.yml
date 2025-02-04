@@ -109,8 +109,8 @@
   - debug: var=out.stdout_lines
   
   - name: Wait for 10 seconds for the listener to start
-  pause:
-    seconds: 10
+    pause:
+      seconds: 10
 
 
   - name: Copy RMAN Script

@@ -73,12 +73,3 @@ resource "azurerm_synapse_sql_pool" "sqlpool" {
   create_mode           = "Default"
 }
 
-#######################################################################
-## Authorize Synapse to ADLS Account
-#######################################################################
-
-resource "azurerm_role_assignment" "synapsetoadls" {
-  scope = azurerm_resource_group.rg.id
-  role_definition_name = "Storage Blob Data Contributor"
-  principal_id = azurerm_synapse_workspace.synapse.identity[0].principal_id
-}

@@ -40,11 +40,7 @@ locals {
   object_id = data.azurerm_client_config.user.object_id == "" ? data.external.azaccount.result.objectId : data.azurerm_client_config.user.object_id
 }
 
-resource "azurerm_role_assignment" "storagerole" {
-  scope                 = azurerm_resource_group.rg.id
-  role_definition_name  = "Storage Blob Data Contributor"
-  principal_id          = local.object_id
-}
+
 
 #######################################################################
 ## Create Virtual Networks

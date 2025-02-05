@@ -2,10 +2,10 @@ name: Run Ansible Playbook on the two Oracle VMs
 on:
   workflow_dispatch:
     inputs:
-      example_input:
-        description: "Example input"
-        required: false
-    
+      rg-list-input:
+        description: "Comma-separated list of Resource Groups for Ansible"
+        required: true
+        default: "rg-mh-oracle-1,rg-mh-oracle-2"
 env:
   TF_LOG: ${{ secrets.TF_LOG != '' && secrets.TF_LOG || 'INFO' }}                                                     #"INFO"
   AZ_LOCATION: ${{ secrets.AZ_LOCATION != '' && secrets.AZ_LOCATION || 'germanywestcentral' }}                             #"swedencentral" # can be parameterized
@@ -31,128 +31,142 @@ permissions:
  
   
 jobs:
-
- ssh-keys:
-    name: '🧮 Prepare and run Ansible Playbook'
-    runs-on: ubuntu-20.04
-    environment: test-deploy
-    strategy:
-      matrix:
-        resource_group: [rg-mh-oracle-1, rg-mh-oracle-2]
-    defaults:
-      run:
-        shell: bash
-        working-directory: ./03-Azure/01-03-Infrastructure/10_Oracle_on_Azure/resources/environment_setup/ansible/oracle
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      rg-list: ${{ steps.set-rg-list.outputs.rg-list }}
     steps:
-      - name: 🛒 Checkout
-        uses: actions/checkout@v4
+    - uses: actions/checkout@v2
+    - id: set-rg-list
+      run: |
+        # Get the input value (example: "rg1, rg2")
+        list="${{ github.event.inputs['rg-list-input'] }}"
+        trimmed=$(echo "$list" | sed 's/, */,/g')
+        json=$(echo "$list" | sed 's/^/["/; s/$/"]/; s/,/","/g')
+        echo "::set-output name=rg-list::${json}"
+        echo "rg-list output: ${json}"
+  ansible:
+      needs: setup
+      name: '🧮 Prepare and run Ansible Playbook'
+      runs-on: ubuntu-20.04
+      environment: test-deploy
+      strategy:
+        matrix:
+          resource_group: ${{ fromJson(needs.setup.outputs.rg-list) }}
+      defaults:
+        run:
+          shell: bash
+          working-directory: ./03-Azure/01-03-Infrastructure/10_Oracle_on_Azure/resources/environment_setup/ansible/oracle
+      steps:
+        - name: 🛒 Checkout
+          uses: actions/checkout@v4
 
-      - name: 🔎 Check IP
-        run: echo "currentRunnerIP=$(curl https://api.ipify.org)" >> $GITHUB_ENV
-      - run: echo "currentRunnerIP=${{env.currentRunnerIP}}"
-      
-      - name: 'Install SSH Key'
-        uses: shimataro/ssh-key-action@v2
-        with: 
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          name: 'github_actions_id_rsa'
-          known_hosts: "sometin"
-      
-      # Login to Azure CLI
-      - name: 🔑 Login via Azure CLI
-        uses: azure/login@v1
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        - name: 🔎 Check IP
+          run: echo "currentRunnerIP=$(curl https://api.ipify.org)" >> $GITHUB_ENV
+        - run: echo "currentRunnerIP=${{env.currentRunnerIP}}"
+        
+        - name: 'Install SSH Key'
+          uses: shimataro/ssh-key-action@v2
+          with: 
+            key: ${{ secrets.SSH_PRIVATE_KEY }}
+            name: 'github_actions_id_rsa'
+            known_hosts: "sometin"
+        
+        # Login to Azure CLI
+        - name: 🔑 Login via Azure CLI
+          uses: azure/login@v1
+          with:
+            client-id: ${{ secrets.AZURE_CLIENT_ID }}
+            tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+            subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      # Get Subscription ID
-      - name: 🔎 Get Subscription ID
-        id: subid
-        run: echo "SubscriptionID=$(az account show --query id -o tsv)" >> $GITHUB_ENV
-      - run: echo ${{env.SubscriptionID}} 
+        # Get Subscription ID
+        - name: 🔎 Get Subscription ID
+          id: subid
+          run: echo "SubscriptionID=$(az account show --query id -o tsv)" >> $GITHUB_ENV
+        - run: echo ${{env.SubscriptionID}} 
 
-      
-      - name: ⌛ Calculate endTimeUTC for JIT request 
-        run: echo "endTimeUtc=$(date -d '+2 hour' '+%FT%T')" >> $GITHUB_ENV
-      - run: echo "endTimeUtc=${{env.endTimeUtc}}"
-      - run: echo "ResourceGroupName=${{ matrix.resource_group }}"
-      
-      - name: 🔑 Login via Az Module
-        uses: azure/login@v1
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          enable-AzPSSession: true 
+        
+        - name: ⌛ Calculate endTimeUTC for JIT request 
+          run: echo "endTimeUtc=$(date -d '+2 hour' '+%FT%T')" >> $GITHUB_ENV
+        - run: echo "endTimeUtc=${{env.endTimeUtc}}"
+        - run: echo "ResourceGroupName=${{ matrix.resource_group }}"
+        
+        - name: 🔑 Login via Az Module
+          uses: azure/login@v1
+          with:
+            client-id: ${{ secrets.AZURE_CLIENT_ID }}
+            tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+            subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+            enable-AzPSSession: true 
 
-      - name: ✅ Enable JIT on VM
-        uses: azure/powershell@v1
-        with:
-          inlineScript: |
-            $JitPolicyVm1 = (@{id="/subscriptions/${{env.SubscriptionID}}/resourceGroups/${{ matrix.resource_group }}/providers/Microsoft.Compute/virtualMachines/${{env.VM_PRIMARY_NAME}}"; ports=(@{number=22;endTimeUtc="${{env.endTimeUtc}}";allowedSourceAddressPrefix=@("${{env.currentRunnerIP}}")})})
-            $JitPolicyVm2 = (@{id="/subscriptions/${{env.SubscriptionID}}/resourceGroups/${{ matrix.resource_group }}/providers/Microsoft.Compute/virtualMachines/${{env.VM_SECONDARY_NAME}}"; ports=(@{number=22;endTimeUtc="${{env.endTimeUtc}}";allowedSourceAddressPrefix=@("${{env.currentRunnerIP}}")})})
-            $JitPolicyArr1=@($JitPolicyVm1)
-            $JitPolicyArr2=@($JitPolicyVm2)
-            Start-AzJitNetworkAccessPolicy -ResourceId "/subscriptions/${{env.SubscriptionID}}/resourceGroups/${{ matrix.resource_group }}/providers/Microsoft.Security/locations/${{env.AZ_LOCATION}}/jitNetworkAccessPolicies/JIT-SSH-Policy-primary" -VirtualMachine $JitPolicyArr1
-            Start-AzJitNetworkAccessPolicy -ResourceId "/subscriptions/${{env.SubscriptionID}}/resourceGroups/${{ matrix.resource_group }}/providers/Microsoft.Security/locations/${{env.AZ_LOCATION}}/jitNetworkAccessPolicies/JIT-SSH-Policy-secondary" -VirtualMachine $JitPolicyArr2
-          azPSVersion: "latest"
+        - name: ✅ Enable JIT on VM
+          uses: azure/powershell@v1
+          with:
+            inlineScript: |
+              $JitPolicyVm1 = (@{id="/subscriptions/${{env.SubscriptionID}}/resourceGroups/${{ matrix.resource_group }}/providers/Microsoft.Compute/virtualMachines/${{env.VM_PRIMARY_NAME}}"; ports=(@{number=22;endTimeUtc="${{env.endTimeUtc}}";allowedSourceAddressPrefix=@("${{env.currentRunnerIP}}")})})
+              $JitPolicyVm2 = (@{id="/subscriptions/${{env.SubscriptionID}}/resourceGroups/${{ matrix.resource_group }}/providers/Microsoft.Compute/virtualMachines/${{env.VM_SECONDARY_NAME}}"; ports=(@{number=22;endTimeUtc="${{env.endTimeUtc}}";allowedSourceAddressPrefix=@("${{env.currentRunnerIP}}")})})
+              $JitPolicyArr1=@($JitPolicyVm1)
+              $JitPolicyArr2=@($JitPolicyVm2)
+              Start-AzJitNetworkAccessPolicy -ResourceId "/subscriptions/${{env.SubscriptionID}}/resourceGroups/${{ matrix.resource_group }}/providers/Microsoft.Security/locations/${{env.AZ_LOCATION}}/jitNetworkAccessPolicies/JIT-SSH-Policy-primary" -VirtualMachine $JitPolicyArr1
+              Start-AzJitNetworkAccessPolicy -ResourceId "/subscriptions/${{env.SubscriptionID}}/resourceGroups/${{ matrix.resource_group }}/providers/Microsoft.Security/locations/${{env.AZ_LOCATION}}/jitNetworkAccessPolicies/JIT-SSH-Policy-secondary" -VirtualMachine $JitPolicyArr2
+            azPSVersion: "latest"
 
-      - name: 🔎 Get VM Public IP Addresses
-        run: |
-            echo "VM_Primary_IP_Address=$(az vm list-ip-addresses --resource-group ${{ matrix.resource_group }} --name ${{env.VM_PRIMARY_NAME}} --query [0].virtualMachine.network.publicIpAddresses[0].ipAddress -o tsv)" >> $GITHUB_ENV
-            echo "VM_Secondary_IP_Address=$(az vm list-ip-addresses --resource-group ${{ matrix.resource_group }} --name ${{env.VM_SECONDARY_NAME}} --query [0].virtualMachine.network.publicIpAddresses[0].ipAddress -o tsv)" >> $GITHUB_ENV
-      - run: echo ${{env.VM_Primary_IP_Address}}
-      - run: echo ${{env.VM_Secondary_IP_Address}}
+        - name: 🔎 Get VM Public IP Addresses
+          run: |
+              echo "VM_Primary_IP_Address=$(az vm list-ip-addresses --resource-group ${{ matrix.resource_group }} --name ${{env.VM_PRIMARY_NAME}} --query [0].virtualMachine.network.publicIpAddresses[0].ipAddress -o tsv)" >> $GITHUB_ENV
+              echo "VM_Secondary_IP_Address=$(az vm list-ip-addresses --resource-group ${{ matrix.resource_group }} --name ${{env.VM_SECONDARY_NAME}} --query [0].virtualMachine.network.publicIpAddresses[0].ipAddress -o tsv)" >> $GITHUB_ENV
+        - run: echo ${{env.VM_Primary_IP_Address}}
+        - run: echo ${{env.VM_Secondary_IP_Address}}
 
-      - name: 🧮 Get Known Hosts parameter using ssh-keyscan
-        run: |
-          ssh-keyscan -T 300 -H ${{env.VM_Primary_IP_Address}} >> /home/runner/.ssh/known_hosts
-          ssh-keyscan -T 300 -H ${{env.VM_Secondary_IP_Address}} >> /home/runner/.ssh/known_hosts
+        - name: 🧮 Get Known Hosts parameter using ssh-keyscan
+          run: |
+            ssh-keyscan -T 300 -H ${{env.VM_Primary_IP_Address}} >> /home/runner/.ssh/known_hosts
+            ssh-keyscan -T 300 -H ${{env.VM_Secondary_IP_Address}} >> /home/runner/.ssh/known_hosts
 
-      - name: 🗒️ Create the inventory file
-        run: |
-          cat > inventory <<EOF
-          [ora-x1]
-          ${{env.VM_PRIMARY_NAME}} ansible_host=${{env.VM_Primary_IP_Address}} ansible_ssh_private_key_file=/home/runner/.ssh/github_actions_id_rsa ansible_user=oracle
+        - name: 🗒️ Create the inventory file
+          run: |
+            cat > inventory <<EOF
+            [ora-x1]
+            ${{env.VM_PRIMARY_NAME}} ansible_host=${{env.VM_Primary_IP_Address}} ansible_ssh_private_key_file=/home/runner/.ssh/github_actions_id_rsa ansible_user=oracle
 
-          [ora-x2]
-          ${{env.VM_SECONDARY_NAME}} ansible_host=${{env.VM_Secondary_IP_Address}} ansible_ssh_private_key_file=/home/runner/.ssh/github_actions_id_rsa ansible_user=oracle
-          EOF
+            [ora-x2]
+            ${{env.VM_SECONDARY_NAME}} ansible_host=${{env.VM_Secondary_IP_Address}} ansible_ssh_private_key_file=/home/runner/.ssh/github_actions_id_rsa ansible_user=oracle
+            EOF
 
-      - name: 🗒️ Show the inventory file
-        run: cat inventory
+        - name: 🗒️ Show the inventory file
+          run: cat inventory
 
-##############################################################################################################################################
-#                                    Ansible                                                                                                 #
-##############################################################################################################################################
-      - name: '🗒️💿🔧 Invoke ansible playbook 😴😴😴'
-        run: ansible-playbook playbook_dg.yml -i inventory --extra-vars "data_guard=yes"
+  ##############################################################################################################################################
+  #                                    Ansible                                                                                                 #
+  ##############################################################################################################################################
+        - name: '🗒️💿🔧 Invoke ansible playbook 😴😴😴'
+          run: ansible-playbook playbook_dg.yml -i inventory --extra-vars "data_guard=yes"
 
-      # - name: Run Ansible playbook to test Oracle database state
-      #   run: ansible-playbook testplaybook_dg.yml -i inventory > ansible_output.txt
-  
-      # - name: Evaluate test output
-      #   run: |
-      #     lines=(
-      #       "INSTANCE_NAME\t STATUS       DATABASE_STATUS"
-      #       "${{env.ORCL_DB_NAME}}\t\t OPEN\t      ACTIVE"
-      #     )
-      #     found_all=true
-      #     for line in "${lines[@]}"; do
-      #       if ! grep -qF "$line" "ansible_output.txt"; then
-      #         found_all=false
-      #         break
-      #       fi
-      #     done
-      #     if $found_all; then
-      #       echo "All lines found in the output."
-      #       # Perform further actions based on the output
-      #     else
-      #       echo "Not all lines found in the output. Showing ansible output:"
-      #       cat ansible_output.txt
-      #       exit 1  # Exit with a non-zero code to indicate failure
-      #     fi      
+        # - name: Run Ansible playbook to test Oracle database state
+        #   run: ansible-playbook testplaybook_dg.yml -i inventory > ansible_output.txt
+    
+        # - name: Evaluate test output
+        #   run: |
+        #     lines=(
+        #       "INSTANCE_NAME\t STATUS       DATABASE_STATUS"
+        #       "${{env.ORCL_DB_NAME}}\t\t OPEN\t      ACTIVE"
+        #     )
+        #     found_all=true
+        #     for line in "${lines[@]}"; do
+        #       if ! grep -qF "$line" "ansible_output.txt"; then
+        #         found_all=false
+        #         break
+        #       fi
+        #     done
+        #     if $found_all; then
+        #       echo "All lines found in the output."
+        #       # Perform further actions based on the output
+        #     else
+        #       echo "Not all lines found in the output. Showing ansible output:"
+        #       cat ansible_output.txt
+        #       exit 1  # Exit with a non-zero code to indicate failure
+        #     fi      
 
 
-          
+            

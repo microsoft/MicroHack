@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       rg-list-input:
-        description: "Comma-separated list of Resource Groups for Ansible"
+        description: "Comma-separated list of Resource Groups"
         required: true
         default: "rg-mh-oracle-1,rg-mh-oracle-2"
   

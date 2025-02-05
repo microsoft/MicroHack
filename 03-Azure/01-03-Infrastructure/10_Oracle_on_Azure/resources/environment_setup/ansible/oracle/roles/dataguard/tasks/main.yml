@@ -108,21 +108,6 @@
     register: out
   - debug: var=out.stdout_lines
   
-  - name: reboot
-    shell: "sleep 5 && reboot"
-    async: 1
-    poll: 0
-    become: true
-    become_user: root
-
-  - name: wait for rebooting
-    wait_for_connection: 
-      connect_timeout: 5
-      sleep: 5
-      delay: 20
-      timeout: 240
-
-
   - name: Copy RMAN Script
     when: inventory_hostname in groups['ora-x1']
     template: src=rman.sql.j2 dest=/u01/app/rman.sql 

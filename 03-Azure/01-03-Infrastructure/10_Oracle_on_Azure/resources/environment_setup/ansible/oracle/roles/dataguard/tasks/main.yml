@@ -108,13 +108,19 @@
     register: out
   - debug: var=out.stdout_lines
   
-  - name: Wait for Oracle Listener to be active
-    when: inventory_hostname in groups['ora-x1']
-    wait_for:
-      host: "localhost"
-      port: 1521
-      delay: 5
-      timeout: 60
+  - name: reboot
+    shell: "sleep 5 && reboot"
+    async: 1
+    poll: 0
+    become: true
+    become_user: root
+
+  - name: wait for rebooting
+    wait_for_connection: 
+      connect_timeout: 5
+      sleep: 5
+      delay: 20
+      timeout: 240
 
 
   - name: Copy RMAN Script

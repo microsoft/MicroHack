@@ -108,6 +108,14 @@
     register: out
   - debug: var=out.stdout_lines
   
+  - name: Wait for Oracle Listener to be active
+    when: inventory_hostname in groups['ora-x1']
+    wait_for:
+      host: "localhost"
+      port: 1521
+      delay: 5
+      timeout: 60
+
 
   - name: Copy RMAN Script
     when: inventory_hostname in groups['ora-x1']

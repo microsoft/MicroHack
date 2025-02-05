@@ -5,3 +5,4 @@
   roles:
    - dbca
    - dataguard
+   - testdataguard

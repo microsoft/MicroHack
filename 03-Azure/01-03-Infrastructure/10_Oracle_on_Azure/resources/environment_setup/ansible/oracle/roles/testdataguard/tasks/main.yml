@@ -19,6 +19,7 @@
   become_user: "{{ oracle_user }}"
 
 - name: Extract numeric count from SQL output
+  when: inventory_hostname in groups['ora-x1']
   set_fact:
     count_result: "{{ sql_output.stdout_lines | select('match', '^\\s*\\d+\\s*$') | list | first | trim }}"
 

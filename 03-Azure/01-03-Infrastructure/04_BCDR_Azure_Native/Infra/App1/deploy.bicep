@@ -60,6 +60,7 @@ module logAnalytics './MODULES/MONITORING/monitor.bicep' = {
 module asrvault './MODULES/SITERECOVERY/asrvault.bicep' = {
   name: 'asrvault'
   scope: targetRG
+  crossRegionRestore: 'Enabled'
   params: {
     namePrefix: parDeploymentPrefix
     // logAnalyticsWorkspaceId: logAnalytics.outputs.logAnalyticsWorkspaceId

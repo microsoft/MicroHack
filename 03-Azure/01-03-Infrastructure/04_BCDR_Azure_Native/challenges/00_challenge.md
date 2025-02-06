@@ -73,4 +73,4 @@ To deploy the lab environment using **terraform**, click the link below.
 
 - [Deploy to Azure (terraform)](./resources/terraform/README.md)
 
-**| [< Microhack Overview](../README.md) | [Challenge 1 >](./01_challenge.md) |**
+**| [< Microhack Overview](../Readme.md) | [Challenge 1 >](./01_challenge.md) |**

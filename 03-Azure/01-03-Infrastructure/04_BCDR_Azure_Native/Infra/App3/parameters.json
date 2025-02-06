@@ -6,10 +6,10 @@
             "value": "germanywestcentral"
         },
         "networkInterfaceName1": {
-            "value": "my-vm55_z1"
+            "value": "vm-data-science699_z1"
         },
         "networkSecurityGroupName": {
-            "value": "my-VM-nsg"
+            "value": "VM-Data-Science-nsg"
         },
         "networkSecurityGroupRules": {
             "value": [
@@ -48,26 +48,11 @@
         "subnetName": {
             "value": "default"
         },
-        "virtualNetworkName": {
-            "value": "my-VM-vnet"
-        },
-        "addressPrefixes": {
-            "value": [
-                "10.2.0.0/16"
-            ]
-        },
-        "subnets": {
-            "value": [
-                {
-                    "name": "default",
-                    "properties": {
-                        "addressPrefix": "10.2.0.0/24"
-                    }
-                }
-            ]
+        "virtualNetworkId": {
+            "value": "/subscriptions/9ada2fb8-4acf-44f0-a1f9-9532dde57b98/resourceGroups/myresourcegroup/providers/Microsoft.Network/virtualNetworks/my-VM-vnet"
         },
         "publicIpAddressName1": {
-            "value": "my-VM-ip"
+            "value": "VM-Data-Science-ip"
         },
         "publicIpAddressType": {
             "value": "Static"
@@ -79,13 +64,13 @@
             "value": "Detach"
         },
         "virtualMachineName": {
-            "value": "my-VM"
+            "value": "VM-Data-Science"
         },
         "virtualMachineName1": {
-            "value": "my-VM"
+            "value": "VM-Data-Science"
         },
         "virtualMachineComputerName1": {
-            "value": "my-VM"
+            "value": "VM-Data-Science"
         },
         "virtualMachineRG": {
             "value": "BCDR-Data-Science"
@@ -106,10 +91,10 @@
             "value": false
         },
         "adminUsername": {
-            "value": "Username"
+            "value": "vm-windows"
         },
         "adminPassword": {
-            "value": "Password123456789"
+            "value": null
         },
         "patchMode": {
             "value": "AutomaticByOS"

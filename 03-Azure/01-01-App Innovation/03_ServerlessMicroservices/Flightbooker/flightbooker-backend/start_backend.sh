@@ -1,1 +1,0 @@
-dapr run --app-port 3000 --app-id flightbooker-backend --app-protocol http --dapr-http-port 3501 -- npm start

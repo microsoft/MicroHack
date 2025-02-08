@@ -4,12 +4,12 @@
 variable "location" {
   description = "Defines the Azure location where the resources will be deployed"
   type        = string
-  default     = "germanywestcentral"
+  default     = "swedencentral"
 }
 
 variable "resourcegroup_name" {
   description = "If defined, the name of the resource group into which the resources will be deployed"
-  default     = "rg-mh-oracle4"
+  default     = "rg-mh-oracle"
 }
 
 variable "resourcegroup_tags" {
@@ -50,7 +50,7 @@ variable "ssh_key" {
 
 variable "vm_sku" {
   description = "The SKU of the virtual machine"
-  default     = "Standard_E4ds_v5"
+  default     = "Standard_E4ds_v6"
 }
 
 variable "vm_source_image_reference" {

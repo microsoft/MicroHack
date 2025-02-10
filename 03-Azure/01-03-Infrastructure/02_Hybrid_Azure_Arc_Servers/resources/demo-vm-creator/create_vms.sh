@@ -11,7 +11,7 @@ adminPassword="REPLACE-ME"
 
 number_of_participants=10
 regions=("germanywestcentral" "northeurope" "swedencentral" "francecentral" "westeurope")
-virtualWinMachineSize="Standard_D2ads_v5" # use a vm size with only 2 cores to avoid core limit issues in sponsored subscriptions
+virtualWinMachineSize="Standard_D2ds_v4" # use a vm size with only 2 cores to avoid core limit issues in sponsored subscriptions
 virtualLnxMachineSize="Standard_DS1_v2" # use a vm size with only 1 core to avoid core limit issues in sponsored subscriptions
 
 # create a resource group

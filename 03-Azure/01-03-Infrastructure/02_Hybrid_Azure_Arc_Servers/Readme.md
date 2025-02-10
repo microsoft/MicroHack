@@ -211,10 +211,29 @@ Managing secrets, credentials or certificates to secure communication between di
 ## Challenge 5 - Best Practices assessment for Windows Server
 
 ### Goal
+
+In this challenge, you will configure and deploy the Best Practices Assessment for Windows Servers onboarded to Azure Arc. The assessment will evaluate the server’s configuration against Windows best practices, generate actionable remediation steps for identified issues, and help you enhance your server infrastructure's performance, security, and stability.
+
 ### Actions
+
+* Set Up Best Practices Assessment for one machine
+* Run the Best Practices Assessment
+* Analyze Results
+
 ### Success criteria
+
+* Best Practices Assessment is enabled and installed on your Arc-enabled Windows Server
+* The Assessment Platform, Windows Server Assessment, and Azure Monitor Agent (AMA)  extensions are installed successfully
+* The first Best Practices Assessment is run successfully
+
 ### Learning resources
+
+* [Configure Best Practices Assessment for Arc-enabled Windows servers](https://learn.microsoft.com/en-us/windows-server/manage/azure-arc/best-practices-assessment-for-windows-server)
+
+
 ### Solution - Spoilerwarning
+
+[Solution Steps](./walkthrough/challenge-5/solution.md)
 
 ## Challenge 6 - Activate ESU for Windows Server 2012 R2 via Arc - optional
 
@@ -284,3 +303,4 @@ Thank you for investing the time and see you next time!
 * Christian Thönes [Github](https://github.com/cthoenes); [LinkedIn](https://www.linkedin.com/in/christian-t-510b7522/)
 * Nils Bankert [GitHub](https://github.com/nilsbankert); [LinkedIn](https://www.linkedin.com/in/nilsbankert/)
 * Alexander Ortha [GitHub](https://github.com/alexor-ms/); [LinkedIn](https://www.linkedin.com/in/alexanderortha/)
+* Christoph Süßer (Schmidt) [GitHub](https://github.com/TheFitzZZ); [LinkedIn](https://www.linkedin.com/in/suesser/)

@@ -143,7 +143,7 @@ Check whether the change tracking data collection rule as been created successfu
 - Scope: Please select the resource group called *mh-arc-servers-rg*
 - Basics: Please search for *[Preview]: Enable ChangeTracking and Inventory for Arc-enabled virtual machines* and select the initiative.
 - Parameters: As *Data Collection Rule Resource Id* provide the resourceId of the data collection rule you just created in the beginning of this task - i.e. */subscriptions/<*your-subscription-guid*>/resourceGroups/mh-arc-servers-rg/providers/Microsoft.Insights/dataCollectionRules/DCR-ChangeTracking*.
-- Remediation: Please select the System assigned identity location according to your resources, e.g. West Europe. You do check the box for "Create a remediation task" at this point in time, as it would only create one of the six required. We will do this in one of the next steps.
+- Remediation: Please select the System assigned identity location according to your resources, e.g. West Europe. You do NOT check the box for "Create a remediation task" at this point in time, as it would only create one of the six required. We will do this in one of the next steps.
 
 4. Please wait a few seconds until the creation of the assignment is complete. You should see that the policy is assigned.
 

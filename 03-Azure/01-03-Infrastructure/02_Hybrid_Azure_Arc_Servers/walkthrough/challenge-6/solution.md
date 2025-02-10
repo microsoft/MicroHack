@@ -8,7 +8,7 @@ Duration: 15 minutes
 ## Task 1: Create a Windows Server ESU license
 
 1. Navigate to the Azure Arc center and click "Licenses" and "Windows Server ESU licenses" (or click [here](https://portal.azure.com/#view/Microsoft_Azure_ArcCenterUX/ArcCenterMenuBlade/~/license))
-2. Click "Create Extended Security Updates - Windows Server 2012/R2". A new blade will open.
+2. Click "Create" on the top bar. A new blade will open.
 3. Fill in the required field:
     - Subscription and Resource group (where you created your previous objects)
     - A license name - should only contain letters (both uppercase and lowercase), digits, hyphens, underscores, and periods. Consecutive dots are not allowed.

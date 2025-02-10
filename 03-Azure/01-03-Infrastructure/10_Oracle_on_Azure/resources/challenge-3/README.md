@@ -13,22 +13,45 @@ az extension add --name containerapp --upgrade
 az provider register --namespace Microsoft.App
 az provider register --namespace Microsoft.OperationalInsights
 # define the prefix for the resources and make sure to configure it accordingly on the terraform.tfvars file.
-$prefix="ora2pg"
+$prefix="maikmh"
 # inside the terraform folder initialize the terraform configuration
-tf init
-tf fmt
-tf validate
-tf plan -out plan1.out
-tf apply --auto-approve plan1.out 
+terraform init
+terraform fmt
+terraform validate
+terraform plan -out plan1.out
+terraform apply --auto-approve plan1.out 
+
+# list and verify the deployed container apps and resource group
+az containerapp list -g $prefix --query "[].{name:name}" -o table
 
 # test connectivity from zookeeper to kafka
-az containerapp exec --name "${prefix}-zookeeper" -g $prefix --container zookeeper --command bash
 nc -zv ora2pg-kafka 9092 # Ncat: Connected to 100.100.248.118:9092.
 exit
 
+# Check if the container name within the container app is correct.
+az containerapp show --name "${prefix}-ora2pg" -g $prefix --query "properties.template.containers[].name" -o table
+
+#Result
+#--------
+#ora2pg
+
+# Check if the container app is running.
+az containerapp show --name "${prefix}-ora2pg" -g $prefix --query "properties.provisioningState" -o table
+
+#Result
+#---------
+#Succeeded
+
+# Check the log files of the container app
+az containerapp logs show --name "${prefix}-ora2pg" -g $prefix --container ora2pg
+
+# connect on the container app
+az containerapp exec --name "${prefix}-ora2pg" -g $prefix --container-name ora2pg --command bash
+
+
 # test connectivity from kafka to zookeeper
 az containerapp exec --name "${prefix}-kafka" -g $prefix --container kafka --command bash
-nc -zv ora2pg-zookeeper 2181 # Ncat: 0 bytes sent, 0 bytes received in 0.04 seconds.
+nc -zv maikmh-zookeeper 2181 # Ncat: 0 bytes sent, 0 bytes received in 0.04 seconds.
 exit
 
 # test azure file share access from kafka connect container
@@ -39,3 +62,5 @@ ls
 cat spiderman.txt
 exit
 ~~~
+az containerapp exec --name "${prefix}-zookeeper" -g $prefix --container zookeeper --command bash
+

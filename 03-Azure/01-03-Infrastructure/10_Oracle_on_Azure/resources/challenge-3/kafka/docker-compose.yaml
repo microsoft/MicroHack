@@ -12,8 +12,11 @@ services:
       - kafka-net
 
   kafka:
+    build:
+      context: ./kafka
+      dockerfile: Dockerfile
     image: confluentinc/cp-kafka:latest
-    container_name: kafka-broker
+    container_name: kafka-kafka
     depends_on:
       - zookeeper
     ports:
@@ -31,6 +34,9 @@ services:
 
 
   connect:
+    build: 
+      context: ./connect
+      dockerfile: Dockerfile
     image: debezium/connect:3.0.0.Final
     container_name: kafka-connect
     ports:
@@ -92,6 +98,25 @@ services:
     networks:
       - kafka-net
 
+
+  ora2pg:
+    image: georgmoser/ora2pg
+    container_name: ora2pg
+    privileged: true
+    environment:
+      - CONFIG_LOCATION=/config/myconfigfile.conf
+      - OUTPUT_LOCATION=/data/myfolder
+      - ORA_HOST=dbi:Oracle:host=oracle_xe1;sid=XE;port=1521
+      - ORA_USER=demo_user
+      - ORA_PWD=password
+    volumes:
+      - /config/:/config
+      - /data:/data
+    command: tail -f /dev/null 
+    stdin_open: true
+    tty: true
+
+    
 networks:
   kafka-net:
     driver: bridge

@@ -20,7 +20,7 @@ resource "azurerm_container_app_environment" "aca" {
   log_analytics_workspace_id     = azurerm_log_analytics_workspace.law.id
   infrastructure_subnet_id       = azurerm_subnet.subnet_aca.id
   internal_load_balancer_enabled = true
-  logs_destination               = "log-analytics"
+#  logs_destination               = "log-analytics"
   depends_on                     = [azurerm_storage_share.fileshare]
   workload_profile {
     name                  = "${var.prefix}D8"
@@ -277,5 +277,66 @@ resource "azurerm_container_app" "container_app_kafka_connect" {
     #     value = "microhack"
     #   }
     # }
+  }
+}
+
+
+resource "azurerm_container_app" "container_app_ora2pg" {
+  #depends_on                   = [azurerm_container_app.container_app_zookeeper]
+  name                         = "${var.prefix}-ora2pg"
+  container_app_environment_id = azurerm_container_app_environment.aca.id
+  resource_group_name          = azurerm_resource_group.rg.name
+  # location            = azurerm_resource_group.rg.location
+  revision_mode         = "Single"
+  workload_profile_name = "${var.prefix}D8"
+  # count                 = 1
+  #ingress {
+  #  transport        = "tcp"
+  #  external_enabled = true
+  #  target_port      = 9092
+  #  exposed_port     = 9092
+  #  traffic_weight {
+  #    # label = "kafka"
+  #    percentage      = 100
+  #    revision_suffix = "kafka"
+  #  }
+  #}
+  template {
+    min_replicas = 1
+    volume {
+      name         = azurerm_storage_share.fileshare.name
+      storage_type = "AzureFile"
+      storage_name = azurerm_container_app_environment_storage.acastorage.name
+    }
+    container { # ORA2PG
+      name   = "ora2pg"
+      image  = "georgmoser/ora2pg"
+      cpu    = 0.25
+      memory = "0.5Gi"
+            env {
+        name  = "ORACLE_DSN"
+        value = "dbi:Oracle:host=oracle-xe1;sid=XE;port=1521"
+      }
+      env {
+        name  = "ORA_USER"
+        value = "demo_user"
+      }
+      env {
+        name  = "ORA_PWD"
+        value = "password"
+      }
+      env {
+        name  = "CONFIG_LOCATION"
+        value = "ora2pg/config/ora2pg.conf"
+      }
+      env {
+        name  = "OUTPUT_LOCATION"
+        value = "ora2pg/data"
+      }
+      volume_mounts {
+        name = azurerm_storage_share.fileshare.name
+        path = "/ora2pg"
+      }
+    }
   }
 }

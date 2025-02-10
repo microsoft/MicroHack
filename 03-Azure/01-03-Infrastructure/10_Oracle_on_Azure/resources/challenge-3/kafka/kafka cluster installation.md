@@ -1,33 +1,37 @@
-online documentation 
+# online documentation 
 
 https://docs.confluent.io/kafka-connectors/oracle-cdc/current/prereqs-validation.html#connect-oracle-cdc-source-prereqs-user-privileges
 
 
 
 
-Step 1: 
+## Step 1: 
 Set Up Kafka with or without Debezium 
     - choose confluent
     - choose kafka apache
 
 Create a Docker Compose File: Create a docker-compose.yml file to set up Kafka, Zookeeper, and Debezium
 
-    see file docker-compose.yml
+see file docker-compose.yml
 
 
 If the container doesn't communicate well, you can delete existing created networks via:
 
-    docker network prune
-
+~~~bash
+docker network prune
+~~~
     
 
-Step 2:
+## Step 2:
 Configure the Oracle database 
 
 For old Oracle release utl_file_dir can be used in newer release directory replaced utl_file_dir
-a: SET the utl_file_dir parameter:
+
+### a. SET the utl_file_dir parameter:
+
 
 connect to the oracle docker container:
+~~~bash
     docker exec -it oracle-xe1 bash
 
     mkdir -p /u01/app/oracle/admin/dpdump
@@ -40,9 +44,11 @@ sqlpus / as sysdba
 
     SHUTDOWN IMMEDIATE;
     STARTUP;
+~~~
 
 --------------------------------------------------------------------------------
-    do not execute instead continue with the creation of a directory (go to b.)
+    
+Do not execute the following code snippet for Oracle datbase > 11g instead continue directly with (B) the creation of a directory (go to b.)
     SQL> declare
     file_open utl_file.file_type;
     begin
@@ -59,277 +65,326 @@ sqlpus / as sysdba
     a. ALTER SYSTEM SET utl_file_dir = '' SCOPE=SPFILE;
     b. SHUTDOWN IMMEDIATE
     c. STARTUP
+
 --------------------------------------------------------------------------------
 
-b. Use Directory instead of utl_file_dir if possible
+### b. Use Directory instead of utl_file_dir if possible
 
+~~~bash
 show parameter utl_file_dir;
-
-create directory logminer_dir as '/u01/app/oracle/admin/dpdump';
 
 CREATE OR REPLACE DIRECTORY logminer_dir AS '/u01/app/oracle/admin/dpdump';
 
 GRANT READ, WRITE ON DIRECTORY logminer_dir TO public;
     
- 
-    select * from dba_directories where directory_name like 'LOGMINER_DIR';
+select * from dba_directories where directory_name like 'LOGMINER_DIR';
+~~~
 
-    Create the LogMiner Dictionary:
-    EXECUTE DBMS_LOGMNR_D.BUILD('dictioniary.ora', 'LOGMINER_DIR');
+Create the LogMiner Dictionary:
+~~~bash
+EXECUTE DBMS_LOGMNR_D.BUILD('dictioniary.ora', 'LOGMINER_DIR');
+~~~
 
 
-c: Enable SUPPLEMENTAL Logging in the oracle database:
+### c: Enable SUPPLEMENTAL Logging in the oracle database:
 
-    ALTER DATABASE ADD SUPPLEMENTAL LOG DATA;
+~~~bash
+ALTER DATABASE ADD SUPPLEMENTAL LOG DATA;
 
-    --- if newer oracle databases are used!!!
-    ALTER SYSTEM SET ENABLE_GOLDENGATE_REPLICATION=TRUE SCOPE=BOTH;
-    ALTER SYSTEM SET ENABLE_LOGMINING=TRUE SCOPE=BOTH;
+--- if newer oracle databases are used!!!
+ALTER SYSTEM SET ENABLE_GOLDENGATE_REPLICATION=TRUE SCOPE=BOTH;
+ALTER SYSTEM SET ENABLE_LOGMINING=TRUE SCOPE=BOTH;
     
       
-    ALTER SYSTEM SWITCH LOGFILE;
+ALTER SYSTEM SWITCH LOGFILE;
+~~~
 
-    Depending on the use database 11g vs 19c for example check the following parameter of the database:
+Depending on the use database 11g vs 19c for example check the following parameter of the database:
 
-        SQL> SHOW PARAMETER ENABLE_GOLDENGATE_REPLICATION;
+~~~bash
+SQL> SHOW PARAMETER ENABLE_GOLDENGATE_REPLICATION;
 
-            NAME                                 TYPE        VALUE
-            ------------------------------------ ----------- ------------------------------
-            enable_goldengate_replication        boolean     TRUE
+NAME                                 TYPE        VALUE
+------------------------------------ ----------- ------------------------------
+enable_goldengate_replication        boolean     TRUE
 
-            SQL> SHOW PARAMETER SUPPLEMENTAL_LOG_DATA;
+SQL> SHOW PARAMETER SUPPLEMENTAL_LOG_DATA;
 
-            NAME                                 TYPE        VALUE
-            ------------------------------------ ----------- ------------------------------
-            supplemental_log_data_min            boolean     TRUE
-            supplemental_log_data_pk             boolean     TRUE
-            supplemental_log_data_ui             boolean     TRUE
+NAME                                 TYPE        VALUE
+------------------------------------ ----------- ------------------------------
+supplemental_log_data_min            boolean     TRUE
+supplemental_log_data_pk             boolean     TRUE
+supplemental_log_data_ui             boolean     TRUE
+~~~
 
+### d:  Switch database in archive log mode
 
-b:  Switch database in archive log mode
+~~~bash
+sqlplus / as sysdba
     
-    sqlplus / as sysdba
+SQL> SELECT LOG_MODE FROM V$DATABASE;
     
-    SQL> SELECT LOG_MODE FROM V$DATABASE;
+LOG_MODE
+------------
+NOARCHIVELOG
     
-    LOG_MODE
-    ------------
-    NOARCHIVELOG
+SQL> show parameter LOG_ARCHIVE_DEST_1
     
-    SQL> show parameter LOG_ARCHIVE_DEST_1
+NAME                                 TYPE        VALUE
+------------------------------------ ----------- ------------------------------
+log_archive_dest_1                   string
+log_archive_dest_10                  string
+log_archive_dest_11                  string
+log_archive_dest_12                  string
+log_archive_dest_13                  string
+log_archive_dest_14                  string
+log_archive_dest_15                  string
+log_archive_dest_16                  string
+log_archive_dest_17                  string
+log_archive_dest_18                  string
+log_archive_dest_19                  string
     
-    NAME                                 TYPE        VALUE
-    ------------------------------------ ----------- ------------------------------
-    log_archive_dest_1                   string
-    log_archive_dest_10                  string
-    log_archive_dest_11                  string
-    log_archive_dest_12                  string
-    log_archive_dest_13                  string
-    log_archive_dest_14                  string
-    log_archive_dest_15                  string
-    log_archive_dest_16                  string
-    log_archive_dest_17                  string
-    log_archive_dest_18                  string
-    log_archive_dest_19                  string
+ALTER SYSTEM SET LOG_ARCHIVE_DEST_1 = 'LOCATION=USE_DB_RECOVERY_FILE_DEST' scope=both;
     
-    ALTER SYSTEM SET LOG_ARCHIVE_DEST_1 = 'LOCATION=USE_DB_RECOVERY_FILE_DEST' scope=both;
+System altered.
+~~~
     
-    System altered.
-    Now you need to stop the Oracle database and to mount it.
+Now you need to stop the Oracle database and to mount it.
 
-    SQL> SHUTDOWN IMMEDIATE
-    Database closed.
-    Database dismounted.
-    ORACLE instance shut down.
+~~~bash
+SQL> SHUTDOWN IMMEDIATE
+Database closed.
+Database dismounted.
+ORACLE instance shut down.
     
-    SQL> STARTUP MOUNT
-    ORACLE instance started.
+SQL> STARTUP MOUNT
+ORACLE instance started.
     
-    Total System Global Area 1073738888 bytes
-    Fixed Size                  9143432 bytes
-    Variable Size             532676608 bytes
-    Database Buffers          524288000 bytes
-    Redo Buffers                7630848 bytes
-    Database mounted.
+Total System Global Area 1073738888 bytes
+Fixed Size                  9143432 bytes
+Variable Size             532676608 bytes
+Database Buffers          524288000 bytes
+Redo Buffers                7630848 bytes
+Database mounted.
     
-    SQL> ALTER DATABASE ARCHIVELOG;
+SQL> ALTER DATABASE ARCHIVELOG;
     
-    Database altered.
+Database altered.
     
-    SQL> ALTER DATABASE OPEN;
+SQL> ALTER DATABASE OPEN;
     
-    Database altered.
+Database altered.
     
-    SQL> ALTER SYSTEM SWITCH LOGFILE;
+SQL> ALTER SYSTEM SWITCH LOGFILE;
     
-    System altered.
-    So now you can check that archive log mode is enabled in your Oracle database.
+System altered.
+So now you can check that archive log mode is enabled in your Oracle database.
 
-    SQL> SELECT NAME FROM V$ARCHIVED_LOG;
+SQL> SELECT NAME FROM V$ARCHIVED_LOG;
     
-    NAME
-    --------------------------------------------------------------------------------
-    /u01/app/oracle/fra/ORADB/archivelog/2021_04_10/o1_mf_1_19_j72qftrw_.arc
+NAME
+--------------------------------------------------------------------------------
+/u01/app/oracle/fra/ORADB/archivelog/2021_04_10/o1_mf_1_19_j72qftrw_.arc
     
-    SQL> SELECT LOG_MODE FROM V$DATABASE;
+SQL> SELECT LOG_MODE FROM V$DATABASE;
     
-    LOG_MODE
-    ------------
-    ARCHIVELOG
+LOG_MODE
+------------
+ARCHIVELOG
     
-    SQL> show parameter LOG_ARCHIVE_DEST_1
+SQL> show parameter LOG_ARCHIVE_DEST_1
     
-    NAME                                 TYPE        VALUE
-    ------------------------------------ ----------- ------------------------------
-    log_archive_dest_1                   string      LOCATION=USE_DB_RECOVERY_FILE_
+NAME                                 TYPE        VALUE
+------------------------------------ ----------- ------------------------------
+log_archive_dest_1                   string      LOCATION=USE_DB_RECOVERY_FILE_
                                                     DEST
-    log_archive_dest_10                  string
-    log_archive_dest_11                  string
-    log_archive_dest_12                  string
-    log_archive_dest_13                  string
-    log_archive_dest_14                  string
-    log_archive_dest_15                  string
-    log_archive_dest_16                  string
-    log_archive_dest_17                  string
-    log_archive_dest_18                  string
-    log_archive_dest_19                  string
+log_archive_dest_10                  string
+log_archive_dest_11                  string
+log_archive_dest_12                  string
+log_archive_dest_13                  string
+log_archive_dest_14                  string
+log_archive_dest_15                  string
+log_archive_dest_16                  string
+log_archive_dest_17                  string
+log_archive_dest_18                  string
+log_archive_dest_19                  string
+~~~
+
+### e: Create a database user for debezium
+
+~~~bash
+CREATE USER debezium IDENTIFIED BY debezium;
+GRANT CONNECT, RESOURCE TO debezium;
+GRANT SELECT ANY TABLE TO debezium;
+GRANT SELECT_CATALOG_ROLE TO debezium;
+GRANT CREATE SESSION TO debezium;
+GRANT EXECUTE_CATALOG_ROLE TO debezium;
+GRANT FLASHBACK ANY TABLE TO debezium;
+GRANT SELECT ANY TRANSACTION TO debezium;
+GRANT READ, WRITE ON DIRECTORY logminer_dir TO debezium;
+GRANT LOGMINING TO debezium;
+~~~
 
 
-c: Create a database user for debezium
-
-    CREATE USER debezium IDENTIFIED BY debezium;
-    GRANT CONNECT, RESOURCE TO debezium;
-    GRANT SELECT ANY TABLE TO debezium;
-    GRANT SELECT_CATALOG_ROLE TO debezium;
-    GRANT CREATE SESSION TO debezium;
-    GRANT EXECUTE_CATALOG_ROLE TO debezium;
-    GRANT FLASHBACK ANY TABLE TO debezium;
-    GRANT SELECT ANY TRANSACTION TO debezium;
-    GRANT READ, WRITE ON DIRECTORY logminer_dir TO debezium;
-    GRANT LOGMINING TO debezium;
-
-    For older databases like 11g rel.2 where the role logmining is not available grant the following roles:
-    CREATE USER debezium IDENTIFIED BY debezium;
-    GRANT READ, WRITE ON DIRECTORY logminer_dir TO debezium;
-    GRANT CONNECT, RESOURCE TO debezium;
-    GRANT SELECT ANY TABLE TO debezium;
-    GRANT SELECT_CATALOG_ROLE TO debezium;
-    GRANT CREATE SESSION TO debezium;
-    GRANT EXECUTE_CATALOG_ROLE TO debezium;
-    GRANT FLASHBACK ANY TABLE TO debezium;
-    GRANT SELECT ANY TRANSACTION TO debezium;
-    GRANT ALTER ANY TABLE TO debezium;
-    GRANT CREATE TABLE TO debezium;
-    GRANT LOCK ANY TABLE TO debezium;
-    GRANT CREATE SEQUENCE TO debezium;
-    GRANT CREATE TRIGGER TO debezium;
-    GRANT CREATE VIEW TO debezium;
-    GRANT UNLIMITED TABLESPACE TO debezium;
+For older databases like 11g rel.2 where the role logmining is not available grant the following roles:
+~~~bash
+CREATE USER debezium IDENTIFIED BY debezium;
+GRANT READ, WRITE ON DIRECTORY logminer_dir TO debezium;
+GRANT CONNECT, RESOURCE TO debezium;
+GRANT SELECT ANY TABLE TO debezium;
+GRANT SELECT_CATALOG_ROLE TO debezium;
+GRANT CREATE SESSION TO debezium;
+GRANT EXECUTE_CATALOG_ROLE TO debezium;
+GRANT FLASHBACK ANY TABLE TO debezium;
+GRANT SELECT ANY TRANSACTION TO debezium;
+GRANT ALTER ANY TABLE TO debezium;
+GRANT CREATE TABLE TO debezium;
+GRANT LOCK ANY TABLE TO debezium;
+GRANT CREATE SEQUENCE TO debezium;
+GRANT CREATE TRIGGER TO debezium;
+GRANT CREATE VIEW TO debezium;
+GRANT UNLIMITED TABLESPACE TO debezium;
 
 
-    CREATE USER demo_schema IDENTIFIED BY "password";
-    GRANT CONNECT, RESOURCE, DBA TO demo_schema;
-    ALTER USER demo_schema QUOTA UNLIMITED ON USERS;
-    ALTER USER demo_schema QUOTA 1000M ON USERS;
+~~~bash
+CREATE USER demo_schema IDENTIFIED BY "password";
+GRANT CONNECT, RESOURCE, DBA TO demo_schema;
+ALTER USER demo_schema QUOTA UNLIMITED ON USERS;
+ALTER USER demo_schema QUOTA 1000M ON USERS;
+GRANT CONNECT, RESOURCE TO demo_schema;
+GRANT READ, WRITE ON DIRECTORY logminer_dir TO demo_schema;
+GRANT SELECT ANY TABLE TO demo_schema;
+GRANT SELECT_CATALOG_ROLE TO demo_schema;
+GRANT CREATE SESSION TO demo_schema;
+GRANT EXECUTE_CATALOG_ROLE TO demo_schema;
+GRANT FLASHBACK ANY TABLE TO demo_schema;
+GRANT SELECT ANY TRANSACTION TO demo_schema;
+GRANT ALTER ANY TABLE TO demo_schema;
+GRANT CREATE TABLE TO demo_schema;
+GRANT LOCK ANY TABLE TO demo_schema;
+GRANT CREATE SEQUENCE TO demo_schema;
+GRANT CREATE TRIGGER TO demo_schema;
+GRANT CREATE VIEW TO demo_schema;
+GRANT UNLIMITED TABLESPACE TO demo_schema;
+CREATE ROLE CDC_PRIVS;
+GRANT CREATE SESSION TO CDC_PRIVS;
+GRANT LOGMINING TO CDC_PRIVS;
+GRANT SELECT ON V_$DATABASE TO demo_schema;
+GRANT SELECT ON V_$INSTANCE to demo_schema;
+GRANT SELECT ON V_$THREAD TO demo_schema;
+GRANT SELECT ON V_$PARAMETER TO demo_schema;
+GRANT SELECT ON V_$NLS_PARAMETERS TO demo_schema;
+GRANT SELECT ON V_$TIMEZONE_NAMES TO demo_schema;
+GRANT SELECT ON V_$LOG TO demo_schema;
+GRANT SELECT ON V_$LOGFILE TO demo_schema;
+GRANT SELECT ON V_$LOGMNR_CONTENTS TO demo_schema;
+GRANT SELECT ON V_$ARCHIVED_LOG TO demo_schema;
+GRANT SELECT ON V_$ARCHIVE_DEST_STATUS TO demo_schema;
+GRANT EXECUTE ON SYS.DBMS_LOGMNR TO demo_schema;
+GRANT EXECUTE ON SYS.DBMS_LOGMNR_D TO demo_schema;
+~~~
+
+
+### f. Create database schema - see orcl_setup01_oracle_schema.sql
+
+Execute initial data load
+
+1. see [setup02_initial_dataload.sql](../../environment_setup/Oracle_Schema/setup01_oracle_schema.sql)
+2. see [setup01_oracle_schema.sql](../../environment_setup/Oracle_Schema/setup02_initial_dataload.sql)
    
-    GRANT CONNECT, RESOURCE TO demo_schema;
-    GRANT READ, WRITE ON DIRECTORY logminer_dir TO demo_schema;
-    GRANT SELECT ANY TABLE TO demo_schema;
-    GRANT SELECT_CATALOG_ROLE TO demo_schema;
-    GRANT CREATE SESSION TO demo_schema;
-    GRANT EXECUTE_CATALOG_ROLE TO demo_schema;
-    GRANT FLASHBACK ANY TABLE TO demo_schema;
-    GRANT SELECT ANY TRANSACTION TO demo_schema;
-    GRANT ALTER ANY TABLE TO demo_schema;
-    GRANT CREATE TABLE TO demo_schema;
-    GRANT LOCK ANY TABLE TO demo_schema;
-    GRANT CREATE SEQUENCE TO demo_schema;
-    GRANT CREATE TRIGGER TO demo_schema;
-    GRANT CREATE VIEW TO demo_schema;
-    GRANT UNLIMITED TABLESPACE TO demo_schema;
-    CREATE ROLE CDC_PRIVS;
-    GRANT CREATE SESSION TO CDC_PRIVS;
-    GRANT LOGMINING TO CDC_PRIVS;
-    GRANT SELECT ON V_$DATABASE TO demo_schema;
-    GRANT SELECT ON V_$INSTANCE to demo_schema;
-    GRANT SELECT ON V_$THREAD TO demo_schema;
-    GRANT SELECT ON V_$PARAMETER TO demo_schema;
-    GRANT SELECT ON V_$NLS_PARAMETERS TO demo_schema;
-    GRANT SELECT ON V_$TIMEZONE_NAMES TO demo_schema;
-    GRANT SELECT ON V_$LOG TO demo_schema;
-    GRANT SELECT ON V_$LOGFILE TO demo_schema;
-    GRANT SELECT ON V_$LOGMNR_CONTENTS TO demo_schema;
-    GRANT SELECT ON V_$ARCHIVED_LOG TO demo_schema;
-    GRANT SELECT ON V_$ARCHIVE_DEST_STATUS TO demo_schema;
-    GRANT EXECUTE ON SYS.DBMS_LOGMNR TO demo_schema;
-    GRANT EXECUTE ON SYS.DBMS_LOGMNR_D TO demo_schema;
+verify the data load ingested the demo data successfully
 
 
-d. Create database schema - see orcl_setup01_oracle_schema.sql
-   Execute initial data load - see orcl_setup02:initial_dataload.sql
-   verify the data load ingested the demo data successfully
+~~~bash
+SELECT count(*) FROM EMPLOYEES;
 
-   SQL> select count(*) from employees;
-
-        COUNT(*)
-        ----------
-        10000
+    COUNT(*)
+    ----------
+    10000
+~~~
 
 
-Step 2: 
+# Step 3: 
 Start the Kafka Cluster: Run the following command to start the Kafka cluster:
 
-    start the container zookeeper, kafka, connect 
-    
-        docker-compose start zookeeper, kafka, connect
+start the container zookeeper, kafka, connect 
 
-        docker compose -f 'kafka\docker-compose.yaml' up -d --build 'zookeeper'
+ ~~~bash   
+docker-compose start zookeeper, kafka, connect
 
-    The following command would start the complete containers -- don't use the one here docker-compose up -d
+docker compose -f 'kafka\docker-compose.yaml' up -d --build 'zookeeper'
+~~~
+
+The following command would start the complete containers -- don't use the one here docker-compose up -d
 
 
-Step 2a:
+## Step 3a:
 
 check the if the containers are reachable. if your are using docker on Windows use the WSL in Windows.
 
+ ~~~bash   
 nc -zv localhost 22181
 Connection to localhost port 22181 [tcp/*] succeeded!
 
 nc -zv localhost 29092
 Connection to localhost port 29092 [tcp/*] succeeded!
+~~~
+
+## Step 3b: Check kafka connect logs
+
+ ~~~bash   
+Via docker-compose command: 
+docker-compose logs connect 
+
+Via docker command: 
+docker logs < container-name >
+~~~
 
 
-Step 2b: Check kafka connect logs
-    
-    docker-compose logs connect 
-    docker logs <container-name>
+# Step 4: Test and execute a first message in kafka
+
+1. open a new terminal/cmd and log into the kafka container
+
+~~~bash   
+docker exec -it  kafka-kafka-1 bash
+~~~        
+
+a. Create the test topic called test-topic
+ ~~~bash   
+ 
+/bin/kafka-topics --create --topic test-topic --bootstrap-server 172.18.0.1:9092 --partitions 1 --replication-factor 1
+~~~
+b. Create a producer to send a test message
+ ~~~bash          
+/bin/kafka-console-producer --broker-list 172.18.0.1:9092 --topic test-topic
+~~~
+
+c. Delete the topics
+ ~~~bash   
+kafka-topics --delete --topic schema-changes-oracle --bootstrap-server localhost:9092
+~~~
+
+d. set the retention time of a topic
+ ~~~bash   
+kafka-configs.sh --alter --entity-type topics --entity-name schema-changes.oracle --add-config retention.ms=1000 --bootstrap-server localhost:9092
+~~~
+
+2. 
+
+open a new terminal/cmd and log into the kafka container 
+
+~~~bash   
+docker exec -it  kafka-kafka-1 bash
+~~~
+
+Now we will consumed the previous meesage using kafka shell.
+
+~~~bash   
+/bin/kafka-console-consumer --bootstrap-server 172.18.0.1:9092 --topic test-topic --from-beginning
+~~~~
 
 
-Step 3: Test and execute a first message in kafka
-
-    1. open a new terminal/cmd and log into the kafka container
-        docker exec -it  kafka-kafka-1 bash
-        
-        Create the test topic called test-topic
-        a.  /bin/kafka-topics --create --topic test-topic --bootstrap-server 172.18.0.1:9092 --partitions 1 --replication-factor 1
-        b. Create a producer to send a test message
-            /bin/kafka-console-producer --broker-list 172.18.0.1:9092 --topic test-topic
-
-        c. Delete the topics
-            kafka-topics --delete --topic schema-changes-oracle --bootstrap-server localhost:9092
-
-        d. set the retention time of a topic
-            kafka-configs.sh --alter --entity-type topics --entity-name schema-changes.oracle --add-config retention.ms=1000 --bootstrap-server localhost:9092
-
-
-    2. open a new terminal/cmd and log into the kafka container 
-        docker exec -it  kafka-kafka-1 bash
-        Now we will consumed the previous meesage using kafka shell.
-        /bin/kafka-console-consumer --bootstrap-server 172.18.0.1:9092 --topic test-topic --from-beginning
-
-
-
-Step 4: Configure the oracle connector of Debezium
+# Step 5: Configure the oracle connector of Debezium
 
 oracle-connector.json
     Identify the database.hostname by using docker inspect container-name (in our case oracle-xe)
@@ -356,7 +411,7 @@ oracle-connector.json
     }
     }
 
-    Explanation of Each Variable:
+Explanation of Each Variable:
     name: The name of the connector instance.
     connector.class: The fully qualified class name of the connector.
     tasks.max: The maximum number of tasks that should be created for this connector.
@@ -377,7 +432,7 @@ oracle-connector.json
 
 ---------------------------------------------------------------------------------------------------------
 
-    Error management in case the oracle-connector can not be registered 
+Error management in case the oracle-connector can not be registered
 
     If there are http 400 error you can test the oracle connection from the kafka-connect container by following the next steps:
 
@@ -423,7 +478,7 @@ oracle-connector.json
             Connected to Oracle database!
 
     
-    Further possibilities is to change the variable in oracle-connector.json
+Further possibilities is to change the variable in oracle-connector.json
 
     - Instead of "database.dbname": "XE", try "database.SID": "XE"
 
@@ -433,7 +488,7 @@ oracle-connector.json
 
 
 
-Step5: Connector registration in Debezium via curl 
+# Step6: Connector registration in Debezium via curl 
 
 please consider the curl command in powershell vs bash / cmd looks different. The following curl command is for a BASH / CMD execution.
 
@@ -544,7 +599,7 @@ Following the output if you don't have any issues.
     }
 
 
-b: How to pause, resume and restart the connector
+## Step 6b: How to pause, resume and restart the connector
 
     # Pause the connector
     curl -X PUT http://localhost:8083/connectors/oracle-connector/pause
@@ -560,13 +615,13 @@ b: How to pause, resume and restart the connector
 
 
 
-Step6: Check kafka connect logs
+# Step 7: Check kafka connect logs
     docker-compose logs connect 
     docker logs <container-name>
 
 
 
-Step7:
+# Step8:
 
 on windows / linux -> curl -X GET http://localhost:8083/connectors/oracle-connector/status
 
@@ -591,7 +646,7 @@ Output:
     }
 
 
-Step 7a:
+# Step 8a:
 
 Check Kafka Broker Status
 You can check the status of your Kafka broker by listing the topics available in the cluster. This can be done using the kafka-topics.sh script.
@@ -608,7 +663,7 @@ To get more details about a specific topic, you can describe it using the kafka-
 
 
 
-Step8: Create a PostgreSQL sink connector
+# Step 9: Create a PostgreSQL sink connector
 
     create postgres-sink-connector.json file and add the following parameter:
 
@@ -672,7 +727,7 @@ name: The name of the connector.
     "record_key","pk.fields":"id","delete.enabled":"false","name":"postgres-sink-connector"},"tasks":[],"type":"sink"}
 
 
-Step 8: Monitoring of the data replication 
+# Step 10: Monitoring of the data replication 
 
     Connect into the kafka-kafka-1 container
      
@@ -680,7 +735,7 @@ Step 8: Monitoring of the data replication
     kafka-console-consumer --bootstrap-server localhost:9092 --topic schema-changes-oracle --from-beginning
 
 
-Step 9: Required configuration step in kafka
+# Step 11: Required configuration step in kafka
 
 a. Display the kafka-topics version
 kafka-topics --version

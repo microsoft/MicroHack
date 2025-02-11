@@ -98,9 +98,10 @@ Migrate the Oracle database to an Azure VM
 
 ### Actions
 
-* Write down the first 3 steps....
-* Set up and enable...
-* Perform and monitor....
+* Determine the most cost efficient compute and disk SKUs for target Azure VM
+* Deploy VM to Azure
+* Configure Oracle on target VM
+* Migrate onprem database using Data Guard
 
 ### Success criteria
 
@@ -111,6 +112,7 @@ Migrate the Oracle database to an Azure VM
 
 ### Learning resources
 * [Create an Oracle Database in an Azure VM](https://learn.microsoft.com/en-us/azure/virtual-machines/workloads/oracle/oracle-database-quick-create)
+* [Configure Oracle Data Guard](https://learn.microsoft.com/en-us/azure/virtual-machines/workloads/oracle/configure-oracle-dataguard#configure-oraclevm1-primary)
 
 ### Solution - Spoilerwarning
 

@@ -21,10 +21,6 @@ resource recoveryServicesVault 'Microsoft.RecoveryServices/vaults@2024-04-01' = 
   location: location
   properties: {
     publicNetworkAccess: 'Enabled'
-    redundancySettings: {
-      crossRegionRestore: 'Enabled'
-      standardTierStorageRedundancy: 'GeoRedundant'
-    }
     monitoringSettings: {
       azureMonitorAlertSettings: {
         alertsForAllFailoverIssues: 'Enabled'
@@ -52,8 +48,8 @@ resource backupRsvConfig 'Microsoft.RecoveryServices/vaults/BackupConfig@2022-02
     isSoftDeleteFeatureStateEditable: true
     softDeleteFeatureState: 'Disabled'
     redundancySettings: {
-      crossRegionRestore: 'Disabled'
-      standardTierStorageRedundancy: 'ZoneRedundant'
+      crossRegionRestore: 'Enabled'
+      standardTierStorageRedundancy: 'GeoRedundant'
     }
   }
 }
@@ -65,7 +61,7 @@ resource backupVlt 'Microsoft.DataProtection/backupVaults@2024-04-01' = {
     storageSettings: [
       {
         datastoreType: 'VaultStore'
-        type: 'ZoneRedundant'
+        type: 'GeoRedundant'
         
       }
     ]

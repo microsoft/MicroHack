@@ -1,0 +1,37 @@
+---
+- name: "Onboard Windows Servers to Azure Arc-enabled servers with Public endpoint connectivity"
+  hosts: all
+  vars:
+    azure:
+      service_principal_id: 'f27d5187-7e97-4512-b7ef-2e9a3f348e2f'
+      service_principal_secret: 'rWt8Q~Zf9ga4RZIGre5qREO6QVK~1vRYBXaqRbae'
+      resource_group: 'mh-arc-cloud'
+      tenant_id: 'e9d3c55b-addf-4d62-bf17-0ea0642744b6'
+      subscription_id: '971650f0-3120-4775-a049-67192bff7e56'
+      location: 'westeurope'
+
+  tasks:
+    - name: Download the Connected Machine Agent on Windows servers
+      win_get_url:
+        url: https://aka.ms/AzureConnectedMachineAgent
+        dest: C:\AzureConnectedMachineAgent.msi
+      ignore_errors: yes
+      #when: (not azcmagent_win_downloaded.stat.exists) #(ansible_os_family == 'Windows') and (not azcmagent_win_downloaded.stat.exists)
+
+    - name: Install the Connected Machine Agent on Windows servers
+      win_package:
+        path: C:\AzureConnectedMachineAgent.msi
+      ignore_errors: yes
+      #when: (not azcmagent_win_downloaded.stat.exists) #(ansible_os_family == 'Windows') and (not azcmagent_win_downloaded.stat.exists)
+
+    - name: Check if the Connected Machine Agent has already been connected on Windows
+      win_shell: '& $env:ProgramFiles\AzureConnectedMachineAgent\azcmagent.exe check'
+      register: azcmagent_win_connected
+      #when: ansible_os_family == 'Windows'
+      ignore_errors: yes
+      failed_when: (azcmagent_win_connected.rc not in [ 0, 16 ])
+      changed_when: False
+
+    - name: Connect the Connected Machine Agent on Windows servers to Azure Arc
+      win_shell: '& $env:ProgramFiles\AzureConnectedMachineAgent\azcmagent.exe connect --service-principal-id "{{ azure.service_principal_id }}" --service-principal-secret "{{ azure.service_principal_secret }}" --resource-group "{{ azure.resource_group }}" --tenant-id "{{ azure.tenant_id }}" --location "{{ azure.location }}" --subscription-id "{{ azure.subscription_id }}"'
+      when: (azcmagent_win_connected.rc is defined and azcmagent_win_connected.rc != 0) #(ansible_os_family == 'Windows') and (azcmagent_win_connected.rc is defined and azcmagent_win_connected.rc != 0)

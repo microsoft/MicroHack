@@ -1,0 +1,47 @@
+---
+- name: "Onboard Linux Servers to Azure Arc-enabled servers with Public endpoint connectivity"
+  hosts: all
+  vars:
+    azure:
+      service_principal_id: 'f27d5187-7e97-4512-b7ef-2e9a3f348e2f'
+      service_principal_secret: 'rWt8Q~Zf9ga4RZIGre5qREO6QVK~1vRYBXaqRbae'
+      resource_group: 'mh-arc-cloud'
+      tenant_id: 'e9d3c55b-addf-4d62-bf17-0ea0642744b6'
+      subscription_id: '971650f0-3120-4775-a049-67192bff7e56'
+      location: 'westeurope'
+  tasks:
+  - name: "checkIfdownloaded"
+    stat:
+      path: /usr/bin/azcmagent
+      get_attributes: False
+      get_checksum: False
+    register: azcmagent_lnx_downloaded
+    when: ansible_system == 'Linux'
+
+  - name: "downloadConnectedMachineAgentLinuxANS"
+    become: yes
+    get_url:
+      url: https://aka.ms/azcmagent
+      dest: ~/install_linux_azcmagent.sh
+      mode: '700'
+    when: (ansible_system == 'Linux') and (azcmagent_lnx_downloaded.stat.exists == false)
+
+  - name: "installConnectedMachineAgent"
+    become: yes
+    shell: bash ~/install_linux_azcmagent.sh
+    when: (ansible_system == 'Linux') and (not azcmagent_lnx_downloaded.stat.exists)
+
+  - name: "checkConnection"
+    become: true
+    command:
+     cmd: azcmagent check
+    register: azcmagent_lnx_connected
+    ignore_errors: yes
+    when: ansible_system == 'Linux'
+    failed_when: (azcmagent_lnx_connected.rc not in [ 0, 16 ])
+    changed_when: False
+
+  - name: "connectToAzureArc"
+    become: yes
+    shell: azcmagent connect --service-principal-id "{{ azure.service_principal_id }}" --service-principal-secret "{{ azure.service_principal_secret }}" --resource-group "{{ azure.resource_group }}" --tenant-id "{{ azure.tenant_id }}" --location "{{ azure.location }}" --subscription-id "{{ azure.subscription_id }}"
+    when:  (ansible_system == 'Linux') and (azcmagent_lnx_connected.rc is defined and azcmagent_lnx_connected.rc != 0)

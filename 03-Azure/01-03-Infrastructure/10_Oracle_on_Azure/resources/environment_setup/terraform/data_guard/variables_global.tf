@@ -50,7 +50,7 @@ variable "ssh_key" {
 
 variable "vm_sku" {
   description = "The SKU of the virtual machine"
-  default     = "Standard_E4ds_v6"
+  default     = "Standard_E4ds_v5"
 }
 
 variable "vm_source_image_reference" {

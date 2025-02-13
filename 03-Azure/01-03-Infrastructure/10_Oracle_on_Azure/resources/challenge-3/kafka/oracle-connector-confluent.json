@@ -17,9 +17,9 @@
     "database.history.skip.unparseable.ddl": "true",
     "database.schema": "DEMO_SCHEMA",
     "database.history.recovery.mode": "SCHEMA_ONLY_RECOVERY",
-    "errors.log.enable" : "true",
-    "errors.log.include.messages" : "true",
-    "schema.history.internal.kafka.bootstrap.servers=localhost" : 9092,
+    "errors.log.enable": "true",
+    "errors.log.include.messages": "true",
+    "schema.history.internal.kafka.bootstrap.servers": "kafka:9092",
     "schema.history.internal.kafka.topic" : "schema-changes-inventory"
   }
 }

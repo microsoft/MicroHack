@@ -3,11 +3,11 @@
   "config": {
     "connector.class": "io.debezium.connector.oracle.OracleConnector",
     "tasks.max": "1",
-    "database.dbname": "xe",
+    "database.dbname": "XE",
     "database.server.name": "microhack",
     "database.user": "demo_schema",
     "database.password": "password",
-    "database.url": "jdbc:oracle:thin:@oracle-xe1:1521:xe",
+    "database.url": "jdbc:oracle:thin:@oracle-xe1:1521:XE",
     "database.out.server.name": "dbzxout",
     "database.history.kafka.bootstrap.servers": "kafka:9092",
     "database.history.kafka.topic": "schema-changes-oracle",

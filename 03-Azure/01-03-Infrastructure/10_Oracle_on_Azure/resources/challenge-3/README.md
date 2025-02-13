@@ -21,6 +21,10 @@ terraform validate
 terraform plan -out plan1.out
 terraform apply --auto-approve plan1.out 
 
+
+# show 
+az containerapp show --resource-group $prefix --name  "${prefix}-kafka" --output json
+
 # list and verify the deployed container apps and resource group
 az containerapp list -g $prefix --query "[].{name:name}" -o table
 
@@ -46,7 +50,7 @@ az containerapp show --name "${prefix}-ora2pg" -g $prefix --query "properties.pr
 az containerapp logs show --name "${prefix}-ora2pg" -g $prefix --container ora2pg
 
 # connect on the container app
-az containerapp exec --name "${prefix}-ora2pg" -g $prefix --container-name ora2pg --command bash
+az containerapp exec --name "${prefix}-ora2pg" -g $prefix --container ora2pg --command bash
 
 
 # test connectivity from kafka to zookeeper

@@ -1,1 +1,7 @@
 https://batuhanorhon.medium.com/efficient-data-streaming-implementing-kafka-connect-and-debezium-with-docker-f5a5d24f5aca
+
+
+Images:
+    build: 
+      context: ./connect
+      dockerfile: Dockerfile

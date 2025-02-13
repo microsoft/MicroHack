@@ -2,7 +2,7 @@
 resourceGroupName="mh-arc-onprem"
 resourceGroupLocation="germanywestcentral"
 adminUsername="mhadmin"
-adminPassword="SecretP@55W0rd"
+adminPassword="REPLACE-ME"
     
 # in a sponsored subscription there is a core limit of 10 cores per VM-series per region. Therefore, the script will distribute the VMs to different regions
 # assuming you stick to the Standard_D2ads_v5 for Windows and Standard_DS1_v2 for Linux, max 4 Win and 2 Linux VMs per region can be deployed. As each participant should have two windows and one linux machine,

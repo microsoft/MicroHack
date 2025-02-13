@@ -1,7 +1,7 @@
 resourceGroupforOnprem="mh-arc-onprem"
 resourceGroupforArc="mh-arc-cloud"
 adminUsername="mhadmin"
-adminPassword="#Start12345!"
+adminPassword="REPLACE-ME"
 arcRegion="westeurope"
 triggerPolicyEvaluation=true
 

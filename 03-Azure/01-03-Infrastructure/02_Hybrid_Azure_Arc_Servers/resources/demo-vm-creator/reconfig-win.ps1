@@ -9,7 +9,9 @@ Stop-Service WindowsAzureGuestAgent -Force -Verbose
 # Block access to the Azure IMDS endpoint
 New-NetFirewallRule -Name BlockAzureIMDS -DisplayName "Block access to Azure IMDS" -Enabled True -Profile Any -Direction Outbound -Action Block -RemoteAddress 169.254.169.254
 
+#####################################################################################################################
 # the following commands are prerequisite for automatic onboarding of the VM to Azure Arc via remote ansible playbook
+# -------------->
 
 # Enable WinRM
 winrm quickconfig -q
@@ -29,3 +31,16 @@ try {
 
 # Open the WinRM port in the firewall
 netsh advfirewall firewall add rule name="WinRM" dir=in action=allow protocol=TCP localport=5985
+
+# <-------------
+#####################################################################################################################
+# VBS activation (prerequisite for Windows 2025 Hotpatch)
+
+try {
+    Reg add "HKLM\SYSTEM\ControlSet001\Control\DeviceGuard" /v "EnableVirtualizationBasedSecurity" /t REG_DWORD /d 1 /f
+    # reboot the machine
+    Restart-Computer -Force
+} catch {
+    Write-Host "Error setting Reg key for VBS"
+}
+

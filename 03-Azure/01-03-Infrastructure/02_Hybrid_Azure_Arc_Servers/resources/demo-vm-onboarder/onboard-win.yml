@@ -3,11 +3,11 @@
   hosts: all
   vars:
     azure:
-      service_principal_id: 'f27d5187-7e97-4512-b7ef-2e9a3f348e2f'
-      service_principal_secret: 'rWt8Q~Zf9ga4RZIGre5qREO6QVK~1vRYBXaqRbae'
-      resource_group: 'mh-arc-cloud'
-      tenant_id: 'e9d3c55b-addf-4d62-bf17-0ea0642744b6'
-      subscription_id: '971650f0-3120-4775-a049-67192bff7e56'
+      service_principal_id: 'WILL-BE-REPLACED-BY-SCRIPT'
+      service_principal_secret: 'WILL-BE-REPLACED-BY-SCRIPT'
+      resource_group: 'WILL-BE-REPLACED-BY-SCRIPT'
+      tenant_id: 'WILL-BE-REPLACED-BY-SCRIPT'
+      subscription_id: 'WILL-BE-REPLACED-BY-SCRIPT'
       location: 'westeurope'
 
   tasks:

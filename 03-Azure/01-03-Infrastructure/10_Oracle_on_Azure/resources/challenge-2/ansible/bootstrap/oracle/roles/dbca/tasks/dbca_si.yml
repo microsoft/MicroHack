@@ -13,7 +13,7 @@
       owner: oracle
       group: oinstall
     loop:
-      - /u01/app/oracle/fast_recovery_area/{{ sid }}
+      - /u02/app/oracle/fast_recovery_area/{{ sid }}
 
   - name: copy response file for silent install
     template: src=dbca.rsp.j2 dest=/home/{{ oracle_user }}/dbca.rsp

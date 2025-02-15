@@ -75,7 +75,7 @@ apt-get install vim
 
 __Generate a migration project:__
 ~~~bash
-ora2pg --project_base /data\`\`\` --init_project myproject
+ora2pg --project_base /data --init_project myproject
 ~~~
 
 change ORACLE_DSN in config file:

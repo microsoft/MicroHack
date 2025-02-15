@@ -1,0 +1,4078 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+  "languageVersion": "2.1-experimental",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_EXPERIMENTAL_WARNING": "This template uses ARM features that are experimental. Experimental features should be enabled for testing purposes only, as there are no guarantees about the quality or stability of these features. Do not enable these settings for any production usage, or your production environment may be subject to breaking.",
+    "_EXPERIMENTAL_FEATURES_ENABLED": [
+      "Extensibility"
+    ],
+    "_generator": {
+      "name": "bicep",
+      "version": "0.33.93.31351",
+      "templateHash": "15001259502962788166"
+    }
+  },
+  "parameters": {
+    "parDeploymentPrefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Deployment Prefix"
+      }
+    },
+    "sourceLocation": {
+      "type": "string",
+      "metadata": {
+        "description": "Source VM Region"
+      }
+    },
+    "targetLocation": {
+      "type": "string",
+      "metadata": {
+        "description": "Target VM Region"
+      }
+    },
+    "vmAdminPassword": {
+      "type": "securestring"
+    },
+    "hubVnetConfig": {
+      "type": "object",
+      "metadata": {
+        "description": "VNet configurations for hub"
+      }
+    },
+    "sourceVnetConfig": {
+      "type": "object",
+      "metadata": {
+        "description": "VNet configurations for source"
+      }
+    },
+    "targetVnetConfig": {
+      "type": "object",
+      "metadata": {
+        "description": "VNet configurations for target"
+      }
+    },
+    "testVnetConfig": {
+      "type": "object",
+      "metadata": {
+        "description": "Vnet configuration for test failovers"
+      }
+    },
+    "vmConfigs": {
+      "type": "array"
+    }
+  },
+  "variables": {
+    "vmAdminUsername": "azadmin"
+  },
+  "resources": {
+    "sourceRG": {
+      "type": "Microsoft.Resources/resourceGroups",
+      "apiVersion": "2021-04-01",
+      "name": "[format('{0}-source-{1}-rg', parameters('parDeploymentPrefix'), parameters('sourceLocation'))]",
+      "location": "[parameters('sourceLocation')]",
+      "metadata": {
+        "description": "Resource Groups for source and target"
+      }
+    },
+    "targetRG": {
+      "type": "Microsoft.Resources/resourceGroups",
+      "apiVersion": "2021-04-01",
+      "name": "[format('{0}-target-{1}-rg', parameters('parDeploymentPrefix'), parameters('targetLocation'))]",
+      "location": "[parameters('targetLocation')]",
+      "metadata": {
+        "description": "Resource Groups for source and target"
+      }
+    },
+    "logAnalytics": {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "loganalytics",
+      "resourceGroup": "[format('{0}-source-{1}-rg', parameters('parDeploymentPrefix'), parameters('sourceLocation'))]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "namePrefix": {
+            "value": "[parameters('parDeploymentPrefix')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "languageVersion": "2.1-experimental",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_EXPERIMENTAL_WARNING": "This template uses ARM features that are experimental. Experimental features should be enabled for testing purposes only, as there are no guarantees about the quality or stability of these features. Do not enable these settings for any production usage, or your production environment may be subject to breaking.",
+            "_EXPERIMENTAL_FEATURES_ENABLED": [
+              "Extensibility"
+            ],
+            "_generator": {
+              "name": "bicep",
+              "version": "0.33.93.31351",
+              "templateHash": "7260674449448490903"
+            }
+          },
+          "parameters": {
+            "namePrefix": {
+              "type": "string"
+            }
+          },
+          "variables": {
+            "nameSuffix": "logs",
+            "location": "[resourceGroup().location]",
+            "Name": "[format('{0}-{1}-{2}', parameters('namePrefix'), variables('location'), variables('nameSuffix'))]"
+          },
+          "resources": {
+            "logAnalyticsWorkspace": {
+              "type": "Microsoft.OperationalInsights/workspaces",
+              "apiVersion": "2023-09-01",
+              "name": "[variables('Name')]",
+              "location": "[variables('location')]",
+              "properties": {
+                "sku": {
+                  "name": "PerGB2018"
+                },
+                "retentionInDays": 30
+              }
+            }
+          },
+          "outputs": {
+            "logAnalyticsWorkspaceId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('Name'))]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "sourceRG"
+      ],
+      "metadata": {
+        "description": "Log Analytics Account in Source Region"
+      }
+    },
+    "asrvault": {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "asrvault",
+      "resourceGroup": "[format('{0}-target-{1}-rg', parameters('parDeploymentPrefix'), parameters('targetLocation'))]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "namePrefix": {
+            "value": "[parameters('parDeploymentPrefix')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "languageVersion": "2.1-experimental",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_EXPERIMENTAL_WARNING": "This template uses ARM features that are experimental. Experimental features should be enabled for testing purposes only, as there are no guarantees about the quality or stability of these features. Do not enable these settings for any production usage, or your production environment may be subject to breaking.",
+            "_EXPERIMENTAL_FEATURES_ENABLED": [
+              "Extensibility"
+            ],
+            "_generator": {
+              "name": "bicep",
+              "version": "0.33.93.31351",
+              "templateHash": "15413208416561354996"
+            }
+          },
+          "parameters": {
+            "namePrefix": {
+              "type": "string",
+              "metadata": {
+                "description": "ASR Vault Name, Location and SKU"
+              }
+            }
+          },
+          "variables": {
+            "nameSuffix": "asrvault",
+            "location": "[resourceGroup().location]",
+            "Name": "[format('{0}-{1}-{2}', parameters('namePrefix'), variables('location'), variables('nameSuffix'))]"
+          },
+          "resources": {
+            "recoveryServicesVault": {
+              "type": "Microsoft.RecoveryServices/vaults",
+              "apiVersion": "2024-04-01",
+              "name": "[variables('Name')]",
+              "location": "[variables('location')]",
+              "properties": {
+                "publicNetworkAccess": "Enabled",
+                "monitoringSettings": {
+                  "azureMonitorAlertSettings": {
+                    "alertsForAllFailoverIssues": "Enabled",
+                    "alertsForAllJobFailures": "Enabled",
+                    "alertsForAllReplicationIssues": "Enabled"
+                  },
+                  "classicAlertSettings": {
+                    "alertsForCriticalOperations": "Disabled",
+                    "emailNotificationsForSiteRecovery": "Disabled"
+                  }
+                }
+              },
+              "sku": {
+                "name": "RS0",
+                "tier": "Standard"
+              },
+              "metadata": {
+                "description": "ASR Vault configuration in the target region"
+              }
+            },
+            "backupRsvConfig": {
+              "type": "Microsoft.RecoveryServices/vaults/backupconfig",
+              "apiVersion": "2022-02-01",
+              "name": "[format('{0}/{1}', variables('Name'), 'vaultconfig')]",
+              "properties": {
+                "enhancedSecurityState": "Disabled",
+                "isSoftDeleteFeatureStateEditable": true,
+                "softDeleteFeatureState": "Disabled",
+                "redundancySettings": {
+                  "crossRegionRestore": "Enabled",
+                  "standardTierStorageRedundancy": "GeoRedundant"
+                }
+              },
+              "dependsOn": [
+                "recoveryServicesVault"
+              ]
+            },
+            "backupVlt": {
+              "type": "Microsoft.DataProtection/backupVaults",
+              "apiVersion": "2024-04-01",
+              "name": "[format('{0}-backupVault', variables('Name'))]",
+              "location": "[variables('location')]",
+              "properties": {
+                "storageSettings": [
+                  {
+                    "datastoreType": "VaultStore",
+                    "type": "GeoRedundant"
+                  }
+                ]
+              }
+            },
+            "replicationPolicies": {
+              "type": "Microsoft.RecoveryServices/vaults/replicationPolicies",
+              "apiVersion": "2024-04-01",
+              "name": "[format('{0}/{1}', variables('Name'), '24-hour-retention-policy')]",
+              "properties": {
+                "providerSpecificInput": {
+                  "instanceType": "A2A",
+                  "multiVmSyncStatus": "Disable"
+                }
+              },
+              "dependsOn": [
+                "recoveryServicesVault"
+              ]
+            }
+          },
+          "outputs": {
+            "vaultName": {
+              "type": "string",
+              "metadata": {
+                "description": "Output the vault name"
+              },
+              "value": "[variables('Name')]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "logAnalytics",
+        "targetRG"
+      ],
+      "metadata": {
+        "description": "ASR Vault in the target region"
+      }
+    },
+    "backupvault": {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "backupvault",
+      "resourceGroup": "[format('{0}-source-{1}-rg', parameters('parDeploymentPrefix'), parameters('sourceLocation'))]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "namePrefix": {
+            "value": "[parameters('parDeploymentPrefix')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "languageVersion": "2.1-experimental",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_EXPERIMENTAL_WARNING": "This template uses ARM features that are experimental. Experimental features should be enabled for testing purposes only, as there are no guarantees about the quality or stability of these features. Do not enable these settings for any production usage, or your production environment may be subject to breaking.",
+            "_EXPERIMENTAL_FEATURES_ENABLED": [
+              "Extensibility"
+            ],
+            "_generator": {
+              "name": "bicep",
+              "version": "0.33.93.31351",
+              "templateHash": "15413208416561354996"
+            }
+          },
+          "parameters": {
+            "namePrefix": {
+              "type": "string",
+              "metadata": {
+                "description": "ASR Vault Name, Location and SKU"
+              }
+            }
+          },
+          "variables": {
+            "nameSuffix": "asrvault",
+            "location": "[resourceGroup().location]",
+            "Name": "[format('{0}-{1}-{2}', parameters('namePrefix'), variables('location'), variables('nameSuffix'))]"
+          },
+          "resources": {
+            "recoveryServicesVault": {
+              "type": "Microsoft.RecoveryServices/vaults",
+              "apiVersion": "2024-04-01",
+              "name": "[variables('Name')]",
+              "location": "[variables('location')]",
+              "properties": {
+                "publicNetworkAccess": "Enabled",
+                "monitoringSettings": {
+                  "azureMonitorAlertSettings": {
+                    "alertsForAllFailoverIssues": "Enabled",
+                    "alertsForAllJobFailures": "Enabled",
+                    "alertsForAllReplicationIssues": "Enabled"
+                  },
+                  "classicAlertSettings": {
+                    "alertsForCriticalOperations": "Disabled",
+                    "emailNotificationsForSiteRecovery": "Disabled"
+                  }
+                }
+              },
+              "sku": {
+                "name": "RS0",
+                "tier": "Standard"
+              },
+              "metadata": {
+                "description": "ASR Vault configuration in the target region"
+              }
+            },
+            "backupRsvConfig": {
+              "type": "Microsoft.RecoveryServices/vaults/backupconfig",
+              "apiVersion": "2022-02-01",
+              "name": "[format('{0}/{1}', variables('Name'), 'vaultconfig')]",
+              "properties": {
+                "enhancedSecurityState": "Disabled",
+                "isSoftDeleteFeatureStateEditable": true,
+                "softDeleteFeatureState": "Disabled",
+                "redundancySettings": {
+                  "crossRegionRestore": "Enabled",
+                  "standardTierStorageRedundancy": "GeoRedundant"
+                }
+              },
+              "dependsOn": [
+                "recoveryServicesVault"
+              ]
+            },
+            "backupVlt": {
+              "type": "Microsoft.DataProtection/backupVaults",
+              "apiVersion": "2024-04-01",
+              "name": "[format('{0}-backupVault', variables('Name'))]",
+              "location": "[variables('location')]",
+              "properties": {
+                "storageSettings": [
+                  {
+                    "datastoreType": "VaultStore",
+                    "type": "GeoRedundant"
+                  }
+                ]
+              }
+            },
+            "replicationPolicies": {
+              "type": "Microsoft.RecoveryServices/vaults/replicationPolicies",
+              "apiVersion": "2024-04-01",
+              "name": "[format('{0}/{1}', variables('Name'), '24-hour-retention-policy')]",
+              "properties": {
+                "providerSpecificInput": {
+                  "instanceType": "A2A",
+                  "multiVmSyncStatus": "Disable"
+                }
+              },
+              "dependsOn": [
+                "recoveryServicesVault"
+              ]
+            }
+          },
+          "outputs": {
+            "vaultName": {
+              "type": "string",
+              "metadata": {
+                "description": "Output the vault name"
+              },
+              "value": "[variables('Name')]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "logAnalytics",
+        "sourceRG"
+      ],
+      "metadata": {
+        "description": "Backup Vault in the source region"
+      }
+    },
+    "automationacct": {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "asr-automationaccount",
+      "resourceGroup": "[format('{0}-target-{1}-rg', parameters('parDeploymentPrefix'), parameters('targetLocation'))]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "namePrefix": {
+            "value": "[parameters('parDeploymentPrefix')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "languageVersion": "2.1-experimental",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_EXPERIMENTAL_WARNING": "This template uses ARM features that are experimental. Experimental features should be enabled for testing purposes only, as there are no guarantees about the quality or stability of these features. Do not enable these settings for any production usage, or your production environment may be subject to breaking.",
+            "_EXPERIMENTAL_FEATURES_ENABLED": [
+              "Extensibility"
+            ],
+            "_generator": {
+              "name": "bicep",
+              "version": "0.33.93.31351",
+              "templateHash": "12338038319178812160"
+            }
+          },
+          "parameters": {
+            "namePrefix": {
+              "type": "string",
+              "metadata": {
+                "description": "Automation Account Name & Location"
+              }
+            }
+          },
+          "variables": {
+            "nameSuffix": "automation",
+            "location": "[resourceGroup().location]",
+            "Name": "[format('{0}-{1}-{2}', parameters('namePrefix'), variables('location'), variables('nameSuffix'))]"
+          },
+          "resources": {
+            "automationAccount": {
+              "type": "Microsoft.Automation/automationAccounts",
+              "apiVersion": "2023-11-01",
+              "name": "[variables('Name')]",
+              "location": "[variables('location')]",
+              "identity": {
+                "type": "SystemAssigned"
+              },
+              "properties": {
+                "sku": {
+                  "name": "Basic"
+                }
+              },
+              "metadata": {
+                "description": "Automation Account"
+              }
+            }
+          },
+          "outputs": {
+            "automationAccountId": {
+              "type": "string",
+              "metadata": {
+                "description": "Output the automation account ID"
+              },
+              "value": "[resourceId('Microsoft.Automation/automationAccounts', variables('Name'))]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "targetRG"
+      ],
+      "metadata": {
+        "description": "Automation Account for ASR"
+      }
+    },
+    "storageacct": {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "[format('storageacct-{0}', parameters('sourceLocation'))]",
+      "resourceGroup": "[format('{0}-source-{1}-rg', parameters('parDeploymentPrefix'), parameters('sourceLocation'))]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "namePrefix": {
+            "value": "[parameters('parDeploymentPrefix')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "languageVersion": "2.1-experimental",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_EXPERIMENTAL_WARNING": "This template uses ARM features that are experimental. Experimental features should be enabled for testing purposes only, as there are no guarantees about the quality or stability of these features. Do not enable these settings for any production usage, or your production environment may be subject to breaking.",
+            "_EXPERIMENTAL_FEATURES_ENABLED": [
+              "Extensibility"
+            ],
+            "_generator": {
+              "name": "bicep",
+              "version": "0.33.93.31351",
+              "templateHash": "4170418831703123220"
+            }
+          },
+          "parameters": {
+            "namePrefix": {
+              "type": "string"
+            }
+          },
+          "variables": {
+            "location": "[resourceGroup().location]",
+            "unique": "[uniqueString(resourceGroup().id)]",
+            "subName": "[format('{0}{1}{2}', parameters('namePrefix'), variables('location'), variables('unique'))]",
+            "Name": "[if(greaterOrEquals(length(variables('subName')), 24), substring(variables('subName'), 0, 24), variables('subName'))]",
+            "logSettings": [
+              {
+                "category": "StorageRead",
+                "enabled": true
+              },
+              {
+                "category": "StorageWrite",
+                "enabled": true
+              },
+              {
+                "category": "StorageDelete",
+                "enabled": true
+              }
+            ]
+          },
+          "resources": {
+            "storageAccount": {
+              "type": "Microsoft.Storage/storageAccounts",
+              "apiVersion": "2023-05-01",
+              "name": "[toLower(variables('Name'))]",
+              "location": "[variables('location')]",
+              "sku": {
+                "name": "Standard_LRS"
+              },
+              "kind": "StorageV2",
+              "properties": {
+                "accessTier": "Hot",
+                "allowSharedKeyAccess": true
+              },
+              "metadata": {
+                "description": "Storage account"
+              }
+            },
+            "blobService": {
+              "type": "Microsoft.Storage/storageAccounts/blobServices",
+              "apiVersion": "2021-06-01",
+              "name": "[format('{0}/{1}', toLower(variables('Name')), 'default')]",
+              "properties": {},
+              "dependsOn": [
+                "storageAccount"
+              ]
+            },
+            "fileService": {
+              "type": "Microsoft.Storage/storageAccounts/fileServices",
+              "apiVersion": "2021-06-01",
+              "name": "[format('{0}/{1}', toLower(variables('Name')), 'default')]",
+              "properties": {},
+              "dependsOn": [
+                "storageAccount"
+              ]
+            },
+            "queueService": {
+              "type": "Microsoft.Storage/storageAccounts/queueServices",
+              "apiVersion": "2021-06-01",
+              "name": "[format('{0}/{1}', toLower(variables('Name')), 'default')]",
+              "properties": {},
+              "dependsOn": [
+                "storageAccount"
+              ]
+            },
+            "tableService": {
+              "type": "Microsoft.Storage/storageAccounts/tableServices",
+              "apiVersion": "2021-06-01",
+              "name": "[format('{0}/{1}', toLower(variables('Name')), 'default')]",
+              "properties": {},
+              "dependsOn": [
+                "storageAccount"
+              ]
+            }
+          },
+          "outputs": {
+            "storageAccountId": {
+              "type": "string",
+              "metadata": {
+                "description": "Output the storage account ID"
+              },
+              "value": "[resourceId('Microsoft.Storage/storageAccounts', toLower(variables('Name')))]"
+            },
+            "storageAccountName": {
+              "type": "string",
+              "value": "[toLower(variables('Name'))]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "sourceRG"
+      ],
+      "metadata": {
+        "description": "Storage account for ASR cache"
+      }
+    },
+    "hubVnet": {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "[format('hubvnet-{0}', parameters('sourceLocation'))]",
+      "resourceGroup": "[format('{0}-source-{1}-rg', parameters('parDeploymentPrefix'), parameters('sourceLocation'))]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "namePrefix": {
+            "value": "[format('{0}-hub', parameters('parDeploymentPrefix'))]"
+          },
+          "vnetConfig": {
+            "value": "[parameters('hubVnetConfig')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "languageVersion": "2.1-experimental",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_EXPERIMENTAL_WARNING": "This template uses ARM features that are experimental. Experimental features should be enabled for testing purposes only, as there are no guarantees about the quality or stability of these features. Do not enable these settings for any production usage, or your production environment may be subject to breaking.",
+            "_EXPERIMENTAL_FEATURES_ENABLED": [
+              "Extensibility"
+            ],
+            "_generator": {
+              "name": "bicep",
+              "version": "0.33.93.31351",
+              "templateHash": "7888375301974977705"
+            }
+          },
+          "parameters": {
+            "namePrefix": {
+              "type": "string"
+            },
+            "vnetConfig": {
+              "type": "object"
+            }
+          },
+          "variables": {
+            "location": "[resourceGroup().location]",
+            "nameSuffix": "vnet",
+            "vnetName": "[format('{0}-{1}-{2}', parameters('namePrefix'), variables('location'), variables('nameSuffix'))]",
+            "defaultNSGRules": [
+              {
+                "name": "AllowHTTPFromInternet",
+                "properties": {
+                  "priority": 100,
+                  "direction": "Inbound",
+                  "access": "Allow",
+                  "protocol": "Tcp",
+                  "sourcePortRange": "*",
+                  "sourceAddressPrefix": "Internet",
+                  "destinationPortRange": "80",
+                  "destinationAddressPrefix": "VirtualNetwork"
+                }
+              },
+              {
+                "name": "AllowHTTPFromLoadBalancer",
+                "properties": {
+                  "priority": 110,
+                  "direction": "Inbound",
+                  "access": "Allow",
+                  "protocol": "Tcp",
+                  "sourcePortRange": "*",
+                  "sourceAddressPrefix": "AzureLoadBalancer",
+                  "destinationPortRange": "80",
+                  "destinationAddressPrefix": "VirtualNetwork"
+                }
+              },
+              {
+                "name": "IngressfromAzureBastion",
+                "properties": {
+                  "priority": 200,
+                  "direction": "Inbound",
+                  "access": "Allow",
+                  "protocol": "Tcp",
+                  "sourcePortRange": "*",
+                  "sourceAddressPrefix": "10.0.1.0/24",
+                  "destinationPortRanges": [
+                    "3389",
+                    "22"
+                  ],
+                  "destinationAddressPrefix": "*"
+                }
+              },
+              {
+                "name": "AllowHTTPOutbound",
+                "properties": {
+                  "priority": 120,
+                  "direction": "Outbound",
+                  "access": "Allow",
+                  "protocol": "Tcp",
+                  "sourcePortRange": "*",
+                  "sourceAddressPrefix": "VirtualNetwork",
+                  "destinationPortRange": "80",
+                  "destinationAddressPrefix": "Internet"
+                }
+              }
+            ],
+            "bastionNSGRules": [
+              {
+                "name": "AllowHttpsInbound",
+                "properties": {
+                  "priority": 120,
+                  "direction": "Inbound",
+                  "access": "Allow",
+                  "protocol": "Tcp",
+                  "sourcePortRange": "*",
+                  "sourceAddressPrefix": "Internet",
+                  "destinationPortRange": "443",
+                  "destinationAddressPrefix": "*"
+                }
+              },
+              {
+                "name": "AllowGatewayManagerInbound",
+                "properties": {
+                  "priority": 130,
+                  "direction": "Inbound",
+                  "access": "Allow",
+                  "protocol": "Tcp",
+                  "sourcePortRange": "*",
+                  "sourceAddressPrefix": "GatewayManager",
+                  "destinationPortRange": "443",
+                  "destinationAddressPrefix": "*"
+                }
+              },
+              {
+                "name": "AllowAzureLoadBalancerInbound",
+                "properties": {
+                  "priority": 140,
+                  "direction": "Inbound",
+                  "access": "Allow",
+                  "protocol": "Tcp",
+                  "sourcePortRange": "*",
+                  "sourceAddressPrefix": "AzureLoadBalancer",
+                  "destinationPortRange": "443",
+                  "destinationAddressPrefix": "*"
+                }
+              },
+              {
+                "name": "AllowBastionHostCommunication",
+                "properties": {
+                  "priority": 150,
+                  "direction": "Inbound",
+                  "access": "Allow",
+                  "protocol": "*",
+                  "sourcePortRange": "*",
+                  "sourceAddressPrefix": "VirtualNetwork",
+                  "destinationPortRanges": [
+                    "8080",
+                    "5701"
+                  ],
+                  "destinationAddressPrefix": "VirtualNetwork"
+                }
+              },
+              {
+                "name": "AllowSshRdpOutbound",
+                "properties": {
+                  "priority": 100,
+                  "direction": "Outbound",
+                  "access": "Allow",
+                  "protocol": "*",
+                  "sourcePortRange": "*",
+                  "sourceAddressPrefix": "*",
+                  "destinationPortRanges": [
+                    "22",
+                    "3389"
+                  ],
+                  "destinationAddressPrefix": "VirtualNetwork"
+                }
+              },
+              {
+                "name": "AllowAzureCloudOutbound",
+                "properties": {
+                  "priority": 110,
+                  "direction": "Outbound",
+                  "access": "Allow",
+                  "protocol": "Tcp",
+                  "sourcePortRange": "*",
+                  "sourceAddressPrefix": "*",
+                  "destinationPortRange": "443",
+                  "destinationAddressPrefix": "AzureCloud"
+                }
+              },
+              {
+                "name": "AllowBastionCommunication",
+                "properties": {
+                  "priority": 120,
+                  "direction": "Outbound",
+                  "access": "Allow",
+                  "protocol": "*",
+                  "sourcePortRange": "*",
+                  "sourceAddressPrefix": "VirtualNetwork",
+                  "destinationPortRanges": [
+                    "8080",
+                    "5701"
+                  ],
+                  "destinationAddressPrefix": "VirtualNetwork"
+                }
+              },
+              {
+                "name": "AllowHttpOutbound",
+                "properties": {
+                  "priority": 130,
+                  "direction": "Outbound",
+                  "access": "Allow",
+                  "protocol": "*",
+                  "sourcePortRange": "*",
+                  "sourceAddressPrefix": "*",
+                  "destinationPortRange": "80",
+                  "destinationAddressPrefix": "Internet"
+                }
+              }
+            ]
+          },
+          "resources": {
+            "virtualNetwork": {
+              "type": "Microsoft.Network/virtualNetworks",
+              "apiVersion": "2024-01-01",
+              "name": "[variables('vnetName')]",
+              "location": "[variables('location')]",
+              "properties": {
+                "copy": [
+                  {
+                    "name": "subnets",
+                    "count": "[length(parameters('vnetConfig').subnets)]",
+                    "input": {
+                      "name": "[parameters('vnetConfig').subnets[copyIndex('subnets')].name]",
+                      "properties": {
+                        "addressPrefix": "[parameters('vnetConfig').subnets[copyIndex('subnets')].addressPrefix]",
+                        "networkSecurityGroup": {
+                          "id": "[reference(format('nsg[{0}]', if(equals(parameters('vnetConfig').subnets[copyIndex('subnets')].name, 'AzureBastionSubnet'), 1, 0))).outputs.nsgId.value]"
+                        }
+                      }
+                    }
+                  }
+                ],
+                "addressSpace": "[parameters('vnetConfig').addressSpace]"
+              },
+              "dependsOn": [
+                "nsg"
+              ],
+              "metadata": {
+                "description": "Virtual Network"
+              }
+            },
+            "nsg": {
+              "copy": {
+                "name": "nsg",
+                "count": "[length(parameters('vnetConfig').subnets)]"
+              },
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2022-09-01",
+              "name": "[format('{0}-{1}-nsg', variables('vnetName'), parameters('vnetConfig').subnets[copyIndex()].name)]",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                  "namePrefix": {
+                    "value": "[format('{0}-{1}', variables('vnetName'), parameters('vnetConfig').subnets[copyIndex()].name)]"
+                  },
+                  "securityRules": "[if(equals(parameters('vnetConfig').subnets[copyIndex()].name, 'AzureBastionSubnet'), createObject('value', variables('bastionNSGRules')), createObject('value', variables('defaultNSGRules')))]"
+                },
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "languageVersion": "2.1-experimental",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_EXPERIMENTAL_WARNING": "This template uses ARM features that are experimental. Experimental features should be enabled for testing purposes only, as there are no guarantees about the quality or stability of these features. Do not enable these settings for any production usage, or your production environment may be subject to breaking.",
+                    "_EXPERIMENTAL_FEATURES_ENABLED": [
+                      "Extensibility"
+                    ],
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.33.93.31351",
+                      "templateHash": "12282744330413832483"
+                    }
+                  },
+                  "parameters": {
+                    "namePrefix": {
+                      "type": "string"
+                    },
+                    "securityRules": {
+                      "type": "array"
+                    }
+                  },
+                  "variables": {
+                    "nameSuffix": "nsg",
+                    "location": "[resourceGroup().location]",
+                    "Name": "[format('{0}-{1}', parameters('namePrefix'), variables('nameSuffix'))]"
+                  },
+                  "resources": {
+                    "nsg": {
+                      "type": "Microsoft.Network/networkSecurityGroups",
+                      "apiVersion": "2024-01-01",
+                      "name": "[variables('Name')]",
+                      "location": "[variables('location')]",
+                      "properties": {
+                        "securityRules": "[parameters('securityRules')]"
+                      },
+                      "metadata": {
+                        "description": "Network Security Group and rules"
+                      }
+                    }
+                  },
+                  "outputs": {
+                    "name": {
+                      "type": "string",
+                      "metadata": {
+                        "description": "Output the NSG ID"
+                      },
+                      "value": "[variables('Name')]"
+                    },
+                    "nsgId": {
+                      "type": "string",
+                      "value": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('Name'))]"
+                    }
+                  }
+                }
+              },
+              "metadata": {
+                "description": "Network Security Group for the subnets"
+              }
+            }
+          },
+          "outputs": {
+            "vnets": {
+              "type": "object",
+              "metadata": {
+                "description": "Output the virtual network ID & subnets"
+              },
+              "value": "[reference('virtualNetwork', '2024-01-01', 'full')]"
+            },
+            "name": {
+              "type": "string",
+              "value": "[variables('vnetName')]"
+            },
+            "id": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]"
+            },
+            "subnets": {
+              "type": "array",
+              "value": "[reference('virtualNetwork').subnets]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "logAnalytics",
+        "sourceRG"
+      ],
+      "metadata": {
+        "description": "VNet configurations for hub/spokes"
+      }
+    },
+    "sourceVnet": {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "[format('sourcevnet-{0}', parameters('sourceLocation'))]",
+      "resourceGroup": "[format('{0}-source-{1}-rg', parameters('parDeploymentPrefix'), parameters('sourceLocation'))]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "namePrefix": {
+            "value": "[format('{0}-source', parameters('parDeploymentPrefix'))]"
+          },
+          "vnetConfig": {
+            "value": "[parameters('sourceVnetConfig')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "languageVersion": "2.1-experimental",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_EXPERIMENTAL_WARNING": "This template uses ARM features that are experimental. Experimental features should be enabled for testing purposes only, as there are no guarantees about the quality or stability of these features. Do not enable these settings for any production usage, or your production environment may be subject to breaking.",
+            "_EXPERIMENTAL_FEATURES_ENABLED": [
+              "Extensibility"
+            ],
+            "_generator": {
+              "name": "bicep",
+              "version": "0.33.93.31351",
+              "templateHash": "7888375301974977705"
+            }
+          },
+          "parameters": {
+            "namePrefix": {
+              "type": "string"
+            },
+            "vnetConfig": {
+              "type": "object"
+            }
+          },
+          "variables": {
+            "location": "[resourceGroup().location]",
+            "nameSuffix": "vnet",
+            "vnetName": "[format('{0}-{1}-{2}', parameters('namePrefix'), variables('location'), variables('nameSuffix'))]",
+            "defaultNSGRules": [
+              {
+                "name": "AllowHTTPFromInternet",
+                "properties": {
+                  "priority": 100,
+                  "direction": "Inbound",
+                  "access": "Allow",
+                  "protocol": "Tcp",
+                  "sourcePortRange": "*",
+                  "sourceAddressPrefix": "Internet",
+                  "destinationPortRange": "80",
+                  "destinationAddressPrefix": "VirtualNetwork"
+                }
+              },
+              {
+                "name": "AllowHTTPFromLoadBalancer",
+                "properties": {
+                  "priority": 110,
+                  "direction": "Inbound",
+                  "access": "Allow",
+                  "protocol": "Tcp",
+                  "sourcePortRange": "*",
+                  "sourceAddressPrefix": "AzureLoadBalancer",
+                  "destinationPortRange": "80",
+                  "destinationAddressPrefix": "VirtualNetwork"
+                }
+              },
+              {
+                "name": "IngressfromAzureBastion",
+                "properties": {
+                  "priority": 200,
+                  "direction": "Inbound",
+                  "access": "Allow",
+                  "protocol": "Tcp",
+                  "sourcePortRange": "*",
+                  "sourceAddressPrefix": "10.0.1.0/24",
+                  "destinationPortRanges": [
+                    "3389",
+                    "22"
+                  ],
+                  "destinationAddressPrefix": "*"
+                }
+              },
+              {
+                "name": "AllowHTTPOutbound",
+                "properties": {
+                  "priority": 120,
+                  "direction": "Outbound",
+                  "access": "Allow",
+                  "protocol": "Tcp",
+                  "sourcePortRange": "*",
+                  "sourceAddressPrefix": "VirtualNetwork",
+                  "destinationPortRange": "80",
+                  "destinationAddressPrefix": "Internet"
+                }
+              }
+            ],
+            "bastionNSGRules": [
+              {
+                "name": "AllowHttpsInbound",
+                "properties": {
+                  "priority": 120,
+                  "direction": "Inbound",
+                  "access": "Allow",
+                  "protocol": "Tcp",
+                  "sourcePortRange": "*",
+                  "sourceAddressPrefix": "Internet",
+                  "destinationPortRange": "443",
+                  "destinationAddressPrefix": "*"
+                }
+              },
+              {
+                "name": "AllowGatewayManagerInbound",
+                "properties": {
+                  "priority": 130,
+                  "direction": "Inbound",
+                  "access": "Allow",
+                  "protocol": "Tcp",
+                  "sourcePortRange": "*",
+                  "sourceAddressPrefix": "GatewayManager",
+                  "destinationPortRange": "443",
+                  "destinationAddressPrefix": "*"
+                }
+              },
+              {
+                "name": "AllowAzureLoadBalancerInbound",
+                "properties": {
+                  "priority": 140,
+                  "direction": "Inbound",
+                  "access": "Allow",
+                  "protocol": "Tcp",
+                  "sourcePortRange": "*",
+                  "sourceAddressPrefix": "AzureLoadBalancer",
+                  "destinationPortRange": "443",
+                  "destinationAddressPrefix": "*"
+                }
+              },
+              {
+                "name": "AllowBastionHostCommunication",
+                "properties": {
+                  "priority": 150,
+                  "direction": "Inbound",
+                  "access": "Allow",
+                  "protocol": "*",
+                  "sourcePortRange": "*",
+                  "sourceAddressPrefix": "VirtualNetwork",
+                  "destinationPortRanges": [
+                    "8080",
+                    "5701"
+                  ],
+                  "destinationAddressPrefix": "VirtualNetwork"
+                }
+              },
+              {
+                "name": "AllowSshRdpOutbound",
+                "properties": {
+                  "priority": 100,
+                  "direction": "Outbound",
+                  "access": "Allow",
+                  "protocol": "*",
+                  "sourcePortRange": "*",
+                  "sourceAddressPrefix": "*",
+                  "destinationPortRanges": [
+                    "22",
+                    "3389"
+                  ],
+                  "destinationAddressPrefix": "VirtualNetwork"
+                }
+              },
+              {
+                "name": "AllowAzureCloudOutbound",
+                "properties": {
+                  "priority": 110,
+                  "direction": "Outbound",
+                  "access": "Allow",
+                  "protocol": "Tcp",
+                  "sourcePortRange": "*",
+                  "sourceAddressPrefix": "*",
+                  "destinationPortRange": "443",
+                  "destinationAddressPrefix": "AzureCloud"
+                }
+              },
+              {
+                "name": "AllowBastionCommunication",
+                "properties": {
+                  "priority": 120,
+                  "direction": "Outbound",
+                  "access": "Allow",
+                  "protocol": "*",
+                  "sourcePortRange": "*",
+                  "sourceAddressPrefix": "VirtualNetwork",
+                  "destinationPortRanges": [
+                    "8080",
+                    "5701"
+                  ],
+                  "destinationAddressPrefix": "VirtualNetwork"
+                }
+              },
+              {
+                "name": "AllowHttpOutbound",
+                "properties": {
+                  "priority": 130,
+                  "direction": "Outbound",
+                  "access": "Allow",
+                  "protocol": "*",
+                  "sourcePortRange": "*",
+                  "sourceAddressPrefix": "*",
+                  "destinationPortRange": "80",
+                  "destinationAddressPrefix": "Internet"
+                }
+              }
+            ]
+          },
+          "resources": {
+            "virtualNetwork": {
+              "type": "Microsoft.Network/virtualNetworks",
+              "apiVersion": "2024-01-01",
+              "name": "[variables('vnetName')]",
+              "location": "[variables('location')]",
+              "properties": {
+                "copy": [
+                  {
+                    "name": "subnets",
+                    "count": "[length(parameters('vnetConfig').subnets)]",
+                    "input": {
+                      "name": "[parameters('vnetConfig').subnets[copyIndex('subnets')].name]",
+                      "properties": {
+                        "addressPrefix": "[parameters('vnetConfig').subnets[copyIndex('subnets')].addressPrefix]",
+                        "networkSecurityGroup": {
+                          "id": "[reference(format('nsg[{0}]', if(equals(parameters('vnetConfig').subnets[copyIndex('subnets')].name, 'AzureBastionSubnet'), 1, 0))).outputs.nsgId.value]"
+                        }
+                      }
+                    }
+                  }
+                ],
+                "addressSpace": "[parameters('vnetConfig').addressSpace]"
+              },
+              "dependsOn": [
+                "nsg"
+              ],
+              "metadata": {
+                "description": "Virtual Network"
+              }
+            },
+            "nsg": {
+              "copy": {
+                "name": "nsg",
+                "count": "[length(parameters('vnetConfig').subnets)]"
+              },
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2022-09-01",
+              "name": "[format('{0}-{1}-nsg', variables('vnetName'), parameters('vnetConfig').subnets[copyIndex()].name)]",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                  "namePrefix": {
+                    "value": "[format('{0}-{1}', variables('vnetName'), parameters('vnetConfig').subnets[copyIndex()].name)]"
+                  },
+                  "securityRules": "[if(equals(parameters('vnetConfig').subnets[copyIndex()].name, 'AzureBastionSubnet'), createObject('value', variables('bastionNSGRules')), createObject('value', variables('defaultNSGRules')))]"
+                },
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "languageVersion": "2.1-experimental",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_EXPERIMENTAL_WARNING": "This template uses ARM features that are experimental. Experimental features should be enabled for testing purposes only, as there are no guarantees about the quality or stability of these features. Do not enable these settings for any production usage, or your production environment may be subject to breaking.",
+                    "_EXPERIMENTAL_FEATURES_ENABLED": [
+                      "Extensibility"
+                    ],
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.33.93.31351",
+                      "templateHash": "12282744330413832483"
+                    }
+                  },
+                  "parameters": {
+                    "namePrefix": {
+                      "type": "string"
+                    },
+                    "securityRules": {
+                      "type": "array"
+                    }
+                  },
+                  "variables": {
+                    "nameSuffix": "nsg",
+                    "location": "[resourceGroup().location]",
+                    "Name": "[format('{0}-{1}', parameters('namePrefix'), variables('nameSuffix'))]"
+                  },
+                  "resources": {
+                    "nsg": {
+                      "type": "Microsoft.Network/networkSecurityGroups",
+                      "apiVersion": "2024-01-01",
+                      "name": "[variables('Name')]",
+                      "location": "[variables('location')]",
+                      "properties": {
+                        "securityRules": "[parameters('securityRules')]"
+                      },
+                      "metadata": {
+                        "description": "Network Security Group and rules"
+                      }
+                    }
+                  },
+                  "outputs": {
+                    "name": {
+                      "type": "string",
+                      "metadata": {
+                        "description": "Output the NSG ID"
+                      },
+                      "value": "[variables('Name')]"
+                    },
+                    "nsgId": {
+                      "type": "string",
+                      "value": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('Name'))]"
+                    }
+                  }
+                }
+              },
+              "metadata": {
+                "description": "Network Security Group for the subnets"
+              }
+            }
+          },
+          "outputs": {
+            "vnets": {
+              "type": "object",
+              "metadata": {
+                "description": "Output the virtual network ID & subnets"
+              },
+              "value": "[reference('virtualNetwork', '2024-01-01', 'full')]"
+            },
+            "name": {
+              "type": "string",
+              "value": "[variables('vnetName')]"
+            },
+            "id": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]"
+            },
+            "subnets": {
+              "type": "array",
+              "value": "[reference('virtualNetwork').subnets]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "logAnalytics",
+        "sourceRG"
+      ]
+    },
+    "targetVnet": {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "[format('targetvnet-{0}', parameters('targetLocation'))]",
+      "resourceGroup": "[format('{0}-target-{1}-rg', parameters('parDeploymentPrefix'), parameters('targetLocation'))]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "namePrefix": {
+            "value": "[format('{0}-target', parameters('parDeploymentPrefix'))]"
+          },
+          "vnetConfig": {
+            "value": "[parameters('targetVnetConfig')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "languageVersion": "2.1-experimental",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_EXPERIMENTAL_WARNING": "This template uses ARM features that are experimental. Experimental features should be enabled for testing purposes only, as there are no guarantees about the quality or stability of these features. Do not enable these settings for any production usage, or your production environment may be subject to breaking.",
+            "_EXPERIMENTAL_FEATURES_ENABLED": [
+              "Extensibility"
+            ],
+            "_generator": {
+              "name": "bicep",
+              "version": "0.33.93.31351",
+              "templateHash": "7888375301974977705"
+            }
+          },
+          "parameters": {
+            "namePrefix": {
+              "type": "string"
+            },
+            "vnetConfig": {
+              "type": "object"
+            }
+          },
+          "variables": {
+            "location": "[resourceGroup().location]",
+            "nameSuffix": "vnet",
+            "vnetName": "[format('{0}-{1}-{2}', parameters('namePrefix'), variables('location'), variables('nameSuffix'))]",
+            "defaultNSGRules": [
+              {
+                "name": "AllowHTTPFromInternet",
+                "properties": {
+                  "priority": 100,
+                  "direction": "Inbound",
+                  "access": "Allow",
+                  "protocol": "Tcp",
+                  "sourcePortRange": "*",
+                  "sourceAddressPrefix": "Internet",
+                  "destinationPortRange": "80",
+                  "destinationAddressPrefix": "VirtualNetwork"
+                }
+              },
+              {
+                "name": "AllowHTTPFromLoadBalancer",
+                "properties": {
+                  "priority": 110,
+                  "direction": "Inbound",
+                  "access": "Allow",
+                  "protocol": "Tcp",
+                  "sourcePortRange": "*",
+                  "sourceAddressPrefix": "AzureLoadBalancer",
+                  "destinationPortRange": "80",
+                  "destinationAddressPrefix": "VirtualNetwork"
+                }
+              },
+              {
+                "name": "IngressfromAzureBastion",
+                "properties": {
+                  "priority": 200,
+                  "direction": "Inbound",
+                  "access": "Allow",
+                  "protocol": "Tcp",
+                  "sourcePortRange": "*",
+                  "sourceAddressPrefix": "10.0.1.0/24",
+                  "destinationPortRanges": [
+                    "3389",
+                    "22"
+                  ],
+                  "destinationAddressPrefix": "*"
+                }
+              },
+              {
+                "name": "AllowHTTPOutbound",
+                "properties": {
+                  "priority": 120,
+                  "direction": "Outbound",
+                  "access": "Allow",
+                  "protocol": "Tcp",
+                  "sourcePortRange": "*",
+                  "sourceAddressPrefix": "VirtualNetwork",
+                  "destinationPortRange": "80",
+                  "destinationAddressPrefix": "Internet"
+                }
+              }
+            ],
+            "bastionNSGRules": [
+              {
+                "name": "AllowHttpsInbound",
+                "properties": {
+                  "priority": 120,
+                  "direction": "Inbound",
+                  "access": "Allow",
+                  "protocol": "Tcp",
+                  "sourcePortRange": "*",
+                  "sourceAddressPrefix": "Internet",
+                  "destinationPortRange": "443",
+                  "destinationAddressPrefix": "*"
+                }
+              },
+              {
+                "name": "AllowGatewayManagerInbound",
+                "properties": {
+                  "priority": 130,
+                  "direction": "Inbound",
+                  "access": "Allow",
+                  "protocol": "Tcp",
+                  "sourcePortRange": "*",
+                  "sourceAddressPrefix": "GatewayManager",
+                  "destinationPortRange": "443",
+                  "destinationAddressPrefix": "*"
+                }
+              },
+              {
+                "name": "AllowAzureLoadBalancerInbound",
+                "properties": {
+                  "priority": 140,
+                  "direction": "Inbound",
+                  "access": "Allow",
+                  "protocol": "Tcp",
+                  "sourcePortRange": "*",
+                  "sourceAddressPrefix": "AzureLoadBalancer",
+                  "destinationPortRange": "443",
+                  "destinationAddressPrefix": "*"
+                }
+              },
+              {
+                "name": "AllowBastionHostCommunication",
+                "properties": {
+                  "priority": 150,
+                  "direction": "Inbound",
+                  "access": "Allow",
+                  "protocol": "*",
+                  "sourcePortRange": "*",
+                  "sourceAddressPrefix": "VirtualNetwork",
+                  "destinationPortRanges": [
+                    "8080",
+                    "5701"
+                  ],
+                  "destinationAddressPrefix": "VirtualNetwork"
+                }
+              },
+              {
+                "name": "AllowSshRdpOutbound",
+                "properties": {
+                  "priority": 100,
+                  "direction": "Outbound",
+                  "access": "Allow",
+                  "protocol": "*",
+                  "sourcePortRange": "*",
+                  "sourceAddressPrefix": "*",
+                  "destinationPortRanges": [
+                    "22",
+                    "3389"
+                  ],
+                  "destinationAddressPrefix": "VirtualNetwork"
+                }
+              },
+              {
+                "name": "AllowAzureCloudOutbound",
+                "properties": {
+                  "priority": 110,
+                  "direction": "Outbound",
+                  "access": "Allow",
+                  "protocol": "Tcp",
+                  "sourcePortRange": "*",
+                  "sourceAddressPrefix": "*",
+                  "destinationPortRange": "443",
+                  "destinationAddressPrefix": "AzureCloud"
+                }
+              },
+              {
+                "name": "AllowBastionCommunication",
+                "properties": {
+                  "priority": 120,
+                  "direction": "Outbound",
+                  "access": "Allow",
+                  "protocol": "*",
+                  "sourcePortRange": "*",
+                  "sourceAddressPrefix": "VirtualNetwork",
+                  "destinationPortRanges": [
+                    "8080",
+                    "5701"
+                  ],
+                  "destinationAddressPrefix": "VirtualNetwork"
+                }
+              },
+              {
+                "name": "AllowHttpOutbound",
+                "properties": {
+                  "priority": 130,
+                  "direction": "Outbound",
+                  "access": "Allow",
+                  "protocol": "*",
+                  "sourcePortRange": "*",
+                  "sourceAddressPrefix": "*",
+                  "destinationPortRange": "80",
+                  "destinationAddressPrefix": "Internet"
+                }
+              }
+            ]
+          },
+          "resources": {
+            "virtualNetwork": {
+              "type": "Microsoft.Network/virtualNetworks",
+              "apiVersion": "2024-01-01",
+              "name": "[variables('vnetName')]",
+              "location": "[variables('location')]",
+              "properties": {
+                "copy": [
+                  {
+                    "name": "subnets",
+                    "count": "[length(parameters('vnetConfig').subnets)]",
+                    "input": {
+                      "name": "[parameters('vnetConfig').subnets[copyIndex('subnets')].name]",
+                      "properties": {
+                        "addressPrefix": "[parameters('vnetConfig').subnets[copyIndex('subnets')].addressPrefix]",
+                        "networkSecurityGroup": {
+                          "id": "[reference(format('nsg[{0}]', if(equals(parameters('vnetConfig').subnets[copyIndex('subnets')].name, 'AzureBastionSubnet'), 1, 0))).outputs.nsgId.value]"
+                        }
+                      }
+                    }
+                  }
+                ],
+                "addressSpace": "[parameters('vnetConfig').addressSpace]"
+              },
+              "dependsOn": [
+                "nsg"
+              ],
+              "metadata": {
+                "description": "Virtual Network"
+              }
+            },
+            "nsg": {
+              "copy": {
+                "name": "nsg",
+                "count": "[length(parameters('vnetConfig').subnets)]"
+              },
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2022-09-01",
+              "name": "[format('{0}-{1}-nsg', variables('vnetName'), parameters('vnetConfig').subnets[copyIndex()].name)]",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                  "namePrefix": {
+                    "value": "[format('{0}-{1}', variables('vnetName'), parameters('vnetConfig').subnets[copyIndex()].name)]"
+                  },
+                  "securityRules": "[if(equals(parameters('vnetConfig').subnets[copyIndex()].name, 'AzureBastionSubnet'), createObject('value', variables('bastionNSGRules')), createObject('value', variables('defaultNSGRules')))]"
+                },
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "languageVersion": "2.1-experimental",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_EXPERIMENTAL_WARNING": "This template uses ARM features that are experimental. Experimental features should be enabled for testing purposes only, as there are no guarantees about the quality or stability of these features. Do not enable these settings for any production usage, or your production environment may be subject to breaking.",
+                    "_EXPERIMENTAL_FEATURES_ENABLED": [
+                      "Extensibility"
+                    ],
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.33.93.31351",
+                      "templateHash": "12282744330413832483"
+                    }
+                  },
+                  "parameters": {
+                    "namePrefix": {
+                      "type": "string"
+                    },
+                    "securityRules": {
+                      "type": "array"
+                    }
+                  },
+                  "variables": {
+                    "nameSuffix": "nsg",
+                    "location": "[resourceGroup().location]",
+                    "Name": "[format('{0}-{1}', parameters('namePrefix'), variables('nameSuffix'))]"
+                  },
+                  "resources": {
+                    "nsg": {
+                      "type": "Microsoft.Network/networkSecurityGroups",
+                      "apiVersion": "2024-01-01",
+                      "name": "[variables('Name')]",
+                      "location": "[variables('location')]",
+                      "properties": {
+                        "securityRules": "[parameters('securityRules')]"
+                      },
+                      "metadata": {
+                        "description": "Network Security Group and rules"
+                      }
+                    }
+                  },
+                  "outputs": {
+                    "name": {
+                      "type": "string",
+                      "metadata": {
+                        "description": "Output the NSG ID"
+                      },
+                      "value": "[variables('Name')]"
+                    },
+                    "nsgId": {
+                      "type": "string",
+                      "value": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('Name'))]"
+                    }
+                  }
+                }
+              },
+              "metadata": {
+                "description": "Network Security Group for the subnets"
+              }
+            }
+          },
+          "outputs": {
+            "vnets": {
+              "type": "object",
+              "metadata": {
+                "description": "Output the virtual network ID & subnets"
+              },
+              "value": "[reference('virtualNetwork', '2024-01-01', 'full')]"
+            },
+            "name": {
+              "type": "string",
+              "value": "[variables('vnetName')]"
+            },
+            "id": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]"
+            },
+            "subnets": {
+              "type": "array",
+              "value": "[reference('virtualNetwork').subnets]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "logAnalytics",
+        "targetRG"
+      ]
+    },
+    "testVnet": {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "[format('testvnet-{0}', parameters('targetLocation'))]",
+      "resourceGroup": "[format('{0}-target-{1}-rg', parameters('parDeploymentPrefix'), parameters('targetLocation'))]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "namePrefix": {
+            "value": "[format('{0}-test', parameters('parDeploymentPrefix'))]"
+          },
+          "vnetConfig": {
+            "value": "[parameters('testVnetConfig')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "languageVersion": "2.1-experimental",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_EXPERIMENTAL_WARNING": "This template uses ARM features that are experimental. Experimental features should be enabled for testing purposes only, as there are no guarantees about the quality or stability of these features. Do not enable these settings for any production usage, or your production environment may be subject to breaking.",
+            "_EXPERIMENTAL_FEATURES_ENABLED": [
+              "Extensibility"
+            ],
+            "_generator": {
+              "name": "bicep",
+              "version": "0.33.93.31351",
+              "templateHash": "7888375301974977705"
+            }
+          },
+          "parameters": {
+            "namePrefix": {
+              "type": "string"
+            },
+            "vnetConfig": {
+              "type": "object"
+            }
+          },
+          "variables": {
+            "location": "[resourceGroup().location]",
+            "nameSuffix": "vnet",
+            "vnetName": "[format('{0}-{1}-{2}', parameters('namePrefix'), variables('location'), variables('nameSuffix'))]",
+            "defaultNSGRules": [
+              {
+                "name": "AllowHTTPFromInternet",
+                "properties": {
+                  "priority": 100,
+                  "direction": "Inbound",
+                  "access": "Allow",
+                  "protocol": "Tcp",
+                  "sourcePortRange": "*",
+                  "sourceAddressPrefix": "Internet",
+                  "destinationPortRange": "80",
+                  "destinationAddressPrefix": "VirtualNetwork"
+                }
+              },
+              {
+                "name": "AllowHTTPFromLoadBalancer",
+                "properties": {
+                  "priority": 110,
+                  "direction": "Inbound",
+                  "access": "Allow",
+                  "protocol": "Tcp",
+                  "sourcePortRange": "*",
+                  "sourceAddressPrefix": "AzureLoadBalancer",
+                  "destinationPortRange": "80",
+                  "destinationAddressPrefix": "VirtualNetwork"
+                }
+              },
+              {
+                "name": "IngressfromAzureBastion",
+                "properties": {
+                  "priority": 200,
+                  "direction": "Inbound",
+                  "access": "Allow",
+                  "protocol": "Tcp",
+                  "sourcePortRange": "*",
+                  "sourceAddressPrefix": "10.0.1.0/24",
+                  "destinationPortRanges": [
+                    "3389",
+                    "22"
+                  ],
+                  "destinationAddressPrefix": "*"
+                }
+              },
+              {
+                "name": "AllowHTTPOutbound",
+                "properties": {
+                  "priority": 120,
+                  "direction": "Outbound",
+                  "access": "Allow",
+                  "protocol": "Tcp",
+                  "sourcePortRange": "*",
+                  "sourceAddressPrefix": "VirtualNetwork",
+                  "destinationPortRange": "80",
+                  "destinationAddressPrefix": "Internet"
+                }
+              }
+            ],
+            "bastionNSGRules": [
+              {
+                "name": "AllowHttpsInbound",
+                "properties": {
+                  "priority": 120,
+                  "direction": "Inbound",
+                  "access": "Allow",
+                  "protocol": "Tcp",
+                  "sourcePortRange": "*",
+                  "sourceAddressPrefix": "Internet",
+                  "destinationPortRange": "443",
+                  "destinationAddressPrefix": "*"
+                }
+              },
+              {
+                "name": "AllowGatewayManagerInbound",
+                "properties": {
+                  "priority": 130,
+                  "direction": "Inbound",
+                  "access": "Allow",
+                  "protocol": "Tcp",
+                  "sourcePortRange": "*",
+                  "sourceAddressPrefix": "GatewayManager",
+                  "destinationPortRange": "443",
+                  "destinationAddressPrefix": "*"
+                }
+              },
+              {
+                "name": "AllowAzureLoadBalancerInbound",
+                "properties": {
+                  "priority": 140,
+                  "direction": "Inbound",
+                  "access": "Allow",
+                  "protocol": "Tcp",
+                  "sourcePortRange": "*",
+                  "sourceAddressPrefix": "AzureLoadBalancer",
+                  "destinationPortRange": "443",
+                  "destinationAddressPrefix": "*"
+                }
+              },
+              {
+                "name": "AllowBastionHostCommunication",
+                "properties": {
+                  "priority": 150,
+                  "direction": "Inbound",
+                  "access": "Allow",
+                  "protocol": "*",
+                  "sourcePortRange": "*",
+                  "sourceAddressPrefix": "VirtualNetwork",
+                  "destinationPortRanges": [
+                    "8080",
+                    "5701"
+                  ],
+                  "destinationAddressPrefix": "VirtualNetwork"
+                }
+              },
+              {
+                "name": "AllowSshRdpOutbound",
+                "properties": {
+                  "priority": 100,
+                  "direction": "Outbound",
+                  "access": "Allow",
+                  "protocol": "*",
+                  "sourcePortRange": "*",
+                  "sourceAddressPrefix": "*",
+                  "destinationPortRanges": [
+                    "22",
+                    "3389"
+                  ],
+                  "destinationAddressPrefix": "VirtualNetwork"
+                }
+              },
+              {
+                "name": "AllowAzureCloudOutbound",
+                "properties": {
+                  "priority": 110,
+                  "direction": "Outbound",
+                  "access": "Allow",
+                  "protocol": "Tcp",
+                  "sourcePortRange": "*",
+                  "sourceAddressPrefix": "*",
+                  "destinationPortRange": "443",
+                  "destinationAddressPrefix": "AzureCloud"
+                }
+              },
+              {
+                "name": "AllowBastionCommunication",
+                "properties": {
+                  "priority": 120,
+                  "direction": "Outbound",
+                  "access": "Allow",
+                  "protocol": "*",
+                  "sourcePortRange": "*",
+                  "sourceAddressPrefix": "VirtualNetwork",
+                  "destinationPortRanges": [
+                    "8080",
+                    "5701"
+                  ],
+                  "destinationAddressPrefix": "VirtualNetwork"
+                }
+              },
+              {
+                "name": "AllowHttpOutbound",
+                "properties": {
+                  "priority": 130,
+                  "direction": "Outbound",
+                  "access": "Allow",
+                  "protocol": "*",
+                  "sourcePortRange": "*",
+                  "sourceAddressPrefix": "*",
+                  "destinationPortRange": "80",
+                  "destinationAddressPrefix": "Internet"
+                }
+              }
+            ]
+          },
+          "resources": {
+            "virtualNetwork": {
+              "type": "Microsoft.Network/virtualNetworks",
+              "apiVersion": "2024-01-01",
+              "name": "[variables('vnetName')]",
+              "location": "[variables('location')]",
+              "properties": {
+                "copy": [
+                  {
+                    "name": "subnets",
+                    "count": "[length(parameters('vnetConfig').subnets)]",
+                    "input": {
+                      "name": "[parameters('vnetConfig').subnets[copyIndex('subnets')].name]",
+                      "properties": {
+                        "addressPrefix": "[parameters('vnetConfig').subnets[copyIndex('subnets')].addressPrefix]",
+                        "networkSecurityGroup": {
+                          "id": "[reference(format('nsg[{0}]', if(equals(parameters('vnetConfig').subnets[copyIndex('subnets')].name, 'AzureBastionSubnet'), 1, 0))).outputs.nsgId.value]"
+                        }
+                      }
+                    }
+                  }
+                ],
+                "addressSpace": "[parameters('vnetConfig').addressSpace]"
+              },
+              "dependsOn": [
+                "nsg"
+              ],
+              "metadata": {
+                "description": "Virtual Network"
+              }
+            },
+            "nsg": {
+              "copy": {
+                "name": "nsg",
+                "count": "[length(parameters('vnetConfig').subnets)]"
+              },
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2022-09-01",
+              "name": "[format('{0}-{1}-nsg', variables('vnetName'), parameters('vnetConfig').subnets[copyIndex()].name)]",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                  "namePrefix": {
+                    "value": "[format('{0}-{1}', variables('vnetName'), parameters('vnetConfig').subnets[copyIndex()].name)]"
+                  },
+                  "securityRules": "[if(equals(parameters('vnetConfig').subnets[copyIndex()].name, 'AzureBastionSubnet'), createObject('value', variables('bastionNSGRules')), createObject('value', variables('defaultNSGRules')))]"
+                },
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "languageVersion": "2.1-experimental",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_EXPERIMENTAL_WARNING": "This template uses ARM features that are experimental. Experimental features should be enabled for testing purposes only, as there are no guarantees about the quality or stability of these features. Do not enable these settings for any production usage, or your production environment may be subject to breaking.",
+                    "_EXPERIMENTAL_FEATURES_ENABLED": [
+                      "Extensibility"
+                    ],
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.33.93.31351",
+                      "templateHash": "12282744330413832483"
+                    }
+                  },
+                  "parameters": {
+                    "namePrefix": {
+                      "type": "string"
+                    },
+                    "securityRules": {
+                      "type": "array"
+                    }
+                  },
+                  "variables": {
+                    "nameSuffix": "nsg",
+                    "location": "[resourceGroup().location]",
+                    "Name": "[format('{0}-{1}', parameters('namePrefix'), variables('nameSuffix'))]"
+                  },
+                  "resources": {
+                    "nsg": {
+                      "type": "Microsoft.Network/networkSecurityGroups",
+                      "apiVersion": "2024-01-01",
+                      "name": "[variables('Name')]",
+                      "location": "[variables('location')]",
+                      "properties": {
+                        "securityRules": "[parameters('securityRules')]"
+                      },
+                      "metadata": {
+                        "description": "Network Security Group and rules"
+                      }
+                    }
+                  },
+                  "outputs": {
+                    "name": {
+                      "type": "string",
+                      "metadata": {
+                        "description": "Output the NSG ID"
+                      },
+                      "value": "[variables('Name')]"
+                    },
+                    "nsgId": {
+                      "type": "string",
+                      "value": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('Name'))]"
+                    }
+                  }
+                }
+              },
+              "metadata": {
+                "description": "Network Security Group for the subnets"
+              }
+            }
+          },
+          "outputs": {
+            "vnets": {
+              "type": "object",
+              "metadata": {
+                "description": "Output the virtual network ID & subnets"
+              },
+              "value": "[reference('virtualNetwork', '2024-01-01', 'full')]"
+            },
+            "name": {
+              "type": "string",
+              "value": "[variables('vnetName')]"
+            },
+            "id": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]"
+            },
+            "subnets": {
+              "type": "array",
+              "value": "[reference('virtualNetwork').subnets]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "logAnalytics",
+        "targetRG"
+      ]
+    },
+    "peerSourceToHub": {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "[format('peer-{0}-{1}', format('sourcevnet-{0}', parameters('sourceLocation')), format('hubvnet-{0}', parameters('sourceLocation')))]",
+      "resourceGroup": "[format('{0}-source-{1}-rg', parameters('parDeploymentPrefix'), parameters('sourceLocation'))]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "parHomeNetworkName": {
+            "value": "[reference('sourceVnet').outputs.name.value]"
+          },
+          "parRemoteNetworkId": {
+            "value": "[reference('hubVnet').outputs.id.value]"
+          },
+          "parUseRemoteGateways": {
+            "value": false
+          },
+          "parAllowGatewayTransit": {
+            "value": false
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "languageVersion": "2.1-experimental",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_EXPERIMENTAL_WARNING": "This template uses ARM features that are experimental. Experimental features should be enabled for testing purposes only, as there are no guarantees about the quality or stability of these features. Do not enable these settings for any production usage, or your production environment may be subject to breaking.",
+            "_EXPERIMENTAL_FEATURES_ENABLED": [
+              "Extensibility"
+            ],
+            "_generator": {
+              "name": "bicep",
+              "version": "0.33.93.31351",
+              "templateHash": "7647257947790037188"
+            }
+          },
+          "parameters": {
+            "parHomeNetworkName": {
+              "type": "string",
+              "metadata": {
+                "description": "The VNet on which this peering is created."
+              }
+            },
+            "parRemoteNetworkId": {
+              "type": "string",
+              "metadata": {
+                "description": "The VNet that this peering targets."
+              }
+            },
+            "parUseRemoteGateways": {
+              "type": "bool",
+              "metadata": {
+                "description": "Whether to use the remote virtual network's gateway or Route Server (typically only true if this is a spoke network)."
+              }
+            },
+            "parAllowGatewayTransit": {
+              "type": "bool",
+              "metadata": {
+                "description": "Whether to allow remote network to utilize gateway links in this home network (typically only true if this is a hub network)."
+              }
+            }
+          },
+          "resources": {
+            "resHomeVNet": {
+              "existing": true,
+              "type": "Microsoft.Network/virtualNetworks",
+              "apiVersion": "2022-07-01",
+              "name": "[parameters('parHomeNetworkName')]"
+            },
+            "resPeering": {
+              "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
+              "apiVersion": "2022-07-01",
+              "name": "[format('{0}/{1}', parameters('parHomeNetworkName'), format('peering-{0}', uniqueString(resourceGroup().id, subscription().id, parameters('parRemoteNetworkId'))))]",
+              "properties": {
+                "remoteVirtualNetwork": {
+                  "id": "[parameters('parRemoteNetworkId')]"
+                },
+                "allowVirtualNetworkAccess": true,
+                "allowForwardedTraffic": true,
+                "allowGatewayTransit": "[parameters('parAllowGatewayTransit')]",
+                "useRemoteGateways": "[parameters('parUseRemoteGateways')]",
+                "doNotVerifyRemoteGateways": false,
+                "peeringState": "Connected"
+              }
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "hubVnet",
+        "sourceRG",
+        "sourceVnet"
+      ]
+    },
+    "peerHubToSource": {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "[format('peer-{0}-{1}', format('hubvnet-{0}', parameters('sourceLocation')), format('sourcevnet-{0}', parameters('sourceLocation')))]",
+      "resourceGroup": "[format('{0}-source-{1}-rg', parameters('parDeploymentPrefix'), parameters('sourceLocation'))]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "parHomeNetworkName": {
+            "value": "[reference('hubVnet').outputs.name.value]"
+          },
+          "parRemoteNetworkId": {
+            "value": "[reference('sourceVnet').outputs.id.value]"
+          },
+          "parUseRemoteGateways": {
+            "value": false
+          },
+          "parAllowGatewayTransit": {
+            "value": false
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "languageVersion": "2.1-experimental",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_EXPERIMENTAL_WARNING": "This template uses ARM features that are experimental. Experimental features should be enabled for testing purposes only, as there are no guarantees about the quality or stability of these features. Do not enable these settings for any production usage, or your production environment may be subject to breaking.",
+            "_EXPERIMENTAL_FEATURES_ENABLED": [
+              "Extensibility"
+            ],
+            "_generator": {
+              "name": "bicep",
+              "version": "0.33.93.31351",
+              "templateHash": "7647257947790037188"
+            }
+          },
+          "parameters": {
+            "parHomeNetworkName": {
+              "type": "string",
+              "metadata": {
+                "description": "The VNet on which this peering is created."
+              }
+            },
+            "parRemoteNetworkId": {
+              "type": "string",
+              "metadata": {
+                "description": "The VNet that this peering targets."
+              }
+            },
+            "parUseRemoteGateways": {
+              "type": "bool",
+              "metadata": {
+                "description": "Whether to use the remote virtual network's gateway or Route Server (typically only true if this is a spoke network)."
+              }
+            },
+            "parAllowGatewayTransit": {
+              "type": "bool",
+              "metadata": {
+                "description": "Whether to allow remote network to utilize gateway links in this home network (typically only true if this is a hub network)."
+              }
+            }
+          },
+          "resources": {
+            "resHomeVNet": {
+              "existing": true,
+              "type": "Microsoft.Network/virtualNetworks",
+              "apiVersion": "2022-07-01",
+              "name": "[parameters('parHomeNetworkName')]"
+            },
+            "resPeering": {
+              "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
+              "apiVersion": "2022-07-01",
+              "name": "[format('{0}/{1}', parameters('parHomeNetworkName'), format('peering-{0}', uniqueString(resourceGroup().id, subscription().id, parameters('parRemoteNetworkId'))))]",
+              "properties": {
+                "remoteVirtualNetwork": {
+                  "id": "[parameters('parRemoteNetworkId')]"
+                },
+                "allowVirtualNetworkAccess": true,
+                "allowForwardedTraffic": true,
+                "allowGatewayTransit": "[parameters('parAllowGatewayTransit')]",
+                "useRemoteGateways": "[parameters('parUseRemoteGateways')]",
+                "doNotVerifyRemoteGateways": false,
+                "peeringState": "Connected"
+              }
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "hubVnet",
+        "sourceRG",
+        "sourceVnet"
+      ]
+    },
+    "peerTargetToHub": {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "[format('peer-{0}-{1}', format('targetvnet-{0}', parameters('targetLocation')), format('hubvnet-{0}', parameters('sourceLocation')))]",
+      "resourceGroup": "[format('{0}-target-{1}-rg', parameters('parDeploymentPrefix'), parameters('targetLocation'))]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "parHomeNetworkName": {
+            "value": "[reference('targetVnet').outputs.name.value]"
+          },
+          "parRemoteNetworkId": {
+            "value": "[reference('hubVnet').outputs.id.value]"
+          },
+          "parUseRemoteGateways": {
+            "value": false
+          },
+          "parAllowGatewayTransit": {
+            "value": false
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "languageVersion": "2.1-experimental",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_EXPERIMENTAL_WARNING": "This template uses ARM features that are experimental. Experimental features should be enabled for testing purposes only, as there are no guarantees about the quality or stability of these features. Do not enable these settings for any production usage, or your production environment may be subject to breaking.",
+            "_EXPERIMENTAL_FEATURES_ENABLED": [
+              "Extensibility"
+            ],
+            "_generator": {
+              "name": "bicep",
+              "version": "0.33.93.31351",
+              "templateHash": "7647257947790037188"
+            }
+          },
+          "parameters": {
+            "parHomeNetworkName": {
+              "type": "string",
+              "metadata": {
+                "description": "The VNet on which this peering is created."
+              }
+            },
+            "parRemoteNetworkId": {
+              "type": "string",
+              "metadata": {
+                "description": "The VNet that this peering targets."
+              }
+            },
+            "parUseRemoteGateways": {
+              "type": "bool",
+              "metadata": {
+                "description": "Whether to use the remote virtual network's gateway or Route Server (typically only true if this is a spoke network)."
+              }
+            },
+            "parAllowGatewayTransit": {
+              "type": "bool",
+              "metadata": {
+                "description": "Whether to allow remote network to utilize gateway links in this home network (typically only true if this is a hub network)."
+              }
+            }
+          },
+          "resources": {
+            "resHomeVNet": {
+              "existing": true,
+              "type": "Microsoft.Network/virtualNetworks",
+              "apiVersion": "2022-07-01",
+              "name": "[parameters('parHomeNetworkName')]"
+            },
+            "resPeering": {
+              "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
+              "apiVersion": "2022-07-01",
+              "name": "[format('{0}/{1}', parameters('parHomeNetworkName'), format('peering-{0}', uniqueString(resourceGroup().id, subscription().id, parameters('parRemoteNetworkId'))))]",
+              "properties": {
+                "remoteVirtualNetwork": {
+                  "id": "[parameters('parRemoteNetworkId')]"
+                },
+                "allowVirtualNetworkAccess": true,
+                "allowForwardedTraffic": true,
+                "allowGatewayTransit": "[parameters('parAllowGatewayTransit')]",
+                "useRemoteGateways": "[parameters('parUseRemoteGateways')]",
+                "doNotVerifyRemoteGateways": false,
+                "peeringState": "Connected"
+              }
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "hubVnet",
+        "targetRG",
+        "targetVnet"
+      ]
+    },
+    "peerHubToTarget": {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "[format('peer-{0}-{1}', format('hubvnet-{0}', parameters('sourceLocation')), format('targetvnet-{0}', parameters('targetLocation')))]",
+      "resourceGroup": "[format('{0}-source-{1}-rg', parameters('parDeploymentPrefix'), parameters('sourceLocation'))]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "parHomeNetworkName": {
+            "value": "[reference('hubVnet').outputs.name.value]"
+          },
+          "parRemoteNetworkId": {
+            "value": "[reference('targetVnet').outputs.id.value]"
+          },
+          "parUseRemoteGateways": {
+            "value": false
+          },
+          "parAllowGatewayTransit": {
+            "value": false
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "languageVersion": "2.1-experimental",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_EXPERIMENTAL_WARNING": "This template uses ARM features that are experimental. Experimental features should be enabled for testing purposes only, as there are no guarantees about the quality or stability of these features. Do not enable these settings for any production usage, or your production environment may be subject to breaking.",
+            "_EXPERIMENTAL_FEATURES_ENABLED": [
+              "Extensibility"
+            ],
+            "_generator": {
+              "name": "bicep",
+              "version": "0.33.93.31351",
+              "templateHash": "7647257947790037188"
+            }
+          },
+          "parameters": {
+            "parHomeNetworkName": {
+              "type": "string",
+              "metadata": {
+                "description": "The VNet on which this peering is created."
+              }
+            },
+            "parRemoteNetworkId": {
+              "type": "string",
+              "metadata": {
+                "description": "The VNet that this peering targets."
+              }
+            },
+            "parUseRemoteGateways": {
+              "type": "bool",
+              "metadata": {
+                "description": "Whether to use the remote virtual network's gateway or Route Server (typically only true if this is a spoke network)."
+              }
+            },
+            "parAllowGatewayTransit": {
+              "type": "bool",
+              "metadata": {
+                "description": "Whether to allow remote network to utilize gateway links in this home network (typically only true if this is a hub network)."
+              }
+            }
+          },
+          "resources": {
+            "resHomeVNet": {
+              "existing": true,
+              "type": "Microsoft.Network/virtualNetworks",
+              "apiVersion": "2022-07-01",
+              "name": "[parameters('parHomeNetworkName')]"
+            },
+            "resPeering": {
+              "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
+              "apiVersion": "2022-07-01",
+              "name": "[format('{0}/{1}', parameters('parHomeNetworkName'), format('peering-{0}', uniqueString(resourceGroup().id, subscription().id, parameters('parRemoteNetworkId'))))]",
+              "properties": {
+                "remoteVirtualNetwork": {
+                  "id": "[parameters('parRemoteNetworkId')]"
+                },
+                "allowVirtualNetworkAccess": true,
+                "allowForwardedTraffic": true,
+                "allowGatewayTransit": "[parameters('parAllowGatewayTransit')]",
+                "useRemoteGateways": "[parameters('parUseRemoteGateways')]",
+                "doNotVerifyRemoteGateways": false,
+                "peeringState": "Connected"
+              }
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "hubVnet",
+        "sourceRG",
+        "targetVnet"
+      ]
+    },
+    "peerTestToHub": {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "[format('peer-{0}-{1}', format('testvnet-{0}', parameters('targetLocation')), format('hubvnet-{0}', parameters('sourceLocation')))]",
+      "resourceGroup": "[format('{0}-target-{1}-rg', parameters('parDeploymentPrefix'), parameters('targetLocation'))]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "parHomeNetworkName": {
+            "value": "[reference('testVnet').outputs.name.value]"
+          },
+          "parRemoteNetworkId": {
+            "value": "[reference('hubVnet').outputs.id.value]"
+          },
+          "parUseRemoteGateways": {
+            "value": false
+          },
+          "parAllowGatewayTransit": {
+            "value": false
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "languageVersion": "2.1-experimental",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_EXPERIMENTAL_WARNING": "This template uses ARM features that are experimental. Experimental features should be enabled for testing purposes only, as there are no guarantees about the quality or stability of these features. Do not enable these settings for any production usage, or your production environment may be subject to breaking.",
+            "_EXPERIMENTAL_FEATURES_ENABLED": [
+              "Extensibility"
+            ],
+            "_generator": {
+              "name": "bicep",
+              "version": "0.33.93.31351",
+              "templateHash": "7647257947790037188"
+            }
+          },
+          "parameters": {
+            "parHomeNetworkName": {
+              "type": "string",
+              "metadata": {
+                "description": "The VNet on which this peering is created."
+              }
+            },
+            "parRemoteNetworkId": {
+              "type": "string",
+              "metadata": {
+                "description": "The VNet that this peering targets."
+              }
+            },
+            "parUseRemoteGateways": {
+              "type": "bool",
+              "metadata": {
+                "description": "Whether to use the remote virtual network's gateway or Route Server (typically only true if this is a spoke network)."
+              }
+            },
+            "parAllowGatewayTransit": {
+              "type": "bool",
+              "metadata": {
+                "description": "Whether to allow remote network to utilize gateway links in this home network (typically only true if this is a hub network)."
+              }
+            }
+          },
+          "resources": {
+            "resHomeVNet": {
+              "existing": true,
+              "type": "Microsoft.Network/virtualNetworks",
+              "apiVersion": "2022-07-01",
+              "name": "[parameters('parHomeNetworkName')]"
+            },
+            "resPeering": {
+              "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
+              "apiVersion": "2022-07-01",
+              "name": "[format('{0}/{1}', parameters('parHomeNetworkName'), format('peering-{0}', uniqueString(resourceGroup().id, subscription().id, parameters('parRemoteNetworkId'))))]",
+              "properties": {
+                "remoteVirtualNetwork": {
+                  "id": "[parameters('parRemoteNetworkId')]"
+                },
+                "allowVirtualNetworkAccess": true,
+                "allowForwardedTraffic": true,
+                "allowGatewayTransit": "[parameters('parAllowGatewayTransit')]",
+                "useRemoteGateways": "[parameters('parUseRemoteGateways')]",
+                "doNotVerifyRemoteGateways": false,
+                "peeringState": "Connected"
+              }
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "hubVnet",
+        "targetRG",
+        "testVnet"
+      ]
+    },
+    "peerHubToTest": {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "[format('peer-{0}-{1}', format('hubvnet-{0}', parameters('sourceLocation')), format('testvnet-{0}', parameters('targetLocation')))]",
+      "resourceGroup": "[format('{0}-source-{1}-rg', parameters('parDeploymentPrefix'), parameters('sourceLocation'))]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "parHomeNetworkName": {
+            "value": "[reference('hubVnet').outputs.name.value]"
+          },
+          "parRemoteNetworkId": {
+            "value": "[reference('testVnet').outputs.id.value]"
+          },
+          "parUseRemoteGateways": {
+            "value": false
+          },
+          "parAllowGatewayTransit": {
+            "value": false
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "languageVersion": "2.1-experimental",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_EXPERIMENTAL_WARNING": "This template uses ARM features that are experimental. Experimental features should be enabled for testing purposes only, as there are no guarantees about the quality or stability of these features. Do not enable these settings for any production usage, or your production environment may be subject to breaking.",
+            "_EXPERIMENTAL_FEATURES_ENABLED": [
+              "Extensibility"
+            ],
+            "_generator": {
+              "name": "bicep",
+              "version": "0.33.93.31351",
+              "templateHash": "7647257947790037188"
+            }
+          },
+          "parameters": {
+            "parHomeNetworkName": {
+              "type": "string",
+              "metadata": {
+                "description": "The VNet on which this peering is created."
+              }
+            },
+            "parRemoteNetworkId": {
+              "type": "string",
+              "metadata": {
+                "description": "The VNet that this peering targets."
+              }
+            },
+            "parUseRemoteGateways": {
+              "type": "bool",
+              "metadata": {
+                "description": "Whether to use the remote virtual network's gateway or Route Server (typically only true if this is a spoke network)."
+              }
+            },
+            "parAllowGatewayTransit": {
+              "type": "bool",
+              "metadata": {
+                "description": "Whether to allow remote network to utilize gateway links in this home network (typically only true if this is a hub network)."
+              }
+            }
+          },
+          "resources": {
+            "resHomeVNet": {
+              "existing": true,
+              "type": "Microsoft.Network/virtualNetworks",
+              "apiVersion": "2022-07-01",
+              "name": "[parameters('parHomeNetworkName')]"
+            },
+            "resPeering": {
+              "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
+              "apiVersion": "2022-07-01",
+              "name": "[format('{0}/{1}', parameters('parHomeNetworkName'), format('peering-{0}', uniqueString(resourceGroup().id, subscription().id, parameters('parRemoteNetworkId'))))]",
+              "properties": {
+                "remoteVirtualNetwork": {
+                  "id": "[parameters('parRemoteNetworkId')]"
+                },
+                "allowVirtualNetworkAccess": true,
+                "allowForwardedTraffic": true,
+                "allowGatewayTransit": "[parameters('parAllowGatewayTransit')]",
+                "useRemoteGateways": "[parameters('parUseRemoteGateways')]",
+                "doNotVerifyRemoteGateways": false,
+                "peeringState": "Connected"
+              }
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "hubVnet",
+        "sourceRG",
+        "testVnet"
+      ]
+    },
+    "bastion": {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "bastion",
+      "resourceGroup": "[format('{0}-source-{1}-rg', parameters('parDeploymentPrefix'), parameters('sourceLocation'))]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "namePrefix": {
+            "value": "[parameters('parDeploymentPrefix')]"
+          },
+          "bastionSubnetId": {
+            "value": "[resourceId(subscription().subscriptionId, format('{0}-source-{1}-rg', parameters('parDeploymentPrefix'), parameters('sourceLocation')), 'Microsoft.Network/virtualNetworks/subnets', reference('hubVnet').outputs.name.value, 'AzureBastionSubnet')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "languageVersion": "2.1-experimental",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_EXPERIMENTAL_WARNING": "This template uses ARM features that are experimental. Experimental features should be enabled for testing purposes only, as there are no guarantees about the quality or stability of these features. Do not enable these settings for any production usage, or your production environment may be subject to breaking.",
+            "_EXPERIMENTAL_FEATURES_ENABLED": [
+              "Extensibility"
+            ],
+            "_generator": {
+              "name": "bicep",
+              "version": "0.33.93.31351",
+              "templateHash": "4242336844036654026"
+            }
+          },
+          "parameters": {
+            "namePrefix": {
+              "type": "string"
+            },
+            "bastionSubnetId": {
+              "type": "string"
+            }
+          },
+          "variables": {
+            "nameSuffix": "bastion",
+            "location": "[resourceGroup().location]",
+            "Name": "[format('{0}-{1}-{2}', parameters('namePrefix'), variables('location'), variables('nameSuffix'))]"
+          },
+          "resources": {
+            "bastion": {
+              "type": "Microsoft.Network/bastionHosts",
+              "apiVersion": "2024-05-01",
+              "name": "[variables('Name')]",
+              "location": "[variables('location')]",
+              "properties": {
+                "ipConfigurations": [
+                  {
+                    "name": "bastionIpConfig",
+                    "properties": {
+                      "subnet": {
+                        "id": "[parameters('bastionSubnetId')]"
+                      },
+                      "publicIPAddress": {
+                        "id": "[reference('bastionpublicIp').outputs.pipId.value]"
+                      }
+                    }
+                  }
+                ]
+              },
+              "dependsOn": [
+                "bastionpublicIp"
+              ]
+            },
+            "bastionpublicIp": {
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2022-09-01",
+              "name": "[format('{0}-pip', variables('Name'))]",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                  "Name": {
+                    "value": "[variables('Name')]"
+                  },
+                  "skuName": {
+                    "value": "Standard"
+                  }
+                },
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "languageVersion": "2.1-experimental",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_EXPERIMENTAL_WARNING": "This template uses ARM features that are experimental. Experimental features should be enabled for testing purposes only, as there are no guarantees about the quality or stability of these features. Do not enable these settings for any production usage, or your production environment may be subject to breaking.",
+                    "_EXPERIMENTAL_FEATURES_ENABLED": [
+                      "Extensibility"
+                    ],
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.33.93.31351",
+                      "templateHash": "3957392161484665173"
+                    }
+                  },
+                  "parameters": {
+                    "Name": {
+                      "type": "string"
+                    },
+                    "skuName": {
+                      "type": "string"
+                    }
+                  },
+                  "variables": {
+                    "location": "[resourceGroup().location]",
+                    "unique": "[substring(uniqueString(resourceGroup().id), 0, 8)]",
+                    "dnsLabelPrefix": "[format('{0}-{1}', parameters('Name'), variables('unique'))]",
+                    "publicIPAllocationMethod": "[if(equals(parameters('skuName'), 'Standard'), 'Static', 'Dynamic')]"
+                  },
+                  "resources": {
+                    "pip": {
+                      "type": "Microsoft.Network/publicIPAddresses",
+                      "apiVersion": "2024-01-01",
+                      "name": "[format('{0}-pip', parameters('Name'))]",
+                      "location": "[variables('location')]",
+                      "sku": {
+                        "name": "[parameters('skuName')]"
+                      },
+                      "properties": {
+                        "publicIPAllocationMethod": "[variables('publicIPAllocationMethod')]",
+                        "dnsSettings": {
+                          "domainNameLabel": "[variables('dnsLabelPrefix')]"
+                        }
+                      },
+                      "metadata": {
+                        "description": "Public IP address"
+                      }
+                    }
+                  },
+                  "outputs": {
+                    "pipId": {
+                      "type": "string",
+                      "metadata": {
+                        "description": "Output the public IP ID & FQDN"
+                      },
+                      "value": "[resourceId('Microsoft.Network/publicIPAddresses', format('{0}-pip', parameters('Name')))]"
+                    },
+                    "pipFqdn": {
+                      "type": "string",
+                      "value": "[reference('pip').dnsSettings.fqdn]"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "hubVnet",
+        "logAnalytics",
+        "peerSourceToHub",
+        "peerTargetToHub",
+        "peerTestToHub",
+        "sourceRG"
+      ],
+      "metadata": {
+        "description": "Azure Bastion in the source region"
+      }
+    },
+    "kv": {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "keyvault",
+      "resourceGroup": "[format('{0}-source-{1}-rg', parameters('parDeploymentPrefix'), parameters('sourceLocation'))]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "namePrefix": {
+            "value": "[parameters('parDeploymentPrefix')]"
+          },
+          "secretName": {
+            "value": "vmAdminPassword"
+          },
+          "vmAdminPassword": {
+            "value": "[parameters('vmAdminPassword')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "languageVersion": "2.1-experimental",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_EXPERIMENTAL_WARNING": "This template uses ARM features that are experimental. Experimental features should be enabled for testing purposes only, as there are no guarantees about the quality or stability of these features. Do not enable these settings for any production usage, or your production environment may be subject to breaking.",
+            "_EXPERIMENTAL_FEATURES_ENABLED": [
+              "Extensibility"
+            ],
+            "_generator": {
+              "name": "bicep",
+              "version": "0.33.93.31351",
+              "templateHash": "12462974513260115470"
+            }
+          },
+          "parameters": {
+            "namePrefix": {
+              "type": "string"
+            },
+            "secretName": {
+              "type": "string"
+            },
+            "vmAdminPassword": {
+              "type": "securestring"
+            }
+          },
+          "variables": {
+            "location": "[resourceGroup().location]",
+            "nameSuffix": "kv",
+            "unique": "[uniqueString(resourceGroup().id)]",
+            "subName": "[format('{0}{1}{2}{3}', parameters('namePrefix'), variables('location'), variables('nameSuffix'), variables('unique'))]",
+            "Name": "[if(greaterOrEquals(length(variables('subName')), 24), substring(variables('subName'), 0, 24), variables('subName'))]"
+          },
+          "resources": {
+            "keyVault": {
+              "type": "Microsoft.KeyVault/vaults",
+              "apiVersion": "2024-04-01-preview",
+              "name": "[variables('Name')]",
+              "location": "[variables('location')]",
+              "properties": {
+                "enabledForTemplateDeployment": true,
+                "enableRbacAuthorization": true,
+                "enableSoftDelete": false,
+                "sku": {
+                  "family": "A",
+                  "name": "standard"
+                },
+                "tenantId": "[subscription().tenantId]",
+                "accessPolicies": []
+              }
+            },
+            "secret": {
+              "type": "Microsoft.KeyVault/vaults/secrets",
+              "apiVersion": "2024-04-01-preview",
+              "name": "[format('{0}/{1}', variables('Name'), parameters('secretName'))]",
+              "properties": {
+                "value": "[parameters('vmAdminPassword')]"
+              },
+              "dependsOn": [
+                "keyVault"
+              ]
+            }
+          },
+          "outputs": {
+            "keyVaultUri": {
+              "type": "string",
+              "value": "[reference('keyVault').vaultUri]"
+            },
+            "kvName": {
+              "type": "string",
+              "value": "[variables('Name')]"
+            },
+            "secret": {
+              "type": "string",
+              "value": "[parameters('secretName')]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "logAnalytics",
+        "sourceRG"
+      ],
+      "metadata": {
+        "description": "Key Vault in the source region"
+      }
+    },
+    "lbSource": {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "lbSource",
+      "resourceGroup": "[format('{0}-source-{1}-rg', parameters('parDeploymentPrefix'), parameters('sourceLocation'))]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "namePrefix": {
+            "value": "[parameters('parDeploymentPrefix')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "languageVersion": "2.1-experimental",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_EXPERIMENTAL_WARNING": "This template uses ARM features that are experimental. Experimental features should be enabled for testing purposes only, as there are no guarantees about the quality or stability of these features. Do not enable these settings for any production usage, or your production environment may be subject to breaking.",
+            "_EXPERIMENTAL_FEATURES_ENABLED": [
+              "Extensibility"
+            ],
+            "_generator": {
+              "name": "bicep",
+              "version": "0.33.93.31351",
+              "templateHash": "15564711701340092689"
+            }
+          },
+          "parameters": {
+            "namePrefix": {
+              "type": "string"
+            }
+          },
+          "variables": {
+            "location": "[resourceGroup().location]",
+            "nameSuffix": "lb",
+            "Name": "[format('{0}-{1}-{2}', parameters('namePrefix'), variables('location'), variables('nameSuffix'))]"
+          },
+          "resources": {
+            "loadBalancer": {
+              "type": "Microsoft.Network/loadBalancers",
+              "apiVersion": "2024-01-01",
+              "name": "[variables('Name')]",
+              "location": "[variables('location')]",
+              "sku": {
+                "name": "Standard"
+              },
+              "properties": {
+                "frontendIPConfigurations": [
+                  {
+                    "name": "frontendConfig",
+                    "properties": {
+                      "publicIPAddress": {
+                        "id": "[reference('lbPip').outputs.pipId.value]"
+                      }
+                    }
+                  }
+                ],
+                "backendAddressPools": [
+                  {
+                    "name": "backendPool"
+                  }
+                ],
+                "loadBalancingRules": [
+                  {
+                    "name": "httpRule",
+                    "properties": {
+                      "frontendIPConfiguration": {
+                        "id": "[resourceId('Microsoft.Network/loadBalancers/frontendIpConfigurations', variables('Name'), 'frontendConfig')]"
+                      },
+                      "backendAddressPool": {
+                        "id": "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', variables('Name'), 'backendPool')]"
+                      },
+                      "probe": {
+                        "id": "[resourceId('Microsoft.Network/loadBalancers/probes', variables('Name'), 'httpProbe')]"
+                      },
+                      "protocol": "Tcp",
+                      "frontendPort": 80,
+                      "backendPort": 80,
+                      "enableFloatingIP": false,
+                      "idleTimeoutInMinutes": 4,
+                      "loadDistribution": "Default"
+                    }
+                  }
+                ],
+                "probes": [
+                  {
+                    "name": "httpProbe",
+                    "properties": {
+                      "protocol": "Http",
+                      "port": 80,
+                      "requestPath": "/",
+                      "intervalInSeconds": 5,
+                      "numberOfProbes": 2
+                    }
+                  }
+                ]
+              },
+              "dependsOn": [
+                "lbPip"
+              ],
+              "metadata": {
+                "description": "Load Balancer for the VMs"
+              }
+            },
+            "lbPip": {
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2022-09-01",
+              "name": "[format('{0}-pip', variables('Name'))]",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                  "Name": {
+                    "value": "[variables('Name')]"
+                  },
+                  "skuName": {
+                    "value": "Standard"
+                  }
+                },
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "languageVersion": "2.1-experimental",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_EXPERIMENTAL_WARNING": "This template uses ARM features that are experimental. Experimental features should be enabled for testing purposes only, as there are no guarantees about the quality or stability of these features. Do not enable these settings for any production usage, or your production environment may be subject to breaking.",
+                    "_EXPERIMENTAL_FEATURES_ENABLED": [
+                      "Extensibility"
+                    ],
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.33.93.31351",
+                      "templateHash": "3957392161484665173"
+                    }
+                  },
+                  "parameters": {
+                    "Name": {
+                      "type": "string"
+                    },
+                    "skuName": {
+                      "type": "string"
+                    }
+                  },
+                  "variables": {
+                    "location": "[resourceGroup().location]",
+                    "unique": "[substring(uniqueString(resourceGroup().id), 0, 8)]",
+                    "dnsLabelPrefix": "[format('{0}-{1}', parameters('Name'), variables('unique'))]",
+                    "publicIPAllocationMethod": "[if(equals(parameters('skuName'), 'Standard'), 'Static', 'Dynamic')]"
+                  },
+                  "resources": {
+                    "pip": {
+                      "type": "Microsoft.Network/publicIPAddresses",
+                      "apiVersion": "2024-01-01",
+                      "name": "[format('{0}-pip', parameters('Name'))]",
+                      "location": "[variables('location')]",
+                      "sku": {
+                        "name": "[parameters('skuName')]"
+                      },
+                      "properties": {
+                        "publicIPAllocationMethod": "[variables('publicIPAllocationMethod')]",
+                        "dnsSettings": {
+                          "domainNameLabel": "[variables('dnsLabelPrefix')]"
+                        }
+                      },
+                      "metadata": {
+                        "description": "Public IP address"
+                      }
+                    }
+                  },
+                  "outputs": {
+                    "pipId": {
+                      "type": "string",
+                      "metadata": {
+                        "description": "Output the public IP ID & FQDN"
+                      },
+                      "value": "[resourceId('Microsoft.Network/publicIPAddresses', format('{0}-pip', parameters('Name')))]"
+                    },
+                    "pipFqdn": {
+                      "type": "string",
+                      "value": "[reference('pip').dnsSettings.fqdn]"
+                    }
+                  }
+                }
+              },
+              "metadata": {
+                "description": "Public IP for the Load Balancer"
+              }
+            }
+          },
+          "outputs": {
+            "backendAddressPools": {
+              "type": "array",
+              "value": "[reference('loadBalancer').backendAddressPools]"
+            },
+            "lbPipid": {
+              "type": "string",
+              "value": "[reference('lbPip').outputs.pipId.value]"
+            },
+            "loadBalancerId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/loadBalancers', variables('Name'))]"
+            },
+            "fqdn": {
+              "type": "string",
+              "value": "[reference('lbPip').outputs.pipFqdn.value]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "logAnalytics",
+        "sourceRG",
+        "sourceVnet"
+      ],
+      "metadata": {
+        "description": "Load Balancer"
+      }
+    },
+    "lbTarget": {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "lbTarget",
+      "resourceGroup": "[format('{0}-target-{1}-rg', parameters('parDeploymentPrefix'), parameters('targetLocation'))]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "namePrefix": {
+            "value": "[parameters('parDeploymentPrefix')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "languageVersion": "2.1-experimental",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_EXPERIMENTAL_WARNING": "This template uses ARM features that are experimental. Experimental features should be enabled for testing purposes only, as there are no guarantees about the quality or stability of these features. Do not enable these settings for any production usage, or your production environment may be subject to breaking.",
+            "_EXPERIMENTAL_FEATURES_ENABLED": [
+              "Extensibility"
+            ],
+            "_generator": {
+              "name": "bicep",
+              "version": "0.33.93.31351",
+              "templateHash": "15564711701340092689"
+            }
+          },
+          "parameters": {
+            "namePrefix": {
+              "type": "string"
+            }
+          },
+          "variables": {
+            "location": "[resourceGroup().location]",
+            "nameSuffix": "lb",
+            "Name": "[format('{0}-{1}-{2}', parameters('namePrefix'), variables('location'), variables('nameSuffix'))]"
+          },
+          "resources": {
+            "loadBalancer": {
+              "type": "Microsoft.Network/loadBalancers",
+              "apiVersion": "2024-01-01",
+              "name": "[variables('Name')]",
+              "location": "[variables('location')]",
+              "sku": {
+                "name": "Standard"
+              },
+              "properties": {
+                "frontendIPConfigurations": [
+                  {
+                    "name": "frontendConfig",
+                    "properties": {
+                      "publicIPAddress": {
+                        "id": "[reference('lbPip').outputs.pipId.value]"
+                      }
+                    }
+                  }
+                ],
+                "backendAddressPools": [
+                  {
+                    "name": "backendPool"
+                  }
+                ],
+                "loadBalancingRules": [
+                  {
+                    "name": "httpRule",
+                    "properties": {
+                      "frontendIPConfiguration": {
+                        "id": "[resourceId('Microsoft.Network/loadBalancers/frontendIpConfigurations', variables('Name'), 'frontendConfig')]"
+                      },
+                      "backendAddressPool": {
+                        "id": "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', variables('Name'), 'backendPool')]"
+                      },
+                      "probe": {
+                        "id": "[resourceId('Microsoft.Network/loadBalancers/probes', variables('Name'), 'httpProbe')]"
+                      },
+                      "protocol": "Tcp",
+                      "frontendPort": 80,
+                      "backendPort": 80,
+                      "enableFloatingIP": false,
+                      "idleTimeoutInMinutes": 4,
+                      "loadDistribution": "Default"
+                    }
+                  }
+                ],
+                "probes": [
+                  {
+                    "name": "httpProbe",
+                    "properties": {
+                      "protocol": "Http",
+                      "port": 80,
+                      "requestPath": "/",
+                      "intervalInSeconds": 5,
+                      "numberOfProbes": 2
+                    }
+                  }
+                ]
+              },
+              "dependsOn": [
+                "lbPip"
+              ],
+              "metadata": {
+                "description": "Load Balancer for the VMs"
+              }
+            },
+            "lbPip": {
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2022-09-01",
+              "name": "[format('{0}-pip', variables('Name'))]",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                  "Name": {
+                    "value": "[variables('Name')]"
+                  },
+                  "skuName": {
+                    "value": "Standard"
+                  }
+                },
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "languageVersion": "2.1-experimental",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_EXPERIMENTAL_WARNING": "This template uses ARM features that are experimental. Experimental features should be enabled for testing purposes only, as there are no guarantees about the quality or stability of these features. Do not enable these settings for any production usage, or your production environment may be subject to breaking.",
+                    "_EXPERIMENTAL_FEATURES_ENABLED": [
+                      "Extensibility"
+                    ],
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.33.93.31351",
+                      "templateHash": "3957392161484665173"
+                    }
+                  },
+                  "parameters": {
+                    "Name": {
+                      "type": "string"
+                    },
+                    "skuName": {
+                      "type": "string"
+                    }
+                  },
+                  "variables": {
+                    "location": "[resourceGroup().location]",
+                    "unique": "[substring(uniqueString(resourceGroup().id), 0, 8)]",
+                    "dnsLabelPrefix": "[format('{0}-{1}', parameters('Name'), variables('unique'))]",
+                    "publicIPAllocationMethod": "[if(equals(parameters('skuName'), 'Standard'), 'Static', 'Dynamic')]"
+                  },
+                  "resources": {
+                    "pip": {
+                      "type": "Microsoft.Network/publicIPAddresses",
+                      "apiVersion": "2024-01-01",
+                      "name": "[format('{0}-pip', parameters('Name'))]",
+                      "location": "[variables('location')]",
+                      "sku": {
+                        "name": "[parameters('skuName')]"
+                      },
+                      "properties": {
+                        "publicIPAllocationMethod": "[variables('publicIPAllocationMethod')]",
+                        "dnsSettings": {
+                          "domainNameLabel": "[variables('dnsLabelPrefix')]"
+                        }
+                      },
+                      "metadata": {
+                        "description": "Public IP address"
+                      }
+                    }
+                  },
+                  "outputs": {
+                    "pipId": {
+                      "type": "string",
+                      "metadata": {
+                        "description": "Output the public IP ID & FQDN"
+                      },
+                      "value": "[resourceId('Microsoft.Network/publicIPAddresses', format('{0}-pip', parameters('Name')))]"
+                    },
+                    "pipFqdn": {
+                      "type": "string",
+                      "value": "[reference('pip').dnsSettings.fqdn]"
+                    }
+                  }
+                }
+              },
+              "metadata": {
+                "description": "Public IP for the Load Balancer"
+              }
+            }
+          },
+          "outputs": {
+            "backendAddressPools": {
+              "type": "array",
+              "value": "[reference('loadBalancer').backendAddressPools]"
+            },
+            "lbPipid": {
+              "type": "string",
+              "value": "[reference('lbPip').outputs.pipId.value]"
+            },
+            "loadBalancerId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/loadBalancers', variables('Name'))]"
+            },
+            "fqdn": {
+              "type": "string",
+              "value": "[reference('lbPip').outputs.pipFqdn.value]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "logAnalytics",
+        "targetRG",
+        "targetVnet"
+      ]
+    },
+    "vmAvSetSource": {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "avset-web-source",
+      "resourceGroup": "[format('{0}-source-{1}-rg', parameters('parDeploymentPrefix'), parameters('sourceLocation'))]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "namePrefix": {
+            "value": "[parameters('parDeploymentPrefix')]"
+          },
+          "nameSuffix": {
+            "value": "web"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "languageVersion": "2.1-experimental",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_EXPERIMENTAL_WARNING": "This template uses ARM features that are experimental. Experimental features should be enabled for testing purposes only, as there are no guarantees about the quality or stability of these features. Do not enable these settings for any production usage, or your production environment may be subject to breaking.",
+            "_EXPERIMENTAL_FEATURES_ENABLED": [
+              "Extensibility"
+            ],
+            "_generator": {
+              "name": "bicep",
+              "version": "0.33.93.31351",
+              "templateHash": "346976442776704143"
+            }
+          },
+          "parameters": {
+            "namePrefix": {
+              "type": "string"
+            },
+            "nameSuffix": {
+              "type": "string"
+            },
+            "faultDomainCount": {
+              "type": "int",
+              "defaultValue": 2
+            },
+            "updateDomainCount": {
+              "type": "int",
+              "defaultValue": 5
+            }
+          },
+          "variables": {
+            "location": "[resourceGroup().location]",
+            "Name": "[format('{0}-{1}', parameters('namePrefix'), parameters('nameSuffix'))]"
+          },
+          "resources": {
+            "availabilitySet": {
+              "type": "Microsoft.Compute/availabilitySets",
+              "apiVersion": "2024-07-01",
+              "name": "[variables('Name')]",
+              "location": "[variables('location')]",
+              "properties": {
+                "platformFaultDomainCount": "[parameters('faultDomainCount')]",
+                "platformUpdateDomainCount": "[parameters('updateDomainCount')]"
+              },
+              "sku": {
+                "name": "Aligned"
+              }
+            }
+          },
+          "outputs": {
+            "avsetId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Compute/availabilitySets', variables('Name'))]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "sourceRG"
+      ],
+      "metadata": {
+        "description": "VM Availability Sets"
+      }
+    },
+    "vmAvSetTarget": {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "avset-web-target",
+      "resourceGroup": "[format('{0}-target-{1}-rg', parameters('parDeploymentPrefix'), parameters('targetLocation'))]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "namePrefix": {
+            "value": "[parameters('parDeploymentPrefix')]"
+          },
+          "nameSuffix": {
+            "value": "web"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "languageVersion": "2.1-experimental",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_EXPERIMENTAL_WARNING": "This template uses ARM features that are experimental. Experimental features should be enabled for testing purposes only, as there are no guarantees about the quality or stability of these features. Do not enable these settings for any production usage, or your production environment may be subject to breaking.",
+            "_EXPERIMENTAL_FEATURES_ENABLED": [
+              "Extensibility"
+            ],
+            "_generator": {
+              "name": "bicep",
+              "version": "0.33.93.31351",
+              "templateHash": "346976442776704143"
+            }
+          },
+          "parameters": {
+            "namePrefix": {
+              "type": "string"
+            },
+            "nameSuffix": {
+              "type": "string"
+            },
+            "faultDomainCount": {
+              "type": "int",
+              "defaultValue": 2
+            },
+            "updateDomainCount": {
+              "type": "int",
+              "defaultValue": 5
+            }
+          },
+          "variables": {
+            "location": "[resourceGroup().location]",
+            "Name": "[format('{0}-{1}', parameters('namePrefix'), parameters('nameSuffix'))]"
+          },
+          "resources": {
+            "availabilitySet": {
+              "type": "Microsoft.Compute/availabilitySets",
+              "apiVersion": "2024-07-01",
+              "name": "[variables('Name')]",
+              "location": "[variables('location')]",
+              "properties": {
+                "platformFaultDomainCount": "[parameters('faultDomainCount')]",
+                "platformUpdateDomainCount": "[parameters('updateDomainCount')]"
+              },
+              "sku": {
+                "name": "Aligned"
+              }
+            }
+          },
+          "outputs": {
+            "avsetId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Compute/availabilitySets', variables('Name'))]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "targetRG"
+      ]
+    },
+    "vmDeployments": {
+      "copy": {
+        "name": "vmDeployments",
+        "count": "[length(parameters('vmConfigs'))]"
+      },
+      "condition": "[parameters('vmConfigs')[copyIndex()].deploy]",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "[format('vm-{0}', parameters('vmConfigs')[copyIndex()].nameSuffix)]",
+      "resourceGroup": "[format('{0}-source-{1}-rg', parameters('parDeploymentPrefix'), parameters('sourceLocation'))]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "namePrefix": {
+            "value": "[parameters('parDeploymentPrefix')]"
+          },
+          "nameSuffix": {
+            "value": "[parameters('vmConfigs')[copyIndex()].nameSuffix]"
+          },
+          "purpose": {
+            "value": "[parameters('vmConfigs')[copyIndex()].purpose]"
+          },
+          "vmSize": {
+            "value": "[parameters('vmConfigs')[copyIndex()].vmSize]"
+          },
+          "osDiskSize": {
+            "value": "[parameters('vmConfigs')[copyIndex()].osDiskSize]"
+          },
+          "dataDiskSize": {
+            "value": "[parameters('vmConfigs')[copyIndex()].dataDiskSize]"
+          },
+          "osType": {
+            "value": "[parameters('vmConfigs')[copyIndex()].osType]"
+          },
+          "adminUsername": {
+            "value": "[variables('vmAdminUsername')]"
+          },
+          "adminPassword": {
+            "value": "[parameters('vmAdminPassword')]"
+          },
+          "imagePublisher": {
+            "value": "[parameters('vmConfigs')[copyIndex()].imagePublisher]"
+          },
+          "imageOffer": {
+            "value": "[parameters('vmConfigs')[copyIndex()].imageOffer]"
+          },
+          "imageSku": {
+            "value": "[parameters('vmConfigs')[copyIndex()].imageSku]"
+          },
+          "imageVersion": {
+            "value": "[parameters('vmConfigs')[copyIndex()].imageVersion]"
+          },
+          "publicIp": {
+            "value": "[parameters('vmConfigs')[copyIndex()].publicIp]"
+          },
+          "subnetId": {
+            "value": "[reference('sourceVnet').outputs.subnets.value[0].id]"
+          },
+          "backendAddressPools": "[if(equals(parameters('vmConfigs')[copyIndex()].purpose, 'web'), createObject('value', reference('lbSource').outputs.backendAddressPools.value), createObject('value', createArray(null())))]",
+          "avset": {
+            "value": "[reference('vmAvSetSource').outputs.avsetId.value]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "languageVersion": "2.1-experimental",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_EXPERIMENTAL_WARNING": "This template uses ARM features that are experimental. Experimental features should be enabled for testing purposes only, as there are no guarantees about the quality or stability of these features. Do not enable these settings for any production usage, or your production environment may be subject to breaking.",
+            "_EXPERIMENTAL_FEATURES_ENABLED": [
+              "Extensibility"
+            ],
+            "_generator": {
+              "name": "bicep",
+              "version": "0.33.93.31351",
+              "templateHash": "14157501068076363411"
+            }
+          },
+          "parameters": {
+            "namePrefix": {
+              "type": "string"
+            },
+            "nameSuffix": {
+              "type": "string"
+            },
+            "purpose": {
+              "type": "string"
+            },
+            "vmSize": {
+              "type": "string"
+            },
+            "osDiskSize": {
+              "type": "int"
+            },
+            "dataDiskSize": {
+              "type": "int"
+            },
+            "osType": {
+              "type": "string"
+            },
+            "adminUsername": {
+              "type": "string"
+            },
+            "adminPassword": {
+              "type": "securestring"
+            },
+            "imagePublisher": {
+              "type": "string"
+            },
+            "imageOffer": {
+              "type": "string"
+            },
+            "imageSku": {
+              "type": "string"
+            },
+            "imageVersion": {
+              "type": "string"
+            },
+            "publicIp": {
+              "type": "bool"
+            },
+            "subnetId": {
+              "type": "string"
+            },
+            "backendAddressPools": {
+              "type": "array"
+            },
+            "avset": {
+              "type": "string"
+            }
+          },
+          "variables": {
+            "location": "[resourceGroup().location]",
+            "Name": "[format('{0}-{1}', parameters('namePrefix'), parameters('nameSuffix'))]"
+          },
+          "resources": {
+            "networkInterface": {
+              "type": "Microsoft.Network/networkInterfaces",
+              "apiVersion": "2024-01-01",
+              "name": "[format('{0}-nic', variables('Name'))]",
+              "location": "[variables('location')]",
+              "properties": {
+                "ipConfigurations": [
+                  {
+                    "name": "ipconfig1",
+                    "properties": {
+                      "subnet": {
+                        "id": "[parameters('subnetId')]"
+                      },
+                      "loadBalancerBackendAddressPools": "[if(equals(parameters('purpose'), 'web'), createArray(createObject('id', parameters('backendAddressPools')[0].id)), createArray())]",
+                      "privateIPAllocationMethod": "Dynamic",
+                      "publicIPAddress": "[if(parameters('publicIp'), createObject('id', reference('vmPip').outputs.pipId.value), null())]"
+                    }
+                  }
+                ]
+              },
+              "dependsOn": [
+                "vmPip"
+              ],
+              "metadata": {
+                "description": "Network interface"
+              }
+            },
+            "virtualMachine": {
+              "type": "Microsoft.Compute/virtualMachines",
+              "apiVersion": "2024-03-01",
+              "name": "[variables('Name')]",
+              "location": "[variables('location')]",
+              "tags": {
+                "purpose": "[parameters('purpose')]"
+              },
+              "properties": {
+                "hardwareProfile": {
+                  "vmSize": "[parameters('vmSize')]"
+                },
+                "osProfile": {
+                  "computerName": "[variables('Name')]",
+                  "adminUsername": "[parameters('adminUsername')]",
+                  "adminPassword": "[parameters('adminPassword')]"
+                },
+                "storageProfile": {
+                  "imageReference": {
+                    "publisher": "[parameters('imagePublisher')]",
+                    "offer": "[parameters('imageOffer')]",
+                    "sku": "[parameters('imageSku')]",
+                    "version": "[parameters('imageVersion')]"
+                  },
+                  "osDisk": {
+                    "createOption": "FromImage",
+                    "diskSizeGB": "[parameters('osDiskSize')]",
+                    "osType": "[parameters('osType')]",
+                    "managedDisk": {
+                      "storageAccountType": "Standard_LRS"
+                    }
+                  },
+                  "dataDisks": "[if(not(equals(parameters('dataDiskSize'), 0)), createArray(createObject('createOption', 'Empty', 'diskSizeGB', parameters('dataDiskSize'), 'lun', 0, 'managedDisk', createObject('storageAccountType', 'Standard_LRS'))), createArray())]"
+                },
+                "networkProfile": {
+                  "networkInterfaces": [
+                    {
+                      "id": "[resourceId('Microsoft.Network/networkInterfaces', format('{0}-nic', variables('Name')))]"
+                    }
+                  ]
+                },
+                "availabilitySet": "[if(equals(parameters('purpose'), 'web'), createObject('id', parameters('avset')), null())]",
+                "diagnosticsProfile": {
+                  "bootDiagnostics": {
+                    "enabled": true
+                  }
+                }
+              },
+              "identity": {
+                "type": "SystemAssigned"
+              },
+              "dependsOn": [
+                "networkInterface"
+              ],
+              "metadata": {
+                "description": "Virtual machine"
+              }
+            },
+            "iisExtension": {
+              "condition": "[equals(parameters('purpose'), 'web')]",
+              "type": "Microsoft.Compute/virtualMachines/extensions",
+              "apiVersion": "2024-03-01",
+              "name": "[format('{0}/{1}', variables('Name'), 'iisExtension')]",
+              "location": "[variables('location')]",
+              "properties": {
+                "publisher": "Microsoft.Compute",
+                "type": "CustomScriptExtension",
+                "typeHandlerVersion": "1.10",
+                "settings": {
+                  "fileUris": [
+                    "https://raw.githubusercontent.com/dsmithcloud/ASR-Lab/refs/heads/main/MODULES/VIRTUALMACHINE/VMEXTENSIONS/DeployIIS.ps1"
+                  ],
+                  "commandToExecute": "powershell -ExecutionPolicy Unrestricted -File DeployIIS.ps1"
+                }
+              },
+              "dependsOn": [
+                "virtualMachine"
+              ],
+              "metadata": {
+                "description": "Custom script extension to deploy IIS"
+              }
+            },
+            "sqlVm": {
+              "condition": "[equals(parameters('purpose'), 'sql')]",
+              "type": "Microsoft.SqlVirtualMachine/sqlVirtualMachines",
+              "apiVersion": "2023-10-01",
+              "name": "[variables('Name')]",
+              "location": "[variables('location')]",
+              "properties": {
+                "virtualMachineResourceId": "[resourceId('Microsoft.Compute/virtualMachines', variables('Name'))]",
+                "sqlServerLicenseType": "PAYG"
+              },
+              "dependsOn": [
+                "virtualMachine"
+              ]
+            },
+            "AdventureWorks": {
+              "condition": "[equals(parameters('purpose'), 'sql')]",
+              "type": "Microsoft.Compute/virtualMachines/extensions",
+              "apiVersion": "2024-07-01",
+              "name": "[format('{0}/{1}', variables('Name'), 'SQL-with-AdventureWorks')]",
+              "location": "[variables('location')]",
+              "properties": {
+                "publisher": "Microsoft.Compute",
+                "type": "CustomScriptExtension",
+                "typeHandlerVersion": "1.10",
+                "autoUpgradeMinorVersion": true,
+                "protectedSettings": {
+                  "script": "DeploySQLDB.ps1",
+                  "commandToExecute": "[format('powershell -ExecutionPolicy Unrestricted -File DeploySQLDB.ps1 -AdminUsername \"{0}\" -AdminPassword \"{1}\"', parameters('adminUsername'), parameters('adminPassword'))]"
+                },
+                "settings": {
+                  "fileUris": [
+                    "https://raw.githubusercontent.com/Azure/USFSI-ASR-Lab/main/MODULES/VIRTUALMACHINE/VMEXTENSIONS/DeploySQLDB.ps1"
+                  ]
+                }
+              },
+              "dependsOn": [
+                "virtualMachine"
+              ],
+              "metadata": {
+                "description": "Custom script extension to deploy AdventureWorks database to SQL Server"
+              }
+            },
+            "vmPip": {
+              "condition": "[parameters('publicIp')]",
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2022-09-01",
+              "name": "[format('{0}-pip', variables('Name'))]",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                  "Name": {
+                    "value": "[variables('Name')]"
+                  },
+                  "skuName": {
+                    "value": "Basic"
+                  }
+                },
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "languageVersion": "2.1-experimental",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_EXPERIMENTAL_WARNING": "This template uses ARM features that are experimental. Experimental features should be enabled for testing purposes only, as there are no guarantees about the quality or stability of these features. Do not enable these settings for any production usage, or your production environment may be subject to breaking.",
+                    "_EXPERIMENTAL_FEATURES_ENABLED": [
+                      "Extensibility"
+                    ],
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.33.93.31351",
+                      "templateHash": "3957392161484665173"
+                    }
+                  },
+                  "parameters": {
+                    "Name": {
+                      "type": "string"
+                    },
+                    "skuName": {
+                      "type": "string"
+                    }
+                  },
+                  "variables": {
+                    "location": "[resourceGroup().location]",
+                    "unique": "[substring(uniqueString(resourceGroup().id), 0, 8)]",
+                    "dnsLabelPrefix": "[format('{0}-{1}', parameters('Name'), variables('unique'))]",
+                    "publicIPAllocationMethod": "[if(equals(parameters('skuName'), 'Standard'), 'Static', 'Dynamic')]"
+                  },
+                  "resources": {
+                    "pip": {
+                      "type": "Microsoft.Network/publicIPAddresses",
+                      "apiVersion": "2024-01-01",
+                      "name": "[format('{0}-pip', parameters('Name'))]",
+                      "location": "[variables('location')]",
+                      "sku": {
+                        "name": "[parameters('skuName')]"
+                      },
+                      "properties": {
+                        "publicIPAllocationMethod": "[variables('publicIPAllocationMethod')]",
+                        "dnsSettings": {
+                          "domainNameLabel": "[variables('dnsLabelPrefix')]"
+                        }
+                      },
+                      "metadata": {
+                        "description": "Public IP address"
+                      }
+                    }
+                  },
+                  "outputs": {
+                    "pipId": {
+                      "type": "string",
+                      "metadata": {
+                        "description": "Output the public IP ID & FQDN"
+                      },
+                      "value": "[resourceId('Microsoft.Network/publicIPAddresses', format('{0}-pip', parameters('Name')))]"
+                    },
+                    "pipFqdn": {
+                      "type": "string",
+                      "value": "[reference('pip').dnsSettings.fqdn]"
+                    }
+                  }
+                }
+              },
+              "metadata": {
+                "description": "Public IP configurations for source and target"
+              }
+            }
+          },
+          "outputs": {
+            "vmId": {
+              "type": "string",
+              "metadata": {
+                "description": "Output the VM ID and NIC ID"
+              },
+              "value": "[resourceId('Microsoft.Compute/virtualMachines', variables('Name'))]"
+            },
+            "vmNicId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/networkInterfaces', format('{0}-nic', variables('Name')))]"
+            },
+            "vmName": {
+              "type": "string",
+              "value": "[variables('Name')]"
+            },
+            "vmMI": {
+              "type": "string",
+              "value": "[reference('virtualMachine', '2024-03-01', 'full').identity.principalId]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "lbSource",
+        "lbTarget",
+        "sourceRG",
+        "sourceVnet",
+        "vmAvSetSource"
+      ]
+    },
+    "trafficManager": {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "myTrafficManagerProfile",
+      "resourceGroup": "[format('{0}-source-{1}-rg', parameters('parDeploymentPrefix'), parameters('sourceLocation'))]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "namePrefix": {
+            "value": "[parameters('parDeploymentPrefix')]"
+          },
+          "endpoint1Target": {
+            "value": "[reference('lbSource').outputs.fqdn.value]"
+          },
+          "endpoint2Target": {
+            "value": "[reference('lbTarget').outputs.fqdn.value]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "languageVersion": "2.1-experimental",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_EXPERIMENTAL_WARNING": "This template uses ARM features that are experimental. Experimental features should be enabled for testing purposes only, as there are no guarantees about the quality or stability of these features. Do not enable these settings for any production usage, or your production environment may be subject to breaking.",
+            "_EXPERIMENTAL_FEATURES_ENABLED": [
+              "Extensibility"
+            ],
+            "_generator": {
+              "name": "bicep",
+              "version": "0.33.93.31351",
+              "templateHash": "17176965106474697924"
+            }
+          },
+          "parameters": {
+            "namePrefix": {
+              "type": "string"
+            },
+            "endpoint1Target": {
+              "type": "string"
+            },
+            "endpoint2Target": {
+              "type": "string"
+            }
+          },
+          "variables": {
+            "nameSuffix": "trafficmanager",
+            "location": "[resourceGroup().location]",
+            "unique": "[substring(uniqueString(resourceGroup().id), 0, 8)]",
+            "Name": "[format('{0}-{1}-{2}-{3}', parameters('namePrefix'), variables('location'), variables('nameSuffix'), variables('unique'))]"
+          },
+          "resources": {
+            "trafficManager": {
+              "type": "Microsoft.Network/trafficmanagerprofiles",
+              "apiVersion": "2022-04-01",
+              "name": "[variables('Name')]",
+              "location": "global",
+              "properties": {
+                "profileStatus": "Enabled",
+                "trafficRoutingMethod": "Priority",
+                "dnsConfig": {
+                  "relativeName": "[variables('Name')]",
+                  "ttl": 30
+                },
+                "monitorConfig": {
+                  "protocol": "TCP",
+                  "port": 80,
+                  "path": null
+                },
+                "endpoints": [
+                  {
+                    "name": "vmEndpt1",
+                    "type": "Microsoft.Network/trafficManagerProfiles/externalEndpoints",
+                    "properties": {
+                      "target": "[parameters('endpoint1Target')]",
+                      "endpointStatus": "Enabled",
+                      "priority": 1
+                    }
+                  },
+                  {
+                    "name": "vmEndpt2",
+                    "type": "Microsoft.Network/trafficManagerProfiles/externalEndpoints",
+                    "properties": {
+                      "target": "[parameters('endpoint2Target')]",
+                      "endpointStatus": "Enabled",
+                      "priority": 2
+                    }
+                  }
+                ]
+              },
+              "metadata": {
+                "description": "Traffic Manager Profile"
+              }
+            }
+          },
+          "outputs": {
+            "trafficManagerId": {
+              "type": "string",
+              "metadata": {
+                "description": "Output the Traffic Manager ID & FQDN"
+              },
+              "value": "[resourceId('Microsoft.Network/trafficmanagerprofiles', variables('Name'))]"
+            },
+            "trafficManagerfqdn": {
+              "type": "string",
+              "value": "[reference('trafficManager').dnsConfig.fqdn]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "lbSource",
+        "lbTarget",
+        "sourceRG"
+      ],
+      "metadata": {
+        "description": "Traffic Manager profile for the web site on the source VM"
+      }
+    }
+  },
+  "outputs": {
+    "vmUserName": {
+      "type": "string",
+      "value": "[variables('vmAdminUsername')]"
+    },
+    "fqdn": {
+      "type": "string",
+      "value": "[reference('trafficManager').outputs.trafficManagerfqdn.value]"
+    }
+  }
+}

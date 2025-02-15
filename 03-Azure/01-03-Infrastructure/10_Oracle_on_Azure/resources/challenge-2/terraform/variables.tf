@@ -3,7 +3,7 @@ variable "location" {
   type        = string
   # In the microhack subscription there is a deployment limit of 10 cores per VM type per region.
   # Please align with your coach what region you should use to avoid hitting the limit.
-  default     = "germanywestcentral"  
+  default     = "swedencentral"  
 }
 
 variable "resource_group_name" {

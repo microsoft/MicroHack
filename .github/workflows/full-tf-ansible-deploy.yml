@@ -21,7 +21,7 @@ on:
     
 env:
   TF_LOG: ${{ secrets.TF_LOG != '' && secrets.TF_LOG || 'INFO' }}                                                     #"INFO"
-  AZ_LOCATION: ${{ secrets.AZ_LOCATION != '' && secrets.AZ_LOCATION || 'germanywestcentral' }}                             #"swedencentral" # can be parameterized
+  AZ_LOCATION: ${{ secrets.AZ_LOCATION != '' && secrets.AZ_LOCATION || 'swedencentral' }}                             #"swedencentral" # can be parameterized
   AZ_RG_BASENAME: ${{ secrets.AZ_RG_BASENAME != '' && secrets.AZ_RG_BASENAME || 'rg-mh-oracle' }}  
   VM_PRIMARY_NAME: ${{ secrets.VM_PRIMARY_NAME != '' && secrets.VM_PRIMARY_NAME || 'vm-primary-0' }}                  # can be parameterized
   VM_SECONDARY_NAME: ${{ secrets.VM_SECONDARY_NAME != '' && secrets.VM_SECONDARY_NAME || 'vm-secondary-0' }}          # can be parameterized

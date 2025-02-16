@@ -136,7 +136,7 @@ Participants must:
 
 [Solution Steps](./walkthrough/challenge-0/solution.md)
 
-Let's get started with the **[challenges](./challenges/00_challenge.md)** and dive into the world of Azure! 🌐
+Let's get started with the **[challenges](./challenges/01_challenge.md)** and dive into the world of Azure! 🌐
 
 By the end of this MicroHack, you'll be equipped with the knowledge and skills to design and implement effective Business Continuity and Disaster Recovery strategies using Azure services. 
 
@@ -147,12 +147,10 @@ The Azure Business Continuity Guide provides a comprehensive set of recommendati
 
 [Azure Business Continuity Guide](https://github.com/Azure/BusinessContinuityGuide)
 
-## Contributors
-* Markus Klein 
-* Bernd Loehlein 
-* Hengameh Bigdeloo 
-* Tara
+## Contributors 
+* Hengameh Bigdeloo
 * Nils Bankert [GitHub](https://github.com/nilsbankert); [LinkedIn](https://www.linkedin.com/in/nilsbankert/)
 * Herman Diessongo
 * Demir Senturk
 * Andressa Jendreieck
+* Sebastian Pfaller

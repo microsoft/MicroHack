@@ -4,6 +4,30 @@
 
 In challenge 1, you will understand and prepare your environment with the needed infrastructure to enable business continuity with Cloud Native / PaaS Services on Azure.
 
+Below an architecure diagram displays the setup. Tutorials and documentation that provide step-by-step guidance on how to deploy the environment comes along.
+
+---
+
+# Lab Environment with Virtual Machines
+
+![Architecture](../img/asrdemo%20architecture.png)
+
+### Deployment
+
+There are **two different ways** to deploy the lab environment. The first is using ARM via **Deploy to Azure-Button** and the second is to use the provided **terraform** scripts. The terraform method is the preferred method as it is faster and more reliable. However, if you are not familiar with terraform, you can use the Azure Portal method.
+
+#### ARM Deployment
+
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fdemirsenturk%2FHA-multi-region-application%2Frefs%2Fheads%2Fmain%2Fdeploy.json)
+
+Choose the same **resource Group** as the N-tier Application.
+
+#### Terraform Method
+
+To deploy the lab environment using **terraform**, click the link below.
+
+- [Deploy to Azure (terraform)](./resources/terraform/README.md)
+
 ### Actions
 
 Create all necessary Azure resources

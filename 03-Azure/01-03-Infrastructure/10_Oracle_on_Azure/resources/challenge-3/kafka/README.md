@@ -371,6 +371,13 @@ SELECT count(*) FROM DEMO_SCHEMA.EMPLOYEES;
     10000
 ~~~
 
+<br>
+<br>
+
+__Note: Zookeeper will be desupported and replaced soon. In the docker compose yaml file we already used KRAFT and or Zookeeper. At the moment it is still possible to use Zookeeper if desired. Information about Kraft is available on the Apache documentation see [here](https://kafka.apache.org/documentation/#kraft)__
+
+<br>
+<br>
 
 # Step 3: 
 Start the Kafka Cluster: Run the following command to start the Kafka cluster:
@@ -540,9 +547,13 @@ curl -i -X POST -H "Accept:application/json" -H "Content-Type:application/json" 
 ~~~
 
 
+Option: Display all registered connectors in Kafka Connect:
+~~~bash
+curl -X GET http://localhost:8083/connectors
+~~~
+
 
 Option: How to delete the oracle debezium connector if required and recreate the one 
-
 ~~~bash
 curl -X DELETE http://localhost:8083/connectors/oracle-connector
 ~~~
@@ -738,6 +749,10 @@ Output:
 
 In case of an error see:
 "state":"FAILED"
+
+<br>
+__In case the state flag is FAILED the connector needs to be DELETED and re-registered.__
+<br>
 
 
 ### Pause the connector
@@ -945,6 +960,18 @@ Connect into the kafka-kafka container
 docker exec -it kafka-kafka bash
 ~~~
      
+
+List all Kafka topics to verify if schema-changes-oracle exists.
+~~~bash
+kafka-topics --bootstrap-server localhost:9092 --list
+~~~
+
+Check the logs of the Kafka brokers to ensure they are running and healthy.
+~~~bash
+docker-compose logs broker
+~~~
+
+
 execute the following query to track the changes
 ~~~bash   
 kafka-console-consumer --bootstrap-server localhost:9092 --topic schema-changes-oracle --from-beginning

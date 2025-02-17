@@ -1,5 +1,5 @@
 {
-  "name": "postgres-sink-connector",
+  "name": "pgfs-sink-conf-jdbc",
   "config": {
     "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
     "tasks.max": "1",

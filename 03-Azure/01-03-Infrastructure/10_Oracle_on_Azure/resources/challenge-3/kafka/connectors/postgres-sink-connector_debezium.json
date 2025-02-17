@@ -1,5 +1,5 @@
 {
-  "name": "postgres-source-connector",
+  "name": "pgfs-sind-deb-jdbc",
   "config": {
     "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
     "tasks.max": "1",
@@ -14,6 +14,7 @@
     "slot.name": "debezium",
     "publication.name": "dbz_publication",
     "database.history.kafka.bootstrap.servers": "kafka:9092",
-    "database.history.kafka.topic": "schema-changes-postgres"
+    "database.history.kafka.topic": "schema-changes-postgres",
+    "topic.prefix": "postgres-"
   }
 }

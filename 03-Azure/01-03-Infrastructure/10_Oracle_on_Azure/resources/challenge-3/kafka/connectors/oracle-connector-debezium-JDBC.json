@@ -1,5 +1,5 @@
 {
-  "name": "oracle-connector",
+  "name": "orcl-source-deb-jdbc",
   "config": {
     "connector.class": "io.debezium.connector.oracle.OracleConnector",
     "tasks.max": "1",

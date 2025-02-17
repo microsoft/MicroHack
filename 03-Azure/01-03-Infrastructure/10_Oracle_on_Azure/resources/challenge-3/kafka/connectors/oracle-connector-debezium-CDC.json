@@ -1,5 +1,5 @@
 {
-  "name": "oracle-connector",
+  "name": "orcl-source-deb-cdc",
   "config": {
     "connector.class": "io.debezium.connector.oracle.OracleCdcSourceConnector",
     "tasks.max": "1",

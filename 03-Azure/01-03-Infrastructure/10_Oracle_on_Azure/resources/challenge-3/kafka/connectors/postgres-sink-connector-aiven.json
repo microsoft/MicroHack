@@ -1,5 +1,5 @@
 {
-  "name": "postgres-sink-connector",
+  "name": "pgfs-sink-aiven-jdbc",
   "config": {
     "connector.class": "io.aiven.connect.jdbc.JdbcSinkConnector",
     "tasks.max": "1",

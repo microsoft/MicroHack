@@ -1,5 +1,5 @@
 {
-  "name": "oracle-cdc-source-connector",
+  "name": "orcl-source-conf-cdc",
   "config": {
     "connector.class": "io.confluent.connect.oracle.cdc.OracleCdcSourceConnector",
     "tasks.max": "1",

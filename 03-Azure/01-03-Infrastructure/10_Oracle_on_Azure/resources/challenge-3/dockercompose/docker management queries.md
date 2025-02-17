@@ -1,4 +1,7 @@
-To build the demo environment an Azure virtual server or Azure container apps can be used. 
+To build the demo environment an Azure virtual server or Azure container apps can be used.
+
+As container images we are trying to use the public available container images from Docker Hub but you can use the available images from the Oracle Container Registry as well see [here](https://container-registry.oracle.com/ords/f?p=113:10::::::)
+
 
 For the docker version we are using a debian 12 - bookworm image with at least 8 cores and 64 CPU's. The docker compose file is stored under /kafka/docker and contains the following images:
 
@@ -19,10 +22,11 @@ An alternative to the docker images is Azure Container Apps. Which are not consi
 
 In case data need to be copied on the remote Azure linux vm you the following SCP command can be used. If the server is deploy with an User/Password replace the private key in the command syntax. 
 
-scp -C -i ./remoteServerKey.ppk -r /var/www/* root@192.168.0.15:/var/www
+~~~bash
+scp -C -i 'privatekey.pem' -r 'path_to_files'  azureuser@48.209.90.102:'path_to_files'
+~~~
 
-
-
+~~~bash
 docker-compose logs connect
 
 docker inspect container-name (for ex. oracle-xe)
@@ -33,15 +37,16 @@ docker network inspect container-name (for ex. oracle-xe)
 docker-compose down
 docker-compose up -d
 
-    docker exec -it --workdir /root --user root oracle-xe1  bash
+docker exec -it --workdir /root --user root oracle-xe1  bash
 
 
 find the ip address of a docker container
 docker inspect -f "{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}" oracle-xe1
-
+~~~
 
 
 How to clean logs of docker-compose connect container
+
 1. docker-compose stop connect
 2. docker exec -it datareplicationkafka-connect-1 bash
 3. rm -rf /path/to/log/files/*
@@ -51,5 +56,6 @@ How to clean logs of docker-compose connect container
 
 
 How to identify the network IP address of a docker container
-
+~~~bash
 docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' oracle-xe1
+~~~

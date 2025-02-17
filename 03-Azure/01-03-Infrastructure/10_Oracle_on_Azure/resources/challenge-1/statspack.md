@@ -14,6 +14,7 @@ Please clarify internal if your licenses or contract with kind of report can be 
 
 ~~~bash
 oracle@oracle-xe1:~$ sqlplus / as sysdba
+~~~
 
 SQL*Plus: Release 11.2.0.2.0 Production on Sun Feb 9 16:54:21 2025
 
@@ -23,7 +24,9 @@ Copyright (c) 1982, 2011, Oracle.  All rights reserved.
 Connected to:
 Oracle Database 11g Express Edition Release 11.2.0.2.0 - 64bit Production
 
+~~~bash
 SQL> @?/rdbms/admin/spcreate.sql
+
 
 Choose the PERFSTAT user's password
 -----------------------------------
@@ -117,7 +120,7 @@ sqlplus / as sysdba
 
 
 Current Instance
-~~~~~~~~~~~~~~~~
+
 
    DB Id    DB Name      Inst Num Instance
 ----------- ------------ -------- ------------
@@ -126,7 +129,7 @@ Current Instance
 
 
 Instances in this Statspack schema
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 
    DB Id    Inst Num DB Name      Instance     Host
 ----------- -------- ------------ ------------ ------------
@@ -137,7 +140,7 @@ Using          1 for instance number
 
 
 Specify the number of days of snapshots to choose from
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 Entering the number of days (n) will result in the most recent
 (n) days of snapshots being listed.  Pressing <return> without
 specifying a number lists all completed snapshots.
@@ -146,7 +149,6 @@ specifying a number lists all completed snapshots.
 
 Listing all Completed Snapshots
 
-                                                       Snap
 Instance     DB Name        Snap Id   Snap Started    Level Comment
 ------------ ------------ --------- ----------------- ----- --------------------
 XE           XE                   1 09 Feb 2025 17:01     7
@@ -154,14 +156,13 @@ XE           XE                   1 09 Feb 2025 17:01     7
 
 
 Specify the Begin and End Snapshot Ids
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Enter value for begin_snap:
 
+Enter value for begin_snap:
 ~~~
 
-~~~bash
-# If the STATSPACK job does not exist, create it
 
+# If the STATSPACK job does not exist, create it
+~~~bash
 BEGIN
   DBMS_SCHEDULER.CREATE_JOB (
     job_name        => 'STATSPACK_JOB',
@@ -183,12 +184,12 @@ BEGIN
   );
 END;
 /
-
+~~~
 # Verify the STATSPACK job
 SELECT job_name, schedule_name, start_date, repeat_interval
 FROM dba_scheduler_jobs
 WHERE job_name LIKE 'STATSPACK%';
-~~~
+
 
 
 Finally copy to statspack report from the oracle-xe1 container on your machine.

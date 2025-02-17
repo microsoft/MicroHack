@@ -145,8 +145,6 @@ services:
       - C:\tmp\oracle\oraclexe21c\init_scripts:/container-entrypoint-initdb.d 
     
 
-
-
   postgres:
     image: postgres:latest
     container_name: postgres
@@ -177,7 +175,18 @@ services:
     stdin_open: true
     tty: true
 
-    
+  pgadmin:
+    image: dpage/pgadmin4:9.0.0
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    networks:
+      - kafka-net
+
+   
 networks:
   kafka-net:
     driver: bridge

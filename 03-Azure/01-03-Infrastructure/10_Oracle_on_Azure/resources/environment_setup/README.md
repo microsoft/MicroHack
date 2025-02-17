@@ -117,7 +117,50 @@ It is acceptable to see warnings highlighted in red.
 
 1. Once the installation and configuration completes, you will see a screen similar to the one below.
 
+## Download Oracle 19c Installation Binaries
+In challenge 2 participants are going to set up a VM in Azure and migrate the database from this simulated on-prem dataguard cluster to Azure. As part of the VM creation
+process they will need the installation binaries for Oracle 19c. These can only be downloaded from the oracle web site after authenticating. In this microhack we will provide a storage account within the microhack subscription in order to automate this step during challenge 2. Use the following script to create the storage account. Then, in a second step download the binaries and upload them to the storage account.
 
+Change directory to resources/environment_setup/oracle_binaries within the Oracle microhack.
+
+```bash
+# get subscription_id
+subscription_id=$(az account show --query id -o tsv)
+
+# search and replace the subscription_id in providers.tf
+sed -i "s/subscription_id = \".*\"/subscription_id = \"$subscription_id\"/g" ./providers.tf
+
+terraform init
+terraform plan -out=tfplan
+terraform apply -auto-approve tfplan
+```
+
+>**Please note**: Stick to all default values defined in variables_global.tf because the automation script in challenge 2 walkthrough need to match these values.
+
+The output should look like this:
+
+```bash
+Apply complete! Resources: 6 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+container_url = "https://mhorabinstoregwc71438.blob.core.windows.net/"
+```
+
+
+Now, click [this link](https://www.oracle.com/database/technologies/oracle19c-linux-downloads.html#license-lightbox) to download the Oracle 19c installation binaries. Pick the 2nd download item named 'LINUX.X64_193000_db_home.zip'. You are redirected to the login page. Provide your Oracle account credentials.
+If prompted in a popup, read and accept the license terms and click the download button.
+After putting in the password, the download starts automatically.
+
+- When the download has finished open the [Azure portal](https://portal.azure.com) and navigate to the storage account you created with the terraform above. 
+- In the storage account tab expand the 'Data storage' section and click on 'Containers'. 
+- In the containers list click on the container name 'oracle-bin'.
+- Click on the 'Upload' button.
+- Click on 'Browse for files'
+- In the Open Dialog navigate to your download folder and select the LINUX.X64_193000_db_home.zip file.
+- Click the 'Upload' button
+
+Done. The microhack environment has now been successfully set up.
 
 ## Trademarks
 

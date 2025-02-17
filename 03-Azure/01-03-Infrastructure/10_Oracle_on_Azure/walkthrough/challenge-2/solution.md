@@ -129,7 +129,7 @@ variable "location" {
 variable "resource_group_name" {
   description = "The name of the resource group"
   type        = string
-  default     = "challenge-1" # you should add a unique prefix (i.e. your name) here to avoid name collisions with your co-participants
+  default     = "challenge-2" # you should add a unique prefix (i.e. your name) here to avoid name collisions with your co-participants
 }
 
 variable "vm_size" {
@@ -192,7 +192,7 @@ Wait for the resources to get created. This may take several minutes. Then, go t
 
 ### **Task 3: Configure Oracle DB single instance via Ansible**
 
-Next, we need to configure the OS of the VM to use the attached data disks.
+Next, we need to configure the OS of the VM.
 
 1. Switch to the ansible bootstrap subdirectory for oracle:
 
@@ -202,9 +202,11 @@ cd <THIS_REPO>/03-Azure/01-03-Infrastructure/10_Oracle_on_Azure/resources/challe
 
 Open the inventory file and replace the \<Public IP address of Azure vm created earlier> with the public ip of your Azure vm and save it. Next start the ansible playbook:
 ```bash
-ansible-playbook 
+ansible-playbook -i ./inventory playbook.yml
 ```
-The ansible playbook will configure the guest OS of the created VM up to the point where the listener gets started so you can start working with the Oracle DB console.
+The ansible playbook will configure the guest OS of the created VM, download and install oracle 19c binaries and create a database.
+
+**Note: The creation of the database takes pretty long, so the ansible playbook takes ~45min to execute. We recommend to continue with another challenge to use the microhack time most effectively.** 
 
 ### Task 4: Setup dataguard to sync source database to the newly created Azure VM 
 
@@ -212,6 +214,6 @@ The ansible playbook will configure the guest OS of the created VM up to the poi
 
 
 
-You successfully completed challenge 1! 🚀🚀🚀
+You successfully completed challenge 2! 🚀🚀🚀
 
- **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-2/solution.md)
+ **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-3/solution.md)

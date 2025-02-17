@@ -19,7 +19,7 @@
     template: src=dbca.rsp.j2 dest=/home/{{ oracle_user }}/dbca.rsp
 
   - name: dbca
-    command: bin/dbca -silent -createDatabase -responseFile /home/{{ oracle_user }}/dbca.rsp -ignorePreReqs
+    command: bin/dbca -silent -createDatabase -responseFile /home/{{ oracle_user }}/dbca.rsp -templateName {{ templateName }} -sid {{ sid }} -databaseType MULTIPURPOSE -ignorePreReqs
     ignore_errors: true
     args:
       chdir: "{{ oracle_db_home }}"

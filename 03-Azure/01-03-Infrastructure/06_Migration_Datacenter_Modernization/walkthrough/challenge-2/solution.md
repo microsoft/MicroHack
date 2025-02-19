@@ -21,7 +21,7 @@ Select *Servers, databases and web app* from the navigation pane on the left and
 
 ![image](./img/AzMig2.png)
 
-Select the *destination-rg* Resource Group, specify a name for the Azure Migrate Project and also select a geograpy where the data will be stored. *Please select b4as_v2 as VM size.*
+Select the *source-rg* Resource Group, specify a name for the Azure Migrate Project and also select a geograpy where the data will be stored. Then under advanced select *private endpoint* as the connectivity metod, and the choise the source virtual network for the private endpoints 
 
 ![image](./img/AzMig3.png)
 
@@ -32,6 +32,9 @@ Your previousley created Azure Migrate project should be preselected.
 
 
 ### **Task 2: Create and prepare Windows Server 2022 for the Azure Migrate Appliance**
+
+> [!PLEASE NOTE]
+> The Windows Server has been pre-created to save some time. It is named Migration
 
 To start physical server discovery you must install the Azure Migrate Appliance on your on-premises. The Azure Migrate Appliance can be downloaded as a OVA or VHD template or you can download a ZIP file containing a PowerShell script to install it on a already existing server. For the purpose of this MicroHack we will install the Azure Migrate Appliance via the PowerShell script on a Windows Server 2022 system.
 

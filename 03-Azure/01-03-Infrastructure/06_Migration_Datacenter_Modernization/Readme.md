@@ -279,6 +279,30 @@ The goal of this exercise is to ...
 
 [Solution Steps](./walkthrough/challenge-6/solution.md)
 
+## Optional Bonus Challenge 6.1 - Azure Update Manager
+
+### Goal 
+
+The goal of this exercise is to ...
+
+* to use Azure Update Manager, and configure patching schedules for migrated VMs 
+
+### Actions
+
+* Enable Azure Update Manager
+
+### Success criteria
+
+* The migrated Servers are pacted by Azure Update Manager
+
+### Learning resources
+* [How Update Manager works ](https://learn.microsoft.com/en-us/azure/defender-for-cloud/tutorial-enable-servers-plan)
+
+
+### Solution - Spoilerwarning
+
+[Solution Steps](./walkthrough/challenge-6.1/solution.md)
+
 ## Optional Bonus Challenge 7 - Modernize with Azure
 
 ### Goal 

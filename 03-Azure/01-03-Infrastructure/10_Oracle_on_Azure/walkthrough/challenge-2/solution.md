@@ -5,9 +5,10 @@ Duration: 20 minutes
 ## Prerequisites
 
 - Please ensure that you successfully verified the [General prerequisits](../../Readme.md#general-prerequisites) before continuing with this challenge.
-- For this walkthrough solution you will need a bash shell with the following:
+- For this walkthrough solution you will need a bash shell with the following tools/packages installed:
   - [Terraform](https://developer.hashicorp.com/terraform/install) 
   - [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli-linux?pivots=apt)
+  - [Ansible](https://docs.ansible.com/ansible/latest/installation_guide/installation_distros.html#installing-ansible-on-ubuntu)
 
 ### **Task 1: Determine the most cost efficient SKUs for compute and storage**
 
@@ -51,15 +52,8 @@ Required input parameters:
       size_gb   = 128           # size of disk 1
       iops      = 5000          # provisioned iops of disk 1
       throughput = 150          # provisioned throuput of disk 1
-      caching   = "None"        # PremiumV2_LRS disks to not support host caching at the time of writing. 
+      caching   = "None"        # PremiumV2_LRS disks do not support host caching at the time of writing. 
                                 # Hence, do not change the caching value.
-    }
-    asm_disk = {
-      name      = "asm_disk"    # name of disk 2
-      size_gb   = 128
-      iops      = 5000
-      throughput = 150
-      caching   = "None"
     }
     redo_disk = {
       name      = "redo_disk"   # name of disk 3
@@ -135,7 +129,7 @@ variable "location" {
 variable "resource_group_name" {
   description = "The name of the resource group"
   type        = string
-  default     = "challenge-1" # you should add a unique prefix (i.e. your name) here to avoid name collisions with your co-participants
+  default     = "challenge-2" # you should add a unique prefix (i.e. your name) here to avoid name collisions with your co-participants
 }
 
 variable "vm_size" {
@@ -151,7 +145,7 @@ variable "path_to_ssh_key_file" {
 }
 
 # change the size, IOPS and throughput of each disk according to the requirements.
-# Please note: It's recommended to separate at least the disks or database files, redo logs and other files.
+# Please note: It's recommended to separate at least the disks for database files and redo logs.
 variable "data_disk_config" {
   description = "The configuration for the data disks"
   type        = map(object({
@@ -169,13 +163,6 @@ variable "data_disk_config" {
       throughput = 150
       caching   = "None"
     }
-    asm_disk = {
-      name      = "asm_disk"
-      size_gb   = 128
-      iops      = 5000
-      throughput = 150
-      caching   = "None"
-    }
     redo_disk = {
       name      = "redo_disk"
       size_gb   = 128
@@ -186,8 +173,11 @@ variable "data_disk_config" {
   }
 }
 ```
+Save the changes you made.
 
-5. Deploy your Azrue resources
+#### TODO: Add the fixtures.tfvars containing the User Managed Identity of the storage account.
+
+5. Deploy your Azure resources
 
 ```bash
 terraform plan -out=tfplan
@@ -198,18 +188,32 @@ Verify the deployment plan or adjust parameter values in case you encounter erro
 ```bash
 terraform apply tfplan
 ```
-Wait for the resources to get created. This may take several minutes.
+Wait for the resources to get created. This may take several minutes. Then, go to the Azure portal and navigate to your VM. Find the public IP address of the VM and copy it for use in the next task.
 
-### **Task 3: Put yourself in the position...**
+### **Task 3: Configure Oracle DB single instance via Ansible**
 
-* [Checklist Testing for...](Link to checklist or microsoft docs)
+Next, we need to configure the OS of the VM.
 
-### Task 4: Who defines the requirements...
+1. Switch to the ansible bootstrap subdirectory for oracle:
+
+```bash
+cd <THIS_REPO>/03-Azure/01-03-Infrastructure/10_Oracle_on_Azure/resources/challenge-2/ansible/bootstrap/oracle
+```
+
+Open the inventory file and replace the \<Public IP address of Azure vm created earlier> with the public ip of your Azure vm and save it. Next start the ansible playbook:
+```bash
+ansible-playbook -i ./inventory playbook.yml
+```
+The ansible playbook will configure the guest OS of the created VM, download and install oracle 19c binaries and create a database.
+
+**Note: The creation of the database takes pretty long, so the ansible playbook takes ~45min to execute. We recommend to continue with another challenge to use the microhack time most effectively.** 
+
+### Task 4: Setup dataguard to sync source database to the newly created Azure VM 
+
+### Task 5 (optional): Set the database hosted in Azure as the new primary 
 
 
-![image](Link to image)
 
+You successfully completed challenge 2! 🚀🚀🚀
 
-You successfully completed challenge 1! 🚀🚀🚀
-
- **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-2/solution.md)
+ **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-3/solution.md)

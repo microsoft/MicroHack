@@ -1,0 +1,2 @@
+[dbservers]
+ora-vm ansible_host=<replace-with-your-vms-pip>  ansible_ssh_private_key_file=~/.ssh/oracle_vm_rsa_id  ansible_user=adminuser

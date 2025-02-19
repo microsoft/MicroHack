@@ -2,7 +2,10 @@
 NOTES.md
 **/misc/*
 .ssh/*
+**/.ssh/*
 
+# ignore terraform plan files
+**/plan*.out
 #-------- Terraform --------
 # Local .terraform directories
 **/.terraform/*
@@ -34,3 +37,6 @@ terraform.rc
 
 #-------- Ansible --------
 inventory
+
+# Ignore Terraform lock files
+*.lock.hcl

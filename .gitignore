@@ -178,11 +178,10 @@ terraform.rc
 .terraform.lock.hcl
 
 # Ignore any .tfplan files
-*.tfplan
+*tfplan
 
 # Ignore any .terraform.tfstate.backup files
 *.tfstate.backup
 
 # Ignore any .DS_Store files
 .DS_Store
-03-Azure/01-03-Infrastructure/10_Oracle_on_Azure/resources/challenge-2/terraform/tfplan

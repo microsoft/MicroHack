@@ -1,0 +1,43 @@
+
+1. Download dockerhub image of ora2pg from the following URL:
+
+https://hub.docker.com/r/georgmoser/ora2pg
+
+
+2. Pull the image on docker hub server or local laptop:
+
+docker pull georgmoser/ora2pg
+
+
+3. Create Directory to store the output and configuration persistently
+
+an example:
+c:\tmp\docker\config
+c:\tmp\docker\data
+
+4. Create a docker network
+docker network create ora2pg-network
+
+5. Execute the downloaded docker image
+docker run -it --privileged --network ora2pg-network -v "C:\tmp\docker\config:/config" -v "C:\tmp\docker\data:/data" georgmoser/ora2pg /bin/bash
+docker run  --name ora2pg --network ora2pg-network -v "C:\tmp\docker\config:/config" -v "C:\tmp\docker\data:/data" georgmoser/ora2pg
+
+6. If required connect to the docker image with Oracle user:
+docker exec -it --user oracle oracle-xe /bin/bash
+
+
+Notice: to connect the oracle data use the right host! 
+ORACLE_DSN dbi:Oracle:host=oracle-xe;sid=XE;port=1521
+ORACLE_USER demo_schema
+ORACLE_PWD yourpassword
+
+CONTAINER ID   IMAGE                             COMMAND                  CREATED          STATUS          PORTS                                      NAMES
+ae5a2fe62bc2   georgmoser/ora2pg                 "entrypoint.sh /bin/…"   25 minutes ago   Up 24 minutes                                              practical_lehmann
+225ae729e2e4   oracleinanutshell/oracle-xe-11g   "/bin/sh -c '/usr/sb…"   33 minutes ago   Up 33 minutes   22/tcp, 8080/tcp, 0.0.0.0:1521->1521/tcp   oracle-xe
+42ae9cd27210   dpage/pgadmin4                    "/entrypoint.sh"         2 years ago      Up 20 hours     443/tcp, 0.0.0.0:5050->80/tcp              kafka-pgadmin-1
+
+
+
+7. Start docker with the oracle image
+docker run -d --name oracle-xe --network ora2pg-network -p 1521:1521 -e ORACLE_PWD=password -v "C:\tmp\docker\config:/config" -v "C:\tmp\docker\data:/data" oracleinanutshell/oracle-xe-11g
+

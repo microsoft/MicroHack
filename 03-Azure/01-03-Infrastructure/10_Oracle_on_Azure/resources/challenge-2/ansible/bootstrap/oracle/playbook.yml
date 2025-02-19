@@ -1,0 +1,10 @@
+---
+- hosts: all
+  gather_facts: true
+  become: true
+  become_method: sudo
+
+  roles:
+  - common     # common OS configuration tasks
+  - oracle19c  # oracle software installation/configuration
+  - dbca       # database creation

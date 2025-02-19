@@ -82,7 +82,7 @@ Switch to the *Privileged administrator roles* tab and choose the `Contributor` 
 
 ![image](./img/challenge-3-identityassignment-role.jpg)
 
-On the *Members* tab, select `Managed Identity` and choose the identity you just created and complete the assignment.
+On the *Members* tab, select `Managed Identity` and choose the identity you just created and complete the assignment by clicking *Review + assign* and then *Assign*. You can leave all other tabs in default settings.
 
 ![image](./img/challenge-3-identityassignment-member.jpg)
 

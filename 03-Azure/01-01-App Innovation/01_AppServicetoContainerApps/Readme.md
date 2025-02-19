@@ -78,6 +78,9 @@ Have a look in the Git repository of the application and the App Service resourc
 * On which operating system (Windows or Linux) is the application currently running?
 * What message does the application state when you open in the browser?
 
+
+**!!!Important: You can ignore the text fields and the button for now, the functionality behind it will be added in the last challenge!!!**
+
 Read through the learning resources and answer the following questions:
 
 * What is containerization and what is a container?
@@ -122,7 +125,7 @@ Before the application can be deployed to a Container App, it needs to be contai
 
 * You have created the Azure Container Registry
 * You created a new GitHub Actions workflow
-* The workflow that pushes a deployable container image to the registry
+* You created a workflow that pushes a deployable container image to the registry
 
 ### Learning resources
 
@@ -205,6 +208,31 @@ Now that the app is up and running and you can deploy changes quickly, it is tim
 ### Solution - Spoilerwarning
 
 [Solution Steps](./walkthrough/challenge-4/solution.md)
+
+## Challenge 5 - Host Your Own AI Models
+
+### Goal
+
+Your production-ready Container App is still missing one thing, you cannot really use it for anything, yet. Time to host your own small AI model that you can chat with via the app.
+
+### Actions
+
+* Host an Ollama container image in a second Container App (or any other model)
+* Start an Ollama model in the Container App
+* Add the URL of the AI app to your main app via an environment variable
+
+### Success criteria
+
+* You can chat with an AI model via your app
+
+### Learning resources
+
+* [Ollama documentation](https://github.com/ollama/ollama)
+* [Ollama on Docker Hub](https://hub.docker.com/r/ollama/ollama)
+
+### Solution - Spoilerwarning
+
+[Solution Steps](./walkthrough/challenge-5/solution.md)
 
 ## Finish
 

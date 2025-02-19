@@ -38,8 +38,6 @@ Patch orchestration option provides:
 **Image Default** - Only supported for Linux Virtual Machines, this mode uses the default patching configuration in the image used to create the VM.
 
 
-
-
 ![image](./img/azureupdatemanager_settings.png)
 
 Verify the *Defender for Server* Settings & monitoring details 

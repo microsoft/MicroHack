@@ -1,4 +1,4 @@
-# Walkthrough Optional Challenge 6 - Secure on Azure
+# Walkthrough Optional Challenge 6 - Post migration 
 
 Duration: 40 minutes
 
@@ -6,7 +6,59 @@ Duration: 40 minutes
 
 Please make sure that you successfully completed [Challenge 5](../challenge-5/solution.md) before continuing with this challenge.
 
-## **Task 1: Enable Defender for Cloud for Server**
+# MicroHack - Migrate and Modernize
+
+- [**Task 1: Enable Azure VM Backup**](#Task-1:-Enable-Azure-VM-Backup)
+- [**MicroHack context**](#microhack-context)
+- [**Objectives**](#objectives)
+- [**MicroHack Challenges**](#microhack-challenges)
+- [**Contributors**](#contributors)
+
+
+# Azure Backup 
+
+## **Task 1: Enable Azure VM Backup**
+
+## **Task 2: Verify Azure VM Backup**
+
+## **Task 3: Enable Azure Update Manager**
+
+In [Challenge 5](../challenge-5/solution.md) you migrated servers to Azure. Now you will enable Azure Update Manager, that is a unified service to help manage and govern updates for all your machines (running a server operating system). Update Manager work both for Windows And Linux and machine in Azure or connected by Azure Arc
+
+To enable the Update Manger components, open the portal and seach for  *Update Manager* in the top search bar.  Then click *Azure Update Manager*.
+
+![image](./img/azureupdatemanageroverview.png)
+
+In the left meny click *Resources* and tclick *Machines*. Now you will see all Azure VMs and all Arc enabled VMs, even if the machines are managed by Update Mager or not.
+
+![image](./img/azureupdatemanager_machines.png)
+
+To enable Update Manager, we fist we need to configure assessment and patch orchestration, that will be done by sellect current VMs by check the checkbox for the VM, and then select *Settings* in the top menu and then select *Update settings* .
+
+Assessmnet
+change *Periodic assmessmet* value to *enable* This will enable assessmnet of patches every 24 hours
+
+Patch Orchstration
+Patch orchestration option provides:
+
+**Customer Managed Schedules** — enables schedule patching on your existing VMs. The new patch orchestration option enables the two VM properties - Patch mode = Azure-orchestrated and BypassPlatformSafetyChecksOnUserSchedule = TRUE on your behalf after receiving your consent.
+
+**Azure Managed - Safe Deployment** — for a group of virtual machines undergoing an update, the Azure platform will orchestrate updates. (not applicable for Arc-enabled server). The VM is set to automatic VM guest patching.(i.e), the patch mode is AutomaticByPlatform. There are different implications depending on whether customer schedule is attached to it or not. For more information, see the user scenarios.
+    Available *Critical* and *Security* patches are downloaded and applied automatically on the Azure VM using automatic VM guest patching. This process kicks off automatically every month when new patches are released. Patch assessment and installation are automatic, and the process includes rebooting the VM as required.
+
+**Windows Automatic Updates (AutomaticByOS)** - When the workload running on the VM doesn't have to meet availability targets, the operating system updates are automatically downloaded and installed. Machines are rebooted as needed.
+
+**Manual updates** - This mode disables Windows automatic updates on VMs. Patches are installed manually or using a different solution.
+
+**Image Default** - Only supported for Linux Virtual Machines, this mode uses the default patching configuration in the image used to create the VM.
+
+
+![image](./img/azureupdatemanager_settings.png)
+
+
+
+
+## **Task 4: Enable Defender for Cloud for Server**
 
 In [Challenge 5](../challenge-5/solution.md) we migrated two servers to Azure. The servers are already protected by the basic services of Defender for Cloud. In this challenge, we'll improve significantly the protection level by activating advanced services such as "Cloud Security Posture Management (CSPM)" and "Cloud Workload Protection (CWP)" (Defender for Server).
 

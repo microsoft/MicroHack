@@ -6,47 +6,24 @@ Duration: 90 minutes
 
 Please make sure thet you successfully completed [Challenge 4](../challenge-4/solution.md) before continuing with this challenge.
 
-### **Task 1: Create and prepare Windows Server 2019 for the Azure Replication Appliance**
+### **Task 1: Prepare Windows Server 2019 for the Azure Replication Appliance**
 
-To start physical server migration you must install the Azure Replication Appliance on your on-premises. The Azure Replication Appliance can be downloaded as a OVA template or you can download the appliance installer to install it on a already existing server. For the purpose of this MicroHack we will install the Azure Replication Appliance via the installer on a new Windows Server 2019 system.
+To start physical server migration you must install the Azure Replication Appliance on your on-premises. The Azure Replication Appliance can be downloaded as a OVA template or you can download the appliance installer to install it on a already existing server. For the purpose of this MicroHack we will install the Azure Replication Appliance via the installer on a Windows Server 2019, namned **Migration** that is **allready deployed**.
+
+The deployed architecture now looks like the following diagram. So you need to configure Azure Replication Appliance, to replicate servers
+
+![image](./img/Challenge-5.jpg)
+
+
 
 > [!IMPORTANT]
-> Please make sure to check the [prerequisites](https://learn.microsoft.com/en-us/azure/migrate/migrate-replication-appliance) of the Azure 
+> If you deploy your own Appliance, please make sure to check the [prerequisites](https://learn.microsoft.com/en-us/azure/migrate/migrate-replication-appliance) of the Azure 
 Replication Appliance.
 
 > [!IMPORTANT]
 > Please note that it is currently [not supported](https://learn.microsoft.com/en-us/azure/migrate/common-questions-appliance#can-the-azure-migrate-appliancereplication-appliance-connect-to-the-same-vcenter) to install the Azure Migrate Replication Appliance on the same system as the Azure Migrate Appliance.
 
-In the Azure Portal select *Virtual machines* from the navigation pane on the left. Select *Create -> Azure virtual machine*
-
-![image](./img/azreplapl1.png)
-
-Under Basics select the *source-rg* Resource Group and provide a name for the server. Select *Windows Server 2019 Datacenter - x64 Gen2* for the Image.
-
-![image](./img/azreplapl2.png)
-
-> [!NOTE]
-> For the Username and Password you can either select a combination of your choice or check the secrets within the KeyVault.
-
-Add an additional 1024GiB Standard HDD LRS data disk to the Virtual Machine and click *Next*
-
-![image](./img/azreplapl2-1.png)
-
-![image](./img/azreplapl2-2.png)
-
-In the *Networking* tab, select the *source-vnet* Virtual Network and the *source-subnet* Subnet and make sure to select *None* for the Public IP and NIC network security group.
-
-![image](./img/azreplapl3.png)
-
-Accept the default settings for the remaining tabs, select *Review + create* and click *Create*.
-
-![image](./img/azreplapl4.png)
-
-Wait until the deployment has been successfully completed and select *Go to resource*
-
-![image](./img/azreplapl5.png)
-
-Select *Bastion* from the navigation pane on the left, provide the credentials to login to the Azure Migrate Replication VM and select *Connect*. A new browser tab should open with a remote session to the Windows Server 2019 system.
+Find the Virtual Machine **Migration** in the Portal and select it. Then select *Bastion* from the navigation pane on the left, provide the credentials to login to the Azure Migrate Replication VM and select *Connect*. A new browser tab should open with a remote session to the Windows Server 2019 system.
 
 ![image](./img/azreplapl6.png)
 

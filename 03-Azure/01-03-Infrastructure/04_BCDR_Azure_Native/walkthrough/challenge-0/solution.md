@@ -71,11 +71,15 @@ Here is a small outlook on which topics you should deal with or at least work cl
 ![image](/03-Azure/01-03-Infrastructure/04_BCDR_Azure_Native/walkthrough/challenge-0/img/DR_Tier_Levels.png)
 
 
-
 ### **Task 5: Plan the different geographic regions you need to use for reaching the highest availability SLA (can also include your datacenter locations)**
 
 ![image](/03-Azure/01-03-Infrastructure/04_BCDR_Azure_Native/walkthrough/challenge-0/img/Customerneeds_RPO_RTO.png)
 
 You successfully completed challenge 0! 🚀🚀🚀
+
+### Azure Business Continuity Guide (ABC Guide)
+The Azure Business Continuity Guide provides a comprehensive set of recommendations to help customers define what BCDR looks like for their applications.
+
+[Azure Business Continuity Guide](https://github.com/Azure/BusinessContinuityGuide)
 
  **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-1/solution.md)

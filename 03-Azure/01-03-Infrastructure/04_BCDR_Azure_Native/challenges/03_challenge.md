@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-Please ensure that you successfully passed [challenge 2](../../Readme.md#challenge-2) before continuing with this challenge.
+Please ensure that you successfully passed [challenge 2](../challenges/02_challenge.md) before continuing with this challenge.
 
 ### Goal 🎯
 

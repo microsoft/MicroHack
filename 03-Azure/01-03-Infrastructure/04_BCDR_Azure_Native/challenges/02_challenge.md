@@ -1,32 +1,22 @@
-## Challenge 2 - Protect in Azure - Backup / Restore
+## Challenge 2 - Protect in Azure - Backup / Restore (Regional)
 
 ### Goal 🎯
 
-In challenge 2, you will successfully onboard your Windows and Linux Virtual Machines to a centralized Recovery Services Vault and leverage Azure Backup Center to Protect with Backup in Azure. 
+In challenge 2, you will successfully onboard your Windows and Linux Virtual Machines to a centralized Recovery Services Vault and leverage Azure Backup Center to Protect with Backup in Azure.
+
+[Datacenter & Availability Zone](image) 
 
 ### Actions
 
-* Deploy a Windows Server 2022 VM in Germany West Central Resource Group. Please use the "Data Science Virtual Machine - Windows 2022" image from the market place.
-  > **Note:** The 'Data Science Virtual Machine (DSVM)' is a 'Windows Server 2022 with Containers' VM that has several popular tools for data exploration, analysis, modeling & development pre-installed.
-  > You will use Microsoft SQL Server Management Studio to connect to the database and Storage Explorer to the storage Account.
-* Deploy an Ubuntu Server VM in Sweden Central Resource Group.
-* Deploy an Azure SQL database server with a database containing the sample data of AdventureWorksLT.
-* From the Data Science Windows Server VM, connect to the database and to the storage account.
-* Create a blob container and upload a sample file to it.
-* Enable Azure Backup for both VMs.
-* Enable Azure Backup for blobs on the storage account.
-* Restore a VM in Azure.
-* Delete and restore the sample blob file.
+* Enable Azure Backup for Linux VM in the primary Region.
+* Disaster recovery for LInux VM in the primary Region
+* Failover from Primary Region AZ1 to Primary Region AZ2  
 
 ### Success Criteria ✅
 * You have deployed two VMs in Azure (one with Windows Server 2022, the other one with Ubuntu Server).
-* You have deployed an Azure SQL database with sample data (AdventureWorksLT) and can access the database from the Windows Server (Data Science Edition).
-* You successfully connected to the database and the storage account from the Windows Server.
-* You successfully enabled Azure Backup on the two virtual machines.
 * You have successfully set up Azure Backup Policies for both virtual machines.
-* You successfully enabled Azure Backup for blobs.
 * You have successfully restored a VM of your choice to Azure.
-* You have successfully restored blobs.
+
 
 ### 📚 Learning Resources
 

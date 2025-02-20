@@ -5,12 +5,10 @@
 In challenge 4, you will focus on implementing disaster recovery strategies for Azure SQL databases using Failover Groups, and for Azure storage accounts using replication. The primary objective is to ensure business continuity by protecting critical data stored in Azure SQL databases and Azure storage accounts against potential disasters.
 
 ### Actions
-* Implement Failover Groups for Azure SQL Database:
-  * Create a Failover Group between two Azure SQL databases located in different Azure regions (Germany West central and Sweden Central).
-  * Configure automatic failover policies and test the failover mechanism to ensure seamless transition in case of a disaster.
 * Disaster Recovery for Azure Storage Account:
   * Set up and configure Azure Storage Account replication to another region using Geo-redundant storage (GRS) or Geo-zone-redundant storage (GZRS) to ensure data availability in case of regional outages.
   * Perform a failover test for the storage account to validate the disaster recovery setup.
+  * Load Balancer discussion
 
 ### Success Criteria ✅
 * You have successfully created and configured a Failover Group for Azure SQL Database, ensuring data is replicated and accessible across regions.

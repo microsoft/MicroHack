@@ -45,71 +45,86 @@ This Task can take up to 10 minutes to finish.
 ## Task 1 Ubuntu VM Version: Enable replication with Azure Site recovery for the Virtual Machine in the Sweden Central Region to the Germany West Central Region
 
 ![image](./img/01.png)
+![image](./img/01a.png)
 ![image](./img/02.png)
 ![image](./img/03.png)
+![image](./img/03a.png)
 ![image](./img/04.png)
 ![image](./img/05.png)
+![image](./img/06.png)
+![image](./img/07.png)
 
 ## Task 2: Create a recovery plan and Run a disaster recovery drill
 
 ### Create a recovery plan
 Navigate to **Recovery Services Vault** in the Sweden Central (mh-rsv-sc). Under **Manage**, select **Recovery Plans (Site Recovery)** and create a recovery plan.
 
-![image](./img/mh-ch-screenshot-09.png)
+![image](./img/09.png)
 
-Select server01 as the protected source machine and create the recovery plan.
+Select `mh-web1` and `mh-web2` as the protected source machine and create the recovery plan.
 
-![image](./img/mh-ch-screenshot-10.png)
+![image](./img/10.png)
 
 ### Run the test failover from Germany West Central to the Sweden Central Region
 Navigate to the recovery plan created in the previous task. 
 
-![image](./img/mh-ch-screenshot-11.png)
+![image](./img/11.png)
 
 From the top menu select **Test failover**.
 
-![image](./img/mh-ch-screenshot-12.png)
+![image](./img/12.png)
 
 
-![image](./img/mh-ch-screenshot-13.png)
+![image](./img/13.png)
 
 ### Monitor the progress
 Navigate to **Site Recovery Jobs** and select Test failover job which is in progress.
 
-![image](./img/mh-ch-screenshot-14.png)
+![image](./img/14.png)
 
 
-![image](./img/mh-ch-screenshot-15.png)
+![image](./img/15.png)
+
+![image](./img/16.png)
 
 After all jobs are finished successully, Navigate to the Virtual Machines list. New Virtual Machine has been created in the Sweden Central Region.
 
-![image](./img/mh-ch-screenshot-16.png)
+![image](./img/17.png)
 
 ### Cleanup test failover
-![image](./img/mh-ch-screenshot-17.png)
+![image](./img/18.png)
 
-![image](./img/mh-ch-screenshot-18.png)
+![image](./img/19.png)
 
-![image](./img/mh-ch-screenshot-19.png)
+![image](./img/20.png)
 
+![image](./img/21.png)
+
+![image](./img/22.png)
 
 ## Task 3: Run a production failover from Germany West Central to Sweden Central and failback again from Sweden to Germany region (Source environment) and monitor the progress
 ### Run the production failover for server01 from Germany West Central to Sweden Central
-![image](./img/mh-ch-screenshot-20.png)
+![image](./img/23.png)
 
-![image](./img/mh-ch-screenshot-21.png)
+![image](./img/24.png)
 
-![image](./img/mh-ch-screenshot-22.png)
+![image](./img/25.png)
+
+![image](./img/26.png)
 
 Check the virtual machine list. There is a new virtual machine running in Sweden Central region.
 
-![image](./img/mh-ch-screenshot-23.png)
+![image](./img/27.png)
 
 ### Reprotect the virtual machine
-![image](./img/mh-ch-screenshot-24.png)
+![image](./img/28.png)
 
-![image](./img/mh-ch-screenshot-25.png)
+![image](./img/29.png)
 
-![image](./img/mh-ch-screenshot-26.png)
+![image](./img/30.png)
+
+![image](./img/31.png)
+
+![image](./img/32.png)
 
 **You successfully completed challenge 3!** 🚀🚀🚀

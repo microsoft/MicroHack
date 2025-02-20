@@ -9,10 +9,24 @@ In challenge 5, you will failback the VM, SQL DB from Sweden Central to Germany 
 * Failback the VM from Sweden Central to Germany West Central region (Source environment) and monitor the progress.
 * Failback Azure SQL DB to Germany West Central.
 * Failback Storage Account to Germany West Central.
+* Restore a VM in Azure.
+
+## New Actions
+* Deploy an Azure SQL database server with a database containing the sample data of AdventureWorksLT.
+* From the Data Science Windows Server VM, connect to the database and to the storage account.
+* Create a blob container and upload a sample file to it.
+* Enable Azure Backup for blobs on the storage account.
+* Delete and restore the sample blob file.
 
 ### Success Criteria ✅
 
 * The failback of all resources to the Germany West Central region has been successfully performed.
+
+* You have deployed an Azure SQL database with sample data (AdventureWorksLT) and can access the database from the Windows Server (Data Science Edition).
+* You successfully connected to the database and the storage account from the Windows Server.
+* You successfully enabled Azure Backup on the two virtual machines.
+* You successfully enabled Azure Backup for blobs.
+* You have successfully restored blobs.
 
 ### Learning Resources 📚
 

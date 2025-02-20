@@ -8,14 +8,16 @@ In this challenge, you will re-establish the connection to your web application 
 * Task 1: Re-establish your connection to the Web Application from the secondary region.
   * Add your failed-over Virtual Machines in the secondary region to the backend pool of your Load Balancer.
   * Test the connection to the Web Application.
-  * High AVailability & SLA Discussion
+  * High Availability & SLA Discussion
 * Disaster Recovery for Azure Storage Account:
   * Task 2: Set up and configure Azure Storage Account replication to another region using Geo-redundant storage (GRS) or Geo-zone-redundant storage (GZRS) to ensure data availability in case of regional outages.
   * Task 3: Perform a failover test for the storage account to validate the disaster recovery setup.
 
 ## Challenge 1 - Calculate Composite SLAs with Azure Copilot
 
-Learn how to calculate composite SLAs, enhance monitoring with alerts, logging, and Kusto queries.
+![architecture](../walkthrough/challenge-4/img/asrdemo%20architecture.png)
+
+Learn how to calculate composite SLAs.
 
 ## References
 - [📄 Azure Copilot Documentation](https://docs.microsoft.com/en-us/azure/copilot/)

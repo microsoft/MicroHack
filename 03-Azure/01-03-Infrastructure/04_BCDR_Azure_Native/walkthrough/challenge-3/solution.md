@@ -18,6 +18,10 @@ In this challenge, you will learn how to protect Azure VM with Azure Site Recove
 
 ## Task 1: Enable replication with Azure Site recovery for the Virtual Machine in the Germany West Central Region to the Sweden Central Region
 
+<details close>
+<summary>💡 Enable replication with Azure Site recovery for the Virtual Machine in the Germany West Central Region to the Sweden Central Region</summary>
+<br>
+
 Navigate to **Recovery Services Vault** in the Germany West Central (mh-rsv-gwc) which we created in the first Challenge. In the **Protected Items**, select **Replicated Items**. Then select **Replicate** and from the dropdown list select **Azure virtual machines**. The following pan will apprear:
 
 ![image](./img/mh-ch-screenshot-01.png)
@@ -53,6 +57,8 @@ This Task can take up to 10 minutes to finish.
 ![image](./img/05.png)
 ![image](./img/06.png)
 ![image](./img/07.png)
+
+</details>
 
 ## Task 2: Create a recovery plan and Run a disaster recovery drill
 

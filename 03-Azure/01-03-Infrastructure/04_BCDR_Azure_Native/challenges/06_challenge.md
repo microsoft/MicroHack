@@ -2,6 +2,30 @@
 
 You can use [the guide](../Infra/App2/setup.md) to deploy an N-tier application, which will be useful for the challenges.
 
+Monitor the resources
+
+## Task 1 - Open the Application Insights dashboard
+
+- Use [`azd monitor`](https://learn.microsoft.com/azure/developer/azure-developer-cli/monitor-your-app) to monitor the application 
+
+Run the following Terminal Command in the directory
+
+    azd monitor
+
+## Task 2 - Navigate through the metrics
+
+Navigate to the Application Insights dashboards:
+- overview
+- live metrics
+- logs
+
+![image](../walkthrough/challenge-6/img/01_App_Insights_dashboards.png)
+
+## Success Criteria
+
+- Successfully execute the ``azd monitor`` command.
+- Navigate and review the Application Insights dashboards.
+
 ### Goal 🎯
 
 In challenge 6, you will focus on implementing disaster recovery strategies for Azure SQL databases using Failover Groups. The primary objective is to ensure business continuity by protecting critical data stored in Azure SQL databases.

@@ -3,7 +3,7 @@
 
 
 
-Duration: 20 minutes
+Duration: 45 minutes
 
 ## Prerequisites
 

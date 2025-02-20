@@ -12,8 +12,7 @@ In this challenge, you will have failback again the VM, SQL DB from Sweden centr
 
 ### Actions
 * Task 1: Failback the VM from Sweden Central to Germany West Central region (Source environment) and monitor the progress.
-* Task 2: Failback Azure SQL DB to Germany West Central.
-* Task 3: Failback Storage Account to Germany West Central.
+* Task 2: Failback Storage Account to Germany West Central.
 
 # Solution
 

@@ -1,5 +1,7 @@
 ## Challenge 1 - Prerequisites and Landing Zone Preparation
 
+Duration: 20 minutes
+
 ### Goal 🎯
 
 In Challenge 1, you will set up your environment with the necessary infrastructure to ensure business continuity using Cloud Native / PaaS Services on Azure.

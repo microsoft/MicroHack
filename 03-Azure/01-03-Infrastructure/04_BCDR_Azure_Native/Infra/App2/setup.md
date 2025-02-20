@@ -15,7 +15,7 @@ To experiment with Azure Monitor & BCDR Solutions and learn how to use it, a lab
 
 ### N-tier Application
 
-![System Architecture Overview](../img/resources0.png)
+![System Architecture Overview](../../img/resources0.png)
 
 ## Guide
 By following this guide, you have successfully deployed a ready-to-go N-tier application using the Awesome Azure Developer CLI and Azure Copilot.
@@ -49,4 +49,4 @@ Use the Awesome Azure Developer CLI to check the status of your deployment.
 ## 3. Access the Application
 Retrieve the URL of the deployed application and open it in your web browser.
 
-**| [< Microhack Overview](../Readme.md) | [Challenge 6 >](./06_challenge.md) |**
+**| [< Microhack Overview](../Readme.md) | [Challenge 6 >](../../challenges/06_challenge.md) |**

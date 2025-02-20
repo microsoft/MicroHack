@@ -10,6 +10,16 @@ In challenge 4, you will focus on implementing disaster recovery strategies for 
   * Task 2: Perform a failover test for the storage account to validate the disaster recovery setup.
   * Task 3: Load Balancer discussion
 
+<details close>
+<summary>💡 Enable GRS on storage account</summary>
+<br>
+
+![grs1](../walkthrough/challenge-1/exploration/5.png)
+![grs2](../walkthrough/challenge-1/exploration/6.png)
+![grs3](../walkthrough/challenge-1/exploration/7.png)
+
+</details>
+
 ### Success Criteria ✅
 * You have implemented disaster recovery for an Azure Storage Account using GRS or GZRS, protecting against regional outages.
 * You have conducted failover tests for the Azure Storage Account, demonstrating the effectiveness of your disaster recovery strategy.

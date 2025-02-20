@@ -17,6 +17,7 @@ In challenge 6, you will focus on implementing disaster recovery strategies for 
 ### 📚 Learning Resources
 * [Azure SQL Database Failover Groups and Active Geo-Replication](https://learn.microsoft.com/en-us/azure/azure-sql/database/auto-failover-group-overview)
 * [Testing for disaster recovery](https://learn.microsoft.com/en-us/azure/site-recovery/site-recovery-test-failover-to-azure)
+* [Create a single database in Azure SQL Database](https://learn.microsoft.com/en-us/azure/azure-sql/database/single-database-create-quickstart?view=azuresql&tabs=azure-portal)
   
 Extra Challenge
 Azd monitor command -> Dashboards (through LAW)

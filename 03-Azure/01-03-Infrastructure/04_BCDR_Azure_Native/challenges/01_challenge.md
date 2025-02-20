@@ -46,7 +46,7 @@ Verify the following resources and setup. Ensure the storage account has geo-red
   * Resource Group: `mh<your assigned number>-source-germanywestcentral-rg`
   * Recovery Services Vault: `mh-germanywestcentral-asrvault`
   * Backup Vault: `mh-germanywestcentral-asrvault-backupVault`
-  * Storage Account with GRS (geo-redundant storage) redundancy: `mhgermanywestcentral` \<Suffix\>
+  * Storage Account with LRS (locally-redundant storage) redundancy: `mhgermanywestcentral` \<Suffix\>
 * **Region 2: Sweden Central (Target environment)**
   * Resource Group: `mh<your assigned number>-target-swedencentral-rg`
   * Recovery Services Vault: `mh-swedencentral-asrvault`
@@ -58,22 +58,12 @@ There is a WebApp running on the machines deployed in the Lab Environment. The W
 ![web2](../walkthrough/challenge-1/exploration/2.png)
 ![web3](../walkthrough/challenge-1/exploration/3.png)
 
-<details close>
-<summary>💡 Enable GRS on storage account</summary>
-<br>
-
-![grs1](../walkthrough/challenge-1/exploration/5.png)
-![grs2](../walkthrough/challenge-1/exploration/6.png)
-![grs3](../walkthrough/challenge-1/exploration/7.png)
-
-</details>
-
 ### Success Criteria ✅
 
 * Resource Groups created in both regions (Germany West Central & Sweden Central).
 * Recovery Services Vaults created in both regions.
 * Backup Vaults created in both regions.
-* A geo-redundant Storage Account created.
+* A locally-redundant Storage Account created.
 
 ### 📚 Learning Resources
 
@@ -83,7 +73,7 @@ There is a WebApp running on the machines deployed in the Lab Environment. The W
 
 ### Solution - Spoiler Warning ⚠️
 
-[Solution Steps](../walkthrough/challenge-1/solution.md)
+[Solution Steps](../walkthrough/challenge-1/img/deployment/solution.md)
 
 ---
 

@@ -1,13 +1,18 @@
 ## Challenge 3 - Protect in Azure with Disaster Recovery (Inter-region)
 
+## Prerequisites
+
+Please ensure that you successfully passed [challenge 2](../../Readme.md#challenge-2) before continuing with this challenge.
+
 ### Goal 🎯
 
 In Challenge 3, you will learn how to protect Azure VMs with Azure Site Recovery, and how to enable replication to a secondary site. Additionally, you will successfully run test & production failovers from Germany West Central to Sweden Central, and fail back again from Sweden to Germany.
 
 ### Actions
-* Set up and enable disaster recovery with Azure Site Recovery and monitor the progress **between Regions**.
-* Perform a disaster recovery drill, create a recovery plan, and run a test failover.
-* Run a production failover from Germany West Central to Sweden Central and monitor the progress.
+
+* Set up and enable disaster recovery with Azure Site Recovery and monitor the progress.
+* Perform a disaster recovery drill, create recovery plan and run a test failover.
+* Run a production failover from Germany West Central to Sweden Central region and failback again from Sweden to Germany.
 
 ### Success Criteria ✅
 
@@ -23,7 +28,7 @@ In Challenge 3, you will learn how to protect Azure VMs with Azure Site Recovery
 
 ### Solution - Spoiler Warning ⚠️
 
-[Solution Steps](./walkthrough/challenge-3/solution.md)
+[Solution Steps](../walkthrough/challenge-3/solution.md)
 
 ---
 

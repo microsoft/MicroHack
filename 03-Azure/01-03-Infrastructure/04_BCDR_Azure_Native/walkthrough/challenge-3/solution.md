@@ -10,7 +10,7 @@ Please ensure that you successfully passed [challenge 2](../../Readme.md#challen
 
 In this challenge, you will learn how to protect Azure VM with Azure Site Recovery, and enable replication to the secondary site. Moreover, you will successfully run the test & production failover and failback between two regions.
 
-Actions
+### Actions
 
 * Set up and enable disaster recovery with Azure Site Recovery and monitor the progress.
 * Perform a disaster recovery drill, create recovery plan and run a test failover.
@@ -126,5 +126,7 @@ Check the virtual machine list. There is a new virtual machine running in Sweden
 ![image](./img/31.png)
 
 ![image](./img/32.png)
+
+![image](./img/33.png)
 
 **You successfully completed challenge 3!** 🚀🚀🚀

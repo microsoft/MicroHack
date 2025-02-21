@@ -5,6 +5,8 @@ adminPassword="REPLACE-ME"
 arcRegion="westeurope"
 triggerPolicyEvaluation=true
 
+# the script takes about 1:30 min per VM
+
 # before creating azure resource group, check if it already exists
 if az group show --name $resourceGroupforArc &> /dev/null; then
   echo "Resource group $resourceGroupforArc already exists."

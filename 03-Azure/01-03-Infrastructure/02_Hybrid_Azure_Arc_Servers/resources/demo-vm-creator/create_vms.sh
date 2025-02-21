@@ -1,5 +1,5 @@
 # adjust parameters with your own values as needed
-resourceGroupName="mh-arc-onprem"
+resourceGroupName="mh-arc-onprem-demo"
 resourceGroupLocation="germanywestcentral"
 adminUsername="mhadmin"
 adminPassword="REPLACE-ME"
@@ -8,6 +8,8 @@ adminPassword="REPLACE-ME"
 # assuming you stick to the Standard_D2ads_v5 for Windows and Standard_DS1_v2 for Linux, max 4 Win and 2 Linux VMs per region can be deployed. As each participant should have two windows and one linux machine,
 # we are deploying always 3 VMs (1 linux and 2 windows) per user. This means we can fit 2 participants into one region. So make your that you add enough regions
 # to the regions array to fit all participants.
+
+# the script takes about 3min per VM (resulting in 9min per participant).
 
 number_of_participants=10
 regions=("germanywestcentral" "northeurope" "swedencentral" "francecentral" "westeurope")

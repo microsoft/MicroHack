@@ -1,4 +1,4 @@
-## Challenge 3 - Protect in Azure with Disaster Recovery (Inter-region)
+## Challenge 3 - Protect in Azure with Disaster Recovery (Inter-regional)
 
 ## Prerequisites
 
@@ -32,6 +32,6 @@ In Challenge 3, you will learn how to protect Azure VMs with Azure Site Recovery
 
 ---
 
-**[> Next Challenge 4 - Protect your Azure PaaS with Disaster recovery](./04_challenge.md)** |
+**[➡️ Next Challenge 4 - Protect your Azure PaaS with Disaster recovery](./04_challenge.md)** |
 
-**[< Previous Challenge 2 - Protect in Azure - Backup / Restore](./02_challenge.md)** 
+**[⬅️ Previous Challenge 2 - Regional Protection and Disaster Recovery (DR)](./02_challenge.md)** 

@@ -36,6 +36,6 @@ Thank you for investing the time and see you next time!
 
 ---
 
-**[> Next Challenge 6 - Protect your Azure PaaS (Azure SQL Database) with Disaster recovery](./06_challenge.md)** |
+**[➡️ Next Challenge 6 - Protect your Azure PaaS (Azure SQL Database) with Disaster recovery](./06_challenge.md)** |
 
-**[< BCDR Micro Hack - Home Page](../Readme.md)** | **[< Challenge 4 - Protect your Azure PaaS with Disaster Recovery](./04_challenge.md)**
+**[⬅️ BCDR Micro Hack - Home Page](../Readme.md)** | **[⬅️ Challenge 4 - Protect your Azure PaaS with Disaster Recovery](./04_challenge.md)**

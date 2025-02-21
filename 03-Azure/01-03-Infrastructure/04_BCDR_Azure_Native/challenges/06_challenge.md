@@ -1,10 +1,14 @@
-## Challenge 6 - Protect your Azure PaaS (Azure SQL Database) with Disaster Recovery
+# Extra Challenge - Monitor & Protect your Azure PaaS (Azure SQL Database)
+
+In this chapter we have extra challanges for the fast participants or the participants who wants to go further more. We will focus on Application 2 - Customer Help Desk Services. 
+
+## Challenge 6.0 - Setup - Application 2
 
 You can use [the guide](../Infra/App2/setup.md) to deploy an N-tier application, which will be useful for the challenges.
 
-Monitor the resources
+## Challenge 6.1 - Monitor the resources
 
-## Task 1 - Open the Application Insights dashboard
+### Task 1 - Open the Application Insights dashboard
 
 - Use [`azd monitor`](https://learn.microsoft.com/azure/developer/azure-developer-cli/monitor-your-app) to monitor the application 
 
@@ -12,7 +16,7 @@ Run the following Terminal Command in the directory
 
     azd monitor
 
-## Task 2 - Navigate through the metrics
+### Task 2 - Navigate through the metrics
 
 Navigate to the Application Insights dashboards:
 - overview
@@ -25,6 +29,8 @@ Navigate to the Application Insights dashboards:
 
 - Successfully execute the ``azd monitor`` command.
 - Navigate and review the Application Insights dashboards.
+
+## Challenge 6.2 - Protect your Azure PaaS (Azure SQL Database) with Failover Groups
 
 ### Goal 🎯
 
@@ -45,10 +51,9 @@ In challenge 6, you will focus on implementing disaster recovery strategies for 
 * [Testing for disaster recovery](https://learn.microsoft.com/en-us/azure/site-recovery/site-recovery-test-failover-to-azure)
 * [Create a single database in Azure SQL Database](https://learn.microsoft.com/en-us/azure/azure-sql/database/single-database-create-quickstart?view=azuresql&tabs=azure-portal)
 
-**[< BCDR Micro Hack - Home Page](../Readme.md)** | **[< Challenge 5 - Failback to the Primary Region (Germany West Central)](./05_challenge.md)**
+**[⬅️ BCDR Micro Hack - Home Page](../Readme.md)** |
+**[⬅️ Challenge 5 - Failback to the Primary Region (Germany West Central)](./05_challenge.md)**
 
 ### Extra Challenges
-* Use `azd monitor` command to create dashboards through Log Analytics Workspace (LAW).
 * Deploy the N-tier application with the 'Deploy to Azure' button.
-* Implement failover for PaaS Cosmos DB.
 * Check WebApp SKUs and upgrade from Basic (without redundancy) to Standard (with redundancy).

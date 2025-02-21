@@ -1,8 +1,10 @@
-# Walkthrough Challenge 3 - Protect in Azure with Disaster Recovery
+# Walkthrough Challenge 3 - Protect in Azure with Disaster Recovery (Inter-regional)
 
-Duration: 1 hour 15 minutes
+⏰ Duration: 1 hour 15 minutes
 
-[Previous Challenge Solution](../challenge-2/solution.md) - **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-4/solution.md)
+📋  [Challenge 3 Instructions](../../challenges/03_challenge.md)
+
+⬅️ [Previous Challenge Solution](../challenge-2/solution.md) - **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-4/solution.md) ➡️
 
 ## Prerequisites
 

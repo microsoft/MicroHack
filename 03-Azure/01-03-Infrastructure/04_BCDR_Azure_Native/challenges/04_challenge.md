@@ -1,4 +1,4 @@
-## Challenge 4 - Protect your Azure PaaS (Storage Account) with Disaster Recovery
+## Challenge 4 - Protect your Azure PaaS with Disaster Recovery
 
 ### Goal 🎯
 
@@ -96,6 +96,6 @@ Can you provide an example of composite SLA calculation?
 
 ---
 
-**[> Next Challenge 5 - Failback to the primary region](./05_challenge.md)** |
+**[➡️ Next Challenge 5 - Failback to the primary region](./05_challenge.md)** |
 
-**[< Previous Challenge 3 - Protect in Azure with Disaster Recovery](./03_challenge.md)** 
+**[⬅️ Previous Challenge 3 - Protect in Azure with Disaster Recovery](./03_challenge.md)** 

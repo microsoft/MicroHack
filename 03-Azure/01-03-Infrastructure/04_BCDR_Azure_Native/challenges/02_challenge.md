@@ -1,14 +1,20 @@
-## Challenge 2 - Protect in Azure - Backup / Restore (Regional)
+## Challenge 2 - Regional Protection and Disaster Recovery (DR)
 
 ### Goal 🎯
 
-In this challenge, you will learn how to back up and restore your Windows and Linux Virtual Machines using Azure's Recovery Services Vault. You will also practice simulating a regional failover between two datacenters to handle a regional failure, such as a datacenter outage.
+* Protect in Azure - **Backup / Restore**
+* Protect in Azure with **Disaster Recover (DR)** within a Region
+
+In this challenge, you will learn how to back up and restore your Linux Virtual Machine using Azure's Recovery Services Vault. You will also practice simulating a regional failover between two datacenters to handle a regional failure, such as a datacenter outage.
 
 ![Datacenter & Availability Zone](../img/AZs.png)
 
-### Actions
+## Actions
 
+### Challenge 2.1 - Protect in Azure - Backup / Restore
 1. Enable Azure Backup for a Linux VM in the primary region.
+
+### Challenge 2.2 - Protect in Azure with Disaster Recover (DR) within an Azure Region
 2. Set up disaster recovery for the Linux VM in the primary region.
 3. Simulate a failover from one part of the primary region to another part within the same region.
 
@@ -16,6 +22,7 @@ In this challenge, you will learn how to back up and restore your Windows and Li
 
 - You have successfully set up Azure Backup Policies for both virtual machines.
 - You have successfully restored a VM of your choice to Azure.
+- You have successfully configured replication between two availability zones and simulated a failover between two datacenters using Azure Site Recovery.
 
 ### 📚 Learning Resources
 
@@ -32,6 +39,6 @@ For detailed steps, refer to the [Solution Steps](../walkthrough/challenge-2/sol
 
 ---
 
-**[> Next Challenge 3 - Protect in Azure with Disaster Recovery](./03_challenge.md)**
+**[➡️ Next Challenge 3 - Protect in Azure with Disaster Recovery (Inter-regional)](./03_challenge.md)**
 
-**[< Previous Challenge 1 - Prerequisites and landing zone preparation](./01_challenge.md)**
+**[⬅️ Previous Challenge 1 - Prerequisites and landing zone preparation](./01_challenge.md)**

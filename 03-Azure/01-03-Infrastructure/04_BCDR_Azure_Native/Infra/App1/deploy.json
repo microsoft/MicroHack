@@ -3706,6 +3706,7 @@
               "apiVersion": "2024-03-01",
               "name": "[variables('Name')]",
               "location": "[variables('location')]",
+              "zones": "[if(equals(parameters('purpose'), 'linux'), createArray('2'), createArray() )]",
               "tags": {
                 "purpose": "[parameters('purpose')]"
               },

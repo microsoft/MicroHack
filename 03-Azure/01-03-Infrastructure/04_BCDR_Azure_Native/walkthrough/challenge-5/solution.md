@@ -1,8 +1,10 @@
 # Walkthrough Challenge 5 - Failback to the primary region (Germany West Central)
 
-Duration: 50 minutes
+⏰ Duration: 50 minutes
 
-[Previous Challenge Solution](../challenge-4/solution.md) - **[Home](../../Readme.md)**
+📋  [Challenge 5 Instructions](../../challenges/05_challenge.md)
+
+⬅️ [Previous Challenge Solution](../challenge-4/solution.md) - **[Home](../../Readme.md)** - [Extra Challenge Solution](../challenge-6/solution.md) ➡️ 
 
 ## Prerequisites
 

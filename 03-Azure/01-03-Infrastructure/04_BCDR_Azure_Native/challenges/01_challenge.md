@@ -33,6 +33,8 @@ To deploy the lab environment using **ARM**, click the link below.
 2. In the Azure portal search bar, search for "deploy a custom template" and select it from the available options.
 3. Upload the templates `deploy.json` and `main.parameters.json`.
 
+> **Note:** The template `deploy.json` and the parameter file `main.parameters.json` is available in the GitHub repository. You can access it directly via [this link](https://github.com/microsoft/MicroHack/tree/main/03-Azure/01-03-Infrastructure/04_BCDR_Azure_Native) or navigate to the path: `.\04_BCDR_Azure_Native\Infra\App1`. Alternatively, you can download it from the repository.
+
 Refer to the [Step-by-Step Deployment Guide](../walkthrough/challenge-1/img/deployment/solution.md) for detailed guidance.
 
 ### 📚 Deploy a custom template
@@ -66,6 +68,7 @@ There is a WebApp running on the machines deployed in the Lab Environment. The W
 * Recovery Services Vaults created in both regions.
 * Backup Vaults created in both regions.
 * A locally-redundant Storage Account created.
+* The Web application is successfully deployed using a backend pool of two Virtual Machines.
 
 ### 📚 Learning Resources
 
@@ -79,6 +82,6 @@ There is a WebApp running on the machines deployed in the Lab Environment. The W
 
 ---
 
-**[> Next Challenge 2 - Protect in Azure - Backup / Restore](./02_challenge.md)** |
+**[ ➡️ Next Challenge 2 - Regional Protection and Disaster Recovery (DR)](./02_challenge.md)** |
 
-**[< Previous Challenge 0 - 🚀 Deploying a Ready-to-Go N-tier App with Awesome Azure Developer CLI](./00_challenge.md)**
+**[ ⬅️ Previous Challenge 0 - Understand the Disaster Recovery (DR) terms and define a DR strategy](../Readme.md#contoso-ltd---business-continuity-and-disaster-recovery-bcdr-strategy)**

@@ -1,8 +1,10 @@
 # Walkthrough Challenge 4 - Protect your Azure PaaS (Azure SQL Database and Storage Account) with Disaster recovery
 
-Duration: 50 minutes
+⏰ Duration: 50 minutes
 
-[Previous Challenge Solution](../challenge-3/solution.md) - **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-5/solution.md)
+📋  [Challenge 4 Instructions](../../challenges/04_challenge.md)
+
+⬅️ [Previous Challenge Solution](../challenge-3/solution.md) - **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-5/solution.md) ➡️
 
 ## Prerequisites
 

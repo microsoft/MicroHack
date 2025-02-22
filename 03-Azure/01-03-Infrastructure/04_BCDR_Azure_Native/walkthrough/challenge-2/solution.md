@@ -51,53 +51,65 @@ Please don't forget to put the VM into the public network and open up Port 3389 
 ### Enable Azure Backup
 ![image](./img/030.png)
 
-Backup Job is started
-![image](./img/031.png)
-
-This might take a while
-![image](./img/032.png)
-
-![image](./img/033.png)
-
-![image](./img/034.png)
-
 ### Create a new Custom Policy
+Navigate to the **Backup** Tab
+
 ![image](./img/040.png)
-![image](./img/041.png)
 
 Go to the Backup Vault in the Primary Region (Germany West Central)
-![image](./img/042.png)
+
+![image](./img/041.png)
 
 Add a new Backup Policy
-![Add Policy](./img/043.png)
+
+![Add Policy](./img/042.png)
 
 Add a new Backup Policy for Disks
-![Policy for Disks](./img/043a.png)
+
+![Policy for Disks](./img/043.png)
 
 ## Schedule daily backups
 
 Configure daily backup frequency
-![image](./img/043b.png)
 
--   Hourly Backup Schedule Optional 
-![image](./img/mh-ch2-screenshot-22.png)
+![image](./img/044.png)
 
-Create Backup Policy
-![Review + Create](./img/043c.png)
-
-Backup Policy is successfuly created!
-![image](./img/043d.png)
 
 ### Review additional Deployment Options
-![image](./img/mh-ch2-screenshot-25.png)
+-   Hourly Backup Schedule Optional
 
-### Wait for intial Backup of the VM
-![image](./img/31.png)
-![image](./img/32.png)
+![image](./img/mh-ch2-screenshot-22.png)
 
-The steps for the Ubuntu Server VM are similar to this and will not be included here.
+Review the configuration 
+* Backup Schedule
+* Backup Retention settings
+and proceed with **Create**
 
-![Microsoft Learn - Azure Cross-region replication](https://learn.microsoft.com/en-us/azure/reliability/cross-region-replication-azure#cross-region-replication)
+![Review + Create](./img/045.png)
+
+Backup Policy is successfuly created!
+
+![image](./img/043d.png)
+
+Backup Job is started
+
+![image](./img/031.png)
+
+### Wait for initial Backup of the VM
+
+This might take a while
+
+**Take Snapshot** and **Transfer data to vault**
+
+![progress](./img/032.png)
+
+![completed](./img/033.png)
+
+![backup](./img/034.png)
+
+The steps for the Data Science Virtual Machine are similar to this and will not be included here.
+
+[Microsoft Learn - Azure Cross-region replication](https://learn.microsoft.com/en-us/azure/reliability/cross-region-replication-azure#cross-region-replication)
 
 ### Task 2: Enable Azure backup for blobs
 Go to the Storage Account in the Primary Region
@@ -108,6 +120,7 @@ Go to the Storage Account in the Primary Region
 <br>
 
 <details close>
+
 <summary>💡 How-to: Create a backup vault (not a recovery service vault)</summary>
 <br>
 

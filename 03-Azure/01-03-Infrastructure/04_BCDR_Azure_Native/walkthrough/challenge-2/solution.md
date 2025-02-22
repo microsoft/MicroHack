@@ -50,12 +50,43 @@ Please don't forget to put the VM into the public network and open up Port 3389 
 
 ### Enable Azure Backup
 ![image](./img/030.png)
-![image](./img/36.png)
+
+Backup Job is started
+![image](./img/031.png)
+
+This might take a while
+![image](./img/032.png)
+
+![image](./img/033.png)
+
+![image](./img/034.png)
 
 ### Create a new Custom Policy
-![image](./img/mh-ch2-screenshot-11.png)
-![image](./img/mh-ch2-screenshot-12.png)
+![image](./img/040.png)
+![image](./img/041.png)
+
+Go to the Backup Vault in the Primary Region (Germany West Central)
+![image](./img/042.png)
+
+Add a new Backup Policy
+![Add Policy](./img/043.png)
+
+Add a new Backup Policy for Disks
+![Policy for Disks](./img/043a.png)
+
+## Schedule daily backups
+
+Configure daily backup frequency
+![image](./img/043b.png)
+
+-   Hourly Backup Schedule Optional 
 ![image](./img/mh-ch2-screenshot-22.png)
+
+Create Backup Policy
+![Review + Create](./img/043c.png)
+
+Backup Policy is successfuly created!
+![image](./img/043d.png)
 
 ### Review additional Deployment Options
 ![image](./img/mh-ch2-screenshot-25.png)
@@ -69,23 +100,69 @@ The steps for the Ubuntu Server VM are similar to this and will not be included 
 ![Microsoft Learn - Azure Cross-region replication](https://learn.microsoft.com/en-us/azure/reliability/cross-region-replication-azure#cross-region-replication)
 
 ### Task 2: Enable Azure backup for blobs
+Go to the Storage Account in the Primary Region
+![Storage Account](./img/050.png)
+
+<details close>
+<summary>💡 Task 2: Enable Azure backup for blobs</summary>
+<br>
+
+<details close>
+<summary>💡 How-to: Create a backup vault (not a recovery service vault)</summary>
+<br>
 
 ### Create a backup vault (not a recovery service vault)
 ![image](./img/mh-ch2-screenshot-71.png)
 
+</details>
+
+
+<details close>
+<summary>💡 How-to: Create a container</summary>
+<br>
+
+![image](./img/019.png)
+![image](./img/019a.png)
+![image](./img/019b.png)
+![image](./img/020.png)
+
+</details>
+
+
 ### Enable system managed Identity for the backup vault and clipboard the MI object ID
-![image](./img/mh-ch2-screenshot-72.png)
+Go to the Backup Vault in the Primary Region (Germany West Central) and navigate to the Identity Tab
+![Identity Tab](./img/060.png)
+
+Click **Azure role assignments**
+![Enable system managed Identity](./img/060a.png)
 
 ### Assign the "Backup Contributor" role to Backup vault managed identity
-![image](./img/mh-ch2-screenshot-73.png)
-![image](./img/mh-ch2-screenshot-74.png)
-![image](./img/mh-ch2-screenshot-75.png)
+Go back to the Storage Account the Primary Region (Germany West Central). Navigate to **Access Control (IAM)** Tab and add a role assignment.
+![image](./img/061.png)
 
-### Enable Azure Backup for Blobs. This will require to create a new backup policy.
-![image](./img/mh-ch2-screenshot-76.png)
-![image](./img/mh-ch2-screenshot-77.png)
-![image](./img/mh-ch2-screenshot-78.png)
-![image](./img/mh-ch2-screenshot-79.png)
+Select Role
+![Backup Contributor](./img/062.png)
+
+Select Scope
+![MI](./img/063.png)
+
+Select Managed Identity of the Backup Vault
+![Backup Vault MI](./img/064.png)
+
+Review + Assign
+![Review + Assign](./img/065.png)
+
+### Enable Azure Backup for Blobs. This will require to create a new backup policy:
+
+![image](./img/019c.png)
+![Create new policy](./img/051.png)
+![Select Vault](./img/052.png)
+![Create](./img/054.png)
+
+Backup Policy for storage successfully created!
+![Create](./img/055.png)
+
+</details>
 
 ### Task 3: Restore a VM in Azure
 

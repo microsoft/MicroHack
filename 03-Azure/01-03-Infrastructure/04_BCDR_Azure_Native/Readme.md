@@ -6,10 +6,9 @@
   - [What is Business Continuity?](#what-is-business-continuity)
 - [**MicroHack context**](#microhack-context)
 - [**MicroHack Challenges**](#microhack-challenges)
-  - [General prerequisites](#general-prerequisites)
+  - [General Prerequisites](#general-prerequisites)
   - [Challenge 0 - Understand the Disaster Recovery terms and define a strategy](#contoso-ltd---business-continuity-and-disaster-recovery-bcdr-strategy)
-    - [General Prerequisites & Setup](#general-prerequisites)
-  - [Challenge 1 - Prerequisites and landing zone preparation](./challenges/01_challenge.md)
+  - [Challenge 1 - Setup and landing zone preparation](./challenges/01_challenge.md)
   - [Challenge 2 - Regional Protection and Disaster Recovery (DR)](./challenges/02_challenge.md)
     - [Challenge 2.1 - Protect in Azure - Backup / Restore](./challenges/02_challenge.md#challenge-21---protect-in-azure---backup--restore)
     - [Challenge 2.2 - Protect in Azure with Disaster Recover (DR) within an Azure Region](./challenges/02_challenge.md#challenge-22---protect-in-azure-with-disaster-recover-dr-within-an-azure-region)
@@ -155,10 +154,10 @@ The Azure Business Continuity Guide provides a comprehensive set of recommendati
 
 [Azure Business Continuity Guide](https://github.com/Azure/BusinessContinuityGuide)
 
-## Contributors 
-* Hengameh Bigdeloo
+## Contributors
 * Nils Bankert [GitHub](https://github.com/nilsbankert); [LinkedIn](https://www.linkedin.com/in/nilsbankert/)
-* Herman Diessongo
 * Demir Senturk [GitHub](https://github.com/demirsenturk); [LinkedIn](https://www.linkedin.com/in/demirsenturk/)
+* Hengameh Bigdeloo
+* Herman Diessongo
 * Andressa Jendreieck
 * Sebastian Pfaller

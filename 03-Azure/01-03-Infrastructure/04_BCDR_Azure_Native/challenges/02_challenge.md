@@ -12,7 +12,9 @@ In this challenge, you will learn how to back up and restore your Linux Virtual 
 ## Actions
 
 ### Challenge 2.1 - Protect in Azure - Backup / Restore
-1. Enable Azure Backup for a Linux VM in the primary region.
+1. Enable Azure Backup for the Linux VM in the primary region.
+2. Enable Azure Backup for Blobs
+3. Restore a VM in Azure.
 
 ### Challenge 2.2 - Protect in Azure with Disaster Recover (DR) within an Azure Region
 2. Set up disaster recovery for the Linux VM in the primary region.

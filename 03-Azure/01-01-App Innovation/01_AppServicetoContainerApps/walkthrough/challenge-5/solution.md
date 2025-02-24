@@ -53,7 +53,10 @@ You will need the *Application Url* form the *microhack-aiapp*, copy it to the c
 
 Switch to the GitHub Actions workflow that deploys to the Container App. You only need to append a single line in the end. In the *Deploy to Container App* task, add this line:
 
-`environmentVariable: API_URL=<your-aipp-url>`
+```
+environmentVariables: |
+          API_URL=<your-aipp-url>
+```
 
 You can run the workflow to deploy the new version. It will pickup the API URL and use that to connect to the *microhack-aiapp* to call the model. After it was successfully deployed, you should be able to send prompts from your web app (it might be a little slow, though).
 

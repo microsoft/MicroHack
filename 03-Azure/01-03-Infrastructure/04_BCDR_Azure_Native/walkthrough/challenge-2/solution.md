@@ -81,7 +81,7 @@ Add a new Backup Policy.
 
 ![Add Policy](./img/042.png)
 
-Add a new Backup Policy for Disks.
+Add a new Backup Policy for Azure Virtual Machines.
 
 ![Policy for Disks](./img/043.png)
 
@@ -220,7 +220,7 @@ Enable Disaster Recovery (DR) between **Availability Zones**
 
 ![image](./img/070.png)
 
-Choose a different Availability Zone different than the current one as **Target**
+Choose a different Availability Zone than the current one as **Target**
 
 ![image](./img/071.png)
 
@@ -236,7 +236,7 @@ The Linux Virtual Machine is protected with Azure Site Recovery between Availabi
 
 ![image](./img/076.png)
 
-###  Task 5: Simulate a failover from one part of the primary region to another part within the same region.
+### Task 5: Simulate a failover from one part of the primary region to another part within the same region.
 
 Test failover
 

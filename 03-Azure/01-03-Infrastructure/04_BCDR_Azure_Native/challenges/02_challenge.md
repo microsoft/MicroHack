@@ -17,8 +17,8 @@ In this challenge, you will learn how to back up and restore your Linux Virtual 
 3. Restore a VM in Azure.
 
 ### Challenge 2.2 - Protect in Azure with Disaster Recover (DR) within an Azure Region
-2. Set up disaster recovery for the Linux VM in the primary region.
-3. Simulate a failover from one part of the primary region to another part within the same region.
+4. Set up disaster recovery for the Linux VM in the primary region.
+5. Simulate a failover from one part of the primary region to another part within the same region.
 
 ### Success Criteria ✅
 

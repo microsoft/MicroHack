@@ -203,10 +203,45 @@ Backup Policy for storage successfully created!
 Proceed with **Restore**.
 
 ![image](./img/037.png)
+![image](./img/038.png)
 ![image](./img/039.png)
-
-You have successfully completed Challenge 2! 🚀🚀🚀
 
 A new Virtual Machine `mh-linux-restore` has been created in the resource group, restored from the backup.
 
+You have successfully completed Challenge 2.1! 🚀
+
+### Challenge 2.2 - Protect in Azure with Disaster Recover (DR) within an Azure Region
+4. Set up disaster recovery for the Linux VM in the primary region.
+5. Simulate a failover from one part of the primary region to another part within the same region.
+
+### Task 4: Set up disaster recovery for the Linux VM in the primary region.
+
+Enable Disaster Recovery (DR) between **Availability Zones**
+
 ![image](./img/070.png)
+
+Choose a different Availability Zone different than the current one as **Target**
+
+![image](./img/071.png)
+
+Review and Start Replication
+
+![image](./img/074.png)
+
+Wait until the replication is finished
+
+![image](./img/075.png)
+
+The Linux Virtual Machine is protected with Azure Site Recovery between Availability Zones.
+
+![image](./img/076.png)
+
+###  Task 5: Simulate a failover from one part of the primary region to another part within the same region.
+
+Test failover
+
+![image](./img/077.png)
+
+You have successfully completed Challenge 2! 🚀🚀
+
+

@@ -62,6 +62,9 @@ There is a WebApp running on the machines deployed in the Lab Environment. The W
 ![web2](../walkthrough/challenge-1/exploration/2.png)
 ![web3](../walkthrough/challenge-1/exploration/3.png)
 
+![web4](../walkthrough/challenge-1/exploration/4.png)
+![web5](../walkthrough/challenge-1/exploration/004.png)
+
 ### Success Criteria ✅
 
 * Resource Groups created in both regions (Germany West Central & Sweden Central).

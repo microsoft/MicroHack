@@ -31,7 +31,7 @@ Duration: 30 minutes
 
 ![image](./img/CS4.png)
 
-- Change into to Migrate & Modernize Microhack directory of the cloned repository using the `cd MicroHack/03-Azure/01-03-Infrastructure/06_Migration_Datacenter_Modernization/resources` command.
+- Change into to Migrate & Modernize Microhack directory of the cloned repository using the `cd MicroHack/03-Azure/01-03-Infrastructure/06_Migration_Secure_AI_Ready/resources` command.
 
 ![image](./img/CS5.png)
 

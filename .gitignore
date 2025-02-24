@@ -168,12 +168,17 @@ override.tf
 override.tf.json
 *_override.tf
 *_override.tf.json
+
+# Ignore CLI configuration files
 .terraformrc
 terraform.rc
 
 # Exclude CLI configuration files
 .terraform.d/plugins/
 .terraform.d/plugins/**/*
+
+# Ignore transient lock info files created by terraform apply
+.terraform.tfstate.lock.info
 
 # Ignore any .terraform.lock.hcl file
 .terraform.lock.hcl

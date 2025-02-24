@@ -157,6 +157,7 @@ local.settings.json
 
 # .tfstate files
 *.tfstate
+tfstate
 *.tfstate.*
 
 # Crash log files
@@ -180,6 +181,7 @@ terraform.rc
 # Ignore any .tfplan files
 *.tfplan
 tfplan
+*.tfplan.*
 
 # Ignore any .terraform.tfstate.backup files
 *.tfstate.backup

@@ -13,8 +13,9 @@ Please ensure that you successfully passed [challenge 4](../../Readme.md#challen
 In this challenge, you will have failback again the VM, SQL DB from Sweden central to Germany West Central. The storage account should be failed back to Germany West Central as well.
 
 ### Actions
-* Task 1: Failback the VM from Sweden Central to Germany West Central region (Source environment) and monitor the progress.
+* Task 1: Failback the Web Application from Sweden Central to Germany West Central region (Source environment) and monitor the progress.
 * Task 2: Failback Storage Account to Germany West Central.
+* Restore a VM in Azure.
 
 # Solution
 
@@ -38,30 +39,6 @@ After the Synchronization completes, select **Failover**.
 Check the Virtual machine list. Server01 is running again in the Germany West Central region.
 
 ![image](./img/mh-ch-screenshot-29.png)
-
-
-## Connect to the Virtual Machine in order to test connection to SQL Database and storage container in the upcoming tasks.
-
-Reader can refer to the [Previous Challenge Solution](../challenge-3/solution.md) to remember how to failover.
-
-## Disaster Recovery for Azure SQL Database
-
-## Task 2: Failback to Germany West Central Region
-
-### Navigate to the **SQL Server**. Open the created **Failover group**:
-![image](./img/20.png)
-
-### Failback to Germany West Central Region
-![image](./img/21.png)
-
-### **SQL Server** in Germany West Central is now the Primary server.
-![image](./img/22.png)
-
-### Open the Data Science Virtual Machine, and test the connection to the Server using the **fail over group listener endpoint**:
-![image](./img/08.png)
-
-### Connection secured! 
-![image](./img/09.png)
 
 ## Disaster Recovery for Azure Storage Account
 
@@ -87,11 +64,6 @@ Reader can refer to the [Previous Challenge Solution](../challenge-3/solution.md
 
 ### Failover Completed
 ![image](./img/23.png)
-
-## Check connection and restore your sample file.
-
-### From the Data Science Virtual Machine, use **Microsoft Azure Storage Explorer** to restore your file:
-![image](./img/16.png)
 
 **You successfully completed challenge 5!** 🚀🚀🚀
 

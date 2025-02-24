@@ -73,7 +73,7 @@ This might take a while.
 
 ## Create a New Custom Policy
 
-Go to the Backup Vault in the Primary Region (Germany West Central).
+Go to the Azure Site Recovery **ASR Vault** in the Primary Region (Germany West Central).
 
 ![image](./img/041.png)
 
@@ -102,11 +102,9 @@ Review the configuration:
 
 Proceed with **Create**.
 
-![Review + Create](./img/045.png)
-
 Backup Policy is successfully created!
 
-![image](./img/043d.png)
+![image](./img/045.png)
 
 The steps for the Data Science Virtual Machine are similar and will not be included here.
 
@@ -208,6 +206,8 @@ Proceed with **Restore**.
 
 A new Virtual Machine `mh-linux-restore` has been created in the resource group, restored from the backup.
 
+![image](./img/070.png)
+
 You have successfully completed Challenge 2.1! 🚀
 
 ### Challenge 2.2 - Protect in Azure with Disaster Recover (DR) within an Azure Region
@@ -218,7 +218,7 @@ You have successfully completed Challenge 2.1! 🚀
 
 Enable Disaster Recovery (DR) between **Availability Zones**
 
-![image](./img/070.png)
+Navigate to **mh-web1 | Disaster recovery**
 
 Choose a different Availability Zone than the current one as **Target**
 
@@ -238,9 +238,21 @@ The Linux Virtual Machine is protected with Azure Site Recovery between Availabi
 
 ### Task 5: Simulate a failover from one part of the primary region to another part within the same region.
 
-Test failover
+Conduct an unplanned failover
 
 ![image](./img/077.png)
+
+![image](./img/078.png)
+
+![image](./img/079.png)
+
+![image](./img/080.png)
+
+![image](./img/081.png)
+
+![image](./img/082.png)
+
+![image](./img/083.png)
 
 You have successfully completed Challenge 2! 🚀🚀
 

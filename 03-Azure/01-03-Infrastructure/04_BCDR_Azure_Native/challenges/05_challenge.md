@@ -6,17 +6,13 @@ In challenge 5, you will failback the VM, SQL DB from Sweden Central to Germany 
 
 ### Actions 🛠️
 
-* Failback the VM from Sweden Central to Germany West Central region (Source environment) and monitor the progress.
+* Failback the Web Application from Sweden Central to Germany West Central region (Source environment) and monitor the progress.
 * Failback Storage Account to Germany West Central.
 * Restore a VM in Azure.
 
 ### Success Criteria ✅
 
 * The failback of all resources to the Germany West Central region has been successfully performed.
-* You successfully connected to the database and the storage account from the Windows Server.
-* You successfully enabled Azure Backup on the two virtual machines.
-* You successfully enabled Azure Backup for blobs.
-* You have successfully restored blobs.
 
 ### Learning Resources 📚
 

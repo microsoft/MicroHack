@@ -24,41 +24,39 @@ In this challenge, you will learn how to protect Azure VM with Azure Site Recove
 <summary>💡 Enable replication with Azure Site recovery for the Virtual Machine in the Germany West Central Region to the Sweden Central Region</summary>
 <br>
 
-Navigate to **Recovery Services Vault** in the Germany West Central (mh-rsv-gwc) which we created in the first Challenge. In the **Protected Items**, select **Replicated Items**. Then select **Replicate** and from the dropdown list select **Azure virtual machines**. The following pan will apprear:
+Navigate to **Recovery Services Vault** in the Sweden Central (mh-swedencentral-asrvault) which we created in the first Challenge. In the **Protected Items**, select **Replicated Items**. Then select **Replicate** and from the dropdown list select **Azure virtual machines**. The following pan will apprear:
 
-![image](./img/mh-ch-screenshot-01.png)
+![image](./img/001.png)
 
-![image](./img/mh-ch-screenshot-02.png)
+![image](./img/002.png)
 
-![image](./img/mh-ch-screenshot-03.png)
+![image](./img/003.png)
 
-![image](./img/mh-ch-screenshot-04.png)
+![image](./img/004.png)
 
-![image](./img/mh-ch-screenshot-05.png)
+![image](./img/005.png)
+
+![image](./img/006.png)
 
 In the deployment notification you could navigate to the Site Recovery Jobs which lists all Site Recovery Actions you have created in this task.
 
-![image](./img/mh-ch-screenshot-06.png)
+![image](./img/007.png)
 
 You can select in progress jobs to check the status and progress.
 
-![image](./img/mh-ch-screenshot-07.png)
+![image](./img/008.png)
 
 This Task can take up to 10 minutes to finish.
 
-![image](./img/mh-ch-screenshot-08.png)
+![image](./img/009.png)
 
-## Task 1 Ubuntu VM Version: Enable replication with Azure Site recovery for the Virtual Machine in the Sweden Central Region to the Germany West Central Region
+![image](./img/011.png)
 
-![image](./img/01.png)
-![image](./img/01a.png)
-![image](./img/02.png)
-![image](./img/03.png)
-![image](./img/03a.png)
-![image](./img/04.png)
-![image](./img/05.png)
-![image](./img/06.png)
-![image](./img/07.png)
+![image](./img/010.png)
+
+### Note: Disaster recovery can be set also under Virtual Machine | Disaster Recovery
+
+![image](./img/100.png)
 
 </details>
 

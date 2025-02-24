@@ -187,7 +187,7 @@ tfplan
 # Ignore any .DS_Store files
 .DS_Store
 
-# Ignore any key fules
+# Ignore any key files
 id_rsa
 id_rsa.pub
 *.private

@@ -157,6 +157,7 @@ local.settings.json
 
 # .tfstate files
 *.tfstate
+tfstate
 *.tfstate.*
 
 # Crash log files
@@ -167,6 +168,8 @@ override.tf
 override.tf.json
 *_override.tf
 *_override.tf.json
+
+# Ignore CLI configuration files
 .terraformrc
 terraform.rc
 
@@ -174,14 +177,25 @@ terraform.rc
 .terraform.d/plugins/
 .terraform.d/plugins/**/*
 
+# Ignore transient lock info files created by terraform apply
+.terraform.tfstate.lock.info
+
 # Ignore any .terraform.lock.hcl file
 .terraform.lock.hcl
 
 # Ignore any .tfplan files
 *.tfplan
+tfplan
+*.tfplan.*
 
 # Ignore any .terraform.tfstate.backup files
 *.tfstate.backup
 
 # Ignore any .DS_Store files
 .DS_Store
+
+# Ignore any key files
+id_rsa
+id_rsa.pub
+*.private
+*.private.pub

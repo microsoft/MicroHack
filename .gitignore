@@ -179,14 +179,16 @@ terraform.rc
 
 # Ignore any .tfplan files
 *.tfplan
+tfplan
 
 # Ignore any .terraform.tfstate.backup files
 *.tfstate.backup
 
 # Ignore any .DS_Store files
 .DS_Store
-03-Azure/01-03-Infrastructure/07_Azure_Monitor/resources/terraform/tfplan
-03-Azure/01-03-Infrastructure/07_Azure_Monitor/resources/terraform/enviornment/modules/vms/.ssh/id_rsa
-03-Azure/01-03-Infrastructure/07_Azure_Monitor/resources/terraform/enviornment/modules/vms/.ssh/id_rsa.pub
-adm-simon.private
-adm-simon.private.pub
+
+# Ignore any key fules
+id_rsa
+id_rsa.pub
+*.private
+*.private.pub

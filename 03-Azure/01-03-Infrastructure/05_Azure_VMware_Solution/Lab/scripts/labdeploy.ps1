@@ -117,7 +117,7 @@ $NFSVMIPAddress = "10.${groupNumber}.${labNumber}.7"
 $NFSVMPrefix = "24"
 $NFSVMVolumeLabel = "nfs"
 $NFSVMCapacity = "500" #GB
-$NFSVMRootPassword = "MSFTavs1!"
+$NFSVMRootPassword = ""
 
 # VCSA Deployment Configuration
 $VCSADeploymentSize = "tiny"
@@ -126,16 +126,16 @@ $VCSAIPAddress = "10.${groupNumber}.${LabNumber}.2"
 $VCSAHostname = "10.${groupNumber}.${LabNumber}.2" #Change to IP if you don't have valid DNS
 $VCSAPrefix = "24"
 $VCSASSODomainName = "avs.lab"
-$VCSASSOPassword = "MSFTavs1!"
-$VCSARootPassword = "MSFTavs1!"
+$VCSASSOPassword = ""
+$VCSARootPassword = ""
 $VCSASSHEnable = "true"
 
 # HCX Deployment Configuration
 $HCXVMDisplayName = "hcx-mgr-${groupNumber}-${labNumber}"
 $HCXIPAddress = "10.${groupNumber}.${LabNumber}.9"
 $HCXVMPrefix = "24"
-$HCXRootPassword = "MSFTavs1!"
-$HCXAdminPassword = "MSFTavs1!"
+$HCXRootPassword = ""
+$HCXAdminPassword = ""
 $HCXSSHEnable = "true"
 
 # General Deployment Configuration for Nested ESXi, VCSA & NSX VMs
@@ -149,7 +149,7 @@ $VMNetmask = "255.255.255.0"
 $VMGateway = "10.${groupNumber}.${labNumber}.1"
 $VMDNS = "1.1.1.1"
 $VMNTP = "pool.ntp.org"
-$VMPassword = "MSFTavs1!"
+$VMPassword = ""
 $VMDomain = "avs.lab"
 #$VMSyslog = "192.168.1.10"
 

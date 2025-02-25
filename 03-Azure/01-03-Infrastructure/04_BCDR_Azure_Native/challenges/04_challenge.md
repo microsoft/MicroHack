@@ -1,5 +1,9 @@
 ## Challenge 4 - Protect your Azure PaaS with Disaster Recovery
 
+## Prerequisites
+
+Please ensure that you successfully passed [challenge 3](./03_challenge.md) before continuing with this challenge.
+
 ### Goal 🎯
 
 In this challenge, you will re-establish the connection to your web application from the failed-over region. You will then focus on implementing disaster recovery strategies for Azure storage accounts using replication. The primary objective is to ensure business continuity by protecting critical data stored in Azure storage accounts against potential disasters.

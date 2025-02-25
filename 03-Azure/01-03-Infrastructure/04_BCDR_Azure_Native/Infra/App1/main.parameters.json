@@ -3,7 +3,7 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "parDeploymentPrefix": {
-      "value": "mh"
+      "value": "mh<insertParticipantNumber>-"
     },
     "sourceLocation": {
       "value": "germanywestcentral"
@@ -12,7 +12,7 @@
       "value": "swedencentral"
     },
     "vmAdminPassword": {
-      "value": "P@ssw0rd1234"
+      "value": ""
     },
     
     "hubVnetConfig": {

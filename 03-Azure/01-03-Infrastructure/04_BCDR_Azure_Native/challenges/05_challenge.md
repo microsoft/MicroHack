@@ -1,8 +1,11 @@
 ## Challenge 5 - Failback to the Primary Region (Germany West Central) 
+## Prerequisites
+
+Please ensure that you successfully passed [challenge 4](./04_challenge.md) before continuing with this challenge.
 
 ### Goal 🎯
 
-In challenge 5, you will failback the VM, SQL DB from Sweden Central to Germany West Central. The storage account should be failed back as well to Germany West Central.
+In challenge 5, you will failback the web application from Sweden Central to Germany West Central. The storage account could be failed back as well to Germany West Central.
 
 ### Actions 🛠️
 

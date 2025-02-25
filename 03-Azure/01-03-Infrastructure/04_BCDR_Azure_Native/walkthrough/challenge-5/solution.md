@@ -4,8 +4,6 @@
 
 📋  [Challenge 5 Instructions](../../challenges/05_challenge.md)
 
-⬅️ [Previous Challenge Solution](../challenge-4/solution.md) - **[Home](../../Readme.md)** - [Extra Challenge Solution](../challenge-6/solution.md) ➡️ 
-
 ## Prerequisites
 
 Please ensure that you successfully passed [challenge 4](../../Readme.md#challenge-4) before continuing with this challenge.
@@ -73,3 +71,4 @@ Check the Virtual machine list. Server01 is running again in the Germany West Ce
 * [Azure Site Recovery - Enable Replication](https://learn.microsoft.com/en-us/azure/site-recovery/azure-to-azure-tutorial-enable-replication)
 * [Testing for disaster recovery](https://learn.microsoft.com/en-us/azure/site-recovery/site-recovery-test-failover-to-azure)
 
+[➡️ Next Challenge 6 Instructions](../../challenges/06_challenge.md)

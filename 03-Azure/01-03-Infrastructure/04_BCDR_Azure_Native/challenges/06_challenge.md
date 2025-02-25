@@ -30,6 +30,7 @@ Navigate to the Application Insights dashboards:
 - Successfully execute the ``azd monitor`` command.
 - Navigate and review the Application Insights dashboards.
 
+<!--
 ## Challenge 6.2 - Protect your Azure PaaS (Azure SQL Database) with Failover Groups
 
 ### Goal 🎯
@@ -45,15 +46,11 @@ In challenge 6, you will focus on implementing disaster recovery strategies for 
 * You have successfully created and configured a Failover Group for Azure SQL Database, ensuring data is replicated and accessible across regions.
 * You have conducted failover tests for the Azure SQL Database, demonstrating the effectiveness of your disaster recovery strategy.
 * You were able to connect to the failed-over SQL DB from the failed-over VM.
-
-### 📚 Learning Resources
+ -->
+<!-- ### 📚 Learning Resources
 * [Azure SQL Database Failover Groups and Active Geo-Replication](https://learn.microsoft.com/en-us/azure/azure-sql/database/auto-failover-group-overview)
 * [Testing for disaster recovery](https://learn.microsoft.com/en-us/azure/site-recovery/site-recovery-test-failover-to-azure)
-* [Create a single database in Azure SQL Database](https://learn.microsoft.com/en-us/azure/azure-sql/database/single-database-create-quickstart?view=azuresql&tabs=azure-portal)
+* [Create a single database in Azure SQL Database](https://learn.microsoft.com/en-us/azure/azure-sql/database/single-database-create-quickstart?view=azuresql&tabs=azure-portal) -->
 
 **[⬅️ BCDR Micro Hack - Home Page](../Readme.md)** |
 **[⬅️ Challenge 5 - Failback to the Primary Region (Germany West Central)](./05_challenge.md)**
-
-### Extra Challenges
-* Deploy the N-tier application with the 'Deploy to Azure' button.
-* Check WebApp SKUs and upgrade from Basic (without redundancy) to Standard (with redundancy).

@@ -1,7 +1,5 @@
 ## Challenge 1 - Prerequisites and Landing Zone Preparation
 
-Duration: 20 minutes
-
 ### Goal 🎯
 
 In Challenge 1, you will set up your environment with the necessary infrastructure to ensure business continuity using Cloud Native / PaaS Services on Azure.
@@ -18,24 +16,24 @@ Below is an architecture diagram illustrating the setup. Tutorials and documenta
 
 We will use **Infrastructure as Code** to deploy the lab environment. There are **two methods** to achieve this:
 
-1. **ARM/Bicep scripts via CloudShell**: This method is preferred as it is faster and more reliable.
-2. **Azure Portal**: Suitable for those unfamiliar with IaaS deployment, allowing deployment by uploading the provided **ARM** or **Bicep** scripts.
+1. **Azure Portal**: Suitable for those unfamiliar with IaaS deployment, allowing deployment by uploading the provided **ARM** scripts.
+1. Alternative: **Bicep/ARM scripts via CloudShell**: This method is preferred for automation
 
-### Option 1 - Infrastructure as Code (ARM) Deployment via CloudShell
-
-To deploy the lab environment using **ARM**, click the link below.
-
-<!-- [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fdemirsenturk%2FHA-multi-region-application%2Frefs%2Fheads%2Fmain%2Fdeploy.json) -->
-
-### Option 2 - Deploy from the Azure Portal
+### Option 1 - Deploy from the Azure Portal
 
 1. Go to the Azure portal and sign in.
 2. In the Azure portal search bar, search for "deploy a custom template" and select it from the available options.
 3. Upload the templates `deploy.json` and `main.parameters.json`.
 
-> **Note:** The template `deploy.json` and the parameter file `main.parameters.json` is available in the GitHub repository. You can access it directly via [this link](https://github.com/microsoft/MicroHack/tree/main/03-Azure/01-03-Infrastructure/04_BCDR_Azure_Native) or navigate to the path: `.\04_BCDR_Azure_Native\Infra\App1`. Alternatively, you can download it from the repository.
+> **Note:** The template `deploy.json` and the parameter file `main.parameters.json` is available in the GitHub repository. You can access it directly via [this link](https://github.com/microsoft/MicroHack/tree/main/03-Azure/01-03-Infrastructure/04_BCDR_Azure_Native/Infra/App1) or navigate to the path: `.\04_BCDR_Azure_Native\Infra\App1`. Alternatively, you can download it from the repository.
 
 Refer to the [Step-by-Step Deployment Guide](../walkthrough/challenge-1/img/deployment/solution.md) for detailed guidance.
+
+### Option 2 - Infrastructure as Code (ARM/Bicep) Deployment via CloudShell
+
+To deploy the lab environment using **Bicep**, use the command documented here:
+ [CloudShell Deployment command](../Infra/App1/ReadMe.md) 
+
 
 ### 📚 Deploy a custom template
 * [Quickstart: Create and deploy ARM templates using the Azure portal](https://learn.microsoft.com/en-us/azure/azure-resource-manager/templates/quickstart-create-templates-use-the-portal)

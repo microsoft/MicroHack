@@ -4,11 +4,9 @@
 
 📋  [Challenge 4 Instructions](../../challenges/04_challenge.md)
 
-⬅️ [Previous Challenge Solution](../challenge-3/solution.md) - **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-5/solution.md) ➡️
-
 ## Prerequisites
 
-Please ensure that you successfully passed [challenge 3](../../Readme.md#challenge-3) before continuing with this challenge.
+Please ensure that you successfully passed [challenge 3](../../challenges/03_challenge.md) before continuing with this challenge.
 
 In challenge 4, you will focus on implementing disaster recovery strategies for Azure storage accounts using replication. The primary objective is to ensure business continuity by protecting critical data stored in Azure storage accounts against potential disasters.
 
@@ -69,3 +67,5 @@ Navigate to the **Azure Storage Account** in the Germany West Central Region. Op
 ![image](./img/13.png)
 
 **You successfully completed challenge 4!** 🚀🚀🚀
+
+[➡️ Next Challenge 5 Instructions](../../challenges/05_challenge.md)

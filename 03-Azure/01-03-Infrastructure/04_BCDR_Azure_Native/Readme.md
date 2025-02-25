@@ -102,9 +102,9 @@ Participants must design and implement recovery strategies to meet business targ
 ## Application Overview
 | Application | Business Function | Criticality | SLA | RTO | RPO | Downtime Cost |
 |-------------|-------------------|-------------|-----|-----|-----|---------------|
-| App1        | TBD               | Critical    | 99.995% | 1 hour | 10 minutes | $50,000/hour |
-| App2        | TBD               | High        | 99.95%  | 2 hours | 15 minutes | $25,000/hour |
-| App3        | TBD               | Medium      | 99.9%   | 6 hours | 4 hours    | $10,000/hour |
+| App1        | Fabric Robot Automation  | Critical    | 99.995% | 1 hour | 10 minutes | $50,000/hour |
+| App2        | Customer Help Desk Services  | High        | 99.95%  | 2 hours | 15 minutes | $25,000/hour |
+| App3        | Archive Service  | Medium      | 99.9%   | 6 hours | 4 hours    | $10,000/hour |
 
 ## Recovery Costs for High Availability
 | Application | Cost of RTO Compliance | Cost of RPO Compliance | Cost of SLA Compliance | Fully Highly Available Cost |
@@ -117,8 +117,8 @@ Participants must design and implement recovery strategies to meet business targ
 ### Actions
 Participants must:
 1. Prioritize recovery of applications based on their criticality and business impact.
-2. Decide which parts of the system to make highly available (HA) based on financial constraints.
-3. Calculate the trade-offs between downtime costs and HA investments.
+1. Decide which parts of the system to make highly available (HA) based on financial constraints.
+1. Calculate the trade-offs between downtime costs and HA investments.
 
 ### Success criteria
 
@@ -132,10 +132,6 @@ Participants must:
 * [Business continuity and disaster recovery - Cloud Adoption Framework | Microsoft Learn](https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/management-business-continuity-disaster-recovery)
 * [Build high availability into your BCDR strategy - Azure Architecture Center | Microsoft Learn](https://learn.microsoft.com/azure/architecture/solution-ideas/articles/build-high-availability-into-your-bcdr-strategy)
 * [Disaster recovery with Azure Site Recovery - Azure Solution Ideas | Microsoft Learn](https://learn.microsoft.com/azure/architecture/solution-ideas/articles/disaster-recovery-smb-azure-site-recovery)
-
-### Solution - Spoilerwarning
-
-[Solution Steps](./walkthrough/challenge-0/solution.md)
 
 ### High Availability vs. Disaster Recovery vs. Backup
 
@@ -160,4 +156,4 @@ The Azure Business Continuity Guide provides a comprehensive set of recommendati
 * Hengameh Bigdeloo
 * Herman Diessongo
 * Andressa Jendreieck
-* Sebastian Pfaller
+* Sebastian Pfaller [LinkedIn](https://www.linkedin.com/in/sebastian-pfaller/)

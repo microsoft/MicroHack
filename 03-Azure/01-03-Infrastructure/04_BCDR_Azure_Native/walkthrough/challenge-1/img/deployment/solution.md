@@ -2,7 +2,7 @@
 
 ⏰ Duration: 20 minutes
 
-📋  [Challenge 1 Instructions](../../../../challenges/02_challenge.md)
+📋  [Challenge 1 Instructions](../../../../challenges/01_challenge.md)
 
 This guide will help you deploy the lab environment using the provided ARM templates.
 
@@ -71,3 +71,5 @@ This guide will help you deploy the lab environment using the provided ARM templ
 Congratulations! You have successfully deployed the lab environment using the ARM templates.
 
 ![New Virtual Machines](./12.png)
+
+[➡️ Next Challenge 2 Instructions](../../../../challenges/02_challenge.md)

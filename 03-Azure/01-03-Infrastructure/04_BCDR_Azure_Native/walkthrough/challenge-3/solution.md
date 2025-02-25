@@ -4,19 +4,17 @@
 
 📋  [Challenge 3 Instructions](../../challenges/03_challenge.md)
 
-⬅️ [Previous Challenge Solution](../challenge-2/solution.md) - **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-4/solution.md) ➡️
-
 ## Prerequisites
 
-Please ensure that you successfully passed [challenge 2](../../Readme.md#challenge-2) before continuing with this challenge.
+Please ensure that you successfully passed [challenge 2](../../challenges/02_challenge.md) before continuing with this challenge.
 
 In this challenge, you will learn how to protect Azure VM with Azure Site Recovery, and enable replication to the secondary site. Moreover, you will successfully run the test & production failover and failback between two regions.
 
 ### Actions
 
-* Set up and enable disaster recovery with Azure Site Recovery and monitor the progress.
-* Perform a disaster recovery drill, create recovery plan and run a test failover.
-* Run a production failover from Germany West Central to Sweden Central region and failback again from Sweden to Germany.
+* Task 1: Set up and enable disaster recovery with Azure Site Recovery and monitor the progress.
+* Task 2: Perform a disaster recovery drill, create recovery plan and run a test failover.
+* Task 3: Run a production failover from Germany West Central to Sweden Central region and failback again from Sweden to Germany.
 
 ## Task 1: Enable replication with Azure Site recovery for the Virtual Machine in the Germany West Central Region to the Sweden Central Region
 
@@ -24,7 +22,7 @@ In this challenge, you will learn how to protect Azure VM with Azure Site Recove
 <summary>💡 Enable replication with Azure Site recovery for the Virtual Machine in the Germany West Central Region to the Sweden Central Region</summary>
 <br>
 
-Navigate to **Recovery Services Vault** in the Sweden Central (mh-swedencentral-asrvault) which we created in the first Challenge. In the **Protected Items**, select **Replicated Items**. Then select **Replicate** and from the dropdown list select **Azure virtual machines**. The following pan will apprear:
+Navigate to **Recovery Services Vault** in the Sweden Central (mh-swedencentral-asrvault) which we created in the first Challenge. In the **Protected Items**, select **Replicated Items**. Then select **Replicate** and from the dropdown list select **Azure virtual machines**. The following pane will apprear:
 
 ![image](./img/001.png)
 
@@ -54,7 +52,7 @@ This Task can take up to 10 minutes to finish.
 
 ![image](./img/010.png)
 
-### Note: Disaster recovery can be set also under Virtual Machine | Disaster Recovery
+### Alternative: Disaster recovery can be set also under Virtual Machine | Disaster Recovery
 
 ![image](./img/100.png)
 
@@ -109,7 +107,7 @@ After all jobs are finished successully, Navigate to the Virtual Machines list. 
 ![image](./img/22.png)
 
 ## Task 3: Run a production failover from Germany West Central to Sweden Central and failback again from Sweden to Germany region (Source environment) and monitor the progress
-### Run the production failover for server01 from Germany West Central to Sweden Central
+### Run the production failover for the web application from Germany West Central to Sweden Central
 ![image](./img/23.png)
 
 ![image](./img/24.png)
@@ -136,3 +134,5 @@ Check the virtual machine list. There is a new virtual machine running in Sweden
 ![image](./img/33.png)
 
 **You successfully completed challenge 3!** 🚀🚀🚀
+
+[➡️ Next Challenge 4 Instructions](../../challenges/04_challenge.md)

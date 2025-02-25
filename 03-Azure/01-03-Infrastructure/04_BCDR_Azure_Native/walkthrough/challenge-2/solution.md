@@ -4,12 +4,12 @@
 
 📋 [Challenge 2 Instructions](../../challenges/02_challenge.md)
 
-⬅️ [Previous Challenge Solution](../challenge-1/solution.md) - **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-3/solution.md) ➡️
-
 ## Prerequisites
 
-Ensure you have successfully completed [challenge 1](../../Readme.md#challenge-1) before proceeding.
+Ensure you have successfully completed [challenge 1](../../challenges/01_challenge.md) before proceeding.
 
+
+### Challenge 2.1 - Protect in Azure - Backup / Restore
 In this challenge, you will onboard your Linux Virtual Machine to a centralized Recovery Services Vault and use Azure Backup Center to protect it with Azure Backup.
 
 * Task 1: Enable Azure Backup for Linux VM.
@@ -87,12 +87,12 @@ Add a new Backup Policy for Azure Virtual Machines.
 
 ### Schedule Daily Backups
 
-Configure daily backup frequency.
+Configure **daily** backup frequency.
 
 ![image](./img/044.png)
 
 ### Review Additional Deployment Options
-- Hourly Backup Schedule (Optional)
+- **Hourly** Backup Schedule (Optional)
 
 ![image](./img/mh-ch2-screenshot-22.png)
 
@@ -106,9 +106,7 @@ Backup Policy is successfully created!
 
 ![image](./img/045.png)
 
-The steps for the Data Science Virtual Machine are similar and will not be included here.
-
-[Microsoft Learn - Azure Cross-region replication](https://learn.microsoft.com/en-us/azure/reliability/cross-region-replication-azure#cross-region-replication)
+<!-- The steps for the Data Science Virtual Machine are similar and will not be included here. -->
 
 ### Task 2: Enable Azure Backup for Blobs
 
@@ -189,6 +187,7 @@ Backup Policy for storage successfully created!
 </details>
 
 ### Task 3: Restore a VM in Azure
+- Backup job from Task 1 should be finished before proceeding here!
 
 #### Start Restore Procedure
 ![image](./img/035.png)
@@ -211,8 +210,8 @@ A new Virtual Machine `mh-linux-restore` has been created in the resource group,
 You have successfully completed Challenge 2.1! 🚀
 
 ### Challenge 2.2 - Protect in Azure with Disaster Recover (DR) within an Azure Region
-4. Set up disaster recovery for the Linux VM in the primary region.
-5. Simulate a failover from one part of the primary region to another part within the same region.
+* Task 4: Set up disaster recovery for the Linux VM in the primary region.
+* Task 5: Simulate a failover from one part of the primary region to another part within the same region.
 
 ### Task 4: Set up disaster recovery for the Linux VM in the primary region.
 
@@ -256,4 +255,4 @@ Conduct an unplanned failover
 
 You have successfully completed Challenge 2! 🚀🚀
 
-
+[➡️ Next Challenge 3 Instructions](../../challenges/03_challenge.md)

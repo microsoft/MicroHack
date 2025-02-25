@@ -199,3 +199,6 @@ id_rsa
 id_rsa.pub
 *.private
 *.private.pub
+
+# Ignore ARM Parameter files
+*.parameters.json

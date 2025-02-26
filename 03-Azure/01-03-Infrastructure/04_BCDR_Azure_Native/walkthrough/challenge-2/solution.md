@@ -1,209 +1,258 @@
-# Walkthrough Challenge 2 - Protect in Azure - Backup/Restore
+# Walkthrough Challenge 2 - Regional Protection and Disaster Recovery (DR)
 
-Duration: 30 minutes
+⏰ Duration: 1 Hour
 
-[Previous Challenge Solution](../challenge-1/solution.md) - **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-3/solution.md)
+📋 [Challenge 2 Instructions](../../challenges/02_challenge.md)
 
 ## Prerequisites
 
-Please ensure that you successfully passed [challenge 1](../../Readme.md#challenge-1) before continuing with this challenge.
+Ensure you have successfully completed [challenge 1](../../challenges/01_challenge.md) before proceeding.
 
-In this challenge, you will successfully onboard your Windows and Linux Virtual Machines to a centralized Recovery Services Vault and leverage Azure Backup Center to Protect with Backup in Azure. 
 
-### Actions
+### Challenge 2.1 - Protect in Azure - Backup / Restore
+In this challenge, you will onboard your Linux Virtual Machine to a centralized Recovery Services Vault and use Azure Backup Center to protect it with Azure Backup.
 
-* Task 1: Deploy a Windows Server 2022 VM in Germany West Central Resource Group. Please use the "Data Science Virtual Machine - Windows 2022" image from the market place.
-> **Note:** The 'Data Science Virtual Machine (DSVM)' is a 'Windows Server 2022 with Containers' VM that has several popular tools for data exploration, analysis, modeling & development pre installed.
-> You will to use Microsoft SQL Server Management Studio to connect to the database and Storage Explorer to the storage Account.
-* Task 2: Deploy a Ubuntu Server VM in Sweden Central Resource Group.
-* Task 3: Deploy a azure sql database server with a database containing the sample data of AdventureWorksLT.
-* Task 4: From the Data Science Windows Server VM, connect to the database  and to the storage account.
-* Task 5: Create a blob container and upload a sample file to it.
-* Task 6: Enable Azure Backup for both VMs.
-* Task 7: Enable Azure Backup for Blobs
-* Task 8: Restore a VM in Azure.
-* Task 9: Delete a file in a
+* Task 1: Enable Azure Backup for Linux VM.
+* Task 2: Enable Azure Backup for Blobs.
+* Task 3: Restore a VM in Azure.
 
-### Task 1: Create a new Virtual Machine in Azure Region Germany West Central
+If you have not created the Linux Machine successfully, follow this guide to create it on the portal:
 
-As a first step, we will create a VM (Name: ds-vm-win-serverl) in Azure in the resource group "mh-bcdr-gwc-rg" that we created in the last challenge. This should be a Data Science Virtual Machine - Windows 2022 using a VM Type of Standard DS3v2. 
-
-### Choose OS
-![image](./img/001.png)
-
-### Configure Details - Basics
-![image](./img/002.png)
-
-### Configure Details - Basics (option 2)
-![image](./img/003.png)
-
-Please don't forget to put the VM into the public network and open up Port 3389 to connect to it (or alternatively use Azure Bastion to access it). 
-### Enable RDP Port
-![image](./img/004.png)
-
-### Review deployed VM
-![image](./img/005.png)
-![image](./img/005a.png)
-
-### Task 2: Deploy a Ubuntu Server VM in Azure Region Sweden Central
+<details>
+<summary>💡 How-to: Deploy a Ubuntu Server VM in Azure Region Sweden Central</summary>
+<br>
 
 ### Choose OS
 ![image](./img/006.png)
+> **Note:** Choose the source resource group.
 
 ### Configure Details - Basics
 ![image](./img/007.png)
+> **Note:** Choose the source resource group.
 
-### Configure Details - Basics (option 2)
+### Configure Details - Basics (Option 2)
 ![image](./img/007a.png)
 
-Please don't forget to put the VM into the public network and open up Port 3389 to connect to it (or alternatively use Azure Bastion to access it). 
+Ensure the VM is in the public network and open Port 3389 to connect to it (or use Azure Bastion to access it).
+
 ### Enable RDP Port
 ![image](./img/008.png)
 
-### Configure Details - Networking (option 2)
+### Configure Details - Networking (Option 2)
 ![image](./img/008a.png)
 
-### Review deployed VM
+### Review Deployed VM
 ![image](./img/009.png)
 ![image](./img/010.png)
 
-### Task 3: Deploy a Azure SQL Database Server with a database containing the sample data of AdventureWorksLT in Azure Region Germany West Central
+</details>
 
-### Choose SQL Database
-![image](./img/011.png)
+### Task 1: Enable Azure Backup for Linux VM
 
-### Configure Details - Basics
-![image](./img/012.png)
-
-### Configure Details - Basics: Create SQL Database Server
-![image](./img/012a.png)
-
-### Configure Details - Networking
-![image](./img/012b.png)
-
-### Configure Details - Additional settings
-Use existing data -> select the sample data of AdventureWorksLT
-![image](./img/013.png)
-
-### Review + Create
-
-> **Note:**  "It's important to ensure that there are no connection blockers preventing access to the SQL Database. If necessary, you may need to set up a firewall rule that allows the IP address of the virtual machine to connect.
-![image](./img/FWrule.png)
-
-### Task 4: From the Data Science Windows Server VM, connect to the database and to the storage account.
-
-### Connect to deployed "Data Science Windows Server VM"
-wait until the pre-configured VM to be installed.
-![image](./img/015.png)
-
-### Open SQL Server Management Studio
-![image](./img/016.png)
-
-### Put your DB Server name and connect to your Database Server via the preferred Authentication method.
-![image](./img/017.png)
-
-### The Database Server is connected!
-![image](./img/018.png)
-
-### Task 5: Create a blob container and upload a sample file to it
-### Go to the storage account in mh-bcdr-gwc-rg Resource Group.
-Under the tab Containers:
-
-![image](./img/019.png)
-
-### Create a Shared access signature (SAS).
-![image](./img/020.png)
-
-### Connect to the "Data Science Windows Server VM" and open "Microsoft Azure Storage Explorer"
-Choose Storage account or service
-
-![image](./img/022.png)
-
-### Select Shared access signature URL (SAS) as connection method.
-![image](./img/023.png)
-
-### Put the Shared access signature (SAS), which we created in the previous task.
-![image](./img/024.png)
-
-### Review Summary + Connect
-![image](./img/025.png)
-
-### Your storage account is connected!
-![image](./img/026.png)
-
-### Now, search for the container that you created in the previous task
-![image](./img/027.png)
-
-### Upload a sample file
-![image](./img/028.png)
-![image](./img/029.png)
-
-### Task 6: Enable Azure Backup for both VMs
-
-### Enable Azure Backup
+#### Enable Azure Backup
 ![image](./img/030.png)
-![image](./img/36.png)
 
-### Create a new Custom Policy
-![image](./img/mh-ch2-screenshot-11.png)
-![image](./img/mh-ch2-screenshot-12.png)
+Navigate to the **Backup** tab and proceed with **Backup now**.
+
+![image](./img/040.png)
+
+Backup job is started.
+
+![image](./img/031.png)
+
+The backup job includes **Take Snapshot** and **Transfer data to vault**.
+
+![progress](./img/032.png)
+
+#### Wait for Initial Backup of the VM
+
+This might take a while.
+
+![completed](./img/033.png)
+![backup](./img/034.png)
+
+## Create a New Custom Policy
+
+Go to the Azure Site Recovery **ASR Vault** in the Primary Region (Germany West Central).
+
+![image](./img/041.png)
+
+Add a new Backup Policy.
+
+![Add Policy](./img/042.png)
+
+Add a new Backup Policy for Azure Virtual Machines.
+
+![Policy for Disks](./img/043.png)
+
+### Schedule Daily Backups
+
+Configure **daily** backup frequency.
+
+![image](./img/044.png)
+
+### Review Additional Deployment Options
+- **Hourly** Backup Schedule (Optional)
+
 ![image](./img/mh-ch2-screenshot-22.png)
 
-### Review additional Deployment Options
-![image](./img/mh-ch2-screenshot-25.png)
+Review the configuration:
+* Backup Schedule
+* Backup Retention settings
 
-### Wait for intial Backup of the VM
-![image](./img/31.png)
-![image](./img/32.png)
+Proceed with **Create**.
 
-The steps for the Ubuntu Server VM are similar to this and will not be included here.
+Backup Policy is successfully created!
 
-![Microsoft Learn - Azure Cross-region replication](https://learn.microsoft.com/en-us/azure/reliability/cross-region-replication-azure#cross-region-replication)
+![image](./img/045.png)
 
-### Task 7: Enable Azure backup for blobs
-### create a backup vault (not a recovery service vault)
+<!-- The steps for the Data Science Virtual Machine are similar and will not be included here. -->
+
+### Task 2: Enable Azure Backup for Blobs
+
+Go to the Storage Account in the Primary Region.
+
+![Storage Account](./img/050.png)
+
+<details>
+<summary>💡 Task 2: Enable Azure Backup for Blobs</summary>
+<br>
+
+<details>
+<summary>💡 How-to: Create a Backup Vault (if not created during lab setup)</summary>
+<br>
+
+### Create a Backup Vault (not a Recovery Service Vault)
 ![image](./img/mh-ch2-screenshot-71.png)
 
-### Enable system managed Identity for the backup vault and clipboard the MI object ID
-![image](./img/mh-ch2-screenshot-72.png)
+</details>
 
-### Assign the "Backup Contributor" role to Backup vault managed identity
-![image](./img/mh-ch2-screenshot-73.png)
-![image](./img/mh-ch2-screenshot-74.png)
-![image](./img/mh-ch2-screenshot-75.png)
+<details>
+<summary>💡 How-to: Create a Container</summary>
+<br>
 
-### Enable Azure Backup for Blobs. This will require to create a new backup policy.
-![image](./img/mh-ch2-screenshot-76.png)
-![image](./img/mh-ch2-screenshot-77.png)
-![image](./img/mh-ch2-screenshot-78.png)
-![image](./img/mh-ch2-screenshot-79.png)
+![image](./img/019.png)
+![image](./img/019a.png)
+![image](./img/019b.png)
+![image](./img/020.png)
 
-### Task 8: Restore a VM in Azure
+</details>
 
-### Start Restore Procedure
-![image](./img/35.png)
+To backup our storage account, assign the Backup Vault in the Primary Region some access permissions.
 
-### Select restore Point
-![image](./img/mh-ch2-screenshot-30.png)
+### Enable System Managed Identity for the Backup Vault and Copy the MI Object ID
 
-### Set Restore Properties
-![image](./img/mh-ch2-screenshot-31.png)
+Go to the Backup Vault in the Primary Region (Germany West Central) and navigate to the Identity tab.
 
-### Task 9: Trigger a restore for the blob
+![Identity Tab](./img/060.png)
 
-### Delete a file in your blob container
+Click **Azure role assignments**.
 
-### Go to the backup vault and select the backup instance
-![image](./img/mh-ch2-screenshot-710.png)
-![image](./img/mh-ch2-screenshot-711.png)
+![Enable System Managed Identity](./img/060a.png)
 
-### Restore the blob container 
-![image](./img/mh-ch2-screenshot-712.png)
-![image](./img/mh-ch2-screenshot-713.png)
-![image](./img/mh-ch2-screenshot-714.png)
-![image](./img/mh-ch2-screenshot-715.png)
-![image](./img/mh-ch2-screenshot-716.png)
-![image](./img/mh-ch2-screenshot-717.png)
+### Assign the "Storage Backup Contributor" Role to Backup Vault Managed Identity
 
+Go back to the Storage Account in the Primary Region (Germany West Central). Navigate to the **Access Control (IAM)** tab and add a role assignment.
 
-You successfully completed challenge 2! 🚀🚀🚀
+![image](./img/061.png)
+
+Select Role.
+
+![Backup Contributor](./img/062.png)
+
+Select Scope.
+
+![MI](./img/063.png)
+
+Select Managed Identity of the Backup Vault.
+
+![Backup Vault MI](./img/064.png)
+
+Review + Assign.
+
+![Review + Assign](./img/065.png)
+
+### Enable Azure Backup for Blobs
+
+This will require creating a new backup policy:
+
+![Create New Policy](./img/051.png)
+![Select Vault](./img/052.png)
+![Create](./img/054.png)
+
+Backup Policy for storage successfully created!
+
+![Create](./img/055.png)
+
+</details>
+
+### Task 3: Restore a VM in Azure
+- Backup job from Task 1 should be finished before proceeding here!
+
+#### Start Restore Procedure
+![image](./img/035.png)
+
+#### Select Restore Point
+![image](./img/036.png)
+
+#### Set Restore Properties
+
+Proceed with **Restore**.
+
+![image](./img/037.png)
+![image](./img/038.png)
+![image](./img/039.png)
+
+A new Virtual Machine `mh-linux-restore` has been created in the resource group, restored from the backup.
+
+![image](./img/070.png)
+
+You have successfully completed Challenge 2.1! 🚀
+
+### Challenge 2.2 - Protect in Azure with Disaster Recover (DR) within an Azure Region
+* Task 4: Set up disaster recovery for the Linux VM in the primary region.
+* Task 5: Simulate a failover from one part of the primary region to another part within the same region.
+
+### Task 4: Set up disaster recovery for the Linux VM in the primary region.
+
+Enable Disaster Recovery (DR) between **Availability Zones**
+
+Navigate to **mh-linux | Disaster recovery**
+
+Choose a different Availability Zone than the current one as **Target**
+
+![image](./img/071.png)
+
+Review and Start Replication
+
+![image](./img/074.png)
+
+Wait until the replication is finished
+
+![image](./img/075.png)
+
+The Linux Virtual Machine is protected with Azure Site Recovery between Availability Zones.
+
+![image](./img/076.png)
+
+### Task 5: Simulate a failover from one part of the primary region to another part within the same region.
+
+Conduct an unplanned failover
+
+![image](./img/077.png)
+
+![image](./img/078.png)
+
+![image](./img/079.png)
+
+![image](./img/080.png)
+
+![image](./img/081.png)
+
+![image](./img/082.png)
+
+![image](./img/083.png)
+
+You have successfully completed Challenge 2! 🚀🚀
+
+[➡️ Next Challenge 3 Instructions](../../challenges/03_challenge.md)

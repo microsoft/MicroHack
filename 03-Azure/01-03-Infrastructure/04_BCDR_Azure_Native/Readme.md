@@ -2,18 +2,20 @@
 
 # MicroHack - Business Continuity on Azure
 
-- [**MicroHack introduction**](#MicroHack-introduction)
-  - [What is Business Continuity?]()
+- [**MicroHack introduction**](#microhack-introduction)
+  - [What is Business Continuity?](#what-is-business-continuity)
 - [**MicroHack context**](#microhack-context)
-- [**Objectives**](#objectives)
 - [**MicroHack Challenges**](#microhack-challenges)
-  - [General prerequisites](#general-prerequisites)
-  - [Challenge 0 - Understand the Disaster Recovery terms and define a strategy](#challenge-0---understand-the-disaster-recovery-terms-and-define-a-strategy)
-  - [Challenge 1 - Prerequisites and landing zone preperation](#challenge-1---prerequisites-and-landing-zone-preperation)
-  - [Challenge 2 - Protect in Azure - Backup / Restore](#challenge-2---protect-in-azure---backup--restore)
-  - [Challenge 3 - Protect in Azure with Disaster Recovery](#challenge-3---protect-in-azure-with-disaster-recovery)
-  - [Challenge 4 - Protect to Azure with Azure Backup & Restore](#challenge-4---protect-to-azure-with-azure-backup--restore)
-  - [Challenge 5 - Protect to Azure with Disaster Recovery](#challenge-5---protect-to-azure-with-disaster-recovery)
+  - [General Prerequisites](#general-prerequisites)
+  - [Challenge 0 - Understand the Disaster Recovery terms and define a strategy](#contoso-ltd---business-continuity-and-disaster-recovery-bcdr-strategy)
+  - [Challenge 1 - Setup and landing zone preparation](./challenges/01_challenge.md)
+  - [Challenge 2 - Regional Protection and Disaster Recovery (DR)](./challenges/02_challenge.md)
+    - [Challenge 2.1 - Protect in Azure - Backup / Restore](./challenges/02_challenge.md#challenge-21---protect-in-azure---backup--restore)
+    - [Challenge 2.2 - Protect in Azure with Disaster Recover (DR) within an Azure Region](./challenges/02_challenge.md#challenge-22---protect-in-azure-with-disaster-recover-dr-within-an-azure-region)
+  - [Challenge 3 - Protect in Azure with Disaster Recovery (Inter-regional)](./challenges/03_challenge.md)
+  - [Challenge 4 - Protect your Azure PaaS with Disaster Recovery](./challenges/04_challenge.md)
+  - [Challenge 5 - Failback to the Primary Region (Germany West Central)](./challenges/05_challenge.md)
+  - [Extra Challenge - Monitor & Protect your Azure PaaS (Azure SQL Database)](./challenges/06_challenge.md)
 - [**Contributors**](#contributors)
 
 ## MicroHack introduction
@@ -28,7 +30,7 @@ When you design for resiliency, you must understand your availability requiremen
 
 💡 For instance, would you consider the application to be ‘unavailable’ if it allows you to place an order, but fails to process it within the usual time period? Also, it’s crucial to evaluate the likelihood of a system failure. Is implementing a countermeasure strategy financially justifiable? Remember, effective resilience planning is rooted in the business’s needs. Here are some strategies to guide your thinking when planning for system resiliency.
 
-The following picture describes in details the individual levels / disaster recovery tier levels and also provides an overview of which topics we should deal with when talking about disaster recovery. The individual terms, terminologies and categories will be discussed in this microhack which will also provide one approach and a few tips on how to define them in your own company.
+The following picture describes in detail the individual levels / disaster recovery tier levels and also provides an overview of which topics we should deal with when talking about disaster recovery. The individual terms, terminologies and categories will be discussed in this microhack which will also provide one approach and a few tips on how to define them in your own company.
 
 ![image](./img/drcontinuum.png)
 
@@ -45,8 +47,7 @@ Further resources:
 💡 Optional: Once you’ve completed this lab, consider reading the following material to further enhance your understanding!
 
 * [Overview of the reliability pillar](https://learn.microsoft.com/en-us/azure/architecture/framework/resiliency/overview)
-* [Whitepaper - Resiliency in Azure ](https://azure.microsoft.com/en-us/resources/resilience-in-azure-whitepaper/)
-
+* [Whitepaper - Resiliency in Azure](https://azure.microsoft.com/en-us/resources/resilience-in-azure-whitepaper/)
 
 ## Objectives
 
@@ -65,34 +66,63 @@ This MicroHack has a few but important prerequisites to be understood before sta
 * Your own Azure subscription with Owner RBAC rights at the subscription level
   * [Azure Evaluation free account](https://azure.microsoft.com/en-us/free/search/?OCID=AIDcmmzzaokddl_SEM_0fa7acb99db91c1fb85fcfd489e5ca6e:G:s&ef_id=0fa7acb99db91c1fb85fcfd489e5ca6e:G:s&msclkid=0fa7acb99db91c1fb85fcfd489e5ca6e)
 
-## Challenge 0 - Understand the Disaster Recovery (DR) terms and define a DR strategy
 
-If you have already worked at a senior level or have been working in IT for many years, you may be able to skip this intro challenge.
+<img src="./img/azure_copilot.png" alt="Azure Copilot" width="600">
 
-The DR terms and strategy should be defined in every organization, and most importantly, is that the Business Continuity Management and all the necessary steps for disaster recovery are regularly tested.
+Azure Copilot is a new tool that helps you manage and optimize your Azure resources with the help of AI. In this Hack Azure Copilot can guide you and help answer some of your questions.
 
-### Goal
+<img src="./img/azure_copilot_bar.png" alt="Azure Copilot Bar" width="600">
 
-The goal from this challenge is to help you comprehend the complexities of business continuity management and familiarize yourself with its key terms. In second place, it is to support you to define a strategy and to put yourself into different roles to view the requirements from different perspectives.
+In this section, you will:
+- Learn how to use Azure Copilot
+- Explore key features and capabilities
 
-1. What exactly is the difference between Disaster Recovery & Business Continuity?
-2. Who is responsible for BCDR?
-3. Is there a difference between High Availability & Disaster Recovery?
-4. Do I really need Backup & Disaster Recovery?
+### References
+- [What is Microsoft Copilot in Azure?](https://learn.microsoft.com/en-us/azure/copilot/overview)
+- [📄 Microsoft Copilot in Azure - Documentation](https://docs.microsoft.com/en-us/azure/copilot/)
 
+
+## Understand the Disaster Recovery (DR) terms and define a DR strategy
+
+# Contoso Ltd - Business Continuity and Disaster Recovery (BCDR) Strategy
+
+## Background
+Contoso Ltd is a global company that relies on advanced technology to manage its operations efficiently. Their business applications, all hosted in the Azure cloud, are crucial to their daily functions and overall success. These applications power a wide range of essential business processes:
+- **App 1:** Fabric Robot Automation
+- **App 2:** Customer Help Desk Services
+- **App 3:** Archive Service
+
+Leaders at Contoso Ltd understand that any downtime can result in significant financial losses and operational disruptions. Therefore, the company has mandated a thorough review of its Business Continuity and Disaster Recovery (BCDR) strategies to strike a balance between business continuity, customer satisfaction, and operational costs. The goal is to design and implement recovery plans that can swiftly restore services and minimize downtime in the event of unforeseen disasters.
+
+## Scenario Overview
+A natural disaster struck the region hosting Contoso applications on Azure one Friday evening, causing outages in many services and leading to a cascading failure of all Contoso applications. The sudden disruption impacted essential business functions, leaving the company to grapple with significant financial losses and operational chaos. Customers and stakeholders were left in a state of uncertainty as they awaited updates on service restoration. The IT team faced immense pressure to rapidly deploy recovery strategies to minimize downtime, restore critical operations, and ensure that such an incident would not recur in the future.
+
+Participants must design and implement recovery strategies to meet business targets while considering costs for high availability.
+
+## Application Overview
+| Application | Business Function | Criticality | SLA | RTO | RPO | Downtime Cost |
+|-------------|-------------------|-------------|-----|-----|-----|---------------|
+| App1        | Fabric Robot Automation  | Critical    | 99.995% | 1 hour | 10 minutes | $50,000/hour |
+| App2        | Customer Help Desk Services  | High        | 99.95%  | 2 hours | 15 minutes | $25,000/hour |
+| App3        | Archive Service  | Medium      | 99.9%   | 6 hours | 4 hours    | $10,000/hour |
+
+## Recovery Costs for High Availability
+| Application | Cost of RTO Compliance | Cost of RPO Compliance | Cost of SLA Compliance | Fully Highly Available Cost |
+|-------------|------------------------|------------------------|------------------------|-----------------------------|
+| App1        | $100,000               | $50,000                | $75,000                | $200,000                    |
+| App2        | $75,000                | $35,000                | $50,000                | $125,000                    |
+| App3        | $50,000                | $20,000                | $25,000                | $75,000                     |
+
+## Challenge Objective
 ### Actions
-
-* Write down the first 3 steps you would go for if your company got attacked by ransomware.
-* Think about if you ever participated in a business continuity test scenario.
-* Put yourself in the position of an application owner and define the necessary steps to make sure your application stays available in case of a disaster.
-* Identify who defines the requirements for Business Continuity and what are the necessary KPI´s for an application to reach a good SLA in terms of availability.
-* Define and write down four different categories of Disaster Recovery Tier Levels that applications can use incl. the availability SLA.
-* Plan the different geographic regions you need to use for reaching the highest availability SLA (you can also include your datacenter locations).
+Participants must:
+1. Prioritize recovery of applications based on their criticality and business impact.
+1. Decide which parts of the system to make highly available (HA) based on financial constraints.
+1. Calculate the trade-offs between downtime costs and HA investments.
 
 ### Success criteria
 
 * Understood the different terms from BCDR.
-* Identified the initial three steps to take following a ransomware attack in your company.
 * Thought about the last successful disaster recovery of daily used applications.
 * Identified the responsibilities and roles within your current company in respect to BCDR.
 * Defined four levels of disaster recovery categories, including availability SLA.
@@ -103,193 +133,27 @@ The goal from this challenge is to help you comprehend the complexities of busin
 * [Build high availability into your BCDR strategy - Azure Architecture Center | Microsoft Learn](https://learn.microsoft.com/azure/architecture/solution-ideas/articles/build-high-availability-into-your-bcdr-strategy)
 * [Disaster recovery with Azure Site Recovery - Azure Solution Ideas | Microsoft Learn](https://learn.microsoft.com/azure/architecture/solution-ideas/articles/disaster-recovery-smb-azure-site-recovery)
 
-### Solution - Spoilerwarning
+### High Availability vs. Disaster Recovery vs. Backup
 
-[Solution Steps](./walkthrough/challenge-0/solution.md)
+![HAvsDRvsBackup](./img/HAvsBackupvsDR.png)
 
-## Challenge 1 - Prerequisites and landing zone preparation
+### Challenges
 
-### Goal
+Let's get started with the **[challenges](./challenges/01_challenge.md)** and dive into the world of Azure! 🌐
 
-In challenge 1, you will understand and prepare your environment with the needed infrastructure to enable business continuity with Cloud Native / PaaS Services on Azure.
+By the end of this MicroHack, you'll be equipped with the knowledge and skills to design and implement effective Business Continuity and Disaster Recovery strategies using Azure services. 
 
-### Actions
+Happy hacking! 🚀
 
-Create all necessary Azure resources
-* Region 1: Germany West Central (Source enviroment)
-  * Resource Group: mh-bcdr-gwc-rg<your assigned number>
-  * Recovery Services Vault: mh-rsv-gwc
-  * Storage Account with GRS (geo-redundant storage) redundancy option: mhstweu\<Suffix\>
-* Region 2: Sweden Central (Target environment)
-  * Resource Group: mh-bcdr-sc-rg<your assigned number>
-  * Recovery Services Vault: mh-rsv-sc
+### Azure Business Continuity Guide (ABC Guide)
+The Azure Business Continuity Guide provides a comprehensive set of recommendations to help customers define what BCDR looks like for their applications.
 
-
-### Success criteria
-
-* You've created Resource Groups in both regions (Germany West Central & Sweden Central).
-* Recovery Services Vaults have been created in both regions.
-* A geo-redundant Storage Account has been created.
-
-### Learning resources
-
-* [Manage resource groups - Azure Portal - Azure Resource Manager | Microsoft Learn](https://learn.microsoft.com/azure/azure-resource-manager/management/manage-resource-groups-portal)
-* [Create a storage account - Azure Storage | Microsoft Learn](https://learn.microsoft.com/azure/storage/common/storage-account-create)
-* [Create and configure Recovery Services vaults - Azure Backup | Microsoft Learn](https://learn.microsoft.com/azure/backup/backup-create-recovery-services-vault)
-
-
-### Solution - Spoilerwarning
-
-[Solution Steps](./walkthrough/challenge-1/solution.md)
-
-## Challenge 2 - Protect in Azure - Backup / Restore 
-
-### Goal
-
-In challenge 2, you will successfully onboard your Windows and Linux Virtual Machines to a centralized Recovery Services Vault and leverage Azure Backup Center to Protect with Backup in Azure. 
-
-### Actions
-
-* Deploy a Windows Server 2022 VM in Germany West Central Resource Group. Please use the "Data Science Virtual Machine - Windows 2022" image from the market place.
-> **Note:** The 'Data Science Virtual Machine (DSVM)' is a 'Windows Server 2022 with Containers' VM that has several popular tools for data exploration, analysis, modeling & development pre installed.
-> You will to use Microsoft SQL Server Management Studio to connect to the database and Storage Explorer to the storage Account.
-* Deploy a Ubuntu Server VM in Sweden Central Resource Group.
-* Deploy a azure SQL database server with a database containing the sample data of AdventureWorksLT.
-* From the Data Science Windows Server VM, connect to the database  and to the storage account.
-* Create a blob container and upload a sample file to it.
-* Enable Azure Backup for both VMs.
-* Enable Azure Backup for blobs on the storage account.
-* Restore a VM in Azure.
-* Delete and restore the sample blob file.
-
-
-### Success criteria
-
-* You have deployed two VMs in Azure (one with Window Server 2022, the other one with Ubuntu Server).
-* You have deployed a azure SQL database with sample data (AdventureWorksLT) and can access the database for the Windows Server (Data Science Edition).
-* You successfully connected to the database and the storage account from the Windows Server.
-* You successfully enabled Azure Backup on the two virtual machines.
-* You have successfully setup Azure Backup Policies for both virtual machines.
-* You successfully enabled Azure Backup for blob.
-* You have successfully restored a VM of your choice to Azure.
-* You have successfully restored blobs.
-
-### Learning resources
-
-* https://learn.microsoft.com/en-us/azure/azure-sql/database/single-database-create-quickstart?view=azuresql&tabs=azure-portal
-* https://learn.microsoft.com/en-us/azure/backup/quick-backup-vm-portal
-* https://learn.microsoft.com/en-us/azure/backup/quick-backup-vm-portal#apply-a-backup-policy
-* https://learn.microsoft.com/en-us/azure/backup/tutorial-backup-vm-at-scale
-* https://learn.microsoft.com/en-us/azure/backup/backup-azure-arm-restore-vms
-* https://learn.microsoft.com/en-us/azure/backup/restore-azure-encrypted-virtual-machines
-* https://learn.microsoft.com/en-us/azure/backup/blob-backup-overview
-
-### Solution - Spoilerwarning
-
-[Solution Steps](./walkthrough/challenge-2/solution.md)
-
-## Challenge 3 - Protect in Azure with Disaster Recovery 
-
-### Goal
-
-In Challenge 3, you will learn how to protect Azure VM with Azure Site Recovery, and how to enable replication to the secondary site. In addition you will successfully run the test & production failover from Germany West Central to Sweden Central, and failback again from Sweden to Germany.
-
-### Actions
-
-* Set up and enable disaster recovery with Azure Site Recovery and monitor the progress.
-* Perform a disaster recovery drill, create recovery plan and run a test failover.
-* Run a production failover from Germany West Central to Sweden Central and monitor the progress.
-
-### Success Criteria
-
-* You enabled the replication for the virtual machine to the Sweden Central region.
-* You successfully initiated a Testfailover from Azure Region Germany West Central to Sweden Central with a near zero downtime requirement.
-* You ran successfully the production failover to the Sweden Central region.
-
-
-### Learning resources
-
-* https://learn.microsoft.com/en-us/azure/site-recovery/azure-to-azure-how-to-enable-replication
-* https://learn.microsoft.com/en-us/azure/site-recovery/site-recovery-create-recovery-plans
-* https://learn.microsoft.com/en-us/azure/site-recovery/site-recovery-test-failover-to-azure
-
-
-### Solution - Spoilerwarning
-
-[Solution Steps](./walkthrough/challenge-3/solution.md)
-
-## Challenge 4 - Protect your Azure PaaS (Azure SQL Database and Storage Account) with Disaster recovery
-
-### Goal
-
-In challenge 4, you will focus on implementing disaster recovery strategies for Azure SQL databases using Failover Groups, and for Azure storage accounts using replication. The primary objective is to ensure business continuity by protecting critical data stored in Azure SQL databases and Azure storage accounts against potential disasters.
-
-### Actions
-* Implement Failover Groups for Azure SQL Database:
-  * Create a Failover Group between two Azure SQL databases located in different Azure regions (Germany West central and Sweden Central).
-  * Configure automatic failover policies and test the failover mechanism to ensure seamless transition in case of a disaster.
-* Disaster Recovery for Azure Storage Account:
-  * Set up and configure Azure Storage Account replication to another region using Geo-redundant storage (GRS) or Geo-zone-redundant storage (GZRS) to ensure data availability in case of regional outages.
-  * Perform a failover test for the storage account to validate the disaster recovery setup.
-
-### Success Criteria
-* You have successfully created and configured a Failover Group for Azure SQL Database, ensuring data is replicated and accessible across regions.
-* You have implemented disaster recovery for an Azure Storage Account using GRS or GZRS, protecting against regional outages.
-* You have conducted failover tests for both the Azure SQL Database and Azure Storage Account, demonstrating the effectiveness of your disaster recovery strategy.
-* You were able to connect to the failed-over SQL DB and the failed-over Storage Account from the failed-over VM.
-
-### Learning resources
-* [Azure SQL Database Failover Groups and Active Geo-Replication](https://learn.microsoft.com/en-us/azure/azure-sql/database/auto-failover-group-overview)
-* [Geo-redundant storage (GRS) for cross-regional durability](https://learn.microsoft.com/en-us/azure/storage/common/storage-redundancy-grs)
-* [Disaster recovery and storage account failover](https://learn.microsoft.com/en-us/azure/storage/common/storage-disaster-recovery-guidance)
-* [Testing for disaster recovery](https://learn.microsoft.com/en-us/azure/site-recovery/site-recovery-test-failover-to-azure)
-	
-### Solution - Spoilerwarning
-
-[Solution Steps](./walkthrough/challenge-4/solution.md)
-
-## Challenge 5 -Failback to the primary region (Germany West Central)
-
-### Goal
-
-In challenge 5, you will failback again the VM, SQL DB from Sweden central to Germany West Central. The storage account should be failed back as well to Germany West Central.
-
-### Actions
-
-* Failback the VM from Sweden Central to Germany West Central region (Source environment) and monitor the progress.
-* Failback Azure SQL DB to Germany West Central.
-* Failback Storage Account to Germany West Central.
-
-### Success Criteria
-
-* The failback of all resources to the Germany West Central region has been successfully performed.
-
-### Learning resources
-* https://learn.microsoft.com/en-us/azure/site-recovery/azure-to-azure-how-to-reprotect
-* https://learn.microsoft.com/en-us/azure/site-recovery/azure-to-azure-tutorial-failback
-* https://learn.microsoft.com/en-us/azure/site-recovery/azure-to-azure-tutorial-enable-replication
-
-### Solution - Spoilerwarning
-
-[Solution Steps](./walkthrough/challenge-5/solution.md)
-
-
-## Finish
-
-Congratulations! You finished the MicroHack Business Continuity / Disaster Recovery. We hope you had the chance to learn about how to implement a successful DR strategy to protect resources in Azure and to Azure. 
-If you want to give feedback please don't hesitate to open an Issue on the repository or get in touch with one of us directly.
-
-Thank you for investing the time and see you next time!
-
+[Azure Business Continuity Guide](https://github.com/Azure/BusinessContinuityGuide)
 
 ## Contributors
-* Markus Klein 
-* Bernd Loehlein 
-* Hengameh Bigdeloo 
-* Tara
 * Nils Bankert [GitHub](https://github.com/nilsbankert); [LinkedIn](https://www.linkedin.com/in/nilsbankert/)
+* Demir Senturk [GitHub](https://github.com/demirsenturk); [LinkedIn](https://www.linkedin.com/in/demirsenturk/)
+* Hengameh Bigdeloo
 * Herman Diessongo
-* Demir Senturk
 * Andressa Jendreieck
-
-
+* Sebastian Pfaller [LinkedIn](https://www.linkedin.com/in/sebastian-pfaller/)

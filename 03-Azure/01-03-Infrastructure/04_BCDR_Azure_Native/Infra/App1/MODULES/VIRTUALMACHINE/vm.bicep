@@ -1,11 +1,3 @@
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
-/*
-SUMMARY: Module to create a Virtual Machine
-DESCRIPTION: This module will create a deployment which will create a Virtual Machine
-AUTHOR/S: David Smith (CSA FSI)
-*/
-
 param namePrefix string
 param nameSuffix string
 var location = resourceGroup().location
@@ -24,7 +16,6 @@ param imageSku string
 param imageVersion string
 param publicIp bool
 param subnetId string
-// param logAnalyticsWorkspaceId string
 param backendAddressPools array
 param avset string
 
@@ -62,7 +53,6 @@ module vmPip '../NETWORK/pip.bicep' = if (publicIp) {
   scope: resourceGroup()
   params: {
     Name: Name
-    //logAnalyticsWorkspaceId: logAnalyticsWorkspaceId
     skuName: 'Basic'
   }
 }
@@ -148,22 +138,6 @@ resource iisExtension 'Microsoft.Compute/virtualMachines/extensions@2024-03-01' 
   }
 }
 
-// Define the Diagnostic Settings for the NIC
-// resource nicDiag 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-//   name: 'nicDiagSettings'
-//   scope: networkInterface
-//   properties: {
-//     logs: []
-//     metrics: [
-//       {
-//         category: 'AllMetrics'
-//         enabled: true
-//       }
-//     ]
-//     workspaceId: logAnalyticsWorkspaceId
-//   }
-// }
-
 // Resource: SQL Virtual Machine
 resource sqlVm 'Microsoft.SqlVirtualMachine/sqlVirtualMachines@2023-10-01' = if (purpose == 'sql') {
   name: Name
@@ -195,19 +169,6 @@ resource AdventureWorks 'Microsoft.Compute/virtualMachines/extensions@2024-07-01
     }
   }
 }
-
-// resource windowsDiagnostics 'Microsoft.Compute/virtualMachines/extensions@2024-03-01' = {
-//   name: 'IaaSDiagnostics'
-//   parent: virtualMachine
-//   location: location
-//   properties: {
-//     publisher: 'Microsoft.Azure.Diagnostics'
-//     type: 'IaaSDiagnostics'
-//     typeHandlerVersion: '1.5'
-//     autoUpgradeMinorVersion: true
-//     settings: diagnosticConfig
-//   }
-// }
 
 // Output
 @description('Output the VM ID and NIC ID')

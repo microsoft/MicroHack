@@ -27,10 +27,6 @@ param targetVnetConfig object
 @description('Vnet configuration for test failovers')
 param testVnetConfig object
 param vmConfigs array
-// @description('Notification Email Address')
-// param userPrincipalId string
-
-// param monitorConfigs object
 
 // Resources
 @description('Resource Groups for source and target')
@@ -50,9 +46,6 @@ module logAnalytics './MODULES/MONITORING/monitor.bicep' = {
   scope: sourceRG
   params: {
     namePrefix: parDeploymentPrefix
-    // emailAddress: monitorConfigs.emailAddress
-    // queries: monitorConfigs.asrqueries
-    // alerts: monitorConfigs.asralerts
   }
 }
 
@@ -62,7 +55,6 @@ module asrvault './MODULES/SITERECOVERY/asrvault.bicep' = {
   scope: targetRG
   params: {
     namePrefix: parDeploymentPrefix
-    // logAnalyticsWorkspaceId: logAnalytics.outputs.logAnalyticsWorkspaceId
   }
   dependsOn: [
     logAnalytics
@@ -75,7 +67,6 @@ module backupvault './MODULES/SITERECOVERY/asrvault.bicep' = {
   scope: sourceRG
   params: {
     namePrefix: parDeploymentPrefix
-    // logAnalyticsWorkspaceId: logAnalytics.outputs.logAnalyticsWorkspaceId
   }
   dependsOn: [
     logAnalytics
@@ -88,7 +79,6 @@ module automationacct './MODULES/SITERECOVERY/automation.bicep' = {
   scope: targetRG
   params: {
     namePrefix: parDeploymentPrefix
-    // logAnalyticsWorkspaceId: logAnalytics.outputs.logAnalyticsWorkspaceId
   }
 }
 
@@ -98,7 +88,6 @@ module storageacct './MODULES/STORAGE/storage.bicep' = {
   scope: sourceRG
   params: {
     namePrefix: parDeploymentPrefix
-    // logAnalyticsWorkspaceId: logAnalytics.outputs.logAnalyticsWorkspaceId
   }
 }
 
@@ -109,7 +98,6 @@ module hubVnet './MODULES/NETWORK/vnet.bicep' = {
   params: {
     namePrefix: '${parDeploymentPrefix}-hub'
     vnetConfig: hubVnetConfig
-    // logAnalyticsWorkspaceId: logAnalytics.outputs.logAnalyticsWorkspaceId
   }
   dependsOn: [
     logAnalytics
@@ -121,7 +109,6 @@ module sourceVnet './MODULES/NETWORK/vnet.bicep' = {
   params: {
     namePrefix: '${parDeploymentPrefix}-source'
     vnetConfig: sourceVnetConfig
-    // logAnalyticsWorkspaceId: logAnalytics.outputs.logAnalyticsWorkspaceId
   }
   dependsOn: [
     logAnalytics
@@ -133,7 +120,6 @@ module targetVnet './MODULES/NETWORK/vnet.bicep' = {
   params: {
     namePrefix: '${parDeploymentPrefix}-target'
     vnetConfig: targetVnetConfig
-    // logAnalyticsWorkspaceId: logAnalytics.outputs.logAnalyticsWorkspaceId
   }
   dependsOn: [
     logAnalytics
@@ -145,7 +131,6 @@ module testVnet './MODULES/NETWORK/vnet.bicep' = {
   params: {
     namePrefix: '${parDeploymentPrefix}-test'
     vnetConfig: testVnetConfig
-    // logAnalyticsWorkspaceId: logAnalytics.outputs.logAnalyticsWorkspaceId
   }
   dependsOn: [
     logAnalytics
@@ -226,7 +211,6 @@ module bastion './MODULES/BASTION/bastion.bicep' = {
       hubVnet.outputs.name,
       'AzureBastionSubnet'
     )
-    // logAnalyticsWorkspaceId: logAnalytics.outputs.logAnalyticsWorkspaceId
   }
   dependsOn: [
     logAnalytics
@@ -245,8 +229,6 @@ module kv './MODULES/SECURITY/keyvault.bicep' = {
     namePrefix: parDeploymentPrefix
     secretName: 'vmAdminPassword'
     vmAdminPassword: vmAdminPassword
-    // userPrincipalId: userPrincipalId
-    // logAnalyticsWorkspaceId: logAnalytics.outputs.logAnalyticsWorkspaceId
   }
   dependsOn: [
     logAnalytics
@@ -259,7 +241,6 @@ module lbSource './MODULES/NETWORK/loadbalancer.bicep' = {
   scope: sourceRG
   params: {
     namePrefix: parDeploymentPrefix
-    // logAnalyticsWorkspaceId: logAnalytics.outputs.logAnalyticsWorkspaceId
   }
   dependsOn: [
     logAnalytics
@@ -271,7 +252,6 @@ module lbTarget './MODULES/NETWORK/loadbalancer.bicep' = {
   scope: targetRG
   params: {
     namePrefix: parDeploymentPrefix
-    // logAnalyticsWorkspaceId: logAnalytics.outputs.logAnalyticsWorkspaceId
   }
   dependsOn: [
     logAnalytics
@@ -324,7 +304,6 @@ module vmDeployments './MODULES/VIRTUALMACHINE/vm.bicep' = [ for vmConfig in vmC
       publicIp: vmConfig.publicIp
       subnetId: sourceVnet.outputs.subnets[0].id
       backendAddressPools: (vmConfig.purpose == 'web') ? lbSource.outputs.backendAddressPools : [null]
-      // logAnalyticsWorkspaceId: logAnalytics.outputs.logAnalyticsWorkspaceId
       avset: vmAvSetSource.outputs.avsetId
     }
   }]
@@ -337,13 +316,9 @@ module trafficManager './MODULES/NETWORK/trafficmanager.bicep' = {
     namePrefix: parDeploymentPrefix
     endpoint1Target: lbSource.outputs.fqdn
     endpoint2Target: lbTarget.outputs.fqdn
-    // logAnalyticsWorkspaceId: logAnalytics.outputs.logAnalyticsWorkspaceId
   }
 }
 
 // Output
-// output asrqueries array = monitorConfigs.asrqueries
-// output asralerts array = monitorConfigs.asralerts
 output vmUserName string = vmAdminUsername
 output fqdn string = trafficManager.outputs.trafficManagerfqdn
-// output vmNames string = vmNames

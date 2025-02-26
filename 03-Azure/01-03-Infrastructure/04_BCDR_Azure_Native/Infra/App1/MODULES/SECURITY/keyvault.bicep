@@ -15,8 +15,6 @@ var Name = length(subName) >= 24 ? substring(subName, 0, 24) : subName // Key Va
 param secretName string
 @secure()
 param vmAdminPassword string
-// param userPrincipalId string
-// param logAnalyticsWorkspaceId string
 
 resource keyVault 'Microsoft.KeyVault/vaults@2024-04-01-preview' = {
   name: Name
@@ -41,40 +39,6 @@ resource secret 'Microsoft.KeyVault/vaults/secrets@2024-04-01-preview' = {
     value: vmAdminPassword
   }
 }
-
-// resource roleAssignment 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
-//   name: guid(keyVault.id, 'Key Vault Secrets User', userPrincipalId)
-//   scope: keyVault
-//   properties: {
-//     roleDefinitionId: subscriptionResourceId(
-//       'Microsoft.Authorization/roleDefinitions',
-//       '4633458b-17de-408a-b874-0445c86b69e6'
-//     ) // Key Vault Secrets User role
-//     principalId: userPrincipalId
-//   }
-// }
-
-
-
-// resource diagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-//   name: '${keyVault.name}-diag'
-//   scope: keyVault
-//   properties: {
-//     workspaceId: logAnalyticsWorkspaceId
-//     logs: [
-//       {
-//         category: 'AuditEvent'
-//         enabled: true
-//       }
-//     ]
-//     metrics: [
-//       {
-//         category: 'AllMetrics'
-//         enabled: true
-//       }
-//     ]
-//   }
-// }
 
 output keyVaultUri string = keyVault.properties.vaultUri
 output kvName string = keyVault.name

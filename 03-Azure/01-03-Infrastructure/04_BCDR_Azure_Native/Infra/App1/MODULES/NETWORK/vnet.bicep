@@ -11,7 +11,7 @@ var location = resourceGroup().location
 var nameSuffix = 'vnet'
 var vnetName = '${namePrefix}-${location}-${nameSuffix}'
 param vnetConfig object
-// param logAnalyticsWorkspaceId string
+
 @description('Network Security Group for the subnets')
 var defaultNSGRules = [
   {
@@ -48,7 +48,6 @@ var defaultNSGRules = [
       access: 'Allow'
       protocol: 'Tcp'
       sourcePortRange: '*'
-      // sourceAddressPrefix: vnetConfig.subnets[1].addressPrefix
       sourceAddressPrefix: '10.0.1.0/24'
       destinationPortRanges: [
         '3389'
@@ -195,7 +194,6 @@ module nsg './nsg.bicep' = [ for subnet in vnetConfig.subnets: {
     scope: resourceGroup()
     params: {
       namePrefix: '${vnetName}-${subnet.name}'
-      // logAnalyticsWorkspaceId: logAnalyticsWorkspaceId
       securityRules: (subnet.name == 'AzureBastionSubnet') ? bastionNSGRules : defaultNSGRules
     }
   }]
@@ -214,34 +212,12 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2024-01-01' = {
         properties: {
           addressPrefix: subnet.addressPrefix
           networkSecurityGroup: {
-            // id: resourceId('Microsoft.Network/networkSecurityGroups', '${namePrefix}-${location}-${nameSuffix}-nsg')
             id: nsg[subnet.name == 'AzureBastionSubnet' ? 1 : 0].outputs.nsgId
           }
         }
       }]
   }
 }
-
-// @description('Define the Diagnostic Settings for the VNet')
-// resource vnetDiag 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-//   name: '${vnetName}-diag'
-//   scope: virtualNetwork
-//   properties: {
-//     logs: [
-//       {
-//         category: 'VMProtectionAlerts'
-//         enabled: true
-//       }
-//     ]
-//     metrics: [
-//       {
-//         category: 'AllMetrics'
-//         enabled: true
-//       }
-//     ]
-//     workspaceId: logAnalyticsWorkspaceId
-//   }
-// }
 
 // Output
 @description('Output the virtual network ID & subnets')

@@ -1,9 +1,7 @@
-// param lbName string = 'myLoadBalancer'
 var location = resourceGroup().location
 param namePrefix string
 var nameSuffix = 'lb'
 var Name = '${namePrefix}-${location}-${nameSuffix}'
-// param logAnalyticsWorkspaceId string
 
 @description('Public IP for the Load Balancer')
 module lbPip './pip.bicep' = {
@@ -11,7 +9,6 @@ module lbPip './pip.bicep' = {
   scope: resourceGroup()
   params: {
     Name: Name
-    // logAnalyticsWorkspaceId: logAnalyticsWorkspaceId
     skuName: 'Standard'
   }
 }

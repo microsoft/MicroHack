@@ -3,6 +3,17 @@ As a coach (or participant) you might need to have some VMs available which you 
 
 For each participant, you will need one Windows 2012 R2, one Windows 2025 and one Linux VM. You can provide the number of participants in the script. The script will then create 1 Windows 2012 R2, 1 Windows 2025 and 1 Ubuntu 24_04-lts-gen2 VM for each participant. 
 
+## Prerequisites
+The script requires the packages `jq` and `ansible`. If not installed already, please do so for your OS before executing. For Debian/Ubuntu, you can use the following commands:
+
+```shell
+sudo apt-add-repository -y ppa:ansible/ansible
+
+sudo apt update
+
+sudo apt install -y ansible jq
+```
+
 ## Deployment instructions
 Open a bash shell and login to Azure:
 ```shell

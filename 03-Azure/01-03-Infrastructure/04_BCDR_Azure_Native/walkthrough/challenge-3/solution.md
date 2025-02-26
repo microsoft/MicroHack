@@ -61,7 +61,7 @@ This Task can take up to 10 minutes to finish.
 ## Task 2: Create a recovery plan and Run a disaster recovery drill
 
 ### Create a recovery plan
-Navigate to **Recovery Services Vault** in the Sweden Central (mh-rsv-sc). Under **Manage**, select **Recovery Plans (Site Recovery)** and create a recovery plan.
+Navigate to **Recovery Services Vault** in the Sweden Central (mh-swedencentral-asrvault). Under **Manage**, select **Recovery Plans (Site Recovery)** and create a recovery plan.
 
 ![image](./img/09.png)
 

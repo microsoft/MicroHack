@@ -217,7 +217,7 @@ You have successfully completed Challenge 2.1! 🚀
 
 Enable Disaster Recovery (DR) between **Availability Zones**
 
-Navigate to **mh-web1 | Disaster recovery**
+Navigate to **mh-linux | Disaster recovery**
 
 Choose a different Availability Zone than the current one as **Target**
 

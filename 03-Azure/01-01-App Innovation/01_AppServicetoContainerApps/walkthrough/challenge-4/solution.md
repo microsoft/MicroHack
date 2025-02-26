@@ -1,4 +1,4 @@
-# Walkthrough Challenge 4 - Assess VM´s for the migration
+# Walkthrough Challenge 4 - Make the Container App Production Ready
 
 Duration: 60 minutes
 
@@ -17,7 +17,7 @@ Select *Microsoft* as the ID provider:
 ![image](./img/challenge-4-authenticationselection.jpg)
 
 Select `Workforce` as tenant type.
-Select `Create new app registration`, name it something like "microhack-containerapp" and select `Current tenant - Single tenant` to create an App Registration in your Azure Entra ID tenant. Then mark the `Require authentication` to make sure only authenticated users can access the app. If the authentication fails, you can choose to which error page you want to redirect unauthenticated users. Leave the rest as is and hit *Add* to activate the authentication (this may take up to a minute in the background):
+Select `Create new app registration`, name it something like "microhack-containerapp" and select `Current tenant - Single tenant` to create an App Registration in your Azure Entra ID tenant. Set the *Client secret expiration* to 180 days. Then mark the `Require authentication` to make sure only authenticated users can access the app. If the authentication fails, you can choose to which error page you want to redirect unauthenticated users. Leave the rest as is and hit *Add* to activate the authentication (this may take up to a minute in the background):
 
 ![image](./img/challenge-4-authenticationsetup.jpg)
 

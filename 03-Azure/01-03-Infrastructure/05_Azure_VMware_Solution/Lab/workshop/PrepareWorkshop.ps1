@@ -176,9 +176,9 @@ function Set-GroupAccountsPermissionsAndPasswords {
 ###################################################################################################################################################
 
 #Run when workshop starts
-#Set-GroupAccountsPermissionsAndPasswords -Prefix "GPSUS-TEST-" -AccountPrefix "GPSUS-Group" -PasswordPrefix "XYZ" -NumberOfLabs 4 -CreateAccounts
+#Set-GroupAccountsPermissionsAndPasswords -Prefix "GPSUS-TEST-" -AccountPrefix "GPSUS-Group" -PasswordPrefix "" -NumberOfLabs 4 -CreateAccounts
 #or
-#Set-GroupAccountsPermissionsAndPasswords -Prefix "GPSUS-TEST-" -AccountPrefix "GPS-Group" -PasswordPrefix "XYZ" -NumberOfLabs 4 -CreateAccounts
+#Set-GroupAccountsPermissionsAndPasswords -Prefix "GPSUS-TEST-" -AccountPrefix "GPS-Group" -PasswordPrefix "" -NumberOfLabs 4 -CreateAccounts
 
 #Run after workshop ends
 #Set-GroupAccountsPermissionsAndPasswords -AccountPrefix "GPSUS-Group" -NumberOfLabs 4 -DeleteAccounts
@@ -255,7 +255,7 @@ function Reset-GroupAccountPermissionsAndPassword {
 
 # Reset-GroupAccountPermissionsAndPassword -Prefix "<Resources-Prefix>" -AccountPrefix "<Group-Account-Number>" -AccountNumber <Group-Number> -Password "<Password-Value>" -FirstLab <lab1> -SecondLab <lab2>
 
-# Reset-GroupAccountPermissionsAndPassword -Prefix "GPSUS-XYZ-" -AccountPrefix "GPSUS-Group" -AccountNumber 3 -Password "TYICsdY@#$%gghhhj24545" -FirstLab 3 -SecondLab 4
+# Reset-GroupAccountPermissionsAndPassword -Prefix "GPSUS-XYZ-" -AccountPrefix "GPSUS-Group" -AccountNumber 3 -Password "" -FirstLab 3 -SecondLab 4
 
 #endregion
 

@@ -24,6 +24,8 @@ Duration: 30 minutes
     
     ![image](./img/challenge-1-url.jpg)
 
+    <p>Important: You can ignore the text fields and the button for now, the functionality behind it will be added in the last challenge. You can try it out of course, but nothing is going to happen (yet). You will probably see something like this: "Error: Failed to execute 'json' on 'Response': Unexpected end of JSON input"</p>
+
 ### **Read through the learning resources**
 
 

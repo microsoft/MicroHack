@@ -51,7 +51,7 @@ Please ensure that you successfully passed [challenge 1](../../Readme.md#challen
 
 3. In this section you can now configure the assignment with the following settings and create the assignment:
 
-- Scope: Please select the resource group called *mh-arc-servers-rg*
+- Scope: Please select your resource group
 - Basics: Please search for *Enable Azure Monitor for Hybrid VMs with AMA* and select the initiative.
 - Parameters: Please insert the Resource ID of the Data Collection Rule from Task 2. 
 - Remediation: Please select the System assigned identity location according to your resources, e.g. West Europe. Don't check the box for "Create a remediation task" here, as it would only create a remediation task for the first policy within the policy initiative. We will do this in one of the next steps for all policies.

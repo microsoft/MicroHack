@@ -109,7 +109,7 @@
             "value": "Username"
         },
         "adminPassword": {
-            "value": "Password123456789"
+            "value": ""
         },
         "patchMode": {
             "value": "AutomaticByOS"

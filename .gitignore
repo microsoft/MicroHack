@@ -159,6 +159,7 @@ local.settings.json
 *.tfstate
 tfstate
 *.tfstate.*
+*tfplan
 
 # Crash log files
 crash.log

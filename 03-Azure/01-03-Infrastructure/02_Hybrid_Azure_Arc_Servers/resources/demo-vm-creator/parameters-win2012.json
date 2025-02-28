@@ -3,7 +3,7 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "location": {
-            "value": "westeurope"
+            "value": "germanywestcentral"
         },
         "networkInterfaceName": {
             "value": "testname558"
@@ -24,6 +24,19 @@
                         "sourcePortRange": "*",
                         "destinationAddressPrefix": "*",
                         "destinationPortRange": "3389"
+                    }
+                },
+                {
+                    "name": "winRM",
+                    "properties": {
+                        "priority": 310,
+                        "protocol": "TCP",
+                        "access": "Allow",
+                        "direction": "Inbound",
+                        "sourceAddressPrefix": "*",
+                        "sourcePortRange": "*",
+                        "destinationAddressPrefix": "*",
+                        "destinationPortRange": "5985"
                     }
                 }
             ]
@@ -96,6 +109,9 @@
         },
         "enableHotpatching": {
             "value": false
+        },
+        "Win2012R2imageUri": {
+            "value": "https://asdlij32.blob.core.windows.net/mh-arc/win2012r2-specialized.vhd"
         }
     }
 }

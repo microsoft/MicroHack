@@ -1,37 +1,45 @@
 # adjust parameters with your own values as needed
-resourceGroupName="rg-on-prem"
+resourceGroupName="mh-arc-onprem-demo"
 resourceGroupLocation="germanywestcentral"
-adminUsername="MHAdmin"
-adminPassword="REPLACEME"
+adminUsername="mhadmin"
+adminPassword="REPLACE-ME"
     
 # in a sponsored subscription there is a core limit of 10 cores per VM-series per region. Therefore, the script will distribute the VMs to different regions
-# assuming you stick to the Standard_D2ads_v5, max 5 VMs per region can be deployed. As each participant should have one windows and one linux machine,
-# we are deploying always 2 VMs (1 linux and 1 windows) per user. This means we can fit 2 participants into one region. So make your that you add enough regions
+# assuming you stick to the Standard_D2ads_v5 for Windows and Standard_DS1_v2 for Linux, max 4 Win and 2 Linux VMs per region can be deployed. As each participant should have two windows and one linux machine,
+# we are deploying always 3 VMs (1 linux and 2 windows) per user. This means we can fit 2 participants into one region. So make your that you add enough regions
 # to the regions array to fit all participants.
 
+# the script takes about 3min per VM (resulting in 9min per participant).
+
 number_of_participants=10
-regions=("germanywestcentral" "northeurope" "swedencentral" "francecentral" "westeurope")
-virtualMachineSize="Standard_D2ads_v5"
+regions=("germanywestcentral" "italynorth" "swedencentral" "francecentral" "polandcentral" "uksouth")
+virtualWinMachineSize="Standard_D2ds_v4" # use a vm size with only 2 cores to avoid core limit issues in sponsored subscriptions
+virtualLnxMachineSize="Standard_DS1_v2" # use a vm size with only 1 core to avoid core limit issues in sponsored subscriptions
 
 # create a resource group
 az group create --name $resourceGroupName --location $resourceGroupLocation
 number_of_regions=${#regions[@]}
 echo "Number of regions: $number_of_regions"
-number_of_loops=$((number_of_participants * 2 - 1 ))
+number_of_loops=$((number_of_participants * 3 - 1 ))
 echo "Number of loops: $number_of_loops"
     
 for j in $(eval echo {0..$number_of_loops})
 do
-    # i++ for every second iteration, so we have win-0 and lnx-0 in the same region
-    i=$(($j / 2))
+    # i++ for every third iteration, so we have win2012-0, win2025-0 and linux-0 in the same region
+    i=$(($j / 3))
     region_index=$((i % number_of_regions))
     location=${regions[($i % $number_of_regions)]}
     
-    # every loop we switch between creating a linux and a windows VM
-    if (( $j % 2 == 0 )); then
-        type="lnx"   
+    # every loop we switch between creating a linux, windows2012 and a windows2025 VM
+    if (( $j % 3 == 0 )); then
+        type="linux"   
+        virtualMachineSize=$virtualLnxMachineSize
+    elif (( $j % 3 == 1 )); then
+        type="win2012"
+        virtualMachineSize=$virtualWinMachineSize
     else
-        type="win"
+        type="win2025"
+        virtualMachineSize=$virtualWinMachineSize
     fi
 
     vmName="vm-$type-mh$i"
@@ -63,9 +71,11 @@ do
         location=$location
 
     # Run the reconfig script to disable the Azure Guest Agent
-    if [ $type == "win" ]; then
+    if [ $type != "linux" ]; then
+        echo "Running reconfig-win.ps1 on $vmName"
         az vm run-command create --name reconfigWin$i --vm-name $vmName -g $resourceGroupName --location $location --script @reconfig-win.ps1 --async-execution
     else
+        echo "Running reconfig-ubuntu.sh on $vmName"
         az vm run-command invoke -g $resourceGroupName -n $vmName --command-id RunShellScript --scripts @reconfig-ubuntu.sh --no-wait
     fi
 

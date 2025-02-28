@@ -3,18 +3,18 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "location": {
-            "value": "francecentral"
+            "value": "westeurope"
         },
         "networkInterfaceName": {
-            "value": "asdadasd1"
+            "value": "testname558"
         },
         "networkSecurityGroupName": {
-            "value": "asdadasd-nsg"
+            "value": "testname-nsg"
         },
         "networkSecurityGroupRules": {
             "value": [
                 {
-                    "name": "SSH",
+                    "name": "RDP",
                     "properties": {
                         "priority": 300,
                         "protocol": "TCP",
@@ -23,7 +23,20 @@
                         "sourceAddressPrefix": "*",
                         "sourcePortRange": "*",
                         "destinationAddressPrefix": "*",
-                        "destinationPortRange": "22"
+                        "destinationPortRange": "3389"
+                    }
+                },
+                {
+                    "name": "winRM",
+                    "properties": {
+                        "priority": 310,
+                        "protocol": "TCP",
+                        "access": "Allow",
+                        "direction": "Inbound",
+                        "sourceAddressPrefix": "*",
+                        "sourcePortRange": "*",
+                        "destinationAddressPrefix": "*",
+                        "destinationPortRange": "5985"
                     }
                 }
             ]
@@ -32,11 +45,11 @@
             "value": "default"
         },
         "virtualNetworkName": {
-            "value": "gxgggssg"
+            "value": "testname-vnet"
         },
         "addressPrefixes": {
             "value": [
-                "10.1.0.0/16"
+                "10.0.0.0/16"
             ]
         },
         "subnets": {
@@ -44,13 +57,13 @@
                 {
                     "name": "default",
                     "properties": {
-                        "addressPrefix": "10.1.0.0/24"
+                        "addressPrefix": "10.0.0.0/24"
                     }
                 }
             ]
         },
         "publicIpAddressName": {
-            "value": "asdadasd-ip"
+            "value": "testname-ip"
         },
         "publicIpAddressType": {
             "value": "Static"
@@ -62,13 +75,13 @@
             "value": "Delete"
         },
         "virtualMachineName": {
-            "value": "asdadasd"
+            "value": "testname"
         },
         "virtualMachineComputerName": {
-            "value": "asdadasd"
+            "value": "testname"
         },
         "virtualMachineRG": {
-            "value": "rg-onpremvms"
+            "value": "test"
         },
         "osDiskType": {
             "value": "StandardSSD_LRS"
@@ -77,7 +90,7 @@
             "value": "Delete"
         },
         "virtualMachineSize": {
-            "value": "Standard_D2s_v3"
+            "value": "Standard_D2ads_v5"
         },
         "nicDeleteOption": {
             "value": "Delete"
@@ -86,10 +99,16 @@
             "value": false
         },
         "adminUsername": {
-            "value": "mhadminyes"
+            "value": "asdasdasdas"
         },
         "adminPassword": {
             "value": null
+        },
+        "patchMode": {
+            "value": "AutomaticByOS"
+        },
+        "enableHotpatching": {
+            "value": false
         }
     }
 }

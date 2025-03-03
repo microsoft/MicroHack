@@ -25,6 +25,13 @@ param adminPassword string
 @description('Deployment Script URL for Windows Machines.')
 var deploymentScriptUrl = 'https://raw.githubusercontent.com/microsoft/MicroHack/main/03-Azure/01-03-Infrastructure/06_Migration_Datacenter_Modernization/resources/deploy.ps1'
 
+@description('Deployment Script URL for Discovery Windows Machine.')
+var deploymentScriptUrlVm3 = 'https://raw.githubusercontent.com/latj/MicroHack/refs/heads/main/03-Azure/01-03-Infrastructure/06_Migration_Datacenter_Modernization/resources/discovery.ps1'
+
+@description('Deployment Script URL for Migration Windows Machine.')
+var deploymentScriptUrlVm4 = 'https://raw.githubusercontent.com/latj/MicroHack/refs/heads/main/03-Azure/01-03-Infrastructure/06_Migration_Datacenter_Modernization/resources/migration.ps1'
+
+
 @description('Cloud Init Data for Linux Machines.')
 var customData = loadTextContent('cloud.cfg')  
 
@@ -37,11 +44,20 @@ var vm1Name = '${prefix}${deployment}-${userName}-Win-fe1'
 @description('Create Name for VM2')
 var vm2Name = '${prefix}${deployment}-${userName}-Lx-fe2'
 
+@description('Create Name for Discovery Appliance VM')
+var vm3Name = '${prefix}${deployment}-${userName}-Discovery'
+
+@description('Create Name for Migration Appliance VM')
+var vm4Name = '${prefix}${deployment}-${userName}-Migration'
+
 @description('Tenant ID used by Keyvault')
 var tenantId  = subscription().tenantId
 
 @description('User Name for the Tags')
 param userName string 
+
+@description('Set this var to true to deploy the Discovery Appliance')
+param deployDiscovery bool = false
 
 // Resources
 // https://learn.microsoft.com/en-us/azure/templates/microsoft.keyvault/vaults?pivots=deployment-language-bicep
@@ -223,7 +239,7 @@ resource vm1 'Microsoft.Compute/virtualMachines@2022-03-01' = {
   location: location
   properties: {
     hardwareProfile: {
-      vmSize: 'Standard_D2as_v5'
+      vmSize: 'Standard_D2s_v5'
     }
     osProfile: {
       computerName: 'Winfe1'
@@ -318,7 +334,7 @@ resource vm2 'Microsoft.Compute/virtualMachines@2022-03-01' = {
   location: location
   properties: {
     hardwareProfile: {
-      vmSize: 'Standard_D2as_v5'
+      vmSize: 'Standard_D2s_v5'
     }
     osProfile: {
       computerName: 'Lxfe2'
@@ -376,6 +392,174 @@ resource vm2Extension 'Microsoft.Compute/virtualMachines/extensions@2022-03-01' 
  }
 } 
 
+// https://learn.microsoft.com/en-us/azure/templates/microsoft.network/networkinterfaces?pivots=deployment-language-bicep
+@description('Windows VM NIC')
+resource vm3Nic 'Microsoft.Network/networkInterfaces@2022-05-01' = {
+  name: '${vm3Name}-nic'
+  location: location
+  properties: {
+    ipConfigurations: [
+      {
+        name: 'ipconfig1'
+        properties: {
+          privateIPAllocationMethod: 'Static'
+          privateIPAddress: '10.1.1.6'
+          subnet: {
+            id: sourceVnet.properties.subnets[0].id
+          }         
+        }
+      }
+    ]
+  }
+}
+
+// https://learn.microsoft.com/en-us/azure/templates/microsoft.compute/virtualmachines?pivots=deployment-language-bicep
+@description('Windows Virtual Machine')
+resource vm3 'Microsoft.Compute/virtualMachines@2022-03-01' = if (deployDiscovery == true) {
+  name: vm3Name
+  location: location
+  properties: {
+    hardwareProfile: {
+      vmSize: 'Standard_B4as_v2'
+    }
+    osProfile: {
+      computerName: 'Discovery'
+      adminUsername: adminUsername
+      adminPassword: adminPassword
+    }
+    storageProfile: {
+      imageReference: {
+        publisher: 'MicrosoftWindowsServer'
+        offer: 'WindowsServer'
+        sku: '2022-datacenter-smalldisk-g2'
+        version: 'latest'
+      }
+      osDisk: {
+        createOption: 'FromImage'
+        managedDisk: {
+          storageAccountType: 'StandardSSD_LRS'
+        }
+      }
+    }
+    networkProfile: {
+      networkInterfaces: [
+        {
+          id: vm3Nic.id
+        }
+      ]
+    }
+    diagnosticsProfile: {
+      bootDiagnostics: {
+        enabled: false
+      }
+    }
+  }
+}
+
+// https://learn.microsoft.com/en-us/azure/templates/microsoft.compute/virtualmachines/extensions?pivots=deployment-language-bicep
+@description('Windows VM Extension')
+resource vm3Extension 'Microsoft.Compute/virtualMachines/extensions@2022-03-01' = {
+  parent: vm3
+  name: '${vm1Name}-customScriptExtension'
+  location: location
+  properties: {
+    publisher: 'Microsoft.Compute'
+    type: 'CustomScriptExtension'
+    typeHandlerVersion: '1.10'
+    autoUpgradeMinorVersion: true
+    settings: {
+            commandToExecute: 'powershell -ExecutionPolicy Unrestricted -File discovery.ps1'
+            fileUris: [deploymentScriptUrlVm3]
+    }
+    protectedSettings: {
+          }
+  }
+} 
+
+
+// https://learn.microsoft.com/en-us/azure/templates/microsoft.network/networkinterfaces?pivots=deployment-language-bicep
+@description('Windows VM NIC')
+resource vm4Nic 'Microsoft.Network/networkInterfaces@2022-05-01' = {
+  name: '${vm4Name}-nic'
+  location: location
+  properties: {
+    ipConfigurations: [
+      {
+        name: 'ipconfig1'
+        properties: {
+          privateIPAllocationMethod: 'Static'
+          privateIPAddress: '10.1.1.7'
+          subnet: {
+            id: sourceVnet.properties.subnets[0].id
+          }          
+        }
+      }
+    ]
+  }
+}
+
+// https://learn.microsoft.com/en-us/azure/templates/microsoft.compute/virtualmachines?pivots=deployment-language-bicep
+@description('Windows Virtual Machine')
+resource vm4 'Microsoft.Compute/virtualMachines@2022-03-01' = {
+  name: vm4Name
+  location: location
+  properties: {
+    hardwareProfile: {
+      vmSize: 'Standard_B4as_v2'
+    }
+    osProfile: {
+      computerName: 'Migration'
+      adminUsername: adminUsername
+      adminPassword: adminPassword
+    }
+    storageProfile: {
+      imageReference: {
+        publisher: 'MicrosoftWindowsServer'
+        offer: 'WindowsServer'
+        sku: '2019-datacenter-smalldisk-g2'
+        version: 'latest'
+      }
+      osDisk: {
+        createOption: 'FromImage'
+        managedDisk: {
+          storageAccountType: 'StandardSSD_LRS'
+        }
+      }
+    }
+    networkProfile: {
+      networkInterfaces: [
+        {
+          id: vm4Nic.id
+        }
+      ]
+    }
+    diagnosticsProfile: {
+      bootDiagnostics: {
+        enabled: false
+      }
+    }
+  }
+}
+
+// https://learn.microsoft.com/en-us/azure/templates/microsoft.compute/virtualmachines/extensions?pivots=deployment-language-bicep
+@description('Windows VM Extension')
+resource vm4Extension 'Microsoft.Compute/virtualMachines/extensions@2022-03-01' = {
+  parent: vm4
+  name: '${vm4Name}-customScriptExtension'
+  location: location
+  properties: {
+    publisher: 'Microsoft.Compute'
+    type: 'CustomScriptExtension'
+    typeHandlerVersion: '1.10'
+    autoUpgradeMinorVersion: true
+    settings: {
+            commandToExecute: 'powershell -ExecutionPolicy Unrestricted -File migration.ps1'
+            fileUris: [deploymentScriptUrlVm4]
+    }
+    protectedSettings: {
+          }
+  }
+} 
 
 
 // https://learn.microsoft.com/en-us/azure/templates/microsoft.network/loadbalancers?pivots=deployment-language-bicep

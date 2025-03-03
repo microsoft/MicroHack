@@ -6,22 +6,9 @@ Duration: 40 minutes
 
 Please make sure that you successfully completed [Challenge 5](../challenge-5/solution.md) before continuing with this challenge.
 
-# MicroHack - Migrate and Modernize
-
-- [**Task 1: Enable Azure VM Backup**](#Task-1:-Enable-Azure-VM-Backup)
-- [**MicroHack context**](#microhack-context)
-- [**Objectives**](#objectives)
-- [**MicroHack Challenges**](#microhack-challenges)
-- [**Contributors**](#contributors)
 
 
-# Azure Backup 
-
-## **Task 1: Enable Azure VM Backup**
-
-## **Task 2: Verify Azure VM Backup**
-
-## **Task 3: Enable Azure Update Manager**
+## **Task 1: Enable Azure Update Manager**
 
 In [Challenge 5](../challenge-5/solution.md) you migrated servers to Azure. Now you will enable Azure Update Manager, that is a unified service to help manage and govern updates for all your machines (running a server operating system). Update Manager work both for Windows And Linux and machine in Azure or connected by Azure Arc
 
@@ -29,36 +16,48 @@ To enable the Update Manger components, open the portal and seach for  *Update M
 
 ![image](./img/azureupdatemanageroverview.png)
 
-In the left meny click *Resources* and tclick *Machines*. Now you will see all Azure VMs and all Arc enabled VMs, even if the machines are managed by Update Mager or not.
+In the left meny click **Resources** and click **Machines**. Now you will see all Azure VMs and all Arc enabled VMs, even if the machines are managed by Update Manger or not.
 
 ![image](./img/azureupdatemanager_machines.png)
 
-To enable Update Manager, we fist we need to configure assessment and patch orchestration, that will be done by sellect current VMs by check the checkbox for the VM, and then select *Settings* in the top menu and then select *Update settings* .
+To enable Update Manager, we fist we need to configure assessment and patch orchestration, that will be done by sellect current VMs by check the checkbox for the VM, and then select *Settings** in the top menu and then select **Update settings** .
 
 Assessmnet
-change *Periodic assmessmet* value to *enable* This will enable assessmnet of patches every 24 hours
+change **Periodic assmessment** value to ***enable** This will enable assessmnet of patches every 24 hours
 
 Patch Orchstration
+
+choose **Customer Managed Schedules** and click **Save**
+ 
 Patch orchestration option provides:
 
-**Customer Managed Schedules** — enables schedule patching on your existing VMs. The new patch orchestration option enables the two VM properties - Patch mode = Azure-orchestrated and BypassPlatformSafetyChecksOnUserSchedule = TRUE on your behalf after receiving your consent.
+*Customer Managed Schedules* — enables schedule patching on your existing VMs. The new patch orchestration option enables the two VM properties - Patch mode = Azure-orchestrated and BypassPlatformSafetyChecksOnUserSchedule = TRUE on your behalf after receiving your consent.
 
-**Azure Managed - Safe Deployment** — for a group of virtual machines undergoing an update, the Azure platform will orchestrate updates. (not applicable for Arc-enabled server). The VM is set to automatic VM guest patching.(i.e), the patch mode is AutomaticByPlatform. There are different implications depending on whether customer schedule is attached to it or not. For more information, see the user scenarios.
+*Azure Managed - Safe Deployment* — for a group of virtual machines undergoing an update, the Azure platform will orchestrate updates. (not applicable for Arc-enabled server). The VM is set to automatic VM guest patching.(i.e), the patch mode is AutomaticByPlatform. There are different implications depending on whether customer schedule is attached to it or not. For more information, see the user scenarios.
     Available *Critical* and *Security* patches are downloaded and applied automatically on the Azure VM using automatic VM guest patching. This process kicks off automatically every month when new patches are released. Patch assessment and installation are automatic, and the process includes rebooting the VM as required.
 
-**Windows Automatic Updates (AutomaticByOS)** - When the workload running on the VM doesn't have to meet availability targets, the operating system updates are automatically downloaded and installed. Machines are rebooted as needed.
+*Windows Automatic Updates (AutomaticByOS)* - When the workload running on the VM doesn't have to meet availability targets, the operating system updates are automatically downloaded and installed. Machines are rebooted as needed.
 
-**Manual updates** - This mode disables Windows automatic updates on VMs. Patches are installed manually or using a different solution.
+*Manual updates* - This mode disables Windows automatic updates on VMs. Patches are installed manually or using a different solution.
 
-**Image Default** - Only supported for Linux Virtual Machines, this mode uses the default patching configuration in the image used to create the VM.
+*Image Default* - Only supported for Linux Virtual Machines, this mode uses the default patching configuration in the image used to create the VM.
 
 
 ![image](./img/azureupdatemanager_settings.png)
 
+## **Task 2: Create a patching schedule and assign it**
+
+After we have enabled the periodic and patch orecestration. We need to create a schedule for the patching, or a *maintenance configuration* as is calling in Azure.
+
+Select the current Virtual machines, and click **Schedule Updates** in the menu. Now a blade to create a new *maintenance configuration* will open. Give the schedule a *name* and place it in the desrtination *resource group*, maintenace scope should be set to *Guest*
+
+![image](./img/createmainconf.png)
+
+click **add a schedule**, here you can configure start date, Manitenance windows and how often the patching will happens hourly, daily, weekly or monthlly. then click **Save**. for the task we will not wait for the schudule to happen so, click **Review and Create** and **Create**
+ 
 
 
-
-## **Task 4: Enable Defender for Cloud for Server**
+## **Task 3: Enable Defender for Cloud for Server**
 
 In [Challenge 5](../challenge-5/solution.md) we migrated two servers to Azure. The servers are already protected by the basic services of Defender for Cloud. In this challenge, we'll improve significantly the protection level by activating advanced services such as "Cloud Security Posture Management (CSPM)" and "Cloud Workload Protection (CWP)" (Defender for Server).
 
@@ -81,7 +80,7 @@ Verify the *Defender for Server* Settings & monitoring details
 > [!NOTE]
 > It takes a few minutes for the new settings to be applied and for more agents to be installed on the servers.
 
-## **Task 2: Check if Defender for Endpoint is active on the virtual machines**
+## **Task 4: Check if Defender for Endpoint is active on the virtual machines**
 
 To check if *Defender for Server* was successfully activated on the virtual machines, open the portal and select *Virtual Machines* and select a Windows Server. Under *Operations'* select to run a command and chose to run a PowerShell script/command.
 
@@ -96,7 +95,7 @@ On a Linux machine you run a shell script instead of PowerShell - the commandlin
 ![image](./img/vmlinuxatpstatus.png)
 
 
-## **Task 3: Check if a virus attack is reported in Azure**
+## **Task 5: Check if a virus attack is reported in Azure**
 
 In the next step, we check whether the infection with malware is reported to Azure, so that appropriate reactions can be triggered based on an alert - e.g. inform administrators, open an incident or follow up on the problem and initiate appropriate measures or react to such incidents with automatic rules.
 

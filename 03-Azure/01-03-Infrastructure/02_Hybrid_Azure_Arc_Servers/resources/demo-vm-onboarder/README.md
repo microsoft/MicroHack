@@ -7,6 +7,17 @@ You can either create and onboard in separate steps, or you can use the 'create-
 
 *Note: Per default, the demo-vm-cerator.sh creates 30 VMs distributed to different regions*
 
+## Prerequisites
+The script requires the packages `jq` and `ansible`. If not installed already, please do so for your OS before executing. For Debian/Ubuntu, you can use the following commands:
+
+```shell
+sudo apt-add-repository -y ppa:ansible/ansible
+
+sudo apt update
+
+sudo apt install -y ansible jq
+```
+
 ## Deployment instructions
 Open a bash shell and login to Azure:
 ```shell

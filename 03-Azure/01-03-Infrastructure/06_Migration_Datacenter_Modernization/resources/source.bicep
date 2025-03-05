@@ -23,13 +23,13 @@ param secretsPermissions array = [
 param adminPassword string
 
 @description('Deployment Script URL for Windows Machines.')
-var deploymentScriptUrl = 'https://raw.githubusercontent.com/microsoft/MicroHack/main/03-Azure/01-03-Infrastructure/06_Migration_Datacenter_Modernization/resources/deploy.ps1'
+var deploymentScriptUrl = 'https://raw.githubusercontent.com/latj/MicroHack/main/03-Azure/01-03-Infrastructure/06_Migration_Datacenter_Modernization/resources/deploy.ps1'
 
 @description('Deployment Script URL for Discovery Windows Machine.')
-var deploymentScriptUrlVm3 = 'https://raw.githubusercontent.com/latj/MicroHack/refs/heads/main/03-Azure/01-03-Infrastructure/06_Migration_Datacenter_Modernization/resources/discovery.ps1'
+var deploymentScriptUrlVm3 = 'https://raw.githubusercontent.com/latj/MicroHack/main/03-Azure/01-03-Infrastructure/06_Migration_Datacenter_Modernization/resources/discovery.ps1'
 
 @description('Deployment Script URL for Migration Windows Machine.')
-var deploymentScriptUrlVm4 = 'https://raw.githubusercontent.com/latj/MicroHack/refs/heads/main/03-Azure/01-03-Infrastructure/06_Migration_Datacenter_Modernization/resources/migration.ps1'
+var deploymentScriptUrlVm4 = 'https://raw.githubusercontent.com/latj/MicroHack/main/03-Azure/01-03-Infrastructure/06_Migration_Datacenter_Modernization/resources/migration.ps1'
 
 
 @description('Cloud Init Data for Linux Machines.')
@@ -458,7 +458,7 @@ resource vm3 'Microsoft.Compute/virtualMachines@2022-03-01' = if (deployDiscover
 
 // https://learn.microsoft.com/en-us/azure/templates/microsoft.compute/virtualmachines/extensions?pivots=deployment-language-bicep
 @description('Windows VM Extension')
-resource vm3Extension 'Microsoft.Compute/virtualMachines/extensions@2022-03-01' = {
+resource vm3Extension 'Microsoft.Compute/virtualMachines/extensions@2022-03-01' = if (deployDiscovery == true){
   parent: vm3
   name: '${vm1Name}-customScriptExtension'
   location: location
@@ -525,6 +525,16 @@ resource vm4 'Microsoft.Compute/virtualMachines@2022-03-01' = {
           storageAccountType: 'StandardSSD_LRS'
         }
       }
+      dataDisks: [
+        {
+          lun: 0
+          diskSizeGB: 1024
+          createOption: 'Empty'
+          managedDisk: {
+            storageAccountType: 'StandardSSD_LRS'
+          }
+        }
+      ]
     }
     networkProfile: {
       networkInterfaces: [

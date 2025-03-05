@@ -256,54 +256,35 @@ The goal of this exercise is to ...
 
 [Solution Steps](./walkthrough/challenge-5/solution.md)
 
-## Optional Bonus Challenge 6 - Secure on Azure
-
-### Goal 
-
-The goal of this exercise is to ...
-
-* secure the migrated Virtual Machines by enabling Defender for Cloud for Server
-
-### Actions
-
-* Enable Defender for Cloud
-
-### Success criteria
-
-* The migrated Servers are protected by Defender for Cloud for Servers
-
-### Learning resources
-* [Deploy Defender for Servers](https://learn.microsoft.com/en-us/azure/defender-for-cloud/tutorial-enable-servers-plan)
-
-### Solution - Spoilerwarning
-
-[Solution Steps](./walkthrough/challenge-6/solution.md)
-
-## Optional Bonus Challenge 6.1 - Azure Update Manager
+## Challenge 6 - Secure on Azure
 
 ### Goal 
 
 The goal of this exercise is to ...
 
 * to use Azure Update Manager, and configure patching schedules for migrated VMs 
+* secure the migrated Virtual Machines by enabling Defender for Cloud for Server
 
 ### Actions
 
 * Enable Azure Update Manager
+* Enable Defender for Cloud
 
 ### Success criteria
 
 * The migrated Servers are pacted by Azure Update Manager
+* The migrated Servers are protected by Defender for Cloud for Servers
 
 ### Learning resources
 * [How Update Manager works ](https://learn.microsoft.com/en-us/azure/defender-for-cloud/tutorial-enable-servers-plan)
-
+* [Deploy Defender for Servers](https://learn.microsoft.com/en-us/azure/defender-for-cloud/tutorial-enable-servers-plan)
 
 ### Solution - Spoilerwarning
 
-[Solution Steps](./walkthrough/challenge-6.1/solution.md)
+[Solution Steps](./walkthrough/challenge-6/solution.md)
 
-## Optional Bonus Challenge 7 - Modernize with Azure
+
+## Challenge 7 - Modernize with Azure
 
 ### Goal 
 

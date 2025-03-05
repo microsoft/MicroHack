@@ -35,8 +35,8 @@ Duration: 30 minutes
 
 ![image](./img/CS5.png)
 
-- Execute `az deployment sub create --name "$(onprem)-$(cat /proc/sys/kernel/random/uuid)" --location swedencentral --template-file ./main.bicep --parameters currentUserObjectId=$(az ad signed-in-user show --query id -o tsv) --parameters userName="onprem"`
-
+- Execute ``
+az deployment sub create --name "MHUserx" --location swedencentral --template-file ./main.bicep --parameters currentUserObjectId=$(az ad signed-in-user show --query id -o tsv) --parameters userName="MHUserx"
 ![image](./img/CS6.png)
 
 - Wait for the deployment to finish. You can view the deployment from the Azure portal by selecting the Azure Subscription and click on *Deployments* from the navigation pane on the left.

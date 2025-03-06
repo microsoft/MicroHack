@@ -1,8 +1,10 @@
 # Walkthrough Challenge 1 - Prerequisites and landing zone preparation
 
-Duration: 20 minutes
+⏰ Duration: 20 minutes
 
- **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-2/solution.md)
+📋  [Challenge 1 Instructions](../../challenges/01_challenge.md)
+
+**[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-2/solution.md) ➡️
 
 ## Prerequisites
 

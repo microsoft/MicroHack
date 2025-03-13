@@ -40,7 +40,6 @@ variable "username" {
 variable "password" {
   description = "Password must meet Azure complexity requirements"
   type        = string
-  default     = "Sapdata!pass123"
 }
 
 variable "SID" {

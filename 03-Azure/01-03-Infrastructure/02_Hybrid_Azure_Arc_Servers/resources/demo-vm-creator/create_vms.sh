@@ -1,5 +1,5 @@
 # adjust parameters with your own values as needed
-resourceGroupName="mh-arc-onprem-demo"
+resourceGroupName="mh-arc-onprem"
 resourceGroupLocation="germanywestcentral"
 adminUsername="mhadmin"
 adminPassword="REPLACE-ME"

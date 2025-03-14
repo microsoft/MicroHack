@@ -1,5 +1,5 @@
 # adjust parameters with your own values as needed
-resourceGroupName="mh-arc-onprem"
+resourceGroupNameBase="mh-arc-onprem"
 resourceGroupLocation="germanywestcentral"
 adminUsername="mhadmin"
 adminPassword="REPLACE-ME"
@@ -16,8 +16,13 @@ regions=("germanywestcentral" "italynorth" "swedencentral" "francecentral" "pola
 virtualWinMachineSize="Standard_D2ds_v4" # use a vm size with only 2 cores to avoid core limit issues in sponsored subscriptions
 virtualLnxMachineSize="Standard_DS1_v2" # use a vm size with only 1 core to avoid core limit issues in sponsored subscriptions
 
-# create a resource group
-az group create --name $resourceGroupName --location $resourceGroupLocation
+# create a resource group for each participant
+for i in $(eval echo {0..$(($number_of_participants-1))})
+do
+    resourceGroupName="$resourceGroupNameBase-mh$i"
+    az group create --name $resourceGroupName --location $resourceGroupLocation
+done
+
 number_of_regions=${#regions[@]}
 echo "Number of regions: $number_of_regions"
 number_of_loops=$((number_of_participants * 3 - 1 ))
@@ -54,7 +59,7 @@ do
     
     # Create a VM
     az deployment group create \
-    --resource-group $resourceGroupName \
+    --resource-group "$resourceGroupNameBase-mh$i" \
     --name $deploymentName \
     --template-file ./template-$type.json \
     --parameters @parameters-$type.json \
@@ -66,17 +71,17 @@ do
         networkSecurityGroupName=$networkSecurityGroupName \
         virtualNetworkName=$virtualNetworkName \
         virtualMachineComputerName=$virtualMachineComputerName \
-        virtualMachineRG=$resourceGroupName \
+        virtualMachineRG="$resourceGroupNameBase-mh$i" \
         virtualMachineSize=$virtualMachineSize \
         location=$location
 
     # Run the reconfig script to disable the Azure Guest Agent
     if [ $type != "linux" ]; then
         echo "Running reconfig-win.ps1 on $vmName"
-        az vm run-command create --name reconfigWin$i --vm-name $vmName -g $resourceGroupName --location $location --script @reconfig-win.ps1 --async-execution
+        az vm run-command create --name reconfigWin$i --vm-name $vmName -g "$resourceGroupNameBase-mh$i" --location $location --script @reconfig-win.ps1 --async-execution
     else
         echo "Running reconfig-ubuntu.sh on $vmName"
-        az vm run-command invoke -g $resourceGroupName -n $vmName --command-id RunShellScript --scripts @reconfig-ubuntu.sh --no-wait
+        az vm run-command invoke -g "$resourceGroupNameBase-mh$i" -n $vmName --command-id RunShellScript --scripts @reconfig-ubuntu.sh --no-wait
     fi
 
 done

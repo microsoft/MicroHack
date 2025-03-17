@@ -261,6 +261,10 @@ In this challenge, you will activate Extended Security Updates (ESU) for Windows
 
 ## Challenge 7 - Azure Automanage Machine Configuration - optional
 
+### Disclaimer
+
+This challenge is only available on x86 based processors.
+
 ### Goal
 
 This challenge is about interacting with the client operating system. We will have a look at Machine Configurations as the final step of this journey.

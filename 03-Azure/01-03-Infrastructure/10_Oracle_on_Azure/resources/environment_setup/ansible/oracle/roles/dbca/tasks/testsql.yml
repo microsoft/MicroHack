@@ -1,0 +1,14 @@
+
+- name: copy archive log mode sql 
+  template: src=archieve.sql.j2 dest=/tmp/archieve.sql
+  when: inventory_hostname in groups['ora-x1']
+  become_user: "{{ oracle_user }}"
+
+- name: Create_standbyDB | execute postsql from the standby database
+  shell: |
+    echo -e "@/tmp/archieve.sql;" | sqlplus / as sysdba
+  when: inventory_hostname in groups['ora-x1']
+  become_user: "{{ oracle_user }}"
+  args:
+    chdir: /home/oracle
+  register: out 

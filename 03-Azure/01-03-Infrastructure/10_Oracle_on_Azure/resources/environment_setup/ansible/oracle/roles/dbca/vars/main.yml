@@ -1,0 +1,8 @@
+---
+
+# shell environment for the oracle user
+ora_user_env:
+  ORACLE_BASE: "{{ oracle_path }}/oracle"
+  ORACLE_SID: "{{ oracle_db_name }}"
+  ORACLE_HOME: "{{ oracle_path }}/oracle/product/19.0.0/dbhome_1"
+  NLS_LANG: "american_america.AL32UTF8"

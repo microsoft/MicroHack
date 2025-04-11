@@ -102,6 +102,7 @@ In challenge 1 you will prepare your Azure environemnt for onboarding of existin
 * Create all necessary Azure resources
   * Resource Group (Name: mh-arc-servers-rg) - not relevant for MicroHack participants, as you have a RG provided for you
   * Service Principal (Name: mh-arc-servers-sp)
+* Enable required Resource Providers - not relevant for MicroHack participants, as the resource provider is already activated
 * Prep existing server operating system on-prem
 * Onboard existing server to Azure Arc
 

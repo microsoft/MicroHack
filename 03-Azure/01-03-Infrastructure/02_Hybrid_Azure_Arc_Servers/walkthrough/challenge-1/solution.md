@@ -20,7 +20,7 @@ Sign in to the [Azure Portal](https://portal.azure.com/).
 
 * [Create Service Principal](https://learn.microsoft.com/en-us/azure/azure-arc/servers/onboard-service-principal#create-a-service-principal-for-onboarding-at-scale)
 
-### Task 3: Enable Service providers
+### Task 3: Enable Service providers - not relevant for MicroHack participants
 
 * Enable Azure Resource Provider 
   [Azure Arc Azure resource providers](https://learn.microsoft.com/en-us/azure/azure-arc/servers/prerequisites#azure-resource-providers)

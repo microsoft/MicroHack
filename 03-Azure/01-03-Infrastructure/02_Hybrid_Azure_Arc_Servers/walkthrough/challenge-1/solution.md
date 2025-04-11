@@ -8,7 +8,7 @@ Duration: 20 minutes
 
 Please ensure that you successfully verified the [General prerequisits](../../Readme.md#general-prerequisites) before continuing with this challenge.
 
-### Task 1: Create Azure Resource Group
+### Task 1: Create Azure Resource Group - not relevant for MicroHack participants
 
 Sign in to the [Azure Portal](https://portal.azure.com/).
 

@@ -14,7 +14,7 @@ Please ensure that you successfully passed [challenge 2](../../Readme.md#challen
 
 ![image](./img/1_new_KV.png)
 
-2. Create the Azure Key Vault in your resource group *mh-arc-servers-rg* with default settings and call it *mh-arc-servers-kv* with a random number at the end as the name needs to be unique across all Azure Key Vaults.
+2. Create the Azure Key Vault in your resource group with default settings and call it *mh-arc-servers-kv* with a random number at the end as the name needs to be unique across all Azure Key Vaults.
 
 ![image](./img/2_KV_settings.jpg)
 

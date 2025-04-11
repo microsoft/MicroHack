@@ -13,7 +13,7 @@ Please ensure that you successfully passed [challenge 1](../../Readme.md#challen
 
 1. Sign in to the [Azure Portal](https://portal.azure.com/).
 
-2. Create a new Log Analytics Workspace called *mh-arc-servers-automation-law* with default settings in the same Resource Group.
+2. Create a new Log Analytics Workspace called *mh-arc-servers-automation-law* with default settings in the your Resource Group.
 
 ![image](./img/5_CreateLAW.jpg)
 
@@ -28,7 +28,7 @@ Please ensure that you successfully passed [challenge 1](../../Readme.md#challen
 
 ![image](./img/2.2_Create_Data_Collection_Rule.png)
 
-3. Name the Data Collection Rule *mh-dcr* select your subscription and *mh-rg* as ressource group and change the Region to *West Europe*. Change Platform Type to *All* and click *Next: Resources* to continue.
+3. Name the Data Collection Rule *mh-dcr* select your subscription, set your ressource group and change the Region to *West Europe*. Change Platform Type to *All* and click *Next: Resources* to continue.
 
 ![image](./img/2.3_Create_Data_Collection_Rule_Basics.png)
 
@@ -79,7 +79,7 @@ Please ensure that you successfully passed [challenge 1](../../Readme.md#challen
 
 ![image](./img/3.7_Assign_Policy_Monitor_AMA_remidiate.png)
 
-### Task 4: Enable and configure Update Management
+### Task 4: Enable and configure Update Manager
 
 1. Navigate to *Policy* using the top search bar and select *Assignments* in the left navigation pane.
 
@@ -87,7 +87,7 @@ Please ensure that you successfully passed [challenge 1](../../Readme.md#challen
 
 3. In this section you can now configure the assignment with the following settings and create the assignment:
 
-- Scope: Please select the resource group called *mh-arc-servers-rg*
+- Scope: Please select your resource group used for arc resources
 - Basics: Please search for *Configure periodic checking for missing system updates on azure Arc-enabled servers* and select the policy. As *Assignment name* append *(Windows)* 
 - Parameters: Skip, and keep defaults (which targeting Windows guest OS.)
 - Remediation: Please select the System assigned identity location according to your resources, e.g. West Europe. 
@@ -122,7 +122,7 @@ In order to use the built-in policy initiative to enable *Change Tracking and In
 In the custom ARM template, provide the following parameters:
 | *Parameter*                           | *Value*                   |
 |---------------------------------------|---------------------------|
-| Resource group                        | mh-arc-servers-rg         |
+| Resource group                        | your resource group       |
 | Data Collection Rule                  | leave the Default         |
 | Log Analytics_workspace_ResourceId    | <paste the full resource id of the Log Analytics workspace you created in Task 1><br> i.e. /subscriptions/<*your-subscription-guid*>/resourcegroups/mh-arc-servers-rg/providers/microsoft.operationalinsights/workspaces/mh-arc-la|
 
@@ -140,9 +140,9 @@ Check whether the change tracking data collection rule as been created successfu
 
 3. In this section you can now configure the assignment with the following settings and create the assignment:
 
-- Scope: Please select the resource group called *mh-arc-servers-rg*
+- Scope: Please select the resource group used for arc resources
 - Basics: Please search for *Enable ChangeTracking and Inventory for Arc-enabled virtual machines* and select the initiative.
-- Parameters: As *Data Collection Rule Resource Id* provide the resourceId of the data collection rule you just created in the beginning of this task - i.e. */subscriptions/<*your-subscription-guid*>/resourceGroups/mh-arc-servers-rg/providers/Microsoft.Insights/dataCollectionRules/DCR-ChangeTracking*.
+- Parameters: As *Data Collection Rule Resource Id* provide the resourceId of the data collection rule you just created in the beginning of this task - i.e. */subscriptions/<*your-subscription-guid*>/resourceGroups/<*your-resource-group*>/providers/Microsoft.Insights/dataCollectionRules/DCR-ChangeTracking*.
 - Remediation: Please select the System assigned identity location according to your resources, e.g. West Europe. You do NOT check the box for "Create a remediation task" at this point in time, as it would only create one of the six required. We will do this in one of the next steps.
 
 4. Please wait a few seconds until the creation of the assignment is complete. You should see that the policy is assigned.

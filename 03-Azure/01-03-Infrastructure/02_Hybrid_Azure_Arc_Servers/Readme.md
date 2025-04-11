@@ -68,11 +68,22 @@ After completing this MicroHack you will:
 
 This MicroHack has a few but important prerequisites to be understood before starting this lab!
 
-* Your own Azure subscription with Owner RBAC rights at the subscription level
-  * [Azure Evaluation free account](https://azure.microsoft.com/en-us/free/search/?OCID=AIDcmmzzaokddl_SEM_0fa7acb99db91c1fb85fcfd489e5ca6e:G:s&ef_id=0fa7acb99db91c1fb85fcfd489e5ca6e:G:s&msclkid=0fa7acb99db91c1fb85fcfd489e5ca6e)
-* You need to have 3 virtual machines ready and updated. One with a Linux operating system (tested with Ubuntu Server 24.04), one with Windows Server 2025 and one with Windows Server 2012 R2 (optional). You can use machines in Azure for this following this guide: [Azure Arc Jumpstart Servers](https://azurearcjumpstart.io/azure_arc_jumpstart/azure_arc_servers/azure/)
-    > **Note**  
-    >  When using the Jumpstart the virtual machines will already be onboarded to Azure Arc and therefore "Challenge 1 - Azure Arc prerequisites & onboarding" is not needed.
+If you participate in the MicroHack as part of an official Microsoft or partner-led event:
+* A microsoft account provided as part of the MicroHack, typically some variation of "MH-User" + a number
+* A resource group with the name "mh-arc-onprem-" + your user ID, which contains three VMs with disabled azure agents, simulating an on-premise environment
+* A resource group with the name "mh-arc-cloud-" + your user ID, which will be used to create adjacent resources
+
+![image](img/microhack_architecture_resource_groups.png)
+
+If you run the MircoHack independent from an official event:
+  * Your own Azure subscription with Owner RBAC rights at the subscription level
+    * [Azure Evaluation free account](https://azure.microsoft.com/en-us/free/search/?OCID=AIDcmmzzaokddl_SEM_0fa7acb99db91c1fb85fcfd489e5ca6e:G:s&ef_id=0fa7acb99db91c1fb85fcfd489e5ca6e:G:s&msclkid=0fa7acb99db91c1fb85fcfd489e5ca6e)
+  * You need to have 3 virtual machines ready and updated. One with a Linux operating system (tested with Ubuntu Server 24.04), one with Windows Server 2025 and one with Windows Server 2012 R2 (optional). You can use machines in Azure for this following this guide: [Azure Arc Jumpstart Servers](https://azurearcjumpstart.io/azure_arc_jumpstart/azure_arc_servers/azure/)
+      > **Note**  
+      >  When using the Jumpstart the virtual machines will already be onboarded to Azure Arc and therefore "Challenge 1 - Azure Arc prerequisites & onboarding" is not needed.
+
+
+On your local machine: 
 * [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) (Hint: Make sure to use the lastest version)
 * [Azure PowerShell Guest Configuration Cmdlets](https://learn.microsoft.com/en-us/azure/governance/machine-configuration/machine-configuration-create-setup#install-the-module-from-the-powershell-gallery)
   * It is not possible to run those commands from Azure Cloud Shell
@@ -89,14 +100,14 @@ In challenge 1 you will prepare your Azure environemnt for onboarding of existin
 ### Actions
 
 * Create all necessary Azure resources
-  * Resource Group (Name: mh-arc-servers-rg)
+  * Resource Group (Name: mh-arc-servers-rg) - not relevant for MicroHack participants, as you have a RG provided for you
   * Service Principal (Name: mh-arc-servers-sp)
 * Prep existing server operating system on-prem
 * Onboard existing server to Azure Arc
 
 ### Success criteria
 
-* You created an Azure resource group
+* You created an Azure resource group - not relevant for MicroHack participants, as you have an RG provided for you
 * You created an service principal with the required role membership
 * Prepared successfully an existing Server OS
 * Onboarded server is visible in the Azure Arc plane in the Azure Portal

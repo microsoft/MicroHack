@@ -128,7 +128,7 @@ In challenge 1 you will prepare your Azure environemnt for onboarding of existin
 
 ### Goal
 
-In challenge 2 you will onboard your Windows and Linux virtual machines to Azure Monitor using the Azure Monitoring Agent (AMA) to leverage Azure Update Management, Change Tracking, Inventory and more. Be aware that Microsoft curently shifts from the retiring Log Analytics Agent to Azure Monitoring Agent. By that some of the features used in challange 2 are currently in preview.
+In challenge 2 you will onboard your Windows and Linux virtual machines to Azure Monitor using the Azure Monitoring Agent (AMA) to leverage Azure Update Manager, Change Tracking, Inventory and more. Be aware that Microsoft curently shifts from the retiring Log Analytics Agent to Azure Monitoring Agent. By that some of the features used in challange 2 are currently in preview.
 
 ### Actions
 
@@ -136,7 +136,7 @@ In challenge 2 you will onboard your Windows and Linux virtual machines to Azure
   * Log Analytics workspace (Name: mh-arc-servers-kv-law)
 * Configure Data Collection Rules in Log Analytics to collect Windows event logs and Linux syslog
 * Enable Azure Monitor for Azure Arc enabled servers with Azure Policy initiative
-* Enable and configure Update Management
+* Enable and configure Update Manager
 * Enable Change Tracking and Inventory
 * Enable VM Insights
 
@@ -156,7 +156,7 @@ In challenge 2 you will onboard your Windows and Linux virtual machines to Azure
 * [Deployment options for Azure Monitor agent on Azure Arc-enabled servers](https://learn.microsoft.com/en-us/azure/azure-arc/servers/concept-log-analytics-extension-deployment)
 * [Data collection rules in Azure Monitor](https://learn.microsoft.com/en-us/azure/azure-monitor/essentials/data-collection-rule-overview)
 * [Azure Policy built-in definitions for Azure Arc-enabled servers](https://docs.microsoft.com/en-us/azure/azure-arc/servers/policy-reference)
-* [Azure Update Management Center](https://learn.microsoft.com/en-us/azure/update-center/overview)
+* [Azure Update Manager](https://learn.microsoft.com/en-us/azure/update-manager/overview)
 * [Enable Change Tracking and Inventory using Azure Monitoring Agent (Preview)](https://learn.microsoft.com/en-us/azure/automation/change-tracking/enable-vms-monitoring-agent?tabs=singlevm)
 * [Monitor a hybrid machine with VM insights](https://docs.microsoft.com/en-us/azure/azure-arc/servers/learn/tutorial-enable-vm-insights)
 

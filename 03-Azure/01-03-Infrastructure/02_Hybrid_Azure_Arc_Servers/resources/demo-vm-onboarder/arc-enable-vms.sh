@@ -10,8 +10,8 @@ number_of_participants=10
 
 for i in $(eval echo {0..$(($number_of_participants-1))})
 do
-    resourceGroupforArc="$resourceGroupforArcBase-mh$i"
-    resourceGroupforOnprem="$resourceGroupforOnpremBase-mh$i"
+    resourceGroupforArc="$resourceGroupforArcBase-$i"
+    resourceGroupforOnprem="$resourceGroupforOnpremBase-$i"
 
     # create individual resoure group per participant
     az group create --name $resourceGroupforArc --location $arcRegion

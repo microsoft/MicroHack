@@ -19,7 +19,7 @@ virtualLnxMachineSize="Standard_DS1_v2" # use a vm size with only 1 core to avoi
 # create a resource group for each participant
 for i in $(eval echo {0..$(($number_of_participants-1))})
 do
-    resourceGroupName="$resourceGroupNameBase-mh$i"
+    resourceGroupName="$resourceGroupNameBase-$i"
     az group create --name $resourceGroupName --location $resourceGroupLocation
 done
 
@@ -47,7 +47,7 @@ do
         virtualMachineSize=$virtualWinMachineSize
     fi
 
-    vmName="vm-$type-mh$i"
+    vmName="vm-$type-$i"
     echo "Creating VM $vmName in $location"
 
     networkInterfaceName="$vmName-nic"
@@ -59,7 +59,7 @@ do
     
     # Create a VM
     az deployment group create \
-    --resource-group "$resourceGroupNameBase-mh$i" \
+    --resource-group "$resourceGroupNameBase-$i" \
     --name $deploymentName \
     --template-file ./template-$type.json \
     --parameters @parameters-$type.json \
@@ -71,17 +71,17 @@ do
         networkSecurityGroupName=$networkSecurityGroupName \
         virtualNetworkName=$virtualNetworkName \
         virtualMachineComputerName=$virtualMachineComputerName \
-        virtualMachineRG="$resourceGroupNameBase-mh$i" \
+        virtualMachineRG="$resourceGroupNameBase-$i" \
         virtualMachineSize=$virtualMachineSize \
         location=$location
 
     # Run the reconfig script to disable the Azure Guest Agent
     if [ $type != "linux" ]; then
         echo "Running reconfig-win.ps1 on $vmName"
-        az vm run-command create --name reconfigWin$i --vm-name $vmName -g "$resourceGroupNameBase-mh$i" --location $location --script @reconfig-win.ps1 --async-execution
+        az vm run-command create --name reconfigWin$i --vm-name $vmName -g "$resourceGroupNameBase-$i" --location $location --script @reconfig-win.ps1 --async-execution
     else
         echo "Running reconfig-ubuntu.sh on $vmName"
-        az vm run-command invoke -g "$resourceGroupNameBase-mh$i" -n $vmName --command-id RunShellScript --scripts @reconfig-ubuntu.sh --no-wait
+        az vm run-command invoke -g "$resourceGroupNameBase-$i" -n $vmName --command-id RunShellScript --scripts @reconfig-ubuntu.sh --no-wait
     fi
 
 done

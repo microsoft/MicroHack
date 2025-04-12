@@ -117,53 +117,30 @@ Please ensure that you successfully passed [challenge 1](../../Readme.md#challen
 
 ### Task 5: Enable Change Tracking and Inventory
 
-In order to use the built-in policy initiative to enable *Change Tracking and Inventory* feature, we first need to create a special data collection rule. At the time of authoring this solution walkthrough, this is not possible using the Azure portal. But you can use the ARM template here: [/03-Azure/01-03-Infrastructure/02_Hybrid_Azure_Arc_Servers/resources/ChangeTracking/template-DCR-ChangeTracking.json](../../resources/ChangeTracking/template-DCR-ChangeTracking.json) to create this data collection rule.
+To enable change tracking and inventory, we can use the azure portal. There are multiple ways to enable it and the following will describe two possible options. Firstly, it can be enabled for individual arc enabled machines:
 
-In the custom ARM template, provide the following parameters:
-| *Parameter*                           | *Value*                   |
-|---------------------------------------|---------------------------|
-| Resource group                        | your resource group       |
-| Data Collection Rule                  | leave the Default         |
-| Log Analytics_workspace_ResourceId    | <paste the full resource id of the Log Analytics workspace you created in Task 1><br> i.e. /subscriptions/<*your-subscription-guid*>/resourcegroups/mh-arc-servers-rg/providers/microsoft.operationalinsights/workspaces/mh-arc-la|
+1. Select an arc-enabled server in your resource group
 
-In your command shell, navigate to the folder where the template is located and execute the following command:
+2. In the side panel under *Operations*, select > *Inventory* and input the previously created log analytics workspace. You might need to first select the correct azure region to see a list of all log analytics workspaces in that region.
 
-```
- az deployment group create -g 'mh-arc-servers-rg' --template-file template-DCR-ChangeTracking.json --parameters workspaceResourceId='/subscriptions/<your-subscription-guid>/resourcegroups/<your-resource-group-name>/providers/microsoft.operationalinsights/workspaces/<your-logAnalyticsWorkspace-name>'
-```
+3. Click on *Enable* and wait for the option to complete
 
-Check whether the change tracking data collection rule as been created successfully and note the resource id (you will need it during the policy initiative assignment). Then create the policy assignment following these steps:
+4. Repeat the same steps in the interface under *Operations* > *Change Tracking*. Important: If the previous operation from step three did not complete yet, you will recieve an error when you enable the extension. ("Wait, An extension of type AzureMonitorLinuxAgent is still processing. Only one instance of an extension may be in progress at a time for the same resource")
 
-1. Navigate to *Policy* using the top search bar and select *Assignments* in the left navigation pane.
+![image](./img/5.1_CTI_individual.png)
 
-2. Select *Assignments* in the left navigation pane and click *Assign initiative*
 
-3. In this section you can now configure the assignment with the following settings and create the assignment:
+Change Tracking and inventory can also be enabled through the portal for for multiple machines at once:
 
-- Scope: Please select the resource group used for arc resources
-- Basics: Please search for *Enable ChangeTracking and Inventory for Arc-enabled virtual machines* and select the initiative.
-- Parameters: As *Data Collection Rule Resource Id* provide the resourceId of the data collection rule you just created in the beginning of this task - i.e. */subscriptions/<*your-subscription-guid*>/resourceGroups/<*your-resource-group*>/providers/Microsoft.Insights/dataCollectionRules/DCR-ChangeTracking*.
-- Remediation: Please select the System assigned identity location according to your resources, e.g. West Europe. You do NOT check the box for "Create a remediation task" at this point in time, as it would only create one of the six required. We will do this in one of the next steps.
+1. Navigate to *Change Tracking and Inventory* using the top search bar and select *Arch enabled Machines* in the filter settings.
 
-4. Please wait a few seconds until the creation of the assignment is complete. You should see that the policy is assigned.
+1. Use the checkboxes to select all machines you want to enable change tracking for and then click on *Enable Change Tracking & Inventory* in the row over the filter settings.
 
-5. Important: Both machines were already onboarded earlier. As a result, you need to create a remediation tasks to apply all policies within the initiative to your Azure Arc Servers. Please select the Initiative Assignment and select *Create Remediation Task* for each policy.
+3. Confirm your selection in the dialogue box. In the next screen of the wizard, make sure to change all the log analytics workspaces to the one you created previously by selecting the right region and picking your LAW from the dropdown. Confirm by clickng on the enable button in the wizard. 
 
-![image](./img/5.1_remediation_tasks.png)
+4. Wait for the deployment to finish and verify the machines showing up in the overview in side panel *Inventory*. In the panel *Change tracking*, you will not see any entries, until you start changing files on your previously added servers
 
-6. Accept the default values, check *Re-evaluate resource compliance before remediating* and repeat the remediation for the following policies:
- - DeployAMALinuxHybridVMWithUAIChangeTrackingAndInventory
- - DCRALinuxHybridVMChangeTrackingAndInventory
- - DeployChangeTrackingExtensionLinuxHybridVM
- - DeployChangeTrackingExtensionWindowsHybridVM
- - DeployAMAWindowsHybridVMWithUAIChangeTrackingAndInventory
- - DCAWindowsHybridVMChangeTrackingAndInventory
-
-8. Verify that all remediation were successful. This might take multiple minutes (or even hours).
-
-9. Navigate to Azure Arc, select Servers, followed by selecting your Windows Server. Select Inventory. Please be aware that generating the initial inventory takes multiple Minutes/hours. After a while the white page should show values.
-
-![image](./img/5.9_Inventory.png)
+![image](./img/5.2_CTI_LAW_selection.png)
 
 ### Task 6: Enable VM Insights
 

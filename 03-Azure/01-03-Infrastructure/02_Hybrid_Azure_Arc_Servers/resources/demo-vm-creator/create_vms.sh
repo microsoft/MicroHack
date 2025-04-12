@@ -12,7 +12,7 @@ adminPassword="REPLACE-ME"
 # the script takes about 3min per VM (resulting in 9min per participant).
 
 number_of_participants=10
-regions=("germanywestcentral" "italynorth" "swedencentral" "francecentral" "polandcentral" "uksouth")
+regions=("italynorth" "swedencentral" "francecentral" "polandcentral" "uksouth")
 virtualWinMachineSize="Standard_D2ds_v4" # use a vm size with only 2 cores to avoid core limit issues in sponsored subscriptions
 virtualLnxMachineSize="Standard_DS1_v2" # use a vm size with only 1 core to avoid core limit issues in sponsored subscriptions
 

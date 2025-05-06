@@ -1,6 +1,8 @@
 # adjust parameters with your own values as needed
-resourceGroupNameBase="mh-arc-onprem"
-resourceGroupLocation="germanywestcentral"
+resourceGroupforOnpremBase="mh-arc-onprem"
+resourceGroupforOnpremLocation="germanywestcentral"
+resourceGroupforArcBase="mh-arc-cloud"
+resourceGroupforArcLocation="westeurope"
 adminUsername="mhadmin"
 adminPassword="REPLACE-ME"
     
@@ -16,11 +18,11 @@ regions=("italynorth" "swedencentral" "francecentral" "polandcentral" "uksouth")
 virtualWinMachineSize="Standard_D2ds_v4" # use a vm size with only 2 cores to avoid core limit issues in sponsored subscriptions
 virtualLnxMachineSize="Standard_DS1_v2" # use a vm size with only 1 core to avoid core limit issues in sponsored subscriptions
 
-# create a resource group for each participant
+# create resource groups for each participant
 for i in $(eval echo {0..$(($number_of_participants-1))})
 do
-    resourceGroupName="$resourceGroupNameBase-$i"
-    az group create --name $resourceGroupName --location $resourceGroupLocation
+    az group create --name "$resourceGroupforOnpremBase-$i" --location "$resourceGroupforOnpremLocation"
+    az group create --name "$resourceGroupforArcBase-$i" --location "$resourceGroupforArcLocation"
 done
 
 number_of_regions=${#regions[@]}
@@ -59,7 +61,7 @@ do
     
     # Create a VM
     az deployment group create \
-    --resource-group "$resourceGroupNameBase-$i" \
+    --resource-group "$resourceGroupforOnpremBase-$i" \
     --name $deploymentName \
     --template-file ./template-$type.json \
     --parameters @parameters-$type.json \
@@ -71,17 +73,17 @@ do
         networkSecurityGroupName=$networkSecurityGroupName \
         virtualNetworkName=$virtualNetworkName \
         virtualMachineComputerName=$virtualMachineComputerName \
-        virtualMachineRG="$resourceGroupNameBase-$i" \
+        virtualMachineRG="$resourceGroupforOnpremBase-$i" \
         virtualMachineSize=$virtualMachineSize \
         location=$location
 
     # Run the reconfig script to disable the Azure Guest Agent
     if [ $type != "linux" ]; then
         echo "Running reconfig-win.ps1 on $vmName"
-        az vm run-command create --name reconfigWin$i --vm-name $vmName -g "$resourceGroupNameBase-$i" --location $location --script @reconfig-win.ps1 --async-execution
+        az vm run-command create --name reconfigWin$i --vm-name $vmName -g "$resourceGroupforOnpremBase-$i" --location $location --script @reconfig-win.ps1 --async-execution
     else
         echo "Running reconfig-ubuntu.sh on $vmName"
-        az vm run-command invoke -g "$resourceGroupNameBase-$i" -n $vmName --command-id RunShellScript --scripts @reconfig-ubuntu.sh --no-wait
+        az vm run-command invoke -g "$resourceGroupforOnpremBase-$i" -n $vmName --command-id RunShellScript --scripts @reconfig-ubuntu.sh --no-wait
     fi
 
 done

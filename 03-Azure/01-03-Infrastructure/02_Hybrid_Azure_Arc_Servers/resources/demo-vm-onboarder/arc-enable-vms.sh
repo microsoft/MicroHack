@@ -2,7 +2,6 @@ resourceGroupforOnpremBase="mh-arc-onprem"
 resourceGroupforArcBase="mh-arc-cloud"
 adminUsername="mhadmin"
 adminPassword="REPLACE-ME"
-arcRegion="westeurope"
 triggerPolicyEvaluation=true
 number_of_participants=10
 
@@ -12,9 +11,6 @@ for i in $(eval echo {0..$(($number_of_participants-1))})
 do
     resourceGroupforArc="$resourceGroupforArcBase-$i"
     resourceGroupforOnprem="$resourceGroupforOnpremBase-$i"
-
-    # create individual resoure group per participant
-    az group create --name $resourceGroupforArc --location $arcRegion
 
     # create service principal for arc onboarding
     subscriptionId=$(az account show --query 'id' --output tsv)

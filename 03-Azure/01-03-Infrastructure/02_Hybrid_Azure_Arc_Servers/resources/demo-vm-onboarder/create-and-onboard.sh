@@ -6,7 +6,7 @@
 
 cd ../demo-vm-creator
 # create the VMs
-./create_vms.sh
+./create-vms-and-rgs.sh
 
 cd ../demo-vm-onboarder
 # onboard the VMs

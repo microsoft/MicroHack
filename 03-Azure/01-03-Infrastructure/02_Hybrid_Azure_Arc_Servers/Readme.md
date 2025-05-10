@@ -11,11 +11,11 @@
   - [Challenge 1 - Azure Arc prerequisites & onboarding](#challenge-1---azure-arc-prerequisites--onboarding)
   - [Challenge 2 - Azure Monitor integration](#challenge-2---azure-monitor-integration)
   - [Challenge 3 - Access Azure resources using Managed Identities from your on-premises servers](#challenge-3---access-azure-resources-using-managed-identities-from-your-on-premises-servers)
-  - [Challenge 4 - Microsoft Defender for Cloud integration with Azure Arc](#challenge-4---microsoft-defender-for-cloud-integration-with-azure-arc)
-  - [Challenge 5 - Best Practices assessment for Windows Server](#challenge-5---best-practices-assessment-for-windows-server)
-  - [Challenge 6 - Activate ESU for Windows Server 2012 R2 via Arc (optional)](#challenge-6---activate-esu-for-windows-server-2012-r2-via-arc---optional)
-  - [Challenge 7 - Azure Automanage Machine Configuration (optional)](#challenge-7---azure-automanage-machine-configuration---optional)
-  
+  - [Challenge 4 - Best Practices assessment for Windows Server](#challenge-4---best-practices-assessment-for-windows-server)
+  - [Challenge 5 - Activate ESU for Windows Server 2012 R2 via Arc (optional)](#challenge-5---activate-esu-for-windows-server-2012-r2-via-arc---optional)
+  - [Challenge 6 - Azure Automanage Machine Configuration (optional)](#challenge-6---azure-automanage-machine-configuration---optional)
+  - [Challenge 7 -  Administrating arc-enabled VMs at scale with Azure Policy (optional)](#Challenge-7---Administrating-arc-enabled-VMs-at-scale-with-Azure-Policy---optional)
+
 - [**Contributors**](#contributors)
 
 ## MicroHack introduction
@@ -189,34 +189,8 @@ Managing secrets, credentials or certificates to secure communication between di
 
 [Solution Steps](./walkthrough/challenge-3/solution.md)
 
-## Challenge 4 - Microsoft Defender for Cloud integration with Azure Arc
 
-### Goal
-
-* In this challenge, we will integrate your Azure Arc connected machines with Azure Defender for Cloud. After completing the previous challenges, you should now have an Azure subscription with one or more Azure Arc-enabled servers. You should also have an available Log Analytics workspace and have deployed the Log Analytics agent to your server(s).
-
-### Actions
-
-* Enable Microsoft Defender for Cloud on your Azure Arc-enabled machines.
-
-### Success criteria
-
-* Open Microsoft Defender for Cloud and view the Secure Score for your Azure Arc-enabled machine(s).
-
-### Learning resources
-
-* [What is Microsoft Defender for Cloud?](https://learn.microsoft.com/en-us/azure/defender-for-cloud/defender-for-cloud-introduction)
-* [Quickstart: Connect your non-Azure machines to Microsoft Defender for Cloud](https://learn.microsoft.com/en-us/azure/defender-for-cloud/quickstart-onboard-machines?pivots=azure-arc)
-* [Connect Azure Arc-enabled servers to Microsoft Defender for Cloud](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/manage/hybrid/server/best-practices/arc-security-center)
-* [Protect non-Azure resources using Azure Arc and Microsoft Defender for Cloud](https://techcommunity.microsoft.com/t5/microsoft-defender-for-cloud/protect-non-azure-resources-using-azure-arc-and-microsoft/ba-p/2277215)
-* [Deploy the Azure Monitor Agent to protect your servers with Microsoft Defender for Cloud](https://learn.microsoft.com/en-us/azure/defender-for-cloud/auto-deploy-azure-monitoring-agent)
-
-
-### Solution - Spoilerwarning
-
-[Solution Steps](./walkthrough/challenge-4/solution.md)
-
-## Challenge 5 - Best Practices assessment for Windows Server
+## Challenge 4 - Best Practices assessment for Windows Server
 
 ### Goal
 
@@ -243,7 +217,7 @@ In this challenge, you will configure and deploy the Best Practices Assessment f
 
 [Solution Steps](./walkthrough/challenge-5/solution.md)
 
-## Challenge 6 - Activate ESU for Windows Server 2012 R2 via Arc - optional
+## Challenge 5 - Activate ESU for Windows Server 2012 R2 via Arc - optional
 
 ### Goal
 
@@ -268,7 +242,7 @@ In this challenge, you will activate Extended Security Updates (ESU) for Windows
 
 [Solution Steps](./walkthrough/challenge-6/solution.md)
 
-## Challenge 7 - Azure Automanage Machine Configuration - optional
+## Challenge 6 - Azure Automanage Machine Configuration - optional
 
 ### Disclaimer
 
@@ -302,7 +276,7 @@ This challenge is about interacting with the client operating system. We will ha
 
 [Solution Steps](./walkthrough/challenge-7/solution.md)
 
-## Chhallenge 8 - Administrating arc-enabled VMs at scale with Azure Policy (Optional)
+## Challenge 7 - Administrating arc-enabled VMs at scale with Azure Policy - optional
 
 ### Goal
 

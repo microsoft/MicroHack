@@ -1,33 +1,55 @@
-# Walkthrough Challenge 4 - Microsoft Defender for Cloud integration with Azure Arc
+# Walkthrough Challenge 4 - Best Practices Assessment for Windows Server
 
-Duration: 30 minutes
+Duration: 20 minutes
 
-[Previous Challenge Solution](../challenge-3/solution.md) - **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-5/solution.md)
+[Previous Challenge Solution](../challenge-4/solution.md) - **[Home](../../Readme.md)**
+
 
 ## Prerequisites
 
-Please ensure that you successfully passed [challenge 3](../../Readme.md#challenge-3) before continuing with this challenge.
+Please ensure that you successfully passed [challenge 2](../../Readme.md#challenge-3) before continuing with this challenge, as we need a Log Analytics Workspace for this feature.
 
-### Task 1: Check and collect the Log Analytics workspace from [Challenge 2](../challenge-2/solution.md)
 
-### Task 2: Configure Defender for Cloud
-* Enable Defender for Server
-* Click on Upgrade 
-![image](./img/1.png)
-* Verify
-![image](./img/2.png)
-* Check that the Defender for Servers Plan 2 is enabled
-![image](./img/3.png)
-![image](./img/4.png)
-* Configure autodeployment of the AMA agent
-![image](./img/5.png)
-![image](./img/6.png)
+## Task 1: Set up the Best Practices Assessment for a Windows server
 
-### Task 3: Check that the server is visible in the inventory with all checks green.
+1. Browse to the Azure Arc [Machines overview](https://portal.azure.com/#view/Microsoft_Azure_ArcCenterUX/ArcCenterMenuBlade/~/servers)
+2. Click one of your Windows 2016 (or later) machines
+3. In the left pane, select "Windows Management" and then "Best Practices Assessment (preview)"
+4. Click "Attest to your license type" in the blue overlay
+![alt text](img/image6.png)
+4. Check the "Activate Azure benefits" box and click "Confirm" to enable the Azure Benefits for this machine. This may take up to 10 minutes. Go back to the page of step 3.
+![alt text](img/image7.png)
+4. Click the "Get Started" button. A blade will open on the right.
+![alt text](img/image.png)
+5. Select your ressoruce group and priviously created Log Analytics Workspace
+6. Let the validation check and confirm via "Set up"
+![alt text](img/image2.png)
+7. Wait for the deployment to go through. This may take up to 15 minutes. Feel free to continue with another challenge in the meantime.
+![alt text](img/image3.png)
+### 
 
-![image](./img/7.png)
 
-Congratulations! You secured any server which is outside of Azure and onboarded via Azure Arc.
 
-You successfully completed challenge 4! 🚀🚀🚀
+## Task 2: Start the assessment
 
+1. Click "Go to resource" after the deployment has finished to move back to the Windows Server we're working on
+2. In the left pane, select "Windows Management" and then "Best Practices Assessment (preview)"
+![alt text](img/image4.png)
+3. Click the "Run assessment" at the top of the page (you might get a message it's already processing)
+4. Running the assessment for the first time takes upward to 4 hours for the assessment to run and provide results. Please continue with the next challenge and feel free to come back later.
+
+###
+
+**Congratulations**! You successfully completed this challenge! 🚀🚀🚀
+### 
+
+
+
+## Optional Steps:  
+
+1. You can take a look at the installed extensions that were deployed when setting up the BPA by navigating to your server and clicking "Settings" -> "Extensions" in the left navigation blade:
+    - AzureMonitorWindowsAgent
+    - assessmentplatform
+    - windowsserverassessment
+    ![alt text](img/image5.png)
+2. Please come back later to review the output of the assessment once it has finished.

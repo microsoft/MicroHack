@@ -43,80 +43,75 @@ Please ensure that you successfully passed [challenge 1](../../Readme.md#challen
 7. Create the Data Collection Rule. 
 
 
-### Task 3: Enable Azure Monitor for Azure Arc enabled Servers with Azure Policy initiative
+### Task 3: Enable Azure Monitor Insights for Azure Arc enabled Servers through the Azure portal (incl. Azure Monitoring Agent)
+Enabling Azure Monitor insights automatically sets up the Azure Monitoring Agent (AMA) on the selected machines. It is also possible to set up AMA with custom data collection rules. This gives you fine-grained control over what data is collected and avoids the default configurations that come with VM Insights. To enable Azure Monitor Insights for arc enabled servers, follow the steps below.
 
-1. Navigate to *Policy* using the top search bar and select *Assignments* in the left navigation pane.
+1. Navigate to Azure Monitor by typing *Monitor* in the top search bar
 
-2. Select *Assignments* in the left navigation pane and go to *Assign initiative*
+2. In the navigation side bar, under *Insights*, select the *Virtual machines* tab and click on "Configure Insights" or "Overiew".
 
-3. In this section you can now configure the assignment with the following settings and create the assignment:
+![image](./img/3.1_Monitor_Configure_Insights.png)
 
-- Scope: Please select your resource group
-- Basics: Please search for *Enable Azure Monitor for Hybrid VMs with AMA* and select the initiative.
-- Parameters: Please insert the Resource ID of the Data Collection Rule from Task 2. 
-- Remediation: Please select the System assigned identity location according to your resources, e.g. West Europe. Don't check the box for "Create a remediation task" here, as it would only create a remediation task for the first policy within the policy initiative. We will do this in one of the next steps for all policies.
-- Click *Review + create* and then *Create*
+3. In the "Not monitored" tab, adjust the filter type to "arc machines" and resource group to only show your resource group
 
-4. Please wait around 30 seconds until the creation of the assignment is complete. You should see that the initiative is assigned. Every new Azure Arc server will now automatically install the AMA and Dependency agents as well the necessary association with the data collection rule we created in task 2. Be aware that agent installation can take up to 60 Minutes.
+4. For each machine, do the following:
 
-![image](./img/3.4_Assign_Policy_Monitor_AMA.png)
+5. In the tree view, click "enable" and then enable again int the pop up
 
-5. Important: Both machines were already onboarded earlier. As a result, you need to create a remediation task for each policy in the initiative to apply the policy to your existing Azure Arc Servers. Please select the Policy Assignment and select *Create Remediation Task*.
+![image](./img/3.2_Monitor_enable_overview.png)
 
-![image](./img/3.5_Assign_Policy_Monitor_AMA_remidiate.png)
+6. Under data collection rule, click "Create New"
 
-6. Accept the default values, check *Re-evaluate resource compliance before remediating* and repeat the remediation for the following policies:
- - AzureMonitorAgent_Windows_HybridVM_Deploy
- - AzureMonitorAgent_Linux_HybridVM_Deploy
- - DependencyAgentExtension_AMA_Windows_HybridVM_Deploy
- - DependencyAgentExtension_AMA_Linux_HybridVM_Deploy
- - DataCollectionRuleAssociation_Windows
- - DataCollectionRuleAssociation_Linux
+![image](./img/3.3_Monitor_configuration_dcr_new.png)
 
-![image](./img/3.6_Assign_Policy_Monitor_AMA_remidiate.png)
+7. Create a new rule with an appropriate name, enable processes and dependencies and select your log analytics workspace you created earlier. Then click "Create"
 
-7. In Policy > Remediation > Remediation Task, verify that all remediation completed successfully:
+![image](./img/3.4_Monitor_dcr_create.png)
 
-![image](./img/3.7_Assign_Policy_Monitor_AMA_remidiate.png)
+8. to Verify the monitoring works, navigate to the Arc control pane and select your one of your enabled VMs. Navigate to the *Insights* tab to see the metrics for that virtual machine. 
 
-### Task 4: Enable and configure Update Manager
+![image](./img/3.5_Monitor_view_metrics.png)
 
-1. Navigate to *Policy* using the top search bar and select *Assignments* in the left navigation pane.
+### Task 4: Enable and configure Update Manager through the Azure portal
+To enable periodic update checking with the Azure Update Manager through the Azure Portal, the following steps have to be completed:
 
-2. Select *Assignments* in the left navigation pane and go to *Assign Policy*
+1. Navigate to the Update manager by typing *Azure Update Manager* in the top search bar
 
-3. In this section you can now configure the assignment with the following settings and create the assignment:
+2. Under the resource category, select the *Machines* tab in the side navigation bar. 
 
-- Scope: Please select your resource group used for arc resources
-- Basics: Please search for *Configure periodic checking for missing system updates on azure Arc-enabled servers* and select the policy. As *Assignment name* append *(Windows)* 
-- Parameters: Skip, and keep defaults (which targeting Windows guest OS.)
-- Remediation: Please select the System assigned identity location according to your resources, e.g. West Europe. 
-- Click *Review + create* and then *Create*
+3. Filter by resource type and select "Arc-enabled servers" and your resource group
 
-4. Please wait a few seconds until the creation of the assignment is complete. You should see that the policy is assigned.
+4. Select all servers with a checkbox and click on "Update settings". Click on confirm in the pop-up dialouge
 
-5. Repeat step 3 and 4 for the policy definition *Configure periodic checking for missing system updates on azure Arc-enabled servers*, apply the same configuration as in step 3 but this time unselect the checkbox at *Only show parameters that need input or review*, and change OS Type to *Linux*. Also append *(Linux)* in the *Assignment name* field.
+![image](./img/4.1_Update_manger_update_settings.png)
 
-6. Important: Both machines were already onboarded earlier. As a result, you need to create a remediation task to trigger the DeployIfNotExists effect of the policy to your Azure Arc Servers. Please select the policy assignment and select *Create Remediation Task*.
+5. In the wizard, select "enable" in the periodic assessment column for all servers and confirm by pressing "save".
 
-7. Accept the default values, check *Re-evaluate resource compliance before remediating* and repeat the remediation for the following policies:
- - Configure periodic checking for missing system updates on azure Arc-enabled servers (Windows)
- - Configure periodic checking for missing system updates on azure Arc-enabled servers (Linux)
+![image](./img/4.2_Update_manager_change_enable_periodic_assessment.png)
 
-8. Verify that all remediation were successful.
+To verify your new settings you can either check one or multiple servers. To select one machine:
 
-9. Navigate to Azure Arc, select Servers, repeat step 10 for your your Windows and Linux Server.
+1. Navigate to *Azure Arc* using the top search bar and select a machine. Within the overview panel, on the sidebar select *Updates*. If there are no update information dispayed yet, click *Check for updates* and wait until missing updates appear. Then click on *One-time update* or *Schedule updates* if you would like to postpone the installation to a later point in time. (follow the wizzard).
 
-10. Select Updates. If there are no update information dispayed yet, click *Check for updates* and wait until missing updates appear. Then click on *One-time update* or *Schedule updates* if you would like to postpone the installation to a later point in time. (follow the wizzard).
+![image](./img/4.3_Update_Management_individual_trigger.png)
 
-![image](./img/4.10_Update_Management.png)
+2. After applying the updates point-in-time or via scheduler you should see the updates being installed on the system.
 
-11. After applying the updates point-in-time or via scheduler you should see the updates beeing installed on the system.
+![image](./img/4.4_Update_Management_individual_install.png)
 
-![image](./img/4.11_Update_Management.png)
+Or to verify the new settings for all machines:
 
-### Task 5: Enable Change Tracking and Inventory
+1. Navigate to the Update manager by typing *Azure Update Manager* in the top search bar
 
+2. Check for pending Updates in the *Pending Updates* overview - if there are none, follow the steps below
+
+3. Under the *Machines* tab, filter for and then select all arc-enabled machines
+
+4. Click on *Check for updates*
+
+5. The identified updates can be found after the operations completes in the navigation bar under *Pending updates*
+
+### Task 5: Enable Change Tracking and Inventory through the Azure portal
 To enable change tracking and inventory, we can use the azure portal. There are multiple ways to enable it and the following will describe two possible options. Firstly, it can be enabled for individual arc enabled machines:
 
 1. Select an arc-enabled server in your resource group

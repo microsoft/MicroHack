@@ -133,12 +133,11 @@ In challenge 2 you will onboard your Windows and Linux virtual machines to Azure
 ### Actions
 
 * Create all necessary Azure resources
-  * Log Analytics workspace (Name: mh-arc-servers-kv-law)
+  * Log Analytics workspace (Name: mh-arc-servers-kv-law - for MicroHack Particicpants please add your ID to the name)
 * Configure Data Collection Rules in Log Analytics to collect Windows event logs and Linux syslog
-* Enable Azure Monitor for Azure Arc enabled servers with Azure Policy initiative
+* Enable VM Insights and the Azure Monitoring Agent
 * Enable and configure Update Manager
 * Enable Change Tracking and Inventory
-* Enable VM Insights
 
 
 ### Success criteria
@@ -155,11 +154,9 @@ In challenge 2 you will onboard your Windows and Linux virtual machines to Azure
 * [Create a Log Analytics workspace in the Azure portal](https://docs.microsoft.com/en-us/azure/azure-monitor/logs/quick-create-workspace)
 * [Deployment options for Azure Monitor agent on Azure Arc-enabled servers](https://learn.microsoft.com/en-us/azure/azure-arc/servers/concept-log-analytics-extension-deployment)
 * [Data collection rules in Azure Monitor](https://learn.microsoft.com/en-us/azure/azure-monitor/essentials/data-collection-rule-overview)
-* [Azure Policy built-in definitions for Azure Arc-enabled servers](https://docs.microsoft.com/en-us/azure/azure-arc/servers/policy-reference)
 * [Azure Update Manager](https://learn.microsoft.com/en-us/azure/update-manager/overview)
-* [Enable Change Tracking and Inventory using Azure Monitoring Agent (Preview)](https://learn.microsoft.com/en-us/azure/automation/change-tracking/enable-vms-monitoring-agent?tabs=singlevm)
 * [Monitor a hybrid machine with VM insights](https://docs.microsoft.com/en-us/azure/azure-arc/servers/learn/tutorial-enable-vm-insights)
-
+* [Enable Change Tracking and Inventory](https://learn.microsoft.com/en-us/azure/automation/change-tracking/enable-vms-monitoring-agent?tabs=singlevm%2Cmultiplevms&pivots=single-portal)
 
 ### Solution - Spoilerwarning
 
@@ -305,6 +302,32 @@ This challenge is about interacting with the client operating system. We will ha
 
 [Solution Steps](./walkthrough/challenge-7/solution.md)
 
+## Chhallenge 8 - Administrating arc-enabled VMs at scale with Azure Policy (Optional)
+
+### Goal
+
+In this challenge, we will re-install the Azure Monitoring agent on our machines, but instead of using the Azure portal to select individual machines, we will use Azure Policy to roll out the Agent. This approach enables scalable, automated administration of large fleets of Arc-enabled servers.
+
+### Actions
+
+* Disable Azure Monitoring Insights and the Azure Monitoring Agent through the Azure Portal
+* Setup an Initivative that re-installs the AMA on the machines and associates it with a suitable DCR (either a new one or from Challenge 2)
+
+### Success criteria
+
+* The AMA is deployed to the machines through Azure Policy
+
+### Learning resources
+
+* [Azure Policy Overview](https://learn.microsoft.com/en-us/azure/governance/policy/overview)
+* [Deploy if not exists effect in Azure Policy](https://learn.microsoft.com/en-us/azure/governance/policy/concepts/effect-deploy-if-not-exists)
+* [Azure Policy built-in definitions for Azure Arc-enabled servers](https://docs.microsoft.com/en-us/azure/azure-arc/servers/policy-reference)
+* [Deploy and configure Azure Monitor Agent using Azure Policy](https://learn.microsoft.com/en-us/azure/azure-arc/servers/deploy-ama-policy)
+
+### Solution - Spoilerwarning
+
+[Solution Steps](./walkthrough/challenge-8/solution.md)
+
 ## Finish
 
 Congratulations! You finished the MicroHack Azure Arc for Servers. We hope you had the chance to learn about the Hybrid capabilities of Azure.  
@@ -319,3 +342,4 @@ Thank you for investing the time and see you next time!
 * Nils Bankert [GitHub](https://github.com/nilsbankert); [LinkedIn](https://www.linkedin.com/in/nilsbankert/)
 * Alexander Ortha [GitHub](https://github.com/alexor-ms/); [LinkedIn](https://www.linkedin.com/in/alexanderortha/)
 * Christoph Süßer (Schmidt) [GitHub](https://github.com/TheFitzZZ); [LinkedIn](https://www.linkedin.com/in/suesser/)
+* Adrian Bossert [GitHub](https://github.com/adrianms509); [LinkedIn](https://www.linkedin.com/in/adrian-bossert/)

@@ -25,6 +25,11 @@ for id in $policy_ids; do
     --body '{"state": "disabled"}'
 done
 
+# Enable all necesarry resource providers for the challenges
+echo Enabling resource providers...
+az provider register --namespace Microsoft.KeyVault
+az provider register --namespace Microsoft.HybridCompute
+
 # Create users and assign resource groups
 tenant=$(az account show --query tenantDefaultDomain --output tsv)
 

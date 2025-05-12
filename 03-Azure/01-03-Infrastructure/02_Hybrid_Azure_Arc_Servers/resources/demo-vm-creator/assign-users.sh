@@ -42,7 +42,9 @@ for i in $(eval echo {0..$(($number_of_participants-1))}); do
     user=$(az ad user show --id "$userPrincipalName" --query "id" --output tsv)
 
     echo Assigning $displayName to resource groups...
-    az role assignment create --assignee "$user" --role "Contributor" --scope "$resourceGroupOnpremId" --output none
-    az role assignment create --assignee "$user" --role "Contributor" --scope "$resourceGroupArcId" --output none
+    # Owner required in case we want to run SSH using Azure CLI
+    az role assignment create --assignee "$user" --role "Owner" --scope "$resourceGroupOnpremId" --output none
+    # Policy Contributer and RBAC write needed to assign DINE policies in challenge 7, requiring owner role
+    az role assignment create --assignee "$user" --role "Owner" --scope "$resourceGroupArcId" --output none
 
 done

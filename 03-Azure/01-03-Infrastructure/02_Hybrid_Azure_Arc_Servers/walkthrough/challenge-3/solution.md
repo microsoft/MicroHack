@@ -22,18 +22,20 @@ Please ensure that you successfully passed [challenge 2](../../Readme.md#challen
 
 ### Task 2: Create a new secret in your Key Vault
 
-1. After the creation navigate to the Azure Key Vault and assign the *Secret Management* template to the managed identity of your Linux Azure Arc-enabled server.
+1. After the creation navigate to the Azure Key Vault, select *Access control (IAM)* on the left control pane and assign your own user the *Key Vault Secrets Officer* role. This is necesarry to create secrets in the next step.
 
-![image](./img/3_Assign_KeyVault_permissions.jpg)
+2. Now assign the role *Key Vault Secrets User* to the managed identity of your Linux Azure Arc-enabled server.
 
-2. Create a new secret called *kv-secret* and give it a value like *This-is-top-secret!!!*.
+![image](./img/1.3_Assing_KeyVault_permissions.png)
+
+3. Create a new secret called *kv-secret* and give it a value like *This-is-top-secret!!!*. You might need to wait several minutes for role assignments from Step 1. to become effective
 
 ![image](./img/4_Create_Secret.png)
 
 
 ### Task 3: Call the secret without providing any credentials
 
-1. Connect via SSH to the Virtual Machine *microhack-arc-servers-lin01*.
+1. Connect via SSH to the virtual Machine running linux
 
 2. Elevate your privileges using the following command:
 

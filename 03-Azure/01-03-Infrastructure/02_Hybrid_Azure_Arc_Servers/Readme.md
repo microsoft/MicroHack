@@ -171,7 +171,7 @@ Managing secrets, credentials or certificates to secure communication between di
 ### Actions
 
 * Create an Azure Key Vault in your Azure resource group
-* Create a secret in the Azure Key Vault and assign permissions to your virtual machine vm-linux-mh0
+* Create a secret in the Azure Key Vault and assign permissions to your arc managed virtual machine running linux 
 * Access the secret via bash script
 
 ### Success Criteria

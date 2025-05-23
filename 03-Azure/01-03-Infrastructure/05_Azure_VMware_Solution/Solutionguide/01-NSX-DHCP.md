@@ -25,6 +25,7 @@ This DHCP server automatically gets connected to the default Tier 1 Gateway
 
 ![](./Images/01-NSX-DHCP/NSX_image4.png)
 
-### Note 2
+> [!NOTE]
+> The settings and changes above are for demonstration purposes only and are not required for the lab to function.
 
-The settings and changes above are for demonstration purposes only and are not required for the lab to function.
+

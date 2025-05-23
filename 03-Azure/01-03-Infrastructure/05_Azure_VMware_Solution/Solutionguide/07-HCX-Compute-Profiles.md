@@ -29,7 +29,10 @@ Generally the type of services greyed out will depend on the type of HCX licensi
 
 ![](./Images/07-HCX-Compute-Profiles/HCX_ComputeCluster002.PNG)
 
-7.	From Select Uplink Network Profile, also select the Management Profile. This is because of the setup of the onprem SDDC. Then select Continue. (**NOTE: If you add the Uplink Network Profile instead, this implementation will fail**)
+7.	From Select Uplink Network Profile, also select the Management Profile. This is because of the setup of the onprem SDDC. Then select Continue.
+[!NOTE]
+Please [Visit AVS Hub](https://www.avshub.io/workshop-guide/#credentials-for-the-workload-vms) for VM Credentials
+
 
 ![](./Images/07-HCX-Compute-Profiles/HCX_image27.png)
 

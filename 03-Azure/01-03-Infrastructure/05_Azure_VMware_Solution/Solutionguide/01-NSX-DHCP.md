@@ -24,3 +24,8 @@ This DHCP server automatically gets connected to the default Tier 1 Gateway
 4.	You can now log on to NSX Manager in AVS and verify that the DHCP server is attached to the Tier1 Gateway
 
 ![](./Images/01-NSX-DHCP/NSX_image4.png)
+
+> [!NOTE]
+> The settings and changes above are for demonstration purposes only and are not required for the lab to function.
+
+

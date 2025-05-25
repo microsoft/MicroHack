@@ -1,0 +1,45 @@
+swapsize: 76800 # <--- !!! adjust depending on the Azure VM series & size you are using (provide in MB (GB*1024)) !!! 
+data_guard: "no"
+
+# primary oracle group
+oracle_group: oinstall
+
+# DBA group
+oracle_dba_group: dba
+oracle_backupdba_group: backupdba
+oracle_oper_group: oper
+oracle_dgdba_group: dgdba
+oracle_kmdba_group: kmdba 
+oracle_racdba_group: racdba
+
+oracle_groups: wheel,dba,backupdba,oper,dgdba,kmdba,racdba
+
+oracle_user: oracle
+oracle_pass: <REPLACE_ME> # <--- adjust with password hash
+
+#storage type, FS|ASM
+storage_type: FS
+data_device: /dev/disk/azure/scsi1/lun1
+data_disk_mount: /u01
+redo_device: /dev/disk/azure/scsi1/lun0
+redo_disk_mount: /u02
+# ctrl_device: /dev/disk/azure/scsi1/lun2
+# ctrl_disk_mount: /u03
+
+
+stage_dir: /tmp
+
+oracle_db_home: /u01/app/oracle/product/19.3.0/dbhome_1
+
+sysPassword: Oracle123.?
+systemPassword: Oracle123.?
+dbsnmpPassword: Oracle123.?
+gdbName: ORCL
+sid: ORCL
+redo_log_filepath: /u02/app/oracle/oradata  
+
+# not needed if using the marketplace image
+# Oracle binaries download information
+storage_account: mhorabinstoregwc71438      # adjust to environment setup
+storage_container: oracle-bin               # adjust to environment setup
+storage_blob: LINUX.X64_193000_db_home.zip

@@ -1,0 +1,12 @@
+# on primary
+host sleep 5 (prior to and after set archivelog mode)
+alter system set log_archive_dest_1='LOCATION=USE_DB_RECOVERY_FILE_DEST VALID_FOR=(ALL_LOGFILES,ALL_ROLES) DB_UNIQUE_NAME={{ sid }}' scope=both;
+
+
+# on standby
+# add to RMAN
+set log_archive_dest_1='LOCATION=USE_DB_RECOVERY_FILE_DEST VALID_FOR=(ALL_LOGFILES,ALL_ROLES) DB_UNIQUE_NAME={{ sid }}DG1'
+
+# restart standby DB after running RMAN
+SQL> shutdown immediate;
+SQL> startup mount;

@@ -1,0 +1,36 @@
+# primary oracle group
+oracle_group: oinstall
+
+# DBA group
+oracle_dba_group: dba
+oracle_backupdba_group: backupdba
+oracle_oper_group: oper
+oracle_dgdba_group: dgdba
+oracle_kmdba_group: kmdba
+oracle_racdba_group: racdba
+
+oracle_groups: wheel,dba,backupdba,oper,dgdba,kmdba,racdba
+
+oracle_user: oracle
+oracle_pass: $1$salt$6hY7SFGTovD5BRJ.4zYAd1
+
+swapsize: 16384
+
+#storage type, FS|ASM
+storage_type: FS
+
+
+data_device: /dev/disk/azure/scsi1/lun1
+#data_device: ../../../sdb
+data_disk_mount: /u01
+
+stage_dir: /tmp
+
+oracle_db_home: /u01/app/oracle/product/19.0.0/dbhome_1
+
+sysPassword: Oracle123.?
+systemPassword: Oracle123.?
+dbsnmpPassword: Oracle123.?
+gdbName: ORCL
+sid: ORCL
+redo_log_filepath: /u01/app/oracle/oradata

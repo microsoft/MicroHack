@@ -1,0 +1,17 @@
+---
+- block:
+
+  - name: copy single instance check script
+    template: src=sicheck.sql.j2 dest=/tmp/sicheck.sql
+    become_user: "{{ oracle_user }}"
+ 
+#    #TODO: https://vjdba.wordpress.com/tag/rman-05537/
+#  
+  - name: check single instance database state
+    become_user: "{{ oracle_user }}"
+    shell: echo @"/tmp/sicheck.sql;" | sqlplus / as sysdba
+    register: out
+
+  - debug: var=out.stdout_lines
+  become: true
+  become_user: "{{ oracle_user }}"

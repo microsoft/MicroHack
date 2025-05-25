@@ -1,0 +1,7 @@
+---
+- hosts: all
+  gather_facts: true
+  become: true
+  roles:
+  - testdataguard
+  

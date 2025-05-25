@@ -1,0 +1,19 @@
+{{ sid }} =
+  (DESCRIPTION =
+    (ADDRESS_LIST =
+      (ADDRESS = (PROTOCOL = TCP)(HOST = vm-primary-0)(PORT = 1521))
+    )
+    (CONNECT_DATA =
+      (SID = {{ sid }})
+    )
+  )
+ 
+{{ sid }}DG1 =
+  (DESCRIPTION =
+    (ADDRESS_LIST =
+      (ADDRESS = (PROTOCOL = TCP)(HOST = vm-secondary-0)(PORT = 1521))
+    )
+    (CONNECT_DATA =
+      (SID = {{ sid }}DG1)
+    )
+  )

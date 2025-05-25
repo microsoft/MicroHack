@@ -1,0 +1,15 @@
+{
+  "name": "postgres-sink-connector_0",
+  "config": {
+    "name": "postgres-sink-connector_0",
+    "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+    "tasks.max": "1",
+    "topics": "addresses",
+    "connection.url": "jdbc:postgresql://microhack.postgres.database.azure.com:5432/postgres",
+    "connection.user": "demo_schema",
+    "connection.password": "********",
+    "insert.mode": "INSERT",
+    "auto.create": "true",
+    "auto.evolve": "true"
+  }
+}

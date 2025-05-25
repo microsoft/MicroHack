@@ -1,0 +1,147 @@
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_MAX_CLIENT_CNXNS: 60
+    networks:
+      - kafka-net
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENERS: 'PLAINTEXT://kafka:29092,CONTROLLER://kafka:29093,PLAINTEXT_HOST://0.0.0.0:9092'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 100
+    networks:
+      - kafka-net
+
+
+  connect:
+    image: confluentinc/cp-kafka-connect:latest
+    container_name: kafka-connect
+    ports:
+      - 8083:8083
+    depends_on:
+      - kafka
+    environment:
+      CONNECT_REST_PORT: 8083
+      CONNECT_BOOTSTRAP_SERVERS: kafka:29092
+      CONNECT_GROUP_ID: connect-cluster
+      CONNECT_CONFIG_STORAGE_TOPIC: _connect_configs
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_OFFSET_STORAGE_TOPIC: _connect_offset
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_STATUS_STORAGE_TOPIC: _connect_status
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_KEY_CONVERTER: org.apache.kafka.connect.storage.StringConverter
+      CONNECT_VALUE_CONVERTER: org.apache.kafka.connect.storage.StringConverter
+      CONNECT_INTERNAL_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_INTERNAL_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_REST_ADVERTISED_HOST_NAME: connect
+      CONNECT_PLUGIN_PATH: "/usr/share/java,/usr/share/confluent-hub-components,/kafka/plugins"
+      CLASSPATH: "/kafka/plugins/ojdbc8.jar,/kafka/plugins/postgresql-42.7.5.jar"
+    command:  
+      - bash 
+      - -c 
+      - |
+        echo 'Installing JDBC and PostgreSQL plugin' && \
+        curl -o /kafka/plugins/kafka-connect-jdbc-10.8.0.jar https://packages.confluent.io/maven/io/confluent/kafka-connect-jdbc/10.8.0/kafka-connect-jdbc-10.8.0.jar && \
+        curl -o /kafka/plugins/postgresql-42.7.5.jar https://jdbc.postgresql.org/download/postgresql-42.7.5.jar && \
+        exec /etc/confluent/docker/run
+    volumes:
+      - C:\tmp\kafka\plugins:/kafka/plugins
+      - C:\oracle\instantclient_23_6\ojdbc8.jar:/kafka/plugins/ojdbc8.jar
+    networks:
+      - kafka-net
+
+
+  oracle:
+    image: oracleinanutshell/oracle-xe-11g
+    container_name: oracle-xe1
+    hostname: oracle-xe1
+    ports:
+      - "1521:1521"
+      - "5500:5500"
+    environment:
+      ORACLE_PASSWORD: password
+      ORACLE_ALLOW_REMOTE: "true"
+    networks:
+      - kafka-net
+
+
+  oracle21c:
+    image: gvenzl/oracle-xe:21.3.0-full-faststart
+    container_name: oracle-xe21c
+    hostname: oracle-xe21c
+    ports:
+      - "1522:1522"
+      - "5501:5501"
+    environment:
+      - ORACLE_PASSWORD=password
+      - ORACLE_ALLOW_REMOTE="true"
+    volumes:
+      - C:\tmp\oracle\oraclexe21c:/opt/oracle/sqldeveloper
+      - C:\tmp\oracle\oraclexe21c\init_scripts:/container-entrypoint-initdb.d 
+    networks:
+      - kafka-net    
+
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: microhack
+    networks:
+      - kafka-net
+
+
+  ora2pg:
+    image: georgmoser/ora2pg
+    container_name: ora2pg
+    privileged: true
+    environment:
+      - CONFIG_LOCATION=/config/myconfigfile.conf
+      - OUTPUT_LOCATION=/data/myfolder
+      - ORA_HOST=dbi:Oracle:host=oracle_xe1;sid=XE;port=1521
+      - ORA_USER=demo_user
+      - ORA_PWD=password
+    volumes:
+      - /config/:/config
+      - /data:/data
+    command: tail -f /dev/null 
+    stdin_open: true
+    tty: true
+    networks:
+      - kafka-net
+      
+
+  pgadmin:
+    image: dpage/pgadmin4:9.0.0
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    networks:
+      - kafka-net
+      
+
+networks:
+  kafka-net:
+    driver: bridge

@@ -1,0 +1,25 @@
+#!/bin/sh
+# chkconfig: 345 99 10
+# Description: Oracle auto start-stop script.
+#
+# Set ORA_HOME to be equivalent to $ORACLE_HOME.
+ORA_HOME=/u01/app/oracle/product/19.0.0/dbhome_1
+ORA_OWNER=oracle
+
+case "$1" in
+'start')
+    # Start the Oracle databases:
+    # The following command assumes that the Oracle sign-in
+    # will not prompt the user for any values.
+    # Remove "&" if you don't want startup as a background process.
+    su - $ORA_OWNER -c "$ORA_HOME/bin/dbstart $ORA_HOME" & touch /var/lock/subsys/dbora
+    ;;
+
+'stop')
+    # Stop the Oracle databases:
+    # The following command assumes that the Oracle sign-in
+    # will not prompt the user for any values.
+    su - $ORA_OWNER -c "$ORA_HOME/bin/dbshut $ORA_HOME" &
+    rm -f /var/lock/subsys/dbora
+    ;;
+esac

@@ -62,6 +62,8 @@ Workload-1-1-1 & Workload-1-1-2
 
 16.	Now come back to the distributed firewall and set the action to reject
 
-17.	Now ping the Workload-1-1-2 VM from Workload-1-1-1 VM. We should notice that the ping is blocked
+17.	Now ping the Workload-1-1-2 VM from Workload-1-1-1 VM. We should notice that the ping is blocked.
+> [!NOTE]
+> Please [Visit AVS Hub](https://www.avshub.io/workshop-guide/#credentials-for-the-workload-vms) for VM Credentials
 
 This proves the distributed firewall rule between the 2 application groups

@@ -30,6 +30,9 @@ Generally the type of services greyed out will depend on the type of HCX licensi
 ![](./Images/07-HCX-Compute-Profiles/HCX_ComputeCluster002.PNG)
 
 7.	From Select Uplink Network Profile, also select the Management Profile. This is because of the setup of the onprem SDDC. Then select Continue.
+> [!NOTE]
+> Selecting the wrong Uplink Network Profile will prevent the lab from proceeding correctly.
+
 
 ![](./Images/07-HCX-Compute-Profiles/HCX_image27.png)
 

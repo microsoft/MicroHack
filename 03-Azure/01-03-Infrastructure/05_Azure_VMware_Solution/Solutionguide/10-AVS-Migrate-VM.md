@@ -35,6 +35,10 @@ As the VM that was migrated was on a extended network, the IP address of the VM 
 
 8. Optionally if time permits please also try out the reverse migration.
 
-9. Try to ping Workload-1-1-2 from Workload-1-1-2. The login details can be found in the Azure Key Vault.
+9. Try to ping Workload-1-1-2 from Workload-1-1-2.
+> [!NOTE]
+> The login details can be found in the Azure Key Vault or [Visit AVS Hub](https://www.avshub.io/workshop-guide/#credentials-for-the-workload-vms) for VM Credentials
 
-10. Move the second VM accordingly to AVS.
+
+
+11. Move the second VM accordingly to AVS.

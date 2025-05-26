@@ -82,11 +82,11 @@ In the search bar enter *Azure Migrate* and select Azure Migrate from the list o
 
 ![image](./img/AzMig1.png)
 
-Select *Servers, databases and web apps*, make sure that the previousley created Azure Migrate project is selected and klick *Discover*
+Select *Servers, databases and web apps*, make sure that the previousley created Azure Migrate project is selected and click *Discover*
 
 ![image](./img/Discover1.png)
 
-Select *Physical or other (AWS, GCP,Xen, etc.)* from the *Are your servers virtualized* drop down. Enter a name into the *Name your appliance* field and clicke *Generate*. Wait until the Project key has been created. Copy the Project key and klick *Download*, to download the ZIP file containing the PowerShell script to install the Azure Migrate Appliance.
+Select *Physical or other (AWS, GCP,Xen, etc.)* from the *Are your servers virtualized* drop down. Enter a name into the *Name your appliance* field and clicke *Generate*. Wait until the Project key has been created. Copy the Project key and click *Download*, to download the ZIP file containing the PowerShell script to install the Azure Migrate Appliance.
 
 ![image](./img/Discover2.png)
 

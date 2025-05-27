@@ -1,55 +1,47 @@
-# Walkthrough Challenge 5 - Best Practices Assessment for Windows Server
+# Walkthrough Challenge 5 - Activate ESU for Windows Server 2012 R2
 
-Duration: 20 minutes
+Duration: 15 minutes
 
-[Previous Challenge Solution](../challenge-4/solution.md) - **[Home](../../Readme.md)**
-
-
-## Prerequisites
-
-Please ensure that you successfully passed [challenge 2](../../Readme.md#challenge-3) before continuing with this challenge, as we need a Log Analytics Workspace for this feature.
+[Previous Challenge Solution](../challenge-5/solution.md) - **[Home](../../Readme.md)**
 
 
-## Task 1: Set up the Best Practices Assessment for a Windows server
+## Task 1: Create a Windows Server ESU license
 
-1. Browse to the Azure Arc [Machines overview](https://portal.azure.com/#view/Microsoft_Azure_ArcCenterUX/ArcCenterMenuBlade/~/servers)
-2. Click one of your Windows 2016 (or later) machines
-3. In the left pane, select "Windows Management" and then "Best Practices Assessment (preview)"
-4. Click "Attest to your license type" in the blue overlay
-![alt text](img/image6.png)
-4. Check the "Activate Azure benefits" box and click "Confirm" to enable the Azure Benefits for this machine. This may take up to 10 minutes. Go back to the page of step 3.
-![alt text](img/image7.png)
-4. Click the "Get Started" button. A blade will open on the right.
-![alt text](img/image.png)
-5. Select your ressoruce group and priviously created Log Analytics Workspace
-6. Let the validation check and confirm via "Set up"
-![alt text](img/image2.png)
-7. Wait for the deployment to go through. This may take up to 15 minutes. Feel free to continue with another challenge in the meantime.
-![alt text](img/image3.png)
+1. Navigate to the Azure Arc center and click "Licenses" and "Windows Server ESU licenses" (or click [here](https://portal.azure.com/#view/Microsoft_Azure_ArcCenterUX/ArcCenterMenuBlade/~/license))
+2. Click "Create" on the top bar. A new blade will open.
+3. Fill in the required field:
+    - Subscription and Resource group (where you created your previous objects)
+    - A license name - should only contain letters (both uppercase and lowercase), digits, hyphens, underscores, and periods. Consecutive dots are not allowed.
+    - Select "Activate now" (you could create one with "Activate later" but cannot attach it to a server then)
+    - Keep "West Europe" as the selected region
+    - Select virtual cores with 8 total
+    - De-select the "Have an invoice?" checkbox at the bottom
+    - Make sure the Software Assurance box is checked, and then click "Create"
+    ![alt text](img/image1.png)
+    ![alt text](img/image2.png)
+    - Wait a couple of moments and click "Refresh" in the license overview. Your new item will apprear:
+    ![alt text](img/image3.png)
 ### 
 
 
 
-## Task 2: Start the assessment
+## Task 2: Attach the ESU license to the server: 
 
-1. Click "Go to resource" after the deployment has finished to move back to the Windows Server we're working on
-2. In the left pane, select "Windows Management" and then "Best Practices Assessment (preview)"
+1. Navigate to the Azure Arc center and click "Licenses" and "Windows Server ESU licenses" (or click [here](https://portal.azure.com/#view/Microsoft_Azure_ArcCenterUX/ArcCenterMenuBlade/~/license))
+2. Click "Eligible resources" on the top to get a list of Arc enabled server that are eligible to use an ESU license
+3. Select your Windows 2012 server and click "Enable ESUs"
 ![alt text](img/image4.png)
-3. Click the "Run assessment" at the top of the page (you might get a message it's already processing)
-4. Running the assessment for the first time takes upward to 4 hours for the assessment to run and provide results. Please continue with the next challenge and feel free to come back later.
+4. Select "Virtual Cores" which will then allow you to select your previously created license
+![alt text](img/image5.png)
+5. Click "Enable" to attach the license to the server
+6. The overview, once refreshed, will now report the server es ESU enabled
+
+    ![alt text](img/image6.png)
+
+
 
 ###
+**Congratulations!** You successfully completed the challenge! 🚀🚀🚀
 
-**Congratulations**! You successfully completed this challenge! 🚀🚀🚀
-### 
-
-
-
-## Optional Steps:  
-
-1. You can take a look at the installed extensions that were deployed when setting up the BPA by navigating to your server and clicking "Settings" -> "Extensions" in the left navigation blade:
-    - AzureMonitorWindowsAgent
-    - assessmentplatform
-    - windowsserverassessment
-    ![alt text](img/image5.png)
-2. Please come back later to review the output of the assessment once it has finished.
+### Optional Steps:  
+1. Check for Windows Updates and observe that new security rollups are being downloaded and installed

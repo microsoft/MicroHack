@@ -49,91 +49,47 @@ sudo -i
 apt-get -y install jq
 ```
 
-4. Request an access token for the Key Vault using the following command:
-
+4. Request an access token for the Key Vault. With the access token, you can call the Azure Key Vault instance to retrieve the secret from the previous task. The below script can be used 
 ```shell
-ChallengeTokenPath=$(curl -s -D - -H Metadata:true "http://127.0.0.1:40342/metadata/identity/oauth2/token?api-version=2019-11-01&resource=https%3A%2F%2Fmanagement.azure.com" | grep Www-Authenticate | cut -d "=" -f 2 | tr -d "[:cntrl:]")
-ChallengeToken=$(cat $ChallengeTokenPath)
-if [ $? -ne 0 ]; then
-    echo "Could not retrieve challenge token, double check that this command is run with root privileges."
-else
-    AccessToken=$(curl -s -H Metadata:true -H "Authorization: Basic $ChallengeToken" "http://127.0.0.1:40342/metadata/identity/oauth2/token?api-version=2019-11-01&resource=https%3A%2F%2Fvault.azure.net")
+#!/bin/sh
+
+VAULT_NAME="REPLACE-ME"
+SECRET_NAME="REPLACE-ME"
+
+CHALLENGE_TOKEN_PATH=$(curl -s -D - -H Metadata:true "http://127.0.0.1:40342/metadata/identity/oauth2/token?api-version=2021-02-01&resource=https://vault.azure.net" \
+  | grep -i "Www-Authenticate" \
+  | cut -d "=" -f 2 \
+  | tr -d '[:cntrl:]')
+
+CHALLENGE_TOKEN=$(cat "$CHALLENGE_TOKEN_PATH")
+if [ -z "$CHALLENGE_TOKEN" ]; then
+  echo "Could not retrieve challenge token. Are you running as root?"
+  exit 1
 fi
+
+ACCESS_TOKEN_RESPONSE=$(curl -s -H Metadata:true -H "Authorization: Basic $CHALLENGE_TOKEN" \
+  "http://127.0.0.1:40342/metadata/identity/oauth2/token?api-version=2021-02-01&resource=https://vault.azure.net")
+
+ACCESS_TOKEN=$(echo "$ACCESS_TOKEN_RESPONSE" | jq -r '.access_token')
+
+if [ -z "$ACCESS_TOKEN" ] || [ "$ACCESS_TOKEN" = "null" ]; then
+  echo "Failed to retrieve access token:"
+  echo "$ACCESS_TOKEN_RESPONSE"
+  exit 1
+else
+  echo "Access token retrieved successfully."
+  echo "$ACCESS_TOKEN"
+  echo
+fi
+
+curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
+  "https://${VAULT_NAME}.vault.azure.net/secrets/${SECRET_NAME}?api-version=7.3"
 ```
-
-   > **Note**  
-   >  For Windows machines you can use the following command:
-
-```powershell
-        Function Get-AzureArcToken {
-            [cmdletbinding()]
-            param(
-                [string]$ResourceURI
-            )
-            # Build up URL
-            $SafeString = [System.Net.WebUtility]::URLEncode($ResourceURI)
-            $URI = "http://localhost:40342/metadata/identity/oauth2/token?api-version=2019-11-01&resource={0}" -f $SafeString
-            # Get Arc API Token
-            try {
-                Invoke-WebRequest -UseBasicParsing -Uri $uri -Headers @{ Metadata = "true" } -Verbose:0
-            }
-            catch {
-                $script:response = $_.Exception.Response
-            }
-
-            # Extract the path to the challenge token
-            $tokenpath = $script:response.Headers["WWW-Authenticate"].TrimStart("Basic realm=")
-
-            # Read the token
-            $token = Get-Content $tokenpath
-
-            # Acquire and return Access Token
-            Invoke-RestMethod -UseBasicParsing -Uri $uri -Headers @{ Metadata = "true"; Authorization = "Basic $token" }
-        }
-```
-
 
 > **❗Hint:**  
 > The above request connects to the Azure Instance Metadata Service to retrieve an access token for the managed identity of your Azure Arc-enabled server. By default, the IMDS is accessible via 169.254.169.254 from Azure VMs. Azure Arc-enabled servers need to use 127.0.0.1 to proxy the request with the Azure Arc agent to Azure.`
 
-4. Verify that you received an access token using the following command:
-
-```shell
-token=$(echo "$AccessToken" | jq -r '.access_token')
-echo $token
-```
-You should see the access token in the output. In addition, the result is saved in the variable *token* for the next step.
-
-5. Now, it's time to call the Azure Key Vault instance to retrieve the secret from the previous task.
-
-```shell
-curl 'https://mh-arc-servers-kv0815.vault.azure.net/secrets/kv-secret?api-version=2016-10-01' -H "Authorization: Bearer $token"
-```
-
-> **❗Hint:**  
-> Please make sure to call your instance of Key Vault and adjust the name in the above command accordingly.
-
 ![image](./img/5_result_secret.png)
-
-   > **Note**  
-   >  For Windows machines you can use the following command:
-
-```powershell
-        # Get an Azure KeyVault Access Token with new Function
-        $AccessToken = Get-AzureArcToken -ResourceURI 'https://vault.azure.net'
-        # Setup Query Attributes
-        $Query = @{
-            # URI of the specific secret we want
-            Uri     = "https://mh-arc-servers-kv2212.vault.azure.net/secrets/test?api-version=7.1"
-            Method  = "Get"
-            Headers = @{
-                Authorization = "Bearer $($AccessToken.access_token)"
-            }
-        }
-        
-        # Retrieve Secrets
-        Invoke-RestMethod @Query | Select-Object -ExpandProperty Value | fl *
-```
 
 Congratulations! You retrieved the secret from your Key Vault without providing any credentials. The resulting possibilities are limitless. You can use it for managing certificates or any secret that is necessary to run your on-premises application. 
 

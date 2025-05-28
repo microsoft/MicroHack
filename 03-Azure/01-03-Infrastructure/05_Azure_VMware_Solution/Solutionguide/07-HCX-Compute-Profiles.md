@@ -1,8 +1,8 @@
-# Exercise 7: What Network will be used by Interconnect Appliances? - Configure Network Profile
+# Exercise 7: What Network will be used by Interconnect Appliances? - Configure Compute Profile
 
 [Previous Challenge Solution](./06-HCX-Network-Profiles.md) - **[Home](../Readme.md)** - [Next Challenge Solution](./08-HCX-Service-Mesh.md)
 
-## Create a Compute Profle
+## Create a Compute Profile
 
 1.	Under Infrastructure, select Interconnect > Compute Profiles > Create Compute Profile.
 

@@ -242,7 +242,7 @@ In this challenge, you will activate Extended Security Updates (ESU) for Windows
 - Apply the ESU license to your server.
 
 > **:warning: IMPORTANT :warning:**  
-> In this exercise you will puchase an ESU license which will incur the cost displayed during the process. Please be aware that the overall cost also includes back-billing as per the rules of ESU licensing. While the montly billing will stop once the license is deactivated, the back-billing will be final.
+> In this challenge you will puchase an ESU license which will incur the cost displayed during the process. Please be aware that the overall cost also includes back-billing as per the rules of ESU licensing. While the montly billing will stop once the license is deactivated, the back-billing will be final.
 
 ### Success criteria
 

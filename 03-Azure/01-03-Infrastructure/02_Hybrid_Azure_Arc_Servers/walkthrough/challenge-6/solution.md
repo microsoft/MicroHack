@@ -6,7 +6,7 @@ Duration: 15 minutes
 request with the Azure Arc agent to Azure.`
 
 > **:warning: IMPORTANT :warning:**  
-> In this exercise you will puchase an ESU license which will incurr the cost displayed during the process. Please be aware that back-billing will also occur and while the montly billing will stop once the license is deactivated, the back-billing will be final.
+> In this exercise you will puchase an ESU license which will incur the cost displayed during the process. Please be aware that the overall cost also includes back-billing as per the rules of ESU licensing. While the montly billing will stop once the license is deactivated, the back-billing will be final.
 
 ## Task 1: Create a Windows Server ESU license
 

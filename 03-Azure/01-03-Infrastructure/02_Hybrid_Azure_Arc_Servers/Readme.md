@@ -107,6 +107,8 @@ In challenge 1 you will prepare your Azure environemnt for onboarding of existin
 - [Prerequisites for Connect hybrid machines with Azure Arc-enabled servers](https://learn.microsoft.com/en-us/azure/azure-arc/servers/learn/quick-enable-hybrid-vm#prerequisites)
 - [Connect hybrid machines with Azure Arc-enabled servers](https://learn.microsoft.com/en-us/azure/azure-arc/servers/learn/quick-enable-hybrid-vm#generate-installation-script)
 - [Create a service principal for onboarding](https://learn.microsoft.com/en-us/azure/azure-arc/servers/onboard-service-principal#create-a-service-principal-for-onboarding-at-scale)
+- [Evaluate Azure Arc-enabled servers on an Azure virtual machine](https://learn.microsoft.com/en-us/azure/azure-arc/servers/plan-evaluate-on-azure-virtual-machine)
+- [Azure Arc Jumpstart Servers](https://azurearcjumpstart.io/azure_arc_jumpstart/azure_arc_servers/azure/)
 
 ### Solution - Spoilerwarning
 

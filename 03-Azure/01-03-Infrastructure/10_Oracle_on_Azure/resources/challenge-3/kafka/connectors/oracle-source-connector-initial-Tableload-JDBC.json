@@ -1,0 +1,16 @@
+{
+  "name": "JdbcSourceConnectorConnector_0",
+  "config": {
+    "name": "JdbcSourceConnectorConnector_0",
+    "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
+    "tasks.max": "1",
+    "connection.url": "jdbc:oracle:thin:@48.209.90.102:1521/xe",
+    "connection.user": "demo_schema",
+    "connection.password": "********",
+    "table.whitelist": "ADDRESSES",
+    "catalog.pattern": "DEMO_SCHEMA",
+    "dialect.name": "OracleDatabaseDialect",
+    "mode": "bulk",
+    "table.types": "table"
+  }
+}

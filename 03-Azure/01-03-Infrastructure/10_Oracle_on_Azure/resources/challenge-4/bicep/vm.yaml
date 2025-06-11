@@ -1,0 +1,14 @@
+#cloud-config
+package_upgrade: true
+packages:
+  - glibc-devel
+  - expect
+  - libaio
+  - oraclelinux-developer-release-el7
+runcmd:
+  # install Node.js
+  - 'sudo groupadd zdm'
+  - # Create a user named zdmuser and add it to the zdm group
+  - 'sudo useradd -m -g zdm zdmuser'
+  - # Set password "demo!pass123" for zdmuser
+  - 'echo "zdmuser:demo\!pass123" | sudo chpasswd'

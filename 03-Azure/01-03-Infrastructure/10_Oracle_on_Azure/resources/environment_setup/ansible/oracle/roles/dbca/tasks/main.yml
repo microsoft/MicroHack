@@ -1,0 +1,10 @@
+---
+#
+# create database
+#
+- name: Configure standalone database
+  include_tasks: dbca_si.yml
+  when: data_guard == "no"
+- name: configure database on primary in a data guard configuration
+  include_tasks: dbca_dg.yml
+  when: data_guard == "yes"

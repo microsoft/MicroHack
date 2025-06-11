@@ -4,12 +4,12 @@
 variable "location" {
   description = "Defines the Azure location where the resources will be deployed"
   type        = string
-  default     = "germanywestcentral"
+  default     = "swedencentral"
 }
 
 variable "resourcegroup_name" {
   description = "If defined, the name of the resource group into which the resources will be deployed"
-  default     = "rg-mh-oracle4"
+  default     = "rg-mh-oracle"
 }
 
 variable "resourcegroup_tags" {
@@ -50,7 +50,7 @@ variable "ssh_key" {
 
 variable "vm_sku" {
   description = "The SKU of the virtual machine"
-  default     = "Standard_D4s_v5"
+  default     = "Standard_E4ds_v5"
 }
 
 variable "vm_source_image_reference" {
@@ -72,10 +72,6 @@ variable "vm_os_disk" {
     disk_encryption_set_id = null
     disk_size_gb           = 128
   }
-}
-
-variable "vm_user_assigned_identity_id" {
-  description = "The ID of the user assigned identity to be used for the virtual machine"
 }
 
 variable "jit_wait_for_vm_creation" {

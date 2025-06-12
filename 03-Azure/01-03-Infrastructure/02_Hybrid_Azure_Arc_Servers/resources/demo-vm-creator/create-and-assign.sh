@@ -4,10 +4,8 @@
 #                                                                                          #
 ############################################################################################
 
-cd ../demo-vm-creator
-# create the VMs
+echo Creating VMs and resource groups...
 ./create-vms-and-rgs.sh
 
-cd ../demo-vm-onboarder
-# onboard the VMs
-./arc-enable-vms.sh
+echo create users and assign to resource groups...
+./assign-users.sh

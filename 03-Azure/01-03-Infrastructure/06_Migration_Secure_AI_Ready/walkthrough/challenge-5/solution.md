@@ -152,7 +152,7 @@ Wait until the installation progress is finished.
 After the successfull installation a configuration server connection passphrase will be displayed. Copy the passphrase and save it as a new secret in the source-rg Resource Group KeyVault.
 
 > [!NOTE]
-> If you forgot to copy the passphrase you can obtain it from inside the Replication Appliance via the following Powershell command.
+> If you forgot to copy the passphrase you can obtain it by executing the following Powershell command on the VM hosting the replication appliance
 >
 > ```powershell
 > Windows PowerShell

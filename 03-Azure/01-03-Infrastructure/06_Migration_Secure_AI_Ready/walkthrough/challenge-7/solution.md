@@ -51,7 +51,8 @@ Review the output of the assessment to see if the web app currently running on W
 
 ### **Task 2: Modernize web app to Azure App Service Code**
 
-> [!WARNING] > **As mentioned above, the current [limitations](https://learn.microsoft.com/en-us/azure/migrate/concepts-migration-webapps#limitations) will not allow the direct migration of web apps running on physical machines. Therefore, we will use the [App Service migration assistant tool](https://learn.microsoft.com/en-us/azure/app-service/app-service-asp-net-migration) for the migration.**
+> [!WARNING]
+> **As mentioned above, the current [limitations](https://learn.microsoft.com/en-us/azure/migrate/concepts-migration-webapps#limitations) will not allow the direct migration of web apps running on physical machines. Therefore, we will use the [App Service migration assistant tool](https://learn.microsoft.com/en-us/azure/app-service/app-service-asp-net-migration) for the migration.**
 
 There are multiple different ways to migrate legacy Web apps to Azure:
 

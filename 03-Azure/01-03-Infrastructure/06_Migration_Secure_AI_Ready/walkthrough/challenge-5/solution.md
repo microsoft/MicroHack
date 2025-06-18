@@ -393,6 +393,8 @@ Open the Microsoft Edge browser on the server, enter _localhost_ in the address 
 
 Repeat the above steps for the _Lxfe2-test_ system. Once you've confirmed that the applications on the systems are running as expected you can perfom a cleanup for the test migration. Change back to the _Azure Migrate: Migration and modernization_ overview page, click on the 3 dots on the end of each row of the replicating servers and select _Clean up test migration_.
 
+> [!NOTE] You can use the IP address of the Linux machine in this browser or connect to the Linux machine and use `curl localhost` to see i fthe server responds correctly.
+
 ![image](./img/test10.png)
 
 Select _Testing complete. Delete test virtual machine_ and select _Cleanup Test_. Reapeat the step for the remainig server and wait until the cleanup has been successfully processed.
@@ -441,6 +443,11 @@ Wait until the load balancer has been created, cahnge back to the _Load balancin
 
 ![image](./img/prep8.png)
 
+> [!NOTE]
+> In the next task we will configure an Azure Traffic Manager Profile for load balancing. To be able to add the public IP addresses they need to be configured with an [DNS name lable](https://learn.microsoft.com/en-us/azure/dns/dns-custom-domain?toc=%2Fazure%2Fvirtual-network%2Ftoc.json#public-ip-address).
+
+![image](./img/prep11-1.png)
+
 #### **Task 6.2: Create a new Azure Traffic Manager Profile**
 
 Azure Traffic Manager is a DNS-based traffic load balancer. It allows us to distribute traffic to public facing endpoints like our two Public Load Balancer. Traffic Manager can be created in advance to distribute traffic among the old and new load balancer. The DNS conbfiguration of the application can be changed in advance to point to the Traffic Manager Profile instead to the Public IP of the Load Balancer. Using this approach makes sure that Traffic Manager automatically removes the old Load Balancer after the frontend servers were migrated.
@@ -457,11 +464,6 @@ From the Load Balancing overview page select _Traffic Manager_ and select the pr
 Select _Endpoints_ and click _Add_. Add each public IP of the source and destination Load Balancer as separate endpoints.
 
 ![image](./img/prep11.png)
-
-> [!NOTE]
-> Please note: To be able to add the public IP addresses they need to be configured with an [DNS name lable](https://learn.microsoft.com/en-us/azure/dns/dns-custom-domain?toc=%2Fazure%2Fvirtual-network%2Ftoc.json#public-ip-address).
-
-![image](./img/prep11-1.png)
 
 Check the Overview section under the navigation pane and note that the source load balancer is shown as _online_ whereas the
 destination load balancer is shown as _degraded_. If you copy the DNS name of the Traffic Manager profile and paste it into your browser, you should be able to browse the source web servers through the Traffic Manager Profile.
@@ -505,9 +507,9 @@ From a user perspective nothing changed. You're still able to browse the Traffic
 
 ![image](./img/finalmig7.png)
 
-🚀🚀🚀🚀🚀🚀 Congratulations, you've successfully migrated the frontend application to Azure.🚀🚀🚀🚀🚀🚀
+## 🚀 Congratulations, you've successfully migrated the frontend application to Azure.🚀
 
-### **Task 8: Cleanup**
+### **Task 8: Stopping Replcation**
 
 After the successfull migration you can now stop replicating the source virtual machines. Open the [Azure Portal](https://portal.azure.com) and navigate to the previousley created Azure Migrate project. Select _Servers, databases and web apps_, make sure that the right Azure Migrate Project is selected and click _Overview_ in the _Migration tools_ box. In the _Azure Migrate: Migration and modernization_ pane, select _Replicating machines_ from the navigation pane on the left, click on the 3 dots on the end of each row of the replicating servers and select _Stop replicating_.
 
@@ -521,14 +523,19 @@ From the Traffic Manager Profile you can now also safley remove the endpoint for
 
 ![image](./img/finalmig10.png)
 
-🚀🚀🚀 You successfully completed challenge 5! 🚀🚀🚀
+# 🚀 **Congratulations!**
+
+You successfully completed the MicroHack.
 
 The deployed architecture now looks like the following diagram.
 
 ![image](./img/Challenge-5.jpg)
 
-🚀🚀🚀 **!!!Congratulations!!! - You successfully completed the MicroHack. You can now safley remove the _source-rg_ and _destination-rg_ Resource Groups.** 🚀🚀🚀
+### **Task 9 : Cleanup**
 
-🚀🚀🚀 **If you still want to continue we have 2 additional bonus challenges to modernize OR secure the migrated environment.**🚀🚀🚀
+> [!NOTE] **If you still want to continue we have 2 additional bonus challenges to modernize OR secure the migrated environment. Continue with either [Bonus Challenge 6 solution](../challenge-6/solution.md)
+> OR [Bonus Challenge 7 solution](../challenge-7/solution.md)**
 
-**[Home](../../Readme.md)** - Continue with either [Bonus Challenge 6 solution](../challenge-6/solution.md) OR [Bonus Challenge 7 solution](../challenge-7/solution.md)
+Otherwise please help us clean up the workhop environment. You can now safley remove the _source-rg_ and _destination-rg_ Resource Groups.
+
+[Home](../../Readme.md)

@@ -17,11 +17,11 @@ Azure App Service bulk migration capabilities are now available as an Azure Migr
 - Discover and migrate with Java Tomcat applications to App Service Linux and to Azure Kubernetes Service.
 - Containerize your ASP.NET web apps and move them to either Windows Containers on App Service or to Azure Kubernetes Service.
 
-> [!WARNING]
+> [!CAUTION]
 >
 > **Currently this feature has a few [limitations](https://learn.microsoft.com/en-us/azure/migrate/concepts-migration-webapps#limitations) and therefore it can't be used to migrate web apps directly from physical servers. However, we can use it at least to perform the assessment of our web apps and use the [App Service migration assistant tool](https://learn.microsoft.com/en-us/azure/app-service/app-service-asp-net-migration) for the migration. Please note that this will only work for the migrated Windows VM**
 
-> [!WARNING]
+> [!IMPORTANT]
 >
 > **Please note that this challenge will only work for the migrated Windows VM. Currently we do not support direct migrations from Linux VMs**
 
@@ -55,7 +55,7 @@ Review the output of the assessment to see if the web app currently running on W
 
 ### **Task 2: Modernize web app to Azure App Service Code**
 
-> [!WARNING]
+> [!CAUTION]
 >
 > **As mentioned above, the current [limitations](https://learn.microsoft.com/en-us/azure/migrate/concepts-migration-webapps#limitations) will not allow the direct migration of web apps running on physical machines. Therefore, we will use the [App Service migration assistant tool](https://learn.microsoft.com/en-us/azure/app-service/app-service-asp-net-migration) for the migration.**
 

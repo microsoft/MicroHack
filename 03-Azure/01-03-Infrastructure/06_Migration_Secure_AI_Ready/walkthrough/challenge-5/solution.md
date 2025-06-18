@@ -533,8 +533,12 @@ The deployed architecture now looks like the following diagram.
 
 ### **Task 9 : Cleanup**
 
-> [!NOTE] **If you still want to continue we have 2 additional bonus challenges to modernize OR secure the migrated environment. Continue with either [Bonus Challenge 6 solution](../challenge-6/solution.md)
-> OR [Bonus Challenge 7 solution](../challenge-7/solution.md)**
+> [!NOTE]
+>
+> If you still want to continue, there are 2 additional bonus challenges to secure OR modernize the migrated environment.
+>
+> Continue with either [Bonus Challenge 6 solution](../challenge-6/solution.md)
+> OR [Bonus Challenge 7 solution](../challenge-7/solution.md)
 
 Otherwise please help us clean up the workhop environment. You can now safley remove the _source-rg_ and _destination-rg_ Resource Groups.
 

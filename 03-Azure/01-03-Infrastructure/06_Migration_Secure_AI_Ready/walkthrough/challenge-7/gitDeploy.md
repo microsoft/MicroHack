@@ -28,6 +28,10 @@ The following commands are easiest sumbitted using _Cloud Shell_ in Azure Portal
    --sku P0v3
    ```
 
+   > [!NOTE]
+   >
+   > Because the environment uses Azure Traffic Manager as entrypoint, the neessary App Service Plan needs to be Standard or Premium. In this simplified scenario with two backend servers, Azure App Service alone could be used to serve the workload, unless global load balancing would be required.
+
 2. Create Web app, with "Local Git" deployment model
 
    ```
@@ -116,7 +120,7 @@ Since _BasicAuth_ does have security implications it is a good idea to disable i
     --parent sites/mh1-app \
     --set properties.allow=false
 
-> [!Note] To re-enable, simply change the parameter accordingly. Once you have re-enabled it, you will need to create a new set of credentials using the command from Task 1, Step 3.
+> [!TIP] To re-enable, simply change the parameter accordingly. Once you have re-enabled it, you will need to create a new set of credentials using the command from Task 1, Step 3.
 >
 > ```
 > -set properties.allow=true

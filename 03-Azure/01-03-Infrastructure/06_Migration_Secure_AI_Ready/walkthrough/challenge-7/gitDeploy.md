@@ -102,7 +102,7 @@ Back on the Windows server you need to convert the code base to a Git repo and c
     git push azure master
    ```
 
-> [!NOTE] You will be challenged for the deployment credentials.
+> [!Note] You will be challenged for the deployment credentials.
 
 ## **Task 3 : Disable Basic Auth for SCM**
 
@@ -116,7 +116,7 @@ Since _BasicAuth_ does have security implications it is a good idea to disable i
     --parent sites/mh1-app \
     --set properties.allow=false
 
-> [!NOTE] To re-enable, simply change the parameter accordingly. Once you have re-enabled it, you will need to create a new set of credentials using the command from Task 1, Step 3.
+> [!Note] To re-enable, simply change the parameter accordingly. Once you have re-enabled it, you will need to create a new set of credentials using the command from Task 1, Step 3.
 >
 > ```
 > -set properties.allow=true

@@ -2,7 +2,7 @@
 
 Azure App Service Migration Assistant is a tool to help you to quickly and easily do a one-time migration of your web application to an Azure App Service. The following steps will guide you through the process.
 
-> [!NOTE] the server names below are for illustration purposes only. The steps should be performed on the windows server you migrated in Challenge 5.
+> [!Note] the server names below are for illustration purposes only. The steps should be performed on the windows server you migrated in Challenge 5.
 
 ### **Task 1 : Set up Azure App Service Migration Assistant**
 

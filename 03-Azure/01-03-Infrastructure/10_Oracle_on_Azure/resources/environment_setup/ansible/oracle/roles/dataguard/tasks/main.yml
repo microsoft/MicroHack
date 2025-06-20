@@ -1,0 +1,160 @@
+---
+
+- name: copy archive log mode sql 
+  template: src=archieve.sql.j2 dest=/tmp/archieve.sql
+  when: inventory_hostname in groups['ora-x1']
+  become_user: "{{ oracle_user }}"
+
+- name: Create_standbyDB | execute postsql from the standby database
+  shell: |
+    echo -e "@/tmp/archieve.sql;" | sqlplus / as sysdba
+  when: inventory_hostname in groups['ora-x1']
+  become_user: "{{ oracle_user }}"
+  args:
+    chdir: /home/oracle
+  register: out 
+
+- debug: var=out.stdout_lines
+- block:
+
+  - debug: var=out.stdout_lines
+  - name: copy TNS NAMES FILE to primary
+    become_user: "{{ oracle_user }}"
+    template: src=tnsnames.ora.j2 dest={{ oracle_db_home }}/network/admin/tnsnames.ora
+    when: inventory_hostname in groups['ora-x1']
+
+  - debug: var=out.stdout_lines
+  - name: copy TNS NAMES FILE to standby
+    become_user: "{{ oracle_user }}"
+    template: src=tnsnames.ora.j2 dest={{ oracle_db_home }}/network/admin/tnsnames.ora
+    when: inventory_hostname in groups['ora-x2']
+
+  - name: copy LISTENER FILE to primary
+    when: inventory_hostname in groups['ora-x1']
+    become_user: "{{ oracle_user }}"
+    template: src=listener_primary.ora.j2 dest={{ oracle_db_home }}/network/admin/listener.ora
+
+  - name: copy LISTENER FILE to standby
+    when: inventory_hostname in groups['ora-x2']
+    become_user: "{{ oracle_user }}"
+    template: src=listener_standby.ora.j2 dest={{ oracle_db_home }}/network/admin/listener.ora
+
+  - name: Create Folder Strucutre in Standby
+    when: inventory_hostname in groups['ora-x2']
+    become_user: "{{ oracle_user }}"
+    file:
+      path: "{{ item }}"
+      state: directory
+      owner: oracle
+      group: oinstall
+    loop:
+      - /u01/app/oracle/oradata/{{ sid }}DG1
+      - /u01/app/oracle/fast_recovery_area/{{ sid }}DG1
+      - /u01/app/oracle/admin/{{ sid }}DG1/adump
+
+  - name: Copy Oracle Password File from Primary to Standby
+    run_once: true
+    fetch: src={{ oracle_db_home }}/dbs/orapw{{ sid }} dest=temp/ flat=yes
+    when: inventory_hostname in groups['ora-x1']
+    become_user: "{{ oracle_user }}"
+ 
+  - name: Remove file (delete file)
+    when: inventory_hostname in groups['ora-x2']
+    become_user: "{{ oracle_user }}"
+    ansible.builtin.file:
+      path: "{{ oracle_db_home }}/dbs/orapw{{ sid }}DG1"
+      state: absent
+
+  - name: Copy the file from the ansible to nodes
+    copy: src=temp/orapw{{ sid }} dest={{ oracle_db_home }}/dbs/orapw{{ sid }}DG1
+    when: inventory_hostname in groups['ora-x2']
+    become_user: "{{ oracle_user }}"
+
+  - name: Copy init.ora file
+    become_user: "{{ oracle_user }}"
+    template: src=init.ora.j2 dest={{ oracle_db_home }}/dbs/init.ora
+    when: inventory_hostname in groups['ora-x2']
+
+
+  - name: copy standby startup sql 
+    template: src=standby_start.sql.j2 dest=/tmp/standby_start.sql
+    become_user: "{{ oracle_user }}"
+    when: inventory_hostname in groups['ora-x2']
+ 
+#    #TODO: https://vjdba.wordpress.com/tag/rman-05537/
+#  
+  - name: Start Oracle Instance on Standby
+    when: inventory_hostname in groups['ora-x2']
+    become_user: "{{ oracle_user }}"
+    shell: echo @"/tmp/standby_start.sql;" | sqlplus / as sysdba
+    register: out
+  - debug: var=out.stdout_lines
+
+  - name: Stop Listener
+    when: inventory_hostname in groups['ora-x2']
+    command: lsnrctl stop
+    ignore_errors: true
+    register: out
+    become: true
+    become_user: "{{ oracle_user }}"
+  - debug: var=out.stdout_lines
+  
+
+  - name: Start  Listener
+    when: inventory_hostname in groups['ora-x2']
+    command: lsnrctl start
+    become: true
+    become_user: "{{ oracle_user }}"
+    register: out
+  - debug: var=out.stdout_lines
+  
+  - name: Copy RMAN Script
+    when: inventory_hostname in groups['ora-x1']
+    template: src=rman.sql.j2 dest=/u01/app/rman.sql 
+    become_user: "{{ oracle_user }}"
+
+  - name: Start RMAN Process
+    when: inventory_hostname in groups['ora-x1']
+    shell: |
+      echo @"/u01/app/rman.sql" | rman TARGET sys/{{ sysPassword }}@{{ sid }} AUXILIARY sys/{{ sysPassword }}@{{ sid }}DG1
+    args:
+      chdir: /home/oracle
+    become_user: "{{ oracle_user }}"
+    register: out
+  - debug: var=out.stdout_lines
+
+
+  - name: reboot
+    shell: "sleep 5 && reboot"
+    async: 1
+    poll: 0
+    become: true
+    become_user: root
+
+  - name: wait for rebooting
+    wait_for_connection: 
+      connect_timeout: 5
+      sleep: 5
+      delay: 20
+      timeout: 240
+      
+  - name: copy standbydatabasedisconnect.sql
+    template: src=standbydatabasedisconnect.sql.j2 dest=/tmp/standbydatabasedisconnect.sql
+    when: inventory_hostname in groups['ora-x2']
+    become_user: "{{ oracle_user }}"
+  
+  - name: Execute standbydatabasedisconnect.sql
+    become_user: oracle
+    shell: |
+      export ORACLE_HOME=/u01/app/oracle/product/19.0.0/dbhome_1
+      export ORACLE_SID=orcl
+      export PATH=$ORACLE_HOME/bin:$PATH
+      echo -e "@/tmp/standbydatabasedisconnect.sql;" | sqlplus / as sysdba
+    when: inventory_hostname in groups['ora-x2']
+    args:
+      chdir: /home/oracle
+    register: out
+
+  - debug: var=out.stdout_lines
+#  become: true
+#  become_user: "{{ oracle_user }}"

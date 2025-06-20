@@ -1,0 +1,193 @@
+---
+
+- name: set oracle user environment for standalone
+  when: data_guard == "no"
+  lineinfile: dest=/home/{{ oracle_user }}/.bashrc state=present line="{{ item }}"
+  with_items:
+    - "export ORACLE_BASE={{ ora_user_env.ORACLE_BASE }}"
+    - "export ORACLE_SID={{ ora_user_env.ORACLE_SID }}"
+    - "export ORACLE_HOME={{ ora_user_env.ORACLE_HOME }}"
+    - "export PATH=$PATH:$ORACLE_HOME/bin"
+    - "export NLS_LANG={{ ora_user_env.NLS_LANG }}"
+
+- name: set oracle user environment for primary
+  when: data_guard == "yes" and inventory_hostname in groups['ora-x1']
+  lineinfile: dest=/home/{{ oracle_user }}/.bashrc state=present line="{{ item }}"
+  with_items:
+    - "export ORACLE_BASE={{ ora_user_env.ORACLE_BASE }}"
+    - "export ORACLE_SID={{ ora_user_env.ORACLE_SID }}"
+    - "export ORACLE_HOME={{ ora_user_env.ORACLE_HOME }}"
+    - "export PATH=$PATH:$ORACLE_HOME/bin"
+    - "export NLS_LANG={{ ora_user_env.NLS_LANG }}"
+
+- name: set oracle user environment for secondary
+  when: data_guard == "yes" and inventory_hostname in groups['ora-x2']
+  lineinfile: dest=/home/{{ oracle_user }}/.bashrc state=present line="{{ item }}"
+  with_items:
+    - "export ORACLE_BASE={{ ora_user_env.ORACLE_BASE }}"
+    - "export ORACLE_SID={{ ora_user_env.ORACLE_SID }}DG1"
+    - "export ORACLE_HOME={{ ora_user_env.ORACLE_HOME }}"
+    - "export PATH=$PATH:$ORACLE_HOME/bin"
+    - "export NLS_LANG={{ ora_user_env.NLS_LANG }}"
+
+- name: disable firewalld
+  systemd:
+    name: firewalld
+    state: stopped
+    enabled: false
+
+- name: disable transparent_hugepage
+  replace:
+    path: /etc/default/grub
+    regexp: '^GRUB_CMDLINE_LINUX="(.*)"$'
+    replace: 'GRUB_CMDLINE_LINUX="\1 transparent_hugepage=never"' 
+
+- name: make grub.cfg
+  command: grub2-mkconfig -o /boot/grub2/grub.cfg
+
+- name: reboot
+  shell: "sleep 5 && reboot"
+  async: 1
+  poll: 0
+
+- name: wait for rebooting
+  wait_for_connection: 
+    connect_timeout: 5
+    sleep: 5
+    delay: 20
+    timeout: 240
+
+- name: check transparent_hugepage
+  shell: "cat /sys/kernel/mm/transparent_hugepage/enabled"
+  register: result_hugepage
+
+- name: debug
+  debug:
+    var: result_hugepage
+
+
+
+
+#
+# create database
+#
+- block:
+
+
+  #create recovery area directory
+  - name: Create Folder Strucutre in Standby
+    when: inventory_hostname in groups['ora-x1']
+    become_user: "{{ oracle_user }}"
+    file:
+      path: "{{ item }}"
+      state: directory
+      owner: oracle
+      group: oinstall
+    loop:
+      #- /u01/app/oracle/oradata/{{ sid }}
+      - /u01/app/oracle/fast_recovery_area/{{ sid }}
+
+
+  - name: copy response file for silent install
+    when: inventory_hostname in groups['ora-x1']
+    template: src=dbca.rsp.j2 dest=/home/{{ oracle_user }}/dbca.rsp
+
+  - name: Use dbca to create the database
+    become: true
+    become_user: oracle
+    when: inventory_hostname in groups['ora-x1']
+    command: bin/dbca -silent -createDatabase -responseFile /home/{{ oracle_user }}/dbca.rsp -ignorePreReqs
+    ignore_errors: true
+    args:
+      chdir: "{{ oracle_db_home }}"
+
+  - name: Configure Oratab
+    shell: sed -i 's/:N/:Y/' /etc/oratab
+    become: true
+    become_user: root
+
+   
+  - name: copy response file for silent install
+    template: src=dbora.j2 dest=/etc/init.d/dbora
+    become: true
+    become_user: root
+
+  - name: Chnage ownership of dbora
+    file:
+      path: /etc/init.d/dbora
+      group: dba
+      mode: 0750
+    become: true
+    become_user: root
+  
+  - name: link files
+    command: ln -s /etc/init.d/dbora {{ item }}
+    loop:
+    - /etc/rc.d/rc0.d/K01dbora
+    - /etc/rc.d/rc3.d/S99dbora
+    - /etc/rc.d/rc5.d/S99dbora
+    ignore_errors: true
+    become: true
+    become_user: root
+
+- name: Execute SQL script on remote Oracle database
+  when: inventory_hostname in groups['ora-x1']
+  become: true
+  become_user: oracle
+  block:
+    - name: Copy SQL script to remote server
+      ansible.builtin.copy:
+        src: ../../../../Oracle_Schema/setup01_oracle_schema.sql
+        dest: /home/oracle/setup01_oracle_schema.sql
+        owner: oracle
+        group: oinstall
+        mode: '0644'
+    
+    - name: Set Oracle environment variables and run SQL setup01_oracle_schema
+      shell: |
+        echo -e "SET DEFINE OFF;\n@/home/oracle/setup01_oracle_schema.sql\nEXIT;" | sqlplus -S / as sysdba
+      args:
+        chdir: /home/oracle
+      register: sql_output
+
+    - name: Print SQL script output
+      debug:
+        var: sql_output.stdout_lines
+
+    - name: Copy SQL setup02_initial_dataload to remote server
+      ansible.builtin.copy:
+        src: ../../../../Oracle_Schema/setup02_initial_dataload.sql
+        dest: /home/oracle/setup02_initial_dataload.sql
+        owner: oracle
+        group: oinstall
+        mode: '0644'
+    
+    - name: Set Oracle environment variables and run SQL setup02_initial_dataload
+      shell: |
+        echo -e "SET DEFINE OFF;\n@/home/oracle/setup02_initial_dataload.sql\nEXIT;" | sqlplus / as sysdba
+      args:
+        chdir: /home/oracle
+      register: sql_output
+
+    - name: Print SQL script output
+      debug:
+        var: sql_output.stdout_lines
+  
+    - name: Copy SQL setup03_start_datagenerator to remote server
+      ansible.builtin.copy:
+        src: ../../../../Oracle_Schema/setup03_start_datagenerator.sql
+        dest: /home/oracle/setup03_start_datagenerator.sql
+        owner: oracle
+        group: oinstall
+        mode: '0644'
+    
+    - name: Set Oracle environment variables and run SQL setup03_start_datagenerator
+      shell: |
+        echo -e "SET DEFINE OFF;\n@/home/oracle/setup03_start_datagenerator.sql\nEXIT;" | sqlplus -S / as sysdba
+      args:
+        chdir: /home/oracle
+      register: sql_output
+
+    - name: Print SQL setup03_start_datagenerator script output
+      debug:
+        var: sql_output.stdout_lines

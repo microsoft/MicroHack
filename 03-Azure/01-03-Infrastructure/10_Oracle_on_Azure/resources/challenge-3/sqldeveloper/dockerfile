@@ -1,0 +1,25 @@
+# Use an official Debian 12 as a parent image
+FROM debian:12
+
+# Set environment variables
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install necessary packages
+RUN apt-get update && \
+    apt-get install -y openjdk-17-jdk libxext6 libxrender1 libxtst6 libfreetype6 libfontconfig1 alien dpkg-dev debhelper build-essential wget && \
+    apt-get clean
+
+# Download and install SQL Developer - https://www.oracle.com/database/sqldeveloper/technologies/download/
+
+# Windows https://download.oracle.com/otn_software/java/sqldeveloper/sqldeveloper-24.3.1.347.1826-x64.zip
+# Linux https://download.oracle.com/otn_software/java/sqldeveloper/sqldeveloper-24.3.1-347.1826.noarch.rpm
+
+RUN wget https://download.oracle.com/otn_software/java/sqldeveloper/sqldeveloper-24.3.1-347.1826.noarch.rpm && \
+    alien -i sqldeveloper-21.4.3-376.1900.noarch.rpm && \
+    rm sqldeveloper-21.4.3-376.1900.noarch.rpm
+
+# Set the display environment variable
+ENV DISPLAY=:0
+
+# Entry point to start SQL Developer
+ENTRYPOINT ["/usr/local/bin/sqldeveloper"]

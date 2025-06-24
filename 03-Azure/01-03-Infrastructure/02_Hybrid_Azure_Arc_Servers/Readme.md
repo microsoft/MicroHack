@@ -88,8 +88,13 @@ In challenge 1 you will prepare your Azure environemnt for onboarding of existin
 ### Actions
 
 - Create all necessary Azure resources
+
   - Resource Group (Name: mh-arc-servers-rg)
   - Service Principal (Name: mh-arc-servers-sp)
+    > [!NOTE]
+    >
+    > If you already have a serice principal provisioned as part of the workshop setup, you can skip the creation step.
+
 - Enable required Resource Providers
 - Prep existing server operating system on-prem
 - Onboard existing server to Azure Arc

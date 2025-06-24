@@ -36,7 +36,7 @@ In this section we'll connect to the Azure Portal and retrieve SQL MI informatio
 
 # Assess the application databases for Azure SQL Database suitability using the Database Migration Assistant
 
-> [!NOTE]
+> **❗Hint:**
 >
 > Credentials for connecting to the VMs is DemoUser / Demo@pass1234567
 

@@ -91,7 +91,7 @@ In challenge 1 you will prepare your Azure environemnt for onboarding of existin
 
   - Resource Group (Name: mh-arc-servers-rg)
   - Service Principal (Name: mh-arc-servers-sp)
-    > [!NOTE]
+    > **❗Hint:**
     >
     > If you already have a serice principal provisioned as part of the workshop setup, you can skip the creation step.
 

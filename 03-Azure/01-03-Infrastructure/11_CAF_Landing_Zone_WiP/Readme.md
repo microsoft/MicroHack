@@ -10,27 +10,31 @@
 
 # MicroHack introduction
 
-This MicroHack scenario walks through the use of ... with a focus on the best practices and the design principles. Specifically, this builds up to include working with an existing infrastructure.
+This MicroHack scenario walks through the use of Microsoft Cloud Adoption Framework and its Landing Zone Accelerators with a focus on the best practices and the design principles.
 
 ![image](Path to the high level architecture )
 
-This lab is not a full explanation of .... as a technology, please consider the following articles required pre-reading to build foundational knowledge.
+This lab is not a full explanation of setting up a Landing Zone and all involved technologies, please consider the following articles required pre-reading to build foundational knowledge.
+
+- ...
+- ...
+- ...
 
 Optional (read this after completing this lab to take your learning even deeper!)
 
-Describe the scenario here...
-
 # MicroHack context
 
-This MicroHack scenario walks through the use of....
+The foundation of a successful cloud journey is a structured approach to workload deplyoment and governance. For Microsoft Azure, these guiding principals are collected under the Microsoft Cloud Adoption Framework umbrella.
+
+As the architect of such cloud journey it is imperative to understand the core requirements and the best practises of implementing those in order to create a clean foundation for scalable cloud deployments and flexibility, while maintaining guardrails and governance across the board.
 
 # Objectives
 
 After completing this MicroHack you will:
 
-- Know how to build a ...
-- Understand default ..
-- Understand how ..
+- Know how to conceptuallize a landing zone in Microsoft Azure
+- Understand the best practise accelerators and how to use them
+- Know how to customize the accelerators to build upon them to tailor the landing zone to your organizations specific needs
 
 # MicroHack challenges
 

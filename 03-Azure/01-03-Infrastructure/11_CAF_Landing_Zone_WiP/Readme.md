@@ -61,28 +61,9 @@ If you want to run though the whole experience in your own environment, please r
 - [Deployment Flow Wiki](https://github.com/Azure/ALZ-Bicep/wiki/DeploymentFlow)
 - [Design Considerations of Azure Landing Zone concept](https://learn.microsoft.com/en-us/azure/architecture/landing-zones/bicep/landing-zone-bicep)
 
-## Base Situation
+## Accelerator for Bicep - Deployment Flow
 
 ![image](https://learn.microsoft.com/en-us/azure/architecture/landing-zones/bicep/images/high-level-deployment-flow.png)
-
-- Challenge 1 : Governance & Security - Core
-  - Module 1
-  - Module 2
-  - Module 3
-- Challenge 2 : Logging - Core
-  - Module 4
-  - Module 4.1
-- Challenge 3 : Connectivity - Core
-  - Module 5
-    -Challenge 4 : Security - Core
-  - Module 6
-  - Module 7 - N/A
-- Challenge 5 : Monitoring - Workload
-  - Module 8 ("no public access for storage" policy)
-  - Module 8.1
-- Challenge 6 : Connectivity - Workload
-  - Module 9
-  - Deploy simple Web App with VNet Integration, Storage Account and Private Link
 
 ## Challenge 1 - Core Setup
 

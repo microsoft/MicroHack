@@ -234,10 +234,12 @@ Validate the assginmet in _Identity & Access Management_ for the Resource group 
 
 ![image](images/challenge04/IAM.jpg)
 
-# Challenge 5 - Policy Assignments <a id="challenge5"/>
+# Challenge 5 - Subscription Placement <a id="challenge5"/>
 
 > [!IMPORTANT]
 > As noted in the description of Challenge 5, there is no sulution steps as this challenge cannot be executed in the shared workshop environment.
+>
+> In real-world environments, a subscription would be moved to its corresponding management group, which would automatically apply and RBAC or policy assignments.
 >
 > Please continue with Challenge 6.
 

@@ -79,7 +79,7 @@ You should create a Management Group hierarchy in accordance with the Microsoft 
 
 ### Success criteria
 
-- You feel confident in how to create a Management Group structure in accordance with the Microsoft Cloud Adoption Framework for Azure
+- You feel confident in how to create a Management Group hierarchies in accordance with the Microsoft Cloud Adoption Framework for Azure
 - You successfully deployed a corresponding Managemnt Group hierarchy within the Management Group branch assigned to you
 
 ### Learning resources
@@ -87,9 +87,10 @@ You should create a Management Group hierarchy in accordance with the Microsoft 
 - https://learn.microsoft.com/en-us/azure/architecture/landing-zones/bicep/landing-zone-bicep
 - https://github.com/Azure/ALZ-Bicep/wiki/DeploymentFlow#deployment-identity
 
-### Solution - Spoilerwarning
+### Solution
 
-[Solution Steps](./walkthrough/challenge-1/solution.md)
+> [!warning]
+> SPOILER - You can find pointers to a faster solution in the [solution document](./walkthrough/solution.md)
 
 ## Challenge 2 - Logging & Security
 
@@ -105,7 +106,7 @@ As optional content you can also look at Management Groups Diagnostic Settings t
 ### Actions
 
 - Deploy Azure Log Analytics Workspace, Automation Account (linked together) & multiple Solutions to an existing Resource Group
-- [optional] Enable Diagnostic Settings on the Management Group hierarchy as was defined during the deployment of the Management Group
+- [optional] Enable Diagnostic Settings on the Management Group hierarchy that was defined during the deployment of the Management Group
 
 ### Success criteria
 
@@ -117,9 +118,10 @@ As optional content you can also look at Management Groups Diagnostic Settings t
 - [infra-as-code/bicep/modules/logging](https://github.com/Azure/ALZ-Bicep/tree/main/infra-as-code/bicep/modules/logging)
 - [infra-as-code/bicep/orchestration/mgDiagSettingsAll](https://github.com/Azure/ALZ-Bicep/tree/main/infra-as-code/bicep/orchestration/mgDiagSettingsAll)]
 
-### Solution - Spoilerwarning
+### Solution
 
-[Solution Steps](./walkthrough/challenge-2/solution.md)
+> [!warning]
+> SPOILER - You can find pointers to a faster solution in the [solution document](./walkthrough/solution.md)
 
 ## Challenge 3 - Core Connectivity
 
@@ -141,6 +143,11 @@ Create the core connectivity infrastructure (Hub vnet or vWAN Hub) correspoding 
 
 - [Netowrk Topoligy Considerations](https://github.com/Azure/ALZ-Bicep/wiki/DeploymentFlow#network-topology-deployment)
 
+### Solution
+
+> [!warning]
+> SPOILER - You can find pointers to a faster solution in the [solution document](./walkthrough/solution.md)
+
 ## Challenge 4 - Role Assignments
 
 ### Goal
@@ -149,10 +156,13 @@ Role assignments are part of [Identity and Access Management (IAM)](https://lear
 
 In this challenge you need to prepare a resource group for later workload deployment by creating it and assigning the appropriate roles.
 
+> [!NOTE]
+> For this challenge, and the deployment happening later in this workshop, you have been issued a separate set of user credentials, so the assignment exercise should be performed on this _deployment_ user.
+
 ### Actions
 
 - Create resource group that will later hold a specific workload
-- Assing the appropriate custom roles so your deployment user has the necessary roles for workload deployment assigned (In a later challenge we will use that user to deploy the demo workload)
+- Ensure your user has the appropriate role on the created resource group for workload deployment assigned (In a later challenge we will use that user to deploy the demo workload)
 
 ### Success criteria
 
@@ -163,16 +173,26 @@ In this challenge you need to prepare a resource group for later workload deploy
 
 - [infra-as-code/bicep/modules/roleAssignments](https://github.com/Azure/ALZ-Bicep/tree/main/infra-as-code/bicep/modules/roleAssignments)
 
+### Solution
+
+> [!warning]
+> SPOILER - You can find pointers to a faster solution in the [solution document](./walkthrough/solution.md)
+
 ## Challenge 5 - Subscription Placement
 
 In proper production environments you would place subscriptions into their respective management groups in order to inherit the corresponding configurations, like RBAC roles, policy assignments, etc.
 
 > [!NOTE]
-> In this workshop environment we are using a shared subscription for all participants and therefore moving subscripitions is not feasible.
+> In this workshop environment we are using a shared subscription for all participants and therefore moving subscripitions is not part of the workshop.
 
 ### Learning resources
 
 - [infra-as-code/bicep/orchestration/subPlacementAll](https://github.com/Azure/ALZ-Bicep/tree/main/infra-as-code/bicep/orchestration/subPlacementAll)
+
+### Solution
+
+> [!warning]
+> SPOILER - You can find pointers to a faster solution in the [solution document](./walkthrough/solution.md)
 
 ## Challenge 6 - Built-In and Custom Policy Assignments
 
@@ -183,20 +203,26 @@ To ensure consistent governance across the whole landing zone, Azure Policies ar
 ### Actions
 
 - Deploys the default Azure Landing Zone Azure Policy Assignments to the Management Group Hierarchy and also assigns the relevant RBAC for the system-assigned Managed Identities created for policies that require them (e.g DeployIfNotExist & Modify effect policies)
-- Exclude - at least - one of the default policies from assignment
-- Add a custom policy to the deployment which limits the resource deployment to Azure region "swedencentral"
+- Exclude "Storage Account must not have public access" from the default policies for assignment
+
+- Add a custom policy which limits the resource deployment to Azure region "swedencentral"
 - Assign this custom policy to the scope of your workload resource group
-- Ensure that the a policy prevents stroage accounts from using public endpoints
+- Ensure that a policy prevents stroage accounts from using public endpoints, but scoped only to the Resource Group
 
 ### Success criteria
 
 - You have a set of default policies assigned to your managmeent group hierarchy
-- You have a custom policy assinment for your workload resource group
+- You have a custom policy and a default policy assinment for your workload resource group
 
 ### Learning resources
 
 - [infra-as-code/bicep/modules/policy/assignments/alzDefaults](https://github.com/Azure/ALZ-Bicep/tree/main/infra-as-code/bicep/modules/policy/assignments/alzDefaults)
 - [infra-as-code/bicep/modules/policy/assignments/workloadSpecific](https://github.com/Azure/ALZ-Bicep/tree/main/infra-as-code/bicep/modules/policy/assignments/workloadSpecific)
+
+### Solution
+
+> [!warning]
+> SPOILER - You can find pointers to a faster solution in the [solution document](./walkthrough/solution.md)
 
 ## Challenge 7 - Workload Deployment to Landing Zone
 
@@ -219,6 +245,11 @@ Now that the foundation is layed, you are ready to deploy your first workload. A
 ### Learning resources
 
 - [Netowrk Topoligy Considerations](https://github.com/Azure/ALZ-Bicep/wiki/DeploymentFlow#network-topology-deployment)
+
+### Solution
+
+> [!warning]
+> SPOILER - You can find pointers to a faster solution in the [solution document](./walkthrough/solution.md)
 
 # Finish
 

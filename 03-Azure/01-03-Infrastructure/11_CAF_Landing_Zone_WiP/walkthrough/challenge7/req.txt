@@ -1,0 +1,3 @@
+- create bicep scripts to implement the following resource deplyoments
+
+- azure storage account with parameter for storage account name, region and to allow/deny public access to the service

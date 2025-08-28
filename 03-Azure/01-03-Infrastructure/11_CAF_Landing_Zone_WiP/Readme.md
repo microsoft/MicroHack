@@ -203,7 +203,8 @@ To ensure consistent governance across the whole landing zone, Azure Policies ar
 ### Actions
 
 - Deploys the default Azure Landing Zone Azure Policy Assignments to the Management Group Hierarchy and also assigns the relevant RBAC for the system-assigned Managed Identities created for policies that require them (e.g DeployIfNotExist & Modify effect policies)
-- Exclude "Storage Account must not have public access" from the default policies for assignment
+
+- Make sure the policy assignment for "Storage Account must not have public access" applied to your management group is not applied to the subscription.
 
 - Add a custom policy which limits the resource deployment to Azure region "swedencentral"
 - Assign this custom policy to the scope of your workload resource group

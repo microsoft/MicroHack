@@ -275,9 +275,32 @@ PARAMETERS="@bicep/modules/policy/assignments/workloadSpecific/parameters/worklo
 az deployment mg create --name ${NAME:0:63} --location $LOCATION --management-group-id $MGID --template-file $TEMPLATEFILE --parameters $PARAMETERS
 ```
 
+### 6.2 Policy Excemption for Subscription
+
+```bash
+EXCEMPTION_NAME="<name>"
+SCOPE_ID="<exclusion scope>"
+ASSIGNMENT_ID="<assignment scope>"
+EXCEMPTION_CATEGORY="Waiver"
+DISPLAY_NAME="<Display Name>"
+REASON="<Description>"
+
+az policy exemption create \
+    --name "$EXCEMPTION_NAME" \
+    --scope "$SCOPE_ID" \
+    --policy-assignment "$ASSIGNMENT_ID" \
+    --exemption-category "$EXCEMPTION_CATEGORY" \
+    --display-name "$DISPLAY_NAME" \
+    --description "$REASON"
+```
+
+> [!NOTE]
+> You can find an example on how to create a comfortable (and automatable) way in challenge6/excemption.
+> The example consists of a bash script which populates all of the above environment variables.
+
 ### 6.3 Policy Assignment to Resource Group
 
-For the purpose of this workshop we assume certain policies excluded at the Management Group level need to be assigned at the Resource Group level for one particular Workload.
+For the purpose of this workshop we assume certain policies excluded at the Management Group level need to be assigned at the Resource Group level for one particular workload.
 
 > [!NOTE]
 > Use the Resource Group you created in Challenge 4 for this assignment.

@@ -10,6 +10,7 @@
   - [Challenge 2 - Containerize the Application](#challenge-2---containerize-the-application)
   - [Challenge 3 - Create the Container App](#challenge-3---create-the-container-app)
   - [Challenge 4 - Make the Container App Production Ready](#challenge-4---make-the-container-app-production-ready)
+  - [Challenge 5 - Host Your Own AI Models](#challenge-5---host-your-own-ai-models)
 - [**Contributors**](#contributors)
 
 ## MicroHack Introduction

@@ -24,11 +24,11 @@ Please ensure that you successfully passed [challenge 1](../../Readme.md#challen
 
 1. Navigate to the Log Analytics Workspace and open *Agents* in the left navigation pane.
 
-2. Select *Data Collection Rules* followed by a click on *Create* to create Data collection rules. 
+2. Select *Data Collection Rules* followed by a click on *Create* to create Data collection rules.
 
 ![image](./img/2.2_Create_Data_Collection_Rule.png)
 
-3. Name the Data Collection Rule *mh-dcr* select your subscription and *mh-rg* as ressource group and change the Region to *West Europe*. Change Platform Type to *All* and click *Next: Resources* to continue.
+3. Name the Data Collection Rule *mh-dcr* select your subscription and resource group and change the Region to *Sweden Central*. Change Platform Type to *All* and click *Next: Resources* to continue.
 
 ![image](./img/2.3_Create_Data_Collection_Rule_Basics.png)
 
@@ -40,7 +40,7 @@ Please ensure that you successfully passed [challenge 1](../../Readme.md#challen
 
 6. Repeat step 4 & 5 for Linux Syslog and accept the defaults.
 
-7. Create the Data Collection Rule. 
+7. Create the Data Collection Rule.
 
 
 ### Task 3: Enable Azure Monitor for Azure Arc enabled Servers with Azure Policy initiative
@@ -53,7 +53,7 @@ Please ensure that you successfully passed [challenge 1](../../Readme.md#challen
 
 - Scope: Please select your resource group
 - Basics: Please search for *Enable Azure Monitor for Hybrid VMs with AMA* and select the initiative.
-- Parameters: Please insert the Resource ID of the Data Collection Rule from Task 2. 
+- Parameters: Please insert the Resource ID of the Data Collection Rule from Task 2.
 - Remediation: Please select the System assigned identity location according to your resources, e.g. West Europe. Don't check the box for "Create a remediation task" here, as it would only create a remediation task for the first policy within the policy initiative. We will do this in one of the next steps for all policies.
 - Click *Review + create* and then *Create*
 
@@ -79,7 +79,7 @@ Please ensure that you successfully passed [challenge 1](../../Readme.md#challen
 
 ![image](./img/3.7_Assign_Policy_Monitor_AMA_remidiate.png)
 
-### Task 4: Enable and configure Update Management
+### Task 4: Enable and configure Update Manager
 
 1. Navigate to *Policy* using the top search bar and select *Assignments* in the left navigation pane.
 
@@ -87,10 +87,10 @@ Please ensure that you successfully passed [challenge 1](../../Readme.md#challen
 
 3. In this section you can now configure the assignment with the following settings and create the assignment:
 
-- Scope: Please select the resource group called *mh-arc-servers-rg*
-- Basics: Please search for *Configure periodic checking for missing system updates on azure Arc-enabled servers* and select the policy. As *Assignment name* append *(Windows)* 
+- Scope: Please select your resource group
+- Basics: Please search for *Configure periodic checking for missing system updates on azure Arc-enabled servers* and select the policy. As *Assignment name* append *(Windows)*
 - Parameters: Skip, and keep defaults (which targeting Windows guest OS.)
-- Remediation: Please select the System assigned identity location according to your resources, e.g. West Europe. 
+- Remediation: Please select the System assigned identity location according to your resources, e.g. West Europe.
 - Click *Review + create* and then *Create*
 
 4. Please wait a few seconds until the creation of the assignment is complete. You should see that the policy is assigned.
@@ -117,51 +117,8 @@ Please ensure that you successfully passed [challenge 1](../../Readme.md#challen
 
 ### Task 5: Enable Change Tracking and Inventory
 
-In order to use the built-in policy initiative to enable *Change Tracking and Inventory* feature, we first need to create a special data collection rule. At the time of authoring this solution walkthrough, this is not possible using the Azure portal. But you can use the ARM template here: [/03-Azure/01-03-Infrastructure/02_Hybrid_Azure_Arc_Servers/resources/ChangeTracking/template-DCR-ChangeTracking.json](../../resources/ChangeTracking/template-DCR-ChangeTracking.json) to create this data collection rule.
-
-In the custom ARM template, provide the following parameters:
-| *Parameter*                           | *Value*                   |
-|---------------------------------------|---------------------------|
-| Resource group                        | mh-arc-servers-rg         |
-| Data Collection Rule                  | leave the Default         |
-| Log Analytics_workspace_ResourceId    | <paste the full resource id of the Log Analytics workspace you created in Task 1><br> i.e. /subscriptions/<*your-subscription-guid*>/resourcegroups/mh-arc-servers-rg/providers/microsoft.operationalinsights/workspaces/mh-arc-la|
-
-In your command shell, navigate to the folder where the template is located and execute the following command:
-
-```
- az deployment group create -g 'mh-arc-servers-rg' --template-file template-DCR-ChangeTracking.json --parameters workspaceResourceId='/subscriptions/<your-subscription-guid>/resourcegroups/<your-resource-group-name>/providers/microsoft.operationalinsights/workspaces/<your-logAnalyticsWorkspace-name>'
-```
-
-Check whether the change tracking data collection rule as been created successfully and note the resource id (you will need it during the policy initiative assignment). Then create the policy assignment following these steps:
-
-1. Navigate to *Policy* using the top search bar and select *Assignments* in the left navigation pane.
-
-2. Select *Assignments* in the left navigation pane and click *Assign initiative*
-
-3. In this section you can now configure the assignment with the following settings and create the assignment:
-
-- Scope: Please select the resource group called *mh-arc-servers-rg*
-- Basics: Please search for *Enable ChangeTracking and Inventory for Arc-enabled virtual machines* and select the initiative.
-- Parameters: As *Data Collection Rule Resource Id* provide the resourceId of the data collection rule you just created in the beginning of this task - i.e. */subscriptions/<*your-subscription-guid*>/resourceGroups/mh-arc-servers-rg/providers/Microsoft.Insights/dataCollectionRules/DCR-ChangeTracking*.
-- Remediation: Please select the System assigned identity location according to your resources, e.g. West Europe. You do NOT check the box for "Create a remediation task" at this point in time, as it would only create one of the six required. We will do this in one of the next steps.
-
-4. Please wait a few seconds until the creation of the assignment is complete. You should see that the policy is assigned.
-
-5. Important: Both machines were already onboarded earlier. As a result, you need to create a remediation tasks to apply all policies within the initiative to your Azure Arc Servers. Please select the Initiative Assignment and select *Create Remediation Task* for each policy.
-
-![image](./img/5.1_remediation_tasks.png)
-
-6. Accept the default values, check *Re-evaluate resource compliance before remediating* and repeat the remediation for the following policies:
- - DeployAMALinuxHybridVMWithUAIChangeTrackingAndInventory
- - DCRALinuxHybridVMChangeTrackingAndInventory
- - DeployChangeTrackingExtensionLinuxHybridVM
- - DeployChangeTrackingExtensionWindowsHybridVM
- - DeployAMAWindowsHybridVMWithUAIChangeTrackingAndInventory
- - DCAWindowsHybridVMChangeTrackingAndInventory
-
-8. Verify that all remediation were successful. This might take multiple minutes (or even hours).
-
-9. Navigate to Azure Arc, select Servers, followed by selecting your Windows Server. Select Inventory. Please be aware that generating the initial inventory takes multiple Minutes/hours. After a while the white page should show values.
+In order to use the built-in policy initiative to enable *Change Tracking and Inventory* feature, perform the steps outlined [here](https://learn.microsoft.com/azure/automation/change-tracking/enable-change-tracking-at-scale-machines-blade).
+2. Navigate to Azure Arc, select Servers, followed by selecting your Windows Server. Select Inventory. Please be aware that generating the initial inventory takes multiple Minutes/hours. After a while the white page should show values.
 
 ![image](./img/5.9_Inventory.png)
 

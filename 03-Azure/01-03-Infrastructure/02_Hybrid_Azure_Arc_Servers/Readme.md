@@ -14,7 +14,7 @@
   - [Challenge 4 - Microsoft Defender for Cloud integration with Azure Arc](#challenge-4---microsoft-defender-for-cloud-integration-with-azure-arc)
   - [Challenge 5 - Best Practices assessment for Windows Server](#challenge-5---best-practices-assessment-for-windows-server)
   - [Challenge 6 - Activate ESU for Windows Server 2012 R2 via Arc (optional)](#challenge-6---activate-esu-for-windows-server-2012-r2-via-arc---optional)
-  - [Challenge 7 - Azure Automanage Machine Configuration (optional)](#challenge-7---azure-automanage-machine-configuration---optional)
+  - [Challenge 7 - Azure Monitor for virtual machines](#challenge-7---azure-monitor-for-virtual-machines)
 
 - [**Contributors**](#contributors)
 
@@ -69,16 +69,10 @@ After completing this MicroHack you will:
 This MicroHack has a few but important prerequisites to be understood before starting this lab!
 
 - Your own Azure subscription with Owner RBAC rights at the subscription level
-  - [Azure Evaluation free account](https://azure.microsoft.com/free)
-- You need to have 3 virtual machines ready and updated. One with a Linux operating system (tested with Ubuntu Server 24.04), one with Windows Server 2025 and one with Windows Server 2012 R2 (optional). You can use machines in Azure for this following this guide: [Azure Arc Jumpstart Servers](https://jumpstart.azure.com/azure_arc_jumpstart/azure_arc_servers/azure)
-    > **Note**
-    > When using the Jumpstart the virtual machines will already be onboarded to Azure Arc and therefore "Challenge 1 - Azure Arc prerequisites & onboarding" is not needed.
-- [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli) (Hint: Make sure to use the lastest version)
-- [Azure PowerShell Guest Configuration Cmdlets](https://learn.microsoft.com/azure/governance/machine-configuration/machine-configuration-create-setup#install-the-module-from-the-powershell-gallery)
-  - It is not possible to run those commands from Azure Cloud Shell
-  - Please make sure you have at least Version 3.4.2 installes with the following Command: ```Install-Module -Name GuestConfiguration -RequiredVersion 3.4.2```
-- [Visual Studio Code](https://code.visualstudio.com/)
-- [Git SCM](https://git-scm.com/download/)
+  - For the workshop at Microsoft Norway Sept 17th 2025, an Azure subscription will be provided
+  - After the workshop, you can sign up for an [Azure Evaluation free account](https://azure.microsoft.com/free)
+- You need to have 3 virtual machines ready and updated. One with a Linux operating system (tested with Ubuntu Server 24.04), one with Windows Server 2025 and one with Windows Server 2012 R2 (optional).
+- For the workshop at Microsoft Norway Sept 17th 2025, these virtual machines will be pre-provisioned.
 
 ## Challenge 1 - Azure Arc prerequisites & onboarding
 
@@ -88,19 +82,26 @@ In challenge 1 you will prepare your Azure environemnt for onboarding of existin
 
 ### Actions
 
-- Create all necessary Azure resources
-  - Resource Group (Name: mh-arc-servers-rg)
-  - Service Principal (Name: mh-arc-servers-sp)
-- Enable required Resource Providers
-- Prep existing server operating system on-prem
-- Onboard existing server to Azure Arc
+- Verify all necessary Azure resources are in place
+  - Resource Group
+      - Name: LabUser-xx
+  - Virtual machines:
+      - LabUser-xx-linux-vm
+      - LabUser-xx-win2012-vm
+      - LabUser-xx-win2025-vm
+- Service Principal (Name: LabUser-xx-arc-servers-sp)
+- Enable required Resource Providers (if not already enabled)
+- Prep existing servers` operating system on-prem
+    - Hint: We are using Azure VMs to simulate on-prem servers
+- Onboard existing servers to Azure Arc
+    - LabUser-xx-win2012-vm may be skipped unless you plan to do the optional Challenge 6 (Extended Security Updates)
 
 ### Success criteria
 
-- You created an Azure resource group
+- You have an Azure resource group
 - You created an service principal with the required role membership
-- Prepared successfully an existing Server OS
-- Onboarded server is visible in the Azure Arc plane in the Azure Portal
+- Successfully prepared existing servers
+- Onboarded servers which is visible in the Azure Arc machines blade in the Azure Portal
 
 ### Learning resources
 
@@ -117,15 +118,15 @@ In challenge 1 you will prepare your Azure environemnt for onboarding of existin
 
 ### Goal
 
-In challenge 2 you will onboard your Windows and Linux virtual machines to Azure Monitor using the Azure Monitoring Agent (AMA) to leverage Azure Update Management, Change Tracking, Inventory and more. Be aware that Microsoft curently shifts from the retiring Log Analytics Agent to Azure Monitoring Agent. By that some of the features used in challange 2 are currently in preview.
+In challenge 2 you will onboard your Windows and Linux virtual machines to Azure Monitor using the Azure Monitoring Agent (AMA) to leverage Azure Update Manager, Change Tracking, Inventory and more.
 
 ### Actions
 
 - Create all necessary Azure resources
   - Log Analytics workspace (Name: mh-arc-servers-kv-law)
-- Configure Data Collection Rules in Log Analytics to collect Windows event logs and Linux syslog
-- Enable Azure Monitor for Azure Arc enabled servers with Azure Policy initiative
-- Enable and configure Update Management
+- Configure Data Collection Rules to collect Windows event logs and Linux syslog
+- Enable Azure Monitor for Azure Arc-enabled Servers with Azure Policy initiative
+- Enable and configure Update Manager
 - Enable Change Tracking and Inventory
 - Enable VM Insights
 
@@ -145,8 +146,8 @@ In challenge 2 you will onboard your Windows and Linux virtual machines to Azure
 - [Deployment options for Azure Monitor agent on Azure Arc-enabled servers](https://learn.microsoft.com/azure/azure-arc/servers/concept-log-analytics-extension-deployment)
 - [Data collection rules in Azure Monitor](https://learn.microsoft.com/azure/azure-monitor/essentials/data-collection-rule-overview)
 - [Azure Policy built-in definitions for Azure Arc-enabled servers](https://docs.microsoft.com/azure/azure-arc/servers/policy-reference)
-- [Azure Update Management Center](https://learn.microsoft.com/azure/update-center/overview)
-- [Enable Change Tracking and Inventory using Azure Monitoring Agent (Preview)](https://learn.microsoft.com/azure/automation/change-tracking/enable-vms-monitoring-agent?tabs=singlevm)
+- [Azure Update Manager](https://learn.microsoft.com/azure/update-manager/overview)
+- [Enable Change Tracking and Inventory using Azure Monitoring Agent](https://learn.microsoft.com/azure/automation/change-tracking/enable-vms-monitoring-agent?tabs=singlevm%2Cmultiplevms&pivots=single-portal)
 - [Monitor a hybrid machine with VM insights](https://docs.microsoft.com/azure/azure-arc/servers/learn/tutorial-enable-vm-insights)
 
 
@@ -163,7 +164,7 @@ Managing secrets, credentials or certificates to secure communication between di
 ### Actions
 
 - Create an Azure Key Vault in your Azure resource group
-- Create a secret in the Azure Key Vault and assign permissions to your virtual machine vm-linux-mh0
+- Create a secret in the Azure Key Vault and assign permissions to your Linux virtual machine
 - Access the secret via bash script
 
 ### Success Criteria
@@ -260,35 +261,18 @@ In this challenge, you will activate Extended Security Updates (ESU) for Windows
 
 [Solution Steps](./walkthrough/challenge-6/solution.md)
 
-## Challenge 7 - Azure Automanage Machine Configuration - optional
+## Challenge 7 - Azure Monitor for virtual machines
 
 ### Goal
 
-This challenge is about interacting with the client operating system. We will have a look at Machine Configurations as the final step of this journey.
+This MicroHack scenario walks through the use of **Azure Monitor** with a focus on the best practices and the design principles of how to monitor your overall Azure infrastructure (Iaas and PaaS) and applications accordingly. Specifically, this builds up to include working with an existing infrastructure like Virtual Machines, Application Gateway, Container Apps etc.
+
+Note: This is a separate MicroHack which requires its own dedicated set of virtual machines.
 
 ### Actions
 
-- Create all necessary Azure resources
-  - Azure Storage account
-- Setup a Policy that checks if the user "FrodoBaggins" is part of the local administrators group
-- Setup a Custom Machine Configuration, for the Windows Server, that creates a registry key in ``` HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment\ ```
-
-### Success criteria
-
-- You can view the compliance state of the Administrator Group Policy
-- You can show the registry key being present on the Windows Server
-
-### Learning resources
-
-- [Understand the machine configuration feature of Azure Automanage](https://learn.microsoft.com/azure/governance/machine-configuration/overview)
-- [How to setup a machine configuration authoring environment](https://learn.microsoft.com/azure/governance/machine-configuration/machine-configuration-create-setup)
-- [How to create custom machine configuration package artifacts](https://learn.microsoft.com/azure/governance/machine-configuration/machine-configuration-create)
-- [How to create custom machine configuration policy definitions](https://learn.microsoft.com/azure/governance/machine-configuration/machine-configuration-create-definition)
-- [Create SAS tokens for storage containers](https://learn.microsoft.com/azure/applied-ai-services/form-recognizer/create-sas-tokens)
-
-### Solution - Spoilerwarning
-
-[Solution Steps](./walkthrough/challenge-7/solution.md)
+- Delete all 3 virtual machines from the Azure Arc-related challenges to free up resources in the subscription
+- Follow the instructions in the [Azure Monitor for virtual machines MicroHack](../07_Azure_Monitor/README.md)
 
 ## Finish
 

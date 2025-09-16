@@ -117,8 +117,15 @@ Please ensure that you successfully passed [challenge 1](../../Readme.md#challen
 
 ### Task 5: Enable Change Tracking and Inventory
 
-In order to use the built-in policy initiative to enable *Change Tracking and Inventory* feature, perform the steps outlined [here](https://learn.microsoft.com/azure/automation/change-tracking/enable-change-tracking-at-scale-machines-blade).
-2. Navigate to Azure Arc, select Servers, followed by selecting your Windows Server. Select Inventory. Please be aware that generating the initial inventory takes multiple Minutes/hours. After a while the white page should show values.
+1. Browse to the Azure Arc [Machines overview](https://portal.azure.com/#view/Microsoft_Azure_ArcCenterUX/ArcCenterMenuBlade/~/servers)
+2. Click on one of your Windows Server 2025 machine
+3. In the left pane, select "Windows Management" and then "Best Practices Assessment (preview)"
+4. Check the "Activate Azure benefits" box and click "Confirm" to enable the Azure Benefits for this machine. This may take up to 10 minutes.
+
+![alt text](img/image7.png)
+5. In order to use the built-in policy initiative to enable *Change Tracking and Inventory* feature, perform the steps outlined [here](https://learn.microsoft.com/azure/automation/change-tracking/enable-change-tracking-at-scale-machines-blade).
+
+6. Navigate to Azure Arc, select Servers, followed by selecting your Windows Server. Select Inventory. Please be aware that generating the initial inventory takes multiple minutes/hours. After a while the white page should show values.
 
 ![image](./img/5.9_Inventory.png)
 

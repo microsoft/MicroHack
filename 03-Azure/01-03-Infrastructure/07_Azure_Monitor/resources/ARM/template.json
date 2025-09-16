@@ -529,7 +529,7 @@
                 "[resourceId('Microsoft.Network/applicationGateways', parameters('applicationGateways_appgw_microhack_name'))]"
             ],
             "sku": {
-                "name": "Standard_DS1_v2",
+                "name": "Standard_D2s_v6",
                 "tier": "Standard",
                 "capacity": 2
             },
@@ -844,7 +844,7 @@
         //         "[resourceId('Microsoft.Network/applicationGateways', parameters('applicationGateways_appgw_microhack_name'))]"
         //     ],
         //     "sku": {
-        //         "name": "Standard_DS1_v2",
+        //         "name": "Standard_D2s_v6",
         //         "tier": "Standard"
         //     },
         //     "identity": {
@@ -885,7 +885,7 @@
         //             ]
         //         },
         //         "hardwareProfile": {
-        //             "vmSize": "Standard_DS1_v2"
+        //             "vmSize": "Standard_D2s_v6"
         //         },
         //         "storageProfile": {
         //             "imageReference": {
@@ -953,7 +953,7 @@
         //         "[resourceId('Microsoft.Network/applicationGateways', parameters('applicationGateways_appgw_microhack_name'))]"
         //     ],
         //     "sku": {
-        //         "name": "Standard_DS1_v2",
+        //         "name": "Standard_D2s_v6",
         //         "tier": "Standard"
         //     },
         //     "identity": {
@@ -994,7 +994,7 @@
         //             ]
         //         },
         //         "hardwareProfile": {
-        //             "vmSize": "Standard_DS1_v2"
+        //             "vmSize": "Standard_D2s_v6"
         //         },
         //         "storageProfile": {
         //             "imageReference": {

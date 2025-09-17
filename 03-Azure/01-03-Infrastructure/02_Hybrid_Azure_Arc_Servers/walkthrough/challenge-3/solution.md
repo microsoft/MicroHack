@@ -18,11 +18,11 @@ Please ensure that you successfully passed [challenge 2](../../Readme.md#challen
 
 ![image](./img/2_KV_settings.jpg)
 
-3. Please wait a few seconds until the creation of the Key Vault is complete. 
+3. Please wait a few seconds until the creation of the Key Vault is complete.
 
 ### Task 2: Create a new secret in your Key Vault
 
-1. After the creation navigate to the Azure Key Vault and assign the *Secret Management* template to the managed identity of your Linux Azure Arc-enabled server.
+1. After the creation navigate to the Azure Key Vault and assign the *Key Vault Secrets User* role to the managed identity of your Linux Azure Arc-enabled server.
 
 ![image](./img/3_Assign_KeyVault_permissions.jpg)
 
@@ -59,7 +59,7 @@ else
 fi
 ```
 
-   > **Note**  
+   > **Note**
    >  For Windows machines you can use the following command:
 
 ```powershell
@@ -91,7 +91,7 @@ fi
 ```
 
 
-> **❗Hint:**  
+> **❗Hint:**
 > The above request connects to the Azure Instance Metadata Service to retrieve an access token for the managed identity of your Azure Arc-enabled server. By default, the IMDS is accessible via 169.254.169.254 from Azure VMs. Azure Arc-enabled servers need to use 127.0.0.1 to proxy the request with the Azure Arc agent to Azure.`
 
 4. Verify that you received an access token using the following command:
@@ -108,12 +108,12 @@ You should see the access token in the output. In addition, the result is saved 
 curl 'https://mh-arc-servers-kv0815.vault.azure.net/secrets/kv-secret?api-version=2016-10-01' -H "Authorization: Bearer $token"
 ```
 
-> **❗Hint:**  
+> **❗Hint:**
 > Please make sure to call your instance of Key Vault and adjust the name in the above command accordingly.
 
 ![image](./img/5_result_secret.png)
 
-   > **Note**  
+   > **Note**
    >  For Windows machines you can use the following command:
 
 ```powershell
@@ -128,11 +128,11 @@ curl 'https://mh-arc-servers-kv0815.vault.azure.net/secrets/kv-secret?api-versio
                 Authorization = "Bearer $($AccessToken.access_token)"
             }
         }
-        
+
         # Retrieve Secrets
         Invoke-RestMethod @Query | Select-Object -ExpandProperty Value | fl *
 ```
 
-Congratulations! You retrieved the secret from your Key Vault without providing any credentials. The resulting possibilities are limitless. You can use it for managing certificates or any secret that is necessary to run your on-premises application. 
+Congratulations! You retrieved the secret from your Key Vault without providing any credentials. The resulting possibilities are limitless. You can use it for managing certificates or any secret that is necessary to run your on-premises application.
 
 You successfully completed challenge 3! 🚀🚀🚀

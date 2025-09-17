@@ -119,7 +119,7 @@ Please ensure that you successfully passed [challenge 1](../../Readme.md#challen
 
 1. Browse to the Azure Arc [Machines overview](https://portal.azure.com/#view/Microsoft_Azure_ArcCenterUX/ArcCenterMenuBlade/~/servers)
 2. Click on one of your Windows Server 2025 machine
-3. In the left pane, select "Windows Management" and then "Best Practices Assessment (preview)"
+3. In the left pane, select "Licenses" and then "Windows Server"
 4. Check the "Activate Azure benefits" box and click "Confirm" to enable the Azure Benefits for this machine. This may take up to 10 minutes.
 
 ![alt text](img/image7.png)

@@ -6,7 +6,7 @@ First of all and before we start, it's important to understand that monitoring I
 
 The Azure Monitor Agent (AMA) targets the IaaS where you have the control to install the agent. But what is the AMA doing then?
 
-Azure Monitor Agent (AMA) collects monitoring data from the guest operating system of Azure and hybrid virtual machines and delivers it to Azure Monitor for use by features, insights, and other services, such as Microsoft Sentinel and Microsoft Defender for Cloud. Azure Monitor Agent replaces all of Azure Monitor's legacy monitoring agents. This article provides an overview of `Azure Monitor Agent's` capabilities and supported use cases.
+Azure Monitor Agent (AMA) collects monitoring data from the guest operating system of Azure and hybrid virtual machines and delivers it to Azure Monitor for use by features and insights, and other services, such as Change Tracking and Inventory & Best Practice Assessment. Azure Monitor Agent replaces all of Azure Monitor's legacy monitoring agents. This article provides an overview of `Azure Monitor Agent's` capabilities and supported use cases.
 
 Benefits of the new `Azure Monitor Agent` are
 

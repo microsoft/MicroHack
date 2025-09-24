@@ -324,3 +324,30 @@ Thank you for investing the time and see you next time!
 * Andreas Schwarz [LinkedIn](https://www.linkedin.com/in/andreas-schwarz-7518a818b/)
 * Christian Thönes [Github](https://github.com/cthoenes); [LinkedIn](https://www.linkedin.com/in/christian-t-510b7522/)
 * Stefan Geisler [Github](https://github.com/StefanGeislerMS); [LinkedIn](https://www.linkedin.com/in/stefan-geisler-7b7363139/)
+
+## Optional Bonus Challenge 8 - Deploy AI chat in App Service
+
+### Goal
+
+The goal of this exercise is to ...
+
+* deploy an AI chat application in Azure App Service
+
+### Actions
+
+* Create a new Azure OpenAI Service
+* Deploy a model and test it in AI Foundry
+* Deploy the AI chat application code to the App Service
+
+### Success criteria
+
+* The AI chat application is running in Azure App Service
+* The application is accessible via a public URL
+
+### Learning resources
+* [Quickstart: Deploy model in AI Foundry](https://learn.microsoft.com/en-us/azure/ai-foundry/openai/how-to/create-resource?pivots=web-portal)
+* [Deploy an Azure App Service from AI Foundy](https://learn.microsoft.com/en-us/azure/ai-foundry/tutorials/deploy-chat-web-app)
+
+### Solution - Spoilerwarning
+
+[Solution Steps](./walkthrough/challenge-8/solution.md)

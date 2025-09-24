@@ -214,6 +214,11 @@
                   "classicAlertSettings": {
                     "alertsForCriticalOperations": "Disabled",
                     "emailNotificationsForSiteRecovery": "Disabled"
+                  },
+                  "securitySettings": {
+                    "immutabilitySettings": {
+                      "state": "Disabled"
+                    }
                   }
                 }
               },
@@ -235,7 +240,7 @@
                 "softDeleteFeatureState": "Disabled",
                 "redundancySettings": {
                   "crossRegionRestore": "Enabled",
-                  "standardTierStorageRedundancy": "GeoRedundant"
+                  "standardTierStorageRedundancy": "ZoneRedundant"
                 }
               },
               "dependsOn": [
@@ -251,7 +256,7 @@
                 "storageSettings": [
                   {
                     "datastoreType": "VaultStore",
-                    "type": "GeoRedundant"
+                    "type": "ZoneRedundant"
                   }
                 ]
               }
@@ -371,7 +376,7 @@
                 "softDeleteFeatureState": "Disabled",
                 "redundancySettings": {
                   "crossRegionRestore": "Enabled",
-                  "standardTierStorageRedundancy": "GeoRedundant"
+                  "standardTierStorageRedundancy": "ZoneRedundant"
                 }
               },
               "dependsOn": [
@@ -387,7 +392,7 @@
                 "storageSettings": [
                   {
                     "datastoreType": "VaultStore",
-                    "type": "GeoRedundant"
+                    "type": "ZoneRedundant"
                   }
                 ]
               }

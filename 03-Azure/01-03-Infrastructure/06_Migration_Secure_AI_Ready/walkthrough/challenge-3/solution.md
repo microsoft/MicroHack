@@ -9,33 +9,32 @@ Please also make sure to review the [prerequisites](https://learn.microsoft.com/
 
 ### **Task 1: Build a business case**
 
-Open the [Azure Portal](https://portal.azure.com) and navigate to the previousley created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click *Build business case*.
+Open the [Azure Portal](https://portal.azure.com) and navigate to the previousley created Azure Migrate project. Select _Servers, databases and web apps_, make sure that the right Azure Migrate Project is selected and click _Build business case_.
 
 ![image](./img/bc1.png)
 
-Provide a name for the business case and select a target location. For the migration strategy select *Azure recommended approach to minimize cost*. You can select your desired saving options and discounts that may apply to your Azure Subscription.
+Provide a name for the business case and select a target location. For the migration strategy select _Azure recommended approach to minimize cost_, if available. You can select your desired saving options and discounts that may apply to your Azure Subscription.
 
 ![image](./img/bc2.png)
 
 > [!IMPORTANT]
 > Please set location as "Sweden Central" instead of "West Europe"
-Wait for the business case creation to complete and click on the business case name to open it.
+> Wait for the business case creation to complete and click on the business case name to open it.
 
 > [!NOTE]
 > Please note that business case creation can take up to 30 minutes.
 
 ![image](./img/bc3.png)
 
-
 ### **Task 2: Review a business case**
 
 There are four major reports that you need to review:
 
 - Overview: This report is an executive summary of the business case and covers:
-  + Potential savings (TCO).
-  + Estimated year on year cashflow savings based on the estimated migration completed that year.
-  + Savings from unique Azure benefits like Azure Hybrid Benefit.
-  + Discovery insights covering the scope of the business case.
+  - Potential savings (TCO).
+  - Estimated year on year cashflow savings based on the estimated migration completed that year.
+  - Savings from unique Azure benefits like Azure Hybrid Benefit.
+  - Discovery insights covering the scope of the business case.
 
 ![image](./img/bc4.png)
 
@@ -67,4 +66,4 @@ You can adjust those parameters what would recalculate the business case.
 
 You successfully completed challenge 3! 🚀🚀🚀
 
- **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-4/solution.md)
+**[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-4/solution.md)

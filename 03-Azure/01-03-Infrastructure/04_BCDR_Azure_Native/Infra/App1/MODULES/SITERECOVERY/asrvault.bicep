@@ -23,6 +23,11 @@ resource recoveryServicesVault 'Microsoft.RecoveryServices/vaults@2024-04-01' = 
         emailNotificationsForSiteRecovery: 'Disabled'
       }
     }
+    securitySettings: {
+      immutabilitySettings: {
+        state: 'Disabled'
+      }
+    }
   }
   sku: {
     name: 'RS0'
@@ -40,7 +45,7 @@ resource backupRsvConfig 'Microsoft.RecoveryServices/vaults/BackupConfig@2022-02
     softDeleteFeatureState: 'Disabled'
     redundancySettings: {
       crossRegionRestore: 'Enabled'
-      standardTierStorageRedundancy: 'GeoRedundant'
+      standardTierStorageRedundancy: 'ZoneRedundant'
     }
   }
 }
@@ -52,7 +57,7 @@ resource backupVlt 'Microsoft.DataProtection/backupVaults@2024-04-01' = {
     storageSettings: [
       {
         datastoreType: 'VaultStore'
-        type: 'GeoRedundant'
+        type: 'ZoneRedundant'
         
       }
     ]

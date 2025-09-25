@@ -14,7 +14,7 @@
   - [Challenge 4 - Microsoft Defender for Cloud integration with Azure Arc](#challenge-4---microsoft-defender-for-cloud-integration-with-azure-arc)
   - [Challenge 5 - Best Practices assessment for Windows Server](#challenge-5---best-practices-assessment-for-windows-server)
   - [Challenge 6 - Activate ESU for Windows Server 2012 R2 via Arc (optional)](#challenge-6---activate-esu-for-windows-server-2012-r2-via-arc---optional)
-  - [Challenge 7 - Azure Automanage Machine Configuration (optional)](#challenge-7---azure-automanage-machine-configuration---optional)
+  - [Challenge 7 - Azure Machine Configuration (optional)](#challenge-7---azure-machine-configuration---optional)
   
 - [**Contributors**](#contributors)
 
@@ -26,11 +26,11 @@ For customers who want to simplify complex and distributed environments across o
 
 ![image](./img/AzureArc-01.png)
 
-- Gain central visibility, operations, and compliance Standardize visibility, operationsand compliance across a wide range of resources and locations by extending the Azure control plane. Right from Azure, you can easily organize, govern, and secure Windows, Linux, SQL Servers and Kubernetes clusters across datacenters, edge, and multi-cloud.
+- Gain central visibility, operations, and compliance standardize visibility, operationsand compliance across a wide range of resources and locations by extending the Azure control plane. Right from Azure, you can easily organize, govern, and secure Windows, Linux, SQL Servers and Kubernetes clusters across datacenters, edge, and multi-cloud.
 
-- Build Cloud native apps anywhere, at scale Centrally code and deploy applications confidently to any Kubernetes distribution in any location. Accelerate development by using best in class applications services with standardized deployment, configuration, security, and observability.
+- Build cloud native apps anywhere, at scale centrally code and deploy applications confidently to any Kubernetes distribution in any location. Accelerate development by using best in class applications services with standardized deployment, configuration, security, and observability.
 
-- Run Azure services anywhere Flexibly use cloud innovation where you need it by deploying Azure services anywhere. Implement cloud practices and automation to deploy faster, consistently, and at scale with always-up-to-date Azure Arc enabled services.
+- Run Azure services anywhere flexibly use cloud innovation where you need it by deploying Azure services anywhere. Implement cloud practices and automation to deploy faster, consistently, and at scale with always-up-to-date Azure Arc enabled services.
 
 ## MicroHack context
 
@@ -52,13 +52,13 @@ Further resources - Thomas Maurer & Lior Kamrat links
 * [Customer reference: Wüstenrot & Württembergische reduces patching time by 35 percent, leans into hybrid cloud management with Azure Arc](https://customers.microsoft.com/en-us/story/1538266003319018436-ww-azure-banking-and-capital-markets)
 * [Introduction to Azure Arc landing zone accelerator for hybrid and multicloud](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/scenarios/hybrid/enterprise-scale-landing-zone)
 
-💡 Optional: Read this after completing this lab to deepen the learned!
+💡 Optional: Read this after completing this lab to deepen what you've learned!
 
 ## Objectives
 
 After completing this MicroHack you will:
 
-* Know how to use Azure Arc in your environment, on-prem or Multi-cloud
+* Know how to use Azure Arc in your environment, on-prem or multi-cloud
 * Understand use cases and possible scenarios in your hybrid world to modernize your infrastructure estate
 * Get insights into real world challenges and scenarios
 
@@ -72,11 +72,11 @@ This MicroHack has a few but important prerequisites to be understood before sta
   * [Azure Evaluation free account](https://azure.microsoft.com/en-us/free/search/?OCID=AIDcmmzzaokddl_SEM_0fa7acb99db91c1fb85fcfd489e5ca6e:G:s&ef_id=0fa7acb99db91c1fb85fcfd489e5ca6e:G:s&msclkid=0fa7acb99db91c1fb85fcfd489e5ca6e)
 * You need to have 3 virtual machines ready and updated. One with a Linux operating system (tested with Ubuntu Server 24.04), one with Windows Server 2025 and one with Windows Server 2012 R2 (optional). You can use machines in Azure for this following this guide: [Azure Arc Jumpstart Servers](https://azurearcjumpstart.io/azure_arc_jumpstart/azure_arc_servers/azure/)
     > **Note**  
-    >  When using the Jumpstart the virtual machines will already be onboarded to Azure Arc and therefore "Challenge 1 - Azure Arc prerequisites & onboarding" is not needed.
+    >  When using the Jumpstart the virtual machines will already be onboarded to Azure Arc and therefore "Challenge 1 - Azure Arc prerequisites & onboarding" is not needed. Keep in mind that Azure Arc is not supported on an Azure VM, this is only done for educational or testing purposes.
 * [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) (Hint: Make sure to use the lastest version)
 * [Azure PowerShell Guest Configuration Cmdlets](https://learn.microsoft.com/en-us/azure/governance/machine-configuration/machine-configuration-create-setup#install-the-module-from-the-powershell-gallery)
   * It is not possible to run those commands from Azure Cloud Shell
-  * Please make sure you have at least Version 3.4.2 installes with the following Command: ```Install-Module -Name GuestConfiguration -RequiredVersion 3.4.2```
+  * Please make sure you have at least Version 3.4.2 installed with the following Command: ```Install-Module -Name GuestConfiguration -RequiredVersion 3.4.2```
 * [Visual Studio Code](https://code.visualstudio.com/)
 * [Git SCM](https://git-scm.com/download/)
 
@@ -92,7 +92,7 @@ In challenge 1 you will prepare your Azure environemnt for onboarding of existin
   * Resource Group (Name: mh-arc-servers-rg)
   * Service Principal (Name: mh-arc-servers-sp)
 * Enable required Resource Providers
-* Prep existing server operating system on-prem
+* Prepare existing server operating system on-prem
 * Onboard existing server to Azure Arc
 
 ### Success criteria
@@ -104,10 +104,10 @@ In challenge 1 you will prepare your Azure environemnt for onboarding of existin
 
 ### Learning resources
 
-* [Plan and deploy Azure Arc-enabled servers](https://learn.microsoft.com/en-us/azure/azure-arc/servers/plan-at-scale-deployment) 
-* [Prerequisites for Connect hybrid machines with Azure Arc-enabled servers](https://learn.microsoft.com/en-us/azure/azure-arc/servers/learn/quick-enable-hybrid-vm#prerequisites) 
-* [Connect hybrid machines with Azure Arc-enabled servers](https://learn.microsoft.com/en-us/azure/azure-arc/servers/learn/quick-enable-hybrid-vm#generate-installation-script) 
-* [Create a service principal for onboarding](https://learn.microsoft.com/en-us/azure/azure-arc/servers/onboard-service-principal#create-a-service-principal-for-onboarding-at-scale) 
+* [Plan and deploy Azure Arc-enabled servers](https://learn.microsoft.com/en-us/azure/azure-arc/servers/plan-at-scale-deployment)
+* [Prerequisites for Connect hybrid machines with Azure Arc-enabled servers](https://learn.microsoft.com/en-us/azure/azure-arc/servers/learn/quick-enable-hybrid-vm#prerequisites)
+* [Connect hybrid machines with Azure Arc-enabled servers](https://learn.microsoft.com/en-us/azure/azure-arc/servers/learn/quick-enable-hybrid-vm#generate-installation-script)
+* [Create a service principal for onboarding](https://learn.microsoft.com/en-us/azure/azure-arc/servers/onboard-service-principal#create-a-service-principal-for-onboarding-at-scale)
 
 ### Solution - Spoilerwarning
 
@@ -117,7 +117,7 @@ In challenge 1 you will prepare your Azure environemnt for onboarding of existin
 
 ### Goal
 
-In challenge 2 you will onboard your Windows and Linux virtual machines to Azure Monitor using the Azure Monitoring Agent (AMA) to leverage Azure Update Management, Change Tracking, Inventory and more. Be aware that Microsoft curently shifts from the retiring Log Analytics Agent to Azure Monitoring Agent. By that some of the features used in challange 2 are currently in preview.
+In challenge 2 you will onboard your Windows and Linux virtual machines to Azure Monitor using the Azure Monitoring Agent (AMA) to leverage Azure Update Management, Change Tracking, Inventory and more.
 
 ### Actions
 
@@ -128,7 +128,6 @@ In challenge 2 you will onboard your Windows and Linux virtual machines to Azure
 * Enable and configure Update Management
 * Enable Change Tracking and Inventory
 * Enable VM Insights
-
 
 ### Success criteria
 
@@ -158,7 +157,7 @@ In challenge 2 you will onboard your Windows and Linux virtual machines to Azure
 
 ### Goal
 
-Managing secrets, credentials or certificates to secure communication between different services is a main challenge for developers and administrators. Managed Identities is Azure's answer to all these challenges and eliminates the need to manage and securely store secrets, credentials or certificates on the virtual machine. In challenge 3 you will leverage Managed Identities via Azure Arc to securely access an Azure Key Vault secret from your Azure Arc enabled servers without the need of managing any credential. 
+Managing secrets, credentials or certificates to secure communication between different services is a main challenge for developers and administrators. Managed Identities is Azure's answer to all these challenges and eliminates the need to manage and securely store secrets, credentials or certificates on the virtual machine. In challenge 3 you will leverage Managed Identities via Azure Arc to securely access an Azure Key Vault secret from your Azure Arc-enabled servers without the need of managing any credential.
 
 ### Actions
 
@@ -185,7 +184,7 @@ Managing secrets, credentials or certificates to secure communication between di
 
 ### Goal
 
-* In this challenge, we will integrate your Azure Arc connected machines with Azure Defender for Cloud. After completing the previous challenges, you should now have an Azure subscription with one or more Azure Arc-enabled servers. You should also have an available Log Analytics workspace and have deployed the Log Analytics agent to your server(s).
+* In this challenge, we will integrate your Azure Arc-enabled servers with Azure Defender for Cloud. After completing the previous challenges, you should now have an Azure subscription with one or more Azure Arc-enabled servers. You should also have an available Log Analytics workspace and have deployed the Azure Monitor agent to your server(s). You should be able to simulate a security alert on the server that is effectively monitored and alerted by Microsoft Defender for Cloud.
 
 ### Actions
 
@@ -194,6 +193,7 @@ Managing secrets, credentials or certificates to secure communication between di
 ### Success criteria
 
 * Open Microsoft Defender for Cloud and view the Secure Score for your Azure Arc-enabled machine(s).
+* Simulated a security alert picked up by Microsoft Defender for Cloud.
 
 ### Learning resources
 
@@ -260,7 +260,7 @@ In this challenge, you will activate Extended Security Updates (ESU) for Windows
 
 [Solution Steps](./walkthrough/challenge-6/solution.md)
 
-## Challenge 7 - Azure Automanage Machine Configuration - optional
+## Challenge 7 - Azure Machine Configuration - optional
 
 ### Goal
 
@@ -280,7 +280,7 @@ This challenge is about interacting with the client operating system. We will ha
 
 ### Learning resources
 
-* [Understand the machine configuration feature of Azure Automanage](https://learn.microsoft.com/en-us/azure/governance/machine-configuration/overview)
+* [Understand Machine COnfiguration](https://learn.microsoft.com/en-us/azure/governance/machine-configuration/overview)
 * [How to setup a machine configuration authoring environment](https://learn.microsoft.com/en-us/azure/governance/machine-configuration/machine-configuration-create-setup)
 * [How to create custom machine configuration package artifacts](https://learn.microsoft.com/en-us/azure/governance/machine-configuration/machine-configuration-create)
 * [How to create custom machine configuration policy definitions](https://learn.microsoft.com/en-us/azure/governance/machine-configuration/machine-configuration-create-definition)
@@ -304,3 +304,4 @@ Thank you for investing the time and see you next time!
 * Nils Bankert [GitHub](https://github.com/nilsbankert); [LinkedIn](https://www.linkedin.com/in/nilsbankert/)
 * Alexander Ortha [GitHub](https://github.com/alexor-ms/); [LinkedIn](https://www.linkedin.com/in/alexanderortha/)
 * Christoph Süßer (Schmidt) [GitHub](https://github.com/TheFitzZZ); [LinkedIn](https://www.linkedin.com/in/suesser/)
+* Laura Nicolas [GitHub](https://github.com/lanicolas); [LinkedIn](https://www.linkedin.com/in/lauranicolasd/)

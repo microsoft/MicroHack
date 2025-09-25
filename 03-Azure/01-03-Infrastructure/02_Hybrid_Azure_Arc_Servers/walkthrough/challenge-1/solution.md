@@ -6,9 +6,9 @@ Duration: 20 minutes
 
 ## Prerequisites
 
-Please ensure that you successfully verified the [General prerequisits](../../Readme.md#general-prerequisites) before continuing with this challenge.
+Please ensure that you successfully verified the [general prerequisits](../../Readme.md#general-prerequisites) before continuing with this challenge.
 
-### Task 1: Create Azure Resource Group
+### Task 1: Create an Azure Resource Group
 
 Sign in to the [Azure Portal](https://portal.azure.com/).
 
@@ -16,46 +16,46 @@ Sign in to the [Azure Portal](https://portal.azure.com/).
 
 *Please note: At the time of writing this solution, not all Azure Arc features are fully supported in all regions. We tested this solution in region West Europe.*
 
-### Task 2: Create Service Principal 
+### Task 2: Create Service Principal
 
-* [Create Service Principal](https://learn.microsoft.com/en-us/azure/azure-arc/servers/onboard-service-principal#create-a-service-principal-for-onboarding-at-scale)
+* [Create an Azure Service Principal](https://learn.microsoft.com/en-us/azure/azure-arc/servers/onboard-service-principal#create-a-service-principal-for-onboarding-at-scale)
 
 ### Task 3: Enable Service providers
 
-* Enable Azure Resource Provider 
+* Enable Azure Azure Arc's Resource Provider
   [Azure Arc Azure resource providers](https://learn.microsoft.com/en-us/azure/azure-arc/servers/prerequisites#azure-resource-providers)
 
 ### Task 4: Prepare on-prem Server OS
 
-* Have a server, windows or linux ready, perhaps on your own laptop/notebook 
-* For windows, please use Windows Server 2025 with the latest patch level. 💡 ATTENTION: Use Windows Update to apply the latest patch level!!
+* Have a server, Windows or Linux ready, perhaps on your own laptop/notebook
+* For Windows, please use Windows Server 2025 with the latest patch level. 💡 ATTENTION: Use Windows Update to apply the latest patch level!!
 
   [Supported operating systems @ Connected Machine agent prerequisites - Azure Arc | Microsoft Docs](https://docs.microsoft.com/en-us/azure/azure-arc/servers/prerequisites#supported-operating-systems)
 	
-  This Server OS could be hosted as a VM on VMware, Hyper-V, Nutanix, AWS, GCP or bare metal. We are focused on-prem. 
+  This server OS could be hosted as a VM on VMware, VirtualBox, Hyper-V, Nutanix, AWS, GCP or bare metal. We are focused on-prem.
 	
 #### Additional:
   * These servers should be able to reach the internet and Azure.
-  * You need to have full access and admin or root permissions on this Server OS.
+  * You need to have full access and admin or root permissions on this server OS.
 
-* If you need to install and deploy your own server OS from scratch, then, download the following ISO files and save them on your own PC / Environment with your preferred Hypervisor e.g. Hyper-V or Virtualization Client (Windows 10/11 Hyper-V or Virtual Box).
+* If you need to install and deploy your own server OS from scratch, then, download the following ISO files and save them on your own PC / Environment with your preferred Hypervisor e.g. Hyper-V or Virtualization Client (Windows 10/11 Hyper-V or VirtualBox).
   * [Ubuntu](https://ubuntu.com/download)
   * [Windows Server 2025](https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2025)
 
 * Install from the downloaded ISO your preferred OS. 
 
 #### Using Azure Arc with Azure VMs
-* In case you want to use an Azure VM for this MicroHack, you need to follow the guidance 
+* In case you want to use an Azure VM for this MicroHack, you need to follow the guidance but please note that this should only be done for evaluation and testing purposes as it is not supported in production.
   * [Evaluate Azure Arc-enabled servers on an Azure virtual machine](https://learn.microsoft.com/en-us/azure/azure-arc/servers/plan-evaluate-on-azure-virtual-machine)
 
-With these prerequisites in place, we can focus on building the differentiated knowledge in the hybrid world with Azure Arc to enable your on-prem, Multi-Cloud environment for the Cloud operations model.
+With these prerequisites in place, we can focus on building the differentiated knowledge in the hybrid world with Azure Arc to enable your on-prem, multi-Cloud environment for the cloud operations model.
 
-### Task 5: Onboard Windows Server OS to Azure Arc
+### Task 5: Onboard Windows Server to Azure Arc
 
 * Onboard the recent installed or prepared Windows Server OS to Azure Arc, by using the documented steps
 1. Generate the installation script from the Azure portal [Link](https://learn.microsoft.com/en-us/azure/azure-arc/servers/onboard-service-principal#generate-the-installation-script-from-the-azure-portal)
 
-*Please note: As not all Azure Arc features are implemented in Germany West Central region, we highly recommended to use West Europe region to onboard your VMs at the time of writing!*
+*Please note: As not all Azure Arc features are implemented in all regions, we highly recommended to use West Europe region to onboard your VMs at the time of writing!*
 
 * Step by step
 ![image](./img/1.png)

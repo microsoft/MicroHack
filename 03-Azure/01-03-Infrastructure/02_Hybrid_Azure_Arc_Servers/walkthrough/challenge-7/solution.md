@@ -1,4 +1,4 @@
-# Walkthrough Challenge 7 - Azure Automanage Machine Configuration
+# Walkthrough Challenge 7 - Azure Machine Configuration
 
 Duration: 30 minutes
 
@@ -7,7 +7,6 @@ Duration: 30 minutes
 ## Action 1: Create an Azure Policy Guest Configuration for your Azure Arc VMs
 
 ### Setup a Policy that checks if the user "FrodoBaggins" is part of the local administrators group
-
 
 1. Please navigate to Azure Policy.
 
@@ -26,7 +25,7 @@ Duration: 30 minutes
     ![PolicyAssignmentParameters.png](./img/PolicyAssignmentParameters.png)
 
     > **Note**  
-    > This example does not include remediation. If you want to learn more on how to use guest configuration to remediate the state of your servers please refer to [Remediation options for guest configuration](https://docs.microsoft.com/en-us/azure/governance/policy/concepts/guest-configuration-policy-effects). 
+    > This example does not include remediation. If you want to learn more on how to use guest configuration to remediate the state of your servers please refer to [remediation options for guest configuration](https://docs.microsoft.com/en-us/azure/governance/policy/concepts/guest-configuration-policy-effects).
     
     
 4. On Non-Compliance Message you can create a custom message that may contain additional information like link to internal documentation or just an explaination why this policy is set.
@@ -84,7 +83,7 @@ Find it here [AddKey.zip](https://github.com/microsoft/MicroHack/raw/main/03-Azu
     
     
     > **Note**  
-    >  You will need at least the *Storage Blob Data Contributor* role to be able to upload the file.   
+    >  You will need at least the *Storage Blob Data Contributor* role to be able to upload the file.
 
     > **Note**  
     >  The expiry date needs be to less than 7 days in the future.

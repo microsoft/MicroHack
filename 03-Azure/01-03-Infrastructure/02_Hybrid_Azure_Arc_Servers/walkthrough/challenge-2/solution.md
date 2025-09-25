@@ -8,7 +8,6 @@ Duration: 30 minutes
 
 Please ensure that you successfully passed [challenge 1](../../Readme.md#challenge-1) before continuing with this challenge.
 
-
 ### Task 1: Create all necessary Azure Resources (Log Analytics workspace)
 
 1. Sign in to the [Azure Portal](https://portal.azure.com/).
@@ -17,14 +16,13 @@ Please ensure that you successfully passed [challenge 1](../../Readme.md#challen
 
 ![image](./img/5_CreateLAW.jpg)
 
-***Please note**: For convenience, in this MicroHack create the Log Analytics workspace in the same resource group as you are using for your arc-enabled servers. Reason: The service pricinipal (used for remediation tasks) of the policy will be given the necessary RBAC roles on the scope where the policy is assigned. In this MicroHack we assume that every participant will assign the policy on resource group level. Hence, if the LAW is outside of that scope, you would need to assign the required permissions manually on the LAW.*
-
+***Please note**: For convenience, in this MicroHack create the Log Analytics workspace in the same resource group as you are using for your arc-enabled servers. Reason: The service principal (used for remediation tasks) of the policy will be given the necessary RBAC roles on the scope where the policy is assigned. In this MicroHack we assume that every participant will assign the policy on resource group level. Hence, if the LAW is outside of that scope, you would need to assign the required permissions manually on the LAW.*
 
 ### Task 2: Configure Data Collection Rules in Log Analytics to collect Windows event logs and Linux syslog
 
 1. Navigate to the Log Analytics Workspace and open *Agents* in the left navigation pane.
 
-2. Select *Data Collection Rules* followed by a click on *Create* to create Data collection rules. 
+2. Select *Data Collection Rules* followed by a click on *Create* to create Data collection rules.
 
 ![image](./img/2.2_Create_Data_Collection_Rule.png)
 
@@ -40,7 +38,7 @@ Please ensure that you successfully passed [challenge 1](../../Readme.md#challen
 
 6. Repeat step 4 & 5 for Linux Syslog and accept the defaults.
 
-7. Create the Data Collection Rule. 
+7. Create the Data Collection Rule.
 
 
 ### Task 3: Enable Azure Monitor for Azure Arc enabled Servers with Azure Policy initiative
@@ -53,7 +51,7 @@ Please ensure that you successfully passed [challenge 1](../../Readme.md#challen
 
 - Scope: Please select your resource group
 - Basics: Please search for *Enable Azure Monitor for Hybrid VMs with AMA* and select the initiative.
-- Parameters: Please insert the Resource ID of the Data Collection Rule from Task 2. 
+- Parameters: Please insert the Resource ID of the Data Collection Rule from Task 2.
 - Remediation: Please select the System assigned identity location according to your resources, e.g. West Europe. Don't check the box for "Create a remediation task" here, as it would only create a remediation task for the first policy within the policy initiative. We will do this in one of the next steps for all policies.
 - Click *Review + create* and then *Create*
 
@@ -117,7 +115,7 @@ Please ensure that you successfully passed [challenge 1](../../Readme.md#challen
 
 ### Task 5: Enable Change Tracking and Inventory
 
-In order to use the built-in policy initiative to enable *Change Tracking and Inventory* feature, we first need to create a special data collection rule. At the time of authoring this solution walkthrough, this is not possible using the Azure portal. But you can use the ARM template here: [/03-Azure/01-03-Infrastructure/02_Hybrid_Azure_Arc_Servers/resources/ChangeTracking/template-DCR-ChangeTracking.json](../../resources/ChangeTracking/template-DCR-ChangeTracking.json) to create this data collection rule.
+In order to use the built-in policy initiative to enable *Change Tracking and Inventory* feature, we first need to create a special data collection rule. For ease of use we provide an ARM template [/03-Azure/01-03-Infrastructure/02_Hybrid_Azure_Arc_Servers/resources/ChangeTracking/template-DCR-ChangeTracking.json](../../resources/ChangeTracking/template-DCR-ChangeTracking.json) to create this data collection rule.
 
 In the custom ARM template, provide the following parameters:
 | *Parameter*                           | *Value*                   |
@@ -161,7 +159,7 @@ Check whether the change tracking data collection rule as been created successfu
 
 8. Verify that all remediation were successful. This might take multiple minutes (or even hours).
 
-9. Navigate to Azure Arc, select Servers, followed by selecting your Windows Server. Select Inventory. Please be aware that generating the initial inventory takes multiple Minutes/hours. After a while the white page should show values.
+9. Navigate to Azure Arc, select Servers, followed by selecting your Windows Server. Select Inventory. Please be aware that generating the initial inventory takes multiple minutes/hours. After a while the white page should show values.
 
 ![image](./img/5.9_Inventory.png)
 
@@ -174,7 +172,7 @@ Check whether the change tracking data collection rule as been created successfu
 3. In the *Monitoring Configuration* form, for *Data collection rule* click the *Create New* link
 
 4. Fill in the *Create new rule* form
-- Data collection rule name: Provide a name (MSVMI for VMInsights will be appended automatically) - i.e. *DCR-MicroHack*
+- Data collection rule name: provide a name (MSVMI for VMInsights will be appended automatically) - i.e. *DCR-MicroHack*
 - Enable process and dependencies (Map): Check the box
 - Subscription: Keep the default
 - Log Analytics workspace: Choose the workspace you created in task 1
@@ -183,7 +181,6 @@ Check whether the change tracking data collection rule as been created successfu
 5. For all other VMs you want to enable for VM Insights in that region, repeat step 1 and 2. Then, in the *Monitoring configuration* form, make sure your newly created data collection rule is selected and click configure.
 
 6. Wait for the deployment of the data collection rule to finish. This might take several minutes.
-
 
 ### Coffee Break of 10 minutes to let the data flow between your Virtual Machines and Azure
 

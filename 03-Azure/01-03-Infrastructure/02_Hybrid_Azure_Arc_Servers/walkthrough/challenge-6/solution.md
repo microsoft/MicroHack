@@ -38,8 +38,6 @@ Duration: 15 minutes
 
     ![alt text](img/image6.png)
 
-
-
 ###
 **Congratulations!** You successfully completed the challenge! 🚀🚀🚀
 

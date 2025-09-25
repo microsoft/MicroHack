@@ -29,7 +29,6 @@ Please ensure that you successfully passed [challenge 2](../../Readme.md#challen
 ### 
 
 
-
 ## Task 2: Start the assessment
 
 1. Click "Go to resource" after the deployment has finished to move back to the Windows Server we're working on

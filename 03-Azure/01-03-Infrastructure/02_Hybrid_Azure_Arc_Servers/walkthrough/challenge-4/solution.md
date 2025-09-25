@@ -12,7 +12,7 @@ Please ensure that you successfully passed [challenge 3](../../Readme.md#challen
 
 ### Task 2: Configure Defender for Cloud
 * Enable Defender for Server
-* Click on Upgrade 
+* Click on Upgrade
 ![image](./img/1.png)
 * Verify
 ![image](./img/2.png)
@@ -27,7 +27,10 @@ Please ensure that you successfully passed [challenge 3](../../Readme.md#challen
 
 ![image](./img/7.png)
 
+### Task 4: Simulate alerts on your Azure Arc-enabled servers.
+
+Once your server is visible in the inventory, you can follow [this guide](https://learn.microsoft.com/en-us/azure/defender-for-cloud/alert-validation) to validate that your system is properly configured and Defender is properly monitoring and responding to security alerts.
+
 Congratulations! You secured any server which is outside of Azure and onboarded via Azure Arc.
 
 You successfully completed challenge 4! 🚀🚀🚀
-

@@ -18,7 +18,7 @@ Please ensure that you successfully passed [challenge 2](../../Readme.md#challen
 
 ![image](./img/2_KV_settings.jpg)
 
-3. Please wait a few seconds until the creation of the Key Vault is complete. 
+3. Please wait a few seconds until the creation of the Key Vault is complete.
 
 ### Task 2: Create a new secret in your Key Vault
 
@@ -133,6 +133,6 @@ curl 'https://mh-arc-servers-kv0815.vault.azure.net/secrets/kv-secret?api-versio
         Invoke-RestMethod @Query | Select-Object -ExpandProperty Value | fl *
 ```
 
-Congratulations! You retrieved the secret from your Key Vault without providing any credentials. The resulting possibilities are limitless. You can use it for managing certificates or any secret that is necessary to run your on-premises application. 
+Congratulations! You retrieved the secret from your Key Vault without providing any credentials. The resulting possibilities are limitless. You can use it for managing certificates or any secret that is necessary to run your on-premises application.
 
 You successfully completed challenge 3! 🚀🚀🚀

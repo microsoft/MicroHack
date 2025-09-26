@@ -36,7 +36,7 @@ For customers who want to simplify complex and distributed environments across o
 
 This MicroHack scenario walks through the use of Azure Arc with a focus on the best practices and the design principles and some interesting challenges for real world scenarios. Specifically, this builds up to include working with an existing infrastructure in your datacenter.
 
-Further resources - Thomas Maurer & Lior Kamrat links
+Further resources
 
 - [Azure Arc Overview Documentation](https://learn.microsoft.com/azure/azure-arc/overview)
 - [Azure Arc Blog from Microsoft](https://techcommunity.microsoft.com/category/azure/blog/azurearcblog)
@@ -52,7 +52,7 @@ Further resources - Thomas Maurer & Lior Kamrat links
 - [Customer reference: Wüstenrot & Württembergische reduces patching time by 35 percent, leans into hybrid cloud management with Azure Arc](https://customers.microsoft.com/story/1538266003319018436-ww-azure-banking-and-capital-markets)
 - [Introduction to Azure Arc landing zone accelerator for hybrid and multicloud](https://learn.microsoft.com/azure/cloud-adoption-framework/scenarios/hybrid/enterprise-scale-landing-zone)
 
-💡 Optional: Read this after completing this lab to deepen the learned!
+💡 Optional: Read this after completing this lab to deepen what you have learned!
 
 ## Objectives
 
@@ -69,10 +69,10 @@ After completing this MicroHack you will:
 This MicroHack has a few but important prerequisites to be understood before starting this lab!
 
 - Your own Azure subscription with Owner RBAC rights at the subscription level
-  - For the workshop at Microsoft Norway Sept 17th 2025, an Azure subscription will be provided
+  - For the workshop at Microsoft Norway, Sept 17th 2025, an Azure subscription will be provided
   - After the workshop, you can sign up for an [Azure Evaluation free account](https://azure.microsoft.com/free)
 - You need to have 3 virtual machines ready and updated. One with a Linux operating system (tested with Ubuntu Server 24.04), one with Windows Server 2025 and one with Windows Server 2012 R2 (optional).
-- For the workshop at Microsoft Norway Sept 17th 2025, these virtual machines will be pre-provisioned.
+- For the workshop at Microsoft Norway, Sept 17th 2025, these virtual machines will be pre-provisioned.
 
 ## Challenge 1 - Azure Arc prerequisites & onboarding
 

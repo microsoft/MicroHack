@@ -69,10 +69,7 @@ After completing this MicroHack you will:
 This MicroHack has a few but important prerequisites to be understood before starting this lab!
 
 - Your own Azure subscription with Owner RBAC rights at the subscription level
-  - For the workshop at Microsoft Norway, Sept 17th 2025, an Azure subscription will be provided
-  - After the workshop, you can sign up for an [Azure Evaluation free account](https://azure.microsoft.com/free)
 - You need to have 3 virtual machines ready and updated. One with a Linux operating system (tested with Ubuntu Server 24.04), one with Windows Server 2025 and one with Windows Server 2012 R2 (optional).
-- For the workshop at Microsoft Norway, Sept 17th 2025, these virtual machines will be pre-provisioned.
 
 ## Challenge 1 - Azure Arc prerequisites & onboarding
 
@@ -84,17 +81,13 @@ In challenge 1 you will prepare your Azure environemnt for onboarding of existin
 
 - Verify all necessary Azure resources are in place
   - Resource Group
-      - Name: LabUser-xx
-  - Virtual machines:
-      - LabUser-xx-linux-vm
-      - LabUser-xx-win2012-vm
-      - LabUser-xx-win2025-vm
+  - Virtual machines
 - Service Principal (Name: LabUser-xx-arc-servers-sp)
 - Enable required Resource Providers (if not already enabled)
 - Prep existing servers` operating system on-prem
     - Hint: We are using Azure VMs to simulate on-prem servers
 - Onboard existing servers to Azure Arc
-    - LabUser-xx-win2012-vm may be skipped unless you plan to do the optional Challenge 6 (Extended Security Updates)
+    - win2012-vm may be skipped unless you plan to do the optional Challenge 6 (Extended Security Updates)
 
 ### Success criteria
 
@@ -288,3 +281,4 @@ Thank you for investing the time and see you next time!
 - Nils Bankert [GitHub](https://github.com/nilsbankert); [LinkedIn](https://www.linkedin.com/in/nilsbankert/)
 - Alexander Ortha [GitHub](https://github.com/alexor-ms/); [LinkedIn](https://www.linkedin.com/in/alexanderortha/)
 - Christoph Süßer (Schmidt) [GitHub](https://github.com/TheFitzZZ); [LinkedIn](https://www.linkedin.com/in/suesser/)
+- Jan Egil Ring [GitHub](https://github.com/janegilring); [LinkedIn](https://www.linkedin.com/in/janegilring/)

@@ -1,6 +1,8 @@
 # adjust parameters with your own values as needed
-resourceGroupName="mh-arc-onprem-demo"
-resourceGroupLocation="germanywestcentral"
+resourceGroupforOnpremBase="mh-arc-onprem"
+resourceGroupforOnpremLocation="germanywestcentral"
+resourceGroupforArcBase="mh-arc-cloud"
+resourceGroupforArcLocation="westeurope"
 adminUsername="mhadmin"
 adminPassword="REPLACE-ME"
     
@@ -12,12 +14,17 @@ adminPassword="REPLACE-ME"
 # the script takes about 3min per VM (resulting in 9min per participant).
 
 number_of_participants=10
-regions=("germanywestcentral" "italynorth" "swedencentral" "francecentral" "polandcentral" "uksouth")
+regions=("italynorth" "swedencentral" "francecentral" "polandcentral" "uksouth")
 virtualWinMachineSize="Standard_D2ds_v4" # use a vm size with only 2 cores to avoid core limit issues in sponsored subscriptions
 virtualLnxMachineSize="Standard_DS1_v2" # use a vm size with only 1 core to avoid core limit issues in sponsored subscriptions
 
-# create a resource group
-az group create --name $resourceGroupName --location $resourceGroupLocation
+# create resource groups for each participant
+for i in $(eval echo {0..$(($number_of_participants-1))})
+do
+    az group create --name "$resourceGroupforOnpremBase-$i" --location "$resourceGroupforOnpremLocation"
+    az group create --name "$resourceGroupforArcBase-$i" --location "$resourceGroupforArcLocation"
+done
+
 number_of_regions=${#regions[@]}
 echo "Number of regions: $number_of_regions"
 number_of_loops=$((number_of_participants * 3 - 1 ))
@@ -42,7 +49,7 @@ do
         virtualMachineSize=$virtualWinMachineSize
     fi
 
-    vmName="vm-$type-mh$i"
+    vmName="vm-$type-$i"
     echo "Creating VM $vmName in $location"
 
     networkInterfaceName="$vmName-nic"
@@ -54,7 +61,7 @@ do
     
     # Create a VM
     az deployment group create \
-    --resource-group $resourceGroupName \
+    --resource-group "$resourceGroupforOnpremBase-$i" \
     --name $deploymentName \
     --template-file ./template-$type.json \
     --parameters @parameters-$type.json \
@@ -66,17 +73,17 @@ do
         networkSecurityGroupName=$networkSecurityGroupName \
         virtualNetworkName=$virtualNetworkName \
         virtualMachineComputerName=$virtualMachineComputerName \
-        virtualMachineRG=$resourceGroupName \
+        virtualMachineRG="$resourceGroupforOnpremBase-$i" \
         virtualMachineSize=$virtualMachineSize \
         location=$location
 
     # Run the reconfig script to disable the Azure Guest Agent
     if [ $type != "linux" ]; then
         echo "Running reconfig-win.ps1 on $vmName"
-        az vm run-command create --name reconfigWin$i --vm-name $vmName -g $resourceGroupName --location $location --script @reconfig-win.ps1 --async-execution
+        az vm run-command create --name reconfigWin$i --vm-name $vmName -g "$resourceGroupforOnpremBase-$i" --location $location --script @reconfig-win.ps1 --async-execution
     else
         echo "Running reconfig-ubuntu.sh on $vmName"
-        az vm run-command invoke -g $resourceGroupName -n $vmName --command-id RunShellScript --scripts @reconfig-ubuntu.sh --no-wait
+        az vm run-command invoke -g "$resourceGroupforOnpremBase-$i" -n $vmName --command-id RunShellScript --scripts @reconfig-ubuntu.sh --no-wait
     fi
 
 done

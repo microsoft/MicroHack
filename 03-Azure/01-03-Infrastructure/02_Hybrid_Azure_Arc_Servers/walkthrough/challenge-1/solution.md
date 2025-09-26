@@ -8,7 +8,7 @@ Duration: 20 minutes
 
 Please ensure that you successfully verified the [General prerequisits](../../Readme.md#general-prerequisites) before continuing with this challenge.
 
-### Task 1: Create Azure Resource Group
+### Task 1: Create Azure Resource Group - not relevant for MicroHack participants
 
 Sign in to the [Azure Portal](https://portal.azure.com/).
 
@@ -20,7 +20,7 @@ Sign in to the [Azure Portal](https://portal.azure.com/).
 
 * [Create Service Principal](https://learn.microsoft.com/en-us/azure/azure-arc/servers/onboard-service-principal#create-a-service-principal-for-onboarding-at-scale)
 
-### Task 3: Enable Service providers
+### Task 3: Enable Service providers - not relevant for MicroHack participants
 
 * Enable Azure Resource Provider 
   [Azure Arc Azure resource providers](https://learn.microsoft.com/en-us/azure/azure-arc/servers/prerequisites#azure-resource-providers)

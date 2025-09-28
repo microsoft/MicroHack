@@ -4,7 +4,7 @@
 
 ### Note
 
- All the data need is the excel file: [AVSMicroHackData](../Lab/info/datos_Microhack_300925.xlsx)
+ All the data needed is the excel file: [AVSMicroHackData](../Lab/info/datos_Microhack_300925.xlsx)
 
 ## Add a Network Segment
 1.	In NSX-T Manager, select Networking > Segments, and then select Add Segment.

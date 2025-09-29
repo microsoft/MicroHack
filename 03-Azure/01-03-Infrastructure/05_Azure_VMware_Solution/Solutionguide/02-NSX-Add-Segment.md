@@ -4,7 +4,7 @@
 
 ### Note
 
- All the data needed is in the excel file: [AVSMicroHackData](../Lab/info/datos_Microhack_300925.xlsx)
+ All the data needed is in the excel file: [AVSMicroHackData](../Lab/info/datos_Microhack_300925.xlsx). Prefixes, credentials .. 
 
 ## Add a Network Segment
 1.	In NSX-T Manager, select Networking > Segments, and then select Add Segment.
@@ -28,11 +28,8 @@
 ### Note
 The IP address needs to be on a non-overlapping RFC1918 address block, which ensures connection to the VMs on the new segment.
 
-7. Create a VM from the ISO file (you need to rename it to .ova first) located at: [Buid a small Vmware VM for testing purposes](https://virtuallymikebrown.com/wp-content/uploads/2012/02/dsl-4-4-10.doc) and attach it to the segment you just created.
-   
-8. Power on the VM. See credentials at: [AVSMicroHackData](../Lab/info/datos_Microhack_300925.xlsx). Verify that it has received an IP address from the DHCP server.
-
-    ![](./Images/02-NSX-Add-Segment/NSX_segment_image1.png)
+7. Test the DHCP Server
+   Enter into the nested vCenter, change the network settings of the virtual machine named server01 to the network adapter belonging to the segment. Check that the virtual machine gets the IP of the created segment.
 
 ### Hint
 

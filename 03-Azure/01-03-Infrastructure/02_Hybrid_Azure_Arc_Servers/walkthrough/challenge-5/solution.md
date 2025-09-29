@@ -13,20 +13,20 @@ Please ensure that you successfully passed [challenge 2](../../Readme.md#challen
 ## Task 1: Set up the Best Practices Assessment for a Windows server
 
 1. Browse to the Azure Arc [Machines overview](https://portal.azure.com/#view/Microsoft_Azure_ArcCenterUX/ArcCenterMenuBlade/~/servers)
-2. Click one of your Windows 2016 (or later) machines
+2. Click on one of your Windows Server 2025 machine
 3. In the left pane, select "Windows Management" and then "Best Practices Assessment (preview)"
 4. Click "Attest to your license type" in the blue overlay
 ![alt text](img/image6.png)
-4. Check the "Activate Azure benefits" box and click "Confirm" to enable the Azure Benefits for this machine. This may take up to 10 minutes. Go back to the page of step 3.
+4. If not already done, check the "Activate Azure benefits" box and click "Confirm" to enable the Azure Benefits for this machine. This may take up to 10 minutes. Go back to the page of step 3.
 ![alt text](img/image7.png)
 4. Click the "Get Started" button. A blade will open on the right.
 ![alt text](img/image.png)
-5. Select your ressoruce group and priviously created Log Analytics Workspace
+5. Select your resource group and previously created Log Analytics Workspace
 6. Let the validation check and confirm via "Set up"
 ![alt text](img/image2.png)
 7. Wait for the deployment to go through. This may take up to 15 minutes. Feel free to continue with another challenge in the meantime.
 ![alt text](img/image3.png)
-### 
+###
 
 
 
@@ -41,11 +41,11 @@ Please ensure that you successfully passed [challenge 2](../../Readme.md#challen
 ###
 
 **Congratulations**! You successfully completed this challenge! 🚀🚀🚀
-### 
+###
 
 
 
-## Optional Steps:  
+## Optional Steps:
 
 1. You can take a look at the installed extensions that were deployed when setting up the BPA by navigating to your server and clicking "Settings" -> "Extensions" in the left navigation blade:
     - AzureMonitorWindowsAgent

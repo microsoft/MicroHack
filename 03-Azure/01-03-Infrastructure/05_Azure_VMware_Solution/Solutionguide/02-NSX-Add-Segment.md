@@ -19,7 +19,7 @@
 
 ![](./Images/02-NSX-Add-Segment/NSXSegment003.PNG)
 
-5. Add DHCP range to your segment such that the VM's attached to this segment can recieve IP address dynamically
+5. Add DHCP range to your segment such that the VM's attached to this segment can receive IP address dynamically
 
 ![](./Images/02-NSX-Add-Segment/NSXSegment004.PNG)
 

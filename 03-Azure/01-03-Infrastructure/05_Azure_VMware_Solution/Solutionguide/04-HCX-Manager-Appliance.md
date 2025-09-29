@@ -2,7 +2,6 @@
 
 [Previous Challenge Solution](./03-NSX-Add-DNS-Forwarder.md) - **[Home](../Readme.md)** - [Next Challenge Solution](./05-HCX-Site-Pair.md)
 
-
 ## Deploy  HCX Manager Appliance On-Prem
 
 1.	Log in to the On Prem SDDC by login to your Azure jumpbox and by navigating to portal.azure.com. Log on to the jumpbox using the Bastion host and key in the username and password provided  in the excel file: [AVSMicroHackData](../Lab/info/datos_Microhack_300925.xlsx)

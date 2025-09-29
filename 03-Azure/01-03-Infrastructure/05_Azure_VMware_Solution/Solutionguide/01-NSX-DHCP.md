@@ -2,6 +2,10 @@
 
 **[Home](../Readme.md)** - [Next Challenge Solution](./02-NSX-Add-Segment.md)
 
+### Note
+
+ All the data needed is in the excel file: [AVSMicroHackData](../Lab/info/datos_Microhack_300925.xlsx). Prefixes, credentials .. 
+
 ## Instructions
 
 Here you will be using NSX-T to host your DHCP server and you will create a DHCP. Then you'll add a network segment and specify the DHCP IP address range.

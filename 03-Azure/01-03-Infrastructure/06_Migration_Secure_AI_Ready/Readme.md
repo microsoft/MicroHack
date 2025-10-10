@@ -312,19 +312,6 @@ The goal of this exercise is to ...
 
 [Solution Steps](./walkthrough/challenge-7/solution.md)
 
-## Finish
-
-Congratulations! You finished the Migrate and Secure to be AI Ready Microhack. We hope you had the chance to learn about the how to implement a successful migration strategy using Azure Migrate.
-If you want to give feedback please don’t hesitate to open an Issue on the repository or get in touch with one of us directly.
-
-Thank you for investing the time and see you next time!
-
-## Contributors
-* Nils Bankert [GitHub](https://github.com/nilsbankert); [LinkedIn](https://www.linkedin.com/in/nilsbankert/)
-* Andreas Schwarz [LinkedIn](https://www.linkedin.com/in/andreas-schwarz-7518a818b/)
-* Christian Thönes [Github](https://github.com/cthoenes); [LinkedIn](https://www.linkedin.com/in/christian-t-510b7522/)
-* Stefan Geisler [Github](https://github.com/StefanGeislerMS); [LinkedIn](https://www.linkedin.com/in/stefan-geisler-7b7363139/)
-
 ## Optional Bonus Challenge 8 - Deploy AI chat in App Service
 
 ### Goal
@@ -351,3 +338,16 @@ The goal of this exercise is to ...
 ### Solution - Spoilerwarning
 
 [Solution Steps](./walkthrough/challenge-8/solution.md)
+
+## Finish
+
+Congratulations! You finished the Migrate and Secure to be AI Ready Microhack. We hope you had the chance to learn about the how to implement a successful migration strategy using Azure Migrate.
+If you want to give feedback please don’t hesitate to open an Issue on the repository or get in touch with one of us directly.
+
+Thank you for investing the time and see you next time!
+
+## Contributors
+* Nils Bankert [GitHub](https://github.com/nilsbankert); [LinkedIn](https://www.linkedin.com/in/nilsbankert/)
+* Andreas Schwarz [LinkedIn](https://www.linkedin.com/in/andreas-schwarz-7518a818b/)
+* Christian Thönes [Github](https://github.com/cthoenes); [LinkedIn](https://www.linkedin.com/in/christian-t-510b7522/)
+* Stefan Geisler [Github](https://github.com/StefanGeislerMS); [LinkedIn](https://www.linkedin.com/in/stefan-geisler-7b7363139/)

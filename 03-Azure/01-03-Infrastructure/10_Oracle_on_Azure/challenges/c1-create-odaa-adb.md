@@ -13,5 +13,8 @@ Billing and payment for the service is processed through Azure. Payment for Orac
 When you set up an instance of Oracle Database@Azure, you use both the Azure portal and the Oracle Cloud Infrastructure (OCI) console.
 Follow the steps described on the following links: 
 
+> IMPORTANT: Administrator credentials will be defined by the user during the creation of the ADB instance. Remember the password as we will use the same password as for the GoldenGate installation in section 3.
+
+
 - 📖 [Overview](https://docs.oracle.com/en-us/iaas/Content/database-at-azure/overview.htm)
 - 🔧 [Create an Autonomous Database](https://docs.oracle.com/en-us/iaas/Content/database-at-azure/azucr-create-autonomous-database.html)

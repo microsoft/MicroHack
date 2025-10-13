@@ -1,0 +1,65 @@
+### specify the name of an existing secret that contains the ogg admin username and password
+ogg:
+  adminSecret: ogg-admin-secret
+  usernameKey: oggusername
+  passwordKey: oggpassword
+  ## the name of an OGG deployment, mostly "local", or ogg-east, ogg-west, ...
+  deploymentName: hacksync
+
+databases:
+  trgConn: "(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=eqsmjgp2.adb.eu-frankfurt-1.oraclecloud.com))(connect_data=(service_name=g6425a1dbd2e95a_adbger_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))"
+
+  #for demo env, dont change the schema names. SH already exists in ADB, so we create another one.
+  srcSchema: "SH"
+  trgSchema: "SH2"
+  adminSecret: 
+    secretName: db-admin-secret
+    srcAdminPwdKey: srcAdminPwd
+    trgAdminPwdKey: trgAdminPwd
+    srcGGUserNameKey: srcGGUserName
+    trgGGUserNameKey: trgGGUserName
+    srcGGPwdKey: srcGGPwd
+    trgGGPwdKey: trgGGPwd
+
+## request sizes of some PVCs, beware that there can be many   big trail files ...
+storage:
+  configSize: 1Gi
+  logSize: 10Gi
+  trailSize: 50Gi
+  storageClass: managed-csi
+
+image:
+  pullPolicy: IfNotPresent
+  ggImageName: container-registry.oracle.com/goldengate/goldengate-oracle-free:23.8.0.25.04
+  dbImageName: container-registry.oracle.com/database/free:23.8.0.0
+
+services:
+  ### You can choose to create an ingress in front of the service 
+  ### with a virtual host name of ggate.<suffix>
+  external:
+    ### set type to either ingress or none if You need something customized
+    type: ingress
+    ### typical ingressClasses are nginx and istio
+    ingressClass: nginx
+    ### uses default SSL certificate of gateway/controller or specify a custom tls-secret here
+    tlsSecretName: ggate-tls-secret
+    vhostName: gghack.4.182.87.218.nip.io
+  internal:
+    type: ClusterIP
+    plainPort: 8080
+    sslPort: 8443
+
+resources:
+  requests:
+    cpu: "1"
+    memory: 2Gi
+  limits:
+    cpu: "2"
+    memory: 16Gi  
+
+gpu:
+  runOnGPU: false
+  toleration: nvidia.com/gpu
+  nodeSelector: VM.GPU.A10.1
+
+

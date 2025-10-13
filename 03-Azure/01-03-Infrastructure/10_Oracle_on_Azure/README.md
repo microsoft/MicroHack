@@ -7,9 +7,10 @@ This intro level microhack (hackathon) will help you get hands-on experience wit
 ## 🎯 Challenges
 
 - 🚀 Challenge 1: **[Create an Oracle Database in Azure (ODAA) Autonomous Database (ADB) instance](./challenges/c1-create-odaa-adb.md)**
-- 🔐 Challenge 2: **[Updating the Oracle ADB NSG with the VNet CIDR where the AKS cluster is deployed](./challenges/c2-update-odaa-nsg.md)**
-- 🔌 Challenge 3: **[Do performance test from inside the AKS cluster against the Oracle ADB instance](./challenges/c3-perf-test-odaa.md)**
-- 🔄 Challenge 4: **[Use GoldenGate to replicate data between an Oracle database running in AKS and the Oracle ADB instance](./challenges/c4-golden-gate-odaa.md)**
+- 🔐 Challenge 2: **[Updating the Oracle ADB NSG with the VNet CIDR where the AKS cluster is deployed](./
+- 🔄 Challenge 3: **[Use GoldenGate to replicate data between an Oracle database running in AKS and the Oracle ADB instance](./challenges/c4-golden-gate-odaa.md)**
+challenges/c2-update-odaa-nsg.md)**
+- 🔌 Challenge 4: **[Do performance test from inside the AKS cluster against the Oracle ADB instance](./challenges/c3-perf-test-odaa.md)**
 - 🦫 Challenge 5: **[Review data replication via Beaver](./challenges/c5-beaver-odaa.md)**
 - 🏗️ Challenge 6: **[Setup High Availability for Oracle ADB](./challenges/c6-ha-oracle-adb.md)**
 - 📊 Challenge 7: **[(Optional) Use Estate Explorer to visualize the Oracle ADB instance](./challenges/c7-estate-explorer-odaa.md)**

@@ -2,7 +2,7 @@
 
 🌟 Oracle GoldenGate enables real-time data replication and integration across heterogeneous environments. In this microhack, GoldenGate is used to synchronize data between an Oracle database running in Azure Kubernetes Service (AKS) and an Oracle Autonomous Database (ADB) instance on Oracle Cloud Infrastructure (OCI), ensuring high availability and seamless data migration.
 
-~~~bash
+~~~powershell
 # Install golden gate
 helm repo add oggfree https://ilfur.github.io/VirtualAnalyticRooms
 ~~~
@@ -11,10 +11,10 @@ helm repo add oggfree https://ilfur.github.io/VirtualAnalyticRooms
 
 > ⚠️ **IMPORTANT**: Make sure to use the external IP of your nginx ingress controller is assigned.
 
-~~~bash
-export EXTIP=$(kubectl get service -n ingress-nginx -o jsonpath='{range .items[*]} {.status.loadBalancer.ingress[*].ip} {end}')
+~~~powershell
+$EXTIP=kubectl get service -n ingress-nginx -o jsonpath='{range .items[*]} {.status.loadBalancer.ingress[*].ip} {end}'
 cp resources/template/gghack.yaml .
-sed -i "s/xxx-xxx-xxx-xxx/${EXTIP// /}/g" gghack.yaml
+(Get-Content gghack.yaml) -replace 'xxx-xxx-xxx-xxx', $EXTIP.Trim() | Set-Content gghack.yaml
 ~~~
 
 ## 🔗 Replace current Goldengate configuration File gghack.yaml ODAA connection String
@@ -30,26 +30,41 @@ sed -i "s/xxx-xxx-xxx-xxx/${EXTIP// /}/g" gghack.yaml
 
 🔧 Alternative you can use the Azure CLI to retrieve the connection string.
 
-~~~bash
-adbName="ADBGer" # replace with your ADB name
+~~~powershell
+$adbName="ADBGer" # replace with your ADB name
 # Prerequisites (if not already installed)
 az extension add --name oracle-database 
 
+# In case you need to switch subscription
+az account set --subscription "ODAA"
+az account show
+$rgODAA="ODAA" # replace with your resource group name
+
 # High profile (TCPS, tlsAuthentication = Server) - returns first match
-trgConn=$(az oracle-database autonomous-database show -g $rg -n $adbName --query "connectionStrings.profiles[?consumerGroup=='High' && protocol=='TCPS' && tlsAuthentication=='Server'].value | [0]" -o tsv)
-echo $trgConn
-sed -i "s/<ODAA-CONNECTION-STRING>/${trgConn}/g" gghack.yaml
+$trgConn=az oracle-database autonomous-database show -g $rgODAA -n $adbName --query "connectionStrings.profiles[?consumerGroup=='High' && protocol=='TCPS' && tlsAuthentication=='Server'].value | [0]" -o tsv
+(Get-Content gghack.yaml) -replace '<ODAA-CONNECTION-STRING>', $trgConn | Set-Content gghack.yaml
 ~~~
 
 ## 🚀 Install GoldenGate Microhack
 
 > ⚠️ **IMPORTANT**: Make sure to use the same password on the ADB as mentioned here.
 
-~~~bash
-ggAdminPassword=Welcome1234#
+There will be 3 different systems involved:
+
+- GoldenGate (ogg-admin-secret)
+ - GoldenGate Admin User: ggadmin
+- Source Database oracle 23ai free edtion
+ - Admin User: system (db-admin-secret), ggadmin (srcGGUserName)
+- Target Database ODAA ADB
+ - Admin User: admin (db-admin-secret), ggadmin (trgGGUserName)
+
+> IMPORTANT: The password for all users must be the same for simplicity and must match the password you defined during the creation of the ODAA ADB instance.
+
+~~~powershell
+$ggAdminPassword="Welcome1234#"
 # create the namespace everything goes into
 kubectl create namespace microhacks
-#create secret for OGG admin user and password to-be-created
+#create secret for Golden Gate OGG admin user and password to-be-created
 kubectl create secret generic ogg-admin-secret -n microhacks --from-literal=oggusername=ggadmin --from-literal=oggpassword=$ggAdminPassword
 #create secret for source and target database admin and ogg users to be created (target must be there already! ODAA ADB in Azure)
 kubectl create secret generic db-admin-secret -n microhacks --from-literal=srcAdminPwd=$ggAdminPassword --from-literal=trgAdminPwd=$ggAdminPassword --from-literal=srcGGUserName=ggadmin --from-literal=trgGGUserName=ggadmin --from-literal=srcGGPwd=$ggAdminPassword --from-literal=trgGGPwd=$ggAdminPassword
@@ -105,3 +120,44 @@ ogghack-goldengate-microhack-sample-ogg-787f954698-zlgg5          1/1     Runnin
 ~~~
 
 ✅ After the job is completed, the local database, which is running inside the AKS cluster, has been migrated to the ODAA ADB instance via GoldenGate.
+
+## Tips and Tricks
+
+### Redeploy if things go wrong
+
+~~~powershell
+# login to aks if not already done
+az aks get-credentials -g $rgName -n $prefix --overwrite-existing
+# Uninstall the Helm release
+helm uninstall ogghack -n microhacks
+# Delete the namespace
+kubectl delete namespace microhacks
+~~~
+
+### Show the logs of the GoldenGate Prepare Job
+
+~~~powershell
+# login to aks if not already done
+az aks get-credentials -g $rgName -n $prefix --overwrite-existing
+# get prep job pod name
+$podPrepName = kubectl get pods -n microhacks | Select-String 'ogghack-goldengate-microhack-sample-db-prepare-job' | ForEach-Object { ($_ -split '\s+')[0] }
+kubectl logs -n microhacks $podPrepName
+~~~
+
+### Connect to the ADB Oracle Database
+
+~~~powershell
+# login to aks if not already done
+az aks get-credentials -g $rgName -n $prefix --overwrite-existing
+# extract the pod name of the instantcleint as it contains a random suffix
+$podInstanteClientName=kubectl get pods -n microhacks | Select-String 'ogghack-goldengate-microhack-sample-instantclient' | ForEach-Object { ($_ -split '\s+')[0] }
+# login to the pod ogghack-goldengate-microhack-sample-instantclient-5985df84vc5xs
+kubectl exec -it -n microhacks $podInstanteClientName -- /bin/bash
+# log into ADB with admin via sqlplus
+sqlplus admin@'(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=eqsmjgp2.adb.eu-frankfurt-1.oraclecloud.com))(connect_data=(service_name=g6425a1dbd2e95a_adbger_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))'
+# This will be the password you defined for variable $ggAdminPassword
+<your-ADB-password>
+select USERNAME from ALL_USERS where USERNAME like 'SH%';
+# should return 35 rows
+select COUNT (*) from SH2.COUNTRIES;
+~~~

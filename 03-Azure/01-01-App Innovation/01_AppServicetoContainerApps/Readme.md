@@ -5,11 +5,6 @@
 - [**MicroHack Context**](#microhack-context)
 - [**MicroHack Objectives**](#objectives)
 - [**MicroHack Challenges**](#microhack-challenges)
-  - [General prerequisites](#general-prerequisites)
-  - [Challenge 1 - Understand the migratable estate](#challenge-1---understand-the-migratable-estate)
-  - [Challenge 2 - Containerize the Application](#challenge-2---containerize-the-application)
-  - [Challenge 3 - Create the Container App](#challenge-3---create-the-container-app)
-  - [Challenge 4 - Make the Container App Production Ready](#challenge-4---make-the-container-app-production-ready)
 - [**Contributors**](#contributors)
 
 ## MicroHack Introduction
@@ -64,182 +59,23 @@ It may take up to 5 minutes for the web app to start in the background.
 
 You also need to fork this GitHub repository that you will work with: https://github.com/ArneDecker3v08mk/MicroHack-AppServiceToContainerAppStart 
 
-## Challenge 1 - Understand the migratable estate 
 
-### Goal
+### Challenges
 
-Before a migration can start you need to first understand what needs to be migrated and why. The first challenge is therefore about analyzing the current application and hosting environment. You will compare classic deployments (like the Azure App Service) with containerized deployments to understand the differences and advantages of both approaches.
+* [Challenge 1 - Understand the migratable estate](challenges/challenge-01.md)  **<- Start here**
+* [Challenge 2 - Containerize the Application](challenges/challenge-02.md)
+* [Challenge 3 - Create the Container App](challenges/challenge-03.md)
+* [Challenge 4 - Make the Container App Production Ready](challenges/challenge-04.md)
+* [Challenge 5 - Host Your Own AI Models](challenges/challenge-05.md)
 
-### Actions
+### Solutions - Spoilerwarning
 
-Have a look in the Git repository of the application and the App Service resource in Azure to familiarize yourself with the current environment. Then answer these questions:
+* [Solution 1 - Prerequisites and Landing Zone](./walkthrough/challenge-01/solution-01.md)
+* [Solution 2 - Containerize the Application](./walkthrough/challenge-02/solution-02.md)
+* [Solution 3 - Create the Container App](./walkthrough/challenge-03/solution-03.md)
+* [Solution 4 - Make the Container App Production Ready](./walkthrough/challenge-04/solution-04.md)
+* [Solution 5 - Host Your Own AI Models](./walkthrough/challenge-05/solution-05.md)
 
-* In which framework and version is the application written?
-* On which operating system (Windows or Linux) is the application currently running?
-* What message does the application state when you open in the browser?
-
-
-**!!!Important: You can ignore the text fields and the button for now, the functionality behind it will be added in the last challenge!!!**
-
-Read through the learning resources and answer the following questions:
-
-* What is containerization and what is a container?
-* What are typical advantages of containerization?
-* Why would a migration from a PaaS hosting to containerization make sense?
-* Which container services are available on Azure?
-
-Bonus question:
-
-When migrating from the App Service to a containerized hosting, which service would be most suitable from you point of view?
-
-### Success criteria
-
-* You answered all questions from above
-* You have an overview of containerization and PaaS (and respective Azure services)
-* You successfully started the web app in your browser
-
-### Learning resources
-
-* [Container introduction](https://resources.github.com/devops/containerization/)
-* [Docker introduction](https://learn.microsoft.com/en-us/training/modules/intro-to-docker-containers/)
-* [Containerization vs. PaaS](https://www.techtarget.com/searchcloudcomputing/feature/PaaS-and-containers-Key-differences-similarities-and-uses)
-* [Azure Services](https://learn.microsoft.com/en-us/azure/container-apps/compare-options)
-
-### Solution - Spoilerwarning
-
-[Solution Steps](./walkthrough/challenge-1/solution.md)
-
-## Challenge 2 - Containerize the Application
-
-### Goal
-Before the application can be deployed to a Container App, it needs to be containerized. As you already know, this means encapsulating the application code with all dependencies and required software into a container image. The images are typically stored ("pushed") in a container registry, from which they can loaded ("pulled") to be deployed into a container hosting service.
-
-### Actions
-
-* Create an Azure Container Registry
-* Setup a new GitHub Actions workflow in the repository to build the application <br> While we will stick to the GitHub terminology and call it a workflow, in CI/CD and DevOps terms this is also known as a pipeline
-* Create a Dockerfile and add it into the repository
-* Add steps to the GitHub Actions workflow to containerize the application and push the image into the container registry
-
-### Success criteria
-
-* You have created the Azure Container Registry
-* You created a new GitHub Actions workflow
-* You created a workflow that pushes a deployable container image to the registry
-
-### Learning resources
-
-* [Creating an Azure Container Registry](https://learn.microsoft.com/en-us/azure/container-registry/container-registry-get-started-portal?tabs=azure-cli)
-* [Creating a GitHub Actions pipeline](https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net)
-* [Docker and .NET](https://learn.microsoft.com/en-us/dotnet/core/docker/introduction)
-* [Azure Container Registry Build](https://github.com/marketplace/actions/azure-container-registry-build)
-
-### Solution - Spoilerwarning
-
-[Solution Steps](./walkthrough/challenge-2/solution.md)
-
-## Challenge 3 - Create the Container App
-
-### Goal
-
-Now that you have a deployable container image, you can setup the Container App to host you web app. As described above, you will use the Container Apps because it is a simple, scalable and straight-forward service that is perfectly suitable for this use case. However, the container image is highly portable and could be deployed into other container services as well.
-
-### Actions
-
-* Create an Azure Container App and the Environment
-* Automate the deployment with GitHub Actions
-* Make a change and deploy it
-
-Hint: Use this workflow task to get the latest container image tag from the registry. You can insert the task after the login to Azure and then use the variable `image_tag`:
-
-    - name: Get Latest Container Image Tag
-      id: get_tag
-      run: |
-        TAG=$(az acr repository show-tags --name microhackregistry --repository microhackapp --orderby time_desc --output tsv --detail | head -n 1 | awk '{print $4}')
-        NUMERIC_TAG=$(echo "$TAG" | grep -oE '[0-9]+')
-        INCREMENTED_TAG=$((NUMERIC_TAG + 1))
-        UPDATED_TAG=$(echo "$TAG" | sed "s/$NUMERIC_TAG/$INCREMENTED_TAG/")
-        echo "image_tag=$UPDATED_TAG" >> $GITHUB_OUTPUT
-
-### Success Criteria
-
-* You successfully deployed the container image to the Container App
-* You can access the newly hosted web app
-* You can make changes to the web app and deploy them into the Container App
-
-### Learning resources
-
-* [Creating an Azure Container App](https://learn.microsoft.com/en-us/azure/container-apps/quickstart-portal)
-* [Connection Azure and GitHub (use option 2)](https://learn.microsoft.com/en-us/azure/developer/github/connect-from-azure-openid-connect)
-* [Deploying Azure Container Apps with GitHub 1](https://learn.microsoft.com/en-us/azure/container-apps/github-actions)
-* [Deploying Azure Container Apps with GitHub 2](https://github.com/Azure/container-apps-deploy-action)
-
-### Solution - Spoilerwarning
-
-[Solution Steps](./walkthrough/challenge-3/solution.md)
-
-## Challenge 4 - Make the Container App Production Ready
-
-### Goal
-
-Now that the app is up and running and you can deploy changes quickly, it is time to make some enhancements to make your application ready for production.
-
-### Actions
-
-* Enable authentication with Azure Entra ID
-* Configure Autoscaling to 200 concurrent connections with 1 to 10 replicas
-* Enable monitoring and logging
-* Configure encryption
-
-### Success criteria
-
-* You have enabled authentication with Azure Entra ID
-* You have configured the autoscaling rules
-* You can check the logs in the Log Analytics workspace
-* All traffic to/from the Container App is encrypted
-
-### Learning resources
-
-* [Enable Authentication on Azure Container Apps](https://learn.microsoft.com/en-us/azure/container-apps/authentication-azure-active-directory)
-* [Scaling Azure Container Apps](https://learn.microsoft.com/en-us/azure/container-apps/scale-app?pivots=azure-portal)
-* [Monitoring with Azure Container Apps](https://learn.microsoft.com/en-us/azure/container-apps/log-monitoring?tabs=bash)
-* [Loggin with Azure Container Apps](https://learn.microsoft.com/en-us/azure/container-apps/log-options)
-
-### Solution - Spoilerwarning
-
-[Solution Steps](./walkthrough/challenge-4/solution.md)
-
-## Challenge 5 - Host Your Own AI Models
-
-### Goal
-
-Your production-ready Container App is still missing one thing, you cannot really use it for anything, yet. Time to host your own small AI model that you can chat with via the app.
-
-### Actions
-
-* Host an Ollama container image in a second Container App (or any other model)
-* Start an Ollama model in the Container App
-* Add the URL of the AI app to your main app via an environment variable
-
-### Success criteria
-
-* You can chat with an AI model via your app
-
-### Learning resources
-
-* [Ollama documentation](https://github.com/ollama/ollama)
-* [Ollama on Docker Hub](https://hub.docker.com/r/ollama/ollama)
-
-### Solution - Spoilerwarning
-
-[Solution Steps](./walkthrough/challenge-5/solution.md)
-
-## Finish
-
-Congratulations! You finished!
-As you saw, containerizing and deploying an application is no rocket science. The Azure Container Apps will take over most of the work so you can focus on your application instead of the hosting.
-
-Thank you for investing the time and see you next time!
 
 ## Contributors
 * Nils Bankert [GitHub](https://github.com/nilsbankert); [LinkedIn](https://www.linkedin.com/in/nilsbankert/)

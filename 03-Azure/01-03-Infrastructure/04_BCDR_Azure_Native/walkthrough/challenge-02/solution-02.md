@@ -102,7 +102,6 @@ Advanced settings don't need to be modified for this Micro Hack
 ###### Review + Create
 ![image](./img/029.png)
 
-## You successfully completed challenge 1! 🚀🚀🚀
 ###### Resources in region 1
 ![image](./img/030.png)
 ###### Resources in region 2

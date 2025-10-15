@@ -26,9 +26,6 @@ In challenge 5, you will failback the web application from Sweden Central to Ger
 * [Failback Azure VMs](https://learn.microsoft.com/en-us/azure/site-recovery/azure-to-azure-tutorial-failback)
 * [Enable Replication for Azure VMs](https://learn.microsoft.com/en-us/azure/site-recovery/azure-to-azure-tutorial-enable-replication)
 
-### Solution - Spoiler Warning ⚠️
-
-[Solution Steps](../walkthrough/challenge-5/solution.md)
 
 ## Finish 🎉
 

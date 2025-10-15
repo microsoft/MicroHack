@@ -128,6 +128,3 @@ Check the virtual machine list. There is a new virtual machine running in Sweden
 
 ![image](./img/33.png)
 
-**You successfully completed challenge 3!** 🚀🚀🚀
-
-[➡️ Next Challenge 4 Instructions](../../challenges/04_challenge.md)

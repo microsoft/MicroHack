@@ -78,9 +78,9 @@ Can you provide an example of composite SLA calculation?
 <summary>💡 Enable GRS on storage account</summary>
 <br>
 
-![grs1](../walkthrough/challenge-1/exploration/5.png)
-![grs2](../walkthrough/challenge-1/exploration/6.png)
-![grs3](../walkthrough/challenge-1/exploration/7.png)
+![grs1](./exploration/5.png)
+![grs2](./exploration/6.png)
+![grs3](./exploration/7.png)
 
 </details>
 
@@ -95,10 +95,7 @@ Can you provide an example of composite SLA calculation?
 * [Geo-redundant storage (GRS) for cross-regional durability](https://learn.microsoft.com/en-us/azure/storage/common/storage-redundancy-grs)
 * [Disaster recovery and storage account failover](https://learn.microsoft.com/en-us/azure/storage/common/storage-disaster-recovery-guidance)
 * [Testing for disaster recovery](https://learn.microsoft.com/en-us/azure/site-recovery/site-recovery-test-failover-to-azure)
-    
-### Solution - Spoiler Warning ⚠️
 
-[Solution Steps](../walkthrough/challenge-4/solution.md)
 
 ---
 

@@ -81,4 +81,3 @@ The Azure Business Continuity Guide provides a comprehensive set of recommendati
 
 [Azure Business Continuity Guide](https://github.com/Azure/BusinessContinuityGuide)
 
- **[Home](../../Readme.md)** - [Next Challenge](../../challenges/01_challenge.md)

@@ -58,12 +58,9 @@ Check the Virtual machine list. Server01 is running again in the Germany West Ce
 ### Failover Completed
 ![image](./img/23.png)
 
-**You successfully completed challenge 5!** 🚀🚀🚀
-
 ### Learning resources
 * [Azure Site Recovery - How to reprotect](https://learn.microsoft.com/en-us/azure/site-recovery/azure-to-azure-how-to-reprotect)
 * [Azure Site Recovery - Failback](https://learn.microsoft.com/en-us/azure/site-recovery/azure-to-azure-tutorial-failback)
 * [Azure Site Recovery - Enable Replication](https://learn.microsoft.com/en-us/azure/site-recovery/azure-to-azure-tutorial-enable-replication)
 * [Testing for disaster recovery](https://learn.microsoft.com/en-us/azure/site-recovery/site-recovery-test-failover-to-azure)
 
-[➡️ Next Challenge 6 Instructions](../../challenges/06_challenge.md)

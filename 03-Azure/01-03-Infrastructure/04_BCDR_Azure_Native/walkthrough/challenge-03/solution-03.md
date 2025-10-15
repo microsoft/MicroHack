@@ -249,6 +249,3 @@ Conduct an unplanned failover
 
 ![image](./img/083.png)
 
-You have successfully completed Challenge 2! 🚀🚀
-
-[➡️ Next Challenge 3 Instructions](../../challenges/03_challenge.md)

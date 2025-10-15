@@ -4,11 +4,11 @@
 
 In this chapter we have extra challanges for the fast participants or the participants who wants to go further more. We will focus on Application 2 - Customer Help Desk Services. 
 
-## Challenge 6.0 - Setup - Application 2
+## Challenge 7.0 - Setup - Application 2
 
 You can use [the guide](../Infra/App2/setup.md) to deploy an N-tier application, which will be useful for the challenges.
 
-## Challenge 6.1 - Monitor the resources
+## Challenge 7.1 - Monitor the resources
 
 ### Task 1 - Open the Application Insights dashboard
 
@@ -33,11 +33,11 @@ Navigate to the Application Insights dashboards:
 - Navigate and review the Application Insights dashboards.
 
 <!--
-## Challenge 6.2 - Protect your Azure PaaS (Azure SQL Database) with Failover Groups
+## Challenge 7.2 - Protect your Azure PaaS (Azure SQL Database) with Failover Groups
 
 ### Goal 🎯
 
-In challenge 6, you will focus on implementing disaster recovery strategies for Azure SQL databases using Failover Groups. The primary objective is to ensure business continuity by protecting critical data stored in Azure SQL databases.
+In challenge 7, you will focus on implementing disaster recovery strategies for Azure SQL databases using Failover Groups. The primary objective is to ensure business continuity by protecting critical data stored in Azure SQL databases.
 
 ### Actions
 * Implement Failover Groups for Azure SQL Database:
@@ -54,5 +54,4 @@ In challenge 6, you will focus on implementing disaster recovery strategies for 
 * [Testing for disaster recovery](https://learn.microsoft.com/en-us/azure/site-recovery/site-recovery-test-failover-to-azure)
 * [Create a single database in Azure SQL Database](https://learn.microsoft.com/en-us/azure/azure-sql/database/single-database-create-quickstart?view=azuresql&tabs=azure-portal) -->
 
-**[⬅️ BCDR Micro Hack - Home Page](../Readme.md)** |
-**[⬅️ Challenge 5 - Failback to the Primary Region (Germany West Central)](./05_challenge.md)**
+

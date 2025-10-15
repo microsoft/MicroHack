@@ -28,9 +28,6 @@ In Challenge 3, you will learn how to protect Azure VMs with Azure Site Recovery
 * [Create Recovery Plans](https://learn.microsoft.com/en-us/azure/site-recovery/site-recovery-create-recovery-plans)
 * [Test Failover to Azure](https://learn.microsoft.com/en-us/azure/site-recovery/site-recovery-test-failover-to-azure)
 
-### Solution - Spoiler Warning ⚠️
-
-[Solution Steps](../walkthrough/challenge-3/solution.md)
 
 ---
 

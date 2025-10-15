@@ -61,6 +61,5 @@ Navigate to the **Azure Storage Account** in the Germany West Central Region. Op
 ### Failover Completed
 ![image](./img/13.png)
 
-**You successfully completed challenge 4!** 🚀🚀🚀
 
-[➡️ Next Challenge 5 Instructions](../../challenges/05_challenge.md)
+

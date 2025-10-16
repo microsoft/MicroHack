@@ -31,11 +31,15 @@ Duration: 30 minutes
 
 ![image](./img/CS4.png)
 
-- Change into to Migrate & Modernize Microhack directory of the cloned repository using the `cd MicroHack/03-Azure/01-03-Infrastructure/06_Migration_Secure_AI_Ready/resources` command.
+- Change into to desired Microhack directory of the cloned repository using the `cd MicroHack/03-Azure/01-03-Infrastructure/06_Migration_Secure_AI_Ready/resources` command.
 
 ![image](./img/CS5.png)
 
-- Execute `az deployment sub create --name "$(az ad signed-in-user show --query userPrincipalName -o tsv | cut -d "@" -f 1 | tr '[:upper:]' '[:lower:]')-$(cat /proc/sys/kernel/random/uuid)" --location swedencentral --template-file ./main.bicep --parameters currentUserObjectId=$(az ad signed-in-user show --query id -o tsv) --parameters userName="$(az ad signed-in-user show --query userPrincipalName -o tsv | cut -d "@" -f 1 | tr '[:upper:]' '[:lower:]')"`
+> [!NOTE]
+> Please update the REGION variable with your desired region - defaulting to swedencentral.
+
+- Execute `REGION="swedencentral"` to set the desired region
+- To start the deployment run `az deployment sub create --name "$(az ad signed-in-user show --query userPrincipalName -o tsv | cut -d "@" -f 1 | tr '[:upper:]' '[:lower:]')-$(cat /proc/sys/kernel/random/uuid)" --location $REGION --template-file ./main.bicep --parameters currentUserObjectId=$(az ad signed-in-user show --query id -o tsv) --parameters userName="$(az ad signed-in-user show --query userPrincipalName -o tsv | cut -d "@" -f 1 | tr '[:upper:]' '[:lower:]')"`
 
 ![image](./img/CS6.png)
 

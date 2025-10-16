@@ -8,46 +8,50 @@ Please make sure thet you successfully completed [Challenge 1](../challenge-1/so
 
 ### **Task 1: Create a Azure Migrate Project**
 
-> [!IMPORTANT]
-> To be able to create a Business Case, make sure to select **Europe** as the Geography for the Azure Migrate Project
-
 Open the [Azure Portal](https://portal.azure.com) and login using a user account with at least Contributor permissions on a Azure Subscription.
 
 In the search bar enter *Azure Migrate* and select Azure Migrate from the list of services
 
 ![image](./img/AzMig1.png)
 
-Select *Servers, databases and web app* from the navigation pane on the left and click on *Create project*
+Select *All projects* from the navigation pane on the left and click on *Create project*
 
 ![image](./img/AzMig2.png)
 
-Select the *destination-rg* Resource Group, specify a name for the Azure Migrate Project and also select a geograpy where the data will be stored. *Please select b4as_v2 as VM size.*
+> [!IMPORTANT]
+> To be able to create a Business Case, make sure to select **Europe** as the Geography for the Azure Migrate Project
+
+Select the *destination-rg* Resource Group, specify a name for the Azure Migrate Project and also select a geography where the data will be stored.
 
 ![image](./img/AzMig3.png)
 
-Wait until the Azure Migrate Project has been created. Select *Servers, databases and web apps* from the navigation pane on the left.
-Your previousley created Azure Migrate project should be preselected.
+Wait until the Azure Migrate Project has been created. Select *All projects* from the navigation pane on the left.
+Your previousley created Azure Migrate project should be listed. Click on it to open the project.
 
 ![image](./img/AzMig4.png)
+
+![image](./img/AzMig5.png)
 
 
 ### **Task 2: Create and prepare Windows Server 2022 for the Azure Migrate Appliance**
 
-To start physical server discovery you must install the Azure Migrate Appliance on your on-premises. The Azure Migrate Appliance can be downloaded as a OVA or VHD template or you can download a ZIP file containing a PowerShell script to install it on a already existing server. For the purpose of this MicroHack we will install the Azure Migrate Appliance via the PowerShell script on a Windows Server 2022 system.
+To start physical server discovery you must install the Azure Migrate Appliance on your on-premises. The Azure Migrate Appliance can be downloaded as a OVA or VHD template or you can download a ZIP file containing a PowerShell script to install it on an already existing server. For the purpose of this MicroHack we will install the Azure Migrate Appliance via the PowerShell script on a Windows Server 2022 system.
 
 > [!IMPORTANT]
 > Please make sure to check the [prerequisites](https://learn.microsoft.com/en-us/azure/migrate/tutorial-discover-physical#prerequisites) of the Azure Migrate Appliance.
 
-In the Azure Portal select *Virtual machines* from the navigation pane on the left. Select *Create -> Azure virtual machine*
+In the Azure Portal select *Virtual machines* from the navigation pane on the left. Select *Create -> Virtual machine*
 
 ![image](./img/AzMigApp1.png)
 
-Under Basics select the *source-rg* Resource Group and provide a name for the server. Select *Windows Server 2022 Datacenter - x64 Gen2* for the Image.
+Under Basics select the *source-rg* Resource Group and provide a name for the server. Select *Windows Server 2022 Datacenter - x64 Gen2* for the image and select *Standard_B4as_v2* as the VM size.
 
 ![image](./img/AzMigApp2.png)
 
+![image](./img/AzMigApp2-1.png)
+
 > [!NOTE]
-> For the Username and Password you can either select a combination of your choice or check the secrets within the KeyVault.
+> For the Username and Password you can either select a combination of your choice or check the secrets within the KeyVault to copy the same credentials that have been used during the deployment of the source VMs which will be migrated later.
 
 Accept the default disk settings and click next to select the *Networking* tab. Select the *source-vnet* Virtual Network, select the *source-subnet* Subnet and make sure to select *None* for the Public IP and NIC network security group.
 
@@ -63,13 +67,12 @@ Wait until the deployment has been successfully completed and select *Go to reso
 
 Select *Bastion* from the navigation pane on the left, provide the credentials to login to the Azure Migrate Appliance VM and select *Connect*. A new browser tab should open with a remote session to the Windows Server 2022 system.
 
-![image](./img/AzMigApp6.png)
-
 > [!NOTE]
 > You can also select *Password from Azure KeyVault* under *Authentication Type* if you set the password during VM creation to match the secret stored in the KeyVault.
 
+![image](./img/AzMigApp6.png)
 
-### **Task 3: Deploy the Azure Migrate Appliance**
+### **Task 3: Install the Azure Migrate Appliance software**
 
 > [!IMPORTANT]
 > Please make sure to run the following commands inside of the virtual machine you created for the mirgration appliance
@@ -82,11 +85,15 @@ In the search bar enter *Azure Migrate* and select Azure Migrate from the list o
 
 ![image](./img/AzMig1.png)
 
-Select *Servers, databases and web apps*, make sure that the previousley created Azure Migrate project is selected and click *Discover*
-
+ Select *All projects* from the navigation pane on the left. Your previousley created Azure Migrate project should be listed. Click on it to open the project.
+ 
 ![image](./img/Discover1.png)
 
-Select *Physical or other (AWS, GCP,Xen, etc.)* from the *Are your servers virtualized* drop down. Enter a name into the *Name your appliance* field and clicke *Generate*. Wait until the Project key has been created. Copy the Project key and click *Download*, to download the ZIP file containing the PowerShell script to install the Azure Migrate Appliance.
+Select *Start Discovery -> Using appliance -> for Azure*.
+
+![image](./img/Discover1-2.png)
+
+Select *Physical or other (AWS, GCP, Xen, etc.)* from the *Are your servers virtualized* drop down. Enter a name into the *Name your appliance* field and clicke *Generate*. Wait until the Project key has been created. Copy the Project key and click *Download*, to download the ZIP file containing the PowerShell script to install the Azure Migrate Appliance.
 
 ![image](./img/Discover2.png)
 
@@ -94,8 +101,10 @@ Open the folder containing the download and extract the ZIP file.
 
 ![image](./img/Discover3.png)
 
+![image](./img/Discover3-1.png)
+
 Start an evelvated PowerShell session and change the PowerShell directory to the folder where the contents have been extraceted.
-Run the script named AzureMigrateInstaller.ps1 and select *A* to confirm script execution.
+Run the script named AzureMigrateInstaller.ps1 and select *R* to confirm script execution.
 
 ![image](./img/Discover4.png)
 
@@ -111,7 +120,7 @@ Select Option 1 for *public endpoint* and confirm your selection to start the in
 
 ![image](./img/Discover7.png)
 
-Select *A* again and continue the installation.
+Select *R* again and continue the installation.
 
 ![image](./img/Discover8-1.png)
 
@@ -137,9 +146,14 @@ Agree the terms of use.
 
 Paste the previously copied Azure Migrate project key and click *Verify*. Once successfully verified the latest appliance updates will be installed.
 
+> [!IMPORTANT]
+> If you forgott to copy the key, go back to the Azure Migrate Project, Select *Action center* from the left, klick on *Pending actions* and then on *Register* to copy the key again
+
+![image](./img/Discover9-1.png)
+
 ![image](./img/Discover10.png)
 
-Next log in to Azure using the provieded code.
+Wait for the Appliance to check and install required updates. Once completed log in to Azure using the provieded code.
 
 ![image](./img/Discover11.png)
 
@@ -147,7 +161,7 @@ Next log in to Azure using the provieded code.
 
 ![image](./img/Discover13.png)
 
-After successfull authentication, appliance will be registered with the Azure Migrate project.
+After successfull authentication, the appliance will be registered with the Azure Migrate project.
 
 ![image](./img/Discover14.png)
 
@@ -163,6 +177,8 @@ Next you need to provide the individual source server details and map them to a 
 
 ![image](./img/Discover16.png)
 
+![image](./img/Discover16-1.png)
+
 The last step is to provide additional credentials if you want to perform software inventory to additionaly collect information about installed web server or SQL server. To start discovery click *Start discovery*.
 
 ![image](./img/Discover17.png)
@@ -172,8 +188,6 @@ The last step is to provide additional credentials if you want to perform softwa
 After discovery has been successfully initiated, go to the Azure portal to review the discovered inventory.
 
 ![image](./img/Discover18.png)
-
-You can click *Overview* to get more insights on what information were discovered.
 
 > [!NOTE]
 > If no inventory data is available, click Refresh to refresh inventory data.

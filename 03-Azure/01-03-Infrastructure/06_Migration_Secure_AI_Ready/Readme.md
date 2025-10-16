@@ -312,19 +312,22 @@ The goal of this exercise is to ...
 
 [Solution Steps](./walkthrough/challenge-7/solution.md)
 
-## Optional Bonus Challenge 8 - Deploy AI chat in App Service
+## Optional Bonus Challenge 8 - Deploy AI chat in App Service and secure with Defender for Cloud
 
 ### Goal
 
 The goal of this exercise is to ...
 
 * deploy an AI chat application in Azure App Service
+* validate security integration with Microsoft Defender for Cloud
 
 ### Actions
 
 * Create a new Azure OpenAI Service
 * Deploy a model and test it in AI Foundry
 * Deploy the AI chat application code to the App Service
+* Integrate your web app with Defender for Cloud
+* Test the security integration and guardrails.
 
 ### Success criteria
 
@@ -334,6 +337,8 @@ The goal of this exercise is to ...
 ### Learning resources
 * [Quickstart: Deploy model in AI Foundry](https://learn.microsoft.com/en-us/azure/ai-foundry/openai/how-to/create-resource?pivots=web-portal)
 * [Deploy an Azure App Service from AI Foundy](https://learn.microsoft.com/en-us/azure/ai-foundry/tutorials/deploy-chat-web-app)
+* [Defender for Cloud web apps](https://learn.microsoft.com/en-us/azure/defender-for-cloud/defender-for-app-service-introduction)
+* [Defender for Cloud AI services](https://learn.microsoft.com/en-us/azure/defender-for-cloud/ai-threat-protection)
 
 ### Solution - Spoilerwarning
 

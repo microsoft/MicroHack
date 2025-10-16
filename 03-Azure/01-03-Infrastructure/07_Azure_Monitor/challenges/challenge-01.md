@@ -56,4 +56,3 @@ Azure Dashboards are customizable workspaces for monitoring your Azure resources
 
 ### Congrats :partying_face:
 
- Move on to [Challenge 1 : Configure Virtual Machine Logs](01_challenge.md).

@@ -77,4 +77,3 @@ The deployed architecture looks like following diagram:
 
 You successfully completed challenge 1! 🚀🚀🚀
 
- **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-2/solution.md)

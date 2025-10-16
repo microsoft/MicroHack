@@ -73,4 +73,4 @@ When migrating from the App Service to a containerized hosting, which service wo
 
 You successfully completed challenge 1! 🚀🚀🚀
 
- **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-2/solution.md)
+

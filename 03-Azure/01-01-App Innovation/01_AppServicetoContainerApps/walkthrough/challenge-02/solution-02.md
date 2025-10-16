@@ -4,10 +4,6 @@
 
 Duration: 60 minutes
 
-## Prerequisites
-
-Please make sure thet you successfully completed [Challenge 1](../challenge-1/solution.md) before continuing with this challenge.
-
 ### **Task 1: Create an Azure Container Registry**
 
 Open the [Azure Portal](https://portal.azure.com) and login using a user account with at least Contributor permissions on a Azure Subscription.
@@ -209,4 +205,3 @@ Check the container repository in the Azure Container Registry to make sure that
 
 You successfully completed challenge 2! 🚀🚀🚀
 
- **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-3/solution.md)

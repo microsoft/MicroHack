@@ -2,10 +2,6 @@
 
 [Previous Challenge Solution](challenge-05.md) - **[Home](../Readme.md)** - [Next Challenge Solution](challenge-07.md)
 
-## Prerequisites
-
-Please ensure that you successfully passed [challenge 4](./04_challenge.md) before continuing with this challenge.
-
 ### Goal 🎯
 
 In challenge 5, you will failback the web application from Sweden Central to Germany West Central. The storage account could be failed back as well to Germany West Central.
@@ -27,14 +23,3 @@ In challenge 5, you will failback the web application from Sweden Central to Ger
 * [Enable Replication for Azure VMs](https://learn.microsoft.com/en-us/azure/site-recovery/azure-to-azure-tutorial-enable-replication)
 
 
-## Finish 🎉
-
-Congratulations! You finished the MicroHack Business Continuity / Disaster Recovery. We hope you had the chance to learn about how to implement a successful DR strategy to protect resources in Azure and to Azure. 
-
-Thank you for investing the time and see you next time!
-
----
-
-**[➡️ Next Challenge 6 - Protect your Azure PaaS (Azure SQL Database) with Disaster recovery](./06_challenge.md)** |
-
-**[⬅️ BCDR Micro Hack - Home Page](../Readme.md)** | **[⬅️ Challenge 4 - Protect your Azure PaaS with Disaster Recovery](./04_challenge.md)**

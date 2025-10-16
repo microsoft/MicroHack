@@ -4,10 +4,6 @@
 
 Duration: 60 minutes
 
-## Prerequisites
-
-Please make sure thet you successfully completed [Challenge 2](../challenge-2/solution.md) before continuing with this challenge.
-
 ### **Task 1: Create the Container App and the Environment**
 
 Open the [Azure Portal](https://portal.azure.com) and navigate to the resource group that you deployed the Container Registry to.  Click *Create* in the top left corner and search for *Container App*, select the *Container App* resource and hit *Create*. 
@@ -222,4 +218,3 @@ Right now, your workflow still uses the ACR name and password to authenticate to
 
 You successfully completed challenge 3! 🚀🚀🚀
 
- **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-4/solution.md)

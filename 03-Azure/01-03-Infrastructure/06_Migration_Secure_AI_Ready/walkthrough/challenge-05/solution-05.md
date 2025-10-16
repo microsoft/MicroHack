@@ -4,10 +4,6 @@
 
 Duration: 90 minutes
 
-## Prerequisites
-
-Please make sure thet you successfully completed [Challenge 4](../challenge-4/solution.md) before continuing with this challenge.
-
 ### **Task 1: Create and prepare Windows Server 2019 for the Azure Replication Appliance**
 
 To start physical server migration you must install the Azure Replication Appliance on your on-premises. The Azure Replication Appliance can be downloaded as a OVA template or you can download the appliance installer to install it on a already existing server. For the purpose of this MicroHack we will install the Azure Replication Appliance via the installer on a new Windows Server 2019 system.
@@ -505,4 +501,3 @@ The deployed architecture now looks like the following diagram.
 
 🚀🚀🚀 **If you still want to continue we have 2 additional bonus challenges to modernize OR secure the migrated environment.**🚀🚀🚀
 
- **[Home](../../Readme.md)** - Continue with either [Bonus Challenge 6 solution](../challenge-6/solution.md) OR [Bonus Challenge 7 solution](../challenge-7/solution.md)

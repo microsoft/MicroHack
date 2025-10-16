@@ -3,7 +3,7 @@
 - [**MicroHack Introduction**](#MicroHack-introduction)
   - [What is the next generation of modernization and why does it matter](#what-is-the-next-generation-of-modernization-and-why-does-it-matter)
 - [**MicroHack Context**](#microhack-context)
-- [**MicroHack Objectives**](#objectives)
+- [**MicroHack Objectives**](#microhack-objectives)
 - [**MicroHack Challenges**](#microhack-challenges)
 - [**Contributors**](#contributors)
 

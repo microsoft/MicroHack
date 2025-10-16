@@ -9,7 +9,7 @@
 
 ## Actions
 
-- Deploy the [Bicep configuration](./resources) of the Micro Hack.
+- Deploy the [Bicep configuration](../resources) of the Micro Hack.
 
 ## Success criteria
 

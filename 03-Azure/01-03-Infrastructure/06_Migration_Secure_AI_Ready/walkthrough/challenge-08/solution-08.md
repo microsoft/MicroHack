@@ -4,10 +4,6 @@
 
 Duration: 40 minutes
 
-## Prerequisites
-
-Please make sure thet you successfully completed [Challenge 7](../challenge-7/solution.md) before continuing with this challenge.
-
 ### **Task 1: Create an Azure OpenAI Service**
 In this task, we will create an Azure OpenAI Service resource in the Azure portal.
 1. In the Azure portal, select **Create a resource**.

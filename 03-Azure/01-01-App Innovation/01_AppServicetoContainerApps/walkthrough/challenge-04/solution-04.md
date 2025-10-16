@@ -5,10 +5,6 @@
 
 Duration: 60 minutes
 
-## Prerequisites
-
-Please make sure thet you successfully completed [Challenge 3](../challenge-3/solution.md) before continuing with this challenge.
-
 ### **Task 1: Enable Authentication with Azure Entra ID**
 
 You can quickly integrate an Azure Container App with Azure Entra ID (or any other OIDC identity provider like GitHub, Facebook, Google, etc.) without changing the implementation of the app. Simply go on the *Authentication* tab of the Container App and hit *Add identity provider*:
@@ -64,4 +60,4 @@ Remember, you can create custom domains and manage certificates in Azure as well
 
 You successfully completed challenge 4! 🚀🚀🚀
 
- **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-5/solution.md)
+

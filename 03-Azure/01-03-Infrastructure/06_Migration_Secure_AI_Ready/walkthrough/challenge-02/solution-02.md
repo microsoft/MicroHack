@@ -4,10 +4,6 @@
 
 Duration: 60 minutes
 
-## Prerequisites
-
-Please make sure thet you successfully completed [Challenge 1](../challenge-1/solution.md) before continuing with this challenge.
-
 ### **Task 1: Create a Azure Migrate Project**
 
 > [!IMPORTANT]
@@ -186,4 +182,3 @@ The deployed architecture now looks like the following diagram.
 
 ![image](./img/Challenge-2.jpg)
 
- **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-3/solution.md)

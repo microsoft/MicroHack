@@ -2,10 +2,6 @@
 
 [Previous Challenge Solution](challenge-04.md) - **[Home](../Readme.md)** - [Next Challenge Solution](challenge-06.md)
 
-## Prerequisites
-
-Please ensure that you successfully passed [challenge 3](./03_challenge.md) before continuing with this challenge.
-
 ### Goal 🎯
 
 In this challenge, you will re-establish the connection to your web application from the failed-over region. You will then focus on implementing disaster recovery strategies for Azure storage accounts using replication. The primary objective is to ensure business continuity by protecting critical data stored in Azure storage accounts against potential disasters.
@@ -96,9 +92,3 @@ Can you provide an example of composite SLA calculation?
 * [Disaster recovery and storage account failover](https://learn.microsoft.com/en-us/azure/storage/common/storage-disaster-recovery-guidance)
 * [Testing for disaster recovery](https://learn.microsoft.com/en-us/azure/site-recovery/site-recovery-test-failover-to-azure)
 
-
----
-
-**[➡️ Next Challenge 5 - Failback to the primary region](./05_challenge.md)** |
-
-**[⬅️ Previous Challenge 3 - Protect in Azure with Disaster Recovery](./03_challenge.md)** 

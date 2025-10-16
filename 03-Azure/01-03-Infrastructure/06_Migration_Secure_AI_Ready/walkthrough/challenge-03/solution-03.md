@@ -4,11 +4,6 @@
 
 Duration: 40 minutes
 
-## Prerequisites
-
-Please make sure thet you successfully completed [Challenge 2](../challenge-2/solution.md) before continuing with this challenge.
-Please also make sure to review the [prerequisites](https://learn.microsoft.com/en-us/azure/migrate/how-to-build-a-business-case#prerequisites) for the business case.
-
 ### **Task 1: Build a business case**
 
 Open the [Azure Portal](https://portal.azure.com) and navigate to the previousley created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click *Build business case*.
@@ -69,4 +64,4 @@ You can adjust those parameters what would recalculate the business case.
 
 You successfully completed challenge 3! 🚀🚀🚀
 
- **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-4/solution.md)
+

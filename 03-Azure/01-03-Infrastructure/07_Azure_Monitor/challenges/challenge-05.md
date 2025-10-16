@@ -60,4 +60,3 @@ Set a threshold for the availability rate and add a traffic light icon to the ta
 
 ### Congrats :partying_face:
 
-Move on to [Challenge 5 : Collect text logs with Azure Monitor Agent](05_challenge.md).

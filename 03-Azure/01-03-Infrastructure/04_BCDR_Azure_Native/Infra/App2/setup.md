@@ -49,4 +49,4 @@ Use the Awesome Azure Developer CLI to check the status of your deployment.
 ## 3. Access the Application
 Retrieve the URL of the deployed application and open it in your web browser.
 
-**| [< Microhack Overview](../Readme.md) | [Challenge 6 >](../../challenges/06_challenge.md) |**
+**| [< Microhack Overview](../../Readme.md) | [Challenge 6 >](../../challenges/challenge-06.md) |**

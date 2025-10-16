@@ -4,13 +4,9 @@
 
 Duration: 40 minutes
 
-## Prerequisites
-
-Please make sure that you successfully completed [Challenge 5](../challenge-5/solution.md) before continuing with this challenge.
-
 ## **Task 1: Enable Defender for Cloud for Server**
 
-In [Challenge 5](../challenge-5/solution.md) we migrated two servers to Azure. The servers are already protected by the basic services of Defender for Cloud. In this challenge, we'll improve significantly the protection level by activating advanced services such as "Cloud Security Posture Management (CSPM)" and "Cloud Workload Protection (CWP)" (Defender for Server).
+In [Challenge 5](../challenge-05/solution-05.md) we migrated two servers to Azure. The servers are already protected by the basic services of Defender for Cloud. In this challenge, we'll improve significantly the protection level by activating advanced services such as "Cloud Security Posture Management (CSPM)" and "Cloud Workload Protection (CWP)" (Defender for Server).
 
 To enable the advanced Defender for Cloud components, open the portal and select *Defender for Cloud*.  Under *Management*, select the *Environment Settings* to define the Defender for Cloud setting for the subscription.
 
@@ -111,4 +107,3 @@ You successfully completed challenge 6! 🚀🚀🚀
 
 🚀🚀🚀 **!!!Congratulations!!! - You successfully completed the MicroHack. You can now safley remove the *source-rg* and *destination-rg* Resource Groups.** 🚀🚀🚀
 
- **[Home](../../Readme.md)** 

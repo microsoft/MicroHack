@@ -97,4 +97,3 @@ Check if the `AMA` was installed  on the virtal machine blade under "Extensions 
 
 ### Congrats :partying_face:
 
- Move on to [Challenge 2 : Enable Virtual Machine Insights](02_challenge.md).

@@ -68,5 +68,3 @@ Create an Activity log alert to track the reboot activity of the linux vm.
 
 ### Congrats :partying_face:
 
-Move on to [Challenge 4 : Create Workbooks](04_challenge.md).
-  

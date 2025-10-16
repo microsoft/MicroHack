@@ -2,9 +2,6 @@
 
 [Previous Challenge Solution](challenge-03.md) - **[Home](../Readme.md)** - [Next Challenge Solution](challenge-05.md)
 
-## Prerequisites
-
-Please ensure that you successfully passed [challenge 2](./02_challenge.md) before continuing with this challenge.
 
 ### Goal 🎯
 
@@ -28,9 +25,3 @@ In Challenge 3, you will learn how to protect Azure VMs with Azure Site Recovery
 * [Create Recovery Plans](https://learn.microsoft.com/en-us/azure/site-recovery/site-recovery-create-recovery-plans)
 * [Test Failover to Azure](https://learn.microsoft.com/en-us/azure/site-recovery/site-recovery-test-failover-to-azure)
 
-
----
-
-**[➡️ Next Challenge 4 - Protect your Azure PaaS with Disaster recovery](./04_challenge.md)** |
-
-**[⬅️ Previous Challenge 2 - Regional Protection and Disaster Recovery (DR)](./02_challenge.md)** 

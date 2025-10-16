@@ -4,10 +4,6 @@
 
 Duration: 40 minutes
 
-## Prerequisites
-
-Please make sure thet you successfully completed [Challenge 3](../challenge-3/solution.md) before continuing with this challenge.
-
 ### **Task 1: Create a machine group**
 
 You group servers together to assess whether they are suitable for migration to Azure and to get size and cost estimates for Azure.
@@ -141,4 +137,3 @@ Once the dependency data has been uploaded to Azure Migrate, you should be able 
 
 You successfully completed challenge 4! 🚀🚀🚀
 
- **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-5/solution.md)

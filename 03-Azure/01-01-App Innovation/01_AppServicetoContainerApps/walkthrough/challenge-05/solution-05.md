@@ -4,10 +4,6 @@
 
 Duration: 60 minutes
 
-## Prerequisites
-
-Please make sure thet you successfully completed [Challenge 4](../challenge-4/solution.md) before continuing with this challenge.
-
 ### **Task 1: Host the Ollama container image**
 
 The web interface is already prepared, you can check it in the *Index.cshtml* file in the *Pages/Shared* folder in the repository. It takes the input from the text field and then calls an API where the AI model is hosted. Let's begin with hosting the model.
@@ -66,4 +62,3 @@ As you can see, you can easily host applications or AI models and let them work 
 
 You successfully completed challenge 5! 🚀🚀🚀
 
- **[Home](../../Readme.md)**

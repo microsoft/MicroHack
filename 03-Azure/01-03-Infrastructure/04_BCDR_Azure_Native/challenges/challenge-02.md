@@ -78,8 +78,4 @@ There is a WebApp running on the machines deployed in the Lab Environment. The W
 * [Create a storage account - Azure Storage | Microsoft Learn](https://learn.microsoft.com/azure/storage/common/storage-account-create)
 * [Create and configure Recovery Services vaults - Azure Backup | Microsoft Learn](https://learn.microsoft.com/azure/backup/backup-create-recovery-services-vault)
 
----
 
-**[ ➡️ Next Challenge 2 - Regional Protection and Disaster Recovery (DR)](./02_challenge.md)** |
-
-**[ ⬅️ Previous Challenge 0 - Understand the Disaster Recovery (DR) terms and define a DR strategy](../Readme.md#contoso-ltd---business-continuity-and-disaster-recovery-bcdr-strategy)**

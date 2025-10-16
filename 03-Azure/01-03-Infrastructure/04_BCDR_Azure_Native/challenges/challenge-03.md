@@ -41,8 +41,3 @@ In this challenge, you will learn how to back up and restore your Linux Virtual 
 
 For detailed steps, refer to the [Solution Steps](../walkthrough/challenge-2/solution.md).
 
----
-
-**[➡️ Next Challenge 3 - Protect in Azure with Disaster Recovery (Inter-regional)](./03_challenge.md)**
-
-**[⬅️ Previous Challenge 1 - Prerequisites and landing zone preparation](./01_challenge.md)**

@@ -58,5 +58,4 @@ VM Insights can be set up in different ways. After the tutorial, you can activat
 
 ### Congrats :partying_face:
 
-Move on to [Challenge 3: Create alerts](03_challenge.md).
   

@@ -12,6 +12,9 @@ helm repo add oggfree https://ilfur.github.io/VirtualAnalyticRooms
 > ⚠️ **IMPORTANT**: Make sure to use the external IP of your nginx ingress controller is assigned.
 
 ~~~powershell
+# log into your AKS cluster if not already done
+az aks get-credentials -g $rgName -n $prefix --overwrite-existing
+# get the external IP of the ingress controller
 $EXTIP=kubectl get service -n ingress-nginx -o jsonpath='{range .items[*]} {.status.loadBalancer.ingress[*].ip} {end}'
 cp resources/template/gghack.yaml .
 (Get-Content gghack.yaml) -replace 'xxx-xxx-xxx-xxx', $EXTIP.Trim() | Set-Content gghack.yaml
@@ -35,7 +38,7 @@ $adbName="ADBGer" # replace with your ADB name
 # Prerequisites (if not already installed)
 az extension add --name oracle-database 
 
-# In case you need to switch subscription
+# [OPTIONAL] In case you need to switch subscription
 az account set --subscription "ODAA"
 az account show
 $rgODAA="ODAA" # replace with your resource group name
@@ -43,6 +46,11 @@ $rgODAA="ODAA" # replace with your resource group name
 # High profile (TCPS, tlsAuthentication = Server) - returns first match
 $trgConn=az oracle-database autonomous-database show -g $rgODAA -n $adbName --query "connectionStrings.profiles[?consumerGroup=='High' && protocol=='TCPS' && tlsAuthentication=='Server'].value | [0]" -o tsv
 (Get-Content gghack.yaml) -replace '<ODAA-CONNECTION-STRING>', $trgConn | Set-Content gghack.yaml
+
+# [OPTIONAL] Switch back to your subscription which contains your AKS cluster
+az account set --subscription "<your-subscription-name>"
+az account set --subscription "sub-1"
+az account show
 ~~~
 
 ## 🚀 Install GoldenGate Microhack

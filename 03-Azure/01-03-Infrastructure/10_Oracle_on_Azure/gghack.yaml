@@ -7,7 +7,7 @@ ogg:
   deploymentName: hacksync
 
 databases:
-  trgConn: "(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=eqsmjgp2.adb.eu-frankfurt-1.oraclecloud.com))(connect_data=(service_name=g6425a1dbd2e95a_adbger_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))"
+  trgConn: "(description=(retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=eqsmjgp2.adb.eu-frankfurt-1.oraclecloud.com))(connect_data=(service_name=g6425a1dbd2e95a_adbger_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))"
 
   #for demo env, dont change the schema names. SH already exists in ADB, so we create another one.
   srcSchema: "SH"
@@ -43,7 +43,7 @@ services:
     ingressClass: nginx
     ### uses default SSL certificate of gateway/controller or specify a custom tls-secret here
     tlsSecretName: ggate-tls-secret
-    vhostName: gghack.4.182.87.218.nip.io
+    vhostName: gghack.4.185.188.124.nip.io
   internal:
     type: ClusterIP
     plainPort: 8080

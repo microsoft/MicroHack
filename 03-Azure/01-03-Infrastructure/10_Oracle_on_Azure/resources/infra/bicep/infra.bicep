@@ -42,6 +42,10 @@ resource vnetAks 'Microsoft.Network/virtualNetworks@2021-05-01' = {
   }
 }
 
+// -----------------------------------------------------------------------------------
+// AKS Cluster
+// -----------------------------------------------------------------------------------
+
 resource aks 'Microsoft.ContainerService/managedClusters@2025-05-01' = {
   name: '${prefix}${postfix}'
   location: 'germanywestcentral'

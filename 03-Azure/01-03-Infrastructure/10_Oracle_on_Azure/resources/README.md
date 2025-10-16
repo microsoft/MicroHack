@@ -24,13 +24,17 @@ The following resources needs to be created before the workshop start.
 az login --use-device-code
 az account show
 az account set -s "<your-subscription-id>"
+az provider register --namespace Microsoft.ContainerService
+az provider register --namespace Microsoft.Network
+az provider register --namespace Microsoft.OperationalInsights
+az provider register --namespace Microsoft.Compute 
 ~~~
 
 ### 🌍 Define some environment variables
 
 ~~~powershell
 $rgName="odaa"
-$prefix="ODAA"
+$prefix="odaa"
 $postfix=""
 $location="germanywestcentral"
 ~~~
@@ -40,10 +44,7 @@ $location="germanywestcentral"
 > ℹ️ **NOTE:** Currently you will need to redo this steps for each Team environment. Make sure to change the postfix.
 
 ~~~bash
-#create resource Group
-az group create -n $rgName -l $location
-### Create AKS
-az deployment group create -n $prefix -g $rgName -f ./resources/infra/bicep/main.bicep -p location=$location aksName=$prefix postfix=$postfix
+az deployment sub create -n $prefix -l $location -f ./resources/infra/bicep/main.bicep -p location=$location prefix=$prefix postfix=$postfix aksVmSize="Standard_D8ads_v6" vnetCIDR="10.11.0.0" --debug
 # Verify the created resources, list all resource inside the resource group
 az resource list -g $rgName -o table --query "[].{Name:name, Type:type}"
 ~~~

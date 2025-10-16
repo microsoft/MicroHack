@@ -69,7 +69,7 @@ bash -c 'H=eqsmjgp2.adb.eu-frankfurt-1.oraclecloud.com;P=1522;for i in {1..10};d
 
 ~~~bash
 # Example DIY quick test script (bash + sqlplus): 
-sqlplus admin@'(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=eqsmjgp2.adb.eu-frankfurt-1.oraclecloud.com))(connect_data=(service_name=g6425a1dbd2e95a_adbger_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))'
+sqlplus admin@'(description=(retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=eqsmjgp2.adb.eu-frankfurt-1.oraclecloud.com))(connect_data=(service_name=g6425a1dbd2e95a_adbger_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))'
 
 
 bash -c 'start=$(date +%s%3N) sqlplus -s user/pass@TNS_ALIAS <<EOF > /dev/null select 1 from dual; exit EOF end=$(date +%s%3N) echo "One minimal query RTT: $((end-start)) ms"'
@@ -123,7 +123,7 @@ kubectl exec -it network-test-pod -- /bin/bash
 ~~~
 
 ~~~bash
-dig eqsmjgp2.adb.eu-frankfurt-1.oraclecloud.com +short
+dig +short eqsmjgp2.adb.eu-frankfurt-1.oraclecloud.com
 # run tcping test
 tcpping 10.0.1.165 1521
 ~~~

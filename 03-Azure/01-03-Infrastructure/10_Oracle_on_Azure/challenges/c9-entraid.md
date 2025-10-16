@@ -69,7 +69,6 @@ Log in to the Oracle Database instance as a user who has been granted the ALTER 
 
 ~~~bash
 sqlplus admin@'(description=(retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=eqsmjgp2.adb.eu-frankfurt-1.oraclecloud.com))(connect_data=(service_name=g6425a1dbd2e95a_adbger_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))'
-
 Welcome1234#
 ~~~
 
@@ -278,16 +277,26 @@ cat /tmp/wallet/sqlnet.ora
 Set the TOKEN_AUTH parameter to enable the client to use the Azure AD token. Include the TOKEN_LOCATION parameter to point to the token location. For example:
 
 ~~~bash
-TOKEN_AUTH=OAUTH 
-TOKEN_LOCATION="/tmp/wallet/token.txt" 
+cat <<'EOF' >> /tmp/wallet/sqlnet.ora
+TOKEN_AUTH=OAUTH
+TOKEN_LOCATION="/tmp/wallet/token.txt"
+EOF
+# verify
+cat /tmp/wallet/sqlnet.ora
 ~~~
 
 Note that there is no default location. If the token is named token, then you only need to specify the file directory (for example, /test/oracle/aad-token). If the token name is different from token (for example, azure.token), then you must include this name in the path (for example, /test/oracle/aad-token/azure.token).
 
 You can specify the TOKEN_AUTH and TOKEN_LOCATION parameters in tnsnames.ora, as well as in sqlnet.ora. The TOKEN_AUTH and TOKEN_LOCATION values in the tnsnames.ora connect strings take precedence over the sqlnet.ora settings for that connection. For example:
 
+~~~bash
+# verfiy current content of tnsnames.ora
+cat /tmp/wallet/tnsnames.ora
+~~~
 
-Copy
+Generell example of a connect string with the TOKEN_AUTH and TOKEN_LOCATION parameters:
+
+~~~text
 (description= 
   (retry_count=20)(retry_delay=3)
   (address=(protocol=tcps)(port=1522)
@@ -297,11 +306,47 @@ Copy
      OU=Oracle BMCS US, O=Example Corporation, 
      L=Redwood City, ST=California, C=US")
   (TOKEN_AUTH=OAUTH)(TOKEN_LOCATION="/test/oracle/aad-token"))
+~~~
+
+> NOTE: We did modify the sqlnet.ora file directly instead of the tnsnames.ora file. Therefore the connect strings in the tnsnames.ora file do not contain the TOKEN_AUTH and TOKEN_LOCATION parameters.
+
+~~~text
+adbger_high = (description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=eqsmjgp2.adb.eu-frankfurt-1.oraclecloud.com))(connect_data=(service_name=g6425a1dbd2e95a_adbger_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))
+
+adbger_low = (description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=eqsmjgp2.adb.eu-frankfurt-1.oraclecloud.com))(connect_data=(service_name=g6425a1dbd2e95a_adbger_low.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))
+
+adbger_medium = (description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=eqsmjgp2.adb.eu-frankfurt-1.oraclecloud.com))(connect_data=(service_name=g6425a1dbd2e95a_adbger_medium.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))
+
+adbger_tp = (description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=eqsmjgp2.adb.eu-frankfurt-1.oraclecloud.com))(connect_data=(service_name=g6425a1dbd2e95a_adbger_tp.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))
+
+adbger_tpurgent = (description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=eqsmjgp2.adb.eu-frankfurt-1.oraclecloud.com))(connect_data=(service_name=g6425a1dbd2e95a_adbger_tpurgent.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))
+~~~
+
 After the connect string is updated with the TOKEN_AUTH and TOKEN_LOCATION parameters, the Azure user can log in to the Oracle Database instance by running the following command to start SQL*Plus. You can include the connect descriptor itself or use the name of the descriptor from the tnsnames.ora file.
 
 
-Copy
-connect /@exampledb_high
+~~~bash
+# set TNS_ADMIN to the wallet directory
+export TNS_ADMIN=/tmp/wallet
+# verify
+echo $TNS_ADMIN
+# delete TNS_ADMIN
+# unset TNS_ADMIN
+
+# connect to the database
+sqlplus /nolog
+connect /@adbger_high # did not work
+
+# connect with connection string directly
+sqlplus /@'(description=(retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=eqsmjgp2.adb.eu-frankfurt-1.oraclecloud.com))(connect_data=(service_name=g6425a1dbd2e95a_adbger_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no))(TOKEN_AUTH=OAUTH)(TOKEN_LOCATION=/tmp/wallet/token.txt))'
+
+
+sqlplus admin@'(description=(retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=eqsmjgp2.adb.eu-frankfurt-1.oraclecloud.com))(connect_data=(service_name=g6425a1dbd2e95a_adbger_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))'
+Welcome1234#
+
+
+
+
 Or the user can use the connect string. For example:
 
 
@@ -320,9 +365,4 @@ The database client is already configured to get an Azure OAuth2 token because T
 
 The Azure user connects to the database using / slash login. Either the sqlnet.ora or tnsnames.ora connection string tells the instant client that an Azure AD OAuth2 token is needed and to retrieve it from a specified file location. The access token is sent to the database.
 
-~~~bash
-# set TNS_ADMIN to the wallet directory
-export TNS_ADMIN=/tmp/wallet
-sqlplus /
 
-~~~

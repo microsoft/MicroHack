@@ -312,6 +312,33 @@ The goal of this exercise is to ...
 
 [Solution Steps](./walkthrough/challenge-7/solution.md)
 
+## Optional Bonus Challenge 8 - Deploy AI chat in App Service
+
+### Goal
+
+The goal of this exercise is to ...
+
+* deploy an AI chat application in Azure App Service
+
+### Actions
+
+* Create a new Azure OpenAI Service
+* Deploy a model and test it in AI Foundry
+* Deploy the AI chat application code to the App Service
+
+### Success criteria
+
+* The AI chat application is running in Azure App Service
+* The application is accessible via a public URL
+
+### Learning resources
+* [Quickstart: Deploy model in AI Foundry](https://learn.microsoft.com/en-us/azure/ai-foundry/openai/how-to/create-resource?pivots=web-portal)
+* [Deploy an Azure App Service from AI Foundy](https://learn.microsoft.com/en-us/azure/ai-foundry/tutorials/deploy-chat-web-app)
+
+### Solution - Spoilerwarning
+
+[Solution Steps](./walkthrough/challenge-8/solution.md)
+
 ## Finish
 
 Congratulations! You finished the Migrate and Secure to be AI Ready Microhack. We hope you had the chance to learn about the how to implement a successful migration strategy using Azure Migrate.

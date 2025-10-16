@@ -75,7 +75,7 @@ In this section, you will:
 
 ### Challenges
 
-Let's get started with the **[challenges](./challenges/01_challenge.md)** and dive into the world of Azure! 🌐
+Let's get started with the **[challenges](./challenges/challenge-01.md)** and dive into the world of Azure! 🌐
 
 By the end of this MicroHack, you'll be equipped with the knowledge and skills to design and implement effective Business Continuity and Disaster Recovery strategies using Azure services. 
 

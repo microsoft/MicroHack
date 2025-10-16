@@ -37,7 +37,3 @@ In this challenge, you will learn how to back up and restore your Linux Virtual 
 - [Restore encrypted virtual machines](https://learn.microsoft.com/en-us/azure/backup/restore-azure-encrypted-virtual-machines)
 - [Azure Blob Storage: Backup overview](https://learn.microsoft.com/en-us/azure/backup/blob-backup-overview)
 
-### Solution - Spoiler Warning ⚠️
-
-For detailed steps, refer to the [Solution Steps](../walkthrough/challenge-2/solution.md).
-

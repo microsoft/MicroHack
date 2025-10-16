@@ -92,7 +92,7 @@ Happy hacking! 🚀
 - [Extra Challenge - Monitor & Protect your Azure PaaS (Azure SQL Database)](./challenges/challenge-07.md)
 
 
-## Solutions - Spoilerwarning
+### Solutions - Spoilerwarning
 
 - [Solution 1 - Understand the Disaster Recovery terms and define a strategy](./walkthrough/challenge-01/solution-01.md)
 - [Solution 2 - Setup and landing zone preparation](./walkthrough/challenge-02/solution-02.md)

@@ -15,6 +15,5 @@ Follow the steps described on the following links:
 
 > IMPORTANT: Administrator credentials will be defined by the user during the creation of the ADB instance. Remember the password as we will use the same password as for the GoldenGate installation in section 3.
 
-
 - 📖 [Overview](https://docs.oracle.com/en-us/iaas/Content/database-at-azure/overview.htm)
 - 🔧 [Create an Autonomous Database](https://docs.oracle.com/en-us/iaas/Content/database-at-azure/azucr-create-autonomous-database.html)

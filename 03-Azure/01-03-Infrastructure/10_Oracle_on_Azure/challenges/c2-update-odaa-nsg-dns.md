@@ -9,6 +9,15 @@ You need to update the Oracle ADB NSG with the CIDR of the VNet where your AKS c
 Also consider aligning your DNS configuration based on the Oracle documentation:
 📚 [Network DNS Configuration Guide](https://docs.oracle.com/en-us/iaas/Content/database-at-azure/network-dns.htm)
 
+~~~powershell
+$fqdnODAA = 'gpdmotes.adb.eu-frankfurt-1.oraclecloud.com'
+$fqdnODAAApp string = 'gpdmotes.adb.eu-frankfurt-1.oraclecloudapps.com'
+$fqdnODAAIpv4  = '10.0.0.213'
+$rgAKS="odaa1" # replace with your AKS resource group name
+$vnetAKSName="odaa1" # replace with your AKS resource group name
+az deployment group create --resource-group $rgAKS --template-file resources/infra/bicep/dns.bicep -p vnetAKSName=$vnetAKSName fqdnODAA=$fqdnODAA fqdnODAAApp=$fqdnODAAApp fqdnODAAIpv4=$fqdnODAAIpv4
+~~~
+
 ### Seperate ODAA Subscription
 
 In case you did deploy your ODAA in a different Subscription as the one which does contain your AKS cluster, you will need to extract the ODAA FQDN and IP Address from the Azure Portal.

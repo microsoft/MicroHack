@@ -20,8 +20,6 @@ Oracle AI Database accepts tokens representing the following Entra ID principals
 - Guest user, who is registered as a guest user in the Entra ID tenancy
 - Service, which is the registered application connecting to the database as itself with the client credential flow (connection pool use case)
 
-QUESTIONS:
-- Does it work with Azure Managed Identity?
 
 ### Oracle AI Database Requirements for the Microsoft Entra ID Integration
 Before you can configure an Oracle AI Database instance with Microsoft Entra ID, you must ensure that your environment meets special requirements.
@@ -87,6 +85,7 @@ Oracle Database 23ai Enterprise Edition Release 23.0.0.0.0 - for Oracle Cloud an
 Version 23.10.0.25.10
 ~~~
 
+turn on external authentication on the database:
 
 ~~~sql
 BEGIN
@@ -228,23 +227,28 @@ The Azure user requests an Azure AD access token for the database in PowerShell 
 az login --tenant "f71980b2-590a-4de9-90d5-6fbc867da951" --scope "https://cptazure.org/7d22ece1-dd60-4279-a911-4b7b95934f2e/session:scope:connect"
 # get access token for the app registration
 $token=az account get-access-token --resource 'https://cptazure.org/7d22ece1-dd60-4279-a911-4b7b95934f2e' --query accessToken --output tsv
+$token=az account get-access-token --scope "https://cptazure.org/7d22ece1-dd60-4279-a911-4b7b95934f2e/.default" --query accessToken -o tsv
+$token | Out-File -FilePath .\misc\token.txt -Encoding ascii
+# view the jwt content
+./resources/scripts/jwt.ps1 -Jwt $token 
 # write token to file
 $token | Out-File -FilePath .\misc\token.txt -Encoding ascii
 code .\misc\token.txt
-# view the jwt content
-./resources/scripts/jwt.ps1 -Jwt $token 
-# upload all files under folder misc/wallet to the pod 
-kubectl cp ./misc/token.txt ogghack-goldengate-microhack-sample-instantclient-5985df84hmkvg:/tmp/wallet -n microhacks
 
 # extract the pod name of the instantcleint as it contains a random suffix
 $podInstanteClientName=kubectl get pods -n microhacks | Select-String 'ogghack-goldengate-microhack-sample-instantclient' | ForEach-Object { ($_ -split '\s+')[0] }
 # upload all files under folder misc/wallet to the pod 
-kubectl cp misc/wallet $podInstanteClientName:/tmp -n microhacks # not working yet.
-kubectl cp misc/wallet ogghack-goldengate-microhack-sample-instantclient-5985df84hmkvg:/tmp -n microhacks
+kubectl cp misc/wallet ${podInstanteClientName}:/tmp -n microhacks
+
+# upload all files under folder misc/wallet to the pod 
+kubectl cp ./misc/token.txt ${podInstanteClientName}:/tmp/wallet -n microhacks
+
 # login to the pod ogghack-goldengate-microhack-sample-instantclient-5985df84vc5xs
 kubectl exec -it -n microhacks $podInstanteClientName -- /bin/bash
 cd /tmp/wallet
 ls -l /tmp/wallet
+cat /tmp/wallet/token.txt
+exit
 ~~~
 
 #### 8.4.7 Configuring SQL*Plus for Azure AD Access Tokens
@@ -324,6 +328,7 @@ adbger_tpurgent = (description= (retry_count=20)(retry_delay=3)(address=(protoco
 
 After the connect string is updated with the TOKEN_AUTH and TOKEN_LOCATION parameters, the Azure user can log in to the Oracle Database instance by running the following command to start SQL*Plus. You can include the connect descriptor itself or use the name of the descriptor from the tnsnames.ora file.
 
+The Azure user connects to the database using / slash login. Either the sqlnet.ora or tnsnames.ora connection string tells the instant client that an Azure AD OAuth2 token is needed and to retrieve it from a specified file location. The access token is sent to the database.
 
 ~~~bash
 # set TNS_ADMIN to the wallet directory
@@ -337,32 +342,51 @@ echo $TNS_ADMIN
 sqlplus /nolog
 connect /@adbger_high # did not work
 
-# connect with connection string directly
-sqlplus /@'(description=(retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=eqsmjgp2.adb.eu-frankfurt-1.oraclecloud.com))(connect_data=(service_name=g6425a1dbd2e95a_adbger_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no))(TOKEN_AUTH=OAUTH)(TOKEN_LOCATION=/tmp/wallet/token.txt))'
+# connect with user GA1 connection string directly
+sqlplus /@'(description=(retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=eqsmjgp2.adb.eu-frankfurt-1.oraclecloud.com))(connect_data=(service_name=g6425a1dbd2e95a_adbger_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=on))(TOKEN_AUTH=OAUTH)(TOKEN_LOCATION="/tmp/wallet/token.txt"))'
+ga1
 
-
+# connect with user GA1 connection string directly
 sqlplus admin@'(description=(retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=eqsmjgp2.adb.eu-frankfurt-1.oraclecloud.com))(connect_data=(service_name=g6425a1dbd2e95a_adbger_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))'
 Welcome1234#
+exit
+~~~
 
+#### Debug
 
+(TOKEN_AUTH=OAUTH)(TOKEN_LOCATION="/test/oracle/aad-token")
 
+~~~bash
+sqlplus admin@'(description=(retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=eqsmjgp2.adb.eu-frankfurt-1.oraclecloud.com))(connect_data=(service_name=g6425a1dbd2e95a_adbger_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))'
+Welcome1234#
+~~~
 
-Or the user can use the connect string. For example:
+~~~sql
+-- Ensure that you set the IDENTITY_PROVIDER_TYPE parameter correctly.
+SELECT NAME, VALUE FROM V$PARAMETER WHERE NAME='identity_provider_type';
+~~~
 
+~~~text
+NAME
+--------------------------------------------------------------------------------
+VALUE
+--------------------------------------------------------------------------------
+identity_provider_type
+AZURE_AD
+~~~
 
-Copy
-connect /@(description= 
-  (retry_count=20)(retry_delay=3)
-  (address=(protocol=tcps)(port=1522)
-  (host=example.us-phoenix-1.oraclecloud.com))
-  (connect_data=(service_name=aaabbbccc_exampledb_high.example.oraclecloud.com))
-  (security=(ssl_server_cert_dn="CN=example.uscom-east-1.oraclecloud.com, 
-     OU=Oracle BMCS US, O=Example Corporation, 
-     L=Redwood City, ST=California, C=US") (TOKEN_AUTH=OAUTH)(TOKEN_LOCATION="/test/oracle/aad-token")
-The database client is already configured to get an Azure OAuth2 token because TOKEN_AUTH has already been set, either through the sqlnet.ora file or in a connect string. The database client gets the OAuth2 token and then sends the token to the Oracle Database instance.
+On the Autonomous Database, check that the mapped database user exists and is global: select username, authentication_type from dba_users where username = 'GA1'; should show GLOBAL. If not, recreate it with the right tenant ID, app (audience) and optional group/role claims using DBMS_CLOUD_ADMIN.CREATE_CLOUD_IDENTITY.
 
+~~~sql
+-- check that the mapped database user exists and is global
+select username, authentication_type from dba_users where username = 'GA1';
+~~~
 
-
-The Azure user connects to the database using / slash login. Either the sqlnet.ora or tnsnames.ora connection string tells the instant client that an Azure AD OAuth2 token is needed and to retrieve it from a specified file location. The access token is sent to the database.
-
-
+~~~text
+USERNAME
+--------------------------------------------------------------------------------
+AUTHENTI
+--------
+GA1
+GLOBAL
+~~~

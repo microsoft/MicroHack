@@ -1,54 +1,43 @@
 targetScope = 'resourceGroup'
 
-param prefix string = 'odaa'
-param location string = 'germanywestcentral'
-param lawName string = 'odaa'
-param postfix string = ''
-param subnetAksName string = 'aks'
-// param vnetODAAName string = 'ODAAvnet'
-// param subnetODAAName string = 'odaasubnet'
-param aksVmSize string = 'Standard_D8ds_v5'
-param vnetCIDR string = '10.10.0.0'
+param prefix string
+param aksVmSize string
+param cidr string
 
-var subnetAksNamePostfix = '${subnetAksName}${postfix}'
 
 resource law 'Microsoft.OperationalInsights/workspaces@2021-06-01' = {
-  name: '${lawName}${postfix}'
-  location: 'germanywestcentral'
+  name: prefix
+  location: resourceGroup().location
 }
 
-// resource vnetODAA 'Microsoft.Network/virtualNetworks@2021-05-01' existing = {
-//   // name: '${vnetODAAName}${postfix}'
-//   name: vnetODAAName
-// }
-
-resource vnetAks 'Microsoft.Network/virtualNetworks@2021-05-01' = {
-  name: '${prefix}${postfix}'
-  location: 'germanywestcentral'
+resource vnet 'Microsoft.Network/virtualNetworks@2021-05-01' = {
+  name: prefix
+  location: resourceGroup().location
   properties: {
     addressSpace: {
       addressPrefixes: [
-        '${vnetCIDR}/16'
+        '${cidr}/16'
       ]
     }
-    subnets: [
-      {
-        name: '${subnetAksName}${postfix}'
-        properties: {
-          addressPrefix: '${vnetCIDR}/23'
-        }
-      }
-    ]
   }
 }
+
+resource subnet 'Microsoft.Network/virtualNetworks/subnets@2021-05-01' = {
+  name: 'aks'
+  parent: vnet
+  properties: {
+          addressPrefix: '${cidr}/23'
+  }
+}
+
 
 // -----------------------------------------------------------------------------------
 // AKS Cluster
 // -----------------------------------------------------------------------------------
 
 resource aks 'Microsoft.ContainerService/managedClusters@2025-05-01' = {
-  name: '${prefix}${postfix}'
-  location: 'germanywestcentral'
+  name: prefix
+  location: resourceGroup().location
   sku: {
     name: 'Base'
     tier: 'Free'
@@ -58,7 +47,7 @@ resource aks 'Microsoft.ContainerService/managedClusters@2025-05-01' = {
   }
   properties: {
     kubernetesVersion: '1.32.6'
-    dnsPrefix: '${prefix}${postfix}'
+    dnsPrefix: prefix
     apiServerAccessProfile: {
       enablePrivateCluster: false // force public API endpoint
       // authorizedIPRanges: length(authorizedIPRanges) == 0 ? [] : authorizedIPRanges
@@ -71,7 +60,7 @@ resource aks 'Microsoft.ContainerService/managedClusters@2025-05-01' = {
         osDiskSizeGB: 300
         osDiskType: 'Ephemeral'
         kubeletDiskType: 'OS'
-        vnetSubnetID: '${vnetAks.id}/subnets/${subnetAksNamePostfix}'
+        vnetSubnetID: subnet.id
         maxPods: 30
         type: 'VirtualMachineScaleSets'
         // availabilityZones: [
@@ -111,7 +100,7 @@ resource aks 'Microsoft.ContainerService/managedClusters@2025-05-01' = {
         osDiskType: 'Ephemeral'
         kubeletDiskType: 'OS'
      // vnetSubnetID: '${virtualNetworks_ODAAvnet_externalid}/subnets/${managedClusters_odaa_name}'
-        vnetSubnetID: '${vnetAks.id}/subnets/${subnetAksNamePostfix}'
+        vnetSubnetID: subnet.id
         maxPods: 30
         type: 'VirtualMachineScaleSets'
         // availabilityZones: [
@@ -159,7 +148,7 @@ resource aks 'Microsoft.ContainerService/managedClusters@2025-05-01' = {
         }
       }
     }
-    nodeResourceGroup: 'MC_${prefix}${postfix}_${location}'
+    nodeResourceGroup: 'MC_${prefix}'
     enableRBAC: true
     supportPlan: 'KubernetesOfficial'
     networkProfile: {

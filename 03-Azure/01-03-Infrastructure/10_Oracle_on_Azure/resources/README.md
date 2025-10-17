@@ -35,7 +35,7 @@ az provider register --namespace Microsoft.Compute
 ~~~powershell
 $rgName="odaa"
 $prefix="odaa"
-$postfix=""
+$postfix="1"
 $location="germanywestcentral"
 ~~~
 
@@ -44,27 +44,24 @@ $location="germanywestcentral"
 > ℹ️ **NOTE:** Currently you will need to redo this steps for each Team environment. Make sure to change the postfix.
 
 ~~~bash
-az deployment sub create -n $prefix -l $location -f ./resources/infra/bicep/main.bicep -p location=$location prefix=$prefix postfix=$postfix aksVmSize="Standard_D8ads_v6" vnetCIDR="10.11.0.0" --debug
+az deployment sub create -n "$prefix$postfix" -l $location -f ./resources/infra/bicep/aks/main.bicep -p location=$location prefix=$prefix postfix=$postfix aksVmSize="Standard_D8ads_v6" cidr="10.11.0.0"
 # Verify the created resources, list all resource inside the resource group
-az resource list -g $rgName -o table --query "[].{Name:name, Type:type}"
+az resource list -g "$prefix$postfix" -o table --query "[].{Name:name, Type:type}"
 ~~~
 
 ~~~text
-Name                                 Type
------------------------------------  ------------------------------------------
-ODAA                                 Microsoft.Network/virtualNetworks
-ODAA-default-nsg-germanywestcentral  Microsoft.Network/networkSecurityGroups
-odaa                                 Microsoft.OperationalInsights/workspaces
-ODAA                                 Microsoft.ContainerService/managedClusters
-ODAA-aks-nsg-germanywestcentral      Microsoft.Network/networkSecurityGroups
+Name    Type
+------  ------------------------------------------
+odaa1   Microsoft.Network/virtualNetworks
+odaa1   Microsoft.OperationalInsights/workspaces
+odaa1   Microsoft.ContainerService/managedClusters
 ~~~
 
 ### ⚓ Connect to AKS
 
 ~~~powershell
 # login to aks
-$aksName="$prefix$postfix"
-az aks get-credentials -g $rgName -n $aksName --overwrite-existing
+az aks get-credentials -g "$prefix$postfix" -n "$prefix$postfix" --overwrite-existing
 # list namespaces
 kubectl get namespaces # should show default, kube-system, kube-public
 ~~~
@@ -94,9 +91,42 @@ kubectl patch service nginx-quick-ingress-nginx-controller -n ingress-nginx -p '
 # verify if annotation is added
 kubectl get service nginx-quick-ingress-nginx-controller -n ingress-nginx -o jsonpath='{.metadata.annotations}' | jq
 kubectl get service --namespace ingress-nginx nginx-quick-ingress-nginx-controller --output wide
-# get external IP of nginx controller
+# get external IP of nginx controller, you maybe need to wait a few minutes until the IP is assigned
 kubectl get service -n ingress-nginx -o jsonpath='{.items[*].status.loadBalancer.ingress[*].ip}'
 ~~~
 
 ## Tips and Tricks
+
+### VNet Peering between two subscriptions
+
+In case your odaa does run in a different tenant / subscription, you need to create a VNet Peering between the two VNet.
+
+~~~powershell
+$postfixODAA = "2"
+$postfixAKS = "1"
+$subODAAName = "ODAA"
+$subAKSName = "sub-1"
+
+az login -t "<ODAA-tenant-id>"
+az account set -s $subODAAName
+
+# Peering AKS VNet to ODAA VNet
+# We need to retrieve the subscription IDs first of the ODAA Vnet
+az account set -s $subODAAName;
+$subODAAId = az account show --query id -o tsv
+# Now we need to login into the subscription where AKS is deployed
+az login -t "<AKS-tenant-id>"
+az account set -s $subAKSName;
+$subAKSId = az account show --query id -o tsv
+az network vnet peering create --name AKS-to-ODAA -g "$prefix$postfixAKS" --vnet-name "$prefix$postfixAKS" --remote-vnet /subscriptions/$subODAAId/resourceGroups/"$prefix$postfixODAA"/providers/Microsoft.Network/virtualNetworks/"$prefix$postfixODAA" --allow-vnet-access
+# Peering ODAA VNet to AKS VNet
+az account set -s $subODAAName;
+az network vnet peering create -n ODAA-to-AKS -g "$prefix$postfixODAA" --vnet-name "$prefix$postfixODAA" --remote-vnet /subscriptions/$subAKSId/resourceGroups/"$prefix$postfixAKS"/providers/Microsoft.Network/virtualNetworks/"$prefix$postfixAKS" --allow-vnet-access
+
+
+# Verify peering on sububscription sub-cptdx-01
+az network vnet peering list -g "$prefix$postfixODAA" --vnet-name "$prefix$postfixODAA" -o table
+az account set -s $subAKSName
+az network vnet peering list -g "$prefix$postfixAKS" --vnet-name "$prefix$postfixAKS" -o table
+~~~
 

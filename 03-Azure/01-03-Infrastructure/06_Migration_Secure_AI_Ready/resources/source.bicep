@@ -333,7 +333,7 @@ resource vm2 'Microsoft.Compute/virtualMachines@2022-03-01' = {
       imageReference: {
         publisher: 'RedHat'
         offer: 'RHEL'
-        sku: '86-gen2'
+        sku: '810-gen2'
         version: 'latest'
       }
       osDisk: {

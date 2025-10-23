@@ -33,7 +33,6 @@ az provider register --namespace Microsoft.Compute
 ### 🌍 Define some environment variables
 
 ~~~powershell
-$rgName="odaa"
 $prefix="odaa"
 $postfix="1"
 $location="germanywestcentral"
@@ -87,7 +86,7 @@ helm repo update
 kubectl create namespace ingress-nginx
 helm install nginx-quick ingress-nginx/ingress-nginx -n ingress-nginx
 # patch health probe:
-kubectl patch service nginx-quick-ingress-nginx-controller -n ingress-nginx -p '{"metadata":{"annotations":{"service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path":"/healthz"}}}'
+kubectl patch service nginx-quick-ingress-nginx-controller -n ingress-nginx -p '{\"metadata\":{\"annotations\":{\"service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path\":\"/healthz\"}}}'
 # verify if annotation is added
 kubectl get service nginx-quick-ingress-nginx-controller -n ingress-nginx -o jsonpath='{.metadata.annotations}' | jq
 kubectl get service --namespace ingress-nginx nginx-quick-ingress-nginx-controller --output wide
@@ -130,3 +129,11 @@ az account set -s $subAKSName
 az network vnet peering list -g "$prefix$postfixAKS" --vnet-name "$prefix$postfixAKS" -o table
 ~~~
 
+### Validate Ingress controller in AKS
+
+~~~powershell
+kubectl get service --namespace ingress-nginx nginx-quick-ingress-nginx-controller
+# validate health probe
+kubectl get service nginx-quick-ingress-nginx-controller -n ingress-nginx -o jsonpath='{.metadata.annotations}'
+
+~~~

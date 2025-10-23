@@ -2,6 +2,10 @@
 // Private DNS Zone for Oracle Database on Autonomous Azure (ODAA) FQDN
 // -----------------------------------------------------------------------------------
 
+
+
+
+
 param fqdnODAA string = 'eqsmjgp2.adb.eu-frankfurt-1.oraclecloud.com'
 param fqdnODAAApp string = 'eqsmjgp2.adb.eu-frankfurt-1.oraclecloudapps.com'
 param fqdnODAAIpv4 string = '10.0.1.165'

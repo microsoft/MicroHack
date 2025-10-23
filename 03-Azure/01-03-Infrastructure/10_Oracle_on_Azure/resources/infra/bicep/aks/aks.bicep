@@ -27,8 +27,38 @@ resource subnet 'Microsoft.Network/virtualNetworks/subnets@2021-05-01' = {
   parent: vnet
   properties: {
           addressPrefix: '${cidr}/23'
+          // networkSecurityGroup: {
+          //   id: nsg.id
+          // }
   }
 }
+
+// -----------------------------------------------------------------------------------
+// NSG
+// -----------------------------------------------------------------------------------
+
+// resource nsg 'Microsoft.Network/networkSecurityGroups@2021-05-01' = {
+//   name: '${prefix}-aks-nsg'
+//   location: resourceGroup().location
+//   properties: {
+//     securityRules: [
+//       {
+//         name: 'Allow-HTTPS-Inbound'
+//         properties: {
+//           priority: 100
+//           direction: 'Inbound'
+//           access: 'Allow'
+//           protocol: 'Tcp'
+//           sourcePortRange: '*'
+//           destinationPortRange: '443'
+//           sourceAddressPrefix: '*'
+//           destinationAddressPrefix: '*'
+//         }
+//       }
+//     ]
+//   }
+// }
+
 
 
 // -----------------------------------------------------------------------------------

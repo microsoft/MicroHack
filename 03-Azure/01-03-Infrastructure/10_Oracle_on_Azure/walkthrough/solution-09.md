@@ -1,3 +1,14 @@
+# Challenge 9: (Optional)  Enable Microsoft Entra ID Authentication on Autonomous Database
+
+[Previous Challenge Solution](solution-08.md) - **[Home](../Readme.md)**
+
+
+Also check:
+ * [Debugging Entra ID Auth](../DEBUG-ENTRAID-AUTH.md)
+ * [Resolution for Entra ID Auth](../RESOLUTION-ENTRAID-AUTH.md)
+ * [Token Refresh Strategies](../TOKEN-REFRESH-STRATEGIES.md)
+
+
 # Enable Microsoft Entra ID Authentication on Autonomous AI Database
 
 - https://docs.oracle.com/en/cloud/paas/autonomous-database/serverless/adbsb/autonomous-azure-ad-enable.html#GUID-C69B47D7-E5B5-4BC5-BB57-EC5BACFAC1DC

@@ -1,4 +1,7 @@
-# 🦫 Challenge 5: Review data replication via Beaver
+# Challenge 5: Review data replication via Beaver
+
+[Previous Challenge Solution](solution-04.md) - **[Home](../Readme.md)** - [Next Challenge Solution](solution-06.md)
+
 
 🌐 CloudBeaver is a web-based database management tool that allows users to connect to, manage, and query various databases directly from a browser. In the context of Kubernetes, deploying CloudBeaver provides an easy-to-access interface for database administration tasks, such as browsing tables, running SQL queries, and managing database users, without needing to install local database clients. This is especially useful for teams working in cloud or containerized environments.
 

@@ -1,4 +1,7 @@
-# 🏗️ Challenge 6: Setup High Availability for Oracle ADB
+# Challenge 6: Setup High Availability for Oracle ADB
+
+[Previous Challenge Solution](solution-05.md) - **[Home](../Readme.md)** - [Next Challenge Solution](solution-07.md)
+
 
 ⚡ This challenge focuses on setting up high availability configurations for Oracle Autonomous Database (ADB) to ensure business continuity and disaster recovery capabilities.
 

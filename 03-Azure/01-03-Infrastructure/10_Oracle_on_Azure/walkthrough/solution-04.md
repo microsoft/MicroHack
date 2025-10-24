@@ -1,4 +1,6 @@
-# 🔌 Challenge 3: Perform Connectivity Tests
+# Challenge 4: Perform Connectivity Tests
+
+[Previous Challenge Solution](solution-03.md) - **[Home](../Readme.md)** - [Next Challenge Solution](solution-05.md)
 
 ## 📋 Prerequisites
 

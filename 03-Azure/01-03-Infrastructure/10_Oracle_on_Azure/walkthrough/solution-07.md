@@ -1,4 +1,6 @@
-# 📊 Challenge 7: (Optional) Use Estate Explorer to visualize the Oracle ADB instance
+# Challenge 7: (Optional) Use Estate Explorer to visualize the Oracle ADB instance
+
+[Previous Challenge Solution](solution-06.md) - **[Home](../Readme.md)** - [Next Challenge Solution](solution-08.md)
 
 ## 🎯 Overview
 

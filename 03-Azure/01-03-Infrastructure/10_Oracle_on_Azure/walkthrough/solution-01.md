@@ -1,4 +1,6 @@
-# 🚀 Challenge 1: Create Azure ODAA Resources
+# Challenge 1: Create Azure ODAA Resources
+
+**[Home](../Readme.md)** - [Next Challenge Solution](solution-02.md)
 
 ## 💰 Purchase Oracle Database@Azure
 

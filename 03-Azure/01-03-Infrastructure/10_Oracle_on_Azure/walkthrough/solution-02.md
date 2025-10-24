@@ -1,4 +1,6 @@
-# 🔐 Challenge 2: Update Oracle ADB NSG with AKS VNet CIDR
+# Challenge 2: Update Oracle ADB NSG with AKS VNet CIDR
+
+[Previous Challenge Solution](solution-01.md) - **[Home](../Readme.md)** - [Next Challenge Solution](solution-03.md)
 
 ## 🌐 Network Security Group Configuration
 

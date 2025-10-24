@@ -1,4 +1,7 @@
-# 🔄 Challenge 4: Use GoldenGate to replicate data between an Oracle database running in AKS and the Oracle ADB instance
+# Challenge 3: Use GoldenGate to replicate data between an Oracle database running in AKS and the Oracle ADB instance
+
+[Previous Challenge Solution](solution-02.md) - **[Home](../Readme.md)** - [Next Challenge Solution](solution-04.md)
+
 
 🌟 Oracle GoldenGate enables real-time data replication and integration across heterogeneous environments. In this microhack, GoldenGate is used to synchronize data between an Oracle database running in Azure Kubernetes Service (AKS) and an Oracle Autonomous Database (ADB) instance on Oracle Cloud Infrastructure (OCI), ensuring high availability and seamless data migration.
 

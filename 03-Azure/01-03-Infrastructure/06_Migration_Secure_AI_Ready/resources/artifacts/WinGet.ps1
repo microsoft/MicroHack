@@ -32,7 +32,7 @@ Install-PSResource -Name Microsoft.WinGet.DSC -Scope AllUsers -Quiet -AcceptLice
 Repair-WinGetPackageManager -AllUsers -Force -Latest -Verbose
 
 start-sleep -Seconds 5
-Restart-Computer -Force -Wait 
+Restart-Computer -Force
 
 # Install DSC resources required for MHBox
 Install-PSResource -Name DSCR_Font -Scope AllUsers -Quiet -AcceptLicense -TrustRepository

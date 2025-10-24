@@ -2,6 +2,9 @@ $ErrorActionPreference = $env:ErrorActionPreference
 
 $Env:MHBoxDir = 'C:\MHBox'
 $Env:MHBoxLogsDir = "$Env:MHBoxDir\Logs"
+
+# Path to the flag file
+$FlagFile = "$Env:MHBoxLogsDir\WINGET_Restart_done.flag"
 $tenantId = $env:tenantId
 $subscriptionId = $env:subscriptionId
 $resourceGroup = $env:resourceGroup
@@ -31,9 +34,22 @@ Install-PSResource -Name Microsoft.WinGet.DSC -Scope AllUsers -Quiet -AcceptLice
 # Update WinGet package manager to the latest version (running twice due to a known issue regarding WinAppSDK)
 Repair-WinGetPackageManager -AllUsers -Force -Latest -Verbose
 
-start-sleep -Seconds 5
-Restart-Computer -Force
 
+
+# Check if the flag file exists
+if (Test-Path $FlagFile) {
+    Write-Host "Restart already performed previously. Suppressing restart."
+} else {
+    Write-Host "Restart not yet performed. Creating flag and restarting..."
+
+    # Create the flag file
+    New-Item -ItemType File -Path $FlagFile -Force | Out-Null
+
+    # Restart the computer
+    start-sleep -Seconds 5
+    Restart-Computer -Force
+}
+# The script will resume here after the restart
 # Install DSC resources required for MHBox
 Install-PSResource -Name DSCR_Font -Scope AllUsers -Quiet -AcceptLicense -TrustRepository
 Install-PSResource -Name HyperVDsc -Scope AllUsers -Quiet -AcceptLicense -TrustRepository -Prerelease

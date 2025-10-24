@@ -26,8 +26,11 @@ $null = Set-AzResourceGroup -ResourceGroupName $resourceGroup -Tag $tags
 $null = Set-AzResource -ResourceName $env:computername -ResourceGroupName $resourceGroup -ResourceType "microsoft.compute/virtualmachines" -Tag $tags -Force
 
 # Install WinGet PowerShell modules
-#Install-PSResource -Name Microsoft.WinGet.Client -Scope AllUsers -Quiet -AcceptLicense -TrustRepository
+Install-PSResource -Name Microsoft.WinGet.Client -Scope AllUsers -Quiet -AcceptLicense -TrustRepository
 Install-PSResource -Name Microsoft.WinGet.DSC -Scope AllUsers -Quiet -AcceptLicense -TrustRepository
+
+start-sleep -Seconds 5
+Restart-Computer -Force -Wait 
 
 # Install DSC resources required for MHBox
 Install-PSResource -Name DSCR_Font -Scope AllUsers -Quiet -AcceptLicense -TrustRepository
@@ -36,7 +39,7 @@ Install-PSResource -Name NetworkingDsc -Scope AllUsers -Quiet -AcceptLicense -Tr
 
 # Update WinGet package manager to the latest version (running twice due to a known issue regarding WinAppSDK)
 Repair-WinGetPackageManager -AllUsers -Force -Latest -Verbose
-start-sleep -Seconds 5
+
 Repair-WinGetPackageManager -AllUsers -Force -Latest -Verbose
 
 # Apply WinGet Configuration files

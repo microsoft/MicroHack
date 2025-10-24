@@ -36,6 +36,7 @@ Install-PSResource -Name NetworkingDsc -Scope AllUsers -Quiet -AcceptLicense -Tr
 
 # Update WinGet package manager to the latest version (running twice due to a known issue regarding WinAppSDK)
 Repair-WinGetPackageManager -AllUsers -Force -Latest -Verbose
+start-sleep -Seconds 5
 Repair-WinGetPackageManager -AllUsers -Force -Latest -Verbose
 
 # Apply WinGet Configuration files

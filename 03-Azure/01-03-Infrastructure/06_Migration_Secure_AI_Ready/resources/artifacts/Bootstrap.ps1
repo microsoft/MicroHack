@@ -212,13 +212,13 @@ Invoke-WebRequest ($templateBaseUrl + "artifacts/WinGet.ps1") -OutFile $Env:MHBo
 if ($flavor -eq "ITPro") {
     Write-Host "Fetching Artifacts for ITPro Flavor"
     Invoke-WebRequest ($templateBaseUrl + "artifacts/ArcServersLogonScript.ps1") -OutFile $Env:MHBoxDir\ArcServersLogonScript.ps1
-    Invoke-WebRequest ($templateBaseUrl + "artifacts/installArcAgent.ps1") -OutFile $Env:MHBoxDir\agentScript\installArcAgent.ps1
-    Invoke-WebRequest ($templateBaseUrl + "artifacts/installArcAgentUbuntu.sh") -OutFile $Env:MHBoxDir\agentScript\installArcAgentUbuntu.sh
-    Invoke-WebRequest ($templateBaseUrl + "artifacts/icons/arcsql.ico") -OutFile $Env:MHBoxIconDir\arcsql.ico
-    Invoke-WebRequest ($templateBaseUrl + "artifacts/installArcAgentSQLUser.ps1") -OutFile $Env:MHBoxDir\installArcAgentSQLUser.ps1
-    Invoke-WebRequest ($templateBaseUrl + "artifacts/SqlAdvancedThreatProtectionShell.psm1") -OutFile $Env:MHBoxDir\SqlAdvancedThreatProtectionShell.psm1
-    Invoke-WebRequest ($templateBaseUrl + "artifacts/defendersqldcrtemplate.json") -OutFile $Env:MHBoxDir\defendersqldcrtemplate.json
-    Invoke-WebRequest ($templateBaseUrl + "artifacts/testDefenderForSQL.ps1") -OutFile $Env:MHBoxDir\testDefenderForSQL.ps1
+    #Invoke-WebRequest ($templateBaseUrl + "artifacts/installArcAgent.ps1") -OutFile $Env:MHBoxDir\agentScript\installArcAgent.ps1
+    #Invoke-WebRequest ($templateBaseUrl + "artifacts/installArcAgentUbuntu.sh") -OutFile $Env:MHBoxDir\agentScript\installArcAgentUbuntu.sh
+    #Invoke-WebRequest ($templateBaseUrl + "artifacts/icons/arcsql.ico") -OutFile $Env:MHBoxIconDir\arcsql.ico
+    #Invoke-WebRequest ($templateBaseUrl + "artifacts/installArcAgentSQLUser.ps1") -OutFile $Env:MHBoxDir\installArcAgentSQLUser.ps1
+    #Invoke-WebRequest ($templateBaseUrl + "artifacts/SqlAdvancedThreatProtectionShell.psm1") -OutFile $Env:MHBoxDir\SqlAdvancedThreatProtectionShell.psm1
+    #Invoke-WebRequest ($templateBaseUrl + "artifacts/defendersqldcrtemplate.json") -OutFile $Env:MHBoxDir\defendersqldcrtemplate.json
+    #Invoke-WebRequest ($templateBaseUrl + "artifacts/testDefenderForSQL.ps1") -OutFile $Env:MHBoxDir\testDefenderForSQL.ps1
     Invoke-WebRequest ($templateBaseUrl + "artifacts/tests/itpro.tests.ps1") -OutFile $Env:MHBoxTestsDir\itpro.tests.ps1
     Invoke-WebRequest ($templateBaseUrl + "artifacts/dsc/itpro.dsc.yml") -OutFile $Env:MHBoxDscDir\itpro.dsc.yml
     Invoke-WebRequest ($templateBaseUrl + "artifacts/dsc/virtual_machines_itpro.dsc.yml") -OutFile $Env:MHBoxDscDir\virtual_machines_itpro.dsc.yml

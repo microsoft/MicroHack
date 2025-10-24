@@ -19,22 +19,6 @@ properties:
         EnableGuestService: true
         SecureBoot: true
     - resource: HyperVDsc/VMHyperV
-      id: namingPrefixStage-Win2K25
-      directives:
-        description: Configure VM namingPrefixStage-Win2K25
-      settings:
-        Name: namingPrefixStage-Win2K25
-        SwitchName: 'InternalNATSwitch'
-        VhdPath: F:\Virtual Machines\namingPrefixStage-Win2K25.vhdx
-        ProcessorCount: 2
-        StartupMemory: '4GB'
-        RestartIfNeeded: true
-        State: Running
-        Generation: 2
-        Path: F:\Virtual Machines
-        EnableGuestService: true
-        SecureBoot: true
-    - resource: HyperVDsc/VMHyperV
       id: namingPrefixStage-Ubuntu-01
       directives:
         description: Configure VM namingPrefixStage-Ubuntu-01
@@ -42,22 +26,6 @@ properties:
         Name: namingPrefixStage-Ubuntu-01
         SwitchName: 'InternalNATSwitch'
         VhdPath: F:\Virtual Machines\namingPrefixStage-Ubuntu-01.vhdx
-        ProcessorCount: 2
-        StartupMemory: '4GB'
-        RestartIfNeeded: true
-        State: Running
-        Generation: 2
-        Path: F:\Virtual Machines
-        EnableGuestService: true
-        SecureBoot: false
-    - resource: HyperVDsc/VMHyperV
-      id: namingPrefixStage-Ubuntu-02
-      directives:
-        description: Configure VM namingPrefixStage-Ubuntu-02
-      settings:
-        Name: namingPrefixStage-Ubuntu-02
-        SwitchName: 'InternalNATSwitch'
-        VhdPath: F:\Virtual Machines\namingPrefixStage-Ubuntu-02.vhdx
         ProcessorCount: 2
         StartupMemory: '4GB'
         RestartIfNeeded: true

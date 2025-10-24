@@ -18,7 +18,7 @@ $resourceTags = $env:resourceTags
 $namingPrefix = $env:namingPrefix
 
 # Moved VHD storage account details here to keep only in place to prevent duplicates.
-$vhdSourceFolder = 'https://jumpstartprodsg.blob.core.windows.net/ArcBox/prod/*'
+$vhdSourceFolder = 'https://jumpstartprodsg.blob.core.windows.net/arcbox/prod/*'
 
 # Archive existing log file and create new one
 $logFilePath = "$Env:MHBoxLogsDir\ArcServersLogonScript.log"
@@ -161,11 +161,16 @@ if ($Env:flavor -ne 'DevOps') {
     # Before deploying MHBox SQL set resource group tag ArcSQLServerExtensionDeployment=Disabled to opt out of automatic SQL onboarding
     #az tag create --resource-id "/subscriptions/$subscriptionId/resourceGroups/$resourceGroup" --tags ArcSQLServerExtensionDeployment=Disabled
 
-    $vhdImageToDownload = 'MHBox-SQL-DEV.vhdx'
+##############################
+### SKIPP nested SQL VM
+##############################
+
+
+    $vhdImageToDownload = 'ArcBox-SQL-DEV.vhdx'
     if ($Env:sqlServerEdition -eq 'Standard') {
-        $vhdImageToDownload = 'MHBox-SQL-STD.vhdx'
+        $vhdImageToDownload = 'ArcBox-SQL-STD.vhdx'
     } elseif ($Env:sqlServerEdition -eq 'Enterprise') {
-        $vhdImageToDownload = 'MHBox-SQL-ENT.vhdx'
+        $vhdImageToDownload = 'ArcBox-SQL-ENT.vhdx'
     }
 
 
@@ -428,16 +433,17 @@ if ($Env:flavor -ne 'DevOps') {
         $Win2k22vmName = "$namingPrefix-Win2K22"
         $Win2k22vmvhdPath = "${Env:MHBoxVMDir}\$namingPrefix-Win2K22.vhdx"
 
-        $Win2k25vmName = "$namingPrefix-Win2K25"
-        $Win2k25vmvhdPath = "${Env:MHBoxVMDir}\$namingPrefix-Win2K25.vhdx"
+        #$Win2k25vmName = "$namingPrefix-Win2K25"
+        #$Win2k25vmvhdPath = "${Env:MHBoxVMDir}\$namingPrefix-Win2K25.vhdx"
 
         $Ubuntu01vmName = "$namingPrefix-Ubuntu-01"
         $Ubuntu01vmvhdPath = "${Env:MHBoxVMDir}\$namingPrefix-Ubuntu-01.vhdx"
 
-        $Ubuntu02vmName = "$namingPrefix-Ubuntu-02"
-        $Ubuntu02vmvhdPath = "${Env:MHBoxVMDir}\$namingPrefix-Ubuntu-02.vhdx"
+        #$Ubuntu02vmName = "$namingPrefix-Ubuntu-02"
+        #$Ubuntu02vmvhdPath = "${Env:MHBoxVMDir}\$namingPrefix-Ubuntu-02.vhdx"
 
-        $files = 'MHBox-Win2K22.vhdx;MHBox-Win2K25.vhdx;MHBox-Ubuntu-01.vhdx;MHBox-Ubuntu-02.vhdx;'
+        #$files = 'ArcBox-Win2K22.vhdx;ArcBox-Win2K25.vhdx;ArcBox-Ubuntu-01.vhdx;ArcBox-Ubuntu-02.vhdx;'
+        $files = 'ArcBox-Win2K22.vhdx;ArcBox-Ubuntu-01.vhdx;'        
 
         $DeploymentProgressString = 'Downloading and configuring nested VMs'
 
@@ -513,7 +519,7 @@ if ($Env:flavor -ne 'DevOps') {
         Write-Header 'Restarting Network Adapters'
         Start-Sleep -Seconds 5
         Invoke-Command -VMName $Win2k22vmName -ScriptBlock { Get-NetAdapter | Restart-NetAdapter } -Credential $winCreds
-        Invoke-Command -VMName $Win2k25vmName -ScriptBlock { Get-NetAdapter | Restart-NetAdapter } -Credential $winCreds
+        #Invoke-Command -VMName $Win2k25vmName -ScriptBlock { Get-NetAdapter | Restart-NetAdapter } -Credential $winCreds
         Start-Sleep -Seconds 10
 
         if ($namingPrefix -ne 'MHBox') {
@@ -528,13 +534,13 @@ if ($Env:flavor -ne 'DevOps') {
 
             } -Credential $winCreds
 
-            Invoke-Command -VMName $Win2k25vmName -ScriptBlock {
+<#             Invoke-Command -VMName $Win2k25vmName -ScriptBlock {
 
                 if ($env:computername -cne $using:Win2k25vmName) {
                     Rename-Computer -NewName $using:Win2k25vmName -Restart
                 }
 
-            } -Credential $winCreds
+            } -Credential $winCreds #>
 
             Write-Host 'Waiting for the nested Windows VMs to come back online...'
 
@@ -546,7 +552,7 @@ if ($Env:flavor -ne 'DevOps') {
 
         # Getting the Ubuntu nested VM IP address
         $Ubuntu01VmIp = Get-VM -Name $Ubuntu01vmName | Select-Object -ExpandProperty NetworkAdapters | Select-Object -ExpandProperty IPAddresses | Select-Object -Index 0
-        $Ubuntu02VmIp = Get-VM -Name $Ubuntu02vmName | Select-Object -ExpandProperty NetworkAdapters | Select-Object -ExpandProperty IPAddresses | Select-Object -Index 0
+        #$Ubuntu02VmIp = Get-VM -Name $Ubuntu02vmName | Select-Object -ExpandProperty NetworkAdapters | Select-Object -ExpandProperty IPAddresses | Select-Object -Index 0
 
         # Configuring SSH for accessing Linux VMs
         Write-Output 'Generating SSH key for accessing nested Linux VMs'
@@ -575,13 +581,13 @@ if ($Env:flavor -ne 'DevOps') {
 
             Restart-VM -Name $ubuntu01vmName -Force
 
-            Invoke-Command -HostName $Ubuntu02VmIp -KeyFilePath "$Env:USERPROFILE\.ssh\id_rsa" -UserName $nestedLinuxUsername -ScriptBlock {
+<#             Invoke-Command -HostName $Ubuntu02VmIp -KeyFilePath "$Env:USERPROFILE\.ssh\id_rsa" -UserName $nestedLinuxUsername -ScriptBlock {
 
                 Invoke-Expression "sudo hostnamectl set-hostname $using:ubuntu02vmName;sudo systemctl reboot"
 
             }
 
-            Restart-VM -Name $ubuntu02vmName -Force
+            Restart-VM -Name $ubuntu02vmName -Force #>
 
         }
 
@@ -616,14 +622,14 @@ if ($Env:flavor -ne 'DevOps') {
 
         } -Credential $winCreds
 
-        Invoke-Command -VMName $Win2k25vmName -ScriptBlock {
+<#         Invoke-Command -VMName $Win2k25vmName -ScriptBlock {
 
             cscript C:\Windows\system32\slmgr.vbs -ipk D764K-2NDRG-47T6Q-P8T8W-YP6DF
             cscript C:\Windows\system32\slmgr.vbs -skms kms.core.windows.net
             cscript C:\Windows\system32\slmgr.vbs -ato
             cscript C:\Windows\system32\slmgr.vbs -dlv
 
-        } -Credential $winCreds
+        } -Credential $winCreds #>
 
         Write-Header 'Onboarding Arc-enabled servers'
 

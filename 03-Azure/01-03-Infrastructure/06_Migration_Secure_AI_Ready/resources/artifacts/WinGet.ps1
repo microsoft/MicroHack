@@ -28,6 +28,8 @@ $null = Set-AzResource -ResourceName $env:computername -ResourceGroupName $resou
 # Install WinGet PowerShell modules
 Install-PSResource -Name Microsoft.WinGet.Client -Scope AllUsers -Quiet -AcceptLicense -TrustRepository
 Install-PSResource -Name Microsoft.WinGet.DSC -Scope AllUsers -Quiet -AcceptLicense -TrustRepository
+# Update WinGet package manager to the latest version (running twice due to a known issue regarding WinAppSDK)
+Repair-WinGetPackageManager -AllUsers -Force -Latest -Verbose
 
 start-sleep -Seconds 5
 Restart-Computer -Force -Wait 

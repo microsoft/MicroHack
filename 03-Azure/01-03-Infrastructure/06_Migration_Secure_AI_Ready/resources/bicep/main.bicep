@@ -83,7 +83,7 @@ param zones string = '1'
 @secure()
 param registryPassword string = newGuid()
 
-var templateBaseUrl = 'https://raw.githubusercontent.com/${githubAccount}/microhack/${githubBranch}/03-Azure/01-03-Infrastructure/06_Migration_Secure_AI_Ready/resources'
+var templateBaseUrl = 'https://raw.githubusercontent.com/${githubAccount}/microhack/${githubBranch}/03-Azure/01-03-Infrastructure/06_Migration_Secure_AI_Ready/resources/'
 
 var userName = contains(deployer().userPrincipalName, '@') ? substring(deployer().userPrincipalName, 0, indexOf(deployer().userPrincipalName, '@')) : deployer().userPrincipalName
 

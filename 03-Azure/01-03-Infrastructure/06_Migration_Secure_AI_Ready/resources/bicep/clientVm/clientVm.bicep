@@ -1,5 +1,3 @@
-
-
 @description('Username for the Virtual Machine')
 param windowsAdminUsername string = 'HVAdmin'
 

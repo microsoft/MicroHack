@@ -193,11 +193,11 @@ Write-Host "Fetching Artifacts for All Flavors"
 #Invoke-WebRequest ($templateBaseUrl + "artifacts/mgmtMonitorWorkbook.parameters.json") -OutFile $Env:MHBoxDir\mgmtMonitorWorkbook.parameters.json
 #Invoke-WebRequest ($templateBaseUrl + "artifacts/monitoring/arc-inventory-workbook.json") -OutFile "$Env:MHBoxDir\arc-inventory-workbook.json"
 #Invoke-WebRequest ($templateBaseUrl + "artifacts/monitoring/arc-osperformance-workbook.json") -OutFile "$Env:MHBoxDir\arc-osperformance-workbook.json"
-Invoke-WebRequest ($templateBaseUrl + "artifacts/DeploymentStatus.ps1") -OutFile $Env:MHBoxDir\DeploymentStatus.ps1
-Invoke-WebRequest ($templateBaseUrl + "artifacts/LogInstructions.txt") -OutFile $Env:MHBoxLogsDir\LogInstructions.txt
+#Invoke-WebRequest ($templateBaseUrl + "artifacts/DeploymentStatus.ps1") -OutFile $Env:MHBoxDir\DeploymentStatus.ps1
+#Invoke-WebRequest ($templateBaseUrl + "artifacts/LogInstructions.txt") -OutFile $Env:MHBoxLogsDir\LogInstructions.txt
 Invoke-WebRequest ($templateBaseUrl + "artifacts/dsc/common.dsc.yml") -OutFile $Env:MHBoxDscDir\common.dsc.yml
 Invoke-WebRequest ($templateBaseUrl + "artifacts/dsc/virtual_machines_sql.dsc.yml") -OutFile $Env:MHBoxDscDir\virtual_machines_sql.dsc.yml
-Invoke-WebRequest ($templateBaseUrl + "artifacts/tests/MHBox-bginfo.bgi") -OutFile $Env:MHBoxTestsDir\MHBox-bginfo.bgi
+Invoke-WebRequest ($templateBaseUrl + "artifacts/tests/mhbox-bginfo.bgi") -OutFile $Env:MHBoxTestsDir\MHBox-bginfo.bgi
 Invoke-WebRequest ($templateBaseUrl + "artifacts/tests/common.tests.ps1") -OutFile $Env:MHBoxTestsDir\common.tests.ps1
 Invoke-WebRequest ($templateBaseUrl + "artifacts/tests/Invoke-Test.ps1") -OutFile $Env:MHBoxTestsDir\Invoke-Test.ps1
 Invoke-WebRequest ($templateBaseUrl + "artifacts/WinGet.ps1") -OutFile $Env:MHBoxDir\WinGet.ps1

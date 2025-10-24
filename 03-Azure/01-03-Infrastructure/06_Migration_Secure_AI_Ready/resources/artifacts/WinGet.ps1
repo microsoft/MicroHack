@@ -26,7 +26,7 @@ $null = Set-AzResourceGroup -ResourceGroupName $resourceGroup -Tag $tags
 $null = Set-AzResource -ResourceName $env:computername -ResourceGroupName $resourceGroup -ResourceType "microsoft.compute/virtualmachines" -Tag $tags -Force
 
 # Install WinGet PowerShell modules
-Install-PSResource -Name Microsoft.WinGet.Client -Scope AllUsers -Quiet -AcceptLicense -TrustRepository
+#Install-PSResource -Name Microsoft.WinGet.Client -Scope AllUsers -Quiet -AcceptLicense -TrustRepository
 Install-PSResource -Name Microsoft.WinGet.DSC -Scope AllUsers -Quiet -AcceptLicense -TrustRepository
 
 # Install DSC resources required for MHBox

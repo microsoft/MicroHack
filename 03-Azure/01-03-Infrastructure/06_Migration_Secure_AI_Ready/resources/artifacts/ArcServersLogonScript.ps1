@@ -102,7 +102,7 @@ if ($Env:flavor -ne 'DevOps') {
     Write-Host 'Creating VM Credentials'
     # Hard-coded username and password for the nested VMs
     $nestedWindowsUsername = 'Administrator'
-    $nestedWindowsPassword = 'MH123!!'
+    $nestedWindowsPassword = 'JS123!!'
 
     # Create Windows credential object
     $secWindowsPassword = ConvertTo-SecureString $nestedWindowsPassword -AsPlainText -Force
@@ -510,7 +510,7 @@ if ($Env:flavor -ne 'DevOps') {
         Write-Header 'Creating VM Credentials'
         # Hard-coded username and password for the nested VMs
         $nestedLinuxUsername = 'jumpstart'
-        $nestedLinuxPassword = 'MH123!!'
+        $nestedLinuxPassword = 'JS123!!'
 
         # Create Linux credential object
         $secLinuxPassword = ConvertTo-SecureString $nestedLinuxPassword -AsPlainText -Force

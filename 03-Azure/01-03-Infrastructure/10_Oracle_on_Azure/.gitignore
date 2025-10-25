@@ -14,10 +14,48 @@ resources/**/terraform.tfvars
 resources/**/terraform.tfvars.json
 resources/**/terraform.rc
 resources/**/terraform.d
-resources/**/terraform
-resources/**/modules
+# resources/**/terraform
+# resources/**/modules
 resources/**/providers
 resources/**/workspace
+
+# Terraform Files
+resources/**/*.tfstate
+resources/**/*.tfstate.*
+resources/**/*.tfplan
+resources/**/*.tfplan.*
+resources/**/.terraform/
+resources/**/.terraform.lock.hcl
+
+# Variable files (may contain sensitive data)
+resources/**/terraform.tfvars
+resources/**/*.auto.tfvars
+resources/**/*.auto.tfvars.json
+
+# Override files
+resources/**/override.tf
+resources/**/override.tf.json
+resources/**/*_override.tf
+resources/**/*_override.tf.json
+
+# CLI configuration files
+resources/**/.terraformrc
+resources/**/terraform.rc
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Log files
+resources/**/*.log
+resources/**/crash.log
+resources/**/crash.*.log
+
+# Ignore any .tfvars files that are generated automatically
+resources/**/**/*.auto.tfvars
 
 # Exclude Oracle GoldenGate BigData Docker images and extracted files
 resources/gg-bigdata-build/V1043090-01.zip

@@ -442,6 +442,12 @@ if ($Env:flavor -ne 'DevOps') {
         #$Ubuntu02vmName = "$namingPrefix-Ubuntu-02"
         #$Ubuntu02vmvhdPath = "${Env:MHBoxVMDir}\$namingPrefix-Ubuntu-02.vhdx"
 
+        $AzMigSrvvmName = "$namingPrefix-AzMigSrv"
+        $AzMigSrvvmvhdPath = "${Env:MHBoxVMDir}\$namingPrefix-AzMigSrv.vhdx"
+
+        $AzRepSrvvmName = "$namingPrefix-AzRepSrv"
+        $AzRepSrvvmvhdPath = "${Env:MHBoxVMDir}\$namingPrefix-AzRepSrv.vhdx"
+
         #$files = 'ArcBox-Win2K22.vhdx;ArcBox-Win2K25.vhdx;ArcBox-Ubuntu-01.vhdx;ArcBox-Ubuntu-02.vhdx;'
         $files = 'ArcBox-Win2K22.vhdx;ArcBox-Ubuntu-01.vhdx;'        
 
@@ -467,7 +473,8 @@ if ($Env:flavor -ne 'DevOps') {
             azcopy cp $vhdSourceFolder $Env:MHBoxVMDir --include-pattern $files --recursive=true --check-length=false --log-level=ERROR
         }
 
-        if ($namingPrefix -ne 'MHBox') {
+
+            if ($namingPrefix -ne 'ArcBox') {
 
             # Split the string into an array
             $fileList = $files -split ';' | Where-Object { $_ -ne '' }
@@ -479,7 +486,7 @@ if ($Env:flavor -ne 'DevOps') {
             foreach ($file in $fileList) {
                 $filePath = Join-Path -Path $searchPath -ChildPath $file
                 if (Test-Path $filePath) {
-                    $newFileName = $file -replace 'MHBox', $namingPrefix
+                    $newFileName = $file -replace 'ArcBox', $namingPrefix
 
                     Rename-Item -Path $filePath -NewName $newFileName
                     Write-Output "Renamed $file to $newFileName"
@@ -487,7 +494,16 @@ if ($Env:flavor -ne 'DevOps') {
                     Write-Output "$file not found in $searchPath"
                 }
             }
+
         }
+
+            if ((Test-Path $Win2k22vmvhdPath) ) {            
+            <# Local Copy of Win2K22 Disk for Azure Migrate Appliances #>            
+            Write-Output 'Local Copy of Win2K22 Disk for Azure Migrate Appliances. This can take some time, hold tight...'
+
+            Copy-Item -Path $Win2k22vmvhdPath -Destination $AzMigSrvvmvhdPath -Force
+            Copy-Item -Path $Win2k22vmvhdPath -Destination $AzRepSrvvmvhdPath -Force
+        }         
 
         # Update disk IOPS and throughput after downloading nested VMs (note: a disk's performance tier can be downgraded only once every 12 hours)
         az disk update --resource-group $env:resourceGroup --name $existingVMDisk.Name --disk-iops-read-write $existingVMDisk.DiskIOPSReadWrite --disk-mbps-read-write $existingVMDisk.DiskMBpsReadWrite
@@ -523,7 +539,7 @@ if ($Env:flavor -ne 'DevOps') {
         #Invoke-Command -VMName $Win2k25vmName -ScriptBlock { Get-NetAdapter | Restart-NetAdapter } -Credential $winCreds
         Start-Sleep -Seconds 10
 
-        if ($namingPrefix -ne 'MHBox') {
+        if ($namingPrefix -ne 'ArcBox') {
 
             # Renaming the nested VMs
             Write-Header 'Renaming the nested Windows VMs'
@@ -569,7 +585,7 @@ if ($Env:flavor -ne 'DevOps') {
         Get-VM *Ubuntu*  | Wait-VM -For Heartbeat
         Get-VM *Ubuntu* | Copy-VMFile -SourcePath "$Env:TEMP\authorized_keys" -DestinationPath "/home/$nestedLinuxUsername/.ssh/" -FileSource Host -Force -CreateFullPath
 
-        if ($namingPrefix -ne 'MHBox') {
+        if ($namingPrefix -ne 'ArcBox') {
 
             # Renaming the nested linux VMs
             Write-Output 'Renaming the nested Linux VMs'

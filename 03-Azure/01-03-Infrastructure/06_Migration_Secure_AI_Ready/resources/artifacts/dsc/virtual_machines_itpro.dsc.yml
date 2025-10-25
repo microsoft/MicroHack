@@ -19,6 +19,38 @@ properties:
         EnableGuestService: true
         SecureBoot: true
     - resource: HyperVDsc/VMHyperV
+      id: namingPrefixStage-AzMigSrv
+      directives:
+        description: Configure VM namingPrefixStage-AzMigSrv
+      settings:
+        Name: namingPrefixStage-AzMigSrv
+        SwitchName: 'InternalNATSwitch'
+        VhdPath: F:\Virtual Machines\namingPrefixStage-AzMigSrv.vhdx
+        ProcessorCount: 2
+        StartupMemory: '4GB'
+        RestartIfNeeded: true
+        State: Running
+        Generation: 2
+        Path: F:\Virtual Machines
+        EnableGuestService: true
+        SecureBoot: true       
+    - resource: HyperVDsc/VMHyperV
+      id: namingPrefixStage-AzRepSrv
+      directives:
+        description: Configure VM namingPrefixStage-AzRepSrv
+      settings:
+        Name: namingPrefixStage-AzRepSrv
+        SwitchName: 'InternalNATSwitch'
+        VhdPath: F:\Virtual Machines\namingPrefixStage-AzRepSrv.vhdx
+        ProcessorCount: 8
+        StartupMemory: '16GB'
+        RestartIfNeeded: true
+        State: Running
+        Generation: 2
+        Path: F:\Virtual Machines
+        EnableGuestService: true
+        SecureBoot: true             
+    - resource: HyperVDsc/VMHyperV
       id: namingPrefixStage-Ubuntu-01
       directives:
         description: Configure VM namingPrefixStage-Ubuntu-01

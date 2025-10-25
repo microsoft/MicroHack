@@ -656,7 +656,7 @@ if ($Env:flavor -ne 'DevOps') {
 
         Invoke-Command -VMName $AzMigSrvvmName -ScriptBlock {
 
-            cscript C:\Windows\system32\slmgr.vbs -ipk D764K-2NDRG-47T6Q-P8T8W-YP6DF
+            cscript C:\Windows\system32\slmgr.vbs -ipk VDYBN-27WPP-V4HQT-9VMD4-VMK7H
             cscript C:\Windows\system32\slmgr.vbs -skms kms.core.windows.net
             cscript C:\Windows\system32\slmgr.vbs -ato
             cscript C:\Windows\system32\slmgr.vbs -dlv
@@ -665,7 +665,7 @@ if ($Env:flavor -ne 'DevOps') {
 
         Invoke-Command -VMName $AzRepSrvvmName -ScriptBlock {
 
-            cscript C:\Windows\system32\slmgr.vbs -ipk D764K-2NDRG-47T6Q-P8T8W-YP6DF
+            cscript C:\Windows\system32\slmgr.vbs -ipk VDYBN-27WPP-V4HQT-9VMD4-VMK7H
             cscript C:\Windows\system32\slmgr.vbs -skms kms.core.windows.net
             cscript C:\Windows\system32\slmgr.vbs -ato
             cscript C:\Windows\system32\slmgr.vbs -dlv

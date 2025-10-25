@@ -1,0 +1,6 @@
+apiVersion: v2
+name: goldengate-da
+version: 0.1.0
+description: Oracle GoldenGate for Distributed Applications and Analytics on AKS
+type: application
+appVersion: "23.4"

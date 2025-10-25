@@ -1,0 +1,37 @@
+namespace: goldengate
+
+replicaCount: 1
+
+image:
+  repository: odaamh.azurecr.io/goldengate-da
+  tag: 23ai
+  pullPolicy: IfNotPresent
+
+admin:
+  user: oggadmin
+  password: Welcome1234#
+
+service:
+  type: LoadBalancer
+  port: 443
+  httpPort: 80
+
+storage:
+  enabled: true
+  data:
+    size: 100Gi
+    storageClass: managed-csi
+  temp:
+    sizeLimit: 4Gi
+
+resources:
+  requests:
+    cpu: "2"
+    memory: "8Gi"
+  limits:
+    cpu: "4"
+    memory: "16Gi"
+
+ingress:
+  host: "ogg-bigdata.131.189.241.67.nip.io"
+  className: nginx

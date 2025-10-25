@@ -4,22 +4,10 @@
 - https://docs.oracle.com/en/database/oracle/oracle-database/19/dbseg/authenticating-and-authorizing-microsoft-entra-id-ms-ei-users-oracle-databases-oracle-exadata.html#GUID-CC8FFE52-DC3B-4F2F-B1CA-308E35288C73
 
 
-This type of integration enables the Azure user to access an Oracle AI Database instance. Azure users and applications can log in with Entra ID Single Sign On (SSO) credentials to get an Entra ID OAuth2 access token to send to the database.
 
-The Entra ID administrator creates and "app registration" for "Oracle AI Database" with Entra ID. Within Entra ID, which is short for application registration. This is the digital information that Entra ID must know about the software that is using Entra ID. 
 
-The Entra ID administrator also creates application (app) roles for the database app registration in Entra ID. App roles connect Azure users, groups, and applications to database schemas and roles. 
 
-The Entra ID administrator assigns Azure users, groups, or applications to the app roles. These app roles are mapped to a database global schema or a global role or to both a schema and a role. 
-
-An Azure user, group, or application that is assigned to an app role will be mapped to a database global schema, global role, or to both a schema and a role. An Oracle global schema can also be mapped exclusively to an Azure user. An Azure guest user (non-organization user) or an Entra ID service principal (application) can only be mapped to a database global schema through an Entra ID app role. An Oracle global role can only be mapped from an Azure app role and cannot be mapped from an Azure user.
-
-Oracle AI Database accepts tokens representing the following Entra ID principals:
-
-- Azure user, who is registered user in the Entra ID tenancy
-- Guest user, who is registered as a guest user in the Entra ID tenancy
-- Service, which is the registered application connecting to the database as itself with the client credential flow (connection pool use case)
-
+################
 
 ### Oracle AI Database Requirements for the Microsoft Entra ID Integration
 Before you can configure an Oracle AI Database instance with Microsoft Entra ID, you must ensure that your environment meets special requirements.

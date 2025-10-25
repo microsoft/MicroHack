@@ -31,7 +31,9 @@ echo "External IP of the Ingress Controller: $EXTIP"
 After you have the external IP address, replace the placeholder in the gghack.yaml file.
 
 ~~~powershell
+# create a copy of the template file
 cp resources/template/gghack.yaml .
+# replace the placeholder with the actual external IP
 (Get-Content gghack.yaml) -replace 'xxx-xxx-xxx-xxx', $EXTIP.Trim() | Set-Content gghack.yaml
 code gghack.yaml
 ~~~
@@ -39,15 +41,9 @@ code gghack.yaml
 the value of vhostName should look like this:
 
 ~~~yaml
-    ### typical ingressClasses are nginx and istio
-    ingressClass: nginx
     ### uses default SSL certificate of gateway/controller or specify a custom tls-secret here
     tlsSecretName: ggate-tls-secret
     vhostName: gghack.4.182.95.155.nip.io
-  internal:
-    type: ClusterIP
-    plainPort: 8080
-    sslPort: 8443
 ~~~
 
 ## 🔗 Replace current Goldengate configuration File gghack.yaml ODAA connection String
@@ -90,7 +86,7 @@ databases:
   trgSchema: "SH2"
 ~~~
 
-## 🚀 Install GoldenGate Microhack
+## 🚀 Install GoldenGate Pods 
 
 There will be 3 different systems involved:
 
@@ -133,54 +129,6 @@ kubectl get secrets -n microhacks -o json
 [System.Text.Encoding]::UTF8.GetString([Convert]::FromBase64String(
     (kubectl get secret db-admin-secret -n microhacks -o jsonpath="{.data.trgAdminPwd}")
 ))
-~~~
-
-~~~json
-{
-    "apiVersion": "v1",
-    "items": [
-        {
-            "apiVersion": "v1",
-            "data": {
-                "srcAdminPwd": "V2VsY29tZTEyMzQj",
-                "srcGGPwd": "V2VsY29tZTEyMzQj",
-                "srcGGUserName": "Z2dhZG1pbg==",
-                "trgAdminPwd": "V2VsY29tZTEyMzQj",
-                "trgGGPwd": "V2VsY29tZTEyMzQj",
-                "trgGGUserName": "Z2dhZG1pbg=="
-            },
-            "kind": "Secret",
-            "metadata": {
-                "creationTimestamp": "2025-10-21T12:36:13Z",
-                "name": "db-admin-secret",
-                "namespace": "microhacks",
-                "resourceVersion": "1683911",
-                "uid": "e79273e7-7e52-41a9-a536-ef1545e5e742"
-            },
-            "type": "Opaque"
-        },
-        {
-            "apiVersion": "v1",
-            "data": {
-                "oggpassword": "V2VsY29tZTEyMzQj",
-                "oggusername": "Z2dhZG1pbg=="
-            },
-            "kind": "Secret",
-            "metadata": {
-                "creationTimestamp": "2025-10-21T12:35:55Z",
-                "name": "ogg-admin-secret",
-                "namespace": "microhacks",
-                "resourceVersion": "1683829",
-                "uid": "3d2a135b-b19b-4a04-be8e-be1d86e5e3e2"
-            },
-            "type": "Opaque"
-        }
-    ],
-    "kind": "List",
-    "metadata": {
-        "resourceVersion": ""
-    }
-}
 ~~~
 
 Install all components via Helm:

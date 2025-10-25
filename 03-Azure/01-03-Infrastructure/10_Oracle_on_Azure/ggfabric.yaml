@@ -15,8 +15,15 @@ storage:
 image:
   pullPolicy: IfNotPresent
   #  imageName: fra.ocir.io/frul1g8cgfam/pub_gg_micro_bigdata:23.4.0.24.06
-  imageName: fra.ocir.io/frul1g8cgfam/pub_gg_micro_bigdata:23.8.4.25.08
-  # secretName: container-registry-secret  # Commented out - requires OCIR auth
+  #  imageName: fra.ocir.io/frul1g8cgfam/pub_gg_micro_bigdata:23.8.4.25.08
+  #  imageName: odaamh.azurecr.io/goldengate-oracle-bigdata:23.4.0.24.06  # BigData only (no web UI)
+  #  imageName: goldengate/goldengate-oracle-bigdata:23.4.0.24.06-enhanced  # Local enhanced
+  #  imageName: odaamh.azurecr.io/goldengate-oracle-enhanced:latest  # Enhanced (BigData + Web UI) - pending ACR push
+  # Now using Oracle Commercial with BigData capabilities for Azure Data Fabric
+  imageName: odaamh.azurecr.io/goldengate/goldengate-oracle-commercial:latest
+  # imageName: odaamh.azurecr.io/goldengate/goldengate-oracle-free:latest
+  # imageName: container-registry.oracle.com/goldengate/goldengate-oracle-free:23.8.0.25.04
+  # secretName: container-registry-secret  # Not needed for Oracle public registry
 
 services:
   ### a clusterIP type service will be created for graph and jupyter UIs.
@@ -34,8 +41,8 @@ services:
     vhostName: ggate.4.182.95.155.nip.io
   internal:
     type: ClusterIP
-    plainPort: 8080
-    sslPort: 8443
+    plainPort: 80
+    sslPort: 443
 
 resources:
   requests:
@@ -44,5 +51,10 @@ resources:
   limits:
     cpu: "2"
     memory: 16Gi
+
+## Security context to fix permission issues - run as root with privileged mode
+securityContext:
+  runAsUser: 0
+  privileged: true
 
 

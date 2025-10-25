@@ -22,15 +22,9 @@
    - Implement data lineage tracking
    - Set up data quality monitoring
 
-## 🛠️ Implementation Steps
+## 🚀 Deploy GoldenGate for Azure Fabric on AKS
 
-> ℹ️ **NOTE**: This challenge section provides a framework for the integration. Please refer to Azure Data Fabric and Oracle ADB integration documentation for specific implementation steps and current best practices.
-
-## 📚 Useful Resources
-
-- 🌐 [Azure Data Fabric Documentation](https://docs.microsoft.com/en-us/azure/data-factory/)
-- 🔶 [Oracle ADB Integration Guides](https://docs.oracle.com/en/cloud/paas/autonomous-database/)
-- 🔗 [Hybrid Data Integration Patterns](https://docs.microsoft.com/en-us/azure/architecture/)
+Login to the AKS cluster where you want to deploy GoldenGate for Azure Fabric if not already done:
 
 ~~~powershell
 # switch to the subscription where AKS is deployed
@@ -41,26 +35,31 @@ az account set --subscription $subAKS
 $rgAKS="odaa1" # replace with your AKS resource group name
 $AKSClusterName="odaa1" # replace with your AKS cluster name
 az aks get-credentials -g $rgAKS -n $AKSClusterName --overwrite-existing
+~~~
 
-helm show values oggfree/goldengate-bigdata >ggfabric.yaml
-#getting public address of nginx ingress controller
+After you have the external IP address, replace the placeholder in the gghack.yaml file.
 
+~~~powershell
 # get the external IP of the ingress controller and strip spaces
 $EXTIP = (kubectl get service -n ingress-nginx -o jsonpath='{range .items[*]}{.status.loadBalancer.ingress[*].ip} {end}') -replace '\s', ''
-
-#putting the external address into the goldengate deployment
-(Get-Content ggfabric.yaml) -replace 'xxx.xxx.xxx.xxx', $EXTIP.Trim() | Set-Content ggfabric.yaml
+# create a copy of the template file
+cp resources/template/ggfabric.yaml .
+# replace the placeholder with the actual external IP
+(Get-Content ggfabric.yaml) -replace 'xxx-xxx-xxx-xxx', $EXTIP.Trim() | Set-Content ggfabric.yaml
 code ggfabric.yaml
 ~~~
 
-Should look like this:
+the value of vhostName should look like this:
 
 ~~~yaml
     ### uses default SSL certificate of gateway/controller or specify a custom tls-secret here
     tlsSecretName: ggate-tls-secret
     vhostName: ggate.4.182.95.155.nip.io
-  internal:
 ~~~
+
+## 🚀 Install GoldenGate Pods 
+
+Install all components via Helm:
 
 ~~~powershell
 helm install oggfabric oggfree/goldengate-bigdata --values ggfabric.yaml -n microhacks
@@ -74,3 +73,52 @@ STATUS: deployed
 REVISION: 1
 TEST SUITE: None
 ~~~
+
+~~~powershell
+# See deployment.apps/oggfabric-goldengate-bigdata
+kubectl describe deployment oggfabric-goldengate-bigdata -n microhacks
+# get our pod 
+$podOGGfabric = kubectl get pods -n microhacks | Select-String 'oggfabric-goldengate-bigdata' | ForEach-Object { ($_ -split '\s+')[0] }
+# get details
+kubectl describe pod $podOGGfabric -n microhacks
+# Check used image:
+kubectl get deployment oggfabric-goldengate-bigdata -n microhacks -o jsonpath='{.spec.template.spec.containers[0].image}'
+# check used services
+kubectl get service --namespace ingress-nginx nginx-quick-ingress-nginx-controller --output wide
+# get external IP of nginx controller, you maybe need to wait a few minutes until the IP is assigned
+kubectl get service -n microhacks -o jsonpath='{.items[*].status.loadBalancer.ingress[*].ip}'
+~~~
+
+You can now access the GoldenGate Microservices UI via: https://ggate.<EXTERNAL_IP>.nip.io (e.g. https://ggate.4.182.95.155.nip.io)
+
+
+## 📚 Useful Resources
+
+- 🌐 [Azure Data Fabric Documentation](https://docs.microsoft.com/en-us/azure/data-factory/)
+- 🔶 [Oracle ADB Integration Guides](https://docs.oracle.com/en/cloud/paas/autonomous-database/)
+- 🔗 [Hybrid Data Integration Patterns](https://docs.microsoft.com/en-us/azure/architecture/)
+
+## Tips and Tricks
+
+### Redeploy if things go wrong
+
+~~~powershell
+# login to aks
+az aks get-credentials -g $rgAKS -n $AKSClusterName --overwrite-existing
+# Uninstall the Helm release
+helm uninstall oggfabric -n microhacks
+~~~
+
+### Use a private Oracle Container Registry image
+
+~~~powershell
+# delete secret if already exist
+kubectl delete secret container-registry-secret -n microhacks
+
+kubectl create secret docker-registry container-registry-secret -n microhacks  --docker-username=test@gmail.com --docker-password="Welcome1234#" --docker-server=container-registry.oracle.com
+
+[System.Text.Encoding]::UTF8.GetString([Convert]::FromBase64String(
+    (kubectl get secret container-registry-secret -n microhacks -o jsonpath="{.data.\.dockerconfigjson}")
+))
+~~~
+

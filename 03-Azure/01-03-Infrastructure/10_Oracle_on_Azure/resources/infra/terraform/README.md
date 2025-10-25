@@ -46,10 +46,17 @@ The Terraform configuration creates the following resources across multiple Azur
   - OLTP workload
 
 ### DNS Module (`modules/dns/`)
+
 - **Private DNS Zone**: For main ODAA FQDN
 - **Private DNS Zone**: For ODAA applications FQDN
 - **DNS A Records**: Pointing to the specified IP address
 - **VNet Links**: Linking DNS zones to the AKS virtual network
+
+### Ingress NGINX Module (`modules/ingress-nginx/`)
+- **Helm Deployment**: Installs the upstream ingress-nginx chart in each AKS cluster
+- **Namespace Management**: Creates the `ingress-nginx` namespace when needed
+- **Azure Load Balancer Annotation**: Sets the health probe path expected by Azure (`/healthz`)
+- **Service Discovery**: Exposes the controller Service external IP via Terraform outputs
 
 ## Prerequisites
 
@@ -192,6 +199,7 @@ The configuration provides the following outputs:
 - `odaa_adb_id`: The ID of the Oracle Autonomous Database
 - `odaa_vnet_id`: The ID of the ODAA virtual network
 - `private_dns_zones`: Information about created private DNS zones
+- `ingress_nginx_controllers`: Release name, namespace, annotations, and external IP for each ingress controller
 
 ## Troubleshooting
 

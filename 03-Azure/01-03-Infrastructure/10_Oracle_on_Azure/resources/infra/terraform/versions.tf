@@ -21,6 +21,14 @@ terraform {
       source  = "hashicorp/azuread"
       version = "~> 2.0"
     }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = ">= 2.33.0"
+    }
+    helm = {
+      source  = "hashicorp/helm"
+      version = ">= 2.13.0, < 3.0.0"
+    }
   }
 
   # Uncomment and configure the backend for remote state storage

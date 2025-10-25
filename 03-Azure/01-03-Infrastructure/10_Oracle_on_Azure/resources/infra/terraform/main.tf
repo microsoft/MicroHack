@@ -420,6 +420,92 @@ module "vnet_peering_team_4" {
   })
 }
 
+# Ingress NGINX deployment per AKS cluster
+module "ingress_nginx_team_0" {
+  for_each = module.aks_team_0
+  source   = "./modules/ingress-nginx"
+
+  providers = {
+    kubernetes = kubernetes.aks_deployment_team_0
+    helm       = helm.aks_deployment_team_0
+  }
+
+  release_name = "nginx-quick"
+  namespace    = "ingress-nginx"
+
+  depends_on = [
+    module.aks_team_0
+  ]
+}
+
+module "ingress_nginx_team_1" {
+  for_each = module.aks_team_1
+  source   = "./modules/ingress-nginx"
+
+  providers = {
+    kubernetes = kubernetes.aks_deployment_team_1
+    helm       = helm.aks_deployment_team_1
+  }
+
+  release_name = "nginx-quick"
+  namespace    = "ingress-nginx"
+
+  depends_on = [
+    module.aks_team_1
+  ]
+}
+
+module "ingress_nginx_team_2" {
+  for_each = module.aks_team_2
+  source   = "./modules/ingress-nginx"
+
+  providers = {
+    kubernetes = kubernetes.aks_deployment_team_2
+    helm       = helm.aks_deployment_team_2
+  }
+
+  release_name = "nginx-quick"
+  namespace    = "ingress-nginx"
+
+  depends_on = [
+    module.aks_team_2
+  ]
+}
+
+module "ingress_nginx_team_3" {
+  for_each = module.aks_team_3
+  source   = "./modules/ingress-nginx"
+
+  providers = {
+    kubernetes = kubernetes.aks_deployment_team_3
+    helm       = helm.aks_deployment_team_3
+  }
+
+  release_name = "nginx-quick"
+  namespace    = "ingress-nginx"
+
+  depends_on = [
+    module.aks_team_3
+  ]
+}
+
+module "ingress_nginx_team_4" {
+  for_each = module.aks_team_4
+  source   = "./modules/ingress-nginx"
+
+  providers = {
+    kubernetes = kubernetes.aks_deployment_team_4
+    helm       = helm.aks_deployment_team_4
+  }
+
+  release_name = "nginx-quick"
+  namespace    = "ingress-nginx"
+
+  depends_on = [
+    module.aks_team_4
+  ]
+}
+
 locals {
   vnet_peering_modules = merge(
     module.vnet_peering_team_0,
@@ -427,6 +513,16 @@ locals {
     module.vnet_peering_team_2,
     module.vnet_peering_team_3,
     module.vnet_peering_team_4,
+  )
+}
+
+locals {
+  ingress_nginx_modules = merge(
+    module.ingress_nginx_team_0,
+    module.ingress_nginx_team_1,
+    module.ingress_nginx_team_2,
+    module.ingress_nginx_team_3,
+    module.ingress_nginx_team_4,
   )
 }
 
@@ -477,6 +573,18 @@ output "vnet_peering_connections" {
     for key, deployment in local.deployments : deployment.name => {
       aks_to_odaa_peering_id = local.vnet_peering_modules[key].aks_to_odaa_peering_id
       odaa_to_aks_peering_id = local.vnet_peering_modules[key].odaa_to_aks_peering_id
+    }
+  }
+}
+
+output "ingress_nginx_controllers" {
+  description = "Information about ingress-nginx controllers per AKS deployment"
+  value = {
+    for key, deployment in local.deployments : deployment.name => {
+      release_name = try(local.ingress_nginx_modules[key].release_name, null)
+      namespace    = try(local.ingress_nginx_modules[key].namespace, null)
+      service_ip   = try(local.ingress_nginx_modules[key].controller_service_ip, null)
+      annotations  = try(local.ingress_nginx_modules[key].service_annotations, null)
     }
   }
 }

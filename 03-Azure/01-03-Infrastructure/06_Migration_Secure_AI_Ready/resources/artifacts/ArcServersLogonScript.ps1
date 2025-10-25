@@ -536,7 +536,8 @@ if ($Env:flavor -ne 'DevOps') {
         Write-Header 'Restarting Network Adapters'
         Start-Sleep -Seconds 5
         Invoke-Command -VMName $Win2k22vmName -ScriptBlock { Get-NetAdapter | Restart-NetAdapter } -Credential $winCreds
-        #Invoke-Command -VMName $Win2k25vmName -ScriptBlock { Get-NetAdapter | Restart-NetAdapter } -Credential $winCreds
+        Invoke-Command -VMName $AzMigSrvvmName -ScriptBlock { Get-NetAdapter | Restart-NetAdapter } -Credential $winCreds
+        Invoke-Command -VMName $AzRepSrvvmName -ScriptBlock { Get-NetAdapter | Restart-NetAdapter } -Credential $winCreds
         Start-Sleep -Seconds 10
 
         if ($namingPrefix -ne 'ArcBox') {
@@ -551,18 +552,32 @@ if ($Env:flavor -ne 'DevOps') {
 
             } -Credential $winCreds
 
-<#             Invoke-Command -VMName $Win2k25vmName -ScriptBlock {
+            Invoke-Command -VMName $AzMigSrvvmName -ScriptBlock {
 
-                if ($env:computername -cne $using:Win2k25vmName) {
-                    Rename-Computer -NewName $using:Win2k25vmName -Restart
+                if ($env:computername -cne $using:AzMigSrvvmName) {
+                    Rename-Computer -NewName $using:AzMigSrvvmName -Restart
                 }
 
-            } -Credential $winCreds #>
+            } -Credential $winCreds 
+
+            Invoke-Command -VMName $AzRepSrvvmName -ScriptBlock {
+
+                if ($env:computername -cne $using:AzRepSrvvmName) {
+                    Rename-Computer -NewName $using:AzRepSrvvmName -Restart
+                }
+
+            } -Credential $winCreds             
 
             Write-Host 'Waiting for the nested Windows VMs to come back online...'
 
             Get-VM *Win* | Restart-VM -Force
             Get-VM *Win* | Wait-VM -For Heartbeat
+
+            Get-VM $AzMigSrvvmName | Restart-VM -Force
+            Get-VM $AzMigSrvvmName | Wait-VM -For Heartbeat
+
+            Get-VM $AzRepSrvvmName | Restart-VM -Force
+            Get-VM $AzRepSrvvmName | Wait-VM -For Heartbeat
 
 
         }
@@ -639,14 +654,23 @@ if ($Env:flavor -ne 'DevOps') {
 
         } -Credential $winCreds
 
-<#         Invoke-Command -VMName $Win2k25vmName -ScriptBlock {
+        Invoke-Command -VMName $AzMigSrvvmName -ScriptBlock {
 
             cscript C:\Windows\system32\slmgr.vbs -ipk D764K-2NDRG-47T6Q-P8T8W-YP6DF
             cscript C:\Windows\system32\slmgr.vbs -skms kms.core.windows.net
             cscript C:\Windows\system32\slmgr.vbs -ato
             cscript C:\Windows\system32\slmgr.vbs -dlv
 
-        } -Credential $winCreds #>
+        } -Credential $winCreds 
+
+        Invoke-Command -VMName $AzRepSrvvmName -ScriptBlock {
+
+            cscript C:\Windows\system32\slmgr.vbs -ipk D764K-2NDRG-47T6Q-P8T8W-YP6DF
+            cscript C:\Windows\system32\slmgr.vbs -skms kms.core.windows.net
+            cscript C:\Windows\system32\slmgr.vbs -ato
+            cscript C:\Windows\system32\slmgr.vbs -dlv
+
+        } -Credential $winCreds         
 
         Write-Header 'Onboarding Arc-enabled servers'
 

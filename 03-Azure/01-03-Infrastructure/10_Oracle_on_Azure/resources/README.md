@@ -33,7 +33,7 @@ az provider register --namespace Microsoft.Compute
 ### 🌍 Define some environment variables
 
 ~~~powershell
-$prefix="odaa"
+$prefix="team"
 $postfix="1"
 $location="germanywestcentral"
 ~~~
@@ -60,7 +60,7 @@ odaa1   Microsoft.ContainerService/managedClusters
 
 ~~~powershell
 # login to aks
-az aks get-credentials -g "$prefix$postfix" -n "$prefix$postfix" --overwrite-existing
+az aks get-credentials -g "aks-team0" -n "aks-team0" --overwrite-existing
 # list namespaces
 kubectl get namespaces # should show default, kube-system, kube-public
 ~~~

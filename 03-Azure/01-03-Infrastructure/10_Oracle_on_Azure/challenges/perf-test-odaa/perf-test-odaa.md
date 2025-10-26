@@ -1,17 +1,28 @@
-# 🔌 Challenge 3: Perform Connectivity Tests
+# 🔌 Challenge 3: Perform Connectivity Tests on Oracle Database@azure [ODAA] Autonoumous Database
+
+[Back to workspace README](../../README.md)
+
+ODAA Autonoumous Database are so called PaaS (Platform as a Service) offerings, where the underlying infrastructure is fully managed by Microsoft and Oracle.
+
+Installing tools like iperf, sockperf, etc is not possible on the ODAA ADB instance itself, as you would do it on a VM or Bare Metal server.
+
+The following exercise will use the oracle instant client running inside the AKS cluster to connect via sqlplus to the ODAA Autonomous Database instance, and perform some simple latency measurements via SQL queries.
+
+The SQL queries will measure the network round trips, elapsed time, DB time, and calculate the latency per round trip.
+
+This is inspired from the blog of Clemens Bleile.
 
 ## 📋 Prerequisites
 
 - 🔧 install Azure CLI
 - ⚓ install kubectl
-- 📦 install helm
 
 ## 🔐 Login to Azure and set the right subscription
 
 ~~~bash
 az login --use-device-code
 # switch to the subscription where AKS is deployed
-$subAKS="sub-1" # replace with your AKS subscription name
+$subAKS="sub-team0" # replace with your AKS subscription name
 # Make sure your cli points to the AKS subscription
 az account set --subscription $subAKS
 ~~~
@@ -20,9 +31,8 @@ az account set --subscription $subAKS
 
 ~~~bash
 # log into your AKS cluster if not already done
-$rgAKS="odaa1" # replace with your AKS resource group name
-$AKSClusterName="odaa1" # replace with your AKS cluster name
-
+$rgAKS="aks-team0" # replace with your AKS resource group name
+$AKSClusterName="aks-team0" # replace with your AKS cluster name
 ~~~
 
 ## ⚓ Connect to AKS
@@ -30,38 +40,17 @@ $AKSClusterName="odaa1" # replace with your AKS cluster name
 ~~~bash
 # login to aks
 az aks get-credentials -g $rgAKS -n $AKSClusterName --overwrite-existing
-# list namespaces
-kubectl get namespaces -n microhacks # should show default, kube-system, kube-public
 ~~~
 
-~~~text
-NAME                STATUS   AGE
-default             Active   4d1h
-gatekeeper-system   Active   4d1h
-ingress-nginx       Active   4d
-kube-node-lease     Active   4d1h
-kube-public         Active   4d1h
-kube-system         Active   4d1h
-microhacks          Active   19m
-~~~
+### 📡 SQL Ping Test from AKS to ODAA ADB
 
-## 📡 Ping Test from AKS to ODAA ADB
+Reference the document [How to retrieve the Oracle Database Autonomous Database connection string from ODAA](../docs/odaa-get-token.md) to get the TNS connection string for your ODAA ADB instance.
 
-You will need to have the TNS Connection String for the ODAA ADB instance handy. You can retrieve it via the Azure Portal from the ODAA ADB instance or use the Azure CLI, or check your gghack.yaml file if you have already created it.
+The script consist of two parts, Setup and Test.
 
-[➡️ Replace current Goldengate configuration File `gghack.yaml` ODAA connection String](#-replace-current-goldengate-configuration-file-gghackyaml-odaa-connection-string)
-TODO
-
-
-
-Here is the script, just run once the Setup part, then the Test part - can be repeated as much as desired, actually it’s good to logout of sqlplus and login again and run it a few times like this.
-
-This is inspired from the blog of Clemens Bleile.
-
-It needs an sqlplus installation on the VM, to be used to connect to the ADB.
+Just run once the Setup part, then the Test part - can be repeated as much as desired, actually it’s good to logout of sqlplus and login again and run it a few times.
 
 ~~~powershell
-
 # extract the pod name of the instantcleint as it contains a random suffix
 $podInstanteClientName=kubectl get pods -n microhacks | Select-String 'ogghack-goldengate-microhack-sample-instantclient' | ForEach-Object { ($_ -split '\s+')[0] }
 # login to the pod InstanteClientName
@@ -72,7 +61,7 @@ Inside the instantclient pod, run the following commands:
 
 ~~~bash
 # Example DIY quick test script (bash + sqlplus): 
-sqlplus admin@'(description=(retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=gpdmotes.adb.eu-frankfurt-1.oraclecloud.com))(connect_data=(service_name=g6425a1dbd2e95a_odaa2_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))'
+sqlplus admin@'(description=(retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=gpdmotes.adb.eu-frankfurt-1.oraclecloud.com))(connect_data=(service_name=g6425a1dbd2e95a_odaa2_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))' # replace with your TNS connection string
 Welcome1234# # replace with your ADB password
 ~~~
 
@@ -98,7 +87,7 @@ end;
 /
 ~~~
 
-create or replace function my_db_time_microsecs return number as
+Create function my_db_time_microsecs return number as
 
 ~~~sql
 create or replace function my_db_time_microsecs return number as
@@ -163,21 +152,18 @@ SQL> 77.008 ms DB time.
 SQL> 53.141 ms latency per round trip.
 SQL> --> (Elapsed Time - DB Time) / network round trips
 ~~~
- 
 
 > NOTE: There is as an alternative but with a bit more work to setup - the OCIPING/CONNPING tool created by Oracle’s Real World Performance team (actually part of a larger tool called rwloadsim):
 
-## Tips and Tricks
-
-### 📶 Test TCP Connection Time to ADB 
+### 📶 Test TCP Connection Time to ADB without sqlplus
 
 The following method can be used to measure the TCP connection time from within the AKS cluster to the ADB instance.
 It does establish a new TCP connection 10 times in a row and measures the time taken for each connection attempt.
-This for sure include the TCP handshake time, plus any network latency involved.
+This for sure include the TCP handshake time everytime and therefore the results will not be that accurate compared to the method described above.
 
 ~~~bash
 # Test tcp connection time to ADB
-bash -c 'H=eqsmjgp2.adb.eu-frankfurt-1.oraclecloud.com;P=1522;for i in {1..10};do t0=$(date +%s%3N);(echo >/dev/tcp/$H/$P) &>/dev/null && dt=$(( $(date +%s%3N)-t0 )) || dt=-1;echo "$i: ${dt} ms";sleep 1;done'
+bash -c 'H=eqsmjgp2.adb.eu-frankfurt-1.oraclecloud.com;P=1522;for i in {1..10};do t0=$(date +%s%3N);(echo >/dev/tcp/$H/$P) &>/dev/null && dt=$(( $(date +%s%3N)-t0 )) || dt=-1;echo "$i: ${dt} ms";sleep 1;done' # replace with your ADB host
 ~~~
 
 ~~~text
@@ -193,4 +179,4 @@ bash -c 'H=eqsmjgp2.adb.eu-frankfurt-1.oraclecloud.com;P=1522;for i in {1..10};d
 10: 16 ms
 ~~~
 
-
+[Back to workspace README](../../README.md)

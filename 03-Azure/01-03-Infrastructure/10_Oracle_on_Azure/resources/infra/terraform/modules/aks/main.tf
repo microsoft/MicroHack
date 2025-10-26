@@ -197,27 +197,19 @@ resource "azurerm_role_assignment" "aks_cluster_user" {
 }
 
 # Azure Kubernetes Service RBAC Admin - allows full admin access to cluster
-resource "azurerm_role_assignment" "aks_rbac_admin" {
+resource "azurerm_role_assignment" "aks_rbac_writer" {
   scope                = azurerm_kubernetes_cluster.aks.id
-  role_definition_name = "Azure Kubernetes Service RBAC Admin"
+  role_definition_name = "Azure Kubernetes Service RBAC Writer"
   principal_id         = var.deployment_group_object_id
-  description          = "Allows group members to perform admin operations in ${azurerm_kubernetes_cluster.aks.name}"
+  description          = "Allows group members to deploy Kubernetes workloads in ${azurerm_kubernetes_cluster.aks.name}"
 }
 
-# Contributor role on the AKS resource group for managing AKS-related resources
-resource "azurerm_role_assignment" "aks_contributor" {
-  scope                = azurerm_resource_group.aks.id
-  role_definition_name = "Contributor"
+# Reader role for visibility into the AKS subscription
+resource "azurerm_role_assignment" "subscription_reader" {
+  scope                = "/subscriptions/${var.subscription_id}"
+  role_definition_name = "Reader"
   principal_id         = var.deployment_group_object_id
-  description          = "Allows group members to manage resources in ${azurerm_resource_group.aks.name}"
-}
-
-# Network Contributor role for managing network resources
-resource "azurerm_role_assignment" "network_contributor" {
-  scope                = azurerm_virtual_network.aks.id
-  role_definition_name = "Network Contributor"
-  principal_id         = var.deployment_group_object_id
-  description          = "Allows group members to manage network resources for AKS"
+  description          = "Allows group members to view resources in subscription ${var.subscription_id}"
 }
 
 # ===============================================================================
@@ -286,4 +278,19 @@ resource "azurerm_private_dns_zone_virtual_network_link" "odaa_app" {
   virtual_network_id    = azurerm_virtual_network.aks.id
   registration_enabled  = false
   tags                  = var.tags
+}
+
+# Grant Private DNS Zone Contributor access to the deployment group
+resource "azurerm_role_assignment" "private_dns_contributor_odaa" {
+  scope                = azurerm_private_dns_zone.odaa.id
+  role_definition_name = "Private DNS Zone Contributor"
+  principal_id         = var.deployment_group_object_id
+  description          = "Allows group members to manage private DNS zone ${azurerm_private_dns_zone.odaa.name}"
+}
+
+resource "azurerm_role_assignment" "private_dns_contributor_odaa_app" {
+  scope                = azurerm_private_dns_zone.odaa_app.id
+  role_definition_name = "Private DNS Zone Contributor"
+  principal_id         = var.deployment_group_object_id
+  description          = "Allows group members to manage private DNS zone ${azurerm_private_dns_zone.odaa_app.name}"
 }

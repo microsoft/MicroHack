@@ -34,6 +34,11 @@ variable "deployment_group_object_id" {
   type        = string
 }
 
+variable "subscription_id" {
+  description = "The subscription hosting the AKS resources"
+  type        = string
+}
+
 # ===============================================================================
 # DNS Configuration Variables
 # ===============================================================================

@@ -1,0 +1,31 @@
+[
+  {"deployment_index": 0, "slot": 1, "identifier": "t0u1", "given_name": "Peter", "surname": "Parker", "user_principal_name": "t0u1@cptazure.org"},
+  {"deployment_index": 0, "slot": 2, "identifier": "t0u2", "given_name": "Bruce", "surname": "Wayne", "user_principal_name": "t0u2@cptazure.org"},
+  {"deployment_index": 0, "slot": 3, "identifier": "t0u3", "given_name": "Diana", "surname": "Prince", "user_principal_name": "t0u3@cptazure.org"},
+  {"deployment_index": 0, "slot": 4, "identifier": "t0u4", "given_name": "Clark", "surname": "Kent", "user_principal_name": "t0u4@cptazure.org"},
+  {"deployment_index": 0, "slot": 5, "identifier": "t0u5", "given_name": "Barry", "surname": "Allen", "user_principal_name": "t0u5@cptazure.org"},
+
+  {"deployment_index": 1, "slot": 1, "identifier": "t1u1", "given_name": "Natasha", "surname": "Romanoff", "user_principal_name": "t1u1@cptazure.org"},
+  {"deployment_index": 1, "slot": 2, "identifier": "t1u2", "given_name": "Tony", "surname": "Stark", "user_principal_name": "t1u2@cptazure.org"},
+  {"deployment_index": 1, "slot": 3, "identifier": "t1u3", "given_name": "Carol", "surname": "Danvers", "user_principal_name": "t1u3@cptazure.org"},
+  {"deployment_index": 1, "slot": 4, "identifier": "t1u4", "given_name": "Stephen", "surname": "Strange", "user_principal_name": "t1u4@cptazure.org"},
+  {"deployment_index": 1, "slot": 5, "identifier": "t1u5", "given_name": "Wanda", "surname": "Maximoff", "user_principal_name": "t1u5@cptazure.org"},
+
+  {"deployment_index": 2, "slot": 1, "identifier": "t2u1", "given_name": "TChalla", "surname": "Udaku", "user_principal_name": "t2u1@cptazure.org"},
+  {"deployment_index": 2, "slot": 2, "identifier": "t2u2", "given_name": "Shuri", "surname": "Udaku", "user_principal_name": "t2u2@cptazure.org"},
+  {"deployment_index": 2, "slot": 3, "identifier": "t2u3", "given_name": "Sam", "surname": "Wilson", "user_principal_name": "t2u3@cptazure.org"},
+  {"deployment_index": 2, "slot": 4, "identifier": "t2u4", "given_name": "Scott", "surname": "Lang", "user_principal_name": "t2u4@cptazure.org"},
+  {"deployment_index": 2, "slot": 5, "identifier": "t2u5", "given_name": "Ororo", "surname": "Munroe", "user_principal_name": "t2u5@cptazure.org"},
+
+  {"deployment_index": 3, "slot": 1, "identifier": "t3u1", "given_name": "Hal", "surname": "Jordan", "user_principal_name": "t3u1@cptazure.org"},
+  {"deployment_index": 3, "slot": 2, "identifier": "t3u2", "given_name": "Arthur", "surname": "Curry", "user_principal_name": "t3u2@cptazure.org"},
+  {"deployment_index": 3, "slot": 3, "identifier": "t3u3", "given_name": "Victor", "surname": "Stone", "user_principal_name": "t3u3@cptazure.org"},
+  {"deployment_index": 3, "slot": 4, "identifier": "t3u4", "given_name": "Billy", "surname": "Batson", "user_principal_name": "t3u4@cptazure.org"},
+  {"deployment_index": 3, "slot": 5, "identifier": "t3u5", "given_name": "Barbara", "surname": "Gordon", "user_principal_name": "t3u5@cptazure.org"},
+
+  {"deployment_index": 4, "slot": 1, "identifier": "t4u1", "given_name": "Kamala", "surname": "Khan", "user_principal_name": "t4u1@cptazure.org"},
+  {"deployment_index": 4, "slot": 2, "identifier": "t4u2", "given_name": "Kate", "surname": "Bishop", "user_principal_name": "t4u2@cptazure.org"},
+  {"deployment_index": 4, "slot": 3, "identifier": "t4u3", "given_name": "Jessica", "surname": "Jones", "user_principal_name": "t4u3@cptazure.org"},
+  {"deployment_index": 4, "slot": 4, "identifier": "t4u4", "given_name": "Matt", "surname": "Murdock", "user_principal_name": "t4u4@cptazure.org"},
+  {"deployment_index": 4, "slot": 5, "identifier": "t4u5", "given_name": "Luke", "surname": "Cage", "user_principal_name": "t4u5@cptazure.org"}
+]

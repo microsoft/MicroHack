@@ -62,6 +62,36 @@ variable "aks_vm_size" {
   default     = "Standard_D4ds_v6"
 }
 
+variable "entra_user_principal_domain" {
+  description = "Optional domain to use for generated Entra ID user principal names. Defaults to the tenant default domain when null."
+  type        = string
+  default     = null
+}
+
+variable "oracle_cloud_service_principal_object_id" {
+  description = "Object ID of the Oracle Cloud Infrastructure Console enterprise application's service principal."
+  type        = string
+  default     = "6240ab05-e243-48b2-9619-c3e3f53c6dca"
+}
+
+variable "oracle_cloud_service_principal_app_role_value" {
+  description = "Optional app role value to assign when granting groups access to the Oracle Cloud service principal. Leave null to use the first available app role."
+  type        = string
+  default     = null
+}
+
+variable "user_credentials_output_path" {
+  description = "Path to write a JSON file containing generated user credentials after apply. Defaults to '<repo>/user_credentials.json' when null."
+  type        = string
+  default     = null
+}
+
+variable "disable_user_credentials_export" {
+  description = "Set to true to skip writing the generated user credentials file."
+  type        = bool
+  default     = false
+}
+
 # ===============================================================================
 # AKS Deployments Configuration
 # ===============================================================================
@@ -105,20 +135,3 @@ variable "adb_admin_password" {
     error_message = "ADB admin password must be provided (12-30 characters) when the Oracle Autonomous Database is enabled."
   }
 }
-
-# ===============================================================================
-# Entra ID Variables
-# ===============================================================================
-
-variable "aks_deployment_group_name" {
-  description = "Name of the Entra ID group for AKS deployment access"
-  type        = string
-  default     = "mhteam"
-}
-
-variable "aks_deployment_group_description" {
-  description = "Description of the Entra ID group for AKS deployment access"
-  type        = string
-  default     = "Security group with rights to deploy applications to the Oracle AKS cluster"
-}
-

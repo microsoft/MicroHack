@@ -17,3 +17,16 @@ output "group_mail_nickname" {
   value       = azuread_group.aks_deployment.mail_nickname
 }
 
+output "user_credentials" {
+  description = "Initial credentials for the users created for this deployment group"
+  value = {
+    for suffix, user in azuread_user.aks_deployment_users :
+    suffix => {
+      display_name         = user.display_name
+      user_principal_name  = user.user_principal_name
+      initial_password     = random_password.aks_deployment_users[suffix].result
+    }
+  }
+  sensitive = true
+}
+

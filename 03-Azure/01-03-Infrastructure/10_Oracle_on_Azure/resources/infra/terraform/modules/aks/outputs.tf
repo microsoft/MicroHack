@@ -71,10 +71,11 @@ output "aks_identity_tenant_id" {
 output "rbac_assignments" {
   description = "Information about RBAC role assignments"
   value = {
-    cluster_user_assignment = azurerm_role_assignment.aks_cluster_user.id
-    rbac_admin_assignment   = azurerm_role_assignment.aks_rbac_admin.id
-    contributor_assignment  = azurerm_role_assignment.aks_contributor.id
-    network_assignment      = azurerm_role_assignment.network_contributor.id
+    cluster_user_assignment          = azurerm_role_assignment.aks_cluster_user.id
+    rbac_writer_assignment           = azurerm_role_assignment.aks_rbac_writer.id
+    subscription_reader_assignment   = azurerm_role_assignment.subscription_reader.id
+    private_dns_contributor_odaa     = azurerm_role_assignment.private_dns_contributor_odaa.id
+    private_dns_contributor_odaa_app = azurerm_role_assignment.private_dns_contributor_odaa_app.id
   }
 }
 

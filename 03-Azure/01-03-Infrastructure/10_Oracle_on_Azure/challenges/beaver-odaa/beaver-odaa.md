@@ -1,5 +1,7 @@
 # 🦫 Challenge 5: Review data replication via Beaver
 
+[Back to workspace README](../../README.md)
+
 🌐 CloudBeaver is a web-based database management tool that allows users to connect to, manage, and query various databases directly from a browser. In the context of Kubernetes, deploying CloudBeaver provides an easy-to-access interface for database administration tasks, such as browsing tables, running SQL queries, and managing database users, without needing to install local database clients. This is especially useful for teams working in cloud or containerized environments.
 
 ~~~bash
@@ -74,19 +76,19 @@ http GET https://beaver.${EXTIP}.nip.io --verbose
 1. ➕ Select the "New connection" Icon on the upper left corner.
 2. 🔶 Select Oracle
 3. ⚙️ Select Configuration option "URL" instead of "Manual"
-1. 🔧 Compile an easy connect string with your current connection string and the needed prefixes similar to the following one: jdbc:oracle:thin:@(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=gpdmotes.adb.eu-frankfurt-1.oraclecloud.com))(connect_data=(service_name=g6425a1dbd2e95a_odaa2_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))
-1. Set "Connection name" to "adb"
-1. 👤 Set User name = admin
-1. 🔐 Set Password = Welcome1234#
-1. 💾 Select check box "Save credentials for all users with access"
-1. 🧪 Select "Test Connection"
-1. ✅ You should see "Success" popup
-1. 🎯 Select "Create" on the upper right corner
+4. 🔧 Compile an easy connect string with your current connection string and the needed prefixes similar to the following one: jdbc:oracle:thin:@(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=gpdmotes.adb.eu-frankfurt-1.oraclecloud.com))(connect_data=(service_name=g6425a1dbd2e95a_odaa2_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))
+5. Set "Connection name" to "adb"
+6. 👤 Set User name = admin
+7. 🔐 Set Password = Welcome1234#
+8. 💾 Select check box "Save credentials for all users with access"
+9. 🧪 Select "Test Connection"
+10. ✅ You should see "Success" popup
+11. 🎯 Select "Create" on the upper right corner
 
 
-## Tips and Tricks
+## 💡 Tips and Tricks
 
-### Redeploy if things go wrong
+### 🔁 Redeploy if things go wrong
 
 ~~~powershell
 # login to aks
@@ -94,3 +96,5 @@ az aks get-credentials -g $rgAKS -n $AKSClusterName --overwrite-existing
 # Uninstall the Helm release
 helm uninstall cloudbeaver -n cloudbeaver
 ~~~
+
+[Back to workspace README](../../README.md)

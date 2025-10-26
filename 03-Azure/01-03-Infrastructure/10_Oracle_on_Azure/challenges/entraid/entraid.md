@@ -1,15 +1,14 @@
-# Enable Microsoft Entra ID Authentication on Autonomous AI Database
+# 🔐 Enable Microsoft Entra ID Authentication on Autonomous AI Database
 
-- https://docs.oracle.com/en/cloud/paas/autonomous-database/serverless/adbsb/autonomous-azure-ad-enable.html#GUID-C69B47D7-E5B5-4BC5-BB57-EC5BACFAC1DC
-- https://docs.oracle.com/en/database/oracle/oracle-database/19/dbseg/authenticating-and-authorizing-microsoft-entra-id-ms-ei-users-oracle-databases-oracle-exadata.html#GUID-CC8FFE52-DC3B-4F2F-B1CA-308E35288C73
+[Back to workspace README](../../README.md)
 
+- [Oracle guide to enabling Entra ID authentication](https://docs.oracle.com/en/cloud/paas/autonomous-database/serverless/adbsb/autonomous-azure-ad-enable.html#GUID-C69B47D7-E5B5-4BC5-BB57-EC5BACFAC1DC)
+- [Oracle database authentication steps](https://docs.oracle.com/en/database/oracle/oracle-database/19/dbseg/authenticating-and-authorizing-microsoft-entra-id-ms-ei-users-oracle-databases-oracle-exadata.html#GUID-CC8FFE52-DC3B-4F2F-B1CA-308E35288C73)
 
+---
 
+## 🧾 Oracle AI Database Requirements for the Microsoft Entra ID Integration
 
-
-################
-
-### Oracle AI Database Requirements for the Microsoft Entra ID Integration
 Before you can configure an Oracle AI Database instance with Microsoft Entra ID, you must ensure that your environment meets special requirements.
 
 For an on-premises, non-cloud Oracle AI Database, follow the steps in this document. If your Oracle AI Database is in one of the following DBaaS platforms, then refer to the platform documentation for additional requirements.
@@ -27,16 +26,16 @@ You can create the TLS server certificate to be self-signed or be signed by a we
 Set the App ID URI, in the Application ID URI field, enter the app ID URI for the database connection using the following format, and then click Save:
 
 your_tenancy_url/application_(client)_id
-https://cptazure.org/7d22ece1-dd60-4279-a911-4b7b95934f2e
+`https://cptazure.org/7d22ece1-dd60-4279-a911-4b7b95934f2e`
 
-### 8.2.3 Enabling Microsoft Entra ID v2 Access Tokens
+### 🔁 8.2.3 Enabling Microsoft Entra ID v2 Access Tokens
 
 We did add the following to the manifest of the app registration:
 
 ~~~json
 {
-	"id": "9bda9b0b-fcab-4472-9815-58dc3b908439",
-    "accessTokenAcceptedVersion": 2, 
+  "id": "9bda9b0b-fcab-4472-9815-58dc3b908439",
+  "accessTokenAcceptedVersion": 2,
 ~~~
 
 ~~~powershell
@@ -101,13 +100,14 @@ identity_provider_type
 AZURE_AD
 ~~~
 
-### Exclusively Mapping an Oracle Database Schema to a Microsoft Azure User
+### 🗺️ Exclusively Mapping an Oracle Database Schema to a Microsoft Azure User
+
 You can exclusively map an Oracle Database schema to a Microsoft Azure user.
 
 Log in to the Oracle Database instance as a user who has been granted the CREATE USER or ALTER USER system privilege.
 
 Run the CREATE USER or ALTER USER statement with the IDENTIFIED GLOBALLY AS clause specifying the Azure user name.
-For example, to create a new database schema user named peter_fitch and map this user to an existing Azure user named ga1@cptazure.org:
+For example, to create a new database schema user named peter_fitch and map this user to an existing Azure user named `ga1@cptazure.org`:
 
 ~~~sql
 CREATE USER ga1 IDENTIFIED GLOBALLY AS 'AZURE_USER=ga1@cptazure.org';
@@ -202,10 +202,12 @@ END;
 
 ~~~
 
-### 8.4.4 Operational Flow for SQL*Plus Client Connection in PowerShell to Oracle Database
-(source: https://docs.oracle.com/en/database/oracle/oracle-database/19/dbseg/authenticating-and-authorizing-microsoft-entra-id-ms-ei-users-oracle-databases-oracle-exadata.html#GUID-455CDC87-C5A1-4A58-801A-29D216CB66B5)
+### ⚙️ 8.4.4 Operational Flow for SQL*Plus Client Connection in PowerShell to Oracle Database
 
-#### Get Wallet
+(source: [Oracle documentation](https://docs.oracle.com/en/database/oracle/oracle-database/19/dbseg/authenticating-and-authorizing-microsoft-entra-id-ms-ei-users-oracle-databases-oracle-exadata.html#GUID-455CDC87-C5A1-4A58-801A-29D216CB66B5))
+
+#### 💼 Get Wallet
+
 Download the Wallet from the Azure portal and unzip it to a secure directory.
 
 The Azure user requests an Azure AD access token for the database in PowerShell and the returned token is written into a file called token at a file location.
@@ -239,21 +241,24 @@ cat /tmp/wallet/token.txt
 exit
 ~~~
 
-#### 8.4.7 Configuring SQL*Plus for Azure AD Access Tokens
-(source: https://docs.oracle.com/en/database/oracle/oracle-database/19/dbseg/authenticating-and-authorizing-microsoft-entra-id-ms-ei-users-oracle-databases-oracle-exadata.html#GUID-89CB6E1E-E383-476A-8B46-4343CEF8512E)
+#### 🛠️ 8.4.7 Configuring SQL*Plus for Azure AD Access Tokens
 
-##### Ensure that you have an Azure AD user account.
+(source: [Oracle documentation](https://docs.oracle.com/en/database/oracle/oracle-database/19/dbseg/authenticating-and-authorizing-microsoft-entra-id-ms-ei-users-oracle-databases-oracle-exadata.html#GUID-89CB6E1E-E383-476A-8B46-4343CEF8512E))
 
-##### Check with an Azure AD administrator or Oracle Database administrator for one of the following:
+##### ✅ Ensure you have an Azure AD user account
+
+##### 🔍 Check with an Azure AD administrator or Oracle Database administrator
+
+For one of the following:
 
 - An application client ID that you can use to get Azure AD tokens. If you have Azure AD privileges to do so, then create your own client app registration, similar to registering the Oracle Database instance with an Azure AD tenancy.
 - You are mapped to a global schema in the database.
 - Ensure that you are using the latest release updates for the Oracle Database client releases 19c.
- - This configuration only works with the Oracle Database client release 19c.
+- This configuration only works with the Oracle Database client release 19c.
 
-##### Follow the existing process to download the wallet from the Oracle Database instance and then follow the directions for configuring it for use with SQL*Plus.
+##### 📥 Follow the existing process to download the wallet from the Oracle Database instance and then configure SQL*Plus
 
-##### On the client, set the following parameters in the sqlnet.ora file:
+##### ⚙️ Set the sqlnet.ora parameters on the client
 
 Check for the parameter SSL_SERVER_DN_MATCH = ON to ensure that DN matching is enabled.
 
@@ -378,3 +383,5 @@ AUTHENTI
 GA1
 GLOBAL
 ~~~
+
+[Back to workspace README](../../README.md)

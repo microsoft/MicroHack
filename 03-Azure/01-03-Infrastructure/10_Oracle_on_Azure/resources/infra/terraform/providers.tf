@@ -261,10 +261,10 @@ provider "azurerm" {
   }
 }
 
-provider "azapi" {
-  # AzAPI provider configuration
-  # This provider is used for Oracle Database on Azure resources
-}
+# provider "azapi" {
+#   # AzAPI provider configuration
+#   # This provider is used for Oracle Database on Azure resources
+# }
 
 provider "azuread" {
   # AzureAD provider configuration
@@ -295,115 +295,6 @@ provider "azuread" {
 provider "azuread" {
   alias     = "aks_deployment_team_4"
   tenant_id = local.aks_tenant_ids_padded[4]
-}
-
-# Kubernetes and Helm provider configurations per AKS deployment
-locals {
-  aks_team_0_kube_config = length(module.aks_team_0) > 0 ? values(module.aks_team_0)[0].aks_cluster_kube_config[0] : null
-  aks_team_1_kube_config = length(module.aks_team_1) > 0 ? values(module.aks_team_1)[0].aks_cluster_kube_config[0] : null
-  aks_team_2_kube_config = length(module.aks_team_2) > 0 ? values(module.aks_team_2)[0].aks_cluster_kube_config[0] : null
-  aks_team_3_kube_config = length(module.aks_team_3) > 0 ? values(module.aks_team_3)[0].aks_cluster_kube_config[0] : null
-  aks_team_4_kube_config = length(module.aks_team_4) > 0 ? values(module.aks_team_4)[0].aks_cluster_kube_config[0] : null
-}
-
-provider "kubernetes" {
-  alias = "aks_deployment_team_0"
-
-  host                   = local.aks_team_0_kube_config != null ? local.aks_team_0_kube_config.host : null
-  client_certificate     = local.aks_team_0_kube_config != null ? base64decode(local.aks_team_0_kube_config.client_certificate) : null
-  client_key             = local.aks_team_0_kube_config != null ? base64decode(local.aks_team_0_kube_config.client_key) : null
-  cluster_ca_certificate = local.aks_team_0_kube_config != null ? base64decode(local.aks_team_0_kube_config.cluster_ca_certificate) : null
-}
-
-provider "kubernetes" {
-  alias = "aks_deployment_team_1"
-
-  host                   = local.aks_team_1_kube_config != null ? local.aks_team_1_kube_config.host : null
-  client_certificate     = local.aks_team_1_kube_config != null ? base64decode(local.aks_team_1_kube_config.client_certificate) : null
-  client_key             = local.aks_team_1_kube_config != null ? base64decode(local.aks_team_1_kube_config.client_key) : null
-  cluster_ca_certificate = local.aks_team_1_kube_config != null ? base64decode(local.aks_team_1_kube_config.cluster_ca_certificate) : null
-}
-
-provider "kubernetes" {
-  alias = "aks_deployment_team_2"
-
-  host                   = local.aks_team_2_kube_config != null ? local.aks_team_2_kube_config.host : null
-  client_certificate     = local.aks_team_2_kube_config != null ? base64decode(local.aks_team_2_kube_config.client_certificate) : null
-  client_key             = local.aks_team_2_kube_config != null ? base64decode(local.aks_team_2_kube_config.client_key) : null
-  cluster_ca_certificate = local.aks_team_2_kube_config != null ? base64decode(local.aks_team_2_kube_config.cluster_ca_certificate) : null
-}
-
-provider "kubernetes" {
-  alias = "aks_deployment_team_3"
-
-  host                   = local.aks_team_3_kube_config != null ? local.aks_team_3_kube_config.host : null
-  client_certificate     = local.aks_team_3_kube_config != null ? base64decode(local.aks_team_3_kube_config.client_certificate) : null
-  client_key             = local.aks_team_3_kube_config != null ? base64decode(local.aks_team_3_kube_config.client_key) : null
-  cluster_ca_certificate = local.aks_team_3_kube_config != null ? base64decode(local.aks_team_3_kube_config.cluster_ca_certificate) : null
-}
-
-provider "kubernetes" {
-  alias = "aks_deployment_team_4"
-
-  host                   = local.aks_team_4_kube_config != null ? local.aks_team_4_kube_config.host : null
-  client_certificate     = local.aks_team_4_kube_config != null ? base64decode(local.aks_team_4_kube_config.client_certificate) : null
-  client_key             = local.aks_team_4_kube_config != null ? base64decode(local.aks_team_4_kube_config.client_key) : null
-  cluster_ca_certificate = local.aks_team_4_kube_config != null ? base64decode(local.aks_team_4_kube_config.cluster_ca_certificate) : null
-}
-
-provider "helm" {
-  alias = "aks_deployment_team_0"
-
-  kubernetes {
-    host                   = local.aks_team_0_kube_config != null ? local.aks_team_0_kube_config.host : null
-    client_certificate     = local.aks_team_0_kube_config != null ? base64decode(local.aks_team_0_kube_config.client_certificate) : null
-    client_key             = local.aks_team_0_kube_config != null ? base64decode(local.aks_team_0_kube_config.client_key) : null
-    cluster_ca_certificate = local.aks_team_0_kube_config != null ? base64decode(local.aks_team_0_kube_config.cluster_ca_certificate) : null
-  }
-}
-
-provider "helm" {
-  alias = "aks_deployment_team_1"
-
-  kubernetes {
-    host                   = local.aks_team_1_kube_config != null ? local.aks_team_1_kube_config.host : null
-    client_certificate     = local.aks_team_1_kube_config != null ? base64decode(local.aks_team_1_kube_config.client_certificate) : null
-    client_key             = local.aks_team_1_kube_config != null ? base64decode(local.aks_team_1_kube_config.client_key) : null
-    cluster_ca_certificate = local.aks_team_1_kube_config != null ? base64decode(local.aks_team_1_kube_config.cluster_ca_certificate) : null
-  }
-}
-
-provider "helm" {
-  alias = "aks_deployment_team_2"
-
-  kubernetes {
-    host                   = local.aks_team_2_kube_config != null ? local.aks_team_2_kube_config.host : null
-    client_certificate     = local.aks_team_2_kube_config != null ? base64decode(local.aks_team_2_kube_config.client_certificate) : null
-    client_key             = local.aks_team_2_kube_config != null ? base64decode(local.aks_team_2_kube_config.client_key) : null
-    cluster_ca_certificate = local.aks_team_2_kube_config != null ? base64decode(local.aks_team_2_kube_config.cluster_ca_certificate) : null
-  }
-}
-
-provider "helm" {
-  alias = "aks_deployment_team_3"
-
-  kubernetes {
-    host                   = local.aks_team_3_kube_config != null ? local.aks_team_3_kube_config.host : null
-    client_certificate     = local.aks_team_3_kube_config != null ? base64decode(local.aks_team_3_kube_config.client_certificate) : null
-    client_key             = local.aks_team_3_kube_config != null ? base64decode(local.aks_team_3_kube_config.client_key) : null
-    cluster_ca_certificate = local.aks_team_3_kube_config != null ? base64decode(local.aks_team_3_kube_config.cluster_ca_certificate) : null
-  }
-}
-
-provider "helm" {
-  alias = "aks_deployment_team_4"
-
-  kubernetes {
-    host                   = local.aks_team_4_kube_config != null ? local.aks_team_4_kube_config.host : null
-    client_certificate     = local.aks_team_4_kube_config != null ? base64decode(local.aks_team_4_kube_config.client_certificate) : null
-    client_key             = local.aks_team_4_kube_config != null ? base64decode(local.aks_team_4_kube_config.client_key) : null
-    cluster_ca_certificate = local.aks_team_4_kube_config != null ? base64decode(local.aks_team_4_kube_config.cluster_ca_certificate) : null
-  }
 }
 
 # Get current Azure client configuration

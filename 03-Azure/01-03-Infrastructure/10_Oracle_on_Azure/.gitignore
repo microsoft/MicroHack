@@ -3,6 +3,10 @@ misc/
 NOTES.md
 gghack.yaml
 ggfabric.yaml
+resources/infra/terraform/user_credentials.json
+
+# ignore helm chart temp folder
+resources/infra/terraform/.helm/
 
 # exclude the terrafom files and folders which should not be commited to git following best practces, located under the folder resources and all subfolder
 resources/**/terraform.tfstate

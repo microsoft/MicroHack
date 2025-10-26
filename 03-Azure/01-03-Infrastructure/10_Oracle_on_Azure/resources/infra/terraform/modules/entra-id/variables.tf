@@ -19,10 +19,21 @@ variable "tenant_id" {
   type        = string
 }
 
+variable "deployment_index" {
+  description = "Zero-based index of the deployment using this module"
+  type        = number
+}
+
 
 
 variable "tags" {
   description = "A mapping of tags to assign to the resources"
   type        = map(string)
   default     = {}
+}
+
+variable "user_principal_domain" {
+  description = "Optional domain to use for generated user principal names. Defaults to the tenant's default domain when null."
+  type        = string
+  default     = null
 }

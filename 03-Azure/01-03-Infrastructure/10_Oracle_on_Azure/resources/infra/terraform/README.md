@@ -1,71 +1,16 @@
 # Oracle on Azure - Terraform Configuration
 
-This directory contains Terraform configurations that correspond to the Bicep templates for deploying Oracle Database on Autonomous Azure (ODAA) infrastructure.
-
-## Overview
-
-The Terraform configuration creates the following resources across multiple Azure subscriptions with automatic VNet peering:
-
-### Multi-Subscription Architecture
-- **AKS Subscription**: Contains AKS cluster and related resources
-- **ODAA Subscription**: Contains Oracle Database resources
-- **Cross-Subscription VNet Peering**: Automatic bidirectional peering between AKS and ODAA networks
-
-### AKS Module (`modules/aks/`)
-- **Resource Group**: Container for AKS resources (AKS subscription)
-- **Log Analytics Workspace**: Monitoring and logging for AKS
-- **Virtual Network**: Network infrastructure for AKS
-- **Subnet**: Dedicated subnet for AKS with proper delegation
-- **AKS Cluster**: Managed Kubernetes cluster with:
-  - System node pool (2 nodes, auto-scaling 1-2)
-  - User node pool (2 nodes, auto-scaling 1-2)
-  - Azure CNI networking
-  - Workload Identity enabled
-  - Azure Policy addon
-  - Container monitoring enabled
-- **RBAC Assignments**: Automatic role assignments for deployment group
-
-### Entra ID Module (`modules/entra-id/`)
-- **Security Group**: Entra ID group for users with AKS deployment rights
-- **RBAC Integration**: Automatic assignment of Azure roles for AKS access
-
-### VNet Peering Module (`modules/vnet-peering/`)
-- **Cross-Subscription Peering**: Bidirectional VNet peering between AKS and ODAA
-- **Network Connectivity**: Enables communication between AKS pods and Oracle Database
-- **Automatic Configuration**: Handles cross-subscription peering complexities
-
-### ODAA Module (`modules/odaa/`)
-- **Resource Group**: Container for ODAA resources
-- **Virtual Network**: Network infrastructure for ODAA
-- **Subnet**: Dedicated subnet with Oracle delegation
-- **Oracle Autonomous Database**: Oracle Database on Azure with:
-  - 2 ECPU compute
-  - 20GB storage
-  - Enterprise Edition
-  - 23ai database version
-  - OLTP workload
-
-### DNS Module (`modules/dns/`)
-
-- **Private DNS Zone**: For main ODAA FQDN
-- **Private DNS Zone**: For ODAA applications FQDN
-- **DNS A Records**: Pointing to the specified IP address
-- **VNet Links**: Linking DNS zones to the AKS virtual network
-
-### Ingress NGINX Module (`modules/ingress-nginx/`)
-- **Helm Deployment**: Installs the upstream ingress-nginx chart in each AKS cluster
-- **Namespace Management**: Creates the `ingress-nginx` namespace when needed
-- **Azure Load Balancer Annotation**: Sets the health probe path expected by Azure (`/healthz`)
-- **Service Discovery**: Exposes the controller Service external IP via Terraform outputs
+This directory contains Terraform configurations to deploying Oracle Database@Azure (ODAA) infrastructure for the Oracle Microhack.
 
 ## Prerequisites
+
+Expection is that you are running on Windows OS.
 
 ### 1. Install Required Tools
 
 ```powershell
 # Install Terraform
 winget install Hashicorp.Terraform
-
 # Install Azure CLI (if not already installed)
 winget install Microsoft.AzureCLI
 ```
@@ -75,7 +20,6 @@ winget install Microsoft.AzureCLI
 ```powershell
 # Login to Azure
 az login
-
 # Set the subscription (if you have multiple)
 az account set --subscription "your-subscription-id"
 ```
@@ -92,84 +36,21 @@ az provider show --namespace Oracle.Database --query "registrationState"
 
 ## Configuration
 
-### 1. Copy and Configure Variables
-
-```powershell
-# Copy the example variables file
-Copy-Item terraform.tfvars.example terraform.tfvars
-
-# Edit the terraform.tfvars file with your specific values
-```
-
 ### 2. Required Variables
 
 Update `terraform.tfvars` with your values:
 
-```hcl
-# Environment Configuration
-environment = "dev"
-location    = "Germany West Central"
-
-# AKS Configuration
-aks_prefix   = "aks-oracle"
-aks_postfix  = "001"
-aks_cidr     = "10.1.0.0"
-aks_vm_size  = "Standard_D8ds_v5"
-
-# ODAA Configuration
-odaa_prefix   = "odaa"
-odaa_postfix  = "1"
-odaa_location = "Germany West Central"
-odaa_cidr     = "10.0.0.0"
-
-# Security Configuration
-adb_admin_password = "YourSecurePassword123!"  # Must be 12-30 characters
-
-# DNS Configuration
-fqdn_odaa      = "eqsmjgp2.adb.eu-frankfurt-1.oraclecloud.com"
-fqdn_odaa_app  = "eqsmjgp2.adb.eu-frankfurt-1.oraclecloudapps.com"
-fqdn_odaa_ipv4 = "10.0.1.165"
-```
-
 ## Deployment
-
-### 1. Initialize Terraform
 
 ```powershell
 terraform init
-```
-
-### 2. Validate Configuration
-
-```powershell
 terraform validate
-```
-
-### 3. Plan Deployment
-
-```powershell
 terraform plan
-```
-
-### 4. Apply Configuration
-
-```powershell
 terraform apply -auto-approve
 ```
 
 ## Post-Deployment
 
-After successful deployment, you can:
-
-### 1. Add Users to Deployment Group
-
-```powershell
-# Get the group object ID from Terraform outputs
-$GroupId = (terraform output -json entra_id_deployment_group | ConvertFrom-Json).object_id
-
-# Add users to the deployment group (replace with actual user object IDs)
-az ad group member add --group $GroupId --member-id <USER_OBJECT_ID>
-```
 
 ### 2. Connect to AKS Cluster
 
@@ -181,25 +62,6 @@ az aks get-credentials --resource-group <aks-resource-group> --name <aks-cluster
 kubectl get nodes
 kubectl auth can-i "*" "*" --all-namespaces
 ```
-
-### 3. Verify Private DNS Resolution
-
-```powershell
-# Test DNS resolution from AKS pods
-kubectl run dns-test --image=busybox --rm -it --restart=Never -- nslookup <fqdn-odaa>
-```
-
-## Outputs
-
-The configuration provides the following outputs:
-
-- `aks_cluster_id`: The ID of the AKS cluster
-- `aks_cluster_name`: The name of the AKS cluster
-- `aks_vnet_id`: The ID of the AKS virtual network
-- `odaa_adb_id`: The ID of the Oracle Autonomous Database
-- `odaa_vnet_id`: The ID of the ODAA virtual network
-- `private_dns_zones`: Information about created private DNS zones
-- `ingress_nginx_controllers`: Release name, namespace, annotations, and external IP for each ingress controller
 
 ## Troubleshooting
 
@@ -226,31 +88,6 @@ To destroy all resources:
 terraform destroy -auto-approve
 ```
 
-## Module Structure
-
-```
-terraform/
-├── main.tf                    # Main configuration
-├── variables.tf               # Variable definitions
-├── providers.tf              # Provider configuration
-├── versions.tf               # Terraform version constraints
-├── terraform.tfvars.example  # Example variable values
-├── README.md                 # This file
-└── modules/
-    ├── aks/                  # AKS module
-    │   ├── main.tf
-    │   ├── variables.tf
-    │   └── outputs.tf
-    ├── odaa/                 # ODAA module
-    │   ├── main.tf
-    │   ├── variables.tf
-    │   └── outputs.tf
-    └── dns/                  # DNS module
-        ├── main.tf
-        ├── variables.tf
-        ├── data.tf
-        └── outputs.tf
-```
 
 ## Security Considerations
 
@@ -258,22 +95,69 @@ terraform/
 - Store the `terraform.tfvars` file securely and don't commit it to version control
 - Consider using Azure Key Vault for sensitive values
 - Review and adjust network security groups as needed
+- Terraform writes generated Entra ID user credentials to `user_credentials.json` in this directory by default; treat this file as sensitive and delete or secure it after use. Override the location with `user_credentials_output_path` or set `disable_user_credentials_export = true` in `terraform.tfvars` to opt out.
 
-## Correspondence with Bicep Templates
 
-This Terraform configuration mirrors the functionality of the original Bicep templates:
+## Terraform Entra ID Group Issues
 
-| Bicep File | Terraform Module | Purpose |
-|------------|------------------|---------|
-| `bicep/aks/main.bicep` | `modules/aks/` | AKS cluster deployment |
-| `bicep/aks/aks.bicep` | `modules/aks/main.tf` | AKS resources |
-| `bicep/odaa/main.bicep` | `modules/odaa/` | ODAA deployment |
-| `bicep/odaa/adb.bicep` | `modules/odaa/main.tf` | Oracle DB resources |
-| `bicep/dns.bicep` | `modules/dns/` | Private DNS zones |
+Unfortunately the Terraform command "destroy" does not destroy the Entra ID group created for deployment access.
+Therefore we need to use the following script to clean up the Entra ID groups created during deployment.
 
-## Support
+~~~powershell
+# PowerShell script to delete Entra ID groups created for AKS deployment access
+pwsh ./scripts/cleanup-entra-groups.ps1
+~~~
 
-For issues related to:
-- **Terraform**: Check [Terraform documentation](https://developer.hashicorp.com/terraform/docs)
-- **Azure Provider**: Check [AzureRM Provider documentation](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs)
-- **Oracle Database on Azure**: Check [Oracle Database on Azure documentation](https://docs.oracle.com/en/cloud/paas/database-dbaas-cloud/database-on-azure/)
+Output will look as follows:
+
+~~~powershell
+Processing group 'mhteam-0' (b2197001-73a7-4a11-a1e2-703f8813ad26)...
+Deleted group 'mhteam-0'.
+~~~
+
+## ODAA Advanced Network Features
+
+Based on [Microsoft Learn ODAA Advanced network features](https://learn.microsoft.com/en-us/azure/oracle/oracle-db/oracle-database-network-plan#advanced-network-features)
+
+We need to register the Oracle SDN appliance feature for both the Microsoft.Baremetal and Microsoft.Network resource providers to enable Oracle Database@Azure (ODAA) Advanced Network features.
+
+### Manual Registration Steps
+
+~~~powershell
+# Register the Oracle SDN appliance feature for Microsoft.Baremetal
+az feature register --namespace Microsoft.Baremetal --name EnableRotterdamSdnApplianceForOracle
+# Register the Oracle SDN appliance feature for Microsoft.Network
+az feature register --namespace Microsoft.Network --name EnableRotterdamSdnApplianceForOracle
+# Check registration status for Microsoft.Baremetal
+az feature show --namespace Microsoft.Baremetal --name EnableRotterdamSdnApplianceForOracle
+# Check registration status for Microsoft.Network
+az feature show --namespace Microsoft.Network --name EnableRotterdamSdnApplianceForOracle
+# After the features are registered (status shows as "Registered"), you may need to re-register the resource providers:
+# Re-register the providers after feature registration
+az provider register --namespace Microsoft.Baremetal
+az provider register --namespace Microsoft.Network
+~~~
+
+> Why Re-register Resource Providers?
+> When you register a preview feature, you're essentially enabling a feature flag for your subscription. However, the resource provider itself may not immediately "know" about this new capability until it's refreshed.
+
+### Scripted Registration for Multiple Subscriptions
+
+~~~powershell
+# Run the PowerShell script to register the Oracle SDN appliance feature across multiple subscriptions
+# Ensure the subscription IDs are correctly set in the script before running
+pwsh ./scripts/register-oracle-sdn.ps1
+~~~
+
+Output will look as follows:
+
+~~~powershell
+=== Processing subscription 556f9b63-ebc9-4c7e-8437-9a05aa8cdb25 ===
+Registering feature Microsoft.Baremetal/EnableRotterdamSdnApplianceForOracle...
+Registering feature Microsoft.Network/EnableRotterdamSdnApplianceForOracle...
+Waiting for feature registration to complete...
+  Microsoft.Baremetal/EnableRotterdamSdnApplianceForOracle: Registered; Microsoft.Network/EnableRotterdamSdnApplianceForOracle: Registered
+Re-registering provider Microsoft.Baremetal...
+Re-registering provider Microsoft.Network...
+Completed feature setup for 556f9b63-ebc9-4c7e-8437-9a05aa8cdb25
+~~~

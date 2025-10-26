@@ -1,5 +1,7 @@
 # 🧵 Challenge 8: (Optional) Use Azure Data Fabric with Oracle ADB
 
+[Back to workspace README](../../README.md)
+
 ## 🎯 Overview
 
 🚀 This challenge focuses on integrating Oracle Autonomous Database (ADB) with Azure Data Fabric to create comprehensive data solutions that leverage both Oracle's database capabilities and Azure's data platform services.
@@ -57,7 +59,7 @@ the value of vhostName should look like this:
     vhostName: ggate.4.182.95.155.nip.io
 ~~~
 
-## 🚀 Install GoldenGate Pods 
+## 🚀 Install GoldenGate Pods
 
 Install all components via Helm:
 
@@ -89,7 +91,7 @@ kubectl get service --namespace ingress-nginx nginx-quick-ingress-nginx-controll
 kubectl get service -n microhacks -o jsonpath='{.items[*].status.loadBalancer.ingress[*].ip}'
 ~~~
 
-You can now access the GoldenGate Microservices UI via: https://ggate.<EXTERNAL_IP>.nip.io (e.g. https://ggate.4.182.95.155.nip.io)
+You can now access the GoldenGate Microservices UI via: `https://ggate.<EXTERNAL_IP>.nip.io` (e.g. `https://ggate.4.182.95.155.nip.io`)
 
 
 ## 📚 Useful Resources
@@ -98,9 +100,9 @@ You can now access the GoldenGate Microservices UI via: https://ggate.<EXTERNAL_
 - 🔶 [Oracle ADB Integration Guides](https://docs.oracle.com/en/cloud/paas/autonomous-database/)
 - 🔗 [Hybrid Data Integration Patterns](https://docs.microsoft.com/en-us/azure/architecture/)
 
-## Tips and Tricks
+## 💡 Tips and Tricks
 
-### Redeploy if things go wrong
+### 🔁 Redeploy if things go wrong
 
 ~~~powershell
 # login to aks
@@ -109,7 +111,7 @@ az aks get-credentials -g $rgAKS -n $AKSClusterName --overwrite-existing
 helm uninstall oggfabric -n microhacks
 ~~~
 
-### Use a private Oracle Container Registry image
+### 🔐 Use a private Oracle Container Registry image
 
 ~~~powershell
 # delete secret if already exist
@@ -122,3 +124,4 @@ kubectl create secret docker-registry container-registry-secret -n microhacks  -
 ))
 ~~~
 
+[Back to workspace README](../../README.md)

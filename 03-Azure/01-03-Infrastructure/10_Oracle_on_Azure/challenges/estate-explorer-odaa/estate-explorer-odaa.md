@@ -1,5 +1,7 @@
 # 📊 Challenge 7: (Optional) Use Estate Explorer to visualize the Oracle ADB instance
 
+[Back to workspace README](../../README.md)
+
 ## 🎯 Overview
 
 Estate Explorer provides comprehensive visualization and analysis capabilities for Oracle databases, helping you understand your database landscape and performance characteristics.
@@ -26,3 +28,5 @@ helm install estate-exp oggfree/autonomous-free --values autonomous.yaml -n esta
 2. 🌐 Access the Estate Explorer interface via the configured ingress
 3. 🔗 Configure connection to your Oracle ADB instance
 4. 📊 Explore the visualization capabilities
+
+[Back to workspace README](../../README.md)

@@ -1,0 +1,32 @@
+# How to retrieve the Oracle Database Autonomous Database connection string from ODAA
+
+To connect to the Oracle Database you will need the TNS connection string.
+
+## 📍 Retrieve the connection string via the Azure Portal from the ODAA ADB instance.
+
+1. 🎯 Go to your Oracle Database in Azure Portal, search for "adb" in the search bar on top.
+2. 🔍 Select "Oracle Database@Azure" from the search results.
+3. 📋 Select "Oracle Autonomous Database Service" from the left menu.
+4. 🎪 Select your created ADB instance.
+5. 🔗 Select "Connection" from the left menu.
+6. 🔒 Select high, TLS Authentication=TLS Connection String
+
+🔧 Alternative you can use the Azure CLI to retrieve the connection string.
+
+~~~powershell
+# Prerequisites (if not already installed)
+az extension add --name oracle-database 
+
+
+$adbName="odaa-team0" # replace with your ADB name
+
+# Switch to the subscription where ODAA is deployed
+$subODAA="sub-mhodaa" # replace with your ODAA subscription name
+az account set --subscription $subODAA
+
+$rgODAA="odaa-team0" # replace with your resource group name
+
+# Retrieve TNS Connection string High profile (TCPS, tlsAuthentication = Server)
+$trgConn=az oracle-database autonomous-database show -g $rgODAA -n $adbName --query "connectionStrings.profiles[?consumerGroup=='High' && protocol=='TCPS' && tlsAuthentication=='Server'].value | [0]" -o tsv
+~~~
+

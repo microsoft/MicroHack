@@ -1,5 +1,7 @@
 # 🔐 Challenge 2: Update Oracle ADB NSG with AKS VNet CIDR
 
+[Back to workspace README](../../README.md)
+
 ## 🌐 Network Security Group Configuration
 
 You need to update the Oracle ADB NSG with the CIDR of the VNet where your AKS cluster is deployed. This can be done via the Azure Portal.
@@ -70,3 +72,5 @@ Name    Records
 3. ➕ Add the AKS VNet CIDR (e.g., `10.10.0.0/16`) to the allowed sources
 4. 💾 Save the configuration
 5. ✅ Test connectivity from AKS to verify the changes
+
+[Back to workspace README](../../README.md)

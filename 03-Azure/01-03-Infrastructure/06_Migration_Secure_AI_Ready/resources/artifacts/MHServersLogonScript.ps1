@@ -21,9 +21,9 @@ $namingPrefix = $env:namingPrefix
 $vhdSourceFolder = 'https://jumpstartprodsg.blob.core.windows.net/arcbox/prod/*'
 
 # Archive existing log file and create new one
-$logFilePath = "$Env:MHBoxLogsDir\ArcServersLogonScript.log"
+$logFilePath = "$Env:MHBoxLogsDir\MHServersLogonScript.log"
 if (Test-Path $logFilePath) {
-    $archivefile = "$Env:MHBoxLogsDir\ArcServersLogonScript-" + (Get-Date -Format 'yyyyMMddHHmmss')
+    $archivefile = "$Env:MHBoxLogsDir\MHServersLogonScript-" + (Get-Date -Format 'yyyyMMddHHmmss')
     Rename-Item -Path $logFilePath -NewName $archivefile -Force
 }
 
@@ -136,7 +136,7 @@ if ($Env:flavor -ne 'DevOps') {
     Write-Header 'Az PowerShell Login'
     Connect-AzAccount -Identity -Tenant $tenantId -Subscription $subscriptionId
 
-    $DeploymentProgressString = 'Started ArcServersLogonScript'
+    $DeploymentProgressString = 'Started MHServersLogonScript'
 
     $tags = Get-AzResourceGroup -Name $env:resourceGroup | Select-Object -ExpandProperty Tags
 
@@ -411,20 +411,6 @@ if ($Env:flavor -ne 'DevOps') {
 
         Start-Sleep -Seconds 10
 
-        # Copy installation script to nested Windows VMs
-        Write-Output 'Transferring installation script to nested Windows VMs...'
-        #Copy-VMFile $Win2k22vmName -SourcePath "$agentScript\installArcAgent.ps1" -DestinationPath "$Env:MHBoxDir\installArcAgent.ps1" -CreateFullPath -FileSource Host -Force
-        #Copy-VMFile $Win2k25vmName -SourcePath "$agentScript\installArcAgent.ps1" -DestinationPath "$Env:MHBoxDir\installArcAgent.ps1" -CreateFullPath -FileSource Host -Force
-
-        # Update Linux VM onboarding script connect to Azure Arc, get new token as it might have been expired by the time execution reached this line.
-        #$accessToken = ConvertFrom-SecureString ((Get-AzAccessToken -AsSecureString).Token) -AsPlainText
-        #(Get-Content -Path "$agentScript\installArcAgentUbuntu.sh" -Raw) -replace '\$accessToken', "'$accessToken'" -replace '\$resourceGroup', "'$resourceGroup'" -replace '\$tenantId', "'$Env:tenantId'" -replace '\$azureLocation', "'$Env:azureLocation'" -replace '\$subscriptionId', "'$subscriptionId'" | Set-Content -Path "$agentScript\installArcAgentModifiedUbuntu.sh"
-
-        # Copy installation script to nested Linux VMs
-        Write-Output 'Transferring installation script to nested Linux VMs...'
-
-
-
         Write-Output 'Activating operating system on Windows VMs...'
 
         Invoke-Command -VMName $Win2k22vmName -ScriptBlock {
@@ -443,16 +429,7 @@ if ($Env:flavor -ne 'DevOps') {
             cscript C:\Windows\system32\slmgr.vbs -ato
             cscript C:\Windows\system32\slmgr.vbs -dlv
 
-        } -Credential $winCreds 
-
-        Invoke-Command -VMName $AzRepSrvvmName -ScriptBlock {
-
-            cscript C:\Windows\system32\slmgr.vbs -ipk VDYBN-27WPP-V4HQT-9VMD4-VMK7H
-            cscript C:\Windows\system32\slmgr.vbs -skms kms.core.windows.net
-            cscript C:\Windows\system32\slmgr.vbs -ato
-            cscript C:\Windows\system32\slmgr.vbs -dlv
-
-        } -Credential $winCreds         
+        } -Credential $winCreds      
 
         Invoke-Command -VMName $SQLvmName -ScriptBlock {
 
@@ -479,15 +456,15 @@ if ($Env:flavor -ne 'DevOps') {
         # Install Apache and clean default web files on Linux VM
         Write-Output 'Installing Apache Web Server on Linux VM...'
         $UbuntuSessions = New-PSSession -HostName $Ubuntu01VmIp -KeyFilePath "$Env:USERPROFILE\.ssh\id_rsa" -UserName $nestedLinuxUsername
-        Copy-VMFile $Ubuntu01vmName -SourcePath "$Env:MHBoxDir\DemoPage\deploy-webserver.sh" -DestinationPath "/home/$nestedLinuxUsername" -FileSource Host -Force
-        Invoke-JSSudoCommand -Session $UbuntuSessions -Command "sh /home/$nestedLinuxUsername/deploy-webserver.sh"       
+        Copy-VMFile $Ubuntu01vmName -SourcePath "$Env:MHBoxDir\DemoPage\deploy-webapp.sh" -DestinationPath "/home/$nestedLinuxUsername" -FileSource Host -Force
+        Invoke-JSSudoCommand -Session $UbuntuSessions -Command "sh /home/$nestedLinuxUsername/deploy-webapp.sh"
 
     }
 
     # Removing the LogonScript Scheduled Task so it won't run on next reboot
     Write-Header 'Removing Logon Task'
-    if ($null -ne (Get-ScheduledTask -TaskName 'ArcServersLogonScript' -ErrorAction SilentlyContinue)) {
-        Unregister-ScheduledTask -TaskName 'ArcServersLogonScript' -Confirm:$false
+    if ($null -ne (Get-ScheduledTask -TaskName 'MHServersLogonScript' -ErrorAction SilentlyContinue)) {
+        Unregister-ScheduledTask -TaskName 'MHServersLogonScript' -Confirm:$false
     }
 }
 

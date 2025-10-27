@@ -189,9 +189,6 @@ Write-Header "Fetching GitHub Artifacts"
 Write-Host "Fetching Artifacts for All Flavors"
 Invoke-WebRequest ($templateBaseUrl + "artifacts/dsc/common.dsc.yml") -OutFile $Env:MHBoxDscDir\common.dsc.yml
 Invoke-WebRequest ($templateBaseUrl + "artifacts/dsc/virtual_machines_sql.dsc.yml") -OutFile $Env:MHBoxDscDir\virtual_machines_sql.dsc.yml
-Invoke-WebRequest ($templateBaseUrl + "artifacts/tests/mhbox-bginfo.bgi") -OutFile $Env:MHBoxTestsDir\MHBox-bginfo.bgi
-Invoke-WebRequest ($templateBaseUrl + "artifacts/tests/common.tests.ps1") -OutFile $Env:MHBoxTestsDir\common.tests.ps1
-Invoke-WebRequest ($templateBaseUrl + "artifacts/tests/Invoke-Test.ps1") -OutFile $Env:MHBoxTestsDir\Invoke-Test.ps1
 Invoke-WebRequest ($templateBaseUrl + "artifacts/WinGet.ps1") -OutFile $Env:MHBoxDir\WinGet.ps1
 Invoke-WebRequest ($templateBaseUrl + "artifacts/MHWallpaper.bmp") -OutFile $Env:MHBoxDir\MHWallpaper.bmp
 Invoke-WebRequest ($templateBaseUrl + "artifacts/demopage/deploy-webapp.sh") -OutFile $Env:MHBoxDemoPageDir\deploy-webapp.sh
@@ -200,8 +197,7 @@ Invoke-WebRequest ($templateBaseUrl + "artifacts/demopage/deployWebApp.ps1") -Ou
 # ITPro
 if ($flavor -eq "ITPro") {
     Write-Host "Fetching Artifacts for ITPro Flavor"
-    Invoke-WebRequest ($templateBaseUrl + "artifacts/ArcServersLogonScript.ps1") -OutFile $Env:MHBoxDir\ArcServersLogonScript.ps1
-    Invoke-WebRequest ($templateBaseUrl + "artifacts/tests/itpro.tests.ps1") -OutFile $Env:MHBoxTestsDir\itpro.tests.ps1
+    Invoke-WebRequest ($templateBaseUrl + "artifacts/MHServersLogonScript.ps1") -OutFile $Env:MHBoxDir\MHServersLogonScript.ps1
     Invoke-WebRequest ($templateBaseUrl + "artifacts/dsc/itpro.dsc.yml") -OutFile $Env:MHBoxDscDir\itpro.dsc.yml
     Invoke-WebRequest ($templateBaseUrl + "artifacts/dsc/virtual_machines_itpro.dsc.yml") -OutFile $Env:MHBoxDscDir\virtual_machines_itpro.dsc.yml
 }
@@ -335,9 +331,9 @@ if ($flavor -eq "ITPro") {
     $Trigger = New-ScheduledTaskTrigger -AtLogOn
     $Action = New-ScheduledTaskAction -Execute $ScheduledTaskExecutable -Argument $Env:MHBoxDir\WinGet.ps1
     Register-ScheduledTask -TaskName "WinGetLogonScript" -Trigger $Trigger -User $adminUsername -Action $Action -RunLevel "Highest" -Force
-    # Creating scheduled task for ArcServersLogonScript.ps1
-    $Action = New-ScheduledTaskAction -Execute $ScheduledTaskExecutable -Argument $Env:MHBoxDir\ArcServersLogonScript.ps1
-    Register-ScheduledTask -TaskName "ArcServersLogonScript" -User $adminUsername -Action $Action -RunLevel "Highest" -Force
+    # Creating scheduled task for MHServersLogonScript.ps1
+    $Action = New-ScheduledTaskAction -Execute $ScheduledTaskExecutable -Argument $Env:MHBoxDir\MHServersLogonScript.ps1
+    Register-ScheduledTask -TaskName "MHServersLogonScript" -User $adminUsername -Action $Action -RunLevel "Highest" -Force
 }
 
     # Disabling Windows Server Manager Scheduled Task

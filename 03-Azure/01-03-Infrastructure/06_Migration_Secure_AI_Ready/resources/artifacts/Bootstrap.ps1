@@ -70,6 +70,7 @@ $Env:MHBoxTestsDir = "$Env:MHBoxDir\Tests"
 $Env:ToolsDir = "C:\Tools"
 $Env:tempDir = "C:\Temp"
 $Env:MHBoxDataOpsDir = "$Env:MHBoxDir\DataOps"
+$Env:MHBoxDemoPageDir = "$Env:MHBoxDir\DemoPage"
 
 New-Item -Path $Env:MHBoxDir -ItemType directory -Force
 New-Item -Path $Env:MHBoxDscDir -ItemType directory -Force
@@ -83,6 +84,7 @@ New-Item -Path $Env:tempDir -ItemType directory -Force
 New-Item -Path $Env:agentScript -ItemType directory -Force
 New-Item -Path $Env:MHBoxDataOpsDir -ItemType directory -Force
 New-Item -Path $Env:MHBoxTestsDir -ItemType directory -Force
+New-Item -Path $Env:MHBoxDemoPageDir -ItemType directory -Force
 
 Start-Transcript -Path $Env:MHBoxLogsDir\Bootstrap.log
 
@@ -101,7 +103,7 @@ Resize-Partition -DriveLetter C -Size $(Get-PartitionSupportedSize -DriveLetter 
 Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
 
 Install-Module -Name Microsoft.PowerShell.PSResourceGet -Force
-$modules = @("Az", "Az.ConnectedMachine", "Az.ConnectedKubernetes", "Az.CustomLocation", "Azure.Arc.Jumpstart.Common", "Microsoft.PowerShell.SecretManagement", "Pester")
+$modules = @("Az", "Azure.Arc.Jumpstart.Common", "Microsoft.PowerShell.SecretManagement", "Pester")
 
 foreach ($module in $modules) {
     Install-PSResource -Name $module -Scope AllUsers -Quiet -AcceptLicense -TrustRepository
@@ -146,9 +148,6 @@ if ($vmAutologon -eq "true") {
     Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon" "AutoAdminLogon" "1"
     Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon" "DefaultUserName" $adminUsername
     Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon" "DefaultPassword" $adminPassword
-    if($flavor -eq "DataOps"){
-        Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon" "DefaultDomainName" "jumpstart.local"
-    }
 } else {
 
     Write-Host "Not configuring VM Autologon"
@@ -188,37 +187,26 @@ Write-Header "Fetching GitHub Artifacts"
 
 # All flavors
 Write-Host "Fetching Artifacts for All Flavors"
-#Invoke-WebRequest "https://raw.githubusercontent.com/Azure/arc_jumpstart_docs/main/img/wallpaper/MHBox_wallpaper_dark.png" -OutFile $Env:MHBoxDir\wallpaper.png
-#Invoke-WebRequest ($templateBaseUrl + "artifacts/MonitorWorkbookLogonScript.ps1") -OutFile $Env:MHBoxDir\MonitorWorkbookLogonScript.ps1
-#Invoke-WebRequest ($templateBaseUrl + "artifacts/mgmtMonitorWorkbook.parameters.json") -OutFile $Env:MHBoxDir\mgmtMonitorWorkbook.parameters.json
-#Invoke-WebRequest ($templateBaseUrl + "artifacts/monitoring/arc-inventory-workbook.json") -OutFile "$Env:MHBoxDir\arc-inventory-workbook.json"
-#Invoke-WebRequest ($templateBaseUrl + "artifacts/monitoring/arc-osperformance-workbook.json") -OutFile "$Env:MHBoxDir\arc-osperformance-workbook.json"
-#Invoke-WebRequest ($templateBaseUrl + "artifacts/DeploymentStatus.ps1") -OutFile $Env:MHBoxDir\DeploymentStatus.ps1
-#Invoke-WebRequest ($templateBaseUrl + "artifacts/LogInstructions.txt") -OutFile $Env:MHBoxLogsDir\LogInstructions.txt
 Invoke-WebRequest ($templateBaseUrl + "artifacts/dsc/common.dsc.yml") -OutFile $Env:MHBoxDscDir\common.dsc.yml
 Invoke-WebRequest ($templateBaseUrl + "artifacts/dsc/virtual_machines_sql.dsc.yml") -OutFile $Env:MHBoxDscDir\virtual_machines_sql.dsc.yml
 Invoke-WebRequest ($templateBaseUrl + "artifacts/tests/mhbox-bginfo.bgi") -OutFile $Env:MHBoxTestsDir\MHBox-bginfo.bgi
 Invoke-WebRequest ($templateBaseUrl + "artifacts/tests/common.tests.ps1") -OutFile $Env:MHBoxTestsDir\common.tests.ps1
 Invoke-WebRequest ($templateBaseUrl + "artifacts/tests/Invoke-Test.ps1") -OutFile $Env:MHBoxTestsDir\Invoke-Test.ps1
 Invoke-WebRequest ($templateBaseUrl + "artifacts/WinGet.ps1") -OutFile $Env:MHBoxDir\WinGet.ps1
+Invoke-WebRequest ($templateBaseUrl + "artifacts/MHWallpaper.bmp") -OutFile $Env:MHBoxDir\MHWallpaper.bmp
+Invoke-WebRequest ($templateBaseUrl + "artifacts/demopage/GitHub_Logo.png") -OutFile $Env:MHBoxDemoPageDir\GitHub_Logo.png
+Invoke-WebRequest ($templateBaseUrl + "artifacts/demopage/github-mark.png") -OutFile $Env:MHBoxDemoPageDir\github-mark.png
+Invoke-WebRequest ($templateBaseUrl + "artifacts/demopage/MSLogo.png") -OutFile $Env:MHBoxDemoPageDir\MSLogo.png
+Invoke-WebRequest ($templateBaseUrl + "artifacts/demopage/MSicon.png") -OutFile $Env:MHBoxDemoPageDir\MSicon.png
+Invoke-WebRequest ($templateBaseUrl + "artifacts/demopage/index.html") -OutFile $Env:MHBoxDemoPageDir\index.html
+Invoke-WebRequest ($templateBaseUrl + "artifacts/demopage/stylesheet.css") -OutFile $Env:MHBoxDemoPageDir\stylesheet.css
 
-# Workbook template
-#if ($flavor -eq "ITPro") {
-#    Write-Host "Fetching Workbook Template Artifact for ITPro"
- #   Invoke-WebRequest ($templateBaseUrl + "artifacts/mgmtMonitorWorkbookITPro.json") -OutFile $Env:MHBoxDir\mgmtMonitorWorkbook.json
-#}
+
 
 # ITPro
 if ($flavor -eq "ITPro") {
     Write-Host "Fetching Artifacts for ITPro Flavor"
     Invoke-WebRequest ($templateBaseUrl + "artifacts/ArcServersLogonScript.ps1") -OutFile $Env:MHBoxDir\ArcServersLogonScript.ps1
-    #Invoke-WebRequest ($templateBaseUrl + "artifacts/installArcAgent.ps1") -OutFile $Env:MHBoxDir\agentScript\installArcAgent.ps1
-    #Invoke-WebRequest ($templateBaseUrl + "artifacts/installArcAgentUbuntu.sh") -OutFile $Env:MHBoxDir\agentScript\installArcAgentUbuntu.sh
-    #Invoke-WebRequest ($templateBaseUrl + "artifacts/icons/arcsql.ico") -OutFile $Env:MHBoxIconDir\arcsql.ico
-    #Invoke-WebRequest ($templateBaseUrl + "artifacts/installArcAgentSQLUser.ps1") -OutFile $Env:MHBoxDir\installArcAgentSQLUser.ps1
-    #Invoke-WebRequest ($templateBaseUrl + "artifacts/SqlAdvancedThreatProtectionShell.psm1") -OutFile $Env:MHBoxDir\SqlAdvancedThreatProtectionShell.psm1
-    #Invoke-WebRequest ($templateBaseUrl + "artifacts/defendersqldcrtemplate.json") -OutFile $Env:MHBoxDir\defendersqldcrtemplate.json
-    #Invoke-WebRequest ($templateBaseUrl + "artifacts/testDefenderForSQL.ps1") -OutFile $Env:MHBoxDir\testDefenderForSQL.ps1
     Invoke-WebRequest ($templateBaseUrl + "artifacts/tests/itpro.tests.ps1") -OutFile $Env:MHBoxTestsDir\itpro.tests.ps1
     Invoke-WebRequest ($templateBaseUrl + "artifacts/dsc/itpro.dsc.yml") -OutFile $Env:MHBoxDscDir\itpro.dsc.yml
     Invoke-WebRequest ($templateBaseUrl + "artifacts/dsc/virtual_machines_itpro.dsc.yml") -OutFile $Env:MHBoxDscDir\virtual_machines_itpro.dsc.yml
@@ -247,7 +235,6 @@ If (-NOT (Test-Path $RegistryPath)) {
 New-ItemProperty -Path $RegistryPath -Name $Name -Value $Value -PropertyType DWORD -Force
 
 # Set Diagnostic Data settings
-
 $telemetryPath = "HKLM:\Software\Policies\Microsoft\Windows\DataCollection"
 $telemetryProperty = "AllowTelemetry"
 $telemetryValue = 3
@@ -298,8 +285,6 @@ if (($rdpPort -ne $null) -and ($rdpPort -ne "") -and ($rdpPort -ne "3389")) {
 
     Write-Host "RDP port configuration complete."
 }
-
-# Workaround for https://github.com/microsoft/azure_arc/issues/3035
 
 # Define firewall rule name
 $ruleName = "Block RDP UDP 3389"
@@ -360,11 +345,6 @@ if ($flavor -eq "ITPro") {
     $Action = New-ScheduledTaskAction -Execute $ScheduledTaskExecutable -Argument $Env:MHBoxDir\ArcServersLogonScript.ps1
     Register-ScheduledTask -TaskName "ArcServersLogonScript" -User $adminUsername -Action $Action -RunLevel "Highest" -Force
 }
-
-    # Creating scheduled task for MonitorWorkbookLogonScript.ps1
-
-    #$Action = New-ScheduledTaskAction -Execute $ScheduledTaskExecutable -Argument $Env:MHBoxDir\MonitorWorkbookLogonScript.ps1
-    #Register-ScheduledTask -TaskName "MonitorWorkbookLogonScript" -User $adminUsername -Action $Action -RunLevel "Highest" -Force
 
     # Disabling Windows Server Manager Scheduled Task
     Get-ScheduledTask -TaskName ServerManager | Disable-ScheduledTask

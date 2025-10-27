@@ -28,28 +28,26 @@ if ($null -ne $tags) {
 $null = Set-AzResourceGroup -ResourceGroupName $resourceGroup -Tag $tags
 $null = Set-AzResource -ResourceName $env:computername -ResourceGroupName $resourceGroup -ResourceType "microsoft.compute/virtualmachines" -Tag $tags -Force
 
-# Install WinGet PowerShell modules
-Install-PSResource -Name Microsoft.WinGet.Client -Scope AllUsers -Quiet -AcceptLicense -TrustRepository
-Install-PSResource -Name Microsoft.WinGet.DSC -Scope AllUsers -Quiet -AcceptLicense -TrustRepository
-# Update WinGet package manager to the latest version (running twice due to a known issue regarding WinAppSDK)
-Repair-WinGetPackageManager -AllUsers -Force -Latest -Verbose
+# Pinned to version 1.11.460 to avoid known issue: https://github.com/microsoft/winget-cli/issues/5826
+Install-PSResource -Name Microsoft.WinGet.Client -Scope AllUsers -Quiet -AcceptLicense -TrustRepository -Version 1.11.460
+Install-PSResource -Name Microsoft.WinGet.DSC -Scope AllUsers -Quiet -AcceptLicense -TrustRepository -Version 1.11.460
+    <# # Update WinGet package manager to the latest version (running twice due to a known issue regarding WinAppSDK)
+    Repair-WinGetPackageManager -AllUsers -Force -Latest -Verbose
 
+    # Check if the flag file exists
+    if (Test-Path $FlagFile) {
+        Write-Host "Restart already performed previously. Suppressing restart."
+    } else {
+        Write-Host "Restart not yet performed. Creating flag and restarting..."
 
+        # Create the flag file
+        New-Item -ItemType File -Path $FlagFile -Force | Out-Null
 
-# Check if the flag file exists
-if (Test-Path $FlagFile) {
-    Write-Host "Restart already performed previously. Suppressing restart."
-} else {
-    Write-Host "Restart not yet performed. Creating flag and restarting..."
-
-    # Create the flag file
-    New-Item -ItemType File -Path $FlagFile -Force | Out-Null
-
-    # Restart the computer
-    start-sleep -Seconds 5
-    Restart-Computer -Force
-}
-# The script will resume here after the restart
+        # Restart the computer
+        start-sleep -Seconds 5
+        Restart-Computer -Force
+    }
+    # The script will resume here after the restart #>
 # Install DSC resources required for MHBox
 Install-PSResource -Name DSCR_Font -Scope AllUsers -Quiet -AcceptLicense -TrustRepository
 Install-PSResource -Name HyperVDsc -Scope AllUsers -Quiet -AcceptLicense -TrustRepository -Prerelease
@@ -57,7 +55,6 @@ Install-PSResource -Name NetworkingDsc -Scope AllUsers -Quiet -AcceptLicense -Tr
 
 # Update WinGet package manager to the latest version (running twice due to a known issue regarding WinAppSDK)
 Repair-WinGetPackageManager -AllUsers -Force -Latest -Verbose
-
 Repair-WinGetPackageManager -AllUsers -Force -Latest -Verbose
 
 # Apply WinGet Configuration files

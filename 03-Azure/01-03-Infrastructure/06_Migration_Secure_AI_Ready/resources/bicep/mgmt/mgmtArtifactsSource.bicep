@@ -33,9 +33,6 @@ param windowsAdminPassword string?
 
 param windowsAdminUserName string?
 
-@secure()
-param registryPassword string?
-
 var userName = contains(deployer().userPrincipalName, '@') ? substring(deployer().userPrincipalName, 0, indexOf(deployer().userPrincipalName, '@')) : deployer().userPrincipalName
 
 var namingPrefix = '${Prefix}-${userName}'
@@ -152,7 +149,6 @@ resource natGateway 'Microsoft.Network/natGateways@2024-07-01' = if (deployBasti
     idleTimeoutInMinutes: 4
   }
 }
-
 
 resource networkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2024-05-01' = {
   name: networkSecurityGroupName
@@ -393,17 +389,6 @@ resource windowsAdminUserName_kv_secret 'Microsoft.KeyVault/vaults/secrets@2024-
   parent: kv
   properties: {
     value: windowsAdminUserName
-  }
-  dependsOn: [
-    keyVault
-  ]
-}
-
-resource registryPassword_kv_secret 'Microsoft.KeyVault/vaults/secrets@2024-04-01-preview' = if (!empty(registryPassword)) {
-  name: 'registryPassword'
-  parent: kv
-  properties: {
-    value: registryPassword
   }
   dependsOn: [
     keyVault

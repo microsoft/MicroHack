@@ -7,7 +7,7 @@ This chart packages the GoldenGate 23ai microservices container image that was b
 ```powershell
 # make sure the goldengate namespace is free or use --create-namespace
 helm upgrade --install goldengate-da ./helm/goldengate-da `
-  --namespace goldengate --create-namespace
+  --namespace microhacks --create-namespace
 ```
 
 The default values expect the image `odaamh.azurecr.io/goldengate-da:23ai`, allocate a `100Gi` persistent volume using the `managed-csi` storage class, and expose the service through an Azure load balancer.
@@ -18,7 +18,7 @@ The default host in `values.yaml` is `ogg-bigdata.131.189.241.67.nip.io`. Update
 
 ```powershell
 helm upgrade --install goldengate-da ./helm/goldengate-da `
-  --namespace goldengate --create-namespace `
+  --namespace microhacks `
   --set ingress.host=ogg-bigdata.<new-ip>.nip.io
 ```
 
@@ -29,5 +29,5 @@ Browse to `https://ogg-bigdata.<public-ip>.nip.io` and sign in with the default 
 ## Uninstall
 
 ```powershell
-helm uninstall goldengate-da --namespace goldengate
+helm uninstall goldengate-da --namespace microhacks
 ```

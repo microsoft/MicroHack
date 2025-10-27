@@ -59,6 +59,8 @@ odaa1   Microsoft.ContainerService/managedClusters
 ### ⚓ Connect to AKS
 
 ~~~powershell
+# set the right subscription
+az account set -s "sub-team0"
 # login to aks
 az aks get-credentials -g "aks-team0" -n "aks-team0" --overwrite-existing
 # list namespaces

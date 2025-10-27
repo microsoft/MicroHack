@@ -8,7 +8,7 @@ You will learn how to create and configure an Oracle Database@Azure service, cre
 
 ## 🎯 Challenges
 
-- Challenge 0: **[CSetup your User Account ](./challenges/setup-user-account/setup-user-account.md)**
+- Challenge 0: **[Setup your User Account ](./challenges/setup-user-account/setup-user-account.md)**
 - Challenge 1: **[Create an Oracle Database@Azure (ODAA) Subscription ](./challenges/create-odaa-service/create-odaa-subscription.md)**
 - Challenge 2: **[Create an Oracle Database@Azure (ODAA) Autonomous Database (ADB) instance](./challenges/create-odaa-adb/create-odaa-adb.md)**
 - Challenge 3: **[Updating the Oracle ADB NSG and DNS](./challenges/update-odaa-nsg-dns/update-odaa-nsg-dns.md)**

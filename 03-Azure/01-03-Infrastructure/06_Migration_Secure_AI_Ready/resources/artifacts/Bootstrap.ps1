@@ -194,14 +194,8 @@ Invoke-WebRequest ($templateBaseUrl + "artifacts/tests/common.tests.ps1") -OutFi
 Invoke-WebRequest ($templateBaseUrl + "artifacts/tests/Invoke-Test.ps1") -OutFile $Env:MHBoxTestsDir\Invoke-Test.ps1
 Invoke-WebRequest ($templateBaseUrl + "artifacts/WinGet.ps1") -OutFile $Env:MHBoxDir\WinGet.ps1
 Invoke-WebRequest ($templateBaseUrl + "artifacts/MHWallpaper.bmp") -OutFile $Env:MHBoxDir\MHWallpaper.bmp
-Invoke-WebRequest ($templateBaseUrl + "artifacts/demopage/GitHub_Logo.png") -OutFile $Env:MHBoxDemoPageDir\GitHub_Logo.png
-Invoke-WebRequest ($templateBaseUrl + "artifacts/demopage/github-mark.png") -OutFile $Env:MHBoxDemoPageDir\github-mark.png
-Invoke-WebRequest ($templateBaseUrl + "artifacts/demopage/MSLogo.png") -OutFile $Env:MHBoxDemoPageDir\MSLogo.png
-Invoke-WebRequest ($templateBaseUrl + "artifacts/demopage/MSicon.png") -OutFile $Env:MHBoxDemoPageDir\MSicon.png
-Invoke-WebRequest ($templateBaseUrl + "artifacts/demopage/index.html") -OutFile $Env:MHBoxDemoPageDir\index.html
-Invoke-WebRequest ($templateBaseUrl + "artifacts/demopage/stylesheet.css") -OutFile $Env:MHBoxDemoPageDir\stylesheet.css
-
-
+Invoke-WebRequest ($templateBaseUrl + "artifacts/demopage/deploy-webapp.sh") -OutFile $Env:MHBoxDemoPageDir\deploy-webapp.sh
+Invoke-WebRequest ($templateBaseUrl + "artifacts/demopage/deployWebApp.ps1") -OutFile $Env:MHBoxDemoPageDir\deployWebApp.ps1
 
 # ITPro
 if ($flavor -eq "ITPro") {

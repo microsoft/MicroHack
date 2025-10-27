@@ -154,11 +154,9 @@ if ($Env:flavor -ne 'DevOps') {
     # Update disk IOPS and throughput before downloading nested VMs
     az disk update --resource-group $env:resourceGroup --name $existingVMDisk.Name --disk-iops-read-write 80000 --disk-mbps-read-write 1200
 
-
-##############################
-### SKIPP nested SQL VM
-##############################
-
+    ##############################
+    ### SKIPP nested SQL VM
+    ##############################
 
     $vhdImageToDownload = 'ArcBox-SQL-DEV.vhdx'
     if ($Env:sqlServerEdition -eq 'Standard') {
@@ -226,7 +224,6 @@ if ($Env:flavor -ne 'DevOps') {
             Write-Host 'Waiting for VM to start...'
             Start-Sleep -Seconds 5
         }
-
         Write-Host 'VM has rebooted successfully!'
     }
 
@@ -246,8 +243,8 @@ if ($Env:flavor -ne 'DevOps') {
         $AzMigSrvvmName = "$namingPrefix-AzMigSrv"
         $AzMigSrvvmvhdPath = "${Env:MHBoxVMDir}\$namingPrefix-AzMigSrv.vhdx"
 
-        $AzRepSrvvmName = "$namingPrefix-AzRepSrv"
-        $AzRepSrvvmvhdPath = "${Env:MHBoxVMDir}\$namingPrefix-AzRepSrv.vhdx"
+        #$AzRepSrvvmName = "$namingPrefix-AzRepSrv"
+        #$AzRepSrvvmvhdPath = "${Env:MHBoxVMDir}\$namingPrefix-AzRepSrv.vhdx"
 
         $files = 'ArcBox-Win2K22.vhdx;ArcBox-Ubuntu-01.vhdx;'        
 
@@ -297,10 +294,10 @@ if ($Env:flavor -ne 'DevOps') {
 
             if ((Test-Path $Win2k22vmvhdPath) ) {            
             <# Local Copy of Win2K22 Disk for Azure Migrate Appliances #>            
-            Write-Output 'Local Copy of Win2K22 Disk for Azure Migrate Appliances. This can take some time, hold tight...'
+            Write-Output 'Local Copy of Win2K22 Disk for Azure Migrate Appliance. This can take some time, hold tight...'
 
             Copy-Item -Path $Win2k22vmvhdPath -Destination $AzMigSrvvmvhdPath -Force
-            Copy-Item -Path $Win2k22vmvhdPath -Destination $AzRepSrvvmvhdPath -Force
+            #Copy-Item -Path $Win2k22vmvhdPath -Destination $AzRepSrvvmvhdPath -Force
             }         
 
         # Update disk IOPS and throughput after downloading nested VMs (note: a disk's performance tier can be downgraded only once every 12 hours)
@@ -336,7 +333,7 @@ if ($Env:flavor -ne 'DevOps') {
         Start-Sleep -Seconds 5
         Invoke-Command -VMName $Win2k22vmName -ScriptBlock { Get-NetAdapter | Restart-NetAdapter } -Credential $winCreds
         Invoke-Command -VMName $AzMigSrvvmName -ScriptBlock { Get-NetAdapter | Restart-NetAdapter } -Credential $winCreds
-        Invoke-Command -VMName $AzRepSrvvmName -ScriptBlock { Get-NetAdapter | Restart-NetAdapter } -Credential $winCreds
+        #Invoke-Command -VMName $AzRepSrvvmName -ScriptBlock { Get-NetAdapter | Restart-NetAdapter } -Credential $winCreds
         Start-Sleep -Seconds 10
 
         if ($namingPrefix -ne 'ArcBox') {
@@ -358,7 +355,7 @@ if ($Env:flavor -ne 'DevOps') {
                 }
 
             } -Credential $winCreds 
-
+<#
             Invoke-Command -VMName $AzRepSrvvmName -ScriptBlock {
 
                 if ($env:computername -cne $using:AzRepSrvvmName) {
@@ -366,7 +363,7 @@ if ($Env:flavor -ne 'DevOps') {
                 }
 
             } -Credential $winCreds             
-
+#>
             Write-Host 'Waiting for the nested Windows VMs to come back online...'
 
             Get-VM *Win* | Restart-VM -Force
@@ -375,8 +372,8 @@ if ($Env:flavor -ne 'DevOps') {
             Get-VM $AzMigSrvvmName | Restart-VM -Force
             Get-VM $AzMigSrvvmName | Wait-VM -For Heartbeat
 
-            Get-VM $AzRepSrvvmName | Restart-VM -Force
-            Get-VM $AzRepSrvvmName | Wait-VM -For Heartbeat
+            #Get-VM $AzRepSrvvmName | Restart-VM -Force
+            #Get-VM $AzRepSrvvmName | Wait-VM -For Heartbeat
 
         }
 
@@ -426,7 +423,7 @@ if ($Env:flavor -ne 'DevOps') {
         # Copy installation script to nested Linux VMs
         Write-Output 'Transferring installation script to nested Linux VMs...'
 
-        #Get-VM *Ubuntu* | Copy-VMFile -SourcePath "$agentScript\installArcAgentModifiedUbuntu.sh" -DestinationPath "/home/$nestedLinuxUsername" -FileSource Host -Force
+
 
         Write-Output 'Activating operating system on Windows VMs...'
 
@@ -457,11 +454,33 @@ if ($Env:flavor -ne 'DevOps') {
 
         } -Credential $winCreds         
 
+        Invoke-Command -VMName $SQLvmName -ScriptBlock {
+
+            cscript C:\Windows\system32\slmgr.vbs -ipk VDYBN-27WPP-V4HQT-9VMD4-VMK7H
+            cscript C:\Windows\system32\slmgr.vbs -skms kms.core.windows.net
+            cscript C:\Windows\system32\slmgr.vbs -ato
+            cscript C:\Windows\system32\slmgr.vbs -dlv
+
+        } -Credential $winCreds           
+
+        # Install Demo Web App on Windows VM
         Write-Header 'Installing Web App on Windows and Linux Server'
 
-        # Onboarding the nested VMs as Azure Arc-enabled servers
-        Write-Output 'Installing Web App on Windows and Linux Server'
-        #Invoke-Command -VMName $Win2k22vmName, $Win2k25vmName -ScriptBlock { powershell -File $Using:nestedVMMHBoxDir\installArcAgent.ps1 -accessToken $using:accessToken, -tenantId $Using:tenantId, -subscriptionId $Using:subscriptionId, -resourceGroup $Using:resourceGroup, -azureLocation $Using:azureLocation } -Credential $winCreds
+        # Copy WebApp to Windows VM
+        Copy-VMFile $Win2k22vmName -SourcePath "$Env:MHBoxDir\DemoPage\deployWebApp.ps1" -DestinationPath "C:\MHDir\DemoPage\deployWebApp.ps1" -CreateFullPath -FileSource Host -Force
+
+        # Install IIS and clean default web files on Windows VM
+        Invoke-Command -VMName $Win2k22vmName -ScriptBlock {
+            Add-WindowsFeature Web-Server -IncludeManagementTools
+            Remove-Item -Path "C:\inetpub\wwwroot\*.*"
+            powershell -ExecutionPolicy Unrestricted -File "C:\MHDir\DemoPage\deployWebApp.ps1"
+        } -Credential $winCreds                 
+
+        # Install Apache and clean default web files on Linux VM
+        Write-Output 'Installing Apache Web Server on Linux VM...'
+        $UbuntuSessions = New-PSSession -HostName $Ubuntu01VmIp -KeyFilePath "$Env:USERPROFILE\.ssh\id_rsa" -UserName $nestedLinuxUsername
+        Copy-VMFile $Ubuntu01vmName -SourcePath "$Env:MHBoxDir\DemoPage\deploy-webserver.sh" -DestinationPath "/home/$nestedLinuxUsername" -FileSource Host -Force
+        Invoke-JSSudoCommand -Session $UbuntuSessions -Command "sh /home/$nestedLinuxUsername/deploy-webserver.sh"       
 
     }
 

@@ -1,4 +1,4 @@
-# 🔄 Challenge 4: OnProm ramp up
+# 🔄 Challenge 4: OnPrem ramp up
 
 [Back to workspace README](../../README.md)
 

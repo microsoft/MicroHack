@@ -26,13 +26,29 @@ az account set --subscription "your-subscription-id"
 
 ### 3. Register Required Resource Providers
 
-```powershell
-# Register Oracle Database provider
-az provider register --namespace Oracle.Database
+Based on [Microsoft Learn ODAA Advanced network features](https://learn.microsoft.com/en-us/azure/oracle/oracle-db/oracle-database-network-plan#advanced-network-features)
 
-# Check registration status
-az provider show --namespace Oracle.Database --query "registrationState"
-```
+We need to register the Oracle SDN appliance feature for both the Microsoft.Baremetal and Microsoft.Network resource providers to enable Oracle Database@Azure (ODAA) Advanced Network features.
+
+### Manual Registration Steps
+
+~~~powershell
+# Register the Oracle SDN appliance feature for Microsoft.Baremetal
+az feature register --namespace Microsoft.Baremetal --name EnableRotterdamSdnApplianceForOracle
+# Register the Oracle SDN appliance feature for Microsoft.Network
+az feature register --namespace Microsoft.Network --name EnableRotterdamSdnApplianceForOracle
+# Check registration status for Microsoft.Baremetal
+az feature show --namespace Microsoft.Baremetal --name EnableRotterdamSdnApplianceForOracle
+# Check registration status for Microsoft.Network
+az feature show --namespace Microsoft.Network --name EnableRotterdamSdnApplianceForOracle
+# After the features are registered (status shows as "Registered"), you may need to re-register the resource providers:
+# Re-register the providers after feature registration
+az provider register --namespace Microsoft.Baremetal
+az provider register --namespace Microsoft.Network
+~~~
+
+> Why Re-register Resource Providers?
+> When you register a preview feature, you're essentially enabling a feature flag for your subscription. However, the resource provider itself may not immediately "know" about this new capability until it's refreshed.
 
 ## Configuration
 
@@ -117,29 +133,6 @@ Deleted group 'mhteam-0'.
 
 ## ODAA Advanced Network Features
 
-Based on [Microsoft Learn ODAA Advanced network features](https://learn.microsoft.com/en-us/azure/oracle/oracle-db/oracle-database-network-plan#advanced-network-features)
-
-We need to register the Oracle SDN appliance feature for both the Microsoft.Baremetal and Microsoft.Network resource providers to enable Oracle Database@Azure (ODAA) Advanced Network features.
-
-### Manual Registration Steps
-
-~~~powershell
-# Register the Oracle SDN appliance feature for Microsoft.Baremetal
-az feature register --namespace Microsoft.Baremetal --name EnableRotterdamSdnApplianceForOracle
-# Register the Oracle SDN appliance feature for Microsoft.Network
-az feature register --namespace Microsoft.Network --name EnableRotterdamSdnApplianceForOracle
-# Check registration status for Microsoft.Baremetal
-az feature show --namespace Microsoft.Baremetal --name EnableRotterdamSdnApplianceForOracle
-# Check registration status for Microsoft.Network
-az feature show --namespace Microsoft.Network --name EnableRotterdamSdnApplianceForOracle
-# After the features are registered (status shows as "Registered"), you may need to re-register the resource providers:
-# Re-register the providers after feature registration
-az provider register --namespace Microsoft.Baremetal
-az provider register --namespace Microsoft.Network
-~~~
-
-> Why Re-register Resource Providers?
-> When you register a preview feature, you're essentially enabling a feature flag for your subscription. However, the resource provider itself may not immediately "know" about this new capability until it's refreshed.
 
 ### Scripted Registration for Multiple Subscriptions
 

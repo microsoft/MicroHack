@@ -211,6 +211,16 @@ If you see pods with `Init:ErrImagePull` status, this is likely due to authentic
 2. **Network connectivity issues (TLS handshake timeout)**
 3. **AKS node storage I/O issues**
 
+### �🔁 Redeploy if things go wrong
+
+~~~powershell
+# login to aks
+az aks get-credentials -g $rgAKS -n $AKSClusterName --overwrite-existing
+# Uninstall the Helm release
+helm uninstall ogghack -n microhacks
+~~~
+
+
 **Solution 1: Create Oracle Container Registry Secret**
 ```powershell
 # Create a docker registry secret for Oracle Container Registry
@@ -238,14 +248,27 @@ kubectl run test-connectivity --image=nginx --rm -it --restart=Never -- curl -I 
 az aks nodepool update --resource-group $rgAKS --cluster-name $AKSClusterName --name agentpool --enable-cluster-autoscaler
 ```
 
-### �🔁 Redeploy if things go wrong
+**Solution 5: Delete the namespace microhacks of the AKS cluster**
+If the namespace microhacks needs to be deleted after the helm charts are uninstalled and  stuck because a Persistent Volume Claim (PVC) was in Terminating status you need to patched the PVC to remoe finalizers that were preventing deletion. Following the following steps.
 
-~~~powershell
-# login to aks
-az aks get-credentials -g $rgAKS -n $AKSClusterName --overwrite-existing
-# Uninstall the Helm release
-helm uninstall ogghack -n microhacks
-~~~
+  # 1. Check what's preventing namespace deletion
+  ```powershell
+  kubectl get all -n microhacks
+  ```
+
+  # 2. Remove finalizers from stuck PVCs
+  ```powershell
+  kubectl patch pvc <pvc-name> -n microhacks -p "{`"metadata`":{`"finalizers`":[]}}" --type=merge
+  ```
+  # 3. Force delete stuck pods
+  ```powershell
+  kubectl delete pods --all -n microhacks --force --grace-period=0
+  ```
+  # 4. Delete the namespace
+  ```powershell
+  kubectl delete namespace microhacks
+  ```
+
 
 ### 🔎 Show the logs of the GoldenGate Prepare Job
 

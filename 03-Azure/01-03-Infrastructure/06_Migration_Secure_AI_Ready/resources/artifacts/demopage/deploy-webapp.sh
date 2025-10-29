@@ -31,12 +31,12 @@ fi
 echo "🌐 Downloading demo web files..."
 sudo mkdir -p /var/www/html
 
-sudo wget -q https://raw.githubusercontent.com/microsoft/MicroHack/main/03-Azure/01-03-Infrastructure/06_Migration_Secure_AI_Ready/resources/demopage/index.html -O /var/www/html/index.html
-sudo wget -q https://raw.githubusercontent.com/microsoft/MicroHack/main/03-Azure/01-03-Infrastructure/06_Migration_Secure_AI_Ready/resources/demopage/GitHub_Logo.png -O /var/www/html/GitHub_Logo.png
-sudo wget -q https://raw.githubusercontent.com/microsoft/MicroHack/main/03-Azure/01-03-Infrastructure/06_Migration_Secure_AI_Ready/resources/demopage/MSLogo.png -O /var/www/html/MSLogo.png
-sudo wget -q https://raw.githubusercontent.com/microsoft/MicroHack/main/03-Azure/01-03-Infrastructure/06_Migration_Secure_AI_Ready/resources/demopage/MSicon.png -O /var/www/html/MSicon.png
-sudo wget -q https://raw.githubusercontent.com/microsoft/MicroHack/main/03-Azure/01-03-Infrastructure/06_Migration_Secure_AI_Ready/resources/demopage/github-mark.png -O /var/www/html/github-mark.png
-sudo wget -q https://raw.githubusercontent.com/microsoft/MicroHack/main/03-Azure/01-03-Infrastructure/06_Migration_Secure_AI_Ready/resources/demopage/stylesheet.css -O /var/www/html/stylesheet.css
+sudo wget -q https://raw.githubusercontent.com/microsoft/MicroHack/main/03-Azure/01-03-Infrastructure/06_Migration_Secure_AI_Ready/resources/artifacts/demopage/index.html -O /var/www/html/index.html
+sudo wget -q https://raw.githubusercontent.com/microsoft/MicroHack/main/03-Azure/01-03-Infrastructure/06_Migration_Secure_AI_Ready/resources/artifacts/demopage/GitHub_Logo.png -O /var/www/html/GitHub_Logo.png
+sudo wget -q https://raw.githubusercontent.com/microsoft/MicroHack/main/03-Azure/01-03-Infrastructure/06_Migration_Secure_AI_Ready/resources/artifacts/demopage/MSLogo.png -O /var/www/html/MSLogo.png
+sudo wget -q https://raw.githubusercontent.com/microsoft/MicroHack/main/03-Azure/01-03-Infrastructure/06_Migration_Secure_AI_Ready/resources/artifacts/demopage/MSicon.png -O /var/www/html/MSicon.png
+sudo wget -q https://raw.githubusercontent.com/microsoft/MicroHack/main/03-Azure/01-03-Infrastructure/06_Migration_Secure_AI_Ready/resources/artifacts/demopage/github-mark.png -O /var/www/html/github-mark.png
+sudo wget -q https://raw.githubusercontent.com/microsoft/MicroHack/main/03-Azure/01-03-Infrastructure/06_Migration_Secure_AI_Ready/resources/artifacts/demopage/stylesheet.css -O /var/www/html/stylesheet.css
 
 # --- Step 4: Replace <HOSTNAME> placeholder ---
 echo "🖋️ Customizing index.html with system hostname..."

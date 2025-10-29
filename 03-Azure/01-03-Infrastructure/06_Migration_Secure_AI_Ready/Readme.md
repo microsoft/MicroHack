@@ -70,7 +70,7 @@ With these pre-requisites in place, we can focus on building the differentiated 
 ## Challenge 1 - Prerequisites and landing zone preparation
 
 > [!IMPORTANT]
-> Many of the resource deployments in this Microhack are adapted from the [Jumpstart ArcBox for IT Pros](https://jumpstart.azure.com/azure_jumpstart_arcbox/ITPro) Special thanks to the [Jumpstart Team](https://aka.ms/arcjumpstart) for their excellent work.
+> **Many of the resource deployments in this Microhack are adapted from the [Jumpstart ArcBox for IT Pros](https://jumpstart.azure.com/azure_jumpstart_arcbox/ITPro). Special thanks to the [Jumpstart Team](https://aka.ms/arcjumpstart) for their excellent work.**
 
 ### Goal
 

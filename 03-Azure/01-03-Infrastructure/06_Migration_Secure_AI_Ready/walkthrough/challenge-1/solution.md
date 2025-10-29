@@ -9,7 +9,7 @@ Duration: 30 minutes
 - Clone the Github repository or download the [Resources](../../resources) directory to your local PC.
 
 > [!IMPORTANT]
-> Many of the resource deployments in this Microhack are adapted from the [Jumpstart ArcBox for IT Pros](https://jumpstart.azure.com/azure_jumpstart_arcbox/ITPro) Special thanks to the [Jumpstart Team](https://aka.ms/arcjumpstart) for their excellent work.
+> **Many of the resource deployments in this Microhack are adapted from the [Jumpstart ArcBox for IT Pros](https://jumpstart.azure.com/azure_jumpstart_arcbox/ITPro). Special thanks to the [Jumpstart Team](https://aka.ms/arcjumpstart) for their excellent work.**
 
 ### **Task 1: Deploy the Landing Zone for the MicroHack**
 
@@ -44,9 +44,8 @@ git clone https://github.com/microsoft/MicroHack.git
 cd MicroHack/03-Azure/01-03-Infrastructure/06_Migration_Secure_AI_Ready/resources/bicep
 ```
 
-> [!NOTE]
-> Please update the REGION variable with your desired region - defaulting to swedencentral.
-> Please update the USERPASSWORD parameter with your desired password.
+> [!IMPORTANT]
+> **Please update the REGION variable with your desired region - defaulting to swedencentral. Please update the USERPASSWORD parameter with your desired password.**
 
 - Execute the following commands to set the target region and your desired password and start the deployment:
 ```bash
@@ -65,7 +64,7 @@ az deployment sub create --name "$(az ad signed-in-user show --query userPrincip
 ![image](./img/CS8.png)
 
 > [!NOTE]
-> Please note that the deployment may take up to 15 minutes. After the deployment, multiple scripts are executed on the VM to install the required roles and to download the netsed guest VMs. This process might take additional 20 minutes. The deployment will be finished if the **DeploymentProgress** tag shows a value of **Deployment Completed**
+> Please note that the deployment may take up to 15 minutes. After the deployment, multiple scripts are executed on the VM to install the required roles and to download the nested guest VMs. This process might take additional 20 minutes. The deployment will be finished if the **DeploymentProgress** tag shows a value of **Deployment Completed**
 
 ![image](./img/CS9.png)
 
@@ -78,7 +77,7 @@ You can also logon to the MHBox-HV system during the deployment to follow the st
 ### **Task 2: Verify the deployed VM resources**
 After the deployment has been completed, from the MHBox-HV open the *Hyper-V Manager* and ensure that 4 VMs are running.
 + MHBox-AzMigSrv
-    + This system will be used later to deploy the Azure Migrate Appliance which is required for the Discovery porcess.
+    + This system will be used later to deploy the Azure Migrate Appliance which is required for the Discovery process.
 + MHBox-SQL
     + This system hosts an Microsoft SQL Server installation to demonstrate the SQL assessment capabilities.    
 + MHBox-Ubuntu-01

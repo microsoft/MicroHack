@@ -85,11 +85,28 @@ After the deployment has been completed, from the MHBox-HV open the *Hyper-V Man
 + MHBox-Win2K22
     + This system hosts an Microsoft Windows Server 2022 with an installed IIS Web Server.      
 
+The following credentials are beeing used inside the nested VMs
+
+**Windows virtual machine credentials:**
+
+```text
+Username: Administrator
+Password: JS123!!
+```
+
+**Ubuntu virtual machine credentials:**
+
+```text
+Username: jumpstart
+Password: JS123!!
+```
+
 ![image](./img/CS12.png)
 
 You can also open the Edge browser and navigate to the IP of the *MHBox-Win2K22* or *MHBox-Ubuntu-01* system to see the Demo Web App which was deployed.
 
 ![image](./img/CS13.png)
+
 
 ### **Task 3: Verify the deployed Azure resources**
 

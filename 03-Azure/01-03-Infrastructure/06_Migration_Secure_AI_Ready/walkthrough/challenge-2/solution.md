@@ -1,4 +1,4 @@
-# Walkthrough Challenge 2 - Discover physical servers for the migration
+# Walkthrough Challenge 2 - Discover the virtualized servers for the migration
 
 Duration: 60 minutes
 
@@ -32,58 +32,47 @@ Your previousley created Azure Migrate project should be listed. Click on it to 
 
 ![image](./img/AzMig5.png)
 
+### **Task 2: Install the Azure Migrate Appliance software**
 
-### **Task 2: Create and prepare Windows Server 2022 for the Azure Migrate Appliance**
-
-To start physical server discovery you must install the Azure Migrate Appliance on your on-premises. The Azure Migrate Appliance can be downloaded as a OVA or VHD template or you can download a ZIP file containing a PowerShell script to install it on an already existing server. For the purpose of this MicroHack we will install the Azure Migrate Appliance via the PowerShell script on a Windows Server 2022 system.
+To start physical server discovery you must install the Azure Migrate Appliance on your on-premises. The Azure Migrate Appliance can be downloaded as a OVA or VHD template or you can download a ZIP file containing a PowerShell script to install it on an already existing server. For the purpose of this MicroHack we will install the Azure Migrate Appliance via the PowerShell script on the already deployed Server **MHBOX-AzMigSrv**.
 
 > [!IMPORTANT]
 > Please make sure to check the [prerequisites](https://learn.microsoft.com/en-us/azure/migrate/tutorial-discover-physical#prerequisites) of the Azure Migrate Appliance.
 
-In the Azure Portal select *Virtual machines* from the navigation pane on the left. Select *Create -> Virtual machine*
+In the Azure Portal select *Virtual machines* from the navigation pane on the left. Select the *MHBox-HV* system and logon via Azure Bastion with you credentials:
+
+> [!NOTE]
+> You can also select *Password from Azure KeyVault* under *Authentication Type* to sekect the secret stored in the KeyVault.
 
 ![image](./img/AzMigApp1.png)
 
-Under Basics select the *source-rg* Resource Group and provide a name for the server. Select *Windows Server 2022 Datacenter - x64 Gen2* for the image and select *Standard_B4as_v2* as the VM size.
+Start the Hyper-V Manager and connect to the **MHBOX-AzMigSrv** server.
+
+The following credentials are beeing used inside the nested VMs
+
+**Windows virtual machine credentials:**
+
+```text
+Username: Administrator
+Password: JS123!!
+```
+
+**Ubuntu virtual machine credentials:**
+
+```text
+Username: jumpstart
+Password: JS123!!
+```
+
+> [!IMPORTANT]
+> Please make sure to run the following commands inside of the **MHBOX-AzMigSrv** virtual machine that was created for the mirgration appliance during the deployment.
 
 ![image](./img/AzMigApp2.png)
 
-![image](./img/AzMigApp2-1.png)
-
-> [!NOTE]
-> For the Username and Password you can either select a combination of your choice or check the secrets within the KeyVault to copy the same credentials that have been used during the deployment of the source VMs which will be migrated later.
-
-Accept the default disk settings and click next to select the *Networking* tab. Select the *source-vnet* Virtual Network, select the *source-subnet* Subnet and make sure to select *None* for the Public IP and NIC network security group.
-
-![image](./img/AzMigApp3.png)
-
-Accept the default settings for the remaining tabs, select *Review + create* and click *Create*.
-
-![image](./img/AzMigApp4.png)
-
-Wait until the deployment has been successfully completed and select *Go to resource*
-
-![image](./img/AzMigApp5.png)
-
-Select *Bastion* from the navigation pane on the left, provide the credentials to login to the Azure Migrate Appliance VM and select *Connect*. A new browser tab should open with a remote session to the Windows Server 2022 system.
-
-> [!NOTE]
-> You can also select *Password from Azure KeyVault* under *Authentication Type* if you set the password during VM creation to match the secret stored in the KeyVault.
-
-![image](./img/AzMigApp6.png)
-
-### **Task 3: Install the Azure Migrate Appliance software**
-
-> [!IMPORTANT]
-> Please make sure to run the following commands inside of the virtual machine you created for the mirgration appliance
-
 Open Microsoft Edge on the Windows Server 2022 system and navigate and login to the [Azure Portal](https://portal.azure.com).
-
-![image](./img/AzMigApp7.png)
-
 In the search bar enter *Azure Migrate* and select Azure Migrate from the list of services
 
-![image](./img/AzMig1.png)
+![image](./img/AzMigApp3.png)
 
  Select *All projects* from the navigation pane on the left. Your previousley created Azure Migrate project should be listed. Click on it to open the project.
  
@@ -93,7 +82,7 @@ Select *Start Discovery -> Using appliance -> for Azure*.
 
 ![image](./img/Discover1-2.png)
 
-Select *Physical or other (AWS, GCP, Xen, etc.)* from the *Are your servers virtualized* drop down. Enter a name into the *Name your appliance* field and clicke *Generate*. Wait until the Project key has been created. Copy the Project key and click *Download*, to download the ZIP file containing the PowerShell script to install the Azure Migrate Appliance.
+Select *Yes, with Hyper-V* from the *Are your servers virtualized* drop down. Enter a name into the *Name your appliance* field and clicke *Generate*. Wait until the Project key has been created. Copy the Project key and click *Download*, to download the ZIP file containing the PowerShell script to install the Azure Migrate Appliance.
 
 ![image](./img/Discover2.png)
 
@@ -106,11 +95,9 @@ Open the folder containing the download and extract the ZIP file.
 Start an evelvated PowerShell session and change the PowerShell directory to the folder where the contents have been extraceted.
 Run the script named AzureMigrateInstaller.ps1 and select *R* to confirm script execution.
 
+Select Option 2 for *Hyper-V*
+
 ![image](./img/Discover4.png)
-
-Select Option 3 for *Physical or other (AWS, GCP, Xen, etc.)*
-
-![image](./img/Discover5.png)
 
 Select Option 1 for *Azure Public*
 
@@ -165,25 +152,24 @@ After successfull authentication, the appliance will be registered with the Azur
 
 ![image](./img/Discover14.png)
 
-Next you need to specify the credentials that will be used to connect to the source server for discovery.
-Add one entry for Windows and for Linux devices. The friendly name will be used later on when specifiying the individual systems.
+Next you need to specify the credentials that will be used to connect to the hypervisor for discovery of the guest-VMs.
 
 > [!NOTE]
 > For the Username and Password check the secrets within the KeyVault.
 
 ![image](./img/Discover15.png)
 
-Next you need to provide the individual source server details and map them to a specific set of credentials. Make sure that validation is successfull.
+Next you need to map the credential to the hyper-V host. Make sure that validation is successfull.
+
+![image](./img/Discover15-1.png)
+
+![image](./img/Discover15-2.png)
+
+Next you need to provide the individual credentials that will be used to perform guest discovery on the guest VMs.
 
 ![image](./img/Discover16.png)
 
-![image](./img/Discover16-1.png)
-
-The last step is to provide additional credentials if you want to perform software inventory to additionaly collect information about installed web server or SQL server. To start discovery click *Start discovery*.
-
-![image](./img/Discover17.png)
-
-![image](./img/Discover17-1.png)
+To start discovery click *Start discovery*.
 
 After discovery has been successfully initiated, go to the Azure portal to review the discovered inventory.
 

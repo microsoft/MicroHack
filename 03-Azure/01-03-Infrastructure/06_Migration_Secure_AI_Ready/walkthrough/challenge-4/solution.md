@@ -16,6 +16,8 @@ Provide a name and click on *Add workloads* to add the recently discovered syste
 
 ![image](./img/Assess6.png)
 
+![image](./img/Assess6-1.png) 
+
 You can adjust the target environment settings like the target location, the VM size and pricing options.
 When finished click on *Next* to continue.
 

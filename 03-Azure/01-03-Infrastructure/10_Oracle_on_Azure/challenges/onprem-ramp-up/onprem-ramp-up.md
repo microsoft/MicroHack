@@ -96,7 +96,7 @@ Your connection string in your gghack.yaml should look similar to this:
 
 ~~~yaml
 databases:
-  trgConn: "(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=gpdmotes.adb.eu-frankfurt-1.oraclecloud.com))(connect_data=(service_name=g6425a1dbd2e95a_odaa2_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))"
+  trgConn: "(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=w7ol7op2.adb.eu-paris-1.oraclecloud.com))(connect_data=(service_name=gc2401553d1c7ab_adbteam0u2_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))"
 
   #for demo env, dont change the schema names. SH already exists in ADB, so we create another one.
   srcSchema: "SH"
@@ -202,7 +202,43 @@ ogghack-goldengate-microhack-sample-ogg-787f954698-kzjpl          1/1     Runnin
 
 ## 💡 Tips and Tricks
 
-### 🔁 Redeploy if things go wrong
+### � Troubleshooting Init:ErrImagePull Issues
+
+If you see pods with `Init:ErrImagePull` status, this is likely due to authentication issues with Oracle Container Image Registry (OCIR) or network connectivity problems.
+
+**Common causes:**
+1. **Missing Oracle Container Registry authentication**
+2. **Network connectivity issues (TLS handshake timeout)**
+3. **AKS node storage I/O issues**
+
+**Solution 1: Create Oracle Container Registry Secret**
+```powershell
+# Create a docker registry secret for Oracle Container Registry
+# You need Oracle Cloud credentials (username/auth token)
+kubectl create secret docker-registry ocir-secret \
+  --docker-server=fra.ocir.io \
+  --docker-username='<your-oracle-cloud-username>' \
+  --docker-password='<your-auth-token>' \
+  --docker-email='<your-email>' \
+  -n microhacks
+```
+
+**Solution 2: Use Alternative Image Repository**
+If OCIR access is not available, you may need to use alternative container images or configure the AKS cluster to access Oracle's public repositories.
+
+**Solution 3: Check Network Connectivity**
+```powershell
+# Test connectivity to Oracle Container Registry from AKS nodes
+kubectl run test-connectivity --image=nginx --rm -it --restart=Never -- curl -I https://fra.ocir.io
+```
+
+**Solution 4: Restart AKS Nodes (if I/O errors persist)**
+```powershell
+# If there are persistent I/O errors, restart the AKS nodepool
+az aks nodepool update --resource-group $rgAKS --cluster-name $AKSClusterName --name agentpool --enable-cluster-autoscaler
+```
+
+### �🔁 Redeploy if things go wrong
 
 ~~~powershell
 # login to aks
@@ -219,6 +255,9 @@ az aks get-credentials -g $rgAKS -n $AKSClusterName --overwrite-existing
 # get prep job pod name
 $podPrepName = kubectl get pods -n microhacks | Select-String 'ogghack-goldengate-microhack-sample-db-prepare-job' | ForEach-Object { ($_ -split '\s+')[0] }
 kubectl logs -n microhacks $podPrepName
+
+# To check for image pull issues:
+kubectl describe pod $podPrepName -n microhacks | Select-String -Pattern "Failed|Error|Warning" -A 2 -B 2
 ~~~
 
 ~~~text

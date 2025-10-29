@@ -1,4 +1,4 @@
-# 🧵 Challenge 8: (Optional) Use Azure Data Fabric with Oracle ADB
+# 🧵 Challenge 8: (Optional) Integration of Azure Data Fabric with Oracle ADB
 
 [Back to workspace README](../../README.md)
 
@@ -26,20 +26,20 @@
 
 ## 🚀 Deploy GoldenGate for Azure Fabric on AKS
 
-Login to the AKS cluster where you want to deploy GoldenGate for Azure Fabric if not already done:
+Log in to the AKS cluster where you want to deploy GoldenGate for Azure Fabric if not already done:
 
 ~~~powershell
 # switch to the subscription where AKS is deployed
 $subAKS="sub-1" # replace with your AKS subscription name
 # Make sure your cli points to the AKS subscription
 az account set --subscription $subAKS
-# log into your AKS cluster if not already done
+# log in to your AKS cluster if not already done
 $rgAKS="odaa1" # replace with your AKS resource group name
 $AKSClusterName="odaa1" # replace with your AKS cluster name
 az aks get-credentials -g $rgAKS -n $AKSClusterName --overwrite-existing
 ~~~
 
-After you have the external IP address, replace the placeholder in the gghack.yaml file.
+Once you have the external IP address, replace the placeholder in the gghack.yaml file.
 
 ~~~powershell
 # get the external IP of the ingress controller and strip spaces
@@ -51,7 +51,7 @@ cp resources/template/ggfabric.yaml .
 code ggfabric.yaml
 ~~~
 
-the value of vhostName should look like this:
+The value of vhostName should look like this:
 
 ~~~yaml
     ### uses default SSL certificate of gateway/controller or specify a custom tls-secret here
@@ -91,7 +91,7 @@ kubectl get service --namespace ingress-nginx nginx-quick-ingress-nginx-controll
 kubectl get service -n microhacks -o jsonpath='{.items[*].status.loadBalancer.ingress[*].ip}'
 ~~~
 
-You can now access the GoldenGate Microservices UI via: `https://ggate.<EXTERNAL_IP>.nip.io` (e.g. `https://ggate.4.182.95.155.nip.io`)
+You can now access the GoldenGate Microservices UI at: `https://ggate.<EXTERNAL_IP>.nip.io` (e.g. `https://ggate.4.182.95.155.nip.io`)
 
 
 ## 📚 Useful Resources

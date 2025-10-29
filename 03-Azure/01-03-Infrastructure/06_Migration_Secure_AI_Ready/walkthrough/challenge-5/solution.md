@@ -9,209 +9,167 @@ Please make sure thet you successfully completed [Challenge 4](../challenge-4/so
 > [!IMPORTANT]
 > In Azure Migrate there exists a classic and simplified experience for physical server migration. The classic experience **retires on 30 September 2026**. The Microhack will focus on using the simplified experience which provides several key advantages e.g, a broader OS support and a more modern replication appliance. More details can be found [here](https://learn.microsoft.com/en-us/azure/migrate/simplified-experience-for-azure-migrate?view=migrate).
 
-### **Task 1: Create and prepare Windows Server 2022 for the Azure Replication Appliance**
-
-To start physical server migration you must install the Azure Replication Appliance on your on-premises. The Azure Replication Appliance can be downloaded as a OVA template or you can download the appliance installer to install it on a already existing server. For the purpose of this MicroHack we will install the Azure Replication Appliance via the installer on a new Windows Server 2022 system.
 
 > [!IMPORTANT]
-> Please make sure to check the [prerequisites](https://learn.microsoft.com/en-us/azure/site-recovery/replication-appliance-support-matrix?view=migrate) of the Azure 
-Replication Appliance.
+> For migrating Hyper-V VMs, the Migration and modernization tool installs software providers (Azure Site Recovery provider and Recovery Services agent) on Hyper-V hosts or cluster nodes. The Azure Migrate appliance isn't used for Hyper-V migration.
 
-> [!IMPORTANT]
-> Please note that it is currently [not supported](https://learn.microsoft.com/en-us/azure/migrate/common-questions-appliance#can-the-azure-migrate-appliancereplication-appliance-connect-to-the-same-vcenter) to install the Azure Migrate Replication Appliance on the same system as the Azure Migrate Appliance.
+### **Task 1: Setup the software providers**
 
-In the Azure Portal select *Virtual machines* from the navigation pane on the left. Select *Create -> Virtual machine*
-
-![image](./img/azreplapl1.png)
-
-Under Basics select the *source-rg* Resource Group and provide a name for the server. Select *Windows Server 2022 Datacenter - x64 Gen2* for the Image.
-
-![image](./img/azreplapl2.png)
-
-Make sure to select a **Standard_B16s_v2** VM instance to adhere to the prerequisites of the Replication appliance.
-
-![image](./img/azreplapl2-0.png)
+In the Azure Portal select *Virtual machines* from the navigation pane on the left. Select the **MHBox-HV** system and logon via Azure Bastion with you credentials:
 
 > [!NOTE]
-> For the Username and Password you can either select a combination of your choice or check the secrets within the KeyVault.
+> You can also select *Password from Azure KeyVault* under *Authentication Type* to sekect the secret stored in the KeyVault.
 
-![image](./img/azreplapl2-1.png)
+![image](./img/HVConnect.png)
 
-Add an additional 1024GiB Standard SSD LRS data disk to the Virtual Machine and click *Next*
+Open Microsoft Edge on the Hyper-V Host and navigate and login to the [Azure Portal](https://portal.azure.com).
+In the search bar enter *Azure Migrate* and select Azure Migrate from the list of services
 
-![image](./img/azreplapl2-2.png)
+![image](./img/PrepRep1.png)
 
-In the *Networking* tab, select the *source-vnet* Virtual Network and the *source-subnet* Subnet and make sure to select *None* for the Public IP and NIC network security group.
+ Select *All projects* from the navigation pane on the left. Your previousley created Azure Migrate project should be listed. Click on it to open the project.
+ 
+![image](./img/PrepRep2.png)
 
-![image](./img/azreplapl3.png)
+Select *Migrations* from the navigation pane on the left and click on *Discover more*
 
-Accept the default settings for the remaining tabs, select *Review + create* and click *Create*.
+![image](./img/PrepRep3.png)
 
-![image](./img/azreplapl4.png)
-
-Wait until the deployment has been successfully completed and select *Go to resource*
-
-![image](./img/azreplapl5.png)
-
-Select *Bastion* from the navigation pane on the left, provide the credentials to login to the Azure Migrate Replication VM and select *Connect*. A new browser tab should open with a remote session to the Windows Server 2022 system.
-
-![image](./img/azreplapl6.png)
-
-> [!NOTE]
-> You can also select *Password from Azure KeyVault* under *Authentication Type* if you set the password during VM creation to match the secret stored in the KeyVault.
-
-### **Task 2: Setup the Azure Replication Appliance**
-
-To prepare for physical server migration, you need to verify the physical server settings, and prepare to deploy a replication appliance.
-
-First we need to initialize and format the data disk that was attached during the VM creation. 
-Open Windows Disk Management using the `diskmgmt.msc` command.
-
-![image](./img/disk1.png)
-
-A popup should arise to initialize the disk.
-
-![image](./img/disk2.png)
-
-Select the initialized disk and create a new simple vplume on it.
-
-![image](./img/disk3.png)
-
-Acceppt the default values, name the Volume *ASR* and click *Finish* to format the disk.
-
-![image](./img/disk4.png)
-
-Wait until the operation is completed successfully.
-
-![image](./img/disk5.png)
-
-Open the [Azure Portal](https://portal.azure.com) on the **Azure Replication Appliance** using the Microsoft Edge browser and navigate to the previousley created Azure Migrate project. Select *Migrate* from the navigation pane on the left and click *Discover more*.
-
-![image](./img/mig1.png)
+Select *Azure VM* in the *Where do you want to migrate to?* and select *Yes, with Hyper-V* in the *Where do you want to migrate to?* field. 
 
 > [!IMPORTANT]
-> Please double check your preferred target region as this cannot be changed afterwards. **In doubt check the region of your destination Resource Group and vNet**.
+> **Make sure to select the right target region. Double check with the destination resource group location. This can't be changed afterwards.**
 
-Select *Azure VM* in the *Where do you want to migrate* drop down, select *Physical or other* in the *Are your machines virtulized* drop down and select **Your Target Region** as the *Target Region*.
-Make sure to check the confirmation checkbox and click *Create resources*. 
+Clicl on *Create resources*
 
-![image](./img/mig2.png)
+![image](./img/PrepRep4.png)
 
-Wait until the deployment has been successfully completed. Open the **documentation** link in a new tab and download the appliance installer from there.
+Next download the binaries and the registration file.
 
-![image](./img/mig3.png)
+![image](./img/PrepRep5.png)
 
-![image](./img/mig4.png)
+Execute the *AzureSiteRecoveryProvider.exe* file to start the installation.
 
-After successfully downloading the zip folder, unzip and extract the components of the folder.
+![image](./img/PrepRep6.png)
 
-Go to the path in which the folder is extracted to and execute the following PowerShell script as an administrator e.g.:
+![image](./img/PrepRep7.png)
 
-~~~powershell
-cd $env:userprofile\Downloads\DRAppliance\DRAppliance
-.\DRInstaller.ps1
-~~~
+![image](./img/PrepRep8.png)
 
-This will start the installation process of the replication appliance.
+![image](./img/PrepRep9.png)
 
-![image](./img/mig5.png)
+Register the Provider with the previousley downloaded registration file.
 
-Once you create the appliance, Microsoft Azure appliance configuration manager is launched automatically. Use the following steps to register the appliance.
+![image](./img/PrepRep10.png)
 
-If the configuration manager does not start autommatically, then it can be also started manually from the link on the Desktop.
+Complete the wizard an dwait for the the Provider to be successfully registered.
 
-![image](./img/mig6.png)
+![image](./img/PrepRep11.png)
 
-![image](./img/mig7.png)
+Go back to the Azure Portal and finalize the registration. You might need to refresh the page.
 
-![image](./img/mig8.png)
+![image](./img/PrepRep12.png)
 
-![image](./img/mig9.png)
+> [!Note]
+> *This process might take up to 15 minutes to complete. Afterwards, the replication of VMs can be started.*
 
-Next you need to register the appliance with the Azure Migrate project. For this a registration key is required. Go back to the Azure portal and generate a key.
+Once the registration is completed, change back to the Azure Migrate project in the Azure portal and select *Replication summary* from the *Migrations* section.
 
-![image](./img/mig10.png)
-
-![image](./img/mig11.png)
-
-![image](./img/mig12.png)
-
-Complete the login to Azure and wait until the appliance is beeing registered.
-
-![image](./img/mig13.png)
-
-![image](./img/mig14.png)
-
-As we do not have a vCenter in thie Microhack select *I do not have vCenter Server/vSphere ESXi server. I'll protect my servers by manually discovering them using IP addresses* and click *Continue*.
-
-![image](./img/mig15.png)
-
-Next you need to provide the Server credentials and also map them to the source servers accordingly. Please note that root needs to be enabled on the Linux system.
-
-![image](./img/mig16.png)
-
-After successfully adding the details, select Continue to install all Azure Site Recovery replication appliance components and register with Azure services. **This activity can take up to 30 minutes**.
-
-Ensure you don't close the browser while configuration is in progress..
-
-![image](./img/mig17.png)
-
-### **Task 3: Replicate machines**
-
-> [!IMPORTANT]
-> As our Windows and Linux systems are using different credentials, we need to enable them on by one. Start with the Windows system and repeat the steps afterwards with the Linux system and make sure to select the appropriate credentials.
-
-In the Azure Migrate project, select *Execute > Migrations > Replicate*.
-
-![image](./img/repl1.png)
-
-In Replicate, > Source settings > Are your machines virtualized?, select *Physical or other (AWS, GCP, Xen, etc.)*.
-
-In *On-premises appliance*, select the name of the replication appliance that you set up and then select continue.
-
-![image](./img/repl2.png)
-
-In Guest credentials, select the friendly name of the credentials created previously during the replication appliance setup and then select Next: Virtual machines.
-
-![image](./img/repl3.png)
-
-Next select the source server. 
-
-![image](./img/repl4.png)
-
-In **Target settings**, select the subscription to which you'll migrate. (The region is set to your selection in the previous step and can't be modified.) Specify the **destination** resource group in which the Azure VMs will reside after migration.
-
-In **Virtual Network**, select the **destination** virtual network/subnet to which the Azure VMs will be joined after migration.
-
-![image](./img/repl5.png)
-
-In **Compute**, review the VM name, size, OS and disk type. VMs must conform with Azure requirements.
-
-![image](./img/repl6.png)
-
-In Disks, specify whether the VM disks should be replicated to Azure. Select the disk type Standard SSD in Azure. Then select Next.
-
-![image](./img/repl7.png)
-
-Proceed to *Review + Start replication* and review your settings. Make sure you've selected the **destination** Resource Group and vNet.
-
-![image](./img/repl8.png)
-
-**Please repeat the above steps now for the Linux server.**
-
-To track the status, in the Azure Migrate project, select *Execute > Migrations > Replications summary*.
-
-![image](./img/repl9.png)
-
-From the list select the server to get more details.
-
-![image](./img/repl10.png)
+![image](./img/PrepRep13.png)
 
 
-> [!IMPORTANT]
-> The push installation of the mobility service has a few prerequisites. If the installation fails please review the [documentation](https://learn.microsoft.com/en-us/azure/site-recovery/vmware-azure-install-mobility-service).
+Click on *Infrastructre servers* and select the recently registered Hyper-v host.
 
-### **Task 6: Prepare Final Migration**
+![image](./img/PrepRep14.png)
+
+If the *MARS agent version* is empty refresh the Server before you continue to enable replication.
+
+![image](./img/PrepRep15.png)
+
+
+### **Task 2: Enable Replication**
+
+From the Azure Migrate project in the Azure portal  select *Replicate* from the *Migrations* section.
+
+![image](./img/Repl1.png)
+
+Specify the intent as shown on the diagram below:
+
+![image](./img/Repl2.png)
+
+Next select the Windows and the Linux System that host the Web Server with the Microhack Demo page.
+
+![image](./img/Repl3.png)
+
+Next select the destination resource group and the destination vNet & subnet.
+
+![image](./img/Repl4.png)
+
+In the Compute section you can adjust the target settings e.g., VM size.
+
+![image](./img/Repl5.png)
+
+In the Disk section you can adjust the target settings e.g., Standard SSD.
+
+![image](./img/Repl6.png)
+
+Proceed to the final summary and enable replication.
+
+![image](./img/Repl7.png)
+
+Wait until the Replication status shows *Protected*
+
+![image](./img/Repl8.png)
+
+### **Task 3: Perform Test Migration
+
+When delta replication begins, you can run a test migration for the VMs, before running a full migration to Azure. We highly recommend that you do this at least once for each machine, before you migrate it.
+
++ Running a test migration checks that migration will work as expected, without impacting the on-premises machines, which remain operational, and continue replicating.
++ Test migration simulates the migration by creating an Azure VM using replicated data (usually migrating to a non-production VNet in your Azure subscription).
++ You can use the replicated test Azure VM to validate the migration, perform app testing, and address any issues before full migration.
+
+Open the Azure Portal and navigate to the previousley created Azure Migrate project. Select *Migrations* and then click on *Replication Summary*. From the Summary page select *Test migration*.
+
+![image](./img/TestMig1.png)
+
+From the new page make sure that the *Replication status* is *Protected*, click on the three dots at the end and click on *Test Migration*.
+
+![image](./img/TestMig2.png)
+
+Select the destination network and click on *Test migration*
+
+![image](./img/TestMig3.png)
+
+> [!Note]
+> **Repeat the above steps for the other VM**
+
+From the Azure Portal, select Virtual machines from the navigation pane on the left. There will be 2 additional servers ending with *-test*. Those servers were created during test migration.
+
+![image](./img/TestMig4.png)
+
+Connect to the Windows VM via Azure Bastion.
+
+![image](./img/TestMig5.png)
+
+On the VM open a browser and navigate to *http://localhost*. Make sure that the Microhack Demo Web App is running as expected.
+
+![image](./img/TestMig6.png)
+
+Once confirmed that the systems are working as expected you can cleanup the test migration and proceed with the final migration.
+
+Go back to the Test Migration section in the Azure Migrate project in the Azure Portal and click on *Cleanup test failover pending*
+
+![image](./img/TestMig7.png)
+
+Provide a comment and click on *Cleanup test* to remove the previousley created resources.
+
+![image](./img/TestMig8.png)
+
+> [!Note]
+> **Repeat the above steps for the other VM**
+
+### **Task : Prepare Final Migration**
 
 Currently the two frontend servers are published via an Azure Public Load Balancer. After the migration, the original server will be turned off. Therefore the access to the system via the Azure Public Load Balancer will be broken. To prepare for the migration and to keep downtime as short as possible some pre-migration steps should be performed.
 

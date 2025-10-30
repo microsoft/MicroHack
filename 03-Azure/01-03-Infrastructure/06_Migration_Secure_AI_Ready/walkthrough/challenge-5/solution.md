@@ -253,11 +253,11 @@ You should now also be able to access the Web Server via the previousley created
 
 After the successfull migration you can now stop replicating the source virtual machines. Open the [Azure Portal](https://portal.azure.com) and navigate to the previousley created Azure Migrate project. Select *Migrations -> Replication summary*. Click on *Replications* and then click on the 3 dots on the end of each row of the replicating servers and select *Stop replicating*.
 
-![image](./img/clean1.png)
+![image](./img/Clean1.png)
 
 Select *Stop replication and remove replication settings* from the drop down list and click *OK*. 
 
-![image](./img/clean2.png)
+![image](./img/Clean2.png)
 
 > [!NOTE]
 > Repeat this step for the remaining Server.

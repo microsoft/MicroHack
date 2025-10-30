@@ -169,23 +169,23 @@ Provide a comment and click on *Cleanup test* to remove the previousley created 
 > [!Note]
 > **Repeat the above steps for the other VM**
 
-### **Task : Prepare Final Migration**
+### **Task 4: Prepare Final Migration**
 
-Currently the two frontend servers are published via an Azure Public Load Balancer. After the migration, the original server will be turned off. Therefore the access to the system via the Azure Public Load Balancer will be broken. To prepare for the migration and to keep downtime as short as possible some pre-migration steps should be performed.
+Currently the two servers are not directly published and are not accessable directly. After the migration, the original server will be turned off. Therefore the access to the system needs to be updated. To prepare for the migration and to keep downtime as short as possible some pre-migration steps should be performed.
 
-#### **Task 6.1: Create a new Azure Public Load Balancer in the destination environment**
+#### **Task 4.1: Create a new Azure Public Load Balancer in the destination environment**
 
 From the Azure Portal open the Load Balancing blade, select Load Balancer on the Navigation pane on the left and click *Create*.
 
-![image](./img/prep1.png)
+![image](./img/LB1.png)
 
 Under *Basics* select the *destination-rg* Resource Group and provide a name for the new Load Balancer.
 
-![image](./img/prep2.png)
+![image](./img/LB2.png)
 
 Under *Frontend IP configuration*, click *Add a frontend IP configuration* and create a new Public IP address.
 
-![image](./img/prep3.png)
+![image](./img/LB3.png)
 
 Under *Backend Pools*, select *Add a backend Pool*. Provide a name and select the *destination-vnet* as the Virtual Network.
 Add *10.2.1.4* and *10.2.1.5* as the IP addresses.
@@ -193,103 +193,74 @@ Add *10.2.1.4* and *10.2.1.5* as the IP addresses.
 > [!NOTE]
 > Please note: Azure reserves the first four addresses (0-3) in each subnet address range, and doesn't assign the addresses. Azure assigns the next available address to a resource from the subnet address range. So it is predictable which IP addresses will be assigned to the destination VMs after the migration.
 
-![image](./img/prep4.png)
+![image](./img/LB4.png)
 
 Under *Inbound rules* click on *Add a load balancing rule* and create the load balancing rule as illustrated on the following diagram.
 
-![image](./img/prep5.png)
+![image](./img/LB5.png)
 
-Under *Outbound rules* click *Add an outbound rule* and create the outbound rule as illustrated on the following diagram.
-
-![image](./img/prep6.png)
+We are already using a NAT GW to provide outbound Internet access. We don't need a Outbound rule and can skip this part.
 
 Proceed to the *Review + create* section, review your configuration and click *Create*
 
-![image](./img/prep7.png)
+![image](./img/LB6.png)
 
-Wait until the load balancer has been created, cahnge back to the *Load balancing* section, select the *plb-frontend* Load Balancer and click *Frontend IP configuration* from the navigation pane on the left. Note down the Public IP of the *LoadBalancerFrontEnd* configuration. Repeat the step for the *plb-frontend-dest* Load Balancer.
+Wait until the load balancer has been created, change back to the *Load balancing* section, select the Load Balancer and from the *Overview* pane copy the *Frontend IP address*. Note down the Public IP of the Load Balancer as we need it after the migration.
 
-![image](./img/prep8.png)
-
-#### **Task 6.2: Create a new Azure Traffic Manager Profile**
-
-Azure Traffic Manager is a DNS-based traffic load balancer. It allows us to distribute traffic to public facing endpoints like our two Public Load Balancer. Traffic Manager can be created in advance to distribute traffic among the old and new load balancer. The DNS conbfiguration of the application can be changed in advance to point to the Traffic Manager Profile instead to the Public IP of the Load Balancer. Using this approach makes sure that Traffic Manager automatically removes the old Load Balancer after the frontend servers were migrated.
-
-From the Azure Portal open the Load Balancing blade, select Traffic Manager on the Navigation pane on the left and click *Create*.
-
-![image](./img/prep9.png)
-
-Select a name for the Traffic Manager profile and select the *destination-rg* as the Resourec Group.
-
-![image](./img/prep10.png)
-
-From the Load Balancing overview page select *Traffic Manager* and select the previously created Traffic Manager profile. 
-Select *Endpoints* and click *Add*. Add each public IP of the source and destination Load Balancer as separate endpoints.
-
-![image](./img/prep11.png)
-
-> [!NOTE]
-> Please note: To be able to add the public IP addresses they need to be configured with an [DNS name lable](https://learn.microsoft.com/en-us/azure/dns/dns-custom-domain?toc=%2Fazure%2Fvirtual-network%2Ftoc.json#public-ip-address).
-
-![image](./img/prep11-1.png)
-
-Check the Overview section under the navigation pane and note that the source load balancer is shown as *online* whereas the 
-destination load balancer is shown as *degraded*. If you copy the DNS name of the Traffic Manager profile and paste it into your browser, you should be able to browse the source web servers through the Traffic Manager Profile.
-
-![image](./img/prep12.png)
-
-![image](./img/prep13.png)
+![image](./img/LB7.png)
 
 ### **Task 7: Perform Final Migration**
 
-Open the [Azure Portal](https://portal.azure.com) and navigate to the previousley created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click *Overview* in the *Migration tools* box. From the Overview section click in *Migrate* under *Step 3: Migrate*.
+Open the [Azure Portal](https://portal.azure.com) and navigate to the previousley created Azure Migrate project. Select *Migrations* from the navigation pane and click on *Migrate*.
 
-![image](./img/finalmig1.png)
+![image](./img/mig1.png)
 
 Select *AzureVM* and click *Continue*.
 
-![image](./img/finalmig1-2.png)
+![image](./img/mig2.png)
 
-Select *No* because shutdown of source machines is only supported for HyperVisor based migrations, select the two servers and click *Migrate*.
+Select the VMs you want to migrate and click on *Yes* to also shutdown the VMs on the Hyper-V host.
 
-![image](./img/finalmig2.png)
+![image](./img/mig3.png)
 
-You can check the progress of the migration under the *Jobs* section within the navigation pane.
+You can check the progress of the migration under the *Jobs* section within the *Replication Summary* section of the Azure Migrate Project.
 
-![image](./img/finalmig3.png)
+![image](./img/mig4.png)
+
+You can also click on each job to review the current status of the migration. 
+
+![image](./img/mig5.png)
 
 After a few minutes the migration should be successfully completed.
 
-![image](./img/finalmig4.png)
+![image](./img/mig7.png)
+
+On the Hyper-V Host, the 2 VMs should also be turned off.
+
+![image](./img/mig6.png)
 
 When you change to the *Virtual machine* section within the Azure Portal you should now see 2 additional serves in the *destination-rg* Resource Group.
-Please select the original source Virtual Machines and click on *Stop* to shutdown the source VMs.
 
-![image](./img/finalmig5.png)
+![image](./img/mig8.png)
 
-Change to the Azure Traffic Manager profile you've created previousley and look at the endpoints. Please note that the *fe-source* endpoint is now shown as degraded and that the *fe-dest* endpoint is shown as online.
+You should now also be able to access the Web Server via the previousley created load balancer frontend IP.
 
-![image](./img/finalmig6.png)
-
-From a user perspective nothing changed. You're still able to browse the Traffic Manager profile DNS name and you will be transparently redirected to the web servers that are know running in Azure.
-
-![image](./img/finalmig7.png)
+![image](./img/mig9.png)
 
 🚀🚀🚀🚀🚀🚀 Congratulations, you've successfully migrated the frontend application to Azure.🚀🚀🚀🚀🚀🚀
 
 ### **Task 8: Cleanup**
 
-After the successfull migration you can now stop replicating the source virtual machines. Open the [Azure Portal](https://portal.azure.com) and navigate to the previousley created Azure Migrate project. Select *Servers, databases and web apps*, make sure that the right Azure Migrate Project is selected and click *Overview* in the *Migration tools* box. In the *Azure Migrate: Migration and modernization* pane, select *Replicating machines* from the navigation pane on the left, click on the 3 dots on the end of each row of the replicating servers and select *Stop replicating*.
+After the successfull migration you can now stop replicating the source virtual machines. Open the [Azure Portal](https://portal.azure.com) and navigate to the previousley created Azure Migrate project. Select *Migrations -> Replication summary*. Click on *Replications* and then click on the 3 dots on the end of each row of the replicating servers and select *Stop replicating*.
 
-![image](./img/finalmig8.png)
+![image](./img/clean1.png)
 
-Select *Stop replication and remove replication settings* from the drop down list and click *OK*. Repeat this step for the remaining Server.
+Select *Stop replication and remove replication settings* from the drop down list and click *OK*. 
 
-![image](./img/finalmig9.png)
+![image](./img/clean2.png)
 
-From the Traffic Manager Profile you can now also safley remove the endpoint for the source load balancer.
-
-![image](./img/finalmig10.png)
+> [!NOTE]
+> Repeat this step for the remaining Server.
 
 🚀🚀🚀 You successfully completed challenge 5! 🚀🚀🚀
 

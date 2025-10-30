@@ -160,6 +160,19 @@ resource networkSecurityGroupDST 'Microsoft.Network/networkSecurityGroups@2024-0
           destinationPortRange: '32323'
         }
       }
+      {
+        name: 'allow_WebApp_Inbound'
+        properties: {
+          priority: 214
+          protocol: 'Tcp'
+          access: 'Allow'
+          direction: 'Inbound'
+          sourceAddressPrefix: '*'
+          sourcePortRange: '*'
+          destinationAddressPrefix: '*'
+          destinationPortRange: '80'
+        }
+      }      
     ]
   }
 }

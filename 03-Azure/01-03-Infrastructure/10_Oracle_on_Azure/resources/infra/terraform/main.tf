@@ -17,11 +17,14 @@
 # ===============================================================================
 
 locals {
-  default_location      = var.location
-  default_prefix        = var.prefix
-  default_aks_vm_size   = var.aks_vm_size
-  default_fqdn_odaa     = var.fqdn_odaa
-  default_fqdn_odaa_app = var.fqdn_odaa_app
+  default_location          = var.location
+  default_prefix            = var.prefix
+  default_aks_vm_size       = var.aks_vm_size
+  default_aks_os_disk_type  = var.aks_os_disk_type
+  default_fqdn_odaa_fra     = var.fqdn_odaa_fra
+  default_fqdn_odaa_app_fra = var.fqdn_odaa_app_fra
+  default_fqdn_odaa_par     = var.fqdn_odaa_par
+  default_fqdn_odaa_app_par = var.fqdn_odaa_app_par
 
   # Modules expect the base network value without the CIDR suffix.
   default_aks_cidr_base  = var.aks_cidr_base
@@ -31,34 +34,59 @@ locals {
     Project   = var.microhack_event_name
     ManagedBy = "Terraform"
   }
+
+  subscription_targets      = var.subscription_targets
+  subscription_target_count = length(local.subscription_targets)
+  user_indices              = range(var.user_count)
+
   deployments = {
-    for idx in range(length(var.aks_deployments)) :
+    for idx in local.user_indices :
     tostring(idx) => {
       index             = idx
-      subscription_id   = var.aks_deployments[idx].subscription_id
-      tenant_id         = var.aks_deployments[idx].tenant_id
-      postfix           = tostring(idx)
+      provider_index    = idx % local.subscription_target_count
+      subscription_id   = local.subscription_targets[idx % local.subscription_target_count].subscription_id
+      tenant_id         = local.subscription_targets[idx % local.subscription_target_count].tenant_id
+      postfix           = format("%02d", idx)
       prefix            = local.default_prefix
       location          = local.default_location
       aks_cidr          = local.default_aks_cidr_base
       aks_vm_size       = local.default_aks_vm_size
+      aks_os_disk_type  = local.default_aks_os_disk_type
       odaa_cidr         = local.default_odaa_cidr_base
-      fqdn_odaa         = local.default_fqdn_odaa
-      fqdn_odaa_app     = local.default_fqdn_odaa_app
-      group_name        = "mhteam-${tostring(idx)}"
-      group_description = "Security group with rights to deploy applications to the Oracle AKS cluster (Deployment ${local.default_prefix}${tostring(idx)})"
-      name              = "${local.default_prefix}${tostring(idx)}"
+      fqdn_odaa_fra     = local.default_fqdn_odaa_fra
+      fqdn_odaa_app_fra = local.default_fqdn_odaa_app_fra
+      fqdn_odaa_par     = local.default_fqdn_odaa_par
+      fqdn_odaa_app_par = local.default_fqdn_odaa_app_par
+      name              = format("%s%02d", local.default_prefix, idx)
+      user_identifier   = lower(format("%s%02d", local.default_prefix, idx))
     }
   }
-  aks_deployments_by_index = {
+
+  aks_deployments_by_slot = {
     for idx in range(5) :
     tostring(idx) => {
       for key, deployment in local.deployments :
-      key => deployment if deployment.index == idx
+      key => deployment if deployment.provider_index == idx
     }
   }
 
   deployment_names = [for deployment in values(local.deployments) : deployment.name]
+
+  tenant_ids = distinct([for deployment in values(local.deployments) : deployment.tenant_id])
+
+  shared_deployment_group = {
+    name        = "mh-odaa-user-grp"
+    description = "Security group with rights to deploy applications to the Oracle AKS cluster"
+  }
+
+  shared_deployment_group_tenant_id = try(local.tenant_ids[0], var.odaa_tenant_id)
+
+  deployment_users = {
+    for key, deployment in local.deployments :
+    key => {
+      identifier = deployment.user_identifier
+    }
+  }
 }
 
 # ===============================================================================
@@ -69,120 +97,45 @@ locals {
 # Removing these resources avoids import requirements when providers are already registered
 # or automatically managed by the AzureRM provider.
 
-# Entra ID Groups per AKS deployment
-module "entra_id_team_0" {
-  for_each = local.aks_deployments_by_index["0"]
-  source   = "./modules/entra-id"
+# Entra ID identities (single shared group, per-user accounts)
+module "entra_id_users" {
+  source = "./modules/entra-id"
 
   providers = {
-    azuread = azuread.aks_deployment_team_0
+    azuread = azuread.aks_deployment_slot_0
   }
 
-  aks_deployment_group_name        = each.value.group_name
-  aks_deployment_group_description = each.value.group_description
-  tenant_id                        = each.value.tenant_id
-  deployment_index                 = each.value.index
+  aks_deployment_group_name        = local.shared_deployment_group.name
+  aks_deployment_group_description = local.shared_deployment_group.description
+  tenant_id                        = local.shared_deployment_group_tenant_id
   user_principal_domain            = var.entra_user_principal_domain
+  users                            = local.deployment_users
   tags = merge(local.common_tags, {
-    AKSDeployment = each.value.name
-  })
-}
-
-module "entra_id_team_1" {
-  for_each = local.aks_deployments_by_index["1"]
-  source   = "./modules/entra-id"
-
-  providers = {
-    azuread = azuread.aks_deployment_team_1
-  }
-
-  aks_deployment_group_name        = each.value.group_name
-  aks_deployment_group_description = each.value.group_description
-  tenant_id                        = each.value.tenant_id
-  deployment_index                 = each.value.index
-  user_principal_domain            = var.entra_user_principal_domain
-  tags = merge(local.common_tags, {
-    AKSDeployment = each.value.name
-  })
-}
-
-module "entra_id_team_2" {
-  for_each = local.aks_deployments_by_index["2"]
-  source   = "./modules/entra-id"
-
-  providers = {
-    azuread = azuread.aks_deployment_team_2
-  }
-
-  aks_deployment_group_name        = each.value.group_name
-  aks_deployment_group_description = each.value.group_description
-  tenant_id                        = each.value.tenant_id
-  deployment_index                 = each.value.index
-  user_principal_domain            = var.entra_user_principal_domain
-  tags = merge(local.common_tags, {
-    AKSDeployment = each.value.name
-  })
-}
-
-module "entra_id_team_3" {
-  for_each = local.aks_deployments_by_index["3"]
-  source   = "./modules/entra-id"
-
-  providers = {
-    azuread = azuread.aks_deployment_team_3
-  }
-
-  aks_deployment_group_name        = each.value.group_name
-  aks_deployment_group_description = each.value.group_description
-  tenant_id                        = each.value.tenant_id
-  deployment_index                 = each.value.index
-  user_principal_domain            = var.entra_user_principal_domain
-  tags = merge(local.common_tags, {
-    AKSDeployment = each.value.name
-  })
-}
-
-module "entra_id_team_4" {
-  for_each = local.aks_deployments_by_index["4"]
-  source   = "./modules/entra-id"
-
-  providers = {
-    azuread = azuread.aks_deployment_team_4
-  }
-
-  aks_deployment_group_name        = each.value.group_name
-  aks_deployment_group_description = each.value.group_description
-  tenant_id                        = each.value.tenant_id
-  deployment_index                 = each.value.index
-  user_principal_domain            = var.entra_user_principal_domain
-  tags = merge(local.common_tags, {
-    AKSDeployment = each.value.name
+    AKSDeploymentGroup = local.shared_deployment_group.name
   })
 }
 
 locals {
-  entra_id_modules = merge(
-    module.entra_id_team_0,
-    module.entra_id_team_1,
-    module.entra_id_team_2,
-    module.entra_id_team_3,
-    module.entra_id_team_4,
-  )
-}
+  deployment_user_credentials = {
+    for key, deployment in local.deployments :
+    key => lookup(module.entra_id_users.user_credentials, key, null)
+  }
 
-locals {
   user_credentials_export = {
     generated_at = timestamp()
     deployments = {
       for key, deployment in local.deployments :
-      deployment.name => [
-        for suffix, cred in try(local.entra_id_modules[key].user_credentials, {}) :
-        {
-          user_principal_name = cred.user_principal_name
-          display_name        = cred.display_name
-          initial_password    = cred.initial_password
-        }
-      ]
+      deployment.name => (
+        local.deployment_user_credentials[key] == null ?
+        [] :
+        [
+          {
+            user_principal_name = local.deployment_user_credentials[key].user_principal_name
+            display_name        = local.deployment_user_credentials[key].display_name
+            initial_password    = local.deployment_user_credentials[key].initial_password
+          }
+        ]
+      )
     }
   }
   user_credentials_output_path = (
@@ -190,6 +143,9 @@ locals {
     var.user_credentials_output_path :
     abspath("${path.root}/user_credentials.json")
   )
+
+  deployment_user_object_ids      = module.entra_id_users.user_object_ids
+  deployment_user_principal_names = module.entra_id_users.user_principal_names
 }
 
 data "azuread_service_principal" "oracle_cloud" {
@@ -239,11 +195,11 @@ locals {
   )
 }
 
-resource "azuread_app_role_assignment" "oracle_cloud_groups" {
-  for_each = local.oracle_cloud_app_role_id == null ? {} : local.entra_id_modules
+resource "azuread_app_role_assignment" "oracle_cloud_group" {
+  count = local.oracle_cloud_app_role_id == null ? 0 : 1
 
   resource_object_id  = local.oracle_cloud_service_principal.object_id
-  principal_object_id = each.value.group_object_id
+  principal_object_id = module.entra_id_users.group_object_id
   app_role_id         = local.oracle_cloud_app_role_id
 
   lifecycle {
@@ -269,123 +225,154 @@ resource "local_file" "user_credentials" {
 
 resource "azurerm_role_assignment" "odaa_autonomous_database_admin" {
   provider             = azurerm.odaa
-  for_each             = local.entra_id_modules
+  for_each             = local.deployment_user_object_ids
   scope                = module.odaa[each.key].resource_group_id
   role_definition_name = "Oracle.Database Autonomous Database Administrator"
-  principal_id         = each.value.group_object_id
-  description          = "Grants ${each.value.group_display_name} permissions to manage Oracle Autonomous Database resources in resource group ${module.odaa[each.key].resource_group_name}."
+  principal_id         = each.value
+  description          = "Grants ${lookup(local.deployment_user_principal_names, each.key, each.key)} permissions to manage Oracle Autonomous Database resources in resource group ${module.odaa[each.key].resource_group_name}."
+}
+
+resource "azurerm_role_assignment" "odaa_subscription_manager_reader" {
+  provider           = azurerm.odaa
+  for_each           = local.deployment_user_object_ids
+  scope              = module.odaa[each.key].resource_group_id
+  role_definition_id = azurerm_role_definition.oracle_subscriptions_manager_reader.role_definition_resource_id
+  principal_id       = each.value
+  description        = "Grants ${lookup(local.deployment_user_principal_names, each.key, each.key)} read access to Oracle Subscription resources in resource group ${module.odaa[each.key].resource_group_name}."
+}
+
+resource "azurerm_role_assignment" "odaa_subscription_manager_reader_group" {
+  provider           = azurerm.odaa
+  scope              = data.azurerm_subscription.odaa.id
+  role_definition_id = azurerm_role_definition.oracle_subscriptions_manager_reader.role_definition_resource_id
+  principal_id       = module.entra_id_users.group_object_id
+  description        = "Grants ${module.entra_id_users.group_display_name} read access to Oracle Subscription resources across subscription ${data.azurerm_subscription.odaa.display_name}."
 }
 
 # AKS Deployments per subscription
-module "aks_team_0" {
-  for_each = local.aks_deployments_by_index["0"]
+module "aks_slot_0" {
+  for_each = local.aks_deployments_by_slot["0"]
   source   = "./modules/aks"
 
   providers = {
-    azurerm = azurerm.aks_deployment_team_0
+    azurerm = azurerm.aks_deployment_slot_0
   }
 
-  prefix                     = each.value.prefix
-  postfix                    = each.value.postfix
-  location                   = each.value.location
-  cidr                       = each.value.aks_cidr
-  aks_vm_size                = each.value.aks_vm_size
-  deployment_group_object_id = local.entra_id_modules[each.key].group_object_id
-  subscription_id            = each.value.subscription_id
-  fqdn_odaa                  = each.value.fqdn_odaa
-  fqdn_odaa_app              = each.value.fqdn_odaa_app
+  prefix                    = each.value.prefix
+  postfix                   = each.value.postfix
+  location                  = each.value.location
+  cidr                      = each.value.aks_cidr
+  aks_vm_size               = each.value.aks_vm_size
+  os_disk_type              = each.value.aks_os_disk_type
+  deployment_user_object_id = local.deployment_user_object_ids[each.key]
+  subscription_id           = each.value.subscription_id
+  fqdn_odaa_fra             = each.value.fqdn_odaa_fra
+  fqdn_odaa_app_fra         = each.value.fqdn_odaa_app_fra
+  fqdn_odaa_par             = each.value.fqdn_odaa_par
+  fqdn_odaa_app_par         = each.value.fqdn_odaa_app_par
 
   tags = merge(local.common_tags, {
     AKSDeployment = each.value.name
   })
 }
 
-module "aks_team_1" {
-  for_each = local.aks_deployments_by_index["1"]
+module "aks_slot_1" {
+  for_each = local.aks_deployments_by_slot["1"]
   source   = "./modules/aks"
 
   providers = {
-    azurerm = azurerm.aks_deployment_team_1
+    azurerm = azurerm.aks_deployment_slot_1
   }
 
-  prefix                     = each.value.prefix
-  postfix                    = each.value.postfix
-  location                   = each.value.location
-  cidr                       = each.value.aks_cidr
-  aks_vm_size                = each.value.aks_vm_size
-  deployment_group_object_id = local.entra_id_modules[each.key].group_object_id
-  subscription_id            = each.value.subscription_id
-  fqdn_odaa                  = each.value.fqdn_odaa
-  fqdn_odaa_app              = each.value.fqdn_odaa_app
+  prefix                    = each.value.prefix
+  postfix                   = each.value.postfix
+  location                  = each.value.location
+  cidr                      = each.value.aks_cidr
+  aks_vm_size               = each.value.aks_vm_size
+  os_disk_type              = each.value.aks_os_disk_type
+  deployment_user_object_id = local.deployment_user_object_ids[each.key]
+  subscription_id           = each.value.subscription_id
+  fqdn_odaa_fra             = each.value.fqdn_odaa_fra
+  fqdn_odaa_app_fra         = each.value.fqdn_odaa_app_fra
+  fqdn_odaa_par             = each.value.fqdn_odaa_par
+  fqdn_odaa_app_par         = each.value.fqdn_odaa_app_par
 
   tags = merge(local.common_tags, {
     AKSDeployment = each.value.name
   })
 }
 
-module "aks_team_2" {
-  for_each = local.aks_deployments_by_index["2"]
+module "aks_slot_2" {
+  for_each = local.aks_deployments_by_slot["2"]
   source   = "./modules/aks"
 
   providers = {
-    azurerm = azurerm.aks_deployment_team_2
+    azurerm = azurerm.aks_deployment_slot_2
   }
 
-  prefix                     = each.value.prefix
-  postfix                    = each.value.postfix
-  location                   = each.value.location
-  cidr                       = each.value.aks_cidr
-  aks_vm_size                = each.value.aks_vm_size
-  deployment_group_object_id = local.entra_id_modules[each.key].group_object_id
-  subscription_id            = each.value.subscription_id
-  fqdn_odaa                  = each.value.fqdn_odaa
-  fqdn_odaa_app              = each.value.fqdn_odaa_app
+  prefix                    = each.value.prefix
+  postfix                   = each.value.postfix
+  location                  = each.value.location
+  cidr                      = each.value.aks_cidr
+  aks_vm_size               = each.value.aks_vm_size
+  os_disk_type              = each.value.aks_os_disk_type
+  deployment_user_object_id = local.deployment_user_object_ids[each.key]
+  subscription_id           = each.value.subscription_id
+  fqdn_odaa_fra             = each.value.fqdn_odaa_fra
+  fqdn_odaa_app_fra         = each.value.fqdn_odaa_app_fra
+  fqdn_odaa_par             = each.value.fqdn_odaa_par
+  fqdn_odaa_app_par         = each.value.fqdn_odaa_app_par
 
   tags = merge(local.common_tags, {
     AKSDeployment = each.value.name
   })
 }
 
-module "aks_team_3" {
-  for_each = local.aks_deployments_by_index["3"]
+module "aks_slot_3" {
+  for_each = local.aks_deployments_by_slot["3"]
   source   = "./modules/aks"
 
   providers = {
-    azurerm = azurerm.aks_deployment_team_3
+    azurerm = azurerm.aks_deployment_slot_3
   }
 
-  prefix                     = each.value.prefix
-  postfix                    = each.value.postfix
-  location                   = each.value.location
-  cidr                       = each.value.aks_cidr
-  aks_vm_size                = each.value.aks_vm_size
-  deployment_group_object_id = local.entra_id_modules[each.key].group_object_id
-  subscription_id            = each.value.subscription_id
-  fqdn_odaa                  = each.value.fqdn_odaa
-  fqdn_odaa_app              = each.value.fqdn_odaa_app
-
+  prefix                    = each.value.prefix
+  postfix                   = each.value.postfix
+  location                  = each.value.location
+  cidr                      = each.value.aks_cidr
+  aks_vm_size               = each.value.aks_vm_size
+  os_disk_type              = each.value.aks_os_disk_type
+  deployment_user_object_id = local.deployment_user_object_ids[each.key]
+  subscription_id           = each.value.subscription_id
+  fqdn_odaa_fra             = each.value.fqdn_odaa_fra
+  fqdn_odaa_app_fra         = each.value.fqdn_odaa_app_fra
+  fqdn_odaa_par             = each.value.fqdn_odaa_par
+  fqdn_odaa_app_par         = each.value.fqdn_odaa_app_par
   tags = merge(local.common_tags, {
     AKSDeployment = each.value.name
   })
 }
 
-module "aks_team_4" {
-  for_each = local.aks_deployments_by_index["4"]
+module "aks_slot_4" {
+  for_each = local.aks_deployments_by_slot["4"]
   source   = "./modules/aks"
 
   providers = {
-    azurerm = azurerm.aks_deployment_team_4
+    azurerm = azurerm.aks_deployment_slot_4
   }
 
-  prefix                     = each.value.prefix
-  postfix                    = each.value.postfix
-  location                   = each.value.location
-  cidr                       = each.value.aks_cidr
-  aks_vm_size                = each.value.aks_vm_size
-  deployment_group_object_id = local.entra_id_modules[each.key].group_object_id
-  subscription_id            = each.value.subscription_id
-  fqdn_odaa                  = each.value.fqdn_odaa
-  fqdn_odaa_app              = each.value.fqdn_odaa_app
+  prefix                    = each.value.prefix
+  postfix                   = each.value.postfix
+  location                  = each.value.location
+  cidr                      = each.value.aks_cidr
+  aks_vm_size               = each.value.aks_vm_size
+  os_disk_type              = each.value.aks_os_disk_type
+  deployment_user_object_id = local.deployment_user_object_ids[each.key]
+  subscription_id           = each.value.subscription_id
+  fqdn_odaa_fra             = each.value.fqdn_odaa_fra
+  fqdn_odaa_app_fra         = each.value.fqdn_odaa_app_fra
+  fqdn_odaa_par             = each.value.fqdn_odaa_par
+  fqdn_odaa_app_par         = each.value.fqdn_odaa_app_par
 
   tags = merge(local.common_tags, {
     AKSDeployment = each.value.name
@@ -394,12 +381,57 @@ module "aks_team_4" {
 
 locals {
   aks_modules = merge(
-    module.aks_team_0,
-    module.aks_team_1,
-    module.aks_team_2,
-    module.aks_team_3,
-    module.aks_team_4,
+    module.aks_slot_0,
+    module.aks_slot_1,
+    module.aks_slot_2,
+    module.aks_slot_3,
+    module.aks_slot_4,
   )
+}
+
+module "ingress_nginx_slot_0" {
+  for_each = local.aks_deployments_by_slot["0"]
+  source   = "./modules/ingress-nginx"
+
+  providers = {
+    helm = helm.aks_deployment_slot_0
+  }
+}
+
+module "ingress_nginx_slot_1" {
+  for_each = local.aks_deployments_by_slot["1"]
+  source   = "./modules/ingress-nginx"
+
+  providers = {
+    helm = helm.aks_deployment_slot_1
+  }
+}
+
+module "ingress_nginx_slot_2" {
+  for_each = local.aks_deployments_by_slot["2"]
+  source   = "./modules/ingress-nginx"
+
+  providers = {
+    helm = helm.aks_deployment_slot_2
+  }
+}
+
+module "ingress_nginx_slot_3" {
+  for_each = local.aks_deployments_by_slot["3"]
+  source   = "./modules/ingress-nginx"
+
+  providers = {
+    helm = helm.aks_deployment_slot_3
+  }
+}
+
+module "ingress_nginx_slot_4" {
+  for_each = local.aks_deployments_by_slot["4"]
+  source   = "./modules/ingress-nginx"
+
+  providers = {
+    helm = helm.aks_deployment_slot_4
+  }
 }
 
 # ODAA Deployments (shared subscription)
@@ -426,12 +458,12 @@ module "odaa" {
 }
 
 # VNet Peering between AKS and ODAA VNets
-module "vnet_peering_team_0" {
-  for_each = local.aks_deployments_by_index["0"]
+module "vnet_peering_slot_0" {
+  for_each = local.aks_deployments_by_slot["0"]
   source   = "./modules/vnet-peering"
 
   providers = {
-    azurerm.aks  = azurerm.aks_deployment_team_0
+    azurerm.aks  = azurerm.aks_deployment_slot_0
     azurerm.odaa = azurerm.odaa
   }
 
@@ -450,12 +482,12 @@ module "vnet_peering_team_0" {
   })
 }
 
-module "vnet_peering_team_1" {
-  for_each = local.aks_deployments_by_index["1"]
+module "vnet_peering_slot_1" {
+  for_each = local.aks_deployments_by_slot["1"]
   source   = "./modules/vnet-peering"
 
   providers = {
-    azurerm.aks  = azurerm.aks_deployment_team_1
+    azurerm.aks  = azurerm.aks_deployment_slot_1
     azurerm.odaa = azurerm.odaa
   }
 
@@ -474,12 +506,12 @@ module "vnet_peering_team_1" {
   })
 }
 
-module "vnet_peering_team_2" {
-  for_each = local.aks_deployments_by_index["2"]
+module "vnet_peering_slot_2" {
+  for_each = local.aks_deployments_by_slot["2"]
   source   = "./modules/vnet-peering"
 
   providers = {
-    azurerm.aks  = azurerm.aks_deployment_team_2
+    azurerm.aks  = azurerm.aks_deployment_slot_2
     azurerm.odaa = azurerm.odaa
   }
 
@@ -498,12 +530,12 @@ module "vnet_peering_team_2" {
   })
 }
 
-module "vnet_peering_team_3" {
-  for_each = local.aks_deployments_by_index["3"]
+module "vnet_peering_slot_3" {
+  for_each = local.aks_deployments_by_slot["3"]
   source   = "./modules/vnet-peering"
 
   providers = {
-    azurerm.aks  = azurerm.aks_deployment_team_3
+    azurerm.aks  = azurerm.aks_deployment_slot_3
     azurerm.odaa = azurerm.odaa
   }
 
@@ -522,12 +554,12 @@ module "vnet_peering_team_3" {
   })
 }
 
-module "vnet_peering_team_4" {
-  for_each = local.aks_deployments_by_index["4"]
+module "vnet_peering_slot_4" {
+  for_each = local.aks_deployments_by_slot["4"]
   source   = "./modules/vnet-peering"
 
   providers = {
-    azurerm.aks  = azurerm.aks_deployment_team_4
+    azurerm.aks  = azurerm.aks_deployment_slot_4
     azurerm.odaa = azurerm.odaa
   }
 
@@ -548,11 +580,11 @@ module "vnet_peering_team_4" {
 
 locals {
   vnet_peering_modules = merge(
-    module.vnet_peering_team_0,
-    module.vnet_peering_team_1,
-    module.vnet_peering_team_2,
-    module.vnet_peering_team_3,
-    module.vnet_peering_team_4,
+    module.vnet_peering_slot_0,
+    module.vnet_peering_slot_1,
+    module.vnet_peering_slot_2,
+    module.vnet_peering_slot_3,
+    module.vnet_peering_slot_4,
   )
 }
 # ===============================================================================
@@ -589,9 +621,9 @@ output "entra_id_deployment_group" {
   description = "Information about the Entra ID deployment groups"
   value = {
     for key, deployment in local.deployments : deployment.name => {
-      object_id     = local.entra_id_modules[key].group_object_id
-      display_name  = local.entra_id_modules[key].group_display_name
-      mail_nickname = local.entra_id_modules[key].group_mail_nickname
+      object_id     = module.entra_id_users.group_object_id
+      display_name  = module.entra_id_users.group_display_name
+      mail_nickname = module.entra_id_users.group_mail_nickname
     }
   }
 }
@@ -599,7 +631,13 @@ output "entra_id_deployment_group" {
 output "entra_id_deployment_users" {
   description = "Initial credentials for the users created in each Entra ID deployment group"
   value = {
-    for key, deployment in local.deployments : deployment.name => local.entra_id_modules[key].user_credentials
+    for key, deployment in local.deployments : deployment.name => (
+      lookup(module.entra_id_users.user_credentials, key, null) == null ?
+      {} :
+      {
+        key = module.entra_id_users.user_credentials[key]
+      }
+    )
   }
   sensitive = true
 }
@@ -621,7 +659,7 @@ output "deployment_summary" {
     deployment_names      = local.deployment_names
     odaa_subscription_id  = var.odaa_subscription_id
     entra_group_display_names = {
-      for key, deployment in local.deployments : deployment.name => local.entra_id_modules[key].group_display_name
+      for key, deployment in local.deployments : deployment.name => module.entra_id_users.group_display_name
     }
   }
 }

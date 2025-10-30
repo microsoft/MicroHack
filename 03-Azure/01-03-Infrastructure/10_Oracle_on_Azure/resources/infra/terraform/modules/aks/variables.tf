@@ -29,8 +29,19 @@ variable "aks_vm_size" {
   default     = "Standard_D8ds_v6"
 }
 
-variable "deployment_group_object_id" {
-  description = "The object ID of the Entra ID group that should have deployment access to AKS"
+variable "os_disk_type" {
+  description = "The OS disk type for AKS node pools (Ephemeral or Managed)"
+  type        = string
+  default     = "Ephemeral"
+
+  validation {
+    condition     = contains(["Ephemeral", "Managed"], var.os_disk_type)
+    error_message = "os_disk_type must be either 'Ephemeral' or 'Managed'."
+  }
+}
+
+variable "deployment_user_object_id" {
+  description = "The object ID of the Entra ID user that should have deployment access to AKS"
   type        = string
 }
 
@@ -43,13 +54,25 @@ variable "subscription_id" {
 # DNS Configuration Variables
 # ===============================================================================
 
-variable "fqdn_odaa" {
+variable "fqdn_odaa_par" {
   description = "The FQDN for Oracle Database on Autonomous Azure"
   type        = string
   default     = ""
 }
 
-variable "fqdn_odaa_app" {
+variable "fqdn_odaa_app_par" {
+  description = "The FQDN for Oracle Database on Autonomous Azure applications"
+  type        = string
+  default     = ""
+}
+
+variable "fqdn_odaa_fra" {
+  description = "The FQDN for Oracle Database on Autonomous Azure"
+  type        = string
+  default     = ""
+}
+
+variable "fqdn_odaa_app_fra" {
   description = "The FQDN for Oracle Database on Autonomous Azure applications"
   type        = string
   default     = ""

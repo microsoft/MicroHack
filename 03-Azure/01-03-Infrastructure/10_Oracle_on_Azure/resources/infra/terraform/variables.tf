@@ -23,7 +23,7 @@ variable "odaa_tenant_id" {
 variable "prefix" {
   description = "The prefix to use for all resources"
   type        = string
-  default     = "team"
+  default     = "user"
 }
 
 variable "location" {
@@ -44,22 +44,45 @@ variable "odaa_cidr_base" {
   default     = "192.168.0.0"
 }
 
-variable "fqdn_odaa" {
+variable "fqdn_odaa_fra" {
   description = "The fully qualified domain name (FQDN) for the ODAA deployment"
   type        = string
   default     = "adb.eu-frankfurt-1.oraclecloud.com"
 }
 
-variable "fqdn_odaa_app" {
+variable "fqdn_odaa_app_fra" {
   description = "The fully qualified domain name (FQDN) for ODAA applications"
   type        = string
   default     = "adb.eu-frankfurt-1.oraclecloudapps.com"
+}
+
+variable "fqdn_odaa_app_par" {
+  description = "The fully qualified domain name (FQDN) for ODAA applications"
+  type        = string
+  default     = "adb.eu-paris-1.oraclecloudapps.com"
+}
+
+variable "fqdn_odaa_par" {
+  description = "The fully qualified domain name (FQDN) for the ODAA deployment"
+  type        = string
+  default     = "adb.eu-paris-1.oraclecloud.com"
 }
 
 variable "aks_vm_size" {
   description = "The VM size for AKS nodes"
   type        = string
   default     = "Standard_D4ds_v6"
+}
+
+variable "aks_os_disk_type" {
+  description = "OS disk type for AKS node pools (Ephemeral or Managed)"
+  type        = string
+  default     = "Ephemeral"
+
+  validation {
+    condition     = contains(["Ephemeral", "Managed"], var.aks_os_disk_type)
+    error_message = "aks_os_disk_type must be either 'Ephemeral' or 'Managed'."
+  }
 }
 
 variable "entra_user_principal_domain" {
@@ -96,16 +119,49 @@ variable "disable_user_credentials_export" {
 # AKS Deployments Configuration
 # ===============================================================================
 
-variable "aks_deployments" {
-  description = "List of AKS deployments to create"
-  type = list(object({
-    subscription_id = string # Azure subscription ID for this AKS deployment
-    tenant_id       = string # Azure AD tenant ID for this subscription
-  }))
+variable "user_count" {
+  description = "Number of isolated user environments to provision"
+  type        = number
+  default     = 1
 
   validation {
-    condition     = length(var.aks_deployments) >= 1 && length(var.aks_deployments) <= 5
-    error_message = "Define between 1 and 5 AKS deployments."
+    condition     = var.user_count >= 1
+    error_message = "At least one user environment must be provisioned."
+  }
+}
+
+variable "subscription_targets" {
+  description = "Ordered list of subscription/tenant pairs used for round-robin assignment"
+  type = list(object({
+    subscription_id = string
+    tenant_id       = string
+  }))
+  default = [
+    {
+      subscription_id = "556f9b63-ebc9-4c7e-8437-9a05aa8cdb25"
+      tenant_id       = "f71980b2-590a-4de9-90d5-6fbc867da951"
+    },
+    {
+      subscription_id = "a0844269-41ae-442c-8277-415f1283d422"
+      tenant_id       = "f71980b2-590a-4de9-90d5-6fbc867da951"
+    },
+    {
+      subscription_id = "b1658f1f-33e5-4e48-9401-f66ba5e64cce"
+      tenant_id       = "f71980b2-590a-4de9-90d5-6fbc867da951"
+    },
+    {
+      subscription_id = "9aa72379-2067-4948-b51c-de59f4005d04"
+      tenant_id       = "f71980b2-590a-4de9-90d5-6fbc867da951"
+    },
+    {
+      subscription_id = "98525264-1eb4-493f-983d-16a330caa7f6"
+      tenant_id       = "f71980b2-590a-4de9-90d5-6fbc867da951"
+    }
+  ]
+
+  validation {
+    condition     = length(var.subscription_targets) >= 1 && length(var.subscription_targets) <= 5
+    error_message = "Provide between 1 and 5 subscription targets."
   }
 }
 

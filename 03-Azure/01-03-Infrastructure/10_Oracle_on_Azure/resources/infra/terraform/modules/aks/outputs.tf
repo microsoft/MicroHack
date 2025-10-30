@@ -28,6 +28,12 @@ output "aks_cluster_kube_config" {
   sensitive   = true
 }
 
+output "aks_cluster_kube_config_raw" {
+  description = "The raw kubeconfig for the AKS cluster"
+  value       = azurerm_kubernetes_cluster.aks.kube_config_raw
+  sensitive   = true
+}
+
 output "resource_group_name" {
   description = "The name of the resource group"
   value       = azurerm_resource_group.aks.name
@@ -74,8 +80,10 @@ output "rbac_assignments" {
     cluster_user_assignment          = azurerm_role_assignment.aks_cluster_user.id
     rbac_writer_assignment           = azurerm_role_assignment.aks_rbac_writer.id
     subscription_reader_assignment   = azurerm_role_assignment.subscription_reader.id
-    private_dns_contributor_odaa     = azurerm_role_assignment.private_dns_contributor_odaa.id
-    private_dns_contributor_odaa_app = azurerm_role_assignment.private_dns_contributor_odaa_app.id
+    private_dns_contributor_odaa_fra     = azurerm_role_assignment.private_dns_contributor_odaa_fra.id
+    private_dns_contributor_odaa_app_fra = azurerm_role_assignment.private_dns_contributor_odaa_app_fra.id
+    private_dns_contributor_odaa_par     = azurerm_role_assignment.private_dns_contributor_odaa_par.id
+    private_dns_contributor_odaa_app_par = azurerm_role_assignment.private_dns_contributor_odaa_app_par.id
   }
 }
 
@@ -86,9 +94,13 @@ output "rbac_assignments" {
 output "dns_zones" {
   description = "Information about the private DNS zones created"
   value = {
-    odaa_zone_id       = azurerm_private_dns_zone.odaa.id
-    odaa_zone_name     = azurerm_private_dns_zone.odaa.name
-    odaa_app_zone_id   = azurerm_private_dns_zone.odaa_app.id
-    odaa_app_zone_name = azurerm_private_dns_zone.odaa_app.name
+    odaa_zone_id_fra       = azurerm_private_dns_zone.odaa_fra.id
+    odaa_zone_name_fra     = azurerm_private_dns_zone.odaa_fra.name
+    odaa_app_zone_id_fra   = azurerm_private_dns_zone.odaa_app_fra.id
+    odaa_app_zone_name_fra = azurerm_private_dns_zone.odaa_app_fra.name
+    odaa_zone_id_par       = azurerm_private_dns_zone.odaa_par.id
+    odaa_zone_name_par     = azurerm_private_dns_zone.odaa_par.name
+    odaa_app_zone_id_par   = azurerm_private_dns_zone.odaa_app_par.id
+    odaa_app_zone_name_par = azurerm_private_dns_zone.odaa_app_par.name
   }
 }

@@ -29,6 +29,10 @@ terraform {
       source  = "hashicorp/local"
       version = "~> 2.5"
     }
+    helm = {
+      source  = "hashicorp/helm"
+      version = "~> 2.13"
+    }
   }
 
   # Uncomment and configure the backend for remote state storage

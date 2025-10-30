@@ -89,7 +89,7 @@ kubectl auth can-i "*" "*" --all-namespaces
    ```
 
 2. **Insufficient permissions**
-   - Ensure you have Contributor or higher permissions
+   - Ensure you have Contributor or higher permissionstf f
    - Ensure you can register resource providers
 
 3. **AKS node provisioning issues**

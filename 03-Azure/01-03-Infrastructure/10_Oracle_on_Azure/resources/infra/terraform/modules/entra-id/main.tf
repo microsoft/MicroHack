@@ -22,37 +22,54 @@ terraform {
 data "azuread_client_config" "current" {}
 
 locals {
-  hero_entries = jsondecode(file("${path.module}/hero_names.json"))
-  hero_map = {
-    for entry in local.hero_entries :
+  user_catalog_entries = jsondecode(file("${path.root}/users.json"))
+  user_catalog_by_identifier = {
+    for entry in local.user_catalog_entries :
     lower(entry.identifier) => entry
   }
 
-  user_slot_count = 5
-  user_slots = [
-    for idx in range(local.user_slot_count) : {
-      key        = format("%02d", idx)
-      identifier = lower("t${var.deployment_index}u${idx + 1}")
-      hero       = lookup(local.hero_map, lower("t${var.deployment_index}u${idx + 1}"), null)
+  user_configs = {
+    for key, user in var.users :
+    key => {
+      identifier   = lower(user.identifier)
+      catalog_entry = lookup(local.user_catalog_by_identifier, lower(user.identifier), null)
     }
+  }
+
+  missing_catalog_identifiers = [
+    for cfg in values(local.user_configs) :
+    cfg.identifier
+    if cfg.catalog_entry == null
   ]
 
-  missing_hero_identifiers = [for slot in local.user_slots : slot.identifier if slot.hero == null]
+  user_principal_names = {
+    for key, cfg in local.user_configs :
+    key => (
+      cfg.catalog_entry != null && trimspace(coalesce(cfg.catalog_entry.user_principal_name, "")) != ""
+      ? cfg.catalog_entry.user_principal_name
+      : (
+        var.user_principal_domain != null
+        ? "${cfg.identifier}@${var.user_principal_domain}"
+        : null
+      )
+    )
+  }
 
   missing_user_principal_names = [
-    for slot in local.user_slots :
-    slot.identifier
-    if slot.hero != null && trimspace(coalesce(slot.hero.user_principal_name, "")) == ""
+    for key, upn in local.user_principal_names :
+    local.user_configs[key].identifier
+    if trimspace(coalesce(upn, "")) == ""
   ]
 
   user_definitions = {
-    for slot in local.user_slots :
-    slot.key => {
-      display_name         = slot.hero != null ? "${slot.hero.given_name} ${slot.hero.surname}" : upper(slot.identifier)
-      user_principal_name  = slot.hero != null ? slot.hero.user_principal_name : null
-      mail_nickname        = slot.hero != null ? lower(slot.hero.identifier) : slot.identifier
-      given_name           = slot.hero != null ? slot.hero.given_name : upper(slot.identifier)
-      surname              = slot.hero != null ? slot.hero.surname : "User"
+    for key, cfg in local.user_configs :
+    key => {
+      identifier          = cfg.identifier
+      display_name        = cfg.catalog_entry != null ? "${cfg.catalog_entry.given_name} ${cfg.catalog_entry.surname}" : upper(cfg.identifier)
+      user_principal_name = local.user_principal_names[key]
+      mail_nickname       = cfg.catalog_entry != null ? lower(cfg.catalog_entry.identifier) : cfg.identifier
+      given_name          = cfg.catalog_entry != null ? cfg.catalog_entry.given_name : upper(cfg.identifier)
+      surname             = cfg.catalog_entry != null ? cfg.catalog_entry.surname : "User"
     }
   }
 }
@@ -92,19 +109,19 @@ resource "azuread_user" "aks_deployment_users" {
   depends_on = [azuread_group.aks_deployment]
   for_each   = local.user_definitions
 
-  display_name         = each.value.display_name
-  user_principal_name  = each.value.user_principal_name
-  mail_nickname        = each.value.mail_nickname
-  given_name           = each.value.given_name
-  surname              = each.value.surname
-  password             = random_password.aks_deployment_users[each.key].result
+  display_name          = each.value.display_name
+  user_principal_name   = each.value.user_principal_name
+  mail_nickname         = each.value.mail_nickname
+  given_name            = each.value.given_name
+  surname               = each.value.surname
+  password              = random_password.aks_deployment_users[each.key].result
   force_password_change = true
   account_enabled       = true
 
   lifecycle {
     precondition {
-      condition = length(local.missing_hero_identifiers) == 0 && length(local.missing_user_principal_names) == 0
-      error_message = length(local.missing_hero_identifiers) > 0 ? format("Missing hero mapping for identifiers: %s", join(", ", local.missing_hero_identifiers)) : format("Missing user_principal_name for identifiers: %s", join(", ", local.missing_user_principal_names))
+      condition = length(local.missing_catalog_identifiers) == 0 && length(local.missing_user_principal_names) == 0
+      error_message = length(local.missing_catalog_identifiers) > 0 ? format("Missing catalog entry for identifiers: %s", join(", ", local.missing_catalog_identifiers)) : format("Missing user_principal_name for identifiers: %s", join(", ", local.missing_user_principal_names))
     }
   }
 }

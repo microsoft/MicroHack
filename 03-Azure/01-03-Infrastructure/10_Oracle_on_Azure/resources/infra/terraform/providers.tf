@@ -6,14 +6,14 @@
 # ===============================================================================
 
 locals {
-  aks_subscription_ids         = [for deployment in var.aks_deployments : deployment.subscription_id]
+  aks_subscription_ids         = [for target in var.subscription_targets : target.subscription_id]
   fallback_aks_subscription_id = var.odaa_subscription_id
   aks_subscription_ids_padded = concat(
     local.aks_subscription_ids,
     [for _ in range(max(0, 5 - length(local.aks_subscription_ids))) : local.fallback_aks_subscription_id]
   )
 
-  aks_tenant_ids         = [for deployment in var.aks_deployments : deployment.tenant_id]
+  aks_tenant_ids         = [for target in var.subscription_targets : target.tenant_id]
   fallback_aks_tenant_id = var.odaa_tenant_id
   aks_tenant_ids_padded = concat(
     local.aks_tenant_ids,
@@ -57,7 +57,7 @@ provider "azurerm" {
 
 # Provider aliases for up to five AKS subscriptions (manual module instances)
 provider "azurerm" {
-  alias                = "aks_deployment_team_0"
+  alias                = "aks_deployment_slot_0"
   subscription_id      = local.aks_subscription_ids_padded[0]
   tenant_id            = local.aks_tenant_ids_padded[0]
   auxiliary_tenant_ids = [var.odaa_tenant_id]
@@ -91,7 +91,7 @@ provider "azurerm" {
 }
 
 provider "azurerm" {
-  alias                = "aks_deployment_team_1"
+  alias                = "aks_deployment_slot_1"
   subscription_id      = local.aks_subscription_ids_padded[1]
   tenant_id            = local.aks_tenant_ids_padded[1]
   auxiliary_tenant_ids = [var.odaa_tenant_id]
@@ -125,7 +125,7 @@ provider "azurerm" {
 }
 
 provider "azurerm" {
-  alias                = "aks_deployment_team_2"
+  alias                = "aks_deployment_slot_2"
   subscription_id      = local.aks_subscription_ids_padded[2]
   tenant_id            = local.aks_tenant_ids_padded[2]
   auxiliary_tenant_ids = [var.odaa_tenant_id]
@@ -159,7 +159,7 @@ provider "azurerm" {
 }
 
 provider "azurerm" {
-  alias                = "aks_deployment_team_3"
+  alias                = "aks_deployment_slot_3"
   subscription_id      = local.aks_subscription_ids_padded[3]
   tenant_id            = local.aks_tenant_ids_padded[3]
   auxiliary_tenant_ids = [var.odaa_tenant_id]
@@ -193,7 +193,7 @@ provider "azurerm" {
 }
 
 provider "azurerm" {
-  alias                = "aks_deployment_team_4"
+  alias                = "aks_deployment_slot_4"
   subscription_id      = local.aks_subscription_ids_padded[4]
   tenant_id            = local.aks_tenant_ids_padded[4]
   auxiliary_tenant_ids = [var.odaa_tenant_id]
@@ -273,27 +273,27 @@ provider "azuread" {
 
 # AzureAD provider aliases per AKS deployment tenant
 provider "azuread" {
-  alias     = "aks_deployment_team_0"
+  alias     = "aks_deployment_slot_0"
   tenant_id = local.aks_tenant_ids_padded[0]
 }
 
 provider "azuread" {
-  alias     = "aks_deployment_team_1"
+  alias     = "aks_deployment_slot_1"
   tenant_id = local.aks_tenant_ids_padded[1]
 }
 
 provider "azuread" {
-  alias     = "aks_deployment_team_2"
+  alias     = "aks_deployment_slot_2"
   tenant_id = local.aks_tenant_ids_padded[2]
 }
 
 provider "azuread" {
-  alias     = "aks_deployment_team_3"
+  alias     = "aks_deployment_slot_3"
   tenant_id = local.aks_tenant_ids_padded[3]
 }
 
 provider "azuread" {
-  alias     = "aks_deployment_team_4"
+  alias     = "aks_deployment_slot_4"
   tenant_id = local.aks_tenant_ids_padded[4]
 }
 

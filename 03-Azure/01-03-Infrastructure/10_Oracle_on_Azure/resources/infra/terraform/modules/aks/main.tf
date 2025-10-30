@@ -86,8 +86,8 @@ resource "azurerm_kubernetes_cluster" "aks" {
     name                   = "agentpool"
     node_count             = 2
     vm_size                = var.aks_vm_size
-  os_disk_size_gb        = 128
-    os_disk_type           = "Ephemeral"
+    os_disk_size_gb        = 128
+    os_disk_type           = var.os_disk_type
     vnet_subnet_id         = azurerm_subnet.aks.id
     max_pods               = 30
     type                   = "VirtualMachineScaleSets"
@@ -192,24 +192,24 @@ resource "azurerm_kubernetes_cluster" "aks" {
 resource "azurerm_role_assignment" "aks_cluster_user" {
   scope                = azurerm_kubernetes_cluster.aks.id
   role_definition_name = "Azure Kubernetes Service Cluster User Role"
-  principal_id         = var.deployment_group_object_id
-  description          = "Allows group members to get cluster credentials for ${azurerm_kubernetes_cluster.aks.name}"
+  principal_id         = var.deployment_user_object_id
+  description          = "Allows the deployment user to get cluster credentials for ${azurerm_kubernetes_cluster.aks.name}"
 }
 
 # Azure Kubernetes Service RBAC Admin - allows full admin access to cluster
 resource "azurerm_role_assignment" "aks_rbac_writer" {
   scope                = azurerm_kubernetes_cluster.aks.id
   role_definition_name = "Azure Kubernetes Service RBAC Writer"
-  principal_id         = var.deployment_group_object_id
-  description          = "Allows group members to deploy Kubernetes workloads in ${azurerm_kubernetes_cluster.aks.name}"
+  principal_id         = var.deployment_user_object_id
+  description          = "Allows the deployment user to deploy Kubernetes workloads in ${azurerm_kubernetes_cluster.aks.name}"
 }
 
 # Reader role for visibility into the AKS subscription
 resource "azurerm_role_assignment" "subscription_reader" {
   scope                = "/subscriptions/${var.subscription_id}"
   role_definition_name = "Reader"
-  principal_id         = var.deployment_group_object_id
-  description          = "Allows group members to view resources in subscription ${var.subscription_id}"
+  principal_id         = var.deployment_user_object_id
+  description          = "Allows the deployment user to view resources in subscription ${var.subscription_id}"
 }
 
 # ===============================================================================
@@ -222,7 +222,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "user" {
   vm_size                = var.aks_vm_size
   node_count             = 1
   os_disk_size_gb        = 128
-  os_disk_type           = "Ephemeral"
+  os_disk_type           = var.os_disk_type
   vnet_subnet_id         = azurerm_subnet.aks.id
   max_pods               = 30
   auto_scaling_enabled   = true
@@ -248,49 +248,102 @@ resource "azurerm_kubernetes_cluster_node_pool" "user" {
 # Private DNS Zones (Integrated DNS)
 # ===============================================================================
 
-# Private DNS Zone for ODAA FQDN
-resource "azurerm_private_dns_zone" "odaa" {
-  name                = var.fqdn_odaa
+# Private DNS Zone for ODAA FQDN FRA
+resource "azurerm_private_dns_zone" "odaa_fra" {
+  name                = var.fqdn_odaa_fra
   resource_group_name = azurerm_resource_group.aks.name
   tags                = var.tags
 }
 
-resource "azurerm_private_dns_zone_virtual_network_link" "odaa" {
+# Link Private DNS Zone for ODAA Link FRA
+resource "azurerm_private_dns_zone_virtual_network_link" "odaa_fra" {
   name                  = "aks-pdns-link-odaa"
   resource_group_name   = azurerm_resource_group.aks.name
-  private_dns_zone_name = azurerm_private_dns_zone.odaa.name
+  private_dns_zone_name = azurerm_private_dns_zone.odaa_fra.name
   virtual_network_id    = azurerm_virtual_network.aks.id
   registration_enabled  = false
   tags                  = var.tags
+}
+
+# Grant Private DNS Zone Contributor access to the deployment group FRA
+resource "azurerm_role_assignment" "private_dns_contributor_odaa_fra" {
+  scope                = azurerm_private_dns_zone.odaa_fra.id
+  role_definition_name = "Private DNS Zone Contributor"
+  principal_id         = var.deployment_user_object_id
+  description          = "Allows the deployment user to manage private DNS zone ${azurerm_private_dns_zone.odaa_fra.name}"
+}
+
+# Private DNS Zone for ODAA App FQDN FRA
+resource "azurerm_private_dns_zone" "odaa_app_fra" {
+  name                = var.fqdn_odaa_app_fra
+  resource_group_name = azurerm_resource_group.aks.name
+  tags                = var.tags
+}
+
+# Link Private DNS Zone for ODAA App Link FRA
+resource "azurerm_private_dns_zone_virtual_network_link" "odaa_app_fra" {
+  name                  = "aks-pdns-link-odaa-app"
+  resource_group_name   = azurerm_resource_group.aks.name
+  private_dns_zone_name = azurerm_private_dns_zone.odaa_app_fra.name
+  virtual_network_id    = azurerm_virtual_network.aks.id
+  registration_enabled  = false
+  tags                  = var.tags
+}
+
+# Grant Private DNS Zone Contributor access to the deployment group FRA
+resource "azurerm_role_assignment" "private_dns_contributor_odaa_app_fra" {
+  scope                = azurerm_private_dns_zone.odaa_app_fra.id
+  role_definition_name = "Private DNS Zone Contributor"
+  principal_id         = var.deployment_user_object_id
+  description          = "Allows the deployment user to manage private DNS zone ${azurerm_private_dns_zone.odaa_app_fra.name}"
+}
+
+# Private DNS Zone for ODAA FQDN PAR
+resource "azurerm_private_dns_zone" "odaa_par" {
+  name                = var.fqdn_odaa_par
+  resource_group_name = azurerm_resource_group.aks.name
+  tags                = var.tags
+}
+
+# Link Private DNS Zone for ODAA Link PAR
+resource "azurerm_private_dns_zone_virtual_network_link" "odaa_par" {
+  name                  = "aks-pdns-link-odaa"
+  resource_group_name   = azurerm_resource_group.aks.name
+  private_dns_zone_name = azurerm_private_dns_zone.odaa_par.name
+  virtual_network_id    = azurerm_virtual_network.aks.id
+  registration_enabled  = false
+  tags                  = var.tags
+}
+
+# Grant Private DNS Zone Contributor access to the deployment group PAR
+resource "azurerm_role_assignment" "private_dns_contributor_odaa_par" {
+  scope                = azurerm_private_dns_zone.odaa_par.id
+  role_definition_name = "Private DNS Zone Contributor"
+  principal_id         = var.deployment_user_object_id
+  description          = "Allows the deployment user to manage private DNS zone ${azurerm_private_dns_zone.odaa_par.name}"
 }
 
 # Private DNS Zone for ODAA App FQDN
-resource "azurerm_private_dns_zone" "odaa_app" {
-  name                = var.fqdn_odaa_app
+resource "azurerm_private_dns_zone" "odaa_app_par" {
+  name                = var.fqdn_odaa_app_par
   resource_group_name = azurerm_resource_group.aks.name
   tags                = var.tags
 }
 
-resource "azurerm_private_dns_zone_virtual_network_link" "odaa_app" {
+# Link
+resource "azurerm_private_dns_zone_virtual_network_link" "odaa_app_par" {
   name                  = "aks-pdns-link-odaa-app"
   resource_group_name   = azurerm_resource_group.aks.name
-  private_dns_zone_name = azurerm_private_dns_zone.odaa_app.name
+  private_dns_zone_name = azurerm_private_dns_zone.odaa_app_par.name
   virtual_network_id    = azurerm_virtual_network.aks.id
   registration_enabled  = false
   tags                  = var.tags
 }
 
-# Grant Private DNS Zone Contributor access to the deployment group
-resource "azurerm_role_assignment" "private_dns_contributor_odaa" {
-  scope                = azurerm_private_dns_zone.odaa.id
+# Grant Private DNS Zone Contributor access to the deployment group PAR
+resource "azurerm_role_assignment" "private_dns_contributor_odaa_app_par" {
+  scope                = azurerm_private_dns_zone.odaa_app_par.id
   role_definition_name = "Private DNS Zone Contributor"
-  principal_id         = var.deployment_group_object_id
-  description          = "Allows group members to manage private DNS zone ${azurerm_private_dns_zone.odaa.name}"
-}
-
-resource "azurerm_role_assignment" "private_dns_contributor_odaa_app" {
-  scope                = azurerm_private_dns_zone.odaa_app.id
-  role_definition_name = "Private DNS Zone Contributor"
-  principal_id         = var.deployment_group_object_id
-  description          = "Allows group members to manage private DNS zone ${azurerm_private_dns_zone.odaa_app.name}"
+  principal_id         = var.deployment_user_object_id
+  description          = "Allows the deployment user to manage private DNS zone ${azurerm_private_dns_zone.odaa_app_par.name}"
 }

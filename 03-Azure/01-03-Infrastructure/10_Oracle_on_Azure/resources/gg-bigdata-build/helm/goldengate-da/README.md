@@ -31,3 +31,6 @@ Browse to `https://ogg-bigdata.<public-ip>.nip.io` and sign in with the default 
 ```powershell
 helm uninstall goldengate-da --namespace microhacks
 ```
+
+
+docker pull fra.ocir.io/fre3ftc1iva4/pub_gg_micro_bigdata:23.8.4.25.08

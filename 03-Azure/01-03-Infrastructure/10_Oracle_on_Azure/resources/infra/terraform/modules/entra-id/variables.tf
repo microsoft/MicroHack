@@ -13,18 +13,17 @@ variable "aks_deployment_group_description" {
   default     = "Security group with rights to deploy applications to the Oracle AKS cluster"
 }
 
-
 variable "tenant_id" {
   description = "Tenant ID where the Entra ID group should be created"
   type        = string
 }
 
-variable "deployment_index" {
-  description = "Zero-based index of the deployment using this module"
-  type        = number
+variable "users" {
+  description = "Map of user definitions keyed by deployment identifier"
+  type = map(object({
+    identifier = string
+  }))
 }
-
-
 
 variable "tags" {
   description = "A mapping of tags to assign to the resources"

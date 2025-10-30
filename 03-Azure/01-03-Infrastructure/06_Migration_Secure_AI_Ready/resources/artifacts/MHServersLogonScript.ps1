@@ -366,6 +366,8 @@ if ($Env:flavor -ne 'DevOps') {
 #>
             Write-Host 'Waiting for the nested Windows VMs to come back online...'
 
+            start-sleep -Seconds 30
+
             Get-VM $Win2k22vmName | Restart-VM -Force
             Get-VM $Win2k22vmName | Wait-VM -For Heartbeat -Timeout 600
 

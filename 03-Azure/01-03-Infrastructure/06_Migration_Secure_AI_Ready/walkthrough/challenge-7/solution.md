@@ -117,7 +117,7 @@ You successfully completed challenge 6! 🚀🚀🚀
 
 The deployed architecture now looks like the following diagram.
 
-![image](./img/Challenge-complete.jpg)
+![image](./img/Challenge-7.jpg)
 
 🚀🚀🚀 **!!!Congratulations!!! - You successfully completed the MicroHack. You can now safley remove the *source-rg* and *destination-rg* Resource Groups.** 🚀🚀🚀
 

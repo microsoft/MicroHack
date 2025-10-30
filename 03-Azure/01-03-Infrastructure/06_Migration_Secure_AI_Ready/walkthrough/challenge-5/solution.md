@@ -91,35 +91,35 @@ If the *MARS agent version* is empty refresh the Server before you continue to e
 
 From the Azure Migrate project in the Azure portal  select *Replicate* from the *Migrations* section.
 
-![image](./img/Repl1.png)
+![image](./img/Rep1.png)
 
 Specify the intent as shown on the diagram below:
 
-![image](./img/Repl2.png)
+![image](./img/Rep2.png)
 
 Next select the Windows and the Linux System that host the Web Server with the Microhack Demo page.
 
-![image](./img/Repl3.png)
+![image](./img/Rep3.png)
 
 Next select the destination resource group and the destination vNet & subnet.
 
-![image](./img/Repl4.png)
+![image](./img/Rep4.png)
 
 In the Compute section you can adjust the target settings e.g., VM size.
 
-![image](./img/Repl5.png)
+![image](./img/Rep5.png)
 
 In the Disk section you can adjust the target settings e.g., Standard SSD.
 
-![image](./img/Repl6.png)
+![image](./img/Rep6.png)
 
 Proceed to the final summary and enable replication.
 
-![image](./img/Repl7.png)
+![image](./img/Rep7.png)
 
 Wait until the Replication status shows *Protected*
 
-![image](./img/Repl8.png)
+![image](./img/Rep8.png)
 
 ### **Task 3: Perform Test Migration
 

@@ -2,6 +2,8 @@
 
 [Back to workspace README](../../README.md)
 
+> IMPORTANT: In the case of this Microhack, the ODAA Subscription, which will be discussed here, is already created and therefore your user does not need the create one.
+
 ## 🧱 ODAA Main Components
 
 1. ODAA Subscription, which is a container that contains the different Oracle Database Services and defines the commercial aspects of the service
@@ -26,8 +28,6 @@ This can be done by following the instructions in [Oracle’s resource provider 
 Many of the tasks you perform during ODAA Subscription onboarding require permissions in either the Azure cloud or the Oracle Cloud Infrastructure (OCI) cloud. Review the following link that details the permissions you need for each task of the onboarding process:
 
 - [Oracle Documentation Permissions for Onboarding and Provisioning ODAA Services](https://docs.oracle.com/en-us/iaas/Content/database-at-azure/oaaprerequisites.htm#permissions)
-
-> NOTE: In the case of this Microhack, the ODAA Subscription is already created and therefore your user does not need the permissions.
 
 ## 💰 ODAA Subscription purchase options
 
@@ -114,9 +114,6 @@ The following shows how we linked our newly created public offer ODAA Subscripti
 
 8. After a while, the Status will switch from "Pending" to "Activated".
 ![An image of the Azure portal showing the Oracle purchase page with the Oracle Cloud account successfully validated.](media/odaa-subscription-activated-status.jpeg)
-
-
-
 
 ## 💰 Purchase ODAA Subscription via Private Offer (Enterprise)
 

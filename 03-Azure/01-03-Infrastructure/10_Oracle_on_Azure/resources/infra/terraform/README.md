@@ -2,6 +2,7 @@
 
 This directory contains Terraform configurations to deploying Oracle Database@Azure (ODAA) infrastructure for the Oracle Microhack.
 
+
 ## Prerequisites
 
 Expection is that you are running on Windows OS.
@@ -49,6 +50,29 @@ az provider register --namespace Microsoft.Network
 
 > Why Re-register Resource Providers?
 > When you register a preview feature, you're essentially enabling a feature flag for your subscription. However, the resource provider itself may not immediately "know" about this new capability until it's refreshed.
+
+### Scripted Registration for Multiple Subscriptions
+
+~~~powershell
+# Run the PowerShell script to register the Oracle SDN appliance feature across multiple subscriptions
+# Ensure the subscription IDs are correctly set in the script before running
+pwsh ./scripts/register-oracle-sdn.ps1
+~~~
+
+Output will look as follows:
+
+~~~powershell
+=== Processing subscription 556f9b63-ebc9-4c7e-8437-9a05aa8cdb25 ===
+Registering feature Microsoft.Baremetal/EnableRotterdamSdnApplianceForOracle...
+Registering feature Microsoft.Network/EnableRotterdamSdnApplianceForOracle...
+Waiting for feature registration to complete...
+  Microsoft.Baremetal/EnableRotterdamSdnApplianceForOracle: Registered; Microsoft.Network/EnableRotterdamSdnApplianceForOracle: Registered
+Re-registering provider Microsoft.Baremetal...
+Re-registering provider Microsoft.Network...
+Completed feature setup for 556f9b63-ebc9-4c7e-8437-9a05aa8cdb25
+~~~
+
+
 
 ## Configuration
 
@@ -116,8 +140,7 @@ terraform destroy -auto-approve
 
 ## Terraform Entra ID Group Issues
 
-Unfortunately the Terraform command "destroy" does not destroy the Entra ID group created for deployment access.
-Therefore we need to use the following script to clean up the Entra ID groups created during deployment.
+In case you need to clean up Entra ID groups created for AKS deployment access, you can use the following PowerShell script instead of Terraform. But this should be only the last resort. You should be able to manage the groups via Terraform state commands.
 
 ~~~powershell
 # PowerShell script to delete Entra ID groups created for AKS deployment access
@@ -134,23 +157,77 @@ Deleted group 'mhteam-0'.
 ## ODAA Advanced Network Features
 
 
-### Scripted Registration for Multiple Subscriptions
+## Entra ID Conditional Access Policy
+
+The currently used Entra Tenant does include a Conditional Accecss Policy
 
 ~~~powershell
-# Run the PowerShell script to register the Oracle SDN appliance feature across multiple subscriptions
-# Ensure the subscription IDs are correctly set in the script before running
-pwsh ./scripts/register-oracle-sdn.ps1
+az rest --method GET `
+  --url "https://graph.microsoft.com/v1.0/identity/conditionalAccess/policies/a0f65b12-2cae-4633-a556-52fef38ed590" `
+  --query "{displayName:displayName,state:state,conditions:conditions,grantControls:grantControls,sessionControls:sessionControls}"
 ~~~
 
-Output will look as follows:
-
-~~~powershell
-=== Processing subscription 556f9b63-ebc9-4c7e-8437-9a05aa8cdb25 ===
-Registering feature Microsoft.Baremetal/EnableRotterdamSdnApplianceForOracle...
-Registering feature Microsoft.Network/EnableRotterdamSdnApplianceForOracle...
-Waiting for feature registration to complete...
-  Microsoft.Baremetal/EnableRotterdamSdnApplianceForOracle: Registered; Microsoft.Network/EnableRotterdamSdnApplianceForOracle: Registered
-Re-registering provider Microsoft.Baremetal...
-Re-registering provider Microsoft.Network...
-Completed feature setup for 556f9b63-ebc9-4c7e-8437-9a05aa8cdb25
+~~~json
+{
+  "conditions": {
+    "applications": {
+      "applicationFilter": null,
+      "excludeApplications": [],
+      "includeApplications": [],
+      "includeAuthenticationContextClassReferences": [],
+      "includeUserActions": [
+        "urn:user:registersecurityinfo"
+      ]
+    },
+    "authenticationFlows": null,
+    "clientAppTypes": [
+      "all"
+    ],
+    "clientApplications": null,
+    "devices": null,
+    "insiderRiskLevels": null,
+    "locations": {
+      "excludeLocations": [
+        "0df1941c-38b1-479b-a57b-7b37916902d0"
+      ],
+      "includeLocations": [
+        "All"
+      ]
+    },
+    "platforms": null,
+    "servicePrincipalRiskLevels": [],
+    "signInRiskLevels": [],
+    "userRiskLevels": [],
+    "users": {
+      "excludeGroups": [
+        "f217541c-b1c0-4247-99d6-c4f06c2492ac"
+      ],
+      "excludeGuestsOrExternalUsers": null,
+      "excludeRoles": [],
+      "excludeUsers": [
+        "7b368f5d-0186-4650-9d50-3559567906f0",
+        "7a4c09e1-dfff-4536-a2c1-f9545e8bdc50"
+      ],
+      "includeGroups": [],
+      "includeGuestsOrExternalUsers": null,
+      "includeRoles": [],
+      "includeUsers": [
+        "All"
+      ]
+    }
+  },
+  "displayName": "Security info registration for Microsoft partners and vendors",
+  "grantControls": {
+    "authenticationStrength": null,
+    "authenticationStrength@odata.context": "https://graph.microsoft.com/v1.0/$metadata#identity/conditionalAccess/policies('a0f65b12-2cae-4633-a556-52fef38ed590')/grantControls/authenticationStrength/$entity",
+    "builtInControls": [
+      "block"
+    ],
+    "customAuthenticationFactors": [],
+    "operator": "OR",
+    "termsOfUse": []
+  },
+  "sessionControls": null,
+  "state": "enabled"
+}
 ~~~

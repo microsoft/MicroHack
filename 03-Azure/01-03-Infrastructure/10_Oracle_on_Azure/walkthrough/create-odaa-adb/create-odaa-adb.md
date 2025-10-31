@@ -20,23 +20,27 @@ Azure delegated subnets allow you to delegate exclusive control of a subnet with
 
 Please follow the instructions in the following link to create an ODAA Autonomous Database instance within the pre-created delegated subnet.
 
-After you have successfully logged into the Azure portal, you will find 3 resource groups. The following resource groups are of interest for you and this Microhack: 
+After you have successfully logged into the Azure portal, you will find the following resource groups which are of interest for you during this Microhack:
 
-- **aks-team0** - Team members of team0 will work on the same deployed AKS and add additional pods during the microhack
-- **MC-team0** - Second resource group of the deployed AKS
-- **odaa-team0** - Used to deploy your ADB shared database in the microhack
+- **aks-user00** - Team members of user00 will work on the same deployed AKS and add additional pods during the microhack
+- **odaa-user00** - Used to deploy your ADB shared database in the microhack
 
-Please use the resource groups you are assigned to based on the number at the end of the resource group names. For example, team0 corresponds to the user t0u1@cptazure.org who logged into the Azure portal.
+Please use the resource groups you are assigned to based on the number at the end of the resource group names. For example, aks-user00 corresponds to the user user00@cptazure.org who logged into the Azure portal.
 
 ### Use the following parameters when creating the ODAA Autonomous Database instance
 
 - **Azure Subscription**: sub-mhodaa
-- **Azure Resource Group**: odaa-team0 *(replace with your user number)*
-- **Azure Region**: France Central *(replace with the region used by your Azure Resource Group)*
-- **VNet**: odaa-team0 *(replace with your user number)*
-- **Subnet**: odaa-team0 *(replace with your user number)*
+- **Azure Resource Group**: odaa-user00 *(replace with your user number)*
+- **Azure Region**: France Central
+- **VNet**: odaa-user00 *(replace with your user number)*
+- **Subnet**: odaa-user00 *(replace with your user number)*
 
 To be considered during the deployment:
+
+### Create the Oracle Autonomous Database
+
+1. In the Azure portal search for the Oracle Services and select **Oracle Database@Azure**.
+1. 
 
 ### Settings of the ADB
 

@@ -213,7 +213,28 @@ resource "azuread_app_role_assignment" "oracle_cloud_group" {
 resource "local_file" "user_credentials" {
   count    = var.disable_user_credentials_export ? 0 : 1
   filename = local.user_credentials_output_path
-  content  = jsonencode(local.user_credentials_export)
+  content  = <<-JSON
+  {
+    "generated_at": ${jsonencode(local.user_credentials_export.generated_at)},
+    "deployments": {
+%{for deployment_name in local.deployment_names~}
+%{if length(local.user_credentials_export.deployments[deployment_name]) == 0}
+      ${jsonencode(deployment_name)}: []%{if index(local.deployment_names, deployment_name) < length(local.deployment_names) - 1},%{endif}
+%{else}
+      ${jsonencode(deployment_name)}: [
+%{for credential_index, credential in local.user_credentials_export.deployments[deployment_name]~}
+        {
+          "user_principal_name": ${jsonencode(credential.user_principal_name)},
+          "display_name": ${jsonencode(credential.display_name)},
+          "initial_password": ${jsonencode(credential.initial_password)}
+        }%{if credential_index < length(local.user_credentials_export.deployments[deployment_name]) - 1},%{endif}
+%{endfor~}
+      ]%{if index(local.deployment_names, deployment_name) < length(local.deployment_names) - 1},%{endif}
+%{endif}
+%{endfor~}
+    }
+  }
+  JSON
 
   lifecycle {
     precondition {
@@ -223,6 +244,45 @@ resource "local_file" "user_credentials" {
   }
 }
 
+/*
+resource "azuread_conditional_access_policy" "security_info_registration" {
+  display_name = "Security info registration for Microsoft partners and vendors"
+  state        = "enabled"
+
+  conditions {
+    client_app_types = ["all"]
+
+    applications {
+      include_user_actions = ["urn:user:registersecurityinfo"]
+    }
+
+    locations {
+      include_locations = ["All"]
+      exclude_locations = [
+        "0df1941c-38b1-479b-a57b-7b37916902d0"
+      ]
+    }
+
+    users {
+      include_users = ["All"]
+      exclude_users = [
+        "7b368f5d-0186-4650-9d50-3559567906f0",
+        "7a4c09e1-dfff-4536-a2c1-f9545e8bdc50"
+      ]
+      exclude_groups = concat(
+        ["f217541c-b1c0-4247-99d6-c4f06c2492ac"],
+        [module.entra_id_users.group_object_id]
+      )
+    }
+  }
+
+  grant_controls {
+    operator          = "OR"
+    built_in_controls = ["block"]
+  }
+}
+*/
+
 resource "azurerm_role_assignment" "odaa_autonomous_database_admin" {
   provider             = azurerm.odaa
   for_each             = local.deployment_user_object_ids
@@ -230,6 +290,32 @@ resource "azurerm_role_assignment" "odaa_autonomous_database_admin" {
   role_definition_name = "Oracle.Database Autonomous Database Administrator"
   principal_id         = each.value
   description          = "Grants ${lookup(local.deployment_user_principal_names, each.key, each.key)} permissions to manage Oracle Autonomous Database resources in resource group ${module.odaa[each.key].resource_group_name}."
+}
+
+resource "azurerm_role_definition" "private_dns_zone_reader" {
+  name        = "custom-private-dns-zone-reader"
+  scope       = data.azurerm_subscription.odaa.id
+  description = "Allows read-only access to Private DNS Zones."
+
+  permissions {
+    actions = [
+      "Microsoft.Network/privateDnsZones/read",
+      "Microsoft.Network/privateDnsZones/*/read"
+    ]
+  }
+
+  assignable_scopes = [
+    data.azurerm_subscription.odaa.id
+  ]
+}
+
+resource "azurerm_role_assignment" "odaa_private_dns_zone_reader" {
+  provider             = azurerm.odaa
+  for_each             = local.deployment_user_object_ids
+  scope                = data.azurerm_subscription.odaa.id
+  role_definition_id   = azurerm_role_definition.private_dns_zone_reader.role_definition_resource_id
+  principal_id         = each.value
+  description          = "Grants ${lookup(local.deployment_user_principal_names, each.key, each.key)} read access to Private DNS Zones across subscription ${data.azurerm_subscription.odaa.display_name}."
 }
 
 resource "azurerm_role_assignment" "odaa_subscription_manager_reader" {

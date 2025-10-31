@@ -12,17 +12,12 @@ The SQL queries will measure the network round trips, elapsed time, DB time, and
 
 This is inspired from the blog of Clemens Bleile.
 
-## 📋 Prerequisites
-
-- 🔧 install Azure CLI
-- ⚓ install kubectl
-
 ## 🔐 Login to Azure and set the right subscription
 
 ~~~bash
 az login --use-device-code
 # switch to the subscription where AKS is deployed
-$subAKS="sub-team0" # replace with your AKS subscription name
+$subAKS="sub-0" # replace with your AKS subscription name
 # Make sure your cli points to the AKS subscription
 az account set --subscription $subAKS
 ~~~
@@ -31,8 +26,8 @@ az account set --subscription $subAKS
 
 ~~~bash
 # log into your AKS cluster if not already done
-$rgAKS="aks-team0" # replace with your AKS resource group name
-$AKSClusterName="aks-team0" # replace with your AKS cluster name
+$rgAKS="aks-user02" # replace with your AKS resource group name
+$AKSClusterName="aks-user02" # replace with your AKS cluster name
 ~~~
 
 ## ⚓ Connect to AKS
@@ -147,9 +142,9 @@ SQL>   2    3    4    5    6
 PL/SQL procedure successfully completed.
 
 SQL> SQL> 1669 network round trips.
-SQL> 88770 ms elapsed time.
-SQL> 77.008 ms DB time.
-SQL> 53.141 ms latency per round trip.
+SQL> 15160 ms elapsed time.
+SQL> 58.106 ms DB time.
+SQL> 9.048 ms latency per round trip.
 SQL> --> (Elapsed Time - DB Time) / network round trips
 ~~~
 
@@ -163,7 +158,7 @@ This for sure include the TCP handshake time everytime and therefore the results
 
 ~~~bash
 # Test tcp connection time to ADB
-bash -c 'H=eqsmjgp2.adb.eu-frankfurt-1.oraclecloud.com;P=1522;for i in {1..10};do t0=$(date +%s%3N);(echo >/dev/tcp/$H/$P) &>/dev/null && dt=$(( $(date +%s%3N)-t0 )) || dt=-1;echo "$i: ${dt} ms";sleep 1;done' # replace with your ADB host
+bash -c 'H=fxdivzxo.adb.eu-paris-1.oraclecloud.com;P=1521;for i in {1..10};do t0=$(date +%s%3N);(echo >/dev/tcp/$H/$P) &>/dev/null && dt=$(( $(date +%s%3N)-t0 )) || dt=-1;echo "$i: ${dt} ms";sleep 1;done' # replace with your ADB host
 ~~~
 
 ~~~text

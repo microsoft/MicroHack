@@ -15,28 +15,21 @@ We will install the following components into the AKS cluster under the Namespac
 
 Helm is a package manager for Kubernetes that allows you to define, install, and manage Kubernetes applications. It uses a packaging format called charts, which are collections of pre-configured Kubernetes resources.
 
-## 📋 Prerequisites
-
-- 🔧 install Azure CLI
-- ⚓ install kubectl
-- install Helm
-
 ## 🔐 Login to Azure and set the right subscription
 
 ~~~bash
 az login --use-device-code
-# switch to the subscription where AKS is deployed
-$subAKS="sub-team0" # replace with your AKS subscription name
-# Make sure your cli points to the AKS subscription
-az account set --subscription $subAKS
+# make sure you select the subscription which starts with "sub-team", do not choose the subscription called "sub-mhodaa".
+# Assign the subscription name to a variable
+$subAKS="sub-team0" # Replace with your Subscription Name.
 ~~~
 
 ## 🌍 Define required environment variables
 
 ~~~bash
 # log into your AKS cluster if not already done
-$rgAKS="aks-team0" # replace with your AKS resource group name
-$AKSClusterName="aks-team0" # replace with your AKS cluster name
+$rgAKS="aks-user02" # replace with your AKS resource group name
+$AKSClusterName="aks-user02" # replace with your AKS cluster name
 ~~~
 
 ## ⚓ Connect to AKS
@@ -88,7 +81,7 @@ The value of vhostName should look like this:
 
 ## 🔗 Replace current Goldengate configuration File gghack.yaml ODAA TNS connection String
 
-Reference the document [How to retrieve the Oracle Database Autonomous Database connection string from ODAA](../docs/odaa-get-token.md) to get the TNS connection string for your ODAA ADB instance.
+Reference the document [How to retrieve the Oracle Database Autonomous Database connection string from ODAA](../../docs/odaa-get-token.md) to get the TNS connection string for your ODAA ADB instance.
 
 After you have assigned the connection string to a variable, replace the placeholder in the gghack.yaml file:
 
@@ -205,6 +198,69 @@ ogghack-goldengate-microhack-sample-ogg-787f954698-kzjpl          1/1     Runnin
 
 ✅ After the job is completed, the local database, which is running inside the AKS cluster, has been migrated to the ODAA ADB instance via Oracle Data Pump.
 
+
+### 🔌 Connect to the ADB Oracle Database
+
+~~~powershell
+# extract the pod name of the instantcleint as it contains a random suffix
+$podInstanteClientName=kubectl get pods -n microhacks | Select-String 'ogghack-goldengate-microhack-sample-instantclient' | ForEach-Object { ($_ -split '\s+')[0] }
+# login to the pod instantclient
+kubectl exec -it -n microhacks $podInstanteClientName -- /bin/bash
+# log into ADB with admin via sqlplus, replace the TNS connection string with your own
+sqlplus admin@'(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=fxdivzxo.adb.eu-paris-1.oraclecloud.com))(connect_data=(service_name=gc2401553d1c7ab_odaauser02_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))' # Replace with your TNS connection string
+Welcome1234# # replace with your ADB password
+~~~
+
+Inside the sqlplus session, run the following commands to verify the SH2 schema and the GoldenGate GGADMIN user have been created successfully in the ADB instance.
+
+~~~sql
+select USERNAME from ALL_USERS where USERNAME like 'SH%';
+~~~
+
+~~~text
+USERNAME
+--------------------------------------------------------------------------------
+SH
+SH2
+~~~
+
+~~~sql
+-- should return 35 rows
+SELECT COUNT(*) FROM all_tables WHERE owner = 'SH2';
+~~~
+
+~~~text
+  COUNT(*)
+----------
+        35
+~~~
+
+Verify SH user and GGADMIN user in ADB
+
+~~~sql
+select USERNAME from ALL_USERS where USERNAME like 'SH%';
+~~~
+
+~~~text
+USERNAME
+--------------------------------------------------------------------------------
+SH
+SH2
+~~~
+
+~~~sql
+select USERNAME, ACCOUNT_STATUS from DBA_USERS where USERNAME like 'SH2';
+~~~
+
+~~~text
+USERNAME
+--------------------------------------------------------------------------------     
+ACCOUNT_STATUS
+--------------------------------
+SH2
+OPEN
+~~~
+
 ## 💡 Tips and Tricks
 
 ### � Troubleshooting Init:ErrImagePull Issues
@@ -315,70 +371,6 @@ PL/SQL procedure successfully completed.
 SQL> Disconnected from Oracle Database 23ai Enterprise Edition Release 23.0.0.0.0 - for Oracle Cloud and Engineered Systems
 Version 23.10.0.25.10
 Cloning into 'db-sample-schemas'...
-~~~
-
-### 🔌 Connect to the ADB Oracle Database
-
-~~~powershell
-# login to aks if not already done
-az aks get-credentials -g $rgAKS -n $AKSClusterName --overwrite-existing
-# extract the pod name of the instantcleint as it contains a random suffix
-$podInstanteClientName=kubectl get pods -n microhacks | Select-String 'ogghack-goldengate-microhack-sample-instantclient' | ForEach-Object { ($_ -split '\s+')[0] }
-# login to the pod instantclient
-kubectl exec -it -n microhacks $podInstanteClientName -- /bin/bash
-# log into ADB with admin via sqlplus, replace the TNS connection string with your own
-sqlplus admin@'(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=gpdmotes.adb.eu-frankfurt-1.oraclecloud.com))(connect_data=(service_name=g6425a1dbd2e95a_odaa2_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))' # Replace with your TNS connection string
-Welcome1234# # replace with your ADB password
-~~~
-
-Inside the sqlplus session, run the following commands to verify the SH2 schema and the GoldenGate GGADMIN user have been created successfully in the ADB instance.
-
-~~~sql
-select USERNAME from ALL_USERS where USERNAME like 'SH%';
-~~~
-
-~~~text
-USERNAME
---------------------------------------------------------------------------------
-SH
-SH2
-~~~
-
-~~~sql
--- should return 35 rows
-select COUNT (*) from SH2.COUNTRIES;
-~~~
-
-~~~text
-  COUNT(*)
-----------
-        35
-~~~
-
-Verify SH user and GGADMIN user in ADB
-
-~~~sql
-select USERNAME from ALL_USERS where USERNAME like 'SH%';
-~~~
-
-~~~text
-USERNAME
---------------------------------------------------------------------------------
-SH
-SH2
-~~~
-
-~~~sql
-select USERNAME, ACCOUNT_STATUS from DBA_USERS where USERNAME like 'GGADMIN';
-~~~
-
-~~~text
-USERNAME
---------------------------------------------------------------------------------
-ACCOUNT_STATUS
---------------------------------
-GGADMIN
-OPEN
 ~~~
 
 [Back to workspace README](../../README.md)

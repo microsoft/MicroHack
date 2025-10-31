@@ -17,14 +17,13 @@ To connect to the Oracle Database you will need the TNS connection string.
 # Prerequisites (if not already installed)
 az extension add --name oracle-database 
 
-
-$adbName="odaa-u0" # replace with your ADB name
+$adbName="odaauser02" # replace with your ADB name
 
 # Switch to the subscription where ODAA is deployed
-$subODAA="sub-mhodaa" # replace with your ODAA subscription name
+$subODAA="sub-mhodaa" 
 az account set --subscription $subODAA
 
-$rgODAA="odaa-u0" # replace with your resource group name
+$rgODAA="odaa-user02" # replace with your resource group name
 
 # Retrieve TNS Connection string High profile (TCPS, tlsAuthentication = Server)
 $trgConn=az oracle-database autonomous-database show -g $rgODAA -n $adbName --query "connectionStrings.profiles[?consumerGroup=='High' && protocol=='TCPS' && tlsAuthentication=='Server'].value | [0]" -o tsv

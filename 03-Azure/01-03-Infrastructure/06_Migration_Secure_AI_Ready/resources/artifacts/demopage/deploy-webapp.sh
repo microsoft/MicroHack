@@ -15,7 +15,7 @@ echo "=========================================="
 
 # --- Step 1: Update and upgrade packages ---
 #echo "📦 Updating system packages..."
-#sudo apt update -y
+sudo apt update -y
 #sudo apt upgrade -y
 
 # --- Step 2: Install required packages ---

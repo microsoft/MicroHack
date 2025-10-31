@@ -70,15 +70,20 @@ After you have the external IP address, replace the placeholder in the gghack.ya
 cp resources/template/gghack.yaml .
 # replace the placeholder with the actual external IP
 (Get-Content gghack.yaml) -replace 'xxx-xxx-xxx-xxx', $EXTIP.Trim() | Set-Content gghack.yaml
-code gghack.yaml
+# show line 44 till 50 with powershell of gghack.yaml
+(Get-Content gghack.yaml)[43..49]
 ~~~
 
 The value of vhostName should look like this:
 
 ~~~yaml
-    ### uses default SSL certificate of gateway/controller or specify a custom tls-secret here
+ ### uses default SSL certificate of gateway/controller or specify a custom tls-secret here
     tlsSecretName: ggate-tls-secret
-    vhostName: gghack.4.182.95.155.nip.io
+    vhostName: gghack.172.189.10.142.nip.io
+  internal:
+    type: ClusterIP
+    plainPort: 8080
+    sslPort: 8443
 ~~~
 
 ## 🔗 Replace current Goldengate configuration File gghack.yaml ODAA TNS connection String
@@ -90,17 +95,17 @@ After you have assigned the connection string to a variable, replace the placeho
 ~~~powershell
 # replace in value in your gghack.yaml
 (Get-Content gghack.yaml) -replace '<ODAA-CONNECTION-STRING>', $trgConn | Set-Content gghack.yaml
+# show line 8 till 11 with powershell of gghack.yaml
+(Get-Content gghack.yaml)[8..11]
 ~~~
 
 Your connection string in your gghack.yaml should look similar to this:
 
 ~~~yaml
 databases:
-  trgConn: "(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=w7ol7op2.adb.eu-paris-1.oraclecloud.com))(connect_data=(service_name=gc2401553d1c7ab_adbteam0u2_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))"
+  trgConn: "(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=ucy29rbl.adb.eu-paris-1.oraclecloud.com))(connect_data=(service_name=gc2401553d1c7ab_odaau0_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))"
 
   #for demo env, dont change the schema names. SH already exists in ADB, so we create another one.
-  srcSchema: "SH"
-  trgSchema: "SH2"
 ~~~
 
 ## 🚀 Install GoldenGate Pods
@@ -219,7 +224,6 @@ az aks get-credentials -g $rgAKS -n $AKSClusterName --overwrite-existing
 # Uninstall the Helm release
 helm uninstall ogghack -n microhacks
 ~~~
-
 
 **Solution 1: Create Oracle Container Registry Secret**
 ```powershell

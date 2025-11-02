@@ -40,7 +40,12 @@ gpdmotes.adb.eu-frankfurt-1.oraclecloudapps.com
 
 ### Create AKS DNS Records
 
-There are multiple ways to create the required DNS records within the Azure Private DNS Zones that are linked to the AKS VNet. Here, we will use Azure Bicep via Azure CLI.
+There are multiple ways to create the required DNS records within the Azure Private DNS Zones that are linked to the AKS VNet. We the following two ways how to set the Azure DNS zones:
+1. By using Azure Bicep via Azure CLI.
+2. By using the Azure portal directly
+
+
+#### Azure Bicep to set the private DNS zones
 
 ~~~powershell
 # switch back to the subscription where AKS is deployed
@@ -71,5 +76,34 @@ Name    Records
 ------  ----------
 @       10.0.0.213
 ~~~
+
+#### Azure Portal to set the private DNS zones
+
+1. From the overview portal of the deployed ADB database, copy the FQDN of the "Database URL name" and Database private IP address both in the section Network.
+<img src="./media/prviate_dns_0.png" alt="Create browser profile" width="400" height="250" />  
+
+1. Move to the AKS resource group (aks-user[assignedgroup number])
+<img src="./media/private_dns_1.png" alt="Create browser profile" width="400" height="250" />
+
+1. The private DNS name needs to be set on the following two private DNS names. 
+   * adb.eu-paris-1.oraclecloud.com
+   * adb.eu-paris-1.oraclecloudapps.com
+
+    The following step is equal for both private DNS name. In the private DNS zone menu open the DNS management and press the link <b>Recodsets</b>.
+    <img src="./media/private_dns_2.png" alt="Create browser profile" width="400" height="250" />
+
+    <b>Important!</b> The other two Private DNS zones can be skipped for the moment till we need to set up ADB with high availability.
+
+2. In the menue Recordsets press the Add button to add the FQDN and private ip address of the deployed ADB shared database.
+    <img src="./media/private_dns_3.png" alt="Create browser profile" width="400" height="250" />
+
+3. After you press the Add button a new window will be opened where the name for the ADB and the private IP address needs to be added. In addition change the TTL to 10 seconds.   
+    <img src="./media/private_dns_4.png" alt="Create browser profile" width="250" height="300" />
+
+4. Final save the configuration and repeat the step for the second private DNS name in the same way as described.    
+   <img src="./media/private_dns_5.png" alt="Create browser profile" width="400" height="250" />
+<br>
+
+<hr>
 
 [Back to workspace README](../../README.md)

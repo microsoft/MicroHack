@@ -13,7 +13,11 @@ Oracle Database@Azure (ODAA) is the joint Oracle–Microsoft managed service tha
 
 
 ### What You Will Learn in the MicroHack
-You will learn how to create and configure an Autonomous Database shared of the offered Oracle Database@Azure services, how to deploy an Autonomous Database instance inside an Azure delegated subnet, update network security group (NSG) and DNS settings to enable connectivity from a simulated on-premises environment, and measure network performance to the Oracle Autonomous Database instance. Furthermore we will address the integration of ODAA into the existing Azure native services and howto use Goldengate for migrations to ODAA and integration into Azure Fabric. 
+You will learn how to create and configure an Autonomous Database shared of the offered Oracle Database@Azure services, how to deploy an Autonomous Database instance inside an Azure delegated subnet, update network security group (NSG) and DNS settings to enable connectivity from a simulated on-premises environment, and measure network performance to the Oracle Autonomous Database instance. To make the microhack more realistic we will deploy the Application layer (AKS) and the Data layer (ODAA) in 2 different subscription to simulate a hub & spoke architecture. The following picture shows highlevel the architecture of the microhack.
+
+<img src="media/overivew deployment.png" alt="ODAA microhack architecture">
+
+Furthermore we will address the integration of ODAA into the existing Azure native services and howto use Goldengate for migrations to ODAA and integration into Azure Fabric. 
 
 ## Learning Objectives
 
@@ -51,6 +55,7 @@ The goal is to ensure your Azure account is ready for administrative work in the
 ## Learning Resources
 * [Sign in to the Azure portal](https://learn.microsoft.com/azure/azure-portal/azure-portal-sign-in), 
 * [Set up Microsoft Entra multi-factor authentication](https://learn.microsoft.com/azure/active-directory/authentication/howto-mfa-userdevicesettings)
+* [Groups and roles in Azure](https://docs.oracle.com/en-us/iaas/Content/database-at-azure/oaagroupsroles.htm)
 
 ## Solution
 * Challenge 0: **[Set Up Your User Account](./walkthrough/setup-user-account/setup-user-account.md)**

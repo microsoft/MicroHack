@@ -2,6 +2,15 @@
 
 [Back to workspace README](../../README.md)
 
+
+Subsequent you find all related information to 
+1. Deploy an Oracle ADB in Azure and the required preparations like the availability of a delegated subnet for the accessibility of the database. 
+2. Furthermore you will deploy in this chapte an ADB database via the Azure Portal.
+3. Finally if the existing vnet peering between the AKS - and database subscription is available and correctly configured.
+
+<br>
+<hr>
+
 ## 🛰️ Delegated Subnet Design (Prerequisites)
 
 - ODAA Autonomous Database can be deployed within Azure Virtual Networks, in delegated subnets that are delegated to Oracle Database@Azure.
@@ -15,6 +24,8 @@ A more detailed description can be found here: [Oracle Documentation: Oracle's d
 ## 🧭 What is an Azure Delegated Subnet?
 
 Azure delegated subnets allow you to delegate exclusive control of a subnet within your VNet to a specific Azure service. When you delegate a subnet, the service can deploy and manage its own network resources (NICs, endpoints, routing) within that subnet without requiring you to provision each resource manually. Traffic still flows privately over your VNet, and you remain in control of higher-level constructs like NSGs and route tables.
+
+
 
 ## 🛠️ Create an ODAA Autonomous Database Instance
 
@@ -40,7 +51,7 @@ To be considered during the deployment:
 ### Create the Oracle Autonomous Database
 
 1. In the Azure portal search for the Oracle Services and select **Oracle Database@Azure**.
-1. 
+
 
 ### Settings of the ADB
 
@@ -70,6 +81,17 @@ To be considered during the deployment:
 A complete documentation is available on under the following links.
 
 [Oracle Documentation: Create an Autonomous Database](https://docs.oracle.com/en-us/iaas/Content/database-at-azure/azucr-create-autonomous-database.html)
+
+<hr>
+
+## Check the existing vnet peering 
+
+To save time to focus on the ODAA service itself the vnet peering between both subscriptions is already available and can be verified. Here you have to switch to the resource group aks-user[assigned number]. Under the section settings you find the menu point peering. Open the peering and check if the peering sync status and peering state are active.
+![Overview if the vnet peering is working](media/vnet_peering/vnet_peering_3.jpg)
+
+The check of the vnet peering can be done from the ODAA side as well.
+
+<hr>
 
 ## Tips and Trickes
 

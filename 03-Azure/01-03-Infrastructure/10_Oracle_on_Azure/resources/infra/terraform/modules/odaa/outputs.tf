@@ -29,10 +29,10 @@ output "subnet_id" {
 
 output "adb_id" {
   description = "The ID of the Oracle Autonomous Database"
-  value       = length(azapi_resource.autonomous_database) > 0 ? azapi_resource.autonomous_database[0].id : null
+  value       = length(azurerm_oracle_autonomous_database.autonomous) > 0 ? azurerm_oracle_autonomous_database.autonomous[0].id : null
 }
 
 output "adb_name" {
   description = "The name of the Oracle Autonomous Database"
-  value       = length(azapi_resource.autonomous_database) > 0 ? azapi_resource.autonomous_database[0].name : null
+  value       = length(azurerm_oracle_autonomous_database.autonomous) > 0 ? azurerm_oracle_autonomous_database.autonomous[0].name : null
 }

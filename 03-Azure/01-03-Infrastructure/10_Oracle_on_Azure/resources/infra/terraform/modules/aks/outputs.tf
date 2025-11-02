@@ -77,13 +77,13 @@ output "aks_identity_tenant_id" {
 output "rbac_assignments" {
   description = "Information about RBAC role assignments"
   value = {
-    cluster_user_assignment          = azurerm_role_assignment.aks_cluster_user.id
-    rbac_writer_assignment           = azurerm_role_assignment.aks_rbac_writer.id
-    subscription_reader_assignment   = azurerm_role_assignment.subscription_reader.id
-    private_dns_contributor_odaa_fra     = azurerm_role_assignment.private_dns_contributor_odaa_fra.id
-    private_dns_contributor_odaa_app_fra = azurerm_role_assignment.private_dns_contributor_odaa_app_fra.id
-    private_dns_contributor_odaa_par     = azurerm_role_assignment.private_dns_contributor_odaa_par.id
-    private_dns_contributor_odaa_app_par = azurerm_role_assignment.private_dns_contributor_odaa_app_par.id
+    cluster_user_assignment        = azurerm_role_assignment.aks_cluster_user.id
+    rbac_writer_assignment         = azurerm_role_assignment.aks_rbac_writer.id
+    subscription_reader_assignment = azurerm_role_assignment.subscription_reader.id
+    private_dns_contributor = {
+      for key, assignment in azurerm_role_assignment.private_dns_contributor_odaa :
+      key => assignment.id
+    }
   }
 }
 
@@ -94,13 +94,17 @@ output "rbac_assignments" {
 output "dns_zones" {
   description = "Information about the private DNS zones created"
   value = {
-    odaa_zone_id_fra       = azurerm_private_dns_zone.odaa_fra.id
-    odaa_zone_name_fra     = azurerm_private_dns_zone.odaa_fra.name
-    odaa_app_zone_id_fra   = azurerm_private_dns_zone.odaa_app_fra.id
-    odaa_app_zone_name_fra = azurerm_private_dns_zone.odaa_app_fra.name
-    odaa_zone_id_par       = azurerm_private_dns_zone.odaa_par.id
-    odaa_zone_name_par     = azurerm_private_dns_zone.odaa_par.name
-    odaa_app_zone_id_par   = azurerm_private_dns_zone.odaa_app_par.id
-    odaa_app_zone_name_par = azurerm_private_dns_zone.odaa_app_par.name
+    zones = {
+      for key, zone in azurerm_private_dns_zone.odaa :
+      key => {
+        id   = zone.id
+        name = zone.name
+      }
+    }
+
+    links = {
+      for key, link in azurerm_private_dns_zone_virtual_network_link.odaa :
+      key => link.id
+    }
   }
 }

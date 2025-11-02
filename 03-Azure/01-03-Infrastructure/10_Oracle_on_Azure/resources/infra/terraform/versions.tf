@@ -13,16 +13,16 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "~> 4.0"
     }
-    azapi = {
-      source  = "Azure/azapi"
-      version = "~> 1.0"
-    }
     azuread = {
       source  = "hashicorp/azuread"
       version = "~> 2.0"
     }
     random = {
       source  = "hashicorp/random"
+      version = "~> 3.0"
+    }
+    null = {
+      source  = "hashicorp/null"
       version = "~> 3.0"
     }
     local = {

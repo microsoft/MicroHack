@@ -21,15 +21,15 @@ Helm is a package manager for Kubernetes that allows you to define, install, and
 az login --use-device-code
 # make sure you select the subscription which starts with "sub-team", do not choose the subscription called "sub-mhodaa".
 # Assign the subscription name to a variable
-$subAKS="sub-team0" # Replace with your Subscription Name.
+$subAKS="sub-mh1" # Replace with your Subscription Name.
 ~~~
 
 ## 🌍 Define required environment variables
 
 ~~~bash
 # log into your AKS cluster if not already done
-$rgAKS="aks-user02" # replace with your AKS resource group name
-$AKSClusterName="aks-user02" # replace with your AKS cluster name
+$rgAKS="aks-user01" # replace with your AKS resource group name
+$AKSClusterName="aks-user01" # replace with your AKS cluster name
 ~~~
 
 ## ⚓ Connect to AKS

@@ -2,6 +2,9 @@
 
 [Back to workspace README](../../README.md)
 
+
+
+
 ## 🌐 Network Security Group Configuration
 
 You need to update the Oracle ADB Network Security Group (NSG) with the CIDR range of the VNet where your AKS cluster is deployed. This can be done via the Azure Portal.

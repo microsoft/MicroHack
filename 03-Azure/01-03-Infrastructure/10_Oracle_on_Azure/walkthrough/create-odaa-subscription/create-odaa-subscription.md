@@ -21,7 +21,18 @@ In addition, the subscriptions must have the following Microsoft Providers regis
 - Microsoft.Network
 - Microsoft.Compute
 
-This can be done by following the instructions in [Oracle’s resource provider registration guide](https://docs.oracle.com/en-us/iaas/Content/database-at-azure/oaaprerequisites.htm#register-resource-providers).
+This can be done by following the instructions in 
+* [Oracle’s resource provider registration guide](https://docs.oracle.com/en-us/iaas/Content/database-at-azure/oaaprerequisites.htm#register-resource-providers)
+* [Network planning for Oracle Database@Azure](https://learn.microsoft.com/en-us/azure/oracle/oracle-db/oracle-database-network-plan)
+
+
+The enablement of the enhanced networking capabilities will be a default behavior shortly. Because it is not yet the case you can check if the Azure resource providers are enabled by using the Azure Portal or the Azure CLI. Because the settings need to be done on subscription level the providers are all enabled. Following we quickly described how to check the status via the Azure Portal.
+
+1. Go the subscription where the ODAA is deployed. In our case the subscription has the name - sub-mhodaa.
+2. In the subscription view you find under the menu setting the sub menue Resource Providers.
+3. Click on the Resource Providers and search for the Providers
+![Overview Resource Providers](media/resource_provider.jpg)
+
 
 ### 🛡️ Permissions for Onboarding and Provisioning ODAA
 

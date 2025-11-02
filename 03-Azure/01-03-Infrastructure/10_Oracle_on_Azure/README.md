@@ -58,7 +58,7 @@ The goal is to ensure your Azure account is ready for administrative work in the
 * [Groups and roles in Azure](https://docs.oracle.com/en-us/iaas/Content/database-at-azure/oaagroupsroles.htm)
 
 ## Solution
-* Challenge 0: **[Set Up Your User Account](./walkthrough/setup-user-account/setup-user-account.md)**
+* Challenge 0: [Set Up Your User Account](./walkthrough/setup-user-account/setup-user-account.md)
 
 <br>
 <hr>
@@ -82,7 +82,7 @@ Review the Oracle Database@Azure service offer, the required Azure resource prov
 * [Enhanced Networking for ODAA](https://learn.microsoft.com/en-us/azure/oracle/oracle-db/oracle-database-network-plan)
 
 ## Solution
-* Challenge 1: **[Create an Oracle Database@Azure (ODAA) Subscription](./walkthrough/create-odaa-subscription/create-odaa-subscription.md)
+* Challenge 1: [Create an Oracle Database@Azure (ODAA) Subscription](./walkthrough/create-odaa-subscription/create-odaa-subscription.md)
 
 
 <br>
@@ -109,7 +109,7 @@ Walk through the delegated subnet prerequisites, select the assigned resource gr
 * [Deploy an ADB in Azure](https://docs.oracle.com/en/solutions/deploy-autonomous-database-db-at-azure/index.html)
 
 ## Solution
-* Challenge 2: **[Create an Oracle Database@Azure (ODAA) Autonomous Database (ADB) Instance](./walkthrough/create-odaa-adb/create-odaa-adb.md)**
+* Challenge 2: [Create an Oracle Database@Azure (ODAA) Autonomous Database (ADB) Instance](./walkthrough/create-odaa-adb/create-odaa-adb.md)
 
 <br>
 <hr>
@@ -133,7 +133,7 @@ Update the Network Security Group to allow traffic from the AKS environment and 
 * [Oracle Database@Azure networking guidance](https://docs.oracle.com/en-us/iaas/Content/database-at-azure/azucr-networking-overview.htm)
 
 ## Solution
-* Challenge 3: **[Update the Oracle ADB NSG and DNS](./walkthrough/update-odaa-nsg-dns/update-odaa-nsg-dns.md)
+* Challenge 3: [Update the Oracle ADB NSG and DNS](./walkthrough/update-odaa-nsg-dns/update-odaa-nsg-dns.md)
 
 <br>
 <hr>
@@ -183,7 +183,7 @@ Use the Instant Client pod to run the scripted SQL latency test against the Auto
 * [Diagnose metrics and logs for Oracle Database@Azure](https://learn.microsoft.com/azure/oracle/oracle-database-at-azure-monitor)
 
 ## Solution
-* Challenge 5: **[Measure Network Performance to Your Oracle Database@Azure Autonomous Database](./walkthrough/perf-test-odaa/perf-test-odaa.md)
+* Challenge 5: [Measure Network Performance to Your Oracle Database@Azure Autonomous Database](./walkthrough/perf-test-odaa/perf-test-odaa.md)
 
 
 <br>

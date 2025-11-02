@@ -1,4 +1,4 @@
-<img src="media/logo_ODAA_microhack_1900x300.png"
+<img src="media/logo_ODAA_microhack_1900x300.jpg"
      alt="ODAA microhack logo"
       />
 

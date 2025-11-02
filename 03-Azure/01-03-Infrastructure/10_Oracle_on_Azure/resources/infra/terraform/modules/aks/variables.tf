@@ -23,6 +23,11 @@ variable "cidr" {
   type        = string
 }
 
+variable "service_cidr" {
+  description = "Service CIDR for the AKS cluster"
+  type        = string
+}
+
 variable "aks_vm_size" {
   description = "The VM size for AKS node pools"
   type        = string

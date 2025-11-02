@@ -18,6 +18,12 @@ variable "tenant_id" {
   type        = string
 }
 
+variable "user_principal_domain" {
+  description = "Optional domain used to construct user principal names when not supplied in the user catalog"
+  type        = string
+  default     = null
+}
+
 variable "users" {
   description = "Map of user definitions keyed by deployment identifier"
   type = map(object({
@@ -31,8 +37,26 @@ variable "tags" {
   default     = {}
 }
 
-variable "user_principal_domain" {
-  description = "Optional domain to use for generated user principal names. Defaults to the tenant's default domain when null."
+variable "user_password_length" {
+  description = "Length of the generated user passwords."
+  type        = number
+  default     = 12
+}
+
+variable "user_password_include_special" {
+  description = "Set to true to include special characters in generated passwords."
+  type        = bool
+  default     = false
+}
+
+variable "user_password_special_characters" {
+  description = "Special characters to use when user_password_include_special is true."
   type        = string
-  default     = null
+  default     = "!#$%&*()-_=+[]{}"
+}
+
+variable "user_password_min_numeric" {
+  description = "Minimum numeric characters in the generated user passwords."
+  type        = number
+  default     = 1
 }

@@ -25,6 +25,33 @@ resource "azurerm_resource_group" "aks" {
   tags     = var.tags
 }
 
+locals {
+  # Azure automatically creates a managed node resource group named
+  # `MC_<aks-resource-group>_<aks-cluster-name>` for agent pools. Matching that
+  # pattern lets the service own the group lifecycle, so deleting the cluster
+  # tears down the node resource group without manual cleanup.
+  cluster_name             = "aks-${var.prefix}${var.postfix}"
+  node_resource_group_name = "MC_${azurerm_resource_group.aks.name}_${local.cluster_name}"
+  private_dns_configs = {
+    odaa_fra = {
+      zone_name = var.fqdn_odaa_fra
+      link_name = "aks-pdns-link-odaa"
+    }
+    odaa_app_fra = {
+      zone_name = var.fqdn_odaa_app_fra
+      link_name = "aks-pdns-link-odaa-app"
+    }
+    odaa_par = {
+      zone_name = var.fqdn_odaa_par
+      link_name = "aks-pdns-link-odaa"
+    }
+    odaa_app_par = {
+      zone_name = var.fqdn_odaa_app_par
+      link_name = "aks-pdns-link-odaa-app"
+    }
+  }
+}
+
 # ===============================================================================
 # Log Analytics Workspace
 # ===============================================================================
@@ -62,20 +89,20 @@ resource "azurerm_subnet" "aks" {
 # ===============================================================================
 
 resource "azurerm_kubernetes_cluster" "aks" {
-  name                = "aks-${var.prefix}${var.postfix}"
+  name                = local.cluster_name
   location            = azurerm_resource_group.aks.location
   resource_group_name = azurerm_resource_group.aks.name
   dns_prefix          = "${var.prefix}${var.postfix}"
   kubernetes_version  = "1.32.6"
-  node_resource_group = "MC_${var.prefix}${var.postfix}"
+  node_resource_group = local.node_resource_group_name
   sku_tier            = "Free"
 
   # Network Profile
   network_profile {
     network_plugin    = "azure"
     network_policy    = "azure"
-    dns_service_ip    = "10.72.0.10"
-    service_cidr      = "10.72.0.0/16"
+    dns_service_ip    = cidrhost(var.service_cidr, 10) # deterministic CoreDNS VIP within the service CIDR
+    service_cidr      = var.service_cidr
     load_balancer_sku = "standard"
     outbound_type     = "loadBalancer"
     ip_versions       = ["IPv4"]
@@ -248,102 +275,31 @@ resource "azurerm_kubernetes_cluster_node_pool" "user" {
 # Private DNS Zones (Integrated DNS)
 # ===============================================================================
 
-# Private DNS Zone for ODAA FQDN FRA
-resource "azurerm_private_dns_zone" "odaa_fra" {
-  name                = var.fqdn_odaa_fra
+# Private DNS zones for Oracle endpoints (FRA and PAR base/app domains)
+resource "azurerm_private_dns_zone" "odaa" {
+  for_each = local.private_dns_configs
+
+  name                = each.value.zone_name
   resource_group_name = azurerm_resource_group.aks.name
   tags                = var.tags
 }
 
-# Link Private DNS Zone for ODAA Link FRA
-resource "azurerm_private_dns_zone_virtual_network_link" "odaa_fra" {
-  name                  = "aks-pdns-link-odaa"
+resource "azurerm_private_dns_zone_virtual_network_link" "odaa" {
+  for_each = local.private_dns_configs
+
+  name                  = each.value.link_name
   resource_group_name   = azurerm_resource_group.aks.name
-  private_dns_zone_name = azurerm_private_dns_zone.odaa_fra.name
+  private_dns_zone_name = azurerm_private_dns_zone.odaa[each.key].name
   virtual_network_id    = azurerm_virtual_network.aks.id
   registration_enabled  = false
   tags                  = var.tags
 }
 
-# Grant Private DNS Zone Contributor access to the deployment group FRA
-resource "azurerm_role_assignment" "private_dns_contributor_odaa_fra" {
-  scope                = azurerm_private_dns_zone.odaa_fra.id
+resource "azurerm_role_assignment" "private_dns_contributor_odaa" {
+  for_each = local.private_dns_configs
+
+  scope                = azurerm_private_dns_zone.odaa[each.key].id
   role_definition_name = "Private DNS Zone Contributor"
   principal_id         = var.deployment_user_object_id
-  description          = "Allows the deployment user to manage private DNS zone ${azurerm_private_dns_zone.odaa_fra.name}"
-}
-
-# Private DNS Zone for ODAA App FQDN FRA
-resource "azurerm_private_dns_zone" "odaa_app_fra" {
-  name                = var.fqdn_odaa_app_fra
-  resource_group_name = azurerm_resource_group.aks.name
-  tags                = var.tags
-}
-
-# Link Private DNS Zone for ODAA App Link FRA
-resource "azurerm_private_dns_zone_virtual_network_link" "odaa_app_fra" {
-  name                  = "aks-pdns-link-odaa-app"
-  resource_group_name   = azurerm_resource_group.aks.name
-  private_dns_zone_name = azurerm_private_dns_zone.odaa_app_fra.name
-  virtual_network_id    = azurerm_virtual_network.aks.id
-  registration_enabled  = false
-  tags                  = var.tags
-}
-
-# Grant Private DNS Zone Contributor access to the deployment group FRA
-resource "azurerm_role_assignment" "private_dns_contributor_odaa_app_fra" {
-  scope                = azurerm_private_dns_zone.odaa_app_fra.id
-  role_definition_name = "Private DNS Zone Contributor"
-  principal_id         = var.deployment_user_object_id
-  description          = "Allows the deployment user to manage private DNS zone ${azurerm_private_dns_zone.odaa_app_fra.name}"
-}
-
-# Private DNS Zone for ODAA FQDN PAR
-resource "azurerm_private_dns_zone" "odaa_par" {
-  name                = var.fqdn_odaa_par
-  resource_group_name = azurerm_resource_group.aks.name
-  tags                = var.tags
-}
-
-# Link Private DNS Zone for ODAA Link PAR
-resource "azurerm_private_dns_zone_virtual_network_link" "odaa_par" {
-  name                  = "aks-pdns-link-odaa"
-  resource_group_name   = azurerm_resource_group.aks.name
-  private_dns_zone_name = azurerm_private_dns_zone.odaa_par.name
-  virtual_network_id    = azurerm_virtual_network.aks.id
-  registration_enabled  = false
-  tags                  = var.tags
-}
-
-# Grant Private DNS Zone Contributor access to the deployment group PAR
-resource "azurerm_role_assignment" "private_dns_contributor_odaa_par" {
-  scope                = azurerm_private_dns_zone.odaa_par.id
-  role_definition_name = "Private DNS Zone Contributor"
-  principal_id         = var.deployment_user_object_id
-  description          = "Allows the deployment user to manage private DNS zone ${azurerm_private_dns_zone.odaa_par.name}"
-}
-
-# Private DNS Zone for ODAA App FQDN
-resource "azurerm_private_dns_zone" "odaa_app_par" {
-  name                = var.fqdn_odaa_app_par
-  resource_group_name = azurerm_resource_group.aks.name
-  tags                = var.tags
-}
-
-# Link
-resource "azurerm_private_dns_zone_virtual_network_link" "odaa_app_par" {
-  name                  = "aks-pdns-link-odaa-app"
-  resource_group_name   = azurerm_resource_group.aks.name
-  private_dns_zone_name = azurerm_private_dns_zone.odaa_app_par.name
-  virtual_network_id    = azurerm_virtual_network.aks.id
-  registration_enabled  = false
-  tags                  = var.tags
-}
-
-# Grant Private DNS Zone Contributor access to the deployment group PAR
-resource "azurerm_role_assignment" "private_dns_contributor_odaa_app_par" {
-  scope                = azurerm_private_dns_zone.odaa_app_par.id
-  role_definition_name = "Private DNS Zone Contributor"
-  principal_id         = var.deployment_user_object_id
-  description          = "Allows the deployment user to manage private DNS zone ${azurerm_private_dns_zone.odaa_app_par.name}"
+  description          = "Allows the deployment user to manage private DNS zone ${azurerm_private_dns_zone.odaa[each.key].name}"
 }

@@ -46,61 +46,62 @@ resource "azurerm_subnet" "odaa" {
       ]
     }
   }
+
+  # Prevent deletion while Oracle databases might be using this subnet
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 # ===============================================================================
 # Oracle Autonomous Database
 # ===============================================================================
-# Note: Oracle Database on Azure requires the azapi provider
-# The Oracle.Database resource provider must be registered in your subscription
-
 terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
       version = "~> 4.0"
     }
-    azapi = {
-      source  = "Azure/azapi"
-      version = "~> 1.0"
-    }
   }
 }
 
-resource "azapi_resource" "autonomous_database" {
-  count     = var.create_autonomous_database ? 1 : 0
-  type      = "Oracle.Database/autonomousDatabases@2025-03-01"
-  name      = "odaa-${var.prefix}${var.postfix}"
-  location  = azurerm_resource_group.odaa.location
-  parent_id = azurerm_resource_group.odaa.id
+locals {
+  raw_autonomous_database_name = lower("odaa${var.prefix}${var.postfix}")
+  # Oracle Autonomous DB name must be alphanumeric; strip common separators.
+  autonomous_database_name = replace(
+    replace(
+      replace(
+        replace(local.raw_autonomous_database_name, "-", ""),
+      "_", ""),
+    ".", ""),
+  " ", "")
+}
 
-  body = jsonencode({
-    properties = {
-      adminPassword = var.password
-      dataBaseType  = "Regular"
-      computeCount  = 2
-      computeModel  = "ECPU"
-      customerContacts = [
-        {
-          email = "maik.sandmann@gmx.net"
-        }
-      ]
-      dataStorageSizeInGbs           = 20
-      databaseEdition                = "EnterpriseEdition"
-      dbVersion                      = "23ai"
-      dbWorkload                     = "OLTP"
-      displayName                    = "${var.prefix}${var.postfix}"
-      isAutoScalingEnabled           = false
-      isAutoScalingForStorageEnabled = false
-      isLocalDataGuardEnabled        = false
-      isMtlsConnectionRequired       = false
-      licenseModel                   = "BringYourOwnLicense"
-      openMode                       = "ReadWrite"
-      subnetId                       = azurerm_subnet.odaa.id
-      vnetId                         = azurerm_virtual_network.odaa.id
-      backupRetentionPeriodInDays    = 1
-    }
-  })
+resource "azurerm_oracle_autonomous_database" "autonomous" {
+  count = var.create_autonomous_database ? 1 : 0
+
+  name                = local.autonomous_database_name
+  resource_group_name = azurerm_resource_group.odaa.name
+  location            = azurerm_resource_group.odaa.location
+  display_name        = local.autonomous_database_name
+
+  admin_password                   = var.password
+  allowed_ips                      = []
+  auto_scaling_enabled             = false
+  auto_scaling_for_storage_enabled = false
+  backup_retention_period_in_days  = 1
+  character_set                    = "AL32UTF8"
+  compute_count                    = 2
+  compute_model                    = "ECPU"
+  customer_contacts                = ["maik.sandmann@gmx.net"]
+  data_storage_size_in_tbs         = 1
+  db_version                       = "23ai"
+  db_workload                      = "OLTP"
+  license_model                    = "BringYourOwnLicense"
+  mtls_connection_required         = false
+  national_character_set           = "AL16UTF16"
+  subnet_id                        = azurerm_subnet.odaa.id
+  virtual_network_id               = azurerm_virtual_network.odaa.id
 
   tags = var.tags
 

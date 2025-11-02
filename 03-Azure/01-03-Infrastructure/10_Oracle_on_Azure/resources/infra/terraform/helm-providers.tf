@@ -1,34 +1,71 @@
 # -----------------------------------------------------------------------------
-# Helm Provider Configuration per AKS deployment slot
+# Helm Provider Configuration per AKS subscription assignment
 # -----------------------------------------------------------------------------
-# Each slot maps to at most one AKS cluster. These providers reuse the kubeconfig
+# Each subscription index maps to at most one AKS cluster. These providers reuse the kubeconfig
 # emitted by the AKS modules so that downstream modules can install Helm charts
 # without embedding their own provider configurations.
 # -----------------------------------------------------------------------------
 
 locals {
-  ingress_slot_counts = {
-    slot_0 = length(module.aks_slot_0)
-    slot_1 = length(module.aks_slot_1)
-    slot_2 = length(module.aks_slot_2)
-    slot_3 = length(module.aks_slot_3)
-    slot_4 = length(module.aks_slot_4)
+  helm_provider_slots = [for index in range(5) : tostring(index)]
+
+  helm_deployment_keys_by_slot = {
+    for slot in local.helm_provider_slots :
+    slot => [
+      for key, deployment in local.deployments : key
+      if tostring(deployment.provider_index) == slot
+    ]
   }
 
-  helm_slot_0_kubeconfig = length(module.aks_slot_0) == 1 ? values(module.aks_slot_0)[0].aks_cluster_kube_config[0] : null
-  helm_slot_1_kubeconfig = length(module.aks_slot_1) == 1 ? values(module.aks_slot_1)[0].aks_cluster_kube_config[0] : null
-  helm_slot_2_kubeconfig = length(module.aks_slot_2) == 1 ? values(module.aks_slot_2)[0].aks_cluster_kube_config[0] : null
-  helm_slot_3_kubeconfig = length(module.aks_slot_3) == 1 ? values(module.aks_slot_3)[0].aks_cluster_kube_config[0] : null
-  helm_slot_4_kubeconfig = length(module.aks_slot_4) == 1 ? values(module.aks_slot_4)[0].aks_cluster_kube_config[0] : null
+  ingress_subscription_counts = {
+    for slot, keys in local.helm_deployment_keys_by_slot :
+    "subscription_${slot}" => length(keys)
+  }
+
+  helm_slot_0_keys = try(local.helm_deployment_keys_by_slot["0"], [])
+  helm_slot_1_keys = try(local.helm_deployment_keys_by_slot["1"], [])
+  helm_slot_2_keys = try(local.helm_deployment_keys_by_slot["2"], [])
+  helm_slot_3_keys = try(local.helm_deployment_keys_by_slot["3"], [])
+  helm_slot_4_keys = try(local.helm_deployment_keys_by_slot["4"], [])
+
+  helm_slot_0_kubeconfig = (
+    length(local.helm_slot_0_keys) == 1 ?
+    try(module.aks_slot_0[local.helm_slot_0_keys[0]].aks_cluster_kube_config[0], null) :
+    null
+  )
+
+  helm_slot_1_kubeconfig = (
+    length(local.helm_slot_1_keys) == 1 ?
+    try(module.aks_slot_1[local.helm_slot_1_keys[0]].aks_cluster_kube_config[0], null) :
+    null
+  )
+
+  helm_slot_2_kubeconfig = (
+    length(local.helm_slot_2_keys) == 1 ?
+    try(module.aks_slot_2[local.helm_slot_2_keys[0]].aks_cluster_kube_config[0], null) :
+    null
+  )
+
+  helm_slot_3_kubeconfig = (
+    length(local.helm_slot_3_keys) == 1 ?
+    try(module.aks_slot_3[local.helm_slot_3_keys[0]].aks_cluster_kube_config[0], null) :
+    null
+  )
+
+  helm_slot_4_kubeconfig = (
+    length(local.helm_slot_4_keys) == 1 ?
+    try(module.aks_slot_4[local.helm_slot_4_keys[0]].aks_cluster_kube_config[0], null) :
+    null
+  )
 }
 
-check "single_ingress_target_per_slot" {
+check "single_ingress_target_per_subscription" {
   assert {
     condition = alltrue([
-      for count in values(local.ingress_slot_counts) : count <= 1
+      for count in values(local.ingress_subscription_counts) : count <= 1
     ])
 
-    error_message = "Ingress automation currently supports at most one AKS deployment per subscription slot. Increase the number of subscription targets or adjust user_count so that each slot maps to a single cluster."
+    error_message = "Ingress automation currently supports at most one AKS deployment per subscription index. Increase the number of subscription targets or adjust user_count so that each index maps to a single cluster."
   }
 }
 

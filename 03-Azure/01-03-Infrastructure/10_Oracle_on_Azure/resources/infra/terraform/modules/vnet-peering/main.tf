@@ -31,6 +31,12 @@ resource "azurerm_virtual_network_peering" "aks_to_odaa" {
   allow_forwarded_traffic      = true
   allow_gateway_transit        = false
   use_remote_gateways          = false
+
+  # Peering can be destroyed independently of subnets
+  # This prevents blocking subnet deletion
+  lifecycle {
+    create_before_destroy = false
+  }
 }
 
 # ===============================================================================
@@ -49,4 +55,10 @@ resource "azurerm_virtual_network_peering" "odaa_to_aks" {
   allow_forwarded_traffic      = true
   allow_gateway_transit        = false
   use_remote_gateways          = false
+
+  # Peering can be destroyed independently of subnets
+  # This prevents blocking subnet deletion
+  lifecycle {
+    create_before_destroy = false
+  }
 }

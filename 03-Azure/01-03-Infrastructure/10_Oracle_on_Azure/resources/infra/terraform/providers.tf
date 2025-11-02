@@ -27,6 +27,8 @@ locals {
 provider "azurerm" {
   subscription_id = var.odaa_subscription_id
   tenant_id       = var.odaa_tenant_id
+  client_id       = var.client_id
+  client_secret   = var.client_secret
   features {
     resource_group {
       prevent_deletion_if_contains_resources = false
@@ -60,6 +62,8 @@ provider "azurerm" {
   alias                = "aks_deployment_slot_0"
   subscription_id      = local.aks_subscription_ids_padded[0]
   tenant_id            = local.aks_tenant_ids_padded[0]
+  client_id            = var.client_id
+  client_secret        = var.client_secret
   auxiliary_tenant_ids = [var.odaa_tenant_id]
 
   features {
@@ -94,6 +98,8 @@ provider "azurerm" {
   alias                = "aks_deployment_slot_1"
   subscription_id      = local.aks_subscription_ids_padded[1]
   tenant_id            = local.aks_tenant_ids_padded[1]
+  client_id            = var.client_id
+  client_secret        = var.client_secret
   auxiliary_tenant_ids = [var.odaa_tenant_id]
 
   features {
@@ -128,6 +134,8 @@ provider "azurerm" {
   alias                = "aks_deployment_slot_2"
   subscription_id      = local.aks_subscription_ids_padded[2]
   tenant_id            = local.aks_tenant_ids_padded[2]
+  client_id            = var.client_id
+  client_secret        = var.client_secret
   auxiliary_tenant_ids = [var.odaa_tenant_id]
 
   features {
@@ -162,6 +170,8 @@ provider "azurerm" {
   alias                = "aks_deployment_slot_3"
   subscription_id      = local.aks_subscription_ids_padded[3]
   tenant_id            = local.aks_tenant_ids_padded[3]
+  client_id            = var.client_id
+  client_secret        = var.client_secret
   auxiliary_tenant_ids = [var.odaa_tenant_id]
 
   features {
@@ -196,6 +206,8 @@ provider "azurerm" {
   alias                = "aks_deployment_slot_4"
   subscription_id      = local.aks_subscription_ids_padded[4]
   tenant_id            = local.aks_tenant_ids_padded[4]
+  client_id            = var.client_id
+  client_secret        = var.client_secret
   auxiliary_tenant_ids = [var.odaa_tenant_id]
 
   features {
@@ -231,6 +243,8 @@ provider "azurerm" {
   alias                = "odaa"
   subscription_id      = var.odaa_subscription_id
   tenant_id            = var.odaa_tenant_id
+  client_id            = var.client_id
+  client_secret        = var.client_secret
   auxiliary_tenant_ids = local.aks_auxiliary_tenant_ids
 
   features {
@@ -269,32 +283,45 @@ provider "azurerm" {
 provider "azuread" {
   # AzureAD provider configuration
   # This provider is used for managing Entra ID (Azure Active Directory) resources
+  tenant_id     = var.odaa_tenant_id
+  client_id     = var.client_id
+  client_secret = var.client_secret
 }
 
 # AzureAD provider aliases per AKS deployment tenant
 provider "azuread" {
-  alias     = "aks_deployment_slot_0"
-  tenant_id = local.aks_tenant_ids_padded[0]
+  alias         = "aks_deployment_slot_0"
+  tenant_id     = local.aks_tenant_ids_padded[0]
+  client_id     = var.client_id
+  client_secret = var.client_secret
 }
 
 provider "azuread" {
-  alias     = "aks_deployment_slot_1"
-  tenant_id = local.aks_tenant_ids_padded[1]
+  alias         = "aks_deployment_slot_1"
+  tenant_id     = local.aks_tenant_ids_padded[1]
+  client_id     = var.client_id
+  client_secret = var.client_secret
 }
 
 provider "azuread" {
-  alias     = "aks_deployment_slot_2"
-  tenant_id = local.aks_tenant_ids_padded[2]
+  alias         = "aks_deployment_slot_2"
+  tenant_id     = local.aks_tenant_ids_padded[2]
+  client_id     = var.client_id
+  client_secret = var.client_secret
 }
 
 provider "azuread" {
-  alias     = "aks_deployment_slot_3"
-  tenant_id = local.aks_tenant_ids_padded[3]
+  alias         = "aks_deployment_slot_3"
+  tenant_id     = local.aks_tenant_ids_padded[3]
+  client_id     = var.client_id
+  client_secret = var.client_secret
 }
 
 provider "azuread" {
-  alias     = "aks_deployment_slot_4"
-  tenant_id = local.aks_tenant_ids_padded[4]
+  alias         = "aks_deployment_slot_4"
+  tenant_id     = local.aks_tenant_ids_padded[4]
+  client_id     = var.client_id
+  client_secret = var.client_secret
 }
 
 # Get current Azure client configuration

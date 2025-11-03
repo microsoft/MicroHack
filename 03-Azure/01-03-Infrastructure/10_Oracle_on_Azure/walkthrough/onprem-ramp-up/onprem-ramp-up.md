@@ -4,6 +4,8 @@
 
 After you successfully created the ODAA Autonomous Database instance, you will now setup Oracle Data Pump and GoldenGate to replicate data from an on-premises Oracle database running in Azure Kubernetes Service (AKS) to the ODAA ADB instance.
 
+Before you continue with the challenge verify that the Adress space 
+
 We will install the following components into the AKS cluster under the Namespace "microhacks" via helm:
 
 - Oracle Database (prefilled with the Schema SH1)

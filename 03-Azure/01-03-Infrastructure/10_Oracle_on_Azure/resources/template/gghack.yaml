@@ -7,11 +7,14 @@ ogg:
   deploymentName: hacksync
 
 databases:
-  trgConn: "<ODAA-CONNECTION-STRING>"
+  # value for source database (23ai free container) is calculated.
+  #  trgConn: "(description=(retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=adb.eu-frankfurt-1.oraclecloud.com))(connect_data=(service_name=gfde677d3a923a9_atp23ai_low.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))"
+  trgConn: "(description=(retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=xxxxxxxxxxxxxxxx.adb.eu-frankfurt-1.oraclecloud.com))(connect_data=(service_name=xxxxxxxxxxxxxxxxxxx_adbger_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))"
 
   #for demo env, dont change the schema names. SH already exists in ADB, so we create another one.
   srcSchema: "SH"
   trgSchema: "SH2"
+  dumpFile: "https://objectstorage.eu-frankfurt-1.oraclecloud.com/p/AchwripxZjs7IxMRtWO2H_gkxFHU4d2uNDYKctfGmgsRodlHvaxxgjAKT0awXOxH/n/fre3ftc1iva4/b/export_bucket/o/SHBIG.dmp"
   adminSecret: 
     secretName: db-admin-secret
     srcAdminPwdKey: srcAdminPwd

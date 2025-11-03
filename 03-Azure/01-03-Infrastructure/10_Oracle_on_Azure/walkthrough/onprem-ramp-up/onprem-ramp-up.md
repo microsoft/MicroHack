@@ -42,6 +42,9 @@ az aks get-credentials -g $rgAKS -n $AKSClusterName --overwrite-existing
 ## 🛠️ Install OnPrem on AKS with helm
 
 ~~~powershell
+# Do an update to get the newest chart templates
+helm repo update
+
 # Install golden gate
 helm repo add oggfree https://ilfur.github.io/VirtualAnalyticRooms
 ~~~
@@ -92,13 +95,14 @@ After you have assigned the connection string to a variable, replace the placeho
 (Get-Content gghack.yaml)[8..11]
 ~~~
 
-Your connection string in your gghack.yaml should look similar to this:
+Your connection string in your gghack.yaml should look similar the yaml below. If the connection string is not copied successful into the gghack.yaml file you can do it manually as well be copy to connection string from the ADB Azure Portal und connections. Choose the connection for high.
+
 
 ~~~yaml
 databases:
   trgConn: "(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=ucy29rbl.adb.eu-paris-1.oraclecloud.com))(connect_data=(service_name=gc2401553d1c7ab_odaau0_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))"
 
-  #for demo env, dont change the schema names. SH already exists in ADB, so we create another one.
+# for demo env, do not change the schema names in the configuration yaml file. The reason why we are using SH2 is that SH is a readonly schema which already exists in the ADB, so we create a new one called SH2.
 ~~~
 
 ## 🚀 Install GoldenGate Pods
@@ -207,7 +211,7 @@ $podInstanteClientName=kubectl get pods -n microhacks | Select-String 'ogghack-g
 # login to the pod instantclient
 kubectl exec -it -n microhacks $podInstanteClientName -- /bin/bash
 # log into ADB with admin via sqlplus, replace the TNS connection string with your own
-sqlplus admin@'(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=fxdivzxo.adb.eu-paris-1.oraclecloud.com))(connect_data=(service_name=gc2401553d1c7ab_odaauser02_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))' # Replace with your TNS connection string
+sqlplus admin@'(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=zeii0mxy.adb.eu-paris-1.oraclecloud.com))(connect_data=(service_name=gc2401553d1c7ab_adbuser01_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))' # Replace with your TNS connection string
 Welcome1234# # replace with your ADB password
 ~~~
 

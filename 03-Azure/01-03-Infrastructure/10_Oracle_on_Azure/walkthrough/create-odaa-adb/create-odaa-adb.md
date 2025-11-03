@@ -89,7 +89,26 @@ A complete documentation is available on under the following links.
 
 [Oracle Documentation: Create an Autonomous Database](https://docs.oracle.com/en-us/iaas/Content/database-at-azure/azucr-create-autonomous-database.html)
 
+<br>
+
 <hr>
+
+## Check the created ADB in OCI console
+
+After the ADB was deployed successful, check if the ADB is visible on the Azure Portal and OCI side. Important to mention on the OCI side is that the region is set to <b> Fracne Central</b> and the Compartment is chosen properly.
+
+The compartment structure in OCI looks like:
+~~~text
+--> Root compartment - cptazure
+   -->OCI Multicloudlink_ODBAA <number>
+      --> Compartment <number>
+~~~
+
+<br>
+
+
+![oci region and compartment setting](media/oci_region_check_compartment.jpg)
+
 
 ## Check the existing vnet peering 
 

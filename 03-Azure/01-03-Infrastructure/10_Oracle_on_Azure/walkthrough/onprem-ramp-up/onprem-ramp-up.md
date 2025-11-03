@@ -329,9 +329,22 @@ If the namespace microhacks needs to be deleted after the helm charts are uninst
   kubectl delete pods --all -n microhacks --force --grace-period=0
   ```
   # 4. Delete the namespace
-  ```powershell
+
+In case the ADB is not reachable the namespace microhacks can be deleted and installed from the beginning by following the subsequent steps: 
+
+  ~~~Powershell
+  helm uninstall ogghack -n microhacks
+
+  kubectl get all -n microhacks
+  ~~~
+  ~~~text
+  output: 
+  No resources found in microhacks namespace.
+  ~~~
+
+  ~~~powershell
   kubectl delete namespace microhacks
-  ```
+  ~~~
 
 
 ### 🔎 Show the logs of the GoldenGate Prepare Job
@@ -376,5 +389,8 @@ SQL> Disconnected from Oracle Database 23ai Enterprise Edition Release 23.0.0.0.
 Version 23.10.0.25.10
 Cloning into 'db-sample-schemas'...
 ~~~
+
+
+
 
 [Back to workspace README](../../README.md)

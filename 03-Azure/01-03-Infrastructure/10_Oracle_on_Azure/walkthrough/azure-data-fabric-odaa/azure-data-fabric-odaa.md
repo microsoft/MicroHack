@@ -30,12 +30,12 @@ Log in to the AKS cluster where you want to deploy GoldenGate for Azure Fabric i
 
 ~~~powershell
 # switch to the subscription where AKS is deployed
-$subAKS="sub-1" # replace with your AKS subscription name
+$subAKS="sub-mh1" # replace with your AKS subscription name
 # Make sure your cli points to the AKS subscription
 az account set --subscription $subAKS
 # log in to your AKS cluster if not already done
-$rgAKS="odaa1" # replace with your AKS resource group name
-$AKSClusterName="odaa1" # replace with your AKS cluster name
+$rgAKS="rg-aks-user01" # replace with your AKS resource group name
+$AKSClusterName="aks-user01" # replace with your AKS cluster name
 az aks get-credentials -g $rgAKS -n $AKSClusterName --overwrite-existing
 ~~~
 

@@ -17,7 +17,7 @@ This is inspired from the blog of Clemens Bleile.
 ~~~bash
 az login --use-device-code
 # switch to the subscription where AKS is deployed
-$subAKS="sub-0" # replace with your AKS subscription name
+$subAKS="sub-mh1" # replace with your AKS subscription name
 # Make sure your cli points to the AKS subscription
 az account set --subscription $subAKS
 ~~~
@@ -26,8 +26,8 @@ az account set --subscription $subAKS
 
 ~~~bash
 # log into your AKS cluster if not already done
-$rgAKS="aks-user02" # replace with your AKS resource group name
-$AKSClusterName="aks-user02" # replace with your AKS cluster name
+$rgAKS="rg-aks-user01" # replace with your AKS resource group name
+$AKSClusterName="aks-user01" # replace with your AKS cluster name
 ~~~
 
 ## ⚓ Connect to AKS
@@ -39,7 +39,14 @@ az aks get-credentials -g $rgAKS -n $AKSClusterName --overwrite-existing
 
 ### 📡 SQL Ping Test from AKS to ODAA ADB
 
-Reference the document [How to retrieve the Oracle Database Autonomous Database connection string from ODAA](../docs/odaa-get-token.md) to get the TNS connection string for your ODAA ADB instance.
+Reference the document [How to retrieve the Oracle Database Autonomous Database connection string from ODAA](../../docs/odaa-get-token.md) to get the TNS connection string for your ODAA ADB instance.
+
+⚠️ **Important**: If you follow the instructions in `docs\odaa-get-token.md`, remember to switch back to your AKS subscription after retrieving the TNS connection string:
+
+~~~powershell
+# Switch back to AKS subscription after getting TNS connection string
+az account set --subscription $subAKS
+~~~
 
 The script consist of two parts, Setup and Test.
 
@@ -56,8 +63,8 @@ Inside the instantclient pod, run the following commands:
 
 ~~~bash
 # Example DIY quick test script (bash + sqlplus): 
-sqlplus admin@'(description=(retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=gpdmotes.adb.eu-frankfurt-1.oraclecloud.com))(connect_data=(service_name=g6425a1dbd2e95a_odaa2_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))' # replace with your TNS connection string
-Welcome1234# # replace with your ADB password
+sqlplus admin@$trgConn  # use the $trgConn variable from docs\odaa-get-token.md
+Welcome1234#  # replace with your ADB password
 ~~~
 
 Execute the Setup
@@ -173,5 +180,194 @@ bash -c 'H=fxdivzxo.adb.eu-paris-1.oraclecloud.com;P=1521;for i in {1..10};do t0
 9: 17 ms
 10: 16 ms
 ~~~
+
+## 🚀 Performance Testing with ADBPing Tool from Azure Container Registry
+
+The following section demonstrates how to connect to AKS, deploy a performance testing container from Azure Container Registry, and run comprehensive Oracle ADB performance tests using the `adbping` tool.
+
+### 🔑 Step 1: Azure Authentication and Subscription Setup
+
+First, ensure you're authenticated and set to the correct subscriptions:
+
+~~~powershell
+# Login to Azure if not already authenticated
+az login --use-device-code
+
+# Set subscription for AKS cluster
+$subAKS="sub-mh1" # replace with your AKS subscription name
+az account set --subscription $subAKS
+
+# Verify current subscription
+az account show --output table
+~~~
+
+### 🔐 Step 2: Connect to AKS Cluster
+
+~~~powershell
+# Get AKS credentials and configure kubectl
+az aks get-credentials --resource-group $rgAKS --name $AKSClusterName --overwrite-existing
+
+# Verify connection to cluster
+kubectl get nodes
+kubectl get namespaces
+~~~
+
+### 🏗️ Step 3: Deploy ADBPing Container
+
+Create a Kubernetes deployment for the adbping performance testing tool using external YAML files:
+
+~~~powershell
+# Deploy namespace and ADBPing container using external YAML files
+kubectl apply -f resources\infra\k8s\namespace.yaml,resources\infra\k8s\adbping-deployment.yaml
+
+# Wait for pod to be ready
+kubectl wait --for=condition=ready pod -l app=adbping -n adb-perf-test --timeout=300s
+
+# Get pod name for interactive access
+$podName = kubectl get pods -n adb-perf-test -l app=adbping -o jsonpath="{.items[0].metadata.name}"
+Write-Host "Pod Name: $podName"
+~~~
+
+### ⚡ Step 4: Configure and Run Performance Tests
+
+Execute comprehensive performance tests using the adbping tool. The recommended approach is using a Kubernetes Job for automated, repeatable testing.
+
+#### Option A: Automated Job-based Testing (Recommended)
+
+**Advantages**: Repeatable, automated, captures complete output, no manual intervention required.
+
+Create a customized performance testing job with your actual ADB credentials:
+
+**Prerequisites**: Ensure you have obtained the TNS connection string by following [docs\odaa-get-token.md](../../docs/odaa-get-token.md) and assigned it to the `$trgConn` variable.
+
+~~~powershell
+# Create a copy of the job template to avoid overwriting the original
+Copy-Item "resources\infra\k8s\adbping-job.yaml" "adbping-job-custom.yaml"
+
+# Configure your ADB connection details
+$ADB_PASSWORD = "Welcome1234#"  # Replace with your actual ADB password
+$ADB_TNS = $trgConn  # Use the TNS connection string obtained from docs\odaa-get-token.md
+
+# Update the job configuration with your credentials
+(Get-Content adbping-job-custom.yaml) -replace 'YOUR_PASSWORD_HERE', $ADB_PASSWORD | Set-Content adbping-job-custom.yaml
+(Get-Content adbping-job-custom.yaml) -replace 'YOUR_TNS_CONNECTION_STRING_HERE', $ADB_TNS | Set-Content adbping-job-custom.yaml
+
+# Verify the changes - show the updated configuration lines
+Write-Host "📋 Updated job configuration:" -ForegroundColor Green
+(Get-Content adbping-job-custom.yaml)[23..26] | ForEach-Object { Write-Host "  $_" -ForegroundColor Yellow }
+~~~
+
+The updated configuration should look like this:
+
+~~~yaml
+          USER="admin"
+          PASSWORD="Welcome1234#"  # Your actual password
+          TNS="(description= (retry_count=20)(retry_delay=3)...)"  # Your actual TNS string
+~~~
+
+Deploy and monitor the performance testing job:
+
+~~~powershell
+# Deploy the customized performance testing job
+kubectl apply -f adbping-job-custom.yaml
+
+# Monitor the job progress
+kubectl get jobs -n adb-perf-test
+
+# Wait for job to complete and view results
+kubectl wait --for=condition=complete job/adbping-performance-test -n adb-perf-test --timeout=300s
+
+# View test results
+kubectl logs job/adbping-performance-test -n adb-perf-test
+
+# Alternative: View logs by label (if needed)
+kubectl logs -l job-name=adbping-performance-test -n adb-perf-test
+
+# Check job status and details
+kubectl describe job adbping-performance-test -n adb-perf-test
+
+# If job fails, check pod logs for troubleshooting
+kubectl get pods -n adb-perf-test
+kubectl logs <pod-name> -n adb-perf-test  # Replace <pod-name> with actual pod name
+~~~
+
+#### Option B: Interactive Testing (Advanced)
+
+For interactive testing and custom test scenarios:
+
+~~~powershell
+# Enter the adbping container for interactive testing
+kubectl exec -it $podName -n adb-perf-test -- /bin/bash
+~~~
+
+Inside the container, run custom adbping tests:
+
+~~~bash
+# The adbping tool is pre-extracted and ready to use
+which adbping
+adbping --help
+
+# Set your Oracle ADB connection details
+export ADB_USER="admin"
+export ADB_PASSWORD="Welcome1234#"  # Replace with your actual ADB password
+export ADB_TNS=$trgConn  # Use the TNS connection string from docs\odaa-get-token.md
+
+# Run custom performance tests
+adbping -u "$ADB_USER" -p "$ADB_PASSWORD" -o -l "$ADB_TNS" -c java -t 5 -d 30
+~~~
+
+### 📊 Step 5: Performance Results Analysis
+
+The adbping tool provides comprehensive metrics including:
+
+- **Pass/Fail Counts**: Total successful/failed connections
+- **SQL Execution Time**: Time to execute SQL only (excludes connection time)
+- **Connect + SQL Time**: Total time including connection establishment
+- **Percentile Analysis**: P90, P95, P99 latency metrics
+- **Connection Pool Statistics**: Pool setup time and configuration
+
+### 🧹 Step 6: Cleanup Resources
+
+~~~powershell
+# Exit the container (if using interactive mode)
+exit
+
+# Delete all performance testing resources
+kubectl delete namespace adb-perf-test
+
+# Remove the customized job file (optional)
+Remove-Item "adbping-job-custom.yaml" -Force
+
+# Verify cleanup
+kubectl get namespaces | grep adb-perf-test
+~~~
+
+> **Note**: Deleting the namespace automatically removes all resources created within it, including deployments, jobs, and pods.
+
+### 📈 Expected Results
+
+Typical performance results you should expect:
+
+~~~text
++++Test Summary+++
+Test Client: java
+Number of concurrent threads: 1
+Duration (secs): 5
+SQL executed: select 1 from dual;
+Pass: 2665 Fail: 0
+Test start date: 2025-11-04 19:44:24.593748+00:00
+Test end date: 2025-11-04 19:44:35.576034+00:00
+Java connection pool Stats: Initsize:1, Maxsize:1, Pool setup time(ms):4804.313
+SQL Execution Time(ms) : Min:1.152 Max:74.072 Avg:1.67 Median:1.253 Perc90:1.393 Perc95:1.477 Perc99:4.691
+Connect + SQL Execution Time(ms) : Min:1.183 Max:74.922 Avg:1.784 Median:1.316 Perc90:1.531 Perc95:1.664 Perc99:7.138
+~~~
+
+### 🔍 Performance Analysis Tips
+
+1. **Latency Optimization**: Monitor P95 and P99 percentiles for consistent performance
+2. **Throughput Analysis**: Calculate operations per second: `Pass Count / Duration`
+3. **Connection Efficiency**: Compare SQL execution time vs. total connect+SQL time
+4. **Scalability Testing**: Test with increasing thread counts to find optimal concurrency
+5. **Network Impact**: Higher latencies may indicate network connectivity issues
 
 [Back to workspace README](../../README.md)

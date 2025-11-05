@@ -33,7 +33,7 @@ param flavor string = 'ITPro'
 param sqlServerEdition string = 'Developer'
 
 @description('Target GitHub account')
-param githubAccount string = 'microhack'
+param githubAccount string = 'microsoft'
 
 @description('Target GitHub branch')
 param githubBranch string = 'main'

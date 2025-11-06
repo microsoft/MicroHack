@@ -114,4 +114,7 @@ $TAPs += [pscustomobject]@{
 
 }
 
-Export-Excel -InputObject $TAPs -Path ".\TemporaryAccessPasses.xlsx" -AutoSize -Title "Temporary Access Passes" -WorksheetName "TAPs" -TableName "TAPs" -TableStyle Light1
+Export-Excel -InputObject $TAPs -Path ".\TemporaryAccessPasses.xlsx" -AutoSize -Title "Temporary Access Passes" -WorksheetName "TAPs" -TableName "TAPs" -TableStyle Light1 -Show
+
+Write-Host "Temporary Access Passes exported to TemporaryAccessPasses.xlsx" -ForegroundColor Green
+Write-Host "Tip: Use the Mail merge feature in Word to create personalized instruction pages for users." -ForegroundColor Yellow

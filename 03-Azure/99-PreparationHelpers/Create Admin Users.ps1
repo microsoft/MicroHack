@@ -16,9 +16,8 @@ Get-MgContext
 # Lab users and group creation
 $UserNamePrefix = "AdminLabUser-"
 $Password = Read-Host -Prompt "Enter password"
-$UPNSuffix = Read-Host -Prompt "Enter UPN suffix, example: @xxx.onmicrosoft.com"
+$UPNSuffix = '@' + ((Get-MgContext).Account -split "@")[1] # Get UPN suffix from the signed-in account (@xxx.onmicrosoft.com)
 $UserCount = 5
-$UserCount = 60
 $StartIndex = 0
 $GroupName = "AdminUsers"
 $GroupId = Get-MgGroup -Filter "DisplayName eq '$GroupName'" | Select-Object -ExpandProperty Id

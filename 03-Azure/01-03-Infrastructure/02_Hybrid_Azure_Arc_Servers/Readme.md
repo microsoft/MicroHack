@@ -307,3 +307,4 @@ Thank you for investing the time and see you next time!
 - Alexander Ortha [GitHub](https://github.com/alexor-ms/); [LinkedIn](https://www.linkedin.com/in/alexanderortha/)
 - Christoph Süßer (Schmidt) [GitHub](https://github.com/TheFitzZZ); [LinkedIn](https://www.linkedin.com/in/suesser/)
 - Jan Egil Ring [GitHub](https://github.com/janegilring); [LinkedIn](https://www.linkedin.com/in/janegilring/)
+- Tom Claes [GitHub](https://github.com/claestom); [LinkedIn](https://www.linkedin.com/in/tomclaes-/)

@@ -1,17 +1,18 @@
 # Virtual Machine creation (PowerShell equialent of create_vms.sh)
 
-# Resource group creation and role assignment
+# Resource group creation and role assignment, requires users to be created first (Create MH Users.ps1)
 
 $SubscriptionName = "Infra-Micro-Hack"
 $Location = "Sweden Central"
 $ResourceGroupPrefix = "LabUser-"
 $ResourceGroupCount = 1
 $StartIndex = 0
-$UPNSuffix = Read-Host -Prompt "Enter UPN suffix, example: @xxx.onmicrosoft.com" # @MngEnvMCAP520721.onmicrosoft.com
 
 Connect-AzAccount -UseDeviceAuthentication
 
 Set-AzContext -Subscription $SubscriptionName
+
+$UPNSuffix = '@' +  ((Get-AzContext).Account.Id -split "@")[1] # Get UPN suffix from the signed-in account (@xxx.onmicrosoft.com)
 
 for ($i = 1; $i -le $ResourceGroupCount; $i++) {
 

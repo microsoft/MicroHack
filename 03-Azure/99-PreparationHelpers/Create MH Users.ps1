@@ -79,7 +79,7 @@ foreach ($i in 1..$UserCount) {
 # Note: TAP requires Entra ID Premium P2 license
 # https://learn.microsoft.com/en-us/entra/identity/authentication/howto-authentication-temporary-access-pass
 $UserNamePrefix = "LabUser-"
-$Users = Get-MgUser -Filter "startsWith(DisplayName,'$UserNamePrefix')" | Sort-Object DisplayName | Where-Object UserPrincipalName -like "*$UPNSuffix" | Select-Object -Last 5
+$Users = Get-MgUser -Filter "startsWith(DisplayName,'$UserNamePrefix')" | Sort-Object DisplayName | Where-Object UserPrincipalName -like "*$UPNSuffix"
 $TAPs = @()
 
 foreach ($user in $Users) {

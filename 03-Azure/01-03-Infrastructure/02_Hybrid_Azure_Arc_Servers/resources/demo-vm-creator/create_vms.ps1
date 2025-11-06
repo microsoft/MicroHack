@@ -2,7 +2,7 @@
 
 # Resource group creation and role assignment
 
-$SubscriptionName = "Infra-Micro-Hack-1"
+$SubscriptionName = "Infra-Micro-Hack"
 $Location = "Sweden Central"
 $ResourceGroupPrefix = "LabUser-"
 $ResourceGroupCount = 1

@@ -17,10 +17,9 @@ Get-MgContext
 
 # Lab users and group creation
 $UserNamePrefix = "LabUser-"
-$UserNamePrefix = "AdminLabUser-"
-$Password = Read-Host -Prompt "Enter password"
-$UPNSuffix = Read-Host -Prompt "Enter UPN suffix, example: @xxx.onmicrosoft.com"
-$UserCount = 5
+$Password = Read-Host -Prompt "Enter password" # P@ssw0rd1234!
+$UPNSuffix = Read-Host -Prompt "Enter UPN suffix, example: @xxx.onmicrosoft.com" # @MngEnvMCAP520721.onmicrosoft.com
+$eventStartDate = Get-Date -Hour 00 -Minute 0 -Second 0 -Millisecond 0 -Day 07 -Month 11 -Year 2025 # Set fixed start date for the MicroHacks event, used to define TAP validity period
 $UserCount = 60
 $StartIndex = 0
 $GroupName = "LabUsers"
@@ -80,14 +79,14 @@ foreach ($i in 1..$UserCount) {
 # Note: TAP requires Entra ID Premium P2 license
 # https://learn.microsoft.com/en-us/entra/identity/authentication/howto-authentication-temporary-access-pass
 $UserNamePrefix = "LabUser-"
-$Users = Get-MgUser -Filter "startsWith(DisplayName,'$UserNamePrefix')"
+$Users = Get-MgUser -Filter "startsWith(DisplayName,'$UserNamePrefix')" | Sort-Object DisplayName | Where-Object UserPrincipalName -like "*$UPNSuffix" | Select-Object -Last 5
 $TAPs = @()
 
-foreach ($user in $Users[5..$Users.Count]) {
+foreach ($user in $Users) {
     $properties = @{}
     $properties.isUsableOnce = $false
-    $properties.startDateTime = Get-Date -Hour 00 -Minute 0 -Second 0 -Millisecond 0 -Day 17 -Month 9 -Year 2025
-    #$properties.startDateTime = (Get-Date).AddMinutes(1)
+    $properties.startDateTime = $eventStartDate
+    #$properties.startDateTime = (Get-Date).AddMinutes(1) # For testing purposes, set start time to 1 minute in the future
     $properties.endDateTime = $properties.startDateTime.AddDays(1)
     $propertiesJSON = $properties | ConvertTo-Json
 

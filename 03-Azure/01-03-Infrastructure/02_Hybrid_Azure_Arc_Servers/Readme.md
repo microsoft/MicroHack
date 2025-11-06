@@ -36,7 +36,7 @@ For customers who want to simplify complex and distributed environments across o
 
 This MicroHack scenario walks through the use of Azure Arc with a focus on the best practices and the design principles and some interesting challenges for real world scenarios. Specifically, this builds up to include working with an existing infrastructure in your datacenter.
 
-Further resources - Thomas Maurer & Lior Kamrat links
+Further resources
 
 - [Azure Arc Overview Documentation](https://learn.microsoft.com/azure/azure-arc/overview)
 - [Azure Arc Blog from Microsoft](https://techcommunity.microsoft.com/category/azure/blog/azurearcblog)
@@ -52,7 +52,7 @@ Further resources - Thomas Maurer & Lior Kamrat links
 - [Customer reference: Wüstenrot & Württembergische reduces patching time by 35 percent, leans into hybrid cloud management with Azure Arc](https://customers.microsoft.com/story/1538266003319018436-ww-azure-banking-and-capital-markets)
 - [Introduction to Azure Arc landing zone accelerator for hybrid and multicloud](https://learn.microsoft.com/azure/cloud-adoption-framework/scenarios/hybrid/enterprise-scale-landing-zone)
 
-💡 Optional: Read this after completing this lab to deepen the learned!
+💡 Optional: Read this after completing this lab to deepen what you have learned!
 
 ## Objectives
 
@@ -69,14 +69,13 @@ After completing this MicroHack you will:
 This MicroHack has a few but important prerequisites to be understood before starting this lab!
 
 - Your own Azure subscription with Owner RBAC rights at the subscription level
-  - [Azure Evaluation free account](https://azure.microsoft.com/free)
 - You need to have 3 virtual machines ready and updated. One with a Linux operating system (tested with Ubuntu Server 24.04), one with Windows Server 2025 and one with Windows Server 2012 R2 (optional). You can use machines in Azure for this following this guide: [Azure Arc Jumpstart Servers](https://jumpstart.azure.com/azure_arc_jumpstart/azure_arc_servers/azure)
     > **Note**
     > When using the Jumpstart the virtual machines will already be onboarded to Azure Arc and therefore "Challenge 1 - Azure Arc prerequisites & onboarding" is not needed.
 - [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli) (Hint: Make sure to use the lastest version)
 - [Azure PowerShell Guest Configuration Cmdlets](https://learn.microsoft.com/azure/governance/machine-configuration/machine-configuration-create-setup#install-the-module-from-the-powershell-gallery)
   - It is not possible to run those commands from Azure Cloud Shell
-  - Please make sure you have at least Version 3.4.2 installes with the following Command: ```Install-Module -Name GuestConfiguration -RequiredVersion 3.4.2```
+  - Please make sure you have at least version 4.11.0 installed with the following Command: ```Install-Module -Name GuestConfiguration -RequiredVersion 4.11.0```
 - [Visual Studio Code](https://code.visualstudio.com/)
 - [Git SCM](https://git-scm.com/download/)
 
@@ -88,19 +87,22 @@ In challenge 1 you will prepare your Azure environemnt for onboarding of existin
 
 ### Actions
 
-- Create all necessary Azure resources
+- Verify all necessary Azure resources are in place
   - Resource Group (Name: mh-arc-servers-rg)
   - Service Principal (Name: mh-arc-servers-sp)
-- Enable required Resource Providers
-- Prep existing server operating system on-prem
-- Onboard existing server to Azure Arc
+- Service Principal (Name: LabUser-xx-arc-servers-sp)
+- Enable required Resource Providers (if not already enabled)
+- Prep existing servers` operating system on-prem
+  - Hint: We are using Azure VMs to simulate on-prem servers
+- Onboard existing servers to Azure Arc
+  - win2012-vm may be skipped unless you plan to do the optional Challenge 6 (Extended Security Updates)
 
 ### Success criteria
 
 - You created an Azure resource group
 - You created an service principal with the required role membership
-- Prepared successfully an existing Server OS
-- Onboarded server is visible in the Azure Arc plane in the Azure Portal
+- Successfully prepared existing servers
+- Onboarded servers which is visible in the Azure Arc machines blade in the Azure Portal
 
 ### Learning resources
 
@@ -117,15 +119,15 @@ In challenge 1 you will prepare your Azure environemnt for onboarding of existin
 
 ### Goal
 
-In challenge 2 you will onboard your Windows and Linux virtual machines to Azure Monitor using the Azure Monitoring Agent (AMA) to leverage Azure Update Management, Change Tracking, Inventory and more. Be aware that Microsoft curently shifts from the retiring Log Analytics Agent to Azure Monitoring Agent. By that some of the features used in challange 2 are currently in preview.
+In challenge 2 you will onboard your Windows and Linux virtual machines to Azure Monitor using the Azure Monitoring Agent (AMA) to leverage Azure Update Manager, Change Tracking, Inventory and more.
 
 ### Actions
 
 - Create all necessary Azure resources
   - Log Analytics workspace (Name: mh-arc-servers-kv-law)
-- Configure Data Collection Rules in Log Analytics to collect Windows event logs and Linux syslog
-- Enable Azure Monitor for Azure Arc enabled servers with Azure Policy initiative
-- Enable and configure Update Management
+- Configure Data Collection Rules to collect Windows event logs and Linux syslog
+- Enable Azure Monitor for Azure Arc-enabled Servers with Azure Policy initiative
+- Enable and configure Update Manager
 - Enable Change Tracking and Inventory
 - Enable VM Insights
 
@@ -145,8 +147,8 @@ In challenge 2 you will onboard your Windows and Linux virtual machines to Azure
 - [Deployment options for Azure Monitor agent on Azure Arc-enabled servers](https://learn.microsoft.com/azure/azure-arc/servers/concept-log-analytics-extension-deployment)
 - [Data collection rules in Azure Monitor](https://learn.microsoft.com/azure/azure-monitor/essentials/data-collection-rule-overview)
 - [Azure Policy built-in definitions for Azure Arc-enabled servers](https://docs.microsoft.com/azure/azure-arc/servers/policy-reference)
-- [Azure Update Management Center](https://learn.microsoft.com/azure/update-center/overview)
-- [Enable Change Tracking and Inventory using Azure Monitoring Agent (Preview)](https://learn.microsoft.com/azure/automation/change-tracking/enable-vms-monitoring-agent?tabs=singlevm)
+- [Azure Update Manager](https://learn.microsoft.com/azure/update-manager/overview)
+- [Enable Change Tracking and Inventory using Azure Monitoring Agent](https://learn.microsoft.com/azure/automation/change-tracking/enable-vms-monitoring-agent?tabs=singlevm%2Cmultiplevms&pivots=single-portal)
 - [Monitor a hybrid machine with VM insights](https://docs.microsoft.com/azure/azure-arc/servers/learn/tutorial-enable-vm-insights)
 
 
@@ -163,7 +165,7 @@ Managing secrets, credentials or certificates to secure communication between di
 ### Actions
 
 - Create an Azure Key Vault in your Azure resource group
-- Create a secret in the Azure Key Vault and assign permissions to your virtual machine vm-linux-mh0
+- Create a secret in the Azure Key Vault and assign permissions to your Linux virtual machine
 - Access the secret via bash script
 
 ### Success Criteria
@@ -304,3 +306,4 @@ Thank you for investing the time and see you next time!
 - Nils Bankert [GitHub](https://github.com/nilsbankert); [LinkedIn](https://www.linkedin.com/in/nilsbankert/)
 - Alexander Ortha [GitHub](https://github.com/alexor-ms/); [LinkedIn](https://www.linkedin.com/in/alexanderortha/)
 - Christoph Süßer (Schmidt) [GitHub](https://github.com/TheFitzZZ); [LinkedIn](https://www.linkedin.com/in/suesser/)
+- Jan Egil Ring [GitHub](https://github.com/janegilring); [LinkedIn](https://www.linkedin.com/in/janegilring/)

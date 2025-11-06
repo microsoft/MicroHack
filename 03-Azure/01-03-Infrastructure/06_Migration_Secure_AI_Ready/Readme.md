@@ -38,11 +38,11 @@ This MicroHack scenario walks through the use of Azure Migrate to support the pr
 - Migrate
 - Modernize
 
-As part of the MicroHack, we will simulate the discovery and migration of physical servers to Azure. We will create the source systems as Azure Virtual Machines within a dedicated source Resource Group in Azure to simulate the on-prem datacenter. We will use Azure Migrate to discover, assess and migrate the systems into a destination Resource Group that simulates the target Azure environment.
+As part of the MicroHack, we will simulate the discovery and migration of virtualized servers on Hyper-V to Azure. We will create the source systems as nested guest-VMs on top of a Hyper-V host within a dedicated source Resource Group in Azure to simulate the on-prem datacenter. We will use Azure Migrate to discover, assess and migrate the systems into a destination Resource Group that simulates the target Azure environment.
 
 The concept behind physical server discovery and migration is described in detail under the following links:
-* [Physical Server discovery](https://learn.microsoft.com/en-us/azure/migrate/migrate-support-matrix-physical)
-* [Physical Server migration](https://learn.microsoft.com/en-us/azure/migrate/migrate-support-matrix-physical-migration)
+* [Hyper-V server discovery](https://learn.microsoft.com/en-us/azure/migrate/migrate-support-matrix-hyper-v?view=migrate)
+* [Hyper-V server migration](https://learn.microsoft.com/en-us/azure/migrate/tutorial-migrate-hyper-v?view=migrate&tabs=UI)
 
 # Objectives
 
@@ -69,9 +69,12 @@ With these pre-requisites in place, we can focus on building the differentiated 
 
 ## Challenge 1 - Prerequisites and landing zone preparation
 
+> [!IMPORTANT]
+> **Many of the resource deployments in this Microhack are adapted from the [Jumpstart ArcBox for IT Pros](https://jumpstart.azure.com/azure_jumpstart_arcbox/ITPro). Special thanks to the [Jumpstart Team](https://aka.ms/arcjumpstart) for their excellent work.**
+
 ### Goal
 
-- Deploy a *source* resource group with two VMs and their dependencies that act as our physical on-premise servers that will be migrated to Azure.
+- Deploy a *source* resource group with one VM acting as the Hyper-V host and their dependencies that act as our physical on-premise server which hosts the workloads that will be migrated to Azure.
 - Deploy a *destination* resource group to which the servers will be migrated.
 
 ### Actions
@@ -115,7 +118,7 @@ The goal of this exercise is to...
 * You have created a Azure Migrate Project
 * You have successfully deployed the Azure Migrate Appliance
 * You successfully registered the Azure Migrate Appliance with the Azure Migrate Project
-* You have successfully setup a continuous discovery for the physical servers.
+* You have successfully setup a continuous discovery for the Hyper-V host.
 * You have successfully verified the discovered servers in the portal
 
 ### Learning resources
@@ -232,8 +235,7 @@ The goal of this exercise is to ...
 
 ### Actions
 
-* Setup the Azure Replication Appliance
-* Deploy the Mobility Service Agent
+* Setup the Azure Site Recovery provider and Recovery Services agent on the Hyper-V host
 * Replicate the machines to Azure
 * Perform a Test Migration
 * Prepare the final Migration
@@ -242,7 +244,7 @@ The goal of this exercise is to ...
 ### Success criteria
 
 * All the source machines are successfully migrated to and running in Azure
-* The Web Servers are seamlessly accessible using a Traffic Manager profile via dedicated Public Load Balancer.
+* The Web Servers are accessible using a dedicated Public Load Balancer.
 
 ### Learning resources
 * [Support matrix for migration of physical servers, AWS VMs, and GCP VMs](https://learn.microsoft.com/en-us/azure/migrate/migrate-support-matrix-physical-migration)
@@ -311,6 +313,33 @@ The goal of this exercise is to ...
 ### Solution - Spoilerwarning
 
 [Solution Steps](./walkthrough/challenge-7/solution.md)
+
+## Optional Bonus Challenge 8 - Deploy AI chat in App Service
+
+### Goal
+
+The goal of this exercise is to ...
+
+* deploy an AI chat application in Azure App Service
+
+### Actions
+
+* Create a new Azure OpenAI Service
+* Deploy a model and test it in AI Foundry
+* Deploy the AI chat application code to the App Service
+
+### Success criteria
+
+* The AI chat application is running in Azure App Service
+* The application is accessible via a public URL
+
+### Learning resources
+* [Quickstart: Deploy model in AI Foundry](https://learn.microsoft.com/en-us/azure/ai-foundry/openai/how-to/create-resource?pivots=web-portal)
+* [Deploy an Azure App Service from AI Foundy](https://learn.microsoft.com/en-us/azure/ai-foundry/tutorials/deploy-chat-web-app)
+
+### Solution - Spoilerwarning
+
+[Solution Steps](./walkthrough/challenge-8/solution.md)
 
 ## Finish
 

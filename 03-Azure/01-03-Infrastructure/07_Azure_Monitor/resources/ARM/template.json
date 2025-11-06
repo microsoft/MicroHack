@@ -71,7 +71,7 @@
             "type": "Microsoft.Network/networkSecurityGroups",
             "apiVersion": "2023-04-01",
             "name": "[parameters('networkSecurityGroups_nsg_subnet_1_name')]",
-            "location": "westeurope",
+            "location": "[resourceGroup().location]",
             "properties": {
                 "securityRules": [
                     {
@@ -100,7 +100,7 @@
             "type": "Microsoft.Network/networkSecurityGroups",
             "apiVersion": "2023-04-01",
             "name": "[parameters('networkSecurityGroups_nsg_subnet_2_name')]",
-            "location": "westeurope",
+            "location": "[resourceGroup().location]",
             "properties": {
                 "securityRules": [
                     {
@@ -148,7 +148,7 @@
             "type": "Microsoft.Network/publicIPAddresses",
             "apiVersion": "2023-04-01",
             "name": "[parameters('publicIPAddresses_pip_appgw_microhack_name')]",
-            "location": "westeurope",
+            "location": "[resourceGroup().location]",
             "sku": {
                 "name": "Standard",
                 "tier": "Regional"
@@ -168,7 +168,7 @@
             "type": "Microsoft.Network/publicIPAddresses",
             "apiVersion": "2023-04-01",
             "name": "[parameters('publicIPAddresses_pip_bastion_name')]",
-            "location": "westeurope",
+            "location": "[resourceGroup().location]",
             "sku": {
                 "name": "Standard",
                 "tier": "Regional"
@@ -188,7 +188,7 @@
             "type": "Microsoft.Compute/virtualMachines",
             "apiVersion": "2023-03-01",
             "name": "[parameters('virtualMachines_vm_linux_name')]",
-            "location": "westeurope",
+            "location": "[resourceGroup().location]",
             "dependsOn": [
                 "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_nic_vm_linux_name'))]"
             ],
@@ -268,7 +268,7 @@
             "type": "Microsoft.Compute/virtualMachines",
             "apiVersion": "2023-03-01",
             "name": "[parameters('virtualMachines_vm_windows_name')]",
-            "location": "westeurope",
+            "location": "[resourceGroup().location]",
             "dependsOn": [
                 "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_nic_vm_windows_name'))]"
             ],
@@ -345,7 +345,7 @@
             "type": "Microsoft.Compute/virtualMachines/extensions",
             "apiVersion": "2023-03-01",
             "name": "[concat(parameters('virtualMachines_vm_windows_name'), '/', parameters('virtualMachines_vm_windows_name'), '-ext')]",
-            "location": "westeurope",
+            "location": "[resourceGroup().location]",
             "dependsOn": [
                 "[resourceId('Microsoft.Compute/virtualMachines', parameters('virtualMachines_vm_windows_name'))]"
             ],
@@ -364,7 +364,7 @@
             "type": "Microsoft.Network/networkInterfaces",
             "apiVersion": "2023-04-01",
             "name": "[parameters('networkInterfaces_nic_vm_linux_name')]",
-            "location": "westeurope",
+            "location": "[resourceGroup().location]",
             "dependsOn": [
                 "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_vnet_microhack_name'), 'subnet-microhack-0')]"
             ],
@@ -403,7 +403,7 @@
             "type": "Microsoft.Network/networkInterfaces",
             "apiVersion": "2023-04-01",
             "name": "[parameters('networkInterfaces_nic_vm_windows_name')]",
-            "location": "westeurope",
+            "location": "[resourceGroup().location]",
             "dependsOn": [
                 "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_vnet_microhack_name'), 'subnet-microhack-0')]"
             ],
@@ -523,13 +523,13 @@
             "type": "Microsoft.Compute/virtualMachineScaleSets",
             "apiVersion": "2023-03-01",
             "name": "[parameters('virtualMachineScaleSets_vmss_linux_nginx_name')]",
-            "location": "westeurope",
+            "location": "[resourceGroup().location]",
             "dependsOn": [
                 "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_vnet_microhack_name'), 'subnet-microhack-0')]",
                 "[resourceId('Microsoft.Network/applicationGateways', parameters('applicationGateways_appgw_microhack_name'))]"
             ],
             "sku": {
-                "name": "Standard_DS1_v2",
+                "name": "Standard_D2s_v6",
                 "tier": "Standard",
                 "capacity": 2
             },
@@ -639,7 +639,7 @@
             "type": "Microsoft.Network/applicationGateways",
             "apiVersion": "2023-04-01",
             "name": "[parameters('applicationGateways_appgw_microhack_name')]",
-            "location": "westeurope",
+            "location": "[resourceGroup().location]",
             "dependsOn": [
                 "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_vnet_microhack_name'), 'subnet-microhack-1')]",
                 "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIPAddresses_pip_appgw_microhack_name'))]"
@@ -781,7 +781,7 @@
             "type": "Microsoft.Network/bastionHosts",
             "apiVersion": "2023-04-01",
             "name": "[parameters('bastionHosts_bastion_microhack_name')]",
-            "location": "westeurope",
+            "location": "[resourceGroup().location]",
             "dependsOn": [
                 "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIPAddresses_pip_bastion_name'))]",
                 "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_vnet_microhack_name'), 'AzureBastionSubnet')]"
@@ -837,14 +837,14 @@
         //     "type": "Microsoft.Compute/virtualMachineScaleSets/virtualMachines",
         //     "apiVersion": "2023-03-01",
         //     "name": "[concat(parameters('virtualMachineScaleSets_vmss_linux_nginx_name'), '1')]",
-        //     "location": "westeurope",
+        //     "location": "[resourceGroup().location]",
         //     "dependsOn": [
         //         "[resourceId('Microsoft.Compute/virtualMachineScaleSets', parameters('virtualMachineScaleSets_vmss_linux_nginx_name'))]",
         //         "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_vnet_microhack_name'), 'subnet-microhack-0')]",
         //         "[resourceId('Microsoft.Network/applicationGateways', parameters('applicationGateways_appgw_microhack_name'))]"
         //     ],
         //     "sku": {
-        //         "name": "Standard_DS1_v2",
+        //         "name": "Standard_D2s_v6",
         //         "tier": "Standard"
         //     },
         //     "identity": {
@@ -885,7 +885,7 @@
         //             ]
         //         },
         //         "hardwareProfile": {
-        //             "vmSize": "Standard_DS1_v2"
+        //             "vmSize": "Standard_D2s_v6"
         //         },
         //         "storageProfile": {
         //             "imageReference": {
@@ -946,14 +946,14 @@
         //     "type": "Microsoft.Compute/virtualMachineScaleSets/virtualMachines",
         //     "apiVersion": "2023-03-01",
         //     "name": "[concat(parameters('virtualMachineScaleSets_vmss_linux_nginx_name'), '/2')]",
-        //     "location": "westeurope",
+        //     "location": "[resourceGroup().location]",
         //     "dependsOn": [
         //         "[resourceId('Microsoft.Compute/virtualMachineScaleSets', parameters('virtualMachineScaleSets_vmss_linux_nginx_name'))]",
         //         "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_vnet_microhack_name'), 'subnet-microhack-0')]",
         //         "[resourceId('Microsoft.Network/applicationGateways', parameters('applicationGateways_appgw_microhack_name'))]"
         //     ],
         //     "sku": {
-        //         "name": "Standard_DS1_v2",
+        //         "name": "Standard_D2s_v6",
         //         "tier": "Standard"
         //     },
         //     "identity": {
@@ -994,7 +994,7 @@
         //             ]
         //         },
         //         "hardwareProfile": {
-        //             "vmSize": "Standard_DS1_v2"
+        //             "vmSize": "Standard_D2s_v6"
         //         },
         //         "storageProfile": {
         //             "imageReference": {
@@ -1055,7 +1055,7 @@
             "type": "Microsoft.Network/virtualNetworks",
             "apiVersion": "2023-04-01",
             "name": "[parameters('virtualNetworks_vnet_microhack_name')]",
-            "location": "westeurope",
+            "location": "[resourceGroup().location]",
             "dependsOn": [
                 "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_nsg_subnet_1_name'))]",
                 "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_nsg_subnet_2_name'))]"

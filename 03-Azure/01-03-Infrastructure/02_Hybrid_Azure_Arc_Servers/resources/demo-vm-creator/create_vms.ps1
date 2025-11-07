@@ -5,7 +5,7 @@
 $SubscriptionName = "Infra-Micro-Hack"
 $Location = "Sweden Central"
 $ResourceGroupPrefix = "LabUser-"
-$ResourceGroupCount = 1
+$ResourceGroupCount = 60 # Should match the number of users created in Create MH Users.ps1
 $StartIndex = 0
 
 Connect-AzAccount -UseDeviceAuthentication

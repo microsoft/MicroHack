@@ -33,7 +33,6 @@ your_tenancy_url/application_(client)_id
 We did add the following to the manifest of the app registration:
 
 ~~~json
-{
   "id": "9bda9b0b-fcab-4472-9815-58dc3b908439",
   "accessTokenAcceptedVersion": 2,
 ~~~

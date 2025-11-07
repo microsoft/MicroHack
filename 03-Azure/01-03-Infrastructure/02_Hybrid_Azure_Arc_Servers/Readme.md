@@ -115,7 +115,7 @@ In challenge 1 you will prepare your Azure environemnt for onboarding of existin
 
 [Solution Steps](./walkthrough/challenge-1/solution.md)
 
-## Challenge 2 - Azure Monitor integration
+## Challenge 2 - Azure Monitor, Update Manager, and Change Tracking integration
 
 ### Goal
 

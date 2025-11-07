@@ -72,10 +72,10 @@ This MicroHack has a few but important prerequisites to be understood before sta
 - You need to have 3 virtual machines ready and updated. One with a Linux operating system (tested with Ubuntu Server 24.04), one with Windows Server 2025 and one with Windows Server 2012 R2 (optional). You can use machines in Azure for this following this guide: [Azure Arc Jumpstart Servers](https://jumpstart.azure.com/azure_arc_jumpstart/azure_arc_servers/azure)
     > **Note**
     > When using the Jumpstart the virtual machines will already be onboarded to Azure Arc and therefore "Challenge 1 - Azure Arc prerequisites & onboarding" is not needed.
-- [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli) (Hint: Make sure to use the lastest version)
+- [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli) (Hint: Make sure to use the latest version)
 - [Azure PowerShell Guest Configuration Cmdlets](https://learn.microsoft.com/azure/governance/machine-configuration/machine-configuration-create-setup#install-the-module-from-the-powershell-gallery)
   - It is not possible to run those commands from Azure Cloud Shell
-  - Please make sure you have at least version 4.11.0 installed with the following Command: ```Install-Module -Name GuestConfiguration -RequiredVersion 4.11.0```
+  - Please make sure you have at least version 4.11.0 installed with the following Command: ```Install-Module -Name GuestConfiguration -Scope CurrentUser -RequiredVersion 4.11.0```
 - [Visual Studio Code](https://code.visualstudio.com/)
 - [Git SCM](https://git-scm.com/download/)
 

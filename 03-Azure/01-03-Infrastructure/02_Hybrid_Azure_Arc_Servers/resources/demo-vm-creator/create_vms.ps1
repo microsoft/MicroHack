@@ -5,7 +5,7 @@
 $SubscriptionName = "Infra-Micro-Hack"
 $Location = "Sweden Central"
 $ResourceGroupPrefix = "LabUser-"
-$ResourceGroupCount = 1
+$ResourceGroupCount = 60 # Should match the number of users created in Create MH Users.ps1
 $StartIndex = 0
 
 Connect-AzAccount -UseDeviceAuthentication
@@ -238,6 +238,20 @@ if (-not (Get-AzResourceGroupDeployment -ResourceGroupName $rg.ResourceGroupName
     New-AzResourceGroupDeployment -ResourceGroupName $rg.ResourceGroupName -TemplateUri $TemplateUrl -TemplateParameterObject $TemplateParameters
 }
 
+
+}
+
+# Add tags to the VMs to avoid auto-shutdown during the event
+foreach ($rg in $ResourceGroups) {
+
+    Write-Host "Adding tags to VMs in resource group: $($rg.ResourceGroupName)"
+
+    $tags = @{
+        'CostControl' = 'Ignore'
+        'SecurityControl' = 'Ignore'
+    }
+
+    Get-AzResource -ResourceGroupName $rg.ResourceGroupName -ResourceType 'Microsoft.Compute/virtualMachines' | Update-AzTag -Tag $tags -Operation Merge | Out-Null
 
 }
 

@@ -241,6 +241,20 @@ if (-not (Get-AzResourceGroupDeployment -ResourceGroupName $rg.ResourceGroupName
 
 }
 
+# Add tags to the VMs to avoid auto-shutdown during the event
+foreach ($rg in $ResourceGroups) {
+
+    Write-Host "Adding tags to VMs in resource group: $($rg.ResourceGroupName)"
+
+    $tags = @{
+        'CostControl' = 'Ignore'
+        'SecurityControl' = 'Ignore'
+    }
+
+    Get-AzResource -ResourceGroupName $rg.ResourceGroupName -ResourceType 'Microsoft.Compute/virtualMachines' | Update-AzTag -Tag $tags -Operation Merge | Out-Null
+
+}
+
 # Wait for VMs to be ready
 Write-Host "Waiting for VMs to be ready..."
 Start-Sleep -Seconds 120

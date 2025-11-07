@@ -11,6 +11,7 @@ foreach ($module in $RequiredModules) {
     Install-PSResource -Name $module -TrustRepository
 }
 
+# Remember to elevate via Privilege Identity Management (PIM) if needed before connecting, at least User Administrator and Group Administrator roles is required
 Connect-MgGraph -Scopes "User.ReadWrite.All","Group.ReadWrite.All","UserAuthenticationMethod.ReadWrite.All" -UseDeviceCode
 
 Get-MgContext
@@ -18,11 +19,11 @@ Get-MgContext
 # Lab users and group creation
 
 # These variables should be changed as needed
-$eventStartDate = Get-Date -Hour 00 -Minute 0 -Second 0 -Millisecond 0 -Day 07 -Month 11 -Year 2025 # Set fixed start date for the MicroHacks event, used to define TAP validity period (24 hours from the defined start date)
-$UserCount = 60
+$eventStartDate = Get-Date -Hour 0 -Minute 0 -Second 0 -Millisecond 0 -Day 25 -Month 11 -Year 2025 # Set fixed start date for the MicroHacks event, used to define TAP validity period (24 hours from the defined start date)
+$UserCount = 65 # Number of users to create, we recommend a buffer of 5-10 users above expected number of participants to use for testing, last-minute registrations or if someone run into any issues a need a fresh start
 
 # Variables below does not need to be changed
-$StartIndex = 0
+$StartIndex = 0 # Starting index for user numbering
 $GroupName = "LabUsers"
 $UserNamePrefix = "LabUser-"
 $Password = New-Guid | Select-Object -ExpandProperty Guid # Generate a random password, this will not be used since TAP is configured
@@ -84,6 +85,7 @@ foreach ($i in 1..$UserCount) {
 # https://learn.microsoft.com/en-us/entra/identity/authentication/howto-authentication-temporary-access-pass
 $UserNamePrefix = "LabUser-"
 $Users = Get-MgUser -Filter "startsWith(DisplayName,'$UserNamePrefix')" | Sort-Object DisplayName | Where-Object UserPrincipalName -like "*$UPNSuffix"
+
 $TAPs = @()
 
 foreach ($user in $Users) {

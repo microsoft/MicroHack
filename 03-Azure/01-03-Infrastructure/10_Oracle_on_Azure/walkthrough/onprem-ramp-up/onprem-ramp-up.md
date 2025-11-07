@@ -30,7 +30,7 @@ $subAKS="sub-mh1" # Replace with your Subscription Name.
 
 ~~~bash
 # log into your AKS cluster if not already done
-$rgAKS="aks-user01" # replace with your AKS resource group name
+$rgAKS="rg-aks-user01" # replace with your AKS resource group name
 $AKSClusterName="aks-user01" # replace with your AKS cluster name
 ~~~
 
@@ -88,7 +88,14 @@ The value of vhostName should look like this:
 
 Reference the document [How to retrieve the Oracle Database Autonomous Database connection string from ODAA](../../docs/odaa-get-token.md) to get the TNS connection string for your ODAA ADB instance.
 
-After you have assigned the connection string to a variable, replace the placeholder in the gghack.yaml file:
+⚠️ **Important**: If you follow the instructions in `docs\odaa-get-token.md`, remember to switch back to your AKS subscription after retrieving the TNS connection string:
+
+~~~powershell
+# Switch back to AKS subscription after getting TNS connection string
+az account set --subscription $subAKS
+~~~
+
+After you have retrieved the TNS connection string and assigned it to the `$trgConn` variable (as shown in docs\odaa-get-token.md), replace the placeholder in the gghack.yaml file:
 
 ~~~powershell
 # replace in value in your gghack.yaml

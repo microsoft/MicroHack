@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: adb-perf-test
+  labels:
+    name: adb-perf-test
+    purpose: oracle-adb-performance-testing

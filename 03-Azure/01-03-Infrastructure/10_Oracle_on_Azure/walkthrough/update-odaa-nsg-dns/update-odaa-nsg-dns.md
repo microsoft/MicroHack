@@ -75,7 +75,7 @@ az account set -s $subAKS
 $fqdnODAA = 'zeii0mxy.eu-paris-1.oraclecloud.com' # replace with your ODAA FQDN
 $fqdnODAAApp = 'zeii0mxy.eu-paris-1.oraclecloudapps.com' # replace with your ODAA FQDN
 $fqdnODAAIpv4 = '192.168.0.48' # replace with your ODAA private IP address
-$rgAKS="aks-user01" # replace with your AKS resource group name
+$rgAKS="rg-aks-user01" # replace with your AKS resource group name
 $vnetAKSName="aks-user01" # replace with your AKS resource group name
 
 az deployment group create --resource-group $rgAKS --template-file resources/infra/bicep/dns.bicep -p vnetAKSName=$vnetAKSName fqdnODAA=$fqdnODAA fqdnODAAApp=$fqdnODAAApp fqdnODAAIpv4=$fqdnODAAIpv4

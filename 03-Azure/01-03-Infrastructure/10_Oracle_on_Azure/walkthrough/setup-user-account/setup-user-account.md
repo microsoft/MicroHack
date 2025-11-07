@@ -45,7 +45,7 @@ Open your browser and click on your work icon in the upper right corner.
         {
           "user_principal_name": "user01@cptazure.org",
           "display_name": "Bruce Wayne",
-          "initial_password": "tSi5=EQcVjHsHv)MoG"
+          "initial_password": <"Assigned Password">
         }
       ],
 ~~~

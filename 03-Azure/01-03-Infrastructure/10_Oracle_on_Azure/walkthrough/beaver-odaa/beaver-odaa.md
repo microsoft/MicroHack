@@ -56,7 +56,7 @@ http GET https://beaver.${EXTIP}.nip.io --verbose
 
 1. 🌐 Go to CloudBeaver and set the Password as follows:
     - 👤 User: cbadmin
-    - 🔐 Password: Welcome1234# (replace by your password)
+    - 🔐 Password: <"Assigned Password"> (replace by your password)
     - Click the "Next" button on top of the page and "Finish" button afterwards.
 2. 🔑 Login to CloudBeaver after you did set the password.
 3. ☁️ Select the cloud icon on the upper left corner.
@@ -65,7 +65,7 @@ http GET https://beaver.${EXTIP}.nip.io --verbose
 6. ⚙️ Select Configuration option "URL" instead of "Manual"
 7. 🔗 Enter the following JDBC URL: jdbc:oracle:thin:@ogghack-goldengate-microhack-sample-db23ai.microhacks:1521/freepdb1
 8. 👤 Set User name = system
-9. 🔐 Set Password = Welcome1234#
+9. 🔐 Set Password = <"Assigned Password">
 10. 💾 Select check box "Save credentials for all users with access"
 11. 🧪 Select "Test"
 12. ✅ You should see "Success" popup
@@ -79,7 +79,7 @@ http GET https://beaver.${EXTIP}.nip.io --verbose
 4. 🔧 Construct an easy connect string with your current connection string and the needed prefixes similar to the following one: jdbc:oracle:thin:@(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=gpdmotes.adb.eu-frankfurt-1.oraclecloud.com))(connect_data=(service_name=g6425a1dbd2e95a_odaa2_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))
 5. Set "Connection name" to "adb"
 6. 👤 Set User name = admin
-7. 🔐 Set Password = Welcome1234#
+7. 🔐 Set Password = <"Assigned Passwort">
 8. 💾 Select check box "Save credentials for all users with access"
 9. 🧪 Select "Test Connection"
 10. ✅ You should see "Success" popup

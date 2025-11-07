@@ -36,7 +36,6 @@ kubectl exec -it -n microhacks $podInstanteClientName -- /bin/bash
 
 # Inside the pod, connect as ADMIN
 sqlplus admin@'(description=(retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=eqsmjgp2.adb.eu-frankfurt-1.oraclecloud.com))(connect_data=(service_name=g6425a1dbd2e95a_adbger_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))'
-# Password: Welcome1234#
 ```
 
 #### Check 2.1: Verify Entra ID is Enabled

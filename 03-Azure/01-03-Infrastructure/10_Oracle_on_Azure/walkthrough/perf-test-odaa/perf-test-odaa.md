@@ -17,7 +17,7 @@ This is inspired from the blog of Clemens Bleile.
 ~~~bash
 az login --use-device-code
 # switch to the subscription where AKS is deployed
-$subAKS="sub-0" # replace with your AKS subscription name
+$subAKS="sub-1" # replace with your AKS subscription name
 # Make sure your cli points to the AKS subscription
 az account set --subscription $subAKS
 ~~~
@@ -26,8 +26,8 @@ az account set --subscription $subAKS
 
 ~~~bash
 # log into your AKS cluster if not already done
-$rgAKS="aks-user02" # replace with your AKS resource group name
-$AKSClusterName="aks-user02" # replace with your AKS cluster name
+$rgAKS="aks-user01" # replace with your AKS resource group name
+$AKSClusterName="aks-user01" # replace with your AKS cluster name
 ~~~
 
 ## ⚓ Connect to AKS
@@ -56,8 +56,7 @@ Inside the instantclient pod, run the following commands:
 
 ~~~bash
 # Example DIY quick test script (bash + sqlplus): 
-sqlplus admin@'(description=(retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=gpdmotes.adb.eu-frankfurt-1.oraclecloud.com))(connect_data=(service_name=g6425a1dbd2e95a_odaa2_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))' # replace with your TNS connection string
-Welcome1234# # replace with your ADB password
+sqlplus admin@'(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=zeii0mxy.adb.eu-paris-1.oraclecloud.com))(connect_data=(service_name=gc2401553d1c7ab_adbuser01_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))' # replace with your TNS connection string
 ~~~
 
 Execute the Setup

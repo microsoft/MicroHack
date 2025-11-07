@@ -30,12 +30,12 @@ Log in to the AKS cluster where you want to deploy GoldenGate for Azure Fabric i
 
 ~~~powershell
 # switch to the subscription where AKS is deployed
-$subAKS="sub-1" # replace with your AKS subscription name
+$subAKS="sub-mh1" # replace with your AKS subscription name
 # Make sure your cli points to the AKS subscription
 az account set --subscription $subAKS
 # log in to your AKS cluster if not already done
-$rgAKS="odaa1" # replace with your AKS resource group name
-$AKSClusterName="odaa1" # replace with your AKS cluster name
+$rgAKS="aks-user01" # replace with your AKS resource group name
+$AKSClusterName="aks-user01" # replace with your AKS cluster name
 az aks get-credentials -g $rgAKS -n $AKSClusterName --overwrite-existing
 ~~~
 
@@ -56,7 +56,7 @@ The value of vhostName should look like this:
 ~~~yaml
     ### uses default SSL certificate of gateway/controller or specify a custom tls-secret here
     tlsSecretName: ggate-tls-secret
-    vhostName: ggate.4.182.95.155.nip.io
+    vhostName: ggfabric.xxx-xxx-xxx-xxx.nip.io
 ~~~
 
 ## 🚀 Install GoldenGate Pods
@@ -91,7 +91,7 @@ kubectl get service --namespace ingress-nginx nginx-quick-ingress-nginx-controll
 kubectl get service -n microhacks -o jsonpath='{.items[*].status.loadBalancer.ingress[*].ip}'
 ~~~
 
-You can now access the GoldenGate Microservices UI at: `https://ggate.<EXTERNAL_IP>.nip.io` (e.g. `https://ggate.4.182.95.155.nip.io`)
+You can now access the GoldenGate Microservices UI at: `https://ggfabric.<EXTERNAL_IP>.nip.io` (e.g. `https://ggfabric.xxx.xxx.xxx.xxx.nip.io`)
 
 
 ## 📚 Useful Resources
@@ -117,7 +117,10 @@ helm uninstall oggfabric -n microhacks
 # delete secret if already exist
 kubectl delete secret container-registry-secret -n microhacks
 
-kubectl create secret docker-registry container-registry-secret -n microhacks  --docker-username=test@gmail.com --docker-password="Welcome1234#" --docker-server=container-registry.oracle.com
+# Prompt for the password that will be used for all three components
+$password = Read-Host -Prompt "Enter the shared password"
+
+kubectl create secret docker-registry container-registry-secret -n microhacks  --docker-username=test@gmail.com --docker-password=$password --docker-server=container-registry.oracle.com
 
 [System.Text.Encoding]::UTF8.GetString([Convert]::FromBase64String(
     (kubectl get secret container-registry-secret -n microhacks -o jsonpath="{.data.\.dockerconfigjson}")

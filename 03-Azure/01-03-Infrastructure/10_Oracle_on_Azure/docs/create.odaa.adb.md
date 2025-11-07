@@ -18,8 +18,8 @@ az provider register --namespace "Microsoft.Network"
 ~~~powershell
 $prefix="odaa"
 $postfix="1"
-$location="germanywestcentral"
-$password="Welcome1234#"
+$location="francecentral"
+$password = Read-Host -Prompt "Enter the shared password"
 $cidr="10.0.0.0"
 ~~~
 

@@ -77,7 +77,7 @@ The value of vhostName should look like this:
 ~~~yaml
  ### uses default SSL certificate of gateway/controller or specify a custom tls-secret here
     tlsSecretName: ggate-tls-secret
-    vhostName: gghack.172.189.10.142.nip.io
+    vhostName: gghack.xxx-xxx-xxx-xxx.nip.io
   internal:
     type: ClusterIP
     plainPort: 8080
@@ -118,11 +118,11 @@ Like mentioned at the beginning of this challenge, we will install several compo
 - Target Database ODAA ADB
   - Admin User: admin (db-admin-secret), ggadmin (trgGGUserName)
 
-> IMPORTANT: The password for all users must be the same for simplicity and must match the password you defined during the creation of the ODAA ADB instance (should be "Welcome1234#" (without quotes)).
+> IMPORTANT: The password for all users must be the same for simplicity and must match the password you defined during the creation of the ODAA ADB instance (should be <"Assigned Password"> (without quotes)).
 
 ~~~powershell
-# Define the password which will be used for all three components
-$password="Welcome1234#"
+# Prompt for the password that will be used for all three components - Please ask if you do not know the one!!!
+$password = Read-Host -Prompt "Enter the shared password"
 # create the namespace everything goes into
 kubectl create namespace microhacks
 #create secret for Golden Gate OGG admin user and password to-be-created
@@ -214,7 +214,6 @@ $podInstanteClientName=kubectl get pods -n microhacks | Select-String 'ogghack-g
 kubectl exec -it -n microhacks $podInstanteClientName -- /bin/bash
 # log into ADB with admin via sqlplus, replace the TNS connection string with your own
 sqlplus admin@'(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=zeii0mxy.adb.eu-paris-1.oraclecloud.com))(connect_data=(service_name=gc2401553d1c7ab_adbuser01_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))' # Replace with your TNS connection string
-Welcome1234# # replace with your ADB password
 ~~~
 
 Inside the sqlplus session, run the following commands to verify the SH2 schema and the GoldenGate GGADMIN user have been created successfully in the ADB instance.
@@ -238,7 +237,7 @@ SELECT COUNT(*) FROM all_tables WHERE owner = 'SH2';
 ~~~text
   COUNT(*)
 ----------
-        35
+        18
 ~~~
 
 Verify SH user and GGADMIN user in ADB
@@ -283,6 +282,8 @@ If you see pods with `Init:ErrImagePull` status, this is likely due to authentic
 ~~~powershell
 # login to aks
 az aks get-credentials -g $rgAKS -n $AKSClusterName --overwrite-existing
+# Uninstall list the available helm charts
+helm list -n microhacks 
 # Uninstall the Helm release
 helm uninstall ogghack -n microhacks
 ~~~

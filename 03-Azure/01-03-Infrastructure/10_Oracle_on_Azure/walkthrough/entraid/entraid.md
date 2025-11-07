@@ -39,6 +39,8 @@ We did add the following to the manifest of the app registration:
 ~~~
 
 ~~~powershell
+# Prompt for the password that will be used for all three components
+$password = Read-Host -Prompt "Enter the shared password"
 $rgName="odaa"
 $prefix="odaa"
 $location="germanywestcentral" # e.g. germanywestcentral
@@ -54,7 +56,6 @@ Log in to the Oracle Database instance as a user who has been granted the ALTER 
 
 ~~~bash
 sqlplus admin@'(description=(retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=eqsmjgp2.adb.eu-frankfurt-1.oraclecloud.com))(connect_data=(service_name=g6425a1dbd2e95a_adbger_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))'
-Welcome1234#
 ~~~
 
 Output should look as follow:
@@ -341,8 +342,6 @@ ga1
 
 # connect with user GA1 connection string directly
 sqlplus admin@'(description=(retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=eqsmjgp2.adb.eu-frankfurt-1.oraclecloud.com))(connect_data=(service_name=g6425a1dbd2e95a_adbger_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))'
-Welcome1234#
-exit
 ~~~
 
 #### Debug
@@ -351,7 +350,6 @@ exit
 
 ~~~bash
 sqlplus admin@'(description=(retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=eqsmjgp2.adb.eu-frankfurt-1.oraclecloud.com))(connect_data=(service_name=g6425a1dbd2e95a_adbger_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))'
-Welcome1234#
 ~~~
 
 ~~~sql

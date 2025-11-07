@@ -35,7 +35,7 @@ az provider register --namespace Microsoft.Compute
 ~~~powershell
 $prefix="team"
 $postfix="1"
-$location="germanywestcentral"
+$location="francecentral"
 ~~~
 
 ### 🏗️ Create Azure Resources
@@ -128,7 +128,7 @@ Build your own image and push it to your private Azure Container Registry (ACR).
 # switch to ACR subscription
 az account set -s <ACR-Sub-ID>
 # change to directory where Dockerfile is located
-cd C:\Users\chpinoto\workspace\msftmh\03-Azure\01-03-Infrastructure\10_Oracle_on_Azure\misc\goldengate-temp
+cd .\10_Oracle_on_Azure\misc\goldengate-temp
 # build and push image to ACR
 az acr build --registry odaamh --image goldengate/goldengate-oracle-bigdata:23.4.0.24.06 --file Dockerfile .
 

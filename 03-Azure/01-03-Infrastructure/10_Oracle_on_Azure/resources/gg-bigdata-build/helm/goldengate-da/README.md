@@ -14,7 +14,7 @@ The default values expect the image `odaamh.azurecr.io/goldengate-da:23ai`, allo
 
 ## nip.io Hostname
 
-The default host in `values.yaml` is `ogg-bigdata.131.189.241.67.nip.io`. Update this value before installing if the service obtains a different IP:
+The default host in `values.yaml` is `ogg-bigdata.<public-ip>.nip.io`. Update this value before installing if the service obtains a different IP:
 
 ```powershell
 helm upgrade --install goldengate-da ./helm/goldengate-da `
@@ -24,7 +24,7 @@ helm upgrade --install goldengate-da ./helm/goldengate-da `
 
 The chart ships with a basic ingress manifest that assumes an NGINX ingress controller. If your cluster uses a different controller (for example, Azure Application Gateway), adjust the `ingress.className` annotation or disable ingress and rely on the load balancer service instead.
 
-Browse to `https://ogg-bigdata.<public-ip>.nip.io` and sign in with the default credentials `oggadmin / Welcome1234#`.
+Browse to `https://ogg-bigdata.<public-ip>.nip.io` and sign in with the default credentials `oggadmin / <Password>`.
 
 ## Uninstall
 

@@ -35,6 +35,13 @@ Furthermore we will address the integration of ODAA into the existing Azure nati
  
 ### Challenge 0: Set Up Your User Account
 
+Before we start with the Microhack you should have 3 passwords:
+1. You User with the initial password for the registration, which you have to change during the registration
+   
+2. The password you need to use for admin user of the ADB deployment - <font color=red>Don't use different passwords</font>
+3. The password you need to use for the AKS cluster deployment  - <font color=red>Don't use different passwords</font>
+
+
 Open a private browser session or create an own browser profile to sign in with the credentials you received, and register multi-factor authentication. In a first check you have to verify if the two resource groups for the hackathon are created.
 <br>
 The goal is to ensure your Azure account is ready for administrative work in the remaining challenges.

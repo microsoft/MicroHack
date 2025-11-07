@@ -69,7 +69,7 @@ To be considered during the deployment:
 5. Storage: 20 GB
 6. Storage autoscaling: off
 7. Backup retention period in days: 1 days
-8. Administrator password: Welcome1234#
+8. Administrator password: <font color=red><"Assigned password"></font>
 9. License type: BYOL
 10. Oracle database edition: Enterprise Edition
 

@@ -14,7 +14,7 @@
   - [Challenge 4 - Microsoft Defender for Cloud integration with Azure Arc](#challenge-4---microsoft-defender-for-cloud-integration-with-azure-arc)
   - [Challenge 5 - Best Practices assessment for Windows Server](#challenge-5---best-practices-assessment-for-windows-server)
   - [Challenge 6 - Activate ESU for Windows Server 2012 R2 via Arc (optional)](#challenge-6---activate-esu-for-windows-server-2012-r2-via-arc---optional)
-  - [Challenge 7 - Azure Automanage Machine Configuration (optional)](#challenge-7---azure-automanage-machine-configuration---optional)
+  - [Challenge 7 - Azure Machine Configuration (optional)](#challenge-7---azure-machine-configuration---optional)
 
 - [**Contributors**](#contributors)
 
@@ -187,7 +187,7 @@ Managing secrets, credentials or certificates to secure communication between di
 
 ### Goal
 
-- In this challenge, we will integrate your Azure Arc connected machines with Azure Defender for Cloud. After completing the previous challenges, you should now have an Azure subscription with one or more Azure Arc-enabled servers. You should also have an available Log Analytics workspace and have deployed the Log Analytics agent to your server(s).
+- In this challenge, we will integrate your Azure Arc connected machines with Azure Defender for Cloud. After completing the previous challenges, you should now have an Azure subscription with one or more Azure Arc-enabled servers. You should also have an available Log Analytics workspace and have deployed the Azure Monitor Agent to your server(s).
 
 ### Actions
 
@@ -262,7 +262,7 @@ In this challenge, you will activate Extended Security Updates (ESU) for Windows
 
 [Solution Steps](./walkthrough/challenge-6/solution.md)
 
-## Challenge 7 - Azure Automanage Machine Configuration - optional
+## Challenge 7 - Azure Machine Configuration - optional
 
 ### Goal
 
@@ -282,7 +282,7 @@ This challenge is about interacting with the client operating system. We will ha
 
 ### Learning resources
 
-- [Understand the machine configuration feature of Azure Automanage](https://learn.microsoft.com/azure/governance/machine-configuration/overview)
+- [Understand the machine configuration feature](https://learn.microsoft.com/azure/governance/machine-configuration/overview)
 - [How to setup a machine configuration authoring environment](https://learn.microsoft.com/azure/governance/machine-configuration/machine-configuration-create-setup)
 - [How to create custom machine configuration package artifacts](https://learn.microsoft.com/azure/governance/machine-configuration/machine-configuration-create)
 - [How to create custom machine configuration policy definitions](https://learn.microsoft.com/azure/governance/machine-configuration/machine-configuration-create-definition)
@@ -307,3 +307,4 @@ Thank you for investing the time and see you next time!
 - Alexander Ortha [GitHub](https://github.com/alexor-ms/); [LinkedIn](https://www.linkedin.com/in/alexanderortha/)
 - Christoph Süßer (Schmidt) [GitHub](https://github.com/TheFitzZZ); [LinkedIn](https://www.linkedin.com/in/suesser/)
 - Jan Egil Ring [GitHub](https://github.com/janegilring); [LinkedIn](https://www.linkedin.com/in/janegilring/)
+- Tom Claes [GitHub](https://github.com/claestom); [LinkedIn](https://www.linkedin.com/in/tomclaes-/)

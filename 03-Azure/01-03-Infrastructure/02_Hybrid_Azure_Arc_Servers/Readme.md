@@ -230,6 +230,8 @@ In this challenge, you will configure and deploy the Best Practices Assessment f
 - The Assessment Platform, Windows Server Assessment, and Azure Monitor Agent (AMA)  extensions are installed successfully
 - The first Best Practices Assessment is run successfully
 
+Note: this feature is only available for Arc-enabled Windows Server that are covered with Software Assurance.
+
 ### Learning resources
 
 - [Configure Best Practices Assessment for Arc-enabled Windows servers](https://learn.microsoft.com/windows-server/manage/azure-arc/best-practices-assessment-for-windows-server)

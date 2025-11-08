@@ -32,6 +32,8 @@ For customers who want to simplify complex and distributed environments across o
 
 - Run Azure services anywhere Flexibly use cloud innovation where you need it by deploying Azure services anywhere. Implement cloud practices and automation to deploy faster, consistently, and at scale with always-up-to-date Azure Arc enabled services.
 
+**Note**: for Arc-enabled Windows servers covered with Software Assurance, Microsoft provides features and services that were paid before, now for no additional cost. In fact, they will become part of your Software Assurance benefits. On top of this, additional features such as the [Best Practice Assessment](https://learn.microsoft.com/en-us/windows-server/manage/azure-arc/best-practices-assessment-for-windows-server) or [Remote Support](https://learn.microsoft.com/en-us/windows-server/manage/azure-arc/remote-support-for-windows-server), are exclusively available to these servers. More information about this announcement on the [Tech Community](https://techcommunity.microsoft.com/blog/azurearcblog/announcing-general-availability-windows-server-management-enabled-by-azure-arc/4303854) and [Microsoft docs](https://learn.microsoft.com/en-us/azure/azure-arc/servers/windows-server-management-overview?tabs=portal).
+
 ## MicroHack context
 
 This MicroHack scenario walks through the use of Azure Arc with a focus on the best practices and the design principles and some interesting challenges for real world scenarios. Specifically, this builds up to include working with an existing infrastructure in your datacenter.
@@ -227,6 +229,8 @@ In this challenge, you will configure and deploy the Best Practices Assessment f
 - Best Practices Assessment is enabled and installed on your Arc-enabled Windows Server
 - The Assessment Platform, Windows Server Assessment, and Azure Monitor Agent (AMA)  extensions are installed successfully
 - The first Best Practices Assessment is run successfully
+
+Note: this feature is only available for Arc-enabled Windows Server that are covered with Software Assurance.
 
 ### Learning resources
 

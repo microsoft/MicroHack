@@ -8,6 +8,17 @@
 
 Ensure you have successfully completed [challenge 1](../../challenges/01_challenge.md) before proceeding.
 
+## Solution Walkthrough
+
+- [**Challenge 2.1 - Protect in Azure - Backup / Restore**](#challenge-21---protect-in-azure---backup--restore)
+  - [Task 1: Enable Azure Backup for Linux VM](#task-1-enable-azure-backup-for-linux-vm)
+  - [Task 2: Enable Azure Backup for Blobs](#task-2-enable-azure-backup-for-blobs)
+    - [Assign access permissions to perform Backup](#enable-system-managed-identity-for-the-backup-vault-and-copy-the-mi-object-id)
+  - [Task 3: Restore a VM in Azure](#task-3-restore-a-vm-in-azure)
+- [**Challenge 2.2 - Protect in Azure with Disaster Recover (DR) within an Azure Region**](#challenge-22---protect-in-azure-with-disaster-recover-dr-within-an-azure-region)
+  - [Task 4: Set up disaster recovery for the Linux VM in the primary region](#task-4-set-up-disaster-recovery-for-the-linux-vm-in-the-primary-region)
+  - [Task 5: Simulate a failover from one part of the primary region to another part within the same region](#task-5-simulate-a-failover-from-one-part-of-the-primary-region-to-another-part-within-the-same-region)
+
 
 ### Challenge 2.1 - Protect in Azure - Backup / Restore
 In this challenge, you will onboard your Linux Virtual Machine to a centralized Recovery Services Vault and use Azure Backup Center to protect it with Azure Backup.
@@ -71,7 +82,7 @@ This might take a while.
 ![completed](./img/033.png)
 ![backup](./img/034.png)
 
-## Create a New Custom Policy
+### Create a New Custom Policy
 
 Go to the Azure Site Recovery **ASR Vault** in the Primary Region (Germany West Central).
 
@@ -108,7 +119,7 @@ Backup Policy is successfully created!
 
 <!-- The steps for the Data Science Virtual Machine are similar and will not be included here. -->
 
-### Task 2: Enable Azure Backup for Blobs
+## Task 2: Enable Azure Backup for Blobs
 
 Go to the Storage Account in the Primary Region.
 
@@ -137,34 +148,58 @@ Go to the Storage Account in the Primary Region.
 ![image](./img/020.png)
 
 </details>
+<br>
 
-To backup our storage account, assign the Backup Vault in the Primary Region some access permissions.
+> **Note:** To enable backup for the storage account, you need to grant the Backup Vault appropriate **access permissions**. Please follow the guidance below.
 
 ### Enable System Managed Identity for the Backup Vault and Copy the MI Object ID
 
-Go to the Backup Vault in the Primary Region (Germany West Central) and navigate to the Identity tab.
+Go to the Backup Vault in the Primary Region (Germany West Central) and navigate to the **Identity** tab.
 
-![Identity Tab](./img/060.png)
+Status: **On**
+![Identity Tab](./img/056.png)
 
-Click **Azure role assignments**.
+Enable system assigned managed identity: **yes**
+![Enable MI](./img/057.png)
 
-![Enable System Managed Identity](./img/060a.png)
+Successfully enabled system assigned managed identity!
+![Identity Tab](./img/058.png)
 
-### Assign the "Storage Backup Contributor" Role to Backup Vault Managed Identity
+Successfully enabled system assigned managed identity!
+Now you can proceed with one of the two options below.
+![Enable System Managed Identity](./img/059.png)
+
+### Solution Example 1 - **Azure role assignments** through MI Identity
+
+Click **Azure role assignments** to proceed with role assignment.
+![Enable MI](./img/060.png)
+
+Select **scope**: you can select the specific Storage account Scope or larger scopes like the resource group or your subscription.
+Select Role ["Storage Account Backup Contributor"](https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles/storage#storage-account-backup-contributor).
+![Scope Selection](./img/061a.png)
+
+Role assignment successfully configured
+![image](./img/061b.png)
+
+### Solution Example 2 -  Assign the "Storage Account Backup Contributor" Role to the Backup Vault Managed Identity
 
 Go back to the Storage Account in the Primary Region (Germany West Central). Navigate to the **Access Control (IAM)** tab and add a role assignment.
 
 ![image](./img/061.png)
 
-Select Role.
+Select Role ["Storage Account Backup Contributor"](https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles/storage#storage-account-backup-contributor).
 
-![Backup Contributor](./img/062.png)
+![Storage Account Backup Contributor](./img/062.png)
 
-Select Scope.
+Under **Assign access to**, select **Managed Identity**.
 
 ![MI](./img/063.png)
 
-Select Managed Identity of the Backup Vault.
+Click **Select members** and choose the appropriate scope.
+
+![MI](./img/063a.png)
+
+Select the Managed Identity of the Backup Vault.
 
 ![Backup Vault MI](./img/064.png)
 
@@ -172,7 +207,11 @@ Review + Assign.
 
 ![Review + Assign](./img/065.png)
 
-### Enable Azure Backup for Blobs
+The Backup Vault now has the required permissions to perform backup operations on the storage account.
+
+<br>
+
+## Enable Azure Backup for Blobs
 
 This will require creating a new backup policy:
 
@@ -209,9 +248,9 @@ A new Virtual Machine `mh-linux-restore` has been created in the resource group,
 
 You have successfully completed Challenge 2.1! 🚀
 
-### Challenge 2.2 - Protect in Azure with Disaster Recover (DR) within an Azure Region
-* Task 4: Set up disaster recovery for the Linux VM in the primary region.
-* Task 5: Simulate a failover from one part of the primary region to another part within the same region.
+## Challenge 2.2 - Protect in Azure with Disaster Recover (DR) within an Azure Region
+* **Task 4:** Set up disaster recovery for the Linux VM in the primary region.
+* **Task 5:** Simulate a failover from one part of the primary region to another part within the same region.
 
 ### Task 4: Set up disaster recovery for the Linux VM in the primary region.
 

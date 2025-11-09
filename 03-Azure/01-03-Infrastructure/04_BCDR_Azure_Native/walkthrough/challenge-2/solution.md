@@ -13,10 +13,11 @@ Ensure you have successfully completed [challenge 1](../../challenges/01_challen
 - [**Challenge 2.1 - Protect in Azure - Backup / Restore**](#challenge-21---protect-in-azure---backup--restore)
   - [Task 1: Enable Azure Backup for Linux VM](#task-1-enable-azure-backup-for-linux-vm)
   - [Task 2: Enable Azure Backup for Blobs](#task-2-enable-azure-backup-for-blobs)
-    - [Assign access permissions to perform Backup](#enable-system-managed-identity-for-the-backup-vault-and-copy-the-mi-object-id)
+    - [Assign access permissions to perform backup](#enable-system-managed-identity-for-the-backup-vault-and-copy-the-mi-object-id)
   - [Task 3: Restore a VM in Azure](#task-3-restore-a-vm-in-azure)
-- [**Challenge 2.2 - Protect in Azure with Disaster Recover (DR) within an Azure Region**](#challenge-22---protect-in-azure-with-disaster-recover-dr-within-an-azure-region)
+- [**Challenge 2.2 - Protect in Azure with Disaster Recovery (DR) within an Azure Region**](#challenge-22---protect-in-azure-with-disaster-recover-dr-within-an-azure-region)
   - [Task 4: Set up disaster recovery for the Linux VM in the primary region](#task-4-set-up-disaster-recovery-for-the-linux-vm-in-the-primary-region)
+    - [Assign access permissions to perform disaster recovery](#enable-system-managed-identity-for-the-recovery-services-vault)
   - [Task 5: Simulate a failover from one part of the primary region to another part within the same region](#task-5-simulate-a-failover-from-one-part-of-the-primary-region-to-another-part-within-the-same-region)
 
 
@@ -175,7 +176,9 @@ Click **Azure role assignments** to proceed with role assignment.
 ![Enable MI](./img/060.png)
 
 Select **scope**: you can select the specific Storage account Scope or larger scopes like the resource group or your subscription.
+
 Select Role ["Storage Account Backup Contributor"](https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles/storage#storage-account-backup-contributor).
+
 ![Scope Selection](./img/061a.png)
 
 Role assignment successfully configured
@@ -255,6 +258,60 @@ You have successfully completed Challenge 2.1! 🚀
 ### Task 4: Set up disaster recovery for the Linux VM in the primary region.
 
 Enable Disaster Recovery (DR) between **Availability Zones**
+
+> **Note:** To enable disaster recovery (DR) between the regions, you might need to grant the Site Recovery Vault appropriate **access permissions**. If needed follow the instructions below.
+
+<details>
+<summary>💡 How-to: Access permissions for Disaster Recovery (DR)</summary>
+<br>
+
+### Enable System Managed Identity for the Recovery Services Vault
+
+Navigate to the **Recovery Services Vault** in the Primary Region (Germany West Central) and select the **Identity** tab.
+
+**Status:** On
+![image](./img/066.png)
+
+✅ System-assigned managed identity successfully enabled!
+
+#### Assign Required Azure Roles
+
+Click **Azure role assignments** to begin configuring permissions.
+
+![image](./img/067.png)
+
+Click **Add role assignment** to add the first required role.
+
+![image](./img/068.png)
+
+#### Role Assignment 1: Storage Blob Data Contributor
+
+**Select scope:**
+- Choose the specific Resource Group or a larger scope (e.g. your subscription) where disaster recovery will operate.
+
+**Select Role:** ["Storage Blob Data Contributor"](https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles/storage#storage-blob-data-contributor)
+
+![image](./img/068a.png)
+
+#### Role Assignment 2: Contributor
+
+Click **Add role assignment** again to add the second required role.
+
+![image](./img/068b.png)
+
+**Select scope:**
+- Use the same scope as the previous role assignment.
+
+**Select Role:** ["Contributor"](https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles/privileged#contributor)
+
+![image](./img/068c.png)
+
+✅ Successfully assigned all required permissions for disaster recovery (DR)!
+
+![image](./img/069.png)
+
+</details>
+<br>
 
 Navigate to **mh-linux | Disaster recovery**
 

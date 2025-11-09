@@ -352,3 +352,30 @@ Conduct an unplanned failover
 You have successfully completed Challenge 2! 🚀🚀
 
 [➡️ Next Challenge 3 Instructions](../../challenges/03_challenge.md)
+
+---
+
+## Troubleshooting & FAQ
+
+### Error: Installing Mobility Service and Preparing Target
+
+**Error ID:** `151192`
+
+**Error Message:**  
+```
+Site recovery configuration failed.
+```
+
+**Possible Causes:**  
+Connection cannot be established to Office 365 authentication and identity IPv4 endpoints.
+
+**Resolution:**  
+Allow outbound access to required Azure Site Recovery endpoints in your **Network Security Group (NSG)**, **firewall**, or **proxy** settings.
+
+**Recommended Actions:**
+- Configure NSG rules using service tags: `AzureActiveDirectory` and `Office365`
+- Verify proxy settings allow access to Azure Site Recovery endpoints
+- Ensure firewall rules permit outbound connectivity to required URLs
+
+**Related Resources:**  
+- [Azure Site Recovery - Firewall and Proxy Guidance](https://aka.ms/a2a-firewall-proxy-guidance)

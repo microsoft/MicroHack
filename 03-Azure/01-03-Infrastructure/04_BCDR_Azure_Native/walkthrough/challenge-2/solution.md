@@ -211,7 +211,6 @@ Review + Assign.
 ![Review + Assign](./img/065.png)
 
 The Backup Vault now has the required permissions to perform backup operations on the storage account.
-
 <br>
 
 ## Enable Azure Backup for Blobs
@@ -251,7 +250,7 @@ A new Virtual Machine `mh-linux-restore` has been created in the resource group,
 
 You have successfully completed Challenge 2.1! 🚀
 
-## Challenge 2.2 - Protect in Azure with Disaster Recover (DR) within an Azure Region
+## Challenge 2.2 - Protect in Azure with Disaster Recovery (DR) within an Azure Region
 * **Task 4:** Set up disaster recovery for the Linux VM in the primary region.
 * **Task 5:** Simulate a failover from one part of the primary region to another part within the same region.
 

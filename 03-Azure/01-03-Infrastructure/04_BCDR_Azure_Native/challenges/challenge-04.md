@@ -1,27 +1,26 @@
-# Challenge 4 - Protect in Azure with Disaster Recovery (Inter-regional)
+# Challenge 4 - Regional Disaster Recovery (DR)
 
-[Previous Challenge Solution](challenge-03.md) - **[Home](../Readme.md)** - [Next Challenge Solution](challenge-05.md)
-
+[Previous Challenge](challenge-03.md) - **[Home](../Readme.md)** - [Next Challenge](challenge-04.md)
 
 ### Goal 🎯
 
-In Challenge 4, you will learn how to protect Azure VMs with Azure Site Recovery, and how to enable replication to a secondary site. Additionally, you will successfully run test & production failovers from Germany West Central to Sweden Central, and fail back again from Sweden to Germany.
+* Enable **Disaster Recovery (DR)** in Azure by protecting workloads within a region across multiple Availability Zones (AZs).
 
-### Actions
+In this challenge, you will learn how to protect VM's with Azure Site Recovery and Azure Recovery Services Vaults. You will also practice simulating a regional failover between two Availability Zones (AZ) to handle a regional failure, such as a datacenter outage.
 
-* Task 1: Set up and enable disaster recovery with Azure Site Recovery and monitor the progress.
-* Task 2: Perform a disaster recovery drill, create recovery plan and run a test failover.
-* Task 3: Run a production failover from Germany West Central to Sweden Central region and failback again from Sweden to Germany.
+![Azure Site Recovery Architecture - zone-to-zone](../img/c4-azure-site-recovery-cross-az.png)
+
+## Actions
+
+### Enable Disaster Recover (DR) in Azure within an Azure Region across Availability Zones.
+1. Set up disaster recovery for the Linux VM in the primary region.
+2. Simulate a zone-to-zone failover in the primary region.
 
 ### Success Criteria ✅
 
-* You enabled the replication for all related components of the web application to the Sweden Central region.
-* You successfully initiated a test failover from Azure Region Germany West Central to Sweden Central with near-zero downtime.
-* You successfully ran the production failover to the Sweden Central region.
+- You have successfully enabled disaster recovery between availability zones of an Azure VM.
+- You have successfully simulated a failover of the VM to another Availability Zone within the Region, using Azure Site Recovery.
 
 ### 📚 Learning Resources
 
-* [Enable Replication](https://learn.microsoft.com/en-us/azure/site-recovery/azure-to-azure-how-to-enable-replication)
-* [Create Recovery Plans](https://learn.microsoft.com/en-us/azure/site-recovery/site-recovery-create-recovery-plans)
-* [Test Failover to Azure](https://learn.microsoft.com/en-us/azure/site-recovery/site-recovery-test-failover-to-azure)
-
+- [Setup Azure VM disaster recovery between availability zones](https://learn.microsoft.com/en-us/azure/site-recovery/azure-to-azure-how-to-enable-zone-to-zone-disaster-recovery)

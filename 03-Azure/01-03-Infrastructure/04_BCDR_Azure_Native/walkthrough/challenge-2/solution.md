@@ -371,11 +371,7 @@ Connection cannot be established to Office 365 authentication and identity IPv4 
 
 **Resolution:**  
 Allow outbound access to required Azure Site Recovery endpoints in your **Network Security Group (NSG)**, **firewall**, or **proxy** settings.
-
-**Recommended Actions:**
-- Configure NSG rules using service tags: `AzureActiveDirectory` and `Office365`
-- Verify proxy settings allow access to Azure Site Recovery endpoints
-- Ensure firewall rules permit outbound connectivity to required URLs
+- Use service tags like `AzureActiveDirectory` and `Office365` for NSG rules.
 
 **Related Resources:**  
 - [Azure Site Recovery - Firewall and Proxy Guidance](https://aka.ms/a2a-firewall-proxy-guidance)

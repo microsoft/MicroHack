@@ -72,10 +72,10 @@ Before you continue please verfiy the correct regions of the AKS and ODAA / ADB 
 # switch back to the subscription where AKS is deployed
 $subAKS="sub-mh1" # replace with your AKS subscription name
 az account set -s $subAKS
-$fqdnODAA = 'zeii0mxy.eu-paris-1.oraclecloud.com' # replace with your ODAA FQDN
-$fqdnODAAApp = 'zeii0mxy.eu-paris-1.oraclecloudapps.com' # replace with your ODAA FQDN
-$fqdnODAAIpv4 = '192.168.0.48' # replace with your ODAA private IP address
-$rgAKS="rg-aks-user01" # replace with your AKS resource group name
+$fqdnODAA = 'p9uld90d.eu-paris-1.oraclecloud.com' # replace with your ODAA FQDN
+$fqdnODAAApp = 'p9uld90d.eu-paris-1.oraclecloudapps.com' # replace with your ODAA FQDN
+$fqdnODAAIpv4 = '192.168.0.157' # replace with your ODAA private IP address
+$rgAKS="aks-user01" # replace with your AKS resource group name
 $vnetAKSName="aks-user01" # replace with your AKS resource group name
 
 az deployment group create --resource-group $rgAKS --template-file resources/infra/bicep/dns.bicep -p vnetAKSName=$vnetAKSName fqdnODAA=$fqdnODAA fqdnODAAApp=$fqdnODAAApp fqdnODAAIpv4=$fqdnODAAIpv4
@@ -106,28 +106,35 @@ Name    Records
 #### Azure Portal to set the private DNS zones
 
 1. From the overview portal of the deployed ADB database, copy the FQDN of the "Database URL name" and Database private IP address both in the section Network.
-<img src="./media/prviate_dns_0.png" alt="Create browser profile" width="400" height="250" />  
+    <br>
+    <img src="./media/prviate_dns_0.png" alt="Create browser profile" width="400" height="250" />  
 
-1. Move to the AKS resource group (aks-user[assignedgroup number])
-<img src="./media/private_dns_1.png" alt="Create browser profile" width="400" height="250" />
+2. Move to the AKS resource group (aks-user[assignedgroup number])
+    <br>
+    <img src="./media/private_dns_1.png" alt="Create browser profile" width="400" height="250" />
 
-1. The private DNS name needs to be set on the following two private DNS names. 
+3. The private DNS name needs to be set on the following two private DNS names. 
    * adb.eu-paris-1.oraclecloud.com
    * adb.eu-paris-1.oraclecloudapps.com
 
     The following step is equal for both private DNS name. In the private DNS zone menu open the DNS management and press the link <b>Recodsets</b>.
+    <br>
     <img src="./media/private_dns_2.png" alt="Create browser profile" width="400" height="250" />
 
     <b>Important!</b> The other two Private DNS zones can be skipped for the moment till we need to set up ADB with high availability.
 
-2. In the menue Recordsets press the Add button to add the FQDN and private ip address of the deployed ADB shared database.
+4.  In the menue Recordsets press the Add button to add the FQDN and private ip address of the deployed ADB shared database.
+   <br>
     <img src="./media/private_dns_3.png" alt="Create browser profile" width="400" height="250" />
 
-3. After you press the Add button a new window will be opened where the name for the ADB and the private IP address needs to be added. In addition change the TTL to 10 seconds.   
+
+5. After you press the Add button a new window will be opened where the name for the ADB and the private IP address needs to be added. In addition change the TTL to 10 seconds.   
     <img src="./media/private_dns_4.png" alt="Create browser profile" width="250" height="300" />
 
-4. Final save the configuration and repeat the step for the second private DNS name in the same way as described.    
-   <img src="./media/private_dns_5.png" alt="Create browser profile" width="400" height="250" />
+
+6. Final save the configuration and repeat the step for the second private DNS name in the same way as described.
+    <br>
+    <img src="./media/private_dns_5.png" alt="Create browser profile" width="400" height="250" />
 <br>
 
 <hr>

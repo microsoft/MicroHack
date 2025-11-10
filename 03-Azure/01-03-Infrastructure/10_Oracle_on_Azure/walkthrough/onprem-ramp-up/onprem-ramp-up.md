@@ -30,7 +30,7 @@ $subAKS="sub-mh1" # Replace with your Subscription Name.
 
 ~~~bash
 # log into your AKS cluster if not already done
-$rgAKS="rg-aks-user01" # replace with your AKS resource group name
+$rgAKS="aks-user01" # replace with your AKS resource group name
 $AKSClusterName="aks-user01" # replace with your AKS cluster name
 ~~~
 
@@ -287,6 +287,8 @@ If you see pods with `Init:ErrImagePull` status, this is likely due to authentic
 ### �🔁 Redeploy if things go wrong
 
 ~~~powershell
+# Update the helm repo 
+helm repo update
 # login to aks
 az aks get-credentials -g $rgAKS -n $AKSClusterName --overwrite-existing
 # Uninstall list the available helm charts
@@ -353,6 +355,7 @@ In case the ADB is not reachable the namespace microhacks can be deleted and ins
   ~~~
 
   ~~~powershell
+  # If the services inside the namespace are not automatically deleted. 
   kubectl delete namespace microhacks
   ~~~
 

@@ -40,9 +40,9 @@ We did add the following to the manifest of the app registration:
 ~~~powershell
 # Prompt for the password that will be used for all three components
 $password = Read-Host -Prompt "Enter the shared password"
-$rgName="odaa"
-$prefix="odaa"
-$location="germanywestcentral" # e.g. germanywestcentral
+$rgName="odaa-shared"
+$prefix="odaa-shared"
+$location="francecentral" # e.g. germanywestcentral
 # login to aks if not already done
 az aks get-credentials -g $rgName -n $prefix --overwrite-existing
 # extract the pod name of the instantcleint as it contains a random suffix

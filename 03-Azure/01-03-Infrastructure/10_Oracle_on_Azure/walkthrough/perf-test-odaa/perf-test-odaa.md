@@ -17,11 +17,9 @@ This is inspired from the blog of Clemens Bleile.
 ~~~bash
 az login --use-device-code
 # switch to the subscription where AKS is deployed
-<<<<<<< HEAD
-$subAKS="sub-1" # replace with your AKS subscription name
-=======
+
 $subAKS="sub-mh1" # replace with your AKS subscription name
->>>>>>> 10a646cdf6f6ebb7e55457d8af05cbb998c75acc
+
 # Make sure your cli points to the AKS subscription
 az account set --subscription $subAKS
 ~~~
@@ -30,11 +28,9 @@ az account set --subscription $subAKS
 
 ~~~bash
 # log into your AKS cluster if not already done
-<<<<<<< HEAD
-$rgAKS="aks-user01" # replace with your AKS resource group name
-=======
+
 $rgAKS="rg-aks-user01" # replace with your AKS resource group name
->>>>>>> 10a646cdf6f6ebb7e55457d8af05cbb998c75acc
+
 $AKSClusterName="aks-user01" # replace with your AKS cluster name
 ~~~
 
@@ -71,12 +67,9 @@ Inside the instantclient pod, run the following commands:
 
 ~~~bash
 # Example DIY quick test script (bash + sqlplus): 
-<<<<<<< HEAD
+
 sqlplus admin@'(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=zeii0mxy.adb.eu-paris-1.oraclecloud.com))(connect_data=(service_name=gc2401553d1c7ab_adbuser01_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))' # replace with your TNS connection string
-=======
-sqlplus admin@$trgConn  # use the $trgConn variable from docs\odaa-get-token.md
-Welcome1234#  # replace with your ADB password
->>>>>>> 10a646cdf6f6ebb7e55457d8af05cbb998c75acc
+
 ~~~
 
 Execute the Setup

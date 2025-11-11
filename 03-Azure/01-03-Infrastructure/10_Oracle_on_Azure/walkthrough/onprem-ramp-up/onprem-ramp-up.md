@@ -69,7 +69,7 @@ cp resources/template/gghack.yaml .
 # replace the placeholder with the actual external IP
 (Get-Content gghack.yaml) -replace 'xxx-xxx-xxx-xxx', $EXTIP.Trim() | Set-Content gghack.yaml
 # show line 44 till 50 with powershell of gghack.yaml
-(Get-Content gghack.yaml)[43..49]
+(Get-Content gghack.yaml)[50..55]
 ~~~
 
 The value of vhostName should look like this:
@@ -77,7 +77,7 @@ The value of vhostName should look like this:
 ~~~yaml
  ### uses default SSL certificate of gateway/controller or specify a custom tls-secret here
     tlsSecretName: ggate-tls-secret
-    vhostName: gghack.xxx-xxx-xxx-xxx.nip.io
+    vhostName: gghack.xxx-xxx-xxx-xxx.nip.io # public IP address of the nginx loadbalancer should be listed 
   internal:
     type: ClusterIP
     plainPort: 8080
@@ -91,7 +91,21 @@ Reference the document [How to retrieve the Oracle Database Autonomous Database 
 ⚠️ **Important**: If you follow the instructions in `docs\odaa-get-token.md`, remember to switch back to your AKS subscription after retrieving the TNS connection string:
 
 ~~~powershell
+# Switch back to ODAA subscription after getting TNS connection string
+az account set --subscription $subODAA
+
+$subODAA = "sub-mhodaa"
+$rgODAA = "odaa-shared"
+$adbname = Read-Host -Prompt "Enter the ADB name deployed "
+
+# query the connectionstring of the deployed ADB database
+$connectstring = az oracle-database autonomous-database show --resource-group $rgODAA --name $adbname --query "connectionStrings.profiles[?consumerGroup=='High' && tlsAuthentication=='Server'].value | [0]" -o tsv
+
+echo "The ADB connect string is :" $connectstring
+
 # Switch back to AKS subscription after getting TNS connection string
+$subODAA = "sub-mhodaa"
+$rgODAA = "odaa-shared"
 az account set --subscription $subAKS
 ~~~
 
@@ -101,7 +115,7 @@ After you have retrieved the TNS connection string and assigned it to the `$trgC
 # replace in value in your gghack.yaml
 (Get-Content gghack.yaml) -replace '<ODAA-CONNECTION-STRING>', $trgConn | Set-Content gghack.yaml
 # show line 8 till 11 with powershell of gghack.yaml
-(Get-Content gghack.yaml)[8..11]
+(Get-Content gghack.yaml)[11..12]
 ~~~
 
 Your connection string in your gghack.yaml should look similar the yaml below. If the connection string is not copied successful into the gghack.yaml file you can do it manually as well be copy to connection string from the ADB Azure Portal und connections. Choose the connection for high.

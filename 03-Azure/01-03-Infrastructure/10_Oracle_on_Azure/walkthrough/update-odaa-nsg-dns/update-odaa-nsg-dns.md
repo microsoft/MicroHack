@@ -3,8 +3,6 @@
 [Back to workspace README](../../README.md)
 
 
-
-
 ## 🌐 Network Security Group Configuration
 
 You need to update the Oracle ADB Network Security Group (NSG) with the CIDR range of the VNet where your AKS cluster is deployed. This can be done via the Azure Portal.
@@ -28,10 +26,12 @@ Because we deployed our ODAA Autonomous Database in a different VNet than the on
 <font color=red> <b>Important:</b> We need to query the Private DNS Zones created with the <b>ODAA deployment</b>.</font>
 
 ~~~powershell
-$subODAA="sub-mhodaa" # replace with your ODAA subscription name
+
 # switch to the corresponding subscription where ODAA is deployed
+$subODAA="sub-mhodaa" # replace with your ODAA subscription name
 az account set -s $subODAA
 $rgODAA="odaa-shared" # replace with your ODAA resource group name
+
 $zones = az network private-dns zone list -g $rgODAA --query "[].name" -o tsv
 echo $zones
 ~~~
@@ -65,20 +65,40 @@ There are multiple ways to create the required DNS records within the Azure Priv
 
 #### Azure Bicep to set the private DNS zones
 
-Before you continue please verfiy the correct regions of the AKS and ODAA / ADB is used!
+In the first step you have to create a Network Security Group called NSG on the Oracle OCI side. The following steps show you the required steps how to add an NSG of the deployed ADB, so that the AKS cluster is able to connect the database. 
 
+1. Move in the Azure portal to your AKS subscription and resoucre group where your aks cluster is deployed. Inside the resource group you will find the aks related vnet. Copy in the overview "address space" the CIDR of the vnet. <br>
+In our case the "address space" should be 10.1.0.0/16
+<br><img src="./media/OCI_nsg5.jpg" alt="Create browser profile" width="450" height="180" />
+
+2. In the second step connect to the OCI console by using the federation via Entra ID. After you logged in use the hamburger Icon in ther upper left corner and press the menue "Oracle AI databases".
+<br><img src="./media/OCI_nsg1.jpg" alt="Create browser profile" width="450" height="180" />
+
+3. Press on the link of your deployed ADB database and scroll down to the networking section on the ADB homepage.
+<br><img src="./media/OCI_nsg2.jpg" alt="Create browser profile" width="450" height="200" />
+
+4. Press on the link "Network Security Groups" to reach the NSG page. Under the Tab "Security Rules" you have to press the "Add Rules" button to add an ingress rule.
+<br><img src="./media/OCI_nsg3.jpg" alt="Create browser profile" width="450" height="200" /> 
+
+5. Choose in the Rule as "Source Type" CIDR and add the copied vnet address space of the previous AKS cluster into the field. Finally save the Rule
+br><img src="./media/OCI_nsg4.jpg" alt="Create browser profile" width="450" height="200" />
+
+
+<br>
+<br>
+
+Before you continue please verfiy the correct regions of the AKS and ODAA / ADB is used!
 
 ~~~powershell
 # switch back to the subscription where AKS is deployed
 $subAKS="sub-mh1" # replace with your AKS subscription name
 az account set -s $subAKS
-$fqdnODAA = 'p9uld90d.eu-paris-1.oraclecloud.com' # replace with your ODAA FQDN
-$fqdnODAAApp = 'p9uld90d.eu-paris-1.oraclecloudapps.com' # replace with your ODAA FQDN
-$fqdnODAAIpv4 = '192.168.0.157' # replace with your ODAA private IP address
+$fqdnODAA = 'dimm5zbj.adb.eu-paris-1.oraclecloud.com' # replace with your ODAA FQDN
+$fqdnODAAApp = 'dimm5zbj.eu-paris-1.oraclecloudapps.com' # replace with your ODAA FQDN
+$fqdnODAAIpv4 = '192.168.0.139' # replace with your ODAA private IP address
 $rgAKS="aks-user01" # replace with your AKS resource group name
 $vnetAKSName="aks-user01" # replace with your AKS resource group name
 
-az deployment group create --resource-group $rgAKS --template-file resources/infra/bicep/dns.bicep -p vnetAKSName=$vnetAKSName fqdnODAA=$fqdnODAA fqdnODAAApp=$fqdnODAAApp fqdnODAAIpv4=$fqdnODAAIpv4
 
 # iterate through all zones and list all A records
 $zones = az network private-dns zone list --resource-group $rgAKS --query "[].name" -o tsv

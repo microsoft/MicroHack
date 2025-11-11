@@ -2,6 +2,9 @@
 
 **[Home](../Readme.md)** - [Next Challenge Solution](challenge-02.md)
 
+> [!IMPORTANT]
+> **Many of the resource deployments in this Microhack are adapted from the [Jumpstart ArcBox for IT Pros](https://jumpstart.azure.com/azure_jumpstart_arcbox/ITPro). Special thanks to the [Jumpstart Team](https://aka.ms/arcjumpstart) for their excellent work.**
+
 ## Goal
 
 - Deploy a *source* resource group with two VMs and their dependencies that act as our physical on-premise servers that will be migrated to Azure.

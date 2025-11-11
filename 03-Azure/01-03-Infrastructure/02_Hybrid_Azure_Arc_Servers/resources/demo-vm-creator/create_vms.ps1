@@ -1,15 +1,18 @@
 # Virtual Machine creation (PowerShell equialent of create_vms.sh)
 
-
-# Resource group creation and role assignment
+# Resource group creation and role assignment, requires users to be created first (Create MH Users.ps1)
 
 $SubscriptionName = "Infra-Micro-Hack"
 $Location = "Sweden Central"
 $ResourceGroupPrefix = "LabUser-"
-$ResourceGroupCount = 10
-$StartIndex = 60
+$ResourceGroupCount = 60 # Should match the number of users created in Create MH Users.ps1
+$StartIndex = 0
+
+Connect-AzAccount -UseDeviceAuthentication
 
 Set-AzContext -Subscription $SubscriptionName
+
+$UPNSuffix = '@' +  ((Get-AzContext).Account.Id -split "@")[1] # Get UPN suffix from the signed-in account (@xxx.onmicrosoft.com)
 
 for ($i = 1; $i -le $ResourceGroupCount; $i++) {
 
@@ -172,8 +175,6 @@ if (-not (Get-AzResourceGroupDeployment -ResourceGroupName $rg.ResourceGroupName
 }
 
 
-
-
 # Linux
 
 $TemplateUrl = 'https://raw.githubusercontent.com/janegilring/MicroHack/refs/heads/arc_mikro_hack_norway/03-Azure/01-03-Infrastructure/02_Hybrid_Azure_Arc_Servers/resources/demo-vm-creator/template-linux.json'
@@ -240,9 +241,26 @@ if (-not (Get-AzResourceGroupDeployment -ResourceGroupName $rg.ResourceGroupName
 
 }
 
+# Add tags to the VMs to avoid auto-shutdown during the event
+foreach ($rg in $ResourceGroups) {
 
+    Write-Host "Adding tags to VMs in resource group: $($rg.ResourceGroupName)"
+
+    $tags = @{
+        'CostControl' = 'Ignore'
+        'SecurityControl' = 'Ignore'
+    }
+
+    Get-AzResource -ResourceGroupName $rg.ResourceGroupName -ResourceType 'Microsoft.Compute/virtualMachines' | Update-AzTag -Tag $tags -Operation Merge | Out-Null
+
+}
+
+# Wait for VMs to be ready
+Write-Host "Waiting for VMs to be ready..."
+Start-Sleep -Seconds 120
 
 # VM configuration via Run Command
+# Performs the actions needed to prepare the VMs for the lab exercises: https://learn.microsoft.com/en-us/azure/azure-arc/servers/plan-evaluate-on-azure-virtual-machine
 
 foreach ($rg in $ResourceGroups) {
 
@@ -272,3 +290,20 @@ foreach ($rg in $ResourceGroups) {
 
 
 }
+
+
+foreach ($rg in $ResourceGroups) {
+
+  Get-AzVMRunCommand  -ResourceGroupName $rg.ResourceGroupName -VMName "$($rg.ResourceGroupName)-win2012-vm" | Format-Table -Property Id, ProvisioningState -AutoSize
+  Get-AzVMRunCommand  -ResourceGroupName $rg.ResourceGroupName -VMName "$($rg.ResourceGroupName)-win2025-vm" | Format-Table -Property Id, ProvisioningState -AutoSize
+  Get-AzVMRunCommand  -ResourceGroupName $rg.ResourceGroupName -VMName "$($rg.ResourceGroupName)-linux-vm" | Format-Table -Property Id, ProvisioningState -AutoSize
+
+}
+
+<# Known issues:
+- On Linux VMs, the Run Command might be stuck in the Creating state. The script has been run regardless, to verify - login via SSH and check if the configuration changes have been applied:
+- sudo ufw status should show:
+ To                         Action      From
+--                         ------      ----
+169.254.169.254            DENY OUT    Anywhere
+#>

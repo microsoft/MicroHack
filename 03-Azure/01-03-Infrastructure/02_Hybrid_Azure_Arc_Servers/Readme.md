@@ -6,7 +6,7 @@
   - [What is Azure Arc?](#what-is-azure-arc)
 - [**MicroHack context**](#microhack-context)
 - [**Objectives**](#objectives)
-- [**MicroHack Challenges**](#microhack-challenges)
+- [**MicroHack Challenges**](#challenges)
 - [**Contributors**](#contributors)
 
 ## MicroHack introduction
@@ -22,6 +22,8 @@ For customers who want to simplify complex and distributed environments across o
 - Build Cloud native apps anywhere, at scale Centrally code and deploy applications confidently to any Kubernetes distribution in any location. Accelerate development by using best in class applications services with standardized deployment, configuration, security, and observability.
 
 - Run Azure services anywhere Flexibly use cloud innovation where you need it by deploying Azure services anywhere. Implement cloud practices and automation to deploy faster, consistently, and at scale with always-up-to-date Azure Arc enabled services.
+
+**Note**: for Arc-enabled Windows servers covered with Software Assurance, Microsoft provides features and services that were paid before, now for no additional cost. In fact, they will become part of your Software Assurance benefits. On top of this, additional features such as the [Best Practice Assessment](https://learn.microsoft.com/en-us/windows-server/manage/azure-arc/best-practices-assessment-for-windows-server) or [Remote Support](https://learn.microsoft.com/en-us/windows-server/manage/azure-arc/remote-support-for-windows-server), are exclusively available to these servers. More information about this announcement on the [Tech Community](https://techcommunity.microsoft.com/blog/azurearcblog/announcing-general-availability-windows-server-management-enabled-by-azure-arc/4303854) and [Microsoft docs](https://learn.microsoft.com/en-us/azure/azure-arc/servers/windows-server-management-overview?tabs=portal).
 
 ## MicroHack context
 
@@ -53,7 +55,6 @@ After completing this MicroHack you will:
 - Understand use cases and possible scenarios in your hybrid world to modernize your infrastructure estate
 - Get insights into real world challenges and scenarios
 
-## MicroHack Challenges
 
 ### General prerequisites
 
@@ -63,15 +64,15 @@ This MicroHack has a few but important prerequisites to be understood before sta
 - You need to have 3 virtual machines ready and updated. One with a Linux operating system (tested with Ubuntu Server 24.04), one with Windows Server 2025 and one with Windows Server 2012 R2 (optional). You can use machines in Azure for this following this guide: [Azure Arc Jumpstart Servers](https://jumpstart.azure.com/azure_arc_jumpstart/azure_arc_servers/azure)
     > **Note**
     > When using the Jumpstart the virtual machines will already be onboarded to Azure Arc and therefore "Challenge 1 - Azure Arc prerequisites & onboarding" is not needed.
-- [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli) (Hint: Make sure to use the lastest version)
+- [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli) (Hint: Make sure to use the latest version)
 - [Azure PowerShell Guest Configuration Cmdlets](https://learn.microsoft.com/azure/governance/machine-configuration/machine-configuration-create-setup#install-the-module-from-the-powershell-gallery)
   - It is not possible to run those commands from Azure Cloud Shell
-  - Please make sure you have at least version 4.11.0 installed with the following Command: ```Install-Module -Name GuestConfiguration -RequiredVersion 4.11.0```
+  - Please make sure you have at least version 4.11.0 installed with the following Command: ```Install-Module -Name GuestConfiguration -Scope CurrentUser -RequiredVersion 4.11.0```
 - [Visual Studio Code](https://code.visualstudio.com/)
 - [Git SCM](https://git-scm.com/download/)
 
 
-### Challenges
+## Challenges
 
 * [Challenge 1 - Azure Arc prerequisites & onboarding](challenges/challenge-01.md)  **<- Start here**
 * [Challenge 2 - Azure Monitor integration](challenges/challenge-02.md)
@@ -82,8 +83,7 @@ This MicroHack has a few but important prerequisites to be understood before sta
 * [Challenge 7 - Azure Automanage Machine Configuration - optional](challenges/challenge-07.md)
 
 
-
-### Solutions - Spoilerwarning
+## Solutions - Spoilerwarning
 
 * [Solution 1 - Azure Arc prerequisites & onboarding](./walkthrough/challenge-01/solution-01.md)
 * [Solution 2 - Azure Monitor integration](./walkthrough/challenge-02/solution-02.md)
@@ -94,6 +94,7 @@ This MicroHack has a few but important prerequisites to be understood before sta
 * [Solution 7 - Azure Automanage Machine Configuration - optional](./walkthrough/challenge-07/solution-07.md)
 
 
+
 ## Contributors
 
 - Adrian Schöne [GitHub](https://github.com/adriandiver); [LinkedIn](https://www.linkedin.com/in/adrian-schoene//)
@@ -102,3 +103,4 @@ This MicroHack has a few but important prerequisites to be understood before sta
 - Alexander Ortha [GitHub](https://github.com/alexor-ms/); [LinkedIn](https://www.linkedin.com/in/alexanderortha/)
 - Christoph Süßer (Schmidt) [GitHub](https://github.com/TheFitzZZ); [LinkedIn](https://www.linkedin.com/in/suesser/)
 - Jan Egil Ring [GitHub](https://github.com/janegilring); [LinkedIn](https://www.linkedin.com/in/janegilring/)
+- Tom Claes [GitHub](https://github.com/claestom); [LinkedIn](https://www.linkedin.com/in/tomclaes-/)

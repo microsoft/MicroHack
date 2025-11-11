@@ -11,19 +11,23 @@ foreach ($module in $RequiredModules) {
     Install-PSResource -Name $module -TrustRepository
 }
 
+# Remember to elevate via Privilege Identity Management (PIM) if needed before connecting, at least User Administrator and Group Administrator roles is required
 Connect-MgGraph -Scopes "User.ReadWrite.All","Group.ReadWrite.All","UserAuthenticationMethod.ReadWrite.All" -UseDeviceCode
 
 Get-MgContext
 
 # Lab users and group creation
-$UserNamePrefix = "LabUser-"
-$UserNamePrefix = "AdminLabUser-"
-$Password = Read-Host -Prompt "Enter password"
-$UPNSuffix = Read-Host -Prompt "Enter UPN suffix, example: @xxx.onmicrosoft.com"
-$UserCount = 5
-$UserCount = 60
-$StartIndex = 0
+
+# These variables should be changed as needed
+$eventStartDate = Get-Date -Hour 0 -Minute 0 -Second 0 -Millisecond 0 -Day 25 -Month 11 -Year 2025 # Set fixed start date for the MicroHacks event, used to define TAP validity period (24 hours from the defined start date)
+$UserCount = 65 # Number of users to create, we recommend a buffer of 5-10 users above expected number of participants to use for testing, last-minute registrations or if someone run into any issues a need a fresh start
+
+# Variables below does not need to be changed
+$StartIndex = 0 # Starting index for user numbering
 $GroupName = "LabUsers"
+$UserNamePrefix = "LabUser-"
+$Password = New-Guid | Select-Object -ExpandProperty Guid # Generate a random password, this will not be used since TAP is configured
+$UPNSuffix = '@' + ((Get-MgContext).Account -split "@")[1] # Get UPN suffix from the signed-in account (@xxx.onmicrosoft.com)
 $GroupId = Get-MgGroup -Filter "DisplayName eq '$GroupName'" | Select-Object -ExpandProperty Id
 if (-not $GroupId) {
     $GroupParams = @{
@@ -80,14 +84,15 @@ foreach ($i in 1..$UserCount) {
 # Note: TAP requires Entra ID Premium P2 license
 # https://learn.microsoft.com/en-us/entra/identity/authentication/howto-authentication-temporary-access-pass
 $UserNamePrefix = "LabUser-"
-$Users = Get-MgUser -Filter "startsWith(DisplayName,'$UserNamePrefix')"
+$Users = Get-MgUser -Filter "startsWith(DisplayName,'$UserNamePrefix')" | Sort-Object DisplayName | Where-Object UserPrincipalName -like "*$UPNSuffix"
+
 $TAPs = @()
 
-foreach ($user in $Users[5..$Users.Count]) {
+foreach ($user in $Users) {
     $properties = @{}
     $properties.isUsableOnce = $false
-    $properties.startDateTime = Get-Date -Hour 00 -Minute 0 -Second 0 -Millisecond 0 -Day 17 -Month 9 -Year 2025
-    #$properties.startDateTime = (Get-Date).AddMinutes(1)
+    $properties.startDateTime = $eventStartDate
+    #$properties.startDateTime = (Get-Date).AddMinutes(1) # For testing purposes, set start time to 1 minute in the future
     $properties.endDateTime = $properties.startDateTime.AddDays(1)
     $propertiesJSON = $properties | ConvertTo-Json
 
@@ -111,4 +116,7 @@ $TAPs += [pscustomobject]@{
 
 }
 
-Export-Excel -InputObject $TAPs -Path ".\TemporaryAccessPasses.xlsx" -AutoSize -Title "Temporary Access Passes" -WorksheetName "TAPs" -TableName "TAPs" -TableStyle Light1
+Export-Excel -InputObject $TAPs -Path ".\TemporaryAccessPasses.xlsx" -AutoSize -Title "Temporary Access Passes" -WorksheetName "TAPs" -TableName "TAPs" -TableStyle Light1 -Show
+
+Write-Host "Temporary Access Passes exported to TemporaryAccessPasses.xlsx" -ForegroundColor Green
+Write-Host "Tip: Use the Mail merge feature in Word to create personalized instruction pages for users." -ForegroundColor Yellow

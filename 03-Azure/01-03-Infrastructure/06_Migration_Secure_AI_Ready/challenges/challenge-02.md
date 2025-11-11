@@ -23,7 +23,7 @@ The goal of this exercise is to...
 * You have created a Azure Migrate Project
 * You have successfully deployed the Azure Migrate Appliance
 * You successfully registered the Azure Migrate Appliance with the Azure Migrate Project
-* You have successfully setup a continuous discovery for the physical servers.
+* You have successfully setup a continuous discovery for the Hyper-V host.
 * You have successfully verified the discovered servers in the portal
 
 ## Learning resources

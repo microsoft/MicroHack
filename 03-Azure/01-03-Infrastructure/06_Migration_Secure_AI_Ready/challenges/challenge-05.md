@@ -23,7 +23,7 @@ The goal of this exercise is to ...
 ## Success criteria
 
 * All the source machines are successfully migrated to and running in Azure
-* The Web Servers are seamlessly accessible using a Traffic Manager profile via dedicated Public Load Balancer.
+* The Web Servers are accessible using a dedicated Public Load Balancer.
 
 ## Learning resources
 * [Support matrix for migration of physical servers, AWS VMs, and GCP VMs](https://learn.microsoft.com/en-us/azure/migrate/migrate-support-matrix-physical-migration)

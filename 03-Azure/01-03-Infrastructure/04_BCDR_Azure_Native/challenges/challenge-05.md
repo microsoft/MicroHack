@@ -5,7 +5,7 @@
 
 ### Goal 🎯
 
-In Challenge 5, you will learn how to protect Azure VMs using Azure Site Recovery and enable replication to a secondary Azure Region. Additionally, You will also perform test and production failovers and failbacks.
+In Challenge 5, you will learn how to protect Azure VMs using Azure Site Recovery and enable replication to a secondary Azure Region. Additionally, You will also perform test and production failovers.
 
 * Source/Primary Region: Germany West Central
 * Target/Secondary Region: Sweden Central
@@ -17,7 +17,7 @@ In Challenge 5, you will learn how to protect Azure VMs using Azure Site Recover
 
 * Task 1: Set up and enable disaster recovery with Azure Site Recovery and monitor the progress.
 * Task 2: Perform a **disaster recovery drill**, **create recovery plan** and run a **test failover**.
-* Task 3: Run a **production failover** from the source to the target Region, and once successful, failback.
+* Task 3: Run a **production failover** from the source to the target Region.
 
 ### Success Criteria ✅
 

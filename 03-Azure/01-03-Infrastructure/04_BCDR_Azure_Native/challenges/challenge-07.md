@@ -1,57 +1,31 @@
-# Extra Challenge 7 - Monitor & Protect your Azure PaaS (Azure SQL Database)
+# Challenge 6 - Failback to the Primary Region (Germany West Central)
 
-[Previous Challenge Solution](challenge-06.md) - **[Home](../Readme.md)** - [Next Challenge Solution](finish.md)
-
-In this chapter we have extra challanges for the fast participants or the participants who wants to go further more. We will focus on Application 2 - Customer Help Desk Services. 
-
-## Challenge 7.0 - Setup - Application 2
-
-You can use [the guide](../Infra/App2/setup.md) to deploy an N-tier application, which will be useful for the challenges.
-
-## Challenge 7.1 - Monitor the resources
-
-### Task 1 - Open the Application Insights dashboard
-
-- Use [`azd monitor`](https://learn.microsoft.com/azure/developer/azure-developer-cli/monitor-your-app) to monitor the application 
-
-Run the following Terminal Command in the directory
-
-    azd monitor
-
-### Task 2 - Navigate through the metrics
-
-Navigate to the Application Insights dashboards:
-- overview
-- live metrics
-- logs
-
-![image](../walkthrough/challenge-6/img/01_App_Insights_dashboards.png)
-
-## Success Criteria
-
-- Successfully execute the ``azd monitor`` command.
-- Navigate and review the Application Insights dashboards.
-
-<!--
-## Challenge 7.2 - Protect your Azure PaaS (Azure SQL Database) with Failover Groups
+[Previous Challenge Solution](challenge-06.md) - **[Home](../Readme.md)**
 
 ### Goal 🎯
 
-In challenge 7, you will focus on implementing disaster recovery strategies for Azure SQL databases using Failover Groups. The primary objective is to ensure business continuity by protecting critical data stored in Azure SQL databases.
+In Challenge 7, you will fail back the web application from Sweden Central to Germany West Central, along with the associated storage account.
 
-### Actions
-* Implement Failover Groups for Azure SQL Database:
-  * Task 1: Create a Failover Group between two Azure SQL databases located in different Azure regions (Germany West Central and Sweden Central).
-  * Task 2: Configure automatic failover policies and test the failover mechanism to ensure seamless transition in case of a disaster.
+### Actions 🛠️
+
+* Failback the Web Application from Sweden Central to Germany West Central region (Source environment) and monitor the progress.
+* Ensure web servers are re-protected for disaster recovery to the secondary region (Sweden Central) after the failback operation completes.
+* Verify Traffic Manager endpoint status and ensure the Germany West Central endpoint is "Online" and receiving traffic.
+* Failback Storage Account to Germany West Central.
 
 ### Success Criteria ✅
-* You have successfully created and configured a Failover Group for Azure SQL Database, ensuring data is replicated and accessible across regions.
-* You have conducted failover tests for the Azure SQL Database, demonstrating the effectiveness of your disaster recovery strategy.
-* You were able to connect to the failed-over SQL DB from the failed-over VM.
- -->
-<!-- ### 📚 Learning Resources
-* [Azure SQL Database Failover Groups and Active Geo-Replication](https://learn.microsoft.com/en-us/azure/azure-sql/database/auto-failover-group-overview)
-* [Testing for disaster recovery](https://learn.microsoft.com/en-us/azure/site-recovery/site-recovery-test-failover-to-azure)
-* [Create a single database in Azure SQL Database](https://learn.microsoft.com/en-us/azure/azure-sql/database/single-database-create-quickstart?view=azuresql&tabs=azure-portal) -->
+
+* The web application has been successfully failed back from Sweden Central to Germany West Central region.
+* All web servers in Germany West Central are operational and serving traffic correctly.
+* Web servers have been re-protected for disaster recovery with replication configured back to Sweden Central region.
+* Traffic Manager shows Germany West Central endpoint as "Online" and is actively routing traffic to the primary region.
+* Storage Account has been successfully failed back to Germany West Central region.
+* Data integrity has been verified - all data is accessible and consistent after the failback operation.
+
+### Learning Resources 📚
+
+* [Reprotect Azure VMs](https://learn.microsoft.com/en-us/azure/site-recovery/azure-to-azure-how-to-reprotect)
+* [Failback Azure VMs](https://learn.microsoft.com/en-us/azure/site-recovery/azure-to-azure-tutorial-failback)
+* [Enable Replication for Azure VMs](https://learn.microsoft.com/en-us/azure/site-recovery/azure-to-azure-tutorial-enable-replication)
 
 

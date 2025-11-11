@@ -1,25 +1,35 @@
-# Challenge 6 - Failback to the Primary Region (Germany West Central)
+# Challenge 5 - Protect your Azure PaaS with Disaster Recovery
 
-[Previous Challenge Solution](challenge-05.md) - **[Home](../Readme.md)** - [Next Challenge Solution](challenge-07.md)
+[Previous Challenge](challenge-05.md) - **[Home](../Readme.md)** - [Next Challenge](challenge-07.md)
 
 ### Goal 🎯
 
-In challenge 5, you will failback the web application from Sweden Central to Germany West Central. The storage account could be failed back as well to Germany West Central.
+In this challenge, you will re-establish the connection to your web application from the failed-over region and then test disaster recovery for an Azure Storage account with GRS enabled. The primary objective is to ensure business continuity by protecting critical data stored in Azure storage accounts against potential disasters.
 
-### Actions 🛠️
+### Actions
+* Task 1: Re-establish your connection to the Web Application from the secondary region.
+  * Add your failed-over Virtual Machines in the secondary region to the backend pool of your Load Balancer.
+  * Test the connection to the Web Application.
+* Task 2: Disaster Recovery for Azure Storage Account.
+  * Verify the configuration of the Azure Storage Account redudancy, and confirm GRS is enabled and data is replicated to a secondary region. Which region is used as secondary region?
+  * Perform a failover test for the storage account to validate the disaster recovery setup.
 
-* Failback the Web Application from Sweden Central to Germany West Central region (Source environment) and monitor the progress.
-* Failback Storage Account to Germany West Central.
-* Restore a VM in Azure.
+
+<details close>
+<summary>💡 Storage Account with GRS enabled</summary>
+<br>
+
+![grs3](./exploration/7.png)
+
+</details>
+
+---
 
 ### Success Criteria ✅
+* You have successfully re-established connection to your web application from the secondary region.
+* You have verified that the Azure Storage Account has GRS enabled and identified the secondary region used for data replication.
+* You have successfully performed a failover test for the Azure Storage Account.
 
-* The failback of all resources to the Germany West Central region has been successfully performed.
-
-### Learning Resources 📚
-
-* [Reprotect Azure VMs](https://learn.microsoft.com/en-us/azure/site-recovery/azure-to-azure-how-to-reprotect)
-* [Failback Azure VMs](https://learn.microsoft.com/en-us/azure/site-recovery/azure-to-azure-tutorial-failback)
-* [Enable Replication for Azure VMs](https://learn.microsoft.com/en-us/azure/site-recovery/azure-to-azure-tutorial-enable-replication)
-
-
+### 📚 Learning Resources
+* [Geo-redundant storage (GRS) for cross-regional durability](https://learn.microsoft.com/en-us/azure/storage/common/storage-redundancy-grs)
+* [Disaster recovery and storage account failover](https://learn.microsoft.com/en-us/azure/storage/common/storage-disaster-recovery-guidance)

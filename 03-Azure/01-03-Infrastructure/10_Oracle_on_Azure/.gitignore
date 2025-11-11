@@ -1,6 +1,8 @@
 # contain sensitive data
 misc/
+**/mis/
 NOTES.md
+
 gghack.yaml
 ggfabric.yaml
 resources/infra/terraform/user_credentials.json

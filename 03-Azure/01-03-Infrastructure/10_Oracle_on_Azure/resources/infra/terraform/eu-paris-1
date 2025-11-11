@@ -1,7 +1,0 @@
-[DEFAULT]
-user=ocid1.user.oc1..aaaaaaaaombwhapyab6asysgyaw46v3k7zlkrq5judzsafmqksiqytmpqqua
-fingerprint=ae:3f:91:86:66:1d:3f:9f:ae:8e:35:00:49:e2:ab:64
-key_file=C:\Users\chpinoto\.oci\ga1_cptazure.pem
-tenancy=ocid1.tenancy.oc1..aaaaaaaarkr3tvxxmzwueaz3dazimmlsoqk2nc6j77vg33jinbnaupdnokxa
-region=eu-paris-1
-pass_phrase=Levis502!

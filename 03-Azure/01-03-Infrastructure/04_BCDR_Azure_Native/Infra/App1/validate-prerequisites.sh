@@ -237,6 +237,7 @@ if [ ${#UNREGISTERED_PROVIDERS[@]} -gt 0 ]; then
         echo -n "Registering $provider... "
         if az provider register --namespace "$provider" &> /dev/null; then
             print_success "Successfully registered $provider"
+            ((ERRORS--))
         else
             print_error "Failed to register $provider (insufficient permissions or other error)"
             REGISTRATION_FAILED=true

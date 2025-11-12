@@ -61,7 +61,7 @@ cp resources/template/gghack.yaml .
 # replace the placeholder with the actual external IP
 (Get-Content gghack.yaml) -replace '<USER-NAME>', $UserName.Trim() | Set-Content gghack.yaml
 # show line 44 till 50 with powershell of gghack.yaml
-(Get-Content gghack.yaml)[1..3]
+(Get-Content gghack.yaml)[0..3]
 ~~~
 
 The value of vhostName should look like this:
@@ -86,9 +86,9 @@ After you have the external IP address, replace the placeholder in the gghack.ya
 
 ~~~powershell
 # replace the placeholder with the actual external IP
-(Get-Content gghack.yaml) -replace 'xxx-xxx-xxx-xxx', $EXTIP.Trim() | Set-Content gghack.yaml
+(Get-Content gghack.yaml) -replace '<INGRESS-PUBLIC-IP>', $EXTIP.Trim() | Set-Content gghack.yaml
 # show line 44 till 50 with powershell of gghack.yaml
-(Get-Content gghack.yaml)[43..57]
+(Get-Content gghack.yaml)[42..57]
 ~~~
 
 The value of vhostName should look like this:
@@ -117,32 +117,15 @@ Reference the document [How to retrieve the Oracle Database Autonomous Database 
 
 ⚠️ **Important**: If you follow the instructions in `docs\odaa-get-token.md`, remember to switch back to your AKS subscription after retrieving the TNS connection string:
 
-~~~powershell
-# Switch back to ODAA subscription after getting TNS connection string
-az account set --subscription $subODAA
-
-$subODAA = "sub-mhodaa"
-$rgODAA = "odaa-user00"
-$adbname = Read-Host -Prompt "Enter the ADB name deployed "
-
-# query the connectionstring of the deployed ADB database
-$connectstring = az oracle-database autonomous-database show --resource-group $rgODAA --name $adbname --query "connectionStrings.profiles[?consumerGroup=='High' && tlsAuthentication=='Server'].value | [0]" -o tsv
-
-echo "The ADB connect string is :" $connectstring
-
-# Switch back to AKS subscription after getting TNS connection string
-$subODAA = "sub-mhodaa"
-$rgODAA = "odaa-user00"
-az account set --subscription $subAKS
-~~~
-
 After you have retrieved the TNS connection string and assigned it to the `$trgConn` variable (as shown in docs\odaa-get-token.md), replace the placeholder in the gghack.yaml file:
 
 ~~~powershell
+# If you did follow the instruction the following line is not needed because $trgConn is already defined 
+$trgConn="(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=t6bchxz9.adb.eu-paris-1.oraclecloud.com))(connect_data=(service_name=gc2401553d1c7ab_user00adb2025111201_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))"
 # replace in value in your gghack.yaml
 (Get-Content gghack.yaml) -replace '<ODAA-CONNECTION-STRING>', $trgConn | Set-Content gghack.yaml
 # show line 8 till 11 with powershell of gghack.yaml
-(Get-Content gghack.yaml)[11..12]
+(Get-Content gghack.yaml)[10..13]
 ~~~
 
 Your connection string in your gghack.yaml should look similar the yaml below. If the connection string is not copied successful into the gghack.yaml file you can do it manually as well be copy to connection string from the ADB Azure Portal und connections. Choose the connection for high.
@@ -150,9 +133,8 @@ Your connection string in your gghack.yaml should look similar the yaml below. I
 
 ~~~yaml
 databases:
-  trgConn: "(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=ucy29rbl.adb.eu-paris-1.oraclecloud.com))(connect_data=(service_name=gc2401553d1c7ab_odaau0_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))"
-
-# for demo env, do not change the schema names in the configuration yaml file. The reason why we are using SH2 is that SH is a readonly schema which already exists in the ADB, so we create a new one called SH2.
+  # value for source database (23ai free container) is calculated.
+  trgConn: "(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=t6bchxz9.adb.eu-paris-1.oraclecloud.com))(connect_data=(service_name=gc2401553d1c7ab_user00adb2025111201_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))"
 ~~~
 
 ## 🚀 Install GoldenGate Pods
@@ -170,7 +152,8 @@ Like mentioned at the beginning of this challenge, we will install several compo
 
 ~~~powershell
 # Prompt for the password that will be used for all three components - Please ask if you do not know the one!!!
-$password = Read-Host -Prompt "Enter the shared password"
+$password = <REPLACE-WITH-YOUR-ADB-PASSWORD> # e.g., "Welcome1234"
+
 # create the namespace everything goes into
 kubectl create namespace microhacks
 #create secret for Golden Gate OGG admin user and password to-be-created

@@ -10,7 +10,6 @@ ogg:
 
 databases:
   # value for source database (23ai free container) is calculated.
-  #  trgConn: "(description=(retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=adb.eu-frankfurt-1.oraclecloud.com))(connect_data=(service_name=gfde677d3a923a9_atp23ai_low.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))"
   trgConn: "<ODAA-CONNECTION-STRING>"
 
   #for demo env, dont change the schema names. SH already exists in ADB, so we create another one.

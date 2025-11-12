@@ -23,15 +23,15 @@ Helm is a package manager for Kubernetes that allows you to define, install, and
 az login --use-device-code
 # make sure you select the subscription which starts with "sub-team", do not choose the subscription called "sub-mhodaa".
 # Assign the subscription name to a variable
-$subAKS="sub-mh1" # Replace with your Subscription Name.
+$subAKS="sub-mh0" # Replace with your Subscription Name.
 ~~~
 
 ## 🌍 Define required environment variables
 
 ~~~bash
 # log into your AKS cluster if not already done
-$rgAKS="aks-user01" # replace with your AKS resource group name
-$AKSClusterName="aks-user01" # replace with your AKS cluster name
+$rgAKS="aks-user00" # replace with your AKS resource group name
+$AKSClusterName="aks-user00" # replace with your AKS cluster name
 ~~~
 
 ## ⚓ Connect to AKS
@@ -44,14 +44,35 @@ az aks get-credentials -g $rgAKS -n $AKSClusterName --overwrite-existing
 ## 🛠️ Install OnPrem on AKS with helm
 
 ~~~powershell
-# Do an update to get the newest chart templates
-helm repo update
-
 # Install golden gate
 helm repo add oggfree https://ilfur.github.io/VirtualAnalyticRooms
+# Do an update to get the newest chart templates
+helm repo update
 ~~~
 
-## 🔧 Replace current Goldengate configuration File gghack.yaml public IP of the nginx ingress controller
+## 🔧 Replace Goldengate configuration File User Name in gghack.yaml
+
+
+~~~powershell
+# retrieve the external IP of the nginx ingress controller
+$UserName = "user00" # replace with your user name
+# create a copy of the template file
+cp resources/template/gghack.yaml .
+# replace the placeholder with the actual external IP
+(Get-Content gghack.yaml) -replace '<USER-NAME>', $UserName.Trim() | Set-Content gghack.yaml
+# show line 44 till 50 with powershell of gghack.yaml
+(Get-Content gghack.yaml)[1..3]
+~~~
+
+The value of vhostName should look like this:
+
+~~~yaml
+microhack:
+  user: user00
+### specify the name of an existing secret that contains the ogg admin username and password
+~~~
+
+## 🔧 Replace Goldengate configuration File Ingress Public IP in gghack.yaml
 
 We are already running an nginx ingress controller in the AKS cluster to provide access from outside the cluster to the GoldenGate microhack application.
 
@@ -64,27 +85,33 @@ echo "External IP of the Ingress Controller: $EXTIP"
 After you have the external IP address, replace the placeholder in the gghack.yaml file.
 
 ~~~powershell
-# create a copy of the template file
-cp resources/template/gghack.yaml .
 # replace the placeholder with the actual external IP
 (Get-Content gghack.yaml) -replace 'xxx-xxx-xxx-xxx', $EXTIP.Trim() | Set-Content gghack.yaml
 # show line 44 till 50 with powershell of gghack.yaml
-(Get-Content gghack.yaml)[50..55]
+(Get-Content gghack.yaml)[43..57]
 ~~~
 
 The value of vhostName should look like this:
 
 ~~~yaml
- ### uses default SSL certificate of gateway/controller or specify a custom tls-secret here
+services:
+  ### You can choose to create an ingress in front of the service 
+  ### with a virtual host name of ggate.<suffix>
+  external:
+    ### set type to either ingress or none if You need something customized
+    type: ingress
+    ### typical ingressClasses are nginx and istio
+    ingressClass: nginx
+    ### uses default SSL certificate of gateway/controller or specify a custom tls-secret here
     tlsSecretName: ggate-tls-secret
-    vhostName: gghack.xxx-xxx-xxx-xxx.nip.io # public IP address of the nginx loadbalancer should be listed 
+    vhostName: gghack.4.251.147.64.nip.io # public IP address of
   internal:
     type: ClusterIP
     plainPort: 8080
     sslPort: 8443
 ~~~
 
-## 🔗 Replace current Goldengate configuration File gghack.yaml ODAA TNS connection String
+## 🔗 Replace Goldengate configuration File gghack.yaml ODAA TNS connection String
 
 Reference the document [How to retrieve the Oracle Database Autonomous Database connection string from ODAA](../../docs/odaa-get-token.md) to get the TNS connection string for your ODAA ADB instance.
 
@@ -95,7 +122,7 @@ Reference the document [How to retrieve the Oracle Database Autonomous Database 
 az account set --subscription $subODAA
 
 $subODAA = "sub-mhodaa"
-$rgODAA = "odaa-shared"
+$rgODAA = "odaa-user00"
 $adbname = Read-Host -Prompt "Enter the ADB name deployed "
 
 # query the connectionstring of the deployed ADB database
@@ -105,7 +132,7 @@ echo "The ADB connect string is :" $connectstring
 
 # Switch back to AKS subscription after getting TNS connection string
 $subODAA = "sub-mhodaa"
-$rgODAA = "odaa-shared"
+$rgODAA = "odaa-user00"
 az account set --subscription $subAKS
 ~~~
 

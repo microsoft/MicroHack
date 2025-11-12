@@ -1,3 +1,5 @@
+microhack:
+  user: <USER-NAME>
 ### specify the name of an existing secret that contains the ogg admin username and password
 ogg:
   adminSecret: ogg-admin-secret
@@ -9,7 +11,7 @@ ogg:
 databases:
   # value for source database (23ai free container) is calculated.
   #  trgConn: "(description=(retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=adb.eu-frankfurt-1.oraclecloud.com))(connect_data=(service_name=gfde677d3a923a9_atp23ai_low.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))"
-  trgConn: "(description=(retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=xxxxxxxxxxxxxxxx.adb.eu-frankfurt-1.oraclecloud.com))(connect_data=(service_name=xxxxxxxxxxxxxxxxxxx_adbger_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))"
+  trgConn: "<ODAA-CONNECTION-STRING>"
 
   #for demo env, dont change the schema names. SH already exists in ADB, so we create another one.
   srcSchema: "SH"
@@ -35,6 +37,7 @@ image:
   pullPolicy: IfNotPresent
   #ggImageName: container-registry.oracle.com/goldengate/goldengate-oracle-free:23.8.0.25.04
   ggImageName: fra.ocir.io/fre3ftc1iva4/pub_gg_micro_ora:23.4.1.24.05
+  ggdaaImageName: fra.ocir.io/frul1g8cgfam/pub_gg_micro_bigdata:23.8.4.25.08
   dbImageName: container-registry.oracle.com/database/free:23.26.0.0
 
 services:
@@ -47,7 +50,7 @@ services:
     ingressClass: nginx
     ### uses default SSL certificate of gateway/controller or specify a custom tls-secret here
     tlsSecretName: ggate-tls-secret
-    vhostName: gghack.xxx-xxx-xxx-xxx.nip.io
+    vhostName: gghack.<INGRESS-PUBLIC-IP>.nip.io # public IP address of
   internal:
     type: ClusterIP
     plainPort: 8080

@@ -44,7 +44,7 @@ locals {
       postfix           = format("%02d", idx)
       prefix            = local.default_prefix
       location          = local.default_location
-      aks_cidr          = "10.${idx}.0.0"                                  # Unique CIDR per environment (10.0.0.0/16, 10.1.0.0/16, etc.)
+      aks_cidr          = "10.0.0.0"                                       # Same CIDR for all users (isolated by VNet, no cross-user peering)
       aks_service_cidr  = "172.${16 + floor(idx / 256)}.${idx % 256}.0/24" # Unique service CIDR in 172.16.0.0/12 to avoid 10.0.0.0/8 and 192.168.0.0/16 overlaps
       aks_vm_size       = local.default_aks_vm_size
       aks_os_disk_type  = local.default_aks_os_disk_type
@@ -192,20 +192,21 @@ locals {
   )
 }
 
-resource "azuread_app_role_assignment" "oracle_cloud_group" {
-  count = local.oracle_cloud_app_role_id == null ? 0 : 1
+# Commented out - App role assignment already exists in Azure AD (created manually)
+# resource "azuread_app_role_assignment" "oracle_cloud_group" {
+#   count = local.oracle_cloud_app_role_id == null ? 0 : 1
 
-  resource_object_id  = local.oracle_cloud_service_principal.object_id
-  principal_object_id = module.entra_id_users.group_object_id
-  app_role_id         = local.oracle_cloud_app_role_id
+#   resource_object_id  = local.oracle_cloud_service_principal.object_id
+#   principal_object_id = module.entra_id_users.group_object_id
+#   app_role_id         = local.oracle_cloud_app_role_id
 
-  lifecycle {
-    precondition {
-      condition     = local.oracle_cloud_app_role_id != null
-      error_message = "Unable to determine an app role ID for the Oracle Cloud service principal. Ensure it exposes an enabled app role (for example 'User') or set 'oracle_cloud_service_principal_app_role_value' accordingly."
-    }
-  }
-}
+#   lifecycle {
+#     precondition {
+#       condition     = local.oracle_cloud_app_role_id != null
+#       error_message = "Unable to determine an app role ID for the Oracle Cloud service principal. Ensure it exposes an enabled app role (for example 'User') or set 'oracle_cloud_service_principal_app_role_value' accordingly."
+#     }
+#   }
+# }
 
 resource "local_file" "user_credentials" {
   filename = local.user_credentials_output_path
@@ -244,12 +245,14 @@ resource "local_file" "user_credentials" {
 # Role Assignments for Shared ODAA Resources
 # ===============================================================================
 
-resource "azurerm_role_assignment" "odaa_autonomous_database_admin_group" {
+resource "azurerm_role_assignment" "odaa_autonomous_database_admin_per_user" {
+  for_each = local.deployments
+
   provider             = azurerm.odaa
-  scope                = module.odaa_shared.resource_group_id
+  scope                = local.odaa_modules[each.key].resource_group_id
   role_definition_name = "Oracle.Database Autonomous Database Administrator"
-  principal_id         = module.entra_id_users.group_object_id
-  description          = "Grants ${module.entra_id_users.group_display_name} permissions to manage Oracle Autonomous Database resources in resource group ${module.odaa_shared.resource_group_name}."
+  principal_id         = local.deployment_user_object_ids[each.key]
+  description          = "Grants ${each.value.name} exclusive admin permissions for their Oracle Autonomous Database resources in resource group ${local.odaa_modules[each.key].resource_group_name}."
 }
 
 resource "azurerm_role_definition" "private_dns_zone_reader" {
@@ -437,75 +440,148 @@ locals {
 }
 
 # ===============================================================================
-# Ingress Deployment per Subscription Slot
+# Ingress Controller Deployment
+# ===============================================================================
+# Ingress controllers are now deployed via the deploy-ingress-controllers.ps1 
+# script after terraform apply completes. This approach removes the helm provider
+# constraint and allows scaling to unlimited users.
+#
+# To deploy ingress controllers:
+#   .\scripts\deploy-ingress-controllers.ps1
+#
+# To uninstall ingress controllers:
+#   .\scripts\deploy-ingress-controllers.ps1 -Uninstall
 # ===============================================================================
 
-module "ingress_nginx_slot_0" {
-  for_each = local.aks_deployments_by_slot["0"]
-  source   = "./modules/ingress-nginx"
-
-  providers = {
-    helm = helm.aks_deployment_slot_0
-  }
-}
-
-module "ingress_nginx_slot_1" {
-  for_each = local.aks_deployments_by_slot["1"]
-  source   = "./modules/ingress-nginx"
-
-  providers = {
-    helm = helm.aks_deployment_slot_1
-  }
-}
-
-module "ingress_nginx_slot_2" {
-  for_each = local.aks_deployments_by_slot["2"]
-  source   = "./modules/ingress-nginx"
-
-  providers = {
-    helm = helm.aks_deployment_slot_2
-  }
-}
-
-module "ingress_nginx_slot_3" {
-  for_each = local.aks_deployments_by_slot["3"]
-  source   = "./modules/ingress-nginx"
-
-  providers = {
-    helm = helm.aks_deployment_slot_3
-  }
-}
-
-module "ingress_nginx_slot_4" {
-  for_each = local.aks_deployments_by_slot["4"]
-  source   = "./modules/ingress-nginx"
-
-  providers = {
-    helm = helm.aks_deployment_slot_4
-  }
-}
-
 # ===============================================================================
-# Shared Oracle Database@Azure Network
+# Per-User Oracle Database@Azure Networks (Isolated)
 # ===============================================================================
+# Each user gets their own ODAA VNet (192.168.0.0/16) - isolated by VNet boundaries
+# No peering between ODAA VNets = complete user isolation
 
-module "odaa_shared" {
+module "odaa_slot_0" {
   source = "./modules/odaa"
+
+  for_each = local.aks_deployments_by_slot["0"]
 
   providers = {
     azurerm = azurerm.odaa
   }
 
-  prefix                     = "shared"
-  postfix                    = ""
-  location                   = var.location
-  cidr                       = local.default_odaa_cidr_base
+  prefix                     = each.value.prefix
+  postfix                    = each.value.postfix
+  location                   = each.value.location
+  cidr                       = each.value.odaa_cidr
   password                   = null
   create_autonomous_database = false
 
   tags = merge(local.common_tags, {
-    ODAAFor = "shared"
+    ODAAFor   = each.value.name
+    UserIndex = each.value.index
   })
+}
+
+module "odaa_slot_1" {
+  source = "./modules/odaa"
+
+  for_each = local.aks_deployments_by_slot["1"]
+
+  providers = {
+    azurerm = azurerm.odaa
+  }
+
+  prefix                     = each.value.prefix
+  postfix                    = each.value.postfix
+  location                   = each.value.location
+  cidr                       = each.value.odaa_cidr
+  password                   = null
+  create_autonomous_database = false
+
+  tags = merge(local.common_tags, {
+    ODAAFor   = each.value.name
+    UserIndex = each.value.index
+  })
+}
+
+module "odaa_slot_2" {
+  source = "./modules/odaa"
+
+  for_each = local.aks_deployments_by_slot["2"]
+
+  providers = {
+    azurerm = azurerm.odaa
+  }
+
+  prefix                     = each.value.prefix
+  postfix                    = each.value.postfix
+  location                   = each.value.location
+  cidr                       = each.value.odaa_cidr
+  password                   = null
+  create_autonomous_database = false
+
+  tags = merge(local.common_tags, {
+    ODAAFor   = each.value.name
+    UserIndex = each.value.index
+  })
+}
+
+module "odaa_slot_3" {
+  source = "./modules/odaa"
+
+  for_each = local.aks_deployments_by_slot["3"]
+
+  providers = {
+    azurerm = azurerm.odaa
+  }
+
+  prefix                     = each.value.prefix
+  postfix                    = each.value.postfix
+  location                   = each.value.location
+  cidr                       = each.value.odaa_cidr
+  password                   = null
+  create_autonomous_database = false
+
+  tags = merge(local.common_tags, {
+    ODAAFor   = each.value.name
+    UserIndex = each.value.index
+  })
+}
+
+module "odaa_slot_4" {
+  source = "./modules/odaa"
+
+  for_each = local.aks_deployments_by_slot["4"]
+
+  providers = {
+    azurerm = azurerm.odaa
+  }
+
+  prefix                     = each.value.prefix
+  postfix                    = each.value.postfix
+  location                   = each.value.location
+  cidr                       = each.value.odaa_cidr
+  password                   = null
+  create_autonomous_database = false
+
+  tags = merge(local.common_tags, {
+    ODAAFor   = each.value.name
+    UserIndex = each.value.index
+  })
+}
+
+# ===============================================================================
+# ODAA Module Outputs Map
+# ===============================================================================
+# Maps each deployment key to its corresponding ODAA module output
+
+locals {
+  odaa_modules = merge(
+    module.odaa_slot_0,
+    module.odaa_slot_1,
+    module.odaa_slot_2,
+    module.odaa_slot_3,
+    module.odaa_slot_4
+  )
 }
 
 # ===============================================================================
@@ -575,7 +651,7 @@ resource "azurerm_oracle_autonomous_database" "user" {
     local.adb_descriptive_suffix[each.key]
   ))
 
-  resource_group_name = module.odaa_shared.resource_group_name
+  resource_group_name = local.odaa_modules[each.key].resource_group_name
   location            = var.location
 
   admin_password                   = var.adb_admin_password
@@ -593,15 +669,21 @@ resource "azurerm_oracle_autonomous_database" "user" {
   license_model                    = "BringYourOwnLicense"
   mtls_connection_required         = false
   national_character_set           = "AL16UTF16"
-  subnet_id                        = module.odaa_shared.subnet_id
-  virtual_network_id               = module.odaa_shared.vnet_id
+  subnet_id                        = local.odaa_modules[each.key].subnet_id
+  virtual_network_id               = local.odaa_modules[each.key].vnet_id
 
   tags = merge(local.common_tags, {
     AKSDeployment = each.value.name
     ODAAFor       = each.value.name
   })
 
-  depends_on = [module.odaa_shared]
+  depends_on = [
+    module.odaa_slot_0,
+    module.odaa_slot_1,
+    module.odaa_slot_2,
+    module.odaa_slot_3,
+    module.odaa_slot_4
+  ]
 }
 
 # ===============================================================================
@@ -620,9 +702,9 @@ module "vnet_peering_slot_0" {
   aks_vnet_id          = local.aks_modules[each.key].vnet_id
   aks_vnet_name        = local.aks_modules[each.key].vnet_name
   aks_resource_group   = local.aks_modules[each.key].resource_group_name
-  odaa_vnet_id         = module.odaa_shared.vnet_id
-  odaa_vnet_name       = module.odaa_shared.vnet_name
-  odaa_resource_group  = module.odaa_shared.resource_group_name
+  odaa_vnet_id         = module.odaa_slot_0[each.key].vnet_id
+  odaa_vnet_name       = module.odaa_slot_0[each.key].vnet_name
+  odaa_resource_group  = module.odaa_slot_0[each.key].resource_group_name
   odaa_subscription_id = var.odaa_subscription_id
   peering_suffix       = each.value.name
 
@@ -644,9 +726,9 @@ module "vnet_peering_slot_1" {
   aks_vnet_id          = local.aks_modules[each.key].vnet_id
   aks_vnet_name        = local.aks_modules[each.key].vnet_name
   aks_resource_group   = local.aks_modules[each.key].resource_group_name
-  odaa_vnet_id         = module.odaa_shared.vnet_id
-  odaa_vnet_name       = module.odaa_shared.vnet_name
-  odaa_resource_group  = module.odaa_shared.resource_group_name
+  odaa_vnet_id         = module.odaa_slot_1[each.key].vnet_id
+  odaa_vnet_name       = module.odaa_slot_1[each.key].vnet_name
+  odaa_resource_group  = module.odaa_slot_1[each.key].resource_group_name
   odaa_subscription_id = var.odaa_subscription_id
   peering_suffix       = each.value.name
 
@@ -668,9 +750,9 @@ module "vnet_peering_slot_2" {
   aks_vnet_id          = local.aks_modules[each.key].vnet_id
   aks_vnet_name        = local.aks_modules[each.key].vnet_name
   aks_resource_group   = local.aks_modules[each.key].resource_group_name
-  odaa_vnet_id         = module.odaa_shared.vnet_id
-  odaa_vnet_name       = module.odaa_shared.vnet_name
-  odaa_resource_group  = module.odaa_shared.resource_group_name
+  odaa_vnet_id         = module.odaa_slot_2[each.key].vnet_id
+  odaa_vnet_name       = module.odaa_slot_2[each.key].vnet_name
+  odaa_resource_group  = module.odaa_slot_2[each.key].resource_group_name
   odaa_subscription_id = var.odaa_subscription_id
   peering_suffix       = each.value.name
 
@@ -692,9 +774,9 @@ module "vnet_peering_slot_3" {
   aks_vnet_id          = local.aks_modules[each.key].vnet_id
   aks_vnet_name        = local.aks_modules[each.key].vnet_name
   aks_resource_group   = local.aks_modules[each.key].resource_group_name
-  odaa_vnet_id         = module.odaa_shared.vnet_id
-  odaa_vnet_name       = module.odaa_shared.vnet_name
-  odaa_resource_group  = module.odaa_shared.resource_group_name
+  odaa_vnet_id         = module.odaa_slot_3[each.key].vnet_id
+  odaa_vnet_name       = module.odaa_slot_3[each.key].vnet_name
+  odaa_resource_group  = module.odaa_slot_3[each.key].resource_group_name
   odaa_subscription_id = var.odaa_subscription_id
   peering_suffix       = each.value.name
 
@@ -716,9 +798,9 @@ module "vnet_peering_slot_4" {
   aks_vnet_id          = local.aks_modules[each.key].vnet_id
   aks_vnet_name        = local.aks_modules[each.key].vnet_name
   aks_resource_group   = local.aks_modules[each.key].resource_group_name
-  odaa_vnet_id         = module.odaa_shared.vnet_id
-  odaa_vnet_name       = module.odaa_shared.vnet_name
-  odaa_resource_group  = module.odaa_shared.resource_group_name
+  odaa_vnet_id         = module.odaa_slot_4[each.key].vnet_id
+  odaa_vnet_name       = module.odaa_slot_4[each.key].vnet_name
+  odaa_resource_group  = module.odaa_slot_4[each.key].resource_group_name
   odaa_subscription_id = var.odaa_subscription_id
   peering_suffix       = each.value.name
 
@@ -756,14 +838,16 @@ output "aks_clusters" {
   }
 }
 
-output "odaa_network" {
-  description = "Information about the shared ODAA network"
+output "odaa_networks" {
+  description = "Information about the per-user ODAA networks"
   value = {
-    resource_group_name = module.odaa_shared.resource_group_name
-    resource_group_id   = module.odaa_shared.resource_group_id
-    vnet_id             = module.odaa_shared.vnet_id
-    vnet_name           = module.odaa_shared.vnet_name
-    subnet_id           = module.odaa_shared.subnet_id
+    for key, deployment in local.deployments : deployment.name => {
+      resource_group_name = local.odaa_modules[key].resource_group_name
+      resource_group_id   = local.odaa_modules[key].resource_group_id
+      vnet_id             = local.odaa_modules[key].vnet_id
+      vnet_name           = local.odaa_modules[key].vnet_name
+      subnet_id           = local.odaa_modules[key].subnet_id
+    }
   }
 }
 
@@ -776,7 +860,7 @@ output "odaa_autonomous_databases" {
         id                  = azurerm_oracle_autonomous_database.user[key].id
         name                = azurerm_oracle_autonomous_database.user[key].name
         display_name        = azurerm_oracle_autonomous_database.user[key].display_name
-        resource_group_name = module.odaa_shared.resource_group_name
+        resource_group_name = local.odaa_modules[key].resource_group_name
         descriptive_suffix  = local.adb_descriptive_suffix[key]
       } : null
     )
@@ -828,5 +912,18 @@ output "deployment_summary" {
       for key, deployment in local.deployments : deployment.name => module.entra_id_users.group_display_name
     }
   }
+}
+
+output "aks_kubeconfigs" {
+  description = "Kubeconfig files for all AKS clusters (for deployment automation only)"
+  value = {
+    for key, deployment in local.deployments : deployment.name => {
+      kubeconfig_raw      = local.aks_modules[key].aks_cluster_kube_config_raw
+      cluster_name        = local.aks_modules[key].aks_cluster_name
+      resource_group_name = local.aks_modules[key].resource_group_name
+      subscription_id     = deployment.subscription_id
+    }
+  }
+  sensitive = true
 }
 

@@ -30,7 +30,7 @@ Because we deployed our ODAA Autonomous Database in a different VNet than the on
 # switch to the corresponding subscription where ODAA is deployed
 $subODAA="sub-mhodaa" # replace with your ODAA subscription name
 az account set -s $subODAA
-$rgODAA="odaa-shared" # replace with your ODAA resource group name
+$rgODAA="odaa-user00" # replace with your ODAA resource group name
 
 $zones = az network private-dns zone list -g $rgODAA --query "[].name" -o tsv
 echo $zones
@@ -39,8 +39,8 @@ echo $zones
 <br>
 
 ~~~text
-gpdmotes.adb.eu-paris-1.oraclecloud.com
-gpdmotes.adb.eu-paris-1.oraclecloudapps.com
+t6bchxz9.adb.eu-paris-1.oraclecloud.com
+t6bchxz9.adb.eu-paris-1.oraclecloudapps.com
 ~~~
 
 <br>
@@ -57,73 +57,32 @@ you need to change to the ODAA subscription by repeting the upper commands! Beca
 
 ### Create AKS DNS Records
 
-There are multiple ways to create the required DNS records within the Azure Private DNS Zones that are linked to the AKS VNet. We the following two ways how to set the Azure DNS zones:
-1. By using Azure Bicep via Azure CLI.
-2. By using the Azure portal directly
+There are multiple ways to create the required DNS records within the Azure Private DNS Zones that are linked to the AKS VNet. We will be using the Azure portal directly
 
-<br>
+#### Move in the Azure portal to your AKS subscription and resoucre group where your aks cluster is deployed. Inside the resource group you will find the aks related vnet. Copy in the overview "address space" the CIDR of the vnet. <br>
+In our case the "address space" should be 10.0.0.0/16
+<br><img src="./media/image.png" alt="Create browser profile" width="450" height="180" />
 
-#### Azure Bicep to set the private DNS zones
+To access the OCI console use the following link after you are logged in into the Azure portal under your newly created ODAA Autonomous Database resource:
+![Azure link to OCI console](media/image%20copy.png)
 
-In the first step you have to create a Network Security Group called NSG on the Oracle OCI side. The following steps show you the required steps how to add an NSG of the deployed ADB, so that the AKS cluster is able to connect the database. 
+At the OCI console login page selcet the "Entra ID" link:
+![OCI login via Entra ID](media/image%20copy%202.png)
 
-1. Move in the Azure portal to your AKS subscription and resoucre group where your aks cluster is deployed. Inside the resource group you will find the aks related vnet. Copy in the overview "address space" the CIDR of the vnet. <br>
-In our case the "address space" should be 10.1.0.0/16
-<br><img src="./media/OCI_nsg5.jpg" alt="Create browser profile" width="450" height="180" />
+You will land on the Oracle ADB databases overview page:
+![OCI ADB overview page](media/image%20copy%203.png)
 
-2. In the second step connect to the OCI console by using the federation via Entra ID. After you logged in use the hamburger Icon in ther upper left corner and press the menue "Oracle AI databases".
-<br><img src="./media/OCI_nsg1.jpg" alt="Create browser profile" width="450" height="180" />
 
-3. Press on the link of your deployed ADB database and scroll down to the networking section on the ADB homepage.
-<br><img src="./media/OCI_nsg2.jpg" alt="Create browser profile" width="450" height="200" />
+#### Scroll down to the networking section on the ADB homepage.
+![OCI ADB networking NSG section](media/image%20copy%204.png)
 
 4. Press on the link "Network Security Groups" to reach the NSG page. Under the Tab "Security Rules" you have to press the "Add Rules" button to add an ingress rule.
-<br><img src="./media/OCI_nsg3.jpg" alt="Create browser profile" width="450" height="200" /> 
+![OCI ADB NSG add Rule](media/image%20copy%205.png) 
 
-5. Choose in the Rule as "Source Type" CIDR and add the copied vnet address space of the previous AKS cluster into the field. Finally save the Rule
-br><img src="./media/OCI_nsg4.jpg" alt="Create browser profile" width="450" height="200" />
+5. Choose in the Rule as "Source Type" CIDR and add the copied vnet address space of the previous AKS cluster into the field. Finally click the "Add" button to create the Rule.
+![OCI ADB NSG create Rule CIDR](media/image%20copy%206.png)
 
-
-<br>
-<br>
-
-Before you continue please verfiy the correct regions of the AKS and ODAA / ADB is used!
-
-~~~powershell
-# switch back to the subscription where AKS is deployed
-$subAKS="sub-mh1" # replace with your AKS subscription name
-az account set -s $subAKS
-$fqdnODAA = 'dimm5zbj.adb.eu-paris-1.oraclecloud.com' # replace with your ODAA FQDN
-$fqdnODAAApp = 'dimm5zbj.eu-paris-1.oraclecloudapps.com' # replace with your ODAA FQDN
-$fqdnODAAIpv4 = '192.168.0.139' # replace with your ODAA private IP address
-$rgAKS="aks-user01" # replace with your AKS resource group name
-$vnetAKSName="aks-user01" # replace with your AKS resource group name
-
-
-# iterate through all zones and list all A records
-$zones = az network private-dns zone list --resource-group $rgAKS --query "[].name" -o tsv
-foreach ($zone in $zones) {
-    Write-Host "Listing A records for zone: $zone"
-    az network private-dns record-set a list --zone-name $zone --resource-group $rgAKS --query "[].{Name:name, Records:aRecords[0].ipv4Address}" -o table
-}
-~~~
-
-~~~text
-Listing A records for zone: adb.eu-frankfurt-1.oraclecloud.com
-
-Listing A records for zone: adb.eu-frankfurt-1.oraclecloudapps.com
-
-Listing A records for zone: gpdmotes.eu-paris-1.oraclecloud.com.com
-Name    Records
-------  ----------
-@       10.0.0.213
-Listing A records for zone: gpdmotes.eu-paris-1.oraclecloudapps.com
-Name    Records
-------  ----------
-@       10.0.0.213
-~~~
-
-#### Azure Portal to set the private DNS zones
+#### Set the private DNS zones for AKS VNet via Azure Portal
 
 1. From the overview portal of the deployed ADB database, copy the FQDN of the "Database URL name" and Database private IP address both in the section Network.
     <br>
@@ -158,5 +117,72 @@ Name    Records
 <br>
 
 <hr>
+
+#### Set the private DNS zones for AKS VNet via Powershell (alternative to Azure portal)
+
+~~~powershell
+# switch back to the subscription where AKS is deployed
+$subAKS="sub-mh0" # replace with your AKS subscription name
+az account set -s $subAKS
+$yourADBDNSLabel = 't6bchxz9' # replace with your ODAA ADB DNS label
+$fqdnODAA = "$yourADBDNSLabel.adb.eu-paris-1.oraclecloud.com" # replace with your ODAA FQDN
+$fqdnODAAApp = "$yourADBDNSLabel.eu-paris-1.oraclecloudapps.com" # replace with your ODAA FQDN
+$fqdnODAAIpv4 = '192.168.0.185' # replace with your ODAA private IP address
+$rgAKS="aks-user00" # replace with your AKS resource group name
+$vnetAKSName="aks-user00" # replace with your AKS resource group name
+
+# iterate through all zones and list all A records
+$zones = az network private-dns zone list --resource-group $rgAKS --query "[].name" -o tsv
+
+# Create A records in each private DNS zone with TTL of 10 seconds
+foreach ($zone in $zones) {
+    Write-Host "Creating A record '$yourADBDNSLabel' in zone: $zone"
+    
+    # Create or update the record set with TTL of 10 seconds
+    az network private-dns record-set a create `
+        --resource-group $rgAKS `
+        --zone-name $zone `
+        --name $yourADBDNSLabel `
+        --ttl 10 `
+    
+    # Add the IP address to the record set
+    az network private-dns record-set a add-record `
+        --resource-group $rgAKS `
+        --zone-name $zone `
+        --record-set-name $yourADBDNSLabel `
+        --ipv4-address $fqdnODAAIpv4
+    
+    Write-Host "Listing A records for zone: $zone"
+    az network private-dns record-set a list --zone-name $zone --resource-group $rgAKS --query "[].{Name:name, Records:aRecords[0].ipv4Address}" -o table
+}
+~~~
+
+Verify the created A records:
+
+~~~powershell
+foreach ($zone in $zones) {   
+    Write-Host "Listing A records for zone: $zone"
+    az network private-dns record-set a list --zone-name $zone --resource-group $rgAKS --query "[].{Name:name, Records:aRecords[0].ipv4Address}" -o table
+}
+~~~
+
+~~~text
+Listing A records for zone: adb.eu-frankfurt-1.oraclecloud.com
+Name      Records
+--------  -------------
+t6bchxz9  192.168.0.185
+Listing A records for zone: adb.eu-frankfurt-1.oraclecloudapps.com
+Name      Records
+--------  -------------
+t6bchxz9  192.168.0.185
+Listing A records for zone: adb.eu-paris-1.oraclecloud.com
+Name      Records
+--------  -------------
+t6bchxz9  192.168.0.185
+Listing A records for zone: adb.eu-paris-1.oraclecloudapps.com
+Name      Records
+--------  -------------
+t6bchxz9  192.168.0.185
+~~~
 
 [Back to workspace README](../../README.md)

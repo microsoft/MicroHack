@@ -406,7 +406,7 @@ The `EXTERNAL-IP` should be assigned (not `<pending>`). This may take 1-2 minute
 ```powershell
 # List Oracle Autonomous Databases in the shared resource group
 az oracle autonomous-database list \
-  --resource-group odaa-shared \
+  --resource-group odaa-user00 \
   --query "[].{Name:name, State:state, ComputeCount:computeCount}" \
   --output table
 ```

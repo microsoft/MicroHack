@@ -220,7 +220,7 @@ variable "adb_admin_password" {
   description = "The admin password for the Oracle Autonomous Database (shared across all ODAA deployments)"
   type        = string
   sensitive   = true
-  default     = null 
+  default     = null
   validation {
     condition = var.create_oracle_database ? (
       var.adb_admin_password != null &&

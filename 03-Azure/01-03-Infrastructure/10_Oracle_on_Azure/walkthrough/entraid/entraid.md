@@ -40,8 +40,8 @@ We did add the following to the manifest of the app registration:
 ~~~powershell
 # Prompt for the password that will be used for all three components
 $password = Read-Host -Prompt "Enter the shared password"
-$rgName="odaa-shared"
-$prefix="odaa-shared"
+$rgName="odaa-user00"
+$prefix="odaa-user00"
 $location="francecentral" # e.g. germanywestcentral
 # login to aks if not already done
 az aks get-credentials -g $rgName -n $prefix --overwrite-existing

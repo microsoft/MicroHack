@@ -23,7 +23,7 @@ $adbName="adbuser01" # replace with your ADB name
 $subODAA="sub-mhodaa" 
 az account set --subscription $subODAA
 
-$rgODAA="odaa-shared" # replace with your resource group name
+$rgODAA="odaa-user00" # replace with your resource group name
 
 # Retrieve TNS Connection string High profile (TCPS, tlsAuthentication = Server)
 $trgConn=az oracle-database autonomous-database show -g $rgODAA -n $adbName --query "connectionStrings.profiles[?consumerGroup=='High' && protocol=='TCPS' && tlsAuthentication=='Server'].value | [0]" -o tsv

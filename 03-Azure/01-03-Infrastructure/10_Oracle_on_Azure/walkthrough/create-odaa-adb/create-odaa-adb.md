@@ -27,11 +27,11 @@ Azure delegated subnets allow you to delegate exclusive control of a subnet with
 
 The delegate subnet is part of the vnet inside your ODAA subscription. 
 1. Click on the subscription sub-mhodaa. 
-2. Change to the available resource group odaa-shared 
-3. You see the deployed resources inside the the resource group and use the vnet odaa-shared.
+2. Change to the available resource group odaa-user00 
+3. You see the deployed resources inside the the resource group and use the vnet odaa-user00.
 4. In the vnet overview you find under the sub menue settings the menue Subnets.
 5. In the menue Subnets you see the subnet and inside the table the delegation for "Oracle.Database/networkAttachments".
-   ![Overview delegated subnet to Oracle.Database/networkAttachments](media/delegated_subnet.jpg)
+   ![Overview delegated subnet to Oracle.Database/networkAttachments](media/image.png)
 
 
 ## 🛠️ Create an ODAA Autonomous Database Instance
@@ -89,31 +89,43 @@ A complete documentation is available on under the following links.
 
 [Oracle Documentation: Create an Autonomous Database](https://docs.oracle.com/en-us/iaas/Content/database-at-azure/azucr-create-autonomous-database.html)
 
-<br>
 
-<hr>
+## **IMPORTANT: While you are waiting for the ADB creation**
+
+You will need in the following challenges to use the Microhack GitHub repository. Please clone the repository to your local machine if you have not done it yet.
+
+Follow the instructions in the [Clone Partial Repository](../../docs/clone-partial-repo.md) document to clone only the required folder for this Microhack.
 
 ## Check the created ADB in OCI console
 
 After the ADB was deployed successful, check if the ADB is visible on the Azure Portal and OCI side. Important to mention on the OCI side is that the region is set to <b> Fracne Central</b> and the Compartment is chosen properly.
 
-The compartment structure in OCI looks like:
+To access the OCI console use the following link after you are logged in into the Azure portal under your newly created ODAA Autonomous Database resource:
+![Azure link to OCI console](media/image%20copy.png)
+
+At the OCI console login page selcet the "Entra ID" link:
+![OCI login via Entra ID](media/image%20copy%202.png)
+
+You will land on the Oracle ADB databases overview page:
+![OCI ADB overview page](media/image%20copy%203.png)
+
+<!-- The compartment structure in OCI looks like:
 ~~~text
---> Root compartment - cptazure
-   -->OCI Multicloudlink_ODBAA <number>
-      --> Compartment <number>
+-- Root compartment - cptazure
+   -- OCI Multicloudlink_ODBAA <number>
+      -- Compartment <number>
 ~~~
 
 <br>
 
 
 ![oci region and compartment setting](media/oci_region_check_compartment.jpg)
-
+ -->
 
 ## Check the existing vnet peering 
 
 To save time to focus on the ODAA service itself the vnet peering between both subscriptions is already available and can be verified. Here you have to switch to the resource group aks-user[assigned number]. Under the section settings you find the menu point peering. Open the peering and check if the peering sync status and peering state are active.
-![Overview if the vnet peering is working](media/vnet_peering/vnet_peering_3.jpg)
+![Overview if the vnet peering is working](media/image%20copy%204.png)
 
 The check of the vnet peering can be done from the ODAA side as well.
 

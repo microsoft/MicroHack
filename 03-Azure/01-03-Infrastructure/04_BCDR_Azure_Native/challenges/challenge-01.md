@@ -34,16 +34,22 @@ Participants must design and implement recovery strategies to meet business targ
 ## Challenge Objective
 ### Actions
 Participants must:
-1. Prioritize recovery of applications based on their criticality and business impact.
-1. Decide which parts of the system to make highly available (HA) based on financial constraints.
-1. Calculate the trade-offs between downtime costs and HA investments.
+1. **Write down the first 3 steps** you would take if your company was attacked by ransomware, considering different perspectives (employee, CISO, CEO).
+2. **Reflect on business continuity testing** - Think about whether you've ever participated in a business continuity test scenario in your organization.
+3. **Define application owner responsibilities** - Put yourself in the position of an application owner and define the necessary steps to ensure your application stays available during a disaster.
+4. **Identify BCDR stakeholders** - Determine who defines the requirements for Business Continuity and identify the necessary KPIs for achieving good SLA in terms of availability.
+5. **Plan geographic distribution** - Design the different geographic regions needed to reach the highest availability SLA (including potential datacenter locations).
+6. **Analyze the Contoso scenario** - Apply your understanding to prioritize recovery of the three applications based on their criticality, business impact, and cost considerations.
 
 ### Success criteria
 
-* Understood the different terms from BCDR.
-* Thought about the last successful disaster recovery of daily used applications.
-* Identified the responsibilities and roles within your current company in respect to BCDR.
-* Defined four levels of disaster recovery categories, including availability SLA.
+* **Understood BCDR terminology** - Clearly distinguish between High Availability, Disaster Recovery, and Business Continuity concepts.
+* **Identified emergency response steps** - Documented the first three critical steps for ransomware response from different organizational perspectives.
+* **Assessed current BCDR maturity** - Reflected on your organization's business continuity testing practices and identified improvement opportunities.
+* **Defined application owner responsibilities** - Listed the nine key steps application owners should take to ensure disaster preparedness.
+* **Identified BCDR roles and KPIs** - Determined who sets BCDR requirements and what metrics are essential for measuring availability SLA.
+* **Planned geographic redundancy** - Designed a multi-region strategy considering RPO/RTO requirements and cost implications.
+* **Applied BCDR principles to real scenario** - Successfully analyzed the Contoso case study and made informed decisions about recovery priorities and high availability investments.
 
 ### Learning resources
 

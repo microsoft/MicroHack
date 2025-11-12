@@ -1,6 +1,6 @@
 # Finish
 
-[Previous Challenge Solution](challenge-07.md) - **[Home](../Readme.md)**
+[Previous Challenge](challenge-07.md) - **[Home](../Readme.md)**
 
 ## Congratulations
 

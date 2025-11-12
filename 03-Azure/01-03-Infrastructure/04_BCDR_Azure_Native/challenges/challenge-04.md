@@ -1,6 +1,6 @@
 # Challenge 4 - Regional Disaster Recovery (DR)
 
-[Previous Challenge](challenge-03.md) - **[Home](../Readme.md)** - [Next Challenge](challenge-04.md)
+[Previous Challenge](challenge-03.md) - **[Home](../Readme.md)** - [Next Challenge](challenge-05.md)
 
 ### Goal 🎯
 

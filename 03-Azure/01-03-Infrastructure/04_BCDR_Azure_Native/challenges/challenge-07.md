@@ -1,6 +1,6 @@
 # Challenge 6 - Failback to the Primary Region (Germany West Central)
 
-[Previous Challenge Solution](challenge-06.md) - **[Home](../Readme.md)**
+[Previous Challenge](challenge-06.md) - **[Home](../Readme.md)** - [Congratulations](finish.md)
 
 ### Goal 🎯
 
@@ -27,5 +27,3 @@ In Challenge 7, you will fail back the web application from Sweden Central to Ge
 * [Reprotect Azure VMs](https://learn.microsoft.com/en-us/azure/site-recovery/azure-to-azure-how-to-reprotect)
 * [Failback Azure VMs](https://learn.microsoft.com/en-us/azure/site-recovery/azure-to-azure-tutorial-failback)
 * [Enable Replication for Azure VMs](https://learn.microsoft.com/en-us/azure/site-recovery/azure-to-azure-tutorial-enable-replication)
-
-

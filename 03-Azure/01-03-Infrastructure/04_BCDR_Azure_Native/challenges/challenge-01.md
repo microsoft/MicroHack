@@ -1,6 +1,6 @@
 # Challenge 1 - Understand the Disaster Recovery (DR) terms and define a DR strategy
 
-**[Home](../Readme.md)** - [Next Challenge Solution](challenge-02.md)
+**[Home](../Readme.md)** - [Next Challenge](challenge-02.md)
 
 # Contoso Ltd - Business Continuity and Disaster Recovery (BCDR) Strategy
 

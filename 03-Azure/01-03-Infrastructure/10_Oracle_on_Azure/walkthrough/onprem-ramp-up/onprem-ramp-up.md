@@ -189,7 +189,7 @@ helm install ogghack oggfree/goldengate-microhack-sample --values gghack.yaml -n
 
 ~~~text
 NAME: ogghack
-LAST DEPLOYED: Tue Oct 21 15:58:24 2025
+LAST DEPLOYED: Wed Nov 12 15:33:39 2025
 NAMESPACE: microhacks
 STATUS: deployed
 REVISION: 1
@@ -200,14 +200,17 @@ Final NOTES:
 Please wait about 2 Minutes for the source database to be completely up and loaded.
 
 You can already try out Your sqlplus command line by using this URL in Your browser:
-https://gghack.4.182.95.155.nip.io/sqlplus/vnc.html
+https://gghack.4.251.147.64.nip.io/sqlplus/vnc.html
 
 Alternatively, have a look at Your personal jupyter notebook:
-https://gghack.4.182.95.155.nip.io/jupyter/
+https://gghack.4.251.147.64.nip.io/jupyter/
 Just enter the password "Welcome1234" when asked and then open the CPAT analysis notebook.
 
-Once the DB is ready, GOldenGate Sync should be set up too. Check it out right here:
-https://gghack.4.182.95.155.nip.io
+Once the DB is ready, GoldenGate Sync should be set up too. Check it out right here:
+https://gghack.4.251.147.64.nip.io
+
+...and for GoldenGate for Distributed Applications, check this host name:      
+https://daagghack.4.251.147.64.nip.io
 
 Have fun !
 ~~~
@@ -244,7 +247,8 @@ $podInstanteClientName=kubectl get pods -n microhacks | Select-String 'ogghack-g
 # login to the pod instantclient
 kubectl exec -it -n microhacks $podInstanteClientName -- /bin/bash
 # log into ADB with admin via sqlplus, replace the TNS connection string with your own
-sqlplus admin@'(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=zeii0mxy.adb.eu-paris-1.oraclecloud.com))(connect_data=(service_name=gc2401553d1c7ab_adbuser01_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))' # Replace with your TNS connection string
+sqlplus admin@'(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=t6bchxz9.adb.eu-paris-1.oraclecloud.com))(connect_data=(service_name=gc2401553d1c7ab_user00adb2025111201_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))' # Replace with your TNS connection string
+# Enter your password e.g. Welcome1234#
 ~~~
 
 Inside the sqlplus session, run the following commands to verify the SH2 schema and the GoldenGate GGADMIN user have been created successfully in the ADB instance.
@@ -297,6 +301,19 @@ SH2
 OPEN
 ~~~
 
+Exit sqlplus
+
+~~~sql
+exit
+~~~
+
+Exit instantclient pod
+
+~~~bash
+exit
+~~~
+
+
 ## 💡 Tips and Tricks
 
 ### � Troubleshooting Init:ErrImagePull Issues
@@ -321,68 +338,19 @@ helm list -n microhacks
 helm uninstall ogghack -n microhacks
 ~~~
 
-**Solution 1: Create Oracle Container Registry Secret**
-```powershell
-# Create a docker registry secret for Oracle Container Registry
-# You need Oracle Cloud credentials (username/auth token)
-kubectl create secret docker-registry ocir-secret \
-  --docker-server=fra.ocir.io \
-  --docker-username='<your-oracle-cloud-username>' \
-  --docker-password='<your-auth-token>' \
-  --docker-email='<your-email>' \
-  -n microhacks
-```
+### Check Network Connectivity**
 
-**Solution 2: Use Alternative Image Repository**
-If OCIR access is not available, you may need to use alternative container images or configure the AKS cluster to access Oracle's public repositories.
-
-**Solution 3: Check Network Connectivity**
 ```powershell
 # Test connectivity to Oracle Container Registry from AKS nodes
 kubectl run test-connectivity --image=nginx --rm -it --restart=Never -- curl -I https://fra.ocir.io
 ```
 
-**Solution 4: Restart AKS Nodes (if I/O errors persist)**
+### Restart AKS Nodes (if I/O errors persist)**
+
 ```powershell
 # If there are persistent I/O errors, restart the AKS nodepool
 az aks nodepool update --resource-group $rgAKS --cluster-name $AKSClusterName --name agentpool --enable-cluster-autoscaler
 ```
-
-**Solution 5: Delete the namespace microhacks of the AKS cluster**
-If the namespace microhacks needs to be deleted after the helm charts are uninstalled and  stuck because a Persistent Volume Claim (PVC) was in Terminating status you need to patched the PVC to remoe finalizers that were preventing deletion. Following the following steps.
-
-  # 1. Check what's preventing namespace deletion
-  ```powershell
-  kubectl get all -n microhacks
-  ```
-
-  # 2. Remove finalizers from stuck PVCs
-  ```powershell
-  kubectl patch pvc <pvc-name> -n microhacks -p "{`"metadata`":{`"finalizers`":[]}}" --type=merge
-  ```
-  # 3. Force delete stuck pods
-  ```powershell
-  kubectl delete pods --all -n microhacks --force --grace-period=0
-  ```
-  # 4. Delete the namespace
-
-In case the ADB is not reachable the namespace microhacks can be deleted and installed from the beginning by following the subsequent steps: 
-
-  ~~~Powershell
-  helm uninstall ogghack -n microhacks
-
-  kubectl get all -n microhacks
-  ~~~
-  ~~~text
-  output: 
-  No resources found in microhacks namespace.
-  ~~~
-
-  ~~~powershell
-  # If the services inside the namespace are not automatically deleted. 
-  kubectl delete namespace microhacks
-  ~~~
-
 
 ### 🔎 Show the logs of the GoldenGate Prepare Job
 
@@ -425,6 +393,21 @@ PL/SQL procedure successfully completed.
 SQL> Disconnected from Oracle Database 23ai Enterprise Edition Release 23.0.0.0.0 - for Oracle Cloud and Engineered Systems
 Version 23.10.0.25.10
 Cloning into 'db-sample-schemas'...
+~~~
+
+### 🔎 Show the logs of the GoldenGate Big Data Container
+
+~~~powershell
+# login to aks if not already done
+az aks get-credentials -g $rgAKS -n $AKSClusterName --overwrite-existing
+# get prep job pod name
+$podBigDataName = kubectl get pods -n microhacks | Select-String 'ogghack-goldengate-microhack-sample-daa' | ForEach-Object { ($_ -split '\s+')[0] }
+kubectl logs -n microhacks $podBigDataName
+
+# To check for image pull issues:
+kubectl describe pod $podBigDataName -n microhacks | Select-String -Pattern "Failed|Error|Warning" -A 2 -B 2
+
+~~~text
 ~~~
 
 

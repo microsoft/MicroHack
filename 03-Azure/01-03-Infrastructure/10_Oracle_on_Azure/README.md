@@ -30,6 +30,7 @@ Furthermore we will address the integration of ODAA into the existing Azure nati
 
 ## 📋 Prerequisites
 
+- Powershell Terminal
 - 🔧 install Azure CLI
 - ⚓ install kubectl
 - install Helm

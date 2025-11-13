@@ -68,8 +68,8 @@ Inside the instantclient pod, run the following commands:
 ~~~bash
 # Example DIY quick test script (bash + sqlplus): 
 
-sqlplus admin@'(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=zeii0mxy.adb.eu-paris-1.oraclecloud.com))(connect_data=(service_name=gc2401553d1c7ab_adbuser01_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))' # replace with your TNS connection string
-
+sqlplus admin@'(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=xsbkef2g.adb.eu-paris-1.oraclecloud.com))(connect_data=(service_name=gc2401553d1c7ab_user00_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))' # replace with your TNS connection string
+# Enter your password e.g. Welcome1234#
 ~~~
 
 Execute the Setup
@@ -250,6 +250,7 @@ Create a customized performance testing job with your actual ADB credentials:
 Copy-Item "resources\infra\k8s\adbping-job.yaml" "adbping-job-custom.yaml"
 
 # Configure your ADB connection details
+
 $ADB_PASSWORD = "Welcome1234#"  # Replace with your actual ADB password
 $ADB_TNS = $trgConn  # Use the TNS connection string obtained from docs\odaa-get-token.md
 

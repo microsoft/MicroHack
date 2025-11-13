@@ -10,7 +10,7 @@ $subAKS="sub-mh1" # replace with your AKS subscription name
 # Make sure your cli points to the AKS subscription
 az account set --subscription $subAKS
 # log in your AKS cluster if not already done
-$rgAKS="rg-aks-user01" # replace with your AKS resource group name
+$rgAKS="aks-user01" # replace with your AKS resource group name
 $AKSClusterName="aks-user01" # replace with your AKS cluster name
 az aks get-credentials -g $rgAKS -n $AKSClusterName --overwrite-existing
 

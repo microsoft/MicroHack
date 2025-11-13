@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: connping-deployment
+  namespace: adb-perf-test
+  labels:
+    app: connping
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: connping
+  template:
+    metadata:
+      labels:
+        app: connping
+    spec:
+      containers:
+      - name: connping
+        image: odaamh.azurecr.io/connping:v1.2
+        command: ["/bin/sleep"]
+        args: ["3600"]
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        env:
+        - name: ORACLE_HOME
+          value: "/usr/lib/oracle/23/client64"
+        - name: TNS_ADMIN
+          value: "/opt/oracle/wallet"

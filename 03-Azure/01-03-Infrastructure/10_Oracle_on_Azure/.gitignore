@@ -5,6 +5,8 @@ NOTES.md
 
 gghack.yaml
 ggfabric.yaml
+adbping-job.yaml
+connping-job.yaml
 resources/infra/terraform/user_credentials.json
 resources/infra/terraform/mhodaa-sp-credentials.json
 resources/infra/terraform/*-sp-credentials.json

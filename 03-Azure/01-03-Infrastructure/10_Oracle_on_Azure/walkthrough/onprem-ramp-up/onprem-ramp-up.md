@@ -23,15 +23,15 @@ Helm is a package manager for Kubernetes that allows you to define, install, and
 az login --use-device-code
 # make sure you select the subscription which starts with "sub-team", do not choose the subscription called "sub-mhodaa".
 # Assign the subscription name to a variable
-$subAKS="sub-mh0" # Replace with your Subscription Name called sub-mh[assigend number].
+$subAKS="sub-mh2" # Replace with your Subscription Name.
 ~~~
 
 ## 🌍 Define required environment variables
 
 ~~~bash
 # log into your AKS cluster if not already done
-$rgAKS="aks-user00" # replace with your AKS resource group name
-$AKSClusterName="aks-user00" # replace with your AKS cluster name
+$rgAKS="aks-user02" # replace with your AKS resource group name
+$AKSClusterName="aks-user02" # replace with your AKS cluster name
 ~~~
 
 ## ⚓ Connect to AKS
@@ -54,8 +54,8 @@ helm repo update
 
 
 ~~~powershell
-# retrieve the external IP of the nginx ingress controller. The assignment of a public IP can take a while!
-$UserName = "user00" # replace with your user name
+# retrieve the external IP of the nginx ingress controller
+$UserName = "user02" # replace with your user name
 # create a copy of the template file
 cp resources/template/gghack.yaml .
 # replace the placeholder with the actual external IP
@@ -68,8 +68,9 @@ The value of vhostName should look like this:
 
 ~~~yaml
 microhack:
-  user: user00
+  user: user02
 ### specify the name of an existing secret that contains the ogg admin username and password
+ogg:
 ~~~
 
 ## 🔧 Replace Goldengate configuration File Ingress Public IP in gghack.yaml
@@ -88,14 +89,14 @@ After you have the external IP address, replace the placeholder in the gghack.ya
 # replace the placeholder with the actual external IP
 (Get-Content gghack.yaml) -replace '<INGRESS-PUBLIC-IP>', $EXTIP.Trim() | Set-Content gghack.yaml
 # show line 44 till 50 with powershell of gghack.yaml
-(Get-Content gghack.yaml)[42..57]
+(Get-Content gghack.yaml)[41..55]
 ~~~
 
 The value of vhostName should look like this:
 
 ~~~yaml
 services:
-  ### You can choose to create an ingress in front of the service 
+  ### You can choose to create an ingress in front of the service
   ### with a virtual host name of ggate.<suffix>
   external:
     ### set type to either ingress or none if You need something customized
@@ -104,7 +105,7 @@ services:
     ingressClass: nginx
     ### uses default SSL certificate of gateway/controller or specify a custom tls-secret here
     tlsSecretName: ggate-tls-secret
-    vhostName: gghack.4.251.147.64.nip.io # public IP address of
+    vhostName: gghack.172.189.91.152.nip.io # public IP address of
   internal:
     type: ClusterIP
     plainPort: 8080
@@ -121,7 +122,7 @@ After you have retrieved the TNS connection string and assigned it to the `$trgC
 
 ~~~powershell
 # If you did follow the instruction the following line is not needed because $trgConn is already defined 
-$trgConn="(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=xsbkef2g.adb.eu-paris-1.oraclecloud.com))(connect_data=(service_name=gc2401553d1c7ab_user00_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))"
+$trgConn="(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=y1jilkjp.adb.eu-paris-1.oraclecloud.com))(connect_data=(service_name=gc2401553d1c7ab_user02_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))"
 # replace in value in your gghack.yaml
 (Get-Content gghack.yaml) -replace '<ODAA-CONNECTION-STRING>', $trgConn | Set-Content gghack.yaml
 # show line 8 till 11 with powershell of gghack.yaml
@@ -133,7 +134,7 @@ Your connection string in your gghack.yaml should look similar the yaml below. I
 ~~~yaml
 databases:
   # value for source database (23ai free container) is calculated.
-  trgConn: "(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=xsbkef2g.adb.eu-paris-1.oraclecloud.com))(connect_data=(service_name=gc2401553d1c7ab_user00_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))"
+  trgConn: "(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=y1jilkjp.adb.eu-paris-1.oraclecloud.com))(connect_data=(service_name=gc2401553d1c7ab_user02_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))"
 ~~~
 
 ## 🚀 Install GoldenGate Pods
@@ -151,7 +152,7 @@ Like mentioned at the beginning of this challenge, we will install several compo
 
 ~~~powershell
 # Prompt for the password that will be used for all three components - Please ask if you do not know the one!!!
-$password = <REPLACE-WITH-YOUR-ADB-PASSWORD> # e.g., "Welcome1234#"
+$password = <REPLACE-WITH-YOUR-ADB-PASSWORD> # e.g. $password="Welcome1234#"
 
 # create the namespace everything goes into
 kubectl create namespace microhacks
@@ -237,6 +238,7 @@ ogghack-goldengate-microhack-sample-ogg-787f954698-kzjpl          1/1     Runnin
 
 ✅ After the job is completed, the local database, which is running inside the AKS cluster, has been migrated to the ODAA ADB instance via Oracle Data Pump.
 
+> IMPORTANT: While you are waiting feel free to already work on the next challenge [Challenge 5: Measure Network Performance to Your Oracle Database@Azure Autonomous Database](../perf-test-odaa/perf-test-odaa.md).
 
 ### 🔌 Connect to the ADB Oracle Database
 
@@ -246,7 +248,7 @@ $podInstanteClientName=kubectl get pods -n microhacks | Select-String 'ogghack-g
 # login to the pod instantclient
 kubectl exec -it -n microhacks $podInstanteClientName -- /bin/bash
 # log into ADB with admin via sqlplus, replace the TNS connection string with your own
-sqlplus admin@'(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=t6bchxz9.adb.eu-paris-1.oraclecloud.com))(connect_data=(service_name=gc2401553d1c7ab_user00adb2025111201_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))' # Replace with your TNS connection string
+sqlplus admin@'(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=y1jilkjp.adb.eu-paris-1.oraclecloud.com))(connect_data=(service_name=gc2401553d1c7ab_user02_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))' # Replace with your TNS connection string
 # Enter your password e.g. Welcome1234#
 ~~~
 
@@ -280,12 +282,95 @@ Exit sqlplus
 exit
 ~~~
 
+### 🔎 Verify replication
+
+Replication between our OnPrem Database and the ADB is done via GoldenGate. We can verify that the replication is working by creating a copy of the SH.SALES table in the OnPrem database and see if it appears in the ADB as well as SH2.SALES.
+
+Inside the instantclient pod, connect via sqlplus with ther alias to the onptrm database
+
+~~~bash
+# show current alias
+alias
+# connect via sqlplus with alias
+sql
+~~~
+
+~~~sql
+-- list all tables in SH schema
+SELECT table_name FROM all_tables WHERE owner = 'SH';
+~~~
+
+~~~text
+TABLE_NAME
+--------------------------------------------------------------------------------
+DR$SUP_TEXT_IDX$C
+DR$SUP_TEXT_IDX$B
+FWEEK_PSCAT_SALES_MV
+CAL_MONTH_SALES_MV
+SALES
+COSTS
+DR$SUP_TEXT_IDX$N
+
+18 rows selected.
+~~~
+
+~~~sql
+-- count the records in SH.SALES table
+SELECT COUNT(*) FROM SH.SALES;
+~~~
+
+~~~text
+  COUNT(*)
+----------
+    918843
+~~~
+
+~~~sql
+-- create copy from SH.SALES to SH.SALES_COPY
+CREATE TABLE SH.SALES_COPY AS SELECT * FROM SH.SALES;
+-- count the records in SH.SALES_COPY table
+SELECT COUNT(*) FROM SH.SALES_COPY;
+~~~
+
+~~~text
+  COUNT(*)
+----------
+    918843
+~~~
+
+~~~sql
+exit
+~~~
+
+~~~bash
+sqlplus admin@'(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=y1jilkjp.adb.eu-paris-1.oraclecloud.com))(connect_data=(service_name=gc2401553d1c7ab_user02_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))' # Replace with your TNS connection string
+# Enter your password e.g. Welcome1234#
+~~~
+
+~~~sql
+-- count the records in SH.SALES_COPY table
+SELECT COUNT(*) FROM SH2.SALES_COPY;
+~~~
+
+~~~text
+  COUNT(*)
+----------
+    918843
+~~~
+
+This does proof that GoldenGate is working and data is replicated from the onprem database to the ODAA ADB instance.
+
+Exit sqlplus
+
+~~~sql
+exit
+~~~
+
 Exit instantclient pod
 
 ~~~bash
 exit
 ~~~
-
 
 ## 💡 Tips and Tricks
 
@@ -384,8 +469,5 @@ kubectl describe pod $podBigDataName -n microhacks | Select-String -Pattern "Fai
 
 ~~~text
 ~~~
-
-
-
 
 [Back to workspace README](../../README.md)

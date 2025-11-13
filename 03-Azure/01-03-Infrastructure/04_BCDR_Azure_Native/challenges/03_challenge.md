@@ -14,6 +14,11 @@ In Challenge 3, you will learn how to protect Azure VMs with Azure Site Recovery
 * Task 2: Perform a disaster recovery drill, create recovery plan and run a test failover.
 * Task 3: Run a production failover from Germany West Central to Sweden Central region and failback again from Sweden to Germany.
 
+> [!IMPORTANT]
+> To enable inter-regional disaster recovery (DR), you may need to grant the Recovery Services Vault appropriate **access permissions**.
+> 
+> 💡 **Need help?** Refer to the [step-by-step guidance](../walkthrough/challenge-3/solution.md#enable-system-managed-identity-for-the-recovery-services-vault) in the solution.
+
 ### Success Criteria ✅
 
 * You enabled the replication for all related components of the web application to the Sweden Central region.

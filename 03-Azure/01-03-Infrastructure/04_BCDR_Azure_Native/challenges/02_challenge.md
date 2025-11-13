@@ -16,9 +16,19 @@ In this challenge, you will learn how to back up and restore your Linux Virtual 
 2. Enable Azure Backup for Blobs
 3. Restore a VM in Azure.
 
+> [!IMPORTANT]
+> To enable backup for the storage account, you need to grant the Backup Vault appropriate **access permissions**.
+> 
+> 💡 **Need help?** Refer to the [step-by-step guidance](../walkthrough/challenge-2/solution.md#enable-system-managed-identity-for-the-backup-vault-and-copy-the-mi-object-id) in the solution.
+
 ### Challenge 2.2 - Protect in Azure with Disaster Recover (DR) within an Azure Region
 4. Set up disaster recovery for the Linux VM in the primary region.
 5. Simulate a failover from one part of the primary region to another part within the same region.
+
+> [!IMPORTANT]
+> To enable disaster recovery (DR), you may need to grant the Recovery Services Vault appropriate **access permissions**.
+> 
+> 💡 **Need help?** Refer to the [step-by-step guidance](../walkthrough/challenge-2/solution.md#enable-system-managed-identity-for-the-recovery-services-vault) in the solution.
 
 ### Success Criteria ✅
 

@@ -1,6 +1,6 @@
 # Clone Partial Repository
 
-This guide shows how to clone only the Oracle on Azure folder from the repository without downloading the entire project history.
+This guide shows how to clone only the "Oracle on Azure" project from the GIT repository without downloading the entire project history.
 
 > NOTE: During Challenge we did setup Azure CloudShell, feel free to use the Azure CloudShell to clone the repo. Alternative you can execute this commands from your local PC.
 

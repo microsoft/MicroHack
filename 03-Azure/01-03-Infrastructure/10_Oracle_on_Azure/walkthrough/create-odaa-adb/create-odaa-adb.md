@@ -2,14 +2,16 @@
 
 [Back to workspace README](../../README.md)
 
-1. Deploy an Oracle ADB in Azure and the required preparations like the availability of a delegated subnet for the accessibility of the database. 
-2. Furthermore you will deploy in this chapte an ADB database via the Azure Portal.
-3. Finally if the existing vnet peering between the AKS - and database subscription is available and correctly configured.
+1. Registration of the Azure resource provider in Azure. In our case they are alreay deployed but can be checked if they are registered - see [Oracle Documentation: Oracle Database at Azure Network Enhancements](https://learn.microsoft.com/en-us/azure/oracle/oracle-db/oracle-database-network-plan)
+2. Check the availability of a vnet and delegated subnet for the deployment of the database.
+3. Deploy an Oracle ADB in Azure. 
+4. Furthermore you will deploy in this chapter an ADB database via the Azure Portal.
+5. Finally if the existing vnet peering between the AKS - and database subscription is available and correctly configured.
 
 ## 🛰️ Delegated Subnet Design (Prerequisites)
 
 - ODAA Autonomous Database can be deployed within Azure Virtual Networks, in delegated subnets that are delegated to Oracle Database@Azure.
-- Client subnet CIDR must fall between /27 and /22 (inclusive).
+- Client subnet CIDR falls in general between /27 and /22 (inclusive).
 - Valid ranges must use private IPv4 addresses and must avoid the reserved 100.106.0.0/16 and 100.107.0.0/16 blocks used for the interconnect.
 
 A more detailed description can be found here: [Oracle Documentation: Oracle's delegated subnet guidance](https://docs.oracle.com/en-us/iaas/Content/database-at-azure/network-delegated-subnet-design.htm)
@@ -64,10 +66,10 @@ Select **Create Oracle Autonomous Database** and "create" to start the creation 
 6. Storage autoscaling: off
 7. Backup retention period in days: 1 days
 8. Administrator password: (e.g. Welcom1234!)
-9. License type: BYOL
+9. License type: License included
 10. Oracle database edition: Enterprise Edition
 
-![An image of the Oracle Autonomous database setting is shown here.](media/adb_creation1.png)
+![An image of the Oracle Autonomous database setting is shown here.](media/adb_creation_01.jpg)
 
 ### Network setting
 
@@ -83,11 +85,11 @@ Review the final summary and click "create"
 
 ### Deployment finished
 
-The deployment will take some minutes. 
+The deployment will take between 10 to 15 minutes. 
 
 ![ODAA deployment in progress](media/image%20copy%2011.png)
 
-After the deployment is finished you see the overview page of your newly created Autonomous Database.
+After the deployment is finished you see the overview page of your new created Autonomous Database.
 
 
 

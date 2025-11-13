@@ -9,7 +9,7 @@ To connect to the Oracle Database you will need the TNS connection string.
 3. 📋 Select "Oracle Autonomous Database Service" from the left menu.
 4. 🎪 Select your created ADB instance.
 5. 🔗 Select "Connection" from the left menu.
-6. 🔒 Select high, TLS Authentication=TLS Connection String
+6. 🔒 Select High profile, TLS Authentication=TLS Connection String
 
 ## 🔧 Alternative you can use the Azure CLI to retrieve the connection string.
 

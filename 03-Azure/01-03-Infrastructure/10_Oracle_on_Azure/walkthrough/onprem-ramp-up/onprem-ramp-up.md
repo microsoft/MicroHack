@@ -4,13 +4,13 @@
 
 After you successfully created the ODAA Autonomous Database instance, you will now setup Oracle Data Pump and GoldenGate to replicate data from an on-premises Oracle database running in Azure Kubernetes Service (AKS) to the ODAA ADB instance.
 
-Before you continue with the challenge verify that the Adress space 
+Before you continue with the challenge copy the Adress space (for example 10.0.0.0/16) in the vnet overview of the AKS resource group.
 
 We will install the following components into the AKS cluster under the Namespace "microhacks" via helm:
 
-- Oracle Database (prefilled with the Schema SH1)
-- Oracle Data Pump to import the SH1 schema into the ODAA ADB instance as SH2 schema
-- Oracle GoldenGate to replicate data changes from SH1 schema to SH2 schema in near real-time
+- An Oracle Database free edition 23ai (prefilled with the Schema SH1)
+- Oracle Data Pump to do the initial import of the SH schema into the ODAA ADB instance as SH2 schema 
+- Oracle GoldenGate to replicate data changes from SH schema to SH2 schema in near real-time
 - Oracle Instant Client to connect to the ODAA ADB instance via sqlplus
 
 ## 📦 What is Kubernetes Helm?
@@ -23,7 +23,7 @@ Helm is a package manager for Kubernetes that allows you to define, install, and
 az login --use-device-code
 # make sure you select the subscription which starts with "sub-team", do not choose the subscription called "sub-mhodaa".
 # Assign the subscription name to a variable
-$subAKS="sub-mh0" # Replace with your Subscription Name.
+$subAKS="sub-mh0" # Replace with your Subscription Name called sub-mh[assigend number].
 ~~~
 
 ## 🌍 Define required environment variables
@@ -44,7 +44,7 @@ az aks get-credentials -g $rgAKS -n $AKSClusterName --overwrite-existing
 ## 🛠️ Install OnPrem on AKS with helm
 
 ~~~powershell
-# Install golden gate
+# Install golden gate  
 helm repo add oggfree https://ilfur.github.io/VirtualAnalyticRooms
 # Do an update to get the newest chart templates
 helm repo update
@@ -54,7 +54,7 @@ helm repo update
 
 
 ~~~powershell
-# retrieve the external IP of the nginx ingress controller
+# retrieve the external IP of the nginx ingress controller. The assignment of a public IP can take a while!
 $UserName = "user00" # replace with your user name
 # create a copy of the template file
 cp resources/template/gghack.yaml .
@@ -128,8 +128,7 @@ $trgConn="(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(
 (Get-Content gghack.yaml)[10..13]
 ~~~
 
-Your connection string in your gghack.yaml should look similar the yaml below. If the connection string is not copied successful into the gghack.yaml file you can do it manually as well be copy to connection string from the ADB Azure Portal und connections. Choose the connection for high.
-
+Your connection string in your gghack.yaml should look similar the yaml below. If the connection string is not copied successful into the gghack.yaml file, you can do it manually as well by copy the connection string from the ADB Azure Portal under section connections. Choose the connection for High profile.
 
 ~~~yaml
 databases:
@@ -197,7 +196,7 @@ TEST SUITE: None
 NOTES:
 Final NOTES:
 
-Please wait about 2 Minutes for the source database to be completely up and loaded.
+Please wait about 8 Minutes for the source database to be completely up and loaded.
 
 You can already try out Your sqlplus command line by using this URL in Your browser:
 https://gghack.4.251.147.64.nip.io/sqlplus/vnc.html
@@ -275,32 +274,6 @@ SELECT COUNT(*) FROM all_tables WHERE owner = 'SH2';
         18
 ~~~
 
-Verify SH user and GGADMIN user in ADB
-
-~~~sql
-select USERNAME from ALL_USERS where USERNAME like 'SH%';
-~~~
-
-~~~text
-USERNAME
---------------------------------------------------------------------------------
-SH
-SH2
-~~~
-
-~~~sql
-select USERNAME, ACCOUNT_STATUS from DBA_USERS where USERNAME like 'SH2';
-~~~
-
-~~~text
-USERNAME
---------------------------------------------------------------------------------     
-ACCOUNT_STATUS
---------------------------------
-SH2
-OPEN
-~~~
-
 Exit sqlplus
 
 ~~~sql
@@ -336,6 +309,8 @@ az aks get-credentials -g $rgAKS -n $AKSClusterName --overwrite-existing
 helm list -n microhacks 
 # Uninstall the Helm release
 helm uninstall ogghack -n microhacks
+# Verify the pods inside the namespace microhacks are deletled
+kubectl get pods -n microhacks
 ~~~
 
 ### Check Network Connectivity**

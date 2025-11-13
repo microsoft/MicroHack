@@ -495,5 +495,4 @@ kubectl describe pod $podBigDataName -n microhacks | Select-String -Pattern "Fai
 ~~~text
 ~~~
 
-
 [Back to workspace README](../../README.md)

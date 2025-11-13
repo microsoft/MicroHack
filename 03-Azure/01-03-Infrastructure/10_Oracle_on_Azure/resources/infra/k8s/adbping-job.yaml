@@ -29,7 +29,7 @@ spec:
           echo "Threads: 3, Duration: 30 seconds"
           echo ""
           
-          adbping -u "$USER" -p "$PASSWORD" -o -l "$TNS" -c java -t 3 -d 30
+          adbping -u "$USER" -p "$PASSWORD" -o -l "$TNS" -c java -t 3 -d 90
           
           echo ""
           echo "✅ Performance test completed!"

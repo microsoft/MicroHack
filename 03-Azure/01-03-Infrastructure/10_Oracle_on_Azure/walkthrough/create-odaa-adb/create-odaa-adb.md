@@ -2,14 +2,9 @@
 
 [Back to workspace README](../../README.md)
 
-
-Subsequent you find all related information to 
 1. Deploy an Oracle ADB in Azure and the required preparations like the availability of a delegated subnet for the accessibility of the database. 
 2. Furthermore you will deploy in this chapte an ADB database via the Azure Portal.
 3. Finally if the existing vnet peering between the AKS - and database subscription is available and correctly configured.
-
-<br>
-<hr>
 
 ## 🛰️ Delegated Subnet Design (Prerequisites)
 
@@ -20,6 +15,8 @@ Subsequent you find all related information to
 A more detailed description can be found here: [Oracle Documentation: Oracle's delegated subnet guidance](https://docs.oracle.com/en-us/iaas/Content/database-at-azure/network-delegated-subnet-design.htm)
 
 **NOTE**: For this Microhack, we have already created the corresponding VNets and subnets, so no additional action is required in this step.
+
+![Already created delegated subnet](media/image%20copy%205.png)
 
 ## 🧭 What is an Azure Delegated Subnet?
 
@@ -36,29 +33,26 @@ The delegate subnet is part of the vnet inside your ODAA subscription.
 
 ## 🛠️ Create an ODAA Autonomous Database Instance
 
-Please follow the instructions in the following link to create an ODAA Autonomous Database instance within the pre-created delegated subnet.
+### Login into the [Azure portal](https://portal.azure.com)
 
-After you have successfully logged into the Azure portal, you will find the following resource groups which are of interest for you during this Microhack:
+In the Azure portal search for the Oracle Services and select **Oracle Database@Azure**.
 
-- **aks-user00** - Team members of user00 will work on the same deployed AKS and add additional pods during the microhack
-- **odaa-user00** - Used to deploy your ADB shared database in the microhack
+![Azure portal Oracle Database@Azure](media/image%20copy%206.png)
 
-Please use the resource groups you are assigned to based on the number at the end of the resource group names. For example, aks-user00 corresponds to the user user00@cptazure.org who logged into the Azure portal.
+### Select Oracle Autonomous Database
 
-### Use the following parameters when creating the ODAA Autonomous Database instance
+Select **Create Oracle Autonomous Database** and "create" to start the creation of the Autonomous Database.
 
-- **Azure Subscription**: sub-mhodaa
-- **Azure Resource Group**: odaa-user00 *(replace with your user number)*
-- **Azure Region**: France Central
-- **VNet**: odaa-user00 *(replace with your user number)*
-- **Subnet**: odaa-user00 *(replace with your user number)*
+![Azure portal Oracle Autonomous Database](media/image%20copy%207.png)
 
-To be considered during the deployment:
+### Define Azure Basics
 
-### Create the Oracle Autonomous Database
+- Subscription: Select "sub-mhodaa"
+- Resource Group: Select "odaa-user<your user number>"
+- Database name: user<your user number>
+- Region: France Central
 
-1. In the Azure portal search for the Oracle Services and select **Oracle Database@Azure**.
-
+![Azure portal Oracle Autonomous Database Basics](media/image%20copy%208.png)
 
 ### Settings of the ADB
 
@@ -69,7 +63,7 @@ To be considered during the deployment:
 5. Storage: 20 GB
 6. Storage autoscaling: off
 7. Backup retention period in days: 1 days
-8. Administrator password: <font color=red><"Assigned password"></font>
+8. Administrator password: (e.g. Welcom1234!)
 9. License type: BYOL
 10. Oracle database edition: Enterprise Edition
 
@@ -79,11 +73,25 @@ To be considered during the deployment:
 
 1.  Choose for the connectivty the Access type: Managed private virtual network IP only
 
-![An image of the Oracle Autonomous database setting is shown here.](media/adb_creation2.png)
+![An image of the Oracle Autonomous database setting is shown here.](media/image%20copy%209.png)
 
 ### Final summary of the settings of the ADB share
 
-![An image of the Oracle Autonomous database setting is shown here.](media/adb_creation3.png)
+Review the final summary and click "create"
+
+![Final summary of ODAA Setup](media/image%20copy%2010.png)
+
+### Deployment finished
+
+The deployment will take some minutes. 
+
+![ODAA deployment in progress](media/image%20copy%2011.png)
+
+After the deployment is finished you see the overview page of your newly created Autonomous Database.
+
+
+
+### Further Read
 
 A complete documentation is available on under the following links.
 
@@ -101,13 +109,13 @@ Follow the instructions in the [Clone Partial Repository](../../docs/clone-parti
 After the ADB was deployed successful, check if the ADB is visible on the Azure Portal and OCI side. Important to mention on the OCI side is that the region is set to <b> Fracne Central</b> and the Compartment is chosen properly.
 
 To access the OCI console use the following link after you are logged in into the Azure portal under your newly created ODAA Autonomous Database resource:
-![Azure link to OCI console](media/image%20copy.png)
+![Azure link to OCI console](media/image%20copy%2012.png)
 
 At the OCI console login page selcet the "Entra ID" link:
 ![OCI login via Entra ID](media/image%20copy%202.png)
 
 You will land on the Oracle ADB databases overview page:
-![OCI ADB overview page](media/image%20copy%203.png)
+![OCI ADB overview page](media/image%20copy%2013.png)
 
 <!-- The compartment structure in OCI looks like:
 ~~~text

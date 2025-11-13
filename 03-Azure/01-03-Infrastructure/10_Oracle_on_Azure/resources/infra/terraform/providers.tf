@@ -275,6 +275,44 @@ provider "azurerm" {
   }
 }
 
+# Provider for Cloud Shell storage subscription (may be different from ODAA subscription)
+provider "azurerm" {
+  alias                           = "cloudshell_storage"
+  subscription_id                 = var.shared_cloudshell_subscription_id != null ? var.shared_cloudshell_subscription_id : var.odaa_subscription_id
+  tenant_id                       = var.odaa_tenant_id
+  client_id                       = var.client_id
+  client_secret                   = var.client_secret
+  auxiliary_tenant_ids            = local.aks_auxiliary_tenant_ids
+  resource_provider_registrations = "none"
+
+  features {
+    resource_group {
+      prevent_deletion_if_contains_resources = false
+    }
+
+    key_vault {
+      purge_soft_delete_on_destroy               = true
+      recover_soft_deleted_key_vaults            = true
+      purge_soft_deleted_certificates_on_destroy = true
+      purge_soft_deleted_keys_on_destroy         = true
+      purge_soft_deleted_secrets_on_destroy      = true
+    }
+
+    virtual_machine {
+      delete_os_disk_on_deletion     = true
+      skip_shutdown_and_force_delete = false
+    }
+
+    managed_disk {
+      expand_without_downtime = true
+    }
+
+    log_analytics_workspace {
+      permanently_delete_on_destroy = true
+    }
+  }
+}
+
 # provider "azapi" {
 #   # AzAPI provider configuration
 #   # This provider is used for Oracle Database on Azure resources

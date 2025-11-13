@@ -41,40 +41,6 @@ function Write-ColorOutput {
     Write-Host $Message -ForegroundColor $Color
 }
 
-function Test-Prerequisites {
-    Write-ColorOutput "`n==> Checking prerequisites..." "Cyan"
-    
-    # Check helm
-    try {
-        $helmVersion = helm version --short 2>&1
-        Write-ColorOutput "  ✓ Helm CLI found: $helmVersion" "Green"
-    }
-    catch {
-        Write-ColorOutput "  ✗ Helm CLI not found. Please install helm from https://helm.sh/docs/intro/install/" "Red"
-        exit 1
-    }
-    
-    # Check kubectl
-    try {
-        $kubectlVersion = kubectl version --client --short 2>&1
-        Write-ColorOutput "  ✓ kubectl found" "Green"
-    }
-    catch {
-        Write-ColorOutput "  ✗ kubectl not found. Please install kubectl" "Red"
-        exit 1
-    }
-    
-    # Check terraform
-    try {
-        terraform version | Out-Null
-        Write-ColorOutput "  ✓ Terraform found" "Green"
-    }
-    catch {
-        Write-ColorOutput "  ✗ Terraform not found in PATH" "Red"
-        exit 1
-    }
-}
-
 function Get-TerraformOutput {
     Write-ColorOutput "`n==> Reading Terraform outputs..." "Cyan"
     
@@ -83,7 +49,7 @@ function Get-TerraformOutput {
         $kubeconfigJson = terraform output -json aks_kubeconfigs 2>&1
         
         if ($LASTEXITCODE -ne 0) {
-            Write-ColorOutput "  ✗ Failed to read terraform output. Make sure 'terraform apply' has been run successfully." "Red"
+            Write-ColorOutput "  Failed to read terraform output. Make sure 'terraform apply' has been run successfully." "Red"
             Write-ColorOutput "  Error: $kubeconfigJson" "Red"
             exit 1
         }
@@ -91,16 +57,16 @@ function Get-TerraformOutput {
         $kubeconfigs = $kubeconfigJson | ConvertFrom-Json
         
         if ($null -eq $kubeconfigs -or $kubeconfigs.PSObject.Properties.Count -eq 0) {
-            Write-ColorOutput "  ✗ No AKS clusters found in terraform output" "Red"
+            Write-ColorOutput "  No AKS clusters found in terraform output" "Red"
             exit 1
         }
         
-        Write-ColorOutput "  ✓ Found $($kubeconfigs.PSObject.Properties.Count) AKS cluster(s)" "Green"
+        Write-ColorOutput "  Found $($kubeconfigs.PSObject.Properties.Count) AKS cluster(s)" "Green"
         
         return $kubeconfigs
     }
     catch {
-        Write-ColorOutput "  ✗ Error reading terraform output: $_" "Red"
+        Write-ColorOutput "  Error reading terraform output: $_" "Red"
         exit 1
     }
 }
@@ -126,24 +92,24 @@ function Deploy-IngressController {
         $env:KUBECONFIG = $tempKubeconfig
         
         # Test cluster connectivity
-        Write-ColorOutput "    → Testing cluster connectivity..." "Gray"
+        Write-ColorOutput "    Testing cluster connectivity..." "Gray"
         $clusterInfo = kubectl cluster-info 2>&1
         
         if ($LASTEXITCODE -ne 0) {
-            Write-ColorOutput "    ✗ Cannot connect to cluster $ClusterName" "Red"
+            Write-ColorOutput "    Cannot connect to cluster $ClusterName" "Red"
             Write-ColorOutput "    Error: $clusterInfo" "Red"
             return $false
         }
         
-        Write-ColorOutput "    ✓ Connected to cluster" "Green"
+        Write-ColorOutput "    Connected to cluster" "Green"
         
         # Add ingress-nginx helm repo
-        Write-ColorOutput "    → Adding/updating ingress-nginx helm repository..." "Gray"
+        Write-ColorOutput "    Adding or updating ingress-nginx helm repository..." "Gray"
         helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx 2>&1 | Out-Null
         helm repo update 2>&1 | Out-Null
         
         # Install/Upgrade ingress-nginx
-        Write-ColorOutput "    → Deploying ingress-nginx v$HelmVersion..." "Gray"
+        Write-ColorOutput "    Deploying ingress-nginx v$HelmVersion..." "Gray"
         
         $helmArgs = @(
             "upgrade", "--install", "nginx-quick",
@@ -159,26 +125,26 @@ function Deploy-IngressController {
         $helmOutput = & helm $helmArgs 2>&1
         
         if ($LASTEXITCODE -ne 0) {
-            Write-ColorOutput "    ✗ Helm deployment failed for $ClusterName" "Red"
+            Write-ColorOutput "    Helm deployment failed for $ClusterName" "Red"
             Write-ColorOutput "    Error: $helmOutput" "Red"
             return $false
         }
         
-        Write-ColorOutput "    ✓ Ingress controller deployed successfully" "Green"
+        Write-ColorOutput "    Ingress controller deployed successfully" "Green"
         
         # Verify deployment
-        Write-ColorOutput "    → Verifying deployment..." "Gray"
+        Write-ColorOutput "    Verifying deployment..." "Gray"
         $pods = kubectl get pods -n $Namespace -l app.kubernetes.io/name=ingress-nginx -o json 2>&1 | ConvertFrom-Json
         
         if ($pods.items.Count -gt 0) {
             $runningPods = ($pods.items | Where-Object { $_.status.phase -eq "Running" }).Count
-            Write-ColorOutput "    ✓ Found $runningPods running pod(s) in namespace '$Namespace'" "Green"
+            Write-ColorOutput "    Found $runningPods running pod(s) in namespace '$Namespace'" "Green"
         }
         
         return $true
     }
     catch {
-        Write-ColorOutput "    ✗ Exception during deployment: $_" "Red"
+        Write-ColorOutput "    Exception during deployment: $_" "Red"
         return $false
     }
     finally {
@@ -212,26 +178,26 @@ function Uninstall-IngressController {
         $env:KUBECONFIG = $tempKubeconfig
         
         # Uninstall helm release
-        Write-ColorOutput "    → Uninstalling nginx-quick release..." "Gray"
+        Write-ColorOutput "    Uninstalling nginx-quick release..." "Gray"
         
         $helmOutput = helm uninstall nginx-quick --namespace $Namespace 2>&1
         
         if ($LASTEXITCODE -ne 0) {
-            Write-ColorOutput "    ⚠ Helm uninstall failed (release may not exist)" "Yellow"
+            Write-ColorOutput "    Helm uninstall failed (release may not exist)" "Yellow"
         }
         else {
-            Write-ColorOutput "    ✓ Helm release uninstalled" "Green"
+            Write-ColorOutput "    Helm release uninstalled" "Green"
         }
         
         # Delete namespace
-        Write-ColorOutput "    → Deleting namespace '$Namespace'..." "Gray"
+        Write-ColorOutput "    Deleting namespace '$Namespace'..." "Gray"
         kubectl delete namespace $Namespace --ignore-not-found=true 2>&1 | Out-Null
-        Write-ColorOutput "    ✓ Namespace deleted" "Green"
+        Write-ColorOutput "    Namespace deleted" "Green"
         
         return $true
     }
     catch {
-        Write-ColorOutput "    ✗ Exception during uninstall: $_" "Red"
+        Write-ColorOutput "    Exception during uninstall: $_" "Red"
         return $false
     }
     finally {
@@ -249,12 +215,9 @@ function Uninstall-IngressController {
 # Main Script
 # ===============================================================================
 
-Write-ColorOutput "`n===============================================================================" "Cyan"
-Write-ColorOutput "          AKS Ingress Controller Deployment Automation" "Cyan"
-Write-ColorOutput "===============================================================================`n" "Cyan"
-
-# Check prerequisites
-Test-Prerequisites
+Write-ColorOutput "`n===============================================================" "Cyan"
+Write-ColorOutput "AKS Ingress Controller Deployment Automation" "Cyan"
+Write-ColorOutput "===============================================================`n" "Cyan"
 
 # Get terraform outputs
 $kubeconfigs = Get-TerraformOutput
@@ -295,9 +258,9 @@ foreach ($property in $kubeconfigs.PSObject.Properties) {
 }
 
 # Summary
-Write-ColorOutput "`n═══════════════════════════════════════════════════════════════════════════════" "Cyan"
+Write-ColorOutput "`n===============================================================" "Cyan"
 Write-ColorOutput "Deployment Summary:" "Cyan"
-Write-ColorOutput "═══════════════════════════════════════════════════════════════════════════════`n" "Cyan"
+Write-ColorOutput "===============================================================`n" "Cyan"
 
 Write-ColorOutput "  Total clusters processed: $clusterCount" "White"
 
@@ -309,13 +272,13 @@ if ($failCount -gt 0) {
     Write-ColorOutput "  Failed: $failCount" "Red"
 }
 
-Write-ColorOutput "" "White"
+Write-ColorOutput ""
 
 if ($failCount -eq 0) {
-    Write-ColorOutput "✓ All ingress controllers deployed successfully!" "Green"
+    Write-ColorOutput "All ingress controllers deployed successfully!" "Green"
     exit 0
 }
 else {
-    Write-ColorOutput "⚠ Some deployments failed. Please review the output above for details." "Yellow"
+    Write-ColorOutput "Some deployments failed. Please review the output above for details." "Yellow"
     exit 1
 }

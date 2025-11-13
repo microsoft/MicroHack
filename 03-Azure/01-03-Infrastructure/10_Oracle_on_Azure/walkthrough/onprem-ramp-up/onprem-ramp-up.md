@@ -121,7 +121,7 @@ After you have retrieved the TNS connection string and assigned it to the `$trgC
 
 ~~~powershell
 # If you did follow the instruction the following line is not needed because $trgConn is already defined 
-$trgConn="(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=t6bchxz9.adb.eu-paris-1.oraclecloud.com))(connect_data=(service_name=gc2401553d1c7ab_user00adb2025111201_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))"
+$trgConn="(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=xsbkef2g.adb.eu-paris-1.oraclecloud.com))(connect_data=(service_name=gc2401553d1c7ab_user00_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))"
 # replace in value in your gghack.yaml
 (Get-Content gghack.yaml) -replace '<ODAA-CONNECTION-STRING>', $trgConn | Set-Content gghack.yaml
 # show line 8 till 11 with powershell of gghack.yaml
@@ -134,7 +134,7 @@ Your connection string in your gghack.yaml should look similar the yaml below. I
 ~~~yaml
 databases:
   # value for source database (23ai free container) is calculated.
-  trgConn: "(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=t6bchxz9.adb.eu-paris-1.oraclecloud.com))(connect_data=(service_name=gc2401553d1c7ab_user00adb2025111201_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))"
+  trgConn: "(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=xsbkef2g.adb.eu-paris-1.oraclecloud.com))(connect_data=(service_name=gc2401553d1c7ab_user00_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))"
 ~~~
 
 ## 🚀 Install GoldenGate Pods
@@ -152,7 +152,7 @@ Like mentioned at the beginning of this challenge, we will install several compo
 
 ~~~powershell
 # Prompt for the password that will be used for all three components - Please ask if you do not know the one!!!
-$password = <REPLACE-WITH-YOUR-ADB-PASSWORD> # e.g., "Welcome1234"
+$password = <REPLACE-WITH-YOUR-ADB-PASSWORD> # e.g., "Welcome1234#"
 
 # create the namespace everything goes into
 kubectl create namespace microhacks

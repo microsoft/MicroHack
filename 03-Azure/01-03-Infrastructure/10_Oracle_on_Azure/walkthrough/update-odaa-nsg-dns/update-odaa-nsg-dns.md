@@ -59,9 +59,11 @@ you need to change to the ODAA subscription by repeting the upper commands! Beca
 
 There are multiple ways to create the required DNS records within the Azure Private DNS Zones that are linked to the AKS VNet. We will be using the Azure portal directly
 
-#### Move in the Azure portal to your AKS subscription and resoucre group where your aks cluster is deployed. Inside the resource group you will find the aks related vnet. Copy in the overview "address space" the CIDR of the vnet. <br>
+#### Move in the Azure portal to your AKS subscription and resoucre group where your aks cluster is deployed. Inside the resource group you will find the aks related vnet. Copy in the overview "address space" the CIDR of the vnet.
+
 In our case the "address space" should be 10.0.0.0/16
-<br><img src="./media/image.png" alt="Create browser profile" width="450" height="180" />
+
+![VNet address space](./media/image.png)
 
 To access the OCI console use the following link after you are logged in into the Azure portal under your newly created ODAA Autonomous Database resource:
 ![Azure link to OCI console](media/image%20copy.png)
@@ -85,35 +87,34 @@ You will land on the Oracle ADB databases overview page:
 #### Set the private DNS zones for AKS VNet via Azure Portal
 
 1. From the overview portal of the deployed ADB database, copy the FQDN of the "Database URL name" and Database private IP address both in the section Network.
-    <br>
-    <img src="./media/prviate_dns_0.png" alt="Create browser profile" width="400" height="250" />  
+
+   ![ADB database overview](./media/prviate_dns_0.png)
 
 2. Move to the AKS resource group (aks-user[assignedgroup number])
-    <br>
-    <img src="./media/private_dns_1.png" alt="Create browser profile" width="400" height="250" />
+
+   ![AKS resource group](./media/private_dns_1.png)
 
 3. The private DNS name needs to be set on the following two private DNS names. 
    * adb.eu-paris-1.oraclecloud.com
    * adb.eu-paris-1.oraclecloudapps.com
 
     The following step is equal for both private DNS name. In the private DNS zone menu open the DNS management and press the link <b>Recodsets</b>.
-    <br>
-    <img src="./media/private_dns_2.png" alt="Create browser profile" width="400" height="250" />
+
+   ![Private DNS recordsets](./media/private_dns_2.png)
 
     <b>Important!</b> The other two Private DNS zones can be skipped for the moment till we need to set up ADB with high availability.
 
 4.  In the menue Recordsets press the Add button to add the FQDN and private ip address of the deployed ADB shared database.
-   <br>
-    <img src="./media/private_dns_3.png" alt="Create browser profile" width="400" height="250" />
 
+   ![Add recordset button](./media/private_dns_3.png)
 
-5. After you press the Add button a new window will be opened where the name for the ADB and the private IP address needs to be added. In addition change the TTL to 10 seconds.   
-    <img src="./media/private_dns_4.png" alt="Create browser profile" width="250" height="300" />
+5. After you press the Add button a new window will be opened where the name for the ADB and the private IP address needs to be added. In addition change the TTL to 10 seconds.
 
+   ![Add recordset form](./media/private_dns_4.png)
 
 6. Final save the configuration and repeat the step for the second private DNS name in the same way as described.
-    <br>
-    <img src="./media/private_dns_5.png" alt="Create browser profile" width="400" height="250" />
+
+   ![Save configuration](./media/private_dns_5.png)
 <br>
 
 <hr>
@@ -124,10 +125,10 @@ You will land on the Oracle ADB databases overview page:
 # switch back to the subscription where AKS is deployed
 $subAKS="sub-mh0" # replace with your AKS subscription name
 az account set -s $subAKS
-$yourADBDNSLabel = 't6bchxz9' # replace with your ODAA ADB DNS label
+$yourADBDNSLabel = 'xsbkef2g' # replace with your ODAA ADB DNS label
 $fqdnODAA = "$yourADBDNSLabel.adb.eu-paris-1.oraclecloud.com" # replace with your ODAA FQDN
 $fqdnODAAApp = "$yourADBDNSLabel.eu-paris-1.oraclecloudapps.com" # replace with your ODAA FQDN
-$fqdnODAAIpv4 = '192.168.0.185' # replace with your ODAA private IP address
+$fqdnODAAIpv4 = '192.168.0.62' # replace with your ODAA private IP address
 $rgAKS="aks-user00" # replace with your AKS resource group name
 $vnetAKSName="aks-user00" # replace with your AKS resource group name
 

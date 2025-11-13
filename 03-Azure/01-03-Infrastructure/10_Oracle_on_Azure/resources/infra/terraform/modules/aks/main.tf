@@ -12,6 +12,10 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "~> 4.0"
     }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "~> 2.30"
+    }
   }
 }
 
@@ -223,13 +227,28 @@ resource "azurerm_role_assignment" "aks_cluster_user" {
   description          = "Allows the deployment user to get cluster credentials for ${azurerm_kubernetes_cluster.aks.name}"
 }
 
-# Azure Kubernetes Service RBAC Admin - allows full admin access to cluster
-resource "azurerm_role_assignment" "aks_rbac_writer" {
-  scope                = azurerm_kubernetes_cluster.aks.id
-  role_definition_name = "Azure Kubernetes Service RBAC Writer"
-  principal_id         = var.deployment_user_object_id
-  description          = "Allows the deployment user to deploy Kubernetes workloads in ${azurerm_kubernetes_cluster.aks.name}"
-}
+# ===============================================================================
+# IMPORTANT: Cluster-wide RBAC Writer has been REPLACED with namespace-scoped RBAC
+# ===============================================================================
+# The Azure Kubernetes Service RBAC Writer role grants full admin access to the
+# entire cluster (all namespaces). This is TOO BROAD for security best practices.
+# 
+# INSTEAD, we now use Kubernetes-native RBAC (see kubernetes-rbac.tf):
+#   - kubernetes_namespace: Creates "microhack" namespace
+#   - kubernetes_role: Defines permissions within "microhack" namespace only
+#   - kubernetes_role_binding: Binds user to the Role in "microhack" namespace
+# 
+# This ensures users can ONLY deploy to the "microhack" namespace and cannot
+# access other namespaces like default, kube-system, or create new namespaces.
+# 
+# If you need to re-enable full cluster access (NOT RECOMMENDED), uncomment below:
+# ===============================================================================
+# resource "azurerm_role_assignment" "aks_rbac_writer" {
+#   scope                = azurerm_kubernetes_cluster.aks.id
+#   role_definition_name = "Azure Kubernetes Service RBAC Writer"
+#   principal_id         = var.deployment_user_object_id
+#   description          = "Allows the deployment user to deploy Kubernetes workloads in ${azurerm_kubernetes_cluster.aks.name}"
+# }
 
 # Reader role for visibility into the AKS subscription
 resource "azurerm_role_assignment" "subscription_reader" {

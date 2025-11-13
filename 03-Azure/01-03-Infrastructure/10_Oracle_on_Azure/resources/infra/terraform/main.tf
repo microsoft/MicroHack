@@ -302,19 +302,21 @@ module "aks_slot_0" {
     azurerm = azurerm.aks_deployment_slot_0
   }
 
-  prefix                    = each.value.prefix
-  postfix                   = each.value.postfix
-  location                  = each.value.location
-  cidr                      = each.value.aks_cidr
-  service_cidr              = each.value.aks_service_cidr
-  aks_vm_size               = each.value.aks_vm_size
-  os_disk_type              = each.value.aks_os_disk_type
-  deployment_user_object_id = local.deployment_user_object_ids[each.key]
-  subscription_id           = each.value.subscription_id
-  fqdn_odaa_fra             = each.value.fqdn_odaa_fra
-  fqdn_odaa_app_fra         = each.value.fqdn_odaa_app_fra
-  fqdn_odaa_par             = each.value.fqdn_odaa_par
-  fqdn_odaa_app_par         = each.value.fqdn_odaa_app_par
+  prefix                         = each.value.prefix
+  postfix                        = each.value.postfix
+  location                       = each.value.location
+  cidr                           = each.value.aks_cidr
+  service_cidr                   = each.value.aks_service_cidr
+  aks_vm_size                    = each.value.aks_vm_size
+  os_disk_type                   = each.value.aks_os_disk_type
+  deployment_user_object_id      = local.deployment_user_object_ids[each.key]
+  deployment_user_principal_name = local.deployment_user_principal_names[each.key]
+  deployment_user_name           = each.value.user_identifier
+  subscription_id                = each.value.subscription_id
+  fqdn_odaa_fra                  = each.value.fqdn_odaa_fra
+  fqdn_odaa_app_fra              = each.value.fqdn_odaa_app_fra
+  fqdn_odaa_par                  = each.value.fqdn_odaa_par
+  fqdn_odaa_app_par              = each.value.fqdn_odaa_app_par
 
   tags = merge(local.common_tags, {
     AKSDeployment = each.value.name
@@ -329,19 +331,21 @@ module "aks_slot_1" {
     azurerm = azurerm.aks_deployment_slot_1
   }
 
-  prefix                    = each.value.prefix
-  postfix                   = each.value.postfix
-  location                  = each.value.location
-  cidr                      = each.value.aks_cidr
-  service_cidr              = each.value.aks_service_cidr
-  aks_vm_size               = each.value.aks_vm_size
-  os_disk_type              = each.value.aks_os_disk_type
-  deployment_user_object_id = local.deployment_user_object_ids[each.key]
-  subscription_id           = each.value.subscription_id
-  fqdn_odaa_fra             = each.value.fqdn_odaa_fra
-  fqdn_odaa_app_fra         = each.value.fqdn_odaa_app_fra
-  fqdn_odaa_par             = each.value.fqdn_odaa_par
-  fqdn_odaa_app_par         = each.value.fqdn_odaa_app_par
+  prefix                         = each.value.prefix
+  postfix                        = each.value.postfix
+  location                       = each.value.location
+  cidr                           = each.value.aks_cidr
+  service_cidr                   = each.value.aks_service_cidr
+  aks_vm_size                    = each.value.aks_vm_size
+  os_disk_type                   = each.value.aks_os_disk_type
+  deployment_user_object_id      = local.deployment_user_object_ids[each.key]
+  deployment_user_principal_name = local.deployment_user_principal_names[each.key]
+  deployment_user_name           = each.value.user_identifier
+  subscription_id                = each.value.subscription_id
+  fqdn_odaa_fra                  = each.value.fqdn_odaa_fra
+  fqdn_odaa_app_fra              = each.value.fqdn_odaa_app_fra
+  fqdn_odaa_par                  = each.value.fqdn_odaa_par
+  fqdn_odaa_app_par              = each.value.fqdn_odaa_app_par
 
   tags = merge(local.common_tags, {
     AKSDeployment = each.value.name
@@ -356,19 +360,21 @@ module "aks_slot_2" {
     azurerm = azurerm.aks_deployment_slot_2
   }
 
-  prefix                    = each.value.prefix
-  postfix                   = each.value.postfix
-  location                  = each.value.location
-  cidr                      = each.value.aks_cidr
-  service_cidr              = each.value.aks_service_cidr
-  aks_vm_size               = each.value.aks_vm_size
-  os_disk_type              = each.value.aks_os_disk_type
-  deployment_user_object_id = local.deployment_user_object_ids[each.key]
-  subscription_id           = each.value.subscription_id
-  fqdn_odaa_fra             = each.value.fqdn_odaa_fra
-  fqdn_odaa_app_fra         = each.value.fqdn_odaa_app_fra
-  fqdn_odaa_par             = each.value.fqdn_odaa_par
-  fqdn_odaa_app_par         = each.value.fqdn_odaa_app_par
+  prefix                         = each.value.prefix
+  postfix                        = each.value.postfix
+  location                       = each.value.location
+  cidr                           = each.value.aks_cidr
+  service_cidr                   = each.value.aks_service_cidr
+  aks_vm_size                    = each.value.aks_vm_size
+  os_disk_type                   = each.value.aks_os_disk_type
+  deployment_user_object_id      = local.deployment_user_object_ids[each.key]
+  deployment_user_principal_name = local.deployment_user_principal_names[each.key]
+  deployment_user_name           = each.value.user_identifier
+  subscription_id                = each.value.subscription_id
+  fqdn_odaa_fra                  = each.value.fqdn_odaa_fra
+  fqdn_odaa_app_fra              = each.value.fqdn_odaa_app_fra
+  fqdn_odaa_par                  = each.value.fqdn_odaa_par
+  fqdn_odaa_app_par              = each.value.fqdn_odaa_app_par
 
   tags = merge(local.common_tags, {
     AKSDeployment = each.value.name
@@ -383,19 +389,21 @@ module "aks_slot_3" {
     azurerm = azurerm.aks_deployment_slot_3
   }
 
-  prefix                    = each.value.prefix
-  postfix                   = each.value.postfix
-  location                  = each.value.location
-  cidr                      = each.value.aks_cidr
-  service_cidr              = each.value.aks_service_cidr
-  aks_vm_size               = each.value.aks_vm_size
-  os_disk_type              = each.value.aks_os_disk_type
-  deployment_user_object_id = local.deployment_user_object_ids[each.key]
-  subscription_id           = each.value.subscription_id
-  fqdn_odaa_fra             = each.value.fqdn_odaa_fra
-  fqdn_odaa_app_fra         = each.value.fqdn_odaa_app_fra
-  fqdn_odaa_par             = each.value.fqdn_odaa_par
-  fqdn_odaa_app_par         = each.value.fqdn_odaa_app_par
+  prefix                         = each.value.prefix
+  postfix                        = each.value.postfix
+  location                       = each.value.location
+  cidr                           = each.value.aks_cidr
+  service_cidr                   = each.value.aks_service_cidr
+  aks_vm_size                    = each.value.aks_vm_size
+  os_disk_type                   = each.value.aks_os_disk_type
+  deployment_user_object_id      = local.deployment_user_object_ids[each.key]
+  deployment_user_principal_name = local.deployment_user_principal_names[each.key]
+  deployment_user_name           = each.value.user_identifier
+  subscription_id                = each.value.subscription_id
+  fqdn_odaa_fra                  = each.value.fqdn_odaa_fra
+  fqdn_odaa_app_fra              = each.value.fqdn_odaa_app_fra
+  fqdn_odaa_par                  = each.value.fqdn_odaa_par
+  fqdn_odaa_app_par              = each.value.fqdn_odaa_app_par
 
   tags = merge(local.common_tags, {
     AKSDeployment = each.value.name
@@ -410,19 +418,21 @@ module "aks_slot_4" {
     azurerm = azurerm.aks_deployment_slot_4
   }
 
-  prefix                    = each.value.prefix
-  postfix                   = each.value.postfix
-  location                  = each.value.location
-  cidr                      = each.value.aks_cidr
-  service_cidr              = each.value.aks_service_cidr
-  aks_vm_size               = each.value.aks_vm_size
-  os_disk_type              = each.value.aks_os_disk_type
-  deployment_user_object_id = local.deployment_user_object_ids[each.key]
-  subscription_id           = each.value.subscription_id
-  fqdn_odaa_fra             = each.value.fqdn_odaa_fra
-  fqdn_odaa_app_fra         = each.value.fqdn_odaa_app_fra
-  fqdn_odaa_par             = each.value.fqdn_odaa_par
-  fqdn_odaa_app_par         = each.value.fqdn_odaa_app_par
+  prefix                         = each.value.prefix
+  postfix                        = each.value.postfix
+  location                       = each.value.location
+  cidr                           = each.value.aks_cidr
+  service_cidr                   = each.value.aks_service_cidr
+  aks_vm_size                    = each.value.aks_vm_size
+  os_disk_type                   = each.value.aks_os_disk_type
+  deployment_user_object_id      = local.deployment_user_object_ids[each.key]
+  deployment_user_principal_name = local.deployment_user_principal_names[each.key]
+  deployment_user_name           = each.value.user_identifier
+  subscription_id                = each.value.subscription_id
+  fqdn_odaa_fra                  = each.value.fqdn_odaa_fra
+  fqdn_odaa_app_fra              = each.value.fqdn_odaa_app_fra
+  fqdn_odaa_par                  = each.value.fqdn_odaa_par
+  fqdn_odaa_app_par              = each.value.fqdn_odaa_app_par
 
   tags = merge(local.common_tags, {
     AKSDeployment = each.value.name

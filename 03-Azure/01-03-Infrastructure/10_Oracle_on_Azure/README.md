@@ -1,6 +1,4 @@
-<img src="media/logo_ODAA_microhack_1900x300.jpg"
-     alt="ODAA microhack logo"
-      />
+![ODAA microhack logo](media/logo_ODAA_microhack_1900x300.jpg)
 
 # 🚀 Microhack - Oracle Database @ Azure (ODAA)
 
@@ -15,7 +13,7 @@ Oracle Database@Azure (ODAA) is the joint Oracle–Microsoft managed service tha
 ### What You Will Learn in the MicroHack
 You will learn how to create and configure an Autonomous Database shared of the offered Oracle Database@Azure services, how to deploy an Autonomous Database instance inside an Azure delegated subnet, update network security group (NSG) and DNS settings to enable connectivity from a simulated on-premises environment, and measure network performance to the Oracle Autonomous Database instance. To make the microhack more realistic we will deploy the Application layer (AKS) and the Data layer (ODAA) in 2 different subscription to simulate a hub & spoke architecture. The following picture shows highlevel the architecture of the microhack.
 
-<img src="media/overivew deployment.png" alt="ODAA microhack architecture">
+![ODAA microhack architecture](media/overivew%20deployment.png)
 
 Furthermore we will address the integration of ODAA into the existing Azure native services and howto use Goldengate for migrations to ODAA and integration into Azure Fabric. 
 

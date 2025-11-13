@@ -2,7 +2,7 @@
 
 [Back to workspace README](../../README.md)
 
-> IMPORTANT: In the case of this Microhack, the ODAA Subscription, which will be discussed here, is already created and therefore your user does not need the create one.
+> **IMPORTANT: In the case of this Microhack, the ODAA Subscription, which will be discussed here, is already created and therefore your user does not need the create one.**
 
 ## 🧱 ODAA Main Components
 

@@ -30,7 +30,7 @@ Because we deployed our ODAA Autonomous Database in a different VNet than the on
 # switch to the corresponding subscription where ODAA is deployed
 $subODAA="sub-mhodaa" # replace with your ODAA subscription name
 az account set -s $subODAA
-$rgODAA="odaa-user00" # replace with your ODAA resource group name
+$rgODAA="odaa-user02" # replace with your ODAA resource group name
 
 $zones = az network private-dns zone list -g $rgODAA --query "[].name" -o tsv
 echo $zones
@@ -49,11 +49,7 @@ If you only see the domains in $zones
 * adb.eu-paris-1.oraclecloud.com, 
 * adb.eu-paris-1.oraclecloudapps.com
   
-you need to change to the ODAA subscription by repeting the upper commands! Because all ODAA databases are deployed in the same shared delegated subnet copy the <font color=red>right</font> FQDN's of your deployed databases!
-
-<br>
-
-<hr>
+you need to change to the ODAA subscription by repeting the upper commands! 
 
 ### Create AKS DNS Records
 
@@ -121,16 +117,22 @@ You will land on the Oracle ADB databases overview page:
 
 #### Set the private DNS zones for AKS VNet via Powershell (alternative to Azure portal)
 
+Find your Azure Kubernetes Ser
+![find your aks](./media/image%20copy%207.png)
+
+There you will find the subscription name which is also used by the private DNS zones linked to your AKS VNet.
+![find your aks subscriptions](./media/image%20copy%208.png)
+
 ~~~powershell
 # switch back to the subscription where AKS is deployed
-$subAKS="sub-mh0" # replace with your AKS subscription name
+$subAKS="sub-mh2" # replace with your AKS subscription name
 az account set -s $subAKS
-$yourADBDNSLabel = 'xsbkef2g' # replace with your ODAA ADB DNS label
+$yourADBDNSLabel = 'y1jilkjp' # replace with your ODAA ADB DNS label
 $fqdnODAA = "$yourADBDNSLabel.adb.eu-paris-1.oraclecloud.com" # replace with your ODAA FQDN
 $fqdnODAAApp = "$yourADBDNSLabel.eu-paris-1.oraclecloudapps.com" # replace with your ODAA FQDN
-$fqdnODAAIpv4 = '192.168.0.62' # replace with your ODAA private IP address
-$rgAKS="aks-user00" # replace with your AKS resource group name
-$vnetAKSName="aks-user00" # replace with your AKS resource group name
+$fqdnODAAIpv4 = '192.168.0.128' # replace with your ODAA private IP address
+$rgAKS="aks-user02" # replace with your AKS resource group name
+$vnetAKSName="aks-user02" # replace with your AKS resource group name
 
 # iterate through all zones and list all A records
 $zones = az network private-dns zone list --resource-group $rgAKS --query "[].name" -o tsv
@@ -185,5 +187,7 @@ Name      Records
 --------  -------------
 t6bchxz9  192.168.0.185
 ~~~
+
+> NOTE: The script does already create A-Records for all 4 private DNS zones linked to the AKS VNet. But we are going only use the one which contain paris in the name for the moment.
 
 [Back to workspace README](../../README.md)

@@ -23,7 +23,7 @@ spec:
           
           USER="admin"
           PASSWORD="Welcome1234#"
-          TNS="YOUR_TNS_CONNECTION_STRING_HERE"
+          TNS="(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=y1jilkjp.adb.eu-paris-1.oraclecloud.com))(connect_data=(service_name=gc2401553d1c7ab_user02_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))"
           
           echo "📊 Starting performance test..."
           echo "Threads: 3, Duration: 30 seconds"

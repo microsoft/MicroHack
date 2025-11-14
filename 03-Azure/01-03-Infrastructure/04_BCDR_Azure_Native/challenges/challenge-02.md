@@ -12,7 +12,7 @@ Below is an architecture diagram illustrating the setup. Tutorials and documenta
 
 # Lab Environment with Virtual Machines
 
-![Architecture](../img/asrdemo%20architecture.png)
+![Architecture](../img/asrdemo-architecture.png)
 
 ## Deployment
 

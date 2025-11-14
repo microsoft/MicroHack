@@ -50,16 +50,6 @@ variable "deployment_user_object_id" {
   type        = string
 }
 
-variable "deployment_user_principal_name" {
-  description = "The principal name (UPN) of the Entra ID user (e.g., user00@cptazure.org)"
-  type        = string
-}
-
-variable "deployment_user_name" {
-  description = "The short name of the user (e.g., user00)"
-  type        = string
-}
-
 variable "subscription_id" {
   description = "The subscription hosting the AKS resources"
   type        = string

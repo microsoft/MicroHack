@@ -33,10 +33,6 @@ terraform {
       source  = "hashicorp/helm"
       version = "~> 2.13"
     }
-    kubernetes = {
-      source  = "hashicorp/kubernetes"
-      version = "~> 2.30"
-    }
   }
 
   # Uncomment and configure the backend for remote state storage

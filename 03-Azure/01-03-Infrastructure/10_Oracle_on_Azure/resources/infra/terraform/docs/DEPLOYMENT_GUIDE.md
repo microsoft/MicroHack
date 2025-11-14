@@ -353,7 +353,7 @@ The deployment script:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                         Terraform Apply                              │
+│                         Terraform Apply                             │
 │  Provisions: AKS Clusters, VNets, RBAC, DNS, Users                  │
 └────────────────────────────┬────────────────────────────────────────┘
                              │
@@ -362,7 +362,7 @@ The deployment script:
                              │
                              ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│              deploy-ingress-controllers.ps1                          │
+│              deploy-ingress-controllers.ps1                         │
 │  Reads kubeconfig from Terraform → Deploys Helm charts              │
 └─────────────────────────────────────────────────────────────────────┘
                              │

@@ -78,8 +78,9 @@ output "rbac_assignments" {
   description = "Information about RBAC role assignments"
   value = {
     cluster_user_assignment        = azurerm_role_assignment.aks_cluster_user.id
-    # rbac_writer_assignment removed - replaced with namespace-scoped Kubernetes RBAC (see kubernetes-rbac.tf)
+    rbac_writer_assignment         = azurerm_role_assignment.aks_rbac_writer.id
     subscription_reader_assignment = azurerm_role_assignment.subscription_reader.id
+    acr_pull_assignment            = azurerm_role_assignment.acr_pull.id
     private_dns_contributor = {
       for key, assignment in azurerm_role_assignment.private_dns_contributor_odaa :
       key => assignment.id

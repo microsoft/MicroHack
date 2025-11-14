@@ -24,6 +24,7 @@ az login --use-device-code
 # make sure you select the subscription which starts with "sub-team", do not choose the subscription called "sub-mhodaa".
 # Assign the subscription name to a variable
 $subAKS="sub-mh2" # Replace with your Subscription Name.
+az account set --subscription $subAKS # make sure you are in the AKS subscription
 ~~~
 
 ## 🌍 Define required environment variables
@@ -50,8 +51,22 @@ helm repo add oggfree https://ilfur.github.io/VirtualAnalyticRooms
 helm repo update
 ~~~
 
-## 🔧 Replace Goldengate configuration File User Name in gghack.yaml
+Output should look similar to this:
 
+~~~text
+10_Oracle_on_Azure> helm repo add oggfree https://ilfur.github.io/VirtualAnalyticRooms
+"oggfree" already exists with the same configuration, skipping
+10_Oracle_on_Azure> # Do an update to get the newest chart templates
+10_Oracle_on_Azure> helm repo update
+Hang tight while we grab the latest from your chart repositories...
+...Successfully got an update from the "ingress-nginx" chart repository
+...Successfully got an update from the "avisto" chart repository
+...Successfully got an update from the "oggfree" chart repository
+...Successfully got an update from the "bitnami" chart repository
+Update Complete. ⎈Happy Helming!⎈
+~~~
+
+## 🔧 Replace Goldengate configuration File User Name in gghack.yaml
 
 ~~~powershell
 # retrieve the external IP of the nginx ingress controller
@@ -83,6 +98,12 @@ $EXTIP = (kubectl get service -n ingress-nginx -o jsonpath='{range .items[*]}{.s
 echo "External IP of the Ingress Controller: $EXTIP"
 ~~~
 
+Output should look similar to this:
+
+~~~text
+External IP of the Ingress Controller: 4.251.148.158
+~~~
+
 After you have the external IP address, replace the placeholder in the gghack.yaml file.
 
 ~~~powershell
@@ -100,12 +121,13 @@ services:
   ### with a virtual host name of ggate.<suffix>
   external:
     ### set type to either ingress or none if You need something customized
-    type: ingress
+    ### typical ingressClasses are nginx and istio
+    ingressClass: nginx
     ### typical ingressClasses are nginx and istio
     ingressClass: nginx
     ### uses default SSL certificate of gateway/controller or specify a custom tls-secret here
     tlsSecretName: ggate-tls-secret
-    vhostName: gghack.172.189.91.152.nip.io # public IP address of
+    vhostName: gghack.4.251.148.158.nip.io # public IP address of
   internal:
     type: ClusterIP
     plainPort: 8080

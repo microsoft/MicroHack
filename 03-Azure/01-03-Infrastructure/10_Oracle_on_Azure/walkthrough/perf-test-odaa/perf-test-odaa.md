@@ -186,7 +186,7 @@ adbping --help
 
 # Set your Oracle ADB connection details
 export ADB_USER="admin"
-export ADB_PASSWORD="Welcome1234#"  # Replace with your actual ADB password
+export $ADB_PASSWORD = "<ADD-YOUR-PASSWORD-HERR>"  # Replace with your actual ADB password
 export ADB_TNS="(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=zuyhervb.adb.eu-paris-1.oraclecloud.com))(connect_data=(service_name=gc2401553d1c7ab_uer00_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))"  # Use the TNS connection string from docs\odaa-get-token.md
 
 # Run custom performance tests

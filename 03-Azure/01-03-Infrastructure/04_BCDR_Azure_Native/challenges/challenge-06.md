@@ -1,10 +1,10 @@
-# Challenge 5 - Protect your Azure PaaS with Disaster Recovery
+# Challenge 6 - Restore Web Application and verify Azure Storage DR
 
 [Previous Challenge](challenge-05.md) - **[Home](../Readme.md)** - [Next Challenge](challenge-07.md)
 
 ### Goal 🎯
 
-In this challenge, you will re-establish the connection to your web application from the failed-over region and then test disaster recovery for an Azure Storage account with GRS enabled. The primary objective is to ensure business continuity by protecting critical data stored in Azure storage accounts against potential disasters.
+In this challenge 6, you will re-establish the connection to your web application from the failed-over region and then test disaster recovery for an Azure Storage account with GRS enabled. The primary objective is to ensure business continuity by protecting critical data stored in Azure storage accounts against potential disasters.
 
 ### Actions
 * Task 1: Re-establish your connection to the Web Application from the secondary region.

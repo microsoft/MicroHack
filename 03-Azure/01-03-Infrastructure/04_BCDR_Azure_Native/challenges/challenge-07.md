@@ -1,6 +1,6 @@
-# Challenge 6 - Failback to the Primary Region (Germany West Central)
+# Challenge 7 - Failback to the Primary Region (Germany West Central)
 
-[Previous Challenge](challenge-06.md) - **[Home](../Readme.md)** - [Congratulations](finish.md)
+[Previous Challenge](challenge-06.md) - **[Home](../Readme.md)** - [Next Challenge](challenge-08.md)
 
 ### Goal 🎯
 

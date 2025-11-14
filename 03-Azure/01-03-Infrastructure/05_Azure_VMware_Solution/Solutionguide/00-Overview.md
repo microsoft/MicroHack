@@ -11,7 +11,6 @@ For the solution of each challenge you will need to use the following informatio
 | Type | Name  |
 |------| ----| 
 | Jumpbox VM | AVS-SDDC-FOM-Jumpbox |
-| Azure Key Vault | AVS-Microhack |
 | vCenter on AVS | AVS-SDDC-FOM-SDDC |
 
 ## vCenter onprem
@@ -22,10 +21,3 @@ For the solution of each challenge you will need to use the following informatio
 | HCX Manager on-prem | 10.1.1.9 |
 | Workload-1-1-1 | 10.1.11.129 |
 | Workload-1-1-2 | 10.1.11.130 |
-
-## VMs in the onprem SDDC
-
-| Name | IP  |
-|------| ----| 
-| win2022-dc | 10.1.1.30|
-| win2022-worker | 10.1.1.31 |

@@ -21,36 +21,6 @@ See the [official Oracle documentation about Network Security Groups](https://do
 
 Because we deployed our ODAA Autonomous Database in a different VNet than the one that contains your AKS cluster, you will need to extract the ODAA FQDN and IP Address from the Azure Portal and assign them to the Azure Private DNS Zones linked to the AKS VNet.
 
-### Retrieve ODAA FQDN
-
-<font color=red> <b>Important:</b> We need to query the Private DNS Zones created with the <b>ODAA deployment</b>.</font>
-
-~~~powershell
-
-# switch to the corresponding subscription where ODAA is deployed
-$subODAA="sub-mhodaa" # replace with your ODAA subscription name
-az account set -s $subODAA
-$rgODAA="odaa-user02" # replace with your ODAA resource group name
-
-$zones = az network private-dns zone list -g $rgODAA --query "[].name" -o tsv
-echo $zones
-~~~
-
-<br>
-
-~~~text
-t6bchxz9.adb.eu-paris-1.oraclecloud.com
-t6bchxz9.adb.eu-paris-1.oraclecloudapps.com
-~~~
-
-<br>
-
-If you only see the domains in $zones
-* adb.eu-paris-1.oraclecloud.com, 
-* adb.eu-paris-1.oraclecloudapps.com
-  
-you need to change to the ODAA subscription by repeting the upper commands! 
-
 ### Create AKS DNS Records
 
 There are multiple ways to create the required DNS records within the Azure Private DNS Zones that are linked to the AKS VNet. We will be using the Azure portal directly
@@ -117,7 +87,48 @@ You will land on the Oracle ADB databases overview page:
 
 #### Set the private DNS zones for AKS VNet via Powershell (alternative to Azure portal)
 
-Find your Azure Kubernetes Ser
+### Retrieve ODAA FQDN
+
+<font color=red> <b>Important:</b> We need to query the Private DNS Zones created with the <b>ODAA deployment</b>.</font>
+
+~~~powershell
+# switch to the corresponding subscription where ODAA is deployed
+$subODAA="sub-mhodaa"  # name of the odaa subscription
+az account set -s $subODAA
+$rgODAA="odaa-user02" # replace with your ODAA resource group name
+
+$zones = az network private-dns zone list -g $rgODAA --query "[].name" -o tsv
+echo $zones
+# Extract the first lable of the first ODAA FQDN entry of $zones
+$yourADBDNSLabel = ($zones[0] -split '\.')[0]
+~~~
+
+The extracted ODAA FQDNs should look similar to this:
+
+~~~text
+t6bchxz9.adb.eu-paris-1.oraclecloud.com
+t6bchxz9.adb.eu-paris-1.oraclecloudapps.com
+~~~
+
+Extract the first lable of the first ODAA FQDN entry of $zones
+
+~~~powershell
+$yourADBDNSLabel = ($zones[0] -split '\.')[0]
+~~~
+
+The extracted ODAA FQDN Lable should look similar to this:
+
+~~~text
+zuyhervb
+~~~
+
+Get IP address of the ODAA ADB from the Private DNS Zone
+
+~~~powershell
+$fqdnODAAIpv4 = az network private-dns record-set a show -g $rgODAA --zone-name $zones[0] --name "@" --query "aRecords[0].ipv4Address" -o tsv
+~~~
+
+Find your Azure Kubernetes Service
 ![find your aks](./media/image%20copy%207.png)
 
 There you will find the subscription name which is also used by the private DNS zones linked to your AKS VNet.
@@ -127,45 +138,50 @@ There you will find the subscription name which is also used by the private DNS 
 # switch back to the subscription where AKS is deployed
 $subAKS="sub-mh2" # replace with your AKS subscription name
 az account set -s $subAKS
-$yourADBDNSLabel = 'y1jilkjp' # replace with your ODAA ADB DNS label
-$fqdnODAA = "$yourADBDNSLabel.adb.eu-paris-1.oraclecloud.com" # replace with your ODAA FQDN
-$fqdnODAAApp = "$yourADBDNSLabel.eu-paris-1.oraclecloudapps.com" # replace with your ODAA FQDN
-$fqdnODAAIpv4 = '192.168.0.128' # replace with your ODAA private IP address
 $rgAKS="aks-user02" # replace with your AKS resource group name
 $vnetAKSName="aks-user02" # replace with your AKS resource group name
 
 # iterate through all zones and list all A records
-$zones = az network private-dns zone list --resource-group $rgAKS --query "[].name" -o tsv
+$zonesAKS = az network private-dns zone list --resource-group $rgAKS --query "[].name" -o tsv
+$zonesAKS
+~~~
 
+resulting zones should look similar to this:
+
+~~~text
+adb.eu-frankfurt-1.oraclecloud.com
+adb.eu-frankfurt-1.oraclecloudapps.com
+adb.eu-paris-1.oraclecloud.com
+adb.eu-paris-1.oraclecloudapps.com
+~~~
+
+~~~powershell
 # Create A records in each private DNS zone with TTL of 10 seconds
-foreach ($zone in $zones) {
-    Write-Host "Creating A record '$yourADBDNSLabel' in zone: $zone"
+foreach ($zoneAKS in $zonesAKS) {
+    Write-Host "Creating A record '$yourADBDNSLabel' in zone: $zoneAKS"
     
     # Create or update the record set with TTL of 10 seconds
     az network private-dns record-set a create `
         --resource-group $rgAKS `
-        --zone-name $zone `
+        --zone-name $zoneAKS `
         --name $yourADBDNSLabel `
         --ttl 10 `
     
     # Add the IP address to the record set
     az network private-dns record-set a add-record `
         --resource-group $rgAKS `
-        --zone-name $zone `
+        --zone-name $zoneAKS `
         --record-set-name $yourADBDNSLabel `
         --ipv4-address $fqdnODAAIpv4
-    
-    Write-Host "Listing A records for zone: $zone"
-    az network private-dns record-set a list --zone-name $zone --resource-group $rgAKS --query "[].{Name:name, Records:aRecords[0].ipv4Address}" -o table
 }
 ~~~
 
 Verify the created A records:
 
 ~~~powershell
-foreach ($zone in $zones) {   
-    Write-Host "Listing A records for zone: $zone"
-    az network private-dns record-set a list --zone-name $zone --resource-group $rgAKS --query "[].{Name:name, Records:aRecords[0].ipv4Address}" -o table
+foreach ($zoneAKS in $zonesAKS) {   
+    Write-Host "Listing A records for zone: $zoneAKS"
+    az network private-dns record-set a list --zone-name $zoneAKS --resource-group $rgAKS --query "[].{Name:name, Records:aRecords[0].ipv4Address}" -o table
 }
 ~~~
 

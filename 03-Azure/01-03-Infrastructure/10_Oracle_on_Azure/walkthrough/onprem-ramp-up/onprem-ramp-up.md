@@ -144,7 +144,7 @@ After you have retrieved the TNS connection string and assigned it to the `$trgC
 
 ~~~powershell
 # If you did follow the instruction the following line is not needed because $trgConn is already defined 
-$trgConn="(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=y1jilkjp.adb.eu-paris-1.oraclecloud.com))(connect_data=(service_name=gc2401553d1c7ab_user02_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))"
+$trgConn="(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=zuyhervb.adb.eu-paris-1.oraclecloud.com))(connect_data=(service_name=gc2401553d1c7ab_uer00_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))"
 # replace in value in your gghack.yaml
 (Get-Content gghack.yaml) -replace '<ODAA-CONNECTION-STRING>', $trgConn | Set-Content gghack.yaml
 # show line 8 till 11 with powershell of gghack.yaml
@@ -156,7 +156,7 @@ Your connection string in your gghack.yaml should look similar the yaml below. I
 ~~~yaml
 databases:
   # value for source database (23ai free container) is calculated.
-  trgConn: "(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=y1jilkjp.adb.eu-paris-1.oraclecloud.com))(connect_data=(service_name=gc2401553d1c7ab_user02_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))"
+  trgConn: "(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=zuyhervb.adb.eu-paris-1.oraclecloud.com))(connect_data=(service_name=gc2401553d1c7ab_uer00_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))"
 ~~~
 
 ## 🚀 Install GoldenGate Pods
@@ -260,6 +260,8 @@ ogghack-goldengate-microhack-sample-ogg-787f954698-kzjpl          1/1     Runnin
 
 ✅ After the job is completed, the local database, which is running inside the AKS cluster, has been migrated to the ODAA ADB instance via Oracle Data Pump.
 
+Use Key CTRL+C to exit the watch command.
+
 > IMPORTANT: While you are waiting feel free to already work on the next challenge [Challenge 5: Measure Network Performance to Your Oracle Database@Azure Autonomous Database](../perf-test-odaa/perf-test-odaa.md).
 
 ### 🔌 Connect to the ADB Oracle Database
@@ -269,9 +271,45 @@ ogghack-goldengate-microhack-sample-ogg-787f954698-kzjpl          1/1     Runnin
 $podInstanteClientName=kubectl get pods -n microhacks | Select-String 'ogghack-goldengate-microhack-sample-instantclient' | ForEach-Object { ($_ -split '\s+')[0] }
 # login to the pod instantclient
 kubectl exec -it -n microhacks $podInstanteClientName -- /bin/bash
+~~~
+
+output should look similar to this:
+
+~~~text
+Defaulted container "app" out of: app, get-files (init)
+***********************************************************************
+WELCOME to the Oracle sqlcl/sqlplus command line
+Oracle instant client has been installed to /opt/oracle/instantclient_23_4
+TNS_ADMIN is set to: /projects
+Just type 'sql' to connect to Your database with sqlplus
+Now hopping to /projects as work directory for Your convenience
+***********************************************************************
+~~~
+
+Login with sqlplus to the ADB instance as admin user
+
+~~~bash
 # log into ADB with admin via sqlplus, replace the TNS connection string with your own
-sqlplus admin@'(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=y1jilkjp.adb.eu-paris-1.oraclecloud.com))(connect_data=(service_name=gc2401553d1c7ab_user02_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))' # Replace with your TNS connection string
+sqlplus admin@'(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=zuyhervb.adb.eu-paris-1.oraclecloud.com))(connect_data=(service_name=gc2401553d1c7ab_uer00_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))' # Replace with your TNS connection string
 # Enter your password e.g. Welcome1234#
+~~~
+
+Output should look similar to this:
+
+~~~text
+SQL*Plus: Release 23.0.0.0.0 - Production on Fri Nov 14 08:08:02 2025
+Version 23.4.0.24.05
+
+Copyright (c) 1982, 2024, Oracle.  All rights reserved.
+
+Enter password:
+Last Successful login time: Fri Nov 14 2025 07:58:14 +00:00
+
+Connected to:
+Oracle Database 23ai Enterprise Edition Release 23.0.0.0.0 - for Oracle Cloud and Engineered Systems
+Version 23.10.0.25.10
+
+SQL> 
 ~~~
 
 Inside the sqlplus session, run the following commands to verify the SH2 schema and the GoldenGate GGADMIN user have been created successfully in the ADB instance.
@@ -298,6 +336,42 @@ SELECT COUNT(*) FROM all_tables WHERE owner = 'SH2';
         18
 ~~~
 
+List all tables in SH2 schema on the ODAA ADB database
+
+~~~sql
+-- list all tables in SH schema
+SELECT table_name FROM all_tables WHERE owner = 'SH2';
+~~~
+
+~~~text
+TABLE_NAME
+--------------------------------------------------------------------------------
+COSTS
+DR$SUP_TEXT_IDX$N
+SALES
+CAL_MONTH_SALES_MV
+CHANNELS
+COUNTRIES
+CUSTOMERS
+DR$SUP_TEXT_IDX$B
+DR$SUP_TEXT_IDX$C
+DR$SUP_TEXT_IDX$I
+DR$SUP_TEXT_IDX$K
+
+TABLE_NAME
+--------------------------------------------------------------------------------
+DR$SUP_TEXT_IDX$Q
+DR$SUP_TEXT_IDX$U
+FWEEK_PSCAT_SALES_MV
+PRODUCTS
+PROMOTIONS
+SUPPLEMENTARY_DEMOGRAPHICS
+TIMES
+
+18 rows selected.
+~~~
+
+
 Exit sqlplus
 
 ~~~sql
@@ -316,6 +390,29 @@ alias
 # connect via sqlplus with alias
 sql
 ~~~
+
+Output should look similar to this:
+
+~~~text
+oracle:/projects$ alias
+alias sql='sqlplus SH/Welcome1234#@//ogghack-goldengate-microhack-sample-db23ai:1521/FREEPDB1'
+oracle:/projects$ sql
+
+SQL*Plus: Release 23.0.0.0.0 - Production on Fri Nov 14 08:09:00 2025
+Version 23.4.0.24.05
+
+Copyright (c) 1982, 2024, Oracle.  All rights reserved.
+
+Last Successful login time: Fri Nov 14 2025 07:38:23 +00:00
+
+Connected to:
+Oracle AI Database 26ai Free Release 23.26.0.0.0 - Develop, Learn, and Run for Free
+Version 23.26.0.0.0
+
+SQL> 
+~~~
+
+List all tables in SH schema on the onprem database
 
 ~~~sql
 -- list all tables in SH schema
@@ -337,7 +434,7 @@ DR$SUP_TEXT_IDX$N
 ~~~
 
 ~~~sql
--- count the records in SH.SALES table
+-- count the records in SH.SALES table on prem database
 SELECT COUNT(*) FROM SH.SALES;
 ~~~
 
@@ -364,8 +461,11 @@ SELECT COUNT(*) FROM SH.SALES_COPY;
 exit
 ~~~
 
+Login with sqlplus to the ADB instance as admin user
+
 ~~~bash
-sqlplus admin@'(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=y1jilkjp.adb.eu-paris-1.oraclecloud.com))(connect_data=(service_name=gc2401553d1c7ab_user02_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))' # Replace with your TNS connection string
+# log into ADB with admin via sqlplus, replace the TNS connection string with your own
+sqlplus admin@'(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=zuyhervb.adb.eu-paris-1.oraclecloud.com))(connect_data=(service_name=gc2401553d1c7ab_uer00_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))' # Replace with your TNS connection string
 # Enter your password e.g. Welcome1234#
 ~~~
 
@@ -488,8 +588,6 @@ kubectl logs -n microhacks $podBigDataName
 
 # To check for image pull issues:
 kubectl describe pod $podBigDataName -n microhacks | Select-String -Pattern "Failed|Error|Warning" -A 2 -B 2
-
-~~~text
 ~~~
 
 [Back to workspace README](../../README.md)

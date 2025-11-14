@@ -11,6 +11,8 @@ resources/infra/terraform/user_credentials.json
 resources/infra/terraform/mhodaa-sp-credentials.json
 resources/infra/terraform/*-sp-credentials.json
 resources/infra/terraform/user-photos/
+resources/gg-bigdata-build
+resources/scripts/adbping.sh
 
 # ignore helm chart temp folder
 resources/infra/terraform/.helm/

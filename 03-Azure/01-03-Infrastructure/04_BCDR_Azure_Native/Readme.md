@@ -81,15 +81,14 @@ By the end of this MicroHack, you'll be equipped with the knowledge and skills t
 
 Happy hacking! 🚀
 
-- [Challenge 1 - Understand the Disaster Recovery terms and define a strategy](./challenges/challenge-01.md)
-- [Challenge 2 - Setup and landing zone preparation](./challenges/challenge-02.md)
-- [Challenge 3 - Regional Protection and Disaster Recovery (DR)](./challenges/challenge-03.md)
-  - [Challenge 3.1 - Protect in Azure - Backup / Restore](./challenges/challenge-03.md#challenge-31---protect-in-azure---backup--restore)
-  - [Challenge 3.2 - Protect in Azure with Disaster Recover (DR) within an Azure Region](./challenges/challenge-03.md#challenge-32---protect-in-azure-with-disaster-recover-dr-within-an-azure-region)
-- [Challenge 4 - Protect in Azure with Disaster Recovery (Inter-regional)](./challenges/challenge-04.md)
-- [Challenge 5 - Protect your Azure PaaS with Disaster Recovery](./challenges/challenge-05.md)
-- [Challenge 6 - Failback to the Primary Region (Germany West Central)](./challenges/challenge-06.md)
-- [Extra Challenge - Monitor & Protect your Azure PaaS (Azure SQL Database)](./challenges/challenge-07.md)
+- [Challenge 1 - Understand the Disaster Recovery (DR) terms and define a DR strategy](./challenges/challenge-01.md)
+- [Challenge 2 - Prerequisites and Landing Zone Preparation](./challenges/challenge-02.md)
+- [Challenge 3 - Regional Protection (Backup)](./challenges/challenge-03.md)
+- [Challenge 4 - Regional Disaster Recovery (DR)](./challenges/challenge-04.md)
+- [Challenge 5 - Disaster Recovery (DR) across Azure Regions](./challenges/challenge-05.md)
+- [Challenge 6 - Restore Web Application and verify Azure Storage DR](./challenges/challenge-06.md)
+- [Challenge 7 - Failback to the Primary Region (Germany West Central)](./challenges/challenge-07.md)
+- [Optional: Challenge 8 - Monitoring and Alerting for BCDR Operations](./challenges/challenge-08.md)
 
 
 ### Solutions - Spoilerwarning

@@ -1,6 +1,6 @@
 # Walkthrough Extra Challenge 7 - Protect to Azure with Azure Backup & Restore
 
-[Previous Challenge Solution](../challenge-06/solution-06.md) - **[Home](../../Readme.md)**
+[Previous Challenge Solution](../challenge-06/solution-06.md) - **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-08/solution-08.md)
 
 ## Implement Failover Groups for Azure SQL Database
 

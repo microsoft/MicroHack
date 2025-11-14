@@ -568,7 +568,7 @@
               "name": "[toLower(variables('Name'))]",
               "location": "[variables('location')]",
               "sku": {
-                "name": "Standard_LRS"
+                "name": "Standard_GRS"
               },
               "kind": "StorageV2",
               "properties": {

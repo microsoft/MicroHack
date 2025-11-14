@@ -1,0 +1,40 @@
+# Token Refresh Sidecar Container
+FROM mcr.microsoft.com/azure-cli:2.55.0
+
+LABEL maintainer="Oracle Entra ID Token Refresh Service"
+LABEL description="Automatically refreshes OAuth tokens for Oracle database authentication"
+
+# Install required packages
+RUN apk add --no-cache \
+    bash \
+    coreutils \
+    curl \
+    jq
+
+# Create non-root user for security
+RUN addgroup -g 1000 tokenrefresh && \
+    adduser -D -u 1000 -G tokenrefresh tokenrefresh
+
+# Copy token refresh script
+COPY resources/scripts/refresh-token.sh /usr/local/bin/refresh-token.sh
+RUN chmod +x /usr/local/bin/refresh-token.sh
+
+# Create wallet directory
+RUN mkdir -p /tmp/wallet && \
+    chown -R tokenrefresh:tokenrefresh /tmp/wallet
+
+# Health check - verify token file exists and is recent
+HEALTHCHECK --interval=5m --timeout=10s --start-period=30s --retries=3 \
+  CMD test -f /tmp/wallet/token.txt && \
+      test -n "$(find /tmp/wallet/token.txt -mmin -60)" || exit 1
+
+# Switch to non-root user
+USER tokenrefresh
+
+# Default environment variables
+ENV TOKEN_FILE=/tmp/wallet/token.txt \
+    REFRESH_INTERVAL=2700 \
+    LOG_LEVEL=INFO
+
+# Run the refresh service
+ENTRYPOINT ["/usr/local/bin/refresh-token.sh"]

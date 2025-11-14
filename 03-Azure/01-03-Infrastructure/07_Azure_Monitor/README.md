@@ -88,35 +88,22 @@ To deploy the lab environment using **terraform**, click the link below.
 
 ## **MicroHack Challenges**
 
-- Challenge 0: **[Explore the lab environment, create an Azure Log Analytics Workspace and an empty Dashboard](challenges/00_challenge.md)**
-- Challenge 1: **[Configure Virtual Machine Logs](challenges/01_challenge.md)**
-- Challenge 2: **[Enable Virtual Machine Insights](challenges/02_challenge.md)**
-- Challenge 3: **[Create alerts](challenges/03_challenge.md)**
-- Challenge 4: **[Workbooks](challenges/04_challenge.md)**
-- Challenge 5: **[Collect custom text logs with Azure Monitor Agent](challenges/05_challenge.md)**
+- Challenge 1: **[Explore the lab environment, create an Azure Log Analytics Workspace and an empty Dashboard](challenges/challenge-01.md)**
+- Challenge 2: **[Configure Virtual Machine Logs](challenges/challenge-02.md)**
+- Challenge 3: **[Enable Virtual Machine Insights](challenges/challenge-03.md)**
+- Challenge 4: **[Create alerts](challenges/challenge-04.md)**
+- Challenge 5: **[Workbooks](challenges/challenge-05.md)**
+- Challenge 6: **[Collect custom text logs with Azure Monitor Agent](challenges/challenge-06.md)**
 
 ## **Solution Guide**
 
-- Walkthrough Challenge 0: **[Explore the lab environment, create an Azure Log Analytics Workspace and an empty Dashboard](walkthrough/challenge-0/solution.md)**
-- Walkthrough Challenge 1: **[Configure Virtual Machine Logs](walkthrough/challenge-1/solution.md)**
-- Walkthrough Challenge 2: **[Enable Virtual Machine Insights](walkthrough/challenge-2/solution.md)**
-- Walkthrough Challenge 3: **[Create alerts](walkthrough/challenge-3/solution.md)**
-- Walkthrough Challenge 4: **[Workbooks](walkthrough/challenge-4/solution.md)**
-- Walkthrough Challenge 5: **[Collect custom text logs with Azure Monitor Agent](walkthrough/challenge-5/solution.md)**
+- Walkthrough Challenge 1: **[Explore the lab environment, create an Azure Log Analytics Workspace and an empty Dashboard](walkthrough/challenge-01/solution-01.md)**
+- Walkthrough Challenge 2: **[Configure Virtual Machine Logs](walkthrough/challenge-02/solution-02.md)**
+- Walkthrough Challenge 3: **[Enable Virtual Machine Insights](walkthrough/challenge-03/solution-03.md)**
+- Walkthrough Challenge 4: **[Create alerts](walkthrough/challenge-04/solution-04.md)**
+- Walkthrough Challenge 5: **[Workbooks](walkthrough/challenge-05/solution-05.md)**
+- Walkthrough Challenge 6: **[Collect custom text logs with Azure Monitor Agent](walkthrough/challenge-06/solution-06.md)**
 
-## **Finished?**
-
-Congratulations! :partying_face: You finished the MicroHack for monitoring virutal machines in Azure Monitor.
-
-We hope you've had the opportunity to experience Azure's Monitoring features.
-
-If you would like to give us feedback, please don't hesitate to open an issue in the repository or contact one of us directly.
-
-Thank you for taking the time and see you next time!
-
-### Delete your lab
-
-If you have used your own subscription to provision the lab, you can delete the lab environment by simply deleting the resource group you created. If you have used the provisioned subscription, no action is required.
 
 ## **Contributor**
 

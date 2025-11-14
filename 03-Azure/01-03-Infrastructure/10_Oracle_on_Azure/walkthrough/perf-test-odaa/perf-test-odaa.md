@@ -66,7 +66,7 @@ Copy-Item "resources\infra\k8s\adbping-job.yaml" "adbping-job.yaml"
 
 # Configure your ADB connection details
 
-$ADB_PASSWORD = "Welcome1234#"  # Replace with your actual ADB password
+$ADB_PASSWORD = "<ADD-YOUR-PASSWORD-HERR>"  # Replace with your actual ADB password
 $ADB_TNS = $trgConn  # Use the TNS connection string obtained from docs\odaa-get-token.md
 
 # Update the job configuration with your credentials
@@ -82,7 +82,7 @@ The updated configuration should look like this:
 
 ~~~yaml
           USER="admin"
-          PASSWORD="Welcome1234#"  # Your actual password
+          PASSWORD="****************"  # Your actual password
           TNS="(description= (retry_count=20)(retry_delay=3)...)"  # Your actual TNS string
 ~~~
 

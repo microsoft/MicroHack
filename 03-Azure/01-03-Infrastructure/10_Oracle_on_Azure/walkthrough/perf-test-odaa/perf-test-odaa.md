@@ -250,7 +250,7 @@ Copy-Item "resources\infra\k8s\connping-job.yaml " "connping-job.yaml"
 
 # Configure your ADB connection details
 
-$ADB_PASSWORD = "Welcome1234#"  # Replace with your actual ADB password
+$ADB_PASSWORD = "<ADD-YOUR-PASSWORD-HERR>"  # Replace with your actual ADB password
 $ADB_TNS = $trgConn  # Use the TNS connection string obtained from docs\odaa-get-token.md
 
 # Update the job with your connection details

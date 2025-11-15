@@ -1,1 +1,77 @@
+# contain sensitive data
+misc/
+**/mis/
 NOTES.md
+
+gghack.yaml
+ggfabric.yaml
+adbping-job.yaml
+connping-job.yaml
+resources/infra/terraform/user_credentials.json
+resources/infra/terraform/mhodaa-sp-credentials.json
+resources/infra/terraform/*-sp-credentials.json
+resources/infra/terraform/user-photos/
+resources/gg-bigdata-build
+resources/scripts/adbping.sh
+
+# ignore helm chart temp folder
+resources/infra/terraform/.helm/
+
+# exclude the terrafom files and folders which should not be commited to git following best practces, located under the folder resources and all subfolder
+resources/**/terraform.tfstate
+resources/**/terraform.tfstate.backup
+resources/**/.terraform
+resources/**/crash.log
+resources/**/override.tf
+resources/**/terraform.tfvars
+resources/**/terraform.tfvars.json
+resources/**/terraform.rc
+resources/**/terraform.d
+# resources/**/terraform
+# resources/**/modules
+resources/**/providers
+resources/**/workspace
+
+# Terraform Files
+resources/**/*.tfstate
+resources/**/*.tfstate.*
+resources/**/*.tfplan
+resources/**/*.tfplan.*
+resources/**/.terraform/
+resources/**/.terraform.lock.hcl
+
+# Variable files (may contain sensitive data)
+resources/**/terraform.tfvars
+resources/**/*.auto.tfvars
+resources/**/*.auto.tfvars.json
+
+# Override files
+resources/**/override.tf
+resources/**/override.tf.json
+resources/**/*_override.tf
+resources/**/*_override.tf.json
+
+# CLI configuration files
+resources/**/.terraformrc
+resources/**/terraform.rc
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Log files
+resources/**/*.log
+resources/**/crash.log
+resources/**/crash.*.log
+
+# Ignore any .tfvars files that are generated automatically
+resources/**/**/*.auto.tfvars
+
+# Exclude Oracle GoldenGate BigData Docker images and extracted files
+resources/gg-bigdata-build/V1043090-01.zip
+resources/gg-bigdata-build/extracted/
+resources/gg-bigdata-build/oracle-docker-images/
+resources/gg-bigdata-build/oracle-docker-images/.git*

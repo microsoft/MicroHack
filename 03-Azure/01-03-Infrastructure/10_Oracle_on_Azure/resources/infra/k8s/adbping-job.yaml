@@ -1,0 +1,44 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: adbping-performance-test
+  namespace: adb-perf-test
+spec:
+  template:
+    spec:
+      containers:
+      - name: adbping-tester
+        image: odaamh.azurecr.io/adb-nettest:v2.1
+        command: ["/bin/bash"]
+        args:
+        - -c
+        - |
+          echo "🚀 Oracle ADB Performance Test"
+          echo "=============================="
+          
+          # Replace these placeholder values with your actual values:
+          # - USER: Your Oracle ADB admin username
+          # - PASSWORD: Your Oracle ADB admin password  
+          # - TNS: Your complete TNS connection string from the ADB wallet
+          
+          USER="admin"
+          PASSWORD="YOUR_PASSWORD_HERE"
+          TNS="YOUR_TNS_CONNECTION_STRING_HERE"
+          
+          echo "📊 Starting performance test..."
+          echo "Threads: 3, Duration: 30 seconds"
+          echo ""
+          
+          adbping -u "$USER" -p "$PASSWORD" -o -l "$TNS" -c java -t 3 -d 90
+          
+          echo ""
+          echo "✅ Performance test completed!"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+      restartPolicy: Never
+  backoffLimit: 3

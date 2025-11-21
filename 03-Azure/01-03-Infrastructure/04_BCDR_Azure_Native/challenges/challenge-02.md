@@ -14,6 +14,19 @@ Below is an architecture diagram illustrating the setup.
 
 ![Architecture](../img/c2-asrdemo-architecture.png)
 
+## Subscription validation
+Before deploying the lab environment, validate that your Azure subscription meets the necessary prerequisites:
+
+1. Navigate to the `Infra/App1` folder in the downloaded zip file.
+2. Run the **`validate-prerequisites.sh`** script to verify your subscription readiness.
+  > **Note:** The script can be executed using the Azure CLI locally or directly within the Azure Cloud Shell (accessible via the terminal icon in the top navigation bar of the Azure Portal).
+3. The script will check:
+  - Azure CLI installation and authentication status
+  - RBAC permissions (Owner role required at subscription level)
+  - Required resource providers are registered (and automatically registers any missing ones)
+4. Address any issues identified by the script before proceeding with deployment.
+  > **Tip:** If any resource providers were missing and automatically registered, you can re-run the script to confirm they are now successfully registered.
+
 ## Deployment
 
 We will use **Infrastructure as Code** to deploy the lab environment. There are **two methods** to achieve this:

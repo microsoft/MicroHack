@@ -1,251 +1,137 @@
-# Walkthrough Challenge 3 - Regional Protection and Disaster Recovery (DR)
+# Walkthrough Challenge 3 - Regional Protection (Backup)
 
 [Previous Challenge Solution](../challenge-02/solution-02.md) - **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-04/solution-04.md)
 
 ⏰ Duration: 1 Hour
 
+## Solution Overview
 
-### Challenge 3.1 - Protect in Azure - Backup / Restore
-In this challenge, you will onboard your Linux Virtual Machine to a centralized Recovery Services Vault and use Azure Backup Center to protect it with Azure Backup.
+This challenge focuses on implementing Azure Backup for virtual machines and blob storage, and performing restore operations. You will configure backup policies, execute backups, and restore resources to demonstrate business continuity capabilities.
 
-* Task 1: Enable Azure Backup for Linux VM.
-* Task 2: Enable Azure Backup for Blobs.
-* Task 3: Restore a VM in Azure.
+## Prerequisites
 
-If you have not created the Linux Machine successfully, follow this guide to create it on the portal:
+Ensure the lab environment from Challenge 2 is successfully deployed with:
+- Linux VM (`mh-linux`) in Germany West Central
+- Recovery Services Vault in Germany West Central
+- Backup Vault in Germany West Central
+- Storage Account with blob containers
 
-<details>
-<summary>💡 How-to: Deploy a Ubuntu Server VM in Azure Region Sweden Central</summary>
-<br>
+## Task 1: Enable Azure Backup for Linux VM
 
-### Choose OS
-![image](./img/006.png)
-> **Note:** Choose the source resource group.
+### Configure VM Backup
 
-### Configure Details - Basics
-![image](./img/007.png)
-> **Note:** Choose the source resource group.
+Navigate to the Linux VM and enable backup:
 
-### Configure Details - Basics (Option 2)
-![image](./img/007a.png)
+1. Navigate to the Linux VM in the Azure Portal. Go to the **Backup** blade and configure settings and enable backup.
+   
+   ![Navigate to Backup](./img/030.png)
 
-Ensure the VM is in the public network and open Port 3389 to connect to it (or use Azure Bastion to access it).
+2. Verify backup settings and start the initial backup by clicking **Backup now**.
+   
+   ![Enable Backup](./img/040.png)
 
-### Enable RDP Port
-![image](./img/008.png)
+3. Monitor the backup job progress, click on **View details** for backup.
+   
+   ![Backup Started](./img/031.png)
 
-### Configure Details - Networking (Option 2)
-![image](./img/008a.png)
+4. Monitor the backup job details (includes snapshot and vault transfer)
+   
+   ![Backup Progress](./img/032.png)
 
-### Review Deployed VM
-![image](./img/009.png)
-![image](./img/010.png)
+5. Wait for the backup to complete
+   
+   ![Backup Completed](./img/033.png)
+   ![Backup Details](./img/034.png)
 
-</details>
+### Create a Custom Backup Policy (Optional)
 
-### Task 1: Enable Azure Backup for Linux VM
+You can create custom backup policies to meet specific retention and scheduling requirements:
 
-#### Enable Azure Backup
-![image](./img/030.png)
+1. Navigate to the Recovery Services Vault in Germany West Central
+   ![Recovery Services Vault](./img/041.png)
 
-Navigate to the **Backup** tab and proceed with **Backup now**.
+2. Add a new Backup Policy
+   ![Add Policy](./img/042.png)
 
-![image](./img/040.png)
+3. Select policy type for Azure Virtual Machines
+   ![Policy for VMs](./img/043.png)
 
-Backup job is started.
+4. Configure backup schedule (daily or hourly)
+   ![Daily Backup Schedule](./img/044.png)
+   
+   Optional: Configure hourly backup schedule
+   ![Hourly Backup Schedule](./img/mh-ch2-screenshot-22.png)
 
-![image](./img/031.png)
+5. Review retention settings and create the policy
+   ![Policy Created](./img/045.png)
 
-The backup job includes **Take Snapshot** and **Transfer data to vault**.
+## Task 2: Enable Azure Backup for Blobs
 
-![progress](./img/032.png)
+### Configure Backup Vault Permissions
 
-#### Wait for Initial Backup of the VM
+1. Navigate to the Backup Vault in Germany West Central
+   ![Backup Vault](./img/060.png)
 
-This might take a while.
+2. Enable System Managed Identity and note the Object ID
+   ![Enable Managed Identity](./img/060a.png)
 
-![completed](./img/033.png)
-![backup](./img/034.png)
+3. Go to the Storage Account in Germany West Central
+   ![Storage Account](./img/050.png)
 
-## Create a New Custom Policy
+4. Navigate to **Access Control (IAM)** and add role assignment
+   ![IAM](./img/061.png)
 
-Go to the Azure Site Recovery **ASR Vault** in the Primary Region (Germany West Central).
+5. Select the **Storage Account Backup Contributor** role
+   ![Select Role](./img/062.png)
 
-![image](./img/041.png)
+6. Assign to the Backup Vault's Managed Identity
+   ![Select Scope](./img/063.png)
+   ![Select Managed Identity](./img/064.png)
 
-Add a new Backup Policy.
+7. Review and assign the role
+   ![Review Assignment](./img/065.png)
 
-![Add Policy](./img/042.png)
+### Configure Blob Backup
 
-Add a new Backup Policy for Azure Virtual Machines.
+1. Create a backup policy for blobs
+   ![Create Policy](./img/051.png)
+   ![Select Vault](./img/052.png)
+   ![Configure Policy](./img/054.png)
 
-![Policy for Disks](./img/043.png)
+2. Verify the backup policy is created
+   ![Policy Created](./img/055.png)
 
-### Schedule Daily Backups
+## Task 3: Restore a VM in Azure
 
-Configure **daily** backup frequency.
+> **Important:** Ensure the backup job from Task 1 is completed before proceeding.
 
-![image](./img/044.png)
+### Perform VM Restore
 
-### Review Additional Deployment Options
-- **Hourly** Backup Schedule (Optional)
+1. Navigate to the VM backup and start the restore procedure
+   ![Start Restore](./img/035.png)
 
-![image](./img/mh-ch2-screenshot-22.png)
+2. Select a restore point
+   ![Select Restore Point](./img/036.png)
 
-Review the configuration:
-* Backup Schedule
-* Backup Retention settings
+3. Configure restore properties and proceed
+   ![Restore Properties](./img/037.png)
+   ![Review Restore](./img/038.png)
+   ![Confirm Restore](./img/039.png)
 
-Proceed with **Create**.
+4. Verify the restored VM is created
+   ![Restored VM](./img/070.png)
 
-Backup Policy is successfully created!
+## Task 4 (Optional): Restore Azure Blob
 
-![image](./img/045.png)
+For restoring blob storage, refer to the [Azure Blob Backup documentation](https://learn.microsoft.com/en-us/azure/backup/blob-restore).
 
-<!-- The steps for the Data Science Virtual Machine are similar and will not be included here. -->
+## Success Criteria Validation ✅
 
-### Task 2: Enable Azure Backup for Blobs
+Confirm you have completed:
+- ✅ Enabled Azure Backup for the Linux VM
+- ✅ Configured Azure Backup for Blob Storage
+- ✅ Successfully restored a VM from backup
+- ✅ (Optional) Restored a blob container
 
-Go to the Storage Account in the Primary Region.
-
-![Storage Account](./img/050.png)
-
-<details>
-<summary>💡 Task 2: Enable Azure Backup for Blobs</summary>
-<br>
-
-<details>
-<summary>💡 How-to: Create a Backup Vault (if not created during lab setup)</summary>
-<br>
-
-### Create a Backup Vault (not a Recovery Service Vault)
-![image](./img/mh-ch2-screenshot-71.png)
-
-</details>
-
-<details>
-<summary>💡 How-to: Create a Container</summary>
-<br>
-
-![image](./img/019.png)
-![image](./img/019a.png)
-![image](./img/019b.png)
-![image](./img/020.png)
-
-</details>
-
-To backup our storage account, assign the Backup Vault in the Primary Region some access permissions.
-
-### Enable System Managed Identity for the Backup Vault and Copy the MI Object ID
-
-Go to the Backup Vault in the Primary Region (Germany West Central) and navigate to the Identity tab.
-
-![Identity Tab](./img/060.png)
-
-Click **Azure role assignments**.
-
-![Enable System Managed Identity](./img/060a.png)
-
-### Assign the "Storage Backup Contributor" Role to Backup Vault Managed Identity
-
-Go back to the Storage Account in the Primary Region (Germany West Central). Navigate to the **Access Control (IAM)** tab and add a role assignment.
-
-![image](./img/061.png)
-
-Select Role.
-
-![Backup Contributor](./img/062.png)
-
-Select Scope.
-
-![MI](./img/063.png)
-
-Select Managed Identity of the Backup Vault.
-
-![Backup Vault MI](./img/064.png)
-
-Review + Assign.
-
-![Review + Assign](./img/065.png)
-
-### Enable Azure Backup for Blobs
-
-This will require creating a new backup policy:
-
-![Create New Policy](./img/051.png)
-![Select Vault](./img/052.png)
-![Create](./img/054.png)
-
-Backup Policy for storage successfully created!
-
-![Create](./img/055.png)
-
-</details>
-
-### Task 3: Restore a VM in Azure
-- Backup job from Task 1 should be finished before proceeding here!
-
-#### Start Restore Procedure
-![image](./img/035.png)
-
-#### Select Restore Point
-![image](./img/036.png)
-
-#### Set Restore Properties
-
-Proceed with **Restore**.
-
-![image](./img/037.png)
-![image](./img/038.png)
-![image](./img/039.png)
-
-A new Virtual Machine `mh-linux-restore` has been created in the resource group, restored from the backup.
-
-![image](./img/070.png)
-
-You have successfully completed Challenge 2.1! 🚀
-
-### Challenge 3.2 - Protect in Azure with Disaster Recover (DR) within an Azure Region
-* Task 4: Set up disaster recovery for the Linux VM in the primary region.
-* Task 5: Simulate a failover from one part of the primary region to another part within the same region.
-
-### Task 4: Set up disaster recovery for the Linux VM in the primary region.
-
-Enable Disaster Recovery (DR) between **Availability Zones**
-
-Navigate to **mh-linux | Disaster recovery**
-
-Choose a different Availability Zone than the current one as **Target**
-
-![image](./img/071.png)
-
-Review and Start Replication
-
-![image](./img/074.png)
-
-Wait until the replication is finished
-
-![image](./img/075.png)
-
-The Linux Virtual Machine is protected with Azure Site Recovery between Availability Zones.
-
-![image](./img/076.png)
-
-### Task 5: Simulate a failover from one part of the primary region to another part within the same region.
-
-Conduct an unplanned failover
-
-![image](./img/077.png)
-
-![image](./img/078.png)
-
-![image](./img/079.png)
-
-![image](./img/080.png)
-
-![image](./img/081.png)
-
-![image](./img/082.png)
-
-![image](./img/083.png)
+You have successfully completed Challenge 3! 🚀
 

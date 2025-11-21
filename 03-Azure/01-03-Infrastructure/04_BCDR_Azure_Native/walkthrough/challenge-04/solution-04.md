@@ -1,130 +1,88 @@
-# Walkthrough Challenge 4 - Protect in Azure with Disaster Recovery (Inter-regional)
+# Walkthrough Challenge 4 - Regional Disaster Recovery (DR)
 
 [Previous Challenge Solution](../challenge-03/solution-03.md) - **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-05/solution-05.md)
 
-⏰ Duration: 1 hour 15 minutes
+⏰ Duration: 1 hour
 
+## Solution Overview
 
-### Actions
+This challenge focuses on implementing zone-to-zone disaster recovery within a single Azure region using Azure Site Recovery. You will configure replication between Availability Zones in Germany West Central and simulate a failover to demonstrate DR capabilities within the same region.
 
-* Task 1: Set up and enable disaster recovery with Azure Site Recovery and monitor the progress.
-* Task 2: Perform a disaster recovery drill, create recovery plan and run a test failover.
-* Task 3: Run a production failover from Germany West Central to Sweden Central region and failback again from Sweden to Germany.
+## Prerequisites
 
-## Task 1: Enable replication with Azure Site recovery for the Virtual Machine in the Germany West Central Region to the Sweden Central Region
+Ensure the lab environment from Challenge 2 is successfully deployed with:
+- Linux VM (`mh-linux`) deployed in Germany West Central in a specific Availability Zone
+- Recovery Services Vault in Germany West Central
 
-<details close>
-<summary>💡 Enable replication with Azure Site recovery for the Virtual Machine in the Germany West Central Region to the Sweden Central Region</summary>
-<br>
+## Task 1: Set up disaster recovery for the Linux VM across Availability Zones
 
-Navigate to **Recovery Services Vault** in the Sweden Central (mh-swedencentral-asrvault) which we created in the first Challenge. In the **Protected Items**, select **Replicated Items**. Then select **Replicate** and from the dropdown list select **Azure virtual machines**. The following pane will apprear:
+### Enable Zone-to-Zone Disaster Recovery
 
-![image](./img/001.png)
+1. Navigate to the Linux VM in Germany West Central
+2. Go to **Disaster recovery** in the left menu
+3. Configure zone-to-zone disaster recovery:
+   - Source: Current Availability Zone
+   - Target: Different Availability Zone in Germany West Central
+   - Select the Recovery Services Vault in Germany West Central
 
-![image](./img/002.png)
+4. Review and start replication
 
-![image](./img/003.png)
+5. Monitor the replication status until it completes
+   - Initial replication may take 15-30 minutes
+   - Verify replication health shows as "Healthy"
 
-![image](./img/004.png)
+> **Note:** Zone-to-zone DR protects against datacenter-level failures within a region by replicating your VM to a different Availability Zone in the same region.
 
-![image](./img/005.png)
+## Task 2: Simulate a zone-to-zone failover
 
-![image](./img/006.png)
+### Perform Test Failover
 
-In the deployment notification you could navigate to the Site Recovery Jobs which lists all Site Recovery Actions you have created in this task.
+1. Navigate to the Linux VM's Disaster Recovery blade
+2. Select **Test failover** from the top menu
+3. Choose a recovery point (typically "Latest" is selected by default)
+4. Select the target virtual network in the same region
+5. Start the test failover
 
-![image](./img/007.png)
+### Monitor Failover Progress
 
-You can select in progress jobs to check the status and progress.
+1. Navigate to **Site Recovery jobs** in the Recovery Services Vault
+2. Monitor the test failover job
+3. Verify a test VM is created in the target Availability Zone
 
-![image](./img/008.png)
+### Validate the Test VM
 
-This Task can take up to 10 minutes to finish.
+1. Check the Virtual Machines list
+2. Verify the test VM is running in a different Availability Zone
+3. Optional: Connect to the test VM to validate functionality
 
-![image](./img/009.png)
+### Cleanup Test Failover
 
-![image](./img/011.png)
+1. Return to the Disaster Recovery blade
+2. Select **Cleanup test failover**
+3. Add notes about the test results
+4. Complete the cleanup to remove the test VM
 
-![image](./img/010.png)
+## Success Criteria Validation ✅
 
-### Alternative: Disaster recovery can be set also under Virtual Machine | Disaster Recovery
+Confirm you have completed:
+- ✅ Enabled disaster recovery for the Linux VM between Availability Zones
+- ✅ Successfully performed a test failover to another Availability Zone
+- ✅ Validated the test VM functionality
+- ✅ Cleaned up the test failover resources
 
-![image](./img/100.png)
+You have successfully completed Challenge 4! 🚀
 
-</details>
+## Additional Notes
 
-## Task 2: Create a recovery plan and Run a disaster recovery drill
+**Zone-to-Zone DR Benefits:**
+- Protection against datacenter-level failures
+- Lower latency than region-to-region replication
+- Same-region data residency compliance
+- Faster failover and failback operations
 
-### Create a recovery plan
-Navigate to **Recovery Services Vault** in the Sweden Central (mh-swedencentral-asrvault). Under **Manage**, select **Recovery Plans (Site Recovery)** and create a recovery plan.
-
-![image](./img/09.png)
-
-Select `mh-web1` and `mh-web2` as the protected source machine and create the recovery plan.
-
-![image](./img/10.png)
-
-### Run the test failover from Germany West Central to the Sweden Central Region
-Navigate to the recovery plan created in the previous task. 
-
-![image](./img/11.png)
-
-From the top menu select **Test failover**.
-
-![image](./img/12.png)
-
-
-![image](./img/13.png)
-
-### Monitor the progress
-Navigate to **Site Recovery Jobs** and select Test failover job which is in progress.
-
-![image](./img/14.png)
-
-
-![image](./img/15.png)
-
-![image](./img/16.png)
-
-After all jobs are finished successully, Navigate to the Virtual Machines list. New Virtual Machine has been created in the Sweden Central Region.
-
-![image](./img/17.png)
-
-### Cleanup test failover
-![image](./img/18.png)
-
-![image](./img/19.png)
-
-![image](./img/20.png)
-
-![image](./img/21.png)
-
-![image](./img/22.png)
-
-## Task 3: Run a production failover from Germany West Central to Sweden Central and failback again from Sweden to Germany region (Source environment) and monitor the progress
-### Run the production failover for the web application from Germany West Central to Sweden Central
-![image](./img/23.png)
-
-![image](./img/24.png)
-
-![image](./img/25.png)
-
-![image](./img/26.png)
-
-Check the virtual machine list. There is a new virtual machine running in Sweden Central region.
-
-![image](./img/27.png)
-
-### Reprotect the virtual machine
-![image](./img/28.png)
-
-![image](./img/29.png)
-
-![image](./img/30.png)
-
-![image](./img/31.png)
-
-![image](./img/32.png)
-
-![image](./img/33.png)
+**Best Practices:**
+- Regularly test failover to ensure DR readiness
+- Monitor replication health continuously
+- Document recovery procedures
+- Update recovery plans as infrastructure changes
 

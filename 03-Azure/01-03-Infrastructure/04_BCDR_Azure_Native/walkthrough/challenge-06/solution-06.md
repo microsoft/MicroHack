@@ -1,66 +1,132 @@
-# Walkthrough Challenge 6 - Failback to the primary region (Germany West Central)
+# Walkthrough Challenge 6 - Restore Web Application and verify Azure Storage DR
 
 [Previous Challenge Solution](../challenge-05/solution-05.md) - **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-07/solution-07.md)
 
-⏰ Duration: 50 minutes
+⏰ Duration: 45 minutes
 
+## Solution Overview
 
-### Actions
-* Task 1: Failback the Web Application from Sweden Central to Germany West Central region (Source environment) and monitor the progress.
-* Task 2: Failback Storage Account to Germany West Central.
-* Restore a VM in Azure.
+This challenge focuses on re-establishing web application connectivity after the DR failover to Sweden Central and verifying that Azure Storage Account disaster recovery is properly configured with GRS. You will add the failed-over VMs to the load balancer and test storage account failover.
 
-# Solution
+## Prerequisites
 
-## Disaster Recovery for Azure Virtual Machines
+Ensure Challenge 5 is completed with:
+- Web VMs (`mh-web1` and `mh-web2`) failed over and running in Sweden Central
+- Load Balancer configured in the environment
+- Storage Account with GRS enabled
 
-## Task 1: Failback the VM from Sweden to Germany region (Source environment) and monitor the progress
+## Task 1: Re-establish connection to the Web Application
 
-### Ensure the VM has been  Re-protected (this is done in challenge 3)
-![image](./img/01.png)
+After failing over the VMs to Sweden Central, the web application needs to be reconnected by adding the failed-over VMs to the load balancer's backend pool.
 
-* [Azure Site Recovery - How to reprotect](https://learn.microsoft.com/en-us/azure/site-recovery/azure-to-azure-how-to-reprotect)
+### Add Failed-Over VMs to Load Balancer Backend Pool
 
-### Run the failback for the VM from Sweden Central Region to Germany West Central
-You can't fail back the VM until the replication has completed, and synchronization is 100% completed. The synchronization process can take several minutes to complete.
-After the Synchronization completes, select **Failover**.
+1. Navigate to the **Load Balancer** in Sweden Central
+2. Go to **Backend pools** in the left menu
+3. Select the backend pool for the web application
+4. Click **+ Add** to add virtual machines
+5. Select the failed-over web VMs:
+   - `mh-web1` (failed-over instance in Sweden Central)
+   - `mh-web2` (failed-over instance in Sweden Central)
+6. Save the configuration
 
-![image](./img/mh-ch-screenshot-27.png)
+### Verify Load Balancer Configuration
 
-![image](./img/mh-ch-screenshot-28.png)
+1. Confirm both VMs are listed in the backend pool
+2. Check the health probe status to ensure VMs are responding
+3. Verify the load balancing rules are properly configured
 
-Check the Virtual machine list. Server01 is running again in the Germany West Central region.
+### Test Web Application Connectivity
 
-![image](./img/mh-ch-screenshot-29.png)
+1. Navigate to the Load Balancer's frontend IP address or DNS name
+2. Access the web application through the load balancer
+3. Verify the application is responding correctly
+4. Confirm the application shows it's running from the Sweden Central region
+5. Refresh multiple times to verify load balancing across both VMs
 
-## Disaster Recovery for Azure Storage Account
+> **Success!** You have successfully re-established the web application in the secondary region after DR failover.
 
-## Task 3: Failback Storage Account to Germany West Central
+## Task 2: Disaster Recovery for Azure Storage Account
 
-### Navigate to the **Azure Storage Account**
-![image](./img/17.png)
+### Verify GRS Configuration
 
-### Open the tab **Redundancy**:
-![image](./img/18.png)
+1. Navigate to the **Storage Account** in Germany West Central (primary region)
+2. Select **Redundancy** from the left menu
+3. Verify that **Geo-redundant storage (GRS)** is enabled
+4. Identify the secondary region for data replication
+   - The secondary region is automatically paired (typically Germany North for Germany West Central)
+5. Note the last sync time to verify replication is active
 
-### If not configured, choose Geo-redundant storage (GRS) as redundancy option. This will enable cross-replication of your storage account with the paired region Germany West Central. 
-![image](./img/13.png)
-![image](./img/14.png)
+> **Note:** With GRS, Azure automatically replicates your data to a secondary region that is hundreds of miles away from the primary region.
 
-### You can see now Germany West Central as the Secondary Region of the Storage Account:
-![image](./img/15.png)
+### Understanding GRS Replication
 
-## Perform a failover test for the storage account to validate the disaster recovery setup.
+**Key Points:**
+- Data is replicated asynchronously to the paired region
+- The secondary region is read-only by default (use RA-GRS for read access)
+- Replication provides protection against regional disasters
+- RPO (Recovery Point Objective) is typically less than 15 minutes
 
-### Run the test failover from Germany North to the Germany West Central Region
-![image](./img/19.png)
+### Perform Storage Account Failover Test
 
-### Failover Completed
-![image](./img/23.png)
+> **Important:** Storage account failover should only be performed when the primary region is unavailable. This is a destructive operation that makes the secondary region the new primary.
 
-### Learning resources
-* [Azure Site Recovery - How to reprotect](https://learn.microsoft.com/en-us/azure/site-recovery/azure-to-azure-how-to-reprotect)
-* [Azure Site Recovery - Failback](https://learn.microsoft.com/en-us/azure/site-recovery/azure-to-azure-tutorial-failback)
-* [Azure Site Recovery - Enable Replication](https://learn.microsoft.com/en-us/azure/site-recovery/azure-to-azure-tutorial-enable-replication)
-* [Testing for disaster recovery](https://learn.microsoft.com/en-us/azure/site-recovery/site-recovery-test-failover-to-azure)
+1. In the Storage Account, go to **Redundancy** or **Geo-replication**
+2. Review the failover warnings and implications:
+   - Failover typically takes less than an hour
+   - Data loss may occur if the last sync was not recent
+   - After failover, the account becomes LRS (locally redundant) in the new primary region
+3. If performing a test (in a test environment only):
+   - Click **Prepare for failover** 
+   - Review the impact and confirm
+   - Monitor the failover process
+4. After failover completes, verify:
+   - The storage account is now primary in the secondary region
+   - Data is accessible from the new primary region
+   - Redundancy type has changed to LRS
+
+> **Caution:** In a production environment, only perform storage account failover when the primary region is genuinely unavailable.
+
+### Verify Data Accessibility
+
+1. Navigate to the storage account containers
+2. List the blobs/files to verify data integrity
+3. Attempt to read/download a file to confirm accessibility
+4. Check that all containers and data are present
+
+## Success Criteria Validation ✅
+
+Confirm you have completed:
+- ✅ Added failed-over VMs to the load balancer backend pool in Sweden Central
+- ✅ Successfully accessed the web application through the load balancer
+- ✅ Verified the web application is operational in the secondary region
+- ✅ Confirmed GRS is enabled on the Storage Account
+- ✅ Identified the secondary region used for storage replication
+- ✅ Understood the storage account failover process
+- ✅ (Optional) Performed a storage account failover test
+
+You have successfully completed Challenge 6! 🚀
+
+## Additional Notes
+
+**Load Balancer Best Practices:**
+- Always configure health probes to monitor backend VM health
+- Use session persistence if your application requires it
+- Monitor load balancer metrics for traffic distribution
+- Plan for scaling by adjusting backend pool capacity
+
+**Storage Account GRS Considerations:**
+- GRS provides at least 99.99999999999999% (16 nines) durability of objects over a given year
+- Use RA-GRS if you need read access to secondary region data
+- Monitor last sync time to understand potential data loss window
+- Storage account failover is a manual operation - plan and test carefully
+- After failover, the account becomes LRS in the new primary region
+- You must reconfigure to GRS/RA-GRS if you want geo-redundancy restored
+
+**Disaster Recovery Best Practices:**
+- Document the complete recovery procedure
+- Test the entire DR process regularly
+- Monitor all components after failover
+- Have a communication plan for stakeholders
+- Plan for failback once the primary region is recovered
 

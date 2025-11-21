@@ -87,7 +87,7 @@ var userName = contains(deployer().userPrincipalName, '@') ? substring(deployer(
 var namingPrefix = '${Prefix}-${userName}'
 
 @description('The name of your Virtual Machine')
-var vmName string = '${namingPrefix}-HV'
+var vmName string = '${userName}-HV'
 
 var bastionName = '${namingPrefix}-Bastion'
 var publicIpAddressName = deployBastion == false ? '${vmName}-PIP' : '${bastionName}-PIP'

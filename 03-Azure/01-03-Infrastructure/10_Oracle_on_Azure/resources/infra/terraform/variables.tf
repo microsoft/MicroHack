@@ -19,13 +19,6 @@ variable "microhack_event_name" {
 variable "odaa_subscription_id" {
   description = "The Azure subscription ID for ODAA resources (single subscription for all ODAA VNets)"
   type        = string
-  default     = "4aecf0e8-2fe2-4187-bc93-0356bd2676f5"
-}
-
-variable "odaa_tenant_id" {
-  description = "The Azure AD tenant ID that owns the ODAA subscription"
-  type        = string
-  default     = "f71980b2-590a-4de9-90d5-6fbc867da951"
 }
 
 variable "location" {
@@ -172,33 +165,10 @@ variable "user_count" {
 }
 
 variable "subscription_targets" {
-  description = "Ordered list of subscription/tenant pairs used for round-robin assignment"
+  description = "Ordered list of subscriptions used for round-robin AKS deployment assignment"
   type = list(object({
     subscription_id = string
-    tenant_id       = string
   }))
-  default = [
-    {
-      subscription_id = "556f9b63-ebc9-4c7e-8437-9a05aa8cdb25"
-      tenant_id       = "f71980b2-590a-4de9-90d5-6fbc867da951"
-    },
-    {
-      subscription_id = "a0844269-41ae-442c-8277-415f1283d422"
-      tenant_id       = "f71980b2-590a-4de9-90d5-6fbc867da951"
-    },
-    {
-      subscription_id = "b1658f1f-33e5-4e48-9401-f66ba5e64cce"
-      tenant_id       = "f71980b2-590a-4de9-90d5-6fbc867da951"
-    },
-    {
-      subscription_id = "9aa72379-2067-4948-b51c-de59f4005d04"
-      tenant_id       = "f71980b2-590a-4de9-90d5-6fbc867da951"
-    },
-    {
-      subscription_id = "98525264-1eb4-493f-983d-16a330caa7f6"
-      tenant_id       = "f71980b2-590a-4de9-90d5-6fbc867da951"
-    }
-  ]
 
   validation {
     condition     = length(var.subscription_targets) >= 1 && length(var.subscription_targets) <= 5
@@ -255,17 +225,30 @@ variable "client_secret" {
 }
 
 # ===============================================================================
-# Subscription and Tenant Configuration
+# Tenant Configuration
 # ===============================================================================
 
-variable "subscription_id" {
-  description = "The Azure subscription ID where resources will be deployed"
+variable "tenant_id" {
+  description = "Azure AD tenant ID for service principal authentication. Used across all subscriptions."
   type        = string
-  default     = "4aecf0e8-2fe2-4187-bc93-0356bd2676f5"
+
+  validation {
+    condition     = can(regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$", var.tenant_id))
+    error_message = "The tenant_id must be a valid GUID/UUID format."
+  }
 }
 
-variable "tenant_id" {
-  description = "The Azure AD tenant ID for the subscription"
-  type        = string
-  default     = "f71980b2-590a-4de9-90d5-6fbc867da951"
+# ===============================================================================
+# Azure AD Workarounds
+# ===============================================================================
+
+variable "azuread_propagation_wait_seconds" {
+  description = "Wait time in seconds for Azure AD changes to propagate before adding group membership. Set to 0 to disable wait. See GitHub issue https://github.com/hashicorp/terraform-provider-azuread/issues/1810 for details on eventual consistency bug."
+  type        = number
+  default     = 180
+
+  validation {
+    condition     = var.azuread_propagation_wait_seconds >= 0
+    error_message = "azuread_propagation_wait_seconds must be 0 or greater."
+  }
 }

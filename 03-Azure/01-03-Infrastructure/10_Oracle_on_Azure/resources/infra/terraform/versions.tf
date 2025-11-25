@@ -37,6 +37,10 @@ terraform {
       source  = "azure/azapi"
       version = "~> 2.0"
     }
+    time = {
+      source  = "hashicorp/time"
+      version = "~> 0.12"
+    }
   }
 
   # Uncomment and configure the backend for remote state storage

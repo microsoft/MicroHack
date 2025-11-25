@@ -449,6 +449,9 @@ terraform destroy
 After successful destruction, verify:
 
 ```powershell
+# clean up ODAA resources
+.\scripts\cleanup-odaa-and-destroy.ps1
+
 # Check no resource groups remain
 az group list --query "[?starts_with(name, 'aks-mh') || starts_with(name, 'odaa-')].name" --output table
 

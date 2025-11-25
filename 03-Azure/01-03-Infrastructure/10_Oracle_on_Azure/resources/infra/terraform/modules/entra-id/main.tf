@@ -123,5 +123,13 @@ resource "azuread_group_member" "aks_deployment_users" {
 
   group_object_id  = data.azuread_group.aks_deployment.object_id
   member_object_id = each.value.object_id
+
+  depends_on = [azuread_user.aks_deployment_users]
+
+  lifecycle {
+    ignore_changes = [
+      member_object_id
+    ]
+  }
 }
 

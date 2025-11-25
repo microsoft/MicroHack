@@ -16,6 +16,10 @@ terraform {
       source  = "hashicorp/kubernetes"
       version = "~> 2.30"
     }
+    azapi = {
+      source  = "azure/azapi"
+      version = "~> 2.0"
+    }
   }
 }
 
@@ -320,3 +324,41 @@ resource "azurerm_role_assignment" "private_dns_contributor_odaa" {
   principal_id         = var.deployment_user_object_id
   description          = "Allows the deployment user to manage private DNS zone ${azurerm_private_dns_zone.odaa[each.key].name}"
 }
+
+# ===============================================================================
+# Container Network Observability Logs
+# ===============================================================================
+# Enable Container Network Observability logs using AzAPI provider.
+# This feature provides Layer 3/4/7 network traffic visibility using eBPF/Cilium.
+# 
+# Requirements (already satisfied):
+# - Cilium data plane (configured via network_policy = "azure")
+# - Azure Monitor agent (configured via oms_agent block)
+# - Log Analytics workspace (already provisioned)
+#
+# Note: Commented out to avoid conflicts with in-progress node pool operations.
+# Uncomment and apply after initial cluster creation completes.
+# Reference: https://learn.microsoft.com/en-us/azure/aks/container-network-observability-logs
+# ===============================================================================
+
+# resource "azapi_update_resource" "enable_container_network_logs" {
+#   type        = "Microsoft.ContainerService/managedClusters@2024-05-01"
+#   resource_id = azurerm_kubernetes_cluster.aks.id
+#
+#   body = {
+#     properties = {
+#       networkProfile = {
+#         advancedNetworking = {
+#           observability = {
+#             enabled = true
+#           }
+#         }
+#       }
+#     }
+#   }
+#
+#   depends_on = [
+#     azurerm_kubernetes_cluster.aks,
+#     azurerm_kubernetes_cluster_node_pool.user
+#   ]
+# }

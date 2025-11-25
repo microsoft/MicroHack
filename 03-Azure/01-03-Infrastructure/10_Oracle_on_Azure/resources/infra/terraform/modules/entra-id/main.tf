@@ -127,9 +127,7 @@ resource "azuread_group_member" "aks_deployment_users" {
   depends_on = [azuread_user.aks_deployment_users]
 
   lifecycle {
-    ignore_changes = [
-      member_object_id
-    ]
+    ignore_changes = all
   }
 }
 

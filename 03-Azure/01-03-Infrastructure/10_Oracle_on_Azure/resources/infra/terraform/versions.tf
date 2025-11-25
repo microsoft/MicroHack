@@ -33,6 +33,10 @@ terraform {
       source  = "hashicorp/helm"
       version = "~> 2.13"
     }
+    azapi = {
+      source  = "azure/azapi"
+      version = "~> 2.0"
+    }
   }
 
   # Uncomment and configure the backend for remote state storage

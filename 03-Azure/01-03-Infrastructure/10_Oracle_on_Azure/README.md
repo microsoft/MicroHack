@@ -16,6 +16,57 @@ You will learn how to create and configure an Autonomous Database shared of the 
 
 Furthermore we will address the integration of ODAA into the existing Azure native services and howto use Goldengate for migrations to ODAA and integration into Azure Fabric. 
 
+
+## Mapping between Azure and OCI
+
+### Azure Tenant
+Azure: Top-level identity boundary (Microsoft Entra ID directory: users, groups, apps).
+
+OCI rough equivalent: OCI tenancy (the root container you get when you sign up, with its identity domain/compartments).
+
+
+### Azure Subscription
+Azure: Billing + deployment boundary that lives inside a tenant; holds resource groups and resources; you can have many subscriptions per tenant.
+
+OCI rough equivalent: OCI tenancy with compartments + cost-tracking tags – there isn’t a 1:1 “subscription” object, but at a high level, subscriptions in Azure sit between tenant and resource groups much like the tenancy (plus contracts) underpins OCI usage and billing.
+
+
+### Azure Resource Group
+Azure: Logical container for related resources within a subscription; used for lifecycle, RBAC, policy, and tagging scope.
+
+OCI closest equivalent: Compartment (a logical container for resources used for access control and organization).
+
+
+### Logical Containers / Scopes
+Azure: Tenant → Subscription → Resource Group → Resource.
+
+OCI: Tenancy → Compartment (nested) → Resource.
+Point: compartments in OCI are closer to resource groups + some subscription-scope concepts in Azure.
+
+
+### Regions & Availability
+Azure: Regions, Availability Zones, Availability Sets.
+
+OCI: Regions, Availability Domains, Fault Domains.
+Point: same idea (isolation for resilience), different names and grouping.
+
+
+### Networking
+Azure: Virtual Network (VNet), Subnets, Network Security Groups (NSGs), Application Gateway/Load Balancer.
+~~~text
+Virtual Network (VNet)
+A private network in Azure where you place resources (VMs, databases, etc.), similar to an on‑premises LAN in the cloud.
+Subnet
+A segment inside a VNet that groups resources and defines their IP range and routing boundaries.
+Network Security Group (NSG)
+A set of inbound/outbound rules that allow or block traffic to subnets or individual NICs, acting like a basic stateful firewall for your VNets.
+~~~
+
+OCI: Virtual Cloud Network (VCN), Subnets, Security Lists / NSGs, Load Balancer.
+Point: VNet ≈ VCN, NSG ≈ NSG/Security List.
+
+
+
 ## Learning Objectives
 
 - Understand how to onboard securely to Azure and prepare an account for Oracle Database@Azure administration.
@@ -27,6 +78,7 @@ Furthermore we will address the integration of ODAA into the existing Azure nati
 <br>
 - <b>Optional</b> available session is the integration of Oracle Database at Azure databases into the Azure Fabric to have a holistic view on business data including the realization of a central data governance. 
 - <b>Optional</b> available session is the integration of the deployed ADB via OAuth v2 tokens with the Azure Entra ID
+
 
 ## 📋 Prerequisites
 
@@ -42,9 +94,13 @@ Furthermore we will address the integration of ODAA into the existing Azure nati
 
 Before we start with the Microhack you should have 3 passwords:
 1. You User with the initial password for the registration, which you have to change during the registration
-   
 2. The password you need to use for admin user of the ADB deployment - <font color=red>Don't use different passwords</font>
 3. The password you need to use for the AKS cluster deployment  - <font color=red>Don't use different passwords</font>
+
+Before using the AZ command line in your preferred GUI or CLI, please make sure to log out of any previous session by running the command: 
+   ~~~powershell 
+   az logout 
+   ~~~
 
 
 Open a private browser session or create an own browser profile to sign in with the credentials you received, and register multi-factor authentication. In a first check you have to verify if the two resource groups for the hackathon are created.
@@ -65,7 +121,7 @@ The goal is to ensure your Azure account is ready for administrative work in the
 * Check if the assigned user have the required roles in both resource groups.
 
 #### Learning Resources
-* [Sign in to the Azure portal](https://learn.microsoft.com/azure/azure-portal/azure-portal-sign-in), 
+* [Sign in to the Azure portal](https://azure.microsoft.com/en-us/get-started/azure-portal)
 * [Set up Microsoft Entra multi-factor authentication](https://learn.microsoft.com/azure/active-directory/authentication/howto-mfa-userdevicesettings)
 * [Groups and roles in Azure](https://docs.oracle.com/en-us/iaas/Content/database-at-azure/oaagroupsroles.htm)
 
@@ -104,7 +160,9 @@ Review the Oracle Database@Azure service offer, the required Azure resource prov
 
 ### Challenge 2: Create an Oracle Database@Azure (ODAA) Autonomous Database (ADB) Instance
 
-Walk through the delegated subnet prerequisites, select the assigned resource group, and deploy the Autonomous Database instance with the standard parameters supplied in the guide. Completion is confirmed when the database instance shows a healthy state in the portal.
+Walk through the delegated subnet prerequisites, select the assigned resource group, and deploy the Autonomous Database instance with the standard parameters supplied in the guide. Completion is confirmed when the database instance shows a healthy state in the portal. 
+
+After you started the ADB deployment please clone the Github repository. Instructions are listed in the challenge 2 at the end of the ADB deployment section - see **IMPORTANT: While you are waiting for the ADB creation**
 
 #### Actions
 * Verify that a delegated subnet of the upcoming ADB deployment is available
@@ -137,7 +195,7 @@ Update the Network Security Group to allow traffic from the AKS environment and 
 #### Learning Resources
 * [Network security groups overview](https://learn.microsoft.com/azure/virtual-network/network-security-groups-overview),
 * [Private DNS zones in Azure](https://learn.microsoft.com/azure/dns/private-dns-privatednszone), 
-* [Oracle Database@Azure networking guidance](https://docs.oracle.com/en-us/iaas/Content/database-at-azure/azucr-networking-overview.htm)
+* [Oracle Database@Azure networking guidance](https://docs.oracle.com/en-us/iaas/Content/database-at-azure/network.htm)
 
 #### Solution
 * Challenge 3: [Update the Oracle ADB NSG and DNS](./walkthrough/update-odaa-nsg-dns/update-odaa-nsg-dns.md)
@@ -160,8 +218,8 @@ Deploy the pre-built Helm chart into AKS to install the sample Oracle database, 
 #### Learning Resources
 * [Connect to an AKS cluster using Azure CLI](https://learn.microsoft.com/azure/aks/learn/quick-kubernetes-deploy-cli),
 *  [Use Helm with AKS](https://learn.microsoft.com/azure/aks/kubernetes-helm), 
-*  [Oracle GoldenGate Microservices overview](https://docs.oracle.com/en/middleware/goldengate/core/23.3/gghic/oracle-goldengate-microservices-overview.html), 
-*  [Oracle Data Pump overview](https://docs.oracle.com/en/database/oracle/oracle-database/23/sutil/introduction-to-oracle-data-pump.html)
+*  [Oracle GoldenGate Microservices overview](https://docs.oracle.com/en/middleware/goldengate/core/23/coredoc/), 
+*  [Oracle Data Pump overview](https://docs.oracle.com/en/database/oracle/oracle-database/26/sutil/oracle-data-pump-overview.html)
 
 #### Solution
 * Challenge 4: [Simulate the On-Premises Environment](./walkthrough/onprem-ramp-up/onprem-ramp-up.md)
@@ -182,8 +240,8 @@ Use the Instant Client pod to run the scripted SQL latency test against the Auto
 * Sucdessful execution of the available performance scripts
 
 #### Learning Resources
-* [Connect to Oracle Database@Azure using SQL*Plus](https://docs.oracle.com/en-us/iaas/Content/database-at-azure/azucr-connect-sqlplus.htm), 
-* [Diagnose metrics and logs for Oracle Database@Azure](https://learn.microsoft.com/azure/oracle/oracle-database-at-azure-monitor)
+* [Connect to Oracle Database@Azure using SQL*Plus](https://docs.oracle.com/en-us/iaas/autonomous-database-serverless/doc/connect-sqlplus-tls.html), 
+* [Diagnose metrics and logs for Oracle Database@Azure](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/scenarios/oracle-on-azure/oracle-manage-monitor-oracle-database-azure)
 
 #### Solution
 * Challenge 5: [Measure Network Performance to Your Oracle Database@Azure Autonomous Database](./walkthrough/perf-test-odaa/perf-test-odaa.md)

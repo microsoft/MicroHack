@@ -1,4 +1,4 @@
-# 🔌 Challenge 3: Perform Connectivity Tests on Oracle Database@azure [ODAA] Autonoumous Database
+# 🔌 Challenge 5: Perform Connectivity Tests on Oracle Database@azure [ODAA] Autonoumous Database
 
 [Back to workspace README](../../README.md)
 
@@ -16,7 +16,7 @@ This is inspired from the blog of Clemens Bleile.
 
 ~~~powershell
 
-az login --use-device-code
+az login # choose your assigned user account for ex. user01@cptazure.org or the menu "Work or school account
 # switch to the subscription where AKS is deployed
 
 $subAKS="sub-mh2" # replace with your AKS subscription name
@@ -409,7 +409,7 @@ $trgConn="(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(
 
 ~~~powershell
 # Configure your ADB connection details
-$ADB_PASSWORD = "Welcome1234#"  # Replace with your actual ADB password
+$ADB_PASSWORD = <REPLACE-WITH-YOUR-ADB-PASSWORD>  # Replace with your actual ADB password for ex Welcome1234#
 $ADB_TNS = $trgConn  # Use the TNS connection string obtained from docs\odaa-get-token.md
 # Run an ad-hoc test
 kubectl exec -it $podNameConnPing -n adb-perf-test -- connping -l "admin/$ADB_PASSWORD@$ADB_TNS" --period=90

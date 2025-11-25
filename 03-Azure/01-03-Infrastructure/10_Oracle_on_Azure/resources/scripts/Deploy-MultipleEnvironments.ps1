@@ -232,7 +232,7 @@ function Main {
     # Login to Azure once
     Write-ColorOutput "Logging into Azure..." "Yellow"
     try {
-        az login --use-device-code
+        az login 
         az account set -s $SubscriptionName
         Write-ColorOutput "Successfully logged into Azure!" "Green"
     }

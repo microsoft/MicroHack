@@ -3,7 +3,7 @@
 ### 🔐 Login to Azure and set the right subscription
 
 ~~~powershell
-az login --use-device-code
+az login # choose your assigned user account for ex. user01@cptazure.org or the menu "Work or school account
 az account show
 az account set -s "ODAA"
 # Register required providers for odaa

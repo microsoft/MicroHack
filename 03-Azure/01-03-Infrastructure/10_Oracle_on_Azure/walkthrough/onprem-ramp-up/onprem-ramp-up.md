@@ -20,7 +20,7 @@ Helm is a package manager for Kubernetes that allows you to define, install, and
 ## 🔐 Login to Azure and set the right subscription
 
 ~~~bash
-az login --use-device-code
+az login # choose your assigned user account for ex. user01@cptazure.org or the menu "Work or school account
 # make sure you select the subscription which starts with "sub-team", do not choose the subscription called "sub-mhodaa".
 # Assign the subscription name to a variable
 $subAKS="sub-mh2" # Replace with your Subscription Name.

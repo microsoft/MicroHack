@@ -136,7 +136,7 @@ function Connect-AzureAccount {
     
     try {
         # Login with device code
-        az login --use-device-code
+        az login
         
         # Show current account
         Write-ColorOutput "Current account information:" "Cyan"

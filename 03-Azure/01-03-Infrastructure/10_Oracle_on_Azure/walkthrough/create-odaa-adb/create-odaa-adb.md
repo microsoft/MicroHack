@@ -5,6 +5,8 @@
 1. Registration of the Azure resource provider in Azure. In our case they are alreay deployed but can be checked if they are registered - see [Oracle Documentation: Oracle Database at Azure Network Enhancements](https://learn.microsoft.com/en-us/azure/oracle/oracle-db/oracle-database-network-plan)
 2. Check the availability of a vnet and delegated subnet for the deployment of the database.
 3. Deploy an Oracle ADB in Azure. 
+   1. Important is to choose as the region <font color=red>FRANCE CENTRAL</font>
+   2. use in the Networking section <font color=red>Managed private virtual network IP only</font>
 4. Furthermore you will deploy in this chapter an ADB database via the Azure Portal.
 5. Finally if the existing vnet peering between the AKS - and database subscription is available and correctly configured.
 

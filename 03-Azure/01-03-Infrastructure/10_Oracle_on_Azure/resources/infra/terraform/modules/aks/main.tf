@@ -235,12 +235,12 @@ resource "azurerm_role_assignment" "aks_rbac_writer" {
   description          = "Allows the deployment user to deploy Kubernetes workloads in ${azurerm_kubernetes_cluster.aks.name}"
 }
 
-# Reader role for visibility into the AKS subscription
-resource "azurerm_role_assignment" "subscription_reader" {
-  scope                = "/subscriptions/${var.subscription_id}"
+# Reader role for visibility into the AKS resource group
+resource "azurerm_role_assignment" "resource_group_reader" {
+  scope                = azurerm_resource_group.aks.id
   role_definition_name = "Reader"
   principal_id         = var.deployment_user_object_id
-  description          = "Allows the deployment user to view resources in subscription ${var.subscription_id}"
+  description          = "Allows the deployment user to view resources in resource group ${azurerm_resource_group.aks.name}"
 }
 
 # ===============================================================================
@@ -249,10 +249,11 @@ resource "azurerm_role_assignment" "subscription_reader" {
 
 # Grant AKS cluster managed identity pull access to shared ACR
 resource "azurerm_role_assignment" "acr_pull" {
-  scope                = "/subscriptions/09808f31-065f-4231-914d-776c2d6bbe34/resourceGroups/odaa/providers/Microsoft.ContainerRegistry/registries/odaamh"
-  role_definition_name = "AcrPull"
-  principal_id         = azurerm_kubernetes_cluster.aks.kubelet_identity[0].object_id
-  description          = "Allows AKS cluster ${azurerm_kubernetes_cluster.aks.name} to pull images from odaamh ACR"
+  scope                            = "/subscriptions/09808f31-065f-4231-914d-776c2d6bbe34/resourceGroups/odaa/providers/Microsoft.ContainerRegistry/registries/odaamh"
+  role_definition_name             = "AcrPull"
+  principal_id                     = azurerm_kubernetes_cluster.aks.kubelet_identity[0].object_id
+  skip_service_principal_aad_check = true
+  description                      = "Allows AKS cluster ${azurerm_kubernetes_cluster.aks.name} to pull images from odaamh ACR"
 }
 
 # ===============================================================================

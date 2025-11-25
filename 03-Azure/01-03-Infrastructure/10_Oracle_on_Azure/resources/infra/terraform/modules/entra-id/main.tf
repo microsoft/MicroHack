@@ -118,10 +118,31 @@ resource "azuread_user" "aks_deployment_users" {
   }
 }
 
+# Wait for Azure AD eventual consistency after user creation (conditionally applied)
+# Only created if azuread_propagation_wait_seconds > 0
+# GitHub Issue: https://github.com/hashicorp/terraform-provider-azuread/issues/1810
+# Community reports show 60-90s delays commonly needed, some environments require 180-300s or up to 48-72 hours
+# Azure AD has no SLA for Graph API replication times
+resource "time_sleep" "wait_for_user_propagation" {
+  count      = var.azuread_propagation_wait_seconds > 0 ? 1 : 0
+  depends_on = [azuread_user.aks_deployment_users]
+
+  create_duration = "${var.azuread_propagation_wait_seconds}s"
+}
+
 resource "azuread_group_member" "aks_deployment_users" {
   for_each = azuread_user.aks_deployment_users
 
   group_object_id  = data.azuread_group.aks_deployment.object_id
   member_object_id = each.value.object_id
+
+  depends_on = [
+    azuread_user.aks_deployment_users,
+    time_sleep.wait_for_user_propagation
+  ]
+
+  lifecycle {
+    ignore_changes = all
+  }
 }
 

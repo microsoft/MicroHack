@@ -40,7 +40,7 @@ locals {
       index             = idx                                                                               # originates from the user count.
       provider_index    = idx % local.subscription_target_count                                             # round robin assignment to subscription slots
       subscription_id   = local.subscription_targets[idx % local.subscription_target_count].subscription_id # round robin assignment to subscription id
-      tenant_id         = local.subscription_targets[idx % local.subscription_target_count].tenant_id       # round robin assignment to corresponding tenant id
+      tenant_id         = var.tenant_id                                                                     # single tenant ID for all deployments
       postfix           = format("%02d", idx)
       prefix            = local.default_prefix
       location          = local.default_location
@@ -68,14 +68,10 @@ locals {
 
   deployment_names = [for deployment in values(local.deployments) : deployment.name]
 
-  tenant_ids = distinct([for deployment in values(local.deployments) : deployment.tenant_id])
-
   shared_deployment_group = {
     name        = "mh-odaa-user-grp"
     description = "Security group with rights to deploy applications to the Oracle AKS cluster"
   }
-
-  shared_deployment_group_tenant_id = try(local.tenant_ids[0], var.odaa_tenant_id)
 
   deployment_users = {
     for key, deployment in local.deployments :
@@ -98,9 +94,10 @@ module "entra_id_users" {
 
   aks_deployment_group_name        = local.shared_deployment_group.name
   aks_deployment_group_description = local.shared_deployment_group.description
-  tenant_id                        = local.shared_deployment_group_tenant_id
+  tenant_id                        = var.tenant_id
   user_principal_domain            = var.entra_user_principal_domain
   users                            = local.deployment_users
+  azuread_propagation_wait_seconds = var.azuread_propagation_wait_seconds
 
   tags = merge(local.common_tags, {
     AKSDeploymentGroup = local.shared_deployment_group.name

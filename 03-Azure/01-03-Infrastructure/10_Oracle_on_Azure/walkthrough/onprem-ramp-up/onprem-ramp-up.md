@@ -23,7 +23,7 @@ Helm is a package manager for Kubernetes that allows you to define, install, and
 az login # choose your assigned user account for ex. user01@cptazure.org or the menu "Work or school account
 # make sure you select the subscription which starts with "sub-team", do not choose the subscription called "sub-mhodaa".
 # Assign the subscription name to a variable
-$subAKS="sub-mh2" # Replace with your Subscription Name.
+$subAKS="sub-mh0" # Replace with your Subscription Name.
 az account set --subscription $subAKS # make sure you are in the AKS subscription
 ~~~
 
@@ -31,8 +31,8 @@ az account set --subscription $subAKS # make sure you are in the AKS subscriptio
 
 ~~~bash
 # log into your AKS cluster if not already done
-$rgAKS="aks-user02" # replace with your AKS resource group name
-$AKSClusterName="aks-user02" # replace with your AKS cluster name
+$rgAKS="aks-user00" # replace with your AKS resource group name
+$AKSClusterName="aks-user00" # replace with your AKS cluster name
 ~~~
 
 ## ⚓ Connect to AKS
@@ -70,7 +70,7 @@ Update Complete. ⎈Happy Helming!⎈
 
 ~~~powershell
 # retrieve the external IP of the nginx ingress controller
-$UserName = "user02" # replace with your user name
+$UserName = "user00" # replace with your user name
 # create a copy of the template file
 cp resources/template/gghack.yaml .
 # replace the placeholder with the actual external IP

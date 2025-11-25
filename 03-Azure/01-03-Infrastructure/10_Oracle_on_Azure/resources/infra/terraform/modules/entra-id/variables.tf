@@ -60,3 +60,9 @@ variable "user_password_min_numeric" {
   type        = number
   default     = 1
 }
+
+variable "azuread_propagation_wait_seconds" {
+  description = "Wait time in seconds for Azure AD changes to propagate before adding group membership. Set to 0 to disable wait."
+  type        = number
+  default     = 180
+}

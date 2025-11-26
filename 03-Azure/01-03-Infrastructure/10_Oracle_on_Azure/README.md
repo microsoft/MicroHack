@@ -224,8 +224,20 @@ After you started the ADB deployment please clone the Github repository. Instruc
 
 #### Actions
 * Verify that a delegated subnet of the upcoming ADB deployment is available
-* Deploy the ADB in the previous created subnet 
-  
+* Deploy the ADB with the following parameters:
+
+> [!IMPORTANT]
+> **ADB Deployment Settings:**
+> 1. Workload type: **OLTP**
+> 2. Database version: **23ai**
+> 3. ECPU Count: **2**
+> 4. Compute auto scaling: **off**
+> 5. Storage: **20 GB**
+> 6. Storage autoscaling: **off**
+> 7. Backup retention period in days: **1 day**
+> 8. Administrator password: (e.g., `Welcome1234#`)
+> 9. License type: **License included**
+> 10. Oracle database edition: **Enterprise Edition**
 
 #### Sucess criteria
 * Delegated Subnet is available

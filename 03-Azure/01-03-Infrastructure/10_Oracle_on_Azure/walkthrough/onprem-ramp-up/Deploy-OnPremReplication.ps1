@@ -47,10 +47,10 @@
     The template is used as base values; user-specific values are overridden via Helm --set
 
 .EXAMPLE
-    .\Deploy-OnPremReplication.ps1 -UserName "user01" -ADBPassword "Welcome1234#" -ADBConnectionString "(description= ...)"
+    .\Deploy-OnPremReplication.ps1 -UserName "user01" -ADBPassword "<YOUR-PASSWORD>" -ADBConnectionString "(description= ...)"
 
 .EXAMPLE
-    .\Deploy-OnPremReplication.ps1 -UserName "user01" -ADBPassword "Welcome1234#" -ADBConnectionString "(description= ...)" -SkipAKSConnection
+    .\Deploy-OnPremReplication.ps1 -UserName "user01" -ADBPassword "<YOUR-PASSWORD>" -ADBConnectionString "(description= ...)" -SkipAKSConnection
 
 .NOTES
     Author: ODAA MicroHack Team

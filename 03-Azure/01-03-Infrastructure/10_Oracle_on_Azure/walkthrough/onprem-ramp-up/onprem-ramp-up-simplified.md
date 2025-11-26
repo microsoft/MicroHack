@@ -2,7 +2,7 @@
 
 [Back to workspace README](../../README.md) | [Original detailed walkthrough](./onprem-ramp-up.md)
 
-> 📖 **This is the simplified version** of Challenge 4. It uses an automated script to deploy everything with minimal manual steps. If you prefer to understand each step in detail, refer to the [original walkthrough](./onprem-ramp-up.md).
+> 📖 We are going to use an automated script to deploy everything with minimal manual steps which will mimic an OnPrem environment.
 
 ---
 
@@ -24,7 +24,7 @@ This challenge sets up Oracle GoldenGate to replicate data from an on-premises O
 Before starting, make sure you have:
 
 - [x] Completed previous challenges (ODAA ADB created)
-- [x] Your ODAA ADB password (e.g., `Welcome1234#`)
+- [x] Your ODAA ADB password
 - [x] Access to your AKS cluster
 - [x] Azure CLI, kubectl, and helm installed
 
@@ -64,7 +64,7 @@ az account set --subscription "sub-team0"
 # Run the deployment script (use $trgConn if you retrieved it via docs\odaa-get-token.md)
 .\Deploy-OnPremReplication.ps1 `
     -UserName "user00" `
-    -ADBPassword "Welcome1234#" `
+    -ADBPassword "<YOUR-PASSWORD>" `
     -ADBConnectionString $trgConn
 ```
 
@@ -217,7 +217,7 @@ Type `exit` to leave the pod.
 # Uninstall and reinstall
 .\Deploy-OnPremReplication.ps1 `
     -UserName "user00" `
-    -ADBPassword "Welcome1234#" `
+    -ADBPassword "<YOUR-PASSWORD>" `
     -ADBConnectionString "(description= ...)" `
     -Uninstall
 ```

@@ -250,7 +250,7 @@ Copy-Item "resources\infra\k8s\connping-job.yaml " "connping-job.yaml"
 
 # Configure your ADB connection details
 
-$ADB_PASSWORD = "Welcome1234#"  # Replace with your actual ADB password
+$ADB_PASSWORD = "<YOUR-PASSWORD>"  # Replace with your actual ADB password
 $ADB_TNS = $trgConn  # Use the TNS connection string obtained from docs\odaa-get-token.md
 
 # Update the job with your connection details
@@ -265,7 +265,7 @@ The updated configuration should look like this:
 
 ~~~yaml
             USER="admin"
-            PASSWORD="Welcome1234#"
+            PASSWORD="<YOUR-PASSWORD>"
             TNS="(description= (retry_count=20)(retry_delay=3)(address..."
 ~~~
 
@@ -409,7 +409,7 @@ $trgConn="(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(
 
 ~~~powershell
 # Configure your ADB connection details
-$ADB_PASSWORD = <REPLACE-WITH-YOUR-ADB-PASSWORD>  # Replace with your actual ADB password for ex Welcome1234#
+$ADB_PASSWORD = <REPLACE-WITH-YOUR-ADB-PASSWORD>  # Replace with your actual ADB password for ex <YOUR-PASSWORD>
 $ADB_TNS = $trgConn  # Use the TNS connection string obtained from docs\odaa-get-token.md
 # Run an ad-hoc test
 kubectl exec -it $podNameConnPing -n adb-perf-test -- connping -l "admin/$ADB_PASSWORD@$ADB_TNS" --period=90
@@ -595,7 +595,7 @@ Inside the instantclient pod, run the following commands:
 
 ~~~bash
 sqlplus admin@'(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=y1jilkjp.adb.eu-paris-1.oraclecloud.com))(connect_data=(service_name=gc2401553d1c7ab_user02_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))' # replace with your TNS connection string
-# Enter your password e.g. Welcome1234#
+# Enter your password e.g. <YOUR-PASSWORD>
 ~~~
 
 Execute the Setup

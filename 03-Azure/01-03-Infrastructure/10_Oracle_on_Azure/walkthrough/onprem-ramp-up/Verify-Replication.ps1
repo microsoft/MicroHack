@@ -19,7 +19,7 @@
     Kubernetes namespace (default: microhacks)
 
 .EXAMPLE
-    .\Verify-Replication.ps1 -ADBConnectionString "(description= ...)" -ADBPassword "Welcome1234#"
+    .\Verify-Replication.ps1 -ADBConnectionString "(description= ...)" -ADBPassword "<YOUR-PASSWORD>"
 
 .NOTES
     Run this after Deploy-OnPremReplication.ps1 has completed successfully

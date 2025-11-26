@@ -7,18 +7,19 @@
 This intro-level microhack (hackathon) helps you gain hands-on experience with Oracle Database@Azure (ODAA).
 
 ### What is Oracle Database at Azure
-Oracle Database@Azure (ODAA) is the joint Oracle–Microsoft managed service that delivers different Database services - see [ODAA deployed Azure regions](https://apexadb.oracle.com/ords/r/dbexpert/multicloud-capabilities/multicloud-regions?session=412943632928469) running on Oracle infrastructure colocated in Azure regions while exposing native Azure management, networking, billing, integration with Azure Key Vault, Entra ID or Azure Sentinel. This microhack targets the first-tier partner solution play focussed on Autononmous database because Microsoft designates ODAA as a strategic, co-sell priority workload; the exercises give partner architects the end-to-end skills—subscription linking, delegated networking, hybrid connectivity, and performance validation—needed to confidently deliver that priority scenario for customers with Oracle related workloads in Azure.
+Oracle Database@Azure (ODAA) is the joint Oracle–Microsoft managed service that delivers different Database services - see [ODAA deployed Azure regions](https://apexadb.oracle.com/ords/r/dbexpert/multicloud-capabilities/multicloud-regions?session=412943632928469) running on Oracle infrastructure colocated in Azure regions while exposing native Azure management, networking, billing, integration with Azure Key Vault, Entra ID or Azure Sentinel. This microhack targets the first-tier partner solution play focused on Autonomous Database because Microsoft designates ODAA as a strategic, co-sell priority workload; the exercises give partner architects the end-to-end skills—subscription linking, delegated networking, hybrid connectivity, and performance validation—needed to confidently deliver that priority scenario for customers with Oracle-related workloads in Azure.
 
 ### What You Will Learn in the MicroHack
-You will learn how to create and configure an Autonomous Database shared of the offered Oracle Database@Azure services, how to deploy an Autonomous Database instance inside an Azure delegated subnet, update network security group (NSG) and DNS settings to enable connectivity from a simulated on-premises environment, and measure network performance to the Oracle Autonomous Database instance. To make the microhack more realistic we will deploy the Application layer (AKS) and the Data layer (ODAA) in 2 different subscription to simulate a hub & spoke architecture. The following picture shows highlevel the architecture of the microhack.
+You will learn how to create and configure an Autonomous Database Shared of the offered Oracle Database@Azure services, how to deploy an Autonomous Database instance inside an Azure delegated subnet, update network security group (NSG) and DNS settings to enable connectivity from a simulated on-premises environment, and measure network performance to the Oracle Autonomous Database instance. To make the microhack more realistic, we will deploy the Application layer (AKS) and the Data layer (ODAA) in two different subscriptions to simulate a hub-and-spoke architecture. The following picture shows the high-level architecture of the microhack.
 
 ![ODAA microhack architecture](media/overivew%20deployment.png)
 
-Furthermore we will address the integration of ODAA into the existing Azure native services and howto use Goldengate for migrations to ODAA and integration into Azure Fabric. 
+Furthermore, we will address the integration of ODAA into the existing Azure native services and how to use GoldenGate for migrations to ODAA and integration into Azure Fabric. 
 
 
-## What is vnet peering
-In our deployed scenario we created in advance a vnet peering between the AKS VNet and the ADB VNet which is required so the Kubernetes workloads can talk privately and directly to the database.
+## What is VNet Peering?
+
+In our deployed scenario, we created in advance a VNet peering between the AKS VNet and the ADB VNet, which is required so the Kubernetes workloads can communicate privately and directly with the database.
 
 ### Architecture Diagram
 
@@ -31,7 +32,6 @@ flowchart TB
             subgraph AKS_VNET[VNet: aks-userXX 10.0.0.0/16]
                 subgraph AKS_SUBNET[Subnet: aks 10.0.0.0/23]
                     AKS[AKS Cluster]
-                    PODS[Pods: Instant Client GoldenGate]
                 end
                 DNS[Private DNS Zones]
             end
@@ -50,8 +50,21 @@ flowchart TB
     end
 
     AKS_VNET <-->|VNet Peering| ODAA_VNET
-    PODS -.->|SQL Queries| ADB
+    AKS -.->|SQL Queries| ADB
     DNS -.->|Resolves hostname| ADB
+
+    style AKS_SUB fill:#0078D4,color:#fff
+    style AKS_RG fill:#50E6FF,color:#000
+    style AKS_VNET fill:#7FBA00,color:#fff
+    style AKS_SUBNET fill:#98FB98,color:#000
+    style ODAA_SUB fill:#0078D4,color:#fff
+    style ODAA_RG fill:#50E6FF,color:#000
+    style ODAA_VNET fill:#7FBA00,color:#fff
+    style ODAA_SUBNET fill:#98FB98,color:#000
+    style ADB fill:#C74634,color:#fff
+    style AKS fill:#FFB900,color:#000
+    style DNS fill:#50E6FF,color:#000
+    style NSG fill:#F25022,color:#fff
 ```
 
 ### What does VNet peering mean in detail
@@ -98,6 +111,19 @@ flowchart TB
     USERS --> SUB_AKS
     USERS --> SUB_ODAA
     VNET_AKS <-.->|VNet Peering| VNET_ODAA
+
+    style TENANT fill:#0078D4,color:#fff
+    style USERS fill:#FFB900,color:#000
+    style SUB_AKS fill:#50E6FF,color:#000
+    style SUB_ODAA fill:#50E6FF,color:#000
+    style RG_AKS fill:#7FBA00,color:#fff
+    style RG_ODAA fill:#7FBA00,color:#fff
+    style VNET_AKS fill:#98FB98,color:#000
+    style VNET_ODAA fill:#98FB98,color:#000
+    style AKS_CLUSTER fill:#FFB900,color:#000
+    style LOG fill:#50E6FF,color:#000
+    style DNS_ZONES fill:#50E6FF,color:#000
+    style ADB fill:#C74634,color:#fff
 ```
 
 > **Learn more:** [Azure resource organization](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-setup-guide/organize-resources)
@@ -140,11 +166,11 @@ OCI:    Tenancy --> Compartment (nested) --> Resource
 
 ## 📋 Prerequisites
 
-- Powershell Terminal
-- 🔧 install Azure CLI
-- ⚓ install kubectl
-- install Helm
-- install git and clone this repo by following the instructions in [Clone Partial Repository](docs/clone-partial-repo.md)
+- PowerShell Terminal
+- 🔧 Install Azure CLI
+- ⚓ Install kubectl
+- Install Helm
+- Install git and clone this repo by following the instructions in [Clone Partial Repository](docs/clone-partial-repo.md)
 
 ## 🎯 Challenges
  
@@ -162,23 +188,23 @@ You will receive a user and password for your account from your microhack coach.
 
 Start by browsing to the Azure Portal https://portal.azure.com.
 
-Open a private browser session or create an own browser profile to sign in with the credentials you received, and register multi-factor authentication.
+Open a private browser session or create your own browser profile to sign in with the credentials you received, and register multi-factor authentication.
 
-In a first check you have to verify if the two resource groups for the hackathon are created via the Azure Portal https://portal.azure.com.
+As a first check, you have to verify if the two resource groups for the hackathon are created via the Azure Portal https://portal.azure.com.
 
 #### Actions
 
-* Enable the multi factor authentication (MFA)
-* Login into the Azure portal with the assigned User
-* Verify if the ODAA and AKS resource group including resources are available
-* Verfity the users roles
+* Enable multi-factor authentication (MFA)
+* Log in to the Azure portal with the assigned user
+* Verify if the ODAA and AKS resource groups including resources are available
+* Verify the user's roles
   
-#### Sucess criteria
+#### Success Criteria
 
-* Download the Microsoft authenticator app on your mobile phone
-* Enable MFA for a successful Login
-* Check if the resource groups for the aks and ODAA are available and contains the resources via the Azure Portal https://portal.azure.com. 
-* Check if the assigned user have the required roles in both resource groups.
+* Download the Microsoft Authenticator app on your mobile phone
+* Enable MFA for a successful login
+* Check if the resource groups for AKS and ODAA are available and contain the resources via the Azure Portal https://portal.azure.com
+* Check if the assigned user has the required roles in both resource groups.
 
 #### Learning Resources
 
@@ -195,17 +221,17 @@ In a first check you have to verify if the two resource groups for the hackathon
 > [!NOTE]
 > **This is a theoretical challenge only.** No action is required from participants aside from reading the content. The ODAA subscription has already been created for you to save time.
 
-Review the Oracle Database@Azure service offer, the required Azure resource providers, and the role of the OCI tenancy. By the end you should understand how an Azure subscription links to Oracle Cloud so database services can be created. Please consider that the challenge 1 is already realized for you to save time and is there a pure theoretical challenge.
+Review the Oracle Database@Azure service offer, the required Azure resource providers, and the role of the OCI tenancy. By the end you should understand how an Azure subscription links to Oracle Cloud so database services can be created. Please consider that Challenge 1 is already realized for you to save time and is therefore a purely theoretical challenge.
 
 #### Actions
 
-* Move to the ODAA marketplace side. The purchasing is already done, but checkout the implementation of ODAA on the Azure side.
+* Move to the ODAA marketplace side. The purchasing is already done, but check out the implementation of ODAA on the Azure side.
 * Check if the required Azure resource providers are enabled
   
-#### Sucess criteria
+#### Success Criteria
 
-* Find the Oracle Database at Azure Service at the Azure Portal.
-* Make yourself familar with the available services of ODAA and how to purchase ODAA
+* Find the Oracle Database at Azure Service in the Azure Portal
+* Make yourself familiar with the available services of ODAA and how to purchase ODAA
 
 #### Learning Resources
 
@@ -220,13 +246,14 @@ Review the Oracle Database@Azure service offer, the required Azure resource prov
 
 Walk through the delegated subnet prerequisites, select the assigned resource group, and deploy the Autonomous Database instance with the standard parameters supplied in the guide. Completion is confirmed when the database instance shows a healthy state in the portal.
 
-After you started the ADB deployment please clone the Github repository. Instructions are listed in the challenge 2 at the end of the ADB deployment section - see **IMPORTANT: While you are waiting for the ADB creation**
-
 #### Actions
+
 * Verify that a delegated subnet of the upcoming ADB deployment is available
-* Deploy the ADB with the following parameters:
 
 > [!IMPORTANT]
+>
+> Setup the ADB exactly with the following settings:
+>
 > **ADB Deployment Settings:**
 > 1. Workload type: **OLTP**
 > 2. Database version: **23ai**
@@ -235,19 +262,24 @@ After you started the ADB deployment please clone the Github repository. Instruc
 > 5. Storage: **20 GB**
 > 6. Storage autoscaling: **off**
 > 7. Backup retention period in days: **1 day**
-> 8. Administrator password: (e.g., `Welcome1234#`)
+> 8. Administrator password: (do not use '!' inside your password)
 > 9. License type: **License included**
 > 10. Oracle database edition: **Enterprise Edition**
 
-#### Sucess criteria
+After you started the ADB deployment please clone the Github repository. Instructions are listed in the challenge 2 at the end of the ADB deployment section - see **IMPORTANT: While you are waiting for the ADB creation**
+
+#### Success Criteria
+
 * Delegated Subnet is available
-* ADB shared is successfully deployed
+* ADB Shared is successfully deployed
 
 #### Learning Resources
+
 * [How to provision an Oracle ADB in Azure](https://learn.microsoft.com/en-us/azure/oracle/oracle-db/oracle-database-provision-autonomous-database)
 * [Deploy an ADB in Azure](https://docs.oracle.com/en/solutions/deploy-autonomous-database-db-at-azure/index.html)
 
 #### Solution
+
 * Challenge 2: [Create an Oracle Database@Azure (ODAA) Autonomous Database (ADB) Instance](./walkthrough/create-odaa-adb/create-odaa-adb.md)
 
 ### Challenge 3: Update the Oracle ADB NSG and DNS
@@ -255,59 +287,154 @@ After you started the ADB deployment please clone the Github repository. Instruc
 Update the Network Security Group to allow traffic from the AKS environment and register the Oracle private endpoints in the AKS Private DNS zones. Validate connectivity from AKS after both security and DNS changes are applied.
 
 #### Actions
-* Set the NSG of the CIDR on the OCI side, to allow Ingress from the AKS on the ADB
-* Extract the ODAA FQDN and IP Address and assign them to the Azure Private DNS Zones linked to the AKS VNet.  
 
-#### Sucess criteria
 * Set the NSG of the CIDR on the OCI side, to allow Ingress from the AKS on the ADB
-* DNS is setup correctly. <font color=red><b>Important:</b> Without a working DNS the next Challenge will failed.</font>
+* Extract the ODAA "Database private URL" (FQDN) and "Database private IP" and assign them to the "Azure Private DNS Zones" linked to the AKS VNet.
+
+#### DNS Configuration Diagram
+
+The following diagram shows how Private DNS enables AKS pods to resolve the Oracle ADB hostname:
+
+```mermaid
+flowchart TB
+    subgraph AKS_SUB["Azure Subscription: AKS"]
+        subgraph AKS_RG["Resource Group: aks-userXX"]
+            subgraph VNET["VNet: aks-userXX<br/>10.0.0.0/16"]
+                POD["📦 Pod"]
+            end
+            LINK["🔗 VNet Link"]
+            subgraph DNS_ZONE["Private DNS Zone<br/>adb.eu-paris-1.oraclecloud.com"]
+                A_RECORD["A Record<br/>Name: abc123<br/>IP: 192.168.0.10"]
+            end
+        end
+    end
+
+    subgraph ODAA_SUB["Azure Subscription: ODAA"]
+        ADB["🗄️ Oracle ADB<br/>━━━━━━━━━━━━━━━━━<br/>Database private URL:<br/>abc123.adb.eu-paris-1...<br/>Database private IP:<br/>192.168.0.10"]
+    end
+
+    ADB -.->|"Copy URL & IP"| A_RECORD
+    VNET --- LINK
+    LINK --- DNS_ZONE
+
+    style AKS_SUB fill:#0078D4,color:#fff
+    style ODAA_SUB fill:#0078D4,color:#fff
+    style DNS_ZONE fill:#50E6FF,color:#000
+    style A_RECORD fill:#FFB900,color:#000
+    style ADB fill:#C74634,color:#fff
+    style VNET fill:#7FBA00,color:#fff
+```
+
+**Steps:**
+
+1. **Copy** the Database private URL and IP from the Azure Portal (ODAA ADB resource)
+2. **Create an A record** in the Private DNS Zone with the hostname pointing to the private IP
+3. **Pods in AKS** resolve the FQDN via the VNet-linked Private DNS Zone  
+
+#### Success Criteria
+
+* Set the NSG of the CIDR on the OCI side, to allow ingress from AKS to the ADB
+* DNS is set up correctly.
+
+> [!CAUTION]
+> **Without a working DNS the next Challenge will fail.** Make sure DNS resolution is properly configured before proceeding.
 
 #### Learning Resources
+
 * [Network security groups overview](https://learn.microsoft.com/azure/virtual-network/network-security-groups-overview),
 * [Private DNS zones in Azure](https://learn.microsoft.com/azure/dns/private-dns-privatednszone), 
 * [Oracle Database@Azure networking guidance](https://docs.oracle.com/en-us/iaas/Content/database-at-azure/network.htm)
 
 #### Solution
+
 * Challenge 3: [Update the Oracle ADB NSG and DNS](./walkthrough/update-odaa-nsg-dns/update-odaa-nsg-dns.md)
 
 ### Challenge 4: Simulate the On-Premises Environment
 
 Deploy the pre-built Helm chart into AKS to install the sample Oracle database, Data Pump job, GoldenGate services, and Instant Client. Manage the shared secrets carefully and verify that data flows from the source schema into the Autonomous Database target schema.
 
-#### Actions
-* Deploy of the AKS cluster with the responsible Pods, juypter notebook with CPAT, Oracle instant client and Goldengate
-* Verify AKS cluster deployment 
-* Check the connectivity from instant client on the ADB database and check if the SH schema from the 23 ai free edition is migrated to the SH2 schema in the ADB
-* Schema the Goldengate configuration
+#### Architecture Diagram
 
-#### Sucess criteria
+The following diagram shows the components deployed via Helm and the data replication flow:
+
+```mermaid
+flowchart TB
+    subgraph AKS_SUB["Azure Subscription: AKS"]
+        subgraph AKS["AKS Cluster (Namespace: microhacks)"]
+            subgraph HELM["Helm Chart: goldengate-microhack-sample"]
+                DB["🗄️ Oracle 23ai Free<br/>(Source DB)<br/>Schema: SH"]
+                OGG["⚡ GoldenGate<br/>(CDC Replication)"]
+                IC["💻 Instant Client<br/>(SQL*Plus)"]
+                JUP["📓 Jupyter Notebook<br/>(CPAT)"]
+                PUMP["📦 Data Pump Job<br/>(Initial Load)"]
+            end
+            SECRETS["🔐 K8s Secrets<br/>ogg-admin-secret<br/>db-admin-secret"]
+            INGRESS["🌐 NGINX Ingress"]
+        end
+    end
+
+    subgraph ODAA_SUB["Azure Subscription: ODAA"]
+        ADB["🗄️ Oracle ADB<br/>(Target DB)<br/>Schema: SH2"]
+    end
+
+    SECRETS -.-> HELM
+    PUMP -->|"1️⃣ Initial Load<br/>SH → SH2"| ADB
+    OGG -->|"2️⃣ CDC Replication<br/>(Real-time)"| ADB
+    IC -->|"SQL Queries"| DB
+    IC -->|"SQL Queries"| ADB
+    INGRESS -->|"Web UI"| OGG
+    INGRESS -->|"Web UI"| JUP
+
+    style AKS_SUB fill:#0078D4,color:#fff
+    style ODAA_SUB fill:#0078D4,color:#fff
+    style HELM fill:#50E6FF,color:#000
+    style DB fill:#C74634,color:#fff
+    style ADB fill:#C74634,color:#fff
+    style OGG fill:#FFB900,color:#000
+    style SECRETS fill:#7FBA00,color:#fff
+```
+
+**Data Flow:**
+1. **Data Pump** performs the initial bulk load of the SH schema to the SH2 schema in ADB
+2. **GoldenGate** captures ongoing changes (CDC) and replicates them in near real-time
+3. **Instant Client** provides SQL*Plus access to both source and target databases
+
+#### Actions
+
+* Deploy the AKS cluster with the responsible Pods, Jupyter notebook with CPAT, Oracle Instant Client and GoldenGate
+* Verify AKS cluster deployment
+* Check the connectivity from Instant Client to the ADB database and check if the SH schema from the 23ai Free Edition is migrated to the SH2 schema in the ADB
+* Review the GoldenGate configuration
+
+#### Success Criteria
+
 * Successful AKS deployment with Pods
-* Successful connection from the instant client to the ADB and source database
-* Successful login to Goldengate
+* Successful connection from the Instant Client to the ADB and source database
+* Successful login to GoldenGate
 
 #### Learning Resources
+
 * [Connect to an AKS cluster using Azure CLI](https://learn.microsoft.com/azure/aks/learn/quick-kubernetes-deploy-cli),
 *  [Use Helm with AKS](https://learn.microsoft.com/azure/aks/kubernetes-helm), 
 *  [Oracle GoldenGate Microservices overview](https://docs.oracle.com/en/middleware/goldengate/core/23/coredoc/), 
 *  [Oracle Data Pump overview](https://docs.oracle.com/en/database/oracle/oracle-database/26/sutil/oracle-data-pump-overview.html)
 
 #### Solution
+
 * Challenge 4: [Simulate the On-Premises Environment](./walkthrough/onprem-ramp-up/onprem-ramp-up.md)
 
-<br>
-<hr>
-
+---
 
 ### Challenge 5: Measure Network Performance to Your Oracle Database@Azure Autonomous Database
 
 Use the Instant Client pod to run the scripted SQL latency test against the Autonomous Database and collect the round-trip results. Optionally supplement the findings with the lightweight TCP probe to observe connection setup timing.
 
 #### Actions
-* Login to the instant client and execute a first performance test from the aks cluster against the deployed ADB
+* Log in to the Instant Client and execute a first performance test from the AKS cluster against the deployed ADB
 
-#### Sucess criteria
-* Successful login on the ADB via the instant client
-* Sucdessful execution of the available performance scripts
+#### Success Criteria
+* Successful login to the ADB via the Instant Client
+* Successful execution of the available performance scripts
 
 #### Learning Resources
 * [Connect to Oracle Database@Azure using SQL*Plus](https://docs.oracle.com/en-us/iaas/autonomous-database-serverless/doc/connect-sqlplus-tls.html), 
@@ -324,5 +451,5 @@ Use the Instant Client pod to run the scripted SQL latency test against the Auto
  
 ## Contributors
 
-<to-be-added>
+*To be added*
 

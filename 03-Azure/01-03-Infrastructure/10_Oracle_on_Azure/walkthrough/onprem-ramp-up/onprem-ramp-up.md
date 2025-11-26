@@ -181,7 +181,7 @@ Like mentioned at the beginning of this challenge, we will install several compo
 
 ~~~powershell
 # Prompt for the password that will be used for all three components - Please ask if you do not know the one!!!
-$password = <REPLACE-WITH-YOUR-ADB-PASSWORD> # e.g. $password="Welcome1234#"
+$password = <REPLACE-WITH-YOUR-ADB-PASSWORD> # e.g. $password="<YOUR-PASSWORD>"
 
 # create the namespace everything goes into
 kubectl create namespace microhacks
@@ -302,7 +302,7 @@ echo "External ADB connection string : $trgConn"
 
 sqlplus admin@'<ODAA-CONNECTION-STRING>' # Replace with your TNS connection string. The TNS connection string should be available over the variable $trgConn. If not you can find the TNS connection string of the deployed ADB in the Azure portal overview under settings/connections.
 
-# Enter your password e.g. Welcome1234#
+# Enter your password e.g. <YOUR-PASSWORD>
 ~~~
 
 Output should look similar to this:
@@ -418,7 +418,7 @@ echo "External ADB connection string : $trgConn"
 
 sqlplus admin@'<ODAA-CONNECTION-STRING>' # Replace with your TNS connection string. The TNS connection string should be available over the variable $trgConn. If not you can find the TNS connection string of the deployed ADB in the Azure portal overview under settings/connections.
 
-# Enter your password e.g. Welcome1234#
+# Enter your password e.g. <YOUR-PASSWORD>
 ~~~
 
 If the objects in the SH2 schema in the previous section was not displayed, you have the grant the "create session" and "resource" role to the user SH2 in the ADB database.
@@ -443,7 +443,7 @@ echo "External ADB connection string : $trgConn"
 
 sqlplus SH2@'<ODAA-CONNECTION-STRING>' # Replace with your TNS connection string. The TNS connection string should be available over the variable $trgConn. If not you can find the TNS connection string of the deployed ADB in the Azure portal overview under settings/connections.
 
-# Enter your password e.g. Welcome1234#
+# Enter your password e.g. <YOUR-PASSWORD>
 ~~~
 
 Create a copy of the table SH.sales in the schema SH2. Please do not use a DDL command like "CREATE TABLE AS SELECT ...."! 

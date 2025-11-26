@@ -1,4 +1,4 @@
-![ODAA microhack logo](media/logo_ODAA_microhack_1900x300.jpg)
+﻿![ODAA microhack logo](media/logo_ODAA_microhack_1900x300.jpg)
 
 # 🚀 Microhack - Oracle Database @ Azure (ODAA)
 
@@ -20,70 +20,115 @@ Furthermore we will address the integration of ODAA into the existing Azure nati
 ## What is vnet peering
 In our deployed scenario we created in advance a vnet peering between the AKS VNet and the ADB VNet which is required so the Kubernetes workloads can talk privately and directly to the database.
 
-What does vnet peering mean in detail: 
+### Architecture Diagram
 
-VNet isolation by default: The AKS nodes run in one VNet and ADB sits in another; without peering, those address spaces are completely isolated and pods cannot reach the database IPs at all.
+The following diagram shows how VNet peering connects the AKS cluster to the Oracle Autonomous Database:
 
-Private, internal traffic: Peering lets both VNets exchange traffic over private IPs only, as if they were one network. No public IPs, no internet exposure, no extra gateways are needed.
+```mermaid
+flowchart TB
+    subgraph AKS_SUB[Azure Subscription AKS]
+        subgraph AKS_RG[Resource Group: aks-userXX]
+            subgraph AKS_VNET[VNet: aks-userXX 10.0.0.0/16]
+                subgraph AKS_SUBNET[Subnet: aks 10.0.0.0/23]
+                    AKS[AKS Cluster]
+                    PODS[Pods: Instant Client GoldenGate]
+                end
+                DNS[Private DNS Zones]
+            end
+        end
+    end
 
-Low latency, high bandwidth path: Application–database calls stay on the cloud backbone, which is crucial for chatty OLTP workloads and for predictable performance.
+    subgraph ODAA_SUB[Azure Subscription ODAA]
+        subgraph ODAA_RG[Resource Group: odaa-userXX]
+            subgraph ODAA_VNET[VNet: odaa-userXX 192.168.0.0/16]
+                subgraph ODAA_SUBNET[Delegated Subnet 192.168.0.0/24]
+                    ADB[Oracle Autonomous Database]
+                end
+            end
+            NSG[NSG: Allow 10.0.0.0/16]
+        end
+    end
 
-Simple routing model: With peering, standard system routes know how to reach the other VNet’s CIDR; you avoid managing separate VPNs, user-defined routes, or NAT just to reach the DB.
+    AKS_VNET <-->|VNet Peering| ODAA_VNET
+    PODS -.->|SQL Queries| ADB
+    DNS -.->|Resolves hostname| ADB
+```
 
-Granular security with NSGs: Even with peering in place, NSGs on subnets/NICs still control which AKS node subnets and ports (for example, 1521/2484) can reach ADB, giving you a simple but secure pattern.
+### What does VNet peering mean in detail
 
-In summary: The peering is what turns two isolated networks (AKS and ADB) into a securely connected, private application–database path, which the scenario depends on for the workloads to function.
+| Concept | Description |
+|---------|-------------|
+| **VNet isolation by default** | The AKS nodes run in one VNet and ADB sits in another; without peering, those address spaces are completely isolated and pods cannot reach the database IPs at all. |
+| **Private, internal traffic** | Peering lets both VNets exchange traffic over private IPs only, as if they were one network. No public IPs, no internet exposure, no extra gateways are needed. |
+| **Low latency, high bandwidth path** | Application-database calls stay on the cloud backbone, which is crucial for chatty OLTP workloads and for predictable performance. |
+| **Simple routing model** | With peering, standard system routes know how to reach the other VNet's CIDR; you avoid managing separate VPNs, user-defined routes, or NAT just to reach the DB. |
+| **Granular security with NSGs** | Even with peering in place, NSGs on subnets/NICs still control which AKS node subnets and ports (for example, 1521/2484) can reach ADB, giving you a simple but secure pattern. |
 
+**In summary:** The peering is what turns two isolated networks (AKS and ADB) into a securely connected, private application-database path, which the scenario depends on for the workloads to function.
 
 ## Mapping between Azure and OCI
 
-### Azure Tenant
-Azure: Top-level identity boundary (Microsoft Entra ID directory: users, groups, apps).
+### Azure Resource Hierarchy Diagram
 
-OCI rough equivalent: OCI tenancy (the root container you get when you sign up, with its identity domain/compartments).
+The following diagram shows how Azure organizes resources, mapped to our Terraform deployment:
 
+```mermaid
+flowchart TB
+    subgraph TENANT[Azure Tenant - Entra ID Directory]
+        direction TB
+        USERS[Users and Groups<br/>mh-odaa-user-grp]
+        
+        subgraph SUB_AKS[Subscription: AKS]
+            subgraph RG_AKS[Resource Group: aks-userXX]
+                VNET_AKS[VNet: aks-userXX<br/>10.0.0.0/16]
+                AKS_CLUSTER[AKS Cluster]
+                LOG[Log Analytics]
+                DNS_ZONES[Private DNS Zones]
+            end
+        end
+        
+        subgraph SUB_ODAA[Subscription: ODAA]
+            subgraph RG_ODAA[Resource Group: odaa-userXX]
+                VNET_ODAA[VNet: odaa-userXX<br/>192.168.0.0/16]
+                ADB[Oracle ADB]
+            end
+        end
+    end
 
-### Azure Subscription
-Azure: Billing + deployment boundary that lives inside a tenant; holds resource groups and resources; you can have many subscriptions per tenant.
+    USERS --> SUB_AKS
+    USERS --> SUB_ODAA
+    VNET_AKS <-.->|VNet Peering| VNET_ODAA
+```
 
-OCI rough equivalent: OCI tenancy with compartments + cost-tracking tags – there isn’t a 1:1 “subscription” object, but at a high level, subscriptions in Azure sit between tenant and resource groups much like the tenancy (plus contracts) underpins OCI usage and billing.
+> **Learn more:** [Azure resource organization](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-setup-guide/organize-resources)
 
+### Comparison Table: Azure vs OCI
 
-### Azure Resource Group
-Azure: Logical container for related resources within a subscription; used for lifecycle, RBAC, policy, and tagging scope.
+| Azure Concept | Description | OCI Equivalent |
+|---------------|-------------|----------------|
+| **Tenant** | Top-level identity boundary (Entra ID directory: users, groups, apps) | **Tenancy** (root container with identity domain/compartments) |
+| **Subscription** | Billing + deployment boundary; holds resource groups and resources | **Tenancy + Compartments** with cost-tracking tags |
+| **Resource Group** | Logical container for related resources; used for lifecycle, RBAC, policy, and tagging scope | **Compartment** (logical container for access control and organization) |
+| **Region** | Geographic area containing one or more datacenters | **Region** |
+| **Availability Zone** | Physically separate datacenter within a region | **Availability Domain** |
 
-OCI closest equivalent: Compartment (a logical container for resources used for access control and organization).
+### Hierarchy Comparison
 
+```
+Azure:  Tenant --> Subscription --> Resource Group --> Resource
+OCI:    Tenancy --> Compartment (nested) --> Resource
+```
 
-### Logical Containers / Scopes
-Azure: Tenant → Subscription → Resource Group → Resource.
+> **Note:** OCI compartments are closer to Azure resource groups + some subscription-scope concepts.
 
-OCI: Tenancy → Compartment (nested) → Resource.
-Point: compartments in OCI are closer to resource groups + some subscription-scope concepts in Azure.
+### Networking Concepts
 
-
-### Regions & Availability
-Azure: Regions, Availability Zones, Availability Sets.
-
-OCI: Regions, Availability Domains, Fault Domains.
-Point: same idea (isolation for resilience), different names and grouping.
-
-
-### Networking
-Azure: Virtual Network (VNet), Subnets, Network Security Groups (NSGs), Application Gateway/Load Balancer.
-~~~text
-Virtual Network (VNet)
-A private network in Azure where you place resources (VMs, databases, etc.), similar to an on‑premises LAN in the cloud.
-Subnet
-A segment inside a VNet that groups resources and defines their IP range and routing boundaries.
-Network Security Group (NSG)
-A set of inbound/outbound rules that allow or block traffic to subnets or individual NICs, acting like a basic stateful firewall for your VNets.
-~~~
-
-OCI: Virtual Cloud Network (VCN), Subnets, Security Lists / NSGs, Load Balancer.
-Point: VNet ≈ VCN, NSG ≈ NSG/Security List.
-
-
+| Azure | Description | OCI Equivalent |
+|-------|-------------|----------------|
+| **Virtual Network (VNet)** | A private network in Azure where you place resources (VMs, databases, etc.), similar to an on-premises LAN in the cloud | **Virtual Cloud Network (VCN)** |
+| **Subnet** | A segment inside a VNet that groups resources and defines their IP range and routing boundaries | **Subnet** |
+| **Network Security Group (NSG)** | A set of inbound/outbound rules that allow or block traffic to subnets or individual NICs, acting like a basic stateful firewall | **Security List / NSG** |
+| **VNet Peering** | Connects two VNets so they can communicate using private IPs | **Local/Remote Peering** |
 
 ## Learning Objectives
 
@@ -92,11 +137,6 @@ Point: VNet ≈ VCN, NSG ≈ NSG/Security List.
 - Deploy an Autonomous Database instance inside an Azure network architecture and the required preparations.
 - Apply required networking and DNS configurations to enable hybrid connectivity between Azure Kubernetes Service and Oracle Database@Azure resources.
 - Operate the provided tooling (Helm, GoldenGate, Data Pump, SQL*Plus) to simulate data replication scenarios and measure connectivity performance.
-<br>
-<br>
-- <b>Optional</b> available session is the integration of Oracle Database at Azure databases into the Azure Fabric to have a holistic view on business data including the realization of a central data governance. 
-- <b>Optional</b> available session is the integration of the deployed ADB via OAuth v2 tokens with the Azure Entra ID
-
 
 ## 📋 Prerequisites
 
@@ -104,82 +144,81 @@ Point: VNet ≈ VCN, NSG ≈ NSG/Security List.
 - 🔧 install Azure CLI
 - ⚓ install kubectl
 - install Helm
-- install git and clone the this repo
+- install git and clone this repo by following the instructions in [Clone Partial Repository](docs/clone-partial-repo.md)
 
 ## 🎯 Challenges
  
 ### Challenge 0: Set Up Your User Account
 
-Before we start with the Microhack you should have 3 passwords:
-1. You User with the initial password for the registration, which you have to change during the registration
-2. The password you need to use for admin user of the ADB deployment - <font color=red>Don't use different passwords</font>
-3. The password you need to use for the AKS cluster deployment  - <font color=red>Don't use different passwords</font>
-4. If you intend to use your own password, please avoid using the <font color=red>exclamation mark <b>!</b></font> in it!
-
-Before using the AZ command line in your preferred GUI or CLI, please make sure to log out of any previous session by running the command: 
-   ~~~powershell 
-   az logout 
-   ~~~
-
-
-Open a private browser session or create an own browser profile to sign in with the credentials you received, and register multi-factor authentication. In a first check you have to verify if the two resource groups for the hackathon are created.
-<br>
 The goal is to ensure your Azure account is ready for administrative work in the remaining challenges.
 
+> [!IMPORTANT] Before using the AZ command line in your preferred GUI or CLI, please make sure to log out of any previous session by running the command: 
+>
+>```powershell 
+>az logout 
+>```
+
+You will receive a user and password for your account from your microhack coach. You must change this password during the initial registration.
+
+Start by browsing to the Azure Portal https://portal.azure.com.
+
+Open a private browser session or create an own browser profile to sign in with the credentials you received, and register multi-factor authentication.
+
+In a first check you have to verify if the two resource groups for the hackathon are created via the Azure Portal https://portal.azure.com.
+
 #### Actions
+
 * Enable the multi factor authentication (MFA)
 * Login into the Azure portal with the assigned User
 * Verify if the ODAA and AKS resource group including resources are available
 * Verfity the users roles
   
-
 #### Sucess criteria
+
 * Download the Microsoft authenticator app on your mobile phone
 * Enable MFA for a successful Login
-* Check if the resource groups for the aks and ODAA are available and contains the resources. 
+* Check if the resource groups for the aks and ODAA are available and contains the resources via the Azure Portal https://portal.azure.com. 
 * Check if the assigned user have the required roles in both resource groups.
 
 #### Learning Resources
+
 * [Sign in to the Azure portal](https://azure.microsoft.com/en-us/get-started/azure-portal)
 * [Set up Microsoft Entra multi-factor authentication](https://learn.microsoft.com/azure/active-directory/authentication/howto-mfa-userdevicesettings)
 * [Groups and roles in Azure](https://docs.oracle.com/en-us/iaas/Content/database-at-azure/oaagroupsroles.htm)
 
 #### Solution
+
 * Challenge 0: [Set Up Your User Account](./walkthrough/setup-user-account/setup-user-account.md)
 
-<br>
-<hr>
-
 ### Challenge 1: Create an Oracle Database@Azure (ODAA) Subscription
+
+> [!NOTE]
+> **This is a theoretical challenge only.** No action is required from participants aside from reading the content. The ODAA subscription has already been created for you to save time.
 
 Review the Oracle Database@Azure service offer, the required Azure resource providers, and the role of the OCI tenancy. By the end you should understand how an Azure subscription links to Oracle Cloud so database services can be created. Please consider that the challenge 1 is already realized for you to save time and is there a pure theoretical challenge.
 
 #### Actions
+
 * Move to the ODAA marketplace side. The purchasing is already done, but checkout the implementation of ODAA on the Azure side.
-* Access the OCI console via the pre defined federation implementation
 * Check if the required Azure resource providers are enabled
   
-
 #### Sucess criteria
-* Search for the Oracle Database at Azure 
+
+* Find the Oracle Database at Azure Service at the Azure Portal.
 * Make yourself familar with the available services of ODAA and how to purchase ODAA
 
 #### Learning Resources
+
 * [ODAA in Azure an overview](https://www.oracle.com/cloud/azure/oracle-database-at-azure/)
 * [Enhanced Networking for ODAA](https://learn.microsoft.com/en-us/azure/oracle/oracle-db/oracle-database-network-plan)
 
 #### Solution
+
 * Challenge 1: [Create an Oracle Database@Azure (ODAA) Subscription](./walkthrough/create-odaa-subscription/create-odaa-subscription.md)
-
-
-<br>
-<hr>
-
-
 
 ### Challenge 2: Create an Oracle Database@Azure (ODAA) Autonomous Database (ADB) Instance
 
-Walk through the delegated subnet prerequisites, select the assigned resource group, and deploy the Autonomous Database instance with the standard parameters supplied in the guide. Completion is confirmed when the database instance shows a healthy state in the portal. 
+Walk through the delegated subnet prerequisites, select the assigned resource group, and deploy the Autonomous Database instance with the standard parameters supplied in the guide. Completion is confirmed when the database instance shows a healthy state in the portal.
 
 After you started the ADB deployment please clone the Github repository. Instructions are listed in the challenge 2 at the end of the ADB deployment section - see **IMPORTANT: While you are waiting for the ADB creation**
 

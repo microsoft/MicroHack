@@ -2,7 +2,8 @@
 
 [Back to workspace README](../../README.md)
 
-> **IMPORTANT: In the case of this Microhack, the ODAA Subscription, which will be discussed here, is already created and therefore your user does not need the create one.**
+> [!NOTE]
+> **This is a theoretical challenge only.** No action is required from participants aside from reading the content. The ODAA subscription has already been created for you to save time.
 
 ## 🧱 ODAA Main Components
 
@@ -10,6 +11,30 @@
 2. ODAA Database service. These are the database services that are used to run Oracle Database on Azure
 
 Without an ODAA Subscription, you cannot create any ODAA Database services.
+
+### Component Hierarchy Diagram
+
+```mermaid
+flowchart TB
+    subgraph Azure["☁️ Azure"]
+        subgraph AzureSub["Azure Subscription"]
+            subgraph ODAAS["ODAA Subscription<br/>(Container & Commercial Terms)"]
+                DB1["🗄️ Oracle Database Service 1<br/>(e.g., Autonomous DB)"]
+                DB2["🗄️ Oracle Database Service 2<br/>(e.g., Exadata DB)"]
+                DB3["🗄️ Oracle Database Service N"]
+            end
+        end
+    end
+
+    style Azure fill:#0078D4,color:#fff
+    style AzureSub fill:#50E6FF,color:#000
+    style ODAAS fill:#C74634,color:#fff
+    style DB1 fill:#F5DEB3,color:#000
+    style DB2 fill:#F5DEB3,color:#000
+    style DB3 fill:#F5DEB3,color:#000
+```
+
+> **Key Concept**: The ODAA Subscription acts as a container that must exist before you can create any Oracle Database services within it.
 
 ## 🛠️ Prerequisites
 
@@ -66,9 +91,27 @@ With BYOL, you can use your existing Oracle Database licenses to run the service
 
 ### 🚀 Onboarding ODAA Subscription via Public Offer
 
-You can find the official Oracle documentation about onboarding ODAA Subscription in [Oracle’s PAYG onboarding guide](https://docs.oracle.com/en-us/iaas/Content/database-at-azure/onboard-purchase.htm#purchase-payg-offer).
+You can find the official Oracle documentation about onboarding ODAA Subscription in [Oracle's PAYG onboarding guide](https://docs.oracle.com/en-us/iaas/Content/database-at-azure/onboard-purchase.htm#purchase-payg-offer).
 
 To use the ODAA Subscription, you configure it within your Azure subscription through a process referred to as [onboarding](https://docs.oracle.com/en-us/iaas/Content/database-at-azure/oaaonboard.htm).
+
+#### Onboarding Process Overview
+
+```mermaid
+flowchart LR
+    A["1️⃣ Purchase<br/>Azure Marketplace"] --> B["2️⃣ Select<br/>Licensing Option"]
+    B --> C["3️⃣ Link to<br/>OCI Tenancy"]
+    C --> D["4️⃣ Configure<br/>Account Details"]
+    D --> E["5️⃣ Activate<br/>ODAA Subscription"]
+    E --> F["✅ Ready to<br/>Create Databases"]
+
+    style A fill:#0078D4,color:#fff
+    style B fill:#50E6FF,color:#000
+    style C fill:#C74634,color:#fff
+    style D fill:#F25022,color:#fff
+    style E fill:#7FBA00,color:#fff
+    style F fill:#00A4EF,color:#fff
+```
 
 ![ODAA Onboarding Process](media/odaa-onboarding-overview.jpeg)
 
@@ -95,6 +138,45 @@ Now you can see the ODAA Subscription in your Azure portal where you can create 
 To finish the ODAA Subscription onboarding, you will need an OCI account. This is needed because some components of the ODAA databases need to be configured via the Oracle Cloud Infrastructure (OCI) even if the physical hardware runs inside Azure Data Centers.
 
 You perform most onboarding tasks only once, during your ODAA Subscription deployment. After you complete the onboarding tasks, you can begin provisioning and using ODAA database resources in your Azure environment.
+
+#### Multicloud Architecture Diagram
+
+```mermaid
+flowchart TB
+    subgraph Azure["☁️ Microsoft Azure"]
+        subgraph AzureSub["Azure Subscription"]
+            Portal["🖥️ Azure Portal<br/>(Primary Management)"]
+            ODAAS["📦 ODAA Subscription"]
+            Hardware["🖧 Oracle Hardware<br/>(In Azure Data Center)"]
+        end
+    end
+
+    subgraph OCI["☁️ Oracle Cloud Infrastructure"]
+        subgraph OCITenancy["OCI Tenancy"]
+            Console["🖥️ OCI Console<br/>(Oracle-Specific Config)"]
+            OracleServices["⚙️ Oracle Services<br/>(Backup, Patching, etc.)"]
+        end
+    end
+
+    Portal <--> |"Multicloud Link"| Console
+    ODAAS <--> |"Service Integration"| OracleServices
+    Hardware <--> |"Management"| OracleServices
+
+    User(["👤 Administrator"]) --> Portal
+    User -.-> |"Some configs"| Console
+
+    style Azure fill:#0078D4,color:#fff
+    style AzureSub fill:#50E6FF,color:#000
+    style OCI fill:#C74634,color:#fff
+    style OCITenancy fill:#F5DEB3,color:#000
+    style Portal fill:#fff,color:#000
+    style Console fill:#fff,color:#000
+    style ODAAS fill:#FFB900,color:#000
+    style Hardware fill:#7FBA00,color:#fff
+    style OracleServices fill:#F25022,color:#fff
+```
+
+> **Key Concept**: While Oracle hardware runs physically inside Azure Data Centers, some Oracle-specific configurations (like backup policies, patching schedules) are managed through the OCI Console. The multicloud link connects your Azure subscription to an OCI tenancy.
 
 Whether you create a new OCI account or link an existing account depends on your situation. Learn more about the Multicloud Linking here:
 

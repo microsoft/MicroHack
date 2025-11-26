@@ -515,6 +515,8 @@ helm list -n microhacks
 helm uninstall ogghack -n microhacks
 # Verify the pods inside the namespace microhacks are deletled
 kubectl get pods -n microhacks
+# Delete the namespace if required
+kubectl delete namespace microhacks
 ~~~
 
 ### Check Network Connectivity**

@@ -61,11 +61,11 @@ az login
 # Set your AKS subscription (replace with your subscription name)
 az account set --subscription "sub-team0"
 
-# Run the deployment script
+# Run the deployment script (use $trgConn if you retrieved it via docs\odaa-get-token.md)
 .\Deploy-OnPremReplication.ps1 `
     -UserName "user00" `
     -ADBPassword "Welcome1234#" `
-    -ADBConnectionString "(description= (retry_count=20)...)"
+    -ADBConnectionString $trgConn
 ```
 
 ### 📝 Script Parameters
@@ -154,7 +154,7 @@ From inside the pod:
 
 ```bash
 # Connect to ODAA ADB (replace with your connection string)
-sqlplus admin@'(description= (retry_count=20)...your-connection-string...)'
+sqlplus admin@'<Replace with the TNS connection string of your deployed ADB>'
 # Enter your password when prompted
 ```
 

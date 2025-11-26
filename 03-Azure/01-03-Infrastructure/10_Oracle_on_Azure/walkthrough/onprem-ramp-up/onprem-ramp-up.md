@@ -142,9 +142,16 @@ Reference the document [How to retrieve the Oracle Database Autonomous Database 
 
 After you have retrieved the TNS connection string and assigned it to the `$trgConn` variable (as shown in docs\odaa-get-token.md), replace the placeholder in the gghack.yaml file:
 
+
 ~~~powershell
-# If you did follow the instruction the following line is not needed because $trgConn is already defined 
-$trgConn="(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=zuyhervb.adb.eu-paris-1.oraclecloud.com))(connect_data=(service_name=gc2401553d1c7ab_uer00_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))"
+# Replace the placeholder <ODAA-CONNECTION-STRING> with the HIGH TNS connection string of your deployed ODAA ADB database. If you followed the instructions in docs\odaa-get-token.md - see above, the $trgConn variable is already set and you do not need the line that assigns $trgConn="<ODAA-CONNECTION-STRING>".
+
+# Check if the variable contains the ADB TNS connection string.
+echo "External ADB connection string : $trgConn" 
+
+# If the variable is not filled copy the TNS connection string directly from the ADB overview under settings/connection menue or following the docs\odaa-get-token.md instrcutions.
+$trgConn="<ODAA-CONNECTION-STRING>"
+
 # replace in value in your gghack.yaml
 (Get-Content gghack.yaml) -replace '<ODAA-CONNECTION-STRING>', $trgConn | Set-Content gghack.yaml
 # show line 8 till 11 with powershell of gghack.yaml
@@ -243,7 +250,7 @@ Have fun !
 kubectl get pods -n microhacks --watch
 ~~~
 
-⏰ Wait until the ogghack-goldengate-microhack-sample-db-prepare-job is completed and exit the watch with Ctrl+C.
+⏰ Wait until the ogghack-goldengate-microhack-sample-db-prepare-job is completed and exit the watch with Ctrl+C. It takes about 8 minutes till all pods are running / Completed. 
 
 > ℹ️ **NOTE**: Error and CrashLoopBackOff of the ogghack-goldengate-microhack-sample-db-prepare-job pod is expected.
 
@@ -290,7 +297,11 @@ Login with sqlplus to the ADB instance as admin user
 
 ~~~bash
 # log into ADB with admin via sqlplus, replace the TNS connection string with your own
-sqlplus admin@'(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=zuyhervb.adb.eu-paris-1.oraclecloud.com))(connect_data=(service_name=gc2401553d1c7ab_uer00_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))' # Replace with your TNS connection string
+echo "External ADB connection string : $trgConn" 
+
+
+sqlplus admin@'<ODAA-CONNECTION-STRING>' # Replace with your TNS connection string. The TNS connection string should be available over the variable $trgConn. If not you can find the TNS connection string of the deployed ADB in the Azure portal overview under settings/connections.
+
 # Enter your password e.g. Welcome1234#
 ~~~
 
@@ -314,6 +325,13 @@ SQL>
 
 Inside the sqlplus session, run the following commands to verify the SH2 schema and the GoldenGate GGADMIN user have been created successfully in the ADB instance.
 
+Because "Nothing is as constant as change" we are constantly working on the Microhack. 
+
+Therefore you might see after the sucessfuly registration at the database a 
+
+  A: successful migration of the SH schema in the 23ai free edition in the SH2 schema of the ADB database
+  B: a current empty SH2 schema in the ADB database
+
 ~~~sql
 select USERNAME from ALL_USERS where USERNAME like 'SH%';
 ~~~
@@ -325,8 +343,9 @@ SH
 SH2
 ~~~
 
+
 ~~~sql
--- should return 35 rows
+-- should return 18 rows
 SELECT COUNT(*) FROM all_tables WHERE owner = 'SH2';
 ~~~
 
@@ -335,6 +354,10 @@ SELECT COUNT(*) FROM all_tables WHERE owner = 'SH2';
 ----------
         18
 ~~~
+
+
+<font color=red>If the previous command returns 0, please continue with the section "Create a table manually in the schema SH2 of your ADB with the user SH2 to trigger Goldengate". If the SH2 schema already contains tables (count is not 0), you can continue with the next steps as normal. </font>
+
 
 List all tables in SH2 schema on the ODAA ADB database
 
@@ -371,7 +394,6 @@ TIMES
 18 rows selected.
 ~~~
 
-
 Exit sqlplus
 
 ~~~sql
@@ -380,58 +402,51 @@ exit
 
 ### 🔎 Verify replication
 
-Replication between our OnPrem Database and the ADB is done via GoldenGate. We can verify that the replication is working by creating a copy of the SH.SALES table in the OnPrem database and see if it appears in the ADB as well as SH2.SALES.
+#### Create a table manually in the schema SH2 of your ADB with the user SH2 to trigger Goldengate
 
-Inside the instantclient pod, connect via sqlplus with ther alias to the onptrm database
+The following steps are required to trigger Goldengate to mirror data from the migrated ADB database into Azure Fabric. Goldengate 23ai suported open mirroring and can contininously replicate data (CDC) from ODAA into Azure Lakehouse. The following online links give additional information about the setup in Goldengate 23ai.
+
+
+* [Oracle GG 23ai supports open mirroring](https://blogs.oracle.com/dataintegration/how-to-replicate-to-mirrored-database-in-microsoft-fabric-using-goldengate)
+* [Oracle OCI GoldenGate to Microsoft Fabric Lakehouse Data Replication](https://www.ateam-oracle.com/post/oracle-oci-goldengate-to-microsoft-fabric-lakehouse-data-replication)
+
 
 ~~~bash
-# show current alias
-alias
-# connect via sqlplus with alias
-sql
+# Reconnect into ADB with admin via sqlplus, replace the TNS connection string with your own
+echo "External ADB connection string : $trgConn" 
+
+
+sqlplus admin@'<ODAA-CONNECTION-STRING>' # Replace with your TNS connection string. The TNS connection string should be available over the variable $trgConn. If not you can find the TNS connection string of the deployed ADB in the Azure portal overview under settings/connections.
+
+# Enter your password e.g. Welcome1234#
 ~~~
 
-Output should look similar to this:
-
-~~~text
-oracle:/projects$ alias
-alias sql='sqlplus SH/Welcome1234#@//ogghack-goldengate-microhack-sample-db23ai:1521/FREEPDB1'
-oracle:/projects$ sql
-
-SQL*Plus: Release 23.0.0.0.0 - Production on Fri Nov 14 08:09:00 2025
-Version 23.4.0.24.05
-
-Copyright (c) 1982, 2024, Oracle.  All rights reserved.
-
-Last Successful login time: Fri Nov 14 2025 07:38:23 +00:00
-
-Connected to:
-Oracle AI Database 26ai Free Release 23.26.0.0.0 - Develop, Learn, and Run for Free
-Version 23.26.0.0.0
-
-SQL> 
-~~~
-
-List all tables in SH schema on the onprem database
+If the objects in the SH2 schema in the previous section was not displayed, you have the grant the "create session" and "resource" role to the user SH2 in the ADB database.
 
 ~~~sql
--- list all tables in SH schema
-SELECT table_name FROM all_tables WHERE owner = 'SH';
+grant create session, resource to SH2;
+
+exit
 ~~~
 
-~~~text
-TABLE_NAME
---------------------------------------------------------------------------------
-DR$SUP_TEXT_IDX$C
-DR$SUP_TEXT_IDX$B
-FWEEK_PSCAT_SALES_MV
-CAL_MONTH_SALES_MV
-SALES
-COSTS
-DR$SUP_TEXT_IDX$N
+~~~sql
+grant create session, resource to SH2;
 
-18 rows selected.
+exit
 ~~~
+
+Connect as User SH2 into the ADB database
+~~~bash
+# Reconnect into ADB with admin via sqlplus, replace the TNS connection string with your own
+echo "External ADB connection string : $trgConn" 
+
+
+sqlplus SH2@'<ODAA-CONNECTION-STRING>' # Replace with your TNS connection string. The TNS connection string should be available over the variable $trgConn. If not you can find the TNS connection string of the deployed ADB in the Azure portal overview under settings/connections.
+
+# Enter your password e.g. Welcome1234#
+~~~
+
+Create a copy of the table SH.sales in the schema SH2. Please do not use a DDL command like "CREATE TABLE AS SELECT ...."! 
 
 ~~~sql
 -- count the records in SH.SALES table on prem database
@@ -446,9 +461,22 @@ SELECT COUNT(*) FROM SH.SALES;
 
 ~~~sql
 -- create copy from SH.SALES to SH.SALES_COPY
-CREATE TABLE SH.SALES_COPY AS SELECT * FROM SH.SALES;
+CREATE TABLE SALES_COPY AS SELECT * FROM SH.SALES where rownum = 0;
 -- count the records in SH.SALES_COPY table
-SELECT COUNT(*) FROM SH.SALES_COPY;
+SELECT COUNT(*) FROM SALES_COPY;
+~~~
+
+~~~text
+  COUNT(*)
+----------
+    0
+~~~
+
+~~~sql
+-- create copy from SH.SALES to SH.SALES_COPY
+INSERT INTO TABLE SALES_COPY (SELECT * FROM SH.SALES);
+-- count the records in SH.SALES_COPY table
+SELECT COUNT(*) FROM SALES_COPY;
 ~~~
 
 ~~~text
@@ -461,38 +489,7 @@ SELECT COUNT(*) FROM SH.SALES_COPY;
 exit
 ~~~
 
-Login with sqlplus to the ADB instance as admin user
 
-~~~bash
-# log into ADB with admin via sqlplus, replace the TNS connection string with your own
-sqlplus admin@'(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=zuyhervb.adb.eu-paris-1.oraclecloud.com))(connect_data=(service_name=gc2401553d1c7ab_uer00_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))' # Replace with your TNS connection string
-# Enter your password e.g. Welcome1234#
-~~~
-
-~~~sql
--- count the records in SH.SALES_COPY table
-SELECT COUNT(*) FROM SH2.SALES_COPY;
-~~~
-
-~~~text
-  COUNT(*)
-----------
-    918843
-~~~
-
-This does proof that GoldenGate is working and data is replicated from the onprem database to the ODAA ADB instance.
-
-Exit sqlplus
-
-~~~sql
-exit
-~~~
-
-Exit instantclient pod
-
-~~~bash
-exit
-~~~
 
 ## 💡 Tips and Tricks
 

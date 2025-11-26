@@ -85,9 +85,10 @@ You will land on the Oracle ADB databases overview page:
 
 <hr>
 
-#### Set the private DNS zones for AKS VNet via Powershell (alternative to Azure portal)
+### If you prefer to configure the DNS settings via command line—for example, to enable later automation—you can follow the next chapter. It repeats the same steps you performed above in the Azure portal UI.
 
-### Retrieve ODAA FQDN
+
+#### Retrieve ODAA FQDN
 
 <font color=red> <b>Important:</b> We need to query the Private DNS Zones created with the <b>ODAA deployment</b>.</font>
 

@@ -17,6 +17,24 @@ You will learn how to create and configure an Autonomous Database shared of the 
 Furthermore we will address the integration of ODAA into the existing Azure native services and howto use Goldengate for migrations to ODAA and integration into Azure Fabric. 
 
 
+## What is vnet peering
+In our deployed scenario we created in advance a vnet peering between the AKS VNet and the ADB VNet which is required so the Kubernetes workloads can talk privately and directly to the database.
+
+What does vnet peering mean in detail: 
+
+VNet isolation by default: The AKS nodes run in one VNet and ADB sits in another; without peering, those address spaces are completely isolated and pods cannot reach the database IPs at all.
+
+Private, internal traffic: Peering lets both VNets exchange traffic over private IPs only, as if they were one network. No public IPs, no internet exposure, no extra gateways are needed.
+
+Low latency, high bandwidth path: Application–database calls stay on the cloud backbone, which is crucial for chatty OLTP workloads and for predictable performance.
+
+Simple routing model: With peering, standard system routes know how to reach the other VNet’s CIDR; you avoid managing separate VPNs, user-defined routes, or NAT just to reach the DB.
+
+Granular security with NSGs: Even with peering in place, NSGs on subnets/NICs still control which AKS node subnets and ports (for example, 1521/2484) can reach ADB, giving you a simple but secure pattern.
+
+In summary: The peering is what turns two isolated networks (AKS and ADB) into a securely connected, private application–database path, which the scenario depends on for the workloads to function.
+
+
 ## Mapping between Azure and OCI
 
 ### Azure Tenant
@@ -96,6 +114,7 @@ Before we start with the Microhack you should have 3 passwords:
 1. You User with the initial password for the registration, which you have to change during the registration
 2. The password you need to use for admin user of the ADB deployment - <font color=red>Don't use different passwords</font>
 3. The password you need to use for the AKS cluster deployment  - <font color=red>Don't use different passwords</font>
+4. If you intend to use your own password, please avoid using the <font color=red>exclamation mark <b>!</b></font> in it!
 
 Before using the AZ command line in your preferred GUI or CLI, please make sure to log out of any previous session by running the command: 
    ~~~powershell 
@@ -133,7 +152,7 @@ The goal is to ensure your Azure account is ready for administrative work in the
 
 ### Challenge 1: Create an Oracle Database@Azure (ODAA) Subscription
 
-Review the Oracle Database@Azure service offer, the required Azure resource providers, and the role of the OCI tenancy. By the end you should understand how an Azure subscription links to Oracle Cloud so database services can be created.
+Review the Oracle Database@Azure service offer, the required Azure resource providers, and the role of the OCI tenancy. By the end you should understand how an Azure subscription links to Oracle Cloud so database services can be created. Please consider that the challenge 1 is already realized for you to save time and is there a pure theoretical challenge.
 
 #### Actions
 * Move to the ODAA marketplace side. The purchasing is already done, but checkout the implementation of ODAA on the Azure side.

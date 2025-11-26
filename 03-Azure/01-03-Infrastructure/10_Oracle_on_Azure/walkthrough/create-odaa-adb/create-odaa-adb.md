@@ -112,6 +112,24 @@ Follow the instructions in the [Clone Partial Repository](../../docs/clone-parti
 
 After the ADB was deployed successful, check if the ADB is visible on the Azure Portal and OCI side. Important to mention on the OCI side is that the region is set to <b> Fracne Central</b> and the Compartment is chosen properly.
 
+
+For Oracle Database@Azure, the OCI console is mainly needed for “Oracle-side” lifecycle and integration tasks that still live in OCI, not in the Azure portal:
+
+Tenant / identity / policy management
+
+Managing OCI tenancy, compartments, IAM policies, and user access that relate to the Oracle-managed parts of the service.
+Networking and integration on the OCI side
+
+Viewing and managing OCI VCNs, subnets, NSGs/Security Lists, and routes that participate in the private dark‑fiber connectivity with Azure.
+Advanced Oracle platform services
+
+Using OCI-native services that integrate with Oracle Database@Azure (e.g., GoldenGate, Data Guard configurations that are exposed via OCI, logging/monitoring integrations).
+Support, diagnostics, and observability
+
+Accessing OCI-native logs, metrics, events, and support tools when Oracle asks you to verify or adjust something from the OCI side.
+
+In short: day‑to‑day database and app operations happen in Azure and the Azure portal; the OCI console is needed when you touch the underlying Oracle/OCI tenancy, networking, or advanced Oracle platform services that sit “behind” Oracle Database@Azure.
+
 To access the OCI console use the following link after you are logged in into the Azure portal under your newly created ODAA Autonomous Database resource:
 ![Azure link to OCI console](media/image%20copy%2012.png)
 

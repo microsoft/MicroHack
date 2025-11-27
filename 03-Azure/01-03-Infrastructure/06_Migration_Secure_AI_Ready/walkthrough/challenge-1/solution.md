@@ -20,7 +20,7 @@ Duration: 30 minutes
 > [!NOTE]
 > You can also use your local PC but make sure to install [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli).
 
-- If this is the first time that Cloud Shell is beeing started, create the required Storage Account by selecting *Bash* and clicking on *Create storage* and wait until the Storage Accounts has been created.
+- If this is the first time that Cloud Shell is beeing started, select *Bash* and clicking on *No storage account required* and click on apply.
 
 ![image](./img/CS1-1.png)
 

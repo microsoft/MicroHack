@@ -1,0 +1,30 @@
+{
+  "name": "Terraform Azure SP",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/azure-cli:1": {},
+    "ghcr.io/devcontainers/features/terraform:1": {},
+    "ghcr.io/devcontainers/features/powershell:1": {}
+  },
+  "mounts": [
+    "source=${localEnv:USERPROFILE}/.oci,target=/home/vscode/.oci,type=bind,consistency=cached"
+  ],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "hashicorp.terraform",
+        "ms-azuretools.vscode-azureterraform",
+        "redhat.vscode-yaml"
+      ],
+      "settings": {
+        "terraform.experimentalFeatures.validateOnSave": true,
+        "terminal.integrated.defaultProfile.linux": "pwsh"
+      }
+    }
+  },
+  "shutdownAction": "stopContainer",
+  "postCreateCommand": "pwsh -File .devcontainer/setup-profile.ps1 && echo 'PS1=\"\\W > \"' >> ~/.bashrc && echo 'alias tf=terraform' >> ~/.bashrc",
+  "postStartCommand": "pwsh -File .devcontainer/login-sp.ps1"
+}

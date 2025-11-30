@@ -68,6 +68,13 @@ resource "random_password" "aks_deployment_users" {
   special          = var.user_password_include_special
   override_special = var.user_password_special_characters
 
+  # Keepers trigger password regeneration when changed
+  # Change user_reset_trigger to rotate all passwords
+  keepers = {
+    reset_trigger = var.user_reset_trigger
+    user_id       = each.key
+  }
+
   lifecycle {
     precondition {
       condition     = var.user_password_length >= 8
@@ -107,6 +114,11 @@ resource "azuread_user" "aks_deployment_users" {
   account_enabled       = true
 
   lifecycle {
+    # CRITICAL: After initial creation, never modify the user resource.
+    # This prevents Azure AD eventual consistency issues on subsequent applies.
+    # Password updates are handled separately via null_resource.update_passwords
+    ignore_changes = all
+
     precondition {
       condition     = local.users_json_count >= local.required_count
       error_message = format("users.json contains %d entries but %d users are being deployed. Please add more entries to users.json.", local.users_json_count, local.required_count)
@@ -144,5 +156,36 @@ resource "azuread_group_member" "aks_deployment_users" {
   lifecycle {
     ignore_changes = all
   }
+}
+
+# ===============================================================================
+# Password Rotation via Azure CLI
+# ===============================================================================
+# Since azuread_user has ignore_changes = all, we use a null_resource with
+# local-exec to update passwords when password_rotation_trigger changes.
+# This avoids touching the user resource and prevents race conditions.
+# ===============================================================================
+
+resource "null_resource" "update_passwords" {
+  for_each = local.user_definitions
+
+  # Trigger when user reset is requested
+  triggers = {
+    reset_trigger = var.user_reset_trigger
+    password_hash = sha256(random_password.aks_deployment_users[each.key].result)
+    user_upn      = each.value.user_principal_name
+  }
+
+  # Update password via Azure CLI (works with service principal)
+  provisioner "local-exec" {
+    command     = "az ad user update --id '${each.value.user_principal_name}' --password '${random_password.aks_deployment_users[each.key].result}' --force-change-password-next-sign-in true"
+    interpreter = ["pwsh", "-Command"]
+    on_failure  = continue  # Don't fail if user doesn't exist yet (first run)
+  }
+
+  depends_on = [
+    azuread_user.aks_deployment_users,
+    azuread_group_member.aks_deployment_users
+  ]
 }
 

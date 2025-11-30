@@ -88,3 +88,14 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "enabled_odaa_regions" {
+  description = "List of ODAA regions to create Private DNS zones for. Valid values: 'paris', 'frankfurt'"
+  type        = list(string)
+  default     = ["paris"]
+
+  validation {
+    condition     = alltrue([for r in var.enabled_odaa_regions : contains(["paris", "frankfurt"], lower(r))])
+    error_message = "enabled_odaa_regions must only contain 'paris' and/or 'frankfurt'."
+  }
+}

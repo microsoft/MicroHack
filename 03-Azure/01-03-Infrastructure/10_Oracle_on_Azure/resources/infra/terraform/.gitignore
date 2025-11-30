@@ -55,6 +55,16 @@ Thumbs.db
 
 # User credentials file (contains sensitive passwords)
 user_credentials.txt
+user_credentials.json
+**/user_credentials.json
 
 # Backup files
 *.backup
+
+# Dev Container secrets
+.env
+.devcontainer/.env
+
+# Members JSON (contains user object IDs)
+members.json
+**/members.json

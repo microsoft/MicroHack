@@ -12,10 +12,6 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "~> 4.0"
     }
-    kubernetes = {
-      source  = "hashicorp/kubernetes"
-      version = "~> 2.30"
-    }
     azapi = {
       source  = "azure/azapi"
       version = "~> 2.0"
@@ -40,23 +36,38 @@ locals {
   # tears down the node resource group without manual cleanup.
   cluster_name             = "aks-${var.prefix}${var.postfix}"
   node_resource_group_name = "MC_${azurerm_resource_group.aks.name}_${local.cluster_name}"
-  private_dns_configs = {
+
+  # Normalize enabled regions to lowercase for comparison
+  enabled_regions = [for r in var.enabled_odaa_regions : lower(r)]
+
+  # All possible DNS zone configurations
+  all_private_dns_configs = {
     odaa_fra = {
       zone_name = var.fqdn_odaa_fra
-      link_name = "aks-pdns-link-odaa"
+      link_name = "aks-pdns-link-odaa-fra"
+      region    = "frankfurt"
     }
     odaa_app_fra = {
       zone_name = var.fqdn_odaa_app_fra
-      link_name = "aks-pdns-link-odaa-app"
+      link_name = "aks-pdns-link-odaa-app-fra"
+      region    = "frankfurt"
     }
     odaa_par = {
       zone_name = var.fqdn_odaa_par
-      link_name = "aks-pdns-link-odaa"
+      link_name = "aks-pdns-link-odaa-par"
+      region    = "paris"
     }
     odaa_app_par = {
       zone_name = var.fqdn_odaa_app_par
-      link_name = "aks-pdns-link-odaa-app"
+      link_name = "aks-pdns-link-odaa-app-par"
+      region    = "paris"
     }
+  }
+
+  # Filter to only enabled regions
+  private_dns_configs = {
+    for key, config in local.all_private_dns_configs :
+    key => config if contains(local.enabled_regions, config.region)
   }
 }
 

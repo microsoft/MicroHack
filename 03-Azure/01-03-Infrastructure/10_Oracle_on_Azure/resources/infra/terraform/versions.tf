@@ -29,10 +29,6 @@ terraform {
       source  = "hashicorp/local"
       version = "~> 2.5"
     }
-    helm = {
-      source  = "hashicorp/helm"
-      version = "~> 2.13"
-    }
     azapi = {
       source  = "azure/azapi"
       version = "~> 2.0"

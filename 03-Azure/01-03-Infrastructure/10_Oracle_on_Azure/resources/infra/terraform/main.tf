@@ -26,7 +26,7 @@ locals {
   default_odaa_cidr_base = var.odaa_cidr_base
 
   common_tags = {
-    Project   = var.microhack_event_name
+    Project   = local.microhack_event_name
     ManagedBy = "Terraform"
   }
 
@@ -82,60 +82,49 @@ locals {
 }
 
 # ===============================================================================
-# Identity and Credential Exports
+# Identity Configuration
+# ===============================================================================
+# User identities are managed separately in the identity/ folder to avoid
+# Azure AD eventual consistency issues. This configuration reads from the
+# identity/user_credentials.json file which contains user object IDs, UPNs,
+# group information, passwords, and event metadata.
+#
+# Workflow:
+#   1. Run 'terraform apply' in identity/ folder to create/manage users
+#   2. Run 'terraform apply' here to deploy infrastructure
 # ===============================================================================
 
-module "entra_id_users" {
-  source = "./modules/entra-id"
+locals {
+  identity_file_path = var.identity_file_path != null ? var.identity_file_path : abspath("${path.root}/identity/user_credentials.json")
+}
 
-  providers = {
-    azuread = azuread.aks_deployment_slot_0
-  }
-
-  aks_deployment_group_name        = local.shared_deployment_group.name
-  aks_deployment_group_description = local.shared_deployment_group.description
-  tenant_id                        = var.tenant_id
-  user_principal_domain            = var.entra_user_principal_domain
-  users                            = local.deployment_users
-  azuread_propagation_wait_seconds = var.azuread_propagation_wait_seconds
-
-  tags = merge(local.common_tags, {
-    AKSDeploymentGroup = local.shared_deployment_group.name
-  })
+data "local_file" "identity" {
+  filename = local.identity_file_path
 }
 
 locals {
-  deployment_user_credentials = {
-    for key, deployment in local.deployments :
-    key => lookup(module.entra_id_users.user_credentials, key, null)
+  # Parse the identity file
+  identity_data = jsondecode(data.local_file.identity.content)
+
+  # Event name from identity file (single source of truth)
+  # Falls back to variable if not present in file (backwards compatibility)
+  microhack_event_name = try(local.identity_data.microhack_event_name, var.microhack_event_name)
+
+  # User object IDs (map from index key to object ID)
+  deployment_user_object_ids = {
+    for idx in local.user_indices :
+    tostring(idx) => local.identity_data.users[format("user%02d", idx)].object_id
   }
 
-  user_credentials_export = {
-    generated_at = timestamp()
-    deployments = {
-      for key, deployment in local.deployments :
-      deployment.name => (
-        local.deployment_user_credentials[key] == null ?
-        [] :
-        [
-          {
-            user_principal_name = local.deployment_user_credentials[key].user_principal_name
-            display_name        = local.deployment_user_credentials[key].display_name
-            initial_password    = local.deployment_user_credentials[key].initial_password
-          }
-        ]
-      )
-    }
+  # User principal names
+  deployment_user_principal_names = {
+    for idx in local.user_indices :
+    tostring(idx) => local.identity_data.users[format("user%02d", idx)].user_principal_name
   }
 
-  user_credentials_output_path = (
-    var.user_credentials_output_path != null ?
-    var.user_credentials_output_path :
-    abspath("${path.root}/user_credentials.json")
-  )
-
-  deployment_user_object_ids      = module.entra_id_users.user_object_ids
-  deployment_user_principal_names = module.entra_id_users.user_principal_names
+  # Group information
+  identity_group_object_id    = local.identity_data.group.object_id
+  identity_group_display_name = local.identity_data.group.display_name
 }
 
 # ===============================================================================
@@ -192,11 +181,11 @@ locals {
 # Commented out - App role assignment already exists in Azure AD (created manually)
 # resource "azuread_app_role_assignment" "oracle_cloud_group" {
 #   count = local.oracle_cloud_app_role_id == null ? 0 : 1
-
+#
 #   resource_object_id  = local.oracle_cloud_service_principal.object_id
-#   principal_object_id = module.entra_id_users.group_object_id
+#   principal_object_id = local.identity_group_object_id
 #   app_role_id         = local.oracle_cloud_app_role_id
-
+#
 #   lifecycle {
 #     precondition {
 #       condition     = local.oracle_cloud_app_role_id != null
@@ -204,39 +193,6 @@ locals {
 #     }
 #   }
 # }
-
-resource "local_file" "user_credentials" {
-  filename = local.user_credentials_output_path
-  content  = <<-JSON
-  {
-    "generated_at": ${jsonencode(local.user_credentials_export.generated_at)},
-    "deployments": {
-%{for deployment_name in local.deployment_names~}
-%{if length(local.user_credentials_export.deployments[deployment_name]) == 0}
-      ${jsonencode(deployment_name)}: []%{if index(local.deployment_names, deployment_name) < length(local.deployment_names) - 1},%{endif}
-%{else}
-      ${jsonencode(deployment_name)}: [
-%{for credential_index, credential in local.user_credentials_export.deployments[deployment_name]~}
-        {
-          "user_principal_name": ${jsonencode(credential.user_principal_name)},
-          "display_name": ${jsonencode(credential.display_name)},
-          "initial_password": ${jsonencode(credential.initial_password)}
-        }%{if credential_index < length(local.user_credentials_export.deployments[deployment_name]) - 1},%{endif}
-%{endfor~}
-      ]%{if index(local.deployment_names, deployment_name) < length(local.deployment_names) - 1},%{endif}
-%{endif}
-%{endfor~}
-    }
-  }
-  JSON
-
-  lifecycle {
-    precondition {
-      condition     = trimspace(local.user_credentials_output_path) != ""
-      error_message = "The user_credentials_output_path must not resolve to an empty string."
-    }
-  }
-}
 
 # ===============================================================================
 # Role Assignments for Shared ODAA Resources
@@ -273,8 +229,8 @@ resource "azurerm_role_assignment" "odaa_private_dns_zone_reader_group" {
   provider           = azurerm.odaa
   scope              = data.azurerm_subscription.odaa.id
   role_definition_id = azurerm_role_definition.private_dns_zone_reader.role_definition_resource_id
-  principal_id       = module.entra_id_users.group_object_id
-  description        = "Grants ${module.entra_id_users.group_display_name} read access to Private DNS Zones across subscription ${data.azurerm_subscription.odaa.display_name}."
+  principal_id       = local.identity_group_object_id
+  description        = "Grants ${local.identity_group_display_name} read access to Private DNS Zones across subscription ${data.azurerm_subscription.odaa.display_name}."
 }
 
 
@@ -283,8 +239,8 @@ resource "azurerm_role_assignment" "odaa_subscription_manager_reader_group" {
   provider           = azurerm.odaa
   scope              = data.azurerm_subscription.odaa.id
   role_definition_id = azurerm_role_definition.oracle_subscriptions_manager_reader.role_definition_resource_id
-  principal_id       = module.entra_id_users.group_object_id
-  description        = "Grants ${module.entra_id_users.group_display_name} read access to Oracle Subscription resources across subscription ${data.azurerm_subscription.odaa.display_name}."
+  principal_id       = local.identity_group_object_id
+  description        = "Grants ${local.identity_group_display_name} read access to Oracle Subscription resources across subscription ${data.azurerm_subscription.odaa.display_name}."
 }
 
 # ===============================================================================
@@ -312,6 +268,7 @@ module "aks_slot_0" {
   fqdn_odaa_app_fra         = each.value.fqdn_odaa_app_fra
   fqdn_odaa_par             = each.value.fqdn_odaa_par
   fqdn_odaa_app_par         = each.value.fqdn_odaa_app_par
+  enabled_odaa_regions      = var.enabled_odaa_regions
 
   tags = merge(local.common_tags, {
     AKSDeployment = each.value.name
@@ -339,6 +296,7 @@ module "aks_slot_1" {
   fqdn_odaa_app_fra         = each.value.fqdn_odaa_app_fra
   fqdn_odaa_par             = each.value.fqdn_odaa_par
   fqdn_odaa_app_par         = each.value.fqdn_odaa_app_par
+  enabled_odaa_regions      = var.enabled_odaa_regions
 
   tags = merge(local.common_tags, {
     AKSDeployment = each.value.name
@@ -366,6 +324,7 @@ module "aks_slot_2" {
   fqdn_odaa_app_fra         = each.value.fqdn_odaa_app_fra
   fqdn_odaa_par             = each.value.fqdn_odaa_par
   fqdn_odaa_app_par         = each.value.fqdn_odaa_app_par
+  enabled_odaa_regions      = var.enabled_odaa_regions
 
   tags = merge(local.common_tags, {
     AKSDeployment = each.value.name
@@ -393,6 +352,7 @@ module "aks_slot_3" {
   fqdn_odaa_app_fra         = each.value.fqdn_odaa_app_fra
   fqdn_odaa_par             = each.value.fqdn_odaa_par
   fqdn_odaa_app_par         = each.value.fqdn_odaa_app_par
+  enabled_odaa_regions      = var.enabled_odaa_regions
 
   tags = merge(local.common_tags, {
     AKSDeployment = each.value.name
@@ -420,6 +380,7 @@ module "aks_slot_4" {
   fqdn_odaa_app_fra         = each.value.fqdn_odaa_app_fra
   fqdn_odaa_par             = each.value.fqdn_odaa_par
   fqdn_odaa_app_par         = each.value.fqdn_odaa_app_par
+  enabled_odaa_regions      = var.enabled_odaa_regions
 
   tags = merge(local.common_tags, {
     AKSDeployment = each.value.name
@@ -601,7 +562,7 @@ resource "null_resource" "adb_creation_time" {
 locals {
   # Sanitize event name for OCI (alphanumeric only, max 8 chars)
   sanitized_event_name = lower(replace(replace(replace(
-    substr(var.microhack_event_name, 0, 8),
+    substr(local.microhack_event_name, 0, 8),
   "-", ""), "_", ""), ".", ""))
 
   # Map Azure regions to IATA airport codes
@@ -865,28 +826,14 @@ output "odaa_autonomous_databases" {
 }
 
 output "entra_id_deployment_group" {
-  description = "Information about the Entra ID deployment groups"
+  description = "Information about the Entra ID deployment group"
   value = {
     for key, deployment in local.deployments : deployment.name => {
-      object_id     = module.entra_id_users.group_object_id
-      display_name  = module.entra_id_users.group_display_name
-      mail_nickname = module.entra_id_users.group_mail_nickname
+      object_id     = local.identity_group_object_id
+      display_name  = local.identity_group_display_name
+      mail_nickname = local.shared_deployment_group.name
     }
   }
-}
-
-output "entra_id_deployment_users" {
-  description = "Initial credentials for the users created in each Entra ID deployment group"
-  value = {
-    for key, deployment in local.deployments : deployment.name => (
-      lookup(module.entra_id_users.user_credentials, key, null) == null ?
-      {} :
-      {
-        key = module.entra_id_users.user_credentials[key]
-      }
-    )
-  }
-  sensitive = true
 }
 
 output "vnet_peering_connections" {
@@ -905,8 +852,9 @@ output "deployment_summary" {
     total_aks_deployments = length(local.deployments)
     deployment_names      = local.deployment_names
     odaa_subscription_id  = var.odaa_subscription_id
+    identity_file_path    = local.identity_file_path
     entra_group_display_names = {
-      for key, deployment in local.deployments : deployment.name => module.entra_id_users.group_display_name
+      for key, deployment in local.deployments : deployment.name => local.identity_group_display_name
     }
   }
 }

@@ -66,3 +66,13 @@ variable "azuread_propagation_wait_seconds" {
   type        = number
   default     = 180
 }
+
+variable "user_reset_trigger" {
+  description = <<-EOT
+    Change this value to reset passwords for all users.
+    The passwords will be regenerated when this value changes.
+    Set to "disabled" to skip password rotation.
+  EOT
+  type        = string
+  default     = "disabled"
+}

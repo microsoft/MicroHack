@@ -213,19 +213,19 @@ Wait until the load balancer has been created, change back to the *Load balancin
 
 Open the [Azure Portal](https://portal.azure.com) and navigate to the previousley created Azure Migrate project. Select *Migrations* from the navigation pane and click on *Migrate*.
 
-![image](./img/mig1.png)
+![image](./img/Mig1.png)
 
 Select *AzureVM* and click *Continue*.
 
-![image](./img/mig2.png)
+![image](./img/Mig2.png)
 
 Select the VMs you want to migrate and click on *Yes* to also shutdown the VMs on the Hyper-V host.
 
-![image](./img/mig3.png)
+![image](./img/Mig3.png)
 
 You can check the progress of the migration under the *Jobs* section within the *Replication Summary* section of the Azure Migrate Project.
 
-![image](./img/mig4.png)
+![image](./img/Mig4.png)
 
 You can also click on each job to review the current status of the migration. 
 

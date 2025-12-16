@@ -1,4 +1,4 @@
-# Challenge 8 - (Optional) Use Azure Data Fabric with Oracle ADB
+# Challenge 8 -  (Optional) Integration of Azure Data Fabric with Oracle ADB
 
 [Previous Challenge Solution](challenge-07.md) - **[Home](../Readme.md)** - [Next Challenge Solution](challenge-09.md)
 

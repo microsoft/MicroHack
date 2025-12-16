@@ -53,7 +53,7 @@ var networkSecurityGroupName string = '${namingPrefix}-Source-NSG'
 var bastionNetworkSecurityGroupName string = '${namingPrefix}-SourceBastion-NSG'
 
 var unique = uniqueString(resourceGroup().id)
-var shortunique = substring(unique, 0, 8)
+var shortunique = substring(unique, 0, 4)
 var keyVaultName = toLower('${namingPrefix}SRC${shortunique}')
 
 var subnetAddressPrefix = '10.1.1.0/24'
@@ -354,7 +354,7 @@ resource bastionHost 'Microsoft.Network/bastionHosts@2024-05-01' = if (deployBas
 
 
 module keyVault 'br/public:avm/res/key-vault/vault:0.5.1' = {
-  name: '${namingPrefix}-keyVaultSource'
+  name: '${namingPrefix}-kvsrc'
   dependsOn: [
     
   ]

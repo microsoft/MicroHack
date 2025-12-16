@@ -33,9 +33,9 @@ az provider register --namespace Microsoft.Compute
 ### 🌍 Define some environment variables
 
 ~~~powershell
-$prefix="odaa"
+$prefix="team"
 $postfix="1"
-$location="germanywestcentral"
+$location="francecentral"
 ~~~
 
 ### 🏗️ Create Azure Resources
@@ -59,8 +59,10 @@ odaa1   Microsoft.ContainerService/managedClusters
 ### ⚓ Connect to AKS
 
 ~~~powershell
+# set the right subscription
+az account set -s "sub-team0"
 # login to aks
-az aks get-credentials -g "$prefix$postfix" -n "$prefix$postfix" --overwrite-existing
+az aks get-credentials -g "aks-team0" -n "aks-team0" --overwrite-existing
 # list namespaces
 kubectl get namespaces # should show default, kube-system, kube-public
 ~~~
@@ -92,6 +94,57 @@ kubectl get service nginx-quick-ingress-nginx-controller -n ingress-nginx -o jso
 kubectl get service --namespace ingress-nginx nginx-quick-ingress-nginx-controller --output wide
 # get external IP of nginx controller, you maybe need to wait a few minutes until the IP is assigned
 kubectl get service -n ingress-nginx -o jsonpath='{.items[*].status.loadBalancer.ingress[*].ip}'
+~~~
+
+### Setup Azure Fabric
+
+Based on https://learn.microsoft.com/en-us/fabric/data-engineering/tutorial-lakehouse-introduction#lakehouse-end-to-end-scenario
+
+1. https://app.fabric.microsoft.com/home?experience=power-bi
+1. 
+
+Sign in to your Power BI account and sign up for the free Microsoft Fabric trial. If you don't have a Power BI license, sign up for a Fabric free license and then you can start the Fabric trial.
+
+Build and implement an end-to-end lakehouse for your organization:
+
+Create a Fabric workspace.
+Create a lakehouse.
+Ingest data, transform data, and load it into the lakehouse. You can also explore the OneLake, one copy of your data across lakehouse mode and SQL analytics endpoint mode.
+Connect to your lakehouse using the SQL analytics endpoint and Create a Power BI report using DirectLake to analyze sales data across different dimensions.
+Optionally, you can orchestrate and schedule data ingestion and transformation flow with a pipeline.
+Clean up resources by deleting the workspace and other items.
+
+#### Install Image GoldenGate for Distributed Applications and Analytics
+
+GoldenGate for Distributed Applications and Analytics v23.4.0.24.06 on Linux x86-64
+
+Links:
+- (Overview of all possible GG Download Images)[https://www.oracle.com/middleware/technologies/goldengate-downloads.html#] 
+- (Download Page for Application andf Analytics GG)[https://edelivery.oracle.com/ocom/faces/Downloads;jsessionid=ir4RtGq2ylyafl5mEIgKLVFghwS6M8qi1_-8fuPA1wyWxNb2EYUh!122914563?dlp_cid=1184745&rel_cid=1153160&auth_token=1761237128_MDA0ZDFkMjczNTYyNmU3YzE2YTFmZjJlZmQ3NTBjOWIxNjRlOGY3MGFhZDI0NzQyY2Y1Yjc3NThiMzBkZmUyMzo6b3NkY19vcmFjbGUuY29t#]
+
+Build your own image and push it to your private Azure Container Registry (ACR).
+
+~~~powershell
+# switch to ACR subscription
+az account set -s <ACR-Sub-ID>
+# change to directory where Dockerfile is located
+cd .\10_Oracle_on_Azure\misc\goldengate-temp
+# build and push image to ACR
+az acr build --registry odaamh --image goldengate/goldengate-oracle-bigdata:23.4.0.24.06 --file Dockerfile .
+
+az acr repository list --name odaamh --output table
+
+~~~
+
+### Attache ACR to AKS
+
+~~~powershell
+# switch to ACR subscription
+az account set -s <ACR-Sub-ID>
+$acrId = az acr show --name odaamh --resource-group odaa --query "id" --output tsv
+
+az account set -s <AKS-Sub-ID>
+az aks update --resource-group odaa1 --name odaa1 --attach-acr $acrId
 ~~~
 
 ## Tips and Tricks

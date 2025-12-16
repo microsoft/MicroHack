@@ -1,4 +1,4 @@
-# Challenge 9 - Enable Microsoft Entra ID Authentication on Autonomous Database
+# Challenge 9 - (Optional) Enable Microsoft Entra ID Authentication on Autonomous AI Database
 
 [Previous Challenge](challenge-08.md) - **[Home](../Readme.md)** - [Next Challenge](finish.md)
 

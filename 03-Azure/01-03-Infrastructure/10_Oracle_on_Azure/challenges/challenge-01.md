@@ -1,33 +1,23 @@
-# Challenge 1 - Create Oracle Database@Azure resources
+# Challenge 1 - Create an Oracle Database@Azure (ODAA) Subscription
 
-**[Home](../Readme.md)**
+**[Home](../Readme.md)** - [Next Challenge Solution](challenge-02.md)
 
-## Goal
+Please ensure you have completed the prerequisite challenge:
+ * [Set Up Your User Account - Challenge](setup-user-account.md)
+ * [Set Up Your User Account - Solution](../walkthrough/prerequisite/setup-user-account.md)
 
-Prepare the landing zone and subscription so an Oracle Database@Azure (ODAA) environment can be purchased and deployed, ending with an Autonomous Database ready for later challenges.
-
-## 💰 Purchase Oracle Database@Azure (Prerequisite)
-
-To purchase Oracle Database@Azure, contact the Oracle sales team or your Oracle sales representative for a sale offer. Oracle Sales creates an Azure private offer in Azure Marketplace for your instance of the service. After an offer is created for your organization, you can accept the offer and complete the purchase in the marketplace in the Azure portal. For more information about Azure private offers, see Overview of the commercial marketplace and enterprise procurement.
-
-Billing and payment for the service is processed through Azure. Payment for Oracle Database@Azure counts toward Microsoft Azure Consumption Commitment (MACC). Existing Oracle Database software customers can use a bring your own license (BYOL) option or an unlimited license agreement (ULA). On your regular invoice for Azure, charges for Oracle Database@Azure appear with charges for your other Azure Marketplace services.
-
-> ⚠️ **IMPORTANT**: In this Microhack the Oracle Database@Azure has been already purchased.
-
+Review the Oracle Database@Azure service offer, the required Azure resource providers, and the role of the OCI tenancy. By the end you should understand how an Azure subscription links to Oracle Cloud so database services can be created.
 
 ## Actions
+* Move to the ODAA marketplace side. The purchasing is already done, but checkout the implementation of ODAA on the Azure side.
+* Access the OCI console via the pre defined federation implementation
+* Check if the required Azure resource providers are enabled
+  
 
-* Document the Azure subscription, resource group, network, and identity requirements that must be in place prior to provisioning ODAA resources.
-* Initiate creation of an Autonomous Database through the Azure portal and OCI console, noting every configuration choice and the administrator credentials you define.
-* Record connection details, regional placement, and any integration points that will be required by downstream workloads in subsequent challenges.
+## Sucess criteria
+* Search for the Oracle Database at Azure 
+* Make yourself familar with the available services of ODAA and how to purchase ODAA
 
-## Success criteria
-
-* You have validated that all prerequisite Azure infrastructure (resource group, networking, identity, RBAC) is ready for the deployment.
-* You have provisioned an Autonomous Database instance in Oracle Database@Azure and retained the administrator credentials and connection endpoints for later use.
-* You have documented configuration decisions and outstanding follow-up actions for the team.
-
-## Learning resources
-
-* https://docs.oracle.com/en-us/iaas/Content/database-at-azure/overview.htm
-* https://docs.oracle.com/en-us/iaas/Content/database-at-azure/azucr-create-autonomous-database.html
+## Learning Resources
+* [ODAA in Azure an overview](https://www.oracle.com/cloud/azure/oracle-database-at-azure/)
+* [Enhanced Networking for ODAA](https://learn.microsoft.com/en-us/azure/oracle/oracle-db/oracle-database-network-plan)

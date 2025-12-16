@@ -1,6 +1,6 @@
 ![image](img/1920x300_EventBanner_MicroHack_BusinessContinuity_wText.jpg)
 
-# MicroHack - Business Continuity on Azure - Second Edition
+# MicroHack - Business Continuity on Azure - Second Edition (Proposal)
 
 - [**MicroHack introduction**](#microhack-introduction)
   - [What is Business Continuity?](#what-is-business-continuity)

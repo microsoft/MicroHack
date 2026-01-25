@@ -322,3 +322,5 @@ module trafficManager './MODULES/NETWORK/trafficmanager.bicep' = {
 // Output
 output vmUserName string = vmAdminUsername
 output fqdn string = trafficManager.outputs.trafficManagerfqdn
+output sourceResourceGroupName string = sourceRG.name
+output targetResourceGroupName string = targetRG.name

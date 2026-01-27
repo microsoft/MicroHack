@@ -120,11 +120,11 @@ $password = $password.Insert((Get-Random -Minimum 2 -Maximum 10), (Get-Random -I
 $password = $password.Insert((Get-Random -Minimum 2 -Maximum 10), (Get-Random -InputObject @('?', '!','@','.',':')))
 
 
-$template = Join-Path $scriptPath "deploy.bicep"
+$template = Join-Path $scriptPath "deploy.json"
 $mainParameters = Join-Path $scriptPath "main.parameters.json"
 $result = New-AzSubscriptionDeployment `
-    -Location "germanywestcentral" `
-    -sourceLocation "germanywestcentral" `
+    -Location "norwayeast" `
+    -sourceLocation "norwayeast" `
     -targetLocation "swedencentral" `
     -TemplateFile $template `
     -parDeploymentPrefix $parPrefix `

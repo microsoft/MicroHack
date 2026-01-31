@@ -1,0 +1,98 @@
+name: PR Compliance Check
+
+on:
+  pull_request:
+    paths:
+      - '01-Identity and Access Management/**'
+      - '02-Security/**'
+      - '03-Azure/**'
+      - '04-Microsoft-365/**'
+
+jobs:
+  compliance-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v44
+        with:
+          files: |
+            01-Identity and Access Management/**
+            02-Security/**
+            03-Azure/**
+            04-Microsoft-365/**
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install brokelink
+        run: pip install brokelink
+
+      - name: Check markdown links and images
+        id: brokelink-check
+        continue-on-error: true
+        run: |
+          echo "## Brokelink Check Results" > brokelink-results.md
+          echo "" >> brokelink-results.md
+          
+          EXIT_CODE=0
+          CHANGED_MD_FILES="${{ steps.changed-files.outputs.all_changed_files }}"
+          
+          for file in $CHANGED_MD_FILES; do
+            if [[ "$file" == *.md ]]; then
+              echo "Checking: $file"
+              OUTPUT=$(brokelink "$file" --include="*.md" --check-images 2>&1) || FILE_EXIT=$?
+              FILE_EXIT=${FILE_EXIT:-0}
+              
+              if [ "$FILE_EXIT" -ne 0 ]; then
+                echo "❌ **$file** - Issues found" >> brokelink-results.md
+                echo '```' >> brokelink-results.md
+                echo "$OUTPUT" >> brokelink-results.md
+                echo '```' >> brokelink-results.md
+                echo "" >> brokelink-results.md
+                EXIT_CODE=1
+              else
+                echo "✅ **$file** - OK" >> brokelink-results.md
+              fi
+            fi
+          done
+          
+          echo "BROKELINK_EXIT_CODE=$EXIT_CODE" >> $GITHUB_OUTPUT
+          cat brokelink-results.md
+
+      - name: Run file structure compliance check
+        id: structure-check
+        run: |
+          CHANGED_FILES="${{ steps.changed-files.outputs.all_changed_files }}"
+          python .github/scripts/check_file_structure.py $CHANGED_FILES
+        continue-on-error: true
+
+      - name: Upload compliance summary
+        if: always()
+        run: |
+          if [ -f structure-check-results.md ]; then
+            cat structure-check-results.md >> $GITHUB_STEP_SUMMARY
+          fi
+          if [ -f brokelink-results.md ]; then
+            cat brokelink-results.md >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Check final compliance status
+        run: |
+          BROKELINK_STATUS=${{ steps.brokelink-check.outputs.BROKELINK_EXIT_CODE }}
+          STRUCTURE_STATUS=${{ steps.structure-check.outcome }}
+          
+          if [ "$BROKELINK_STATUS" != "0" ] || [ "$STRUCTURE_STATUS" == "failure" ]; then
+            echo "❌ Compliance check failed"
+            exit 1
+          fi
+          
+          echo "✅ All compliance checks passed"

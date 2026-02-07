@@ -34,7 +34,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install brokelink
-        run: pip install brokelink
+        run: pip install brokelink beautifulsoup4 colorama click
 
       - name: Check markdown links and images
         id: brokelink-check

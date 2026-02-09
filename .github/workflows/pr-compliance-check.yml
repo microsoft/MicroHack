@@ -26,17 +26,12 @@ jobs:
         id: changed-files
         uses: tj-actions/changed-files@v44
         with:
-          json: true
+          write_output_files: true
           files: |
             01-Identity and Access Management/**
             02-Security/**
             03-Azure/**
             04-Microsoft-365/**
-
-      - name: Write changed files to temp file
-        run: |
-          echo '${{ steps.changed-files.outputs.all_changed_files }}' | jq -r '.[]' > changed-files.txt
-          cat changed-files.txt
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -73,7 +68,7 @@ jobs:
                 echo "✅ **$file** - OK" >> brokelink-results.md
               fi
             fi
-          done < changed-files.txt
+          done < .github/outputs/all_changed_files.txt
           
           echo "BROKELINK_EXIT_CODE=$EXIT_CODE" >> $GITHUB_OUTPUT
           cat brokelink-results.md
@@ -81,7 +76,7 @@ jobs:
       - name: Run file structure compliance check
         id: structure-check
         run: |
-          python .github/scripts/check_file_structure.py < changed-files.txt
+          python .github/scripts/check_file_structure.py < .github/outputs/all_changed_files.txt
         continue-on-error: true
 
       - name: Upload compliance summary

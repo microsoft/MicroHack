@@ -26,6 +26,7 @@ jobs:
         id: changed-files
         uses: tj-actions/changed-files@v44
         with:
+          separator: "\n"
           files: |
             01-Identity and Access Management/**
             02-Security/**
@@ -50,7 +51,8 @@ jobs:
           EXIT_CODE=0
           CHANGED_MD_FILES="${{ steps.changed-files.outputs.all_changed_files }}"
           
-          for file in $CHANGED_MD_FILES; do
+          while IFS= read -r file; do
+            [ -z "$file" ] && continue
             if [[ "$file" == *.md ]]; then
               echo "Checking: $file"
               OUTPUT=$(brokelink "$file" --include="*.md" --check-images 2>&1) || FILE_EXIT=$?
@@ -67,7 +69,7 @@ jobs:
                 echo "✅ **$file** - OK" >> brokelink-results.md
               fi
             fi
-          done
+          done <<< "$CHANGED_MD_FILES"
           
           echo "BROKELINK_EXIT_CODE=$EXIT_CODE" >> $GITHUB_OUTPUT
           cat brokelink-results.md
@@ -76,7 +78,7 @@ jobs:
         id: structure-check
         run: |
           CHANGED_FILES="${{ steps.changed-files.outputs.all_changed_files }}"
-          python .github/scripts/check_file_structure.py $CHANGED_FILES
+          echo "$CHANGED_FILES" | python .github/scripts/check_file_structure.py
         continue-on-error: true
 
       - name: Upload compliance summary

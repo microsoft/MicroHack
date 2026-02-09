@@ -459,13 +459,16 @@ class ComplianceChecker:
 
 def main():
     """Main entry point."""
-    # Get changed files from command line arguments
+    # Get changed files from command line arguments, stdin, or environment variable
     if len(sys.argv) > 1:
         changed_files = sys.argv[1:]
+    elif not sys.stdin.isatty():
+        # Read from stdin (newline-separated)
+        changed_files = [line.strip() for line in sys.stdin if line.strip()]
     else:
         changed_files_env = os.environ.get("CHANGED_FILES", "")
         if changed_files_env:
-            changed_files = changed_files_env.split()
+            changed_files = [f.strip() for f in changed_files_env.split('\n') if f.strip()]
         else:
             changed_files = []
 

@@ -34,15 +34,6 @@ jobs:
             03-Azure/**
             04-Microsoft-365/**
 
-      - name: Debug - Show changed files
-        run: |
-          echo "=== Changed files (from .github/outputs/all_changed_files.txt) ==="
-          echo "File count: $(wc -l < .github/outputs/all_changed_files.txt)"
-          echo ""
-          cat .github/outputs/all_changed_files.txt
-          echo ""
-          echo "=== End of changed files ==="
-
       - name: Setup Python
         uses: actions/setup-python@v5
         with:

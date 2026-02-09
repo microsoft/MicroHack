@@ -472,6 +472,14 @@ def main():
         else:
             changed_files = []
 
+    # Debug: Show received files
+    print(f"DEBUG: Received {len(changed_files)} files from input")
+    for i, f in enumerate(changed_files[:10]):
+        print(f"  [{i+1}] {f}")
+    if len(changed_files) > 10:
+        print(f"  ... and {len(changed_files) - 10} more files")
+    print()
+
     if not changed_files:
         summary = "## 📋 Challenges & Walkthrough Compliance Check\n\n### ✅ Status: COMPLIANT\n\n*No files to check.*\n"
         with open("structure-check-results.md", "w", encoding="utf-8") as f:
@@ -491,6 +499,14 @@ def main():
         f for f in changed_files
         if any(f.startswith(prefix) for prefix in relevant_prefixes)
     ]
+
+    # Debug: Show filtered files
+    print(f"DEBUG: {len(filtered_files)} files after filtering for relevant directories")
+    for i, f in enumerate(filtered_files[:10]):
+        print(f"  [{i+1}] {f}")
+    if len(filtered_files) > 10:
+        print(f"  ... and {len(filtered_files) - 10} more files")
+    print()
 
     if not filtered_files:
         summary = "## 📋 Challenges & Walkthrough Compliance Check\n\n### ✅ Status: COMPLIANT\n\n*No relevant files in monitored directories.*\n"

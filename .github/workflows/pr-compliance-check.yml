@@ -27,7 +27,7 @@ jobs:
         uses: tj-actions/changed-files@v44
         with:
           write_output_files: true
-          output_files_separator: "\n"
+          separator: "\n"
           files: |
             01-Identity and Access Management/**
             02-Security/**

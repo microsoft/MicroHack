@@ -1,4 +1,7 @@
 # Challenge 3 - Encryption in transit: enforcing TLS
+
+[Previous Challenge Solution](../challenge-02/solution-02.md) - **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-04/solution-04.md)
+
 **Estimated Duration:** 30 minutes
 
 > 💡**Objective:**
@@ -207,4 +210,4 @@ StorageBlobLogs
 
 You successsfully completed challenge 3! 🚀🚀🚀
 
- **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-4/solution.md)
+ **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-04/solution-04.md)

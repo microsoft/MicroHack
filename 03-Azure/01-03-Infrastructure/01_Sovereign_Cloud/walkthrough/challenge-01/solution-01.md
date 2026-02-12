@@ -1,5 +1,7 @@
 # Walkthrough Challenge 1 - Enforce Sovereign Controls with Azure Policy and RBAC
 
+**[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-02/solution-02.md)
+
 **Estimated Duration:** 45 minutes
 
 > 💡 **Objective:** Learn how to enforce sovereign cloud governance controls using Azure native platform capabilities. You will restrict resource deployments to sovereign regions, enforce compliance through tagging and network policies, implement least-privilege access with RBAC, and remediate non-compliant resources.

@@ -32,7 +32,16 @@ The following procedure creates a virtual network with a resource subnet, and a 
 
 
 ## Subnet + delegation
-1.
-2.
-3.
-4.
+1. Navigate to Virtual networks in the Azure portal. Select the virtual network that you want to use for Azure NetApp Files.
+
+2. From Virtual network, select Subnets then the +Subnet button.
+
+3. Create a new subnet to use for Azure NetApp Files by completing the following required fields in the Add Subnet page:
+
+* Name: Specify the subnet name.
+* Address range: Specify the IP address range.
+* Subnet delegation: Select Microsoft.NetApp/volumes.
+
+Note: You can also create and delegate a subnet when you create a volume for Azure NetApp Files.
+https://learn.microsoft.com/en-us/azure/azure-netapp-files/azure-netapp-files-create-volumes
+

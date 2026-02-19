@@ -1,4 +1,4 @@
-# 2. Setup Network Configuration 
+# Setup Network Configuration 
 
 ![image](./img/vnet_title.jpg)
 

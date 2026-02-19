@@ -12,4 +12,4 @@ For registration steps using Portal,
 
 5. Select **Microsoft.NetApp** and select **Register**. 
 
-ressource_provider.png
+![image](./img/ressource_provider.png)

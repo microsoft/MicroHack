@@ -8,7 +8,7 @@ Key attributes of Azure NetApp Files are:
 * Simplicity and availability
 * Data management and security
 
-## Azure NetApp Files supports SMB, NFS, and dual protocols volumes and can be used for use cases such as:
+Azure NetApp Files supports SMB, NFS, and dual protocols volumes and can be used for use cases such as:
 
 * File sharing
 * Home directories

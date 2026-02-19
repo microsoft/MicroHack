@@ -20,7 +20,7 @@
 
 1. In the Azure portal's search box, enter **Azure NetApp Files** and then select **Azure NetApp Files** from the list that appears. 
 
-Screenshot
+![image](./img/search-azure-netapp-files.png)
 
 2. Select + **Create** to create a new NetApp account. 
 
@@ -30,3 +30,5 @@ Screenshot
 * Select your subscription. 
 * Select **Create new** to create new resource group. Enter **myRG1** for the resource group name. Select OK. 
 * Select your account location.
+
+![image](./img/azure-netapp-files-new-netapp-account.png)

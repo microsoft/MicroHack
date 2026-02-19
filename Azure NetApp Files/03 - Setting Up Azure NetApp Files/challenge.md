@@ -11,3 +11,5 @@ For registration steps using Portal,
 4. Find the provider Microsoft.NetApp. 
 
 5. Select **Microsoft.NetApp** and select **Register**. 
+
+ressource_provider.png

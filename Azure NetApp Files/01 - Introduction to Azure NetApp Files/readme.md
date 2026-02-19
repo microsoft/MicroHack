@@ -1,4 +1,4 @@
-# 1. Introduction to Azure NetApp Files 
+# Introduction to Azure NetApp Files 
 
  
 

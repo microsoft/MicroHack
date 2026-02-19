@@ -1,6 +1,6 @@
 # 2. Setup Network Configuration 
 
- 
+![image](./img/frame_2791_w1120 (1).jpg)
 
 ## Objective: 
 Design an effective network architecture for your workloads to benefit from the rich capabilities of Azure NetApp Files. 

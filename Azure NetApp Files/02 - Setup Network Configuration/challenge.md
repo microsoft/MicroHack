@@ -3,7 +3,7 @@
 Sign in to the Azure portal with your Azure account.
 
 
-# Create a virtual network and an Azure Bastion host
+# Create a virtual network and subnet delegation
 
 The following procedure creates a virtual network with a resource subnet, an Azure Bastion subnet, and a Bastion host:
 

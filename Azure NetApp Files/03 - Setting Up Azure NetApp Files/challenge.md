@@ -40,15 +40,15 @@
 
 1. From the Azure NetApp Files management sidebar, select your NetApp account, e.g. myaccount1
 
-Screenshot
+![image](./img/azure-netapp-files-select-netapp-account.png)
 
 2. From the Azure NetApp Files management sidebar, select **Capacity pools**.
 
-Screenshot
+![image](./img/azure-netapp-files-click-capacity-pools.png)
 
 3. Select + **Add pools**. 
 
-Screenshot
+![image](./img/azure-netapp-files-new-capacity-pool.png)
 
 4. Provide information for the capacity pool: 
 

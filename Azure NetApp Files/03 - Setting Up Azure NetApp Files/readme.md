@@ -1,4 +1,4 @@
-# 3. Setting Up Azure NetApp Files 
+# Setting Up Azure NetApp Files 
 
 ## Objective:
 Teach participants how to set up and configure Azure NetApp Files. 

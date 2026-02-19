@@ -1,26 +1,24 @@
-# Sign in to Azure
-
-Sign in to the Azure portal with your Azure account.
-
-
 # Create a virtual network and subnet delegation
 
-The following procedure creates a virtual network with a resource subnet, an Azure Bastion subnet, and a Bastion host:
+The following procedure creates a virtual network with a resource subnet, and a delegated ANF subnet.
 
-1. In the portal, search for and select Virtual networks.
+## Virtual Network
+1. Sign in to the Azure portal with your Azure account.
 
-2. On the Virtual networks page, select + Create.
+2. In the portal, search for and select Virtual networks.
 
-3. On the Basics tab of Create virtual network, enter, or select the following information:
+3. On the Virtual networks page, select + Create.
+
+4. On the Basics tab of Create virtual network, enter, or select the following information:
 
 ![image](./img/create-virtual-network-basics.png)
 
 
-4. Select Next to proceed to the IP Addresses tab.
+5. Select Next to proceed to the IP Addresses tab.
 
-5. In the address space box in Subnets, select the default subnet.
+6. In the address space box in Subnets, select the default subnet.
 
-6. In Edit subnet, enter or select the following information:
+7. In Edit subnet, enter or select the following information:
 
 * Subnet purpose: Leave the default of Default.
 * Name: Enter subnet-1.
@@ -28,7 +26,13 @@ The following procedure creates a virtual network with a resource subnet, an Azu
 * Starting address: Leave the default of 10.0.0.0.
 * Size: Leave the default of /24 (256 addresses).
 
-7. Select Save
+8. Select Save
 
-8. Select Review + create at the bottom of the window. When validation passes, select Create
+9. Select Review + create at the bottom of the window. When validation passes, select Create
 
+
+## Subnet + delegation
+1.
+2.
+3.
+4.

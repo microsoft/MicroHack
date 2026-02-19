@@ -1,13 +1,13 @@
-
+# Register and set up
 
 For registration steps using Portal, 
 
-Log in to the Azure portal. 
+1. Log in to the [Azure portal](https://portal.azure.com/#home). 
 
-In the Azure portal's search box, enter Subscriptions and then select your subscription. 
+2. In the Azure portal's search box, enter **Subscriptions** and then select your subscription. 
 
-On the left menu under Settings, select Resource providers. 
+3. On the left menu under **Settings**, select **Resource providers**. 
 
-Find the provider Microsoft.NetApp. 
+4. Find the provider Microsoft.NetApp. 
 
-Select Microsoft.NetApp and select Register. 
+5. Select **Microsoft.NetApp** and select **Register**. 

@@ -35,25 +35,26 @@
 
 4. Select **Create** to create your new NetApp account.
 
+
 ## Create a capacity pool 
 
 1. From the Azure NetApp Files management sidebar, select your NetApp account, e.g. myaccount1
 
 Screenshot
 
-2. From the Azure NetApp Files management sidebar, select Capacity pools.
+2. From the Azure NetApp Files management sidebar, select **Capacity pools**.
 
 Screenshot
 
-3.) Select + Add pools. 
+3. Select + **Add pools**. 
 
 Screenshot
 
 4. Provide information for the capacity pool: 
 
-* Enter mypool1 as the pool name. 
-* Select Premium for the service level. 
-* Specify 1 (TiB) as the pool size. 
-* Use the Auto QoS type. 
+* Enter **mypool1** as the pool name. 
+* Select **Premium** for the service level. 
+* Specify **1 (TiB)** as the pool size. 
+* Use the **Auto** QoS type. 
 
-5. Select Create. 
+5. Select **Create**. 

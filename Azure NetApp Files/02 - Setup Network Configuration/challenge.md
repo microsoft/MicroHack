@@ -13,7 +13,8 @@ The following procedure creates a virtual network with a resource subnet, an Azu
 
 3. On the Basics tab of Create virtual network, enter, or select the following information:
 
-Screenshot Create Virtual Network
+![image](./img/create-virtual-network-basics.png)
+
 
 4. Select Next to proceed to the IP Addresses tab.
 

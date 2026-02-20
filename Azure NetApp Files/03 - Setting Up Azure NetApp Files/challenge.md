@@ -84,24 +84,28 @@
 3. Select **Join**.
 
 
-
 ##   
-## Create an NFS volume for Azure NetApp Files
+## Create an SMB volume for Azure NetApp Files
 
-1. From the Azure NetApp Files sidebar of your NetApp account, select **Volumes**.
+1. Select the Volumes blade from the Capacity Pools blade.
 
-![image](./img/nfs_1.png)
+Screenshot
 
-2. Select + **Add volume**.
+2. Select + Add volume to create a volume.
 
-![image](./img/nfs_2.png)
+Screenshot
 
-3. In the Create a Volume window, provide information for the volume:
+3. In the Create a Volume window, select Create and provide information for the following fields under the Basics tab:
 
 a. Enter **myvol1** as the volume name.
 b. Select your capacity pool (**mypool1**).
 c. Use the default value for quota.
-d. Under virtual network, select **Create new** to create a new Azure virtual network (VNet). Then fill in the following information:
+
+
+
+3. In the Create a Volume window, provide information for the volume:
+
+
 
 * Enter **myvnet1** as the VNet name.
 * Specify an address space for your setting, for example, 10.7.0.0/16

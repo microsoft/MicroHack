@@ -3,7 +3,7 @@
 ## Objective: 
 Explore the use cases and benefits of Azure NetApp Files for Virtual Desktop Infrastructure (VDI) and Azure Virtual Desktop (AVD). 
 
-##Topics Covered: 
+## Topics Covered: 
 
 * Benefits of using Azure NetApp Files for VDI/AVD 
 

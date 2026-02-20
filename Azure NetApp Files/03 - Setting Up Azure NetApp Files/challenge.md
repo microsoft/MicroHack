@@ -89,11 +89,11 @@
 
 1. Select the Volumes blade from the Capacity Pools blade.
 
-Screenshot
+![image](./img/nfs_1.png)
 
 2. Select + Add volume to create a volume.
 
-Screenshot
+![image](./img/nfs_2.png)
 
 3. In the Create a Volume window, select Create and provide information for the following fields under the Basics tab:
 
@@ -101,23 +101,11 @@ a. Enter **myvol1** as the volume name.
 b. Select your capacity pool (**mypool1**).
 c. Use the default value for quota.
 
-
+![image](./img/nfs_3.png)
 
 3. In the Create a Volume window, provide information for the volume:
 
 
-
-* Enter **myvnet1** as the VNet name.
-* Specify an address space for your setting, for example, 10.7.0.0/16
-* Enter **myANFsubnet** as the subnet name.
-* Specify the subnet address range, for example, 10.7.0.0/24. You can't share the dedicated subnet with other resources.
-* Select **Microsoft.NetApp/volumes** for subnet delegation.
-* Select **OK** to create the VNet.
-
-e. In subnet, select the newly created VNet (**myvnet1**) as the delegate subnet.
-
-![image](./img/nfs_3.png)
-![image](./img/nfs_4.png)
 
 4. Select **Protocol**, and then complete the following actions:
 

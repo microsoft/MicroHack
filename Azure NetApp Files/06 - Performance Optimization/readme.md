@@ -20,6 +20,12 @@ Provide strategies to optimize the performance of Azure NetApp Files.
 
 * Hands-On Lab: Participants adjust performance levels based on simulated workloads. 
 
+## Materials: 
 
+* Performance optimization best practices guide 
 
+* Access to performance monitoring tools 
 
+## Documentation Links: 
+
+* [Azure NetApp Files performance considerations](https://learn.microsoft.com/en-us/azure/azure-netapp-files/azure-netapp-files-performance-considerations) 

@@ -60,6 +60,20 @@
 5. Select **Create**.
 
 
+## Create and manage Active Directory connections for Azure NetApp Files
+
+1. From your NetApp account, select **Active Directory connections** then **Join**.
+
+![image](./img/1-azure-netapp-files-active-directory-connections.png)
+
+2. In the Join Active Directory window, provide the following information, based on the Domain Services you want to use:
+
+![image](./img/2-azure-netapp-files-join-active-directory.png)
+
+3. Select **Join**.
+
+
+
 
    
 ## Create an NFS volume for Azure NetApp Files

@@ -1,4 +1,4 @@
-![image](./img/1920x300_EventBanner_MicroHack_General_wText.jpg)
+![image](./img/1920x300_EventBanner_MicroHack_ANF_VDI_AVD.png)
 
 # Azure NetApp Files Microhack VDI/AVD 
 

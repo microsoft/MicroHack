@@ -3,6 +3,7 @@
 
 ## Register for NetApp Resource Provider 
 
+
 1. Log in to the [Azure portal](https://portal.azure.com/#home). 
 
 2. In the Azure portal's search box, enter **Subscriptions** and then select your subscription. 
@@ -15,7 +16,7 @@
 
 ![image](./img/ressource_provider.png)
 
-
+## 
 ## Create a NetApp account in Azure NetApp Files 
 
 1. In the Azure portal's search box, enter **Azure NetApp Files** and then select **Azure NetApp Files** from the list that appears. 
@@ -36,6 +37,7 @@
 4. Select **Create** to create your new NetApp account.
 
 
+##
 ## Create a capacity pool 
 
 1. From the Azure NetApp Files management sidebar, select your NetApp account, e.g. myaccount1
@@ -60,6 +62,7 @@
 5. Select **Create**.
 
 
+##
 ## Create and manage Active Directory connections for Azure NetApp Files
 
 1. From your NetApp account, select **Active Directory connections** then **Join**.
@@ -74,8 +77,7 @@
 
 
 
-
-   
+##   
 ## Create an NFS volume for Azure NetApp Files
 
 1. From the Azure NetApp Files sidebar of your NetApp account, select **Volumes**.

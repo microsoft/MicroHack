@@ -2,7 +2,7 @@
 
 # Azure NetApp Files Microhack VDI/AVD 
 
-##Table of Contents 
+## Table of Contents 
 
 1. Introduction to Azure NetApp Files 
 

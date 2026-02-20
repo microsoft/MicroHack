@@ -59,23 +59,25 @@
 
 5. Select **Create**.
 
+
+
    
 ## Create an NFS volume for Azure NetApp Files
 
-1. From the Azure NetApp Files sidebar of your NetApp account, select Volumes.
+1. From the Azure NetApp Files sidebar of your NetApp account, select **Volumes**.
 
 ![image](./img/nfs_1.png)
 
-2. Select + Add volume.
+2. Select + **Add volume**.
 
 ![image](./img/nfs_2.png)
 
 3. In the Create a Volume window, provide information for the volume:
 
-a. Enter myvol1 as the volume name.
-b. Select your capacity pool (mypool1).
+a. Enter **myvol1** as the volume name.
+b. Select your capacity pool (**mypool1**).
 c. Use the default value for quota.
-d. Under virtual network, select Create new to create a new Azure virtual network (VNet). Then fill in the following information:
+d. Under virtual network, select **Create new** to create a new Azure virtual network (VNet). Then fill in the following information:
 
 * Enter **myvnet1** as the VNet name.
 * Specify an address space for your setting, for example, 10.7.0.0/16
@@ -84,24 +86,24 @@ d. Under virtual network, select Create new to create a new Azure virtual networ
 * Select **Microsoft.NetApp/volumes** for subnet delegation.
 * Select **OK** to create the VNet.
 
-e. In subnet, select the newly created VNet (myvnet1) as the delegate subnet.
+e. In subnet, select the newly created VNet (**myvnet1**) as the delegate subnet.
 
 ![image](./img/nfs_3.png)
 ![image](./img/nfs_4.png)
 
-4. Select Protocol, and then complete the following actions:
+4. Select **Protocol**, and then complete the following actions:
 
-* Select NFS as the protocol type for the volume.
-* Enter myfilepath1 for the file path used to create the export path for the volume.
-* Select the NFS version (NFSv3 or NFSv4.1) for the volume. See considerations and best practice about NFS versions.
-* Select Disabled for Kerberos and LDAP (for the quickstart).
-* Optionally, configure Unix permissions. For information, see Configure UNIX permissions.
-* Leave Azure VMware Solution DataStore unchecked.
+* Select **NFS** as the protocol type for the volume.
+* Enter **myfilepath1** for the file path used to create the export path for the volume.
+* Select the NFS version (**NFSv3** or **NFSv4.1**) for the volume. See [considerations](https://learn.microsoft.com/en-us/azure/azure-netapp-files/azure-netapp-files-create-volumes#considerations) and [best practice](https://learn.microsoft.com/en-us/azure/azure-netapp-files/azure-netapp-files-create-volumes#best-practices) about NFS versions.
+* Select **Disabled** for Kerberos and LDAP (for the quickstart).
+* Optionally, configure **Unix permissions**. For information, see Configure UNIX permissions.
+* Leave **Azure VMware Solution** DataStore unchecked.
   
 ![image](./img/nfs_5.png)
 
-5. Select Review + create to display information for the volume you're creating.
+5. Select **Review + create** to display information for the volume you're creating.
 
-6. Select Create to create the volume. The created volume appears in the Volumes menu.
+6. Select **Create** to create the volume. The created volume appears in the Volumes menu.
 
 ![image](./img/nfs_6.png)

@@ -11,8 +11,6 @@ Equip participants with the skills to manage and monitor Azure NetApp Files.
 
 * Managing Active Directory integration 
 
-* Capacity management and quotas 
-
 * Backup and restore operations 
 
 ## Activities: 

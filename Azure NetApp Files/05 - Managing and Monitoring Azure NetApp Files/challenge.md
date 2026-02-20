@@ -1,4 +1,4 @@
-# Ways to access metrics and Monitoring Performance:
+# Ways to access metrics and monitoring performance:
 
 Azure NetApp Files metrics are natively integrated into Azure monitor. From within the Azure portal, you can find metrics for Azure NetApp Files capacity pools and volumes from two locations:
 

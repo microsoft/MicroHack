@@ -1,16 +1,21 @@
-# Azure NetApp Files
+![image](./img/1920x300_EventBanner_MicroHack_General_wText.jpg)
 
-Azure NetApp Files is an Azure native, first-party, enterprise-class, high-performance file storage service. It provides Volumes as a service, which you can create within a NetApp account and a capacity pool, and share to clients using SMB and NFS. You can also select service and performance levels and manage data protection. You can create and manage high-performance, highly available, and scalable file shares by using the same protocols and tools that you're familiar with and rely on on-premises.
+# Azure NetApp Files Microhack VDI/AVD 
 
-Key attributes of Azure NetApp Files are:
+##Table of Contents 
 
-* Performance, cost optimization, and scale
-* Simplicity and availability
-* Data management and security
+1. Introduction to Azure NetApp Files 
 
-Azure NetApp Files supports SMB, NFS, and dual protocols volumes and can be used for use cases such as:
+2. Setup Network Configuration 
 
-* File sharing
-* Home directories
-* Databases
-* High-performance computing
+3. Setting Up Azure NetApp Files 
+
+4. Azure NetApp Files for VDI/AVD Use-Case 
+
+5. Managing and Monitoring Azure NetApp Files 
+
+6. Performance Optimization 
+
+7. Best Practices and Use Cases 
+
+8. Q&A and Troubleshooting 

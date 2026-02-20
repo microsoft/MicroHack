@@ -64,11 +64,11 @@
 
 1. From the Azure NetApp Files sidebar of your NetApp account, select Volumes.
 
-![image](./img/nfs_1)
+![image](./img/nfs_1.png)
 
 2. Select + Add volume.
 
-![image](./img/nfs_2)
+![image](./img/nfs_2.png)
 
 3. In the Create a Volume window, provide information for the volume:
 
@@ -86,8 +86,8 @@ d. Under virtual network, select Create new to create a new Azure virtual networ
 
 e. In subnet, select the newly created VNet (myvnet1) as the delegate subnet.
 
-![image](./img/nfs_3)
-![image](./img/nfs_4)
+![image](./img/nfs_3.png)
+![image](./img/nfs_4.png)
 
 4. Select Protocol, and then complete the following actions:
 
@@ -98,10 +98,10 @@ e. In subnet, select the newly created VNet (myvnet1) as the delegate subnet.
 * Optionally, configure Unix permissions. For information, see Configure UNIX permissions.
 * Leave Azure VMware Solution DataStore unchecked.
   
-![image](./img/nfs_5)
+![image](./img/nfs_5.png)
 
 5. Select Review + create to display information for the volume you're creating.
 
 6. Select Create to create the volume. The created volume appears in the Volumes menu.
 
-![image](./img/nfs_6)
+![image](./img/nfs_6.png)

@@ -6,7 +6,7 @@
 ## Objective: 
 Address any questions and provide troubleshooting tips for common issues. 
 
-##Topics Covered: 
+## Topics Covered: 
 
 * Common issues and resolutions 
 

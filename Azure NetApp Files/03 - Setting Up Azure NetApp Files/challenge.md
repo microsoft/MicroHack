@@ -97,9 +97,9 @@
 
 3. In the Create a Volume window, provide information for the volume:
    
-a. Enter **myvol1** as the volume name.
-b. Select your capacity pool (**mypool1**).
-c. Use the default value for quota.
+* Enter **myvol1** as the volume name.
+* Select your capacity pool (**mypool1**).
+* Use the default value for quota.
 
 ![image](./img/nfs_7.png)
 
@@ -108,15 +108,8 @@ c. Use the default value for quota.
 ![image](./img/smb_1.png)
 
 * Select **SMB** as the protocol type for the volume.
-
-  
-* Enter **myfilepath1** for the file path used to create the export path for the volume.
-* Select the NFS version (**NFSv3** or **NFSv4.1**) for the volume. See [considerations](https://learn.microsoft.com/en-us/azure/azure-netapp-files/azure-netapp-files-create-volumes#considerations) and [best practice](https://learn.microsoft.com/en-us/azure/azure-netapp-files/azure-netapp-files-create-volumes#best-practices) about NFS versions.
-* Select **Disabled** for Kerberos and LDAP (for the quickstart).
-* Optionally, configure **Unix permissions**. For information, see Configure UNIX permissions.
-* Leave **Azure VMware Solution** DataStore unchecked.
-  
-![image](./img/nfs_5.png)
+* Active Directory: **microhack.test**
+* Share name: **myvol1**
 
 5. Select **Review + create** to display information for the volume you're creating.
 

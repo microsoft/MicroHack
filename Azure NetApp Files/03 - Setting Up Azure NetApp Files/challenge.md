@@ -73,6 +73,14 @@
 
 ![image](./img/2-azure-netapp-files-join-active-directory.png)
 
+* Primary DNS
+* AD DNS Domain Name: **microhack.test**
+* AD Site Name: **Default-First-Site-Name**
+* SMB Server (computer account) prefix: **MH**
+* AES Encryption: **enable**
+* Username: **microhack**
+* Password: **NetApp12345!!**
+
 3. Select **Join**.
 
 

@@ -4,7 +4,7 @@
 
 ## Table of Contents 
 
-1. Introduction to Azure NetApp Files 
+[1. Introduction to Azure NetApp Files](Azure NetApp Files/01 - Introduction to Azure NetApp Files)
 
 2. Setup Network Configuration 
 

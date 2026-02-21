@@ -4,7 +4,7 @@
 
 ## Table of Contents 
 
-[1. Introduction to Azure NetApp Files](Azure NetApp Files/01 - Introduction to Azure NetApp Files)
+[1. Introduction to Azure NetApp Files](https://github.com/saschape/MicroHack/tree/main/Azure%20NetApp%20Files/01%20-%20Introduction%20to%20Azure%20NetApp%20Files)
 
 2. Setup Network Configuration 
 

@@ -3,7 +3,7 @@
 The following procedure creates a virtual network with a resource subnet, and a delegated ANF subnet.
 
 ## Virtual Network
-1. Sign in to the Azure portal with your Azure account.
+1. Log in to the [Azure portal](https://portal.azure.com/#home). 
 
 2. In the portal, search for and select Virtual networks.
 

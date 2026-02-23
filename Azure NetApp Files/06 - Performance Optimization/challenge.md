@@ -12,4 +12,6 @@ Azure Portal:
 
 * Check updated value of  “maximum throughput” in your ANF volume.  
 
-* Log in again to your AVD environment. How long did it take compared to your previous attempt? 
+* Log in again to your AVD environment. How long did it take compared to your previous attempt?
+
+* Go back to Azure Monitor. How many MB/sec did the volume deliver?

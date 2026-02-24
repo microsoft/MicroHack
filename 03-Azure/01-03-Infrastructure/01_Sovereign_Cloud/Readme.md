@@ -5,6 +5,7 @@
 - [**Objectives**](#objectives)
 - [**MicroHack Challenges**](#microhack-challenges)
 - [**Contributors**](#contributors)
+
 # MicroHack introduction
 
 This Microsoft Sovereign Cloud MicroHack introduces engineers and architects to the core concepts, technical controls, and hands-on deployment models of Microsoft Sovereign Cloud offerings — across both Microsoft Sovereign Public Cloud and Microsoft Sovereign Private Cloud environments.
@@ -14,19 +15,20 @@ This Microsoft Sovereign Cloud MicroHack introduces engineers and architects to 
 Participants will explore how to design and operate cloud workloads that meet sovereignty, regulatory, and compliance requirements, leveraging Azure native capabilities such as Policy, RBAC, encryption, confidential compute, and hybrid enablement through Azure Arc and Azure Local.
 
 ## MicroHack context
+
 This MicroHack scenario walks through the use of Microsoft Sovereign Cloud technologies with a focus on the best practices and the design principles and some interesting challenges for real world scenarios. Specifically, this builds up to include working with different solutions around the Microsoft Sovereign Public Cloud and the Microsoft Sovereign Private Cloud,
 
-* [Microsoft Sovereign Cloud](https://www.microsoft.com/en-us/ai/sovereign-cloud?msockid=35d465bce58561e42620737ce487605e)
-* [Microsoft Sovereign Cloud documentation](https://learn.microsoft.com/en-us/industry/sovereign-cloud/)
-* [What is Sovereign Public Cloud?](https://learn.microsoft.com/en-us/industry/sovereign-cloud/sovereign-public-cloud/overview-sovereign-public-cloud)
-* [Sovereign Private CLoud](https://learn.microsoft.com/en-us/industry/sovereign-cloud/sovereign-private-cloud/overview-sovereign-private-cloud)
-* [Digital sovereignty](https://learn.microsoft.com/en-us/industry/sovereign-cloud/overview/digital-sovereignty)
-* [Sovereign Landing Zone (SLZ)](https://learn.microsoft.com/en-us/industry/sovereign-cloud/sovereign-public-cloud/sovereign-landing-zone/overview-slz?tabs=hubspoke)
-* [Azure Policy](https://learn.microsoft.com/en-us/azure/governance/policy/overview)
-* [Azure encryption overview](https://learn.microsoft.com/en-us/azure/security/fundamentals/encryption-overview)
-* [Azure Confidential Computing Overview](https://learn.microsoft.com/en-us/azure/confidential-computing/overview)
-* [Azure Local](https://learn.microsoft.com/en-us/azure/azure-local/)
-* [Azure Arc](https://learn.microsoft.com/en-us/azure/azure-arc/)
+- [Microsoft Sovereign Cloud](https://www.microsoft.com/ai/sovereign-cloud?msockid=35d465bce58561e42620737ce487605e)
+- [Microsoft Sovereign Cloud documentation](https://learn.microsoft.com/industry/sovereign-cloud/)
+- [What is Sovereign Public Cloud?](https://learn.microsoft.com/industry/sovereign-cloud/sovereign-public-cloud/overview-sovereign-public-cloud)
+- [Sovereign Private CLoud](https://learn.microsoft.com/industry/sovereign-cloud/sovereign-private-cloud/overview-sovereign-private-cloud)
+- [Digital sovereignty](https://learn.microsoft.com/industry/sovereign-cloud/overview/digital-sovereignty)
+- [Sovereign Landing Zone (SLZ)](https://learn.microsoft.com/industry/sovereign-cloud/sovereign-public-cloud/sovereign-landing-zone/overview-slz?tabs=hubspoke)
+- [Azure Policy](https://learn.microsoft.com/azure/governance/policy/overview)
+- [Azure encryption overview](https://learn.microsoft.com/azure/security/fundamentals/encryption-overview)
+- [Azure Confidential Computing Overview](https://learn.microsoft.com/azure/confidential-computing/overview)
+- [Azure Local](https://learn.microsoft.com/azure/azure-local/)
+- [Azure Arc](https://learn.microsoft.com/azure/azure-arc/)
 
 ## Objectives
 
@@ -53,15 +55,17 @@ This MicroHack has a few but important prerequisites
 
 In order to use the MicroHack time most effectively, the following tasks should be completed prior to starting the session.
 
-- Your own Azure subscription with Owner RBAC rights at the subscription level
-- [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli) (Hint: Make sure to use the lastest version)
-- Contributor or Owner permissions on your subscription or resource group
-- Optional: Access to Azure Arc Jumpstart LocalBox for hybrid challenges
+> [!NOTE]
+> Prerequisites 1 - 3 are handled by the organizers for events hosted by Microsoft.
 
-
+1. Your own Azure subscription with Owner RBAC rights at the subscription level
+2. Contributor or Owner permissions on your subscription or resource group
+3. Optional: Access to Azure Arc Jumpstart ArcBox & LocalBox for hybrid challenges
+4. [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli). **Hint:** Make sure to use the latest version available.
 
 ## Contributors
-* Thomas Maurer [GitHub](https://github.com/thomasmaurer); [LinkedIn](https://www.linkedin.com/in/thomasmaurer2/)
-* Jan Egil Ring [GitHub](https://github.com/janegilring); [LinkedIn](https://www.linkedin.com/in/janegilring/)
-* Murali Rao Yelamanchili [GitHub](https://github.com/yelamanchili-murali); [LinkedIn](https://www.linkedin.com/in/muraliyelamanchili/)
-* Ye Zhang [GitHub](https://github.com/zhangyems); [LinkedIn](https://www.linkedin.com/in/ye-zhang-497b96a7/)
+
+- Thomas Maurer [GitHub](https://github.com/thomasmaurer); [LinkedIn](https://www.linkedin.com/in/thomasmaurer2/)
+- Jan Egil Ring [GitHub](https://github.com/janegilring); [LinkedIn](https://www.linkedin.com/in/janegilring/)
+- Murali Rao Yelamanchili [GitHub](https://github.com/yelamanchili-murali); [LinkedIn](https://www.linkedin.com/in/muraliyelamanchili/)
+- Ye Zhang [GitHub](https://github.com/zhangyems); [LinkedIn](https://www.linkedin.com/in/ye-zhang-497b96a7/)

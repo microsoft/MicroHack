@@ -35,7 +35,7 @@
 
 
 .EXAMPLE
-    .\deploy-localbox.ps1 -ResourceGroupName "rg-localbox-shared" -Location "swedencentral"
+    .\deploy-localbox.ps1 -ResourceGroupName "rg-localbox" -Location "swedencentral"
 
 
 .NOTES

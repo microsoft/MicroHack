@@ -712,24 +712,21 @@ Create a file named `add-tag-policy-params.json`:
 
 ```json
 {
-  "if": {
-    "field": "[concat('tags[', parameters('tagName'), ']')]",
-    "exists": "false"
+  "tagName": {
+    "type": "String",
+    "metadata": {
+      "displayName": "Tag Name",
+      "description": "Name of the tag to add"
+    },
+    "defaultValue": "DataClassification"
   },
-  "then": {
-    "effect": "modify",
-    "details": {
-      "roleDefinitionIds": [
-        "/providers/microsoft.authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c"
-      ],
-      "operations": [
-        {
-          "operation": "add",
-          "field": "[concat('tags[', parameters('tagName'), ']')]",
-          "value": "[parameters('tagValue')]"
-        }
-      ]
-    }
+  "tagValue": {
+    "type": "String",
+    "metadata": {
+      "displayName": "Tag Value",
+      "description": "Value of the tag to add"
+    },
+    "defaultValue": "Sovereign"
   }
 }
 ```

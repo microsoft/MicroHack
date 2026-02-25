@@ -34,10 +34,10 @@
     ArcBox flavor to deploy: ITPro, DevOps, DataOps (default: ITPro)
 
 .EXAMPLE
-    .\deploy-arcbox.ps1 -ResourceGroupName "rg-arcbox-shared" -Location "swedencentral"
+    .\deploy-arcbox.ps1 -ResourceGroupName "rg-arcbox" -Location "swedencentral"
 
 .EXAMPLE
-    .\deploy-arcbox.ps1 -ResourceGroupName "rg-arcbox-shared" -Location "westeurope" -DeployBastion $false
+    .\deploy-arcbox.ps1 -ResourceGroupName "rg-arcbox" -Location "westeurope" -DeployBastion $false
 
 .NOTES
     Author: MicroHack Team

@@ -95,6 +95,7 @@ az policy assignment create \
 
 ### Create Log Analytics workspace and Diagnostic settings to capture logs
 
+### CLI
 ```bash
 # Create Log Analytics workspace
 LOG_ANALYTICS_WORKSPACE=law-$RESOURCE_GROUP
@@ -130,7 +131,7 @@ az monitor diagnostic-settings create \
   ]'
 ```
 
-
+### Azure Portal steps
 1. Open the storage account and go to **Monitoring > Diagnostic settings**.
 2. Select **+ Add diagnostic setting**.
 3. Name the setting (e.g., `blob-tls-insights`).

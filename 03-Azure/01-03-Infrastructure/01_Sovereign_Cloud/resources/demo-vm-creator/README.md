@@ -113,6 +113,22 @@ Logical network:
 ![Create logical network](./img/add_logical_network_03.jpg)
 6. Select **Review + create** and wait for the deployment to finish
 
+Role assignments:
+1. In the Azure Portal, navigate to your resource group where LocalBox is deployed (e.g. rg-localbox)
+2. Select **Access control (IAM)** in the left menu
+3. Click **+ Add -> Add role assignment** to start the role assignment wizard
+![Create role assignment](./img/add_rbac_01.jpg)
+4. Select the **Reader** role and click **Next**
+![Create role assignment](./img/add_rbac_02.jpg)
+5. Click **+ Select members** to add the **LabUsers** Entra ID group
+![Create role assignment](./img/add_rbac_03.jpg)
+6. Click **Next**
+7. For **Assignment type**, select **Active** and click **Review + assign**
+![Create role assignment](./img/add_rbac_04.jpg)
+8. Repeat steps 1-7 to add a role assignment for the **Azure Stack HCI VM Contributor** role
+![Create role assignment](./img/add_rbac_05.jpg)
+
+
 ### Step 5: Test the Environment
 Once deployed:
 - Follow Challenge 6 walkthrough for lab exercises verification

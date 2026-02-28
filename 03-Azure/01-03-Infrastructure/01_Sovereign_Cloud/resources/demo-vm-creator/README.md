@@ -95,7 +95,7 @@ VM image:
 ![Create VM image](./img/add_vm_image_win_01.jpg)
 4. For the **Image to download** parameter, select **Windows Server 2025: Azure edition - Gen2**
 ![Create VM image](./img/add_vm_image_win_02.jpg)
-5. Select **Review + create** and wait for the deployment to finish
+5. Select **Review + create** and wait for the deployment to finish (on LocalBox, this takes approximately 2,5 hours due to use of nested VMs and a virtual router VM).
 
 Logical network:
 1. In the Azure Portal, navigate to your **Azure Local** instance
@@ -127,7 +127,9 @@ Role assignments:
 ![Create role assignment](./img/add_rbac_04.jpg)
 8. Repeat steps 1-7 to add a role assignment for the **Azure Stack HCI VM Contributor** role
 ![Create role assignment](./img/add_rbac_05.jpg)
-
+8. Repeat steps 1-7 to add a role assignment for the **Reader** role and **User Access Administrator** role for the resource group where **ArcBox** is deployed (e.g. rg-arcbox)
+- For the **User Access Administrator** role, select **Allow user to assign all roles except privileged administrator roles Owner, UAA, RBAC (Recommended)** on the **Conditions** tab:
+![Create role assignment](./img/add_rbac_06.jpg)
 
 ### Step 5: Test the Environment
 Once deployed:

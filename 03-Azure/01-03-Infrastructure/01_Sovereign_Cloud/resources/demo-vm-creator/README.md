@@ -85,13 +85,37 @@ Choose the appropriate deployment script:
 ### Step 3: Wait for Deployment
 Deployments can take 2-6 hours depending on the environment. Monitor progress in:
 - Azure Portal > Resource Groups > Deployments
-- The deployment script output
 
-### Step 4: Access the Environment
+### Step 4: Configure the Environment
+
+VM image:
+1. In the Azure Portal, navigate to your **Azure Local** instance
+2. Select **VM images** in the left menu
+3. Click **+ Add VM Image -> From Azure Marketplace** to start the VM image creation wizard
+![Create VM image](./img/add_vm_image_win_01.jpg)
+4. For the **Image to download** parameter, select **Windows Server 2025: Azure edition - Gen2**
+![Create VM image](./img/add_vm_image_win_02.jpg)
+5. Select **Review + create** and wait for the deployment to finish
+
+Logical network:
+1. In the Azure Portal, navigate to your **Azure Local** instance
+2. Select **Logical network** in the left menu
+3. Click **+ Create logical network** to start the creation wizard
+![Create logical network](./img/add_logical_network_01.jpg)
+4. For the **Logical network name** parameter, enter **localbox-vm-lnet-vlan200** and click **Next: Network Configuration**:
+![Create logical network](./img/add_logical_network_02.jpg)
+5. Enter the following parameter values:
+- **IPv4 address space**: 192.168.200.0 /24 (256 addresses)
+- **IP Pools**: 192.168.200.0 - 192.168.200.255
+- **Default gateway**: 192.168.200.1
+- **DNS Servers**: 192.168.1.254
+- **VLAN ID**: 200
+![Create logical network](./img/add_logical_network_03.jpg)
+6. Select **Review + create** and wait for the deployment to finish
+
+### Step 5: Test the Environment
 Once deployed:
-- Use Azure Bastion to connect to the Client VM
-- All Arc resources will be visible in the Azure Portal
-- Follow Challenge 6 walkthrough for lab exercises
+- Follow Challenge 6 walkthrough for lab exercises verification
 
 ## Notes
 

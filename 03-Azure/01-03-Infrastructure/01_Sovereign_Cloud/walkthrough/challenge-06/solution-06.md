@@ -255,24 +255,28 @@ To learn more, see [SSH access to Azure Arc-enabled servers](https://learn.micro
 **Azure Portal**
 
 1. Navigate to **Microsoft Defender for Cloud**
-2. Select **Environment settings** in the left menu
-3. Expand your tenant and select your subscription
+2. Select **Management -> Environment settings** in the left menu
+3. Expand your **Tenant Root Group** and select your subscription
 4. Under **Defender plans**, locate **Servers**
-5. Toggle to **On** (select Plan 1 or Plan 2 based on requirements)
-6. Click **Save**
+5. If not already enabled, toggle to **On** (select Plan 1 or Plan 2 based on requirements)
+6. Review available features when selecting **Change plan** and **Settings** for the **Servers** plan.
+7. Click **Save**
 
 ### 4.2 Review Security Posture
 
-1. Navigate to **Microsoft Defender for Cloud** > **Overview**
+1. Navigate to **Microsoft Defender for Cloud** -> **General** -> **Overview**
 2. Review the **Secure Score** for your environment
 3. Click on **Recommendations** to see security recommendations
+
+![Defender for Cloud](./images/dfc_01.jpg)
 
 💥 **Filter for Arc-enabled servers:**
 
 1. In **Recommendations**, use filters:
-   - **Resource type**: `Microsoft.HybridCompute/machines`
-   - **Environment**: All
+   - **Resource type**: `Machine - Azure Arc`
 2. Review recommendations specific to your Arc-enabled servers
+
+![Defender for Cloud](./images/dfc_02.jpg)
 
 ### 4.3 Explore Common Recommendations for Arc-enabled Servers
 
@@ -283,7 +287,7 @@ You may see recommendations such as:
 | Guest configuration extension should be installed | High | Required for Machine Configuration policies |
 | System updates should be installed | High | OS patches are available |
 | Endpoint protection should be installed | High | Antimalware solution needed |
-| Log Analytics agent should be installed | Medium | Required for advanced monitoring |
+| Azure Monitor agent should be installed | Medium | Required for advanced monitoring |
 | Vulnerabilities should be remediated | Varies | Software vulnerabilities detected |
 
 💥 **Investigate a recommendation:**

@@ -40,14 +40,14 @@ After completing this MicroHack you will:
 
 ## MicroHack challenges
 
-| Challenge | Topic    | Maker     | Status    |
-|:---------:|----------|-----------|-----------|
-| 1         | [Using Azure native platform controls (e.g. Policy, RBAC etc) to enforce sovereign controls in the public cloud](./challenges/challenge-01.md)  | Jan Egil Ring | ✅ |
-| 2         | [Encryption at rest with Customer Managed Keys in Azure Key Vault](./challenges/challenge-02.md) | Ye Zhang | ✅ |
-| 3         | [Encryption in transit - enforcing TLS](./challenges/challenge-03.md) | Ye Zhang | ✅ |
-| 4         | [Encryption in use with Azure Confidential Compute - VM](./challenges/challenge-04.md) | Murali Rao Yelamanchili | ✅ |
-| 5         | [Encryption in use with Azure Confidential Compute - Containers/Applications](./challenges/challenge-05.md) | Murali Rao Yelamanchili | ✅ |
-| 6         | [Operating Sovereign in a hybrid environment with Azure Local and Azure Arc](./challenges/challenge-06.md) | Jan Egil Ring / Thomas Maurer | ✅ |
+| Challenge | Topic    | Challenge | Solution | Maker     | Status    |
+|:---------:|----------|-----------|----------|-----------|-----------|
+| 1         | Using Azure native platform controls (e.g. Policy, RBAC etc) to enforce sovereign controls in the public cloud | [Challenge](./challenges/challenge-01.md) | [Solution](./walkthrough/challenge-01/solution-01.md) | Jan Egil Ring | ✅ |
+| 2         | Encryption at rest with Customer Managed Keys in Azure Key Vault | [Challenge](./challenges/challenge-02.md) | [Solution](./walkthrough/challenge-02/solution-02.md) | Ye Zhang | ✅ |
+| 3         | Encryption in transit - enforcing TLS | [Challenge](./challenges/challenge-03.md) | [Solution](./walkthrough/challenge-03/solution-03.md) | Ye Zhang | ✅ |
+| 4         | Encryption in use with Azure Confidential Compute - VM | [Challenge](./challenges/challenge-04.md) | [Solution](./walkthrough/challenge-04/solution-04.md) | Murali Rao Yelamanchili | ✅ |
+| 5         | Encryption in use with Azure Confidential Compute - Containers/Applications | [Challenge](./challenges/challenge-05.md) | [Solution](./walkthrough/challenge-05/solution-05.md) | Murali Rao Yelamanchili | ✅ |
+| 6         | Operating Sovereign in a hybrid environment with Azure Local and Azure Arc | [Challenge](./challenges/challenge-06.md) | [Solution](./walkthrough/challenge-06/solution-06.md) | Jan Egil Ring / Thomas Maurer | ✅ |
 
 ### General prerequisites
 

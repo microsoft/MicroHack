@@ -11,7 +11,7 @@ The goal of this exercise is to establish foundational sovereign cloud governanc
 
 ## Actions
 
-- Create and assign Azure Policy controls to restrict deployments to EU sovereign regions (Norway East, Germany North).
+- Create and assign Azure Policy controls to restrict deployments to EU sovereign regions (Norway East, Germany North, North Europe).
 - Enforce resource tagging requirements for data classification and compliance tracking.
 - Block public IP exposure by enforcing private endpoints for sensitive resources.
 - Assign least-privilege RBAC roles for the SovereignOps team.

@@ -19,7 +19,7 @@ Please ensure that you successfully verified the [General prerequisites](../../R
 
 You are a cloud architect at a European organization that must comply with data sovereignty requirements. Your workloads contain sensitive data that must remain within EU sovereign regions. Additionally, regulatory requirements mandate:
 
-- **Geographic restrictions**: All resources must be deployed only in approved sovereign regions (Norway East, Germany North)
+- **Geographic restrictions**: All resources must be deployed only in approved sovereign regions (Norway East, Germany North, North Europe)
 - **Data classification**: All resources must be tagged with appropriate data classification labels
 - **Network isolation**: Sensitive resources must not expose public IP addresses
 - **Access control**: Only authorized teams should have access, following least-privilege principles

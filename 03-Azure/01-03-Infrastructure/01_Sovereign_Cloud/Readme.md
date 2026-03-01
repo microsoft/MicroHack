@@ -63,6 +63,21 @@ In order to use the MicroHack time most effectively, the following tasks should 
 3. Optional: Access to Azure Arc Jumpstart ArcBox & LocalBox for hybrid challenges
 4. [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli). **Hint:** Make sure to use the latest version available.
 
+### Cost estimates
+
+The main cost driver for this MicroHack is virtual machines:
+
+- **ArcBox for ITPro** cost is approximately 7 USD per day. We recommend setting it up the week before the event, so for example 5 days before the event would result in a cost between 30-40 USD.
+- **LocalBox** cost is approximately 100-110 USD per day. We recommend setting it up the week before the event, so for example 5 days before the event would result in a cost between 5-600 USD.
+- Challenge 4 and 5 contains a Confidential Compute VM (Standard_DC2as_v5) which costs approximately 5 USD per day. These 2 VMs will run only for a few hours as they will be created by the students, so using 50 students as an example running the VMs for 8 hours would results in 2 VMs x 8 hours = 230 USD.
+
+This would result in a total cost of 789 USD.
+In addition, there would be some smaller costs for other services like Key Vault, so a rough estimate is 1000 USD for one Sovereign Cloud MicroHack if following the above example.
+An Azure Pricing Calculator estimate is available [here](https://azure.com/e/1a7aec76a3e049cba57cda6742025373).
+This estimate can be adjusted for fewer/more students, running the VMs shorter/longer and adding additional services if desired.
+
+If you plan to run this MicroHack in your own description on a limited budget, you may skip deploying the prerequisites for Challenge 6, this would leave you with a cost of less than 50 USD for one day as long as resources are deleted when finished with the challenges.
+
 ## Contributors
 
 - Thomas Maurer [GitHub](https://github.com/thomasmaurer); [LinkedIn](https://www.linkedin.com/in/thomasmaurer2/)

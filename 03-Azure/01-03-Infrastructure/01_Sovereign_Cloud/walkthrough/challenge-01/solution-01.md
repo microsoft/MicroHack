@@ -8,7 +8,7 @@
 
 ## Prerequisites
 
-Please ensure that you successfully verified the [General prerequisites](../../README.md#general-prerequisites) before continuing with this challenge.
+Please ensure that you successfully verified the [General prerequisites](../../Readme.md#general-prerequisites) before continuing with this challenge.
 
 - Azure subscription with Owner or User Access Administrator permissions
 - Azure CLI >= 2.54 or access to Azure Portal

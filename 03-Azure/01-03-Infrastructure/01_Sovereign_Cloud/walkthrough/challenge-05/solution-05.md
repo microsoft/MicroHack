@@ -10,7 +10,7 @@
 
 ## Prerequisites
 
-Please ensure that you successfully verified the [General prerequisites](../../README.md#general-prerequisites) before continuing with this challenge.
+Please ensure that you successfully verified the [General prerequisites](../../Readme.md#general-prerequisites) before continuing with this challenge.
 
 - Azure CLI >= 2.54 installed and logged in (`az login`)
 - **Linux/Bash environment** - Choose one of the following:

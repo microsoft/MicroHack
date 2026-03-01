@@ -14,7 +14,7 @@ This challenge uses the Azure Arc Jumpstart environments:
 
 ## Prerequisites
 
-Please ensure that you successfully verified the [General prerequisites](../../README.md#general-prerequisites) before continuing with this challenge.
+Please ensure that you successfully verified the [General prerequisites](../../Readme.md#general-prerequisites) before continuing with this challenge.
 
 **Additional requirements for this challenge:**
 - Access to a pre-deployed ArcBox/LocalBox environment (shared lab or individual deployment)

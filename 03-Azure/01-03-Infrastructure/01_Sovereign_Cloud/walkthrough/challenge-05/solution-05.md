@@ -78,6 +78,13 @@ The AKS deployment patterns and attestation verification workflows have been ada
 
 ### Step 1: Configure Environment Variables
 
+> [!IMPORTANT]
+> The Azure CLI commands in this walkthrough use **bash** syntax and will not work directly in PowerShell. Use **Azure Cloud Shell (Bash)** for the best experience. If running locally on Windows, use **WSL2** (Windows Subsystem for Linux) to run a bash shell. You can install the Azure CLI inside WSL with:
+>
+> ```bash
+> curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+> ```
+
 ### Linux/Bash
 
 ```bash
@@ -98,6 +105,9 @@ KEYVAULT_NAME="kv-cc-${HASH_SUFFIX}"  # Must be globally unique
 SSH_KEY_NAME="cc-${ATTENDEE_ID}-key"
 ATTESTATION_NAME="attest${HASH_SUFFIX}"
 ```
+
+> [!WARNING]
+> If your Azure Cloud Shell session times out (e.g. during a break), the variables defined above will be lost and must be re-defined before continuing. We recommend saving them in a local text file on your machine so you can quickly copy and paste them back into a new session.
 
 ### Step 2: Install Required AKS Extensions
 

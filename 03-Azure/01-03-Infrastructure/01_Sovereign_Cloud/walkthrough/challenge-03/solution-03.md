@@ -16,6 +16,27 @@
 - Azure CLI 2.54 or later and Azure PowerShell Az module 10.0.0 or later installed locally.
 - Log Analytics workspace (or rights to create one) for collecting Storage diagnostic logs.
 
+> [!IMPORTANT]
+> The Azure CLI commands in this walkthrough use **bash** syntax and will not work directly in PowerShell. Use **Azure Cloud Shell (Bash)** for the best experience. If running locally on Windows, use **WSL2** (Windows Subsystem for Linux) to run a bash shell. You can install the Azure CLI inside WSL with:
+>
+> ```bash
+> curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+> ```
+
+Set up the common variables that will be used in the CLI alternatives throughout this challenge:
+
+```bash
+# Set common variables
+# Customize RESOURCE_GROUP for each participant
+RESOURCE_GROUP="labuser-xx"  # Change this for each participant (e.g., labuser-01, labuser-02, ...)
+SUBSCRIPTION_ID="xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx"  # Replace with your subscription ID
+LOCATION="norwayeast"  # If attending a MicroHack event, change to the location provided by your local MicroHack organizers
+STORAGEACCOUNT_NAME="yourStorageAccountName"  # Replace with the name of your storage account from Challenge 2
+```
+
+> [!WARNING]
+> If your Azure Cloud Shell session times out (e.g. during a break), the variables defined above will be lost and must be re-defined before continuing. We recommend saving them in a local text file on your machine so you can quickly copy and paste them back into a new session.
+
 ## Task 1: Understand Encryption in transit
 
 💡Encryption in transit protects data as it travels between clients and Azure services, ensuring confidentiality, integrity, and mutual authentication. Transport Layer Security (TLS) establishes a cryptographic handshake that negotiates protocol versions, cipher suites, and validates certificates before any payload flows. In Azure, enforcing TLS aligns with service-specific capabilities (e.g., Storage, Key Vault, App Service) and underpins sovereign cloud controls by preventing downgrade attacks and plaintext exposures. Azure's encryption guidance emphasizes pairing secure transport with encryption at rest to meet regulatory requirements and Zero Trust principles.
@@ -173,7 +194,8 @@ StorageBlobLogs
 | where TimeGenerated > ago(7d) and AccountName == "$STORAGEACCOUNT_NAME"
 | summarize requests = count() by TlsVersion
 ```
-<img width="900" height="424" alt="image" src="https://github.com/user-attachments/assets/06f1c3ce-17f1-408b-b345-7278329cb125" />
+
+![Log Analytics](./images/log_analytics_01.png)
 
 ```kusto
 StorageBlobLogs

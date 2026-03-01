@@ -45,8 +45,27 @@
 
 ### Step-by-Step Walkthrough (Azure CLI)
 
->💥 Set environment variables: `SUBSCRIPTION_ID`, `RESOURCE_GROUP`, `LOCATION`, `KEYVAULT_NAME`, `STORAGEACCOUNT_NAME`.
-> You may need to use the following commands:
+> [!IMPORTANT]
+> The Azure CLI commands in this walkthrough use **bash** syntax and will not work directly in PowerShell. Use **Azure Cloud Shell (Bash)** for the best experience. If running locally on Windows, use **WSL2** (Windows Subsystem for Linux) to run a bash shell. You can install the Azure CLI inside WSL with:
+>
+> ```bash
+> curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+> ```
+
+Set up the common variables that will be used throughout this challenge:
+
+```bash
+# Set common variables
+# Customize RESOURCE_GROUP for each participant
+RESOURCE_GROUP="labuser-xx"  # Change this for each participant (e.g., labuser-01, labuser-02, ...)
+SUBSCRIPTION_ID="xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx"  # Replace with your subscription ID
+LOCATION="norwayeast"  # If attending a MicroHack event, change to the location provided by your local MicroHack organizers
+```
+
+> [!WARNING]
+> If your Azure Cloud Shell session times out (e.g. during a break), the variables defined above will be lost and must be re-defined before continuing. We recommend saving them in a local text file on your machine so you can quickly copy and paste them back into a new session.
+
+>💥 You may need to use the following commands to look up your subscription ID and resource group:
 ```bash
 az account show <------- this is to show your subscriptionID
 az group list <-------- this is to show your resourceGroups

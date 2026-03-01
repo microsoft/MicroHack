@@ -39,3 +39,15 @@ Your organization must run workloads in a sovereign cloud while still leveraging
 * [Microsoft Defender for Cloud with Arc-enabled servers](https://learn.microsoft.com/azure/defender-for-cloud/quickstart-onboard-machines)
 * [Azure Arc Jumpstart - LocalBox](https://jumpstart.azure.com/azure_jumpstart_localbox)
 * [Govern Azure Arc-enabled servers (Microsoft Learn Training)](https://learn.microsoft.com/training/modules/govern-azure-arc-enabled-servers/)
+
+## Solution
+
+> [!TIP]
+> We encourage you to try solving the challenge on your own before looking at the solution. This will help you learn and understand the concepts better.
+
+<details>
+<summary>Click here to view the solution</summary>
+
+[Solution for Challenge 6](../walkthrough/challenge-06/solution-06.md)
+
+</details>

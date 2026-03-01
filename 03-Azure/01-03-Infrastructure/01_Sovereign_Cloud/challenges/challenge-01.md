@@ -37,3 +37,15 @@ The goal of this exercise is to establish foundational sovereign cloud governanc
 - [Azure RBAC overview](https://learn.microsoft.com/azure/role-based-access-control/overview)
 - [Create custom roles for Azure RBAC](https://learn.microsoft.com/azure/role-based-access-control/custom-roles)
 - [Remediate non-compliant resources](https://learn.microsoft.com/azure/governance/policy/how-to/remediate-resources)
+
+## Solution
+
+> [!TIP]
+> We encourage you to try solving the challenge on your own before looking at the solution. This will help you learn and understand the concepts better.
+
+<details>
+<summary>Click here to view the solution</summary>
+
+[Solution for Challenge 1](../walkthrough/challenge-01/solution-01.md)
+
+</details>

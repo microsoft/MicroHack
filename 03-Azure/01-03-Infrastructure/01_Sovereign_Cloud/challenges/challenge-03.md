@@ -27,3 +27,15 @@ Understand encryption in transit considerations for sovereign scenarios. Configu
 * [Enforce a minimum required TLS version for Storage](https://learn.microsoft.com/azure/storage/common/transport-layer-security-configure-minimum-version)
 * [Azure Resource Manager TLS support](https://learn.microsoft.com/azure/azure-resource-manager/management/tls-support)
 * [Policy: Storage accounts should have the specified minimum TLS version](https://learn.microsoft.com/azure/storage/common/transport-layer-security-configure-minimum-version?toc=%2Fazure%2Fstorage%2Fblobs%2Ftoc.json&tabs=portal#detect-the-tls-version-used-by-client-applications)
+
+## Solution
+
+> [!TIP]
+> We encourage you to try solving the challenge on your own before looking at the solution. This will help you learn and understand the concepts better.
+
+<details>
+<summary>Click here to view the solution</summary>
+
+[Solution for Challenge 3](../walkthrough/challenge-03/solution-03.md)
+
+</details>

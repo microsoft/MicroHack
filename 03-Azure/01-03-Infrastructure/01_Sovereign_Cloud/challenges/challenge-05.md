@@ -1,6 +1,6 @@
 # Challenge 5 - Encryption in use with Confidential VMs/Node Pools in Azure Kubernetes Service(AKS)
 
-[Previous Challenge Solution](challenge-04.md) - **[Home](../Readme.md)** - [Next Challenge Solution](challenge-06.md)
+[Previous Challenge](challenge-04.md) - **[Home](../Readme.md)** - [Next Challenge](challenge-06.md)
 
 ## Goal
 
@@ -20,9 +20,8 @@ Deploy and validate guest attestation on Azure Confidential VMs to ensure busine
 
 ## Learning resources
 
-* [Azure confidential computing](https://learn.microsoft.com/en-us/azure/confidential-computing/)
-* [Azure encryption overview](https://learn.microsoft.com/en-us/azure/security/fundamentals/encryption-overview)
-* [Azure Confidential Computing Overview](https://learn.microsoft.com/en-us/azure/confidential-computing/overview)
-* [Microsoft Azure Attestation](https://learn.microsoft.com/en-us/azure/attestation/overview)
-* [Confidential containers on Azure](https://learn.microsoft.com/en-us/azure/confidential-computing/confidential-containers)
-
+* [Azure confidential computing](https://learn.microsoft.com/azure/confidential-computing/)
+* [Azure encryption overview](https://learn.microsoft.com/azure/security/fundamentals/encryption-overview)
+* [Azure Confidential Computing Overview](https://learn.microsoft.com/azure/confidential-computing/overview)
+* [Microsoft Azure Attestation](https://learn.microsoft.com/azure/attestation/overview)
+* [Confidential containers on Azure](https://learn.microsoft.com/azure/confidential-computing/confidential-containers)

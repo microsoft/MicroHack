@@ -1,6 +1,6 @@
 # Challenge 6 (optional) - Operating a Sovereign Hybrid Cloud with Azure Arc & Azure Local
 
-[Previous Challenge Solution](challenge-05.md) - **[Home](../Readme.md)** - [Next Challenge Solution](finish.md)
+[Previous Challenge](challenge-05.md) - **[Home](../Readme.md)** - [Finish](finish.md)
 
 ## Goal
 
@@ -37,4 +37,3 @@ Your organization must run workloads in a sovereign cloud while still leveraging
 * [Microsoft Defender for Cloud with Arc-enabled servers](https://learn.microsoft.com/azure/defender-for-cloud/quickstart-onboard-machines)
 * [Azure Arc Jumpstart - LocalBox](https://jumpstart.azure.com/azure_jumpstart_localbox)
 * [Govern Azure Arc-enabled servers (Microsoft Learn Training)](https://learn.microsoft.com/training/modules/govern-azure-arc-enabled-servers/)
-

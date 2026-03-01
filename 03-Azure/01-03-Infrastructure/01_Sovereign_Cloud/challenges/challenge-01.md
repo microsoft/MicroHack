@@ -1,6 +1,6 @@
 # Challenge 1 - Enforce Sovereign Controls with Azure Policy and RBAC
 
-**[Home](../Readme.md)** - [Next Challenge Solution](challenge-02.md)
+**[Home](../Readme.md)** - [Next Challenge](challenge-02.md)
 
 - All policy assignments in this challenge should be scoped to your own resource group (e.g. "LabUser-01")
 - All resources created in Microsoft Entra should be prefixed with your prefix (e.g. "LabUser01")
@@ -37,4 +37,3 @@ The goal of this exercise is to establish foundational sovereign cloud governanc
 - [Azure RBAC overview](https://learn.microsoft.com/azure/role-based-access-control/overview)
 - [Create custom roles for Azure RBAC](https://learn.microsoft.com/azure/role-based-access-control/custom-roles)
 - [Remediate non-compliant resources](https://learn.microsoft.com/azure/governance/policy/how-to/remediate-resources)
-

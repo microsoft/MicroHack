@@ -1,10 +1,10 @@
-# Challenge 6 (optional) - Operating a Sovereign Hybrid Cloud with Azure Arc & Azure Local
+# Challenge 6 - Operating a Sovereign Hybrid Cloud with Azure Arc & Azure Local
 
 [Previous Challenge](challenge-05.md) - **[Home](../Readme.md)** - [Finish](finish.md)
 
 ## Goal
 
-The goal of this challenge is to operate a sovereign hybrid cloud environment by combining Microsoft Sovereign Public Cloud and Sovereign Private Cloud components. You will work with Azure Local (simulated via LocalBox) as a sovereign on-premises cloud environment and use Azure Arc to bridge on-premises resources with Azure for unified governance, security, and management.
+The goal of this challenge is to operate a sovereign hybrid cloud environment by combining Microsoft Sovereign Public Cloud and Sovereign Private Cloud components. You will work with Azure Local and Arc-enabled Servers (simulated via Arc Jumpstart ArcBox and LocalBox) as a sovereign on-premises cloud environment and use Azure Arc to bridge on-premises resources with Azure for unified governance, security, and management.
 
 ## Scenario
 

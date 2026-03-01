@@ -15,8 +15,8 @@ Understand Customer-Managed Keys in Azure Key Vault. Configure an Azure Storage 
 ## Success criteria
 
 * You have deployed Azure Key Vault
-* You successfully  implement CMK for an Azure Storage account using Azure CLI.
-* You have successfully verify encryption settings
+* You successfully implement CMK for an Azure Storage account using Azure CLI.
+* You have successfully verified encryption settings
 
 ## Learning resources
 

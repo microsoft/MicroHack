@@ -1,4 +1,4 @@
-# Challenge 5 - Encryption in use with Confidential VMs/Node Pools in Azure Kubernetes Service(AKS)
+# Challenge 5 - Encryption in use with Confidential VMs/Node Pools in Azure Kubernetes Service (AKS)
 
 [Previous Challenge](challenge-04.md) - **[Home](../Readme.md)** - [Next Challenge](challenge-06.md)
 

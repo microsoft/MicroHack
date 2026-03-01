@@ -1,4 +1,4 @@
-# Challenge 2 — Encryption at Rest with Customer-Managed Keys (CMKs) in Azure Key Vault
+# Walkthrough Challenge 2 - Encryption at Rest with Customer-Managed Keys (CMKs) in Azure Key Vault
 
 [Previous Challenge Solution](../challenge-01/solution-01.md) - **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-03/solution-03.md)
 
@@ -290,6 +290,6 @@ az keyvault delete -n $KEYVAULT_NAME -g $RESOURCE_GROUP
 
 ---
 
-You successsfully completed challenge 2! 🚀🚀🚀
+You successfully completed challenge 2! 🚀🚀🚀
 
  **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-03/solution-03.md)

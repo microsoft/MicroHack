@@ -1,4 +1,4 @@
-# Challenge 3 - Encryption in transit: enforcing TLS
+# Walkthrough Challenge 3 - Encryption in transit: enforcing TLS
 
 [Previous Challenge Solution](../challenge-02/solution-02.md) - **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-04/solution-04.md)
 
@@ -230,6 +230,6 @@ StorageBlobLogs
 
 ---
 
-You successsfully completed challenge 3! 🚀🚀🚀
+You successfully completed challenge 3! 🚀🚀🚀
 
  **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-04/solution-04.md)

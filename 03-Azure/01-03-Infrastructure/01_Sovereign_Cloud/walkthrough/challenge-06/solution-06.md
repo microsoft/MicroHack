@@ -404,15 +404,17 @@ For additional learning, explore:
 
 Before completing this challenge, verify:
 
-- [ ] You can identify Arc-enabled servers in the Azure Portal
-- [ ] You have assigned at least one Machine Configuration policy
-- [ ] You can view policy compliance status for Arc-enabled servers
-- [ ] You understand how to deploy VMs on Azure Local (conceptually or hands-on)
-- [ ] You have enabled or verified Defender for Cloud coverage
+- [ ] You can navigate and understand the ArcBox/LocalBox hybrid environment in the Azure Portal
+- [ ] You have assigned at least one Azure Policy (e.g., SSH Posture Control) to Arc-enabled servers
+- [ ] You can verify the compliance status of Arc-enabled servers in the Azure Policy dashboard
+- [ ] You can verify the compliance status of Arc-enabled servers in the Azure Machine Configuration blade
+- [ ] You have deployed a VM on Azure Local via the Azure Portal
+- [ ] You have enabled or verified Defender for Cloud coverage and reviewed security recommendations
 - [ ] You can navigate Azure Update Manager for hybrid patching
+- [ ] You understand how Azure Arc provides a unified control plane for sovereign hybrid scenarios
 
 ---
 
 You successfully completed Challenge 6! 🚀🚀🚀
 
-**[Home](../../README.md)** - [Previous Challenge Solution](../challenge-05/solution-05.md)
+**[Home](../../Readme.md)** - [Previous Challenge Solution](../challenge-05/solution-05.md)

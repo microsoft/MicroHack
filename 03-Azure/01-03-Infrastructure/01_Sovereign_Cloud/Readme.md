@@ -21,7 +21,7 @@ This MicroHack scenario walks through the use of Microsoft Sovereign Cloud techn
 - [Microsoft Sovereign Cloud](https://www.microsoft.com/ai/sovereign-cloud?msockid=35d465bce58561e42620737ce487605e)
 - [Microsoft Sovereign Cloud documentation](https://learn.microsoft.com/industry/sovereign-cloud/)
 - [What is Sovereign Public Cloud?](https://learn.microsoft.com/industry/sovereign-cloud/sovereign-public-cloud/overview-sovereign-public-cloud)
-- [Sovereign Private CLoud](https://learn.microsoft.com/industry/sovereign-cloud/sovereign-private-cloud/overview-sovereign-private-cloud)
+- [Sovereign Private Cloud](https://learn.microsoft.com/industry/sovereign-cloud/sovereign-private-cloud/overview-sovereign-private-cloud)
 - [Digital sovereignty](https://learn.microsoft.com/industry/sovereign-cloud/overview/digital-sovereignty)
 - [Sovereign Landing Zone (SLZ)](https://learn.microsoft.com/industry/sovereign-cloud/sovereign-public-cloud/sovereign-landing-zone/overview-slz?tabs=hubspoke)
 - [Azure Policy](https://learn.microsoft.com/azure/governance/policy/overview)
@@ -46,7 +46,7 @@ After completing this MicroHack you will:
 | 2         | Encryption at rest with Customer Managed Keys in Azure Key Vault | [Challenge](./challenges/challenge-02.md) | [Solution](./walkthrough/challenge-02/solution-02.md) | Ye Zhang | ✅ |
 | 3         | Encryption in transit - enforcing TLS | [Challenge](./challenges/challenge-03.md) | [Solution](./walkthrough/challenge-03/solution-03.md) | Ye Zhang | ✅ |
 | 4         | Encryption in use with Azure Confidential Compute - VM | [Challenge](./challenges/challenge-04.md) | [Solution](./walkthrough/challenge-04/solution-04.md) | Murali Rao Yelamanchili | ✅ |
-| 5         | Encryption in use with Azure Confidential Compute - Containers/Applications | [Challenge](./challenges/challenge-05.md) | [Solution](./walkthrough/challenge-05/solution-05.md) | Murali Rao Yelamanchili | ✅ |
+| 5         | Encryption in use with Confidential VMs/Node Pools in Azure Kubernetes Service (AKS) | [Challenge](./challenges/challenge-05.md) | [Solution](./walkthrough/challenge-05/solution-05.md) | Murali Rao Yelamanchili | ✅ |
 | 6         | Operating Sovereign in a hybrid environment with Azure Local and Azure Arc | [Challenge](./challenges/challenge-06.md) | [Solution](./walkthrough/challenge-06/solution-06.md) | Jan Egil Ring / Thomas Maurer | ✅ |
 
 ### General prerequisites
@@ -76,7 +76,7 @@ In addition, there would be some smaller costs for other services like Key Vault
 An Azure Pricing Calculator estimate is available [here](https://azure.com/e/1a7aec76a3e049cba57cda6742025373).
 This estimate can be adjusted for fewer/more students, running the VMs shorter/longer and adding additional services if desired.
 
-If you plan to run this MicroHack in your own description on a limited budget, you may skip deploying the prerequisites for Challenge 6, this would leave you with a cost of less than 50 USD for one day as long as resources are deleted when finished with the challenges.
+If you plan to run this MicroHack in your own subscription on a limited budget, you may skip deploying the prerequisites for Challenge 6, this would leave you with a cost of less than 50 USD for one day as long as resources are deleted when finished with the challenges.
 
 ## Contributors
 

@@ -40,14 +40,14 @@ After completing this MicroHack you will:
 
 ## MicroHack challenges
 
-| Challenge | Topic    | Challenge | Solution | Maker     | Status    |
+| Challenge | Topic    | Challenge | Solution | Maker     | Duration  |
 |:---------:|----------|-----------|----------|-----------|-----------|
-| 1         | Using Azure native platform controls (e.g. Policy, RBAC etc) to enforce sovereign controls in the public cloud | [Challenge](./challenges/challenge-01.md) | [Solution](./walkthrough/challenge-01/solution-01.md) | Jan Egil Ring | ✅ |
-| 2         | Encryption at rest with Customer Managed Keys in Azure Key Vault | [Challenge](./challenges/challenge-02.md) | [Solution](./walkthrough/challenge-02/solution-02.md) | Ye Zhang | ✅ |
-| 3         | Encryption in transit - enforcing TLS | [Challenge](./challenges/challenge-03.md) | [Solution](./walkthrough/challenge-03/solution-03.md) | Ye Zhang | ✅ |
-| 4         | Encryption in use with Azure Confidential Compute - VM | [Challenge](./challenges/challenge-04.md) | [Solution](./walkthrough/challenge-04/solution-04.md) | Murali Rao Yelamanchili | ✅ |
-| 5         | Encryption in use with Confidential VMs/Node Pools in Azure Kubernetes Service (AKS) | [Challenge](./challenges/challenge-05.md) | [Solution](./walkthrough/challenge-05/solution-05.md) | Murali Rao Yelamanchili | ✅ |
-| 6         | Operating Sovereign in a hybrid environment with Azure Local and Azure Arc | [Challenge](./challenges/challenge-06.md) | [Solution](./walkthrough/challenge-06/solution-06.md) | Jan Egil Ring / Thomas Maurer | ✅ |
+| 1         | Using Azure native platform controls (e.g. Policy, RBAC etc) to enforce sovereign controls in the public cloud | [Challenge](./challenges/challenge-01.md) | [Solution](./walkthrough/challenge-01/solution-01.md) | Jan Egil Ring | 45 min |
+| 2         | Encryption at rest with Customer Managed Keys in Azure Key Vault | [Challenge](./challenges/challenge-02.md) | [Solution](./walkthrough/challenge-02/solution-02.md) | Ye Zhang | 30 min |
+| 3         | Encryption in transit - enforcing TLS | [Challenge](./challenges/challenge-03.md) | [Solution](./walkthrough/challenge-03/solution-03.md) | Ye Zhang | 30 min |
+| 4         | Encryption in use with Azure Confidential Compute - VM | [Challenge](./challenges/challenge-04.md) | [Solution](./walkthrough/challenge-04/solution-04.md) | Murali Rao Yelamanchili | 90-120 min |
+| 5         | Encryption in use with Confidential VMs/Node Pools in Azure Kubernetes Service (AKS) | [Challenge](./challenges/challenge-05.md) | [Solution](./walkthrough/challenge-05/solution-05.md) | Murali Rao Yelamanchili | 90-120 min |
+| 6         | Operating Sovereign in a hybrid environment with Azure Local and Azure Arc | [Challenge](./challenges/challenge-06.md) | [Solution](./walkthrough/challenge-06/solution-06.md) | Jan Egil Ring / Thomas Maurer | 60-90 min |
 
 ### General prerequisites
 

@@ -315,9 +315,8 @@ You may see recommendations such as:
 
 ### 5.1 Navigate to Azure Update Manager
 
-1. In the Azure Portal, search for **Azure Update Manager**
-2. Or navigate via: **Home** > **Update Manager**
-3. Review the dashboard overview showing:
+1. In the Azure Portal, search for **Azure Update Manager** in the middle-top search bar
+2. Go to **Overview** to review the dashboard overview showing:
    - Machines pending updates
    - Compliance status
    - Recent update deployments
@@ -326,21 +325,24 @@ You may see recommendations such as:
 
 💥 **Check update status for Arc-enabled servers:**
 
-1. Select **Machines** in the left menu
+1. Select **Resources -> Machines** in the left menu
 2. Filter by:
    - **Machine type**: `Arc-enabled servers`
    - **Resource group**: Your ArcBox resource group (e.g. **rg-arcbox**)
-3. Review the update status for each machine
+![Azure Update Manager](./images/aum_01.jpg)
+3. Review the update status for one machine
+![Azure Update Manager](./images/aum_02.jpg)
 
 ### 5.3 Trigger an Update Assessment
 
-1. Select the Arc-enabled server
+1. Select an Arc-enabled server
 2. Click **Check for updates**
-3. Wait for the assessment to complete
+![Azure Update Manager](./images/aum_03.jpg)
+1. Wait for the assessment to complete
 
 ### 5.4 Review Available Updates
 
-1. Click on a machine to see detailed update status
+1. Click on the previously selected machine to see an updated status
 2. Review:
    - **Critical and security updates** - High priority
    - **Other updates** - Feature and quality updates
@@ -369,7 +371,7 @@ After completing this challenge, you should understand:
 ✅ **Azure Local as Sovereign Private Cloud**
 - Azure Local enables sovereign on-premises cloud infrastructure
 - Arc Resource Bridge connects Azure Local to Azure management plane
-- Self-service VM provisioning using Azure Portal and CLI
+- Self-service VM provisioning using Azure Portal (also available via CLI and Infrastructure as Code)
 
 ✅ **Security and Compliance**
 - Microsoft Defender for Cloud provides unified security posture management
@@ -391,9 +393,10 @@ Consider how these capabilities apply to sovereign cloud scenarios:
 ### 6.3 Further Exploration
 
 For additional learning, explore:
+
 - [Azure Arc Jumpstart Scenarios](https://jumpstart.azure.com/)
 - [Azure Local documentation](https://learn.microsoft.com/azure/azure-local/)
-- [Microsoft Sovereign Cloud documentation](https://learn.microsoft.com/industry/sovereignty/sovereignty-capabilities)
+- [Microsoft Sovereign Cloud documentation](https://learn.microsoft.com/industry/sovereign-cloud/)
 
 ---
 

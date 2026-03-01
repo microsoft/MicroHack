@@ -61,7 +61,20 @@ In this challenge, you'll implement these controls using Azure Policy and RBAC.
 
 ### Step 1: Configure Environment Variables
 
+Open Azure Cloud Shell:
+
+![image](./img/cloud-shell.jpg)
+
+![image](./img/cloud-shell2.jpg)
+
 Set up the variables that will be used throughout this challenge:
+
+> [!IMPORTANT]
+> The Azure CLI commands in this walkthrough use **bash** syntax and will not work directly in PowerShell. Use **Azure Cloud Shell (Bash)** for the best experience. If running locally on Windows, use **WSL2** (Windows Subsystem for Linux) to run a bash shell. You can install the Azure CLI inside WSL with:
+>
+> ```bash
+> curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+> ```
 
 ```bash
 # Set common variables
@@ -70,6 +83,7 @@ RESOURCE_GROUP="labuser-xx"  # Change this for each participant (e.g., labuser-0
 
 ATTENDEE_ID="${RESOURCE_GROUP}"
 SUBSCRIPTION_ID="xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx"  # Replace with your subscription ID
+LOCATION="norwayeast" #If attending a MicroHack event, change to the location provided by your local MicroHack organizers
 
 # Generate friendly display names with attendee ID
 DISPLAY_PREFIX="Lab User-${ATTENDEE_ID#labuser-}"  # Converts "labuser-01" to "Lab User-01"
@@ -77,6 +91,9 @@ GROUP_PREFIX="Lab-User-${ATTENDEE_ID#labuser-}"    # Converts "labuser-01" to "L
 ```
 
 🔑 **Best Practice**: Setting variables once at the beginning ensures consistency across all commands and reduces the chance of errors from manual editing.
+
+> [!WARNING]
+> If your Azure Cloud Shell session times out (e.g. during a break), the variables defined above will be lost and must be re-defined before continuing. We recommend saving them in a local text file on your machine so you can quickly copy and paste them back into a new session.
 
 ### Step 2: Identify the Built-in Policy
 
@@ -113,10 +130,6 @@ The **"Allowed locations"** built-in policy restricts which locations users can 
 ### Step 3 - option B: Assign the Policy Using Azure CLI
 
 Alternatively, use Azure CLI for automation:
-
-![image](./img/cloud-shell.jpg)
-
-![image](./img/cloud-shell2.jpg)
 
 ```bash
 # Use the variables defined in Step 1
@@ -408,16 +421,7 @@ az policy assignment create \
 - **Scope**: The level at which access applies (management group, subscription, resource group, or resource)
 - **Role Assignment**: Binding a security principal to a role at a specific scope
 
-### Step 1: Create a Resource Group for Testing
-
-```bash
-RESOURCE_GROUP_TEST="${ATTENDEE_ID}-rg-sovereign-test"
-LOCATION="norwayeast"
-
-az group create --name "$RESOURCE_GROUP_TEST" --location "$LOCATION" --tags DataClassification=Sovereign
-```
-
-### Step 2: Create a Security Group for SovereignOps Team
+### Step 1: Create a Security Group for SovereignOps Team
 
 Create a security group:
 
@@ -430,7 +434,7 @@ az ad group create \
   --mail-nickname "${GROUP_PREFIX}-SovereignOps"
 ```
 
-### Step 3: Assign Built-in Roles to the SovereignOps Team
+### Step 2: Assign Built-in Roles to the SovereignOps Team
 
 For operational teams managing sovereign workloads, use the **Contributor** role at the resource group scope:
 
@@ -442,7 +446,7 @@ GROUP_OBJECT_ID=$(az ad group show --group "${GROUP_PREFIX}-SovereignOps-Team" -
 az role assignment create \
   --assignee "$GROUP_OBJECT_ID" \
   --role "Contributor" \
-  --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP_TEST"
+  --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP"
 ```
 
 ### Alternative: Assign More Specific Roles
@@ -454,13 +458,13 @@ For better least-privilege access, consider specific roles:
 az role assignment create \
   --assignee "$GROUP_OBJECT_ID" \
   --role "Virtual Machine Contributor" \
-  --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP_TEST"
+  --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP"
 
 # Storage Account Contributor
 az role assignment create \
   --assignee "$GROUP_OBJECT_ID" \
   --role "Storage Account Contributor" \
-  --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP_TEST"
+  --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP"
 ```
 
 🔑 **Best Practice**: Always use the most specific role that provides necessary permissions. Avoid using Owner or Contributor roles when more granular roles are available.

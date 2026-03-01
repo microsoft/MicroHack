@@ -127,7 +127,7 @@ for ($i = 1; $i -le $ResourceGroupCount; $i++) {
     $ResourceGroupName = "$ResourceGroupPrefix{0:D2}" -f $ResourceGroupNumber
 
     try {
-        #$null = New-AzResourceGroup -Name $ResourceGroupName -Location $Location
+        $null = New-AzResourceGroup -Name $ResourceGroupName -Location $Location
         Write-Host "Resource group $ResourceGroupName has been created" -ForegroundColor Green
     }
     catch {
@@ -143,6 +143,8 @@ for ($i = 1; $i -le $ResourceGroupCount; $i++) {
 
     try {
         $null = New-AzRoleAssignment -SignInName $SignInName -ResourceGroupName $ResourceGroupName -RoleDefinitionName 'Owner'
+        $null = New-AzRoleAssignment -SignInName $SignInName -ResourceGroupName $ResourceGroupName -RoleDefinitionName 'Key Vault Administrator'
+        $null = New-AzRoleAssignment -SignInName $SignInName -ResourceGroupName $ResourceGroupName -RoleDefinitionName 'Storage Account Contributor'
         Write-Host "Role assignment completed for user $SignInName in resource group $ResourceGroupName" -ForegroundColor Green
     }
     catch {

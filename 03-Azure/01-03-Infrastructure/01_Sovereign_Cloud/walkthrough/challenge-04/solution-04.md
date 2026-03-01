@@ -119,6 +119,9 @@ This setup implements a zero-trust security model:
 💡 **You'll create the foundational Azure resources including Resource Group, Key Vault, SSH keys, Attestation Provider, Virtual Network, Confidential VM, and Azure Bastion.**
 
 > [!IMPORTANT]
+> **Prerequisite — Challenge 1 policy adjustment:** This challenge deploys a **public IP address** for Azure Bastion and creates resources that require tags. If you completed Challenge 1, make sure you ran the **"Preparing for Next Challenges"** section at the end of that walkthrough to switch the tag-requirement and public-IP-block policies to **DoNotEnforce** mode. Otherwise the deployments below will fail.
+
+> [!IMPORTANT]
 > The Azure CLI commands in this walkthrough use **bash** syntax and will not work directly in PowerShell. Use **Azure Cloud Shell (Bash)** for the best experience. If running locally on Windows, use **WSL2** (Windows Subsystem for Linux) to run a bash shell. You can install the Azure CLI inside WSL with:
 >
 > ```bash

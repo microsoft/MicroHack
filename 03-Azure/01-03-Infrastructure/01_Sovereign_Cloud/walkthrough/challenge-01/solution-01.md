@@ -402,9 +402,11 @@ INITIATIVE_ID="/subscriptions/$SUBSCRIPTION_ID/providers/Microsoft.Authorization
 az policy assignment create \
   --name "${ATTENDEE_ID}-sovereign-baseline-assignment" \
   --display-name "${DISPLAY_PREFIX} - Sovereign Cloud Security Baseline" \
-  --scope "/subscriptions/$SUBSCRIPTION_ID" \
+  --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP" \
   --policy-set-definition "$INITIATIVE_ID"
 ```
+
+> **Note:** The initiative is scoped to your **resource group** so it does not affect other participants. The individual policy assignments you created earlier in Tasks 2–4 already cover the same resource group, so this initiative demonstrates the grouping concept. Make sure to switch it to **DoNotEnforce** or delete it before proceeding to the next challenges (see the "Preparing for Next Challenges" section at the end of this walkthrough).
 
 🔑 **Best Practice**: Use initiatives to bundle related policies together. This simplifies governance and ensures consistent application of multiple controls.
 
@@ -890,6 +892,39 @@ az policy remediation list --resource-group "$RESOURCE_GROUP_TEST" -o table
 # Verify resources now have required tags
 az resource list --resource-group "$RESOURCE_GROUP_TEST" --query "[].{Name:name, Tags:tags}" -o json
 ```
+
+---
+
+## Preparing for Next Challenges
+
+> [!IMPORTANT]
+> The **Deny** policies you assigned in this challenge (tag requirement and public IP block) will **prevent resource deployments** in Challenges 2–5 if left in enforce mode. Now that you have demonstrated and validated their blocking behavior, switch them to **DoNotEnforce** (audit-only) mode so the remaining challenges can proceed.
+
+```bash
+# Switch the tag requirement policy to audit-only mode
+az policy assignment update \
+  --name "${ATTENDEE_ID}-require-data-classification-tag" \
+  --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP" \
+  --enforcement-mode DoNotEnforce
+
+# Switch the public IP block policy to audit-only mode
+az policy assignment update \
+  --name "${ATTENDEE_ID}-block-public-ip-addresses" \
+  --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP" \
+  --enforcement-mode DoNotEnforce
+```
+
+After running these commands, the policies will still appear in the **Compliance** dashboard and flag non-compliant resources, but they will no longer **block** deployments. This mirrors a realistic governance workflow where policies are initially deployed in audit mode before enforcing.
+
+> [!NOTE]
+> If you completed the **Bonus** Task 5 (Policy Initiative), you should also switch that initiative assignment to audit-only mode or delete it:
+>
+> ```bash
+> az policy assignment update \
+>   --name "${ATTENDEE_ID}-sovereign-baseline-assignment" \
+>   --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP" \
+>   --enforcement-mode DoNotEnforce
+> ```
 
 ---
 

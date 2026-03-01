@@ -46,6 +46,9 @@
 ### Step-by-Step Walkthrough (Azure CLI)
 
 > [!IMPORTANT]
+> **Prerequisite — Challenge 1 policy adjustment:** Before proceeding, make sure you completed the **"Preparing for Next Challenges"** section at the end of Challenge 1's walkthrough. The tag-requirement and public-IP-block policies must be switched to **DoNotEnforce** mode, otherwise the resource creation commands below will fail.
+
+> [!IMPORTANT]
 > The Azure CLI commands in this walkthrough use **bash** syntax and will not work directly in PowerShell. Use **Azure Cloud Shell (Bash)** for the best experience. If running locally on Windows, use **WSL2** (Windows Subsystem for Linux) to run a bash shell. You can install the Azure CLI inside WSL with:
 >
 > ```bash

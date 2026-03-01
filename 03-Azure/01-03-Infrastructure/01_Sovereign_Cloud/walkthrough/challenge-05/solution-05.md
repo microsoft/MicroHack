@@ -10,17 +10,13 @@
 
 ## Prerequisites
 
-Please ensure that you successfully verified the [General prerequisites](../../README.md#general-prerequisites) before continuing with this challenge.
+Please ensure that you successfully verified the [General prerequisites](../../Readme.md#general-prerequisites) before continuing with this challenge.
 
-- Azure CLI >= 2.54 installed and logged in (`az login`)
-- **Linux/Bash environment** - Choose one of the following:
-  - **Azure Cloud Shell (Bash)** - Recommended for ease of use
-  - **WSL2 on Windows** - Windows Subsystem for Linux 2
-  - **Linux or macOS** - Native Bash terminal
-- Azure subscription with permissions to create AKS clusters, node pools, and register preview features
+- Azure subscription with Contributor permissions on your resource group
+- Azure CLI >= 2.54 or access to Azure Portal
+- **Linux/Bash environment** — Azure Cloud Shell (Bash), WSL2 on Windows, or a native Linux/macOS terminal
 - `kubectl` command-line tool (can be installed via `az aks install-cli`)
 - Basic understanding of Kubernetes concepts (pods, deployments, node pools)
-- Familiarity with Azure CLI commands
 - Basic understanding of confidential computing concepts
 
 ## Scenario Context
@@ -78,6 +74,13 @@ The AKS deployment patterns and attestation verification workflows have been ada
 
 ### Step 1: Configure Environment Variables
 
+> [!IMPORTANT]
+> The Azure CLI commands in this walkthrough use **bash** syntax and will not work directly in PowerShell. Use **Azure Cloud Shell (Bash)** for the best experience. If running locally on Windows, use **WSL2** (Windows Subsystem for Linux) to run a bash shell. You can install the Azure CLI inside WSL with:
+>
+> ```bash
+> curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+> ```
+
 ### Linux/Bash
 
 ```bash
@@ -98,6 +101,9 @@ KEYVAULT_NAME="kv-cc-${HASH_SUFFIX}"  # Must be globally unique
 SSH_KEY_NAME="cc-${ATTENDEE_ID}-key"
 ATTESTATION_NAME="attest${HASH_SUFFIX}"
 ```
+
+> [!WARNING]
+> If your Azure Cloud Shell session times out (e.g. during a break), the variables defined above will be lost and must be re-defined before continuing. We recommend saving them in a local text file on your machine so you can quickly copy and paste them back into a new session.
 
 ### Step 2: Install Required AKS Extensions
 
@@ -131,7 +137,7 @@ az group create \
   --location $LOCATION
 
 # Create an AKS cluster
-az aks create --resource-group $RESOURCE_GROUP --name $AKS_CLUSTER_NAME --node-count 1 --generate-ssh-keys
+az aks create --resource-group $RESOURCE_GROUP --name $AKS_CLUSTER_NAME --node-count 1 --location $LOCATION --generate-ssh-keys
 
 # Connect to the cluster
 az aks get-credentials --resource-group $RESOURCE_GROUP --name $AKS_CLUSTER_NAME

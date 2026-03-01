@@ -1,6 +1,6 @@
 # Challenge 4 - Encryption in use with Azure Confidential Compute – VM
 
-[Previous Challenge Solution](challenge-03.md) - **[Home](../Readme.md)** - [Next Challenge Solution](challenge-05.md)
+[Previous Challenge](challenge-03.md) - **[Home](../Readme.md)** - [Next Challenge](challenge-05.md)
 
 ## Goal
 
@@ -21,10 +21,20 @@ Deploy and validate guest attestation on Azure Confidential VMs to ensure busine
 
 ## Learning resources
 
-* [Azure confidential computing](https://learn.microsoft.com/en-us/azure/confidential-computing/)
-* [Azure encryption overview](https://learn.microsoft.com/en-us/azure/security/fundamentals/encryption-overview)
-* [Azure Confidential Computing Overview](https://learn.microsoft.com/en-us/azure/confidential-computing/overview)
-* [Microsoft Azure Attestation](https://learn.microsoft.com/en-us/azure/attestation/overview)
-* [About Azure confidential VMs](https://learn.microsoft.com/en-us/azure/confidential-computing/confidential-vm-overview)
+* [Azure confidential computing](https://learn.microsoft.com/azure/confidential-computing/)
+* [Azure encryption overview](https://learn.microsoft.com/azure/security/fundamentals/encryption-overview)
+* [Azure Confidential Computing Overview](https://learn.microsoft.com/azure/confidential-computing/overview)
+* [Microsoft Azure Attestation](https://learn.microsoft.com/azure/attestation/overview)
+* [About Azure confidential VMs](https://learn.microsoft.com/azure/confidential-computing/confidential-vm-overview)
 
+## Solution
 
+> [!TIP]
+> We encourage you to try solving the challenge on your own before looking at the solution. This will help you learn and understand the concepts better.
+
+<details>
+<summary>Click here to view the solution</summary>
+
+[Solution for Challenge 4](../walkthrough/challenge-04/solution-04.md)
+
+</details>

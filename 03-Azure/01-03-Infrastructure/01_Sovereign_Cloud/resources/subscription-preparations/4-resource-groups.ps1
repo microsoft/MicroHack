@@ -113,7 +113,6 @@ try {
 }
 
 $UPNSuffix = '@' + ((Get-AzContext).Account.Id -split "@")[1] # Get UPN suffix from the signed-in account (@xxx.onmicrosoft.com)
-$UPNSuffix = '@micro-hack.arcmasterclass.cloud'
 
 Write-Host "`nStarting resource group creation..." -ForegroundColor Cyan
 Write-Host "  Prefix: $ResourceGroupPrefix" -ForegroundColor Gray
@@ -132,7 +131,7 @@ for ($i = 1; $i -le $ResourceGroupCount; $i++) {
         Write-Host "Resource group $ResourceGroupName has been created" -ForegroundColor Green
     }
     catch {
-        Write-Host "Failed to create resource group $ResourceGroupName -ForegroundColor Red
+        Write-Host "Failed to create resource group $ResourceGroupName" -ForegroundColor Red
     }
 
     Write-Host "Updating role assignments for resource group $ResourceGroupName" -ForegroundColor Cyan
@@ -144,12 +143,14 @@ for ($i = 1; $i -le $ResourceGroupCount; $i++) {
 
     try {
         $null = New-AzRoleAssignment -SignInName $SignInName -ResourceGroupName $ResourceGroupName -RoleDefinitionName 'Owner'
+        $null = New-AzRoleAssignment -SignInName $SignInName -ResourceGroupName $ResourceGroupName -RoleDefinitionName 'Key Vault Administrator'
+        $null = New-AzRoleAssignment -SignInName $SignInName -ResourceGroupName $ResourceGroupName -RoleDefinitionName 'Storage Account Contributor'
         Write-Host "Role assignment completed for user $SignInName in resource group $ResourceGroupName" -ForegroundColor Green
     }
     catch {
-        Write-Host "Failed to assign role to user $SignInName in resource group $ResourceGroupName -ForegroundColor Red
+        Write-Host "Failed to assign role to user $SignInName in resource group $ResourceGroupName" -ForegroundColor Red
     }
 
-
 }
+
 Write-Host "`nResource group creation and role assignment process completed." -ForegroundColor Cyan

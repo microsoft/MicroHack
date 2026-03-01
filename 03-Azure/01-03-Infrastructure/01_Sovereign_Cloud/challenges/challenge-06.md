@@ -1,10 +1,10 @@
-# Challenge 6 (optional) - Operating a Sovereign Hybrid Cloud with Azure Arc & Azure Local
+# Challenge 6 - Operating a Sovereign Hybrid Cloud with Azure Arc & Azure Local
 
-[Previous Challenge Solution](challenge-05.md) - **[Home](../Readme.md)** - [Next Challenge Solution](finish.md)
+[Previous Challenge](challenge-05.md) - **[Home](../Readme.md)** - [Finish](finish.md)
 
 ## Goal
 
-The goal of this challenge is to operate a sovereign hybrid cloud environment by combining Microsoft Sovereign Public Cloud and Sovereign Private Cloud components. You will work with Azure Local (simulated via LocalBox) as a sovereign on-premises cloud environment and use Azure Arc to bridge on-premises resources with Azure for unified governance, security, and management.
+The goal of this challenge is to operate a sovereign hybrid cloud environment by combining Microsoft Sovereign Public Cloud and Sovereign Private Cloud components. You will work with Azure Local and Arc-enabled Servers (simulated via Arc Jumpstart ArcBox and LocalBox) as a sovereign on-premises cloud environment and use Azure Arc to bridge on-premises resources with Azure for unified governance, security, and management.
 
 ## Scenario
 
@@ -22,8 +22,9 @@ Your organization must run workloads in a sovereign cloud while still leveraging
 ## Success criteria
 
 * You can navigate and understand the ArcBox/LocalBox hybrid environment in the Azure Portal
-* You have successfully assigned an Azure Policy (e.g., SSH security baseline) to Arc-enabled servers
+* You have successfully assigned an Azure Policy (e.g., SSH Posture Control) to Arc-enabled servers
 * You can verify the compliance status of Arc-enabled servers in the Azure Policy dashboard
+* You can verify the compliance status of Arc-enabled servers in the Azure Machine Configuration blade
 * You have deployed a VM on Azure Local via the Azure Portal
 * You have enabled Microsoft Defender for Cloud and reviewed security recommendations for hybrid resources
 * You understand how Azure Arc provides a unified control plane for sovereign hybrid scenarios
@@ -33,8 +34,20 @@ Your organization must run workloads in a sovereign cloud while still leveraging
 * [Azure Arc-enabled Servers overview](https://learn.microsoft.com/azure/azure-arc/servers/overview)
 * [Azure Local hybrid capabilities](https://learn.microsoft.com/azure/azure-local/hybrid-capabilities-with-azure-services-23h2)
 * [Azure Machine Configuration (Guest Configuration)](https://learn.microsoft.com/azure/governance/machine-configuration/overview)
+* [What is SSH Posture Control?](https://learn.microsoft.com/azure/osconfig/overview-ssh-posture-control-mc)
 * [Azure Policy built-in definitions for Arc-enabled servers](https://learn.microsoft.com/azure/azure-arc/servers/policy-reference)
 * [Microsoft Defender for Cloud with Arc-enabled servers](https://learn.microsoft.com/azure/defender-for-cloud/quickstart-onboard-machines)
 * [Azure Arc Jumpstart - LocalBox](https://jumpstart.azure.com/azure_jumpstart_localbox)
 * [Govern Azure Arc-enabled servers (Microsoft Learn Training)](https://learn.microsoft.com/training/modules/govern-azure-arc-enabled-servers/)
 
+## Solution
+
+> [!TIP]
+> We encourage you to try solving the challenge on your own before looking at the solution. This will help you learn and understand the concepts better.
+
+<details>
+<summary>Click here to view the solution</summary>
+
+[Solution for Challenge 6](../walkthrough/challenge-06/solution-06.md)
+
+</details>

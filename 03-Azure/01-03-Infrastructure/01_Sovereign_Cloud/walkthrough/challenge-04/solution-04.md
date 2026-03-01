@@ -8,16 +8,12 @@
 
 ## Prerequisites
 
-Please ensure that you successfully verified the [General prerequisites](../../README.md#general-prerequisites) before continuing with this challenge.
+Please ensure that you successfully verified the [General prerequisites](../../Readme.md#general-prerequisites) before continuing with this challenge.
 
-- Azure subscription with permissions to create VMs, Key Vault, and Attestation Providers
-- **Linux/Bash environment** - Choose one of the following:
-  - **Azure Cloud Shell (Bash)** - Recommended for ease of use
-  - **WSL2 on Windows** - Windows Subsystem for Linux 2
-  - **Linux or macOS** - Native Bash terminal
-- Azure CLI >= 2.54 (pre-installed in Azure Cloud Shell)
-- Basic understanding of Azure Virtual Machines and networking concepts
-- Familiarity with SSH key authentication and basic Bash commands
+- Azure subscription with Contributor permissions on your resource group
+- Azure CLI >= 2.54 or access to Azure Portal
+- **Linux/Bash environment** — Azure Cloud Shell (Bash), WSL2 on Windows, or a native Linux/macOS terminal
+- Basic understanding of Azure Virtual Machines, networking, and SSH key authentication
 - Basic understanding of confidential computing concepts
 
 ## Scenario Context
@@ -118,7 +114,15 @@ This setup implements a zero-trust security model:
 
 💡 **You'll create the foundational Azure resources including Resource Group, Key Vault, SSH keys, Attestation Provider, Virtual Network, Confidential VM, and Azure Bastion.**
 
-> **💡 Note**: This guide uses Bash commands. If you're on Windows, use Azure Cloud Shell (Bash) or WSL2.
+> [!IMPORTANT]
+> **Prerequisite — Challenge 1 policy adjustment:** This challenge deploys a **public IP address** for Azure Bastion and creates resources that require tags. If you completed Challenge 1, make sure you ran the **"Preparing for Next Challenges"** section at the end of that walkthrough to switch the tag-requirement and public-IP-block policies to **DoNotEnforce** mode. Otherwise the deployments below will fail.
+
+> [!IMPORTANT]
+> The Azure CLI commands in this walkthrough use **bash** syntax and will not work directly in PowerShell. Use **Azure Cloud Shell (Bash)** for the best experience. If running locally on Windows, use **WSL2** (Windows Subsystem for Linux) to run a bash shell. You can install the Azure CLI inside WSL with:
+>
+> ```bash
+> curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+> ```
 
 ---
 
@@ -143,6 +147,9 @@ ATTESTATION_NAME="attest${HASH_SUFFIX}"
 ```
 
 🔑 **Best Practice**: Using hash-based suffixes ensures globally unique resource names even if multiple participants use similar attendee IDs.
+
+> [!WARNING]
+> If your Azure Cloud Shell session times out (e.g. during a break), the variables defined above will be lost and must be re-defined before continuing. We recommend saving them in a local text file on your machine so you can quickly copy and paste them back into a new session.
 
 ### Step 2: Create Resource Group and Key Vault
 

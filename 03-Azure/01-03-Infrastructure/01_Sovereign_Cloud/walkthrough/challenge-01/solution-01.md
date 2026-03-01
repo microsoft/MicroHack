@@ -8,18 +8,17 @@
 
 ## Prerequisites
 
-Please ensure that you successfully verified the [General prerequisites](../../README.md#general-prerequisites) before continuing with this challenge.
+Please ensure that you successfully verified the [General prerequisites](../../Readme.md#general-prerequisites) before continuing with this challenge.
 
 - Azure subscription with Owner or User Access Administrator permissions
 - Azure CLI >= 2.54 or access to Azure Portal
 - Basic understanding of Azure Resource Manager and resource groups
-- A resource group for testing (we'll create resources to test policy compliance)
 
 ## Scenario Context
 
 You are a cloud architect at a European organization that must comply with data sovereignty requirements. Your workloads contain sensitive data that must remain within EU sovereign regions. Additionally, regulatory requirements mandate:
 
-- **Geographic restrictions**: All resources must be deployed only in approved sovereign regions (Norway East, Germany North)
+- **Geographic restrictions**: All resources must be deployed only in approved sovereign regions (Norway East, Germany North, North Europe)
 - **Data classification**: All resources must be tagged with appropriate data classification labels
 - **Network isolation**: Sensitive resources must not expose public IP addresses
 - **Access control**: Only authorized teams should have access, following least-privilege principles
@@ -61,7 +60,20 @@ In this challenge, you'll implement these controls using Azure Policy and RBAC.
 
 ### Step 1: Configure Environment Variables
 
+Open Azure Cloud Shell:
+
+![image](./img/cloud-shell.jpg)
+
+![image](./img/cloud-shell2.jpg)
+
 Set up the variables that will be used throughout this challenge:
+
+> [!IMPORTANT]
+> The Azure CLI commands in this walkthrough use **bash** syntax and will not work directly in PowerShell. Use **Azure Cloud Shell (Bash)** for the best experience. If running locally on Windows, use **WSL2** (Windows Subsystem for Linux) to run a bash shell. You can install the Azure CLI inside WSL with:
+>
+> ```bash
+> curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+> ```
 
 ```bash
 # Set common variables
@@ -70,6 +82,7 @@ RESOURCE_GROUP="labuser-xx"  # Change this for each participant (e.g., labuser-0
 
 ATTENDEE_ID="${RESOURCE_GROUP}"
 SUBSCRIPTION_ID="xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx"  # Replace with your subscription ID
+LOCATION="norwayeast" #If attending a MicroHack event, change to the location provided by your local MicroHack organizers
 
 # Generate friendly display names with attendee ID
 DISPLAY_PREFIX="Lab User-${ATTENDEE_ID#labuser-}"  # Converts "labuser-01" to "Lab User-01"
@@ -77,6 +90,9 @@ GROUP_PREFIX="Lab-User-${ATTENDEE_ID#labuser-}"    # Converts "labuser-01" to "L
 ```
 
 🔑 **Best Practice**: Setting variables once at the beginning ensures consistency across all commands and reduces the chance of errors from manual editing.
+
+> [!WARNING]
+> If your Azure Cloud Shell session times out (e.g. during a break), the variables defined above will be lost and must be re-defined before continuing. We recommend saving them in a local text file on your machine so you can quickly copy and paste them back into a new session.
 
 ### Step 2: Identify the Built-in Policy
 
@@ -113,10 +129,6 @@ The **"Allowed locations"** built-in policy restricts which locations users can 
 ### Step 3 - option B: Assign the Policy Using Azure CLI
 
 Alternatively, use Azure CLI for automation:
-
-![image](./img/cloud-shell.jpg)
-
-![image](./img/cloud-shell2.jpg)
 
 ```bash
 # Use the variables defined in Step 1
@@ -389,9 +401,11 @@ INITIATIVE_ID="/subscriptions/$SUBSCRIPTION_ID/providers/Microsoft.Authorization
 az policy assignment create \
   --name "${ATTENDEE_ID}-sovereign-baseline-assignment" \
   --display-name "${DISPLAY_PREFIX} - Sovereign Cloud Security Baseline" \
-  --scope "/subscriptions/$SUBSCRIPTION_ID" \
+  --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP" \
   --policy-set-definition "$INITIATIVE_ID"
 ```
+
+> **Note:** The initiative is scoped to your **resource group** so it does not affect other participants. The individual policy assignments you created earlier in Tasks 2–4 already cover the same resource group, so this initiative demonstrates the grouping concept. Make sure to switch it to **DoNotEnforce** or delete it before proceeding to the next challenges (see the "Preparing for Next Challenges" section at the end of this walkthrough).
 
 🔑 **Best Practice**: Use initiatives to bundle related policies together. This simplifies governance and ensures consistent application of multiple controls.
 
@@ -408,16 +422,7 @@ az policy assignment create \
 - **Scope**: The level at which access applies (management group, subscription, resource group, or resource)
 - **Role Assignment**: Binding a security principal to a role at a specific scope
 
-### Step 1: Create a Resource Group for Testing
-
-```bash
-RESOURCE_GROUP_TEST="${ATTENDEE_ID}-rg-sovereign-test"
-LOCATION="norwayeast"
-
-az group create --name "$RESOURCE_GROUP_TEST" --location "$LOCATION" --tags DataClassification=Sovereign
-```
-
-### Step 2: Create a Security Group for SovereignOps Team
+### Step 1: Create a Security Group for SovereignOps Team
 
 Create a security group:
 
@@ -430,7 +435,7 @@ az ad group create \
   --mail-nickname "${GROUP_PREFIX}-SovereignOps"
 ```
 
-### Step 3: Assign Built-in Roles to the SovereignOps Team
+### Step 2: Assign Built-in Roles to the SovereignOps Team
 
 For operational teams managing sovereign workloads, use the **Contributor** role at the resource group scope:
 
@@ -442,7 +447,7 @@ GROUP_OBJECT_ID=$(az ad group show --group "${GROUP_PREFIX}-SovereignOps-Team" -
 az role assignment create \
   --assignee "$GROUP_OBJECT_ID" \
   --role "Contributor" \
-  --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP_TEST"
+  --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP"
 ```
 
 ### Alternative: Assign More Specific Roles
@@ -454,13 +459,13 @@ For better least-privilege access, consider specific roles:
 az role assignment create \
   --assignee "$GROUP_OBJECT_ID" \
   --role "Virtual Machine Contributor" \
-  --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP_TEST"
+  --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP"
 
 # Storage Account Contributor
 az role assignment create \
   --assignee "$GROUP_OBJECT_ID" \
   --role "Storage Account Contributor" \
-  --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP_TEST"
+  --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP"
 ```
 
 🔑 **Best Practice**: Always use the most specific role that provides necessary permissions. Avoid using Owner or Contributor roles when more granular roles are available.
@@ -613,7 +618,7 @@ az policy state list \
 # Try to create a storage account in West US (should be denied)
 az storage account create \
   --name "teststoragewestus$RANDOM" \
-  --resource-group "$RESOURCE_GROUP_TEST" \
+  --resource-group "$RESOURCE_GROUP" \
   --location "westus" \
   --sku Standard_LRS \
   --tags DataClassification=Sovereign
@@ -629,7 +634,7 @@ STORAGE_NAME="sovereignstore$RANDOM"
 
 az storage account create \
   --name "$STORAGE_NAME" \
-  --resource-group "$RESOURCE_GROUP_TEST" \
+  --resource-group "$RESOURCE_GROUP" \
   --location "norwayeast" \
   --sku Standard_LRS \
   --tags DataClassification=Sovereign
@@ -643,7 +648,7 @@ Expected result: ✅ **Success**
 # Try to create a resource without the DataClassification tag
 az storage account create \
   --name "testuntagged$RANDOM" \
-  --resource-group "$RESOURCE_GROUP_TEST" \
+  --resource-group "$RESOURCE_GROUP" \
   --location "norwayeast" \
   --sku Standard_LRS
 ```
@@ -656,7 +661,7 @@ Expected result: ❌ **Error** - Required tag 'DataClassification' with value 'S
 # Try to create a public IP address (should be denied)
 az network public-ip create \
   --name "test-public-ip" \
-  --resource-group "$RESOURCE_GROUP_TEST" \
+  --resource-group "$RESOURCE_GROUP" \
   --location "norwayeast" \
   --tags DataClassification=Sovereign
 ```
@@ -769,7 +774,7 @@ az policy assignment create \
 az policy remediation create \
   --name "${ATTENDEE_ID}-remediate-missing-tags" \
   --policy-assignment "${ATTENDEE_ID}-add-tag-with-remediation" \
-  --resource-group "$RESOURCE_GROUP_TEST"
+  --resource-group "$RESOURCE_GROUP"
 ```
 
 ### Step 5: Monitor Remediation Progress
@@ -778,10 +783,10 @@ az policy remediation create \
 # Check remediation status
 az policy remediation show \
   --name "${ATTENDEE_ID}-remediate-missing-tags" \
-  --resource-group "$RESOURCE_GROUP_TEST"
+  --resource-group "$RESOURCE_GROUP"
 
 # List all remediation tasks
-az policy remediation list --resource-group "$RESOURCE_GROUP_TEST" -o table
+az policy remediation list --resource-group "$RESOURCE_GROUP" -o table
 ```
 
 ### Alternative: Use Built-in Tag Inheritance Policy
@@ -810,7 +815,7 @@ az policy assignment create \
 az policy remediation create \
   --name "${ATTENDEE_ID}-remediate-tag-inheritance" \
   --policy-assignment "${ATTENDEE_ID}-inherit-dataclassification-tag" \
-  --resource-group "$RESOURCE_GROUP_TEST"
+  --resource-group "$RESOURCE_GROUP"
 ```
 
 🔑 **Best Practice**: Use remediation tasks for existing resources and "deny" or "modify" effects for new deployments. This ensures both existing and new resources comply with policies.
@@ -831,7 +836,7 @@ az policy exemption create \
   --description "Temporary exemption for testing purposes" \
   --policy-assignment "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP/providers/microsoft.authorization/policyAssignments/${ATTENDEE_ID}-restrict-to-sovereign-regions" \
   --exemption-category "Waiver" \
-  --expires "2026-2-28T23:59:59Z" \
+  --expires "2026-3-28T23:59:59Z" \
   --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP"
 ```
 
@@ -865,7 +870,7 @@ To verify you've successfully completed this challenge, confirm the following:
 
 ```bash
 # List role assignments for your resource group
-az role assignment list --resource-group "$RESOURCE_GROUP_TEST" --query "[].{Principal:principalName, Role:roleDefinitionName}" -o table
+az role assignment list --resource-group "$RESOURCE_GROUP" --query "[].{Principal:principalName, Role:roleDefinitionName}" -o table
 
 # Verify custom role exists
 az role definition list --name "${DISPLAY_PREFIX} - Sovereign Compliance Auditor" --query "[].roleName" -o tsv
@@ -881,11 +886,44 @@ az role definition list --name "${DISPLAY_PREFIX} - Sovereign Compliance Auditor
 
 ```bash
 # Check remediation task status
-az policy remediation list --resource-group "$RESOURCE_GROUP_TEST" -o table
+az policy remediation list --resource-group "$RESOURCE_GROUP" -o table
 
 # Verify resources now have required tags
-az resource list --resource-group "$RESOURCE_GROUP_TEST" --query "[].{Name:name, Tags:tags}" -o json
+az resource list --resource-group "$RESOURCE_GROUP" --query "[].{Name:name, Tags:tags}" -o json
 ```
+
+---
+
+## Preparing for Next Challenges
+
+> [!IMPORTANT]
+> The **Deny** policies you assigned in this challenge (tag requirement and public IP block) will **prevent resource deployments** in Challenges 2–5 if left in enforce mode. Now that you have demonstrated and validated their blocking behavior, switch them to **DoNotEnforce** (audit-only) mode so the remaining challenges can proceed.
+
+```bash
+# Switch the tag requirement policy to audit-only mode
+az policy assignment update \
+  --name "${ATTENDEE_ID}-require-data-classification-tag" \
+  --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP" \
+  --enforcement-mode DoNotEnforce
+
+# Switch the public IP block policy to audit-only mode
+az policy assignment update \
+  --name "${ATTENDEE_ID}-block-public-ip-addresses" \
+  --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP" \
+  --enforcement-mode DoNotEnforce
+```
+
+After running these commands, the policies will still appear in the **Compliance** dashboard and flag non-compliant resources, but they will no longer **block** deployments. This mirrors a realistic governance workflow where policies are initially deployed in audit mode before enforcing.
+
+> [!NOTE]
+> If you completed the **Bonus** Task 5 (Policy Initiative), you should also switch that initiative assignment to audit-only mode or delete it:
+>
+> ```bash
+> az policy assignment update \
+>   --name "${ATTENDEE_ID}-sovereign-baseline-assignment" \
+>   --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP" \
+>   --enforcement-mode DoNotEnforce
+> ```
 
 ---
 

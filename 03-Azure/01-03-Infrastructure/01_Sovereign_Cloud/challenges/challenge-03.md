@@ -1,6 +1,6 @@
 # Challenge 3 - Encryption in transit: enforcing TLS
 
-[Previous Challenge Solution](challenge-02.md) - **[Home](../Readme.md)** - [Next Challenge Solution](challenge-04.md)
+[Previous Challenge](challenge-02.md) - **[Home](../Readme.md)** - [Next Challenge](challenge-04.md)
 
 ## Goal
 
@@ -22,9 +22,20 @@ Understand encryption in transit considerations for sovereign scenarios. Configu
 
 ## Learning resources
 
-* [Azure encryption overview](https://learn.microsoft.com/en-us/azure/security/fundamentals/encryption-overview)
-* [Require secure transfer (HTTPS only) for Storage](https://learn.microsoft.com/en-us/azure/storage/common/storage-require-secure-transfer)
-* [Enforce a minimum required TLS version for Storage](https://learn.microsoft.com/en-us/azure/storage/common/transport-layer-security-configure-minimum-version)
-* [Azure Resource Manager TLS support](https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/tls-support)
-* [Policy: Storage accounts should have the specified minimum TLS version](https://learn.microsoft.com/en-us/azure/storage/common/transport-layer-security-configure-minimum-version?toc=%2Fazure%2Fstorage%2Fblobs%2Ftoc.json&tabs=portal#detect-the-tls-version-used-by-client-applications)
+* [Azure encryption overview](https://learn.microsoft.com/azure/security/fundamentals/encryption-overview)
+* [Require secure transfer (HTTPS only) for Storage](https://learn.microsoft.com/azure/storage/common/storage-require-secure-transfer)
+* [Enforce a minimum required TLS version for Storage](https://learn.microsoft.com/azure/storage/common/transport-layer-security-configure-minimum-version)
+* [Azure Resource Manager TLS support](https://learn.microsoft.com/azure/azure-resource-manager/management/tls-support)
+* [Policy: Storage accounts should have the specified minimum TLS version](https://learn.microsoft.com/azure/storage/common/transport-layer-security-configure-minimum-version?toc=%2Fazure%2Fstorage%2Fblobs%2Ftoc.json&tabs=portal#detect-the-tls-version-used-by-client-applications)
 
+## Solution
+
+> [!TIP]
+> We encourage you to try solving the challenge on your own before looking at the solution. This will help you learn and understand the concepts better.
+
+<details>
+<summary>Click here to view the solution</summary>
+
+[Solution for Challenge 3](../walkthrough/challenge-03/solution-03.md)
+
+</details>

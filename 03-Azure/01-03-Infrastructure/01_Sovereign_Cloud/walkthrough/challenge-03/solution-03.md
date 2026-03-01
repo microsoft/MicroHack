@@ -1,20 +1,40 @@
-# Challenge 3 - Encryption in transit: enforcing TLS
+# Walkthrough Challenge 3 - Encryption in transit: enforcing TLS
 
 [Previous Challenge Solution](../challenge-02/solution-02.md) - **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-04/solution-04.md)
 
 **Estimated Duration:** 30 minutes
 
-> 💡**Objective:**
-- Understand encryption in transit considerations for sovereign scenarios
-- Configure Azure Storage accounts to require secure transfer (HTTPS only) and enforce TLS 1.2 as the minimum protocol version.
-- Apply Azure Policy to block weaker TLS versions and monitor client protocol usage through Log Analytics.
+> 💡 **Objective:** Understand encryption in transit considerations for sovereign scenarios. Configure Azure Storage accounts to require secure transfer (HTTPS only) and enforce TLS 1.2 as the minimum protocol version. Apply Azure Policy to block weaker TLS versions and monitor client protocol usage through Log Analytics.
 
 ## Prerequisites
 
-- Azure subscription with permissions to manage Storage accounts and assign Azure Policy (Contributor or higher).
-- Existing StorageV2 account with Blob service enabled and access via the Azure Portal.
-- Azure CLI 2.54 or later and Azure PowerShell Az module 10.0.0 or later installed locally.
-- Log Analytics workspace (or rights to create one) for collecting Storage diagnostic logs.
+Please ensure that you successfully verified the [General prerequisites](../../Readme.md#general-prerequisites) before continuing with this challenge.
+
+- Azure subscription with Contributor permissions on your resource group
+- Azure CLI >= 2.54 or access to Azure Portal
+- Existing StorageV2 account with Blob service enabled (created in Challenge 2)
+- Log Analytics workspace (or permissions to create one) for collecting Storage diagnostic logs
+
+> [!IMPORTANT]
+> The Azure CLI commands in this walkthrough use **bash** syntax and will not work directly in PowerShell. Use **Azure Cloud Shell (Bash)** for the best experience. If running locally on Windows, use **WSL2** (Windows Subsystem for Linux) to run a bash shell. You can install the Azure CLI inside WSL with:
+>
+> ```bash
+> curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+> ```
+
+Set up the common variables that will be used in the CLI alternatives throughout this challenge:
+
+```bash
+# Set common variables
+# Customize RESOURCE_GROUP for each participant
+RESOURCE_GROUP="labuser-xx"  # Change this for each participant (e.g., labuser-01, labuser-02, ...)
+SUBSCRIPTION_ID="xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx"  # Replace with your subscription ID
+LOCATION="norwayeast"  # If attending a MicroHack event, change to the location provided by your local MicroHack organizers
+STORAGEACCOUNT_NAME="yourStorageAccountName"  # Replace with the name of your storage account from Challenge 2
+```
+
+> [!WARNING]
+> If your Azure Cloud Shell session times out (e.g. during a break), the variables defined above will be lost and must be re-defined before continuing. We recommend saving them in a local text file on your machine so you can quickly copy and paste them back into a new session.
 
 ## Task 1: Understand Encryption in transit
 
@@ -33,8 +53,8 @@ Azure Storage currently allows setting **Minimum TLS Version = TLS 1.0, 1.1, or 
 
 ## Task 3: Hands-on: Azure Blob Storage - require secure transfer (HTTPS only) in Azure Portal
 
-### Prerequisites:
-- StorageV2 account with Blob service enabled in the target subscription.
+### Task prerequisites
+- StorageV2 account with Blob service enabled in the target subscription (created in Challenge 2).
 - Contributor permissions on the resource group hosting the account.
 
 ### Azure Portal steps
@@ -42,16 +62,15 @@ Azure Storage currently allows setting **Minimum TLS Version = TLS 1.0, 1.1, or 
 1. Open the **Create storage account** pane in the Azure portal.
 2. In the **Advanced** page, select the **Enable secure transfer** checkbox.
 3. Create storage account blade
-<img width="900" height="573" alt="image" src="https://github.com/user-attachments/assets/fd48ddb5-1e49-4d4b-87a8-d773d0679abb" />
 
-
+![desc](./images/storage_01.png)
 
 #### Require secure transfer for an existing storage account
 1. Select an existing storage account in the Azure portal.
 2. In the storage account menu pane, under **Settings**, select **Configuration**.
 3. Under **Secure transfer required**, select **Enabled**.
-<img width="1462" height="738" alt="8986c5e2-4783-4475-8fbf-97532b9ed2e9" src="https://github.com/user-attachments/assets/76813943-4533-43b0-a380-ec302bfae00d" />
 
+![desc](./images/storage_01.png)
 
 ### CLI alternative
 ```bash
@@ -73,8 +92,8 @@ Goal: ensure all storage accounts enforce **Minimum TLS Version = TLS 1.2**.
 4. Set **Scope** to the subscription or resource group.
 5. Under **Parameters**, set **Minimum TLS version** to `TLS 1.2` and (optionally) effect to `Deny`.
 6. Complete **Review + Create**, then select **Create**.
-<img width="900" height="380" alt="image" src="https://github.com/user-attachments/assets/639f9f53-e9b5-40f6-9970-dc0de34e1109" />
 
+![Azure Policy](./images/policy_01.png)
 
 ### CLI alternative
 
@@ -138,8 +157,8 @@ az monitor diagnostic-settings create \
 4. Check **Blob** under **Logs**.
 5. Choose **Send to Log Analytics workspace** and select an existing workspace (or create one beforehand).
 6. Save the diagnostic setting.
-<img width="1091" height="621" alt="image" src="https://github.com/user-attachments/assets/b70f33a2-2ca6-47a7-bf22-f43e03effe8d" />
 
+![Diagnostic settings](./images/storage_03.png)
 
 ### Create a Container and perform a blob upload and download
 
@@ -173,7 +192,8 @@ StorageBlobLogs
 | where TimeGenerated > ago(7d) and AccountName == "$STORAGEACCOUNT_NAME"
 | summarize requests = count() by TlsVersion
 ```
-<img width="900" height="424" alt="image" src="https://github.com/user-attachments/assets/06f1c3ce-17f1-408b-b345-7278329cb125" />
+
+![Log Analytics](./images/log_analytics_01.png)
 
 ```kusto
 StorageBlobLogs
@@ -209,6 +229,6 @@ StorageBlobLogs
 
 ---
 
-You successsfully completed challenge 3! 🚀🚀🚀
+You successfully completed challenge 3! 🚀🚀🚀
 
  **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-04/solution-04.md)

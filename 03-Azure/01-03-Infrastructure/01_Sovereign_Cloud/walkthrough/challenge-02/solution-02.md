@@ -1,20 +1,18 @@
-# Challenge 2 — Encryption at Rest with Customer-Managed Keys (CMKs) in Azure Key Vault
+# Walkthrough Challenge 2 - Encryption at Rest with Customer-Managed Keys (CMKs) in Azure Key Vault
 
 [Previous Challenge Solution](../challenge-01/solution-01.md) - **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-03/solution-03.md)
 
 **Estimated Duration:** 30 minutes
 
-> 💡**Objective:** Understand Customer-Managed Keys in Azure Key Vault. Configure an Azure Storage account to use a customer-managed key stored in Azure Key Vault (or Azure Managed HSM) for encryption at rest. Validate the configuration and understand operational considerations for sovereign scenarios.
+> 💡 **Objective:** Understand Customer-Managed Keys in Azure Key Vault. Configure an Azure Storage account to use a customer-managed key stored in Azure Key Vault (or Azure Managed HSM) for encryption at rest. Validate the configuration and understand operational considerations for sovereign scenarios.
 
 ## Prerequisites
-- Azure subscription with contributor rights to the resource group.
-- Azure CLI >= 2.54 (or Portal).
-- Key Vault with **soft-delete** and **purge protection** enabled.
-- Network access to Key Vault (consider private endpoints if required).
-- RBAC roles:
-  - **Key Vault Administrator** (to manage keys/access policies)
-  - **Storage Account Contributor** (to configure encryption)
-  - **Managed Identity or Service Principal** with proper Key Vault access (if using programmatic access)
+
+Please ensure that you successfully verified the [General prerequisites](../../Readme.md#general-prerequisites) before continuing with this challenge.
+
+- Azure subscription with Contributor permissions on your resource group
+- Azure CLI >= 2.54 or access to Azure Portal
+- Basic understanding of Azure Key Vault and Storage encryption concepts
 
 ## Task 1: Understand Azure Key Management Options
 
@@ -45,8 +43,30 @@
 
 ### Step-by-Step Walkthrough (Azure CLI)
 
->💥 Set environment variables: `SUBSCRIPTION_ID`, `RESOURCE_GROUP`, `LOCATION`, `KEYVAULT_NAME`, `STORAGEACCOUNT_NAME`.
-> You may need to use the following commands:
+> [!IMPORTANT]
+> **Prerequisite — Challenge 1 policy adjustment:** Before proceeding, make sure you completed the **"Preparing for Next Challenges"** section at the end of Challenge 1's walkthrough. The tag-requirement and public-IP-block policies must be switched to **DoNotEnforce** mode, otherwise the resource creation commands below will fail.
+
+> [!IMPORTANT]
+> The Azure CLI commands in this walkthrough use **bash** syntax and will not work directly in PowerShell. Use **Azure Cloud Shell (Bash)** for the best experience. If running locally on Windows, use **WSL2** (Windows Subsystem for Linux) to run a bash shell. You can install the Azure CLI inside WSL with:
+>
+> ```bash
+> curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+> ```
+
+Set up the common variables that will be used throughout this challenge:
+
+```bash
+# Set common variables
+# Customize RESOURCE_GROUP for each participant
+RESOURCE_GROUP="labuser-xx"  # Change this for each participant (e.g., labuser-01, labuser-02, ...)
+SUBSCRIPTION_ID="xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx"  # Replace with your subscription ID
+LOCATION="norwayeast"  # If attending a MicroHack event, change to the location provided by your local MicroHack organizers
+```
+
+> [!WARNING]
+> If your Azure Cloud Shell session times out (e.g. during a break), the variables defined above will be lost and must be re-defined before continuing. We recommend saving them in a local text file on your machine so you can quickly copy and paste them back into a new session.
+
+>💥 You may need to use the following commands to look up your subscription ID and resource group:
 ```bash
 az account show <------- this is to show your subscriptionID
 az group list <-------- this is to show your resourceGroups
@@ -271,6 +291,6 @@ az keyvault delete -n $KEYVAULT_NAME -g $RESOURCE_GROUP
 
 ---
 
-You successsfully completed challenge 2! 🚀🚀🚀
+You successfully completed challenge 2! 🚀🚀🚀
 
  **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-03/solution-03.md)

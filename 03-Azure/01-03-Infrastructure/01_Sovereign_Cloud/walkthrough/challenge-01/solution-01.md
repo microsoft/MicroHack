@@ -13,7 +13,6 @@ Please ensure that you successfully verified the [General prerequisites](../../R
 - Azure subscription with Owner or User Access Administrator permissions
 - Azure CLI >= 2.54 or access to Azure Portal
 - Basic understanding of Azure Resource Manager and resource groups
-- A resource group for testing (we'll create resources to test policy compliance)
 
 ## Scenario Context
 
@@ -619,7 +618,7 @@ az policy state list \
 # Try to create a storage account in West US (should be denied)
 az storage account create \
   --name "teststoragewestus$RANDOM" \
-  --resource-group "$RESOURCE_GROUP_TEST" \
+  --resource-group "$RESOURCE_GROUP" \
   --location "westus" \
   --sku Standard_LRS \
   --tags DataClassification=Sovereign
@@ -635,7 +634,7 @@ STORAGE_NAME="sovereignstore$RANDOM"
 
 az storage account create \
   --name "$STORAGE_NAME" \
-  --resource-group "$RESOURCE_GROUP_TEST" \
+  --resource-group "$RESOURCE_GROUP" \
   --location "norwayeast" \
   --sku Standard_LRS \
   --tags DataClassification=Sovereign
@@ -649,7 +648,7 @@ Expected result: ✅ **Success**
 # Try to create a resource without the DataClassification tag
 az storage account create \
   --name "testuntagged$RANDOM" \
-  --resource-group "$RESOURCE_GROUP_TEST" \
+  --resource-group "$RESOURCE_GROUP" \
   --location "norwayeast" \
   --sku Standard_LRS
 ```
@@ -662,7 +661,7 @@ Expected result: ❌ **Error** - Required tag 'DataClassification' with value 'S
 # Try to create a public IP address (should be denied)
 az network public-ip create \
   --name "test-public-ip" \
-  --resource-group "$RESOURCE_GROUP_TEST" \
+  --resource-group "$RESOURCE_GROUP" \
   --location "norwayeast" \
   --tags DataClassification=Sovereign
 ```
@@ -775,7 +774,7 @@ az policy assignment create \
 az policy remediation create \
   --name "${ATTENDEE_ID}-remediate-missing-tags" \
   --policy-assignment "${ATTENDEE_ID}-add-tag-with-remediation" \
-  --resource-group "$RESOURCE_GROUP_TEST"
+  --resource-group "$RESOURCE_GROUP"
 ```
 
 ### Step 5: Monitor Remediation Progress
@@ -784,10 +783,10 @@ az policy remediation create \
 # Check remediation status
 az policy remediation show \
   --name "${ATTENDEE_ID}-remediate-missing-tags" \
-  --resource-group "$RESOURCE_GROUP_TEST"
+  --resource-group "$RESOURCE_GROUP"
 
 # List all remediation tasks
-az policy remediation list --resource-group "$RESOURCE_GROUP_TEST" -o table
+az policy remediation list --resource-group "$RESOURCE_GROUP" -o table
 ```
 
 ### Alternative: Use Built-in Tag Inheritance Policy
@@ -816,7 +815,7 @@ az policy assignment create \
 az policy remediation create \
   --name "${ATTENDEE_ID}-remediate-tag-inheritance" \
   --policy-assignment "${ATTENDEE_ID}-inherit-dataclassification-tag" \
-  --resource-group "$RESOURCE_GROUP_TEST"
+  --resource-group "$RESOURCE_GROUP"
 ```
 
 🔑 **Best Practice**: Use remediation tasks for existing resources and "deny" or "modify" effects for new deployments. This ensures both existing and new resources comply with policies.
@@ -837,7 +836,7 @@ az policy exemption create \
   --description "Temporary exemption for testing purposes" \
   --policy-assignment "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP/providers/microsoft.authorization/policyAssignments/${ATTENDEE_ID}-restrict-to-sovereign-regions" \
   --exemption-category "Waiver" \
-  --expires "2026-2-28T23:59:59Z" \
+  --expires "2026-3-28T23:59:59Z" \
   --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP"
 ```
 
@@ -871,7 +870,7 @@ To verify you've successfully completed this challenge, confirm the following:
 
 ```bash
 # List role assignments for your resource group
-az role assignment list --resource-group "$RESOURCE_GROUP_TEST" --query "[].{Principal:principalName, Role:roleDefinitionName}" -o table
+az role assignment list --resource-group "$RESOURCE_GROUP" --query "[].{Principal:principalName, Role:roleDefinitionName}" -o table
 
 # Verify custom role exists
 az role definition list --name "${DISPLAY_PREFIX} - Sovereign Compliance Auditor" --query "[].roleName" -o tsv
@@ -887,10 +886,10 @@ az role definition list --name "${DISPLAY_PREFIX} - Sovereign Compliance Auditor
 
 ```bash
 # Check remediation task status
-az policy remediation list --resource-group "$RESOURCE_GROUP_TEST" -o table
+az policy remediation list --resource-group "$RESOURCE_GROUP" -o table
 
 # Verify resources now have required tags
-az resource list --resource-group "$RESOURCE_GROUP_TEST" --query "[].{Name:name, Tags:tags}" -o json
+az resource list --resource-group "$RESOURCE_GROUP" --query "[].{Name:name, Tags:tags}" -o json
 ```
 
 ---

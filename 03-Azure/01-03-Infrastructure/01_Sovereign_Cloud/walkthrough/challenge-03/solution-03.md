@@ -4,17 +4,16 @@
 
 **Estimated Duration:** 30 minutes
 
-> 💡**Objective:**
-- Understand encryption in transit considerations for sovereign scenarios
-- Configure Azure Storage accounts to require secure transfer (HTTPS only) and enforce TLS 1.2 as the minimum protocol version.
-- Apply Azure Policy to block weaker TLS versions and monitor client protocol usage through Log Analytics.
+> 💡 **Objective:** Understand encryption in transit considerations for sovereign scenarios. Configure Azure Storage accounts to require secure transfer (HTTPS only) and enforce TLS 1.2 as the minimum protocol version. Apply Azure Policy to block weaker TLS versions and monitor client protocol usage through Log Analytics.
 
 ## Prerequisites
 
-- Azure subscription with permissions to manage Storage accounts and assign Azure Policy (Contributor or higher).
-- Existing StorageV2 account with Blob service enabled and access via the Azure Portal.
-- Azure CLI 2.54 or later and Azure PowerShell Az module 10.0.0 or later installed locally.
-- Log Analytics workspace (or rights to create one) for collecting Storage diagnostic logs.
+Please ensure that you successfully verified the [General prerequisites](../../Readme.md#general-prerequisites) before continuing with this challenge.
+
+- Azure subscription with Contributor permissions on your resource group
+- Azure CLI >= 2.54 or access to Azure Portal
+- Existing StorageV2 account with Blob service enabled (created in Challenge 2)
+- Log Analytics workspace (or permissions to create one) for collecting Storage diagnostic logs
 
 > [!IMPORTANT]
 > The Azure CLI commands in this walkthrough use **bash** syntax and will not work directly in PowerShell. Use **Azure Cloud Shell (Bash)** for the best experience. If running locally on Windows, use **WSL2** (Windows Subsystem for Linux) to run a bash shell. You can install the Azure CLI inside WSL with:
@@ -54,8 +53,8 @@ Azure Storage currently allows setting **Minimum TLS Version = TLS 1.0, 1.1, or 
 
 ## Task 3: Hands-on: Azure Blob Storage - require secure transfer (HTTPS only) in Azure Portal
 
-### Prerequisites:
-- StorageV2 account with Blob service enabled in the target subscription.
+### Task prerequisites
+- StorageV2 account with Blob service enabled in the target subscription (created in Challenge 2).
 - Contributor permissions on the resource group hosting the account.
 
 ### Azure Portal steps

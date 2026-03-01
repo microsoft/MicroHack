@@ -10,14 +10,10 @@
 
 Please ensure that you successfully verified the [General prerequisites](../../Readme.md#general-prerequisites) before continuing with this challenge.
 
-- Azure subscription with permissions to create VMs, Key Vault, and Attestation Providers
-- **Linux/Bash environment** - Choose one of the following:
-  - **Azure Cloud Shell (Bash)** - Recommended for ease of use
-  - **WSL2 on Windows** - Windows Subsystem for Linux 2
-  - **Linux or macOS** - Native Bash terminal
-- Azure CLI >= 2.54 (pre-installed in Azure Cloud Shell)
-- Basic understanding of Azure Virtual Machines and networking concepts
-- Familiarity with SSH key authentication and basic Bash commands
+- Azure subscription with Contributor permissions on your resource group
+- Azure CLI >= 2.54 or access to Azure Portal
+- **Linux/Bash environment** — Azure Cloud Shell (Bash), WSL2 on Windows, or a native Linux/macOS terminal
+- Basic understanding of Azure Virtual Machines, networking, and SSH key authentication
 - Basic understanding of confidential computing concepts
 
 ## Scenario Context

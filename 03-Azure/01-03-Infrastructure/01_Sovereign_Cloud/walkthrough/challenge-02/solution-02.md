@@ -4,17 +4,15 @@
 
 **Estimated Duration:** 30 minutes
 
-> 💡**Objective:** Understand Customer-Managed Keys in Azure Key Vault. Configure an Azure Storage account to use a customer-managed key stored in Azure Key Vault (or Azure Managed HSM) for encryption at rest. Validate the configuration and understand operational considerations for sovereign scenarios.
+> 💡 **Objective:** Understand Customer-Managed Keys in Azure Key Vault. Configure an Azure Storage account to use a customer-managed key stored in Azure Key Vault (or Azure Managed HSM) for encryption at rest. Validate the configuration and understand operational considerations for sovereign scenarios.
 
 ## Prerequisites
-- Azure subscription with contributor rights to the resource group.
-- Azure CLI >= 2.54 (or Portal).
-- Key Vault with **soft-delete** and **purge protection** enabled.
-- Network access to Key Vault (consider private endpoints if required).
-- RBAC roles:
-  - **Key Vault Administrator** (to manage keys/access policies)
-  - **Storage Account Contributor** (to configure encryption)
-  - **Managed Identity or Service Principal** with proper Key Vault access (if using programmatic access)
+
+Please ensure that you successfully verified the [General prerequisites](../../Readme.md#general-prerequisites) before continuing with this challenge.
+
+- Azure subscription with Contributor permissions on your resource group
+- Azure CLI >= 2.54 or access to Azure Portal
+- Basic understanding of Azure Key Vault and Storage encryption concepts
 
 ## Task 1: Understand Azure Key Management Options
 

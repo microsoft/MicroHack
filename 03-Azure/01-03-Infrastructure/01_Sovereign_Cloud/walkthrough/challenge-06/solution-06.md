@@ -2,11 +2,12 @@
 
 [Previous Challenge Solution](../challenge-05/solution-05.md) - **[Home](../../Readme.md)**
 
-Duration: 60-90 minutes
+**Estimated Duration:** 60-90 minutes
 
-💡 **In this challenge, you will operate a sovereign hybrid cloud environment combining Azure Local and Azure Arc. You'll learn how to apply consistent governance, security, and management across on-premises sovereign infrastructure and Azure.**
+> 💡 **Objective:** Operate a sovereign hybrid cloud environment combining Azure Local and Azure Arc. You'll learn how to apply consistent governance, security, and management across on-premises sovereign infrastructure and Azure.
 
 This challenge uses the Azure Arc Jumpstart environments:
+
 - **ArcBox for IT Pros** - Provides Arc-enabled servers in a sandbox environment
 - **LocalBox** - Simulates an Azure Local on-premises environment
 
@@ -17,6 +18,7 @@ This challenge uses the Azure Arc Jumpstart environments:
 Please ensure that you successfully verified the [General prerequisites](../../Readme.md#general-prerequisites) before continuing with this challenge.
 
 **Additional requirements for this challenge:**
+
 - Access to a pre-deployed ArcBox/LocalBox environment (shared lab or individual deployment)
 - **Reader** and **Azure Stack HCI VM Contributor** role permissions on the resource group containing the hybrid resources
 

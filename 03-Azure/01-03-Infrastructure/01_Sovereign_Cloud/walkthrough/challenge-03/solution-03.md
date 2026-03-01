@@ -63,16 +63,15 @@ Azure Storage currently allows setting **Minimum TLS Version = TLS 1.0, 1.1, or 
 1. Open the **Create storage account** pane in the Azure portal.
 2. In the **Advanced** page, select the **Enable secure transfer** checkbox.
 3. Create storage account blade
-<img width="900" height="573" alt="image" src="https://github.com/user-attachments/assets/fd48ddb5-1e49-4d4b-87a8-d773d0679abb" />
 
-
+![desc](./images/storage_01.png)
 
 #### Require secure transfer for an existing storage account
 1. Select an existing storage account in the Azure portal.
 2. In the storage account menu pane, under **Settings**, select **Configuration**.
 3. Under **Secure transfer required**, select **Enabled**.
-<img width="1462" height="738" alt="8986c5e2-4783-4475-8fbf-97532b9ed2e9" src="https://github.com/user-attachments/assets/76813943-4533-43b0-a380-ec302bfae00d" />
 
+![desc](./images/storage_01.png)
 
 ### CLI alternative
 ```bash
@@ -94,8 +93,8 @@ Goal: ensure all storage accounts enforce **Minimum TLS Version = TLS 1.2**.
 4. Set **Scope** to the subscription or resource group.
 5. Under **Parameters**, set **Minimum TLS version** to `TLS 1.2` and (optionally) effect to `Deny`.
 6. Complete **Review + Create**, then select **Create**.
-<img width="900" height="380" alt="image" src="https://github.com/user-attachments/assets/639f9f53-e9b5-40f6-9970-dc0de34e1109" />
 
+![Azure Policy](./images/policy_01.png)
 
 ### CLI alternative
 
@@ -159,8 +158,8 @@ az monitor diagnostic-settings create \
 4. Check **Blob** under **Logs**.
 5. Choose **Send to Log Analytics workspace** and select an existing workspace (or create one beforehand).
 6. Save the diagnostic setting.
-<img width="1091" height="621" alt="image" src="https://github.com/user-attachments/assets/b70f33a2-2ca6-47a7-bf22-f43e03effe8d" />
 
+![Diagnostic settings](./images/storage_03.png)
 
 ### Create a Container and perform a blob upload and download
 

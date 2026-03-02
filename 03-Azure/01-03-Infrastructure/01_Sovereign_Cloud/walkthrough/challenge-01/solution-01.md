@@ -303,7 +303,7 @@ For sensitive services like Azure Storage, you can require private endpoint usag
 
 ```bash
 # Search for storage account public access policies
-az policy definition list --query "[?contains(displayName, 'Storage') && contains(displayName, 'public')].{Name:displayName, ID:name}" -o table
+az policy definition list --query "[?displayName && contains(displayName, 'Storage') && contains(displayName, 'public')].{Name:displayName, ID:name}" -o table
 ```
 
 Example policy assignment to disable public network access for storage accounts:

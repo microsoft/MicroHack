@@ -91,4 +91,6 @@ Permissions for the deployment:
 
 
 ## Contributors
-* Nils Bankert [GitHub](https://github.com/nilsbankert); [LinkedIn](https://www.linkedin.com/in/nilsbankert/)
+
+* Sascha Petrovski [GitHub](https://github.com/saschape/) [LinkedIn](https://www.linkedin.com/in/sascha-petrovski/)
+* Tristan Daude [LinkedIn](https://www.linkedin.com/in/tristandaude/)

@@ -759,11 +759,11 @@ POLICY_DEF_ID="/subscriptions/$SUBSCRIPTION_ID/providers/Microsoft.Authorization
 az policy assignment create \
   --name "${ATTENDEE_ID}-add-tag-with-remediation" \
   --display-name "${DISPLAY_PREFIX} - Add DataClassification Tag with Remediation" \
-  --scope "/subscriptions/$SUBSCRIPTION_ID" \
+  --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP" \
   --policy "$POLICY_DEF_ID" \
   --location "norwayeast" \
   --assign-identity \
-  --identity-scope "/subscriptions/$SUBSCRIPTION_ID" \
+  --identity-scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP" \
   --role "Contributor"
 ```
 

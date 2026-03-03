@@ -42,7 +42,7 @@ Delegated subnet: **anf**
 
 Click on **Next Protocol**
 
-![image](../smbvolume.png)
+![image](../img/smbvolume.png)
 
 Access: Select **SMB**
 

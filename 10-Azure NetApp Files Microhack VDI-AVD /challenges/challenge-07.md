@@ -1,26 +1,15 @@
-# Best Practices and Use Cases 
+# Challenge 6 - Best Practices and Use Cases
 
-## Objective: 
-Provide best practices for using Azure NetApp Files and review various use cases. 
+[Previous Challenge Solution](challenge-06.md) - **[Home](../Readme.md)** - [Next Challenge Solution](challenge-08.md)
 
-## Topics Covered: 
+## Goal
+Understand best practices for using Azure NetApp Files and review various use cases.
 
-* General best practices 
+## Actions
+* Participants adjust performance levels based on simulated workloads. 
 
-* Industry-specific use cases 
+## Success criteria
+* TDB.
 
-## Activities: 
-
-* Presentation: Best practices for optimizing Azure NetApp Files. 
-
-* Case Study Review: Discuss different use cases and their implementations. 
-
-## Materials: 
-
-* Best practices guide 
-
-* Collection of use case documents 
-
-## Documentation Links: 
-
-Microsoft Learn: [Best Practices](https://learn.microsoft.com/en-us/azure/azure-netapp-files/best-practices)
+## Learning resources
+[Best Practices](https://learn.microsoft.com/en-us/azure/azure-netapp-files/best-practices)

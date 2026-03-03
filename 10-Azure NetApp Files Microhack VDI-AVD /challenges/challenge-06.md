@@ -1,31 +1,17 @@
-# Performance Optimization 
+# Challenge 6 - Performance Optimization
 
- 
+[Previous Challenge Solution](challenge-05.md) - **[Home](../Readme.md)** - [Next Challenge Solution](challenge-07.md)
 
-## Objective: 
+## Goal
 
-Provide strategies to optimize the performance of Azure NetApp Files. 
+Strategies to optimize the performance of Azure NetApp Files. 
 
-## Topics Covered: 
+## Actions
+* Participants adjust performance levels based on simulated workloads. 
 
-* Performance tiers: Standard, Premium, Ultra 
+## Success criteria
+* TDB.
 
-* Dynamic service level changes 
-
-* Performance best practices 
-
-## Activities: 
-
-* Presentation: Explain different performance tiers and their use cases. 
-
-* Hands-On Lab: Participants adjust performance levels based on simulated workloads. 
-
-## Materials: 
-
-* Performance optimization best practices guide 
-
-* Access to performance monitoring tools 
-
-## Documentation Links: 
+## Learning resources
 
 * [Azure NetApp Files performance considerations](https://learn.microsoft.com/en-us/azure/azure-netapp-files/azure-netapp-files-performance-considerations) 

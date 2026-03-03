@@ -1,6 +1,6 @@
 # Challenge 3 - Setting Up Azure NetApp Files 
 
-**[Home](../Readme.md)** - [Next Challenge Solution](challenge-04.md)
+[Previous Challenge Solution](challenge-02.md) - **[Home](../Readme.md)** - [Next Challenge Solution](challenge-04.md)
 
 ## Goal 
 

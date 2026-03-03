@@ -1,6 +1,6 @@
 # Challenge 5 - Managing and Monitoring Azure NetApp Files
 
-**[Home](../Readme.md)** - [Next Challenge Solution](challenge-06.md)
+[Previous Challenge Solution](challenge-04.md) - **[Home](../Readme.md)** - [Next Challenge Solution](challenge-06.md)
 
 ## Goal
 

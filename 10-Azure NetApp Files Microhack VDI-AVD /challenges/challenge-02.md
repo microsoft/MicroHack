@@ -1,6 +1,6 @@
 # Challenge 2 - Setup Network Configuration
 
-**[Home](../Readme.md)** - [Next Challenge Solution](challenge-03.md)
+[Previous Challenge Solution](challenge-02.md) - **[Home](../Readme.md)** - [Next Challenge Solution](challenge-03.md)
 
 ## Goal 
 

@@ -9,9 +9,48 @@ Duration: 20 minutes
 The following procedure creates a virtual network with a resource subnet, and a delegated ANF subnet.
 Please ensure that you successfully verified the [General prerequisits](../../Readme.md#general-prerequisites) before continuing with this challenge.
 
-### **Task 1: Create a Virtual Network and Subnet**
+### **Task 1: Register for NetApp Resource Provider**
 
-💡 1. Log in to the [Azure portal](https://portal.azure.com/#home). 
+1. From the Azure portal, select the Azure Cloud Shell icon on the upper right-hand corner:
+
+![image](../img/solution-02-azure-netapp-files-azure-cloud-shell.png)
+
+2. If you have multiple subscriptions on your Azure account, select the one that you want to configure for Azure NetApp Files:
+
+az account set --subscription <subscriptionId>
+
+3. In the Azure Cloud Shell console, enter the following command to register the Azure Resource Provider:
+
+az provider register --namespace Microsoft.NetApp --wait
+
+The --wait parameter instructs the console to wait for the registration to complete. The registration process can take some time to complete.
+
+4. Verify that the Azure Resource Provider has been registered. To verify, enter the following command in the Azure Cloud Shell console:
+
+az provider show --namespace Microsoft.NetApp
+
+The command output appears as follows:
+
+{
+"id": "/subscriptions/<SubID>/providers/Microsoft.NetApp",
+"namespace": "Microsoft.NetApp", 
+"registrationState": "Registered", 
+"resourceTypes": [….
+
+<SubID> is your subscription ID. The state parameter value indicates Registered.
+
+5. From the Azure portal, select Subscriptions.
+
+6. From Subscriptions, select your subscription ID.
+
+7. In the settings of the subscription, select Resource providers to verify that Microsoft.NetApp Provider indicates the Registered status:
+
+![image](../img/solution-02-azure-netapp-files-registered-resource-providers.png)
+
+
+### **Task 2: Create a Virtual Network and Subnet**
+
+1. Log in to the [Azure portal](https://portal.azure.com/#home). 
 
 2. In the portal, search for and select Virtual networks.
 
@@ -38,7 +77,7 @@ Please ensure that you successfully verified the [General prerequisits](../../Re
 9. Select Review + create at the bottom of the window. When validation passes, select Create
 
 
-### **Task 2: Delegate a subnet to Azure NetApp Files**
+### **Task 3: Delegate a subnet to Azure NetApp Files**
 
 1. Navigate to Virtual networks in the Azure portal. Select the virtual network that you want to use for Azure NetApp Files.
 

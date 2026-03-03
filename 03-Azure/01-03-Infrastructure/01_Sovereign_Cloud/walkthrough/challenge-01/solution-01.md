@@ -831,6 +831,18 @@ az policy remediation create \
 
 ---
 
+You can also find the same information in the Azure portal by navigating to **your resource group -> Settings -> Policies**:
+
+![Azure Portal policy monitoring](./img/task10-portal.jpg)
+
+Here you should see the policy assignments you have created along with their compliance state:
+
+![Azure Portal policy monitoring](./img/task10-portal-02.jpg)
+
+You can also navigate to the **Remediation** blade to see the remediation task you triggered previously:
+
+![Azure Portal policy monitoring](./img/task10-portal-03.jpg)
+
 ## Task 11: Create Policy Exemptions (Optional)
 
 💡 **Sometimes you need to exempt specific resources from policies due to legitimate business reasons.**

@@ -24,9 +24,11 @@ The pre-provisioned AVD setup already has a designated Hostpool for each attende
 * AD DNS Domain Name: microhack.test
 * AD Site Name: Default-First-Site-Name
 * SMB Serve: MH
-* Organizational Unit Path: OU=Hostpool<group number>
+* Organizational Unit Path: OU=Hostpool{Group Number}
 * AES Encryption: checked
 
+Example:
+![image](img/AD.png)
 
 
 🔑 **Key to a successful strategy....**

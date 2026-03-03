@@ -59,9 +59,11 @@ Azure Storage currently allows setting **Minimum TLS Version = TLS 1.0, 1.1, or 
 
 ### Azure Portal steps
 #### Require secure transfer for a new storage account
-1. Open the **Create storage account** pane in the Azure portal.
-2. In the **Advanced** page, select the **Enable secure transfer** checkbox.
-3. Create storage account blade
+1. In the top center search bar in the Azure portal, search for **Storage accounts**
+1. Click on **Create**
+1. Select your own resource group, provide a unique name for the **Storage account name** and select "**Azure Blob Storage or Azure Data Lake Storage Gen2** for the **Preferred storage type** parameter
+1. Click next and in the **Advanced** page, select the **Require secure transfer for REST API operations** checkbox if not already enabled.
+1. Leave the rest of the parameters as-is and click **Review + create**
 
 ![desc](./images/storage_01.png)
 

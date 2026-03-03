@@ -11,6 +11,7 @@ Set up and configure Azure NetApp Files.
 * Creating NetApp accounts 
 * Setting up capacity pools
 * Creating and managing volumes
+* Provision and Validate NFS Storage
 * Deploy a Virtual Instance and mount Azure NetApp Files
 
 ## Success criteria

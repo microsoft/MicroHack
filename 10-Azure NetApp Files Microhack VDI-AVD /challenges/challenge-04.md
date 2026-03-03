@@ -9,7 +9,6 @@ Explore the use cases and benefits of Azure NetApp Files for Virtual Desktop Inf
 ## Actions
 
 * Prepare Core Infrastructure
-* Provision and Validate NFS Storage
 * Configure Active Directory & SMB for AVD
 * Deploy and Test AVD Integration
 * Performance Testing, Monitoring & Tuning

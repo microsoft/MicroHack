@@ -869,8 +869,12 @@ az policy exemption create \
 ### Step 2: List and Review Exemptions
 
 ```bash
-az policy exemption list --query "[].{Name:name, Category:exemptionCategory, Expires:expiresOn}" -o table
+az policy exemption list -g $RESOURCE_GROUP --query "[].{Name:name, Category:exemptionCategory, Expires:expiresOn}" -o table
 ```
+
+Exemption can also be managed via the Azure portal:
+
+![Azure Portal policy exemption](./img/task11-portal.jpg)
 
 ⚠️ **Warning**: Use exemptions sparingly and always document the business justification. Set expiration dates and review exemptions regularly.
 
@@ -892,7 +896,9 @@ To verify you've successfully completed this challenge, confirm the following:
 ```bash
 # List role assignments for your resource group
 az role assignment list --resource-group "$RESOURCE_GROUP" --query "[].{Principal:principalName, Role:roleDefinitionName}" -o table
+```
 
+```bash
 # Verify custom role exists
 az role definition list --name "${DISPLAY_PREFIX} - Sovereign Compliance Auditor" --query "[].roleName" -o tsv
 ```
@@ -947,6 +953,10 @@ After running these commands, the policies will still appear in the **Compliance
 > ```
 
 ---
+
+> [!TIP] Policy enforcement mode can also be managed via the Azure portal if you navigate to the policy assignments and click **Edit assignment**:
+
+![Azure Portal policy enforcement mode](./img/policy-enforcement-mode.jpg)
 
 ## Key Takeaways
 

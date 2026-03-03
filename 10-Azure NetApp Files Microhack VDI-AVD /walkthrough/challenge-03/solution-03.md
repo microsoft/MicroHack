@@ -1,27 +1,18 @@
-# Register and set up
+# Walkthrough Challenge 3 - Setting Up Azure NetApp Files
 
+[Previous Challenge Solution](../challenge-02/solution-02.md) - **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-04/solution-04.md)
 
-## Register for NetApp Resource Provider 
+Duration: 30 minutes
 
+## Prerequisites
 
-1. Log in to the [Azure portal](https://portal.azure.com/#home). 
+Please ensure that you successfully verified the [General prerequisits](../../Readme.md#general-prerequisites) before continuing with this challenge.
 
-2. In the Azure portal's search box, enter **Subscriptions** and then select your subscription. 
-
-3. On the left menu under **Settings**, select **Resource providers**. 
-
-4. Find the provider Microsoft.NetApp. 
-
-5. Select **Microsoft.NetApp** and select **Register**. 
-
-![image](../img/ressource_provider.png)
-
-## 
-## Create a NetApp account in Azure NetApp Files 
+### **Task 1: Create a NetApp account in Azure NetApp Files**
 
 1. In the Azure portal's search box, enter **Azure NetApp Files** and then select **Azure NetApp Files** from the list that appears. 
 
-![image](../img/search-azure-netapp-files.png)
+![image](../img/solution-03-search-azure-netapp-files.png)
 
 2. Select + **Create** to create a new NetApp account. 
 
@@ -32,25 +23,24 @@
 * Select **Create new** to create new resource group. Enter **myRG1** for the resource group name. Select OK. 
 * Select your account location.
 
-![image](../img/azure-netapp-files-new-netapp-account.png)
+![image](../img/solution-03-azure-netapp-files-new-netapp-account.png)
 
 4. Select **Create** to create your new NetApp account.
 
 
-##
-## Create a capacity pool 
+### **Task 2: Create a capacity pool**
 
 1. From the Azure NetApp Files management sidebar, select your NetApp account, e.g. myaccount1
 
-![image](../img/azure-netapp-files-select-netapp-account.png)
+![image](../img/solution-03-azure-netapp-files-select-netapp-account.png)
 
 2. From the Azure NetApp Files management sidebar, select **Capacity pools**.
 
-![image](../img/azure-netapp-files-click-capacity-pools.png)
+![image](../img/solution-03-azure-netapp-files-click-capacity-pools.png)
 
 3. Select + **Add pools**. 
 
-![image](../img/azure-netapp-files-new-capacity-pool.png)
+![image](../img/solution-03-azure-netapp-files-new-capacity-pool.png)
 
 4. Provide information for the capacity pool: 
 
@@ -61,17 +51,15 @@
 
 5. Select **Create**.
 
-
-##
-## Create and manage Active Directory connections for Azure NetApp Files
+### **Task 3: Create and manage Active Directory connections for Azure NetApp Files**
 
 1. From your NetApp account, select **Active Directory connections** then **Join**.
 
-![image](../img/1-azure-netapp-files-active-directory-connections.png)
+![image](../img/solution-03-azure-netapp-files-active-directory-connections.png)
 
 2. In the Join Active Directory window, provide the following information, based on the Domain Services you want to use:
 
-![image](../img/2-azure-netapp-files-join-active-directory.png)
+![image](../img/solution-03-azure-netapp-files-join-active-directory.png)
 
 * Primary DNS
 * AD DNS Domain Name: **microhack.test**
@@ -83,9 +71,7 @@
 
 3. Select **Join**.
 
-
-##   
-## Create an SMB volume for Azure NetApp Files
+### **Task 4: Create an SMB volume for Azure NetApp Files**
 
 1. Select the Volumes blade from the Capacity Pools blade.
 
@@ -116,3 +102,37 @@
 6. Select **Create** to create the volume. The created volume appears in the Volumes menu.
 
 ![image](../img/nfs_6.png)
+
+
+
+
+
+
+
+
+
+
+💡 The first....
+
+💥 **Here are the first three general steps that are typically happen:** 
+1. Everybody struggles with finding the right person....
+2. If somebody finds the plan, the first three actions...
+3. Do not sress to much we have a...
+
+🔑 **Key to a successful strategy....**
+- The key to success is not a technical consideration of....
+
+
+
+
+
+
+* [Checklist Testing for...](Link to checklist or microsoft docs)
+
+
+
+
+![image](Link to image)
+
+
+You successfully completed challenge 1! 🚀🚀🚀

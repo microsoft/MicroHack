@@ -315,7 +315,7 @@ POLICY_DISPLAY_NAME="${DISPLAY_PREFIX} - Storage accounts should disable public 
 
 az policy assignment create \
   --name "storage-disable-public-access" \
-  --display-name "Storage accounts should disable public network access" \
+  --display-name "$POLICY_DISPLAY_NAME" \
   --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP" \
   --policy "$STORAGE_PUBLIC_ACCESS_POLICY"
 ```

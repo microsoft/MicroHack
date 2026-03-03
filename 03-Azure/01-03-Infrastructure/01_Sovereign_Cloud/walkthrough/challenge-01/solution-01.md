@@ -158,7 +158,7 @@ RG_POLICY_DEFINITION_ID="e765b5de-1225-4ba3-bd56-1ac6695af988"
 az policy assignment create \
   --name "${ATTENDEE_ID}-restrict-rg-to-sovereign-regions" \
   --display-name "${DISPLAY_PREFIX} - Restrict Resource Groups to Sovereign Regions" \
-  --scope "/subscriptions/$SUBSCRIPTION_ID" \
+  --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP" \
   --policy "$RG_POLICY_DEFINITION_ID" \
   --params '{
     "listOfAllowedLocations": {

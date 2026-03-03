@@ -539,11 +539,11 @@ az ad group create \
 # Get the group's object ID
 COMPLIANCE_GROUP_ID=$(az ad group show --group "${GROUP_PREFIX}-Compliance-Officers" --query id -o tsv)
 
-# Assign the custom role at subscription scope
+# Assign the custom role at resource group scope
 az role assignment create \
   --assignee "$COMPLIANCE_GROUP_ID" \
   --role "${DISPLAY_PREFIX} - Sovereign Compliance Auditor" \
-  --scope "/subscriptions/$SUBSCRIPTION_ID"
+  --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP"
 ```
 
 ### Step 5: Verify the Custom Role

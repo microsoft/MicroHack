@@ -1,4 +1,4 @@
-# Challenge 6 - Best Practices and Use Cases
+# Challenge 7 - Best Practices and Use Cases
 
 [Previous Challenge Solution](challenge-06.md) - **[Home](../Readme.md)** - [Next Challenge Solution](challenge-08.md)
 

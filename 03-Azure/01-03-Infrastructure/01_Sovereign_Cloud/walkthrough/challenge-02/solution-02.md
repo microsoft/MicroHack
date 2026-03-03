@@ -249,29 +249,6 @@ If you navigate to the key inside your Key Vault, you should now see a new versi
 
 ---
 
-### Clean-Up (Safe)
-
-```bash
-# Optional: revert to platform-managed key before deletion
-az storage account update \
-  -n $STORAGEACCOUNT_NAME \
-  -g $RESOURCE_GROUP \
-  --encryption-key-source Microsoft.Storage
-
-# Delete storage account (data becomes unrecoverable after retention window)
-az storage account delete -n $STORAGEACCOUNT_NAME -g $RESOURCE_GROUP --yes
-
-# Delete Key Vault (remains recoverable due to soft-delete/purge protection)
-az keyvault delete -n $KEYVAULT_NAME -g $RESOURCE_GROUP
-
-# Optional purge (only if policy allows; requires purge protection disabled)
-# az keyvault purge --name $KEYVAULT_NAME
-```
-
-> **Note:** Evaluate legal hold, retention, and audit requirements before purging keys. With purge protection enabled, the vault persists in a recoverable state for the configured retention period.
-
----
-
 ## Task 4: Sovereignty & Compliance Notes
 
 - **Regional co-location:** Place Key Vault/Managed HSM and Storage in the **same sovereign region** to meet residency mandates and reduce latency.

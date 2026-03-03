@@ -1,6 +1,6 @@
 ## Integrate Azure NetApp Files volume into AVD environment 
 
-** Deploy new SMB volume, integrate with AVD Session Host and verify ** 
+### Deploy new SMB volume, integrate with AVD Session Host and verify ###
 
 
 
@@ -66,24 +66,5 @@ The UNC path of your share needs to be entered in the AD Group Policy attribute 
 5. Can you find your home directory on the share?
 
 
-
-
-
-🔑 **Key to a successful strategy....**
-- The key to success is not a technical consideration of....
-
-### **Task 2: Think about if...**
-
-
-### **Task 3: Put yourself in the position...**
-
-* [Checklist Testing for...](Link to checklist or microsoft docs)
-
-### Task 4: Who defines the requirements...
-
-
-![image](Link to image)
-
-
-You successfully completed challenge 1! 🚀🚀🚀
+You successfully completed challenge 4! 🚀🚀🚀
 

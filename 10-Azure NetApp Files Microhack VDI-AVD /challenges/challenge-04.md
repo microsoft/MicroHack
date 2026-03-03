@@ -20,6 +20,7 @@ Explore the use cases and benefits of Azure NetApp Files for Virtual Desktop Inf
 * Integrate identity and user profiles with the platform.
 * Access the environment as a user and verify functionality.
 * Observe, test, and adjust performance behavior.
+* Understand storage requirements for Azure Virtual Desktop
 
 ## Learning resources
 

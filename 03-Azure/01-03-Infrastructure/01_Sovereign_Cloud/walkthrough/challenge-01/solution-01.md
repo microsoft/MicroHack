@@ -383,7 +383,7 @@ Create a JSON file named `sovereign-cloud-initiative.json`:
 ```
 
 > [!TIP]
-> When using Cloud Shell instead of a local terminal to run Azure CLI commands, create the files locally in a text editor (Notepad or similar). Then you can upload the files to Cloud Shell by using the **Manage files -> Upload** feature
+> When using Cloud Shell instead of a local terminal to run Azure CLI commands, create the files locally in a text editor (Notepad or similar). Then you can upload the files to Cloud Shell by using the **Manage files -> Upload** feature before running the command in the following step:
 
 ![image](./img/cloud-shell4.jpg)
 

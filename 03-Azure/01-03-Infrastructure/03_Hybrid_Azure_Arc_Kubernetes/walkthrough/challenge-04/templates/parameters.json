@@ -1,0 +1,68 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "parentResource": {
+            "value": "Microsoft.Kubernetes/connectedClusters/<USER_NUMBER>-k8s-arc-enabled"
+        },
+        "k8sExtensionName": {
+            "value": "<USER_NUMBER>-onprem-ext"
+        },
+        "namespace": {
+            "value": "<USER_NUMBER>-onprem"
+        },
+        "location": {
+            "value": "westeurope"
+        },
+        "roleDefinitionId_Contributor": {
+            "value": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/<USER_NUMBER>-k8s-arc/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c"
+        },
+        "roleAssignment_Contributor": {
+            "value": "<GENERATE_GUID_1>"
+        },
+        "roleDefinitionId_MonitoringMetricsPublisher": {
+            "value": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/<USER_NUMBER>-k8s-arc/providers/Microsoft.Authorization/roleDefinitions/3913510d-42f4-4e42-8a64-420c390055eb"
+        },
+        "roleAssignment_MonitoringMetricsPublisher": {
+            "value": "<GENERATE_GUID_2>"
+        },
+        "customLocationName": {
+            "value": "<USER_NUMBER>-onprem"
+        },
+        "customLocationId": {
+            "value": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/<USER_NUMBER>-k8s-arc/providers/Microsoft.ExtendedLocation/customLocations/<USER_NUMBER>-onprem"
+        },
+        "customLocation_hostResourceId": {
+            "value": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/<USER_NUMBER>-k8s-arc/providers/Microsoft.Kubernetes/connectedClusters/<USER_NUMBER>-k8s-arc-enabled"
+        },
+        "customLocation_clusterExtensionIds": {
+            "value": [
+                "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/<USER_NUMBER>-k8s-arc/providers/Microsoft.Kubernetes/connectedClusters/<USER_NUMBER>-k8s-arc-enabled/providers/Microsoft.KubernetesConfiguration/extensions/<USER_NUMBER>-onprem-ext"
+            ]
+        },
+        "resourceSyncRuleName": {
+            "value": "<USER_NUMBER>-onprem/defaultResourceSyncRule"
+        },
+        "dataController_metricsAndLogsDashboardPassword": {
+            "value": null
+        },
+        "dataController_logAnalyticsWorkspaceId": {
+            "value": "<LOG_ANALYTICS_WORKSPACE_ID>"
+        },
+        "dataController_logAnalyticsPrimaryKey": {
+            "value": "<LOG_ANALYTICS_PRIMARY_KEY>"
+        },
+        "storageClass": {
+            "value": "local-path"
+        },
+        "dataController_subscription": {
+            "value": "<SUBSCRIPTION_ID>"
+        },
+        "dataController_resourceGroup": {
+            "value": "<USER_NUMBER>-k8s-arc"
+        },
+        "dataControllerName": {
+            "value": "<USER_NUMBER>-dc"
+        }
+    }
+}

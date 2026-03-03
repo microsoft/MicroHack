@@ -75,11 +75,11 @@ Please ensure that you successfully verified the [General prerequisits](../../Re
 
 1. Select the Volumes blade from the Capacity Pools blade.
 
-![image](../img/nfs_1.png)
+![image](../img/solution-03-volumes.png)
 
 2. Select + Add volume to create a volume.
 
-![image](../img/nfs_2.png)
+![image](../img/solution-3-add-volume.png)
 
 3. In the Create a Volume window, provide information for the volume:
    
@@ -87,11 +87,11 @@ Please ensure that you successfully verified the [General prerequisits](../../Re
 * Select your capacity pool (**mypool1**).
 * Use the default value for quota.
 
-![image](../img/nfs_7.png)
+![image](../img/solution-03-create-volume.png)
 
 4. Select **Protocol**, and then complete the following actions:
 
-![image](../img/smb_1.png)
+![image](../img/solution-03-protocol-smb.png)
 
 * Select **SMB** as the protocol type for the volume.
 * Active Directory: **microhack.test**
@@ -101,7 +101,7 @@ Please ensure that you successfully verified the [General prerequisits](../../Re
 
 6. Select **Create** to create the volume. The created volume appears in the Volumes menu.
 
-![image](../img/nfs_6.png)
+![image](../img/solution-03-creted-volume-overview.png)
 
 
 

@@ -115,24 +115,31 @@ az policy assignment create \
 ### Create Log Analytics workspace and Diagnostic settings to capture logs
 
 ### CLI
+
 ```bash
 # Create Log Analytics workspace
 LOG_ANALYTICS_WORKSPACE=law-$RESOURCE_GROUP
 az monitor log-analytics workspace create --resource-group $RESOURCE_GROUP \
        --workspace-name $LOG_ANALYTICS_WORKSPACE
+```
 
+```bash
 # Get the storage account resource ID
 STORAGE_ACCOUNT_ID=$(az storage account show \
   --name $STORAGEACCOUNT_NAME \
   --resource-group $RESOURCE_GROUP \
   --query id --output tsv)
+```
 
+```bash
 # Get the Log Analytics workspace resource ID
 LOG_ANALYTICS_WORKSPACE_ID=$(az monitor log-analytics workspace show \
   --resource-group $RESOURCE_GROUP \
   --workspace-name $LOG_ANALYTICS_WORKSPACE \
   --query id --output tsv)
+```
 
+```bash
 # Create diagnostic setting for blob service with StorageRead and StorageWrite categories
 az monitor diagnostic-settings create \
   --name blob-tls-insights \
@@ -151,6 +158,7 @@ az monitor diagnostic-settings create \
 ```
 
 ### Azure Portal steps
+
 1. Open the storage account and go to **Monitoring > Diagnostic settings**.
 2. Select **+ Add diagnostic setting**.
 3. Name the setting (e.g., `blob-tls-insights`).
@@ -163,6 +171,7 @@ az monitor diagnostic-settings create \
 ### Create a Container and perform a blob upload and download
 
 #### Grant access to the current user id to the Blob storage service
+
 ```bash
 # Get your current user's object ID
 CURRENT_USER_ID=$(az ad signed-in-user show --query id --output tsv)
@@ -176,6 +185,7 @@ az role assignment create \
 ```
 
 #### Create a Container
+
 ```bash
 # Create a blob storage container
 # Create a container named "test-container"
@@ -185,11 +195,17 @@ az storage container create \
   --auth-mode login
 ```
 
-Run the following queries in **Log Analytics**:
+- In the Azure portal, search for **Storage accounts** in the top center search bar and navigate to the storage account which resides in your resource group.
+- Click on the menu blade **Storage browser**, navigate to **Blob containers** -> **test-container** and click the **Upload**-button to upload a sample file (e.g. an image or text-file) from your local computer to generate some traffic/logs
+
+![Storage account](./images/storage_04.png)
+
+- In the Azure portal, search for **Log Analytics workspaces** in the top center search bar and navigate to the workspace which resides in your resource group.
+- Click on **Logs**, close any welcome/introduction-notifications, select **KQL mode** and run the following queries:
 
 ```kusto
 StorageBlobLogs
-| where TimeGenerated > ago(7d) and AccountName == "$STORAGEACCOUNT_NAME"
+| where TimeGenerated > ago(1d)
 | summarize requests = count() by TlsVersion
 ```
 
@@ -197,27 +213,21 @@ StorageBlobLogs
 
 ```kusto
 StorageBlobLogs
-| where TimeGenerated > ago(7d) and AccountName == "$STORAGEACCOUNT_NAME"
+| where TimeGenerated > ago(1d)
 | where TlsVersion !in ("TLS 1.2","TLS 1.3")
 | project TimeGenerated, TlsVersion, CallerIpAddress, UserAgentHeader, OperationName
 | sort by TimeGenerated desc
 ```
 
-> **Tip:** If you observe TLS 1.0/1.1 usage, upgrade client frameworks (e.g., .NET, Java, Python SDKs), avoid hardcoded protocol versions, and rely on OS defaults that negotiate TLS 1.2+ ([learn.microsoft.com](https://learn.microsoft.com/en-us/azure/storage/common/transport-layer-security-configure-minimum-version)).
+![Log Analytics](./images/log_analytics_02.png)
+
+> **Tip:** If you observe TLS 1.0/1.1 usage, upgrade client frameworks (e.g., .NET, Java, Python SDKs), avoid hardcoded protocol versions, and rely on OS defaults that negotiate TLS 1.2+ ([learn.microsoft.com](https://learn.microsoft.com/azure/storage/common/transport-layer-security-configure-minimum-version)).
 
 ## Results & acceptance criteria
 
 - ✅ Storage accounts reject HTTP requests and enforce HTTPS (secure transfer required) ([learn.microsoft.com](https://learn.microsoft.com/en-us/azure/storage/common/storage-require-secure-transfer)).
 - ✅ Policy compliance shows all storage accounts with **Minimum TLS Version = TLS 1.2** ([learn.microsoft.com](https://learn.microsoft.com/en-us/azure/storage/common/transport-layer-security-configure-minimum-version?toc=%2Fazure%2Fstorage%2Fblobs%2Ftoc.json&tabs=portal#use-azure-policy-to-audit-for-compliance)).
 - ✅ Log Analytics reports no requests using TLS 1.0/1.1 in the past 7 days (or policy denies/blocks them) ([learn.microsoft.com](https://learn.microsoft.com/en-us/azure/storage/common/transport-layer-security-configure-minimum-version?toc=%2Fazure%2Fstorage%2Fblobs%2Ftoc.json&tabs=portal#detect-the-tls-version-used-by-client-applications)).
-
-## Cleanup
-
-- Remove the policy assignment when enforcement is no longer required:
-  ```bash
-  az policy assignment delete --name enforce-storage-min-tls12 --scope /subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP
-  ```
-- Delete or disable diagnostic settings to stop streaming logs if the workspace costs are no longer justified.
 
 ## References
 

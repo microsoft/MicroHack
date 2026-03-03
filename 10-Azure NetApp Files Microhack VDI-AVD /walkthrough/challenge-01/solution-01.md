@@ -14,6 +14,7 @@ Please ensure that you successfully verified the [General prerequisits](../../Re
 1. [What's New](https://learn.microsoft.com/en-us/azure/azure-netapp-files/whats-new)
 2. [Solution and Architectures](https://learn.microsoft.com/en-us/azure/azure-netapp-files/azure-netapp-files-solution-architectures)
 3. [ANF Tools](https://azure.github.io/azure-netapp-files/)
+4. [Azure NetApp Files pricing](https://azure.microsoft.com/en-us/pricing/details/netapp/)
 
 ### **Task 2: Register for NetApp Resource Provider**
 

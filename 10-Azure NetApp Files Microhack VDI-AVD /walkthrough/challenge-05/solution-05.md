@@ -17,7 +17,7 @@ Azure NetApp Files metrics are natively integrated into Azure monitor. From with
 
 2. Click on **Metrics** 
 
-![image](./img/3-metrics-select-scope.png)
+![image](../img/3-metrics-select-scope.png)
 
 3. In “Select a scope” select **Resource** type “Capacity Pools” 
 

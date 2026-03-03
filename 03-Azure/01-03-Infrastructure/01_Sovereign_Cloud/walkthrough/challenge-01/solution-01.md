@@ -507,7 +507,7 @@ Create a file named `compliance-auditor-role.json`:
   "DataActions": [],
   "NotDataActions": [],
   "AssignableScopes": [
-    "/subscriptions/{{SUBSCRIPTION_ID}}"
+    "/subscriptions/{{SUBSCRIPTION_ID}}/resourceGroups/{{RESOURCE_GROUP}}"
   ]
 }
 ```
@@ -517,10 +517,11 @@ Create a file named `compliance-auditor-role.json`:
 ```bash
 # Replace placeholders with actual values
 sed -i "s/{{SUBSCRIPTION_ID}}/$SUBSCRIPTION_ID/g" compliance-auditor-role.json
+sed -i "s/{{RESOURCE_GROUP}}/$RESOURCE_GROUP/g" compliance-auditor-role.json
 sed -i "s/{{DISPLAY_NAME}}/$DISPLAY_PREFIX/g" compliance-auditor-role.json
 ```
 
-Or manually edit the file to replace `{{SUBSCRIPTION_ID}}` with your subscription ID and `{{DISPLAY_NAME}}` with your display prefix (e.g., "Lab User-01").
+Or manually edit the file to replace `{{SUBSCRIPTION_ID}}` with your subscription ID, `{{RESOURCE_GROUP}}` with your resource group name, and `{{DISPLAY_NAME}}` with your display prefix (e.g., "Lab User-01").
 
 ### Step 3: Create the Custom Role
 

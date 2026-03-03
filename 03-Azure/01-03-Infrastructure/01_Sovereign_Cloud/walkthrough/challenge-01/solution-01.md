@@ -303,7 +303,7 @@ For sensitive services like Azure Storage, you can require private endpoint usag
 
 ```bash
 # Search for storage account public access policies
-az policy definition list --query "[?contains(displayName, 'Storage') && contains(displayName, 'public')].{Name:displayName, ID:name}" -o table
+az policy definition list --query "[?displayName && contains(displayName, 'Storage') && contains(displayName, 'public')].{Name:displayName, ID:name}" -o table
 ```
 
 Example policy assignment to disable public network access for storage accounts:
@@ -315,7 +315,7 @@ POLICY_DISPLAY_NAME="${DISPLAY_PREFIX} - Storage accounts should disable public 
 
 az policy assignment create \
   --name "storage-disable-public-access" \
-  --display-name "Storage accounts should disable public network access" \
+  --display-name "$POLICY_DISPLAY_NAME" \
   --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP" \
   --policy "$STORAGE_PUBLIC_ACCESS_POLICY"
 ```
@@ -381,6 +381,11 @@ Create a JSON file named `sovereign-cloud-initiative.json`:
   }
 ]
 ```
+
+> [!TIP]
+> When using Cloud Shell instead of a local terminal to run Azure CLI commands, create the files locally in a text editor (Notepad or similar). Then you can upload the files to Cloud Shell by using the **Manage files -> Upload** feature before running the command in the following step:
+
+![image](./img/cloud-shell4.jpg)
 
 ### Step 2: Create the Initiative Using Azure CLI
 
@@ -507,7 +512,7 @@ Create a file named `compliance-auditor-role.json`:
   "DataActions": [],
   "NotDataActions": [],
   "AssignableScopes": [
-    "/subscriptions/{{SUBSCRIPTION_ID}}"
+    "/subscriptions/{{SUBSCRIPTION_ID}}/resourceGroups/{{RESOURCE_GROUP}}"
   ]
 }
 ```
@@ -517,10 +522,11 @@ Create a file named `compliance-auditor-role.json`:
 ```bash
 # Replace placeholders with actual values
 sed -i "s/{{SUBSCRIPTION_ID}}/$SUBSCRIPTION_ID/g" compliance-auditor-role.json
+sed -i "s/{{RESOURCE_GROUP}}/$RESOURCE_GROUP/g" compliance-auditor-role.json
 sed -i "s/{{DISPLAY_NAME}}/$DISPLAY_PREFIX/g" compliance-auditor-role.json
 ```
 
-Or manually edit the file to replace `{{SUBSCRIPTION_ID}}` with your subscription ID and `{{DISPLAY_NAME}}` with your display prefix (e.g., "Lab User-01").
+Or manually edit the file to replace `{{SUBSCRIPTION_ID}}` with your subscription ID, `{{RESOURCE_GROUP}}` with your resource group name, and `{{DISPLAY_NAME}}` with your display prefix (e.g., "Lab User-01").
 
 ### Step 3: Create the Custom Role
 
@@ -539,18 +545,18 @@ az ad group create \
 # Get the group's object ID
 COMPLIANCE_GROUP_ID=$(az ad group show --group "${GROUP_PREFIX}-Compliance-Officers" --query id -o tsv)
 
-# Assign the custom role at subscription scope
+# Assign the custom role at resource group scope
 az role assignment create \
   --assignee "$COMPLIANCE_GROUP_ID" \
   --role "${DISPLAY_PREFIX} - Sovereign Compliance Auditor" \
-  --scope "/subscriptions/$SUBSCRIPTION_ID"
+  --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP"
 ```
 
 ### Step 5: Verify the Custom Role
 
 ```bash
 # List custom roles
-az role definition list --custom-role-only true --query "[].{Name:roleName, Type:roleType}" -o table
+az role definition list -g $RESOURCE_GROUP --custom-role-only true --query "[].{Name:roleName, Type:roleType}" -o table
 
 # View detailed permissions
 az role definition list --name "${DISPLAY_PREFIX} - Sovereign Compliance Auditor" -o json
@@ -583,13 +589,13 @@ az role definition list --name "${DISPLAY_PREFIX} - Sovereign Compliance Auditor
 
 ```bash
 # Query compliance state for a specific policy
-az policy state list \
-  --filter "policyAssignmentName eq '${ATTENDEE_ID}-restrict-to-sovereign-regions'" \
-  --query "[].{Resource:resourceId, State:complianceState}" \
+az policy state list -g $RESOURCE_GROUP \
+  --filter "policyAssignmentName eq '${ATTENDEE_ID}-restrict-rg-to-sovereign-regions'" \
+  --query "[].{Resource:resourceId, State:complianceState, PolicyAssignmentName:policyAssignmentName}" \
   -o table
 
 # Get summary of non-compliant resources
-az policy state summarize \
+az policy state summarize -g $RESOURCE_GROUP \
   --filter "complianceState eq 'NonCompliant'" \
   -o json
 ```
@@ -597,10 +603,10 @@ az policy state summarize \
 ### Step 4: Identify Non-Compliant Resources
 
 ```bash
-# List all non-compliant resources
-az policy state list \
+# List all non-compliant resources (at this point we have not deployed any resources yet, so seeing no non-compliant resources is expected)
+az policy state list -g $RESOURCE_GROUP \
   --filter "complianceState eq 'NonCompliant'" \
-  --query "[].{Resource:resourceId, Policy:policyDefinitionName, Reason:complianceReasonCode}" \
+  --query "[].{Resource:resourceId, PolicyAssignmentName:policyAssignmentName, Reason:complianceReasonCode}" \
   -o table
 ```
 
@@ -667,6 +673,14 @@ az network public-ip create \
 ```
 
 Expected result: ❌ **Error** - Resource type 'Microsoft.Network/publicIPAddresses' is not allowed
+
+You may also try to create the resource using the Azure portal to see how the experience looks like. Search for "Public IP" in the center search bar at the top and fill out the required information:
+
+![Public IP creation](./img/task-9-test-pip-creation.jpg)
+
+Then press **Review + create**:
+
+![Public IP creation](./img/task-9-test-pip-creation-02.jpg)
 
 🔑 **Testing Best Practice**: Always test both positive (should succeed) and negative (should fail) cases to ensure policies work as expected.
 
@@ -759,11 +773,11 @@ POLICY_DEF_ID="/subscriptions/$SUBSCRIPTION_ID/providers/Microsoft.Authorization
 az policy assignment create \
   --name "${ATTENDEE_ID}-add-tag-with-remediation" \
   --display-name "${DISPLAY_PREFIX} - Add DataClassification Tag with Remediation" \
-  --scope "/subscriptions/$SUBSCRIPTION_ID" \
+  --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP" \
   --policy "$POLICY_DEF_ID" \
   --location "norwayeast" \
   --assign-identity \
-  --identity-scope "/subscriptions/$SUBSCRIPTION_ID" \
+  --identity-scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP" \
   --role "Contributor"
 ```
 
@@ -822,6 +836,18 @@ az policy remediation create \
 
 ---
 
+You can also find the same information in the Azure portal by navigating to **your resource group -> Settings -> Policies**:
+
+![Azure Portal policy monitoring](./img/task10-portal.jpg)
+
+Here you should see the policy assignments you have created along with their compliance state:
+
+![Azure Portal policy monitoring](./img/task10-portal-02.jpg)
+
+You can also navigate to the **Remediation** blade to see the remediation task you triggered previously:
+
+![Azure Portal policy monitoring](./img/task10-portal-03.jpg)
+
 ## Task 11: Create Policy Exemptions (Optional)
 
 💡 **Sometimes you need to exempt specific resources from policies due to legitimate business reasons.**
@@ -848,8 +874,12 @@ az policy exemption create \
 ### Step 2: List and Review Exemptions
 
 ```bash
-az policy exemption list --query "[].{Name:name, Category:exemptionCategory, Expires:expiresOn}" -o table
+az policy exemption list -g $RESOURCE_GROUP --query "[].{Name:name, Category:exemptionCategory, Expires:expiresOn}" -o table
 ```
+
+Exemption can also be managed via the Azure portal:
+
+![Azure Portal policy exemption](./img/task11-portal.jpg)
 
 ⚠️ **Warning**: Use exemptions sparingly and always document the business justification. Set expiration dates and review exemptions regularly.
 
@@ -871,7 +901,9 @@ To verify you've successfully completed this challenge, confirm the following:
 ```bash
 # List role assignments for your resource group
 az role assignment list --resource-group "$RESOURCE_GROUP" --query "[].{Principal:principalName, Role:roleDefinitionName}" -o table
+```
 
+```bash
 # Verify custom role exists
 az role definition list --name "${DISPLAY_PREFIX} - Sovereign Compliance Auditor" --query "[].roleName" -o tsv
 ```
@@ -926,6 +958,11 @@ After running these commands, the policies will still appear in the **Compliance
 > ```
 
 ---
+
+> [!TIP]
+> Policy enforcement mode can also be managed via the Azure portal if you navigate to the policy assignments and click **Edit assignment**:
+
+![Azure Portal policy enforcement mode](./img/policy-enforcement-mode.jpg)
 
 ## Key Takeaways
 

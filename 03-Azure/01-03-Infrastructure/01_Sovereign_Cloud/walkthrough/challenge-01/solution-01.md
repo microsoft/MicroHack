@@ -551,7 +551,7 @@ az role assignment create \
 
 ```bash
 # List custom roles
-az role definition list --custom-role-only true --query "[].{Name:roleName, Type:roleType}" -o table
+az role definition list -g $RESOURCE_GROUP --custom-role-only true --query "[].{Name:roleName, Type:roleType}" -o table
 
 # View detailed permissions
 az role definition list --name "${DISPLAY_PREFIX} - Sovereign Compliance Auditor" -o json
@@ -584,13 +584,13 @@ az role definition list --name "${DISPLAY_PREFIX} - Sovereign Compliance Auditor
 
 ```bash
 # Query compliance state for a specific policy
-az policy state list \
-  --filter "policyAssignmentName eq '${ATTENDEE_ID}-restrict-to-sovereign-regions'" \
-  --query "[].{Resource:resourceId, State:complianceState}" \
+az policy state list -g $RESOURCE_GROUP \
+  --filter "policyAssignmentName eq '${ATTENDEE_ID}-restrict-rg-to-sovereign-regions'" \
+  --query "[].{Resource:resourceId, State:complianceState, PolicyAssignmentName:policyAssignmentName}" \
   -o table
 
 # Get summary of non-compliant resources
-az policy state summarize \
+az policy state summarize -g $RESOURCE_GROUP \
   --filter "complianceState eq 'NonCompliant'" \
   -o json
 ```

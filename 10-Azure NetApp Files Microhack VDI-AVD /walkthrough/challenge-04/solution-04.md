@@ -1,6 +1,6 @@
-** Integrate Azure NetApp Files volume into AVD environment **
+## Integrate Azure NetApp Files volume into AVD environment 
 
-## Deploy new SMB volume, integrate with AVD Session Host and verify  
+** Deploy new SMB volume, integrate with AVD Session Host and verify ** 
 
 
 
@@ -33,22 +33,37 @@ Click **OK**
 
 1. On the left side expand **Storage service**, click on **Volumes** and **Add volume**. Enter the following
 
-Volume Name: **mySMBvol{Group Number}**
-Capacity Pool: **your existing capacity pool**
-Quota: **100**
-Max. Throughput: What throughput value did you get? Why can't you change it?
-Virtual Network: **microhack_vnet**
-Delegated subnet: **anf**
+* Volume Name: **mySMBvol{Group Number}**
+* Capacity Pool: **your existing capacity pool**
+* Quota: **100**
+* Max. Throughput: What throughput value did you get? Why can't you change it?
+* Virtual Network: **microhack_vnet**
+* Delegated subnet: **anf**
 
 Click on **Next Protocol**
-
-![image](../img/smbvolume.png)
 
 Access: Select **SMB**
 
 Click on **Review + create** and **create**
 
+### Task 3: Integration of your volume into AVD (Trainer Task)
 
+1. Click on your new volume
+2. On the left side under **Storage Service** click on **Mount instructions** to identify the UNC path of your volume
+
+The UNC path of your share needs to be entered in the AD Group Policy attribute **VHD locations** which is assigned to your OU (see AD connection) 
+
+### Task 4: Test and verify correct AVD integration of your SMB volume 
+
+1. Login to AVD using your assigned AVD user
+
+2. Goto **Settings** and select **Manage disks and volumes**
+
+3. Can you see the attached VHD disks?
+
+4. Now select **Map network drive** and mount you SMB share manually
+
+5. Can you find your home directory on the share?
 
 
 

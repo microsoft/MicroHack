@@ -36,7 +36,7 @@ Please ensure that you successfully verified the [General prerequisites](../../R
 ## Task 3: CMK for Azure Storage - Implementation Steps
 💡Let's use CMK for Azure Storage as an example to show how CMK works. The following implement CMK for an Azure Storage account using Azure CLI. The steps below outline the process to create a Key Vault, generate/import a key, create a storage account, and configure it to use the CMK.
 
-- **Data at rest** in Azure Storage (Blob/Files/Tables/Queues) is encrypted by default. With **CMK**, you replace the platform-managed key with your **own key** stored in **Key Vault** (or **Managed HSM**) which you control for lifecycle, rotation, and revocation. 
+- **Data at rest** in Azure Storage (Blob/Files/Tables/Queues) is encrypted by default. With **CMK**, you replace the platform-managed key with your **own key** stored in **Key Vault** (or **Managed HSM**) which you control for lifecycle, rotation, and revocation.
 - **Key Vault** supplies FIPS-compliant key storage, RBAC/access policies, logging, soft-delete, and purge protection. Managed HSM can be used when hardware isolation or FIPS 140-2 Level 3 compliance is required. See [Microsoft Learn — Azure Key and Certificate Management](https://learn.microsoft.com/azure/key-vault/general/overview).
 - **Sovereignty considerations:** keep keys and data in the **same sovereign region**, enforce regional scope with Azure Policy, restrict exposure using **private endpoints**, and maintain **role separation** between key custodians and storage operators. Validate the service’s CMK support list via [Microsoft Learn — Services that support CMKs in Key Vault & Managed HSM](https://learn.microsoft.com/azure/key-vault/general/key-vault-integrate-sdks).
 
@@ -66,18 +66,13 @@ LOCATION="norwayeast"  # If attending a MicroHack event, change to the location 
 > [!WARNING]
 > If your Azure Cloud Shell session times out (e.g. during a break), the variables defined above will be lost and must be re-defined before continuing. We recommend saving them in a local text file on your machine so you can quickly copy and paste them back into a new session.
 
->💥 You may need to use the following commands to look up your subscription ID and resource group:
-```bash
-az account show <------- this is to show your subscriptionID
-az group list <-------- this is to show your resourceGroups
-```
+#### 1) Create Resource Group (only if needed, for Microsoft-hosted events this is pre-provisioned)
 
-#### 1) Create Resource Group (if needed)
 ```bash
 az group create -n $RESOURCE_GROUP -l $LOCATION
 ```
 
-# Generate a short hash from RESOURCE_GROUP with random component for uniqueness
+#### Generate a short hash from RESOURCE_GROUP with random component for uniqueness
 ```bash
 HASH_SUFFIX=$(echo -n "${RESOURCE_GROUP}-${RANDOM}-${RANDOM}" | md5sum | cut -c1-8)
 ```
@@ -98,8 +93,6 @@ az keyvault create \
 
 > **Note:** Soft-delete is enabled by default. Purge protection prevents hard deletion even by administrators, supporting regulatory retention requirements. Ensure the vault resides in-region with the storage account.
 
-<img width="1190" height="748" alt="b91e7288-9ef3-4365-8646-61b3a64c3982" src="https://github.com/user-attachments/assets/258476c6-3ca0-4f6a-869d-7056626ba23a" />
-
 #### 3) Generate or Import a Key
 
 * **Option A: Generate RSA key in Key Vault**
@@ -115,9 +108,6 @@ az role assignment create \
   --assignee $CURRENT_USER_ID \
   --scope $(az keyvault show --name $KEYVAULT_NAME --resource-group $RESOURCE_GROUP --query id -o tsv)
 ```
-
-<img width="1334" height="464" alt="image" src="https://github.com/user-attachments/assets/80354359-624c-4046-8d42-52bb7995c95c" />
-
 
 ```bash
 az keyvault key create \
@@ -136,7 +126,9 @@ az keyvault key import \
   --file /path/to/key.pem
 ```
 
-> **Portal alternative:** Key Vault > Keys > Generate/Import.
+> **Portal alternative:** Key Vaults -> your key vault > Keys > Generate/Import.
+
+![image](./images/key-vault.jpg)
 
 #### 4) Create Storage Account
 
@@ -162,7 +154,11 @@ az storage account create \
 ```bash
 # Enable system-assigned managed identity (required to authenticate to Key Vault)
 az storage account update -n $STORAGEACCOUNT_NAME -g $RESOURCE_GROUP --assign-identity
+```
 
+Wait at least 20 seconds before running the next command to wait for eventual consistency in the backend (required for the managed identity principal ID to become available)
+
+```bash
 # Capture the managed identity principal ID (Bash syntax)
 STORAGEACCOUNT_PRINCIPAL_ID=$(az storage account show -n $STORAGEACCOUNT_NAME -g $RESOURCE_GROUP --query "identity.principalId"  -o tsv)
 
@@ -175,8 +171,6 @@ az role assignment create \
   --role "Key Vault Crypto Service Encryption User" \
   --scope "${KV_SCOPE}"
 ```
-<img width="1254" height="416" alt="image" src="https://github.com/user-attachments/assets/1ea4ed7a-d588-483a-9c64-2572428fab6e" />
-
 
 #### 6) Configure Storage to Use the CMK
 
@@ -184,7 +178,9 @@ az role assignment create \
 KEY_ID=$(az keyvault key show --vault-name $KEYVAULT_NAME --name cmk-storage-rsa-4096 --query "key.kid" -o tsv)
 KEY_NAME=$(basename "$(dirname "$KEY_ID")")
 KEY_VERSION=$(basename "$KEY_ID")
+```
 
+```bash
 az storage account update \
   -n $STORAGEACCOUNT_NAME \
   -g $RESOURCE_GROUP \
@@ -193,10 +189,12 @@ az storage account update \
   --encryption-key-version $KEY_VERSION \
   --encryption-key-vault https://$KEYVAULT_NAME.vault.azure.net/
 ```
- 
+
 > **Rotation tip:** Omit `--encryption-key-version` to always use the latest key version, reducing manual steps during key rotation.
 >
-> **Portal alternative:** Storage account > Encryption > Customer-managed keys > Select Key Vault key.
+> **Portal alternative:** Storage accounts -> your storrage account > Security + networking > Encryption > Customer-managed keys > Select Key Vault key.
+
+![image](./images/storage-account.jpg)
 
 ---
 
@@ -211,16 +209,12 @@ az storage account show -n $STORAGEACCOUNT_NAME -g $RESOURCE_GROUP --query "encr
 Expected values:
 - `keySource` equals `Microsoft.Keyvault`.
 - `keyVaultProperties` contains `keyName`, `keyVersion`, and the vault URI.
-<img width="1080" height="512" alt="image" src="https://github.com/user-attachments/assets/cb7f7a6c-3a5c-44bc-91fd-d8ca648aa397" />
 
 #### B) Portal Check
 
 - Navigate to **Storage account** > **Encryption**.
 - Confirm **Customer-managed key** is selected, referencing your Key Vault key.
 - Review **Encryption scopes** if granular encryption is used for multiple keys.
-
-  <img width="1311" height="456" alt="image" src="https://github.com/user-attachments/assets/6ac3c808-8775-459d-9e33-2f136cbafc1f" />
-
 
 #### C) Audit Key Usage
 
@@ -238,6 +232,10 @@ az keyvault key rotate --vault-name $KEYVAULT_NAME --name cmk-storage-rsa-4096
 - When a new key version is created, the storage account automatically uses it if no explicit `keyVersion` is set.
 - If a fixed version is configured, rerun Step 6 with the new version value.
 - Document rotation cadence and approvals for sovereign compliance.
+
+If you navigate to the key inside your Key Vault, you should now see a new version:
+
+![image](./images/key-vault-02.jpg)
 
 ---
 
@@ -273,6 +271,7 @@ az keyvault delete -n $KEYVAULT_NAME -g $RESOURCE_GROUP
 > **Note:** Evaluate legal hold, retention, and audit requirements before purging keys. With purge protection enabled, the vault persists in a recoverable state for the configured retention period.
 
 ---
+
 ## Task 4: Sovereignty & Compliance Notes
 
 - **Regional co-location:** Place Key Vault/Managed HSM and Storage in the **same sovereign region** to meet residency mandates and reduce latency.

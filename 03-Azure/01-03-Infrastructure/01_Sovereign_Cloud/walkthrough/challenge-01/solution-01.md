@@ -598,10 +598,10 @@ az policy state summarize -g $RESOURCE_GROUP \
 ### Step 4: Identify Non-Compliant Resources
 
 ```bash
-# List all non-compliant resources
-az policy state list \
+# List all non-compliant resources (at this point we have not deployed any resources yet, so seeing no non-compliant resources is expected)
+az policy state list -g $RESOURCE_GROUP \
   --filter "complianceState eq 'NonCompliant'" \
-  --query "[].{Resource:resourceId, Policy:policyDefinitionName, Reason:complianceReasonCode}" \
+  --query "[].{Resource:resourceId, PolicyAssignmentName:policyAssignmentName, Reason:complianceReasonCode}" \
   -o table
 ```
 

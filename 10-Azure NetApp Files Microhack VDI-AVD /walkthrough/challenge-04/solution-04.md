@@ -1,12 +1,12 @@
-# Walkthrough Challenge 1 - Prerequisites and Landing Zone
+# Integrate Azure NetApp Files volume into AVD environment
 
-**[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-02/solution-02.md)
+** Deploy new SMB volume, integrate with AVD Session Host and verify  
 
-Duration: 20 minutes
+
 
 ## Prerequisites
 
-Please ensure that you successfully verified the [General prerequisits](../../Readme.md#general-prerequisites) before continuing with this challenge.
+The pre-provisioned AVD setup already has a designated Hostpool for each attendee. Your Hostpool is microhack_hostpool<group number>
 
 ### **Task 1: Write down...**
 

@@ -11,7 +11,7 @@ The following procedure creates a virtual network with a resource subnet, and a 
 
 4. On the Basics tab of Create virtual network, enter, or select the following information:
 
-![image](../img/create-virtual-network-basics.png)
+![image](../img/solution-01-create-virtual-network-basics.png)
 
 
 5. Select Next to proceed to the IP Addresses tab.
@@ -42,7 +42,7 @@ The following procedure creates a virtual network with a resource subnet, and a 
 * Address range: Specify the IP address range.
 * Subnet delegation: Select Microsoft.NetApp/volumes.
 
-![image](../img/azure-netapp-files-subnet-delegation.png)
+![image](../img/solution-01-azure-netapp-files-subnet-delegation.png)
 
 Note: You can also create and delegate a subnet when you [create a volume for Azure NetApp Files.](https://learn.microsoft.com/en-us/azure/azure-netapp-files/azure-netapp-files-create-volumes)
 

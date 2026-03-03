@@ -16,7 +16,6 @@ Overview of Azure NetApp Files, including its purpose, benefits, and key feature
 ## Success criteria
 
 * Describe the key attributes of Azure NetApp Files, including:
-
 * Performance characteristics and service levels
 * Cost optimization considerations
 * Scalability and enterprise readiness

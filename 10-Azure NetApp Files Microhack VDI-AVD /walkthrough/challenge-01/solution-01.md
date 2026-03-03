@@ -1,4 +1,4 @@
-# Walkthrough Challenge 1 - Register Azure NetApp Files
+# Walkthrough Challenge 1 - Get to know and Register Azure NetApp Files
 
 **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-02/solution-02.md)
 

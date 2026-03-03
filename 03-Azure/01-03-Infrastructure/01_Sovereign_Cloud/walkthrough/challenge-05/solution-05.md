@@ -135,7 +135,7 @@ az provider register --namespace Microsoft.ContainerService
 
 ```bash
 # Create an AKS cluster
-az aks create --resource-group $RESOURCE_GROUP --name $AKS_CLUSTER_NAME --node-count 1 --location $LOCATION --generate-ssh-keys
+az aks create --resource-group $RESOURCE_GROUP --name $AKS_CLUSTER_NAME --node-count 1 --location $LOCATION --generate-ssh-keys --node-vm-size Standard_D2s_v5
 
 # Connect to the cluster
 az aks get-credentials --resource-group $RESOURCE_GROUP --name $AKS_CLUSTER_NAME

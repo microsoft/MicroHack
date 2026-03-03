@@ -669,6 +669,14 @@ az network public-ip create \
 
 Expected result: ❌ **Error** - Resource type 'Microsoft.Network/publicIPAddresses' is not allowed
 
+You may also try to create the resource using the Azure portal to see how the experience looks like. Search for "Public IP" in the center search bar at the top and fill out the required information:
+
+![Public IP creation](./img/task-9-test-pip-creation.jpg)
+
+Then press **Review + create**:
+
+![Public IP creation](./img/task-9-test-pip-creation-02.jpg)
+
 🔑 **Testing Best Practice**: Always test both positive (should succeed) and negative (should fail) cases to ensure policies work as expected.
 
 ---

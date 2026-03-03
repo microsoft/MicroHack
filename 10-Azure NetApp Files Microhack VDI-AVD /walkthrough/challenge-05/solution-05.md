@@ -1,3 +1,30 @@
+# Monitoring Azure NetApp Files
+
+### Understand throughput, latency and much more ###
+
+
+### Task 1: Configure a quick metrics dashboard
+
+1. Open your NetApp acoount
+
+2. On the left side open **Monitoring** and then click on **Metrics**
+
+3. Click on **New chart**. Now you see 2 charts in total
+
+4. On the upper chart, click on **Save to dashboard**, select **Pin to dashboard**, enter a name and hit **OK**
+
+5. Repeat the previous step on the lower chart and pin it the the same dashboard
+
+6. On the upper chart, click on **Scope**, click on your capacity pool and select both volumes. Hit **Apply** 
+
+7. Click on **Metric** and select **Write throughput**
+
+8. On the lower chart chose the same scope and select **Read Throuput** as metric
+
+9. Change to service **Dashboard Hub** and view your new dashboard
+
+
+
 # Walkthrough Challenge 5 - 
 
 **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-06/solution-06.md)

@@ -17,25 +17,32 @@ Please ensure that you successfully verified the [General prerequisits](../../Re
 
 2. If you have multiple subscriptions on your Azure account, select the one that you want to configure for Azure NetApp Files:
 
+```bash
 az account set --subscription <subscriptionId>
+```
 
 3. In the Azure Cloud Shell console, enter the following command to register the Azure Resource Provider:
 
+```bash
 az provider register --namespace Microsoft.NetApp --wait
+```
 
 The --wait parameter instructs the console to wait for the registration to complete. The registration process can take some time to complete.
 
 4. Verify that the Azure Resource Provider has been registered. To verify, enter the following command in the Azure Cloud Shell console:
 
+```bash
 az provider show --namespace Microsoft.NetApp
+```
 
 The command output appears as follows:
-
+```bash
 {
 "id": "/subscriptions/<SubID>/providers/Microsoft.NetApp",
 "namespace": "Microsoft.NetApp", 
 "registrationState": "Registered", 
 "resourceTypes": [….
+```
 
 <SubID> is your subscription ID. The state parameter value indicates Registered.
 

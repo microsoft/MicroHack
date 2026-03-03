@@ -1,22 +1,27 @@
-# Azure NetApp Files for VDI/AVD
+# Challenge 4 - Setting Up Azure NetApp Files for VDI/AVD
 
-## Objective: 
+**[Home](../Readme.md)** - [Next Challenge Solution](challenge-05.md)
+
+## Goal
+
 Explore the use cases and benefits of Azure NetApp Files for Virtual Desktop Infrastructure (VDI) and Azure Virtual Desktop (AVD). 
 
-## Topics Covered: 
+## Actions
 
-* Benefits of using Azure NetApp Files for VDI/AVD 
+* Prepare Core Infrastructure
+* Provision and Validate NFS Storage
+* Configure Active Directory & SMB for AVD
+* Deploy and Test AVD Integration
+* Performance Testing, Monitoring & Tuning
 
-* Configuration and setup for VDI/AVD environments 
+## Success criteria
+* Deploy and connect the required infrastructure components.
+* Be able to provision storage and perform basic data operations.
+* Integrate identity and user profiles with the platform.
+* Access the environment as a user and verify functionality.
+* Observe, test, and adjust performance behavior.
 
-* Performance considerations 
+## Learning resources
 
-* Introduction to FSLogix 
-
-* Snapshotting functionality for VDI/AVD environments 
-
-## Activities: 
-
-* Case Study: Review a real-world example of Azure NetApp Files in a VDI/AVD setup. 
-
-* Hands-On Lab: Participants configure Azure NetApp Files for a VDI/AVD environment, integrate FSLogix, and use snapshotting for profile management. 
+* [Storage options for FSLogix profile containers in Azure Virtual Desktop](https://learn.microsoft.com/en-us/azure/virtual-desktop/store-fslogix-profile#azure-platform-details)
+* [Store FSLogix profile containers on Azure NetApp Files](https://learn.microsoft.com/en-us/fslogix/how-to-configure-profile-container-netapp)

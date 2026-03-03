@@ -28,7 +28,7 @@ The pre-provisioned AVD setup already has a designated Hostpool for each attende
 * AES Encryption: checked
 
 Example:
-![image](img/AD.png)
+![image](../img/AD.png)
 
 
 🔑 **Key to a successful strategy....**

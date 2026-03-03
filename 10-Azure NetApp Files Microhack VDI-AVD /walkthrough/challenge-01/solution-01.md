@@ -63,11 +63,4 @@ The command output appears as follows:
 ![image](../img/solution-02-azure-netapp-files-registered-resource-providers.png)
 
 
-
-💥[**Considerations:**](https://learn.microsoft.com/en-us/azure/azure-netapp-files/azure-netapp-files-delegate-subnet)
-1. In scenarios involving high application volume counts,  consider larger subnets
-2. Once the delegated network is created, its network mask cannot be altered.
-3. In each VNet, only one subnet can be delegated to Azure NetApp Files.
-
-
-You successfully completed challenge 2! 🚀🚀🚀
+You successfully completed challenge 1! 🚀🚀🚀

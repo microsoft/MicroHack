@@ -56,26 +56,10 @@ Note: You can also create and delegate a subnet when you [create a volume for Az
 
 
 
-
-💥 **Here are the first three general steps that are typically happen:** 
-1. Everybody struggles with finding the right person....
-2. If somebody finds the plan, the first three actions...
-3. Do not sress to much we have a...
-
-🔑 **Key to a successful strategy....**
-- The key to success is not a technical consideration of....
-
-### **Task 2: Think about if...**
+[💥 **Considerations:**] (https://learn.microsoft.com/en-us/azure/azure-netapp-files/azure-netapp-files-delegate-subnet)
+1. In scenarios involving high application volume counts,  consider larger subnets
+2. Once the delegated network is created, its network mask cannot be altered.
+3. In each VNet, only one subnet can be delegated to Azure NetApp Files.
 
 
-### **Task 3: Put yourself in the position...**
-
-* [Checklist Testing for...](Link to checklist or microsoft docs)
-
-### Task 4: Who defines the requirements...
-
-
-![image](Link to image)
-
-
-You successfully completed challenge 1! 🚀🚀🚀
+You successfully completed challenge 2! 🚀🚀🚀

@@ -954,7 +954,8 @@ After running these commands, the policies will still appear in the **Compliance
 
 ---
 
-> [!TIP] Policy enforcement mode can also be managed via the Azure portal if you navigate to the policy assignments and click **Edit assignment**:
+> [!TIP]
+> Policy enforcement mode can also be managed via the Azure portal if you navigate to the policy assignments and click **Edit assignment**:
 
 ![Azure Portal policy enforcement mode](./img/policy-enforcement-mode.jpg)
 

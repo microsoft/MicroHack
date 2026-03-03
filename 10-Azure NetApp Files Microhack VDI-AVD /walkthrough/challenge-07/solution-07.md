@@ -1,6 +1,6 @@
-# Walkthrough Challenge 7 - 
+# Walkthrough Challenge 7 - Best Practices and Use Cases
 
-**[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-08/solution-08.md)
+[Previous Challenge Solution](../challenge-06/solution-06.md) - **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-08/solution-08.md)
 
 Duration: 20 minutes
 

@@ -1,6 +1,6 @@
-# Walkthrough Challenge 6 - 
+# Walkthrough Challenge 6 - Performance Optimization
 
-**[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-07/solution-07.md)
+[Previous Challenge Solution](../challenge-05/solution-05.md) - **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-07/solution-07.md)
 
 Duration: 20 minutes
 

@@ -1,6 +1,7 @@
 # Walkthrough Challenge 8 - 
 
-[Previous Challenge Solution](../challenge-07/solution-07.md) - **[Home](../../Readme.md)**
+[Previous Challenge Solution](../challenge-08/solution-08.md) - **[Home](../../Readme.md)**
+
 
 Duration: 20 minutes
 
@@ -33,5 +34,5 @@ Please ensure that you successfully verified the [General prerequisits](../../Re
 ![image](Link to image)
 
 
-You successfully completed challenge 1! 🚀🚀🚀
+You successfully completed challenge 8! 🚀🚀🚀
 

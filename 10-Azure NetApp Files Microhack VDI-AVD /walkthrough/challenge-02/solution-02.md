@@ -1,6 +1,6 @@
 # Walkthrough Challenge 2 - Setup Network Configuration
 
-**[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-03/solution-03.md)
+[Previous Challenge Solution](../challenge-01/solution-01.md) - **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-03/solution-03.md)
 
 Duration: 20 minutes
 

@@ -1,4 +1,7 @@
-# Monitoring Azure NetApp Files
+# Walkthrough Challenge 5 - Managing and Monitoring Azure NetApp Files
+
+[Previous Challenge Solution](../challenge-04/solution-04.md) - **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-06/solution-06.md)
+
 
 ### Understand throughput, latency and much more ###
 

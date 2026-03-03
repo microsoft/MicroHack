@@ -122,26 +122,28 @@ az feature show --namespace Microsoft.ContainerService --name AzureLinuxCVMPrevi
 az provider register --namespace Microsoft.ContainerService
 ```
 
+> [!WARNING]
+> For all Microsoft-hosted events, these features and providers below are already registered. Ignore any error messages due to lack of permissions.
+
 ---
 
-## Task 2: Create Resource Group and AKS Cluster
+## Task 2: Create Azure Kubernetes Service cluster
 
 💡 **Deploy the foundational AKS cluster with a standard system node pool. You'll add the Confidential VM node pool in the next task.**
 
-### Step 1: Create Resource Group and AKS Cluster
+### Step 1: Create  AKS cluster
 
 ```bash
-# Create Resource Group
-az group create \
-  --name $RESOURCE_GROUP \
-  --location $LOCATION
-
 # Create an AKS cluster
 az aks create --resource-group $RESOURCE_GROUP --name $AKS_CLUSTER_NAME --node-count 1 --location $LOCATION --generate-ssh-keys
 
 # Connect to the cluster
 az aks get-credentials --resource-group $RESOURCE_GROUP --name $AKS_CLUSTER_NAME
 ```
+
+At this point, you should see an AKS cluster in your resource group:
+
+![AKS](./images//aks.png)
 
 ---
 
@@ -154,6 +156,10 @@ az aks get-credentials --resource-group $RESOURCE_GROUP --name $AKS_CLUSTER_NAME
 ```bash
 az aks nodepool add --resource-group $RESOURCE_GROUP --cluster-name $AKS_CLUSTER_NAME --name cvmnodepool --node-count 1 --node-vm-size Standard_DC2as_v5
 ```
+
+At this point, you should see another AKS node pool in your cluster:
+
+![AKS](./images//aks-02.png)
 
 ---
 
@@ -179,12 +185,12 @@ az aks nodepool list --resource-group $RESOURCE_GROUP --cluster-name $AKS_CLUSTE
 
 ### Step 1: Deploy the Attestation Pod
 
-1. The attestation pod YAML file is located at `walkthrough/challenge-5/resources/cvm-attestation-pod.yaml` in this repository.
+1. The attestation pod YAML file is located at `walkthrough/challenge-5/resources/cvm-attestation-pod.yaml` in this repository (if using Cloud Shell, upload the file via the **Manage files** menu option).
 
-2. Apply the YAML file using the relative path from the repository root:
+2. Apply the YAML file using the file from the repository:
 
 ```bash
-kubectl apply -f walkthrough/challenge-5/resources/cvm-attestation-pod.yaml
+kubectl apply -f cvm-attestation-pod.yaml
 ```
 
 2. Check pod status:
@@ -192,6 +198,8 @@ kubectl apply -f walkthrough/challenge-5/resources/cvm-attestation-pod.yaml
 ```bash
 kubectl get pods
 ```
+
+![AKS](./images//aks-03.png)
 
 3. Get the attestation report by checking logs:
 

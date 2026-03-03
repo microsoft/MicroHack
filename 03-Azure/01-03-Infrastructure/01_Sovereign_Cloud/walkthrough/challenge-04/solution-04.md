@@ -151,16 +151,11 @@ ATTESTATION_NAME="attest${HASH_SUFFIX}"
 > [!WARNING]
 > If your Azure Cloud Shell session times out (e.g. during a break), the variables defined above will be lost and must be re-defined before continuing. We recommend saving them in a local text file on your machine so you can quickly copy and paste them back into a new session.
 
-### Step 2: Create Resource Group and Key Vault
+### Step 2: Create Key Vault
 
-Create the resource group and Key Vault with RBAC-based permissions:
+Create a Key Vault with RBAC-based permissions:
 
 ```bash
-# Create Resource Group
-az group create \
-  --name $RESOURCE_GROUP \
-  --location $LOCATION
-
 # Create Key Vault with Azure RBAC permission model
 az keyvault create \
   --name $KEYVAULT_NAME \
@@ -263,12 +258,12 @@ az network vnet subnet create \
 Create the Confidential VM with AMD SEV-SNP hardware encryption:
 
 ```bash
-# Create Confidential VM (North Europe) - No public IP
+# Create Confidential VM - No public IP
 az vm create \
   --resource-group $RESOURCE_GROUP \
   --name "vm-ubuntu-cvm" \
   --location $LOCATION \
-  --size "Standard_DC2as_v5" \
+  --size "Standard_DC2as_v6" \
   --admin-username $ADMIN_USERNAME \
   --ssh-key-value "$SSH_PUBLIC_KEY" \
   --authentication-type ssh \
@@ -288,6 +283,7 @@ az vm identity assign \
 ```
 
 💡 **Key Configuration Details**:
+
 - `--security-type "ConfidentialVM"` - Enables hardware-based confidential computing
 - `--os-disk-security-encryption-type "VMGuestStateOnly"` - Encrypts VM guest state with platform-managed keys
 - `--enable-secure-boot true` - Protects boot integrity
@@ -299,24 +295,25 @@ az vm identity assign \
 Create Azure Bastion for secure remote access:
 
 ```bash
-# Create Public IP for Bastion (North Europe)
+# Create Public IP for Bastion
 az network public-ip create \
   --resource-group $RESOURCE_GROUP \
-  --name "bastion-northeurope-ip" \
+  --name "bastion-ip" \
   --location $LOCATION \
   --sku "Standard" \
   --allocation-method "Static"
 
-# Create Azure Bastion (Basic SKU) for North Europe
+# Create Azure Bastion (Basic SKU)
+
+echo "Bastion deployment initiated (this may take 5-10 minutes)"
+
 az network bastion create \
   --resource-group $RESOURCE_GROUP \
-  --name "bastion-northeurope" \
+  --name "bastion" \
   --location $LOCATION \
   --vnet-name "vm-ubuntu-cvm-vnet" \
-  --public-ip-address "bastion-northeurope-ip" \
+  --public-ip-address "bastion-ip" \
   --sku "Basic"
-
-echo "Bastion deployment in North Europe initiated (this may take 5-10 minutes)"
 ```
 
 ⏱️ **Deployment Time**: Azure Bastion typically takes 5-10 minutes to deploy. You can proceed with reviewing the next sections while waiting.
@@ -329,10 +326,10 @@ echo "Bastion deployment in North Europe initiated (this may take 5-10 minutes)"
 
 ### Step 1: Connect via Azure Bastion
 
-> **📝 Note: These commands run ON the Linux VM itself after connecting via Bastion (not on your local machine)**
+> **📝 Note: These commands run ON the Linux VM itself after connecting via Bastion (not on your local machine or in Azure Cloud Shell)**
 
 1. Navigate to the Azure Portal
-2. Go to **Virtual Machines** > **vm-ubuntu-cvm**
+2. Go to **Virtual Machines** > **vm-ubuntu-cvm** (select the one in your resource group)
 3. Click **Connect** > **Connect via Bastion**
 4. **Authentication Type**: SSH Private Key from Azure Key Vault
 5. **Username**: `azureuser`
@@ -391,14 +388,29 @@ sudo dpkg -i azguestattestation1_1.1.2_amd64.deb
 
 ### Step 1: Build the Attestation Client
 
+Install prerequisites by running these commands:
+
+```bash
+sudo apt  install cmake
+
+sudo apt-get update -y && sudo apt-get install -y build-essential
+
+sudo apt-get install -y libcurl4-openssl-dev libjsoncpp-dev libboost-all-dev nlohmann-json3-dev jq
+```
+
+### Generate build files
+
 ```bash
 # Navigate to the sample app directory
 cd confidential-computing-cvm-guest-attestation/cvm-attestation-sample-app/
 
 # Generate build files with CMake
 cmake .
+```
 
-# Compile the application
+### Compile the application
+
+```bash
 make
 ```
 
@@ -408,7 +420,7 @@ make
 
 To use the dedicated Attestation Provider you created in Task 2 Step 4, you need to pass its URI using the `-a` argument.
 
-**Retrieve Your Attestation URI via Azure CLI**
+#### Retrieve Your Attestation URI via Azure CLI from your Azure CLI session in Cloud Shell or your local machine
 
 ```bash
 # Retrieve your attestation provider URI
@@ -417,7 +429,17 @@ ATTESTATION_URI=$(az attestation show \
   --resource-group $RESOURCE_GROUP \
   --query "attestUri" \
   -o tsv)
+echo $ATTESTATION_URI
+```
 
+Alternatively, you may also retrieve the URL from the Azure portal (navigate to your resource group and click on the Attestation provider resource):
+
+![Attestation Client - Specified Provider](./images/attestation-provider.png)
+
+#### Run attestation with your custom provider (inside the Linux VM)
+
+```bash
+ATTESTATION_URI= <insert value from previous command>
 # Run attestation with your custom provider
 sudo ./AttestationClient -a $ATTESTATION_URI -o token | jq -R 'split(".") | .[0],.[1] | @base64d | fromjson'
 ```
@@ -453,7 +475,7 @@ The JWT token contains multiple claims that cryptographically prove the VM's sec
 
 ### Production Implementation Pattern
 
-In a production scenario, your application would implement attestation checks before processing sensitive data:
+In a production scenario, your application would implement attestation checks before processing sensitive data (this is just an example for inspiration, do not run this on the Linux server):
 
 ```python
 # Pseudocode - Production attestation pattern
@@ -487,22 +509,6 @@ def process_sensitive_data(customer_data):
 4. **Multi-Party Computation**: Prove to partners that shared data is processed securely
 
 🔑 **Best Practice**: Attestation should be performed at application startup and periodically during long-running workloads to detect runtime tampering.
-
----
-
-## Task 6: Clean Up Resources
-
-💡 **Delete all resources to avoid ongoing charges.**
-
-### Delete Resource Group
-
-To delete all resources created in this challenge:
-
-```bash
-az group delete --name $RESOURCE_GROUP --yes --no-wait
-```
-
-⚠️ **Warning**: This command will permanently delete all resources in the resource group including the VM, Key Vault, Bastion, and all associated resources.
 
 ---
 

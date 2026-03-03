@@ -59,9 +59,11 @@ Azure Storage currently allows setting **Minimum TLS Version = TLS 1.0, 1.1, or 
 
 ### Azure Portal steps
 #### Require secure transfer for a new storage account
-1. Open the **Create storage account** pane in the Azure portal.
-2. In the **Advanced** page, select the **Enable secure transfer** checkbox.
-3. Create storage account blade
+1. In the top center search bar in the Azure portal, search for **Storage accounts**
+1. Click on **Create**
+1. Select your own resource group, provide a unique name for the **Storage account name** and select "**Azure Blob Storage or Azure Data Lake Storage Gen2** for the **Preferred storage type** parameter
+1. Click next and in the **Advanced** page, select the **Require secure transfer for REST API operations** checkbox if not already enabled.
+1. Leave the rest of the parameters as-is and click **Review + create**
 
 ![desc](./images/storage_01.png)
 
@@ -86,12 +88,13 @@ Goal: ensure all storage accounts enforce **Minimum TLS Version = TLS 1.2**.
 
 ### Azure Portal steps
 
-1. Open **Azure Policy** in the Portal.
+1. In the Azure Portal, navigate to **Policy**
 2. Select **Definitions**, search for **"Storage accounts should have the specified minimum TLS version"** (Policy ID `fe83a0eb-a853-422d-aac2-1bffd182c5d0`).
 3. Choose **Assign**.
-4. Set **Scope** to the subscription or resource group.
-5. Under **Parameters**, set **Minimum TLS version** to `TLS 1.2` and (optionally) effect to `Deny`.
-6. Complete **Review + Create**, then select **Create**.
+4. Set **Scope** to the subscription and your **Labuser-xxx** resource group.
+5. Uncheck the box: **Only show parameters that need input or review**
+6. Under **Parameters**, set **Minimum TLS version** to `TLS 1.2` and (optionally) effect to `Deny`.
+7. Complete **Review + Create**, then select **Create**.
 
 ![Azure Policy](./images/policy_01.png)
 
@@ -186,6 +189,8 @@ az role assignment create \
 
 #### Create a Container
 
+Use the Azure Portal to create a new container or use CLI below
+
 ```bash
 # Create a blob storage container
 # Create a container named "test-container"
@@ -220,6 +225,8 @@ StorageBlobLogs
 ```
 
 ![Log Analytics](./images/log_analytics_02.png)
+
+Look for TLS 1.0/1.1 usage.
 
 > **Tip:** If you observe TLS 1.0/1.1 usage, upgrade client frameworks (e.g., .NET, Java, Python SDKs), avoid hardcoded protocol versions, and rely on OS defaults that negotiate TLS 1.2+ ([learn.microsoft.com](https://learn.microsoft.com/azure/storage/common/transport-layer-security-configure-minimum-version)).
 

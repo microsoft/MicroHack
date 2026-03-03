@@ -79,7 +79,7 @@ Please ensure that you successfully verified the [General prerequisits](../../Re
 
 2. Select + Add volume to create a volume.
 
-![image](../img/solution-3-add-volume.png)
+![image](../img/solution-03-add-volume.png)
 
 3. In the Create a Volume window, provide information for the volume:
    
@@ -104,35 +104,4 @@ Please ensure that you successfully verified the [General prerequisits](../../Re
 ![image](../img/solution-03-creted-volume-overview.png)
 
 
-
-
-
-
-
-
-
-
-💡 The first....
-
-💥 **Here are the first three general steps that are typically happen:** 
-1. Everybody struggles with finding the right person....
-2. If somebody finds the plan, the first three actions...
-3. Do not sress to much we have a...
-
-🔑 **Key to a successful strategy....**
-- The key to success is not a technical consideration of....
-
-
-
-
-
-
-* [Checklist Testing for...](Link to checklist or microsoft docs)
-
-
-
-
-![image](Link to image)
-
-
-You successfully completed challenge 1! 🚀🚀🚀
+You successfully completed challenge 3! 🚀🚀🚀

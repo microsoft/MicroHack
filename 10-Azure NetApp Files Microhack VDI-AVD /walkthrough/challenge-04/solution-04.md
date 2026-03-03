@@ -1,4 +1,4 @@
-# Integrate Azure NetApp Files volume into AVD environment
+** Integrate Azure NetApp Files volume into AVD environment **
 
 ## Deploy new SMB volume, integrate with AVD Session Host and verify  
 
@@ -12,23 +12,46 @@ The pre-provisioned AVD setup already has a designated Hostpool for each attende
 
 1. Log in to the [Azure portal](https://portal.azure.com/#home) 
 
-2. Pick Azure NetApp Fils service 
+2. Pick Azure NetApp Files service 
 
 3. From the Azure NetApp Files management sidebar, select your NetApp account, e.g. myaccount1
 
-4. One the left side expand "Azure Netapp Files" and click on "Active Directory connections"
+4. One the left side expand **Azure Netapp Files** and click on **Active Directory connections**
 
-5. Click "Join" and enter the following values (leave all other fields blak)
+5. Click **Join** and enter the following values (leave all other fields blank)
 
-* Primary DNS: 10.100.0.4
-* AD DNS Domain Name: microhack.test
-* AD Site Name: Default-First-Site-Name
-* SMB Serve: MH
-* Organizational Unit Path: OU=Hostpool{Group Number}
-* AES Encryption: checked
+* Primary DNS: **10.100.0.4**
+* AD DNS Domain Name: **microhack.test**
+* AD Site Name: **Default-First-Site-Name**
+* SMB Serve: **MH**
+* Organizational Unit Path: **OU=Hostpool{Group Number}**
+* AES Encryption: **checked**
 
-Example:
-![image](../img/AD.png)
+Click **OK**
+
+### Task 2: Create a new SMB volume
+
+1. On the left side expand **Storage service**, click on **Volumes** and **Add volume**. Enter the following
+
+Volume Name: **mySMBvol{Group Number}**
+Capacity Pool: **your existing capacity pool**
+Quota: **100**
+Max. Throughput: What throughput value did you get? Why can't you change it?
+Virtual Network: **microhack_vnet**
+Delegated subnet: **anf**
+
+Click on **Next Protocol**
+
+![image](../smbvolume.png)
+
+Access: Select **SMB**
+
+Click on **Review + create** and **create**
+
+
+
+
+
 
 
 🔑 **Key to a successful strategy....**

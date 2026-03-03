@@ -9,7 +9,8 @@ Design an effective network architecture for your workloads to benefit from the 
 ## Actions
 
 * Design considerations for Azure NetApp Files network planning
-* Review basic requirements and networking options 
+* Review basic requirements and networking options
+* Setup vNet and delegated subnet 
 
 ## Success criteria
 

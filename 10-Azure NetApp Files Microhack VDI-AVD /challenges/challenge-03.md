@@ -8,11 +8,13 @@ Set up and configure Azure NetApp Files.
 
 ## Actions
 
-* Creating NetApp accounts 
-* Setting up capacity pools
-* Creating and managing volumes
-* Provision and Validate NFS Storage
-* Deploy a Virtual Instance and mount Azure NetApp Files
+* Create a NetApp accounts in Azure NetApp Files
+* Setting up Capacity Pools
+* Create a volume with NFSv3
+* Deploy a Virtual Instance and mount a volume
+* Write test data to a volume (Download larger data amount)  
+* Create Snapshot 
+* Restore from Snapshot 
 
 ## Success criteria
 

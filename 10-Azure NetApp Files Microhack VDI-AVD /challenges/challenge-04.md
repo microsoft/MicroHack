@@ -8,11 +8,9 @@ Explore the use cases and benefits of Azure NetApp Files for Virtual Desktop Inf
 
 ## Actions
 
-* Prepare Core Infrastructure
-* Configure Active Directory
+* Configure Active Directory connection for Azure NetApp Files
 * Create SMB volume for AVD environment
 * Deploy and Test AVD Integration
-* Performance Testing, Monitoring & Tuning
 
 ## Success criteria
 * Deploy and connect the required infrastructure components.

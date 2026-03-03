@@ -1,32 +1,25 @@
-# Introduction to Azure NetApp Files 
+# Challenge 1 - Introduction to Azure NetApp Files
 
- 
+**[Home](../Readme.md)** - [Next Challenge Solution](challenge-02.md)
 
-## Objective: 
-Provide an overview of Azure NetApp Files, including its purpose, benefits, and key features. 
+## Goal 
 
- 
+Overview of Azure NetApp Files, including its purpose, benefits, and key features. 
 
-## Topics Covered: 
+## Actions
 
 * Azure NetApp Files overview 
-
 * Key attributes: performance, cost optimization, and scale 
-
 * Supported protocols: SMB, NFS, and dual protocol 
+* Use cases: File sharing, ome directories, databases, high-performance computing 
 
-* Use cases: file sharing, home directories, databases, high-performance computing 
+## Success criteria
 
-# Activities: 
+* Describe the key attributes of Azure NetApp Files, including:
 
-* Presentation: Introduce Azure NetApp Files with slides and discuss its importance. 
+* Performance characteristics and service levels
+* Cost optimization considerations
+* Scalability and enterprise readiness
 
-* Discussion: Engage participants in a discussion about their current file storage solutions and how Azure NetApp Files might improve them. 
-
-# Materials: 
-
-* Slide deck on Azure NetApp Files overview 
-
-* Presentation on key features and benefits 
-
-* Microsoft Learn: [Azure NetApp Files documentation](https://learn.microsoft.com/en-us/azure/azure-netapp-files/)
+## Learning resources
+* [Azure NetApp Files documentation](https://learn.microsoft.com/en-us/azure/azure-netapp-files/)

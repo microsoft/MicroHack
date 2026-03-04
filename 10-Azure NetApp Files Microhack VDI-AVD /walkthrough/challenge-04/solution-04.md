@@ -38,6 +38,8 @@ The pre-provisioned AVD setup already has a designated Hostpool for each attende
 
 1. On the left side expand **Storage service**, click on **Volumes** and **Add volume**. Enter the following
 
+![image](../img/solution-04-add-volume.png)
+
 * Volume Name: **mySMBvol{Group Number}**
 * Capacity Pool: **your existing capacity pool**
 * Quota: **100**
@@ -45,7 +47,11 @@ The pre-provisioned AVD setup already has a designated Hostpool for each attende
 * Virtual Network: **microhack_vnet**
 * Delegated subnet: **anf**
 
+![image](../img/solution-04-smb-vol-create.png)
+
 Click on **Next Protocol**
+
+![image](../img/solution-04-smb-protocol.png)
 
 Access: Select **SMB**
 

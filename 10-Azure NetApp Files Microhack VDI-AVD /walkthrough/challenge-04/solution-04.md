@@ -4,7 +4,8 @@
 
 
 # Prerequisites
-The pre-provisioned AVD setup already has a designated Hostpool for each attendee. Your Hostpool is microhack_hostpool{Group Number}
+The pre-provisioned AVD setup already has a designated Hostpool for each attendee. 
+Your Hostpool is microhack_hostpool{Group Number}
 
 ### Task 1: Configure AD connection in NetApp account
 

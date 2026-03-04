@@ -1,4 +1,4 @@
-# Walkthrough Challenge 6 - Performance Optimization
+# Walkthrough Challenge 6 - Azure NetApp Files Backup
 
 [Previous Challenge Solution](../challenge-05/solution-05.md) - **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-07/solution-07.md)
 
@@ -33,29 +33,4 @@ Please ensure that you successfully verified the [General prerequisits](../../Re
 ![image](Link to image)
 
 
-You successfully completed challenge 1! 🚀🚀🚀
-
-
-
-
-
-
-
-
-# Challenge: 
-
-## Adjusting Performance Levels: 
-
-Azure Portal: 
-
-* Go to the Azure portal, navigate to your NetApp account, and select your AVD volume 
-
-* Click on “resize” and copy the value of “available quota” to “quota”  
-
-* Save your change 
-
-* Check updated value of  “maximum throughput” in your ANF volume.  
-
-* Log in again to your AVD environment. How long did it take compared to your previous attempt?
-
-* Go back to Azure Monitor. How many MB/sec did the volume deliver?
+You successfully completed challenge 6! 🚀🚀🚀

@@ -85,13 +85,55 @@ Choose the appropriate deployment script:
 ### Step 3: Wait for Deployment
 Deployments can take 2-6 hours depending on the environment. Monitor progress in:
 - Azure Portal > Resource Groups > Deployments
-- The deployment script output
 
-### Step 4: Access the Environment
+### Step 4: Configure the Environment
+
+VM image:
+1. In the Azure Portal, navigate to your **Azure Local** instance
+2. Select **VM images** in the left menu
+3. Click **+ Add VM Image -> From Azure Marketplace** to start the VM image creation wizard
+![Create VM image](./img/add_vm_image_win_01.jpg)
+4. For the **Image to download** parameter, select **Windows Server 2025: Azure edition - Gen2**
+![Create VM image](./img/add_vm_image_win_02.jpg)
+5. Select **Review + create** and wait for the deployment to finish (on LocalBox, this takes approximately 2,5 hours due to use of nested VMs and a virtual router VM).
+
+Logical network:
+1. In the Azure Portal, navigate to your **Azure Local** instance
+2. Select **Logical network** in the left menu
+3. Click **+ Create logical network** to start the creation wizard
+![Create logical network](./img/add_logical_network_01.jpg)
+4. For the **Logical network name** parameter, enter **localbox-vm-lnet-vlan200** and click **Next: Network Configuration**:
+![Create logical network](./img/add_logical_network_02.jpg)
+5. Enter the following parameter values:
+- **IPv4 address space**: 192.168.200.0 /24 (256 addresses)
+- **IP Pools**: 192.168.200.0 - 192.168.200.255
+- **Default gateway**: 192.168.200.1
+- **DNS Servers**: 192.168.1.254
+- **VLAN ID**: 200
+![Create logical network](./img/add_logical_network_03.jpg)
+6. Select **Review + create** and wait for the deployment to finish
+
+Role assignments:
+1. In the Azure Portal, navigate to your resource group where LocalBox is deployed (e.g. rg-localbox)
+2. Select **Access control (IAM)** in the left menu
+3. Click **+ Add -> Add role assignment** to start the role assignment wizard
+![Create role assignment](./img/add_rbac_01.jpg)
+4. Select the **Reader** role and click **Next**
+![Create role assignment](./img/add_rbac_02.jpg)
+5. Click **+ Select members** to add the **LabUsers** Entra ID group
+![Create role assignment](./img/add_rbac_03.jpg)
+6. Click **Next**
+7. For **Assignment type**, select **Active** and click **Review + assign**
+![Create role assignment](./img/add_rbac_04.jpg)
+8. Repeat steps 1-7 to add a role assignment for the **Azure Stack HCI VM Contributor** role
+![Create role assignment](./img/add_rbac_05.jpg)
+8. Repeat steps 1-7 to add a role assignment for the **Reader** role and **User Access Administrator** role for the resource group where **ArcBox** is deployed (e.g. rg-arcbox)
+- For the **User Access Administrator** role, select **Allow user to assign all roles except privileged administrator roles Owner, UAA, RBAC (Recommended)** on the **Conditions** tab:
+![Create role assignment](./img/add_rbac_06.jpg)
+
+### Step 5: Test the Environment
 Once deployed:
-- Use Azure Bastion to connect to the Client VM
-- All Arc resources will be visible in the Azure Portal
-- Follow Challenge 6 walkthrough for lab exercises
+- Follow Challenge 6 walkthrough for lab exercises verification
 
 ## Notes
 

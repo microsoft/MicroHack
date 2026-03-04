@@ -1,20 +1,40 @@
-# Challenge 3 - Encryption in transit: enforcing TLS
+# Walkthrough Challenge 3 - Encryption in transit: enforcing TLS
 
 [Previous Challenge Solution](../challenge-02/solution-02.md) - **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-04/solution-04.md)
 
 **Estimated Duration:** 30 minutes
 
-> 💡**Objective:**
-- Understand encryption in transit considerations for sovereign scenarios
-- Configure Azure Storage accounts to require secure transfer (HTTPS only) and enforce TLS 1.2 as the minimum protocol version.
-- Apply Azure Policy to block weaker TLS versions and monitor client protocol usage through Log Analytics.
+> 💡 **Objective:** Understand encryption in transit considerations for sovereign scenarios. Configure Azure Storage accounts to require secure transfer (HTTPS only) and enforce TLS 1.2 as the minimum protocol version. Apply Azure Policy to block weaker TLS versions and monitor client protocol usage through Log Analytics.
 
 ## Prerequisites
 
-- Azure subscription with permissions to manage Storage accounts and assign Azure Policy (Contributor or higher).
-- Existing StorageV2 account with Blob service enabled and access via the Azure Portal.
-- Azure CLI 2.54 or later and Azure PowerShell Az module 10.0.0 or later installed locally.
-- Log Analytics workspace (or rights to create one) for collecting Storage diagnostic logs.
+Please ensure that you successfully verified the [General prerequisites](../../Readme.md#general-prerequisites) before continuing with this challenge.
+
+- Azure subscription with Contributor permissions on your resource group
+- Azure CLI >= 2.54 or access to Azure Portal
+- Existing StorageV2 account with Blob service enabled (created in Challenge 2)
+- Log Analytics workspace (or permissions to create one) for collecting Storage diagnostic logs
+
+> [!IMPORTANT]
+> The Azure CLI commands in this walkthrough use **bash** syntax and will not work directly in PowerShell. Use **Azure Cloud Shell (Bash)** for the best experience. If running locally on Windows, use **WSL2** (Windows Subsystem for Linux) to run a bash shell. You can install the Azure CLI inside WSL with:
+>
+> ```bash
+> curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+> ```
+
+Set up the common variables that will be used in the CLI alternatives throughout this challenge:
+
+```bash
+# Set common variables
+# Customize RESOURCE_GROUP for each participant
+RESOURCE_GROUP="labuser-xx"  # Change this for each participant (e.g., labuser-01, labuser-02, ...)
+SUBSCRIPTION_ID="xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx"  # Replace with your subscription ID
+LOCATION="norwayeast"  # If attending a MicroHack event, change to the location provided by your local MicroHack organizers
+STORAGEACCOUNT_NAME="yourStorageAccountName"  # Replace with the name of your storage account from Challenge 2
+```
+
+> [!WARNING]
+> If your Azure Cloud Shell session times out (e.g. during a break), the variables defined above will be lost and must be re-defined before continuing. We recommend saving them in a local text file on your machine so you can quickly copy and paste them back into a new session.
 
 ## Task 1: Understand Encryption in transit
 
@@ -33,25 +53,26 @@ Azure Storage currently allows setting **Minimum TLS Version = TLS 1.0, 1.1, or 
 
 ## Task 3: Hands-on: Azure Blob Storage - require secure transfer (HTTPS only) in Azure Portal
 
-### Prerequisites:
-- StorageV2 account with Blob service enabled in the target subscription.
+### Task prerequisites
+- StorageV2 account with Blob service enabled in the target subscription (created in Challenge 2).
 - Contributor permissions on the resource group hosting the account.
 
 ### Azure Portal steps
 #### Require secure transfer for a new storage account
-1. Open the **Create storage account** pane in the Azure portal.
-2. In the **Advanced** page, select the **Enable secure transfer** checkbox.
-3. Create storage account blade
-<img width="900" height="573" alt="image" src="https://github.com/user-attachments/assets/fd48ddb5-1e49-4d4b-87a8-d773d0679abb" />
+1. In the top center search bar in the Azure portal, search for **Storage accounts**
+1. Click on **Create**
+1. Select your own resource group, provide a unique name for the **Storage account name** and select "**Azure Blob Storage or Azure Data Lake Storage Gen2** for the **Preferred storage type** parameter
+1. Click next and in the **Advanced** page, select the **Require secure transfer for REST API operations** checkbox if not already enabled.
+1. Leave the rest of the parameters as-is and click **Review + create**
 
-
+![desc](./images/storage_01.png)
 
 #### Require secure transfer for an existing storage account
 1. Select an existing storage account in the Azure portal.
 2. In the storage account menu pane, under **Settings**, select **Configuration**.
 3. Under **Secure transfer required**, select **Enabled**.
-<img width="1462" height="738" alt="8986c5e2-4783-4475-8fbf-97532b9ed2e9" src="https://github.com/user-attachments/assets/76813943-4533-43b0-a380-ec302bfae00d" />
 
+![desc](./images/storage_01.png)
 
 ### CLI alternative
 ```bash
@@ -67,14 +88,15 @@ Goal: ensure all storage accounts enforce **Minimum TLS Version = TLS 1.2**.
 
 ### Azure Portal steps
 
-1. Open **Azure Policy** in the Portal.
+1. In the Azure Portal, navigate to **Policy**
 2. Select **Definitions**, search for **"Storage accounts should have the specified minimum TLS version"** (Policy ID `fe83a0eb-a853-422d-aac2-1bffd182c5d0`).
 3. Choose **Assign**.
-4. Set **Scope** to the subscription or resource group.
-5. Under **Parameters**, set **Minimum TLS version** to `TLS 1.2` and (optionally) effect to `Deny`.
-6. Complete **Review + Create**, then select **Create**.
-<img width="900" height="380" alt="image" src="https://github.com/user-attachments/assets/639f9f53-e9b5-40f6-9970-dc0de34e1109" />
+4. Set **Scope** to your **Labuser-xxx** resource group. **Do NOT select the subscription** — assigning at subscription scope will affect all other participants.
+5. Uncheck the box: **Only show parameters that need input or review**
+6. Under **Parameters**, set **Minimum TLS version** to `TLS 1.2` and (optionally) effect to `Deny`.
+7. Complete **Review + Create**, then select **Create**.
 
+![Azure Policy](./images/policy_01.png)
 
 ### CLI alternative
 
@@ -95,24 +117,32 @@ az policy assignment create \
 
 ### Create Log Analytics workspace and Diagnostic settings to capture logs
 
+### CLI
+
 ```bash
 # Create Log Analytics workspace
 LOG_ANALYTICS_WORKSPACE=law-$RESOURCE_GROUP
 az monitor log-analytics workspace create --resource-group $RESOURCE_GROUP \
        --workspace-name $LOG_ANALYTICS_WORKSPACE
+```
 
+```bash
 # Get the storage account resource ID
 STORAGE_ACCOUNT_ID=$(az storage account show \
   --name $STORAGEACCOUNT_NAME \
   --resource-group $RESOURCE_GROUP \
   --query id --output tsv)
+```
 
+```bash
 # Get the Log Analytics workspace resource ID
 LOG_ANALYTICS_WORKSPACE_ID=$(az monitor log-analytics workspace show \
   --resource-group $RESOURCE_GROUP \
   --workspace-name $LOG_ANALYTICS_WORKSPACE \
   --query id --output tsv)
+```
 
+```bash
 # Create diagnostic setting for blob service with StorageRead and StorageWrite categories
 az monitor diagnostic-settings create \
   --name blob-tls-insights \
@@ -130,6 +160,7 @@ az monitor diagnostic-settings create \
   ]'
 ```
 
+### Azure Portal steps
 
 1. Open the storage account and go to **Monitoring > Diagnostic settings**.
 2. Select **+ Add diagnostic setting**.
@@ -137,12 +168,13 @@ az monitor diagnostic-settings create \
 4. Check **Blob** under **Logs**.
 5. Choose **Send to Log Analytics workspace** and select an existing workspace (or create one beforehand).
 6. Save the diagnostic setting.
-<img width="1091" height="621" alt="image" src="https://github.com/user-attachments/assets/b70f33a2-2ca6-47a7-bf22-f43e03effe8d" />
 
+![Diagnostic settings](./images/storage_03.png)
 
 ### Create a Container and perform a blob upload and download
 
 #### Grant access to the current user id to the Blob storage service
+
 ```bash
 # Get your current user's object ID
 CURRENT_USER_ID=$(az ad signed-in-user show --query id --output tsv)
@@ -156,6 +188,9 @@ az role assignment create \
 ```
 
 #### Create a Container
+
+Use the Azure Portal to create a new container or use CLI below
+
 ```bash
 # Create a blob storage container
 # Create a container named "test-container"
@@ -165,38 +200,41 @@ az storage container create \
   --auth-mode login
 ```
 
-Run the following queries in **Log Analytics**:
+- In the Azure portal, search for **Storage accounts** in the top center search bar and navigate to the storage account which resides in your resource group.
+- Click on the menu blade **Storage browser**, navigate to **Blob containers** -> **test-container** and click the **Upload**-button to upload a sample file (e.g. an image or text-file) from your local computer to generate some traffic/logs
+
+![Storage account](./images/storage_04.png)
+
+- In the Azure portal, search for **Log Analytics workspaces** in the top center search bar and navigate to the workspace which resides in your resource group.
+- Click on **Logs**, close any welcome/introduction-notifications, select **KQL mode** and run the following queries:
 
 ```kusto
 StorageBlobLogs
-| where TimeGenerated > ago(7d) and AccountName == "$STORAGEACCOUNT_NAME"
+| where TimeGenerated > ago(1d)
 | summarize requests = count() by TlsVersion
 ```
-<img width="900" height="424" alt="image" src="https://github.com/user-attachments/assets/06f1c3ce-17f1-408b-b345-7278329cb125" />
+
+![Log Analytics](./images/log_analytics_01.png)
 
 ```kusto
 StorageBlobLogs
-| where TimeGenerated > ago(7d) and AccountName == "$STORAGEACCOUNT_NAME"
+| where TimeGenerated > ago(1d)
 | where TlsVersion !in ("TLS 1.2","TLS 1.3")
 | project TimeGenerated, TlsVersion, CallerIpAddress, UserAgentHeader, OperationName
 | sort by TimeGenerated desc
 ```
 
-> **Tip:** If you observe TLS 1.0/1.1 usage, upgrade client frameworks (e.g., .NET, Java, Python SDKs), avoid hardcoded protocol versions, and rely on OS defaults that negotiate TLS 1.2+ ([learn.microsoft.com](https://learn.microsoft.com/en-us/azure/storage/common/transport-layer-security-configure-minimum-version)).
+![Log Analytics](./images/log_analytics_02.png)
+
+Look for TLS 1.0/1.1 usage.
+
+> **Tip:** If you observe TLS 1.0/1.1 usage, upgrade client frameworks (e.g., .NET, Java, Python SDKs), avoid hardcoded protocol versions, and rely on OS defaults that negotiate TLS 1.2+ ([learn.microsoft.com](https://learn.microsoft.com/azure/storage/common/transport-layer-security-configure-minimum-version)).
 
 ## Results & acceptance criteria
 
 - ✅ Storage accounts reject HTTP requests and enforce HTTPS (secure transfer required) ([learn.microsoft.com](https://learn.microsoft.com/en-us/azure/storage/common/storage-require-secure-transfer)).
 - ✅ Policy compliance shows all storage accounts with **Minimum TLS Version = TLS 1.2** ([learn.microsoft.com](https://learn.microsoft.com/en-us/azure/storage/common/transport-layer-security-configure-minimum-version?toc=%2Fazure%2Fstorage%2Fblobs%2Ftoc.json&tabs=portal#use-azure-policy-to-audit-for-compliance)).
 - ✅ Log Analytics reports no requests using TLS 1.0/1.1 in the past 7 days (or policy denies/blocks them) ([learn.microsoft.com](https://learn.microsoft.com/en-us/azure/storage/common/transport-layer-security-configure-minimum-version?toc=%2Fazure%2Fstorage%2Fblobs%2Ftoc.json&tabs=portal#detect-the-tls-version-used-by-client-applications)).
-
-## Cleanup
-
-- Remove the policy assignment when enforcement is no longer required:
-  ```bash
-  az policy assignment delete --name enforce-storage-min-tls12 --scope /subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP
-  ```
-- Delete or disable diagnostic settings to stop streaming logs if the workspace costs are no longer justified.
 
 ## References
 
@@ -208,6 +246,6 @@ StorageBlobLogs
 
 ---
 
-You successsfully completed challenge 3! 🚀🚀🚀
+You successfully completed challenge 3! 🚀🚀🚀
 
  **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-04/solution-04.md)

@@ -1,6 +1,6 @@
 # Challenge 2 - Encryption at Rest with Customer-Managed Keys (CMKs) in Azure Key Vault
 
-[Previous Challenge Solution](challenge-01.md) - **[Home](../Readme.md)** - [Next Challenge Solution](challenge-03.md)
+[Previous Challenge](challenge-01.md) - **[Home](../Readme.md)** - [Next Challenge](challenge-03.md)
 
 ## Goal
 
@@ -15,16 +15,27 @@ Understand Customer-Managed Keys in Azure Key Vault. Configure an Azure Storage 
 ## Success criteria
 
 * You have deployed Azure Key Vault
-* You successfully  implement CMK for an Azure Storage account using Azure CLI. 
-* You have successfully verify encryption settings
+* You successfully implement CMK for an Azure Storage account using Azure CLI.
+* You have successfully verified encryption settings
 
 ## Learning resources
 
-* [Customer-managed keys for Azure Storage encryption](https://learn.microsoft.com/en-us/azure/storage/common/customer-managed-keys-overview)
-* [About Azure Key Vault](https://learn.microsoft.com/en-us/azure/key-vault/general/overview)
-* [Azure Key Vault keys, secrets, and certificates overview](https://learn.microsoft.com/en-us/azure/key-vault/general/about-keys-secrets-certificates)
-* [Azure Key Vault basic concepts](https://learn.microsoft.com/en-us/azure/key-vault/general/basic-concepts)
-* [What is Azure Key Vault Managed HSM?](https://learn.microsoft.com/en-us/azure/key-vault/managed-hsm/overview)
+* [Customer-managed keys for Azure Storage encryption](https://learn.microsoft.com/azure/storage/common/customer-managed-keys-overview)
+* [About Azure Key Vault](https://learn.microsoft.com/azure/key-vault/general/overview)
+* [Azure Key Vault keys, secrets, and certificates overview](https://learn.microsoft.com/azure/key-vault/general/about-keys-secrets-certificates)
+* [Azure Key Vault basic concepts](https://learn.microsoft.com/azure/key-vault/general/basic-concepts)
+* [What is Azure Key Vault Managed HSM?](https://learn.microsoft.com/azure/key-vault/managed-hsm/overview)
 * [Azure Key & Certificate Management](https://learn.microsoft.com/azure/key-vault/general/overview)
 * [Services that support CMKs with Key Vault & Managed HSM](https://learn.microsoft.com/azure/key-vault/general/key-vault-integrate-sdks)
 
+## Solution
+
+> [!TIP]
+> We encourage you to try solving the challenge on your own before looking at the solution. This will help you learn and understand the concepts better.
+
+<details>
+<summary>Click here to view the solution</summary>
+
+[Solution for Challenge 2](../walkthrough/challenge-02/solution-02.md)
+
+</details>

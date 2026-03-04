@@ -34,10 +34,10 @@
     ArcBox flavor to deploy: ITPro, DevOps, DataOps (default: ITPro)
 
 .EXAMPLE
-    .\deploy-arcbox.ps1 -ResourceGroupName "rg-arcbox-shared" -Location "swedencentral"
+    .\deploy-arcbox.ps1 -ResourceGroupName "rg-arcbox" -Location "swedencentral"
 
 .EXAMPLE
-    .\deploy-arcbox.ps1 -ResourceGroupName "rg-arcbox-shared" -Location "westeurope" -DeployBastion $false
+    .\deploy-arcbox.ps1 -ResourceGroupName "rg-arcbox" -Location "westeurope"
 
 .NOTES
     Author: MicroHack Team
@@ -68,7 +68,7 @@ param(
     [string]$WindowsAdminUsername = "arcdemo",
 
     [Parameter(Mandatory = $false)]
-    [bool]$DeployBastion = $true,
+    [bool]$DeployBastion = $false,
 
     [Parameter(Mandatory = $false)]
     [ValidateSet("ITPro", "DevOps", "DataOps")]

@@ -2,11 +2,12 @@
 
 [Previous Challenge Solution](../challenge-05/solution-05.md) - **[Home](../../Readme.md)**
 
-Duration: 60-90 minutes
+**Estimated Duration:** 60-90 minutes
 
-💡 **In this challenge, you will operate a sovereign hybrid cloud environment combining Azure Local and Azure Arc. You'll learn how to apply consistent governance, security, and management across on-premises sovereign infrastructure and Azure.**
+> 💡 **Objective:** Operate a sovereign hybrid cloud environment combining Azure Local and Azure Arc. You'll learn how to apply consistent governance, security, and management across on-premises sovereign infrastructure and Azure.
 
 This challenge uses the Azure Arc Jumpstart environments:
+
 - **ArcBox for IT Pros** - Provides Arc-enabled servers in a sandbox environment
 - **LocalBox** - Simulates an Azure Local on-premises environment
 
@@ -14,15 +15,15 @@ This challenge uses the Azure Arc Jumpstart environments:
 
 ## Prerequisites
 
-Please ensure that you successfully verified the [General prerequisites](../../README.md#general-prerequisites) before continuing with this challenge.
+Please ensure that you successfully verified the [General prerequisites](../../Readme.md#general-prerequisites) before continuing with this challenge.
 
 **Additional requirements for this challenge:**
+
 - Access to a pre-deployed ArcBox/LocalBox environment (shared lab or individual deployment)
-- Azure CLI installed and logged in (`az login`)
-- Contributor or Owner permissions on the resource group containing the hybrid resources
+- **Reader** and **Azure Stack HCI VM Contributor** role permissions on the resource group containing the hybrid resources
 
 > [!NOTE]
-> ArcBox and LocalBox are typically deployed by the workshop facilitator due to resource requirements and deployment time. If deploying yourself, see the [LocalBox deployment guide](https://jumpstart.azure.com/azure_jumpstart_localbox).
+> ArcBox and LocalBox are typically deployed by the workshop facilitator due to resource requirements and deployment time. If deploying yourself, see the [ArcBox and LocalBox deployment guide](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/resources/demo-vm-creator/README.md).
 
 ---
 
@@ -77,19 +78,20 @@ Please ensure that you successfully verified the [General prerequisites](../../R
 
 💥 **Explore the Arc-enabled servers:**
 
-1. In the resource group, filter by type **Azure Arc machines** (or search for "Machine - Azure Arc")
-2. Click on one of the Arc-enabled servers (e.g., `ArcBox-Ubuntu-01`)
+1. In the Azure portal, navigate to **Azure Arc** by using the search bar at the top, and then navigate to the **Machines** menu option under **Infrastructure**
+![ArcBox](./images/arcbox_01.jpg)
+2. Click on one of the Arc-enabled servers (e.g., `ArcBox-Win2k25`)
 3. Review the **Overview** blade:
    - Operating system and version
    - Agent status and version
    - Resource location (Azure region for metadata)
    - Machine location (actual physical location)
-4. Navigate to **Properties** to see detailed machine information
-5. Check **Extensions** to see installed Azure extensions
+4. Check **Settings -> Extensions** to see installed Azure extensions
+5. Navigate through other menu items such as **Monitoring** and **Operations** to see available features and functionality.
 
 🔑 **Key insight:** Arc-enabled servers appear as Azure resources with resource IDs, allowing you to apply Azure management constructs (tags, RBAC, policies) to on-premises machines.
 
-### 1.2 Explore LocalBox Resources (if available)
+### 1.2 Explore LocalBox resources (if available)
 
 1. Navigate to the LocalBox resource group (e.g., `rg-localbox`)
 2. Locate the **Azure Local** instance resource
@@ -115,79 +117,34 @@ Azure Machine Configuration (formerly Guest Configuration) extends Azure Policy 
 
 This provides "policy as code" governance across your hybrid environment, similar to Group Policy but managed through Azure.
 
-### 2.2 Assign the Linux Security Baseline Policy
+### 2.2 Assign the Linux SSH Posture Control
 
-💥 **Assign a built-in policy to audit Linux security baseline compliance:**
+💥 **Assign a built-in policy to audit Linux SSH Posture compliance:**
 
-**Option A: Azure Portal**
+For background and conceptual reference, review the article [What is SSH Posture Control?](https://learn.microsoft.com/azure/osconfig/overview-ssh-posture-control-mc) before proceeding.
+
+#### Azure Portal
 
 1. Navigate to **Azure Policy** in the Azure Portal
 2. Select **Definitions** in the left menu
-3. Search for: `Linux machines should meet requirements for the Azure compute security baseline`
-4. Click on the policy definition to view details
-5. Click **Assign**
+3. Search for: `Configure SSH security posture`
+![ArcBox](./images/ssh_posture_04.jpg)
+4. Click on the policy definition **Configure SSH security posture for Linux (powered by OSConfig)** to view details
+5. Click **Assign policy**
 6. Configure the assignment:
-   - **Scope**: Select the resource group containing your Arc-enabled servers
-   - **Assignment name**: `Linux Security Baseline - Arc Servers`
-   - **Policy enforcement**: Enabled
-7. Click **Review + create**, then **Create**
-
-**Option B: Azure CLI**
-
-```bash
-# Set variables
-RESOURCE_GROUP="rg-arcbox"
-SUBSCRIPTION_ID=$(az account show --query id -o tsv)
-
-# Get the policy definition ID
-POLICY_DEFINITION_ID="/providers/Microsoft.Authorization/policyDefinitions/fc9b3da7-8347-4380-8e70-0a0361d8dedd"
-
-# Assign the policy to the resource group
-az policy assignment create \
-  --name "linux-security-baseline-arc" \
-  --display-name "Linux Security Baseline - Arc Servers" \
-  --policy $POLICY_DEFINITION_ID \
-  --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP" \
-  --mi-system-assigned \
-  --location "westeurope"
-```
-
-### 2.3 Assign SSH Security Policy
-
-💥 **Assign a policy to audit SSH key authentication:**
-
-```bash
-# SSH key authentication policy
-POLICY_DEFINITION_ID="/providers/Microsoft.Authorization/policyDefinitions/630c64f9-8b6b-4c64-b511-6544ceff6fd6"
-
-az policy assignment create \
-  --name "linux-ssh-key-auth" \
-  --display-name "Linux SSH Key Authentication Required" \
-  --policy $POLICY_DEFINITION_ID \
-  --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP" \
-  --mi-system-assigned \
-  --location "westeurope"
-```
-
-### 2.4 Verify Policy Compliance
-
-1. Wait 15-30 minutes for the initial compliance scan (or trigger manually)
-2. Navigate to **Azure Policy** > **Compliance**
-3. Filter by the scope (your resource group)
-4. Review the compliance state:
-   - **Compliant** - Resource meets the policy requirements
-   - **Non-compliant** - Resource fails one or more checks
-   - **Not started** - Evaluation hasn't completed yet
-
-💥 **To trigger an on-demand compliance scan:**
-
-```bash
-# Trigger policy evaluation for the resource group
-az policy state trigger-scan --resource-group $RESOURCE_GROUP
-```
-
-5. Click on a non-compliant resource to view detailed compliance reasons
-6. Navigate to the Arc-enabled server > **Machine Configuration** to see individual configuration status
+   - **Scope**: Select the resource group containing Arc-enabled servers (e.g. **rg-arcbox**)
+   - **Assignment name**: `labuserXX - Configure SSH security posture for Linux (powered by OSConfig)` (change XX to your suffix)
+   - ![ArcBox](./images/ssh_posture_01.jpg)
+   - Click **Next**
+   - Change **Include Arc connected servers** to **true** and click **Next**
+   - ![ArcBox](./images/ssh_posture_02.jpg)
+7. Click **Next** on the remaining tabs without making any changes to default values, then **Review + create**
+8. ![ArcBox](./images/ssh_posture_03.jpg)
+9. After 15 minutes, navigate to the Arc-enabled server **Arcbox-Ubuntu-01** -> **Operations** -> **Machine Configuration** to see individual configuration status
+10. Click on the **SetLinuxSshServerSecurityBaseline** Configuration Name
+11. ![ArcBox](./images/ssh_posture_06.jpg)
+12. Enable the checkbox **Compliant** to view both compliant and non-compliant SSH settings
+13. ![ArcBox](./images/ssh_posture_07.jpg)
 
 🔑 **Key insight:** Azure Policy with Machine Configuration provides unified compliance visibility across Azure VMs and Arc-enabled servers. This is essential for maintaining sovereign compliance requirements across hybrid environments.
 
@@ -202,54 +159,90 @@ az policy state trigger-scan --resource-group $RESOURCE_GROUP
 
 ### 3.1 Navigate to Azure Local VM Management
 
-1. In the Azure Portal, navigate to your **Azure Local** instance
-2. Select **Virtual machines** in the left menu
-3. Click **+ Create** to start the VM creation wizard
+1. In the Azure portal, navigate to **Azure Arc** by using the search bar at the top, and then navigate to the **Azure Local** menu option under **Supported environments**. Click on **All systems**.
+![Azure Local](./images/localbox_01.jpg)
+2. Click on the **localboxcluster** Azure Local instance
+3. Explore the available features and services under **Resources**
+4. Select **Virtual machines** option
+5. Click **+ Create VM** to start the VM creation wizard
 
 ### 3.2 Configure the Virtual Machine
 
 💥 **Basic settings:**
 
-1. **Subscription**: Select your subscription
-2. **Resource group**: Create new or use existing
-3. **Virtual machine name**: `sovereign-vm-01`
-4. **Custom location**: Select the custom location for your Azure Local cluster
-5. **Image**: Select an available gallery image (e.g., Windows Server 2022)
+1. **Subscription**: Select your subscription (e.g. **Micro-Hack-1**)
+2. **Resource group**: Select the same resource group as the Azure Local instance (e.g. **rg-localbox**)
+3. **Virtual machine name**: `labuserXX-vm-01` (replace XX with your own suffix)
+4. **Security type**: Select **Standard**
+
+![Azure Local](./images/localbox_02.jpg)
+
+5. **Image**: Select an available gallery image (e.g., Windows Server 2025)
 6. **Virtual processor count**: 2
-7. **Memory (GB)**: 4
+7. **Memory (MB)**: 4096
+
+![Azure Local](./images/localbox_03.jpg)
 
 💥 **Administrator account:**
 
 1. **Username**: `localadmin`
-2. **Password**: Create a strong password
+2. **Password**: Create a strong password and make a note of it
+
+![Azure Local](./images/localbox_04.jpg)
+
+Do not opt-in for domain join at this time, and select **Next**
+
+![Azure Local](./images/localbox_05.jpg)
+
+Click **Next** without creating any data disks.
+
+![Azure Local](./images/localbox_05.jpg)
 
 💥 **Networking:**
 
-1. **Network interface**: Create or select existing logical network
-2. Configure as needed for your environment
+Click **+ Add network interface**
+
+![Azure Local](./images/localbox_06.jpg)
+
+For **Name** use the same value as for **Virtual machine name**: `labuserXX-vm-01` (replace XX with your own suffix)
+For **Network** choose **localbox-vm-lnet-vlan200**
+Select **Add** and then **Next**
+
+![Azure Local](./images/localbox_07.jpg)
+
+Click **Next** twice
+
+![Azure Local](./images/localbox_08.jpg)
+
+Click **Create**
+
+![Azure Local](./images/localbox_09.jpg)
 
 ### 3.3 Review and Create
 
 1. Review all settings
 2. Click **Create** to deploy the VM
 
-💥 **Monitor the deployment:**
-
-```bash
-# Check VM deployment status (if using CLI)
-az stack-hci-vm show \
-  --name "sovereign-vm-01" \
-  --resource-group $RESOURCE_GROUP
-```
 
 ### 3.4 Validate VM Deployment
 
-1. Navigate to the VM resource in Azure Portal
+1. Click **Go to resource** when the deployment is finished
 2. Verify the VM is running
-3. Check that the VM appears under the **Custom Location**
-4. Review the VM properties and available operations
+3. Review the VM properties and available operations
+
+![Azure Local](./images/localbox_10.jpg)
 
 🔑 **Key insight:** Azure Arc VM management enables self-service VM provisioning on Azure Local using familiar Azure tools and RBAC. This allows organizations to maintain data sovereignty by keeping workloads on-premises while benefiting from Azure management capabilities.
+
+#### **Bonus tip**
+
+By appending **--rdp** to the Azure CLI command generated on the **Connect** blade for the VM, it is possible to connect to Windows machines running on Azure Local (and any Arc-enabled Windows machine) via Remote Desktop when running the command from Azure CLI on your local computer:
+
+![Azure Local](./images/localbox_11.jpg)
+
+![Azure Local](./images/localbox_12.jpg)
+
+To learn more, see [SSH access to Azure Arc-enabled servers](https://learn.microsoft.com/azure/azure-arc/servers/ssh-arc-overview).
 
 ---
 
@@ -261,42 +254,31 @@ az stack-hci-vm show \
 
 💥 **Enable Defender for Servers on your subscription:**
 
-**Option A: Azure Portal**
+**Azure Portal**
 
 1. Navigate to **Microsoft Defender for Cloud**
-2. Select **Environment settings** in the left menu
-3. Expand your tenant and select your subscription
+2. Select **Management -> Environment settings** in the left menu
+3. Expand your **Tenant Root Group** and select your subscription
 4. Under **Defender plans**, locate **Servers**
-5. Toggle to **On** (select Plan 1 or Plan 2 based on requirements)
-6. Click **Save**
-
-**Option B: Azure CLI**
-
-```bash
-# Enable Defender for Servers Plan 1
-az security pricing create \
-  --name VirtualMachines \
-  --tier Standard
-
-# Or enable Plan 2 for additional features
-az security pricing create \
-  --name VirtualMachines \
-  --tier Standard \
-  --subplan P2
-```
+5. If not already enabled, toggle to **On** (select Plan 1 or Plan 2 based on requirements)
+6. Review available features when selecting **Change plan** and **Settings** for the **Servers** plan.
+7. Click **Save**
 
 ### 4.2 Review Security Posture
 
-1. Navigate to **Microsoft Defender for Cloud** > **Overview**
+1. Navigate to **Microsoft Defender for Cloud** -> **General** -> **Overview**
 2. Review the **Secure Score** for your environment
 3. Click on **Recommendations** to see security recommendations
+
+![Defender for Cloud](./images/dfc_01.jpg)
 
 💥 **Filter for Arc-enabled servers:**
 
 1. In **Recommendations**, use filters:
-   - **Resource type**: `Microsoft.HybridCompute/machines`
-   - **Environment**: All
+   - **Resource type**: `Machine - Azure Arc`
 2. Review recommendations specific to your Arc-enabled servers
+
+![Defender for Cloud](./images/dfc_02.jpg)
 
 ### 4.3 Explore Common Recommendations for Arc-enabled Servers
 
@@ -307,7 +289,7 @@ You may see recommendations such as:
 | Guest configuration extension should be installed | High | Required for Machine Configuration policies |
 | System updates should be installed | High | OS patches are available |
 | Endpoint protection should be installed | High | Antimalware solution needed |
-| Log Analytics agent should be installed | Medium | Required for advanced monitoring |
+| Azure Monitor agent should be installed | Medium | Required for advanced monitoring |
 | Vulnerabilities should be remediated | Varies | Software vulnerabilities detected |
 
 💥 **Investigate a recommendation:**
@@ -335,9 +317,8 @@ You may see recommendations such as:
 
 ### 5.1 Navigate to Azure Update Manager
 
-1. In the Azure Portal, search for **Azure Update Manager**
-2. Or navigate via: **Home** > **Update Manager**
-3. Review the dashboard overview showing:
+1. In the Azure Portal, search for **Azure Update Manager** in the middle-top search bar
+2. Go to **Overview** to review the dashboard overview showing:
    - Machines pending updates
    - Compliance status
    - Recent update deployments
@@ -346,33 +327,24 @@ You may see recommendations such as:
 
 💥 **Check update status for Arc-enabled servers:**
 
-1. Select **Machines** in the left menu
+1. Select **Resources -> Machines** in the left menu
 2. Filter by:
    - **Machine type**: `Arc-enabled servers`
-   - **Resource group**: Your ArcBox resource group
-3. Review the update status for each machine
+   - **Resource group**: Your ArcBox resource group (e.g. **rg-arcbox**)
+![Azure Update Manager](./images/aum_01.jpg)
+3. Review the update status for one machine
+![Azure Update Manager](./images/aum_02.jpg)
 
 ### 5.3 Trigger an Update Assessment
 
-```bash
-# Trigger update assessment for an Arc-enabled server
-az maintenance configuration assignment create \
-  --maintenance-configuration-id "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.Maintenance/maintenanceConfigurations/default" \
-  --name "update-assessment" \
-  --resource-group $RESOURCE_GROUP \
-  --resource-name "ArcBox-Ubuntu-01" \
-  --resource-type "Microsoft.HybridCompute/machines" \
-  --provider-name "Microsoft.HybridCompute"
-```
-
-Or via Portal:
-1. Select the Arc-enabled server
+1. Select an Arc-enabled server
 2. Click **Check for updates**
-3. Wait for the assessment to complete
+![Azure Update Manager](./images/aum_03.jpg)
+1. Wait for the assessment to complete
 
 ### 5.4 Review Available Updates
 
-1. Click on a machine to see detailed update status
+1. Click on the previously selected machine to see an updated status
 2. Review:
    - **Critical and security updates** - High priority
    - **Other updates** - Feature and quality updates
@@ -401,7 +373,7 @@ After completing this challenge, you should understand:
 ✅ **Azure Local as Sovereign Private Cloud**
 - Azure Local enables sovereign on-premises cloud infrastructure
 - Arc Resource Bridge connects Azure Local to Azure management plane
-- Self-service VM provisioning using Azure Portal and CLI
+- Self-service VM provisioning using Azure Portal (also available via CLI and Infrastructure as Code)
 
 ✅ **Security and Compliance**
 - Microsoft Defender for Cloud provides unified security posture management
@@ -423,9 +395,10 @@ Consider how these capabilities apply to sovereign cloud scenarios:
 ### 6.3 Further Exploration
 
 For additional learning, explore:
+
 - [Azure Arc Jumpstart Scenarios](https://jumpstart.azure.com/)
 - [Azure Local documentation](https://learn.microsoft.com/azure/azure-local/)
-- [Microsoft Sovereign Cloud documentation](https://learn.microsoft.com/industry/sovereignty/sovereignty-capabilities)
+- [Microsoft Sovereign Cloud documentation](https://learn.microsoft.com/industry/sovereign-cloud/)
 
 ---
 
@@ -433,15 +406,17 @@ For additional learning, explore:
 
 Before completing this challenge, verify:
 
-- [ ] You can identify Arc-enabled servers in the Azure Portal
-- [ ] You have assigned at least one Machine Configuration policy
-- [ ] You can view policy compliance status for Arc-enabled servers
-- [ ] You understand how to deploy VMs on Azure Local (conceptually or hands-on)
-- [ ] You have enabled or verified Defender for Cloud coverage
+- [ ] You can navigate and understand the ArcBox/LocalBox hybrid environment in the Azure Portal
+- [ ] You have assigned at least one Azure Policy (e.g., SSH Posture Control) to Arc-enabled servers
+- [ ] You can verify the compliance status of Arc-enabled servers in the Azure Policy dashboard
+- [ ] You can verify the compliance status of Arc-enabled servers in the Azure Machine Configuration blade
+- [ ] You have deployed a VM on Azure Local via the Azure Portal
+- [ ] You have enabled or verified Defender for Cloud coverage and reviewed security recommendations
 - [ ] You can navigate Azure Update Manager for hybrid patching
+- [ ] You understand how Azure Arc provides a unified control plane for sovereign hybrid scenarios
 
 ---
 
 You successfully completed Challenge 6! 🚀🚀🚀
 
-**[Home](../../README.md)** - [Previous Challenge Solution](../challenge-05/solution-05.md)
+**[Home](../../Readme.md)** - [Previous Challenge Solution](../challenge-05/solution-05.md)

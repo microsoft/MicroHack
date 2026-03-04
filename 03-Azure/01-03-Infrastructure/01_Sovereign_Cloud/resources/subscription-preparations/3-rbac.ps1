@@ -1,22 +1,27 @@
 <#
 .SYNOPSIS
-    Create a custom "Deployment Validator" RBAC role and assign permissions for MicroHack participants.
+    Create a custom "Deployment Validator" RBAC role and assign it to a group along with Security Reader and Resource Policy Contributor roles.
 
 .DESCRIPTION
-    This script is intended for MicroHack coaches who are preparing Azure subscriptions
-    for lab participants. It automates the setup of appropriate RBAC permissions.
+    This script is intended for MicroHack coaches who are preparing pre-provisioned Azure subscriptions
+    for lab participants. It automates the setup of appropriate RBAC permissions for lab users.
 
-    The script creates a custom Azure RBAC role that allows users to validate ARM/Bicep
-    deployments without granting full deployment permissions. It then assigns both this
-    custom role and the built-in Security Reader role to a specified Entra ID group.
+    The script creates a custom Azure RBAC role that allows users to validate ARM/Bicep deployments
+    without granting full deployment permissions. It then assigns both this custom role and the
+    built-in Security Reader role to a specified Entra ID group.
 
     The custom "Deployment Validator" role includes permissions to:
     - Validate ARM/Bicep deployments
     - Read deployment information
     - Read resource group information
 
-    This setup ensures lab participants have the necessary permissions to complete
-    MicroHack exercises while maintaining appropriate security boundaries.
+    The Security Reader role provides read-only access to security-related resources and settings.
+
+    The Resource Policy Contributor role allows managing resource policies, including creating/modifying
+    policy assignments and definitions.
+
+    This setup ensures lab participants have the necessary permissions to complete MicroHack exercises
+    while maintaining appropriate security boundaries in pre-provisioned subscriptions.
 
 .PARAMETER GroupName
     The display name of the Entra ID group to assign the roles to (default: "LabUsers")
@@ -30,7 +35,7 @@
     Prompts for subscription selection and uses the default group name "LabUsers"
 
 .EXAMPLE
-    .\3-rbac.ps1 -GroupName "SovereignCloudLabUsers"
+    .\3-rbac.ps1 -GroupName "LabUsers"
     Prompts for subscription selection and uses the specified group name
 
 .EXAMPLE
@@ -51,6 +56,8 @@
     https://learn.microsoft.com/azure/role-based-access-control/custom-roles
 .LINK
     https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#security-reader
+.LINK
+    https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#resource-policy-contributor
 #>
 
 [CmdletBinding()]
@@ -75,7 +82,7 @@ foreach ($module in $requiredModules) {
 Import-Module Az.Accounts, Az.Resources, Microsoft.Graph.Groups -ErrorAction Stop
 
 Write-Host "`n=== RBAC Role Assignment Utility ===" -ForegroundColor Cyan
-Write-Host "This script will create a custom 'Deployment Validator' role and assign RBAC permissions."
+
 Write-Host ""
 
 # Check if user is logged in to Azure
@@ -100,13 +107,15 @@ function Select-AzureSubscription {
     if ([string]::IsNullOrWhiteSpace($SubId)) {
         Write-Host "`n=== Select Azure Subscription ===" -ForegroundColor Cyan
 
+        # Get all available subscriptions
         $subscriptions = Get-AzSubscription | Sort-Object Name
 
         if ($subscriptions.Count -eq 0) {
-            Write-Error "No subscriptions found."
+            Write-Error "No subscriptions found. Please ensure you have access to at least one subscription."
             exit 1
         }
 
+        # Display subscriptions
         Write-Host "`nAvailable Subscriptions:" -ForegroundColor Yellow
         for ($i = 0; $i -lt $subscriptions.Count; $i++) {
             $sub = $subscriptions[$i]
@@ -114,42 +123,59 @@ function Select-AzureSubscription {
             Write-Host ("  {0,2}. {1} ({2}){3}" -f ($i + 1), $sub.Name, $sub.Id, $current) -ForegroundColor Gray
         }
 
-        $selection = Read-Host "`nEnter selection (or press Enter for current)"
+        Write-Host "`nOptions:" -ForegroundColor Cyan
+        Write-Host "  - Enter a number to select a subscription"
+        Write-Host "  - Press Enter to use the current subscription"
+
+        $selection = Read-Host "`nYour selection"
 
         if ([string]::IsNullOrWhiteSpace($selection)) {
+            # Use current subscription
             $selectedSub = $subscriptions | Where-Object { $_.Id -eq (Get-AzContext).Subscription.Id }
-            if (-not $selectedSub) { $selectedSub = $subscriptions[0] }
+            if (-not $selectedSub) {
+                $selectedSub = $subscriptions[0]
+            }
         } else {
-            $idx = [int]$selection - 1
-            if ($idx -ge 0 -and $idx -lt $subscriptions.Count) {
-                $selectedSub = $subscriptions[$idx]
+            # Parse selection
+            if ($selection -match '^\d+$') {
+                $idx = [int]$selection - 1
+                if ($idx -ge 0 -and $idx -lt $subscriptions.Count) {
+                    $selectedSub = $subscriptions[$idx]
+                } else {
+                    Write-Error "Invalid selection: $selection (out of range)"
+                    exit 1
+                }
             } else {
-                Write-Error "Invalid selection"
+                Write-Error "Invalid selection: $selection (not a number)"
                 exit 1
             }
         }
 
-        Write-Host "`nSelected Subscription: $($selectedSub.Name)" -ForegroundColor Green
+        Write-Host "`nSelected Subscription: $($selectedSub.Name) ($($selectedSub.Id))" -ForegroundColor Green
         return $selectedSub.Id
     } else {
+        # Validate provided subscription ID
         $sub = Get-AzSubscription -SubscriptionId $SubId -ErrorAction SilentlyContinue
         if (-not $sub) {
-            Write-Error "Subscription ID '$SubId' not found."
+            Write-Error "Subscription ID '$SubId' not found or you don't have access to it."
             exit 1
         }
-        Write-Host "`nUsing Subscription: $($sub.Name)" -ForegroundColor Green
+        Write-Host "`nUsing Subscription: $($sub.Name) ($($sub.Id))" -ForegroundColor Green
         return $SubId
     }
 }
 
 # Select subscription
 $subId = Select-AzureSubscription -SubId $SubscriptionId
+
+# Set context to selected subscription
 Set-AzContext -SubscriptionId $subId | Out-Null
 
 # Get group object ID
 Write-Host "`nLooking up Entra ID group: '$GroupName'..." -ForegroundColor Cyan
 
 try {
+    # Ensure we're connected to Microsoft Graph
     $mgContext = Get-MgContext -ErrorAction SilentlyContinue
     if (-not $mgContext) {
         Write-Host "Connecting to Microsoft Graph..." -ForegroundColor Yellow
@@ -176,82 +202,6 @@ try {
     exit 1
 }
 
-# Define the custom role
-Write-Host "`nCreating custom 'Deployment Validator' role definition..." -ForegroundColor Cyan
-
-$role = [pscustomobject]@{
-    Name             = "Deployment Validator"
-    IsCustom         = $true
-    Description      = "Can validate ARM/Bicep deployments without full deployment permissions."
-    Actions          = @(
-        "Microsoft.Resources/deployments/validate/action",
-        "Microsoft.Resources/deployments/read",
-        "Microsoft.Resources/subscriptions/resourceGroups/read"
-    )
-    NotActions       = @()
-    DataActions      = @()
-    NotDataActions   = @()
-    AssignableScopes = @("/subscriptions/$subId")
-}
-
-$tmp = Join-Path $env:TEMP "deployment-validator-role.json"
-$role | ConvertTo-Json -Depth 10 | Set-Content -Path $tmp -Encoding UTF8
-
-# Check if role already exists
-$existingRole = Get-AzRoleDefinition -Name "Deployment Validator" -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-
-if ($existingRole) {
-    Write-Host "Custom role 'Deployment Validator' already exists." -ForegroundColor Yellow
-
-    if ($existingRole.AssignableScopes -notcontains "/subscriptions/$subId") {
-        Write-Host "Updating role to include this subscription..." -ForegroundColor Cyan
-        try {
-            $existingRole.AssignableScopes = @($existingRole.AssignableScopes) + @("/subscriptions/$subId")
-            Set-AzRoleDefinition -Role $existingRole | Out-Null
-            Write-Host "Role updated successfully." -ForegroundColor Green
-            Start-Sleep -Seconds 10
-        } catch {
-            Write-Warning "Could not update role: $($_.Exception.Message)"
-        }
-    }
-} else {
-    try {
-        Write-Host "Creating new custom role..." -ForegroundColor Gray
-        $newRole = New-AzRoleDefinition -InputFile $tmp -ErrorAction Stop
-        Write-Host "Custom role 'Deployment Validator' created successfully." -ForegroundColor Green
-        Start-Sleep -Seconds 10
-        $existingRole = $newRole
-    } catch {
-        if ($_.Exception.Message -like "*Conflict*" -or $_.Exception.Message -like "*RoleDefinitionAlreadyExists*") {
-            Write-Host "Role already exists (detected during creation)." -ForegroundColor Yellow
-            Start-Sleep -Seconds 5
-            $existingRole = Get-AzRoleDefinition -Name "Deployment Validator" -ErrorAction SilentlyContinue
-        } else {
-            Write-Error "Failed to create custom role: $($_.Exception.Message)"
-            exit 1
-        }
-    }
-}
-
-# Assign the custom role
-Write-Host "`nAssigning 'Deployment Validator' role to group '$GroupName'..." -ForegroundColor Cyan
-
-$existingAssignment = Get-AzRoleAssignment -ObjectId $objectId -RoleDefinitionName "Deployment Validator" -Scope "/subscriptions/$subId" -ErrorAction SilentlyContinue
-
-if ($existingAssignment) {
-    Write-Host "Group already has 'Deployment Validator' role assigned." -ForegroundColor Yellow
-} else {
-    try {
-        New-AzRoleAssignment `
-            -ObjectId $objectId `
-            -RoleDefinitionName "Deployment Validator" `
-            -Scope "/subscriptions/$subId" | Out-Null
-        Write-Host "'Deployment Validator' role assigned successfully." -ForegroundColor Green
-    } catch {
-        Write-Error "Failed to assign 'Deployment Validator' role: $($_.Exception.Message)"
-    }
-}
-
 # Assign the Security Reader role
 Write-Host "`nAssigning 'Security Reader' role to group '$GroupName'..." -ForegroundColor Cyan
 
@@ -271,6 +221,25 @@ if ($existingSecurityReaderAssignment) {
     }
 }
 
+# Assign the Resource Policy Contributor role
+Write-Host "`nAssigning 'Resource Policy Contributor' role to group '$GroupName'..." -ForegroundColor Cyan
+
+$existingResourcePolicyContributorAssignment = Get-AzRoleAssignment -ObjectId $objectId -RoleDefinitionName "Resource Policy Contributor" -Scope "/subscriptions/$subId" -ErrorAction SilentlyContinue
+
+if ($existingResourcePolicyContributorAssignment) {
+    Write-Host "Group already has 'Resource Policy Contributor' role assigned." -ForegroundColor Yellow
+} else {
+    try {
+        New-AzRoleAssignment `
+            -ObjectId $objectId `
+            -RoleDefinitionName "Resource Policy Contributor" `
+            -Scope "/subscriptions/$subId" | Out-Null
+        Write-Host "'Resource Policy Contributor' role assigned successfully." -ForegroundColor Green
+    } catch {
+        Write-Error "Failed to assign 'Resource Policy Contributor' role: $($_.Exception.Message)"
+    }
+}
+
 # Display summary
 Write-Host "`n" + ("=" * 80) -ForegroundColor Cyan
 Write-Host "SUMMARY" -ForegroundColor Cyan
@@ -281,7 +250,7 @@ Write-Host "Group Name         : $GroupName" -ForegroundColor Gray
 Write-Host "Group Object ID    : $objectId" -ForegroundColor Gray
 Write-Host ""
 Write-Host "Roles Assigned:" -ForegroundColor Yellow
-Write-Host "  1. Deployment Validator (Custom)" -ForegroundColor Green
-Write-Host "  2. Security Reader (Built-in)" -ForegroundColor Green
+Write-Host "  1. Security Reader (Built-in) - for viewing Defender for Cloud secure score and recommendations" -ForegroundColor Green
+Write-Host "  2. Resource Policy Contributor (Built-in) - for deploying policy definitions at subscription level" -ForegroundColor Green
 Write-Host ""
 Write-Host "Configuration complete!" -ForegroundColor Green

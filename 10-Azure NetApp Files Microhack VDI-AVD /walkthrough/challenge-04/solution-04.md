@@ -28,6 +28,8 @@ The pre-provisioned AVD setup already has a designated Hostpool for each attende
 * Organizational Unit Path: **OU=Hostpool{Group Number}**
 * AES Encryption: **checked**
 
+![image](../img/solution-04-azure-netapp-files-join-active-directory.png)
+
 Click **OK**
 
 ### Task 2: Create a new SMB volume

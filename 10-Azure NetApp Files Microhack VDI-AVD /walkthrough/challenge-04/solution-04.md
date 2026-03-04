@@ -32,7 +32,7 @@ The pre-provisioned AVD setup already has a designated Hostpool for each attende
 
 ![image](../img/solution-04-azure-netapp-files-join-active-directory.png)
 
-Click **OK**
+6. Click **OK**
 
 ### Task 2: Create a new SMB volume
 

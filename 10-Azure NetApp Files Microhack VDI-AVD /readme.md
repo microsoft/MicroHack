@@ -61,15 +61,19 @@ Permissions for the deployment:
 * [Challenge 3 - Setting Up Azure NetApp Files](challenges/challenge-03.md)
 * [Challenge 4 - Azure NetApp Files for VDI/AVD Use-Case](challenges/challenge-04.md)
 * [Challenge 5 - Managing and Monitoring Azure NetApp Files](challenges/challenge-05.md)
-* [Challenge 6 - Performance Optimization](challenges/challenge-06.md)
+* [Challenge 6 - Azure NetApp Files Backup](challenges/challenge-06.md)
 * [Challenge 7 - Best Practices and Use Cases](challenges/challenge-07.md) 
-* [Challenge 8 - Q&A and Troubleshooting](challenges/challenge-08.md)
 
 
 ## Solutions - Spoilerwarning
 
-* [Solution 1 - title](./walkthrough/challenge-01/solution-01.md)
-* [Solution 2 - title](./walkthrough/challenge-02/solution-02.md)
+* [Solution 1 - Get to know and Register](./walkthrough/challenge-01/solution-01.md)
+* [Solution 2 - Setup Network Configuration](./walkthrough/challenge-02/solution-02.md)
+* [Solution 3 - Setting Up Azure NetApp Files](./walkthrough/challenge-02/solution-03.md)
+* [Solution 4 - Setting Up Azure NetApp Files for VDI/AVD](./walkthrough/challenge-02/solution-04.md)
+* [Solution 5 - Managing and Monitoring Azure NetApp Files](./walkthrough/challenge-02/solution-05.md)
+* [Solution 6 - Setting Up Azure NetApp Files Backup](./walkthrough/challenge-02/solution-06.md)
+* [Solution 7 - Best Practices and Use Cases](./walkthrough/challenge-02/solution-07.md)
 
 
 

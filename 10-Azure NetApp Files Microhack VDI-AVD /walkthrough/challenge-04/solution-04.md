@@ -2,11 +2,8 @@
 
 [Previous Challenge Solution](../challenge-03/solution-03.md) - **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-05/solution-05.md)
 
-## Integrate Azure NetApp Files volume into AVD environment 
-### Deploy new SMB volume, integrate with AVD Session Host and verify ###
 
-## Prerequisites
-
+# Prerequisites
 The pre-provisioned AVD setup already has a designated Hostpool for each attendee. Your Hostpool is microhack_hostpool{Group Number}
 
 ### Task 1: Configure AD connection in NetApp account

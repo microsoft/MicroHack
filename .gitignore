@@ -206,7 +206,5 @@ id_rsa.pub
 
 # Ignore ARM Parameter files
 *.parameters.json
-03-Azure/01-03-Infrastructure/03_Hybrid_Azure_Arc_Kubernetes/walkthrough/01-connect/azure-arc.yaml
-03-Azure/01-03-Infrastructure/03_Hybrid_Azure_Arc_Kubernetes/walkthrough/01-connect/azure-arc-release.yaml
 03-Azure/01-05-SAP/01_MicroHack-SAP-Cashflow-Prediction/SAP-Data-MicroHack.pptx
-03-Azure/01-03-Infrastructure/03_Hybrid_Azure_Arc_Kubernetes/walkthroughs/challenge-04/templates/parameters-my.json
+03-Azure/01-03-Infrastructure/03_Hybrid_Azure_Arc_Kubernetes/walkthrough/challenge-04/templates/parameters-my.json

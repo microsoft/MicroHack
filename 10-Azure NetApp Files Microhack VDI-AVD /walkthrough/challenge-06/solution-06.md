@@ -31,6 +31,11 @@ The minimum value for Daily Backups to Keep is 2.
 
 ![image](../img/solution-05-backup-policy-window-daily.png)
 
+**Example of a valid configuration**
+Backup policy:
+Daily: Daily Backups to Keep = 15
+Weekly: Weekly Backups to Keep = 6
+Monthly: Monthly Backups to Keep = 4
 
 ### **Task 3: Assign backup vault and backup policy to a volume**
 
@@ -56,14 +61,18 @@ The minimum value for Daily Backups to Keep is 2.
 
 If there are backups from volumes that have been deleted that you want to migrate, select Include backups from Deleted Volumes. This option is only enabled if backups from deleted volumes are present.
 
-![image](../img/)
+![image](../img/solution-05-backup-vault-assign.png)
+
+4. Navigate to the Backup Vault menu to view and manage your backups.
+
+
 
 ### **Task 5: Delete a backup vault**
 1. Navigate to the Backup Vault menu.
 
 2. Identify the backup vault you want to delete and select the three dots ... next to the backup's name. Select Delete.
 
-![image](../img/)
+![image](../img/solution-05-backup-vault-delete.png)
 
 
 You successfully completed challenge 6! 🚀🚀🚀

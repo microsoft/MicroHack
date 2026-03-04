@@ -44,7 +44,7 @@ fio --name=fio-8krandomwrites --rw=randwrite --direct=1 --ioengine=libaio --bs=8
 
 3. Go to your metrics dashboard and review achvieved throughput
 
-4. Go to your NetApp account, select your NFS volume and double the size of your volume
+4. Go to your NetApp account, select your NFS volume, double the size of your volume and save your change
 
 5. Repeat your FIO testing 
 
@@ -52,8 +52,21 @@ fio --name=fio-8krandomwrites --rw=randwrite --direct=1 --ioengine=libaio --bs=8
 
 ### Task 3: AVD/FSLogix user experience 
 
-1. 
+1. Login to the AVD environment with your user
 
+2. Download Google Chrome in offline edition 
+
+3. Change to your performance dashboard and review achieved performance
+
+https://www.google.com/intl/en/chrome/next-steps.html?standalone=1
+
+4. Leave the AVD connection open and switch to your Netapp account
+
+5. Change your AVD volume size to 300 GB and save the change
+
+6. Return to your AVD session and repeat the download
+
+7. Change to your performance dashboard, review achieved performance and compare to the first download
 
 # Walkthrough Challenge 5 - 
 

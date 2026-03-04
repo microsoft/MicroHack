@@ -8,7 +8,16 @@ Duration: 20 minutes
 
 Please ensure that you successfully verified the [General prerequisits](../../Readme.md#general-prerequisites) before continuing with this challenge.
 
-### **Task 1: Configure a backup policy**
+### **Task 1: Create a backup vault**
+
+1. In your Azure NetApp Files subscription, navigate to the Backup Vaults menu.
+
+2. Select + Add Backup Vault. Assign a name to your backup vault then select Create.
+
+**SCREENSHOT**
+
+
+### **Task 2: Configure a backup policy**
 
 1. Sign in to the Azure portal and navigate to Azure NetApp Files.
 
@@ -24,8 +33,10 @@ Please ensure that you successfully verified the [General prerequisits](../../Re
 
 The minimum value for Daily Backups to Keep is 2.
 
+**SCREENSHOT**
 
-### **Task 2: Assign backup vault and backup policy to a volume**
+
+### **Task 3: Assign backup vault and backup policy to a volume**
 
 1. Navigate to Volumes then select the volume for which you want to configure backups.
 
@@ -37,6 +48,26 @@ The minimum value for Daily Backups to Keep is 2.
 
 5. The Vault information is prepopulated.
 
+**SCREENSHOT**
+
+### **Task 4: Migrate backups to a backup vault**
+
+1. Navigate to Backups.
+
+2. From the banner above the backups, select Assign Backup Vault.
+
+3. Select the volumes for migrating backups. Then, select Assign to Backup Vault.
+
+If there are backups from volumes that have been deleted that you want to migrate, select Include backups from Deleted Volumes. This option is only enabled if backups from deleted volumes are present.
+
+**SCREENSHOT**
+
+### **Task 5: Delete a backup vault**
+1. Navigate to the Backup Vault menu.
+
+2. Identify the backup vault you want to delete and select the three dots ... next to the backup's name. Select Delete.
+
+**SCREENSHOT**
 
 
 You successfully completed challenge 6! 🚀🚀🚀

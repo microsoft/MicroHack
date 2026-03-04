@@ -1,4 +1,4 @@
-# Walkthrough Challenge 3 - Setting Up Azure NetApp Files for VDI/AVD
+# Walkthrough Challenge 4 - Setting Up Azure NetApp Files for VDI/AVD
 
 [Previous Challenge Solution](../challenge-03/solution-03.md) - **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-05/solution-05.md)
 

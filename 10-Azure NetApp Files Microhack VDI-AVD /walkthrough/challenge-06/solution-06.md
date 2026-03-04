@@ -4,10 +4,6 @@
 
 Duration: 20 minutes
 
-## Prerequisites
-
-Please ensure that you successfully verified the [General prerequisits](../../Readme.md#general-prerequisites) before continuing with this challenge.
-
 ### **Task 1: Create a backup vault**
 
 1. In your Azure NetApp Files subscription, navigate to the Backup Vaults menu.

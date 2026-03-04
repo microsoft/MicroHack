@@ -17,7 +17,9 @@ The pre-provisioned AVD setup already has a designated Hostpool for each attende
 
 3. From the Azure NetApp Files management sidebar, select your NetApp account, e.g. myaccount1
 
-4. One the left side expand **Azure Netapp Files** and click on **Active Directory connections**
+4. On the left side expand **Azure Netapp Files** and click on **Active Directory connections**
+
+![image](../img/solution-04-azure-netapp-files-active-directory-connections.png)
 
 5. Click **Join** and enter the following values (leave all other fields blank)
 

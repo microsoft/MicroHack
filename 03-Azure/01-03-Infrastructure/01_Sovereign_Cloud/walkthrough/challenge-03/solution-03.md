@@ -91,7 +91,7 @@ Goal: ensure all storage accounts enforce **Minimum TLS Version = TLS 1.2**.
 1. In the Azure Portal, navigate to **Policy**
 2. Select **Definitions**, search for **"Storage accounts should have the specified minimum TLS version"** (Policy ID `fe83a0eb-a853-422d-aac2-1bffd182c5d0`).
 3. Choose **Assign**.
-4. Set **Scope** to the subscription and your **Labuser-xxx** resource group.
+4. Set **Scope** to your **Labuser-xxx** resource group. **Do NOT select the subscription** — assigning at subscription scope will affect all other participants.
 5. Uncheck the box: **Only show parameters that need input or review**
 6. Under **Parameters**, set **Minimum TLS version** to `TLS 1.2` and (optionally) effect to `Deny`.
 7. Complete **Review + Create**, then select **Create**.

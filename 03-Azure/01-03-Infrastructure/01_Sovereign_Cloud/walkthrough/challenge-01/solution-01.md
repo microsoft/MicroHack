@@ -111,8 +111,8 @@ The **"Allowed locations"** built-in policy restricts which locations users can 
 2. Click **Assignments** in the left menu
 3. Click **Assign policy**
 4. Configure the assignment:
-   - **Scope**: Select your subscription or resource group
-   - **Exclusions**: Leave empty (or exclude specific resource groups if needed)
+   - **Scope**: Select your resource group (e.g., `labuser-01`). **Do NOT select the subscription** — assigning at subscription scope will affect all other participants.
+   - **Exclusions**: Leave empty
    - **Policy definition**: Search for "Allowed locations"
    - **Assignment name**: Use the format "Lab User-{YourAttendeeNumber} - Restrict to Sovereign Regions" (e.g., "Lab User-01 - Restrict to Sovereign Regions")
    - **Description**: "Restrict all resource deployments to EU sovereign regions for data residency compliance"
@@ -273,6 +273,7 @@ Azure provides several policies to control public network access:
 2. Click **Assign policy**
 3. Search for "Not allowed resource types"
 4. Configure:
+   - **Scope**: Your resource group (e.g., `labuser-01`). **Do NOT select the subscription.**
    - **Assignment name**: "Block Public IP Addresses"
    - **Parameters**:
      - **Not allowed resource types**: Select `Microsoft.Network/publicIPAddresses`

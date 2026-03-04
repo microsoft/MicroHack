@@ -62,6 +62,8 @@ The pre-provisioned AVD setup already has a designated Hostpool for each attende
 1. Click on your new volume
 2. On the left side under **Storage Service** click on **Mount instructions** to identify the UNC path of your volume
 
+![image](../img/solution-04-smb-mount-instructions.png)
+
 The UNC path of your share needs to be entered in the AD Group Policy attribute **VHD locations** which is assigned to your OU (see AD connection) 
 
 ### Task 4: Test and verify correct AVD integration of your SMB volume 

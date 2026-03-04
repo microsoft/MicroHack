@@ -1,37 +1,13 @@
 # Walkthrough Challenge 7 - Best Practices and Use Cases
 
-[Previous Challenge Solution](../challenge-06/solution-06.md) - **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-08/solution-08.md)
+[Previous Challenge Solution](../challenge-06/solution-06.md) - **[Home](../../Readme.md)**
 
 Duration: 20 minutes
 
-## Prerequisites
+### **Task 1: Documentation, Links, Content...**
 
-Please ensure that you successfully verified the [General prerequisits](../../Readme.md#general-prerequisites) before continuing with this challenge.
-
-### **Task 1: Write down...**
-
-💡 The first....
-
-💥 **Here are the first three general steps that are typically happen:** 
-1. Everybody struggles with finding the right person....
-2. If somebody finds the plan, the first three actions...
-3. Do not sress to much we have a...
-
-🔑 **Key to a successful strategy....**
-- The key to success is not a technical consideration of....
-
-### **Task 2: Think about if...**
+* [Architecture best practices for Azure NetApp Files](https://learn.microsoft.com/en-us/azure/well-architected/service-guides/azure-netapp-files)
 
 
-### **Task 3: Put yourself in the position...**
-
-* [Checklist Testing for...](Link to checklist or microsoft docs)
-
-### Task 4: Who defines the requirements...
-
-
-![image](Link to image)
-
-
-You successfully completed challenge 1! 🚀🚀🚀
+You successfully completed challenge 7! 🚀🚀🚀
 

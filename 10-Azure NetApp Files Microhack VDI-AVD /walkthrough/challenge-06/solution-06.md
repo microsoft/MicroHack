@@ -10,7 +10,7 @@ Duration: 20 minutes
 
 2. Select + Add Backup Vault. Assign a name to your backup vault then select Create.
 
-**SCREENSHOT**
+![image](../img/solution-05-backup-vault-create.png)
 
 
 ### **Task 2: Configure a backup policy**
@@ -29,7 +29,7 @@ Duration: 20 minutes
 
 The minimum value for Daily Backups to Keep is 2.
 
-**SCREENSHOT**
+![image](../img/solution-05-backup-policy-window-daily.png)
 
 
 ### **Task 3: Assign backup vault and backup policy to a volume**
@@ -44,7 +44,7 @@ The minimum value for Daily Backups to Keep is 2.
 
 5. The Vault information is prepopulated.
 
-**SCREENSHOT**
+![image](../img/solution-05-backup-configure-enabled.png)
 
 ### **Task 4: Migrate backups to a backup vault**
 
@@ -56,14 +56,14 @@ The minimum value for Daily Backups to Keep is 2.
 
 If there are backups from volumes that have been deleted that you want to migrate, select Include backups from Deleted Volumes. This option is only enabled if backups from deleted volumes are present.
 
-**SCREENSHOT**
+![image](../img/)
 
 ### **Task 5: Delete a backup vault**
 1. Navigate to the Backup Vault menu.
 
 2. Identify the backup vault you want to delete and select the three dots ... next to the backup's name. Select Delete.
 
-**SCREENSHOT**
+![image](../img/)
 
 
 You successfully completed challenge 6! 🚀🚀🚀

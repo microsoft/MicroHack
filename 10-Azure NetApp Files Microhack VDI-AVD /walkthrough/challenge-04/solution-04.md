@@ -49,13 +49,13 @@ The pre-provisioned AVD setup already has a designated Hostpool for each attende
 
 ![image](../img/solution-04-smb-vol-create.png)
 
-Click on **Next Protocol**
+2. Click on **Next Protocol**
 
 ![image](../img/solution-04-smb-protocol.png)
 
-Access: Select **SMB**
+3. Access: Select **SMB**
 
-Click on **Review + create** and **create**
+4. Click on **Review + create** and **create**
 
 ### Task 3: Integration of your volume into AVD (Trainer Task)
 

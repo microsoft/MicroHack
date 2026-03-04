@@ -438,6 +438,9 @@ Create a security group:
 az ad group create \
   --display-name "${GROUP_PREFIX}-SovereignOps-Team" \
   --mail-nickname "${GROUP_PREFIX}-SovereignOps"
+
+# Wait for eventual consistency
+sleep 20
 ```
 
 ### Step 2: Assign Built-in Roles to the SovereignOps Team
@@ -541,6 +544,9 @@ az role definition create --role-definition compliance-auditor-role.json
 az ad group create \
   --display-name "${GROUP_PREFIX}-Compliance-Officers" \
   --mail-nickname "${GROUP_PREFIX}-ComplianceOfficers"
+
+# Wait for eventual consistency
+sleep 20
 
 # Get the group's object ID
 COMPLIANCE_GROUP_ID=$(az ad group show --group "${GROUP_PREFIX}-Compliance-Officers" --query id -o tsv)

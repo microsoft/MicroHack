@@ -8,29 +8,35 @@ Duration: 20 minutes
 
 Please ensure that you successfully verified the [General prerequisits](../../Readme.md#general-prerequisites) before continuing with this challenge.
 
-### **Task 1: Write down...**
+### **Task 1: Configure a backup policy**
 
-💡 The first....
+1. Sign in to the Azure portal and navigate to Azure NetApp Files.
 
-💥 **Here are the first three general steps that are typically happen:** 
-1. Everybody struggles with finding the right person....
-2. If somebody finds the plan, the first three actions...
-3. Do not sress to much we have a...
+2. Select your Azure NetApp Files account.
 
-🔑 **Key to a successful strategy....**
-- The key to success is not a technical consideration of....
+3. Select Backups.
 
-### **Task 2: Think about if...**
+4. Select Backup Policies.
 
+5. Select Add.
 
-### **Task 3: Put yourself in the position...**
+6. In the Backup Policy page, specify the backup policy name. Enter the number of backups that you want to keep for daily, weekly, and monthly backups. Select Save.
 
-* [Checklist Testing for...](Link to checklist or microsoft docs)
-
-### Task 4: Who defines the requirements...
+The minimum value for Daily Backups to Keep is 2.
 
 
-![image](Link to image)
+### **Task 2: Assign backup vault and backup policy to a volume**
+
+1. Navigate to Volumes then select the volume for which you want to configure backups.
+
+2. From the selected volume, select Backup then Configure.
+
+3. In the Configure Backups page, select the backup vault from the Backup vaults drop-down. For information about creating a backup vault, see Create a backup vault.
+
+4. In the Backup Policy drop-down menu, assign the backup policy to use for the volume. Select OK.
+
+5. The Vault information is prepopulated.
+
 
 
 You successfully completed challenge 6! 🚀🚀🚀

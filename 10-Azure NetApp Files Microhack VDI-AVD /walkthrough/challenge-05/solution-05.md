@@ -26,6 +26,33 @@
 
 9. Change to service **Dashboard Hub** and view your new dashboard
 
+### Task 2: NFS Performance monitoring and optimization
+
+1. Logon to your Linux VM and mount your NFS volume
+
+2. Run a couple of load simualations
+
+8k block size 100% random read test
+```bash
+fio --name=fio-8krandomreads --rw=randread --direct=1 --ioengine=libaio --bs=8k --numjobs=4 --iodepth=128 --size=5G --runtime=600 --group_reporting
+```
+
+8k block size 100% random writes
+```bash
+fio --name=fio-8krandomwrites --rw=randwrite --direct=1 --ioengine=libaio --bs=8k --numjobs=4 --iodepth=128 --size=5G --runtime=600 --group_reporting
+```
+
+3. Go to your metrics dashboard and review achvieved throughput
+
+4. Go to your NetApp account, select your NFS volume and double the size of your volume
+
+5. Repeat your FIO testing 
+
+6. Return to your metrics dashboard and review achvieved throughput
+
+### Task 3: AVD/FSLogix user experience 
+
+1. 
 
 
 # Walkthrough Challenge 5 - 

@@ -28,14 +28,14 @@ Please ensure that you successfully verified the [General prerequisits](../../Re
 7. In Edit subnet, enter or select the following information:
 
 * Subnet purpose: Leave the default of Default.
-* Name: Enter subnet-1.
-* IPv4 address range: Leave the default of 10.0.0.0/16.
-* Starting address: Leave the default of 10.0.0.0.
-* Size: Leave the default of /24 (256 addresses).
+* Name: Enter **subnet-1**
+* IPv4 address range: Leave the default of **10.0.0.0/16**
+* Starting address: Leave the default of **10.0.0.0**
+* Size: Leave the default of **/24** (256 addresses).
 
-8. Select Save
+8. Select **Save**
 
-9. Select Review + create at the bottom of the window. When validation passes, select Create
+9. Select **Review + create** at the bottom of the window. When validation passes, select Create
 
 
 ### **Task 2: Delegate a subnet to Azure NetApp Files**
@@ -46,9 +46,9 @@ Please ensure that you successfully verified the [General prerequisits](../../Re
 
 3. Create a new subnet to use for Azure NetApp Files by completing the following required fields in the Add Subnet page:
 
-* Name: Specify the subnet name.
-* Address range: Specify the IP address range.
-* Subnet delegation: Select Microsoft.NetApp/volumes.
+* Name: Specify **anf** as the subnet name.
+* Address range: Specify **/28** the IP address range.
+* Subnet delegation: Select **Microsoft.NetApp/volumes**.
 
 ![image](../img/solution-01-azure-netapp-files-subnet-delegation.png)
 

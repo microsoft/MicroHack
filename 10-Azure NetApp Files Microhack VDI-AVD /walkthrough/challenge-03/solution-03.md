@@ -83,5 +83,40 @@ Please ensure that you successfully verified the [General prerequisits](../../Re
 
 ![image](../img/solution-03-creted-volume-overview.png)
 
+### **Task 4: Create a Linux VM and mout the NFS volume**
+
+1. Select **Virtual Machines** blade
+
+2. Select **Create** and **Virtual Machine** and enter these parameters
+
+![image](../img/create_vm1.png)
+![image](../img/create_vm2.png)
+
+3. Click on **Disks** and leave the defaults
+
+4. Click on **Networking** and enter the vnet and default subnet (not the delegated subnet) you had created in the previous challenge
+
+5. Click **Review + create** and **Create**
+
+5. Once deployment has finished to Networking configuration and add an inbound rule for your IP to the NSG
+
+6. Log into you VM using public IP via puTTY
+
+7. Run the following commands 
+
+```bash
+sudo su
+apt update
+apt install fio
+apt install nfs-common
+mkdir /netapp-mnt
+```
+8. Go back to your NetApp account and click on the NFS volume you had created
+
+9. On the left side find **Mount instructions** and select it
+
+
+
+
 
 You successfully completed challenge 3! 🚀🚀🚀

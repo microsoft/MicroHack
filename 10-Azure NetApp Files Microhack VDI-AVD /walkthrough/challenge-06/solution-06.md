@@ -13,7 +13,7 @@ Duration: 20 minutes
 ![image](../img/solution-05-backup-vault-create.png)
 
 
-### **Task 2: Configure a backup policy**
+### **Task 2: Configure a Backup Policy for automated backups**
 
 1. Select your NetApp account.
 
@@ -46,6 +46,24 @@ Monthly: Monthly Backups to Keep = 4
 4. Select the previously created backup policy 
 
 ![image](../img/solution-05-backup-configure-enabled.png)
+
+5. Select **Backups** to find new backup jobs (will take some time)
+
+### **Task 2: Run a manual backup**
+
+1. Pick your volume, on the left side, select **Volumes**
+
+2. Click on your SMB volume
+
+3. Select **Backups**
+
+4. Click on **Add Backup**
+
+5. Specify a backup name
+
+6. Select **Create**
+
+7. Select **Backups** to check the status of the new backup job
 
 
 You successfully completed challenge 6! 🚀🚀🚀

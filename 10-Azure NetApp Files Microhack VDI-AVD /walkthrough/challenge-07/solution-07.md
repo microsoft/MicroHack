@@ -4,9 +4,17 @@
 
 Duration: 20 minutes
 
-### **Task 1: Documentation, Links, Content...**
+### **Task 1: Azure Netapp Files use cases**
+
+* AVD/VDI
+
+
+### **Task 2: Documentation, Links, Content...**
+
 
 * [Architecture best practices for Azure NetApp Files](https://learn.microsoft.com/en-us/azure/well-architected/service-guides/azure-netapp-files)
+
+
 
 
 You successfully completed challenge 7! 🚀🚀🚀

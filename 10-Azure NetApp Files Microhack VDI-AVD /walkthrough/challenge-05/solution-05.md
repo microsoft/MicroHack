@@ -3,8 +3,6 @@
 [Previous Challenge Solution](../challenge-04/solution-04.md) - **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-06/solution-06.md)
 
 
-### Understand throughput, latency and much more ###
-
 
 ### Task 1: Configure a quick metrics dashboard
 
@@ -48,66 +46,28 @@ fio --name=fio-8krandomwrites --rw=randwrite --direct=1 --ioengine=libaio --bs=8
 
 5. Repeat your FIO testing 
 
-6. Return to your metrics dashboard and review achvieved throughput
+6. Return to your metrics dashboard and review achvieved throughput and download speed
 
 ### Task 3: AVD/FSLogix user experience 
 
 1. Login to the AVD environment with your user
 
-2. Download Google Chrome in offline edition 
-
-3. Change to your performance dashboard and review achieved performance
+2. For a quick test, download Google Chrome in offline edition and note the time it took
 
 https://www.google.com/intl/en/chrome/next-steps.html?standalone=1
 
+3. Change to your performance dashboard and review achieved 
+
 4. Leave the AVD connection open and switch to your Netapp account
 
-5. Change your AVD volume size to 300 GB and save the change
+5. In your NetApp account, change your AVD volume size to 300 GB and save the change
 
-6. Return to your AVD session and repeat the download
+6. Return to your AVD session and repeat the download test
 
-7. Change to your performance dashboard, review achieved performance and compare to the first download
+https://www.google.com/intl/en/chrome/next-steps.html?standalone=1
+
+7. Change to your performance dashboard, review achieved throughput and download speed. Compare this to the first download results
 
 
 You successfully completed challenge 5! 🚀🚀🚀
-
-
-# Ways to access metrics and monitoring performance:
-
-Azure NetApp Files metrics are natively integrated into Azure monitor. From within the Azure portal, you can find metrics for Azure NetApp Files capacity pools and volumes from two locations:
-
-# Challenge:
-
-## AVD environment 
-
-1. Logon to your AVD client 
-
-2. Copy some data to your user profile share 
-
-
-## Azure Portal: 
-
-1. Open **[Azure monitor](https://learn.microsoft.com/en-us/azure/azure-monitor/platform/monitor-azure-resource)** 
-
-2. Click on **Metrics** 
-
-![image](../img/3-metrics-select-scope.png)
-
-3. In “Select a scope” select **Resource** type “Capacity Pools” 
-
-4. Select the AVD capability pool being used and hit **Apply** 
-
-5. Under “Metric” select **Pool allocated throughput**
-
-6. Set “Local Time” to 30 minutes 
-
-7. Watch the graph 
-
-8. Copy more data in AVD client 
-
-9. Check out the other capacity pool metrics 
-
-10. Open you NetApp account and click on your volume 
-
-11. Click on **Metrics** and check out the available volume-level metrics
 

@@ -11,14 +11,17 @@
 # MicroHack introduction
 
 This MicroHack is a hands-on technical workshop designed to help participants build practical experience with Azure NetApp Files (ANF) in the context of Virtual Desktop Infrastructure (VDI) using Azure Virtual Desktop (AVD).
-Rather than focusing only on theory or documentation, this MicroHack guides you through real-world configuration tasks and challenges that reflect common customer scenarios.
-MicroHacks are intentionally scoped, time‑boxed, and challenge‑driven. They allow you to learn by doing and to incrementally build technical confidence by solving practical problems step by step
+
+Rather than focusing only on theory or documentation, this MicroHack guides you through real-world configuration tasks and challenges that reflect common customer scenarios. MicroHacks are intentionally scoped, time‑boxed, and challenge‑driven. 
+
+They allow you to learn by doing and to incrementally build technical confidence by solving practical problems step by step
 
 ![image](img/fsl-ccd-ha.jpg)
 
 # MicroHack context
 
 Many organizations adopt Azure Virtual Desktop to modernize their end-user computing strategy, but quickly encounter challenges around performance, profile management, and scalable storage.
+
 Azure NetApp Files is a native Azure service that provides high‑performance, low‑latency file storage, making it an ideal backend for FSLogix profiles, user home directories, and application data in AVD environments.
 
 This MicroHack places Azure NetApp Files into a realistic VDI scenario, where participants must integrate ANF with Azure networking, identity services, and AVD workloads. The focus is on understanding why specific design decisions matter, not just how to configure them.

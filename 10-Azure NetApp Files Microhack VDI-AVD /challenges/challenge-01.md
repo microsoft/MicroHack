@@ -12,10 +12,11 @@ Overview of Azure NetApp Files, including its purpose, benefits, and key feature
 * Key attributes: performance, cost optimization, and scale 
 * Supported protocols: SMB, NFS, and dual protocol 
 * Use cases: File sharing, ome directories, databases, high-performance computing 
+* Introduction to Microhack subscription and challenges
 
 ## Success criteria
 
-* Describe the key attributes of Azure NetApp Files:
+* Describe the key attributes of Azure NetApp Files
 * Performance characteristics and service levels
 * Cost optimization considerations
 * Scalability and enterprise readiness

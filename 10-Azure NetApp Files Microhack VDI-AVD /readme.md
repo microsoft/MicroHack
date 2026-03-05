@@ -24,7 +24,7 @@ Many organizations adopt Azure Virtual Desktop to modernize their end-user compu
 
 Azure NetApp Files is a native Azure service that provides high‑performance, low‑latency file storage, making it an ideal backend for FSLogix profiles, user home directories, and application data in AVD environments.
 
-This MicroHack places Azure NetApp Files into a realistic VDI scenario, where participants must integrate ANF with Azure networking, identity services, and AVD workloads. The focus is on understanding why specific design decisions matter, not just how to configure them.
+This MicroHack places Azure NetApp Files into a realistic VDI scenario, where participants must integrate ANF with Azure networking, identity services and AVD workloads. The focus is on understanding why specific design decisions matter, not just how to configure them.
 
 # Objectives
 
@@ -34,7 +34,9 @@ Understand the role of Azure NetApp Files in a Virtual Desktop Infrastructure sc
 Create and configure an Azure NetApp Files account, capacity pools, and volumes
 Integrate Azure NetApp Files with Azure Virtual Desktop
 Configure networking prerequisites such as VNets and delegated subnets
-Understand how ANF supports user profiles and session-based workloads
+Understand how ANF integrates with FSLogix user profiles and session-based workloads
+Configure Azure NetApp Files backup for protecting user data
+Understand how to monitor and tune Azure NetApp Files performance 
 Gain hands-on experience that can be transferred directly to customer or production environments
 
 The challenges are designed to build on each other, reinforcing learning outcomes as you progress.

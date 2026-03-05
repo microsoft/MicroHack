@@ -55,7 +55,7 @@ fio --name=fio-8krandomwrites --rw=randwrite --direct=1 --ioengine=libaio --bs=8
 
 https://www.google.com/intl/en/chrome/next-steps.html?standalone=1
 
-3. Change to your performance dashboard and review achieved 
+3. Change to your performance dashboard and review results 
 
 4. Leave the AVD connection open and switch to your Netapp account
 

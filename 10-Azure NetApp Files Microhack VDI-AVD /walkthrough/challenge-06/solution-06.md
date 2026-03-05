@@ -6,26 +6,24 @@ Duration: 20 minutes
 
 ### **Task 1: Create a backup vault**
 
-1. In your Azure NetApp Files subscription, navigate to the Backup Vaults menu.
+1. In your NetApp account on the left side navigate to **Backup Vaults**
 
-2. Select + Add Backup Vault. Assign a name to your backup vault then select Create.
+2. Select **Add Backup Vault** and assign a name to your backup vault then select **Create**
 
 ![image](../img/solution-05-backup-vault-create.png)
 
 
 ### **Task 2: Configure a backup policy**
 
-1. Sign in to the Azure portal and navigate to Azure NetApp Files.
+1. Select your NetApp account.
 
-2. Select your Azure NetApp Files account.
+2. On the left side under **Storage service**, select Backups.
 
-3. Select Backups.
+3. Select **Backup Policies**
 
-4. Select Backup Policies.
+4. Select **Add**
 
-5. Select Add.
-
-6. In the Backup Policy page, specify the backup policy name. Enter the number of backups that you want to keep for daily, weekly, and monthly backups. Select Save.
+5. In the Backup Policy page, specify the **Backup Policy Name**. Enter the number of backups that you want to keep for daily, weekly, and monthly backups. Select **Save**
 
 The minimum value for Daily Backups to Keep is 2.
 
@@ -41,38 +39,13 @@ Monthly: Monthly Backups to Keep = 4
 
 1. Navigate to Volumes then select the volume for which you want to configure backups.
 
-2. From the selected volume, select Backup then Configure.
+2. From the selected volume, select **Backups** then **Configure Backups**.
 
-3. In the Configure Backups page, select the backup vault from the Backup vaults drop-down. For information about creating a backup vault, see Create a backup vault.
+3. Select your backup vault 
 
-4. In the Backup Policy drop-down menu, assign the backup policy to use for the volume. Select OK.
-
-5. The Vault information is prepopulated.
+4. Select the previously created backup policy 
 
 ![image](../img/solution-05-backup-configure-enabled.png)
-
-### **Task 4: Migrate backups to a backup vault**
-
-1. Navigate to Backups.
-
-2. From the banner above the backups, select Assign Backup Vault.
-
-3. Select the volumes for migrating backups. Then, select Assign to Backup Vault.
-
-If there are backups from volumes that have been deleted that you want to migrate, select Include backups from Deleted Volumes. This option is only enabled if backups from deleted volumes are present.
-
-![image](../img/solution-05-backup-vault-assign.png)
-
-4. Navigate to the Backup Vault menu to view and manage your backups.
-
-
-
-### **Task 5: Delete a backup vault**
-1. Navigate to the Backup Vault menu.
-
-2. Identify the backup vault you want to delete and select the three dots ... next to the backup's name. Select Delete.
-
-![image](../img/solution-05-backup-vault-delete.png)
 
 
 You successfully completed challenge 6! 🚀🚀🚀

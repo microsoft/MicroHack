@@ -110,13 +110,20 @@ apt update
 apt install fio
 apt install nfs-common
 mkdir /netapp-mnt
+cd /netapp-mnt
 ```
 8. Go back to your NetApp account and click on the NFS volume you had created
 
-9. On the left side find **Mount instructions** and select it
+9. On the left side find **Mount instructions**, select it and copy the mount command
 
+10. Paste it into putty and make sure the share will be mounted to /netapp-mnt
 
+Example:
 
+```bash
+mount -t nfs -o rw,hard,rsize=262144,wsize=262144,vers=3,tcp 10.100.1.5:/myvol1 /netapp-mnt
+```
+11. Copy some files to the share
 
 
 You successfully completed challenge 3! 🚀🚀🚀

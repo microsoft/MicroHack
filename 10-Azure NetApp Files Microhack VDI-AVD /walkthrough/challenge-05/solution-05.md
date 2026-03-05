@@ -30,13 +30,16 @@
 
 2. Run a couple of load simualations
 
-8k block size 100% random read test
+Read test
 ```bash
-fio --name=fio-8krandomreads --rw=randread --direct=1 --ioengine=libaio --bs=8k --numjobs=4 --iodepth=128 --size=5G --runtime=600 --group_reporting
+sudo su
+cd /netapp-mnt
+fio --name=read_test --ioengine=libaio --rw=read --bs=4k --direct=1 --size=100M --numjobs=1 --runtime=60 --group_reporting
 ```
-8k block size 100% random writes
+Write test
 ```bash
-fio --name=fio-8krandomwrites --rw=randwrite --direct=1 --ioengine=libaio --bs=8k --numjobs=4 --iodepth=128 --size=5G --runtime=600 --group_reporting
+fio --name=write_test --ioengine=libaio --rw=write --bs=4k --direct=1 --size=100M --numjobs=1 --runtime=60 --group_reporting --direct=1
+
 ```
 
 3. Go to your metrics dashboard and review achvieved throughput

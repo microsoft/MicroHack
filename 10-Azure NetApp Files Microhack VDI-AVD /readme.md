@@ -10,51 +10,54 @@
 
 # MicroHack introduction
 
-This MicroHack scenario walks through the use of FSLogix with Azure NetApp Files in AVD environments.
-
-focus on the best practices and the design principles. Specifically, this builds up to include working with an existing infrastructure.
+This MicroHack is a hands-on technical workshop designed to help participants build practical experience with Azure NetApp Files (ANF) in the context of Virtual Desktop Infrastructure (VDI) using Azure Virtual Desktop (AVD).
+Rather than focusing only on theory or documentation, this MicroHack guides you through real-world configuration tasks and challenges that reflect common customer scenarios.
+MicroHacks are intentionally scoped, time‑boxed, and challenge‑driven. They allow you to learn by doing and to incrementally build technical confidence by solving practical problems step by step
 
 ![image](img/fsl-ccd-ha.jpg)
 
-This lab is not a full explanation of .... as a technology, please consider the following articles required pre-reading to build foundational knowledge.
-
-Optional (read this after completing this lab to take your learning even deeper!)
-
-Describe the scenario here...
-
 # MicroHack context
-This MicroHack scenario walks through the use of Azure NetApp Files with Azure Virtual Desktop.
+
+Many organizations adopt Azure Virtual Desktop to modernize their end-user computing strategy, but quickly encounter challenges around performance, profile management, and scalable storage.
+Azure NetApp Files is a native Azure service that provides high‑performance, low‑latency file storage, making it an ideal backend for FSLogix profiles, user home directories, and application data in AVD environments.
+
+This MicroHack places Azure NetApp Files into a realistic VDI scenario, where participants must integrate ANF with Azure networking, identity services, and AVD workloads. The focus is on understanding why specific design decisions matter, not just how to configure them.
 
 # Objectives
 
-Provide an overview of Azure NetApp Files, including its purpose, benefits, and key features.
+By completing this MicroHack, you will be able to:
 
-After completing this MicroHack you will:
+Understand the role of Azure NetApp Files in a Virtual Desktop Infrastructure scenario
+Create and configure an Azure NetApp Files account, capacity pools, and volumes
+Integrate Azure NetApp Files with Azure Virtual Desktop
+Configure networking prerequisites such as VNets and delegated subnets
+Understand how ANF supports user profiles and session-based workloads
+Gain hands-on experience that can be transferred directly to customer or production environments
 
-- Know how to build a Azure NetApp Files Enviroment
-- Understand how to implement FsLogiX to redirect Profiles and App Containers ..
-- Understand how to...
+The challenges are designed to build on each other, reinforcing learning outcomes as you progress.
 
 # MicroHack challenges
 
 ## General prerequisites
 
-This MicroHack has a few but important prerequisites
+Before starting this MicroHack, you should have:
 
-In order to use the MicroHack time most effectively, the following tasks should be completed prior to starting the session.
+* An active Azure subscription with sufficient permissions to create:
+    * Resource groups
+    * Virtual networks and subnets
+    * Azure NetApp Files resources
 
-With these pre-requisites in place, we can focus on building the differentiated knowledge in ... that is required when working with the product, rather than spending hours repeating relatively simple tasks such as setting up....
+* Basic knowledge of:
+    * Azure networking concepts (VNets, subnets, delegation)
+    * Azure Virtual Desktop fundamentals
+    * Azure Active Directory
 
-In summary:
+* Familiarity with the Azure Portal and Azure CLI or PowerShell A workstation with:
+    * Internet access
+    * A modern web browser
+    * Access to the Azure Portal
 
-- Azure Subscription 
-- Resource Group 
-- Service 1
-- Service 2  
-
-Permissions for the deployment: 
-- Contributor on your Resource Group
-- Other necessary permissions
+No prior Azure NetApp Files experience is required, but a general understanding of storage concepts will be helpful.
 
 
 ## Challenges

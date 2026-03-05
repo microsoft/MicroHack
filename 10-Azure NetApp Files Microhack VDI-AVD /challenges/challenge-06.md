@@ -27,7 +27,7 @@ This challenge is completed successfully when:
 
 ## Learning resources
 
-[Azure NetApp Files Backup overview](https://learn.microsoft.com/azure/azure-netapp-files/backup-introduction)
-[Configure Azure NetApp Files Backup](https://learn.microsoft.com/azure/azure-netapp-files/backup-configure)
-[Azure NetApp Files data protection](https://learn.microsoft.com/azure/azure-netapp-files/azure-netapp-files-data-protection)
+* [Azure NetApp Files Backup overview](https://learn.microsoft.com/azure/azure-netapp-files/backup-introduction)
+* [Configure Azure NetApp Files Backup](https://learn.microsoft.com/azure/azure-netapp-files/backup-configure)
+* [Azure NetApp Files data protection](https://learn.microsoft.com/azure/azure-netapp-files/azure-netapp-files-data-protection)
 

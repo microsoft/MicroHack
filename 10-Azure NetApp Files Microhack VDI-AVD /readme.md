@@ -16,7 +16,7 @@ Rather than focusing only on theory or documentation, this MicroHack guides you 
 
 They allow you to learn by doing and to incrementally build technical confidence by solving practical problems step by step
 
-![image](img/fsl-ccd-ha.jpg)
+![image]("img/fsl-ccd-ha.jpg" width="150")
 
 # MicroHack context
 

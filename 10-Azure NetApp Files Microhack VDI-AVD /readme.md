@@ -10,9 +10,11 @@
 
 # MicroHack introduction
 
-This MicroHack scenario walks through the use of ... with a focus on the best practices and the design principles. Specifically, this builds up to include working with an existing infrastructure.
+This MicroHack scenario walks through the use of FSLogix with Azure NetApp Files in AVD environments.
 
-![image](Path to the high level architecture )
+focus on the best practices and the design principles. Specifically, this builds up to include working with an existing infrastructure.
+
+![image](img/fsl-ccd-ha.jpg)
 
 This lab is not a full explanation of .... as a technology, please consider the following articles required pre-reading to build foundational knowledge.
 
@@ -74,8 +76,6 @@ Permissions for the deployment:
 * [Solution 5 - Managing and Monitoring Azure NetApp Files](./walkthrough/challenge-02/solution-05.md)
 * [Solution 6 - Setting Up Azure NetApp Files Backup](./walkthrough/challenge-02/solution-06.md)
 * [Solution 7 - Best Practices and Use Cases](./walkthrough/challenge-02/solution-07.md)
-
-
 
 ## Contributors
 

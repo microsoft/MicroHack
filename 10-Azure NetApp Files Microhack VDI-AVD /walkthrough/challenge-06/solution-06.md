@@ -49,7 +49,7 @@ Monthly: Monthly Backups to Keep = 4
 
 5. Select **Backups** to find new backup jobs (will take some time)
 
-### **Task 2: Run a manual backup**
+### **Task 4: Run a manual backup**
 
 1. Pick your volume, on the left side, select **Volumes**
 

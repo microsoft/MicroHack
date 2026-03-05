@@ -71,9 +71,9 @@ Please ensure that you successfully verified the [General prerequisits](../../Re
 
 4. Select **Protocol**, and then complete the following actions:
 
-![image](../img/solution-03-protocol-smb.png)
+![image](../img/nfs_5.png)
 
-* Select **SMB** as the protocol type for the volume.
+* Select **NFS** and **NFSv3** as protocol type and version for the volume.
 * Active Directory: **microhack.test**
 * Share name: **myvol1**
 

@@ -1,4 +1,4 @@
-# Walkthrough Challenge 5 - Managing and Monitoring Azure NetApp Files
+# Walkthrough Challenge 5 - Managing and Monitoring Azure NetApp Files Performance
 
 [Previous Challenge Solution](../challenge-04/solution-04.md) - **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-06/solution-06.md)
 
@@ -34,7 +34,6 @@
 ```bash
 fio --name=fio-8krandomreads --rw=randread --direct=1 --ioengine=libaio --bs=8k --numjobs=4 --iodepth=128 --size=5G --runtime=600 --group_reporting
 ```
-
 8k block size 100% random writes
 ```bash
 fio --name=fio-8krandomwrites --rw=randwrite --direct=1 --ioengine=libaio --bs=8k --numjobs=4 --iodepth=128 --size=5G --runtime=600 --group_reporting
@@ -68,6 +67,23 @@ https://www.google.com/intl/en/chrome/next-steps.html?standalone=1
 
 7. Change to your performance dashboard, review achieved throughput and download speed. Compare this to the first download results
 
+### Task 4: We need more performance
+
+1. Go back to you NetApp account
+
+2. On the left side expand **Storage service** and  select **Capacity pools**
+
+3. Select **Add Pool**, enter a name, select **Ultra** for Service level and make it 1 TB in size and hit **Create** 
+
+4. Once your new pool is ready, select **Volumes** on the left side
+
+5. Click the three dots in column **Actions** on the right side of you SMB volume, select **Change pool**, select your new pool and hit **OK**
+
+6. Repeat the previous steps for your NFS volume
+
+7. Repeat the tests from **Task 2** and **Task 3**
+
+8. Check your monitoring dashboard and compare the results. 
 
 You successfully completed challenge 5! 🚀🚀🚀
 

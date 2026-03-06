@@ -34,11 +34,13 @@ The participant/group number is the second octet in the network address
 
 5. Select Next to proceed to the IP Addresses tab, enter or select the following information:
 
-* Address Space: Group Number 1 = **10.1.0.0/16**, Group Number 2 = **10.2.0.0/16...**
+* Address Space: Group Number 1 = **10.1.0.0/16**, Group Number 2 = **10.2.0.0/16 ...**
+
+<kbd> <img src="../img/solution-02-create-virtual-network-ip-address.png" /> </kbd>
 
 6. Click on **Add a Subnet** and enter or select the following information:
 
-<kbd> <img src="../img/solution-02-create-virtual-network-ip-address.png" /> </kbd>
+<kbd> <img src="../img/solution-02-create-virtual-network-subnet.png" /> </kbd>
 
 * Subnet purpose: **Leave the default of Default**
 * Name: Enter **subnet-hsotpool-{Group Number}**

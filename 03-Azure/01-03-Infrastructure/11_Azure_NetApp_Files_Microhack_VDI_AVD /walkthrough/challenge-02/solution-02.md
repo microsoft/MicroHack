@@ -30,7 +30,7 @@ The participant/group number is the second octet in the network address
 * Virtual network name: vnet-hostpool{Group Number}
 * Region: Germany West Central
 
-![image](../img/solution-02-create-virtual-network-basics.png)
+<kbd> <img src="../img/solution-02-create-virtual-network-basics.png" /> </kbd>
 
 5. Select Next to proceed to the IP Addresses tab.
 

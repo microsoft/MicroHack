@@ -39,7 +39,11 @@ The username and password will be provided during the session.
 
 ### Task 2: Create a new SMB volume
 
-1. On the left side expand **Storage service**, click on **Volumes** and **Add volume**. Enter the following:
+1. On the left side expand **Storage service**, click on **Volumes** and **Add volume**. 
+
+<kbd> <img src="../img/solution-04-add-volume.png" /> </kbd>
+
+2. Enter the following values (leave all other fields blank)
 
 * Volume Name: **vol2-smb-hostpool{Group Number}**
 * Capacity Pool: **capacity-pool-hostpool{Group Number}**
@@ -48,17 +52,17 @@ The username and password will be provided during the session.
 * Virtual Network: **vnet-hostpool{Group Number}**
 * Delegated subnet: **anf-subnet-hostpool{Group Number}**
 
-<kbd> <img src="../img/solution-04-add-volume.png" /> </kbd>
-
 <kbd> <img src="../img/solution-04-smb-vol-create.png" /> </kbd>
 
-2. Click on **Next Protocol**
+2. Click on **Next** or **Protocol** and enter the following values:
+
+Protocol Type: **SMB**
+Active Directory: **microhack.test**
+Share name: **Leave Default**
 
 <kbd> <img src="../img/solution-04-smb-protocol.png" /> </kbd>
 
-3. Access: Select **SMB**
-
-4. Click on **Review + create** and **create**
+3. Click on **Review + create** and **create**
 
 <kbd> <img src="../img/solution-04-vol-review.png" /> </kbd>
 

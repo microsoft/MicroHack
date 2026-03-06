@@ -99,8 +99,6 @@ $PSBoundParameters.GetEnumerator() | Sort-Object Name | ForEach-Object {
 # Early Az init - before any module install/update in this session
 $ErrorActionPreference = 'Stop'
 
-Disable-AzContextAutosave -Scope Process | Out-Null
-
 Import-Module Az.Accounts -Force
 Import-Module Az.Resources -Force
 Import-Module Az.KeyVault -Force

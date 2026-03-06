@@ -48,6 +48,7 @@ Please ensure that you successfully verified the [General prerequisits](../../Re
 * Service Level: **Standard**
 * Size (TiB): **1 (TiB)** 
 * QoS Type: **Auto**
+* Encryption: **Single**
 
 5. Select **Create**
 

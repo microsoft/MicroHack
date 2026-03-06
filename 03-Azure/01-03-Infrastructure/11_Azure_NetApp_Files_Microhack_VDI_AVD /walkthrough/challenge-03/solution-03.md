@@ -38,11 +38,7 @@ Please ensure that you successfully verified the [General prerequisits](../../Re
 
 <kbd> <img src="../img/solution-03-azure-netapp-files-click-capacity-pools.png" /> </kbd>
 
-3. Select + **+ Add pools**. 
-
-<kbd> <img src="../img/solution-03-azure-netapp-files-new-capacity-pool.png" /> </kbd>
-
-4. Provide information for the capacity pool: 
+3. Select + **+ Add pools** and provide information for the capacity pool: 
 
 * Name: **capacity-pool-hostpool{Group Number}** 
 * Service Level: **Standard**
@@ -50,6 +46,8 @@ Please ensure that you successfully verified the [General prerequisits](../../Re
 * Enable Cool Access: **Enabled**
 * QoS Type: **Auto**
 * Encryption: **Single**
+
+<kbd> <img src="../img/solution-03-azure-netapp-files-new-capacity-pool.png" /> </kbd>
 
 5. Select **Create**
 
@@ -63,27 +61,23 @@ Please ensure that you successfully verified the [General prerequisits](../../Re
 
 <kbd> <img src="../img/solution-03-azure-netapp-files-add-volume.png" /> </kbd>
 
-2. Select **+ Add volume** to create a new volume and enter the following information
-
-<kbd> <img src="../img/solution-03-azure-netapp-files-add-volume-basics.png" /> </kbd>
+2. Select **+ Add volume** to create a new volume and enter the following information:
 
 * Volume Name: **vol1-nfs-hostpool{Group Number}**
 * Capacity Pool: (**apacity-pool-hostpool{Group Number}**).
 * Quote (GiB): **100**
 * Virtual Network: **vnet-hostpool{Group Number}**
 
-
-* Use the default value for quota.
-
-![image](../img/solution-03-create-volume.png)
+<kbd> <img src="../img/solution-03-azure-netapp-files-add-volume-basics.png" /> </kbd>
 
 4. Select **Protocol**, and then complete the following actions:
 
-![image](../img/nfs_5.png)
+* Protocol typ: **NFS**
+* File path: **Leave default**
+* Versions: **NFSv3**
 
-* Select **NFS** and **NFSv3** as protocol type and version for the volume.
-* Active Directory: **microhack.test**
-* Share name: **myvol1**
+<kbd> <img src="../img/solution-03-azure-netapp-files-add-volume-protocol.png" /> </kbd>
+
 
 5. Select **Review + create** to display information for the volume you're creating.
 

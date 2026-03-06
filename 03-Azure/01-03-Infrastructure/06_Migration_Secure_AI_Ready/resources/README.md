@@ -1,6 +1,6 @@
 # Deploy the Landing Zone for the Micro Hack
 
-Clone the GitHub repository using Azure Cloud Shell and deploy .\bicep\main.bicep file. [Solution 1](../walkthrough/challenge-1/solution.md)
+Download \*.bicep files to your local PC and follow [Solution 1](../walkthrough/challenge-01/solution-01.md)
 
 
 ## Quota Information if multiple Users Deploy to the same subscription

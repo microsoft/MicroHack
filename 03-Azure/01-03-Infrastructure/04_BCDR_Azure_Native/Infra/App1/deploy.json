@@ -568,7 +568,7 @@
               "name": "[toLower(variables('Name'))]",
               "location": "[variables('location')]",
               "sku": {
-                "name": "Standard_LRS"
+                "name": "Standard_GRS"
               },
               "kind": "StorageV2",
               "properties": {
@@ -3748,6 +3748,13 @@
                   "bootDiagnostics": {
                     "enabled": true
                   }
+                },
+                "securityProfile": {
+                  "securityType": "TrustedLaunch",
+                  "uefiSettings": {
+                    "secureBootEnabled": true,
+                    "vTpmEnabled": true
+                  }
                 }
               },
               "identity": {
@@ -4074,6 +4081,14 @@
     "fqdn": {
       "type": "string",
       "value": "[reference('trafficManager').outputs.trafficManagerfqdn.value]"
+    },
+    "sourceResourceGroupName": {
+      "type": "string",
+      "value": "[format('{0}-source-{1}-rg', parameters('parDeploymentPrefix'), parameters('sourceLocation'))]"
+    },
+    "targetResourceGroupName": {
+      "type": "string",
+      "value": "[format('{0}-target-{1}-rg', parameters('parDeploymentPrefix'), parameters('targetLocation'))]"
     }
   }
 }

@@ -88,7 +88,7 @@ Please ensure that you successfully verified the [General prerequisits](../../Re
 
 7. The created volume appears in the Volumes menu. (This can take some time...)
 
-![image](../img/solution-03-creted-volume-overview.png)
+<kbd> <img src="../img/solution-03-created-volume-overview.png" /> </kbd>
 
 ### **Task 4: Create a Linux VM and mout the NFS volume**
 

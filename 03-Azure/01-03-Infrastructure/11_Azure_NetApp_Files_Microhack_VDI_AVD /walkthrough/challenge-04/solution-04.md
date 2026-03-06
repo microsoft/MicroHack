@@ -29,23 +29,27 @@ The username and password will be provided during the session.
 * SMB Serve: **MH**
 * Organizational Unit Path: **OU=Hostpool{Group Number}**
 * AES Encryption: **checked**
+* Username: ???
+* Password: ???
 
-<kbd> <img src="../img/solution-04-azure-netapp-files-join-active-directory.png" /> </kbd>
+<kbd> <img src="../img/solution-04-azure-netapp-files-join-active-directory-1.png" /> </kbd>
+<kbd> <img src="../img/solution-04-azure-netapp-files-join-active-directory-2.png" /> </kbd>
 
 6. Click **OK**
 
 ### Task 2: Create a new SMB volume
 
-1. On the left side expand **Storage service**, click on **Volumes** and **Add volume**. Enter the following
+1. On the left side expand **Storage service**, click on **Volumes** and **Add volume**. Enter the following:
+
+* Volume Name: **vol2-smb-hostpool{Group Number}**
+* Capacity Pool: **capacity-pool-hostpool{Group Number}**
+* Quota (GiB): **100**
+* Max. Throughput: What throughput value did you get? Why can't you change it?
+* Virtual Network: **vnet-hostpool{Group Number}**
+* Delegated subnet: **anf-subnet-hostpool{Group Number}**
 
 ![image](../img/solution-04-add-volume.png)
 
-* Volume Name: **mySMBvol{Group Number}**
-* Capacity Pool: **your existing capacity pool**
-* Quota: **100**
-* Max. Throughput: What throughput value did you get? Why can't you change it?
-* Virtual Network: **microhack_vnet**
-* Delegated subnet: **anf**
 
 ![image](../img/solution-04-smb-vol-create.png)
 

@@ -44,7 +44,7 @@ helm install ollama otwld/ollama `
   --set resources.limits.memory="4Gi"
 ```
 
-## Step 2: Install openwebUI
+### Step 2: Install openwebUI
 
 ```bash
 helm install openwebui open-webui/open-webui `

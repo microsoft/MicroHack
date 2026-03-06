@@ -72,7 +72,15 @@ echo "Open: http://${node_pip}:30080"
 ```
 
 ## Task 5 - Access the openwebUI and run a prompt
-open webbrowser to access the external IP, login to the openwebUI portal and try out your first prompt
+open webbrowser to access the external IP, create user login to the openwebUI portal 
+![add-connection](img/01_add_connection.png)
+
+add an ollama connection
+![add-connection-ollama](img/02_add_connection_ollama.png)
+
+add IP Address and port and click in save(2x)
+![add-connection-IPandPort](img/03_add_connection_ip_port.png)
+and try out your first prompt
 If your connection works, you should see in the upper left corner the deployed model "phi4-mini".
 
 You successfully completed challenge 3! 🚀🚀🚀

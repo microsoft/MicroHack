@@ -25,23 +25,23 @@ The participant/group number is the second octet in the network address
 
 4. On the Basics tab of Create virtual network, enter, or select the following information:
 
-* Subscription: Use the default subscription
-* Ressource Group: rg-hostpool{Group Number}
-* Virtual network name: vnet-hostpool{Group Number}
-* Region: Germany West Central
+* Subscription: **Use the default subscription**
+* Ressource Group: **rg-hostpool{Group Number}**
+* Virtual network name: **vnet-hostpool{Group Number}**
+* Region: **Germany West Central**
 
 <kbd> <img src="../img/solution-02-create-virtual-network-basics.png" /> </kbd>
 
 5. Select Next to proceed to the IP Addresses tab.
 
-6. In the address space box in Subnets, select the default subnet.
+<kbd> <img src="../img/solution-02-create-virtual-network-ip-address.png" /> </kbd>
 
-7. In Edit subnet, enter or select the following information:
+6. Click on **Add a Subnet** and enter or select the following information:
 
-* Subnet purpose: Leave the default of Default.
-* Name: Enter **subnet-1**
+* Subnet purpose: **Leave the default of Default**
+* Name: Enter **subnet-hsotpool-{Group Number}**
 * IPv4 address range: Leave the default of **10.0.0.0/16**
-* Starting address: Leave the default of **10.0.0.0**
+* Starting address: Group Number 1 = **10.1.0.0/16, Group Number 2 = 10.2.0.0/16...**
 * Size: Leave the default of **/24** (256 addresses).
 
 8. Select **Save**

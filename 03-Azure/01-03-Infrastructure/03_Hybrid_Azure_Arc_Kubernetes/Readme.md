@@ -100,6 +100,7 @@ In order to successfully work through the challenges in this MicroHack, you will
 
 ## Contributors
 * Simon Schwingel [GitHub](https://github.com/skiddder); [LinkedIn](https://www.linkedin.com/in/simon-schwingel-b602869a/)
+* Lars Fischer [GitHub](https://github.com/MSFT-LarsFisch); [LinkedIn](https://www.linkedin.com/in/lars-fischer-5464a5175/)
 
 ## Get Started
 [Challenge-01](challenges/challenge-01.md)

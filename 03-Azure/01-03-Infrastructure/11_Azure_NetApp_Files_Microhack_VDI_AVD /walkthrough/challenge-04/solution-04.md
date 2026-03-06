@@ -29,8 +29,8 @@ The username and password will be provided during the session.
 * SMB Serve: **MH**
 * Organizational Unit Path: **OU=Hostpool{Group Number}**
 * AES Encryption: **checked**
-* Username: ???
-* Password: ???
+* Username: **provided during the session**
+* Password: **provided during the session**
 
 <kbd> <img src="../img/solution-04-azure-netapp-files-join-active-directory-1.png" /> </kbd>
 <kbd> <img src="../img/solution-04-azure-netapp-files-join-active-directory-2.png" /> </kbd>

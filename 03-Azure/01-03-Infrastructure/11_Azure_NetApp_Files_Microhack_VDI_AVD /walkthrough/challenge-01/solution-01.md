@@ -17,7 +17,7 @@ Please ensure that you successfully verified the [General prerequisits](../../Re
 
 1. From the Azure portal, select the Azure Cloud Shell icon on the upper right-hand corner:
 
-![image](../img/solution-02-azure-netapp-files-azure-cloud-shell.png)
+<kbd> <img src="../img/solution-01-azure-netapp-files-azure-cloud-shell.png" /> </kbd>
 
 2. If you have multiple subscriptions on your Azure account, select the one that you want to configure for Azure NetApp Files:
 

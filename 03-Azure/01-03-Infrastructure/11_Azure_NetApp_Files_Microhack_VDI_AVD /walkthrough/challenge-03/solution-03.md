@@ -12,7 +12,7 @@ Please ensure that you successfully verified the [General prerequisits](../../Re
 
 1. In the Azure portal's search box, enter **Azure NetApp Files** and then select **Azure NetApp Files** from the list that appears. 
 
-![image](../img/solution-03-search-azure-netapp-files.png)
+<kbd> <img src="../img/solution-03-search-azure-netapp-files.png" /> </kbd>
 
 2. Select + **Create** to create a new NetApp account. 
 
@@ -23,7 +23,7 @@ Please ensure that you successfully verified the [General prerequisits](../../Re
 * Select **Create new** to create new resource group. Enter **myRG1** for the resource group name. Select OK. 
 * Select your account location.
 
-![image](../img/solution-03-azure-netapp-files-new-netapp-account.png)
+<kbd> <img src="../img/solution-03-azure-netapp-files-new-netapp-account.png" /> </kbd>
 
 4. Select **Create** to create your new NetApp account.
 
@@ -32,15 +32,15 @@ Please ensure that you successfully verified the [General prerequisits](../../Re
 
 1. From the Azure NetApp Files management sidebar, select your NetApp account, e.g. myaccount1
 
-![image](../img/solution-03-azure-netapp-files-select-netapp-account.png)
+<kbd> <img src="../img/solution-03-azure-netapp-files-select-netapp-account.png" /> </kbd>
 
 2. From the Azure NetApp Files management sidebar, select **Capacity pools**.
 
-![image](../img/solution-03-azure-netapp-files-click-capacity-pools.png)
+<kbd> <img src="../img/solution-03-azure-netapp-files-click-capacity-pools.png" /> </kbd>
 
 3. Select + **Add pools**. 
 
-![image](../img/solution-03-azure-netapp-files-new-capacity-pool.png)
+<kbd> <img src="../img/solution-03-azure-netapp-files-new-capacity-pool.png" /> </kbd>
 
 4. Provide information for the capacity pool: 
 

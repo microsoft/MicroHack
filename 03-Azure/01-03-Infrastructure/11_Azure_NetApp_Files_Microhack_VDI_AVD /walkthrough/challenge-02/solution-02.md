@@ -42,16 +42,15 @@ The participant/group number is the second octet in the network address
 
 <kbd> <img src="../img/solution-02-create-virtual-network-subnet.png" /> </kbd>
 
-* Subnet purpose: **Leave the default of Default**
+* Subnet purpose: **Default**
 * Name: Enter **subnet-hsotpool-{Group Number}**
-* IPv4 address range: Leave the default of **10.0.0.0/16**
-* Starting address: Group Number 1 = **10.1.0.0/16, Group Number 2 = 10.2.0.0/16...**
+* IPv4 address range: Group Number 1 = **10.1.0.0/16, Group Number 2 = 10.2.0.0/16 ...**
+* Starting address: Group Number 1 = **10.1.0.0, Group Number 2 = 10.2.0.0 ...**
 * Size: Leave the default of **/24** (256 addresses).
 
 8. Select **Save**
 
 9. Select **Review + create** at the bottom of the window. When validation passes, select Create
-
 
 ### **Task 2: Delegate a subnet to Azure NetApp Files**
 
@@ -65,7 +64,7 @@ The participant/group number is the second octet in the network address
 * Address range: Specify **/28** the IP address range.
 * Subnet delegation: Select **Microsoft.NetApp/volumes**.
 
-![image](../img/solution-01-azure-netapp-files-subnet-delegation.png)
+<kbd> <img src="../img/solution-02-azure-netapp-files-subnet-delegation.png" /> </kbd>
 
 Note: You can also create and delegate a subnet when you [create a volume for Azure NetApp Files.](https://learn.microsoft.com/en-us/azure/azure-netapp-files/azure-netapp-files-create-volumes)
 

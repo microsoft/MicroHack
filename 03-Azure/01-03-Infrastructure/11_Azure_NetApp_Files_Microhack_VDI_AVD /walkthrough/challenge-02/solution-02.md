@@ -52,16 +52,24 @@ The participant/group number is the second octet in the network address
 
 9. Select **Review + create** at the bottom of the window. When validation passes, select Create
 
+<kbd> <img src="../img/solution-02-create-virtual-network-review.png" /> </kbd>
+
 ### **Task 2: Delegate a subnet to Azure NetApp Files**
 
-1. Navigate to Virtual networks in the Azure portal. Select the virtual network that you want to use for Azure NetApp Files.
+1. Navigate to Virtual networks in the Azure portal. 
+
+2. Select the virtual network that you previously created. 
+
+<kbd> <img src="../img/solution-02-create-virtual-network-select-vnet.png" /> </kbd>
 
 2. From Virtual network, select Subnets then the +Subnet button.
 
+<kbd> <img src="../img/solution-02-create-virtual-network-create-anf-subnet" /> </kbd>
+
 3. Create a new subnet to use for Azure NetApp Files by completing the following required fields in the Add Subnet page:
 
-* Name: Specify **anf** as the subnet name.
-* Address range: Specify **/28** the IP address range.
+* Name: Specify **anf-hostpool-{Group Number}** as the subnet name.
+* Address range: Specify **/24** the IP address range.
 * Subnet delegation: Select **Microsoft.NetApp/volumes**.
 
 <kbd> <img src="../img/solution-02-azure-netapp-files-subnet-delegation.png" /> </kbd>

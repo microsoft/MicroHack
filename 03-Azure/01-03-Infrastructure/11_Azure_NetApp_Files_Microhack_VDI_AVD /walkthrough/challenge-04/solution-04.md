@@ -7,6 +7,8 @@
 The pre-provisioned AVD setup already has a designated Hostpool for each attendee. 
 Your Hostpool is microhack_hostpool{Group Number}
 
+The username and password will be provided during the session.
+
 ### Task 1: Configure AD connection in NetApp account
 
 1. Log in to the [Azure portal](https://portal.azure.com/#home) 

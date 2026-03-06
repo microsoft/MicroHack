@@ -2,7 +2,7 @@
 
 [Previous Challenge Solution](../challenge-04/solution-04.md) - **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-06/solution-06.md)
 
-
+Duration: 20 minutes
 
 ### Task 1: Configure a quick metrics dashboard
 

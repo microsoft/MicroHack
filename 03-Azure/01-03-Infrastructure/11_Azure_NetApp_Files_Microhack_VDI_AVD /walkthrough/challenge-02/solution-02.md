@@ -9,6 +9,12 @@ Duration: 20 minutes
 The following procedure creates a virtual network with a resource subnet, and a delegated ANF subnet.
 Please ensure that you successfully verified the [General prerequisits](../../Readme.md#general-prerequisites) before continuing with this challenge.
 
+The participant/group number is the second octet in the network address
+10.1.0.0/16
+10.2.0.0/16
+...
+
+
 ### **Task 1: Create a Virtual Network and Subnet**
 
 1. Log in to the [Azure portal](https://portal.azure.com/#home). 

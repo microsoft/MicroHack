@@ -72,7 +72,7 @@ The participant/group number is the second octet in the network address
 * Address range: Specify **/24** the IP address range.
 * Subnet delegation: Select **Microsoft.NetApp/volumes**.
 
-<kbd> <img src="../img/solution-02-azure-netapp-files-subnet-delegation.png1" /> </kbd>
+<kbd> <img src="../img/solution-02-azure-netapp-files-subnet-delegation.png" /> </kbd>
 
 Note: You can also create and delegate a subnet when you [create a volume for Azure NetApp Files.](https://learn.microsoft.com/en-us/azure/azure-netapp-files/azure-netapp-files-create-volumes)
 

@@ -78,8 +78,10 @@ Please ensure that you successfully verified the [General prerequisits](../../Re
 
 <kbd> <img src="../img/solution-03-azure-netapp-files-add-volume-protocol.png" /> </kbd>
 
-
 5. Select **Review + create** to display information for the volume you're creating.
+
+<kbd> <img src="../img/solution-03-azure-netapp-files-add-volume-review.png" /> </kbd>
+
 
 6. Select **Create** to create the volume. The created volume appears in the Volumes menu.
 

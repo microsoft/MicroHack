@@ -48,18 +48,19 @@ The username and password will be provided during the session.
 * Virtual Network: **vnet-hostpool{Group Number}**
 * Delegated subnet: **anf-subnet-hostpool{Group Number}**
 
-![image](../img/solution-04-add-volume.png)
+<kbd> <img src="../img/solution-04-add-volume.png" /> </kbd>
 
-
-![image](../img/solution-04-smb-vol-create.png)
+<kbd> <img src="../img/solution-04-smb-vol-create.png" /> </kbd>
 
 2. Click on **Next Protocol**
 
-![image](../img/solution-04-smb-protocol.png)
+<kbd> <img src="../img/solution-04-smb-protocol.png" /> </kbd>
 
 3. Access: Select **SMB**
 
 4. Click on **Review + create** and **create**
+
+<kbd> <img src="../img/solution-04-vol-review.png" /> </kbd>
 
 ### Task 3: Integration of your volume into AVD (Trainer Task)
 

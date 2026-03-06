@@ -86,7 +86,80 @@ Choose the appropriate deployment script:
 Deployments can take 2-6 hours depending on the environment. Monitor progress in:
 - Azure Portal > Resource Groups > Deployments
 
-### Step 4: Configure the Environment
+### Step 4: Expand UserStorage Volumes
+
+> [!IMPORTANT]
+> LocalBox VM creation may fail for some attendees if the UserStorage volumes do not have enough free space. The default volume sizes (~679 GB each) can be too small when multiple attendees create VMs simultaneously. To fix this, add a 1 TB data disk to each Azure Local node and expand the storage pool before the event.
+
+![Create role assignment](./img/localbox_storage_01.png)
+
+This is a two-part process: first add disks from the **host VM**, then expand volumes from a **cluster node**.
+
+#### Part A: Add data disks to each node (run on the host VM)
+
+Connect to the LocalBox host VM (`LOCALBOX-CLIENT`) via Azure Bastion or Remote Desktop, open a PowerShell session as Administrator, and run:
+
+```powershell
+# Create and attach a 1 TB dynamic VHDX to each Azure Local node
+foreach ($node in @("AzLHOST1", "AzLHOST2")) {
+    $vhdxPath = "V:\VMs\${node}-S2D_Disk7.vhdx"
+    Write-Host "Creating $vhdxPath (1 TB dynamic)..."
+    New-VHD -Path $vhdxPath -SizeBytes 1TB -Dynamic
+    Add-VMHardDiskDrive -VMName $node -Path $vhdxPath
+    Write-Host "Attached $vhdxPath to $node"
+}
+```
+
+#### Part B: Expand the storage pool and volumes (run on a cluster node)
+
+Open **Hyper-V Manager** on the host VM, connect to one of the Azure Local nodes (e.g., `AzLHOST1`), and open a PowerShell session as Administrator on the node:
+
+**1. Expand the UserStorage virtual disks and partitions:**
+
+```powershell
+# Get the updated pool
+$pool = Get-StoragePool -FriendlyName "SU1_Pool"
+
+# Calculate available space and split evenly between the two UserStorage volumes
+$freeSpace = ($pool.Size - $pool.AllocatedSize)
+$expandPerDisk = [math]::Floor($freeSpace / 2)
+
+# Expand each UserStorage virtual disk
+foreach ($diskName in @("UserStorage_1", "UserStorage_2")) {
+    $vdisk = Get-VirtualDisk -FriendlyName $diskName
+    $currentSize = $vdisk.Size
+    $newSize = $currentSize + $expandPerDisk
+    Write-Host "Expanding $diskName from $([math]::Round($currentSize/1GB)) GB to $([math]::Round($newSize/1GB)) GB..."
+    Resize-VirtualDisk -FriendlyName $diskName -Size $newSize
+}
+
+# Expand the partitions to use the new virtual disk space
+foreach ($diskName in @("UserStorage_1", "UserStorage_2")) {
+    $volume = Get-Volume -FriendlyName $diskName
+    $partition = $volume | Get-Partition
+    $maxSize = ($partition | Get-PartitionSupportedSize).SizeMax
+    Resize-Partition -InputObject $partition -Size $maxSize
+    Write-Host "$diskName partition resized to $([math]::Round($maxSize/1GB)) GB"
+}
+```
+
+**2. Verify the new sizes:**
+
+```powershell
+Get-StoragePool -FriendlyName "SU1_Pool"
+```
+
+```powershell
+Get-Volume -FriendlyName UserStorage_*
+```
+
+![Azure Local storage](./img/localbox_storage_01.png)
+
+You should also see updated values in the Azure Portal:
+
+![Azure Local storage](./img/localbox_storage_02.png)
+
+### Step 5: Configure the Environment
 
 VM image:
 1. In the Azure Portal, navigate to your **Azure Local** instance
@@ -131,7 +204,7 @@ Role assignments:
 - For the **User Access Administrator** role, select **Allow user to assign all roles except privileged administrator roles Owner, UAA, RBAC (Recommended)** on the **Conditions** tab:
 ![Create role assignment](./img/add_rbac_06.jpg)
 
-### Step 5: Test the Environment
+### Step 6: Test the Environment
 Once deployed:
 - Follow Challenge 6 walkthrough for lab exercises verification
 

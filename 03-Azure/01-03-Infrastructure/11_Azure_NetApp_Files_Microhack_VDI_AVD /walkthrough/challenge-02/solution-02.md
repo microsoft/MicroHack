@@ -68,9 +68,16 @@ The participant/group number is the second octet in the network address
 
 3. Create a new subnet to use for Azure NetApp Files by completing the following required fields in the Add Subnet page:
 
+* Subnet purpose: **Default**
+* IPv4 address range: Group Number 1 = **10.1.0.0/16, Group Number 2 = 10.2.0.0/16 ...**
+* Starting address: Group Number 1 = **10.1.0.0, Group Number 2 = 10.2.0.0 ...**
+
 * Name: Specify **anf-hostpool-{Group Number}** as the subnet name.
 * Address range: Specify **/24** the IP address range.
-* Subnet delegation: Select **Microsoft.NetApp/volumes**.
+
+4. Scroll down to **Subnet delegation**
+
+5. Select **Microsoft.NetApp/volumes**.
 
 <kbd> <img src="../img/solution-02-azure-netapp-files-subnet-delegation.png" /> </kbd>
 

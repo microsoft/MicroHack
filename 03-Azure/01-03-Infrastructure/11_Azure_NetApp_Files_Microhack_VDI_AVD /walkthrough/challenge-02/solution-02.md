@@ -64,7 +64,7 @@ The participant/group number is the second octet in the network address
 
 2. From Virtual network, select Subnets then the +Subnet button.
 
-<kbd> <img src="../img/solution-02-create-virtual-network-create-anf-subnet" /> </kbd>
+<kbd> <img src="../img/solution-02-create-virtual-network-create-anf-subnet.png" /> </kbd>
 
 3. Create a new subnet to use for Azure NetApp Files by completing the following required fields in the Add Subnet page:
 

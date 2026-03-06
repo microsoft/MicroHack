@@ -28,29 +28,28 @@ Please ensure that you successfully verified the [General prerequisits](../../Re
 
 4. Select **Create** to create your new NetApp account.
 
-
 ### **Task 2: Create a capacity pool**
 
-1. From the Azure NetApp Files management sidebar, select your NetApp account, e.g. myaccount1
+1. From the Azure NetApp Files management sidebar, select your NetApp account **anf-account-hostpool{Group Number}**
 
 <kbd> <img src="../img/solution-03-azure-netapp-files-select-netapp-account.png" /> </kbd>
 
-2. From the Azure NetApp Files management sidebar, select **Capacity pools**.
+2. From the Azure NetApp Files management sidebar, select **Capacity pools** in the section "storage service"
 
 <kbd> <img src="../img/solution-03-azure-netapp-files-click-capacity-pools.png" /> </kbd>
 
-3. Select + **Add pools**. 
+3. Select + **+ Add pools**. 
 
 <kbd> <img src="../img/solution-03-azure-netapp-files-new-capacity-pool.png" /> </kbd>
 
 4. Provide information for the capacity pool: 
 
-* Enter **mypool1** as the pool name. 
-* Select **Premium** for the service level. 
-* Specify **1 (TiB)** as the pool size. 
-* Use the **Auto** QoS type. 
+* Name: **capacity-pool-hostpool{Group Number}** 
+* Service Level: **Standard**
+* Size (TiB): **1 (TiB)** 
+* QoS Type: **Auto**
 
-5. Select **Create**.
+5. Select **Create**
 
 ### **Task 3: Create an NFS volume for Azure NetApp Files**
 

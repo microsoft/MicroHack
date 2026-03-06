@@ -19,7 +19,7 @@ The username and password will be provided during the session.
 
 4. On the left side expand **Azure Netapp Files** and click on **Active Directory connections**
 
-![image](../img/solution-04-azure-netapp-files-active-directory-connections.png)
+<kbd> <img src="../img/solution-04-azure-netapp-files-active-directory-connections.png" /> </kbd>
 
 5. Click **Join** and enter the following values (leave all other fields blank)
 
@@ -30,7 +30,7 @@ The username and password will be provided during the session.
 * Organizational Unit Path: **OU=Hostpool{Group Number}**
 * AES Encryption: **checked**
 
-![image](../img/solution-04-azure-netapp-files-join-active-directory.png)
+<kbd> <img src="../img/solution-04-azure-netapp-files-join-active-directory.png" /> </kbd>
 
 6. Click **OK**
 

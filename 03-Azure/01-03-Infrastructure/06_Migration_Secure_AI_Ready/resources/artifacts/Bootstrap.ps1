@@ -88,6 +88,14 @@ New-Item -Path $Env:MHBoxDemoPageDir -ItemType directory -Force
 
 Start-Transcript -Path $Env:MHBoxLogsDir\Bootstrap.log
 
+Write-Host "Invocation line:"
+Write-Host $MyInvocation.Line
+
+Write-Host "Bound parameters:"
+$PSBoundParameters.GetEnumerator() | Sort-Object Name | ForEach-Object {
+    Write-Host "$($_.Key) = $($_.Value)"
+}
+
 # Set SyncForegroundPolicy to 1 to ensure that the scheduled task runs after the client VM joins the domain
 Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon" "SyncForegroundPolicy" 1
 

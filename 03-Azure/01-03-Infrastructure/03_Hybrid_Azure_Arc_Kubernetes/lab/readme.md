@@ -174,9 +174,9 @@ rg_names_onprem = {
 # Set admin username (must match the admin_user value in fixtures.tfvars)
 admin_user="<replace-with-admin-user-from-fixtures.tfvars>"
 
-# Extract user number from Azure username (e.g., LabUser-37 -> 37)
+# Extract user number from Azure username before '@' (e.g., LabUser-37@... -> 37)
 azure_user=$(az account show --query user.name --output tsv)
-user_number=$(echo $azure_user | sed -n 's/.*LabUser-\([0-9]\+\).*/\1/p')
+user_number=$(echo "${azure_user%@*}" | grep -oE '[0-9]+' | tail -n1 | sed 's/^0*//; s/^$/0/')
 
 # Get public ip of master node via Azure CLI according to user-number
 master_pip=$(az vm list-ip-addresses --resource-group "${user_number}-k8s-onprem" --name "${user_number}-k8s-master" --query "[0].virtualMachine.network.publicIpAddresses[0].ipAddress" --output tsv)

@@ -23,9 +23,9 @@ az extension add -n k8s-extension
 * Flux CLI installed (optional; not required for this challenge)
 * Extension microsoft.flux installed on your kubernetes cluster
 ```bash
-# Extract user number from Azure username (e.g., LabUser-37 -> 37)
+# Extract user number from Azure username before '@' (e.g., LabUser-37@... -> 37)
 azure_user=$(az account show --query user.name --output tsv)
-user_number=$(echo "$azure_user" | sed -E -n 's/.*[^0-9]([0-9]+)$/\1/p' | sed 's/^0*//; s/^$/0/')
+user_number=$(echo "${azure_user%@*}" | grep -oE '[0-9]+' | tail -n1 | sed 's/^0*//; s/^$/0/')
 
 export arc_resource_group="${user_number}-k8s-arc"
 export arc_cluster_name="${user_number}-k8s-arc-enabled"

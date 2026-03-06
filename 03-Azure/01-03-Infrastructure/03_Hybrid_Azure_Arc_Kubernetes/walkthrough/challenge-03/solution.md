@@ -30,35 +30,45 @@ kubectl create namespace aimh
 ### Step 1: Install ollama with phi4-mini
 
 ```bash
-helm install ollama otwld/ollama `
-  --namespace aimh `
-  --set service.type=ClusterIP `
-  --set ollama.port=15000 `
-  --set persistentVolume.enabled=true `
-  --set persistentVolume.size=20Gi `
-  --set ollama.models.pull[0]=phi4-mini:latest `
-  --set ollama.models.run[0]=phi4-mini:latest `
-  --set resources.requests.cpu="2" `
-  --set resources.requests.memory="2Gi" `
-  --set resources.limits.cpu="4" `
+helm install ollama otwld/ollama \
+  --namespace aimh \
+  --set service.type=ClusterIP \
+  --set ollama.port=15000 \
+  --set persistentVolume.enabled=true \
+  --set persistentVolume.size=20Gi \
+  --set ollama.models.pull[0]=phi4-mini:latest \
+  --set ollama.models.run[0]=phi4-mini:latest \
+  --set resources.requests.cpu="2" \
+  --set resources.requests.memory="2Gi" \
+  --set resources.limits.cpu="4" \
   --set resources.limits.memory="4Gi"
 ```
 
 ### Step 2: Install openwebUI
 
 ```bash
-helm install openwebui open-webui/open-webui `
-  --namespace aimh `
-  --set service.type=LoadBalancer `
-  --set ollama.enabled=false `
-  --set ollamaUrls[0]="http://ollama.slm.svc.cluster.local:15000" `
-  --set persistence.enabled=true `
+helm install openwebui open-webui/open-webui \
+  --namespace aimh \
+  --set service.type=NodePort \
+  --set service.nodePort=30080 \
+  --set ollama.enabled=false \
+  --set ollamaUrls[0]="http://ollama.slm.svc.cluster.local:15000" \
+  --set persistence.enabled=true \
   --set persistence.size=5Gi
 ```
 
 Get the external IP of the openwebui
 ```bash
 kubectl get svc -n aimh
+
+azure_user=$(az account show --query user.name -o tsv)
+user_number=$(echo "${azure_user%@*}" | grep -oE '[0-9]+' | tail -n1 | sed 's/^0*//; s/^$/0/')
+node_pip=$(az vm list-ip-addresses \
+  --resource-group "${user_number}-k8s-onprem" \
+  --name "${user_number}-k8s-master" \
+  --query "[0].virtualMachine.network.publicIpAddresses[0].ipAddress" -o tsv)
+
+echo "Open: http://${node_pip}:30080"
 ```
 
 ## Task 5 - Access the openwebUI and run a prompt

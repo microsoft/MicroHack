@@ -21,7 +21,7 @@ The username and password will be provided during the session.
 
 <kbd> <img src="../img/solution-04-azure-netapp-files-active-directory-connections.png" /> </kbd>
 
-5. Click **Join** and enter the following values (leave all other fields blank)
+5. Click **Join** and enter the following values (leave all other fields blank):
 
 * Primary DNS: **10.100.0.4**
 * AD DNS Domain Name: **microhack.test**
@@ -54,7 +54,7 @@ The username and password will be provided during the session.
 
 <kbd> <img src="../img/solution-04-smb-vol-create.png" /> </kbd>
 
-2. Click on **Next** or **Protocol** and enter the following values:
+2. Click on **Next** or **Protocol** and enter the following values (leave all other fields blank):
 
 * Protocol Type: **SMB**
 * Active Directory: **microhack.test**

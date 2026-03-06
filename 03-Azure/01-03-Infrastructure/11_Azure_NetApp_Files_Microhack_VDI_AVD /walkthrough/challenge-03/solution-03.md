@@ -64,7 +64,7 @@ Please ensure that you successfully verified the [General prerequisits](../../Re
 2. Select **+ Add volume** to create a new volume and enter the following information:
 
 * Volume Name: **vol1-nfs-hostpool{Group Number}**
-* Capacity Pool: (**apacity-pool-hostpool{Group Number}**).
+* Capacity Pool: (**capacity-pool-hostpool{Group Number}**).
 * Quote (GiB): **100**
 * Virtual Network: **vnet-hostpool{Group Number}**
 

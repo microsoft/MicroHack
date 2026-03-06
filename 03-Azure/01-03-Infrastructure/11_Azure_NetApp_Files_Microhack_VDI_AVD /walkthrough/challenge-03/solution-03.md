@@ -89,7 +89,8 @@ Please ensure that you successfully verified the [General prerequisits](../../Re
 
 2. Select **Create** and **Virtual Machine** and enter these parameters
 
-<kbd>![image](../img/solution-03-create-vm1.png)</kbd>
+![image](../img/solution-03-create-vm1.png)
+<kbd> <img src="../img/solution-03-create-vm1.png" /> </kbd>
 ![image](../img/solution-03-create-vm2.png)
 
 3. Click on **Disks** and leave the defaults

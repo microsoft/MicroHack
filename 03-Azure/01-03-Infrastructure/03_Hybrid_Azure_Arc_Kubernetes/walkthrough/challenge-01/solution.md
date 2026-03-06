@@ -66,36 +66,6 @@ kubectl get nodes
 💡 *Important*: Make sure that your kubectl works and is pointing to the k8s cluster you want to onboard before executing the script!
 
 ```bash
-./az_connect_k8s.sh
-```
-
-Wait until the script terminates. Expected result should look comparable to this output: 
-
-```bash
-# adjust the prefix according to your microhack user number
-export onprem_resource_group="${user_number}-k8s-onprem"
-export arc_resource_group="${user_number}-k8s-arc"
-export arc_cluster_name="${user_number}-k8s-arc-enabled"
-export location="westeurope"
-```
-
-* Execute the script to
-    * register required resource providers in your subscription (this step may take several minutes if the resource providers have not been registered before):
-        * Microsoft.Kubernetes
-        * Microsoft.KubernetesConfiguration
-        * Microsoft.ExtendedLocation
-    * remove Azure Arc helm charts which might exist from previous connection attempts
-    * install required Azure CLI extensions or update them to latest version:
-        * connectedk8s
-        * k8s-configuration
-    * connecting the simulated onprem cluster to Azure Arc using the Azure CLI approach
-
-💡 *Important*: Make sure that your kubectl works and is pointing to the k8s cluster you want to onboard before executing the script!
-
-```bash
-# Login to Azure on the master node
-az login
-
 # Clone the repository (or copy the script content)
 git clone https://github.com/microsoft/MicroHack.git
 cd MicroHack/03-Azure/01-03-Infrastructure/03_Hybrid_Azure_Arc_Kubernetes/walkthroughs/challenge-01

@@ -56,9 +56,9 @@ The username and password will be provided during the session.
 
 2. Click on **Next** or **Protocol** and enter the following values:
 
-Protocol Type: **SMB**
-Active Directory: **microhack.test**
-Share name: **Leave Default**
+* Protocol Type: **SMB**
+* Active Directory: **microhack.test**
+* Share name: **Leave Default**
 
 <kbd> <img src="../img/solution-04-smb-protocol.png" /> </kbd>
 

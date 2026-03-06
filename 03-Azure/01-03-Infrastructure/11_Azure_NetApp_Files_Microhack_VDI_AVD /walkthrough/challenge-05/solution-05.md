@@ -10,6 +10,8 @@ Duration: 20 minutes
 
 2. On the left side open **Monitoring** and then click on **Metrics**
 
+<kbd> <img src="../img/solution-05-monitor-metrics.png" /> </kbd>
+
 3. Click on **New chart**. Now you see 2 charts in total
 
 4. On the upper chart, click on **Save to dashboard**, select **Pin to dashboard**, enter a name and hit **OK**

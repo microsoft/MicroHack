@@ -96,6 +96,20 @@ $PSBoundParameters.GetEnumerator() | Sort-Object Name | ForEach-Object {
     Write-Host "$($_.Key) = $($_.Value)"
 }
 
+# Early Az init - before any module install/update in this session
+$ErrorActionPreference = 'Stop'
+
+Disable-AzContextAutosave -Scope Process | Out-Null
+
+Import-Module Az.Accounts -Force
+Import-Module Az.Resources -Force
+Import-Module Az.KeyVault -Force
+
+Connect-AzAccount -Identity -Tenant $tenantId -Subscription $subscriptionId | Out-Null
+Set-AzContext -Subscription $subscriptionId | Out-Null
+
+Write-Host "Az context initialized successfully"
+
 # Set SyncForegroundPolicy to 1 to ensure that the scheduled task runs after the client VM joins the domain
 Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon" "SyncForegroundPolicy" 1
 
@@ -118,8 +132,6 @@ foreach ($module in $modules) {
 }
 
 # Add Key Vault Secrets
-Connect-AzAccount -Identity
-
 $DeploymentProgressString = "Started bootstrap-script..."
 
 $tags = Get-AzResourceGroup -Name $resourceGroup | Select-Object -ExpandProperty Tags
@@ -344,10 +356,10 @@ if ($flavor -eq "ITPro") {
     Register-ScheduledTask -TaskName "MHServersLogonScript" -User $adminUsername -Action $Action -RunLevel "Highest" -Force
 }
 
-    # Disabling Windows Server Manager Scheduled Task
-    Get-ScheduledTask -TaskName ServerManager | Disable-ScheduledTask
+# Disabling Windows Server Manager Scheduled Task
+Get-ScheduledTask -TaskName ServerManager | Disable-ScheduledTask
 
-    if ($flavor -eq "ITPro") {
+if ($flavor -eq "ITPro") {
 
     Write-Header "Installing Hyper-V"
 
@@ -357,14 +369,13 @@ if ($flavor -eq "ITPro") {
     Enable-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatform -NoRestart
     Install-WindowsFeature -Name Hyper-V -IncludeAllSubFeature -IncludeManagementTools -Restart
 
-    }
+}
 
-    # Clean up Bootstrap.log
-    Write-Host "Clean up Bootstrap.log"
-    Stop-Transcript
-    $logSuppress = Get-Content $Env:MHBoxLogsDir\Bootstrap.log | Where-Object { $_ -notmatch "Host Application: $ScheduledTaskExecutable" }
-    $logSuppress | Set-Content $Env:MHBoxLogsDir\Bootstrap.log -Force
-
+# Clean up Bootstrap.log
+Write-Host "Clean up Bootstrap.log"
+Stop-Transcript
+$logSuppress = Get-Content $Env:MHBoxLogsDir\Bootstrap.log | Where-Object { $_ -notmatch "Host Application: $ScheduledTaskExecutable" }
+$logSuppress | Set-Content $Env:MHBoxLogsDir\Bootstrap.log -Force
 
 # Restart computer
 Restart-Computer

@@ -12,7 +12,7 @@
 Execute the following script in your bash shell to access the kuberentes cluster:
 ```bash
 kubectl get nodes
-kubectt get all --all-namespaces
+kubectl get all --all-namespaces
 ```
 
 ## Task 2 - Create a new namespace and prepare the helm repository

@@ -28,9 +28,9 @@ To connect to your k8s cluster, we first need to merge the cluster credentials i
 # Set admin username (use the admin_user value provided by your coach)
 admin_user="<replace-with-admin_user-from-fixtures.tfvars>"
 
-# Extract user number from Azure username (e.g., LabUser-37 -> 37)
+# Extract trailing number from Azure username (e.g., LabUser-37 or hackuser-067 -> 37 or 67)
 azure_user=$(az account show --query user.name --output tsv)
-user_number=$(echo $azure_user | sed -n 's/.*LabUser-\([0-9]\+\).*/\1/p')
+user_number=$(echo "$azure_user" | sed -E -n 's/.*[^0-9]([0-9]+)$/\1/p' | sed 's/^0*//; s/^$/0/')
 
 # Get public ip of master node via Azure cli according to user-number
 master_pip=$(az vm list-ip-addresses --resource-group "${user_number}-k8s-onprem" --name "${user_number}-k8s-master" --query "[0].virtualMachine.network.publicIpAddresses[0].ipAddress" --output tsv)

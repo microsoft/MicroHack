@@ -15,7 +15,7 @@ Execute the following commands in your bash shell to install the container log e
 ```bash
 # Extract user number from Azure username (e.g., LabUser-37 -> 37)
 azure_user=$(az account show --query user.name --output tsv)
-user_number=$(echo $azure_user | sed -n 's/.*LabUser-\([0-9]\+\).*/\1/p')
+user_number=$(echo "$azure_user" | sed -E -n 's/.*[^0-9]([0-9]+)$/\1/p' | sed 's/^0*//; s/^$/0/')
 echo $user_number
 
 # if you are running this in a non-microhack env, adjust the values to match your env

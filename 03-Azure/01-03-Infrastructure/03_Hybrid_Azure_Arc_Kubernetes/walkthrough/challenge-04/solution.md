@@ -23,7 +23,7 @@ The deployment uses ARM templates as this is the most robust way for deployment 
 ```bash
 # Get current LabUser's number
 export azure_user=$(az account show --query user.name --output tsv)
-export user_number=$(echo $azure_user | sed -n 's/.*LabUser-\([0-9]\+\).*/\1/p')
+export user_number=$(echo "$azure_user" | sed -E -n 's/.*[^0-9]([0-9]+)$/\1/p' | sed 's/^0*//; s/^$/0/')
 export subscription_id=$(az account show --query id -o tsv)
 export resource_group="$user_number-k8s-arc"
 

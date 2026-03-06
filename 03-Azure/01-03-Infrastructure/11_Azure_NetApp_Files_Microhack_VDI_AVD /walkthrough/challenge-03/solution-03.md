@@ -82,8 +82,11 @@ Please ensure that you successfully verified the [General prerequisits](../../Re
 
 <kbd> <img src="../img/solution-03-azure-netapp-files-add-volume-review.png" /> </kbd>
 
+6. Select **Create** to create the volume. 
 
-6. Select **Create** to create the volume. The created volume appears in the Volumes menu.
+<kbd> <img src="../img/solution-03-azure-netapp-files-add-volume-deployment.png" /> </kbd>
+
+7. The created volume appears in the Volumes menu. (This can take some time...)
 
 ![image](../img/solution-03-creted-volume-overview.png)
 

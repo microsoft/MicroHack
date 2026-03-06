@@ -46,11 +46,16 @@ Please ensure that you successfully verified the [General prerequisits](../../Re
 
 * Name: **capacity-pool-hostpool{Group Number}** 
 * Service Level: **Standard**
-* Size (TiB): **1 (TiB)** 
+* Size (TiB): **1 (TiB)**
+* Enable Cool Access: **Enabled**
 * QoS Type: **Auto**
 * Encryption: **Single**
 
 5. Select **Create**
+
+6. Check if capacity pool has been created
+
+<kbd> <img src="../img/solution-03-azure-netapp-files-created-capacity-pool.png" /> </kbd>
 
 ### **Task 3: Create an NFS volume for Azure NetApp Files**
 

@@ -53,24 +53,26 @@ Please ensure that you successfully verified the [General prerequisits](../../Re
 
 5. Select **Create**
 
-6. Check if capacity pool has been created
+6. Check if capacity pool has been created.
 
 <kbd> <img src="../img/solution-03-azure-netapp-files-created-capacity-pool.png" /> </kbd>
 
 ### **Task 3: Create an NFS volume for Azure NetApp Files**
 
-1. Select the Volumes blade from the Capacity Pools blade.
+1. In NetApp Account window **anf-account-hostpool{Group Number}** click on **Volumes** in the "Storage service" section.
 
-![image](../img/solution-03-volumes.png)
+<kbd> <img src="../img/solution-03-azure-netapp-files-add-volume.png" /> </kbd>
 
-2. Select + Add volume to create a volume.
+2. Select **+ Add volume** to create a new volume and enter the following information
 
-![image](../img/solution-03-add-volume.png)
+<kbd> <img src="../img/solution-03-azure-netapp-files-add-volume-basics.png" /> </kbd>
 
-3. In the Create a Volume window, provide information for the volume:
-   
-* Enter **myvol1** as the volume name.
-* Select your capacity pool (**mypool1**).
+* Volume Name: **vol1-nfs-hostpool{Group Number}**
+* Capacity Pool: (**apacity-pool-hostpool{Group Number}**).
+* Quote (GiB): **100**
+* Virtual Network: **vnet-hostpool{Group Number}**
+
+
 * Use the default value for quota.
 
 ![image](../img/solution-03-create-volume.png)

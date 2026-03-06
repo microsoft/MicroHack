@@ -43,7 +43,7 @@ The participant/group number is the second octet in the network address
 <kbd> <img src="../img/solution-02-create-virtual-network-subnet.png" /> </kbd>
 
 * Subnet purpose: **Default**
-* Name: Enter **subnet-hostpool-{Group Number}**
+* Name: Enter **subnet-hostpool{Group Number}**
 * IPv4 address range: Group Number 1 = **10.1.0.0/16, Group Number 2 = 10.2.0.0/16 ...**
 * Starting address: Group Number 1 = **10.1.0.0, Group Number 2 = 10.2.0.0 ...**
 * Size: Leave the default of **/24** (256 addresses).
@@ -70,9 +70,9 @@ The participant/group number is the second octet in the network address
 
 * Subnet purpose: **Default**
 * IPv4 address range: Group Number 1 = **10.1.0.0/16, Group Number 2 = 10.2.0.0/16 ...**
-* Starting address: Group Number 1 = **10.1.0.0, Group Number 2 = 10.2.0.0 ...**
+* Starting address: Group Number 1 = **10.1.1.0, Group Number 2 = 10.2.1.0 ...**
 
-* Name: Specify **anf-hostpool-{Group Number}** as the subnet name.
+* Name: Specify **anf-subnet-hostpool{Group Number}** as the subnet name.
 * Address range: Specify **/24** the IP address range.
 
 4. Scroll down to **Subnet delegation**

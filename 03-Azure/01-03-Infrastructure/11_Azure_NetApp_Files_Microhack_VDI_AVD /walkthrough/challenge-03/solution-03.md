@@ -18,10 +18,11 @@ Please ensure that you successfully verified the [General prerequisits](../../Re
 
 3. In the New NetApp Account window, provide the following information:
    
-* Enter **myaccount1** for the account name. 
+* Enter **anf-account-hostpool{Group Number}** for the account name. 
 * Select your subscription. 
-* Select **Create new** to create new resource group. Enter **myRG1** for the resource group name. Select OK. 
-* Select your account location.
+* Select the previously created resource group **rg-hostpool-{Group Number}**
+* Select your account location to "Germany West Central"
+* Account Type: **NetApp Account**
 
 <kbd> <img src="../img/solution-03-azure-netapp-files-new-netapp-account.png" /> </kbd>
 

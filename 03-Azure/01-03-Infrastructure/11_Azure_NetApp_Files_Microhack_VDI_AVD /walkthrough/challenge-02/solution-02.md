@@ -58,11 +58,11 @@ The participant/group number is the second octet in the network address
 
 1. Navigate to Virtual networks in the Azure portal. 
 
-2. Select the virtual network that you previously created. 
+2. Select the **virtual network** that you previously created. 
 
 <kbd> <img src="../img/solution-02-create-virtual-network-select-vnet.png" /> </kbd>
 
-2. From Virtual network, select Subnets then the +Subnet button.
+2. From Virtual network, select Subnets then the **+Subnet** button.
 
 <kbd> <img src="../img/solution-02-create-virtual-network-create-anf-subnet.png" /> </kbd>
 

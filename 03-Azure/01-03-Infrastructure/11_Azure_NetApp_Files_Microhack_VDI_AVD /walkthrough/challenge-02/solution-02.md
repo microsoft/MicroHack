@@ -25,7 +25,12 @@ The participant/group number is the second octet in the network address
 
 4. On the Basics tab of Create virtual network, enter, or select the following information:
 
-![image](../img/solution-01-create-virtual-network-basics.png)
+* Subscription: Use the default subscription
+* Ressource Group: rg-hostpool{Group Number}
+* Virtual network name: vnet-hostpool{Group Number}
+* Region: Germany West Central
+
+![image](../img/solution-02-create-virtual-network-basics.png)
 
 5. Select Next to proceed to the IP Addresses tab.
 

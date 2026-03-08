@@ -1,0 +1,325 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "parentResource": {
+            "type": "String",
+            "metadata": {
+                "description": "The resource ID of the arc-enabled K8s cluster where the extension will be installed."
+            }
+        },
+        "k8sExtensionName": {
+            "type": "String",
+            "metadata": {
+                "description": "The name of the Kubernetes extension to create."
+            }
+        },
+        "namespace": {
+            "type": "String",
+            "metadata": {
+                "description": "The namespace in the Kubernetes cluster where the extension will be installed."
+            }
+        },
+        "location": {
+            "type": "String",
+            "defaultValue": "westeurope"
+        },
+        "roleDefinitionId_Contributor": {
+            "type": "String",
+            "metadata": {
+                "description": "The role definition ID for the Contributor role."
+            }
+        },
+        "roleAssignment_Contributor": {
+            "type": "String",
+            "metadata": {
+                "description": "The role assignment name (GUID) for the Contributor role."
+            }
+        },
+        "roleDefinitionId_MonitoringMetricsPublisher": {
+            "type": "String",
+            "metadata": {
+                "description": "The role definition ID for the Monitoring Metrics Publisher role."
+            }
+        },
+        "roleAssignment_MonitoringMetricsPublisher": {
+            "type": "String",
+            "metadata": {
+                "description": "The role assignment name (GUID) for the Monitoring Metrics Publisher role."
+            }
+        },
+        "customLocationName": {
+            "type": "String",
+            "metadata": {
+                "description": "The name of the custom location."
+            }
+        },
+        "customLocationId": {
+            "type": "String",
+            "metadata": {
+                "description": "The ID of the custom location."
+            }
+        },
+        "customLocation_hostResourceId": {
+            "type": "String",
+            "metadata": {
+                "description": "The host resource ID of the custom location."
+            }
+        },
+        "customLocation_clusterExtensionIds": {
+            "type": "Array",
+            "metadata": {
+                "description": "The cluster extension IDs of the custom location."
+            }
+        },
+        "resourceSyncRuleName": {
+            "type": "String",
+            "metadata": {
+                "description": "The name of the resource sync rule."
+            }
+        },
+        "dataController_metricsAndLogsDashboardPassword": {
+            "type": "SecureString"
+        },
+        "dataController_logAnalyticsWorkspaceId": {
+            "type": "String",
+            "metadata": {
+                "description": "The Log Analytics Workspace ID for the data controller."
+            }
+        },
+        "dataController_logAnalyticsPrimaryKey": {
+            "type": "String",
+            "metadata": {
+                "description": "The primary key for the Log Analytics Workspace."
+            }
+        },
+        "storageClass": {
+            "type": "String",
+            "defaultValue": "local-path",
+            "metadata": {
+                "description": "The storage class for data and logs storage."
+            }
+        },
+        "dataController_subscription": {
+            "type": "String"
+        },
+        "dataController_resourceGroup": {
+            "type": "String"
+        },
+        "dataControllerName": {
+            "type": "String",
+            "metadata": {
+                "description": "The name of the data controller."
+            }
+        }
+    },
+    "variables": {},
+    "functions": [],
+    "resources": [
+        {
+            "type": "Microsoft.KubernetesConfiguration/extensions",
+            "apiVersion": "2021-09-01",
+            "name": "[parameters('k8sExtensionName')]",
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "extensionType": "microsoft.arcdataservices",
+                "autoUpgradeMinorVersion": false,
+                "releaseTrain": "stable",
+                "version": "1.42.0",
+                "scope": {
+                    "cluster": {
+                        "releaseNamespace": "[parameters('namespace')]"
+                    }
+                },
+                "configurationSettings": {
+                    "Microsoft.CustomLocation.ServiceAccount": "sa-arc-bootstrapper",
+                    "imageCredentials.registry": "mcr.microsoft.com",
+                    "systemDefaultValues.image": "mcr.microsoft.com/arcdata/arc-bootstrapper:v1.42.0_2025-10-14",
+                    "systemDefaultValues.imagePullPolicy": "Always"
+                },
+                "configurationProtectedSettings": {}
+            },
+            "scope": "[parameters('parentResource')]"
+        },
+        {
+            "type": "Microsoft.Authorization/roleAssignments",
+            "apiVersion": "2018-09-01-preview",
+            "name": "[parameters('roleAssignment_Contributor')]",
+            "dependsOn": [
+                "[parameters('k8sExtensionName')]"
+            ],
+            "properties": {
+                "roleDefinitionId": "[parameters('roleDefinitionId_Contributor')]",
+                "principalId": "[reference(parameters('k8sExtensionName'), '2021-09-01', 'Full').identity.principalId]"
+            }
+        },
+        {
+            "type": "Microsoft.Authorization/roleAssignments",
+            "apiVersion": "2018-09-01-preview",
+            "name": "[parameters('roleAssignment_MonitoringMetricsPublisher')]",
+            "dependsOn": [
+                "[parameters('roleAssignment_Contributor')]"
+            ],
+            "properties": {
+                "roleDefinitionId": "[parameters('roleDefinitionId_MonitoringMetricsPublisher')]",
+                "principalId": "[reference(parameters('k8sExtensionName'), '2021-09-01', 'Full').identity.principalId]"
+            }
+        },
+        {
+            "type": "Microsoft.ExtendedLocation/customLocations",
+            "apiVersion": "2021-08-31-preview",
+            "name": "[parameters('customLocationName')]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[parameters('roleAssignment_MonitoringMetricsPublisher')]"
+            ],
+            "properties": {
+                "hostType": "Kubernetes",
+                "hostResourceId": "[parameters('customLocation_hostResourceId')]",
+                "namespace": "[parameters('namespace')]",
+                "displayName": "",
+                "clusterExtensionIds": "[parameters('customLocation_clusterExtensionIds')]",
+                "authentication": {}
+            }
+        },
+        {
+            "type": "Microsoft.ExtendedLocation/customLocations/resourceSyncRules",
+            "apiVersion": "2021-08-31-preview",
+            "name": "[parameters('resourceSyncRuleName')]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[parameters('customLocationName')]"
+            ],
+            "properties": {
+                "targetResourceGroup": "[concat('/subscriptions/', parameters('dataController_subscription'), '/resourceGroups/', parameters('dataController_resourceGroup'))]",
+                "priority": 100,
+                "selector": {
+                    "matchLabels": {
+                        "management.azure.com/provider-name": "Microsoft.AzureArcData"
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.AzureArcData/dataControllers",
+            "apiVersion": "2023-01-15-preview",
+            "name": "[parameters('dataControllerName')]",
+            "location": "[parameters('location')]",
+            "extendedLocation": {
+                "name": "[parameters('customLocationId')]",
+                "type": "CustomLocation"
+            },
+            "dependsOn": [
+                "[last(split(parameters('resourceSyncRuleName'), '/'))]"
+            ],
+            "tags": {},
+            "properties": {
+                "metricsDashboardCredential": {
+                    "username": "mhadmin",
+                    "password": "[parameters('dataController_metricsAndLogsDashboardPassword')]"
+                },
+                "logsDashboardCredential": {
+                    "username": "mhadmin",
+                    "password": "[parameters('dataController_metricsAndLogsDashboardPassword')]"
+                },
+                "logAnalyticsWorkspaceConfig": {
+                    "workspaceId": "[parameters('dataController_logAnalyticsWorkspaceId')]",
+                    "primaryKey": "[parameters('dataController_logAnalyticsPrimaryKey')]"
+                },
+                "infrastructure": "onpremises",
+                "k8sRaw": {
+                    "kind": "DataController",
+                    "spec": {
+                        "credentials": {
+                            "dockerRegistry": "arc-private-registry",
+                            "domainServiceAccount": "domain-service-account-secret",
+                            "serviceAccount": "sa-arc-controller"
+                        },
+                        "docker": {
+                            "registry": "mcr.microsoft.com",
+                            "repository": "arcdata",
+                            "imageTag": "v1.42.0_2025-10-14",
+                            "imagePullPolicy": "Always"
+                        },
+                        "security": {
+                            "allowDumps": true,
+                            "allowNodeMetricsCollection": true,
+                            "allowPodMetricsCollection": true
+                        },
+                        "services": [
+                            {
+                                "name": "controller",
+                                "port": 30080,
+                                "serviceType": "NodePort"
+                            }
+                        ],
+                        "settings": {
+                            "ElasticSearch": {
+                                "vm.max_map_count": "-1"
+                            },
+                            "azure": {
+                                "autoUploadMetrics": "true",
+                                "autoUploadLogs": "true",
+                                "subscription": "[parameters('dataController_subscription')]",
+                                "resourceGroup": "[parameters('dataController_resourceGroup')]",
+                                "location": "[parameters('location')]",
+                                "connectionMode": "direct"
+                            },
+                            "controller": {
+                                "logs.rotation.days": "7",
+                                "logs.rotation.size": "5000",
+                                "displayName": "[parameters('dataControllerName')]"
+                            },
+                            "controldb": {
+                                "backupCount": "5"
+                            }
+                        },
+                        "storage": {
+                            "data": {
+                                "accessMode": "ReadWriteOnce",
+                                "className": "[parameters('storageClass')]",
+                                "size": "15Gi"
+                            },
+                            "logs": {
+                                "accessMode": "ReadWriteOnce",
+                                "className": "[parameters('storageClass')]",
+                                "size": "10Gi"
+                            }
+                        },
+                        "infrastructure": "onpremises",
+                        "resources": {
+                            "controller": {
+                                "requests": {
+                                    "cpu": "400m",
+                                    "memory": "2Gi"
+                                },
+                                "limits": {
+                                    "cpu": "1800m",
+                                    "memory": "2Gi"
+                                }
+                            },
+                            "controllerDb": {
+                                "requests": {
+                                    "cpu": "200m",
+                                    "memory": "4Gi"
+                                },
+                                "limits": {
+                                    "cpu": "800m",
+                                    "memory": "6Gi"
+                                }
+                            }
+                        }
+                    },
+                    "metadata": {
+                        "namespace": "[parameters('namespace')]",
+                        "name": "datacontroller"
+                    },
+                    "apiVersion": "arcdata.microsoft.com/v5"
+                }
+            }
+        }
+    ],
+    "outputs": {}
+}

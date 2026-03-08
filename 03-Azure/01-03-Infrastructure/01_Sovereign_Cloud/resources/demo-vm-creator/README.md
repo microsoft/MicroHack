@@ -124,8 +124,8 @@ $pool = Get-StoragePool -FriendlyName "SU1_Pool"
 $freeSpace = ($pool.Size - $pool.AllocatedSize)
 $expandPerDisk = [math]::Floor($freeSpace / 2)
 
-# Expand each UserStorage virtual disk
-foreach ($diskName in @("UserStorage_1", "UserStorage_2")) {
+# Expand each UserStorage_1 virtual disk
+foreach ($diskName in @("UserStorage_1")) {
     $vdisk = Get-VirtualDisk -FriendlyName $diskName
     $currentSize = $vdisk.Size
     $newSize = $currentSize + $expandPerDisk
@@ -133,14 +133,17 @@ foreach ($diskName in @("UserStorage_1", "UserStorage_2")) {
     Resize-VirtualDisk -FriendlyName $diskName -Size $newSize
 }
 
-# Expand the partitions to use the new virtual disk space
-foreach ($diskName in @("UserStorage_1", "UserStorage_2")) {
+# Expand the partition to use the new virtual disk space
+foreach ($diskName in @("UserStorage_1")) {
     $volume = Get-Volume -FriendlyName $diskName
     $partition = $volume | Get-Partition
     $maxSize = ($partition | Get-PartitionSupportedSize).SizeMax
     Resize-Partition -InputObject $partition -Size $maxSize
     Write-Host "$diskName partition resized to $([math]::Round($maxSize/1GB)) GB"
 }
+
+# Remove the UserStorage_2 virtual disk as we will only use UserStorage_1 for the labs
+Remove-VirtualDisk -FriendlyName UserStorage_2
 ```
 
 **2. Verify the new sizes:**

@@ -161,16 +161,21 @@ You should also see updated values in the Azure Portal:
 
 ### Step 5: Configure the Environment
 
-VM image:
+#### VM image and storage paths
+
 1. In the Azure Portal, navigate to your **Azure Local** instance
 2. Select **VM images** in the left menu
 3. Click **+ Add VM Image -> From Azure Marketplace** to start the VM image creation wizard
 ![Create VM image](./img/add_vm_image_win_01.jpg)
-4. For the **Image to download** parameter, select **Windows Server 2025: Azure edition - Gen2**
-![Create VM image](./img/add_vm_image_win_02.jpg)
-5. Select **Review + create** and wait for the deployment to finish (on LocalBox, this takes approximately 2,5 hours due to use of nested VMs and a virtual router VM).
+4. For the **Image to download** parameter, select **[smalldisk] Windows Server 2025: Azure edition - Gen2**
+![Create VM image](./img/add_vm_image_win_02.png)
+5. For the **Storage path** parameter, select **Choose manually** and the **UserStorage1** storage path.
+6. Select **Review + create** and wait for the deployment to finish (on LocalBox, this takes approximately 2,5 hours due to use of nested VMs and a virtual router VM).
+7. To avoid an issue with image file copies when many VMs are created in parallel, delete the storage path **UserStorage2**
+![Create VM image](./img/add_vm_image_win_03.png)
 
-Logical network:
+#### Logical network
+
 1. In the Azure Portal, navigate to your **Azure Local** instance
 2. Select **Logical network** in the left menu
 3. Click **+ Create logical network** to start the creation wizard

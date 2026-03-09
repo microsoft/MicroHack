@@ -97,13 +97,13 @@ Note: You can also create and delegate a subnet when you [create a volume for Az
 
 5. Enter or select values for the following settings, and then select Add.
 
-Peering link name: **vnet_peering_hostpool{Group Number}**
-Peering type: **Virtual network**
-Subscription: **Leave defaut**
-Virtual network: **microhack_vnet**
-Remote virtual network peering settings: 
-Allow the peered virtual network to access '**microhack_vnet**': **checked**
-Allow the peered virtual network to receive forwarded traffic from '**microhack_vnet**': **checked**
+* Peering link name: **vnet_peering_hostpool{Group Number}**
+* Peering type: **Virtual network**
+* Subscription: **Leave defaut**
+* Virtual network: **microhack_vnet**
+* Remote virtual network peering settings: 
+* Allow the peered virtual network to access '**microhack_vnet**': **checked**
+* Allow the peered virtual network to receive forwarded traffic from '**microhack_vnet**': **checked**
 
 <kbd> <img src="../img/solution-02-create-vnet-peering.png" /> </kbd>
 

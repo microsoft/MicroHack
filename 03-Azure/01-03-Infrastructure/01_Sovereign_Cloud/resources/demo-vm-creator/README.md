@@ -124,8 +124,8 @@ $pool = Get-StoragePool -FriendlyName "SU1_Pool"
 $freeSpace = ($pool.Size - $pool.AllocatedSize)
 $expandPerDisk = [math]::Floor($freeSpace / 2)
 
-# Expand each UserStorage virtual disk
-foreach ($diskName in @("UserStorage_1", "UserStorage_2")) {
+# Expand each UserStorage_1 virtual disk
+foreach ($diskName in @("UserStorage_1")) {
     $vdisk = Get-VirtualDisk -FriendlyName $diskName
     $currentSize = $vdisk.Size
     $newSize = $currentSize + $expandPerDisk
@@ -133,14 +133,17 @@ foreach ($diskName in @("UserStorage_1", "UserStorage_2")) {
     Resize-VirtualDisk -FriendlyName $diskName -Size $newSize
 }
 
-# Expand the partitions to use the new virtual disk space
-foreach ($diskName in @("UserStorage_1", "UserStorage_2")) {
+# Expand the partition to use the new virtual disk space
+foreach ($diskName in @("UserStorage_1")) {
     $volume = Get-Volume -FriendlyName $diskName
     $partition = $volume | Get-Partition
     $maxSize = ($partition | Get-PartitionSupportedSize).SizeMax
     Resize-Partition -InputObject $partition -Size $maxSize
     Write-Host "$diskName partition resized to $([math]::Round($maxSize/1GB)) GB"
 }
+
+# Remove the UserStorage_2 virtual disk as we will only use UserStorage_1 for the labs
+Remove-VirtualDisk -FriendlyName UserStorage_2
 ```
 
 **2. Verify the new sizes:**
@@ -161,16 +164,21 @@ You should also see updated values in the Azure Portal:
 
 ### Step 5: Configure the Environment
 
-VM image:
+#### VM image and storage paths
+
 1. In the Azure Portal, navigate to your **Azure Local** instance
 2. Select **VM images** in the left menu
 3. Click **+ Add VM Image -> From Azure Marketplace** to start the VM image creation wizard
 ![Create VM image](./img/add_vm_image_win_01.jpg)
-4. For the **Image to download** parameter, select **Windows Server 2025: Azure edition - Gen2**
-![Create VM image](./img/add_vm_image_win_02.jpg)
-5. Select **Review + create** and wait for the deployment to finish (on LocalBox, this takes approximately 2,5 hours due to use of nested VMs and a virtual router VM).
+4. For the **Image to download** parameter, select **[smalldisk] Windows Server 2025: Azure edition - Gen2**
+![Create VM image](./img/add_vm_image_win_02.png)
+5. For the **Storage path** parameter, select **Choose manually** and the **UserStorage1** storage path.
+6. Select **Review + create** and wait for the deployment to finish (on LocalBox, this takes approximately 2,5 hours due to use of nested VMs and a virtual router VM).
+7. To avoid an issue with image file copies when many VMs are created in parallel, delete the storage path **UserStorage2**
+![Create VM image](./img/add_vm_image_win_03.png)
 
-Logical network:
+#### Logical network
+
 1. In the Azure Portal, navigate to your **Azure Local** instance
 2. Select **Logical network** in the left menu
 3. Click **+ Create logical network** to start the creation wizard

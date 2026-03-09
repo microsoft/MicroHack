@@ -177,7 +177,7 @@ For background and conceptual reference, review the article [What is SSH Posture
 
 ![Azure Local](./images/localbox_02.jpg)
 
-5. **Image**: Select an available gallery image (e.g., Windows Server 2025)
+5. **Image**: Select the available gallery image **2025-datacenter-azure-edition-smalldisk-01** (Windows Server 2025)
 6. **Virtual processor count**: 2
 7. **Memory (MB)**: 4096
 

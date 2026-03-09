@@ -85,27 +85,33 @@ Note: You can also create and delegate a subnet when you [create a volume for Az
 
 ### **Task 3: Create VNet Peering**
 
-1. Navigate to Virtual networks in the Azure Portal.
+1. Navigate to Virtual networks in the **Azure Portal**
 
 2. In Virtual networks, select the network you want to create a peering for.
 
-3. Select Peerings in Settings.
+3. Select **Peerings** in Settings.
 
 <kbd> <img src="../img/solution-02-create-vnet-peering-2.png" /> </kbd>
 
-4. Select + Add
+4. Select **+ Add**
 
-5. Enter or select values for the following settings, and then select Add.
+5. Enter or select values for the following settings, and then select **Add**
 
 * Peering link name: **vnet_peering_hostpool{Group Number}**
 * Peering type: **Virtual network**
 * Subscription: **Leave defaut**
 * Virtual network: **microhack_vnet**
 * Remote virtual network peering settings: 
-* Allow the peered virtual network to access '**microhack_vnet**': **checked**
-* Allow the peered virtual network to receive forwarded traffic from '**microhack_vnet**': **checked**
+* Allow the peered virtual network to access 'vnet': **checked**
+* Allow the peered virtual network to receive forwarded traffic from 'vnet': **checked**
 
 <kbd> <img src="../img/solution-02-create-vnet-peering.png" /> </kbd>
+
+Peering link name: **vnet_peering_hostpool{Group Number}**
+* Allow 'vnet' to access the peered virtual network: **checked**
+* Allow 'vnet' to receive forwarded traffic from the peered virtual network: **checked**
+
+<kbd> <img src="../img/solution-02-create-vnet-peering-3.png" /> </kbd>
 
 
 💥[**Considerations:**](https://learn.microsoft.com/en-us/azure/azure-netapp-files/azure-netapp-files-delegate-subnet)

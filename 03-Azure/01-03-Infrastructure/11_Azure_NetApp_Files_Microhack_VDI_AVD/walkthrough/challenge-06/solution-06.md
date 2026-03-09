@@ -10,8 +10,7 @@ Duration: 20 minutes
 
 2. Select **Add Backup Vault** and assign a name to your backup vault then select **Create**
 
-![image](../img/solution-05-backup-vault-create.png)
-
+<kbd> <img src="../img/solution-06-backup-vault-create.png" /> </kbd>
 
 ### **Task 2: Configure a Backup Policy for automated backups**
 
@@ -27,7 +26,7 @@ Duration: 20 minutes
 
 The minimum value for Daily Backups to Keep is 2.
 
-![image](../img/solution-05-backup-policy-window-daily.png)
+<kbd> <img src="../img/solution-06-backup-policy-window-daily.png" /> </kbd>
 
 **Example of a valid configuration**
 Backup policy:
@@ -45,7 +44,7 @@ Monthly: Monthly Backups to Keep = 4
 
 4. Select the previously created backup policy 
 
-![image](../img/solution-05-backup-configure-enabled.png)
+<kbd> <img src="../img/solution-06-backup-configure-enabled.png" /> </kbd>
 
 5. Select **Backups** to find new backup jobs (will take some time)
 

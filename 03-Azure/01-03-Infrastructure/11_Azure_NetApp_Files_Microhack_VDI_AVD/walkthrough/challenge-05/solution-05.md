@@ -2,13 +2,15 @@
 
 [Previous Challenge Solution](../challenge-04/solution-04.md) - **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-06/solution-06.md)
 
-
+Duration: 20 minutes
 
 ### Task 1: Configure a quick metrics dashboard
 
 1. Open your NetApp acoount
 
 2. On the left side open **Monitoring** and then click on **Metrics**
+
+<kbd> <img src="../img/solution-05-monitor-metrics.png" /> </kbd>
 
 3. Click on **New chart**. Now you see 2 charts in total
 

@@ -7,6 +7,8 @@
 The pre-provisioned AVD setup already has a designated Hostpool for each attendee. 
 Your Hostpool is microhack_hostpool{Group Number}
 
+The username and password will be provided during the session.
+
 ### Task 1: Configure AD connection in NetApp account
 
 1. Log in to the [Azure portal](https://portal.azure.com/#home) 
@@ -17,9 +19,9 @@ Your Hostpool is microhack_hostpool{Group Number}
 
 4. On the left side expand **Azure Netapp Files** and click on **Active Directory connections**
 
-![image](../img/solution-04-azure-netapp-files-active-directory-connections.png)
+<kbd> <img src="../img/solution-04-azure-netapp-files-active-directory-connections.png" /> </kbd>
 
-5. Click **Join** and enter the following values (leave all other fields blank)
+5. Click **Join** and enter the following values (leave all other fields blank):
 
 * Primary DNS: **10.100.0.4**
 * AD DNS Domain Name: **microhack.test**
@@ -27,33 +29,42 @@ Your Hostpool is microhack_hostpool{Group Number}
 * SMB Serve: **MH**
 * Organizational Unit Path: **OU=Hostpool{Group Number}**
 * AES Encryption: **checked**
+* Username: **provided during the session**
+* Password: **provided during the session**
 
-![image](../img/solution-04-azure-netapp-files-join-active-directory.png)
+<kbd> <img src="../img/solution-04-azure-netapp-files-join-active-directory-1.png" /> </kbd>
+<kbd> <img src="../img/solution-04-azure-netapp-files-join-active-directory-2.png" /> </kbd>
 
 6. Click **OK**
 
 ### Task 2: Create a new SMB volume
 
-1. On the left side expand **Storage service**, click on **Volumes** and **Add volume**. Enter the following
+1. On the left side expand **Storage service**, click on **Volumes** and **Add volume**. 
 
-![image](../img/solution-04-add-volume.png)
+<kbd> <img src="../img/solution-04-add-volume.png" /> </kbd>
 
-* Volume Name: **mySMBvol{Group Number}**
-* Capacity Pool: **your existing capacity pool**
-* Quota: **100**
+2. Enter the following values (leave all other fields blank)
+
+* Volume Name: **vol2-smb-hostpool{Group Number}**
+* Capacity Pool: **capacity-pool-hostpool{Group Number}**
+* Quota (GiB): **100**
 * Max. Throughput: What throughput value did you get? Why can't you change it?
-* Virtual Network: **microhack_vnet**
-* Delegated subnet: **anf**
+* Virtual Network: **vnet-hostpool{Group Number}**
+* Delegated subnet: **anf-subnet-hostpool{Group Number}**
 
-![image](../img/solution-04-smb-vol-create.png)
+<kbd> <img src="../img/solution-04-smb-vol-create.png" /> </kbd>
 
-2. Click on **Next Protocol**
+2. Click on **Next** or **Protocol** and enter the following values (leave all other fields blank):
 
-![image](../img/solution-04-smb-protocol.png)
+* Protocol Type: **SMB**
+* Active Directory: **microhack.test**
+* Share name: **Leave Default**
 
-3. Access: Select **SMB**
+<kbd> <img src="../img/solution-04-smb-protocol.png" /> </kbd>
 
-4. Click on **Review + create** and **create**
+3. Click on **Review + create** and **create**
+
+<kbd> <img src="../img/solution-04-vol-review.png" /> </kbd>
 
 ### Task 3: Integration of your volume into AVD (Trainer Task)
 

@@ -12,76 +12,83 @@ Please ensure that you successfully verified the [General prerequisits](../../Re
 
 1. In the Azure portal's search box, enter **Azure NetApp Files** and then select **Azure NetApp Files** from the list that appears. 
 
-![image](../img/solution-03-search-azure-netapp-files.png)
+<kbd> <img src="../img/solution-03-search-azure-netapp-files.png" /> </kbd>
 
 2. Select + **Create** to create a new NetApp account. 
 
 3. In the New NetApp Account window, provide the following information:
    
-* Enter **myaccount1** for the account name. 
+* Enter **anf-account-hostpool{Group Number}** for the account name. 
 * Select your subscription. 
-* Select **Create new** to create new resource group. Enter **myRG1** for the resource group name. Select OK. 
-* Select your account location.
+* Select the previously created resource group **rg-hostpool-{Group Number}**
+* Select your account location to "Germany West Central"
+* Account Type: **NetApp Account**
 
-![image](../img/solution-03-azure-netapp-files-new-netapp-account.png)
+<kbd> <img src="../img/solution-03-azure-netapp-files-new-netapp-account.png" /> </kbd>
 
 4. Select **Create** to create your new NetApp account.
 
-
 ### **Task 2: Create a capacity pool**
 
-1. From the Azure NetApp Files management sidebar, select your NetApp account, e.g. myaccount1
+1. From the Azure NetApp Files management sidebar, select your NetApp account **anf-account-hostpool{Group Number}**
 
-![image](../img/solution-03-azure-netapp-files-select-netapp-account.png)
+<kbd> <img src="../img/solution-03-azure-netapp-files-select-netapp-account.png" /> </kbd>
 
-2. From the Azure NetApp Files management sidebar, select **Capacity pools**.
+2. From the Azure NetApp Files management sidebar, select **Capacity pools** in the section "storage service"
 
-![image](../img/solution-03-azure-netapp-files-click-capacity-pools.png)
+<kbd> <img src="../img/solution-03-azure-netapp-files-click-capacity-pools.png" /> </kbd>
 
-3. Select + **Add pools**. 
+3. Select + **+ Add pools** and provide information for the capacity pool: 
 
-![image](../img/solution-03-azure-netapp-files-new-capacity-pool.png)
+* Name: **capacity-pool-hostpool{Group Number}** 
+* Service Level: **Standard**
+* Size (TiB): **1 (TiB)**
+* Enable Cool Access: **Enabled**
+* QoS Type: **Auto**
+* Encryption: **Single**
 
-4. Provide information for the capacity pool: 
+<kbd> <img src="../img/solution-03-azure-netapp-files-new-capacity-pool.png" /> </kbd>
 
-* Enter **mypool1** as the pool name. 
-* Select **Premium** for the service level. 
-* Specify **1 (TiB)** as the pool size. 
-* Use the **Auto** QoS type. 
+5. Select **Create**
 
-5. Select **Create**.
+6. Check if capacity pool has been created.
+
+<kbd> <img src="../img/solution-03-azure-netapp-files-created-capacity-pool.png" /> </kbd>
 
 ### **Task 3: Create an NFS volume for Azure NetApp Files**
 
-1. Select the Volumes blade from the Capacity Pools blade.
+1. In NetApp Account window **anf-account-hostpool{Group Number}** click on **Volumes** in the "Storage service" section.
 
-![image](../img/solution-03-volumes.png)
+<kbd> <img src="../img/solution-03-azure-netapp-files-add-volume.png" /> </kbd>
 
-2. Select + Add volume to create a volume.
+2. Select **+ Add volume** to create a new volume and enter the following information:
 
-![image](../img/solution-03-add-volume.png)
+* Volume Name: **vol1-nfs-hostpool{Group Number}**
+* Capacity Pool: (**capacity-pool-hostpool{Group Number}**).
+* Quote (GiB): **100**
+* Virtual Network: **vnet-hostpool{Group Number}**
 
-3. In the Create a Volume window, provide information for the volume:
-   
-* Enter **myvol1** as the volume name.
-* Select your capacity pool (**mypool1**).
-* Use the default value for quota.
-
-![image](../img/solution-03-create-volume.png)
+<kbd> <img src="../img/solution-03-azure-netapp-files-add-volume-basics.png" /> </kbd>
 
 4. Select **Protocol**, and then complete the following actions:
 
-![image](../img/nfs_5.png)
+* Protocol typ: **NFS**
+* File path: **Leave default**
+* Versions: **NFSv3**
 
-* Select **NFS** and **NFSv3** as protocol type and version for the volume.
-* Active Directory: **microhack.test**
-* Share name: **myvol1**
+<kbd> <img src="../img/solution-03-azure-netapp-files-add-volume-protocol.png" /> </kbd>
 
 5. Select **Review + create** to display information for the volume you're creating.
 
-6. Select **Create** to create the volume. The created volume appears in the Volumes menu.
+<kbd> <img src="../img/solution-03-azure-netapp-files-add-volume-review.png" /> </kbd>
 
-![image](../img/solution-03-creted-volume-overview.png)
+6. Select **Create** to create the volume. 
+
+<kbd> <img src="../img/solution-03-azure-netapp-files-add-volume-deployment.png" /> </kbd>
+
+7. The created volume appears in the Volumes menu. (This can take some time...)
+
+<kbd> <img src="../img/solution-03-created-volume-overview.png" /> </kbd>
 
 ### **Task 4: Create a Linux VM and mout the NFS volume**
 
@@ -89,12 +96,14 @@ Please ensure that you successfully verified the [General prerequisits](../../Re
 
 2. Select **Create** and **Virtual Machine** and enter these parameters
 
-![image](../img/create_vm1.png)
-![image](../img/create_vm2.png)
+<kbd> <img src="../img/solution-03-create-vm1.png" /> </kbd>
+<kbd> <img src="../img/solution-03-create-vm2.png" /> </kbd>
 
 3. Click on **Disks** and leave the defaults
 
 4. Click on **Networking** and enter the vnet and default subnet (not the delegated subnet) you had created in the previous challenge
+
+<kbd> <img src="../img/solution-03-create-vm3.png" /> </kbd>
 
 5. Click **Review + create** and **Create**
 

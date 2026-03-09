@@ -9,6 +9,12 @@ Duration: 20 minutes
 The following procedure creates a virtual network with a resource subnet, and a delegated ANF subnet.
 Please ensure that you successfully verified the [General prerequisits](../../Readme.md#general-prerequisites) before continuing with this challenge.
 
+The participant/group number is the second octet in the network address
+10.1.0.0/16
+10.2.0.0/16
+...
+
+
 ### **Task 1: Create a Virtual Network and Subnet**
 
 1. Log in to the [Azure portal](https://portal.azure.com/#home). 
@@ -19,41 +25,63 @@ Please ensure that you successfully verified the [General prerequisits](../../Re
 
 4. On the Basics tab of Create virtual network, enter, or select the following information:
 
-![image](../img/solution-01-create-virtual-network-basics.png)
+* Subscription: **Use the default subscription**
+* Ressource Group: **rg-hostpool{Group Number}**
+* Virtual network name: **vnet-hostpool{Group Number}**
+* Region: **Germany West Central**
 
-5. Select Next to proceed to the IP Addresses tab.
+<kbd> <img src="../img/solution-02-create-virtual-network-basics.png" /> </kbd>
 
-6. In the address space box in Subnets, select the default subnet.
+5. Select Next to proceed to the IP Addresses tab, enter or select the following information:
 
-7. In Edit subnet, enter or select the following information:
+* Address Space: Group Number 1 = **10.1.0.0/16**, Group Number 2 = **10.2.0.0/16 ...**
 
-* Subnet purpose: Leave the default of Default.
-* Name: Enter **subnet-1**
-* IPv4 address range: Leave the default of **10.0.0.0/16**
-* Starting address: Leave the default of **10.0.0.0**
+<kbd> <img src="../img/solution-02-create-virtual-network-ip-address.png" /> </kbd>
+
+6. Click on **Add a Subnet** and enter or select the following information:
+
+<kbd> <img src="../img/solution-02-create-virtual-network-subnet.png" /> </kbd>
+
+* Subnet purpose: **Default**
+* Name: Enter **subnet-hostpool{Group Number}**
+* IPv4 address range: Group Number 1 = **10.1.0.0/16, Group Number 2 = 10.2.0.0/16 ...**
+* Starting address: Group Number 1 = **10.1.0.0, Group Number 2 = 10.2.0.0 ...**
 * Size: Leave the default of **/24** (256 addresses).
 
 8. Select **Save**
 
 9. Select **Review + create** at the bottom of the window. When validation passes, select Create
 
+<kbd> <img src="../img/solution-02-create-virtual-network-review.png" /> </kbd>
 
 ### **Task 2: Delegate a subnet to Azure NetApp Files**
 
-1. Navigate to Virtual networks in the Azure portal. Select the virtual network that you want to use for Azure NetApp Files.
+1. Navigate to Virtual networks in the Azure portal. 
 
-2. From Virtual network, select Subnets then the +Subnet button.
+2. Select the **virtual network** that you previously created. 
+
+<kbd> <img src="../img/solution-02-create-virtual-network-select-vnet.png" /> </kbd>
+
+2. From Virtual network, select Subnets then the **+Subnet** button.
+
+<kbd> <img src="../img/solution-02-create-virtual-network-create-anf-subnet.png" /> </kbd>
 
 3. Create a new subnet to use for Azure NetApp Files by completing the following required fields in the Add Subnet page:
 
-* Name: Specify **anf** as the subnet name.
-* Address range: Specify **/28** the IP address range.
-* Subnet delegation: Select **Microsoft.NetApp/volumes**.
+* Subnet purpose: **Default**
+* IPv4 address range: Group Number 1 = **10.1.0.0/16, Group Number 2 = 10.2.0.0/16 ...**
+* Starting address: Group Number 1 = **10.1.1.0, Group Number 2 = 10.2.1.0 ...**
 
-![image](../img/solution-01-azure-netapp-files-subnet-delegation.png)
+* Name: Specify **anf-subnet-hostpool{Group Number}** as the subnet name.
+* Address range: Specify **/24** the IP address range.
+
+4. Scroll down to **Subnet delegation**
+
+5. Select **Microsoft.NetApp/volumes**.
+
+<kbd> <img src="../img/solution-02-azure-netapp-files-subnet-delegation.png" /> </kbd>
 
 Note: You can also create and delegate a subnet when you [create a volume for Azure NetApp Files.](https://learn.microsoft.com/en-us/azure/azure-netapp-files/azure-netapp-files-create-volumes)
-
 
 
 💥[**Considerations:**](https://learn.microsoft.com/en-us/azure/azure-netapp-files/azure-netapp-files-delegate-subnet)

@@ -820,7 +820,7 @@ TAG_INHERIT_POLICY="cd3aa116-8754-49c9-a813-ad46512ece54"
 az policy assignment create \
   --name "${ATTENDEE_ID}-inherit-dataclassification-tag" \
   --display-name "${DISPLAY_PREFIX} - Inherit DataClassification Tag from RG" \
-  --scope "/subscriptions/$SUBSCRIPTION_ID" \
+  --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP" \
   --policy "$TAG_INHERIT_POLICY" \
   --params '{
     "tagName": {

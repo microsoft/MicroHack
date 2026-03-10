@@ -274,7 +274,7 @@ Azure provides several policies to control public network access:
 3. Search for "Not allowed resource types"
 4. Configure:
    - **Scope**: Your resource group (e.g., `labuser-01`). **Do NOT select the subscription.**
-   - **Assignment name**: "Block Public IP Addresses"
+   - **Assignment name**: "labuser-xx - Block Public IP Addresses" (replace xx with your labuser value)
    - **Parameters**:
      - **Not allowed resource types**: Select `Microsoft.Network/publicIPAddresses`
 5. Click **Review + create** and **Create**

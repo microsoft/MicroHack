@@ -192,10 +192,10 @@ This policy requires that resources have a specific tag with a specific value.
 
 1. Navigate to **Policy** > **Assignments**
 2. Click **Assign policy**
-3. Search for "Require a tag and its value"
+3. Search for "Require a tag and its value on resources"
 4. Configure:
    - **Scope**: Your resource group
-   - **Assignment name**: "Require Data Classification Tag"
+   - **Assignment name**: "labuser-xx - Require Data Classification Tag" (replace xx with your labuser value)
    - **Parameters**:
      - **Tag name**: `DataClassification`
      - **Tag value**: `Sovereign`

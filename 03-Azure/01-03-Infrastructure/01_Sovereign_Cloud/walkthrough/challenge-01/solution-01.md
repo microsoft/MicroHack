@@ -192,10 +192,10 @@ This policy requires that resources have a specific tag with a specific value.
 
 1. Navigate to **Policy** > **Assignments**
 2. Click **Assign policy**
-3. Search for "Require a tag and its value"
+3. Search for "Require a tag and its value on resources"
 4. Configure:
    - **Scope**: Your resource group
-   - **Assignment name**: "Require Data Classification Tag"
+   - **Assignment name**: "labuser-xx - Require Data Classification Tag" (replace xx with your labuser value)
    - **Parameters**:
      - **Tag name**: `DataClassification`
      - **Tag value**: `Sovereign`
@@ -274,7 +274,7 @@ Azure provides several policies to control public network access:
 3. Search for "Not allowed resource types"
 4. Configure:
    - **Scope**: Your resource group (e.g., `labuser-01`). **Do NOT select the subscription.**
-   - **Assignment name**: "Block Public IP Addresses"
+   - **Assignment name**: "labuser-xx - Block Public IP Addresses" (replace xx with your labuser value)
    - **Parameters**:
      - **Not allowed resource types**: Select `Microsoft.Network/publicIPAddresses`
 5. Click **Review + create** and **Create**
@@ -820,7 +820,7 @@ TAG_INHERIT_POLICY="cd3aa116-8754-49c9-a813-ad46512ece54"
 az policy assignment create \
   --name "${ATTENDEE_ID}-inherit-dataclassification-tag" \
   --display-name "${DISPLAY_PREFIX} - Inherit DataClassification Tag from RG" \
-  --scope "/subscriptions/$SUBSCRIPTION_ID" \
+  --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP" \
   --policy "$TAG_INHERIT_POLICY" \
   --params '{
     "tagName": {

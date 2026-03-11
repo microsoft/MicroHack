@@ -72,7 +72,7 @@ Azure Storage currently allows setting **Minimum TLS Version = TLS 1.0, 1.1, or 
 2. In the storage account menu pane, under **Settings**, select **Configuration**.
 3. Under **Secure transfer required**, select **Enabled**.
 
-![desc](./images/storage_01.png)
+![desc](./images/storage_02.png)
 
 ### CLI alternative
 ```bash
@@ -102,8 +102,8 @@ Goal: ensure all storage accounts enforce **Minimum TLS Version = TLS 1.2**.
 
 ```bash
 az policy assignment create \
-  --name enforce-storage-min-tls12 \
-  --display-name "Enforce storage min TLS 1.2" \
+  --name $RESOURCE_GROUP-enforce-storage-min-tls12 \
+  --display-name "${RESOURCE_GROUP} - Enforce storage min TLS 1.2" \
   --policy fe83a0eb-a853-422d-aac2-1bffd182c5d0 \
   --scope /subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP \
   --params '{ "effect": { "value": "Deny" }, "minimumTlsVersion": { "value": "TLS1_2" } }'

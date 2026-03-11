@@ -28,8 +28,14 @@ Set up the common variables that will be used in the CLI alternatives throughout
 # Set common variables
 # Customize RESOURCE_GROUP for each participant
 RESOURCE_GROUP="labuser-xx"  # Change this for each participant (e.g., labuser-01, labuser-02, ...)
+
+ATTENDEE_ID="${RESOURCE_GROUP}"
 SUBSCRIPTION_ID="xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx"  # Replace with your subscription ID
 LOCATION="norwayeast"  # If attending a MicroHack event, change to the location provided by your local MicroHack organizers
+# Generate friendly display names with attendee ID
+DISPLAY_PREFIX="Lab User-${ATTENDEE_ID#labuser-}"  # Converts "labuser-01" to "Lab User-01"
+GROUP_PREFIX="Lab-User-${ATTENDEE_ID#labuser-}"    # Converts "labuser-01" to "Lab-User-01"
+
 STORAGEACCOUNT_NAME="yourStorageAccountName"  # Replace with the name of your storage account from Challenge 2
 ```
 
@@ -102,8 +108,8 @@ Goal: ensure all storage accounts enforce **Minimum TLS Version = TLS 1.2**.
 
 ```bash
 az policy assignment create \
-  --name $RESOURCE_GROUP-enforce-storage-min-tls12 \
-  --display-name "${RESOURCE_GROUP} - Enforce storage min TLS 1.2" \
+  --name "${ATTENDEE_ID}-enforce-storage-min-tls12" \
+  --display-name "${DISPLAY_PREFIX} - Enforce storage min TLS 1.2" \
   --policy fe83a0eb-a853-422d-aac2-1bffd182c5d0 \
   --scope /subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP \
   --params '{ "effect": { "value": "Deny" }, "minimumTlsVersion": { "value": "TLS1_2" } }'

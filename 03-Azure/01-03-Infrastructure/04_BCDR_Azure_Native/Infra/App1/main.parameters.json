@@ -124,8 +124,8 @@
           "dataDiskSize": 1024,
           "osType": "Linux",
           "imagePublisher": "Canonical",
-          "imageOffer": "UbuntuServer",
-          "imageSku": "18_04-lts-gen2",
+          "imageOffer": "0001-com-ubuntu-server-jammy",
+          "imageSku": "22_04-lts-gen2",
           "imageVersion": "latest",
           "publicIp": false
         }

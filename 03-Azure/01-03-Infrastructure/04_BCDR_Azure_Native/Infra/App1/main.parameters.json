@@ -119,7 +119,7 @@
           "purpose": "linux",
           "deploy": true,
           "nameSuffix": "linux",
-          "vmSize": "Standard_D2as_v6",
+          "vmSize": "Standard_D2as_v5",
           "osDiskSize": 127,
           "dataDiskSize": 1024,
           "osType": "Linux",

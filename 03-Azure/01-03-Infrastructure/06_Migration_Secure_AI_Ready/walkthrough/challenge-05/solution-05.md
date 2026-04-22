@@ -8,14 +8,6 @@ Duration: 90 minutes
 
 Please make sure thet you successfully completed [Challenge 4](../challenge-4/solution.md) before continuing with this challenge.
 
-### **Task 1: Create and prepare Windows Server 2019 for the Azure Replication Appliance**
-
-To start physical server migration you must install the Azure Replication Appliance on your on-premises. The Azure Replication Appliance can be downloaded as a OVA template or you can download the appliance installer to install it on a already existing server. For the purpose of this MicroHack we will install the Azure Replication Appliance via the installer on a new Windows Server 2019 system.
-
-> [!IMPORTANT]
-> In Azure Migrate there exists a classic and simplified experience for physical server migration. The classic experience **retires on 30 September 2026**. The Microhack will focus on using the simplified experience which provides several key advantages e.g, a broader OS support and a more modern replication appliance. More details can be found [here](https://learn.microsoft.com/en-us/azure/migrate/simplified-experience-for-azure-migrate?view=migrate).
-
-
 > [!IMPORTANT]
 > For migrating Hyper-V VMs, the Migration and modernization tool installs software providers (Azure Site Recovery provider and Recovery Services agent) on Hyper-V hosts or cluster nodes. The Azure Migrate appliance isn't used for Hyper-V migration.
 

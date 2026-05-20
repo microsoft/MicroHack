@@ -37,7 +37,7 @@ Ask yourself the questions:
 1. Can I take an active part in the optimization process from the emergency plan? 
 2. Whom should I involve? 
 3. Do I have feedback from the application owners for the applications I am working with? 
-4. When was the last succesful failover in my organization? 
+4. When was the last successful failover in my organization? 
 5. Ask internally when the next failover is planned to test the disaster recovery plan.
 
 ### **Task 3: Put yourself in the position of an application owner and define the necessary steps to make sure your application stays available in case of a disaster**

@@ -10,7 +10,7 @@ Specifies the Azure subscription that contains the lab resources.
 .PARAMETER ResourceGroupName
 In case of resourcegroup deployment, specifies the target resource group name.
 .PARAMETER PreferredLocation
-Specifies the preferred Azure region for resource deployment. "" indicates no preference.
+Specifies the preferred Azure regions (ordered by preference) for resource deployment. An empty array indicates no preference.
 .PARAMETER AllowedEntraUserIds
 Optional list of Entra user object IDs permitted to access the lab resources.
 #>
@@ -24,7 +24,7 @@ param(
 
     [string]$ResourceGroupName = "",
 
-    [string]$PreferredLocation = "",
+    [string[]]$PreferredLocation = @(),
 
     [string[]]$AllowedEntraUserIds = @()
 )

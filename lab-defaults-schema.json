@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Lab Defaults",
+  "description": "Smart defaults for the lab lifecycle wizard. Only include fields you want to override — missing fields are ignored.",
+  "type": "object",
+  "properties": {
+    "groups": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Group-based feature activation names (e.g. [\"GHCPUsers\"]). Each group provisions a feature for the created Entra ID users."
+    },
+    "deploymentType": {
+      "type": "string",
+      "enum": ["resourcegroup", "subscription", "resourcegroup-with-subscriptionowner"],
+      "description": "Azure deployment scope."
+    },
+    "labsPerSubscription": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100,
+      "description": "Number of lab environments to pack per Azure subscription."
+    },
+    "preferredLocation": {
+      "type": "string",
+      "description": "Comma-separated list of preferred Azure regions, in priority order (e.g. \"swedencentral, norwayeast\")."
+    },
+    "estimatedDailyCostsUsd": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Estimated daily cost per lab environment in USD. Used for cost forecasting in the lab lifecycle wizard."
+    }
+  },
+  "additionalProperties": false
+}

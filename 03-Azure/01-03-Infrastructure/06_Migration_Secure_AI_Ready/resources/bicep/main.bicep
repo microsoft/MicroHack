@@ -30,7 +30,7 @@ param flavor string = 'ITPro'
   'Standard'
   'Enterprise'
 ])
-param sqlServerEdition string = 'Developer'
+param sqlServerEdition string = 'Standard'
 
 @description('Target GitHub account')
 param githubAccount string = 'microsoft'

@@ -29,11 +29,13 @@ In the search bar enter *Azure Migrate* and select Azure Migrate from the list o
  
 ![image](./img/PrepRep2.png)
 
-Select *Migrations* from the navigation pane on the left and click on *Discover more*
+Select *Migrations* from the navigation pane on the left and click on *Start execution*
 
 ![image](./img/PrepRep3.png)
 
-Select *Azure VM* in the *Where do you want to migrate to?* and select *Yes, with Hyper-V* in the *Where do you want to migrate to?* field. 
+Select *Azure VM* in the *Where do you want to migrate to?* and select *Yes, with Hyper-V* in the *Where do you want to migrate to?* field. An error will be displayed indicating that no Hyper-V host was registered yet. Click on *Click here to set up* to start the registration process.
+
+![image](./img/PrepRep3-1.png)
 
 > [!IMPORTANT]
 > **Make sure to select the right target region. Double check with the destination resource group location. This can't be changed afterwards.**
@@ -64,38 +66,30 @@ Complete the wizard an dwait for the the Provider to be successfully registered.
 
 ![image](./img/PrepRep11.png)
 
-Go back to the Azure Portal and finalize the registration. You might need to refresh the page.
+Go back to the Azure Portal and finalize the registration. 
+
+> [!Note]
+> *You might need to refresh the page.*
 
 ![image](./img/PrepRep12.png)
 
 > [!Note]
 > *This process might take up to 15 minutes to complete. Afterwards, the replication of VMs can be started.*
 
-Once the registration is completed, change back to the Azure Migrate project in the Azure portal and select *Replication summary* from the *Migrations* section.
-
-![image](./img/PrepRep13.png)
-
-
-Click on *Infrastructre servers* and select the recently registered Hyper-v host.
-
-![image](./img/PrepRep14.png)
-
-If the *MARS agent version* is empty refresh the Server before you continue to enable replication.
-
-![image](./img/PrepRep15.png)
-
-
 ### **Task 2: Enable Replication**
 
-From the Azure Migrate project in the Azure portal  select *Replicate* from the *Migrations* section.
+Once the registration is completed, change back to the Azure Migrate project in the Azure portal and select *Migrations* from the navigation pane on the left and click on *Start execution*
 
-![image](./img/Rep1.png)
+![image](./img/Rep1.png) 
 
 Specify the intent as shown on the diagram below:
 
 ![image](./img/Rep2.png)
 
 Next select the Windows and the Linux System that host the Web Server with the Microhack Demo page.
+
+> [!Note]
+> *If the Linux Server is greyed out this is due to an compatibility issue with the lates Ubuntu image and the new Azrue Migrate experience. To migrate the Ubuntu VM you need to change to the classic migration experience*
 
 ![image](./img/Rep3.png)
 
@@ -115,7 +109,7 @@ Proceed to the final summary and enable replication.
 
 ![image](./img/Rep7.png)
 
-Wait until the Replication status shows *Protected*
+Wait until the Execution stage shows *Testing*
 
 ![image](./img/Rep8.png)
 
@@ -127,11 +121,11 @@ When delta replication begins, you can run a test migration for the VMs, before 
 + Test migration simulates the migration by creating an Azure VM using replicated data (usually migrating to a non-production VNet in your Azure subscription).
 + You can use the replicated test Azure VM to validate the migration, perform app testing, and address any issues before full migration.
 
-Open the Azure Portal and navigate to the previousley created Azure Migrate project. Select *Migrations* and then click on *Replication Summary*. From the Summary page select *Test migration*.
+Open the Azure Portal and navigate to the previousley created Azure Migrate project. Select *Migrations* and then click on *Action pending* to initiate the test migration.
 
 ![image](./img/TestMig1.png)
 
-From the new page make sure that the *Replication status* is *Protected*, click on the three dots at the end and click on *Test Migration*.
+From the new page make sure that the *Preparation* is *Completed*, click on the drop down menu next to *Testing* click on *Start test migration*.
 
 ![image](./img/TestMig2.png)
 
@@ -142,7 +136,15 @@ Select the destination network and click on *Test migration*
 > [!Note]
 > **Repeat the above steps for the other VM**
 
-From the Azure Portal, select Virtual machines from the navigation pane on the left. There will be 2 additional servers ending with *-test*. Those servers were created during test migration.
+From the Azure Portal navigate to the Azure Migrate project. Select *Migrations* and then click on *In progress* under *Execution status* to follow the steps performed during Test migration.
+
+![image](./img/TestMig3-1.png)
+
+Wait until all steps are completed.
+
+![image](./img/TestMig3-2.png)
+
+To validate if Test migration was successfull, open the Azure Portal, select Virtual machines from the navigation pane on the left. There will be additional VMs ending with *-test*. Those VMs were created during test migration.
 
 ![image](./img/TestMig4.png)
 
@@ -156,13 +158,17 @@ On the VM open a browser and navigate to *http://localhost*. Make sure that the 
 
 Once confirmed that the systems are working as expected you can cleanup the test migration and proceed with the final migration.
 
-Go back to the Test Migration section in the Azure Migrate project in the Azure Portal and click on *Cleanup test failover pending*
+Go back to the *Migrations* section in the Azure Migrate project in the Azure Portal and click on *Action pending* for the VMs where the Test migration was executed.
 
 ![image](./img/TestMig7.png)
 
-Provide a comment and click on *Cleanup test* to remove the previousley created resources.
+From the Testing drop down menue select *Cleanup test migration*.
 
 ![image](./img/TestMig8.png)
+
+Provide a comment, select *Testing is complete....* and click *Cleanup Test* to remove all resources.
+
+![image](./img/TestMig9.png)
 
 > [!Note]
 > **Repeat the above steps for the other VM**
@@ -209,19 +215,20 @@ Wait until the load balancer has been created, change back to the *Load balancin
 
 ### **Task 7: Perform Final Migration**
 
-Open the [Azure Portal](https://portal.azure.com) and navigate to the previousley created Azure Migrate project. Select *Migrations* from the navigation pane and click on *Migrate*.
+Open the [Azure Portal](https://portal.azure.com) and go back to the *Migrations* section in the Azure Migrate project in the Azure Portal and click on *Action pending* for the VMs to be migrated.
 
 ![image](./img/Mig1.png)
 
-Select *AzureVM* and click *Continue*.
+Open the drop down of the *Completion* menu and select *Migrate*.
 
-![image](./img/Mig2.png)
+![image](./img/Mig1-1.png)
 
-Select the VMs you want to migrate and click on *Yes* to also shutdown the VMs on the Hyper-V host.
+
+Make sure to select *Yes* to shutdown the VMs on the Hyper-V host and click *Migrate*
 
 ![image](./img/Mig3.png)
 
-You can check the progress of the migration under the *Jobs* section within the *Replication Summary* section of the Azure Migrate Project.
+On the *Migrations* section in the Azure Migrate project in the Azure Portal click on *In progress* to follow the migration steps..
 
 ![image](./img/Mig4.png)
 
@@ -233,7 +240,7 @@ After a few minutes the migration should be successfully completed.
 
 ![image](./img/mig7.png)
 
-On the Hyper-V Host, the 2 VMs should also be turned off.
+On the Hyper-V Host, the VMs should also be turned off.
 
 ![image](./img/mig6.png)
 
@@ -249,11 +256,11 @@ You should now also be able to access the Web Server via the previousley created
 
 ### **Task 8: Cleanup**
 
-After the successfull migration you can now stop replicating the source virtual machines. Open the [Azure Portal](https://portal.azure.com) and navigate to the previousley created Azure Migrate project. Select *Migrations -> Replication summary*. Click on *Replications* and then click on the 3 dots on the end of each row of the replicating servers and select *Stop replicating*.
+After the successfull migration you can now stop replicating the source virtual machines. Open the [Azure Portal](https://portal.azure.com) and navigate to the previousley created Azure Migrate project and select *Migrations* and click on *Completion*.
 
 ![image](./img/Clean1.png)
 
-Select *Stop replication and remove replication settings* from the drop down list and click *OK*. 
+Select *Stop replication* to remove replication settings from the drop down list. 
 
 ![image](./img/Clean2.png)
 

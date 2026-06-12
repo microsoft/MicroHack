@@ -7,7 +7,7 @@
     "groups": {
       "type": "array",
       "items": { "type": "string" },
-      "description": "Group-based feature activation names (e.g. [\"GHCPUsers\"]). Each group provisions a feature for the created Entra ID users."
+      "description": "Group-based feature activation names (e.g. [\"GHCPUsers\", \"M365-E5-Users\"]). Each group provisions a feature for the created Entra ID users."
     },
     "deploymentType": {
       "type": "string",

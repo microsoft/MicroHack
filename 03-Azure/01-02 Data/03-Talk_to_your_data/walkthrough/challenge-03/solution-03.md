@@ -47,6 +47,7 @@ In this task, you will set up a Data Agent to enable intelligent data interactio
 <tr><td colspan="2" align="center"><img src="../../Images/image069.png" style="width: 100%; display: block;"></td></tr>
 <tr><td>In the Explorer pane on the left, confirm the Lakehouse is listed as an data source</td><td>Leave the Page open, you will work with this agent in the next chapter.</td></tr>
 <tr><td colspan="2" align="center"><img src="../../Images/image070.png" style="width: 100%; display: block;"></td></tr>
+<tr><td><b>Expand the Lakehouse node in the Explorer pane and verify that all required tables are visible and Ensure that all tables are checked and accessible. The Data Agent requires access to these tables to function properly.</td><td>If any tables are not visible, refresh the Lakehouse connection or check that the tables were successfully created in Challenge 1. Without proper table access, the Data Agent cannot answer questions accurately.</td></tr>
 </table>
 
 # 2. Prompt Engineering for Data Agents
@@ -112,6 +113,8 @@ In this task, you will see how answer quality improves based on how clearly you 
 You can also optionally compare your own setup with the reference instructions used in this lab.
 
 💡 **Important:** AI-generated responses may differ each time, even for the same question.
+
+💡 **Tip:** If the Data Agent does not answer consistently or stops responding, clear the chat history first and try again with the same prompt.
 
 **Example Prompt:** 
 Identify the months with the highest toy sales. Then analyze whether those months also show higher customer satisfaction scores.

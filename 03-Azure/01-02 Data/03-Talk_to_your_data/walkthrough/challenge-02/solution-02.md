@@ -56,7 +56,7 @@ In this task, you will create a semantic model from the Lakehouse tables. A sema
 <tr><td colspan="2" align="center"><img src="../../Images/image041.png" style="width: 100%; display: block;"></td></tr>
 <tr><td>Before clicking <b>Confirm</b>, make sure newly created tables (for example <b>employees</b>) is included in the selection.</td><td>Use your screenshot below to verify that the table is selected.</td></tr>
 <tr><td colspan="2" align="center"><img src="../../Images/image151.png" style="width: 100%; display: block;"></td></tr>
-<tr><td>If you cannot see the employees table, switch once to the SQL Analytics Endpoint view and create it from there and refresh the dbo schema. Verify if the employees table is now available. </td><td></td></tr>
+<tr><td>If you cannot see the <b>employees</b> table, switch to the SQL Analytics Endpoint view, expand <b>dbo</b>, and refresh the schema. Then return to the Lakehouse view and verify that the <b>employees</b> table is available.</td><td></td></tr>
 <tr><td colspan="2" align="center"><img src="../../Images/image042.png" style="width: 100%; display: block;"></td></tr>
 <tr><td>Click on <b>Confirm</b>.</td><td></td></tr>
 <tr><td colspan="2" align="center"><img src="../../Images/image152.png" style="width: 100%; display: block;"></td></tr>

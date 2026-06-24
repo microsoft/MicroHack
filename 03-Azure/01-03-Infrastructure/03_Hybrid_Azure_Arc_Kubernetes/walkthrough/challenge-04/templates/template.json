@@ -2,10 +2,10 @@
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "parentResource": {
+        "connectedClusterName": {
             "type": "String",
             "metadata": {
-                "description": "The resource ID of the arc-enabled K8s cluster where the extension will be installed."
+                "description": "The name of the arc-enabled connected Kubernetes cluster."
             }
         },
         "k8sExtensionName": {
@@ -24,28 +24,18 @@
             "type": "String",
             "defaultValue": "westeurope"
         },
-        "roleDefinitionId_Contributor": {
-            "type": "String",
-            "metadata": {
-                "description": "The role definition ID for the Contributor role."
-            }
-        },
         "roleAssignment_Contributor": {
             "type": "String",
+            "defaultValue": "[newGuid()]",
             "metadata": {
-                "description": "The role assignment name (GUID) for the Contributor role."
-            }
-        },
-        "roleDefinitionId_MonitoringMetricsPublisher": {
-            "type": "String",
-            "metadata": {
-                "description": "The role definition ID for the Monitoring Metrics Publisher role."
+                "description": "The role assignment name (GUID) for the Contributor role. Auto-generated if not provided."
             }
         },
         "roleAssignment_MonitoringMetricsPublisher": {
             "type": "String",
+            "defaultValue": "[newGuid()]",
             "metadata": {
-                "description": "The role assignment name (GUID) for the Monitoring Metrics Publisher role."
+                "description": "The role assignment name (GUID) for the Monitoring Metrics Publisher role. Auto-generated if not provided."
             }
         },
         "customLocationName": {
@@ -54,28 +44,10 @@
                 "description": "The name of the custom location."
             }
         },
-        "customLocationId": {
+        "dataController_metricsAndLogsDashboardUsername": {
             "type": "String",
             "metadata": {
-                "description": "The ID of the custom location."
-            }
-        },
-        "customLocation_hostResourceId": {
-            "type": "String",
-            "metadata": {
-                "description": "The host resource ID of the custom location."
-            }
-        },
-        "customLocation_clusterExtensionIds": {
-            "type": "Array",
-            "metadata": {
-                "description": "The cluster extension IDs of the custom location."
-            }
-        },
-        "resourceSyncRuleName": {
-            "type": "String",
-            "metadata": {
-                "description": "The name of the resource sync rule."
+                "description": "The username for the metrics and logs dashboard."
             }
         },
         "dataController_metricsAndLogsDashboardPassword": {
@@ -100,12 +72,6 @@
                 "description": "The storage class for data and logs storage."
             }
         },
-        "dataController_subscription": {
-            "type": "String"
-        },
-        "dataController_resourceGroup": {
-            "type": "String"
-        },
         "dataControllerName": {
             "type": "String",
             "metadata": {
@@ -113,7 +79,17 @@
             }
         }
     },
-    "variables": {},
+    "variables": {
+        "parentResource": "[concat('Microsoft.Kubernetes/connectedClusters/', parameters('connectedClusterName'))]",
+        "roleDefinitionId_Contributor": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]",
+        "roleDefinitionId_MonitoringMetricsPublisher": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '3913510d-42f4-4e42-8a64-420c390055eb')]",
+        "customLocationId": "[resourceId('Microsoft.ExtendedLocation/customLocations', parameters('customLocationName'))]",
+        "customLocation_hostResourceId": "[resourceId('Microsoft.Kubernetes/connectedClusters', parameters('connectedClusterName'))]",
+        "customLocation_clusterExtensionIds": [
+            "[extensionResourceId(resourceId('Microsoft.Kubernetes/connectedClusters', parameters('connectedClusterName')), 'Microsoft.KubernetesConfiguration/extensions', parameters('k8sExtensionName'))]"
+        ],
+        "resourceSyncRuleName": "[concat(parameters('customLocationName'), '/defaultResourceSyncRule')]"
+    },
     "functions": [],
     "resources": [
         {
@@ -141,7 +117,7 @@
                 },
                 "configurationProtectedSettings": {}
             },
-            "scope": "[parameters('parentResource')]"
+            "scope": "[variables('parentResource')]"
         },
         {
             "type": "Microsoft.Authorization/roleAssignments",
@@ -151,7 +127,7 @@
                 "[parameters('k8sExtensionName')]"
             ],
             "properties": {
-                "roleDefinitionId": "[parameters('roleDefinitionId_Contributor')]",
+                "roleDefinitionId": "[variables('roleDefinitionId_Contributor')]",
                 "principalId": "[reference(parameters('k8sExtensionName'), '2021-09-01', 'Full').identity.principalId]"
             }
         },
@@ -163,7 +139,7 @@
                 "[parameters('roleAssignment_Contributor')]"
             ],
             "properties": {
-                "roleDefinitionId": "[parameters('roleDefinitionId_MonitoringMetricsPublisher')]",
+                "roleDefinitionId": "[variables('roleDefinitionId_MonitoringMetricsPublisher')]",
                 "principalId": "[reference(parameters('k8sExtensionName'), '2021-09-01', 'Full').identity.principalId]"
             }
         },
@@ -177,23 +153,23 @@
             ],
             "properties": {
                 "hostType": "Kubernetes",
-                "hostResourceId": "[parameters('customLocation_hostResourceId')]",
+                "hostResourceId": "[variables('customLocation_hostResourceId')]",
                 "namespace": "[parameters('namespace')]",
                 "displayName": "",
-                "clusterExtensionIds": "[parameters('customLocation_clusterExtensionIds')]",
+                "clusterExtensionIds": "[variables('customLocation_clusterExtensionIds')]",
                 "authentication": {}
             }
         },
         {
             "type": "Microsoft.ExtendedLocation/customLocations/resourceSyncRules",
             "apiVersion": "2021-08-31-preview",
-            "name": "[parameters('resourceSyncRuleName')]",
+            "name": "[variables('resourceSyncRuleName')]",
             "location": "[parameters('location')]",
             "dependsOn": [
                 "[parameters('customLocationName')]"
             ],
             "properties": {
-                "targetResourceGroup": "[concat('/subscriptions/', parameters('dataController_subscription'), '/resourceGroups/', parameters('dataController_resourceGroup'))]",
+                "targetResourceGroup": "[resourceGroup().id]",
                 "priority": 100,
                 "selector": {
                     "matchLabels": {
@@ -208,20 +184,20 @@
             "name": "[parameters('dataControllerName')]",
             "location": "[parameters('location')]",
             "extendedLocation": {
-                "name": "[parameters('customLocationId')]",
+                "name": "[variables('customLocationId')]",
                 "type": "CustomLocation"
             },
             "dependsOn": [
-                "[last(split(parameters('resourceSyncRuleName'), '/'))]"
+                "[last(split(variables('resourceSyncRuleName'), '/'))]"
             ],
             "tags": {},
             "properties": {
                 "metricsDashboardCredential": {
-                    "username": "mhadmin",
+                    "username": "[parameters('dataController_metricsAndLogsDashboardUsername')]",
                     "password": "[parameters('dataController_metricsAndLogsDashboardPassword')]"
                 },
                 "logsDashboardCredential": {
-                    "username": "mhadmin",
+                    "username": "[parameters('dataController_metricsAndLogsDashboardUsername')]",
                     "password": "[parameters('dataController_metricsAndLogsDashboardPassword')]"
                 },
                 "logAnalyticsWorkspaceConfig": {
@@ -262,8 +238,8 @@
                             "azure": {
                                 "autoUploadMetrics": "true",
                                 "autoUploadLogs": "true",
-                                "subscription": "[parameters('dataController_subscription')]",
-                                "resourceGroup": "[parameters('dataController_resourceGroup')]",
+                                "subscription": "[subscription().subscriptionId]",
+                                "resourceGroup": "[resourceGroup().name]",
                                 "location": "[parameters('location')]",
                                 "connectionMode": "direct"
                             },

@@ -24,23 +24,25 @@ The deployment uses ARM templates as this is the most robust way for deployment 
 # Get current user's number (e.g., LabUser-37@... or hackuser-067@... -> 37 or 67)
 export azure_user=$(az account show --query user.name --output tsv)
 export user_number=$(echo "$azure_user" | cut -d'@' -f1 | sed -E -n 's/.*[^0-9]([0-9]+)$/\1/p' | sed 's/^0*//')
-export subscription_id=$(az account show --query id -o tsv)
 export resource_group="$user_number-k8s-arc"
+export connected_cluster_name="$user_number-k8s-arc-enabled"
+export extension_name="$user_number-arc-data-controller-ext"
+export namespace="$user_number-arc-data-controller"
+export custom_location_name="$user_number-arc-data-controller"
+export data_controller_name="$user_number-dc"
 
 # Get Log Analytics workspace details
 export log_analytics_workspace_id=$(az monitor log-analytics workspace show -g $resource_group -n "$user_number-law" --query customerId -o tsv)
 export log_analytics_primary_key=$(az monitor log-analytics workspace get-shared-keys -g $resource_group -n "$user_number-law" --query primarySharedKey -o tsv)
 
-# Generate new GUIDs for role assignments
-export guid1=$(uuidgen)
-export guid2=$(uuidgen)
-
 echo "Your values:"
-echo "USER_NUMBER: $user_number"
-echo "SUBSCRIPTION_ID: $subscription_id"
+echo "RESOURCE_GROUP: $resource_group"
+echo "CONNECTED_CLUSTER_NAME: $connected_cluster_name"
+echo "EXTENSION_NAME: $extension_name"
+echo "NAMESPACE: $namespace"
+echo "CUSTOM_LOCATION_NAME: $custom_location_name"
+echo "DATA_CONTROLLER_NAME: $data_controller_name"
 echo "LOG_ANALYTICS_WORKSPACE_ID: $log_analytics_workspace_id"
-echo "GUID 1: $guid1"
-echo "GUID 2: $guid2"
 ```
 
 ### Step 2: Update parameters.json
@@ -59,21 +61,25 @@ cp parameters.json parameters-my.json
 # Note: Escape special sed characters in the primary key to handle any potential delimiters
 escaped_key=$(printf '%s\n' "$log_analytics_primary_key" | sed 's/[\/&]/\\&/g')
 
-sed -i "s/<USER_NUMBER>/$user_number/g" parameters-my.json
-sed -i "s/<SUBSCRIPTION_ID>/$subscription_id/g" parameters-my.json
+sed -i "s/<CONNECTED_CLUSTER_NAME>/$connected_cluster_name/g" parameters-my.json
+sed -i "s/<EXTENSION_NAME>/$extension_name/g" parameters-my.json
+sed -i "s/<NAMESPACE>/$namespace/g" parameters-my.json
+sed -i "s/<CUSTOM_LOCATION_NAME>/$custom_location_name/g" parameters-my.json
+sed -i "s/<DATA_CONTROLLER_NAME>/$data_controller_name/g" parameters-my.json
 sed -i "s/<LOG_ANALYTICS_WORKSPACE_ID>/$log_analytics_workspace_id/g" parameters-my.json
 sed -i "s/<LOG_ANALYTICS_PRIMARY_KEY>/$escaped_key/g" parameters-my.json
-sed -i "s/<GENERATE_GUID_1>/$guid1/g" parameters-my.json
-sed -i "s/<GENERATE_GUID_2>/$guid2/g" parameters-my.json
+sed -i "s/<DC_DASHBOARD_USERNAME>/mhadmin/g" parameters-my.json
 
 # Alternative: manual replacement
 # Edit parameters-my.json and replace:
-#   <USER_NUMBER> with your user number
-#   <SUBSCRIPTION_ID> with your subscription ID
+#   <CONNECTED_CLUSTER_NAME> with the name of your arc-enabled connected cluster
+#   <EXTENSION_NAME> with the desired extension name
+#   <NAMESPACE> with the Kubernetes namespace for arc data services
+#   <CUSTOM_LOCATION_NAME> with the custom location name
+#   <DATA_CONTROLLER_NAME> with the desired data controller name
 #   <LOG_ANALYTICS_WORKSPACE_ID> with workspace ID
 #   <LOG_ANALYTICS_PRIMARY_KEY> with workspace key
-#   <GENERATE_GUID_1> with first new GUID (use 'uuidgen' command)
-#   <GENERATE_GUID_2> with second new GUID (use 'uuidgen' command again)
+#   <DC_DASHBOARD_USERNAME> with the desired dashboard username (e.g., mhadmin)
 ```
 
 ### Step 3: Deploy the Arc Data Controller
@@ -121,13 +127,12 @@ az deployment operation group list \
 ```bash
 # Set SQL MI name (must start with a letter for Kubernetes naming rules)
 export sqlmi_name="sqlmi-${user_number}-1"
-export custom_location="${user_number}-onprem"
 
 # Create SQL MI (you'll be prompted for sql admin user and password)
 az sql mi-arc create \
   --name $sqlmi_name \
   --resource-group $resource_group \
-  --custom-location $custom_location \
+  --custom-location $custom_location_name \
   --cores-request 1 \
   --memory-request 3Gi
 ```
@@ -139,7 +144,7 @@ The creation takes 5-10 minutes. Monitor progress:
 az sql mi-arc show --name $sqlmi_name --resource-group $resource_group --query "properties.k8sRaw.status.state" -o tsv
 
 # Check pods in the namespace
-kubectl get pods -n ${user_number}-onprem -l app.kubernetes.io/name=$sqlmi_name
+kubectl get pods -n $namespace -l app.kubernetes.io/name=$sqlmi_name
 ```
 
 ## Task 3 - Connect to your SQL Managed Instance
@@ -155,7 +160,7 @@ kubectl get pods -n ${user_number}-onprem -l app.kubernetes.io/name=$sqlmi_name
 master_ip=$(az vm list-ip-addresses --resource-group "${user_number}-k8s-onprem" --name "${user_number}-k8s-master" --query "[0].virtualMachine.network.privateIpAddresses[0]" --output tsv)
 
 # Get the NodePort assigned to SQL MI
-node_port=$(kubectl get svc ${sqlmi_name}-external-svc -n ${user_number}-onprem -o jsonpath='{.spec.ports[0].nodePort}')
+node_port=$(kubectl get svc ${sqlmi_name}-external-svc -n $namespace -o jsonpath='{.spec.ports[0].nodePort}')
 
 echo "Connection details:"
 echo "Server: $master_ip,$node_port"
@@ -179,7 +184,7 @@ echo "Server=$master_ip,$node_port;Database=master;User Id=sa;Password=<your-pas
 #### 3. Enter connection details:
 **💡Note: In this lab we are using the public ip to connect to the service.**
    - **Input type**: Parameters
-   - **Server:** `<Public-IP-Master-Node>,<NODE_PORT>` (e.g., `20.123.45.67,31433`, optionally, use the following command: ```echo "$master_ip,$(kubectl get svc ${sqlmi_name}-external-svc -n ${custom_location} -o jsonpath='{.spec.ports[0].nodePort}')"```
+   - **Server:** `<Public-IP-Master-Node>,<NODE_PORT>` (e.g., `20.123.45.67,31433`, optionally, use the following command: ```echo "$master_ip,$(kubectl get svc ${sqlmi_name}-external-svc -n $namespace -o jsonpath='{.spec.ports[0].nodePort}')"```
    - **Trust Server Certificate:** Yes
    - **Authentication Type:** SQL Login
    - **User name:** (the admin account you entered during SQL MI creation)

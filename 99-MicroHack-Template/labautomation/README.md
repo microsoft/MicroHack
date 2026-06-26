@@ -53,6 +53,7 @@ Key points for integration:
     - [Returning credentials to the user (HackboxCredential)](#returning-credentials-to-the-user-hackboxcredential)
   - [Available helper cmdlets](#available-helper-cmdlets)
     - [`Get-MhhStableHash`](#get-mhhstablehash)
+    - [`Get-MhhLabUser`](#get-mhhlabuser)
     - [`Invoke-MhhDeploymentWithRegionFallback`](#invoke-mhhdeploymentwithregionfallback)
     - [`Test-MhhDeploymentFailureRetryable`](#test-mhhdeploymentfailureretryable)
   - [Authoring guidelines](#authoring-guidelines)
@@ -281,6 +282,41 @@ $rgName = "lab-$hash"
 | `Length` (`int`, optional) | Number of hex chars to return. Range 12–64. Default 24. |
 
 The same set of inputs (in any order, any casing) always produces the same hash.
+
+### `Get-MhhLabUser`
+
+Resolve the Entra object IDs you receive in `$AllowedEntraUserIds` to lab-user
+records (`UserPrincipalName` + a short, lowercase name). Content scripts only
+get bare object IDs — use this cmdlet whenever you need the user's UPN or a
+human-friendly name (e.g. to tag resources, build a greeting, or derive a
+stable per-user resource name).
+
+```powershell
+# Resolve the single user this invocation is for
+$me = Get-MhhLabUser -UserId $AllowedEntraUserIds[0]
+Write-Host "Deploying for $($me.UserPrincipalName) ($($me.ShortName))"
+
+# Or resolve many at once via the pipeline
+$AllowedEntraUserIds | Get-MhhLabUser | ForEach-Object { $_.ShortName }
+```
+
+| Parameter | Description |
+| --- | --- |
+| `UserId` (`string[]`, required) | One or more Entra object IDs (GUIDs). Also accepts the aliases `-ObjectId` / `-Id`, and accepts pipeline input. |
+
+**Return value** — one `PSCustomObject` per input ID:
+
+| Field | Description |
+| --- | --- |
+| `Id` | The Entra object ID you passed in. |
+| `UserPrincipalName` | The user's UPN (e.g. `user01@contoso.onmicrosoft.com`). |
+| `ShortName` | The lowercase local part of the UPN (the bit before `@`) — handy for resource names and greetings. |
+
+Resolution is served from a cache that the platform pre-seeds before your script runs,
+so hits cost nothing. On a cache miss (e.g. local development or a one-off run)
+it transparently falls back to `Get-AzADUser -ObjectId` and
+writes the result back to the cache, so it always resolves correctly —
+just without the cache speed-up.
 
 ### `Invoke-MhhDeploymentWithRegionFallback`
 

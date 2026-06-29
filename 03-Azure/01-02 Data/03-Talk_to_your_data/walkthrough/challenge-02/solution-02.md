@@ -56,6 +56,8 @@ In this task, you will create a semantic model from the Lakehouse tables. A sema
 <tr><td colspan="2" align="center"><img src="../../Images/image041.png" style="width: 100%; display: block;"></td></tr>
 <tr><td>Before clicking <b>Confirm</b>, make sure newly created tables (for example <b>employees</b>) is included in the selection.</td><td>Use your screenshot below to verify that the table is selected.</td></tr>
 <tr><td colspan="2" align="center"><img src="../../Images/image151.png" style="width: 100%; display: block;"></td></tr>
+<tr><td>If you cannot see the <b>employees</b> table, switch to the SQL Analytics Endpoint view, expand <b>dbo</b>, and refresh the schema. Then return to the Lakehouse view and verify that the <b>employees</b> table is available.</td><td></td></tr>
+<tr><td colspan="2" align="center"><img src="../../Images/image042.png" style="width: 100%; display: block;"></td></tr>
 <tr><td>Click on <b>Confirm</b>.</td><td></td></tr>
 <tr><td colspan="2" align="center"><img src="../../Images/image152.png" style="width: 100%; display: block;"></td></tr>
 <tr><td>Wait until the semantic model is successfully created. You will then see it listed in the workspace.</td><td>If creation fails, switch once to the SQL Analytics Endpoint view and create it from there.</td></tr>
@@ -300,6 +302,13 @@ In this step, open Power BI Copilot from the report and ask natural language que
 <tr><td colspan="2" align="center"><img src="../../Images/image154.png" style="width: 100%; display: block;"></td></tr>
 <tr><td>Click <b>Copilot</b> in the report and select <b>Get started</b>.</td><td>You can now ask natural language questions directly against the prepared report and semantic model.</td></tr>
 <tr><td colspan="2" align="center"><img src="../../Images/image048.png" style="width: 100%; display: block;"></td></tr>
+<tr><td colspan="2"><b>Try asking these sample questions:</b>
+<ul>
+<li>"What is this report about?"</li>
+<li>"Summarize the key insights from this report"</li>
+<li>"What are the most important trends here?"</li>
+</ul>
+</td></tr>
 </table>
 
 ## Summary

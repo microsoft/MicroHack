@@ -1,4 +1,4 @@
-# Modernize a Java Application
+# Modernize a .NET Application
 
 [Previous Challenge Solution](../challenge-01/solution-01.md) - **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-03/solution-03.md)
 
@@ -6,93 +6,70 @@
 
 ## Goal
 
-Modernize the Asset Manager Java Spring Boot application for Azure deployment, migrating from AWS dependencies to Azure services using GitHub Copilot App Modernization in VS Code.
+Modernize the Contoso University .NET Framework application to .NET 9 and deploy it to Azure App Service using GitHub Copilot's AI-powered code transformation capabilities.
 
 ## Actions
 
-### Environment Setup:
-1. Navigate to [../../src/AssetManager](../../src/AssetManager)
-1. Open Visual Studio Code
-1. Login to GitHub from VS Code
-1. Install GitHub Copilot App Modernization extension if not present
+### Setup and Preparation:
+1. Navigate to [../../src/ContosoUniversity](../../src/ContosoUniversity)
+1. Open Visual Studio 2022
+1. Select "Clone a repository" and paste your forked repository URL
+1. Navigate to Solution Explorer and locate the ContosoUniversity project
+1. Rebuild the project to verify it compiles successfully
 
-### Validate Application Locally:
+![Application running in IIS Express](media/0030.png)
 
-1. Open Terminal in VS Code (View → Terminal)
-1. Run `scripts\startapp.cmd`
-1. Wait for Docker containers (RabbitMQ, Postgres) to start
-1. Allow network permissions when prompted
-1. Verify application is accessible at http://localhost:8080
-1. Stop the application by closing console windows
+### Assess and Upgrade to .NET 9:
 
-### Perform AppCAT Assessment:
+1. Right-click the ContosoUniversity project and select "Modernize"
 
-1. Open GitHub Copilot App Modernization extension in the Activity bar
-1. Ensure Claude Sonnet 4.5 is selected as the model
-1. Click "Migrate to Azure" to begin assessment
-1. Wait for AppCAT CLI installation to complete
-1. Review assessment progress in the VS Code terminal
-1. Wait for assessment results (9 cloud readiness issues, 4 Java upgrade opportunities)
+![Right-click Modernize menu](media/0040.png)
 
-### Analyze Assessment Results:
+1. Sign in to GitHub Copilot if prompted
+1. Select Claude Sonnet 4.5 as the model
+1. Click "Upgrade to a newer .NET version"
+1. Allow GitHub Copilot to analyze the codebase
+1. Review the upgrade plan when presented
+1. Allow operations when prompted during the upgrade process
+1. Wait for the upgrade to complete (marked by `dotnet-upgrade-report.md` appearing)
 
-1. Review the assessment summary in GitHub Copilot chat
-1. Examine issue prioritization:
-    - Mandatory (Purple) - Critical blocking issues
-    - Potential (Blue) - Performance optimizations
-    - Optional (Gray) - Future improvements
-1. Click on individual issues to see detailed recommendations
-1. Focus on the AWS S3 to Azure Blob Storage migration finding
+### Migrate to Azure:
 
-### Execute Guided Migration:
+1. Right-click the project again and select "Modernize"
+1. Click "Migrate to Azure" in the GitHub Copilot Chat window
+1. Wait for GitHub Copilot to assess cloud readiness
 
-1. Expand the "Migrate from AWS S3 to Azure Blob Storage" task
-1. Read the explanation of why this migration is important
-1. Click the "Run Task" button to start the migration
-1. Review the generated migration plan in the chat window and `plan.md` file
-1. Type "Continue" in the chat to begin code refactoring
+### Resolve Cloud Readiness Issues:
+1. Open the `dotnet-upgrade-report.md` file
 
-### Monitor Migration Progress:
+![Upgrade report with cloud readiness issues](media/0080.png)
 
-1. Watch the GitHub Copilot chat for real-time status updates
-1. Check the `progress.md` file for detailed change logs
-1. Review file modifications as they occur:
-    - `pom.xml` and `build.gradle` updates for Azure SDK dependencies
-    - `application.properties` configuration changes
-    - Spring Cloud Azure version properties
-1. Allow any prompted operations during the migration
+1. Review the Cloud Readiness Issues section
+1. Click "Migrate from Windows AD to Microsoft Entra ID"
+1. Allow GitHub Copilot to implement the authentication changes
+1. Ensure all mandatory tasks are resolved
+1. Review the changes made to authentication configuration
 
-### Validate Migration:
+### Deploy to Azure:
 
-1. Wait for automated validation to complete:
-    - CVE scanning for security vulnerabilities
-    - Build validation
-    - Consistency checks
-    - Test execution
-1. Review validation results in the chat window
-1. Allow automated fixes if validation issues are detected
-1. Confirm all validation stages pass successfully
+1. Allow GitHub Copilot to complete the Azure App Service deployment
+1. Verify the deployment succeeds
+1. Test the deployed application in Azure
 
-### Test Modernized Application:
+## Success Criteria
 
-1. Open Terminal in VS Code
-1. Run `scripts\startapp.cmd` again
-1. Verify the application starts with Azure Blob Storage integration
-1. Test application functionality at http://localhost:8080
-1. Confirm no errors related to storage operations
-
-### Optional: Continue Modernization:
-
-1. Review other migration tasks in the assessment report
-1. Execute additional migrations as time permits
-1. Track progress through the `plan.md` and `progress.md` files
-
+- ✅ ContosoUniversity solution cloned and builds successfully
+- ✅ Application upgraded from .NET Framework to .NET 9
+- ✅ Upgrade report generated showing all changes and issues
+- ✅ Authentication migrated from Windows AD to Microsoft Entra ID
+- ✅ All mandatory cloud readiness issues resolved
+- ✅ Application successfully deployed to Azure App Service
+- ✅ Deployed application is accessible and functional
 
 ## Learning Resources
 
-- [GitHub Copilot for VS Code](https://code.visualstudio.com/docs/copilot/overview)
-- [Azure SDK for Java](https://learn.microsoft.com/azure/developer/java/sdk/)
-- [Migrate from AWS to Azure](https://learn.microsoft.com/azure/architecture/aws-professional/)
-- [Azure Blob Storage for Java](https://learn.microsoft.com/azure/storage/blobs/storage-quickstart-blobs-java)
-- [Spring Cloud Azure](https://learn.microsoft.com/azure/developer/java/spring-framework/)
-- [AppCAT Assessment Tool](https://learn.microsoft.com/azure/developer/java/migration/migration-toolkit-intro)
+- [GitHub Copilot for Visual Studio](https://learn.microsoft.com/visualstudio/ide/visual-studio-github-copilot-extension)
+- [Modernize .NET Applications](https://learn.microsoft.com/dotnet/architecture/modernize-with-azure-containers/)
+- [Migrate to .NET 9](https://learn.microsoft.com/dotnet/core/migration/)
+- [Azure App Service for .NET](https://learn.microsoft.com/azure/app-service/quickstart-dotnetcore)
+- [Microsoft Entra ID Authentication](https://learn.microsoft.com/azure/active-directory/develop/quickstart-v2-aspnet-core-webapp)

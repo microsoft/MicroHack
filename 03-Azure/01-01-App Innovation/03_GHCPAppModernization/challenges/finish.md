@@ -1,6 +1,6 @@
 # Finish
 
-[Previous Challenge Solution](challenge-03.md) - **[Home](../Readme.md)**
+[Previous Challenge](challenge-03.md) - **[Home](../Readme.md)**
 
 Congratulations! You've completed the Migrate & Modernize Applications with GitHub Copilot MicroHack.
 

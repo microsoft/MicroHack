@@ -1,9 +1,9 @@
-# **Migrate & Modernize Applications with GitHub Copilot**
+# **Migrate & Modernize Applications with GitHub Copilot*#
 
 - [**MicroHack introduction**](#microhack-introduction)
 - [**MicroHack context**](#microhack-context)
 - [**Objectives**](#objectives)
-- [**MicroHack Challenges**](#microhack-challenges)
+- [**MicroHack challenges**](#microhack-challenges)
 - [**Contributors**](#contributors)
 
 # MicroHack introduction

@@ -33,6 +33,8 @@ Before pointing AI at a real .NET or Java application (challenges 2 and 3), you 
 * `.vscode/mcp.json` is configured and **MCP: List Servers** resolves the servers; the `appmod-*` tools are visible to the agent.
 * When run, the agent respects the gates — it does **not** modify code before the assessment and plan are approved.
 
+> Need the detailed, step-by-step walkthrough? See the [Challenge 1 Solution](../walkthrough/challenge-01/solution-01.md).
+
 ## Learning resources
 
 * [Custom chat modes / agents in VS Code](https://code.visualstudio.com/docs/copilot/chat/chat-modes)

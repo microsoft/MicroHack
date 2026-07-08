@@ -1,6 +1,6 @@
 # Finish
 
-[Previous Challenge Solution](challenge-02.md) - **[Home](../Readme.md)**
+[Previous Challenge](challenge-03.md) - **[Home](../Readme.md)**
 
 Congratulations! You've completed the Azure Migration & Modernization MicroHack. 
 
@@ -8,7 +8,15 @@ Congratulations! You've completed the Azure Migration & Modernization MicroHack.
 
 Throughout this MicroHack, you've gained hands-on experience with the complete migration lifecycle:
 
-### Challenge 1: .NET Application Modernization
+### Fundamentals: Custom Agents, Skills & MCP
+
+- Learned how Custom Agents, Skills, and MCP servers fit together in an AI-assisted modernization workflow
+- Authored a gated modernization Custom Agent (`.agent.md`) with a least-privilege tool allow-list
+- Packaged reusable domain knowledge as a Skill (`SKILL.md`) with explicit `WHEN:` triggers
+- Configured MCP servers (`mcp.json`) and surfaced the `appmod-*` tools to the agent
+- Ran the assess → plan → execute → validate loop with approval gates
+
+### Challenge 2: .NET Application Modernization
 
 - Cloned and configured the Contoso University .NET application repository
 - Used GitHub Copilot App Modernization extension in Visual Studio
@@ -18,7 +26,7 @@ Throughout this MicroHack, you've gained hands-on experience with the complete m
 - Resolved cloud readiness issues identified in the upgrade report
 - Deployed the modernized application to Azure App Service
 
-### Challenge 2: Java Application Modernization
+### Challenge 3: Java Application Modernization
 
 - Set up local Java development environment with Docker and Maven
 - Ran the Asset Manager application locally to validate functionality

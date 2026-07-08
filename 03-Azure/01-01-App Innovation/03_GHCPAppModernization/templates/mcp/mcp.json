@@ -1,0 +1,54 @@
+{
+  // MCP SERVER CONFIGURATION TEMPLATE — App Modernization
+  // Copy to: <target-repo>/.vscode/mcp.json
+  // Replace {{PLACEHOLDER}} values. Remove servers you don't need.
+  // Docs: https://code.visualstudio.com/docs/copilot/chat/mcp-servers
+  "inputs": [
+    {
+      // Prompted once and stored securely — never hardcode secrets here.
+      "type": "promptString",
+      "id": "azure-subscription-id",
+      "description": "Azure subscription ID used for deployment tools",
+      "password": false
+    }
+  ],
+  "servers": {
+    // ── Azure MCP server: resource queries, quotas, deploy, diagnostics ──
+    "azure": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@azure/mcp@latest", "server", "start"],
+      "env": {
+        "AZURE_SUBSCRIPTION_ID": "${input:azure-subscription-id}"
+      }
+    },
+
+    // ── GitHub MCP server (remote): repos, issues, PRs for the migration ──
+    "github": {
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/"
+    },
+
+    // ── {{YOUR CUSTOM / SCENARIO-SPECIFIC SERVER}} ──
+    // Example shapes — pick one transport and delete the others:
+    "{{custom-server-name}}": {
+      // stdio (local process):
+      "type": "stdio",
+      "command": "{{npx | uvx | dotnet | java}}",
+      "args": ["{{-y}}", "{{package-or-jar}}"],
+      "env": {
+        "{{ENV_VAR}}": "{{value-or-${input:id}}}"
+      }
+      // OR http (remote):
+      // "type": "http",
+      // "url": "https://{{host}}/mcp/"
+    }
+  }
+}
+// NOTES
+// 1. The app-modernization tool families (appmod-*) are registered automatically
+//    by the GitHub Copilot app modernization VS Code extensions — no mcp.json
+//    entry needed. Install the extension for your stack (.NET or Java).
+// 2. After editing this file run "MCP: List Servers" in the Command Palette
+//    and start/inspect the servers.
+// 3. Reference tools in your .agent.md tools list so the custom agent can call them.

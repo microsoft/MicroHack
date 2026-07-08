@@ -1,4 +1,4 @@
-# Modernize a .NET Application
+# Fundamentals — Custom Agents, Skills & MCP
 
 **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-02/solution-02.md)
 
@@ -6,70 +6,63 @@
 
 ## Goal
 
-Modernize the Contoso University .NET Framework application to .NET 9 and deploy it to Azure App Service using GitHub Copilot's AI-powered code transformation capabilities.
+Author a reusable, gated modernization Custom Agent, package a Skill, and configure the MCP tools that back the assess → plan → execute → validate loop used in the .NET and Java challenges.
 
 ## Actions
 
-### Setup and Preparation:
-1. Navigate to [../../src/ContosoUniversity](../../src/ContosoUniversity)
-1. Open Visual Studio 2022
-1. Select "Clone a repository" and paste your forked repository URL
-1. Navigate to Solution Explorer and locate the ContosoUniversity project
-1. Rebuild the project to verify it compiles successfully
+### Understand the model
 
-![Application running in IIS Express](media/0030.png)
+1. Read [docs/00-fundamentals.md](../../docs/00-fundamentals.md).
+2. Remember the rule of thumb:
+   - **Agent** = *who* is working and *how* the workflow runs (role + gates + tool allow-list).
+   - **Skill** = *what* the agent knows (loaded only when the task matches — progressive disclosure).
+   - **MCP** = *what* the agent can do (tools with typed inputs/outputs).
 
-### Assess and Upgrade to .NET 9:
+### Author a Custom Agent
 
-1. Right-click the ContosoUniversity project and select "Modernize"
+1. Copy [templates/agents/modernization.agent.md](../../templates/agents/modernization.agent.md) into your target repo at `.github/agents/modernization.agent.md`.
+2. Replace every `{{PLACEHOLDER}}`: role, application, source/target platform, in/out of scope.
+3. Keep the phased workflow with **Gate 1 (after assessment)** and **Gate 2 (after plan)**.
+4. Trim the `tools:` allow-list to least privilege — the assess phase should *not* include `editFiles`.
+5. Reload VS Code and confirm the agent appears in the Copilot Chat agent picker.
 
-![Right-click Modernize menu](media/0040.png)
+> ✅ Reference answer: [templates/agents/dotnet-modernization.agent.md](../../templates/agents/dotnet-modernization.agent.md) and [templates/agents/java-modernization.agent.md](../../templates/agents/java-modernization.agent.md).
 
-1. Sign in to GitHub Copilot if prompted
-1. Select Claude Sonnet 4.5 as the model
-1. Click "Upgrade to a newer .NET version"
-1. Allow GitHub Copilot to analyze the codebase
-1. Review the upgrade plan when presented
-1. Allow operations when prompted during the upgrade process
-1. Wait for the upgrade to complete (marked by `dotnet-upgrade-report.md` appearing)
+### Author a Skill
 
-### Migrate to Azure:
+1. Copy [templates/skills/modernization-skill/SKILL.md](../../templates/skills/modernization-skill/SKILL.md) to `.github/skills/<skill-name>/SKILL.md`.
+2. Write the `description` as a routing contract: start it with an explicit `WHEN:` list of trigger phrases, and add a `NOT for:` line to prevent false triggering.
+3. Fill in the **Procedure** with at least one transformation-rules table (source pattern → target pattern → notes) and a verification checklist.
+4. (Optional) Use the [skill-creator](../../templates/skills/skill-creator/SKILL.md) meta-skill to test and iterate on the description.
 
-1. Right-click the project again and select "Modernize"
-1. Click "Migrate to Azure" in the GitHub Copilot Chat window
-1. Wait for GitHub Copilot to assess cloud readiness
+> ✅ Reference answers: [templates/skills/dotnet-upgrade/SKILL.md](../../templates/skills/dotnet-upgrade/SKILL.md) and [templates/skills/java-upgrade/SKILL.md](../../templates/skills/java-upgrade/SKILL.md).
 
-### Resolve Cloud Readiness Issues:
-1. Open the `dotnet-upgrade-report.md` file
+### Configure MCP
 
-![Upgrade report with cloud readiness issues](media/0080.png)
+1. Copy [templates/mcp/mcp.json](../../templates/mcp/mcp.json) to `.vscode/mcp.json`.
+2. Remove servers you don't need; keep `azure` and `github` if relevant.
+3. Open the Command Palette → **MCP: List Servers** and start/inspect the servers.
+4. Confirm the `appmod-*` tool families appear in the agent's tool picker — they are registered automatically by the GitHub Copilot app modernization extensions (install the extension for your stack; no `mcp.json` entry needed).
 
-1. Review the Cloud Readiness Issues section
-1. Click "Migrate from Windows AD to Microsoft Entra ID"
-1. Allow GitHub Copilot to implement the authentication changes
-1. Ensure all mandatory tasks are resolved
-1. Review the changes made to authentication configuration
+### Dry-run the gated loop
 
-### Deploy to Azure:
-
-1. Allow GitHub Copilot to complete the Azure App Service deployment
-1. Verify the deployment succeeds
-1. Test the deployed application in Azure
+1. Select your Custom Agent in Copilot Chat.
+2. Prompt: *"Modernize this application following your workflow."*
+3. Verify the agent runs the assessment and **stops at Gate 1** with an `ASSESSMENT.md`, then **stops at Gate 2** with a `PLAN.md` — without editing any source code.
+4. Approve to continue, or reject the plan once on purpose and watch the agent revise it.
 
 ## Success Criteria
 
-- ✅ ContosoUniversity solution cloned and builds successfully
-- ✅ Application upgraded from .NET Framework to .NET 9
-- ✅ Upgrade report generated showing all changes and issues
-- ✅ Authentication migrated from Windows AD to Microsoft Entra ID
-- ✅ All mandatory cloud readiness issues resolved
-- ✅ Application successfully deployed to Azure App Service
-- ✅ Deployed application is accessible and functional
+- ✅ You can explain Agent vs Skill vs MCP in one sentence each
+- ✅ A valid `.agent.md` exists with a gated, phased workflow and a least-privilege tool list
+- ✅ A valid `SKILL.md` exists with an explicit `WHEN:` trigger description and a rules table
+- ✅ `.vscode/mcp.json` resolves via **MCP: List Servers**; `appmod-*` tools are visible to the agent
+- ✅ The agent respects Gate 1 and Gate 2 and does not modify code before approval
 
 ## Learning Resources
 
-- [GitHub Copilot for Visual Studio](https://learn.microsoft.com/visualstudio/ide/visual-studio-github-copilot-extension)
-- [Modernize .NET Applications](https://learn.microsoft.com/dotnet/architecture/modernize-with-azure-containers/)
-- [Migrate to .NET 9](https://learn.microsoft.com/dotnet/core/migration/)
-- [Azure App Service for .NET](https://learn.microsoft.com/azure/app-service/quickstart-dotnetcore)
-- [Microsoft Entra ID Authentication](https://learn.microsoft.com/azure/active-directory/develop/quickstart-v2-aspnet-core-webapp)
+- [Custom chat modes / agents in VS Code](https://code.visualstudio.com/docs/copilot/chat/chat-modes)
+- [MCP servers in VS Code](https://code.visualstudio.com/docs/copilot/chat/mcp-servers)
+- [GitHub Copilot app modernization for .NET](https://learn.microsoft.com/dotnet/core/porting/github-copilot-app-modernization-overview)
+- [GitHub Copilot app modernization for Java](https://learn.microsoft.com/azure/developer/java/migration/migrate-github-copilot-app-modernization-for-java)
+- [Model Context Protocol](https://modelcontextprotocol.io/)

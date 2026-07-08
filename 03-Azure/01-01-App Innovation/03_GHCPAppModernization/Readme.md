@@ -10,7 +10,7 @@
 
 This MicroHack guides you through migrating and modernizing real-world applications to Azure using **GitHub Copilot App Modernization**. You will work across two technology stacks — **.NET** and **Java (Spring Boot)** — and use the **modernize CLI** agent to assess, upgrade, and deploy applications at scale.
 
-The lab builds up progressively: you start by driving multi-repository assessment and framework upgrades from the command line, and finish by provisioning Azure infrastructure and deploying the modernized apps.
+The lab builds up progressively: you start by learning to author the AI foundation — **Custom Agents**, **Skills**, and **MCP** — then drive multi-repository assessment and framework upgrades from the command line, and finish by provisioning Azure infrastructure and deploying the modernized apps.
 
 # MicroHack context
 
@@ -22,6 +22,7 @@ Across the challenges you will work with **PhotoAlbum** and **PhotoAlbum-Java** 
 
 After completing this MicroHack you will:
 
+- Know how to author a **Custom Agent** (`.agent.md`), package a reusable **Skill** (`SKILL.md`), and configure **MCP** (`mcp.json`), and understand the gated assess → plan → execute → validate loop.
 - Understand how to use the GitHub Copilot App Modernization agent (modernize CLI).
 - Know how to assess applications for cloud readiness and framework upgrade opportunities.
 - Be able to upgrade .NET and Java applications to their latest framework versions.
@@ -45,12 +46,14 @@ In order to use the MicroHack time most effectively, the following should be in 
 
 ## Challenges
 
-* [Challenge 2 - Batch Upgrade a Java App and a .NET App](challenges/challenge-02.md)  **<- Start here**
+* [Challenge 1 - Fundamentals: Custom Agents, Skills & MCP for App Modernization](challenges/challenge-01.md)  **<- Start here**
+* [Challenge 2 - Batch Upgrade a Java App and a .NET App](challenges/challenge-02.md)
 * [Challenge 3 - Modernize the Upgraded Apps and Deploy Them to Azure](challenges/challenge-03.md)
 * [Finish](challenges/finish.md)
 
 ## Solutions - Spoilerwarning
 
+* [Solution 1 - Fundamentals: Custom Agents, Skills & MCP for App Modernization](./walkthrough/challenge-01/solution-01.md)
 * [Solution 2 - Batch Upgrade a Java App and a .NET App](./walkthrough/challenge-02/solution-02.md)
 * [Solution 3 - Modernize the Upgraded Apps and Deploy Them to Azure](./walkthrough/challenge-03/solution-03.md)
 

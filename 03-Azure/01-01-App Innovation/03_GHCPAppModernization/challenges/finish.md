@@ -8,6 +8,14 @@ Congratulations! You've completed the Migrate & Modernize Applications with GitH
 
 Throughout this MicroHack, you've gained hands-on experience with the complete migration lifecycle using the GitHub Copilot App Modernization agent (modernize CLI):
 
+### Challenge 1: Fundamentals — Custom Agents, Skills & MCP for App Modernization
+
+- Learned how GitHub Copilot Custom Agents, Skills, and MCP servers fit together (*Agent = who/how*, *Skill = what it knows*, *MCP = what it can do*)
+- Authored a Custom Agent (`.agent.md`) with a phased, gated workflow and a least-privilege tool allow-list
+- Packaged a reusable Skill (`SKILL.md`) with an explicit `WHEN:` trigger and transformation-rules table
+- Configured MCP (`mcp.json`) and confirmed the `appmod-*` tools resolve in the agent's tool picker
+- Dry-ran the gated assess → plan → execute → validate loop, confirming the agent stops at the assessment and plan approval gates before editing code
+
 ### Challenge 2: Batch Upgrade a Java App and a .NET App
 
 - Forked the PhotoAlbum-Java (Spring Boot) and PhotoAlbum (.NET) sample repositories
@@ -30,6 +38,7 @@ Throughout this MicroHack, you've gained hands-on experience with the complete m
 
 **Skills Acquired:**
 
+- Authoring Custom Agents, Skills, and MCP configurations for a gated modernization workflow
 - AI-powered code modernization with GitHub Copilot App Modernization
 - Batch assessment and framework upgrades across multiple repositories
 - Cloud modernization planning and dependency migration

@@ -1,6 +1,6 @@
-# Modernize the Upgraded Apps and Deploy Them to Azure
+# 3. Modernize the Upgraded Apps and Deploy Them to Azure
 
-[Previous Challenge Solution](challenge-02.md) - **[Home](../Readme.md)** - [Next Challenge Solution](finish.md)
+[Previous Challenge](challenge-02.md) - **[Home](../Readme.md)** - [Next Challenge](finish.md)
 
 ## Goal
 

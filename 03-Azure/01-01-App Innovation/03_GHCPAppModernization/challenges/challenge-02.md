@@ -1,6 +1,6 @@
-# Batch Upgrade a Java App and a .NET App
+# 2. Batch Upgrade a Java App and a .NET App
 
-[Previous Challenge Solution](challenge-01.md) - **[Home](../Readme.md)** - [Next Challenge Solution](challenge-03.md)
+[Previous Challenge](challenge-01.md) - **[Home](../Readme.md)** - [Next Challenge](challenge-03.md)
 
 ## Goal
 

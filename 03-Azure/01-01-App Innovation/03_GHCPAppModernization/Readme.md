@@ -1,4 +1,4 @@
-# **App Modernization with GitHub Copilot**
+# **Migrate & Modernize Applications with GitHub Copilot*#
 
 - [**MicroHack introduction**](#microhack-introduction)
 - [**MicroHack context**](#microhack-context)
@@ -8,31 +8,27 @@
 
 # MicroHack introduction
 
-This MicroHack teaches you to **drive application modernization with AI tooling**. You will use GitHub Copilot **Custom Agents**, **Skills**, and **MCP (Model Context Protocol)** servers, together with the GitHub Copilot **App Modernization** extensions, to modernize a legacy **.NET Framework** application and a legacy **Java / Spring Boot** application and move them to Azure.
+This MicroHack guides you through migrating and modernizing real-world applications to Azure using **GitHub Copilot App Modernization**. You will work across two technology stacks — **.NET** and **Java (Spring Boot)** — and use the **modernize CLI** agent to assess, upgrade, and deploy applications at scale.
 
-You start by building the AI foundation (agents, skills, MCP), then apply it to two real applications shipped in [`src/`](src/): **Contoso University** (.NET) and **Asset Manager** (Java).
-
-This lab is not a full explanation of app modernization as a discipline. The following are recommended pre-reading:
-
-- [GitHub Copilot app modernization for .NET](https://learn.microsoft.com/dotnet/core/porting/github-copilot-app-modernization-overview)
-- [GitHub Copilot app modernization for Java](https://learn.microsoft.com/azure/developer/java/migration/migrate-github-copilot-app-modernization-for-java)
-- [Model Context Protocol](https://modelcontextprotocol.io/)
+The lab builds up progressively: you start by learning to author the AI foundation — **Custom Agents**, **Skills**, and **MCP** — then drive multi-repository assessment and framework upgrades from the command line, and finish by provisioning Azure infrastructure and deploying the modernized apps.
 
 # MicroHack context
 
-Modernization is a **multi-step, knowledge-heavy workflow**: assess → plan → execute → validate. AI coding agents are good at executing steps, but out of the box they lack a defined role and guardrails (Custom Agent), reusable domain knowledge (Skills), and tools to act on the real world (MCP servers). This MicroHack shows how those three pieces combine into a repeatable, gated modernization playbook — and then applies it to a .NET and a Java workload.
+Modernizing legacy applications is often slow and error-prone: upgrading frameworks, resolving cloud readiness issues, replacing non-Azure dependencies, and standing up infrastructure all take significant manual effort. GitHub Copilot App Modernization uses AI to accelerate every phase of this journey — assessment, code upgrade, migration planning, and deployment — while keeping you in control through reviewable plans and pull requests.
 
-> 📖 Concept primer: [docs/00-fundamentals.md](docs/00-fundamentals.md)
+Across the challenges you will work with **PhotoAlbum** and **PhotoAlbum-Java** — a .NET and a Spring Boot sample app that you upgrade and deploy to Azure using the modernize CLI.
 
 # Objectives
 
 After completing this MicroHack you will:
 
-- Explain how Custom Agents, Skills, and MCP fit together in an AI-assisted modernization workflow.
-- Author a **Custom Agent** (`.agent.md`) with a phased, gated workflow and a least-privilege tool allow-list.
-- Author a **Skill** (`SKILL.md`) that packages modernization domain knowledge with explicit `WHEN:` triggers.
-- Configure **MCP servers** (`mcp.json`) that give the agent modernization tools (assessment, build, CVE checks, deployment).
-- Run an end-to-end **assess → plan → execute → validate** loop to upgrade a .NET Framework app to **.NET 9** and a Java 8 / Spring Boot 2.x app to **Java 21 / Spring Boot 3.x**, and deploy to Azure.
+- Know how to author a **Custom Agent** (`.agent.md`), package a reusable **Skill** (`SKILL.md`), and configure **MCP** (`mcp.json`), and understand the gated assess → plan → execute → validate loop.
+- Understand how to use the GitHub Copilot App Modernization agent (modernize CLI).
+- Know how to assess applications for cloud readiness and framework upgrade opportunities.
+- Be able to upgrade .NET and Java applications to their latest framework versions.
+- Understand how to run batch assessments across multiple repositories.
+- Know how to create a cloud modernization plan, resolve cloud readiness issues, and migrate dependencies (for example, Oracle to PostgreSQL).
+- Be able to provision Azure infrastructure and deploy modernized apps to Azure Container Apps.
 
 # MicroHack challenges
 
@@ -40,43 +36,24 @@ After completing this MicroHack you will:
 
 This MicroHack has a few but important prerequisites.
 
-In order to use the MicroHack time most effectively, the following should be completed prior to the session:
+In order to use the MicroHack time most effectively, the following should be in place before you start:
 
-- **VS Code** (latest) with **GitHub Copilot** + **GitHub Copilot Chat** extensions, agent mode enabled
-- **Visual Studio 2022** (latest) for the .NET challenge
-- GitHub Copilot **App Modernization** extensions:
-  - *App Modernization for Java* (`vscjava.migrate-java-to-azure`)
-  - GitHub Copilot **app modernization for .NET** (Visual Studio "Modernize" flow)
-- **Azure subscription** with **Contributor** on your resource group (for the deploy steps)
-- **.NET SDK 9**, **Java 17/21 + Maven**, **Docker Desktop**
-
-## Repository layout
-
-```
-03_GHCPAppModernization/
-├── docs/
-│   └── 00-fundamentals.md          # Concepts: Custom Agents, Skills, MCP
-├── templates/                      # Generic + pre-tailored templates
-│   ├── agents/                     # Custom Agent templates (generic, .NET, Java)
-│   ├── skills/                     # Skill templates (generic, skill-creator, .NET, Java)
-│   └── mcp/                        # MCP server configuration template
-├── challenges/                     # Challenge instructions
-├── walkthrough/                    # Step-by-step solutions
-└── src/                            # Sample apps: ContosoUniversity (.NET), AssetManager (Java)
-```
+- An **Azure Subscription** with permission to create resource groups and resources (Contributor or Owner).
+- A **GitHub account** to fork the sample repositories.
+- **Visual Studio Code** and/or a terminal with the **GitHub Copilot App Modernization agent (modernize CLI)** installed.
+- **Docker Desktop**, **Git**, and the relevant SDKs (.NET and Java) installed locally.
+- An active **GitHub Copilot** subscription.
 
 ## Challenges
 
-* [Challenge 1 - Fundamentals: Custom Agents, Skills & MCP](challenges/challenge-01.md)  **<- Start here**
-* [Challenge 2 - Modernize a .NET Application](challenges/challenge-02.md)
-* [Challenge 3 - Modernize a Java Application](challenges/challenge-03.md)
+* [Challenge 1 - Fundamentals: Custom Agents, Skills & MCP for App Modernization](challenges/challenge-01.md)  **<- Start here**
+* [Challenge 2 - Batch Upgrade a Java App and a .NET App](challenges/challenge-02.md)
+* [Challenge 3 - Modernize the Upgraded Apps and Deploy Them to Azure](challenges/challenge-03.md)
 * [Finish](challenges/finish.md)
 
 ## Solutions - Spoilerwarning
 
-* [Solution 1 - Fundamentals](./walkthrough/challenge-01/solution-01.md)
-* [Solution 2 - .NET Application](./walkthrough/challenge-02/solution-02.md)
-* [Solution 3 - Java Application](./walkthrough/challenge-03/solution-03.md)
+* [Solution 1 - Fundamentals: Custom Agents, Skills & MCP for App Modernization](./walkthrough/challenge-01/solution-01.md)
+* [Solution 2 - Batch Upgrade a Java App and a .NET App](./walkthrough/challenge-02/solution-02.md)
+* [Solution 3 - Modernize the Upgraded Apps and Deploy Them to Azure](./walkthrough/challenge-03/solution-03.md)
 
-# Contributors
-* Nils Bankert [GitHub](https://github.com/nilsbankert); [LinkedIn](https://www.linkedin.com/in/nilsbankert/)

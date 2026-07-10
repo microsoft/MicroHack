@@ -2,56 +2,54 @@
 
 [Previous Challenge](challenge-03.md) - **[Home](../Readme.md)**
 
-Congratulations! You've completed the Azure Migration & Modernization MicroHack. 
+Congratulations! You've completed the Migrate & Modernize Applications with GitHub Copilot MicroHack.
 
 **What You've Accomplished:**
 
-Throughout this MicroHack, you've gained hands-on experience with the complete migration lifecycle:
+Throughout this MicroHack, you've gained hands-on experience with the complete migration lifecycle using the GitHub Copilot App Modernization agent (modernize CLI):
 
-### Fundamentals: Custom Agents, Skills & MCP
+### Challenge 1: Fundamentals — Custom Agents, Skills & MCP for App Modernization
 
-- Learned how Custom Agents, Skills, and MCP servers fit together in an AI-assisted modernization workflow
-- Authored a gated modernization Custom Agent (`.agent.md`) with a least-privilege tool allow-list
-- Packaged reusable domain knowledge as a Skill (`SKILL.md`) with explicit `WHEN:` triggers
-- Configured MCP servers (`mcp.json`) and surfaced the `appmod-*` tools to the agent
-- Ran the assess → plan → execute → validate loop with approval gates
+- Learned how GitHub Copilot Custom Agents, Skills, and MCP servers fit together (*Agent = who/how*, *Skill = what it knows*, *MCP = what it can do*)
+- Authored a Custom Agent (`.agent.md`) with a phased, gated workflow and a least-privilege tool allow-list
+- Packaged a reusable Skill (`SKILL.md`) with an explicit `WHEN:` trigger and transformation-rules table
+- Configured MCP (`mcp.json`) and confirmed the `appmod-*` tools resolve in the agent's tool picker
+- Dry-ran the gated assess → plan → execute → validate loop, confirming the agent stops at the assessment and plan approval gates before editing code
 
-### Challenge 2: .NET Application Modernization
+### Challenge 2: Batch Upgrade a Java App and a .NET App
 
-- Cloned and configured the Contoso University .NET application repository
-- Used GitHub Copilot App Modernization extension in Visual Studio
-- Performed comprehensive code assessment for cloud readiness
-- Upgraded application from legacy .NET Framework to .NET 9
-- Migrated from Windows AD to Microsoft Entra ID authentication
-- Resolved cloud readiness issues identified in the upgrade report
-- Deployed the modernized application to Azure App Service
+- Forked the PhotoAlbum-Java (Spring Boot) and PhotoAlbum (.NET) sample repositories
+- Installed and configured the GitHub Copilot App Modernization agent (modernize CLI)
+- Ran a batch assessment across both repositories for Upgrade and Cloud readiness
+- Reviewed the aggregated and per-repository assessment reports
+- Upgraded the .NET app to .NET 10 and the Java app to Java 25 / Spring Boot 4.0
+- Committed and pushed the upgraded code to each repository
 
-### Challenge 3: Java Application Modernization
+### Challenge 3: Modernize the Upgraded Apps and Deploy Them to Azure
 
-- Set up local Java development environment with Docker and Maven
-- Ran the Asset Manager application locally to validate functionality
-- Used GitHub Copilot App Modernization extension in VS Code
-- Performed AppCAT assessment for Azure migration readiness (9 cloud readiness issues, 4 Java upgrade opportunities)
-- Executed guided migration tasks to modernize the application
-- Migrated from AWS S3 to Azure Blob Storage with automated code refactoring
-- Validated migration success through automated CVE, build, consistency, and test validation
-- Tested the modernized application locally
+- Created a cloud modernization plan targeting both repositories
+- Resolved cloud readiness issues and migrated dependencies (for example, Oracle to PostgreSQL)
+- Reviewed and merged the modernization pull request
+- Provisioned Azure infrastructure and deployed the PhotoAlbum-Java app to Azure
+- Created an explicit infrastructure/deployment plan and deployed the PhotoAlbum (.NET) app to Azure
+- Validated both applications running on Azure Container Apps
 
 ---
 
 **Skills Acquired:**
 
-- AI-powered code modernization with GitHub Copilot
-- Azure App Service deployment
-- AppCAT assessment for Java applications
-- Automated validation and testing workflows
+- Authoring Custom Agents, Skills, and MCP configurations for a gated modernization workflow
+- AI-powered code modernization with GitHub Copilot App Modernization
+- Batch assessment and framework upgrades across multiple repositories
+- Cloud modernization planning and dependency migration
+- Azure infrastructure provisioning and Azure Container Apps deployment
 
 **Key Takeaways:**
 
-This workshop demonstrated the complete migration lifecycle from discovery to deployment:
+This workshop demonstrated the complete migration lifecycle from assessment to deployment:
 - **AI-Powered Modernization**: GitHub Copilot dramatically accelerates code modernization while maintaining quality
-- **Platform Migration**: Successfully migrated dependencies (S3 to Blob Storage, Windows AD to Entra ID) alongside application code
-- **Validation at Every Step**: Automated testing ensures functionality is preserved throughout modernization
+- **Scale Across Repositories**: Batch assessment and planning streamline modernizing multiple apps at once
+- **Platform Migration**: Successfully migrated dependencies (for example, Oracle to PostgreSQL) alongside application code
 - **Multiple Technology Stacks**: Experience with both .NET and Java modernization approaches
 
 ---
@@ -69,4 +67,3 @@ This workshop demonstrated the complete migration lifecycle from discovery to de
 If you want to give feedback, please don't hesitate to open an issue on the repository or get in touch with one of us directly.
 
 Thank you for investing the time and see you next time!
-

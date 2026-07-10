@@ -1,38 +1,41 @@
-# Modernize the Asset Manager Java Application
+# 3. Modernize the Upgraded Apps and Deploy Them to Azure
 
-[Previous Challenge](challenge-02.md) - **[Home](../Readme.md)** - [Finish](finish.md)
+[Previous Challenge](challenge-02.md) - **[Home](../Readme.md)** - [Next Challenge](finish.md)
 
 ## Goal
 
-Modernize the Asset Manager Spring Boot application for Azure by replacing AWS S3 dependencies with Azure services through the GitHub Copilot App Modernization workflow.
+Take the two apps you upgraded in Challenge 2 and use the modernize CLI to create a cloud modernization plan, resolve cloud readiness issues, provision Azure infrastructure, and deploy both the Java and .NET applications to Azure.
 
 ## Actions
 
-* Prepare the workstation by launching Docker Desktop, cloning the `migrate-modernize-lab` repo, and opening `src/AssetManager` in VS Code.
-* Authenticate to GitHub, ensure the GitHub Copilot App Modernization extension (Claude Sonnet 4.5) is installed, and review prerequisite setup.
-* Run `scripts\startapp.cmd` to validate the existing containers (RabbitMQ, Postgres) and confirm the app is reachable at `http://localhost:8080`.
-* Launch the AppCAT assessment from the extension, track CLI installation, and wait for the identified cloud readiness issues and Java upgrade opportunities.
-* Review the assessment insights, focusing on the AWS S3 to Azure Blob Storage migration recommendation and understanding the priority levels.
-* Execute the guided migration task, inspect the generated `plan.md`, and continue the conversation to apply the proposed code refactoring.
-* Monitor `progress.md`, Maven/Gradle changes, configuration updates, and Spring Cloud Azure versions as the migration proceeds.
-* Allow the automated validation stages (CVE scans, builds, consistency checks, tests) to complete and remediate any issues flagged.
-* Re-run `scripts\startapp.cmd`, verify Blob Storage integration locally, and test application functionality end-to-end.
-* Optionally proceed with additional modernization tasks surfaced in the assessment to continue improving the workload.
+* Using the modernize CLI, create a **cloud modernization plan** that targets both repositories from your config file. Instruct the plan to:
+  * Ignore any upgrade recommendations from the earlier assessment (the apps are already upgraded).
+  * Focus on resolving cloud readiness issues, provisioning Azure infrastructure for each app, and deploying each app to Azure.
+  * Migrate any OracleDB dependency to PostgreSQL if present.
+* Review the generated plan and its tasks, then review and **merge the pull request** the agent produces.
+* **Deploy the PhotoAlbum-Java app**: pull the latest plan branch, execute the plan with the modernize CLI, and wait for all tasks to finish. Validate the deployment by inspecting the created resource group in Azure and browsing to the Frontend Container App URL.
+* **Deploy the PhotoAlbum (.NET) app**: pull the latest plan branch and execute the plan. If the plan does not provision infrastructure or deploy resources for this app, create a second, more explicit plan (for example, an "infra-setup-plan" that provisions Azure resources and deploys the app), then execute it.
+* Validate the .NET deployment the same way — confirm the Azure resources and open the Frontend Container App URL.
+
+> [!TIP]
+> If a deployment step fails, use GitHub Copilot CLI to help diagnose and fix the error before retrying.
+
+> [!NOTE]
+> Plan generation and execution can each take a while (roughly 15–20 minutes per plan). This is a good point to take a break while the agent works.
 
 ## Success criteria
 
-* Docker containers start successfully and the legacy app runs locally before changes.
-* AppCAT completes with nine cloud readiness issues and four Java upgrade opportunities identified.
-* The AWS S3 to Azure Blob Storage migration task executes with updated dependencies and configuration.
-* All automated validation stages pass without unresolved issues.
-* The modernized application starts locally using Azure Blob Storage with no storage errors.
-* Migration activities are traceable through dedicated plan and progress artifacts for rollback readiness.
+* A cloud modernization plan is generated for both repositories and its pull request is reviewed and merged.
+* The PhotoAlbum-Java app is deployed to Azure, with its resources visible in a resource group and the Frontend Container App reachable.
+* The PhotoAlbum (.NET) app is deployed to Azure — creating an explicit infrastructure/deployment plan where needed — with its resources visible and the Frontend Container App reachable.
+* Both applications run successfully in Azure.
+
+> Need the detailed, step-by-step walkthrough? See the [Challenge 3 Solution](../walkthrough/challenge-03/solution-03.md).
 
 ## Learning resources
 
-* [GitHub Copilot for VS Code](https://code.visualstudio.com/docs/copilot/overview)
-* [Azure SDK for Java](https://learn.microsoft.com/azure/developer/java/sdk/)
-* [Migrate from AWS to Azure](https://learn.microsoft.com/azure/architecture/aws-professional/)
-* [Azure Blob Storage for Java](https://learn.microsoft.com/azure/storage/blobs/storage-quickstart-blobs-java)
-* [Spring Cloud Azure](https://learn.microsoft.com/azure/developer/java/spring-framework/)
-* [AppCAT Assessment Tool](https://learn.microsoft.com/azure/developer/java/migration/migration-toolkit-intro)
+* [GitHub Copilot App Modernization – create a modernization plan](https://learn.microsoft.com/azure/developer/github-copilot-app-modernization/modernization-agent/quickstart)
+* [Azure Container Apps documentation](https://learn.microsoft.com/azure/container-apps/)
+* [Migrate Oracle to Azure Database for PostgreSQL](https://learn.microsoft.com/azure/postgresql/migrate/)
+* [GitHub Copilot CLI](https://docs.github.com/copilot/github-copilot-in-the-cli)
+* [Azure deployment best practices](https://learn.microsoft.com/azure/architecture/)

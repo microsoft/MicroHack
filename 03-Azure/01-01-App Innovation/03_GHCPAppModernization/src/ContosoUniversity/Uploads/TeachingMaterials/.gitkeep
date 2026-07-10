@@ -1,4 +1,0 @@
-# This file ensures the TeachingMaterials directory is tracked in git
-# Uploaded teaching material images will be stored in this directory
-# The actual image files are excluded by .gitignore for security and repository size reasons
-# This directory structure is required for the application to function properly

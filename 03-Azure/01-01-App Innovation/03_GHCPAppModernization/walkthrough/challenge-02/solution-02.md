@@ -1,75 +1,102 @@
-# Modernize a .NET Application
+# Walkthrough Challenge 2 - Upgrading one Java app and one .NET app
 
 [Previous Challenge Solution](../challenge-01/solution-01.md) - **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-03/solution-03.md)
 
-**Duration:** 30 minutes
+## 2.1. Fork the sample repositories
 
-## Goal
+Start by logging in your Github account and fork both the .NET and the Java app.
 
-Modernize the Contoso University .NET Framework application to .NET 9 and deploy it to Azure App Service using GitHub Copilot's AI-powered code transformation capabilities.
+- <https://github.com/Azure-Samples/PhotoAlbum-Java>
+- <https://github.com/Azure-Samples/PhotoAlbum>
 
-## Actions
+<img src="img/1.png" width="700" alt="Forking the PhotoAlbum sample repositories" />
 
-### Setup and Preparation:
-1. Navigate to [../../src/ContosoUniversity](../../src/ContosoUniversity)
-1. Open Visual Studio 2022
-1. Select "Clone a repository" and paste your forked repository URL
-1. Navigate to Solution Explorer and locate the ContosoUniversity project
-1. Rebuild the project to verify it compiles successfully
+## 2.2. Set up your working directory
 
-![Application running in IIS Express](media/0030.png)
+Create a working directory in a location at your choice.
 
-### Assess and Upgrade to .NET 9:
+Install the Github Copilot modernization agent (modernize CLI). We will use it for the modernization end-to-end (upgrade, assessment, plan, execute). 
 
-1. Right-click the ContosoUniversity project and select "Modernize"
+Download source: <https://learn.microsoft.com/en-us/azure/developer/github-copilot-app-modernization/modernization-agent/quickstart?tabs=windows%2Cjava#prerequisites>
 
-![Right-click Modernize menu](media/0040.png)
+For batch operations across many repositories, create a JSON config file to list all repositories. For example, create it at `.github/modernize/repos.json` in your working directory, or provide a custom path.
 
-1. Sign in to GitHub Copilot if prompted
-1. Select Claude Sonnet 4.5 as the model
-1. Click "Upgrade to a newer .NET version"
-1. Allow GitHub Copilot to analyze the codebase
-1. Review the upgrade plan when presented
-1. Allow operations when prompted during the upgrade process
-1. Wait for the upgrade to complete (marked by `dotnet-upgrade-report.md` appearing)
+Reference: <https://learn.microsoft.com/en-gb/azure/developer/github-copilot-app-modernization/modernization-agent/batch-assess#configure-repositories>
 
-### Migrate to Azure:
+<img src="img/2.png" width="500" alt="Config file listing the repositories" />
 
-1. Right-click the project again and select "Modernize"
-1. Click "Migrate to Azure" in the GitHub Copilot Chat window
-1. Wait for GitHub Copilot to assess cloud readiness
+## 2.3. Run the batch assessment
 
-### Resolve Cloud Readiness Issues:
-1. Open the `dotnet-upgrade-report.md` file
+In your terminal, run the modernize CLI agent and accept execution in your working directory.
 
-![Upgrade report with cloud readiness issues](media/0080.png)
+Run "Assess" to analyze the code of the 2 apps and generate a report.
 
-1. Review the Cloud Readiness Issues section
-1. Click "Migrate from Windows AD to Microsoft Entra ID"
-1. Allow GitHub Copilot to implement the authentication changes
-1. Ensure all mandatory tasks are resolved
-1. Review the changes made to authentication configuration
+<img src="img/3.png" width="700" alt="Running assess in the modernize CLI" />
 
-### Deploy to Azure:
+Select "From a config file".
 
-1. Allow GitHub Copilot to complete the Azure App Service deployment
-1. Verify the deployment succeeds
-1. Test the deployed application in Azure
+<img src="img/4.png" width="700" alt="Selecting the config file source" />
 
-## Success Criteria
+Select both apps.
 
-- ✅ ContosoUniversity solution cloned and builds successfully
-- ✅ Application upgraded from .NET Framework to .NET 9
-- ✅ Upgrade report generated showing all changes and issues
-- ✅ Authentication migrated from Windows AD to Microsoft Entra ID
-- ✅ All mandatory cloud readiness issues resolved
-- ✅ Application successfully deployed to Azure App Service
-- ✅ Deployed application is accessible and functional
+<img src="img/5.png" width="700" alt="Selecting both apps" />
 
-## Learning Resources
+Check both "Upgrade" and "Cloud readiness". Leave "Security" unchecked.
 
-- [GitHub Copilot for Visual Studio](https://learn.microsoft.com/visualstudio/ide/visual-studio-github-copilot-extension)
-- [Modernize .NET Applications](https://learn.microsoft.com/dotnet/architecture/modernize-with-azure-containers/)
-- [Migrate to .NET 9](https://learn.microsoft.com/dotnet/core/migration/)
-- [Azure App Service for .NET](https://learn.microsoft.com/azure/app-service/quickstart-dotnetcore)
-- [Microsoft Entra ID Authentication](https://learn.microsoft.com/azure/active-directory/develop/quickstart-v2-aspnet-core-webapp)
+<img src="img/6.png" width="700" alt="Selecting Upgrade and cloud readiness" />
+
+Change the Analysis coverage to "Full analysis" and press enter to continue.
+
+<img src="img/8.png" width="700" alt="Setting analysis coverage to Full analysis" />
+
+Chose to assess locally (using cloud agents is also possible)
+
+> [!NOTE]
+> Note that an assessment-config.yaml file gets automatically generated. Both repositories get cloned and assessment starts. It may take about 5-10 min to complete, so it's a good time to take a coffee break.
+
+<img src="img/9.png" width="700" alt="Assessment running locally" />
+
+
+Congratulations 🎉 you have just finished the batch assessment phase. Take some time to explore the outcome results.
+
+## 2.4. Explore the assessment results
+
+Batch assessment is especially valuable for migration planning because it enables you to efficiently assess the readiness and requirements of various applications at once. By using batch assessment, you can evaluate different repositories at the same time and obtain detailed assessment reports for each application. It produces two kinds of reports to support your migration planning:
+
+**Aggregated report:** Presents an overall perspective of all assessed applications, offering summary insights, recommendations on Azure services, target platforms, upgrade paths, migration strategies, and migration waves. Additionally, the aggregated report includes shortcuts for easy access to each per repository report.
+
+<img src="img/10.png" width="700" alt="Aggregated assessment report" />
+
+**Per repository report:** Provides detailed insights on the two aspects identified at the individual repository level.
+
+<img src="img/11.png" width="700" alt="Per repository report" />
+
+<img src="img/12.png" width="700" alt="Per repository report details" />
+
+## 2.5. Upgrade each app individually
+
+Now that we have an assessment report, we could jump straight to a modernization plan, but we want to start with an upgrade of the .NET and Java versions first.
+
+For a batch upgrade, both repositories would need to use the same programming language, which is not the case here, so let's upgrade both apps individually.
+
+Exit the modernize CLI, navigate to the folder of the PhotoAlbum (.NET) and relaunch the modernize CLI.
+
+Select the Upgrade option, current folder, and upgrade locally.
+
+In the prompt box, submit the following prompt: "Upgrade to .NET 10", as recommended previously in our assessment report.
+
+Migrate CLI imediately starts creating an upgrade plan, followed by execution of the necessary code changes.
+
+Check the resulting Plan Execution Summary for each app. Upgrade should show "Success".
+
+<img src="img/14.png" width="700" alt="Plan Execution Summary showing Success" />
+
+Navigate to the PhotoAlbum-Java directory and repeat the same process for the Java version of the app. Use the following prompt: "Upgrade to Java 25 and upgrade to Spring Boot 4.0", as recommended previously in our assessment report.
+
+Exit modernize CLI, navigate to each app folder, commit and push your changes to each respective remote repository. Ensure all changes are committed and pushed.
+
+Congratulations 🎉 your apps are now upgraded and you have completed challenge 2.
+
+Navigate back to your parent directory and launch modernize CLI again.
+
+You are now ready to initiate challenge 3 - modernize your upgraded apps and deploy them in Azure.

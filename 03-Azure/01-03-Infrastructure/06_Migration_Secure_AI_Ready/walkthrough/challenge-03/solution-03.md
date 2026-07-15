@@ -1,4 +1,4 @@
-# Walkthrough Challenge 3 - Create a Business Case
+# Walkthrough Challenge 3 - Create a business case
 
 [Previous Challenge Solution](../challenge-02/solution-02.md) - **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-04/solution-04.md)
 
@@ -10,11 +10,11 @@ Open the [Azure Portal](https://portal.azure.com) and navigate to the previously
 
 ![image](./img/bc1.png)
 
-Provide a name for the business case and select a *Entire datacenter* for the scope.
+Provide a name for the business case and select *Entire datacenter* for the scope.
 
 ![image](./img/bc2.png)
 
-Provide addtional details like the preffered target region, your migration preference and any saving options and click *Build business case*
+Provide additional details, such as the preferred target region, migration preference, and savings options, and then click *Build business case*.
 
 ![image](./img/bc2-1.png)
 
@@ -30,7 +30,7 @@ There are multiple reports that you need to review:
 
 - Overview: This report is an executive summary of the business case and covers:
   + Potential savings (TCO).
-  + Estimated year on year cashflow savings based on the estimated migration completed that year.
+  + Estimated year-on-year cash flow savings based on the migrations estimated to be completed that year.
   + Savings from unique Azure benefits like Azure Hybrid Benefit.
   + Discovery insights covering the scope of the business case.
 
@@ -44,7 +44,7 @@ There are multiple reports that you need to review:
 
 ![image](./img/bc6.png)
 
-- This report covers the breakdown of the total cost of ownership for your on-premises estate with and without Arc.
+- Azure Arc: This report covers the breakdown of the total cost of ownership for your on-premises estate with and without Arc.
 
 ![image](./img/bc7.png)
 
@@ -58,8 +58,7 @@ The business case is calculated based on some [assumptions](https://learn.micros
 **On-premises cost**
 ![image](./img/bc9.png)
 
-You can adjust those parameters what would recalculate the business case or you can create additional new business cases to review different options.
+You can adjust those parameters to recalculate the business case, or you can create additional business cases to review different options.
 
-You successfully completed challenge 3! 🚀🚀🚀
-
+You successfully completed Challenge 3! 🚀🚀🚀
 

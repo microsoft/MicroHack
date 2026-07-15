@@ -6,45 +6,45 @@ Duration: 90 minutes
 
 ## Prerequisites
 
-Please make sure thet you successfully completed [Challenge 4](../challenge-4/solution.md) before continuing with this challenge.
+Please make sure that you successfully completed [Challenge 4](../challenge-04/solution-04.md) before continuing with this challenge.
 
 > [!IMPORTANT]
 > For migrating Hyper-V VMs, the Migration and modernization tool installs software providers (Azure Site Recovery provider and Recovery Services agent) on Hyper-V hosts or cluster nodes. The Azure Migrate appliance isn't used for Hyper-V migration.
 
-### **Task 1: Setup the software providers**
+### **Task 1: Set up the software providers**
 
-In the Azure Portal select *Virtual machines* from the navigation pane on the left. Select the **MHBox-HV** system and logon via Azure Bastion with you credentials:
+In the Azure Portal, select *Virtual machines* from the navigation pane on the left. Select the **MHBox-HV** system and log on via Azure Bastion with your credentials:
 
 > [!NOTE]
-> You can also select *Password from Azure KeyVault* under *Authentication Type* to sekect the secret stored in the KeyVault.
+> You can also select *Password from Azure Key Vault* under *Authentication Type* to select the secret stored in the Key Vault.
 
 ![image](./img/HVConnect.png)
 
-Open Microsoft Edge on the Hyper-V Host and navigate and login to the [Azure Portal](https://portal.azure.com).
-In the search bar enter *Azure Migrate* and select Azure Migrate from the list of services
+Open Microsoft Edge on the Hyper-V host, navigate to the [Azure Portal](https://portal.azure.com), and log in.
+In the search bar, enter *Azure Migrate* and select Azure Migrate from the list of services.
 
 ![image](./img/PrepRep1.png)
 
- Select *All projects* from the navigation pane on the left. Your previousley created Azure Migrate project should be listed. Click on it to open the project.
+Select *All projects* from the navigation pane on the left. Your previously created Azure Migrate project should be listed. Click it to open the project.
  
 ![image](./img/PrepRep2.png)
 
-Select *Migrations* from the navigation pane on the left and click on *Start execution*
+Select *Migrations* from the navigation pane on the left and click *Start execution*.
 
 ![image](./img/PrepRep3.png)
 
-Select *Azure VM* in the *Where do you want to migrate to?* and select *Yes, with Hyper-V* in the *Where do you want to migrate to?* field. An error will be displayed indicating that no Hyper-V host was registered yet. Click on *Click here to set up* to start the registration process.
+Select *Azure VM* as the migration destination and *Yes, with Hyper-V* as the virtualization type. An error will indicate that no Hyper-V host has been registered yet. Click *Click here to set up* to start the registration process.
 
 ![image](./img/PrepRep3-1.png)
 
 > [!IMPORTANT]
-> **Make sure to select the right target region. Double check with the destination resource group location. This can't be changed afterwards.**
+> **Make sure to select the correct target region. Double-check it against the destination resource group location. This can't be changed afterward.**
 
-Clicl on *Create resources*
+Click *Create resources*.
 
 ![image](./img/PrepRep4.png)
 
-Next download the binaries and the registration file.
+Next, download the binaries and the registration file.
 
 ![image](./img/PrepRep5.png)
 
@@ -58,27 +58,27 @@ Execute the *AzureSiteRecoveryProvider.exe* file to start the installation.
 
 ![image](./img/PrepRep9.png)
 
-Register the Provider with the previousley downloaded registration file.
+Register the provider with the previously downloaded registration file.
 
 ![image](./img/PrepRep10.png)
 
-Complete the wizard an dwait for the the Provider to be successfully registered.
+Complete the wizard and wait for the provider to be successfully registered.
 
 ![image](./img/PrepRep11.png)
 
-Go back to the Azure Portal and finalize the registration. 
+Go back to the Azure Portal and finalize the registration.
 
-> [!Note]
+> [!NOTE]
 > *You might need to refresh the page.*
 
 ![image](./img/PrepRep12.png)
 
-> [!Note]
-> *This process might take up to 15 minutes to complete. Afterwards, the replication of VMs can be started.*
+> [!NOTE]
+> *This process might take up to 15 minutes to complete. Afterward, VM replication can be started.*
 
-### **Task 2: Enable Replication**
+### **Task 2: Enable replication**
 
-Once the registration is completed, change back to the Azure Migrate project in the Azure portal and select *Migrations* from the navigation pane on the left and click on *Start execution*
+Once registration is complete, return to the Azure Migrate project in the Azure portal, select *Migrations* from the navigation pane on the left, and click *Start execution*.
 
 ![image](./img/Rep1.png) 
 
@@ -86,22 +86,22 @@ Specify the intent as shown on the diagram below:
 
 ![image](./img/Rep2.png)
 
-Next select the Windows and the Linux System that host the Web Server with the Microhack Demo page.
+Next, select the Windows and Linux systems that host the web servers with the MicroHack demo page.
 
-> [!Note]
-> *If the Linux Server is greyed out this is due to an compatibility issue with the lates Ubuntu image and the new Azrue Migrate experience. To migrate the Ubuntu VM you need to change to the classic migration experience*
+> [!NOTE]
+> *If the Linux server is greyed out, this is due to a compatibility issue with the latest Ubuntu image and the new Azure Migrate experience. To migrate the Ubuntu VM, change to the classic migration experience.*
 
 ![image](./img/Rep3.png)
 
-Next select the destination resource group and the destination vNet & subnet.
+Next, select the destination resource group, virtual network, and subnet.
 
 ![image](./img/Rep4.png)
 
-In the Compute section you can adjust the target settings e.g., VM size.
+In the *Compute* section, you can adjust target settings such as the VM size.
 
 ![image](./img/Rep5.png)
 
-In the Disk section you can adjust the target settings e.g., Standard SSD.
+In the *Disk* section, you can adjust target settings such as the disk type.
 
 ![image](./img/Rep6.png)
 
@@ -109,34 +109,34 @@ Proceed to the final summary and enable replication.
 
 ![image](./img/Rep7.png)
 
-Wait until the Execution stage shows *Testing*
+Wait until the *Execution* stage shows *Testing*.
 
 ![image](./img/Rep8.png)
 
-### **Task 3: Perform Test Migration
+### **Task 3: Perform a test migration**
 
-When delta replication begins, you can run a test migration for the VMs, before running a full migration to Azure. We highly recommend that you do this at least once for each machine, before you migrate it.
+When delta replication begins, you can run a test migration for the VMs before running a full migration to Azure. We highly recommend doing this at least once for each machine before migrating it.
 
-+ Running a test migration checks that migration will work as expected, without impacting the on-premises machines, which remain operational, and continue replicating.
-+ Test migration simulates the migration by creating an Azure VM using replicated data (usually migrating to a non-production VNet in your Azure subscription).
-+ You can use the replicated test Azure VM to validate the migration, perform app testing, and address any issues before full migration.
++ Running a test migration checks that migration will work as expected without affecting the on-premises machines, which remain operational and continue replicating.
++ A test migration simulates migration by creating an Azure VM from replicated data, usually in a nonproduction virtual network in your Azure subscription.
++ You can use the replicated test Azure VM to validate the migration, test the application, and address any issues before full migration.
 
-Open the Azure Portal and navigate to the previousley created Azure Migrate project. Select *Migrations* and then click on *Action pending* to initiate the test migration.
+Open the Azure Portal and navigate to the previously created Azure Migrate project. Select *Migrations*, and then click *Action pending* to initiate the test migration.
 
 ![image](./img/TestMig1.png)
 
-From the new page make sure that the *Preparation* is *Completed*, click on the drop down menu next to *Testing* click on *Start test migration*.
+On the new page, make sure that *Preparation* is *Completed*. Open the menu next to *Testing*, and then click *Start test migration*.
 
 ![image](./img/TestMig2.png)
 
-Select the destination network and click on *Test migration*
+Select the destination network and click *Test migration*.
 
 ![image](./img/TestMig3.png)
 
-> [!Note]
-> **Repeat the above steps for the other VM**
+> [!NOTE]
+> **Repeat the preceding steps for the other VM.**
 
-From the Azure Portal navigate to the Azure Migrate project. Select *Migrations* and then click on *In progress* under *Execution status* to follow the steps performed during Test migration.
+From the Azure Portal, navigate to the Azure Migrate project. Select *Migrations*, and then click *In progress* under *Execution status* to follow the test migration.
 
 ![image](./img/TestMig3-1.png)
 
@@ -144,7 +144,7 @@ Wait until all steps are completed.
 
 ![image](./img/TestMig3-2.png)
 
-To validate if Test migration was successfull, open the Azure Portal, select Virtual machines from the navigation pane on the left. There will be additional VMs ending with *-test*. Those VMs were created during test migration.
+To validate that the test migration was successful, open the Azure Portal and select *Virtual machines* from the navigation pane on the left. Additional VMs ending with *-test* were created during the test migration.
 
 ![image](./img/TestMig4.png)
 
@@ -152,83 +152,83 @@ Connect to the Windows VM via Azure Bastion.
 
 ![image](./img/TestMig5.png)
 
-On the VM open a browser and navigate to *http://localhost*. Make sure that the Microhack Demo Web App is running as expected.
+On the VM, open a browser and navigate to *http://localhost*. Make sure that the MicroHack Demo Web App is running as expected.
 
 ![image](./img/TestMig6.png)
 
-Once confirmed that the systems are working as expected you can cleanup the test migration and proceed with the final migration.
+After confirming that the systems work as expected, you can clean up the test migration and proceed with the final migration.
 
-Go back to the *Migrations* section in the Azure Migrate project in the Azure Portal and click on *Action pending* for the VMs where the Test migration was executed.
+Go back to the *Migrations* section in the Azure Migrate project in the Azure Portal and click *Action pending* for the VMs on which the test migration was performed.
 
 ![image](./img/TestMig7.png)
 
-From the Testing drop down menue select *Cleanup test migration*.
+From the *Testing* menu, select *Cleanup test migration*.
 
 ![image](./img/TestMig8.png)
 
-Provide a comment, select *Testing is complete....* and click *Cleanup Test* to remove all resources.
+Provide a comment, select *Testing is complete....*, and click *Cleanup Test* to remove all resources.
 
 ![image](./img/TestMig9.png)
 
-> [!Note]
-> **Repeat the above steps for the other VM**
+> [!NOTE]
+> **Repeat the preceding steps for the other VM.**
 
-### **Task 4: Prepare Final Migration**
+### **Task 4: Prepare the final migration**
 
-Currently the two servers are not directly published and are not accessable directly. After the migration, the original server will be turned off. Therefore the access to the system needs to be updated. To prepare for the migration and to keep downtime as short as possible some pre-migration steps should be performed.
+Currently, the two servers are not published or directly accessible. After migration, the source servers will be turned off, so access to the systems must be updated. Perform the following premigration steps to keep downtime as short as possible.
 
-#### **Task 4.1: Create a new Azure Public Load Balancer in the destination environment**
+#### **Task 4.1: Create a new Azure public load balancer in the destination environment**
 
-From the Azure Portal open the Load Balancing blade, select Load Balancer on the Navigation pane on the left and click *Create*.
+From the Azure Portal, open the Load Balancing page, select *Load Balancer* from the navigation pane on the left, and click *Create*.
 
 ![image](./img/LB1.png)
 
-Under *Basics* select the *destination-rg* Resource Group and provide a name for the new Load Balancer.
+Under *Basics*, select the *destination-rg* resource group and provide a name for the new load balancer.
 
 ![image](./img/LB2.png)
 
-Under *Frontend IP configuration*, click *Add a frontend IP configuration* and create a new Public IP address.
+Under *Frontend IP configuration*, click *Add a frontend IP configuration* and create a new public IP address.
 
 ![image](./img/LB3.png)
 
-Under *Backend Pools*, select *Add a backend Pool*. Provide a name and select the *destination-vnet* as the Virtual Network.
+Under *Backend Pools*, select *Add a backend Pool*. Provide a name and select *destination-vnet* as the virtual network.
 Add *10.2.1.4* and *10.2.1.5* as the IP addresses.
 
 > [!NOTE]
-> Please note: Azure reserves the first four addresses (0-3) in each subnet address range, and doesn't assign the addresses. Azure assigns the next available address to a resource from the subnet address range. So it is predictable which IP addresses will be assigned to the destination VMs after the migration.
+> Azure reserves the first four addresses (0-3) in each subnet address range and doesn't assign them. Azure assigns the next available address to a resource from the subnet address range. Therefore, the IP addresses assigned to the destination VMs after migration are predictable in this lab.
 
 ![image](./img/LB4.png)
 
-Under *Inbound rules* click on *Add a load balancing rule* and create the load balancing rule as illustrated on the following diagram.
+Under *Inbound rules*, click *Add a load balancing rule* and create the rule as illustrated in the following diagram.
 
 ![image](./img/LB5.png)
 
-We are already using a NAT GW to provide outbound Internet access. We don't need a Outbound rule and can skip this part.
+We are already using a NAT gateway to provide outbound internet access. We don't need an outbound rule and can skip this part.
 
-Proceed to the *Review + create* section, review your configuration and click *Create*
+Proceed to the *Review + create* section, review your configuration, and click *Create*.
 
 ![image](./img/LB6.png)
 
-Wait until the load balancer has been created, change back to the *Load balancing* section, select the Load Balancer and from the *Overview* pane copy the *Frontend IP address*. Note down the Public IP of the Load Balancer as we need it after the migration.
+After the load balancer has been created, return to the *Load balancing* section and select the load balancer. From the *Overview* pane, copy the *Frontend IP address*. Record the load balancer's public IP address because you will need it after migration.
 
 ![image](./img/LB7.png)
 
-### **Task 7: Perform Final Migration**
+### **Task 5: Perform the final migration**
 
-Open the [Azure Portal](https://portal.azure.com) and go back to the *Migrations* section in the Azure Migrate project in the Azure Portal and click on *Action pending* for the VMs to be migrated.
+Open the [Azure Portal](https://portal.azure.com), return to the *Migrations* section in the Azure Migrate project, and click *Action pending* for the VMs to be migrated.
 
 ![image](./img/Mig1.png)
 
-Open the drop down of the *Completion* menu and select *Migrate*.
+Open the *Completion* menu and select *Migrate*.
 
 ![image](./img/Mig1-1.png)
 
 
-Make sure to select *Yes* to shutdown the VMs on the Hyper-V host and click *Migrate*
+Select *Yes* to shut down the VMs on the Hyper-V host, and then click *Migrate*.
 
 ![image](./img/Mig3.png)
 
-On the *Migrations* section in the Azure Migrate project in the Azure Portal click on *In progress* to follow the migration steps..
+In the *Migrations* section of the Azure Migrate project, click *In progress* to follow the migration steps.
 
 ![image](./img/Mig4.png)
 
@@ -236,44 +236,41 @@ You can also click on each job to review the current status of the migration.
 
 ![image](./img/mig5.png)
 
-After a few minutes the migration should be successfully completed.
+After a few minutes, the migration should complete successfully.
 
 ![image](./img/mig7.png)
 
-On the Hyper-V Host, the VMs should also be turned off.
+On the Hyper-V host, the VMs should also be turned off.
 
 ![image](./img/mig6.png)
 
-When you change to the *Virtual machine* section within the Azure Portal you should now see 2 additional serves in the *destination-rg* Resource Group.
+In the *Virtual machines* section of the Azure Portal, you should now see two additional servers in the *destination-rg* resource group.
 
 ![image](./img/mig8.png)
 
-You should now also be able to access the Web Server via the previousley created load balancer frontend IP.
+You should now also be able to access the web server via the previously created load balancer frontend IP.
 
 ![image](./img/mig9.png)
 
-🚀🚀🚀🚀🚀🚀 Congratulations, you've successfully migrated the frontend application to Azure.🚀🚀🚀🚀🚀🚀
+🚀🚀🚀🚀🚀🚀 Congratulations, you've successfully migrated the frontend application to Azure. 🚀🚀🚀🚀🚀🚀
 
-### **Task 8: Cleanup**
+### **Task 6: Cleanup**
 
-After the successfull migration you can now stop replicating the source virtual machines. Open the [Azure Portal](https://portal.azure.com) and navigate to the previousley created Azure Migrate project and select *Migrations* and click on *Completion*.
+After the successful migration, you can stop replicating the source virtual machines. Open the [Azure Portal](https://portal.azure.com), navigate to the previously created Azure Migrate project, select *Migrations*, and click *Completion*.
 
 ![image](./img/Clean1.png)
 
-Select *Stop replication* to remove replication settings from the drop down list. 
+Select *Stop replication* from the dropdown list to remove the replication settings.
 
 ![image](./img/Clean2.png)
 
 > [!NOTE]
-> Repeat this step for the remaining Server.
+> Repeat this step for the remaining server.
 
-🚀🚀🚀 You successfully completed challenge 5! 🚀🚀🚀
+You successfully completed Challenge 5.
 
 The deployed architecture now looks like the following diagram.
 
 ![image](./img/Challenge-5.jpg)
 
-🚀🚀🚀 **!!!Congratulations!!! - You successfully completed the MicroHack. You can now safley remove the *source-rg* and *destination-rg* Resource Groups.** 🚀🚀🚀
-
-🚀🚀🚀 **If you still want to continue we have 2 additional bonus challenges to modernize OR secure the migrated environment.**🚀🚀🚀
-
+Continue to Challenge 6 to secure the migrated environment. Do not remove `destination-rg` because Challenges 6 through 8 use the migrated workload.

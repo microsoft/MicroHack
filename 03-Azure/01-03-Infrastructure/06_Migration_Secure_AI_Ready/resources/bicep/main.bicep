@@ -92,14 +92,14 @@ var resourceTags object = {
   User: userName
 }
 
-@description('Source Resouce Group')
+@description('Source resource group')
 resource sourceRg 'Microsoft.Resources/resourceGroups@2021-01-01'={
   name: '${namingPrefix}-source-rg'
   location: location
   tags: resourceTags
 }
 
-@description('Destination Resouce Group')
+@description('Destination resource group')
 resource destinationRg 'Microsoft.Resources/resourceGroups@2021-01-01'={
   name: '${namingPrefix}-destination-rg'
   location: location

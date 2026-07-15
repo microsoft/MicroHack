@@ -4,49 +4,49 @@
 
 Duration: 60 minutes
 
-### **Task 1: Create a Azure Migrate Project**
+### **Task 1: Create an Azure Migrate project**
 
-Open the [Azure Portal](https://portal.azure.com) and login using a user account with at least Contributor permissions on a Azure Subscription.
+Open the [Azure Portal](https://portal.azure.com) and log in using a user account with at least Contributor permissions on an Azure subscription.
 
-In the search bar enter *Azure Migrate* and select Azure Migrate from the list of services
+In the search bar, enter *Azure Migrate* and select Azure Migrate from the list of services.
 
 ![image](./img/AzMig1.png)
 
-Select *All projects* from the navigation pane on the left and click on *Create project*
+Select *All projects* from the navigation pane on the left and click *Create project*.
 
 ![image](./img/AzMig2.png)
 
 > [!IMPORTANT]
-> To be able to create a Business Case, make sure to select **Europe** as the Geography for the Azure Migrate Project
+> To create a business case, make sure to select **Europe** as the *Geography* for the Azure Migrate project.
 
-Select the *destination-rg* Resource Group, specify a name for the Azure Migrate Project and also select a geography where the data will be stored.
+Select the *destination-rg* resource group, specify a name for the Azure Migrate project, and select a geography where the data will be stored.
 
 ![image](./img/AzMig3.png)
 
-Wait until the Azure Migrate Project has been created. Select *All projects* from the navigation pane on the left.
-Your previousley created Azure Migrate project should be listed. Click on it to open the project.
+Wait until the Azure Migrate project has been created. Select *All projects* from the navigation pane on the left.
+Your previously created Azure Migrate project should be listed. Click on it to open the project.
 
 ![image](./img/AzMig4.png)
 
 ![image](./img/AzMig5.png)
 
-### **Task 2: Install the Azure Migrate Appliance software**
+### **Task 2: Install the Azure Migrate appliance software**
 
-To start physical server discovery you must install the Azure Migrate Appliance on your on-premises. The Azure Migrate Appliance can be downloaded as a OVA or VHD template or you can download a ZIP file containing a PowerShell script to install it on an already existing server. For the purpose of this MicroHack we will install the Azure Migrate Appliance via the PowerShell script on the already deployed Server **MHBOX-AzMigSrv**.
+To start physical server discovery, you must install the Azure Migrate appliance in your on-premises environment. You can download the appliance as an OVA or VHD template, or download a ZIP file containing a PowerShell installation script. For this MicroHack, install the appliance by running the PowerShell script on the existing **MHBOX-AzMigSrv** server.
 
 > [!IMPORTANT]
-> Please make sure to check the [prerequisites](https://learn.microsoft.com/en-us/azure/migrate/tutorial-discover-physical#prerequisites) of the Azure Migrate Appliance.
+> Check the [prerequisites](https://learn.microsoft.com/en-us/azure/migrate/tutorial-discover-physical#prerequisites) for the Azure Migrate appliance.
 
-In the Azure Portal select *Virtual machines* from the navigation pane on the left. Select the *MHBox-HV* system and logon via Azure Bastion with you credentials:
+In the Azure Portal select *Virtual machines* from the navigation pane on the left. Select the *MHBox-HV* system and log on via Azure Bastion with your credentials:
 
 > [!NOTE]
-> You can also select *Password from Azure KeyVault* under *Authentication Type* to sekect the secret stored in the KeyVault.
+> You can also select *Password from Azure Key Vault* under *Authentication Type* to select the secret stored in the Key Vault.
 
 ![image](./img/AzMigApp1.png)
 
 Start the Hyper-V Manager and connect to the **MHBOX-AzMigSrv** server.
 
-The following credentials are beeing used inside the nested VMs
+The following credentials are being used inside the nested VMs.
 
 **Windows virtual machine credentials:**
 
@@ -63,16 +63,16 @@ Password: JS123!!
 ```
 
 > [!IMPORTANT]
-> Please make sure to run the following commands inside of the **MHBOX-AzMigSrv** virtual machine that was created for the mirgration appliance during the deployment.
+> Please make sure to run the following commands inside of the **MHBOX-AzMigSrv** virtual machine that was created for the migration appliance during the deployment.
 
 ![image](./img/AzMigApp2.png)
 
-Open Microsoft Edge on the Windows Server 2022 system and navigate and login to the [Azure Portal](https://portal.azure.com).
-In the search bar enter *Azure Migrate* and select Azure Migrate from the list of services
+Open Microsoft Edge on the Windows Server 2022 system, navigate to the [Azure Portal](https://portal.azure.com), and log in.
+In the search bar, enter *Azure Migrate* and select Azure Migrate from the list of services.
 
 ![image](./img/AzMigApp3.png)
 
- Select *All projects* from the navigation pane on the left. Your previousley created Azure Migrate project should be listed. Click on it to open the project.
+Select *All projects* from the navigation pane on the left. Your previously created Azure Migrate project should be listed. Click it to open the project.
  
 ![image](./img/Discover1.png)
 
@@ -80,7 +80,7 @@ Select *Start Discovery -> Using appliance -> for Azure*.
 
 ![image](./img/Discover1-2.png)
 
-Select *Yes, with Hyper-V* from the *Are your servers virtualized* drop down. Enter a name into the *Name your appliance* field and clicke *Generate*. Wait until the Project key has been created. Copy the Project key and click *Download*, to download the ZIP file containing the PowerShell script to install the Azure Migrate Appliance.
+Select *Yes, with Hyper-V* from the *Are your servers virtualized* list. Enter a name in the *Name your appliance* field and click *Generate*. Wait until the project key has been created. Copy the project key and click *Download* to download the ZIP file containing the PowerShell script that installs the Azure Migrate appliance.
 
 ![image](./img/Discover2.png)
 
@@ -90,18 +90,18 @@ Open the folder containing the download and extract the ZIP file.
 
 ![image](./img/Discover3-1.png)
 
-Start an evelvated PowerShell session and change the PowerShell directory to the folder where the contents have been extraceted.
+Start an elevated PowerShell session and change to the folder where the contents were extracted.
 Run the script named AzureMigrateInstaller.ps1 and select *R* to confirm script execution.
 
-Select Option 2 for *Hyper-V*
+Select option 2 for *Hyper-V*.
 
 ![image](./img/Discover4.png)
 
-Select Option 1 for *Azure Public*
+Select option 1 for *Azure Public*.
 
 ![image](./img/Discover6.png)
 
-Select Option 1 for *public endpoint* and confirm your selection to start the installation.
+Select option 1 for *public endpoint* and confirm your selection to start the installation.
 
 ![image](./img/Discover7.png)
 
@@ -117,28 +117,28 @@ The system will reboot automatically. Installation is now complete.
 
 ![image](./img/Discover8-3.png)
 
-Wait for the reboot to complete, log-in again and proceed to Task 4.
+Wait for the reboot to complete, log in again, and proceed to Task 3.
 
-### **Task 4: Configure the Azure Migrate Appliance**
+### **Task 3: Configure the Azure Migrate appliance**
 
-Open Azure Migrate Appliance Configuration Manager using the icon on the Desktop.
+Open Azure Migrate Appliance Configuration Manager using the icon on the desktop.
 
 ![image](./img/Discover9-0.png)
 
-Agree the terms of use.
+Agree to the terms of use.
 
 ![image](./img/Discover9.png)
 
-Paste the previously copied Azure Migrate project key and click *Verify*. Once successfully verified the latest appliance updates will be installed.
+Paste the previously copied Azure Migrate project key and click *Verify*. Once the key is successfully verified, the latest appliance updates will be installed.
 
 > [!IMPORTANT]
-> If you forgott to copy the key, go back to the Azure Migrate Project, Select *Action center* from the left, klick on *Pending actions* and then on *Register* to copy the key again
+> If you forgot to copy the key, go back to the Azure Migrate project, select *Action center* from the left, click *Pending actions*, and then click *Register* to copy the key again.
 
 ![image](./img/Discover9-1.png)
 
 ![image](./img/Discover10.png)
 
-Wait for the Appliance to check and install required updates. Once completed log in to Azure using the provieded code.
+Wait for the appliance to check for and install required updates. Once this process is complete, log in to Azure using the provided code.
 
 ![image](./img/Discover11.png)
 
@@ -146,39 +146,38 @@ Wait for the Appliance to check and install required updates. Once completed log
 
 ![image](./img/Discover13.png)
 
-After successfull authentication, the appliance will be registered with the Azure Migrate project.
+After successful authentication, the appliance will be registered with the Azure Migrate project.
 
 ![image](./img/Discover14.png)
 
-Next you need to specify the credentials that will be used to connect to the hypervisor for discovery of the guest-VMs.
+Next, specify the credentials that will be used to connect to the hypervisor to discover the guest VMs.
 
 > [!NOTE]
-> For the Username and Password check the secrets within the KeyVault.
+> For the username and password, check the secrets in the Key Vault.
 
 ![image](./img/Discover15.png)
 
-Next you need to map the credential to the hyper-V host. Make sure that validation is successfull.
+Next, map the credentials to the Hyper-V host. Make sure that validation is successful.
 
 ![image](./img/Discover15-1.png)
 
 ![image](./img/Discover15-2.png)
 
-Next you need to provide the individual credentials that will be used to perform guest discovery on the guest VMs.
+Next, provide the individual credentials that will be used to perform guest discovery on the guest VMs.
 
 ![image](./img/Discover16.png)
 
-To start discovery click *Start discovery*.
+To start discovery, click *Start discovery*.
 
 After discovery has been successfully initiated, go to the Azure portal to review the discovered inventory.
 
 ![image](./img/Discover18.png)
 
 > [!NOTE]
-> If no inventory data is available, click Refresh to refresh inventory data.
+> If no inventory data is available, click *Refresh*.
 
-You successfully completed challenge 2! 🚀🚀🚀
+You successfully completed Challenge 2! 🚀🚀🚀
 
 The deployed architecture now looks like the following diagram.
 
 ![image](./img/Challenge-2.jpg)
-

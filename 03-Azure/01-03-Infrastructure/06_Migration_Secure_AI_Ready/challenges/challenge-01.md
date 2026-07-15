@@ -7,7 +7,7 @@
 
 ## Goal
 
-- Deploy a *source* resource group with two VMs and their dependencies that act as our physical on-premises servers to be migrated to Azure.
+- Deploy a *source* resource group with two VMs and their dependencies that act as on-premises Hyper-V workloads to be migrated to Azure.
 - Deploy a *destination* resource group to which the servers will be migrated.
 
 ## Actions

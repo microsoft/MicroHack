@@ -1,4 +1,4 @@
-# Walkthrough Challenge 5 - Migrate machines to Azure
+# Walkthrough Challenge 5 - Migrate Hyper-V virtual machines to Azure
 
 [Previous Challenge Solution](../challenge-04/solution-04.md) - **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-06/solution-06.md)
 
@@ -9,9 +9,9 @@ Duration: 90 minutes
 Please make sure that you successfully completed [Challenge 4](../challenge-04/solution-04.md) before continuing with this challenge.
 
 > [!IMPORTANT]
-> For migrating Hyper-V VMs, the Migration and modernization tool installs software providers (Azure Site Recovery provider and Recovery Services agent) on Hyper-V hosts or cluster nodes. The Azure Migrate appliance isn't used for Hyper-V migration.
+> Native Hyper-V migration uses host-installed replication components: the Azure Site Recovery provider and Recovery Services agent. Install them on the Hyper-V host or cluster nodes. Nothing is installed in the guest VMs, and the Azure Migrate appliance isn't used for migration.
 
-### **Task 1: Set up the software providers**
+### **Task 1: Configure and register the Hyper-V replication providers**
 
 In the Azure Portal, select *Virtual machines* from the navigation pane on the left. Select the **MHBox-HV** system and log on via Azure Bastion with your credentials:
 
@@ -33,7 +33,7 @@ Select *Migrations* from the navigation pane on the left and click *Start execut
 
 ![image](./img/PrepRep3.png)
 
-Select *Azure VM* as the migration destination and *Yes, with Hyper-V* as the virtualization type. An error will indicate that no Hyper-V host has been registered yet. Click *Click here to set up* to start the registration process.
+On *Specify intent*, select *Servers or virtual machines (VMs)* as the workload and *Azure VM* as the destination. Under *How will you select workloads*, select *From replication provider (Hyper-V)*, and then use the link provided to start the replication-provider setup.
 
 ![image](./img/PrepRep3-1.png)
 
@@ -86,10 +86,10 @@ Specify the intent as shown on the diagram below:
 
 ![image](./img/Rep2.png)
 
-Next, select the Windows and Linux systems that host the web servers with the MicroHack demo page.
+Next, select both web VMs: **MHBox-Win2K22** and **MHBox-Ubuntu-01**. Enable replication for both so that either workload can be selected in Challenges 7 and 8.
 
 > [!NOTE]
-> *If the Linux server is greyed out, this is due to a compatibility issue with the latest Ubuntu image and the new Azure Migrate experience. To migrate the Ubuntu VM, change to the classic migration experience.*
+> *If either VM isn't available for selection, verify the Hyper-V provider registration, confirm the VM appears in inventory, and review the current [Hyper-V migration support matrix](https://learn.microsoft.com/en-us/azure/migrate/migrate-support-matrix-hyper-v-migration?view=migrate) before continuing.*
 
 ![image](./img/Rep3.png)
 
@@ -148,11 +148,11 @@ To validate that the test migration was successful, open the Azure Portal and se
 
 ![image](./img/TestMig4.png)
 
-Connect to the Windows VM via Azure Bastion.
+Connect to each test VM via Azure Bastion.
 
 ![image](./img/TestMig5.png)
 
-On the VM, open a browser and navigate to *http://localhost*. Make sure that the MicroHack Demo Web App is running as expected.
+On the Windows VM, open a browser and navigate to *http://localhost*. On the Ubuntu VM, run `curl -I http://localhost`. Confirm that the MicroHack Demo Web App responds successfully on both test VMs.
 
 ![image](./img/TestMig6.png)
 
@@ -254,18 +254,16 @@ You should now also be able to access the web server via the previously created 
 
 🚀🚀🚀🚀🚀🚀 Congratulations, you've successfully migrated the frontend application to Azure. 🚀🚀🚀🚀🚀🚀
 
-### **Task 6: Cleanup**
+### **Task 6: Complete the migration**
 
-After the successful migration, you can stop replicating the source virtual machines. Open the [Azure Portal](https://portal.azure.com), navigate to the previously created Azure Migrate project, select *Migrations*, and click *Completion*.
+After validating both migrated web VMs and the load-balanced endpoint, complete the migration to stop replication and clean up each VM's replication state. Open the [Azure Portal](https://portal.azure.com), navigate to the Azure Migrate project, select *Migrations*, and open each migrated VM from the *Completion* stage.
 
 ![image](./img/Clean1.png)
 
-Select *Stop replication* from the dropdown list to remove the replication settings.
-
-![image](./img/Clean2.png)
+Under *Completion*, select *Complete migration*. Repeat this action for both **MHBox-Win2K22** and **MHBox-Ubuntu-01**.
 
 > [!NOTE]
-> Repeat this step for the remaining server.
+> Completing migration stops replication for the source VM and removes its replication-state information. Confirm that the migrated Azure VM is healthy before completing this action.
 
 You successfully completed Challenge 5.
 

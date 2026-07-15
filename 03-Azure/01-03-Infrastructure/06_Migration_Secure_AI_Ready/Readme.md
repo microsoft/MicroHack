@@ -1,6 +1,6 @@
 ![image](img/1920x300_EventBanner_MicroHack_Migrate_wText.jpg)
 
-# MicroHack - Migrate and Secure to be AI Ready
+# MicroHack – Migrate and Secure to be ready for AI Ops
 
 *From secure migration to agent-assisted cloud operations.*
 
@@ -78,10 +78,10 @@ Challenge 7 includes a preflight for Azure Copilot tenant access, RBAC, network 
 ## Challenges
 
 * [Challenge 1 - Prerequisites and landing zone preparation](challenges/challenge-01.md) **<- Start here**
-* [Challenge 2 - Discover physical servers for the migration](challenges/challenge-02.md)
+* [Challenge 2 - Discover Hyper-V virtual machines for migration](challenges/challenge-02.md)
 * [Challenge 3 - Create a business case](challenges/challenge-03.md)
 * [Challenge 4 - Assess VMs for the migration](challenges/challenge-04.md)
-* [Challenge 5 - Migrate machines to Azure](challenges/challenge-05.md)
+* [Challenge 5 - Migrate Hyper-V virtual machines to Azure](challenges/challenge-05.md)
 * [Optional Challenge 6 - Secure on Azure](challenges/challenge-06.md)
 * [Challenge 7 - Operate the migrated workload with intelligent observability](challenges/challenge-07.md)
 * [Challenge 8 - Replatform the selected migrated web workload to Azure App Service](challenges/challenge-08.md)
@@ -89,10 +89,10 @@ Challenge 7 includes a preflight for Azure Copilot tenant access, RBAC, network 
 ## Solutions - Spoiler warning
 
 * [Solution 1 - Prerequisites and landing zone preparation](./walkthrough/challenge-01/solution-01.md)
-* [Solution 2 - Discover physical servers for the migration](./walkthrough/challenge-02/solution-02.md)
+* [Solution 2 - Discover Hyper-V virtual machines for migration](./walkthrough/challenge-02/solution-02.md)
 * [Solution 3 - Create a business case](./walkthrough/challenge-03/solution-03.md)
 * [Solution 4 - Assess VMs for the migration](./walkthrough/challenge-04/solution-04.md)
-* [Solution 5 - Migrate machines to Azure](./walkthrough/challenge-05/solution-05.md)
+* [Solution 5 - Migrate Hyper-V virtual machines to Azure](./walkthrough/challenge-05/solution-05.md)
 * [Optional Solution 6 - Secure on Azure](./walkthrough/challenge-06/solution-06.md)
 * [Solution 7 - Operate the migrated workload with intelligent observability](./walkthrough/challenge-07/solution-07.md)
 * [Solution 8 - Replatform the selected migrated web workload to Azure App Service](./walkthrough/challenge-08/solution-08.md)

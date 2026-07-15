@@ -1,4 +1,4 @@
-# Walkthrough Challenge 2 - Discover the virtualized servers for the migration
+# Walkthrough Challenge 2 - Discover Hyper-V virtual machines for migration
 
 [Previous Challenge Solution](../challenge-01/solution-01.md) - **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-03/solution-03.md)
 
@@ -30,12 +30,12 @@ Your previously created Azure Migrate project should be listed. Click on it to o
 
 ![image](./img/AzMig5.png)
 
-### **Task 2: Install the Azure Migrate appliance software**
+### **Task 2: Install the Azure Migrate appliance for Hyper-V discovery**
 
-To start physical server discovery, you must install the Azure Migrate appliance in your on-premises environment. You can download the appliance as an OVA or VHD template, or download a ZIP file containing a PowerShell installation script. For this MicroHack, install the appliance by running the PowerShell script on the existing **MHBOX-AzMigSrv** server.
+Hyper-V discovery uses an Azure Migrate appliance that connects to the Hyper-V host and continuously collects VM configuration, performance metadata, and workload inventory. For this MicroHack, install and register the appliance by running the PowerShell installation script on the existing **MHBOX-AzMigSrv** server, and then connect it to **MHBox-HV**.
 
 > [!IMPORTANT]
-> Check the [prerequisites](https://learn.microsoft.com/en-us/azure/migrate/tutorial-discover-physical#prerequisites) for the Azure Migrate appliance.
+> Check the current [Hyper-V discovery prerequisites](https://learn.microsoft.com/en-us/azure/migrate/tutorial-discover-hyper-v?view=migrate#prerequisites) for the Azure Migrate appliance and Hyper-V host.
 
 In the Azure Portal select *Virtual machines* from the navigation pane on the left. Select the *MHBox-HV* system and log on via Azure Bastion with your credentials:
 
@@ -63,7 +63,7 @@ Password: JS123!!
 ```
 
 > [!IMPORTANT]
-> Please make sure to run the following commands inside of the **MHBOX-AzMigSrv** virtual machine that was created for the migration appliance during the deployment.
+> Run the following commands inside the **MHBOX-AzMigSrv** virtual machine that was created for the discovery appliance during the lab deployment.
 
 ![image](./img/AzMigApp2.png)
 
@@ -150,7 +150,7 @@ After successful authentication, the appliance will be registered with the Azure
 
 ![image](./img/Discover14.png)
 
-Next, specify the credentials that will be used to connect to the hypervisor to discover the guest VMs.
+Next, specify the credentials that the appliance will use to connect to the Hyper-V host and discover its VMs.
 
 > [!NOTE]
 > For the username and password, check the secrets in the Key Vault.
@@ -163,7 +163,7 @@ Next, map the credentials to the Hyper-V host. Make sure that validation is succ
 
 ![image](./img/Discover15-2.png)
 
-Next, provide the individual credentials that will be used to perform guest discovery on the guest VMs.
+Next, provide the VM credentials used to collect software inventory and workload details from the Windows and Ubuntu VMs.
 
 ![image](./img/Discover16.png)
 

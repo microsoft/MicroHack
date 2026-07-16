@@ -173,14 +173,27 @@ function Restart-VMNetworkAdapters {
 
     $completionMarker = "C:\Windows\Temp\MHBox-network-restart-$([guid]::NewGuid()).done"
     $errorMarker = "$completionMarker.error"
+    $armedMarker = "$completionMarker.armed"
+    $releaseMarker = "$completionMarker.release"
     $restartScript = @"
 `$ErrorActionPreference = 'Stop'
 try {
+    New-Item -Path '$armedMarker' -ItemType File -Force | Out-Null
+    `$releaseDeadline = [DateTime]::UtcNow.AddSeconds(120)
+    while (-not (Test-Path -LiteralPath '$releaseMarker')) {
+        if ([DateTime]::UtcNow -ge `$releaseDeadline) {
+            throw 'Timed out waiting for the host to release the network adapter restart.'
+        }
+        Start-Sleep -Milliseconds 200
+    }
+    Remove-Item -LiteralPath '$releaseMarker' -Force
     Get-NetAdapter | Restart-NetAdapter
     New-Item -Path '$completionMarker' -ItemType File -Force | Out-Null
 }
 catch {
-    `$_ | Out-String | Set-Content -LiteralPath '$errorMarker'
+    `$errorTemp = '$errorMarker.tmp'
+    `$_ | Out-String | Set-Content -LiteralPath `$errorTemp
+    Move-Item -LiteralPath `$errorTemp -Destination '$errorMarker' -Force
     exit 1
 }
 "@
@@ -188,16 +201,69 @@ catch {
         [Text.Encoding]::Unicode.GetBytes($restartScript)
     )
 
-    Invoke-Command -VMName $VMName -Credential $Credential -ErrorAction Stop -ScriptBlock {
-        param($markerPath, $failurePath, $encodedCommand)
+    $launchStatus = Invoke-Command -VMName $VMName -Credential $Credential -ErrorAction Stop -ScriptBlock {
+        param($markerPath, $failurePath, $armedPath, $releasePath, $encodedCommand)
 
         Remove-Item -LiteralPath $markerPath -Force -ErrorAction SilentlyContinue
         Remove-Item -LiteralPath $failurePath -Force -ErrorAction SilentlyContinue
-        Start-Process `
+        Remove-Item -LiteralPath $armedPath -Force -ErrorAction SilentlyContinue
+        Remove-Item -LiteralPath $releasePath -Force -ErrorAction SilentlyContinue
+        $restartProcess = Start-Process `
             -FilePath "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe" `
             -ArgumentList '-NoProfile', '-NonInteractive', '-EncodedCommand', $encodedCommand `
-            -WindowStyle Hidden
-    } -ArgumentList $completionMarker, $errorMarker, $encodedRestartScript
+            -WindowStyle Hidden `
+            -PassThru
+
+        $launchDeadline = [DateTime]::UtcNow.AddSeconds(45)
+        while (
+            -not (Test-Path -LiteralPath $armedPath) -and
+            -not (Test-Path -LiteralPath $failurePath)
+        ) {
+            if ($restartProcess.HasExited) {
+                throw "The detached network restart process exited with code $($restartProcess.ExitCode) before acknowledging launch."
+            }
+            if ([DateTime]::UtcNow -ge $launchDeadline) {
+                throw 'Timed out waiting for the detached network restart process to acknowledge launch.'
+            }
+            Start-Sleep -Milliseconds 200
+        }
+
+        if (Test-Path -LiteralPath $failurePath) {
+            $launchError = Get-Content -LiteralPath $failurePath -Raw
+            throw "The detached network restart process failed during launch: $launchError"
+        }
+
+        [pscustomobject]@{
+            ProcessId = $restartProcess.Id
+            Armed = $true
+        }
+    } -ArgumentList $completionMarker, $errorMarker, $armedMarker, $releaseMarker, $encodedRestartScript
+
+    if (-not $launchStatus.Armed) {
+        throw "The detached network restart process on '$VMName' did not acknowledge launch."
+    }
+
+    $releaseSource = [IO.Path]::GetTempFileName()
+    try {
+        Wait-Until `
+            -Description "release marker delivery to '$VMName'" `
+            -TimeoutSeconds 45 `
+            -PollIntervalSeconds 3 `
+            -Condition {
+                Copy-VMFile `
+                    -VMName $VMName `
+                    -SourcePath $releaseSource `
+                    -DestinationPath $releaseMarker `
+                    -FileSource Host `
+                    -CreateFullPath `
+                    -Force `
+                    -ErrorAction Stop
+                return $true
+            }
+    }
+    finally {
+        Remove-Item -LiteralPath $releaseSource -Force -ErrorAction SilentlyContinue
+    }
 
     Wait-VMCommand `
         -VMName $VMName `
@@ -211,7 +277,7 @@ catch {
         -TimeoutSeconds 180
 
     $restartStatus = Invoke-Command -VMName $VMName -Credential $Credential -ErrorAction Stop -ScriptBlock {
-        param($markerPath, $failurePath)
+        param($markerPath, $failurePath, $armedPath, $releasePath)
 
         $errorMessage = if (Test-Path -LiteralPath $failurePath) {
             Get-Content -LiteralPath $failurePath -Raw
@@ -227,8 +293,10 @@ catch {
             Remove-Item -LiteralPath $failurePath -Force
         }
         Remove-Item -LiteralPath $markerPath -Force -ErrorAction SilentlyContinue
+        Remove-Item -LiteralPath $armedPath -Force -ErrorAction SilentlyContinue
+        Remove-Item -LiteralPath $releasePath -Force -ErrorAction SilentlyContinue
         return $status
-    } -ArgumentList $completionMarker, $errorMarker
+    } -ArgumentList $completionMarker, $errorMarker, $armedMarker, $releaseMarker
 
     if (-not $restartStatus.Succeeded) {
         $restartError = if ($restartStatus.Error) {

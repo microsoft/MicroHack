@@ -118,4 +118,4 @@ A typical one-day delivery of this MicroHack:
 
 ## Contributors
 
-* Frank ([GitHub](https://github.com/Frank802))
+* Francesco Lana ([GitHub](https://github.com/Frank802), [Linkedin](https://www.linkedin.com/in/franklana))

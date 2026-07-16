@@ -236,7 +236,6 @@ Write-Host 'Fetching Artifacts for All Flavors'
 Invoke-WebRequest ($templateBaseUrl + 'artifacts/dsc/common.dsc.yml') -OutFile "$Env:MHBoxDscDir\common.dsc.yml"
 Invoke-WebRequest ($templateBaseUrl + 'artifacts/dsc/virtual_machines_sql.dsc.yml') -OutFile "$Env:MHBoxDscDir\virtual_machines_sql.dsc.yml"
 Invoke-WebRequest ($templateBaseUrl + 'artifacts/WinGet.ps1') -OutFile "$Env:MHBoxDir\WinGet.ps1"
-Invoke-WebRequest ($templateBaseUrl + 'artifacts/MHWallpaper.bmp') -OutFile "$Env:MHBoxDir\MHWallpaper.bmp"
 Invoke-WebRequest ($templateBaseUrl + 'artifacts/demopage/deploy-webapp.sh') -OutFile "$Env:MHBoxDemoPageDir\deploy-webapp.sh"
 Invoke-WebRequest ($templateBaseUrl + 'artifacts/demopage/deployWebApp.ps1') -OutFile "$Env:MHBoxDemoPageDir\deployWebApp.ps1"
 

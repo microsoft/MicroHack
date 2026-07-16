@@ -458,7 +458,7 @@ if ($Env:flavor -ne 'DevOps') {
         } -Credential $winCreds           
 
         # Install Demo Web App on Windows VM
-        Write-Header 'Installing Web App on Windows and Linux Server'
+        Write-Header 'Installing Web App on Windows and Linux Servers'
 
         # Copy WebApp to Windows VM
         Copy-VMFile $Win2k22vmName -SourcePath "$Env:MHBoxDir\DemoPage\deployWebApp.ps1" -DestinationPath "C:\MHDir\DemoPage\deployWebApp.ps1" -CreateFullPath -FileSource Host -Force
@@ -479,30 +479,43 @@ if ($Env:flavor -ne 'DevOps') {
 
         # Install Apache and clean default web files on Linux VM
         Write-Output 'Installing Apache Web Server on Linux VM...'
-        $UbuntuSessions = New-PSSession -HostName $Ubuntu01VmIp -KeyFilePath "$Env:USERPROFILE\.ssh\id_rsa" -UserName $nestedLinuxUsername
-        $linuxDeploymentScript = "/home/$nestedLinuxUsername/deploy-webapp.sh"
-        Copy-VMFile $Ubuntu01vmName -SourcePath "$Env:MHBoxDir\DemoPage\deploy-webapp.sh" -DestinationPath "/home/$nestedLinuxUsername" -FileSource Host -Force
+        $UbuntuSessions = $null
+        try {
+            $UbuntuSessions = New-PSSession -HostName $Ubuntu01VmIp -KeyFilePath "$Env:USERPROFILE\.ssh\id_rsa" -UserName $nestedLinuxUsername -ErrorAction Stop
+            $linuxDeploymentScript = "/home/$nestedLinuxUsername/deploy-webapp.sh"
+            Copy-VMFile $Ubuntu01vmName -SourcePath "$Env:MHBoxDir\DemoPage\deploy-webapp.sh" -DestinationPath "/home/$nestedLinuxUsername" -FileSource Host -Force
 
-        $sourceRootBase64 = [Convert]::ToBase64String(
-            [Text.Encoding]::UTF8.GetBytes($demoAssetSourceRoot)
-        )
-        Invoke-Command -Session $UbuntuSessions -ScriptBlock {
-            param($deploymentScript, $encodedSourceRoot)
+            $sourceRootBase64 = [Convert]::ToBase64String(
+                [Text.Encoding]::UTF8.GetBytes($demoAssetSourceRoot)
+            )
+            Invoke-Command -Session $UbuntuSessions -ScriptBlock {
+                param($deploymentScript, $encodedSourceRoot)
 
-            try {
-                $sourceRoot = [Text.Encoding]::UTF8.GetString(
-                    [Convert]::FromBase64String($encodedSourceRoot)
-                )
-            }
-            catch {
-                throw 'The demo asset source URL could not be decoded.'
-            }
+                try {
+                    $sourceRoot = [Text.Encoding]::UTF8.GetString(
+                        [Convert]::FromBase64String($encodedSourceRoot)
+                    )
+                }
+                catch {
+                    throw 'The demo asset source URL could not be decoded.'
+                }
 
-            & sudo /bin/sh $deploymentScript $sourceRoot
-            if ($LASTEXITCODE -ne 0) {
-                throw "deploy-webapp.sh failed with exit code $LASTEXITCODE."
+                $deploymentOutput = @(& sudo /bin/sh $deploymentScript $sourceRoot 2>&1)
+                $deploymentExitCode = $LASTEXITCODE
+                foreach ($outputLine in $deploymentOutput) {
+                    Write-Output ([string]$outputLine)
+                }
+
+                if ($deploymentExitCode -ne 0) {
+                    throw "deploy-webapp.sh failed with exit code $deploymentExitCode."
+                }
+            } -ArgumentList $linuxDeploymentScript, $sourceRootBase64 -ErrorAction Stop
+        }
+        finally {
+            if ($null -ne $UbuntuSessions) {
+                Remove-PSSession -Session $UbuntuSessions -ErrorAction Continue
             }
-        } -ArgumentList $linuxDeploymentScript, $sourceRootBase64 -ErrorAction Stop
+        }
 
     }
 
@@ -513,14 +526,6 @@ if ($Env:flavor -ne 'DevOps') {
     }
 }
 
-
-#Changing to Jumpstart MHBox wallpaper
-Write-Header 'Changing wallpaper'
-
-# bmp file is required for BGInfo
-#Convert-JSImageToBitMap -SourceFilePath "$Env:MHBoxDir\wallpaper.png" -DestinationFilePath "$Env:MHBoxDir\wallpaper.bmp"
-
-Set-JSDesktopBackground -ImagePath "$Env:MHBoxDir\MHWallpaper.bmp"
 
     # Enabling Azure VM Auto-shutdown
     if ($env:autoShutdownEnabled -eq "true") {

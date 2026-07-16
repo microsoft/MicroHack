@@ -1,11 +1,9 @@
 param (
     [string]$adminUsername,
-    [string]$spnClientId,
     [string]$tenantId,
     [string]$spnAuthority,
     [string]$subscriptionId,
     [string]$resourceGroup,
-    [string]$azdataUsername,
     [string]$acceptEula,
     [string]$registryUsername,
     [string]$azureLocation,
@@ -14,9 +12,7 @@ param (
     [string]$templateBaseUrl,
     [string]$flavor,
     [string]$rdpPort,
-    [string]$sshPort,
     [string]$vmAutologon,
-    [object]$resourceTags,
     [string]$namingPrefix,
     [string]$debugEnabled,
     [string]$sqlServerEdition,
@@ -35,8 +31,6 @@ param (
 [System.Environment]::SetEnvironmentVariable('githubUser', $githubUser, [System.EnvironmentVariableTarget]::Machine)
 [System.Environment]::SetEnvironmentVariable('templateBaseUrl', $templateBaseUrl, [System.EnvironmentVariableTarget]::Machine)
 [System.Environment]::SetEnvironmentVariable('flavor', $flavor, [System.EnvironmentVariableTarget]::Machine)
-[System.Environment]::SetEnvironmentVariable('automationTriggerAtLogon', $automationTriggerAtLogon, [System.EnvironmentVariableTarget]::Machine)
-[System.Environment]::SetEnvironmentVariable('resourceTags', $resourceTags, [System.EnvironmentVariableTarget]::Machine)
 [System.Environment]::SetEnvironmentVariable('namingPrefix', $namingPrefix, [System.EnvironmentVariableTarget]::Machine)
 [System.Environment]::SetEnvironmentVariable('MHBoxDir', 'C:\MHBox', [System.EnvironmentVariableTarget]::Machine)
 [System.Environment]::SetEnvironmentVariable('sqlServerEdition', $sqlServerEdition, [System.EnvironmentVariableTarget]::Machine)
@@ -115,11 +109,7 @@ Resize-Partition -DriveLetter C -Size $(Get-PartitionSupportedSize -DriveLetter 
 Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
 
 Install-Module -Name Microsoft.PowerShell.PSResourceGet -Force
-$modules = @('Az', 'Azure.Arc.Jumpstart.Common', 'Microsoft.PowerShell.SecretManagement', 'Pester')
-
-foreach ($module in $modules) {
-    Install-PSResource -Name $module -Scope AllUsers -Quiet -AcceptLicense -TrustRepository
-}
+Install-PSResource -Name Az -Scope AllUsers -Quiet -AcceptLicense -TrustRepository
 
 # Azure init in isolated child process
 $azInitScriptPath = "$Env:tempDir\AzBootstrap-Init.ps1"

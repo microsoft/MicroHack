@@ -67,7 +67,7 @@ switch ($env:flavor) {
 }
 
 # Start remaining logon scripts
-Get-ScheduledTask *LogonScript* | Start-ScheduledTask
+Start-ScheduledTask -TaskName 'MHServersLogonScript'
 
 #Cleanup
 Unregister-ScheduledTask -TaskName 'WinGetLogonScript' -Confirm:$false

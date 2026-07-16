@@ -3,18 +3,11 @@ $ErrorActionPreference = $env:ErrorActionPreference
 $Env:MHBoxDir = 'C:\MHBox'
 $Env:MHBoxLogsDir = "$Env:MHBoxDir\Logs"
 $Env:MHBoxVMDir = 'F:\Virtual Machines'
-$Env:MHBoxIconDir = "$Env:MHBoxDir\Icons"
-$Env:MHBoxTestsDir = "$Env:MHBoxDir\Tests"
 $Env:MHBoxDscDir = "$Env:MHBoxDir\DSC"
-$agentScript = "$Env:MHBoxDir\agentScript"
 
 # Set variables to execute remote powershell scripts on guest VMs
-$nestedVMMHBoxDir = $Env:MHBoxDir
 $tenantId = $env:tenantId
 $subscriptionId = $env:subscriptionId
-$azureLocation = $env:azureLocation
-$resourceGroup = $env:resourceGroup
-$resourceTags = $env:resourceTags
 $namingPrefix = $env:namingPrefix
 $templateBaseUrl = [Environment]::GetEnvironmentVariable(
     'templateBaseUrl',
@@ -31,6 +24,264 @@ if (
 }
 
 $demoAssetSourceRoot = "$($templateBaseUrl.Trim().TrimEnd('/'))/artifacts/demopage"
+
+function Wait-Until {
+    param(
+        [Parameter(Mandatory)]
+        [scriptblock]$Condition,
+
+        [Parameter(Mandatory)]
+        [string]$Description,
+
+        [ValidateRange(1, 3600)]
+        [int]$TimeoutSeconds = 600,
+
+        [ValidateRange(1, 60)]
+        [int]$PollIntervalSeconds = 5
+    )
+
+    $stopwatch = [Diagnostics.Stopwatch]::StartNew()
+    $lastError = $null
+
+    while ($stopwatch.Elapsed.TotalSeconds -lt $TimeoutSeconds) {
+        try {
+            if (& $Condition) {
+                return
+            }
+        }
+        catch {
+            $lastError = $_.Exception.Message
+        }
+
+        Start-Sleep -Seconds $PollIntervalSeconds
+    }
+
+    $errorDetail = if ($lastError) {
+        " Last error: $lastError"
+    }
+    else {
+        ''
+    }
+    throw "Timed out after $TimeoutSeconds seconds waiting for $Description.$errorDetail"
+}
+
+function Wait-VMCommand {
+    param(
+        [Parameter(Mandatory)]
+        [string]$VMName,
+
+        [Parameter(Mandatory)]
+        [pscredential]$Credential,
+
+        [scriptblock]$ScriptBlock = { $true },
+
+        [object[]]$ArgumentList = @(),
+
+        [string]$Description = 'PowerShell Direct readiness',
+
+        [int]$TimeoutSeconds = 600
+    )
+
+    Wait-Until -Description "$Description on '$VMName'" -TimeoutSeconds $TimeoutSeconds -Condition {
+        $result = Invoke-Command -VMName $VMName `
+            -Credential $Credential `
+            -ScriptBlock $ScriptBlock `
+            -ArgumentList $ArgumentList `
+            -ErrorAction Stop
+        @($result) -contains $true
+    }
+}
+
+function Get-VMIPv4AddressWithRetry {
+    param(
+        [Parameter(Mandatory)]
+        [string]$VMName,
+
+        [int]$TimeoutSeconds = 600
+    )
+
+    $address = $null
+    $addressReference = [ref]$address
+
+    Wait-Until -Description "a usable IPv4 address on '$VMName'" -TimeoutSeconds $TimeoutSeconds -Condition {
+        $candidates = Get-VM -Name $VMName -ErrorAction Stop |
+            Select-Object -ExpandProperty NetworkAdapters |
+            Select-Object -ExpandProperty IPAddresses
+
+        foreach ($candidate in $candidates) {
+            $parsedAddress = $null
+            if (
+                [IPAddress]::TryParse([string]$candidate, [ref]$parsedAddress) -and
+                $parsedAddress.AddressFamily -eq [Net.Sockets.AddressFamily]::InterNetwork -and
+                -not $parsedAddress.IsIPv6LinkLocal -and
+                $candidate -notlike '127.*' -and
+                $candidate -notlike '169.254.*'
+            ) {
+                $addressReference.Value = [string]$candidate
+                return $true
+            }
+        }
+
+        return $false
+    }
+
+    return $address
+}
+
+function Wait-TcpPort {
+    param(
+        [Parameter(Mandatory)]
+        [string]$ComputerName,
+
+        [Parameter(Mandatory)]
+        [int]$Port,
+
+        [int]$TimeoutSeconds = 300
+    )
+
+    Wait-Until -Description "TCP $Port on '$ComputerName'" -TimeoutSeconds $TimeoutSeconds -Condition {
+        $client = [Net.Sockets.TcpClient]::new()
+        try {
+            $connection = $client.BeginConnect($ComputerName, $Port, $null, $null)
+            $waitHandle = $connection.AsyncWaitHandle
+            try {
+                if (-not $waitHandle.WaitOne(3000)) {
+                    return $false
+                }
+            }
+            finally {
+                $waitHandle.Dispose()
+            }
+
+            $client.EndConnect($connection)
+            return $true
+        }
+        finally {
+            $client.Dispose()
+        }
+    }
+}
+
+function Restart-VMNetworkAdapters {
+    param(
+        [Parameter(Mandatory)]
+        [string]$VMName,
+
+        [Parameter(Mandatory)]
+        [pscredential]$Credential
+    )
+
+    $completionMarker = "C:\Windows\Temp\MHBox-network-restart-$([guid]::NewGuid()).done"
+    $errorMarker = "$completionMarker.error"
+    $restartScript = @"
+`$ErrorActionPreference = 'Stop'
+try {
+    Get-NetAdapter | Restart-NetAdapter
+    New-Item -Path '$completionMarker' -ItemType File -Force | Out-Null
+}
+catch {
+    `$_ | Out-String | Set-Content -LiteralPath '$errorMarker'
+    exit 1
+}
+"@
+    $encodedRestartScript = [Convert]::ToBase64String(
+        [Text.Encoding]::Unicode.GetBytes($restartScript)
+    )
+
+    Invoke-Command -VMName $VMName -Credential $Credential -ErrorAction Stop -ScriptBlock {
+        param($markerPath, $failurePath, $encodedCommand)
+
+        Remove-Item -LiteralPath $markerPath -Force -ErrorAction SilentlyContinue
+        Remove-Item -LiteralPath $failurePath -Force -ErrorAction SilentlyContinue
+        Start-Process `
+            -FilePath "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe" `
+            -ArgumentList '-NoProfile', '-NonInteractive', '-EncodedCommand', $encodedCommand `
+            -WindowStyle Hidden
+    } -ArgumentList $completionMarker, $errorMarker, $encodedRestartScript
+
+    Wait-VMCommand `
+        -VMName $VMName `
+        -Credential $Credential `
+        -ScriptBlock {
+            param($markerPath, $failurePath)
+            (Test-Path -LiteralPath $markerPath) -or (Test-Path -LiteralPath $failurePath)
+        } `
+        -ArgumentList $completionMarker, $errorMarker `
+        -Description 'network adapter restart completion' `
+        -TimeoutSeconds 180
+
+    $restartStatus = Invoke-Command -VMName $VMName -Credential $Credential -ErrorAction Stop -ScriptBlock {
+        param($markerPath, $failurePath)
+
+        $errorMessage = if (Test-Path -LiteralPath $failurePath) {
+            Get-Content -LiteralPath $failurePath -Raw
+        }
+        else {
+            $null
+        }
+        $status = [pscustomobject]@{
+            Succeeded = Test-Path -LiteralPath $markerPath
+            Error = $errorMessage
+        }
+        if (Test-Path -LiteralPath $failurePath) {
+            Remove-Item -LiteralPath $failurePath -Force
+        }
+        Remove-Item -LiteralPath $markerPath -Force -ErrorAction SilentlyContinue
+        return $status
+    } -ArgumentList $completionMarker, $errorMarker
+
+    if (-not $restartStatus.Succeeded) {
+        $restartError = if ($restartStatus.Error) {
+            $restartStatus.Error
+        }
+        else {
+            'The detached restart process reported failure without an error message.'
+        }
+        throw "Network adapter restart failed on '$VMName': $restartError"
+    }
+}
+
+function Restart-VMAndWait {
+    param(
+        [Parameter(Mandatory)]
+        [string]$VMName,
+
+        [Parameter(Mandatory)]
+        [pscredential]$Credential
+    )
+
+    $previousBootTime = Invoke-Command -VMName $VMName -Credential $Credential -ErrorAction Stop -ScriptBlock {
+        (Get-CimInstance -ClassName Win32_OperatingSystem).LastBootUpTime
+    }
+    Restart-VM -Name $VMName -Force -ErrorAction Stop
+    Wait-VMCommand `
+        -VMName $VMName `
+        -Credential $Credential `
+        -ScriptBlock {
+            param($bootTime)
+            (Get-CimInstance -ClassName Win32_OperatingSystem).LastBootUpTime -gt [datetime]$bootTime
+        } `
+        -ArgumentList $previousBootTime `
+        -Description 'a new Windows boot and PowerShell Direct readiness after restart'
+}
+
+function Restart-LinuxVMAndWaitForSsh {
+    param(
+        [Parameter(Mandatory)]
+        [string]$VMName
+    )
+
+    $previousUptime = (Get-VM -Name $VMName -ErrorAction Stop).Uptime
+    Restart-VM -Name $VMName -Force -ErrorAction Stop
+    Wait-Until -Description "a completed restart of '$VMName'" -Condition {
+        $vm = Get-VM -Name $VMName -ErrorAction Stop
+        $vm.State -eq 'Running' -and $vm.Uptime -lt $previousUptime
+    }
+
+    $address = Get-VMIPv4AddressWithRetry -VMName $VMName
+    Wait-TcpPort -ComputerName $address -Port 22
+    return $address
+}
 
 # Moved VHD storage account details here to keep only in place to prevent duplicates.
 $vhdSourceFolder = 'https://jumpstartprodsg.blob.core.windows.net/arcbox/prod/*'
@@ -217,9 +468,7 @@ if ($Env:flavor -ne 'DevOps') {
 
     # Restarting Windows VM Network Adapters
     Write-Host 'Restarting Network Adapters'
-    Start-Sleep -Seconds 5
-    Invoke-Command -VMName $SQLvmName -ScriptBlock { Get-NetAdapter | Restart-NetAdapter } -Credential $winCreds
-    Start-Sleep -Seconds 20
+    Restart-VMNetworkAdapters -VMName $SQLvmName -Credential $winCreds
 
     # Rename server if hostname is not as MHBox-SQL or doesn't match naming prefix
     $hostname = Invoke-Command -VMName $SQLvmName -ScriptBlock { hostname } -Credential $winCreds
@@ -227,19 +476,8 @@ if ($Env:flavor -ne 'DevOps') {
     if ($hostname -ne $SQLvmName) {
 
         Write-Header 'Renaming the nested SQL VM'
-        Invoke-Command -VMName $SQLvmName -ScriptBlock { Rename-Computer -NewName $using:SQLvmName -Restart } -Credential $winCreds
-
-        Get-VM *SQL* | Wait-VM -For IPAddress
-
-        Write-Host 'Waiting for the nested Windows SQL VM to come back online...waiting for 30 seconds'
-        Start-Sleep -Seconds 30
-
-        # Wait for VM to start again
-        while ((Get-VM -vmName $SQLvmName).State -ne 'Running') {
-            Write-Host 'Waiting for VM to start...'
-            Start-Sleep -Seconds 5
-        }
-        Write-Host 'VM has rebooted successfully!'
+        Invoke-Command -VMName $SQLvmName -ScriptBlock { Rename-Computer -NewName $using:SQLvmName } -Credential $winCreds
+        Restart-VMAndWait -VMName $SQLvmName -Credential $winCreds
     }
 
     # Enable Windows Firewall rule for SQL Server
@@ -331,25 +569,19 @@ if ($Env:flavor -ne 'DevOps') {
                 Set-VM -Name $PSItem.Name -AutomaticStopAction ShutDown -AutomaticStartAction Start
                 Start-VM -Name $PSItem.Name
             }
-        
-        Start-Sleep -Seconds 30
+
+        foreach ($vmName in @($SQLvmName, $Win2k22vmName, $AzMigSrvvmName)) {
+            Wait-VMCommand -VMName $vmName -Credential $winCreds
+        }
 
         Write-Header 'Creating VM Credentials'
-        # Hard-coded username and password for the nested VMs
+        # Hard-coded username for the nested Linux VM
         $nestedLinuxUsername = 'jumpstart'
-        $nestedLinuxPassword = 'JS123!!'
-
-        # Create Linux credential object
-        $secLinuxPassword = ConvertTo-SecureString $nestedLinuxPassword -AsPlainText -Force
-        $linCreds = New-Object System.Management.Automation.PSCredential ($nestedLinuxUsername, $secLinuxPassword)
 
         # Restarting Windows VM Network Adapters
         Write-Header 'Restarting Network Adapters'
-        Start-Sleep -Seconds 5
-        Invoke-Command -VMName $Win2k22vmName -ScriptBlock { Get-NetAdapter | Restart-NetAdapter } -Credential $winCreds
-        Invoke-Command -VMName $AzMigSrvvmName -ScriptBlock { Get-NetAdapter | Restart-NetAdapter } -Credential $winCreds
-        #Invoke-Command -VMName $AzRepSrvvmName -ScriptBlock { Get-NetAdapter | Restart-NetAdapter } -Credential $winCreds
-        Start-Sleep -Seconds 10
+        Restart-VMNetworkAdapters -VMName $Win2k22vmName -Credential $winCreds
+        Restart-VMNetworkAdapters -VMName $AzMigSrvvmName -Credential $winCreds
 
         if ($namingPrefix -ne 'ArcBox') {
 
@@ -358,7 +590,7 @@ if ($Env:flavor -ne 'DevOps') {
             Invoke-Command -VMName $Win2k22vmName -ScriptBlock {
 
                 if ($env:computername -cne $using:Win2k22vmName) {
-                    Rename-Computer -NewName $using:Win2k22vmName -Restart
+                    Rename-Computer -NewName $using:Win2k22vmName
                 }
 
             } -Credential $winCreds
@@ -366,7 +598,7 @@ if ($Env:flavor -ne 'DevOps') {
             Invoke-Command -VMName $AzMigSrvvmName -ScriptBlock {
 
                 if ($env:computername -cne $using:AzMigSrvvmName) {
-                    Rename-Computer -NewName $using:AzMigSrvvmName -Restart
+                    Rename-Computer -NewName $using:AzMigSrvvmName
                 }
 
             } -Credential $winCreds 
@@ -379,23 +611,10 @@ if ($Env:flavor -ne 'DevOps') {
 
             } -Credential $winCreds             
 #>
-            Write-Host 'Waiting for the nested Windows VMs to come back online...'
-
-            start-sleep -Seconds 30
-
-            Get-VM $Win2k22vmName | Restart-VM -Force
-            Get-VM $Win2k22vmName | Wait-VM -For Heartbeat -Timeout 600
-
-            Get-VM $AzMigSrvvmName | Restart-VM -Force
-            Get-VM $AzMigSrvvmName | Wait-VM -For Heartbeat -Timeout 600
-
-            #Get-VM $AzRepSrvvmName | Restart-VM -Force
-            #Get-VM $AzRepSrvvmName | Wait-VM -For Heartbeat
+            Restart-VMAndWait -VMName $Win2k22vmName -Credential $winCreds
+            Restart-VMAndWait -VMName $AzMigSrvvmName -Credential $winCreds
 
         }
-
-        # Getting the Ubuntu nested VM IP address
-        $Ubuntu01VmIp = Get-VM -Name $Ubuntu01vmName | Select-Object -ExpandProperty NetworkAdapters | Select-Object -ExpandProperty IPAddresses | Select-Object -Index 0    
 
         # Configuring SSH for accessing Linux VMs
         Write-Output 'Generating SSH key for accessing nested Linux VMs'
@@ -408,7 +627,8 @@ if ($Env:flavor -ne 'DevOps') {
         # Automatically accept unseen keys but will refuse connections for changed or invalid hostkeys.
         Add-Content -Path "$Env:USERPROFILE\.ssh\config" -Value 'StrictHostKeyChecking=accept-new'
 
-        Get-VM *Ubuntu*  | Wait-VM -For Heartbeat
+        $Ubuntu01VmIp = Get-VMIPv4AddressWithRetry -VMName $Ubuntu01vmName
+        Wait-TcpPort -ComputerName $Ubuntu01VmIp -Port 22
         Get-VM *Ubuntu* | Copy-VMFile -SourcePath "$Env:TEMP\authorized_keys" -DestinationPath "/home/$nestedLinuxUsername/.ssh/" -FileSource Host -Force -CreateFullPath
 
         if ($namingPrefix -ne 'ArcBox') {
@@ -417,45 +637,36 @@ if ($Env:flavor -ne 'DevOps') {
             Write-Output 'Renaming the nested Linux VMs'
 
             Invoke-Command -HostName $Ubuntu01VmIp -KeyFilePath "$Env:USERPROFILE\.ssh\id_rsa" -UserName $nestedLinuxUsername -ScriptBlock {
-                Invoke-Expression "sudo hostnamectl set-hostname $using:ubuntu01vmName;sudo systemctl reboot"
-            }
-            Restart-VM -Name $ubuntu01vmName -Force
+                param($newHostName)
+
+                $renameOutput = @(& sudo hostnamectl set-hostname -- $newHostName 2>&1)
+                $renameExitCode = $LASTEXITCODE
+                foreach ($outputLine in $renameOutput) {
+                    Write-Output ([string]$outputLine)
+                }
+                if ($renameExitCode -ne 0) {
+                    throw "hostnamectl failed with exit code $renameExitCode."
+                }
+            } -ArgumentList $Ubuntu01vmName -ErrorAction Stop
+            $Ubuntu01VmIp = Restart-LinuxVMAndWaitForSsh -VMName $Ubuntu01vmName
+        }
+        else {
+            $Ubuntu01VmIp = Get-VMIPv4AddressWithRetry -VMName $Ubuntu01vmName
+            Wait-TcpPort -ComputerName $Ubuntu01VmIp -Port 22
          }
-
-        Get-VM *Ubuntu* | Wait-VM -For IPAddress
-
-        Write-Host 'Waiting for the nested Linux VMs to come back online...waiting for 10 seconds'
-
-        Start-Sleep -Seconds 10
 
         Write-Output 'Activating operating system on Windows VMs...'
 
-        Invoke-Command -VMName $Win2k22vmName -ScriptBlock {
-
+        $activationScript = {
             cscript C:\Windows\system32\slmgr.vbs -ipk VDYBN-27WPP-V4HQT-9VMD4-VMK7H
             cscript C:\Windows\system32\slmgr.vbs -skms kms.core.windows.net
             cscript C:\Windows\system32\slmgr.vbs -ato
             cscript C:\Windows\system32\slmgr.vbs -dlv
+        }
 
-        } -Credential $winCreds
-
-        Invoke-Command -VMName $AzMigSrvvmName -ScriptBlock {
-
-            cscript C:\Windows\system32\slmgr.vbs -ipk VDYBN-27WPP-V4HQT-9VMD4-VMK7H
-            cscript C:\Windows\system32\slmgr.vbs -skms kms.core.windows.net
-            cscript C:\Windows\system32\slmgr.vbs -ato
-            cscript C:\Windows\system32\slmgr.vbs -dlv
-
-        } -Credential $winCreds      
-
-        Invoke-Command -VMName $SQLvmName -ScriptBlock {
-
-            cscript C:\Windows\system32\slmgr.vbs -ipk VDYBN-27WPP-V4HQT-9VMD4-VMK7H
-            cscript C:\Windows\system32\slmgr.vbs -skms kms.core.windows.net
-            cscript C:\Windows\system32\slmgr.vbs -ato
-            cscript C:\Windows\system32\slmgr.vbs -dlv
-
-        } -Credential $winCreds           
+        foreach ($vmName in @($Win2k22vmName, $AzMigSrvvmName, $SQLvmName)) {
+            Invoke-Command -VMName $vmName -ScriptBlock $activationScript -Credential $winCreds
+        }
 
         # Install Demo Web App on Windows VM
         Write-Header 'Installing Web App on Windows and Linux Servers'
@@ -463,12 +674,11 @@ if ($Env:flavor -ne 'DevOps') {
         # Copy WebApp to Windows VM
         Copy-VMFile $Win2k22vmName -SourcePath "$Env:MHBoxDir\DemoPage\deployWebApp.ps1" -DestinationPath "C:\MHDir\DemoPage\deployWebApp.ps1" -CreateFullPath -FileSource Host -Force
 
-        # Install IIS and clean default web files on Windows VM
+        # Install IIS and deploy the demo page on Windows VM
         Invoke-Command -VMName $Win2k22vmName -ScriptBlock {
             param($sourceRoot)
 
             Add-WindowsFeature Web-Server -IncludeManagementTools
-            Remove-Item -Path "C:\inetpub\wwwroot\*.*"
             & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass `
                 -File 'C:\MHDir\DemoPage\deployWebApp.ps1' `
                 -SourceRoot $sourceRoot
@@ -477,7 +687,7 @@ if ($Env:flavor -ne 'DevOps') {
             }
         } -ArgumentList $demoAssetSourceRoot -Credential $winCreds -ErrorAction Stop
 
-        # Install Apache and clean default web files on Linux VM
+        # Install Apache and deploy the demo page on Linux VM
         Write-Output 'Installing Apache Web Server on Linux VM...'
         $UbuntuSessions = $null
         try {

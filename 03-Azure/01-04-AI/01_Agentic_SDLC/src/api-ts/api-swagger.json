@@ -1,0 +1,1811 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Express API with Swagger",
+        "version": "1.0.0",
+        "description": "REST API documentation using Swagger/OpenAPI"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:3000",
+            "description": "Development server"
+        }
+    ],
+    "paths": {
+        "/api/branches": {
+            "get": {
+                "summary": "Returns all branches",
+                "tags": [
+                    "Branches"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of all branches",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Branch"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "summary": "Create a new branch",
+                "tags": [
+                    "Branches"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Branch"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Branch created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Branch"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/branches/{id}": {
+            "get": {
+                "summary": "Get a branch by ID",
+                "tags": [
+                    "Branches"
+                ],
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "Branch ID"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Branch found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Branch"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Branch not found"
+                    }
+                }
+            },
+            "put": {
+                "summary": "Update a branch",
+                "tags": [
+                    "Branches"
+                ],
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "Branch ID"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Branch"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Branch updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Branch"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Branch not found"
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Delete a branch",
+                "tags": [
+                    "Branches"
+                ],
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "Branch ID"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Branch deleted successfully"
+                    },
+                    "404": {
+                        "description": "Branch not found"
+                    }
+                }
+            }
+        },
+        "/api/deliveries": {
+            "get": {
+                "summary": "Returns all deliveries",
+                "tags": [
+                    "Deliveries"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of all deliveries",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Delivery"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "summary": "Create a new delivery",
+                "tags": [
+                    "Deliveries"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Delivery"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Delivery created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Delivery"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/deliveries/{id}": {
+            "get": {
+                "summary": "Get a delivery by ID",
+                "tags": [
+                    "Deliveries"
+                ],
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "Delivery ID"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Delivery found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Delivery"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Delivery not found"
+                    }
+                }
+            },
+            "put": {
+                "summary": "Update a delivery",
+                "tags": [
+                    "Deliveries"
+                ],
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "Delivery ID"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Delivery"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Delivery updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Delivery"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Delivery not found"
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Delete a delivery",
+                "tags": [
+                    "Deliveries"
+                ],
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "Delivery ID"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Delivery deleted successfully"
+                    },
+                    "404": {
+                        "description": "Delivery not found"
+                    }
+                }
+            }
+        },
+        "/api/deliveries/{id}/status": {
+            "put": {
+                "summary": "Update the status of a delivery",
+                "tags": [
+                    "Deliveries"
+                ],
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "Delivery ID"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "status"
+                                ],
+                                "properties": {
+                                    "status": {
+                                        "type": "string",
+                                        "description": "The new status of the delivery"
+                                    },
+                                    "deliveryPartner": {
+                                        "type": "string",
+                                        "description": "Optional delivery partner to notify via the notify-service about the status update"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Delivery status updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        {
+                                            "$ref": "#/components/schemas/Delivery"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "delivery": {
+                                                    "$ref": "#/components/schemas/Delivery"
+                                                },
+                                                "commandOutput": {
+                                                    "type": "string",
+                                                    "description": "Output from the notify-service command"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Delivery not found"
+                    },
+                    "500": {
+                        "description": "Error executing notify command"
+                    }
+                }
+            }
+        },
+        "/api/headquarters": {
+            "get": {
+                "summary": "Returns all headquarters",
+                "tags": [
+                    "Headquarters"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of all headquarters",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Headquarters"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "summary": "Create a new headquarters",
+                "tags": [
+                    "Headquarters"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Headquarters"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Headquarters created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Headquarters"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/headquarters/{id}": {
+            "get": {
+                "summary": "Get a headquarters by ID",
+                "tags": [
+                    "Headquarters"
+                ],
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "Headquarters ID"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Headquarters found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Headquarters"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Headquarters not found"
+                    }
+                }
+            },
+            "put": {
+                "summary": "Update a headquarters",
+                "tags": [
+                    "Headquarters"
+                ],
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "Headquarters ID"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Headquarters"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Headquarters updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Headquarters"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Headquarters not found"
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Delete a headquarters",
+                "tags": [
+                    "Headquarters"
+                ],
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "Headquarters ID"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Headquarters deleted successfully"
+                    },
+                    "404": {
+                        "description": "Headquarters not found"
+                    }
+                }
+            }
+        },
+        "/api/headquarters/{id}/metrics": {
+            "get": {
+                "summary": "Get headquarters metrics by ID",
+                "tags": [
+                    "Headquarters"
+                ],
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "Headquarters ID"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Headquarters metrics calculated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "score": {
+                                            "type": "number",
+                                            "description": "Total score calculated from ID, floor count, and capacity"
+                                        },
+                                        "average": {
+                                            "type": "number",
+                                            "description": "Average value"
+                                        },
+                                        "display": {
+                                            "type": "string",
+                                            "description": "Display text"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Headquarters not found"
+                    }
+                }
+            }
+        },
+        "/api/headquarters/{id}/label": {
+            "get": {
+                "summary": "Get headquarters label by ID",
+                "tags": [
+                    "Headquarters"
+                ],
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "Headquarters ID"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Headquarters label created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "label": {
+                                            "type": "string",
+                                            "description": "Formatted location label"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Headquarters not found"
+                    }
+                }
+            }
+        },
+        "/api/orders": {
+            "get": {
+                "summary": "Returns all orders",
+                "tags": [
+                    "Orders"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of all orders",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Order"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "summary": "Create a new order",
+                "tags": [
+                    "Orders"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Order"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Order created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Order"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/orders/{id}": {
+            "get": {
+                "summary": "Get an order by ID",
+                "tags": [
+                    "Orders"
+                ],
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "Order ID"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Order found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Order"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Order not found"
+                    }
+                }
+            },
+            "put": {
+                "summary": "Update an order",
+                "tags": [
+                    "Orders"
+                ],
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "Order ID"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Order"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Order updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Order"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Order not found"
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Delete an order",
+                "tags": [
+                    "Orders"
+                ],
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "Order ID"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Order deleted successfully"
+                    },
+                    "404": {
+                        "description": "Order not found"
+                    }
+                }
+            }
+        },
+        "/api/order-details": {
+            "get": {
+                "summary": "Returns all order details",
+                "tags": [
+                    "Order Details"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of all order details",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/OrderDetail"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "summary": "Create a new order detail",
+                "tags": [
+                    "Order Details"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/OrderDetail"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Order detail created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/OrderDetail"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/order-details/{id}": {
+            "get": {
+                "summary": "Get an order detail by ID",
+                "tags": [
+                    "Order Details"
+                ],
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "Order detail ID"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Order detail found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/OrderDetail"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Order detail not found"
+                    }
+                }
+            },
+            "put": {
+                "summary": "Update an order detail",
+                "tags": [
+                    "Order Details"
+                ],
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "Order detail ID"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/OrderDetail"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Order detail updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/OrderDetail"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Order detail not found"
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Delete an order detail",
+                "tags": [
+                    "Order Details"
+                ],
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "Order detail ID"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Order detail deleted successfully"
+                    },
+                    "404": {
+                        "description": "Order detail not found"
+                    }
+                }
+            }
+        },
+        "/api/order-detail-deliveries": {
+            "get": {
+                "summary": "Returns all order detail deliveries",
+                "tags": [
+                    "Order Detail Deliveries"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of all order detail deliveries",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/OrderDetailDelivery"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "summary": "Create a new order detail delivery",
+                "tags": [
+                    "Order Detail Deliveries"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/OrderDetailDelivery"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Order detail delivery created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/OrderDetailDelivery"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/order-detail-deliveries/{id}": {
+            "get": {
+                "summary": "Get an order detail delivery by ID",
+                "tags": [
+                    "Order Detail Deliveries"
+                ],
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "Order detail delivery ID"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Order detail delivery found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/OrderDetailDelivery"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Order detail delivery not found"
+                    }
+                }
+            },
+            "put": {
+                "summary": "Update an order detail delivery",
+                "tags": [
+                    "Order Detail Deliveries"
+                ],
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "Order detail delivery ID"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/OrderDetailDelivery"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Order detail delivery updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/OrderDetailDelivery"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Order detail delivery not found"
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Delete an order detail delivery",
+                "tags": [
+                    "Order Detail Deliveries"
+                ],
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "Order detail delivery ID"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Order detail delivery deleted successfully"
+                    },
+                    "404": {
+                        "description": "Order detail delivery not found"
+                    }
+                }
+            }
+        },
+        "/api/products": {
+            "get": {
+                "summary": "Returns all products",
+                "tags": [
+                    "Products"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of all products",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Product"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "summary": "Create a new product",
+                "tags": [
+                    "Products"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Product"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Product created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Product"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/products/{id}": {
+            "get": {
+                "summary": "Get a product by ID",
+                "tags": [
+                    "Products"
+                ],
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "Product ID"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Product found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Product"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Product not found"
+                    }
+                }
+            },
+            "put": {
+                "summary": "Update a product",
+                "tags": [
+                    "Products"
+                ],
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "Product ID"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Product"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Product updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Product"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Product not found"
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Delete a product",
+                "tags": [
+                    "Products"
+                ],
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "Product ID"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Product deleted successfully"
+                    },
+                    "404": {
+                        "description": "Product not found"
+                    }
+                }
+            }
+        },
+        "/api/suppliers": {
+            "get": {
+                "summary": "Returns all suppliers",
+                "tags": [
+                    "Suppliers"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of all suppliers",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Supplier"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "summary": "Create a new supplier",
+                "tags": [
+                    "Suppliers"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Supplier"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Supplier created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Supplier"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/suppliers/{id}": {
+            "get": {
+                "summary": "Get a supplier by ID",
+                "tags": [
+                    "Suppliers"
+                ],
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "Supplier ID"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Supplier found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Supplier"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Supplier not found"
+                    }
+                }
+            },
+            "put": {
+                "summary": "Update a supplier",
+                "tags": [
+                    "Suppliers"
+                ],
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "Supplier ID"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Supplier"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Supplier updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Supplier"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Supplier not found"
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Delete a supplier",
+                "tags": [
+                    "Suppliers"
+                ],
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "Supplier ID"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Supplier deleted successfully"
+                    },
+                    "404": {
+                        "description": "Supplier not found"
+                    }
+                }
+            }
+        },
+        "/api/suppliers/{id}/status": {
+            "get": {
+                "summary": "Get the status of a supplier",
+                "tags": [
+                    "Suppliers"
+                ],
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "Supplier ID"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Supplier status",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "enum": [
+                                                "INACTIVE",
+                                                "APPROVED",
+                                                "PENDING"
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Supplier not found"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "Branch": {
+                "type": "object",
+                "required": [
+                    "branchId",
+                    "name",
+                    "headquartersId"
+                ],
+                "properties": {
+                    "branchId": {
+                        "type": "integer",
+                        "description": "The unique identifier for the branch"
+                    },
+                    "headquartersId": {
+                        "type": "integer",
+                        "description": "The ID of the headquarters this branch belongs to"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "The name of the branch"
+                    },
+                    "address": {
+                        "type": "string",
+                        "description": "Physical address of the branch"
+                    },
+                    "phone": {
+                        "type": "string",
+                        "description": "Contact phone number for the branch"
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Additional details about the branch"
+                    },
+                    "contactPerson": {
+                        "type": "string",
+                        "description": "Name of the primary contact person"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "description": "Contact email for the branch"
+                    }
+                }
+            },
+            "Delivery": {
+                "type": "object",
+                "required": [
+                    "deliveryId",
+                    "supplierId",
+                    "status"
+                ],
+                "properties": {
+                    "deliveryId": {
+                        "type": "integer",
+                        "description": "The unique identifier for the delivery"
+                    },
+                    "supplierId": {
+                        "type": "integer",
+                        "description": "The ID of the supplier for this delivery"
+                    },
+                    "deliveryDate": {
+                        "type": "string",
+                        "description": "The date of the delivery"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "The name of the delivery"
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Additional details about the delivery"
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "Current status of the delivery"
+                    }
+                }
+            },
+            "Headquarters": {
+                "type": "object",
+                "required": [
+                    "headquartersId",
+                    "name"
+                ],
+                "properties": {
+                    "headquartersId": {
+                        "type": "integer",
+                        "description": "The unique identifier for the headquarters"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "The name of the headquarters"
+                    },
+                    "address": {
+                        "type": "string",
+                        "description": "Main office address of the headquarters"
+                    },
+                    "phone": {
+                        "type": "string",
+                        "description": "Contact phone number for the headquarters"
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Additional details about the headquarters"
+                    },
+                    "contactPerson": {
+                        "type": "string",
+                        "description": "Name of the primary contact person"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "description": "Contact email for the headquarters"
+                    },
+                    "city": {
+                        "type": "string",
+                        "description": "City where the headquarters is located"
+                    },
+                    "country": {
+                        "type": "string",
+                        "description": "Country where the headquarters is located"
+                    },
+                    "floorCount": {
+                        "type": "integer",
+                        "description": "Number of floors in the headquarters building"
+                    },
+                    "capacity": {
+                        "type": "integer",
+                        "description": "Total capacity of the headquarters"
+                    }
+                }
+            },
+            "Order": {
+                "type": "object",
+                "required": [
+                    "orderId",
+                    "branchId",
+                    "orderDate"
+                ],
+                "properties": {
+                    "orderId": {
+                        "type": "integer",
+                        "description": "The unique identifier for the order"
+                    },
+                    "branchId": {
+                        "type": "integer",
+                        "description": "The ID of the branch that placed the order"
+                    },
+                    "orderDate": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "The date and time when the order was placed"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "The name of the order"
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Additional details about the order"
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "The current status of the order",
+                        "enum": [
+                            "pending",
+                            "processing",
+                            "shipped",
+                            "delivered",
+                            "cancelled"
+                        ]
+                    }
+                }
+            },
+            "OrderDetail": {
+                "type": "object",
+                "required": [
+                    "orderDetailId",
+                    "orderId",
+                    "productId",
+                    "quantity",
+                    "unitPrice"
+                ],
+                "properties": {
+                    "orderDetailId": {
+                        "type": "integer",
+                        "description": "The unique identifier for the order detail"
+                    },
+                    "orderId": {
+                        "type": "integer",
+                        "description": "The ID of the parent order"
+                    },
+                    "productId": {
+                        "type": "integer",
+                        "description": "The ID of the product ordered"
+                    },
+                    "quantity": {
+                        "type": "integer",
+                        "description": "The quantity of products ordered"
+                    },
+                    "unitPrice": {
+                        "type": "number",
+                        "format": "float",
+                        "description": "The price per unit"
+                    },
+                    "notes": {
+                        "type": "string",
+                        "description": "Additional notes for the order detail"
+                    }
+                }
+            },
+            "OrderDetailDelivery": {
+                "type": "object",
+                "required": [
+                    "orderDetailDeliveryId",
+                    "orderDetailId",
+                    "deliveryId"
+                ],
+                "properties": {
+                    "orderDetailDeliveryId": {
+                        "type": "integer",
+                        "description": "The unique identifier for the order detail delivery"
+                    },
+                    "orderDetailId": {
+                        "type": "integer",
+                        "description": "The ID of the related order detail"
+                    },
+                    "deliveryId": {
+                        "type": "integer",
+                        "description": "The ID of the related delivery"
+                    },
+                    "quantity": {
+                        "type": "integer",
+                        "description": "The quantity of items in this delivery"
+                    },
+                    "notes": {
+                        "type": "string",
+                        "description": "Additional notes about this delivery"
+                    }
+                }
+            },
+            "Product": {
+                "type": "object",
+                "required": [
+                    "productId",
+                    "supplierId",
+                    "name",
+                    "price",
+                    "sku",
+                    "unit"
+                ],
+                "properties": {
+                    "productId": {
+                        "type": "integer",
+                        "description": "The unique identifier for the product"
+                    },
+                    "supplierId": {
+                        "type": "integer",
+                        "description": "The ID of the supplier providing this product"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "The name of the product"
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Detailed description of the product"
+                    },
+                    "price": {
+                        "type": "number",
+                        "format": "float",
+                        "description": "The current price of the product"
+                    },
+                    "sku": {
+                        "type": "string",
+                        "description": "Stock keeping unit code for the product"
+                    },
+                    "unit": {
+                        "type": "string",
+                        "description": "Unit of measure for the product (e.g., \"piece\")"
+                    },
+                    "imgName": {
+                        "type": "string",
+                        "description": "Filename of the product image"
+                    },
+                    "discount": {
+                        "type": "number",
+                        "format": "float",
+                        "description": "Discount percentage (if applicable) expressed as a decimal (e.g., 0.25 for 25%)"
+                    }
+                }
+            },
+            "Supplier": {
+                "type": "object",
+                "required": [
+                    "supplierId",
+                    "name"
+                ],
+                "properties": {
+                    "supplierId": {
+                        "type": "integer",
+                        "description": "The unique identifier for the supplier"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "The name of the supplier"
+                    },
+                    "contactPerson": {
+                        "type": "string",
+                        "description": "Name of the primary contact person"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "description": "Contact email for the supplier"
+                    },
+                    "phone": {
+                        "type": "string",
+                        "description": "Contact phone number for the supplier"
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Additional details about the supplier"
+                    },
+                    "active": {
+                        "type": "boolean",
+                        "description": "Whether the supplier is active"
+                    },
+                    "verified": {
+                        "type": "boolean",
+                        "description": "Whether the supplier is verified"
+                    }
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Branches",
+            "description": "API endpoints for managing branches"
+        },
+        {
+            "name": "Deliveries",
+            "description": "API endpoints for managing deliveries"
+        },
+        {
+            "name": "Headquarters",
+            "description": "API endpoints for managing headquarters locations"
+        },
+        {
+            "name": "Orders",
+            "description": "API endpoints for managing orders"
+        },
+        {
+            "name": "Order Details",
+            "description": "API endpoints for managing order details"
+        },
+        {
+            "name": "Order Detail Deliveries",
+            "description": "API endpoints for managing order detail deliveries"
+        },
+        {
+            "name": "Products",
+            "description": "API endpoints for managing products"
+        },
+        {
+            "name": "Suppliers",
+            "description": "API endpoints for managing suppliers"
+        }
+    ]
+}

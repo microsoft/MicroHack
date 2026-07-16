@@ -24,7 +24,7 @@ Deploy and verify                        ~10 min
 ### Task 1: Choose IaC and author templates
 
 - Pick **Bicep** or **Terraform** and let Copilot scaffold the resources: compute for frontend/API, storage/database, supporting services.
-- 💡 **Optional starter scaffold** in the companion repo: `infra/` (Bicep) + `.github/workflows/deploy.yml` sketch a **Container Apps + ACR + Log Analytics + OIDC** topology — two apps (`api` on port 3000, `frontend`/nginx on port 80). The design decisions (SKUs, database/storage strategy, API ingress visibility, secrets, scaling, image build/push, frontend→api discovery) are deliberately left as `TODO`. It's a de-risking starting point, **not** a required or "correct" answer — extend it, replace it, or ignore it. See `infra/README.md`.
+- 💡 **Optional starter scaffold** — [`infra/`](../../infra/README.md) (Bicep) is bundled in this MicroHack folder; combined with the companion repo's `.github/workflows/deploy.yml` it sketches a **Container Apps + ACR + Log Analytics + OIDC** topology — two apps (`api` on port 3000, `frontend`/nginx on port 80). The design decisions (SKUs, database/storage strategy, API ingress visibility, secrets, scaling, image build/push, frontend→api discovery) are deliberately left as `TODO`. It's a de-risking starting point, **not** a required or "correct" answer — extend it, replace it, or ignore it. See [`infra/README.md`](../../infra/README.md).
 
 ### Task 2: Build one linear pipeline
 

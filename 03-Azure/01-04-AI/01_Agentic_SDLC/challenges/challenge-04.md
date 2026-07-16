@@ -14,7 +14,7 @@ Deploy the full Octocat Supply application to **Microsoft Azure** using **Infras
 * **Configure securely** — Use GitHub secrets / **OIDC federated credentials** for Azure authentication; avoid hard-coded credentials.
 * **Deploy and verify** — Run the pipeline and confirm the application is reachable in Azure.
 
-> **Optional starter scaffold (in the companion repo).** `infra/` (Bicep) and `.github/workflows/deploy.yml` sketch a **Container Apps + ACR + OIDC** topology so you don't start from a blank page. The meaningful design choices — SKUs, database/storage strategy, API ingress visibility, secrets, scaling — are intentionally left as `TODO`s. It removes boilerplate; it does **not** do the challenge for you. Use it, extend it, or replace it. See `infra/README.md`.
+> **Optional starter scaffold (included in this folder).** [`infra/`](../infra/README.md) (Bicep) — bundled here — plus the companion repo's `.github/workflows/deploy.yml` sketch a **Container Apps + ACR + OIDC** topology so you don't start from a blank page. The meaningful design choices — SKUs, database/storage strategy, API ingress visibility, secrets, scaling — are intentionally left as `TODO`s. It removes boilerplate; it does **not** do the challenge for you. Use it, extend it, or replace it. See [`infra/README.md`](../infra/README.md).
 
 ## Success criteria
 

@@ -43,7 +43,7 @@ This lab is **not** a full explanation of GitHub Copilot or Azure as technologie
 - [Azure Container Apps](https://learn.microsoft.com/en-us/azure/container-apps/)
 - [Azure SRE Agent](https://learn.microsoft.com/en-us/azure/sre-agent/)
 
-> **Companion application repository.** This MicroHack is delivered against a companion repo that contains the **Octocat Supply** application, the challenge scaffolding, and the mock organizational knowledge (WorkIQ) used in Challenge 2: **[Frank802/agentic-sdlc-hack](https://github.com/Frank802/agentic-sdlc-hack)**. Facilitators create a copy/fork of that repo per team before the event; participants work in their team's copy throughout. All in-repo paths referenced below (e.g. `src/`, `hackathon/`, `infra/`) are paths **inside that companion repo**.
+> **What's included & the companion repo.** This MicroHack folder bundles the **Octocat Supply** application source ([`src/`](src/README.md)), the Azure infrastructure scaffold ([`infra/`](infra/README.md)), and helper [`scripts/`](scripts/README.md) — so the code and deployment assets ship with the MicroHack. The remaining scaffolding — the dev containers (`.devcontainer/`), repo custom instructions and custom agents/workflows (`.github/`), the Challenge 2 backlog and mock **WorkIQ** organizational knowledge (`hackathon/`), and the facilitator docs (`docs/`) — lives in the companion repo **[Frank802/agentic-sdlc-hack](https://github.com/Frank802/agentic-sdlc-hack)**. Facilitators create a copy/fork of that companion repo per team before the event; participants work in their team's copy, into which these bundled `src/` / `infra/` / `scripts/` folders drop in directly.
 
 ## MicroHack context
 

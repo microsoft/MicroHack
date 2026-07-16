@@ -4,13 +4,13 @@
 
 *From secure migration to agent-assisted cloud operations.*
 
-- [**Hack introduction**](#microhack-introduction)
-- [**Hack context**](#microhack-context)
+- [**Hack introduction**](#hack-introduction)
+- [**Hack context**](#hack-context)
 - [**Objectives**](#objectives)
-- [**Hack challenges**](#microhack-challenges)
+- [**Hack challenges**](#hack-challenges)
 - [**Contributors**](#contributors)
 
-<a id="microhack-introduction"></a>
+<a id="hack-introduction"></a>
 
 # Hack introduction
 
@@ -32,7 +32,7 @@ Optional follow-up reading:
 * [Azure Copilot Observability Agent](https://learn.microsoft.com/en-us/azure/azure-monitor/aiops/observability-agent-overview)
 * [Deploy files to Azure App Service](https://learn.microsoft.com/en-us/azure/app-service/deploy-zip)
 
-<a id="microhack-context"></a>
+<a id="hack-context"></a>
 
 # Hack context
 
@@ -66,7 +66,7 @@ After completing this Hack, you will be able to:
 * Inspect a selected IIS or Apache workload and manually replatform its static content to Windows App Service with ZIP deployment.
 * Explain why Azure Storage static website hosting or Azure Static Web Apps can be a better production target for a static workload.
 
-<a id="microhack-challenges"></a>
+<a id="hack-challenges"></a>
 
 # Hack challenges
 

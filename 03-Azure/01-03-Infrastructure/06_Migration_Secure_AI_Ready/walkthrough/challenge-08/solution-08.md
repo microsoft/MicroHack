@@ -13,7 +13,7 @@ Complete only your selected track.
 
 ## Task 1: Discover the web application before choosing a target (10 minutes)
 
-Azure Migrate's at-scale web-app migration flow supports ASP.NET web apps on Windows IIS servers hosted in VMware environments. This MicroHack uses Hyper-V, and the integrated flow doesn't support the Linux/Apache workload. We will deliberately inspect and manually replatform the selected migrated workload.
+Azure Migrate's at-scale web-app migration flow supports ASP.NET web apps on Windows IIS servers hosted in VMware environments. This Hack uses Hyper-V, and the integrated flow doesn't support the Linux/Apache workload. We will deliberately inspect and manually replatform the selected migrated workload.
 
 ### Track A - Inventory Windows/IIS
 
@@ -458,4 +458,4 @@ az account clear
 
 Interactive sign-in is appropriate for this guided lab. Signing out and clearing the local subscription cache reduce credential exposure on the VM. No publishing credentials were used or exposed.
 
-You successfully completed Challenge 8 and the MicroHack.
+You successfully completed Challenge 8 and the Hack.

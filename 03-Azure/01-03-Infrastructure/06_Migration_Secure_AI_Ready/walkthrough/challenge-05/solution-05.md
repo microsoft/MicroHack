@@ -152,7 +152,7 @@ Connect to each test VM via Azure Bastion.
 
 ![image](./img/TestMig5.png)
 
-On the Windows VM, open a browser and navigate to *http://localhost*. On the Ubuntu VM, run `curl -I http://localhost`. Confirm that the MicroHack Demo Web App responds successfully on both test VMs.
+On the Windows VM, open a browser and navigate to *http://localhost*. On the Ubuntu VM, run `curl -I http://localhost`. Confirm that the Hack Demo Web App responds successfully on both test VMs.
 
 ![image](./img/TestMig6.png)
 

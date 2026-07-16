@@ -3,7 +3,7 @@
 **[Home](../Readme.md)** - [Next Challenge](challenge-02.md)
 
 > [!IMPORTANT]
-> **Many of the resource deployments in this MicroHack are adapted from the [Jumpstart ArcBox for IT Pros](https://jumpstart.azure.com/azure_jumpstart_arcbox/ITPro). Special thanks to the [Jumpstart Team](https://aka.ms/arcjumpstart) for their excellent work.**
+> **Many of the resource deployments in this Hack are adapted from the [Jumpstart ArcBox for IT Pros](https://jumpstart.azure.com/azure_jumpstart_arcbox/ITPro). Special thanks to the [Jumpstart Team](https://aka.ms/arcjumpstart) for their excellent work.**
 
 ## Goal
 
@@ -12,11 +12,11 @@
 
 ## Actions
 
-- Deploy the [Bicep configuration](../resources) of the MicroHack.
+- Deploy the [Bicep configuration](../resources) for the Hack.
 
 ## Success criteria
 
-- You have understood the concept and architecture for the MicroHack.
+- You have understood the concept and architecture for the Hack.
 - The Bicep deployment command exits successfully.
 - The *source* and *destination* resource groups are visible in the Azure Portal.
 

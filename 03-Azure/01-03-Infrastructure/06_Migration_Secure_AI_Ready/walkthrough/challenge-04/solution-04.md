@@ -76,7 +76,7 @@ Agentless dependency analysis works by capturing TCP connection data from server
 
 For agent-based analysis, Azure Migrate: Discovery and assessment uses the Service Map solution in Azure Monitor. You install the Microsoft Monitoring Agent/Log Analytics agent and the Dependency agent on each server you want to analyze.
 
-In this MicroHack, we will use agentless dependency analysis.
+In this Hack, we will use agentless dependency analysis.
 
 > [!NOTE]
 > Agentless dependency analysis is automatically enabled for the discovered servers when the prerequisite checks are successful. Unlike before, you no longer need to manually enable this feature on servers.

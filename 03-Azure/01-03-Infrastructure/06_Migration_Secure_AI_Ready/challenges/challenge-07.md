@@ -44,7 +44,7 @@ At the start of this challenge, select one track. Follow the same VM and track t
 * Create or reuse an action group and create an actionable log search alert.
 * Use Azure Copilot Observability Agent chat, or the KQL/VM insights fallback, to distinguish a service outage from a VM outage.
 * Restore the selected service and verify local, external, and telemetry recovery.
-* Decide which lab monitoring resources should remain after the MicroHack.
+* Decide which lab monitoring resources should remain after the Hack.
 
 ### Track A - Windows Server / IIS
 

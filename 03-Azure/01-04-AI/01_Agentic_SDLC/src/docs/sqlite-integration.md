@@ -38,7 +38,7 @@ make dev
 
 This will:
 
-- Create the SQLite database file at `api/data/app.db`
+- Create the SQLite database file at `api-ts/data/app.db`
 - Run all pending migrations
 - Seed the database with sample data (if empty)
 
@@ -57,10 +57,10 @@ make db-migrate
 make db-seed
 ```
 
-Alternatively, if you're in the `api/` directory, you can use npm commands directly:
+Alternatively, if you're in the `api-ts/` directory, you can use npm commands directly:
 
 ```bash
-cd api
+cd api-ts
 npm run db:init
 npm run db:migrate
 npm run db:seed
@@ -70,7 +70,7 @@ npm run db:seed
 
 The database file is stored at:
 
-- **Development**: `api/data/app.db`
+- **Development**: `api-ts/data/app.db`
 - **Testing**: In-memory (`:memory:`)
 
 You can override the database location using the `DB_FILE` environment variable:
@@ -128,15 +128,15 @@ const results = await repo.findByName('Tech');
 
 Database schema changes are managed through migration files:
 
-1. Create a new migration file: `api/sql/migrations/002_description.sql`
+1. Create a new migration file: `src/database/migrations/002_description.sql`
 2. Add your SQL statements
-3. Run migrations: `make db-migrate` (or `cd api && npm run db:migrate`)
+3. Run migrations: `make db-migrate` (or `cd api-ts && npm run db:migrate`)
 
 Migration files are executed in order and tracked in the `migrations` table.
 
 ### Seed Data
 
-Sample data is provided through seed files in `api/sql/seed/`:
+Sample data is provided through seed files in `src/database/seed/`:
 
 - `001_suppliers.sql` - Supplier data
 - `002_headquarters.sql` - Headquarters data
@@ -177,7 +177,7 @@ const db = await getDatabase(true); // true = test mode (in-memory)
 
 ## Configuration
 
-Database configuration is managed in `api/src/db/config.ts`:
+Database configuration is managed in `api-ts/src/db/config.ts`:
 
 ```typescript
 export const DB_CONFIG = {
@@ -223,10 +223,10 @@ Since SQLite stores data in a single file, backup is straightforward:
 
 ```bash
 # Backup database
-cp api/data/app.db api/data/app-backup-$(date +%Y%m%d).db
+cp api-ts/data/app.db api-ts/data/app-backup-$(date +%Y%m%d).db
 
 # Restore from backup
-cp api/data/app-backup-20231225.db api/data/app.db
+cp api-ts/data/app-backup-20231225.db api-ts/data/app.db
 ```
 
 For production deployments, consider regular automated backups.

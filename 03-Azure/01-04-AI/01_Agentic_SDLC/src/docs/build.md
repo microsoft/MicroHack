@@ -34,10 +34,10 @@ make build-api
 make build-frontend
 ```
 
-Alternatively, if you're in the `api/` or `frontend/` directories, you can use npm commands directly:
+Alternatively, if you're in the `api-ts/` or `frontend/` directories, you can use npm commands directly:
 
 ```bash
-cd api && npm run build
+cd api-ts && npm run build
 cd frontend && npm run build
 ```
 
@@ -54,10 +54,10 @@ make db-migrate
 make db-seed
 ```
 
-Alternatively, if you're in the `api/` directory, you can use npm commands directly:
+Alternatively, if you're in the `api-ts/` directory, you can use npm commands directly:
 
 ```bash
-cd api
+cd api-ts
 npm run db:init
 npm run db:migrate
 npm run db:seed
@@ -65,7 +65,7 @@ npm run db:seed
 
 Environment variables:
 
-- DB_FILE: path to SQLite database file (default: `api/data/app.db`)
+- DB_FILE: path to SQLite database file (default: `api-ts/data/app.db`)
 - DB_ENABLE_WAL: enable WAL mode (default: true)
 - DB_FOREIGN_KEYS: enforce foreign keys (default: true)
 - DB_TIMEOUT: busy timeout in ms (default: 30000)
@@ -101,10 +101,10 @@ make dev-frontend
 make start
 ```
 
-Alternatively, if you're in the `api/` or `frontend/` directories, you can use npm commands directly:
+Alternatively, if you're in the `api-ts/` or `frontend/` directories, you can use npm commands directly:
 
 ```bash
-cd api && npm run dev
+cd api-ts && npm run dev
 cd frontend && npm run dev
 ```
 
@@ -131,10 +131,10 @@ make test-api
 make test-frontend
 ```
 
-Alternatively, if you're in the `api/` or `frontend/` directories, you can use npm commands directly:
+Alternatively, if you're in the `api-ts/` or `frontend/` directories, you can use npm commands directly:
 
 ```bash
-cd api && npm run test
+cd api-ts && npm run test
 cd frontend && npm run test
 ```
 
@@ -145,14 +145,14 @@ cd frontend && npm run test
 make lint
 ```
 
-Alternatively, if you're in the `api/` or `frontend/` directory, you can use npm commands directly:
+Alternatively, if you're in the `api-ts/` or `frontend/` directory, you can use npm commands directly:
 
 ```bash
 cd frontend && npm run lint
 ```
 
 ```bash
-cd api && npm run lint
+cd api-ts && npm run lint
 ```
 
 ## Additional Information

@@ -49,7 +49,6 @@ Install-PSResource -Name Microsoft.WinGet.DSC -Scope AllUsers -Quiet -AcceptLice
     }
     # The script will resume here after the restart #>
 # Install DSC resources required for MHBox
-Install-PSResource -Name DSCR_Font -Scope AllUsers -Quiet -AcceptLicense -TrustRepository
 Install-PSResource -Name HyperVDsc -Scope AllUsers -Quiet -AcceptLicense -TrustRepository -Prerelease
 Install-PSResource -Name NetworkingDsc -Scope AllUsers -Quiet -AcceptLicense -TrustRepository
 

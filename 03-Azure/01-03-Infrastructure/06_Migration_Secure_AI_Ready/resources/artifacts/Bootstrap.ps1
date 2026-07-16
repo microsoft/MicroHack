@@ -237,8 +237,6 @@ if ($flavor -eq 'ITPro') {
     Invoke-WebRequest ($templateBaseUrl + 'artifacts/dsc/virtual_machines_itpro.dsc.yml') -OutFile "$Env:MHBoxDscDir\virtual_machines_itpro.dsc.yml"
 }
 
-New-Item -Path alias:azdata -Value 'C:\Program Files (x86)\Microsoft SDKs\Azdata\CLI\wbin\azdata.cmd' -Force
-
 # Disable Microsoft Edge sidebar
 $RegistryPath = 'HKLM:\SOFTWARE\Policies\Microsoft\Edge'
 $Name = 'HubsSidebarEnabled'

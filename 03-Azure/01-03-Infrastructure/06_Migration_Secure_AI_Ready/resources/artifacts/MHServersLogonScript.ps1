@@ -384,16 +384,6 @@ if ($Env:flavor -ne 'DevOps') {
         $folder.Attributes += [System.IO.FileAttributes]::Hidden
     }
 
-    # Install Azure CLI extensions
-    Write-Header 'Az CLI extensions'
-
-    az config set extension.use_dynamic_install=yes_without_prompt --only-show-errors
-
-    @('ssh', 'log-analytics-solution', 'connectedmachine', 'monitor-control-service') |
-    ForEach-Object -Parallel {
-        az extension add --name $PSItem --yes --only-show-errors
-    }
-
     # Required for CLI commands
     Write-Header 'Az CLI Login'
     az login --identity

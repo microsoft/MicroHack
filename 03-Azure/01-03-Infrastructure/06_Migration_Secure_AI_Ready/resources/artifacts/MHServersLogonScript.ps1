@@ -92,6 +92,41 @@ function Wait-VMCommand {
     }
 }
 
+function Invoke-VMCommandWithRetry {
+    param(
+        [Parameter(Mandatory)]
+        [string]$VMName,
+
+        [Parameter(Mandatory)]
+        [pscredential]$Credential,
+
+        [Parameter(Mandatory)]
+        [scriptblock]$ScriptBlock,
+
+        [object[]]$ArgumentList = @(),
+
+        [Parameter(Mandatory)]
+        [string]$Description,
+
+        [int]$TimeoutSeconds = 600
+    )
+
+    $commandResult = $null
+    $commandResultReference = [ref]$commandResult
+    Wait-Until -Description "$Description on '$VMName'" -TimeoutSeconds $TimeoutSeconds -Condition {
+        $commandResultReference.Value = @(
+            Invoke-Command -VMName $VMName `
+                -Credential $Credential `
+                -ScriptBlock $ScriptBlock `
+                -ArgumentList $ArgumentList `
+                -ErrorAction Stop
+        )
+        return $true
+    }
+
+    return $commandResult
+}
+
 function Get-VMIPv4AddressWithRetry {
     param(
         [Parameter(Mandatory)]
@@ -162,153 +197,6 @@ function Wait-TcpPort {
     }
 }
 
-function Restart-VMNetworkAdapters {
-    param(
-        [Parameter(Mandatory)]
-        [string]$VMName,
-
-        [Parameter(Mandatory)]
-        [pscredential]$Credential
-    )
-
-    $completionMarker = "C:\Windows\Temp\MHBox-network-restart-$([guid]::NewGuid()).done"
-    $errorMarker = "$completionMarker.error"
-    $armedMarker = "$completionMarker.armed"
-    $releaseMarker = "$completionMarker.release"
-    $restartScript = @"
-`$ErrorActionPreference = 'Stop'
-try {
-    New-Item -Path '$armedMarker' -ItemType File -Force | Out-Null
-    `$releaseDeadline = [DateTime]::UtcNow.AddSeconds(120)
-    while (-not (Test-Path -LiteralPath '$releaseMarker')) {
-        if ([DateTime]::UtcNow -ge `$releaseDeadline) {
-            throw 'Timed out waiting for the host to release the network adapter restart.'
-        }
-        Start-Sleep -Milliseconds 200
-    }
-    Remove-Item -LiteralPath '$releaseMarker' -Force
-    Get-NetAdapter | Restart-NetAdapter
-    New-Item -Path '$completionMarker' -ItemType File -Force | Out-Null
-}
-catch {
-    `$errorTemp = '$errorMarker.tmp'
-    `$_ | Out-String | Set-Content -LiteralPath `$errorTemp
-    Move-Item -LiteralPath `$errorTemp -Destination '$errorMarker' -Force
-    exit 1
-}
-"@
-    $encodedRestartScript = [Convert]::ToBase64String(
-        [Text.Encoding]::Unicode.GetBytes($restartScript)
-    )
-
-    $launchStatus = Invoke-Command -VMName $VMName -Credential $Credential -ErrorAction Stop -ScriptBlock {
-        param($markerPath, $failurePath, $armedPath, $releasePath, $encodedCommand)
-
-        Remove-Item -LiteralPath $markerPath -Force -ErrorAction SilentlyContinue
-        Remove-Item -LiteralPath $failurePath -Force -ErrorAction SilentlyContinue
-        Remove-Item -LiteralPath $armedPath -Force -ErrorAction SilentlyContinue
-        Remove-Item -LiteralPath $releasePath -Force -ErrorAction SilentlyContinue
-        $restartProcess = Start-Process `
-            -FilePath "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe" `
-            -ArgumentList '-NoProfile', '-NonInteractive', '-EncodedCommand', $encodedCommand `
-            -WindowStyle Hidden `
-            -PassThru
-
-        $launchDeadline = [DateTime]::UtcNow.AddSeconds(45)
-        while (
-            -not (Test-Path -LiteralPath $armedPath) -and
-            -not (Test-Path -LiteralPath $failurePath)
-        ) {
-            if ($restartProcess.HasExited) {
-                throw "The detached network restart process exited with code $($restartProcess.ExitCode) before acknowledging launch."
-            }
-            if ([DateTime]::UtcNow -ge $launchDeadline) {
-                throw 'Timed out waiting for the detached network restart process to acknowledge launch.'
-            }
-            Start-Sleep -Milliseconds 200
-        }
-
-        if (Test-Path -LiteralPath $failurePath) {
-            $launchError = Get-Content -LiteralPath $failurePath -Raw
-            throw "The detached network restart process failed during launch: $launchError"
-        }
-
-        [pscustomobject]@{
-            ProcessId = $restartProcess.Id
-            Armed = $true
-        }
-    } -ArgumentList $completionMarker, $errorMarker, $armedMarker, $releaseMarker, $encodedRestartScript
-
-    if (-not $launchStatus.Armed) {
-        throw "The detached network restart process on '$VMName' did not acknowledge launch."
-    }
-
-    $releaseSource = [IO.Path]::GetTempFileName()
-    try {
-        Wait-Until `
-            -Description "release marker delivery to '$VMName'" `
-            -TimeoutSeconds 45 `
-            -PollIntervalSeconds 3 `
-            -Condition {
-                Copy-VMFile `
-                    -VMName $VMName `
-                    -SourcePath $releaseSource `
-                    -DestinationPath $releaseMarker `
-                    -FileSource Host `
-                    -CreateFullPath `
-                    -Force `
-                    -ErrorAction Stop
-                return $true
-            }
-    }
-    finally {
-        Remove-Item -LiteralPath $releaseSource -Force -ErrorAction SilentlyContinue
-    }
-
-    Wait-VMCommand `
-        -VMName $VMName `
-        -Credential $Credential `
-        -ScriptBlock {
-            param($markerPath, $failurePath)
-            (Test-Path -LiteralPath $markerPath) -or (Test-Path -LiteralPath $failurePath)
-        } `
-        -ArgumentList $completionMarker, $errorMarker `
-        -Description 'network adapter restart completion' `
-        -TimeoutSeconds 180
-
-    $restartStatus = Invoke-Command -VMName $VMName -Credential $Credential -ErrorAction Stop -ScriptBlock {
-        param($markerPath, $failurePath, $armedPath, $releasePath)
-
-        $errorMessage = if (Test-Path -LiteralPath $failurePath) {
-            Get-Content -LiteralPath $failurePath -Raw
-        }
-        else {
-            $null
-        }
-        $status = [pscustomobject]@{
-            Succeeded = Test-Path -LiteralPath $markerPath
-            Error = $errorMessage
-        }
-        if (Test-Path -LiteralPath $failurePath) {
-            Remove-Item -LiteralPath $failurePath -Force
-        }
-        Remove-Item -LiteralPath $markerPath -Force -ErrorAction SilentlyContinue
-        Remove-Item -LiteralPath $armedPath -Force -ErrorAction SilentlyContinue
-        Remove-Item -LiteralPath $releasePath -Force -ErrorAction SilentlyContinue
-        return $status
-    } -ArgumentList $completionMarker, $errorMarker, $armedMarker, $releaseMarker
-
-    if (-not $restartStatus.Succeeded) {
-        $restartError = if ($restartStatus.Error) {
-            $restartStatus.Error
-        }
-        else {
-            'The detached restart process reported failure without an error message.'
-        }
-        throw "Network adapter restart failed on '$VMName': $restartError"
-    }
-}
-
 function Restart-VMAndWait {
     param(
         [Parameter(Mandatory)]
@@ -318,19 +206,20 @@ function Restart-VMAndWait {
         [pscredential]$Credential
     )
 
-    $previousBootTime = Invoke-Command -VMName $VMName -Credential $Credential -ErrorAction Stop -ScriptBlock {
-        (Get-CimInstance -ClassName Win32_OperatingSystem).LastBootUpTime
-    }
+    $previousUptime = (Get-VM -Name $VMName -ErrorAction Stop).Uptime
     Restart-VM -Name $VMName -Force -ErrorAction Stop
+    Wait-Until `
+        -Description "a completed host-controlled restart of '$VMName'" `
+        -TimeoutSeconds 180 `
+        -PollIntervalSeconds 1 `
+        -Condition {
+            $vm = Get-VM -Name $VMName -ErrorAction Stop
+            $vm.State -eq 'Running' -and $vm.Uptime -lt $previousUptime
+        }
     Wait-VMCommand `
         -VMName $VMName `
         -Credential $Credential `
-        -ScriptBlock {
-            param($bootTime)
-            (Get-CimInstance -ClassName Win32_OperatingSystem).LastBootUpTime -gt [datetime]$bootTime
-        } `
-        -ArgumentList $previousBootTime `
-        -Description 'a new Windows boot and PowerShell Direct readiness after restart'
+        -Description 'PowerShell Direct readiness after host-controlled restart'
 }
 
 function Restart-LinuxVMAndWaitForSsh {
@@ -524,22 +413,49 @@ if ($Env:flavor -ne 'DevOps') {
     (Get-Content -Path $sqlDscConfigurationFile) -replace 'namingPrefixStage', $namingPrefix | Set-Content -Path $sqlDscConfigurationFile
     winget configure --file C:\MHBox\DSC\virtual_machines_sql.dsc.yml --accept-configuration-agreements --disable-interactivity
 
-    # Restarting Windows VM Network Adapters
-    Write-Host 'Restarting Network Adapters'
-    Restart-VMNetworkAdapters -VMName $SQLvmName -Credential $winCreds
+    # Restart the newly created VM from the host before guest configuration.
+    Write-Host 'Restarting the nested SQL VM'
+    Restart-VMAndWait -VMName $SQLvmName -Credential $winCreds
 
     # Rename server if hostname is not as MHBox-SQL or doesn't match naming prefix
-    $hostname = Invoke-Command -VMName $SQLvmName -ScriptBlock { hostname } -Credential $winCreds
+    $hostname = Invoke-VMCommandWithRetry `
+        -VMName $SQLvmName `
+        -Credential $winCreds `
+        -ScriptBlock { hostname } `
+        -Description 'hostname query'
 
     if ($hostname -ne $SQLvmName) {
 
         Write-Header 'Renaming the nested SQL VM'
-        Invoke-Command -VMName $SQLvmName -ScriptBlock { Rename-Computer -NewName $using:SQLvmName } -Credential $winCreds
+        Invoke-VMCommandWithRetry `
+            -VMName $SQLvmName `
+            -Credential $winCreds `
+            -ScriptBlock {
+                param($newName)
+                if ($env:COMPUTERNAME -cne $newName) {
+                    Rename-Computer -NewName $newName
+                }
+            } `
+            -ArgumentList $SQLvmName `
+            -Description 'computer rename'
         Restart-VMAndWait -VMName $SQLvmName -Credential $winCreds
     }
 
     # Enable Windows Firewall rule for SQL Server
-    Invoke-Command -VMName $SQLvmName -ScriptBlock { New-NetFirewallRule -DisplayName 'Allow SQL Server TCP 1433' -Direction Inbound -Protocol TCP -LocalPort 1433 -Action Allow } -Credential $winCreds
+    Invoke-VMCommandWithRetry `
+        -VMName $SQLvmName `
+        -Credential $winCreds `
+        -ScriptBlock {
+            if (-not (Get-NetFirewallRule -DisplayName 'Allow SQL Server TCP 1433' -ErrorAction SilentlyContinue)) {
+                New-NetFirewallRule `
+                    -DisplayName 'Allow SQL Server TCP 1433' `
+                    -Direction Inbound `
+                    -Protocol TCP `
+                    -LocalPort 1433 `
+                    -Action Allow | Out-Null
+            }
+        } `
+        -Description 'SQL Server firewall configuration'
 
     # Onboard nested Windows and Linux VMs to Azure Arc
     if ($Env:flavor -eq 'ITPro') {
@@ -635,11 +551,6 @@ if ($Env:flavor -ne 'DevOps') {
         Write-Header 'Creating VM Credentials'
         # Hard-coded username for the nested Linux VM
         $nestedLinuxUsername = 'jumpstart'
-
-        # Restarting Windows VM Network Adapters
-        Write-Header 'Restarting Network Adapters'
-        Restart-VMNetworkAdapters -VMName $Win2k22vmName -Credential $winCreds
-        Restart-VMNetworkAdapters -VMName $AzMigSrvvmName -Credential $winCreds
 
         if ($namingPrefix -ne 'ArcBox') {
 

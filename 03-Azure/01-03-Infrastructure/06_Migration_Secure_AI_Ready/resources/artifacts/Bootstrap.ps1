@@ -57,28 +57,14 @@ $Env:MHBoxDir = 'C:\MHBox'
 $Env:MHBoxDscDir = "$Env:MHBoxDir\DSC"
 $Env:MHBoxLogsDir = "$Env:MHBoxDir\Logs"
 $Env:MHBoxVMDir = 'F:\Virtual Machines'
-$Env:MHBoxKVDir = "$Env:MHBoxDir\KeyVault"
-$Env:MHBoxGitOpsDir = "$Env:MHBoxDir\GitOps"
-$Env:MHBoxIconDir = "$Env:MHBoxDir\Icons"
-$Env:agentScript = "$Env:MHBoxDir\agentScript"
-$Env:MHBoxTestsDir = "$Env:MHBoxDir\Tests"
-$Env:ToolsDir = 'C:\Tools'
 $Env:tempDir = 'C:\Temp'
-$Env:MHBoxDataOpsDir = "$Env:MHBoxDir\DataOps"
 $Env:MHBoxDemoPageDir = "$Env:MHBoxDir\DemoPage"
 
 New-Item -Path $Env:MHBoxDir -ItemType Directory -Force | Out-Null
 New-Item -Path $Env:MHBoxDscDir -ItemType Directory -Force | Out-Null
 New-Item -Path $Env:MHBoxLogsDir -ItemType Directory -Force | Out-Null
 New-Item -Path $Env:MHBoxVMDir -ItemType Directory -Force | Out-Null
-New-Item -Path $Env:MHBoxKVDir -ItemType Directory -Force | Out-Null
-New-Item -Path $Env:MHBoxGitOpsDir -ItemType Directory -Force | Out-Null
-New-Item -Path $Env:MHBoxIconDir -ItemType Directory -Force | Out-Null
-New-Item -Path $Env:ToolsDir -ItemType Directory -Force | Out-Null
 New-Item -Path $Env:tempDir -ItemType Directory -Force | Out-Null
-New-Item -Path $Env:agentScript -ItemType Directory -Force | Out-Null
-New-Item -Path $Env:MHBoxDataOpsDir -ItemType Directory -Force | Out-Null
-New-Item -Path $Env:MHBoxTestsDir -ItemType Directory -Force | Out-Null
 New-Item -Path $Env:MHBoxDemoPageDir -ItemType Directory -Force | Out-Null
 
 Start-Transcript -Path "$Env:MHBoxLogsDir\Bootstrap.log"

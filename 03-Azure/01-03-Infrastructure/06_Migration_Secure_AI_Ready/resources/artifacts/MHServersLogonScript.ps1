@@ -290,7 +290,7 @@ if (Test-Path $registryPath) {
 ################################################
 # Setup Hyper-V server before deploying VMs for each flavor
 ################################################
-if ($Env:flavor -ne 'DevOps') {
+if ($Env:flavor -eq 'ITPro') {
     # Install and configure DHCP service (used by Hyper-V nested VMs)
     Write-Host 'Configuring DHCP Service'
     $dnsClient = Get-DnsClient | Where-Object { $_.InterfaceAlias -eq 'Ethernet' }
@@ -470,9 +470,6 @@ if ($Env:flavor -ne 'DevOps') {
         $AzMigSrvvmName = "$namingPrefix-AzMigSrv"
         $AzMigSrvvmvhdPath = "${Env:MHBoxVMDir}\$namingPrefix-AzMigSrv.vhdx"
 
-        #$AzRepSrvvmName = "$namingPrefix-AzRepSrv"
-        #$AzRepSrvvmvhdPath = "${Env:MHBoxVMDir}\$namingPrefix-AzRepSrv.vhdx"
-
         $files = 'ArcBox-Win2K22.vhdx;ArcBox-Ubuntu-01.vhdx;'        
 
         $DeploymentProgressString = 'Downloading and configuring nested VMs'
@@ -524,7 +521,6 @@ if ($Env:flavor -ne 'DevOps') {
             Write-Output 'Local Copy of Win2K22 Disk for Azure Migrate Appliance. This can take some time, hold tight...'
 
             Copy-Item -Path $Win2k22vmvhdPath -Destination $AzMigSrvvmvhdPath -Force
-            #Copy-Item -Path $Win2k22vmvhdPath -Destination $AzRepSrvvmvhdPath -Force
             }         
 
         # Update disk IOPS and throughput after downloading nested VMs (note: a disk's performance tier can be downgraded only once every 12 hours)
@@ -571,15 +567,6 @@ if ($Env:flavor -ne 'DevOps') {
                 }
 
             } -Credential $winCreds 
-<#
-            Invoke-Command -VMName $AzRepSrvvmName -ScriptBlock {
-
-                if ($env:computername -cne $using:AzRepSrvvmName) {
-                    Rename-Computer -NewName $using:AzRepSrvvmName -Restart
-                }
-
-            } -Credential $winCreds             
-#>
             Restart-VMAndWait -VMName $Win2k22vmName -Credential $winCreds
             Restart-VMAndWait -VMName $AzMigSrvvmName -Credential $winCreds
 

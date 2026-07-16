@@ -1,0 +1,69 @@
+# .gitignore for the Agentic SDLC MicroHack
+#
+# Scoped to 03-Azure/01-04-AI/01_Agentic_SDLC/. Keeps build artifacts and local
+# runtime files out of git when participants build/run the bundled Octocat Supply
+# app (src/), the infra scaffold (infra/), or the helper scripts (scripts/).
+# Mirrors the companion app repo's ignore rules for the folders vendored here.
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+.idea/
+.vs/
+
+# Playwright local runtime / browser cache (Makefile test targets)
+.playwright-mcp/
+src/.cache/ms-playwright/
+
+# TypeScript / Node artifacts
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# .NET build artifacts
+**/[Bb]in/
+**/[Oo]bj/
+*.user
+*.rsuser
+*.suo
+*.userprefs
+*.nupkg
+*.snupkg
+TestResults/
+
+# Python artifacts
+**/__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+.venv/
+src/api-py/uploads/
+
+# Java artifacts
+**/target/
+*.class
+*.jar
+*.war
+*.ear
+
+# Local database files (SQLite runtime)
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# General logs
+*.log

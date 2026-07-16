@@ -74,7 +74,7 @@ Next, verify that the alert was forwarded to Azure. Open the portal, select *Def
 
 ## **Task 4: Explore *Defender for Cloud* proactive security advice**
 
-The challenges in this MicroHack were designed to be simple, with virtual machines deployed in a single subscription. For simplicity, the lab omits the secure, scalable landing zone recommended by the *Cloud Adoption Framework* ([What is an Azure landing zone? - Cloud Adoption Framework | Microsoft Learn](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/landing-zone/)).
+The challenges in this Hack were designed to be simple, with virtual machines deployed in a single subscription. For simplicity, the lab omits the secure, scalable landing zone recommended by the *Cloud Adoption Framework* ([What is an Azure landing zone? - Cloud Adoption Framework | Microsoft Learn](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/landing-zone/)).
 
 As a result, *Defender for Cloud* makes several recommendations for proactively improving the security of the environment.
 To view general security recommendations for the managed virtual machines, please open the portal and select Defender for Cloud. Under Security Posture, you can view the recommendations in detail.
@@ -91,7 +91,7 @@ Go back to *Defender for Cloud* and click *Attack path analysis*. This view prov
 
 ![image](./img/secpost03.png)
 
-In this MicroHack, we deployed virtual machines that use public IP addresses and are directly exposed to the internet. This approach is straightforward but isn't a best practice. Click one of the *Attack paths* to learn more about the attack vector.
+In this Hack, we deployed virtual machines that use public IP addresses and are directly exposed to the internet. This approach is straightforward but isn't a best practice. Click one of the *Attack paths* to learn more about the attack vector.
 
 ![image](./img/secpost04.png)
 

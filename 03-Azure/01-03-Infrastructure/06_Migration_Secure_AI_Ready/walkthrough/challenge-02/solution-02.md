@@ -32,7 +32,7 @@ Your previously created Azure Migrate project should be listed. Click on it to o
 
 ### **Task 2: Install the Azure Migrate appliance for Hyper-V discovery**
 
-Hyper-V discovery uses an Azure Migrate appliance that connects to the Hyper-V host and continuously collects VM configuration, performance metadata, and workload inventory. For this MicroHack, install and register the appliance by running the PowerShell installation script on the existing **MHBOX-AzMigSrv** server, and then connect it to **MHBox-HV**.
+Hyper-V discovery uses an Azure Migrate appliance that connects to the Hyper-V host and continuously collects VM configuration, performance metadata, and workload inventory. For this Hack, install and register the appliance by running the PowerShell installation script on the existing **MHBOX-AzMigSrv** server, and then connect it to **MHBox-HV**.
 
 > [!IMPORTANT]
 > Check the current [Hyper-V discovery prerequisites](https://learn.microsoft.com/en-us/azure/migrate/tutorial-discover-hyper-v?view=migrate#prerequisites) for the Azure Migrate appliance and Hyper-V host.

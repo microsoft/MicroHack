@@ -43,7 +43,7 @@ The service must be `active` and HTTP must return `200`.
 1. In the portal, select **Copilot**. If an unauthorized message appears, ask a tenant administrator to follow [Manage access to Azure Copilot](https://learn.microsoft.com/en-us/azure/copilot/manage-access). In a restricted tenant, the user or a group containing the user needs the **Copilot for Azure User** role.
 2. Confirm the client network allows WebSocket connections to `https://directline.botframework.com`.
 3. Open the [Observability Agent overview](https://learn.microsoft.com/en-us/azure/azure-monitor/aiops/observability-agent-overview#regions) and confirm that the intended Log Analytics workspace region is supported.
-4. Confirm your signed-in account can read the VM and its monitoring data and create the required monitoring resources. The MicroHack's Contributor or Owner prerequisite is sufficient. For least privilege, review **Monitoring Reader**, **Log Analytics Reader**, and the specific write roles required for DCRs and alerts.
+4. Confirm your signed-in account can read the VM and its monitoring data and create the required monitoring resources. The Contributor or Owner prerequisite for this Hack is sufficient. For least privilege, review **Monitoring Reader**, **Log Analytics Reader**, and the specific write roles required for DCRs and alerts.
 
 > [!IMPORTANT]
 > If Azure Copilot, the **Observability Agent** button, the selected region, or tenant access is unavailable, continue with Tasks 2 through 4 and use the fallback in Task 5. Do not provision an Azure OpenAI resource or model. Do not create an Observability Agent resource for the required path.
@@ -442,7 +442,7 @@ For either track, test the existing external endpoint. If automatic alert resolu
 
 ### Cleanup
 
-Keep VM monitoring for Challenge 8 unless your instructor asks you to remove it. After the MicroHack, you may independently remove the alert rule, action group, selected event DCR association/DCR, and Log Analytics workspace if they were created only for this lab. Do not delete shared resources.
+Keep VM monitoring for Challenge 8 unless your instructor asks you to remove it. After the Hack, you may independently remove the alert rule, action group, selected event DCR association/DCR, and Log Analytics workspace if they were created only for this lab. Do not delete shared resources.
 
 ### Optional stretch - autonomous operations (preview)
 

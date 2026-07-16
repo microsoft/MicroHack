@@ -1,18 +1,20 @@
 ![image](img/1920x300_EventBanner_MicroHack_Migrate_wText.jpg)
 
-# MicroHack – Migrate and Secure to be ready for AI Ops
+# Migrate and Secure to be ready for AI Ops
 
 *From secure migration to agent-assisted cloud operations.*
 
-- [**MicroHack introduction**](#microhack-introduction)
-- [**MicroHack context**](#microhack-context)
+- [**Hack introduction**](#hack-introduction)
+- [**Hack context**](#hack-context)
 - [**Objectives**](#objectives)
-- [**MicroHack challenges**](#microhack-challenges)
+- [**Hack challenges**](#hack-challenges)
 - [**Contributors**](#contributors)
 
-# MicroHack introduction
+<a id="hack-introduction"></a>
 
-This MicroHack follows an end-to-end datacenter modernization journey. It combines Azure Migrate, security controls, Azure Monitor, intelligent operations, and a deliberate PaaS replatform. The scenario focuses on practical decisions, repeatable validation, cost awareness, and supported product capabilities.
+# Hack introduction
+
+This Hack follows an end-to-end datacenter modernization journey. It combines Azure Migrate, security controls, Azure Monitor, intelligent operations, and a deliberate PaaS replatform. The scenario focuses on practical decisions, repeatable validation, cost awareness, and supported product capabilities.
 
 This lab is not a complete migration-factory or application-modernization program. Use the following articles as foundational reading:
 
@@ -30,9 +32,11 @@ Optional follow-up reading:
 * [Azure Copilot Observability Agent](https://learn.microsoft.com/en-us/azure/azure-monitor/aiops/observability-agent-overview)
 * [Deploy files to Azure App Service](https://learn.microsoft.com/en-us/azure/app-service/deploy-zip)
 
-# MicroHack context
+<a id="hack-context"></a>
 
-The MicroHack follows a coherent modernization storyline:
+# Hack context
+
+The Hack follows a coherent modernization storyline:
 
 1. **Discover** the Hyper-V-hosted servers and their inventory.
 2. **Assess** technical readiness and cloud sizing.
@@ -51,7 +55,7 @@ The Hyper-V discovery and migration design is described here:
 
 # Objectives
 
-After completing this MicroHack, you will be able to:
+After completing this Hack, you will be able to:
 
 * Build an assessment and business case for a datacenter transformation.
 * Plan and execute a right-sized Hyper-V VM migration to Azure.
@@ -62,7 +66,9 @@ After completing this MicroHack, you will be able to:
 * Inspect a selected IIS or Apache workload and manually replatform its static content to Windows App Service with ZIP deployment.
 * Explain why Azure Storage static website hosting or Azure Static Web Apps can be a better production target for a static workload.
 
-# MicroHack challenges
+<a id="hack-challenges"></a>
+
+# Hack challenges
 
 ## General prerequisites
 
@@ -73,7 +79,7 @@ Complete these prerequisites before the session:
 * A Microsoft Entra user with Contributor or Owner permissions on the Azure subscription.
 * A client network and browser that support the Azure portal, Azure Bastion, and Azure Cloud Shell.
 
-Challenge 7 includes a preflight for Azure Copilot tenant access, RBAC, network access, and supported regions. Azure Copilot is not mandatory because the challenge includes a full KQL/VM insights fallback. No Azure OpenAI resource, model deployment, or model quota is required anywhere in this MicroHack.
+Challenge 7 includes a preflight for Azure Copilot tenant access, RBAC, network access, and supported regions. Azure Copilot is not mandatory because the challenge includes a full KQL/VM insights fallback. No Azure OpenAI resource, model deployment, or model quota is required anywhere in this Hack.
 
 ## Challenges
 

@@ -1,35 +1,33 @@
-# Challenge 2 - Discover physical servers for the migration
+# Challenge 2 - Discover Hyper-V virtual machines for migration
 
-[Previous Challenge Solution](challenge-01.md) - **[Home](../Readme.md)** - [Next Challenge Solution](challenge-03.md)
+[Previous Challenge](challenge-01.md) - **[Home](../Readme.md)** - [Next Challenge](challenge-03.md)
 
 ## Goal 
 
 The goal of this exercise is to...
 
-* Setup Azure Migrate Project in Azure
-* Installing / Deploying the necessary setup for discovery 
-* Create a discovery 
+* Set up an Azure Migrate project for Hyper-V discovery.
+* Deploy and register the Azure Migrate appliance.
+* Continuously discover the Hyper-V host, its VMs, and their inventory.
 
 ## Actions
 
-* Create a Azure Migrate Project
+* Create an Azure Migrate project.
 > [!IMPORTANT]
-> To be able to create a Business Case, make sure to select Europe as the Geography for the Azure Migrate Project
-* Deploy a Azure Migrate Appliance
-* Create a continuous discovery of your source environment
+> To create a business case, make sure to select Europe as the *Geography* for the Azure Migrate project.
+* Install and register the Azure Migrate appliance on **MHBOX-AzMigSrv**.
+* Connect the appliance to the Hyper-V host.
+* Start continuous discovery and review the VM inventory.
 
 ## Success criteria
 
-* You have created a Azure Migrate Project
-* You have successfully deployed the Azure Migrate Appliance
-* You successfully registered the Azure Migrate Appliance with the Azure Migrate Project
-* You have successfully setup a continuous discovery for the Hyper-V host.
-* You have successfully verified the discovered servers in the portal
+* You have created an Azure Migrate project.
+* You have successfully deployed the Azure Migrate appliance.
+* You successfully registered the Azure Migrate appliance with the Azure Migrate project.
+* You have successfully configured continuous discovery for the Hyper-V host.
+* You have successfully verified the discovered Windows and Ubuntu VMs and their inventory in the portal.
 
 ## Learning resources
-* [Create and managed Azure Migrate projects](https://learn.microsoft.com/en-us/azure/migrate/create-manage-projects)
-* [Setup and appliance on VMWare](https://learn.microsoft.com/en-us/azure/migrate/how-to-set-up-appliance-vmware)
-* [Setup and appliance on Hyper-V](https://learn.microsoft.com/en-us/azure/migrate/how-to-set-up-appliance-hyper-v)
-* [Steup an appliance for physical servers](https://learn.microsoft.com/en-us/azure/migrate/how-to-set-up-appliance-physical)
-* [Before you start / general prerequisites](https://learn.microsoft.com/en-us/azure/migrate/how-to-discover-applications#before-you-start) 
-
+* [Create and manage Azure Migrate projects](https://learn.microsoft.com/en-us/azure/migrate/create-manage-projects)
+* [Discover Hyper-V VMs with Azure Migrate](https://learn.microsoft.com/en-us/azure/migrate/tutorial-discover-hyper-v?view=migrate)
+* [Hyper-V discovery support matrix](https://learn.microsoft.com/en-us/azure/migrate/migrate-support-matrix-hyper-v?view=migrate)

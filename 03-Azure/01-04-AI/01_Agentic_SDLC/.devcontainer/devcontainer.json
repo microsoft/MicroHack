@@ -1,0 +1,93 @@
+{
+  "dockerComposeFile": [
+    "docker-compose.yml"
+  ],
+  "service": "dev",
+  "workspaceFolder": "/workspaces/octocat-supply-hack",
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": false,
+      "upgradePackages": false,
+      "username": "vscode"
+    },
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "24",
+      "nodeGypDependencies": true
+    },
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "3.13",
+      "installTools": true
+    },
+    "ghcr.io/devcontainers/features/dotnet:2": {
+      "version": "10.0"
+    },
+    "ghcr.io/devcontainers/features/java:1": {
+      "version": "17",
+      "installMaven": true,
+      "installGradle": false
+    },
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/azure-cli:1": {}
+  },
+  "forwardPorts": [
+    3000,
+    5137,
+    5500
+  ],
+  "portsAttributes": {
+    "3000": {
+      "label": "API",
+      "onAutoForward": "notify",
+      "visibility": "public"
+    },
+    "5137": {
+      "label": "Frontend",
+      "onAutoForward": "notify"
+    },
+    "5500": {
+      "label": "HTML Preview",
+      "onAutoForward": "openPreview"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-azuretools.vscode-docker",
+        "GitHub.copilot",
+        "ms-vscode.extension-test-runner",
+        "vitest.explorer",
+        "ms-vscode.vscode-speech",
+        "ms-vscode.live-server",
+        "ritwickdey.liveserver",
+        "Blodwynn.featurehighlight",
+        "bierner.markdown-mermaid",
+        "ms-azuretools.vscode-bicep",
+        "GitHub.vscode-pull-request-github"
+      ],
+      "settings": {
+        "editor.inlineSuggest.experimentalInlineEditsEnabled": true,
+        "github.copilot.chat.advanced.inlineEdits.enabled": true,
+        "github.copilot.chat.agent.enabled": true,
+        "github.copilot.chat.codesearch.enabled": true,
+        "github.copilot.chat.generateTests.codeLens": true,
+        "chat.agent.enabled": true,
+        "chat.promptFiles": true,
+        "git.enableSmartCommit": true,
+        "github.copilot.chat.search.semanticTextResults": true,
+        "github.copilot.chat.edits.temporalContext.enabled": true,
+        "github.copilot.chat.completionContext.typescript.mode": "on",
+        "github.copilot.chat.languageContext.typescript.enabled": true,
+        "github.copilot.nextEditSuggestions.enabled": true,
+        "github.copilot.chat.editor.temporalContext.enabled": true
+      }
+    }
+  },
+  "postCreateCommand": "cd src && make install && make build",
+  // set the API port to public visibility (best effort in Codespaces)
+  "postAttachCommand": "bash -lc 'if command -v gh >/dev/null 2>&1 && [ -n \"$CODESPACE_NAME\" ]; then gh cs ports visibility 3000:public -c \"$CODESPACE_NAME\" || true; gh cs ports visibility 5500:public -c \"$CODESPACE_NAME\" || true; fi'",
+  "shutdownAction": "stopCompose",
+  "hostRequirements": {
+    "cpus": 4,
+    "memory": "8gb"
+  }
+}

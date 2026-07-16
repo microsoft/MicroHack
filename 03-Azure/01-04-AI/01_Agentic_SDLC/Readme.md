@@ -43,7 +43,7 @@ This lab is **not** a full explanation of GitHub Copilot or Azure as technologie
 - [Azure Container Apps](https://learn.microsoft.com/en-us/azure/container-apps/)
 - [Azure SRE Agent](https://learn.microsoft.com/en-us/azure/sre-agent/)
 
-> **What's included & the companion repo.** This MicroHack folder bundles the **Octocat Supply** application source ([`src/`](src/README.md)), the Azure infrastructure scaffold ([`infra/`](infra/README.md)), and helper [`scripts/`](scripts/README.md) — so the code and deployment assets ship with the MicroHack. The remaining scaffolding — the dev containers (`.devcontainer/`), repo custom instructions and custom agents/workflows (`.github/`), the Challenge 2 backlog and mock **WorkIQ** organizational knowledge (`hackathon/`), and the facilitator docs (`docs/`) — lives in the companion repo **[Frank802/agentic-sdlc-hack](https://github.com/Frank802/agentic-sdlc-hack)**. Facilitators create a copy/fork of that companion repo per team before the event; participants work in their team's copy, into which these bundled `src/` / `infra/` / `scripts/` folders drop in directly.
+> **What's included.** This MicroHack folder is **self-contained** — everything you need ships with it: the **Octocat Supply** application source ([`src/`](src/README.md)), the Azure infrastructure scaffold ([`infra/`](infra/README.md)), helper [`scripts/`](scripts/README.md), the dev containers ([`.devcontainer/`](.devcontainer/)), the editor config ([`.vscode/`](.vscode/)), and the repo custom instructions, custom agents, and workflows ([`.github/`](.github/)). The Challenge 2 inputs — the product backlog and the mock **WorkIQ** organizational knowledge (Teams thread, support-ticket digest, stakeholder email) — live under [`assets/`](assets/). Facilitators create a copy/fork of this MicroHack per team before the event; participants work in their team's copy.
 
 ## MicroHack context
 
@@ -70,7 +70,7 @@ This MicroHack has a few but important prerequisites. Completing them before the
 
 In summary:
 
-- A **GitHub account** with access to your team's copy of the companion repo and an **active GitHub Copilot seat** (Copilot Business/Enterprise, with Chat, agents, CLI, and MCP policies enabled).
+- A **GitHub account** with access to your team's copy of this MicroHack repo and an **active GitHub Copilot seat** (Copilot Business/Enterprise, with Chat, agents, CLI, and MCP policies enabled).
 - Either **GitHub Codespaces** (recommended — nothing to install) **or** local **VS Code** with the **Dev Container** plus the **GitHub Copilot / Copilot Chat** extensions. The container preinstalls **Node.js 24, Python 3.13, .NET 10, Java 17**.
 - For **Challenges 4 & 5**, **Azure access**:
   - An **Azure subscription** with budget.
@@ -79,7 +79,7 @@ In summary:
   - A GitHub ↔ Azure **OIDC federated credential** for pipeline authentication.
   - **Azure SRE Agent** available in the team's region/subscription.
 
-> Facilitators: work through the pre-event admin checklist (Copilot enablement, repo access, backlog issue seeding, Azure prerequisites) in the companion repo's Proctor Guide before running the event.
+> Facilitators: work through the pre-event admin checklist (Copilot enablement, repo access, backlog issue seeding, Azure prerequisites) before running the event.
 
 ### Challenges
 

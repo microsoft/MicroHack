@@ -1,7 +1,7 @@
 # `infra/` — Challenge 4 starter scaffold (optional)
 
 > **Optional starting point, not a required or "correct" answer.** This is a
-> deliberately incomplete **skeleton** for [Challenge 4 — Deploy into Azure](../hackathon/challenge-4-azure-deploy.md).
+> deliberately incomplete **skeleton** for [Challenge 4 — Deploy into Azure](../challenges/challenge-04.md).
 > It removes blank-page boilerplate (structure, parameters, module wiring, OIDC
 > plumbing) so your 60 minutes go into the interesting agentic work — authoring
 > and refining the deploy with Copilot, deploying, and debugging — **not**

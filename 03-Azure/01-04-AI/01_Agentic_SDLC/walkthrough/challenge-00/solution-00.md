@@ -14,7 +14,7 @@ The aim here is a smooth, fast start — a good setup means the rest of the day 
 
 ### Task 1: Get the code and open an environment
 
-- Open your team's copy of the companion repo in **GitHub Codespaces** (fastest, nothing to install), a local **VS Code Dev Container**, or locally.
+- Open your team's copy of this MicroHack in **GitHub Codespaces** (fastest, nothing to install), a local **VS Code Dev Container**, or locally.
 - 💡 If local setup takes more than ~15 minutes, **switch to Codespaces** rather than fighting a local toolchain.
 - Confirm you're on the intended working branch.
 
@@ -26,7 +26,7 @@ The aim here is a smooth, fast start — a good setup means the rest of the day 
 ### Task 3: Explore the repo
 
 - 🔑 The quickest way to satisfy this is to **ask Copilot Chat to summarise the repository structure and the main entry points**.
-- Identify: `src/` (the app — frontend + four API variants + shared SQLite schema), `docs/` (guidance), `hackathon/` (the challenges). Read `src/README.md`.
+- Identify: `src/` (the app — frontend + four API variants + shared SQLite schema, plus `src/docs/` architecture guidance), `infra/` + `scripts/` (Azure deployment), `assets/` (Challenge 2 backlog & WorkIQ inputs), `.github/` (Copilot custom instructions & agents). Read `src/README.md`.
 
 ### Task 4: Run the app locally
 

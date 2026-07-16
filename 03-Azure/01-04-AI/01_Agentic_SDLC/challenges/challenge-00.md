@@ -10,10 +10,10 @@ The Octocat team is behind schedule and adopting Agentic Development practices. 
 
 ## Actions
 
-* **Get the code** — Open your team's copy of the companion repo in **GitHub Codespaces** (recommended), a local **VS Code Dev Container** (`.devcontainer/`), or locally. Confirm you're on the intended working branch.
+* **Get the code** — Open your team's copy of this MicroHack in **GitHub Codespaces** (recommended), a local **VS Code Dev Container** (`.devcontainer/`), or locally. Confirm you're on the intended working branch.
 * **Verify runtimes** — Confirm the runtimes for your chosen API track are available (TypeScript, Python, .NET, or Java) plus Node.js for the frontend. In Codespaces / the Dev Container these are preinstalled.
 * **Enable GitHub Copilot** — Sign in and confirm your Copilot entitlement is active in your IDE; install the GitHub Copilot / Copilot Chat extensions.
-* **Explore the repo** — Review the structure: `src/` (the app), `docs/` (guidance), `hackathon/` (the challenges). Identify where the frontend, APIs, and database live. Read `src/README.md` for the code structure and build commands.
+* **Explore the repo** — Review the structure: `src/` (the app, with `src/docs/` architecture guidance), `infra/` + `scripts/` (Azure deployment), `assets/` (Challenge 2 backlog & WorkIQ inputs), and `.github/` (Copilot custom instructions & agents). Identify where the frontend, APIs, and database live. Read `src/README.md` for the code structure and build commands.
 * **Run the app locally** — Start the frontend and one API to confirm the application builds and runs before you begin changing it.
 
 ## Success criteria

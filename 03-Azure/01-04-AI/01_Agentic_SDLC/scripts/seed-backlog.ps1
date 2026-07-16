@@ -1,9 +1,9 @@
-﻿<#
+<#
 .SYNOPSIS
     Seed the Challenge 2 backlog into a GitHub repo as Issues.
 
 .DESCRIPTION
-    Creates one GitHub Issue per item in hackathon/backlog.md, so teams can pick from a real,
+    Creates one GitHub Issue per item in assets/backlog.md, so teams can pick from a real,
     prioritised, labelled list instead of inventing a backlog. The same issues are what an MCP
     server can pull as real backlog context in the Challenge 2 optional stretch.
 
@@ -73,7 +73,7 @@ $Labels = @(
 )
 
 # ---------------------------------------------------------------------------
-# Backlog items (kept in sync with hackathon/backlog.md and seed-backlog.sh)
+# Backlog items (kept in sync with assets/backlog.md and seed-backlog.sh)
 # ---------------------------------------------------------------------------
 $Items = @(
     @{
@@ -221,7 +221,7 @@ $($item.Body)
 
 $acBlock
 
-_Seeded from hackathon/backlog.md for Challenge 2._
+_Seeded from assets/backlog.md for Challenge 2._
 "@
 
     if ($ExistingTitles -contains $item.Title) {

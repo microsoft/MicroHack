@@ -2,7 +2,7 @@
 #
 # seed-backlog.sh — Seed the Challenge 2 backlog into a GitHub repo as Issues.
 #
-# Creates one GitHub Issue per item in hackathon/backlog.md, so teams can pick
+# Creates one GitHub Issue per item in assets/backlog.md, so teams can pick
 # from a real, prioritised, labelled list instead of inventing a backlog. The
 # same issues are what an MCP server can pull as real backlog context in the
 # Challenge 2 optional stretch.
@@ -99,7 +99,7 @@ LABELS=(
 # ---------------------------------------------------------------------------
 # Backlog items. Each item is a block of key=value lines separated by a line
 # containing only '---'. Keeps the two scripts (bash/ps1) easy to keep in sync
-# with hackathon/backlog.md.
+# with assets/backlog.md.
 #   title       Issue title
 #   priority    High|Medium|Low  (maps to priority:<lower> label)
 #   size        S|M|L
@@ -244,7 +244,7 @@ flush_item() {
   issue_body+="**Affected layers:** $layers"$'\n\n'
   issue_body+="**Acceptance criteria**"$'\n\n'
   issue_body+="$ac_block"$'\n'
-  issue_body+="_Seeded from hackathon/backlog.md for Challenge 2._"
+  issue_body+="_Seeded from assets/backlog.md for Challenge 2._"
 
   # Duplicate check (open issues with identical title).
   if [[ -n "$EXISTING_TITLES" ]] && grep -Fxq "$title" <<<"$EXISTING_TITLES"; then

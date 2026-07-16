@@ -24,7 +24,7 @@ Agent-assisted review                    ~8 min
 
 ### Task 1: Choose a backlog item
 
-- Pick one from `hackathon/backlog.md` — payment integration for the cart, order history, product search/filtering, or inventory management are good candidates. If seeded as Issues, pick a real labelled issue.
+- Pick one from `assets/backlog.md` — payment integration for the cart, order history, product search/filtering, or inventory management are good candidates. If seeded as Issues, pick a real labelled issue.
 
 ### Task 2: Plan with the agent first
 
@@ -47,7 +47,7 @@ Agent-assisted review                    ~8 min
 
 - **Compare harnesses** — run the planning step in Copilot CLI vs. the Copilot App / IDE chat; write a decision rule for quick fix vs. multi-file change.
 - **Wire in an MCP server** — connect the GitHub MCP server to pull real backlog context (issues, PRs); note what stays local-only vs. what the server can see.
-- **Refine a requirement from WorkIQ signal** — point the agent at `hackathon/workiq/` (Teams thread, support-ticket digest, stakeholder email). Synthesize across the artifacts, **separate a genuinely-new need from noise and from work already on the backlog**, and shape it into an issue-ready requirement: problem statement → acceptance criteria → scoped tasks (optionally a GitHub Issue). There is deliberately **no answer key** — realistic noise is mixed in, and the skill being assessed is the refinement, not guessing a specific feature. A good refinement has a clear problem statement, testable acceptance criteria, timebox-sized scope, and evidence the new need was separated from backlog/noise. The **Requirement Refiner** custom agent (`.github/agents/`) can guide this and will not name a "correct" feature.
+- **Refine a requirement from WorkIQ signal** — point the agent at `assets/workiq/` (Teams thread, support-ticket digest, stakeholder email). Synthesize across the artifacts, **separate a genuinely-new need from noise and from work already on the backlog**, and shape it into an issue-ready requirement: problem statement → acceptance criteria → scoped tasks (optionally a GitHub Issue). There is deliberately **no answer key** — realistic noise is mixed in, and the skill being assessed is the refinement, not guessing a specific feature. A good refinement has a clear problem statement, testable acceptance criteria, timebox-sized scope, and evidence the new need was separated from backlog/noise. The **Requirement Refiner** custom agent (`.github/agents/`) can guide this and will not name a "correct" feature.
 
 ## Common blockers
 

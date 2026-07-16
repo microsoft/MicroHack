@@ -1,0 +1,17 @@
+# Docker Compose File for Application Container with Docker bindings
+version: "3.8"
+
+services:
+  dev:
+    image: mcr.microsoft.com/devcontainers/typescript-node:24-bookworm
+    command: sleep infinity
+
+    ports:
+      - "3000:3000"
+      - "5137:5137"
+
+    volumes:
+      - ..:/workspaces/octocat-supply-hack:cached
+
+    environment:
+      - NODE_ENV=development

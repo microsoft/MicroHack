@@ -3,7 +3,6 @@
 # Scoped to 03-Azure/01-04-AI/01_Agentic_SDLC/. Keeps build artifacts and local
 # runtime files out of git when participants build/run the bundled Octocat Supply
 # app (src/), the infra scaffold (infra/), or the helper scripts (scripts/).
-# Mirrors the companion app repo's ignore rules for the folders vendored here.
 
 # OS / editor cruft
 .DS_Store

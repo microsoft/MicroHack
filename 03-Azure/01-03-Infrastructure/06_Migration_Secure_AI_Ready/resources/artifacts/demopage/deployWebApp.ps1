@@ -1,19 +1,57 @@
-# Setting Variables
-$pathToRepo = "https://raw.githubusercontent.com/microsoft/MicroHack/main/03-Azure/01-03-Infrastructure/06_Migration_Secure_AI_Ready/resources/artifacts/demopage"
-$pathToIndex = "C:\inetpub\wwwroot\index.html"
-$replaceText = "<HOSTNAME>"
-$hostname = $env:computername
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
 
-# Remove Default contents of wwwroot
-Remove-Item -Path "C:\inetpub\wwwroot\*.*"
+$sourceRoot = 'https://raw.githubusercontent.com/microsoft/MicroHack/main/03-Azure/01-03-Infrastructure/06_Migration_Secure_AI_Ready/resources/artifacts/demopage'
+$webRoot = 'C:\inetpub\wwwroot'
+$assets = @('index.html', 'stylesheet.css', 'GitHub_Logo.png', 'MSLogo.png', 'MSicon.png')
+$stagingRoot = Join-Path $env:TEMP "microhack-demopage-$([guid]::NewGuid())"
 
-# Download files from repository
-Invoke-WebRequest -Uri "$pathToRepo/index.html" -OutFile C:\inetpub\wwwroot\index.html
-Invoke-WebRequest -Uri "$pathToRepo/GitHub_Logo.png" -OutFile C:\inetpub\wwwroot\GitHub_Logo.png
-Invoke-WebRequest -Uri "$pathToRepo/MSLogo.png" -OutFile C:\inetpub\wwwroot\MSLogo.png
-Invoke-WebRequest -Uri "$pathToRepo/MSicon.png" -OutFile C:\inetpub\wwwroot\MSicon.png
-Invoke-WebRequest -Uri "$pathToRepo/github-mark.png" -OutFile C:\inetpub\wwwroot\github-mark.png
-Invoke-WebRequest -Uri "$pathToRepo/stylesheet.css" -OutFile C:\inetpub\wwwroot\stylesheet.css
+New-Item -Path $stagingRoot -ItemType Directory -Force | Out-Null
 
-# Replace Hostname placeholder with actual Hostname
-(Get-Content -path $pathToIndex -Raw).replace($replaceText, $hostname) | Set-Content -Path $pathToIndex
+try {
+    foreach ($asset in $assets) {
+        $destination = Join-Path $stagingRoot $asset
+        Invoke-WebRequest -Uri "$sourceRoot/$asset" -OutFile $destination -UseBasicParsing
+        if ((Get-Item -LiteralPath $destination).Length -eq 0) {
+            throw "Downloaded asset is empty: $asset"
+        }
+    }
+
+    $indexPath = Join-Path $stagingRoot 'index.html'
+    $html = Get-Content -LiteralPath $indexPath -Raw
+    $values = [ordered]@{
+        '<HOSTNAME>' = [Environment]::MachineName
+        '<PLATFORM>' = 'Windows Server 2022'
+        '<WEB_SERVER>' = 'IIS'
+    }
+
+    foreach ($token in $values.Keys) {
+        $html = $html.Replace($token, $values[$token])
+    }
+
+    if ($html -match '<(?:HOSTNAME|PLATFORM|WEB_SERVER)>') {
+        throw 'One or more template tokens remain in index.html.'
+    }
+
+    $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+    [System.IO.File]::WriteAllText($indexPath, $html, $utf8NoBom)
+
+    New-Item -Path $webRoot -ItemType Directory -Force | Out-Null
+    Get-ChildItem -LiteralPath $webRoot -Force | Remove-Item -Recurse -Force
+    Copy-Item -Path (Join-Path $stagingRoot '*') -Destination $webRoot -Force
+
+    $deployedAssets = @(Get-ChildItem -LiteralPath $webRoot -File | Select-Object -ExpandProperty Name)
+    if ($deployedAssets.Count -ne $assets.Count -or (Compare-Object $assets $deployedAssets)) {
+        throw 'The IIS web root does not contain exactly the expected static assets.'
+    }
+
+    Set-Service -Name W3SVC -StartupType Automatic
+    Start-Service -Name W3SVC
+    $response = Invoke-WebRequest -Uri 'http://localhost/' -UseBasicParsing -TimeoutSec 15
+    if ($response.StatusCode -ne 200) {
+        throw "Local IIS validation returned HTTP $($response.StatusCode)."
+    }
+}
+finally {
+    Remove-Item -LiteralPath $stagingRoot -Recurse -Force -ErrorAction SilentlyContinue
+}

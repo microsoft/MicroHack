@@ -1,37 +1,124 @@
-<!DOCTYPE html>
-<html lang="en" class="bg">
-
+<!doctype html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    (() => {
+      const param = new URLSearchParams(window.location.search).get("scoutTheme");
+      const theme =
+        param || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <title>Migrate and Secure to be ready for AI Ops</title>
+  <meta name="description" content="A portable workload dashboard for the Secure Migration Hack.">
   <link rel="stylesheet" href="stylesheet.css">
-  <link rel="icon" type="image/x-icon" href="MSicon.png">
-  <title>MicroHack Demo Page</title>
+  <link rel="icon" type="image/png" href="MSicon.png">
 </head>
-
 <body>
-  <div class="topnav">
-    <div class="logo">
-      <a href="#home"><img src="MSLogo.png"></a>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <img class="microsoft-logo" src="MSLogo.png" alt="Microsoft">
+      <a
+        class="repository-link"
+        href="https://github.com/microsoft/MicroHack"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Open the Microsoft MicroHack repository on GitHub in a new tab"
+      >
+        <span>View repository</span>
+        <img class="github-logo" src="GitHub_Logo.png" alt="" aria-hidden="true">
+      </a>
     </div>
-    <div class="menu">
-      <a href="https://github.com/microsoft/MicroHack" target="_blank" rel="noopener noreferrer"><img src="GitHub_Logo.png"></a>
-    </div>
-  </div>
+  </header>
 
+  <main id="main-content">
+    <section class="hero" aria-labelledby="page-title">
+      <div class="status-badge" role="status" aria-label="Workload status: online">
+        <span class="status-dot" aria-hidden="true"></span>
+        Workload online
+      </div>
+      <p class="eyebrow">Secure Migration Hack</p>
+      <h1 id="page-title">Migrate and Secure to be ready for AI Ops</h1>
+      <p class="hero-subtitle">From secure migration to agent-assisted cloud operations.</p>
+    </section>
 
-  <div class="center">
-    <div>
-      <h1 class="heading">MicroHack<br>Demo Page</h1>
-      <h2 class="heading2">Current Hostname: <HOSTNAME></h2>
+    <section class="journey-section" aria-labelledby="journey-title">
+      <div class="section-heading">
+        <p class="eyebrow">End-to-end journey</p>
+        <h2 id="journey-title">Modernize with a clear path forward</h2>
+      </div>
+      <ol class="journey" aria-label="Five-step migration journey">
+        <li class="journey-step">
+          <span class="step-number" aria-hidden="true">01</span>
+          <h3>Discover</h3>
+          <p>Inventory the estate</p>
+        </li>
+        <li class="journey-step">
+          <span class="step-number" aria-hidden="true">02</span>
+          <h3>Assess</h3>
+          <p>Build the business case</p>
+        </li>
+        <li class="journey-step">
+          <span class="step-number" aria-hidden="true">03</span>
+          <h3>Migrate</h3>
+          <p>Move with confidence</p>
+        </li>
+        <li class="journey-step">
+          <span class="step-number" aria-hidden="true">04</span>
+          <h3>Secure</h3>
+          <p>Harden the landing zone</p>
+        </li>
+        <li class="journey-step">
+          <span class="step-number" aria-hidden="true">05</span>
+          <h3>Operate</h3>
+          <p>Assist cloud operations</p>
+        </li>
+      </ol>
+    </section>
 
-    </div>
-  </div>
+    <section class="workload-section" aria-labelledby="workload-title">
+      <div class="workload-copy">
+        <p class="eyebrow">Portable by design</p>
+        <h2 id="workload-title">One workload, two platforms</h2>
+        <p>
+          The same dependency-free static workload runs on Windows Server with IIS and
+          Ubuntu Linux with Apache. Its hosting details change, but the application stays portable.
+        </p>
+      </div>
 
-  <div class="footer">
-    &copy Microsoft 2026
-  </div>
+      <article class="workload-card" aria-label="Current workload details">
+        <div class="card-heading">
+          <div>
+            <p class="eyebrow">Live environment</p>
+            <h2>Workload details</h2>
+          </div>
+          <span class="card-state">Ready</span>
+        </div>
+        <dl class="metadata-list">
+          <div class="metadata-row" data-workload-field="hostname">
+            <dt>Hostname</dt>
+            <dd id="workload-hostname" data-workload-value="hostname"><HOSTNAME></dd>
+          </div>
+          <div class="metadata-row" data-workload-field="platform">
+            <dt>Platform</dt>
+            <dd id="workload-platform" data-workload-value="platform"><PLATFORM></dd>
+          </div>
+          <div class="metadata-row" data-workload-field="web-server">
+            <dt>Web server</dt>
+            <dd id="workload-web-server" data-workload-value="web-server"><WEB_SERVER></dd>
+          </div>
+        </dl>
+      </article>
+    </section>
+  </main>
 
+  <footer class="site-footer">
+    <p>&copy; Microsoft 2026</p>
+    <p>Built for the Microsoft MicroHack learning experience.</p>
+  </footer>
 </body>
-
 </html>

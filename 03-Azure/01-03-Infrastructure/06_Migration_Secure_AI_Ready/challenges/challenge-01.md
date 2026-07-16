@@ -19,6 +19,7 @@
 - You have understood the concept and architecture for the Hack.
 - The Bicep deployment command exits successfully.
 - The *source* and *destination* resource groups are visible in the Azure Portal.
+- The Windows/IIS and Ubuntu/Apache demo dashboards return HTTP success and show the correct hostname, platform, and web server.
 
 ## Learning resources
 

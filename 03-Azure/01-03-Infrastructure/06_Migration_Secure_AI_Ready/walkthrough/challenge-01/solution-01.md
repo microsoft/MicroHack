@@ -105,7 +105,14 @@ Password: JS123!!
 
 ![image](./img/CS12.png)
 
-You can also open Microsoft Edge and navigate to the IP address of the *MHBox-Win2K22* or *MHBox-Ubuntu-01* system to view the deployed Demo Web App.
+Open Microsoft Edge and navigate to the IP address of each web VM. Confirm that the migration journey dashboard returns HTTP success and shows the correct details:
+
+| VM | Platform | Web server |
+| --- | --- | --- |
+| *MHBox-Win2K22* | `Windows Server 2022` | `IIS` |
+| *MHBox-Ubuntu-01* | `Ubuntu Linux` | `Apache` |
+
+The **Hostname** value must match the VM you opened.
 
 ![image](./img/CS13.png)
 

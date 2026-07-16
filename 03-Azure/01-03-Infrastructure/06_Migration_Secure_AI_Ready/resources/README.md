@@ -1,4 +1,4 @@
-# Deploy the Landing Zone for the MicroHack
+# Deploy the Landing Zone for the Hack
 
 Download the \*.bicep files to your local PC and follow [Solution 1](../walkthrough/challenge-01/solution-01.md).
 

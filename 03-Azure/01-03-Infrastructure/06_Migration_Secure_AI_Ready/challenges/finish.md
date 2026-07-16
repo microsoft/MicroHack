@@ -1,10 +1,10 @@
-# MicroHack – Migrate and Secure to be ready for AI Ops
+# Migrate and Secure to be ready for AI Ops
 
 [Previous Challenge](challenge-08.md) - **[Home](../Readme.md)**
 
 ## Congratulations
 
-You finished *MicroHack – Migrate and Secure to be ready for AI Ops*.
+You finished *Migrate and Secure to be ready for AI Ops*.
 
 *From secure migration to agent-assisted cloud operations.*
 

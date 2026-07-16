@@ -7,13 +7,13 @@ Duration: 30 minutes
 ## Prerequisites
 
 - Please ensure that you successfully verified the [General prerequisites](../../Readme.md#general-prerequisites) before continuing with this challenge.
-- The Azure CLI is required to deploy the Bicep configuration of the MicroHack.
+- The Azure CLI is required to deploy the Bicep configuration for the Hack.
 - Clone the GitHub repository or download the [Resources](../../resources) directory to your local PC.
 
 > [!IMPORTANT]
-> **Many of the resource deployments in this MicroHack are adapted from the [Jumpstart ArcBox for IT Pros](https://jumpstart.azure.com/azure_jumpstart_arcbox/ITPro). Special thanks to the [Jumpstart Team](https://aka.ms/arcjumpstart) for their excellent work.**
+> **Many of the resource deployments in this Hack are adapted from the [Jumpstart ArcBox for IT Pros](https://jumpstart.azure.com/azure_jumpstart_arcbox/ITPro). Special thanks to the [Jumpstart Team](https://aka.ms/arcjumpstart) for their excellent work.**
 
-### **Task 1: Deploy the Landing Zone for the MicroHack**
+### **Task 1: Deploy the Landing Zone for the Hack**
 
 - Open the [Azure Portal](https://portal.azure.com) and log in using a user account with at least Contributor permissions on an Azure subscription. Start Azure Cloud Shell from the menu bar at the top.
 
@@ -32,7 +32,7 @@ Duration: 30 minutes
 
 ![image](./img/CS3.png)
 
-- Clone the MicroHack GitHub repository using the following command:
+- Clone the Hack GitHub repository using the following command:
 
 ```bash
 git clone https://github.com/microsoft/MicroHack.git
@@ -40,7 +40,7 @@ git clone https://github.com/microsoft/MicroHack.git
 
 ![image](./img/CS4.png)
 
-- Change into the desired MicroHack directory of the cloned repository using the command:
+- Change into the Hack's resources directory in the cloned repository using the command:
 
 ```bash 
 cd MicroHack/03-Azure/01-03-Infrastructure/06_Migration_Secure_AI_Ready/resources/bicep

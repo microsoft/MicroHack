@@ -16,7 +16,7 @@ Continue with the same track:
 Teams complete only their selected track.
 
 > [!IMPORTANT]
-> Azure Migrate's agentless at-scale web-app migration supports ASP.NET applications on Windows IIS servers hosted in VMware environments. It does not support direct web-app migration from this MicroHack's Hyper-V source scenario or this Linux/Apache workload. This challenge therefore performs a deliberate manual replatform from the already migrated Azure VM.
+> Azure Migrate's agentless at-scale web-app migration supports ASP.NET applications on Windows IIS servers hosted in VMware environments. It does not support direct web-app migration from this Hack's Hyper-V source scenario or this Linux/Apache workload. This challenge therefore performs a deliberate manual replatform from the already migrated Azure VM.
 
 ## Prerequisites
 

@@ -342,11 +342,11 @@ if ($Env:flavor -ne 'DevOps') {
     }
 
     # Required for CLI commands
-    Write-Header 'Az CLI Login'
+    Write-Host "`n### Az CLI Login ###`n"
     az login --identity
     az account set -s $subscriptionId
 
-    Write-Header 'Az PowerShell Login'
+    Write-Host "`n### Az PowerShell Login ###`n"
     Connect-AzAccount -Identity -Tenant $tenantId -Subscription $subscriptionId
 
     $DeploymentProgressString = 'Started MHServersLogonScript'
@@ -406,7 +406,7 @@ if ($Env:flavor -ne 'DevOps') {
     }
 
     # Create the nested VMs if not already created
-    Write-Header 'Create Hyper-V VMs'
+    Write-Host "`n### Create Hyper-V VMs ###`n"
 
     # Create the nested SQL VMs
     $sqlDscConfigurationFile = "$Env:MHBoxDscDir\virtual_machines_sql.dsc.yml"
@@ -426,7 +426,7 @@ if ($Env:flavor -ne 'DevOps') {
 
     if ($hostname -ne $SQLvmName) {
 
-        Write-Header 'Renaming the nested SQL VM'
+        Write-Host "`n### Renaming the nested SQL VM ###`n"
         Invoke-VMCommandWithRetry `
             -VMName $SQLvmName `
             -Credential $winCreds `
@@ -459,7 +459,7 @@ if ($Env:flavor -ne 'DevOps') {
 
     # Onboard nested Windows and Linux VMs to Azure Arc
     if ($Env:flavor -eq 'ITPro') {
-        Write-Header 'Fetching Nested VMs'
+        Write-Host "`n### Fetching Nested VMs ###`n"
 
         $Win2k22vmName = "$namingPrefix-Win2K22"
         $Win2k22vmvhdPath = "${Env:MHBoxVMDir}\$namingPrefix-Win2K22.vhdx"
@@ -531,7 +531,7 @@ if ($Env:flavor -ne 'DevOps') {
         az disk update --resource-group $env:resourceGroup --name $existingVMDisk.Name --disk-iops-read-write $existingVMDisk.DiskIOPSReadWrite --disk-mbps-read-write $existingVMDisk.DiskMBpsReadWrite
 
         # Create the nested VMs if not already created
-        Write-Header 'Create Hyper-V VMs'
+        Write-Host "`n### Create Hyper-V VMs ###`n"
         $serversDscConfigurationFile = "$Env:MHBoxDscDir\virtual_machines_itpro.dsc.yml"
         (Get-Content -Path $serversDscConfigurationFile) -replace 'namingPrefixStage', $namingPrefix | Set-Content -Path $serversDscConfigurationFile
         winget configure --file C:\MHBox\DSC\virtual_machines_itpro.dsc.yml --accept-configuration-agreements --disable-interactivity
@@ -548,14 +548,14 @@ if ($Env:flavor -ne 'DevOps') {
             Wait-VMCommand -VMName $vmName -Credential $winCreds
         }
 
-        Write-Header 'Creating VM Credentials'
+        Write-Host "`n### Creating VM Credentials ###`n"
         # Hard-coded username for the nested Linux VM
         $nestedLinuxUsername = 'jumpstart'
 
         if ($namingPrefix -ne 'ArcBox') {
 
             # Renaming the nested VMs
-            Write-Header 'Renaming the nested Windows VMs'
+            Write-Host "`n### Renaming the nested Windows VMs ###`n"
             Invoke-Command -VMName $Win2k22vmName -ScriptBlock {
 
                 if ($env:computername -cne $using:Win2k22vmName) {
@@ -638,7 +638,7 @@ if ($Env:flavor -ne 'DevOps') {
         }
 
         # Install Demo Web App on Windows VM
-        Write-Header 'Installing Web App on Windows and Linux Servers'
+        Write-Host "`n### Installing Web App on Windows and Linux Servers ###`n"
 
         # Copy WebApp to Windows VM
         Copy-VMFile $Win2k22vmName -SourcePath "$Env:MHBoxDir\DemoPage\deployWebApp.ps1" -DestinationPath "C:\MHDir\DemoPage\deployWebApp.ps1" -CreateFullPath -FileSource Host -Force
@@ -699,7 +699,7 @@ if ($Env:flavor -ne 'DevOps') {
     }
 
     # Removing the LogonScript Scheduled Task so it won't run on next reboot
-    Write-Header 'Removing Logon Task'
+    Write-Host "`n### Removing Logon Task ###`n"
     if ($null -ne (Get-ScheduledTask -TaskName 'MHServersLogonScript' -ErrorAction SilentlyContinue)) {
         Unregister-ScheduledTask -TaskName 'MHServersLogonScript' -Confirm:$false
     }
@@ -709,7 +709,7 @@ if ($Env:flavor -ne 'DevOps') {
     # Enabling Azure VM Auto-shutdown
     if ($env:autoShutdownEnabled -eq "true") {
 
-        Write-Header "Enabling Azure VM Auto-shutdown"
+        Write-Host "`n### Enabling Azure VM Auto-shutdown ###`n"
 
         $ScheduleResource = Get-AzResource -ResourceGroup $env:resourceGroup -ResourceType Microsoft.DevTestLab/schedules
         $Uri = "https://management.azure.com$($ScheduleResource.ResourceId)?api-version=2018-09-15"
@@ -723,7 +723,7 @@ if ($Env:flavor -ne 'DevOps') {
 
     } else {
 
-        Write-Header "Auto-shutdown is not enabled, skipping."
+        Write-Host "`n### Auto-shutdown is not enabled, skipping. ###`n"
 
     }
 

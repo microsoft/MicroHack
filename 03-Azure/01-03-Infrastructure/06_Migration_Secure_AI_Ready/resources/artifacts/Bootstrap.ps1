@@ -97,10 +97,6 @@ $PSBoundParameters.GetEnumerator() | Sort-Object Name | ForEach-Object {
 # Set SyncForegroundPolicy to 1 to ensure that the scheduled task runs after the client VM joins the domain
 Set-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' 'SyncForegroundPolicy' 1
 
-# Copy PowerShell Profile and Reload
-Invoke-WebRequest ($templateBaseUrl + 'artifacts/PSProfile.ps1') -OutFile $PsHome\Profile.ps1
-. $PsHome\Profile.ps1
-
 # Extending C:\ partition to the maximum size
 Write-Host 'Extending C:\ partition to the maximum size'
 Resize-Partition -DriveLetter C -Size $(Get-PartitionSupportedSize -DriveLetter C).SizeMax
@@ -203,7 +199,7 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 # Installing tools
-Write-Header 'Installing PowerShell 7'
+Write-Host "`n### Installing PowerShell 7 ###`n"
 
 $ProgressPreference = 'SilentlyContinue'
 $url = 'https://github.com/PowerShell/PowerShell/releases/latest'
@@ -217,9 +213,7 @@ Invoke-WebRequest -UseBasicParsing -Uri $downloadUrl -OutFile .\PowerShell7.msi
 Start-Process msiexec.exe -Wait -ArgumentList '/I PowerShell7.msi /quiet ADD_EXPLORER_CONTEXT_MENU_OPENPOWERSHELL=1 ADD_FILE_CONTEXT_MENU_RUNPOWERSHELL=1 ENABLE_PSREMOTING=1 REGISTER_MANIFEST=1 USE_MU=1 ENABLE_MU=1 ADD_PATH=1'
 Remove-Item .\PowerShell7.msi -Force
 
-Copy-Item $PsHome\Profile.ps1 -Destination 'C:\Program Files\PowerShell\7\' -Force
-
-Write-Header 'Fetching GitHub Artifacts'
+Write-Host "`n### Fetching GitHub Artifacts ###`n"
 
 # All flavors
 Write-Host 'Fetching Artifacts for All Flavors'
@@ -333,7 +327,7 @@ if (-not (Test-Path $registryPath)) {
 Set-ItemProperty -Path $registryPath -Name $registryName -Value $registryValue -Type DWord
 Write-Host "Registry setting applied successfully. fClientDisableUDP set to $registryValue"
 
-Write-Header 'Configuring Logon Scripts'
+Write-Host "`n### Configuring Logon Scripts ###`n"
 
 $ScheduledTaskExecutable = 'pwsh.exe'
 
@@ -413,7 +407,7 @@ if ($flavor -eq 'ITPro') {
 Get-ScheduledTask -TaskName ServerManager | Disable-ScheduledTask | Out-Null
 
 if ($flavor -eq 'ITPro') {
-    Write-Header 'Installing Hyper-V'
+    Write-Host "`n### Installing Hyper-V ###`n"
 
     # Install Hyper-V and reboot
     Write-Host 'Installing Hyper-V and restart'

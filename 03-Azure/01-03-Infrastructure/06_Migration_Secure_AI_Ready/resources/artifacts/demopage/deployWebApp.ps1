@@ -1,7 +1,21 @@
+param (
+    [Parameter(Mandatory)]
+    [ValidateNotNullOrEmpty()]
+    [string]$SourceRoot
+)
+
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-$sourceRoot = 'https://raw.githubusercontent.com/microsoft/MicroHack/main/03-Azure/01-03-Infrastructure/06_Migration_Secure_AI_Ready/resources/artifacts/demopage'
+$SourceRoot = $SourceRoot.Trim().TrimEnd('/')
+$sourceUri = $null
+if (
+    -not [Uri]::TryCreate($SourceRoot, [UriKind]::Absolute, [ref]$sourceUri) -or
+    $sourceUri.Scheme -ne [Uri]::UriSchemeHttps
+) {
+    throw 'SourceRoot must be an absolute HTTPS URL.'
+}
+
 $webRoot = 'C:\inetpub\wwwroot'
 $assets = @('index.html', 'stylesheet.css', 'GitHub_Logo.png', 'MSLogo.png', 'MSicon.png')
 $stagingRoot = Join-Path $env:TEMP "microhack-demopage-$([guid]::NewGuid())"
@@ -11,7 +25,7 @@ New-Item -Path $stagingRoot -ItemType Directory -Force | Out-Null
 try {
     foreach ($asset in $assets) {
         $destination = Join-Path $stagingRoot $asset
-        Invoke-WebRequest -Uri "$sourceRoot/$asset" -OutFile $destination -UseBasicParsing
+        Invoke-WebRequest -Uri "$SourceRoot/$asset" -OutFile $destination -UseBasicParsing
         if ((Get-Item -LiteralPath $destination).Length -eq 0) {
             throw "Downloaded asset is empty: $asset"
         }

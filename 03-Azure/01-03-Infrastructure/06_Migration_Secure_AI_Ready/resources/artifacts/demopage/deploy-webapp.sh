@@ -1,7 +1,24 @@
 #!/bin/sh
 set -eu
 
-source_root="https://raw.githubusercontent.com/microsoft/MicroHack/main/03-Azure/01-03-Infrastructure/06_Migration_Secure_AI_Ready/resources/artifacts/demopage"
+if [ "$#" -ne 1 ] || [ -z "$1" ]; then
+  echo "Usage: $0 <https-source-root>" >&2
+  exit 2
+fi
+
+source_root="$1"
+while [ "${source_root%/}" != "$source_root" ]; do
+  source_root="${source_root%/}"
+done
+
+case "$source_root" in
+  https://?*) ;;
+  *)
+    echo "Source root must be an absolute HTTPS URL." >&2
+    exit 2
+    ;;
+esac
+
 web_root="/var/www/html"
 assets="index.html stylesheet.css GitHub_Logo.png MSLogo.png MSicon.png"
 staging_root="$(mktemp -d)"

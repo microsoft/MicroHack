@@ -16,6 +16,21 @@ $azureLocation = $env:azureLocation
 $resourceGroup = $env:resourceGroup
 $resourceTags = $env:resourceTags
 $namingPrefix = $env:namingPrefix
+$templateBaseUrl = [Environment]::GetEnvironmentVariable(
+    'templateBaseUrl',
+    [EnvironmentVariableTarget]::Machine
+)
+
+$templateBaseUri = $null
+if (
+    [string]::IsNullOrWhiteSpace($templateBaseUrl) -or
+    -not [Uri]::TryCreate($templateBaseUrl, [UriKind]::Absolute, [ref]$templateBaseUri) -or
+    $templateBaseUri.Scheme -ne [Uri]::UriSchemeHttps
+) {
+    throw 'The machine-level templateBaseUrl must be an absolute HTTPS URL.'
+}
+
+$demoAssetSourceRoot = "$($templateBaseUrl.Trim().TrimEnd('/'))/artifacts/demopage"
 
 # Moved VHD storage account details here to keep only in place to prevent duplicates.
 $vhdSourceFolder = 'https://jumpstartprodsg.blob.core.windows.net/arcbox/prod/*'
@@ -450,16 +465,44 @@ if ($Env:flavor -ne 'DevOps') {
 
         # Install IIS and clean default web files on Windows VM
         Invoke-Command -VMName $Win2k22vmName -ScriptBlock {
+            param($sourceRoot)
+
             Add-WindowsFeature Web-Server -IncludeManagementTools
             Remove-Item -Path "C:\inetpub\wwwroot\*.*"
-            powershell -ExecutionPolicy Unrestricted -File "C:\MHDir\DemoPage\deployWebApp.ps1"
-        } -Credential $winCreds                 
+            & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass `
+                -File 'C:\MHDir\DemoPage\deployWebApp.ps1' `
+                -SourceRoot $sourceRoot
+            if ($LASTEXITCODE -ne 0) {
+                throw "deployWebApp.ps1 failed with exit code $LASTEXITCODE."
+            }
+        } -ArgumentList $demoAssetSourceRoot -Credential $winCreds -ErrorAction Stop
 
         # Install Apache and clean default web files on Linux VM
         Write-Output 'Installing Apache Web Server on Linux VM...'
         $UbuntuSessions = New-PSSession -HostName $Ubuntu01VmIp -KeyFilePath "$Env:USERPROFILE\.ssh\id_rsa" -UserName $nestedLinuxUsername
+        $linuxDeploymentScript = "/home/$nestedLinuxUsername/deploy-webapp.sh"
         Copy-VMFile $Ubuntu01vmName -SourcePath "$Env:MHBoxDir\DemoPage\deploy-webapp.sh" -DestinationPath "/home/$nestedLinuxUsername" -FileSource Host -Force
-        Invoke-JSSudoCommand -Session $UbuntuSessions -Command "sh /home/$nestedLinuxUsername/deploy-webapp.sh"
+
+        $sourceRootBase64 = [Convert]::ToBase64String(
+            [Text.Encoding]::UTF8.GetBytes($demoAssetSourceRoot)
+        )
+        Invoke-Command -Session $UbuntuSessions -ScriptBlock {
+            param($deploymentScript, $encodedSourceRoot)
+
+            try {
+                $sourceRoot = [Text.Encoding]::UTF8.GetString(
+                    [Convert]::FromBase64String($encodedSourceRoot)
+                )
+            }
+            catch {
+                throw 'The demo asset source URL could not be decoded.'
+            }
+
+            & sudo /bin/sh $deploymentScript $sourceRoot
+            if ($LASTEXITCODE -ne 0) {
+                throw "deploy-webapp.sh failed with exit code $LASTEXITCODE."
+            }
+        } -ArgumentList $linuxDeploymentScript, $sourceRootBase64 -ErrorAction Stop
 
     }
 

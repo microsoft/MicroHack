@@ -222,6 +222,36 @@ function Restart-VMAndWait {
         -Description 'PowerShell Direct readiness after host-controlled restart'
 }
 
+function Restart-VMGracefullyAndWaitForHeartbeat {
+    param(
+        [Parameter(Mandatory)]
+        [string]$VMName
+    )
+
+    Stop-VM -Name $VMName -ErrorAction Stop
+    Wait-Until `
+        -Description "a graceful shutdown of '$VMName'" `
+        -TimeoutSeconds 300 `
+        -Condition {
+            (Get-VM -Name $VMName -ErrorAction Stop).State -eq 'Off'
+        }
+
+    Start-VM -Name $VMName -ErrorAction Stop
+    Wait-Until `
+        -Description "a healthy heartbeat after restarting '$VMName'" `
+        -TimeoutSeconds 600 `
+        -Condition {
+            $vm = Get-VM -Name $VMName -ErrorAction Stop
+            $heartbeat = Get-VMIntegrationService `
+                -VMName $VMName `
+                -Name 'Heartbeat' `
+                -ErrorAction Stop
+            $vm.State -eq 'Running' -and
+                $heartbeat.Enabled -and
+                $heartbeat.PrimaryStatusDescription -eq 'OK'
+        }
+}
+
 function Restart-LinuxVMAndWaitForSsh {
     param(
         [Parameter(Mandatory)]
@@ -552,24 +582,25 @@ if ($Env:flavor -eq 'ITPro') {
 
             # Renaming the nested VMs
             Write-Host "`n### Renaming the nested Windows VMs ###`n"
-            Invoke-Command -VMName $Win2k22vmName -ScriptBlock {
+            foreach ($vmName in @($Win2k22vmName, $AzMigSrvvmName)) {
+                $restartRequired = Invoke-VMCommandWithRetry `
+                    -VMName $vmName `
+                    -Credential $winCreds `
+                    -ScriptBlock {
+                        param($newName)
+                        if ($env:COMPUTERNAME -ceq $newName) {
+                            return $false
+                        }
+                        Rename-Computer -NewName $newName
+                        return $true
+                    } `
+                    -ArgumentList $vmName `
+                    -Description 'computer rename'
 
-                if ($env:computername -cne $using:Win2k22vmName) {
-                    Rename-Computer -NewName $using:Win2k22vmName
+                if ($restartRequired) {
+                    Restart-VMGracefullyAndWaitForHeartbeat -VMName $vmName
                 }
-
-            } -Credential $winCreds
-
-            Invoke-Command -VMName $AzMigSrvvmName -ScriptBlock {
-
-                if ($env:computername -cne $using:AzMigSrvvmName) {
-                    Rename-Computer -NewName $using:AzMigSrvvmName
-                }
-
-            } -Credential $winCreds 
-            Restart-VMAndWait -VMName $Win2k22vmName -Credential $winCreds
-            Restart-VMAndWait -VMName $AzMigSrvvmName -Credential $winCreds
-
+            }
         }
 
         # Configuring SSH for accessing Linux VMs
@@ -621,7 +652,11 @@ if ($Env:flavor -eq 'ITPro') {
         }
 
         foreach ($vmName in @($Win2k22vmName, $AzMigSrvvmName, $SQLvmName)) {
-            Invoke-Command -VMName $vmName -ScriptBlock $activationScript -Credential $winCreds
+            Invoke-VMCommandWithRetry `
+                -VMName $vmName `
+                -Credential $winCreds `
+                -ScriptBlock $activationScript `
+                -Description 'Windows activation'
         }
 
         # Install Demo Web App on Windows VM

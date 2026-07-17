@@ -327,21 +327,202 @@ function Restart-VMGracefullyAndWaitForHeartbeat {
         }
 }
 
-function Restart-LinuxVMAndWaitForSsh {
+function Test-TcpPort {
     param(
         [Parameter(Mandatory)]
-        [string]$VMName
+        [string]$ComputerName,
+
+        [Parameter(Mandatory)]
+        [int]$Port,
+
+        [int]$TimeoutMilliseconds = 3000
     )
 
-    $previousUptime = (Get-VM -Name $VMName -ErrorAction Stop).Uptime
-    Restart-VM -Name $VMName -Force -ErrorAction Stop
-    Wait-Until -Description "a completed restart of '$VMName'" -Condition {
-        $vm = Get-VM -Name $VMName -ErrorAction Stop
-        $vm.State -eq 'Running' -and $vm.Uptime -lt $previousUptime
+    $client = [Net.Sockets.TcpClient]::new()
+    try {
+        $connection = $client.BeginConnect($ComputerName, $Port, $null, $null)
+        $waitHandle = $connection.AsyncWaitHandle
+        try {
+            if (-not $waitHandle.WaitOne($TimeoutMilliseconds)) {
+                return $false
+            }
+        }
+        finally {
+            $waitHandle.Dispose()
+        }
+
+        $client.EndConnect($connection)
+        return $true
+    }
+    catch {
+        return $false
+    }
+    finally {
+        $client.Dispose()
+    }
+}
+
+function Get-LinuxBootId {
+    param(
+        [Parameter(Mandatory)]
+        [string]$ComputerName,
+
+        [Parameter(Mandatory)]
+        [string]$UserName,
+
+        [Parameter(Mandatory)]
+        [string]$KeyFilePath
+    )
+
+    $bootIdOutput = @(
+        Invoke-Command `
+            -HostName $ComputerName `
+            -KeyFilePath $KeyFilePath `
+            -UserName $UserName `
+            -ConnectingTimeout 10000 `
+            -ErrorAction Stop `
+            -ScriptBlock {
+                $bootId = (Get-Content /proc/sys/kernel/random/boot_id -Raw).Trim()
+                if ([string]::IsNullOrWhiteSpace($bootId)) {
+                    throw 'Linux boot ID is empty.'
+                }
+                return $bootId
+            }
+    )
+    $bootId = ([string]$bootIdOutput[-1]).Trim()
+    $parsedBootId = [guid]::Empty
+    if (-not [guid]::TryParse($bootId, [ref]$parsedBootId)) {
+        throw "Linux boot ID '$bootId' is not a valid GUID."
     }
 
-    $address = Get-VMIPv4AddressWithRetry -VMName $VMName
-    Wait-TcpPort -ComputerName $address -Port 22
+    return $parsedBootId.ToString()
+}
+
+function Clear-LinuxHostNameRebootMarker {
+    param(
+        [Parameter(Mandatory)]
+        [string]$ComputerName,
+
+        [Parameter(Mandatory)]
+        [string]$UserName,
+
+        [Parameter(Mandatory)]
+        [string]$KeyFilePath,
+
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [string]$ExpectedHostName
+    )
+
+    Invoke-Command `
+        -HostName $ComputerName `
+        -KeyFilePath $KeyFilePath `
+        -UserName $UserName `
+        -ConnectingTimeout 10000 `
+        -ErrorAction Stop `
+        -ScriptBlock {
+            param(
+                [Parameter(Mandatory)]
+                [ValidateNotNullOrEmpty()]
+                [string]$ExpectedHostName
+            )
+
+            $markerPath = '/var/lib/mhbox/hostname-reboot-pending'
+            if (-not (Test-Path -LiteralPath $markerPath)) {
+                return
+            }
+
+            $markerLines = @(Get-Content -LiteralPath $markerPath)
+            if ($markerLines.Count -ne 2) {
+                throw "Ubuntu hostname reboot marker '$markerPath' is malformed."
+            }
+
+            $pendingBootId = ([string]$markerLines[0]).Trim()
+            $pendingHostName = ([string]$markerLines[1]).Trim()
+            $currentBootId = (Get-Content /proc/sys/kernel/random/boot_id -Raw).Trim()
+            if ($pendingHostName -cne $ExpectedHostName) {
+                throw "Ubuntu hostname reboot marker targets '$pendingHostName', expected '$ExpectedHostName'."
+            }
+            if ($pendingBootId -ceq $currentBootId) {
+                throw "Ubuntu hostname reboot marker still belongs to the current boot '$currentBootId'."
+            }
+
+            $removeOutput = @(& sudo -- rm -f -- $markerPath 2>&1)
+            $removeExitCode = $LASTEXITCODE
+            if ($removeExitCode -ne 0) {
+                throw "Failed to clear Ubuntu hostname reboot marker with exit code $removeExitCode. $($removeOutput -join [Environment]::NewLine)"
+            }
+        } `
+        -ArgumentList @($ExpectedHostName) |
+        Out-Null
+}
+
+function Wait-LinuxGuestReboot {
+    param(
+        [Parameter(Mandatory)]
+        [string]$VMName,
+
+        [Parameter(Mandatory)]
+        [string]$UserName,
+
+        [Parameter(Mandatory)]
+        [string]$KeyFilePath,
+
+        [Parameter(Mandatory)]
+        [string]$PreviousBootId,
+
+        [int]$TimeoutSeconds = 600
+    )
+
+    $address = $null
+    $addressReference = [ref]$address
+    Wait-Until `
+        -Description "a new Linux boot and SSH readiness on '$VMName'" `
+        -TimeoutSeconds $TimeoutSeconds `
+        -Condition {
+            $candidates = @(
+                Get-VM -Name $VMName -ErrorAction Stop |
+                    Select-Object -ExpandProperty NetworkAdapters |
+                    Select-Object -ExpandProperty IPAddresses |
+                    Where-Object {
+                        $parsedAddress = $null
+                        [IPAddress]::TryParse([string]$_, [ref]$parsedAddress) -and
+                            $parsedAddress.AddressFamily -eq [Net.Sockets.AddressFamily]::InterNetwork -and
+                            $_ -notlike '127.*' -and
+                            $_ -notlike '169.254.*'
+                    } |
+                    Select-Object -Unique
+            )
+            if ($candidates.Count -eq 0) {
+                throw 'The guest is not reporting a usable IPv4 address.'
+            }
+
+            $lastAttempt = $null
+            foreach ($candidate in $candidates) {
+                if (-not (Test-TcpPort -ComputerName $candidate -Port 22)) {
+                    $lastAttempt = "SSH is not yet reachable on '$candidate'."
+                    continue
+                }
+
+                try {
+                    $currentBootId = Get-LinuxBootId `
+                        -ComputerName $candidate `
+                        -UserName $UserName `
+                        -KeyFilePath $KeyFilePath
+                    if ($currentBootId -cne $PreviousBootId) {
+                        $addressReference.Value = [string]$candidate
+                        return $true
+                    }
+                    $lastAttempt = "SSH is still connected to the previous boot '$PreviousBootId'."
+                }
+                catch {
+                    $lastAttempt = $_.Exception.Message
+                }
+            }
+
+            throw $lastAttempt
+        }
+
     return $address
 }
 
@@ -774,121 +955,245 @@ if ($Env:flavor -eq 'ITPro') {
             # Renaming the nested linux VMs
             Write-Output 'Renaming the nested Linux VMs'
 
-            $restartRequired = Invoke-Command -HostName $Ubuntu01VmIp -KeyFilePath "$Env:USERPROFILE\.ssh\id_rsa" -UserName $nestedLinuxUsername -ScriptBlock {
-                param(
-                    [Parameter(Mandatory)]
-                    [ValidateNotNullOrEmpty()]
-                    [string]$NewHostName
-                )
+            $linuxKeyFilePath = "$Env:USERPROFILE\.ssh\id_rsa"
+            $previousBootId = Get-LinuxBootId `
+                -ComputerName $Ubuntu01VmIp `
+                -UserName $nestedLinuxUsername `
+                -KeyFilePath $linuxKeyFilePath
 
-                function Invoke-SudoCommand {
+            $configurationResult = $null
+            $configurationError = $null
+            try {
+                $configurationResult = Invoke-Command -HostName $Ubuntu01VmIp -KeyFilePath $linuxKeyFilePath -UserName $nestedLinuxUsername -ScriptBlock {
                     param(
                         [Parameter(Mandatory)]
-                        [string]$Command,
-
-                        [string[]]$Arguments = @()
+                        [ValidateNotNullOrEmpty()]
+                        [string]$NewHostName
                     )
 
-                    $commandOutput = @(& sudo -- $Command @Arguments 2>&1)
-                    $commandExitCode = $LASTEXITCODE
-                    if ($commandExitCode -ne 0) {
-                        $commandDetail = $commandOutput -join [Environment]::NewLine
-                        throw "'$Command' failed with exit code $commandExitCode. $commandDetail"
+                    function Invoke-SudoCommand {
+                        param(
+                            [Parameter(Mandatory)]
+                            [string]$Command,
+
+                            [string[]]$Arguments = @()
+                        )
+
+                        $commandOutput = @(& sudo -- $Command @Arguments 2>&1)
+                        $commandExitCode = $LASTEXITCODE
+                        if ($commandExitCode -ne 0) {
+                            $commandDetail = $commandOutput -join [Environment]::NewLine
+                            throw "'$Command' failed with exit code $commandExitCode. $commandDetail"
+                        }
+
+                        return $commandOutput
                     }
 
-                    return $commandOutput
-                }
-
-                $currentHostNameOutput = @(
-                    Invoke-SudoCommand -Command 'hostname'
-                )
-                $currentHostName = ([string]$currentHostNameOutput[-1]).Trim()
-                $restartRequired = $currentHostName -cne $NewHostName
-
-                $tempRoot = [IO.Path]::Combine(
-                    [IO.Path]::GetTempPath(),
-                    "mhbox-hostname-$([guid]::NewGuid())"
-                )
-                [IO.Directory]::CreateDirectory($tempRoot) | Out-Null
-                try {
-                    $utf8NoBom = [Text.UTF8Encoding]::new($false)
-                    $cloudInitPath = Join-Path $tempRoot '99-mhbox-preserve-hostname.cfg'
-                    [IO.File]::WriteAllText(
-                        $cloudInitPath,
-                        "preserve_hostname: true`n",
-                        $utf8NoBom
+                    $currentHostNameOutput = @(
+                        Invoke-SudoCommand -Command 'hostname'
                     )
+                    $currentHostName = ([string]$currentHostNameOutput[-1]).Trim()
+                    $desiredCloudInitContent = "preserve_hostname: true`n"
+                    $desiredHostnameContent = "$NewHostName`n"
+                    $desiredHostsEntry = "127.0.1.1`t$NewHostName"
+                    $cloudInitTarget = '/etc/cloud/cloud.cfg.d/99-mhbox-preserve-hostname.cfg'
+                    $rebootMarkerTarget = '/var/lib/mhbox/hostname-reboot-pending'
+                    $bootId = (Get-Content /proc/sys/kernel/random/boot_id -Raw).Trim()
+                    $desiredRebootMarkerContent = "$bootId`n$NewHostName`n"
 
-                    $hostnamePath = Join-Path $tempRoot 'hostname'
-                    [IO.File]::WriteAllText(
-                        $hostnamePath,
-                        "$NewHostName`n",
-                        $utf8NoBom
-                    )
-
+                    $currentCloudInitContent = if (Test-Path -LiteralPath $cloudInitTarget) {
+                        [IO.File]::ReadAllText($cloudInitTarget)
+                    }
+                    else {
+                        $null
+                    }
+                    $currentHostnameContent = [IO.File]::ReadAllText('/etc/hostname')
                     $hostsLines = @(
                         Invoke-SudoCommand -Command 'cat' -Arguments @('/etc/hosts')
                     )
-                    $localHostEntryFound = $false
-                    $updatedHostsLines = foreach ($hostsLine in $hostsLines) {
-                        if ([string]$hostsLine -match '^\s*127\.0\.1\.1(?:\s|$)') {
-                            $localHostEntryFound = $true
-                            "127.0.1.1`t$NewHostName"
-                        }
-                        else {
-                            [string]$hostsLine
-                        }
+                    $currentHostsEntries = @(
+                        $hostsLines |
+                            Where-Object { [string]$_ -match '^\s*127\.0\.1\.1(?:\s|$)' }
+                    )
+                    $currentRebootMarkerContent = if (Test-Path -LiteralPath $rebootMarkerTarget) {
+                        [IO.File]::ReadAllText($rebootMarkerTarget)
                     }
-                    if (-not $localHostEntryFound) {
-                        $updatedHostsLines += "127.0.1.1`t$NewHostName"
+                    else {
+                        $null
                     }
-
-                    $hostsPath = Join-Path $tempRoot 'hosts'
-                    [IO.File]::WriteAllText(
-                        $hostsPath,
-                        ($updatedHostsLines -join "`n") + "`n",
-                        $utf8NoBom
+                    $restartRequired = (
+                        $currentHostName -cne $NewHostName -or
+                        $currentCloudInitContent -cne $desiredCloudInitContent -or
+                        $currentHostnameContent -cne $desiredHostnameContent -or
+                        $currentHostsEntries.Count -ne 1 -or
+                        [string]$currentHostsEntries[0] -cne $desiredHostsEntry -or
+                        $currentRebootMarkerContent -ceq $desiredRebootMarkerContent
                     )
 
-                    Invoke-SudoCommand `
-                        -Command 'mkdir' `
-                        -Arguments @('-p', '/etc/cloud/cloud.cfg.d') |
-                        Out-Null
-                    Invoke-SudoCommand `
-                        -Command 'install' `
-                        -Arguments @(
-                            '-m', '0644', '--',
+                    if (-not $restartRequired) {
+                        return [pscustomobject]@{
+                            RestartRequired = $false
+                            RebootScheduled = $false
+                            BootId = $bootId
+                        }
+                    }
+
+                    $tempRoot = [IO.Path]::Combine(
+                        [IO.Path]::GetTempPath(),
+                        "mhbox-hostname-$([guid]::NewGuid())"
+                    )
+                    [IO.Directory]::CreateDirectory($tempRoot) | Out-Null
+                    try {
+                        $utf8NoBom = [Text.UTF8Encoding]::new($false)
+                        $cloudInitPath = Join-Path $tempRoot '99-mhbox-preserve-hostname.cfg'
+                        [IO.File]::WriteAllText(
                             $cloudInitPath,
-                            '/etc/cloud/cloud.cfg.d/99-mhbox-preserve-hostname.cfg'
-                        ) |
-                        Out-Null
-                    Invoke-SudoCommand `
-                        -Command 'install' `
-                        -Arguments @('-m', '0644', '--', $hostnamePath, '/etc/hostname') |
-                        Out-Null
-                    Invoke-SudoCommand `
-                        -Command 'install' `
-                        -Arguments @('-m', '0644', '--', $hostsPath, '/etc/hosts') |
-                        Out-Null
-                    Invoke-SudoCommand `
-                        -Command 'hostnamectl' `
-                        -Arguments @('set-hostname', '--', $NewHostName) |
-                        Out-Null
-                }
-                finally {
-                    Remove-Item -LiteralPath $tempRoot -Recurse -Force -ErrorAction Continue
-                }
+                            $desiredCloudInitContent,
+                            $utf8NoBom
+                        )
 
-                return $restartRequired
-            } -ArgumentList @($Ubuntu01HostName) -ErrorAction Stop
+                        $hostnamePath = Join-Path $tempRoot 'hostname'
+                        [IO.File]::WriteAllText(
+                            $hostnamePath,
+                            $desiredHostnameContent,
+                            $utf8NoBom
+                        )
 
-            if ($restartRequired) {
-                $Ubuntu01VmIp = Restart-LinuxVMAndWaitForSsh -VMName $Ubuntu01vmName
+                        $rebootMarkerPath = Join-Path $tempRoot 'hostname-reboot-pending'
+                        [IO.File]::WriteAllText(
+                            $rebootMarkerPath,
+                            $desiredRebootMarkerContent,
+                            $utf8NoBom
+                        )
+
+                        $localHostEntryFound = $false
+                        $updatedHostsLines = foreach ($hostsLine in $hostsLines) {
+                            if ([string]$hostsLine -match '^\s*127\.0\.1\.1(?:\s|$)') {
+                                if (-not $localHostEntryFound) {
+                                    $localHostEntryFound = $true
+                                    $desiredHostsEntry
+                                }
+                            }
+                            else {
+                                [string]$hostsLine
+                            }
+                        }
+                        if (-not $localHostEntryFound) {
+                            $updatedHostsLines += $desiredHostsEntry
+                        }
+
+                        $hostsPath = Join-Path $tempRoot 'hosts'
+                        [IO.File]::WriteAllText(
+                            $hostsPath,
+                            ($updatedHostsLines -join "`n") + "`n",
+                            $utf8NoBom
+                        )
+
+                        Invoke-SudoCommand `
+                            -Command 'mkdir' `
+                            -Arguments @('-p', '/etc/cloud/cloud.cfg.d', '/var/lib/mhbox') |
+                            Out-Null
+                        Invoke-SudoCommand `
+                            -Command 'install' `
+                            -Arguments @(
+                                '-m', '0644', '--',
+                                $rebootMarkerPath,
+                                $rebootMarkerTarget
+                            ) |
+                            Out-Null
+                        Invoke-SudoCommand `
+                            -Command 'install' `
+                            -Arguments @(
+                                '-m', '0644', '--',
+                                $cloudInitPath,
+                                $cloudInitTarget
+                            ) |
+                            Out-Null
+                        Invoke-SudoCommand `
+                            -Command 'install' `
+                            -Arguments @('-m', '0644', '--', $hostnamePath, '/etc/hostname') |
+                            Out-Null
+                        Invoke-SudoCommand `
+                            -Command 'install' `
+                            -Arguments @('-m', '0644', '--', $hostsPath, '/etc/hosts') |
+                            Out-Null
+                        Invoke-SudoCommand `
+                            -Command 'hostnamectl' `
+                            -Arguments @('set-hostname', '--', $NewHostName) |
+                            Out-Null
+                        Invoke-SudoCommand -Command 'sync' | Out-Null
+
+                        $rebootUnitName = "mhbox-hostname-reboot-$([guid]::NewGuid().ToString('N').Substring(0, 12))"
+                        Invoke-SudoCommand `
+                            -Command 'systemd-run' `
+                            -Arguments @(
+                                "--unit=$rebootUnitName",
+                                '--on-active=3s',
+                                '--collect',
+                                '/usr/bin/systemctl',
+                                'reboot'
+                            ) |
+                            Out-Null
+                    }
+                    finally {
+                        Remove-Item -LiteralPath $tempRoot -Recurse -Force -ErrorAction Continue
+                    }
+
+                    return [pscustomobject]@{
+                        RestartRequired = $true
+                        RebootScheduled = $true
+                        BootId = $bootId
+                    }
+                } -ArgumentList @($Ubuntu01HostName) -ErrorAction Stop
             }
+            catch {
+                $configurationError = $_
+            }
+
+            if ($configurationError) {
+                $disconnectPattern = 'remote session might have ended|SSH transport|connection.*(?:closed|reset|lost)|broken pipe'
+                if ($configurationError.Exception.Message -notmatch $disconnectPattern) {
+                    throw "Ubuntu hostname configuration failed before reboot acknowledgement. $($configurationError.Exception.Message)"
+                }
+
+                try {
+                    $Ubuntu01VmIp = Wait-LinuxGuestReboot `
+                        -VMName $Ubuntu01vmName `
+                        -UserName $nestedLinuxUsername `
+                        -KeyFilePath $linuxKeyFilePath `
+                        -PreviousBootId $previousBootId `
+                        -TimeoutSeconds 300
+                }
+                catch {
+                    throw "Ubuntu reboot was not acknowledged and no new boot was observed. Configuration error: $($configurationError.Exception.Message) Reboot error: $($_.Exception.Message)"
+                }
+            }
+            elseif ($configurationResult.RestartRequired) {
+                if (
+                    -not $configurationResult.RebootScheduled -or
+                    $configurationResult.BootId -cne $previousBootId
+                ) {
+                    throw 'Ubuntu returned an invalid hostname reboot acknowledgement.'
+                }
+                $Ubuntu01VmIp = Wait-LinuxGuestReboot `
+                    -VMName $Ubuntu01vmName `
+                    -UserName $nestedLinuxUsername `
+                    -KeyFilePath $linuxKeyFilePath `
+                    -PreviousBootId $previousBootId
+            }
+            elseif ($configurationResult.RebootScheduled) {
+                throw 'Ubuntu scheduled an unexpected hostname reboot.'
+            }
+
             Wait-LinuxHostName `
                 -ComputerName $Ubuntu01VmIp `
                 -UserName $nestedLinuxUsername `
-                -KeyFilePath "$Env:USERPROFILE\.ssh\id_rsa" `
+                -KeyFilePath $linuxKeyFilePath `
+                -ExpectedHostName $Ubuntu01HostName
+            Clear-LinuxHostNameRebootMarker `
+                -ComputerName $Ubuntu01VmIp `
+                -UserName $nestedLinuxUsername `
+                -KeyFilePath $linuxKeyFilePath `
                 -ExpectedHostName $Ubuntu01HostName
         }
         else {

@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 #
-# seed-backlog.sh — Seed the Challenge 2 backlog into a GitHub repo as Issues.
+# seed-backlog.sh — Seed the Challenge 3 backlog into a GitHub repo as Issues.
 #
 # Creates one GitHub Issue per item in assets/backlog.md, so teams can pick
 # from a real, prioritised, labelled list instead of inventing a backlog. The
 # same issues are what an MCP server can pull as real backlog context in the
-# Challenge 2 optional stretch.
+# Challenge 3 optional stretch.
 #
 # PREREQUISITES
 #   - GitHub CLI installed:      https://cli.github.com/
@@ -90,7 +90,7 @@ fi
 # Label definitions:  name|color|description
 # ---------------------------------------------------------------------------
 LABELS=(
-  "backlog|0e8a16|Challenge 2 backlog item"
+  "backlog|0e8a16|Challenge 3 backlog item"
   "priority:high|b60205|High priority"
   "priority:medium|fbca04|Medium priority"
   "priority:low|0e8a16|Low priority"
@@ -112,7 +112,7 @@ title=Payment integration for the cart
 priority=High
 size=M
 layers=frontend, API
-body=As a customer, I want to pay for the items in my cart so that I can complete a purchase and turn my cart into a confirmed order. This is the natural continuation of the cart feature from Challenge 1.
+body=As a customer, I want to pay for the items in my cart so that I can complete a purchase and turn my cart into a confirmed order. This is the natural continuation of the cart feature from Challenge 2.
 ac=A customer can start a checkout from the cart and submit payment details through a dedicated flow.
 ac=A successful payment converts the cart into an order (with order details) via the API.
 ac=Payment configuration (keys/provider) is read from environment variables — no secrets in source.
@@ -244,7 +244,7 @@ flush_item() {
   issue_body+="**Affected layers:** $layers"$'\n\n'
   issue_body+="**Acceptance criteria**"$'\n\n'
   issue_body+="$ac_block"$'\n'
-  issue_body+="_Seeded from assets/backlog.md for Challenge 2._"
+  issue_body+="_Seeded from assets/backlog.md for Challenge 3._"
 
   # Duplicate check (open issues with identical title).
   if [[ -n "$EXISTING_TITLES" ]] && grep -Fxq "$title" <<<"$EXISTING_TITLES"; then

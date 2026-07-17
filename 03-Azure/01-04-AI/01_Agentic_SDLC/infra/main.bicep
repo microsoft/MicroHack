@@ -1,5 +1,5 @@
 // =============================================================================
-// main.bicep — Challenge 4 starter scaffold (OPTIONAL, SKELETON — not an answer key)
+// main.bicep — Challenge 5 starter scaffold (OPTIONAL, SKELETON — not an answer key)
 // -----------------------------------------------------------------------------
 // Target architecture expressed here (Azure Container Apps):
 //

@@ -1,54 +1,59 @@
-# Walkthrough Challenge 3 - Testing & review
+# Walkthrough Challenge 3 - Backlog feature (agentic loop)
 
 **[Home](../../Readme.md)** - [Previous Challenge Solution](../challenge-02/solution-02.md) - [Next Challenge Solution](../challenge-04/solution-04.md)
 
-Duration: 30 minutes
+Duration: 60 minutes
 
 ## Prerequisites
 
-Complete [Challenge 2](../challenge-02/solution-02.md). Know the exact test commands for your API track and the frontend.
+Complete [Challenge 2](../challenge-02/solution-02.md). If the backlog has been seeded as GitHub Issues, have the Issues tab open.
 
 ## Approach
 
-Focus tests on the **cart and backlog features you just built** — not the whole app. Push for quality of tests (edge cases, error handling) over raw count.
+This is the centrepiece: run a full **plan → implement → test → review** loop. The easiest mistake is over-scoping — pick a feature you can finish *with tests*, not the most ambitious one.
 
 Suggested pacing:
 
 ```
-Run existing tests (baseline green)      ~5 min
-Find the gaps with Copilot               ~5 min
-Extend coverage (unit + component)      ~12 min
-Agent-assisted review                    ~5 min
-Fix findings                             ~3 min
+Choose a backlog item                    ~5 min
+Plan with an agent                      ~10 min
+Implement across the stack              ~25 min
+Add tests                               ~12 min
+Agent-assisted review                    ~8 min
 ```
 
-### Task 1: Establish a green baseline
+### Task 1: Choose a backlog item
 
-- Run the existing API and frontend suites and confirm they pass. If the baseline fails on a clean checkout, it's usually an environment issue from Challenge 0 — fix that first (Codespaces), then re-run.
+- Pick one from `assets/backlog.md` — payment integration for the cart, order history, product search/filtering, or inventory management are good candidates. If seeded as Issues, pick a real labelled issue.
 
-### Task 2: Find the gaps
+### Task 2: Plan with the agent first
 
-- Ask Copilot to identify untested code paths in the cart and backlog features you added.
+- 🔑 **Don't dive straight into code.** Have the agent decompose the work into steps and produce a file/layer map (frontend, API, database) before you implement. A team that skips planning is missing the point of the challenge.
 
-### Task 3: Extend coverage
+### Task 3: Implement across the stack
 
-- 🔑 **Generate tests from the existing types and interfaces** so they stay accurate and compile.
-- Prompt explicitly for **edge cases and error handling** — not just happy paths.
-- Repo rule: only use test frameworks that **already exist** in the repo.
+- Build the smallest demonstrable slice, consistent with existing patterns and type-safe.
+- For anything touching payment/config, use **environment-variable-driven configuration — no secrets in source.**
 
-### Task 4: Agent-assisted review
+### Task 4: Add tests
 
-- Run the code review agent (or Copilot review) on your recent changes.
-- Triage findings by the escalation order: **security / data integrity → correctness → performance → maintainability → style.** Fix the top; note the rest. Don't drown in nits.
+- Cover the new logic with unit tests (API/repository) and component tests where relevant. Letting the agent draft tests first (TDD-style) is fine. Don't let implementation eat the whole hour — reserve time for tests.
 
-### Task 5: Fix findings
+### Task 5: Agent-assisted review
 
-- Address the security/correctness issues surfaced by tests and review; confirm the suites are green again.
+- Before calling it done, ask Copilot to review your change for correctness, security, and data integrity, and fix what it surfaces.
 
-## Optional stretch — model selection & context budgeting
+## Optional stretch — harnesses, MCP & requirement refinement
 
-- **Compare models** — generate tests once in Auto and once with an explicitly selected model; record a decision rule for when to use each.
-- **Set a context budget** — decide a max number of files and max reference length per file before prompting, and stick to it.
-- **Note the trade-off** — capture how the budget affected quality vs. noise. The reflection is the deliverable.
+- **Compare harnesses** — run the planning step in Copilot CLI vs. the Copilot App / IDE chat; write a decision rule for quick fix vs. multi-file change.
+- **Wire in an MCP server** — connect the GitHub MCP server to pull real backlog context (issues, PRs); note what stays local-only vs. what the server can see.
+- **Refine a requirement from WorkIQ signal** — point the agent at `assets/workiq/` (Teams thread, support-ticket digest, stakeholder email). Synthesize across the artifacts, **separate a genuinely-new need from noise and from work already on the backlog**, and shape it into an issue-ready requirement: problem statement → acceptance criteria → scoped tasks (optionally a GitHub Issue). There is deliberately **no answer key** — realistic noise is mixed in, and the skill being assessed is the refinement, not guessing a specific feature. A good refinement has a clear problem statement, testable acceptance criteria, timebox-sized scope, and evidence the new need was separated from backlog/noise. The **Requirement Refiner** custom agent (`.github/agents/`) can guide this and will not name a "correct" feature.
+
+## Common blockers
+
+- **Over-scoped feature** → cut to the smallest demonstrable, testable slice.
+- **Thrashing in code with no plan** → stop, produce a step list + file/layer map first.
+- **Hard-coded secrets** → move to environment-variable config.
+- **No tests by ~45 min** → have the agent draft tests now.
 
 You successfully completed challenge 3! 🚀🚀🚀

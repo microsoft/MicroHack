@@ -1,32 +1,32 @@
-# Challenge 5 - Monitor the deployed app with the Azure SRE Agent
+# Challenge 5 - Deploy into Azure
 
 **[Home](../Readme.md)** - [Previous Challenge](challenge-04.md) - [Next Challenge](challenge-06.md)
 
 ## Goal
 
-Use agents to monitor the deployed Octocat Supply application and improve its reliability, leveraging the **Azure SRE Agent**. Now that the app is deployed, the team wants agentic monitoring — detect, diagnose, and help remediate issues.
-
-> This challenge depends on a reachable deployment from Challenge 4. If your team doesn't have one, pair with another team or use a shared reference deployment so you can still practise the loop.
+Deploy the full Octocat Supply application to **Microsoft Azure** using **Infrastructure as Code (IaC)** and a **GitHub Actions** CI/CD pipeline. The deployment should be automated, repeatable, defined as code, and driven from GitHub Actions.
 
 ## Actions
 
-* **Enable observability** — Confirm the deployed app emits the telemetry needed for monitoring (logs, metrics, health checks). Add health/readiness endpoints if it doesn't already expose them.
-* **Set up the SRE Agent** — Connect the Azure SRE Agent to the deployed resources so it can observe application health.
-* **Simulate an issue** — Introduce or trigger a fault (e.g. a failing dependency or a bad deploy) that clearly affects health.
-* **Investigate with the agent** — Use the SRE Agent to identify root cause and suggest remediation.
-* **Remediate** — Apply the fix and confirm the agent reports healthy status.
+* **Choose your IaC** — Define the Azure infrastructure using an IaC approach (e.g. **Bicep** or **Terraform**) for the resources the app needs: compute for frontend/API, storage/database, and supporting services.
+* **Author the templates** — Use Copilot to help generate and refine the IaC, following Azure best practices.
+* **Build the pipeline** — Create a GitHub Actions workflow that builds, tests, provisions infrastructure, and deploys the frontend and API.
+* **Configure securely** — Use GitHub secrets / **OIDC federated credentials** for Azure authentication; avoid hard-coded credentials.
+* **Deploy and verify** — Run the pipeline and confirm the application is reachable in Azure.
+
+> **Optional starter scaffold (included in this folder).** [`infra/`](../infra/README.md) (Bicep) — bundled here — plus the bundled [`.github/workflows/deploy.yml`](../.github/workflows/deploy.yml) sketch a **Container Apps + ACR + OIDC** topology so you don't start from a blank page. The meaningful design choices — SKUs, database/storage strategy, API ingress visibility, secrets, scaling — are intentionally left as `TODO`s. It removes boilerplate; it does **not** do the challenge for you. Use it, extend it, or replace it. See [`infra/README.md`](../infra/README.md).
 
 ## Success criteria
 
-* The deployed application emits usable telemetry for monitoring.
-* The Azure SRE Agent is monitoring the application.
-* An induced issue is detected and diagnosed with agent assistance (not just noticed manually).
-* The issue is remediated and health is restored.
-
-> Capture **what the agent surfaced vs. what you had to investigate manually**, and note reliability improvements to feed back into the backlog.
+* Azure infrastructure is defined as code and provisions cleanly (no manual portal clicking to create resources).
+* A single GitHub Actions workflow builds, tests, provisions, and deploys the application.
+* Authentication to Azure uses secrets/OIDC — no credentials in source.
+* The deployed application is reachable and functional in Azure (exercise a real flow, e.g. the cart).
 
 ## Learning resources
 
-* [Azure SRE Agent documentation](https://learn.microsoft.com/en-us/azure/sre-agent/)
-* [Azure Monitor overview](https://learn.microsoft.com/en-us/azure/azure-monitor/overview)
-* [Health probes in Azure Container Apps](https://learn.microsoft.com/en-us/azure/container-apps/health-probes)
+* [Deploy to Azure from GitHub Actions](https://learn.microsoft.com/en-us/azure/developer/github/github-actions)
+* [Authenticate to Azure from GitHub Actions using OIDC](https://learn.microsoft.com/en-us/azure/developer/github/connect-from-azure-openid-connect)
+* [Bicep documentation](https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/)
+* [Azure Container Apps](https://learn.microsoft.com/en-us/azure/container-apps/)
+* [Azure Well-Architected Framework](https://learn.microsoft.com/en-us/azure/well-architected/)

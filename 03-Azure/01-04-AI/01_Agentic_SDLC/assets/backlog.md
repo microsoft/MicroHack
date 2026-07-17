@@ -1,6 +1,6 @@
 # Octocat Supply — Product Backlog
 
-This is the **Challenge 2 backlog**: a curated, prioritised list of features the Octocat team still
+This is the **Challenge 3 backlog**: a curated, prioritised list of features the Octocat team still
 needs to deliver for the Octocat Supply application. Instead of inventing a feature, pick one of the
 items below and take it through a full agentic loop — **plan → implement → test → review**.
 
@@ -13,7 +13,7 @@ existing patterns (repository pattern, DTOs/types, error handling, consistent HT
 A set of these items may already be seeded as **GitHub Issues** in your team repo (see
 [`scripts/seed-backlog.sh` / `scripts/seed-backlog.ps1`](../scripts/README.md)). If so, you can pick from
 real, labelled issues — and the same issues are what an MCP server can pull as real backlog context in
-the Challenge 2 optional stretch.
+the Challenge 3 optional stretch.
 
 ## How to use this backlog
 
@@ -23,7 +23,7 @@ the Challenge 2 optional stretch.
 3. Keep the diff scoped and consistent with the existing codebase; add tests for the new logic.
 
 > **Recommended starting point:** _Payment integration for the cart_ — it's the natural continuation of
-> the cart feature from Challenge 1.
+> the cart feature from Challenge 2.
 
 ## Priority & sizing legend
 
@@ -40,7 +40,7 @@ the Challenge 2 optional stretch.
 - **Suggested label:** `backlog`, `priority:high`
 
 > As a customer, I want to pay for the items in my cart so that I can complete a purchase and turn my
-> cart into a confirmed order. This is the natural continuation of the cart feature from Challenge 1.
+> cart into a confirmed order. This is the natural continuation of the cart feature from Challenge 2.
 
 **Acceptance criteria**
 

@@ -1,11 +1,11 @@
 <#
 .SYNOPSIS
-    Seed the Challenge 2 backlog into a GitHub repo as Issues.
+    Seed the Challenge 3 backlog into a GitHub repo as Issues.
 
 .DESCRIPTION
     Creates one GitHub Issue per item in assets/backlog.md, so teams can pick from a real,
     prioritised, labelled list instead of inventing a backlog. The same issues are what an MCP
-    server can pull as real backlog context in the Challenge 2 optional stretch.
+    server can pull as real backlog context in the Challenge 3 optional stretch.
 
     Labels (backlog, priority:high|medium|low) are ensured first. The script is safe to re-run:
     open issues with an identical title are skipped rather than duplicated.
@@ -66,7 +66,7 @@ if ($LASTEXITCODE -ne 0) {
 # Label definitions
 # ---------------------------------------------------------------------------
 $Labels = @(
-    @{ Name = "backlog";         Color = "0e8a16"; Description = "Challenge 2 backlog item" },
+    @{ Name = "backlog";         Color = "0e8a16"; Description = "Challenge 3 backlog item" },
     @{ Name = "priority:high";   Color = "b60205"; Description = "High priority" },
     @{ Name = "priority:medium"; Color = "fbca04"; Description = "Medium priority" },
     @{ Name = "priority:low";    Color = "0e8a16"; Description = "Low priority" }
@@ -79,7 +79,7 @@ $Items = @(
     @{
         Title    = "Payment integration for the cart"
         Priority = "High"; Size = "M"; Layers = "frontend, API"
-        Body     = "As a customer, I want to pay for the items in my cart so that I can complete a purchase and turn my cart into a confirmed order. This is the natural continuation of the cart feature from Challenge 1."
+        Body     = "As a customer, I want to pay for the items in my cart so that I can complete a purchase and turn my cart into a confirmed order. This is the natural continuation of the cart feature from Challenge 2."
         Ac       = @(
             "A customer can start a checkout from the cart and submit payment details through a dedicated flow.",
             "A successful payment converts the cart into an order (with order details) via the API.",
@@ -221,7 +221,7 @@ $($item.Body)
 
 $acBlock
 
-_Seeded from assets/backlog.md for Challenge 2._
+_Seeded from assets/backlog.md for Challenge 3._
 "@
 
     if ($ExistingTitles -contains $item.Title) {

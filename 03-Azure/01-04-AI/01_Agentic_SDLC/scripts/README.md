@@ -2,11 +2,11 @@
 
 Utility scripts for running the Agentic SDLC Hackathon.
 
-## `seed-backlog.sh` / `seed-backlog.ps1` — Seed the Challenge 2 backlog
+## `seed-backlog.sh` / `seed-backlog.ps1` — Seed the Challenge 3 backlog
 
-These scripts create the [Challenge 2 backlog](../assets/backlog.md) as real **GitHub Issues** in a
+These scripts create the [Challenge 3 backlog](../assets/backlog.md) as real **GitHub Issues** in a
 repo, so teams pick from a real, prioritised, labelled list instead of inventing a backlog. The seeded
-issues are also what an MCP server can pull as **real backlog context** in the Challenge 2 optional stretch.
+issues are also what an MCP server can pull as **real backlog context** in the Challenge 3 optional stretch.
 
 Both scripts do the same thing — use the `.sh` on macOS/Linux and the `.ps1` on Windows.
 
@@ -63,7 +63,7 @@ any changes.
 ### When to run it (event flow)
 
 - **Pre-event, per team repo/fork.** As part of pre-event repo prep, run the seeder against each team's repo/fork so the backlog is already there
-  when teams reach Challenge 2.
+  when teams reach Challenge 3.
 - **Do a `--dry-run` first** to confirm the target repo and see the list before creating anything.
 - It's safe to re-run if a repo was missed or you want to top up after manual edits — duplicates are
   skipped by title.

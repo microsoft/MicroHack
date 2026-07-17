@@ -2,7 +2,7 @@
 
 **WorkIQ** is this hackathon's stand-in for **Microsoft 365 organization knowledge, context & insights** — the kind of signal an agent could pull from Teams chats, support systems, and stakeholder email. None of it is real; it's a small, deliberately **messy** slice of "what the org is talking about" so you can practise turning ambient organizational chatter into implementable work.
 
-This folder exists for the **Challenge 2 optional stretch** (requirement refinement). It gives you something *raw* to refine — there is no clean story, no spec, and no acceptance criteria for you to copy. That's the point.
+This folder exists for the **Challenge 3 optional stretch** (requirement refinement). It gives you something *raw* to refine — there is no clean story, no spec, and no acceptance criteria for you to copy. That's the point.
 
 ## What's in here
 

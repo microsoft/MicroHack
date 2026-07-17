@@ -1,6 +1,6 @@
 # Custom agents — `.github/agents/`
 
-This folder holds **custom agents** for the repo. This README is a short "anatomy of a custom agent" so you can read one, use one, and build your own — the working example here is [`requirement-refiner.agent.md`](requirement-refiner.agent.md), built for the Challenge 2 requirement-refinement stretch.
+This folder holds **custom agents** for the repo. This README is a short "anatomy of a custom agent" so you can read one, use one, and build your own — the working example here is [`requirement-refiner.agent.md`](requirement-refiner.agent.md), built for the Challenge 3 requirement-refinement stretch.
 
 ## What is a custom agent?
 

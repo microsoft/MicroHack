@@ -1,35 +1,32 @@
-# Challenge 6 - Implement agentic workflows to maintain the app
+# Challenge 6 - Monitor the deployed app with the Azure SRE Agent
 
-**[Home](../Readme.md)** - [Previous Challenge](challenge-05.md) - [Next Challenge](finish.md)
+**[Home](../Readme.md)** - [Previous Challenge](challenge-05.md) - [Next Challenge](challenge-07.md)
 
 ## Goal
 
-Implement **GitHub Agentic Workflows** to help maintain the Octocat Supply application over time. Delivering the app is only the beginning — the team needs sustainable, agent-driven maintenance: triaging issues, keeping dependencies current, and responding to changes in the repository.
+Use agents to monitor the deployed Octocat Supply application and improve its reliability, leveraging the **Azure SRE Agent**. Now that the app is deployed, the team wants agentic monitoring — detect, diagnose, and help remediate issues.
+
+> This challenge depends on a reachable deployment from Challenge 5. If your team doesn't have one, pair with another team or use a shared reference deployment so you can still practise the loop.
 
 ## Actions
 
-* **Identify maintenance tasks** — Choose a recurring task that benefits from automation (e.g. issue triage/labelling, dependency updates, test/lint on change, documentation upkeep). Start with a **low-risk** task.
-* **Author an agentic workflow** — Create a GitHub Agentic Workflow that performs one of these tasks autonomously.
-* **Define triggers and guardrails** — Configure when it runs (schedule, PR, issue) and constrain what it is allowed to do — least privilege.
-* **Test the workflow** — Trigger it and observe the agent completing the task.
-* **Review the output** — Confirm the agent's actions are correct and safe before enabling it broadly.
+* **Enable observability** — Confirm the deployed app emits the telemetry needed for monitoring (logs, metrics, health checks). Add health/readiness endpoints if it doesn't already expose them.
+* **Set up the SRE Agent** — Connect the Azure SRE Agent to the deployed resources so it can observe application health.
+* **Simulate an issue** — Introduce or trigger a fault (e.g. a failing dependency or a bad deploy) that clearly affects health.
+* **Investigate with the agent** — Use the SRE Agent to identify root cause and suggest remediation.
+* **Remediate** — Apply the fix and confirm the agent reports healthy status.
 
 ## Success criteria
 
-* At least one agentic workflow is implemented and completes a real run.
-* The workflow has clear triggers and appropriate, least-privilege guardrails.
-* The agent completes a real maintenance task on the repository (not a no-op).
-* The workflow's output is reviewed for correctness and safety.
+* The deployed application emits usable telemetry for monitoring.
+* The Azure SRE Agent is monitoring the application.
+* An induced issue is detected and diagnosed with agent assistance (not just noticed manually).
+* The issue is remediated and health is restored.
 
-### Optional stretch — package a reusable skill / slash command
-
-* Pick a repeatable flow you've done by hand (e.g. "read instructions → scaffold tests → run validation").
-* Package it as a reusable **skill or slash command** so it can be invoked in one step.
-* Invoke it against a real task and confirm it performs the steps.
-* Document where **human review stays mandatory** (e.g. before merging generated tests or committing changes).
+> Capture **what the agent surfaced vs. what you had to investigate manually**, and note reliability improvements to feed back into the backlog.
 
 ## Learning resources
 
-* [GitHub Agentic Workflows (gh-aw)](https://github.com/githubnext/gh-aw)
-* [About GitHub Actions](https://docs.github.com/en/actions/learn-github-actions)
-* [Controlling permissions for GITHUB_TOKEN](https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token)
+* [Azure SRE Agent documentation](https://learn.microsoft.com/en-us/azure/sre-agent/)
+* [Azure Monitor overview](https://learn.microsoft.com/en-us/azure/azure-monitor/overview)
+* [Health probes in Azure Container Apps](https://learn.microsoft.com/en-us/azure/container-apps/health-probes)

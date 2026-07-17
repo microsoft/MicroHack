@@ -1,51 +1,54 @@
-# Walkthrough Challenge 4 - Deploy into Azure
+# Walkthrough Challenge 4 - Testing & review
 
 **[Home](../../Readme.md)** - [Previous Challenge Solution](../challenge-03/solution-03.md) - [Next Challenge Solution](../challenge-05/solution-05.md)
 
-Duration: 60 minutes
+Duration: 30 minutes
 
 ## Prerequisites
 
-Complete [Challenge 3](../challenge-03/solution-03.md). Confirm your **Azure prerequisites**: subscription/budget, Contributor on your scope, a working GitHub ↔ Azure **OIDC federated credential**, and region capacity.
+Complete [Challenge 3](../challenge-03/solution-03.md). Know the exact test commands for your API track and the frontend.
 
 ## Approach
 
-The most operationally demanding challenge. **Get to a simple, working deploy early**, then refine — a reachable app on basic infra beats perfect templates that never ship. Auth and quota are the top time sinks.
+Focus tests on the **cart and backlog features you just built** — not the whole app. Push for quality of tests (edge cases, error handling) over raw count.
 
 Suggested pacing:
 
 ```
-Choose IaC + author templates            ~20 min
-Build the Actions pipeline               ~20 min
-Configure secure auth (OIDC/secrets)     ~10 min
-Deploy and verify                        ~10 min
+Run existing tests (baseline green)      ~5 min
+Find the gaps with Copilot               ~5 min
+Extend coverage (unit + component)      ~12 min
+Agent-assisted review                    ~5 min
+Fix findings                             ~3 min
 ```
 
-### Task 1: Choose IaC and author templates
+### Task 1: Establish a green baseline
 
-- Pick **Bicep** or **Terraform** and let Copilot scaffold the resources: compute for frontend/API, storage/database, supporting services.
-- 💡 **Optional starter scaffold** — [`infra/`](../../infra/README.md) (Bicep) is bundled in this MicroHack folder; combined with the bundled [`.github/workflows/deploy.yml`](../../.github/workflows/deploy.yml) it sketches a **Container Apps + ACR + Log Analytics + OIDC** topology — two apps (`api` on port 3000, `frontend`/nginx on port 80). The design decisions (SKUs, database/storage strategy, API ingress visibility, secrets, scaling, image build/push, frontend→api discovery) are deliberately left as `TODO`. It's a de-risking starting point, **not** a required or "correct" answer — extend it, replace it, or ignore it. See [`infra/README.md`](../../infra/README.md).
+- Run the existing API and frontend suites and confirm they pass. If the baseline fails on a clean checkout, it's usually an environment issue from Challenge 1 — fix that first (Codespaces), then re-run.
 
-### Task 2: Build one linear pipeline
+### Task 2: Find the gaps
 
-- Author a single GitHub Actions workflow that goes **build → test → provision → deploy**. Keep it linear and readable.
+- Ask Copilot to identify untested code paths in the cart and backlog features you added.
 
-### Task 3: Configure secure auth
+### Task 3: Extend coverage
 
-- 🔑 Use **OIDC federated credentials** for Azure auth, not long-lived secrets. The **most common wall** is the federated-credential subject (`repo:<owner>/<repo>:ref:refs/heads/main` or an environment subject) or a missing role. If auth fails in the pipeline, check this first and confirm the identity has Contributor on your scope.
+- 🔑 **Generate tests from the existing types and interfaces** so they stay accurate and compile.
+- Prompt explicitly for **edge cases and error handling** — not just happy paths.
+- Repo rule: only use test frameworks that **already exist** in the repo.
 
-### Task 4: Deploy and verify
+### Task 4: Agent-assisted review
 
-- Get a simple deploy reachable first, then refine SKUs and structure. Load the app's Azure URL and exercise a real flow (e.g. the cart). Ask Copilot for **Azure Well-Architected** guidance when choosing SKUs/services.
+- Run the code review agent (or Copilot review) on your recent changes.
+- Triage findings by the escalation order: **security / data integrity → correctness → performance → maintainability → style.** Fix the top; note the rest. Don't drown in nits.
 
-## Common blockers
+### Task 5: Fix findings
 
-- **Azure auth fails** → almost always the OIDC/federated credential or a missing role.
-- **Quota / capacity errors** → fall back to a smaller SKU or an alternate region.
-- **Provisioning partially fails** → tear down the resource group and re-provision clean rather than patching half-built state.
-- **Secrets committed to source** → stop and move them to GitHub secrets / OIDC.
-- **Pipeline green but app unreachable** → check ingress/networking and that the deploy targeted the provisioned resources.
+- Address the security/correctness issues surfaced by tests and review; confirm the suites are green again.
 
-> No optional stretch. Fast finishers should harden the pipeline (environments, review gates) or get a head start on Challenge 5's observability.
+## Optional stretch — model selection & context budgeting
+
+- **Compare models** — generate tests once in Auto and once with an explicitly selected model; record a decision rule for when to use each.
+- **Set a context budget** — decide a max number of files and max reference length per file before prompting, and stick to it.
+- **Note the trade-off** — capture how the budget affected quality vs. noise. The reflection is the deliverable.
 
 You successfully completed challenge 4! 🚀🚀🚀

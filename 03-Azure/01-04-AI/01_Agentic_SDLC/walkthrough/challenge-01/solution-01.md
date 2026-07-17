@@ -1,59 +1,45 @@
-# Walkthrough Challenge 1 - Deliver the cart feature
+# Walkthrough Challenge 1 - Dev environment & repo overview
 
-**[Home](../../Readme.md)** - [Previous Challenge Solution](../challenge-00/solution-00.md) - [Next Challenge Solution](../challenge-02/solution-02.md)
+**[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-02/solution-02.md)
 
 Duration: 30 minutes
 
 ## Prerequisites
 
-Complete [Challenge 0](../challenge-00/solution-00.md) — a working app and a responding Copilot — before starting.
+Please ensure you have satisfied the [General prerequisites](../../Readme.md#general-prerequisites) before continuing.
 
 ## Approach
 
-The emphasis is **using Copilot well**, not just writing code. Aim for a minimal, working cart (add / update qty / remove / total), not a perfect one.
+The aim here is a smooth, fast start — a good setup means the rest of the day goes into building, not fighting toolchains.
 
-Suggested pacing:
+### Task 1: Get the code and open an environment
 
-```
-Understand current state (Copilot explain)   ~5 min
-Design cart behaviours                        ~3 min
-Implement API endpoints                      ~10 min
-Wire up the UI                                ~8 min
-Validate end to end                           ~4 min
-```
+- Open your team's copy of this MicroHack in **GitHub Codespaces** (fastest, nothing to install), a local **VS Code Dev Container**, or locally.
+- 💡 If local setup takes more than ~15 minutes, **switch to Codespaces** rather than fighting a local toolchain.
+- Confirm you're on the intended working branch.
 
-### Task 1: Understand what already exists
+### Task 2: Verify runtimes and enable Copilot
 
-- Ask Copilot to explain the existing cart-related code in the frontend and API and to point out what's missing. Note the repo patterns you must follow: repository pattern, DTOs/types, error handling, consistent HTTP status codes (see `.github/instructions/api.instructions.md`).
+- In Codespaces / the Dev Container, Node.js 24, Python 3.13, .NET 10, and Java 17 are preinstalled. Locally, install only the runtime for your chosen API track plus Node.js.
+- Sign in to GitHub Copilot in the IDE. **Proof that it works** is a real Chat response about a file you have open — not just the extension being installed. If suggestions are empty, sign out/in, confirm your seat is assigned, and open a real source file so the agent has context.
 
-### Task 2: Design the behaviours first
+### Task 3: Explore the repo
 
-- Decide the specific behaviours — add, update quantity, remove, total — then implement one at a time rather than everything at once.
+- 🔑 The quickest way to satisfy this is to **ask Copilot Chat to summarise the repository structure and the main entry points**.
+- Identify: `src/` (the app — frontend + four API variants + shared SQLite schema, plus `src/docs/` architecture guidance), `infra/` + `scripts/` (Azure deployment), `assets/` (Challenge 3 backlog & WorkIQ inputs), `.github/` (Copilot custom instructions & agents). Read `src/README.md`.
 
-### Task 3: Implement the API
+### Task 4: Run the app locally
 
-- 🔑 **Paste (or open) the existing model/DTO types into your prompt** so Copilot's suggestions match the codebase and stay type-safe.
-- Persist cart state **through the API using the repository pattern** — don't fake persistence in the client.
+- Start the frontend and one API (see `src/README.md` — `make dev` / per-variant targets). Load a page in the browser and confirm the API responds.
+- Pick the API language your team is most comfortable with; the choice doesn't affect the concepts in later challenges.
 
-### Task 4: Wire a thin UI early
+## Optional stretch — repo-wide agent context
 
-- Get a minimal UI wired to the API early so you can validate the whole loop, then refine. If you're deep in the API at ~20 minutes with no UI, wire the thin UI now.
+Create an `AGENTS.md` and/or `.github/copilot-instructions.md` with:
+- **Conventions** — concrete, repo-specific rules (naming, repository pattern, DTO/type usage), not generic advice.
+- **Validation commands** — the exact build/test commands for your track and the frontend.
+- **Scope rules** — explicit "do not touch" boundaries (generated files, infra, unrelated services).
 
-### Task 5: Validate end to end
-
-- Exercise add / update qty / remove in the running app and confirm the displayed total updates correctly.
-
-## Common blockers
-
-- **Output drifts from repo style** → reference the existing DTO/model types in the prompt.
-- **Sprawling diff touching unrelated files** → keep changes incremental and scoped; revert unrelated edits.
-- **Endpoint not persisting** → follow the repository pattern, not in-memory/client-only storage.
-- **Trying to build payment now** → payment is a follow-on (Challenge 2); capture it and stay scoped.
-
-## Optional stretch — structured prompting
-
-- Build a reusable **prompt template**: objective / constraints / files in scope / output format.
-- Feed context in priority order and **stop** once it's enough: directly edited files → adjacent tests → docs only if needed.
-- Run the same request with a vague prompt and keep the better result — and be able to say *why* it was better.
+Then, in a **fresh** Copilot Chat, ask something that relies on a convention **without restating it** and confirm the instructions were applied. This pays off directly in Challenges 2–4.
 
 You successfully completed challenge 1! 🚀🚀🚀

@@ -43,7 +43,7 @@ This lab is **not** a full explanation of GitHub Copilot or Azure as technologie
 - [Azure Container Apps](https://learn.microsoft.com/en-us/azure/container-apps/)
 - [Azure SRE Agent](https://learn.microsoft.com/en-us/azure/sre-agent/)
 
-> **What's included.** This MicroHack folder is **self-contained** — everything you need ships with it: the **Octocat Supply** application source ([`src/`](src/README.md)), the Azure infrastructure scaffold ([`infra/`](infra/README.md)), helper [`scripts/`](scripts/README.md), the dev containers ([`.devcontainer/`](.devcontainer/)), the editor config ([`.vscode/`](.vscode/)), and the repo custom instructions, custom agents, and workflows ([`.github/`](.github/)). The Challenge 2 inputs — the product backlog and the mock **WorkIQ** organizational knowledge (Teams thread, support-ticket digest, stakeholder email) — live under [`assets/`](assets/). Facilitators create a copy/fork of this MicroHack per team before the event; participants work in their team's copy.
+> **What's included.** This MicroHack folder is **self-contained** — everything you need ships with it: the **Octocat Supply** application source ([`src/`](src/README.md)), the Azure infrastructure scaffold ([`infra/`](infra/README.md)), helper [`scripts/`](scripts/README.md), the dev containers ([`.devcontainer/`](.devcontainer/)), the editor config ([`.vscode/`](.vscode/)), and the repo custom instructions, custom agents, and workflows ([`.github/`](.github/)). The Challenge 3 inputs — the product backlog and the mock **WorkIQ** organizational knowledge (Teams thread, support-ticket digest, stakeholder email) — live under [`assets/`](assets/). Facilitators create a copy/fork of this MicroHack per team before the event; participants work in their team's copy.
 
 ## MicroHack context
 
@@ -72,7 +72,7 @@ In summary:
 
 - A **GitHub account** with access to your team's copy of this MicroHack repo and an **active GitHub Copilot seat** (Copilot Business/Enterprise, with Chat, agents, CLI, and MCP policies enabled).
 - Either **GitHub Codespaces** (recommended — nothing to install) **or** local **VS Code** with the **Dev Container** plus the **GitHub Copilot / Copilot Chat** extensions. The container preinstalls **Node.js 24, Python 3.13, .NET 10, Java 17**.
-- For **Challenges 4 & 5**, **Azure access**:
+- For **Challenges 5 & 6**, **Azure access**:
   - An **Azure subscription** with budget.
   - A **Resource Group** for the team.
   - **Contributor** permissions on that scope (plus any roles the Azure SRE Agent needs on the monitored resources).
@@ -83,26 +83,26 @@ In summary:
 
 ### Challenges
 
-* [Challenge 0 - Dev environment, Copilot access & repo overview](challenges/challenge-00.md)  **<- Start here**
-* [Challenge 1 - Deliver a new feature (the cart)](challenges/challenge-01.md)
-* [Challenge 2 - Add another feature from the backlog (agentic loop)](challenges/challenge-02.md)
-* [Challenge 3 - Run and extend test coverage, and review code](challenges/challenge-03.md)
-* [Challenge 4 - Deploy into Azure](challenges/challenge-04.md)
-* [Challenge 5 - Monitor the deployed app with the Azure SRE Agent](challenges/challenge-05.md)
-* [Challenge 6 - Implement agentic workflows to maintain the app](challenges/challenge-06.md)
+* [Challenge 1 - Dev environment, Copilot access & repo overview](challenges/challenge-01.md)  **<- Start here**
+* [Challenge 2 - Deliver a new feature (the cart)](challenges/challenge-02.md)
+* [Challenge 3 - Add another feature from the backlog (agentic loop)](challenges/challenge-03.md)
+* [Challenge 4 - Run and extend test coverage, and review code](challenges/challenge-04.md)
+* [Challenge 5 - Deploy into Azure](challenges/challenge-05.md)
+* [Challenge 6 - Monitor the deployed app with the Azure SRE Agent](challenges/challenge-06.md)
+* [Challenge 7 - Implement agentic workflows to maintain the app](challenges/challenge-07.md)
 * [Finish](challenges/finish.md)
 
 ### Solutions - Spoilerwarning
 
 Do not open these before attempting the challenges — they contain guidance and worked approaches.
 
-* [Solution 0 - Dev environment & repo overview](walkthrough/challenge-00/solution-00.md)
-* [Solution 1 - Deliver the cart feature](walkthrough/challenge-01/solution-01.md)
-* [Solution 2 - Backlog feature (agentic loop)](walkthrough/challenge-02/solution-02.md)
-* [Solution 3 - Testing & review](walkthrough/challenge-03/solution-03.md)
-* [Solution 4 - Deploy into Azure](walkthrough/challenge-04/solution-04.md)
-* [Solution 5 - Monitor with the Azure SRE Agent](walkthrough/challenge-05/solution-05.md)
-* [Solution 6 - Agentic workflows](walkthrough/challenge-06/solution-06.md)
+* [Solution 1 - Dev environment & repo overview](walkthrough/challenge-01/solution-01.md)
+* [Solution 2 - Deliver the cart feature](walkthrough/challenge-02/solution-02.md)
+* [Solution 3 - Backlog feature (agentic loop)](walkthrough/challenge-03/solution-03.md)
+* [Solution 4 - Testing & review](walkthrough/challenge-04/solution-04.md)
+* [Solution 5 - Deploy into Azure](walkthrough/challenge-05/solution-05.md)
+* [Solution 6 - Monitor with the Azure SRE Agent](walkthrough/challenge-06/solution-06.md)
+* [Solution 7 - Agentic workflows](walkthrough/challenge-07/solution-07.md)
 
 ## Suggested agenda
 
@@ -111,9 +111,9 @@ A typical one-day delivery of this MicroHack:
 | Time | Activity |
 | --- | --- |
 | 09:00 – 10:00 | Tech Talk — Agentic SDLC overview |
-| 10:00 – 12:30 | Hacking session — Challenges 0, 1, 2, 3 |
+| 10:00 – 12:30 | Hacking session — Challenges 1, 2, 3, 4 |
 | 12:30 – 13:30 | Lunch break |
-| 13:30 – 15:30 | Hacking session — Challenges 4, 5, 6 |
+| 13:30 – 15:30 | Hacking session — Challenges 5, 6, 7 |
 | 15:30 – 16:00 | Final discussion / Wrap-up |
 
 ## Contributors

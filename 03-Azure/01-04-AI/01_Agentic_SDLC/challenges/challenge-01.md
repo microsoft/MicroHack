@@ -1,36 +1,39 @@
-# Challenge 1 - Deliver a new feature (the cart)
+# Challenge 1 - Dev environment, Copilot access & repo overview
 
-**[Home](../Readme.md)** - [Previous Challenge](challenge-00.md) - [Next Challenge](challenge-02.md)
+**[Home](../Readme.md)** - [Next Challenge](challenge-02.md)
 
 ## Goal
 
-Deliver a new feature for the Octocat Supply application by completing the incomplete shopping **cart** functionality, using GitHub Copilot to move fast while keeping the code consistent with the existing app.
+Configure your development environment, confirm GitHub Copilot access, and get familiar with the **Octocat Supply** application so the later challenges run without setup interruptions.
 
-The shopping cart is incomplete and lacks payment integration, which is blocking the launch. The focus of this challenge is **using Copilot well** — giving it the right context and iterating — not just writing code.
+The Octocat team is behind schedule and adopting Agentic Development practices. Before you can help deliver features, you need a working environment, Copilot enabled, and a clear picture of the codebase.
 
 ## Actions
 
-* **Understand the current state** — Review the existing cart-related code in the frontend and API. Use Copilot to explain what exists and what's missing.
-* **Design the feature** — Decide the cart behaviours to implement: add item, update quantity, remove item, view cart total.
-* **Implement the API** — Add or complete the cart endpoints following the repository's patterns (repository pattern, DTOs/types, error handling, consistent HTTP status codes).
-* **Implement the UI** — Wire up the frontend cart view to the API using the React + Vite + Tailwind stack.
-* **Validate** — Manually exercise the cart flow end to end in the running app.
+* **Get the code** — Open your team's copy of this MicroHack in **GitHub Codespaces** (recommended), a local **VS Code Dev Container** (`.devcontainer/`), or locally. Confirm you're on the intended working branch.
+* **Verify runtimes** — Confirm the runtimes for your chosen API track are available (TypeScript, Python, .NET, or Java) plus Node.js for the frontend. In Codespaces / the Dev Container these are preinstalled.
+* **Enable GitHub Copilot** — Sign in and confirm your Copilot entitlement is active in your IDE; install the GitHub Copilot / Copilot Chat extensions.
+* **Explore the repo** — Review the structure: `src/` (the app, with `src/docs/` architecture guidance), `infra/` + `scripts/` (Azure deployment), `assets/` (Challenge 3 backlog & WorkIQ inputs), and `.github/` (Copilot custom instructions & agents). Identify where the frontend, APIs, and database live. Read `src/README.md` for the code structure and build commands.
+* **Run the app locally** — Start the frontend and one API to confirm the application builds and runs before you begin changing it.
 
 ## Success criteria
 
-* A user can add products to the cart, update quantities, and remove items.
-* The cart displays an accurate total.
-* Cart state is persisted through the API using existing patterns (not just client-side React state).
-* Changes are type-safe and consistent with the existing codebase style, with a scoped diff.
+* Your team's repo copy is open in your environment and Copilot is active and responding in your IDE.
+* You can build and run the frontend and at least one API locally.
+* You can describe, at a high level, how the frontend, APIs, and database fit together.
 
-### Optional stretch — structured prompting & context retrieval
+### Optional stretch — repo-wide agent context
 
-* Build a **reusable prompt template** with clear sections: objective, constraints, files in scope, desired output format.
-* Set a **context-retrieval order**: directly edited files first → adjacent tests → architecture docs only if still needed. Stop once it's enough.
-* Run the cart prompt structured, then run the same request with a loose, unstructured prompt and keep the better result — the comparison is the learning.
+Give Copilot persistent, repo-wide context so later challenges start with your conventions loaded.
+
+* Create an `AGENTS.md` and/or `.github/copilot-instructions.md` recording coding conventions, naming, and preferred patterns.
+* Record the exact **build and test commands** for your API track (and the frontend) so an agent can verify its own work.
+* Add explicit **scope rules** (e.g. don't touch generated files, infra, unrelated services) to keep agent diffs minimal.
+* In a fresh Copilot Chat, ask a question that relies on those conventions **without restating them** and confirm they're applied.
 
 ## Learning resources
 
-* [Prompt engineering for GitHub Copilot](https://docs.github.com/en/copilot/using-github-copilot/prompt-engineering-for-github-copilot)
-* [Best practices for using GitHub Copilot](https://docs.github.com/en/copilot/using-github-copilot/best-practices-for-using-github-copilot)
-* [Getting started with Copilot Chat](https://docs.github.com/en/copilot/github-copilot-chat/using-github-copilot-chat)
+* [Setting up GitHub Copilot](https://docs.github.com/en/copilot/quickstart)
+* [GitHub Codespaces](https://docs.github.com/en/codespaces/overview)
+* [Development Containers](https://containers.dev/)
+* [Adding repository custom instructions for Copilot](https://docs.github.com/en/copilot/customizing-copilot/adding-repository-custom-instructions-for-github-copilot)

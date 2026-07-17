@@ -1,61 +1,47 @@
-# Walkthrough Challenge 6 - Agentic workflows
+# Walkthrough Challenge 6 - Monitor with the Azure SRE Agent
 
-**[Home](../../Readme.md)** - [Previous Challenge Solution](../challenge-05/solution-05.md) - [Finish](../../challenges/finish.md)
+**[Home](../../Readme.md)** - [Previous Challenge Solution](../challenge-05/solution-05.md) - [Next Challenge Solution](../challenge-07/solution-07.md)
 
 Duration: 30 minutes
 
 ## Prerequisites
 
-Complete [Challenge 5](../challenge-05/solution-05.md). Confirm agentic-workflow / agent capabilities are enabled for your org.
+Complete [Challenge 5](../challenge-05/solution-05.md) — you need a **reachable deployment**. No deploy? Pair with another team or use a shared reference environment so you can still practise the loop. Confirm the **Azure SRE Agent** is available in your region/subscription and accessible to you.
 
 ## Approach
 
-The closing challenge: agents don't just build, they **sustain**. Keep it focused — start with a **low-risk task** so you get a working workflow rather than an ambitious half-built one. Make sure you actually **trigger and observe** it.
+Move from build to operate. The learning is in the **detect → diagnose → remediate** loop — get the agent connected fast so there's time to actually reach the diagnosis step.
 
 Suggested pacing:
 
 ```
-Identify a maintenance task              ~5 min
-Author the agentic workflow             ~12 min
-Define triggers + guardrails             ~5 min
-Test the workflow                        ~5 min
-Review the output                        ~3 min
+Enable/confirm observability             ~7 min
+Connect the SRE Agent                    ~7 min
+Simulate a fault                         ~5 min
+Investigate with the agent               ~7 min
+Remediate + confirm healthy              ~4 min
 ```
 
-### Task 1: Identify a low-risk maintenance task
+### Task 1: Enable/confirm observability
 
-- Choose a recurring task: **issue triage/labelling** (great first choice), dependency updates, test/lint on change, or docs upkeep. Automate code-changing tasks only once the pattern works.
+- Confirm the deployed app emits logs, metrics, and health/readiness signals. If it lacks health/readiness endpoints, add them and confirm logging/metrics are enabled on the Azure resources.
 
-### Task 2: Author the workflow
+### Task 2: Connect the SRE Agent
 
-- Create a GitHub Agentic Workflow that performs that one task autonomously.
+- Connect the Azure SRE Agent to the **correct deployed resources / resource group** so it can observe application health and report status. Permissions errors usually mean the agent needs extra roles on the monitored resources.
 
-### Task 3: Define triggers and guardrails
+### Task 3: Simulate a clear fault
 
-- 🔑 Configure exactly **when** it runs (schedule / PR / issue) and **constrain what it may do** — least privilege. The agent should only touch what its task needs.
+- 💡 Pick a fault that clearly affects health — a **failing dependency** (e.g. break a connection string) or a **bad deploy** — rather than a subtle one that won't surface.
 
-### Task 4: Test the workflow
+### Task 4: Investigate with the agent
 
-- Trigger it against real repo state and watch the agent complete the task. If it doesn't fire, check the trigger config matches the event you're testing and that permissions allow it.
+- 🔑 Let the **agent** surface and diagnose the issue and suggest remediation — the goal is agent-assisted diagnosis, not you spotting it manually. Capture **what the agent surfaced vs. what you had to investigate yourself**.
 
-### Task 5: Review the output
+### Task 5: Remediate and confirm
 
-- Inspect the agent's actions for correctness and safety before trusting/enabling it broadly. If it did something unexpected, that's the teaching moment — tighten scope and re-run.
+- Apply the fix and confirm the agent reports healthy again. Note reliability gaps as backlog items — a natural feed into Challenge 7.
 
-## Common blockers
+> No optional stretch. Fast finishers should document agent-caught vs. manually-investigated findings and turn reliability gaps into backlog items.
 
-- **Workflow too ambitious (auto-changing code)** → start with triage/labelling.
-- **Doesn't trigger** → trigger config mismatch or insufficient permissions.
-- **Over-broad permissions** → tighten to least privilege.
-- **No-op / nothing to review** → ensure the task is real and the trigger fired against actual state.
-
-## Optional stretch — package a reusable skill / slash command
-
-- Pick a repeatable manual flow (e.g. "read instructions → scaffold tests → run validation").
-- Package it as a reusable **skill or slash command** so it's invocable in one step.
-- Invoke it against a real task and confirm the steps run.
-- Document where **human review stays mandatory** (e.g. before merging generated tests or committing changes).
-
-You successfully completed challenge 6 — and the full Agentic SDLC arc: **plan → build → test → review → deploy → monitor → maintain**, all with agents. 🚀🚀🚀
-
-Head to the [Finish](../../challenges/finish.md) page.
+You successfully completed challenge 6! 🚀🚀🚀

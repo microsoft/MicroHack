@@ -1,5 +1,5 @@
 # =============================================================================
-# deploy.yml — Challenge 4 starter workflow (OPTIONAL, SKELETON — not turnkey)
+# deploy.yml — Challenge 5 starter workflow (OPTIONAL, SKELETON — not turnkey)
 # -----------------------------------------------------------------------------
 # This is a TODO-marked scaffold, NOT a working deploy. It is inert by default:
 #   - the `push` trigger is commented out, so it never auto-runs, and
@@ -25,7 +25,7 @@
 # No AZURE_CREDENTIALS / client secret is used — auth is OIDC only.
 # =============================================================================
 
-name: Deploy to Azure (Challenge 4 — scaffold)
+name: Deploy to Azure (Challenge 5 — scaffold)
 
 on:
   workflow_dispatch:

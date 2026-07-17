@@ -348,6 +348,7 @@ function Restart-LinuxVMAndWaitForSsh {
 function ConvertTo-LinuxHostName {
     param(
         [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
         [string]$Name
     )
 
@@ -380,6 +381,7 @@ function Wait-LinuxHostName {
         [string]$KeyFilePath,
 
         [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
         [string]$ExpectedHostName,
 
         [int]$TimeoutSeconds = 300
@@ -395,7 +397,11 @@ function Wait-LinuxHostName {
                 -UserName $UserName `
                 -ErrorAction Stop `
                 -ScriptBlock {
-                    param($expectedHostName)
+                    param(
+                        [Parameter(Mandatory)]
+                        [ValidateNotNullOrEmpty()]
+                        [string]$ExpectedHostName
+                    )
 
                     $hostnameOutput = @(& hostname 2>&1)
                     $hostnameExitCode = $LASTEXITCODE
@@ -404,12 +410,12 @@ function Wait-LinuxHostName {
                     }
 
                     $effectiveHostName = ([string]$hostnameOutput[-1]).Trim()
-                    if ($effectiveHostName -cne $expectedHostName) {
-                        throw "Effective hostname is '$effectiveHostName', expected '$expectedHostName'."
+                    if ($effectiveHostName -cne $ExpectedHostName) {
+                        throw "Effective hostname is '$effectiveHostName', expected '$ExpectedHostName'."
                     }
                     return $true
                 } `
-                -ArgumentList $ExpectedHostName
+                -ArgumentList @($ExpectedHostName)
         }
 }
 
@@ -639,6 +645,7 @@ if ($Env:flavor -eq 'ITPro') {
 
         $Ubuntu01vmName = "$namingPrefix-Ubuntu-01"
         $Ubuntu01HostName = ConvertTo-LinuxHostName -Name $Ubuntu01vmName
+        Write-Output "Expected Ubuntu guest hostname: $Ubuntu01HostName"
         $Ubuntu01vmvhdPath = "${Env:MHBoxVMDir}\$namingPrefix-Ubuntu-01.vhdx"
 
         $AzMigSrvvmName = "$namingPrefix-AzMigSrv"
@@ -768,7 +775,11 @@ if ($Env:flavor -eq 'ITPro') {
             Write-Output 'Renaming the nested Linux VMs'
 
             $restartRequired = Invoke-Command -HostName $Ubuntu01VmIp -KeyFilePath "$Env:USERPROFILE\.ssh\id_rsa" -UserName $nestedLinuxUsername -ScriptBlock {
-                param($newHostName)
+                param(
+                    [Parameter(Mandatory)]
+                    [ValidateNotNullOrEmpty()]
+                    [string]$NewHostName
+                )
 
                 function Invoke-SudoCommand {
                     param(
@@ -792,7 +803,7 @@ if ($Env:flavor -eq 'ITPro') {
                     Invoke-SudoCommand -Command 'hostname'
                 )
                 $currentHostName = ([string]$currentHostNameOutput[-1]).Trim()
-                $restartRequired = $currentHostName -cne $newHostName
+                $restartRequired = $currentHostName -cne $NewHostName
 
                 $tempRoot = [IO.Path]::Combine(
                     [IO.Path]::GetTempPath(),
@@ -811,7 +822,7 @@ if ($Env:flavor -eq 'ITPro') {
                     $hostnamePath = Join-Path $tempRoot 'hostname'
                     [IO.File]::WriteAllText(
                         $hostnamePath,
-                        "$newHostName`n",
+                        "$NewHostName`n",
                         $utf8NoBom
                     )
 
@@ -822,14 +833,14 @@ if ($Env:flavor -eq 'ITPro') {
                     $updatedHostsLines = foreach ($hostsLine in $hostsLines) {
                         if ([string]$hostsLine -match '^\s*127\.0\.1\.1(?:\s|$)') {
                             $localHostEntryFound = $true
-                            "127.0.1.1`t$newHostName"
+                            "127.0.1.1`t$NewHostName"
                         }
                         else {
                             [string]$hostsLine
                         }
                     }
                     if (-not $localHostEntryFound) {
-                        $updatedHostsLines += "127.0.1.1`t$newHostName"
+                        $updatedHostsLines += "127.0.1.1`t$NewHostName"
                     }
 
                     $hostsPath = Join-Path $tempRoot 'hosts'
@@ -861,7 +872,7 @@ if ($Env:flavor -eq 'ITPro') {
                         Out-Null
                     Invoke-SudoCommand `
                         -Command 'hostnamectl' `
-                        -Arguments @('set-hostname', '--', $newHostName) |
+                        -Arguments @('set-hostname', '--', $NewHostName) |
                         Out-Null
                 }
                 finally {
@@ -869,7 +880,7 @@ if ($Env:flavor -eq 'ITPro') {
                 }
 
                 return $restartRequired
-            } -ArgumentList $Ubuntu01HostName -ErrorAction Stop
+            } -ArgumentList @($Ubuntu01HostName) -ErrorAction Stop
 
             if ($restartRequired) {
                 $Ubuntu01VmIp = Restart-LinuxVMAndWaitForSsh -VMName $Ubuntu01vmName

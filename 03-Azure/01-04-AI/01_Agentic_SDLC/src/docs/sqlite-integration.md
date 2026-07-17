@@ -47,13 +47,10 @@ This will:
 You can also manage the database manually from the root directory:
 
 ```bash
-# Initialize database with migrations and seed data
+# Initialize database schema (runs migrations)
 make db-init
 
-# Run migrations only (no seeding)
-make db-migrate
-
-# Seed database only
+# Seed the database with sample data
 make db-seed
 ```
 
@@ -62,7 +59,6 @@ Alternatively, if you're in the `api-ts/` directory, you can use npm commands di
 ```bash
 cd api-ts
 npm run db:init
-npm run db:migrate
 npm run db:seed
 ```
 
@@ -130,7 +126,7 @@ Database schema changes are managed through migration files:
 
 1. Create a new migration file: `src/database/migrations/002_description.sql`
 2. Add your SQL statements
-3. Run migrations: `make db-migrate` (or `cd api-ts && npm run db:migrate`)
+3. Run migrations: `make db-init` (or `cd api-ts && npm run db:migrate`)
 
 Migration files are executed in order and tracked in the `migrations` table.
 

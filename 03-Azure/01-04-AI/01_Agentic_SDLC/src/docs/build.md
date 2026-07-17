@@ -27,8 +27,8 @@ You can build the entire application or its individual components using the foll
 # Build both API and Frontend components
 make build
 
-# Build only the API component
-make build-api
+# Build only the TypeScript API component
+make build-ts
 
 # Build only the Frontend component
 make build-frontend
@@ -44,13 +44,10 @@ cd frontend && npm run build
 ### Database management
 
 ```bash
-# Initialize DB (migrations + seed)
+# Initialize DB schema (runs migrations)
 make db-init
 
-# Run migrations only
-make db-migrate
-
-# Seed data only
+# Seed sample data
 make db-seed
 ```
 
@@ -59,7 +56,6 @@ Alternatively, if you're in the `api-ts/` directory, you can use npm commands di
 ```bash
 cd api-ts
 npm run db:init
-npm run db:migrate
 npm run db:seed
 ```
 
@@ -91,8 +87,8 @@ Alternatively, you can press `Ctrl+Shift+B` (or `Cmd+Shift+B` on macOS) to run t
 # Start both API and Frontend in development mode with hot reloading
 make dev
 
-# Start only the API in development mode
-make dev-api
+# Start only the TypeScript API in development mode
+make dev-api-ts
 
 # Start only the Frontend in development mode
 make dev-frontend
@@ -124,8 +120,8 @@ This will start both the API and Frontend in development mode with the integrate
 # Run all tests
 make test
 
-# Run API tests only
-make test-api
+# Run TypeScript API tests only
+make test-ts
 
 # Run frontend tests only
 make test-frontend

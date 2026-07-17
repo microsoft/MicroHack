@@ -127,6 +127,81 @@ function Invoke-VMCommandWithRetry {
     return $commandResult
 }
 
+$removeWallpaperScript = {
+    $desktopKey = 'HKCU:\Control Panel\Desktop'
+    New-ItemProperty `
+        -Path $desktopKey `
+        -Name 'Wallpaper' `
+        -Value '' `
+        -PropertyType String `
+        -Force `
+        -ErrorAction Stop |
+        Out-Null
+
+    $desktopProperties = Get-ItemProperty -Path $desktopKey -ErrorAction Stop
+    foreach ($propertyName in @('WallpaperStyle', 'TileWallpaper')) {
+        if ($desktopProperties.PSObject.Properties.Name -contains $propertyName) {
+            Remove-ItemProperty `
+                -Path $desktopKey `
+                -Name $propertyName `
+                -ErrorAction Stop
+        }
+    }
+
+    foreach ($policyKey in @(
+        'HKCU:\Software\Microsoft\Windows\CurrentVersion\Policies\System',
+        'HKLM:\Software\Microsoft\Windows\CurrentVersion\Policies\System'
+    )) {
+        if (Test-Path -LiteralPath $policyKey -ErrorAction Stop) {
+            $policyProperties = Get-ItemProperty -Path $policyKey -ErrorAction Stop
+            foreach ($propertyName in @('Wallpaper', 'WallpaperStyle')) {
+                if ($policyProperties.PSObject.Properties.Name -contains $propertyName) {
+                    Remove-ItemProperty `
+                        -Path $policyKey `
+                        -Name $propertyName `
+                        -ErrorAction Stop
+                }
+            }
+        }
+    }
+
+    $themePath = Join-Path $env:APPDATA 'Microsoft\Windows\Themes'
+    if (Test-Path -LiteralPath $themePath -ErrorAction Stop) {
+        Get-ChildItem `
+            -Path $themePath `
+            -Filter 'Transcoded*' `
+            -File `
+            -ErrorAction Stop |
+            Remove-Item -Force -ErrorAction Stop
+    }
+
+    $cachedFilesPath = Join-Path $themePath 'CachedFiles'
+    if (Test-Path -LiteralPath $cachedFilesPath -ErrorAction Stop) {
+        Get-ChildItem `
+            -Path $cachedFilesPath `
+            -File `
+            -ErrorAction Stop |
+            Remove-Item -Force -ErrorAction Stop
+    }
+}
+
+function Remove-VMUserWallpaper {
+    param(
+        [Parameter(Mandatory)]
+        [string]$VMName,
+
+        [Parameter(Mandatory)]
+        [pscredential]$Credential
+    )
+
+    Invoke-VMCommandWithRetry `
+        -VMName $VMName `
+        -Credential $Credential `
+        -ScriptBlock $removeWallpaperScript `
+        -Description 'Administrator wallpaper removal' |
+        Out-Null
+}
+
 function Get-VMIPv4AddressWithRetry {
     param(
         [Parameter(Mandatory)]
@@ -652,6 +727,7 @@ if ($Env:flavor -eq 'ITPro') {
         }
 
         foreach ($vmName in @($Win2k22vmName, $AzMigSrvvmName, $SQLvmName)) {
+            Remove-VMUserWallpaper -VMName $vmName -Credential $winCreds
             Invoke-VMCommandWithRetry `
                 -VMName $vmName `
                 -Credential $winCreds `

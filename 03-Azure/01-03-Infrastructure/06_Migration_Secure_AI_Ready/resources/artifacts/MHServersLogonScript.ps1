@@ -345,6 +345,74 @@ function Restart-LinuxVMAndWaitForSsh {
     return $address
 }
 
+function ConvertTo-LinuxHostName {
+    param(
+        [Parameter(Mandatory)]
+        [string]$Name
+    )
+
+    $normalizedName = $Name.ToLowerInvariant() `
+        -replace '[^a-z0-9-]', '-' `
+        -replace '-+', '-'
+    $normalizedName = $normalizedName.Trim('-')
+    if ($normalizedName.Length -gt 63) {
+        $normalizedName = $normalizedName.Substring(0, 63).TrimEnd('-')
+    }
+    if (
+        [string]::IsNullOrWhiteSpace($normalizedName) -or
+        $normalizedName -notmatch '^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$'
+    ) {
+        throw "'$Name' cannot be normalized to a valid Linux hostname."
+    }
+
+    return $normalizedName
+}
+
+function Wait-LinuxHostName {
+    param(
+        [Parameter(Mandatory)]
+        [string]$ComputerName,
+
+        [Parameter(Mandatory)]
+        [string]$UserName,
+
+        [Parameter(Mandatory)]
+        [string]$KeyFilePath,
+
+        [Parameter(Mandatory)]
+        [string]$ExpectedHostName,
+
+        [int]$TimeoutSeconds = 300
+    )
+
+    Wait-Until `
+        -Description "Linux hostname '$ExpectedHostName' through a fresh SSH connection to '$ComputerName'" `
+        -TimeoutSeconds $TimeoutSeconds `
+        -Condition {
+            Invoke-Command `
+                -HostName $ComputerName `
+                -KeyFilePath $KeyFilePath `
+                -UserName $UserName `
+                -ErrorAction Stop `
+                -ScriptBlock {
+                    param($expectedHostName)
+
+                    $hostnameOutput = @(& hostname 2>&1)
+                    $hostnameExitCode = $LASTEXITCODE
+                    if ($hostnameExitCode -ne 0) {
+                        throw "hostname failed with exit code $hostnameExitCode."
+                    }
+
+                    $effectiveHostName = ([string]$hostnameOutput[-1]).Trim()
+                    if ($effectiveHostName -cne $expectedHostName) {
+                        throw "Effective hostname is '$effectiveHostName', expected '$expectedHostName'."
+                    }
+                    return $true
+                } `
+                -ArgumentList $ExpectedHostName
+        }
+}
+
 # Moved VHD storage account details here to keep only in place to prevent duplicates.
 $vhdSourceFolder = 'https://jumpstartprodsg.blob.core.windows.net/arcbox/prod/*'
 
@@ -570,6 +638,7 @@ if ($Env:flavor -eq 'ITPro') {
         $Win2k22vmvhdPath = "${Env:MHBoxVMDir}\$namingPrefix-Win2K22.vhdx"
 
         $Ubuntu01vmName = "$namingPrefix-Ubuntu-01"
+        $Ubuntu01HostName = ConvertTo-LinuxHostName -Name $Ubuntu01vmName
         $Ubuntu01vmvhdPath = "${Env:MHBoxVMDir}\$namingPrefix-Ubuntu-01.vhdx"
 
         $AzMigSrvvmName = "$namingPrefix-AzMigSrv"
@@ -698,19 +767,118 @@ if ($Env:flavor -eq 'ITPro') {
             # Renaming the nested linux VMs
             Write-Output 'Renaming the nested Linux VMs'
 
-            Invoke-Command -HostName $Ubuntu01VmIp -KeyFilePath "$Env:USERPROFILE\.ssh\id_rsa" -UserName $nestedLinuxUsername -ScriptBlock {
+            $restartRequired = Invoke-Command -HostName $Ubuntu01VmIp -KeyFilePath "$Env:USERPROFILE\.ssh\id_rsa" -UserName $nestedLinuxUsername -ScriptBlock {
                 param($newHostName)
 
-                $renameOutput = @(& sudo hostnamectl set-hostname -- $newHostName 2>&1)
-                $renameExitCode = $LASTEXITCODE
-                foreach ($outputLine in $renameOutput) {
-                    Write-Output ([string]$outputLine)
+                function Invoke-SudoCommand {
+                    param(
+                        [Parameter(Mandatory)]
+                        [string]$Command,
+
+                        [string[]]$Arguments = @()
+                    )
+
+                    $commandOutput = @(& sudo -- $Command @Arguments 2>&1)
+                    $commandExitCode = $LASTEXITCODE
+                    if ($commandExitCode -ne 0) {
+                        $commandDetail = $commandOutput -join [Environment]::NewLine
+                        throw "'$Command' failed with exit code $commandExitCode. $commandDetail"
+                    }
+
+                    return $commandOutput
                 }
-                if ($renameExitCode -ne 0) {
-                    throw "hostnamectl failed with exit code $renameExitCode."
+
+                $currentHostNameOutput = @(
+                    Invoke-SudoCommand -Command 'hostname'
+                )
+                $currentHostName = ([string]$currentHostNameOutput[-1]).Trim()
+                $restartRequired = $currentHostName -cne $newHostName
+
+                $tempRoot = [IO.Path]::Combine(
+                    [IO.Path]::GetTempPath(),
+                    "mhbox-hostname-$([guid]::NewGuid())"
+                )
+                [IO.Directory]::CreateDirectory($tempRoot) | Out-Null
+                try {
+                    $utf8NoBom = [Text.UTF8Encoding]::new($false)
+                    $cloudInitPath = Join-Path $tempRoot '99-mhbox-preserve-hostname.cfg'
+                    [IO.File]::WriteAllText(
+                        $cloudInitPath,
+                        "preserve_hostname: true`n",
+                        $utf8NoBom
+                    )
+
+                    $hostnamePath = Join-Path $tempRoot 'hostname'
+                    [IO.File]::WriteAllText(
+                        $hostnamePath,
+                        "$newHostName`n",
+                        $utf8NoBom
+                    )
+
+                    $hostsLines = @(
+                        Invoke-SudoCommand -Command 'cat' -Arguments @('/etc/hosts')
+                    )
+                    $localHostEntryFound = $false
+                    $updatedHostsLines = foreach ($hostsLine in $hostsLines) {
+                        if ([string]$hostsLine -match '^\s*127\.0\.1\.1(?:\s|$)') {
+                            $localHostEntryFound = $true
+                            "127.0.1.1`t$newHostName"
+                        }
+                        else {
+                            [string]$hostsLine
+                        }
+                    }
+                    if (-not $localHostEntryFound) {
+                        $updatedHostsLines += "127.0.1.1`t$newHostName"
+                    }
+
+                    $hostsPath = Join-Path $tempRoot 'hosts'
+                    [IO.File]::WriteAllText(
+                        $hostsPath,
+                        ($updatedHostsLines -join "`n") + "`n",
+                        $utf8NoBom
+                    )
+
+                    Invoke-SudoCommand `
+                        -Command 'mkdir' `
+                        -Arguments @('-p', '/etc/cloud/cloud.cfg.d') |
+                        Out-Null
+                    Invoke-SudoCommand `
+                        -Command 'install' `
+                        -Arguments @(
+                            '-m', '0644', '--',
+                            $cloudInitPath,
+                            '/etc/cloud/cloud.cfg.d/99-mhbox-preserve-hostname.cfg'
+                        ) |
+                        Out-Null
+                    Invoke-SudoCommand `
+                        -Command 'install' `
+                        -Arguments @('-m', '0644', '--', $hostnamePath, '/etc/hostname') |
+                        Out-Null
+                    Invoke-SudoCommand `
+                        -Command 'install' `
+                        -Arguments @('-m', '0644', '--', $hostsPath, '/etc/hosts') |
+                        Out-Null
+                    Invoke-SudoCommand `
+                        -Command 'hostnamectl' `
+                        -Arguments @('set-hostname', '--', $newHostName) |
+                        Out-Null
                 }
-            } -ArgumentList $Ubuntu01vmName -ErrorAction Stop
-            $Ubuntu01VmIp = Restart-LinuxVMAndWaitForSsh -VMName $Ubuntu01vmName
+                finally {
+                    Remove-Item -LiteralPath $tempRoot -Recurse -Force -ErrorAction Continue
+                }
+
+                return $restartRequired
+            } -ArgumentList $Ubuntu01HostName -ErrorAction Stop
+
+            if ($restartRequired) {
+                $Ubuntu01VmIp = Restart-LinuxVMAndWaitForSsh -VMName $Ubuntu01vmName
+            }
+            Wait-LinuxHostName `
+                -ComputerName $Ubuntu01VmIp `
+                -UserName $nestedLinuxUsername `
+                -KeyFilePath "$Env:USERPROFILE\.ssh\id_rsa" `
+                -ExpectedHostName $Ubuntu01HostName
         }
         else {
             $Ubuntu01VmIp = Get-VMIPv4AddressWithRetry -VMName $Ubuntu01vmName

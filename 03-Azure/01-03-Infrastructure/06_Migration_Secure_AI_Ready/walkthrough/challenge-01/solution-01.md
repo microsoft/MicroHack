@@ -38,6 +38,9 @@ Duration: 30 minutes
 git clone https://github.com/microsoft/MicroHack.git
 ```
 
+> [!NOTE]
+> Contributors testing before merge must clone or check out their fork's feature branch locally so the Bicep files match the automation source selected below.
+
 ![image](./img/CS4.png)
 
 - Change into the Hack's resources directory in the cloned repository using the command:
@@ -47,13 +50,39 @@ cd MicroHack/03-Azure/01-03-Infrastructure/06_Migration_Secure_AI_Ready/resource
 ```
 
 > [!IMPORTANT]
-> **Please update the REGION variable with your desired region - defaulting to swedencentral. Please update the USERPASSWORD parameter with your desired password.**
+> **Update the `REGION` variable with your desired region (the example defaults to `swedencentral`) and set `USERPASSWORD` to your desired password. The GitHub owner and branch default to the official `microsoft/MicroHack` `main` branch.**
 
-- Execute the following commands to set the target region and your desired password and start the deployment:
+- Set the deployment values. The defaults use the official repository. To test before merge, replace `microsoft` with your `<fork-owner>` and `main` with your `<feature-branch>`.
+
 ```bash
 REGION="swedencentral"
 USERPASSWORD="<REPLACE-WITHYOUR-PASSWORD>"
-az deployment sub create --name "$(az ad signed-in-user show --query userPrincipalName -o tsv | cut -d "@" -f 1 | tr '[:upper:]' '[:lower:]')-MHBox" --location $REGION --template-file ./main.bicep --parameters windowsAdminPassword=$USERPASSWORD
+GITHUB_ACCOUNT="microsoft"
+GITHUB_BRANCH="main"
+```
+
+> [!NOTE]
+> The local `main.bicep` comes from your checked-out clone. `GITHUB_ACCOUNT` and `GITHUB_BRANCH` select the repository version used for all automation and demo-page assets downloaded during deployment.
+
+- Verify that the selected repository branch contains a required deployment artifact before starting the costly Azure deployment:
+
+```bash
+ARTIFACT_BASE_URL="https://raw.githubusercontent.com/${GITHUB_ACCOUNT}/MicroHack/${GITHUB_BRANCH}/03-Azure/01-03-Infrastructure/06_Migration_Secure_AI_Ready/resources"
+curl --fail --silent --show-error --head \
+  "${ARTIFACT_BASE_URL}/artifacts/Bootstrap.ps1" >/dev/null
+```
+
+- Start the deployment:
+
+```bash
+az deployment sub create \
+  --name "$(az ad signed-in-user show --query userPrincipalName -o tsv | cut -d "@" -f 1 | tr '[:upper:]' '[:lower:]')-MHBox" \
+  --location "$REGION" \
+  --template-file ./main.bicep \
+  --parameters \
+    windowsAdminPassword="$USERPASSWORD" \
+    githubAccount="$GITHUB_ACCOUNT" \
+    githubBranch="$GITHUB_BRANCH"
 ```
 ![image](./img/CS5.png)
 
@@ -105,7 +134,14 @@ Password: JS123!!
 
 ![image](./img/CS12.png)
 
-You can also open Microsoft Edge and navigate to the IP address of the *MHBox-Win2K22* or *MHBox-Ubuntu-01* system to view the deployed Demo Web App.
+Open Microsoft Edge and navigate to the IP address of each web VM. Confirm that the migration journey dashboard returns HTTP success and shows the correct details:
+
+| VM | Platform | Web server |
+| --- | --- | --- |
+| *MHBox-Win2K22* | `Windows Server 2022` | `IIS` |
+| *MHBox-Ubuntu-01* | `Ubuntu Linux` | `Apache` |
+
+The **Hostname** value must match the VM you opened.
 
 ![image](./img/CS13.png)
 

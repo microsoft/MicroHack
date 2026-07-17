@@ -77,7 +77,7 @@ Review enabled virtual hosts/modules and any dependency matches. A text match is
 | Content | Static HTML, CSS, and images | Static HTML, CSS, and images |
 | External dependencies | None required to render the page | None required to render the page |
 | Persistent/session state | None | None |
-| Machine-specific value | VM hostname in `index.html` | VM hostname in `index.html` |
+| Machine-specific values | Hostname, platform, and web server in stable `data-workload-value` fields | Hostname, platform, and web server in stable `data-workload-value` fields |
 
 The source is a static artifact. A Windows App Service worker can host it regardless of whether it came from Windows/IIS or Linux/Apache.
 
@@ -89,15 +89,23 @@ The source is a static artifact. A Windows App Service worker can host it regard
 $siteRoot = 'C:\inetpub\wwwroot'
 $indexPath = Join-Path $siteRoot 'index.html'
 $html = Get-Content -Path $indexPath -Raw
-$html = $html -replace 'Current Hostname:\s*[^<]+', 'Hosting platform: Azure App Service'
+$html = $html -replace '(<dd\b[^>]*\bdata-workload-value="hostname"[^>]*>)[^<]*(</dd>)', '${1}Azure App Service${2}'
+$html = $html -replace '(<dd\b[^>]*\bdata-workload-value="platform"[^>]*>)[^<]*(</dd>)', '${1}Managed PaaS${2}'
+$html = $html -replace '(<dd\b[^>]*\bdata-workload-value="web-server"[^>]*>)[^<]*(</dd>)', '${1}Azure App Service${2}'
 Set-Content -Path $indexPath -Value $html -Encoding UTF8
 
 $updatedHtml = Get-Content -Path $indexPath -Raw
-if ($updatedHtml -match [regex]::Escape($env:COMPUTERNAME)) {
-    throw 'The VM-specific hostname is still present in index.html.'
+$expectedMetadata = [ordered]@{
+    hostname = 'Azure App Service'
+    platform = 'Managed PaaS'
+    'web-server' = 'Azure App Service'
 }
-if ($updatedHtml -notmatch 'Hosting platform: Azure App Service') {
-    throw 'The platform-neutral hosting value was not written.'
+foreach ($field in $expectedMetadata.Keys) {
+    $pattern = 'data-workload-value="' + [regex]::Escape($field) +
+        '"[^>]*>\s*' + [regex]::Escape($expectedMetadata[$field]) + '\s*</dd>'
+    if ($updatedHtml -notmatch $pattern) {
+        throw "Expected App Service metadata was not written: $field"
+    }
 }
 
 $packageDirectory = 'C:\temp'
@@ -136,17 +144,24 @@ sudo cp -a "${site_root}/." "${staging_dir}/"
 sudo chown -R "$(id -u):$(id -g)" "${staging_dir}"
 
 sed -E -i \
-  's/Current Hostname:[^<]*/Hosting platform: Azure App Service/' \
+  -e 's#(<dd[^>]*data-workload-value="hostname"[^>]*>)[^<]*(</dd>)#\1Azure App Service\2#' \
+  -e 's#(<dd[^>]*data-workload-value="platform"[^>]*>)[^<]*(</dd>)#\1Managed PaaS\2#' \
+  -e 's#(<dd[^>]*data-workload-value="web-server"[^>]*>)[^<]*(</dd>)#\1Azure App Service\2#' \
   "${staging_dir}/index.html"
 
-if grep -Fq "$(hostname)" "${staging_dir}/index.html"; then
-  echo "The VM-specific hostname is still present in index.html." >&2
-  rm -rf "${staging_dir}"
-  exit 1
-fi
-
-grep -F "Hosting platform: Azure App Service" \
-  "${staging_dir}/index.html"
+while IFS='|' read -r field expected_value; do
+  grep -Eq \
+    "data-workload-value=\"${field}\"[^>]*>${expected_value}</dd>" \
+    "${staging_dir}/index.html" || {
+    echo "Expected App Service metadata was not written: ${field}" >&2
+    rm -rf "${staging_dir}"
+    exit 1
+  }
+done <<'EOF'
+hostname|Azure App Service
+platform|Managed PaaS
+web-server|Azure App Service
+EOF
 
 if ! command -v zip >/dev/null 2>&1 ||
    ! command -v unzip >/dev/null 2>&1; then
@@ -342,9 +357,9 @@ $appName = '<recorded-web-app-name>'
 $appUrl = "https://$appName.azurewebsites.net"
 $home = Invoke-WebRequest -Uri "$appUrl/" -UseBasicParsing -TimeoutSec 30
 $home.StatusCode
-$home.Content -match 'Hosting platform: Azure App Service'
+$home.Content -match 'data-workload-value="platform"[^>]*>Managed PaaS</dd>'
 
-$assets = @('stylesheet.css', 'MSLogo.png', 'MSicon.png')
+$assets = @('stylesheet.css', 'GitHub_Logo.png', 'MSLogo.png', 'MSicon.png')
 foreach ($asset in $assets) {
     $response = Invoke-WebRequest -Uri "$appUrl/$asset" -UseBasicParsing -TimeoutSec 30
     [pscustomobject]@{
@@ -371,9 +386,9 @@ Start-Service -Name W3SVC
 app_url="https://${app_name}.azurewebsites.net"
 
 curl --fail --silent --show-error "${app_url}/" |
-  grep -F "Hosting platform: Azure App Service"
+  grep -E 'data-workload-value="platform"[^>]*>Managed PaaS</dd>'
 
-for asset in stylesheet.css MSLogo.png MSicon.png; do
+for asset in stylesheet.css GitHub_Logo.png MSLogo.png MSicon.png; do
   curl --fail --silent --show-error --output /dev/null \
     --write-out "${asset}: HTTP %{http_code}, %{size_download} bytes\n" \
     "${app_url}/${asset}"

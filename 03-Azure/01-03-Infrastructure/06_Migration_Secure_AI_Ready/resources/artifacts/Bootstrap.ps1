@@ -1,11 +1,9 @@
 param (
     [string]$adminUsername,
-    [string]$spnClientId,
     [string]$tenantId,
     [string]$spnAuthority,
     [string]$subscriptionId,
     [string]$resourceGroup,
-    [string]$azdataUsername,
     [string]$acceptEula,
     [string]$registryUsername,
     [string]$azureLocation,
@@ -14,9 +12,7 @@ param (
     [string]$templateBaseUrl,
     [string]$flavor,
     [string]$rdpPort,
-    [string]$sshPort,
     [string]$vmAutologon,
-    [object]$resourceTags,
     [string]$namingPrefix,
     [string]$debugEnabled,
     [string]$sqlServerEdition,
@@ -35,8 +31,6 @@ param (
 [System.Environment]::SetEnvironmentVariable('githubUser', $githubUser, [System.EnvironmentVariableTarget]::Machine)
 [System.Environment]::SetEnvironmentVariable('templateBaseUrl', $templateBaseUrl, [System.EnvironmentVariableTarget]::Machine)
 [System.Environment]::SetEnvironmentVariable('flavor', $flavor, [System.EnvironmentVariableTarget]::Machine)
-[System.Environment]::SetEnvironmentVariable('automationTriggerAtLogon', $automationTriggerAtLogon, [System.EnvironmentVariableTarget]::Machine)
-[System.Environment]::SetEnvironmentVariable('resourceTags', $resourceTags, [System.EnvironmentVariableTarget]::Machine)
 [System.Environment]::SetEnvironmentVariable('namingPrefix', $namingPrefix, [System.EnvironmentVariableTarget]::Machine)
 [System.Environment]::SetEnvironmentVariable('MHBoxDir', 'C:\MHBox', [System.EnvironmentVariableTarget]::Machine)
 [System.Environment]::SetEnvironmentVariable('sqlServerEdition', $sqlServerEdition, [System.EnvironmentVariableTarget]::Machine)
@@ -63,28 +57,14 @@ $Env:MHBoxDir = 'C:\MHBox'
 $Env:MHBoxDscDir = "$Env:MHBoxDir\DSC"
 $Env:MHBoxLogsDir = "$Env:MHBoxDir\Logs"
 $Env:MHBoxVMDir = 'F:\Virtual Machines'
-$Env:MHBoxKVDir = "$Env:MHBoxDir\KeyVault"
-$Env:MHBoxGitOpsDir = "$Env:MHBoxDir\GitOps"
-$Env:MHBoxIconDir = "$Env:MHBoxDir\Icons"
-$Env:agentScript = "$Env:MHBoxDir\agentScript"
-$Env:MHBoxTestsDir = "$Env:MHBoxDir\Tests"
-$Env:ToolsDir = 'C:\Tools'
 $Env:tempDir = 'C:\Temp'
-$Env:MHBoxDataOpsDir = "$Env:MHBoxDir\DataOps"
 $Env:MHBoxDemoPageDir = "$Env:MHBoxDir\DemoPage"
 
 New-Item -Path $Env:MHBoxDir -ItemType Directory -Force | Out-Null
 New-Item -Path $Env:MHBoxDscDir -ItemType Directory -Force | Out-Null
 New-Item -Path $Env:MHBoxLogsDir -ItemType Directory -Force | Out-Null
 New-Item -Path $Env:MHBoxVMDir -ItemType Directory -Force | Out-Null
-New-Item -Path $Env:MHBoxKVDir -ItemType Directory -Force | Out-Null
-New-Item -Path $Env:MHBoxGitOpsDir -ItemType Directory -Force | Out-Null
-New-Item -Path $Env:MHBoxIconDir -ItemType Directory -Force | Out-Null
-New-Item -Path $Env:ToolsDir -ItemType Directory -Force | Out-Null
 New-Item -Path $Env:tempDir -ItemType Directory -Force | Out-Null
-New-Item -Path $Env:agentScript -ItemType Directory -Force | Out-Null
-New-Item -Path $Env:MHBoxDataOpsDir -ItemType Directory -Force | Out-Null
-New-Item -Path $Env:MHBoxTestsDir -ItemType Directory -Force | Out-Null
 New-Item -Path $Env:MHBoxDemoPageDir -ItemType Directory -Force | Out-Null
 
 Start-Transcript -Path "$Env:MHBoxLogsDir\Bootstrap.log"
@@ -103,10 +83,6 @@ $PSBoundParameters.GetEnumerator() | Sort-Object Name | ForEach-Object {
 # Set SyncForegroundPolicy to 1 to ensure that the scheduled task runs after the client VM joins the domain
 Set-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' 'SyncForegroundPolicy' 1
 
-# Copy PowerShell Profile and Reload
-Invoke-WebRequest ($templateBaseUrl + 'artifacts/PSProfile.ps1') -OutFile $PsHome\Profile.ps1
-. $PsHome\Profile.ps1
-
 # Extending C:\ partition to the maximum size
 Write-Host 'Extending C:\ partition to the maximum size'
 Resize-Partition -DriveLetter C -Size $(Get-PartitionSupportedSize -DriveLetter C).SizeMax
@@ -115,11 +91,7 @@ Resize-Partition -DriveLetter C -Size $(Get-PartitionSupportedSize -DriveLetter 
 Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
 
 Install-Module -Name Microsoft.PowerShell.PSResourceGet -Force
-$modules = @('Az', 'Azure.Arc.Jumpstart.Common', 'Microsoft.PowerShell.SecretManagement', 'Pester')
-
-foreach ($module in $modules) {
-    Install-PSResource -Name $module -Scope AllUsers -Quiet -AcceptLicense -TrustRepository
-}
+Install-PSResource -Name Az -Scope AllUsers -Quiet -AcceptLicense -TrustRepository
 
 # Azure init in isolated child process
 $azInitScriptPath = "$Env:tempDir\AzBootstrap-Init.ps1"
@@ -213,7 +185,7 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 # Installing tools
-Write-Header 'Installing PowerShell 7'
+Write-Host "`n### Installing PowerShell 7 ###`n"
 
 $ProgressPreference = 'SilentlyContinue'
 $url = 'https://github.com/PowerShell/PowerShell/releases/latest'
@@ -227,16 +199,13 @@ Invoke-WebRequest -UseBasicParsing -Uri $downloadUrl -OutFile .\PowerShell7.msi
 Start-Process msiexec.exe -Wait -ArgumentList '/I PowerShell7.msi /quiet ADD_EXPLORER_CONTEXT_MENU_OPENPOWERSHELL=1 ADD_FILE_CONTEXT_MENU_RUNPOWERSHELL=1 ENABLE_PSREMOTING=1 REGISTER_MANIFEST=1 USE_MU=1 ENABLE_MU=1 ADD_PATH=1'
 Remove-Item .\PowerShell7.msi -Force
 
-Copy-Item $PsHome\Profile.ps1 -Destination 'C:\Program Files\PowerShell\7\' -Force
-
-Write-Header 'Fetching GitHub Artifacts'
+Write-Host "`n### Fetching GitHub Artifacts ###`n"
 
 # All flavors
 Write-Host 'Fetching Artifacts for All Flavors'
 Invoke-WebRequest ($templateBaseUrl + 'artifacts/dsc/common.dsc.yml') -OutFile "$Env:MHBoxDscDir\common.dsc.yml"
 Invoke-WebRequest ($templateBaseUrl + 'artifacts/dsc/virtual_machines_sql.dsc.yml') -OutFile "$Env:MHBoxDscDir\virtual_machines_sql.dsc.yml"
 Invoke-WebRequest ($templateBaseUrl + 'artifacts/WinGet.ps1') -OutFile "$Env:MHBoxDir\WinGet.ps1"
-Invoke-WebRequest ($templateBaseUrl + 'artifacts/MHWallpaper.bmp') -OutFile "$Env:MHBoxDir\MHWallpaper.bmp"
 Invoke-WebRequest ($templateBaseUrl + 'artifacts/demopage/deploy-webapp.sh') -OutFile "$Env:MHBoxDemoPageDir\deploy-webapp.sh"
 Invoke-WebRequest ($templateBaseUrl + 'artifacts/demopage/deployWebApp.ps1') -OutFile "$Env:MHBoxDemoPageDir\deployWebApp.ps1"
 
@@ -247,8 +216,6 @@ if ($flavor -eq 'ITPro') {
     Invoke-WebRequest ($templateBaseUrl + 'artifacts/dsc/itpro.dsc.yml') -OutFile "$Env:MHBoxDscDir\itpro.dsc.yml"
     Invoke-WebRequest ($templateBaseUrl + 'artifacts/dsc/virtual_machines_itpro.dsc.yml') -OutFile "$Env:MHBoxDscDir\virtual_machines_itpro.dsc.yml"
 }
-
-New-Item -Path alias:azdata -Value 'C:\Program Files (x86)\Microsoft SDKs\Azdata\CLI\wbin\azdata.cmd' -Force
 
 # Disable Microsoft Edge sidebar
 $RegistryPath = 'HKLM:\SOFTWARE\Policies\Microsoft\Edge'
@@ -346,7 +313,7 @@ if (-not (Test-Path $registryPath)) {
 Set-ItemProperty -Path $registryPath -Name $registryName -Value $registryValue -Type DWord
 Write-Host "Registry setting applied successfully. fClientDisableUDP set to $registryValue"
 
-Write-Header 'Configuring Logon Scripts'
+Write-Host "`n### Configuring Logon Scripts ###`n"
 
 $ScheduledTaskExecutable = 'pwsh.exe'
 
@@ -426,7 +393,7 @@ if ($flavor -eq 'ITPro') {
 Get-ScheduledTask -TaskName ServerManager | Disable-ScheduledTask | Out-Null
 
 if ($flavor -eq 'ITPro') {
-    Write-Header 'Installing Hyper-V'
+    Write-Host "`n### Installing Hyper-V ###`n"
 
     # Install Hyper-V and reboot
     Write-Host 'Installing Hyper-V and restart'

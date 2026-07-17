@@ -2,20 +2,6 @@
 properties:
 
   resources:
-    - resource: Microsoft.WinGet.DSC/WinGetPackage
-      id: 7zip
-      directives:
-        description: Install 7zip
-      settings:
-        id: 7zip.7zip
-        source: winget
-    - resource: PSDscResources/WindowsFeature
-      id: Hyper-V
-      directives:
-        description: Install Hyper-V
-      settings:
-        Name: Hyper-V
-        Ensure: Present
     - resource: HyperVDsc/VMHost
       id: VMHost
       directives:

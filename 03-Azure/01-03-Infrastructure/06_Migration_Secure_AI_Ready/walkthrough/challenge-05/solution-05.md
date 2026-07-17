@@ -152,7 +152,7 @@ Connect to each test VM via Azure Bastion.
 
 ![image](./img/TestMig5.png)
 
-On the Windows VM, open a browser and navigate to *http://localhost*. On the Ubuntu VM, run `curl -I http://localhost`. Confirm that the Hack Demo Web App responds successfully on both test VMs.
+On the Windows VM, open a browser and navigate to *http://localhost*. Confirm that the dashboard shows the VM hostname, `Windows Server 2022`, and `IIS`. On the Ubuntu VM, run `curl -I http://localhost`, then open the page and confirm that it shows the VM hostname, `Ubuntu Linux`, and `Apache`. Both requests must return HTTP success.
 
 ![image](./img/TestMig6.png)
 

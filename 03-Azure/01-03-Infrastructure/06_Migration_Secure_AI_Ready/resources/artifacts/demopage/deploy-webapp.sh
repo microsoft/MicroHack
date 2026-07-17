@@ -1,54 +1,67 @@
-#!/bin/bash
-# =========================================================
-# Web Server Deployment Script
-# Converted from cloud.cfg
-# =========================================================
-# This script updates the system, installs required packages,
-# deploys a demo web page, and starts the web server.
-# =========================================================
+#!/bin/sh
+set -eu
 
-set -e
-
-echo "=========================================="
-echo "🚀 Starting Web Server Deployment"
-echo "=========================================="
-
-# --- Step 1: Update and upgrade packages ---
-#echo "📦 Updating system packages..."
-sudo apt update -y
-#sudo apt upgrade -y
-
-# --- Step 2: Install required packages ---
-echo "🧰 Installing required packages..."
-# Note: 'httpd' is Apache on RHEL; on Ubuntu it's 'apache2'
-if ! command -v apache2 >/dev/null 2>&1; then
-    sudo apt install -y apache2 samba-client wget
-else
-    echo "✅ Apache already installed."
+if [ "$#" -ne 1 ] || [ -z "$1" ]; then
+  echo "Usage: $0 <https-source-root>" >&2
+  exit 2
 fi
 
-# --- Step 3: Download demo web content ---
-echo "🌐 Downloading demo web files..."
-sudo mkdir -p /var/www/html
+source_root="$1"
+while [ "${source_root%/}" != "$source_root" ]; do
+  source_root="${source_root%/}"
+done
 
-sudo wget -q https://raw.githubusercontent.com/microsoft/MicroHack/main/03-Azure/01-03-Infrastructure/06_Migration_Secure_AI_Ready/resources/artifacts/demopage/index.html -O /var/www/html/index.html
-sudo wget -q https://raw.githubusercontent.com/microsoft/MicroHack/main/03-Azure/01-03-Infrastructure/06_Migration_Secure_AI_Ready/resources/artifacts/demopage/GitHub_Logo.png -O /var/www/html/GitHub_Logo.png
-sudo wget -q https://raw.githubusercontent.com/microsoft/MicroHack/main/03-Azure/01-03-Infrastructure/06_Migration_Secure_AI_Ready/resources/artifacts/demopage/MSLogo.png -O /var/www/html/MSLogo.png
-sudo wget -q https://raw.githubusercontent.com/microsoft/MicroHack/main/03-Azure/01-03-Infrastructure/06_Migration_Secure_AI_Ready/resources/artifacts/demopage/MSicon.png -O /var/www/html/MSicon.png
-sudo wget -q https://raw.githubusercontent.com/microsoft/MicroHack/main/03-Azure/01-03-Infrastructure/06_Migration_Secure_AI_Ready/resources/artifacts/demopage/github-mark.png -O /var/www/html/github-mark.png
-sudo wget -q https://raw.githubusercontent.com/microsoft/MicroHack/main/03-Azure/01-03-Infrastructure/06_Migration_Secure_AI_Ready/resources/artifacts/demopage/stylesheet.css -O /var/www/html/stylesheet.css
+case "$source_root" in
+  https://?*) ;;
+  *)
+    echo "Source root must be an absolute HTTPS URL." >&2
+    exit 2
+    ;;
+esac
 
-# --- Step 4: Replace <HOSTNAME> placeholder ---
-echo "🖋️ Customizing index.html with system hostname..."
-sudo sed -i "s/<HOSTNAME>/$(hostname)/g" /var/www/html/index.html
+web_root="/var/www/html"
+assets="index.html stylesheet.css GitHub_Logo.png MSLogo.png MSicon.png"
+staging_root="$(mktemp -d)"
+trap 'rm -rf "$staging_root"' EXIT
 
-# --- Step 5: Enable and start web server ---
-echo "🕹️ Enabling and starting Apache..."
-sudo systemctl enable apache2
-sudo systemctl start apache2
+if ! command -v apache2 >/dev/null 2>&1 ||
+   ! command -v wget >/dev/null 2>&1; then
+  sudo apt-get update
+  sudo DEBIAN_FRONTEND=noninteractive apt-get install -y apache2 wget
+fi
 
-# --- Step 6: Display status and access info ---
-echo "=========================================="
-echo "✅ Deployment Complete!"
-echo "🌍 Access your web page at: http://$(hostname -I | awk '{print $1}')/"
-echo "=========================================="
+for asset in $assets; do
+  wget --quiet --https-only --timeout=30 --tries=3 \
+    --output-document "$staging_root/$asset" "$source_root/$asset"
+  test -s "$staging_root/$asset" || {
+    echo "Downloaded asset is empty: $asset" >&2
+    exit 1
+  }
+done
+
+hostname_value="$(hostname)"
+sed -i \
+  -e "s|<HOSTNAME>|$hostname_value|g" \
+  -e 's|<PLATFORM>|Ubuntu Linux|g' \
+  -e 's|<WEB_SERVER>|Apache|g' \
+  "$staging_root/index.html"
+
+if grep -Eq '<(HOSTNAME|PLATFORM|WEB_SERVER)>' "$staging_root/index.html"; then
+  echo "One or more template tokens remain in index.html." >&2
+  exit 1
+fi
+
+sudo mkdir -p "$web_root"
+sudo find "$web_root" -mindepth 1 -delete
+for asset in $assets; do
+  sudo install -m 0644 "$staging_root/$asset" "$web_root/$asset"
+done
+
+deployed_count="$(sudo find "$web_root" -mindepth 1 -maxdepth 1 -type f | wc -l)"
+if [ "$deployed_count" -ne 5 ]; then
+  echo "The Apache web root does not contain exactly the expected static assets." >&2
+  exit 1
+fi
+
+sudo systemctl enable --now apache2
+wget --quiet --spider --timeout=15 http://127.0.0.1/

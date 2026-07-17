@@ -34,7 +34,7 @@ Teams complete only their selected track.
 
 * Inspect the site's content, bindings or virtual hosts, runtime/modules, dependencies, and state requirements.
 * Confirm the workload consists of portable static HTML, CSS, and image assets.
-* Replace the VM-specific hostname displayed in `index.html` with a platform-neutral value.
+* Replace the VM-specific hostname, platform, and web-server values in `index.html` with App Service values by using the page's stable metadata attributes.
 * Create a ZIP package whose root contains `index.html`.
 * Create a low-cost Windows App Service plan and web app in `destination-rg`.
 * Deploy with the supported App Service ZIP deployment experience.
@@ -62,7 +62,7 @@ Teams complete only their selected track.
 * The discovery record shows that the selected site has no required server-side runtime, database, machine-local dependency, or session state.
 * The ZIP root contains `index.html` rather than a nested content directory.
 * A Windows App Service web app serves the selected site's page and assets over HTTPS.
-* The rendered page contains a platform-neutral hosting value.
+* The rendered page identifies the hostname as Azure App Service, the platform as managed PaaS, and the web server as Azure App Service.
 * The App Service endpoint remains healthy after `W3SVC` or `apache2` is stopped.
 * Track B signs out of Azure CLI after deployment.
 * No Azure Load Balancer is placed in front of App Service and no GitHub integration is required.

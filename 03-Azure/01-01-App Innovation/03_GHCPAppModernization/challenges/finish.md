@@ -2,7 +2,7 @@
 
 [Previous Challenge](challenge-03.md) - **[Home](../Readme.md)**
 
-Congratulations! You've completed the Migrate & Modernize Applications with GitHub Copilot MicroHack.
+Congratulations! You've completed the App modernization with GitHub Copilot MicroHack.
 
 **What You've Accomplished:**
 

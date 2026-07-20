@@ -1,4 +1,4 @@
-# **Migrate & Modernize Applications with GitHub Copilot*#
+# App modernization with GitHub Copilot
 
 - [**MicroHack introduction**](#microhack-introduction)
 - [**MicroHack context**](#microhack-context)

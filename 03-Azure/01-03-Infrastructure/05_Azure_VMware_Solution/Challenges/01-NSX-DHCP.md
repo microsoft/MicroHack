@@ -17,7 +17,7 @@ As a part of this challenge you are expected to <u>log on to the AVS Private clo
 
 ### Use Case Tip 
 
-VMs within the AVS environment will recieve IP from various sources 
+VMs within the AVS environment will receive IP from various sources 
 
 1. Some VMs may be migrated and they will retain their IPs from On-Prem to AVS if they are on an extended L2 stretch
 2. Some VMs may be migrated and they will need new IP from AVS if they are on a non-extended VLAN. in such cases the VM will get a new IP (DHCP based) or static IP

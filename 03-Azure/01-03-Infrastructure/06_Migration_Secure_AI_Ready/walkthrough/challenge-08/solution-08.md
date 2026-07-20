@@ -416,7 +416,7 @@ sudo systemctl start apache2
 sudo systemctl is-active apache2
 ```
 
-For both tracks, visually check the HTTPS page and assets. App Service has its own public endpoint and is not a backend of the Azure Load Balancer used for the migrated VMs.
+For both tracks, visually check the HTTPS page and assets. App Service has its own public endpoint and remains independent of the migrated VM networking.
 
 ## Task 6: Record the architecture decision and clean up (3 minutes)
 

@@ -1,0 +1,40 @@
+# yaml-language-server: $schema=https://aka.ms/configuration-dsc-schema/0.2
+properties:
+
+  resources:
+    - resource: Microsoft.WinGet.DSC/WinGetPackage
+      id: AzureCLI
+      directives:
+        description: Install Azure CLI
+      settings:
+        id: Microsoft.AzureCLI
+        source: winget
+    - resource: Microsoft.WinGet.DSC/WinGetPackage
+      id: edge
+      directives:
+        description: Install Microsoft Edge
+      settings:
+        id: Microsoft.Edge
+        source: winget
+    - resource: Microsoft.WinGet.DSC/WinGetPackage
+      id: azcopy
+      directives:
+        description: Install azcopy
+      settings:
+        id: Microsoft.Azure.AZCopy.10
+        source: winget
+    - resource: PSDesiredStateConfiguration/WindowsFeature
+      id: DHCP
+      directives:
+        description: Install DHCP Server
+      settings:
+        name: DHCP
+        source: winget
+    - resource: PSDesiredStateConfiguration/WindowsFeature
+      id: RSAT-DHCP
+      directives:
+        description: Install DHCP Server Management tools
+      settings:
+        name: RSAT-DHCP
+        source: winget
+  configurationVersion: 0.2.0

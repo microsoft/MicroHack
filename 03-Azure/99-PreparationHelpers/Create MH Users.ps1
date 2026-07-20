@@ -1,136 +1,122 @@
+#requires -Version 7
 
-Import-Module AzureADPreview
+$RequiredModules = @(
+    'Microsoft.Graph.Users',
+    'Microsoft.Graph.Groups',
+    'Microsoft.Graph.Identity.SignIns',
+    'ImportExcel'
+)
 
-
-# Connect to Azure AD
-
-# - PLEASE UPDATE
-Connect-AzureAD -AccountId admin@.onmicrosoft.com
-
-$PasswordProfile = New-Object -TypeName Microsoft.Open.AzureAD.Model.PasswordProfile
-
-# - PLEASE UPDATE
-$PasswordProfile.Password = ""
-
-$PasswordProfile.EnforceChangePasswordPolicy = $true
-$PasswordProfile.ForceChangePasswordNextLogin = $true
-
-# - PLEASE UPDATE
-$tenant = ".onmicrosoft.com"
-
-
-## MH - Migrate & Modernize" ##
-$MHName = "MH - Migrate - Modernize"
-# Create user accounts
-for ($i = 1; $i -le 10; $i++) {
-    $displayName = "MHUser$i"
-    $userPrincipalName = "MHUser$i@$tenant"
-
-    # Create user account
-    New-AzureADUser -DisplayName $displayName -UserPrincipalName $userPrincipalName -PasswordProfile $PasswordProfile -AccountEnabled $true -MailNickName $displayName -ErrorAction SilentlyContinue
-    $user = Get-AzureADUser -ObjectId $userPrincipalName
-
-    # Add user to Azure AD group
-    $group = Get-AzureADGroup -SearchString $MHName
-    Add-AzureADGroupMember -ObjectId $group.ObjectId -RefObjectId $user.ObjectId -ErrorAction SilentlyContinue
-
-    Write-Host "User account created: $($user.DisplayName) ($($user.UserPrincipalName))"
+foreach ($module in $RequiredModules) {
+    Install-PSResource -Name $module -TrustRepository
 }
 
+# Remember to elevate via Privilege Identity Management (PIM) if needed before connecting, at least User Administrator and Group Administrator roles is required
+Connect-MgGraph -Scopes "User.ReadWrite.All","Group.ReadWrite.All","UserAuthenticationMethod.ReadWrite.All" -UseDeviceCode
 
-## MH - MH - AVD" ##
-$MHName = "MH - AVD"
-# Create user accounts
-for ($i = 11; $i -le 20; $i++) {
-    $displayName = "MHUser$i"
-    $userPrincipalName = "MHUser$i@$tenant"
+Get-MgContext
 
-    # Create user account
-    New-AzureADUser -DisplayName $displayName -UserPrincipalName $userPrincipalName -PasswordProfile $PasswordProfile -AccountEnabled $true -MailNickName $displayName -ErrorAction SilentlyContinue
-    $user = Get-AzureADUser -ObjectId $userPrincipalName
+# Lab users and group creation
 
-    # Add user to Azure AD group
-    $group = Get-AzureADGroup -SearchString $MHName
-    Add-AzureADGroupMember -ObjectId $group.ObjectId -RefObjectId $user.ObjectId -ErrorAction SilentlyContinue
+# These variables should be changed as needed
+$eventStartDate = Get-Date -Hour 0 -Minute 0 -Second 0 -Millisecond 0 -Day 25 -Month 11 -Year 2025 # Set fixed start date for the MicroHacks event, used to define TAP validity period (24 hours from the defined start date)
+$UserCount = 65 # Number of users to create, we recommend a buffer of 5-10 users above expected number of participants to use for testing, last-minute registrations or if someone run into any issues a need a fresh start
 
-    Write-Host "User account created: $($user.DisplayName) ($($user.UserPrincipalName))"
+# Variables below does not need to be changed
+$StartIndex = 0 # Starting index for user numbering
+$GroupName = "LabUsers"
+$UserNamePrefix = "LabUser-"
+$Password = New-Guid | Select-Object -ExpandProperty Guid # Generate a random password, this will not be used since TAP is configured
+$UPNSuffix = '@' + ((Get-MgContext).Account -split "@")[1] # Get UPN suffix from the signed-in account (@xxx.onmicrosoft.com)
+$GroupId = Get-MgGroup -Filter "DisplayName eq '$GroupName'" | Select-Object -ExpandProperty Id
+if (-not $GroupId) {
+    $GroupParams = @{
+        DisplayName     = $GroupName
+        MailEnabled     = $false
+        MailNickname    = $GroupName
+        SecurityEnabled = $true
+    }
+
+    $Group = New-MgGroup @GroupParams
+    $GroupId = $Group.Id
 }
 
+foreach ($i in 1..$UserCount) {
 
-## MH - MH - Business Continuity & Disaster Recovery" ##
-$MHName = "MH - Business Continuity - Disaster Recovery"
-# Create user accounts
-for ($i = 21; $i -le 30; $i++) {
-    $displayName = "MHUser$i"
-    $userPrincipalName = "MHUser$i@$tenant"
+    $UserNumber = $StartIndex+$i
+    $UserName = "$UserNamePrefix$UserNumber"
+    $UserName = "$UserNamePrefix{0:D2}" -f $UserNumber
+    $UserPrincipalName = $UserName + $UPNSuffix
+    $PasswordProfile = New-Object -TypeName Microsoft.Graph.PowerShell.Models.MicrosoftGraphPasswordProfile
+    $PasswordProfile.ForceChangePasswordNextSignIn = $true
+    $PasswordProfile.Password = $Password
 
-    # Create user account
-    New-AzureADUser -DisplayName $displayName -UserPrincipalName $userPrincipalName -PasswordProfile $PasswordProfile -AccountEnabled $true -MailNickName $displayName -ErrorAction SilentlyContinue
-    $user = Get-AzureADUser -ObjectId $userPrincipalName
+    $UserParams = @{
+        AccountEnabled = $true
+        DisplayName = $UserName
+        MailNickname = $UserName
+        UserPrincipalName = $UserPrincipalName
+        PasswordProfile = $PasswordProfile
+        OutVariable = "CreatedUser"
+    }
 
-    # Add user to Azure AD group
-    $group = Get-AzureADGroup -SearchString $MHName
-    Add-AzureADGroupMember -ObjectId $group.ObjectId -RefObjectId $user.ObjectId -ErrorAction SilentlyContinue
+    Write-Host "Creating user : $UserPrincipalName"
 
-    Write-Host "User account created: $($user.DisplayName) ($($user.UserPrincipalName))"
+    try {
+        New-MgUser @UserParams
+    }
+    catch {
+        Write-Host "Error creating user $UserPrincipalName : $_"
+    }
+
+    # Add user to group
+    $UserId = $CreatedUser.Id
+    try {
+        New-MgGroupMember -GroupId $GroupId -DirectoryObjectId $UserId
+    }
+    catch {
+        Write-Host "Error adding user $UserPrincipalName to group $GroupName : $_"
+    }
+
 }
 
+# Configure Temporary Access Pass (TAP) for users
+# Note: TAP requires Entra ID Premium P2 license
+# https://learn.microsoft.com/en-us/entra/identity/authentication/howto-authentication-temporary-access-pass
+$UserNamePrefix = "LabUser-"
+$Users = Get-MgUser -Filter "startsWith(DisplayName,'$UserNamePrefix')" | Sort-Object DisplayName | Where-Object UserPrincipalName -like "*$UPNSuffix"
 
-## MH - MH - Azure Arc & Defender" ##
-$MHName = "MH - Azure Arc - Defender"
-# Create user accounts
-for ($i = 31; $i -le 40; $i++) {
-    $displayName = "MHUser$i"
-    $userPrincipalName = "MHUser$i@$tenant"
+$TAPs = @()
 
-    # Create user account
-    New-AzureADUser -DisplayName $displayName -UserPrincipalName $userPrincipalName -PasswordProfile $PasswordProfile -AccountEnabled $true -MailNickName $displayName -ErrorAction SilentlyContinue
-    $user = Get-AzureADUser -ObjectId $userPrincipalName
+foreach ($user in $Users) {
+    $properties = @{}
+    $properties.isUsableOnce = $false
+    $properties.startDateTime = $eventStartDate
+    #$properties.startDateTime = (Get-Date).AddMinutes(1) # For testing purposes, set start time to 1 minute in the future
+    $properties.endDateTime = $properties.startDateTime.AddDays(1)
+    $propertiesJSON = $properties | ConvertTo-Json
 
-    # Add user to Azure AD group
-    $group = Get-AzureADGroup -SearchString $MHName
-    Add-AzureADGroupMember -ObjectId $group.ObjectId -RefObjectId $user.ObjectId -ErrorAction SilentlyContinue
+    Write-Host "Creating Temporary Access Pass for user: $($user.UserPrincipalName)" -ForegroundColor Green
 
-    Write-Host "User account created: $($user.DisplayName) ($($user.UserPrincipalName))"
+    try {
+        New-MgUserAuthenticationTemporaryAccessPassMethod -UserId $user.Id -BodyParameter $propertiesJSON -OutVariable "CreatedTAP"
+    }
+    catch {
+        Write-Host "Error creating TAP for user $($user.UserPrincipalName) : $_"
+    }
+
+$TAPs += [pscustomobject]@{
+        UserPrincipalName = $user.UserPrincipalName
+        TemporaryAccessPass = $CreatedTAP.TemporaryAccessPass
+        LifetimeInMinutes = $CreatedTAP.LifetimeInMinutes
+        IsUsableOnce = $CreatedTAP.IsUsableOnce
+        StartDateTime = $CreatedTAP.StartDateTime
+        EndDateTime = $CreatedTAP.StartDateTime.AddMinutes($CreatedTAP.LifetimeInMinutes)
+    }
+
 }
 
+Export-Excel -InputObject $TAPs -Path ".\TemporaryAccessPasses.xlsx" -AutoSize -Title "Temporary Access Passes" -WorksheetName "TAPs" -TableName "TAPs" -TableStyle Light1 -Show
 
-## MH - MH - Advanced Monitoring" ##
-$MHName = "MH - Advanced Monitoring"
-# Create user accounts
-for ($i = 41; $i -le 50 ; $i++) {
-    $displayName = "MHUser$i"
-    $userPrincipalName = "MHUser$i@$tenant"
-
-    # Create user account
-    New-AzureADUser -DisplayName $displayName -UserPrincipalName $userPrincipalName -PasswordProfile $PasswordProfile -AccountEnabled $true -MailNickName $displayName -ErrorAction SilentlyContinue
-    $user = Get-AzureADUser -ObjectId $userPrincipalName
-
-    # Add user to Azure AD group
-    $group = Get-AzureADGroup -SearchString $MHName
-    Add-AzureADGroupMember -ObjectId $group.ObjectId -RefObjectId $user.ObjectId -ErrorAction SilentlyContinue
-
-    Write-Host "User account created: $($user.DisplayName) ($($user.UserPrincipalName))"
-}
-
-
-## MH - MH - Linux Migration" ##
-$MHName = "MH - Linux Migration"
-# Create user accounts
-for ($i = 51; $i -le  60 ; $i++) {
-    $displayName = "MHUser$i"
-    $userPrincipalName = "MHUser$i@$tenant"
-
-    # Create user account
-    New-AzureADUser -DisplayName $displayName -UserPrincipalName $userPrincipalName -PasswordProfile $PasswordProfile -AccountEnabled $true -MailNickName $displayName -ErrorAction SilentlyContinue
-    $user = Get-AzureADUser -ObjectId $userPrincipalName
-
-    # Add user to Azure AD group
-    $group = Get-AzureADGroup -SearchString $MHName
-    Add-AzureADGroupMember -ObjectId $group.ObjectId -RefObjectId $user.ObjectId -ErrorAction SilentlyContinue
-
-    Write-Host "User account created: $($user.DisplayName) ($($user.UserPrincipalName))"
-}
-
-
-
+Write-Host "Temporary Access Passes exported to TemporaryAccessPasses.xlsx" -ForegroundColor Green
+Write-Host "Tip: Use the Mail merge feature in Word to create personalized instruction pages for users." -ForegroundColor Yellow

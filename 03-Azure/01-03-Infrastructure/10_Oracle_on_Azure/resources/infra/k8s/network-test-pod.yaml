@@ -1,0 +1,96 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: network-test-pod
+  namespace: default
+  labels:
+    app: network-test
+spec:
+  # Optional: set to true if you need to test hostNetwork performance
+  # hostNetwork: true
+  containers:
+  - name: net-tools
+    image: ubuntu:22.04
+    command: ["/bin/bash","-c"]
+    args:
+      - |
+        set -euo pipefail
+        export DEBIAN_FRONTEND=noninteractive
+        apt-get update && apt-get install -y --no-install-recommends \
+          sockperf iperf3 qperf iputils-ping dnsutils curl tcpdump netcat-openbsd nmap traceroute mtr-tiny ca-certificates jq wget \
+          && rm -rf /var/lib/apt/lists/*
+        printf '%s\n' \
+          '#!/usr/bin/env bash' \
+          'if [ $# -lt 2 ]; then echo "Usage: tcpping host port [intervalSeconds]"; exit 1; fi' \
+          'H="$1"; P="$2"; I="${3:-1}"' \
+          'while true; do' \
+          '  START=$(date +%s%3N)' \
+          '  timeout 1 bash -c "</dev/tcp/$H/$P" &>/dev/null' \
+          '  RC=$?' \
+          '  END=$(date +%s%3N); ELAPSED=$((END-START))' \
+          '  TS=$(date -Iseconds)' \
+          '  if [ $RC -eq 0 ]; then' \
+          '    echo "$TS OK $H $P ${ELAPSED}ms"' \
+          '  else' \
+          '    echo "$TS FAIL $H $P timeout"' \
+          '  fi' \
+          '  sleep $I' \
+          'done' > /usr/local/bin/tcpping
+        chmod +x /usr/local/bin/tcpping
+        echo "Container ready"; sleep infinity
+    securityContext:
+      capabilities:
+        add: ["NET_ADMIN", "NET_RAW"]
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "250m"
+      limits:
+        memory: "512Mi"
+        cpu: "1"
+    ports:
+    - name: iperf3
+      containerPort: 5201
+      protocol: TCP
+    - name: qperf
+      containerPort: 19765
+      protocol: TCP
+  - name: sockperf-server
+    image: mellanox/sockperf:latest
+    args: ["sockperf", "server", "-p", "11111"]  # default UDP server port
+    ports:
+    - name: sockperf
+      containerPort: 11111
+      protocol: UDP
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "100m"
+      limits:
+        memory: "256Mi"
+        cpu: "500m"
+  restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: network-test-svc
+  namespace: default
+spec:
+  selector:
+    app: network-test
+  ports:
+  - name: sockperf
+    port: 11111
+    targetPort: 11111
+    protocol: UDP
+  - name: iperf3
+    port: 5201
+    targetPort: 5201
+    protocol: TCP
+  - name: qperf
+    port: 19765
+    targetPort: 19765
+    protocol: TCP
+  type: ClusterIP
+# tcpping script created via printf to avoid YAML heredoc parsing issues.

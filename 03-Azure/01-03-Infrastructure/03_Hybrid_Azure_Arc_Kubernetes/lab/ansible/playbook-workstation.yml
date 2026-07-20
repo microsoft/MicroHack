@@ -1,0 +1,124 @@
+---
+# Ansible playbook to configure Windows 11 workstation VMs with all
+# MicroHack prerequisites: VS Code, Git, WSL2 + Ubuntu, Azure CLI,
+# kubectl, and Helm.
+#
+# Usage:
+#   ansible-galaxy collection install -r requirements.yml
+#   ./open-bastion-tunnels.sh
+#   ansible-playbook -i inventory.yml playbook-workstation.yml \
+#       --extra-vars "ansible_password=<admin_password>"
+#   ./open-bastion-tunnels.sh --stop
+
+- name: Configure Windows 11 Workstation for MicroHack
+  hosts: workstations
+  gather_facts: true
+
+  tasks:
+    # ── Windows tools via Chocolatey ──────────────────────────────────
+
+    - name: Install Git
+      chocolatey.chocolatey.win_chocolatey:
+        name: git
+        state: present
+
+    - name: Install Visual Studio Code
+      chocolatey.chocolatey.win_chocolatey:
+        name: vscode
+        state: present
+        package_params: "/NoDesktopIcon"
+
+    - name: Install VS Code WSL extension
+      ansible.windows.win_command: cmd /c code --install-extension ms-vscode-remote.remote-wsl
+      register: vscode_wsl_ext
+      changed_when: "'was successfully installed' in vscode_wsl_ext.stdout"
+      failed_when: false
+
+    # ── Install WSL2 + Ubuntu ────────────────────────────────────────
+    # On Win11 24H2 the in-box wsl.exe is a stub that requires Store
+    # install (which fails in non-interactive WinRM sessions).
+    # Use Chocolatey to install the WSL2 kernel and Ubuntu distro.
+
+    - name: Create temp directory on Windows
+      ansible.windows.win_file:
+        path: C:\Temp
+        state: directory
+
+    - name: Enable VirtualMachinePlatform feature
+      ansible.windows.win_optional_feature:
+        name: VirtualMachinePlatform
+        state: present
+      register: vm_platform
+
+    - name: Enable Microsoft-Windows-Subsystem-Linux feature
+      ansible.windows.win_optional_feature:
+        name: Microsoft-Windows-Subsystem-Linux
+        state: present
+      register: wsl_feature
+
+    - name: Reboot after enabling WSL features
+      ansible.windows.win_reboot:
+        reboot_timeout: 600
+      when: wsl_feature.reboot_required | default(false) or
+            vm_platform.reboot_required | default(false)
+
+    - name: Install WSL2 via Chocolatey
+      chocolatey.chocolatey.win_chocolatey:
+        name: wsl2
+        state: present
+      register: wsl2_choco
+
+    - name: Reboot after WSL2 install
+      ansible.windows.win_reboot:
+        reboot_timeout: 600
+      when: wsl2_choco.changed | default(false)
+
+    - name: Set WSL default version to 2
+      ansible.windows.win_command: wsl --set-default-version 2
+      register: wsl_ver
+      retries: 3
+      delay: 10
+      until: wsl_ver.rc == 0
+
+    - name: Check if Ubuntu WSL distribution is already installed
+      ansible.windows.win_shell: (wsl -l -q) -contains 'Ubuntu'
+      register: wsl_list
+      changed_when: false
+      failed_when: false
+
+    - name: Install Ubuntu WSL distribution
+      ansible.windows.win_command: wsl --install -d Ubuntu --no-launch
+      register: wsl_install_ubuntu
+      failed_when: wsl_install_ubuntu.rc not in [0, 1]
+      when: "'True' not in wsl_list.stdout"
+
+    - name: Reboot after Ubuntu install
+      ansible.windows.win_reboot:
+        reboot_timeout: 600
+      when: wsl_install_ubuntu is changed
+
+    - name: Initialize Ubuntu distro (first launch)
+      ansible.windows.win_command: >-
+        wsl -d Ubuntu -- echo "WSL Ubuntu initialized"
+      register: wsl_init
+      retries: 5
+      delay: 15
+      until: wsl_init.rc == 0
+
+    # ── Install tools inside WSL Ubuntu ──────────────────────────────
+
+    - name: Copy WSL tools setup script
+      ansible.windows.win_copy:
+        src: ../scripts/setup-wsl-tools.sh
+        dest: C:\Temp\setup-wsl-tools.sh
+
+    - name: Install prerequisite tools in WSL Ubuntu
+      ansible.windows.win_command: wsl -d Ubuntu -u root -- bash /mnt/c/Temp/setup-wsl-tools.sh
+      register: wsl_tools
+      async: 1200
+      poll: 30
+
+    - name: Show WSL tools installation output
+      ansible.builtin.debug:
+        var: wsl_tools.stdout_lines
+      when: wsl_tools.stdout_lines is defined

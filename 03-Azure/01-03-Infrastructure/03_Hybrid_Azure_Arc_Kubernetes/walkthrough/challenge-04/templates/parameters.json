@@ -1,0 +1,39 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "connectedClusterName": {
+            "value": "<CONNECTED_CLUSTER_NAME>"
+        },
+        "k8sExtensionName": {
+            "value": "<EXTENSION_NAME>"
+        },
+        "namespace": {
+            "value": "<NAMESPACE>"
+        },
+        "location": {
+            "value": "westeurope"
+        },
+        "customLocationName": {
+            "value": "<CUSTOM_LOCATION_NAME>"
+        },
+        "dataController_metricsAndLogsDashboardUsername": {
+            "value": "<DC_DASHBOARD_USERNAME>"
+        },
+        "dataController_metricsAndLogsDashboardPassword": {
+            "value": null
+        },
+        "dataController_logAnalyticsWorkspaceId": {
+            "value": "<LOG_ANALYTICS_WORKSPACE_ID>"
+        },
+        "dataController_logAnalyticsPrimaryKey": {
+            "value": "<LOG_ANALYTICS_PRIMARY_KEY>"
+        },
+        "storageClass": {
+            "value": "local-path"
+        },
+        "dataControllerName": {
+            "value": "<DATA_CONTROLLER_NAME>"
+        }
+    }
+}

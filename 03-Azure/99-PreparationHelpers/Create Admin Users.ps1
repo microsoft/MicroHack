@@ -1,34 +1,73 @@
+#requires -Version 7
 
-$numberOfUsers = 10
+$RequiredModules = @(
+    'Microsoft.Graph.Users',
+    'Microsoft.Graph.Groups'
+)
 
-# Connect to Azure AD
+foreach ($module in $RequiredModules) {
+    Install-PSResource -Name $module -TrustRepository
+}
 
-# - PLEASE UPDATE
-Connect-AzureAD -AccountId admin@.onmicrosoft.com
+Connect-MgGraph -Scopes "User.ReadWrite.All","Group.ReadWrite.All","UserAuthenticationMethod.ReadWrite.All" -UseDeviceCode
 
-$PasswordProfile = New-Object -TypeName Microsoft.Open.AzureAD.Model.PasswordProfile
+Get-MgContext
 
-# - PLEASE UPDATE
-$PasswordProfile.Password = ""
-$PasswordProfile.EnforceChangePasswordPolicy = $false
-$PasswordProfile.ForceChangePasswordNextLogin = $false
+# Lab users and group creation
+$UserNamePrefix = "AdminLabUser-"
+$Password = Read-Host -Prompt "Enter password"
+$UPNSuffix = '@' + ((Get-MgContext).Account -split "@")[1] # Get UPN suffix from the signed-in account (@xxx.onmicrosoft.com)
+$UserCount = 5
+$StartIndex = 0
+$GroupName = "AdminUsers"
+$GroupId = Get-MgGroup -Filter "DisplayName eq '$GroupName'" | Select-Object -ExpandProperty Id
+if (-not $GroupId) {
+    $GroupParams = @{
+        DisplayName     = $GroupName
+        MailEnabled     = $false
+        MailNickname    = $GroupName
+        SecurityEnabled = $true
+    }
 
-# - PLEASE UPDATE
-$tenant = ".onmicrosoft.com"
+    $Group = New-MgGroup @GroupParams
+    $GroupId = $Group.Id
+}
 
-#Create Groups
-New-AzureADGroup -DisplayName "MH - Migrate - Modernize" -MailEnabled $false -SecurityEnabled $true -MailNickName "NotSet"
-New-AzureADGroup -DisplayName "MH - AVD" -MailEnabled $false -SecurityEnabled $true -MailNickName "NotSet"
-New-AzureADGroup -DisplayName "MH - Business Continuity - Disaster Recovery" -MailEnabled $false -SecurityEnabled $true -MailNickName "NotSet"
-New-AzureADGroup -DisplayName "MH - Azure Arc - Defender" -MailEnabled $false -SecurityEnabled $true -MailNickName "NotSet"
-New-AzureADGroup -DisplayName "MH - Advanced Monitoring" -MailEnabled $false -SecurityEnabled $true -MailNickName "NotSet"
-New-AzureADGroup -DisplayName "MH - Linux Migration" -MailEnabled $false -SecurityEnabled $true -MailNickName "NotSet"
+foreach ($i in 1..$UserCount) {
 
-# Create user accounts
-for ($i = 1; $i -le $numberOfUsers; $i++) {
-    $displayName = "Admin$i"
-    $userPrincipalName = "admin$i@$tenant"
+    $UserNumber = $StartIndex+$i
+    $UserName = "$UserNamePrefix$UserNumber"
+    $UserName = "$UserNamePrefix{0:D2}" -f $UserNumber
+    $UserPrincipalName = $UserName + $UPNSuffix
+    $PasswordProfile = New-Object -TypeName Microsoft.Graph.PowerShell.Models.MicrosoftGraphPasswordProfile
+    $PasswordProfile.ForceChangePasswordNextSignIn = $true
+    $PasswordProfile.Password = $Password
 
-    $user = New-AzureADUser -DisplayName $displayName -UserPrincipalName $userPrincipalName -PasswordProfile $PasswordProfile -AccountEnabled $true -MailNickName $displayName
-    Write-Host "User account created: $($user.DisplayName) ($($user.UserPrincipalName))"
+    $UserParams = @{
+        AccountEnabled = $true
+        DisplayName = $UserName
+        MailNickname = $UserName
+        UserPrincipalName = $UserPrincipalName
+        PasswordProfile = $PasswordProfile
+        OutVariable = "CreatedUser"
+    }
+
+    Write-Host "Creating user : $UserPrincipalName"
+
+    try {
+        New-MgUser @UserParams
+    }
+    catch {
+        Write-Host "Error creating user $UserPrincipalName : $_"
+    }
+
+    # Add user to group
+    $UserId = $CreatedUser.Id
+    try {
+        New-MgGroupMember -GroupId $GroupId -DirectoryObjectId $UserId
+    }
+    catch {
+        Write-Host "Error adding user $UserPrincipalName to group $GroupName : $_"
+    }
+
 }

@@ -1,0 +1,71 @@
+microhack:
+  user: <USER-NAME>
+### specify the name of an existing secret that contains the ogg admin username and password
+ogg:
+  adminSecret: ogg-admin-secret
+  usernameKey: oggusername
+  passwordKey: oggpassword
+  ## the name of an OGG deployment, mostly "local", or ogg-east, ogg-west, ...
+  deploymentName: hacksync
+
+databases:
+  # value for source database (23ai free container) is calculated.
+  trgConn: "<ODAA-CONNECTION-STRING>"
+
+  #for demo env, dont change the schema names. SH already exists in ADB, so we create another one.
+  srcSchema: "SH"
+  trgSchema: "SH2"
+  dumpFile: "https://objectstorage.eu-frankfurt-1.oraclecloud.com/p/MlPjh_7vFzaFTVOXUhZGCOWVCD1rmQz8nBxrUgkLTv70Z0feXgNm9kgtnEiR9n_I/n/fre3ftc1iva4/b/export_bucket/o/SHBIG.dmp"
+  adminSecret: 
+    secretName: db-admin-secret
+    srcAdminPwdKey: srcAdminPwd
+    trgAdminPwdKey: trgAdminPwd
+    srcGGUserNameKey: srcGGUserName
+    trgGGUserNameKey: trgGGUserName
+    srcGGPwdKey: srcGGPwd
+    trgGGPwdKey: trgGGPwd
+
+## request sizes of some PVCs, beware that there can be many   big trail files ...
+storage:
+  configSize: 1Gi
+  logSize: 10Gi
+  trailSize: 50Gi
+  storageClass: managed-csi
+
+image:
+  pullPolicy: IfNotPresent
+  #ggImageName: container-registry.oracle.com/goldengate/goldengate-oracle-free:23.8.0.25.04
+  ggImageName: fra.ocir.io/fre3ftc1iva4/pub_gg_micro_ora:23.4.1.24.05
+  ggdaaImageName: fra.ocir.io/fre3ftc1iva4/pub_gg_micro_bigdata:23.8.4.25.08
+  dbImageName: container-registry.oracle.com/database/free:23.26.0.0
+
+services:
+  ### You can choose to create an ingress in front of the service 
+  ### with a virtual host name of ggate.<suffix>
+  external:
+    ### set type to either ingress or none if You need something customized
+    type: ingress
+    ### typical ingressClasses are nginx and istio
+    ingressClass: nginx
+    ### uses default SSL certificate of gateway/controller or specify a custom tls-secret here
+    tlsSecretName: ggate-tls-secret
+    vhostName: gghack.<INGRESS-PUBLIC-IP>.nip.io # public IP address of
+  internal:
+    type: ClusterIP
+    plainPort: 8080
+    sslPort: 8443
+
+resources:
+  requests:
+    cpu: "1"
+    memory: 2Gi
+  limits:
+    cpu: "2"
+    memory: 16Gi  
+
+gpu:
+  runOnGPU: false
+  toleration: nvidia.com/gpu
+  nodeSelector: VM.GPU.A10.1
+
+

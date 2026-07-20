@@ -1,0 +1,60 @@
+# Terraform state files
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+
+# Crash log files
+crash.log
+crash.*.log
+
+# Terraform variable files (may contain sensitive data)
+*.tfvars
+*.tfvars.json
+
+# Override files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Terraform plan files
+*.tfplan
+
+# Terraform lock file (comment out if you want to commit it)
+.terraform.lock.hcl
+
+# Terraform provider cache
+.terraform/
+.terraform.tfstate.lock.info
+
+# Local terraform directories
+**/.terraform/*
+
+# Kubeconfig files (contain cluster credentials)
+**/kubeconfig*
+*.kubeconfig
+kubeconfig-*
+*-kubeconfig.yaml
+
+# Scripts logs directory
+scripts/logs/
+logs/
+
+# Temporary files
+*.tmp
+*.bak
+.DS_Store
+Thumbs.db
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# User credentials file (contains sensitive passwords)
+user_credentials.txt
+
+# Backup files
+*.backup

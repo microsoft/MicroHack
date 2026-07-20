@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: cvm-attestation
+  labels:
+    app: cvm-attestation
+spec:
+  containers:
+  - image: mcr.microsoft.com/acc/samples/cvm-attestation:1.1
+    imagePullPolicy: IfNotPresent
+    name: cvm-attestation
+    volumeMounts:
+      - mountPath: /sys/kernel/security
+        name: tcg
+      - mountPath: /dev/tpmrm0
+        name: tpmrm0
+    securityContext:
+      privileged: true
+  nodeSelector:
+    kubernetes.azure.com/security-type: ConfidentialVM
+  volumes:
+    - name: tcg
+      hostPath:
+        path: /sys/kernel/security
+    - name: tpmrm0
+      hostPath:
+        path: /dev/tpmrm0
+  restartPolicy: Never

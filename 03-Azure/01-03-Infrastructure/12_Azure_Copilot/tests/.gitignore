@@ -1,0 +1,16 @@
+# Test output artifacts (generated during test runs)
+screenshots/
+test-coverage-report.html
+test-report.md
+
+# Playwright output directories
+test-results/
+playwright-report/
+blob-report/
+
+# Authentication state (contains session tokens — never commit)
+.auth/
+
+# Dependencies
+node_modules/
+package-lock.json

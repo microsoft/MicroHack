@@ -50,64 +50,17 @@ Permissions for the deployment:
 - Contributor on your Resource Group
 - Other necessary permissions
 
-## Challenge 1 - Prerequisites and landing zone preparation 
 
-### Goal 
+## Challenges
 
-The goal of this exercise is to deploy...
+* [Challenge 1 - title](challenges/challenge-01.md)  **<- Start here**
+* [Challenge 2 - title](challenges/challenge-02.md)
 
-### Actions
+## Solutions - Spoilerwarning
 
-* Write down the first 3 steps....
-* Set up and enable...
-* Perform and monitor....
+* [Solution 1 - title](./walkthrough/challenge-01/solution-01.md)
+* [Solution 2 - title](./walkthrough/challenge-02/solution-02.md)
 
-### Success criteria
-
-* You have deployed ....
-* You successfully enabled ...
-* You have successfully setup ....
-* You have successfully ....
-
-### Learning resources
-* Link to https://learn.microsoft.com/en-us/azure/....
-
-### Solution - Spoilerwarning
-
-[Solution Steps](./walkthrough/challenge-1/solution.md)
-
-## Challenge 2 - ...
-
-### Goal 
-
-The goal of this exercise is to deploy...
-
-### Actions
-
-* Write down the first 3 steps....
-* Set up and enable...
-* Perform and monitor....
-
-### Success criteria
-
-* You have deployed ....
-* You successfully enabled ...
-* You have successfully setup ....
-* You have successfully ....
-
-### Learning resources
-* Link to https://learn.microsoft.com/en-us/azure/....
-
-### Solution - Spoilerwarning
-
-[Solution Steps](./walkthrough/challenge-2/solution.md)
-
-## Finish
-
-Congratulations! You finished the MicroHack *Name*. We hope you had the chance to learn about the how to implement a successful...
-If you want to give feedback please dont hesitate to open an Issue on the repository or get in touch with one of us directly.
-
-Thank you for investing the time and see you next time!
 
 
 ## Contributors

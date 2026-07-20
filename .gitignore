@@ -39,6 +39,9 @@ MANIFEST
 # to change depending on the environment.
 *.tfvars
 *.tfvars.json
+# exclude the provider.tf file on arc-enabled k8s microhack (contains subscription id)
+03-Azure/01-03-Infrastructure/03_Hybrid_Azure_Arc_Kubernetes/**/provider.tf
+
 # PyInstaller
 #  Usually these files are written by a python script from a template
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
@@ -203,3 +206,5 @@ id_rsa.pub
 
 # Ignore ARM Parameter files
 *.parameters.json
+03-Azure/01-05-SAP/01_MicroHack-SAP-Cashflow-Prediction/SAP-Data-MicroHack.pptx
+03-Azure/01-03-Infrastructure/03_Hybrid_Azure_Arc_Kubernetes/walkthrough/challenge-04/templates/parameters-my.json

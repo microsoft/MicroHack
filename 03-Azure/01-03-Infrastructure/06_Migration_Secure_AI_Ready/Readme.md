@@ -1,326 +1,111 @@
 ![image](img/1920x300_EventBanner_MicroHack_Migrate_wText.jpg)
 
-# MicroHack - Migrate and Secure to be AI Ready
+# Migrate and Secure to be ready for AI Ops
 
-- [**MicroHack introduction**](#MicroHack-introduction)
-- [**MicroHack context**](#microhack-context)
+*From secure migration to agent-assisted cloud operations.*
+
+- [**Hack introduction**](#hack-introduction)
+- [**Hack context**](#hack-context)
 - [**Objectives**](#objectives)
-- [**MicroHack Challenges**](#microhack-challenges)
+- [**Hack challenges**](#hack-challenges)
 - [**Contributors**](#contributors)
 
-# MicroHack introduction
+<a id="hack-introduction"></a>
 
-This MicroHack scenario walks through the process how to optimize and modernize you datacenter. The assessment, the tooling and processes are global best practices and with a focus on the real world scenarios, cost optimization and the best customer recommended design principles. Specifically, this builds up to include working with an existing infrastructure.
+# Hack introduction
 
-This lab is not a full explanation of building up a migration factory or a program to modernize your processes and dependencies. Please consider the following articles required pre-reading to build foundational knowledge.
+This Hack follows an end-to-end datacenter modernization journey. It combines Azure Migrate, security controls, Azure Monitor, intelligent operations, and a deliberate PaaS replatform. The scenario focuses on practical decisions, repeatable validation, cost awareness, and supported product capabilities.
 
-* [Understand the security baseline from Azure Migrate](https://learn.microsoft.com/en-us/security/benchmark/azure/baselines/azure-migrate-security-baseline?context=%2Fazure%2Fmigrate%2Fcontext%2Fmigrate-context)
+This lab is not a complete migration-factory or application-modernization program. Use the following articles as foundational reading:
+
+* [Azure Migrate security baseline](https://learn.microsoft.com/en-us/security/benchmark/azure/baselines/azure-migrate-security-baseline)
 * [Build a migration plan](https://learn.microsoft.com/en-us/azure/migrate/concepts-migration-planning)
-* [Assessment overview VM´s](https://learn.microsoft.com/en-us/azure/migrate/concepts-assessment-calculation)
-* [Assessment overview App Service](https://learn.microsoft.com/en-us/azure/migrate/concepts-azure-webapps-assessment-calculation)
-* [Assessment overview SQL](https://learn.microsoft.com/en-us/azure/migrate/concepts-azure-sql-assessment-calculation)
-* [Azure Arc Enabled Extended Security Updates](https://learn.microsoft.com/en-us/windows-server/get-started/extended-security-updates-deploy)
+* [Azure VM assessment overview](https://learn.microsoft.com/en-us/azure/migrate/concepts-assessment-calculation)
+* [Azure Migrate web-app migration support matrix](https://learn.microsoft.com/en-us/azure/migrate/concepts-migration-webapps?view=migrate)
+* [Azure Arc-enabled Extended Security Updates](https://learn.microsoft.com/en-us/windows-server/get-started/extended-security-updates-deploy)
 
-Optional (read this after completing this lab to take your learning even deeper!)
-* [Web apps migration support](https://learn.microsoft.com/en-us/azure/migrate/concepts-migration-webapps)
-* [Support matrix for vSphere migration](https://learn.microsoft.com/en-us/azure/migrate/migrate-support-matrix-vmware-migration)
-* [VMWare agentless migration architecture](https://learn.microsoft.com/en-us/azure/migrate/concepts-vmware-agentless-migration)
+Optional follow-up reading:
+
 * [Support matrix for Hyper-V migration](https://learn.microsoft.com/en-us/azure/migrate/migrate-support-matrix-hyper-v-migration)
 * [Hyper-V migration architecture](https://learn.microsoft.com/en-us/azure/migrate/hyper-v-migration-architecture)
-* [Troubleshooting guide](https://learn.microsoft.com/en-us/azure/migrate/troubleshoot-general)
+* [Azure Migrate troubleshooting guide](https://learn.microsoft.com/en-us/azure/migrate/troubleshoot-general)
+* [Azure Copilot Observability Agent](https://learn.microsoft.com/en-us/azure/azure-monitor/aiops/observability-agent-overview)
+* [Deploy files to Azure App Service](https://learn.microsoft.com/en-us/azure/app-service/deploy-zip)
 
-# MicroHack context
-This MicroHack scenario walks through the use of Azure Migrate to support the process and the different phases of datacenter modernization: 
+<a id="hack-context"></a>
 
-- Discover
-- Decide
-- Assess
-- Migrate
-- Modernize
+# Hack context
 
-As part of the MicroHack, we will simulate the discovery and migration of physical servers to Azure. We will create the source systems as Azure Virtual Machines within a dedicated source Resource Group in Azure to simulate the on-prem datacenter. We will use Azure Migrate to discover, assess and migrate the systems into a destination Resource Group that simulates the target Azure environment.
+The Hack follows a coherent modernization storyline:
 
-The concept behind physical server discovery and migration is described in detail under the following links:
-* [Physical Server discovery](https://learn.microsoft.com/en-us/azure/migrate/migrate-support-matrix-physical)
-* [Physical Server migration](https://learn.microsoft.com/en-us/azure/migrate/migrate-support-matrix-physical-migration)
+1. **Discover** the Hyper-V-hosted servers and their inventory.
+2. **Assess** technical readiness and cloud sizing.
+3. **Plan** the migration by building the business case and target design.
+4. **Migrate** the workloads to Azure IaaS.
+5. **Secure** the migrated environment.
+6. **Operate intelligently** with Azure Monitor telemetry, alerting, and AI-assisted investigation.
+7. **Replatform** the selected static IIS or Apache workload to Azure App Service and evaluate the optimal production hosting target.
+
+The lab simulates an on-premises datacenter by running nested guest VMs on a Hyper-V host in an Azure source resource group. Azure Migrate discovers, assesses, and migrates those systems into a destination resource group. In the final challenges, each team operates and manually replatforms either the migrated Windows/IIS workload or the migrated Ubuntu/Apache workload.
+
+The Hyper-V discovery and migration design is described here:
+
+* [Hyper-V server discovery support](https://learn.microsoft.com/en-us/azure/migrate/migrate-support-matrix-hyper-v)
+* [Migrate Hyper-V VMs](https://learn.microsoft.com/en-us/azure/migrate/tutorial-migrate-hyper-v)
 
 # Objectives
 
-After completing this MicroHack you will:
+After completing this Hack, you will be able to:
 
-- Know how to build an assessment & business case for you datacenter transformation 
-- Understand the default and best practices how to quickly migrate workloads and safe with right sizing
-- Understand how to use the tools and best practices to optimize and safe time
-- Know how to not only use the tools to Lift & Shift, you will also understand how to modernize to cloud native services
+* Build an assessment and business case for a datacenter transformation.
+* Plan and execute a right-sized Hyper-V VM migration to Azure.
+* Apply security practices to migrated workloads.
+* Enable Azure Monitor Agent, DCR-based telemetry, VM insights, and actionable alerting.
+* Investigate a deterministic IIS or Apache incident with Azure Copilot Observability Agent or a KQL fallback.
+* Restore and verify service using evidence from both the VM and Azure Monitor.
+* Inspect a selected IIS or Apache workload and manually replatform its static content to Windows App Service with ZIP deployment.
+* Explain why Azure Storage static website hosting or Azure Static Web Apps can be a better production target for a static workload.
 
-# MicroHack challenges
+<a id="hack-challenges"></a>
+
+# Hack challenges
 
 ## General prerequisites
 
-This MicroHack has a few but important prerequisites
-
-In order to use the MicroHack time most effectively, the following prerequisites should be completed prior to starting the session.
-
-* Entra ID Tenant
-* At least one Azure Subscription
-* Entra ID user with Contributor or Owner permissions on the Azure Subscription
-
-With these pre-requisites in place, we can focus on building the differentiated knowledge in Azure Migrate that is required when working with the product.
-
-## Challenge 1 - Prerequisites and landing zone preparation
-
-### Goal
-
-- Deploy a *source* resource group with two VMs and their dependencies that act as our physical on-premise servers that will be migrated to Azure.
-- Deploy a *destination* resource group to which the servers will be migrated.
-
-### Actions
-
-- Deploy the [Bicep configuration](./resources) of the Micro Hack.
-
-### Success criteria
-
-- You have understood the concept and architecture for the MicroHack.
-- The Bicep deployment command exits successfully.
-- The *source* and *destination* resource group is visible in the Azure Portal.
-
-### Learning resources
-
-- [What is Bicep?](https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/overview?tabs=bicep)
-
-### Solution - Spoilerwarning
-
-[Solution Steps](./walkthrough/challenge-1/solution.md)
-
-## Challenge 2 - Discover physical servers for the migration
-
-### Goal 
-
-The goal of this exercise is to...
-
-* Setup Azure Migrate Project in Azure
-* Installing / Deploying the necessary setup for discovery 
-* Create a discovery 
-
-### Actions
-
-* Create a Azure Migrate Project
-> [!IMPORTANT]
-> To be able to create a Business Case, make sure to select Europe as the Geography for the Azure Migrate Project
-* Deploy a Azure Migrate Appliance
-* Create a continuous discovery of your source environment
-
-### Success criteria
-
-* You have created a Azure Migrate Project
-* You have successfully deployed the Azure Migrate Appliance
-* You successfully registered the Azure Migrate Appliance with the Azure Migrate Project
-* You have successfully setup a continuous discovery for the physical servers.
-* You have successfully verified the discovered servers in the portal
-
-### Learning resources
-* [Create and managed Azure Migrate projects](https://learn.microsoft.com/en-us/azure/migrate/create-manage-projects)
-* [Setup and appliance on VMWare](https://learn.microsoft.com/en-us/azure/migrate/how-to-set-up-appliance-vmware)
-* [Setup and appliance on Hyper-V](https://learn.microsoft.com/en-us/azure/migrate/how-to-set-up-appliance-hyper-v)
-* [Steup an appliance for physical servers](https://learn.microsoft.com/en-us/azure/migrate/how-to-set-up-appliance-physical)
-* [Before you start / general prerequisites](https://learn.microsoft.com/en-us/azure/migrate/how-to-discover-applications#before-you-start) 
-
-### Solution - Spoilerwarning
-
-[Solution Steps](./walkthrough/challenge-2/solution.md)
-
-## Challenge 3 - Create a Business Case
-
-The Business case capability helps you build a business proposal to understand how Azure can bring the most value to your business. 
-
-It highlights:
-
-- On-premises vs Azure total cost of ownership.
-- Year on year cashflow analysis.
-- Resource utilization based insights to identify servers and workloads that are ideal for cloud.
-- Quick wins for migration and modernization including end of support Windows OS and SQL versions.
-- Long term cost savings by moving from a capital expenditure model to an Operating expenditure model, by paying for only what you use.
-
-Other key features:
-
-- Helps remove guess work in your cost planning process and adds data insights driven calculations.
-- It can be generated in just a few clicks after you have performed discovery using the Azure Migrate appliance.
-- The feature is automatically enabled for existing Azure Migrate projects.
-
-### Goal 
-
-The goal of this exercise is to create a business case. The Business case capability helps you build a business proposal to understand how Azure can bring the most value to your business. It highlights:
-
-- On-premises vs Azure total cost of ownership.
-- Year on year cashflow analysis.
-- Resource utilization based insights to identify servers and workloads that are ideal for cloud.
-- Quick wins for migration and modernization including end of support Windows OS and SQL versions.
-- Long term cost savings by moving from a capital expenditure model to an Operating expenditure model, by paying for only what you use.
-
-> [!WARNING]
-> The Business case capability is currently in public preview
-
-### Actions
-
-* Build a business case 
-* Review a business case
-* Adjust business case assumptions
-
-### Success criteria
-
-* You successfully build a business case
-* You have successfully reviewed the business case
-* You understand how to adjust the business case assumptions
-
-### Learning resources
-* [Business case overview](https://learn.microsoft.com/en-us/azure/migrate/concepts-business-case-calculation)
-* [Build a business case](https://learn.microsoft.com/en-us/azure/migrate/how-to-build-a-business-case)
-* [Review a business case](https://learn.microsoft.com/en-us/azure/migrate/how-to-view-a-business-case)
-
-### Solution - Spoilerwarning
-
-[Solution Steps](./walkthrough/challenge-3/solution.md)
-
-
-## Challenge 4 - Assess VM´s for the migration
-
-In most cases, you don't want to migrate all machines at once, but want to prioritize workload by workload and even understand what the dependencies between workloads are. You then look at each phase or wave of migration and break down the risks and workloads.
-
-### Goal 
-
-The goal of this exercise is to ...
-
-* measure the readiness and estimates the effect of migrating on-premises servers to Azure
-* review the assessment output to understand the readiness and sizing recommendations
-* review the dependencies between the discovered servers
-
-### Actions
-
-* Group machines for the assessment
-* Create an Azure VM assessment
-* Review assessment output and recommendations
-* Enable and review dependency analysis
-
-### Success criteria
-
-* You created a machine group
-* You successfully created an Azure VM assessment
-* You reviewed the assessment output and recommendations
-* You enabled and reviewed the dependencies of the discovered server
-
-### Learning resources
-* [Assessment overview - To Azure VMs](https://learn.microsoft.com/en-us/azure/migrate/concepts-assessment-calculation)
-* [Select assessment tools](https://learn.microsoft.com/en-us/azure/migrate/how-to-assess)
-* [Create a group for assessment](https://learn.microsoft.com/en-us/azure/migrate/how-to-create-a-group)
-* [Create an Azure VM assessment](https://learn.microsoft.com/en-us/azure/migrate/how-to-create-assessment)
-* [Customize an assessment](https://learn.microsoft.com/en-us/azure/migrate/how-to-modify-assessment)
-
-### Solution - Spoilerwarning
-
-[Solution Steps](./walkthrough/challenge-4/solution.md)
-
-## Challenge 5 - Migrate machines to Azure
-
-### Goal 
-
-The goal of this exercise is to ...
-
-* understand the different migration options and prerequisites provided by Azure Migrate
-* perform a test migration of the desired workload
-* keep downtime as short as possible
-* perform the final migration towards Azure
-
-### Actions
-
-* Setup the Azure Replication Appliance
-* Deploy the Mobility Service Agent
-* Replicate the machines to Azure
-* Perform a Test Migration
-* Prepare the final Migration
-* Migrate the workload to Azure
-
-### Success criteria
-
-* All the source machines are successfully migrated to and running in Azure
-* The Web Servers are seamlessly accessible using a Traffic Manager profile via dedicated Public Load Balancer.
-
-### Learning resources
-* [Support matrix for migration of physical servers, AWS VMs, and GCP VMs](https://learn.microsoft.com/en-us/azure/migrate/migrate-support-matrix-physical-migration)
-* [Migrate Hyper-V VM´s to Azure](https://learn.microsoft.com/en-us/azure/migrate/tutorial-migrate-hyper-v)
-* [Migrate options for VMWare to Azure](https://learn.microsoft.com/en-us/azure/migrate/server-migrate-overview)
-* [Migrate Physical Servers](https://learn.microsoft.com/en-us/azure/migrate/tutorial-migrate-physical-virtual-machines)
-* [Migrate AWS Instances to Azure](https://learn.microsoft.com/en-us/azure/migrate/tutorial-migrate-aws-virtual-machines)
-* [Migrate GCP Instances to Azure](https://learn.microsoft.com/en-us/azure/migrate/tutorial-migrate-gcp-virtual-machines)
-
-### Solution - Spoilerwarning
-
-[Solution Steps](./walkthrough/challenge-5/solution.md)
-
-## Optional Bonus Challenge 6 - Secure on Azure
-
-### Goal 
-
-The goal of this exercise is to ...
-
-* secure the migrated Virtual Machines by enabling Defender for Cloud for Server
-
-### Actions
-
-* Enable Defender for Cloud
-
-### Success criteria
-
-* The migrated Servers are protected by Defender for Cloud for Servers
-
-### Learning resources
-* [Deploy Defender for Servers](https://learn.microsoft.com/en-us/azure/defender-for-cloud/tutorial-enable-servers-plan)
-
-### Solution - Spoilerwarning
-
-[Solution Steps](./walkthrough/challenge-6/solution.md)
-
-## Optional Bonus Challenge 7 - Modernize with Azure
-
-### Goal 
-
-The goal of this exercise is to ...
-
-* modernize the Web App running on the frontend Servers to be hosted on PaaS instead of IaaS (Lift & Shift)
-* understand the options that are available for App Services assessment & migration
-
-### Actions
-
-* Create a web app assessment using Azure Migrate
-* Preform a web app migration using Azure Migrate towards Azure App Services
-
-### Success criteria
-
-* An assessment has been performed using the already deployed infrastructure.
-* An migration has been performed towards PaaS instead of IaaS.
-* The App Services are accessible using the source Load Balancer.
-
-> [!IMPORTANT]
-> Currently [July 2024], At-Scale Discovery, Assessment and Migration is supported for ASP.NET web apps deployed to on-premises IIS servers hosted on VMware Environment.
-
-### Learning resources
-* [App Service assessment overview](https://learn.microsoft.com/en-us/azure/migrate/concepts-azure-webapps-assessment-calculation)
-* [Web App migration support](https://learn.microsoft.com/en-us/azure/migrate/concepts-migration-webapps)
-* [App Service Migration Assistant](https://github.com/Azure/App-Service-Migration-Assistant/wiki)
-* [App Service migration tools and resources](https://learn.microsoft.com/en-us/azure/app-service/app-service-asp-net-migration#app-service-migration-tools-and-resources)
-
-### Solution - Spoilerwarning
-
-[Solution Steps](./walkthrough/challenge-7/solution.md)
-
-## Finish
-
-Congratulations! You finished the Migrate and Secure to be AI Ready Microhack. We hope you had the chance to learn about the how to implement a successful migration strategy using Azure Migrate.
-If you want to give feedback please don’t hesitate to open an Issue on the repository or get in touch with one of us directly.
-
-Thank you for investing the time and see you next time!
+Complete these prerequisites before the session:
+
+* A Microsoft Entra ID tenant.
+* At least one Azure subscription.
+* A Microsoft Entra user with Contributor or Owner permissions on the Azure subscription.
+* A client network and browser that support the Azure portal, Azure Bastion, and Azure Cloud Shell.
+
+Challenge 7 includes a preflight for Azure Copilot tenant access, RBAC, network access, and supported regions. Azure Copilot is not mandatory because the challenge includes a full KQL/VM insights fallback. No Azure OpenAI resource, model deployment, or model quota is required anywhere in this Hack.
+
+## Challenges
+
+* [Challenge 1 - Prerequisites and landing zone preparation](challenges/challenge-01.md) **<- Start here**
+* [Challenge 2 - Discover Hyper-V virtual machines for migration](challenges/challenge-02.md)
+* [Challenge 3 - Create a business case](challenges/challenge-03.md)
+* [Challenge 4 - Assess VMs for the migration](challenges/challenge-04.md)
+* [Challenge 5 - Migrate Hyper-V virtual machines to Azure](challenges/challenge-05.md)
+* [Optional Challenge 6 - Secure on Azure](challenges/challenge-06.md)
+* [Challenge 7 - Operate the migrated workload with intelligent observability](challenges/challenge-07.md)
+* [Challenge 8 - Replatform the selected migrated web workload to Azure App Service](challenges/challenge-08.md)
+
+## Solutions - Spoiler warning
+
+* [Solution 1 - Prerequisites and landing zone preparation](./walkthrough/challenge-01/solution-01.md)
+* [Solution 2 - Discover Hyper-V virtual machines for migration](./walkthrough/challenge-02/solution-02.md)
+* [Solution 3 - Create a business case](./walkthrough/challenge-03/solution-03.md)
+* [Solution 4 - Assess VMs for the migration](./walkthrough/challenge-04/solution-04.md)
+* [Solution 5 - Migrate Hyper-V virtual machines to Azure](./walkthrough/challenge-05/solution-05.md)
+* [Optional Solution 6 - Secure on Azure](./walkthrough/challenge-06/solution-06.md)
+* [Solution 7 - Operate the migrated workload with intelligent observability](./walkthrough/challenge-07/solution-07.md)
+* [Solution 8 - Replatform the selected migrated web workload to Azure App Service](./walkthrough/challenge-08/solution-08.md)
 
 ## Contributors
+
 * Nils Bankert [GitHub](https://github.com/nilsbankert); [LinkedIn](https://www.linkedin.com/in/nilsbankert/)
 * Andreas Schwarz [LinkedIn](https://www.linkedin.com/in/andreas-schwarz-7518a818b/)
-* Christian Thönes [Github](https://github.com/cthoenes); [LinkedIn](https://www.linkedin.com/in/christian-t-510b7522/)
-* Stefan Geisler [Github](https://github.com/StefanGeislerMS); [LinkedIn](https://www.linkedin.com/in/stefan-geisler-7b7363139/)
+* Christian Thönes [GitHub](https://github.com/cthoenes); [LinkedIn](https://www.linkedin.com/in/christian-t-510b7522/)
+* Stefan Geisler [GitHub](https://github.com/StefanGeislerMS); [LinkedIn](https://www.linkedin.com/in/stefan-geisler-7b7363139/)

@@ -1,0 +1,21 @@
+{
+  "name": "microhack-azure-copilot-tests",
+  "version": "1.0.0",
+  "description": "Playwright E2E tests for MicroHack Azure Copilot challenges",
+  "scripts": {
+    "test": "npx playwright test",
+    "test:headed": "npx playwright test --headed",
+    "test:debug": "npx playwright test --debug",
+    "test:challenge1": "npx playwright test specs/challenge-01",
+    "test:challenge2": "npx playwright test specs/challenge-02",
+    "test:challenge3": "npx playwright test specs/challenge-03",
+    "test:challenge4": "npx playwright test specs/challenge-04",
+    "test:challenge5": "npx playwright test specs/challenge-05",
+    "test:challenge6": "npx playwright test specs/challenge-06",
+    "test:challenge7": "npx playwright test specs/challenge-07",
+    "auth:setup": "npx playwright test --project=setup"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.50.0"
+  }
+}

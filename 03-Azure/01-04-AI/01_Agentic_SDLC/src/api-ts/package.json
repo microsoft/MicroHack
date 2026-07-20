@@ -1,0 +1,47 @@
+{
+	"name": "typescript-api-project",
+	"version": "1.0.0",
+	"main": "dist/index.js",
+	"scripts": {
+		"build": "tsc",
+		"start": "npm run start:install",
+		"start:install": "npm run db:seed && node dist/index.js",
+		"dev": "npm run db:seed:dev && tsx src/index.ts",
+		"test": "vitest",
+		"test:coverage": "vitest run --coverage",
+		"lint": "eslint .",
+		"lint:fix": "eslint . --fix",
+		"db:init": "node dist/init-db.js",
+		"db:init:dev": "tsx src/init-db.ts",
+		"db:seed": "npm run db:init -- --seed",
+		"db:seed:dev": "npm run db:init:dev -- --seed",
+		"db:migrate": "node dist/init-db.js",
+		"swagger:generate": "tsx src/generate-swagger.ts"
+	},
+	"dependencies": {
+		"@types/cors": "^2.8.19",
+		"@types/better-sqlite3": "^7.6.13",
+		"@types/swagger-jsdoc": "^6.0.4",
+		"@types/swagger-ui-express": "^4.1.8",
+		"better-sqlite3": "^12.4.1",
+		"cors": "^2.8.5",
+		"express": "^4.21.2",
+		"globals": "16.4.0",
+		"swagger-jsdoc": "^6.2.8",
+		"swagger-ui-express": "^5.0.1"
+	},
+	"devDependencies": {
+		"@eslint/js": "^9.37.0",
+		"@types/express": "^5.0.3",
+		"@types/node": "^24.7.2",
+		"@types/supertest": "^6.0.3",
+		"@vitest/coverage-v8": "^4.0.10",
+		"eslint": "^9.37.0",
+		"supertest": "^7.1.4",
+		"tsx": "^4.20.6",
+		"typescript": "^5.9.3",
+		"typescript-eslint": "8.46.1",
+		"vitest": "^4.0.10"
+	},
+	"license": "MIT"
+}

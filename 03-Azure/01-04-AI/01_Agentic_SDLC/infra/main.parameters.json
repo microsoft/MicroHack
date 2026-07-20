@@ -1,0 +1,33 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "_comment_location": "TODO: Set a region with Container Apps capacity (e.g. eastus, westeurope). Defaults to the resource group location if omitted.",
+    "namePrefix": {
+      "value": "octocat"
+    },
+    "environmentName": {
+      "value": "dev"
+    },
+    "_comment_images": "TODO: Replace <acr> with your registry login server once the ACR name is known. The workflow builds/pushes these tags. On a first bootstrap you may point at a public placeholder image until the real images exist.",
+    "apiImage": {
+      "value": "<acr>.azurecr.io/api:latest"
+    },
+    "frontendImage": {
+      "value": "<acr>.azurecr.io/frontend:latest"
+    },
+    "minReplicas": {
+      "value": 1
+    },
+    "maxReplicas": {
+      "value": 3
+    },
+    "_comment_registry_creds": "TODO: These enable the simplest ACR-admin-credentials path for a first deploy. Prefer a user-assigned managed identity with AcrPull and leave these empty. Never commit real values — pass them at deploy time (e.g. from the workflow) instead.",
+    "registryUsername": {
+      "value": ""
+    },
+    "registryPassword": {
+      "value": ""
+    }
+  }
+}

@@ -1,0 +1,122 @@
+# =============================================================================
+# deploy.yml — Challenge 5 starter workflow (OPTIONAL, SKELETON — not turnkey)
+# -----------------------------------------------------------------------------
+# This is a TODO-marked scaffold, NOT a working deploy. It is inert by default:
+#   - the `push` trigger is commented out, so it never auto-runs, and
+#   - no secrets are configured, so `azure/login` would no-op until you set them.
+#
+# Your job (the interesting part): finish the # TODO steps with Copilot, wire up
+# OIDC, and get a green, reachable deploy. See infra/README.md for the topology.
+#
+# ----- OIDC setup (no client secret is ever stored) --------------------------
+# 1. Create a user-assigned managed identity OR an app registration in Azure.
+# 2. Grant it Contributor on the target resource group (or subscription scope).
+# 3. Add a FEDERATED CREDENTIAL on it whose subject matches how this workflow
+#    runs, e.g. for the main branch:
+#        repo:<owner>/<repo>:ref:refs/heads/main
+#    (or `repo:<owner>/<repo>:environment:<env>` if you gate on an environment).
+# 4. Add these GitHub secrets — Settings > Secrets and variables > Actions:
+#        AZURE_CLIENT_ID         (the identity/app client id)
+#        AZURE_TENANT_ID
+#        AZURE_SUBSCRIPTION_ID
+#    and these repo/environment VARIABLES:
+#        AZURE_RESOURCE_GROUP    (e.g. octocat-hack-rg)
+#        AZURE_LOCATION          (e.g. eastus)
+# No AZURE_CREDENTIALS / client secret is used — auth is OIDC only.
+# =============================================================================
+
+name: Deploy to Azure (Challenge 5 — scaffold)
+
+on:
+  workflow_dispatch:
+  # TODO: Opt in to automatic deploys once the workflow is finished and you trust
+  #       it. Kept commented out so this scaffold never runs destructively.
+  # push:
+  #   branches: [ main ]
+
+# OIDC: `id-token: write` lets the job request a short-lived federated token that
+# azure/login exchanges for Azure creds. `contents: read` is for checkout.
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  # Pulled from the GitHub secrets/variables described in the header comment.
+  AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+  LOCATION: ${{ vars.AZURE_LOCATION }}
+  # TODO: Registry + image naming. Set the ACR name your Bicep produces (it is
+  #       derived as <namePrefix><environmentName>acr) or read it from an output.
+  ACR_NAME: '' # TODO: e.g. octocatdevacr
+  IMAGE_TAG: ${{ github.sha }}
+
+jobs:
+  deploy:
+    name: Provision & deploy
+    runs-on: ubuntu-latest
+    # TODO: Consider binding to a GitHub Environment (e.g. `environment: dev`) so
+    #       you can add reviewers/approval gates and environment-scoped secrets.
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # OIDC login — note there is NO `creds:` input and no client secret.
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ env.AZURE_CLIENT_ID }}
+          tenant-id: ${{ env.AZURE_TENANT_ID }}
+          subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+
+      # TODO: Ensure the resource group exists (idempotent). Uncomment/complete.
+      - name: Create resource group
+        run: |
+          echo "TODO: create the resource group"
+          # az group create --name "$RESOURCE_GROUP" --location "$LOCATION"
+
+      # TODO: Ensure the ACR exists before you can push to it. Options:
+      #   (a) create it here with `az acr create` on first run, or
+      #   (b) let the Bicep create it, then read ACR_NAME from a deployment output
+      #       and split this into "provision infra" -> "build/push" -> "update apps".
+      # The two build contexts and their Dockerfiles are:
+      #   - API:      context src/api-ts   Dockerfile src/api-ts/Dockerfile   (port 3000)
+      #   - Frontend: context src/frontend Dockerfile src/frontend/Dockerfile (port 80)
+      - name: Build & push images to ACR
+        run: |
+          echo "TODO: build and push both images"
+          # az acr login --name "$ACR_NAME"
+          # LOGIN_SERVER="$ACR_NAME.azurecr.io"
+          # docker build -t "$LOGIN_SERVER/api:$IMAGE_TAG" -f src/api-ts/Dockerfile src/api-ts
+          # docker build -t "$LOGIN_SERVER/frontend:$IMAGE_TAG" -f src/frontend/Dockerfile src/frontend
+          # docker push "$LOGIN_SERVER/api:$IMAGE_TAG"
+          # docker push "$LOGIN_SERVER/frontend:$IMAGE_TAG"
+          # Tip: `az acr build` can build server-side and avoids a local docker daemon.
+
+      # TODO: Provision (or update) the infrastructure from the Bicep skeleton.
+      #       Pass the image references you just pushed. Decide how you supply
+      #       registry auth (admin creds vs. managed identity) — see infra/README.md.
+      - name: Deploy infrastructure (Bicep)
+        run: |
+          echo "TODO: az deployment group create against infra/main.bicep"
+          # az deployment group create \
+          #   --resource-group "$RESOURCE_GROUP" \
+          #   --template-file infra/main.bicep \
+          #   --parameters infra/main.parameters.json \
+          #   --parameters \
+          #       apiImage="$ACR_NAME.azurecr.io/api:$IMAGE_TAG" \
+          #       frontendImage="$ACR_NAME.azurecr.io/frontend:$IMAGE_TAG"
+
+      # TODO: If you provision infra and build images in separate phases, roll the
+      #       container apps to the new tags here (otherwise the deployment above
+      #       already set them). Then print the frontend URL to verify.
+      - name: Update container apps to new image tags
+        run: |
+          echo "TODO: update the api + frontend container apps to :$IMAGE_TAG"
+          # az containerapp update -g "$RESOURCE_GROUP" -n <api-app-name> \
+          #   --image "$ACR_NAME.azurecr.io/api:$IMAGE_TAG"
+          # az containerapp update -g "$RESOURCE_GROUP" -n <frontend-app-name> \
+          #   --image "$ACR_NAME.azurecr.io/frontend:$IMAGE_TAG"
+          # az deployment group show -g "$RESOURCE_GROUP" -n main \
+          #   --query properties.outputs.frontendUrl.value -o tsv

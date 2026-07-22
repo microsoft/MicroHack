@@ -66,7 +66,7 @@ Enable metrics-based OpenTelemetry monitoring for both VMs. Use classic log coll
 * An inactive service and local HTTP failure prove user-visible impact on each VM; process or service telemetry alone isn't treated as a synthetic availability test.
 * The AI-assisted or manual investigation distinguishes service failure from VM/platform failure and produces evidence-backed remediation with rollback and prevention guidance.
 * A human restores `W3SVC` and `apache2`; both sites return HTTP `200`, service/process telemetry returns, and alerts resolve.
-* One recovered workload is selected for Challenge 8.
+* Both recovered workloads are available for the path selection at the start of Challenge 8.
 
 ## Learning resources
 

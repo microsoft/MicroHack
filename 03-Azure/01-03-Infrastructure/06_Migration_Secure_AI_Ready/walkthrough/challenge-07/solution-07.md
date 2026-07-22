@@ -438,6 +438,6 @@ Keep monitoring while completing Challenge 8. After the Hack:
 * Remove additional per-process metrics if they were enabled only for this lab and their ongoing cost isn't justified.
 * Don't delete portal-created Azure Monitor or Log Analytics workspaces, generated DCRs, managed identities, dashboards, or action groups until you confirm no other resources use them.
 
-Select either recovered workload as the Track A or Track B source for Challenge 8.
+Continue to Challenge 8, where you select either recovered workload for the guided replatforming exercise.
 
 You successfully completed Challenge 7.

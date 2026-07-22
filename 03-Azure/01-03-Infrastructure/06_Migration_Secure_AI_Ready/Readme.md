@@ -63,7 +63,7 @@ After completing this Hack, you will be able to:
 * Enable OpenTelemetry VM metrics, DCR-based Windows event collection, and service-specific alerting.
 * Investigate deterministic IIS and Apache incidents with Azure Copilot Observability Agent or the manual/KQL fallback.
 * Restore and verify both services using evidence from the VMs and Azure Monitor.
-* Inspect a selected IIS or Apache workload and manually replatform its static content to Windows App Service with ZIP deployment.
+* Select an IIS or Apache workload and manually replatform its static content to the appropriate Windows or Linux App Service target with ZIP deployment.
 * Explain why Azure Storage static website hosting or Azure Static Web Apps can be a better production target for a static workload.
 
 <a id="hack-challenges"></a>
@@ -90,7 +90,7 @@ Challenge 7 assumes Hack participants have Azure Copilot access, suitable RBAC, 
 * [Challenge 5 - Migrate Hyper-V virtual machines to Azure](challenges/challenge-05.md)
 * [Optional Challenge 6 - Secure on Azure](challenges/challenge-06.md)
 * [Challenge 7 - Operate the migrated workloads with intelligent observability](challenges/challenge-07.md)
-* [Challenge 8 - Replatform the selected migrated web workload to Azure App Service](challenges/challenge-08.md)
+* [Challenge 8 - Replatform a migrated web workload to Azure App Service](challenges/challenge-08.md)
 
 ## Solutions - Spoiler warning
 
@@ -101,7 +101,7 @@ Challenge 7 assumes Hack participants have Azure Copilot access, suitable RBAC, 
 * [Solution 5 - Migrate Hyper-V virtual machines to Azure](./walkthrough/challenge-05/solution-05.md)
 * [Optional Solution 6 - Secure on Azure](./walkthrough/challenge-06/solution-06.md)
 * [Solution 7 - Operate the migrated workloads with intelligent observability](./walkthrough/challenge-07/solution-07.md)
-* [Solution 8 - Replatform the selected migrated web workload to Azure App Service](./walkthrough/challenge-08/solution-08.md)
+* [Solution 8 - Replatform a migrated web workload to Azure App Service](./walkthrough/challenge-08/solution-08.md)
 
 ## Contributors
 

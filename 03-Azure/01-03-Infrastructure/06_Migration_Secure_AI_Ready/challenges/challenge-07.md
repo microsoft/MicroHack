@@ -21,7 +21,9 @@ The Linux alert monitors every process whose `"process.executable.name"` is `apa
 
 * Challenge 5 is complete and both migrated web VMs in `destination-rg` are running.
 * You can connect to both VMs through Azure Bastion and each site responds locally.
-* You can enable VM monitoring, use the portal-selected regional workspaces, create or edit DCRs and alerts, create or reuse an action group, and assign the alert identity **Monitoring Reader**.
+* Before opening **Infrastructure monitoring**, you can create or reuse one user-assigned managed identity for both migrated VMs. Using the destination resource group and the same region is recommended for this lab.
+* You can grant that identity **Monitoring Reader** on both monitored VMs or their containing destination resource group, and on the Azure Monitor workspace when the alert uses workspace scope.
+* This user-assigned identity authorizes OpenTelemetry query-based and recommended alerts. It is separate from the VM's system-assigned identity used by Azure Monitor Agent; the portal doesn't automatically create the user-assigned alert identity.
 * Azure Copilot access, a supported region, and the required telemetry permissions are available to Hack participants. No Azure OpenAI resource, model deployment, or model quota is required.
 * The client network allows WebSocket connections to `https://directline.botframework.com`.
 
@@ -47,9 +49,10 @@ Enable metrics-based OpenTelemetry monitoring for both VMs. Use classic log coll
 ## Actions
 
 * Warm and validate both web pages before changing either service.
+* Create one reusable user-assigned alert identity before opening Infrastructure monitoring, grant its required **Monitoring Reader** access, and select that existing identity in the portal's **Identity** field for both VMs.
 * Let Infrastructure monitoring select or create the regional default Azure Monitor workspace and generated OpenTelemetry DCR; do not pre-create a custom workspace.
 * Enable OpenTelemetry metrics, per-process metrics, built-in Grafana dashboards, and recommended infrastructure alerts.
-* Select a managed identity for query-based metric alerts and verify its monitoring read access.
+* Confirm query-based and recommended alerts use the pre-created identity and that it retains the required monitoring read access.
 * Locate the Linux VM's generated `MSVMOtel-<region>-<name>` DCR and ensure that `process.uptime` is collected.
 * Reuse the portal-selected compatible Log Analytics workspace for Windows events and associate a focused Event DCR.
 * Create an Apache PromQL absence alert and an IIS KQL scheduled-query alert.
@@ -76,6 +79,8 @@ Enable metrics-based OpenTelemetry monitoring for both VMs. Use classic log coll
 * [OpenTelemetry guest OS metrics reference](https://learn.microsoft.com/azure/azure-monitor/vm/metrics-guest-reference)
 * [PromQL for system and guest OS metrics](https://learn.microsoft.com/azure/azure-monitor/metrics/prometheus-system-metrics-best-practices)
 * [Query-based metric alerts](https://learn.microsoft.com/azure/azure-monitor/alerts/alerts-query-based-metric-alerts-overview)
+* [Create a user-assigned managed identity in the Azure portal](https://learn.microsoft.com/entra/identity/managed-identities-azure-resources/manage-user-assigned-managed-identities-azure-portal)
+* [Assign Azure roles using the Azure portal](https://learn.microsoft.com/azure/role-based-access-control/role-assignments-portal)
 * [Collect Windows events with Azure Monitor Agent](https://learn.microsoft.com/azure/azure-monitor/vm/data-collection-windows-events)
 * [Create Azure Monitor log search alert rules](https://learn.microsoft.com/azure/azure-monitor/alerts/alerts-create-log-alert-rule)
 * [Azure Copilot Observability Agent overview](https://learn.microsoft.com/azure/azure-monitor/aiops/observability-agent-overview)

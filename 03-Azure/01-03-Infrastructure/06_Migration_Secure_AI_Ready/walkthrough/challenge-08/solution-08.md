@@ -439,19 +439,55 @@ plan_name="asp-mh-linux-${name_suffix}"
 app_name="mh-web-linux-${name_suffix}"
 startup_command='pm2 serve /home/site/wwwroot $PORT --no-daemon'
 
-runtime_list_args=(webapp list-runtimes --os-type linux --runtime node --output tsv)
-runtime_candidates="$(az "${runtime_list_args[@]}")"
-runtime="$(
-  printf '%s\n' "${runtime_candidates}" |
-    awk 'tolower($0) ~ /^node:[0-9]+-lts$/ { print }' |
-    sort -t: -k2,2Vr |
-    sed -n '1p'
-)"
-if [[ -z "${runtime}" ]]; then
-  echo 'No supported NODE:<major>-lts Linux runtime was returned.' >&2
-  printf '%s\n' "${runtime_candidates}" >&2
+runtime_list_args=(webapp list-runtimes --os-type linux --runtime node --output json)
+runtime_raw="$(az "${runtime_list_args[@]}")"
+if ! command -v python3 >/dev/null 2>&1; then
+  echo 'python3 is required to parse the Azure CLI runtime response.' >&2
   false
 fi
+runtime_candidates="$(
+  MH_RUNTIME_OUTPUT="${runtime_raw}" python3 <<'PY_RUNTIME'
+import json
+import os
+import re
+
+raw = os.environ["MH_RUNTIME_OUTPUT"]
+pattern = re.compile(
+    r"(?i)(?<![A-Za-z0-9_])NODE[|:](\d+)-lts(?=$|[\s\"',}\]]|(?:19|20)\d{2}-\d{2}-\d{2}|Linux)"
+)
+majors = set()
+
+
+def collect(value):
+    if isinstance(value, dict):
+        for key, item in value.items():
+            collect(key)
+            collect(item)
+    elif isinstance(value, list):
+        for item in value:
+            collect(item)
+    elif isinstance(value, str):
+        majors.update(int(match.group(1)) for match in pattern.finditer(value))
+
+
+try:
+    collect(json.loads(raw))
+except json.JSONDecodeError:
+    collect(raw)
+
+for major in sorted(majors, reverse=True):
+    print(f"NODE:{major}-lts")
+PY_RUNTIME
+)"
+if [[ -z "${runtime_candidates}" ]]; then
+  echo 'No supported NODE:<major>-lts Linux runtime was returned.' >&2
+  echo 'Raw Azure CLI runtime response:' >&2
+  printf '%s\n' "${runtime_raw}" >&2
+  false
+fi
+runtime="${runtime_candidates%%$'\n'*}"
+printf 'Discovered Node LTS runtimes, normalized for az webapp create:\n%s\n' "${runtime_candidates}"
+printf 'Selected runtime: %s\n' "${runtime}"
 
 plan_list_args=(appservice plan list --resource-group "${destination_rg}" --query "[?name=='${plan_name}'].id | [0]" --output tsv)
 plan_id="$(az "${plan_list_args[@]}")"
@@ -485,11 +521,12 @@ else
   existing_plan_id="$(az webapp show --name "${app_name}" --resource-group "${destination_rg}" --query serverFarmId --output tsv)"
   existing_https_only="$(az webapp show --name "${app_name}" --resource-group "${destination_rg}" --query httpsOnly --output tsv)"
   existing_runtime="$(az webapp config show --name "${app_name}" --resource-group "${destination_rg}" --query linuxFxVersion --output tsv)"
-  existing_runtime_canonical="${existing_runtime/|/:}"
+  existing_runtime_canonical="$(printf '%s' "${existing_runtime/|/:}" | tr '[:upper:]' '[:lower:]')"
+  supported_runtime_candidates="$(printf '%s\n' "${runtime_candidates}" | tr '[:upper:]' '[:lower:]')"
   if [[ "${existing_plan_id,,}" != "${plan_id,,}" ||
         "${existing_https_only,,}" != 'true' ||
         -z "${existing_runtime_canonical}" ]] ||
-     ! grep -Fxiq "${existing_runtime_canonical}" <<<"${runtime_candidates}"; then
+     ! grep -Fxq "${existing_runtime_canonical}" <<<"${supported_runtime_candidates}"; then
     echo "Existing app ${app_name} isn't compatible with the intended plan, HTTPS setting, or supported Node LTS runtimes." >&2
     false
   fi
@@ -516,6 +553,8 @@ else
   echo 'Correct the error and rerun this block before continuing.' >&2
 fi
 ```
+
+If runtime discovery stopped this step on an earlier attempt, paste and run the entire corrected block again with the same subscription ID and destination resource group. Its stable names reconcile compatible existing resources instead of creating duplicates. Continue only after the block reports success.
 
 `az webapp list-runtimes` is the source of truth for currently available built-in runtimes. The block chooses the highest advertised Node.js LTS major version for a new app and fails rather than inventing a fallback. On rerun, it reuses only the same Linux B1 plan and HTTPS-enabled app when their plan association and Node LTS runtime remain compatible. PM2 runs in the foreground, listens on the App Service-provided `$PORT`, and serves the ready-to-run static ZIP from `/home/site/wwwroot`. `B1` incurs charges until the plan is deleted.
 

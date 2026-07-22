@@ -1,154 +1,184 @@
-# Walkthrough Challenge 7 - Operate the migrated workload with intelligent observability
+# Walkthrough Challenge 7 - Operate the migrated workloads with intelligent observability
 
 [Previous Challenge Solution](../challenge-06/solution-06.md) - **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-08/solution-08.md)
 
-Duration: 40 minutes
+Duration: 70 minutes
 
-## Task 1: Select a track and complete the preflight (5 minutes)
+## Task 1: Validate both workloads and complete preflight (5 minutes)
 
-Select one migrated VM in `destination-rg` and follow the same track through Challenges 7 and 8:
+Record both VM names, their region, and their Azure resource IDs. Connect to each VM with Azure Bastion.
 
-| Track | VM | Web service | Service-event table |
-| --- | --- | --- | --- |
-| A | Windows Server | IIS `W3SVC` | `Event` |
-| B | Ubuntu Linux | Apache `apache2` | `Syslog` |
-
-Record the VM name and region. Connect with Azure Bastion and verify the selected service and local website.
-
-### Track A - Windows
+### Windows/IIS baseline
 
 Run in Windows PowerShell as administrator:
 
 ```powershell
-Get-Service -Name W3SVC
-(Invoke-WebRequest -Uri 'http://localhost/' -UseBasicParsing -TimeoutSec 10).StatusCode
+$service = Get-Service -Name W3SVC
+$response = Invoke-WebRequest -Uri 'http://localhost/' -UseBasicParsing -TimeoutSec 10
+
+$service | Select-Object Name, Status, StartType
+$response | Select-Object StatusCode
+
+if ($service.Status -ne 'Running' -or $response.StatusCode -ne 200) {
+    throw 'The IIS baseline is not healthy.'
+}
 ```
 
-The service must be `Running` and HTTP must return `200`.
-
-### Track B - Linux
+### Linux/Apache baseline
 
 Run in Bash:
 
 ```bash
+set -euo pipefail
+
 sudo systemctl is-active apache2
 curl --fail --silent --show-error --output /dev/null \
   --write-out 'HTTP %{http_code}\n' http://localhost/
+pgrep -a -x apache2
 ```
 
-The service must be `active` and HTTP must return `200`.
+Opening each page before the incident both proves the baseline and warms IIS/Apache. Keep both Bastion sessions available for the recovery task.
 
-### Common Azure Copilot preflight
+### Azure Copilot and permissions
 
-1. In the portal, select **Copilot**. If an unauthorized message appears, ask a tenant administrator to follow [Manage access to Azure Copilot](https://learn.microsoft.com/en-us/azure/copilot/manage-access). In a restricted tenant, the user or a group containing the user needs the **Copilot for Azure User** role.
-2. Confirm the client network allows WebSocket connections to `https://directline.botframework.com`.
-3. Open the [Observability Agent overview](https://learn.microsoft.com/en-us/azure/azure-monitor/aiops/observability-agent-overview#regions) and confirm that the intended Log Analytics workspace region is supported.
-4. Confirm your signed-in account can read the VM and its monitoring data and create the required monitoring resources. The Contributor or Owner prerequisite for this Hack is sufficient. For least privilege, review **Monitoring Reader**, **Log Analytics Reader**, and the specific write roles required for DCRs and alerts.
+Azure Copilot access is treated as available for this Hack. Confirm:
+
+1. The portal **Copilot** entry opens and the current region is listed in the [Observability Agent regions](https://learn.microsoft.com/azure/azure-monitor/aiops/observability-agent-overview#regions).
+2. Your account can read both VMs and their monitoring data and create the lab monitoring resources. To grant **Monitoring Reader**, you also need Owner, Role Based Access Control Administrator, User Access Administrator, or equivalent role-assignment permissions at the chosen scope; Contributor alone can't create the role assignment.
+3. The client network allows WebSocket connections to `https://directline.botframework.com`.
+4. Your account can create or reuse a user-assigned managed identity and grant it **Monitoring Reader** at the scope used by the query-based metric alerts.
 
 > [!IMPORTANT]
-> If Azure Copilot, the **Observability Agent** button, the selected region, or tenant access is unavailable, continue with Tasks 2 through 4 and use the fallback in Task 5. Do not provision an Azure OpenAI resource or model. Do not create an Observability Agent resource for the required path.
+> Observability Agent, deep investigations, Azure Monitor issues, and query-based metric alerts include preview experiences. A deep investigation can use up to 300 Azure Agent Credits. Portal labels and availability can vary by tenant and region.
 
-## Task 2: Enable monitoring and collect the selected service event (10 minutes)
+No Azure OpenAI deployment or autonomous Observability Agent resource is required.
 
-### Common workspace and VM insights setup
+## Task 2: Enable modern infrastructure monitoring (15 minutes)
 
-1. Search for **Log Analytics workspaces** in the Azure portal.
-2. Reuse a workspace in the selected VM's region, or create one in `destination-rg` with a unique name such as `law-mh-migration-<suffix>`.
-3. Open the selected VM and go to **Monitoring** > **Insights**. Select **Enable**, **Configure**, or **Configure monitoring**, depending on the current portal blade.
-4. Select the Log Analytics workspace and enable the logs-based VM insights metrics option so performance data is available in `InsightsMetrics`.
-5. Apply the configuration.
-6. On the VM, open **Extensions + applications** and confirm the selected track's extension is provisioned successfully:
-   * Track A: `AzureMonitorWindowsAgent`
-   * Track B: `AzureMonitorLinuxAgent`
-7. Open **Monitor** > **Data Collection Rules** and confirm that the VM insights DCR is associated with the selected VM.
+Azure Monitor provides two different guest-monitoring models:
+
+| | OpenTelemetry metrics-based | Classic logs-based |
+| --- | --- | --- |
+| Data store | Azure Monitor workspace | Log Analytics workspace |
+| Query | PromQL | KQL |
+| Latency | Near real-time | Typically 1-3 minutes |
+| Cost | Default metric set is free; additional metrics can incur cost | Standard log ingestion and retention charges |
+| Best fit | New deployments and consistent Windows/Linux metrics | Multi-VM views and single-query metric/log correlation |
+| Current limitation | Metrics and logs require separate queries; built-in multi-VM views are limited | Platform-specific counters and higher ingestion cost |
+
+Use the recommended OpenTelemetry experience for both VMs. Windows also needs Log Analytics for the authoritative service-control event; this challenge doesn't query classic performance tables.
+
+### Create the alert-query identity before onboarding
+
+Create the identity before opening **Infrastructure monitoring** on either VM:
+
+1. In the Azure portal, search for **Managed Identities**, select **Create**, and create a user-assigned managed identity such as `id-mh-monitor-alerts`. For this lab, use the Hack subscription and preferably the destination resource group and the same region as the migrated VMs.
+2. Open the destination resource group or each migrated VM, select **Access control (IAM)** > **Add role assignment**, choose **Monitoring Reader**, and assign it to the new user-assigned managed identity. Resource-group scope is the simplest reusable choice for both lab VMs.
+3. If a query-based alert is scoped to the Azure Monitor workspace instead of a VM or resource group, also grant the identity **Monitoring Reader** on that workspace.
+4. Reuse this identity for both migrated VMs. The [query-based metric alert identity requirements](https://learn.microsoft.com/azure/azure-monitor/alerts/alerts-query-based-metric-alerts-overview#managed-identities-for-query-based-alerts) require read access to the alert scope.
+
+This user-assigned identity authorizes OpenTelemetry alert queries. It is different from the VM's system-assigned identity that Azure Monitor Agent can use. The Infrastructure monitoring wizard doesn't create the user-assigned alert identity, so create and authorize it before selecting it in the wizard.
+
+### Onboard the Windows VM
+
+1. Open the Windows VM and select **Monitor**. If enhanced monitoring isn't enabled, select **Configure**.
+2. Select **Customize infrastructure monitoring**.
+3. Keep **OpenTelemetry metrics** selected.
+4. Optionally select the OpenTelemetry detailed or per-process option to explore the cross-platform schema. The Windows alert doesn't use process metrics, and enabling them can incur ingestion cost.
+5. Also select **Classic Log-based metrics** for the Windows VM so the portal selects or creates a compatible regional default Log Analytics workspace for the Windows Event DCR and Logs-scoped agent experience. This also enables classic performance ingestion as a side effect and can incur Log Analytics cost. Do not create a separately named lab workspace first.
+6. Use the default regional Azure Monitor workspace, Log Analytics workspace, and generated DCR proposed by the portal.
+7. Keep **Dashboards with Grafana** and **Recommended alerts** selected when offered. Recommended alerts cover infrastructure health; they don't replace the service-specific alerts created in Task 3.
+8. In **Identity**, select the pre-created `id-mh-monitor-alerts` user-assigned identity. Confirm it has **Monitoring Reader** on the VM or containing destination resource group and, for a workspace-scoped rule, on the Azure Monitor workspace.
+9. Review and enable monitoring.
+
+Before continuing, confirm that the review page names an Azure Monitor workspace, a compatible regional default Log Analytics workspace, and the generated DCR. If no Log Analytics workspace appears, return to customization and confirm **Classic Log-based metrics** is selected. If the portal still doesn't propose a default workspace, stop and ask your instructor to provide the lab's compatible default; don't independently recreate the obsolete custom-workspace flow.
+
+The configuration should show both **OpenTelemetry metrics** and **Classic Log-based metrics** selected, the portal-proposed Azure Monitor and Log Analytics workspaces, recommended alerts enabled, and the pre-created user-assigned identity selected.
+
+![Azure portal Infrastructure monitoring configuration showing OpenTelemetry and Classic Log-based metrics, proposed workspaces, recommended alerts, and a pre-created user-assigned identity](./img/configure-infrastructure-monitoring.png)
 
 > [!NOTE]
-> Azure Monitor supports associating multiple DCRs with one Azure Monitor Agent. Keep the VM insights DCR and add the selected track's focused event DCR.
+> As part of Azure Monitor Agent installation, Azure can enable a system-assigned identity on the VM. That VM identity is separate from the pre-created user-assigned identity selected for alert queries; the wizard doesn't create the user-assigned alert identity.
 
-### Track A - Create the Windows service-event DCR
+### Onboard the Linux VM
 
-1. In **Monitor** > **Data Collection Rules**, select **Create**.
-2. Use rule name `dcr-iis-service-events`, resource group `destination-rg`, the VM's region, and platform type **Windows**.
-3. On **Resources**, add the selected VM. Leave **Enable Data Collection Endpoints** off unless your network design requires a DCE.
-4. On **Collect and deliver**, select **Add data source** > **Windows Event Logs**.
+Repeat the Infrastructure monitoring flow for the Linux VM:
+
+1. Keep **OpenTelemetry metrics** and its detailed/per-process option selected.
+2. Leave **Classic Log-based metrics** off; Apache uses an OpenTelemetry process signal and doesn't require a Log Analytics workspace.
+3. Let the portal select or create the same regional default Azure Monitor workspace.
+4. Accept the generated DCR, dashboard, and recommended alerts.
+5. Select the same pre-created user-assigned alert identity and enable monitoring.
+
+The portal installs `AzureMonitorWindowsAgent` or `AzureMonitorLinuxAgent`. Provisioning, DCR association, and the first metric samples take several minutes.
+
+### Verify and customize the generated OpenTelemetry DCR
+
+1. Open **Monitor** > **Data Collection Rules** > **Resources**.
+2. Locate each VM and open its associated DCR whose name follows `MSVMOtel-<region>-<name>`.
+3. For the Linux DCR, open **Data sources** > **OpenTelemetry Performance Counters**.
+4. Select **Custom** and confirm that `process.uptime` is included. Add it if it isn't present.
+5. Optionally include `process.cpu.utilization` and `process.memory.usage` for richer investigation evidence.
+6. Keep the default 60-second sampling interval and save.
+
+Default OpenTelemetry metrics such as `system.uptime`, `system.cpu.time`, and `system.memory.usage` are free. `process.uptime` and other metrics beyond the default set can incur ingestion cost. Remove unneeded additional metrics after the Hack.
+
+### Verify metrics on both VMs
+
+From each VM, open **Metrics** and choose **View Azure Monitor workspace metrics in editor**, or open the Azure Monitor workspace PromQL editor. When the query is launched from a VM resource, Azure applies that VM's resource scope.
+
+Run:
+
+```promql
+{"system.uptime"}
+```
+
+On the Linux VM, also run:
+
+```promql
+count({"process.uptime", "process.executable.name"="apache2"})
+```
+
+The first query must return recent data for each VM. The Linux query must return a value greater than zero. `process.executable.name` is an enabled per-process resource attribute, and `process.uptime` is a gauge measured in seconds.
+
+> [!NOTE]
+> Azure Monitor PromQL uses Prometheus 3 UTF-8 syntax. Metric and label names containing dots are quoted inside braces, for example `{"process.uptime", "process.executable.name"="apache2"}`.
+
+## Task 3: Create service-specific alert paths (15 minutes)
+
+Reuse the action group created by recommended monitoring alerts, or create `ag-mh-operators` in `destination-rg` with an email receiver you can check.
+
+### Windows/IIS: collect the authoritative service event
+
+Create a focused DCR:
+
+1. Open **Monitor** > **Data Collection Rules** and select **Create**.
+2. Name it `dcr-iis-service-events`, use `destination-rg`, the VM's region, and platform type **Windows**.
+3. On **Resources**, add the Windows VM. Leave **Enable Data Collection Endpoints** off unless your network design requires a DCE.
+4. Add a **Windows Event Logs** data source.
 5. Select **Custom** and enter:
 
    ```text
    System!*[System[(EventID=7036)]]
    ```
 
-6. Add a destination of **Azure Monitor Logs**, select the Log Analytics workspace, and create the DCR.
-7. Return to the DCR **Resources** page and verify the VM association.
+6. Set the destination to **Azure Monitor Logs** and select the compatible default Log Analytics workspace chosen during Windows onboarding.
+7. Create the DCR and verify its VM association.
 
-### Track B - Create the Linux Syslog DCR
-
-1. In **Monitor** > **Data Collection Rules**, select **Create**.
-2. Use rule name `dcr-apache-incident-syslog`, resource group `destination-rg`, the VM's region, and platform type **Linux**.
-3. On **Resources**, add the selected VM. Leave **Enable Data Collection Endpoints** off unless your network design requires a DCE.
-4. On **Collect and deliver**, select **Add data source** > **Linux Syslog**.
-5. Set the `daemon` facility to minimum log level **Warning**. Set all other facilities to **NONE**.
-6. Add a destination of **Azure Monitor Logs**, select the Log Analytics workspace, and create the DCR.
-7. Return to the DCR **Resources** page and verify the VM association.
-8. After the association is ready, emit a focused preflight record:
-
-   ```bash
-   logger -p daemon.warning -t microhack \
-     "MicroHack Syslog preflight for apache2 monitoring"
-   ```
-
-The DCR collects `daemon.warning` and higher-severity records. The tag and exact message let the queries ignore unrelated daemon messages.
-
-### Verify telemetry before the incident
-
-Open the Log Analytics workspace **Logs** page, set the time range to **Last 30 minutes**, and run:
+Confirm that the DCR's **Resources** page shows the Windows VM. You can use the Log Analytics workspace's **Logs** page to inspect any service-control records collected after the association:
 
 ```kusto
-Heartbeat
-| summarize LastHeartbeat=max(TimeGenerated) by Computer, _ResourceId
-| order by LastHeartbeat desc
-```
-
-```kusto
-InsightsMetrics
-| where Origin == "vm.azm.ms"
-| summarize LastMetric=max(TimeGenerated), Samples=count() by Computer, _ResourceId
-| order by LastMetric desc
-```
-
-The selected VM must appear in both queries.
-
-Copy the selected VM's `_ResourceId` from the results. Replace `<selected-vm-resource-id>` in the track-specific queries below with that exact value.
-
-Track B also verifies the preflight event:
-
-```kusto
-Syslog
+Event
 | where TimeGenerated >= ago(30m)
-| where Facility =~ "daemon" and SeverityLevel =~ "warning"
-| where ProcessName =~ "microhack"
-| where SyslogMessage == "MicroHack Syslog preflight for apache2 monitoring"
-| where _ResourceId =~ "<selected-vm-resource-id>"
-| project TimeGenerated, Computer, ProcessName, Facility, SeverityLevel, SyslogMessage, _ResourceId
+| where EventLog == "System" and EventID == 7036
+| where _ResourceId =~ "<windows-vm-resource-id>"
+| project TimeGenerated, Computer, RenderedDescription, _ResourceId
 | order by TimeGenerated desc
 ```
 
-> [!NOTE]
-> Agent installation, DCR association, and ingestion are asynchronous. Refresh until the required records appear; do not assume a fixed ingestion time.
+Zero rows are valid when no service has changed state since the DCR became active. The deterministic ingestion gate is the `W3SVC` stopped event generated and queried in Task 4; don't create a false service interruption only to populate this preflight query.
 
-## Task 3: Create an actionable service alert (8 minutes)
-
-### Create or reuse an action group
-
-1. In **Monitor** > **Alerts**, select **Action groups** > **Create**.
-2. Create `ag-mh-operators` in `destination-rg`, or reuse it if another team already created it.
-3. Add an **Email/SMS message/Push/Voice** notification and send email to an address you can check. Name the receiver `LabOperator`.
-4. Review and create the action group.
-
-### Create the selected track's log search alert
-
-Open the Log Analytics workspace, select **Alerts** > **Create** > **Alert rule**, and choose **Custom log search**.
-
-Track A query:
+Create a **Custom log search** scheduled-query alert from the workspace:
 
 ```kusto
 Event
@@ -158,55 +188,60 @@ Event
     or RenderedDescription has "W3SVC"
     or ParameterXml has "W3SVC"
 | where RenderedDescription has "stopped" or ParameterXml has "stopped"
-| where _ResourceId =~ "<selected-vm-resource-id>"
+| where _ResourceId =~ "<windows-vm-resource-id>"
 | project TimeGenerated, Computer, RenderedDescription, _ResourceId
 ```
 
-Track B query:
-
-```kusto
-Syslog
-| where TimeGenerated >= ago(10m)
-| where Facility =~ "daemon" and SeverityLevel =~ "warning"
-| where ProcessName =~ "microhack"
-| where SyslogMessage == "apache2 service stopped for MicroHack incident"
-| where _ResourceId =~ "<selected-vm-resource-id>"
-| project TimeGenerated, Computer, ProcessName, SyslogMessage, _ResourceId
-```
-
-Select **Run**. A zero-row result is expected before the incident. Configure:
+Configure:
 
 | Setting | Value |
 | --- | --- |
+| Alert name | `IIS W3SVC stopped` |
 | Measure | Table rows |
-| Aggregation type | Count |
-| Aggregation granularity | 10 minutes |
-| Operator | Greater than |
-| Threshold value | `0` |
-| Frequency of evaluation | 5 minutes |
-| Action group | `ag-mh-operators` |
+| Aggregation | Count over 10 minutes |
+| Condition | Greater than `0` |
+| Evaluation frequency | 5 minutes |
 | Severity | 2 - Warning |
-| Enable upon creation | Selected |
+| Action group | `ag-mh-operators` |
+| Enable | Selected |
 
-Use the selected track's alert details:
+Enable automatic resolution when offered. Do not alert on `w3wp.exe` absence: application-pool idle timeout can remove the worker process while `W3SVC` and the site remain healthy.
 
-| Track | Alert rule name | Description |
-| --- | --- | --- |
-| A | `IIS W3SVC stopped` | `W3SVC stopped. Validate VM heartbeat, start W3SVC, and test HTTP.` |
-| B | `Apache apache2 stopped` | `Controlled apache2 stop event detected. Validate VM heartbeat, start apache2, and test HTTP.` |
+### Linux/Apache: alert only when every Apache process disappears
 
-If the portal offers automatic resolution, enable it. Create the rule and verify it is enabled.
+Open **Monitor** > **Alerts** > **Create** > **Alert rule** and scope the rule to the Linux VM. Select the query-based metric alert condition and use:
 
-## Task 4: Induce and prove a safe incident (5 minutes)
+```promql
+absent_over_time({"process.uptime", "process.executable.name"="apache2"}[5m])
+```
 
-### Track A - Windows
+Configure:
+
+| Setting | Value |
+| --- | --- |
+| Alert name | `Apache processes absent` |
+| Condition | Query result greater than `0` |
+| Evaluation frequency | 1 minute |
+| Failing period | 1 minute |
+| Auto resolution | Enabled |
+| Severity | 2 - Warning |
+| Managed identity | Pre-created user-assigned identity with **Monitoring Reader** on the Linux VM or destination resource group and, for workspace scope, the Azure Monitor workspace |
+| Action group | `ag-mh-operators` |
+
+`apache2` normally has a parent and multiple workers, each with its own `process.uptime` series. `absent_over_time` returns no result while any matching series exists and returns `1` only after all matching series have been absent for the full five-minute window. Allow up to 10 minutes after the stop command for the final sample, absence window, collection, and alert evaluation before treating a missing alert as a configuration problem.
+
+## Task 4: Induce and prove both controlled incidents (10 minutes)
+
+Warm both pages once more before stopping either service. Process/service telemetry proves component state, while the local HTTP request proves user-visible impact in this private lab. Neither signal is a substitute for production synthetic availability monitoring.
+
+### Stop IIS and prove impact
 
 Run in elevated Windows PowerShell:
 
 ```powershell
 $incidentStart = Get-Date
 Stop-Service -Name W3SVC -Force
-Get-Service -Name W3SVC
+$service = Get-Service -Name W3SVC
 
 $siteFailed = $false
 try {
@@ -216,187 +251,150 @@ catch {
     $siteFailed = $true
     Write-Host "Expected local IIS failure: $($_.Exception.Message)"
 }
-if (-not $siteFailed) {
-    throw 'The local site unexpectedly remained available.'
+
+if ($service.Status -ne 'Stopped' -or -not $siteFailed) {
+    throw "The controlled IIS incident wasn't proven."
 }
 
 Get-WinEvent -FilterHashtable @{
-    LogName = 'System'
-    Id = 7036
+    LogName   = 'System'
+    Id        = 7036
     StartTime = $incidentStart
 } | Where-Object {
     $_.Message -match 'World Wide Web Publishing Service|W3SVC'
 } | Select-Object TimeCreated, Id, Message
 ```
 
-### Track B - Linux
+Wait for the stopped event to appear in the Task 3 KQL query, then wait for `IIS W3SVC stopped` to appear under **Monitor** > **Alerts** > **Alert instances**.
+
+### Stop Apache and prove impact
 
 Run in Bash:
 
 ```bash
+set -euo pipefail
+
 sudo systemctl stop apache2
 
-if sudo systemctl is-active --quiet apache2; then
-  echo "apache2 unexpectedly remained active." >&2
+if systemctl is-active --quiet apache2 || pgrep -x apache2 >/dev/null; then
+  echo "Apache unexpectedly remained active." >&2
   exit 1
-else
-  sudo systemctl is-active apache2 || true
 fi
 
 if curl --fail --silent --show-error --max-time 10 http://localhost/ >/dev/null; then
-  echo "The local site unexpectedly remained available." >&2
+  echo "The local Apache site unexpectedly remained available." >&2
   exit 1
 else
   echo "Expected local Apache HTTP failure confirmed."
 fi
-
-logger -p daemon.warning -t microhack \
-  "apache2 service stopped for MicroHack incident"
 ```
 
-The `logger` command explicitly records the controlled stop action. This avoids depending solely on whether the Ubuntu systemd journal is forwarded to Syslog.
+In the Linux VM's resource-scoped PromQL editor, compare:
 
-### Verify the ingested incident
-
-Run the selected track's query.
-
-Track A:
-
-```kusto
-Event
-| where TimeGenerated >= ago(30m)
-| where EventLog == "System" and EventID == 7036
-| where RenderedDescription has "World Wide Web Publishing Service"
-    or RenderedDescription has "W3SVC"
-    or ParameterXml has "W3SVC"
-| where RenderedDescription has "stopped" or ParameterXml has "stopped"
-| where _ResourceId =~ "<selected-vm-resource-id>"
-| project TimeGenerated, Computer, RenderedDescription, ParameterXml, _ResourceId
-| order by TimeGenerated desc
+```promql
+count({"process.uptime", "process.executable.name"="apache2"})
 ```
 
-Track B:
-
-```kusto
-Syslog
-| where TimeGenerated >= ago(30m)
-| where Facility =~ "daemon" and SeverityLevel =~ "warning"
-| where ProcessName =~ "microhack"
-| where SyslogMessage == "apache2 service stopped for MicroHack incident"
-| where _ResourceId =~ "<selected-vm-resource-id>"
-| project TimeGenerated, Computer, ProcessName, Facility, SeverityLevel, SyslogMessage, _ResourceId
-| order by TimeGenerated desc
+```promql
+absent_over_time({"process.uptime", "process.executable.name"="apache2"}[5m])
 ```
 
-Refresh until the stop event appears. This record is the deterministic incident gate. Then review **Monitor** > **Alerts** > **Alert instances** and the action-group destination. Ingestion, evaluation, and notification are separate asynchronous stages.
-
-## Task 5: Investigate with Azure Copilot Observability Agent (7 minutes)
-
-On the Log Analytics workspace **Logs** page, select **Observability Agent** and use the prompt for your track.
-
-### Track A prompt
-
-```text
-Investigate the IIS availability incident on Windows VM <vm-name> during the last
-30 minutes. Use Event, Heartbeat, and InsightsMetrics. Determine whether W3SVC
-stopped, whether the VM stayed online, and whether host performance suggests a
-broader failure. Cite the resource and timestamps, recommend the safest
-remediation, and do not make changes.
-```
-
-### Track B prompt
-
-```text
-Investigate the Apache availability incident on Ubuntu VM <vm-name> during the
-last 30 minutes. Use the microhack-tagged daemon.warning record in Syslog,
-Heartbeat, and InsightsMetrics. Determine whether apache2 stopped, whether the VM
-stayed online, and whether host performance suggests a broader failure. Cite the
-resource and timestamps, recommend the safest remediation, and do not make changes.
-```
-
-For either track, ask:
-
-```text
-Correlate the service-stop event with heartbeat and CPU or memory signals.
-Explain why this is a service-level or VM-level outage and provide recovery
-verification steps.
-```
-
-Confirm that the response identifies the selected event, checks whether heartbeat continued, reviews performance telemetry, and recommends starting the selected web service and testing HTTP. If the portal offers **Start investigation** from the fired alert, you may compare it with workspace-scoped chat. Saving an issue is optional.
+The count disappears after the final process series stops reporting. The absence query becomes `1` only after the complete five-minute gap. Allow up to 10 minutes from the stop command for `Apache processes absent` to fire.
 
 > [!NOTE]
-> On-demand chat and investigation work without provisioning a `Microsoft.Monitor/observabilityAgents` resource. Chat context is temporary.
+> If either alert doesn't fire, keep the services stopped only long enough to verify DCR association, identity authorization, query scope, ingestion, and alert evaluation. Task 6 contains independent recovery commands and can be run at any time.
 
-### Fallback - KQL and VM insights when Azure Copilot is blocked
+## Task 5: Investigate, decide, and preserve context with AI (15 minutes)
 
-Use the selected track's event query to identify the incident's UTC `TimeGenerated`.
+Open each fired alert and select **Investigate**. Review the Azure Agent Credit notice, select **Start chat**, and let the Observability Agent complete its deep investigation.
 
-Track A:
+### Investigate the IIS alert
 
-```kusto
-Event
-| where TimeGenerated >= ago(2h)
-| where EventLog == "System" and EventID == 7036
-| where RenderedDescription has "World Wide Web Publishing Service"
-    or RenderedDescription has "W3SVC"
-    or ParameterXml has "W3SVC"
-| where RenderedDescription has "stopped" or ParameterXml has "stopped"
-| where _ResourceId =~ "<selected-vm-resource-id>"
-| project TimeGenerated, Computer, RenderedDescription, _ResourceId
-| order by TimeGenerated desc
+```text
+Investigate this IIS availability incident on the Windows VM. Build an evidence-backed
+timeline from the alert, Windows System event ID 7036 for W3SVC, OpenTelemetry host
+metrics, Resource Health, Activity Log, and related alerts. State the user impact and
+blast radius. Determine the most likely root cause, list plausible hypotheses that the
+evidence rules out, and cite the resource and timestamps used. Recommend the safest
+human-executed remediation, rollback, validation steps, and alert-tuning or prevention
+improvements. Do not change resources or restart services.
 ```
 
-Track B:
+### Investigate the Apache alert
 
-```kusto
-Syslog
-| where TimeGenerated >= ago(2h)
-| where Facility =~ "daemon" and SeverityLevel =~ "warning"
-| where ProcessName =~ "microhack"
-| where SyslogMessage == "apache2 service stopped for MicroHack incident"
-| where _ResourceId =~ "<selected-vm-resource-id>"
-| project TimeGenerated, Computer, SyslogMessage, _ResourceId
-| order by TimeGenerated desc
+```text
+Investigate this Apache availability incident on the Ubuntu VM. Confirm that all
+process.uptime series with process.executable.name=apache2 disappeared for the alert
+window, then correlate that signal with OpenTelemetry host metrics, Resource Health,
+Activity Log, and related alerts. State the user impact and blast radius. Determine the
+most likely root cause, list hypotheses ruled out by the evidence, and cite resources
+and timestamps. Recommend the safest human-executed remediation, rollback, validation,
+and alert-tuning or prevention improvements. Do not change resources or start services.
 ```
 
-Replace the placeholder below with that UTC timestamp and run the common correlation queries:
+Then ask from either investigation:
 
-```kusto
-let IncidentTime = datetime(<incident-time-UTC>);
-Heartbeat
-| where TimeGenerated between ((IncidentTime - 15m) .. (IncidentTime + 15m))
-| summarize Heartbeats=count(), LastHeartbeat=max(TimeGenerated)
-    by Computer, bin(TimeGenerated, 5m)
-| order by TimeGenerated asc
+```text
+Compare the two incidents. Did they share a platform, network, capacity, or regional
+failure, or were they independent service-level failures? Separate observed evidence
+from inference and identify any telemetry gap that prevents a firm conclusion.
 ```
 
-```kusto
-let IncidentTime = datetime(<incident-time-UTC>);
-InsightsMetrics
-| where TimeGenerated between ((IncidentTime - 15m) .. (IncidentTime + 15m))
-| where Origin == "vm.azm.ms"
-| summarize Samples=count()
-    by Computer, Namespace, Name, bin(TimeGenerated, 5m)
-| order by TimeGenerated asc
-```
+Confirm that the report contains impact, scope, chronology, supporting evidence, a likely cause, ruled-out alternatives, safe remediation, rollback, and prevention guidance. Use **Create Issue** when available to preserve the investigation report and conversation as an Azure Monitor issue.
 
-Open the VM's **Monitoring** > **Insights** performance view for the same time range. Continuing heartbeat and performance samples show the VM remained available while the web service stopped, so service restoration is the first remediation.
+> [!IMPORTANT]
+> This lab uses controlled autonomy. The agent can chat, correlate telemetry, run a user-invoked investigation, create issues, and recommend actions. It doesn't restart services, modify production resources, or resolve the incident automatically. The human operator evaluates and executes remediation.
 
-## Task 6: Restore service and verify recovery (5 minutes)
+Do not create an autonomous Observability Agent resource. In the current preview, the portal scopes that resource to Application Insights, and new VM-only scope isn't a supported configuration for this Hack.
 
-### Track A - Windows
+### Concise manual fallback
+
+If agent output is unavailable, retain the same evidence standard:
+
+1. Use the IIS stopped-event KQL query from Task 3.
+2. Use the Linux `count` and `absent_over_time` PromQL queries from Task 4.
+3. At each VM's incident time, inspect the default host signals:
+
+   ```promql
+   {"system.uptime"}
+   ```
+
+   ```promql
+   sum by (state) (rate({"system.cpu.time"}[5m]))
+   ```
+
+   ```promql
+   sum by (state) ({"system.memory.usage"})
+   ```
+
+4. Review each VM's **Resource Health**, **Activity log**, and Grafana dashboard for the same window.
+
+Continuing system uptime and normal host signals, combined with a stopped service signal and local HTTP failure, support a service-level diagnosis. Record evidence that rules out VM restart, resource exhaustion, Azure platform impact, or an unrelated configuration change before choosing remediation.
+
+## Task 6: Restore, validate, and improve the runbook (10 minutes)
+
+The operator, not the agent, restores both services.
+
+### Restore IIS
+
+Run in elevated Windows PowerShell:
 
 ```powershell
 Set-Service -Name W3SVC -StartupType Automatic
 Start-Service -Name W3SVC
+
 $service = Get-Service -Name W3SVC
 $response = Invoke-WebRequest -Uri 'http://localhost/' -UseBasicParsing -TimeoutSec 10
 
 $service | Select-Object Name, Status, StartType
 $response | Select-Object StatusCode
+
+if ($service.Status -ne 'Running' -or $response.StatusCode -ne 200) {
+    throw 'IIS recovery validation failed.'
+}
 ```
 
-Verify `Running`, `Automatic`, and HTTP `200`. In Log Analytics, the latest matching event ID 7036 record should show the service returning to the running state.
+Verify the running event:
 
 ```kusto
 Event
@@ -406,46 +404,54 @@ Event
     or RenderedDescription has "W3SVC"
     or ParameterXml has "W3SVC"
 | where RenderedDescription has "running" or ParameterXml has "running"
-| where _ResourceId =~ "<selected-vm-resource-id>"
+| where _ResourceId =~ "<windows-vm-resource-id>"
 | project TimeGenerated, Computer, RenderedDescription, ParameterXml, _ResourceId
 | order by TimeGenerated desc
 ```
 
-### Track B - Linux
+### Restore Apache
+
+Run in Bash:
 
 ```bash
-sudo systemctl enable apache2
-sudo systemctl start apache2
-sudo systemctl is-active apache2
+set -euo pipefail
 
+sudo systemctl enable --now apache2
+systemctl is-active --quiet apache2
+pgrep -a -x apache2
 curl --fail --silent --show-error --output /dev/null \
   --write-out 'HTTP %{http_code}\n' http://localhost/
-
-logger -p daemon.warning -t microhack \
-  "apache2 service restored after MicroHack incident"
 ```
 
-Verify `active` and HTTP `200`. Then verify the recovery record:
+Verify that process telemetry returns:
 
-```kusto
-Syslog
-| where TimeGenerated >= ago(30m)
-| where Facility =~ "daemon" and SeverityLevel =~ "warning"
-| where ProcessName =~ "microhack"
-| where SyslogMessage == "apache2 service restored after MicroHack incident"
-| where _ResourceId =~ "<selected-vm-resource-id>"
-| project TimeGenerated, Computer, SyslogMessage, _ResourceId
-| order by TimeGenerated desc
+```promql
+count({"process.uptime", "process.executable.name"="apache2"})
 ```
 
-For either track, test the existing external endpoint. If automatic alert resolution is enabled, resolution occurs only after the stop event leaves the query window and a later evaluation completes; you do not need to wait for it.
+The value must again be greater than zero. Use Bastion to validate both web pages and confirm their hostname, platform, and web-server details remain correct.
 
-### Cleanup
+The Apache alert can resolve after process samples return. The IIS alert resolves only after the stopped event leaves its query window and a later evaluation succeeds. Review the alert timelines rather than forcing closure.
 
-Keep VM monitoring for Challenge 8 unless your instructor asks you to remove it. After the Hack, you may independently remove the alert rule, action group, selected event DCR association/DCR, and Log Analytics workspace if they were created only for this lab. Do not delete shared resources.
+Ask the agent in the saved investigation or issue:
 
-### Optional stretch - autonomous operations (preview)
+```text
+Create a concise post-incident summary for both service failures. Include impact,
+timeline, authoritative evidence, root cause, remediation and validation, rollback,
+alert behavior, remaining telemetry gaps, and three prioritized runbook or alert-tuning
+improvements. Clearly state that local HTTP validation isn't continuous synthetic
+availability monitoring.
+```
 
-If your instructor has prepared an Azure Monitor workspace, an eligible monitored application, and the documented roles, review [Create an Azure Copilot Observability Agent resource](https://learn.microsoft.com/en-us/azure/azure-monitor/aiops/observability-agent-resource-create-portal). The resource enables preview autonomous correlation, issue creation, investigations, and custom instructions. It is intentionally excluded from the required lab path.
+### Cleanup and handoff
 
-You successfully completed Challenge 7. Continue to Challenge 8 with the same selected track.
+Keep monitoring while completing Challenge 8. After the Hack:
+
+* Remove the two lab service alerts, their action-group links, and the Windows service-event DCR if they aren't shared.
+* Remove additional per-process metrics if they were enabled only for this lab and their ongoing cost isn't justified.
+* Don't delete portal-created Azure Monitor or Log Analytics workspaces, generated DCRs, dashboards, or action groups until you confirm no other resources use them.
+* Don't delete the shared user-assigned alert identity until you confirm no other alert rules use it.
+
+Continue to Challenge 8, where you select either recovered workload for the guided replatforming exercise.
+
+You successfully completed Challenge 7.

@@ -15,16 +15,17 @@ The goal of this exercise is to ...
 * Configure and register the Hyper-V replication provider and Recovery Services agent on the Hyper-V host.
 * Select the Windows and Ubuntu VMs and enable replication.
 * Review the compute, network, and disk target settings.
-* Run and clean up test migrations.
-* Prepare destination load balancing and cutover.
+* Run, validate, and clean up test migrations for both VMs.
 * Perform the final migration with a planned shutdown.
-* Validate the migrated workloads and complete the migration to stop replication.
+* Directly validate both migrated web workloads in Azure.
+* Complete both migrations to stop replication.
 
 ## Success criteria
 
-* The Windows and Ubuntu web VMs are successfully migrated to and running in Azure.
-* Both web workloads are accessible through the dedicated public load balancer.
-* Test-migration resources are cleaned up, and the final migrations are completed.
+* The Windows/IIS and Ubuntu/Apache VMs are successfully replicated and test-migrated.
+* Both test-migrated web workloads return HTTP success with the correct hostname, platform, and web-server details.
+* Test-migration resources are cleaned up.
+* Both web VMs are successfully migrated, directly validated in Azure, and completed in Azure Migrate.
 
 ## Learning resources
 * [Migrate Hyper-V VMs to Azure](https://learn.microsoft.com/en-us/azure/migrate/tutorial-migrate-hyper-v?view=migrate)

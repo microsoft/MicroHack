@@ -1,70 +1,74 @@
-# Challenge 8 - Replatform the selected migrated web workload to Azure App Service
+# Challenge 8 - Replatform a migrated web workload to Azure App Service
 
 [Previous Challenge](challenge-07.md) - **[Home](../Readme.md)** - [Finish](finish.md)
 
-Duration: 40 minutes
+Duration: 45 minutes
 
 ## Goal
 
-Replatform the web workload selected in Challenge 7 from an IaaS VM to a managed web app in Azure App Service. First discover what the site actually needs, then package and deploy it without a source repository integration.
+Select either the migrated Windows/IIS workload or the Ubuntu/Apache workload for a guided manual replatform to Azure App Service. Inspect what the site needs, package its portable static content, deploy it to the appropriate managed App Service platform, and prove that the new endpoint operates independently of the source VM.
 
-Continue with the same track:
+## Select a path
 
-* **Track A:** Windows Server / IIS
-* **Track B:** Ubuntu Linux / Apache
+| Path | Source | Guided target |
+| --- | --- | --- |
+| A | Windows Server / IIS | Windows App Service |
+| B | Ubuntu Linux / Apache | Linux App Service with a supported Node.js LTS runtime |
 
-Teams complete only their selected track.
+Complete one path during the standard challenge time. If time permits, you may complete both. Use a distinct App Service plan and a distinct globally unique web-app name for each path because Windows and Linux apps require plans for their respective operating systems.
 
 > [!IMPORTANT]
-> Azure Migrate's agentless at-scale web-app migration supports ASP.NET applications on Windows IIS servers hosted in VMware environments. It does not support direct web-app migration from this Hack's Hyper-V source scenario or this Linux/Apache workload. This challenge therefore performs a deliberate manual replatform from the already migrated Azure VM.
+> Azure Migrate's agentless at-scale web-app migration supports ASP.NET applications on Windows IIS servers hosted in VMware environments. It doesn't directly modernize this Hack's Hyper-V-hosted IIS site or its Linux/Apache site. This challenge therefore performs a deliberate manual replatform from an already migrated Azure VM.
 
 ## Prerequisites
 
-* Challenge 7 is complete and the selected `W3SVC` or `apache2` service has been restored.
-* You can connect to the selected migrated VM by using Azure Bastion.
-* You can create an App Service plan and web app in `destination-rg`.
+* Challenge 7 is complete and both `W3SVC` and `apache2` have been restored.
+* You can connect to the source VM for your chosen path through Azure Bastion.
+* You know the Hack subscription ID and can create App Service resources in it.
+* You know the exact destination resource group. The Bicep deployment names it `MHBox-<UserSuffix>-destination-rg`, where `<UserSuffix>` is the deployer's user principal name before `@`.
 * The selected site content is available at `C:\inetpub\wwwroot` or `/var/www/html`.
-* Track A has an interactive browser session available for Kudu ZIP upload, or can use the documented CLI alternative.
-* Track B can make an interactive device-code sign-in from the migrated Linux VM and has permission to deploy the App Service resources.
+* Path A can use Azure Cloud Shell and an interactive browser session for Kudu ZIP upload, or the documented CLI alternative.
+* Path B can make an interactive device-code sign-in from the migrated Linux VM and has permission to deploy App Service resources.
 * No GitHub repository, repository connection, Azure OpenAI deployment, or model quota is required.
 
 ## Actions
 
 ### Common actions
 
-* Inspect the site's content, bindings or virtual hosts, runtime/modules, dependencies, and state requirements.
-* Confirm the workload consists of portable static HTML, CSS, and image assets.
-* Replace the VM-specific hostname, platform, and web-server values in `index.html` with App Service values by using the page's stable metadata attributes.
+* Select Path A or Path B and inspect the site's content, bindings or virtual host, runtime/modules, dependencies, and state requirements.
+* Confirm that the site is portable static HTML, CSS, and image content. No additional Azure Migrate portal action is required at this stage.
+* Replace the VM-specific hostname, platform, and web-server values in the package by using the page's stable metadata attributes.
 * Create a ZIP package whose root contains `index.html`.
-* Create a low-cost Windows App Service plan and web app in `destination-rg`.
-* Deploy with the supported App Service ZIP deployment experience.
-* Enforce HTTPS and validate the home page and referenced assets.
-* Stop the original web service and prove that the App Service endpoint remains available.
+* Set and display the intended Azure subscription, tenant, and user before any resource operation. Stop if they don't identify the Hack subscription.
+* Replace the destination resource-group placeholder with the exact `MHBox-<UserSuffix>-destination-rg` name and verify that it exists.
+* Create a low-cost App Service plan for the selected operating system and a globally unique web app.
+* Deploy with supported App Service ZIP deployment, enforce HTTPS, and validate the page and assets.
+* Stop the source web service, prove that App Service remains available, and restore the source service.
 * Compare App Service with Azure Storage static website hosting and Azure Static Web Apps for a production architecture decision.
 
-### Track A - Windows Server / IIS
+### Path A - Windows Server / IIS
 
 * Inventory IIS bindings, the application pool, runtime settings, and `C:\inetpub\wwwroot`.
 * Create the package with PowerShell `Compress-Archive`.
-* Deploy with the Kudu ZIP deploy UI or the documented Azure CLI alternative.
+* Create a Windows App Service plan and deploy through Kudu ZIP deploy or the documented Azure CLI alternative.
 
-### Track B - Ubuntu Linux / Apache
+### Path B - Ubuntu Linux / Apache
 
 * Inventory Apache virtual hosts, modules, configuration, and `/var/www/html`.
 * Stage a user-owned copy, make it portable, and create and verify the ZIP with Linux tools.
-* Install Azure CLI from Microsoft's Debian/Ubuntu repository only if it is missing, use interactive device-code sign-in, verify the subscription, deploy the local ZIP with `az webapp deploy --type zip`, and sign out.
-
-> [!NOTE]
-> Both tracks deploy the static artifact to the same pedagogical Windows App Service target. The source VM operating system does not dictate the App Service worker operating system when the artifact is portable static content.
+* Use device-code authentication, deterministically select the newest advertised Node.js LTS runtime, create a Linux App Service plan, and configure PM2 to serve the static ZIP.
+* Sign out of Azure CLI after deployment.
 
 ## Success criteria
 
-* The discovery record shows that the selected site has no required server-side runtime, database, machine-local dependency, or session state.
+* The selected site's inspection shows no required server-side runtime, database, machine-local dependency, or session state.
+* The active subscription, tenant, user, and exact destination resource group are displayed and verified before deployment.
 * The ZIP root contains `index.html` rather than a nested content directory.
-* A Windows App Service web app serves the selected site's page and assets over HTTPS.
+* The chosen Windows or Linux App Service app serves the selected site's page and assets over HTTPS.
+* A Path B app uses a runtime returned by `az webapp list-runtimes --os-type linux` and a PM2 static-content startup command.
 * The rendered page identifies the hostname as Azure App Service, the platform as managed PaaS, and the web server as Azure App Service.
-* The App Service endpoint remains healthy after `W3SVC` or `apache2` is stopped.
-* Track B signs out of Azure CLI after deployment.
+* The App Service endpoint remains healthy while the selected source service is stopped, and the source service is restored afterward.
+* Path B signs out of Azure CLI after deployment.
 * No Azure Load Balancer is placed in front of App Service and no GitHub integration is required.
 
 ## Architecture decision
@@ -76,7 +80,8 @@ App Service is the pedagogical target because it demonstrates replatforming to a
 * [Azure Migrate web-app migration support matrix](https://learn.microsoft.com/en-us/azure/migrate/concepts-migration-webapps?view=migrate)
 * [Deploy files to Azure App Service](https://learn.microsoft.com/en-us/azure/app-service/deploy-zip)
 * [Azure CLI App Service plan reference](https://learn.microsoft.com/en-us/cli/azure/appservice/plan?view=azure-cli-latest#az-appservice-plan-create)
-* [Azure CLI web app deployment reference](https://learn.microsoft.com/en-us/cli/azure/webapp?view=azure-cli-latest#az-webapp-deploy)
+* [Azure CLI web app reference](https://learn.microsoft.com/en-us/cli/azure/webapp?view=azure-cli-latest)
+* [Configure Node.js in App Service](https://learn.microsoft.com/en-us/azure/app-service/configure-language-nodejs)
 * [Install Azure CLI on Ubuntu or Debian](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli-linux?view=azure-cli-latest&pivots=apt)
 * [Sign in interactively with Azure CLI](https://learn.microsoft.com/en-us/cli/azure/authenticate-azure-cli-interactively?view=azure-cli-latest)
 * [Enforce HTTPS in Azure App Service](https://learn.microsoft.com/en-us/azure/app-service/configure-ssl-bindings#enforce-https)

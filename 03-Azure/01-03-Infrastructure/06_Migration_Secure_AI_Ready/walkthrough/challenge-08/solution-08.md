@@ -1,21 +1,21 @@
-# Walkthrough Challenge 8 - Replatform the selected migrated web workload to Azure App Service
+# Walkthrough Challenge 8 - Replatform a migrated web workload to Azure App Service
 
 [Previous Challenge Solution](../challenge-07/solution-07.md) - **[Home](../../Readme.md)** - [Finish](../../challenges/finish.md)
 
-Duration: 40 minutes
+Duration: 45 minutes
 
-Continue with the same track selected in Challenge 7:
+Select one path for the guided exercise:
 
-* **Track A:** Windows Server / IIS
-* **Track B:** Ubuntu Linux / Apache
+* **Path A:** Windows Server / IIS to Windows App Service
+* **Path B:** Ubuntu Linux / Apache to Linux App Service
 
-Complete only your selected track.
+Complete one path during the standard challenge time. If time permits, complete both paths with distinct App Service plans and distinct globally unique web-app names. Windows and Linux apps require plans for their respective operating systems.
 
-## Task 1: Discover the web application before choosing a target (10 minutes)
+## Task 1: Select and inspect a web workload (10 minutes)
 
 Azure Migrate's at-scale web-app migration flow supports ASP.NET web apps on Windows IIS servers hosted in VMware environments. This Hack uses Hyper-V, and the integrated flow doesn't support the Linux/Apache workload. We will deliberately inspect and manually replatform the selected migrated workload.
 
-### Track A - Inventory Windows/IIS
+### Path A - Inventory Windows/IIS
 
 Connect with Azure Bastion and run in elevated Windows PowerShell:
 
@@ -37,57 +37,70 @@ Get-Content -Path 'C:\inetpub\wwwroot\index.html'
 (Invoke-WebRequest -Uri 'http://localhost/' -UseBasicParsing -TimeoutSec 10).StatusCode
 ```
 
-### Track B - Inventory Linux/Apache
+### Path B - Inventory Linux/Apache
 
 Connect with Azure Bastion and run in Bash:
 
+> [!NOTE]
+> Paste each Path B Bash block into the Azure Bastion browser SSH terminal as one complete block, then wait for its completion or failure status before continuing. Each block runs its fail-fast commands in a child Bash process while leaving terminal input available for device-code sign-in. If a command fails, the child stops and control returns to your SSH prompt without changing your login shell options or traps. Correct the reported error and rerun that block before continuing.
+
 ```bash
+if bash /dev/fd/3 3<<'PATH_B_INVENTORY'
+set -euo pipefail
+
 sudo apache2ctl -S
 sudo apache2ctl -M
-sudo systemctl show apache2 \
-  --property=ActiveState,SubState,UnitFileState
+systemctl_args=(show apache2 --property=ActiveState,SubState,UnitFileState)
+sudo systemctl "${systemctl_args[@]}"
 
-sudo find /var/www/html -type f \
-  -printf '%p\t%f\t%s bytes\n' | sort
+file_list_args=(/var/www/html -type f -printf '%p\t%f\t%s bytes\n')
+sudo find "${file_list_args[@]}" | sort
 
 sudo find /var/www/html -type f -printf '%f\n' |
   awk -F. 'NF > 1 {print "." $NF}' |
   sort | uniq -c | sort -nr
 
-sudo find /var/www/html -type f \
-  \( -name '*.html' -o -name '*.css' -o -name '*.js' -o -name '*.json' \) \
-  -exec grep -HnEi \
-  'localhost|127\.0\.0\.1|/var/|/home/|mysql|postgres|connection(string)?' {} + || true
+dependency_pattern='localhost|127\.0\.0\.1|/var/|/home/|mysql|postgres|connection(string)?'
+dependency_find_args=(/var/www/html -type f '(' -name '*.html' -o -name '*.css' -o -name '*.js' -o -name '*.json' ')' -exec grep -HnEi "${dependency_pattern}" '{}' +)
+sudo find "${dependency_find_args[@]}" || true
 
 sudo sed -n '1,120p' /var/www/html/index.html
-curl --fail --silent --show-error --output /dev/null \
-  --write-out 'HTTP %{http_code}\n' http://localhost/
+curl_args=(--fail --silent --show-error --output /dev/null --write-out 'HTTP %{http_code}\n')
+curl "${curl_args[@]}" http://localhost/
+PATH_B_INVENTORY
+then
+  echo 'Path B inventory completed.'
+else
+  path_b_status=$?
+  printf 'Path B step failed; your SSH session remains open (status %d).\n' "${path_b_status}" >&2
+  echo 'Correct the error and rerun this block before continuing.' >&2
+fi
 ```
 
 Review enabled virtual hosts/modules and any dependency matches. A text match is a prompt to investigate, not proof of a dependency.
 
-### Complete the discovery record
+Review the output for required runtimes, databases, machine-local dependencies, and session state. This site is a portable static artifact containing HTML, CSS, and images; only its hostname, platform, and web-server metadata is machine-specific.
 
-| Area | Track A finding | Track B finding |
-| --- | --- | --- |
-| Site/service | `Default Web Site` / `W3SVC` | Default Apache virtual host / `apache2` |
-| Content path | `C:\inetpub\wwwroot` | `/var/www/html` |
-| Binding | HTTP, normally port 80 | HTTP, normally `*:80` |
-| Runtime/modules | No server-side runtime used by the site | No server-side runtime/module used by the site |
-| Content | Static HTML, CSS, and images | Static HTML, CSS, and images |
-| External dependencies | None required to render the page | None required to render the page |
-| Persistent/session state | None | None |
-| Machine-specific values | Hostname, platform, and web server in stable `data-workload-value` fields | Hostname, platform, and web server in stable `data-workload-value` fields |
-
-The source is a static artifact. A Windows App Service worker can host it regardless of whether it came from Windows/IIS or Linux/Apache.
+There is no additional Azure Migrate portal action to perform here. The inventory is the evidence for choosing an App Service target.
 
 ## Task 2: Make the content portable and create the package (10 minutes)
 
-### Track A - PowerShell package
+### Path A - PowerShell package
+
+Create a staging copy so packaging doesn't modify the IIS source content:
 
 ```powershell
 $siteRoot = 'C:\inetpub\wwwroot'
-$indexPath = Join-Path $siteRoot 'index.html'
+$packageDirectory = 'C:\temp'
+$stagingDirectory = Join-Path $packageDirectory 'microhack-app'
+$packagePath = Join-Path $packageDirectory 'microhack-app.zip'
+
+New-Item -Path $packageDirectory -ItemType Directory -Force | Out-Null
+Remove-Item -Path $stagingDirectory -Recurse -Force -ErrorAction SilentlyContinue
+Remove-Item -Path $packagePath -Force -ErrorAction SilentlyContinue
+Copy-Item -LiteralPath $siteRoot -Destination $stagingDirectory -Recurse
+
+$indexPath = Join-Path $stagingDirectory 'index.html'
 $html = Get-Content -Path $indexPath -Raw
 $html = $html -replace '(<dd\b[^>]*\bdata-workload-value="hostname"[^>]*>)[^<]*(</dd>)', '${1}Azure App Service${2}'
 $html = $html -replace '(<dd\b[^>]*\bdata-workload-value="platform"[^>]*>)[^<]*(</dd>)', '${1}Managed PaaS${2}'
@@ -108,11 +121,7 @@ foreach ($field in $expectedMetadata.Keys) {
     }
 }
 
-$packageDirectory = 'C:\temp'
-$packagePath = Join-Path $packageDirectory 'microhack-app.zip'
-New-Item -Path $packageDirectory -ItemType Directory -Force | Out-Null
-Remove-Item -Path $packagePath -Force -ErrorAction SilentlyContinue
-Compress-Archive -Path "$siteRoot\*" -DestinationPath $packagePath -Force
+Compress-Archive -Path "$stagingDirectory\*" -DestinationPath $packagePath -Force
 
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 $archive = [System.IO.Compression.ZipFile]::OpenRead($packagePath)
@@ -124,44 +133,46 @@ try {
 }
 finally {
     $archive.Dispose()
+    Remove-Item -Path $stagingDirectory -Recurse -Force
 }
 
 Get-Item -Path $packagePath | Select-Object FullName, Length, LastWriteTime
 ```
 
-### Track B - Linux package
+### Path B - Linux package
 
-Keep the same Bash session open through Task 6 so the recorded variables remain available. Create a temporary, user-owned staging copy. This keeps `/var/www/html` and its ownership unchanged:
+Create a temporary, user-owned staging copy. This keeps `/var/www/html` and its ownership unchanged, and the published package path is reconstructed by later blocks:
 
 ```bash
+if bash /dev/fd/3 3<<'PATH_B_PACKAGE'
 set -euo pipefail
 
-site_root="/var/www/html"
+site_root='/var/www/html'
 staging_dir="$(mktemp -d)"
-package_path="$HOME/microhack-app.zip"
+package_path="${HOME}/microhack-app.zip"
+package_tmp="$(mktemp --tmpdir="${HOME}" '.microhack-app.XXXXXXXX.zip')"
+rm -f "${package_tmp}"
+
+cleanup_package() {
+  local status=$?
+  trap - EXIT
+  rm -rf "${staging_dir}" || true
+  rm -f "${package_tmp}" || true
+  return "${status}"
+}
+trap cleanup_package EXIT
 
 sudo cp -a "${site_root}/." "${staging_dir}/"
 sudo chown -R "$(id -u):$(id -g)" "${staging_dir}"
 
-sed -E -i \
-  -e 's#(<dd[^>]*data-workload-value="hostname"[^>]*>)[^<]*(</dd>)#\1Azure App Service\2#' \
-  -e 's#(<dd[^>]*data-workload-value="platform"[^>]*>)[^<]*(</dd>)#\1Managed PaaS\2#' \
-  -e 's#(<dd[^>]*data-workload-value="web-server"[^>]*>)[^<]*(</dd>)#\1Azure App Service\2#' \
-  "${staging_dir}/index.html"
-
-while IFS='|' read -r field expected_value; do
-  grep -Eq \
-    "data-workload-value=\"${field}\"[^>]*>${expected_value}</dd>" \
-    "${staging_dir}/index.html" || {
-    echo "Expected App Service metadata was not written: ${field}" >&2
-    rm -rf "${staging_dir}"
-    exit 1
-  }
-done <<'EOF'
-hostname|Azure App Service
-platform|Managed PaaS
-web-server|Azure App Service
-EOF
+sed_args=(
+  -E
+  -i
+  -e 's#(<dd[^>]*data-workload-value="hostname"[^>]*>)[^<]*(</dd>)#\1Azure App Service\2#'
+  -e 's#(<dd[^>]*data-workload-value="platform"[^>]*>)[^<]*(</dd>)#\1Managed PaaS\2#'
+  -e 's#(<dd[^>]*data-workload-value="web-server"[^>]*>)[^<]*(</dd>)#\1Azure App Service\2#'
+)
+sed "${sed_args[@]}" "${staging_dir}/index.html"
 
 if ! command -v zip >/dev/null 2>&1 ||
    ! command -v unzip >/dev/null 2>&1; then
@@ -169,58 +180,137 @@ if ! command -v zip >/dev/null 2>&1 ||
   sudo apt-get install -y zip unzip
 fi
 
-rm -f "${package_path}"
 (
   cd "${staging_dir}"
-  zip -r "${package_path}" .
+  zip -qr "${package_tmp}" .
 )
 
-unzip -l "${package_path}"
-unzip -Z1 "${package_path}" | grep -Fxq 'index.html' || {
-  echo "index.html is not at the ZIP root." >&2
-  rm -rf "${staging_dir}"
-  exit 1
-}
+archive_entries="$(unzip -Z1 "${package_tmp}")"
+required_assets=(
+  'index.html'
+  'stylesheet.css'
+  'GitHub_Logo.png'
+  'MSLogo.png'
+  'MSicon.png'
+)
+for asset in "${required_assets[@]}"; do
+  if ! grep -Fxq "${asset}" <<<"${archive_entries}"; then
+    echo "Required asset is missing from the ZIP root: ${asset}" >&2
+    false
+  fi
+done
 
-rm -rf "${staging_dir}"
+archive_html="$(unzip -p "${package_tmp}" index.html)"
+metadata_checks=(
+  'hostname|Azure App Service'
+  'platform|Managed PaaS'
+  'web-server|Azure App Service'
+)
+for check in "${metadata_checks[@]}"; do
+  field="${check%%|*}"
+  expected_value="${check#*|}"
+  if ! grep -Eq "data-workload-value=\"${field}\"[^>]*>${expected_value}</dd>" <<<"${archive_html}"; then
+    echo "Expected App Service metadata is missing from the ZIP: ${field}" >&2
+    false
+  fi
+done
+if grep -Eq '<(HOSTNAME|PLATFORM|WEB_SERVER)>' <<<"${archive_html}"; then
+  echo 'The ZIP still contains unresolved workload template tokens.' >&2
+  false
+fi
+
+mv -f "${package_tmp}" "${package_path}"
 ls -lh "${package_path}"
+PATH_B_PACKAGE
+then
+  echo 'Path B package completed.'
+else
+  path_b_status=$?
+  printf 'Path B step failed; your SSH session remains open (status %d).\n' "${path_b_status}" >&2
+  echo 'Correct the error and rerun this block before continuing.' >&2
+fi
 ```
 
-For both tracks, the archive must contain `index.html` at its root, not under `wwwroot/`, `html/`, or another parent directory.
+For both paths, the archive must contain `index.html` and all four image/style assets at its root, not under `wwwroot/`, `html/`, or another parent directory. Path B keeps any previously published `$HOME/microhack-app.zip` unchanged until a replacement ZIP passes every check and is moved into place atomically.
 
-## Task 3: Create the low-cost Windows App Service target (7 minutes)
+## Task 3: Verify Azure scope and create the App Service target (10 minutes)
 
-The target is a Windows App Service plan for both tracks. Static files are portable; the source OS does not determine the worker OS.
+The Bicep deployment names the destination resource group `MHBox-<UserSuffix>-destination-rg`, where `<UserSuffix>` is the deployer's user principal name before `@`. Find the exact name under **Resource groups** in the Azure portal. After selecting the intended subscription, you can also run `az group list --query "[?ends_with(name, '-destination-rg')].[name,location]" --output table`.
 
-### Track A - Create from Azure Cloud Shell
+Replace every placeholder below before running a resource command. Each Path B block repeats the required subscription and resource-group values and derives the same stable plan and app names, so it can be rerun from a new SSH session.
 
-Open Azure Cloud Shell in the portal, select **PowerShell**, and run:
+### Path A - Create a Windows target from Azure Cloud Shell
+
+Open Azure Cloud Shell in the portal and select **PowerShell**. Verify the Az PowerShell and Azure CLI contexts before creating anything:
 
 ```powershell
-$destinationRg = 'destination-rg'
-$location = az group show `
-    --name $destinationRg `
-    --query location `
-    --output tsv
+$subscriptionId = '<REPLACE-WITH-SUBSCRIPTION-ID>'
+$destinationRg = 'MHBox-<UserSuffix>-destination-rg'
 
-$suffix = (Get-Random -Minimum 100000 -Maximum 999999).ToString()
-$planName = "asp-mh-replatform-$suffix"
-$appName = "mh-web-$suffix"
+if ([string]::IsNullOrWhiteSpace($subscriptionId) -or
+    $subscriptionId -eq '<REPLACE-WITH-SUBSCRIPTION-ID>') {
+    throw 'Replace $subscriptionId with the Hack subscription ID.'
+}
+if ([string]::IsNullOrWhiteSpace($destinationRg) -or
+    $destinationRg -match '[<>]') {
+    throw 'Replace $destinationRg with the exact destination resource-group name.'
+}
+
+if (-not (Get-AzContext -ErrorAction SilentlyContinue)) {
+    Connect-AzAccount -UseDeviceAuthentication | Out-Null
+}
+$azContext = Set-AzContext -SubscriptionId $subscriptionId
+
+az account set --subscription $subscriptionId
+if ($LASTEXITCODE -ne 0) {
+    throw 'Azure CLI could not select the requested subscription.'
+}
+$cliContextJson = az account show `
+    --query '{subscription:name,subscriptionId:id,tenantId:tenantId,user:user.name}' `
+    --output json
+if ($LASTEXITCODE -ne 0) {
+    throw 'Azure CLI could not display the active subscription.'
+}
+$cliContext = $cliContextJson | ConvertFrom-Json
+
+[pscustomobject]@{
+    Subscription   = $azContext.Subscription.Name
+    SubscriptionId = $azContext.Subscription.Id
+    TenantId       = $azContext.Tenant.Id
+    User           = $azContext.Account.Id
+} | Format-Table
+$cliContext | Format-Table
+
+if ($azContext.Subscription.Id -ne $cliContext.subscriptionId) {
+    throw 'Az PowerShell and Azure CLI are using different subscriptions.'
+}
+
+$resourceGroup = Get-AzResourceGroup -Name $destinationRg -ErrorAction Stop
+$location = $resourceGroup.Location
+$resourceGroup | Select-Object ResourceGroupName, Location
+```
+
+> [!WARNING]
+> Stop if either displayed context isn't the Hack subscription or if the resource group isn't your `MHBox-<UserSuffix>-destination-rg`.
+
+Create the Windows plan and app:
+
+```powershell
+$suffix = [guid]::NewGuid().ToString('N').Substring(0, 10)
+$planName = "asp-mh-win-$suffix"
+$appName = "mh-web-win-$suffix"
 
 az appservice plan create `
     --name $planName `
     --resource-group $destinationRg `
     --location $location `
-    --sku B1
+    --sku B1 `
+    --is-linux false
 
 az webapp create `
     --name $appName `
     --resource-group $destinationRg `
-    --plan $planName
-
-az webapp update `
-    --name $appName `
-    --resource-group $destinationRg `
+    --plan $planName `
     --https-only true
 
 az webapp show `
@@ -236,81 +326,241 @@ Write-Host "HTTPS URL: https://$appName.azurewebsites.net"
 
 Record `$planName` and `$appName`.
 
-### Track B - Install Azure CLI if needed and sign in
+### Path B - Install Azure CLI if needed and verify scope
 
-Run from the migrated Ubuntu VM. First check for Azure CLI:
+Run from the migrated Ubuntu VM. Replace both placeholders. The block installs Azure CLI when it is missing or unhealthy, then signs in and verifies the exact scope:
 
 ```bash
-if command -v az >/dev/null 2>&1; then
-  az version
+if bash /dev/fd/3 3<<'PATH_B_SCOPE'
+set -euo pipefail
+
+subscription_id='<REPLACE-WITH-SUBSCRIPTION-ID>'
+destination_rg='MHBox-<UserSuffix>-destination-rg'
+installer_path="$(mktemp)"
+
+cleanup_installer() {
+  local status=$?
+  trap - EXIT
+  rm -f "${installer_path}" || true
+  return "${status}"
+}
+trap cleanup_installer EXIT
+
+if [[ -z "${subscription_id}" ||
+      "${subscription_id}" == '<REPLACE-WITH-SUBSCRIPTION-ID>' ]]; then
+  echo 'Replace subscription_id with the Hack subscription ID.' >&2
+  false
+fi
+if [[ -z "${destination_rg}" ||
+      "${destination_rg}" == *'<'* ||
+      "${destination_rg}" == *'>'* ]]; then
+  echo 'Replace destination_rg with the exact destination resource-group name.' >&2
+  false
+fi
+
+if ! command -v az >/dev/null 2>&1 ||
+   ! az version >/dev/null 2>&1; then
+  installer_curl_args=(--fail --silent --show-error --location --output "${installer_path}")
+  curl "${installer_curl_args[@]}" 'https://aka.ms/InstallAzureCLIDeb'
+  sudo bash "${installer_path}"
+fi
+az version
+
+az login --use-device-code
+az account set --subscription "${subscription_id}"
+account_show_args=(account show --query '{subscription:name,subscriptionId:id,tenantId:tenantId,user:user.name}' --output table)
+az "${account_show_args[@]}"
+
+active_subscription_id="$(az account show --query id --output tsv)"
+destination_rg="$(az group show --name "${destination_rg}" --query name --output tsv)"
+location="$(az group show --name "${destination_rg}" --query location --output tsv)"
+if [[ -z "${location}" ]]; then
+  echo "Could not resolve ${destination_rg} in the active subscription." >&2
+  false
+fi
+
+name_suffix="$(
+  printf '%s\0%s' "${active_subscription_id}" "${destination_rg}" |
+    sha256sum |
+    cut -c1-12
+)"
+plan_name="asp-mh-linux-${name_suffix}"
+app_name="mh-web-linux-${name_suffix}"
+
+printf 'Destination resource group: %s (%s)\nPlan name: %s\nWeb app name: %s\n' "${destination_rg}" "${location}" "${plan_name}" "${app_name}"
+PATH_B_SCOPE
+then
+  echo 'Path B scope verification completed.'
 else
-  curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
-  az version
+  path_b_status=$?
+  printf 'Path B step failed; your SSH session remains open (status %d).\n' "${path_b_status}" >&2
+  echo 'Correct the error and rerun this block before continuing.' >&2
 fi
 ```
 
-The conditional uses the current Microsoft-supported Debian/Ubuntu installation script only when `az` is missing.
+Complete the sign-in in the browser using the displayed code. Do not paste passwords, tokens, or publishing credentials into the shell or lab notes. The stable 12-character suffix is derived only from Azure's validated subscription ID and canonical destination resource-group name; it contains no secret and is reproduced by every later block.
 
-Sign in with device code and verify the active subscription:
+> [!WARNING]
+> Stop if the displayed subscription, tenant, or user doesn't identify the Hack subscription, or if the resource group isn't your `MHBox-<UserSuffix>-destination-rg`.
 
-```bash
-az login --use-device-code
-az account list --output table
-
-read -r -p "Enter the target subscription ID: " subscription_id
-az account set --subscription "${subscription_id}"
-az account show \
-  --query '{subscription:name,subscriptionId:id,tenantId:tenantId,user:user.name}' \
-  --output table
-```
-
-Complete the sign-in in the browser using the displayed code. Do not paste passwords, tokens, or publishing credentials into the shell or lab notes.
-
-Create the target:
+Resolve the newest advertised Node.js LTS runtime and create a Linux target:
 
 ```bash
+if bash /dev/fd/3 3<<'PATH_B_CREATE'
 set -euo pipefail
 
-destination_rg="destination-rg"
-location="$(az group show \
-  --name "${destination_rg}" \
-  --query location \
-  --output tsv)"
-suffix="$(date +%s)-${RANDOM}"
-plan_name="asp-mh-replatform-${suffix}"
-app_name="mh-web-${suffix}"
+subscription_id='<REPLACE-WITH-SUBSCRIPTION-ID>'
+destination_rg='MHBox-<UserSuffix>-destination-rg'
 
-az appservice plan create \
-  --name "${plan_name}" \
-  --resource-group "${destination_rg}" \
-  --location "${location}" \
-  --sku B1
+if [[ -z "${subscription_id}" ||
+      "${subscription_id}" == '<REPLACE-WITH-SUBSCRIPTION-ID>' ]]; then
+  echo 'Replace subscription_id with the Hack subscription ID.' >&2
+  false
+fi
+if [[ -z "${destination_rg}" ||
+      "${destination_rg}" == *'<'* ||
+      "${destination_rg}" == *'>'* ]]; then
+  echo 'Replace destination_rg with the exact destination resource-group name.' >&2
+  false
+fi
 
-az webapp create \
-  --name "${app_name}" \
-  --resource-group "${destination_rg}" \
-  --plan "${plan_name}"
+command -v az >/dev/null
+az account set --subscription "${subscription_id}"
+active_subscription_id="$(az account show --query id --output tsv)"
+destination_rg="$(az group show --name "${destination_rg}" --query name --output tsv)"
+location="$(az group show --name "${destination_rg}" --query location --output tsv)"
 
-az webapp update \
-  --name "${app_name}" \
-  --resource-group "${destination_rg}" \
-  --https-only true
+name_suffix="$(
+  printf '%s\0%s' "${active_subscription_id}" "${destination_rg}" |
+    sha256sum |
+    cut -c1-12
+)"
+plan_name="asp-mh-linux-${name_suffix}"
+app_name="mh-web-linux-${name_suffix}"
+startup_command='pm2 serve /home/site/wwwroot $PORT --no-daemon'
 
-az webapp show \
-  --name "${app_name}" \
-  --resource-group "${destination_rg}" \
-  --query '{name:name,host:defaultHostName,httpsOnly:httpsOnly,state:state}' \
-  --output table
+runtime_list_args=(webapp list-runtimes --os-type linux --runtime node --output json)
+runtime_raw="$(az "${runtime_list_args[@]}")"
+if ! command -v python3 >/dev/null 2>&1; then
+  echo 'python3 is required to parse the Azure CLI runtime response.' >&2
+  false
+fi
+runtime_candidates="$(
+  MH_RUNTIME_OUTPUT="${runtime_raw}" python3 <<'PY_RUNTIME'
+import json
+import os
+import re
 
-printf 'Plan name: %s\nWeb app name: %s\nHTTPS URL: https://%s.azurewebsites.net\n' \
-  "${plan_name}" "${app_name}" "${app_name}"
+raw = os.environ["MH_RUNTIME_OUTPUT"]
+pattern = re.compile(
+    r"(?i)(?<![A-Za-z0-9_])NODE[|:](\d+)-lts(?=$|[\s\"',}\]]|(?:19|20)\d{2}-\d{2}-\d{2}|Linux)"
+)
+majors = set()
+
+
+def collect(value):
+    if isinstance(value, dict):
+        for key, item in value.items():
+            collect(key)
+            collect(item)
+    elif isinstance(value, list):
+        for item in value:
+            collect(item)
+    elif isinstance(value, str):
+        majors.update(int(match.group(1)) for match in pattern.finditer(value))
+
+
+try:
+    collect(json.loads(raw))
+except json.JSONDecodeError:
+    collect(raw)
+
+for major in sorted(majors, reverse=True):
+    print(f"NODE:{major}-lts")
+PY_RUNTIME
+)"
+if [[ -z "${runtime_candidates}" ]]; then
+  echo 'No supported NODE:<major>-lts Linux runtime was returned.' >&2
+  echo 'Raw Azure CLI runtime response:' >&2
+  printf '%s\n' "${runtime_raw}" >&2
+  false
+fi
+runtime="${runtime_candidates%%$'\n'*}"
+printf 'Discovered Node LTS runtimes, normalized for az webapp create:\n%s\n' "${runtime_candidates}"
+printf 'Selected runtime: %s\n' "${runtime}"
+
+plan_list_args=(appservice plan list --resource-group "${destination_rg}" --query "[?name=='${plan_name}'].id | [0]" --output tsv)
+plan_id="$(az "${plan_list_args[@]}")"
+if [[ -z "${plan_id}" ]]; then
+  plan_create_args=(appservice plan create --name "${plan_name}" --resource-group "${destination_rg}" --location "${location}" --sku B1 --is-linux true --output none)
+  az "${plan_create_args[@]}"
+  plan_id="$(az appservice plan show --name "${plan_name}" --resource-group "${destination_rg}" --query id --output tsv)"
+  echo "Created Linux App Service plan: ${plan_name}"
+else
+  plan_is_linux="$(az appservice plan show --name "${plan_name}" --resource-group "${destination_rg}" --query reserved --output tsv)"
+  plan_location="$(az appservice plan show --name "${plan_name}" --resource-group "${destination_rg}" --query location --output tsv)"
+  plan_sku="$(az appservice plan show --name "${plan_name}" --resource-group "${destination_rg}" --query sku.name --output tsv)"
+  normalized_plan_location="${plan_location// /}"
+  normalized_location="${location// /}"
+  if [[ "${plan_is_linux,,}" != 'true' ||
+        "${normalized_plan_location,,}" != "${normalized_location,,}" ||
+        "${plan_sku^^}" != 'B1' ]]; then
+    echo "Existing plan ${plan_name} isn't a compatible Linux B1 plan in ${location}." >&2
+    false
+  fi
+  echo "Reusing compatible Linux App Service plan: ${plan_name}"
+fi
+
+app_list_args=(webapp list --resource-group "${destination_rg}" --query "[?name=='${app_name}'].id | [0]" --output tsv)
+app_id="$(az "${app_list_args[@]}")"
+if [[ -z "${app_id}" ]]; then
+  app_create_args=(webapp create --name "${app_name}" --resource-group "${destination_rg}" --plan "${plan_name}" --runtime "${runtime}" --https-only true --output none)
+  az "${app_create_args[@]}"
+  echo "Created Linux web app: ${app_name}"
+else
+  existing_plan_id="$(az webapp show --name "${app_name}" --resource-group "${destination_rg}" --query serverFarmId --output tsv)"
+  existing_https_only="$(az webapp show --name "${app_name}" --resource-group "${destination_rg}" --query httpsOnly --output tsv)"
+  existing_runtime="$(az webapp config show --name "${app_name}" --resource-group "${destination_rg}" --query linuxFxVersion --output tsv)"
+  existing_runtime_canonical="$(printf '%s' "${existing_runtime/|/:}" | tr '[:upper:]' '[:lower:]')"
+  supported_runtime_candidates="$(printf '%s\n' "${runtime_candidates}" | tr '[:upper:]' '[:lower:]')"
+  if [[ "${existing_plan_id,,}" != "${plan_id,,}" ||
+        "${existing_https_only,,}" != 'true' ||
+        -z "${existing_runtime_canonical}" ]] ||
+     ! grep -Fxq "${existing_runtime_canonical}" <<<"${supported_runtime_candidates}"; then
+    echo "Existing app ${app_name} isn't compatible with the intended plan, HTTPS setting, or supported Node LTS runtimes." >&2
+    false
+  fi
+  echo "Reusing compatible Linux web app: ${app_name} (${existing_runtime})"
+  runtime="${existing_runtime_canonical}"
+fi
+
+appsettings_args=(webapp config appsettings set --resource-group "${destination_rg}" --name "${app_name}" --settings SCM_DO_BUILD_DURING_DEPLOYMENT=false --output none)
+az "${appsettings_args[@]}"
+startup_args=(webapp config set --resource-group "${destination_rg}" --name "${app_name}" --startup-file "${startup_command}" --output none)
+az "${startup_args[@]}"
+app_show_args=(webapp show --name "${app_name}" --resource-group "${destination_rg}" --query '{name:name,host:defaultHostName,httpsOnly:httpsOnly,state:state}' --output table)
+az "${app_show_args[@]}"
+config_show_args=(webapp config show --name "${app_name}" --resource-group "${destination_rg}" --query '{runtime:linuxFxVersion,startup:appCommandLine}' --output table)
+az "${config_show_args[@]}"
+
+printf 'Runtime: %s\nPlan name: %s\nWeb app name: %s\nHTTPS URL: https://%s.azurewebsites.net\n' "${runtime}" "${plan_name}" "${app_name}" "${app_name}"
+PATH_B_CREATE
+then
+  echo 'Path B resource creation completed.'
+else
+  path_b_status=$?
+  printf 'Path B step failed; your SSH session remains open (status %d).\n' "${path_b_status}" >&2
+  echo 'Correct the error and rerun this block before continuing.' >&2
+fi
 ```
 
-The omitted `--is-linux` flag creates a Windows plan. `B1` is the lowest Basic dedicated tier and incurs charges until the plan is deleted.
+If runtime discovery stopped this step on an earlier attempt, paste and run the entire corrected block again with the same subscription ID and destination resource group. Its stable names reconcile compatible existing resources instead of creating duplicates. Continue only after the block reports success.
+
+`az webapp list-runtimes` is the source of truth for currently available built-in runtimes. The block chooses the highest advertised Node.js LTS major version for a new app and fails rather than inventing a fallback. On rerun, it reuses only the same Linux B1 plan and HTTPS-enabled app when their plan association and Node LTS runtime remain compatible. PM2 runs in the foreground, listens on the App Service-provided `$PORT`, and serves the ready-to-run static ZIP from `/home/site/wwwroot`. `B1` incurs charges until the plan is deleted.
 
 ## Task 4: Deploy with supported App Service ZIP deployment (5 minutes)
 
-### Track A - Kudu ZIP deploy
+### Path A - Kudu ZIP deploy
 
 Keep the browser on the Windows VM so it can access `C:\temp\microhack-app.zip`.
 
@@ -330,34 +580,129 @@ az webapp deploy `
     --type zip
 ```
 
-### Track B - Deploy the local ZIP
+Windows ZIP deployment extracts the package into `D:\home\site\wwwroot`.
 
-The variables from Task 3 remain in the same Bash session:
+### Path B - Deploy the local ZIP
+
+Replace both placeholders. This block reconstructs the package, plan, and app values and confirms the packaged content again before deployment:
 
 ```bash
+if bash /dev/fd/3 3<<'PATH_B_DEPLOY'
+set -euo pipefail
+
+subscription_id='<REPLACE-WITH-SUBSCRIPTION-ID>'
+destination_rg='MHBox-<UserSuffix>-destination-rg'
 package_path="${HOME}/microhack-app.zip"
 
-az webapp deploy \
-  --resource-group "${destination_rg}" \
-  --name "${app_name}" \
-  --src-path "${package_path}" \
-  --type zip
+if [[ -z "${subscription_id}" ||
+      "${subscription_id}" == '<REPLACE-WITH-SUBSCRIPTION-ID>' ]]; then
+  echo 'Replace subscription_id with the Hack subscription ID.' >&2
+  false
+fi
+if [[ -z "${destination_rg}" ||
+      "${destination_rg}" == *'<'* ||
+      "${destination_rg}" == *'>'* ]]; then
+  echo 'Replace destination_rg with the exact destination resource-group name.' >&2
+  false
+fi
+if [[ ! -f "${package_path}" ]]; then
+  echo "Package not found: ${package_path}" >&2
+  false
+fi
+
+archive_entries="$(unzip -Z1 "${package_path}")"
+for asset in index.html stylesheet.css GitHub_Logo.png MSLogo.png MSicon.png; do
+  if ! grep -Fxq "${asset}" <<<"${archive_entries}"; then
+    echo "Required asset is missing from the ZIP root: ${asset}" >&2
+    false
+  fi
+done
+archive_html="$(unzip -p "${package_path}" index.html)"
+metadata_checks=(
+  'hostname|Azure App Service'
+  'platform|Managed PaaS'
+  'web-server|Azure App Service'
+)
+for check in "${metadata_checks[@]}"; do
+  field="${check%%|*}"
+  expected_value="${check#*|}"
+  if ! grep -Eq "data-workload-value=\"${field}\"[^>]*>${expected_value}</dd>" <<<"${archive_html}"; then
+    echo "Expected App Service metadata is missing from the ZIP: ${field}" >&2
+    false
+  fi
+done
+if grep -Eq '<(HOSTNAME|PLATFORM|WEB_SERVER)>' <<<"${archive_html}"; then
+  echo 'The ZIP still contains unresolved workload template tokens.' >&2
+  false
+fi
+
+command -v az >/dev/null
+az account set --subscription "${subscription_id}"
+active_subscription_id="$(az account show --query id --output tsv)"
+destination_rg="$(az group show --name "${destination_rg}" --query name --output tsv)"
+name_suffix="$(
+  printf '%s\0%s' "${active_subscription_id}" "${destination_rg}" |
+    sha256sum |
+    cut -c1-12
+)"
+plan_name="asp-mh-linux-${name_suffix}"
+app_name="mh-web-linux-${name_suffix}"
+app_list_args=(webapp list --resource-group "${destination_rg}" --query "[?name=='${app_name}'].id | [0]" --output tsv)
+app_id="$(az "${app_list_args[@]}")"
+if [[ -z "${app_id}" ]]; then
+  echo "Web app ${app_name} doesn't exist. Complete Task 3 first." >&2
+  false
+fi
+
+printf 'Plan name: %s\nWeb app name: %s\nPackage: %s\n' "${plan_name}" "${app_name}" "${package_path}"
+
+deploy_args=(webapp deploy --resource-group "${destination_rg}" --name "${app_name}" --src-path "${package_path}" --type zip)
+az "${deploy_args[@]}"
+PATH_B_DEPLOY
+then
+  echo 'Path B ZIP deployment completed.'
+else
+  path_b_status=$?
+  printf 'Path B step failed; your SSH session remains open (status %d).\n' "${path_b_status}" >&2
+  echo 'Correct the error and rerun this block before continuing.' >&2
+fi
 ```
 
-App Service extracts the package into `D:\home\site\wwwroot`. Do not configure Deployment Center source control; neither track requires GitHub or Azure DevOps integration.
+Linux ZIP deployment extracts the package into `/home/site/wwwroot`. Build automation remains disabled because the ZIP is already complete and PM2 serves it directly. Do not configure Deployment Center source control; neither path requires GitHub or Azure DevOps integration.
 
 ## Task 5: Validate HTTPS, assets, and independence (5 minutes)
 
-### Track A - Validate and stop IIS
+### Path A - Validate and stop IIS
 
 Run in Windows PowerShell, replacing the placeholder:
 
 ```powershell
 $appName = '<recorded-web-app-name>'
 $appUrl = "https://$appName.azurewebsites.net"
-$home = Invoke-WebRequest -Uri "$appUrl/" -UseBasicParsing -TimeoutSec 30
-$home.StatusCode
-$home.Content -match 'data-workload-value="platform"[^>]*>Managed PaaS</dd>'
+$home = $null
+foreach ($attempt in 1..18) {
+    try {
+        $home = Invoke-WebRequest -Uri "$appUrl/" -UseBasicParsing -TimeoutSec 30
+        break
+    }
+    catch {
+        Start-Sleep -Seconds 10
+    }
+}
+if ($null -eq $home -or $home.StatusCode -ne 200) {
+    throw 'The App Service home page did not become ready within three minutes.'
+}
+
+$requiredMetadata = @(
+    'data-workload-value="hostname"[^>]*>Azure App Service</dd>'
+    'data-workload-value="platform"[^>]*>Managed PaaS</dd>'
+    'data-workload-value="web-server"[^>]*>Azure App Service</dd>'
+)
+foreach ($pattern in $requiredMetadata) {
+    if ($home.Content -notmatch $pattern) {
+        throw "The App Service page is missing expected metadata: $pattern"
+    }
+}
 
 $assets = @('stylesheet.css', 'GitHub_Logo.png', 'MSLogo.png', 'MSicon.png')
 foreach ($asset in $assets) {
@@ -369,54 +714,153 @@ foreach ($asset in $assets) {
     }
 }
 
-Stop-Service -Name W3SVC -Force
+try {
+    Stop-Service -Name W3SVC -Force
+    Get-Service -Name W3SVC
+    $independentResponse = Invoke-WebRequest `
+        -Uri $appUrl `
+        -UseBasicParsing `
+        -TimeoutSec 30
+    if ($independentResponse.StatusCode -ne 200) {
+        throw 'App Service failed while IIS was stopped.'
+    }
+}
+finally {
+    Set-Service -Name W3SVC -StartupType Automatic
+    Start-Service -Name W3SVC
+}
 Get-Service -Name W3SVC
-(Invoke-WebRequest -Uri $appUrl -UseBasicParsing -TimeoutSec 30).StatusCode
 ```
 
-`W3SVC` must be `Stopped` while App Service still returns `200`. To preserve the original site after the proof, run:
+`W3SVC` must be stopped during the independent App Service check and running again afterward.
 
-```powershell
-Start-Service -Name W3SVC
-```
+### Path B - Validate and stop Apache
 
-### Track B - Validate and stop Apache
+Replace both placeholders. Readiness is bounded to approximately three minutes: at most 18 five-second requests with up to 17 five-second waits.
 
 ```bash
+if bash /dev/fd/3 3<<'PATH_B_VALIDATE'
+set -euo pipefail
+
+subscription_id='<REPLACE-WITH-SUBSCRIPTION-ID>'
+destination_rg='MHBox-<UserSuffix>-destination-rg'
+
+if [[ -z "${subscription_id}" ||
+      "${subscription_id}" == '<REPLACE-WITH-SUBSCRIPTION-ID>' ]]; then
+  echo 'Replace subscription_id with the Hack subscription ID.' >&2
+  false
+fi
+if [[ -z "${destination_rg}" ||
+      "${destination_rg}" == *'<'* ||
+      "${destination_rg}" == *'>'* ]]; then
+  echo 'Replace destination_rg with the exact destination resource-group name.' >&2
+  false
+fi
+
+command -v az >/dev/null
+az account set --subscription "${subscription_id}"
+active_subscription_id="$(az account show --query id --output tsv)"
+destination_rg="$(az group show --name "${destination_rg}" --query name --output tsv)"
+name_suffix="$(
+  printf '%s\0%s' "${active_subscription_id}" "${destination_rg}" |
+    sha256sum |
+    cut -c1-12
+)"
+plan_name="asp-mh-linux-${name_suffix}"
+app_name="mh-web-linux-${name_suffix}"
 app_url="https://${app_name}.azurewebsites.net"
+printf 'Plan name: %s\nWeb app name: %s\nHTTPS URL: %s\n' "${plan_name}" "${app_name}" "${app_url}"
 
-curl --fail --silent --show-error "${app_url}/" |
-  grep -E 'data-workload-value="platform"[^>]*>Managed PaaS</dd>'
+home_html=''
+readiness_curl_args=(--fail --silent --show-error --max-time 5)
+for ((attempt = 1; attempt <= 18; attempt++)); do
+  if home_html="$(curl "${readiness_curl_args[@]}" "${app_url}/")"; then
+    break
+  fi
+  if (( attempt < 18 )); then
+    sleep 5
+  fi
+done
+if [[ -z "${home_html}" ]]; then
+  echo 'The App Service home page did not become ready within approximately three minutes.' >&2
+  false
+fi
 
-for asset in stylesheet.css GitHub_Logo.png MSLogo.png MSicon.png; do
-  curl --fail --silent --show-error --output /dev/null \
-    --write-out "${asset}: HTTP %{http_code}, %{size_download} bytes\n" \
-    "${app_url}/${asset}"
+expected_metadata=(
+  'data-workload-value="hostname"[^>]*>Azure App Service</dd>'
+  'data-workload-value="platform"[^>]*>Managed PaaS</dd>'
+  'data-workload-value="web-server"[^>]*>Azure App Service</dd>'
+)
+for expected in "${expected_metadata[@]}"; do
+  grep -Eq "${expected}" <<<"${home_html}" || {
+    echo "The App Service page is missing expected metadata: ${expected}" >&2
+    false
+  }
 done
 
-az webapp show \
-  --resource-group "${destination_rg}" \
-  --name "${app_name}" \
-  --query '{state:state,httpsOnly:httpsOnly,host:defaultHostName}' \
-  --output table
+for asset in stylesheet.css GitHub_Logo.png MSLogo.png MSicon.png; do
+  asset_curl_args=(--fail --silent --show-error --output /dev/null --write-out "${asset}: HTTP %{http_code}, %{size_download} bytes\n")
+  curl "${asset_curl_args[@]}" "${app_url}/${asset}"
+done
 
+app_show_args=(webapp show --resource-group "${destination_rg}" --name "${app_name}" --query '{state:state,httpsOnly:httpsOnly,host:defaultHostName}' --output table)
+az "${app_show_args[@]}"
+
+if ! sudo systemctl is-active --quiet apache2; then
+  echo 'Apache must be running before the source-independence test.' >&2
+  false
+fi
+
+apache_may_be_stopped=0
+restore_apache_once() {
+  if (( ! apache_may_be_stopped )); then
+    return 0
+  fi
+  if sudo systemctl start apache2 >/dev/null &&
+     sudo systemctl is-active --quiet apache2; then
+    apache_may_be_stopped=0
+    return 0
+  fi
+  apache_may_be_stopped=0
+  echo 'Apache restoration failed; start apache2 manually before continuing.' >&2
+  return 1
+}
+cleanup_validation() {
+  local status=$?
+  trap - EXIT
+  if (( apache_may_be_stopped )) &&
+     ! restore_apache_once; then
+    status=1
+  fi
+  return "${status}"
+}
+trap cleanup_validation EXIT
+
+apache_may_be_stopped=1
 sudo systemctl stop apache2
-sudo systemctl is-active apache2 || true
+if sudo systemctl is-active --quiet apache2; then
+  echo 'Apache is still running after the stop command.' >&2
+  false
+fi
+independence_curl_args=(--fail --silent --show-error --output /dev/null --max-time 30 --write-out 'App Service after Apache stop: HTTP %{http_code}\n')
+curl "${independence_curl_args[@]}" "${app_url}/"
 
-curl --fail --silent --show-error --output /dev/null \
-  --write-out 'App Service after Apache stop: HTTP %{http_code}\n' \
-  "${app_url}/"
-```
-
-`apache2` must be inactive while App Service still returns `200`. To preserve the original site after the proof:
-
-```bash
-sudo systemctl enable apache2
-sudo systemctl start apache2
+restore_apache_once
+trap - EXIT
 sudo systemctl is-active apache2
+PATH_B_VALIDATE
+then
+  echo 'Path B validation and source restoration completed.'
+else
+  path_b_status=$?
+  printf 'Path B step failed; your SSH session remains open (status %d).\n' "${path_b_status}" >&2
+  echo 'Correct the error and rerun this block before continuing.' >&2
+fi
 ```
 
-For both tracks, visually check the HTTPS page and assets. App Service has its own public endpoint and is not a backend of the Azure Load Balancer used for the migrated VMs.
+The child-shell trap makes one restoration attempt if any command fails after Apache might have stopped. It clears itself before reporting a restoration failure, so it cannot recurse. `apache2` must be inactive during the App Service check and active again afterward.
+
+For both paths, visually check the HTTPS page and assets. App Service has its own public endpoint and remains independent of the migrated VM networking.
 
 ## Task 6: Record the architecture decision and clean up (3 minutes)
 
@@ -432,9 +876,9 @@ Document which target you would choose and why.
 
 ### Optional resource cleanup
 
-Do not delete resources automatically. If the lab owner approves cleanup, delete the web app and plan with the variables from your track's shell:
+Do not delete resources automatically. If the lab owner approves cleanup, delete the web app and plan. Path B reconstructs its stable names from the validated subscription and resource group:
 
-Track A, Azure Cloud Shell PowerShell:
+Path A, Azure Cloud Shell PowerShell:
 
 ```powershell
 az webapp delete `
@@ -447,28 +891,109 @@ az appservice plan delete `
     --yes
 ```
 
-Track B, Bash:
+Path B, Bash:
 
 ```bash
-az webapp delete \
-  --resource-group "${destination_rg}" \
-  --name "${app_name}"
+if bash /dev/fd/3 3<<'PATH_B_CLEANUP'
+set -euo pipefail
 
-az appservice plan delete \
-  --resource-group "${destination_rg}" \
-  --name "${plan_name}" \
-  --yes
+subscription_id='<REPLACE-WITH-SUBSCRIPTION-ID>'
+destination_rg='MHBox-<UserSuffix>-destination-rg'
+
+if [[ -z "${subscription_id}" ||
+      "${subscription_id}" == '<REPLACE-WITH-SUBSCRIPTION-ID>' ]]; then
+  echo 'Replace subscription_id with the Hack subscription ID.' >&2
+  false
+fi
+if [[ -z "${destination_rg}" ||
+      "${destination_rg}" == *'<'* ||
+      "${destination_rg}" == *'>'* ]]; then
+  echo 'Replace destination_rg with the exact destination resource-group name.' >&2
+  false
+fi
+
+command -v az >/dev/null
+az account set --subscription "${subscription_id}"
+active_subscription_id="$(az account show --query id --output tsv)"
+destination_rg="$(az group show --name "${destination_rg}" --query name --output tsv)"
+name_suffix="$(
+  printf '%s\0%s' "${active_subscription_id}" "${destination_rg}" |
+    sha256sum |
+    cut -c1-12
+)"
+plan_name="asp-mh-linux-${name_suffix}"
+app_name="mh-web-linux-${name_suffix}"
+printf 'Plan name: %s\nWeb app name: %s\n' "${plan_name}" "${app_name}"
+
+cleanup_failed=0
+app_list_args=(webapp list --resource-group "${destination_rg}" --query "[?name=='${app_name}'].id | [0]" --output tsv)
+app_id="$(az "${app_list_args[@]}")"
+if [[ -n "${app_id}" ]]; then
+  app_delete_args=(webapp delete --resource-group "${destination_rg}" --name "${app_name}")
+  if ! az "${app_delete_args[@]}"; then
+    echo "Could not delete web app ${app_name}." >&2
+    cleanup_failed=1
+  fi
+else
+  echo "Web app is already absent: ${app_name}"
+fi
+
+plan_list_args=(appservice plan list --resource-group "${destination_rg}" --query "[?name=='${plan_name}'].id | [0]" --output tsv)
+plan_id="$(az "${plan_list_args[@]}")"
+if [[ -n "${plan_id}" ]]; then
+  plan_delete_args=(appservice plan delete --resource-group "${destination_rg}" --name "${plan_name}" --yes)
+  if ! az "${plan_delete_args[@]}"; then
+    echo "Could not delete App Service plan ${plan_name}." >&2
+    cleanup_failed=1
+  fi
+else
+  echo "App Service plan is already absent: ${plan_name}"
+fi
+
+if (( cleanup_failed )); then
+  false
+fi
+PATH_B_CLEANUP
+then
+  echo 'Path B resource cleanup completed.'
+else
+  path_b_status=$?
+  printf 'Path B step failed; your SSH session remains open (status %d).\n' "${path_b_status}" >&2
+  echo 'Correct the error and rerun this block before continuing.' >&2
+fi
 ```
 
 Deleting only the web app does not stop App Service plan charges.
 
-### Track B - Sign out
+### Path B - Sign out
 
 Whether or not you delete the resources, remove the interactive Azure CLI session from the migrated VM:
 
 ```bash
-az logout
-az account clear
+if bash /dev/fd/3 3<<'PATH_B_SIGN_OUT'
+set -euo pipefail
+
+command -v az >/dev/null
+sign_out_failed=0
+if ! az logout; then
+  echo 'Azure CLI logout reported an error.' >&2
+  sign_out_failed=1
+fi
+if ! az account clear; then
+  echo 'Azure CLI account-cache cleanup reported an error.' >&2
+  sign_out_failed=1
+fi
+if (( sign_out_failed )); then
+  false
+fi
+PATH_B_SIGN_OUT
+then
+  echo 'Path B Azure CLI sign-out completed.'
+else
+  path_b_status=$?
+  printf 'Path B step failed; your SSH session remains open (status %d).\n' "${path_b_status}" >&2
+  echo 'Correct the error and rerun this block before continuing.' >&2
+fi
 ```
 
 Interactive sign-in is appropriate for this guided lab. Signing out and clearing the local subscription cache reduce credential exposure on the VM. No publishing credentials were used or exposed.

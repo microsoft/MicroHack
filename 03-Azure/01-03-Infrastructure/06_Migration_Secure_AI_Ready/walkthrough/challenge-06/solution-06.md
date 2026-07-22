@@ -96,13 +96,6 @@ In this Hack, we deployed virtual machines that use public IP addresses and are 
 ![image](./img/secpost04.png)
 
 
-## **Task 5: Enable and configure Copilot for Security**
-
-Sign in to Copilot for Security (https://securitycopilot.microsoft.com).
-
-
-
-
 You successfully completed Challenge 6.
 
-Continue to Challenge 7, select the migrated IIS or Apache workload, and configure intelligent observability. Do not remove `destination-rg`.
+Continue to Challenge 7 and configure intelligent observability for both migrated web workloads. Do not remove `destination-rg`.

@@ -60,10 +60,10 @@ After completing this Hack, you will be able to:
 * Build an assessment and business case for a datacenter transformation.
 * Plan and execute a right-sized Hyper-V VM migration to Azure.
 * Apply security practices to migrated workloads.
-* Enable Azure Monitor Agent, DCR-based telemetry, VM insights, and actionable alerting.
-* Investigate a deterministic IIS or Apache incident with Azure Copilot Observability Agent or a KQL fallback.
-* Restore and verify service using evidence from both the VM and Azure Monitor.
-* Inspect a selected IIS or Apache workload and manually replatform its static content to Windows App Service with ZIP deployment.
+* Enable OpenTelemetry VM metrics, DCR-based Windows event collection, and service-specific alerting.
+* Investigate deterministic IIS and Apache incidents with Azure Copilot Observability Agent or the manual/KQL fallback.
+* Restore and verify both services using evidence from the VMs and Azure Monitor.
+* Select an IIS or Apache workload and manually replatform its static content to the appropriate Windows or Linux App Service target with ZIP deployment.
 * Explain why Azure Storage static website hosting or Azure Static Web Apps can be a better production target for a static workload.
 
 <a id="hack-challenges"></a>
@@ -79,7 +79,7 @@ Complete these prerequisites before the session:
 * A Microsoft Entra user with Contributor or Owner permissions on the Azure subscription.
 * A client network and browser that support the Azure portal, Azure Bastion, and Azure Cloud Shell.
 
-Challenge 7 includes a preflight for Azure Copilot tenant access, RBAC, network access, and supported regions. Azure Copilot is not mandatory because the challenge includes a full KQL/VM insights fallback. No Azure OpenAI resource, model deployment, or model quota is required anywhere in this Hack.
+Challenge 7 assumes Hack participants have Azure Copilot access, suitable RBAC, network access, and a supported region. It also includes a concise manual/KQL fallback if agent output is unavailable. No Azure OpenAI resource, model deployment, or model quota is required anywhere in this Hack.
 
 ## Challenges
 
@@ -89,8 +89,8 @@ Challenge 7 includes a preflight for Azure Copilot tenant access, RBAC, network 
 * [Challenge 4 - Assess VMs for the migration](challenges/challenge-04.md)
 * [Challenge 5 - Migrate Hyper-V virtual machines to Azure](challenges/challenge-05.md)
 * [Optional Challenge 6 - Secure on Azure](challenges/challenge-06.md)
-* [Challenge 7 - Operate the migrated workload with intelligent observability](challenges/challenge-07.md)
-* [Challenge 8 - Replatform the selected migrated web workload to Azure App Service](challenges/challenge-08.md)
+* [Challenge 7 - Operate the migrated workloads with intelligent observability](challenges/challenge-07.md)
+* [Challenge 8 - Replatform a migrated web workload to Azure App Service](challenges/challenge-08.md)
 
 ## Solutions - Spoiler warning
 
@@ -100,8 +100,8 @@ Challenge 7 includes a preflight for Azure Copilot tenant access, RBAC, network 
 * [Solution 4 - Assess VMs for the migration](./walkthrough/challenge-04/solution-04.md)
 * [Solution 5 - Migrate Hyper-V virtual machines to Azure](./walkthrough/challenge-05/solution-05.md)
 * [Optional Solution 6 - Secure on Azure](./walkthrough/challenge-06/solution-06.md)
-* [Solution 7 - Operate the migrated workload with intelligent observability](./walkthrough/challenge-07/solution-07.md)
-* [Solution 8 - Replatform the selected migrated web workload to Azure App Service](./walkthrough/challenge-08/solution-08.md)
+* [Solution 7 - Operate the migrated workloads with intelligent observability](./walkthrough/challenge-07/solution-07.md)
+* [Solution 8 - Replatform a migrated web workload to Azure App Service](./walkthrough/challenge-08/solution-08.md)
 
 ## Contributors
 

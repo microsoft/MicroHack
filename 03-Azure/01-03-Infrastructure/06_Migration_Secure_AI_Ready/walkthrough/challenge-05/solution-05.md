@@ -152,7 +152,16 @@ Connect to each test VM via Azure Bastion.
 
 ![image](./img/TestMig5.png)
 
-On the Windows VM, open a browser and navigate to *http://localhost*. Confirm that the dashboard shows the VM hostname, `Windows Server 2022`, and `IIS`. On the Ubuntu VM, run `curl -I http://localhost`, then open the page and confirm that it shows the VM hostname, `Ubuntu Linux`, and `Apache`. Both requests must return HTTP success.
+On the Windows VM, open a browser and navigate to *http://localhost*. Confirm that the dashboard shows the VM hostname, `Windows Server 2022`, and `IIS`.
+
+On the Ubuntu VM, run the following commands:
+
+```bash
+curl --fail --silent --show-error --head http://localhost
+curl --fail --silent --show-error http://localhost | grep -E 'mhbox-ubuntu-01|Ubuntu Linux|Apache'
+```
+
+The first command must return HTTP success. The second command must show the Ubuntu hostname, `Ubuntu Linux`, and `Apache`.
 
 ![image](./img/TestMig6.png)
 
@@ -173,47 +182,9 @@ Provide a comment, select *Testing is complete....*, and click *Cleanup Test* to
 > [!NOTE]
 > **Repeat the preceding steps for the other VM.**
 
-### **Task 4: Prepare the final migration**
+### **Task 4: Perform the final migration**
 
-Currently, the two servers are not published or directly accessible. After migration, the source servers will be turned off, so access to the systems must be updated. Perform the following premigration steps to keep downtime as short as possible.
-
-#### **Task 4.1: Create a new Azure public load balancer in the destination environment**
-
-From the Azure Portal, open the Load Balancing page, select *Load Balancer* from the navigation pane on the left, and click *Create*.
-
-![image](./img/LB1.png)
-
-Under *Basics*, select the *destination-rg* resource group and provide a name for the new load balancer.
-
-![image](./img/LB2.png)
-
-Under *Frontend IP configuration*, click *Add a frontend IP configuration* and create a new public IP address.
-
-![image](./img/LB3.png)
-
-Under *Backend Pools*, select *Add a backend Pool*. Provide a name and select *destination-vnet* as the virtual network.
-Add *10.2.1.4* and *10.2.1.5* as the IP addresses.
-
-> [!NOTE]
-> Azure reserves the first four addresses (0-3) in each subnet address range and doesn't assign them. Azure assigns the next available address to a resource from the subnet address range. Therefore, the IP addresses assigned to the destination VMs after migration are predictable in this lab.
-
-![image](./img/LB4.png)
-
-Under *Inbound rules*, click *Add a load balancing rule* and create the rule as illustrated in the following diagram.
-
-![image](./img/LB5.png)
-
-We are already using a NAT gateway to provide outbound internet access. We don't need an outbound rule and can skip this part.
-
-Proceed to the *Review + create* section, review your configuration, and click *Create*.
-
-![image](./img/LB6.png)
-
-After the load balancer has been created, return to the *Load balancing* section and select the load balancer. From the *Overview* pane, copy the *Frontend IP address*. Record the load balancer's public IP address because you will need it after migration.
-
-![image](./img/LB7.png)
-
-### **Task 5: Perform the final migration**
+After validating and cleaning up both test migrations, proceed with the planned cutover. The source VMs will be shut down during migration to keep the final replicated state consistent.
 
 Open the [Azure Portal](https://portal.azure.com), return to the *Migrations* section in the Azure Migrate project, and click *Action pending* for the VMs to be migrated.
 
@@ -248,27 +219,37 @@ In the *Virtual machines* section of the Azure Portal, you should now see two ad
 
 ![image](./img/mig8.png)
 
-You should now also be able to access the web server via the previously created load balancer frontend IP.
+Connect to both migrated VMs through Azure Bastion and validate each workload directly.
 
-![image](./img/mig9.png)
+On **MHBox-Win2K22**, open a browser and navigate to *http://localhost*. Confirm that the dashboard returns HTTP success, its hostname matches the migrated Windows VM, and it shows `Windows Server 2022` and `IIS`.
 
-🚀🚀🚀🚀🚀🚀 Congratulations, you've successfully migrated the frontend application to Azure. 🚀🚀🚀🚀🚀🚀
+On **MHBox-Ubuntu-01**, run the following commands:
 
-### **Task 6: Complete the migration**
+```bash
+curl --fail --silent --show-error --head http://localhost
+curl --fail --silent --show-error http://localhost | grep -E 'mhbox-ubuntu-01|Ubuntu Linux|Apache'
+```
 
-After validating both migrated web VMs and the load-balanced endpoint, complete the migration to stop replication and clean up each VM's replication state. Open the [Azure Portal](https://portal.azure.com), navigate to the Azure Migrate project, select *Migrations*, and open each migrated VM from the *Completion* stage.
+The first command must return HTTP success. The second command must show the Ubuntu hostname, `Ubuntu Linux`, and `Apache`. Validating the VMs separately confirms that both migrated workloads are healthy.
+
+🚀🚀🚀🚀🚀🚀 Congratulations, you've successfully migrated both web workloads to Azure. 🚀🚀🚀🚀🚀🚀
+
+### **Task 5: Complete the migration**
+
+After validating both migrated web VMs, complete the migration to stop replication and clean up each VM's replication state. Open the [Azure Portal](https://portal.azure.com), navigate to the Azure Migrate project, select *Migrations*, and open each migrated VM from the *Completion* stage.
 
 ![image](./img/Clean1.png)
 
 Under *Completion*, select *Complete migration*. Repeat this action for both **MHBox-Win2K22** and **MHBox-Ubuntu-01**.
 
 > [!NOTE]
+> In some Azure Migrate portal views, the equivalent action is labeled *Stop replication*.
+
+![image](./img/Clean2.png)
+
+> [!NOTE]
 > Completing migration stops replication for the source VM and removes its replication-state information. Confirm that the migrated Azure VM is healthy before completing this action.
 
 You successfully completed Challenge 5.
-
-The deployed architecture now looks like the following diagram.
-
-![image](./img/Challenge-5.jpg)
 
 Continue to Challenge 6 to secure the migrated environment. Do not remove `destination-rg` because Challenges 6 through 8 use the migrated workload.

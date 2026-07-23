@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zava · Planner Console</title>
+  <style>
+    :root {
+      --bg: #0f172a; --panel: #1e293b; --panel2: #273449; --line: #334155;
+      --text: #e2e8f0; --muted: #94a3b8; --accent: #38bdf8; --accent2: #22c55e;
+      --warn: #f59e0b; --crit: #ef4444; --radius: 10px;
+    }
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    body { margin: 0; font-family: "Segoe UI", system-ui, sans-serif; background: var(--bg); color: var(--text); }
+    header { padding: 18px 28px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 14px; }
+    header h1 { font-size: 18px; margin: 0; font-weight: 600; }
+    header .badge { font-size: 12px; color: var(--muted); border: 1px solid var(--line); padding: 3px 10px; border-radius: 999px; }
+    header .flow { margin-left: auto; font-size: 13px; color: var(--muted); }
+    header .flow b { color: var(--accent); }
+    main { display: grid; grid-template-columns: 320px 1fr; gap: 20px; padding: 20px 28px; max-width: 1200px; }
+    .panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; margin-bottom: 18px; }
+    .panel h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 12px; }
+    .step { border-left: 3px solid var(--line); }
+    .step.active { border-left-color: var(--accent); }
+    .step.done { border-left-color: var(--accent2); }
+    .step-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .step-num { width: 24px; height: 24px; border-radius: 50%; background: var(--panel2); color: var(--muted);
+      display: grid; place-items: center; font-size: 13px; font-weight: 600; }
+    .step.active .step-num { background: var(--accent); color: #04222f; }
+    .step.done .step-num { background: var(--accent2); color: #052e16; }
+    .step h3 { margin: 0; font-size: 15px; }
+    .step small { color: var(--muted); }
+    button { background: var(--accent); color: #04222f; border: 0; border-radius: 8px; padding: 9px 16px;
+      font-weight: 600; cursor: pointer; font-size: 14px; }
+    button.secondary { background: var(--panel2); color: var(--text); border: 1px solid var(--line); }
+    button.ok { background: var(--accent2); color: #052e16; }
+    button.danger { background: var(--crit); color: #fff; }
+    button:disabled { opacity: .4; cursor: not-allowed; }
+    textarea, select, input[type=text] { width: 100%; background: var(--panel2); color: var(--text); border: 1px solid var(--line);
+      border-radius: 8px; padding: 9px; font-size: 14px; font-family: inherit; }
+    textarea { min-height: 70px; resize: vertical; }
+    .chat { display:flex; gap:8px; margin-top:10px; }
+    .chat input { flex:1; }
+    .out { background: #0b1220; border: 1px solid var(--line); border-radius: 8px; padding: 12px; margin-top: 12px;
+      font-size: 13px; white-space: pre-wrap; line-height: 1.5; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
+    th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+    th { color: var(--muted); font-weight: 500; }
+    .tag { font-size: 11px; padding: 2px 8px; border-radius: 999px; font-weight: 600; }
+    .tag.CRITICAL { background: rgba(239,68,68,.15); color: var(--crit); }
+    .tag.AT_RISK { background: rgba(245,158,11,.15); color: var(--warn); }
+    .tag.OK { background: rgba(34,197,94,.15); color: var(--accent2); }
+    .row { display: flex; gap: 8px; align-items: center; margin-top: 10px; flex-wrap: wrap; }
+    .err { color: var(--warn); font-size: 13px; margin-top: 10px; }
+    .muted { color: var(--muted); font-size: 13px; }
+    .total { font-size: 16px; font-weight: 700; margin-top: 10px; }
+    .live-dot { display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--muted); margin-left:6px; vertical-align:middle; }
+    .live-dot.on { background: var(--accent2); box-shadow: 0 0 6px var(--accent2); }
+    .activity { margin-top:12px; font-size:12px; max-height:150px; overflow:auto; line-height:1.7;
+      border-top:1px solid var(--line); padding-top:8px; }
+    .activity .ev { display:block; }
+    .activity .ev b { color: var(--accent); }
+    .sig-note { margin-top:10px; font-size:13px; color: var(--accent2); background: rgba(34,197,94,.1);
+      border:1px solid rgba(34,197,94,.35); border-radius:8px; padding:8px 10px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Zava · Planner Console</h1>
+    <span class="badge" id="stats">loading…</span>
+    <span class="flow">Sense · <b>→</b> Plan · <b>→</b> Approve · <b>→</b> Act</span>
+  </header>
+
+  <main>
+    <!-- Left rail: governed state -->
+    <div>
+      <div class="panel">
+        <h2>Current exposure</h2>
+        <div id="lowStock" class="muted">loading…</div>
+      </div>
+      <div class="panel">
+        <h2>Event trigger <span class="live-dot" id="liveDot" title="Cosmos change-feed watcher"></span></h2>
+        <p class="muted" style="margin:0 0 10px">Drop a market signal into Cosmos. An independent insert — from here or an MCP client — triggers the loop <b>automatically</b>.</p>
+        <select id="signalPick">
+          <option data-cat="outdoor_power_tools" data-region="Pacific Northwest">🔥 Heatwave intensifies across the Pacific Northwest</option>
+          <option data-cat="outdoor_power_tools" data-region="West">📉 Competitor out of stock on chainsaws in the West</option>
+          <option data-cat="paint_and_supplies" data-region="National">🎨 Interior painting projects trending nationally</option>
+        </select>
+        <div class="row"><button id="btnInject" class="secondary">⚡ Inject signal</button></div>
+        <div id="activity" class="activity muted">watcher: connecting…</div>
+      </div>
+      <div class="panel">
+        <h2>Order book</h2>
+        <div id="orders" class="muted">loading…</div>
+      </div>
+    </div>
+
+    <!-- Right: the loop -->
+    <div>
+      <div class="panel step active" id="s1">
+        <div class="step-head"><div class="step-num">1</div><div><h3>Sense demand</h3><small>Demand Sensing Agent</small></div></div>
+        <select id="scenario">
+          <option>A prolonged heatwave is hitting the Pacific Northwest. Check our exposure on outdoor power tools.</option>
+          <option>A major competitor is out of stock on chainsaws in the West. Are we positioned to capture demand?</option>
+          <option>Interior painting projects are trending nationally. Do we have paint supplies covered?</option>
+        </select>
+        <div class="row"><button id="btnSense">Sense demand</button></div>
+        <div id="signalQueue" class="sig-note" hidden></div>
+        <div id="senseSignal" class="sig-note" hidden></div>
+        <div class="out" id="outSense" hidden></div>
+      </div>
+
+      <div class="panel step" id="s2">
+        <div class="step-head"><div class="step-num">2</div><div><h3>Plan replenishment</h3><small>Inventory Optimisation Agent</small></div></div>
+        <div class="row"><button id="btnPlan" disabled>Generate reorder plan</button></div>
+        <div id="outPlan"></div>
+        <div class="chat" id="planChatRow" hidden>
+          <input type="text" id="planChat" placeholder="Refine the plan… e.g. 'only the CRITICAL SKUs' or 'halve the leaf blower quantities'" />
+          <button id="btnPlanChat" class="secondary">Send</button>
+        </div>
+      </div>
+
+      <div class="panel step" id="s3">
+        <div class="step-head"><div class="step-num">3</div><div><h3>Review purchase order</h3><small>Replenishment Action Agent</small></div></div>
+        <div class="row"><button id="btnPropose" disabled>Build PO proposal</button></div>
+        <div id="outPropose"></div>
+        <div class="chat" id="poChatRow" hidden>
+          <input type="text" id="poChat" placeholder="Edit the PO… e.g. 'drop the warehouse line' or 'cut chainsaws to 40'" />
+          <button id="btnPoChat" class="secondary">Send</button>
+        </div>
+      </div>
+
+      <div class="panel step" id="s4">
+        <div class="step-head"><div class="step-num">4</div><div><h3>Approve &amp; act</h3><small>Human-in-the-loop gate</small></div></div>
+        <p class="muted">Nothing is submitted until you approve. This is the human decision point.</p>
+        <div id="approveSummary"></div>
+        <div class="row">
+          <button id="btnApprove" class="ok" disabled>Approve &amp; submit</button>
+          <button id="btnReject" class="danger secondary" disabled>Reject</button>
+        </div>
+        <div class="out" id="outApprove" hidden></div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    let recommendation = null, submitItems = null;
+
+    async function api(path, body) {
+      const res = await fetch(path, {
+        method: body ? "POST" : "GET",
+        headers: { "Content-Type": "application/json" },
+        body: body ? JSON.stringify(body) : undefined,
+      });
+      return res.json();
+    }
+
+    function tag(status) { return `<span class="tag ${status}">${status}</span>`; }
+
+    function setStep(id, cls) { const el = $(id); el.classList.remove("active", "done"); if (cls) el.classList.add(cls); }
+
+    async function refreshState() {
+      const s = await api("/api/state");
+      if (s.error) {
+        $("stats").textContent = "not connected";
+        $("lowStock").innerHTML = `<span class="muted">Set COSMOS_ENDPOINT in src/.env and run az login, then reload.</span>`;
+        $("orders").innerHTML = `<span class="muted">—</span>`;
+        return;
+      }
+      $("stats").textContent = `${s.products} SKUs · ${s.locations} locations · ${s.lowStock.length} exposed`;
+      $("lowStock").innerHTML = s.lowStock.length ? `<table><tr><th>SKU</th><th>Loc</th><th>On hand</th><th></th></tr>` +
+        s.lowStock.map(r => `<tr><td>${r.productName}</td><td>${r.location}</td><td>${r.onHand}</td><td>${tag(r.status)}</td></tr>`).join("") + `</table>`
+        : `<span class="muted">All stock healthy.</span>`;
+      $("orders").innerHTML = `<table><tr><th>Order</th><th>Status</th><th>By</th></tr>` +
+        s.orders.slice(-6).reverse().map(o => `<tr><td>${o.orderId}</td><td>${o.status}</td><td>${o.approvedBy || "-"}</td></tr>`).join("") + `</table>`;
+    }
+
+    function showError(elId, msg) {
+      const el = $(elId); el.hidden = false;
+      el.innerHTML = `<span class="err">⚠ ${msg}<br><span class="muted">Deploy the agent for this step, then try again (see the challenge for this step).</span></span>`;
+    }
+
+    $("btnSense").onclick = async () => {
+      $("senseSignal").hidden = true;
+      $("btnSense").disabled = true; $("outSense").hidden = false; $("outSense").textContent = "Sensing…";
+      const r = await api("/api/sense", { scenario: $("scenario").value });
+      $("btnSense").disabled = false;
+      if (r.error) return showError("outSense", r.error);
+      $("outSense").textContent = r.assessment;
+      window._assessment = r.assessment;
+      setStep("s1", "done"); setStep("s2", "active"); $("btnPlan").disabled = false;
+    };
+
+    function renderPlan(rec) {
+      recommendation = rec;
+      const rows = rec.recommendations || [];
+      $("outPlan").innerHTML = `<table><tr><th>SKU</th><th>Loc</th><th>Stock</th><th>Reorder</th><th></th></tr>` +
+        rows.map(x => `<tr><td>${x.productName || x.sku}</td><td>${x.location}</td><td>${x.currentStock}</td><td>${x.suggestedReorderQty}</td><td>${tag(x.priority)}</td></tr>`).join("") + `</table>`;
+      $("planChatRow").hidden = false;
+    }
+
+    $("btnPlan").onclick = async () => {
+      $("btnPlan").disabled = true; $("outPlan").innerHTML = `<div class="out">Planning…</div>`;
+      const r = await api("/api/plan", { assessment: window._assessment || "" });
+      if (r.error) { $("outPlan").innerHTML = ""; return showErrorInline("outPlan", r.error); }
+      renderPlan(r.recommendation);
+      setStep("s2", "done"); setStep("s3", "active"); $("btnPropose").disabled = false;
+    };
+
+    function renderProposal(pr) {
+      window._proposal = pr;
+      const p = pr.proposal || pr;
+      submitItems = pr.submitItems || submitItems || [];
+      const lines = p.lines || [];
+      $("outPropose").innerHTML = `<table><tr><th>#</th><th>SKU</th><th>Loc</th><th>Qty</th><th>Unit</th><th>Total</th></tr>` +
+        lines.map(l => `<tr><td>${l.line}</td><td>${l.productName || l.sku}</td><td>${l.location}</td><td>${l.quantity}</td><td>$${l.unitCost}</td><td>$${l.lineTotal}</td></tr>`).join("") +
+        `</table><div class="total">Total: $${p.totalEstimatedValue}</div>`;
+      $("approveSummary").innerHTML = lines.length
+        ? `<div class="muted" style="margin-bottom:8px">You're approving <b>${lines.length}</b> purchase-order line(s) · total <b>$${p.totalEstimatedValue}</b>:</div>`
+          + `<table><tr><th>SKU</th><th>Loc</th><th>Qty</th><th>Unit</th><th>Total</th></tr>`
+          + lines.map(l => `<tr><td>${l.productName || l.sku}</td><td>${l.location}</td><td>${l.quantity}</td><td>$${l.unitCost}</td><td>$${l.lineTotal}</td></tr>`).join("")
+          + `</table>`
+        : "";
+      $("poChatRow").hidden = false;
+    }
+
+    $("btnPropose").onclick = async () => {
+      $("btnPropose").disabled = true; $("outPropose").innerHTML = `<div class="out">Building proposal…</div>`;
+      const r = await api("/api/propose", { recommendation });
+      if (r.error) { $("outPropose").innerHTML = ""; return showErrorInline("outPropose", r.error); }
+      renderProposal(r.proposal);
+      setStep("s3", "done"); setStep("s4", "active");
+      $("btnApprove").disabled = false; $("btnReject").disabled = false;
+    };
+
+    $("btnApprove").onclick = async () => {
+      $("btnApprove").disabled = true; $("btnReject").disabled = true;
+      $("outApprove").hidden = false; $("outApprove").textContent = "Submitting…";
+      const r = await api("/api/approve", { items: submitItems, approvedBy: "Planner" });
+      if (r.error) return showError("outApprove", r.error);
+      $("outApprove").textContent = "✅ " + r.result.confirmation;
+      setStep("s4", "done");
+      $("btnSense").disabled = false; $("senseSignal").hidden = true;
+      refreshState();
+    };
+
+    $("btnReject").onclick = () => {
+      $("outApprove").hidden = false;
+      $("outApprove").textContent = "❌ Order cancelled. No action taken.";
+      $("btnApprove").disabled = true; $("btnReject").disabled = true;
+      $("btnSense").disabled = false; $("senseSignal").hidden = true;
+      setStep("s4", "done");
+    };
+
+    function showErrorInline(elId, msg) {
+      $(elId).innerHTML = `<div class="out"><span class="err">⚠ ${msg}</span></div>`;
+    }
+
+    // --- Event-driven layer (Challenge 5): drive the loop from a Cosmos insert ---
+    function logActivity(html) {
+      const el = $("activity"); const line = document.createElement("span");
+      line.className = "ev"; line.innerHTML = `<span class="muted">${new Date().toLocaleTimeString()}</span> ${html}`;
+      el.prepend(line);
+    }
+
+    $("btnInject").onclick = async () => {
+      const opt = $("signalPick").selectedOptions[0];
+      $("btnInject").disabled = true;
+      const r = await api("/api/signal", { headline: opt.value, category: opt.dataset.cat, region: opt.dataset.region, type: "weather" });
+      $("btnInject").disabled = false;
+      if (r.error) logActivity(`<span style="color:var(--warn)">inject failed: ${r.error}</span>`);
+    };
+
+    $("btnPlanChat").onclick = async () => {
+      const instr = $("planChat").value.trim(); if (!instr) return;
+      $("btnPlanChat").disabled = true; const prev = $("outPlan").innerHTML;
+      $("outPlan").innerHTML = `<div class="out">Updating plan…</div>`;
+      const r = await api("/api/plan/refine", { recommendation, instruction: instr });
+      $("btnPlanChat").disabled = false;
+      if (r.error) { $("outPlan").innerHTML = prev; return showErrorInline("outPlan", r.error); }
+      renderPlan(r.recommendation); $("planChat").value = "";
+    };
+
+    $("btnPoChat").onclick = async () => {
+      const instr = $("poChat").value.trim(); if (!instr) return;
+      $("btnPoChat").disabled = true; const prev = $("outPropose").innerHTML;
+      $("outPropose").innerHTML = `<div class="out">Updating PO…</div>`;
+      const r = await api("/api/propose/refine", { proposal: window._proposal || {}, instruction: instr });
+      $("btnPoChat").disabled = false;
+      if (r.error) { $("outPropose").innerHTML = prev; return showErrorInline("outPropose", r.error); }
+      renderProposal(r.proposal); $("poChat").value = "";
+    };
+
+    $("planChat").addEventListener("keydown", (ev) => { if (ev.key === "Enter") $("btnPlanChat").click(); });
+    $("poChat").addEventListener("keydown", (ev) => { if (ev.key === "Enter") $("btnPoChat").click(); });
+
+    function resetLoopUI() {
+      setStep("s1", "active"); setStep("s2", ""); setStep("s3", ""); setStep("s4", "");
+      $("outSense").hidden = false; $("outSense").textContent = "Sensing…";
+      $("outPlan").innerHTML = ""; $("outPropose").innerHTML = ""; $("outApprove").hidden = true;
+      $("approveSummary").innerHTML = "";
+      $("planChatRow").hidden = true; $("poChatRow").hidden = true;
+      $("btnSense").disabled = true;
+      $("btnPlan").disabled = true; $("btnPropose").disabled = true;
+      $("btnApprove").disabled = true; $("btnReject").disabled = true;
+    }
+
+    const es = new EventSource("/api/events");
+    es.onmessage = (m) => {
+      let e; try { e = JSON.parse(m.data); } catch { return; }
+      if (e.type === "connected" || (e.type === "watcher" && e.state === "listening")) {
+        $("liveDot").classList.add("on");
+        $("activity").innerHTML = ""; logActivity("watcher <b>listening</b> for signals");
+      } else if (e.type === "signal") {
+        const h = e.signal.headline || e.signal.type;
+        logActivity(`⚡ signal received: <b>${h}</b>`);
+        resetLoopUI();
+        const sn = $("senseSignal"); sn.hidden = false;
+        sn.innerHTML = `⚡ <b>External signal received</b> — sensing automatically<br><span class="muted">${h}</span>`;
+      } else if (e.type === "step" && e.state === "running") {
+        if (e.step === 2) { setStep("s2", "active"); $("outPlan").innerHTML = `<div class="out">Planning…</div>`; }
+        if (e.step === 3) { setStep("s3", "active"); $("outPropose").innerHTML = `<div class="out">Building proposal…</div>`; }
+      } else if (e.type === "step" && e.state === "done") {
+        if (e.step === 1) { $("outSense").textContent = e.assessment; window._assessment = e.assessment; setStep("s1", "done"); setStep("s2", "active"); $("btnPlan").disabled = false; logActivity("step 1 <b>sensed</b>"); }
+        if (e.step === 2) { renderPlan(e.recommendation); setStep("s2", "done"); setStep("s3", "active"); $("btnPropose").disabled = false; logActivity("step 2 <b>planned</b>"); }
+        if (e.step === 3) { renderProposal(e.proposal); setStep("s3", "done"); setStep("s4", "active"); logActivity("step 3 <b>proposed</b>"); }
+      } else if (e.type === "awaiting_approval") {
+        submitItems = e.submitItems || submitItems || [];
+        $("btnApprove").disabled = false; $("btnReject").disabled = false;
+        logActivity(`awaiting <b>human approval</b> — the gate holds`);
+        refreshState();
+      } else if (e.type === "queue") {
+        const q = $("signalQueue");
+        if (e.depth > 0) {
+          q.hidden = false;
+          q.innerHTML = `🕓 <b>${e.depth}</b> signal(s) queued` + (e.pending && e.pending.length ? ` — <span class="muted">${e.pending.join(" · ")}</span>` : "");
+        } else { q.hidden = true; }
+      } else if (e.type === "error") {
+        logActivity(`<span style="color:var(--warn)">error: ${e.message}</span>`);
+      }
+    };
+    es.onerror = () => {
+      // EventSource reconnects on its own; surface the drop so the gray dot isn't a mystery.
+      // It re-greens on the next "connected" event the server sends on reconnect.
+      $("liveDot").classList.remove("on");
+      logActivity(`<span class="muted">watcher connection dropped — reconnecting…</span>`);
+    };
+
+    refreshState();
+  </script>
+</body>
+</html>

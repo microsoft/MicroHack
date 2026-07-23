@@ -1,0 +1,31 @@
+[project]
+name = "agentic-inventory-hack"
+version = "0.1.0"
+description = "Agentic Inventory Planning — hosted-agents MicroHack"
+requires-python = ">=3.11"
+dependencies = [
+    # Foundry Agent Service SDK — new-format agents (create_version + Responses).
+    # 2.x exposes agents natively in the Foundry portal (no "update your agents"
+    # migration prompt) and enables server-side tracing once App Insights is linked.
+    "azure-ai-projects>=2.0.0,<3.0.0",
+    # The runtime drives agents via the OpenAI-compatible Responses client returned
+    # by AIProjectClient.get_openai_client(); we import its function-call output type.
+    "openai>=1.100.0",
+    "azure-identity>=1.19.0",
+    # Governed data store (per-attendee Cosmos DB provisioned by labautomation)
+    "azure-cosmos>=4.9.0",
+    # Minimal planner-console UI
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
+    "pydantic>=2.7.0",
+    # Load src/.env during development
+    "python-dotenv>=1.0.1",
+    # Model Context Protocol server — exposes `inject_signal` so an external MCP
+    # client can drop a market signal into Cosmos and trigger the loop (Challenge 5).
+    "mcp>=1.2.0",
+]
+
+# This is an application, not an installable library — uv manages the environment
+# and dependencies without building/installing the project itself.
+[tool.uv]
+package = false

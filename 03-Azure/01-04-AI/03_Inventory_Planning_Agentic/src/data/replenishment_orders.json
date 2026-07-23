@@ -1,0 +1,6 @@
+[
+  { "orderId": "ORD-1001", "type": "purchase", "status": "submitted", "requestedBy": "Inventory Optimisation Agent", "approvedBy": "Sam Rivera", "createdDate": "2026-06-15", "items": [ { "sku": "P007", "location": "WH01", "quantity": 200 } ] },
+  { "orderId": "ORD-1002", "type": "transfer", "status": "completed", "requestedBy": "Planning Team",                "approvedBy": "Sam Rivera", "createdDate": "2026-06-22", "items": [ { "sku": "P002", "location": "ST01", "quantity": 60 } ] },
+  { "orderId": "ORD-1003", "type": "purchase", "status": "rejected",  "requestedBy": "Inventory Optimisation Agent", "approvedBy": "Sam Rivera", "createdDate": "2026-06-28", "items": [ { "sku": "P010", "location": "WH02", "quantity": 120 } ] },
+  { "orderId": "ORD-1004", "type": "purchase", "status": "submitted", "requestedBy": "Inventory Optimisation Agent", "approvedBy": "Jordan Lee", "createdDate": "2026-07-02", "items": [ { "sku": "P004", "location": "WH01", "quantity": 150 } ] }
+]

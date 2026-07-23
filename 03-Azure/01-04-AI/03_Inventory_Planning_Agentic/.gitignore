@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# Environment / secrets
+.env
+*.local
+
+# Azure Developer CLI
+.azure/
+
+# Editor
+.vscode/
+.idea/
+.DS_Store
+
+# Editable diagram source (kept local — architecture.png is what ships)
+images/architecture.excalidraw

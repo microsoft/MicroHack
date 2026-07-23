@@ -1,0 +1,19 @@
+# Lab-provisioned credentials — never commit
+labautomation/lab-defaults.local.json
+
+# Azure session artifacts
+.azure/
+*.log
+
+# VS Code local settings
+.vscode/settings.json
+.vscode/launch.json
+
+# OS
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Diagram build artifacts — only the rendered PNG (images/architecture.png) is committed
+images/render/
+images/architecture.excalidraw

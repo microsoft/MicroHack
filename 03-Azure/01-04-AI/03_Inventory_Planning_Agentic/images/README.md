@@ -20,7 +20,7 @@ portal) from the sense → plan → approve → act loop:
 | `challenge-02-console.png` | Planner console **Step 2** — the reorder recommendation table with CRITICAL rows. |
 | `challenge-02-trace.png` | Foundry **Traces** view of an `inventory-optimisation-agent` run: the `invoke_agent` span and the `execute_tool` call showing `calc_reorder` / `query_inventory` with their parameters. |
 | `challenge-03-approve.png` | Planner console at the **approval gate** — the purchase-order proposal plus Step 4's summary of exactly what's being approved, with Approve / Reject. |
-| `challenge-05-reactive.png` | The event-driven loop (Challenge 5): an injected signal auto-runs sense → plan → propose live, with the natural-language edit boxes and the informed approval gate. |
+| `challenge-05-reactive.png` | The event-driven loop (Challenge 6): an injected signal auto-runs sense → plan → propose live, with the natural-language edit boxes and the informed approval gate. |
 
 To refresh one, run the matching step in the planner console (or open the agent's
 **Traces** tab in the Foundry portal for the trace) and re-save it under the same file

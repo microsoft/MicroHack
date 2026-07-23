@@ -2,7 +2,7 @@
 
 Each agent is declared as an :class:`AgentSpec`: a name, system instructions, and
 the set of function tools it may call. The runtime turns these into real hosted
-agents in your Foundry project. Participants build these up across Challenges 1-3.
+agents in your Foundry project. Participants build these up across Challenges 2-4.
 """
 
 from __future__ import annotations

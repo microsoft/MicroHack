@@ -1,114 +1,92 @@
-# Challenge 4 — Orchestrate the Loop (Stretch)
+# Challenge 4 — Replenishment Action + Human-in-the-Loop
 
 **[← Previous](challenge-03.md)** - [Home](../README.md) - [Next Challenge →](challenge-05.md)
 
-> [!NOTE]
-> Optional stretch for teams that finish early. It builds on the three agents from
-> Challenges 1–3. Skip without penalty — Challenges 0–3 are the core.
-
 ## 🎯 Objective
 
-Chain the three agents into one **sequential workflow** so the entire
-sense → plan → approve → act loop runs from a single entry point, pausing only at
-the human-approval gate. Then wire the console's one-click **"Run the whole loop"**.
+Build the third hosted agent: it proposes a purchase order, then a **human approves
+or rejects it in code** before the one side-effecting tool runs. This is the gate
+that turns an AI assistant into an AI agent that genuinely acts.
 
 ## 🧭 Context
 
-Planners don't want to click four buttons — they want to type one sentence and have
-the system run the loop, stopping only for approval.
+Someone has to actually place the order — but purchase orders need a human sign-off.
+Your Replenishment Action Agent **proposes**; a person **decides**; the tool **acts**.
 
 ## ✅ Tasks
 
-### Part A — Read the workflow (10 min)
+### Part A — Read the agent & the gate (20 min)
 
-Open [`src/workflow.py`](../src/workflow.py) → `run_planning_workflow`. It takes a
-scenario and an `approve` callback (the human gate) and runs
-`sense → plan → propose → [human] → approve`. This mirrors the Microsoft Agent
-Framework **sequential** pattern: deterministic hand-off with a gate before the
-terminal action.
+Open [`src/agents/__init__.py`](../src/agents/__init__.py) → `REPLENISHMENT`. It has
+two tools: `get_product` (to look up unit costs) and `submit_purchase_order` (the
+only side effect). Its instructions tell it to **propose** a PO as JSON and to
+**never** submit without approval.
 
-### Part B — Read the workflow endpoint (10 min)
+Now open [`src/agent_runtime.py`](../src/agent_runtime.py). The set
+`APPROVAL_REQUIRED = {"submit_purchase_order"}` makes the runtime **refuse to
+auto-execute** that tool: if the model asks for it, `run()` returns a
+`ToolApprovalRequest` instead of acting. The human decision happens in
+[`src/orchestrator.py`](../src/orchestrator.py) → `approve()`, which only runs the
+tool after a person says yes.
 
-The console already exposes the workflow through one endpoint. Open
-[`src/ui/app.py`](../src/ui/app.py) → `/api/run-loop`: it calls
-`run_planning_workflow(scenario, approve=lambda _p: False, ...)` — running
-`sense → plan → propose` server-side in one shot and returning all three stages,
-**without** submitting (the human still approves at Step 4). This is the sequential
-workflow driving the whole loop from a single call.
+> [!NOTE]
+> The approval here isn't *simulated in a prompt* — the acting tool is **structurally
+> blocked** until a human approves.
 
-### Part C — Add the one-click UI button (25 min)
+### Part B — Build the proposal (20 min)
 
-Wire a **"Run the whole loop"** button in
-[`src/ui/static/index.html`](../src/ui/static/index.html) that:
+In the console, after Steps 1–2, click **Build PO proposal**. That first click
+**creates the `replenishment-action-agent` hosted agent**, then runs it: **Step 3**
+renders a per-line purchase-order proposal with a total, and **Step 4 (Approve &
+act)** unlocks. Nothing is submitted yet — the agent only *proposes*. The **Approve**
+/ **Reject** buttons appear for the human gate you test next, and **Step 4 shows a
+summary of exactly what you're approving** — the per-line PO and total — so the
+decision is fully informed.
 
-1. `POST`s the chosen scenario to **`/api/run-loop`**, then
-2. fills Steps 1–3 from the response (`assessment`, `recommendation`, `proposal`) and
-   **stops at Step 4** for the human's **Approve / Reject**.
+### Part C — Approve in the console (25 min)
 
-First add the button element (for example next to the Step 1 **Sense demand**
-button):
+> [!IMPORTANT]
+> This is the payoff: the whole loop, with the human gate, in the UI.
 
-```html
-<button id="btnRunLoop">Run the whole loop</button>
-```
+1. With the proposal at **Step 3** and the **Approve** / **Reject** buttons at **Step 4** (from Part B):
+2. Click **Reject** first — confirm *"Order cancelled. No action taken."* and that
+   the order book does **not** change.
+3. Refresh the page, re-run Steps 1–3, then click **Approve & submit** — the
+   confirmation `✅ Purchase order PO-… submitted and recorded in the order book.`
+   appears and the new order shows up in the **order book** panel (a real Cosmos write).
 
-Then attach a handler to get you started:
+![Planner console at the approval gate — Step 4 shows the per-line PO summary with Approve / Reject before the write](../images/challenge-03-approve.png)
 
-```javascript
-document.getElementById("btnRunLoop").onclick = async () => {
-  const r = await api("/api/run-loop", { scenario: $("scenario").value });
-  if (r.error) return showError("outSense", r.error);
-  $("outSense").hidden = false; $("outSense").textContent = r.assessment;
-  recommendation = r.recommendation;
-  submitItems = (r.proposal.submitItems) || [];
-  renderPlan(r.recommendation);     // existing helper — fills the Step 2 table
-  renderProposal(r.proposal);       // existing helper — fills Step 3 and the Step 4 summary
-  $("btnApprove").disabled = false; $("btnReject").disabled = false;   // open the human gate
-};
-```
+### Part D — Trace the acting run (10 min)
 
-> [!TIP]
-> `renderPlan()` and `renderProposal()` already exist in `index.html` — they power the
-> manual Step 2/3 buttons. Reuse them here instead of hand-rolling table markup.
-
-> Keep the human gate: the button must still stop at approval — the whole point is
-> that automation runs everything *except* the human decision. Never auto-call
-> `/api/approve`.
-
-### Part D — (Alternative) evaluation pass (optional)
-
-If you'd rather evaluate quality: in the portal **Evaluation**, build a small
-dataset of 3–5 questions with expected answers (e.g. *"Which store has the lowest
-leaf blower stock?"* → *"Portland"*), run it against `inventory-optimisation-agent`,
-and review **groundedness** and **relevance**.
+In the portal, open the `replenishment-action-agent` **Traces** tab and its latest
+run. You'll see the `get_product` unit-cost lookups — but **no** `submit_purchase_order`
+call, because the runtime blocks it and hands control to the human before it can run.
 
 ## 🏁 Success criteria
 
-- [ ] You can explain how `/api/run-loop` + `run_planning_workflow` drive the full
-      loop from one call, pausing at approval.
-- [ ] The console's **Run the whole loop** button fills Steps 1–3 and stops at Step 4.
-      *Quick test:* run it with *"A prolonged heatwave is forecast across the Southwest"* —
-      Step 1 shows an assessment within ~10 s and Steps 2–3 populate on their own, with
-      **Approve / Reject** live at Step 4.
-- [ ] **Reject** submits nothing; **Approve** appends a `PO-…` to the order book.
-- [ ] You can explain when a deterministic workflow beats manual step-by-step driving.
+- [ ] `replenishment-action-agent` exists with `get_product` + `submit_purchase_order`.
+- [ ] The proposal is a per-line cost table with a total.
+- [ ] **Reject** writes nothing; **Approve** appends a `PO-…` to the order book.
+- [ ] You can explain, pointing at the code, *why* the agent can't submit on its own.
 
 ## 🛠️ Troubleshooting
 
 | Symptom | Fix |
 |---------|-----|
-| `/api/run-loop` returns an error | Ensure all three agents work (Challenges 1–3) and `az login` is valid. |
-| The button submits automatically | Don't call `/api/approve` from the button; only from the Approve button. |
-| Nothing renders | Check the browser console — the response keys are `assessment`, `recommendation`, `proposal`. |
+| An order is written without approval | Confirm `submit_purchase_order` is in `APPROVAL_REQUIRED`. |
+| Unit costs all show `$20` | The `get_product` lookup failed — check the trace; `$20` is the fallback only. |
+| Proposal isn't valid JSON | Reinforce *"Return ONLY the JSON"* in the instructions. |
+| Approve does nothing | Ensure `submitItems` is populated in the proposal (see the agent instructions). |
 
 ## 🚀 Go further
 
-- Export the sequence as an **Agent Framework** YAML workflow and run it as a routine.
-- Add a **group-chat** variant where agents hand off dynamically instead of in a fixed order.
-- Publish the console behind auth and add an audit log of every approval.
+- Add a **spend cap**: reject any proposal above a threshold and escalate.
+- Capture the approver's **name and reason** and echo them in the confirmation.
+- Query the Cosmos `orders` container directly (portal Data Explorer) to see your
+  submitted PO persisted alongside the seed orders.
 
 ## 📚 Learning resources
 
-- [Agent Framework sequential workflows](https://learn.microsoft.com/agent-framework/workflows/orchestrations/sequential)
-- [Build a workflow in Microsoft Foundry (Preview)](https://learn.microsoft.com/azure/ai-foundry/agents/concepts/workflow)
-- [Evaluate agents in Foundry](https://learn.microsoft.com/azure/ai-foundry/observability/how-to/evaluate-agent)
+- [Human-in-the-loop tool approvals for agents](https://learn.microsoft.com/agent-framework/agents/tools/tool-approval)
+- [Agent development lifecycle](https://learn.microsoft.com/azure/ai-foundry/agents/concepts/development-lifecycle)

@@ -1,88 +1,104 @@
-# Challenge 2 — Inventory Optimisation (Hosted Agent) + Tracing
+# Challenge 2 — Demand Sensing (Hosted Agent)
 
 **[← Previous](challenge-01.md)** - [Home](../README.md) - [Next Challenge →](challenge-03.md)
 
 ## 🎯 Objective
 
-Build the second hosted agent: it takes the demand assessment and produces a
-concrete **reorder recommendation** using a planning rule and the governed data.
-Then use **tracing** in the Foundry portal to inspect every tool call it made.
+Build and deploy your first **hosted agent** in code. Give it **function tools**
+over the governed inventory data, run it against a real-world scenario, and light
+up **Step 1** of the planner console.
 
 ## 🧭 Context
 
-The demand signal shows exposure. The planning team now needs to know *which SKUs*
-to reorder, *how many units*, *to which location*, and *why*.
+Your facilitator announces a scenario, for example:
+
+> *"A prolonged heatwave and early spring across the Pacific Northwest is driving a
+> surge in demand for garden and outdoor power equipment."*
+
+Your agent must sense that signal, reconcile it against the governed inventory
+position, and produce a demand assessment planners can act on.
 
 ## ✅ Tasks
 
-### Part A — Read the agent & the reorder rule (15 min)
+### Part A — Read the agent definition (15 min)
 
-Open [`src/agents/__init__.py`](../src/agents/__init__.py) → `INVENTORY_OPTIMISATION`
-and [`src/tools.py`](../src/tools.py) → `calc_reorder`. The rule is:
+Open [`src/agents/__init__.py`](../src/agents/__init__.py) and study `DEMAND_SENSING`:
 
-```
-reorder_qty = max(0, average_daily_sales * 30 - current_stock)
-```
+- **`name`** — becomes the hosted agent's name in your Foundry project.
+- **`instructions`** — the system prompt; note the strict *TOOL USE* rule.
+- **`functions`** — `query_inventory`, `list_low_stock`, `get_external_signals`
+  from [`src/tools.py`](../src/tools.py).
 
-The agent is instructed to return a **structured JSON** recommendation (so the UI
-can render a table), marking any SKU below safety stock as **CRITICAL**.
+Open [`src/agent_runtime.py`](../src/agent_runtime.py) and follow `AgentRuntime.ensure`:
+it **creates a versioned agent** with the new Foundry agents API and routes the
+agent's endpoint to it — this is what makes it a *native hosted* agent (it appears in
+the portal under **Agents**, with a **Traces** tab).
 
-### Part B — Run the optimisation step (15 min)
+### Part B — Run the agent from the console (20 min)
 
-In the console, after Step 1, click **Generate reorder plan**. That first click
-**creates the `inventory-optimisation-agent` hosted agent**, then runs it: Step 2
-renders the recommendation table and unlocks Step 3.
+You run the agent straight from the planner console — there are no scripts to run.
 
-Confirm at least one item is flagged **CRITICAL** (leaf blowers / chainsaws at
-Portland and Seattle are strong candidates). Behind the scenes the agent returns a
-JSON `recommendations` array — the console renders it as a table.
+1. Launch the console (if it isn't already running) and open the forwarded port 8000:
+   ```bash
+   cd src && uv run uvicorn ui.app:app --reload --port 8000
+   ```
+2. Pick a scenario and click **Sense demand**.
 
-![Planner console Step 2: a reorder recommendation table with a CRITICAL row](../images/challenge-02-console.png)
+That first click does two things: `AgentRuntime.ensure()` **creates the
+`demand-sensing-agent` hosted agent** in your Foundry project, then runs it. Step 1
+turns green and shows an assessment that:
+- cites at least one **external signal** (from `get_external_signals`),
+- references at least one **governed inventory** number (from `list_low_stock` /
+  `query_inventory`), and
+- states whether stock is **adequate / at risk / critically exposed**.
 
-### Part C — Inspect the trace (25 min)
+Step 2's button unlocks once Step 1 succeeds.
 
-> [!IMPORTANT]
-> Understanding *what an agent did and why* is the core skill for trustworthy AI.
+![The planner console after Step 1: the demand assessment appears and Step 2 unlocks](../images/challenge-01-console.png)
 
-1. In the Foundry portal, open your agent → the **Traces** tab (your lab already
-   connected Application Insights, so tracing is on — no setup needed).
-2. Find the most recent `inventory-optimisation-agent` run.
-3. Locate and read:
-   - the **model call** — the instructions + input the model received,
-   - each **tool call** — e.g. `calc_reorder` with its arguments,
-   - the **tool response** — the numbers your code returned,
-   - the **final generation** — how the model assembled the JSON.
-4. Answer from the trace:
-   - Did the agent call `calc_reorder` once or per SKU? Why?
-   - Are the reorder quantities traceable to real `avgDailySales × 30 − stock` numbers?
-   - Did it correctly flag the CRITICAL items?
+Now confirm it's really hosted: open [ai.azure.com](https://ai.azure.com) → your
+project → **Agents**. You'll see **`demand-sensing-agent`** listed — the hosted agent
+your click just created. Edit its instructions in `src/agents/__init__.py`, save (the
+server auto-reloads), and click **Sense demand** again to update it in place.
 
-![Trace view: the model call, the calc_reorder tool call, its response, and the final generation](../images/challenge-02-trace.png)
+> [!NOTE]
+> In the agent's **Playground** tab, its function tools may show *"Not supported by
+> the selected model."* This is a **cosmetic** portal capability flag for
+> `gpt-5.4-mini` — the tools **do** execute at runtime via the Responses API (the
+> assessment's governed numbers come straight from those tool calls).
+
+### Part C — (Optional) add Web Search grounding (10 min)
+
+The `get_external_signals` tool already grounds the agent in pre-loaded market
+signals, so the challenge completes without any live web tool. If your project has
+the Web Search / Bing grounding tool enabled, set `ENABLE_WEB_SEARCH=true` in
+`src/.env` and extend the agent to add it (see **Go further**).
 
 ## 🏁 Success criteria
 
-- [ ] `inventory-optimisation-agent` exists in your project with only the read tools.
-- [ ] The plan step returns a recommendation with at least one **CRITICAL** item.
-- [ ] The console's **Step 2** renders the table and unlocks Step 3.
-- [ ] You can point to the trace and prove *why* a quantity was recommended.
+- [ ] `demand-sensing-agent` appears under **Agents** in your Foundry project.
+- [ ] Running the agent returns an assessment backed by a governed data point **and**
+      an external signal, with a clear adequate / at-risk / exposed verdict.
+- [ ] The planner console's **Step 1** turns green and unlocks Step 2.
+- [ ] You can explain what each function tool contributed.
 
 ## 🛠️ Troubleshooting
 
 | Symptom | Fix |
 |---------|-----|
-| No run under **Traces** | Traces can take a minute or two to reach Application Insights — wait, then refresh; make sure the agent actually ran. |
-| Tools show "Not supported by the selected model" | Cosmetic portal flag for `gpt-5.4-mini`; the tools run via the Responses API (the real reorder numbers prove it). |
-| Output isn't valid JSON | The orchestrator tolerates code-fences, but reinforce *"Return ONLY the JSON"* in instructions. |
-| No CRITICAL item | Use a scenario touching outdoor power tools (Portland/Seattle are below safety stock). |
-| Quantities look wrong | Check the trace — confirm `calc_reorder` was called and returned real numbers. |
+| `PROJECT_ENDPOINT is not set` | Fill in `src/.env` from your dashboard (Challenge 1). |
+| `DefaultAzureCredential` error | Run `az login` in the same terminal. |
+| Agent answers from memory | Strengthen the *TOOL USE* rule in the instructions. |
+| The agent never calls a tool | Confirm the deployed model's Foundry card lists **Functions/Tools** support (e.g. `gpt-5.4-mini`); avoid the older o-series. |
 
 ## 🚀 Go further
 
-- Extend `calc_reorder` to respect `safetyStock` as well as `reorderPoint`.
-- Have the agent rank recommendations by estimated spend using `unitCost`.
-- Add a `transfer` suggestion when another location has surplus.
+- Add the Bing grounding tool: create a `BingGroundingTool` in `agent_runtime.ensure`
+  when `config.ENABLE_WEB_SEARCH` is true, and pass a `BING_CONNECTION_ID`.
+- Ask the agent to rank **all** locations by exposure, not just the worst.
+- Add a second scenario (a supplier delay) and compare the assessment.
 
 ## 📚 Learning resources
 
-- [Trace agents in Foundry](https://learn.microsoft.com/azure/ai-foundry/observability/concepts/trace-agent-concept)
-- [Responsible AI for agents](https://learn.microsoft.com/azure/ai-foundry/responsible-use-of-ai-overview)
+- [Create and run agents with the Foundry Agents SDK](https://learn.microsoft.com/azure/ai-foundry/agents/quickstart)
+- [Function tools for agents](https://learn.microsoft.com/azure/ai-foundry/agents/how-to/tools/function-calling)

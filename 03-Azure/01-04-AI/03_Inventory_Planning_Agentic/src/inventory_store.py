@@ -190,7 +190,7 @@ class InventoryStore:
 
         This is the *independent insert* that the change-feed watcher reacts to — the
         console's Inject control, an MCP client, or any other system can call it, and
-        the event-driven loop (Challenge 5) kicks off automatically. Returns the stored
+        the event-driven loop (Challenge 6) kicks off automatically. Returns the stored
         document (with the ``id``/``signalId`` it was given).
         """
         signal_id = signal.get("signalId") or signal.get("id") or f"SIG-{uuid.uuid4().hex[:8].upper()}"

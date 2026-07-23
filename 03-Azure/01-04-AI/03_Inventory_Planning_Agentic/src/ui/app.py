@@ -9,7 +9,7 @@ In a Codespace the port is forwarded automatically.
 
 The page always loads. Endpoints that need the agents create the orchestrator
 lazily and return a friendly error until your Foundry project + agents are ready -
-so Challenge 0 can open an empty console before any agent exists.
+so Challenge 1 can open an empty console before any agent exists.
 """
 
 from __future__ import annotations
@@ -79,7 +79,7 @@ class RunLoopRequest(BaseModel):
 
 
 class SignalRequest(BaseModel):
-    """An external market signal injected into the governed store (Challenge 5)."""
+    """An external market signal injected into the governed store (Challenge 6)."""
 
     headline: str
     type: str = "weather"
@@ -164,7 +164,7 @@ def approve(req: ApproveRequest) -> Any:
 
 @app.post("/api/run-loop")
 def run_loop(req: RunLoopRequest) -> Any:
-    """Challenge 4: run sense -> plan -> propose in one call (stops before acting).
+    """Challenge 5: run sense -> plan -> propose in one call (stops before acting).
 
     Uses the sequential workflow with a False approval gate, so it produces the PO
     proposal but never submits — the human still approves at Step 4 via /api/approve.
@@ -186,7 +186,7 @@ def run_loop(req: RunLoopRequest) -> Any:
 
 
 # ---------------------------------------------------------------------------
-# Event-driven "living demo" (Challenge 5, stretch). A background watcher tails the
+# Event-driven "living demo" (Challenge 6, stretch). A background watcher tails the
 # Cosmos `signals` change feed; any independent insert (from the Inject control below,
 # an MCP client, or any other system) auto-runs sense -> plan -> propose and streams
 # progress to the console over SSE — stopping at the human-approval gate.

@@ -164,12 +164,12 @@ Each challenge follows the same anatomy, so you always know where to look:
 
 ### Challenge list
 
-- **Challenge 0**: **[Get Grounded & Set Up](challenges/challenge-00.md)** *(45 min)* — the scenario, the data model, your Codespace, and the planner console.
-- **Challenge 1**: **[Demand Sensing](challenges/challenge-01.md)** *(60 min)* — build and deploy your first hosted agent with function tools over the governed data.
-- **Challenge 2**: **[Inventory Optimisation](challenges/challenge-02.md)** *(60 min)* — a reasoning agent that produces a reorder recommendation, then read its trace.
-- **Challenge 3**: **[Replenishment + Human-in-the-Loop](challenges/challenge-03.md)** *(75 min)* — a real approval gate before the only side-effecting tool.
-- **Challenge 4** *(stretch)*: **[Orchestrate the Loop](challenges/challenge-04.md)** *(45 min)* — chain all three agents into one sequential workflow with a one-click UI.
-- **Challenge 5** *(stretch)*: **[The Loop Reacts](challenges/challenge-05.md)** *(60 min)* — event-driven: an independent Cosmos insert (from the console or an MCP client) auto-runs the loop live and stops at the human gate.
+- **Challenge 1**: **[Get Grounded & Set Up](challenges/challenge-01.md)** *(45 min)* — the scenario, the data model, your Codespace, and the planner console.
+- **Challenge 2**: **[Demand Sensing](challenges/challenge-02.md)** *(60 min)* — build and deploy your first hosted agent with function tools over the governed data.
+- **Challenge 3**: **[Inventory Optimisation](challenges/challenge-03.md)** *(60 min)* — a reasoning agent that produces a reorder recommendation, then read its trace.
+- **Challenge 4**: **[Replenishment + Human-in-the-Loop](challenges/challenge-04.md)** *(75 min)* — a real approval gate before the only side-effecting tool.
+- **Challenge 5** *(stretch)*: **[Orchestrate the Loop](challenges/challenge-05.md)** *(45 min)* — chain all three agents into one sequential workflow with a one-click UI.
+- **Challenge 6** *(stretch)*: **[The Loop Reacts](challenges/challenge-06.md)** *(60 min)* — event-driven: an independent Cosmos insert (from the console or an MCP client) auto-runs the loop live and stops at the human gate.
 
 > [!TIP]
 > It's tempting to race through, but pause and reflect: which planning decisions in

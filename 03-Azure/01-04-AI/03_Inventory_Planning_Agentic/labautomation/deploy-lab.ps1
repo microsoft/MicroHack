@@ -471,7 +471,7 @@ Write-Host "[OK]    Lab provisioning complete."
 @{ HackboxCredential = @{
     name  = "FoundryProjectEndpoint"
     value = $projectEndpoint
-    note  = "Paste into src/.env as PROJECT_ENDPOINT (Challenge 0)"
+    note  = "Paste into src/.env as PROJECT_ENDPOINT (Challenge 1)"
 } }
 
 @{ HackboxCredential = @{

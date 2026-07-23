@@ -1,6 +1,6 @@
-"""Event-driven "living demo" layer — Challenge 5 (stretch).
+"""Event-driven "living demo" layer — Challenge 6 (stretch).
 
-The manual console (Challenges 0–4) has a human click **Sense → Plan → Approve → Act**.
+The manual console (Challenges 1–5) has a human click **Sense → Plan → Approve → Act**.
 This module makes the loop **reactive**: a background watcher tails the Cosmos ``signals``
 **change feed**, and whenever an *independent write* lands — from the console's Inject
 control, an MCP client (see ``mcp_server.py``), or any other system — it **auto-runs**

@@ -1,62 +1,43 @@
-# Solution 01 — Demand Sensing (Hosted Agent)
+# Solution 00 — Get Grounded & Set Up
 
 **[← Back to Challenge 1](../../challenges/challenge-01.md)** · [Home](../../README.md)
 
-## The reference implementation
+This walkthrough confirms a correct setup. There is no agent to build yet.
 
-The agent is already defined in [`src/agents/__init__.py`](../../src/agents/__init__.py)
-as `DEMAND_SENSING`. The key ideas:
+## Expected end state
 
-- **Tools:** `query_inventory`, `list_low_stock`, `get_external_signals` — all from
-  [`src/tools.py`](../../src/tools.py).
-- **Instructions:** a strict *TOOL USE* rule forcing the model to call a tool for any
-  inventory number and to separate external signals from governed data.
+- Codespace (or local devcontainer) built, dependencies installed.
+- `az login` completed in the Codespace terminal.
+- `src/.env` populated from the lab dashboard:
+  ```
+  PROJECT_ENDPOINT=https://inv-xxxxxxxxxxxx.services.ai.azure.com/api/projects/inventory-hack
+  MODEL_DEPLOYMENT_NAME=gpt-5.4-mini
+  COSMOS_ENDPOINT=https://inv-cos-xxxxxxxxxxxx.documents.azure.com:443/
+  REASONING_EFFORT=minimal
+  ```
+- The Foundry portal shows `gpt-5.4-mini` = *Succeeded* under **Models + endpoints**.
+- The planner console loads on port 8000 and shows populated **Current exposure**
+  and **Order book** panels (from Cosmos, seeded on first load — no agent required).
 
-`AgentRuntime.ensure()` in [`src/agent_runtime.py`](../../src/agent_runtime.py) is what
-makes it a **native hosted** agent: it calls `create_version(...)` on the new Foundry
-agents API (`azure-ai-projects` 2.x) and points the agent's endpoint at that version.
-The agent then appears in the portal under **Agents** with a **Traces** tab.
+## Verify the data layer without any agent
 
-## Run it
+The console's **Current exposure** panel is served straight from the governed Cosmos
+store (the `/api/state` endpoint → `list_low_stock`) — no agent required. Expect leaf
+blowers (`P004`) and chainsaws (`P005`) at Portland (`ST03`) and Seattle (`ST04`)
+flagged `CRITICAL`, plus a few `AT_RISK` rows. These numbers are seeded
+deterministically by `inventory_store.py`, so they are stable every run.
 
-Start the console from `src/`:
+## Why the console still works before Challenge 2
 
-```bash
-uv run uvicorn ui.app:app --reload --port 8000
-```
-
-Open port 8000, pick a scenario, and click **Sense demand**. The first click creates
-the `demand-sensing-agent` hosted agent in your project and runs it.
-
-## Expected output (shape)
-
-A short assessment that:
-- names one or more **external signals** (heatwave, search-trend spike, competitor
-  out of stock on chainsaws — from `get_external_signals`),
-- cites **governed** stock (e.g. leaf blowers CRITICAL at Portland/Seattle — from
-  `list_low_stock` / `query_inventory`),
-- ends with a verdict: **critically exposed** for outdoor power tools.
-
-![Planner console after Step 1 — the demand assessment appears and Step 2 unlocks](../../images/challenge-01-console.png)
-
-## Verify it is really hosted
-
-Open the Foundry portal → your project → **Agents**. `demand-sensing-agent` is listed
-as a **native** agent (Playground / Traces / Monitor tabs, no "update your agents"
-prompt). Re-running just adds a new **version** — it doesn't create a duplicate agent.
-
-## How the tool call flows
-
-1. `run()` calls the **Responses** API with the scenario as input.
-2. The model replies with one or more `function_call` items in `response.output`.
-3. The runtime runs each Python function locally and feeds the results back as
-   `function_call_output` items (chained via `previous_response_id`).
-4. The model produces the final assessment (`response.output_text`).
+`ui/app.py` serves the page and the `/api/state` snapshot from the bundled data.
+The `/api/sense|plan|propose|approve` endpoints create the orchestrator lazily and
+return a friendly `503 {"error": ...}` until the agents exist — so the shell loads,
+and each step lights up as you build its agent.
 
 ## Common issues
 
-| Symptom | Fix |
-|---------|-----|
-| Agent answers without a tool | Strengthen the *TOOL USE* rule; confirm the model card lists Functions/Tools. |
-| `DefaultAzureCredential` error | `az login` in the same terminal. |
-| Slow first response | Reasoning latency — `REASONING_EFFORT=minimal` (default) keeps it snappy. |
+| Symptom | Cause / fix |
+|---------|-------------|
+| `PROJECT_ENDPOINT is not set` | `.env` missing or not in `src/` — the console reads it via `config.py`. |
+| Panels empty | A Python import error — check the `uvicorn` terminal output. |
+| Port 8000 not forwarded | Open the **Ports** tab and forward 8000 manually. |

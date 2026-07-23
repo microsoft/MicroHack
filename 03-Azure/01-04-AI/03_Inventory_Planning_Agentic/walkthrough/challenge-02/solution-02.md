@@ -1,53 +1,62 @@
-# Solution 02 — Inventory Optimisation + Tracing
+# Solution 01 — Demand Sensing (Hosted Agent)
 
 **[← Back to Challenge 2](../../challenges/challenge-02.md)** · [Home](../../README.md)
 
 ## The reference implementation
 
-`INVENTORY_OPTIMISATION` in [`src/agents/__init__.py`](../../src/agents/__init__.py):
+The agent is already defined in [`src/agents/__init__.py`](../../src/agents/__init__.py)
+as `DEMAND_SENSING`. The key ideas:
 
-- **Tools:** `list_low_stock`, `calc_reorder`, `get_product`, `query_inventory`.
-- **Instructions:** compute `reorder_qty = max(0, avg_daily_sales*30 - current_stock)`
-  via `calc_reorder`, flag items below safety stock as `CRITICAL`, and return **only**
-  a JSON object: `{"recommendations": [{sku, productName, location, currentStock,
-  suggestedReorderQty, priority}]}`.
+- **Tools:** `query_inventory`, `list_low_stock`, `get_external_signals` — all from
+  [`src/tools.py`](../../src/tools.py).
+- **Instructions:** a strict *TOOL USE* rule forcing the model to call a tool for any
+  inventory number and to separate external signals from governed data.
 
-The planning maths lives in `calc_reorder` in [`src/tools.py`](../../src/tools.py), so
-the model does not invent numbers — it orchestrates the tool.
+`AgentRuntime.ensure()` in [`src/agent_runtime.py`](../../src/agent_runtime.py) is what
+makes it a **native hosted** agent: it calls `create_version(...)` on the new Foundry
+agents API (`azure-ai-projects` 2.x) and points the agent's endpoint at that version.
+The agent then appears in the portal under **Agents** with a **Traces** tab.
 
 ## Run it
 
-In the console, after Step 1, click **Generate reorder plan**. The first click creates
-the `inventory-optimisation-agent` hosted agent and runs it: Step 2 renders the
-recommendation table with at least one `CRITICAL` row (leaf blowers / chainsaws at
-Portland / Seattle).
+Start the console from `src/`:
 
-![Planner console Step 2 — a reorder recommendation table with CRITICAL rows](../../images/challenge-02-console.png)
+```bash
+uv run uvicorn ui.app:app --reload --port 8000
+```
 
-## Structured output
+Open port 8000, pick a scenario, and click **Sense demand**. The first click creates
+the `demand-sensing-agent` hosted agent in your project and runs it.
 
-`orchestrator.plan()` calls `_extract_json()` which tolerates a ```json code fence
-and pulls the JSON object out — so the UI can render a table reliably. gpt-5.4-mini
-supports **Structured Outputs**, so the JSON is well-formed.
+## Expected output (shape)
 
-## Reading the trace (the real learning)
+A short assessment that:
+- names one or more **external signals** (heatwave, search-trend spike, competitor
+  out of stock on chainsaws — from `get_external_signals`),
+- cites **governed** stock (e.g. leaf blowers CRITICAL at Portland/Seattle — from
+  `list_low_stock` / `query_inventory`),
+- ends with a verdict: **critically exposed** for outdoor power tools.
 
-Your lab already connected **Application Insights** to the project, so **server-side
-tracing** is on automatically (no code changes). Foundry portal → your agent →
-**Traces** tab → latest `inventory-optimisation-agent` run. You should see:
+![Planner console after Step 1 — the demand assessment appears and Step 2 unlocks](../../images/challenge-01-console.png)
 
-- one **model call** (the instructions + the demand assessment as input),
-- one or more **`calc_reorder`** tool calls with their arguments,
-- the **tool responses** (the exact numbers your code returned),
-- the **final generation** assembling the JSON.
+## Verify it is really hosted
 
-Point to a specific `calc_reorder` response to prove *why* a quantity was suggested —
-`suggestedReorderQty = thirtyDayDemand - currentStock`, never invented.
+Open the Foundry portal → your project → **Agents**. `demand-sensing-agent` is listed
+as a **native** agent (Playground / Traces / Monitor tabs, no "update your agents"
+prompt). Re-running just adds a new **version** — it doesn't create a duplicate agent.
+
+## How the tool call flows
+
+1. `run()` calls the **Responses** API with the scenario as input.
+2. The model replies with one or more `function_call` items in `response.output`.
+3. The runtime runs each Python function locally and feeds the results back as
+   `function_call_output` items (chained via `previous_response_id`).
+4. The model produces the final assessment (`response.output_text`).
 
 ## Common issues
 
 | Symptom | Fix |
 |---------|-----|
-| No CRITICAL row | Use a scenario touching outdoor power tools; Portland/Seattle are below safety stock. |
-| Output not JSON | Reinforce *"Return ONLY the JSON"*; `_extract_json` handles fences but not prose. |
-| No trace | Refresh after a few seconds; ensure the run actually executed. |
+| Agent answers without a tool | Strengthen the *TOOL USE* rule; confirm the model card lists Functions/Tools. |
+| `DefaultAzureCredential` error | `az login` in the same terminal. |
+| Slow first response | Reasoning latency — `REASONING_EFFORT=minimal` (default) keeps it snappy. |

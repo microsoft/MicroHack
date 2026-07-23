@@ -1,5 +1,5 @@
 """MCP server that lets an *external* system drop a market signal into the governed
-store — Challenge 5 (stretch).
+store — Challenge 6 (stretch).
 
 This is the "real-life" edge of the event-driven story: an MCP client (GitHub Copilot,
 Claude, another agent, a WebIQ-style watcher, …) calls the ``inject_signal`` tool, which

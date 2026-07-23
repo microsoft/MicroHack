@@ -52,8 +52,8 @@ again.
 | `agent_runtime.py` | Creates the **native** (versioned) Foundry agents and runs them over the Responses API; pauses on approval-gated tools |
 | `orchestrator.py` | `sense → plan → propose → approve` for the UI (plus `refine_plan` / `refine_proposal` for natural-language edits) |
 | `workflow.py` | Stretch: the whole loop as one callable (used by `/api/run-loop`) |
-| `live.py` | Stretch (Challenge 5): Cosmos change-feed watcher — auto-runs the loop when a signal is written, streamed to the UI over SSE, stopping at the human gate |
-| `mcp_server.py` | Stretch (Challenge 5): MCP server exposing `inject_signal` so an external client can trigger the loop |
+| `live.py` | Stretch (Challenge 6): Cosmos change-feed watcher — auto-runs the loop when a signal is written, streamed to the UI over SSE, stopping at the human gate |
+| `mcp_server.py` | Stretch (Challenge 6): MCP server exposing `inject_signal` so an external client can trigger the loop |
 | `ui/` | Minimal FastAPI + static-HTML planner console — the only way in |
 
 > The store is provisioned by `labautomation` (per-attendee Cosmos DB, keyless). The

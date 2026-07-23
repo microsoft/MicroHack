@@ -66,7 +66,7 @@ def require_endpoint() -> str:
     if not PROJECT_ENDPOINT:
         raise RuntimeError(
             "PROJECT_ENDPOINT is not set. Copy .env.example to .env and paste the "
-            "FoundryProjectEndpoint value from your lab dashboard (Challenge 0)."
+            "FoundryProjectEndpoint value from your lab dashboard (Challenge 1)."
         )
     return PROJECT_ENDPOINT
 
@@ -76,6 +76,6 @@ def require_cosmos_endpoint() -> str:
     if not COSMOS_ENDPOINT:
         raise RuntimeError(
             "COSMOS_ENDPOINT is not set. Copy .env.example to .env and paste the "
-            "CosmosEndpoint value from your lab dashboard (Challenge 0)."
+            "CosmosEndpoint value from your lab dashboard (Challenge 1)."
         )
     return COSMOS_ENDPOINT

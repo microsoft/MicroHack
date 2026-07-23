@@ -1,4 +1,4 @@
-"""Stretch (Challenge 4): orchestrate the three agents as one sequential workflow.
+"""Stretch (Challenge 5): orchestrate the three agents as one sequential workflow.
 
 The ``HackOrchestrator`` already chains the agents from Python. This module makes
 that chaining explicit and reusable as a single callable "workflow" so a caller

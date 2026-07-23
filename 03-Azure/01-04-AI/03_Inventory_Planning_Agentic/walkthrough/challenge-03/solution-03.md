@@ -1,46 +1,53 @@
-# Solution 03 — Replenishment + Human-in-the-Loop
+# Solution 02 — Inventory Optimisation + Tracing
 
 **[← Back to Challenge 3](../../challenges/challenge-03.md)** · [Home](../../README.md)
 
 ## The reference implementation
 
-`REPLENISHMENT` in [`src/agents/__init__.py`](../../src/agents/__init__.py):
+`INVENTORY_OPTIMISATION` in [`src/agents/__init__.py`](../../src/agents/__init__.py):
 
-- **Tools:** `get_product` (unit costs) and `submit_purchase_order` (the only side effect).
-- **Instructions:** produce a PO proposal as JSON with `proposal` (per-line cost table
-  + total) and `submitItems`; **never** submit without approval.
+- **Tools:** `list_low_stock`, `calc_reorder`, `get_product`, `query_inventory`.
+- **Instructions:** compute `reorder_qty = max(0, avg_daily_sales*30 - current_stock)`
+  via `calc_reorder`, flag items below safety stock as `CRITICAL`, and return **only**
+  a JSON object: `{"recommendations": [{sku, productName, location, currentStock,
+  suggestedReorderQty, priority}]}`.
 
-## The gate (the whole point)
+The planning maths lives in `calc_reorder` in [`src/tools.py`](../../src/tools.py), so
+the model does not invent numbers — it orchestrates the tool.
 
-In [`src/agent_runtime.py`](../../src/agent_runtime.py):
+## Run it
 
-```python
-APPROVAL_REQUIRED = {"submit_purchase_order"}
-```
+In the console, after Step 1, click **Generate reorder plan**. The first click creates
+the `inventory-optimisation-agent` hosted agent and runs it: Step 2 renders the
+recommendation table with at least one `CRITICAL` row (leaf blowers / chainsaws at
+Portland / Seattle).
 
-`run()` scans the model's `function_call` items. If the model asks for
-`submit_purchase_order`, the runtime **returns a `ToolApprovalRequest` instead of
-executing it** (the read-only tools still run normally). The write only happens when a
-human calls `orchestrator.approve(...)`, which invokes `submit_purchase_order`
-directly. So the acting tool is **structurally blocked** behind the human decision —
-not just asked nicely in a prompt.
+![Planner console Step 2 — a reorder recommendation table with CRITICAL rows](../../images/challenge-02-console.png)
 
-## In the console
+## Structured output
 
-Steps 1–2, then **Step 3** shows the proposal and **Step 4 (Approve & act)** offers **Approve & submit** / **Reject**.
-- **Reject** → "Order cancelled. No action taken." Order book unchanged.
-- **Approve** → `✅ Purchase order PO-… submitted and recorded in the order book.` and
-  the new order appears in the **Order book** panel.
+`orchestrator.plan()` calls `_extract_json()` which tolerates a ```json code fence
+and pulls the JSON object out — so the UI can render a table reliably. gpt-5.4-mini
+supports **Structured Outputs**, so the JSON is well-formed.
 
-> The order is a **real write** to the Cosmos `orders` container, so it **persists**
-> across server restarts — reload the console and it's still there.
+## Reading the trace (the real learning)
 
-![Planner console Step 4 — the PO proposal with Approve / Reject, then the submitted confirmation](../../images/challenge-03-approve.png)
+Your lab already connected **Application Insights** to the project, so **server-side
+tracing** is on automatically (no code changes). Foundry portal → your agent →
+**Traces** tab → latest `inventory-optimisation-agent` run. You should see:
+
+- one **model call** (the instructions + the demand assessment as input),
+- one or more **`calc_reorder`** tool calls with their arguments,
+- the **tool responses** (the exact numbers your code returned),
+- the **final generation** assembling the JSON.
+
+Point to a specific `calc_reorder` response to prove *why* a quantity was suggested —
+`suggestedReorderQty = thirtyDayDemand - currentStock`, never invented.
 
 ## Common issues
 
 | Symptom | Fix |
 |---------|-----|
-| Order written without approval | Ensure `submit_purchase_order` is in `APPROVAL_REQUIRED`. |
-| Unit costs all `$20` | `get_product` lookup failed — check the trace; `$20` is the fallback only. |
-| `submitItems` empty | Reinforce the JSON shape in the agent instructions. |
+| No CRITICAL row | Use a scenario touching outdoor power tools; Portland/Seattle are below safety stock. |
+| Output not JSON | Reinforce *"Return ONLY the JSON"*; `_extract_json` handles fences but not prose. |
+| No trace | Refresh after a few seconds; ensure the run actually executed. |

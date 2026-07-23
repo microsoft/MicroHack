@@ -1,92 +1,88 @@
-# Challenge 3 — Replenishment Action + Human-in-the-Loop
+# Challenge 3 — Inventory Optimisation (Hosted Agent) + Tracing
 
 **[← Previous](challenge-02.md)** - [Home](../README.md) - [Next Challenge →](challenge-04.md)
 
 ## 🎯 Objective
 
-Build the third hosted agent: it proposes a purchase order, then a **human approves
-or rejects it in code** before the one side-effecting tool runs. This is the gate
-that turns an AI assistant into an AI agent that genuinely acts.
+Build the second hosted agent: it takes the demand assessment and produces a
+concrete **reorder recommendation** using a planning rule and the governed data.
+Then use **tracing** in the Foundry portal to inspect every tool call it made.
 
 ## 🧭 Context
 
-Someone has to actually place the order — but purchase orders need a human sign-off.
-Your Replenishment Action Agent **proposes**; a person **decides**; the tool **acts**.
+The demand signal shows exposure. The planning team now needs to know *which SKUs*
+to reorder, *how many units*, *to which location*, and *why*.
 
 ## ✅ Tasks
 
-### Part A — Read the agent & the gate (20 min)
+### Part A — Read the agent & the reorder rule (15 min)
 
-Open [`src/agents/__init__.py`](../src/agents/__init__.py) → `REPLENISHMENT`. It has
-two tools: `get_product` (to look up unit costs) and `submit_purchase_order` (the
-only side effect). Its instructions tell it to **propose** a PO as JSON and to
-**never** submit without approval.
+Open [`src/agents/__init__.py`](../src/agents/__init__.py) → `INVENTORY_OPTIMISATION`
+and [`src/tools.py`](../src/tools.py) → `calc_reorder`. The rule is:
 
-Now open [`src/agent_runtime.py`](../src/agent_runtime.py). The set
-`APPROVAL_REQUIRED = {"submit_purchase_order"}` makes the runtime **refuse to
-auto-execute** that tool: if the model asks for it, `run()` returns a
-`ToolApprovalRequest` instead of acting. The human decision happens in
-[`src/orchestrator.py`](../src/orchestrator.py) → `approve()`, which only runs the
-tool after a person says yes.
+```
+reorder_qty = max(0, average_daily_sales * 30 - current_stock)
+```
 
-> [!NOTE]
-> The approval here isn't *simulated in a prompt* — the acting tool is **structurally
-> blocked** until a human approves.
+The agent is instructed to return a **structured JSON** recommendation (so the UI
+can render a table), marking any SKU below safety stock as **CRITICAL**.
 
-### Part B — Build the proposal (20 min)
+### Part B — Run the optimisation step (15 min)
 
-In the console, after Steps 1–2, click **Build PO proposal**. That first click
-**creates the `replenishment-action-agent` hosted agent**, then runs it: **Step 3**
-renders a per-line purchase-order proposal with a total, and **Step 4 (Approve &
-act)** unlocks. Nothing is submitted yet — the agent only *proposes*. The **Approve**
-/ **Reject** buttons appear for the human gate you test next, and **Step 4 shows a
-summary of exactly what you're approving** — the per-line PO and total — so the
-decision is fully informed.
+In the console, after Step 1, click **Generate reorder plan**. That first click
+**creates the `inventory-optimisation-agent` hosted agent**, then runs it: Step 2
+renders the recommendation table and unlocks Step 3.
 
-### Part C — Approve in the console (25 min)
+Confirm at least one item is flagged **CRITICAL** (leaf blowers / chainsaws at
+Portland and Seattle are strong candidates). Behind the scenes the agent returns a
+JSON `recommendations` array — the console renders it as a table.
+
+![Planner console Step 2: a reorder recommendation table with a CRITICAL row](../images/challenge-02-console.png)
+
+### Part C — Inspect the trace (25 min)
 
 > [!IMPORTANT]
-> This is the payoff: the whole loop, with the human gate, in the UI.
+> Understanding *what an agent did and why* is the core skill for trustworthy AI.
 
-1. With the proposal at **Step 3** and the **Approve** / **Reject** buttons at **Step 4** (from Part B):
-2. Click **Reject** first — confirm *"Order cancelled. No action taken."* and that
-   the order book does **not** change.
-3. Refresh the page, re-run Steps 1–3, then click **Approve & submit** — the
-   confirmation `✅ Purchase order PO-… submitted and recorded in the order book.`
-   appears and the new order shows up in the **order book** panel (a real Cosmos write).
+1. In the Foundry portal, open your agent → the **Traces** tab (your lab already
+   connected Application Insights, so tracing is on — no setup needed).
+2. Find the most recent `inventory-optimisation-agent` run.
+3. Locate and read:
+   - the **model call** — the instructions + input the model received,
+   - each **tool call** — e.g. `calc_reorder` with its arguments,
+   - the **tool response** — the numbers your code returned,
+   - the **final generation** — how the model assembled the JSON.
+4. Answer from the trace:
+   - Did the agent call `calc_reorder` once or per SKU? Why?
+   - Are the reorder quantities traceable to real `avgDailySales × 30 − stock` numbers?
+   - Did it correctly flag the CRITICAL items?
 
-![Planner console at the approval gate — Step 4 shows the per-line PO summary with Approve / Reject before the write](../images/challenge-03-approve.png)
-
-### Part D — Trace the acting run (10 min)
-
-In the portal, open the `replenishment-action-agent` **Traces** tab and its latest
-run. You'll see the `get_product` unit-cost lookups — but **no** `submit_purchase_order`
-call, because the runtime blocks it and hands control to the human before it can run.
+![Trace view: the model call, the calc_reorder tool call, its response, and the final generation](../images/challenge-02-trace.png)
 
 ## 🏁 Success criteria
 
-- [ ] `replenishment-action-agent` exists with `get_product` + `submit_purchase_order`.
-- [ ] The proposal is a per-line cost table with a total.
-- [ ] **Reject** writes nothing; **Approve** appends a `PO-…` to the order book.
-- [ ] You can explain, pointing at the code, *why* the agent can't submit on its own.
+- [ ] `inventory-optimisation-agent` exists in your project with only the read tools.
+- [ ] The plan step returns a recommendation with at least one **CRITICAL** item.
+- [ ] The console's **Step 2** renders the table and unlocks Step 3.
+- [ ] You can point to the trace and prove *why* a quantity was recommended.
 
 ## 🛠️ Troubleshooting
 
 | Symptom | Fix |
 |---------|-----|
-| An order is written without approval | Confirm `submit_purchase_order` is in `APPROVAL_REQUIRED`. |
-| Unit costs all show `$20` | The `get_product` lookup failed — check the trace; `$20` is the fallback only. |
-| Proposal isn't valid JSON | Reinforce *"Return ONLY the JSON"* in the instructions. |
-| Approve does nothing | Ensure `submitItems` is populated in the proposal (see the agent instructions). |
+| No run under **Traces** | Traces can take a minute or two to reach Application Insights — wait, then refresh; make sure the agent actually ran. |
+| Tools show "Not supported by the selected model" | Cosmetic portal flag for `gpt-5.4-mini`; the tools run via the Responses API (the real reorder numbers prove it). |
+| Output isn't valid JSON | The orchestrator tolerates code-fences, but reinforce *"Return ONLY the JSON"* in instructions. |
+| No CRITICAL item | Use a scenario touching outdoor power tools (Portland/Seattle are below safety stock). |
+| Quantities look wrong | Check the trace — confirm `calc_reorder` was called and returned real numbers. |
 
 ## 🚀 Go further
 
-- Add a **spend cap**: reject any proposal above a threshold and escalate.
-- Capture the approver's **name and reason** and echo them in the confirmation.
-- Query the Cosmos `orders` container directly (portal Data Explorer) to see your
-  submitted PO persisted alongside the seed orders.
+- Extend `calc_reorder` to respect `safetyStock` as well as `reorderPoint`.
+- Have the agent rank recommendations by estimated spend using `unitCost`.
+- Add a `transfer` suggestion when another location has surplus.
 
 ## 📚 Learning resources
 
-- [Human-in-the-loop tool approvals for agents](https://learn.microsoft.com/agent-framework/agents/tools/tool-approval)
-- [Agent development lifecycle](https://learn.microsoft.com/azure/ai-foundry/agents/concepts/development-lifecycle)
+- [Trace agents in Foundry](https://learn.microsoft.com/azure/ai-foundry/observability/concepts/trace-agent-concept)
+- [Responsible AI for agents](https://learn.microsoft.com/azure/ai-foundry/responsible-use-of-ai-overview)

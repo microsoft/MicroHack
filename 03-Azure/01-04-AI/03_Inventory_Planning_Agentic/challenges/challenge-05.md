@@ -1,136 +1,114 @@
-# Challenge 5 — The Loop Reacts (Event-Driven, Stretch)
+# Challenge 5 — Orchestrate the Loop (Stretch)
 
-**[← Previous](challenge-04.md)** - [Home](../README.md)
+**[← Previous](challenge-04.md)** - [Home](../README.md) - [Next Challenge →](challenge-06.md)
 
 > [!NOTE]
-> Optional capstone for teams that finish early. It builds on the three agents from
-> Challenges 1–3. Skip without penalty — Challenges 0–3 are the core.
+> Optional stretch for teams that finish early. It builds on the three agents from
+> Challenges 2–4. Skip without penalty — Challenges 1–4 are the core.
 
 ## 🎯 Objective
 
-Turn the planner loop from *click-driven* into *event-driven*. A background watcher
-tails the Cosmos **change feed**; any **independent insert** into the `signals`
-container — from the console, an **MCP** client, or any other system — makes the loop
-**run itself** (Sense → Plan → Propose) and stream progress live, then **stop at the
-human-approval gate**. No new Azure infrastructure: the change feed is intrinsic to
-Cosmos, and the watcher runs inside the console you already have.
+Chain the three agents into one **sequential workflow** so the entire
+sense → plan → approve → act loop runs from a single entry point, pausing only at
+the human-approval gate. Then wire the console's one-click **"Run the whole loop"**.
 
 ## 🧭 Context
 
-Planners don't watch a dashboard all day. In real operations a *signal* arrives — a
-weather alert, a competitor stockout, a supplier delay lands in a system — and the
-planning process should react on its own, surfacing a decision for a human to approve.
-
-That's the shift here: the **write is the trigger**. Whoever drops a signal into the
-governed store kicks off the loop, and the agents you built react to it automatically —
-while the human still owns the final **Approve**.
+Planners don't want to click four buttons — they want to type one sentence and have
+the system run the loop, stopping only for approval.
 
 ## ✅ Tasks
 
-### Part A — Read the reactive layer (15 min)
+### Part A — Read the workflow (10 min)
 
-Open [`src/live.py`](../src/live.py) and follow three pieces:
+Open [`src/workflow.py`](../src/workflow.py) → `run_planning_workflow`. It takes a
+scenario and an `approve` callback (the human gate) and runs
+`sense → plan → propose → [human] → approve`. This mirrors the Microsoft Agent
+Framework **sequential** pattern: deterministic hand-off with a gate before the
+terminal action.
 
-- **`start_watcher`** — tails the `signals` **change feed** (pull model: poll with a
-  continuation token, primed from *now* so the one-time seed never triggers a run).
-- **`_auto_run`** — on each new signal, runs `sense → plan → propose` via the same
-  orchestrator the console uses, publishing an event at each step — then **stops** and
-  emits `awaiting_approval`. It never submits.
-- **`EventBus`** — fans those events out to the browser over **SSE** (`/api/events`).
+### Part B — Read the workflow endpoint (10 min)
 
-Then skim [`src/ui/app.py`](../src/ui/app.py): the `startup` hook launches the watcher,
-`POST /api/signal` only **writes** the signal (it never calls an agent — the change
-feed does the triggering), and `GET /api/events` is the SSE stream the console watches.
+The console already exposes the workflow through one endpoint. Open
+[`src/ui/app.py`](../src/ui/app.py) → `/api/run-loop`: it calls
+`run_planning_workflow(scenario, approve=lambda _p: False, ...)` — running
+`sense → plan → propose` server-side in one shot and returning all three stages,
+**without** submitting (the human still approves at Step 4). This is the sequential
+workflow driving the whole loop from a single call.
 
-### Part B — Watch it react from the console (15 min)
+### Part C — Add the one-click UI button (25 min)
 
-1. Launch the console and open port 8000. The **Event trigger** panel shows a green
-   dot once the watcher is **listening**.
-2. Pick a signal and click **⚡ Inject signal**. Watch **Steps 1–3 run themselves** —
-   the activity log narrates each step — and the loop **stop at Step 4**. Notice that
-   **Sense demand disables** and shows an *"⚡ External signal received"* banner: the
-   run was driven by the signal, not a human click. If several signals arrive at once,
-   Step 1 shows a **queue** that drains one run at a time.
-3. **Step 4 shows exactly what you're approving** — the per-line purchase order and the
-   total — so the human decision is fully informed. Click **Approve & submit** and a
-   real `PO-…` is written to Cosmos, exactly as in Challenge 3. The automation ran
-   everything *except* the human decision.
+Wire a **"Run the whole loop"** button in
+[`src/ui/static/index.html`](../src/ui/static/index.html) that:
 
-![The planner console reacting to an injected signal: Sense demand disabled with an external-signal banner, the plan and PO built automatically with natural-language edit boxes, and Step 4 showing exactly what is being approved before the human gate](../images/challenge-05-reactive.png)
+1. `POST`s the chosen scenario to **`/api/run-loop`**, then
+2. fills Steps 1–3 from the response (`assessment`, `recommendation`, `proposal`) and
+   **stops at Step 4** for the human's **Approve / Reject**.
 
-### Part B2 — Steer the loop in natural language (10 min)
+First add the button element (for example next to the Step 1 **Sense demand**
+button):
 
-The reactive loop produces a *draft* — the planner stays in control and can refine it
-in plain English before approving, each edit re-running the relevant agent:
+```html
+<button id="btnRunLoop">Run the whole loop</button>
+```
 
-- Under **Step 2**, type into *"Refine the plan…"* — e.g. *"only the CRITICAL SKUs"* or
-  *"halve the leaf blower quantities"* — and the **Inventory Optimisation agent**
-  regenerates the recommendation (`POST /api/plan/refine`).
-- Under **Step 3**, type into *"Edit the PO…"* — e.g. *"drop the warehouse line"* or
-  *"cut chainsaws to 40"* — and the **Replenishment agent** rewrites the proposal
-  (`POST /api/propose/refine`). The approval summary at Step 4 updates to match.
+Then attach a handler to get you started:
 
-The gate is untouched: refining is still only *proposing* — nothing is written until a
-human clicks **Approve**.
+```javascript
+document.getElementById("btnRunLoop").onclick = async () => {
+  const r = await api("/api/run-loop", { scenario: $("scenario").value });
+  if (r.error) return showError("outSense", r.error);
+  $("outSense").hidden = false; $("outSense").textContent = r.assessment;
+  recommendation = r.recommendation;
+  submitItems = (r.proposal.submitItems) || [];
+  renderPlan(r.recommendation);     // existing helper — fills the Step 2 table
+  renderProposal(r.proposal);       // existing helper — fills Step 3 and the Step 4 summary
+  $("btnApprove").disabled = false; $("btnReject").disabled = false;   // open the human gate
+};
+```
 
-### Part C — Trigger it from outside via MCP (20 min)
+> [!TIP]
+> `renderPlan()` and `renderProposal()` already exist in `index.html` — they power the
+> manual Step 2/3 buttons. Reuse them here instead of hand-rolling table markup.
 
-The write can come from anywhere — including an **MCP** client (GitHub Copilot, Claude,
-another agent). [`src/mcp_server.py`](../src/mcp_server.py) exposes one tool,
-`inject_signal`, that writes to the same `signals` container.
+> Keep the human gate: the button must still stop at approval — the whole point is
+> that automation runs everything *except* the human decision. Never auto-call
+> `/api/approve`.
 
-1. From `src/`, run the MCP server. It uses **stdio transport** — it talks over standard
-   input/output, **not a network port**, so there's nothing to `curl`; an MCP client
-   launches and speaks to the process directly.
-   ```bash
-   uv run python mcp_server.py
-   ```
-2. Point an MCP client at that command (or use an MCP client session to call the tool).
-   Invoke **`inject_signal`** with a headline, e.g. *"Competitor out of stock on
-   chainsaws in the West"*.
-3. Switch to the console — it **reacts on its own** to the MCP-driven insert, runs the
-   loop, and waits at the gate. An external system just drove your inventory loop.
+### Part D — (Alternative) evaluation pass (optional)
 
-### Part D — (Go further) any producer, same reaction
-
-The trigger is **decoupled** from the loop: the watcher reacts to the *data*, not to
-who wrote it. Prove it by writing a signal from a third path — the Cosmos portal Data
-Explorer, a `az cosmosdb`/SDK script, or a scheduled job — and watch the console react.
+If you'd rather evaluate quality: in the portal **Evaluation**, build a small
+dataset of 3–5 questions with expected answers (e.g. *"Which store has the lowest
+leaf blower stock?"* → *"Portland"*), run it against `inventory-optimisation-agent`,
+and review **groundedness** and **relevance**.
 
 ## 🏁 Success criteria
 
-- [ ] The **Event trigger** panel shows the watcher **listening** (green dot).
-- [ ] Injecting a signal (console **or** MCP) auto-runs Sense → Plan → Propose with
-      **no manual clicks**, streamed live, and **disables Sense** with an external-signal banner.
-- [ ] You can **refine the plan and the PO in natural language**, and each edit re-runs the agent.
-- [ ] **Step 4 shows exactly what's being approved** (per-line PO + total).
-- [ ] The loop **stops at the gate** — nothing is submitted without a human.
-- [ ] **Approve** writes a real `PO-…` to the order book.
-- [ ] You can explain how the change feed **decouples** the trigger from the loop.
+- [ ] You can explain how `/api/run-loop` + `run_planning_workflow` drive the full
+      loop from one call, pausing at approval.
+- [ ] The console's **Run the whole loop** button fills Steps 1–3 and stops at Step 4.
+      *Quick test:* run it with *"A prolonged heatwave is forecast across the Southwest"* —
+      Step 1 shows an assessment within ~10 s and Steps 2–3 populate on their own, with
+      **Approve / Reject** live at Step 4.
+- [ ] **Reject** submits nothing; **Approve** appends a `PO-…` to the order book.
+- [ ] You can explain when a deterministic workflow beats manual step-by-step driving.
 
 ## 🛠️ Troubleshooting
 
 | Symptom | Fix |
 |---------|-----|
-| Watcher dot never turns green | Check `COSMOS_ENDPOINT` in `.env` + `az login`; the watcher starts only when Cosmos is configured. |
-| Nothing happens after injecting | The watcher primes from *now* — inject **after** the app has started. Check the server log for `watcher: …` errors. |
-| Steps error out mid-run | The auto-run uses the same agents as Challenges 1–3 — make sure they work manually first, and that `az login` is valid. |
-| SSE doesn't update the UI | Some corporate proxies buffer `text/event-stream`; open the forwarded port directly, or check the browser console for the `/api/events` connection. |
-| Watcher dot goes gray mid-session | The SSE link dropped; it **reconnects automatically** and the dot re-greens on the next event. If it stays gray, reload the page. |
-| MCP client can't call the tool | Run `uv run python mcp_server.py` from `src/`, and make sure `.env` + `az login` are in that shell (the tool writes to Cosmos). |
+| `/api/run-loop` returns an error | Ensure all three agents work (Challenges 2–4) and `az login` is valid. |
+| The button submits automatically | Don't call `/api/approve` from the button; only from the Approve button. |
+| Nothing renders | Check the browser console — the response keys are `assessment`, `recommendation`, `proposal`. |
 
 ## 🚀 Go further
 
-- Add a **debounce** so a burst of signals collapses into one run.
-- Emit a **completion event** and have the UI toast when a proposal is ready.
-- Swap the in-process watcher for a **Cosmos-trigger Azure Function** (fully serverless)
-  — same pattern, detached from the console. Note the added Function App infra.
-- Give the MCP server a second tool, `list_exposure`, so an external agent can *ask*
-  before it *injects*.
+- Export the sequence as an **Agent Framework** YAML workflow and run it as a routine.
+- Add a **group-chat** variant where agents hand off dynamically instead of in a fixed order.
+- Publish the console behind auth and add an audit log of every approval.
 
 ## 📚 Learning resources
 
-- [Change feed in Azure Cosmos DB](https://learn.microsoft.com/azure/cosmos-db/change-feed)
-- [Change feed pull model](https://learn.microsoft.com/azure/cosmos-db/nosql/change-feed-pull-model)
-- [Model Context Protocol](https://modelcontextprotocol.io/)
-- [Server-Sent Events (MDN)](https://developer.mozilla.org/docs/Web/API/Server-sent_events)
+- [Agent Framework sequential workflows](https://learn.microsoft.com/agent-framework/workflows/orchestrations/sequential)
+- [Build a workflow in Microsoft Foundry (Preview)](https://learn.microsoft.com/azure/ai-foundry/agents/concepts/workflow)
+- [Evaluate agents in Foundry](https://learn.microsoft.com/azure/ai-foundry/observability/how-to/evaluate-agent)

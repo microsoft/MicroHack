@@ -1,0 +1,6 @@
+[
+  { "supplierId": "S01", "name": "GreenField Supply",  "region": "Midwest",   "reliabilityScore": 0.92 },
+  { "supplierId": "S02", "name": "PowerTool Depot",    "region": "West",      "reliabilityScore": 0.85 },
+  { "supplierId": "S03", "name": "ColorCraft Paints",  "region": "Northeast", "reliabilityScore": 0.95 },
+  { "supplierId": "S04", "name": "ConnectHome",        "region": "West",      "reliabilityScore": 0.88 }
+]

@@ -1,0 +1,14 @@
+[
+  { "productId": "P001", "name": "Lawn Mower Pro",     "category": "garden_and_lawn",     "unitCost": 180, "leadTimeDays": 14, "supplierId": "S01", "baseWeeklyUnits": 8,  "baseOnHand": 40 },
+  { "productId": "P002", "name": "Garden Hose 50ft",   "category": "garden_and_lawn",     "unitCost": 25,  "leadTimeDays": 7,  "supplierId": "S01", "baseWeeklyUnits": 30, "baseOnHand": 150 },
+  { "productId": "P003", "name": "Fertilizer 20lb",    "category": "garden_and_lawn",     "unitCost": 18,  "leadTimeDays": 10, "supplierId": "S01", "baseWeeklyUnits": 45, "baseOnHand": 200 },
+  { "productId": "P004", "name": "Leaf Blower X2",      "category": "outdoor_power_tools", "unitCost": 95,  "leadTimeDays": 21, "supplierId": "S02", "baseWeeklyUnits": 20, "baseOnHand": 30 },
+  { "productId": "P005", "name": "Chainsaw 16in",       "category": "outdoor_power_tools", "unitCost": 140, "leadTimeDays": 21, "supplierId": "S02", "baseWeeklyUnits": 12, "baseOnHand": 25 },
+  { "productId": "P006", "name": "Hedge Trimmer",       "category": "outdoor_power_tools", "unitCost": 85,  "leadTimeDays": 18, "supplierId": "S02", "baseWeeklyUnits": 15, "baseOnHand": 28 },
+  { "productId": "P007", "name": "Interior Paint 1gal", "category": "paint_and_supplies",  "unitCost": 22,  "leadTimeDays": 7,  "supplierId": "S03", "baseWeeklyUnits": 50, "baseOnHand": 300 },
+  { "productId": "P008", "name": "Paint Roller Set",    "category": "paint_and_supplies",  "unitCost": 12,  "leadTimeDays": 5,  "supplierId": "S03", "baseWeeklyUnits": 40, "baseOnHand": 250 },
+  { "productId": "P009", "name": "Painters Tape",       "category": "paint_and_supplies",  "unitCost": 6,   "leadTimeDays": 5,  "supplierId": "S03", "baseWeeklyUnits": 60, "baseOnHand": 400 },
+  { "productId": "P010", "name": "Smart Thermostat",    "category": "smart_home",          "unitCost": 110, "leadTimeDays": 12, "supplierId": "S04", "baseWeeklyUnits": 18, "baseOnHand": 90 },
+  { "productId": "P011", "name": "Video Doorbell",      "category": "smart_home",          "unitCost": 130, "leadTimeDays": 12, "supplierId": "S04", "baseWeeklyUnits": 16, "baseOnHand": 80 },
+  { "productId": "P012", "name": "Smart Plug 4-pack",   "category": "smart_home",          "unitCost": 28,  "leadTimeDays": 9,  "supplierId": "S04", "baseWeeklyUnits": 35, "baseOnHand": 180 }
+]

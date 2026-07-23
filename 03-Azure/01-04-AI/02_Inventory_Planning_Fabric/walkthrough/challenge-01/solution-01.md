@@ -1,37 +1,52 @@
-# Challenge 1 — Solution: Demand Sensing Agent
+# Challenge 1 — Solution: Get Grounded
 
-**[← Previous](../challenge-00/solution-00.md)** - [Home](../../README.md) - [Next Solution →](../challenge-02/solution-02.md)
+**[Home](../../README.md)** - [Next Solution →](../challenge-02/solution-02.md)
 
-**Duration:** 60 minutes
+**Duration:** 45 minutes
 
 ## Goal
 
-Build a Foundry prompt agent with Web Search + Fabric Data Agent tools to sense a real-world demand change.
+Understand the inventory scenario, provision your own Fabric workspace + Data Agent, and learn the Foundry + Fabric architecture.
 
 ## Solution walkthrough
 
-### Agent creation
+### Data model summary
 
-Navigate to **Agents → + New agent**. If the portal shows a wizard, select **Prompt agent** (not Hosted agent).
+| Table | Key columns | Used by |
+|-------|-------------|---------|
+| `Inventory` | productId, storeId, onHand, reorderPoint, safetyStock | Challenges 2, 3 |
+| `DemandHistory` | productId, storeId, weekStart, unitsSold | Challenge 2 |
+| `ExternalSignals` | signalType, region, headline, score, affectedCategories | Challenge 2 |
+| `Products` | productId, name, category, unitCost, leadTimeDays, supplierId | Challenges 3, 4 |
+| `Stores` | storeId, name, type, region, city | Challenges 2, 3 |
+| `ReplenishmentOrders` | orderId, type, status, approvedBy, items | Challenge 4 |
+| `Suppliers` | supplierId, name | Challenge 4 |
 
-### Common issues
+### Foundry portal navigation
 
-| Symptom | Cause | Fix |
-|---------|-------|-----|
-| Fabric tool call returns "unauthorized" | The Fabric Data Agent isn't published, or your F2 capacity is paused | You own this agent — confirm the setup notebook finished **publishing** it (Challenge 0) and that your F2 capacity is **running** (Azure portal → your Fabric capacity → **Resume**) |
-| Web Search returns no results | Web Search tool not enabled in the project | Go to **Project settings** and verify Web Search is listed under enabled tools |
-| Agent ignores the Fabric tool (trace shows only Web Search, or it replies "I can't access your data") | `gpt-5.4-mini` is a GPT-5 reasoning model and may skip a tool it treats as optional; the portal may also flag the Fabric tool as "not supported" (cosmetic — it still runs via the Responses API) | Keep the **IMPORTANT - tool use** block in the instructions **and set tool choice = required** in the run settings so the Fabric Data Agent tool is always invoked. |
+1. Sign in at [ai.azure.com](https://ai.azure.com) with the credentials provided by your facilitator.
+2. Select your project from the **Projects** list.
+3. In the left navigation: **Models + endpoints** → confirm `gpt-5.4-mini` is listed with status **Succeeded**.
+4. **Agents → Playground** → send "Hello" → confirm a response is returned.
+5. You attach the **Fabric Data Agent** as a *tool* on each agent you build — the `inventory-hack-agent` connection is created the first time (Challenge 2) via **Tools → Add → Fabric Data Agent**, using the **Workspace ID and Agent ID your setup notebook printed** in Challenge 1. No standalone connection page is needed.
 
-### Expected agent response
+### Provision your Fabric workspace + Data Agent (Challenge 1 Task 3)
 
-A well-formed response includes three sections:
+1. **Create the workspace on your capacity.** [app.fabric.microsoft.com](https://app.fabric.microsoft.com) → **Workspaces → + New workspace** → name `inventory-hack` → expand **Advanced** → **Workspace type: Fabric** → under **Details** select your **`FabricCapacityName`** (the `invcap…` value from your dashboard) → **Apply**. If the capacity isn't listed, resume it in Azure (your Fabric capacity → **Resume**) and confirm you're signed in as your lab user.
+2. **Create the Lakehouse.** **+ New item → Lakehouse**, named exactly **`InventoryLakehouse`**.
+3. **Import + attach.** Download **`Setup-InventoryDataAgent.ipynb`** from the repo's **`setup/`** folder (or your facilitator's link), then **Import → Notebook → From this computer → Upload** in the workspace toolbar. Open it and, in the **Explorer**, **Add → Existing Lakehouse → `InventoryLakehouse`** as the **default** — if names collide, pick the one whose **Location** is your `inventory-hack` workspace (the write cells fail without a default Lakehouse).
+4. **Run all** (~5–10 min). The kernel restarts once after the `%pip` cell — expected. It writes 7 tables and publishes `inventory-hack-agent`.
+5. Copy the **Workspace ID** and **Agent ID** the final cell prints — you'll use them in Challenge 2.
 
-1. **External signals** — 2–3 web search results with URLs, describing the demand trend or event.
-2. **Inventory position** — current stock levels for the relevant SKUs, sourced from Fabric.
-3. **Assessment** — a clear verdict: adequate / at risk / critically exposed, with reasons.
+**Common stumbles:** capacity not in the dropdown (paused, or wrong signed-in user) · table-write cells fail (Lakehouse not attached as default) · Data Agent tool missing later in Foundry (capacity paused, or the notebook didn't finish publishing).
 
-### Sample test prompts
+### Grounding questions — suggested answers
 
-- *"A prolonged heatwave is forecast across the Pacific Northwest. What is our exposure on outdoor power tools like leaf blowers and chainsaws?"*
-- *"Search trends show a spike in leaf blower demand. What is our current stock of the Leaf Blower X2 at the Portland and Seattle stores?"*
-- *"Early spring is driving garden equipment demand. How are we positioned on garden and lawn products across our stores and warehouses?"*
+**What would go wrong if the Demand Sensing Agent only looked at web signals?**
+It might recommend a reorder that the company already has stock for, wasting budget. The governed Fabric data is the source of truth for what is actually on the shelves.
+
+**Why does the Replenishment Action Agent need a human approval step?**
+Purchase orders have financial and operational consequences. The agent can propose and calculate, but a human should validate the business context (budget constraints, supplier relationships, timing) before committing.
+
+**What does the Fabric Data Agent abstract away?**
+SQL query generation, Fabric authentication, schema discovery, and result formatting. The agent sends a plain English question and receives a plain English answer — no DAX or SQL knowledge needed.

@@ -6,7 +6,7 @@
 # Prereqs: Connect-AzAccount (Az) AND az login (CLI) to the SAME subscription.
 # deploy-lab.ps1 provisions the signed-in user's Foundry project + their own Fabric
 # F2 capacity; you then build your workspace + Data Agent by running
-# setup/Setup-InventoryDataAgent.ipynb (see Challenge 0).
+# setup/Setup-InventoryDataAgent.ipynb (see Challenge 1).
 
 param(
     # Defaults to the current Az context subscription; pass to override.

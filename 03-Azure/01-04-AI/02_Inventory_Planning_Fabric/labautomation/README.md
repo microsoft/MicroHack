@@ -1,6 +1,6 @@
 # Lab Automation — Agentic Inventory Planning MicroHack
 
-Everything for this hack is provisioned per attendee by [`deploy-lab.ps1`](deploy-lab.ps1) — there is **no shared Fabric backend**. Each attendee gets their own Foundry project **and** their own Fabric F2 capacity, then builds their own Fabric workspace + Data Agent by running [`Setup-InventoryDataAgent.ipynb`](../setup/Setup-InventoryDataAgent.ipynb) in Challenge 0.
+Everything for this hack is provisioned per attendee by [`deploy-lab.ps1`](deploy-lab.ps1) — there is **no shared Fabric backend**. Each attendee gets their own Foundry project **and** their own Fabric F2 capacity, then builds their own Fabric workspace + Data Agent by running [`Setup-InventoryDataAgent.ipynb`](../setup/Setup-InventoryDataAgent.ipynb) in Challenge 1.
 
 ## What `deploy-lab.ps1` provisions (per attendee)
 
@@ -13,12 +13,12 @@ Everything for this hack is provisioned per attendee by [`deploy-lab.ps1`](deplo
 
 The script sets each attendee as **admin of their own F2 capacity** (resolving their Entra object ID to a UPN via the platform `Get-MhhLabUser` helper), so they can create a workspace, assign it to the capacity, and publish their own Data Agent — no shared state, no cross-attendee contention.
 
-## What the attendee does themselves (Challenge 0)
+## What the attendee does themselves (Challenge 1)
 
 1. Create a Fabric **workspace** and assign it to their **F2 capacity** (`FabricCapacityName`).
 2. Create a Lakehouse named **`InventoryLakehouse`** and attach it to the notebook.
 3. Import and **Run All** [`Setup-InventoryDataAgent.ipynb`](../setup/Setup-InventoryDataAgent.ipynb) — it loads its **embedded** seed data, writes 7 tables, publishes their **`inventory-hack-agent`** Data Agent, and prints **their** Workspace ID + Agent ID.
-4. Use those two IDs when adding the Fabric Data Agent tool to their Foundry agent (Challenge 1).
+4. Use those two IDs when adding the Fabric Data Agent tool to their Foundry agent (Challenge 2).
 
 ## Credentials returned to the attendee dashboard
 
@@ -26,7 +26,7 @@ The script sets each attendee as **admin of their own F2 capacity** (resolving t
 |-----|-------|
 | `FoundryProjectEndpoint` | `https://<account>.services.ai.azure.com/api/projects/inventory-hack` |
 | `ModelDeploymentName` | `gpt-5.4-mini` |
-| `FabricCapacityName` | The attendee's own F2 capacity (assign your workspace to it in Challenge 0) |
+| `FabricCapacityName` | The attendee's own F2 capacity (assign your workspace to it in Challenge 1) |
 | `ResourceGroupName` | The attendee's resource group |
 
 Attendees use these in the Foundry and Fabric portals — no SDK or code required.

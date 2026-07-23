@@ -1,4 +1,4 @@
-# Challenge 2 — Solution: Inventory Optimisation Agent
+# Challenge 2 — Solution: Demand Sensing Agent
 
 **[← Previous](../challenge-01/solution-01.md)** - [Home](../../README.md) - [Next Solution →](../challenge-03/solution-03.md)
 
@@ -6,45 +6,32 @@
 
 ## Goal
 
-Build the Inventory Optimisation Agent and use agent tracing to inspect its reasoning.
+Build a Foundry prompt agent with Web Search + Fabric Data Agent tools to sense a real-world demand change.
 
 ## Solution walkthrough
 
-### Agent — key configuration point
+### Agent creation
 
-This agent should have **only the Fabric Data Agent tool** — no Web Search. If attendees add Web Search, the agent may use it unnecessarily. The instructions say "governed data only" for a reason: optimisation decisions should be traceable to authoritative internal data, not unverified web content.
-
-### Reading the trace — what to look for
-
-In **Tracing**, each run shows a tree of spans:
-
-```
-run
-├── model_call (instructions + user message sent to gpt-5.4-mini)
-├── tool_call: Fabric Data Agent
-│   ├── input: { query: "current stock and reorder point for Leaf Blower X2 (P004) across all locations" }
-│   └── output: { ... table of rows ... }
-├── tool_call: Fabric Data Agent   ← agent may call multiple times
-│   ├── input: { query: "average weekly sales for outdoor power tools over the last 8 weeks" }
-│   └── output: { ... }
-└── model_call (final synthesis → recommendation table)
-```
+Navigate to **Agents → + New agent**. If the portal shows a wizard, select **Prompt agent** (not Hosted agent).
 
 ### Common issues
 
 | Symptom | Cause | Fix |
 |---------|-------|-----|
-| Agent returns "I don't have enough information" | Product/category words don't match Fabric values | Ask by the real product name or category, e.g. "Leaf Blower X2" or "outdoor power tools" |
-| Reorder quantity seems wrong | Agent used a different formula | Remind the agent of the formula in a follow-up: "Use the rule: reorder_qty = max(0, 30-day demand - current stock)" |
-| Trace not appearing | Tracing may take 30–60 seconds to update | Refresh the Tracing page |
+| Fabric tool call returns "unauthorized" | The Fabric Data Agent isn't published, or your F2 capacity is paused | You own this agent — confirm the setup notebook finished **publishing** it (Challenge 1) and that your F2 capacity is **running** (Azure portal → your Fabric capacity → **Resume**) |
+| Web Search returns no results | Web Search tool not enabled in the project | Go to **Project settings** and verify Web Search is listed under enabled tools |
+| Agent ignores the Fabric tool (trace shows only Web Search, or it replies "I can't access your data") | `gpt-5.4-mini` is a GPT-5 reasoning model and may skip a tool it treats as optional; the portal may also flag the Fabric tool as "not supported" (cosmetic — it still runs via the Responses API) | Keep the **IMPORTANT - tool use** block in the instructions **and set tool choice = required** in the run settings so the Fabric Data Agent tool is always invoked. |
 
-### Sample recommendation table
+### Expected agent response
 
-```
-| SKU  | Product        | Location  | Current Stock | Suggested Reorder Qty | Priority |
-|------|----------------|-----------|---------------|-----------------------|----------|
-| P004 | Leaf Blower X2 | Seattle   | 6             | 54                    | CRITICAL |
-| P004 | Leaf Blower X2 | Portland  | 8             | 52                    | CRITICAL |
-| P005 | Chainsaw 16in  | Portland  | 5             | 31                    | CRITICAL |
-| P004 | Leaf Blower X2 | Chicago   | 45            | 15                    | At Risk  |
-```
+A well-formed response includes three sections:
+
+1. **External signals** — 2–3 web search results with URLs, describing the demand trend or event.
+2. **Inventory position** — current stock levels for the relevant SKUs, sourced from Fabric.
+3. **Assessment** — a clear verdict: adequate / at risk / critically exposed, with reasons.
+
+### Sample test prompts
+
+- *"A prolonged heatwave is forecast across the Pacific Northwest. What is our exposure on outdoor power tools like leaf blowers and chainsaws?"*
+- *"Search trends show a spike in leaf blower demand. What is our current stock of the Leaf Blower X2 at the Portland and Seattle stores?"*
+- *"Early spring is driving garden equipment demand. How are we positioned on garden and lawn products across our stores and warehouses?"*

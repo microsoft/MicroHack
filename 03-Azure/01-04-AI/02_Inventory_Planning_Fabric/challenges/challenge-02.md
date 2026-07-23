@@ -1,124 +1,136 @@
-# Challenge 2 — Inventory Optimisation Agent
+# Challenge 2 — Demand Sensing Agent
 
 **[← Previous](challenge-01.md)** - [Home](../README.md) - [Next Challenge →](challenge-03.md)
 
 ## 🎯 Objective
 
-Build a second Foundry prompt agent that takes the demand assessment from Challenge 1 and reasons over the governed stock data to produce a concrete reorder recommendation. Then use **agent tracing** to inspect every decision the agent made — the most important skill for building trustworthy AI systems.
+Build your first Foundry prompt agent. Configure it with two tools — **Web Search** and the **Fabric Data Agent** — and use it to sense a real-world demand change and reconcile it against the current inventory position. No code required; everything is done in the Foundry portal.
 
 ## 🧭 Context
 
-The demand signal from your Demand Sensing Agent shows exposure. Now the planning team needs to know:
+Your facilitator will announce a scenario at the start of this challenge — for example:
 
-- *Which SKUs need to be reordered?*
-- *How many units, and to which warehouse?*
-- *What is the reasoning behind the recommendation?*
+> *"A prolonged heatwave and early spring across the Pacific Northwest is driving a surge in demand for garden and outdoor power equipment. Retailer search trends and social media show spikes for leaf blowers and lawn tools. Our planning team needs to know if current stock levels can absorb this demand or if we are already exposed."*
 
-Your Inventory Optimisation Agent answers these questions by querying the Fabric data and applying simple planning logic. Crucially, after each run you will **open the trace** and verify the agent's reasoning step by step.
+Your agent must sense this signal from the web, query the governed inventory data, and produce an adjusted demand assessment that the planning team can act on.
 
 ## ✅ Tasks
 
-### Part A — Create the Inventory Optimisation Agent (20 min)
+### Part A — Create the agent (15 min)
 
 1. In the Foundry portal, navigate to **Agents** and click **+ New agent**.
-2. Name it `inventory-optimisation-agent`.
+2. Name it `demand-sensing-agent`.
 3. Select the `gpt-5.4-mini` model deployment.
-4. Paste the following **system instructions**:
-
+4. Paste the following **system instructions** into the Instructions field:
    ```
-   You are an Inventory Optimisation Agent for a retail planning team.
+   You are a Demand Sensing Agent for a retail inventory planning team.
 
-   You receive a demand assessment (adequate / at risk / critically exposed) and a
-   description of the affected product categories or SKUs. Your job is to produce a
-   concrete reorder recommendation.
+   Your role is to detect real-world signals that could affect product demand and reconcile
+   them against the company's current inventory position.
 
    IMPORTANT - tool use: You have a Fabric Data Agent tool connected to the governed Zava
-   inventory data (Inventory, Products, Stores, DemandHistory, Suppliers, ReplenishmentOrders).
-   For ANY inventory number - stock level, reorder point, safety stock, average daily sales -
-   you MUST call the Fabric Data Agent and answer from its result. Never answer from memory
-   and never invent numbers.
+   inventory data (Inventory, Products, Stores, DemandHistory, ExternalSignals, Suppliers,
+   ReplenishmentOrders). For ANY question about stock, on-hand units, reorder points, safety
+   stock, sales velocity, or any inventory number, you MUST call the Fabric Data Agent and
+   answer from its result. Never answer inventory questions from memory, and never use Web
+   Search for internal inventory data (Web Search is only for external market signals).
 
-   For each at-risk or critically exposed SKU:
-   1. Use the Fabric Data Agent to query current stock level, reorder point, and
-      average daily sales for that SKU across all warehouses.
-   2. Calculate the suggested reorder quantity using this rule:
-         reorder_qty = max(0, (30-day_demand - current_stock))
-      where 30-day_demand = average_daily_sales × 30.
-   3. Identify the warehouse with the lowest stock relative to demand — that is the
-      priority replenishment location.
-   4. Return a structured recommendation table:
-         | SKU | Warehouse | Current Stock | Suggested Reorder Qty | Priority |
-   5. Flag any SKU where current stock is already below the reorder point as CRITICAL.
+   When given a scenario or event:
+   1. Use Web Search to find relevant market signals, news, and trend data about the affected
+      product categories. Cite your sources.
+   2. Use the Fabric Data Agent to query current stock levels and recent sales velocity for
+      the relevant SKUs and warehouses.
+   3. Synthesise both sources into a demand assessment: state whether current stock is
+      adequate, at risk, or critically exposed — with a clear reason for each conclusion.
+   4. Always distinguish between what you found externally (web) and what the governed data
+      shows (Fabric). Never blend them without attribution.
 
-   If you cannot find a SKU in the data, say so clearly — do not invent numbers.
+   Be concise. Planners need a signal they can act on, not an essay.
    ```
 
-5. Add the **Fabric Data Agent** tool and select the existing **`inventory-hack-agent`** connection (created in Challenge 1). Do **not** add Web Search — this agent works only with internal data.
-6. Click **Save**.
+5. Click **Save**.
 
-### Part B — Run the agent (15 min)
+![New agent editor showing the name, gpt-5.4-mini model selection, and instructions field](../images/challenge-01-new-agent.png)
 
-1. Open the **Agents playground**.
-2. Paste the demand assessment you received in Challenge 1 as your first message. Copy it directly from your Challenge 1 playground chat, for example:
+### Part B — Add the Web Search tool (optional, 10 min)
 
-   > *"Outdoor power tools are critically exposed. Leaf blowers and chainsaws show demand uplift signals but stock at both Chicago and Dallas warehouses is near reorder point. The Portland and Seattle stores are already below safety stock on leaf blowers."*
+> [!NOTE]
+> Web Search is **optional**. It enriches the demand signal with live external context, but if it is not enabled in your project, skip this part — the Fabric Data Agent alone still completes the challenge (the `ExternalSignals` table carries pre-loaded market signals).
 
-3. The agent should query Fabric and return a recommendation table.
-4. Ask a follow-up: *"Show me only the CRITICAL items."*
-5. Ask: *"Can the Chicago warehouse cover Portland's shortfall with a transfer instead of a new purchase order?"*
+1. In the agent editor, click **+ Add tool**.
+2. Select **Web Search** from the tool catalogue.
+3. Leave the default configuration — no API key required for the built-in preview tool.
+4. Click **Save**.
 
-![Playground showing a structured reorder recommendation table with a CRITICAL item flagged](../images/challenge-02-recommendation.png)
+![Tool catalogue in the agent editor showing Web Search and Fabric Data Agent available to add](../images/challenge-01-add-tool.png)
 
-### Part C — Inspect the agent trace (25 min)
+> [!TIP]
+> **Web Search not appearing in the catalogue?** It is in Public Preview and may need project-level enablement — ask your facilitator, or simply skip it and continue with the Fabric Data Agent.
 
-> [!IMPORTANT]
-> This is the most important part of the challenge. Understanding what an agent did — and why — is essential for building trust with stakeholders and catching errors before they reach production.
+### Part C — Add the Fabric Data Agent tool (10 min)
 
-1. In the left navigation, click **Tracing**.
-2. Find the most recent run of `inventory-optimisation-agent`.
-3. Open the trace and locate:
-   - The **model call** — what instructions and context were sent to gpt-5.4-mini?
-   - The **tool call** — what exact NL query was sent to the Fabric Data Agent?
-   - The **tool response** — what data did Fabric return?
-   - The **final generation** — how did the model synthesise the data into the recommendation?
+This is the first agent where you attach the Fabric Data Agent, so you'll **create** the `inventory-hack-agent` connection here using the two IDs from Challenge 1. Every later challenge just selects it.
 
-   ![Expanded trace view showing the model call, Fabric tool call, tool response, and final generation spans](../images/challenge-02-trace.png)
-4. Answer these questions by reading the trace:
-   - Did the agent query Fabric once or multiple times? Why?
-   - Was the reorder quantity calculation visible in the trace?
-   - Did the agent correctly identify the CRITICAL items?
+1. In the agent editor, expand **Tools** and select **Add**.
+2. Choose **Fabric Data Agent** from the tool catalogue.
+3. Create the connection with the two IDs your **setup notebook printed in Challenge 1**:
+   - **Workspace ID** → your Fabric workspace ID
+   - **Artifact / Data Agent ID** → your `inventory-hack-agent` Agent ID
+   - **Connection name** → `inventory-hack-agent`
+4. Select **Add tool**, then **Save**.
+
+![The Add tool → Fabric Data Agent connection dialog with the Workspace ID and Artifact ID fields, named inventory-hack-agent](../images/challenge-01-new-connection.png)
+
+> [!TIP]
+> **No "Fabric Data Agent" in the catalogue?** Your F2 capacity must be running (Azure portal → your Fabric capacity → **Resume**) and the setup notebook must have published the agent.
+
+> [!NOTE]
+> **Why two tools?** Web Search gives the agent access to what is happening *outside* the business. The Fabric Data Agent gives access to what is happening *inside* — including the `ExternalSignals` table of pre-loaded market signals. Combining live web context with governed internal data is the core pattern of this hack.
+
+### Part D — Test the agent (20 min)
+
+1. Open the **Agents playground** (click **Test in playground**).
+2. Send the facilitator's scenario as your first message.
+3. Observe the agent's response — look for:
+   - At least one web source cited with a URL.
+   - At least one inventory query result from Fabric (stock level or sales velocity).
+   - A clear demand assessment: adequate / at risk / critically exposed.
+
+   ![Playground response citing a web source and a Fabric inventory query result with a demand assessment](../images/challenge-01-playground.png)
+4. Ask a follow-up question: *"Which store or warehouse has the lowest stock of outdoor power tools relative to its reorder point?"*
+5. Ask: *"What external signals in the last 30 days could affect demand for outdoor power tools in the Pacific Northwest?"*
 
 ## 🏁 Success criteria
 
-- [ ] The `inventory-optimisation-agent` prompt agent exists with only the Fabric Data Agent tool (no Web Search).
-- [ ] A test run returns a recommendation table with at least one CRITICAL flagged item.
-- [ ] You have opened the trace for your run and can identify the model call, tool call, tool response, and final generation steps.
-- [ ] You can explain, by pointing to the trace, why the agent made the recommendation it did.
+- [ ] The `demand-sensing-agent` prompt agent exists in your Foundry project with the Fabric Data Agent tool attached (and Web Search too, if it is enabled).
+- [ ] A test run produces a response backed by at least one governed data point from the Fabric Data Agent (and an external web source, if Web Search is enabled).
+- [ ] The agent produces a clear demand assessment (adequate / at risk / critically exposed) with reasoning.
+- [ ] You can explain in your own words what each tool contributed to the response.
 
 ## 🛠️ Troubleshooting
 
 | Symptom | Fix |
 |---------|-----|
-| The run doesn't appear under **Tracing** | Give it a few seconds and refresh; make sure you ran the agent from the playground, not just saved it. |
-| The agent invents stock numbers | Reinforce the *IMPORTANT – tool use* instruction — every inventory number must come from a Fabric Data Agent call. |
-| No item is flagged **CRITICAL** | Use a scenario/SKU that is genuinely below reorder point (e.g. leaf blowers at Portland/Seattle), or ask the agent to list items below their reorder point. |
-| The reorder quantity looks wrong | Check the trace — confirm the agent used `average_daily_sales × 30 − current_stock` and pulled real numbers from Fabric. |
+| **Web Search** isn't in the tool catalogue | It's in Public Preview and may need project-level enablement — ask your facilitator, or skip it and rely on the `ExternalSignals` table via the Fabric Data Agent. |
+| **Fabric Data Agent** isn't in the catalogue | The integration needs **your** F2 Fabric capacity to be running — resume it (Azure portal → your Fabric capacity → **Resume**) and confirm the setup notebook published the agent. |
+| The agent answers inventory questions from memory | Strengthen the *IMPORTANT – tool use* line in the instructions; it must call the Fabric Data Agent for any stock number. |
+| The connection dialog asks for IDs you don't have | Copy the **Workspace ID** and **Agent ID** your setup notebook printed in its last cell (Challenge 1). |
 
 ## 🚀 Go further
 
-- Ask whether a **transfer** from another warehouse could cover a shortfall instead of a new purchase order.
-- Extend the reorder rule to respect `safetyStock` as well as `reorderPoint`.
-- Have the agent rank all recommendations by estimated spend using `unitCost` from the `Products` table.
+- Ask the agent to rank **all** warehouses by demand exposure, not just the most exposed one.
+- Add a second scenario (e.g. a supplier delay) and see whether the agent changes its assessment.
+- Have the agent state its confidence and list exactly which data points drove the conclusion.
 
 ## 🧠 Reflection
 
-- By pointing at the trace, can you prove *why* the agent recommended what it did?
-- Did the agent query Fabric once or several times — and what does that tell you about its reasoning?
-- What would you show a sceptical stakeholder from this trace to earn their trust?
+- What did **Web Search** contribute that the governed data could not — and vice versa?
+- How did the instructions force the agent to separate external signals from governed facts, and why does that matter for trust?
+- Where in your own organisation is a decision made on stale data that this *sense → reconcile* pattern could improve?
 
 ## 📚 Learning resources
 
-- [Agent tracing — Foundry](https://learn.microsoft.com/azure/foundry/observability/concepts/trace-agent-concept)
+- [Create a prompt agent in Foundry](https://learn.microsoft.com/azure/foundry/agents/quickstarts/prompt-agent)
+- [Web Search tool — Foundry Agent Service](https://learn.microsoft.com/azure/foundry/agents/how-to/tools/web-search)
 - [Fabric Data Agent with Foundry agents](https://learn.microsoft.com/fabric/data-science/data-agent-foundry)
-- [Responsible AI for agents — Foundry](https://learn.microsoft.com/azure/foundry/responsible-use-of-ai-overview)
-- [Tool best practices — when to use one tool vs many](https://learn.microsoft.com/azure/foundry/agents/concepts/tool-best-practice)
+- [Tool best practices — Foundry](https://learn.microsoft.com/azure/foundry/agents/concepts/tool-best-practice)

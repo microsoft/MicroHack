@@ -1,55 +1,50 @@
-# Challenge 3 — Solution: Replenishment Action Agent + Human-in-the-Loop
+# Challenge 3 — Solution: Inventory Optimisation Agent
 
 **[← Previous](../challenge-02/solution-02.md)** - [Home](../../README.md) - [Next Solution →](../challenge-04/solution-04.md)
 
-**Duration:** 75 minutes
+**Duration:** 60 minutes
 
 ## Goal
 
-Build the Replenishment Action Agent, implement the human approval loop, and trace the full cycle.
+Build the Inventory Optimisation Agent and use agent tracing to inspect its reasoning.
 
 ## Solution walkthrough
 
-### Simulated submission (no function tool)
+### Agent — key configuration point
 
-The current **New Foundry** portal has no no-code custom-function tool — the Custom tab offers only OpenAPI, MCP, and A2A connectors, which all need a hosted endpoint. Because the Fabric Data Agent is read-only, the "act" step is **simulated by the agent**: on `YES`, its instructions have it generate a confirmation message (`✅ Purchase order PO-... submitted`). This keeps the lab fully no-code while still demonstrating the approve → act gate. In production you'd swap this for an OpenAPI tool that writes to the `ReplenishmentOrders` table / ERP (see Challenge 3, Part E).
+This agent should have **only the Fabric Data Agent tool** — no Web Search. If attendees add Web Search, the agent may use it unnecessarily. The instructions say "governed data only" for a reason: optimisation decisions should be traceable to authoritative internal data, not unverified web content.
 
-### The MODIFY flow
+### Reading the trace — what to look for
 
-When an attendee replies `MODIFY 1 50`, the agent should:
-1. Find line 1 in the current proposal.
-2. Update the quantity to 50.
-3. Recalculate the line total and the grand total.
-4. Re-present the full updated proposal.
-5. Ask for approval again.
-
-If the agent skips the re-presentation, add to the instructions: *"After any MODIFY, always re-present the full updated table before asking for approval again."*
-
-### Trace — what the full cycle looks like
+In **Tracing**, each run shows a tree of spans:
 
 ```
-run (challenge 3 approval)
-├── model_call (format PO proposal from recommendation)
-│   └── tool_call: Fabric Data Agent (unit-cost lookup from Products)
-├── model_call (present proposal + ask for approval)
-│   → user replies: MODIFY 1 50
-├── model_call (update line 1, recalculate, re-present)
-│   → user replies: YES
-└── model_call (simulated confirmation: "✅ Purchase order PO-... submitted")
+run
+├── model_call (instructions + user message sent to gpt-5.4-mini)
+├── tool_call: Fabric Data Agent
+│   ├── input: { query: "current stock and reorder point for Leaf Blower X2 (P004) across all locations" }
+│   └── output: { ... table of rows ... }
+├── tool_call: Fabric Data Agent   ← agent may call multiple times
+│   ├── input: { query: "average weekly sales for outdoor power tools over the last 8 weeks" }
+│   └── output: { ... }
+└── model_call (final synthesis → recommendation table)
 ```
 
-### Where does the human add value?
+### Common issues
 
-The human approval step adds value that an automated pipeline cannot replicate:
-- **Business context** — budget constraints, supplier relationships, timing preferences
-- **Exception handling** — unusual circumstances the model's instructions don't cover
-- **Accountability** — a named human is on record as having approved the expenditure
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| Agent returns "I don't have enough information" | Product/category words don't match Fabric values | Ask by the real product name or category, e.g. "Leaf Blower X2" or "outdoor power tools" |
+| Reorder quantity seems wrong | Agent used a different formula | Remind the agent of the formula in a follow-up: "Use the rule: reorder_qty = max(0, 30-day demand - current stock)" |
+| Trace not appearing | Tracing may take 30–60 seconds to update | Refresh the Tracing page |
 
-This is why the pattern is called "human-in-the-loop" rather than "human-in-the-way" — the human is the decision-maker; the agent is the research and proposal layer.
+### Sample recommendation table
 
-### Monitoring in production
-
-In a production deployment, you would add:
-- **Application Insights** integration (built into Foundry) for latency and error tracking
-- **Evaluation runs** to catch instruction drift over time
-- **Agent versioning** so you can roll back if a model update changes behaviour
+```
+| SKU  | Product        | Location  | Current Stock | Suggested Reorder Qty | Priority |
+|------|----------------|-----------|---------------|-----------------------|----------|
+| P004 | Leaf Blower X2 | Seattle   | 6             | 54                    | CRITICAL |
+| P004 | Leaf Blower X2 | Portland  | 8             | 52                    | CRITICAL |
+| P005 | Chainsaw 16in  | Portland  | 5             | 31                    | CRITICAL |
+| P004 | Leaf Blower X2 | Chicago   | 45            | 15                    | At Risk  |
+```

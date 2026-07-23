@@ -1,54 +1,55 @@
-# Challenge 4 — Solution: Orchestrate the Loop (Stretch)
+# Challenge 4 — Solution: Replenishment Action Agent + Human-in-the-Loop
 
-**[← Previous](../challenge-03/solution-03.md)** - [Home](../../README.md)
+**[← Previous](../challenge-03/solution-03.md)** - [Home](../../README.md) - [Next Solution →](../challenge-05/solution-05.md)
 
-**Duration:** ~45 minutes (optional)
+**Duration:** 75 minutes
 
 ## Goal
 
-Chain the three agents in a Foundry **Workflow** (Sequential pattern + human-in-the-loop), then read the node-by-node trace.
+Build the Replenishment Action Agent, implement the human approval loop, and trace the full cycle.
 
 ## Solution walkthrough
 
-### Why a workflow, not connected agents
+### Simulated submission (no function tool)
 
-The classic **connected agents** tool (one agent added as another's tool) is **not available** in the New Foundry portal — Microsoft replaced it with **Workflows** for multi-agent orchestration. A workflow is a *deterministic* graph: each agent is a **node**, and edges pass one node's output to the next. That's a better fit than an LLM-driven orchestrator for this hack's fixed sense → plan → approve → act chain, and it keeps everything no-code.
+The current **New Foundry** portal has no no-code custom-function tool — the Custom tab offers only OpenAPI, MCP, and A2A connectors, which all need a hosted endpoint. Because the Fabric Data Agent is read-only, the "act" step is **simulated by the agent**: on `YES`, its instructions have it generate a confirmation message (`✅ Purchase order PO-... submitted`). This keeps the lab fully no-code while still demonstrating the approve → act gate. In production you'd swap this for an OpenAPI tool that writes to the `ReplenishmentOrders` table / ERP (see Challenge 4, Part E).
 
-Wire the three specialists in order and name each node's output so the next node can consume it:
-- `demand-sensing-agent` → output `demandAssessment`
-- `inventory-optimisation-agent` → input `demandAssessment`, output `reorderTable`
-- `replenishment-action-agent` → input `reorderTable`, **Allow multi-turn conversation** ON for the approval gate
+### The MODIFY flow
 
-> The visual designer is supported in-portal until **1 December 2026**; after that, export the workflow **YAML** and run it via Microsoft Agent Framework / a hosted agent. The orchestration logic carries over unchanged.
+When an attendee replies `MODIFY 1 50`, the agent should:
+1. Find line 1 in the current proposal.
+2. Update the quantity to 50.
+3. Recalculate the line total and the grand total.
+4. Re-present the full updated proposal.
+5. Ask for approval again.
 
-### What a good run looks like
+If the agent skips the re-presentation, add to the instructions: *"After any MODIFY, always re-present the full updated table before asking for approval again."*
 
-The orchestrator should narrate its delegation and stop at the approval gate:
+### Trace — what the full cycle looks like
 
 ```
-run (challenge 4 workflow)
-├── node: demand-sensing-agent
-│   └── tool_call: Fabric Data Agent (stock + velocity)
-│   → "Outdoor power tools critically exposed at Portland/Seattle."
-├── node: inventory-optimisation-agent
-│   └── tool_call: Fabric Data Agent (reorder point + demand)
-│   → recommendation table with CRITICAL items
-└── node: replenishment-action-agent
-    ├── model_call (present PO, ask for approval)
-    │   → user replies: YES
-    └── model_call (simulated PO confirmation)
+run (challenge 3 approval)
+├── model_call (format PO proposal from recommendation)
+│   └── tool_call: Fabric Data Agent (unit-cost lookup from Products)
+├── model_call (present proposal + ask for approval)
+│   → user replies: MODIFY 1 50
+├── model_call (update line 1, recalculate, re-present)
+│   → user replies: YES
+└── model_call (simulated confirmation: "✅ Purchase order PO-... submitted")
 ```
 
-### Common issues
+### Where does the human add value?
 
-| Symptom | Fix |
-|---|---|
-| A node gets empty input | Wire it: set the node's **Input message** to the upstream node's **Save agent output message as** variable. |
-| A specialist node uses the wrong model | Each node runs its underlying agent — confirm that agent is on `gpt-5.4-mini` with **tool choice = required** so it always calls the Fabric tool. |
-| Approval gate is skipped | Enable **Allow multi-turn conversation** on the `replenishment-action-agent` node, and keep the Challenge 3 instructions that require explicit `YES`. |
-| No **Workflows** tab / designer | Preview rollout — use the Part D evaluation alternative instead. |
+The human approval step adds value that an automated pipeline cannot replicate:
+- **Business context** — budget constraints, supplier relationships, timing preferences
+- **Exception handling** — unusual circumstances the model's instructions don't cover
+- **Accountability** — a named human is on record as having approved the expenditure
 
-### Discussion points
+This is why the pattern is called "human-in-the-loop" rather than "human-in-the-way" — the human is the decision-maker; the agent is the research and proposal layer.
 
-- **Deterministic workflow vs. three human-driven agents:** the workflow is faster and hands-free, but the human loses the natural checkpoints between steps. The approval gate becomes the *only* control point — so it matters even more.
-- **Where would you add guardrails** in a production version? (e.g. a spend cap the orchestrator can't exceed without escalation.)
+### Monitoring in production
+
+In a production deployment, you would add:
+- **Application Insights** integration (built into Foundry) for latency and error tracking
+- **Evaluation runs** to catch instruction drift over time
+- **Agent versioning** so you can roll back if a model update changes behaviour

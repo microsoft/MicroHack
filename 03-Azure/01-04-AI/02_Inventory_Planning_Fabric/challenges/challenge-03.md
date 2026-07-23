@@ -1,163 +1,124 @@
-# Challenge 3 — Replenishment Action Agent + Human-in-the-Loop
+# Challenge 3 — Inventory Optimisation Agent
 
 **[← Previous](challenge-02.md)** - [Home](../README.md) - [Next Challenge →](challenge-04.md)
 
 ## 🎯 Objective
 
-Build the third and final agent: one that proposes a purchase order, waits for a human to approve or reject it, and records the outcome. Then trace the **complete sense → plan → approve → act cycle** end-to-end — the pattern that turns an AI assistant into an AI agent that genuinely acts in the world.
+Build a second Foundry prompt agent that takes the demand assessment from Challenge 2 and reasons over the governed stock data to produce a concrete reorder recommendation. Then use **agent tracing** to inspect every decision the agent made — the most important skill for building trustworthy AI systems.
 
 ## 🧭 Context
 
-The optimisation recommendation is ready. Now someone has to actually place the order. But purchase orders above a threshold require a human sign-off before anything is submitted. Your Replenishment Action Agent handles this:
+The demand signal from your Demand Sensing Agent shows exposure. Now the planning team needs to know:
 
-1. It presents a clear, structured purchase order proposal.
-2. It pauses and asks: *"Do you approve this order? (yes / no / modify)"*
-3. If approved, it records the outcome and returns a submission confirmation (simulated — see Part B).
-4. If rejected, it records the reason and suggests an alternative.
+- *Which SKUs need to be reordered?*
+- *How many units, and to which warehouse?*
+- *What is the reasoning behind the recommendation?*
 
-This human-in-the-loop pattern is critical for **agentic AI in enterprise settings**: the agent proposes, the human decides, the agent acts.
+Your Inventory Optimisation Agent answers these questions by querying the Fabric data and applying simple planning logic. Crucially, after each run you will **open the trace** and verify the agent's reasoning step by step.
 
 ## ✅ Tasks
 
-### Part A — Create the Replenishment Action Agent (25 min)
+### Part A — Create the Inventory Optimisation Agent (20 min)
 
 1. In the Foundry portal, navigate to **Agents** and click **+ New agent**.
-2. Name it `replenishment-action-agent`.
+2. Name it `inventory-optimisation-agent`.
 3. Select the `gpt-5.4-mini` model deployment.
 4. Paste the following **system instructions**:
 
    ```
-   You are a Replenishment Action Agent for a retail planning team.
+   You are an Inventory Optimisation Agent for a retail planning team.
 
-   You receive an inventory optimisation recommendation (a table of SKUs, warehouses, and
-   suggested reorder quantities). Your job is to present a formal purchase order proposal
-   and obtain human approval before taking any action.
+   You receive a demand assessment (adequate / at risk / critically exposed) and a
+   description of the affected product categories or SKUs. Your job is to produce a
+   concrete reorder recommendation.
 
-   IMPORTANT - tool use: When you need a unit cost, you MUST look it up from the Products
-   table via the Fabric Data Agent - do not answer from memory. Use $20 per unit only as a
-   fallback if the Fabric Data Agent has no cost for that SKU.
+   IMPORTANT - tool use: You have a Fabric Data Agent tool connected to the governed Zava
+   inventory data (Inventory, Products, Stores, DemandHistory, Suppliers, ReplenishmentOrders).
+   For ANY inventory number - stock level, reorder point, safety stock, average daily sales -
+   you MUST call the Fabric Data Agent and answer from its result. Never answer from memory
+   and never invent numbers.
 
-   Workflow:
-   1. Format the recommendation as a purchase order proposal:
-         PURCHASE ORDER PROPOSAL
-         ─────────────────────────────────────────────
-         Date: <today>
-         Requested by: Inventory Optimisation Agent
-         ─────────────────────────────────────────────
-         | Line | SKU | Warehouse | Qty | Unit Cost (est.) | Line Total |
-         ─────────────────────────────────────────────
-         TOTAL ESTIMATED VALUE: $X,XXX
-         ─────────────────────────────────────────────
-      Look up each item's unit cost from the Products table via the Fabric Data Agent.
-      Use $20 per unit as a fallback only if a cost is unavailable.
+   For each at-risk or critically exposed SKU:
+   1. Use the Fabric Data Agent to query current stock level, reorder point, and
+      average daily sales for that SKU across all warehouses.
+   2. Calculate the suggested reorder quantity using this rule:
+         reorder_qty = max(0, (30-day_demand - current_stock))
+      where 30-day_demand = average_daily_sales × 30.
+   3. Identify the warehouse with the lowest stock relative to demand — that is the
+      priority replenishment location.
+   4. Return a structured recommendation table:
+         | SKU | Warehouse | Current Stock | Suggested Reorder Qty | Priority |
+   5. Flag any SKU where current stock is already below the reorder point as CRITICAL.
 
-   2. Ask clearly: "Do you approve this purchase order? Reply YES to submit, NO to cancel,
-      or MODIFY <line number> <new qty> to adjust a specific line."
-
-   3. If the response is YES: generate a simulated submission confirmation - do NOT call any
-      external system (there is no live ERP in this lab). Reply with:
-      "✅ Purchase order PO-<YYYYMMDD>-001 submitted to ERP." Build the PO number yourself from
-      today's date; never claim to have written to a real system.
-
-   4. If the response is NO: record the reason (ask for one if not given) and reply:
-      "❌ Order cancelled. Reason recorded: <reason>. No action has been taken."
-
-   5. If the response is MODIFY: update the specified line, recalculate the total, re-present
-      the updated proposal, and ask for approval again.
-
-   Never submit an order without explicit YES approval. Only generate the simulated PO number
-   (from today's date) after a YES; never fabricate a real ERP order ID.
+   If you cannot find a SKU in the data, say so clearly — do not invent numbers.
    ```
 
-5. Click **Save** — you'll attach the Fabric Data Agent tool next.
+5. Add the **Fabric Data Agent** tool and select the existing **`inventory-hack-agent`** connection (created in Challenge 2). Do **not** add Web Search — this agent works only with internal data.
+6. Click **Save**.
 
-### Part B — Add the Fabric Data Agent tool (10 min)
+### Part B — Run the agent (15 min)
 
-The "act" step — submitting the purchase order — is **simulated by the agent itself**. In the current **New Foundry** portal, prompt agents don't expose a no-code custom-function tool: the tool catalogue's **Custom** tab offers only **OpenAPI**, **MCP**, and **Agent2Agent (A2A)** connectors, which all require a hosted endpoint. Because the Fabric Data Agent is **read-only**, the agent closes the loop by *generating* a submission confirmation on approval — which delivers the exact human-in-the-loop teaching point with zero infrastructure.
+1. Open the **Agents playground**.
+2. Paste the demand assessment you received in Challenge 2 as your first message. Copy it directly from your Challenge 2 playground chat, for example:
 
-You only need one tool here:
+   > *"Outdoor power tools are critically exposed. Leaf blowers and chainsaws show demand uplift signals but stock at both Chicago and Dallas warehouses is near reorder point. The Portland and Seattle stores are already below safety stock on leaf blowers."*
 
-1. In the agent editor, expand **Tools** and select **Add**.
-2. On the **Configured** tab, choose **Fabric Data Agent** and connect the existing **`inventory-hack-agent`** connection — the agent needs it to look up unit costs from the `Products` table when building the PO.
-3. Select **Add tool**, then **Save**.
+3. The agent should query Fabric and return a recommendation table.
+4. Ask a follow-up: *"Show me only the CRITICAL items."*
+5. Ask: *"Can the Chicago warehouse cover Portland's shortfall with a transfer instead of a new purchase order?"*
 
-> [!NOTE]
-> **Want a *real* submit action?** In production you'd add an **OpenAPI tool** (New Foundry) or a custom function that writes to the `ReplenishmentOrders` table / your ERP. That needs a hosted endpoint, so it's out of scope for this no-code lab — see **Part E — Stretch** at the end of this challenge.
+![Playground showing a structured reorder recommendation table with a CRITICAL item flagged](../images/challenge-02-recommendation.png)
 
-### Part C — Run the complete planning loop (30 min)
+### Part C — Inspect the agent trace (25 min)
 
 > [!IMPORTANT]
-> This is the payoff: running the full sense → plan → approve → act cycle in one session.
+> This is the most important part of the challenge. Understanding what an agent did — and why — is essential for building trust with stakeholders and catching errors before they reach production.
 
-1. Open a **new chat** in the Agents playground with `replenishment-action-agent`.
-2. Paste the recommendation table from Challenge 2 as your first message.
-3. The agent should present a formatted purchase order proposal.
-4. **Test the approval flow:**
-   - First, reply `MODIFY 1 50` — adjust the first line quantity. Verify the agent updates and re-presents the order.
-   - Then reply `YES` — verify the agent responds with the simulated submission confirmation (`✅ Purchase order PO-... submitted to ERP.`).
+1. In the left navigation, click **Tracing**.
+2. Find the most recent run of `inventory-optimisation-agent`.
+3. Open the trace and locate:
+   - The **model call** — what instructions and context were sent to gpt-5.4-mini?
+   - The **tool call** — what exact NL query was sent to the Fabric Data Agent?
+   - The **tool response** — what data did Fabric return?
+   - The **final generation** — how did the model synthesise the data into the recommendation?
 
-   ![Playground showing the MODIFY 1 50 adjustment followed by a YES approval and the submission confirmation](../images/challenge-03-approval-flow.png)
-5. Open **Tracing** and find this run. Trace the complete sequence:
-   - Model call (format PO from the recommendation) → **Fabric tool call** (unit-cost lookup from `Products`) → model call (present proposal) → model call (apply MODIFY, re-present) → model call (confirm submission after YES).
-6. **Discuss with your team:** At which step did the human add value that an automated pipeline could not?
-
-![Trace view showing the model calls and the Fabric unit-cost lookup across the approval cycle](../images/challenge-03-trace.png)
-
-### Part D — Reflect on the full loop (optional, 10 min)
-
-If time allows, open a single trace view and describe the complete three-agent journey:
-
-```
-Challenge 1: [web signal] + [Fabric stock query]   → demand assessment
-Challenge 2: [Fabric stock query] + [calculation]  → reorder recommendation
-Challenge 3: [proposal formatting] + [human YES]   → PO-xxxx submitted
-```
-
-- What would break if the Fabric Data Agent returned stale or incorrect data?
-- Where would you add monitoring in a production deployment of this pattern?
-
-### Part E — Stretch: wire a real action tool (optional)
-
-The lab simulates submission so it stays 100% no-code. To make the "act" step *real*, you have two production-grade options — both require a small hosted endpoint, so treat this as homework:
-
-- **OpenAPI tool (New Foundry).** Deploy a tiny API with a `POST /purchase-orders` operation, then in the agent editor go to **Add → Custom → OpenAPI tool** and paste its OpenAPI 3.0 schema. The agent calls your endpoint on approval.
-- **Adaptive Card approval (channel surface).** The Foundry *playground* renders Markdown only — it does **not** render Adaptive Cards. To show a true Adaptive Card with an approval button, surface the agent through a channel that supports cards (Teams, or a custom Web Chat using the Foundry SDK + the Adaptive Cards JS renderer) and return a card payload instead of the Markdown proposal. This is a front-end exercise, not a portal one.
-
-Either path turns the simulated confirmation into a genuine side effect while keeping the same sense → plan → approve → act gate.
+   ![Expanded trace view showing the model call, Fabric tool call, tool response, and final generation spans](../images/challenge-02-trace.png)
+4. Answer these questions by reading the trace:
+   - Did the agent query Fabric once or multiple times? Why?
+   - Was the reorder quantity calculation visible in the trace?
+   - Did the agent correctly identify the CRITICAL items?
 
 ## 🏁 Success criteria
 
-- [ ] The `replenishment-action-agent` prompt agent exists on `gpt-5.4-mini` with the Fabric Data Agent tool attached.
-- [ ] A test run successfully presents a formatted purchase order proposal (per-line cost table with a total).
-- [ ] The MODIFY flow works correctly — the agent updates the specified line, recalculates the total, and re-presents.
-- [ ] A YES reply produces the simulated submission confirmation (`✅ Purchase order PO-... submitted`).
-- [ ] You have opened the trace and can identify the human approval step and the Fabric unit-cost lookup.
-- [ ] You can explain the sense → plan → approve → act pattern and where the human decision point sits.
+- [ ] The `inventory-optimisation-agent` prompt agent exists with only the Fabric Data Agent tool (no Web Search).
+- [ ] A test run returns a recommendation table with at least one CRITICAL flagged item.
+- [ ] You have opened the trace for your run and can identify the model call, tool call, tool response, and final generation steps.
+- [ ] You can explain, by pointing to the trace, why the agent made the recommendation it did.
 
 ## 🛠️ Troubleshooting
 
 | Symptom | Fix |
 |---------|-----|
-| The agent submits without waiting for approval | Reinforce the *Never submit an order without explicit YES approval* rule; the confirmation must only appear after a `YES`. |
-| The agent claims it wrote to a real ERP | The submit is **simulated** — the instructions must build the `PO-<date>-001` number itself and never fabricate a real order ID. |
-| **MODIFY** doesn't recalculate the total | Confirm the instruction to update the line, recompute the total, and re-present before asking for approval again. |
-| Unit costs all show the $20 fallback | The `Products` table lookup via the Fabric Data Agent may have failed — check the trace; the fallback is only for genuinely missing costs. |
+| The run doesn't appear under **Tracing** | Give it a few seconds and refresh; make sure you ran the agent from the playground, not just saved it. |
+| The agent invents stock numbers | Reinforce the *IMPORTANT – tool use* instruction — every inventory number must come from a Fabric Data Agent call. |
+| No item is flagged **CRITICAL** | Use a scenario/SKU that is genuinely below reorder point (e.g. leaf blowers at Portland/Seattle), or ask the agent to list items below their reorder point. |
+| The reorder quantity looks wrong | Check the trace — confirm the agent used `average_daily_sales × 30 − current_stock` and pulled real numbers from Fabric. |
 
 ## 🚀 Go further
 
-- Make the *act* step real: follow **Part E** to wire an **OpenAPI tool** that writes to `ReplenishmentOrders`, or surface the proposal as an **Adaptive Card** approval.
-- Add a spend cap: have the agent refuse to auto-format any PO above a threshold and escalate instead.
-- Capture the approver's name and reason and echo them back in the confirmation for an audit trail.
+- Ask whether a **transfer** from another warehouse could cover a shortfall instead of a new purchase order.
+- Extend the reorder rule to respect `safetyStock` as well as `reorderPoint`.
+- Have the agent rank all recommendations by estimated spend using `unitCost` from the `Products` table.
 
 ## 🧠 Reflection
 
-- At which step did the human add value that a fully automated pipeline could not?
-- What would break if the Fabric Data Agent returned stale or incorrect unit costs?
-- Where would you add monitoring and guardrails before letting this run against a real ERP?
+- By pointing at the trace, can you prove *why* the agent recommended what it did?
+- Did the agent query Fabric once or several times — and what does that tell you about its reasoning?
+- What would you show a sceptical stakeholder from this trace to earn their trust?
 
 ## 📚 Learning resources
 
-- [Agent tools overview (tool catalog) — Foundry](https://learn.microsoft.com/azure/foundry/agents/concepts/tool-catalog)
-- [Human-in-the-loop tool approvals for AI agents](https://learn.microsoft.com/agent-framework/agents/tools/tool-approval)
 - [Agent tracing — Foundry](https://learn.microsoft.com/azure/foundry/observability/concepts/trace-agent-concept)
-- [Agent development lifecycle](https://learn.microsoft.com/azure/foundry/agents/concepts/development-lifecycle)
+- [Fabric Data Agent with Foundry agents](https://learn.microsoft.com/fabric/data-science/data-agent-foundry)
+- [Responsible AI for agents — Foundry](https://learn.microsoft.com/azure/foundry/responsible-use-of-ai-overview)
+- [Tool best practices — when to use one tool vs many](https://learn.microsoft.com/azure/foundry/agents/concepts/tool-best-practice)

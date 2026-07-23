@@ -32,7 +32,7 @@ Three Foundry prompt agents that form one closed planning loop — every one of 
 ![Agentic Inventory Planning — the sense → reason → act loop across Foundry Agents, a human-approved action, and the governed Fabric data layer](images/architecture.png)
 
 > [!NOTE]
-> You build **your own** Fabric Data Agent on **your own** Inventory Lakehouse in **Challenge 0** (one notebook, Run All) — there is no shared backend. You then build the three Foundry agents on top of it; **Challenge 4** wraps them under a single orchestrator.
+> You build **your own** Fabric Data Agent on **your own** Inventory Lakehouse in **Challenge 1** (one notebook, Run All) — there is no shared backend. You then build the three Foundry agents on top of it; **Challenge 5** wraps them under a single orchestrator.
 
 ## MicroHack context
 
@@ -76,31 +76,31 @@ Complete the following before the hack session:
 - No local software installation required — all participant work is browser-based.
 
 > [!NOTE]
-> Your Foundry project, gpt-5.4-mini model deployment, and your **own Fabric F2 capacity** are provisioned for you by the lab automation. In **Challenge 0** you stand up your own Fabric workspace and publish your **Fabric Data Agent** by running one notebook (Run All). You'll be handed a project endpoint and your capacity name at the start of the hack. Web Search is optional and may need project-level enablement.
+> Your Foundry project, gpt-5.4-mini model deployment, and your **own Fabric F2 capacity** are provisioned for you by the lab automation. In **Challenge 1** you stand up your own Fabric workspace and publish your **Fabric Data Agent** by running one notebook (Run All). You'll be handed a project endpoint and your capacity name at the start of the hack. Web Search is optional and may need project-level enablement.
 
 > [!TIP]
-> **You're ready to start when**, in the Foundry portal, you can: (1) see `gpt-5.4-mini` under **Models + endpoints** with status *Succeeded*, and (2) add the **Fabric Data Agent** tool to an agent and create the `inventory-hack-agent` connection (you do this in Challenge 1). If `gpt-5.4-mini` is missing, flag your facilitator before starting.
+> **You're ready to start when**, in the Foundry portal, you can: (1) see `gpt-5.4-mini` under **Models + endpoints** with status *Succeeded*, and (2) add the **Fabric Data Agent** tool to an agent and create the `inventory-hack-agent` connection (you do this in Challenge 2). If `gpt-5.4-mini` is missing, flag your facilitator before starting.
 
 > [!IMPORTANT]
-> **Facilitators:** there is **no shared Fabric backend** — [`labautomation/deploy-lab.ps1`](labautomation/deploy-lab.ps1) provisions each attendee's Foundry project, model, and their **own Fabric F2 capacity**, and each attendee builds their workspace + Data Agent in Challenge 0. Ensure: the platform service principal has **Owner** on the attendee resource groups; [`lab-defaults.json`](labautomation/lab-defaults.json) sets **`groups: ["M365-E5-Users"]`** so attendees get a Power BI Pro license for the Fabric portal; the **lab tenant has Fabric enabled** (tenant-admin setting *“Users can create Fabric items / workspaces”* — **not** settable via `lab-defaults.json`); and the subscription has **Fabric F-SKU quota** (F2 = 2 CU; ~256 attendees per 512-CU subscription). See [`labautomation/README.md`](labautomation/README.md).
+> **Facilitators:** there is **no shared Fabric backend** — [`labautomation/deploy-lab.ps1`](labautomation/deploy-lab.ps1) provisions each attendee's Foundry project, model, and their **own Fabric F2 capacity**, and each attendee builds their workspace + Data Agent in Challenge 1. Ensure: the platform service principal has **Owner** on the attendee resource groups; [`lab-defaults.json`](labautomation/lab-defaults.json) sets **`groups: ["M365-E5-Users"]`** so attendees get a Power BI Pro license for the Fabric portal; the **lab tenant has Fabric enabled** (tenant-admin setting *“Users can create Fabric items / workspaces”* — **not** settable via `lab-defaults.json`); and the subscription has **Fabric F-SKU quota** (F2 = 2 CU; ~256 attendees per 512-CU subscription). See [`labautomation/README.md`](labautomation/README.md).
 
 ### Challenge overview
 
 | Challenge | Title | Duration | Key learning |
 |-----------|-------|----------|--------------|
-| [Challenge 0](challenges/challenge-00.md) | Get Grounded | 45 min | Understand the inventory scenario and the Foundry + Fabric architecture |
-| [Challenge 1](challenges/challenge-01.md) | Demand Sensing Agent | 60 min | Build an agent that combines web signals with governed data |
-| [Challenge 2](challenges/challenge-02.md) | Inventory Optimisation Agent | 60 min | Reasoning over stock positions + reading agent traces |
-| [Challenge 3](challenges/challenge-03.md) | Replenishment + Human-in-the-Loop | 75 min | Close the loop with an approval gate and end-to-end trace |
-| [Challenge 4](challenges/challenge-04.md) *(stretch)* | Orchestrate the Loop | 45 min | Multi-agent orchestration with a Foundry Workflow — optional, for fast finishers |
+| [Challenge 1](challenges/challenge-01.md) | Get Grounded | 45 min | Understand the inventory scenario and the Foundry + Fabric architecture |
+| [Challenge 2](challenges/challenge-02.md) | Demand Sensing Agent | 60 min | Build an agent that combines web signals with governed data |
+| [Challenge 3](challenges/challenge-03.md) | Inventory Optimisation Agent | 60 min | Reasoning over stock positions + reading agent traces |
+| [Challenge 4](challenges/challenge-04.md) | Replenishment + Human-in-the-Loop | 75 min | Close the loop with an approval gate and end-to-end trace |
+| [Challenge 5](challenges/challenge-05.md) *(stretch)* | Orchestrate the Loop | 45 min | Multi-agent orchestration with a Foundry Workflow — optional, for fast finishers |
 
 ### Agenda
 
 ```
 09:00 – 10:00   Tech Talk: the agentic dev model, the three agents, the tools (60 min)
-10:00 – 11:45   Challenges 0 and 1 (with a short break)
+10:00 – 11:45   Challenges 1 and 2 (with a short break)
 11:45 – 12:45   Lunch
-12:45 – 15:00   Challenges 2 and 3 (fast finishers: Challenge 4 stretch)
+12:45 – 15:00   Challenges 3 and 4 (fast finishers: Challenge 5 stretch)
 15:00 – 15:30   Wrap-up and discussion
 ```
 

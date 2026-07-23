@@ -13,7 +13,7 @@
     
     Each attendee gets their OWN Fabric capacity (no shared backend, no shared
     Spark contention). The attendee then creates a workspace, assigns it to their
-    capacity, and Run All's the setup notebook themselves (Challenge 0) to load the
+    capacity, and Run All's the setup notebook themselves (Challenge 1) to load the
     data and publish their own Fabric Data Agent.
 
     Returns to the attendee dashboard:
@@ -238,7 +238,7 @@ if ($existingDeploy.StatusCode -ne 200) {
 # ---------------------------------------------------------------------------
 # Per-attendee Fabric F2 capacity (ARM REST — no az CLI / Fabric extension needed).
 # The attendee is set as capacity ADMIN so they can create a workspace, assign it
-# to this capacity, and Run All the setup notebook themselves (Challenge 0).
+# to this capacity, and Run All the setup notebook themselves (Challenge 1).
 # F2 = 2 CU; a 512-CU subscription supports ~256 attendees.
 #
 # Capacity admin members must be UPNs (or service principals) — bare object IDs are
@@ -327,7 +327,7 @@ Write-Host "[OK]    Lab provisioning complete."
 @{ HackboxCredential = @{
     name  = "FabricCapacityName"
     value = $fabricCapacityName
-    note  = "Your own Fabric F2 capacity. In Challenge 0 you create a workspace and assign it to this capacity, then Run All the setup notebook to publish your Data Agent."
+    note  = "Your own Fabric F2 capacity. In Challenge 1 you create a workspace and assign it to this capacity, then Run All the setup notebook to publish your Data Agent."
 } }
 
 @{ HackboxCredential = @{

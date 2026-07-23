@@ -1,0 +1,10 @@
+[
+  { "signalId": "SIG01", "signalType": "weather",      "region": "Pacific Northwest", "headline": "Prolonged heatwave and early spring across the Pacific Northwest", "score": 0.80, "source": "WeatherIQ", "affectedCategories": "outdoor_power_tools,garden_and_lawn" },
+  { "signalId": "SIG02", "signalType": "search_trend",  "region": "National",          "headline": "Sharp spike in online searches for leaf blowers and lawn tools", "score": 0.75, "source": "SearchIQ", "affectedCategories": "outdoor_power_tools" },
+  { "signalId": "SIG03", "signalType": "competitor",    "region": "West",              "headline": "Major competitor reported out of stock on chainsaws", "score": 0.60, "source": "MarketIQ", "affectedCategories": "outdoor_power_tools" },
+  { "signalId": "SIG04", "signalType": "news",          "region": "National",          "headline": "Home improvement season demand surge expected", "score": 0.50, "source": "NewsIQ", "affectedCategories": "paint_and_supplies,garden_and_lawn" },
+  { "signalId": "SIG05", "signalType": "promo",         "region": "National",          "headline": "Competitor launches smart-home bundle promotion", "score": 0.40, "source": "MarketIQ", "affectedCategories": "smart_home" },
+  { "signalId": "SIG06", "signalType": "weather",       "region": "Northeast",         "headline": "Active storm season forecast for the Northeast", "score": 0.55, "source": "WeatherIQ", "affectedCategories": "outdoor_power_tools" },
+  { "signalId": "SIG07", "signalType": "supply",        "region": "West",              "headline": "Supplier delay reported at PowerTool Depot", "score": 0.65, "source": "SupplyIQ", "affectedCategories": "outdoor_power_tools" },
+  { "signalId": "SIG08", "signalType": "search_trend",  "region": "National",          "headline": "Interior painting projects trending on social media", "score": 0.45, "source": "SearchIQ", "affectedCategories": "paint_and_supplies" }
+]

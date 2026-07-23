@@ -1,0 +1,8 @@
+[
+  { "storeId": "ST01", "name": "Boston Store",     "type": "retail",    "region": "Northeast",         "city": "Boston",   "state": "MA" },
+  { "storeId": "ST02", "name": "Brooklyn Store",   "type": "retail",    "region": "Northeast",         "city": "Brooklyn", "state": "NY" },
+  { "storeId": "ST03", "name": "Portland Store",   "type": "retail",    "region": "Pacific Northwest", "city": "Portland", "state": "OR" },
+  { "storeId": "ST04", "name": "Seattle Store",    "type": "retail",    "region": "Pacific Northwest", "city": "Seattle",  "state": "WA" },
+  { "storeId": "WH01", "name": "Chicago Warehouse","type": "warehouse", "region": "Midwest",           "city": "Chicago",  "state": "IL" },
+  { "storeId": "WH02", "name": "Dallas Warehouse", "type": "warehouse", "region": "South",             "city": "Dallas",   "state": "TX" }
+]

@@ -1,0 +1,9 @@
+[
+  { "productId": "P004", "storeId": "ST03", "onHand": 8,  "note": "Leaf Blower critically low at Portland" },
+  { "productId": "P004", "storeId": "ST04", "onHand": 6,  "note": "Leaf Blower critically low at Seattle" },
+  { "productId": "P004", "storeId": "WH01", "onHand": 45, "note": "Leaf Blower near reorder at Chicago" },
+  { "productId": "P004", "storeId": "WH02", "onHand": 40, "note": "Leaf Blower near reorder at Dallas" },
+  { "productId": "P005", "storeId": "ST03", "onHand": 5,  "note": "Chainsaw critically low at Portland" },
+  { "productId": "P005", "storeId": "ST04", "onHand": 7,  "note": "Chainsaw critically low at Seattle" },
+  { "productId": "P006", "storeId": "ST03", "onHand": 12, "note": "Hedge Trimmer below safety stock at Portland" }
+]

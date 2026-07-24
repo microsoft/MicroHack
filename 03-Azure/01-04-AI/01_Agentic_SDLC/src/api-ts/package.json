@@ -35,13 +35,13 @@
 		"@types/express": "^5.0.3",
 		"@types/node": "^24.7.2",
 		"@types/supertest": "^6.0.3",
-		"@vitest/coverage-v8": "^4.0.10",
+		"@vitest/coverage-v8": "^4.1.10",
 		"eslint": "^9.37.0",
 		"supertest": "^7.1.4",
 		"tsx": "^4.20.6",
 		"typescript": "^5.9.3",
 		"typescript-eslint": "8.46.1",
-		"vitest": "^4.0.10"
+		"vitest": "^4.1.10"
 	},
 	"license": "MIT"
 }

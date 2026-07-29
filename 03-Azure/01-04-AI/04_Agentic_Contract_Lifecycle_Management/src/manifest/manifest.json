@@ -1,0 +1,45 @@
+{
+  "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.19/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.19",
+  "version": "1.0.0",
+  "id": "${{MICROSOFT_APP_ID}}",
+  "developer": {
+    "name": "Contoso Global",
+    "websiteUrl": "https://contoso.example.com",
+    "privacyUrl": "https://contoso.example.com/privacy",
+    "termsOfUseUrl": "https://contoso.example.com/terms"
+  },
+  "name": {
+    "short": "CLM Assistant",
+    "full": "Contoso Contract Lifecycle Management Assistant"
+  },
+  "description": {
+    "short": "Draft, review and track contracts with grounded, cited answers.",
+    "full": "A multi-agent CLM assistant: a GPT orchestrator coordinating a Claude-backed drafting specialist and a GPT-5.6 Sol clause-risk specialist, grounded on the enterprise contract corpus via Foundry IQ. Answers cited questions, drafts NDA/MSA/SOW, risk-scores counterparty drafts, and posts proactive renewal alerts."
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "accentColor": "#1E2761",
+  "bots": [
+    {
+      "botId": "${{MICROSOFT_APP_ID}}",
+      "scopes": ["personal", "team", "groupChat"],
+      "supportsFiles": false,
+      "isNotificationOnly": false,
+      "commandLists": [
+        {
+          "scopes": ["personal", "team", "groupChat"],
+          "commands": [
+            { "title": "Draft a contract", "description": "Draft an NDA/MSA/SOW from approved templates" },
+            { "title": "Review a draft", "description": "Extract clauses and risk-score a counterparty draft" },
+            { "title": "Contract status", "description": "Look up status, renewal date and risk by contract ID" }
+          ]
+        }
+      ]
+    }
+  ],
+  "permissions": ["identity", "messageTeamMembers"],
+  "validDomains": ["token.botframework.com"]
+}

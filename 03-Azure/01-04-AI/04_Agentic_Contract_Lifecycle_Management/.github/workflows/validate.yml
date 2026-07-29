@@ -1,0 +1,47 @@
+name: validate
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Byte-compile all challenge + shared code
+        run: python -m compileall -q src labautomation
+
+      - name: Validate JSON + evaluation dataset
+        run: |
+          python - <<'PY'
+          import json, pathlib, sys
+          root = pathlib.Path(".")
+          bad = 0
+          for p in root.rglob("*.json"):
+              if "node_modules" in p.parts:
+                  continue
+              try:
+                  json.loads(p.read_text(encoding="utf-8"))
+              except Exception as e:
+                  print(f"BAD JSON {p}: {e}"); bad += 1
+          ds = root / "src" / "data" / "evaluation" / "evaluation_dataset.jsonl"
+          rows = [l for l in ds.read_text(encoding="utf-8").splitlines() if l.strip()]
+          for i, line in enumerate(rows, 1):
+              try:
+                  json.loads(line)
+              except Exception as e:
+                  print(f"BAD JSONL line {i}: {e}"); bad += 1
+          print(f"validated {len(rows)} eval rows")
+          sys.exit(1 if bad else 0)
+          PY
+
+      # Go Further: run the Challenge 3 quality gate on a schedule/PR once Azure
+      # secrets (AZURE_AI_PROJECT_ENDPOINT, etc.) are configured as repo secrets:
+      #   python src/evaluators.py --gate 4.0

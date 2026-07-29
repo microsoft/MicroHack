@@ -1,0 +1,44 @@
+name: links
+
+# Markdown link checker (lychee). Verifies that every relative link and image
+# path in the docs resolves on disk and that external links are reachable.
+# Relative-link checks are deterministic (they catch renamed/moved files); the
+# external check also runs weekly to catch link rot without being noisy on PRs.
+on:
+  push:
+    branches: ["**"]
+    paths:
+      - "**/*.md"
+      - ".github/workflows/links.yml"
+  pull_request:
+    paths:
+      - "**/*.md"
+      - ".github/workflows/links.yml"
+  schedule:
+    - cron: "0 7 * * 1" # Mondays 07:00 UTC — surface external link rot
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  link-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check Markdown links
+        uses: lycheeverse/lychee-action@v2
+        with:
+          # Links inside fenced code blocks and mail links are skipped by
+          # default. 403/429 are accepted because some Microsoft pages
+          # bot-block or rate-limit crawlers.
+          args: >-
+            --no-progress
+            --accept 200,206,403,429
+            --max-retries 3
+            --retry-wait-time 5
+            "**/*.md"
+          fail: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

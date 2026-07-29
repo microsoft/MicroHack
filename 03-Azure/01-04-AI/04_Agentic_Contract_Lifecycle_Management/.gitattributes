@@ -1,0 +1,11 @@
+# Treat PDFs as binary so Git never applies end-of-line conversion to them
+# (the CLM contract corpus PDFs would otherwise be corrupted on checkout).
+*.pdf binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pptx binary
+*.docx binary
+*.xlsx binary

@@ -1,0 +1,46 @@
+# ==========================================================================
+# Foundry CLM Microhack — Azure Developer CLI (azd) configuration
+# `azd up` provisions the full Foundry environment defined in labautomation/infra/ and then
+# writes a repo-root .env matching labautomation/deploy.sh.
+# Docs: https://aka.ms/azure-dev/schema
+# ==========================================================================
+name: foundry-clm-microhack
+metadata:
+  template: foundry-clm-microhack@1.0.0
+
+infra:
+  provider: bicep
+  path: labautomation/infra
+  module: main
+
+hooks:
+  # Before provisioning, probe Anthropic Claude Opus 4.8 quota in the target region
+  # and set DEPLOY_CLAUDE_MODEL=false when it is 0 (the common sandbox case), so the
+  # Bicep skips Claude and `azd up` doesn't fail preflight with InsufficientQuota.
+  # Deploys GPT-only in that case (Drafting falls back to the GPT orchestrator; Clause
+  # & Risk stays on gpt-5.6-sol). Force with DEPLOY_CLAUDE_MODEL_FORCE=true|false.
+  preprovision:
+    windows:
+      shell: pwsh
+      run: python src/scripts/claude_quota_preflight.py
+      continueOnError: true
+      interactive: false
+    posix:
+      shell: sh
+      run: python3 src/scripts/claude_quota_preflight.py
+      continueOnError: true
+      interactive: false
+
+  # After provisioning, translate Bicep outputs into the repo-root .env the
+  # challenges read. Runs on both Windows (pwsh) and Linux/macOS (sh).
+  postprovision:
+    windows:
+      shell: pwsh
+      run: python src/scripts/write_env.py
+      continueOnError: false
+      interactive: false
+    posix:
+      shell: sh
+      run: python3 src/scripts/write_env.py
+      continueOnError: false
+      interactive: false

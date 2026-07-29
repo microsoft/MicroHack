@@ -1,0 +1,12 @@
+{
+  "servers": {
+    "clm-mcp": {
+      "type": "stdio",
+      "command": "python",
+      "args": ["${workspaceFolder}/src/mcp_server/server.py"],
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/src"
+      }
+    }
+  }
+}

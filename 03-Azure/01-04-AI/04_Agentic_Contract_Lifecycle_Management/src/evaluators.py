@@ -127,7 +127,7 @@ def build_target(model: str, connection_id: str):
             tls.agent = agent
         return agent
 
-    def target(query: str, **_: object) -> dict:
+    def target(query: str) -> dict:
         start = time.perf_counter()
         for attempt in range(1, MAX_TARGET_ATTEMPTS + 1):
             try:

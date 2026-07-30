@@ -44,20 +44,12 @@ Author a reusable, gated modernization Custom Agent, package a Skill, and config
 3. Open the Command Palette → **MCP: List Servers** and start/inspect the servers.
 4. Confirm the `appmod-*` tool families appear in the agent's tool picker — they are registered automatically by the GitHub Copilot app modernization extensions (install the extension for your stack; no `mcp.json` entry needed).
 
-### Dry-run the gated loop
-
-1. Select your Custom Agent in Copilot Chat.
-2. Prompt: *"Modernize this application following your workflow."*
-3. Verify the agent runs the assessment and **stops at Gate 1** with an `ASSESSMENT.md`, then **stops at Gate 2** with a `PLAN.md` — without editing any source code.
-4. Approve to continue, or reject the plan once on purpose and watch the agent revise it.
-
 ## Success Criteria
 
 - ✅ You can explain Agent vs Skill vs MCP in one sentence each
 - ✅ A valid `.agent.md` exists with a gated, phased workflow and a least-privilege tool list
 - ✅ A valid `SKILL.md` exists with an explicit `WHEN:` trigger description and a rules table
 - ✅ `.vscode/mcp.json` resolves via **MCP: List Servers**; `appmod-*` tools are visible to the agent
-- ✅ The agent respects Gate 1 and Gate 2 and does not modify code before approval
 
 ## Learning Resources
 

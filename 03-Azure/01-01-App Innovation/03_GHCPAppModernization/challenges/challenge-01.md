@@ -22,7 +22,6 @@ Before pointing AI at a real .NET or Java application (challenges 2 and 3), you 
 * **Author a Custom Agent** — copy [templates/agents/modernization.agent.md](../templates/agents/modernization.agent.md) to `.github/agents/<name>.agent.md` in a target repo, replace every `{{PLACEHOLDER}}`, and tighten the tool allow-list so the assessment phase stays read-only (least privilege).
 * **Author a Skill** — copy [templates/skills/modernization-skill/SKILL.md](../templates/skills/modernization-skill/SKILL.md) to `.github/skills/<skill-name>/SKILL.md`, and write an explicit `WHEN:` trigger description plus at least one transformation-rules table. Optionally use the [skill-creator](../templates/skills/skill-creator/SKILL.md) meta-skill to iterate.
 * **Configure MCP** — copy [templates/mcp/mcp.json](../templates/mcp/mcp.json) to `.vscode/mcp.json`, then run **MCP: List Servers** and confirm the `appmod-*` tools (registered by the App Modernization extensions) appear in the agent's tool picker.
-* **Dry-run the loop** — select your Custom Agent in Copilot Chat and prompt it to modernize a sample. Confirm it **stops at Gate 1 (assessment)** and **Gate 2 (plan)** before editing any code.
 * Compare your work against the pre-tailored references shipped in [templates/](../templates/) (`dotnet-modernization.agent.md`, `dotnet-upgrade`, `java-modernization.agent.md`, `java-upgrade`).
 
 ## Success criteria
@@ -31,7 +30,6 @@ Before pointing AI at a real .NET or Java application (challenges 2 and 3), you 
 * A valid Custom Agent (`.agent.md` with YAML frontmatter) exists, with a phased, gated workflow and a least-privilege tool list.
 * A valid Skill (`SKILL.md`) exists with an explicit `WHEN:` trigger description and at least one rules table.
 * `.vscode/mcp.json` is configured and **MCP: List Servers** resolves the servers; the `appmod-*` tools are visible to the agent.
-* When run, the agent respects the gates — it does **not** modify code before the assessment and plan are approved.
 
 > Need the detailed, step-by-step walkthrough? See the [Challenge 1 Solution](../walkthrough/challenge-01/solution-01.md).
 

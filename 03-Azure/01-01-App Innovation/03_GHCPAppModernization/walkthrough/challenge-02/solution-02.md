@@ -2,9 +2,9 @@
 
 [Previous Challenge Solution](../challenge-01/solution-01.md) - **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-03/solution-03.md)
 
-## 2.1. Fork the sample repositories
+## 2.1. Check your forks of the sample repositories
 
-Start by logging in your Github account and fork both the .NET and the Java app.
+You forked both apps in [Challenge 1](../challenge-01/solution-01.md). Confirm they are still available in your GitHub account before continuing:
 
 - <https://github.com/Azure-Samples/PhotoAlbum-Java>
 - <https://github.com/Azure-Samples/PhotoAlbum>

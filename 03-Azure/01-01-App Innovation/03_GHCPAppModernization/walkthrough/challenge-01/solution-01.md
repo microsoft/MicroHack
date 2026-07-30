@@ -10,6 +10,13 @@ Author a reusable, gated modernization Custom Agent, package a Skill, and config
 
 ## Actions
 
+### Fork the sample applications
+
+1. Log in to your GitHub account and fork both sample apps:
+   - <https://github.com/Azure-Samples/PhotoAlbum> (.NET)
+   - <https://github.com/Azure-Samples/PhotoAlbum-Java> (Spring Boot)
+2. Clone your fork of **PhotoAlbum** locally and open it in VS Code. This clone is the target repo for the files you author below, and you will reuse both forks in Challenges 2 and 3.
+
 ### Understand the model
 
 1. Read [docs/00-fundamentals.md](../../docs/00-fundamentals.md).
@@ -46,10 +53,13 @@ Author a reusable, gated modernization Custom Agent, package a Skill, and config
 
 ### Dry-run the gated loop
 
-1. Select your Custom Agent in Copilot Chat.
-2. Prompt: *"Modernize this application following your workflow."*
-3. Verify the agent runs the assessment and **stops at Gate 1** with an `ASSESSMENT.md`, then **stops at Gate 2** with a `PLAN.md` — without editing any source code.
-4. Approve to continue, or reject the plan once on purpose and watch the agent revise it.
+1. Reload VS Code so the agent, skill, and MCP configuration are picked up.
+2. Open Copilot Chat in your **PhotoAlbum** clone and select your Custom Agent in the agent picker. If it does not appear, check the YAML frontmatter and the file location (`.github/agents/<name>.agent.md`).
+3. Prompt: *"Modernize this application following your workflow."* — keep it open-ended on purpose, so the agent's own definition drives the run rather than your prompt.
+4. Verify the agent runs the assessment and **stops at Gate 1** with an `ASSESSMENT.md`, then **stops at Gate 2** with a `PLAN.md` — without editing any source code.
+5. Approve to continue, or reject the plan once on purpose and watch the agent revise it.
+
+> 💡 This step validates *behaviour*, not the quality of the assessment. If the agent runs straight through and starts editing files, the most common cause is `editFiles` still being available during the assessment phase — trim the `tools:` allow-list and try again.
 
 ## Success Criteria
 

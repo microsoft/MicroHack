@@ -8,9 +8,7 @@ Use the GitHub Copilot App Modernization agent (modernize CLI) to assess and upg
 
 ## Actions
 
-* Fork the two sample repositories into your own GitHub account:
-  * PhotoAlbum-Java (Spring Boot): `https://github.com/Azure-Samples/PhotoAlbum-Java`
-  * PhotoAlbum (.NET): `https://github.com/Azure-Samples/PhotoAlbum`
+* You already forked both sample repositories in [Challenge 1](challenge-01.md) — make sure your forks of **PhotoAlbum** (.NET) and **PhotoAlbum-Java** (Spring Boot) are cloned into a single working directory before you continue.
 * Prepare a working directory and install the GitHub Copilot App Modernization agent (modernize CLI), which you will use end-to-end for assessment, upgrade, planning, and execution.
 * Create a repositories config file so the CLI can operate on both apps in a single batch run.
 * Run a **batch assessment** across both repositories, selecting the *Upgrade* and *Cloud readiness* analyses with full analysis coverage. Let the assessment run locally and wait for it to complete.
@@ -25,7 +23,7 @@ Use the GitHub Copilot App Modernization agent (modernize CLI) to assess and upg
 
 ## Success criteria
 
-* Both PhotoAlbum-Java and PhotoAlbum are forked and available in your working directory.
+* Both PhotoAlbum-Java and PhotoAlbum (forked in Challenge 1) are available in your working directory.
 * The modernize CLI is installed and configured to target both repositories from a config file.
 * A batch assessment completes and produces both an aggregated report and per-repository reports.
 * The .NET app is upgraded to .NET 10 and the Java app is upgraded to Java 25 / Spring Boot 4.0, each reporting a successful upgrade.

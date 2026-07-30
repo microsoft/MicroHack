@@ -18,15 +18,26 @@ Before pointing AI at a real .NET or Java application (challenges 2 and 3), you 
 
 ## Actions
 
+* **Fork the sample applications** — fork both repositories into your own GitHub account. You need them here to dry-run your agent, and you will keep using them in Challenges 2 and 3:
+  * PhotoAlbum (.NET): `https://github.com/Azure-Samples/PhotoAlbum`
+  * PhotoAlbum-Java (Spring Boot): `https://github.com/Azure-Samples/PhotoAlbum-Java`
+
+  Clone your fork of **PhotoAlbum** locally and open it in VS Code — this clone is the *target repo* for the agent, skill, and MCP files you author below.
 * Read [docs/00-fundamentals.md](../docs/00-fundamentals.md) and review the base templates in [templates/](../templates/).
-* **Author a Custom Agent** — copy [templates/agents/modernization.agent.md](../templates/agents/modernization.agent.md) to `.github/agents/<name>.agent.md` in a target repo, replace every `{{PLACEHOLDER}}`, and tighten the tool allow-list so the assessment phase stays read-only (least privilege).
+* **Author a Custom Agent** — copy [templates/agents/modernization.agent.md](../templates/agents/modernization.agent.md) to `.github/agents/<name>.agent.md` in your PhotoAlbum clone, replace every `{{PLACEHOLDER}}`, and tighten the tool allow-list so the assessment phase stays read-only (least privilege).
 * **Author a Skill** — copy [templates/skills/modernization-skill/SKILL.md](../templates/skills/modernization-skill/SKILL.md) to `.github/skills/<skill-name>/SKILL.md`, and write an explicit `WHEN:` trigger description plus at least one transformation-rules table. Optionally use the [skill-creator](../templates/skills/skill-creator/SKILL.md) meta-skill to iterate.
 * **Configure MCP** — copy [templates/mcp/mcp.json](../templates/mcp/mcp.json) to `.vscode/mcp.json`, then run **MCP: List Servers** and confirm the `appmod-*` tools (registered by the App Modernization extensions) appear in the agent's tool picker.
-* **Dry-run the loop** — select your Custom Agent in Copilot Chat and prompt it to modernize a sample. Confirm it **stops at Gate 1 (assessment)** and **Gate 2 (plan)** before editing any code.
+* **Dry-run the loop** — reload VS Code, open Copilot Chat in your PhotoAlbum clone, and select your Custom Agent in the agent picker. Prompt it with something deliberately open-ended, such as *"Modernize this application following your workflow."*, and watch what it does:
+  * it must run the assessment, produce an assessment report, and **stop at Gate 1** waiting for your approval;
+  * after you approve, it must produce a plan and **stop at Gate 2**;
+  * at no point before those approvals may it edit source code.
+
+  This is a test of *behaviour*, not of output quality — the assessment itself does not have to be perfect. If the agent runs straight through and starts rewriting files, its definition is wrong (most often because `editFiles` is still in the tool list used by the assessment phase). Optionally, reject the plan once on purpose and confirm the agent revises it instead of proceeding.
 * Compare your work against the pre-tailored references shipped in [templates/](../templates/) (`dotnet-modernization.agent.md`, `dotnet-upgrade`, `java-modernization.agent.md`, `java-upgrade`).
 
 ## Success criteria
 
+* Both **PhotoAlbum** and **PhotoAlbum-Java** are forked into your GitHub account, and PhotoAlbum is cloned locally.
 * You can explain, in one sentence each, what an Agent, a Skill, and an MCP server contribute to a modernization workflow.
 * A valid Custom Agent (`.agent.md` with YAML frontmatter) exists, with a phased, gated workflow and a least-privilege tool list.
 * A valid Skill (`SKILL.md`) exists with an explicit `WHEN:` trigger description and at least one rules table.

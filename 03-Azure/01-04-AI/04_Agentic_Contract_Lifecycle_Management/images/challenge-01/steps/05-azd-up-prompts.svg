@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="300" viewBox="0 0 900 300" role="img" aria-label="Screenshot slot: azd up · Prompts">
+  <rect x="4" y="4" width="892" height="292" rx="14" fill="#F5F3FA" stroke="#7A4FB5" stroke-width="2" stroke-dasharray="10 8"/>
+  <text x="36" y="66" font-family="Segoe UI, Arial, sans-serif" font-size="30">📸</text>
+  <text x="80" y="70" font-family="Segoe UI, Arial, sans-serif" font-size="26" font-weight="700" fill="#4A2A82">SCREENSHOT SLOT</text>
+  <text x="36" y="120" font-family="Segoe UI, Arial, sans-serif" font-size="22" font-weight="600" fill="#222">azd up · Prompts</text>
+  <foreignObject x="36" y="140" width="828" height="110">
+    <div xmlns="http://www.w3.org/1999/xhtml" style="font-family:Segoe UI,Arial,sans-serif;font-size:17px;line-height:1.5;color:#444;">
+      The terminal prompting for an environment name and an Azure region (pick swedencentral).
+    </div>
+  </foreignObject>
+  <text x="36" y="278" font-family="Segoe UI, Arial, sans-serif" font-size="14" fill="#7A4FB5">Replace this file with your own screenshot (05-azd-up-prompts.png), then point the README &lt;img&gt; at the .png.</text>
+</svg>

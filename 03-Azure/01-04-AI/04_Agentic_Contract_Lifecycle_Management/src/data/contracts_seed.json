@@ -1,0 +1,10 @@
+{
+  "_comment": "Dates are stored as day-offsets from TODAY (effective_in_days / renewal_in_days) so the demo dataset stays evergreen — clm_common.tools materializes absolute effective_date / renewal_date relative to date.today() at load time. Negative = past. This keeps 'upcoming renewals' non-empty no matter when the microhack is run.",
+  "contracts": [
+    {"contract_id": "CT-4821", "counterparty": "Acme Corp",     "type": "MSA", "status": "Active",  "effective_in_days": -675,  "renewal_in_days": 55,   "auto_renew": true,  "notice_days": 90, "risk": "High",   "owner": "legal@contoso.com"},
+    {"contract_id": "CT-3390", "counterparty": "Globex Ltd",    "type": "NDA", "status": "Active",  "effective_in_days": -515,  "renewal_in_days": 215,  "auto_renew": false, "notice_days": 30, "risk": "Low",    "owner": "procurement@contoso.com"},
+    {"contract_id": "CT-5102", "counterparty": "Initech LLC",   "type": "SOW", "status": "Active",  "effective_in_days": -285,  "renewal_in_days": 80,   "auto_renew": true,  "notice_days": 60, "risk": "Medium", "owner": "legal@contoso.com"},
+    {"contract_id": "CT-2765", "counterparty": "Umbrella Inc",  "type": "MSA", "status": "Expired", "effective_in_days": -1290, "renewal_in_days": -560, "auto_renew": false, "notice_days": 90, "risk": "Medium", "owner": "legal@contoso.com"},
+    {"contract_id": "CT-6033", "counterparty": "Soylent Co",    "type": "MSA", "status": "Active",  "effective_in_days": -340,  "renewal_in_days": 25,   "auto_renew": true,  "notice_days": 90, "risk": "High",   "owner": "procurement@contoso.com"}
+  ]
+}

@@ -1,0 +1,819 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.41.2.15936",
+      "templateHash": "478454005631202934"
+    }
+  },
+  "parameters": {
+    "environmentName": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "metadata": {
+        "description": "Name of the azd environment (used to name the resource group + resources)."
+      }
+    },
+    "location": {
+      "type": "string",
+      "minLength": 1,
+      "metadata": {
+        "description": "Azure region for all resources. Must offer gpt-5.4, gpt-5-mini and gpt-5.6-sol (and Claude Opus 4.8 unless DEPLOY_CLAUDE_MODEL=false)."
+      }
+    },
+    "principalId": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Object id of the user/service principal running the deployment (azd provides AZURE_PRINCIPAL_ID). Used for RBAC."
+      }
+    },
+    "principalType": {
+      "type": "string",
+      "defaultValue": "User",
+      "allowedValues": [
+        "User",
+        "ServicePrincipal"
+      ],
+      "metadata": {
+        "description": "Principal type for RBAC assignments: User (interactive azd) or ServicePrincipal (CI)."
+      }
+    },
+    "deployClaudeModel": {
+      "type": "string",
+      "defaultValue": "true",
+      "metadata": {
+        "description": "Deploy the Anthropic Claude model (\"true\"/\"false\"). Set DEPLOY_CLAUDE_MODEL=false to skip it when your subscription has no Claude quota / marketplace offer; the Claude-backed agents then use the GPT orchestrator."
+      }
+    },
+    "claudeOrganizationName": {
+      "type": "string",
+      "defaultValue": "Contoso",
+      "metadata": {
+        "description": "Legal-entity name for the Anthropic Marketplace attestation (modelProviderData.organizationName). Azure requires it for Claude deployments — override via CLAUDE_ORGANIZATION_NAME."
+      }
+    },
+    "claudeCountryCode": {
+      "type": "string",
+      "defaultValue": "US",
+      "metadata": {
+        "description": "Two-letter country code for the Anthropic Marketplace attestation — override via CLAUDE_COUNTRY_CODE."
+      }
+    },
+    "claudeIndustry": {
+      "type": "string",
+      "defaultValue": "technology",
+      "metadata": {
+        "description": "Industry (lowercase) for the Anthropic Marketplace attestation — override via CLAUDE_INDUSTRY."
+      }
+    },
+    "deploySql": {
+      "type": "string",
+      "defaultValue": "false",
+      "metadata": {
+        "description": "Provision the optional Azure SQL backing store for the contract-status tool (\"true\"/\"false\")."
+      }
+    },
+    "sqlAdminPassword": {
+      "type": "securestring",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Admin password for the optional Azure SQL server (required when deploySql is true)."
+      }
+    },
+    "deployBing": {
+      "type": "string",
+      "defaultValue": "false",
+      "metadata": {
+        "description": "Provision the optional Grounding with Bing Search resource + project connection for web grounding (\"true\"/\"false\")."
+      }
+    }
+  },
+  "variables": {
+    "resourceToken": "[toLower(uniqueString(subscription().id, parameters('environmentName'), parameters('location')))]",
+    "tags": {
+      "azd-env-name": "[parameters('environmentName')]",
+      "project": "foundry-clm-microhack"
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Resources/resourceGroups",
+      "apiVersion": "2024-03-01",
+      "name": "rg-clm-microhack",
+      "location": "[parameters('location')]",
+      "tags": "[variables('tags')]"
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2025-04-01",
+      "name": "clm-resources",
+      "resourceGroup": "rg-clm-microhack",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "resourceToken": {
+            "value": "[variables('resourceToken')]"
+          },
+          "principalId": {
+            "value": "[parameters('principalId')]"
+          },
+          "principalType": {
+            "value": "[parameters('principalType')]"
+          },
+          "deployClaudeModel": {
+            "value": "[parameters('deployClaudeModel')]"
+          },
+          "claudeOrganizationName": {
+            "value": "[parameters('claudeOrganizationName')]"
+          },
+          "claudeCountryCode": {
+            "value": "[parameters('claudeCountryCode')]"
+          },
+          "claudeIndustry": {
+            "value": "[parameters('claudeIndustry')]"
+          },
+          "deploySql": {
+            "value": "[parameters('deploySql')]"
+          },
+          "sqlAdminPassword": {
+            "value": "[parameters('sqlAdminPassword')]"
+          },
+          "deployBing": {
+            "value": "[parameters('deployBing')]"
+          },
+          "tags": {
+            "value": "[variables('tags')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.41.2.15936",
+              "templateHash": "1365307448099890225"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string",
+              "metadata": {
+                "description": "Azure region for all resources."
+              }
+            },
+            "resourceToken": {
+              "type": "string",
+              "metadata": {
+                "description": "Short, unique token used to name globally-unique resources."
+              }
+            },
+            "principalId": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Object id of the user/service principal running the deployment (for RBAC). Leave empty to skip role assignments."
+              }
+            },
+            "principalType": {
+              "type": "string",
+              "defaultValue": "User",
+              "allowedValues": [
+                "User",
+                "ServicePrincipal"
+              ],
+              "metadata": {
+                "description": "Principal type for RBAC assignments: User or ServicePrincipal."
+              }
+            },
+            "deployClaudeModel": {
+              "type": "string",
+              "defaultValue": "true",
+              "metadata": {
+                "description": "Deploy the Anthropic Claude model (\"true\"/\"false\"). Set to \"false\" (azd env set DEPLOY_CLAUDE_MODEL false) if your subscription has no Claude quota or the Anthropic marketplace offer is unavailable — the drafting agent then falls back to the GPT orchestrator model (Clause & Risk stays on gpt-5.6-sol)."
+              }
+            },
+            "claudeOrganizationName": {
+              "type": "string",
+              "defaultValue": "Contoso",
+              "metadata": {
+                "description": "Legal-entity name for the Anthropic Marketplace attestation (modelProviderData.organizationName). Required by Azure for Claude deployments."
+              }
+            },
+            "claudeCountryCode": {
+              "type": "string",
+              "defaultValue": "US",
+              "metadata": {
+                "description": "Two-letter country code for the Anthropic Marketplace attestation (modelProviderData.countryCode)."
+              }
+            },
+            "claudeIndustry": {
+              "type": "string",
+              "defaultValue": "technology",
+              "metadata": {
+                "description": "Industry for the Anthropic Marketplace attestation (modelProviderData.industry) — lowercase, e.g. technology, finance, healthcare, education, retail."
+              }
+            },
+            "deploySql": {
+              "type": "string",
+              "defaultValue": "false",
+              "metadata": {
+                "description": "Provision the optional Azure SQL backing store for the contract-status tool (\"true\"/\"false\")."
+              }
+            },
+            "sqlAdminPassword": {
+              "type": "securestring",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Admin password for the optional Azure SQL server (required when deploySql is true)."
+              }
+            },
+            "deployBing": {
+              "type": "string",
+              "defaultValue": "false",
+              "metadata": {
+                "description": "Provision the optional Grounding with Bing Search resource + project connection for web grounding (\"true\"/\"false\")."
+              }
+            },
+            "tags": {
+              "type": "object",
+              "defaultValue": {},
+              "metadata": {
+                "description": "Tags applied to every resource."
+              }
+            }
+          },
+          "variables": {
+            "foundryName": "[format('clmfoundry{0}', parameters('resourceToken'))]",
+            "projectName": "clm-project",
+            "searchName": "[format('clmsearch{0}', parameters('resourceToken'))]",
+            "appInsightsName": "[format('clm-appinsights-{0}', parameters('resourceToken'))]",
+            "logAnalyticsName": "[format('clm-logs-{0}', parameters('resourceToken'))]",
+            "searchIndexName": "clm-corpus",
+            "searchConnectionName": "clm-search",
+            "appInsightsConnectionName": "clm-appinsights",
+            "bingName": "[format('clmbing{0}', parameters('resourceToken'))]",
+            "bingConnectionName": "clm-bing",
+            "gptOrchestrator": "gpt-5.4",
+            "gptMini": "gpt-5-mini",
+            "gpt56sol": "gpt-5.6-sol",
+            "claude": "claude-opus-4-8",
+            "gptOrchestratorModel": "gpt-5.4",
+            "gptOrchestratorVersion": "2026-03-05",
+            "gpt56solModel": "gpt-5.6-sol",
+            "gpt56solVersion": "2026-07-09",
+            "gptMiniModel": "gpt-5-mini",
+            "gptMiniVersion": "2025-08-07",
+            "roleAiDeveloper": "64702f94-c441-49e6-a78b-ef80e0188fee",
+            "roleCognitiveServicesUser": "a97b65f3-24c7-4388-baec-2e87135dc908",
+            "roleSearchIndexDataContributor": "8ebe5a00-799e-43f5-93ac-243d3dce84a7",
+            "roleSearchServiceContributor": "7ca78c08-252a-4471-8644-bb5ff32d4ba0",
+            "roleSearchIndexDataReader": "1407120a-92aa-4202-b7e9-c0e197c71c8f",
+            "wantSql": "[and(equals(toLower(parameters('deploySql')), 'true'), not(empty(parameters('sqlAdminPassword'))))]",
+            "wantClaude": "[equals(toLower(parameters('deployClaudeModel')), 'true')]",
+            "wantBing": "[equals(toLower(parameters('deployBing')), 'true')]",
+            "assignUserRoles": "[not(empty(parameters('principalId')))]"
+          },
+          "resources": [
+            {
+              "type": "Microsoft.OperationalInsights/workspaces",
+              "apiVersion": "2023-09-01",
+              "name": "[variables('logAnalyticsName')]",
+              "location": "[parameters('location')]",
+              "tags": "[parameters('tags')]",
+              "properties": {
+                "sku": {
+                  "name": "PerGB2018"
+                },
+                "retentionInDays": 30
+              }
+            },
+            {
+              "type": "Microsoft.Insights/components",
+              "apiVersion": "2020-02-02",
+              "name": "[variables('appInsightsName')]",
+              "location": "[parameters('location')]",
+              "tags": "[parameters('tags')]",
+              "kind": "web",
+              "properties": {
+                "Application_Type": "web",
+                "WorkspaceResourceId": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsName'))]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Search/searchServices",
+              "apiVersion": "2024-06-01-preview",
+              "name": "[variables('searchName')]",
+              "location": "[parameters('location')]",
+              "tags": "[parameters('tags')]",
+              "sku": {
+                "name": "basic"
+              },
+              "identity": {
+                "type": "SystemAssigned"
+              },
+              "properties": {
+                "partitionCount": 1,
+                "replicaCount": 1,
+                "hostingMode": "default",
+                "semanticSearch": "free",
+                "authOptions": {
+                  "aadOrApiKey": {
+                    "aadAuthFailureMode": "http401WithBearerChallenge"
+                  }
+                }
+              }
+            },
+            {
+              "type": "Microsoft.CognitiveServices/accounts",
+              "apiVersion": "2025-04-01-preview",
+              "name": "[variables('foundryName')]",
+              "location": "[parameters('location')]",
+              "tags": "[parameters('tags')]",
+              "kind": "AIServices",
+              "sku": {
+                "name": "S0"
+              },
+              "identity": {
+                "type": "SystemAssigned"
+              },
+              "properties": {
+                "customSubDomainName": "[variables('foundryName')]",
+                "publicNetworkAccess": "Enabled",
+                "disableLocalAuth": false,
+                "allowProjectManagement": true
+              }
+            },
+            {
+              "type": "Microsoft.CognitiveServices/accounts/projects",
+              "apiVersion": "2025-04-01-preview",
+              "name": "[format('{0}/{1}', variables('foundryName'), variables('projectName'))]",
+              "location": "[parameters('location')]",
+              "tags": "[parameters('tags')]",
+              "identity": {
+                "type": "SystemAssigned"
+              },
+              "properties": {
+                "displayName": "CLM Microhack",
+                "description": "Contract Lifecycle Management multi-agent microhack project."
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.CognitiveServices/accounts', variables('foundryName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.CognitiveServices/accounts/deployments",
+              "apiVersion": "2025-04-01-preview",
+              "name": "[format('{0}/{1}', variables('foundryName'), variables('gptOrchestrator'))]",
+              "sku": {
+                "name": "GlobalStandard",
+                "capacity": 30
+              },
+              "properties": {
+                "model": {
+                  "format": "OpenAI",
+                  "name": "[variables('gptOrchestratorModel')]",
+                  "version": "[variables('gptOrchestratorVersion')]"
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.CognitiveServices/accounts', variables('foundryName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.CognitiveServices/accounts/deployments",
+              "apiVersion": "2025-04-01-preview",
+              "name": "[format('{0}/{1}', variables('foundryName'), variables('gptMini'))]",
+              "sku": {
+                "name": "GlobalStandard",
+                "capacity": 30
+              },
+              "properties": {
+                "model": {
+                  "format": "OpenAI",
+                  "name": "[variables('gptMiniModel')]",
+                  "version": "[variables('gptMiniVersion')]"
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.CognitiveServices/accounts', variables('foundryName'))]",
+                "[resourceId('Microsoft.CognitiveServices/accounts/deployments', variables('foundryName'), variables('gptOrchestrator'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.CognitiveServices/accounts/deployments",
+              "apiVersion": "2025-04-01-preview",
+              "name": "[format('{0}/{1}', variables('foundryName'), variables('gpt56sol'))]",
+              "sku": {
+                "name": "GlobalStandard",
+                "capacity": 30
+              },
+              "properties": {
+                "model": {
+                  "format": "OpenAI",
+                  "name": "[variables('gpt56solModel')]",
+                  "version": "[variables('gpt56solVersion')]"
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.CognitiveServices/accounts', variables('foundryName'))]",
+                "[resourceId('Microsoft.CognitiveServices/accounts/deployments', variables('foundryName'), variables('gptMini'))]"
+              ]
+            },
+            {
+              "condition": "[variables('wantClaude')]",
+              "type": "Microsoft.CognitiveServices/accounts/deployments",
+              "apiVersion": "2025-04-01-preview",
+              "name": "[format('{0}/{1}', variables('foundryName'), variables('claude'))]",
+              "sku": {
+                "name": "GlobalStandard",
+                "capacity": 20
+              },
+              "properties": {
+                "model": {
+                  "format": "Anthropic",
+                  "name": "claude-opus-4-8",
+                  "version": "2"
+                },
+                "modelProviderData": {
+                  "organizationName": "[parameters('claudeOrganizationName')]",
+                  "countryCode": "[parameters('claudeCountryCode')]",
+                  "industry": "[parameters('claudeIndustry')]"
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.CognitiveServices/accounts', variables('foundryName'))]",
+                "[resourceId('Microsoft.CognitiveServices/accounts/deployments', variables('foundryName'), variables('gpt56sol'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.CognitiveServices/accounts/projects/connections",
+              "apiVersion": "2025-04-01-preview",
+              "name": "[format('{0}/{1}/{2}', variables('foundryName'), variables('projectName'), variables('searchConnectionName'))]",
+              "properties": {
+                "category": "CognitiveSearch",
+                "target": "[format('https://{0}.search.windows.net', variables('searchName'))]",
+                "authType": "AAD",
+                "isSharedToAll": true,
+                "metadata": {
+                  "ApiType": "Azure",
+                  "ResourceId": "[resourceId('Microsoft.Search/searchServices', variables('searchName'))]",
+                  "location": "[parameters('location')]"
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.CognitiveServices/accounts/projects', variables('foundryName'), variables('projectName'))]",
+                "[resourceId('Microsoft.Search/searchServices', variables('searchName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.CognitiveServices/accounts/projects/connections",
+              "apiVersion": "2025-04-01-preview",
+              "name": "[format('{0}/{1}/{2}', variables('foundryName'), variables('projectName'), variables('appInsightsConnectionName'))]",
+              "properties": {
+                "category": "AppInsights",
+                "target": "[resourceId('Microsoft.Insights/components', variables('appInsightsName'))]",
+                "authType": "ApiKey",
+                "isSharedToAll": true,
+                "credentials": {
+                  "key": "[reference(resourceId('Microsoft.Insights/components', variables('appInsightsName')), '2020-02-02').ConnectionString]"
+                },
+                "metadata": {
+                  "ApiType": "Azure",
+                  "ResourceId": "[resourceId('Microsoft.Insights/components', variables('appInsightsName'))]"
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Insights/components', variables('appInsightsName'))]",
+                "[resourceId('Microsoft.CognitiveServices/accounts/projects', variables('foundryName'), variables('projectName'))]"
+              ]
+            },
+            {
+              "condition": "[variables('wantBing')]",
+              "type": "Microsoft.Bing/accounts",
+              "apiVersion": "2020-06-10",
+              "name": "[variables('bingName')]",
+              "location": "global",
+              "sku": {
+                "name": "G1"
+              },
+              "kind": "Bing.Grounding",
+              "tags": "[parameters('tags')]"
+            },
+            {
+              "condition": "[variables('wantBing')]",
+              "type": "Microsoft.CognitiveServices/accounts/projects/connections",
+              "apiVersion": "2025-04-01-preview",
+              "name": "[format('{0}/{1}/{2}', variables('foundryName'), variables('projectName'), variables('bingConnectionName'))]",
+              "properties": {
+                "category": "ApiKey",
+                "target": "https://api.bing.microsoft.com/",
+                "authType": "ApiKey",
+                "credentials": {
+                  "key": "[listKeys(resourceId('Microsoft.Bing/accounts', variables('bingName')), '2020-06-10').key1]"
+                },
+                "isSharedToAll": true,
+                "metadata": {
+                  "ApiType": "Azure",
+                  "Location": "global",
+                  "ResourceId": "[resourceId('Microsoft.Bing/accounts', variables('bingName'))]",
+                  "type": "bing_grounding"
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Bing/accounts', variables('bingName'))]",
+                "[resourceId('Microsoft.CognitiveServices/accounts/projects', variables('foundryName'), variables('projectName'))]"
+              ]
+            },
+            {
+              "condition": "[variables('wantSql')]",
+              "type": "Microsoft.Sql/servers",
+              "apiVersion": "2023-08-01",
+              "name": "[format('clmsql{0}', parameters('resourceToken'))]",
+              "location": "[parameters('location')]",
+              "tags": "[parameters('tags')]",
+              "properties": {
+                "administratorLogin": "clmadmin",
+                "administratorLoginPassword": "[parameters('sqlAdminPassword')]",
+                "minimalTlsVersion": "1.2",
+                "publicNetworkAccess": "Enabled"
+              }
+            },
+            {
+              "condition": "[variables('wantSql')]",
+              "type": "Microsoft.Sql/servers/databases",
+              "apiVersion": "2023-08-01",
+              "name": "[format('{0}/{1}', format('clmsql{0}', parameters('resourceToken')), 'clmdb')]",
+              "location": "[parameters('location')]",
+              "tags": "[parameters('tags')]",
+              "sku": {
+                "name": "Basic",
+                "tier": "Basic"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', format('clmsql{0}', parameters('resourceToken')))]"
+              ]
+            },
+            {
+              "condition": "[variables('wantSql')]",
+              "type": "Microsoft.Sql/servers/firewallRules",
+              "apiVersion": "2023-08-01",
+              "name": "[format('{0}/{1}', format('clmsql{0}', parameters('resourceToken')), 'AllowAzure')]",
+              "properties": {
+                "startIpAddress": "0.0.0.0",
+                "endIpAddress": "0.0.0.0"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', format('clmsql{0}', parameters('resourceToken')))]"
+              ]
+            },
+            {
+              "condition": "[variables('assignUserRoles')]",
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2022-04-01",
+              "scope": "[resourceId('Microsoft.CognitiveServices/accounts', variables('foundryName'))]",
+              "name": "[guid(resourceId('Microsoft.CognitiveServices/accounts', variables('foundryName')), parameters('principalId'), variables('roleAiDeveloper'))]",
+              "properties": {
+                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', variables('roleAiDeveloper'))]",
+                "principalId": "[parameters('principalId')]",
+                "principalType": "[parameters('principalType')]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.CognitiveServices/accounts', variables('foundryName'))]"
+              ]
+            },
+            {
+              "condition": "[variables('assignUserRoles')]",
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2022-04-01",
+              "scope": "[resourceId('Microsoft.CognitiveServices/accounts', variables('foundryName'))]",
+              "name": "[guid(resourceId('Microsoft.CognitiveServices/accounts', variables('foundryName')), parameters('principalId'), variables('roleCognitiveServicesUser'))]",
+              "properties": {
+                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', variables('roleCognitiveServicesUser'))]",
+                "principalId": "[parameters('principalId')]",
+                "principalType": "[parameters('principalType')]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.CognitiveServices/accounts', variables('foundryName'))]"
+              ]
+            },
+            {
+              "condition": "[variables('assignUserRoles')]",
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2022-04-01",
+              "scope": "[resourceId('Microsoft.Search/searchServices', variables('searchName'))]",
+              "name": "[guid(resourceId('Microsoft.Search/searchServices', variables('searchName')), parameters('principalId'), variables('roleSearchIndexDataContributor'))]",
+              "properties": {
+                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', variables('roleSearchIndexDataContributor'))]",
+                "principalId": "[parameters('principalId')]",
+                "principalType": "[parameters('principalType')]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Search/searchServices', variables('searchName'))]"
+              ]
+            },
+            {
+              "condition": "[variables('assignUserRoles')]",
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2022-04-01",
+              "scope": "[resourceId('Microsoft.Search/searchServices', variables('searchName'))]",
+              "name": "[guid(resourceId('Microsoft.Search/searchServices', variables('searchName')), parameters('principalId'), variables('roleSearchServiceContributor'))]",
+              "properties": {
+                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', variables('roleSearchServiceContributor'))]",
+                "principalId": "[parameters('principalId')]",
+                "principalType": "[parameters('principalType')]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Search/searchServices', variables('searchName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2022-04-01",
+              "scope": "[resourceId('Microsoft.Search/searchServices', variables('searchName'))]",
+              "name": "[guid(resourceId('Microsoft.Search/searchServices', variables('searchName')), resourceId('Microsoft.CognitiveServices/accounts', variables('foundryName')), variables('roleSearchIndexDataReader'))]",
+              "properties": {
+                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', variables('roleSearchIndexDataReader'))]",
+                "principalId": "[reference(resourceId('Microsoft.CognitiveServices/accounts', variables('foundryName')), '2025-04-01-preview', 'full').identity.principalId]",
+                "principalType": "ServicePrincipal"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.CognitiveServices/accounts', variables('foundryName'))]",
+                "[resourceId('Microsoft.Search/searchServices', variables('searchName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2022-04-01",
+              "scope": "[resourceId('Microsoft.Search/searchServices', variables('searchName'))]",
+              "name": "[guid(resourceId('Microsoft.Search/searchServices', variables('searchName')), resourceId('Microsoft.CognitiveServices/accounts', variables('foundryName')), variables('roleSearchServiceContributor'))]",
+              "properties": {
+                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', variables('roleSearchServiceContributor'))]",
+                "principalId": "[reference(resourceId('Microsoft.CognitiveServices/accounts', variables('foundryName')), '2025-04-01-preview', 'full').identity.principalId]",
+                "principalType": "ServicePrincipal"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.CognitiveServices/accounts', variables('foundryName'))]",
+                "[resourceId('Microsoft.Search/searchServices', variables('searchName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2022-04-01",
+              "scope": "[resourceId('Microsoft.Search/searchServices', variables('searchName'))]",
+              "name": "[guid(resourceId('Microsoft.Search/searchServices', variables('searchName')), resourceId('Microsoft.CognitiveServices/accounts/projects', variables('foundryName'), variables('projectName')), variables('roleSearchIndexDataReader'))]",
+              "properties": {
+                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', variables('roleSearchIndexDataReader'))]",
+                "principalId": "[reference(resourceId('Microsoft.CognitiveServices/accounts/projects', variables('foundryName'), variables('projectName')), '2025-04-01-preview', 'full').identity.principalId]",
+                "principalType": "ServicePrincipal"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.CognitiveServices/accounts/projects', variables('foundryName'), variables('projectName'))]",
+                "[resourceId('Microsoft.Search/searchServices', variables('searchName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2022-04-01",
+              "scope": "[resourceId('Microsoft.Search/searchServices', variables('searchName'))]",
+              "name": "[guid(resourceId('Microsoft.Search/searchServices', variables('searchName')), resourceId('Microsoft.CognitiveServices/accounts/projects', variables('foundryName'), variables('projectName')), variables('roleSearchServiceContributor'))]",
+              "properties": {
+                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', variables('roleSearchServiceContributor'))]",
+                "principalId": "[reference(resourceId('Microsoft.CognitiveServices/accounts/projects', variables('foundryName'), variables('projectName')), '2025-04-01-preview', 'full').identity.principalId]",
+                "principalType": "ServicePrincipal"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.CognitiveServices/accounts/projects', variables('foundryName'), variables('projectName'))]",
+                "[resourceId('Microsoft.Search/searchServices', variables('searchName'))]"
+              ]
+            }
+          ],
+          "outputs": {
+            "AZURE_AI_PROJECT_ENDPOINT": {
+              "type": "string",
+              "value": "[format('https://{0}.services.ai.azure.com/api/projects/{1}', variables('foundryName'), variables('projectName'))]"
+            },
+            "MODEL_ORCHESTRATOR": {
+              "type": "string",
+              "value": "[variables('gptOrchestrator')]"
+            },
+            "MODEL_DRAFTING": {
+              "type": "string",
+              "value": "[if(variables('wantClaude'), variables('claude'), variables('gptOrchestrator'))]"
+            },
+            "MODEL_CLAUSE_RISK": {
+              "type": "string",
+              "value": "[variables('gpt56sol')]"
+            },
+            "MODEL_RENEWAL": {
+              "type": "string",
+              "value": "[variables('gptMini')]"
+            },
+            "AZURE_SEARCH_ENDPOINT": {
+              "type": "string",
+              "value": "[format('https://{0}.search.windows.net', variables('searchName'))]"
+            },
+            "AZURE_SEARCH_INDEX": {
+              "type": "string",
+              "value": "[variables('searchIndexName')]"
+            },
+            "AZURE_SEARCH_CONNECTION_NAME": {
+              "type": "string",
+              "value": "[variables('searchConnectionName')]"
+            },
+            "AZURE_BING_CONNECTION_NAME": {
+              "type": "string",
+              "value": "[if(variables('wantBing'), variables('bingConnectionName'), '')]"
+            },
+            "APPLICATIONINSIGHTS_CONNECTION_STRING": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.Insights/components', variables('appInsightsName')), '2020-02-02').ConnectionString]"
+            },
+            "AZURE_TRACING_GEN_AI_CONTENT_RECORDING_ENABLED": {
+              "type": "string",
+              "value": "true"
+            },
+            "AZURE_SQL_CONNECTION_STRING": {
+              "type": "string",
+              "value": "[if(variables('wantSql'), format('Driver={{ODBC Driver 18 for SQL Server}};Server=tcp:{0},1433;Database=clmdb;Uid=clmadmin;Pwd={1};Encrypt=yes;TrustServerCertificate=no;', reference(resourceId('Microsoft.Sql/servers', format('clmsql{0}', parameters('resourceToken'))), '2023-08-01').fullyQualifiedDomainName, parameters('sqlAdminPassword')), '')]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', 'rg-clm-microhack')]"
+      ]
+    }
+  ],
+  "outputs": {
+    "AZURE_LOCATION": {
+      "type": "string",
+      "value": "[parameters('location')]"
+    },
+    "AZURE_RESOURCE_GROUP": {
+      "type": "string",
+      "value": "rg-clm-microhack"
+    },
+    "AZURE_AI_PROJECT_ENDPOINT": {
+      "type": "string",
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, 'rg-clm-microhack'), 'Microsoft.Resources/deployments', 'clm-resources'), '2025-04-01').outputs.AZURE_AI_PROJECT_ENDPOINT.value]"
+    },
+    "MODEL_ORCHESTRATOR": {
+      "type": "string",
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, 'rg-clm-microhack'), 'Microsoft.Resources/deployments', 'clm-resources'), '2025-04-01').outputs.MODEL_ORCHESTRATOR.value]"
+    },
+    "MODEL_DRAFTING": {
+      "type": "string",
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, 'rg-clm-microhack'), 'Microsoft.Resources/deployments', 'clm-resources'), '2025-04-01').outputs.MODEL_DRAFTING.value]"
+    },
+    "MODEL_CLAUSE_RISK": {
+      "type": "string",
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, 'rg-clm-microhack'), 'Microsoft.Resources/deployments', 'clm-resources'), '2025-04-01').outputs.MODEL_CLAUSE_RISK.value]"
+    },
+    "MODEL_RENEWAL": {
+      "type": "string",
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, 'rg-clm-microhack'), 'Microsoft.Resources/deployments', 'clm-resources'), '2025-04-01').outputs.MODEL_RENEWAL.value]"
+    },
+    "AZURE_SEARCH_ENDPOINT": {
+      "type": "string",
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, 'rg-clm-microhack'), 'Microsoft.Resources/deployments', 'clm-resources'), '2025-04-01').outputs.AZURE_SEARCH_ENDPOINT.value]"
+    },
+    "AZURE_SEARCH_INDEX": {
+      "type": "string",
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, 'rg-clm-microhack'), 'Microsoft.Resources/deployments', 'clm-resources'), '2025-04-01').outputs.AZURE_SEARCH_INDEX.value]"
+    },
+    "AZURE_SEARCH_CONNECTION_NAME": {
+      "type": "string",
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, 'rg-clm-microhack'), 'Microsoft.Resources/deployments', 'clm-resources'), '2025-04-01').outputs.AZURE_SEARCH_CONNECTION_NAME.value]"
+    },
+    "AZURE_BING_CONNECTION_NAME": {
+      "type": "string",
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, 'rg-clm-microhack'), 'Microsoft.Resources/deployments', 'clm-resources'), '2025-04-01').outputs.AZURE_BING_CONNECTION_NAME.value]"
+    },
+    "APPLICATIONINSIGHTS_CONNECTION_STRING": {
+      "type": "string",
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, 'rg-clm-microhack'), 'Microsoft.Resources/deployments', 'clm-resources'), '2025-04-01').outputs.APPLICATIONINSIGHTS_CONNECTION_STRING.value]"
+    },
+    "AZURE_TRACING_GEN_AI_CONTENT_RECORDING_ENABLED": {
+      "type": "string",
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, 'rg-clm-microhack'), 'Microsoft.Resources/deployments', 'clm-resources'), '2025-04-01').outputs.AZURE_TRACING_GEN_AI_CONTENT_RECORDING_ENABLED.value]"
+    },
+    "AZURE_SQL_CONNECTION_STRING": {
+      "type": "string",
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, 'rg-clm-microhack'), 'Microsoft.Resources/deployments', 'clm-resources'), '2025-04-01').outputs.AZURE_SQL_CONNECTION_STRING.value]"
+    }
+  }
+}

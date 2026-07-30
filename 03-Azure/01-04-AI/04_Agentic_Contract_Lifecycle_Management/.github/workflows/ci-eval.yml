@@ -1,0 +1,62 @@
+name: ci-eval
+
+# Continuous evaluation gate (Challenge 3 quality + Challenge 6 safety).
+# Runs on demand and nightly. Requires Azure secrets to be configured, so it is
+# guarded: if AZURE_CLIENT_ID is not set, the job no-ops instead of failing.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * 1-5" # weekdays 06:00 UTC
+
+permissions:
+  id-token: write # OIDC federated login to Azure
+  contents: read
+
+jobs:
+  eval-gate:
+    runs-on: ubuntu-latest
+    env:
+      AZURE_AI_PROJECT_ENDPOINT: ${{ secrets.AZURE_AI_PROJECT_ENDPOINT }}
+      MODEL_ORCHESTRATOR: ${{ vars.MODEL_ORCHESTRATOR || 'gpt-5.4' }}
+      MODEL_DRAFTING: ${{ vars.MODEL_DRAFTING || 'claude-opus-4-8' }}
+      MODEL_CLAUSE_RISK: ${{ vars.MODEL_CLAUSE_RISK || 'gpt-5.6-sol' }}
+      MODEL_RENEWAL: ${{ vars.MODEL_RENEWAL || 'gpt-5-mini' }}
+      AZURE_SEARCH_INDEX: ${{ vars.AZURE_SEARCH_INDEX || 'clm-corpus' }}
+      PYTHONPATH: src
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Skip if Azure isn't configured
+        id: guard
+        run: |
+          if [ -z "${{ secrets.AZURE_CLIENT_ID }}" ]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Azure secrets not set — skipping the eval gate. Configure AZURE_CLIENT_ID / AZURE_TENANT_ID / AZURE_SUBSCRIPTION_ID and AZURE_AI_PROJECT_ENDPOINT to enable."
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-python@v5
+        if: steps.guard.outputs.configured == 'true'
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        if: steps.guard.outputs.configured == 'true'
+        run: pip install -r requirements.txt "azure-ai-evaluation[redteam]"
+
+      - name: Azure login (OIDC)
+        if: steps.guard.outputs.configured == 'true'
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Quality gate (Challenge 3)
+        if: steps.guard.outputs.configured == 'true'
+        run: python src/evaluators.py --gate 4.0
+
+      - name: Safety gate (Challenge 6)
+        if: steps.guard.outputs.configured == 'true'
+        run: python src/safety_eval.py --gate 0.1 --safety-evals

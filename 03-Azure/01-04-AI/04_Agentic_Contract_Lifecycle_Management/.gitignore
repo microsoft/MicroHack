@@ -1,0 +1,33 @@
+# Secrets / local config
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.python-version
+
+# Node / MCP tooling
+node_modules/
+
+# Build / conversion artifacts
+*.log
+*.pdf
+# ...but the Challenge 1 CLM corpus PDFs ARE seed data and must be tracked.
+!src/data/**/*.pdf
+dist/
+build/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Azure / tooling
+.azure/
+*.azd

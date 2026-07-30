@@ -1,0 +1,58 @@
+# ==========================================================================
+# Foundry CLM Microhack — Python dependencies
+# ==========================================================================
+
+# --- Microsoft Agent Framework (every agent in this repo is built on it) ---
+# `agent-framework-foundry` pulls in `agent-framework-core` (the Agent, tool
+# and orchestration APIs) and `agent-framework-openai`, and targets Foundry as
+# the chat-client provider so the multi-model fleet (Claude + GPT in one
+# Foundry project) and Foundry IQ / Azure AI Search grounding keep working.
+agent-framework-core>=1.11.0,<2
+agent-framework-foundry>=1.10.1,<2
+
+# --- Foundry project client + auth ----------------------------------------
+# azure-ai-projects v2 is required by agent-framework-foundry and is used here
+# only to resolve the default Azure AI Search connection for grounding.
+azure-ai-projects>=2.2.0,<2.3.0
+azure-identity>=1.19.0
+openai>=1.108.0
+# NOTE: azure-ai-agents (the older Foundry Agent Service SDK) is no longer a
+# direct dependency — agents are built with the Microsoft Agent Framework above.
+# Fallback path for calling Claude directly if the Foundry chat client doesn't
+# yet support a non-OpenAI model in your region (see challenge-1 README).
+anthropic>=0.50.0
+
+# --- Grounding / knowledge (Foundry IQ over Azure AI Search) --------------
+# The Azure AI Search SDK also creates the SharePoint Online data source +
+# indexer that crawls the corpus library into the clm-corpus index (Ch0 seeding).
+azure-search-documents>=11.5.0
+# Text extraction from the corpus PDFs (executed contracts, templates, clause
+# library, policy, counterparty drafts) so the Clause & Risk agent (Ch3) can
+# analyze inbound drafts locally. Regenerating the PDFs is build-time only and
+# needs reportlab (`pip install reportlab`; see scripts/make_corpus_pdfs.py).
+pypdf>=5.0.0
+
+# --- Observability + evaluation (Challenge 2) -----------------------------
+azure-monitor-opentelemetry>=1.6.0
+opentelemetry-sdk>=1.27.0
+azure-ai-evaluation>=1.3.0
+# Bonus Challenge 5 (safety + AI Red Teaming Agent) needs the redteam extra
+# (pulls PyRIT). Install when doing Ch5:  pip install "azure-ai-evaluation[redteam]"
+# azure-ai-evaluation[redteam]>=1.3.0
+
+# --- Function tool: Azure SQL contract lookups ----------------------------
+pyodbc>=5.1.0
+
+# --- MCP server (Challenge 3) — official SDK, pin to stable v1.x ----------
+mcp>=1.9,<2
+
+# --- Publish + proactive Teams alerts (Challenge 4) -----------------------
+botbuilder-core>=4.16.0
+botbuilder-schema>=4.16.0
+botbuilder-integration-aiohttp>=4.16.0
+aiohttp>=3.10.0
+
+# --- Utilities ------------------------------------------------------------
+python-dotenv>=1.0.1
+requests>=2.32.0
+rich>=13.9.0

@@ -1,0 +1,45 @@
+{
+  "name": "Azure / App Innovation / GHCP App Modernization",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/dotnet:2": {
+      "version": "10.0"
+    },
+    "ghcr.io/devcontainers/features/java:1": {
+      "version": "25"
+    },
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "24"
+    },
+    "ghcr.io/devcontainers/features/azure-cli:1": {},
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/copilot-cli:1": {}
+  },
+  "overrideFeatureInstallOrder": [
+    "ghcr.io/devcontainers/features/dotnet",
+    "ghcr.io/devcontainers/features/java",
+    "ghcr.io/devcontainers/features/node",
+    "ghcr.io/devcontainers/features/azure-cli",
+    "ghcr.io/devcontainers/features/docker-outside-of-docker",
+    "ghcr.io/devcontainers/features/github-cli",
+    "ghcr.io/devcontainers/features/copilot-cli"
+  ],
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/microhack,type=bind,consistency=cached",
+  "workspaceFolder": "/workspaces/microhack/03-Azure/01-01-App Innovation/03_GHCPAppModernization",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "GitHub.copilot",
+        "GitHub.copilot-chat"
+      ],
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  },
+  "remoteUser": "vscode",
+  "postAttachCommand": "bash /workspaces/microhack/.devcontainer/welcome.sh"
+}

@@ -1,0 +1,15 @@
+{
+  "name": "Azure / AI / Inventory Planning Agentic",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/microhack,type=bind,consistency=cached",
+  "workspaceFolder": "/workspaces/microhack/03-Azure/01-04-AI/03_Inventory_Planning_Agentic",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  },
+  "remoteUser": "vscode",
+  "postAttachCommand": "bash /workspaces/microhack/.devcontainer/welcome.sh"
+}

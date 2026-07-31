@@ -1,0 +1,15 @@
+{
+  "name": "Azure / Infra / Hybrid Azure Arc Kubernetes",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/microhack,type=bind,consistency=cached",
+  "workspaceFolder": "/workspaces/microhack/03-Azure/01-03-Infrastructure/03_Hybrid_Azure_Arc_Kubernetes",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  },
+  "remoteUser": "vscode",
+  "postAttachCommand": "bash /workspaces/microhack/.devcontainer/welcome.sh"
+}

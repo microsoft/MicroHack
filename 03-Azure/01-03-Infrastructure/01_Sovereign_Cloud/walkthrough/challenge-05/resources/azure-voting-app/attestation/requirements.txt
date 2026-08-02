@@ -1,0 +1,6 @@
+flask>=2.3
+requests
+click
+pyjwt
+cryptography
+construct

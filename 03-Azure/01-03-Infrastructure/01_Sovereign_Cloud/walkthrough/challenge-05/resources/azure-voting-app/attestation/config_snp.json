@@ -1,0 +1,11 @@
+{
+    "attestation_url": "",
+    "attestation_provider": "maa_snp",
+    "api_key": "",
+    "enable_metrics": false,
+    "claims": {
+        "user-claims": {
+            "nonce": "placeholder-replaced-per-request"
+        }
+    }
+}

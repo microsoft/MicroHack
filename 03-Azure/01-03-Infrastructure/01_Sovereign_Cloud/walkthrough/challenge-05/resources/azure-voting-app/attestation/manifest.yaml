@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cc-attest
+  labels: { app: cc-attest }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: cc-attest } }
+  template:
+    metadata:
+      labels: { app: cc-attest }
+    spec:
+      nodeSelector:
+        kubernetes.io/os: linux
+        workload: confidential
+      containers:
+      - name: cc-attest
+        image: docker.io/library/python:3.11-slim
+        securityContext:
+          privileged: true
+        env:
+        - name: POD_NAME
+          valueFrom: { fieldRef: { fieldPath: metadata.name } }
+        - name: NODE_NAME
+          valueFrom: { fieldRef: { fieldPath: spec.nodeName } }
+        - name: CVM_TOOLS_DIR
+          value: /opt/cvm-tools/cvm-attestation
+        ports:
+        - containerPort: 80
+        command: ["bash","-c"]
+        args:
+        - |
+          set -e
+          export DEBIAN_FRONTEND=noninteractive
+          apt-get update -qq
+          apt-get install -y -qq --no-install-recommends git ca-certificates tpm2-tools >/dev/null
+          rm -rf /opt/cvm-tools
+          git clone --depth 1 https://github.com/Azure/cvm-attestation-tools.git /opt/cvm-tools
+          cd /opt/cvm-tools/cvm-attestation
+          pip install --no-cache-dir -r requirements.txt >/dev/null
+          pip install --no-cache-dir flask >/dev/null
+          mkdir -p /app/templates
+          cp /etc/attest-app/app.py          /app/app.py
+          cp /etc/attest-app/config_snp.json /app/config_snp.json
+          cp /etc/attest-app/index.html      /app/templates/index.html
+          exec python /app/app.py
+        volumeMounts:
+        - { name: tpmrm,    mountPath: /dev/tpmrm0 }
+        - { name: tpm0,     mountPath: /dev/tpm0 }
+        - { name: securityfs, mountPath: /sys/kernel/security, readOnly: true }
+        - { name: app,      mountPath: /etc/attest-app }
+        startupProbe:
+          httpGet: { path: /healthz, port: 80 }
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          failureThreshold: 60
+        readinessProbe:
+          httpGet: { path: /healthz, port: 80 }
+          periodSeconds: 10
+          failureThreshold: 6
+        resources:
+          requests: { cpu: 100m, memory: 256Mi }
+          limits:   { cpu: 1,    memory: 1Gi }
+      volumes:
+      - name: tpmrm
+        hostPath: { path: /dev/tpmrm0, type: CharDevice }
+      - name: tpm0
+        hostPath: { path: /dev/tpm0,   type: CharDevice }
+      - name: securityfs
+        hostPath: { path: /sys/kernel/security, type: Directory }
+      - name: app
+        configMap:
+          name: cc-attest-app
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cc-attest
+spec:
+  type: LoadBalancer
+  selector: { app: cc-attest }
+  ports:
+  - port: 80
+    targetPort: 80

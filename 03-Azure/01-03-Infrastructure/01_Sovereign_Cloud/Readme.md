@@ -45,8 +45,8 @@ After completing this MicroHack you will:
 | 1         | Using Azure native platform controls (e.g. Policy, RBAC etc) to enforce sovereign controls in the public cloud | [Challenge](./challenges/challenge-01.md) | [Solution](./walkthrough/challenge-01/solution-01.md) | 45 min | Jan Egil Ring |
 | 2         | Encryption at rest with Customer Managed Keys in Azure Key Vault | [Challenge](./challenges/challenge-02.md) | [Solution](./walkthrough/challenge-02/solution-02.md) | 30 min | Ye Zhang |
 | 3         | Encryption in transit - enforcing TLS | [Challenge](./challenges/challenge-03.md) | [Solution](./walkthrough/challenge-03/solution-03.md) | 30 min | Ye Zhang |
-| 4         | Encryption in use with Azure Confidential Compute - VM | [Challenge](./challenges/challenge-04.md) | [Solution](./walkthrough/challenge-04/solution-04.md) | 90-120 min | Murali Rao Yelamanchili |
-| 5         | Encryption in use with Confidential VMs/Node Pools in Azure Kubernetes Service (AKS) | [Challenge](./challenges/challenge-05.md) | [Solution](./walkthrough/challenge-05/solution-05.md) | 90-120 min | Murali Rao Yelamanchili |
+| 4         | Runtime attestation with Confidential Azure Container Instances | [Challenge](./challenges/challenge-04.md) | [Solution](./walkthrough/challenge-04/solution-04.md) | 30-45 min | Murali Rao Yelamanchili |
+| 5         | Confidential workloads and runtime attestation on Azure Kubernetes Service (AKS) | [Challenge](./challenges/challenge-05.md) | [Solution](./walkthrough/challenge-05/solution-05.md) | 30-45 min | Murali Rao Yelamanchili |
 | 6         | Operating Sovereign in a hybrid environment with Azure Local and Azure Arc | [Challenge](./challenges/challenge-06.md) | [Solution](./walkthrough/challenge-06/solution-06.md) | 60-90 min | Jan Egil Ring / Thomas Maurer |
 
 ### General prerequisites
@@ -69,12 +69,10 @@ The main cost driver for this MicroHack is virtual machines:
 
 - **ArcBox for ITPro** cost is approximately 7 USD per day. We recommend setting it up the week before the event, so for example 5 days before the event would result in a cost between 30-40 USD.
 - **LocalBox** cost is approximately 100-110 USD per day. We recommend setting it up the week before the event, so for example 5 days before the event would result in a cost between 5-600 USD.
-- Challenge 4 and 5 contains a Confidential Compute VM (Standard_DC2as_v5) which costs approximately 5 USD per day. These 2 VMs will run only for a few hours as they will be created by the students, so using 50 students as an example running the VMs for 8 hours would results in 2 VMs x 8 hours = 230 USD.
+- Challenge 4 uses two short-lived Azure Container Instances and a Basic Azure Container Registry. Challenge 5 creates one `Standard_D2as_v6` AKS system node and two `Standard_DC2as_v5` confidential nodes by default, plus two public LoadBalancer services. These resources run only for a few hours and should be deleted after each challenge.
 
-This would result in a total cost of 789 USD.
-In addition, there would be some smaller costs for other services like Key Vault, so a rough estimate is 1000 USD for one Sovereign Cloud MicroHack if following the above example.
-An Azure Pricing Calculator estimate is available [here](https://azure.com/e/1a7aec76a3e049cba57cda6742025373).
-This estimate can be adjusted for fewer/more students, running the VMs shorter/longer and adding additional services if desired.
+The total depends on attendee count, runtime, and which optional environments are deployed. Smaller charges also apply for services such as Key Vault, ACI, and ACR.
+An Azure Pricing Calculator estimate is available [here](https://azure.com/e/1a7aec76a3e049cba57cda6742025373) and should be adjusted for the current challenge design, attendee count, and runtime.
 
 If you plan to run this MicroHack in your own subscription on a limited budget, you may skip deploying the prerequisites for Challenge 6, this would leave you with a cost of less than 50 USD for one day as long as resources are deleted when finished with the challenges.
 

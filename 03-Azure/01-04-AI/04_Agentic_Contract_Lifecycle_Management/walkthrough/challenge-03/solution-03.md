@@ -12,7 +12,7 @@ Application Insights, an evaluation scorecard over a labelled dataset, a
   emits spans to Application Insights — you can see agent runs end-to-end.
 - [`src/evaluators.py`](../../src/evaluators.py) scores responses (Relevance,
   Coherence, Groundedness) over the labelled dataset and prints a scorecard.
-- The bake-off compares gpt-5.4 (flagship) vs gpt-4.1-mini (lightweight) on quality vs latency/cost.
+- The bake-off compares gpt-5.4 (flagship) vs gpt-5.4-nano (lightweight) on quality vs latency/cost.
 - The gate `python src/evaluators.py --gate 4.0` **exits 3** if groundedness < 4.0.
 
 ## 🛠️ Task-by-task walkthrough
@@ -100,10 +100,10 @@ python src/evaluators.py
 python src/evaluators.py --bakeoff
 ```
 ```text
---- Bake-off (gpt-5.4 vs gpt-4.1-mini) ---
-  groundedness                             gpt-5.4=4.6   gpt-4.1-mini=4.2
-  relevance                                gpt-5.4=4.4   gpt-4.1-mini=4.1
-  mean latency (s)                         gpt-5.4=3.2   gpt-4.1-mini=1.1
+--- Bake-off (gpt-5.4 vs gpt-5.4-nano) ---
+  groundedness                             gpt-5.4=4.6   gpt-5.4-nano=4.2
+  relevance                                gpt-5.4=4.4   gpt-5.4-nano=4.1
+  mean latency (s)                         gpt-5.4=3.2   gpt-5.4-nano=1.1
 ```
 
 ### Task 5 · Add a quality gate (for CI)

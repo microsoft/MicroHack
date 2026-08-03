@@ -17,7 +17,7 @@ process into a grounded, **agentic** workflow with a human always in the loop.
 
 The build uniquely combines four things: a **multi-model GPT fleet** — orchestration and specialist
 drafting share **GPT-5.4**, clause-analysis runs on **GPT-5.6 Sol**, and renewal tracking runs on
-**GPT-4.1-mini**, all inside a single Foundry project; **grounded retrieval with Foundry IQ** over your own contract corpus so
+**GPT-5.4-nano**, all inside a single Foundry project; **grounded retrieval with Foundry IQ** over your own contract corpus so
 every answer is cited; **tools and an MCP server** that expose the workflow to **Microsoft 365
 Copilot**, **Teams**, and any MCP-compatible client; and the full **GenAIOps lifecycle** —
 OpenTelemetry tracing to Application Insights, evaluation scorecards with a quality gate, and
@@ -85,7 +85,7 @@ diagram](images/diagrams/user-journey.png) alongside this table.
 | **2 · Check their draft** | Uploads Acme's counter-draft MSA | **Clause & Risk** agent (GPT-5.6 Sol) scores every clause against the **Standard Clause Library** and flags deviations | Specialist agent + orchestration | [C4](challenges/challenge-04.md) |
 | **3 · Ask, with citations** | *"What's our standard indemnity cap?"* | **Foundry IQ** answers over the Contoso corpus — **with sources** | Agentic retrieval (Foundry IQ) | [C2](challenges/challenge-02.md) |
 | **4 · Review & sign off** | Reads flags + citations, edits, **approves** | **Human-in-the-loop** — nothing is finalized without sign-off | HITL + guardrails | [C2](challenges/challenge-02.md) · [C4](challenges/challenge-04.md) |
-| **5 · Track obligations** | Reviews upcoming renewals | **Obligation & Renewal** agent (GPT-4.1-mini) **reads** contract status & upcoming renewals via function tools — **Azure SQL** (seed-data fallback) | Function tool / MCP server | [C4](challenges/challenge-04.md) · [C5](challenges/challenge-05.md) |
+| **5 · Track obligations** | Reviews upcoming renewals | **Obligation & Renewal** agent (GPT-5.4-nano) **reads** contract status & upcoming renewals via function tools — **Azure SQL** (seed-data fallback) | Function tool / MCP server | [C4](challenges/challenge-04.md) · [C5](challenges/challenge-05.md) |
 | **6 · Proactive alert** | Gets a proactive Teams ping **before the renewal date** | Renew or renegotiate in time — **no missed auto-renewals** | Publish + proactive messaging | [C5](challenges/challenge-05.md) |
 
 > 🔒 **Under the hood, every step runs in one Microsoft Foundry project** — traced (Application
@@ -125,7 +125,7 @@ deterministic routing and tool/hand-off calls rather than long-form generation.
 ❹ **Specialist agents — each matched to its task *and* its model.** The Orchestrator delegates to three
 grounded specialists: **Intake & Drafting** shares **GPT-5.4** with the Orchestrator for high-fidelity
 drafting while **Clause & Risk** runs on **GPT-5.6 Sol** for structured clause comparison; **Obligation & Renewal** runs on the
-cheaper **GPT-4.1-mini** (blue) for high-frequency date and obligation extraction.
+cheaper **GPT-5.4-nano** (blue) for high-frequency date and obligation extraction.
 
 ❺ **Grounding & tools (blue) — how agents stay factual and act on the world.** **Foundry IQ** (over
 **Azure AI Search**) provides agentic retrieval so drafting and clause agents answer *with citations*
@@ -173,7 +173,7 @@ flowchart TB
         subgraph Farm["LLM farm · model deployments"]
             gpt54["GPT-5.4<br/>OpenAI · GlobalStandard"]
             gpt56sol["GPT-5.6 Sol<br/>OpenAI · GlobalStandard"]
-            gpt5mini["GPT-4.1-mini<br/>OpenAI · GlobalStandard"]
+            gpt5mini["GPT-5.4-nano<br/>OpenAI · GlobalStandard"]
         end
         orch -->|runs on| gpt54
         intake -->|shares| gpt54
@@ -221,7 +221,7 @@ flowchart TB
 
 The fleet uses four agent roles across three distinct GPT deployments in **one** Foundry project:
 the Orchestrator and Intake & Drafting share GPT-5.4, Clause & Risk uses GPT-5.6 Sol, and
-Obligation & Renewal uses GPT-4.1-mini. The platform remains model-agnostic — teams can swap GPT
+Obligation & Renewal uses GPT-5.4-nano. The platform remains model-agnostic — teams can swap GPT
 deployments through configuration without changing the agent or tool code.
 
 | Agent | Model | Why this model |
@@ -229,7 +229,7 @@ deployments through configuration without changing the agent or tool code.
 | **Orchestrator** | GPT-5.4 | Fast, deterministic routing + tool/hand-off calls |
 | **Intake & Drafting** | **GPT-5.4** | High-fidelity, template-grounded drafting; shares the Orchestrator deployment |
 | **Clause & Risk** | **GPT-5.6 Sol** | Structured clause comparison + nuanced risk rationale |
-| **Obligation & Renewal** | GPT-4.1-mini | Cheap, high-frequency structured extraction + alerts |
+| **Obligation & Renewal** | GPT-5.4-nano | Cheap, high-frequency structured extraction + alerts |
 
 ---
 

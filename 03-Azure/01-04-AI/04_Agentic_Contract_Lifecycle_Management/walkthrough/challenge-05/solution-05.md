@@ -33,12 +33,12 @@ by the **Obligation & Renewal** agent.
 > <img src="../../images/challenge-05/steps/02-teams-live.svg" alt="Screenshot slot: agent live in Teams" width="80%">
 
 ### Part B, Task 5 · Build the Obligation & Renewal agent
-[`src/agents/obligation_renewal_agent.py`](../../src/agents/obligation_renewal_agent.py) is a small, cheap GPT-4.1-mini agent with two function tools:
+[`src/agents/obligation_renewal_agent.py`](../../src/agents/obligation_renewal_agent.py) is a small, cheap GPT-5.4-nano agent with two function tools:
 ```python
 # src/agents/obligation_renewal_agent.py
 def create_agent(model=None):
     return Agent(
-        client=build_chat_client(model or settings.model_renewal),   # gpt-4.1-mini
+        client=build_chat_client(model or settings.model_renewal),   # gpt-5.4-nano
         name=AGENT_NAME, instructions=INSTRUCTIONS,
         tools=[function_tool(get_contract_status), function_tool(list_upcoming_renewals)],
     )
@@ -58,7 +58,7 @@ python src/proactive_alerts.py --from-renewals --days 30 --dry-run    # preview 
 ```
 ✅ **You should see** a renewal summary then the previewed alert (day counts differ — relative to today):
 ```text
-✓ Obligation & Renewal agent on 'gpt-4.1-mini' — window 60d
+✓ Obligation & Renewal agent on 'gpt-5.4-nano' — window 60d
   🔴 CT-6033 (Soylent Co · MSA) — renews in ~25 days, auto-renew ON, 90-day notice → HIGH, send notice now
   🔴 CT-4821 (Acme Corp · MSA) — renews in ~55 days, auto-renew ON, 90-day notice → HIGH, notify owner
 --- alert (dry run) ---
@@ -105,7 +105,7 @@ python src/proactive_alerts.py --from-renewals --days 30      # generate from th
 
 | Path | Role |
 |------|------|
-| [`src/agents/obligation_renewal_agent.py`](../../src/agents/obligation_renewal_agent.py) | Reads contract status + upcoming renewals (GPT-4.1-mini) |
+| [`src/agents/obligation_renewal_agent.py`](../../src/agents/obligation_renewal_agent.py) | Reads contract status + upcoming renewals (GPT-5.4-nano) |
 | [`src/proactive_alerts.py`](../../src/proactive_alerts.py) | Sends proactive Teams renewal alerts via the Bot Framework |
 | [`src/manifest/`](../../src/manifest/) | Teams / M365 Copilot app package (manifest + branded icons) |
 

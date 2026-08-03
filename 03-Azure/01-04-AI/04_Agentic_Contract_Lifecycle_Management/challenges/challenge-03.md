@@ -34,7 +34,7 @@ that blocks a bad build.
   fluency) are **LLM-judged** by an Azure OpenAI deployment. A *target* callable generates the
   agent's response for each dataset row so evaluation is end-to-end.
 - **Bake-off**: run the same agent + same scorecard on the **gpt-5.4** flagship vs the lighter
-  **gpt-4.1-mini** deployment and compare quality against latency/cost — the concrete payoff of a
+  **gpt-5.4-nano** deployment and compare quality against latency/cost — the concrete payoff of a
   model-agnostic platform.
 
 ## 🧰 Services & models in this challenge
@@ -86,12 +86,12 @@ an **Agent Monitoring Dashboard** — no query-writing required.
 
 **What it is:** the library ([`src/evaluators.py`](../src/evaluators.py)) that **scores** agent responses.
 `GroundednessEvaluator`, `RelevanceEvaluator`, `CoherenceEvaluator` and `FluencyEvaluator` are **LLM-judged**
-by an Azure OpenAI deployment (your `gpt-5.4` / `gpt-4.1-mini`); a `target(query)` callable produces the
+by an Azure OpenAI deployment (your `gpt-5.4` / `gpt-5.4-nano`); a `target(query)` callable produces the
 agent's answer for each of the **16 rows** in `src/data/evaluation/evaluation_dataset.jsonl`.
 
 - Ready-made **quality** and **safety** evaluators (safety ones take `azure_ai_project` + a credential).
 - The gate `python src/evaluators.py --gate 4.0` **exits 3** if groundedness < 4.0 — drop-in for CI.
-- `--bakeoff` reruns the same scorecard on **gpt-5.4 vs gpt-4.1-mini** to weigh quality against latency/cost.
+- `--bakeoff` reruns the same scorecard on **gpt-5.4 vs gpt-5.4-nano** to weigh quality against latency/cost.
 
 **Why here:** tracing shows *what happened*; evaluation shows *how good it was* — and lets a bad build
 **fail the gate** before it ships. → [Evaluation & observability](https://learn.microsoft.com/en-us/azure/foundry/concepts/observability)
@@ -181,7 +181,7 @@ You'll get a scorecard for the gpt-5.4 drafting agent.
 
 ### Task 4 · Run the bake-off (~10 min)
 
-gpt-5.4 (flagship) vs gpt-4.1-mini (lightweight) on the same scorecard:
+gpt-5.4 (flagship) vs gpt-5.4-nano (lightweight) on the same scorecard:
 ```bash
 python src/evaluators.py --bakeoff
 ```
@@ -189,10 +189,10 @@ Compare groundedness/relevance vs mean latency. Which model wins for *this* task
 
 ✅ **You should see** a side-by-side block:
 ```text
---- Bake-off (gpt-5.4 vs gpt-4.1-mini) ---
-  groundedness                             gpt-5.4=4.6   gpt-4.1-mini=4.2
-  relevance                                gpt-5.4=4.4   gpt-4.1-mini=4.1
-  mean latency (s)                         gpt-5.4=3.2   gpt-4.1-mini=1.1
+--- Bake-off (gpt-5.4 vs gpt-5.4-nano) ---
+  groundedness                             gpt-5.4=4.6   gpt-5.4-nano=4.2
+  relevance                                gpt-5.4=4.4   gpt-5.4-nano=4.1
+  mean latency (s)                         gpt-5.4=3.2   gpt-5.4-nano=1.1
 ```
 
 ### Task 5 · Add a quality gate (~10 min)
@@ -225,7 +225,7 @@ Python API yet; the `--gate` flag is the code-first equivalent for CI.)
 
 - Prompt/retrieval/tool spans visible in the portal for **every agent in the fleet**.
 - An evaluation scorecard is produced (groundedness, relevance, coherence, fluency).
-- The **gpt-5.4-vs-gpt-4.1-mini** comparison is captured (quality + latency).
+- The **gpt-5.4-vs-gpt-5.4-nano** comparison is captured (quality + latency).
 - The quality gate **fails** when you set a threshold above the measured score (try `--gate 5.0`).
 
 ## 🚀 Go Further
@@ -250,7 +250,7 @@ Python API yet; the `--gate` flag is the code-first equivalent for CI.)
 
 - Tracing shows *what happened*; evaluation shows *how good it was*. Which would catch a silent
   grounding regression, and which a latency spike?
-- After the bake-off, would you keep drafting on gpt-5.4, or move to the lighter gpt-4.1-mini? What
+- After the bake-off, would you keep drafting on gpt-5.4, or move to the lighter gpt-5.4-nano? What
   evidence (quality vs latency/cost) drives that call — and how would continuous eval keep you honest
   in production?
 

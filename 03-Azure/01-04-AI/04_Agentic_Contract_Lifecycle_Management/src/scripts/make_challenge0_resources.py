@@ -184,7 +184,7 @@ resource(46, 66.2, 33.5, 13.6, "GPT", GPT, "gpt-5.4",
          "OpenAI · shared w/ orch.\nIntake & Drafting", mono_fs=8, title_fs=9.5)
 resource(82, 66.2, 33.5, 13.6, "SOL", GPT, "gpt-5.6-sol",
          "OpenAI · GlobalStd 20\nClause & Risk", mono_fs=8, title_fs=9.5)
-resource(118, 66.2, 33.5, 13.6, "GPT", GPT, "gpt-4.1-mini",
+resource(118, 66.2, 33.5, 13.6, "GPT", GPT, "gpt-5.4-nano",
          "OpenAI · GlobalStd 30\nObligation & Renewal", mono_fs=8, title_fs=9.5)
 
 # capability tags

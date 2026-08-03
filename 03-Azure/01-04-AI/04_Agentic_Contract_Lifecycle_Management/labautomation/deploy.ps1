@@ -15,7 +15,7 @@ $Project     = $env:PROJECT     ?? "clm-project"
 $Search      = $env:SEARCH      ?? "clmsearch$Suffix"
 $AppInsights = "clm-appinsights"
 
-$GptOrch = "gpt-5.4"; $GptMini = "gpt-4.1-mini"; $Gpt56Sol = "gpt-5.6-sol"
+$GptOrch = "gpt-5.4"; $GptMini = "gpt-5.4-nano"; $Gpt56Sol = "gpt-5.6-sol"
 
 # The Intake & Drafting agent shares the gpt-5.4 orchestrator deployment (the
 # highest-quota flagship in the project), so no separate drafting model is deployed.
@@ -40,7 +40,7 @@ function Deploy-Model($name, $model, $version, $format, $cap) {
   if ($LASTEXITCODE -ne 0) { Write-Host "    ! $name failed — check availability in $Location." }
 }
 Deploy-Model $GptOrch  "gpt-5.4"          "2026-03-05" "OpenAI"    30
-Deploy-Model $GptMini  "gpt-4.1-mini"     "2025-04-14" "OpenAI"    30
+Deploy-Model $GptMini  "gpt-5.4-nano"     "2025-04-14" "OpenAI"    30
 # Clause & Risk runs on gpt-5.6-sol — its own dedicated deployment.
 Deploy-Model $Gpt56Sol "gpt-5.6-sol"      "2026-07-09" "OpenAI"    30
 

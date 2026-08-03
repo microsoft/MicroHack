@@ -40,7 +40,7 @@ same resources from `infra/`.
 
 [`infra/`](infra/) holds the Bicep templates (plus `azuredeploy.json` for the
 one-click **Deploy to Azure** button) that create the Microsoft Foundry project, the
-three GPT model deployments (`gpt-5.4`, `gpt-5.6-sol`, `gpt-4.1-mini`), Azure AI Search, Azure SQL, and Application Insights.
+three GPT model deployments (`gpt-5.4`, `gpt-5.6-sol`, `gpt-5.4-nano`), Azure AI Search, Azure SQL, and Application Insights.
 `azure.yaml` at the repo root points `azd` at this folder.
 
 ## Scripts

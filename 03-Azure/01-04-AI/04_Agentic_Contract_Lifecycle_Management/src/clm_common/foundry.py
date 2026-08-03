@@ -69,7 +69,7 @@ async def run_agent(agent, prompt: str, *, session=None) -> str:
 
 
 # --- Rate-limit-aware retry --------------------------------------------------
-# The shared Foundry model deployments (gpt-5.4 / gpt-5.6-sol / gpt-4.1-mini)
+# The shared Foundry model deployments (gpt-5.4 / gpt-5.6-sol / gpt-5.4-nano)
 # are throughput-throttled, so a burst of demo prompts can hit HTTP 429
 # `rate_limit_exceeded` and crash a run mid-way. `run_agent_with_retry` retries
 # transient rate-limit errors with exponential backoff (honouring a Retry-After

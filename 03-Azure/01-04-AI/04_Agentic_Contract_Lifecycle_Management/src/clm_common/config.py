@@ -49,7 +49,7 @@ class Settings:
     model_orchestrator: str = field(default_factory=lambda: _get("MODEL_ORCHESTRATOR", "gpt-5.4"))
     model_drafting: str = field(default_factory=lambda: _get("MODEL_DRAFTING", "gpt-5.4"))
     model_clause_risk: str = field(default_factory=lambda: _get("MODEL_CLAUSE_RISK", "gpt-5.6-sol"))
-    model_renewal: str = field(default_factory=lambda: _get("MODEL_RENEWAL", "gpt-4.1-mini"))
+    model_renewal: str = field(default_factory=lambda: _get("MODEL_RENEWAL", "gpt-5.4-nano"))
 
     # Grounding
     search_endpoint: str | None = field(default_factory=lambda: _get("AZURE_SEARCH_ENDPOINT"))

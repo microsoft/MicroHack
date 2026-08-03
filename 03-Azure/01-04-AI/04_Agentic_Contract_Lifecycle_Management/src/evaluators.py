@@ -4,13 +4,13 @@ Runs the Foundry `azure-ai-evaluation` evaluators over
 src/data/evaluation/evaluation_dataset.jsonl, using a *target* callable that
 generates the agent's response for each row. Then it does the headline
 **cross-model bake-off**: run the Intake & Drafting agent on the **gpt-5.4**
-flagship vs the lighter **gpt-4.1-mini** deployment against the SAME scorecard, and
+flagship vs the lighter **gpt-5.4-nano** deployment against the SAME scorecard, and
 compare quality vs cost/latency. Finally, a **quality gate** fails the build if
 groundedness drops below a threshold.
 
 Usage:
     python src/evaluators.py                 # evaluate the drafting model (gpt-5.4)
-    python src/evaluators.py --bakeoff       # gpt-5.4 vs gpt-4.1-mini comparison
+    python src/evaluators.py --bakeoff       # gpt-5.4 vs gpt-5.4-nano comparison
     python src/evaluators.py --gate 4.0      # fail if mean groundedness < 4.0
     python src/evaluators.py --workers 2     # throttle evaluator concurrency (429s)
 """
@@ -223,7 +223,7 @@ def _configure_workers(workers: int | None) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--bakeoff", action="store_true",
-                        help="compare the drafting model (gpt-5.4) vs gpt-4.1-mini")
+                        help="compare the drafting model (gpt-5.4) vs gpt-5.4-nano")
     parser.add_argument("--gate", type=float, default=None,
                         help="fail if mean groundedness < THRESHOLD (e.g. 4.0)")
     parser.add_argument("--workers", type=int, default=None,

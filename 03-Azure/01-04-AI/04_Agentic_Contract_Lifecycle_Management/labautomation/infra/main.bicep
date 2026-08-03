@@ -11,7 +11,7 @@ targetScope = 'subscription'
 param environmentName string
 
 @minLength(1)
-@description('Azure region for all resources. Must offer gpt-5.4, gpt-4.1-mini and gpt-5.6-sol.')
+@description('Azure region for all resources. Must offer gpt-5.4, gpt-5.4-nano and gpt-5.6-sol.')
 param location string
 
 @description('Object id of the user/service principal running the deployment (azd provides AZURE_PRINCIPAL_ID). Used for RBAC.')

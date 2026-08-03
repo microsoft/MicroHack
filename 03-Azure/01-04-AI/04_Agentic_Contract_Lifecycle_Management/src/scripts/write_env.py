@@ -28,7 +28,7 @@ DEFAULTS = {
     "MODEL_ORCHESTRATOR": "gpt-5.4",
     "MODEL_DRAFTING": "gpt-5.4",
     "MODEL_CLAUSE_RISK": "gpt-5.6-sol",
-    "MODEL_RENEWAL": "gpt-4.1-mini",
+    "MODEL_RENEWAL": "gpt-5.4-nano",
     "AZURE_SEARCH_INDEX": "clm-corpus",
     "AZURE_SEARCH_CONNECTION_NAME": "clm-search",
     "SHAREPOINT_DOC_LIBRARY": "Documents",

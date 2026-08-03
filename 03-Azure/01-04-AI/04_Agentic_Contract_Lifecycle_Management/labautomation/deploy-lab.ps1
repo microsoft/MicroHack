@@ -89,7 +89,7 @@ function Get-MhhIdentityPrincipalId {
 
 # --- Region fallback list ---------------------------------------------------
 # Honour the platform's ordered preference; fall back across regions that offer the
-# gpt-5.4 / gpt-4.1-mini / gpt-5.6-sol deployments.
+# gpt-5.4 / gpt-5.4-nano / gpt-5.6-sol deployments.
 $candidateRegions = if ($PreferredLocation.Count -gt 0) { $PreferredLocation } else { @('swedencentral', 'westeurope', 'norwayeast') }
 
 $scriptPath = Split-Path -Parent $MyInvocation.MyCommand.Definition

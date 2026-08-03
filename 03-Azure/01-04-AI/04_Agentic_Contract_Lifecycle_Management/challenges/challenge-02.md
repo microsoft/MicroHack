@@ -141,7 +141,7 @@ each is**, the **specifics wired into this repo**, and **why it's in the archite
 your `.env` reaches it through `AZURE_AI_PROJECT_ENDPOINT`
 (`https://<account>.services.ai.azure.com/api/projects/clm-project`).
 
-- **All three models deploy onto that one account** — `gpt-5.4`, `gpt-5.6-sol`, `gpt-4.1-mini` — so a
+- **All three models deploy onto that one account** — `gpt-5.4`, `gpt-5.6-sol`, `gpt-5.4-nano` — so a
   single `get_project_client()` ([`src/clm_common/foundry.py`](../src/clm_common/foundry.py)) reaches each.
 - The **Microsoft Agent Framework** (`Agent(client=FoundryChatClient(...))`) runs the agent loop **in your
   process** — planning, tool-calls and retrieval — calling Foundry for model inference.
@@ -198,7 +198,7 @@ and keeps them where the business already curates them. → [Index SharePoint co
 - Called through the **same Agents API** as every other deployment; only the deployment name differs.
 
 **Why here:** drafting and orchestration share **`gpt-5.4`**; the clause-risk specialist uses **`gpt-5.6-sol`**
-and the renewal scan **`gpt-4.1-mini`** — right model per job, one platform. → [Models in Microsoft Foundry](https://learn.microsoft.com/azure/ai-foundry/)
+and the renewal scan **`gpt-5.4-nano`** — right model per job, one platform. → [Models in Microsoft Foundry](https://learn.microsoft.com/azure/ai-foundry/)
 
 ### Function tools — `get_contract_status`
 
@@ -356,7 +356,7 @@ safety adds a second, model-independent layer (previewed here, built in **Challe
 ### ⚙️ Swapping the deployment (model-agnostic by design)
 
 The agent reaches its model purely through `model=settings.model_drafting` on `build_chat_client(...)`.
-To run drafting on a different deployment — a cheaper `gpt-4.1-mini`, or any other model you've deployed —
+To run drafting on a different deployment — a cheaper `gpt-5.4-nano`, or any other model you've deployed —
 change the single `MODEL_DRAFTING` value in `.env` (or `settings.model_drafting`); the grounding, tools,
 persona and run loop are untouched. That's the whole point of Foundry as a control plane: the
 agent/tool/grounding API is identical across models.
@@ -421,7 +421,7 @@ to it, and everything it does will be **traced and evaluated** in Challenge 3.
 ## 🧠 Reflection
 
 - Why put **drafting** and **routing** on the same `gpt-5.4` deployment, but the **renewal scan** on
-  `gpt-4.1-mini`? (Flagship instruction-following & long-context reasoning vs. fast, cheap batch scanning.)
+  `gpt-5.4-nano`? (Flagship instruction-following & long-context reasoning vs. fast, cheap batch scanning.)
 - Where should guardrails live — in the prompt, as a content-safety policy, or both? What does each
   catch that the other misses?
 - When should a fact come from a **function tool** vs. **retrieval**? What breaks if you let the model

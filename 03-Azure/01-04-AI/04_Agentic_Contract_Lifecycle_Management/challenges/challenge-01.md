@@ -46,7 +46,7 @@ All resources reside in a **single resource group** (default name `rg-clm-microh
 - A **Microsoft Foundry** account (Azure AI Services · S0) with a **Foundry project** (`clm-project`)
   — one identity, billing, tracing, and governance plane for the whole system.
 - Three **model deployments** — the multi-model GPT fleet the agents run on: **`gpt-5.4`**
-  (Orchestrator + Intake & Drafting share it), **`gpt-5.6-sol`** (Clause & Risk), and **`gpt-4.1-mini`**
+  (Orchestrator + Intake & Drafting share it), **`gpt-5.6-sol`** (Clause & Risk), and **`gpt-5.4-nano`**
   (Obligation & Renewal).
 - **Azure AI Search** (Basic) — the backing store for the **Foundry IQ** knowledge base (`clm-corpus`
   index, `clm-search` connection).
@@ -87,11 +87,11 @@ ID RBAC (Azure AI Developer, Cognitive Services User, Search data roles) — all
 |------------|----------------|-----|-----------------|-----------|
 | `gpt-5.4` | OpenAI `gpt-5.4` (`2026-03-05`) | GlobalStandard · 30 | **Orchestrator** (routing + hand-offs) + **Intake & Drafting** | C1, C3 |
 | `gpt-5.6-sol` | OpenAI `gpt-5.6-sol` (`2026-07-09`) | GlobalStandard · 30 | **Clause & Risk** — clause comparison + risk | C4 |
-| `gpt-4.1-mini` | OpenAI `gpt-4.1-mini` (`2025-04-14`) | GlobalStandard · 30 | **Obligation & Renewal** — cheap, high-frequency | C3 |
+| `gpt-5.4-nano` | OpenAI `gpt-5.4-nano` (`2025-04-14`) | GlobalStandard · 30 | **Obligation & Renewal** — cheap, high-frequency | C3 |
 
 > Every agent runs on **GPT** deployments — all inside **one** Foundry project. That's the multi-model
 > GPT fleet you'll build agents on: Intake & Drafting shares the `gpt-5.4` orchestrator deployment,
-> while Clause & Risk runs on `gpt-5.6-sol` and Obligation & Renewal on `gpt-4.1-mini`.
+> while Clause & Risk runs on `gpt-5.6-sol` and Obligation & Renewal on `gpt-5.4-nano`.
 
 </details>
 
@@ -227,7 +227,7 @@ az account set --subscription "<your-subscription-id>"
 > which case you can **skip to Task 6**. Check with your coach what applies.
 
 Choose a region that offers **all three** models. This repo's infra is pre-pinned to models that are
-available in **`swedencentral`** today (`gpt-5.4`, `gpt-5.6-sol`, `gpt-4.1-mini`), so
+available in **`swedencentral`** today (`gpt-5.4`, `gpt-5.6-sol`, `gpt-5.4-nano`), so
 **`swedencentral` is the safe default** — use it unless your coach says otherwise. Then pick **one** option:
 
 > [!TIP]
@@ -242,7 +242,7 @@ available in **`swedencentral`** today (`gpt-5.4`, `gpt-5.6-sol`, `gpt-4.1-mini`
 > ```bash
 > grep -nE "gptOrchestratorVersion|gptMiniModel|gptMiniVersion|gpt56solVersion" labautomation/infra/resources.bicep
 > ```
-> ✅ You should see **all three** pins: orchestrator `gpt-5.4` `2026-03-05`, renewal `gpt-4.1-mini`
+> ✅ You should see **all three** pins: orchestrator `gpt-5.4` `2026-03-05`, renewal `gpt-5.4-nano`
 > `2025-04-14`, and clause-risk `gpt-5.6-sol` `2026-07-09`.
 > ❌ If you instead see `gpt-5.3-chat`, `2026-03-03`, `2025-11-01`, or `gpt-4o-mini` `2024-07-18`, your fork/checkout
 > is **stale** — go back and **[sync your fork](#task-1--fork-the-repository)** + `git pull`, then re-run
@@ -384,7 +384,7 @@ Application Insights, Log Analytics, and the model deployments live inside the F
 
 **5b — Model deployments in the Foundry portal.** Open [ai.azure.com](https://ai.azure.com) → select
 your **`clm-project`** → **Models + endpoints**. Confirm the deployments show **Succeeded**:
-`gpt-5.4`, `gpt-5.6-sol`, and `gpt-4.1-mini` (**three** model deployments).
+`gpt-5.4`, `gpt-5.6-sol`, and `gpt-5.4-nano` (**three** model deployments).
 
 > 📸 **Screenshot slot — what you'll see:** the three model deployments, all "Succeeded".
 >
@@ -401,7 +401,7 @@ AZURE_AI_PROJECT_ENDPOINT=https://clmfoundryab12c.services.ai.azure.com/api/proj
 MODEL_ORCHESTRATOR=gpt-5.4
 MODEL_DRAFTING=gpt-5.4
 MODEL_CLAUSE_RISK=gpt-5.6-sol
-MODEL_RENEWAL=gpt-4.1-mini
+MODEL_RENEWAL=gpt-5.4-nano
 AZURE_SEARCH_ENDPOINT=https://clmsearchab12c.search.windows.net
 AZURE_SEARCH_INDEX=clm-corpus
 AZURE_SEARCH_CONNECTION_NAME=clm-search
@@ -701,7 +701,7 @@ python src/scripts/smoke_test.py
 2) Pinging orchestrator deployment 'gpt-5.4'… ✓ orchestrator replied: OK
    · drafting shares deployment 'gpt-5.4' with orchestrator — already verified.
 2) Pinging clause-risk deployment 'gpt-5.6-sol'… ✓ clause-risk replied: OK
-2) Pinging renewal deployment 'gpt-4.1-mini'… ✓ renewal replied: OK
+2) Pinging renewal deployment 'gpt-5.4-nano'… ✓ renewal replied: OK
 
 Smoke test: ✅ PASS
 ```
@@ -717,7 +717,7 @@ chat-client limitation.
 
 - `.env` is populated (project endpoint + connection strings).
 - `python src/scripts/smoke_test.py` prints **✅ PASS** — a tiny agent runs on `gpt-5.4`, `gpt-5.6-sol`
-  **and** `gpt-4.1-mini`.
+  **and** `gpt-5.4-nano`.
 - In the Foundry portal you can see the project, the three model deployments, and the
   `clm-corpus` index with documents.
 
@@ -728,7 +728,7 @@ Expected smoke-test output:
 2) Pinging orchestrator deployment 'gpt-5.4'… ✓ orchestrator replied: OK
    · drafting shares deployment 'gpt-5.4' with orchestrator — already verified.
 2) Pinging clause-risk deployment 'gpt-5.6-sol'… ✓ clause-risk replied: OK
-2) Pinging renewal deployment 'gpt-4.1-mini'… ✓ renewal replied: OK
+2) Pinging renewal deployment 'gpt-5.4-nano'… ✓ renewal replied: OK
 Smoke test: ✅ PASS
 ```
 
@@ -744,14 +744,14 @@ Smoke test: ✅ PASS
   `az bicep build --file labautomation/infra/main.bicep --outfile labautomation/infra/azuredeploy.json`.
 - Regenerate this challenge's resource diagram: `python src/scripts/make_challenge0_resources.py`.
 - Add a **US Data Zone** deployment tier for data-residency, or scope RBAC to least privilege.
-- Deploy an alternative lightweight model (e.g. another GPT mini tier) and compare it against `gpt-4.1-mini` for the renewal agent later.
+- Deploy an alternative lightweight model (e.g. another GPT mini tier) and compare it against `gpt-5.4-nano` for the renewal agent later.
 
 ## 🛠️ Troubleshooting
 
 | Symptom | Fix |
 |---------|-----|
-| `DeploymentModelNotSupported` / `deployment failed` for a model | **First: are you on a stale fork?** Run the [preflight grep](#task-4--deploy-the-resources) — it must show `gpt-5.4`+`2026-03-05`, `gpt-5.6-sol`+`2026-07-09`, and `gpt-4.1-mini`+`2025-04-14`. If you see `gpt-5.3-chat`, `2026-03-03`, `2025-11-01`, or `gpt-4o-mini`, [sync your fork](#task-1--fork-the-repository) and `git pull`, then redeploy. **Otherwise** the model **name or version** isn't offered in your region: list what *is* available with `az cognitiveservices model list --location <region> --output table`, then update the model/version in [`infra/resources.bicep`](../labautomation/infra/resources.bicep) (and `labautomation/deploy.sh`). This repo is pre-pinned for `swedencentral`; if you changed regions, switch back or re-pin. |
-| `ServiceModelDeprecating` for `gpt-4o-mini` (or another model) | You're on a **stale template** pinning a deprecating model. The repo now uses `gpt-4.1-mini` `2025-04-14` for the renewal agent — sync your fork + `git pull`. If you deliberately changed a version, pick a current one from `az cognitiveservices model list --location <region> --output table` (avoid ones with a near/past `deprecation.inference` date). |
+| `DeploymentModelNotSupported` / `deployment failed` for a model | **First: are you on a stale fork?** Run the [preflight grep](#task-4--deploy-the-resources) — it must show `gpt-5.4`+`2026-03-05`, `gpt-5.6-sol`+`2026-07-09`, and `gpt-5.4-nano`+`2025-04-14`. If you see `gpt-5.3-chat`, `2026-03-03`, `2025-11-01`, or `gpt-4o-mini`, [sync your fork](#task-1--fork-the-repository) and `git pull`, then redeploy. **Otherwise** the model **name or version** isn't offered in your region: list what *is* available with `az cognitiveservices model list --location <region> --output table`, then update the model/version in [`infra/resources.bicep`](../labautomation/infra/resources.bicep) (and `labautomation/deploy.sh`). This repo is pre-pinned for `swedencentral`; if you changed regions, switch back or re-pin. |
+| `ServiceModelDeprecating` for `gpt-4o-mini` (or another model) | You're on a **stale template** pinning a deprecating model. The repo now uses `gpt-5.4-nano` `2025-04-14` for the renewal agent — sync your fork + `git pull`. If you deliberately changed a version, pick a current one from `az cognitiveservices model list --location <region> --output table` (avoid ones with a near/past `deprecation.inference` date). |
 | `Project can only be created under AIServices Kind account with allowProjectManagement set to true` | Fixed in the template (`account.properties.allowProjectManagement: true`). If you hit it, you're on a stale fork — sync + `git pull` and redeploy. |
 | SharePoint: *"Tenant does not have a SPO license"*, or you can't grant the app's Graph **admin consent** (only Global Reader / **"Grant admin consent" greyed out**) | Only happens if you're **not** an admin of the tenant — in your own sandbox tenant the Path A script self-grants consent. If you hit it, it's **not** a failure: use the **local-PDF fallback (Path B)** — leave the `SHAREPOINT_*` values blank in `.env` and run `python src/scripts/seed_corpus.py`. It extracts `src/data/**/*.pdf` and populates `clm-corpus` directly (needs the Search Index Data Contributor role, granted by `azd up`) — the **same index** the SharePoint path builds, so Challenges 2–6 are unaffected. See [Task 6, Path B](#task-6--seed-the-corpus). |
 | `account project create` unavailable | The CLI project command is preview. Create the project in the **Foundry portal**, then set `AZURE_AI_PROJECT_ENDPOINT` in `.env` manually (Overview → Endpoint). |

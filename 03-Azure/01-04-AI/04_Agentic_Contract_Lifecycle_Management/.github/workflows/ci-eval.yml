@@ -20,7 +20,7 @@ jobs:
       MODEL_ORCHESTRATOR: ${{ vars.MODEL_ORCHESTRATOR || 'gpt-5.4' }}
       MODEL_DRAFTING: ${{ vars.MODEL_DRAFTING || 'gpt-5.4' }}
       MODEL_CLAUSE_RISK: ${{ vars.MODEL_CLAUSE_RISK || 'gpt-5.6-sol' }}
-      MODEL_RENEWAL: ${{ vars.MODEL_RENEWAL || 'gpt-4.1-mini' }}
+      MODEL_RENEWAL: ${{ vars.MODEL_RENEWAL || 'gpt-5.4-nano' }}
       AZURE_SEARCH_INDEX: ${{ vars.AZURE_SEARCH_INDEX || 'clm-corpus' }}
       PYTHONPATH: src
     steps:

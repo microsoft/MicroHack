@@ -55,7 +55,7 @@ DEFAULTS = {
     "MODEL_ORCHESTRATOR": "gpt-5.4",
     "MODEL_DRAFTING": "gpt-5.4",
     "MODEL_CLAUSE_RISK": "gpt-5.6-sol",
-    "MODEL_RENEWAL": "gpt-4.1-mini",
+    "MODEL_RENEWAL": "gpt-5.4-nano",
     "AZURE_SEARCH_INDEX": "clm-corpus",
     "AZURE_SEARCH_CONNECTION_NAME": "clm-search",
     # …
@@ -121,13 +121,13 @@ python src/scripts/smoke_test.py
    ✓ MODEL_ORCHESTRATOR = gpt-5.4
    ✓ MODEL_DRAFTING = gpt-5.4
    ✓ MODEL_CLAUSE_RISK = gpt-5.6-sol
-   ✓ MODEL_RENEWAL = gpt-4.1-mini
+   ✓ MODEL_RENEWAL = gpt-5.4-nano
 2) Pinging orchestrator deployment 'gpt-5.4'…
    ✓ orchestrator replied: OK
    · drafting shares deployment 'gpt-5.4' with orchestrator — already verified.
 2) Pinging clause-risk deployment 'gpt-5.6-sol'…
    ✓ clause-risk replied: OK
-2) Pinging renewal deployment 'gpt-4.1-mini'…
+2) Pinging renewal deployment 'gpt-5.4-nano'…
    ✓ renewal replied: OK
 
 Smoke test: ✅ PASS
@@ -152,5 +152,5 @@ Smoke test: ✅ PASS
 
 | Symptom | Cause / fix |
 |---------|-------------|
-| A model isn't offered in your region | Pick a region with `gpt-5.4`, `gpt-5.6-sol`, and `gpt-4.1-mini`; verify in the Foundry model catalog. |
+| A model isn't offered in your region | Pick a region with `gpt-5.4`, `gpt-5.6-sol`, and `gpt-5.4-nano`; verify in the Foundry model catalog. |
 | Corpus / index empty | Re-run `python src/scripts/seed_corpus.py` (idempotent). |

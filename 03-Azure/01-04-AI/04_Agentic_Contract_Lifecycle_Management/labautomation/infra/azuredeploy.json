@@ -21,7 +21,7 @@
       "type": "string",
       "minLength": 1,
       "metadata": {
-        "description": "Azure region for all resources. Must offer gpt-5.4, gpt-4.1-mini and gpt-5.6-sol."
+        "description": "Azure region for all resources. Must offer gpt-5.4, gpt-5.4-nano and gpt-5.6-sol."
       }
     },
     "principalId": {
@@ -197,13 +197,13 @@
             "bingName": "[format('clmbing{0}', parameters('resourceToken'))]",
             "bingConnectionName": "clm-bing",
             "gptOrchestrator": "gpt-5.4",
-            "gptMini": "gpt-4.1-mini",
+            "gptMini": "gpt-5.4-nano",
             "gpt56sol": "gpt-5.6-sol",
             "gptOrchestratorModel": "gpt-5.4",
             "gptOrchestratorVersion": "2026-03-05",
             "gpt56solModel": "gpt-5.6-sol",
             "gpt56solVersion": "2026-07-09",
-            "gptMiniModel": "gpt-4.1-mini",
+            "gptMiniModel": "gpt-5.4-nano",
             "gptMiniVersion": "2025-04-14",
             "roleAiDeveloper": "64702f94-c441-49e6-a78b-ef80e0188fee",
             "roleCognitiveServicesUser": "a97b65f3-24c7-4388-baec-2e87135dc908",

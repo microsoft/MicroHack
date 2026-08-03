@@ -47,7 +47,7 @@ var bingConnectionName = 'clm-bing'
 // swedencentral offers the base `gpt-5.4` flagship, so the orchestrator
 // deployment (named `gpt-5.4`) runs the `gpt-5.4` catalog model directly.
 var gptOrchestrator = 'gpt-5.4'
-var gptMini = 'gpt-4.1-mini'
+var gptMini = 'gpt-5.4-nano'
 var gpt56sol = 'gpt-5.6-sol'
 // Orchestrator catalog model + version — confirm the exact model/version offered
 // in your region's Foundry model catalog and update here if needed
@@ -60,9 +60,9 @@ var gpt56solModel = 'gpt-5.6-sol'
 var gpt56solVersion = '2026-07-09'
 // Renewal / lightweight agent catalog model. gpt-4o-mini is deprecating in
 // swedencentral (fires ServiceModelDeprecating on new deployments), so the
-// renewal deployment runs gpt-4.1-mini instead — same GlobalStandard SKU, a later
+// renewal deployment runs gpt-5.4-nano instead — same GlobalStandard SKU, a later
 // deprecation horizon, and still cheap/fast for the high-frequency agent.
-var gptMiniModel = 'gpt-4.1-mini'
+var gptMiniModel = 'gpt-5.4-nano'
 var gptMiniVersion = '2025-04-14'
 
 // ---- Built-in role definition ids ----------------------------------------

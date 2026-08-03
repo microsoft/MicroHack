@@ -22,7 +22,7 @@ tips. Participants never see this file; it's for the people running the room.
 
 | Task | Why it matters |
 |------|----------------|
-| **Pick a region with all three model deployments** (`gpt-5.4`, `gpt-4.1-mini`, `gpt-5.6-sol`). `swedencentral` is a good default. | Challenge 1 dies here if a model isn't offered. **Verify in the Foundry model catalog for your exact subscription.** Model versions drift — the repo tracks non-deprecating pins; if you re-pin, avoid versions with a near/past `deprecation.inference` date (`az cognitiveservices model list`). |
+| **Pick a region with all three model deployments** (`gpt-5.4`, `gpt-5.4-nano`, `gpt-5.6-sol`). `swedencentral` is a good default. | Challenge 1 dies here if a model isn't offered. **Verify in the Foundry model catalog for your exact subscription.** Model versions drift — the repo tracks non-deprecating pins; if you re-pin, avoid versions with a near/past `deprecation.inference` date (`az cognitiveservices model list`). |
 | **Check quota** — Basic Azure AI Search + the model SKUs (TPM for each deployment). Request increases early. | Quota denials are the #1 day-of blocker and can take hours to approve. |
 | **Decide the subscription model** — one sub per team (cleanest) vs a shared sub with per-team resource groups / env names. | `azd up` uses an environment name as the RG suffix; shared subs need unique names per team. |
 | **Do a full dry-run** in the target region, including `azd up` **and** `labautomation/deploy.sh`. | You'll hit the region/quota issues before the participants do. |
@@ -64,7 +64,7 @@ of the challenge, what "done" looks like, where teams get stuck, and the hint to
 
 - **Point:** stand up the whole Foundry environment + seed the corpus with **zero local install**.
 - **Done when:** `python src/scripts/smoke_test.py` prints `✅ PASS` (a tiny agent verifies
-  `gpt-5.4`, `gpt-5.6-sol`, and `gpt-4.1-mini`; drafting shares the Orchestrator's `gpt-5.4`) and the `clm-corpus` index shows documents in the portal.
+  `gpt-5.4`, `gpt-5.6-sol`, and `gpt-5.4-nano`; drafting shares the Orchestrator's `gpt-5.4`) and the `clm-corpus` index shows documents in the portal.
 - **Coach prep (before the event):** essentially **none** for the corpus. Each participant is an
   **admin of their own sandbox tenant**, so Task 6 has them run a single script —
   **`python src/scripts/setup_sharepoint_corpus.py`** — that does the *entire* SharePoint path inside

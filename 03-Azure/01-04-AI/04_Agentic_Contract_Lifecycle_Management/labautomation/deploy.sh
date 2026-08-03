@@ -7,7 +7,7 @@
 #           rights to deploy GPT models.
 #
 # NOTE: Model + region availability changes over time. Confirm your target
-#       region offers gpt-5.4, gpt-4.1-mini, and gpt-5.6-sol in the
+#       region offers gpt-5.4, gpt-5.4-nano, and gpt-5.6-sol in the
 #       Foundry model catalog before running. See the challenge-0 README.
 # ==========================================================================
 set -euo pipefail
@@ -31,7 +31,7 @@ done
 
 # Model deployments (name=catalog-model:version:format)
 GPT_ORCH="gpt-5.4"
-GPT_MINI="gpt-4.1-mini"
+GPT_MINI="gpt-5.4-nano"
 GPT56SOL="gpt-5.6-sol"
 
 # The Intake & Drafting agent shares the gpt-5.4 orchestrator deployment (the
@@ -71,8 +71,8 @@ deploy_model () {  # name  model-name  version  format  sku-capacity
 # Confirm the exact model/version in your region's Foundry catalog.
 deploy_model "$GPT_ORCH" "gpt-5.4"          "2026-03-05" "OpenAI"    30
 # Renewal / lightweight agent: gpt-4o-mini is deprecating in swedencentral, so
-# deploy gpt-4.1-mini instead (same GlobalStandard SKU, later deprecation date).
-deploy_model "$GPT_MINI" "gpt-4.1-mini"     "2025-04-14" "OpenAI"    30
+# deploy gpt-5.4-nano instead (same GlobalStandard SKU, later deprecation date).
+deploy_model "$GPT_MINI" "gpt-5.4-nano"     "2025-04-14" "OpenAI"    30
 # Clause & Risk runs on gpt-5.6-sol — its own dedicated deployment.
 deploy_model "$GPT56SOL" "gpt-5.6-sol"      "2026-07-09" "OpenAI"    30
 

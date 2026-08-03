@@ -142,7 +142,7 @@ A **fork** is your own copy of this repo where your changes and progress are sav
 
 > 📸 **Screenshot slot — what you'll see:** the GitHub *Create a new fork* page with the green **Create fork** button.
 >
-> <img src="../images/challenge-01/steps/01-fork.png" alt="Screenshot slot: GitHub fork page" width="80%">
+> <img src="../images/challenge-01/steps/01-fork.svg" alt="Screenshot slot: GitHub fork page" width="80%">
 
 ✅ **You'll know it worked when:** the page reloads at `github.com/<your-username>/microhack-aiagents` (your username, not `glejdis`, in the URL).
 
@@ -169,8 +169,8 @@ A **fork** is your own copy of this repo where your changes and progress are sav
 
 > 📸 **Screenshot slot — what you'll see:** the **Code → Codespaces → Create codespace on main** menu, then the ready Codespace.
 >
-> <img src="../images/challenge-01/steps/02-create-codespace.png" alt="Screenshot slot: create codespace" width="80%">
-> <img src="../images/challenge-01/steps/03-codespace-ready.png" alt="Screenshot slot: codespace ready" width="80%">
+> <img src="../images/challenge-01/steps/02-create-codespace.svg" alt="Screenshot slot: create codespace" width="80%">
+> <img src="../images/challenge-01/steps/03-codespace-ready.svg" alt="Screenshot slot: codespace ready" width="80%">
 
 ✅ **You'll know it worked when:** you see a VS Code editor in the browser with a **Terminal** panel
 at the bottom showing a ready prompt (e.g. `@your-username ➜ /workspaces/microhack-aiagents (main) $`).
@@ -196,7 +196,7 @@ in a new browser tab, paste the code, and sign in with your Azure account.
 
 > 📸 **Screenshot slot — what you'll see:** the device-login page where you paste the code from the terminal.
 >
-> <img src="../images/challenge-01/steps/04-az-login-device.png" alt="Screenshot slot: device-code login" width="80%">
+> <img src="../images/challenge-01/steps/04-az-login-device.svg" alt="Screenshot slot: device-code login" width="80%">
 
 ✅ **You should see** (your subscriptions listed, then a table like this):
 
@@ -274,7 +274,7 @@ azd up
 
 > 📸 **Screenshot slot — what you'll see:** the three `azd up` prompts (environment name, subscription, region).
 >
-> <img src="../images/challenge-01/steps/05-azd-up-prompts.png" alt="Screenshot slot: azd up prompts" width="80%">
+> <img src="../images/challenge-01/steps/05-azd-up-prompts.svg" alt="Screenshot slot: azd up prompts" width="80%">
 
 Then it provisions for **5–10 minutes**. `azd up` deploys the Bicep in [`infra/`](../labautomation/infra/), assigns the
 RBAC roles the later challenges need, creates the `clm-search` Foundry IQ connection, and runs the
@@ -282,7 +282,7 @@ RBAC roles the later challenges need, creates the `clm-search` Foundry IQ connec
 
 > 📸 **Screenshot slot — what you'll see:** the green **SUCCESS** summary with the deployed resources and outputs.
 >
-> <img src="../images/challenge-01/steps/06-azd-up-success.png" alt="Screenshot slot: azd up success" width="80%">
+> <img src="../images/challenge-01/steps/06-azd-up-success.svg" alt="Screenshot slot: azd up success" width="80%">
 
 ✅ **You should see** (names/values will differ) — the key line is `SUCCESS`:
 
@@ -380,7 +380,7 @@ Application Insights, Log Analytics, and the model deployments live inside the F
 
 > 📸 **Screenshot slot — what you'll see:** the `rg-clm-microhack` overview listing the resources.
 >
-> <img src="../images/challenge-01/steps/07-portal-resource-group.png" alt="Screenshot slot: resource group" width="80%">
+> <img src="../images/challenge-01/steps/07-portal-resource-group.svg" alt="Screenshot slot: resource group" width="80%">
 
 **5b — Model deployments in the Foundry portal.** Open [ai.azure.com](https://ai.azure.com) → select
 your **`clm-project`** → **Models + endpoints**. Confirm the deployments show **Succeeded**:
@@ -388,7 +388,7 @@ your **`clm-project`** → **Models + endpoints**. Confirm the deployments show 
 
 > 📸 **Screenshot slot — what you'll see:** the three model deployments, all "Succeeded".
 >
-> <img src="../images/challenge-01/steps/08-foundry-deployments.png" alt="Screenshot slot: model deployments" width="80%">
+> <img src="../images/challenge-01/steps/08-foundry-deployments.svg" alt="Screenshot slot: model deployments" width="80%">
 
 **5c — Your `.env` file.** In the Codespace file explorer, open **`.env`** at the repo root. Confirm the
 values are filled in (every entry has a value **except** the `SHAREPOINT_*` corpus and the Challenge 5
@@ -713,7 +713,7 @@ python src/scripts/smoke_test.py
 
 > 📸 **Screenshot slot — what you'll see:** the terminal ending in **`Smoke test: ✅ PASS`**.
 >
-> <img src="../images/challenge-01/steps/10-smoke-pass.png" alt="Screenshot slot: smoke test PASS" width="80%">
+> <img src="../images/challenge-01/steps/10-smoke-pass.svg" alt="Screenshot slot: smoke test PASS" width="80%">
 
 ✅ **You should see** (this is the finish line for Challenge 1):
 

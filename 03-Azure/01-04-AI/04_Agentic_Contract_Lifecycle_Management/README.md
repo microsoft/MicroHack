@@ -292,6 +292,11 @@ By participating in this hackathon, you will learn how to:
 3. Do **[Challenge 1](challenges/challenge-01.md)** to deploy resources and seed the corpus — provision with
    **`azd up`** (Bicep in `labautomation/infra/`), the **`labautomation/deploy`** script, or the one-click
    **Deploy to Azure** button (`infra/azuredeploy.json`). The first two autofill your `.env`.
+   - **Seeding the corpus has two paths** (Challenge 1 · Task 6): **Path A** builds a real SharePoint
+     corpus but needs **tenant-admin** rights; **Path B** is a **local-PDF fallback** that needs no
+     SharePoint and no admin consent and builds the identical `clm-corpus` index. **If you're not a
+     tenant admin** (common in shared/managed sandbox tenants), use **Path B** — blank the
+     `SHAREPOINT_*` values in `.env` and run `python src/scripts/seed_corpus.py`.
 4. Work through Challenges 2 → 5.
 
 ---

@@ -142,7 +142,7 @@ A **fork** is your own copy of this repo where your changes and progress are sav
 
 > 📸 **Screenshot slot — what you'll see:** the GitHub *Create a new fork* page with the green **Create fork** button.
 >
-> <img src="../images/challenge-01/steps/01-fork.svg" alt="Screenshot slot: GitHub fork page" width="80%">
+> <img src="../images/challenge-01/steps/01-fork.png" alt="Screenshot slot: GitHub fork page" width="80%">
 
 ✅ **You'll know it worked when:** the page reloads at `github.com/<your-username>/microhack-aiagents` (your username, not `glejdis`, in the URL).
 
@@ -169,8 +169,8 @@ A **fork** is your own copy of this repo where your changes and progress are sav
 
 > 📸 **Screenshot slot — what you'll see:** the **Code → Codespaces → Create codespace on main** menu, then the ready Codespace.
 >
-> <img src="../images/challenge-01/steps/02-create-codespace.svg" alt="Screenshot slot: create codespace" width="80%">
-> <img src="../images/challenge-01/steps/03-codespace-ready.svg" alt="Screenshot slot: codespace ready" width="80%">
+> <img src="../images/challenge-01/steps/02-create-codespace.png" alt="Screenshot slot: create codespace" width="80%">
+> <img src="../images/challenge-01/steps/03-codespace-ready.png" alt="Screenshot slot: codespace ready" width="80%">
 
 ✅ **You'll know it worked when:** you see a VS Code editor in the browser with a **Terminal** panel
 at the bottom showing a ready prompt (e.g. `@your-username ➜ /workspaces/microhack-aiagents (main) $`).
@@ -196,7 +196,7 @@ in a new browser tab, paste the code, and sign in with your Azure account.
 
 > 📸 **Screenshot slot — what you'll see:** the device-login page where you paste the code from the terminal.
 >
-> <img src="../images/challenge-01/steps/04-az-login-device.svg" alt="Screenshot slot: device-code login" width="80%">
+> <img src="../images/challenge-01/steps/04-az-login-device.png" alt="Screenshot slot: device-code login" width="80%">
 
 ✅ **You should see** (your subscriptions listed, then a table like this):
 
@@ -274,7 +274,7 @@ azd up
 
 > 📸 **Screenshot slot — what you'll see:** the three `azd up` prompts (environment name, subscription, region).
 >
-> <img src="../images/challenge-01/steps/05-azd-up-prompts.svg" alt="Screenshot slot: azd up prompts" width="80%">
+> <img src="../images/challenge-01/steps/05-azd-up-prompts.png" alt="Screenshot slot: azd up prompts" width="80%">
 
 Then it provisions for **5–10 minutes**. `azd up` deploys the Bicep in [`infra/`](../labautomation/infra/), assigns the
 RBAC roles the later challenges need, creates the `clm-search` Foundry IQ connection, and runs the
@@ -282,7 +282,7 @@ RBAC roles the later challenges need, creates the `clm-search` Foundry IQ connec
 
 > 📸 **Screenshot slot — what you'll see:** the green **SUCCESS** summary with the deployed resources and outputs.
 >
-> <img src="../images/challenge-01/steps/06-azd-up-success.svg" alt="Screenshot slot: azd up success" width="80%">
+> <img src="../images/challenge-01/steps/06-azd-up-success.png" alt="Screenshot slot: azd up success" width="80%">
 
 ✅ **You should see** (names/values will differ) — the key line is `SUCCESS`:
 
@@ -380,7 +380,7 @@ Application Insights, Log Analytics, and the model deployments live inside the F
 
 > 📸 **Screenshot slot — what you'll see:** the `rg-clm-microhack` overview listing the resources.
 >
-> <img src="../images/challenge-01/steps/07-portal-resource-group.svg" alt="Screenshot slot: resource group" width="80%">
+> <img src="../images/challenge-01/steps/07-portal-resource-group.png" alt="Screenshot slot: resource group" width="80%">
 
 **5b — Model deployments in the Foundry portal.** Open [ai.azure.com](https://ai.azure.com) → select
 your **`clm-project`** → **Models + endpoints**. Confirm the deployments show **Succeeded**:
@@ -388,7 +388,7 @@ your **`clm-project`** → **Models + endpoints**. Confirm the deployments show 
 
 > 📸 **Screenshot slot — what you'll see:** the three model deployments, all "Succeeded".
 >
-> <img src="../images/challenge-01/steps/08-foundry-deployments.svg" alt="Screenshot slot: model deployments" width="80%">
+> <img src="../images/challenge-01/steps/08-foundry-deployments.png" alt="Screenshot slot: model deployments" width="80%">
 
 **5c — Your `.env` file.** In the Codespace file explorer, open **`.env`** at the repo root. Confirm the
 values are filled in (every entry has a value **except** the `SHAREPOINT_*` corpus and the Challenge 5
@@ -417,12 +417,24 @@ APPLICATIONINSIGHTS_CONNECTION_STRING=InstrumentationKey=...
 
 ### Task 6 · Seed the corpus (~7 min)
 
-Build the `clm-corpus` search index that grounds every later challenge (2–6). Because each
-participant is an **admin of their own sandbox tenant**, the default is the real,
-production-shaped **SharePoint** path — and a single script does all of it for you.
+Build the `clm-corpus` search index that grounds every later challenge (2–6). There are two
+supported ways to do it — **pick based on your tenant rights**:
+
+> [!NOTE]
+> **Which path is mine?**
+> - **Path A (SharePoint)** — use it **only if you're a tenant admin** (Global Administrator /
+>   Privileged Role Administrator / Application Administrator) of the tenant you're signed into.
+>   It builds the real, production-shaped SharePoint corpus in one command.
+> - **Path B (local-PDF fallback)** — use it if you're **not** a tenant admin. This is common in
+>   **shared or managed sandbox tenants** (e.g. accounts like `t-…@MngEnv…onmicrosoft.com`), where
+>   Path A's admin consent silently fails with *"Admin consent did not take effect. You must be a
+>   tenant admin…"*. Path B needs **no SharePoint and no admin consent**, and builds the **identical
+>   `clm-corpus` index** — Challenges 2–6 are completely unaffected.
+>
+> Not sure? **Path B always works.** If Path A errors on admin consent, switch to Path B and move on.
 
 > [!IMPORTANT]
-> **Path A — SharePoint corpus, one command (default · recommended).** One script does the
+> **Path A — SharePoint corpus, one command (tenant admins only).** One script does the
 > *entire* SharePoint path — Entra app registration, **admin consent**, a SharePoint site,
 > uploading the 14 corpus PDFs, and building the index — with **no portal clicks**:
 > ```bash
@@ -444,23 +456,32 @@ production-shaped **SharePoint** path — and a single script does all of it for
 > flags `--dry-run` (preview only), `--skip-upload`, `--skip-index`, and
 > `--site-url https://<tenant>.sharepoint.com/sites/<name>` (to reuse a site you already have).
 
-<details>
-<summary><strong>Path B — local-PDF fallback (no SharePoint · works in any tenant · use if you're not an admin)</strong></summary>
-
-Not an admin of your tenant, or SharePoint/SPO unavailable? Skip SharePoint entirely: leave the
-five `SHAREPOINT_*` values **blank** in `.env` and run:
-```bash
-python src/scripts/seed_corpus.py
-```
-It extracts the local `src/data/**/*.pdf` corpus straight into the `clm-corpus` index — the
-**same Foundry IQ grounding** the agents use, no SharePoint required. You should see
-`✓ uploaded 14/14 local PDF(s) into 'clm-corpus'`. *(This needs the **Search Index Data
-Contributor** role, which `azd up` already granted you.)*
-
-**Skipping SharePoint has zero impact on Challenges 2–6** — the agents only ever read the
-`clm-corpus` index, never SharePoint directly. Both paths produce the identical index.
-
-</details>
+> [!IMPORTANT]
+> **Path B — local-PDF fallback (no SharePoint · no admin consent · works in any tenant).**
+> Use this if you're **not** a tenant admin — including the very common case where Path A above
+> failed with *"Admin consent did not take effect. You must be a tenant admin…"*. It skips
+> SharePoint entirely and extracts the local `src/data/**/*.pdf` corpus straight into the
+> `clm-corpus` index — the **same Foundry IQ grounding** the agents use.
+>
+> 1. **Blank the five `SHAREPOINT_*` values in `.env`** (the fallback triggers when any of the
+>    site / app id / secret / tenant is empty). One command does it:
+>    ```bash
+>    sed -i -E 's/^(SHAREPOINT_SITE_URL|SHAREPOINT_APP_ID|SHAREPOINT_APP_SECRET|SHAREPOINT_TENANT_ID)=.*/\1=/' .env
+>    ```
+>    (Confirm `AZURE_SEARCH_ENDPOINT=` is still set from Task 4's deploy.)
+> 2. **Seed the corpus:**
+>    ```bash
+>    python src/scripts/seed_corpus.py
+>    ```
+>    You should see `· SharePoint settings not set — using the LOCAL-PDF fallback` followed by
+>    `✓ uploaded 14/14 local PDF(s) into 'clm-corpus'`. *(This needs the **Search Index Data
+>    Contributor** role, which `azd up` already granted you — if a doc fails, wait a minute for
+>    role propagation and re-run; the script is idempotent.)*
+> 3. Confirm a **non-zero document count** (portal → Search service → Indexes → `clm-corpus`), then
+>    **jump to [Task 7](#task-7--smoke-test).**
+>
+> **Skipping SharePoint has zero impact on Challenges 2–6** — the agents only ever read the
+> `clm-corpus` index, never SharePoint directly. Both paths produce the identical index.
 
 <details>
 <summary><strong>Path C — coach / tenant-admin pre-consent (shared tenant · participants are NOT admins)</strong></summary>
@@ -692,7 +713,7 @@ python src/scripts/smoke_test.py
 
 > 📸 **Screenshot slot — what you'll see:** the terminal ending in **`Smoke test: ✅ PASS`**.
 >
-> <img src="../images/challenge-01/steps/10-smoke-pass.svg" alt="Screenshot slot: smoke test PASS" width="80%">
+> <img src="../images/challenge-01/steps/10-smoke-pass.png" alt="Screenshot slot: smoke test PASS" width="80%">
 
 ✅ **You should see** (this is the finish line for Challenge 1):
 

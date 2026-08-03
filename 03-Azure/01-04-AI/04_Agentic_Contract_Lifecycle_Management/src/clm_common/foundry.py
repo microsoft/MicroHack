@@ -2,9 +2,10 @@
 
 Every CLM agent in this repo is built with the **Microsoft Agent Framework**
 (`agent-framework` + `agent-framework-foundry`). Foundry is used as the *chat
-client provider*, which keeps the multi-model fleet (Claude + GPT deployments in
-one Foundry project) and Foundry IQ / Azure AI Search grounding available while
-the agent, tool-calling and orchestration APIs stay provider-agnostic.
+client provider*, which keeps the multi-model GPT fleet (one deployment per
+specialist in a single Foundry project) and Foundry IQ / Azure AI Search
+grounding available while the agent, tool-calling and orchestration APIs stay
+provider-agnostic.
 
 The framework is async-first. This module gives challenge scripts one obvious way
 to build a client, wrap a plain function as an auto-executed tool, and run a
@@ -35,8 +36,8 @@ from .config import settings, credential
 def build_chat_client(model: str):
     """Return a `FoundryChatClient` bound to a specific model deployment.
 
-    The SAME call backs a Claude agent or a GPT agent — only ``model`` changes,
-    which is what lets the microhack run a multi-model fleet inside one Foundry
+    The SAME call backs any agent in the fleet — only ``model`` changes, which is
+    what lets the microhack run a multi-model GPT fleet inside one Foundry
     project.
     """
     from agent_framework.foundry import FoundryChatClient
@@ -68,7 +69,7 @@ async def run_agent(agent, prompt: str, *, session=None) -> str:
 
 
 # --- Rate-limit-aware retry --------------------------------------------------
-# The shared Foundry model deployments (gpt-5.4 / gpt-5.6-sol / gpt-5-mini / claude-opus-4-8)
+# The shared Foundry model deployments (gpt-5.4 / gpt-5.6-sol / gpt-4.1-mini)
 # are throughput-throttled, so a burst of demo prompts can hit HTTP 429
 # `rate_limit_exceeded` and crash a run mid-way. `run_agent_with_retry` retries
 # transient rate-limit errors with exponential backoff (honouring a Retry-After

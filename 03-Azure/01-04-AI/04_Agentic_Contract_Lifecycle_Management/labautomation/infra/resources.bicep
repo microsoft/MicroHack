@@ -16,25 +16,6 @@ param principalId string = ''
 @allowed([ 'User', 'ServicePrincipal' ])
 param principalType string = 'User'
 
-@description('Deploy the Anthropic Claude model ("true"/"false"). Set to "false" (azd env set DEPLOY_CLAUDE_MODEL false) if your subscription has no Claude quota or the Anthropic marketplace offer is unavailable — the drafting agent then falls back to the GPT orchestrator model (Clause & Risk stays on gpt-5.6-sol).')
-param deployClaudeModel string = 'true'
-
-// ---- Anthropic Marketplace attestation (modelProviderData) ---------------
-// Azure's Cognitive Services RP REQUIRES this block on every Anthropic/Claude
-// deployment — it uses these values to auto-accept the Azure Marketplace offer
-// on your behalf (no manual portal click-through). Omitting it fails preflight
-// with `InvalidModelProviderData`. Override for your org via
-// `azd env set CLAUDE_ORGANIZATION_NAME "<legal entity>"` (likewise
-// CLAUDE_COUNTRY_CODE / CLAUDE_INDUSTRY).
-@description('Legal-entity name for the Anthropic Marketplace attestation (modelProviderData.organizationName). Required by Azure for Claude deployments.')
-param claudeOrganizationName string = 'Contoso'
-
-@description('Two-letter country code for the Anthropic Marketplace attestation (modelProviderData.countryCode).')
-param claudeCountryCode string = 'US'
-
-@description('Industry for the Anthropic Marketplace attestation (modelProviderData.industry) — lowercase, e.g. technology, finance, healthcare, education, retail.')
-param claudeIndustry string = 'technology'
-
 @description('Provision the optional Azure SQL backing store for the contract-status tool ("true"/"false").')
 param deploySql string = 'false'
 
@@ -66,9 +47,8 @@ var bingConnectionName = 'clm-bing'
 // swedencentral offers the base `gpt-5.4` flagship, so the orchestrator
 // deployment (named `gpt-5.4`) runs the `gpt-5.4` catalog model directly.
 var gptOrchestrator = 'gpt-5.4'
-var gptMini = 'gpt-5-mini'
+var gptMini = 'gpt-4.1-mini'
 var gpt56sol = 'gpt-5.6-sol'
-var claude = 'claude-opus-4-8'
 // Orchestrator catalog model + version — confirm the exact model/version offered
 // in your region's Foundry model catalog and update here if needed
 // (`az cognitiveservices model list --location <region>`).
@@ -80,10 +60,10 @@ var gpt56solModel = 'gpt-5.6-sol'
 var gpt56solVersion = '2026-07-09'
 // Renewal / lightweight agent catalog model. gpt-4o-mini is deprecating in
 // swedencentral (fires ServiceModelDeprecating on new deployments), so the
-// renewal deployment runs gpt-5-mini instead — same GlobalStandard SKU, a later
+// renewal deployment runs gpt-4.1-mini instead — same GlobalStandard SKU, a later
 // deprecation horizon, and still cheap/fast for the high-frequency agent.
-var gptMiniModel = 'gpt-5-mini'
-var gptMiniVersion = '2025-08-07'
+var gptMiniModel = 'gpt-4.1-mini'
+var gptMiniVersion = '2025-04-14'
 
 // ---- Built-in role definition ids ----------------------------------------
 var roleAiDeveloper = '64702f94-c441-49e6-a78b-ef80e0188fee'            // Azure AI Developer
@@ -93,7 +73,6 @@ var roleSearchServiceContributor = '7ca78c08-252a-4471-8644-bb5ff32d4ba0'
 var roleSearchIndexDataReader = '1407120a-92aa-4202-b7e9-c0e197c71c8f'
 
 var wantSql = toLower(deploySql) == 'true' && !empty(sqlAdminPassword)
-var wantClaude = toLower(deployClaudeModel) == 'true'
 var wantBing = toLower(deployBing) == 'true'
 var assignUserRoles = !empty(principalId)
 
@@ -208,8 +187,7 @@ resource deployMini 'Microsoft.CognitiveServices/accounts/deployments@2025-04-01
   dependsOn: [ deployOrchestrator ]
 }
 
-// Clause & Risk agent runs on gpt-5.6-sol — its own deployment, independent of
-// Claude (so it works even when deployClaudeModel=false).
+// Clause & Risk agent runs on gpt-5.6-sol — its own dedicated deployment.
 resource deployGpt56Sol 'Microsoft.CognitiveServices/accounts/deployments@2025-04-01-preview' = {
   parent: account
   name: gpt56sol
@@ -218,34 +196,6 @@ resource deployGpt56Sol 'Microsoft.CognitiveServices/accounts/deployments@2025-0
     model: { format: 'OpenAI', name: gpt56solModel, version: gpt56solVersion }
   }
   dependsOn: [ deployMini ]
-}
-
-// Claude: model-format Anthropic. claude-opus-4-8 uses Anthropic's simple
-// integer version scheme in the Azure Foundry catalog — version '2' is the
-// current GA (confirm with `az cognitiveservices model list --location <region>`;
-// claude-opus-4-8 is offered in swedencentral, not francecentral/norwayeast).
-// The modelProviderData block is mandatory for Anthropic deployments (see the
-// claude* params above); without it Azure fails preflight with
-// InvalidModelProviderData. Gated on deployClaudeModel: set
-// DEPLOY_CLAUDE_MODEL=false to skip Claude when the subscription is genuinely
-// ineligible (no Anthropic quota / offer entitlement).
-resource deployClaude 'Microsoft.CognitiveServices/accounts/deployments@2025-04-01-preview' = if (wantClaude) {
-  parent: account
-  name: claude
-  sku: { name: 'GlobalStandard', capacity: 20 }
-  properties: {
-    model: { format: 'Anthropic', name: 'claude-opus-4-8', version: '2' }
-    // modelProviderData is required by the RP for Anthropic deployments but is
-    // not yet in the bundled Bicep type schema (BCP037) — it is still emitted to
-    // the compiled ARM and honoured at deploy time.
-    #disable-next-line BCP037
-    modelProviderData: {
-      organizationName: claudeOrganizationName
-      countryCode: claudeCountryCode
-      industry: claudeIndustry
-    }
-  }
-  dependsOn: [ deployGpt56Sol ]
 }
 
 // Foundry IQ connection: project -> Azure AI Search (deploy.sh only sets the
@@ -455,10 +405,9 @@ resource raProjectSearchServiceContributor 'Microsoft.Authorization/roleAssignme
 output AZURE_AI_PROJECT_ENDPOINT string = 'https://${account.name}.services.ai.azure.com/api/projects/${project.name}'
 
 output MODEL_ORCHESTRATOR string = gptOrchestrator
-// When Claude is skipped (deployClaudeModel=false) the Intake & Drafting agent
-// falls back to the GPT orchestrator deployment so the smoke test + later
-// challenges still run end-to-end. Clause & Risk always runs on gpt-5.6-sol.
-output MODEL_DRAFTING string = wantClaude ? claude : gptOrchestrator
+// The Intake & Drafting agent shares the gpt-5.4 orchestrator deployment (the
+// highest-quota flagship in the project). Clause & Risk runs on gpt-5.6-sol.
+output MODEL_DRAFTING string = gptOrchestrator
 output MODEL_CLAUSE_RISK string = gpt56sol
 output MODEL_RENEWAL string = gptMini
 

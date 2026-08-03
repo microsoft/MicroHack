@@ -6,7 +6,7 @@ categories, mutates them with attack strategies (encodings, ciphers, jailbreak
 templates), sends them to your agent, and scores how often the agent produced
 unsafe output — an **attack success rate** scorecard.
 
-The target is a plain callback that wraps the Intake & Drafting agent (Claude),
+The target is a plain callback that wraps the Intake & Drafting agent (gpt-5.4),
 so we red-team the SAME agent you shipped in Challenge 2.
 
 Run (scan is async; this wraps it):

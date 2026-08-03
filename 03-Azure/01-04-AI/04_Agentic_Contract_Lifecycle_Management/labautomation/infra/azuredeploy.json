@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.41.2.15936",
-      "templateHash": "478454005631202934"
+      "templateHash": "11939388332108595426"
     }
   },
   "parameters": {
@@ -21,7 +21,7 @@
       "type": "string",
       "minLength": 1,
       "metadata": {
-        "description": "Azure region for all resources. Must offer gpt-5.4, gpt-5-mini and gpt-5.6-sol (and Claude Opus 4.8 unless DEPLOY_CLAUDE_MODEL=false)."
+        "description": "Azure region for all resources. Must offer gpt-5.4, gpt-4.1-mini and gpt-5.6-sol."
       }
     },
     "principalId": {
@@ -40,34 +40,6 @@
       ],
       "metadata": {
         "description": "Principal type for RBAC assignments: User (interactive azd) or ServicePrincipal (CI)."
-      }
-    },
-    "deployClaudeModel": {
-      "type": "string",
-      "defaultValue": "true",
-      "metadata": {
-        "description": "Deploy the Anthropic Claude model (\"true\"/\"false\"). Set DEPLOY_CLAUDE_MODEL=false to skip it when your subscription has no Claude quota / marketplace offer; the Claude-backed agents then use the GPT orchestrator."
-      }
-    },
-    "claudeOrganizationName": {
-      "type": "string",
-      "defaultValue": "Contoso",
-      "metadata": {
-        "description": "Legal-entity name for the Anthropic Marketplace attestation (modelProviderData.organizationName). Azure requires it for Claude deployments — override via CLAUDE_ORGANIZATION_NAME."
-      }
-    },
-    "claudeCountryCode": {
-      "type": "string",
-      "defaultValue": "US",
-      "metadata": {
-        "description": "Two-letter country code for the Anthropic Marketplace attestation — override via CLAUDE_COUNTRY_CODE."
-      }
-    },
-    "claudeIndustry": {
-      "type": "string",
-      "defaultValue": "technology",
-      "metadata": {
-        "description": "Industry (lowercase) for the Anthropic Marketplace attestation — override via CLAUDE_INDUSTRY."
       }
     },
     "deploySql": {
@@ -130,18 +102,6 @@
           "principalType": {
             "value": "[parameters('principalType')]"
           },
-          "deployClaudeModel": {
-            "value": "[parameters('deployClaudeModel')]"
-          },
-          "claudeOrganizationName": {
-            "value": "[parameters('claudeOrganizationName')]"
-          },
-          "claudeCountryCode": {
-            "value": "[parameters('claudeCountryCode')]"
-          },
-          "claudeIndustry": {
-            "value": "[parameters('claudeIndustry')]"
-          },
           "deploySql": {
             "value": "[parameters('deploySql')]"
           },
@@ -162,7 +122,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.41.2.15936",
-              "templateHash": "1365307448099890225"
+              "templateHash": "443604104115375257"
             }
           },
           "parameters": {
@@ -194,34 +154,6 @@
               ],
               "metadata": {
                 "description": "Principal type for RBAC assignments: User or ServicePrincipal."
-              }
-            },
-            "deployClaudeModel": {
-              "type": "string",
-              "defaultValue": "true",
-              "metadata": {
-                "description": "Deploy the Anthropic Claude model (\"true\"/\"false\"). Set to \"false\" (azd env set DEPLOY_CLAUDE_MODEL false) if your subscription has no Claude quota or the Anthropic marketplace offer is unavailable — the drafting agent then falls back to the GPT orchestrator model (Clause & Risk stays on gpt-5.6-sol)."
-              }
-            },
-            "claudeOrganizationName": {
-              "type": "string",
-              "defaultValue": "Contoso",
-              "metadata": {
-                "description": "Legal-entity name for the Anthropic Marketplace attestation (modelProviderData.organizationName). Required by Azure for Claude deployments."
-              }
-            },
-            "claudeCountryCode": {
-              "type": "string",
-              "defaultValue": "US",
-              "metadata": {
-                "description": "Two-letter country code for the Anthropic Marketplace attestation (modelProviderData.countryCode)."
-              }
-            },
-            "claudeIndustry": {
-              "type": "string",
-              "defaultValue": "technology",
-              "metadata": {
-                "description": "Industry for the Anthropic Marketplace attestation (modelProviderData.industry) — lowercase, e.g. technology, finance, healthcare, education, retail."
               }
             },
             "deploySql": {
@@ -265,22 +197,20 @@
             "bingName": "[format('clmbing{0}', parameters('resourceToken'))]",
             "bingConnectionName": "clm-bing",
             "gptOrchestrator": "gpt-5.4",
-            "gptMini": "gpt-5-mini",
+            "gptMini": "gpt-4.1-mini",
             "gpt56sol": "gpt-5.6-sol",
-            "claude": "claude-opus-4-8",
             "gptOrchestratorModel": "gpt-5.4",
             "gptOrchestratorVersion": "2026-03-05",
             "gpt56solModel": "gpt-5.6-sol",
             "gpt56solVersion": "2026-07-09",
-            "gptMiniModel": "gpt-5-mini",
-            "gptMiniVersion": "2025-08-07",
+            "gptMiniModel": "gpt-4.1-mini",
+            "gptMiniVersion": "2025-04-14",
             "roleAiDeveloper": "64702f94-c441-49e6-a78b-ef80e0188fee",
             "roleCognitiveServicesUser": "a97b65f3-24c7-4388-baec-2e87135dc908",
             "roleSearchIndexDataContributor": "8ebe5a00-799e-43f5-93ac-243d3dce84a7",
             "roleSearchServiceContributor": "7ca78c08-252a-4471-8644-bb5ff32d4ba0",
             "roleSearchIndexDataReader": "1407120a-92aa-4202-b7e9-c0e197c71c8f",
             "wantSql": "[and(equals(toLower(parameters('deploySql')), 'true'), not(empty(parameters('sqlAdminPassword'))))]",
-            "wantClaude": "[equals(toLower(parameters('deployClaudeModel')), 'true')]",
             "wantBing": "[equals(toLower(parameters('deployBing')), 'true')]",
             "assignUserRoles": "[not(empty(parameters('principalId')))]"
           },
@@ -431,32 +361,6 @@
               "dependsOn": [
                 "[resourceId('Microsoft.CognitiveServices/accounts', variables('foundryName'))]",
                 "[resourceId('Microsoft.CognitiveServices/accounts/deployments', variables('foundryName'), variables('gptMini'))]"
-              ]
-            },
-            {
-              "condition": "[variables('wantClaude')]",
-              "type": "Microsoft.CognitiveServices/accounts/deployments",
-              "apiVersion": "2025-04-01-preview",
-              "name": "[format('{0}/{1}', variables('foundryName'), variables('claude'))]",
-              "sku": {
-                "name": "GlobalStandard",
-                "capacity": 20
-              },
-              "properties": {
-                "model": {
-                  "format": "Anthropic",
-                  "name": "claude-opus-4-8",
-                  "version": "2"
-                },
-                "modelProviderData": {
-                  "organizationName": "[parameters('claudeOrganizationName')]",
-                  "countryCode": "[parameters('claudeCountryCode')]",
-                  "industry": "[parameters('claudeIndustry')]"
-                }
-              },
-              "dependsOn": [
-                "[resourceId('Microsoft.CognitiveServices/accounts', variables('foundryName'))]",
-                "[resourceId('Microsoft.CognitiveServices/accounts/deployments', variables('foundryName'), variables('gpt56sol'))]"
               ]
             },
             {
@@ -712,7 +616,7 @@
             },
             "MODEL_DRAFTING": {
               "type": "string",
-              "value": "[if(variables('wantClaude'), variables('claude'), variables('gptOrchestrator'))]"
+              "value": "[variables('gptOrchestrator')]"
             },
             "MODEL_CLAUSE_RISK": {
               "type": "string",

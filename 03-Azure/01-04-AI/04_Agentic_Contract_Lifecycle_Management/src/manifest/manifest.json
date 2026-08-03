@@ -15,7 +15,7 @@
   },
   "description": {
     "short": "Draft, review and track contracts with grounded, cited answers.",
-    "full": "A multi-agent CLM assistant: a GPT orchestrator coordinating a Claude-backed drafting specialist and a GPT-5.6 Sol clause-risk specialist, grounded on the enterprise contract corpus via Foundry IQ. Answers cited questions, drafts NDA/MSA/SOW, risk-scores counterparty drafts, and posts proactive renewal alerts."
+    "full": "A multi-agent CLM assistant: a GPT orchestrator coordinating a gpt-5.4 drafting specialist and a GPT-5.6 Sol clause-risk specialist, grounded on the enterprise contract corpus via Foundry IQ. Answers cited questions, drafts NDA/MSA/SOW, risk-scores counterparty drafts, and posts proactive renewal alerts."
   },
   "icons": {
     "color": "color.png",

@@ -3,8 +3,8 @@
 Verifies the environment is wired up before you start building agents:
   1. `.env` is loaded and required variables are present.
   2. The Foundry project is reachable and the Microsoft Agent Framework can build
-     and run a tiny agent on the GPT deployments (orchestrator + Clause & Risk)
-     AND on the Claude deployment (proving the multi-model fleet).
+     and run a tiny agent on each GPT deployment in the fleet (orchestrator +
+     drafting + Clause & Risk + renewal), proving the multi-model GPT fleet.
 
 Run:  python src/scripts/smoke_test.py
 """
@@ -51,9 +51,6 @@ def ping_model(model: str, label: str) -> bool:
         return bool(reply.strip())
     except Exception as exc:  # noqa: BLE001
         print(f"   ✗ {label} failed: {exc}")
-        if label == "claude":
-            print("     → If Claude isn't served via the Foundry chat client in your region,")
-            print("       see challenges/challenge-02.md for the Anthropic-SDK fallback.")
         return False
 
 
@@ -62,30 +59,27 @@ def main() -> int:
         print("\n✗ Environment incomplete. Run labautomation/deploy.sh or fill .env, then retry.")
         return 1
 
-    gpt_ok = ping_model(settings.model_orchestrator, "gpt")
+    # Ping each DISTINCT model deployment once. The drafting agent shares the
+    # gpt-5.4 orchestrator deployment, so it dedupes automatically — this proves
+    # the multi-model GPT fleet is reachable via the Foundry chat client.
+    fleet = [
+        (settings.model_orchestrator, "orchestrator"),
+        (settings.model_drafting, "drafting"),
+        (settings.model_clause_risk, "clause-risk"),
+        (settings.model_renewal, "renewal"),
+    ]
+    seen: dict[str, str] = {}
+    results: list[bool] = []
+    for model, label in fleet:
+        if not model:
+            continue
+        if model in seen:
+            print(f"   · {label} shares deployment '{model}' with {seen[model]} — already verified.")
+            continue
+        seen[model] = label
+        results.append(ping_model(model, label))
 
-    # Clause & Risk runs on its own GPT deployment (gpt-5.6-sol) — always present,
-    # independent of the Claude gate. Skip only if it equals a model already pinged.
-    if settings.model_clause_risk and settings.model_clause_risk != settings.model_orchestrator:
-        clause_ok = ping_model(settings.model_clause_risk, "clause-risk")
-    else:
-        clause_ok = gpt_ok
-
-    # When Claude was skipped at deploy time (DEPLOY_CLAUDE_MODEL=false), the
-    # drafting deployment falls back to the orchestrator model, so
-    # MODEL_DRAFTING == MODEL_ORCHESTRATOR. Don't ping (or require) Claude then.
-    # (Clause & Risk always runs on its own gpt-5.6-sol deployment.)
-    claude_skipped = settings.model_drafting == settings.model_orchestrator
-    if claude_skipped:
-        print(
-            "2) Claude skipped (MODEL_DRAFTING == MODEL_ORCHESTRATOR) — the drafting\n"
-            "   agent runs on the orchestrator model. Skipping Claude ping."
-        )
-        claude_ok = gpt_ok
-    else:
-        claude_ok = ping_model(settings.model_drafting, "claude")
-
-    all_ok = gpt_ok and clause_ok and claude_ok
+    all_ok = bool(results) and all(results)
     print("\nSmoke test:", "✅ PASS" if all_ok else "⚠️  PARTIAL (see notes above)")
     return 0 if all_ok else 2
 

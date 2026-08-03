@@ -4,7 +4,7 @@
 
 Make the agent **observable** and **measurable**: end-to-end OpenTelemetry traces in
 Application Insights, an evaluation scorecard over a labelled dataset, a
-**Claude-vs-GPT bake-off**, and a **quality gate** you can drop into CI.
+**flagship-vs-mini bake-off**, and a **quality gate** you can drop into CI.
 
 ## Expected end state
 
@@ -12,7 +12,7 @@ Application Insights, an evaluation scorecard over a labelled dataset, a
   emits spans to Application Insights — you can see agent runs end-to-end.
 - [`src/evaluators.py`](../../src/evaluators.py) scores responses (Relevance,
   Coherence, Groundedness) over the labelled dataset and prints a scorecard.
-- The bake-off compares Claude vs GPT on the same prompts.
+- The bake-off compares gpt-5.4 (flagship) vs gpt-4.1-mini (lightweight) on quality vs latency/cost.
 - The gate `python src/evaluators.py --gate 4.0` **exits 3** if groundedness < 4.0.
 
 ## 🛠️ Task-by-task walkthrough
@@ -82,7 +82,7 @@ python src/evaluators.py
 > further when a run stalls: `python src/evaluators.py --workers 1`.
 ✅ **You should see** (scores 1–5; your numbers differ):
 ```text
-=== Intake & Drafting (claude-opus-4-8) ===
+=== Intake & Drafting (gpt-5.4) ===
   groundedness                             4.6
   relevance                                4.4
   coherence                                4.7
@@ -95,15 +95,15 @@ python src/evaluators.py
 > <img src="../../images/challenge-03/steps/04-scorecard.svg" alt="Screenshot slot: evaluation scorecard" width="75%">
 
 ### Task 4 · Run the bake-off
-`--bakeoff` runs the **same** target on the GPT deployment and prints Claude vs GPT side by side:
+`--bakeoff` runs the **same** target on the flagship and lightweight GPT deployments and prints quality vs latency/cost side by side:
 ```bash
 python src/evaluators.py --bakeoff
 ```
 ```text
---- Bake-off (Claude vs GPT) ---
-  groundedness                             claude=4.6   gpt=4.5
-  relevance                                claude=4.4   gpt=4.3
-  mean latency (s)                         claude=3.2   gpt=1.9
+--- Bake-off (gpt-5.4 vs gpt-4.1-mini) ---
+  groundedness                             gpt-5.4=4.6   gpt-4.1-mini=4.2
+  relevance                                gpt-5.4=4.4   gpt-4.1-mini=4.1
+  mean latency (s)                         gpt-5.4=3.2   gpt-4.1-mini=1.1
 ```
 
 ### Task 5 · Add a quality gate (for CI)
@@ -111,7 +111,7 @@ The gate reads mean groundedness and **exits 3** if it's below the threshold —
 ```python
 # src/evaluators.py
 if args.gate is not None:
-    score = claude.get("groundedness.groundedness") or claude.get("groundedness")
+    score = primary.get("groundedness.groundedness") or primary.get("groundedness")
     if float(score) < args.gate:
         print("❌ GATE FAILED — groundedness below threshold. Blocking release.")
         return 3   # non-zero exit fails the CI job
@@ -146,7 +146,7 @@ Enable **continuous/online evaluation** on the agent in the portal so production
 ```bash
 python src/tracing_setup.py                 # verify traces flow to App Insights
 python src/evaluators.py                     # print the scorecard
-python src/evaluators.py --bakeoff           # Claude-vs-GPT comparison
+python src/evaluators.py --bakeoff           # flagship-vs-mini comparison
 python src/evaluators.py --gate 4.0          # exit code 3 if groundedness < 4.0
 python src/evaluators.py --workers 1         # throttle concurrency if 429s appear
 ```

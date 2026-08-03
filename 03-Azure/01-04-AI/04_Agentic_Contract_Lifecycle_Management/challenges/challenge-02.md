@@ -6,8 +6,8 @@ Welcome to your first agent! In Challenge 1 you provisioned Microsoft Foundry an
 **Contoso Global** contract corpus. Now you'll turn that corpus into a working assistant: the
 **Intake & Drafting agent** — a grounded, cited, tool-enabled, guard-railed agent that drafts
 contracts from approved templates and answers policy questions **with sources**. It runs on
-**Anthropic Claude Opus 4.8**, and the twist you'll internalize here is that grounding it on Claude
-takes the *exact same code* as grounding it on GPT — because Foundry is a **model-agnostic control
+**gpt-5.4**, and the twist you'll internalize here is that grounding it on one deployment
+takes the *exact same code* as grounding it on any other — because Foundry is a **model-agnostic control
 plane**.
 
 If something isn't working as expected, please let your coach know.
@@ -16,7 +16,7 @@ If something isn't working as expected, please let your coach know.
 
 > **📋 Prerequisites:**
 > - **Challenge 1 complete** — `.env` populated, corpus seeded into Azure AI Search, smoke test green.
-> - A model deployment for **`claude-opus-4-8`** (created in Challenge 1) reachable from your project.
+> - A model deployment for **`gpt-5.4`** (created in Challenge 1) reachable from your project.
 
 > 🧩 **How to use this challenge:** the code in this folder is a **complete, working reference
 > implementation** — you're not building it from a blank file. **Run it, read it, and understand *why*
@@ -26,7 +26,7 @@ If something isn't working as expected, please let your coach know.
 
 ## 🎯 Objective
 
-Build the **Intake & Drafting agent** on **Anthropic Claude Opus 4.8** and make it:
+Build the **Intake & Drafting agent** on **gpt-5.4** and make it:
 
 - **Grounded** — every substantive answer is drawn from the CLM corpus via **Foundry IQ**, not the
   model's parametric memory.
@@ -43,7 +43,7 @@ Build the **Intake & Drafting agent** on **Anthropic Claude Opus 4.8** and make 
 | **Knowledge tool (Foundry IQ)** | An `AzureAISearchTool` over the `clm-corpus` index — grounds the agent on Contoso's templates, clauses, policy and contracts | [`kb_setup.py`](../src/kb_setup.py) → `build_knowledge_tool()` |
 | **Function tool** | `get_contract_status(contract_id)` — deterministic lookup of status, renewal date, risk and owner (Azure SQL, falling back to seed JSON) | [`src/clm_common/tools.py`](../src/clm_common/tools.py) |
 | **Guard-railed persona** | Instructions that force citations, forbid invented terms, and refuse legal advice | `INSTRUCTIONS` in [`agents/intake_drafting_agent.py`](../src/agents/intake_drafting_agent.py) |
-| **Claude-backed agent** | The same Agent Framework API as GPT, with `model` pointed at the Claude deployment | `create_agent()` in [`agents/intake_drafting_agent.py`](../src/agents/intake_drafting_agent.py) |
+| **gpt-5.4-backed agent** | The same Agent Framework API for every model, with `model` pointed at the `gpt-5.4` deployment | `create_agent()` in [`agents/intake_drafting_agent.py`](../src/agents/intake_drafting_agent.py) |
 | **A repeatable demo** | Builds the agent, runs four prompts (draft · cited Q&A · tool call · refusal) in one session | `main()` in [`agents/intake_drafting_agent.py`](../src/agents/intake_drafting_agent.py) |
 
 ## 🧭 Context and Background
@@ -65,7 +65,7 @@ flowchart TB
   subgraph IQ["Foundry IQ — knowledge grounding"]
     D["AzureAISearchTool<br/>agentic retrieval: plan → search → rerank → cite<br/>kb_setup.py"]
   end
-  D --> E["Intake &amp; Drafting agent<br/>Claude Opus 4.8"]
+  D --> E["Intake &amp; Drafting agent<br/>gpt-5.4"]
   F["get_contract_status<br/>function tool"] --> E
   E --> G["Cited draft / answer<br/>+ tool results"]
   style D fill:#FCEBDD,stroke:#E8590C,stroke-width:2px,color:#1A1A1A
@@ -91,13 +91,14 @@ An agent grounds and acts through **tools**. This agent has both flavors:
 > Because the schema is derived from the function signature and docstring, **keeping good type hints
 > and a clear docstring is not optional** — they *are* the tool contract the model sees.
 
-### Why Claude here — and why the API doesn't change
+### Why gpt-5.4 here — and why the API doesn't change
 
 Drafting rewards strong instruction-following and long-context legal reasoning, so the Intake &
-Drafting agent runs on **Claude Opus 4.8** (`MODEL_DRAFTING`). The whole point of Foundry as a
-control plane is that you get there by pointing `model` at the Claude deployment — **the
-agent/tool/grounding API is identical across providers**. The same `Agent(client=..., tools=[...]) →
-run` shape hosts a GPT agent (you'll see that in Challenge 4's orchestrator) with no other changes.
+Drafting agent runs on **gpt-5.4** (`MODEL_DRAFTING`) — the same flagship deployment as the
+orchestrator. The whole point of Foundry as a control plane is that you get there by pointing `model`
+at a deployment name — **the agent/tool/grounding API is identical across models**. The same
+`Agent(client=..., tools=[...]) → run` shape hosts any other deployment (you'll see the specialists
+in Challenge 4's orchestrator) with no other changes.
 
 ### Guardrails at the prompt layer
 
@@ -140,14 +141,14 @@ each is**, the **specifics wired into this repo**, and **why it's in the archite
 your `.env` reaches it through `AZURE_AI_PROJECT_ENDPOINT`
 (`https://<account>.services.ai.azure.com/api/projects/clm-project`).
 
-- **All four models deploy onto that one account** — `gpt-5.4`, `gpt-5.6-sol`, `gpt-5-mini`, `claude-opus-4-8` — so a
+- **All three models deploy onto that one account** — `gpt-5.4`, `gpt-5.6-sol`, `gpt-4.1-mini` — so a
   single `get_project_client()` ([`src/clm_common/foundry.py`](../src/clm_common/foundry.py)) reaches each.
 - The **Microsoft Agent Framework** (`Agent(client=FoundryChatClient(...))`) runs the agent loop **in your
   process** — planning, tool-calls and retrieval — calling Foundry for model inference.
 - The project also owns the grounding **`clm-search` connection** and the RBAC that makes retrieval keyless.
 
-**Why here:** you build a grounded, tool-using **Claude** agent in ~15 lines, and moving to GPT is a
-one-argument change (`model=`). → [Microsoft Agent Framework](https://learn.microsoft.com/agent-framework/overview/agent-framework-overview)
+**Why here:** you build a grounded, tool-using **gpt-5.4** agent in ~15 lines, and moving to a
+different deployment is a one-argument change (`model=`). → [Microsoft Agent Framework](https://learn.microsoft.com/agent-framework/overview/agent-framework-overview)
 
 ### Foundry IQ — agentic retrieval (`AzureAISearchTool`)
 
@@ -188,16 +189,16 @@ system of record; the corpus is authored/managed there, not copied into Azure.
 **Why here:** it holds the templates, clause library, policy and executed-contract PDFs that Search indexes —
 and keeps them where the business already curates them. → [Index SharePoint content](https://learn.microsoft.com/azure/search/search-howto-index-sharepoint-online)
 
-### Model — Anthropic Claude Opus 4.8
+### Model — gpt-5.4
 
-**What it is:** this agent's LLM — deployment **`claude-opus-4-8`** (`format: Anthropic`, **version `2`** =
-Azure-hosted, SKU `GlobalStandard`, capacity 20), read from `settings.model_drafting` (`MODEL_DRAFTING`).
+**What it is:** this agent's LLM — deployment **`gpt-5.4`** (SKU `GlobalStandard`), read from
+`settings.model_drafting` (`MODEL_DRAFTING`) — the **same deployment the orchestrator uses**.
 
 - Strong **instruction-following** + **long-context** reasoning — ideal for careful legal drafting.
-- Called through the **same Agents API** as the GPT deployments; only the deployment name differs.
+- Called through the **same Agents API** as every other deployment; only the deployment name differs.
 
-**Why here:** drafting goes to Claude; routing/tool-calling to **`gpt-5.4`** (Ch3) and the renewal scan to
-**`gpt-5-mini`** (Ch4) — right model per job, one platform. → [Models in Microsoft Foundry](https://learn.microsoft.com/azure/ai-foundry/)
+**Why here:** drafting and orchestration share **`gpt-5.4`**; the clause-risk specialist uses **`gpt-5.6-sol`**
+and the renewal scan **`gpt-4.1-mini`** — right model per job, one platform. → [Models in Microsoft Foundry](https://learn.microsoft.com/azure/ai-foundry/)
 
 ### Function tools — `get_contract_status`
 
@@ -243,7 +244,7 @@ Expected output (ids will differ):
 
 Open [`agents/intake_drafting_agent.py`](../src/agents/intake_drafting_agent.py) and trace how it's wired:
 
-- `model=settings.model_drafting` → **Claude Opus 4.8** (the only line that would change for GPT).
+- `model=settings.model_drafting` → **gpt-5.4** (the only line that would change for a different deployment).
 - The persona + **refusal** instructions in `INSTRUCTIONS`.
 - Grounding via `build_knowledge_tool(...)` **plus** the `get_contract_status` **function tool**,
   passed together in the Agent's `tools=[...]`.
@@ -261,7 +262,7 @@ from clm_common.tools import get_contract_status
 knowledge = build_knowledge_tool(connection_id=connection_id)   # Azure AI Search grounding over clm-corpus
 
 agent = Agent(
-    client=build_chat_client(settings.model_drafting),          # ← "claude-opus-4-8"; swap for a GPT id, nothing else changes
+    client=build_chat_client(settings.model_drafting),          # ← "gpt-5.4"; swap for another deployment id, nothing else changes
     name="intake-drafting-agent",
     instructions=INSTRUCTIONS,                                  # persona + citations + refusal policy
     tools=[
@@ -291,7 +292,7 @@ Q&A, a **`CT-4821` status** lookup (function tool), and a **legal-advice** promp
 ✅ **You should see** (the model's wording varies — the **structure** is what matters):
 
 ```text
-✓ Built intake-drafting-agent on model 'claude-opus-4-8'
+✓ Built intake-drafting-agent on model 'gpt-5.4'
 
 ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
 USER: Draft a mutual NDA between Contoso Global and Northwind Traders...
@@ -352,31 +353,13 @@ In the portal, attach **Prompt Shields / PII** guardrails to the agent, or discu
 The refusal instructions already enforce the no-legal-advice policy at the prompt layer — content
 safety adds a second, model-independent layer (previewed here, built in **Challenge 6**).
 
-### ⚙️ Claude fallback (if Foundry can't serve Claude via the chat client in your region)
+### ⚙️ Swapping the deployment (model-agnostic by design)
 
-The **preferred** path is `model="claude-opus-4-8"` on `build_chat_client(...)`, exactly like GPT. If that
-run fails because Foundry doesn't yet serve Anthropic models through the chat client in your region, call
-Claude **directly** through Foundry with the Anthropic SDK and keep grounding/tools in your own code:
-
-```python
-from anthropic import AnthropicFoundry           # pip: anthropic (already in requirements.txt)
-from clm_common.config import settings, credential
-
-token = credential().get_token("https://cognitiveservices.azure.com/.default").token
-client = AnthropicFoundry(
-    base_url=settings.project_endpoint.split("/api/projects")[0],   # the AI Services endpoint
-    api_key=token,                                                  # Entra token as bearer
-)
-msg = client.messages.create(
-    model=settings.model_drafting,
-    max_tokens=1024,
-    messages=[{"role": "user", "content": "Draft a mutual NDA…"}],
-)
-print(msg.content[0].text)
-```
-
-You'd then do retrieval (Azure AI Search) and the contract-status lookup yourself and pass the results
-into the prompt. Prefer the native agent path when available — this is only a safety net.
+The agent reaches its model purely through `model=settings.model_drafting` on `build_chat_client(...)`.
+To run drafting on a different deployment — a cheaper `gpt-4.1-mini`, or any other model you've deployed —
+change the single `MODEL_DRAFTING` value in `.env` (or `settings.model_drafting`); the grounding, tools,
+persona and run loop are untouched. That's the whole point of Foundry as a control plane: the
+agent/tool/grounding API is identical across models.
 
 ## ✔️ Success criteria
 
@@ -386,7 +369,7 @@ You're done when:
 - [ ] Cited answers are drawn from the corpus (you can see the source documents).
 - [ ] The `get_contract_status` tool is invoked for `CT-4821` and returns real fields.
 - [ ] The legal-advice prompt is **refused** with a recommendation to consult counsel.
-- [ ] The agent is running on the **Claude** deployment (confirm the model name in the portal).
+- [ ] The agent is running on the **`gpt-5.4`** deployment (confirm the model name in the portal).
 
 ## 🚀 Go Further
 
@@ -407,13 +390,12 @@ You're done when:
 | `TypeError: Object of type AzureAISearchToolResource is not JSON serializable` | The Foundry tool factory returns an SDK model, not a plain dict. `build_knowledge_tool` / `build_web_search_tool` now normalize it via `.as_dict()` before attaching — pull the latest `src/kb_setup.py`. |
 | `400 tool_user_error … Access denied, check managed identity access to search service` | The Foundry **account _and_ project** managed identities each need **Search Index Data Reader** + **Search Service Contributor** on the Search service. The infra grants both now — re-run `labautomation/deploy-lab.ps1` (idempotent) or add the roles in the portal (Search service → Access control). |
 | `429 rate_limit_exceeded` on `gpt-5.4` mid-demo | Deployment throughput throttling. The demo now retries with exponential backoff and isolates each prompt (`run_agent_with_retry`), so it rides through and continues. If it persists, raise the deployment capacity or space out prompts. |
-| Run fails on Claude | Foundry may not serve Anthropic models via the chat client in your region yet — use the **Claude fallback** above. |
 | `Missing required environment variable 'AZURE_AI_PROJECT_ENDPOINT'` | Re-run Challenge 1's deploy (which writes `.env`) or copy `.env.example` → `.env` and fill it in. |
 
 ## 🎯 What you accomplished
 
-You built your first **grounded, cited, tool-using, guard-railed agent** — and did it on **Claude**
-with the same API you'll use for GPT.
+You built your first **grounded, cited, tool-using, guard-railed agent** — on **`gpt-5.4`**, with the
+same API you'd use for any other deployment.
 
 **Key achievements:**
 
@@ -422,8 +404,8 @@ with the same API you'll use for GPT.
 - **Mixed knowledge + function tools** — combined unstructured retrieval with a deterministic
   `get_contract_status` lookup in the Agent's `tools=[...]`, auto-invoked mid-run.
 - **Enforced guardrails** — the agent refuses legal advice and flags policy deviations for a human.
-- **Proved model-agnosticism** — ran the whole thing on Claude Opus 4.8 by changing a single
-  `model` argument.
+- **Proved model-agnosticism** — ran the whole thing on `gpt-5.4` and could point it at any other
+  deployment by changing a single `model` argument.
 
 This agent becomes a building block later: the **orchestrator** (Challenge 4) will delegate drafting
 to it, and everything it does will be **traced and evaluated** in Challenge 3.
@@ -438,8 +420,8 @@ to it, and everything it does will be **traced and evaluated** in Challenge 3.
 
 ## 🧠 Reflection
 
-- Why put **drafting** on Claude and **routing** on GPT? (Instruction-following & long-context legal
-  reasoning vs. fast, deterministic tool-calling.)
+- Why put **drafting** and **routing** on the same `gpt-5.4` deployment, but the **renewal scan** on
+  `gpt-4.1-mini`? (Flagship instruction-following & long-context reasoning vs. fast, cheap batch scanning.)
 - Where should guardrails live — in the prompt, as a content-safety policy, or both? What does each
   catch that the other misses?
 - When should a fact come from a **function tool** vs. **retrieval**? What breaks if you let the model

@@ -3,8 +3,8 @@
 Turns on the **Microsoft Agent Framework's** built-in OpenTelemetry
 instrumentation and ships spans to Application Insights, so you can inspect
 prompt / retrieval / tool spans in the Foundry portal (Tracing + Agent
-Monitoring Dashboard). Traces span BOTH the Claude and GPT agents — one pane of
-glass across providers.
+Monitoring Dashboard). Traces span every agent in the GPT fleet — one pane of
+glass across the orchestrator and specialists.
 
 IMPORTANT: content-recording flag must be set BEFORE the agent framework is
 imported anywhere, so import this module (or call enable_tracing()) at the very

@@ -10,7 +10,7 @@ maintained as finalized images (`architecture.png`, `user-journey.png`).
 
 ## Legend (architecture)
 
-- 🟦 **Blue** = GPT agents · 🟪 **Purple** = Claude (Anthropic) agents ·
+- 🟦 **Blue** = orchestrator · 🟪 **Purple** = specialist agents ·
   🟧 **Orange** = tools / MCP · 🟩 **Green** = data / grounding · ⬜ **Gray** = governance ·
   **dashed grey** = telemetry (traces, eval scorecards) · **dashed red** = alerts / guardrails.
 

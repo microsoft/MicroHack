@@ -63,7 +63,7 @@ param(
 
 - `deploymentType`: `"resourcegroup"` | `"resourcegroup-with-subscriptionowner"` | `"subscription"`
 - `groups`: `["M365-E5-Users"]` for this hack — the CLM scenario needs M365 E5 (Teams publish, SharePoint corpus, proactive alerts). Use `[]` for Azure-only, or `["GHCPUsers"]` for a GitHub Copilot seat.
-- `preferredLocation`: comma-separated regions, priority order — swedencentral first for gpt-5.4 + Claude Opus 4.8 availability
+- `preferredLocation`: comma-separated regions, priority order — swedencentral first for gpt-5.4 availability
 - `estimatedDailyCostsUsd`: per-user per-day cost for the lifecycle wizard (Foundry models + AI Search + App Insights)
 
 ## Returning Credentials to Users

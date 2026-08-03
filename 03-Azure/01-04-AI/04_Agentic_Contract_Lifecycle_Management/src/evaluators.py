@@ -1,16 +1,16 @@
-"""Challenge 3 — evaluation + Claude-vs-GPT bake-off + quality gate.
+"""Challenge 3 — evaluation + cross-model bake-off + quality gate.
 
 Runs the Foundry `azure-ai-evaluation` evaluators over
 src/data/evaluation/evaluation_dataset.jsonl, using a *target* callable that
 generates the agent's response for each row. Then it does the headline
-**cross-model bake-off**: run the Intake & Drafting agent on **Claude Opus
-4.8** vs a **GPT** deployment against the SAME scorecard, and compare quality vs
-cost/latency. Finally, a **quality gate** fails the build if groundedness drops
-below a threshold.
+**cross-model bake-off**: run the Intake & Drafting agent on the **gpt-5.4**
+flagship vs the lighter **gpt-4.1-mini** deployment against the SAME scorecard, and
+compare quality vs cost/latency. Finally, a **quality gate** fails the build if
+groundedness drops below a threshold.
 
 Usage:
-    python src/evaluators.py                 # evaluate Claude (default)
-    python src/evaluators.py --bakeoff       # Claude vs GPT comparison
+    python src/evaluators.py                 # evaluate the drafting model (gpt-5.4)
+    python src/evaluators.py --bakeoff       # gpt-5.4 vs gpt-4.1-mini comparison
     python src/evaluators.py --gate 4.0      # fail if mean groundedness < 4.0
     python src/evaluators.py --workers 2     # throttle evaluator concurrency (429s)
 """
@@ -222,7 +222,8 @@ def _configure_workers(workers: int | None) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--bakeoff", action="store_true", help="compare Claude vs GPT")
+    parser.add_argument("--bakeoff", action="store_true",
+                        help="compare the drafting model (gpt-5.4) vs gpt-4.1-mini")
     parser.add_argument("--gate", type=float, default=None,
                         help="fail if mean groundedness < THRESHOLD (e.g. 4.0)")
     parser.add_argument("--workers", type=int, default=None,
@@ -243,22 +244,23 @@ def main() -> int:
         tracing_setup.enable_tracing(project)
         connection_id = get_search_connection_id(project)
 
-    claude = run_eval(settings.model_drafting, connection_id)
-    print_scorecard("Intake & Drafting", claude)
+    primary = run_eval(settings.model_drafting, connection_id)
+    print_scorecard("Intake & Drafting", primary)
 
-    gpt = None
+    alt = None
     if args.bakeoff:
-        gpt = run_eval(settings.model_orchestrator, connection_id)
-        print_scorecard("Intake & Drafting", gpt)
-        print("\n--- Bake-off (Claude vs GPT) ---")
-        keys = [k for k in claude if not k.startswith("_")]
+        alt = run_eval(settings.model_renewal, connection_id)
+        print_scorecard("Intake & Drafting", alt)
+        print(f"\n--- Bake-off ({settings.model_drafting} vs {settings.model_renewal}) ---")
+        keys = [k for k in primary if not k.startswith("_")]
         for k in sorted(keys):
-            print(f"  {k:<40} claude={claude.get(k)}   gpt={gpt.get(k)}")
-        print(f"  {'mean latency (s)':<40} claude={claude['_mean_latency_s']}   "
-              f"gpt={gpt['_mean_latency_s']}")
+            print(f"  {k:<40} {settings.model_drafting}={primary.get(k)}   "
+                  f"{settings.model_renewal}={alt.get(k)}")
+        print(f"  {'mean latency (s)':<40} {settings.model_drafting}={primary['_mean_latency_s']}   "
+              f"{settings.model_renewal}={alt['_mean_latency_s']}")
 
     if args.gate is not None:
-        score = claude.get("groundedness.groundedness") or claude.get("groundedness")
+        score = primary.get("groundedness.groundedness") or primary.get("groundedness")
         print(f"\nQuality gate: groundedness={score} threshold={args.gate}")
         if score is None:
             print("⚠️  Could not read groundedness metric — check evaluator output keys.")

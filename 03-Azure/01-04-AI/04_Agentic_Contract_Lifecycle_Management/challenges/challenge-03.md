@@ -4,7 +4,7 @@
 
 Welcome back! In Challenge 2 you built the grounded **Intake & Drafting** agent. Now you'll make it
 **observable and measurable** — instrument it with end-to-end **OpenTelemetry** traces to Application
-Insights, score it against a labelled dataset, run a **Claude-vs-GPT bake-off**, and add a **quality
+Insights, score it against a labelled dataset, run a **flagship-vs-mini bake-off**, and add a **quality
 gate** that blocks a bad build. This is the GenAIOps layer that turns a demo into something you trust.
 
 If something isn't working as expected, please let your coach know.
@@ -21,20 +21,21 @@ If something isn't working as expected, please let your coach know.
 ## 🎯 Objective
 
 Make the agent **observable** and **measurable**: end-to-end traces in Application Insights, an
-evaluation scorecard over a labelled dataset, a **Claude-vs-GPT bake-off**, and a **quality gate**
+evaluation scorecard over a labelled dataset, a **flagship-vs-mini bake-off**, and a **quality gate**
 that blocks a bad build.
 
 ## 🧭 Context
 
 - **Tracing** uses OpenTelemetry. The Agents SDK emits spans for prompts, retrieval and tool calls;
   `configure_azure_monitor` ships them to **Application Insights**, and the Foundry portal renders
-  them in **Tracing** + the **Agent Monitoring Dashboard**. Because both agents live in one project,
-  you see **Claude and GPT traces in one pane of glass**.
+  them in **Tracing** + the **Agent Monitoring Dashboard**. Because every agent lives in one project,
+  you see **the whole GPT fleet's traces in one pane of glass**.
 - **Evaluation** uses `azure-ai-evaluation`. Evaluators (groundedness, relevance, coherence,
   fluency) are **LLM-judged** by an Azure OpenAI deployment. A *target* callable generates the
   agent's response for each dataset row so evaluation is end-to-end.
-- **Bake-off**: run the same agent + same scorecard on **Claude Opus 4.8** vs **GPT** and compare
-  quality against latency — the concrete payoff of a model-agnostic platform.
+- **Bake-off**: run the same agent + same scorecard on the **gpt-5.4** flagship vs the lighter
+  **gpt-4.1-mini** deployment and compare quality against latency/cost — the concrete payoff of a
+  model-agnostic platform.
 
 ## 🧰 Services & models in this challenge
 
@@ -75,7 +76,7 @@ monitoring views. → [Application Insights overview](https://learn.microsoft.co
 an **Agent Monitoring Dashboard** — no query-writing required.
 
 - Per-run **span timelines** with retrieval hits and tool arguments.
-- Because both agents live in one project, you see **Claude and GPT traces in one pane of glass**.
+- Because every agent lives in one project, you see **the whole GPT fleet's traces in one pane of glass**.
 - Home for **continuous/online evaluation** on live traffic.
 
 **Why here:** it's the fastest way to *look at* what the agent actually did on a given run.
@@ -85,12 +86,12 @@ an **Agent Monitoring Dashboard** — no query-writing required.
 
 **What it is:** the library ([`src/evaluators.py`](../src/evaluators.py)) that **scores** agent responses.
 `GroundednessEvaluator`, `RelevanceEvaluator`, `CoherenceEvaluator` and `FluencyEvaluator` are **LLM-judged**
-by an Azure OpenAI deployment (your `gpt-5.4` / `gpt-5-mini`); a `target(query)` callable produces the
+by an Azure OpenAI deployment (your `gpt-5.4` / `gpt-4.1-mini`); a `target(query)` callable produces the
 agent's answer for each of the **16 rows** in `src/data/evaluation/evaluation_dataset.jsonl`.
 
 - Ready-made **quality** and **safety** evaluators (safety ones take `azure_ai_project` + a credential).
 - The gate `python src/evaluators.py --gate 4.0` **exits 3** if groundedness < 4.0 — drop-in for CI.
-- `--bakeoff` reruns the same scorecard on **Claude vs GPT** to weigh quality against latency.
+- `--bakeoff` reruns the same scorecard on **gpt-5.4 vs gpt-4.1-mini** to weigh quality against latency/cost.
 
 **Why here:** tracing shows *what happened*; evaluation shows *how good it was* — and lets a bad build
 **fail the gate** before it ships. → [Evaluation & observability](https://learn.microsoft.com/en-us/azure/foundry/concepts/observability)
@@ -156,7 +157,7 @@ Run it over the 16-row dataset (`src/data/evaluation/evaluation_dataset.jsonl`):
 ```bash
 python src/evaluators.py
 ```
-You'll get a scorecard for the Claude-backed agent.
+You'll get a scorecard for the gpt-5.4 drafting agent.
 
 > 💡 The four LLM judges run concurrently. If you hit `429` rate-limits on a
 > shared judge deployment, lower the batch concurrency (defaults to `2`):
@@ -166,7 +167,7 @@ You'll get a scorecard for the Claude-backed agent.
 
 ✅ **You should see** (scores 1–5; your numbers will differ):
 ```text
-=== Intake & Drafting (claude-opus-4-8) ===
+=== Intake & Drafting (gpt-5.4) ===
   groundedness                             4.6
   relevance                                4.4
   coherence                                4.7
@@ -180,7 +181,7 @@ You'll get a scorecard for the Claude-backed agent.
 
 ### Task 4 · Run the bake-off (~10 min)
 
-Claude vs GPT on the same scorecard:
+gpt-5.4 (flagship) vs gpt-4.1-mini (lightweight) on the same scorecard:
 ```bash
 python src/evaluators.py --bakeoff
 ```
@@ -188,10 +189,10 @@ Compare groundedness/relevance vs mean latency. Which model wins for *this* task
 
 ✅ **You should see** a side-by-side block:
 ```text
---- Bake-off (Claude vs GPT) ---
-  groundedness                             claude=4.6   gpt=4.5
-  relevance                                claude=4.4   gpt=4.3
-  mean latency (s)                         claude=3.2   gpt=1.9
+--- Bake-off (gpt-5.4 vs gpt-4.1-mini) ---
+  groundedness                             gpt-5.4=4.6   gpt-4.1-mini=4.2
+  relevance                                gpt-5.4=4.4   gpt-4.1-mini=4.1
+  mean latency (s)                         gpt-5.4=3.2   gpt-4.1-mini=1.1
 ```
 
 ### Task 5 · Add a quality gate (~10 min)
@@ -222,9 +223,9 @@ Python API yet; the `--gate` flag is the code-first equivalent for CI.)
 
 ## ✔️ Success criteria
 
-- Prompt/retrieval/tool spans visible in the portal for **both** providers.
+- Prompt/retrieval/tool spans visible in the portal for **every agent in the fleet**.
 - An evaluation scorecard is produced (groundedness, relevance, coherence, fluency).
-- The **Claude-vs-GPT** comparison is captured (quality + latency).
+- The **gpt-5.4-vs-gpt-4.1-mini** comparison is captured (quality + latency).
 - The quality gate **fails** when you set a threshold above the measured score (try `--gate 5.0`).
 
 ## 🚀 Go Further
@@ -249,7 +250,8 @@ Python API yet; the `--gate` flag is the code-first equivalent for CI.)
 
 - Tracing shows *what happened*; evaluation shows *how good it was*. Which would catch a silent
   grounding regression, and which a latency spike?
-- After the bake-off, would you keep drafting on Claude? What evidence (quality vs latency/cost)
-  drives that call — and how would continuous eval keep you honest in production?
+- After the bake-off, would you keep drafting on gpt-5.4, or move to the lighter gpt-4.1-mini? What
+  evidence (quality vs latency/cost) drives that call — and how would continuous eval keep you honest
+  in production?
 
 ➡️ Next: **[Challenge 4 — Orchestration + MCP Server](challenge-04.md)**

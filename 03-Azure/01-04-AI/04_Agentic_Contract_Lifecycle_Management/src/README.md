@@ -10,13 +10,13 @@ helpers live in [`clm_common/`](clm_common/); every entry-point script adds `src
 | Path | Role | Challenge |
 |------|------|-----------|
 | [`clm_common/`](clm_common/) | Shared config (`config.py`, `DATA_DIR`), Foundry client, document + tool helpers | all |
-| [`agents/intake_drafting_agent.py`](agents/intake_drafting_agent.py) | Grounded, cited, guard-railed drafting agent (Claude Opus 4.8) | 2 |
+| [`agents/intake_drafting_agent.py`](agents/intake_drafting_agent.py) | Grounded, cited, guard-railed drafting agent (gpt-5.4) | 2 |
 | [`agents/clause_risk_agent.py`](agents/clause_risk_agent.py) | Clause & Risk specialist (GPT-5.6 Sol) | 4 |
-| [`agents/obligation_renewal_agent.py`](agents/obligation_renewal_agent.py) | Obligation & Renewal agent (GPT-5-mini) reading status + renewals | 5 |
+| [`agents/obligation_renewal_agent.py`](agents/obligation_renewal_agent.py) | Obligation & Renewal agent (GPT-4.1-mini) reading status + renewals | 5 |
 | [`kb_setup.py`](kb_setup.py) | Builds the Foundry IQ knowledge source + web-grounding tool over `clm-corpus` | 2 |
 | [`sample_prompts.md`](sample_prompts.md) | Prompts to exercise drafting, grounded Q&A, guardrails | 2 |
 | [`tracing_setup.py`](tracing_setup.py) | Wires OpenTelemetry → Application Insights | 3 |
-| [`evaluators.py`](evaluators.py) | Eval scorecard, Claude-vs-GPT bake-off, quality gate (exit 3) | 3 |
+| [`evaluators.py`](evaluators.py) | Eval scorecard, gpt-5.4-vs-gpt-4.1-mini bake-off, quality gate (exit 3) | 3 |
 | [`orchestrator.py`](orchestrator.py) | Orchestrator (GPT-5.4) with specialists as tools | 4 |
 | [`mcp_server/server.py`](mcp_server/server.py) | MCP server exposing the CLM workflow over stdio | 4 |
 | [`.vscode/mcp.json`](.vscode/mcp.json) | VS Code MCP client config (`clm-mcp`) | 4 |

@@ -22,8 +22,7 @@ tips. Participants never see this file; it's for the people running the room.
 
 | Task | Why it matters |
 |------|----------------|
-| **Pick a region with all 4 models** (`gpt-5.4`, `gpt-5-mini`, `gpt-5.6-sol`, `claude-opus-4-8`). `swedencentral` is a good default. | Challenge 1 dies here if a model isn't offered. **Verify in the Foundry model catalog for your exact subscription.** Model versions drift — the repo tracks non-deprecating pins; if you re-pin, avoid versions with a near/past `deprecation.inference` date (`az cognitiveservices model list`). |
-| **Confirm Claude is enabled** in both the **model catalog** *and* the **Foundry chat runner** for that region, and that you have **Anthropic quota**. | If Foundry can't serve Claude via the chat client, Ch2 needs the Anthropic-SDK fallback. The infra now auto-accepts the Anthropic marketplace offer (it sends the `modelProviderData` attestation — override the org via `CLAUDE_ORGANIZATION_NAME`), so `InvalidModelProviderData` from *missing* attestation is gone. If there's genuinely **zero Claude quota / no entitlement**, tell teams to deploy with **`DEPLOY_CLAUDE_MODEL=false`** (`DEPLOY_CLAUDE=false` for the deploy scripts) — drafting falls back to `gpt-5.4` (Clause & Risk stays on `gpt-5.6-sol`) and the smoke test still passes. |
+| **Pick a region with all three model deployments** (`gpt-5.4`, `gpt-4.1-mini`, `gpt-5.6-sol`). `swedencentral` is a good default. | Challenge 1 dies here if a model isn't offered. **Verify in the Foundry model catalog for your exact subscription.** Model versions drift — the repo tracks non-deprecating pins; if you re-pin, avoid versions with a near/past `deprecation.inference` date (`az cognitiveservices model list`). |
 | **Check quota** — Basic Azure AI Search + the model SKUs (TPM for each deployment). Request increases early. | Quota denials are the #1 day-of blocker and can take hours to approve. |
 | **Decide the subscription model** — one sub per team (cleanest) vs a shared sub with per-team resource groups / env names. | `azd up` uses an environment name as the RG suffix; shared subs need unique names per team. |
 | **Do a full dry-run** in the target region, including `azd up` **and** `labautomation/deploy.sh`. | You'll hit the region/quota issues before the participants do. |
@@ -34,7 +33,7 @@ tips. Participants never see this file; it's for the people running the room.
 ### Pre-flight checklist (per team, morning of)
 
 - [ ] Team has an **Azure subscription** with Owner/Contributor + rights to create role assignments.
-- [ ] Region confirmed to offer all four models.
+- [ ] Region confirmed to offer all three model deployments.
 - [ ] They can **fork** the repo and **open a Codespace** (or have the devcontainer locally).
 - [ ] `Microsoft.BotService` provider registered (needed in Ch5): `az provider register --namespace Microsoft.BotService`.
 
@@ -44,7 +43,7 @@ tips. Participants never see this file; it's for the people running the room.
 
 | Time | Block | Coach cadence |
 |------|-------|---------------|
-| 09:00 – 10:00 | **Tech talk** — the CLM story, the agentic architecture, multi-model (Claude + GPT), Foundry IQ, tracing/eval, MCP, publish. | Show the [architecture diagram](../images/architecture.png). Set the "human always signs" guardrail expectation. |
+| 09:00 – 10:00 | **Tech talk** — the CLM story, the agentic architecture, multi-model GPT fleet, Foundry IQ, tracing/eval, MCP, publish. | Show the [architecture diagram](../images/architecture.png). Set the "human always signs" guardrail expectation. |
 | 10:00 – 12:30 | **Hacking — Challenges 1, 2, 3** | **Gate at Ch1:** no team moves on until `smoke_test.py` is green. Float hard here. |
 | 12:30 – 13:30 | Lunch | — |
 | 13:30 – 15:30 | **Hacking — Challenges 4, 5** | Ch5 builds on a working Ch4 orchestrator — make sure Ch4 runs cleanly first. Remind teams before lunch. |
@@ -64,8 +63,8 @@ of the challenge, what "done" looks like, where teams get stuck, and the hint to
 ### Challenge 1 · Setup & Foundry Foundations *(30 min · setup)*
 
 - **Point:** stand up the whole Foundry environment + seed the corpus with **zero local install**.
-- **Done when:** `python src/scripts/smoke_test.py` prints `✅ PASS` (a tiny agent runs on
-  `gpt-5.4`, `gpt-5.6-sol` **and** `claude-opus-4-8`) and the `clm-corpus` index shows documents in the portal.
+- **Done when:** `python src/scripts/smoke_test.py` prints `✅ PASS` (a tiny agent verifies
+  `gpt-5.4`, `gpt-5.6-sol`, and `gpt-4.1-mini`; drafting shares the Orchestrator's `gpt-5.4`) and the `clm-corpus` index shows documents in the portal.
 - **Coach prep (before the event):** essentially **none** for the corpus. Each participant is an
   **admin of their own sandbox tenant**, so Task 6 has them run a single script —
   **`python src/scripts/setup_sharepoint_corpus.py`** — that does the *entire* SharePoint path inside
@@ -92,22 +91,20 @@ of the challenge, what "done" looks like, where teams get stuck, and the hint to
     or adjust the version in `deploy.sh`. **This is the single most common Ch1 blocker.**
   - *`account project create` unavailable* → the CLI project command is preview. Create the project in
     the **portal**, then set `AZURE_AI_PROJECT_ENDPOINT` in `.env` by hand.
-  - *Claude ping fails in smoke test* → runner may not host Claude yet; they can still proceed (Ch2 has
-    the fallback). Don't let them rabbit-hole here.
   - *`az login` in Codespaces* → must use `az login --use-device-code`.
   - *RBAC not propagated* → role assignments can take a few minutes; a retry usually fixes "auth" errors
     right after `azd up`.
 - **Coach hint if stuck on region:** "Open the Foundry model catalog filtered to *your* subscription and
-  pick a region that lists all four — don't trust a blog's default."
+  pick a region that lists the three deployments — don't trust a blog's default."
 
 ### Challenge 2 · Grounded Agent with Foundry IQ + Tools *(60 min · grounding · tools · guardrails)*
 
-- **Point:** build the **Intake & Drafting agent on Claude Opus 4.8** — grounded, cited, tool-enabled,
+- **Point:** build the **Intake & Drafting agent on GPT-5.4** — grounded, cited, tool-enabled,
   and guard-railed (refuses legal advice). Establishes the pattern reused in Ch4/5.
 - **Done when:** answers are **cited** from the corpus; `get_contract_status` fires for **CT-4821**; the
-  legal-advice prompt is **refused**; the model shown in the portal is the **Claude** deployment.
-- **Key teaching moment:** the agent/tool/grounding API is **identical** whether `model` points at GPT
-  or Claude — that's the whole point of Foundry as a model-agnostic control plane.
+  legal-advice prompt is **refused**; the model shown in the portal is the **GPT-5.4** deployment shared with the Orchestrator.
+- **Key teaching moment:** the agent/tool/grounding API is **identical** as you swap GPT deployments —
+  that's the whole point of Foundry as a model-agnostic control plane.
 - **Agents are built in-process:** with the Microsoft Agent Framework each run builds its agent against
   the Foundry chat client — nothing persists server-side, so there's no `--keep` and nothing to clean up.
 - **Watch for:**
@@ -116,20 +113,18 @@ of the challenge, what "done" looks like, where teams get stuck, and the hint to
     ensure it's wrapped with `function_tool(...)` and passed in `tools=[...]`.
   - *Search connection returns nothing* → set `AZURE_SEARCH_CONNECTION_NAME` in `.env`; check portal →
     Connected resources.
-  - *Run `failed` on Claude* → use the **Anthropic-SDK fallback** in the README (§ Claude fallback). Point
-    them to it; don't let them think the whole platform is broken.
 - **Coach hint:** "Run `sample_prompts.md` top to bottom — it deliberately exercises draft → cited Q&A →
   status lookup → refusal, one per capability."
 
 ### Challenge 3 · Observability, Tracing & Evaluation *(60 min · tracing · eval)*
 
 - **Point:** make the agent **observable** (OTel traces → App Insights) and **measurable** (evaluation
-  scorecard + a **Claude-vs-GPT bake-off** + a **quality gate**).
-- **Done when:** prompt/retrieval/tool spans are visible for **both** providers; a scorecard prints
-  (groundedness/relevance/coherence/fluency); the **bake-off** captures quality vs latency; `--gate`
+  scorecard + a **flagship-vs-mini bake-off** + a **quality gate**).
+- **Done when:** prompt/retrieval/tool spans are visible for the agent runs; a scorecard prints
+  (groundedness/relevance/coherence/fluency); the **bake-off** captures quality vs latency/cost; `--gate`
   fails when the threshold is set above the measured score.
 - **The "aha":** tracing shows *what happened*; evaluation shows *how good it was*. The bake-off is the
-  concrete payoff of a model-agnostic platform.
+  concrete payoff of a model-agnostic platform: compare GPT deployments without rewriting agent code.
 - **Watch for:**
   - *No spans* → `APPLICATIONINSIGHTS_CONNECTION_STRING` must be set, the content-recording flag must be
     set **before** the agents SDK import (`tracing_setup` does this on import — import it first), and
@@ -217,7 +212,6 @@ of the challenge, what "done" looks like, where teams get stuck, and the hint to
 | **Legacy agents in the project** | The Microsoft Agent Framework builds agents in-process against the Foundry chat client — it registers **no** persistent server-side agents, so there's nothing to clean up. Delete any stragglers from earlier Agent-Service runs in **portal → Agents** if you like. |
 | **Auth / 403 right after provisioning** | RBAC propagation lag — wait 2–3 min and retry before debugging anything else. |
 | **Everything is wedged, start clean** | `azd down` (or delete the resource group), then `azd up` again. Budget ~15 min. |
-| **Region has no Claude runner** | Proceed with the **Anthropic-SDK fallback** in Challenge 2 — the concepts still land; only the *hosting* path differs. |
 | **Cross-challenge script `ModuleNotFoundError`** | Should not happen — the shared-module import paths are fixed and CI byte-compiles all six challenges. If it does, confirm the team didn't move files between folders. |
 
 ---
@@ -230,7 +224,7 @@ of the challenge, what "done" looks like, where teams get stuck, and the hint to
   **bake-off** (Ch3), a **routed** orchestrator turn (Ch4), and a **live Teams** response or alert (Ch5).
 - **The code is the answer key.** If a team is truly stuck, read the relevant script *with* them — it's
   the reference implementation, fully commented.
-- **Time-box the fallbacks.** Claude-runner and no-tenant fallbacks exist precisely so one environment
+- **Time-box the fallbacks.** No-tenant fallbacks exist precisely so one environment
   gap doesn't cost a team the whole afternoon. Reach for them early.
 - **Bank Challenge 6** for the one or two teams who fly — it's a great "take it home" extension.
 

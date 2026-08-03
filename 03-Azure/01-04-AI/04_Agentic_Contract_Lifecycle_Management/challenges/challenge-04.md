@@ -30,7 +30,7 @@ server** callable from VS Code / GitHub Copilot.
 - **Clause & Risk agent** reuses the Ch1 grounding pattern → fast to build. It compares a
   counterparty draft to the enterprise standard and returns a **risk score**.
 - **Orchestrator** (GPT-5.4) uses the Agent Framework's **`agent.as_tool(...)`** to call each specialist as a tool. A
-  **GPT orchestrator coordinating Claude + GPT-5.6 Sol specialists** is multi-model composition in one project. It
+  **GPT-5.4 orchestrator coordinating gpt-5.4 drafting and GPT-5.6 Sol specialists** is multi-model composition in one project. It
   manages routing, hand-offs and human-in-the-loop.
 - **MCP** (Model Context Protocol) lets you expose the workflow as standard tools so *any* MCP client
   can reuse it. You'll run a local **stdio** server and call it from VS Code.
@@ -40,7 +40,7 @@ server** callable from VS Code / GitHub Copilot.
  user → │  routes + hand-offs + human-in-the-loop            │
         └───────┬───────────────────────────┬───────────────┘
                 │ agent-as-tool             │ agent-as-tool
-        Intake & Drafting (Claude)   Clause & Risk (GPT-5.6 Sol)
+        Intake & Drafting (gpt-5.4)  Clause & Risk (GPT-5.6 Sol)
                 └──────────── grounded on Foundry IQ ─────────┘
         Also exposed as an MCP server: draft_contract · analyze_contract · get_contract_status
 ```
@@ -58,7 +58,7 @@ calls a function.
 
 - **Separation of concerns** — each specialist has its own model, instructions and evaluation.
 - The orchestrator handles **routing, hand-offs and human-in-the-loop**.
-- A **GPT orchestrator coordinating Claude + GPT-5.6 Sol specialists** = multi-model composition in one project.
+- A **multi-model GPT fleet** = one project with gpt-5.4 orchestration/drafting and GPT-5.6 Sol risk analysis.
 - `agent.as_tool(name=..., description=...)` wires each specialist into
   [`src/orchestrator.py`](../src/orchestrator.py); agents are built in-process, so there's nothing to keep.
 
@@ -68,14 +68,14 @@ instead of one bloated mega-agent. → [Microsoft Agent Framework](https://learn
 ### Model — GPT-5.4 (the orchestrator)
 
 **What it is:** the LLM behind the Orchestrator (`MODEL_ORCHESTRATOR = gpt-5.4`) — deployment `gpt-5.4`
-(`format: OpenAI`, version confirmed in your region's Foundry catalog, SKU `GlobalStandard`, capacity 30), sitting alongside the Claude
-specialists on the same account.
+(`format: OpenAI`, version confirmed in your region's Foundry catalog, SKU `GlobalStandard`, capacity 30), sitting alongside the other GPT
+specialist deployments on the same account.
 
 - Fast, **deterministic tool-calling** and reliable **routing** decisions.
-- Same Agents API as the Claude agents — only the `model` id differs.
+- Same Agents API as the specialists — only the `model` id differs when a specialist uses its own deployment.
 
-**Why here:** routing and hand-offs reward speed and predictable tool selection (GPT), while drafting
-rewards long-context legal reasoning (Claude) — the platform lets you pick **the right model per job**.
+**Why here:** routing and drafting share the flagship gpt-5.4 deployment, while clause/risk uses
+gpt-5.6-sol for deeper review — the platform lets you pick **the right GPT deployment per job**.
 → [Models in Microsoft Foundry](https://learn.microsoft.com/azure/ai-foundry/)
 
 ### Model Context Protocol (MCP)

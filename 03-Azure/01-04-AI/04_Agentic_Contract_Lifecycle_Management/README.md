@@ -15,9 +15,9 @@ inconsistent clause review, and missed renewals. In this microhack you'll transf
 **AI-native, enterprise-ready** system on **Microsoft Foundry** — turning a manual, weeks-long
 process into a grounded, **agentic** workflow with a human always in the loop.
 
-The build uniquely combines four things: a **multi-model agent fleet** — orchestration on
-**GPT-5.4** with specialist drafting on **Anthropic Claude** and clause-analysis on **GPT-5.6 Sol**, all inside
-a single Foundry project; **grounded retrieval with Foundry IQ** over your own contract corpus so
+The build uniquely combines four things: a **multi-model GPT fleet** — orchestration and specialist
+drafting share **GPT-5.4**, clause-analysis runs on **GPT-5.6 Sol**, and renewal tracking runs on
+**GPT-4.1-mini**, all inside a single Foundry project; **grounded retrieval with Foundry IQ** over your own contract corpus so
 every answer is cited; **tools and an MCP server** that expose the workflow to **Microsoft 365
 Copilot**, **Teams**, and any MCP-compatible client; and the full **GenAIOps lifecycle** —
 OpenTelemetry tracing to Application Insights, evaluation scorecards with a quality gate, and
@@ -81,11 +81,11 @@ diagram](images/diagrams/user-journey.png) alongside this table.
 
 | # | What the manager does | What happens under the hood | Foundry capability | Built in |
 |---|-----------------------|-----------------------------|--------------------|----------|
-| **1 · Request a draft** | *"Draft a mutual NDA with Acme, 2-yr term."* | **Intake & Drafting** agent (Claude Opus 4.8) drafts from an **approved template** | Grounded agent + tools | [C2](challenges/challenge-02.md) |
+| **1 · Request a draft** | *"Draft a mutual NDA with Acme, 2-yr term."* | **Intake & Drafting** agent (GPT-5.4, shared with the Orchestrator) drafts from an **approved template** | Grounded agent + tools | [C2](challenges/challenge-02.md) |
 | **2 · Check their draft** | Uploads Acme's counter-draft MSA | **Clause & Risk** agent (GPT-5.6 Sol) scores every clause against the **Standard Clause Library** and flags deviations | Specialist agent + orchestration | [C4](challenges/challenge-04.md) |
 | **3 · Ask, with citations** | *"What's our standard indemnity cap?"* | **Foundry IQ** answers over the Contoso corpus — **with sources** | Agentic retrieval (Foundry IQ) | [C2](challenges/challenge-02.md) |
 | **4 · Review & sign off** | Reads flags + citations, edits, **approves** | **Human-in-the-loop** — nothing is finalized without sign-off | HITL + guardrails | [C2](challenges/challenge-02.md) · [C4](challenges/challenge-04.md) |
-| **5 · Track obligations** | Reviews upcoming renewals | **Obligation & Renewal** agent (GPT-5-mini) **reads** contract status & upcoming renewals via function tools — **Azure SQL** (seed-data fallback) | Function tool / MCP server | [C4](challenges/challenge-04.md) · [C5](challenges/challenge-05.md) |
+| **5 · Track obligations** | Reviews upcoming renewals | **Obligation & Renewal** agent (GPT-4.1-mini) **reads** contract status & upcoming renewals via function tools — **Azure SQL** (seed-data fallback) | Function tool / MCP server | [C4](challenges/challenge-04.md) · [C5](challenges/challenge-05.md) |
 | **6 · Proactive alert** | Gets a proactive Teams ping **before the renewal date** | Renew or renegotiate in time — **no missed auto-renewals** | Publish + proactive messaging | [C5](challenges/challenge-05.md) |
 
 > 🔒 **Under the hood, every step runs in one Microsoft Foundry project** — traced (Application
@@ -115,17 +115,17 @@ grounded answers back.
 
 ❷ **The Microsoft Foundry project (navy) — one governed home for every agent and model.** Everything
 runs inside a *single* Foundry project: shared identity (Entra), model deployments, tool connections,
-tracing, and safety. Crucially, **GPT** *and* **Anthropic Claude** deployments live side by side here —
-no second platform to operate.
+tracing, and safety. Crucially, three GPT model deployments support four agent roles here — no second
+platform to operate.
 
 ❸ **Orchestrator (GPT-5.4) — the front door.** It receives each request, decides which specialist to
 call, hands off the right context, and composes the final answer. GPT-5.4 is chosen for fast,
 deterministic routing and tool/hand-off calls rather than long-form generation.
 
 ❹ **Specialist agents — each matched to its task *and* its model.** The Orchestrator delegates to three
-grounded specialists: **Intake & Drafting** runs on **Claude Opus 4.8** (purple) for high-fidelity
+grounded specialists: **Intake & Drafting** shares **GPT-5.4** with the Orchestrator for high-fidelity
 drafting while **Clause & Risk** runs on **GPT-5.6 Sol** for structured clause comparison; **Obligation & Renewal** runs on the
-cheaper **GPT-5-mini** (blue) for high-frequency date and obligation extraction.
+cheaper **GPT-4.1-mini** (blue) for high-frequency date and obligation extraction.
 
 ❺ **Grounding & tools (blue) — how agents stay factual and act on the world.** **Foundry IQ** (over
 **Azure AI Search**) provides agentic retrieval so drafting and clause agents answer *with citations*
@@ -146,7 +146,7 @@ the Foundry project — the layer that makes agent behavior debuggable, measurab
 days before expiry** it pushes a **proactive alert** straight back to the manager in Teams, closing the
 loop so renewals are never missed.
 
-> 🎨 **Legend:** 🟦 blue = GPT agents · 🟪 purple = Claude agents · 🟧 orange = tools / MCP ·
+> 🎨 **Legend:** 🟦 blue = GPT agents · 🟪 purple = Intake & Drafting · 🟧 orange = tools / MCP ·
 > 🟩 green = data / grounding · ⬜ gray = governance · **dashed grey** = telemetry · **dashed red** =
 > alerts / guardrails. The finalized architecture image — plus the end-to-end **[user
 > journey](images/diagrams/)** (Excalidraw) — lives in **[`images/diagrams/`](images/diagrams/)**.
@@ -171,15 +171,14 @@ flowchart TB
             orch --> renew
         end
         subgraph Farm["LLM farm · model deployments"]
-            gpt53["GPT-5.4<br/>OpenAI · GlobalStandard"]
-            claude["Claude Opus 4.8<br/>Anthropic"]
+            gpt54["GPT-5.4<br/>OpenAI · GlobalStandard"]
             gpt56sol["GPT-5.6 Sol<br/>OpenAI · GlobalStandard"]
-            gpt4omini["GPT-5-mini<br/>OpenAI · GlobalStandard"]
+            gpt5mini["GPT-4.1-mini<br/>OpenAI · GlobalStandard"]
         end
-        orch -->|runs on| gpt53
-        intake -->|runs on| claude
+        orch -->|runs on| gpt54
+        intake -->|shares| gpt54
         clause -->|runs on| gpt56sol
-        renew -->|runs on| gpt4omini
+        renew -->|runs on| gpt5mini
     end
     hitl <--> orch
 
@@ -218,18 +217,19 @@ flowchart TB
 
 </details>
 
-### Multi-model fleet
+### Multi-model GPT fleet
 
-Anthropic **Claude is generally available in Microsoft Foundry** (model catalog **and** Foundry Agent
-Service), Azure-hosted with Entra identity, consolidated billing, and data-residency controls — so
-specialists run on Claude and GPT-5.6 Sol while orchestration runs on GPT, all inside **one** Foundry project.
+The fleet uses four agent roles across three distinct GPT deployments in **one** Foundry project:
+the Orchestrator and Intake & Drafting share GPT-5.4, Clause & Risk uses GPT-5.6 Sol, and
+Obligation & Renewal uses GPT-4.1-mini. The platform remains model-agnostic — teams can swap GPT
+deployments through configuration without changing the agent or tool code.
 
 | Agent | Model | Why this model |
 |-------|-------|----------------|
 | **Orchestrator** | GPT-5.4 | Fast, deterministic routing + tool/hand-off calls |
-| **Intake & Drafting** | **Claude Opus 4.8** | High-fidelity, template-grounded drafting |
+| **Intake & Drafting** | **GPT-5.4** | High-fidelity, template-grounded drafting; shares the Orchestrator deployment |
 | **Clause & Risk** | **GPT-5.6 Sol** | Structured clause comparison + nuanced risk rationale |
-| **Obligation & Renewal** | GPT-5-mini | Cheap, high-frequency structured extraction + alerts |
+| **Obligation & Renewal** | GPT-4.1-mini | Cheap, high-frequency structured extraction + alerts |
 
 ---
 
@@ -237,11 +237,11 @@ specialists run on Claude and GPT-5.6 Sol while orchestration runs on GPT, all i
 
 By participating in this hackathon, you will learn how to:
 
-- **Build grounded, tool-using agents with the [Microsoft Agent Framework](https://learn.microsoft.com/agent-framework/overview/agent-framework-overview)** — author agents with instructions, tools, and safety on Foundry as the chat-client provider, and run the *same* patterns across **GPT** *and* **Anthropic Claude** deployments from the [Foundry model catalog](https://learn.microsoft.com/azure/ai-foundry/concepts/foundry-models-overview). *(Challenges [2](challenges/challenge-02.md), [4](challenges/challenge-04.md))*
+- **Build grounded, tool-using agents with the [Microsoft Agent Framework](https://learn.microsoft.com/agent-framework/overview/agent-framework-overview)** — author agents with instructions, tools, and safety on Foundry as the chat-client provider, and run the *same* patterns across multiple **GPT** deployments from the [Foundry model catalog](https://learn.microsoft.com/azure/ai-foundry/concepts/foundry-models-overview). *(Challenges [2](challenges/challenge-02.md), [4](challenges/challenge-04.md))*
 - **Ground answers with [Foundry IQ](https://learn.microsoft.com/azure/ai-foundry/agents/concepts/what-is-foundry-iq)** — connect a knowledge source over your contract corpus and use [agentic retrieval](https://learn.microsoft.com/azure/search/search-agentic-retrieval-concept) on [Azure AI Search](https://learn.microsoft.com/azure/search/search-what-is-azure-search) so every answer is **cited**, not hallucinated. *(Challenge [2](challenges/challenge-02.md))*
 - **Connect tools and expose an [MCP server](https://learn.microsoft.com/azure/ai-foundry/agents/how-to/tools/model-context-protocol)** — add a [function tool](https://learn.microsoft.com/azure/ai-foundry/agents/how-to/tools/function-calling) that reads contract status from [Azure SQL](https://learn.microsoft.com/azure/azure-sql/database/sql-database-paas-overview), then publish the workflow as a **Model Context Protocol** server any MCP client can call. *(Challenge [4](challenges/challenge-04.md))*
 - **Orchestrate a multi-agent system with the [Microsoft Agent Framework](https://learn.microsoft.com/agent-framework/overview/agent-framework-overview) agent-as-tool pattern** — an **Orchestrator** delegating to specialist drafting, clause-risk, and renewal agents via `agent.as_tool(...)` (reinforced by this [multi-agent training module](https://learn.microsoft.com/training/modules/develop-multi-agent-azure-ai-foundry/)). *(Challenge [4](challenges/challenge-04.md))*
-- **Practice GenAIOps — [tracing](https://learn.microsoft.com/azure/ai-foundry/how-to/develop/trace-agents-sdk) & [observability](https://learn.microsoft.com/azure/ai-foundry/concepts/observability)** — emit **OpenTelemetry** traces to **Application Insights**, then run [evaluations](https://learn.microsoft.com/azure/ai-foundry/how-to/develop/evaluate-sdk) to score quality, add a **quality gate**, and run a **Claude-vs-GPT bake-off**. *(Challenge [3](challenges/challenge-03.md))*
+- **Practice GenAIOps — [tracing](https://learn.microsoft.com/azure/ai-foundry/how-to/develop/trace-agents-sdk) & [observability](https://learn.microsoft.com/azure/ai-foundry/concepts/observability)** — emit **OpenTelemetry** traces to **Application Insights**, then run [evaluations](https://learn.microsoft.com/azure/ai-foundry/how-to/develop/evaluate-sdk) to score quality, add a **quality gate**, and run a **flagship-vs-mini bake-off**. *(Challenge [3](challenges/challenge-03.md))*
 - **Publish to [Microsoft 365 Copilot & Teams](https://learn.microsoft.com/azure/ai-foundry/agents/how-to/agent-365)** — surface the assistant where contract managers already work and push **proactive renewal alerts**. *(Challenge [5](challenges/challenge-05.md))*
 - **Apply Responsible AI** *(bonus)* — [red-team the agent](https://learn.microsoft.com/azure/ai-foundry/how-to/develop/run-scans-ai-red-teaming-agent), add [Azure AI Content Safety](https://learn.microsoft.com/azure/ai-services/content-safety/overview) / PII guardrails, and gate releases on a **quality + safety** check in CI. *(Challenge [6](challenges/challenge-06.md))*
 
@@ -278,8 +278,8 @@ By participating in this hackathon, you will learn how to:
 
 ## Prerequisites
 
-- An **Azure subscription** with rights to create a Foundry project and deploy models (GPT **and**
-  Anthropic Claude — confirm Claude availability in your target region via the model catalog).
+- An **Azure subscription** with rights to create a Foundry project and deploy GPT models (confirm
+  availability in your target region via the model catalog).
 - **GitHub account** (to fork + open in Codespaces).
 - Basic Python. No local install needed — the devcontainer has everything.
 - For Challenge 5: a Microsoft 365 tenant where you can sideload a Teams app (or a coach-provided one).

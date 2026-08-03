@@ -11,7 +11,7 @@ targetScope = 'subscription'
 param environmentName string
 
 @minLength(1)
-@description('Azure region for all resources. Must offer gpt-5.4, gpt-5-mini and gpt-5.6-sol (and Claude Opus 4.8 unless DEPLOY_CLAUDE_MODEL=false).')
+@description('Azure region for all resources. Must offer gpt-5.4, gpt-4.1-mini and gpt-5.6-sol.')
 param location string
 
 @description('Object id of the user/service principal running the deployment (azd provides AZURE_PRINCIPAL_ID). Used for RBAC.')
@@ -20,18 +20,6 @@ param principalId string = ''
 @description('Principal type for RBAC assignments: User (interactive azd) or ServicePrincipal (CI).')
 @allowed([ 'User', 'ServicePrincipal' ])
 param principalType string = 'User'
-
-@description('Deploy the Anthropic Claude model ("true"/"false"). Set DEPLOY_CLAUDE_MODEL=false to skip it when your subscription has no Claude quota / marketplace offer; the Claude-backed agents then use the GPT orchestrator.')
-param deployClaudeModel string = 'true'
-
-@description('Legal-entity name for the Anthropic Marketplace attestation (modelProviderData.organizationName). Azure requires it for Claude deployments — override via CLAUDE_ORGANIZATION_NAME.')
-param claudeOrganizationName string = 'Contoso'
-
-@description('Two-letter country code for the Anthropic Marketplace attestation — override via CLAUDE_COUNTRY_CODE.')
-param claudeCountryCode string = 'US'
-
-@description('Industry (lowercase) for the Anthropic Marketplace attestation — override via CLAUDE_INDUSTRY.')
-param claudeIndustry string = 'technology'
 
 @description('Provision the optional Azure SQL backing store for the contract-status tool ("true"/"false").')
 param deploySql string = 'false'
@@ -63,10 +51,6 @@ module resources 'resources.bicep' = {
     resourceToken: resourceToken
     principalId: principalId
     principalType: principalType
-    deployClaudeModel: deployClaudeModel
-    claudeOrganizationName: claudeOrganizationName
-    claudeCountryCode: claudeCountryCode
-    claudeIndustry: claudeIndustry
     deploySql: deploySql
     sqlAdminPassword: sqlAdminPassword
     deployBing: deployBing

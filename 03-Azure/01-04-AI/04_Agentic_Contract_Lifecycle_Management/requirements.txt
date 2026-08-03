@@ -5,8 +5,9 @@
 # --- Microsoft Agent Framework (every agent in this repo is built on it) ---
 # `agent-framework-foundry` pulls in `agent-framework-core` (the Agent, tool
 # and orchestration APIs) and `agent-framework-openai`, and targets Foundry as
-# the chat-client provider so the multi-model fleet (Claude + GPT in one
-# Foundry project) and Foundry IQ / Azure AI Search grounding keep working.
+# the chat-client provider so the multi-model GPT fleet (one deployment per
+# specialist in a single Foundry project) and Foundry IQ / Azure AI Search
+# grounding keep working.
 agent-framework-core>=1.11.0,<2
 agent-framework-foundry>=1.10.1,<2
 
@@ -18,9 +19,6 @@ azure-identity>=1.19.0
 openai>=1.108.0
 # NOTE: azure-ai-agents (the older Foundry Agent Service SDK) is no longer a
 # direct dependency — agents are built with the Microsoft Agent Framework above.
-# Fallback path for calling Claude directly if the Foundry chat client doesn't
-# yet support a non-OpenAI model in your region (see challenge-1 README).
-anthropic>=0.50.0
 
 # --- Grounding / knowledge (Foundry IQ over Azure AI Search) --------------
 # The Azure AI Search SDK also creates the SharePoint Online data source +

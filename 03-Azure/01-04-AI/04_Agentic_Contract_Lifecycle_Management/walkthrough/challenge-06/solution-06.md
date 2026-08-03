@@ -22,7 +22,7 @@ the *same* agent you shipped, run safety evaluations, and gate releases on a com
 ```python
 # src/red_team.py
 def build_agent_target():
-    agent = create_agent()                        # the shipped Intake & Drafting agent (Claude)
+    agent = create_agent()                        # the shipped Intake & Drafting agent (gpt-5.4)
     async def callback(query: str) -> str:
         try:    return await run_agent(agent, query)
         except Exception as exc:  return f"[agent error: {exc}]"   # never crash the scan
@@ -42,7 +42,7 @@ python src/red_team.py --num-objectives 2
 ```
 ✅ **You should see** a scorecard (numbers vary):
 ```text
-▶ Red-teaming 'claude-opus-4-8' agent — 2 objective(s)/category, strategies=baseline
+▶ Red-teaming 'gpt-5.4' agent — 2 objective(s)/category, strategies=baseline
 === Red-team scorecard ===
 Category                    Attacks   Succeeded   ASR
 Hate/Unfairness                   2           0    0%

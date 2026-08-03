@@ -53,7 +53,7 @@ CARD_FILL = "#F7FAFD"
 
 FOUNDRY = "#8661C5"   # AI Foundry / Cognitive Services purple
 GPT = "#0E9C6E"       # OpenAI green
-CLAUDE = "#CC6B3E"    # Anthropic clay
+ACCENT = "#CC6B3E"    # warm clay accent (client / Teams chat)
 SEARCH = "#0F6CBD"    # Azure blue
 SHAREPOINT = "#038387" # SharePoint teal
 SQL = "#C0392B"       # SQL red
@@ -153,7 +153,7 @@ text(80, 106.4,
 # --------------------------------------------------------------------------
 # User pill (client)
 # --------------------------------------------------------------------------
-panel(48, 99.4, 64, 5.0, fill="#FDF3E7", edge=CLAUDE, lw=1.6, radius=2.2, z=3)
+panel(48, 99.4, 64, 5.0, fill="#FDF3E7", edge=ACCENT, lw=1.6, radius=2.2, z=3)
 text(80, 101.9, "Contract Manager   ·   Microsoft 365 Copilot  &  Teams",
      fs=11.5, weight="bold", ha="center", color="#7A3E1D")
 
@@ -180,11 +180,11 @@ text(10, 81.4, "Model fleet — LLM deployments", fs=9.5, weight="bold", color=I
 # four model cards
 resource(10, 66.2, 33.5, 13.6, "GPT", GPT, "gpt-5.4",
          "OpenAI · GlobalStd 30\nOrchestrator", mono_fs=8, title_fs=9.5)
-resource(46, 66.2, 33.5, 13.6, "CLD", CLAUDE, "claude-opus-4-8",
-         "Anthropic · GlobalStd 20\nIntake & Drafting", mono_fs=8, title_fs=9.5)
+resource(46, 66.2, 33.5, 13.6, "GPT", GPT, "gpt-5.4",
+         "OpenAI · shared w/ orch.\nIntake & Drafting", mono_fs=8, title_fs=9.5)
 resource(82, 66.2, 33.5, 13.6, "SOL", GPT, "gpt-5.6-sol",
          "OpenAI · GlobalStd 20\nClause & Risk", mono_fs=8, title_fs=9.5)
-resource(118, 66.2, 33.5, 13.6, "GPT", GPT, "gpt-5-mini",
+resource(118, 66.2, 33.5, 13.6, "GPT", GPT, "gpt-4.1-mini",
          "OpenAI · GlobalStd 30\nObligation & Renewal", mono_fs=8, title_fs=9.5)
 
 # capability tags
@@ -244,7 +244,7 @@ resource(85.5, 8.8, 64, 6.2, "M365", "#3B57B0", "Microsoft 365 Copilot & Teams",
 # --------------------------------------------------------------------------
 # Connectors
 # --------------------------------------------------------------------------
-arrow((80, 99.2), (80, 91.2), color=CLAUDE, lw=2.2, double=True)
+arrow((80, 99.2), (80, 91.2), color=ACCENT, lw=2.2, double=True)
 text(82.0, 95.4, "chat", fs=8.6, color="#7A3E1D", weight="bold")
 
 arrow((40, 61.9), (40, 58.1), color=SEARCH, lw=2.0)
@@ -263,13 +263,13 @@ arrow((153.8, 27.2), (153.8, 61.8), color=DELIVERY, lw=1.6, dashed=True)
 ax.text(155.1, 44.5, "publish · MCP / Teams", fontsize=8, color=DELIVERY,
         weight="bold", rotation=90, ha="center", va="center", zorder=6)
 
-# legend (vendor colours)
+# legend (model + client colours)
 lx = 96
 panel(lx, 92.8, 54, 4.0, fill="#FFFFFF", edge="#D9E2EC", lw=1.0, radius=1.2, z=2)
 chip(lx + 2, 93.6, 5.5, 2.4, "", GPT, fs=1)
 text(lx + 8.2, 94.8, "OpenAI (GPT)", fs=8.6, color=INK)
-chip(lx + 24, 93.6, 5.5, 2.4, "", CLAUDE, fs=1)
-text(lx + 30.2, 94.8, "Anthropic (Claude)", fs=8.6, color=INK)
+chip(lx + 24, 93.6, 5.5, 2.4, "", ACCENT, fs=1)
+text(lx + 30.2, 94.8, "Client · Teams chat", fs=8.6, color=INK)
 
 # --------------------------------------------------------------------------
 # Save

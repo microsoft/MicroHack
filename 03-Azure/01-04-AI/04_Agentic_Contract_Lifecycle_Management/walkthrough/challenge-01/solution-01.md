@@ -22,7 +22,7 @@ contract corpus the later challenges ground on.
   [`src/scripts/seed_corpus.py`](../../src/scripts/seed_corpus.py) over the local PDFs in
   [`src/data/`](../../src/data/).
 - **Done when** [`src/scripts/smoke_test.py`](../../src/scripts/smoke_test.py)
-  prints `✅ PASS` — a tiny agent runs on the GPT and Claude deployments.
+  prints `✅ PASS` — a tiny agent verifies each distinct GPT deployment.
 
 ## 🛠️ Task-by-task walkthrough
 
@@ -47,17 +47,15 @@ Pick **one** path — all three provision the same Foundry project, models, Sear
 azd up                             # Bicep in labautomation/infra/ (recommended)
 # — or the scripted path —
 ./labautomation/deploy.sh          # bash;  deploy.ps1 on Windows
-# — no Claude entitlement? skip it (drafting falls back to gpt-5.4; clause-risk stays on gpt-5.6-sol) —
-DEPLOY_CLAUDE=false ./labautomation/deploy.sh   # azd equivalent: azd env set DEPLOY_CLAUDE_MODEL false
 ```
 The `.env` is written for you by the postprovision hook → [`src/scripts/write_env.py`](../../src/scripts/write_env.py), which reads the deployment outputs (`azd env get-values`, or `--deployment` for the ARM path) and writes every env var the agents use — filling constants from a `DEFAULTS` map when an output is absent:
 ```python
 # src/scripts/write_env.py — constants used when a deployment output is missing
 DEFAULTS = {
     "MODEL_ORCHESTRATOR": "gpt-5.4",
-    "MODEL_DRAFTING": "claude-opus-4-8",
+    "MODEL_DRAFTING": "gpt-5.4",
     "MODEL_CLAUSE_RISK": "gpt-5.6-sol",
-    "MODEL_RENEWAL": "gpt-5-mini",
+    "MODEL_RENEWAL": "gpt-4.1-mini",
     "AZURE_SEARCH_INDEX": "clm-corpus",
     "AZURE_SEARCH_CONNECTION_NAME": "clm-search",
     # …
@@ -73,12 +71,12 @@ get = lambda k: env.get(k) or DEFAULTS.get(k, "")
 > <img src="../../images/challenge-01/steps/06-azd-up-success.svg" alt="Screenshot slot: azd up success" width="80%">
 
 ### Task 5 · Verify your resources
-In the Foundry portal confirm the project, the **4 model deployments** (3 without Claude), and the `clm-corpus` Search index. From the CLI:
+In the Foundry portal confirm the project, the **3 distinct model deployments** (4 roles; Intake & Drafting shares gpt-5.4 with Orchestrator), and the `clm-corpus` Search index. From the CLI:
 ```bash
 az cognitiveservices account deployment list -g <rg> -n clmfoundry<token> -o table
 ```
 
-> 📸 **Screenshot slot:** the **resource group** in the portal and the **Foundry model deployments** (3, or 2 without Claude).
+> 📸 **Screenshot slot:** the **resource group** in the portal and the **Foundry model deployments** (3 distinct deployments).
 >
 > <img src="../../images/challenge-01/steps/07-portal-resource-group.svg" alt="Screenshot slot: resource group" width="80%">
 > <img src="../../images/challenge-01/steps/08-foundry-deployments.svg" alt="Screenshot slot: model deployments" width="80%">
@@ -99,7 +97,7 @@ Both paths build the same idempotent `clm-corpus` index the later challenges gro
 > <img src="../../images/challenge-01/steps/09-search-index.svg" alt="Screenshot slot: clm-corpus index" width="80%">
 
 ### Task 7 · Smoke test (the finish line)
-The gate proves the project is reachable **and** that both model runners answer. The core of it builds a one-line agent per deployment:
+The gate proves the project is reachable **and** that each distinct model deployment answers. The core of it builds a one-line agent per deployment:
 ```python
 # src/scripts/smoke_test.py
 def ping_model(model: str, label: str) -> bool:
@@ -110,18 +108,27 @@ def ping_model(model: str, label: str) -> bool:
     )
     reply = run_prompt(agent, "Say OK.")
     return bool(reply.strip())
-# main() pings MODEL_ORCHESTRATOR (gpt) and MODEL_DRAFTING (claude);
-# if Claude was skipped, MODEL_DRAFTING == MODEL_ORCHESTRATOR and the Claude ping is skipped.
+# main() pings each distinct deployment once; drafting shares MODEL_ORCHESTRATOR (gpt-5.4),
+# so that deployment is verified only once.
 ```
 ```bash
 python src/scripts/smoke_test.py
 ```
 ✅ **You should see** — this is the finish line for Challenge 1:
 ```text
-1) Checking environment…            ✓ (all vars present)
-2) Pinging gpt deployment 'gpt-5.4'… ✓ gpt replied: OK
-2) Pinging clause-risk deployment 'gpt-5.6-sol'… ✓ clause-risk replied: OK
-2) Pinging claude deployment 'claude-opus-4-8'… ✓ claude replied: OK
+1) Checking environment…
+   ✓ AZURE_AI_PROJECT_ENDPOINT = https://<foundry>.services.ai.azure.com/api/projects/clm-project
+   ✓ MODEL_ORCHESTRATOR = gpt-5.4
+   ✓ MODEL_DRAFTING = gpt-5.4
+   ✓ MODEL_CLAUSE_RISK = gpt-5.6-sol
+   ✓ MODEL_RENEWAL = gpt-4.1-mini
+2) Pinging orchestrator deployment 'gpt-5.4'…
+   ✓ orchestrator replied: OK
+   · drafting shares deployment 'gpt-5.4' with orchestrator — already verified.
+2) Pinging clause-risk deployment 'gpt-5.6-sol'…
+   ✓ clause-risk replied: OK
+2) Pinging renewal deployment 'gpt-4.1-mini'…
+   ✓ renewal replied: OK
 
 Smoke test: ✅ PASS
 ```
@@ -138,13 +145,12 @@ Smoke test: ✅ PASS
 | [`labautomation/deploy.sh`](../../labautomation/deploy.sh) · `.ps1` | Scripted provisioning that autofills `.env` |
 | [`src/scripts/seed_corpus.py`](../../src/scripts/seed_corpus.py) | Seeds the `clm-corpus` index (SharePoint crawl or local-PDF fallback) |
 | [`src/scripts/seed_sql.py`](../../src/scripts/seed_sql.py) | Optional: seeds contract-status rows in Azure SQL |
-| [`src/scripts/smoke_test.py`](../../src/scripts/smoke_test.py) | Gate — confirms both model runners answer |
+| [`src/scripts/smoke_test.py`](../../src/scripts/smoke_test.py) | Gate — confirms each distinct model deployment answers |
 | [`src/data/`](../../src/data/) | The CLM corpus (contracts, templates, clause library, playbooks) + eval datasets |
 
 ## Common issues
 
 | Symptom | Cause / fix |
 |---------|-------------|
-| A model isn't offered in your region | Pick a region with `gpt-5.4`, `gpt-5-mini`, **and** `claude-opus-4-8`; verify in the Foundry model catalog. |
-| `smoke_test.py` fails on Claude | The runner may not host Claude in your region — deploy with `DEPLOY_CLAUDE_MODEL=false` to fall back to `gpt-5.4`. |
+| A model isn't offered in your region | Pick a region with `gpt-5.4`, `gpt-5.6-sol`, and `gpt-4.1-mini`; verify in the Foundry model catalog. |
 | Corpus / index empty | Re-run `python src/scripts/seed_corpus.py` (idempotent). |

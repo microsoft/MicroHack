@@ -1,4 +1,4 @@
-"""Challenge 2 — Intake & Drafting agent (Anthropic Claude Opus 4.8).
+"""Challenge 2 — Intake & Drafting agent (gpt-5.4).
 
 Builds a grounded, cited, tool-enabled, guard-railed agent with the **Microsoft
 Agent Framework** that:
@@ -7,9 +7,9 @@ Agent Framework** that:
   • calls the `get_contract_status` function tool for structured lookups,
   • REFUSES to give legal advice (guardrail).
 
-The agent runs on the **Claude Opus 4.8** deployment (MODEL_DRAFTING). Note how
-the Agent Framework code is identical to a GPT agent — only the `model` on the
-Foundry chat client changes.
+The agent runs on the **gpt-5.4** deployment (MODEL_DRAFTING) — the highest-quota
+flagship in the Foundry project. Note how the Agent Framework code is identical
+across models — only the `model` on the Foundry chat client changes.
 
 Run:
     python src/agents/intake_drafting_agent.py            # interactive demo
@@ -69,7 +69,7 @@ GUARDRAILS (must follow)
 def create_agent(model: str | None = None, *, connection_id: str | None = None):
     """Create the Intake & Drafting agent with knowledge grounding + a function tool.
 
-    :param model: model deployment to run on (defaults to MODEL_DRAFTING / Claude).
+    :param model: model deployment to run on (defaults to MODEL_DRAFTING / gpt-5.4).
         Override it to run the same agent on another deployment (e.g. Ch3 bake-off).
     :param connection_id: optional Azure AI Search connection id to reuse instead of
         resolving the project's default connection again.
@@ -80,7 +80,7 @@ def create_agent(model: str | None = None, *, connection_id: str | None = None):
     knowledge = build_knowledge_tool(connection_id=connection_id)
 
     return Agent(
-        client=build_chat_client(model or settings.model_drafting),  # claude-opus-4-8
+        client=build_chat_client(model or settings.model_drafting),  # gpt-5.4
         name=AGENT_NAME,
         instructions=INSTRUCTIONS,
         tools=[knowledge, function_tool(get_contract_status)],

@@ -92,10 +92,13 @@ an **Agent Monitoring Dashboard** — no query-writing required.
 **What it is:** the library ([`src/evaluators.py`](../src/evaluators.py)) that **scores** agent responses.
 `GroundednessEvaluator`, `RelevanceEvaluator`, `CoherenceEvaluator` and `FluencyEvaluator` are **LLM-judged**
 by an Azure OpenAI deployment (your `gpt-5.4` / `gpt-5.4-nano`); a `target(query)` callable produces the
-agent's answer for each of the **16 rows** in `src/data/evaluation/evaluation_dataset.jsonl`.
+agent's answer for each of the **16 rows** in `src/data/evaluation/evaluation_dataset.jsonl`. On top of the
+generic evaluators, a **domain `clm_rubric` evaluator** (Task 6) scores each answer against weighted,
+contract-specific dimensions — and it's the metric the quality gate blocks on.
 
-- Ready-made **quality** and **safety** evaluators (safety ones take `azure_ai_project` + a credential).
-- The gate `python src/evaluators.py --gate 3.0` **exits 3** if groundedness < 3.0 — drop-in for CI.
+- Ready-made **quality** and **safety** evaluators (safety ones take `azure_ai_project` + a credential), plus
+  a custom **CLM rubric** evaluator you can also build in the portal.
+- The gate `python src/evaluators.py --gate 3.0` **exits 3** if the **CLM rubric** score < 3.0 — drop-in for CI.
 - `--bakeoff` reruns the same scorecard on **gpt-5.4 vs gpt-5.4-nano** to weigh quality against latency/cost.
 
 **Why here:** tracing shows *what happened*; evaluation shows *how good it was* — and lets a bad build
@@ -182,19 +185,22 @@ You'll get a scorecard for the gpt-5.4 drafting agent.
 ✅ **You should see** (scores 1–5; your numbers will differ):
 ```text
 === Intake & Drafting (gpt-5.4) ===
-  groundedness                             3.4
-  relevance                                4.5
+  clm_rubric                               3.8
   coherence                                4.9
   fluency                                  4.2
-  groundedness (gate: groundable rows)     3.4  (n=11)
+  groundedness                             3.4
+  relevance                                4.5
+  groundedness (groundable rows)           3.4  (n=11)
+  CLM rubric (gate: groundable rows)       3.8  (n=11)
   mean latency (s)                         4.4
 ```
 
-> ℹ️ The plain `groundedness` line is the dataset-wide mean over **all 16** rows.
-> The **`groundedness (gate: groundable rows)`** line is the mean over only the
-> `grounded_qa` + `clause_risk` rows — the ones where the correct answer is drawn
-> from the corpus. The 3 `refusal` + 2 `tool_call` rows are graded by *behaviour*,
-> not grounding, so they're excluded here — and the **quality gate uses this number**.
+> ℹ️ The four generic judges (`groundedness`, `relevance`, `coherence`, `fluency`) are
+> dataset-wide means over **all 16** rows. **`clm_rubric`** is the domain rubric from
+> Task 6. The two **`… (groundable rows)`** lines average only the `grounded_qa` +
+> `clause_risk` rows — where the correct answer is drawn from the corpus. The 3
+> `refusal` + 2 `tool_call` rows are graded by *behaviour*, so they're excluded there —
+> and the **quality gate uses the `CLM rubric (gate: groundable rows)` number**.
 
 > 📸 **Screenshot slot:** the evaluation scorecard in the terminal.
 >
@@ -206,11 +212,12 @@ gpt-5.4 (flagship) vs gpt-5.4-nano (lightweight) on the same scorecard:
 ```bash
 python src/evaluators.py --bakeoff
 ```
-Compare groundedness/relevance vs mean latency. Which model wins for *this* task?
+Compare the **CLM rubric** + groundedness/relevance vs mean latency. Which model wins for *this* task?
 
 ✅ **You should see** a side-by-side block:
 ```text
 --- Bake-off (gpt-5.4 vs gpt-5.4-nano) ---
+  clm_rubric                               gpt-5.4=3.8   gpt-5.4-nano=3.1
   groundedness                             gpt-5.4=3.4   gpt-5.4-nano=3.0
   relevance                                gpt-5.4=4.5   gpt-5.4-nano=4.1
   mean latency (s)                         gpt-5.4=4.4   gpt-5.4-nano=1.5
@@ -220,23 +227,26 @@ Compare groundedness/relevance vs mean latency. Which model wins for *this* task
 
 This is what a CI job would run:
 ```bash
-python src/evaluators.py --gate 3.0   # exit code 3 if groundedness < 3.0
+python src/evaluators.py --gate 3.0   # exit code 3 if the CLM rubric score < 3.0
 ```
-The gate measures groundedness over the **groundable rows** (`grounded_qa` +
-`clause_risk`) — the `groundedness (gate: groundable rows)` line from Task 3.
+The gate blocks on the **CLM rubric** (Task 6) averaged over the **groundable rows**
+(`grounded_qa` + `clause_risk`) — the `CLM rubric (gate: groundable rows)` line from
+Task 3. A domain rubric is a better gate than a single generic metric: it fails a build
+for the reasons that matter to a contract team (wrong clause, missed deviation, no
+fallback, self-approval), not just raw grounding.
 
 ✅ **You should see** `✅ GATE PASSED.` — then prove it can **fail** by raising the bar past your score:
 ```bash
 python src/evaluators.py --gate 5.0
 ```
 ```text
-Quality gate: groundedness=3.4 (groundable rows) threshold=5.0
-❌ GATE FAILED — groundedness below threshold. Blocking release.
+Quality gate: CLM rubric=3.8 (groundable rows) threshold=5.0
+❌ GATE FAILED — CLM rubric below threshold. Blocking release.
 ```
 
 > ⚠️ If the gate fails at **3.0** with a low number (e.g. `2.0`), that's **not** a
-> too-strict threshold — it means the agent isn't grounding well. The usual cause
-> is an **empty or unconnected `clm-corpus` Azure AI Search index**: re-run the
+> too-strict threshold — it means the agent isn't citing the right clauses. The usual
+> cause is an **empty or unconnected `clm-corpus` Azure AI Search index**: re-run the
 > Challenge 1 corpus seeding, then verify the connection + index with
 > `python src/kb_setup.py`. See Troubleshooting below.
 
@@ -244,17 +254,48 @@ Quality gate: groundedness=3.4 (groundable rows) threshold=5.0
 >
 > <img src="../images/challenge-03/steps/05-gate-fail.svg" alt="Screenshot slot: quality gate fails" width="75%">
 
-### Task 6 · (Portal) Continuous evaluation (~10 min)
+### Task 6 · (Portal) Build the rubric evaluator + continuous evaluation (~15 min)
 
-In the portal, enable **continuous/online evaluation** on the
-agent so production traffic is scored automatically. (This is portal-only preview — no stable
-Python API yet; the `--gate` flag is the code-first equivalent for CI.)
+You just gated on a **`clm_rubric`** score in code. A **rubric evaluator** is Foundry's
+*recommended primary measure* of agent quality: an LLM judge scores each response against
+weighted, domain-specific **dimensions you define**, so "good" means what it means for
+*your* use case. Now build the same rubric in the portal — no code — and (optionally) wire
+it to continuous evaluation.
+
+**Build it in the portal (UI twin of `src/evaluators.py`):**
+1. In your Foundry project, go to **Evaluation → Evaluator catalog**.
+2. Select **Custom evaluator** (or **Rubric evaluator**, preview) → **Create**.
+3. Choose **Prompt-based**, **ordinal 1–5** scoring. **Auto-generate** the rubric from your
+   **Intake & Drafting agent** (Foundry pulls its instructions), or paste the seven CLM
+   dimensions from `CLM_RUBRIC` in [`src/evaluators.py`](../src/evaluators.py):
+   `clause_identification` (9) · `deviation_flagging` (8) · `fallback_recommendation` (6) ·
+   `authority_escalation` (5) · `grounded_no_fabrication` (4) · `communication_clarity` (2)
+   · `general_quality` (5, always applies).
+4. Review the dimensions/weights, set a **pass threshold**, and **run** the evaluator on
+   `evaluation_dataset.jsonl` (upload it as the data source). Each row gets a weighted
+   score, a pass/fail label, and the judge's **reason** per dimension.
+
+> ⚖️ **Calibrate the gate.** The first time you run the rubric (in code or the portal),
+> read your actual groundable-rows score, then set `--gate` a little below it (start at
+> `3.0`). A well-grounded agent should clear it; an empty-corpus or over-reaching agent
+> won't. That tuning *is* the lesson — the threshold is a policy you set, not a magic number.
+
+> 📸 **Screenshot slot:** your rubric evaluator's per-dimension scores in the portal.
+
+**Continuous evaluation (optional):** once the rubric reflects your bar, enable
+**continuous/scheduled evaluation** in **Monitor settings** so live agent traffic is scored
+automatically and you catch quality regressions in production. (Portal preview — the
+`--gate` flag is the code-first equivalent for CI, wired in `ci-eval.yml`.)
+
+Docs: [Rubric evaluators](https://learn.microsoft.com/azure/foundry/concepts/evaluation-evaluators/rubric-evaluators)
+· [Custom evaluators](https://learn.microsoft.com/azure/foundry/concepts/evaluation-evaluators/custom-evaluators)
 
 ## ✔️ Success criteria
 
 - Prompt/retrieval/tool spans visible in the portal for **every agent in the fleet**.
-- An evaluation scorecard is produced (groundedness, relevance, coherence, fluency).
+- An evaluation scorecard is produced (groundedness, relevance, coherence, fluency, **CLM rubric**).
 - The **gpt-5.4-vs-gpt-5.4-nano** comparison is captured (quality + latency).
+- A **rubric evaluator** is built in the portal (or via `CLM_RUBRIC` in code) and run on the dataset.
 - The quality gate **fails** when you set a threshold above the measured score (try `--gate 5.0`).
 
 ## 🚀 Go Further
@@ -263,7 +304,7 @@ Python API yet; the `--gate` flag is the code-first equivalent for CI.)
   instead of a `model_config`.
 - Add a **`ToolCallAccuracyEvaluator`** for the `get_contract_status` tool rows.
 - Run **AI red teaming** against the agent and add adversarial rows to the dataset.
-- Wire `--gate` into a GitHub Action so PRs are blocked on a groundedness regression.
+- Wire `--gate` into a GitHub Action so PRs are blocked on a **CLM rubric** regression (see `ci-eval.yml`).
 
 ## 🛠️ Troubleshooting
 
@@ -271,9 +312,9 @@ Python API yet; the `--gate` flag is the code-first equivalent for CI.)
 |---------|-----|
 | No spans in the portal | **(1)** Make sure you ran an **agent demo** (`intake_drafting_agent.py`, `orchestrator.py`, …) or `evaluators.py` — these enable tracing per-process. Running `python src/tracing_setup.py` alone only prints the confirmation and exits, so a demo launched separately still traces because each demo now calls `enable_tracing()` itself. **(2)** The portal's tracing/monitoring view needs App Insights *connected to the project*. In **New Foundry** there is **no** project-level *Tracing* menu — connect it from **Build → your agent/model → `Monitor`** (or type **"Tracing"** in the **search bar**); in **classic Foundry** open **project → Tracing → Connect**. Pick `clm-appinsights` (Task 2). **(3)** Confirm `APPLICATIONINSIGHTS_CONNECTION_STRING` is set in `.env`; allow 1–2 min for ingestion. To check data independently, query `dependencies` in **Azure portal → clm-appinsights → Logs**. |
 | Evaluator auth error | The judge is an **Azure OpenAI** deployment. Set `AZURE_OPENAI_ENDPOINT`/`AZURE_OPENAI_DEPLOYMENT` (or rely on the derived project endpoint + AAD). |
-| `groundedness` key not found by the gate | Print `result["metrics"]` and adjust the key — SDK versions name it `groundedness` or `groundedness.groundedness`. |
+| Gate can't read the `clm_rubric` (or `groundedness`) key | Print `result["metrics"]` and adjust the key — SDK versions name it `<metric>` or `<metric>.<metric>` (e.g. `clm_rubric.clm_rubric`). |
 | `ImportError: Blocked import of regex / defusedxml / … from current working directory …` when running `evaluators.py` (or `safety_eval.py` / `red_team.py`) | This is **NLTK's import guard** (`nltk/inisec.py`, pulled in by `azure-ai-evaluation`), *not* an eval error — it fires before any row is scored. It blocks its helper libs (`regex`, `defusedxml`, …) whenever they resolve to a path **inside the current working directory**, and because the hack's virtualenv lives **inside the repo** (`./.venv`) every site-package counts as "inside cwd". **`-P` / `PYTHONSAFEPATH` do _not_ help** — the guard checks `Path.cwd()`, not `sys.path`. `git pull` the latest scripts: they now pre-import the eval SDK from a throwaway temp directory, so the guard is bypassed automatically. If you can't pull, just run from **any directory outside the repo**, e.g. `cd /tmp && python /workspaces/microhack-aiagents/src/evaluators.py` (the scripts resolve their data/paths absolutely, so a different cwd is safe). |
-| Gate fails at `--gate 3.0` with a low score (e.g. `groundedness=2.0`) | **Diagnose, don't guess.** **(1)** Confirm `clm-corpus` actually has documents: Azure portal → your Search service → **Indexes → `clm-corpus`** (check the document count), or run `python src/kb_setup.py`. A score near 2.0 almost always means the index is **empty or not connected**, so the agent can't ground its answers — re-run Challenge 1 seeding (`src/scripts/seed_corpus.py`). **(2)** If it *is* seeded but the score is still under the bar, run **`python src/evaluators.py --explain`** — it prints each groundable row's score **and the LLM judge's own reason**, so you can see exactly which rows fall short and why. The gate already excludes `refusal`/`tool_call` rows, so a low number means the **groundable** rows (grounded_qa + clause_risk) are underperforming. |
+| Gate fails at `--gate 3.0` with a low score (e.g. `CLM rubric=2.0`) | **Diagnose, don't guess.** **(1)** Confirm `clm-corpus` actually has documents: Azure portal → your Search service → **Indexes → `clm-corpus`** (check the document count), or run `python src/kb_setup.py`. A score near 2.0 almost always means the index is **empty or not connected**, so the agent can't cite the right clauses — re-run Challenge 1 seeding (`src/scripts/seed_corpus.py`). **(2)** If it *is* seeded but the score is still under the bar, run **`python src/evaluators.py --explain`** — it prints each groundable row's **CLM rubric + groundedness score** and the LLM judge's own reason, so you can see exactly which rows fall short and why. The gate already excludes `refusal`/`tool_call` rows, so a low number means the **groundable** rows (grounded_qa + clause_risk) are underperforming. |
 | `429` rate-limits / `cannot schedule new futures after shutdown` | The judge/agent deployment is throttled. Re-run with `--workers 1` (or set `PF_WORKER_COUNT`); the target auto-retries 429s with backoff, so a slower run still completes. |
 | Bake-off is slow | It runs the dataset twice (once per model). Trim the JSONL while iterating. |
 

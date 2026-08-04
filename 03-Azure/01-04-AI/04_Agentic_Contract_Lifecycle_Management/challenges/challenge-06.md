@@ -86,7 +86,8 @@ hardening actually worked. → [Evaluation & observability](https://learn.micros
 
 ### Continuous evaluation in CI (GitHub Actions)
 
-**What it is:** the **automation** that runs the quality + safety gates on every relevant change.
+**What it is:** the **automation** that runs the quality + safety gates on every relevant change. The
+quality gate blocks on the **CLM rubric** score (Challenge 3, Task 6).
 [`.github/workflows/ci-eval.yml`](../.github/workflows/ci-eval.yml) runs `evaluators.py --gate 3.0` and
 `safety_eval.py --gate 0.1` on a schedule / on demand using **Azure OIDC**.
 

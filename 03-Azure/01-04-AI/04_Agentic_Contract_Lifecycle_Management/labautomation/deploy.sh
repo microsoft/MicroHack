@@ -72,7 +72,7 @@ deploy_model () {  # name  model-name  version  format  sku-capacity
 deploy_model "$GPT_ORCH" "gpt-5.4"          "2026-03-05" "OpenAI"    30
 # Renewal / lightweight agent: gpt-4o-mini is deprecating in swedencentral, so
 # deploy gpt-5.4-nano instead (same GlobalStandard SKU, later deprecation date).
-deploy_model "$GPT_MINI" "gpt-5.4-nano"     "2025-04-14" "OpenAI"    30
+deploy_model "$GPT_MINI" "gpt-5.4-nano"     "2026-03-17" "OpenAI"    30
 # Clause & Risk runs on gpt-5.6-sol — its own dedicated deployment.
 deploy_model "$GPT56SOL" "gpt-5.6-sol"      "2026-07-09" "OpenAI"    30
 

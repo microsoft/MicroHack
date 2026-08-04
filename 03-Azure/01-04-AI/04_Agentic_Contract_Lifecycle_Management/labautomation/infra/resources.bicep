@@ -63,7 +63,7 @@ var gpt56solVersion = '2026-07-09'
 // renewal deployment runs gpt-5.4-nano instead — same GlobalStandard SKU, a later
 // deprecation horizon, and still cheap/fast for the high-frequency agent.
 var gptMiniModel = 'gpt-5.4-nano'
-var gptMiniVersion = '2025-04-14'
+var gptMiniVersion = '2026-03-17'
 
 // ---- Built-in role definition ids ----------------------------------------
 var roleAiDeveloper = '64702f94-c441-49e6-a78b-ef80e0188fee'            // Azure AI Developer

@@ -40,7 +40,7 @@ function Deploy-Model($name, $model, $version, $format, $cap) {
   if ($LASTEXITCODE -ne 0) { Write-Host "    ! $name failed — check availability in $Location." }
 }
 Deploy-Model $GptOrch  "gpt-5.4"          "2026-03-05" "OpenAI"    30
-Deploy-Model $GptMini  "gpt-5.4-nano"     "2025-04-14" "OpenAI"    30
+Deploy-Model $GptMini  "gpt-5.4-nano"     "2026-03-17" "OpenAI"    30
 # Clause & Risk runs on gpt-5.6-sol — its own dedicated deployment.
 Deploy-Model $Gpt56Sol "gpt-5.6-sol"      "2026-07-09" "OpenAI"    30
 

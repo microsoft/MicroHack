@@ -233,23 +233,6 @@ Expected output (ids will differ):
 ✓ Built Foundry Azure AI Search grounding tool (semantic, top_k=5).
 ```
 
-> [!IMPORTANT]
-> **"Why don't I see the agent in the Foundry portal?"** — By design. `intake_drafting_agent.py` builds the
-> agent with a `FoundryChatClient`, which runs the tool-calling loop **in your process**; it is never
-> registered server-side, so it won't appear in portal → **Agents** or the **Playground**. Running the demo
-> script is a fully valid way to complete this task (the terminal output *is* your evidence).
->
-> **Want the Playground path too?** Publish the same agent (name, persona, gpt-5.4, Foundry IQ grounding) as a
-> persistent Foundry agent, then open it in the Playground:
-> ```bash
-> python src/agents/publish_agent.py          # create/update the portal agent
-> python src/agents/publish_agent.py --list    # list published versions
-> python src/agents/publish_agent.py --delete  # cleanup
-> ```
-> Grounded drafting, cited Q&A and the refusal guardrail all work in the Playground. The `get_contract_status`
-> **function tool runs client-side**, so the portal will *request* the call and let you paste the result — use
-> the demo script for the full `CT-4821` tool round-trip.
-
 > 📸 **Screenshot slot — what you'll see:** the terminal confirming the `clm-search` connection and `clm-corpus` index.
 >
 > <img src="../images/challenge-02/steps/01-kb-setup-ok.svg" alt="Screenshot slot: kb_setup OK" width="80%">
@@ -341,6 +324,29 @@ AGENT: I can't provide legal advice. Please consult qualified counsel... [refusa
 Work through [`sample_prompts.md`](../src/sample_prompts.md) — via the demo script, the portal **Playground**,
 or your own thread. Each section maps to one capability, and the file's *"What good looks like"* table
 tells you the expected behavior:
+
+> [!IMPORTANT]
+> **"Why don't I see the agent in the Foundry portal?"** — By design. `intake_drafting_agent.py` builds the
+> agent with a `FoundryChatClient`, which runs the tool-calling loop **in your process**; it is never
+> registered server-side, so it won't appear in portal → **Agents** or the **Playground**. Running the demo
+> script is a fully valid way to complete this task (the terminal output *is* your evidence).
+>
+> **Want the Playground path too?** Publish the same agent (name, persona, gpt-5.4, Foundry IQ grounding) as a
+> persistent Foundry agent, then open it in the Playground:
+> ```bash
+> python src/agents/publish_agent.py          # create/update the portal agent
+> python src/agents/publish_agent.py --list    # list published versions
+> python src/agents/publish_agent.py --delete  # optional — remove it later (NOT required)
+> ```
+> Grounded drafting, cited Q&A and the refusal guardrail all work in the Playground. The `get_contract_status`
+> **function tool runs client-side**, so the portal will *request* the call and let you paste the result — use
+> the demo script for the full `CT-4821` tool round-trip.
+>
+> **Leaving it published is free and recommended.** A published prompt-agent is just a definition — it
+> costs nothing to exist, and deleting it is *not* required before Challenge 3. Challenge 3's monitoring
+> is **trace-based** (it reads telemetry from *running the demos*), so it works whether or not this agent
+> is registered in **Assets → Agents**. Already deleted it? Just re-run `python src/agents/publish_agent.py`
+> to bring it back — nothing else to redo.
 
 > 📸 **Screenshot slot — what you'll see:** the Foundry **Playground** with the agent giving a grounded, cited answer.
 >

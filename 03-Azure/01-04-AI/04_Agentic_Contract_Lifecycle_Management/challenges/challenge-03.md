@@ -145,6 +145,13 @@ Open **Foundry portal → Tracing** and inspect the **prompt / retrieval / tool*
 > <img src="../images/challenge-03/steps/02-portal-tracing.svg" alt="Screenshot slot: Foundry Tracing" width="75%">
 > <img src="../images/challenge-03/steps/03-agent-monitoring.svg" alt="Screenshot slot: Agent Monitoring" width="75%">
 
+> [!IMPORTANT]
+> **Tracing and Agent Monitoring are driven by telemetry — not by a registered agent.** The demos run
+> in-process and stream OpenTelemetry spans to Application Insights, so these views populate from
+> *running the demos*, **not** from anything in **Assets → Agents**. An empty Agents list is expected and
+> does not affect monitoring. (The optional Challenge 2 `publish_agent.py` step is unrelated: you don't
+> need a published agent here, and deleting one removes no telemetry.)
+
 > [!NOTE]
 > Spans take **1–2 minutes** to appear after a run — refresh if the timeline is empty at first. To
 > confirm data is flowing independently of the portal tab, open **Azure portal → your

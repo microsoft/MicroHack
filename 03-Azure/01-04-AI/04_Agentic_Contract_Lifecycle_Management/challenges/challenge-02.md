@@ -235,7 +235,7 @@ Expected output (ids will differ):
 
 > 📸 **Screenshot slot — what you'll see:** the terminal confirming the `clm-search` connection and `clm-corpus` index.
 >
-> <img src="../images/challenge-02/steps/01-kb-setup-ok.svg" alt="Screenshot slot: kb_setup OK" width="80%">
+> <img src="../images/challenge-02/steps/01-kb-setup-ok.png" alt="Screenshot slot: kb_setup OK" width="80%">
 
 > [!TIP]
 > If the connection doesn't resolve, it's almost always a Challenge 1 gap — see **Troubleshooting**.
@@ -313,7 +313,7 @@ AGENT: I can't provide legal advice. Please consult qualified counsel... [refusa
 
 > 📸 **Screenshot slot — what you'll see:** the 4-prompt demo (draft · cited Q&A · tool call · refusal).
 >
-> <img src="../images/challenge-02/steps/02-agent-demo.svg" alt="Screenshot slot: 4-prompt demo" width="80%">
+> <img src="../images/challenge-02/steps/02-agent-demo.png" alt="Screenshot slot: 4-prompt demo" width="80%">
 
 > [!NOTE]
 > The agent is built in-process each run via the Microsoft Agent Framework — there's no server-side
@@ -350,7 +350,7 @@ tells you the expected behavior:
 
 > 📸 **Screenshot slot — what you'll see:** the Foundry **Playground** with the agent giving a grounded, cited answer.
 >
-> <img src="../images/challenge-02/steps/03-portal-playground.svg" alt="Screenshot slot: Foundry Playground" width="80%">
+> <img src="../images/challenge-02/steps/03-portal-playground.png" alt="Screenshot slot: Foundry Playground" width="80%">
 
 | Prompt type | Expected behavior |
 |-------------|-------------------|

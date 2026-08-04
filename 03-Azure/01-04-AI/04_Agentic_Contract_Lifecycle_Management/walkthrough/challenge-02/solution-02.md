@@ -46,7 +46,7 @@ python src/kb_setup.py
 
 > 📸 **Screenshot slot:** the terminal confirming the `clm-search` connection and `clm-corpus` index.
 >
-> <img src="../../images/challenge-02/steps/01-kb-setup-ok.svg" alt="Screenshot slot: kb_setup OK" width="80%">
+> <img src="../../images/challenge-02/steps/01-kb-setup-ok.png" alt="Screenshot slot: kb_setup OK" width="80%">
 
 ### Task 2 · The agent definition (the answer)
 The whole agent is ~15 lines — grounding tool **plus** a function tool, with the model as the only deployment-specific line. From [`src/agents/intake_drafting_agent.py`](../../src/agents/intake_drafting_agent.py):
@@ -93,7 +93,7 @@ AGENT: I can't provide legal advice. Please consult qualified counsel... [refusa
 
 > 📸 **Screenshot slot:** the 4-prompt demo (draft · cited Q&A · tool call · refusal).
 >
-> <img src="../../images/challenge-02/steps/02-agent-demo.svg" alt="Screenshot slot: 4-prompt demo" width="80%">
+> <img src="../../images/challenge-02/steps/02-agent-demo.png" alt="Screenshot slot: 4-prompt demo" width="80%">
 
 ### Task 4 · Exercise every capability
 Work through [`src/sample_prompts.md`](../../src/sample_prompts.md). The `get_contract_status` tool returns real, structured fields (dates computed relative to today, so yours differ):
@@ -108,7 +108,7 @@ The demo agent runs **in-process** (`FoundryChatClient`), so it does not appear 
 
 > 📸 **Screenshot slot:** the Foundry **Playground** with the agent giving a grounded, cited answer.
 >
-> <img src="../../images/challenge-02/steps/03-portal-playground.svg" alt="Screenshot slot: Foundry Playground" width="80%">
+> <img src="../../images/challenge-02/steps/03-portal-playground.png" alt="Screenshot slot: Foundry Playground" width="80%">
 
 ### Task 5 · (Optional) Content safety
 Attach **Prompt Shields / PII** to the agent in the portal — a second, model-independent guardrail layer on top of the prompt-level refusal (built out in Challenge 6).

@@ -22,19 +22,35 @@ import os
 import sys
 from pathlib import Path
 
-# --- azure-ai-evaluation / NLTK safe-path shim -----------------------------
-# azure-ai-evaluation imports NLTK, whose import-time security finder refuses to
-# load its helper libs (regex, defusedxml, …) unless Python runs in "safe path"
-# mode (-P / PYTHONSAFEPATH); otherwise this crashes at
-# `from azure.ai.evaluation import …` with
-# "ImportError: Blocked import of <mod> from current working directory …".
-# Re-run once under PYTHONSAFEPATH so the guard stands down for *every* such
-# module. The script re-adds its own dirs to sys.path explicitly below, so
-# safe-path mode still lets the sibling imports (clm_common, …) resolve.
-if not sys.flags.safe_path:
-    os.environ["PYTHONSAFEPATH"] = "1"
-    import subprocess
-    raise SystemExit(subprocess.call([sys.executable, *sys.argv]))
+# --- azure-ai-evaluation / NLTK import-guard workaround --------------------
+# azure-ai-evaluation pulls in NLTK, which installs an import "security finder"
+# (nltk/inisec.py) that BLOCKS importing its helper libs (regex, defusedxml,
+# wordnet, ...) whenever the module resolves to a path *inside the current
+# working directory*. This hack's virtualenv lives INSIDE the repo (./.venv), so
+# every site-package counts as "inside cwd" and the finder raises
+# "ImportError: Blocked import of <mod> from current working directory".
+# NOTE: -P / PYTHONSAFEPATH do NOT help here -- the finder checks Path.cwd(),
+# not sys.path. Work around it by importing the azure-ai-evaluation -> NLTK chain
+# once from a throwaway temp dir (an ancestor of nothing), so the finder sees
+# those modules as OUTSIDE cwd and caches them in sys.modules; later imports are
+# cache hits and never re-trigger the guard. The cwd is restored immediately.
+def _preload_eval_sdk() -> None:
+    import shutil
+    import tempfile
+
+    cwd = os.getcwd()
+    safe_dir = tempfile.mkdtemp(prefix="clm-eval-")
+    try:
+        os.chdir(safe_dir)
+        import azure.ai.evaluation  # noqa: F401  (loads NLTK + regex/defusedxml/...)
+    except Exception:
+        pass  # let the real import below surface any genuine error
+    finally:
+        os.chdir(cwd)
+        shutil.rmtree(safe_dir, ignore_errors=True)
+
+
+_preload_eval_sdk()
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))             # src (clm_common, tracing_setup)
 sys.path.insert(0, str(Path(__file__).resolve().parent / "agents"))  # agent modules

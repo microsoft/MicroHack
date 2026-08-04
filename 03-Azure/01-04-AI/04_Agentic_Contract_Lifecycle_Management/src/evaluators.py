@@ -14,6 +14,7 @@ Usage:
     python src/evaluators.py                 # evaluate the drafting model (gpt-5.4)
     python src/evaluators.py --bakeoff       # gpt-5.4 vs gpt-5.4-nano comparison
     python src/evaluators.py --gate 4.0      # fail if mean groundedness < 4.0
+    python src/evaluators.py --explain       # print each row's score + the judge's reason
     python src/evaluators.py --workers 2     # throttle evaluator concurrency (429s)
 """
 from __future__ import annotations
@@ -146,6 +147,51 @@ def _groundable_groundedness(result: dict) -> tuple[float | None, int, int]:
     return round(sum(scores) / len(scores), 3), len(scores), len(rows)
 
 
+def _print_row_explanations(result: dict) -> None:
+    """Print each row's groundedness score + the judge's own reason (``--explain``).
+
+    Turns the single aggregate gate number into a row-by-row diagnosis: for every
+    dataset row it shows the category, the query, the agent's response (truncated)
+    and — crucially — the LLM judge's ``groundedness_reason``. This is what tells
+    you *why* a groundable row scored low: the reason string distinguishes the two
+    usual culprits — the agent **over-answering** past the terse reference context
+    (claims true but not in ``context``) vs. the agent **grounding on the wrong
+    retrieved document** (claims that conflict with the standard clause).
+    """
+    rows = result.get("rows") or []
+    if not rows:
+        print("· --explain: no per-row results available from this SDK version.")
+        return
+    print("\n--- Per-row groundedness (--explain) ---")
+    print("    GATED rows (grounded_qa + clause_risk) drive the quality gate.\n")
+    for i, row in enumerate(rows, 1):
+        category = _row_get(row, "inputs.category", "category")
+        query = _row_get(row, "inputs.query", "query")
+        response = _row_get(row, "outputs.response", "response", "inputs.response") or ""
+        score = _row_get(
+            row,
+            "outputs.groundedness.groundedness",
+            "outputs.groundedness",
+            "groundedness.groundedness",
+            "groundedness",
+        )
+        reason = _row_get(
+            row,
+            "outputs.groundedness.groundedness_reason",
+            "groundedness.groundedness_reason",
+            "outputs.groundedness_reason",
+            "groundedness_reason",
+        )
+        tag = "GATED" if str(category) in GROUNDABLE_CATEGORIES else "info "
+        oneline = lambda s: " ".join(str(s).split())  # noqa: E731
+        print(f"[{i:>2}] {tag}  category={category}  groundedness={score}")
+        print(f"     Q: {oneline(query)[:150]}")
+        print(f"     A: {oneline(response)[:260]}")
+        if reason:
+            print(f"     judge: {oneline(reason)[:320]}")
+        print()
+
+
 def _is_rate_limit(exc: BaseException) -> bool:
     """True if `exc` (or anything in its cause/context chain) is a 429 rate-limit.
 
@@ -273,7 +319,7 @@ def evaluators_dict():
     }
 
 
-def run_eval(model: str, connection_id: str) -> dict:
+def run_eval(model: str, connection_id: str, *, explain: bool = False) -> dict:
     """Evaluate the agent on `model` over the dataset; return the metrics summary."""
     from azure.ai.evaluation import evaluate
 
@@ -293,6 +339,9 @@ def run_eval(model: str, connection_id: str) -> dict:
             }
         },
     )
+
+    if explain:
+        _print_row_explanations(result)
 
     metrics = dict(result.get("metrics", {}))
     g_groundable, n_used, _ = _groundable_groundedness(result)
@@ -338,6 +387,9 @@ def main() -> int:
                         help="compare the drafting model (gpt-5.4) vs gpt-5.4-nano")
     parser.add_argument("--gate", type=float, default=None,
                         help="fail if mean groundedness < THRESHOLD (e.g. 4.0)")
+    parser.add_argument("--explain", action="store_true",
+                        help="print each row's groundedness score + the judge's own "
+                             "reason (diagnose WHY the gate score is what it is)")
     parser.add_argument("--workers", type=int, default=None,
                         help="override PF_WORKER_COUNT (evaluator batch concurrency); "
                              f"lower values reduce 429 rate-limit pressure "
@@ -375,12 +427,12 @@ def main() -> int:
         tracing_setup.enable_tracing(project)
         connection_id = get_search_connection_id(project)
 
-    primary = run_eval(settings.model_drafting, connection_id)
+    primary = run_eval(settings.model_drafting, connection_id, explain=args.explain)
     print_scorecard("Intake & Drafting", primary)
 
     alt = None
     if args.bakeoff:
-        alt = run_eval(settings.model_renewal, connection_id)
+        alt = run_eval(settings.model_renewal, connection_id, explain=args.explain)
         print_scorecard("Intake & Drafting", alt)
         print(f"\n--- Bake-off ({settings.model_drafting} vs {settings.model_renewal}) ---")
         keys = [k for k in primary if not k.startswith("_")]

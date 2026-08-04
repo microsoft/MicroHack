@@ -26,6 +26,18 @@ import sys
 import time
 from pathlib import Path
 
+# NLTK — pulled in transitively by `azure-ai-evaluation` — ships an import-time
+# security finder that blocks `import regex` whenever the working/script
+# directory is on sys.path (i.e. unless Python runs with -P / PYTHONSAFEPATH),
+# raising `ImportError: Blocked import of regex from current working directory`.
+# Pre-importing regex here — *before* azure-ai-evaluation (hence nltk) loads —
+# caches it in sys.modules, so nltk's later `import regex` returns the cached
+# module and the finder is never consulted. Harmless if regex isn't installed.
+try:
+    import regex as _regex  # noqa: F401
+except ImportError:
+    pass
+
 # Enable tracing before importing the agents SDK (import has the side effect).
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import tracing_setup  # noqa: E402,F401  (sets content-recording env flag)

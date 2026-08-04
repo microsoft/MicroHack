@@ -67,4 +67,5 @@ if __name__ == "__main__":
 
     with get_project_client() as project:
         enable_tracing(project)
-        print("Run an agent now; open Foundry portal → Tracing to see spans.")
+        print("Run an agent now, then view spans in the Foundry portal — New Foundry: "
+              "Build → your agent/model → Monitor; classic: project → Tracing.")

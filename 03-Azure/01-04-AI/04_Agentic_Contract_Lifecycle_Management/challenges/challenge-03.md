@@ -123,7 +123,7 @@ python src/tracing_setup.py
 ✅ **You should see:**
 ```text
 ✓ Tracing enabled → Application Insights (content recording ON).
-Run an agent now; open Foundry portal → Tracing to see spans.
+Run an agent now, then view spans in the Foundry portal — New Foundry: Build → your agent/model → Monitor; classic: project → Tracing.
 ```
 
 > 📸 **Screenshot slot:** the "Tracing enabled" confirmation.
@@ -132,20 +132,22 @@ Run an agent now; open Foundry portal → Tracing to see spans.
 
 ### Task 2 · Generate traffic (~15 min)
 
-**One-time — connect Application Insights to your project.** The Foundry portal **Tracing** tab only
-renders spans from an App Insights resource that is *connected to the project*; provisioning the
-resource in Challenge 1 is not enough on its own. In the portal open your **project → Tracing** (or
-**Observability → Tracing**) and, if prompted, click **Connect** and pick the `clm-appinsights`
-resource. *(Fresh `azd up` / `deploy.ps1` / `deploy.sh` deployments now create this connection for
-you — this step is only needed if Tracing still shows "connect a resource".)*
+**One-time — connect Application Insights to your project.** The portal's tracing/monitoring views only
+render spans from an App Insights resource that is *connected to the project*; provisioning the
+resource in Challenge 1 is not enough on its own. The click-path depends on which portal you're in:
+
+- **New Foundry** (the **New Foundry** toggle is **on** — the redesigned UI most people now land in): there is **no** project-level *Tracing* menu item. Open **Build → your agent or model → the `Monitor` tab** and, if prompted, connect Application Insights. Tip: you can jump straight there by typing **"Tracing"** or **"Monitor"** in the portal **search bar** (this is how you reach it when the left nav has no Tracing entry).
+- **Classic Foundry**: open your **project → Tracing** (or **Observability → Tracing**) and click **Connect**, then pick `clm-appinsights`.
+
+*(Fresh `azd up` / `deploy.ps1` / `deploy.sh` deployments now create this connection for you — this step is only needed if the view still shows "connect a resource".)*
 
 Then run any agent demo — each one enables tracing itself, so a normal run emits spans:
 ```bash
 python src/agents/intake_drafting_agent.py     # or orchestrator.py / clause_risk_agent.py
 ```
-Open **Foundry portal → Tracing** and inspect the **prompt / retrieval / tool** spans and token counts.
+Then open the spans — **New Foundry:** **Build → your agent/model → `Monitor`** (or search **"Tracing"** in the search bar); **classic:** **project → Tracing**. Inspect the **prompt / retrieval / tool** spans and token counts.
 
-> 📸 **Screenshot slot — what you'll see:** a run's span timeline in **Tracing**, and the **Agent Monitoring** dashboard.
+> 📸 **Screenshot slot — what you'll see:** a run's span timeline (in **Tracing** / the **Monitor** tab) and the **Agent Monitoring** dashboard.
 >
 > <img src="../images/challenge-03/steps/02-portal-tracing.svg" alt="Screenshot slot: Foundry Tracing" width="75%">
 > <img src="../images/challenge-03/steps/03-agent-monitoring.svg" alt="Screenshot slot: Agent Monitoring" width="75%">
@@ -267,7 +269,7 @@ Python API yet; the `--gate` flag is the code-first equivalent for CI.)
 
 | Symptom | Fix |
 |---------|-----|
-| No spans in the portal | **(1)** Make sure you ran an **agent demo** (`intake_drafting_agent.py`, `orchestrator.py`, …) or `evaluators.py` — these enable tracing per-process. Running `python src/tracing_setup.py` alone only prints the confirmation and exits, so a demo launched separately still traces because each demo now calls `enable_tracing()` itself. **(2)** The portal **Tracing** tab needs App Insights *connected to the project* — open **project → Tracing → Connect** and pick `clm-appinsights` (Task 2). **(3)** Confirm `APPLICATIONINSIGHTS_CONNECTION_STRING` is set in `.env`; allow 1–2 min for ingestion. To check data independently, query `dependencies` in **Azure portal → clm-appinsights → Logs**. |
+| No spans in the portal | **(1)** Make sure you ran an **agent demo** (`intake_drafting_agent.py`, `orchestrator.py`, …) or `evaluators.py` — these enable tracing per-process. Running `python src/tracing_setup.py` alone only prints the confirmation and exits, so a demo launched separately still traces because each demo now calls `enable_tracing()` itself. **(2)** The portal's tracing/monitoring view needs App Insights *connected to the project*. In **New Foundry** there is **no** project-level *Tracing* menu — connect it from **Build → your agent/model → `Monitor`** (or type **"Tracing"** in the **search bar**); in **classic Foundry** open **project → Tracing → Connect**. Pick `clm-appinsights` (Task 2). **(3)** Confirm `APPLICATIONINSIGHTS_CONNECTION_STRING` is set in `.env`; allow 1–2 min for ingestion. To check data independently, query `dependencies` in **Azure portal → clm-appinsights → Logs**. |
 | Evaluator auth error | The judge is an **Azure OpenAI** deployment. Set `AZURE_OPENAI_ENDPOINT`/`AZURE_OPENAI_DEPLOYMENT` (or rely on the derived project endpoint + AAD). |
 | `groundedness` key not found by the gate | Print `result["metrics"]` and adjust the key — SDK versions name it `groundedness` or `groundedness.groundedness`. |
 | `ImportError: Blocked import of regex / defusedxml / … from current working directory …` when running `evaluators.py` (or `safety_eval.py` / `red_team.py`) | This is **NLTK's import guard** (`nltk/inisec.py`, pulled in by `azure-ai-evaluation`), *not* an eval error — it fires before any row is scored. It blocks its helper libs (`regex`, `defusedxml`, …) whenever they resolve to a path **inside the current working directory**, and because the hack's virtualenv lives **inside the repo** (`./.venv`) every site-package counts as "inside cwd". **`-P` / `PYTHONSAFEPATH` do _not_ help** — the guard checks `Path.cwd()`, not `sys.path`. `git pull` the latest scripts: they now pre-import the eval SDK from a throwaway temp directory, so the guard is bypassed automatically. If you can't pull, just run from **any directory outside the repo**, e.g. `cd /tmp && python /workspaces/microhack-aiagents/src/evaluators.py` (the scripts resolve their data/paths absolutely, so a different cwd is safe). |

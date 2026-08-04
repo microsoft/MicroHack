@@ -15,7 +15,8 @@ enforcement policy, and deploys both variants for a falsifiable comparison.
 - The [general MicroHack prerequisites](../../Readme.md#general-prerequisites).
 - PowerShell 7 or later.
 - Azure CLI signed in to the target subscription.
-- Docker Desktop running. The `confcom` extension uses it to calculate the CCE policy.
+- Docker Desktop running. The `confcom` extension uses it to calculate the CCE
+	policy. See [why Challenge 4 requires `confcom` and Docker](CONFCOM-AND-CCE-POLICY.md).
 - Contributor access to the attendee resource group.
 - Confidential ACI capacity in the selected region.
 
@@ -58,6 +59,11 @@ From this walkthrough directory, run:
 `-Build` creates the registry and image. `-Compare` is the deployment step for
 this walkthrough: it deploys both the Confidential and Standard container
 groups. You do not need to run `-Deploy` before `-Compare`.
+
+> [!IMPORTANT]
+> Before repeating Challenge 4 with the same environment values, run
+> `./Deploy-VisualAttestationV2.ps1 -Cleanup`. The script intentionally uses a
+> clean build/deploy/cleanup lifecycle rather than updating an existing run.
 
 The script performs the time-consuming setup:
 
@@ -185,8 +191,10 @@ prerequisites for it:
 ./Deploy-VisualAttestationV2.ps1 -Cleanup
 ```
 
-The command removes the two named container groups and challenge ACR. The
-attendee resource group and resources from other challenges are retained.
+The command removes the two named container groups, challenge ACR, generated
+state, and the tagged local Docker image. The attendee resource group and
+resources from other challenges are retained. Run cleanup before rebuilding
+Challenge 4 with the same `HASH_SUFFIX`.
 
 ## Source alignment
 

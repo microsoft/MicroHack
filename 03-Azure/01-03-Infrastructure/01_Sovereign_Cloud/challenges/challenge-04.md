@@ -27,6 +27,7 @@ logic alone.
 
 ## Learning resources
 
+- [Why Challenge 4 uses `confcom` and Docker](../walkthrough/challenge-04/CONFCOM-AND-CCE-POLICY.md)
 - [Confidential containers on Azure Container Instances](https://learn.microsoft.com/azure/container-instances/container-instances-confidential-overview)
 - [Microsoft Azure Attestation](https://learn.microsoft.com/azure/attestation/overview)
 - [Confidential computing enforcement policies](https://learn.microsoft.com/azure/container-instances/confidential-containers-attestation-concepts)

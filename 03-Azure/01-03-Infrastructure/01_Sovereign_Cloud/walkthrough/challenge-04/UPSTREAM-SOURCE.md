@@ -30,6 +30,10 @@ contains the workshop adaptations.
 5. Clear the policy only in the temporary confidential template and approve
    wildcard prompts so `confcom` can run non-interactively.
 6. Delete only the two Challenge 4 container groups and ACR during cleanup.
+7. Require cleanup before another build is recorded with the same workshop
+   values.
+8. Remove the tagged local Docker image during cleanup so a later clean run
+   cannot generate a CCE policy from stale local layers.
 
 When updating the sample, replace the complete snapshot from one upstream
 commit, update the commit above, and review the top-level script diff against

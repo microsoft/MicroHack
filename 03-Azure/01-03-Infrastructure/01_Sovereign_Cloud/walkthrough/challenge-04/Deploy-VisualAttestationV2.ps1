@@ -12,7 +12,8 @@
 
 .PARAMETER Build
     Create an ACR in the existing attendee resource group and run `az acr build`
-    to produce the image.
+    to produce the image. Run -Cleanup before repeating a completed or failed
+    Challenge 4 run with the same workshop values.
 
 .PARAMETER Deploy
     Deploy a single container group. Confidential by default. Pass -NoAcc to
@@ -24,8 +25,9 @@
     extension on the local machine for CCE policy generation.
 
 .PARAMETER Cleanup
-    Delete the two challenge container groups and ACR. Retain the attendee
-    resource group and resources created by other challenges.
+    Delete the two challenge container groups, ACR, generated state, and tagged
+    local Docker image. Retain the attendee resource group and resources created
+    by other challenges.
 
 .PARAMETER NoAcc
     With -Deploy: use the Standard SKU template (attestation will fail).
@@ -122,6 +124,10 @@ function Test-AzCli {
 function Invoke-Build {
     Write-Header "Build phase - creating ACR and building image server-side"
     Test-AzCli
+
+    if (Test-Path $ConfigPath) {
+        throw "An existing Challenge 4 deployment is recorded. Run .\Deploy-VisualAttestationV2.ps1 -Cleanup before rebuilding."
+    }
 
     foreach ($requiredValue in @{
             RESOURCE_GROUP = $ResourceGroup
@@ -615,6 +621,11 @@ function Invoke-Cleanup {
         az acr delete --resource-group $cfg.resourceGroup --name $cfg.registryName --yes | Out-Null
         if ($LASTEXITCODE -ne 0) { throw "Failed to delete ACR '$($cfg.registryName)'" }
         Write-Success "Deleted ACR: $($cfg.registryName)"
+    }
+
+    if (Get-Command docker -ErrorAction SilentlyContinue) {
+        docker image rm $cfg.fullImage 2>$null | Out-Null
+        if ($LASTEXITCODE -eq 0) { Write-Success "Removed local image: $($cfg.fullImage)" }
     }
 
     Remove-Item $ConfigPath -Force -ErrorAction SilentlyContinue

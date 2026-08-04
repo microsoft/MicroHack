@@ -23,6 +23,12 @@ you to verify the node from inside a pod before trusting the workload.
 The current confidential AKS capability is GA. The old `aks-preview` extension
 and `AzureLinuxCVMPreview` feature registration are not used.
 
+> [!NOTE]
+> Challenge 5 does not use the Confidential VM Orchestrator enterprise
+> application. That identity is required by the customer-managed confidential
+> OS disk path demonstrated in Challenge 5.5. See
+> [when Confidential VM Orchestrator is required](CVM-ORCHESTRATOR.md).
+
 > [!IMPORTANT]
 > The automation creates the AKS cluster in the existing attendee resource
 > group. Cleanup deletes the cluster, not the resource group.

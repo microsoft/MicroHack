@@ -179,8 +179,15 @@ You'll get a scorecard for the gpt-5.4 drafting agent.
   relevance                                4.4
   coherence                                4.7
   fluency                                  4.8
+  groundedness (gate: groundable rows)     4.6  (n=11)
   mean latency (s)                         3.2
 ```
+
+> ℹ️ The plain `groundedness` line is the dataset-wide mean over **all 16** rows.
+> The **`groundedness (gate: groundable rows)`** line is the mean over only the
+> `grounded_qa` + `clause_risk` rows — the ones where the correct answer is drawn
+> from the corpus. The 3 `refusal` + 2 `tool_call` rows are graded by *behaviour*,
+> not grounding, so they're excluded here — and the **quality gate uses this number**.
 
 > 📸 **Screenshot slot:** the evaluation scorecard in the terminal.
 >
@@ -208,15 +215,23 @@ This is what a CI job would run:
 ```bash
 python src/evaluators.py --gate 4.0   # exit code 3 if groundedness < 4.0
 ```
+The gate measures groundedness over the **groundable rows** (`grounded_qa` +
+`clause_risk`) — the `groundedness (gate: groundable rows)` line from Task 3.
 
 ✅ **You should see** `✅ GATE PASSED.` — then prove it can **fail** by raising the bar past your score:
 ```bash
 python src/evaluators.py --gate 5.0
 ```
 ```text
-Quality gate: groundedness=4.6 threshold=5.0
+Quality gate: groundedness=4.6 (groundable rows) threshold=5.0
 ❌ GATE FAILED — groundedness below threshold. Blocking release.
 ```
+
+> ⚠️ If the gate fails at **4.0** with a low number (e.g. `2.75`), that's **not** a
+> too-strict threshold — it means the agent isn't grounding well. The usual cause
+> is an **empty or unconnected `clm-corpus` Azure AI Search index**: re-run the
+> Challenge 1 corpus seeding, then verify the connection + index with
+> `python src/kb_setup.py`. See Troubleshooting below.
 
 > 📸 **Screenshot slot:** the gate failing on a too-strict threshold.
 >
@@ -250,6 +265,7 @@ Python API yet; the `--gate` flag is the code-first equivalent for CI.)
 | No spans in the portal | **(1)** Make sure you ran an **agent demo** (`intake_drafting_agent.py`, `orchestrator.py`, …) or `evaluators.py` — these enable tracing per-process. Running `python src/tracing_setup.py` alone only prints the confirmation and exits, so a demo launched separately still traces because each demo now calls `enable_tracing()` itself. **(2)** The portal **Tracing** tab needs App Insights *connected to the project* — open **project → Tracing → Connect** and pick `clm-appinsights` (Task 2). **(3)** Confirm `APPLICATIONINSIGHTS_CONNECTION_STRING` is set in `.env`; allow 1–2 min for ingestion. To check data independently, query `dependencies` in **Azure portal → clm-appinsights → Logs**. |
 | Evaluator auth error | The judge is an **Azure OpenAI** deployment. Set `AZURE_OPENAI_ENDPOINT`/`AZURE_OPENAI_DEPLOYMENT` (or rely on the derived project endpoint + AAD). |
 | `groundedness` key not found by the gate | Print `result["metrics"]` and adjust the key — SDK versions name it `groundedness` or `groundedness.groundedness`. |
+| Gate fails at `--gate 4.0` with a low score (e.g. `groundedness=2.75`) | Not a too-strict threshold — the agent isn't grounding. Your **`clm-corpus` Azure AI Search index is empty or not connected**, so answers aren't drawn from the corpus. Re-run the Challenge 1 corpus seeding (`src/scripts/seed_corpus.py` / SharePoint indexer), then verify the default Search connection + index resolve with `python src/kb_setup.py`. The gate already excludes `refusal`/`tool_call` rows, so a low number means the **groundable** rows themselves are underperforming. |
 | `429` rate-limits / `cannot schedule new futures after shutdown` | The judge/agent deployment is throttled. Re-run with `--workers 1` (or set `PF_WORKER_COUNT`); the target auto-retries 429s with backoff, so a slower run still completes. |
 | Bake-off is slow | It runs the dataset twice (once per model). Trim the JSONL while iterating. |
 

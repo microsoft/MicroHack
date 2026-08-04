@@ -6,7 +6,9 @@ generates the agent's response for each row. Then it does the headline
 **cross-model bake-off**: run the Intake & Drafting agent on the **gpt-5.4**
 flagship vs the lighter **gpt-5.4-nano** deployment against the SAME scorecard, and
 compare quality vs cost/latency. Finally, a **quality gate** fails the build if
-groundedness drops below a threshold.
+groundedness drops below a threshold. The gate scores groundedness over the
+*groundable* dataset rows only (grounded_qa + clause_risk); the refusal and
+tool_call rows are validated by behaviour, not grounding, so they don't skew it.
 
 Usage:
     python src/evaluators.py                 # evaluate the drafting model (gpt-5.4)
@@ -40,6 +42,56 @@ MAX_TARGET_ATTEMPTS = 8
 # Default evaluator batch concurrency when neither --workers nor PF_WORKER_COUNT
 # is set. Kept low so the four LLM judges don't overwhelm a throttled deployment.
 DEFAULT_WORKER_COUNT = 2
+
+# Every dataset row is tagged with a `category`. Groundedness only makes sense
+# where the correct answer is *drawn from the corpus*: the `refusal` rows
+# (correct answer = "I can't give legal advice") and `tool_call` rows (correct
+# answer = a live get_contract_status result, which is deliberately absent from
+# the row's context snippet) are validated by *behaviour*, not grounding — so
+# scoring them for groundedness would unfairly sink the gate. The gate therefore
+# averages groundedness over the GROUNDABLE categories only.
+GROUNDABLE_CATEGORIES = {"grounded_qa", "clause_risk"}
+
+
+def _row_get(row: dict, *keys):
+    """Return the first present, non-None value among dotted `keys` in an eval row."""
+    for key in keys:
+        if key in row and row[key] is not None:
+            return row[key]
+    return None
+
+
+def _groundable_groundedness(result: dict) -> tuple[float | None, int, int]:
+    """Mean groundedness over the groundable rows (grounded_qa + clause_risk).
+
+    Reads per-row scores from ``result["rows"]`` and averages only rows whose
+    ``category`` is groundable. Returns ``(mean, n_used, n_total)``; ``mean`` is
+    ``None`` when per-row categories/scores aren't available (older SDKs) so the
+    caller can fall back to the dataset-wide aggregate.
+    """
+    rows = result.get("rows") or []
+    have_categories = any(
+        _row_get(r, "inputs.category", "category") is not None for r in rows
+    )
+    if not rows or not have_categories:
+        return None, 0, len(rows)
+    scores: list[float] = []
+    for row in rows:
+        category = _row_get(row, "inputs.category", "category")
+        score = _row_get(
+            row,
+            "outputs.groundedness.groundedness",
+            "outputs.groundedness",
+            "groundedness.groundedness",
+            "groundedness",
+        )
+        if category is None or score is None:
+            continue
+        if str(category) in GROUNDABLE_CATEGORIES:
+            scores.append(float(score))
+    if not scores:
+        return None, 0, len(rows)
+    return round(sum(scores) / len(scores), 3), len(scores), len(rows)
 
 
 def _is_rate_limit(exc: BaseException) -> bool:
@@ -191,6 +243,10 @@ def run_eval(model: str, connection_id: str) -> dict:
     )
 
     metrics = dict(result.get("metrics", {}))
+    g_groundable, n_used, _ = _groundable_groundedness(result)
+    if g_groundable is not None:
+        metrics["_groundedness_groundable"] = g_groundable
+        metrics["_groundedness_groundable_n"] = n_used
     lat = meta["latencies"]
     metrics["_mean_latency_s"] = round(sum(lat) / len(lat), 2) if lat else None
     metrics["_model"] = model
@@ -203,6 +259,10 @@ def print_scorecard(title: str, metrics: dict) -> None:
         if k.startswith("_"):
             continue
         print(f"  {k:<40} {v}")
+    groundable = metrics.get("_groundedness_groundable")
+    if groundable is not None:
+        print(f"  {'groundedness (gate: groundable rows)':<40} {groundable}"
+              f"  (n={metrics.get('_groundedness_groundable_n')})")
     print(f"  {'mean latency (s)':<40} {metrics.get('_mean_latency_s')}")
 
 
@@ -260,13 +320,21 @@ def main() -> int:
               f"{settings.model_renewal}={alt['_mean_latency_s']}")
 
     if args.gate is not None:
-        score = primary.get("groundedness.groundedness") or primary.get("groundedness")
-        print(f"\nQuality gate: groundedness={score} threshold={args.gate}")
+        gated = primary.get("_groundedness_groundable")
+        overall = primary.get("groundedness.groundedness") or primary.get("groundedness")
+        score = gated if gated is not None else overall
+        scope = "groundable rows" if gated is not None else "all rows"
+        print(f"\nQuality gate: groundedness={score} ({scope}) threshold={args.gate}")
         if score is None:
             print("⚠️  Could not read groundedness metric — check evaluator output keys.")
             return 2
         if float(score) < args.gate:
             print("❌ GATE FAILED — groundedness below threshold. Blocking release.")
+            if float(score) < 4.0:
+                print("   ↳ Unexpectedly low? Your `clm-corpus` Azure AI Search index is")
+                print("     probably empty or not connected, so the agent can't ground its")
+                print("     answers. Re-run Challenge 1 seeding, then verify with:")
+                print("     python src/kb_setup.py")
             return 3
         print("✅ GATE PASSED.")
 

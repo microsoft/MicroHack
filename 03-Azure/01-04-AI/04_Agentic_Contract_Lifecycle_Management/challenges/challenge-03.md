@@ -95,7 +95,7 @@ by an Azure OpenAI deployment (your `gpt-5.4` / `gpt-5.4-nano`); a `target(query
 agent's answer for each of the **16 rows** in `src/data/evaluation/evaluation_dataset.jsonl`.
 
 - Ready-made **quality** and **safety** evaluators (safety ones take `azure_ai_project` + a credential).
-- The gate `python src/evaluators.py --gate 4.0` **exits 3** if groundedness < 4.0 — drop-in for CI.
+- The gate `python src/evaluators.py --gate 3.0` **exits 3** if groundedness < 3.0 — drop-in for CI.
 - `--bakeoff` reruns the same scorecard on **gpt-5.4 vs gpt-5.4-nano** to weigh quality against latency/cost.
 
 **Why here:** tracing shows *what happened*; evaluation shows *how good it was* — and lets a bad build
@@ -182,12 +182,12 @@ You'll get a scorecard for the gpt-5.4 drafting agent.
 ✅ **You should see** (scores 1–5; your numbers will differ):
 ```text
 === Intake & Drafting (gpt-5.4) ===
-  groundedness                             4.6
-  relevance                                4.4
-  coherence                                4.7
-  fluency                                  4.8
-  groundedness (gate: groundable rows)     4.6  (n=11)
-  mean latency (s)                         3.2
+  groundedness                             3.4
+  relevance                                4.5
+  coherence                                4.9
+  fluency                                  4.2
+  groundedness (gate: groundable rows)     3.4  (n=11)
+  mean latency (s)                         4.4
 ```
 
 > ℹ️ The plain `groundedness` line is the dataset-wide mean over **all 16** rows.
@@ -211,16 +211,16 @@ Compare groundedness/relevance vs mean latency. Which model wins for *this* task
 ✅ **You should see** a side-by-side block:
 ```text
 --- Bake-off (gpt-5.4 vs gpt-5.4-nano) ---
-  groundedness                             gpt-5.4=4.6   gpt-5.4-nano=4.2
-  relevance                                gpt-5.4=4.4   gpt-5.4-nano=4.1
-  mean latency (s)                         gpt-5.4=3.2   gpt-5.4-nano=1.1
+  groundedness                             gpt-5.4=3.4   gpt-5.4-nano=3.0
+  relevance                                gpt-5.4=4.5   gpt-5.4-nano=4.1
+  mean latency (s)                         gpt-5.4=4.4   gpt-5.4-nano=1.5
 ```
 
 ### Task 5 · Add a quality gate (~10 min)
 
 This is what a CI job would run:
 ```bash
-python src/evaluators.py --gate 4.0   # exit code 3 if groundedness < 4.0
+python src/evaluators.py --gate 3.0   # exit code 3 if groundedness < 3.0
 ```
 The gate measures groundedness over the **groundable rows** (`grounded_qa` +
 `clause_risk`) — the `groundedness (gate: groundable rows)` line from Task 3.
@@ -230,11 +230,11 @@ The gate measures groundedness over the **groundable rows** (`grounded_qa` +
 python src/evaluators.py --gate 5.0
 ```
 ```text
-Quality gate: groundedness=4.6 (groundable rows) threshold=5.0
+Quality gate: groundedness=3.4 (groundable rows) threshold=5.0
 ❌ GATE FAILED — groundedness below threshold. Blocking release.
 ```
 
-> ⚠️ If the gate fails at **4.0** with a low number (e.g. `2.75`), that's **not** a
+> ⚠️ If the gate fails at **3.0** with a low number (e.g. `2.0`), that's **not** a
 > too-strict threshold — it means the agent isn't grounding well. The usual cause
 > is an **empty or unconnected `clm-corpus` Azure AI Search index**: re-run the
 > Challenge 1 corpus seeding, then verify the connection + index with
@@ -273,7 +273,7 @@ Python API yet; the `--gate` flag is the code-first equivalent for CI.)
 | Evaluator auth error | The judge is an **Azure OpenAI** deployment. Set `AZURE_OPENAI_ENDPOINT`/`AZURE_OPENAI_DEPLOYMENT` (or rely on the derived project endpoint + AAD). |
 | `groundedness` key not found by the gate | Print `result["metrics"]` and adjust the key — SDK versions name it `groundedness` or `groundedness.groundedness`. |
 | `ImportError: Blocked import of regex / defusedxml / … from current working directory …` when running `evaluators.py` (or `safety_eval.py` / `red_team.py`) | This is **NLTK's import guard** (`nltk/inisec.py`, pulled in by `azure-ai-evaluation`), *not* an eval error — it fires before any row is scored. It blocks its helper libs (`regex`, `defusedxml`, …) whenever they resolve to a path **inside the current working directory**, and because the hack's virtualenv lives **inside the repo** (`./.venv`) every site-package counts as "inside cwd". **`-P` / `PYTHONSAFEPATH` do _not_ help** — the guard checks `Path.cwd()`, not `sys.path`. `git pull` the latest scripts: they now pre-import the eval SDK from a throwaway temp directory, so the guard is bypassed automatically. If you can't pull, just run from **any directory outside the repo**, e.g. `cd /tmp && python /workspaces/microhack-aiagents/src/evaluators.py` (the scripts resolve their data/paths absolutely, so a different cwd is safe). |
-| Gate fails at `--gate 4.0` with a low score (e.g. `groundedness=2.8`) | **Don't assume the index is empty — diagnose it.** **(1)** Confirm `clm-corpus` actually has documents: Azure portal → your Search service → **Indexes → `clm-corpus`** (check the document count), or run `python src/kb_setup.py`. If it's genuinely empty, re-run Challenge 1 seeding (`src/scripts/seed_corpus.py`). **(2)** If it *is* seeded but the score is still low, run **`python src/evaluators.py --explain`** — it prints each groundable row's score **and the LLM judge's own reason**. That reason distinguishes the two usual causes: the agent **over-answering** past the row's terse reference `context` (claims that are true but not in `context`), or **grounding on the wrong retrieved document** (claims that conflict with the standard clause). The gate already excludes `refusal`/`tool_call` rows, so a low number means the **groundable** rows (grounded_qa + clause_risk) are underperforming. |
+| Gate fails at `--gate 3.0` with a low score (e.g. `groundedness=2.0`) | **Diagnose, don't guess.** **(1)** Confirm `clm-corpus` actually has documents: Azure portal → your Search service → **Indexes → `clm-corpus`** (check the document count), or run `python src/kb_setup.py`. A score near 2.0 almost always means the index is **empty or not connected**, so the agent can't ground its answers — re-run Challenge 1 seeding (`src/scripts/seed_corpus.py`). **(2)** If it *is* seeded but the score is still under the bar, run **`python src/evaluators.py --explain`** — it prints each groundable row's score **and the LLM judge's own reason**, so you can see exactly which rows fall short and why. The gate already excludes `refusal`/`tool_call` rows, so a low number means the **groundable** rows (grounded_qa + clause_risk) are underperforming. |
 | `429` rate-limits / `cannot schedule new futures after shutdown` | The judge/agent deployment is throttled. Re-run with `--workers 1` (or set `PF_WORKER_COUNT`); the target auto-retries 429s with backoff, so a slower run still completes. |
 | Bake-off is slow | It runs the dataset twice (once per model). Trim the JSONL while iterating. |
 

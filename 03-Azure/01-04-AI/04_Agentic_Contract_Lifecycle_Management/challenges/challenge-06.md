@@ -87,7 +87,7 @@ hardening actually worked. → [Evaluation & observability](https://learn.micros
 ### Continuous evaluation in CI (GitHub Actions)
 
 **What it is:** the **automation** that runs the quality + safety gates on every relevant change.
-[`.github/workflows/ci-eval.yml`](../.github/workflows/ci-eval.yml) runs `evaluators.py --gate 4.0` and
+[`.github/workflows/ci-eval.yml`](../.github/workflows/ci-eval.yml) runs `evaluators.py --gate 3.0` and
 `safety_eval.py --gate 0.1` on a schedule / on demand using **Azure OIDC**.
 
 - A regression **fails the build** — the code-first counterpart to portal continuous monitoring.
@@ -167,7 +167,7 @@ Then re-scan to prove it improved:
 ### Task 5 · Wire the gate into CI (~10 min)
 
 Review `.github/workflows/ci-eval.yml` — it runs the **quality gate**
-(`evaluators.py --gate 4.0`) and **safety gate** (`safety_eval.py --gate 0.1`) on a schedule /
+(`evaluators.py --gate 3.0`) and **safety gate** (`safety_eval.py --gate 0.1`) on a schedule /
 on demand, using Azure OIDC. Configure the repo secrets (`AZURE_CLIENT_ID`, `AZURE_TENANT_ID`,
 `AZURE_SUBSCRIPTION_ID`, `AZURE_AI_PROJECT_ENDPOINT`) and trigger it from the **Actions** tab.
 

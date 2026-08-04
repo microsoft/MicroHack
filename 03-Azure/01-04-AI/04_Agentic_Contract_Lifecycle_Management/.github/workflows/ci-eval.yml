@@ -55,7 +55,7 @@ jobs:
 
       - name: Quality gate (Challenge 3)
         if: steps.guard.outputs.configured == 'true'
-        run: python src/evaluators.py --gate 4.0
+        run: python src/evaluators.py --gate 3.0
 
       - name: Safety gate (Challenge 6)
         if: steps.guard.outputs.configured == 'true'

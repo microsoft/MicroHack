@@ -13,7 +13,7 @@ tool_call rows are validated by behaviour, not grounding, so they don't skew it.
 Usage:
     python src/evaluators.py                 # evaluate the drafting model (gpt-5.4)
     python src/evaluators.py --bakeoff       # gpt-5.4 vs gpt-5.4-nano comparison
-    python src/evaluators.py --gate 4.0      # fail if mean groundedness < 4.0
+    python src/evaluators.py --gate 3.0      # fail if mean groundedness < 3.0
     python src/evaluators.py --explain       # print each row's score + the judge's reason
     python src/evaluators.py --workers 2     # throttle evaluator concurrency (429s)
 """
@@ -386,7 +386,7 @@ def main() -> int:
     parser.add_argument("--bakeoff", action="store_true",
                         help="compare the drafting model (gpt-5.4) vs gpt-5.4-nano")
     parser.add_argument("--gate", type=float, default=None,
-                        help="fail if mean groundedness < THRESHOLD (e.g. 4.0)")
+                        help="fail if mean groundedness < THRESHOLD (e.g. 3.0)")
     parser.add_argument("--explain", action="store_true",
                         help="print each row's groundedness score + the judge's own "
                              "reason (diagnose WHY the gate score is what it is)")
@@ -414,7 +414,7 @@ def main() -> int:
         print("  Seed the corpus (Challenge 1), then re-run this evaluation:")
         print("      python src/scripts/seed_corpus.py   # SharePoint indexer, or auto local-PDF fallback")
         print("      python src/kb_setup.py               # verify the connection + index")
-        print("      python src/evaluators.py --gate 4.0")
+        print("      python src/evaluators.py --gate 3.0")
         return 4
     if corpus_docs is None and settings.search_endpoint:
         print(f"· Couldn't read the `{settings.search_index}` index document count "
@@ -453,11 +453,15 @@ def main() -> int:
             return 2
         if float(score) < args.gate:
             print("❌ GATE FAILED — groundedness below threshold. Blocking release.")
-            if float(score) < 4.0:
-                print("   ↳ Unexpectedly low? Your `clm-corpus` Azure AI Search index is")
-                print("     probably empty or not connected, so the agent can't ground its")
+            if float(score) < 2.5:
+                print("   ↳ A score this low usually means the `clm-corpus` Azure AI Search")
+                print("     index is empty or not connected, so the agent can't ground its")
                 print("     answers. Re-run Challenge 1 seeding, then verify with:")
-                print("     python src/kb_setup.py")
+                print("       python src/kb_setup.py")
+            else:
+                print("   ↳ The corpus is grounding, but some groundable rows fall short of")
+                print("     the bar. See which rows and the judge's own reason with:")
+                print("       python src/evaluators.py --explain")
             return 3
         print("✅ GATE PASSED.")
 

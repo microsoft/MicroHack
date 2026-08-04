@@ -62,10 +62,32 @@ import tracing_setup  # noqa: E402,F401  (sets content-recording env flag)
 
 sys.path.insert(0, str(Path(__file__).resolve().parent / "agents"))  # agent modules
 
-from clm_common.config import settings, DATA_DIR  # noqa: E402
+from clm_common.config import settings, credential, DATA_DIR  # noqa: E402
 from clm_common.foundry import build_chat_client, function_tool, get_project_client, run_prompt  # noqa: E402
 
 DATASET = DATA_DIR / "evaluation" / "evaluation_dataset.jsonl"
+
+
+def _corpus_document_count() -> int | None:
+    """Best-effort count of documents in the ``clm-corpus`` search index.
+
+    Returns the document count, or ``None`` when it can't be determined (search
+    endpoint not configured, or an SDK/auth/transient error). This never raises:
+    a flaky preflight must not block an otherwise-valid evaluation run.
+    """
+    if not settings.search_endpoint:
+        return None
+    try:
+        from azure.search.documents import SearchClient
+
+        client = SearchClient(
+            endpoint=settings.search_endpoint,
+            index_name=settings.search_index,
+            credential=credential(),
+        )
+        return client.get_document_count()
+    except Exception:  # noqa: BLE001 — preflight is advisory, never fatal
+        return None
 
 # Retry budget for target calls that hit Azure OpenAI 429 (rate-limit) bursts.
 MAX_TARGET_ATTEMPTS = 8
@@ -327,6 +349,25 @@ def main() -> int:
     if not DATASET.exists():
         print(f"✗ Missing dataset: {DATASET}")
         return 1
+
+    # Preflight: evaluation grounds answers on the `clm-corpus` search index
+    # (seeded in Challenge 1). If it's empty, every groundable row scores low and
+    # the quality gate fails for a confusing reason — so fail fast with the fix
+    # instead of burning a full LLM-judged run. Only a *definitive* zero blocks;
+    # an unknown count (endpoint unset / transient error) never stops the run.
+    corpus_docs = _corpus_document_count()
+    if corpus_docs == 0:
+        print(f"✗ The `{settings.search_index}` Azure AI Search index has 0 documents.")
+        print("  Evaluation would score every grounded row low, so it's stopped early.")
+        print("  Seed the corpus (Challenge 1), then re-run this evaluation:")
+        print("      python src/scripts/seed_corpus.py   # SharePoint indexer, or auto local-PDF fallback")
+        print("      python src/kb_setup.py               # verify the connection + index")
+        print("      python src/evaluators.py --gate 4.0")
+        return 4
+    if corpus_docs is None and settings.search_endpoint:
+        print(f"· Couldn't read the `{settings.search_index}` index document count "
+              "(transient/auth) — continuing. If groundedness is low, re-seed with "
+              "src/scripts/seed_corpus.py.")
 
     from kb_setup import get_search_connection_id
 

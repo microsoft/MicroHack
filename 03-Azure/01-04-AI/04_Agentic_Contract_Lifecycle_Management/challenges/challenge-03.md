@@ -13,6 +13,11 @@ If something isn't working as expected, please let your coach know.
 
 > **📋 Prerequisites:**
 > - **Challenge 2 complete** — the Intake & Drafting agent runs against your Foundry project.
+> - **Challenge 1 corpus seeded** — the `clm-corpus` Azure AI Search index has a **non-zero document
+>   count** (run `python src/scripts/seed_corpus.py`, then `python src/kb_setup.py` to verify).
+>   Evaluation grounds answers on this index; an empty index makes every grounded row score low and
+>   the quality gate fail. The evaluator now **stops early with this same instruction** if the index
+>   is empty, so seed it first.
 
 > 🧩 **How to use this challenge:** the code in this folder is a **complete, working reference
 > implementation** — you're not building it from a blank file. **Run it, read it, and understand *why*

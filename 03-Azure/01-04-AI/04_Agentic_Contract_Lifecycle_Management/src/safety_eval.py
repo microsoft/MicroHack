@@ -18,8 +18,23 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
+
+# --- azure-ai-evaluation / NLTK safe-path shim -----------------------------
+# azure-ai-evaluation imports NLTK, whose import-time security finder refuses to
+# load its helper libs (regex, defusedxml, …) unless Python runs in "safe path"
+# mode (-P / PYTHONSAFEPATH); otherwise this crashes at
+# `from azure.ai.evaluation import …` with
+# "ImportError: Blocked import of <mod> from current working directory …".
+# Re-run once under PYTHONSAFEPATH so the guard stands down for *every* such
+# module. The script re-adds its own dirs to sys.path explicitly below, so
+# safe-path mode still lets the sibling imports (clm_common, …) resolve.
+if not sys.flags.safe_path:
+    os.environ["PYTHONSAFEPATH"] = "1"
+    import subprocess
+    raise SystemExit(subprocess.call([sys.executable, *sys.argv]))
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))             # src (clm_common, tracing_setup)
 sys.path.insert(0, str(Path(__file__).resolve().parent / "agents"))  # agent modules

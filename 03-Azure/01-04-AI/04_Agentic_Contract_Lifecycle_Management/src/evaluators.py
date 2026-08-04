@@ -26,17 +26,20 @@ import sys
 import time
 from pathlib import Path
 
-# NLTK — pulled in transitively by `azure-ai-evaluation` — ships an import-time
-# security finder that blocks `import regex` whenever the working/script
-# directory is on sys.path (i.e. unless Python runs with -P / PYTHONSAFEPATH),
-# raising `ImportError: Blocked import of regex from current working directory`.
-# Pre-importing regex here — *before* azure-ai-evaluation (hence nltk) loads —
-# caches it in sys.modules, so nltk's later `import regex` returns the cached
-# module and the finder is never consulted. Harmless if regex isn't installed.
-try:
-    import regex as _regex  # noqa: F401
-except ImportError:
-    pass
+# --- azure-ai-evaluation / NLTK safe-path shim -----------------------------
+# azure-ai-evaluation imports NLTK, whose import-time security finder refuses to
+# load its helper libs (regex, defusedxml, …) unless Python runs in "safe path"
+# mode (-P / PYTHONSAFEPATH); otherwise this crashes at
+# `from azure.ai.evaluation import evaluate` with
+# "ImportError: Blocked import of <mod> from current working directory …".
+# Re-run once under PYTHONSAFEPATH so the guard stands down for *every* such
+# module (spawned evaluator workers inherit the env var too). The script re-adds
+# its own dirs to sys.path explicitly below, so safe-path mode still lets the
+# sibling imports (clm_common, tracing_setup, agents) resolve.
+if not sys.flags.safe_path:
+    os.environ["PYTHONSAFEPATH"] = "1"
+    import subprocess
+    raise SystemExit(subprocess.call([sys.executable, *sys.argv]))
 
 # Enable tracing before importing the agents SDK (import has the side effect).
 sys.path.insert(0, str(Path(__file__).resolve().parent))

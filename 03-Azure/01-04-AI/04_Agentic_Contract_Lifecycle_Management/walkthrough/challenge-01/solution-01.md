@@ -38,8 +38,8 @@ az account set --subscription "<your-subscription-id>"
 
 > 📸 **Screenshot slot:** the GitHub **fork** page, then the **device-code `az login`** prompt.
 >
-> <img src="../../images/challenge-01/steps/01-fork.svg" alt="Screenshot slot: GitHub fork page" width="80%">
-> <img src="../../images/challenge-01/steps/04-az-login-device.svg" alt="Screenshot slot: device-code login" width="80%">
+> <img src="../../images/challenge-01/steps/01-fork.png" alt="Screenshot slot: GitHub fork page" width="80%">
+> <img src="../../images/challenge-01/steps/04-az-login-device.png" alt="Screenshot slot: device-code login" width="80%">
 
 ### Task 4 · Deploy the resources
 Pick **one** path — all three provision the same Foundry project, models, Search, SQL and App Insights, then autofill `.env`:
@@ -67,8 +67,8 @@ get = lambda k: env.get(k) or DEFAULTS.get(k, "")
 
 > 📸 **Screenshot slot:** the `azd up` prompts, then the **deployment success** summary.
 >
-> <img src="../../images/challenge-01/steps/05-azd-up-prompts.svg" alt="Screenshot slot: azd up prompts" width="80%">
-> <img src="../../images/challenge-01/steps/06-azd-up-success.svg" alt="Screenshot slot: azd up success" width="80%">
+> <img src="../../images/challenge-01/steps/05-azd-up-prompts.png" alt="Screenshot slot: azd up prompts" width="80%">
+> <img src="../../images/challenge-01/steps/06-azd-up-success.png" alt="Screenshot slot: azd up success" width="80%">
 
 ### Task 5 · Verify your resources
 In the Foundry portal confirm the project, the **3 distinct model deployments** (4 roles; Intake & Drafting shares gpt-5.4 with Orchestrator), and the `clm-corpus` Search index. From the CLI:
@@ -78,8 +78,8 @@ az cognitiveservices account deployment list -g <rg> -n clmfoundry<token> -o tab
 
 > 📸 **Screenshot slot:** the **resource group** in the portal and the **Foundry model deployments** (3 distinct deployments).
 >
-> <img src="../../images/challenge-01/steps/07-portal-resource-group.svg" alt="Screenshot slot: resource group" width="80%">
-> <img src="../../images/challenge-01/steps/08-foundry-deployments.svg" alt="Screenshot slot: model deployments" width="80%">
+> <img src="../../images/challenge-01/steps/07-portal-resource-group.png" alt="Screenshot slot: resource group" width="80%">
+> <img src="../../images/challenge-01/steps/08-foundry-deployments.png" alt="Screenshot slot: model deployments" width="80%">
 
 ### Task 6 · Seed the corpus
 ```bash
@@ -135,7 +135,7 @@ Smoke test: ✅ PASS
 
 > 📸 **Screenshot slot:** the terminal ending in **`Smoke test: ✅ PASS`**.
 >
-> <img src="../../images/challenge-01/steps/10-smoke-pass.svg" alt="Screenshot slot: smoke test PASS" width="80%">
+> <img src="../../images/challenge-01/steps/10-smoke-pass.png" alt="Screenshot slot: smoke test PASS" width="80%">
 
 ## Key files
 

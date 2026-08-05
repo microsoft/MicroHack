@@ -44,65 +44,14 @@ that blocks a bad build.
 
 ## 🧰 Services & models in this challenge
 
-Observability turns the agent from a black box into something you can **see** and **measure**. These are
-the services that make that possible.
+Observability turns the agent from a black box into something you can **see** and **measure**:
 
-### OpenTelemetry + Azure Monitor OpenTelemetry Distro
-
-**What it is:** the **open standard** for traces, metrics and logs. The Agents SDK emits OpenTelemetry
-**spans** for every prompt, retrieval and tool call; `configure_azure_monitor(...)` from the Azure Monitor
-distro exports them to Azure with one call.
-
-- **Vendor-neutral** instrumentation — no bespoke logging code.
-- Captures the **causal chain** of a run (prompt → retrieval → tool → response).
-- [`src/tracing_setup.py`](../src/tracing_setup.py) calls `configure_azure_monitor(connection_string=…)`
-  and sets `AZURE_TRACING_GEN_AI_CONTENT_RECORDING_ENABLED=true` **on import** — import it first in any
-  entry point, or prompt/response content won't be recorded.
-
-**Why here:** it's how a multi-step agent run becomes an inspectable trace instead of a wall of print
-statements. → [Enable OpenTelemetry](https://learn.microsoft.com/en-us/azure/azure-monitor/app/opentelemetry-enable)
-
-### Application Insights + Log Analytics
-
-**What it is:** the **Azure Monitor** APM service that **stores and queries** the telemetry. Ch0 provisions
-a **workspace-based** Application Insights component wired to a Log Analytics workspace (`PerGB2018` SKU,
-30-day retention).
-
-- End-to-end **transaction/trace** views, latency and token metrics, failures.
-- **KQL** queries over spans for custom analysis and dashboards.
-- Provisioned in **Challenge 1**; the connection string lives in `APPLICATIONINSIGHTS_CONNECTION_STRING`.
-
-**Why here:** it's the durable sink your traces land in — the data source behind the portal's Tracing and
-monitoring views. → [Application Insights overview](https://learn.microsoft.com/en-us/azure/azure-monitor/app/app-insights-overview)
-
-### Foundry Observability (portal Tracing + Agent Monitoring)
-
-**What it is:** the **agent-aware UI** in the Foundry portal that renders those traces as **Tracing** and
-an **Agent Monitoring Dashboard** — no query-writing required.
-
-- Per-run **span timelines** with retrieval hits and tool arguments.
-- Because every agent lives in one project, you see **the whole GPT fleet's traces in one pane of glass**.
-- Home for **continuous/online evaluation** on live traffic.
-
-**Why here:** it's the fastest way to *look at* what the agent actually did on a given run.
-→ [Observability in Foundry](https://learn.microsoft.com/en-us/azure/foundry/concepts/observability)
-
-### Azure AI Evaluation SDK (`azure-ai-evaluation`)
-
-**What it is:** the library ([`src/evaluators.py`](../src/evaluators.py)) that **scores** agent responses.
-`GroundednessEvaluator`, `RelevanceEvaluator`, `CoherenceEvaluator` and `FluencyEvaluator` are **LLM-judged**
-by an Azure OpenAI deployment (your `gpt-5.4` / `gpt-5.4-nano`); a `target(query)` callable produces the
-agent's answer for each of the **16 rows** in `src/data/evaluation/evaluation_dataset.jsonl`. On top of the
-generic evaluators, a **domain `clm_rubric` evaluator** (Task 6) scores each answer against weighted,
-contract-specific dimensions — and it's the metric the quality gate blocks on.
-
-- Ready-made **quality** and **safety** evaluators (safety ones take `azure_ai_project` + a credential), plus
-  a custom **CLM rubric** evaluator you can also build in the portal.
-- The gate `python src/evaluators.py --gate 3.0` **exits 3** if the **CLM rubric** score < 3.0 — drop-in for CI.
-- `--bakeoff` reruns the same scorecard on **gpt-5.4 vs gpt-5.4-nano** to weigh quality against latency/cost.
-
-**Why here:** tracing shows *what happened*; evaluation shows *how good it was* — and lets a bad build
-**fail the gate** before it ships. → [Evaluation & observability](https://learn.microsoft.com/en-us/azure/foundry/concepts/observability)
+| Service | What it is | Why it's here |
+|---|---|---|
+| **OpenTelemetry + Azure Monitor Distro** | The open standard for traces/metrics/logs; the Agents SDK emits **spans** per prompt, retrieval and tool call. [`tracing_setup.py`](../src/tracing_setup.py) calls `configure_azure_monitor(...)` and enables content recording **on import** — import it first or content won't be captured. | Turns a multi-step run into an inspectable trace instead of a wall of prints. → [Enable OpenTelemetry](https://learn.microsoft.com/en-us/azure/azure-monitor/app/opentelemetry-enable) |
+| **Application Insights + Log Analytics** | The Azure Monitor APM service that stores & queries the telemetry (workspace-based, provisioned in Challenge 1); connection string in `APPLICATIONINSIGHTS_CONNECTION_STRING`. Trace views, latency/token metrics, KQL. | The durable sink your traces land in — the data behind the portal's Tracing views. → [Application Insights](https://learn.microsoft.com/en-us/azure/azure-monitor/app/app-insights-overview) |
+| **Foundry Observability** (portal Tracing + Agent Monitoring) | The agent-aware Foundry UI that renders traces as **Tracing** + an **Agent Monitoring** dashboard — per-run span timelines, the whole GPT fleet in one pane, home for continuous eval. No KQL required. | The fastest way to *look at* what the agent actually did on a run. → [Observability in Foundry](https://learn.microsoft.com/en-us/azure/foundry/concepts/observability) |
+| **Azure AI Evaluation SDK** (`azure-ai-evaluation`) | [`evaluators.py`](../src/evaluators.py) scores responses with LLM-judged **Groundedness / Relevance / Coherence / Fluency** over the 16-row dataset, plus a domain **`clm_rubric`** (Task 6). Gate `--gate 3.0` exits 3 if rubric < 3.0; `--bakeoff` compares gpt-5.4 vs -nano. | Tracing shows *what happened*; evaluation shows *how good it was* — and fails a bad build before it ships. → [Evaluation](https://learn.microsoft.com/en-us/azure/foundry/concepts/observability) |
 
 ## ✅ Tasks
 

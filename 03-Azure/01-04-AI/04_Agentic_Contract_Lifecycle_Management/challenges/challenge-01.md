@@ -28,7 +28,7 @@ If something isn't working as expected, please let your coach know.
   Search (via a SharePoint Online indexer) so **Foundry IQ** can ground the agents with **cited** answers.
 - Smoke-test the environment so you *know* the GPT model fleet runs before you build.
 
-## 🧭 Context and Background
+## 🧭 Context
 
 Everything runs from **GitHub Codespaces** using the devcontainer in this repo (Python 3.11, Azure
 CLI, `azd`, Node). A single command — **`azd up`** (Bicep in [`infra/`](../labautomation/infra/)) or the

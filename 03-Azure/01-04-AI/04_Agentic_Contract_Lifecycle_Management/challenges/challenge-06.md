@@ -42,60 +42,14 @@ liability. This challenge closes the responsible-AI loop over everything you bui
 
 ## 🧰 Services & models in this challenge
 
-This challenge closes the **responsible-AI loop**. These are the services that attack, guard, and gate
-the agent so a risky change can never ship.
+This challenge closes the **responsible-AI loop** — services that attack, guard, and gate the agent so a risky change can never ship:
 
-### Azure AI Content Safety
-
-**What it is:** a managed **guardrail service** that inspects prompts and responses. In the portal you
-attach it to an agent to block jailbreaks and leaks at the platform layer.
-
-- **Prompt Shields** against jailbreak + indirect (document) prompt injection.
-- **PII** detection and **protected-material** checks.
-- Model-independent — a second line of defense **beyond** the Ch1 prompt-level refusal policy.
-
-**Why here:** legal contracts mean sensitive data + high stakes; a prompt-only guardrail isn't enough on
-its own. → [Azure AI Content Safety](https://learn.microsoft.com/en-us/azure/ai-services/content-safety/overview)
-
-### AI Red Teaming Agent (`azure-ai-evaluation[redteam]`)
-
-**What it is:** an **automated adversary**. It generates adversarial objectives across risk categories,
-mutates them with **attack strategies** (encodings, ciphers, composed jailbreaks — powered by
-**PyRIT**), fires them at your agent, and reports an **attack success rate** scorecard.
-
-- **Auto-generated** attacks — you don't have to invent every jailbreak.
-- **Attack strategies** reveal what slips past guardrails that plain prompts don't.
-- [`src/red_team.py`](../src/red_team.py) (`--num-objectives`, `--strategies`) writes a repeatable
-  scorecard (`redteam_scorecard.json`) you can track over time.
-
-**Why here:** red-teaming finds **unknown** failures — the ones you didn't think to test for — before an
-attacker does. → [AI Red Teaming Agent](https://learn.microsoft.com/en-us/azure/foundry/concepts/ai-red-teaming-agent)
-
-### Safety evaluators (`azure-ai-evaluation`)
-
-**What it is:** the **safety** side of the evaluation SDK from Challenge 3. `ContentSafetyEvaluator` and
-`IndirectAttackEvaluator` score responses for harmful content and **indirect prompt injection (XPIA)**.
-
-- Model-graded scoring for a **guardrail defect rate**, not just pass/fail heuristics.
-- Take `azure_ai_project` + a credential (not a `model_config`).
-- Run via [`src/safety_eval.py`](../src/safety_eval.py) (`--safety-evals`); the gate `--gate 0.1` fails on
-  too high a defect rate (`--dry-run` previews with no Azure calls).
-
-**Why here:** red-teaming *attacks*; safety evaluators *measure* — together they tell you whether
-hardening actually worked. → [Evaluation & observability](https://learn.microsoft.com/en-us/azure/foundry/concepts/observability)
-
-### Continuous evaluation in CI (GitHub Actions)
-
-**What it is:** the **automation** that runs the quality + safety gates on every relevant change. The
-quality gate blocks on the **CLM rubric** score (Challenge 3, Task 6).
-[`.github/workflows/ci-eval.yml`](../.github/workflows/ci-eval.yml) runs `evaluators.py --gate 3.0` and
-`safety_eval.py --gate 0.1` on a schedule / on demand using **Azure OIDC**.
-
-- A regression **fails the build** — the code-first counterpart to portal continuous monitoring.
-- No secrets? The job **cleanly no-ops** by design.
-- Wire it as a **required check** so no merge lands without passing.
-
-**Why here:** a one-time scan proves safety *today*; a CI gate keeps it safe **on every future change**.
+| Service | What it is | Why it's here |
+|---|---|---|
+| **Azure AI Content Safety** | A managed guardrail service that inspects prompts & responses — **Prompt Shields** (jailbreak + indirect injection), **PII** and protected-material checks — attached to an agent in the portal. | Legal contracts = sensitive data + high stakes; a prompt-only guardrail isn't enough on its own. → [Content Safety](https://learn.microsoft.com/en-us/azure/ai-services/content-safety/overview) |
+| **AI Red Teaming Agent** (`azure-ai-evaluation[redteam]`) | An automated adversary: generates adversarial objectives, mutates them with **attack strategies** (encodings, ciphers, composed jailbreaks via **PyRIT**), fires them at your agent, and reports an attack-success-rate scorecard. [`red_team.py`](../src/red_team.py) writes a repeatable `redteam_scorecard.json`. | Finds **unknown** failures — the ones you didn't think to test — before an attacker does. → [AI Red Teaming Agent](https://learn.microsoft.com/en-us/azure/foundry/concepts/ai-red-teaming-agent) |
+| **Safety evaluators** (`azure-ai-evaluation`) | The safety side of the Challenge 3 eval SDK: `ContentSafetyEvaluator` + `IndirectAttackEvaluator` score responses for harmful content and **indirect prompt injection (XPIA)**. Run via [`safety_eval.py`](../src/safety_eval.py); gate `--gate 0.1` fails on too high a defect rate. | Red-teaming *attacks*; safety evaluators *measure* — together they tell you whether hardening actually worked. → [Evaluation](https://learn.microsoft.com/en-us/azure/foundry/concepts/observability) |
+| **Continuous evaluation in CI** (GitHub Actions) | [`ci-eval.yml`](../.github/workflows/ci-eval.yml) runs `evaluators.py --gate 3.0` + `safety_eval.py --gate 0.1` on schedule / on demand via **Azure OIDC**; a regression **fails the build**, and it cleanly no-ops without secrets. | A one-time scan proves safety *today*; a CI gate keeps it safe **on every future change**. |
 
 ## ✅ Tasks
 

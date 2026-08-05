@@ -50,65 +50,14 @@ server** — locally over stdio, then **hosted on Azure Container Apps** and cal
 
 ## 🧰 Services & models in this challenge
 
-This challenge is about **composition**: many specialist agents behind one orchestrator, plus a standard
-protocol that makes the whole workflow reusable outside your code.
+This challenge is about **composition** — specialists behind one orchestrator, plus a standard protocol that makes the workflow reusable outside your code:
 
-### Agent-as-tool composition (`agent.as_tool(...)`)
-
-**What it is:** the Microsoft Agent Framework's **multi-agent orchestration** primitive. You wrap an
-existing agent as a *tool* and hand it to an orchestrator, which then calls specialists the same way it
-calls a function.
-
-- **Separation of concerns** — each specialist has its own model, instructions and evaluation.
-- The orchestrator handles **routing, hand-offs and human-in-the-loop**.
-- A **multi-model GPT fleet** = one project with gpt-5.4 orchestration/drafting and GPT-5.6 Sol risk analysis.
-- `agent.as_tool(name=..., description=...)` wires each specialist into
-  [`src/orchestrator.py`](../src/orchestrator.py); agents are built in-process, so there's nothing to keep.
-
-**Why here:** it lets the Orchestrator delegate *drafting* and *clause/risk* to the right specialist
-instead of one bloated mega-agent. → [Microsoft Agent Framework](https://learn.microsoft.com/agent-framework/overview/agent-framework-overview)
-
-### Model — GPT-5.4 (the orchestrator)
-
-**What it is:** the LLM behind the Orchestrator (`MODEL_ORCHESTRATOR = gpt-5.4`) — deployment `gpt-5.4`
-(`format: OpenAI`, version confirmed in your region's Foundry catalog, SKU `GlobalStandard`, capacity 30), sitting alongside the other GPT
-specialist deployments on the same account.
-
-- Fast, **deterministic tool-calling** and reliable **routing** decisions.
-- Same Agents API as the specialists — only the `model` id differs when a specialist uses its own deployment.
-
-**Why here:** routing and drafting share the flagship gpt-5.4 deployment, while clause/risk uses
-gpt-5.6-sol for deeper review — the platform lets you pick **the right GPT deployment per job**.
-→ [Models in Microsoft Foundry](https://learn.microsoft.com/azure/ai-foundry/)
-
-### Model Context Protocol (MCP)
-
-**What it is:** an **open standard** for exposing tools/data to any LLM client. You run a local **stdio**
-server that publishes the workflow as standard tools; any MCP client (VS Code, GitHub Copilot) can
-discover and call them.
-
-- **Portable** — the same tools work across editors, agents and hosts.
-- Decouples *who provides a capability* from *who consumes it*.
-- `src/mcp_server/server.py` serves over **stdio**; VS Code loads it from
-  `.vscode/mcp.json` (start **clm-mcp**), exposing `draft_contract` · `analyze_contract` · `get_contract_status`.
-- **An agent can be the client too:** `src/orchestrator_mcp.py` runs the same GPT-5.4
-  Orchestrator but reaches the workflow over MCP (`MCPStdioTool`) instead of in-process
-  `as_tool()` — proving the tools are consumable by *any* MCP client, editor **or** agent.
-
-**Why here:** it turns your agents into reusable building blocks the rest of the org can call **without
-touching your code**. → [Model Context Protocol](https://modelcontextprotocol.io/docs/getting-started/intro)
-
-### Azure SQL Database
-
-**What it is:** the **optional** managed relational store behind `get_contract_status` — provisioned only
-when you deploy with `deploySql=true` (`Basic` tier, database `clmdb`, table `dbo.contracts`); without it
-the tool falls back to `contracts_seed.json`.
-
-- Queried via **pyodbc** (`ODBC Driver 18 for SQL Server`) in [`src/clm_common/tools.py`](../src/clm_common/tools.py).
-- Authoritative, **queryable** system-of-record for structured contract facts.
-
-**Why here:** structured contract facts belong in a database the tool can query, not in the model's
-memory. → [Azure SQL Database](https://learn.microsoft.com/en-us/azure/azure-sql/database/sql-database-paas-overview?view=azuresql)
+| Building block | What it is | Why it's here |
+|---|---|---|
+| **Agent-as-tool** (`agent.as_tool(...)`) | The Agent Framework's multi-agent primitive: wrap an agent as a *tool* and hand it to an orchestrator, which calls specialists like functions. `as_tool(name=…, description=…)` wires them into [`orchestrator.py`](../src/orchestrator.py); each specialist keeps its own model & instructions. | Lets the Orchestrator delegate *drafting* and *clause/risk* to the right specialist instead of one bloated mega-agent. → [Agent Framework](https://learn.microsoft.com/agent-framework/overview/agent-framework-overview) |
+| **Model — gpt-5.4** (orchestrator) | The LLM behind the Orchestrator (`MODEL_ORCHESTRATOR`, `GlobalStandard`) — fast, deterministic tool-calling & routing; same Agents API as the specialists (only the `model` id differs). | Routing & drafting share flagship **gpt-5.4**; clause/risk uses **gpt-5.6-sol** — the right GPT deployment per job. → [Models in Foundry](https://learn.microsoft.com/azure/ai-foundry/) |
+| **Model Context Protocol (MCP)** | An open standard for exposing tools/data to any LLM client. `src/mcp_server/server.py` serves `draft_contract` · `analyze_contract` · `get_contract_status` over **stdio**; any client (VS Code, Copilot) — or an agent via `src/orchestrator_mcp.py` (`MCPStdioTool`) — can discover and call them. | Turns your agents into reusable building blocks the rest of the org can call **without touching your code**. → [Model Context Protocol](https://modelcontextprotocol.io/docs/getting-started/intro) |
+| **Azure SQL Database** *(optional)* | The managed store behind `get_contract_status`, provisioned only with `deploySql=true` (`Basic`, db `clmdb`, table `dbo.contracts`); queried via **pyodbc** in [`tools.py`](../src/clm_common/tools.py). Without it, the tool falls back to `contracts_seed.json`. | Structured contract facts belong in a queryable database, not the model's memory. → [Azure SQL](https://learn.microsoft.com/en-us/azure/azure-sql/database/sql-database-paas-overview?view=azuresql) |
 
 ## ✅ Tasks
 

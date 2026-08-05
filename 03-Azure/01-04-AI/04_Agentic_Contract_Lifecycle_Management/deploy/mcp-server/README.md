@@ -16,26 +16,42 @@ network — no local process required.
 
 ## Run it (from the repo root)
 
+**Zero-config** — the script reads your repo-root `.env` (the same file the agents
+use) for `AZURE_AI_PROJECT_ENDPOINT` + `MODEL_*`, then **auto-discovers** the
+resource group, Foundry account id and region from that endpoint. Usually just:
+
 ```bash
-RESOURCE_GROUP=<your-lab-rg> \
-AZURE_AI_PROJECT_ENDPOINT=<your-project-endpoint> \
-FOUNDRY_ACCOUNT_ID=<your-foundry-account-resource-id> \
+bash deploy/mcp-server/deploy.sh          # Linux / macOS / Azure Cloud Shell
+```
+```powershell
+./deploy/mcp-server/deploy.ps1            # Windows PowerShell — same auto-discovery
+```
+
+Prereq: `az login` on your lab subscription. The script echoes what it discovered
+(resource group / account / region), then prints the `…/mcp` URL. Use that URL in
+the Foundry portal (Task 4 · Part B) or locally with
+`CLM_MCP_URL=<url> python src/orchestrator_mcp.py` (Task 4 · Part C).
+
+### Overrides
+
+Auto-discovery guessing wrong (e.g. several AI accounts in the subscription)? Set
+any value explicitly — an env var / parameter always wins over `.env` and discovery:
+
+| What | `deploy.sh` (env var) | `deploy.ps1` (param) | Default |
+|------|-----------------------|----------------------|---------|
+| App name | `APP_NAME` | `-AppName` | `clm-mcp` |
+| Resource group | `RESOURCE_GROUP` | `-ResourceGroup` | from Foundry account |
+| Region | `LOCATION` | `-Location` | account region → `swedencentral` |
+| Project endpoint | `AZURE_AI_PROJECT_ENDPOINT` | `-ProjectEndpoint` | from `.env` |
+| Foundry account id | `FOUNDRY_ACCOUNT_ID` | `-FoundryAccountId` | discovered from endpoint |
+| `.env` path | `ENV_FILE` | `-EnvFile` | `.env` |
+
+```bash
+# example: force a specific RG + account
+RESOURCE_GROUP=rg-clm-lab \
+FOUNDRY_ACCOUNT_ID=$(az cognitiveservices account list -g rg-clm-lab --query "[0].id" -o tsv) \
   bash deploy/mcp-server/deploy.sh
 ```
-
-Find your Foundry account resource id with:
-
-```bash
-az cognitiveservices account list -g "<your-lab-rg>" --query "[].id" -o tsv
-```
-
-The script prints the `…/mcp` URL at the end. Use it in the Foundry portal
-(Task 4 · Part B) or locally with `CLM_MCP_URL=<url> python src/orchestrator_mcp.py`
-(Task 4 · Part C).
-
-> **Windows / no bash?** Run the same `az containerapp up …` / `az containerapp
-> identity assign …` / `az role assignment create …` commands from the script by
-> hand in PowerShell — they are plain `az` calls.
 
 ## Security note
 

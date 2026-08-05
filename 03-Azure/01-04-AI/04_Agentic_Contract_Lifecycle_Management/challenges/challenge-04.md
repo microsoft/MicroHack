@@ -253,26 +253,37 @@ agent, your orchestrator) can reach. No editor required.
 
 The server already speaks HTTP — `--http` (what the repo-root [`Dockerfile`](../Dockerfile) runs) serves
 **streamable HTTP** at `/mcp` on port 8000. Deploy it (image builds **in the cloud** — no local Docker)
-from the **repo root**:
+from the **repo root**. The script **reads your `.env`** (the same one the agents use) and
+**auto-discovers** the resource group, Foundry account and region from your project endpoint — so there's
+nothing to fill in:
 
 ```bash
-RESOURCE_GROUP=<your-lab-rg> \
-AZURE_AI_PROJECT_ENDPOINT=<your-project-endpoint> \
-FOUNDRY_ACCOUNT_ID=$(az cognitiveservices account list -g <your-lab-rg> --query "[0].id" -o tsv) \
-  bash deploy/mcp-server/deploy.sh
+bash deploy/mcp-server/deploy.sh            # Linux/macOS/Cloud Shell
+```
+```powershell
+./deploy/mcp-server/deploy.ps1              # Windows PowerShell (same auto-discovery)
 ```
 
 The script builds the image, creates the Container App with **external HTTPS ingress**, turns on a
 **system-assigned managed identity**, and grants it a data-plane role on your Foundry account so the
-server's own tools can call your models. It prints your endpoint:
+server's own tools can call your models. It echoes what it discovered, then prints your endpoint:
 
 ```text
+==> Using:
+    resource group   = rg-clm-lab
+    region           = swedencentral
+    Foundry account  = /subscriptions/…/accounts/<your-account>
+    project endpoint = https://<account>.services.ai.azure.com/api/projects/<project>
  clm-mcp is live. Use this MCP endpoint in Foundry / CLM_MCP_URL:
      https://clm-mcp.<region>.azurecontainerapps.io/mcp
 ```
 
-*(No bash? See [`deploy/mcp-server/README.md`](../deploy/mcp-server/README.md) — the script is plain `az`
-commands you can run by hand in PowerShell.)*
+> [!TIP]
+> Everything is still overridable if the auto-discovery guesses wrong (e.g. multiple AI accounts in the
+> subscription) — just set the value on the command line: `RESOURCE_GROUP=<rg>
+> FOUNDRY_ACCOUNT_ID=<id> bash deploy/mcp-server/deploy.sh` (or `-ResourceGroup`/`-FoundryAccountId` for
+> the `.ps1`). Prereq: `az login` on your lab subscription. See
+> [`deploy/mcp-server/README.md`](../deploy/mcp-server/README.md) for the full override list.
 
 > [!IMPORTANT]
 > The server's tools **call Foundry agents themselves**, so the container needs its **own** Foundry

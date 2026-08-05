@@ -183,9 +183,11 @@ clm-mcp exposes 3 tool(s):
   • get_contract_status: Look up a contract's status, renewal date, risk and owner by ID (e.g. "CT-4821").
 ```
 
-Then (optionally) start it **over stdio** the way a client will — a quick smoke test:
+Then (optionally) start it **over stdio** the way a client will — a quick smoke test. It just sits there
+with **no output — that's success, not a hang** (a stdio server waits silently for a client); press
+`Ctrl-C` to stop:
 ```bash
-python src/mcp_server/server.py       # serves over stdio (Ctrl-C to stop)
+python src/mcp_server/server.py       # serves over stdio — silent = waiting for a client (Ctrl-C to stop)
 ```
 
 <details>
@@ -367,7 +369,7 @@ lock the endpoint down to a **private** MCP subnet, and add **approval** before 
 | `clm-mcp` not in *MCP: List Servers* | VS Code discovers a workspace MCP server only from `.vscode/mcp.json` at the **root of the opened folder** — running `python src/mcp_server/server.py` in a terminal does **not** register it. Open the **repo root** (not `src/`) and confirm the file is at `<repo>/.vscode/mcp.json`. If it's missing there, **pull the latest hack repo** (older copies shipped it under `src/.vscode/`), then reload VS Code. |
 | `Invalid JSON … Internal Server Error` after starting the server | **Harmless.** You typed or pressed **Enter** in the stdio window, so the server rejected the newline as invalid JSON-RPC. It's still running — don't type into it. Use `python src/mcp_server/server.py --list` to confirm the tools without the stdio loop. |
 | Orchestrator doesn't route correctly | Sharpen the routing rules in `INSTRUCTIONS`; make each specialist's `as_tool(description=...)` specific. |
-| `agent_framework` import error | Install the framework: `pip install agent-framework-core agent-framework-foundry` (see requirements.txt). |
+| `ImportError: cannot import name 'Agent' from 'agent_framework'` (or other `agent_framework` import errors) | You have an **old/mismatched build**, or you `pip install`ed into a **different Python** than the one running the script (common with Microsoft Store Python). Reinstall the pinned deps with the **same** interpreter — the `-U` matters, a plain install won't replace a stale version: `python -m pip install -U -r requirements.txt`. Then verify: `python -c "import agent_framework as a; print(a.__version__)"` — you need **≥ 1.11.0**. |
 | MCP server not listed in VS Code | Ensure the MCP feature is enabled and `mcp.json` path is correct; confirm the server imports cleanly first with `python src/mcp_server/server.py --list`. |
 | MCP tool call times out | Each call spins up + tears down a Foundry agent (a few seconds). Keep drafts short while testing. |
 | `orchestrator_mcp.py` finds no tools / hangs at startup | The stdio server failed to import. Confirm `python src/mcp_server/server.py` starts standalone; `MCPStdioTool` sets `PYTHONPATH=src`, so run from the repo root. |

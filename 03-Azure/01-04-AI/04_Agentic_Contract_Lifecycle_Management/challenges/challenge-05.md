@@ -9,7 +9,7 @@ Renewal agent — so nobody misses a key date again.
 
 If something isn't working as expected, please let your coach know.
 
-> **⏱️ Duration:** ~60 min · ≈30 min publish · ≈30 min alerts
+> **⏱️ Duration:** ~30 min core (Tasks 1–4 · publish to Teams & M365 Copilot). Tasks 5–7 (proactive alerts) are an **optional** ~30-min extension.
 
 > **📋 Prerequisites:**
 > - **Challenge 4 complete** — you can build and run the orchestrator.
@@ -79,8 +79,9 @@ the user rather than wait to be asked. → [Send proactive notifications](https:
 
 ## ✅ Tasks
 
-**Two phases:** Tasks 1–4 **publish** the orchestrator to Teams & M365 Copilot (~30 min); Tasks 5–7
-add **proactive alerts** (~30 min).
+**Two phases:** Tasks 1–4 **publish** the orchestrator to Teams & M365 Copilot (~30 min) — this is
+the **core** deliverable. Tasks 5–7 add **proactive alerts** (~30 min) — an **optional extension**;
+do it if you have time, or come back to it as a follow-up.
 
 ### Task 1 · Open the orchestrator agent
 
@@ -112,7 +113,7 @@ the Acme draft. Confirm grounded, cited answers come back through the orchestrat
 ✅ **You'll know publishing worked when:** you can chat with the agent inside Teams and it returns the
 same grounded, cited answers you saw in the terminal in Challenges 2 & 4.
 
-### Task 5 · Build the Obligation & Renewal agent
+### Task 5 · (Optional) Build the Obligation & Renewal agent
 
 See the alert-ready summary (works with no bot):
 ```bash
@@ -134,14 +135,14 @@ Upcoming renewals (next 60 days):
 🔴 CT-6033 auto-renews soon (90-day notice) — HIGH risk. Send notice before the window closes; recommend legal review.
 ```
 
-### Task 6 · Capture a conversation reference
+### Task 6 · (Optional) Capture a conversation reference
 
 In your bot's message handler, on any inbound activity save
 `TurnContext.get_conversation_reference(activity)` and persist `service_url` + `conversation.id`.
 Put them in `.env` as `TEAMS_SERVICE_URL` and `TEAMS_CONVERSATION_ID` (and set `MICROSOFT_APP_ID`
 / `MICROSOFT_APP_PASSWORD` / `MICROSOFT_APP_TENANT_ID`).
 
-### Task 7 · Fire a proactive alert
+### Task 7 · (Optional) Fire a proactive alert
 
 Send it into that Teams conversation:
 ```bash
@@ -163,8 +164,8 @@ python src/proactive_alerts.py --from-renewals --days 30
 ## ✔️ Success criteria
 
 - The orchestrator answers **live in Teams and M365 Copilot** with grounded, cited responses.
-- A **proactive renewal/risk alert** appears in a Teams channel/chat (e.g. the CT-4821 message)
-  without the user prompting first.
+- *(Optional · Tasks 5–7)* A **proactive renewal/risk alert** appears in a Teams channel/chat
+  (e.g. the CT-4821 message) without the user prompting first.
 
 ## 🚀 Go Further
 

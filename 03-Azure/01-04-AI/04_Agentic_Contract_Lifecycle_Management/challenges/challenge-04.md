@@ -10,7 +10,7 @@ This is where the system becomes truly **multi-agent**.
 
 If something isn't working as expected, please let your coach know.
 
-> **⏱️ Duration:** ~90 min (Tasks 1–4). Task 4 hosts the MCP server remotely and calls it from Foundry — that's the point of this challenge, so plan for it.
+> **⏱️ Duration:** ~75 min (Tasks 1–4). Task 4 hosts the MCP server remotely and calls it from Foundry — that's the point of this challenge, so plan for it.
 
 > **📋 Prerequisites:**
 > - **Challenge 2 pattern understood** — you know how a grounded agent is built.
@@ -112,7 +112,7 @@ memory. → [Azure SQL Database](https://learn.microsoft.com/en-us/azure/azure-s
 
 ## ✅ Tasks
 
-### Task 1 · Build the Clause & Risk agent (~15 min)
+### Task 1 · Build the Clause & Risk agent (~10 min)
 
 Analyze the (deliberately red-flag) sample drafts. By
 default it analyzes **both** inbound drafts (`acme_msa_draft.pdf` and `globex_nda_redline.pdf`),
@@ -144,7 +144,7 @@ Required approver: VP Legal (delegation-of-authority matrix)
 >
 > <img src="../images/challenge-04/steps/01-clause-risk.svg" alt="Screenshot slot: Clause & Risk output" width="80%">
 
-### Task 2 · Build the Orchestrator (~15 min)
+### Task 2 · Build the Orchestrator (~10 min)
 
 With both specialists connected, run a multi-step thread
 (draft → analyze → status):

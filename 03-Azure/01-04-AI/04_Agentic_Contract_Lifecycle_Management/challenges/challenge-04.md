@@ -188,28 +188,21 @@ Then (optionally) start it **over stdio** the way a client will — a quick smok
 python src/mcp_server/server.py       # serves over stdio (Ctrl-C to stop)
 ```
 
-> [!NOTE]
-> A stdio MCP server has **no console UI**: once it starts it just waits silently for a client
-> (VS Code, next step) to connect over stdin/stdout. **Don't type into that window** — a stray
-> keystroke or **Enter** isn't valid JSON, so the server logs a red
-> `Invalid JSON … Internal Server Error` and **keeps running**. That line is harmless (it's the
-> server rejecting your keystroke, not a crash). Stop it with `Ctrl-C` when you're done.
+<details>
+<summary>🛠️ <b>The window looks frozen, or <code>clm-mcp</code> won't show up in VS Code? — click to expand</b></summary>
 
-> [!IMPORTANT]
-> **Running this script does _not_ register the server with VS Code.** This standalone run is only a
-> smoke test to prove the server imports and serves. You **don't** need to keep it running for Task 4 —
-> in the next step VS Code reads `.vscode/mcp.json` and launches its **own** copy of the server. The
-> only thing that makes `clm-mcp` appear in VS Code is the config file, never a hand-run terminal.
-> A stdio server is **not a network listener** — there's no port or socket to "connect" to. Each MCP
-> client (here, VS Code) **spawns its own subprocess** and talks to it over that process's stdin/stdout,
-> so the copy you ran by hand is a *separate* process nobody attaches to — `Ctrl-C` it once you've
-> confirmed it starts.
+- **No output is correct.** A stdio MCP server has no console UI — it just waits silently for a client to
+  connect over stdin/stdout. It isn't stuck.
+- **Don't type into that window.** A stray keystroke or **Enter** isn't valid JSON, so it logs a red
+  `Invalid JSON … Internal Server Error` and keeps running — that's the server rejecting your keystroke,
+  not a crash. Stop it with `Ctrl-C`.
+- **Running it by hand does _not_ register it with VS Code.** VS Code reads `.vscode/mcp.json` and
+  launches its **own** copy. A stdio server isn't a network listener — there's no port to "connect" to;
+  each client spawns its own subprocess, so the copy you ran by hand is a separate process nobody attaches to.
+- **Running vs. stuck?** Don't judge from the terminal. `python src/mcp_server/server.py --list` is the
+  self-check (prints the 3 tools and exits); in VS Code, *MCP: List Servers* shows `clm-mcp` as **Running**.
 
-> [!NOTE]
-> **"How do I tell it's running vs. stuck?"** A silent stdio window looks the same either way, so don't
-> judge health from the terminal. Use `python src/mcp_server/server.py --list` for a quick self-check
-> (it prints the 3 tools and exits) — if that works, the server is fine. The **authoritative** status is
-> in VS Code: *MCP: List Servers* shows `clm-mcp` as **Running** with its tool count once you start it.
+</details>
 
 #### (Optional) Consume it locally
 

@@ -206,8 +206,11 @@ python src/mcp_server/server.py       # serves over stdio (Ctrl-C to stop)
 
 #### (Optional) Consume it locally
 
-Prove the three tools work end-to-end **before** you host them — run the Orchestrator as a local
-MCP **client**. It spawns the stdio server for you, so there's no IDE to set up and no second terminal:
+<details>
+<summary>💻 <b>Prove the three tools work end-to-end before you host them</b> — one local command (click to expand)</summary>
+
+Run the Orchestrator as a local MCP **client** — it spawns the stdio server for you, so there's no IDE
+to set up and no second terminal:
 
 ```bash
 python src/orchestrator_mcp.py     # MCPStdioTool launches server.py → draft → analyze → status over MCP
@@ -222,6 +225,8 @@ Part C below — only the transport changes (stdio here, HTTPS there).
 
 ✅ **Local check:** `orchestrator_mcp.py` (or `#analyze_contract` in VS Code) returns the **same** risk
 assessment you saw in Task 1.
+
+</details>
 
 ### Task 4 · Host it remotely + call it from Foundry (~35–45 min)
 

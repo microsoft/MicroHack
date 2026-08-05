@@ -9,19 +9,24 @@ themselves are what the server *exposes* (``draft_contract`` = Intake & Drafting
 call itself. The orchestrator is the front door and is never an MCP tool, so it
 can safely fan out over MCP.
 
-The Microsoft Agent Framework ships the client side as ``MCPStdioTool``: it spawns
-``src/mcp_server/server.py`` over stdio, discovers its tools, and hands
-them to the model exactly like any other tool — no remote hosting required. To go
-fully remote instead, expose the server over HTTP/SSE (behind APIM) and swap
-``MCPStdioTool`` for ``MCPStreamableHTTPTool`` (or a Foundry hosted ``MCPTool``);
-the orchestrator code below is otherwise unchanged.
+The Microsoft Agent Framework ships the client side as two tools that share one
+API: ``MCPStdioTool`` spawns ``src/mcp_server/server.py`` over stdio (local dev),
+and ``MCPStreamableHTTPTool`` connects to a **remote** server over HTTPS — the
+same ``clm-mcp`` container you host on Azure in Task 4. This script picks between
+them from the ``CLM_MCP_URL`` env var (unset → local stdio; set → remote HTTP), so
+the exact same orchestrator can drive the workflow in-process, over local stdio,
+or over the network with no code change. To use a Foundry-hosted MCP tool instead,
+swap in ``MCPTool``; the orchestrator wiring below is otherwise unchanged.
 
 Run:
-    python src/orchestrator_mcp.py      # one session: draft -> analyze -> status, over MCP
+    python src/orchestrator_mcp.py      # LOCAL: spawns server.py over stdio, one session
+    #  REMOTE (hosted MCP): point it at the Container Apps URL from Task 4 —
+    #  CLM_MCP_URL=https://<your-app>.azurecontainerapps.io/mcp python src/orchestrator_mcp.py
 """
 from __future__ import annotations
 
 import asyncio
+import os
 import sys
 from pathlib import Path
 
@@ -61,13 +66,31 @@ Summarize each tool's output for the user and state which tool you used.
 
 
 def build_mcp_tool():
-    """Return the client-side MCP tool that launches and connects to the clm-mcp server.
+    """Return the client-side MCP tool that connects to the clm-mcp server.
 
-    ``MCPStdioTool`` spawns ``server.py`` over stdio and discovers its tools. It is an
-    async context manager, so use it inside ``async with`` before building the agent.
-    ``PYTHONPATH`` mirrors ``.vscode/mcp.json`` so the server resolves
-    ``clm_common`` regardless of the caller's working directory.
+    Two transports, selected by the ``CLM_MCP_URL`` env var:
+
+    * **``CLM_MCP_URL`` set** → ``MCPStreamableHTTPTool``: connect to the **remote**
+      server over HTTPS at that ``/mcp`` URL (the Azure Container Apps deployment
+      from Task 4). If the endpoint is key-protected, set ``CLM_MCP_KEY`` and it is
+      sent as an ``x-api-key`` header.
+    * **``CLM_MCP_URL`` unset** → ``MCPStdioTool``: spawn a **local** ``server.py``
+      over stdio. ``PYTHONPATH`` mirrors ``.vscode/mcp.json`` so the server resolves
+      ``clm_common`` regardless of the caller's working directory.
+
+    Both are async context managers, so use inside ``async with`` before building
+    the agent.
     """
+    url = os.getenv("CLM_MCP_URL")
+    if url:
+        from agent_framework import MCPStreamableHTTPTool
+
+        headers: dict[str, str] = {}
+        key = os.getenv("CLM_MCP_KEY")
+        if key:
+            headers["x-api-key"] = key
+        return MCPStreamableHTTPTool(name="clm-mcp", url=url, headers=headers or None)
+
     from agent_framework import MCPStdioTool
 
     return MCPStdioTool(
@@ -104,9 +127,10 @@ async def main() -> None:
     # calls it as a standard tool client (the same workflow as orchestrator.py, over MCP).
     async with build_mcp_tool() as mcp_tool:
         orchestrator = build_orchestrator(mcp_tool)
+        target = os.getenv("CLM_MCP_URL") or f"local stdio ({SERVER_PATH.name})"
         print(
             f"✓ Orchestrator on '{settings.model_orchestrator}' calling the clm-mcp server "
-            f"as an MCP client\n"
+            f"as an MCP client via {target}\n"
         )
 
         session = orchestrator.create_session()

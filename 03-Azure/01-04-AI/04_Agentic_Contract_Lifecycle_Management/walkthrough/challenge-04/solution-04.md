@@ -4,7 +4,8 @@
 
 Add the **2nd specialist** (Clause & Risk on GPT-5.6 Sol), stand up an **Orchestrator
 agent** (GPT-5.4) that delegates via the `agent.as_tool(...)` pattern, then expose the
-whole workflow as an **MCP server** any client can call.
+whole workflow as an **MCP server** — locally, then **hosted on Azure Container Apps** and
+called from a **Foundry** agent by URL.
 
 ## Expected end state
 
@@ -13,11 +14,13 @@ whole workflow as an **MCP server** any client can call.
 - [`src/orchestrator.py`](../../src/orchestrator.py) routes a request to the right
   specialist(s) in-process — agents built as tools.
 - [`src/mcp_server/server.py`](../../src/mcp_server/server.py) serves
-  `draft_contract` · `analyze_contract` · `get_contract_status` over **stdio**;
-  VS Code loads it from [`.vscode/mcp.json`](../../.vscode/mcp.json) (repo root).
+  `draft_contract` · `analyze_contract` · `get_contract_status` over **stdio** (local) and
+  **streamable HTTP** (`--http`, for hosting); VS Code loads the stdio server from
+  [`.vscode/mcp.json`](../../.vscode/mcp.json) (repo root).
+- [`Dockerfile`](../../Dockerfile) + [`deploy/mcp-server/deploy.sh`](../../deploy/mcp-server/deploy.sh)
+  host it on **Azure Container Apps** as a remote `https://…/mcp` endpoint a Foundry agent can call.
 - [`src/orchestrator_mcp.py`](../../src/orchestrator_mcp.py) runs the same GPT-5.4
-  orchestrator as an **MCP client**, consuming the workflow over MCP instead of
-  in-process.
+  orchestrator as an **MCP client** — local stdio, or the remote server via `CLM_MCP_URL`.
 
 ## 🛠️ Task-by-task walkthrough
 
@@ -80,7 +83,7 @@ ORCHESTRATOR: [→ intake_drafting] Draft ready... [→ clause_risk] Acme draft 
 >
 > <img src="../../images/challenge-04/steps/02-orchestrator.svg" alt="Screenshot slot: orchestrator thread" width="80%">
 
-### Task 3 · Run the MCP server
+### Task 3 · Run the MCP server (local)
 [`src/mcp_server/server.py`](../../src/mcp_server/server.py) wraps the workflow as three MCP tools over stdio using FastMCP:
 ```python
 # src/mcp_server/server.py
@@ -97,41 +100,72 @@ def analyze_contract(draft_text: str) -> str: ...   # Clause & Risk
 def get_contract_status(contract_id: str) -> str: ...
 
 if __name__ == "__main__":
-    mcp.run(transport="stdio")
+    # --list prints the tools and exits; --http (or MCP_TRANSPORT=streamable-http) serves
+    # streamable HTTP at /mcp for remote hosting; otherwise serve over stdio for local clients.
+    mcp.run(transport="streamable-http") if _http_requested() else mcp.run(transport="stdio")
 ```
 ```bash
-python src/mcp_server/server.py     # looks like it hangs — correct: it's waiting for a client on stdio
+python src/mcp_server/server.py --list   # verify the 3 tools, then exit
+python src/mcp_server/server.py          # stdio: waits for a local client (VS Code / orchestrator_mcp.py)
 ```
 
-### Task 4 · Consume it from VS Code
-VS Code launches the server from [`.vscode/mcp.json`](../../.vscode/mcp.json) at the repo root:
-```json
-{ "servers": { "clm-mcp": {
-    "type": "stdio", "command": "python",
-    "args": ["${workspaceFolder}/src/mcp_server/server.py"],
-    "env": { "PYTHONPATH": "${workspaceFolder}/src" } } } }
-```
-Command Palette → **MCP: List Servers** → start **clm-mcp**, then in Copilot Chat (Agent mode) call `#draft_contract` / `#analyze_contract` / `#get_contract_status`. ✅ It worked when `clm-mcp` shows **Running** and `#analyze_contract` returns the **same** risk assessment as Task 1.
+**Consume it locally (optional):** open the **repo root** in VS Code (it loads
+[`.vscode/mcp.json`](../../.vscode/mcp.json)) → **MCP: List Servers** → start **clm-mcp** → call
+`#analyze_contract` in Copilot Chat; **or** run `python src/orchestrator_mcp.py` (a terminal MCP client
+that spawns the stdio server for you).
 
 > 📸 **Screenshot slot:** **MCP: List Servers** with `clm-mcp`, then Copilot Chat calling `#analyze_contract`.
 >
 > <img src="../../images/challenge-04/steps/03-mcp-list.svg" alt="Screenshot slot: VS Code MCP list" width="80%">
 > <img src="../../images/challenge-04/steps/04-copilot-tool.svg" alt="Screenshot slot: Copilot tool call" width="80%">
 
-### Task 5 · (Go Further) Consume it from an agent
-[`src/orchestrator_mcp.py`](../../src/orchestrator_mcp.py) is the mirror of Task 2, but the tools come over MCP. `MCPStdioTool` spawns the server for you:
+### Task 4 · Host it remotely + call it from Foundry
+**Part A — host on Azure Container Apps.** The repo-root [`Dockerfile`](../../Dockerfile) runs
+`server.py --http` (streamable HTTP at `/mcp`). Deploy from the repo root — the image builds in the
+cloud, no local Docker:
+```bash
+RESOURCE_GROUP=<rg> AZURE_AI_PROJECT_ENDPOINT=<endpoint> \
+FOUNDRY_ACCOUNT_ID=$(az cognitiveservices account list -g <rg> --query "[0].id" -o tsv) \
+  bash deploy/mcp-server/deploy.sh          # → https://clm-mcp.<region>.azurecontainerapps.io/mcp
+```
+The script gives the app a **system-assigned managed identity** and grants it a data-plane role on the
+Foundry account so the server's own tools can call your models.
+
+**Part B — Foundry Playground.** In [ai.azure.com](https://ai.azure.com): agent → **Tools → Add MCP tool**,
+Server label `clm-mcp`, Server URL `https://…/mcp`, **No authentication**. In the Playground ask it to
+analyze a clause, **approve** the tool call → the agent calls `analyze_contract` on your remote server.
+
+**Part C — local agent → remote server.** Same script, tools over HTTPS instead of stdio:
+```bash
+CLM_MCP_URL=https://…/mcp python src/orchestrator_mcp.py   # MCPStreamableHTTPTool, no code change
+```
+
+> 📸 **Screenshot slots:** the MCP tool on the agent, the Playground calling it, and the local orchestrator against the remote URL.
+>
+> <img src="../../images/challenge-04/steps/05-foundry-mcp-tool.svg" alt="Screenshot slot: add MCP tool in Foundry" width="80%">
+> <img src="../../images/challenge-04/steps/06-foundry-playground.svg" alt="Screenshot slot: Foundry Playground calling the remote MCP tool" width="80%">
+> <img src="../../images/challenge-04/steps/07-orchestrator-remote.svg" alt="Screenshot slot: local orchestrator calling the remote MCP server" width="80%">
+
+### Task 5 · (Go Further) One client, two transports
+[`src/orchestrator_mcp.py`](../../src/orchestrator_mcp.py) is the mirror of Task 2, but the tools come
+over MCP. It picks the transport from `CLM_MCP_URL` — `MCPStdioTool` (spawns `server.py`) when unset,
+`MCPStreamableHTTPTool` (remote) when set:
 ```python
 # src/orchestrator_mcp.py
 def build_mcp_tool():
-    return MCPStdioTool(name="clm-mcp", command=sys.executable,
+    url = os.getenv("CLM_MCP_URL")
+    if url:                                           # remote streamable HTTP
+        return MCPStreamableHTTPTool(name="clm-mcp", url=url, headers=_headers())
+    return MCPStdioTool(name="clm-mcp", command=sys.executable,   # local stdio
                         args=[str(SERVER_PATH)], env={"PYTHONPATH": str(SRC_DIR)})
 
-async with build_mcp_tool() as mcp_tool:          # launches server.py over stdio
-    orchestrator = build_orchestrator(mcp_tool)   # gpt-5.4, tools=[mcp_tool]
+async with build_mcp_tool() as mcp_tool:              # local subprocess *or* remote URL
+    orchestrator = build_orchestrator(mcp_tool)       # gpt-5.4, tools=[mcp_tool]
     ...
 ```
 ```bash
-python src/orchestrator_mcp.py      # you don't start the server yourself
+python src/orchestrator_mcp.py                        # local: you don't start the server yourself
+CLM_MCP_URL=https://…/mcp python src/orchestrator_mcp.py   # remote: same run, over HTTPS
 ```
 
 ## Key files
@@ -140,9 +174,10 @@ python src/orchestrator_mcp.py      # you don't start the server yourself
 |------|------|
 | [`src/agents/clause_risk_agent.py`](../../src/agents/clause_risk_agent.py) | Clause & Risk specialist (GPT-5.6 Sol) |
 | [`src/orchestrator.py`](../../src/orchestrator.py) | Orchestrator with specialists as tools |
-| [`src/mcp_server/server.py`](../../src/mcp_server/server.py) | MCP server exposing the CLM workflow over stdio |
+| [`src/mcp_server/server.py`](../../src/mcp_server/server.py) | MCP server exposing the CLM workflow (stdio **and** streamable HTTP via `--http`) |
 | [`.vscode/mcp.json`](../../.vscode/mcp.json) | VS Code MCP client config (`clm-mcp`, repo root) |
-| [`src/orchestrator_mcp.py`](../../src/orchestrator_mcp.py) | Orchestrator consuming the MCP server as a client |
+| [`src/orchestrator_mcp.py`](../../src/orchestrator_mcp.py) | Orchestrator as MCP client — local stdio, or remote via `CLM_MCP_URL` |
+| [`Dockerfile`](../../Dockerfile) + [`deploy/mcp-server/deploy.sh`](../../deploy/mcp-server/deploy.sh) | Containerize + deploy the server to Azure Container Apps as a remote `/mcp` endpoint |
 
 ## Run it
 
@@ -150,7 +185,10 @@ python src/orchestrator_mcp.py      # you don't start the server yourself
 python src/agents/clause_risk_agent.py       # analyze a counterparty draft
 python src/orchestrator.py                    # route a request to specialists in-process
 python src/mcp_server/server.py               # serve over stdio (Ctrl-C to stop)
+python src/mcp_server/server.py --http        # serve streamable HTTP at /mcp (what the container runs)
 python src/orchestrator_mcp.py                # launch the stdio server and call it as a client
+bash deploy/mcp-server/deploy.sh              # host it on Azure Container Apps → https://…/mcp
+CLM_MCP_URL=https://…/mcp python src/orchestrator_mcp.py   # drive the remote server
 ```
 
 ## Common issues
@@ -159,3 +197,5 @@ python src/orchestrator_mcp.py                # launch the stdio server and call
 |---------|-------------|
 | `orchestrator_mcp.py` finds no tools / hangs | The stdio server failed to import — confirm `python src/mcp_server/server.py` starts standalone; run from repo root (`PYTHONPATH=src`). |
 | MCP server not listed in VS Code | VS Code reads `.vscode/mcp.json` only from the **root of the opened folder** — open the repo root (not `src/`) and confirm the file is at `<repo>/.vscode/mcp.json`. |
+| Remote tools return `401/403` from Foundry | The Container App's **managed identity** needs a data-plane role (Azure AI User) on the Foundry account — `deploy.sh` sets it; allow ~1 min to propagate. |
+| Foundry can't reach the server | Ingress must be **external** and the Server URL must end with `/mcp`; open `https://<app>.azurecontainerapps.io/mcp` to confirm it responds. |

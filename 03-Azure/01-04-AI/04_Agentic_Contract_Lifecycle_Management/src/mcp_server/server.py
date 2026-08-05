@@ -12,17 +12,27 @@ Tools exposed:
 Verify the tools are registered (prints the 3 tools and exits — no client needed):
     python src/mcp_server/server.py --list
 
-Run (stdio, for an MCP client to launch):
+Run locally over stdio (for an MCP client — e.g. VS Code — to launch):
     python src/mcp_server/server.py
+
+Run as a *remote* server over streamable HTTP (for Azure Container Apps / Foundry):
+    python src/mcp_server/server.py --http        # serves POST/GET on http://0.0.0.0:8000/mcp
+    #  or set MCP_TRANSPORT=streamable-http (what the Dockerfile does)
+    #  MCP_HOST / MCP_PORT override the bind address (default 0.0.0.0:8000)
 
 A stdio server has no console UI: once it starts it waits silently for a client
 to speak JSON-RPC over stdin. Don't type into that window — a stray keystroke or
 Enter is not valid JSON, so the server logs a harmless red
 ``Invalid JSON … Internal Server Error`` and keeps running. Use ``--list`` above
 to confirm the tools, then point VS Code at it via .vscode/mcp.json (repo root).
+
+The HTTP transport is what makes the workflow **remotely** consumable: host this
+container in Azure, and a Foundry agent (portal Playground or ``orchestrator_mcp.py``
+with ``CLM_MCP_URL``) reaches the exact same tools over ``https://<host>/mcp``.
 """
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 
@@ -96,8 +106,36 @@ def _list_tools() -> None:
         print(f"  • {t.name}: {summary}")
 
 
+def _run_http() -> None:
+    """Serve the tools over **streamable HTTP** so a remote client can reach them.
+
+    This is the transport used when the server is containerized and hosted (e.g.
+    Azure Container Apps): a Foundry agent connects to ``https://<host>/mcp``.
+    Bind address is configurable via ``MCP_HOST`` / ``MCP_PORT`` (the Dockerfile
+    sets ``0.0.0.0:8000``); the MCP endpoint path is ``/mcp``.
+    """
+    mcp.settings.host = os.getenv("MCP_HOST", "0.0.0.0")
+    mcp.settings.port = int(os.getenv("MCP_PORT", "8000"))
+    print(
+        f"clm-mcp serving over streamable HTTP on "
+        f"http://{mcp.settings.host}:{mcp.settings.port}{mcp.settings.streamable_http_path}",
+        flush=True,
+    )
+    mcp.run(transport="streamable-http")
+
+
+def _http_requested() -> bool:
+    """True when HTTP transport is asked for via a flag or MCP_TRANSPORT env."""
+    argv = sys.argv[1:]
+    if "--http" in argv or "--streamable-http" in argv:
+        return True
+    return os.getenv("MCP_TRANSPORT", "").strip().lower() in {"streamable-http", "http", "sse"}
+
+
 if __name__ == "__main__":
     if "--list" in sys.argv[1:] or "--tools" in sys.argv[1:]:
         _list_tools()
+    elif _http_requested():
+        _run_http()
     else:
         mcp.run(transport="stdio")

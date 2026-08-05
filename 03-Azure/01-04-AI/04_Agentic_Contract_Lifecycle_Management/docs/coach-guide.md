@@ -142,8 +142,9 @@ of the challenge, what "done" looks like, where teams get stuck, and the hint to
 - **Point:** add the **Clause & Risk** specialist (GPT-5.6 Sol), stand up a **GPT-5.4 Orchestrator** that
   routes to both specialists via the **agent-as-tool pattern**, and expose the workflow as an **MCP server**.
 - **Done when:** one orchestrator thread runs **draft → extract → risk** by delegating; the Clause & Risk
-  agent returns a structured, cited risk assessment; the **MCP server is discoverable + callable** from
-  VS Code / Copilot Chat (`#draft_contract`, `#analyze_contract`, `#get_contract_status`).
+  agent returns a structured, cited risk assessment; the **MCP server is discoverable + callable** —
+  locally (VS Code / Copilot Chat or `orchestrator_mcp.py`) and, in Task 4, as a **remote** endpoint a
+  **Foundry agent calls by URL** (`#draft_contract`, `#analyze_contract`, `#get_contract_status`).
 - **Ch5 builds on this orchestrator:** it publishes the Ch4 orchestrator pattern — make sure it runs cleanly.
   Call this out loudly before lunch.
 - **Watch for:**
@@ -152,17 +153,24 @@ of the challenge, what "done" looks like, where teams get stuck, and the hint to
   - *`agent_framework` import error* → `pip install agent-framework-core agent-framework-foundry` (see requirements.txt).
   - *MCP server not listed in VS Code* → the workspace config must be at the repo-root `.vscode/mcp.json`
     and you must open the **repo root** (not `src/`); confirm the server imports cleanly first (`python src/mcp_server/server.py --list`).
+  - *(Task 4) Remote deploy* → run `bash deploy/mcp-server/deploy.sh` from the **repo root** (needs the
+    `containerapp` az extension). Two common failures: (a) Foundry tool calls 401/403 → the Container App's
+    **managed identity** needs the **Azure AI User** data-plane role on the Foundry account (the script sets
+    it; allow ~1 min); (b) Foundry can't reach it → ingress must be **external** and the Server URL must end
+    with `/mcp`. Teams with no Azure quota can skip Task 4 and stay on the local path.
   - *MCP call times out* → each call spins up + tears down a Foundry agent (a few seconds); keep test
     drafts short.
 - **Sample draft is rigged:** the Clause & Risk sample has deliberate red flags (uncapped liability,
   60-day auto-renew) so a **High** risk result is the expected, demo-able outcome.
-- **Go Further — agent as MCP client:** `src/orchestrator_mcp.py` runs the *same* GPT-5.4
-  Orchestrator but consumes the workflow over MCP (`MCPStdioTool`) instead of in-process `as_tool()`.
-  Great "aha" for the portability point — the tools serve editors **and** agents. Note the only
-  non-circular consumer is the Orchestrator: a specialist consuming the server (`analyze_contract` =
-  Clause & Risk) would call itself. It spawns the stdio server automatically; teams don't start it
-  separately. Slower than the in-process orchestrator (each MCP call spins up a fresh Foundry agent in
-  the subprocess) — fine for a demo.
+- **Task 4 — remote MCP + Foundry:** `src/orchestrator_mcp.py` runs the *same* GPT-5.4
+  Orchestrator but consumes the workflow over MCP instead of in-process `as_tool()` — `MCPStdioTool`
+  locally, or `MCPStreamableHTTPTool` when `CLM_MCP_URL` is set. Task 4 hosts the server on **Azure
+  Container Apps** (`--http` streamable HTTP at `/mcp`) and calls it from a **Foundry agent by URL** in
+  the Playground. Great "aha" for portability — the tools serve editors, a Foundry-hosted agent, **and**
+  your own agent from one endpoint. Note the only non-circular consumer is the Orchestrator: a specialist
+  consuming the server (`analyze_contract` = Clause & Risk) would call itself. The hosted server needs its
+  **own** Foundry access (managed identity + role) because its tools call Foundry agents internally.
+  Slower than the in-process orchestrator (each MCP call spins up a fresh Foundry agent) — fine for a demo.
 
 ### Challenge 5 · Publish to M365 Copilot & Teams + Proactive Alerts *(60 min ≈ 30 publish + 30 alerts)*
 

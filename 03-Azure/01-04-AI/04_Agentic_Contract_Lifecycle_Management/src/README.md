@@ -18,9 +18,10 @@ helpers live in [`clm_common/`](clm_common/); every entry-point script adds `src
 | [`tracing_setup.py`](tracing_setup.py) | Wires OpenTelemetry → Application Insights | 3 |
 | [`evaluators.py`](evaluators.py) | Eval scorecard, gpt-5.4-vs-gpt-5.4-nano bake-off, quality gate (exit 3) | 3 |
 | [`orchestrator.py`](orchestrator.py) | Orchestrator (GPT-5.4) with specialists as tools | 4 |
-| [`mcp_server/server.py`](mcp_server/server.py) | MCP server exposing the CLM workflow over stdio | 4 |
+| [`mcp_server/server.py`](mcp_server/server.py) | MCP server exposing the CLM workflow — stdio (local) **and** streamable HTTP (`--http`, for hosting) | 4 |
 | [`../.vscode/mcp.json`](../.vscode/mcp.json) | VS Code MCP client config (`clm-mcp`, repo root) | 4 |
-| [`orchestrator_mcp.py`](orchestrator_mcp.py) | Orchestrator consuming the MCP server as a client | 4 |
+| [`orchestrator_mcp.py`](orchestrator_mcp.py) | Orchestrator as MCP client — local stdio, or remote via `CLM_MCP_URL` | 4 |
+| [`../Dockerfile`](../Dockerfile) + [`../deploy/mcp-server/`](../deploy/mcp-server/) | Containerize + deploy the MCP server to Azure Container Apps (remote `/mcp` for Foundry) | 4 |
 | [`proactive_alerts.py`](proactive_alerts.py) | Proactive Teams renewal alerts via the Bot Framework | 5 |
 | [`manifest/`](manifest/) | Teams / M365 Copilot app package (manifest + icons) | 5 |
 | [`red_team.py`](red_team.py) | Automated red-teaming → `redteam_scorecard.json` | 6 |

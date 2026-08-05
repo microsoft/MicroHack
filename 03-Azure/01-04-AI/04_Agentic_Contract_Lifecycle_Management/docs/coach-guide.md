@@ -150,8 +150,8 @@ of the challenge, what "done" looks like, where teams get stuck, and the hint to
   - *Orchestrator routes wrong* → sharpen `INSTRUCTIONS` routing rules and make each specialist's
     `as_tool(description=...)` specific.
   - *`agent_framework` import error* → `pip install agent-framework-core agent-framework-foundry` (see requirements.txt).
-  - *MCP server not listed in VS Code* → ensure the MCP feature is on and `src/.vscode/mcp.json`
-    is picked up; confirm the server starts standalone first (`python src/mcp_server/server.py`).
+  - *MCP server not listed in VS Code* → the workspace config must be at the repo-root `.vscode/mcp.json`
+    and you must open the **repo root** (not `src/`); confirm the server imports cleanly first (`python src/mcp_server/server.py --list`).
   - *MCP call times out* → each call spins up + tears down a Foundry agent (a few seconds); keep test
     drafts short.
 - **Sample draft is rigged:** the Clause & Risk sample has deliberate red flags (uncapped liability,

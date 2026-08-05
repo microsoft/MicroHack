@@ -65,7 +65,7 @@ def build_mcp_tool():
 
     ``MCPStdioTool`` spawns ``server.py`` over stdio and discovers its tools. It is an
     async context manager, so use it inside ``async with`` before building the agent.
-    ``PYTHONPATH`` mirrors ``src/.vscode/mcp.json`` so the server resolves
+    ``PYTHONPATH`` mirrors ``.vscode/mcp.json`` so the server resolves
     ``clm_common`` regardless of the caller's working directory.
     """
     from agent_framework import MCPStdioTool

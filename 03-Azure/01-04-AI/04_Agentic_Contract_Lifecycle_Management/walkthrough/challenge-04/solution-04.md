@@ -14,7 +14,7 @@ whole workflow as an **MCP server** any client can call.
   specialist(s) in-process — agents built as tools.
 - [`src/mcp_server/server.py`](../../src/mcp_server/server.py) serves
   `draft_contract` · `analyze_contract` · `get_contract_status` over **stdio**;
-  VS Code loads it from [`src/.vscode/mcp.json`](../../src/.vscode/mcp.json).
+  VS Code loads it from [`.vscode/mcp.json`](../../.vscode/mcp.json) (repo root).
 - [`src/orchestrator_mcp.py`](../../src/orchestrator_mcp.py) runs the same GPT-5.4
   orchestrator as an **MCP client**, consuming the workflow over MCP instead of
   in-process.
@@ -104,7 +104,7 @@ python src/mcp_server/server.py     # looks like it hangs — correct: it's wait
 ```
 
 ### Task 4 · Consume it from VS Code
-VS Code launches the server from [`src/.vscode/mcp.json`](../../src/.vscode/mcp.json):
+VS Code launches the server from [`.vscode/mcp.json`](../../.vscode/mcp.json) at the repo root:
 ```json
 { "servers": { "clm-mcp": {
     "type": "stdio", "command": "python",
@@ -141,7 +141,7 @@ python src/orchestrator_mcp.py      # you don't start the server yourself
 | [`src/agents/clause_risk_agent.py`](../../src/agents/clause_risk_agent.py) | Clause & Risk specialist (GPT-5.6 Sol) |
 | [`src/orchestrator.py`](../../src/orchestrator.py) | Orchestrator with specialists as tools |
 | [`src/mcp_server/server.py`](../../src/mcp_server/server.py) | MCP server exposing the CLM workflow over stdio |
-| [`src/.vscode/mcp.json`](../../src/.vscode/mcp.json) | VS Code MCP client config (`clm-mcp`) |
+| [`.vscode/mcp.json`](../../.vscode/mcp.json) | VS Code MCP client config (`clm-mcp`, repo root) |
 | [`src/orchestrator_mcp.py`](../../src/orchestrator_mcp.py) | Orchestrator consuming the MCP server as a client |
 
 ## Run it
@@ -158,4 +158,4 @@ python src/orchestrator_mcp.py                # launch the stdio server and call
 | Symptom | Cause / fix |
 |---------|-------------|
 | `orchestrator_mcp.py` finds no tools / hangs | The stdio server failed to import — confirm `python src/mcp_server/server.py` starts standalone; run from repo root (`PYTHONPATH=src`). |
-| MCP server not listed in VS Code | Ensure the MCP feature is on and `src/.vscode/mcp.json` is picked up. |
+| MCP server not listed in VS Code | VS Code reads `.vscode/mcp.json` only from the **root of the opened folder** — open the repo root (not `src/`) and confirm the file is at `<repo>/.vscode/mcp.json`. |

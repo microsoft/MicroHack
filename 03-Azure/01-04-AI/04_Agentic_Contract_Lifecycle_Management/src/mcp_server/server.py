@@ -19,7 +19,7 @@ A stdio server has no console UI: once it starts it waits silently for a client
 to speak JSON-RPC over stdin. Don't type into that window — a stray keystroke or
 Enter is not valid JSON, so the server logs a harmless red
 ``Invalid JSON … Internal Server Error`` and keeps running. Use ``--list`` above
-to confirm the tools, then point VS Code at it via src/.vscode/mcp.json.
+to confirm the tools, then point VS Code at it via .vscode/mcp.json (repo root).
 """
 from __future__ import annotations
 

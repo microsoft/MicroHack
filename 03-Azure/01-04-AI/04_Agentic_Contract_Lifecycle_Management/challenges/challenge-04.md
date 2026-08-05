@@ -87,7 +87,7 @@ discover and call them.
 - **Portable** — the same tools work across editors, agents and hosts.
 - Decouples *who provides a capability* from *who consumes it*.
 - `src/mcp_server/server.py` serves over **stdio**; VS Code loads it from
-  `src/.vscode/mcp.json` (start **clm-mcp**), exposing `draft_contract` · `analyze_contract` · `get_contract_status`.
+  `.vscode/mcp.json` (start **clm-mcp**), exposing `draft_contract` · `analyze_contract` · `get_contract_status`.
 - **An agent can be the client too:** `src/orchestrator_mcp.py` runs the same GPT-5.4
   Orchestrator but reaches the workflow over MCP (`MCPStdioTool`) instead of in-process
   `as_tool()` — proving the tools are consumable by *any* MCP client, editor **or** agent.
@@ -192,8 +192,9 @@ python src/mcp_server/server.py       # serves over stdio (Ctrl-C to stop)
 
 ### Task 4 · Consume it from VS Code (~15 min)
 
-Open this repo in VS Code, ensure `src/.vscode/mcp.json`
-is picked up (Command Palette → *MCP: List Servers* → start **clm-mcp**), then in Copilot Chat
+Open the **repo root** in VS Code — VS Code auto-discovers a workspace MCP server
+only from `.vscode/mcp.json` at the **root of the opened folder** (it ships at the repo root, not under `src/`).
+Command Palette → *MCP: List Servers* → **clm-mcp** → **Start**, then in Copilot Chat
 (Agent mode) call `#draft_contract` / `#analyze_contract` / `#get_contract_status`. This proves
 the workflow is reusable outside your script.
 
@@ -244,6 +245,7 @@ You don't start the server yourself — `MCPStdioTool` spawns `mcp_server/server
 
 | Symptom | Fix |
 |---------|-----|
+| `clm-mcp` not in *MCP: List Servers* | VS Code discovers a workspace MCP server only from `.vscode/mcp.json` at the **root of the opened folder**. Open the **repo root** (not `src/`) and confirm the file is at `<repo>/.vscode/mcp.json`. |
 | `Invalid JSON … Internal Server Error` after starting the server | **Harmless.** You typed or pressed **Enter** in the stdio window, so the server rejected the newline as invalid JSON-RPC. It's still running — don't type into it. Use `python src/mcp_server/server.py --list` to confirm the tools without the stdio loop. |
 | Orchestrator doesn't route correctly | Sharpen the routing rules in `INSTRUCTIONS`; make each specialist's `as_tool(description=...)` specific. |
 | `agent_framework` import error | Install the framework: `pip install agent-framework-core agent-framework-foundry` (see requirements.txt). |

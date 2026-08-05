@@ -19,7 +19,7 @@ helpers live in [`clm_common/`](clm_common/); every entry-point script adds `src
 | [`evaluators.py`](evaluators.py) | Eval scorecard, gpt-5.4-vs-gpt-5.4-nano bake-off, quality gate (exit 3) | 3 |
 | [`orchestrator.py`](orchestrator.py) | Orchestrator (GPT-5.4) with specialists as tools | 4 |
 | [`mcp_server/server.py`](mcp_server/server.py) | MCP server exposing the CLM workflow over stdio | 4 |
-| [`.vscode/mcp.json`](.vscode/mcp.json) | VS Code MCP client config (`clm-mcp`) | 4 |
+| [`../.vscode/mcp.json`](../.vscode/mcp.json) | VS Code MCP client config (`clm-mcp`, repo root) | 4 |
 | [`orchestrator_mcp.py`](orchestrator_mcp.py) | Orchestrator consuming the MCP server as a client | 4 |
 | [`proactive_alerts.py`](proactive_alerts.py) | Proactive Teams renewal alerts via the Bot Framework | 5 |
 | [`manifest/`](manifest/) | Teams / M365 Copilot app package (manifest + icons) | 5 |

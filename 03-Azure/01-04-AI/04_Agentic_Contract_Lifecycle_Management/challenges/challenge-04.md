@@ -217,7 +217,6 @@ python src/mcp_server/server.py       # serves over stdio (Ctrl-C to stop)
 (you don't run `server.py`; a hand-run terminal never registers it):
 
 1. **Open the repo root** in VS Code — the folder that contains `.vscode/mcp.json`, **not** `src/`.
-   *(Cloned/forked earlier and don't see it at the root? Pull latest — it used to ship under `src/.vscode/`.)*
 2. Command Palette → *MCP: List Servers* → **clm-mcp** → **Start**. VS Code launches the server for you.
 3. In Copilot Chat (**Agent mode**) call `#draft_contract` / `#analyze_contract` / `#get_contract_status`.
 
@@ -240,6 +239,15 @@ assessment you saw in Task 1.
 This is the production shape: **host the MCP server in Azure**, then let a **Foundry agent call it by
 URL** — the same three tools, now a network service any MCP client (the Foundry Playground, another
 agent, your orchestrator) can reach. No editor required.
+
+> **Task 4 at a glance — three short parts:**
+> - **A · Host it** → `bash deploy/mcp-server/deploy.sh` → you get a `https://…/mcp` URL.
+> - **B · Call it from Foundry** → paste that URL as an agent's MCP tool, test `analyze_contract` in the Playground.
+> - **C · Call it from your own agent** → `CLM_MCP_URL=<url> python src/orchestrator_mcp.py`.
+>
+> **Which path should I do?** If you have an Azure lab subscription, do Task 4 (it's the real, remote
+> pattern). No Azure access? The **local quick-start above (Task 3) is enough** — the tools and results
+> are identical; only *where* the server runs differs.
 
 #### Part A · Host the server on Azure Container Apps
 

@@ -131,7 +131,7 @@ Run an agent now, then view spans in the Foundry portal — New Foundry: Build �
 
 > 📸 **Screenshot slot:** the "Tracing enabled" confirmation.
 >
-> <img src="../images/challenge-03/steps/01-tracing-on.svg" alt="Screenshot slot: tracing enabled" width="75%">
+> <img src="../images/challenge-03/steps/01-tracing-on.png" alt="Screenshot slot: tracing enabled" width="75%">
 
 ### Task 2 · Generate traffic (~15 min)
 
@@ -152,8 +152,8 @@ Then open the spans — **New Foundry:** **Build → your agent/model → `Monit
 
 > 📸 **Screenshot slot — what you'll see:** a run's span timeline (in **Tracing** / the **Monitor** tab) and the **Agent Monitoring** dashboard.
 >
-> <img src="../images/challenge-03/steps/02-portal-tracing.svg" alt="Screenshot slot: Foundry Tracing" width="75%">
-> <img src="../images/challenge-03/steps/03-agent-monitoring.svg" alt="Screenshot slot: Agent Monitoring" width="75%">
+> <img src="../images/challenge-03/steps/02-portal-tracing.png" alt="Screenshot slot: Foundry Tracing" width="75%">
+> <img src="../images/challenge-03/steps/03-agent-monitoring.png" alt="Screenshot slot: Agent Monitoring" width="75%">
 
 > [!IMPORTANT]
 > **Tracing and Agent Monitoring are driven by telemetry — not by a registered agent.** The demos run
@@ -204,7 +204,7 @@ You'll get a scorecard for the gpt-5.4 drafting agent.
 
 > 📸 **Screenshot slot:** the evaluation scorecard in the terminal.
 >
-> <img src="../images/challenge-03/steps/04-scorecard.svg" alt="Screenshot slot: evaluation scorecard" width="75%">
+> <img src="../images/challenge-03/steps/04-scorecard.png" alt="Screenshot slot: evaluation scorecard" width="75%">
 
 ### Task 4 · Run the bake-off (~10 min)
 
@@ -252,7 +252,7 @@ Quality gate: CLM rubric=3.8 (groundable rows) threshold=5.0
 
 > 📸 **Screenshot slot:** the gate failing on a too-strict threshold.
 >
-> <img src="../images/challenge-03/steps/05-gate-fail.svg" alt="Screenshot slot: quality gate fails" width="75%">
+> <img src="../images/challenge-03/steps/05-gate-fail.png" alt="Screenshot slot: quality gate fails" width="75%">
 
 ### Task 6 · (Portal) Build the rubric evaluator + continuous evaluation (~15 min)
 

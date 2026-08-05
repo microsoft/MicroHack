@@ -194,6 +194,16 @@ python src/mcp_server/server.py       # serves over stdio (Ctrl-C to stop)
 > smoke test to prove the server imports and serves. You **don't** need to keep it running for Task 4 —
 > in the next step VS Code reads `.vscode/mcp.json` and launches its **own** copy of the server. The
 > only thing that makes `clm-mcp` appear in VS Code is the config file, never a hand-run terminal.
+> A stdio server is **not a network listener** — there's no port or socket to "connect" to. Each MCP
+> client (here, VS Code) **spawns its own subprocess** and talks to it over that process's stdin/stdout,
+> so the copy you ran by hand is a *separate* process nobody attaches to — `Ctrl-C` it once you've
+> confirmed it starts.
+
+> [!NOTE]
+> **"How do I tell it's running vs. stuck?"** A silent stdio window looks the same either way, so don't
+> judge health from the terminal. Use `python src/mcp_server/server.py --list` for a quick self-check
+> (it prints the 3 tools and exits) — if that works, the server is fine. The **authoritative** status is
+> in VS Code: *MCP: List Servers* shows `clm-mcp` as **Running** with its tool count once you start it.
 
 ### Task 4 · Consume it from VS Code (~15 min)
 

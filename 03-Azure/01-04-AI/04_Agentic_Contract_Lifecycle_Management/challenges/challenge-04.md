@@ -10,7 +10,7 @@ This is where the system becomes truly **multi-agent**.
 
 If something isn't working as expected, please let your coach know.
 
-> **⏱️ Duration:** ~60 min (+ ~30 min if you deploy the remote MCP server in Task 4)
+> **⏱️ Duration:** ~90 min (Tasks 1–4). Task 4 hosts the MCP server remotely and calls it from Foundry — that's the point of this challenge, so plan for it.
 
 > **📋 Prerequisites:**
 > - **Challenge 2 pattern understood** — you know how a grounded agent is built.
@@ -241,9 +241,10 @@ agent, your orchestrator) can reach. No editor required.
 > - **B · Call it from Foundry** → paste that URL as an agent's MCP tool, test `analyze_contract` in the Playground.
 > - **C · Call it from your own agent** → `CLM_MCP_URL=<url> python src/orchestrator_mcp.py`.
 >
-> **Which path should I do?** If you have an Azure lab subscription, do Task 4 (it's the real, remote
-> pattern). No Azure access? The **local quick-start above (Task 3) is enough** — the tools and results
-> are identical; only *where* the server runs differs.
+> **Do this task — it's the point of the challenge.** You provisioned an Azure lab subscription back
+> in Challenge 1, so you're set to host and call the server for real. (Task 3's local stdio server
+> produces the identical tools and results — keep it only as a fallback if Azure is ever completely
+> unavailable; otherwise the whole value of MCP is reaching the server *remotely* here.)
 
 #### Part A · Host the server on Azure Container Apps
 

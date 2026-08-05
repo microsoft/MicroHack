@@ -177,7 +177,7 @@ clm-mcp exposes 3 tool(s):
   • get_contract_status: Look up a contract's status, renewal date, risk and owner by ID (e.g. "CT-4821").
 ```
 
-Then start it **over stdio** the way a client will:
+Then (optionally) start it **over stdio** the way a client will — a quick smoke test:
 ```bash
 python src/mcp_server/server.py       # serves over stdio (Ctrl-C to stop)
 ```
@@ -187,16 +187,29 @@ python src/mcp_server/server.py       # serves over stdio (Ctrl-C to stop)
 > (VS Code, next step) to connect over stdin/stdout. **Don't type into that window** — a stray
 > keystroke or **Enter** isn't valid JSON, so the server logs a red
 > `Invalid JSON … Internal Server Error` and **keeps running**. That line is harmless (it's the
-> server rejecting your keystroke, not a crash). Leave it running, or stop it with `Ctrl-C` since
-> VS Code starts its own copy from `mcp.json`.
+> server rejecting your keystroke, not a crash). Stop it with `Ctrl-C` when you're done.
+
+> [!IMPORTANT]
+> **Running this script does _not_ register the server with VS Code.** This standalone run is only a
+> smoke test to prove the server imports and serves. You **don't** need to keep it running for Task 4 —
+> in the next step VS Code reads `.vscode/mcp.json` and launches its **own** copy of the server. The
+> only thing that makes `clm-mcp` appear in VS Code is the config file, never a hand-run terminal.
 
 ### Task 4 · Consume it from VS Code (~15 min)
 
-Open the **repo root** in VS Code — VS Code auto-discovers a workspace MCP server
-only from `.vscode/mcp.json` at the **root of the opened folder** (it ships at the repo root, not under `src/`).
-Command Palette → *MCP: List Servers* → **clm-mcp** → **Start**, then in Copilot Chat
-(Agent mode) call `#draft_contract` / `#analyze_contract` / `#get_contract_status`. This proves
-the workflow is reusable outside your script.
+> [!IMPORTANT]
+> **You do _not_ run `server.py` yourself here.** VS Code discovers `clm-mcp` from `.vscode/mcp.json`
+> and **spawns its own copy** of the server. Starting the script in a terminal (Task 3) does **not**
+> make it show up in VS Code — that only ever comes from the config file.
+
+1. **Pull the latest hack repo**, then **open the repo root** in VS Code — the folder that contains
+   `.vscode/mcp.json`, **not** `src/`. VS Code auto-discovers a workspace MCP server only from
+   `.vscode/mcp.json` at the **root of the opened folder**. *(If you cloned/forked earlier and don't
+   see the file at the repo root, pull latest — it used to ship under `src/.vscode/`.)*
+2. Command Palette → *MCP: List Servers* → **clm-mcp** → **Start**. VS Code launches the server for you.
+3. In Copilot Chat (**Agent mode**) call `#draft_contract` / `#analyze_contract` / `#get_contract_status`.
+
+This proves the workflow is reusable outside your script.
 
 > 📸 **Screenshot slot — what you'll see:** **MCP: List Servers** with `clm-mcp`, then Copilot Chat calling `#analyze_contract`.
 >
@@ -245,7 +258,7 @@ You don't start the server yourself — `MCPStdioTool` spawns `mcp_server/server
 
 | Symptom | Fix |
 |---------|-----|
-| `clm-mcp` not in *MCP: List Servers* | VS Code discovers a workspace MCP server only from `.vscode/mcp.json` at the **root of the opened folder**. Open the **repo root** (not `src/`) and confirm the file is at `<repo>/.vscode/mcp.json`. |
+| `clm-mcp` not in *MCP: List Servers* | VS Code discovers a workspace MCP server only from `.vscode/mcp.json` at the **root of the opened folder** — running `python src/mcp_server/server.py` in a terminal does **not** register it. Open the **repo root** (not `src/`) and confirm the file is at `<repo>/.vscode/mcp.json`. If it's missing there, **pull the latest hack repo** (older copies shipped it under `src/.vscode/`), then reload VS Code. |
 | `Invalid JSON … Internal Server Error` after starting the server | **Harmless.** You typed or pressed **Enter** in the stdio window, so the server rejected the newline as invalid JSON-RPC. It's still running — don't type into it. Use `python src/mcp_server/server.py --list` to confirm the tools without the stdio loop. |
 | Orchestrator doesn't route correctly | Sharpen the routing rules in `INSTRUCTIONS`; make each specialist's `as_tool(description=...)` specific. |
 | `agent_framework` import error | Install the framework: `pip install agent-framework-core agent-framework-foundry` (see requirements.txt). |

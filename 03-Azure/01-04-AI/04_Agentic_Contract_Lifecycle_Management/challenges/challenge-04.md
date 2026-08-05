@@ -211,27 +211,23 @@ python src/mcp_server/server.py       # serves over stdio (Ctrl-C to stop)
 > (it prints the 3 tools and exits) — if that works, the server is fine. The **authoritative** status is
 > in VS Code: *MCP: List Servers* shows `clm-mcp` as **Running** with its tool count once you start it.
 
-#### (Optional) Consume it locally — pick either, so you're never blocked
+#### (Optional) Consume it locally
 
-**A · VS Code** — VS Code discovers `clm-mcp` from `.vscode/mcp.json` and **spawns its own copy**
-(you don't run `server.py`; a hand-run terminal never registers it):
+Prove the three tools work end-to-end **before** you host them — run the Orchestrator as a local
+MCP **client**. It spawns the stdio server for you, so there's no IDE to set up and no second terminal:
 
-1. **Open the repo root** in VS Code — the folder that contains `.vscode/mcp.json`, **not** `src/`.
-2. Command Palette → *MCP: List Servers* → **clm-mcp** → **Start**. VS Code launches the server for you.
-3. In Copilot Chat (**Agent mode**) call `#draft_contract` / `#analyze_contract` / `#get_contract_status`.
-
-> 📸 **Screenshot slot:** **MCP: List Servers** with `clm-mcp`, then Copilot Chat calling `#analyze_contract`.
->
-> <img src="../images/challenge-04/steps/03-mcp-list.svg" alt="Screenshot slot: VS Code MCP list" width="80%">
-> <img src="../images/challenge-04/steps/04-copilot-tool.svg" alt="Screenshot slot: Copilot tool call" width="80%">
-
-**B · Terminal agent** — run the Orchestrator as a local MCP client; it spawns the stdio server for you
-(no VS Code needed):
 ```bash
 python src/orchestrator_mcp.py     # MCPStdioTool launches server.py → draft → analyze → status over MCP
 ```
 
-✅ **Local check:** `#analyze_contract` (VS Code) or `orchestrator_mcp.py` returns the **same** risk
+This is the exact **"an agent is an MCP client"** pattern you'll reuse against the **remote** server in
+Part C below — only the transport changes (stdio here, HTTPS there).
+
+> 💡 **Prefer an IDE?** The repo ships [`.vscode/mcp.json`](../.vscode/mcp.json), so any MCP-aware client
+> discovers the same server: open the **repo root** in VS Code → Command Palette → *MCP: List Servers* →
+> **clm-mcp** → **Start**, then call `#analyze_contract` in Copilot Chat (**Agent mode**).
+
+✅ **Local check:** `orchestrator_mcp.py` (or `#analyze_contract` in VS Code) returns the **same** risk
 assessment you saw in Task 1.
 
 ### Task 4 · Host it remotely + call it from Foundry (~35–45 min)

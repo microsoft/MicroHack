@@ -74,10 +74,6 @@ SLOTS: list[tuple[str, str, str, str]] = [
      "clause_risk_agent.py output: per-draft clause table, flagged deviations, High risk, cited to the clause library."),
     ("challenge-3", "02-orchestrator", "Terminal · Orchestrator thread",
      "orchestrator.py running draft → analyze → status, noting which specialist handled each turn."),
-    ("challenge-3", "03-mcp-list", "VS Code · MCP: List Servers",
-     "Command Palette → 'MCP: List Servers' with clm-mcp listed and 'Start' available."),
-    ("challenge-3", "04-copilot-tool", "VS Code · Copilot tool call",
-     "Copilot Chat (Agent mode) invoking #analyze_contract and returning the risk assessment."),
 
     # ---- Challenge 5 · Publish + alerts ------------------------------------
     ("challenge-4", "01-channels-publish", "Foundry Portal · Publish to Teams",

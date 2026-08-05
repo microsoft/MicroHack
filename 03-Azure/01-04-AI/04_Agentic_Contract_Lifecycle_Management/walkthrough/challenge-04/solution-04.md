@@ -109,27 +109,23 @@ python src/mcp_server/server.py --list   # verify the 3 tools, then exit
 python src/mcp_server/server.py          # stdio: waits for a local client (VS Code / orchestrator_mcp.py)
 ```
 
-**Consume it locally (optional):** open the **repo root** in VS Code (it loads
-[`.vscode/mcp.json`](../../.vscode/mcp.json)) → **MCP: List Servers** → start **clm-mcp** → call
-`#analyze_contract` in Copilot Chat; **or** run `python src/orchestrator_mcp.py` (a terminal MCP client
-that spawns the stdio server for you).
-
-> 📸 **Screenshot slot:** **MCP: List Servers** with `clm-mcp`, then Copilot Chat calling `#analyze_contract`.
->
-> <img src="../../images/challenge-04/steps/03-mcp-list.svg" alt="Screenshot slot: VS Code MCP list" width="80%">
-> <img src="../../images/challenge-04/steps/04-copilot-tool.svg" alt="Screenshot slot: Copilot tool call" width="80%">
+**Consume it locally (optional):** run `python src/orchestrator_mcp.py` — a terminal MCP **client** that
+spawns the stdio server for you (no IDE) and runs draft → analyze → status over MCP. Same
+"agent-as-MCP-client" shape as Task 4 · Part C, just over stdio instead of HTTPS. Prefer an IDE? Open the
+**repo root** in VS Code (it loads [`.vscode/mcp.json`](../../.vscode/mcp.json)) → **MCP: List Servers** →
+start **clm-mcp** → call `#analyze_contract` in Copilot Chat.
 
 ### Task 4 · Host it remotely + call it from Foundry
 **Part A — host on Azure Container Apps.** The repo-root [`Dockerfile`](../../Dockerfile) runs
 `server.py --http` (streamable HTTP at `/mcp`). Deploy from the repo root — the image builds in the
 cloud, no local Docker:
 ```bash
-RESOURCE_GROUP=<rg> AZURE_AI_PROJECT_ENDPOINT=<endpoint> \
-FOUNDRY_ACCOUNT_ID=$(az cognitiveservices account list -g <rg> --query "[0].id" -o tsv) \
-  bash deploy/mcp-server/deploy.sh          # → https://clm-mcp.<region>.azurecontainerapps.io/mcp
+bash deploy/mcp-server/deploy.sh    # reads .env, auto-discovers RG/account/region → https://clm-mcp.<region>.azurecontainerapps.io/mcp
 ```
-The script gives the app a **system-assigned managed identity** and grants it a data-plane role on the
-Foundry account so the server's own tools can call your models.
+The script reads the repo-root `.env` and auto-discovers the resource group, Foundry account and region
+(all overridable via env vars; `deploy.ps1` is the Windows twin). It gives the app a **system-assigned
+managed identity** and grants it a data-plane role on the Foundry account so the server's own tools can
+call your models.
 
 **Part B — Foundry Playground.** In [ai.azure.com](https://ai.azure.com): agent → **Tools → Add MCP tool**,
 Server label `clm-mcp`, Server URL `https://…/mcp`, **No authentication**. In the Playground ask it to

@@ -166,15 +166,29 @@ ORCHESTRATOR: [→ intake_drafting] Draft ready... [→ clause_risk] Acme draft 
 
 ### Task 3 · Run the MCP server (~10 min)
 
-Inspect its tools:
+First **verify the tools are registered** — this needs no client and exits on its own:
+```bash
+python src/mcp_server/server.py --list
+```
+```text
+clm-mcp exposes 3 tool(s):
+  • draft_contract: Draft a contract from Contoso Global's approved templates.
+  • analyze_contract: Extract clauses from a counterparty draft, compare to standard, and return a risk score.
+  • get_contract_status: Look up a contract's status, renewal date, risk and owner by ID (e.g. "CT-4821").
+```
+
+Then start it **over stdio** the way a client will:
 ```bash
 python src/mcp_server/server.py       # serves over stdio (Ctrl-C to stop)
 ```
 
 > [!NOTE]
-> A stdio MCP server **looks like it hangs with no output — that's correct.** It's waiting for a
-> client (VS Code, next step) to connect over stdin/stdout. Leave it running, or stop it with
-> `Ctrl-C` since VS Code will start its own copy from `mcp.json`.
+> A stdio MCP server has **no console UI**: once it starts it just waits silently for a client
+> (VS Code, next step) to connect over stdin/stdout. **Don't type into that window** — a stray
+> keystroke or **Enter** isn't valid JSON, so the server logs a red
+> `Invalid JSON … Internal Server Error` and **keeps running**. That line is harmless (it's the
+> server rejecting your keystroke, not a crash). Leave it running, or stop it with `Ctrl-C` since
+> VS Code starts its own copy from `mcp.json`.
 
 ### Task 4 · Consume it from VS Code (~15 min)
 
@@ -230,9 +244,10 @@ You don't start the server yourself — `MCPStdioTool` spawns `mcp_server/server
 
 | Symptom | Fix |
 |---------|-----|
+| `Invalid JSON … Internal Server Error` after starting the server | **Harmless.** You typed or pressed **Enter** in the stdio window, so the server rejected the newline as invalid JSON-RPC. It's still running — don't type into it. Use `python src/mcp_server/server.py --list` to confirm the tools without the stdio loop. |
 | Orchestrator doesn't route correctly | Sharpen the routing rules in `INSTRUCTIONS`; make each specialist's `as_tool(description=...)` specific. |
 | `agent_framework` import error | Install the framework: `pip install agent-framework-core agent-framework-foundry` (see requirements.txt). |
-| MCP server not listed in VS Code | Ensure the MCP feature is enabled and `mcp.json` path is correct; check the server starts standalone first. |
+| MCP server not listed in VS Code | Ensure the MCP feature is enabled and `mcp.json` path is correct; confirm the server imports cleanly first with `python src/mcp_server/server.py --list`. |
 | MCP tool call times out | Each call spins up + tears down a Foundry agent (a few seconds). Keep drafts short while testing. |
 | `orchestrator_mcp.py` finds no tools / hangs at startup | The stdio server failed to import. Confirm `python src/mcp_server/server.py` starts standalone; `MCPStdioTool` sets `PYTHONPATH=src`, so run from the repo root. |
 | Web search tool not attaching | Confirm `AZURE_BING_CONNECTION_NAME` matches a **project connection** for your Grounding with Bing Search resource; run `python src/kb_setup.py` — it prints whether the web-grounding tool built. |

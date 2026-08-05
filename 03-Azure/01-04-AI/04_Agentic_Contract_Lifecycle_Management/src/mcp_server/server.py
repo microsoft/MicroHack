@@ -9,10 +9,17 @@ Tools exposed:
   • analyze_contract(draft_text)                → clause extraction + risk score
   • get_contract_status(contract_id)            → structured status lookup
 
+Verify the tools are registered (prints the 3 tools and exits — no client needed):
+    python src/mcp_server/server.py --list
+
 Run (stdio, for an MCP client to launch):
     python src/mcp_server/server.py
 
-Then point VS Code at it via src/.vscode/mcp.json.
+A stdio server has no console UI: once it starts it waits silently for a client
+to speak JSON-RPC over stdin. Don't type into that window — a stray keystroke or
+Enter is not valid JSON, so the server logs a harmless red
+``Invalid JSON … Internal Server Error`` and keeps running. Use ``--list`` above
+to confirm the tools, then point VS Code at it via src/.vscode/mcp.json.
 """
 from __future__ import annotations
 
@@ -72,5 +79,25 @@ def get_contract_status(contract_id: str) -> str:
     return _get_contract_status(contract_id)
 
 
+def _list_tools() -> None:
+    """Print the registered tools and exit — a client-free smoke test.
+
+    Runs the same ``list_tools`` the protocol exposes, so it proves the tools are
+    registered (and the module imports cleanly) without the stdio handshake that
+    a raw ``mcp.run`` needs. No Foundry agent is created — the heavy imports stay
+    lazy inside each tool.
+    """
+    import asyncio
+
+    tools = asyncio.run(mcp.list_tools())
+    print(f"clm-mcp exposes {len(tools)} tool(s):")
+    for t in tools:
+        summary = (t.description or "").strip().splitlines()[0] if t.description else ""
+        print(f"  • {t.name}: {summary}")
+
+
 if __name__ == "__main__":
-    mcp.run(transport="stdio")
+    if "--list" in sys.argv[1:] or "--tools" in sys.argv[1:]:
+        _list_tools()
+    else:
+        mcp.run(transport="stdio")

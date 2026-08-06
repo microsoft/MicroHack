@@ -2,9 +2,9 @@
 
 **[← Back to Challenge 5](../../challenges/challenge-05.md)** · [Home](../../README.md)
 
-Ship the **Orchestrator** to **Microsoft 365 Copilot & Teams** so people chat with it
-live, **and** push **proactive renewal alerts** before contracts auto-renew — driven
-by the **Obligation & Renewal** agent.
+Ship your **CLM agent** — the MCP-backed **`clm-contract-agent`** from Challenge 4 — to **Microsoft 365
+Copilot & Teams** so people chat with it live, **and** push **proactive renewal alerts** before
+contracts auto-renew — driven by the **Obligation & Renewal** agent.
 
 ## Expected end state
 
@@ -14,7 +14,7 @@ by the **Obligation & Renewal** agent.
   seed-data fallback).
 - The Teams/M365 app package is built from the manifest in
   [`src/manifest/`](../../src/manifest/) and sideloaded — you chat with the
-  orchestrator where contract managers already work.
+  `clm-contract-agent` where contract managers already work.
 - Proactive alerts fire via
   [`src/proactive_alerts.py`](../../src/proactive_alerts.py) — a Teams ping **before**
   the renewal date.
@@ -22,12 +22,12 @@ by the **Obligation & Renewal** agent.
 ## 🛠️ Task-by-task walkthrough
 
 ### Part A · Publish to Teams & M365 Copilot (portal)
-1. In the **Foundry portal**, open the **`clm-orchestrator`** agent (kept from Ch4).
+1. In the **Foundry portal**, open the **`clm-contract-agent`** you published in **Challenge 4 (Task 4 Part B)** — the MCP-backed portal agent. *(The `clm-orchestrator` from Ch4 Task 2 was in-process and isn't in the portal.)*
 2. **Details → Channels → "Teams and Microsoft 365 Copilot" → Publish** (provisions an **Azure Bot Service**; first time: `az provider register --namespace Microsoft.BotService`).
 3. Fill the metadata, then **direct publish** or download & sideload the manifest from [`src/manifest/`](../../src/manifest/).
 4. **Test live** in Teams and M365 Copilot: ask it to draft an NDA and review the Acme draft. ✅ Part A worked when the agent returns the **same grounded, cited answers** you saw in the terminal in Ch2 & Ch4.
 
-> 📸 **Screenshot slot:** the **Channels** page ("Teams and Microsoft 365 Copilot" → **Publish**), then the orchestrator answering **live in a Teams chat** with cited output.
+> 📸 **Screenshot slot:** the **Channels** page ("Teams and Microsoft 365 Copilot" → **Publish**), then the agent answering **live in a Teams chat** with cited output.
 >
 > <img src="../../images/challenge-05/steps/01-channels-publish.svg" alt="Screenshot slot: publish to Teams" width="80%">
 > <img src="../../images/challenge-05/steps/02-teams-live.svg" alt="Screenshot slot: agent live in Teams" width="80%">

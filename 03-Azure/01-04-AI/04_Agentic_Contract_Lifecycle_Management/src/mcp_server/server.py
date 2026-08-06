@@ -40,6 +40,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))            # src (c
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "agents"))  # agent modules
 
 from mcp.server.fastmcp import FastMCP  # noqa: E402
+from mcp.server.transport_security import TransportSecuritySettings  # noqa: E402
 
 from clm_common.tools import get_contract_status as _get_contract_status  # noqa: E402
 
@@ -116,6 +117,29 @@ def _run_http() -> None:
     """
     mcp.settings.host = os.getenv("MCP_HOST", "0.0.0.0")
     mcp.settings.port = int(os.getenv("MCP_PORT", "8000"))
+
+    # --- Accept the public (container) Host header --------------------------------
+    # FastMCP is constructed with its default host (127.0.0.1), so it auto-enables
+    # DNS-rebinding protection with a *localhost-only* Host allowlist. Behind Azure
+    # Container Apps ingress the incoming Host header is the public FQDN, which that
+    # allowlist rejects with **421 "Invalid Host header"** — so a Foundry agent
+    # can't even enumerate the tools. DNS-rebinding protection only guards servers
+    # reachable at localhost from a victim's browser; it's inapplicable to an
+    # intentionally public, hosted endpoint, so we relax it here. To lock the server
+    # down to specific hostnames instead, set MCP_ALLOWED_HOSTS to a comma-separated
+    # allowlist (e.g. "clm-mcp.<hash>.<region>.azurecontainerapps.io").
+    allowed_hosts = [h.strip() for h in os.getenv("MCP_ALLOWED_HOSTS", "").split(",") if h.strip()]
+    if allowed_hosts:
+        mcp.settings.transport_security = TransportSecuritySettings(
+            enable_dns_rebinding_protection=True,
+            allowed_hosts=allowed_hosts,
+            allowed_origins=[f"https://{h}" for h in allowed_hosts],
+        )
+    else:
+        mcp.settings.transport_security = TransportSecuritySettings(
+            enable_dns_rebinding_protection=False,
+        )
+
     print(
         f"clm-mcp serving over streamable HTTP on "
         f"http://{mcp.settings.host}:{mcp.settings.port}{mcp.settings.streamable_http_path}",

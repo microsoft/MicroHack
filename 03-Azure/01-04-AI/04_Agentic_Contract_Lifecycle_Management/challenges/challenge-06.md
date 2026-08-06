@@ -160,6 +160,17 @@ on demand, using Azure OIDC. Configure the repo secrets (`AZURE_CLIENT_ID`, `AZU
 | Defect rate looks too good/bad | The heuristic keys on refusal phrases; use `--safety-evals` for model-graded scoring and refine `REFUSAL_MARKERS`. |
 | CI job skipped | Expected when Azure secrets aren't set — it no-ops by design. Add the secrets to enable it. |
 
+## 🔗 How this fits
+
+**You built** the safety net — an **AI Red Teaming** scan, **Content Safety / PII** guardrails, and a
+**quality + safety gate wired into CI** so a risky change can never ship.
+
+- **Builds on** the entire system — it attacks and guards everything from Challenges 2–5, reusing
+  Challenge 3's gate pattern.
+- **Feeds** nothing after it — this is the production-readiness capstone.
+
+*In the arc → this is **"make it safe"**: the Responsible-AI layer that separates a prototype from something legal and procurement would approve.*
+
 ## 🧠 Reflection
 
 - Red-teaming finds *unknown* failures; evaluation measures *known* quality. Why do you need both

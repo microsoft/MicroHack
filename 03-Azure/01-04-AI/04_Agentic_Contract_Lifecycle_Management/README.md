@@ -247,6 +247,26 @@ By participating in this hackathon, you will learn how to:
 
 ---
 
+## The logic of this hack
+
+Every challenge adds **one capability** to the **same Foundry project** — read top to bottom, the six
+challenges are a single story:
+
+1. **Ground it** *(C1–C2)* — deploy Foundry, seed the Contoso corpus, and build an agent that answers
+   **from the documents, with citations** — not from model memory.
+2. **Prove it's good** *(C3)* — trace every run and score it against a labelled set, with a **quality
+   gate** that blocks a bad build.
+3. **Orchestrate a team** *(C4)* — add a second specialist and an **Orchestrator** that routes to both,
+   then expose the whole workflow as a reusable **MCP server**.
+4. **Deliver it** *(C5)* — **publish** the Orchestrator to M365 Copilot & Teams so legal uses it where
+   they already work.
+5. **Make it safe** *(C6, bonus)* — **red-team** it, add **Content Safety**, and gate CI so a risky
+   change can never ship.
+
+> In one line: **a grounded assistant → proven trustworthy → scaled into a team → delivered to users →
+> hardened for production.** Each challenge closes with a **🔗 How this fits** note tying its piece back
+> to this arc.
+
 ## Challenges
 
 | # | Challenge | Focus | Duration |

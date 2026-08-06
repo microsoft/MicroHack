@@ -796,6 +796,16 @@ az search service show --name <clmsearch****> --resource-group rg-clm-microhack 
 
 </details>
 
+## 🔗 How this fits
+
+**You built** the foundation — a **Microsoft Foundry** project with the model fleet deployed and the
+**Contoso CLM corpus** seeded into Azure AI Search.
+
+- **Builds on** nothing — this is the ground everything else stands on.
+- **Feeds** every later challenge: no seeded corpus means no grounding, no agents, no evaluation.
+
+*In the arc → this is **"ground it"**: deploy the platform and load the knowledge before any agent exists.*
+
 ## 🧠 Reflection
 
 - Why keep the corpus in **SharePoint** *and* an Azure AI Search index? *(Business system of record vs. retrieval.)*

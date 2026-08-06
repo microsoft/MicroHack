@@ -341,23 +341,20 @@ You're done when:
 | `429 rate_limit_exceeded` on `gpt-5.4` mid-demo | Deployment throughput throttling. The demo now retries with exponential backoff and isolates each prompt (`run_agent_with_retry`), so it rides through and continues. If it persists, raise the deployment capacity or space out prompts. |
 | `Missing required environment variable 'AZURE_AI_PROJECT_ENDPOINT'` | Re-run Challenge 1's deploy (which writes `.env`) or copy `.env.example` → `.env` and fill it in. |
 
-## 🎯 What you accomplished
+## 🔗 How this fits
 
-You built your first **grounded, cited, tool-using, guard-railed agent** — on **`gpt-5.4`**, with the
-same API you'd use for any other deployment.
+**You built** your first agent — the **Intake & Drafting** agent on **`gpt-5.4`**: grounded (Foundry
+IQ), cited, tool-enabled and guard-railed.
 
-**Key achievements:**
+- **Builds on** Challenge 1's seeded corpus and deployed models.
+- **Feeds** Challenge 3 (which traces & evaluates this exact agent) and Challenge 4 (whose orchestrator
+  delegates drafting to it).
 
-- **Grounded on your corpus** — attached the Foundry IQ knowledge base as a tool so answers come from
-  Contoso's documents, with citations, not model memory.
-- **Mixed knowledge + function tools** — combined unstructured retrieval with a deterministic
-  `get_contract_status` lookup in the Agent's `tools=[...]`, auto-invoked mid-run.
-- **Enforced guardrails** — the agent refuses legal advice and flags policy deviations for a human.
-- **Proved model-agnosticism** — ran the whole thing on `gpt-5.4` and could point it at any other
-  deployment by changing a single `model` argument.
+**Key moves:** grounded answers from Contoso's documents *with citations*; a deterministic
+`get_contract_status` function tool alongside retrieval; guardrails that refuse legal advice; and one
+`model` argument you could point at any deployment.
 
-This agent becomes a building block later: the **orchestrator** (Challenge 4) will delegate drafting
-to it, and everything it does will be **traced and evaluated** in Challenge 3.
+*In the arc → this is **"ground it"**: the first working agent, and the pattern every later agent reuses.*
 
 ## 📚 Learn more
 

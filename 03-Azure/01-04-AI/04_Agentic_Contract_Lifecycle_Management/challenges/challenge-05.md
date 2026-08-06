@@ -149,6 +149,20 @@ python src/proactive_alerts.py --from-renewals --days 30
 | Alert never arrives | Verify `TEAMS_SERVICE_URL` + `TEAMS_CONVERSATION_ID` came from a **real inbound** message to *this* bot. |
 | Want to test with no bot | Use `--dry-run` to print the alert text. |
 
+## 🔗 How this fits
+
+**You built** delivery — the Orchestrator published to **M365 Copilot & Teams** for live chat, plus
+(optional) **proactive renewal/risk alerts** pushed into Teams.
+
+- **Builds on** Challenge 4's orchestrator.
+- **Feeds** the bonus Challenge 6, which hardens everything for production.
+
+**Step back — you've built the whole assistant:** grounded (C2) → proven trustworthy (C3) →
+orchestrated into a team & made reusable via MCP (C4) → delivered where legal already works (C5).
+That's a complete **Agentic CLM** system.
+
+*In the arc → this is **"deliver it"**: the agent reaches its users instead of living in a terminal.*
+
 ## 🧠 Reflection
 
 - Conversational (pull) vs proactive (push) — which contract-management moments deserve an

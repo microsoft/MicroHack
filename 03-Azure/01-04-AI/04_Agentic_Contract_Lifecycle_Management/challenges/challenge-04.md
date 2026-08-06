@@ -329,6 +329,17 @@ lock the endpoint down to a **private** MCP subnet, and add **approval** before 
 | Remote tools return `401/403` / "credential" errors from Foundry | The **container's managed identity** lacks a data-plane role on your Foundry account. Re-run the role step in `deploy.sh` (or assign **Azure AI User** on `FOUNDRY_ACCOUNT_ID`), then wait ~1 min for propagation. Verify with `az containerapp identity show` + `az role assignment list --assignee <principalId>`. |
 | `CLM_MCP_URL` run: connection refused / hangs | Confirm the app is running (`az containerapp show --query properties.runningStatus`) and the URL includes `/mcp`. If you added a key, set `CLM_MCP_KEY` too. Unset `CLM_MCP_URL` to fall back to the local stdio server. |
 
+## 🔗 How this fits
+
+**You built** the team — a second specialist (**Clause & Risk**, GPT-5.6 Sol), an **Orchestrator**
+(GPT-5.4) that routes to both via the **agent-as-tool** pattern, and an **MCP server** exposing the
+whole workflow (locally, then on Azure Container Apps).
+
+- **Builds on** Challenge 2's agent pattern and Challenge 3's evaluation discipline.
+- **Feeds** Challenge 5, which publishes this orchestrator to where people work.
+
+*In the arc → this is **"orchestrate a team"**: one agent becomes a reusable set of specialists callable from anywhere.*
+
 ## 🧠 Reflection
 
 - Specialist agents-as-tools vs one mega-agent with many tools — what do you gain (separation, per-agent

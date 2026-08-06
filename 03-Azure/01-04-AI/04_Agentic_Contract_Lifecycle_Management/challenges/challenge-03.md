@@ -267,6 +267,16 @@ Docs: [Rubric evaluators](https://learn.microsoft.com/azure/foundry/concepts/eva
 | `429` rate-limits / `cannot schedule new futures after shutdown` | The judge/agent deployment is throttled. Re-run with `--workers 1` (or set `PF_WORKER_COUNT`); the target auto-retries 429s with backoff, so a slower run still completes. |
 | Bake-off is slow | It runs the dataset twice (once per model). Trim the JSONL while iterating. |
 
+## 🔗 How this fits
+
+**You built** the trust layer — end-to-end **OpenTelemetry** tracing to Application Insights,
+evaluation against a labelled set, and a **quality gate** that blocks a bad build.
+
+- **Builds on** Challenge 2's agent — the exact thing being traced and scored.
+- **Feeds** Challenge 4's specialists and Challenge 6's CI gate, which reuse this eval discipline.
+
+*In the arc → this is **"prove it's good"**: the GenAIOps layer that turns a demo into something you trust.*
+
 ## 🧠 Reflection
 
 - Tracing shows *what happened*; evaluation shows *how good it was*. Which would catch a silent

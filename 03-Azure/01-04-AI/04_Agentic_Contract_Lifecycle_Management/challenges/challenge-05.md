@@ -1,4 +1,4 @@
-# Challenge 5 · Publish to M365 Copilot & Teams + Proactive Alerts
+# Challenge 5 · Publish to M365 Copilot & Teams *(+ optional Proactive Alerts)*
 
 **[🏠 Home](../README.md)**  ·  [← Challenge 4: Orchestration + MCP](challenge-04.md)  ·  [Challenge 6: Safety (Bonus) →](challenge-06.md)
 

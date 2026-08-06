@@ -274,7 +274,7 @@ challenges are a single story:
 | [1](challenges/challenge-01.md) | Resource deployment · Codespaces · `.env` · corpus seeding | Setup | 30 min |
 | [2](challenges/challenge-02.md) | Intake & Drafting agent + Foundry IQ + tools | Grounding · tools · guardrails | 60 min |
 | [3](challenges/challenge-03.md) | Observability, tracing & evaluation | Tracing · eval | 60 min |
-| [4](challenges/challenge-04.md) | Clause & Risk agent + Orchestrator + MCP server | Orchestration · MCP | 75 min |
+| [4](challenges/challenge-04.md) | Clause & Risk agent + Orchestrator + MCP server | Orchestration · MCP | 55 min |
 | [5](challenges/challenge-05.md) | Publish to M365 Copilot & Teams (+ optional proactive alerts) | Publish · *(alerts optional)* | 30 min |
 | [6](challenges/challenge-06.md) 🧪 | *Bonus:* Safety, Red-Teaming & Continuous Eval | Responsible AI · CI gate | optional |
 

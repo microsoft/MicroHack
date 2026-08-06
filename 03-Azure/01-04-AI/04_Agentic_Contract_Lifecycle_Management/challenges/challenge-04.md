@@ -268,6 +268,12 @@ With `CLM_MCP_URL` set, the client switches from `MCPStdioTool` (local subproces
 **hosted** tools. *(If you protect the endpoint with a key, also set `CLM_MCP_KEY`.)* This is the
 "same brain, swappable transport" idea from the Context note, taken all the way to a hosted endpoint.
 
+> [!TIP]
+> **`MCP server failed to initialize: Cancelled via cancel scope`?** Your `CLM_MCP_URL` is pointing at a
+> server that isn't ready. Check it directly — `curl -s -o /dev/null -w '%{http_code}\n' "$CLM_MCP_URL"`.
+> A **421** means the container is running an **old image**: redeploy with `bash deploy/mcp-server/deploy.sh`
+> and retry. (`orchestrator_mcp.py` now prints this diagnosis for you automatically.)
+
 > 📸 **Screenshot slot:** `orchestrator_mcp.py` printing that it's calling `clm-mcp` **via https://…/mcp** and completing the run.
 >
 > <img src="../images/challenge-04/steps/07-orchestrator-remote.svg" alt="Screenshot slot: local orchestrator calling the remote MCP server" width="80%">

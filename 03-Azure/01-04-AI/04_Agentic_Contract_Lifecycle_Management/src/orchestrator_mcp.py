@@ -122,22 +122,81 @@ DEMO = [
 ]
 
 
+def _diagnose_remote_mcp(url: str) -> str:
+    """Best-effort probe of a remote clm-mcp URL to explain a failed connection.
+
+    The most common cause is a server still running the pre-fix image: it rejects
+    the request's Host header with HTTP 421 ("Invalid Host header"), so the MCP
+    handshake never completes and Agent Framework surfaces it as an opaque
+    "MCP server failed to initialize: Cancelled via cancel scope".
+    """
+    body = {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "initialize",
+        "params": {
+            "protocolVersion": "2025-06-18",
+            "capabilities": {},
+            "clientInfo": {"name": "clm-preflight", "version": "0"},
+        },
+    }
+    headers = {"Content-Type": "application/json", "Accept": "application/json, text/event-stream"}
+    try:
+        import httpx
+
+        # Stream so we read only the status line (a healthy server answers with a
+        # long-lived SSE body that a plain GET/read would hang on).
+        with httpx.stream(
+            "POST", url, json=body, headers=headers, timeout=httpx.Timeout(15.0, read=5.0)
+        ) as resp:
+            code = resp.status_code
+    except Exception as probe_exc:  # DNS / TLS / timeout / connection refused
+        return f"the server could not be reached ({type(probe_exc).__name__}: {probe_exc})."
+    if code == 421:
+        return (
+            "the server returned HTTP 421 'Invalid Host header' — it is running an OLD image from "
+            "before the Host-header fix. Redeploy it with the latest code."
+        )
+    return f"the server answered HTTP {code}; the MCP handshake still failed (see the error above)."
+
+
 async def main() -> None:
+    url = os.getenv("CLM_MCP_URL")
     # The MCP server is launched for the lifetime of this `async with`; the orchestrator
     # calls it as a standard tool client (the same workflow as orchestrator.py, over MCP).
-    async with build_mcp_tool() as mcp_tool:
-        orchestrator = build_orchestrator(mcp_tool)
-        target = os.getenv("CLM_MCP_URL") or f"local stdio ({SERVER_PATH.name})"
-        print(
-            f"✓ Orchestrator on '{settings.model_orchestrator}' calling the clm-mcp server "
-            f"as an MCP client via {target}\n"
-        )
+    try:
+        async with build_mcp_tool() as mcp_tool:
+            orchestrator = build_orchestrator(mcp_tool)
+            target = url or f"local stdio ({SERVER_PATH.name})"
+            print(
+                f"✓ Orchestrator on '{settings.model_orchestrator}' calling the clm-mcp server "
+                f"as an MCP client via {target}\n"
+            )
 
-        session = orchestrator.create_session()
-        for prompt in DEMO:
-            print("―" * 80)
-            print("USER:", prompt)
-            print("ORCHESTRATOR:", await run_agent(orchestrator, prompt, session=session), "\n")
+            session = orchestrator.create_session()
+            for prompt in DEMO:
+                print("―" * 80)
+                print("USER:", prompt)
+                print("ORCHESTRATOR:", await run_agent(orchestrator, prompt, session=session), "\n")
+    except Exception as exc:
+        if not url:  # local stdio failure — let the real traceback surface
+            raise
+        print(
+            "\n".join(
+                [
+                    "",
+                    f"✗ Could not connect to the remote clm-mcp server at {url}",
+                    f"    ({type(exc).__name__}: {exc})",
+                    f"  Diagnosis: {_diagnose_remote_mcp(url)}",
+                    "  Fix — redeploy the server with the latest code, then retry:",
+                    "      bash deploy/mcp-server/deploy.sh",
+                    f"      curl -s -o /dev/null -w '%{{http_code}}\\n' {url}   # must NOT be 421",
+                    "",
+                ]
+            ),
+            file=sys.stderr,
+        )
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":

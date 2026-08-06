@@ -235,8 +235,9 @@ at your URL. *(Task 2's orchestrator ran **in-process** from your terminal — n
 portal — so you create a fresh agent here whose **only** tool is the MCP server. The drafting & clause-risk
 grounding still runs, but **server-side**, behind that tool.)*
 
-1. Open your project → **Agents** → **+ New agent** → **Tools** → **Add tool** →
-   **Model Context Protocol (MCP)** / *Custom MCP server*.
+1. Open your project → **Agents** → **+ New agent**. In the **Details** tab, set **Name** =
+   `clm-contract-agent` (the portal's default is `new-agent` — rename it so the screenshots make sense).
+   Then → **Tools** → **Add tool** → **Model Context Protocol (MCP)** / *Custom MCP server*.
 2. Set **Server label** = `clm-mcp` and **Server URL** = `https://<your-app>.azurecontainerapps.io/mcp`.
    Authentication = **No authentication** (matches Part A). Save.
 3. Open the **Playground** and ask, e.g.:

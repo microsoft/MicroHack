@@ -127,7 +127,8 @@ The script reads the repo-root `.env` and auto-discovers the resource group, Fou
 managed identity** and grants it a data-plane role on the Foundry account so the server's own tools can
 call your models.
 
-**Part B — Foundry Playground.** In [ai.azure.com](https://ai.azure.com): agent → **Tools → Add MCP tool**,
+**Part B — Foundry Playground.** In [ai.azure.com](https://ai.azure.com): **+ New agent**, name it
+`clm-contract-agent` (rename from the default `new-agent`), then **Tools → Add MCP tool**,
 Server label `clm-mcp`, Server URL `https://…/mcp`, **No authentication**. In the Playground ask it to
 analyze a clause, **approve** the tool call → the agent calls `analyze_contract` on your remote server.
 

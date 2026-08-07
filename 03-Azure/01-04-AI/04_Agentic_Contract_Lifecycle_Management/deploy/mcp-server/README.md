@@ -30,6 +30,7 @@ bash deploy/mcp-server/deploy.sh          # Codespaces / Linux / macOS / Azure C
 > **Codespaces / Cloud Shell = a Linux `bash` shell.** Use the `bash deploy/mcp-server/deploy.sh`
 > line above — the `.ps1` is Windows PowerShell only and, run in bash, fails with
 > `bash: ./deploy/mcp-server/deploy.ps1: Permission denied`.
+
 Prereq: `az login` on your lab subscription. The script echoes what it discovered
 (resource group / account / region), then prints the `…/mcp` URL. Use that URL in
 the Foundry portal (Task 4 · Part B) or locally with

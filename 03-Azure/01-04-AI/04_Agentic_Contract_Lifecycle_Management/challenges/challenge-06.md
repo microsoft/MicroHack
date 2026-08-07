@@ -17,7 +17,7 @@ If something isn't working as expected, please let your coach know.
 
 > 🧩 **How to use this challenge:** the code in this folder is a **complete, working reference
 > implementation** — you're not building it from a blank file. **Run it, read it, and understand *why*
-> it works**, then take it further with **🚀 Go Further**. Stuck? The code *is* the answer key.
+> it works**. Stuck? The code *is* the answer key.
 
 ## 🎯 Objective
 
@@ -140,15 +140,6 @@ on demand, using Azure OIDC. Configure the repo secrets (`AZURE_CLIENT_ID`, `AZU
   strict threshold (e.g. `--gate 0.0` on an unhardened agent).
 - After hardening, the attack success / defect rate is **measurably lower**.
 - `ci-eval.yml` runs the quality + safety gates (or cleanly no-ops when secrets are absent).
-
-## 🚀 Go Further
-
-- **Bring your own attack prompts**: feed `RedTeam` a custom objectives JSON with `target_harms` to
-  probe CLM-specific harms.
-- Red-team the **Orchestrator** end-to-end (not just one specialist) to catch routing-layer leaks.
-- Add **`ProtectedMaterialEvaluator`** and a groundedness safety check to the gate.
-- Turn on **portal continuous evaluation / monitoring** and compare it to this CI gate.
-- Add a PR-triggered **required check** so no merge lands without passing the safety gate.
 
 ## 🛠️ Troubleshooting
 

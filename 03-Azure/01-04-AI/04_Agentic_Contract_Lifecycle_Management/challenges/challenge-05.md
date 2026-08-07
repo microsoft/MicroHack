@@ -77,13 +77,18 @@ Copilot** → **Continue**. This provisions an **Azure Bot Service** behind the 
 >
 > <img src="../images/challenge-05/steps/05-publish-menu.png" alt="Publish dropdown showing Teams & Microsoft 365 Copilot" width="60%">
 
-### Task 3 · Fill the metadata & sideload (~10 min)
+### Task 3 · Fill the publish details & submit (~10 min)
 
-Fill the app details (**App name**, short + full **description**, **developer/publisher** name and
-placeholder URLs) and upload the two **icons** — **color 192×192** and **outline 32×32** (the
-`src/manifest/` folder ships branded placeholders; regenerate with `python src/scripts/make_icons.py`).
-Expand **More** to set the required **Developer website / Terms of use / Privacy statement** URLs, then
-select **Next: Publish options** (a.k.a. **Prepare Agent**).
+Fill the **"Publish to Teams and Microsoft 365"** form: **Agent name**, **Short description**, and
+**Description**. Leave **Azure bot services** on its auto-filled value — Foundry provisions the bot for
+you. Expand **More** and set the required **Developer website / Terms of use / Privacy statement** URLs
+(`https://example.com` placeholders are fine for the lab), then select **Next: Publish options**
+(older portal builds label this button **Prepare Agent**).
+
+> **App icons:** the current in-product form auto-packages default icons, so you usually **don't upload
+> any here**. *If* your tenant's form (or the **Download & customize** route below) asks for them, use the
+> branded **color 192×192** + **outline 32×32** placeholders in `src/manifest/` (regenerate with
+> `python src/scripts/make_icons.py`).
 
 > 📸 **Publish details form — what you'll see:** the **"Publish to Teams and Microsoft 365"** dialog with
 > the agent name, descriptions, the auto-provisioned **Azure bot services**, and the **More** section
@@ -91,8 +96,7 @@ select **Next: Publish options** (a.k.a. **Prepare Agent**).
 >
 > <img src="../images/challenge-05/steps/06-publish-details.png" alt="Publish to Teams and Microsoft 365 metadata form" width="70%">
 
-When the package is ready (~1–2 min), select **Continue the in-product publishing flow**, choose a
-**publish scope**, and **Submit**:
+On the **Publish options** step, choose a **publish scope** and **Submit** (packaging takes ~1–2 min):
 
 | Scope | Visibility | Admin approval | Use for |
 |---|---|---|---|

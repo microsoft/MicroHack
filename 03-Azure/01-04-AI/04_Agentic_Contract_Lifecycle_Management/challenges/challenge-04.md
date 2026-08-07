@@ -192,12 +192,18 @@ from the **repo root**. The script **reads your `.env`** (the same one the agent
 nothing to fill in:
 
 ```bash
-bash deploy/mcp-server/deploy.sh            # Linux/macOS/Cloud Shell
+bash deploy/mcp-server/deploy.sh            # Codespaces / Linux / macOS / Cloud Shell
 ```
 ```powershell
-./deploy/mcp-server/deploy.ps1              # Windows PowerShell (same auto-discovery)
+./deploy/mcp-server/deploy.ps1              # Windows PowerShell ONLY — not for Codespaces/bash
 ```
 
+> [!IMPORTANT]
+> **In GitHub Codespaces (and Azure Cloud Shell) you're in a Linux `bash` shell — run the
+> `bash deploy/mcp-server/deploy.sh` line.** The `.ps1` is **Windows PowerShell only**; running
+> `./deploy/mcp-server/deploy.ps1` in bash fails with
+> `bash: ./deploy/mcp-server/deploy.ps1: Permission denied`. Both lines run the *same* deploy with
+> the same auto-discovery — just pick the one for your shell.
 The script builds the image, creates the Container App with **external HTTPS ingress**, turns on a
 **system-assigned managed identity**, and grants it a data-plane role on your Foundry account so the
 server's own tools can call your models. It echoes what it discovered, then prints your endpoint:

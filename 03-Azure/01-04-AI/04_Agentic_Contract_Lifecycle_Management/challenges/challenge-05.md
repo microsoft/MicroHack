@@ -19,7 +19,7 @@ If something isn't working as expected, please let your coach know.
 
 > 🧩 **How to use this challenge:** the code in this folder is a **complete, working reference
 > implementation** — you're not building it from a blank file. **Run it, read it, and understand *why*
-> it works**, then take it further with **🚀 Go Further**. Stuck? The code *is* the answer key.
+> it works**. Stuck? The code *is* the answer key.
 
 ## 🎯 Objective
 
@@ -149,13 +149,6 @@ python src/proactive_alerts.py --from-renewals --days 30
 - Your **`clm-contract-agent`** answers **live in Teams and M365 Copilot** with grounded, cited responses.
 - *(Optional · Tasks 5–7)* A **proactive renewal/risk alert** appears in a Teams channel/chat
   (e.g. the CT-4821 message) without the user prompting first.
-
-## 🚀 Go Further
-
-- **Scope access** with Entra (who can use the agent); add agent-store metadata + governance.
-- Schedule the renewal scan (GitHub Action / cron) so alerts fire daily and post an **Adaptive Card**
-  instead of plain text.
-- Add an **approval action** in the card ("Send renewal notice") that calls back into the workflow.
 
 ## 🛠️ Troubleshooting
 

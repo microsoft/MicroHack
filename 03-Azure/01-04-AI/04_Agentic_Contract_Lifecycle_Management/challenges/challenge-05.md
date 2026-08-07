@@ -65,17 +65,39 @@ In the **[Foundry portal](https://ai.azure.com)**, open the **`clm-contract-agen
 
 ### Task 2 · Publish to Teams & M365 Copilot (~10 min)
 
-**Details → Channels → "Teams and Microsoft 365 Copilot" → Publish.** This provisions an **Azure
-Bot Service**. (First time: `az provider register --namespace Microsoft.BotService`.)
+Open the agent and select **Publish** (top of the page) → **Publish to Teams and Microsoft 365
+Copilot** → **Continue**. This provisions an **Azure Bot Service** behind the scenes — no bot code.
 
-> 📸 **Screenshot slot — what you'll see:** the **Channels** page with "Teams and Microsoft 365 Copilot" → **Publish**.
+> First time only: `az provider register --namespace Microsoft.BotService` (so the portal can create
+> the bot). Leave the **Azure bot services** dropdown on *auto* — let Foundry provision a fresh,
+> properly-wired bot. Re-publishing? **Delete any stale Azure Bot** from earlier attempts first, or
+> you'll hit an **App ID collision**.
+
+> 📸 **Screenshot slot — what you'll see:** the **Publish** button → **"Publish to Teams and Microsoft 365 Copilot"**.
 >
 > <img src="../images/challenge-05/steps/01-channels-publish.svg" alt="Screenshot slot: publish to Teams" width="80%">
 
 ### Task 3 · Fill the metadata & sideload (~10 min)
 
-Fill the metadata (name, description, publisher). Choose **direct publish** or **download the
-manifest** and sideload it (`manifest/` has a template).
+Fill the app details (**App name**, short + full **description**, **developer/publisher** name and
+placeholder URLs) and upload the two **icons** — **color 192×192** and **outline 32×32** (the
+`src/manifest/` folder ships branded placeholders; regenerate with `python src/scripts/make_icons.py`).
+Select **Prepare Agent**.
+
+When the package is ready (~1–2 min), select **Continue the in-product publishing flow**, choose a
+**publish scope**, and **Submit**:
+
+| Scope | Visibility | Admin approval | Use for |
+|---|---|---|---|
+| **Individual / Shared** | under **Apps → Your agents** | Not required | this lab, personal testing |
+| **Organization** | under **Built by your org** | Required | tenant-wide rollout |
+
+For the lab pick **Individual scope**. After it succeeds, find the agent in Teams under **Apps → Your
+agents** (allow 1–2 min).
+
+> **If direct publish returns a 400 error:** open the **Download & customize** tab instead, download the
+> app package, and sideload it manually — in Teams: **Apps → Manage your apps → Upload an app → Upload a
+> custom app** → pick the zip. (`src/manifest/` has a ready template if you build the zip yourself.)
 
 ### Task 4 · Test the agent live (~8 min)
 
@@ -89,6 +111,30 @@ call if prompted).
 
 ✅ **You'll know publishing worked when:** you can chat with the agent inside Teams and it returns the
 same grounded, cited answers you saw in the terminal in Challenges 2 & 4.
+
+### Troubleshooting Teams deployment
+
+**Can't find the agent in Teams (after direct publish):**
+- Check **Apps → Your agents** in Teams.
+- Wait 1–2 minutes for it to appear after publishing.
+- Verify publishing completed successfully in the Foundry portal.
+
+**Can't upload the app (manual / Download & customize):**
+- Ensure the `manifest.zip` isn't corrupted (re-download, or re-zip `src/manifest/`).
+- Check your Teams admin hasn't disabled **custom app uploads** (sideloading) — many corp tenants do; use a coach-provided tenant.
+- Verify the icons are the correct sizes (**192×192** and **32×32**).
+
+**Agent doesn't respond:**
+- Wait ~30 s after installation for the bot to initialize.
+- Confirm the **Azure Bot Service** was created (shown during publishing).
+- Test the agent in the Foundry **Playground** first.
+
+**Responses are generic (missing your data or tools):**
+- Unlike a simple file-search agent, this one is grounded through its **MCP tool** (Ch4) — confirm the
+  **MCP endpoint from Challenge 4 is still deployed** and reachable, and **approve the tool call** if
+  Teams prompts you.
+- Re-test the same prompt in the Foundry **Playground**; if it's grounded there but generic in Teams,
+  it's a channel / tool-approval issue, not a grounding one.
 
 ### Task 5 · (Optional) Build the Obligation & Renewal agent (~10 min)
 
@@ -120,10 +166,18 @@ Upcoming renewals (next 60 days):
 
 ### Task 6 · (Optional) Capture a conversation reference (~10 min)
 
-In your bot's message handler, on any inbound activity save
-`TurnContext.get_conversation_reference(activity)` and persist `service_url` + `conversation.id`.
-Put them in `.env` as `TEAMS_SERVICE_URL` and `TEAMS_CONVERSATION_ID` (and set `MICROSOFT_APP_ID`
-/ `MICROSOFT_APP_PASSWORD` / `MICROSOFT_APP_TENANT_ID`).
+Proactive alerts need a **saved conversation reference** (service URL + conversation id) for a real
+Teams chat with your bot. A Foundry-published agent is **managed**, so you don't own its message
+handler — use the helper bot [`src/capture_reference_bot.py`](../src/capture_reference_bot.py) to grab
+it:
+
+1. Set `MICROSOFT_APP_ID` / `MICROSOFT_APP_PASSWORD` / `MICROSOFT_APP_TENANT_ID` in `.env` (Azure
+   portal → your Bot → **Configuration**; create a client secret if you don't have the password).
+2. `python src/capture_reference_bot.py`, then expose it: `devtunnel host -p 3978 --allow-anonymous`.
+3. Temporarily point your Azure Bot's **Messaging endpoint** at `https://<tunnel>/api/messages`.
+4. Message the agent **once** in Teams — the helper writes `TEAMS_SERVICE_URL` +
+   `TEAMS_CONVERSATION_ID` to `.env` and replies to confirm.
+5. **Revert** the messaging endpoint (so the agent keeps answering).
 
 ### Task 7 · (Optional) Fire a proactive alert (~10 min)
 
@@ -156,7 +210,7 @@ python src/proactive_alerts.py --from-renewals --days 30
 |---------|-----|
 | Publish option missing | Ensure `Microsoft.BotService` is registered and you have rights to create an Azure Bot. |
 | Bot responds in Teams but not Copilot | Confirm the app is approved for M365 Copilot and the manifest scopes include it. |
-| `continue_conversation` 401/403 | Check `MICROSOFT_APP_ID`/`MICROSOFT_APP_PASSWORD`; the bot must own the saved conversation reference. |
+| `continue_conversation` 401/403 | Foundry provisions a **single-tenant** bot — set `MICROSOFT_APP_TENANT_ID` in `.env` (the adapter now scopes auth to that tenant). Also check `MICROSOFT_APP_ID`/`MICROSOFT_APP_PASSWORD`; the bot must own the saved conversation reference. |
 | Alert never arrives | Verify `TEAMS_SERVICE_URL` + `TEAMS_CONVERSATION_ID` came from a **real inbound** message to *this* bot. |
 | Want to test with no bot | Use `--dry-run` to print the alert text. |
 

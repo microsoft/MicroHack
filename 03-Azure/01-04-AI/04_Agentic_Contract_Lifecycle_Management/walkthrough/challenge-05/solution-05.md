@@ -23,11 +23,11 @@ contracts auto-renew — driven by the **Obligation & Renewal** agent.
 
 ### Part A · Publish to Teams & M365 Copilot (portal)
 1. In the **Foundry portal**, open the **`clm-contract-agent`** you published in **Challenge 4 (Task 4 Part B)** — the MCP-backed portal agent. *(The `clm-orchestrator` from Ch4 Task 2 was in-process and isn't in the portal.)*
-2. **Details → Channels → "Teams and Microsoft 365 Copilot" → Publish** (provisions an **Azure Bot Service**; first time: `az provider register --namespace Microsoft.BotService`).
-3. Fill the metadata, then **direct publish** or download & sideload the manifest from [`src/manifest/`](../../src/manifest/).
+2. Select **Publish** → **Publish to Teams and Microsoft 365 Copilot** → **Continue** (provisions an **Azure Bot Service**; first time: `az provider register --namespace Microsoft.BotService`). Leave the **Azure bot services** dropdown on *auto*; delete any stale bot from earlier attempts to avoid an **App ID collision**.
+3. Fill the app details + upload **192×192** and **32×32** icons → **Prepare Agent** → **Continue the in-product publishing flow** → **Individual scope** → **Submit**. Find it in Teams under **Apps → Your agents**. *(If direct publish returns a **400**, use the **Download & customize** tab and sideload the zip from [`src/manifest/`](../../src/manifest/).)*
 4. **Test live** in Teams and M365 Copilot: ask it to draft an NDA and review the Acme draft. ✅ Part A worked when the agent returns the **same grounded, cited answers** you saw in the terminal in Ch2 & Ch4.
 
-> 📸 **Screenshot slot:** the **Channels** page ("Teams and Microsoft 365 Copilot" → **Publish**), then the agent answering **live in a Teams chat** with cited output.
+> 📸 **Screenshot slot:** the **Publish → "Publish to Teams and Microsoft 365 Copilot"** flow, then the agent answering **live in a Teams chat** with cited output.
 >
 > <img src="../../images/challenge-05/steps/01-channels-publish.svg" alt="Screenshot slot: publish to Teams" width="80%">
 > <img src="../../images/challenge-05/steps/02-teams-live.svg" alt="Screenshot slot: agent live in Teams" width="80%">
@@ -70,7 +70,20 @@ python src/proactive_alerts.py --from-renewals --days 30 --dry-run    # preview 
 > <img src="../../images/challenge-05/steps/04-renewal-summary.svg" alt="Screenshot slot: renewal summary" width="80%">
 
 ### Task 6 · Capture a conversation reference
-In your bot's message handler, on **any** inbound activity save `TurnContext.get_conversation_reference(activity)` and persist `service_url` + `conversation.id` into `.env` as `TEAMS_SERVICE_URL` / `TEAMS_CONVERSATION_ID` (plus `MICROSOFT_APP_ID` / `MICROSOFT_APP_PASSWORD` / `MICROSOFT_APP_TENANT_ID`). [`src/proactive_alerts.py`](../../src/proactive_alerts.py) rebuilds the reference from those vars:
+A Foundry-published agent is **managed**, so you don't own its message handler. Use
+[`src/capture_reference_bot.py`](../../src/capture_reference_bot.py) — a tiny aiohttp bot that, on
+**any** inbound activity, calls `TurnContext.get_conversation_reference(activity)` and writes
+`TEAMS_SERVICE_URL` + `TEAMS_CONVERSATION_ID` into `.env` (with `MICROSOFT_APP_ID` /
+`MICROSOFT_APP_PASSWORD` / `MICROSOFT_APP_TENANT_ID`). Run it, expose it with a dev tunnel, point your
+Azure Bot's **Messaging endpoint** at `https://<tunnel>/api/messages`, message the agent once, then
+revert the endpoint:
+```python
+# src/capture_reference_bot.py
+async def _on_turn(turn_context):
+    ref = TurnContext.get_conversation_reference(turn_context.activity)
+    _upsert_env({"TEAMS_SERVICE_URL": ref.service_url,
+                 "TEAMS_CONVERSATION_ID": ref.conversation.id})
+```
 ```python
 # src/proactive_alerts.py
 def _conversation_reference():
@@ -106,7 +119,8 @@ python src/proactive_alerts.py --from-renewals --days 30      # generate from th
 | Path | Role |
 |------|------|
 | [`src/agents/obligation_renewal_agent.py`](../../src/agents/obligation_renewal_agent.py) | Reads contract status + upcoming renewals (GPT-5.4-nano) |
-| [`src/proactive_alerts.py`](../../src/proactive_alerts.py) | Sends proactive Teams renewal alerts via the Bot Framework |
+| [`src/proactive_alerts.py`](../../src/proactive_alerts.py) | Sends proactive Teams renewal alerts via the Bot Framework (tenant-aware adapter) |
+| [`src/capture_reference_bot.py`](../../src/capture_reference_bot.py) | Helper bot that captures `TEAMS_SERVICE_URL` + `TEAMS_CONVERSATION_ID` from a real Teams chat |
 | [`src/manifest/`](../../src/manifest/) | Teams / M365 Copilot app package (manifest + branded icons) |
 
 ## Run it
@@ -121,6 +135,9 @@ python src/proactive_alerts.py --from-renewals --days 30       # live send
 
 | Symptom | Cause / fix |
 |---------|-------------|
+| Published, but "nothing in Teams" | Publish with **Individual scope → Submit**, then look under **Apps → Your agents** (wait 1–2 min). If direct publish 400s, use **Download & customize** and sideload the zip. |
 | Can't sideload the Teams app | Many corp tenants block sideloading — use a coach-provided tenant. |
+| `continue_conversation` 401/403 | Foundry provisions a **single-tenant** bot — set `MICROSOFT_APP_TENANT_ID` in `.env` (adapter scopes auth to it). |
+| App ID collision on re-publish | Delete the stale Azure Bot from the earlier attempt, then re-publish (Foundry provisions a fresh one). |
 | No renewals found | Seed Azure SQL (`src/scripts/seed_sql.py`) or rely on the seed-data fallback. |
 | `Microsoft.BotService` errors | Register the provider: `az provider register --namespace Microsoft.BotService`. |

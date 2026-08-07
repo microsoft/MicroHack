@@ -56,13 +56,24 @@ def _conversation_reference():
     )
 
 
-def _adapter():
+def build_adapter():
+    """Tenant-aware BotFrameworkAdapter.
+
+    Foundry's "Publish to Teams and Microsoft 365 Copilot" provisions a
+    **single-tenant** Azure Bot by default. Without the tenant authority the
+    adapter requests its outbound token from the *multi-tenant* login authority,
+    and Teams rejects the proactive call with **401/403**. Passing
+    `channel_auth_tenant` scopes auth to the bot's home tenant so
+    `continue_conversation(...)` is accepted. (Harmless for multi-tenant bots —
+    leave `MICROSOFT_APP_TENANT_ID` blank to keep the old behaviour.)
+    """
     from botbuilder.core import BotFrameworkAdapter, BotFrameworkAdapterSettings
 
     return BotFrameworkAdapter(
         BotFrameworkAdapterSettings(
             app_id=os.environ.get("MICROSOFT_APP_ID", ""),
             app_password=os.environ.get("MICROSOFT_APP_PASSWORD", ""),
+            channel_auth_tenant=os.environ.get("MICROSOFT_APP_TENANT_ID") or None,
         )
     )
 
@@ -70,7 +81,7 @@ def _adapter():
 async def _send(text: str) -> None:
     from botbuilder.core import TurnContext
 
-    adapter = _adapter()
+    adapter = build_adapter()
     reference = _conversation_reference()
 
     async def _callback(turn_context: TurnContext):

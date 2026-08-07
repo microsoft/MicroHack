@@ -23,6 +23,7 @@ helpers live in [`clm_common/`](clm_common/); every entry-point script adds `src
 | [`orchestrator_mcp.py`](orchestrator_mcp.py) | Orchestrator as MCP client — local stdio, or remote via `CLM_MCP_URL` | 4 |
 | [`../Dockerfile`](../Dockerfile) + [`../deploy/mcp-server/`](../deploy/mcp-server/) | Containerize + deploy the MCP server to Azure Container Apps (remote `/mcp` for Foundry) | 4 |
 | [`proactive_alerts.py`](proactive_alerts.py) | Proactive Teams renewal alerts via the Bot Framework | 5 |
+| [`capture_reference_bot.py`](capture_reference_bot.py) | Helper bot that captures a Teams conversation reference into `.env` (for proactive alerts) | 5 |
 | [`manifest/`](manifest/) | Teams / M365 Copilot app package (manifest + icons) | 5 |
 | [`red_team.py`](red_team.py) | Automated red-teaming → `redteam_scorecard.json` | 6 |
 | [`safety_eval.py`](safety_eval.py) | Safety evaluation + CLM guardrail gate | 6 |

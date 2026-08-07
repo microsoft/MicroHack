@@ -21,12 +21,15 @@ use) for `AZURE_AI_PROJECT_ENDPOINT` + `MODEL_*`, then **auto-discovers** the
 resource group, Foundry account id and region from that endpoint. Usually just:
 
 ```bash
-bash deploy/mcp-server/deploy.sh          # Linux / macOS / Azure Cloud Shell
+bash deploy/mcp-server/deploy.sh          # Codespaces / Linux / macOS / Azure Cloud Shell
 ```
 ```powershell
-./deploy/mcp-server/deploy.ps1            # Windows PowerShell — same auto-discovery
+./deploy/mcp-server/deploy.ps1            # Windows PowerShell ONLY — not for Codespaces/bash
 ```
 
+> **Codespaces / Cloud Shell = a Linux `bash` shell.** Use the `bash deploy/mcp-server/deploy.sh`
+> line above — the `.ps1` is Windows PowerShell only and, run in bash, fails with
+> `bash: ./deploy/mcp-server/deploy.ps1: Permission denied`.
 Prereq: `az login` on your lab subscription. The script echoes what it discovered
 (resource group / account / region), then prints the `…/mcp` URL. Use that URL in
 the Foundry portal (Task 4 · Part B) or locally with

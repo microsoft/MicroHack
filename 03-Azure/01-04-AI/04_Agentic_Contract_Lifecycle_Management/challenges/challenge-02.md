@@ -257,22 +257,27 @@ tells you the expected behavior:
 > registered server-side, so it won't appear in portal → **Agents** or the **Playground**. Running the demo
 > script is a fully valid way to complete this task (the terminal output *is* your evidence).
 >
-> **Want the Playground path too?** Publish the same agent (name, persona, gpt-5.4, Foundry IQ grounding) as a
-> persistent Foundry agent, then open it in the Playground:
+> **Want the Playground path too?** One script publishes the persistent Foundry versions of **all three
+> specialist agents** (Intake & Drafting · gpt-5.4, Clause & Risk · gpt-5.6-sol, Obligation & Renewal ·
+> gpt-5.4-nano — each with the same persona, model and grounding/tools as its in-process build). After it
+> runs, **all of them appear in portal → Agents** and you can open any in the Playground:
 > ```bash
-> python src/agents/publish_agent.py          # create/update the portal agent
+> python src/agents/publish_agent.py          # publish ALL specialist agents (portal → Agents)
 > python src/agents/publish_agent.py --list    # list published versions
-> python src/agents/publish_agent.py --delete  # optional — remove it later (NOT required)
+> python src/agents/publish_agent.py --agent intake-drafting-agent  # publish just one
+> python src/agents/publish_agent.py --delete  # optional — remove them later (NOT required)
 > ```
-> Grounded drafting, cited Q&A and the refusal guardrail all work in the Playground. The `get_contract_status`
-> **function tool runs client-side**, so the portal will *request* the call and let you paste the result — use
-> the demo script for the full `CT-4821` tool round-trip.
+> Grounded drafting, cited Q&A, clause-risk analysis and the refusal guardrail all work in the Playground.
+> The `get_contract_status` / `list_upcoming_renewals` **function tools run client-side**, so the portal
+> will *request* the call and let you paste the result — use the demo scripts for the full tool round-trip.
+> *(The Challenge 4 **orchestrator** isn't a standalone prompt agent — it calls these specialists as tools
+> in-process — so it's run with `python src/orchestrator.py`, not published here.)*
 >
-> **Leaving it published is free and recommended.** A published prompt-agent is just a definition — it
+> **Leaving them published is free and recommended.** A published prompt-agent is just a definition — it
 > costs nothing to exist, and deleting it is *not* required before Challenge 3. Challenge 3's monitoring
-> is **trace-based** (it reads telemetry from *running the demos*), so it works whether or not this agent
-> is registered in **Assets → Agents**. Already deleted it? Just re-run `python src/agents/publish_agent.py`
-> to bring it back — nothing else to redo.
+> is **trace-based** (it reads telemetry from *running the demos*), so it works whether or not these agents
+> are registered in **Assets → Agents**. Already deleted them? Just re-run `python src/agents/publish_agent.py`
+> to bring them back — nothing else to redo.
 
 > 📸 **Screenshot slot — what you'll see:** the Foundry **Playground** with the agent giving a grounded, cited answer.
 >

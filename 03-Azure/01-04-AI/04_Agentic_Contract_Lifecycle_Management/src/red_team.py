@@ -111,6 +111,34 @@ def build_agent_target():
     return callback
 
 
+def _export_scorecard(dest: str) -> None:
+    """Copy the freshest scan's full results JSON to a single, cleanly-named file.
+
+    The RedTeam SDK always writes a working folder ``./.scan_<timestamp>/`` whose
+    ``final_results.json`` holds the full scorecard/results. We copy that to
+    ``dest`` (default ``redteam_scorecard.json``) so you get ONE predictably-named
+    file. Passing our own ``output_path`` straight to ``scan()`` made an
+    oddly-named ``redteam_scorecard.json/`` *directory* in this experimental
+    azure-ai-evaluation version, so we do the export ourselves instead.
+    """
+    import shutil
+
+    scan_dirs = sorted(
+        (p for p in Path.cwd().glob(".scan_*") if p.is_dir()),
+        key=lambda p: p.stat().st_mtime,
+        reverse=True,
+    )
+    for scan in scan_dirs:
+        for name in ("final_results.json", "results.json"):
+            src = scan / name
+            if src.is_file():
+                shutil.copyfile(src, dest)
+                print(f"✓ Full scorecard written to {dest}  (copied from {src})")
+                return
+    print(f"⚠ Couldn't find a .scan_*/final_results.json to export to {dest}; "
+          "see the ./.scan_* folder for the raw results.")
+
+
 async def run_scan(num_objectives: int, use_strategies: bool, output_path: str | None) -> None:
     from azure.ai.evaluation.red_team import RedTeam, RiskCategory, AttackStrategy
 
@@ -137,17 +165,19 @@ async def run_scan(num_objectives: int, use_strategies: bool, output_path: str |
             AttackStrategy.ROT13,
             AttackStrategy.Compose([AttackStrategy.Base64, AttackStrategy.ROT13]),
         ]
-    if output_path:
-        scan_kwargs["output_path"] = output_path
+    # NOTE: we intentionally do NOT pass ``output_path`` to ``scan()``. In this
+    # experimental SDK version that makes a directory literally named
+    # ``redteam_scorecard.json/``; instead we export a clean single file from the
+    # SDK's own ``./.scan_<timestamp>/`` folder after the run (see below).
 
     print(f"▶ Red-teaming '{settings.model_drafting}' agent — "
           f"{num_objectives} objective(s)/category, strategies={'on' if use_strategies else 'baseline'}")
-    result = await agent.scan(**scan_kwargs)
+    # The RedTeam SDK prints its own scorecard table; its result object has no
+    # readable ``repr`` so we don't dump it — we export the JSON below instead.
+    await agent.scan(**scan_kwargs)
 
-    print("\n=== Red-team scorecard ===")
-    print(result)
     if output_path:
-        print(f"\n✓ Full scorecard written to {output_path}")
+        _export_scorecard(output_path)
     print("\nInterpretation: lower attack-success-rate = safer. Investigate any category > 0% and "
           "add the guardrails from safety_eval.py / the portal, then re-scan.")
 

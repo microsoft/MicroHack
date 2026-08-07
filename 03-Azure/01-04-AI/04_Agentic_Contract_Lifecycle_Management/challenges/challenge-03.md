@@ -107,9 +107,9 @@ Then open the spans — **New Foundry:** **Build → your agent/model → `Monit
 > [!IMPORTANT]
 > **Tracing and Agent Monitoring are driven by telemetry — not by a registered agent.** The demos run
 > in-process and stream OpenTelemetry spans to Application Insights, so these views populate from
-> *running the demos*, **not** from anything in **Assets → Agents**. An empty Agents list is expected and
-> does not affect monitoring. (The optional Challenge 2 `publish_agent.py` step is unrelated: you don't
-> need a published agent here, and deleting one removes no telemetry.)
+> *running the demos*, **not** from anything in **Assets → Agents**. An empty Agents list is fine — and so
+> is a full one — monitoring is unaffected either way. (The optional Challenge 2 `publish_agent.py` step is
+> unrelated: you don't need published agents here, and publishing or deleting them adds/removes no telemetry.)
 
 > [!NOTE]
 > Spans take **1–2 minutes** to appear after a run — refresh if the timeline is empty at first. To

@@ -17,9 +17,9 @@ If something isn't working as expected, please let your coach know.
 > - **GitHub Codespaces** access — everything runs in the browser; no local tooling required.
 
 > 🧩 **How to use this challenge:** for a MicroHack event your Azure resources are **provisioned for
-> you** — you just point your `.env` at them (Task 4) and **confirm you understand what got created**:
+> you** — you just point your `.env` at them (Task 3) and **confirm you understand what got created**:
 > the Foundry project, the three-model GPT fleet, and the search index the later challenges depend on.
-> *(Running outside the platform? One `azd up` provisions the same resources — see Task 4.)*
+> *(Running outside the platform? One `azd up` provisions the same resources — see Task 3.)*
 
 ## 🎯 Objective
 
@@ -33,7 +33,7 @@ If something isn't working as expected, please let your coach know.
 Everything runs from **GitHub Codespaces** using the devcontainer in this repo (Python 3.11, Azure
 CLI, `azd`, Node). For a MicroHack event the resources below are **already provisioned** into **one
 resource group** and their endpoints appear on your **lab dashboard**; you copy them into `.env` in
-Task 4. *(Self-hosting? One **`azd up`** — Bicep in [`infra/`](../labautomation/infra/) — provisions the
+Task 3. *(Self-hosting? One **`azd up`** — Bicep in [`infra/`](../labautomation/infra/) — provisions the
 same resource group and autofills `.env`.)*
 
 The following image illustrates the complete setup — every Azure resource, the LLM model fleet, and
@@ -133,53 +133,29 @@ text at crawl time); regenerate the PDFs with `python src/scripts/make_corpus_pd
 - [ ] *(Self-hosting only)* Your Azure subscription can deploy **GPT** models (ask your coach if unsure).
 - [ ] You have ~30 minutes and a stable connection (provisioning takes 5–10 min on its own).
 
-### Task 1 · Open the code in a Codespace (~2 min)
+### Task 1 · Open the Codespace (~7 min)
 
-**No fork needed.** You read the challenge steps in the MicroHack repo; the **code you run lives in
-this companion repo**. Open it directly in **GitHub Codespaces** — a full VS Code + terminal in your
-browser, no local installs. Because you work off the source repo, `git pull` always gets the latest
-fixes (there's no fork to fall behind).
+**No fork needed** — the code you run lives in this repo. Open it in **GitHub Codespaces** (a full VS
+Code + terminal in your browser, zero local install); because you work off the source repo, `git pull`
+always gets the latest fixes.
 
-1. Go to **[github.com/glejdis/microhack-aiagents](https://github.com/glejdis/microhack-aiagents)**.
-2. Click the green **`< > Code`** button, then the **Codespaces** tab.
-3. Click **Create codespace on `main`**.
+1. On the repo's GitHub page, click **`< > Code` → Codespaces → Create codespace on `main`**.
+   *(Prefer local? `git clone` the repo and **Reopen in Container** with the VS Code Dev Containers
+   extension.)*
+2. Wait for the container to build — it installs dependencies with `pip install -r requirements.txt`
+   automatically. When the terminal stops scrolling and shows a prompt, it's ready.
 
-> 📸 **Screenshot slot — what you'll see:** the **Code → Codespaces → Create codespace on main** menu.
->
-> <img src="../images/challenge-01/steps/02-create-codespace.png" alt="Screenshot slot: create a Codespace" width="80%">
+<img src="../images/challenge-01/steps/02-create-codespace.png" alt="GitHub · Code → Codespaces → Create codespace on main" width="80%">
 
-✅ **You'll know it worked when:** a new browser tab opens and starts **building your Codespace**.
-
-> [!TIP]
-> Prefer working locally? `git clone https://github.com/glejdis/microhack-aiagents.git`, open it in
-> VS Code, and **Reopen in Container** (Dev Containers extension) for the same environment.
-
----
-
-### Task 2 · Launch the development environment (~5 min)
-
-Your Codespace builds the **devcontainer** automatically — no local installs, no "works on my
-machine." Everything below runs inside it.
-
-1. Wait for the build to finish — it auto-runs `pip install -r requirements.txt`. First build takes
-   a few minutes. When the terminal at the bottom stops scrolling and shows a prompt, it's ready.
-
-> 📸 **Screenshot slot — what you'll see:** the ready Codespace — a VS Code editor with a terminal at the bottom.
->
-> <img src="../images/challenge-01/steps/03-codespace-ready.png" alt="Screenshot slot: codespace ready" width="80%">
-
-✅ **You'll know it worked when:** you see a VS Code editor in the browser with a **Terminal** panel
-at the bottom showing a ready prompt (e.g. `@your-username ➜ /workspaces/microhack-aiagents (main) $`).
+✅ **You'll know it worked when:** a browser VS Code editor opens with a **Terminal** panel showing a
+ready prompt (e.g. `@your-username ➜ /workspaces/microhack-aiagents (main) $`).
 
 > [!NOTE]
-> If GitHub Codespaces is not enabled in your organization, see [enabling or disabling Codespaces](https://docs.github.com/en/codespaces/managing-codespaces-for-your-organization/enabling-or-disabling-github-codespaces-for-your-organization), or create a [free personal GitHub account](https://github.com/signup). The Free plan includes 120 core-hours/month.
-
-> [!TIP]
-> While the Codespace builds, skim the [hackathon scenario & architecture](../README.md#the-scenario--contoso-global) so the pieces you deploy here make sense.
+> If Codespaces isn't enabled in your org, see [enabling Codespaces](https://docs.github.com/en/codespaces/managing-codespaces-for-your-organization/enabling-or-disabling-github-codespaces-for-your-organization) or use a [free personal account](https://github.com/signup) (120 core-hours/month free). While it builds, skim the [scenario & architecture](../README.md#the-scenario--contoso-global) so the pieces you deploy here make sense.
 
 ---
 
-### Task 3 · Log in to Azure (~3 min)
+### Task 2 · Log in to Azure (~3 min)
 
 Now connect the terminal to your Azure account. In the Codespace **Terminal**, type this and press Enter:
 
@@ -216,19 +192,19 @@ az account set --subscription "<your-subscription-id>"
 
 ---
 
-### Task 4 · Connect to your provisioned resources (~5 min)
+### Task 3 · Connect to your provisioned resources (~5 min)
 
 For a **MicroHack event your Azure resources are already provisioned** — a resource group with the
 Foundry project, the three-model GPT fleet, and Azure AI Search. You don't deploy anything; you just
 point your `.env` at them using the values on your **lab dashboard**.
 
-**Step 4a — create your `.env`** from the template (Codespace terminal, at the repo root):
+**Step 3a — create your `.env`** from the template (Codespace terminal, at the repo root):
 
 ```bash
 cp .env.example .env
 ```
 
-**Step 4b — copy your dashboard values into `.env`.** Open `.env` in the Codespace editor and fill in
+**Step 3b — copy your dashboard values into `.env`.** Open `.env` in the Codespace editor and fill in
 the values shown on your lab dashboard:
 
 | Lab dashboard credential | `.env` variable | Example value |
@@ -246,10 +222,6 @@ the values shown on your lab dashboard:
 > (`clm-search`) already have the right defaults in `.env.example`, so at minimum you only need to
 > paste the two **endpoints** and the **App Insights connection string**. Paste the model names too if
 > your dashboard shows different values.
-
-> 📸 **Screenshot slot — what you'll see:** your lab dashboard listing the resource endpoints and model names.
->
-> <img src="../images/challenge-01/steps/04b-lab-dashboard.png" alt="Screenshot slot: lab dashboard credentials" width="80%">
 
 ✅ **You'll know it worked when:** `.env` has real values for `AZURE_AI_PROJECT_ENDPOINT` and
 `AZURE_SEARCH_ENDPOINT` (not blank). Leave the `SHAREPOINT_*` and the Challenge 5 `MICROSOFT_APP_*` /
@@ -279,7 +251,7 @@ azd up                  # answer: environment name (e.g. clm-microhack), your su
 
 It provisions for **5–10 minutes**, assigns the RBAC roles the later challenges need, creates the
 `clm-search` Foundry IQ connection, and runs the `postprovision` hook (`src/scripts/write_env.py`) to
-**write your `.env` automatically** — so you can skip Step 4b above. Add Azure SQL with
+**write your `.env` automatically** — so you can skip Step 3b above. Add Azure SQL with
 `azd env set DEPLOY_SQL true` (+ `azd env set SQL_ADMIN_PASSWORD '<StrongP@ssw0rd!>'`) or Bing web
 grounding with `azd env set DEPLOY_BING true` before `azd up`.
 
@@ -292,11 +264,11 @@ grounding with `azd env set DEPLOY_BING true` before `azd up`.
 
 ---
 
-### Task 5 · Verify your resources (~3 min)
+### Task 4 · Verify your resources (~3 min)
 
 Let's confirm everything landed. Do all three checks:
 
-**5a — Resource group in the Azure Portal.** Open the [Azure Portal](https://portal.azure.com/) →
+**4a — Resource group in the Azure Portal.** Open the [Azure Portal](https://portal.azure.com/) →
 search for **your resource group** (its name is on your dashboard as **ResourceGroup**; the
 self-hosted default is **`rg-clm-microhack`**) → click it. You should see ~7 resources (Foundry account, Azure AI Search,
 Application Insights, Log Analytics, and the model deployments live inside the Foundry account).
@@ -305,7 +277,7 @@ Application Insights, Log Analytics, and the model deployments live inside the F
 >
 > <img src="../images/challenge-01/steps/07-portal-resource-group.png" alt="Screenshot slot: resource group" width="80%">
 
-**5b — Model deployments in the Foundry portal.** Open [ai.azure.com](https://ai.azure.com) → select
+**4b — Model deployments in the Foundry portal.** Open [ai.azure.com](https://ai.azure.com) → select
 your **`clm-project`** → **Models + endpoints**. Confirm the deployments show **Succeeded**:
 `gpt-5.4`, `gpt-5.6-sol`, and `gpt-5.4-nano` (**three** model deployments).
 
@@ -313,7 +285,7 @@ your **`clm-project`** → **Models + endpoints**. Confirm the deployments show 
 >
 > <img src="../images/challenge-01/steps/08-foundry-deployments.png" alt="Screenshot slot: model deployments" width="80%">
 
-**5c — Your `.env` file.** In the Codespace file explorer, open **`.env`** at the repo root. Confirm the
+**4c — Your `.env` file.** In the Codespace file explorer, open **`.env`** at the repo root. Confirm the
 values are filled in (every entry has a value **except** the `SHAREPOINT_*` corpus and the Challenge 5
 `MICROSOFT_APP_*` / `TEAMS_*` variables, which you fill later).
 
@@ -338,7 +310,7 @@ APPLICATIONINSIGHTS_CONNECTION_STRING=InstrumentationKey=...
 
 ---
 
-### Task 6 · Seed the corpus (~7 min)
+### Task 5 · Seed the corpus (~7 min)
 
 Build the `clm-corpus` search index that grounds every later challenge (2–6). **The default is
 Path B (local-PDF) — it needs no SharePoint, no admin consent, and works in every tenant.** Path A
@@ -366,7 +338,7 @@ Path B (local-PDF) — it needs no SharePoint, no admin consent, and works in ev
 >    ```bash
 >    sed -i -E 's/^(SHAREPOINT_SITE_URL|SHAREPOINT_APP_ID|SHAREPOINT_APP_SECRET|SHAREPOINT_TENANT_ID)=.*/\1=/' .env
 >    ```
->    (Confirm `AZURE_SEARCH_ENDPOINT=` is still set from Task 4's deploy.)
+>    (Confirm `AZURE_SEARCH_ENDPOINT=` is still set from Task 3's deploy.)
 > 2. **Seed the corpus:**
 >    ```bash
 >    python src/scripts/seed_corpus.py
@@ -376,7 +348,7 @@ Path B (local-PDF) — it needs no SharePoint, no admin consent, and works in ev
 >    Contributor** role, which provisioning already granted you — if a doc fails, wait a minute for
 >    role propagation and re-run; the script is idempotent.)*
 > 3. Confirm a **non-zero document count** (portal → Search service → Indexes → `clm-corpus`), then
->    **jump to [Task 7](#task-7--smoke-test).**
+>    **jump to [Task 6](#task-6--smoke-test).**
 >
 > **This has zero impact on Challenges 2–6** — the agents only ever read the `clm-corpus` index,
 > never SharePoint directly. Both paths produce the identical index.
@@ -400,9 +372,9 @@ Path B (local-PDF) — it needs no SharePoint, no admin consent, and works in ev
 > ✅ Done. SharePoint is now your corpus source: https://<tenant>.sharepoint.com/sites/clm-microhack-corpus
 > ```
 > Confirm a **non-zero document count** (portal → Search service → Indexes → `clm-corpus`), then
-> **jump to [Task 7](#task-7--smoke-test).**
+> **jump to [Task 6](#task-6--smoke-test).**
 >
-> **Prerequisites:** `az login` as your sandbox admin, and Task 4's deploy already wrote `.env`
+> **Prerequisites:** `az login` as your sandbox admin, and Task 3's deploy already wrote `.env`
 > (so `AZURE_SEARCH_ENDPOINT` is set). The script is **idempotent** — safe to re-run — and takes
 > flags `--dry-run` (preview only), `--skip-upload`, `--skip-index`, and
 > `--site-url https://<tenant>.sharepoint.com/sites/<name>` (to reuse a site you already have).
@@ -623,7 +595,7 @@ the index is populated immediately.)*
 
 ---
 
-### Task 7 · Smoke test (~2 min)
+### Task 6 · Smoke test (~2 min)
 
 The final check — prove the project is reachable and that the GPT model fleet runs:
 
@@ -677,10 +649,10 @@ Smoke test: ✅ PASS
 
 | Symptom | Fix |
 |---------|-----|
-| `DeploymentModelNotSupported` / `deployment failed` for a model | *(Self-provision path only — provisioned labs don't deploy.)* **First: is your checkout current?** Run the [preflight grep](#task-4--connect-to-your-provisioned-resources) — it must show `gpt-5.4`+`2026-03-05`, `gpt-5.6-sol`+`2026-07-09`, and `gpt-5.4-nano`+`2026-03-17`. If you see `gpt-5.3-chat`, `2026-03-03`, `2025-11-01`, renewal `gpt-5.4-nano` `2025-04-14`, or `gpt-4o-mini`, run `git pull`, then redeploy. **Otherwise** the model **name or version** isn't offered in your region: list what *is* available with `az cognitiveservices model list --location <region> --output table`, then update the model/version in [`infra/resources.bicep`](../labautomation/infra/resources.bicep) (and `labautomation/deploy.sh`). This repo is pre-pinned for `swedencentral`; if you changed regions, switch back or re-pin. |
+| `DeploymentModelNotSupported` / `deployment failed` for a model | *(Self-provision path only — provisioned labs don't deploy.)* **First: is your checkout current?** Run the [preflight grep](#task-3--connect-to-your-provisioned-resources) — it must show `gpt-5.4`+`2026-03-05`, `gpt-5.6-sol`+`2026-07-09`, and `gpt-5.4-nano`+`2026-03-17`. If you see `gpt-5.3-chat`, `2026-03-03`, `2025-11-01`, renewal `gpt-5.4-nano` `2025-04-14`, or `gpt-4o-mini`, run `git pull`, then redeploy. **Otherwise** the model **name or version** isn't offered in your region: list what *is* available with `az cognitiveservices model list --location <region> --output table`, then update the model/version in [`infra/resources.bicep`](../labautomation/infra/resources.bicep) (and `labautomation/deploy.sh`). This repo is pre-pinned for `swedencentral`; if you changed regions, switch back or re-pin. |
 | `ServiceModelDeprecating` for `gpt-4o-mini` (or another model) | Your checkout pins a **deprecating model**. The repo now uses `gpt-5.4-nano` `2026-03-17` for the renewal agent — run `git pull`. If you deliberately changed a version, pick a current one from `az cognitiveservices model list --location <region> --output table` (avoid ones with a near/past `deprecation.inference` date). |
 | `Project can only be created under AIServices Kind account with allowProjectManagement set to true` | Fixed in the template (`account.properties.allowProjectManagement: true`). If you hit it, your checkout is behind — run `git pull` and redeploy. |
-| SharePoint: *"Tenant does not have a SPO license"*, or you can't grant the app's Graph **admin consent** (only Global Reader / **"Grant admin consent" greyed out**) | Only happens if you're **not** an admin of the tenant — in your own sandbox tenant the Path A script self-grants consent. If you hit it, it's **not** a failure: use the **local-PDF fallback (Path B)** — leave the `SHAREPOINT_*` values blank in `.env` and run `python src/scripts/seed_corpus.py`. It extracts `src/data/**/*.pdf` and populates `clm-corpus` directly (needs the Search Index Data Contributor role, granted during provisioning) — the **same index** the SharePoint path builds, so Challenges 2–6 are unaffected. See [Task 6, Path B](#task-6--seed-the-corpus). |
+| SharePoint: *"Tenant does not have a SPO license"*, or you can't grant the app's Graph **admin consent** (only Global Reader / **"Grant admin consent" greyed out**) | Only happens if you're **not** an admin of the tenant — in your own sandbox tenant the Path A script self-grants consent. If you hit it, it's **not** a failure: use the **local-PDF fallback (Path B)** — leave the `SHAREPOINT_*` values blank in `.env` and run `python src/scripts/seed_corpus.py`. It extracts `src/data/**/*.pdf` and populates `clm-corpus` directly (needs the Search Index Data Contributor role, granted during provisioning) — the **same index** the SharePoint path builds, so Challenges 2–6 are unaffected. See [Task 5, Path B](#task-5--seed-the-corpus). |
 | `account project create` unavailable | The CLI project command is preview. Create the project in the **Foundry portal**, then set `AZURE_AI_PROJECT_ENDPOINT` in `.env` manually (Overview → Endpoint). |
 | `az login` in Codespaces | Use `az login --use-device-code`. |
 | Search / quota errors | Ensure the subscription has quota for Basic Search + the model SKUs; request quota if needed. |

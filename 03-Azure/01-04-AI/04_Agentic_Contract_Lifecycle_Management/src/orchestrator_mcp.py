@@ -1,4 +1,4 @@
-"""Challenge 4 (Go Further) — Orchestrator that calls the CLM MCP server as a *client*.
+"""Challenge 4 (optional) — Orchestrator that calls the CLM MCP server as a *client*.
 
 This is the mirror image of ``orchestrator.py``. The plain orchestrator wires the
 two specialists in-process with ``agent.as_tool(...)``; this variant reaches the

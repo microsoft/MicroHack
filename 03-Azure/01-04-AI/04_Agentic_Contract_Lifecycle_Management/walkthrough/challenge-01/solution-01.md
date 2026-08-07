@@ -26,19 +26,19 @@ contract corpus the later challenges ground on.
 
 ## 🛠️ Task-by-task walkthrough
 
-### Tasks 1–3 · Fork, dev environment, `az login`
+### Tasks 1–3 · Open the code, dev environment, `az login`
 ```bash
-# Task 1: fork glejdis/microhack-aiagents on GitHub, then open your fork.
-# Task 2: launch the devcontainer — Code ▸ Codespaces ▸ Create, or locally:
+# Task 1: open glejdis/microhack-aiagents in a Codespace (no fork) — Code ▸ Codespaces ▸ Create.
+# Task 2: the devcontainer builds automatically; to run locally instead:
 code .            # "Reopen in Container" when prompted
 # Task 3: authenticate the Azure CLI (the deploy script and azd both reuse this login)
 az login
 az account set --subscription "<your-subscription-id>"
 ```
 
-> 📸 **Screenshot slot:** the GitHub **fork** page, then the **device-code `az login`** prompt.
+> 📸 **Screenshot slot:** creating the **Codespace**, then the **device-code `az login`** prompt.
 >
-> <img src="../../images/challenge-01/steps/01-fork.png" alt="Screenshot slot: GitHub fork page" width="80%">
+> <img src="../../images/challenge-01/steps/02-create-codespace.png" alt="Screenshot slot: create a Codespace" width="80%">
 > <img src="../../images/challenge-01/steps/04-az-login-device.png" alt="Screenshot slot: device-code login" width="80%">
 
 ### Task 4 · Deploy the resources

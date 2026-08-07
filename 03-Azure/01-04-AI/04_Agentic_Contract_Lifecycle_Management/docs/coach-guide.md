@@ -34,7 +34,7 @@ tips. Participants never see this file; it's for the people running the room.
 
 - [ ] Team has an **Azure subscription** with Owner/Contributor + rights to create role assignments.
 - [ ] Region confirmed to offer all three model deployments.
-- [ ] They can **fork** the repo and **open a Codespace** (or have the devcontainer locally).
+- [ ] They can **open the repo in a Codespace** (no fork needed) or run the devcontainer locally.
 - [ ] `Microsoft.BotService` provider registered (needed in Ch5): `az provider register --namespace Microsoft.BotService`.
 
 ---

@@ -300,13 +300,13 @@ challenges are a single story:
 
 - An **Azure subscription** with rights to create a Foundry project and deploy GPT models (confirm
   availability in your target region via the model catalog).
-- **GitHub account** (to fork + open in Codespaces).
+- **GitHub account** (to open the repo in Codespaces).
 - Basic Python. No local install needed — the devcontainer has everything.
 - For Challenge 5: a Microsoft 365 tenant where you can sideload a Teams app (or a coach-provided one).
 
 ## Getting started
 
-1. **Fork** this repo, then **Code → Codespaces → Create codespace**. The devcontainer installs
+1. **Open this repo in Codespaces** (no fork) — **Code → Codespaces → Create codespace**. The devcontainer installs
    Python 3.11, Azure CLI, `azd`, Node, and `requirements.txt` automatically.
 2. `az login` (and `azd auth login` if you use the `azd up` path)
 3. Do **[Challenge 1](challenges/challenge-01.md)** to deploy resources and seed the corpus — provision with

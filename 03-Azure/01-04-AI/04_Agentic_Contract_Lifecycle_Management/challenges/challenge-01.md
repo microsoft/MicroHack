@@ -13,7 +13,7 @@ If something isn't working as expected, please let your coach know.
 
 > **📋 Prerequisites:**
 > - An **Azure subscription** with rights to create a Foundry project and deploy GPT models.
-> - A **GitHub account** (to fork the repo and open it in Codespaces).
+> - A **GitHub account** (to open the repo in Codespaces).
 > - **GitHub Codespaces** access — everything runs in the browser; no local tooling required.
 
 > 🧩 **How to use this challenge:** the provisioning is **scripted for you** (`azd up` *or* the
@@ -132,44 +132,39 @@ text at crawl time); regenerate the PDFs with `python src/scripts/make_corpus_pd
 - [ ] Your Azure subscription can deploy **GPT** models (ask your coach if unsure).
 - [ ] You have ~30 minutes and a stable connection (provisioning takes 5–10 min on its own).
 
-### Task 1 · Fork the repository (~2 min)
+### Task 1 · Open the code in a Codespace (~2 min)
 
-A **fork** is your own copy of this repo where your changes and progress are saved.
+**No fork needed.** You read the challenge steps in the MicroHack repo; the **code you run lives in
+this companion repo**. Open it directly in **GitHub Codespaces** — a full VS Code + terminal in your
+browser, no local installs. Because you work off the source repo, `git pull` always gets the latest
+fixes (there's no fork to fall behind).
 
-1. Go to **[github.com/glejdis/microhack-aiagents/fork](https://github.com/glejdis/microhack-aiagents/fork)**.
-2. Leave **Owner** as your username and keep the repo name.
-3. Click the green **Create fork** button.
+1. Go to **[github.com/glejdis/microhack-aiagents](https://github.com/glejdis/microhack-aiagents)**.
+2. Click the green **`< > Code`** button, then the **Codespaces** tab.
+3. Click **Create codespace on `main`**.
 
-> 📸 **Screenshot slot — what you'll see:** the GitHub *Create a new fork* page with the green **Create fork** button.
+> 📸 **Screenshot slot — what you'll see:** the **Code → Codespaces → Create codespace on main** menu.
 >
-> <img src="../images/challenge-01/steps/01-fork.png" alt="Screenshot slot: GitHub fork page" width="80%">
+> <img src="../images/challenge-01/steps/02-create-codespace.png" alt="Screenshot slot: create a Codespace" width="80%">
 
-✅ **You'll know it worked when:** the page reloads at `github.com/<your-username>/microhack-aiagents` (your username, not `glejdis`, in the URL).
+✅ **You'll know it worked when:** a new browser tab opens and starts **building your Codespace**.
 
-> [!IMPORTANT]
-> **Already forked this repo a while ago?** Your fork can fall **behind** the original and miss recent
-> fixes (for example the model/region fix in Challenge 1). Before you deploy, **sync your fork**: open
-> your fork on GitHub → click **"Sync fork" → "Update branch"**, or run
-> `gh repo sync <your-username>/microhack-aiagents --branch main`. Then, inside your
-> Codespace/clone, run `git pull`. Skipping this is the #1 cause of a `DeploymentModelNotSupported`
-> error in Task 4.
+> [!TIP]
+> Prefer working locally? `git clone https://github.com/glejdis/microhack-aiagents.git`, open it in
+> VS Code, and **Reopen in Container** (Dev Containers extension) for the same environment.
 
 ---
 
 ### Task 2 · Launch the development environment (~5 min)
 
-**GitHub Codespaces** is a full VS Code + terminal running in your browser — no local installs, no
-"works on my machine." Everything below runs inside it.
+Your Codespace builds the **devcontainer** automatically — no local installs, no "works on my
+machine." Everything below runs inside it.
 
-1. On **your fork's** main page, click the green **`< > Code`** button.
-2. Open the **Codespaces** tab.
-3. Click **Create codespace on `main`**.
-4. Wait for the build to finish — it auto-runs `pip install -r requirements.txt`. First build takes
+1. Wait for the build to finish — it auto-runs `pip install -r requirements.txt`. First build takes
    a few minutes. When the terminal at the bottom stops scrolling and shows a prompt, it's ready.
 
-> 📸 **Screenshot slot — what you'll see:** the **Code → Codespaces → Create codespace on main** menu, then the ready Codespace.
+> 📸 **Screenshot slot — what you'll see:** the ready Codespace — a VS Code editor with a terminal at the bottom.
 >
-> <img src="../images/challenge-01/steps/02-create-codespace.png" alt="Screenshot slot: create codespace" width="80%">
 > <img src="../images/challenge-01/steps/03-codespace-ready.png" alt="Screenshot slot: codespace ready" width="80%">
 
 ✅ **You'll know it worked when:** you see a VS Code editor in the browser with a **Terminal** panel
@@ -244,10 +239,9 @@ available in **`swedencentral`** today (`gpt-5.4`, `gpt-5.6-sol`, `gpt-5.4-nano`
 > ```
 > ✅ You should see **all three** pins: orchestrator `gpt-5.4` `2026-03-05`, renewal `gpt-5.4-nano`
 > `2026-03-17`, and clause-risk `gpt-5.6-sol` `2026-07-09`.
-> ❌ If you instead see `gpt-5.3-chat`, `2026-03-03`, `2025-11-01`, renewal `gpt-5.4-nano` `2025-04-14`, or `gpt-4o-mini` `2024-07-18`, your fork/checkout
-> is **stale** — go back and **[sync your fork](#task-1--fork-the-repository)** + `git pull`, then re-run
-> this check. Deploying a stale template is what triggers `DeploymentModelNotSupported` /
-> `ServiceModelDeprecating`.
+> ❌ If you instead see `gpt-5.3-chat`, `2026-03-03`, `2025-11-01`, renewal `gpt-5.4-nano` `2025-04-14`, or `gpt-4o-mini` `2024-07-18`, your checkout
+> is **behind** — run `git pull`, then re-run this check. Deploying an old template is what triggers
+> `DeploymentModelNotSupported` / `ServiceModelDeprecating`.
 
 <details open>
 <summary><strong>Option A — <code>azd up</code></strong> (recommended · Bicep in <code>infra/</code>)</summary>
@@ -296,9 +290,9 @@ Deploying services (azd deploy)
 SUCCESS: Your up workflow to provision and deploy to Azure completed in 8 minutes.
 ```
 
-❌ **If it fails with `DeploymentModelNotSupported`** — first check you're **not on a stale fork**:
+❌ **If it fails with `DeploymentModelNotSupported`** — first make sure your checkout is **current**:
 run `grep -n "gptOrchestrator" labautomation/infra/resources.bicep` and confirm you see `gpt-5.4`
-and `2026-03-05` (if you see `2025-11-01` or `gpt-5.3-chat`, [sync your fork](#task-1--fork-the-repository) + `git pull`).
+and `2026-03-05` (if you see `2025-11-01` or `gpt-5.3-chat`, run `git pull`).
 If your checkout is current, then a model/version simply isn't offered in your region: this repo is
 already fixed for `swedencentral`, so switch back to it, or update the versions in
 [`infra/resources.bicep`](../labautomation/infra/resources.bicep). See [🛠️ Troubleshooting](#️-troubleshooting).
@@ -754,9 +748,9 @@ Smoke test: ✅ PASS
 
 | Symptom | Fix |
 |---------|-----|
-| `DeploymentModelNotSupported` / `deployment failed` for a model | **First: are you on a stale fork?** Run the [preflight grep](#task-4--deploy-the-resources) — it must show `gpt-5.4`+`2026-03-05`, `gpt-5.6-sol`+`2026-07-09`, and `gpt-5.4-nano`+`2026-03-17`. If you see `gpt-5.3-chat`, `2026-03-03`, `2025-11-01`, renewal `gpt-5.4-nano` `2025-04-14`, or `gpt-4o-mini`, [sync your fork](#task-1--fork-the-repository) and `git pull`, then redeploy. **Otherwise** the model **name or version** isn't offered in your region: list what *is* available with `az cognitiveservices model list --location <region> --output table`, then update the model/version in [`infra/resources.bicep`](../labautomation/infra/resources.bicep) (and `labautomation/deploy.sh`). This repo is pre-pinned for `swedencentral`; if you changed regions, switch back or re-pin. |
-| `ServiceModelDeprecating` for `gpt-4o-mini` (or another model) | You're on a **stale template** pinning a deprecating model. The repo now uses `gpt-5.4-nano` `2026-03-17` for the renewal agent — sync your fork + `git pull`. If you deliberately changed a version, pick a current one from `az cognitiveservices model list --location <region> --output table` (avoid ones with a near/past `deprecation.inference` date). |
-| `Project can only be created under AIServices Kind account with allowProjectManagement set to true` | Fixed in the template (`account.properties.allowProjectManagement: true`). If you hit it, you're on a stale fork — sync + `git pull` and redeploy. |
+| `DeploymentModelNotSupported` / `deployment failed` for a model | **First: is your checkout current?** Run the [preflight grep](#task-4--deploy-the-resources) — it must show `gpt-5.4`+`2026-03-05`, `gpt-5.6-sol`+`2026-07-09`, and `gpt-5.4-nano`+`2026-03-17`. If you see `gpt-5.3-chat`, `2026-03-03`, `2025-11-01`, renewal `gpt-5.4-nano` `2025-04-14`, or `gpt-4o-mini`, run `git pull`, then redeploy. **Otherwise** the model **name or version** isn't offered in your region: list what *is* available with `az cognitiveservices model list --location <region> --output table`, then update the model/version in [`infra/resources.bicep`](../labautomation/infra/resources.bicep) (and `labautomation/deploy.sh`). This repo is pre-pinned for `swedencentral`; if you changed regions, switch back or re-pin. |
+| `ServiceModelDeprecating` for `gpt-4o-mini` (or another model) | Your checkout pins a **deprecating model**. The repo now uses `gpt-5.4-nano` `2026-03-17` for the renewal agent — run `git pull`. If you deliberately changed a version, pick a current one from `az cognitiveservices model list --location <region> --output table` (avoid ones with a near/past `deprecation.inference` date). |
+| `Project can only be created under AIServices Kind account with allowProjectManagement set to true` | Fixed in the template (`account.properties.allowProjectManagement: true`). If you hit it, your checkout is behind — run `git pull` and redeploy. |
 | SharePoint: *"Tenant does not have a SPO license"*, or you can't grant the app's Graph **admin consent** (only Global Reader / **"Grant admin consent" greyed out**) | Only happens if you're **not** an admin of the tenant — in your own sandbox tenant the Path A script self-grants consent. If you hit it, it's **not** a failure: use the **local-PDF fallback (Path B)** — leave the `SHAREPOINT_*` values blank in `.env` and run `python src/scripts/seed_corpus.py`. It extracts `src/data/**/*.pdf` and populates `clm-corpus` directly (needs the Search Index Data Contributor role, granted by `azd up`) — the **same index** the SharePoint path builds, so Challenges 2–6 are unaffected. See [Task 6, Path B](#task-6--seed-the-corpus). |
 | `account project create` unavailable | The CLI project command is preview. Create the project in the **Foundry portal**, then set `AZURE_AI_PROJECT_ENDPOINT` in `.env` manually (Overview → Endpoint). |
 | `az login` in Codespaces | Use `az login --use-device-code`. |

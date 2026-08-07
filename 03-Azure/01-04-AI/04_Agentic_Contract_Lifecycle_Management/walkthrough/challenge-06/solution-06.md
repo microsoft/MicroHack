@@ -101,7 +101,13 @@ Guardrails held: 9/10 · defect rate = 10%
 Task 4 hardens **two different agents** — keep them straight:
 - **Code agent (`intake-drafting-agent`)** — tighten the refusal/grounding instructions in [`src/agents/intake_drafting_agent.py`](../../src/agents/intake_drafting_agent.py). This is the in-process agent `red_team.py` scans (via `create_agent()`), so it's what moves the scorecard.
 - **Portal agent (`clm-contract-agent`)** — in the portal, attach **Content Safety** (Prompt Shields + PII) to the **existing** MCP-backed agent from **Ch4 Task 4 Part B** (published to Teams in Ch5). Defense-in-depth for the production/Teams surface — not a new agent.
+
+  **Attach it:** **Build → Agents → `clm-contract-agent`** → expand **Guardrails** → **Manage guardrail**. Keep **Hate / Sexual / Self-harm / Violence** at **Medium**; enable **Prompt Shields** (jailbreak + indirect/XPIA), **Protected materials** (text + code), and **Sensitive data leakage → PII (Preview)**. PII requires **≥ 1 data type** — for contracts pick **User information** (Name, Email, Phone, Address) and **Financial information** (Credit card, IBAN, SWIFT, regional bank-account numbers); the **Azure / Database** connection-string types are optional defense-in-depth, or **Select All**. Then **Review → Create guardrails**.
 - Re-run Tasks 1–3 and confirm the attack-success / defect rate **drops**.
+
+> 📸 **What you'll see:** the Guardrails wizard — content filters plus **PII (Preview)** with its data-type picker (pick at least one).
+>
+> <img src="../../images/challenge-06/steps/04-guardrails-pii.png" alt="Foundry Guardrails wizard: content filters, Protected materials, and PII (Preview) data-type picker" width="80%">
 
 ### Task 5 · Wire the gate into CI
 `.github/workflows/ci-eval.yml` runs the **quality gate** (`evaluators.py --gate 4.0`) and **safety gate** (`safety_eval.py --gate 0.1`) on a schedule / on demand via Azure OIDC. Set the repo secrets (`AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`, `AZURE_AI_PROJECT_ENDPOINT`) and trigger it from the **Actions** tab. ✅ Green check = gates passed; red X = a regression tripped a gate (the whole point).

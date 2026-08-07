@@ -118,7 +118,20 @@ Task 4 hardens **two different agents** — keep them straight:
 - **Code agent (`intake-drafting-agent`)** — tighten the refusal/grounding instructions in `src/agents/intake_drafting_agent.py`. This is the in-process agent the red-team scan targets, so this is what drops the defect rate.
 - **Portal agent (`clm-contract-agent`)** — in the portal, attach **Content Safety** (Prompt Shields + PII) to your **existing** MCP-backed agent from **Ch4 Task 4 Part B** (published to Teams in Ch5). Defense-in-depth for the production/Teams surface — **don't create a new agent**.
 
-Then **re-run Tasks 1–3** and confirm the attack success / defect rate **drops**.
+**Attach Content Safety (portal):** go to **Build → Agents → `clm-contract-agent`**, expand **Guardrails** in the playground's left pane, then **Manage guardrail** and enable:
+- **Content filters** — keep **Hate / Sexual / Self-harm / Violence** at **Medium** (default).
+- **Prompt Shields** — turn on both **jailbreak** and **indirect (XPIA) prompt injection** — the injection attacks the red team throws.
+- **Protected materials** — text + code.
+- **Sensitive data leakage → PII (Preview)** — you **must pick at least one** data type or the wizard blocks you (*"Please select at least one PII data type"*). For legal contracts:
+  - **User information:** Name, Email, Phone number, Address — party/contact PII in NDAs & MSAs.
+  - **Financial information:** Credit card, IBAN, SWIFT code, and the bank-account types for your regions (US / EU / Canada / Australia) — payment & banking clauses.
+  - *Optional (defense-in-depth):* the **Azure / Database** connection-string & key types stop the agent ever echoing infra secrets — or just **Select All** for max coverage.
+
+Then **Review → Create guardrails**, **re-run Tasks 1–3**, and confirm the attack success / defect rate **drops**.
+
+> 📸 **What you'll see:** the Guardrails wizard — content filters plus **PII (Preview)** with its data-type picker (pick at least one).
+>
+> <img src="../images/challenge-06/steps/04-guardrails-pii.png" alt="Foundry Guardrails wizard: content filters, Protected materials, and PII (Preview) data-type picker (User / Azure / Database / Financial information)" width="80%">
 
 ### Task 5 · Wire the gate into CI (~10 min)
 

@@ -24,12 +24,13 @@ contracts auto-renew — driven by the **Obligation & Renewal** agent.
 ### Part A · Publish to Teams & M365 Copilot (portal)
 1. In the **Foundry portal**, open the **`clm-contract-agent`** you published in **Challenge 4 (Task 4 Part B)** — the MCP-backed portal agent. *(The `clm-orchestrator` from Ch4 Task 2 was in-process and isn't in the portal.)*
 2. Select **Publish** → **Publish to Teams and Microsoft 365 Copilot** → **Continue** (provisions an **Azure Bot Service**; first time: `az provider register --namespace Microsoft.BotService`). Leave the **Azure bot services** dropdown on *auto*; delete any stale bot from earlier attempts to avoid an **App ID collision**.
-3. Fill the app details + upload **192×192** and **32×32** icons → **Prepare Agent** → **Continue the in-product publishing flow** → **Individual scope** → **Submit**. Find it in Teams under **Apps → Your agents**. *(If direct publish returns a **400**, use the **Download & customize** tab and sideload the zip from [`src/manifest/`](../../src/manifest/).)*
+3. **Fill the app details.** Most fields are **pre-filled from the agent** — **Agent name** (`clm-contract-agent`), **Publish version** (`1.0.0`), **Short description**, **Description**, and **Azure bot services** (auto-generated). The one required (`*`) field you must type yourself is **Developer** — enter your name or team (e.g. `Contoso Global CLM Team`). Then upload **192×192** and **32×32** icons → **Prepare Agent** → **Continue the in-product publishing flow** → **Individual scope** → **Submit**. Find it in Teams under **Apps → Your agents**. *(If direct publish returns a **400**, use the **Download & customize** tab and sideload the zip from [`src/manifest/`](../../src/manifest/).)*
+
+   <img src="../../images/challenge-05/steps/partA-publish-details.png" alt="Publish to Teams and Microsoft 365: app details — Developer is the one mandatory field you must fill in" width="80%">
 4. **Test live** in Teams and M365 Copilot: ask it to draft an NDA and review the Acme draft. ✅ Part A worked when the agent returns the **same grounded, cited answers** you saw in the terminal in Ch2 & Ch4.
 
-> 📸 **Screenshot slot:** the **Publish → "Publish to Teams and Microsoft 365 Copilot"** flow, then the agent answering **live in a Teams chat** with cited output.
+> 📸 **Screenshot slot:** the agent answering **live in a Teams chat** with cited output.
 >
-> <img src="../../images/challenge-05/steps/01-channels-publish.svg" alt="Screenshot slot: publish to Teams" width="80%">
 > <img src="../../images/challenge-05/steps/02-teams-live.svg" alt="Screenshot slot: agent live in Teams" width="80%">
 
 ### Part B, Task 5 · Build the Obligation & Renewal agent

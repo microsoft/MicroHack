@@ -143,7 +143,7 @@ CLM_MCP_URL=https://…/mcp python src/orchestrator_mcp.py   # MCPStreamableHTTP
 > <img src="../../images/challenge-04/steps/06-foundry-playground.svg" alt="Screenshot slot: Foundry Playground calling the remote MCP tool" width="80%">
 > <img src="../../images/challenge-04/steps/07-orchestrator-remote.svg" alt="Screenshot slot: local orchestrator calling the remote MCP server" width="80%">
 
-### Task 5 · (Go Further) One client, two transports
+### Task 5 · (Optional) One client, two transports
 [`src/orchestrator_mcp.py`](../../src/orchestrator_mcp.py) is the mirror of Task 2, but the tools come
 over MCP. It picks the transport from `CLM_MCP_URL` — `MCPStdioTool` (spawns `server.py`) when unset,
 `MCPStreamableHTTPTool` (remote) when set:

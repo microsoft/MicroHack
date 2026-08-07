@@ -85,7 +85,7 @@ of the challenge, what "done" looks like, where teams get stuck, and the hint to
   - *Optional add-ons* (all paths, off by default): Azure SQL for the renewal tool
     (`DEPLOY_SQL`/`--with-sql`/`-WithSql`) and **Grounding with Bing Search** for the Clause & Risk
     agent's optional web lookup (`DEPLOY_BING`/`--with-bing`/`-WithBing`). Bing data leaves the Azure
-    compliance boundary — only suggest it for the Challenge 4 "Go Further" web-grounding track.
+    compliance boundary — only suggest it for the Challenge 4 optional web-grounding track.
 - **Watch for:**
   - *Model deploy fails* → the model/version isn't in their region. Switch region (`eastus2`/`westus3`)
     or adjust the version in `deploy.sh`. **This is the single most common Ch1 blocker.**

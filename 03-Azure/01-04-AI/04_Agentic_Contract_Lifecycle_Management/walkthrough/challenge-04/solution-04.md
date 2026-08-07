@@ -51,9 +51,9 @@ Risk: HIGH · Top issues: uncapped liability, long auto-renew, one-sided indemni
 Required approver: VP Legal (delegation-of-authority matrix)
 ```
 
-> 📸 **Screenshot slot:** the clause table + High-risk verdict with citations.
+> 📸 **What you'll see:** the clause table + High-risk verdict with citations.
 >
-> <img src="../../images/challenge-04/steps/01-clause-risk.svg" alt="Screenshot slot: Clause & Risk output" width="80%">
+> <img src="../../images/challenge-04/steps/01-clause-risk.png" alt="Clause & Risk agent (gpt-5.6-sol): clause table with citations and High-risk verdict" width="80%">
 
 ### Task 2 · Build the Orchestrator
 [`src/orchestrator.py`](../../src/orchestrator.py) builds both specialists once and exposes each as a tool via `agent.as_tool(...)` — the GPT-5.4 front door then routes:
@@ -79,9 +79,9 @@ ORCHESTRATOR: [→ intake_drafting] Draft ready... [→ clause_risk] Acme draft 
               [→ get_contract_status] CT-4821 is Active, renews 2026-09-01.
 ```
 
-> 📸 **Screenshot slot:** the orchestrator thread routing across specialists.
+> 📸 **What you'll see:** the orchestrator thread routing across specialists.
 >
-> <img src="../../images/challenge-04/steps/02-orchestrator.svg" alt="Screenshot slot: orchestrator thread" width="80%">
+> <img src="../../images/challenge-04/steps/02-orchestrator.png" alt="Orchestrator (gpt-5.4) thread delegating each turn to the Intake & Drafting and Clause & Risk specialists" width="80%">
 
 ### Task 3 · Run the MCP server (local)
 [`src/mcp_server/server.py`](../../src/mcp_server/server.py) wraps the workflow as three MCP tools over stdio using FastMCP:
@@ -157,9 +157,9 @@ call your models.
 CLM_MCP_URL=https://…/mcp python src/orchestrator_mcp.py   # MCPStreamableHTTPTool, no code change
 ```
 
-> 📸 **Screenshot slot (Part C):** the local orchestrator against the remote URL.
+> 📸 **What you'll see (Part C):** the local orchestrator against the remote URL.
 >
-> <img src="../../images/challenge-04/steps/07-orchestrator-remote.svg" alt="Screenshot slot: local orchestrator calling the remote MCP server" width="80%">
+> <img src="../../images/challenge-04/steps/07-orchestrator-remote.png" alt="Local orchestrator (gpt-5.4) calling the remote clm-mcp server by URL as an MCP client" width="80%">
 
 ### Task 5 · (Optional) One client, two transports
 [`src/orchestrator_mcp.py`](../../src/orchestrator_mcp.py) is the mirror of Task 2, but the tools come

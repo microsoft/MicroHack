@@ -96,9 +96,9 @@ Risk: HIGH · Top issues: uncapped liability, long auto-renew, one-sided indemni
 Required approver: VP Legal (delegation-of-authority matrix)
 ```
 
-> 📸 **Screenshot slot:** the clause table + High-risk verdict with citations.
+> 📸 **What you'll see:** the clause table + High-risk verdict with citations.
 >
-> <img src="../images/challenge-04/steps/01-clause-risk.svg" alt="Screenshot slot: Clause & Risk output" width="80%">
+> <img src="../images/challenge-04/steps/01-clause-risk.png" alt="Clause & Risk agent (gpt-5.6-sol): clause table with citations and High-risk verdict" width="80%">
 
 > [!TIP]
 > **Want to see this agent in the Foundry portal?** `python src/agents/publish_agent.py` (from Challenge 2)
@@ -124,9 +124,9 @@ ORCHESTRATOR: [→ intake_drafting] Draft ready... [→ clause_risk] Acme draft 
               [→ get_contract_status] CT-4821 is Active, renews 2026-09-01.
 ```
 
-> 📸 **Screenshot slot:** the orchestrator thread routing across specialists.
+> 📸 **What you'll see:** the orchestrator thread routing across specialists.
 >
-> <img src="../images/challenge-04/steps/02-orchestrator.svg" alt="Screenshot slot: orchestrator thread" width="80%">
+> <img src="../images/challenge-04/steps/02-orchestrator.png" alt="Orchestrator (gpt-5.4) thread delegating each turn to the Intake & Drafting and Clause & Risk specialists" width="80%">
 
 ### Task 3 · Verify the MCP server exposes its tools (~5 min)
 
@@ -263,11 +263,11 @@ grounding still runs, but **server-side**, behind that tool.)*
    *Always approve this tool* / *Always approve all tools*); **Approve once** is fine for the hack. The agent
    then invokes `analyze_contract` on **your hosted server** and returns the risk assessment.
 
-> 📸 **Screenshot slot — what you'll see:** the MCP tool/connection on the agent, then the Playground
+> 📸 **What you'll see:** the MCP tool/connection on the agent, then the Playground
 > running `analyze_contract` against your remote server.
 >
-> <img src="../images/challenge-04/steps/05-foundry-mcp-tool.svg" alt="Screenshot slot: add MCP tool in Foundry" width="80%">
-> <img src="../images/challenge-04/steps/06-foundry-playground.svg" alt="Screenshot slot: Foundry Playground calling the remote MCP tool" width="80%">
+> <img src="../images/challenge-04/steps/05-foundry-mcp-tool.png" alt="Add Model Context Protocol tool: Name clm-mcp, Remote MCP Server endpoint, Unauthenticated" width="80%">
+> <img src="../images/challenge-04/steps/06-foundry-playground.png" alt="Foundry Playground calling the remote clm-mcp analyze_contract tool — request approved, High risk" width="80%">
 
 ✅ **You'll know it worked when:** the Playground shows an **MCP tool call to `clm-mcp`** and returns the
 **same** risk result as Task 1 — a Foundry-hosted agent just consumed your *remote* server by URL.
@@ -292,9 +292,9 @@ With `CLM_MCP_URL` set, the client switches from `MCPStdioTool` (local subproces
 > A **421** means the container is running an **old image**: redeploy with `bash deploy/mcp-server/deploy.sh`
 > and retry. (`orchestrator_mcp.py` now prints this diagnosis for you automatically.)
 
-> 📸 **Screenshot slot:** `orchestrator_mcp.py` printing that it's calling `clm-mcp` **via https://…/mcp** and completing the run.
+> 📸 **What you'll see:** `orchestrator_mcp.py` printing that it's calling `clm-mcp` **via https://…/mcp**.
 >
-> <img src="../images/challenge-04/steps/07-orchestrator-remote.svg" alt="Screenshot slot: local orchestrator calling the remote MCP server" width="80%">
+> <img src="../images/challenge-04/steps/07-orchestrator-remote.png" alt="Local orchestrator (gpt-5.4) calling the remote clm-mcp server by URL as an MCP client" width="80%">
 
 </details>
 

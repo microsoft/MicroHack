@@ -42,6 +42,6 @@ jobs:
           sys.exit(1 if bad else 0)
           PY
 
-      # Go Further: run the Challenge 3 quality gate on a schedule/PR once Azure
+      # Optional: run the Challenge 3 quality gate on a schedule/PR once Azure
       # secrets (AZURE_AI_PROJECT_ENDPOINT, etc.) are configured as repo secrets:
       #   python src/evaluators.py --gate 4.0

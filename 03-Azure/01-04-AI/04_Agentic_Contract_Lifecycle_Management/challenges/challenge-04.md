@@ -248,16 +248,20 @@ at your URL. *(Task 2's orchestrator ran **in-process** from your terminal — n
 portal — so you create a fresh agent here whose **only** tool is the MCP server. The drafting & clause-risk
 grounding still runs, but **server-side**, behind that tool.)*
 
-1. Open your project → **Agents** → **+ New agent**. In the **Details** tab, set **Name** =
-   `clm-contract-agent` (the portal's default is `new-agent` — rename it so the screenshots make sense).
-   Then → **Tools** → **Add tool** → **Model Context Protocol (MCP)** / *Custom MCP server*.
-2. Set **Server label** = `clm-mcp` and **Server URL** = `https://<your-app>.azurecontainerapps.io/mcp`.
-   Authentication = **No authentication** (matches Part A). Save.
-3. Open the **Playground** and ask, e.g.:
+1. Open your project → **Agents** → **+ New agent** → pick **Build an agent**. In the **Create an agent**
+   dialog, set **Agent name** = `clm-contract-agent` and click **Create** (the portal used to drop you on a
+   `new-agent` default and a *Details* tab — the current UI names the agent up front).
+2. On the agent, go to **Tools** → **Connect a tool** → **Custom** tab → **Model Context Protocol (MCP)** →
+   **Create**.
+3. In the **Add Model Context Protocol tool** dialog set **Name** = `clm-mcp`, **Remote MCP Server
+   endpoint** = `https://<your-app>.azurecontainerapps.io/mcp`, and **Authentication** = **Unauthenticated**
+   (matches Part A), then click **Connect**.
+4. Open the **Playground** and ask, e.g.:
    *"Analyze this clause and score its risk: 'Contoso's liability shall be unlimited and the agreement
    auto-renews for 2-year terms unless cancelled 90 days in advance.'"*
-4. **Approve** the MCP tool call when prompted — the agent invokes `analyze_contract` on **your hosted
-   server** and returns the risk assessment.
+5. When prompted, **Approve** the MCP tool call — the **Approve** button is a dropdown (**Approve once** /
+   *Always approve this tool* / *Always approve all tools*); **Approve once** is fine for the hack. The agent
+   then invokes `analyze_contract` on **your hosted server** and returns the risk assessment.
 
 > 📸 **Screenshot slot — what you'll see:** the MCP tool/connection on the agent, then the Playground
 > running `analyze_contract` against your remote server.

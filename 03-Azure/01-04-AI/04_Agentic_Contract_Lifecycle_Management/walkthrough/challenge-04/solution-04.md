@@ -127,20 +127,38 @@ The script reads the repo-root `.env` and auto-discovers the resource group, Fou
 managed identity** and grants it a data-plane role on the Foundry account so the server's own tools can
 call your models.
 
-**Part B — Foundry Playground.** In [ai.azure.com](https://ai.azure.com): **+ New agent**, name it
-`clm-contract-agent` (rename from the default `new-agent`), then **Tools → Add MCP tool**,
-Server label `clm-mcp`, Server URL `https://…/mcp`, **No authentication**. In the Playground ask it to
-analyze a clause, **approve** the tool call → the agent calls `analyze_contract` on your remote server.
+**Part B — Foundry Playground.** In [ai.azure.com](https://ai.azure.com):
+
+1. **Agents → + New agent → Build an agent.**
+
+   <img src="../../images/challenge-04/steps/partb-01-new-agent.png" alt="Agents: New agent → Build an agent" width="70%">
+
+2. In the **Create an agent** dialog, set **Agent name** = `clm-contract-agent` → **Create**.
+
+   <img src="../../images/challenge-04/steps/partb-02-create-agent.png" alt="Create an agent dialog with name clm-contract-agent" width="70%">
+
+3. On the agent, go to **Tools → Connect a tool → Custom** tab → **Model Context Protocol (MCP) → Create**.
+
+   <img src="../../images/challenge-04/steps/partb-03-select-tool-mcp.png" alt="Select a tool: Custom tab → Model Context Protocol (MCP)" width="90%">
+
+4. In **Add Model Context Protocol tool**, set **Name** = `clm-mcp`, **Remote MCP Server endpoint** =
+   `https://clm-mcp.<random>.<region>.azurecontainerapps.io/mcp`, **Authentication** = **Unauthenticated**
+   (matches Part A) → **Connect**.
+
+   <img src="../../images/challenge-04/steps/partb-04-add-mcp-tool.png" alt="Add MCP tool: Name, Remote MCP Server endpoint, Unauthenticated" width="80%">
+
+5. Open the **Playground**, ask it to analyze a clause, and click **Approve once** on the tool call → the
+   agent calls `analyze_contract` on your remote server.
+
+   <img src="../../images/challenge-04/steps/partb-05-approve.png" alt="Playground: approve the MCP tool call (Approve once)" width="80%">
 
 **Part C — local agent → remote server.** Same script, tools over HTTPS instead of stdio:
 ```bash
 CLM_MCP_URL=https://…/mcp python src/orchestrator_mcp.py   # MCPStreamableHTTPTool, no code change
 ```
 
-> 📸 **Screenshot slots:** the MCP tool on the agent, the Playground calling it, and the local orchestrator against the remote URL.
+> 📸 **Screenshot slot (Part C):** the local orchestrator against the remote URL.
 >
-> <img src="../../images/challenge-04/steps/05-foundry-mcp-tool.svg" alt="Screenshot slot: add MCP tool in Foundry" width="80%">
-> <img src="../../images/challenge-04/steps/06-foundry-playground.svg" alt="Screenshot slot: Foundry Playground calling the remote MCP tool" width="80%">
 > <img src="../../images/challenge-04/steps/07-orchestrator-remote.svg" alt="Screenshot slot: local orchestrator calling the remote MCP server" width="80%">
 
 ### Task 5 · (Optional) One client, two transports

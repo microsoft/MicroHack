@@ -239,7 +239,7 @@ resource appInsightsConnection 'Microsoft.CognitiveServices/accounts/projects/co
 }
 
 // ==========================================================================
-// agent (Ch4 "Go Further"). The Bing account is a global resource; the project
+// agent (Ch4 optional web grounding). The Bing account is a global resource; the project
 // connection (category ApiKey, resolved by name AZURE_BING_CONNECTION_NAME) is
 // what build_web_search_tool() attaches to the agent. Bing search data leaves
 // the Azure compliance boundary — provision only when web grounding is wanted.

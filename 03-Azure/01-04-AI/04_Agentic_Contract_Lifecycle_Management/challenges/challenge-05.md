@@ -73,16 +73,23 @@ Copilot** → **Continue**. This provisions an **Azure Bot Service** behind the 
 > properly-wired bot. Re-publishing? **Delete any stale Azure Bot** from earlier attempts first, or
 > you'll hit an **App ID collision**.
 
-> 📸 **Screenshot slot — what you'll see:** the **Publish** button → **"Publish to Teams and Microsoft 365 Copilot"**.
+> 📸 **Publish menu — what you'll see:** the **Publish** dropdown → **"Teams & Microsoft 365 Copilot"**.
 >
-> <img src="../images/challenge-05/steps/01-channels-publish.svg" alt="Screenshot slot: publish to Teams" width="80%">
+> <img src="../images/challenge-05/steps/05-publish-menu.png" alt="Publish dropdown showing Teams & Microsoft 365 Copilot" width="60%">
 
 ### Task 3 · Fill the metadata & sideload (~10 min)
 
 Fill the app details (**App name**, short + full **description**, **developer/publisher** name and
 placeholder URLs) and upload the two **icons** — **color 192×192** and **outline 32×32** (the
 `src/manifest/` folder ships branded placeholders; regenerate with `python src/scripts/make_icons.py`).
-Select **Prepare Agent**.
+Expand **More** to set the required **Developer website / Terms of use / Privacy statement** URLs, then
+select **Next: Publish options** (a.k.a. **Prepare Agent**).
+
+> 📸 **Publish details form — what you'll see:** the **"Publish to Teams and Microsoft 365"** dialog with
+> the agent name, descriptions, the auto-provisioned **Azure bot services**, and the **More** section
+> (developer website, terms, privacy) required to continue.
+>
+> <img src="../images/challenge-05/steps/06-publish-details.png" alt="Publish to Teams and Microsoft 365 metadata form" width="70%">
 
 When the package is ready (~1–2 min), select **Continue the in-product publishing flow**, choose a
 **publish scope**, and **Submit**:
@@ -94,6 +101,12 @@ When the package is ready (~1–2 min), select **Continue the in-product publish
 
 For the lab pick **Individual scope**. After it succeeds, find the agent in Teams under **Apps → Your
 agents** (allow 1–2 min).
+
+> 📸 **Publish successful — what you'll see:** the confirmation that your agent is now in the
+> **Microsoft 365 Copilot agent store** (*All agents → Your agents*) and in **Teams** (*Apps → Manage
+> your apps*).
+>
+> <img src="../images/challenge-05/steps/07-publish-successful.png" alt="Publish successful dialog" width="70%">
 
 > **If direct publish returns a 400 error:** open the **Download & customize** tab instead, download the
 > app package, and sideload it manually — in Teams: **Apps → Manage your apps → Upload an app → Upload a

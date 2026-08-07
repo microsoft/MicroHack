@@ -62,4 +62,4 @@ FOUNDRY_ACCOUNT_ID=$(az cognitiveservices account list -g rg-clm-lab --query "[0
 The endpoint is deployed with **external ingress and no auth** for hack
 simplicity — anyone with the URL can call the tools. For anything real, put it
 behind auth (a key header, APIM, or a **private** endpoint on a dedicated MCP
-subnet) as described in the challenge's *Go Further* section.
+subnet).

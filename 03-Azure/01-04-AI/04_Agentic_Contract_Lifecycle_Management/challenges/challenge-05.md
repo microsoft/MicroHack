@@ -112,6 +112,12 @@ Upcoming renewals (next 60 days):
 🔴 CT-6033 auto-renews soon (90-day notice) — HIGH risk. Send notice before the window closes; recommend legal review.
 ```
 
+> [!TIP]
+> **See it in the portal too:** `python src/agents/publish_agent.py` (Challenge 2) also publishes
+> `obligation-renewal-agent` (gpt-5.4-nano) to portal → **Agents**. Its `get_contract_status` /
+> `list_upcoming_renewals` **function tools run client-side**, so in the Playground the portal will
+> *request* each call and let you paste the result — use the script above for the full round-trip.
+
 ### Task 6 · (Optional) Capture a conversation reference (~10 min)
 
 In your bot's message handler, on any inbound activity save

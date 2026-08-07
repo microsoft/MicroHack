@@ -20,7 +20,7 @@ If something isn't working as expected, please let your coach know.
 
 > 🧩 **How to use this challenge:** the code in this folder is a **complete, working reference
 > implementation** — you're not building it from a blank file. **Run it, read it, and understand *why*
-> it works**, then take it further with **🚀 Go Further**. Stuck? The code *is* the answer key.
+> it works**. Stuck? The code *is* the answer key.
 
 ---
 
@@ -324,14 +324,6 @@ You're done when:
 - [ ] The `get_contract_status` tool is invoked for `CT-4821` and returns real fields.
 - [ ] The legal-advice prompt is **refused** with a recommendation to consult counsel.
 - [ ] The agent is running on the **`gpt-5.4`** deployment (confirm the model name in the portal).
-
-## 🚀 Go Further
-
-- Add a **Web IQ (Bing)** grounding tool for external / regulatory lookups.
-- Add a second knowledge base scoped to a single contract type and compare retrieval quality.
-- Tighten the persona so every draft includes a **"⚠️ requires human review"** banner.
-- Add a second function tool (e.g. `list_upcoming_renewals`, already in `clm_common.tools`) and watch
-  the model choose between tools.
 
 ## 🛠️ Troubleshooting
 

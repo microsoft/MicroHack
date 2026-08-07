@@ -21,7 +21,7 @@ If something isn't working as expected, please let your coach know.
 
 > 🧩 **How to use this challenge:** the code in this folder is a **complete, working reference
 > implementation** — you're not building it from a blank file. **Run it, read it, and understand *why*
-> it works**, then take it further with **🚀 Go Further**. Stuck? The code *is* the answer key.
+> it works**. Stuck? The code *is* the answer key.
 
 ## 🎯 Objective
 
@@ -246,14 +246,6 @@ Docs: [Rubric evaluators](https://learn.microsoft.com/azure/foundry/concepts/eva
 - The **gpt-5.4-vs-gpt-5.4-nano** comparison is captured (quality + latency).
 - A **rubric evaluator** is built in the portal (or via `CLM_RUBRIC` in code) and run on the dataset.
 - The quality gate **fails** when you set a threshold above the measured score (try `--gate 5.0`).
-
-## 🚀 Go Further
-
-- Add **safety** evaluators (`ContentSafetyEvaluator`) — these take `azure_ai_project` + a credential
-  instead of a `model_config`.
-- Add a **`ToolCallAccuracyEvaluator`** for the `get_contract_status` tool rows.
-- Run **AI red teaming** against the agent and add adversarial rows to the dataset.
-- Wire `--gate` into a GitHub Action so PRs are blocked on a **CLM rubric** regression (see `ci-eval.yml`).
 
 ## 🛠️ Troubleshooting
 

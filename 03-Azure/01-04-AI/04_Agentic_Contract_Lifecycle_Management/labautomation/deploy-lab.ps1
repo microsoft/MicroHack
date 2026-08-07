@@ -269,6 +269,7 @@ $modelOrch       = Get-OutVal $deployOutputs 'MODEL_ORCHESTRATOR'
 $modelDraft      = Get-OutVal $deployOutputs 'MODEL_DRAFTING'
 $modelClauseRisk = Get-OutVal $deployOutputs 'MODEL_CLAUSE_RISK'
 $modelRenewal    = Get-OutVal $deployOutputs 'MODEL_RENEWAL'
+$appInsights     = Get-OutVal $deployOutputs 'APPLICATIONINSIGHTS_CONNECTION_STRING'
 
 Write-Host ""
 Write-Host "==================== Your CLM microhack environment ===================="
@@ -276,6 +277,7 @@ Write-Host "  Resource group          : $effectiveResourceGroup ($effectiveLocat
 Write-Host "  Foundry project endpoint: $projectEndpoint"
 Write-Host "  Azure AI Search endpoint: $searchEndpoint (index '$searchIndex')"
 Write-Host "  Models                  : orchestrator=$modelOrch, drafting=$modelDraft, clause-risk=$modelClauseRisk, renewal=$modelRenewal"
+Write-Host "  App Insights            : $(if ($appInsights) { 'connection string ready' } else { '(none)' })"
 Write-Host "  Next                    : paste these into the repo-root .env (see Challenge 1)."
 Write-Host "========================================================================"
 
@@ -301,4 +303,7 @@ if ($modelClauseRisk) {
 }
 if ($modelRenewal) {
     @{ HackboxCredential = @{ name = 'ModelRenewal'; value = $modelRenewal; note = 'Renewal model deployment -> MODEL_RENEWAL in .env' } }
+}
+if ($appInsights) {
+    @{ HackboxCredential = @{ name = 'AppInsightsConnectionString'; value = $appInsights; note = 'Application Insights connection string -> APPLICATIONINSIGHTS_CONNECTION_STRING in .env (Challenge 3)' } }
 }

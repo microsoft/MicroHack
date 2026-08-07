@@ -12,14 +12,14 @@ If something isn't working as expected, please let your coach know.
 > **⏱️ Duration:** ~30 min
 
 > **📋 Prerequisites:**
-> - An **Azure subscription** with rights to create a Foundry project and deploy GPT models.
+> - An **Azure subscription** your lab was provisioned in *(or, if self-hosting, one with rights to create a Foundry project and deploy GPT models)*.
 > - A **GitHub account** (to open the repo in Codespaces).
 > - **GitHub Codespaces** access — everything runs in the browser; no local tooling required.
 
-> 🧩 **How to use this challenge:** the provisioning is **scripted for you** (`azd up` *or* the
-> `labautomation/deploy` script). **Run it, then confirm you understand what got created** — the Foundry
-> project, the three-model fleet, and the search index the later challenges depend on. Stuck? The
-> scripts *are* the answer key.
+> 🧩 **How to use this challenge:** for a MicroHack event your Azure resources are **provisioned for
+> you** — you just point your `.env` at them (Task 4) and **confirm you understand what got created**:
+> the Foundry project, the three-model GPT fleet, and the search index the later challenges depend on.
+> *(Running outside the platform? One `azd up` provisions the same resources — see Task 4.)*
 
 ## 🎯 Objective
 
@@ -31,9 +31,10 @@ If something isn't working as expected, please let your coach know.
 ## 🧭 Context
 
 Everything runs from **GitHub Codespaces** using the devcontainer in this repo (Python 3.11, Azure
-CLI, `azd`, Node). A single command — **`azd up`** (Bicep in [`infra/`](../labautomation/infra/)) or the
-**`labautomation/deploy`** script — provisions everything below into **one resource group** and autofills
-your `.env`.
+CLI, `azd`, Node). For a MicroHack event the resources below are **already provisioned** into **one
+resource group** and their endpoints appear on your **lab dashboard**; you copy them into `.env` in
+Task 4. *(Self-hosting? One **`azd up`** — Bicep in [`infra/`](../labautomation/infra/) — provisions the
+same resource group and autofills `.env`.)*
 
 The following image illustrates the complete setup — every Azure resource, the LLM model fleet, and
 the identity + delivery plane around them:
@@ -59,8 +60,8 @@ All resources reside in a **single resource group** (default name `rg-clm-microh
   compliance boundary.
 
 Identity is **keyless** for Azure data planes: system-assigned managed identities plus Microsoft Entra
-ID RBAC (Azure AI Developer, Cognitive Services User, Search data roles) — all assigned for you by
-`azd up`. *(The SharePoint indexer authenticates with a separate Entra app registration — see below.)*
+ID RBAC (Azure AI Developer, Cognitive Services User, Search data roles) — all assigned for you during
+provisioning. *(The SharePoint indexer authenticates with a separate Entra app registration — see below.)*
 
 <details>
 <summary><strong>📦 Resource inventory</strong> (what gets created)</summary>
@@ -128,8 +129,8 @@ text at crawl time); regenerate the PDFs with `python src/scripts/make_corpus_pd
 **Before you begin — tick these off:**
 
 - [ ] You can sign in to [github.com](https://github.com).
-- [ ] You can sign in to the [Azure Portal](https://portal.azure.com) with an account that can **create resources**.
-- [ ] Your Azure subscription can deploy **GPT** models (ask your coach if unsure).
+- [ ] You can sign in to the [Azure Portal](https://portal.azure.com) with the account your lab was provisioned for (or, if self-hosting, one that can **create resources**).
+- [ ] *(Self-hosting only)* Your Azure subscription can deploy **GPT** models (ask your coach if unsure).
 - [ ] You have ~30 minutes and a stable connection (provisioning takes 5–10 min on its own).
 
 ### Task 1 · Open the code in a Codespace (~2 min)
@@ -215,106 +216,79 @@ az account set --subscription "<your-subscription-id>"
 
 ---
 
-### Task 4 · Deploy the resources (~8 min)
+### Task 4 · Connect to your provisioned resources (~5 min)
 
-> [!IMPORTANT]
-> Depending on the setup for your event, the Azure resources may already be provisioned for you — in
-> which case you can **skip to Task 6**. Check with your coach what applies.
+For a **MicroHack event your Azure resources are already provisioned** — a resource group with the
+Foundry project, the three-model GPT fleet, and Azure AI Search. You don't deploy anything; you just
+point your `.env` at them using the values on your **lab dashboard**.
 
-Choose a region that offers **all three** models. This repo's infra is pre-pinned to models that are
-available in **`swedencentral`** today (`gpt-5.4`, `gpt-5.6-sol`, `gpt-5.4-nano`), so
-**`swedencentral` is the safe default** — use it unless your coach says otherwise. Then pick **one** option:
+**Step 4a — create your `.env`** from the template (Codespace terminal, at the repo root):
+
+```bash
+cp .env.example .env
+```
+
+**Step 4b — copy your dashboard values into `.env`.** Open `.env` in the Codespace editor and fill in
+the values shown on your lab dashboard:
+
+| Lab dashboard credential | `.env` variable | Example value |
+|--------------------------|-----------------|---------------|
+| **FoundryProjectEndpoint** | `AZURE_AI_PROJECT_ENDPOINT` | `https://clmfoundry****.services.ai.azure.com/api/projects/clm-project` |
+| **SearchEndpoint** | `AZURE_SEARCH_ENDPOINT` | `https://clmsearch****.search.windows.net` |
+| **AppInsightsConnectionString** | `APPLICATIONINSIGHTS_CONNECTION_STRING` | `InstrumentationKey=...;IngestionEndpoint=...` |
+| **ModelOrchestrator** | `MODEL_ORCHESTRATOR` | `gpt-5.4` |
+| **ModelDrafting** | `MODEL_DRAFTING` | `gpt-5.4` |
+| **ModelClauseRisk** | `MODEL_CLAUSE_RISK` | `gpt-5.6-sol` |
+| **ModelRenewal** | `MODEL_RENEWAL` | `gpt-5.4-nano` |
 
 > [!TIP]
-> **Want to double-check what your subscription offers in a region?** Run
-> `az cognitiveservices model list --location swedencentral --output table` and look for the model
-> names above. If you switch regions and a model isn't listed, that's what causes a
-> `DeploymentModelNotSupported` error — see [🛠️ Troubleshooting](#️-troubleshooting).
+> The model names plus `AZURE_SEARCH_INDEX` (`clm-corpus`) and `AZURE_SEARCH_CONNECTION_NAME`
+> (`clm-search`) already have the right defaults in `.env.example`, so at minimum you only need to
+> paste the two **endpoints** and the **App Insights connection string**. Paste the model names too if
+> your dashboard shows different values.
+
+> 📸 **Screenshot slot — what you'll see:** your lab dashboard listing the resource endpoints and model names.
+>
+> <img src="../images/challenge-01/steps/04b-lab-dashboard.png" alt="Screenshot slot: lab dashboard credentials" width="80%">
+
+✅ **You'll know it worked when:** `.env` has real values for `AZURE_AI_PROJECT_ENDPOINT` and
+`AZURE_SEARCH_ENDPOINT` (not blank). Leave the `SHAREPOINT_*` and the Challenge 5 `MICROSOFT_APP_*` /
+`TEAMS_*` variables blank for now — you fill those later.
+
+<details>
+<summary><strong>Running outside the MicroHack platform? Self-provision with <code>azd up</code></strong></summary>
+
+If you're **not** on a provisioned lab (e.g. testing in your own subscription), one command creates
+everything. First pick a region that offers **all three** models — this repo's infra is pre-pinned for
+**`swedencentral`** (`gpt-5.4`, `gpt-5.6-sol`, `gpt-5.4-nano`), so use it unless you know another works.
 
 > [!IMPORTANT]
 > **Preflight (30 seconds, saves 10 minutes):** confirm your checkout has the current model pins
-> *before* you provision. Run:
+> *before* you provision:
 > ```bash
 > grep -nE "gptOrchestratorVersion|gptMiniModel|gptMiniVersion|gpt56solVersion" labautomation/infra/resources.bicep
 > ```
-> ✅ You should see **all three** pins: orchestrator `gpt-5.4` `2026-03-05`, renewal `gpt-5.4-nano`
-> `2026-03-17`, and clause-risk `gpt-5.6-sol` `2026-07-09`.
-> ❌ If you instead see `gpt-5.3-chat`, `2026-03-03`, `2025-11-01`, renewal `gpt-5.4-nano` `2025-04-14`, or `gpt-4o-mini` `2024-07-18`, your checkout
-> is **behind** — run `git pull`, then re-run this check. Deploying an old template is what triggers
-> `DeploymentModelNotSupported` / `ServiceModelDeprecating`.
-
-Provision everything with **`azd up`** — it's pre-installed in the Codespace, deploys the Bicep in
-[`infra/`](../labautomation/infra/), and auto-writes your `.env`.
-
-**Step 4a — sign `azd` in** (separate from `az login` above):
+> ✅ You should see orchestrator `gpt-5.4` `2026-03-05`, renewal `gpt-5.4-nano` `2026-03-17`, and
+> clause-risk `gpt-5.6-sol` `2026-07-09`. ❌ If you see older values, run `git pull` first — deploying an
+> old template is what triggers `DeploymentModelNotSupported` / `ServiceModelDeprecating`.
 
 ```bash
-azd auth login
+azd auth login          # separate from az login above
+azd up                  # answer: environment name (e.g. clm-microhack), your subscription, region = Sweden Central
 ```
 
-**Step 4b — provision everything** with one command:
+It provisions for **5–10 minutes**, assigns the RBAC roles the later challenges need, creates the
+`clm-search` Foundry IQ connection, and runs the `postprovision` hook (`src/scripts/write_env.py`) to
+**write your `.env` automatically** — so you can skip Step 4b above. Add Azure SQL with
+`azd env set DEPLOY_SQL true` (+ `azd env set SQL_ADMIN_PASSWORD '<StrongP@ssw0rd!>'`) or Bing web
+grounding with `azd env set DEPLOY_BING true` before `azd up`.
 
-```bash
-azd up
-```
+> **Prefer not to use `azd`?** `LOCATION=swedencentral ./labautomation/deploy.sh` (add `--with-sql` /
+> `--with-bing`; on Windows outside Codespaces use `./labautomation/deploy.ps1`) provisions the same
+> resources and writes `.env` too. If it fails with `DeploymentModelNotSupported`, a model/version
+> isn't offered in your region — see [🛠️ Troubleshooting](#️-troubleshooting).
 
-`azd up` asks you **three questions** the first time. Answer them like this:
-
-| Prompt | What to type |
-|--------|--------------|
-| `Enter a new environment name` | anything short + lowercase, e.g. **`clm-microhack`** |
-| `Select an Azure Subscription` | the subscription you set in Task 3 (arrow keys → Enter) |
-| `Select an Azure location` | **`Sweden Central`** (start typing `sweden` to filter) |
-
-> 📸 **Screenshot slot — what you'll see:** the three `azd up` prompts (environment name, subscription, region).
->
-> <img src="../images/challenge-01/steps/05-azd-up-prompts.png" alt="Screenshot slot: azd up prompts" width="80%">
-
-Then it provisions for **5–10 minutes**. `azd up` deploys the Bicep in [`infra/`](../labautomation/infra/), assigns the
-RBAC roles the later challenges need, creates the `clm-search` Foundry IQ connection, and runs the
-`postprovision` hook (`src/scripts/write_env.py`) to write your `.env`.
-
-> 📸 **Screenshot slot — what you'll see:** the green **SUCCESS** summary with the deployed resources and outputs.
->
-> <img src="../images/challenge-01/steps/06-azd-up-success.png" alt="Screenshot slot: azd up success" width="80%">
-
-✅ **You should see** (names/values will differ) — the key line is `SUCCESS`:
-
-```text
-  (✓) Done: Deploying service ...
-Deploying services (azd deploy)
-
-  Provisioning Azure resources (azd provision)
-  Resource group: rg-clm-microhack
-  ...
-SUCCESS: Your up workflow to provision and deploy to Azure completed in 8 minutes.
-```
-
-❌ **If it fails with `DeploymentModelNotSupported`** — first make sure your checkout is **current**:
-run `grep -n "gptOrchestrator" labautomation/infra/resources.bicep` and confirm you see `gpt-5.4`
-and `2026-03-05` (if you see `2025-11-01` or `gpt-5.3-chat`, run `git pull`).
-If your checkout is current, then a model/version simply isn't offered in your region: this repo is
-already fixed for `swedencentral`, so switch back to it, or update the versions in
-[`infra/resources.bicep`](../labautomation/infra/resources.bicep). See [🛠️ Troubleshooting](#️-troubleshooting).
-
-To also provision Azure SQL:
-
-```bash
-azd env set DEPLOY_SQL true
-azd env set SQL_ADMIN_PASSWORD '<StrongP@ssw0rd!>'
-azd up
-```
-
-To also provision **Grounding with Bing Search** (optional web grounding for the Clause & Risk
-agent — see Challenge 4): `azd env set DEPLOY_BING true` before `azd up`. The `.env` then gets a
-populated `AZURE_BING_CONNECTION_NAME`. Bing search data leaves the Azure compliance boundary.
-
-> **Prefer not to use `azd`?** Run the same provisioning via the deploy script:
-> `LOCATION=swedencentral ./labautomation/deploy.sh` (add `--with-sql` / `--with-bing` for those
-> optional resources; on Windows outside Codespaces use `./labautomation/deploy.ps1`). It writes your
-> `.env` automatically too.
-
-⏱️ Provisioning takes ~5–10 minutes.
+</details>
 
 ---
 
@@ -323,7 +297,8 @@ populated `AZURE_BING_CONNECTION_NAME`. Bing search data leaves the Azure compli
 Let's confirm everything landed. Do all three checks:
 
 **5a — Resource group in the Azure Portal.** Open the [Azure Portal](https://portal.azure.com/) →
-search **`rg-clm-microhack`** → click it. You should see ~7 resources (Foundry account, Azure AI Search,
+search for **your resource group** (its name is on your dashboard as **ResourceGroup**; the
+self-hosted default is **`rg-clm-microhack`**) → click it. You should see ~7 resources (Foundry account, Azure AI Search,
 Application Insights, Log Analytics, and the model deployments live inside the Foundry account).
 
 > 📸 **Screenshot slot — what you'll see:** the `rg-clm-microhack` overview listing the resources.
@@ -398,7 +373,7 @@ Path B (local-PDF) — it needs no SharePoint, no admin consent, and works in ev
 >    ```
 >    You should see `· SharePoint settings not set — using the LOCAL-PDF fallback` followed by
 >    `✓ uploaded 14/14 local PDF(s) into 'clm-corpus'`. *(This needs the **Search Index Data
->    Contributor** role, which `azd up` already granted you — if a doc fails, wait a minute for
+>    Contributor** role, which provisioning already granted you — if a doc fails, wait a minute for
 >    role propagation and re-run; the script is idempotent.)*
 > 3. Confirm a **non-zero document count** (portal → Search service → Indexes → `clm-corpus`), then
 >    **jump to [Task 7](#task-7--smoke-test).**
@@ -702,10 +677,10 @@ Smoke test: ✅ PASS
 
 | Symptom | Fix |
 |---------|-----|
-| `DeploymentModelNotSupported` / `deployment failed` for a model | **First: is your checkout current?** Run the [preflight grep](#task-4--deploy-the-resources) — it must show `gpt-5.4`+`2026-03-05`, `gpt-5.6-sol`+`2026-07-09`, and `gpt-5.4-nano`+`2026-03-17`. If you see `gpt-5.3-chat`, `2026-03-03`, `2025-11-01`, renewal `gpt-5.4-nano` `2025-04-14`, or `gpt-4o-mini`, run `git pull`, then redeploy. **Otherwise** the model **name or version** isn't offered in your region: list what *is* available with `az cognitiveservices model list --location <region> --output table`, then update the model/version in [`infra/resources.bicep`](../labautomation/infra/resources.bicep) (and `labautomation/deploy.sh`). This repo is pre-pinned for `swedencentral`; if you changed regions, switch back or re-pin. |
+| `DeploymentModelNotSupported` / `deployment failed` for a model | *(Self-provision path only — provisioned labs don't deploy.)* **First: is your checkout current?** Run the [preflight grep](#task-4--connect-to-your-provisioned-resources) — it must show `gpt-5.4`+`2026-03-05`, `gpt-5.6-sol`+`2026-07-09`, and `gpt-5.4-nano`+`2026-03-17`. If you see `gpt-5.3-chat`, `2026-03-03`, `2025-11-01`, renewal `gpt-5.4-nano` `2025-04-14`, or `gpt-4o-mini`, run `git pull`, then redeploy. **Otherwise** the model **name or version** isn't offered in your region: list what *is* available with `az cognitiveservices model list --location <region> --output table`, then update the model/version in [`infra/resources.bicep`](../labautomation/infra/resources.bicep) (and `labautomation/deploy.sh`). This repo is pre-pinned for `swedencentral`; if you changed regions, switch back or re-pin. |
 | `ServiceModelDeprecating` for `gpt-4o-mini` (or another model) | Your checkout pins a **deprecating model**. The repo now uses `gpt-5.4-nano` `2026-03-17` for the renewal agent — run `git pull`. If you deliberately changed a version, pick a current one from `az cognitiveservices model list --location <region> --output table` (avoid ones with a near/past `deprecation.inference` date). |
 | `Project can only be created under AIServices Kind account with allowProjectManagement set to true` | Fixed in the template (`account.properties.allowProjectManagement: true`). If you hit it, your checkout is behind — run `git pull` and redeploy. |
-| SharePoint: *"Tenant does not have a SPO license"*, or you can't grant the app's Graph **admin consent** (only Global Reader / **"Grant admin consent" greyed out**) | Only happens if you're **not** an admin of the tenant — in your own sandbox tenant the Path A script self-grants consent. If you hit it, it's **not** a failure: use the **local-PDF fallback (Path B)** — leave the `SHAREPOINT_*` values blank in `.env` and run `python src/scripts/seed_corpus.py`. It extracts `src/data/**/*.pdf` and populates `clm-corpus` directly (needs the Search Index Data Contributor role, granted by `azd up`) — the **same index** the SharePoint path builds, so Challenges 2–6 are unaffected. See [Task 6, Path B](#task-6--seed-the-corpus). |
+| SharePoint: *"Tenant does not have a SPO license"*, or you can't grant the app's Graph **admin consent** (only Global Reader / **"Grant admin consent" greyed out**) | Only happens if you're **not** an admin of the tenant — in your own sandbox tenant the Path A script self-grants consent. If you hit it, it's **not** a failure: use the **local-PDF fallback (Path B)** — leave the `SHAREPOINT_*` values blank in `.env` and run `python src/scripts/seed_corpus.py`. It extracts `src/data/**/*.pdf` and populates `clm-corpus` directly (needs the Search Index Data Contributor role, granted during provisioning) — the **same index** the SharePoint path builds, so Challenges 2–6 are unaffected. See [Task 6, Path B](#task-6--seed-the-corpus). |
 | `account project create` unavailable | The CLI project command is preview. Create the project in the **Foundry portal**, then set `AZURE_AI_PROJECT_ENDPOINT` in `.env` manually (Overview → Endpoint). |
 | `az login` in Codespaces | Use `az login --use-device-code`. |
 | Search / quota errors | Ensure the subscription has quota for Basic Search + the model SKUs; request quota if needed. |

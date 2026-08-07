@@ -243,8 +243,8 @@ available in **`swedencentral`** today (`gpt-5.4`, `gpt-5.6-sol`, `gpt-5.4-nano`
 > is **behind** — run `git pull`, then re-run this check. Deploying an old template is what triggers
 > `DeploymentModelNotSupported` / `ServiceModelDeprecating`.
 
-<details open>
-<summary><strong>Option A — <code>azd up</code></strong> (recommended · Bicep in <code>infra/</code>)</summary>
+Provision everything with **`azd up`** — it's pre-installed in the Codespace, deploys the Bicep in
+[`infra/`](../labautomation/infra/), and auto-writes your `.env`.
 
 **Step 4a — sign `azd` in** (separate from `az login` above):
 
@@ -309,58 +309,12 @@ To also provision **Grounding with Bing Search** (optional web grounding for the
 agent — see Challenge 4): `azd env set DEPLOY_BING true` before `azd up`. The `.env` then gets a
 populated `AZURE_BING_CONNECTION_NAME`. Bing search data leaves the Azure compliance boundary.
 
-</details>
+> **Prefer not to use `azd`?** Run the same provisioning via the deploy script:
+> `LOCATION=swedencentral ./labautomation/deploy.sh` (add `--with-sql` / `--with-bing` for those
+> optional resources; on Windows outside Codespaces use `./labautomation/deploy.ps1`). It writes your
+> `.env` automatically too.
 
-<details>
-<summary><strong>Option B — deploy script</strong> (<code>az</code> CLI)</summary>
-
-```bash
-LOCATION=swedencentral ./labautomation/deploy.sh          # add --with-sql and/or --with-bing to also provision those
-```
-
-> Windows (outside Codespaces): `./labautomation/deploy.ps1` (`-WithSql` / `-WithBing` optional).
-> `--with-bing` provisions Grounding with Bing Search (optional web grounding for Challenge 4).
-
-</details>
-
-<details>
-<summary><strong>Option C — one-click <em>Deploy to Azure</em> / plain ARM</strong> (<code>infra/azuredeploy.json</code> · no <code>azd</code>)</summary>
-
-Prefer a portal button or a pure `az` deploy with no `azd`? [`infra/azuredeploy.json`](../labautomation/infra/azuredeploy.json)
-is a self-contained ARM template **compiled from the same Bicep** — it creates the same
-`rg-clm-microhack` resource group and resources.
-
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fglejdis%2Fmicrohack-aiagents%2Fmain%2Fchallenge-0%2Finfra%2Fazuredeploy.json)
-
-The button opens a **subscription-scoped** custom deployment — pick your subscription and
-region and it provisions everything (no resource-group picker; the template creates
-`rg-clm-microhack` itself). Or from the CLI:
-
-```bash
-az deployment sub create \
-  --name clm-microhack \
-  --location swedencentral \
-  --template-file labautomation/infra/azuredeploy.json \
-  --parameters environmentName=clm-microhack location=swedencentral \
-               principalId=$(az ad signed-in-user show --query id -o tsv)
-```
-
-> Passing your `principalId` assigns the data-plane roles (Search Index Data) you need to
-> seed the corpus. Add `deploySql=true sqlAdminPassword='<StrongP@ssw0rd!>'` to also
-> provision Azure SQL, and/or `deployBing=true` to provision Grounding with Bing Search
-> (optional web grounding for Challenge 4).
-
-Unlike `azd up`, this path does **not** auto-write `.env`. Populate it from the deployment
-outputs (use the same `--name` you deployed with):
-
-```bash
-python src/scripts/write_env.py --deployment clm-microhack
-```
-
-</details>
-
-Options A and B write a populated **`.env`** automatically; Option C writes it via the
-`write_env.py --deployment` step above. ⏱️ Provisioning takes ~5–10 minutes.
+⏱️ Provisioning takes ~5–10 minutes.
 
 ---
 

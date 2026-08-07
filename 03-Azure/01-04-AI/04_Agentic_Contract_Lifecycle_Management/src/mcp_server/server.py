@@ -47,16 +47,25 @@ from clm_common.tools import get_contract_status as _get_contract_status  # noqa
 mcp = FastMCP("clm-mcp")
 
 
-def _run_agent(create_agent_fn, prompt: str) -> str:
-    """Build a specialist Agent Framework agent, run one prompt, return the text."""
-    from clm_common.foundry import run_prompt
+async def _run_agent(create_agent_fn, prompt: str) -> str:
+    """Build a specialist Agent Framework agent, run one prompt, return the text.
+
+    This is ``async`` on purpose. FastMCP invokes a *synchronous* tool function
+    directly inside its own already-running event loop, so a sync tool that
+    blocked on the agent (``run_prompt`` → ``loop.run_until_complete``) crashed
+    with ``RuntimeError: Cannot run the event loop while another loop is
+    running`` the moment a client actually called it over HTTP. Awaiting the
+    async agent (``run_agent_with_retry``) on the loop FastMCP is already running
+    avoids the nested loop entirely — and adds transient-error retry for free.
+    """
+    from clm_common.foundry import run_agent_with_retry
 
     agent = create_agent_fn()
-    return run_prompt(agent, prompt)
+    return await run_agent_with_retry(agent, prompt)
 
 
 @mcp.tool()
-def draft_contract(contract_type: str, party: str, term: str = "1 year") -> str:
+async def draft_contract(contract_type: str, party: str, term: str = "1 year") -> str:
     """Draft a contract from Contoso Global's approved templates.
 
     :param contract_type: One of NDA, MSA, SOW.
@@ -66,11 +75,11 @@ def draft_contract(contract_type: str, party: str, term: str = "1 year") -> str:
     from intake_drafting_agent import create_agent
 
     prompt = f"Draft a {contract_type} between Contoso Global and {party} for a {term} term."
-    return _run_agent(create_agent, prompt)
+    return await _run_agent(create_agent, prompt)
 
 
 @mcp.tool()
-def analyze_contract(draft_text: str) -> str:
+async def analyze_contract(draft_text: str) -> str:
     """Extract clauses from a counterparty draft, compare to standard, and return a risk score.
 
     :param draft_text: The full text of the counterparty draft to analyze.
@@ -81,7 +90,7 @@ def analyze_contract(draft_text: str) -> str:
         "Analyze this counterparty draft. Extract clauses, compare to our standard, flag "
         "deviations, and give an overall risk score with the top 3 issues.\n\n" + draft_text
     )
-    return _run_agent(create_agent, prompt)
+    return await _run_agent(create_agent, prompt)
 
 
 @mcp.tool()

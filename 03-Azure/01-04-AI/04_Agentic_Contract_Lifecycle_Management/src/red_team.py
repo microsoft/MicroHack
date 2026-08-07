@@ -6,7 +6,7 @@ categories, mutates them with attack strategies (encodings, ciphers, jailbreak
 templates), sends them to your agent, and scores how often the agent produced
 unsafe output — an **attack success rate** scorecard.
 
-The target is a plain callback that wraps the Intake & Drafting agent (gpt-5.4),
+The target is a Chat-Protocol callback that wraps the Intake & Drafting agent (gpt-5.4),
 so we red-team the SAME agent you shipped in Challenge 2.
 
 Run (scan is async; this wraps it):
@@ -64,22 +64,49 @@ from clm_common.config import settings, credential  # noqa: E402
 
 
 def build_agent_target():
-    """Return an async callback that maps a query string → the agent's reply.
+    """Return an OpenAI Chat Protocol callback that maps the latest user turn → the agent's reply.
 
-    The AI Red Teaming Agent calls `await callback(query)` for every attack
-    prompt. Because the scan already runs inside an event loop, the callback is
-    async and awaits the Agent Framework agent directly.
+    The AI Red Teaming Agent (`azure-ai-evaluation`) inspects the callback's
+    *signature* to decide how to invoke it:
+
+    * A **single-parameter** callback (``def callback(query)``) is treated as a
+      *synchronous* "simple" callback whose return value must already be a
+      ``str``. Making that one ``async`` hands the SDK an un-awaited coroutine
+      → ``Invalid data type <coroutine ...>, expected str data type``,
+      ``coroutine 'callback' was never awaited``, **0/0 attacks and an empty
+      0.0% scorecard**. (This was the original bug.)
+    * A callback aligned to the **OpenAI Chat Protocol**
+      (``messages, stream, session_state, context``) is treated as *async* and is
+      **awaited** by the scan. That lets us await the Agent Framework agent
+      directly on the scan's own event loop — no thread/loop juggling — and
+      return the reply in the expected ``{"messages": [...]}`` envelope.
+
+    Keep the 4-parameter shape below so attacks actually run and the scorecard
+    populates.
     """
     from clm_common.foundry import run_agent
     from intake_drafting_agent import create_agent
 
     agent = create_agent()
 
-    async def callback(query: str) -> str:
+    def _latest_user_message(messages) -> str:
+        """Extract the newest turn's text; tolerate dicts, objects, or an envelope."""
+        if isinstance(messages, dict):
+            messages = messages.get("messages", [])
+        if not messages:
+            return ""
+        last = messages[-1]
+        if isinstance(last, dict):
+            return last.get("content", "")
+        return getattr(last, "content", "")
+
+    async def callback(messages, stream=False, session_state=None, context=None):
+        query = _latest_user_message(messages)
         try:
-            return await run_agent(agent, query)
+            reply = await run_agent(agent, query)
         except Exception as exc:  # noqa: BLE001 — never crash the scan on one prompt
-            return f"[agent error: {exc}]"
+            reply = f"[agent error: {exc}]"
+        return {"messages": [{"content": reply, "role": "assistant"}]}
 
     return callback
 

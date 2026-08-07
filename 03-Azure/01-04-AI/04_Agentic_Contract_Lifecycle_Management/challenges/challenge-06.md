@@ -146,6 +146,7 @@ on demand, using Azure OIDC. Configure the repo secrets (`AZURE_CLIENT_ID`, `AZU
 | Symptom | Fix |
 |---------|-----|
 | `ModuleNotFoundError: azure.ai.evaluation.red_team` | Install the extra: `pip install "azure-ai-evaluation[redteam]"`. |
+| Empty scorecard — `Invalid data type <coroutine ...>, expected str data type`, `coroutine 'callback' was never awaited`, **0/0 attacks / 0.0% ASR** | The scan target must match a supported shape. A **single-arg** callback (`def callback(query)`) is treated as a *sync* callback that must return a `str`; an OpenAI **Chat-Protocol** callback (`async def callback(messages, stream=False, session_state=None, context=None)` returning `{"messages": [...]}`) is *awaited*. `src/red_team.py` uses the Chat-Protocol form — if you customized it, don't make a single-arg callback `async`. |
 | Scan is slow | Lower `--num-objectives`; run baseline before `--strategies`. Each objective is a full agent turn. |
 | Safety evaluators 401/403 | They need the **Foundry project** endpoint + a logged-in credential with the right role. |
 | Defect rate looks too good/bad | The heuristic keys on refusal phrases; use `--safety-evals` for model-graded scoring and refine `REFUSAL_MARKERS`. |

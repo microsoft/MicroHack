@@ -18,14 +18,19 @@ the *same* agent you shipped, run safety evaluations, and gate releases on a com
 ## 🛠️ Task-by-task walkthrough
 
 ### Task 1 · Baseline red-team scan
-[`src/red_team.py`](../../src/red_team.py) points Foundry's **AI Red Teaming Agent** at the *same* Intake & Drafting agent from Ch2 via a simple async callback:
+[`src/red_team.py`](../../src/red_team.py) points Foundry's **AI Red Teaming Agent** at the *same* Intake & Drafting agent from Ch2 via an OpenAI **Chat-Protocol** callback (the scan *awaits* it, so attacks actually run and the scorecard populates):
 ```python
 # src/red_team.py
 def build_agent_target():
     agent = create_agent()                        # the shipped Intake & Drafting agent (gpt-5.4)
-    async def callback(query: str) -> str:
-        try:    return await run_agent(agent, query)
-        except Exception as exc:  return f"[agent error: {exc}]"   # never crash the scan
+    # Chat-Protocol shape (messages, stream, session_state, context) → the SDK awaits it.
+    # A single-arg callback would be treated as *sync* and must return a str; an async
+    # one there is never awaited → empty 0.0% scorecard / 0-0 attacks.
+    async def callback(messages, stream=False, session_state=None, context=None):
+        query = messages[-1]["content"] if isinstance(messages[-1], dict) else messages[-1].content
+        try:    reply = await run_agent(agent, query)
+        except Exception as exc:  reply = f"[agent error: {exc}]"   # never crash the scan
+        return {"messages": [{"content": reply, "role": "assistant"}]}
     return callback
 
 agent = RedTeam(
@@ -127,4 +132,5 @@ python src/safety_eval.py --dry-run --gate 0.1            # gate for CI
 | Symptom | Cause / fix |
 |---------|-------------|
 | Non-zero category in the scorecard | Tighten refusal/grounding instructions in [`src/agents/intake_drafting_agent.py`](../../src/agents/intake_drafting_agent.py). |
+| **Empty scorecard** — `Invalid data type <coroutine ...>, expected str`, `coroutine 'callback' was never awaited`, **0/0 attacks / 0.0% ASR** | The scan target didn't match a supported callback shape. Use the **Chat-Protocol** form (`async def callback(messages, stream=False, session_state=None, context=None)` returning `{"messages": [...]}`) so the SDK *awaits* it — a single-arg `async` callback is treated as sync and its coroutine is never awaited. |
 | Red-teaming agent unavailable | Confirm the AI Red Teaming Agent is enabled for your Foundry project/region. |

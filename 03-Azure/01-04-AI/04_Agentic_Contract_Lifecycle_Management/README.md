@@ -341,11 +341,11 @@ challenges are a single story:
 > Teams app icons with `python src/scripts/make_icons.py`.
 
 Each challenge README follows the same anatomy: **🎯 Objective · 🧭 Context · ✅ Tasks · ✔️ Success
-criteria · 🚀 Go Further · 🛠️ Troubleshooting · 🧠 Reflection**.
+criteria · 🛠️ Troubleshooting · 🧠 Reflection**.
 
 > **On "solutions":** each challenge folder ships a **complete, working reference implementation** —
 > there's no separate `solutions/` folder. The challenge is to **run it, understand *why* it works, and
-> extend it** (the 🚀 Go Further section), not to type it from a blank file. The code *is* the answer key.
+> extend it**, not to type it from a blank file. The code *is* the answer key.
 
 ---
 

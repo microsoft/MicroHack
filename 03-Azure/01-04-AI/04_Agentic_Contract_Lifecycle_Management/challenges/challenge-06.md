@@ -114,10 +114,11 @@ Guardrails held: 9/10 · defect rate = 10%
 
 ### Task 4 · Harden the agent (~15 min)
 
-Then re-scan to prove it improved:
-- In the portal, attach **Content Safety** (Prompt Shields + PII) to the agent.
-- Tighten the refusal/grounding instructions in `src/agents/intake_drafting_agent.py`.
-- Re-run Tasks 1–3 and confirm the attack success / defect rate **drops**.
+Task 4 hardens **two different agents** — keep them straight:
+- **Code agent (`intake-drafting-agent`)** — tighten the refusal/grounding instructions in `src/agents/intake_drafting_agent.py`. This is the in-process agent the red-team scan targets, so this is what drops the defect rate.
+- **Portal agent (`clm-contract-agent`)** — in the portal, attach **Content Safety** (Prompt Shields + PII) to your **existing** MCP-backed agent from **Ch4 Task 4 Part B** (published to Teams in Ch5). Defense-in-depth for the production/Teams surface — **don't create a new agent**.
+
+Then **re-run Tasks 1–3** and confirm the attack success / defect rate **drops**.
 
 ### Task 5 · Wire the gate into CI (~10 min)
 

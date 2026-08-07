@@ -98,8 +98,9 @@ Guardrails held: 9/10 · defect rate = 10%
 > <img src="../../images/challenge-06/steps/02-safety-gate.svg" alt="Screenshot slot: safety gate verdict" width="80%">
 
 ### Task 4 · Harden the agent, then re-scan
-- Attach **Content Safety** (Prompt Shields + PII) to the agent in the portal.
-- Tighten the refusal/grounding instructions in [`src/agents/intake_drafting_agent.py`](../../src/agents/intake_drafting_agent.py).
+Task 4 hardens **two different agents** — keep them straight:
+- **Code agent (`intake-drafting-agent`)** — tighten the refusal/grounding instructions in [`src/agents/intake_drafting_agent.py`](../../src/agents/intake_drafting_agent.py). This is the in-process agent `red_team.py` scans (via `create_agent()`), so it's what moves the scorecard.
+- **Portal agent (`clm-contract-agent`)** — in the portal, attach **Content Safety** (Prompt Shields + PII) to the **existing** MCP-backed agent from **Ch4 Task 4 Part B** (published to Teams in Ch5). Defense-in-depth for the production/Teams surface — not a new agent.
 - Re-run Tasks 1–3 and confirm the attack-success / defect rate **drops**.
 
 ### Task 5 · Wire the gate into CI

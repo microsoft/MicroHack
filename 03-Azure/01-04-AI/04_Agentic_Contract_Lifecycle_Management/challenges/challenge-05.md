@@ -73,10 +73,6 @@ Copilot** → **Continue**. This provisions an **Azure Bot Service** behind the 
 > properly-wired bot. Re-publishing? **Delete any stale Azure Bot** from earlier attempts first, or
 > you'll hit an **App ID collision**.
 
-> 📸 **Publish menu — what you'll see:** the **Publish** dropdown → **"Teams & Microsoft 365 Copilot"**.
->
-> <img src="../images/challenge-05/steps/05-publish-menu.png" alt="Publish dropdown showing Teams & Microsoft 365 Copilot" width="60%">
-
 ### Task 3 · Fill the publish details & submit (~10 min)
 
 Fill the **"Publish to Teams and Microsoft 365"** form: **Agent name**, **Short description**, and
@@ -121,6 +117,12 @@ agents** (allow 1–2 min).
 Open the agent in Teams and in M365 Copilot; ask it to draft an NDA and to review
 the Acme draft. Confirm grounded, cited answers come back **through its MCP tool** (approve the tool
 call if prompted).
+
+> 📸 **Open in Teams / Microsoft 365 Copilot — what you'll see:** once published, the agent's **Publish**
+> dropdown gains the entries **Open in Teams** and **Open in Microsoft 365 Copilot** (plus **Edit display
+> details** and **Unpublish**) — use these to launch the live agent for testing.
+>
+> <img src="../images/challenge-05/steps/05-publish-menu.png" alt="Publish dropdown after publishing: Open in Teams and Open in Microsoft 365 Copilot" width="60%">
 
 > 📸 **Screenshot slot — what you'll see:** your agent answering **live in a Teams chat** with cited output.
 >

@@ -121,6 +121,7 @@ Task 4 hardens **two different agents** — keep them straight:
 **Attach Content Safety (portal):** go to **Build → Agents → `clm-contract-agent`**, expand **Guardrails** in the playground's left pane, then **Manage guardrail** and enable:
 - **Content filters** — keep **Hate / Sexual / Self-harm / Violence** at **Medium** (default).
 - **Prompt Shields** — turn on both **jailbreak** and **indirect (XPIA) prompt injection** — the injection attacks the red team throws.
+- **Set each guardrail's Action to `Block`, not `Annotate`.** Ticking the checkbox only turns on *detection*; the **Action** dropdown decides *enforcement*. **Annotate** lets the content through with a severity label (the attack can still succeed, so the defect rate won't drop) — it's monitor-only. **Block** stops the response so the guardrail actually holds and the attack-success / defect rate falls.
 - **Protected materials** — text + code.
 - **Sensitive data leakage → PII (Preview)** — you **must pick at least one** data type or the wizard blocks you (*"Please select at least one PII data type"*). For legal contracts:
   - **User information:** Name, Email, Phone number, Address — party/contact PII in NDAs & MSAs.

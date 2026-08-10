@@ -121,6 +121,8 @@ Task 4 hardens **two different agents** — keep them straight:
 
 **Purpose:** turn the one-off eval into a **continuous gate** — [`.github/workflows/ci-eval.yml`](../../.github/workflows/ci-eval.yml) re-runs the **quality gate** (`evaluators.py --gate 3.0`) and **safety gate** (`safety_eval.py --gate 0.1 --safety-evals`) **nightly** (weekdays 06:00 UTC) and **on demand**, via Azure **OIDC**, so a regression fails the build on every future change. It runs on **GitHub-hosted runners**, and **no-ops** if the Azure secrets aren't set.
 
+> 🍴 **Storyline note — this task needs a fork.** Challenges 1–5 run in a **Codespace off this repo (no fork)**; the CI gate runs in **GitHub Actions**, which only runs in **a repo the attendee owns**. So Task 5 begins by **forking** the repo (repo page → **Fork** → **Create fork**) and doing everything below **in the fork**. Flag this to attendees — it's the first and only place a fork appears.
+
 **Required — enable + trigger (universal, ~2 min):**
 1. **Turn on Actions for the fork (first-time only)** — a freshly forked repo has Actions **disabled entirely**. In the **Actions** tab, if you see *"Workflows aren't being run on this forked repository,"* click the green **"I understand my workflows, go ahead and enable them"** button; the workflow list (incl. **ci-eval**) and **Run workflow** button only appear after this.
 2. **Enable the ci-eval workflow** — scheduled workflows are *additionally* **disabled by default in forks**. In **Actions → ci-eval**, click **Enable workflow** (yellow banner); otherwise it never runs (this is the #1 gotcha).

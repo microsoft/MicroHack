@@ -137,7 +137,9 @@ text at crawl time); regenerate the PDFs with `python src/scripts/make_corpus_pd
 
 **No fork needed** — the code you run lives in this repo. Open it in **GitHub Codespaces** (a full VS
 Code + terminal in your browser, zero local install); because you work off the source repo, `git pull`
-always gets the latest fixes.
+always gets the latest fixes. *(This holds for Challenges 1–5. The **one exception** is the optional
+**Challenge 6** CI bonus, which runs in **GitHub Actions** and so needs **your own fork** — you'll create
+it there, not now.)*
 
 1. On the repo's GitHub page, click **`< > Code` → Codespaces → Create codespace on `main`**.
    *(Prefer local? `git clone` the repo and **Reopen in Container** with the VS Code Dev Containers

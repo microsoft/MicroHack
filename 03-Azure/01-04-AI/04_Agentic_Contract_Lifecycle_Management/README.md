@@ -306,7 +306,7 @@ challenges are a single story:
 
 ## Getting started
 
-1. **Open this repo in Codespaces** (no fork) — **Code → Codespaces → Create codespace**. The devcontainer installs
+1. **Open this repo in Codespaces** (no fork needed — the optional Challenge 6 CI bonus is the only part that needs a fork) — **Code → Codespaces → Create codespace**. The devcontainer installs
    Python 3.11, Azure CLI, `azd`, Node, and `requirements.txt` automatically.
 2. `az login` (and `azd auth login` if you use the `azd up` path)
 3. Do **[Challenge 1](challenges/challenge-01.md)** to deploy resources and seed the corpus — provision with

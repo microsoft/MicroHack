@@ -77,7 +77,7 @@ Sexual                            2           0    0%
 
 > 📸 **Screenshot slot — what you'll see:** the printed **scorecard table** (and/or `redteam_scorecard.json`).
 >
-> <img src="../images/challenge-06/steps/01-redteam-scorecard.svg" alt="Screenshot slot: red-team scorecard" width="80%">
+> <img src="../images/challenge-06/steps/01-redteam-scorecard.png" alt="Baseline red-team scan scorecard with 0% overall attack success rate" width="80%">
 
 ### Task 2 · Turn up the heat (~10 min)
 
@@ -86,6 +86,10 @@ With attack strategies (encodings + a composed Base64→ROT13 attack):
 python src/red_team.py --strategies --num-objectives 2
 ```
 Which strategies slip past the guardrails that baseline prompts don't?
+
+> 📸 **Screenshot slot — what you'll see:** the printed **scorecard table** (and/or `redteam_scorecard.json`).
+>
+> <img src="../images/challenge-06/steps/02-redteam-scorecard.png" alt="Red-team scorecard table showing attack success rates by risk category and complexity" width="80%">
 
 ### Task 3 · Score CLM-specific attacks (~10 min)
 
@@ -110,7 +114,7 @@ Guardrails held: 9/10 · defect rate = 10%
 
 > 📸 **Screenshot slot — what you'll see:** the **defect rate line** + PASS/FAIL verdict.
 >
-> <img src="../images/challenge-06/steps/02-safety-gate.svg" alt="Screenshot slot: safety gate verdict" width="80%">
+> <img src="../images/challenge-06/steps/03-guardrails.png" alt="Guardrail evaluation defect rates and passing safety gate verdict" width="80%">
 
 ### Task 4 · Harden the agent (~15 min)
 
@@ -174,6 +178,7 @@ on demand, using Azure OIDC. Configure the repo secrets (`AZURE_CLIENT_ID`, `AZU
 | Scan is slow | Lower `--num-objectives`; run baseline before `--strategies`. Each objective is a full agent turn. |
 | Safety evaluators 401/403 | They need the **Foundry project** endpoint + a logged-in credential with the right role. |
 | `ValueError: 'ContentFiltered' is not a valid ContentFilterCodes` from `safety_eval.py --safety-evals` | **Not a bug in your agent — the guardrail worked.** Your adversarial prompt tripped Azure's content filter / Prompt Shields (common once Task 4 attaches Content Safety), so the platform blocked it upstream. A client-library enum doesn't recognise the server's `ContentFiltered` code, so the block used to surface as this `ValueError` and crash the run. `safety_eval.py` now catches it, counts the prompt as **held** (⛔ content filter), and keeps going — `git pull` if you still see the crash. |
+| Guardrail wizard **Next / Create** fails with `Error updating guardrail …: "Policy does not have necessary permission to override base policy. Please check aka.ms/oai/rai/exceptions"` | Applying a guardrail writes a **complete content-filter (RAI) policy** to the deployment, and Azure only accepts one that is **as strict or stricter** than Microsoft's base policy. The error means your config is **looser** somewhere. **Fix:** set **every** control's **Action = `Block`** (not `Annotate` — annotate is monitor-only = looser than base) and **don't** raise severity thresholds above the default (blocking only *High* is also looser). If it *still* fails with everything on `Block`, your subscription/tenant has a **locked base RAI policy** you lack RBAC to override — that needs an org admin exception ([aka.ms/oai/rai/exceptions](https://aka.ms/oai/rai/exceptions)) and is **out of scope** here. Either way you're not blocked: the guardrail is optional hardening — Tasks 1–3 run without it. |
 | Defect rate looks too good/bad | The heuristic keys on refusal phrases; use `--safety-evals` for model-graded scoring and refine `REFUSAL_MARKERS`. |
 | CI job skipped | Expected when Azure secrets aren't set — it no-ops by design. Add the secrets to enable it. |
 

@@ -132,7 +132,17 @@ def _export_scorecard(dest: str) -> None:
         for name in ("final_results.json", "results.json"):
             src = scan / name
             if src.is_file():
-                shutil.copyfile(src, dest)
+                # A prior run of an older version (which passed ``output_path``
+                # straight to ``scan()``) can leave a stray *directory* named
+                # like our dest — then ``shutil.copyfile`` raises
+                # ``IsADirectoryError``. Clear whatever is there first so the
+                # export is self-healing and idempotent.
+                dest_path = Path(dest)
+                if dest_path.is_dir():
+                    shutil.rmtree(dest_path, ignore_errors=True)
+                elif dest_path.exists():
+                    dest_path.unlink()
+                shutil.copyfile(src, dest_path)
                 print(f"✓ Full scorecard written to {dest}  (copied from {src})")
                 return
     print(f"⚠ Couldn't find a .scan_*/final_results.json to export to {dest}; "

@@ -41,7 +41,7 @@ Run an agent now; open Foundry portal → Tracing to see spans.
 
 > 📸 **Screenshot slot:** the "Tracing enabled" confirmation.
 >
-> <img src="../../images/challenge-03/steps/01-tracing-on.svg" alt="Screenshot slot: tracing enabled" width="75%">
+> <img src="../../images/challenge-03/steps/01-tracing-on.png" alt="Screenshot slot: tracing enabled" width="75%">
 
 ### Task 2 · Generate traffic, inspect spans
 Each agent demo now calls `tracing_setup.enable_tracing()` at start-up (tracing is **per-process**, so running `python src/tracing_setup.py` once does *not* leave it on for a separately-launched demo). Just run any agent — e.g. `python src/agents/intake_drafting_agent.py` — then open **Foundry portal → Tracing**. Inspect the **prompt / retrieval / tool** spans and token counts. Spans take **1–2 min** to appear — refresh if empty.
@@ -51,8 +51,8 @@ Each agent demo now calls `tracing_setup.enable_tracing()` at start-up (tracing 
 
 > 📸 **Screenshot slot:** a run's span timeline in **Tracing**, and the **Agent Monitoring** dashboard.
 >
-> <img src="../../images/challenge-03/steps/02-portal-tracing.svg" alt="Screenshot slot: Foundry Tracing" width="75%">
-> <img src="../../images/challenge-03/steps/03-agent-monitoring.svg" alt="Screenshot slot: Agent Monitoring" width="75%">
+> <img src="../../images/challenge-03/steps/02-portal-tracing.png" alt="Screenshot slot: Foundry Tracing" width="75%">
+> <img src="../../images/challenge-03/steps/03-agent-monitoring.png" alt="Screenshot slot: Agent Monitoring" width="75%">
 
 ### Task 3 · Run the evaluation
 [`src/evaluators.py`](../../src/evaluators.py) builds a *target* that runs the agent per row, then scores with the Foundry evaluators over `evaluation_dataset.jsonl`:
@@ -92,7 +92,7 @@ python src/evaluators.py
 
 > 📸 **Screenshot slot:** the evaluation scorecard in the terminal.
 >
-> <img src="../../images/challenge-03/steps/04-scorecard.svg" alt="Screenshot slot: evaluation scorecard" width="75%">
+> <img src="../../images/challenge-03/steps/04-scorecard.png" alt="Screenshot slot: evaluation scorecard" width="75%">
 
 ### Task 4 · Run the bake-off
 `--bakeoff` runs the **same** target on the flagship and lightweight GPT deployments and prints quality vs latency/cost side by side:
@@ -131,7 +131,7 @@ Enable **continuous/online evaluation** on the agent in the portal so production
 
 > 📸 **Screenshot slot:** the gate failing on a too-strict threshold.
 >
-> <img src="../../images/challenge-03/steps/05-gate-fail.svg" alt="Screenshot slot: quality gate fails" width="75%">
+> <img src="../../images/challenge-03/steps/05-gate-fail.png" alt="Screenshot slot: quality gate fails" width="75%">
 
 ## Key files
 

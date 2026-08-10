@@ -292,7 +292,7 @@ With `CLM_MCP_URL` set, the client switches from `MCPStdioTool` (local subproces
 > A **421** means the container is running an **old image**: redeploy with `bash deploy/mcp-server/deploy.sh`
 > and retry. (`orchestrator_mcp.py` now prints this diagnosis for you automatically.)
 
-> 📸 **What you'll see:** `orchestrator_mcp.py` printing that it's calling `clm-mcp` **via https://…/mcp**.
+> 📸 **What you'll see:** `orchestrator_mcp.py` printing that it's calling `clm-mcp` **via your remote `/mcp` URL**.
 >
 > <img src="../images/challenge-04/steps/07-orchestrator-remote.png" alt="Local orchestrator (gpt-5.4) calling the remote clm-mcp server by URL as an MCP client" width="80%">
 

@@ -139,6 +139,61 @@ def _export_scorecard(dest: str) -> None:
           "see the ./.scan_* folder for the raw results.")
 
 
+def _print_scorecard_table(scorecard_path: str) -> None:
+    """Render the per-category attack-success-rate matrix from the exported JSON.
+
+    The RedTeam SDK returns a ``RedTeamResult`` object with no readable ``repr``
+    (printing it just dumps ``<...RedTeamResult object at 0x...>``), and in this
+    experimental version it does not always print a scorecard table to the
+    terminal — so the per-category numbers otherwise only live inside
+    ``redteam_scorecard.json``. The SDK's ``ScanResult`` JSON exposes
+    ``scorecard.risk_category_summary[0]`` with ``<cat>_total`` /
+    ``<cat>_successful_attacks`` per risk category, so we print the same
+    Category / Attacks / Succeeded / ASR table the challenge promises. ASR is
+    computed from succeeded/total here so it's independent of the SDK's own
+    fraction-vs-percent scaling.
+    """
+    import json
+
+    path = Path(scorecard_path)
+    if not path.is_file():
+        return
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return
+
+    summaries = (data.get("scorecard") or {}).get("risk_category_summary") or []
+    if not summaries:
+        print("⚠ Scorecard JSON has no risk_category_summary — 0 attacks ran? "
+              "Check that the scan target is the Chat-Protocol callback.")
+        return
+    row = summaries[0]
+
+    categories = [
+        ("Hate/Unfairness", "hate_unfairness"),
+        ("Violence", "violence"),
+        ("Sexual", "sexual"),
+        ("Self-harm", "self_harm"),
+    ]
+
+    print("\n=== Red-team scorecard ===")
+    print(f"{'Category':<20}{'Attacks':>9}{'Succeeded':>11}{'ASR':>7}")
+
+    def _emit(label: str, total, succeeded) -> None:
+        total = int(total or 0)
+        succeeded = int(succeeded or 0)
+        asr = (100.0 * succeeded / total) if total else 0.0
+        print(f"{label:<20}{total:>9}{succeeded:>11}{asr:>6.0f}%")
+
+    for label, key in categories:
+        if f"{key}_total" not in row:
+            continue
+        _emit(label, row.get(f"{key}_total"), row.get(f"{key}_successful_attacks"))
+    if "overall_total" in row:
+        _emit("Overall", row.get("overall_total"), row.get("overall_successful_attacks"))
+
+
 async def run_scan(num_objectives: int, use_strategies: bool, output_path: str | None) -> None:
     from azure.ai.evaluation.red_team import RedTeam, RiskCategory, AttackStrategy
 
@@ -172,12 +227,14 @@ async def run_scan(num_objectives: int, use_strategies: bool, output_path: str |
 
     print(f"▶ Red-teaming '{settings.model_drafting}' agent — "
           f"{num_objectives} objective(s)/category, strategies={'on' if use_strategies else 'baseline'}")
-    # The RedTeam SDK prints its own scorecard table; its result object has no
-    # readable ``repr`` so we don't dump it — we export the JSON below instead.
+    # The RedTeam result object has no readable ``repr`` (printing it just dumps
+    # ``<...RedTeamResult object at 0x...>``), so we don't dump it — we export the
+    # JSON below and render a per-category table from it (see _print_scorecard_table).
     await agent.scan(**scan_kwargs)
 
     if output_path:
         _export_scorecard(output_path)
+        _print_scorecard_table(output_path)
     print("\nInterpretation: lower attack-success-rate = safer. Investigate any category > 0% and "
           "add the guardrails from safety_eval.py / the portal, then re-scan.")
 

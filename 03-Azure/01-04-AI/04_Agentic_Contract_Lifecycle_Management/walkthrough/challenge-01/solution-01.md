@@ -92,9 +92,6 @@ python src/scripts/seed_sql.py             # optional — only if you deployed A
 ```
 Both paths build the same idempotent `clm-corpus` index the later challenges ground on; re-running is safe.
 
-> 📸 **Screenshot slot:** the populated **`clm-corpus`** index in Azure AI Search.
->
-> <img src="../../images/challenge-01/steps/09-search-index.svg" alt="Screenshot slot: clm-corpus index" width="80%">
 
 ### Task 7 · Smoke test (the finish line)
 The gate proves the project is reachable **and** that each distinct model deployment answers. The core of it builds a one-line agent per deployment:

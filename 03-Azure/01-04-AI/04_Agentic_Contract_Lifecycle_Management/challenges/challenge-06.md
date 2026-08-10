@@ -122,7 +122,10 @@ Task 4 hardens **two different agents** — keep them straight:
 - **Content filters** — keep **Hate / Sexual / Self-harm / Violence** at **Medium** (default).
 - **Prompt Shields** — turn on both **jailbreak** and **indirect (XPIA) prompt injection** — the injection attacks the red team throws.
 - **Set each guardrail's Action to `Block`, not `Annotate`.** Ticking the checkbox only turns on *detection*; the **Action** dropdown decides *enforcement*. **Annotate** lets the content through with a severity label (the attack can still succeed, so the defect rate won't drop) — it's monitor-only. **Block** stops the response so the guardrail actually holds and the attack-success / defect rate falls.
-- **Protected materials** — text + code.
+- **Protected materials** — this control shows **two checkboxes**; tick **both**:
+  - **Protected material for text** — blocks the agent from reproducing copyrighted text (song lyrics, articles, recipes…).
+  - **Protected material for code** — blocks regurgitation of licensed source code (with its GitHub-repo citation).
+  For **each** box set **Intervention point = `Output`** (the risk is in what the agent *emits*, not the user's prompt) and **Action = `Block`**. The header should then read **Protected materials (2)** — the *(2)* confirms both are on.
 - **Sensitive data leakage → PII (Preview)** — you **must pick at least one** data type or the wizard blocks you (*"Please select at least one PII data type"*). For legal contracts:
   - **User information:** Name, Email, Phone number, Address — party/contact PII in NDAs & MSAs.
   - **Financial information:** Credit card, IBAN, SWIFT code, and the bank-account types for your regions (US / EU / Canada / Australia) — payment & banking clauses.

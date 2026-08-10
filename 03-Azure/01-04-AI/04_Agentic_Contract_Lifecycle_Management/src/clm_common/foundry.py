@@ -143,6 +143,46 @@ async def run_agent_with_retry(
     raise RuntimeError("run_agent_with_retry exhausted retries without returning")
 
 
+# --- Content-filter detection ------------------------------------------------
+# Adversarial safety prompts (safety_eval.py) are *designed* to trip Azure OpenAI's
+# content filter / Prompt Shields — and once Challenge 6 Task 4 attaches Content
+# Safety, they do. When that happens the agent-framework OpenAI client tries to
+# raise `OpenAIContentFilterException`, but on current versions constructing that
+# exception itself throws
+#     ValueError: 'ContentFiltered' is not a valid ContentFilterCodes
+# (the server returns innererror code "ContentFiltered", which isn't a member of
+# the client's ContentFilterCodes enum), so the error that actually propagates is
+# a bare ValueError. A content-filter block on an adversarial prompt means the
+# guardrail HELD, so callers detect it structurally — by exception class name, an
+# OpenAI content-filter `code`, or a marker anywhere in the exception chain —
+# rather than by a single, version-fragile exception type.
+_CONTENT_FILTER_MARKERS = (
+    "contentfilter",   # OpenAIContentFilterException / ContentFilterCodes / code "ContentFiltered"
+    "content_filter",  # content_filter_results / content_filter_result payloads
+    "content filter",
+    "responsibleaipolicyviolation",
+    "content management policy",
+    "jailbreak",       # Prompt Shields jailbreak detection in the filter result
+)
+
+
+def is_content_filter_error(exc: BaseException) -> bool:
+    """True if `exc` (or a cause/context in its chain) is an Azure content-filter block."""
+    seen: set[int] = set()
+    current: BaseException | None = exc
+    while current is not None and id(current) not in seen:
+        seen.add(id(current))
+        if "contentfilter" in type(current).__name__.lower():
+            return True
+        code = getattr(current, "code", None)
+        if isinstance(code, str) and "contentfilter" in code.lower():
+            return True
+        if any(marker in str(current).lower() for marker in _CONTENT_FILTER_MARKERS):
+            return True
+        current = current.__cause__ or current.__context__
+    return False
+
+
 # One event loop per thread. Reusing a live loop across repeated sync calls keeps
 # the framework's underlying async HTTP client bound to an open loop (a fresh
 # asyncio.run() per call would close the loop and break the next call), while

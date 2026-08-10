@@ -131,7 +131,13 @@ Task 4 hardens **two different agents** — keep them straight:
   - **Financial information:** Credit card, IBAN, SWIFT code, and the bank-account types for your regions (US / EU / Canada / Australia) — payment & banking clauses.
   - *Optional (defense-in-depth):* the **Azure / Database** connection-string & key types stop the agent ever echoing infra secrets — or just **Select All** for max coverage.
 
-Then **Review → Create guardrails**, **re-run Tasks 1–3**, and confirm the attack success / defect rate **drops**.
+Then click **Next** to reach **Select agents and models** (step 2 of 3):
+- **Pick at least one agent** — for this hack tick **`clm-contract-agent`** (your MCP-backed portal/Teams agent from Ch4 Task 4 Part B). That's the production surface this guardrail protects.
+- *Optional:* you can also tick **`intake-drafting-agent`**, but the **Task 1 red-team scan won't reflect it** — `red_team.py` builds that agent **in-process** via `create_agent()`, so it never hits the portal deployment. The code agent's defect rate moves by tightening its **instructions**, not this portal guardrail.
+- **Leave the Models list unchecked** — the guardrail rides on the *agent*; only check a raw model deployment if you want to guard a bare endpoint with no agent.
+- Heads-up: **applying the guardrail creates a new *version* of the selected agent(s)** (the wizard says so) — expected; your Teams-published agent simply picks up the new version.
+
+Then **Next → Review → Create guardrails**, **re-run Tasks 1–3**, and confirm the attack success / defect rate **drops**.
 
 > 📸 **What you'll see:** the Guardrails wizard — content filters plus **PII (Preview)** with its data-type picker (pick at least one).
 >

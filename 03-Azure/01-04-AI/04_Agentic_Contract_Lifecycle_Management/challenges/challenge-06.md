@@ -147,33 +147,41 @@ Then **Next → Review → Create guardrails**, **re-run Tasks 1–3**, and conf
 >
 > <img src="../images/challenge-06/steps/04-guardrails-pii.png" alt="Foundry Guardrails wizard: content filters, Protected materials, and PII (Preview) data-type picker (User / Azure / Database / Financial information)" width="80%">
 
-### Task 5 · Wire the gate into CI (~10 min)
+### Task 5 · Wire the gate into CI (~5 min + optional OIDC)
 
 **Why this task:** a one-time scan proves your agent is safe *today*; a **CI gate keeps it safe on every future change**. [`.github/workflows/ci-eval.yml`](../.github/workflows/ci-eval.yml) re-runs the Challenge 3 **quality gate** (`evaluators.py --gate 3.0`) and the Challenge 6 **safety gate** (`safety_eval.py --gate 0.1 --safety-evals`) **automatically** — **nightly** (weekdays 06:00 UTC) and **on demand** — so a regression **fails the build** before it can merge. It runs on **GitHub-hosted runners** (not your Codespace), logs into Azure with **OIDC** (no stored passwords), and cleanly **no-ops** if the Azure secrets aren't set.
 
-**Do this in your fork:**
-1. **Enable the workflow first.** Scheduled workflows are **disabled by default in forks**, so open the **Actions** tab → select **ci-eval** → click **Enable workflow** (the yellow banner). Until you do, it will never run — schedule *or* manual.
-2. **Add the four repo secrets** — **Settings → Secrets and variables → Actions → New repository secret**. Add each one **separately**: put the variable **name** in the **Name** box and paste **only the value** in the **Secret** box — **no `NAME=` prefix and no quotes** (e.g. Name = `AZURE_TENANT_ID`, Secret = `72f988bf-…`). Where to get each (run in the Codespace terminal, where you're already `az login`'d from Challenge 1):
+**Required — enable + trigger (works for *every* fork, ~2 min):**
+1. **Enable the workflow.** Scheduled workflows are **disabled by default in forks**, so open the **Actions** tab → select **ci-eval** → click **Enable workflow** (the yellow banner). Until you do, it never runs — schedule *or* manual.
+2. **Trigger it:** on the **ci-eval** workflow click **Run workflow** (`workflow_dispatch`), or wait for the nightly schedule. **With no Azure secrets set, the job runs and cleanly no-ops (a green check)** — that already satisfies the success criterion below, so *you're done*. Adding the secrets (optional stretch) makes the gates run for real.
 
-   | Secret | How to get the value |
-   |--------|----------------------|
-   | `AZURE_SUBSCRIPTION_ID` | `az account show --query id -o tsv` |
-   | `AZURE_TENANT_ID` | `az account show --query tenantId -o tsv` |
-   | `AZURE_AI_PROJECT_ENDPOINT` | already in your `.env` from Challenge 1 → `grep AZURE_AI_PROJECT_ENDPOINT .env` (or `azd env get-values`, or Foundry portal **Overview → Endpoint**) |
-   | `AZURE_CLIENT_ID` | the **client (application) ID** of the identity the workflow signs in as — **see the note below** (it's *not* just any app registration) |
+<details>
+<summary>🔓 <b>Optional stretch — make the gates actually call Azure (OIDC)</b></summary>
 
-   **Grab them in two commands:**
-   ```bash
-   azd env get-values                         # dumps the azd-provisioned values, incl. AZURE_SUBSCRIPTION_ID + AZURE_AI_PROJECT_ENDPOINT
-   az account show --query tenantId -o tsv     # AZURE_TENANT_ID (not stored in the azd env)
-   ```
+> ⚠️ **This is tenant/org-dependent — skip it if you're blocked; the two required steps above already pass.** Running the gates *for real* needs rights to create a **managed identity + federated credential + role assignment**, and some GitHub orgs enforce **immutable OIDC subjects** (see Troubleshooting → `AADSTS700213`). Without the secrets the job simply **no-ops** (still green).
 
-   > ⚠️ **`AZURE_CLIENT_ID` must be an OIDC-enabled identity — not just any app registration.** In particular **don't reuse the Challenge 1 SharePoint app** ("CLM Microhack Corpus") — it signs in with a client *secret* and has no federation, so CI login fails with **`AADSTS70025: … has no configured federated identity credentials`**. `azure/login@v2` uses **federated** login (no stored secret), so the app behind `AZURE_CLIENT_ID` needs **(a)** a **federated credential** trusting this repo **and (b)** an RBAC role on the Foundry project. Set it up either way:
-   >   - **One-shot (recommended):** `azd pipeline config --provider github` (run once in the Codespace) — creates the identity, adds the federated credential, assigns the roles, **and** sets the `AZURE_CLIENT_ID` / `AZURE_TENANT_ID` / `AZURE_SUBSCRIPTION_ID` GitHub secrets automatically. Then just add `AZURE_AI_PROJECT_ENDPOINT` by hand.
-   >   - **Manual:** add the credential in **Entra ID → App registrations → *your app* → Certificates & secrets → Federated credentials → Add credential → GitHub Actions**, **Entity = Branch**, **Branch = `main`** (subject `repo:<owner>/<repo>:ref:refs/heads/main`, audience `api://AzureADTokenExchange`) — CLI: `az ad app federated-credential create --id <AZURE_CLIENT_ID> --parameters '{"name":"gh-ci-eval-main","issuer":"https://token.actions.githubusercontent.com","subject":"repo:<owner>/<repo>:ref:refs/heads/main","audiences":["api://AzureADTokenExchange"]}'`. Then grant the app the **Azure AI Developer** role (or **Cognitive Services User**) on the Foundry project, or the eval steps 401/403 after login succeeds.
+**Add the four repo secrets** — **Settings → Secrets and variables → Actions → New repository secret**. Add each one **separately**: put the variable **name** in the **Name** box and paste **only the value** in the **Secret** box — **no `NAME=` prefix and no quotes** (e.g. Name = `AZURE_TENANT_ID`, Secret = `72f988bf-…`). Where to get each (run in the Codespace terminal, where you're already `az login`'d from Challenge 1):
 
-   Without the secrets the job still runs but **skips** the gates (a green no-op).
-3. **Trigger it:** on the **ci-eval** workflow click **Run workflow** (`workflow_dispatch`), or wait for the nightly schedule.
+| Secret | How to get the value |
+|--------|----------------------|
+| `AZURE_SUBSCRIPTION_ID` | `az account show --query id -o tsv` |
+| `AZURE_TENANT_ID` | `az account show --query tenantId -o tsv` |
+| `AZURE_AI_PROJECT_ENDPOINT` | already in your `.env` from Challenge 1 → `grep AZURE_AI_PROJECT_ENDPOINT .env` (or `azd env get-values`, or Foundry portal **Overview → Endpoint**) |
+| `AZURE_CLIENT_ID` | the **client (application) ID** of the identity the workflow signs in as — **see the note below** (it's *not* just any app registration) |
+
+**Grab them in two commands:**
+```bash
+azd env get-values                         # dumps the azd-provisioned values, incl. AZURE_SUBSCRIPTION_ID + AZURE_AI_PROJECT_ENDPOINT
+az account show --query tenantId -o tsv     # AZURE_TENANT_ID (not stored in the azd env)
+```
+
+> ⚠️ **`AZURE_CLIENT_ID` must be an OIDC-enabled identity — not just any app registration.** In particular **don't reuse the Challenge 1 SharePoint app** ("CLM Microhack Corpus") — it signs in with a client *secret* and has no federation, so CI login fails with **`AADSTS70025: … has no configured federated identity credentials`**. `azure/login@v2` uses **federated** login (no stored secret), so the app behind `AZURE_CLIENT_ID` needs **(a)** a **federated credential** trusting this repo **and (b)** an RBAC role on the Foundry project. Set it up either way:
+>   - **One-shot (recommended):** `azd pipeline config --provider github` (run once in the Codespace) — creates the identity, adds the federated credential, assigns the roles, **and** sets the `AZURE_CLIENT_ID` / `AZURE_TENANT_ID` / `AZURE_SUBSCRIPTION_ID` GitHub secrets automatically. Then just add `AZURE_AI_PROJECT_ENDPOINT` by hand. *(It also generates a stray `azure-dev.yml` deploy pipeline — not part of this hack; ignore or delete it. If login then fails with `AADSTS700213`, your org uses immutable subjects — see Troubleshooting.)*
+>   - **Manual:** add the credential in **Entra ID → App registrations → *your app* → Certificates & secrets → Federated credentials → Add credential → GitHub Actions**, **Entity = Branch**, **Branch = `main`** (subject `repo:<owner>/<repo>:ref:refs/heads/main`, audience `api://AzureADTokenExchange`) — CLI: `az ad app federated-credential create --id <AZURE_CLIENT_ID> --parameters '{"name":"gh-ci-eval-main","issuer":"https://token.actions.githubusercontent.com","subject":"repo:<owner>/<repo>:ref:refs/heads/main","audiences":["api://AzureADTokenExchange"]}'`. Then grant the app the **Azure AI Developer** role (or **Cognitive Services User**) on the Foundry project, or the eval steps 401/403 after login succeeds.
+
+Then **re-run ci-eval** — with the secrets present it runs the gates for real instead of no-opping.
+
+</details>
 
 > 💡 **"Should I run it in the Codespace instead?"** No — the **GitHub Action runs on GitHub's runners**, triggered from the **Actions** tab. You *can* dry-run the very same gates locally to check the logic — e.g. `python src/safety_eval.py --gate 0.1 --safety-evals` (add `--dry-run` to skip live calls) in the Codespace terminal — but that's a **local check**, not the continuous gate. Task 5 is specifically about the **automated** CI run.
 
@@ -205,7 +213,9 @@ Then **Next → Review → Create guardrails**, **re-run Tasks 1–3**, and conf
 | Defect rate looks too good/bad | The heuristic keys on refusal phrases; use `--safety-evals` for model-graded scoring and refine `REFUSAL_MARKERS`. |
 | CI job skipped | Expected when Azure secrets aren't set — it no-ops by design. Add the secrets to enable it. |
 | `ci-eval` shows **0 workflow runs** / never triggers in your fork | GitHub **disables scheduled workflows by default in forks**. Open **Actions → ci-eval → Enable workflow** (yellow banner), then use **Run workflow** or wait for the schedule. |
-| Workflow fails at **Azure login** with `AADSTS70025: The client '…' has no configured federated identity credentials` | Your `AZURE_CLIENT_ID` app has **no GitHub OIDC federated credential** — usually because it's the Challenge 1 **SharePoint app** (secret auth). Set up the federated identity as described in **Task 5 → Step 2** (`azd pipeline config --provider github`, or add the credential + **Azure AI Developer** role by hand). |
+| Workflow fails at **Azure login** with `AADSTS70025: The client '…' has no configured federated identity credentials` | Your `AZURE_CLIENT_ID` app has **no GitHub OIDC federated credential** — usually because it's the Challenge 1 **SharePoint app** (secret auth). Set up the federated identity as described in **Task 5 → Optional stretch** (`azd pipeline config --provider github`, or add the credential + **Azure AI Developer** role by hand). |
+| Workflow fails at **Azure login** with `AADSTS700213: No matching federated identity record found for presented assertion subject 'repo:<owner-id>/<repo-id>@…:ref:refs/heads/main'` | Your org enforces **immutable OIDC subjects** (numeric owner/repo IDs), but the federated credential was created with the *plain* `repo:<owner>/<repo>:ref:…` subject, so they don't match. **Copy the exact `subject` string from the failed run log** and add a matching federated credential: `az identity federated-credential create --name gh-main-immutable --identity-name <msi> --resource-group <rg> --issuer "https://token.actions.githubusercontent.com" --subject "<paste immutable subject verbatim>" --audiences "api://AzureADTokenExchange"` (or, for an app registration, `az ad app federated-credential create`). This is the **optional stretch** only — the required no-op run is unaffected. |
+| A second workflow **`azure-dev.yml` / "Configure Azure Developer Pipeline"** appears and fails | That's **not part of this hack** — `azd pipeline config` auto-generates it to run `azd provision/deploy`. Ignore it, disable it in **Actions**, or delete `.github/workflows/azure-dev.yml`. Only **`ci-eval`** is the lab gate. |
 
 ## 🔗 How this fits
 

@@ -227,6 +227,10 @@ Quality gate: CLM rubric=3.8 (groundable rows) threshold=5.0
 >
 > <img src="../../images/challenge-03/steps/05-quality-gate-passed.png" alt="Terminal scorecard for the Intake & Drafting agent ending with CLM rubric 3.949 over groundable rows above the 3.0 threshold and a GATE PASSED message" width="75%">
 
+> 📸 **…and what a failure looks like:** run `python src/evaluators.py --gate 5.0` to set an intentionally high bar. The same Intake & Drafting (gpt-5.4) agent scores **CLM rubric = 3.919** over the groundable rows — below the **5.0** threshold — so the run prints `❌ GATE FAILED — CLM rubric below threshold. Blocking release.` and **exits 3**, which fails the CI job. Read the hint on the last line: the agent *is* grounding, but individual rows still miss rubric dimensions (wrong clause, missed deviation, no fallback, or self-approval). Run `python src/evaluators.py --explain` to see exactly which rows fell short and the judge's reasoning, then fix the agent (or, deliberately, recalibrate the threshold) — don't just lower the bar to make CI green.
+>
+> <img src="../../images/challenge-03/steps/05-gate-fail.png" alt="Terminal scorecard for the Intake & Drafting agent (gpt-5.4) ending with CLM rubric 3.919 over the groundable rows below the 5.0 threshold, a GATE FAILED / Blocking release message, and a hint to run evaluators.py --explain" width="75%">
+
 ## Key files
 
 | Path | Role |

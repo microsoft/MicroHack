@@ -140,6 +140,7 @@ thing in the portal — no code — so a non-engineer can own the quality bar.
    score, a pass/fail label, and the judge's **reason** per dimension.
 
 > 📸 **Screenshot slot:** your rubric evaluator's per-dimension scores in the portal.
+> <img src="../images/challenge-03/steps/03-rubric-evaluator.png" alt="Screenshot slot: rubric evaluator per-dimension scores" width="75%">
 
 **Continuous evaluation (optional):** once the rubric reflects your bar, enable
 **continuous/scheduled evaluation** in **Monitor settings** so live agent traffic is scored

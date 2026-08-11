@@ -193,6 +193,8 @@ Expected output (ids will differ):
 
 ### Task 2 · Read the agent definition (~15 min)
 
+**What this agent is.** In business terms it's Contoso's *contract-intake assistant*: it drafts NDAs and MSAs from approved templates and answers policy questions **with citations**, so managers stop redrafting by hand and reaching for the wrong clause. Technically it's a single **gpt-5.4** agent wired to two tools — an **Azure AI Search** knowledge tool over the `clm-corpus` index (grounding + citations) and the **`get_contract_status`** function tool (deterministic lookups from Azure SQL, falling back to seed JSON) — all behind a guard-railed persona that refuses legal advice.
+
 Open [`agents/intake_drafting_agent.py`](../src/agents/intake_drafting_agent.py) and trace how it's wired:
 
 - `model=settings.model_drafting` → **gpt-5.4** (the only line that would change for a different deployment).

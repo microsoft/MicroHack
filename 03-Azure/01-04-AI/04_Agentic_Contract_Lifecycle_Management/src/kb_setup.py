@@ -1,9 +1,10 @@
-"""Challenge 2 — Foundry IQ / knowledge grounding setup.
+"""Challenge 2 — Azure AI Search grounding setup.
 
-Foundry IQ grounds an agent on your corpus. Under the hood the agent uses an
-**Azure AI Search** index (built in Challenge 1 by src/scripts/seed_corpus.py, which
-crawls the SharePoint contract library with a SharePoint Online indexer) via
-agentic retrieval (plan → search → rerank → cite).
+The agent uses an Azure AI Search index built in Challenge 1 by
+src/scripts/seed_corpus.py. The default path extracts local PDFs directly into the
+index; the optional SharePoint path populates the same index through an indexer.
+The attached search tool runs semantic queries and returns grounded passages with
+citation metadata.
 
 This module resolves the project's default Azure AI Search connection and builds
 the Foundry Azure AI Search tool you can attach to any Microsoft Agent Framework

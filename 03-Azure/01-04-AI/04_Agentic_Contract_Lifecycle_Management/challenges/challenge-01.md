@@ -333,7 +333,7 @@ Path B (local-PDF) — it needs no SharePoint, no admin consent, and works in ev
 >    `✓ uploaded 14/14 local PDF(s) into 'clm-corpus'`. *(This needs the **Search Index Data
 >    Contributor** role, which provisioning already granted you — if a doc fails, wait a minute for
 >    role propagation and re-run; the script is idempotent.)*
-> 3. Confirm a **non-zero document count** (portal → Search service → Indexes → `clm-corpus`), then
+> 3. Confirm a **non-zero document count** (Azure Portal → Search service → Indexes → `clm-corpus`), then
 >    **jump to [Task 6](#task-6--smoke-test).**
 >
 > **This has zero impact on Challenges 2–6** — the agents only ever read the `clm-corpus` index,

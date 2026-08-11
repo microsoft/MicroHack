@@ -1,4 +1,4 @@
-# Solution 02 — Grounded Agent with Foundry IQ + Tools
+# Solution 02 — Grounded Agent with Azure AI Search + Tools
 
 **[← Back to Challenge 2](../../challenges/challenge-02.md)** · [Home](../../README.md)
 
@@ -9,7 +9,7 @@ GPT deployments — Foundry is a model-agnostic control plane.
 
 ## Expected end state
 
-- Foundry IQ knowledge source built over the `clm-corpus` index by
+- Azure AI Search grounding tool built over the `clm-corpus` index by
   [`src/kb_setup.py`](../../src/kb_setup.py) (also reports the web-grounding tool).
 - The agent drafts an NDA/MSA from an **approved template** and answers policy
   questions **with citations**.
@@ -118,7 +118,7 @@ Attach **Prompt Shields / PII** to the agent in the portal — a second, model-i
 | Path | Role |
 |------|------|
 | [`src/agents/intake_drafting_agent.py`](../../src/agents/intake_drafting_agent.py) | The grounded, tool-using, guard-railed drafting agent (gpt-5.4) |
-| [`src/kb_setup.py`](../../src/kb_setup.py) | Builds the Foundry IQ knowledge source + web-grounding tool over `clm-corpus` |
+| [`src/kb_setup.py`](../../src/kb_setup.py) | Builds the Azure AI Search grounding tool + optional web-grounding tool over `clm-corpus` |
 | [`src/sample_prompts.md`](../../src/sample_prompts.md) | Prompts to exercise drafting, grounded Q&A, and the guardrails |
 | [`src/clm_common/`](../../src/clm_common/) | Shared config + Foundry client helpers reused by every agent |
 

@@ -130,6 +130,22 @@ python src/scripts/seed_corpus.py          # → "uploaded 14/14 local PDF(s) in
 python src/scripts/seed_sql.py             # optional — only if you deployed Azure SQL
 ```
 
+<img src="../../images/challenge-01/steps/10-seed-corpus-success.png" alt="Terminal output showing 14 local PDFs uploaded successfully into the clm-corpus index" width="80%">
+
+Confirm a non-zero document count (**Azure portal → Search service → Indexes → `clm-corpus`**), then jump to Task 6.
+
+**1 · Open the Search service.** In the Azure portal, open your lab resource group and select the **Search service (Foundry IQ)** resource.
+
+<img src="../../images/challenge-01/steps/11-open-search-service.png" alt="Azure resource group with the Search service resource highlighted" width="80%">
+
+**2 · Open the index list.** Under **Search management**, select **Indexes**.
+
+<img src="../../images/challenge-01/steps/12-open-search-indexes.png" alt="Azure AI Search service with Indexes highlighted under Search management" width="80%">
+
+**3 · Verify the corpus.** Find **`clm-corpus`** and confirm its **Document count** is greater than zero. The example below shows all 14 local PDFs indexed successfully.
+
+<img src="../../images/challenge-01/steps/13-clm-corpus-document-count.png" alt="clm-corpus index showing a non-zero document count of 14" width="80%">
+
 <details>
 <summary><strong>Path A — SharePoint corpus (optional · advanced · tenant admins only)</strong></summary>
 

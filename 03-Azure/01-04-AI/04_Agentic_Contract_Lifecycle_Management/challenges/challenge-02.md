@@ -1,4 +1,4 @@
-# Challenge 2 · Grounded Agent with Foundry IQ + Tools
+# Challenge 2 · Grounded Agent with Azure AI Search + Tools
 
 **[🏠 Home](../README.md)**  ·  [← Challenge 1: Setup](challenge-01.md)  ·  [Challenge 3: Observability →](challenge-03.md)
 
@@ -9,6 +9,14 @@ contracts from approved templates and answers policy questions **with sources**.
 **gpt-5.4**, and the twist you'll internalize here is that grounding it on one deployment
 takes the *exact same code* as grounding it on any other — because Foundry is a **model-agnostic control
 plane**.
+
+**Why the business cares:** at Contoso, intake is the slow, risky front door of every contract.
+Managers redraft the same NDAs and MSAs by hand, dig through SharePoint for the approved clause, and
+re-answer the same policy questions — a big chunk of the **~17-day** contract cycle, with real
+exposure when someone reaches for the wrong clause. This agent removes that friction *safely*: it
+drafts from approved templates, answers **with citations**, looks up contract facts with a tool
+instead of guessing, and stays firmly out of legal advice — a faster intake cycle the business can
+actually trust.
 
 If something isn't working as expected, please let your coach know.
 
@@ -26,9 +34,10 @@ If something isn't working as expected, please let your coach know.
 
 ## 🎯 Objective
 
-Build the **Intake & Drafting agent** on **gpt-5.4** and make it:
+Build the **Intake & Drafting agent** on **gpt-5.4**. These four properties aren't academic — each
+one is what makes the agent's output *safe for a contract manager to act on*:
 
-- **Grounded** — every substantive answer is drawn from the CLM corpus via **Foundry IQ**, not the
+- **Grounded** — every substantive answer is drawn from the CLM corpus via **Azure AI Search**, not the
   model's parametric memory.
 - **Cited** — answers reference the source documents they came from.
 - **Tool-enabled** — a **function tool** (`get_contract_status`) performs structured lookups the model
@@ -40,7 +49,7 @@ Build the **Intake & Drafting agent** on **gpt-5.4** and make it:
 
 | Component | What it is | Where it lives |
 |-----------|-----------|----------------|
-| **Knowledge tool (Foundry IQ)** | An `AzureAISearchTool` over the `clm-corpus` index — grounds the agent on Contoso's templates, clauses, policy and contracts | [`kb_setup.py`](../src/kb_setup.py) → `build_knowledge_tool()` |
+| **Knowledge tool (Azure AI Search)** | An `AzureAISearchTool` over the `clm-corpus` index — grounds the agent on Contoso's templates, clauses, policy and contracts | [`kb_setup.py`](../src/kb_setup.py) → `build_knowledge_tool()` |
 | **Function tool** | `get_contract_status(contract_id)` — deterministic lookup of status, renewal date, risk and owner (Azure SQL, falling back to seed JSON) | [`src/clm_common/tools.py`](../src/clm_common/tools.py) |
 | **Guard-railed persona** | Instructions that force citations, forbid invented terms, and refuse legal advice | `INSTRUCTIONS` in [`agents/intake_drafting_agent.py`](../src/agents/intake_drafting_agent.py) |
 | **gpt-5.4-backed agent** | The same Agent Framework API for every model, with `model` pointed at the `gpt-5.4` deployment | `create_agent()` in [`agents/intake_drafting_agent.py`](../src/agents/intake_drafting_agent.py) |
@@ -48,26 +57,30 @@ Build the **Intake & Drafting agent** on **gpt-5.4** and make it:
 
 ## 🧭 Context
 
-### How grounding works — the Foundry IQ chain
+### How grounding works — the Azure AI Search tool chain
 
-**Foundry IQ** is how you ground an agent on *your* knowledge. You never hand the model a pile of
-documents; instead you attach a **knowledge base** as a **tool**, and the agent performs **agentic
-retrieval** — it plans sub-queries, searches, reranks, and returns **cited** passages — during a run.
+This microhack attaches an **Azure AI Search tool** directly to the agent. The tool queries the
+`clm-corpus` index with `query_type="semantic"` and `top_k=5`, then returns matching passages and
+citation metadata for the agent to use in its response.
 
 ![Foundry IQ architecture — knowledge sources feed the Foundry IQ grounding layer (knowledge sources, access rules, retrieval logic, agentic retrieval), which an AI agent/Copilot queries to produce grounded, cited, permission-checked responses](../images/diagrams/foundry-iq-architecture.png)
 
-*The general Foundry IQ picture: trusted enterprise knowledge → the grounding layer → an agent → a grounded, cited answer. The diagram below shows how **this microhack** instantiates that chain for contracts.*
+*Foundry IQ is the broader managed knowledge layer shown above. This microhack uses the simpler
+direct Azure AI Search tool integration shown below; it does not create a Foundry IQ knowledge base.*
 
 ```mermaid
 flowchart TB
-  A["Corpus in SharePoint library<br/>templates · clauses · policy · contracts"] --> B["Azure AI Search index · clm-corpus<br/>semantic · separate service (backing store)"]
-  B --> D
-  subgraph IQ["Foundry IQ — knowledge grounding"]
-    D["AzureAISearchTool<br/>agentic retrieval: plan → search → rerank → cite<br/>kb_setup.py"]
+  A["Corpus source<br/>Local PDFs (default)<br/>or SharePoint (optional)"] --> B["Azure AI Search<br/>clm-corpus index"]
+  subgraph Search["Semantic grounding"]
+    D["AzureAISearchTool<br/>semantic · top_k=5"]
   end
-  D --> E["Intake &amp; Drafting agent<br/>gpt-5.4"]
-  F["get_contract_status<br/>function tool"] --> E
-  E --> G["Cited draft / answer<br/>+ tool results"]
+  E["Intake &amp; Drafting<br/>gpt-5.4"] -->|semantic query| D
+  D -->|query| B
+  B -->|top 5 results| D
+  D -->|passages + citations| E
+  E -->|contract ID| F["get_contract_status<br/>SQL or seed JSON"]
+  F -->|status result| E
+  E --> G["Grounded response<br/>citations + tool results"]
   style D fill:#FCEBDD,stroke:#E8590C,stroke-width:2px,color:#1A1A1A
   style E fill:#EDE4F5,stroke:#7A4FB5,stroke-width:2px,color:#1A1A1A
   style F fill:#FCEBDD,stroke:#E8590C,stroke-width:2px,color:#1A1A1A
@@ -102,11 +115,23 @@ in Challenge 4's orchestrator) with no other changes.
 
 ### Guardrails at the prompt layer
 
+**Why this matters:** for a contract assistant, a confident *wrong* answer is worse than a slow one.
+An agent that invents a liability cap, cites a clause that doesn't exist, or opines on whether a
+contract is enforceable stops being a productivity tool and becomes **legal and financial exposure**
+for Contoso. The guardrails are what keep it a **drafting-and-lookup assistant, not a lawyer** — so a
+contract manager can safely act on its output.
+
 The `INSTRUCTIONS` block encodes Contoso's policy: never invent legal terms, always cite, call the
 tool for contract facts, and **refuse legal advice** (recommend qualified counsel instead). That's
 the first line of defense; content-safety policies (Challenge 6) add a second, independent one.
 
 ### The knowledge base — what actually grounds the agent
+
+**Why this matters:** grounding means the agent drafts from **Contoso's own approved documents**, not
+a model's generic memory. That's what makes a draft **enforceable and on-policy** — real templates
+legal already signed off on, the clause positions the business actually takes, the true approval
+thresholds — instead of plausible-sounding text no one approved. It's how you cut the **~17-day**
+cycle *without* trading speed for clause drift.
 
 Everything the agent "knows" comes from the corpus you seeded in Challenge 1:
 
@@ -124,7 +149,7 @@ Everything the agent "knows" comes from the corpus you seeded in Challenge 1:
 
 | File | What it does |
 |------|--------------|
-| [`kb_setup.py`](../src/kb_setup.py) | Resolves the project's **default Azure AI Search connection** and builds the `AzureAISearchTool` (the Foundry IQ knowledge base). Run it standalone to verify grounding is wired up. |
+| [`kb_setup.py`](../src/kb_setup.py) | Resolves the project's **default Azure AI Search connection** and builds the `AzureAISearchTool`. Run it standalone to verify grounding is wired up. |
 | [`agents/intake_drafting_agent.py`](../src/agents/intake_drafting_agent.py) | Defines the agent (persona, guardrails, knowledge + function tools) and runs a four-prompt demo. Agents are built in-process — nothing persists server-side. |
 | [`sample_prompts.md`](../src/sample_prompts.md) | Curated prompts that exercise every capability: grounded drafting, cited Q&A, the function tool, and the refusal guardrail. |
 
@@ -135,9 +160,9 @@ Every line of this agent stands on a concrete resource `azd up` provisioned in C
 | Service / model | What it is | Why it's here |
 |---|---|---|
 | **Microsoft Foundry** (AI Services account + runtime) | The control plane + model runtime — one `AIServices` account holding project **`clm-project`** (`AZURE_AI_PROJECT_ENDPOINT`). All three models deploy onto it, and the **Agent Framework** runs the agent loop in-process. | You build a grounded, tool-using **gpt-5.4** agent in ~15 lines; switching deployment is a one-arg change (`model=`). → [Agent Framework](https://learn.microsoft.com/agent-framework/overview/agent-framework-overview) |
-| **Foundry IQ** — agentic retrieval (`AzureAISearchTool`) | The grounding layer. [`kb_setup.py`](../src/kb_setup.py) builds `AzureAISearchTool(index_name="clm-corpus", query_type=SEMANTIC, top_k=5)` over the keyless **`clm-search`** connection; the agent runs **plan → search → rerank → cite**. | Makes answers come from **Contoso's corpus, with sources** — not model memory. → [Agentic retrieval](https://learn.microsoft.com/azure/search/search-agentic-retrieval-concept) |
-| **Azure AI Search** — the `clm-corpus` index | The retrieval engine behind Foundry IQ: a `basic` service, index **`clm-corpus`** + semantic config **`clm-semantic`** (fields `id`·`title`·`content`·`source`), full-text + L2 re-ranking. Built in Challenge 1 — here you only attach & query it. | The searchable store that turns "the model guesses" into "the agent cites `CL-04`". → [Azure AI Search](https://learn.microsoft.com/azure/search/) |
-| **SharePoint** — corpus source of truth | The Microsoft 365 library the contract PDFs live in; the indexer crawls it into `clm-corpus`. *(Path B seeds the identical index from local PDFs — no SharePoint needed.)* | Holds the templates, clause library, policy & executed-contract PDFs, where the business already curates them. → [Index SharePoint content](https://learn.microsoft.com/azure/search/search-howto-index-sharepoint-online) |
+| **Azure AI Search tool** — agent integration | [`kb_setup.py`](../src/kb_setup.py) builds `AzureAISearchTool(index_name="clm-corpus", query_type="semantic", top_k=5)` over the keyless **`clm-search`** connection. | Lets the agent query indexed content and return source citations. → [Azure AI Search tool](https://learn.microsoft.com/azure/foundry/agents/how-to/tools/ai-search) |
+| **Azure AI Search** — the `clm-corpus` index | A `basic` service with index **`clm-corpus`** + semantic config **`clm-semantic`** (fields `id`·`title`·`content`·`source`) and semantic ranking. Built in Challenge 1 — here you only attach and query it. | The searchable store that turns "the model guesses" into "the agent cites `CL-04`". → [Azure AI Search](https://learn.microsoft.com/azure/search/) |
+| **Corpus sources** | **Path B (default)** extracts the local PDFs directly into `clm-corpus`. **Path A (optional)** uses a SharePoint library and indexer to populate the same index. | Gives every participant identical grounding data while preserving a production-shaped SharePoint option. |
 | **Model — gpt-5.4** | This agent's LLM — deployment **`gpt-5.4`** (`GlobalStandard`, `MODEL_DRAFTING`), the same deployment the orchestrator uses; strong instruction-following + long context. | Drafting & orchestration share **gpt-5.4**; clause-risk uses **gpt-5.6-sol**, renewal scan **gpt-5.4-nano** — right model per job, one platform. → [Models in Foundry](https://learn.microsoft.com/azure/ai-foundry/) |
 | **Function tool** — `get_contract_status` | Plain Python in [`tools.py`](../src/clm_common/tools.py) exposed as a tool; the framework derives its schema from type hints + docstring. Prefers **Azure SQL**, falls back to [`contracts_seed.json`](../src/data/contracts_seed.json). | Structured facts (status, renewal, risk, owner) come from a **lookup, never a guess** — the knowledge tool grounds *unstructured* answers, this grounds *structured* ones. → [Function calling](https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/function-calling) |
 
@@ -192,7 +217,7 @@ agent = Agent(
     name="intake-drafting-agent",
     instructions=INSTRUCTIONS,                                  # persona + citations + refusal policy
     tools=[
-        knowledge,                                              # unstructured grounding (Foundry IQ)
+        knowledge,                                              # unstructured grounding (Azure AI Search)
         function_tool(get_contract_status),                     # structured lookups, approval_mode="never_require"
     ],
 )
@@ -358,7 +383,8 @@ IQ), cited, tool-enabled and guard-railed.
 - [Microsoft Foundry](https://learn.microsoft.com/azure/ai-foundry/)
 - [Microsoft Agent Framework](https://learn.microsoft.com/agent-framework/overview/agent-framework-overview)
 - [Function calling with Foundry agents](https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/function-calling)
-- [Foundry IQ / agentic retrieval](https://learn.microsoft.com/azure/search/search-agentic-retrieval-concept)
+- [Azure AI Search tool for Foundry agents](https://learn.microsoft.com/azure/foundry/agents/how-to/tools/ai-search)
+- [Foundry IQ](https://learn.microsoft.com/azure/foundry/agents/concepts/what-is-foundry-iq)
 - [Azure AI Search](https://learn.microsoft.com/azure/search/)
 
 ## 🧠 Reflection

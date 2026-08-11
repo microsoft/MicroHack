@@ -141,6 +141,14 @@ That's why **Task 4**'s scorecard shows a `clm_rubric` line and **Task 6**'s gat
 
 > <img src="../../images/challenge-03/steps/03-eval5-review-submit.png" alt="Review step — evaluators listed, run named, ready to Submit" width="80%">
 
+6. **Read the scorecard.** When the run finishes it lands under `eval-intake-drafting-agent` as a **Completed** row with an **Overall score** and one column per evaluator. Here everything is green — **Overall 100% (76/76)**, `ToolCallSuccessEvaluator` 5/5, `Fluency` 5/5, and the safety judges `Violence` / `SelfHarm` / `IndirectAttack` 11/11 — i.e. the agent stayed grounded, routed its tools correctly, and tripped none of the risk evaluators. Tick two runs to **Compare runs**, or use **Analyze Results** to have Foundry explain any failures.
+
+> <img src="../../images/challenge-03/steps/03-eval6-run-complete.png" alt="Evaluation eval-intake-drafting-agent with one Completed run scoring 100% overall and per-evaluator" width="80%">
+
+7. **Drill into a run for per-turn detail.** Open the run to get **Download user logs / Download results / Raw JSON**, the full **Overall metric results** strip (scroll right for every evaluator — `ToolCallSuccessEvaluator`, `Fluency`, `Violence`, `SelfHarm`, `IndirectAttack`, `Sexual`, `HateAndUnfairness`, `CodeVulnerability`, and your custom `ClmRubricEvaluator`), and a **Detailed metrics result** table with one row per turn (`agent_id` `intake-drafting-agent:3`, trace `id`, `metadata`, `query`, `response`). Hit **View JSON** on any row to see the exact input and the judge's reasoning — the portal twin of what `python src/evaluators.py --explain` prints in Task 4.
+
+> <img src="../../images/challenge-03/steps/03-eval7-run-details.png" alt="Run details showing overall metric results across all evaluators and a per-turn detailed metrics table with View JSON links" width="85%">
+
 **Continuous evaluation (optional).** Once the rubric reflects your bar, enable **continuous/scheduled evaluation** in **Monitor settings** so live agent traffic is scored automatically and you catch regressions in production. Portal preview today — the `--gate` flag is the code-first equivalent for CI (wired in `ci-eval.yml`).
 
 Docs: [Rubric evaluators](https://learn.microsoft.com/azure/foundry/concepts/evaluation-evaluators/rubric-evaluators) · [Custom evaluators](https://learn.microsoft.com/azure/foundry/concepts/evaluation-evaluators/custom-evaluators)

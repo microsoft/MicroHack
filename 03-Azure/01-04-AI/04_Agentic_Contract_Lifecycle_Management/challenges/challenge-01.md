@@ -177,7 +177,7 @@ Retrieving tenants and subscriptions for the selection...
 [Tenant and subscription selection]
 No     Subscription name        Subscription ID                       Tenant
 -----  -----------------------  ------------------------------------  -------------
-[1] *  My Azure Subscription    2942123c-....-793528767894            Contoso
+[1] *  My Azure Subscription    2942123c-....-...                     Contoso
 ```
 
 Then pick the subscription you want to deploy into (replace the id with yours):

@@ -9,46 +9,65 @@ contract corpus the later challenges ground on.
 ## Expected end state
 
 - Codespace (or local devcontainer) built and dependencies installed.
-- `az login` completed in the terminal.
-- Resources provisioned via **one** path: `azd up` (Bicep in
-  [`labautomation/infra/`](../../labautomation/infra/)), the
-  [`labautomation/deploy.sh`](../../labautomation/deploy.sh) / `.ps1` script, or the
-  one-click **Deploy to Azure** button.
-- `.env` populated — the deploy script / `azd` postprovision hook autofills it via
+- `az login --use-device-code` completed and the target subscription selected.
+- **MicroHack event:** resources are **already provisioned** — you point `.env` at your
+  **lab-dashboard** values. **Self-hosting:** one `azd up` (Bicep in
+  [`labautomation/infra/`](../../labautomation/infra/)) — or
+  [`labautomation/deploy.sh`](../../labautomation/deploy.sh) / `.ps1`, or the **Deploy to Azure**
+  button — provisions the same resources and autofills `.env` via
   [`src/scripts/write_env.py`](../../src/scripts/write_env.py).
-- The corpus is crawled into the `clm-corpus` Azure AI Search index. **Default:** one command,
-  [`src/scripts/setup_sharepoint_corpus.py`](../../src/scripts/setup_sharepoint_corpus.py), provisions
-  the whole SharePoint grounding source in your own admin tenant; **fallback:**
+- The corpus is crawled into the `clm-corpus` Azure AI Search index. **Default (Path B · any tenant):**
   [`src/scripts/seed_corpus.py`](../../src/scripts/seed_corpus.py) over the local PDFs in
-  [`src/data/`](../../src/data/).
+  [`src/data/`](../../src/data/); **optional (Path A · tenant admins):**
+  [`src/scripts/setup_sharepoint_corpus.py`](../../src/scripts/setup_sharepoint_corpus.py) builds the
+  real SharePoint grounding source.
 - **Done when** [`src/scripts/smoke_test.py`](../../src/scripts/smoke_test.py)
   prints `✅ PASS` — a tiny agent verifies each distinct GPT deployment.
 
 ## 🛠️ Task-by-task walkthrough
 
-### Tasks 1–3 · Open the code, dev environment, `az login`
+### Task 1 · Open the Codespace
+No fork — the code lives in this repo. **`< > Code` ▸ Codespaces ▸ Create codespace on `main`**; the devcontainer builds and `pip install -r requirements.txt` runs automatically. *(Local alt: `git clone` then **Reopen in Container**.)*
+
+> 📸 **Screenshot slot:** creating the **Codespace**.
+>
+> <img src="../../images/challenge-01/steps/02-create-codespace.png" alt="Screenshot slot: create a Codespace" width="80%">
+
+### Task 2 · Log in to Azure
 ```bash
-# Task 1: open glejdis/microhack-aiagents in a Codespace (no fork) — Code ▸ Codespaces ▸ Create.
-# Task 2: the devcontainer builds automatically; to run locally instead:
-code .            # "Reopen in Container" when prompted
-# Task 3: authenticate the Azure CLI (the deploy script and azd both reuse this login)
-az login
+az login --use-device-code                             # device code is required in Codespaces
 az account set --subscription "<your-subscription-id>"
 ```
 
-> 📸 **Screenshot slot:** creating the **Codespace**, then the **device-code `az login`** prompt.
+> 📸 **Screenshot slot:** the **device-code `az login`** prompt.
 >
-> <img src="../../images/challenge-01/steps/02-create-codespace.png" alt="Screenshot slot: create a Codespace" width="80%">
 > <img src="../../images/challenge-01/steps/04-az-login-device.png" alt="Screenshot slot: device-code login" width="80%">
 
-### Task 4 · Deploy the resources
-Pick **one** path — all three provision the same Foundry project, models, Search, SQL and App Insights, then autofill `.env`:
+### Task 3 · Connect to your provisioned resources
+**MicroHack event — resources are already provisioned; you don't deploy.** Point `.env` at the values on your **lab dashboard**:
 ```bash
-azd up                             # Bicep in labautomation/infra/ (recommended)
-# — or the scripted path —
-./labautomation/deploy.sh          # bash;  deploy.ps1 on Windows
+cp .env.example .env
+# then paste the dashboard values into .env (the two endpoints + the App Insights connection string)
 ```
-The `.env` is written for you by the postprovision hook → [`src/scripts/write_env.py`](../../src/scripts/write_env.py), which reads the deployment outputs (`azd env get-values`, or `--deployment` for the ARM path) and writes every env var the agents use — filling constants from a `DEFAULTS` map when an output is absent:
+
+| Lab-dashboard credential | `.env` variable |
+|---|---|
+| **FoundryProjectEndpoint** | `AZURE_AI_PROJECT_ENDPOINT` |
+| **SearchEndpoint** | `AZURE_SEARCH_ENDPOINT` |
+| **AppInsightsConnectionString** | `APPLICATIONINSIGHTS_CONNECTION_STRING` |
+| **ModelOrchestrator / Drafting / ClauseRisk / Renewal** | `MODEL_ORCHESTRATOR` / `MODEL_DRAFTING` / `MODEL_CLAUSE_RISK` / `MODEL_RENEWAL` |
+
+The model names + `AZURE_SEARCH_INDEX` (`clm-corpus`) / `AZURE_SEARCH_CONNECTION_NAME` (`clm-search`) already default in `.env.example`, so at minimum paste the two **endpoints** + the **App Insights** string. Leave `SHAREPOINT_*` and the Challenge 5 `MICROSOFT_APP_*` / `TEAMS_*` blank for now.
+
+<details>
+<summary><strong>Self-hosting? One <code>azd up</code> provisions everything and writes <code>.env</code> for you</strong></summary>
+
+```bash
+azd auth login          # separate from az login above
+azd up                  # env name, subscription, region = Sweden Central (offers all three models)
+# — or the scripted path — LOCATION=swedencentral ./labautomation/deploy.sh   (deploy.ps1 on Windows)
+```
+The `postprovision` hook → [`src/scripts/write_env.py`](../../src/scripts/write_env.py) reads the deployment outputs (`azd env get-values`, or `--deployment` for the ARM path) and writes every env var the agents use — filling constants from a `DEFAULTS` map when an output is absent, so you can skip the manual paste above:
 ```python
 # src/scripts/write_env.py — constants used when a deployment output is missing
 DEFAULTS = {
@@ -64,36 +83,49 @@ env = azd_env_values()                       # or arm_env_values(--deployment)
 get = lambda k: env.get(k) or DEFAULTS.get(k, "")
 # → writes AZURE_AI_PROJECT_ENDPOINT, MODEL_*, AZURE_SEARCH_*, App Insights, SQL … to .env
 ```
+Add Azure SQL (`azd env set DEPLOY_SQL true`) or Bing web grounding (`azd env set DEPLOY_BING true`) before `azd up`.
 
 > 📸 **Screenshot slot:** the `azd up` prompts, then the **deployment success** summary.
 >
 > <img src="../../images/challenge-01/steps/05-azd-up-prompts.png" alt="Screenshot slot: azd up prompts" width="80%">
 > <img src="../../images/challenge-01/steps/06-azd-up-success.png" alt="Screenshot slot: azd up success" width="80%">
 
-### Task 5 · Verify your resources
-In the Foundry portal confirm the project, the **3 distinct model deployments** (4 roles; Intake & Drafting shares gpt-5.4 with Orchestrator), and the `clm-corpus` Search index. From the CLI:
+</details>
+
+### Task 4 · Verify your resources
+Three checks: **(4a)** the **resource group** in the [Azure Portal](https://portal.azure.com/) (its name is on your dashboard; self-host default `rg-clm-microhack`) lists ~7 resources; **(4b)** in the Foundry portal ([ai.azure.com](https://ai.azure.com) → **`clm-project`** → **Models + endpoints**) the **3 distinct model deployments** show **Succeeded** — `gpt-5.4`, `gpt-5.6-sol`, `gpt-5.4-nano` (4 roles; Intake & Drafting shares `gpt-5.4` with Orchestrator); **(4c)** `.env` is filled (every value except the `SHAREPOINT_*` corpus and the Challenge 5 `MICROSOFT_APP_*` / `TEAMS_*`). CLI shortcut for 4b:
 ```bash
 az cognitiveservices account deployment list -g <rg> -n clmfoundry<token> -o table
 ```
 
-> 📸 **Screenshot slot:** the **resource group** in the portal and the **Foundry model deployments** (3 distinct deployments).
+> 📸 **Screenshot slot:** the **resource group** in the portal and the **3 Foundry model deployments**.
 >
 > <img src="../../images/challenge-01/steps/07-portal-resource-group.png" alt="Screenshot slot: resource group" width="80%">
 > <img src="../../images/challenge-01/steps/08-foundry-deployments.png" alt="Screenshot slot: model deployments" width="80%">
 
-### Task 6 · Seed the corpus
+### Task 5 · Seed the corpus
+**Path B (local-PDF) is the default — works in any tenant, no SharePoint, no admin consent.** Blank the `SHAREPOINT_*` values so the fallback triggers, then extract the local PDFs straight into `clm-corpus`:
 ```bash
-# Default — one command does the whole SharePoint path in your own admin tenant
-# (Entra app + admin consent + site + upload + index):
-python src/scripts/setup_sharepoint_corpus.py
-# Fallback (not an admin / no SharePoint) — local-PDF corpus straight into the index:
-python src/scripts/seed_corpus.py
+sed -i -E 's/^(SHAREPOINT_SITE_URL|SHAREPOINT_APP_ID|SHAREPOINT_APP_SECRET|SHAREPOINT_TENANT_ID)=.*/\1=/' .env
+python src/scripts/seed_corpus.py          # → "uploaded 14/14 local PDF(s) into 'clm-corpus'"
 python src/scripts/seed_sql.py             # optional — only if you deployed Azure SQL
 ```
+
+<details>
+<summary><strong>Path A — SharePoint corpus (optional · advanced · tenant admins only)</strong></summary>
+
+One command does the entire SharePoint path in your own admin tenant (Entra app + admin consent + site + upload + index):
+```bash
+python src/scripts/setup_sharepoint_corpus.py
+```
+In shared/managed sandbox tenants where you're **not** a tenant admin, its admin consent silently fails — that's expected; use Path B, which builds the **identical** `clm-corpus` index.
+
+</details>
+
 Both paths build the same idempotent `clm-corpus` index the later challenges ground on; re-running is safe.
 
 
-### Task 7 · Smoke test (the finish line)
+### Task 6 · Smoke test (the finish line)
 The gate proves the project is reachable **and** that each distinct model deployment answers. The core of it builds a one-line agent per deployment:
 ```python
 # src/scripts/smoke_test.py
@@ -140,7 +172,8 @@ Smoke test: ✅ PASS
 |------|------|
 | [`labautomation/infra/`](../../labautomation/infra/) | Bicep templates + `azuredeploy.json` for the Foundry project, models, Search, SQL, App Insights |
 | [`labautomation/deploy.sh`](../../labautomation/deploy.sh) · `.ps1` | Scripted provisioning that autofills `.env` |
-| [`src/scripts/seed_corpus.py`](../../src/scripts/seed_corpus.py) | Seeds the `clm-corpus` index (SharePoint crawl or local-PDF fallback) |
+| [`src/scripts/seed_corpus.py`](../../src/scripts/seed_corpus.py) | Seeds the `clm-corpus` index — **Path B local-PDF (default)** or SharePoint crawl |
+| [`src/scripts/setup_sharepoint_corpus.py`](../../src/scripts/setup_sharepoint_corpus.py) | Optional Path A — one-command SharePoint corpus (Entra app + consent + site + upload + index) |
 | [`src/scripts/seed_sql.py`](../../src/scripts/seed_sql.py) | Optional: seeds contract-status rows in Azure SQL |
 | [`src/scripts/smoke_test.py`](../../src/scripts/smoke_test.py) | Gate — confirms each distinct model deployment answers |
 | [`src/data/`](../../src/data/) | The CLM corpus (contracts, templates, clause library, playbooks) + eval datasets |
@@ -149,5 +182,7 @@ Smoke test: ✅ PASS
 
 | Symptom | Cause / fix |
 |---------|-------------|
-| A model isn't offered in your region | Pick a region with `gpt-5.4`, `gpt-5.6-sol`, and `gpt-5.4-nano`; verify in the Foundry model catalog. |
-| Corpus / index empty | Re-run `python src/scripts/seed_corpus.py` (idempotent). |
+| A model isn't offered in your region | *(Self-host only — provisioned labs don't deploy.)* Pick a region with `gpt-5.4`, `gpt-5.6-sol`, and `gpt-5.4-nano`; verify in the Foundry model catalog. |
+| `az login` fails / no browser in Codespaces | Use `az login --use-device-code` and paste the code at [microsoft.com/devicelogin](https://microsoft.com/devicelogin). |
+| SharePoint (Path A): *"Tenant does not have a SPO license"* / **"Grant admin consent" greyed out** | You're not a tenant admin — expected. Use **Path B** (blank `SHAREPOINT_*`, run `python src/scripts/seed_corpus.py`); it builds the identical `clm-corpus` index. |
+| Corpus / index empty | Re-run `python src/scripts/seed_corpus.py` (idempotent); if a doc 403s, wait a minute for Search-role propagation and retry. |

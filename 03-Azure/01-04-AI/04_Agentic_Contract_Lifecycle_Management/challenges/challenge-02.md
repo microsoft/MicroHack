@@ -332,7 +332,7 @@ layer on now.
   detection, and protected-material checks. It still holds even when the prompt guardrail is bypassed.
 
 **Try it now** — only if you published the portal agents in Task 4 (`python src/agents/publish_agent.py`):
-1. Portal → **Build → Agents → `intake-drafting-agent`**.
+1. In the **Foundry portal** ([ai.azure.com](https://ai.azure.com)) → **Build → Agents → `intake-drafting-agent`**.
 2. Expand **Guardrails** in the left pane → **Manage guardrail**.
 3. Enable **Prompt Shields** (jailbreak + indirect injection) and **PII (Preview)** — PII needs **at
    least one** data type (for contracts, start with *User information* → Name / Email / Phone / Address).

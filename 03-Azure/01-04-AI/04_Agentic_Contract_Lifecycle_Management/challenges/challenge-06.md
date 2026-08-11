@@ -77,7 +77,7 @@ Sexual                            2           0    0%
 
 > 📸 **Screenshot slot — what you'll see:** the printed **scorecard table** (and/or `redteam_scorecard.json`).
 >
-> <img src="../images/challenge-06/steps/01-redteam-scorecard.png" alt="Baseline red-team scan scorecard with 0% overall attack success rate" width="80%">
+> <img src="../images/challenge-06/steps/01-redteam-scorecard.png" alt="Baseline red-team scan scorecard with 12.5% overall attack success rate (1 of 8 attacks)" width="80%">
 
 ### Task 2 · Turn up the heat (~10 min)
 

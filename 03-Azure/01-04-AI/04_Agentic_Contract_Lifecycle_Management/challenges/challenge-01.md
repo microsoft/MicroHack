@@ -283,25 +283,11 @@ your **`clm-project`** → **Models + endpoints**. Confirm the deployments show 
 
 > 📸 **Screenshot slot — what you'll see:** the three model deployments, all "Succeeded".
 >
-> <img src="../images/challenge-01/steps/08-foundry-deployments.png" alt="Screenshot slot: model deployments" width="80%">
+> <img src="../images/challenge-01/steps/08-foundry-deployments-dark.png" alt="Screenshot slot: model deployments" width="80%">
 
 **4c — Your `.env` file.** In the Codespace file explorer, open **`.env`** at the repo root. Confirm the
 values are filled in (every entry has a value **except** the `SHAREPOINT_*` corpus and the Challenge 5
 `MICROSOFT_APP_*` / `TEAMS_*` variables, which you fill later).
-
-✅ **`.env` should look like this** (values will differ):
-
-```bash
-AZURE_AI_PROJECT_ENDPOINT=https://clmfoundryab12c.services.ai.azure.com/api/projects/clm-project
-MODEL_ORCHESTRATOR=gpt-5.4
-MODEL_DRAFTING=gpt-5.4
-MODEL_CLAUSE_RISK=gpt-5.6-sol
-MODEL_RENEWAL=gpt-5.4-nano
-AZURE_SEARCH_ENDPOINT=https://clmsearchab12c.search.windows.net
-AZURE_SEARCH_INDEX=clm-corpus
-AZURE_SEARCH_CONNECTION_NAME=clm-search
-APPLICATIONINSIGHTS_CONNECTION_STRING=InstrumentationKey=...
-```
 
 > [!CAUTION]
 > For convenience, this hackathon keeps secrets (e.g. the SharePoint app secret) in `.env` and uses

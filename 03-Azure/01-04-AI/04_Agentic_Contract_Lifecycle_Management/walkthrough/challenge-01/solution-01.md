@@ -120,7 +120,7 @@ az cognitiveservices account deployment list -g <rg> -n clmfoundry<token> -o tab
 
 **4 · Verify the model deployments.** In the left nav open **Models + endpoints** — the **3 distinct deployments** (`gpt-5.4`, `gpt-5.6-sol`, `gpt-5.4-nano`; Intake & Drafting shares `gpt-5.4` with the Orchestrator) should all show **Succeeded**.
 
-<img src="../../images/challenge-01/steps/08-foundry-deployments.png" alt="Foundry portal Models + endpoints showing three model deployments in Succeeded state" width="80%">
+<img src="../../images/challenge-01/steps/08-foundry-deployments-dark.png" alt="Foundry portal Models + endpoints showing three model deployments in Succeeded state" width="80%">
 
 ### Task 5 · Seed the corpus
 **Path B (local-PDF) is the default — works in any tenant, no SharePoint, no admin consent.** Blank the `SHAREPOINT_*` values so the fallback triggers, then extract the local PDFs straight into `clm-corpus`:

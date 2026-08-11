@@ -57,7 +57,7 @@ Violence                          2           0    0%
 
 > 📸 **Screenshot slot:** the printed **scorecard table** (and/or `redteam_scorecard.json`).
 >
-> <img src="../../images/challenge-06/steps/01-redteam-scorecard.svg" alt="Screenshot slot: red-team scorecard" width="80%">
+> <img src="../../images/challenge-06/steps/01-redteam-scorecard.png" alt="Red-team scorecard table with overall attack success rate by risk category" width="80%">
 
 ### Task 2 · Turn up the heat (attack strategies)
 `--strategies` layers encodings/ciphers and a **composed Base64→ROT13** attack on top of the baseline:
@@ -95,7 +95,7 @@ Guardrails held: 9/10 · defect rate = 10%
 
 > 📸 **Screenshot slot:** the **defect rate line** + PASS/FAIL verdict.
 >
-> <img src="../../images/challenge-06/steps/02-safety-gate.svg" alt="Screenshot slot: safety gate verdict" width="80%">
+> <img src="../../images/challenge-06/steps/02-safety-gate.png" alt="Safety gate verdict: guardrails held 10/10, defect rate 0% — SAFETY GATE PASSED" width="80%">
 
 ### Task 4 · Harden the agent, then re-scan
 Task 4 hardens **two different agents** — keep them straight:

@@ -310,24 +310,6 @@ tells you the expected behavior:
 >
 > <img src="../images/challenge-02/steps/03-portal-playground.png" alt="Screenshot slot: Foundry Playground" width="80%">
 
-| Prompt type | Expected behavior |
-|-------------|-------------------|
-| **Drafting** | Uses the approved template structure; fills only provided details; **no invented terms** |
-| **Cited Q&A** | Answer grounded in the corpus **with citations**; says "not in corpus" if unknown |
-| **Function tool** | Calls `get_contract_status`; returns **real fields** for `CT-4821` |
-| **Legal advice** | **Brief refusal** + recommends qualified counsel |
-
-For the tool call, `CT-4821` should come back with concrete, structured data. The
-`renewal_date`/`effective_date` are **computed relative to today** (the seed stores
-day-offsets so "upcoming renewals" demos never go stale), so your dates will differ:
-
-```json
-{"contract_id": "CT-4821", "counterparty": "Acme Corp", "type": "MSA",
- "status": "Active", "renewal_date": "<~55 days out>", "auto_renew": true,
- "notice_days": 90, "risk": "High", "owner": "legal@contoso.com",
- "_note": "(source: contracts_seed.json)"}
-```
-
 ### Task 5 · (Optional) Add content safety (~10 min)
 
 In the portal, attach **Prompt Shields / PII** guardrails to the agent, or discuss where they'd sit.

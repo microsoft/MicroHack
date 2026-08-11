@@ -139,6 +139,18 @@ thing in the portal — no code — so a non-engineer can own the quality bar.
    `evaluation_dataset.jsonl` (upload it as the data source). Each row gets a weighted
    score, a pass/fail label, and the judge's **reason** per dimension.
 
+**Run it against the agent (New Foundry, no dataset upload).** To score the **live agent**
+over its recent traces instead of a static file, use the redesigned **Evaluations** hub:
+1. **Evaluation → Evaluations → Create** (top-right).
+2. **Target: Agent** → pick your published **`intake-drafting-agent`** (the version you
+   published in Challenge 2) → **Next**.
+3. **Data → Existing traces** → set the **Number of traces**, a **Time range** and
+   **Intelligent sampling** (telemetry takes a few minutes to appear, so pad your window).
+4. **Criteria → Add evaluators** → under the **Custom** group, select **`ClmRubricEvaluator`**
+   (add the built-in judges too for a full scorecard).
+5. **Review** → name the run → **Submit**, then open it for the per-dimension `clm_rubric`
+   scores and the judge's reasons.
+
 > 📸 **Screenshot slot:** your rubric evaluator's per-dimension scores in the portal.
 > <img src="../images/challenge-03/steps/03-rubric-evaluator.png" alt="Screenshot slot: rubric evaluator per-dimension scores" width="75%">
 

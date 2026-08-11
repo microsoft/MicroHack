@@ -101,14 +101,45 @@ return {
 
 That's why **Task 4**'s scorecard shows a `clm_rubric` line and **Task 6**'s gate blocks on it — no extra setup for the code path.
 
-**Build the same rubric in the Foundry portal (no code).** This is the UI twin of `CLM_RUBRIC` — how a non-engineer on the team owns the quality bar:
+**Build the same rubric in the Foundry portal (no code).** This is the UI twin of `CLM_RUBRIC` — how a non-engineer on the team owns the quality bar. The portal **auto-generates** the rubric by reading the agent's own instructions (and, optionally, its recent production traces), so you get a domain rubric without hand-writing a single dimension.
 
-1. In your Foundry project, open **Evaluation → Evaluator catalog**.
-2. Choose **Custom evaluator** (or **Rubric evaluator**, preview) → **Create**.
-3. Pick **Prompt-based**, **ordinal 1–5** scoring. **Auto-generate** the rubric from the **Intake & Drafting agent** (Foundry reads its instructions), or paste the seven dimensions above.
-4. Review the dimensions + weights, set a **pass threshold**, then **run** it on `evaluation_dataset.jsonl` (upload it as the data source). Each row gets a weighted score, a pass/fail, and the judge's **reason** per dimension — the portal view of what `--explain` prints.
+**1 · Open the Evaluator catalog and start a new evaluator.** In your Foundry project, go to **Evaluations → Evaluator catalog**. The catalog lists the built-in evaluators (IFEval, Tool-Selection, Similarity, …) — those are Microsoft's generic measures. Click **Create evaluator** (top-right) to add your own domain rubric.
 
-> 📸 **Screenshot slot:** your rubric evaluator's per-dimension scores in the portal.
+> <img src="../../images/challenge-03/steps/03-rubric-evaluator-catalog.png" alt="Foundry Evaluations page on the Evaluator catalog tab, listing built-in evaluators, with the Evaluator catalog tab and the Create evaluator button highlighted" width="85%">
+
+**2 · Configure a Rubric evaluator and point it at the agent.** Name it `ClmRubricEvaluator`, choose **Rubric** as the evaluator type, and leave **Auto-generate rubric** on. Pick a **judge model** (here `gpt-5.4-nano`) and set **Target agent** to **`intake-drafting-agent`** — Foundry pulls that agent's system prompt into the **Prompt** box, so the rubric is derived from the *same* instructions the code rubric was lifted from. Turn on **Add context → Use production traces from target agent** to ground the rubric in real traffic (17 traces were found in the date range; a representative set is auto-sampled), then click **Generate rubric**.
+
+> <img src="../../images/challenge-03/steps/03-rubric-create-evaluator.png" alt="Create evaluator dialog with name ClmRubricEvaluator, Rubric type selected, Auto-generate rubric on, judge model gpt-5.4-nano, target agent intake-drafting-agent, the agent prompt loaded, and Use production traces from target agent enabled with 17 traces found" width="85%">
+
+**3 · Review the generated dimensions, weights, and pass threshold.** Foundry proposes **8 weighted dimensions** — each scored **1–5**, combined into an overall **0–1** score with a **Pass score threshold** (0.5 here). They map straight onto the policy the code rubric encodes: `policy_grounded_answer` (8) + `citation_discipline` (5) ≈ *grounded, no fabrication*; `tool_routing_for_contract_status` (6) ≈ *call `get_contract_status`, don't guess*; `hierarchy_and_escalation_handling` (6) + `legal_advice_boundary_with_safe_redirect` (4) ≈ *authority escalation*; `template_safe_drafting` (6) ≈ *deviation flagging + standard fallback*; `instruction_injection_resistance` (4) covers the guardrail; `general_quality` (5) is the always-applicable catch-all. Edit any weight, add or delete a dimension, then **Save evaluator**.
+
+> <img src="../../images/challenge-03/steps/03-rubric-generated-dimensions.png" alt="Create evaluator dialog showing the auto-generated rubric with 8 weighted dimensions — policy_grounded_answer, tool_routing_for_contract_status, citation_discipline, hierarchy_and_escalation_handling, legal_advice_boundary_with_safe_redirect, instruction_injection_resistance, template_safe_drafting, general_quality — a pass score threshold of 0.5, and the Save evaluator button" width="85%">
+
+**4 · Your custom evaluator is now a reusable asset.** The saved **ClmRubricEvaluator** (Rubric-based, versioned) shows the full evaluator configuration — overall score range **[0-1]** / dimension range **[1-5]**, category **Quality / Agents**, evaluation level **Turn, Conversation**, and target agent **intake-drafting-agent** — plus all 8 dimensions with their weight bars. Click **Create evaluation** to run it over `evaluation_dataset.jsonl`: every row gets a weighted score, a pass/fail, and the judge's **reason** per dimension — the portal view of what `--explain` prints in code.
+
+> <img src="../../images/challenge-03/steps/03-rubric-evaluator-saved.png" alt="Saved ClmRubricEvaluator detail page showing version 2, Rubric-based type, evaluator configuration with score ranges and target agent intake-drafting-agent, all 8 dimensions with weight bars, and a Create evaluation button" width="85%">
+
+**Run it against the agent (New Foundry).** That **Create evaluation** button opens a wizard — and instead of uploading `evaluation_dataset.jsonl`, you can score the **live agent** over the traces it already produced in Task 2:
+
+1. From the saved evaluator (or **Evaluations → Create**), start a new evaluation.
+
+> <img src="../../images/challenge-03/steps/03-eval1-create.png" alt="Evaluations hub with the Create button highlighted" width="80%">
+
+2. **Target: Agent** → select **`intake-drafting-agent`** at the version you published in Challenge 2 (here **v3**) → **Next**.
+
+> <img src="../../images/challenge-03/steps/03-eval2-target-agent.png" alt="Create evaluation — select the intake-drafting-agent target" width="80%">
+
+3. **Data → Existing traces.** Score the runs the agent already produced in Task 2 — no dataset upload. Set the **Number of traces**, a **Time range** (e.g. `7D`) and **Intelligent sampling**, then **Next**. *(Telemetry takes a few minutes to land, so pad the end of your window by ~10 min.)*
+
+> <img src="../../images/challenge-03/steps/03-eval3-existing-traces.png" alt="Create evaluation — choose Existing traces as the data source" width="80%">
+
+4. **Criteria → Add evaluators.** Scroll to the **Custom** group and tick the **`ClmRubricEvaluator`** you just saved. Add the built-ins (Groundedness, Relevance, Coherence, Fluency…) alongside it for the full scorecard.
+
+> <img src="../../images/challenge-03/steps/03-eval4-add-rubric.png" alt="Add evaluators dialog — the custom ClmRubricEvaluator under the Custom group" width="80%">
+
+5. **Review → name the run** (e.g. `eval-intake-drafting-agent`) → **Submit.** Foundry scores each selected trace and the run lands in the **Evaluations** list; open it for the per-dimension `clm_rubric` scores and the judge's reasons.
+
+> <img src="../../images/challenge-03/steps/03-eval5-review-submit.png" alt="Review step — evaluators listed, run named, ready to Submit" width="80%">
 
 **Continuous evaluation (optional).** Once the rubric reflects your bar, enable **continuous/scheduled evaluation** in **Monitor settings** so live agent traffic is scored automatically and you catch regressions in production. Portal preview today — the `--gate` flag is the code-first equivalent for CI (wired in `ci-eval.yml`).
 

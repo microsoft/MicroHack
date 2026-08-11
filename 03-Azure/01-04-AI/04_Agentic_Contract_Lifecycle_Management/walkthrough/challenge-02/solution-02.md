@@ -158,18 +158,25 @@ Work through [`src/sample_prompts.md`](../../src/sample_prompts.md). The `get_co
  "_note": "(source: contracts_seed.json)"}
 ```
 
-The demo agent runs **in-process** (`FoundryChatClient`), so it does not appear in portal → Agents/Playground. To get the Playground path, publish it as a persistent Foundry agent: `python src/agents/publish_agent.py` (`--list` / `--delete` to manage). Grounded Q&A/drafting/refusal work in the Playground; `get_contract_status` stays client-side.
+### Task 5 · Publish to Foundry & test in the Playground
+The Task 3 demo runs the agent **in-process** (`FoundryChatClient`), so it isn't registered server-side and doesn't appear in portal → **Agents**/**Playground** — that's expected. Publish **just this challenge's agent**, then open **Agents → intake-drafting-agent → Playground** and re-run a prompt:
+```bash
+python src/agents/publish_agent.py --agent intake-drafting-agent          # publish this challenge's agent
+python src/agents/publish_agent.py --list                                 # list what's published
+python src/agents/publish_agent.py --delete --agent intake-drafting-agent  # optional cleanup
+```
+Challenges 4 and 5 publish their own specialists (`clause-risk-agent`, `obligation-renewal-agent`), so the portal grows one agent per challenge. Grounded drafting, cited Q&A and the refusal guardrail all work in the Playground; the `get_contract_status` / `list_upcoming_renewals` function tools stay client-side (the Playground requests the call and lets you paste the result).
 
 > 📸 **Screenshot slot:** the Foundry **Playground** with the agent giving a grounded, cited answer.
 >
 > <img src="../../images/challenge-02/steps/03-portal-playground.png" alt="Screenshot slot: Foundry Playground" width="80%">
 
-### Task 5 · (Optional) Content safety
+### Task 6 · (Optional) Content safety
 A **preview** of Challenge 6, not a required step here. Two layers of defense:
 - **Prompt layer (done)** — the `INSTRUCTIONS` refusal enforces the no-legal-advice policy; fast, but model-dependent.
 - **Content-safety layer** — Azure AI **Content Safety** (Prompt Shields for jailbreak + indirect injection, PII, protected material) inspects prompts/responses **independently of the model**, so it holds even if the prompt guardrail is bypassed.
 
-If you published the portal agents in Task 4, attach it now in the **Foundry portal** ([ai.azure.com](https://ai.azure.com)): **Build → Agents → `intake-drafting-agent` → Guardrails → Manage guardrail** → enable **Prompt Shields** + **PII** (pick ≥ 1 data type) → **Create guardrails**. No portal agent yet? Just discuss where the guardrails would sit.
+If you published the portal agents in Task 5, attach it now in the **Foundry portal** ([ai.azure.com](https://ai.azure.com)): **Build → Agents → `intake-drafting-agent` → Guardrails → Manage guardrail** → enable **Prompt Shields** + **PII** (pick ≥ 1 data type) → **Create guardrails**. No portal agent yet? Just discuss where the guardrails would sit.
 
 ➡️ Full walkthrough (data-type picks, screenshots, re-testing): **[Challenge 6 · Task 4](../../challenges/challenge-06.md#task-4--harden-the-agent-15-min)**.
 

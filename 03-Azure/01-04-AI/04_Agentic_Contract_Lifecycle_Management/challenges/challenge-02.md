@@ -53,7 +53,7 @@ one is what makes the agent's output *safe for a contract manager to act on*:
 | **Function tool** | `get_contract_status(contract_id)` — deterministic lookup of status, renewal date, risk and owner (Azure SQL, falling back to seed JSON) | [`src/clm_common/tools.py`](../src/clm_common/tools.py) |
 | **Guard-railed persona** | Instructions that force citations, forbid invented terms, and refuse legal advice | `INSTRUCTIONS` in [`agents/intake_drafting_agent.py`](../src/agents/intake_drafting_agent.py) |
 | **gpt-5.4-backed agent** | The same Agent Framework API for every model, with `model` pointed at the `gpt-5.4` deployment | `create_agent()` in [`agents/intake_drafting_agent.py`](../src/agents/intake_drafting_agent.py) |
-| **A repeatable demo** | Builds the agent, runs four prompts (draft · cited Q&A · tool call · refusal) in one session | `main()` in [`agents/intake_drafting_agent.py`](../src/agents/intake_drafting_agent.py) |
+| **A repeatable demo** | Builds the agent, runs six prompts (draft · 3× cited Q&A · tool call · refusal) in one session | `main()` in [`agents/intake_drafting_agent.py`](../src/agents/intake_drafting_agent.py) |
 
 ## 🧭 Context
 
@@ -156,7 +156,7 @@ Everything the agent "knows" comes from the corpus you seeded in Challenge 1:
 |------|--------------|
 | [`kb_setup.py`](../src/kb_setup.py) | Builds the Foundry IQ MCP tool restricted to `knowledge_base_retrieve`. Run it standalone to verify grounding is wired up. |
 | [`clm_common/foundry_iq.py`](../src/clm_common/foundry_iq.py) | Idempotently creates the knowledge source/base through the Azure AI Search knowledge APIs. |
-| [`agents/intake_drafting_agent.py`](../src/agents/intake_drafting_agent.py) | Defines the agent (persona, guardrails, knowledge + function tools) and runs a four-prompt demo. Agents are built in-process — nothing persists server-side. |
+| [`agents/intake_drafting_agent.py`](../src/agents/intake_drafting_agent.py) | Defines the agent (persona, guardrails, knowledge + function tools) and runs a six-prompt demo. Agents are built in-process — nothing persists server-side. |
 | [`sample_prompts.md`](../src/sample_prompts.md) | Curated prompts that exercise every capability: grounded drafting, cited Q&A, the function tool, and the refusal guardrail. |
 
 ## 🧰 Services & models in this challenge
@@ -239,15 +239,15 @@ optionally calls `get_contract_status`, and drafts — then returns the assistan
 
 ### Task 3 · Run the agent end-to-end (~10 min)
 
-This builds the agent and runs four demo prompts in one shared session:
+This builds the agent and runs six demo prompts in one shared session:
 
 ```bash
 python src/agents/intake_drafting_agent.py
 ```
 
-The four built-in prompts deliberately cover all four behaviors — a **draft**, a **cited** clause
-Q&A, a **`CT-4821` status** lookup (function tool), and a **legal-advice** prompt that must be
-**refused**.
+The six built-in prompts deliberately span the core behaviors — grounded **drafting** from an approved
+template, three **cited** clause Q&As (standard position · negotiation fallback · approval routing), a
+**`CT-4821` status** lookup (function tool), and a **legal-advice** prompt that must be **refused**.
 
 ✅ **You should see** (the model's wording varies — the **structure** is what matters):
 
@@ -255,69 +255,84 @@ Q&A, a **`CT-4821` status** lookup (function tool), and a **legal-advice** promp
 ✓ Built intake-drafting-agent on model 'gpt-5.4'
 
 ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
-USER: Draft a mutual NDA between Contoso Global and Northwind Traders...
-AGENT: MUTUAL NON-DISCLOSURE AGREEMENT ... [uses the approved template, no invented terms]
+USER: Draft a mutual NDA between Contoso Global and Acme Corp for a 2-year term.
+AGENT: MUTUAL NON-DISCLOSURE AGREEMENT ... [drafts from the approved NDA template; fills the parties +
+       2-yr term, [PLACEHOLDERS] for anything missing; no invented terms]
 
 ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
-USER: What is our standard limitation-of-liability position?
-AGENT: Our standard position caps liability at ... [CL-04] (cited from the clause library)
+USER: What does our standard limitation-of-liability clause say, and what's the cap?
+AGENT: Cap = 12 months' fees, with carve-outs for confidentiality / IP / indemnity... (cited)
 
 ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
-USER: What's the status of contract CT-4821?
-AGENT: CT-4821 (Acme Corp, MSA) is Active, renews 2026-09-01... [from get_contract_status]
+USER: The counterparty demands unlimited liability. What fallbacks can we offer, in order?
+AGENT: 1) hold the 12-mo cap → 2) up to 24-mo cap keeping carve-outs → 3) escalate uncapped to the
+       General Counsel... (cited from the negotiation playbook)
 
 ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
-USER: Should we accept this indemnity clause? What's your legal opinion?
-AGENT: I can't provide legal advice. Please consult qualified counsel... [refusal guardrail]
+USER: We're signing a $5M MSA above our standard cap — who must approve, per the DoA matrix?
+AGENT: > USD 1,000,000 band → CEO staff (business) · General Counsel (legal) · CEO or CFO (signatory);
+       human sign-off required... (cited)
+
+――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
+USER: What is the status and renewal date of contract CT-4821?
+AGENT: CT-4821 (Acme Corp) is Active, renews ~55 days out... [from get_contract_status — dates are
+       computed relative to today, so yours differ]
+
+――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
+USER: Should we sue Acme for breach — will we win in court?
+AGENT: I can't advise whether to sue or predict a court outcome — please consult qualified counsel...
+       [refusal guardrail]
 ```
 
-> 📸 **Screenshot slot — what you'll see:** the 4-prompt demo (draft · cited Q&A · tool call · refusal).
+> 📸 **Screenshot slot — what you'll see:** the six-prompt demo (draft · 3× cited Q&A · tool call · refusal).
 >
-> <img src="../images/challenge-02/steps/02-agent-demo.png" alt="Screenshot slot: 4-prompt demo" width="80%">
+> <img src="../images/challenge-02/steps/02-agent-demo.png" alt="Screenshot slot: six-prompt demo" width="80%">
 
 > [!NOTE]
-> The agent is built in-process each run via the Microsoft Agent Framework — there's no server-side
-> agent id to manage or clean up. Later challenges simply call `create_agent(...)` again.
+> The agent is built **in-process** each run via the Microsoft Agent Framework — there's no server-side
+> agent id to manage or clean up, and it **won't show up in the portal's Agents list or Playground** yet.
+> That's expected — **Task 5** publishes persistent versions if you want the portal path.
 
 ### Task 4 · Exercise every capability (~15 min)
 
-Work through [`sample_prompts.md`](../src/sample_prompts.md) — via the demo script, the portal **Playground**,
-or your own thread. Each section maps to one capability, and the file's *"What good looks like"* table
-tells you the expected behavior:
+Work through [`sample_prompts.md`](../src/sample_prompts.md) — via the demo script or your own thread.
+Each section maps to one capability, and the file's *"What good looks like"* table tells you the
+expected behavior for each capability.
 
-> [!IMPORTANT]
-> **"Why don't I see the agent in the Foundry portal?"** — By design. `intake_drafting_agent.py` builds the
-> agent with a `FoundryChatClient`, which runs the tool-calling loop **in your process**; it is never
-> registered server-side, so it won't appear in portal → **Agents** or the **Playground**. Running the demo
-> script is a fully valid way to complete this task (the terminal output *is* your evidence).
+### Task 5 · Publish to Foundry & test in the Playground (~5 min)
+
+Task 3 builds the agent **in-process** — `FoundryChatClient` runs the whole tool-calling loop inside
+your Python process, so nothing is registered server-side and the agent **won't appear in the portal's
+Agents list or Playground**. That's expected; the terminal output is your evidence. To get a persistent
+agent you can click through in the portal, publish **just this challenge's agent**:
+
+```bash
+python src/agents/publish_agent.py --agent intake-drafting-agent          # publish this challenge's agent
+python src/agents/publish_agent.py --list                                 # list what's published
+python src/agents/publish_agent.py --delete --agent intake-drafting-agent  # optional cleanup
+```
+
+Then open portal → **Agents** → **intake-drafting-agent** → **Playground** and try a prompt such as
+*"Draft a mutual NDA between Contoso Global and Acme Corp for a 2-year term."* — you'll get the same
+grounded, cited answer, now in the portal UI.
+
+> [!NOTE]
+> Publish **only the agent you're working on**. Challenges 4 and 5 publish their own specialists
+> (`clause-risk-agent`, `obligation-renewal-agent`) when you get there, so your portal grows one agent
+> per challenge instead of all at once. Grounded drafting, cited Q&A and the refusal guardrail all work
+> in the Playground; the `get_contract_status` / `list_upcoming_renewals` **function tools run
+> client-side**, so the Playground only *requests* the call and lets you paste the result — use the demo
+> scripts for the full tool round-trip. Leaving an agent published is free (it's just a definition) and
+> there's nothing to clean up before Challenge 3.
 >
-> **Want the Playground path too?** One script publishes the persistent Foundry versions of **all three
-> specialist agents** (Intake & Drafting · gpt-5.4, Clause & Risk · gpt-5.6-sol, Obligation & Renewal ·
-> gpt-5.4-nano — each with the same persona, model and grounding/tools as its in-process build). After it
-> runs, **all of them appear in portal → Agents** and you can open any in the Playground:
-> ```bash
-> python src/agents/publish_agent.py          # publish ALL specialist agents (portal → Agents)
-> python src/agents/publish_agent.py --list    # list published versions
-> python src/agents/publish_agent.py --agent intake-drafting-agent  # publish just one
-> python src/agents/publish_agent.py --delete  # optional — remove them later (NOT required)
-> ```
-> Grounded drafting, cited Q&A, clause-risk analysis and the refusal guardrail all work in the Playground.
-> The `get_contract_status` / `list_upcoming_renewals` **function tools run client-side**, so the portal
-> will *request* the call and let you paste the result — use the demo scripts for the full tool round-trip.
-> *(The Challenge 4 **orchestrator** isn't a standalone prompt agent — it calls these specialists as tools
-> in-process — so it's run with `python src/orchestrator.py`, not published here.)*
->
-> **Leaving them published is free and recommended.** A published prompt-agent is just a definition — it
-> costs nothing to exist, and deleting it is *not* required before Challenge 3. Challenge 3's monitoring
-> is **trace-based** (it reads telemetry from *running the demos*), so it works whether or not these agents
-> are registered in **Assets → Agents**. Already deleted them? Just re-run `python src/agents/publish_agent.py`
-> to bring them back — nothing else to redo.
+> *(Prefer to stage everything up front? `python src/agents/publish_agent.py` with no `--agent` publishes
+> all three specialists at once.)*
 
 > 📸 **Screenshot slot — what you'll see:** the Foundry **Playground** with the agent giving a grounded, cited answer.
 >
 > <img src="../images/challenge-02/steps/03-portal-playground.png" alt="Screenshot slot: Foundry Playground" width="80%">
 
-### Task 5 · (Optional) Add content safety (~10 min)
+### Task 6 · (Optional) Add content safety (~10 min)
 
 This is a **preview**, not a required build step — you wire Content Safety in full in **Challenge 6**.
 The goal here is to understand the **two layers of defense** and, if you like, switch the first portal
@@ -331,7 +346,7 @@ layer on now.
   **independently of the model**: **Prompt Shields** (jailbreak + indirect/XPIA injection), **PII**
   detection, and protected-material checks. It still holds even when the prompt guardrail is bypassed.
 
-**Try it now** — only if you published the portal agents in Task 4 (`python src/agents/publish_agent.py`):
+**Try it now** — only if you published the portal agents in Task 5 (`python src/agents/publish_agent.py --agent intake-drafting-agent`):
 1. In the **Foundry portal** ([ai.azure.com](https://ai.azure.com)) → **Build → Agents → `intake-drafting-agent`**.
 2. Expand **Guardrails** in the left pane → **Manage guardrail**.
 3. Enable **Prompt Shields** (jailbreak + indirect injection) and **PII (Preview)** — PII needs **at

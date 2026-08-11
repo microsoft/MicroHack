@@ -101,8 +101,8 @@ Required approver: VP Legal (delegation-of-authority matrix)
 > <img src="../images/challenge-04/steps/01-clause-risk.png" alt="Clause & Risk agent (gpt-5.6-sol): clause table with citations and High-risk verdict" width="80%">
 
 > [!TIP]
-> **Want to see this agent in the Foundry portal?** `python src/agents/publish_agent.py` (from Challenge 2)
-> publishes **all** the specialists — including `clause-risk-agent` (gpt-5.6-sol) — so it shows up in
+> **Want to see this agent in the Foundry portal?** Publish it as a persistent Foundry agent:
+> `python src/agents/publish_agent.py --agent clause-risk-agent` (gpt-5.6-sol) — then it shows up in
 > portal → **Agents** and opens in the **Playground**. Optional; the demo output above is the real evidence.
 
 ### Task 2 · Build the Orchestrator (~10 min)

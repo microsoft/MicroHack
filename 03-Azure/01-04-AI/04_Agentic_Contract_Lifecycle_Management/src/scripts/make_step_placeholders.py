@@ -52,8 +52,8 @@ SLOTS: list[tuple[str, str, str, str]] = [
     # ---- Challenge 2 · Grounded agent --------------------------------------
     ("challenge-1", "01-kb-setup-ok", "Terminal · kb_setup OK",
      "kb_setup.py printing the resolved clm-search connection and clm-corpus index."),
-    ("challenge-1", "02-agent-demo", "Terminal · 4-prompt demo",
-     "intake_drafting_agent.py output: draft, cited Q&A, CT-4821 tool JSON, and the legal-advice refusal."),
+    ("challenge-1", "02-agent-demo", "Terminal · six-prompt demo",
+     "intake_drafting_agent.py output: NDA draft, 3 cited Q&As, CT-4821 tool JSON, and the legal-advice refusal."),
     ("challenge-1", "03-portal-playground", "Foundry Portal · Playground",
      "The Foundry Playground with the Intake & Drafting agent selected, showing a grounded answer with citations."),
 

@@ -138,6 +138,22 @@ if [[ -n "$APPINSIGHTS_ID" && -n "$APPINSIGHTS_CONN" ]]; then
     || echo "    ! App Insights connection failed — in the portal open project '$PROJECT' → Tracing → Connect and pick '$APPINSIGHTS'."
 fi
 
+# Grant the signed-in user monitoring read access so the Foundry portal Monitor
+# dashboard (Challenge 3) passes its "Verifying access" check. Owner/Contributor
+# deployers already inherit this; the explicit grant covers non-owner deployers
+# and teammates who open the dashboard. Non-fatal.
+SIGNED_IN_USER=$(az ad signed-in-user show --query id -o tsv 2>/dev/null || true)
+if [[ -n "$SIGNED_IN_USER" && -n "$APPINSIGHTS_ID" ]]; then
+  az role assignment create --assignee-object-id "$SIGNED_IN_USER" --assignee-principal-type User \
+    --role "Monitoring Reader" --scope "$APPINSIGHTS_ID" -o none 2>/dev/null || true
+  LOG_ANALYTICS_ID=$(az monitor app-insights component show --app "$APPINSIGHTS" -g "$RG" --query WorkspaceResourceId -o tsv 2>/dev/null || true)
+  if [[ -n "$LOG_ANALYTICS_ID" ]]; then
+    az role assignment create --assignee-object-id "$SIGNED_IN_USER" --assignee-principal-type User \
+      --role "Log Analytics Reader" --scope "$LOG_ANALYTICS_ID" -o none 2>/dev/null || true
+  fi
+  echo "  ✓ Monitoring read access granted to signed-in user — portal Monitor dashboard enabled"
+fi
+
 # ---- 7. Grounding with Bing Search (optional web grounding) --------------
 # Provisions a Bing.Grounding resource + a Foundry project connection (resolved
 # by name AZURE_BING_CONNECTION_NAME) that the Clause & Risk agent's

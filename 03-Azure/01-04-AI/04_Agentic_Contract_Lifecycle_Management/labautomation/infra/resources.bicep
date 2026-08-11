@@ -75,6 +75,8 @@ var roleCognitiveServicesUser = 'a97b65f3-24c7-4388-baec-2e87135dc908' // Cognit
 var roleSearchIndexDataContributor = '8ebe5a00-799e-43f5-93ac-243d3dce84a7'
 var roleSearchServiceContributor = '7ca78c08-252a-4471-8644-bb5ff32d4ba0'
 var roleSearchIndexDataReader = '1407120a-92aa-4202-b7e9-c0e197c71c8f'
+var roleMonitoringReader = '43d0d8ad-25c7-4714-9337-8ba259a9fe05'      // Monitoring Reader (App Insights)
+var roleLogAnalyticsReader = '73c42c96-874c-492b-b04d-ab87d138a893'    // Log Analytics Reader (Log Analytics workspace)
 
 var wantSql = toLower(deploySql) == 'true' && !empty(sqlAdminPassword)
 var wantBing = toLower(deployBing) == 'true'
@@ -369,6 +371,29 @@ resource raUserSearchServiceContributor 'Microsoft.Authorization/roleAssignments
   scope: search
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', roleSearchServiceContributor)
+    principalId: principalId
+    principalType: principalType
+  }
+}
+
+// Monitoring read access so the Foundry portal Monitor dashboard (Challenge 3)
+// passes its "Verifying access" check. Without these, the connected App Insights
+// stays "Setup incomplete" for the participant even though tracing is wired up.
+resource raUserMonitoringReader 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (assignUserRoles) {
+  name: guid(appInsights.id, principalId, roleMonitoringReader)
+  scope: appInsights
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', roleMonitoringReader)
+    principalId: principalId
+    principalType: principalType
+  }
+}
+
+resource raUserLogAnalyticsReader 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (assignUserRoles) {
+  name: guid(logAnalytics.id, principalId, roleLogAnalyticsReader)
+  scope: logAnalytics
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', roleLogAnalyticsReader)
     principalId: principalId
     principalType: principalType
   }

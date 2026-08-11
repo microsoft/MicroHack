@@ -164,6 +164,8 @@ Write-Host "[OK]    Provisioning complete in '$effectiveLocation' (resource grou
 if ($AllowedEntraUserIds.Count -gt 0 -and $effectiveResourceGroup) {
     $account = Get-AzResource -ResourceGroupName $effectiveResourceGroup -ResourceType 'Microsoft.CognitiveServices/accounts' -ErrorAction SilentlyContinue | Select-Object -First 1
     $search  = Get-AzResource -ResourceGroupName $effectiveResourceGroup -ResourceType 'Microsoft.Search/searchServices' -ErrorAction SilentlyContinue | Select-Object -First 1
+    $appInsightsRes  = Get-AzResource -ResourceGroupName $effectiveResourceGroup -ResourceType 'Microsoft.Insights/components' -ErrorAction SilentlyContinue | Select-Object -First 1
+    $logAnalyticsRes = Get-AzResource -ResourceGroupName $effectiveResourceGroup -ResourceType 'Microsoft.OperationalInsights/workspaces' -ErrorAction SilentlyContinue | Select-Object -First 1
 
     # Built-in role definition ids (match infra/resources.bicep).
     $accountRoles = [ordered]@{
@@ -174,6 +176,15 @@ if ($AllowedEntraUserIds.Count -gt 0 -and $effectiveResourceGroup) {
         'Search Index Data Contributor' = '8ebe5a00-799e-43f5-93ac-243d3dce84a7'
         'Search Service Contributor'    = '7ca78c08-252a-4471-8644-bb5ff32d4ba0'
     }
+    # Monitoring read access so the Foundry portal Monitor dashboard (Challenge 3)
+    # passes its "Verifying access" check. Missing before → users saw a permanent
+    # "Setup incomplete" banner even though App Insights was connected.
+    $monitorAppInsightsRoles = [ordered]@{
+        'Monitoring Reader' = '43d0d8ad-25c7-4714-9337-8ba259a9fe05'
+    }
+    $monitorLogAnalyticsRoles = [ordered]@{
+        'Log Analytics Reader' = '73c42c96-874c-492b-b04d-ab87d138a893'
+    }
 
     foreach ($userId in $AllowedEntraUserIds) {
         if ($account) {
@@ -181,6 +192,12 @@ if ($AllowedEntraUserIds.Count -gt 0 -and $effectiveResourceGroup) {
         }
         if ($search) {
             foreach ($roleName in $searchRoles.Keys) { Grant-MhhRole -ObjectId $userId -RoleId $searchRoles[$roleName] -RoleName $roleName -Scope $search.ResourceId }
+        }
+        if ($appInsightsRes) {
+            foreach ($roleName in $monitorAppInsightsRoles.Keys) { Grant-MhhRole -ObjectId $userId -RoleId $monitorAppInsightsRoles[$roleName] -RoleName $roleName -Scope $appInsightsRes.ResourceId }
+        }
+        if ($logAnalyticsRes) {
+            foreach ($roleName in $monitorLogAnalyticsRoles.Keys) { Grant-MhhRole -ObjectId $userId -RoleId $monitorLogAnalyticsRoles[$roleName] -RoleName $roleName -Scope $logAnalyticsRes.ResourceId }
         }
     }
 }

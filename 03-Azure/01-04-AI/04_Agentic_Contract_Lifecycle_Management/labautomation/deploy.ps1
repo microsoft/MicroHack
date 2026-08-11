@@ -111,6 +111,22 @@ if ($AppInsightsId -and $AppInsightsConn) {
   Remove-Item $AiTmp -ErrorAction SilentlyContinue
 }
 
+# Grant the signed-in user monitoring read access so the Foundry portal Monitor
+# dashboard (Challenge 3) passes its "Verifying access" check. Owner/Contributor
+# deployers already inherit this; the explicit grant covers non-owner deployers
+# and teammates who open the dashboard. Non-fatal — skip quietly if it can't run.
+$SignedInUserId = az ad signed-in-user show --query id -o tsv 2>$null
+if ($SignedInUserId -and $AppInsightsId) {
+  az role assignment create --assignee-object-id $SignedInUserId --assignee-principal-type User `
+    --role "Monitoring Reader" --scope $AppInsightsId -o none 2>$null
+  $LogAnalyticsId = az monitor app-insights component show --app $AppInsights -g $Rg --query WorkspaceResourceId -o tsv 2>$null
+  if ($LogAnalyticsId) {
+    az role assignment create --assignee-object-id $SignedInUserId --assignee-principal-type User `
+      --role "Log Analytics Reader" --scope $LogAnalyticsId -o none 2>$null
+  }
+  Write-Host "  ✓ Monitoring read access granted to signed-in user — portal Monitor dashboard enabled"
+}
+
 # Grounding with Bing Search (optional web grounding for the Clause & Risk agent).
 # Bing search data leaves the Azure compliance boundary — opt in with -WithBing.
 $BingConnName = ""

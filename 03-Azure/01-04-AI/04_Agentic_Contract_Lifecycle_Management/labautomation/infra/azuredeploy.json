@@ -214,6 +214,8 @@
             "roleSearchIndexDataContributor": "8ebe5a00-799e-43f5-93ac-243d3dce84a7",
             "roleSearchServiceContributor": "7ca78c08-252a-4471-8644-bb5ff32d4ba0",
             "roleSearchIndexDataReader": "1407120a-92aa-4202-b7e9-c0e197c71c8f",
+            "roleMonitoringReader": "43d0d8ad-25c7-4714-9337-8ba259a9fe05",
+            "roleLogAnalyticsReader": "73c42c96-874c-492b-b04d-ab87d138a893",
             "wantSql": "[and(equals(toLower(parameters('deploySql')), 'true'), not(empty(parameters('sqlAdminPassword'))))]",
             "wantBing": "[equals(toLower(parameters('deployBing')), 'true')]",
             "assignUserRoles": "[not(empty(parameters('principalId')))]"
@@ -565,6 +567,36 @@
               },
               "dependsOn": [
                 "[resourceId('Microsoft.Search/searchServices', variables('searchName'))]"
+              ]
+            },
+            {
+              "condition": "[variables('assignUserRoles')]",
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2022-04-01",
+              "scope": "[resourceId('Microsoft.Insights/components', variables('appInsightsName'))]",
+              "name": "[guid(resourceId('Microsoft.Insights/components', variables('appInsightsName')), parameters('principalId'), variables('roleMonitoringReader'))]",
+              "properties": {
+                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', variables('roleMonitoringReader'))]",
+                "principalId": "[parameters('principalId')]",
+                "principalType": "[parameters('principalType')]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Insights/components', variables('appInsightsName'))]"
+              ]
+            },
+            {
+              "condition": "[variables('assignUserRoles')]",
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2022-04-01",
+              "scope": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsName'))]",
+              "name": "[guid(resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsName')), parameters('principalId'), variables('roleLogAnalyticsReader'))]",
+              "properties": {
+                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', variables('roleLogAnalyticsReader'))]",
+                "principalId": "[parameters('principalId')]",
+                "principalType": "[parameters('principalType')]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsName'))]"
               ]
             },
             {

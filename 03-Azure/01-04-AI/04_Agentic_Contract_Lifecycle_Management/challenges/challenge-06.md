@@ -55,6 +55,13 @@ This challenge closes the **responsible-AI loop** — services that attack, guar
 
 ### Task 1 · Baseline red-team scan (~10 min)
 
+**Why do this?** You can't prove your hardening worked (Task 4) without a *before* number. This
+baseline scan turns Foundry's **AI Red Teaming Agent** loose on the **un-hardened** Intake & Drafting
+agent, auto-generating adversarial prompts across the four content-harm categories
+(hate/unfairness, violence, self-harm, sexual) and reporting an **Attack Success Rate (ASR)** per
+category. Any non-zero ASR means the agent produced disallowed content — a concrete gap to close.
+Record it: Task 4 re-runs this *exact* scan so you can show the ASR drop.
+
 Against the Intake & Drafting agent (auto-generated attacks):
 ```bash
 pip install "azure-ai-evaluation[redteam]"     # pulls PyRIT (one-time)
@@ -80,6 +87,13 @@ Sexual                            2           0    0%
 > <img src="../images/challenge-06/steps/01-redteam-scorecard.png" alt="Baseline red-team scan scorecard with 12.5% overall attack success rate (1 of 8 attacks)" width="80%">
 
 ### Task 2 · Turn up the heat (~10 min)
+
+**Why do this?** Baseline prompts are the easy case — a real attacker *obfuscates* intent.
+`--strategies` disguises the same malicious objectives behind encodings (Base64, ROT13,
+character-spacing) and a **composed Base64→ROT13** chain, testing whether the guardrails still hold
+when the harm isn't in plain text. Strategies that push ASR *higher* than Task 1 expose the evasion
+techniques the model's native safety misses — exactly what your system-prompt hardening (Task 4)
+has to defend against.
 
 With attack strategies (encodings + a composed Base64→ROT13 attack):
 ```bash

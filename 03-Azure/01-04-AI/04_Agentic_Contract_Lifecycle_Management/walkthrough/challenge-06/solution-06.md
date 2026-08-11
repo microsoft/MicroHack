@@ -136,6 +136,8 @@ Task 4 hardens **two different agents** — keep them straight:
 
 > 💡 **Codespace vs CI:** the Action runs on **GitHub's runners, not the Codespace**. Running `python src/safety_eval.py --gate 0.1 --safety-evals` (± `--dry-run`) in the Codespace terminal is a valid **local** dry-run of the same gate, but Task 5 is the **automated** CI run — enable the workflow and trigger it from the Actions tab.
 
+> 🤔 **If an attendee asks "did that no-op run actually *do* anything?"** Yes — they **wired the safety gate into CI**. It reports green *without* executing because live evaluation needs an Azure sign-in that's intentionally **out of scope** (no secrets → live steps skipped). The green check proves the gate is in place; a team makes it run for real by adding the Azure secrets and setting the repo variable `RUN_LIVE_EVAL=true`, after which it blocks risky merges automatically.
+
 ## Key files
 
 | Path | Role |

@@ -167,6 +167,16 @@ Then **Next → Review → Create guardrails**, **re-run Tasks 1–3**, and conf
 ✅ **You'll know it worked when:** the workflow run shows a **green check** (gates passed) — or a
 **red X** if a regression tripped a gate, which is the whole point.
 
+### 🤔 What did that green no-op actually accomplish?
+
+Fair question — the check is a **deliberate no-op**, and that *is* the point of the task. Here's what you really did:
+
+- **You wired a safety gate into CI.** `ci-eval.yml` will now re-run your Challenge 3 **quality** gate and Challenge 6 **safety** gate **automatically** — nightly and on every manual trigger — and **fail the build** if either regresses.
+- **It "did nothing" today on purpose.** Running the gates *for real* needs an Azure sign-in (project endpoint + credentials). That setup is tenant/org-specific and intentionally **out of scope**, so with no secrets configured the workflow **skips the live steps and reports green**.
+- **Green = the plumbing works.** A team turns it on later by adding the Azure secrets and setting the repo variable `RUN_LIVE_EVAL=true`; from then on it blocks risky merges for real. You built the tripwire — going live is one config change.
+
+**Takeaway:** this is the jump from *"we tested it once"* to *"every future change is checked automatically"* — the thing that makes an agent shippable, not just a demo.
+
 ## ✔️ Success criteria
 
 - A red-team scorecard exists and you can point to the **attack success rate** per risk category.

@@ -185,7 +185,9 @@ Drop all three values into `.env`. Now give that app a bot that can receive Team
 
    <img src="../../images/challenge-05/steps/task6-enable-teams-channel.png" alt="Azure Bot Channels blade with Microsoft Teams highlighted in the Available Channels list; Direct Line and Web Chat already show a Healthy status" width="80%">
 
-7. **Expose the capture bot with a dev tunnel.** Start the bot locally (`python src/capture_reference_bot.py` listens on port **3978**), but the Bot Service can only reach it over public HTTPS — not `localhost`. A **dev tunnel** gives your local port a public `https://<tunnel>` URL. Codespaces doesn't ship the CLI, so install it, sign in (hosting **requires** a login — `--allow-anonymous` only waives auth for *callers*, not the host), then host port 3978:
+7. **Get a public HTTPS messaging endpoint for the capture bot.** Start the bot with `python src/capture_reference_bot.py` (it listens on port **3978**), but the Bot Service can only reach it over public HTTPS — not `localhost`. Pick **one** of the two ways to expose it, exactly as in [challenge-05.md · Task 6](../../challenges/challenge-05.md):
+
+   **Option A · Run locally + dev tunnel.** A **dev tunnel** gives your local port a public `https://<tunnel>` URL. Codespaces doesn't ship the CLI, so install it from a **second terminal**, sign in (hosting **requires** a login — `--allow-anonymous` only waives auth for *callers*, not the host), then host port 3978:
 
    ```bash
    curl -sL https://aka.ms/DevTunnelCliInstall | bash   # installs to ~/bin and adds it to PATH
@@ -195,17 +197,25 @@ Drop all three values into `.env`. Now give that app a bot that can receive Team
    devtunnel host -p 3978 --allow-anonymous              # copy the https://<tunnel> URL it prints
    ```
 
-   A healthy install prints the CLI version and tunnel-service details, then keeps running as it hosts the tunnel. Copy the `https://<tunnel>` URL, then set your bot's **Configuration → Messaging endpoint** to `https://<tunnel>/api/messages` and save.
+   A healthy install prints the CLI version and tunnel-service details, then keeps running as it hosts the tunnel. Your endpoint is `https://<tunnel>/api/messages`.
 
    <img src="../../images/challenge-05/steps/task6-devtunnel-install.png" alt="Codespace terminal showing the Dev Tunnels CLI install commands followed by 'devtunnel CLI installed!' and version 1.0.2014, with the Tunnel service URI, version, and cluster (uks1) printed below" width="80%">
 
-   **No local run or tunnel? Deploy the capture bot instead.** `bash deploy/capture-bot/deploy.sh` (or, on Windows, `./deploy/capture-bot/deploy.ps1`) builds the *same* bot image in the cloud (Azure Container Apps) and prints a stable `https://<app>.azurecontainerapps.io/api/messages`. Use that as the **Messaging endpoint** in place of the tunnel URL — no dev tunnel, no second terminal. It reads `MICROSOFT_APP_*` from `.env` and, because the bot never calls a model, needs no managed identity. See [`deploy/capture-bot/`](../../deploy/capture-bot/).
+   **Option B · Deploy to Azure — no local run, no tunnel.** Build the *same* bot image in the cloud (Azure Container Apps) for a **stable** endpoint — the simpler path if the tunnel/second-terminal dance is fiddly. It reads `MICROSOFT_APP_*` from `.env` and, because the bot never calls a model, needs no managed identity:
+
+   ```bash
+   bash deploy/capture-bot/deploy.sh                     # or (Windows PowerShell): ./deploy/capture-bot/deploy.ps1
+   ```
+
+   It prints `https://<app>.azurecontainerapps.io/api/messages` — that's your endpoint. See [`deploy/capture-bot/`](../../deploy/capture-bot/).
+
+   Whichever option you pick, set your bot's **Configuration → Messaging endpoint** to that `…/api/messages` URL and **Apply**.
 
 8. **Open your bot in Teams and send one message.** Back on the bot's **Channels** blade, click **Open in Teams** next to the (now Healthy) Microsoft Teams channel — this deep-links you into a 1:1 chat with *your* bot. Send any text (e.g. `hi`); that first inbound activity fires the capture bot's `_on_turn`, which writes `TEAMS_SERVICE_URL` + `TEAMS_CONVERSATION_ID` into `.env`. Those two values are what Task 7 replays to post proactive alerts. The bot also **replies with the two values in the chat** — if you deployed it to Azure, copy them from that reply into your local `.env` (the container can't write to your laptop's `.env`).
 
    <img src="../../images/challenge-05/steps/task6-open-in-teams.png" alt="Azure Bot Channels page for clm-contract-agent-bot with the Microsoft Teams channel showing a Healthy status and the Open in Teams link highlighted in the Actions column" width="80%">
 
-That bot — **not** `clm-contract-agent` — is the one you point at your dev tunnel (its **Messaging endpoint**) and message to capture the conversation reference.
+That bot — **not** `clm-contract-agent` — is the one you point at your messaging endpoint (Option A's dev tunnel or Option B's Azure URL) and message to capture the conversation reference.
 
 ### Task 7 · (Optional) Fire a proactive alert
 The send path uses `adapter.continue_conversation(...)` to post into the saved conversation unprompted:

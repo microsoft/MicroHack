@@ -84,24 +84,19 @@ Three steps: **connect** Application Insights once, **run** a demo, then **open*
 
 **1 · Connect Application Insights to your project (one-time).** The portal only renders spans from an
 App Insights resource *connected to the project* — provisioning it in Challenge 1 isn't enough on its
-own. Where you click depends on your portal, but you're heading to the **same view** either way:
-
-| Portal | Where to connect | Shortcut |
-|--------|------------------|----------|
-| **New Foundry** (default redesigned UI) | **Build → your agent/model → the `Monitor` tab** → connect if prompted. There is **no** project-level *Tracing* menu here. | Type **"Monitor"** or **"Tracing"** in the portal **search bar**. |
-| **Classic Foundry** | **project → Tracing** (or **Observability → Tracing**) → **Connect**. | — |
-
-Pick **`clm-appinsights`** when prompted.
+own. In the Foundry portal, open **Build → your agent/model → the `Monitor` tab** and connect
+**`clm-appinsights`** if prompted. *(Shortcut: type **"Monitor"** or **"Tracing"** in the portal
+**search bar** — the redesigned UI has no project-level *Tracing* menu.)*
 
 **2 · Run any agent demo.** Each demo enables tracing itself, so a normal run emits spans:
 ```bash
 python src/agents/intake_drafting_agent.py     # or orchestrator.py / clause_risk_agent.py
 ```
 
-**3 · Open the spans** in that same **`Monitor`** (New Foundry) / **Tracing** (classic) view. Inspect the
-**prompt / retrieval / tool** spans and token counts.
+**3 · Open the spans** in that same **`Monitor`** tab. Inspect the **prompt / retrieval / tool** spans
+and token counts.
 
-> 📸 **Screenshot slot — what you'll see:** a run's span timeline (in **Tracing** / the **Monitor** tab) and the **Agent Monitoring** dashboard.
+> 📸 **Screenshot slot — what you'll see:** a run's span timeline (in the **Monitor** tab) and the **Agent Monitoring** dashboard.
 >
 > <img src="../images/challenge-03/steps/02-portal-tracing.png" alt="Screenshot slot: Foundry Tracing" width="75%">
 > <img src="../images/challenge-03/steps/03-agent-monitoring.png" alt="Screenshot slot: Agent Monitoring" width="75%">

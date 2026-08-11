@@ -250,7 +250,8 @@ azd up                  # answer: environment name (e.g. clm-microhack), your su
 ```
 
 It provisions for **5–10 minutes**, assigns the RBAC roles the later challenges need, creates the
-`clm-search` Foundry IQ connection, and runs the `postprovision` hook (`src/scripts/write_env.py`) to
+`clm-search` Search connection, the `clm-knowledge-mcp` Foundry IQ connection, and runs the
+`postprovision` hook (`src/scripts/write_env.py`) to
 **write your `.env` automatically** — so you can skip Step 3b above. Add Azure SQL with
 `azd env set DEPLOY_SQL true` (+ `azd env set SQL_ADMIN_PASSWORD '<StrongP@ssw0rd!>'`) or Bing web
 grounding with `azd env set DEPLOY_BING true` before `azd up`.
@@ -330,14 +331,15 @@ Path B (local-PDF) — it needs no SharePoint, no admin consent, and works in ev
 >    python src/scripts/seed_corpus.py
 >    ```
 >    You should see `· SharePoint settings not set — using the LOCAL-PDF fallback` followed by
->    `✓ uploaded 14/14 local PDF(s) into 'clm-corpus'`. *(This needs the **Search Index Data
+>    `✓ uploaded 14/14 local PDF(s) into 'clm-corpus'`, then confirmations for knowledge source
+>    **`clm-corpus-ks`** and knowledge base **`clm-contracts-kb`**. *(This needs the **Search Index Data
 >    Contributor** role, which provisioning already granted you — if a doc fails, wait a minute for
 >    role propagation and re-run; the script is idempotent.)*
 > 3. Confirm a **non-zero document count** (Azure Portal → Search service → Indexes → `clm-corpus`), then
 >    **jump to [Task 6](#task-6--smoke-test).**
 >
-> **This has zero impact on Challenges 2–6** — the agents only ever read the `clm-corpus` index,
-> never SharePoint directly. Both paths produce the identical index.
+> **This has zero impact on Challenges 2–6** — Foundry IQ reads the same `clm-corpus` index through
+> `clm-corpus-ks`, never SharePoint directly. Both paths produce the identical knowledge base.
 
 <details>
 <summary><strong>Path A — SharePoint corpus (optional · advanced · tenant admins only)</strong></summary>

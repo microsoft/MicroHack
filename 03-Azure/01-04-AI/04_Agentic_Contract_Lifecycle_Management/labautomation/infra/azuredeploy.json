@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.41.2.15936",
-      "templateHash": "11939388332108595426"
+      "templateHash": "1789184193731087016"
     }
   },
   "parameters": {
@@ -122,7 +122,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.41.2.15936",
-              "templateHash": "443604104115375257"
+              "templateHash": "6761378093912506035"
             }
           },
           "parameters": {
@@ -193,6 +193,10 @@
             "logAnalyticsName": "[format('clm-logs-{0}', parameters('resourceToken'))]",
             "searchIndexName": "clm-corpus",
             "searchConnectionName": "clm-search",
+            "foundryIqKnowledgeSource": "clm-corpus-ks",
+            "foundryIqKnowledgeBase": "clm-contracts-kb",
+            "foundryIqConnectionName": "clm-knowledge-mcp",
+            "foundryIqApiVersion": "2026-05-01-preview",
             "appInsightsConnectionName": "clm-appinsights",
             "bingName": "[format('clmbing{0}', parameters('resourceToken'))]",
             "bingConnectionName": "clm-bing",
@@ -376,6 +380,25 @@
                   "ApiType": "Azure",
                   "ResourceId": "[resourceId('Microsoft.Search/searchServices', variables('searchName'))]",
                   "location": "[parameters('location')]"
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.CognitiveServices/accounts/projects', variables('foundryName'), variables('projectName'))]",
+                "[resourceId('Microsoft.Search/searchServices', variables('searchName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.CognitiveServices/accounts/projects/connections",
+              "apiVersion": "2025-04-01-preview",
+              "name": "[format('{0}/{1}/{2}', variables('foundryName'), variables('projectName'), variables('foundryIqConnectionName'))]",
+              "properties": {
+                "category": "RemoteTool",
+                "target": "[format('https://{0}.search.windows.net/knowledgebases/{1}/mcp?api-version={2}', variables('searchName'), variables('foundryIqKnowledgeBase'), variables('foundryIqApiVersion'))]",
+                "authType": "ProjectManagedIdentity",
+                "isSharedToAll": true,
+                "audience": "https://search.azure.com/",
+                "metadata": {
+                  "ApiType": "Azure"
                 }
               },
               "dependsOn": [
@@ -603,6 +626,21 @@
                 "[resourceId('Microsoft.CognitiveServices/accounts/projects', variables('foundryName'), variables('projectName'))]",
                 "[resourceId('Microsoft.Search/searchServices', variables('searchName'))]"
               ]
+            },
+            {
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2022-04-01",
+              "scope": "[resourceId('Microsoft.CognitiveServices/accounts', variables('foundryName'))]",
+              "name": "[guid(resourceId('Microsoft.CognitiveServices/accounts', variables('foundryName')), resourceId('Microsoft.Search/searchServices', variables('searchName')), variables('roleCognitiveServicesUser'))]",
+              "properties": {
+                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', variables('roleCognitiveServicesUser'))]",
+                "principalId": "[reference(resourceId('Microsoft.Search/searchServices', variables('searchName')), '2024-06-01-preview', 'full').identity.principalId]",
+                "principalType": "ServicePrincipal"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.CognitiveServices/accounts', variables('foundryName'))]",
+                "[resourceId('Microsoft.Search/searchServices', variables('searchName'))]"
+              ]
             }
           ],
           "outputs": {
@@ -637,6 +675,22 @@
             "AZURE_SEARCH_CONNECTION_NAME": {
               "type": "string",
               "value": "[variables('searchConnectionName')]"
+            },
+            "FOUNDRY_IQ_KNOWLEDGE_SOURCE": {
+              "type": "string",
+              "value": "[variables('foundryIqKnowledgeSource')]"
+            },
+            "FOUNDRY_IQ_KNOWLEDGE_BASE": {
+              "type": "string",
+              "value": "[variables('foundryIqKnowledgeBase')]"
+            },
+            "FOUNDRY_IQ_CONNECTION_NAME": {
+              "type": "string",
+              "value": "[variables('foundryIqConnectionName')]"
+            },
+            "FOUNDRY_IQ_API_VERSION": {
+              "type": "string",
+              "value": "[variables('foundryIqApiVersion')]"
             },
             "AZURE_BING_CONNECTION_NAME": {
               "type": "string",
@@ -702,6 +756,22 @@
     "AZURE_SEARCH_CONNECTION_NAME": {
       "type": "string",
       "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, 'rg-clm-microhack'), 'Microsoft.Resources/deployments', 'clm-resources'), '2025-04-01').outputs.AZURE_SEARCH_CONNECTION_NAME.value]"
+    },
+    "FOUNDRY_IQ_KNOWLEDGE_SOURCE": {
+      "type": "string",
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, 'rg-clm-microhack'), 'Microsoft.Resources/deployments', 'clm-resources'), '2025-04-01').outputs.FOUNDRY_IQ_KNOWLEDGE_SOURCE.value]"
+    },
+    "FOUNDRY_IQ_KNOWLEDGE_BASE": {
+      "type": "string",
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, 'rg-clm-microhack'), 'Microsoft.Resources/deployments', 'clm-resources'), '2025-04-01').outputs.FOUNDRY_IQ_KNOWLEDGE_BASE.value]"
+    },
+    "FOUNDRY_IQ_CONNECTION_NAME": {
+      "type": "string",
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, 'rg-clm-microhack'), 'Microsoft.Resources/deployments', 'clm-resources'), '2025-04-01').outputs.FOUNDRY_IQ_CONNECTION_NAME.value]"
+    },
+    "FOUNDRY_IQ_API_VERSION": {
+      "type": "string",
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, 'rg-clm-microhack'), 'Microsoft.Resources/deployments', 'clm-resources'), '2025-04-01').outputs.FOUNDRY_IQ_API_VERSION.value]"
     },
     "AZURE_BING_CONNECTION_NAME": {
       "type": "string",

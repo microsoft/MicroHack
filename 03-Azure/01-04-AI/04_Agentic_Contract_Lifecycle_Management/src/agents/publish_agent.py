@@ -97,8 +97,14 @@ _LIST_UPCOMING_RENEWALS_TOOL = {
 }
 
 
-def _knowledge_tool(connection_id: str):
-    """Foundry IQ grounding over the clm-corpus index (same params as build_knowledge_tool)."""
+def _knowledge_tool(connection_id: str | None):
+    """Build the Foundry IQ MCP tool, or the direct Search compatibility fallback."""
+    if settings.foundry_iq_enabled:
+        from azure.ai.projects.models import MCPTool
+        from clm_common.foundry_iq import mcp_tool_kwargs
+
+        return MCPTool(**mcp_tool_kwargs())
+
     from azure.ai.projects.models import (
         AISearchIndexResource,
         AzureAISearchTool,
@@ -149,7 +155,9 @@ class _Ctx:
     """Resolved connections shared while building the agent definitions."""
 
     def __init__(self, project):
-        self.search_connection_id = get_search_connection_id(project)
+        self.search_connection_id = (
+            None if settings.foundry_iq_enabled else get_search_connection_id(project)
+        )
         self.bing_connection_id = None
         if settings.web_search_enabled:
             try:

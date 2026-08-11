@@ -132,6 +132,10 @@ python src/scripts/seed_sql.py             # optional — only if you deployed A
 
 <img src="../../images/challenge-01/steps/10-seed-corpus-success.png" alt="Terminal output showing 14 local PDFs uploaded successfully into the clm-corpus index" width="80%">
 
+The same command then creates or updates the real Foundry IQ layer:
+`clm-corpus-ks` (search-index knowledge source) and `clm-contracts-kb` (knowledge base using
+gpt-5.4 query planning with low retrieval reasoning effort). Re-running is safe.
+
 Confirm a non-zero document count (**Azure portal → Search service → Indexes → `clm-corpus`**), then jump to Task 6.
 
 **1 · Open the Search service.** In the Azure portal, open your lab resource group and select the **Search service (Foundry IQ)** resource.
@@ -157,7 +161,8 @@ In shared/managed sandbox tenants where you're **not** a tenant admin, its admin
 
 </details>
 
-Both paths build the same idempotent `clm-corpus` index the later challenges ground on; re-running is safe.
+Both paths build the same idempotent `clm-corpus` index and Foundry IQ knowledge base the later
+challenges ground on; re-running is safe.
 
 
 ### Task 6 · Smoke test (the finish line)

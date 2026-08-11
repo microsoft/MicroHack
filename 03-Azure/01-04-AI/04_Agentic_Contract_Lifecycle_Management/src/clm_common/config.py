@@ -55,6 +55,18 @@ class Settings:
     search_endpoint: str | None = field(default_factory=lambda: _get("AZURE_SEARCH_ENDPOINT"))
     search_index: str = field(default_factory=lambda: _get("AZURE_SEARCH_INDEX", "clm-corpus"))
     search_connection_name: str = field(default_factory=lambda: _get("AZURE_SEARCH_CONNECTION_NAME", "clm-search"))
+    foundry_iq_knowledge_source: str = field(
+        default_factory=lambda: _get("FOUNDRY_IQ_KNOWLEDGE_SOURCE", "clm-corpus-ks")
+    )
+    foundry_iq_knowledge_base: str | None = field(
+        default_factory=lambda: _get("FOUNDRY_IQ_KNOWLEDGE_BASE")
+    )
+    foundry_iq_connection_name: str = field(
+        default_factory=lambda: _get("FOUNDRY_IQ_CONNECTION_NAME", "clm-knowledge-mcp")
+    )
+    foundry_iq_api_version: str = field(
+        default_factory=lambda: _get("FOUNDRY_IQ_API_VERSION", "2026-05-01-preview")
+    )
 
     # Web grounding (Grounding with Bing Search) — OPTIONAL / opt-in. Powers
     # external, public counterparty due-diligence for the Clause & Risk agent
@@ -92,6 +104,11 @@ class Settings:
     def web_search_enabled(self) -> bool:
         """True when a Grounding-with-Bing-Search connection has been configured."""
         return bool(self.bing_connection_id or self.bing_connection_name)
+
+    @property
+    def foundry_iq_enabled(self) -> bool:
+        """True when this environment has a Foundry IQ knowledge base."""
+        return bool(self.foundry_iq_knowledge_base)
 
 
 settings = Settings()

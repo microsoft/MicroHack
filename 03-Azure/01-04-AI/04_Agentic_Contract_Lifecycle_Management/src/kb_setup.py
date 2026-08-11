@@ -1,15 +1,11 @@
-"""Challenge 2 — Azure AI Search grounding setup.
+"""Challenge 2 — Foundry IQ knowledge grounding setup.
 
-The agent uses an Azure AI Search index built in Challenge 1 by
-src/scripts/seed_corpus.py. The default path extracts local PDFs directly into the
-index; the optional SharePoint path populates the same index through an indexer.
-The attached search tool runs semantic queries and returns grounded passages with
-citation metadata.
+Foundry IQ wraps the clm-corpus Azure AI Search index in a reusable knowledge
+source and knowledge base. Its MCP tool performs query planning, parallel
+retrieval, semantic reranking, and citation-aware grounding.
 
-This module resolves the project's default Azure AI Search connection and builds
-the Foundry Azure AI Search tool you can attach to any Microsoft Agent Framework
-agent. The SAME code grounds any Foundry-backed agent regardless of model — Foundry
-keeps the tool/grounding API identical across deployments.
+Existing environments that don't define FOUNDRY_IQ_KNOWLEDGE_BASE retain the
+direct Azure AI Search tool as a compatibility fallback.
 
 Run standalone to verify your connection + index:
     python src/kb_setup.py
@@ -97,7 +93,7 @@ def get_search_connection_id(project) -> str:
 
 
 def build_knowledge_tool(*, connection_id: str | None = None, project=None):
-    """Build the Foundry Azure AI Search grounding tool over the clm-corpus index.
+    """Build the Foundry IQ MCP tool, or the legacy direct Search fallback.
 
     Pass ``connection_id`` to skip resolution (cheap, no network — handy when
     rebuilding the tool per call), or ``project`` to resolve it from an existing
@@ -106,8 +102,13 @@ def build_knowledge_tool(*, connection_id: str | None = None, project=None):
 
     Returns a Foundry tool object ready to drop into an ``Agent``'s ``tools=[...]``.
     """
-    from agent_framework.foundry import FoundryChatClient
+    if settings.foundry_iq_enabled:
+        from azure.ai.projects.models import MCPTool
+        from clm_common.foundry_iq import mcp_tool_kwargs
 
+        return _normalize_foundry_tool(MCPTool(**mcp_tool_kwargs()))
+
+    from agent_framework.foundry import FoundryChatClient
     if connection_id is None:
         if project is not None:
             connection_id = get_search_connection_id(project)
@@ -185,11 +186,17 @@ def main() -> None:
     from clm_common.foundry import get_project_client
 
     with get_project_client() as project:
-        conn_id = get_search_connection_id(project)
-        print("✓ Default Azure AI Search connection:", conn_id)
+        conn_id = None
+        if not settings.foundry_iq_enabled:
+            conn_id = get_search_connection_id(project)
+            print("✓ Default Azure AI Search connection:", conn_id)
         print("✓ Index:", settings.search_index)
         build_knowledge_tool(connection_id=conn_id)
-        print("✓ Built Foundry Azure AI Search grounding tool (semantic, top_k=5).")
+        if settings.foundry_iq_enabled:
+            print("✓ Foundry IQ knowledge base:", settings.foundry_iq_knowledge_base)
+            print("✓ Built Foundry IQ MCP tool (knowledge_base_retrieve).")
+        else:
+            print("✓ Built direct Azure AI Search fallback (semantic, top_k=5).")
         if settings.web_search_enabled:
             build_web_search_tool(project=project)
             print("✓ Built Foundry web-grounding tool (Grounding with Bing Search).")

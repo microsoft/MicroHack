@@ -10,14 +10,9 @@
       with a deterministic per-user name via Get-MhhStableHash
     - imported Az.Accounts and Az.Resources for us
 
-  Provisioning engine (both options are supported):
-    - DEFAULT: deploys infra/resources.bicep (resource-group-scoped) via
+  Provisioning engine:
+    - Deploys infra/resources.bicep (resource-group-scoped) via
       New-AzResourceGroupDeployment. This is the path used by the platform and by `azd up`.
-    - -UseArm: deploys the equivalent ARM template infra/azuredeploy.json
-      (subscription-scoped) via New-AzSubscriptionDeployment. Because that template
-      creates its own resource group, -UseArm is only honoured in 'subscription' mode
-      (or manual runs); in 'resourcegroup' modes it falls back to Bicep to respect the
-      pre-created RG contract.
 
   Robustness:
     - Region fallback: the deployment is retried across $PreferredLocation (then
@@ -26,7 +21,8 @@
       roles (not just the first), so team labs work for all members. Idempotent.
     - Grounding RBAC: the Foundry account AND project managed identities are granted
       Search Index Data Reader + Search Service Contributor so Foundry IQ agentic
-      retrieval works (both identities, idempotent — also remediates older labs).
+      retrieval works. The Search identity receives Cognitive Services User on Foundry
+      for query planning (all grants are idempotent and remediate older labs).
     - Console output: [INFO]/[OK]/[WARN] progress plus @{ HackboxCredential = ... }
       records that surface every endpoint / model name to the team dashboard.
 
@@ -44,11 +40,7 @@ param(
 
     [string[]]$PreferredLocation = @(),
 
-    [string[]]$AllowedEntraUserIds = @(),
-
-    # Opt into the ARM (azuredeploy.json) engine instead of Bicep. Subscription-scoped;
-    # see the header for the resourcegroup-mode fallback behaviour.
-    [switch]$UseArm
+    [string[]]$AllowedEntraUserIds = @()
 )
 
 $ErrorActionPreference = 'Stop'
@@ -94,7 +86,6 @@ $candidateRegions = if ($PreferredLocation.Count -gt 0) { $PreferredLocation } e
 
 $scriptPath = Split-Path -Parent $MyInvocation.MyCommand.Definition
 $bicepFile  = Join-Path $scriptPath 'infra/resources.bicep'
-$armFile    = Join-Path $scriptPath 'infra/azuredeploy.json'
 
 # Primary RBAC principal — passed into the template (which grants the first user).
 # The multi-user loop below covers every remaining member of a team lab.
@@ -117,88 +108,52 @@ if ($AllowedEntraUserIds.Count -eq 0) {
     Write-Host "[WARN]  -AllowedEntraUserIds <entraObjectId> (comma-separate ids for a team lab)."
 }
 
-# --- Choose the engine ------------------------------------------------------
-$armRequested = $UseArm.IsPresent
-if ($armRequested -and $DeploymentType -ne 'subscription') {
-    Write-Host "[WARN]  -UseArm uses the subscription-scoped ARM template (creates its own resource group), which conflicts with '$DeploymentType' mode (RG pre-created). Falling back to the resource-group-scoped Bicep template."
-    $armRequested = $false
-}
-
 $deployOutputs          = $null
 $effectiveResourceGroup = $null
 $effectiveLocation      = $null
 
-if ($armRequested) {
-    # ---- ARM path: subscription-scoped azuredeploy.json, region fallback ----
-    Write-Host "[INFO]  Engine: ARM (infra/azuredeploy.json), subscription-scoped."
-    foreach ($region in $candidateRegions) {
-        Write-Host "[INFO]  Deploying ARM template in '$region'..."
-        try {
-            $d = New-AzSubscriptionDeployment `
-                -Location $region `
-                -TemplateFile $armFile `
-                -environmentName 'clm-microhack' `
-                -location $region `
-                -principalId $primaryPrincipalId `
-                -principalType 'User' `
-                -deploySql 'false' `
-                -deployBing 'false' `
-                -ErrorAction Stop
-            $deployOutputs     = $d.Outputs
-            $effectiveLocation = $region
-            break
-        }
-        catch {
-            Write-Host "[WARN]  ARM deployment failed in '$region': $_ — trying next region."
-        }
-    }
-    if (-not $deployOutputs) { throw "ARM deployment failed in all candidate regions: $($candidateRegions -join ', ')" }
-    $effectiveResourceGroup = Get-OutVal $deployOutputs 'AZURE_RESOURCE_GROUP'
+# --- Deploy the resource-group-scoped Bicep template ------------------------
+Write-Host "[INFO]  Engine: Bicep (infra/resources.bicep), resource-group-scoped."
+
+# Resolve / create the resource group per the platform contract (once).
+if ($DeploymentType -eq 'subscription') {
+    $hashInput = if ($AllowedEntraUserIds.Count -gt 0) { $AllowedEntraUserIds } else { @($SubscriptionId) }
+    $stableHash = Get-MhhStableHash $hashInput -Length 24
+    $effectiveResourceGroup = "rg-clm-microhack-$stableHash"
+    New-AzResourceGroup -Name $effectiveResourceGroup -Location $candidateRegions[0] -Force | Out-Null
 }
 else {
-    # ---- Bicep path (default): resource-group-scoped resources.bicep --------
-    Write-Host "[INFO]  Engine: Bicep (infra/resources.bicep), resource-group-scoped."
-
-    # Resolve / create the resource group per the platform contract (once).
-    if ($DeploymentType -eq 'subscription') {
-        $hashInput = if ($AllowedEntraUserIds.Count -gt 0) { $AllowedEntraUserIds } else { @($SubscriptionId) }
-        $stableHash = Get-MhhStableHash $hashInput -Length 24
-        $effectiveResourceGroup = "rg-clm-microhack-$stableHash"
-        New-AzResourceGroup -Name $effectiveResourceGroup -Location $candidateRegions[0] -Force | Out-Null
-    }
-    else {
-        # 'resourcegroup' / 'resourcegroup-with-subscriptionowner': RG pre-created, we hold Owner.
-        $effectiveResourceGroup = $ResourceGroupName
-    }
-
-    # Deterministic token for globally-unique resource names (RG-name based, so it is
-    # stable across region retries). resources.bicep names Search/Foundry as clm*${token}.
-    $resourceToken = (Get-MhhStableHash "$SubscriptionId-$effectiveResourceGroup" -Length 13).ToLower()
-
-    foreach ($region in $candidateRegions) {
-        Write-Host "[INFO]  Deploying Bicep -> RG '$effectiveResourceGroup' in '$region' (token '$resourceToken')..."
-        try {
-            $d = New-AzResourceGroupDeployment `
-                -ResourceGroupName $effectiveResourceGroup `
-                -TemplateFile $bicepFile `
-                -location $region `
-                -resourceToken $resourceToken `
-                -principalId $primaryPrincipalId `
-                -principalType 'User' `
-                -deploySql 'false' `
-                -deployBing 'false' `
-                -tags $tags `
-                -ErrorAction Stop
-            $deployOutputs     = $d.Outputs
-            $effectiveLocation = $region
-            break
-        }
-        catch {
-            Write-Host "[WARN]  Bicep deployment failed in '$region': $_ — trying next region."
-        }
-    }
-    if (-not $deployOutputs) { throw "Bicep deployment failed in all candidate regions: $($candidateRegions -join ', ')" }
+    # 'resourcegroup' / 'resourcegroup-with-subscriptionowner': RG pre-created, we hold Owner.
+    $effectiveResourceGroup = $ResourceGroupName
 }
+
+# Deterministic token for globally-unique resource names (RG-name based, so it is
+# stable across region retries). resources.bicep names Search/Foundry as clm*${token}.
+$resourceToken = (Get-MhhStableHash "$SubscriptionId-$effectiveResourceGroup" -Length 13).ToLower()
+
+foreach ($region in $candidateRegions) {
+    Write-Host "[INFO]  Deploying Bicep -> RG '$effectiveResourceGroup' in '$region' (token '$resourceToken')..."
+    try {
+        $d = New-AzResourceGroupDeployment `
+            -ResourceGroupName $effectiveResourceGroup `
+            -TemplateFile $bicepFile `
+            -location $region `
+            -resourceToken $resourceToken `
+            -principalId $primaryPrincipalId `
+            -principalType 'User' `
+            -deploySql 'false' `
+            -deployBing 'false' `
+            -tags $tags `
+            -ErrorAction Stop
+        $deployOutputs     = $d.Outputs
+        $effectiveLocation = $region
+        break
+    }
+    catch {
+        Write-Host "[WARN]  Bicep deployment failed in '$region': $_ — trying next region."
+    }
+}
+if (-not $deployOutputs) { throw "Bicep deployment failed in all candidate regions: $($candidateRegions -join ', ')" }
 
 Write-Host "[OK]    Provisioning complete in '$effectiveLocation' (resource group '$effectiveResourceGroup')."
 
@@ -256,6 +211,14 @@ if ($effectiveResourceGroup) {
             foreach ($roleName in $searchMiRoles.Keys) {
                 Grant-MhhRole -ObjectId $mi -RoleId $searchMiRoles[$roleName] -RoleName $roleName -Scope $search.ResourceId
             }
+
+            if ($account) {
+                $searchPrincipalId = Get-MhhIdentityPrincipalId $search.ResourceId
+                Grant-MhhRole -ObjectId $searchPrincipalId `
+                    -RoleId 'a97b65f3-24c7-4388-baec-2e87135dc908' `
+                    -RoleName 'Cognitive Services User' `
+                    -Scope $account.ResourceId
+            }
         }
     }
 }
@@ -265,6 +228,10 @@ if ($effectiveResourceGroup) {
 $projectEndpoint = Get-OutVal $deployOutputs 'AZURE_AI_PROJECT_ENDPOINT'
 $searchEndpoint  = Get-OutVal $deployOutputs 'AZURE_SEARCH_ENDPOINT'
 $searchIndex     = Get-OutVal $deployOutputs 'AZURE_SEARCH_INDEX'
+$iqSource        = Get-OutVal $deployOutputs 'FOUNDRY_IQ_KNOWLEDGE_SOURCE'
+$iqBase          = Get-OutVal $deployOutputs 'FOUNDRY_IQ_KNOWLEDGE_BASE'
+$iqConnection    = Get-OutVal $deployOutputs 'FOUNDRY_IQ_CONNECTION_NAME'
+$iqApiVersion    = Get-OutVal $deployOutputs 'FOUNDRY_IQ_API_VERSION'
 $modelOrch       = Get-OutVal $deployOutputs 'MODEL_ORCHESTRATOR'
 $modelDraft      = Get-OutVal $deployOutputs 'MODEL_DRAFTING'
 $modelClauseRisk = Get-OutVal $deployOutputs 'MODEL_CLAUSE_RISK'
@@ -276,6 +243,7 @@ Write-Host "==================== Your CLM microhack environment ================
 Write-Host "  Resource group          : $effectiveResourceGroup ($effectiveLocation)"
 Write-Host "  Foundry project endpoint: $projectEndpoint"
 Write-Host "  Azure AI Search endpoint: $searchEndpoint (index '$searchIndex')"
+Write-Host "  Foundry IQ              : source=$iqSource, knowledge-base=$iqBase, connection=$iqConnection"
 Write-Host "  Models                  : orchestrator=$modelOrch, drafting=$modelDraft, clause-risk=$modelClauseRisk, renewal=$modelRenewal"
 Write-Host "  App Insights            : $(if ($appInsights) { 'connection string ready' } else { '(none)' })"
 Write-Host "  Next                    : paste these into the repo-root .env (see Challenge 1)."
@@ -291,6 +259,18 @@ if ($searchEndpoint) {
 }
 if ($searchIndex) {
     @{ HackboxCredential = @{ name = 'SearchIndex'; value = $searchIndex; note = 'Azure AI Search index name -> AZURE_SEARCH_INDEX in .env' } }
+}
+if ($iqSource) {
+    @{ HackboxCredential = @{ name = 'FoundryIQKnowledgeSource'; value = $iqSource; note = 'Created by seed_corpus.py -> FOUNDRY_IQ_KNOWLEDGE_SOURCE in .env' } }
+}
+if ($iqBase) {
+    @{ HackboxCredential = @{ name = 'FoundryIQKnowledgeBase'; value = $iqBase; note = 'Foundry IQ knowledge base -> FOUNDRY_IQ_KNOWLEDGE_BASE in .env' } }
+}
+if ($iqConnection) {
+    @{ HackboxCredential = @{ name = 'FoundryIQConnection'; value = $iqConnection; note = 'Foundry project RemoteTool connection -> FOUNDRY_IQ_CONNECTION_NAME in .env' } }
+}
+if ($iqApiVersion) {
+    @{ HackboxCredential = @{ name = 'FoundryIQApiVersion'; value = $iqApiVersion; note = 'Azure AI Search knowledge API -> FOUNDRY_IQ_API_VERSION in .env' } }
 }
 if ($modelOrch) {
     @{ HackboxCredential = @{ name = 'ModelOrchestrator'; value = $modelOrch; note = 'Orchestrator model deployment -> MODEL_ORCHESTRATOR in .env' } }

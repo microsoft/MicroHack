@@ -72,6 +72,10 @@ output MODEL_RENEWAL string = resources.outputs.MODEL_RENEWAL
 output AZURE_SEARCH_ENDPOINT string = resources.outputs.AZURE_SEARCH_ENDPOINT
 output AZURE_SEARCH_INDEX string = resources.outputs.AZURE_SEARCH_INDEX
 output AZURE_SEARCH_CONNECTION_NAME string = resources.outputs.AZURE_SEARCH_CONNECTION_NAME
+output FOUNDRY_IQ_KNOWLEDGE_SOURCE string = resources.outputs.FOUNDRY_IQ_KNOWLEDGE_SOURCE
+output FOUNDRY_IQ_KNOWLEDGE_BASE string = resources.outputs.FOUNDRY_IQ_KNOWLEDGE_BASE
+output FOUNDRY_IQ_CONNECTION_NAME string = resources.outputs.FOUNDRY_IQ_CONNECTION_NAME
+output FOUNDRY_IQ_API_VERSION string = resources.outputs.FOUNDRY_IQ_API_VERSION
 output AZURE_BING_CONNECTION_NAME string = resources.outputs.AZURE_BING_CONNECTION_NAME
 
 #disable-next-line outputs-should-not-contain-secrets

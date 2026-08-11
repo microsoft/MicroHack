@@ -37,6 +37,10 @@ var appInsightsName = 'clm-appinsights-${resourceToken}'
 var logAnalyticsName = 'clm-logs-${resourceToken}'
 var searchIndexName = 'clm-corpus'
 var searchConnectionName = 'clm-search'
+var foundryIqKnowledgeSource = 'clm-corpus-ks'
+var foundryIqKnowledgeBase = 'clm-contracts-kb'
+var foundryIqConnectionName = 'clm-knowledge-mcp'
+var foundryIqApiVersion = '2026-05-01-preview'
 var appInsightsConnectionName = 'clm-appinsights'
 var bingName = 'clmbing${resourceToken}'
 var bingConnectionName = 'clm-bing'
@@ -212,6 +216,25 @@ resource searchConnection 'Microsoft.CognitiveServices/accounts/projects/connect
       ApiType: 'Azure'
       ResourceId: search.id
       location: location
+    }
+  }
+}
+
+// Foundry IQ exposes the knowledge base as an authenticated MCP endpoint. The
+// knowledge source/base are idempotently created after the clm-corpus index is
+// seeded; this project connection is safe to create before the endpoint exists.
+resource foundryIqConnection 'Microsoft.CognitiveServices/accounts/projects/connections@2025-04-01-preview' = {
+  parent: project
+  name: foundryIqConnectionName
+  properties: {
+    category: 'RemoteTool'
+    target: 'https://${search.name}.search.windows.net/knowledgebases/${foundryIqKnowledgeBase}/mcp?api-version=${foundryIqApiVersion}'
+    #disable-next-line BCP036
+    authType: 'ProjectManagedIdentity'
+    isSharedToAll: true
+    audience: 'https://search.azure.com/'
+    metadata: {
+      ApiType: 'Azure'
     }
   }
 }
@@ -399,6 +422,18 @@ resource raProjectSearchServiceContributor 'Microsoft.Authorization/roleAssignme
   }
 }
 
+// Foundry IQ query planning runs under the Search service identity when the
+// knowledge base specifies an LLM.
+resource raSearchCognitiveUser 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(account.id, search.id, roleCognitiveServicesUser)
+  scope: account
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', roleCognitiveServicesUser)
+    principalId: search.identity.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
 // ==========================================================================
 // Outputs — consumed by the postprovision hook to write .env
 // ==========================================================================
@@ -414,6 +449,10 @@ output MODEL_RENEWAL string = gptMini
 output AZURE_SEARCH_ENDPOINT string = 'https://${search.name}.search.windows.net'
 output AZURE_SEARCH_INDEX string = searchIndexName
 output AZURE_SEARCH_CONNECTION_NAME string = searchConnectionName
+output FOUNDRY_IQ_KNOWLEDGE_SOURCE string = foundryIqKnowledgeSource
+output FOUNDRY_IQ_KNOWLEDGE_BASE string = foundryIqKnowledgeBase
+output FOUNDRY_IQ_CONNECTION_NAME string = foundryIqConnectionName
+output FOUNDRY_IQ_API_VERSION string = foundryIqApiVersion
 
 // Empty unless Bing was provisioned — build_web_search_tool() treats an empty
 // value as "web search off", so the Clause & Risk agent stays corpus-only.

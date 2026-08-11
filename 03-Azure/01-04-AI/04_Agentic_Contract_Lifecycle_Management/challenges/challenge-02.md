@@ -1,4 +1,4 @@
-# Challenge 2 · Grounded Agent with Azure AI Search + Tools
+# Challenge 2 · Grounded Agent with Foundry IQ + Tools
 
 **[🏠 Home](../README.md)**  ·  [← Challenge 1: Setup](challenge-01.md)  ·  [Challenge 3: Observability →](challenge-03.md)
 
@@ -37,8 +37,8 @@ If something isn't working as expected, please let your coach know.
 Build the **Intake & Drafting agent** on **gpt-5.4**. These four properties aren't academic — each
 one is what makes the agent's output *safe for a contract manager to act on*:
 
-- **Grounded** — every substantive answer is drawn from the CLM corpus via **Azure AI Search**, not the
-  model's parametric memory.
+- **Grounded** — every substantive answer is drawn from the CLM corpus through **Foundry IQ agentic
+  retrieval**, not the model's parametric memory.
 - **Cited** — answers reference the source documents they came from.
 - **Tool-enabled** — a **function tool** (`get_contract_status`) performs structured lookups the model
   must not guess.
@@ -49,7 +49,7 @@ one is what makes the agent's output *safe for a contract manager to act on*:
 
 | Component | What it is | Where it lives |
 |-----------|-----------|----------------|
-| **Knowledge tool (Azure AI Search)** | An `AzureAISearchTool` over the `clm-corpus` index — grounds the agent on Contoso's templates, clauses, policy and contracts | [`kb_setup.py`](../src/kb_setup.py) → `build_knowledge_tool()` |
+| **Knowledge tool (Foundry IQ MCP)** | The `knowledge_base_retrieve` MCP tool over `clm-contracts-kb` — grounds the agent on Contoso's templates, clauses, policy and contracts | [`kb_setup.py`](../src/kb_setup.py) → `build_knowledge_tool()` |
 | **Function tool** | `get_contract_status(contract_id)` — deterministic lookup of status, renewal date, risk and owner (Azure SQL, falling back to seed JSON) | [`src/clm_common/tools.py`](../src/clm_common/tools.py) |
 | **Guard-railed persona** | Instructions that force citations, forbid invented terms, and refuse legal advice | `INSTRUCTIONS` in [`agents/intake_drafting_agent.py`](../src/agents/intake_drafting_agent.py) |
 | **gpt-5.4-backed agent** | The same Agent Framework API for every model, with `model` pointed at the `gpt-5.4` deployment | `create_agent()` in [`agents/intake_drafting_agent.py`](../src/agents/intake_drafting_agent.py) |
@@ -57,44 +57,49 @@ one is what makes the agent's output *safe for a contract manager to act on*:
 
 ## 🧭 Context
 
-### How grounding works — the Azure AI Search tool chain
+### How grounding works — the Foundry IQ tool chain
 
-This microhack attaches an **Azure AI Search tool** directly to the agent. The tool queries the
-`clm-corpus` index with `query_type="semantic"` and `top_k=5`, then returns matching passages and
-citation metadata for the agent to use in its response.
+This microhack creates a real Foundry IQ **search-index knowledge source** (`clm-corpus-ks`) and
+**knowledge base** (`clm-contracts-kb`) over the `clm-corpus` index. The knowledge base uses
+**gpt-5.4** with **low retrieval reasoning effort** to plan one or more searches, then returns
+extractive passages and citation metadata through its authenticated MCP endpoint.
 
 ![Foundry IQ architecture — knowledge sources feed the Foundry IQ grounding layer (knowledge sources, access rules, retrieval logic, agentic retrieval), which an AI agent/Copilot queries to produce grounded, cited, permission-checked responses](../images/diagrams/foundry-iq-architecture.png)
 
-*Foundry IQ is the broader managed knowledge layer shown above. This microhack uses the simpler
-direct Azure AI Search tool integration shown below; it does not create a Foundry IQ knowledge base.*
+*The implementation follows this architecture: Azure AI Search stores the indexed corpus; Foundry IQ
+adds the managed knowledge-source, knowledge-base, query-planning, and MCP retrieval layers.*
 
 ```mermaid
 flowchart TB
   A["Corpus source<br/>Local PDFs (default)<br/>or SharePoint (optional)"] --> B["Azure AI Search<br/>clm-corpus index"]
-  subgraph Search["Semantic grounding"]
-    D["AzureAISearchTool<br/>semantic · top_k=5"]
+  B --> C["Knowledge source<br/>clm-corpus-ks"]
+  subgraph IQ["Foundry IQ"]
+    C --> D["Knowledge base<br/>clm-contracts-kb"]
+    D --> E["Query planning<br/>gpt-5.4 · low effort"]
+    E --> D
   end
-  E["Intake &amp; Drafting<br/>gpt-5.4"] -->|semantic query| D
-  D -->|query| B
-  B -->|top 5 results| D
-  D -->|passages + citations| E
-  E -->|contract ID| F["get_contract_status<br/>SQL or seed JSON"]
-  F -->|status result| E
-  E --> G["Grounded response<br/>citations + tool results"]
+  F["Intake &amp; Drafting<br/>gpt-5.4"] -->|knowledge_base_retrieve<br/>over MCP| D
+  D -->|planned searches| C
+  D -->|passages + citations| F
+  F -->|contract ID| G["get_contract_status<br/>SQL or seed JSON"]
+  G -->|status result| F
+  F --> H["Grounded response<br/>citations + tool results"]
   style D fill:#FCEBDD,stroke:#E8590C,stroke-width:2px,color:#1A1A1A
-  style E fill:#EDE4F5,stroke:#7A4FB5,stroke-width:2px,color:#1A1A1A
-  style F fill:#FCEBDD,stroke:#E8590C,stroke-width:2px,color:#1A1A1A
+  style F fill:#EDE4F5,stroke:#7A4FB5,stroke-width:2px,color:#1A1A1A
+  style G fill:#FCEBDD,stroke:#E8590C,stroke-width:2px,color:#1A1A1A
 ```
 
 The index itself was built in **Challenge 1** by `src/scripts/seed_corpus.py`. In this challenge you
-simply **attach it** as a tool and let the agent retrieve from it.
+created the knowledge source/base after seeding. In this challenge you **attach its MCP endpoint** and
+let the agent use agentic retrieval.
 
 ### Two kinds of tools
 
 An agent grounds and acts through **tools**. This agent has both flavors:
 
-- **Knowledge tool** (`AzureAISearchTool`) — for *unstructured* knowledge: "what does our standard
-  limitation-of-liability clause say?" Answered from the corpus, **with citations**.
+- **Knowledge tool** (`knowledge_base_retrieve` over MCP) — for *unstructured* knowledge: "what does
+  our standard limitation-of-liability clause say?" Foundry IQ plans the retrieval and answers from
+  the corpus, **with citations**.
 - **Function tool** (`get_contract_status`) — for *structured* facts the model must never hallucinate:
   "what's the renewal date of `CT-4821`?" The Agent Framework generates the tool's JSON schema **from the
   Python type hints + docstring**, and `function_tool(...)` (`approval_mode="never_require"`) runs the
@@ -149,7 +154,8 @@ Everything the agent "knows" comes from the corpus you seeded in Challenge 1:
 
 | File | What it does |
 |------|--------------|
-| [`kb_setup.py`](../src/kb_setup.py) | Resolves the project's **default Azure AI Search connection** and builds the `AzureAISearchTool`. Run it standalone to verify grounding is wired up. |
+| [`kb_setup.py`](../src/kb_setup.py) | Builds the Foundry IQ MCP tool restricted to `knowledge_base_retrieve`. Run it standalone to verify grounding is wired up. |
+| [`clm_common/foundry_iq.py`](../src/clm_common/foundry_iq.py) | Idempotently creates the knowledge source/base through the Azure AI Search knowledge APIs. |
 | [`agents/intake_drafting_agent.py`](../src/agents/intake_drafting_agent.py) | Defines the agent (persona, guardrails, knowledge + function tools) and runs a four-prompt demo. Agents are built in-process — nothing persists server-side. |
 | [`sample_prompts.md`](../src/sample_prompts.md) | Curated prompts that exercise every capability: grounded drafting, cited Q&A, the function tool, and the refusal guardrail. |
 
@@ -160,7 +166,8 @@ Every line of this agent stands on a concrete resource `azd up` provisioned in C
 | Service / model | What it is | Why it's here |
 |---|---|---|
 | **Microsoft Foundry** (AI Services account + runtime) | The control plane + model runtime — one `AIServices` account holding project **`clm-project`** (`AZURE_AI_PROJECT_ENDPOINT`). All three models deploy onto it, and the **Agent Framework** runs the agent loop in-process. | You build a grounded, tool-using **gpt-5.4** agent in ~15 lines; switching deployment is a one-arg change (`model=`). → [Agent Framework](https://learn.microsoft.com/agent-framework/overview/agent-framework-overview) |
-| **Azure AI Search tool** — agent integration | [`kb_setup.py`](../src/kb_setup.py) builds `AzureAISearchTool(index_name="clm-corpus", query_type="semantic", top_k=5)` over the keyless **`clm-search`** connection. | Lets the agent query indexed content and return source citations. → [Azure AI Search tool](https://learn.microsoft.com/azure/foundry/agents/how-to/tools/ai-search) |
+| **Foundry IQ MCP tool** — agent integration | [`kb_setup.py`](../src/kb_setup.py) connects to `clm-contracts-kb` through the keyless **`clm-knowledge-mcp`** RemoteTool connection and permits only `knowledge_base_retrieve`. | Lets in-process and published agents invoke the same managed knowledge base. |
+| **Foundry IQ knowledge base** | `clm-contracts-kb` uses the `clm-corpus-ks` source, `gpt-5.4` query planning, low reasoning effort, and extractive output. | Breaks complex questions into retrieval subqueries and returns cited evidence. → [Foundry IQ](https://learn.microsoft.com/azure/foundry/agents/concepts/what-is-foundry-iq) |
 | **Azure AI Search** — the `clm-corpus` index | A `basic` service with index **`clm-corpus`** + semantic config **`clm-semantic`** (fields `id`·`title`·`content`·`source`) and semantic ranking. Built in Challenge 1 — here you only attach and query it. | The searchable store that turns "the model guesses" into "the agent cites `CL-04`". → [Azure AI Search](https://learn.microsoft.com/azure/search/) |
 | **Corpus sources** | **Path B (default)** extracts the local PDFs directly into `clm-corpus`. **Path A (optional)** uses a SharePoint library and indexer to populate the same index. | Gives every participant identical grounding data while preserving a production-shaped SharePoint option. |
 | **Model — gpt-5.4** | This agent's LLM — deployment **`gpt-5.4`** (`GlobalStandard`, `MODEL_DRAFTING`), the same deployment the orchestrator uses; strong instruction-following + long context. | Drafting & orchestration share **gpt-5.4**; clause-risk uses **gpt-5.6-sol**, renewal scan **gpt-5.4-nano** — right model per job, one platform. → [Models in Foundry](https://learn.microsoft.com/azure/ai-foundry/) |
@@ -170,7 +177,7 @@ Every line of this agent stands on a concrete resource `azd up` provisioned in C
 
 ### Task 1 · Verify the knowledge connection (~10 min)
 
-Confirm the default Azure AI Search connection resolves and the index is present:
+Confirm the Foundry IQ knowledge base and MCP tool are configured:
 
 ```bash
 python src/kb_setup.py
@@ -179,9 +186,9 @@ python src/kb_setup.py
 Expected output (ids will differ):
 
 ```text
-✓ Default Azure AI Search connection: /subscriptions/.../connections/clm-search
 ✓ Index: clm-corpus
-✓ Built Foundry Azure AI Search grounding tool (semantic, top_k=5).
+✓ Foundry IQ knowledge base: clm-contracts-kb
+✓ Built Foundry IQ MCP tool (knowledge_base_retrieve).
 ```
 
 > 📸 **Screenshot slot — what you'll see:** the terminal confirming the `clm-search` connection and `clm-corpus` index.
@@ -212,14 +219,14 @@ from clm_common.foundry import build_chat_client, function_tool
 from kb_setup import build_knowledge_tool
 from clm_common.tools import get_contract_status
 
-knowledge = build_knowledge_tool(connection_id=connection_id)   # Azure AI Search grounding over clm-corpus
+knowledge = build_knowledge_tool()                               # Foundry IQ MCP grounding over clm-contracts-kb
 
 agent = Agent(
     client=build_chat_client(settings.model_drafting),          # ← "gpt-5.4"; swap for another deployment id, nothing else changes
     name="intake-drafting-agent",
     instructions=INSTRUCTIONS,                                  # persona + citations + refusal policy
     tools=[
-        knowledge,                                              # unstructured grounding (Azure AI Search)
+        knowledge,                                              # Foundry IQ agentic retrieval
         function_tool(get_contract_status),                     # structured lookups, approval_mode="never_require"
     ],
 )
@@ -351,7 +358,7 @@ agent/tool/grounding API is identical across models.
 
 You're done when:
 
-- [ ] `python src/kb_setup.py` prints the Search connection id **and** the `clm-corpus` index.
+- [ ] `python src/kb_setup.py` prints the `clm-corpus` index and the **`clm-contracts-kb` Foundry IQ MCP tool**.
 - [ ] Cited answers are drawn from the corpus (you can see the source documents).
 - [ ] The `get_contract_status` tool is invoked for `CT-4821` and returns real fields.
 - [ ] The legal-advice prompt is **refused** with a recommendation to consult counsel.
@@ -361,12 +368,11 @@ You're done when:
 
 | Symptom | Fix |
 |---------|-----|
-| `get_default(AZURE_AI_SEARCH)` returns nothing | Ensure Challenge 1 created the Search resource and connected it to the project (**portal → Connected resources**). Set `AZURE_SEARCH_CONNECTION_NAME` in `.env`. |
-| No citations returned | Confirm `src/scripts/seed_corpus.py` populated the index and the semantic config exists; try raising `top_k` in `build_knowledge_tool`. |
+| Foundry IQ MCP tool is not built | Confirm `.env` contains `FOUNDRY_IQ_KNOWLEDGE_BASE=clm-contracts-kb` and `FOUNDRY_IQ_CONNECTION_NAME=clm-knowledge-mcp`, then re-run `seed_corpus.py`. |
+| No citations returned | Confirm `src/scripts/seed_corpus.py` populated the index and successfully created `clm-corpus-ks` and `clm-contracts-kb`. |
 | Function tool never called | Keep the docstring + type hints (the schema comes from them); ensure it's wrapped with `function_tool(...)` and passed in the Agent's `tools=[...]`, and the prompt actually asks for a specific contract. |
 | `get_contract_status` says "not found" | Use a known id (`CT-4821`, `CT-3390`, `CT-5102`, `CT-2765`, `CT-6033`) — the error message lists them. |
-| `TypeError: Object of type AzureAISearchToolResource is not JSON serializable` | The Foundry tool factory returns an SDK model, not a plain dict. `build_knowledge_tool` / `build_web_search_tool` now normalize it via `.as_dict()` before attaching — pull the latest `src/kb_setup.py`. |
-| `400 tool_user_error … Access denied, check managed identity access to search service` | The Foundry **account _and_ project** managed identities each need **Search Index Data Reader** + **Search Service Contributor** on the Search service. The infra grants both now — re-run `labautomation/deploy-lab.ps1` (idempotent) or add the roles in the portal (Search service → Access control). |
+| `400 … Access denied` during retrieval or setup | The Foundry account/project identities need Search reader/contributor roles, and the Search identity needs Cognitive Services User on the Foundry account. Re-run provisioning and allow time for RBAC propagation. |
 | `429 rate_limit_exceeded` on `gpt-5.4` mid-demo | Deployment throughput throttling. The demo now retries with exponential backoff and isolates each prompt (`run_agent_with_retry`), so it rides through and continues. If it persists, raise the deployment capacity or space out prompts. |
 | `Missing required environment variable 'AZURE_AI_PROJECT_ENDPOINT'` | Re-run Challenge 1's deploy (which writes `.env`) or copy `.env.example` → `.env` and fill it in. |
 
@@ -390,8 +396,8 @@ IQ), cited, tool-enabled and guard-railed.
 - [Microsoft Foundry](https://learn.microsoft.com/azure/ai-foundry/)
 - [Microsoft Agent Framework](https://learn.microsoft.com/agent-framework/overview/agent-framework-overview)
 - [Function calling with Foundry agents](https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/function-calling)
-- [Azure AI Search tool for Foundry agents](https://learn.microsoft.com/azure/foundry/agents/how-to/tools/ai-search)
 - [Foundry IQ](https://learn.microsoft.com/azure/foundry/agents/concepts/what-is-foundry-iq)
+- [Agentic retrieval in Azure AI Search](https://learn.microsoft.com/azure/search/search-agentic-retrieval-concept)
 - [Azure AI Search](https://learn.microsoft.com/azure/search/)
 
 ## 🧠 Reflection

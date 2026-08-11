@@ -12,8 +12,8 @@ agent-framework-core>=1.11.0,<2
 agent-framework-foundry>=1.10.1,<2
 
 # --- Foundry project client + auth ----------------------------------------
-# azure-ai-projects v2 is required by agent-framework-foundry and is used here
-# only to resolve the default Azure AI Search connection for grounding.
+# azure-ai-projects v2 is required by agent-framework-foundry and supplies the
+# MCP/AI Search tool models plus project-connection discovery.
 azure-ai-projects>=2.2.0,<2.3.0
 azure-identity>=1.19.0
 openai>=1.108.0
@@ -21,8 +21,9 @@ openai>=1.108.0
 # direct dependency — agents are built with the Microsoft Agent Framework above.
 
 # --- Grounding / knowledge (Foundry IQ over Azure AI Search) --------------
-# The Azure AI Search SDK also creates the SharePoint Online data source +
-# indexer that crawls the corpus library into the clm-corpus index (Ch0 seeding).
+# Stable Search SDK types create the corpus index/indexer. Foundry IQ knowledge
+# source/base provisioning uses the 2026-05-01-preview REST API through requests,
+# avoiding a preview-SDK pin in the participant environment.
 azure-search-documents>=11.5.0
 # Text extraction from the corpus PDFs (executed contracts, templates, clause
 # library, policy, counterparty drafts) so the Clause & Risk agent (Ch3) can

@@ -98,12 +98,29 @@ Three checks: **(4a)** the **resource group** in the [Azure Portal](https://port
 az cognitiveservices account deployment list -g <rg> -n clmfoundry<token> -o table
 ```
 
-> 📸 **Screenshot slot:** the **resource group** in the portal, the **`clm-project` Foundry project** (→ *Go to Foundry portal*), and the **3 Foundry model deployments**.
->
-> <img src="../../images/challenge-01/steps/07-portal-resource-group.png" alt="Screenshot slot: resource group" width="80%">
-> <img src="../../images/challenge-01/steps/09-foundry-project-portal.png" alt="clm-project Foundry project in the Azure Portal — Overview with 'Go to Foundry portal' highlighted" width="80%">
-> <img src="../../images/challenge-01/steps/09-foundry-portal-switcher.png" alt="Microsoft Foundry portal project switcher showing clm-project (swedencentral)" width="80%">
-> <img src="../../images/challenge-01/steps/08-foundry-deployments.png" alt="Screenshot slot: model deployments" width="80%">
+> 📸 **Visual walk-through — checks (4a) → (4b), one screenshot per step:**
+
+**1 · Resource group (Azure Portal).** Open the [Azure Portal](https://portal.azure.com/) → **Resource groups** → your RG (self-host default `rg-clm-microhack`). It should list **~7 resources**: the Foundry (AI Services) account, the Foundry **project**, Azure AI Search, Application Insights + Log Analytics, etc.
+
+<img src="../../images/challenge-01/steps/07-portal-resource-group.png" alt="Resource group rg-clm-microhack listing ~7 resources in the Azure Portal" width="80%">
+
+<br>
+
+**2 · Open the Foundry project.** Click the **`clm-project`** resource (Type = *Foundry project*); on its **Overview** blade, click **Go to Foundry portal**.
+
+<img src="../../images/challenge-01/steps/09-foundry-project-portal.png" alt="clm-project Foundry project Overview in the Azure Portal with 'Go to Foundry portal' highlighted" width="80%">
+
+<br>
+
+**3 · Confirm you're in the right project.** The Foundry portal opens on your project — check the switcher (top-left) shows **`clm-project` · swedencentral** ✓.
+
+<img src="../../images/challenge-01/steps/09-foundry-portal-switcher.png" alt="Microsoft Foundry portal project switcher showing clm-project in swedencentral" width="80%">
+
+<br>
+
+**4 · Verify the model deployments.** In the left nav open **Models + endpoints** — the **3 distinct deployments** (`gpt-5.4`, `gpt-5.6-sol`, `gpt-5.4-nano`; Intake & Drafting shares `gpt-5.4` with the Orchestrator) should all show **Succeeded**.
+
+<img src="../../images/challenge-01/steps/08-foundry-deployments.png" alt="Foundry portal Models + endpoints showing three model deployments in Succeeded state" width="80%">
 
 ### Task 5 · Seed the corpus
 **Path B (local-PDF) is the default — works in any tenant, no SharePoint, no admin consent.** Blank the `SHAREPOINT_*` values so the fallback triggers, then extract the local PDFs straight into `clm-corpus`:

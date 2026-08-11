@@ -78,26 +78,28 @@ python src/tracing_setup.py
 Run an agent now, then view spans in the Foundry portal — New Foundry: Build → your agent/model → Monitor; classic: project → Tracing.
 ```
 
-> 📸 **Screenshot slot:** the "Tracing enabled" confirmation.
->
-> <img src="../images/challenge-03/steps/01-tracing-on.png" alt="Screenshot slot: tracing enabled" width="75%">
-
 ### Task 2 · Generate traffic (~15 min)
 
-**One-time — connect Application Insights to your project.** The portal's tracing/monitoring views only
-render spans from an App Insights resource that is *connected to the project*; provisioning the
-resource in Challenge 1 is not enough on its own. The click-path depends on which portal you're in:
+Three steps: **connect** Application Insights once, **run** a demo, then **open** the spans.
 
-- **New Foundry** (the **New Foundry** toggle is **on** — the redesigned UI most people now land in): there is **no** project-level *Tracing* menu item. Open **Build → your agent or model → the `Monitor` tab** and, if prompted, connect Application Insights. Tip: you can jump straight there by typing **"Tracing"** or **"Monitor"** in the portal **search bar** (this is how you reach it when the left nav has no Tracing entry).
-- **Classic Foundry**: open your **project → Tracing** (or **Observability → Tracing**) and click **Connect**, then pick `clm-appinsights`.
+**1 · Connect Application Insights to your project (one-time).** The portal only renders spans from an
+App Insights resource *connected to the project* — provisioning it in Challenge 1 isn't enough on its
+own. Where you click depends on your portal, but you're heading to the **same view** either way:
 
-*(Fresh `azd up` / `deploy.ps1` / `deploy.sh` deployments now create this connection for you — this step is only needed if the view still shows "connect a resource".)*
+| Portal | Where to connect | Shortcut |
+|--------|------------------|----------|
+| **New Foundry** (default redesigned UI) | **Build → your agent/model → the `Monitor` tab** → connect if prompted. There is **no** project-level *Tracing* menu here. | Type **"Monitor"** or **"Tracing"** in the portal **search bar**. |
+| **Classic Foundry** | **project → Tracing** (or **Observability → Tracing**) → **Connect**. | — |
 
-Then run any agent demo — each one enables tracing itself, so a normal run emits spans:
+Pick **`clm-appinsights`** when prompted.
+
+**2 · Run any agent demo.** Each demo enables tracing itself, so a normal run emits spans:
 ```bash
 python src/agents/intake_drafting_agent.py     # or orchestrator.py / clause_risk_agent.py
 ```
-Then open the spans — **New Foundry:** **Build → your agent/model → `Monitor`** (or search **"Tracing"** in the search bar); **classic:** **project → Tracing**. Inspect the **prompt / retrieval / tool** spans and token counts.
+
+**3 · Open the spans** in that same **`Monitor`** (New Foundry) / **Tracing** (classic) view. Inspect the
+**prompt / retrieval / tool** spans and token counts.
 
 > 📸 **Screenshot slot — what you'll see:** a run's span timeline (in **Tracing** / the **Monitor** tab) and the **Agent Monitoring** dashboard.
 >

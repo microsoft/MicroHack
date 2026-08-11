@@ -330,7 +330,7 @@ grounded, cited answer, now in the portal UI.
 
 > 📸 **Screenshot slot — what you'll see:** the Foundry **Playground** with the agent giving a grounded, cited answer.
 >
-> <img src="../images/challenge-02/steps/03-portal-playground.png" alt="Screenshot slot: Foundry Playground" width="80%">
+> <img src="../images/challenge-02/steps/03-foundry-iq-playground.png" alt="Foundry Playground showing the intake-drafting agent grounded by the clm-contracts-kb Foundry IQ knowledge base" width="80%">
 
 ### Task 6 · (Optional) Add content safety (~10 min)
 
@@ -354,9 +354,6 @@ layer on now.
    Leave content filters at **Medium**.
 4. **Review → Create guardrails**, then re-send the legal-advice prompt (and an injection attempt) and
    watch it get blocked at the service layer.
-
-**No portal agent yet?** Just **discuss where the guardrails would sit** — that's a valid way to
-complete this optional task.
 
 ➡️ **Full walkthrough** (every PII data-type pick, screenshots, and re-testing against the red-team scan):
 **[Challenge 6 · Task 4 — Harden the agent](challenge-06.md#task-4--harden-the-agent-15-min)**.

@@ -169,7 +169,7 @@ Challenges 4 and 5 publish their own specialists (`clause-risk-agent`, `obligati
 
 > 📸 **Screenshot slot:** the Foundry **Playground** with the agent giving a grounded, cited answer.
 >
-> <img src="../../images/challenge-02/steps/03-portal-playground.png" alt="Screenshot slot: Foundry Playground" width="80%">
+> <img src="../../images/challenge-02/steps/03-foundry-iq-playground.png" alt="Foundry Playground showing the intake-drafting agent grounded by the clm-contracts-kb Foundry IQ knowledge base" width="80%">
 
 ### Task 6 · (Optional) Content safety
 A **preview** of Challenge 6, not a required step here. Two layers of defense:

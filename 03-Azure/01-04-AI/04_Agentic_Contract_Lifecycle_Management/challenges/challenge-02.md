@@ -312,9 +312,32 @@ tells you the expected behavior:
 
 ### Task 5 · (Optional) Add content safety (~10 min)
 
-In the portal, attach **Prompt Shields / PII** guardrails to the agent, or discuss where they'd sit.
-The refusal instructions already enforce the no-legal-advice policy at the prompt layer — content
-safety adds a second, model-independent layer (previewed here, built in **Challenge 6**).
+This is a **preview**, not a required build step — you wire Content Safety in full in **Challenge 6**.
+The goal here is to understand the **two layers of defense** and, if you like, switch the first portal
+layer on now.
+
+**Where a guardrail can live:**
+- **Prompt layer (already done)** — the refusal rules in the agent's `INSTRUCTIONS` enforce the
+  no-legal-advice policy. Fast and free, but **model-dependent**: a strong jailbreak can talk its way
+  around it.
+- **Content-safety layer (this task)** — Azure AI **Content Safety** inspects prompts *and* responses
+  **independently of the model**: **Prompt Shields** (jailbreak + indirect/XPIA injection), **PII**
+  detection, and protected-material checks. It still holds even when the prompt guardrail is bypassed.
+
+**Try it now** — only if you published the portal agents in Task 4 (`python src/agents/publish_agent.py`):
+1. Portal → **Build → Agents → `intake-drafting-agent`**.
+2. Expand **Guardrails** in the left pane → **Manage guardrail**.
+3. Enable **Prompt Shields** (jailbreak + indirect injection) and **PII (Preview)** — PII needs **at
+   least one** data type (for contracts, start with *User information* → Name / Email / Phone / Address).
+   Leave content filters at **Medium**.
+4. **Review → Create guardrails**, then re-send the legal-advice prompt (and an injection attempt) and
+   watch it get blocked at the service layer.
+
+**No portal agent yet?** Just **discuss where the guardrails would sit** — that's a valid way to
+complete this optional task.
+
+➡️ **Full walkthrough** (every PII data-type pick, screenshots, and re-testing against the red-team scan):
+**[Challenge 6 · Task 4 — Harden the agent](challenge-06.md#task-4--harden-the-agent-15-min)**.
 
 ### ⚙️ Swapping the deployment (model-agnostic by design)
 

@@ -209,6 +209,10 @@ Drop all three values into `.env`. Now give that app a bot that can receive Team
 
    It prints `https://<app>.azurecontainerapps.io/api/messages` — that's your endpoint. See [`deploy/capture-bot/`](../../deploy/capture-bot/).
 
+   <img src="../../images/challenge-05/steps/task6-deploy-capture-bot.png" alt="Codespace terminal after running deploy/capture-bot/deploy.sh: 'clm-capture-bot is live' with the https://clm-capture-bot.<region>.azurecontainerapps.io/api/messages endpoint to set as the Bot's Messaging endpoint, followed by the Open in Teams / send 'hi' instructions and the az containerapp logs/delete commands" width="80%">
+
+   The script finishes by printing the exact **Messaging endpoint** to paste into your Bot's **Configuration**, plus the follow-up commands: how to read the captured `TEAMS_SERVICE_URL` + `TEAMS_CONVERSATION_ID` from the logs (`az containerapp logs show …`) and how to delete the container app when you're done (`az containerapp delete …`).
+
    Whichever option you pick, set your bot's **Configuration → Messaging endpoint** to that `…/api/messages` URL and **Apply**.
 
 8. **Open your bot in Teams and send one message.** Back on the bot's **Channels** blade, click **Open in Teams** next to the (now Healthy) Microsoft Teams channel — this deep-links you into a 1:1 chat with *your* bot. Send any text (e.g. `hi`); that first inbound activity fires the capture bot's `_on_turn`, which writes `TEAMS_SERVICE_URL` + `TEAMS_CONVERSATION_ID` into `.env`. Those two values are what Task 7 replays to post proactive alerts. The bot also **replies with the two values in the chat** — if you deployed it to Azure, copy them from that reply into your local `.env` (the container can't write to your laptop's `.env`).

@@ -44,4 +44,8 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
     CMD curl -s -o /dev/null "http://127.0.0.1:${MCP_PORT}/mcp" || exit 1
 
-CMD ["python", "src/mcp_server/server.py", "--http"]
+# APP_ROLE selects which service this image runs (same image, two entrypoints):
+#   (unset | mcp)  -> Challenge 4 MCP server on :8000   (default — unchanged)
+#   capture-bot    -> Challenge 5 Teams capture bot on :3978
+#                     (deploy/capture-bot/deploy.sh sets APP_ROLE + CAPTURE_BOT_HOST=0.0.0.0)
+CMD ["sh", "-c", "if [ \"$APP_ROLE\" = \"capture-bot\" ]; then exec python src/capture_reference_bot.py; else exec python src/mcp_server/server.py --http; fi"]

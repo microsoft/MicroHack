@@ -165,7 +165,7 @@ Upcoming renewals (next 60 days):
 > sequenceDiagram
 >     participant You as You (Teams)
 >     participant Bot as Your Azure Bot (own app + secret)
->     participant Cap as capture_reference_bot.py (local + tunnel)
+>     participant Cap as capture_reference_bot.py (local+tunnel or Azure)
 >     participant Env as .env
 >     participant Alert as proactive_alerts.py
 >     Note over Bot,Cap: TASK 6 — capture
@@ -188,19 +188,28 @@ Proactive alerts need a **saved conversation reference** (service URL + conversa
 
 1. **Register your own app.** Entra ID → **App registrations → New registration** → *Accounts in this organizational directory only* (single tenant). Copy the **Application (client) ID** + **Directory (tenant) ID**, then **Certificates & secrets → + New client secret** → copy the **Value**. Set `MICROSOFT_APP_ID` / `MICROSOFT_APP_PASSWORD` / `MICROSOFT_APP_TENANT_ID` in `.env`.
 2. **Create an Azure Bot that reuses it:** portal → **Create a resource → Azure Bot** → **Type of App = Single Tenant**, **Creation type = Use existing app registration** (paste your App ID + tenant) → **Create**. Then enable **Channels → Microsoft Teams**.
-3. **Run the capture bot:** `python src/capture_reference_bot.py` (listens on `localhost:3978`).
-4. **Install the Dev Tunnels CLI (one-time), sign in, then expose the bot publicly.** Codespaces don't ship the `devtunnel` CLI — installing it is what fixes `bash: devtunnel: command not found`:
+3. **Get a public HTTPS messaging endpoint for the capture bot — pick one:**
+
+   **Option A · Run locally + dev tunnel.** Start the bot, then expose port 3978 from a **second terminal**. Codespaces don't ship the `devtunnel` CLI — installing it is what fixes `bash: devtunnel: command not found`:
    ```bash
-   # Codespaces / Linux / macOS — installs to ~/bin and adds it to PATH
-   curl -sL https://aka.ms/DevTunnelCliInstall | bash
-   source ~/.bashrc                              # or open a new terminal so the shell finds ~/bin/devtunnel
-   # Windows (PowerShell): winget install Microsoft.devtunnel
-   devtunnel user login                          # required to host — sign in with your Microsoft or GitHub account
-   devtunnel host -p 3978 --allow-anonymous      # copy the https://<tunnel> URL it prints
+   python src/capture_reference_bot.py             # terminal 1 — listens on localhost:3978
+   # terminal 2 — install + host the tunnel:
+   curl -sL https://aka.ms/DevTunnelCliInstall | bash && source ~/.bashrc   # Windows: winget install Microsoft.devtunnel
+   devtunnel user login                            # required to host
+   devtunnel host -p 3978 --allow-anonymous        # copy the https://<tunnel> URL it prints
    ```
-   Run this in a **second terminal** (leave the capture bot from step 3 running); the `https://<tunnel>` URL is the public forward of `localhost:3978`.
-5. **Point your bot at your laptop:** your Bot → **Configuration** → **Messaging endpoint** = `https://<tunnel>/api/messages` → **Apply**.
-6. **Message your bot once:** your Bot → **Channels → Teams → Open in Teams**, type anything (`hi`). The capture bot validates the token against **your** App ID, writes `TEAMS_SERVICE_URL` + `TEAMS_CONVERSATION_ID` to `.env`, and replies "✅ Saved…". Stop it (`Ctrl+C`).
+   Your endpoint is `https://<tunnel>/api/messages`.
+
+   **Option B · Deploy to Azure — no local run, no tunnel.** Build the bot in the cloud (it reads `MICROSOFT_APP_*` from `.env`) and get a **stable** HTTPS endpoint. This is the simpler path if the tunnel/second-terminal dance is fiddly:
+   ```bash
+   bash deploy/capture-bot/deploy.sh               # or (Windows PowerShell): ./deploy/capture-bot/deploy.ps1
+   ```
+   It prints `https://<app>.azurecontainerapps.io/api/messages` — that's your endpoint. Details in [`deploy/capture-bot/`](../deploy/capture-bot/).
+
+4. **Point your bot at that endpoint:** your Bot → **Configuration** → **Messaging endpoint** = the `…/api/messages` URL from step 3 → **Apply**.
+5. **Message your bot once:** your Bot → **Channels → Teams → Open in Teams**, type anything (`hi`). The capture bot validates the token against **your** App ID and replies "✅ Saved…" **with the `TEAMS_SERVICE_URL` + `TEAMS_CONVERSATION_ID` values in the chat**.
+   - *Option A:* those two values are also written straight to your local `.env`; stop the bot (`Ctrl+C`).
+   - *Option B:* the bot runs in Azure, so copy the two lines from its Teams reply into your local `.env` (or read them from `az containerapp logs show -n clm-capture-bot -g <rg> --tail 50`).
 
 ### Task 7 · (Optional) Fire a proactive alert (~10 min)
 
@@ -231,7 +240,8 @@ python src/proactive_alerts.py --from-renewals --days 30
 
 | Symptom | Fix |
 |---------|-----|
-| `bash: devtunnel: command not found` | The Dev Tunnels CLI isn't preinstalled in the Codespace. Install it and re-load PATH: `curl -sL https://aka.ms/DevTunnelCliInstall \| bash && source ~/.bashrc` (Windows: `winget install Microsoft.devtunnel`). It installs to `~/bin`, so open a new terminal if the shell still can't find it. Hosting also requires `devtunnel user login` first. |
+| `bash: devtunnel: command not found` | The Dev Tunnels CLI isn't preinstalled in the Codespace. Install it and re-load PATH: `curl -sL https://aka.ms/DevTunnelCliInstall \| bash && source ~/.bashrc` (Windows: `winget install Microsoft.devtunnel`). It installs to `~/bin`, so open a new terminal if the shell still can't find it. Hosting also requires `devtunnel user login` first. Prefer to skip tunnels entirely? Deploy the bot: `bash deploy/capture-bot/deploy.sh`. |
+| **"You do not have permission to use this app here"** when you click **Open in Teams** | Teams won't start an ad-hoc chat with a bot that isn't installed for you. Build a Teams app package pointing at **your** bot and sideload it (**Teams → Apps → Manage your apps → Upload a custom app**), then open the bot from there. If custom-app upload is disabled tenant-wide, use a coach-provided/dev tenant. Note: **deploying** the bot doesn't change this — it's a Teams *install* gate, not a hosting one. |
 | Publish option missing | Ensure `Microsoft.BotService` is registered and you have rights to create an Azure Bot. |
 | Bot responds in Teams but not Copilot | Confirm the app is approved for M365 Copilot and the manifest scopes include it. |
 | *Manage password* 404s / bot's App ID isn't under **App registrations → All applications** | Expected — the Foundry-published bot is **managed** and its app lives outside your tenant, so no secret is creatable. Register **your own** single-tenant app + Azure Bot (Task 6) and use those creds. |

@@ -176,9 +176,37 @@ A **preview** of Challenge 6, not a required step here. Two layers of defense:
 - **Prompt layer (done)** — the `INSTRUCTIONS` refusal enforces the no-legal-advice policy; fast, but model-dependent.
 - **Content-safety layer** — Azure AI **Content Safety** (Prompt Shields for jailbreak + indirect injection, PII, protected material) inspects prompts/responses **independently of the model**, so it holds even if the prompt guardrail is bypassed.
 
-If you published the portal agents in Task 5, attach it now in the **Foundry portal** ([ai.azure.com](https://ai.azure.com)): **Build → Agents → `intake-drafting-agent` → Guardrails → Manage guardrail** → enable **Prompt Shields** + **PII** (pick ≥ 1 data type) → **Create guardrails**. No portal agent yet? Just discuss where the guardrails would sit.
+You need a **published** portal agent for this (Task 5: `python src/agents/publish_agent.py`). No portal agent? Just discuss where the guardrails would sit. Everything below happens in the **Foundry portal** ([ai.azure.com](https://ai.azure.com)) → **Build → Agents → `intake-drafting-agent`**.
 
-➡️ Full walkthrough (data-type picks, screenshots, re-testing): **[Challenge 6 · Task 4](../../challenges/challenge-06.md#task-4--harden-the-agent-15-min)**.
+**1. Find the Guardrail section.** In the agent's **Playground**, scroll the left pane to **Guardrail (Preview)**. Out of the box it reads *"This agent has not been assigned a guardrail. It is inheriting its model's guardrail"* — so today it only has whatever the model deployment carries. Click **Manage guardrail → Create guardrail**.
+
+> <img src="../../images/challenge-02/steps/04-guardrail-section.png" alt="Agent Playground with the Guardrail (Preview) section highlighted: inheriting the model's guardrail, Manage guardrail button" width="80%">
+
+**2. Add controls.** The wizard opens on **Add controls**. Leave the defaults on and confirm:
+- **Jailbreak** → **Block** on user input (Prompt Shields).
+- **Indirect prompt injections** (+ **Spotlighting**) → **Block** on user input & tool responses — the XPIA/indirect attacks the red team throws in Challenge 6.
+- **Content harms** — **Hate / Sexual / Self-harm / Violence** at **Medium blocking**, Block on input & output.
+- **Protected materials** — code + text → **Block** on output.
+
+> <img src="../../images/challenge-02/steps/05-guardrail-controls.png" alt="Create guardrail Add-controls step: Jailbreak, Indirect prompt injections, Content harms at Medium, Protected materials" width="80%">
+
+**3. Turn on PII and pick data types.** Under **Sensitive data leakage**, check **PII (Preview)** and open its picker — you **must select at least one** type. For legal contracts start with **User information** — *Name, Email, Phone number, Address* (IP address / Age optional) — the party/contact PII in NDAs & MSAs. Add **Financial information** (*Credit card, IBAN, SWIFT, regional bank-account numbers*) for payment/banking clauses; the **Azure / Database** connection-string types are optional defense-in-depth, or just **Select All**.
+
+> <img src="../../images/challenge-02/steps/06-guardrail-pii-picker.png" alt="PII data-type picker: User / Azure / Database / Financial / Government information categories with User information selected" width="70%">
+
+**4. Assign it to the agent.** On **Select agents and models**, tick **`intake-drafting-agent`**. (A guardrail can cover several agents or model deployments — here scope it to just this one.)
+
+> <img src="../../images/challenge-02/steps/07-guardrail-assign-agent.png" alt="Select agents and models step with intake-drafting-agent checked" width="80%">
+
+**5. Name & create.** On **Review**, give it a clear name (e.g. `Guardrails-intake-drafting-agent`), sanity-check the controls + assignment, then **Create**.
+
+> <img src="../../images/challenge-02/steps/08-guardrail-review.png" alt="Review step: guardrail name Guardrails-intake-drafting-agent, controls summary, Create button" width="80%">
+
+**6. Confirm it's attached.** Back in the Playground the Guardrail section now names your guardrail and lists **Risks with controls** (Jailbreak, Indirect prompt injections, Sensitive data leakage, Content safety, Protected materials) with the note *"Guardrail settings at the agent level will replace those set at the model level."* Re-send the legal-advice prompt (and an injection attempt) and watch it get blocked at the **service** layer — independent of the prompt.
+
+> <img src="../../images/challenge-02/steps/09-guardrail-applied.png" alt="Playground Guardrail section after creation: named guardrail with Risks with controls listed, agent-level overrides model-level" width="80%">
+
+➡️ Re-testing this against the AI Red Teaming scan (and full PII rationale) lives in **[Challenge 6 · Task 4](../../challenges/challenge-06.md#task-4--harden-the-agent-15-min)**.
 
 ## ✅ How to tell each capability truly passed
 

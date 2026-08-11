@@ -1,23 +1,16 @@
-# Solution 05 — Publish to M365 Copilot & Teams + Proactive Alerts
+# Solution 05 — Publish to M365 Copilot & Teams
 
 **[← Back to Challenge 5](../../challenges/challenge-05.md)** · [Home](../../README.md)
 
 Ship your **CLM agent** — the MCP-backed **`clm-contract-agent`** from Challenge 4 — to **Microsoft 365
-Copilot & Teams** so people chat with it live, **and** push **proactive renewal alerts** before
-contracts auto-renew — driven by the **Obligation & Renewal** agent.
+Copilot & Teams** so people chat with it live where contract managers already work.
 
 ## Expected end state
 
-- The **Obligation & Renewal** agent
-  ([`src/agents/obligation_renewal_agent.py`](../../src/agents/obligation_renewal_agent.py))
-  reads contract status + upcoming renewals via function tools (Azure SQL, with a
-  seed-data fallback).
 - The Teams/M365 app package is built from the manifest in
   [`src/manifest/`](../../src/manifest/) and sideloaded — you chat with the
-  `clm-contract-agent` where contract managers already work.
-- Proactive alerts fire via
-  [`src/proactive_alerts.py`](../../src/proactive_alerts.py) — a Teams ping **before**
-  the renewal date.
+  `clm-contract-agent` where contract managers already work, and it returns the same
+  grounded, cited answers you saw in the terminal in Challenges 2 & 4.
 
 ## 🛠️ Task-by-task walkthrough
 
@@ -91,171 +84,11 @@ Select **Publish** → **Publish to Teams and Microsoft 365 Copilot** → **Cont
 - Re-test the same prompt in the Foundry **Playground**; if it's grounded there but generic in Teams,
   it's a channel / tool-approval issue, not a grounding one.
 
-### Task 5 · (Optional) Build the Obligation & Renewal agent
-[`src/agents/obligation_renewal_agent.py`](../../src/agents/obligation_renewal_agent.py) is a small, cheap GPT-5.4-nano agent with two function tools:
-```python
-# src/agents/obligation_renewal_agent.py
-def create_agent(model=None):
-    return Agent(
-        client=build_chat_client(model or settings.model_renewal),   # gpt-5.4-nano
-        name=AGENT_NAME, instructions=INSTRUCTIONS,
-        tools=[function_tool(get_contract_status), function_tool(list_upcoming_renewals)],
-    )
-```
-`list_upcoming_renewals` reads Azure SQL when configured, else the evergreen JSON seed (dates relative to today, so the demo never goes stale):
-```python
-# src/clm_common/tools.py
-def list_upcoming_renewals(within_days: int = 90) -> str:
-    contracts, source = _all_contracts()          # Azure SQL if AZURE_SQL_CONNECTION_STRING, else seed
-    rows = [{**c, "days_until_renewal": (rdate - today).days}
-            for c in contracts if 0 <= (rdate - today).days <= within_days]
-    return json.dumps({"within_days": within_days, "count": len(rows), "contracts": rows, "_source": source})
-```
-```bash
-python src/agents/obligation_renewal_agent.py --days 60
-python src/proactive_alerts.py --from-renewals --days 30 --dry-run    # preview text, nothing sent
-```
-✅ **You should see** a renewal summary then the previewed alert (day counts differ — relative to today):
-```text
-✓ Obligation & Renewal agent on 'gpt-5.4-nano' — window 60d
-  🔴 CT-6033 (Soylent Co · MSA) — renews in ~25 days, auto-renew ON, 90-day notice → HIGH, send notice now
-  🔴 CT-4821 (Acme Corp · MSA) — renews in ~55 days, auto-renew ON, 90-day notice → HIGH, notify owner
---- alert (dry run) ---
-🔴 CT-6033 auto-renews soon (90-day notice) — HIGH risk. Send notice before the window closes; recommend legal review.
-```
-
-> 📸 **What you'll see:** the **renewal summary** printed by `obligation_renewal_agent.py --days 60` — each
-> contract prioritized and emoji-tagged with days-to-renewal, auto-renew, notice window, and risk.
->
-> <img src="../../images/challenge-05/steps/04-renewal-summary.png" alt="obligation_renewal_agent.py --days 60 terminal output: CT-6033 (Soylent Co) and CT-4821 (Acme Corp), both auto-renew Yes, 90-day notice window, Risk High, with an action to send a non-renew notice immediately" width="80%">
-
-### Task 6 · (Optional) Capture a conversation reference
-The Foundry-published agent's Azure Bot is **managed** — its app registration lives outside your
-tenant, so you can't mint a client secret for it and can't authenticate a local handler as it. Instead
-register your **own** throwaway single-tenant app + Azure Bot, then drive
-[`src/capture_reference_bot.py`](../../src/capture_reference_bot.py) — a tiny aiohttp bot that, on
-**any** inbound activity, calls `TurnContext.get_conversation_reference(activity)` and writes
-`TEAMS_SERVICE_URL` + `TEAMS_CONVERSATION_ID` into `.env` (alongside your `MICROSOFT_APP_ID` /
-`MICROSOFT_APP_PASSWORD` / `MICROSOFT_APP_TENANT_ID`). Run it, expose it with a dev tunnel, point
-**your** bot's **Messaging endpoint** at `https://<tunnel>/api/messages`, then message **your** bot once
-(not `clm-contract-agent` — the capture bot only accepts tokens minted for your App ID):
-```python
-# src/capture_reference_bot.py
-async def _on_turn(turn_context):
-    ref = TurnContext.get_conversation_reference(turn_context.activity)
-    _upsert_env({"TEAMS_SERVICE_URL": ref.service_url,
-                 "TEAMS_CONVERSATION_ID": ref.conversation.id})
-```
-```python
-# src/proactive_alerts.py
-def _conversation_reference():
-    return ConversationReference(
-        channel_id="msteams",
-        service_url=os.environ["TEAMS_SERVICE_URL"],
-        bot=ChannelAccount(id=f"28:{os.environ['MICROSOFT_APP_ID']}"),
-        conversation=ConversationAccount(id=os.environ["TEAMS_CONVERSATION_ID"]),
-    )
-```
-
-**Register your own single-tenant app + secret (the concrete clicks):**
-
-1. **Entra ID → App registrations → + New registration.**
-
-   <img src="../../images/challenge-05/steps/task6-app-registration-new.png" alt="Azure portal App registrations blade with the + New registration button highlighted; the Owned applications tab lists no apps yet" width="80%">
-
-2. **Name it** (e.g. `clm-contract-agent-app`) and set **Supported account types = Single tenant only**, then **Register**. Single-tenant matters — the capture bot scopes token validation to *your* tenant via `MICROSOFT_APP_TENANT_ID`.
-
-   <img src="../../images/challenge-05/steps/task6-register-app-form.png" alt="Register an application form with Name set to clm-contract-agent-app and Supported account types set to Single tenant only - Contoso, Register button at the bottom" width="70%">
-
-3. **Copy the two IDs** from the app's **Overview**: **Application (client) ID** → `MICROSOFT_APP_ID`, **Directory (tenant) ID** → `MICROSOFT_APP_TENANT_ID`.
-
-   <img src="../../images/challenge-05/steps/task6-app-overview-ids.png" alt="App registration Overview with the Application (client) ID and Directory (tenant) ID boxed in red; Supported account types reads My organization only" width="80%">
-
-4. **Certificates & secrets → Client secrets → + New client secret.** Copy the generated **Value** immediately (it's shown only once) → that's `MICROSOFT_APP_PASSWORD`.
-
-   <img src="../../images/challenge-05/steps/task6-new-client-secret.png" alt="Certificates and secrets blade on the Client secrets tab with the + New client secret button highlighted and no secrets created yet" width="80%">
-
-Drop all three values into `.env`. Now give that app a bot that can receive Teams messages:
-
-5. **Create an Azure Bot that reuses the app.** Portal → **Create a resource → Azure Bot**. Set a **Bot handle**, pick your **Resource group**, then under **Microsoft App ID** choose **Type of App = Single Tenant** and **Creation type = Use existing app registration**, and paste the **App ID** + **App tenant ID** from step 3 → **Review + create**.
-
-   <img src="../../images/challenge-05/steps/task6-create-azure-bot.png" alt="Create an Azure Bot Basics tab: Bot handle clm-contract-agent-bot, Resource group rg-clm-microhack, Type of App set to Single Tenant, Creation type set to Use existing app registration, with the App ID and App tenant ID fields populated" width="70%">
-
-6. **Enable the Teams channel.** Open the new bot → **Channels** → under *Available Channels* pick **Microsoft Teams** and save. This is the channel Teams uses to route your "hi" to the capture bot.
-
-   <img src="../../images/challenge-05/steps/task6-enable-teams-channel.png" alt="Azure Bot Channels blade with Microsoft Teams highlighted in the Available Channels list; Direct Line and Web Chat already show a Healthy status" width="80%">
-
-7. **Get a public HTTPS messaging endpoint for the capture bot.** Start the bot with `python src/capture_reference_bot.py` (it listens on port **3978**), but the Bot Service can only reach it over public HTTPS — not `localhost`. Pick **one** of the two ways to expose it, exactly as in [challenge-05.md · Task 6](../../challenges/challenge-05.md):
-
-   **Option A · Run locally + dev tunnel.** A **dev tunnel** gives your local port a public `https://<tunnel>` URL. Codespaces doesn't ship the CLI, so install it from a **second terminal**, sign in (hosting **requires** a login — `--allow-anonymous` only waives auth for *callers*, not the host), then host port 3978:
-
-   ```bash
-   curl -sL https://aka.ms/DevTunnelCliInstall | bash   # installs to ~/bin and adds it to PATH
-   source ~/.bashrc                                      # or open a new terminal so it finds ~/bin/devtunnel
-   # Windows (PowerShell): winget install Microsoft.devtunnel
-   devtunnel user login                                  # sign in with your Microsoft or GitHub account
-   devtunnel host -p 3978 --allow-anonymous              # copy the https://<tunnel> URL it prints
-   ```
-
-   A healthy install prints the CLI version and tunnel-service details, then keeps running as it hosts the tunnel. Your endpoint is `https://<tunnel>/api/messages`.
-
-   <img src="../../images/challenge-05/steps/task6-devtunnel-install.png" alt="Codespace terminal showing the Dev Tunnels CLI install commands followed by 'devtunnel CLI installed!' and version 1.0.2014, with the Tunnel service URI, version, and cluster (uks1) printed below" width="80%">
-
-   **Option B · Deploy to Azure — no local run, no tunnel.** Build the *same* bot image in the cloud (Azure Container Apps) for a **stable** endpoint — the simpler path if the tunnel/second-terminal dance is fiddly. It reads `MICROSOFT_APP_*` from `.env` and, because the bot never calls a model, needs no managed identity:
-
-   ```bash
-   bash deploy/capture-bot/deploy.sh                     # or (Windows PowerShell): ./deploy/capture-bot/deploy.ps1
-   ```
-
-   It prints `https://<app>.azurecontainerapps.io/api/messages` — that's your endpoint. See [`deploy/capture-bot/`](../../deploy/capture-bot/).
-
-   <img src="../../images/challenge-05/steps/task6-deploy-capture-bot.png" alt="Codespace terminal after running deploy/capture-bot/deploy.sh: 'clm-capture-bot is live' with the https://clm-capture-bot.<region>.azurecontainerapps.io/api/messages endpoint to set as the Bot's Messaging endpoint, followed by the Open in Teams / send 'hi' instructions and the az containerapp logs/delete commands" width="80%">
-
-   The script finishes by printing the exact **Messaging endpoint** to paste into your Bot's **Configuration**, plus the follow-up commands: how to read the captured `TEAMS_SERVICE_URL` + `TEAMS_CONVERSATION_ID` from the logs (`az containerapp logs show …`) and how to delete the container app when you're done (`az containerapp delete …`).
-
-   Whichever option you pick, set your bot's **Configuration → Messaging endpoint** to that `…/api/messages` URL and **Apply**.
-
-8. **Open your bot in Teams and send one message.** Back on the bot's **Channels** blade, click **Open in Teams** next to the (now Healthy) Microsoft Teams channel — this deep-links you into a 1:1 chat with *your* bot. Send any text (e.g. `hi`); that first inbound activity fires the capture bot's `_on_turn`, which writes `TEAMS_SERVICE_URL` + `TEAMS_CONVERSATION_ID` into `.env`. Those two values are what Task 7 replays to post proactive alerts. The bot also **replies with the two values in the chat** — if you deployed it to Azure, copy them from that reply into your local `.env` (the container can't write to your laptop's `.env`).
-
-   <img src="../../images/challenge-05/steps/task6-open-in-teams.png" alt="Azure Bot Channels page for clm-contract-agent-bot with the Microsoft Teams channel showing a Healthy status and the Open in Teams link highlighted in the Actions column" width="80%">
-
-That bot — **not** `clm-contract-agent` — is the one you point at your messaging endpoint (Option A's dev tunnel or Option B's Azure URL) and message to capture the conversation reference.
-
-### Task 7 · (Optional) Fire a proactive alert
-The send path uses `adapter.continue_conversation(...)` to post into the saved conversation unprompted:
-```python
-# src/proactive_alerts.py
-async def _send(text: str):
-    async def _callback(turn_context): await turn_context.send_activity(text)
-    await adapter.continue_conversation(reference, _callback, bot_id=os.environ["MICROSOFT_APP_ID"])
-```
-```bash
-python src/proactive_alerts.py --from-renewals --days 30      # generate from the agent and send
-```
-```text
-✓ Proactive alert sent to Teams.
-```
-
-> 📸 **Screenshot slot:** the **alert message appearing in the Teams channel/chat** without anyone prompting.
->
-> <img src="../../images/challenge-05/steps/03-proactive-alert.svg" alt="Screenshot slot: proactive alert in Teams" width="80%">
-
 ## Key files
 
 | Path | Role |
 |------|------|
-| [`src/agents/obligation_renewal_agent.py`](../../src/agents/obligation_renewal_agent.py) | Reads contract status + upcoming renewals (GPT-5.4-nano) |
-| [`src/proactive_alerts.py`](../../src/proactive_alerts.py) | Sends proactive Teams renewal alerts via the Bot Framework (tenant-aware adapter) |
-| [`src/capture_reference_bot.py`](../../src/capture_reference_bot.py) | Helper bot that captures `TEAMS_SERVICE_URL` + `TEAMS_CONVERSATION_ID` from a real Teams chat |
 | [`src/manifest/`](../../src/manifest/) | Teams / M365 Copilot app package (manifest + branded icons) |
-
-## Run it
-
-```bash
-python src/agents/obligation_renewal_agent.py --days 60
-python src/proactive_alerts.py --from-renewals --days 30 --dry-run
-python src/proactive_alerts.py --from-renewals --days 30       # live send
-```
 
 ## Common issues
 
@@ -263,8 +96,5 @@ python src/proactive_alerts.py --from-renewals --days 30       # live send
 |---------|-------------|
 | Published, but "nothing in Teams" | Publish with **Individual scope → Submit**, then look under **Apps → Your agents** (wait 1–2 min). If direct publish 400s, use **Download & customize** and sideload the zip. |
 | Can't sideload the Teams app | Many corp tenants block sideloading — use a coach-provided tenant. |
-| `continue_conversation` 401/403 | Use **your own** single-tenant app's `MICROSOFT_APP_ID` / `MICROSOFT_APP_PASSWORD` / `MICROSOFT_APP_TENANT_ID` (the adapter scopes auth to that tenant); the saved reference must come from **that** bot. |
-| Can't create a secret for the published bot (*Manage password* 404 / App ID not in **App registrations**) | Expected — the Foundry bot is **managed** (app owned by another tenant). Register your **own** single-tenant app + Azure Bot for Task 6 instead. |
 | App ID collision on re-publish | Delete the stale Azure Bot from the earlier attempt, then re-publish (Foundry provisions a fresh one). |
-| No renewals found | Seed Azure SQL (`src/scripts/seed_sql.py`) or rely on the seed-data fallback. |
 | `Microsoft.BotService` errors | Register the provider: `az provider register --namespace Microsoft.BotService`. |

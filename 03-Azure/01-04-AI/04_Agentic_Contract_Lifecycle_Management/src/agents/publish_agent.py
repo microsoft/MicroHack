@@ -226,7 +226,7 @@ SPECS = [
         "obligation-renewal-agent",
         _renewal,
         settings.model_renewal,
-        "Challenge 5 — scans upcoming renewals & obligations for proactive alerts (gpt-5.4-nano).",
+        "Challenge 5 — scans upcoming renewals & obligations (gpt-5.4-nano).",
         _renewal_tools,
     ),
 ]

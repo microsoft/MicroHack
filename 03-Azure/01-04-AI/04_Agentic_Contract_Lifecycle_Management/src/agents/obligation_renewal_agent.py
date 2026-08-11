@@ -2,8 +2,7 @@
 
 A small, cheap, high-frequency Microsoft Agent Framework agent that scans
 contract renewal dates and obligations (via the contract-status tools) and
-produces alert-ready summaries of what's coming due. Its output feeds the
-proactive Teams alerts in proactive_alerts.py.
+produces alert-ready summaries of what's coming due.
 
 Run:
     python src/agents/obligation_renewal_agent.py            # summarize upcoming renewals

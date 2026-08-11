@@ -4,7 +4,7 @@
 
 Build a **multi-model, multi-agent** contract assistant on **Microsoft Foundry** — grounded with
 **Foundry IQ**, traced and evaluated, exposed as an **MCP server**, and published to **Microsoft 365
-Copilot & Teams** with proactive renewal alerts.
+Copilot & Teams**.
 
 > A 4.5-hour microhack · 5 challenges (+ optional bonus) · code-first (Python) · GitHub Codespaces.
 
@@ -31,7 +31,7 @@ use.
 ## The scenario — Contoso Global
 
 <p align="center">
-  <img src="images/diagrams/user-journey.png" alt="User journey — a day in the life of a Contoso contract manager, from requesting a draft through review, citations, sign-off, obligation tracking, and a proactive renewal alert — all in one Microsoft Foundry project" width="100%">
+  <img src="images/diagrams/user-journey.png" alt="User journey — a day in the life of a Contoso contract manager, from requesting a draft through review, citations, sign-off, and obligation tracking — all in one Microsoft Foundry project" width="100%">
 </p>
 
 This microhack uses a fictitious multinational, **Contoso Global**, but the scenario applies to any
@@ -86,7 +86,6 @@ diagram](images/diagrams/user-journey.png) alongside this table.
 | **3 · Ask, with citations** | *"What's our standard indemnity cap?"* | **Foundry IQ** answers over the Contoso corpus — **with sources** | Agentic retrieval (Foundry IQ) | [C2](challenges/challenge-02.md) |
 | **4 · Review & sign off** | Reads flags + citations, edits, **approves** | **Human-in-the-loop** — nothing is finalized without sign-off | HITL + guardrails | [C2](challenges/challenge-02.md) · [C4](challenges/challenge-04.md) |
 | **5 · Track obligations** | Reviews upcoming renewals | **Obligation & Renewal** agent (GPT-5.4-nano) **reads** contract status & upcoming renewals via function tools — **Azure SQL** (seed-data fallback) | Function tool / MCP server | [C4](challenges/challenge-04.md) · [C5](challenges/challenge-05.md) |
-| **6 · Proactive alert** | Gets a proactive Teams ping **before the renewal date** | Renew or renegotiate in time — **no missed auto-renewals** | Publish + proactive messaging | [C5](challenges/challenge-05.md) |
 
 > 🔒 **Under the hood, every step runs in one Microsoft Foundry project** — traced (Application
 > Insights), scored by **evaluations** *([C3](challenges/challenge-03.md))*, and guarded by **Content Safety**
@@ -142,13 +141,9 @@ any MCP client — including M365 Copilot — can call. The Orchestrator can its
 quality and enforce guardrails. The **dashed** lines are telemetry (traces, scorecards) flowing out of
 the Foundry project — the layer that makes agent behavior debuggable, measurable, and safe.
 
-❼ **The proactive loop (red, dashed).** The Obligation & Renewal agent doesn't wait to be asked — **60
-days before expiry** it pushes a **proactive alert** straight back to the manager in Teams, closing the
-loop so renewals are never missed.
-
 > 🎨 **Legend:** 🟦 blue = GPT agents · 🟪 purple = Intake & Drafting · 🟧 orange = tools / MCP ·
 > 🟩 green = data / grounding · ⬜ gray = governance · **dashed grey** = telemetry · **dashed red** =
-> alerts / guardrails. The finalized architecture image — plus the end-to-end **[user
+> guardrails. The finalized architecture image — plus the end-to-end **[user
 > journey](images/diagrams/)** (Excalidraw) — lives in **[`images/diagrams/`](images/diagrams/)**.
 
 <details>
@@ -211,8 +206,6 @@ flowchart TB
     end
     Foundry -.traces.-> ai
     Foundry -.scorecard.-> eval
-
-    renew -. "proactive alert · 60-day scheduler" .-> user
 ```
 
 </details>
@@ -242,7 +235,7 @@ By participating in this hackathon, you will learn how to:
 - **Connect tools and expose an [MCP server](https://learn.microsoft.com/azure/ai-foundry/agents/how-to/tools/model-context-protocol)** — add a [function tool](https://learn.microsoft.com/azure/ai-foundry/agents/how-to/tools/function-calling) that reads contract status from [Azure SQL](https://learn.microsoft.com/azure/azure-sql/database/sql-database-paas-overview), then publish the workflow as a **Model Context Protocol** server any MCP client can call. *(Challenge [4](challenges/challenge-04.md))*
 - **Orchestrate a multi-agent system with the [Microsoft Agent Framework](https://learn.microsoft.com/agent-framework/overview/agent-framework-overview) agent-as-tool pattern** — an **Orchestrator** delegating to specialist drafting, clause-risk, and renewal agents via `agent.as_tool(...)` (reinforced by this [multi-agent training module](https://learn.microsoft.com/training/modules/develop-multi-agent-azure-ai-foundry/)). *(Challenge [4](challenges/challenge-04.md))*
 - **Practice GenAIOps — [tracing](https://learn.microsoft.com/azure/ai-foundry/how-to/develop/trace-agents-sdk) & [observability](https://learn.microsoft.com/azure/ai-foundry/concepts/observability)** — emit **OpenTelemetry** traces to **Application Insights**, then run [evaluations](https://learn.microsoft.com/azure/ai-foundry/how-to/develop/evaluate-sdk) to score quality, add a **quality gate**, and run a **flagship-vs-mini bake-off**. *(Challenge [3](challenges/challenge-03.md))*
-- **Publish to [Microsoft 365 Copilot & Teams](https://learn.microsoft.com/azure/ai-foundry/agents/how-to/agent-365)** — surface the assistant where contract managers already work and push **proactive renewal alerts**. *(Challenge [5](challenges/challenge-05.md))*
+- **Publish to [Microsoft 365 Copilot & Teams](https://learn.microsoft.com/azure/ai-foundry/agents/how-to/agent-365)** — surface the assistant where contract managers already work. *(Challenge [5](challenges/challenge-05.md))*
 - **Apply Responsible AI** *(bonus)* — [red-team the agent](https://learn.microsoft.com/azure/ai-foundry/how-to/develop/run-scans-ai-red-teaming-agent), add [Azure AI Content Safety](https://learn.microsoft.com/azure/ai-services/content-safety/overview) / PII guardrails, and gate releases on a **quality + safety** check in CI. *(Challenge [6](challenges/challenge-06.md))*
 
 ---
@@ -275,7 +268,7 @@ challenges are a single story:
 | [2](challenges/challenge-02.md) | Intake & Drafting agent + Foundry IQ + tools | Grounding · tools · guardrails | 60 min |
 | [3](challenges/challenge-03.md) | Observability, tracing & evaluation | Tracing · eval | 60 min |
 | [4](challenges/challenge-04.md) | Clause & Risk agent + Orchestrator + MCP server | Orchestration · MCP | 55 min |
-| [5](challenges/challenge-05.md) | Publish to M365 Copilot & Teams (+ optional proactive alerts) | Publish · *(alerts optional)* | 30 min |
+| [5](challenges/challenge-05.md) | Publish to M365 Copilot & Teams | Publish | 30 min |
 | [6](challenges/challenge-06.md) 🧪 | *Bonus:* Safety, Red-Teaming & Continuous Eval | Responsible AI · CI gate | optional |
 
 ## Suggested agenda (4.5h)

@@ -172,27 +172,24 @@ of the challenge, what "done" looks like, where teams get stuck, and the hint to
   **own** Foundry access (managed identity + role) because its tools call Foundry agents internally.
   Slower than the in-process orchestrator (each MCP call spins up a fresh Foundry agent) — fine for a demo.
 
-### Challenge 5 · Publish to M365 Copilot & Teams + Proactive Alerts *(60 min ≈ 30 publish + 30 alerts)*
+### Challenge 5 · Publish to M365 Copilot & Teams *(30 min)*
 
-- **Point:** ship the orchestrator to **Teams / M365 Copilot** (conversational, no bot code) **and**
-  push **proactive** renewal/risk alerts into Teams (needs a saved conversation reference).
+- **Point:** ship the orchestrator to **Teams / M365 Copilot** (conversational, no bot code) so people
+  chat with it where they already work.
 - **Done when:** the orchestrator answers **live in Teams and M365 Copilot** with grounded, cited
-  responses; **and** a proactive alert (e.g. the CT-4821 message) appears **without** the user prompting.
-- **The distinction to teach:** conversational = **pull** (auto Azure Bot Service channel); proactive =
-  **push** (save `TurnContext.get_conversation_reference` on first inbound, then
-  `ADAPTER.continue_conversation(...)`).
+  responses.
+- **The mechanism to teach:** publishing a Foundry agent auto-provisions an **Azure Bot Service** channel
+  — the managed plumbing that brokers messages between Teams/M365 Copilot and your agent, no bot code.
 - **Watch for:**
   - *Publish option missing* → `Microsoft.BotService` not registered, or no rights to create an Azure Bot.
   - *Works in Teams but not Copilot* → the app must be **approved for M365 Copilot** and manifest scopes
     must include it.
-  - *`continue_conversation` 401/403* → check `MICROSOFT_APP_ID` / `MICROSOFT_APP_PASSWORD`; the bot must
-    own the saved conversation reference.
-  - *Alert never arrives* → `TEAMS_SERVICE_URL` + `TEAMS_CONVERSATION_ID` must come from a **real inbound**
-    message to *this* bot.
-- **No-tenant fallback:** everything alert-related runs with `--dry-run` to print the exact text without
-  sending — teams blocked on sideload rights can still complete the *logic*. The manifest template +
-  **branded placeholder icons** live in `src/manifest/` (regenerate via
-  `python src/scripts/make_icons.py`), so zipping the app package needs no design work.
+  - *Nothing appears in Teams* → publish with **Individual scope**, then look under **Apps → Your agents**
+    (wait 1–2 min); if direct publish 400s, use **Download & customize** and sideload the zip.
+- **No-tenant fallback:** re-test the same prompts in the Foundry **Playground** — teams blocked on
+  sideload rights can still see the grounded answers. The manifest template + **branded placeholder icons**
+  live in `src/manifest/` (regenerate via `python src/scripts/make_icons.py`), so zipping the app package
+  needs no design work.
 
 ### Challenge 6 · Safety, Red-Teaming & Continuous Eval 🧪 *(bonus · optional · ~45–60 min)*
 

@@ -62,7 +62,7 @@ param(
 ```
 
 - `deploymentType`: `"resourcegroup"` | `"resourcegroup-with-subscriptionowner"` | `"subscription"`
-- `groups`: `["M365-E5-Users"]` for this hack — the CLM scenario needs M365 E5 (Teams publish, SharePoint corpus, proactive alerts). Use `[]` for Azure-only, or `["GHCPUsers"]` for a GitHub Copilot seat.
+- `groups`: `["M365-E5-Users"]` for this hack — the CLM scenario needs M365 E5 (Teams publish, SharePoint corpus). Use `[]` for Azure-only, or `["GHCPUsers"]` for a GitHub Copilot seat.
 - `preferredLocation`: comma-separated regions, priority order — swedencentral first for gpt-5.4 availability
 - `estimatedDailyCostsUsd`: per-user per-day cost for the lifecycle wizard (Foundry models + AI Search + App Insights)
 

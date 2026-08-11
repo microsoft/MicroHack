@@ -239,7 +239,7 @@ text(85.5, 23.8, "Delivery & clients", fs=12, weight="bold", color=DELIVERY)
 resource(85.5, 16.2, 64, 6.2, "MCP", DELIVERY, "MCP server",
          "draft_contract · analyze_contract tools", mono_fs=8)
 resource(85.5, 8.8, 64, 6.2, "M365", "#3B57B0", "Microsoft 365 Copilot & Teams",
-         "published agent + proactive renewal alerts", mono_fs=7.5)
+         "published agent for live chat", mono_fs=7.5)
 
 # --------------------------------------------------------------------------
 # Connectors

@@ -80,10 +80,6 @@ SLOTS: list[tuple[str, str, str, str]] = [
      "Agent → Channels → 'Teams and Microsoft 365 Copilot' → Publish, provisioning an Azure Bot."),
     ("challenge-4", "02-teams-live", "Teams · Agent answering live",
      "The orchestrator answering a 'draft an NDA' request inside a Teams chat with cited output."),
-    ("challenge-4", "03-proactive-alert", "Teams · Proactive alert",
-     "A proactive 'CT-4821 renews in 30 days' alert arriving in Teams without the user prompting."),
-    ("challenge-4", "04-renewal-summary", "Terminal · Renewal summary",
-     "obligation_renewal_agent.py printing the alert-ready renewal summary for the chosen window."),
 
     # ---- Challenge 6 · Safety ----------------------------------------------
     ("challenge-5", "01-redteam-scorecard", "Terminal · Red-team scorecard",

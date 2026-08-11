@@ -202,12 +202,6 @@ APPLICATIONINSIGHTS_CONNECTION_STRING=$AppInsightsConn
 AZURE_TRACING_GEN_AI_CONTENT_RECORDING_ENABLED=true
 
 AZURE_SQL_CONNECTION_STRING=$SqlConn
-
-MICROSOFT_APP_ID=
-MICROSOFT_APP_PASSWORD=
-MICROSOFT_APP_TENANT_ID=
-TEAMS_SERVICE_URL=
-TEAMS_CONVERSATION_ID=
 "@ | Out-File -FilePath ".env" -Encoding utf8
 
 Write-Host "`n✅ Deployment complete. Wrote .env. Next: python src/scripts/seed_corpus.py; python src/scripts/smoke_test.py"

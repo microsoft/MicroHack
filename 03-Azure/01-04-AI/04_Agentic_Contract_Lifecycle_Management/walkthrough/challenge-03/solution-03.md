@@ -95,7 +95,14 @@ python src/evaluators.py
 > <img src="../../images/challenge-03/steps/04-scorecard.png" alt="Screenshot slot: evaluation scorecard" width="75%">
 
 ### Task 4 · Run the bake-off
-`--bakeoff` runs the **same** target on the flagship and lightweight GPT deployments and prints quality vs latency/cost side by side:
+A **bake-off** is a controlled A/B comparison: `--bakeoff` runs the **same** evaluation
+target — the same labelled dataset and the same judges from Task 3 — twice, once per model,
+and prints quality vs latency/cost side by side. In code it's deliberately minimal: only the
+model deployment swaps (`settings.model_drafting` → `settings.model_renewal`), while the
+agent definition, instructions, tools and Foundry IQ grounding are untouched. That isolation
+is the whole point — any score delta is attributable to the **model**, not to a prompt or
+retrieval change.
+
 ```bash
 python src/evaluators.py --bakeoff
 ```
@@ -105,6 +112,21 @@ python src/evaluators.py --bakeoff
   relevance                                gpt-5.4=4.4   gpt-5.4-nano=4.1
   mean latency (s)                         gpt-5.4=3.2   gpt-5.4-nano=1.1
 ```
+
+**How to read it.** Each row is one metric with both models next to each other. The top rows
+(**CLM rubric**, groundedness, relevance) are *quality* on a 1–5 scale; **mean latency (s)**
+is a *speed* number — and a stand-in for **cost**, since a smaller/faster model is also
+cheaper per call. In the sample above the flagship is marginally better on quality
+(groundedness 4.6 vs 4.2) but the nano model is **~3× faster** (1.1s vs 3.2s).
+
+**Why it matters — the trade-off.** There is no universal "best model"; there's only the
+best model *for this task at an acceptable quality bar*. If gpt-5.4-nano lands within
+tolerance of the flagship on the metrics you care about, it's often the right production
+pick: the same job for a fraction of the latency and spend. If the quality gap is real on
+the rows that matter (e.g. it misses clause deviations or fumbles citations), you keep the
+flagship for drafting and perhaps reserve nano for cheaper sub-tasks. The bake-off turns
+that decision into **evidence** instead of a hunch — and it's exactly the signal continuous
+evaluation (Task 6) keeps watching as models and prompts change.
 
 ### Task 5 · Add a quality gate (for CI)
 The gate reads mean groundedness and **exits 3** if it's below the threshold — the crux from `main()`:

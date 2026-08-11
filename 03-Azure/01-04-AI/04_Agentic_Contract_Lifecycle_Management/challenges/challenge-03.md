@@ -154,11 +154,23 @@ You'll get a scorecard for the gpt-5.4 drafting agent.
 
 ### Task 4 · Run the bake-off (~10 min)
 
-gpt-5.4 (flagship) vs gpt-5.4-nano (lightweight) on the same scorecard:
+A **bake-off** is a head-to-head A/B test: run the **same evaluation you built in Task 3**
+(same dataset, same judges, same scorecard) on **two different models** and compare the
+results. Only the model changes — the agent, prompt, tools and grounding stay identical —
+so any difference in the scores is down to the **model alone**:
+
+- **gpt-5.4** — the *flagship*: higher quality, but slower and more expensive.
+- **gpt-5.4-nano** — the *lightweight* model: cheaper and much faster, possibly lower quality.
+
+The goal is a **data-driven model choice**: is the cheaper/faster model *good enough* for
+contract drafting & QA, or is the flagship's extra quality worth the added latency/cost?
+
 ```bash
 python src/evaluators.py --bakeoff
 ```
-Compare the **CLM rubric** + groundedness/relevance vs mean latency. Which model wins for *this* task?
+Read each row as one metric with both models side by side — **CLM rubric +
+groundedness/relevance** measure *quality*, **mean latency** is a *speed/cost* proxy.
+Which model wins for *this* task?
 
 ✅ **You should see** a side-by-side block:
 ```text

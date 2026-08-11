@@ -160,9 +160,9 @@ Then **Next → Review → Create guardrails**, **re-run Tasks 1–3**, and conf
 
 > 💡 **"Should I run it in the Codespace instead?"** No — the **GitHub Action runs on GitHub's runners**, triggered from the **Actions** tab. You *can* dry-run the very same gates locally to check the logic — e.g. `python src/safety_eval.py --gate 0.1 --safety-evals` (add `--dry-run` to skip live calls) in the Codespace terminal — but that's a **local check**, not the continuous gate. Task 5 is specifically about the **automated** CI run.
 
-> 📸 **Screenshot slot — what you'll see:** the **Actions** tab with the eval workflow run (green check = gates passed).
+> 📸 **What you'll see** — the **ci-eval** run in the **Actions** tab: job **`eval-gate` ✓ Success**, with the annotation *"Eval gate running in no-op mode (green check). Live Azure evaluation is out of scope for this lab…"* — proof the gate is wired into CI.
 >
-> <img src="../images/challenge-06/steps/03-actions-run.svg" alt="Screenshot slot: GitHub Actions eval run" width="80%">
+> <img src="../images/challenge-06/steps/03-actions-run.png" alt="GitHub Actions ci-eval run #12 succeeded — eval-gate green in no-op mode" width="80%">
 
 ✅ **You'll know it worked when:** the workflow run shows a **green check** (gates passed) — or a
 **red X** if a regression tripped a gate, which is the whole point.

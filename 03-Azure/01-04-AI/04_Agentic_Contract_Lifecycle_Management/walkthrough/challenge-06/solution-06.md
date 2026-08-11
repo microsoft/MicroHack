@@ -128,9 +128,9 @@ Task 4 hardens **two different agents** — keep them straight:
 2. **Enable the ci-eval workflow** — scheduled workflows are *additionally* **disabled by default in forks**. In **Actions → ci-eval**, click **Enable workflow** (yellow banner); otherwise it never runs (this is the #1 gotcha).
 3. **Trigger** via **Run workflow** (`workflow_dispatch`) or the nightly schedule. With **no Azure secrets set, the job runs and cleanly no-ops (a green check)** — that already satisfies the success criteria, so this path works for **every** attendee.
 
-> 📸 **Screenshot slot:** the **Actions** tab with the eval workflow run (green check = gates passed / no-op).
+> 📸 **What you'll see** — the **ci-eval** run: **`eval-gate` ✓ Success** with the *"Eval gate running in no-op mode (green check)"* annotation.
 >
-> <img src="../../images/challenge-06/steps/03-actions-run.svg" alt="Screenshot slot: GitHub Actions eval run" width="80%">
+> <img src="../../images/challenge-06/steps/03-actions-run.png" alt="GitHub Actions ci-eval run succeeded — eval-gate green in no-op mode" width="80%">
 
 ✅ Green check = gates passed (or no-op); red X = a regression tripped a gate (the whole point).
 

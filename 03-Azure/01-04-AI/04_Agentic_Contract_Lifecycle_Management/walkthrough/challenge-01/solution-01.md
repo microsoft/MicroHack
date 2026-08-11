@@ -98,9 +98,11 @@ Three checks: **(4a)** the **resource group** in the [Azure Portal](https://port
 az cognitiveservices account deployment list -g <rg> -n clmfoundry<token> -o table
 ```
 
-> 📸 **Screenshot slot:** the **resource group** in the portal and the **3 Foundry model deployments**.
+> 📸 **Screenshot slot:** the **resource group** in the portal, the **`clm-project` Foundry project** (→ *Go to Foundry portal*), and the **3 Foundry model deployments**.
 >
 > <img src="../../images/challenge-01/steps/07-portal-resource-group.png" alt="Screenshot slot: resource group" width="80%">
+> <img src="../../images/challenge-01/steps/09-foundry-project-portal.png" alt="clm-project Foundry project in the Azure Portal — Overview with 'Go to Foundry portal' highlighted" width="80%">
+> <img src="../../images/challenge-01/steps/09-foundry-portal-switcher.png" alt="Microsoft Foundry portal project switcher showing clm-project (swedencentral)" width="80%">
 > <img src="../../images/challenge-01/steps/08-foundry-deployments.png" alt="Screenshot slot: model deployments" width="80%">
 
 ### Task 5 · Seed the corpus

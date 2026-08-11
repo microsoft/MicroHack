@@ -150,7 +150,7 @@ You'll get a scorecard for the gpt-5.4 drafting agent.
 
 > 📸 **Screenshot slot:** the evaluation scorecard in the terminal.
 >
-> <img src="../images/challenge-03/steps/04-scorecard.png" alt="Screenshot slot: evaluation scorecard" width="75%">
+> <img src="../images/challenge-03/steps/04-scorecard.png" alt="Screenshot slot: evaluation scorecard" width="55%">
 
 ### Task 4 · Run the bake-off (~10 min)
 

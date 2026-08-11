@@ -368,44 +368,6 @@ Path B (local-PDF) — it needs no SharePoint, no admin consent, and works in ev
 </details>
 
 <details>
-<summary><strong>Path C — coach / tenant-admin pre-consent (shared tenant · participants are NOT admins)</strong></summary>
-
-Running in a **shared tenant** where participants **aren't** tenant admins? Then Path A's
-automatic admin consent can't run — and, importantly, **the lab deploy can't grant it for you
-either.** Consenting to Microsoft Graph *application* permissions (`Sites.ReadWrite.All`,
-`Files.Read.All`) is a **directory-plane** action that needs a directory role (Global
-Administrator / Privileged Role Administrator / Application Administrator). Azure **`Owner`** on
-the subscription — the most `deploy-lab.ps1` is ever guaranteed — is a *resource*-plane role and does **not**
-include directory consent, so it's neither in the Bicep nor grantable via `AllowedEntraUserIds`.
-
-The fix: a **tenant admin does the consent once** and shares one app with the whole room.
-
-1. **Admin (once):** register the app, add both Graph permissions, **grant admin consent**, and
-   mint a secret — the helper does all of it:
-   ```bash
-   pwsh src/scripts/setup_sharepoint_app.ps1        # Windows / PowerShell
-   # — or —
-   bash src/scripts/setup_sharepoint_app.sh         # Codespaces / Linux / macOS
-   ```
-   Create (or pick) **one** shared SharePoint site + **Documents** library and upload the 14
-   corpus PDFs once: `python src/scripts/upload_corpus_to_sharepoint.py`.
-2. **Admin → participants:** hand out the five `SHAREPOINT_*` values (site URL, library, tenant
-   id, app id, **secret**). One admin-consented app is shared by everyone — participants do **not**
-   each need consent.
-3. **Each participant:** paste those values into `.env`, then build *their own* index against the
-   shared library (skip the upload — the admin already did it):
-   ```bash
-   python src/scripts/seed_corpus.py
-   ```
-   Each participant's Foundry + Search resources are their own; only the SharePoint corpus is
-   shared. The indexer signs in as the shared app (app-only), so no per-user consent is involved.
-
-Prefer no shared secret, or no admin on hand? Use **Path B** — the local-PDF fallback needs
-neither SharePoint nor consent and produces the identical `clm-corpus` index.
-
-</details>
-
-<details>
 <summary><strong>Manual SharePoint setup (advanced · click-by-click — only if you can't run the Path A script)</strong></summary>
 
 > [!TIP]

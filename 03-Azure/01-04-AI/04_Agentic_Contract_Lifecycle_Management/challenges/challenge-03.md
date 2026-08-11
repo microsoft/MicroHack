@@ -210,7 +210,7 @@ Quality gate: CLM rubric=3.8 (groundable rows) threshold=5.0
 
 > 📸 **Screenshot slot:** the gate failing on a too-strict threshold.
 >
-> <img src="../images/challenge-03/steps/05-gate-fail.png" alt="Screenshot slot: quality gate fails" width="75%">
+> <img src="../images/challenge-03/steps/05-gate-fail.png" alt="Screenshot slot: quality gate fails" width="55%">
 
 ### Task 6 · (Portal) Build the rubric evaluator + continuous evaluation (~15 min)
 

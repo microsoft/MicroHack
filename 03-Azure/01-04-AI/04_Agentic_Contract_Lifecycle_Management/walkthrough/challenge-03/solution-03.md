@@ -70,7 +70,7 @@ python src/agents/intake_drafting_agent.py     # or orchestrator.py / clause_ris
 > <img src="../../images/challenge-03/steps/02-portal-tracing.png" alt="Screenshot slot: Foundry Tracing" width="75%">
 > <img src="../../images/challenge-03/steps/03-agent-monitoring.png" alt="Screenshot slot: Agent Monitoring" width="75%">
 
-### The `clm_rubric` evaluator — how "good" is defined (read this first)
+### Task 3 · The `clm_rubric` evaluator — define "good" before you measure
 
 Before the scorecard makes sense, meet the metric this challenge is really about: **`clm_rubric`**. A *rubric evaluator* is Foundry's **recommended primary measure** of agent quality — an LLM judge scores each response against **weighted, domain-specific dimensions you define**, so "good" means what it means for *your* use case. A single generic score (groundedness) can't tell you whether the agent cited the **right** clause, flagged the deviation, recommended the standard fallback, or deferred authority to a human — but those are exactly the rubric's dimensions.
 
@@ -99,7 +99,7 @@ return {
 }
 ```
 
-That's why **Task 3**'s scorecard shows a `clm_rubric` line and **Task 5**'s gate blocks on it — no extra setup for the code path.
+That's why **Task 4**'s scorecard shows a `clm_rubric` line and **Task 6**'s gate blocks on it — no extra setup for the code path.
 
 **Build the same rubric in the Foundry portal (no code).** This is the UI twin of `CLM_RUBRIC` — how a non-engineer on the team owns the quality bar:
 
@@ -114,7 +114,7 @@ That's why **Task 3**'s scorecard shows a `clm_rubric` line and **Task 5**'s gat
 
 Docs: [Rubric evaluators](https://learn.microsoft.com/azure/foundry/concepts/evaluation-evaluators/rubric-evaluators) · [Custom evaluators](https://learn.microsoft.com/azure/foundry/concepts/evaluation-evaluators/custom-evaluators)
 
-### Task 3 · Run the evaluation
+### Task 4 · Run the evaluation
 [`src/evaluators.py`](../../src/evaluators.py) builds a *target* that runs the agent per row, then scores each response with the **five evaluators above** over `evaluation_dataset.jsonl`:
 ```python
 result = evaluate(data=str(DATASET), target=target, evaluators=evaluators_dict(), ...)
@@ -144,9 +144,9 @@ python src/evaluators.py
 >
 > <img src="../../images/challenge-03/steps/04-scorecard.png" alt="Screenshot slot: evaluation scorecard" width="75%">
 
-### Task 4 · Run the bake-off
+### Task 5 · Run the bake-off
 A **bake-off** is a controlled A/B comparison: `--bakeoff` runs the **same** evaluation
-target — the same labelled dataset and the same judges from Task 3 — twice, once per model,
+target — the same labelled dataset and the same judges from Task 4 — twice, once per model,
 and prints quality vs latency/cost side by side. In code it's deliberately minimal: only the
 model deployment swaps (`settings.model_drafting` → `settings.model_renewal`), while the
 agent definition, instructions, tools and Foundry IQ grounding are untouched. That isolation
@@ -164,11 +164,19 @@ python src/evaluators.py --bakeoff
   mean latency (s)                         gpt-5.4=4.4   gpt-5.4-nano=1.4
 ```
 
-**How to read it.** Each row is one metric with both models next to each other. The top rows
-(**CLM rubric**, groundedness, relevance) are *quality* on a 1–5 scale; **mean latency (s)**
-is a *speed* number — and a stand-in for **cost**, since a smaller/faster model is also
-cheaper per call. In the sample above the flagship is marginally better on quality
-(groundedness 4.6 vs 4.2) but the nano model is **~3× faster** (1.1s vs 3.2s).
+<img src="../../images/challenge-03/steps/04-bakeoff-results.png" alt="Terminal bake-off comparing gpt-5.4 and gpt-5.4-nano across CLM rubric, coherence, fluency, groundedness, relevance, pass rates, and mean latency" width="85%">
+
+**How to read this run.** Each row places both models side by side. The flagship
+**gpt-5.4** scores higher on the overall CLM rubric (**3.76 vs 3.35**) and groundedness
+(**3.88 vs 3.38**), with a stronger groundedness pass rate (**81.25% vs 62.5%**).
+Coherence and fluency are nearly tied, while relevance is also close. This gives you
+evidence that the flagship is the safer drafting choice when citation quality matters.
+
+The observed mean latency is **7.0s for gpt-5.4** and **10.94s for gpt-5.4-nano**.
+That is a useful reminder not to assume the smaller model wins every individual run:
+service load, throttling, retries, and sample size can dominate a short benchmark.
+Repeat the bake-off and compare representative averages before making a production
+latency or cost decision.
 
 **Why it matters — the trade-off.** There is no universal "best model"; there's only the
 best model *for this task at an acceptable quality bar*. If gpt-5.4-nano lands within
@@ -177,9 +185,24 @@ pick: the same job for a fraction of the latency and spend. If the quality gap i
 the rows that matter (e.g. it misses clause deviations or fumbles citations), you keep the
 flagship for drafting and perhaps reserve nano for cheaper sub-tasks. The bake-off turns
 that decision into **evidence** instead of a hunch — and it's exactly the signal continuous
-evaluation (Task 6) keeps watching as models and prompts change.
+evaluation (Task 3) keeps watching as models and prompts change.
 
-### Task 5 · Add a quality gate (for CI)
+### Task 6 · Add a quality gate (for CI)
+An evaluation report is useful only if somebody reads it; a quality gate turns that report into
+an **automatic release decision**. Agent quality can regress even when the code still builds and
+unit tests pass — for example after changing a prompt, model deployment, retrieval configuration,
+knowledge corpus, or SDK version. In a CLM workflow, shipping that regression could mean missed
+clause deviations, unsupported answers, weak citations, or recommendations beyond delegated
+authority.
+
+The gate establishes the minimum evidence required to ship. CI runs the fixed labelled dataset,
+compares the domain-specific **CLM rubric** with your accepted threshold, and blocks the release
+with a non-zero exit code when the score falls below it. It is not a claim that the agent is
+perfect, nor a substitute for legal review; it is a repeatable regression guard that stops a
+known-good baseline from silently getting worse. Calibrate the threshold from representative
+runs, keep the dataset versioned, and investigate failures rather than lowering the bar just to
+make CI green.
+
 The gate reads the **CLM rubric** over the **groundable rows** and **exits 3** if it's below the threshold — the crux from `main()`:
 ```python
 # src/evaluators.py
@@ -200,9 +223,9 @@ Quality gate: CLM rubric=3.8 (groundable rows) threshold=5.0
 ❌ GATE FAILED — CLM rubric below threshold. Blocking release.
 ```
 
-> 📸 **Screenshot slot:** the gate failing on a too-strict threshold.
+> 📸 **What you'll see:** the full scorecard with the gate's verdict on the last line. Here the CLM rubric over the groundable rows is **3.949**, above the **3.0** threshold, so the run prints `✅ GATE PASSED.` and exits 0 — CI proceeds. A score below the threshold would print `❌ GATE FAILED` and exit 3, blocking the release.
 >
-> <img src="../../images/challenge-03/steps/05-gate-fail.png" alt="Screenshot slot: quality gate fails" width="75%">
+> <img src="../../images/challenge-03/steps/05-quality-gate-passed.png" alt="Terminal scorecard for the Intake & Drafting agent ending with CLM rubric 3.949 over groundable rows above the 3.0 threshold and a GATE PASSED message" width="75%">
 
 ## Key files
 

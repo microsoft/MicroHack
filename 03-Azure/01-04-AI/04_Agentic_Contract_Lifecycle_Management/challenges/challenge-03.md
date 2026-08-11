@@ -51,7 +51,7 @@ Observability turns the agent from a black box into something you can **see** an
 | **OpenTelemetry + Azure Monitor Distro** | The open standard for traces/metrics/logs; the Agents SDK emits **spans** per prompt, retrieval and tool call. [`tracing_setup.py`](../src/tracing_setup.py) calls `configure_azure_monitor(...)` and enables content recording **on import** — import it first or content won't be captured. | Turns a multi-step run into an inspectable trace instead of a wall of prints. → [Enable OpenTelemetry](https://learn.microsoft.com/en-us/azure/azure-monitor/app/opentelemetry-enable) |
 | **Application Insights + Log Analytics** | The Azure Monitor APM service that stores & queries the telemetry (workspace-based, provisioned in Challenge 1); connection string in `APPLICATIONINSIGHTS_CONNECTION_STRING`. Trace views, latency/token metrics, KQL. | The durable sink your traces land in — the data behind the portal's Tracing views. → [Application Insights](https://learn.microsoft.com/en-us/azure/azure-monitor/app/app-insights-overview) |
 | **Foundry Observability** (portal Tracing + Agent Monitoring) | The agent-aware Foundry UI that renders traces as **Tracing** + an **Agent Monitoring** dashboard — per-run span timelines, the whole GPT fleet in one pane, home for continuous eval. No KQL required. | The fastest way to *look at* what the agent actually did on a run. → [Observability in Foundry](https://learn.microsoft.com/en-us/azure/foundry/concepts/observability) |
-| **Azure AI Evaluation SDK** (`azure-ai-evaluation`) | [`evaluators.py`](../src/evaluators.py) scores responses with LLM-judged **Groundedness / Relevance / Coherence / Fluency** over the 16-row dataset, plus a domain **`clm_rubric`** (Task 6). Gate `--gate 3.0` exits 3 if rubric < 3.0; `--bakeoff` compares gpt-5.4 vs -nano. | Tracing shows *what happened*; evaluation shows *how good it was* — and fails a bad build before it ships. → [Evaluation](https://learn.microsoft.com/en-us/azure/foundry/concepts/observability) |
+| **Azure AI Evaluation SDK** (`azure-ai-evaluation`) | [`evaluators.py`](../src/evaluators.py) scores responses with LLM-judged **Groundedness / Relevance / Coherence / Fluency** over the 16-row dataset, plus a domain **`clm_rubric`**. Gate `--gate 3.0` exits 3 if rubric < 3.0; `--bakeoff` compares gpt-5.4 vs -nano. | Tracing shows *what happened*; evaluation shows *how good it was* — and fails a bad build before it ships. → [Evaluation](https://learn.microsoft.com/en-us/azure/foundry/concepts/observability) |
 
 ## ✅ Tasks
 
@@ -114,7 +114,42 @@ and token counts.
 > `clm-appinsights` → Logs** and run `dependencies | order by timestamp desc` (or `union traces,
 > dependencies`) — Agent Framework spans land as `dependencies`.
 
-### Task 3 · Run the evaluation (~10 min)
+### Task 3 · The `clm_rubric` evaluator — define "good" before you measure (~15 min)
+
+Before the scorecard in Task 4 makes sense, meet the metric this challenge is really about:
+**`clm_rubric`**. A **rubric evaluator** is Foundry's *recommended primary measure* of agent
+quality: an LLM judge scores each response against weighted, domain-specific **dimensions you
+define**, so "good" means what it means for *your* use case — whether the agent cited the
+**right** clause, flagged the deviation, recommended the standard fallback, and deferred
+authority to a human, not just whether it sounded grounded. It's defined in code as
+`CLM_RUBRIC` + `ClmRubricEvaluator` in [`src/evaluators.py`](../src/evaluators.py) (the 5th
+evaluator, alongside groundedness / relevance / coherence / fluency); here you build the same
+thing in the portal — no code — so a non-engineer can own the quality bar.
+
+**Build it in the portal (UI twin of `src/evaluators.py`):**
+1. In your Foundry project, go to **Evaluation → Evaluator catalog**.
+2. Select **Custom evaluator** (or **Rubric evaluator**, preview) → **Create**.
+3. Choose **Prompt-based**, **ordinal 1–5** scoring. **Auto-generate** the rubric from your
+   **Intake & Drafting agent** (Foundry pulls its instructions), or paste the seven CLM
+   dimensions from `CLM_RUBRIC` in [`src/evaluators.py`](../src/evaluators.py):
+   `clause_identification` (9) · `deviation_flagging` (8) · `fallback_recommendation` (6) ·
+   `authority_escalation` (5) · `grounded_no_fabrication` (4) · `communication_clarity` (2)
+   · `general_quality` (5, always applies).
+4. Review the dimensions/weights, set a **pass threshold**, and **run** the evaluator on
+   `evaluation_dataset.jsonl` (upload it as the data source). Each row gets a weighted
+   score, a pass/fail label, and the judge's **reason** per dimension.
+
+> 📸 **Screenshot slot:** your rubric evaluator's per-dimension scores in the portal.
+
+**Continuous evaluation (optional):** once the rubric reflects your bar, enable
+**continuous/scheduled evaluation** in **Monitor settings** so live agent traffic is scored
+automatically and you catch quality regressions in production. (Portal preview — the
+`--gate` flag is the code-first equivalent for CI, wired in `ci-eval.yml`.)
+
+Docs: [Rubric evaluators](https://learn.microsoft.com/azure/foundry/concepts/evaluation-evaluators/rubric-evaluators)
+· [Custom evaluators](https://learn.microsoft.com/azure/foundry/concepts/evaluation-evaluators/custom-evaluators)
+
+### Task 4 · Run the evaluation (~10 min)
 
 Run it over the 16-row dataset (`src/data/evaluation/evaluation_dataset.jsonl`):
 ```bash
@@ -142,8 +177,8 @@ You'll get a scorecard for the gpt-5.4 drafting agent.
 ```
 
 > ℹ️ The four generic judges (`groundedness`, `relevance`, `coherence`, `fluency`) are
-> dataset-wide means over **all 16** rows. **`clm_rubric`** is the domain rubric from
-> Task 6. The two **`… (groundable rows)`** lines average only the `grounded_qa` +
+> dataset-wide means over **all 16** rows. **`clm_rubric`** is the domain rubric you built in
+> Task 3. The two **`… (groundable rows)`** lines average only the `grounded_qa` +
 > `clause_risk` rows — where the correct answer is drawn from the corpus. The 3
 > `refusal` + 2 `tool_call` rows are graded by *behaviour*, so they're excluded there —
 > and the **quality gate uses the `CLM rubric (gate: groundable rows)` number**.
@@ -152,9 +187,9 @@ You'll get a scorecard for the gpt-5.4 drafting agent.
 >
 > <img src="../images/challenge-03/steps/04-scorecard.png" alt="Screenshot slot: evaluation scorecard" width="55%">
 
-### Task 4 · Run the bake-off (~10 min)
+### Task 5 · Run the bake-off (~10 min)
 
-A **bake-off** is a head-to-head A/B test: run the **same evaluation you built in Task 3**
+A **bake-off** is a head-to-head A/B test: run the **same evaluation you built in Task 4**
 (same dataset, same judges, same scorecard) on **two different models** and compare the
 results. Only the model changes — the agent, prompt, tools and grounding stay identical —
 so any difference in the scores is down to the **model alone**:
@@ -181,17 +216,24 @@ Which model wins for *this* task?
   mean latency (s)                         gpt-5.4=4.4   gpt-5.4-nano=1.5
 ```
 
-### Task 5 · Add a quality gate (~10 min)
+### Task 6 · Add a quality gate (~10 min)
+
+The quality gate converts your evaluation score into an automated CI release rule, blocking prompt, model, retrieval, or corpus changes that make the CLM agent measurably worse even when the code still builds.
 
 This is what a CI job would run:
 ```bash
 python src/evaluators.py --gate 3.0   # exit code 3 if the CLM rubric score < 3.0
 ```
-The gate blocks on the **CLM rubric** (Task 6) averaged over the **groundable rows**
+The gate blocks on the **CLM rubric** averaged over the **groundable rows**
 (`grounded_qa` + `clause_risk`) — the `CLM rubric (gate: groundable rows)` line from
-Task 3. A domain rubric is a better gate than a single generic metric: it fails a build
+Task 4. A domain rubric is a better gate than a single generic metric: it fails a build
 for the reasons that matter to a contract team (wrong clause, missed deviation, no
 fallback, self-approval), not just raw grounding.
+
+> ⚖️ **Calibrate the gate.** The first time you run the rubric (in code or the portal),
+> read your actual groundable-rows score, then set `--gate` a little below it (start at
+> `3.0`). A well-grounded agent should clear it; an empty-corpus or over-reaching agent
+> won't. That tuning *is* the lesson — the threshold is a policy you set, not a magic number.
 
 ✅ **You should see** `✅ GATE PASSED.` — then prove it can **fail** by raising the bar past your score:
 ```bash
@@ -211,42 +253,6 @@ Quality gate: CLM rubric=3.8 (groundable rows) threshold=5.0
 > 📸 **Screenshot slot:** the gate failing on a too-strict threshold.
 >
 > <img src="../images/challenge-03/steps/05-gate-fail.png" alt="Screenshot slot: quality gate fails" width="55%">
-
-### Task 6 · (Portal) Build the rubric evaluator + continuous evaluation (~15 min)
-
-You just gated on a **`clm_rubric`** score in code. A **rubric evaluator** is Foundry's
-*recommended primary measure* of agent quality: an LLM judge scores each response against
-weighted, domain-specific **dimensions you define**, so "good" means what it means for
-*your* use case. Now build the same rubric in the portal — no code — and (optionally) wire
-it to continuous evaluation.
-
-**Build it in the portal (UI twin of `src/evaluators.py`):**
-1. In your Foundry project, go to **Evaluation → Evaluator catalog**.
-2. Select **Custom evaluator** (or **Rubric evaluator**, preview) → **Create**.
-3. Choose **Prompt-based**, **ordinal 1–5** scoring. **Auto-generate** the rubric from your
-   **Intake & Drafting agent** (Foundry pulls its instructions), or paste the seven CLM
-   dimensions from `CLM_RUBRIC` in [`src/evaluators.py`](../src/evaluators.py):
-   `clause_identification` (9) · `deviation_flagging` (8) · `fallback_recommendation` (6) ·
-   `authority_escalation` (5) · `grounded_no_fabrication` (4) · `communication_clarity` (2)
-   · `general_quality` (5, always applies).
-4. Review the dimensions/weights, set a **pass threshold**, and **run** the evaluator on
-   `evaluation_dataset.jsonl` (upload it as the data source). Each row gets a weighted
-   score, a pass/fail label, and the judge's **reason** per dimension.
-
-> ⚖️ **Calibrate the gate.** The first time you run the rubric (in code or the portal),
-> read your actual groundable-rows score, then set `--gate` a little below it (start at
-> `3.0`). A well-grounded agent should clear it; an empty-corpus or over-reaching agent
-> won't. That tuning *is* the lesson — the threshold is a policy you set, not a magic number.
-
-> 📸 **Screenshot slot:** your rubric evaluator's per-dimension scores in the portal.
-
-**Continuous evaluation (optional):** once the rubric reflects your bar, enable
-**continuous/scheduled evaluation** in **Monitor settings** so live agent traffic is scored
-automatically and you catch quality regressions in production. (Portal preview — the
-`--gate` flag is the code-first equivalent for CI, wired in `ci-eval.yml`.)
-
-Docs: [Rubric evaluators](https://learn.microsoft.com/azure/foundry/concepts/evaluation-evaluators/rubric-evaluators)
-· [Custom evaluators](https://learn.microsoft.com/azure/foundry/concepts/evaluation-evaluators/custom-evaluators)
 
 ## ✔️ Success criteria
 

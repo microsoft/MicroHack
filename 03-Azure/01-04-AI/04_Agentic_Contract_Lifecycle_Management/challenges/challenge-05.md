@@ -159,46 +159,48 @@ Upcoming renewals (next 60 days):
 
 ### Task 6 · (Optional) Capture a conversation reference (~10 min)
 
-> **🧠 The core problem — why this dance exists.** To send a **proactive** message (a ping *nobody asked for*), your code must tell Teams **which chat to post into**. That address is a **conversation reference** = `TEAMS_SERVICE_URL` + `TEAMS_CONVERSATION_ID`. Normally a bot saves it the first time you message it — but a **Foundry-managed** agent owns its own message handler, so you never see those values. **Task 6 grabs them once** (temporarily point the bot at a local helper); **Task 7 uses them** to fire the alert.
+> **🧠 The core problem — why this dance exists.** To send a **proactive** message (a ping *nobody asked for*), your code must (a) **authenticate as a bot** and (b) know **which chat to post into** — a **conversation reference** = `TEAMS_SERVICE_URL` + `TEAMS_CONVERSATION_ID`. A bot normally saves that the first time you message it. But the **Foundry-published** agent's Azure Bot is **managed**: its app registration lives **outside your tenant**, so you **can't create a client secret for it** (its App ID won't appear under Entra ID → *App registrations*; *Manage password* 404s). The fix: stand up your **own** single-tenant bot, capture a reference by messaging **it** once (**Task 6**), then push the alert through it (**Task 7**).
 >
 > ```mermaid
 > sequenceDiagram
 >     participant You as You (Teams)
->     participant Bot as Azure Bot resource
+>     participant Bot as Your Azure Bot (own app + secret)
 >     participant Cap as capture_reference_bot.py (local + tunnel)
 >     participant Env as .env
 >     participant Alert as proactive_alerts.py
->     Note over Bot,Cap: TASK 6 — capture (temporary)
->     You->>Bot: send "hi"
+>     Note over Bot,Cap: TASK 6 — capture
+>     You->>Bot: send "hi" to YOUR bot
 >     Bot->>Cap: routes to your tunnel endpoint
 >     Cap->>Env: writes TEAMS_SERVICE_URL + TEAMS_CONVERSATION_ID
 >     Cap-->>You: "✅ Saved this conversation"
->     Note over Bot: revert endpoint back to Foundry's
 >     Note over Alert,You: TASK 7 — fire (uses saved .env)
 >     Alert->>Bot: continue_conversation(reference)
 >     Bot-->>You: 🔴 CT-4821 renewal alert (unprompted)
 > ```
 >
-> ⚠️ The endpoint swap in step 4 is **temporary** — step 6 *must* revert it, or the published agent goes silent. And the password in step 1 isn't shown anywhere: create a fresh **client secret** on the bot's app registration.
+> ⚠️ You message **your own** test bot here, **not** `clm-contract-agent`: the capture bot validates the inbound Teams token against **your** `MICROSOFT_APP_ID`, so the managed Foundry bot's identity can't be reused. This proves the push mechanism — the alert comes from your bot, not the published agent.
 
-Proactive alerts need a **saved conversation reference** (service URL + conversation id) for a real
-Teams chat with your bot. A Foundry-published agent is **managed**, so you don't own its message
-handler — use the helper bot [`src/capture_reference_bot.py`](../src/capture_reference_bot.py) to grab
-it.
+Proactive alerts need a **saved conversation reference** (service URL + conversation id) *and* a bot identity you can authenticate as. Because the Foundry-published agent's bot is **managed** — no client secret you can own — you register a small **single-tenant bot you control** and drive [`src/capture_reference_bot.py`](../src/capture_reference_bot.py) with it.
 
-> **💡 Do I need to create an Azure Bot? No.** Publishing to Teams in **Task 2** already
-> **auto-provisioned** one for you (that's the "Azure Bot Service" the publish flow created). You don't
-> build a bot — you just **find the existing one**: Azure portal → your lab **resource group** (or search
-> *Azure Bot*) → open the bot named after your agent. Everything below configures *that* resource.
+> **💡 Why your own bot?** The Teams publish in **Task 2** auto-provisioned an Azure Bot, but it's **managed** — its App ID isn't in your tenant (Entra ID → *App registrations* won't list it; *Manage password* 404s), so a local handler can't authenticate as it. For this optional demo you create a throwaway **single-tenant app + Azure Bot** you fully own, then delete both afterwards.
 
-**Capture the reference (do this once):**
+**Set up your own bot + capture the reference (do this once):**
 
-1. **Get the bot's credentials.** Azure portal → your Bot → **Configuration**. Copy `MICROSOFT_APP_ID` (labelled *Microsoft App ID*) + the tenant into `.env`; under **Manage password** (opens the app registration) create a **client secret** → that value is `MICROSOFT_APP_PASSWORD`. Also set `MICROSOFT_APP_TENANT_ID`.
-2. **Run the capture bot:** `python src/capture_reference_bot.py` (listens on `localhost:3978`).
-3. **Expose it publicly:** `devtunnel host -p 3978 --allow-anonymous` → copy the `https://<tunnel>` URL.
-4. **Redirect the bot to your laptop:** Azure portal → Bot → **Configuration** → **Messaging endpoint** = `https://<tunnel>/api/messages` → **Apply**. *(You're temporarily hijacking where Teams delivers messages.)*
-5. **Message the agent once** in Teams — type anything (`hi`). The capture bot writes `TEAMS_SERVICE_URL` + `TEAMS_CONVERSATION_ID` into `.env` and replies "✅ Saved…".
-6. **Revert** the Messaging endpoint back to the URL Foundry had set — otherwise your agent stops answering normally. Then stop the capture bot (`Ctrl+C`).
+1. **Register your own app.** Entra ID → **App registrations → New registration** → *Accounts in this organizational directory only* (single tenant). Copy the **Application (client) ID** + **Directory (tenant) ID**, then **Certificates & secrets → + New client secret** → copy the **Value**. Set `MICROSOFT_APP_ID` / `MICROSOFT_APP_PASSWORD` / `MICROSOFT_APP_TENANT_ID` in `.env`.
+2. **Create an Azure Bot that reuses it:** portal → **Create a resource → Azure Bot** → **Type of App = Single Tenant**, **Creation type = Use existing app registration** (paste your App ID + tenant) → **Create**. Then enable **Channels → Microsoft Teams**.
+3. **Run the capture bot:** `python src/capture_reference_bot.py` (listens on `localhost:3978`).
+4. **Install the Dev Tunnels CLI (one-time), sign in, then expose the bot publicly.** Codespaces don't ship the `devtunnel` CLI — installing it is what fixes `bash: devtunnel: command not found`:
+   ```bash
+   # Codespaces / Linux / macOS — installs to ~/bin and adds it to PATH
+   curl -sL https://aka.ms/DevTunnelCliInstall | bash
+   source ~/.bashrc                              # or open a new terminal so the shell finds ~/bin/devtunnel
+   # Windows (PowerShell): winget install Microsoft.devtunnel
+   devtunnel user login                          # required to host — sign in with your Microsoft or GitHub account
+   devtunnel host -p 3978 --allow-anonymous      # copy the https://<tunnel> URL it prints
+   ```
+   Run this in a **second terminal** (leave the capture bot from step 3 running); the `https://<tunnel>` URL is the public forward of `localhost:3978`.
+5. **Point your bot at your laptop:** your Bot → **Configuration** → **Messaging endpoint** = `https://<tunnel>/api/messages` → **Apply**.
+6. **Message your bot once:** your Bot → **Channels → Teams → Open in Teams**, type anything (`hi`). The capture bot validates the token against **your** App ID, writes `TEAMS_SERVICE_URL` + `TEAMS_CONVERSATION_ID` to `.env`, and replies "✅ Saved…". Stop it (`Ctrl+C`).
 
 ### Task 7 · (Optional) Fire a proactive alert (~10 min)
 
@@ -229,9 +231,11 @@ python src/proactive_alerts.py --from-renewals --days 30
 
 | Symptom | Fix |
 |---------|-----|
+| `bash: devtunnel: command not found` | The Dev Tunnels CLI isn't preinstalled in the Codespace. Install it and re-load PATH: `curl -sL https://aka.ms/DevTunnelCliInstall \| bash && source ~/.bashrc` (Windows: `winget install Microsoft.devtunnel`). It installs to `~/bin`, so open a new terminal if the shell still can't find it. Hosting also requires `devtunnel user login` first. |
 | Publish option missing | Ensure `Microsoft.BotService` is registered and you have rights to create an Azure Bot. |
 | Bot responds in Teams but not Copilot | Confirm the app is approved for M365 Copilot and the manifest scopes include it. |
-| `continue_conversation` 401/403 | Foundry provisions a **single-tenant** bot — set `MICROSOFT_APP_TENANT_ID` in `.env` (the adapter now scopes auth to that tenant). Also check `MICROSOFT_APP_ID`/`MICROSOFT_APP_PASSWORD`; the bot must own the saved conversation reference. |
+| *Manage password* 404s / bot's App ID isn't under **App registrations → All applications** | Expected — the Foundry-published bot is **managed** and its app lives outside your tenant, so no secret is creatable. Register **your own** single-tenant app + Azure Bot (Task 6) and use those creds. |
+| `continue_conversation` 401/403 | Use **your own** single-tenant app's `MICROSOFT_APP_ID` / `MICROSOFT_APP_PASSWORD` / `MICROSOFT_APP_TENANT_ID` in `.env` (the adapter scopes auth to that tenant), and make sure the saved conversation reference came from **that** bot. |
 | Alert never arrives | Verify `TEAMS_SERVICE_URL` + `TEAMS_CONVERSATION_ID` came from a **real inbound** message to *this* bot. |
 | Want to test with no bot | Use `--dry-run` to print the alert text. |
 

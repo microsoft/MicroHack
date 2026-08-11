@@ -116,6 +116,10 @@ and token counts.
 
 ### Task 3 · The `clm_rubric` evaluator — define "good" before you measure (~15 min)
 
+🖥️ **Portal (UI) · no code.** You build the `clm_rubric` evaluator by clicking through the Foundry
+portal — it's the UI twin of `src/evaluators.py`. **Task 4 runs the *same* rubric from code**, so the
+two tasks are one evaluator seen two ways.
+
 Before the scorecard in Task 4 makes sense, meet the metric this challenge is really about:
 **`clm_rubric`**. A **rubric evaluator** is Foundry's *recommended primary measure* of agent
 quality: an LLM judge scores each response against weighted, domain-specific **dimensions you
@@ -163,6 +167,9 @@ Docs: [Rubric evaluators](https://learn.microsoft.com/azure/foundry/concepts/eva
 · [Custom evaluators](https://learn.microsoft.com/azure/foundry/concepts/evaluation-evaluators/custom-evaluators)
 
 ### Task 4 · Run the evaluation (~10 min)
+
+💻 **Code · your terminal.** This runs the *same* `clm_rubric` you built in the portal in Task 3 — now
+over the full 16-row dataset from code.
 
 Run it over the 16-row dataset (`src/data/evaluation/evaluation_dataset.jsonl`):
 ```bash

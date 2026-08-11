@@ -38,11 +38,15 @@ server** — locally over stdio, then **hosted on Azure Container Apps** and cal
   and call it from a **Foundry agent** by URL — same tools, now a network service.
 
 > [!NOTE]
-> **Orchestration vs MCP — why both?** They're different layers, not alternatives. **Orchestration**
-> (`agent.as_tool`) is the *reasoning brain* that routes each request to the right specialist. **MCP** is
-> a *packaging standard* that exposes those same capabilities so clients **outside your code** (VS Code,
-> the Foundry Playground, another team's agent) can call them. `orchestrator.py` and `orchestrator_mcp.py`
-> are the **same brain** — only *where the tools live* changes (in-process vs. behind MCP).
+> **Orchestration vs MCP — why both, if the orchestrator already calls the specialists?** They solve
+> *different* problems and stack. **Orchestration** (`agent.as_tool`) is the *reasoning brain* that decides
+> *which* specialist to call and when — but it only runs **inside your Python process**, so only *your* code
+> can reuse it. **MCP** is a *packaging standard* that publishes those same capabilities as a service **any**
+> client can call **by URL, with zero coupling to your code** (VS Code, the Foundry Playground, another
+> team's agent). `orchestrator.py` and `orchestrator_mcp.py` are the **same brain** — only *where the tools
+> live* changes (in-process vs. behind MCP). **Task 4 is the payoff:** a *Foundry-hosted* agent — **not** your
+> orchestrator — calls your server by URL and returns the same risk result, reusing the whole workflow
+> without touching your code.
 
 ```
         ┌────────────── Orchestrator (GPT-5.4) ──────────────┐
@@ -69,6 +73,27 @@ This challenge is about **composition** — specialists behind one orchestrator,
 ## ✅ Tasks
 
 ### Task 1 · Build the Clause & Risk agent (~10 min)
+
+**Why it matters — the business case.** Contract review is the bottleneck in every deal: a lawyer
+manually reads each counterparty redline, compares it clause-by-clause to the company's approved
+positions, and decides what's safe to sign — slow, expensive, and inconsistent across reviewers. The
+**Clause & Risk agent** does that first pass in seconds. It extracts the key clauses from an inbound
+draft, compares each to **Contoso Global's** standard clause library and contracting policy, flags
+every deviation (e.g. uncapped liability, 60-day auto-renew), and returns a **Low / Medium / High**
+risk score with the top issues and the **required approver** per the delegation-of-authority matrix.
+The human still signs off — the agent just ensures nothing risky slips through and keeps reviewers
+focused only where it matters (**human-in-the-loop**).
+
+**How it works — the tech.** It's a **Microsoft Agent Framework** `Agent` running on **GPT-5.6 Sol**
+(chosen for structured legal reasoning), grounded on the `clm-corpus` — the clause library,
+contracting policy, negotiation playbook and delegation-of-authority matrix — through the same
+**Foundry IQ / Azure AI Search** knowledge tool you wired in Challenge 2, so it *cites* the standard
+it compares against instead of inventing one. Its instructions pin the workflow deterministically —
+**extract → compare → classify → score**, always cite sources, escalate High-risk items, and never
+give legal advice or self-approve. When an optional **Grounding-with-Bing-Search** connection is set
+(`AZURE_BING_CONNECTION_NAME`), it also attaches a web-search tool for *public* counterparty
+due-diligence (corporate status, adverse-media, sanctions) — never sending the confidential draft to
+the web.
 
 Analyze the (deliberately red-flag) sample drafts. By
 default it analyzes **both** inbound drafts (`acme_msa_draft.pdf` and `globex_nda_redline.pdf`),
@@ -107,6 +132,25 @@ Required approver: VP Legal (delegation-of-authority matrix)
 
 ### Task 2 · Build the Orchestrator (~10 min)
 
+**Why it matters — the business case.** A real contract request is rarely one step — *"draft this NDA,
+then review their redline, then tell me the renewal date"* is three jobs for three different
+specialists. Forcing the Contract Manager to know which agent does what is friction. The
+**Orchestrator** is the single front door: the user asks in plain language and it decides *which*
+specialist handles each step, calls them in the right order, combines the results, and centrally
+enforces the guardrails — recommending **human review** for anything High-risk or any final document,
+and never giving legal advice itself. Governance stops depending on the user remembering to ask the
+right agent.
+
+**How it works — the tech.** It's a **Microsoft Agent Framework** `Agent` on **GPT-5.4** (chosen for
+fast, deterministic tool-calling and routing) that wraps each specialist as a callable tool via
+**`agent.as_tool(...)`** — the framework's multi-agent primitive. `intake_drafting` and `clause_risk`
+become ordinary tools the orchestrator invokes like functions, each keeping its own model and
+instructions. That's **multi-model composition in one Foundry project**: a GPT-5.4 brain coordinating
+gpt-5.4 drafting and **GPT-5.6 Sol** clause/risk — only the `model` id on each agent's chat client
+changes. It runs as a single **session** so context carries across turns (the draft it just produced
+is available when you ask it to analyze the counterparty's redline), and both specialists share one
+**Azure AI Search** connection resolved once at startup.
+
 With both specialists connected, run a multi-step thread
 (draft → analyze → status):
 ```bash
@@ -128,10 +172,48 @@ ORCHESTRATOR: [→ intake_drafting] Draft ready... [→ clause_risk] Acme draft 
 >
 > <img src="../images/challenge-04/steps/02-orchestrator.png" alt="Orchestrator (gpt-5.4) thread delegating each turn to the Intake & Drafting and Clause & Risk specialists" width="80%">
 
-### Task 3 · Verify the MCP server exposes its tools (~5 min)
+### Task 3 · Build & verify the MCP server (~5 min)
+
+**What you're verifying — and why.** [`src/mcp_server/server.py`](../src/mcp_server/server.py) is the **same brain** as your orchestrator, repackaged as an open **MCP** server: it exposes the workflow's three capabilities as standard tools that *any* MCP client — VS Code, the Foundry Playground, another team's agent — can discover and call **without touching your code**. Each tool is a thin wrapper over a specialist you already built:
+
+| MCP tool | Wraps | Model |
+|---|---|---|
+| `draft_contract` | **Intake & Drafting** agent (Challenge 1/2) | gpt-5.4 |
+| `analyze_contract` | **Clause & Risk** agent (Task 1) | gpt-5.6-sol |
+| `get_contract_status` | Contract-status lookup (Azure SQL → seed fallback) | — |
+
+**How it's built — the MCP pattern.** The server is a thin slice of
+[`server.py`](../src/mcp_server/server.py) on the official **FastMCP** SDK: name a server, decorate each
+capability as a tool, and run it over a transport. You hand-write **no schema** — the function's
+**docstring becomes the tool's description** and its **type-hinted parameters become the input schema**
+that a client discovers:
+
+```python
+# src/mcp_server/server.py
+from mcp.server.fastmcp import FastMCP
+
+mcp = FastMCP("clm-mcp")                        # 1 · name the server
+
+@mcp.tool()                                     # 2 · expose a function as an MCP tool
+async def analyze_contract(draft_text: str) -> str:
+    """Extract clauses from a counterparty draft, compare to standard, return a risk score."""
+    from clause_risk_agent import create_agent  # the Clause & Risk agent from Task 1
+    return await _run_agent(create_agent, draft_text)
+
+if __name__ == "__main__":                      # 3 · serve it over a transport
+    mcp.run(transport="stdio")                  # stdio locally · streamable-http when hosted (Task 4)
+```
+
+Three `@mcp.tool()` functions → the three tools above, each just forwarding to a specialist you already
+built. Going remote in Task 4 changes **one line** — `stdio` → `streamable-http`.
 
 The server speaks **two transports** from the same code: **stdio** for local dev (what VS Code
 launches) and **streamable HTTP** for remote hosting (Task 4). Start locally here, then go remote next.
+
+> [!NOTE]
+> **"But the orchestrator already calls these agents — why MCP?"** The orchestrator is the *brain*, and it
+> only runs inside *your* code. MCP *publishes* the same tools so **anything** can call them by URL with zero
+> coupling — in **Task 4** a **Foundry** agent (not your orchestrator) does exactly that.
 
 **Verify the tools are registered** — this needs no client and exits on its own:
 ```bash
@@ -203,13 +285,6 @@ bash deploy/mcp-server/deploy.sh            # Codespaces / Linux / macOS / Cloud
 ./deploy/mcp-server/deploy.ps1              # Windows PowerShell ONLY — not for Codespaces/bash
 ```
 
-> [!IMPORTANT]
-> **In GitHub Codespaces (and Azure Cloud Shell) you're in a Linux `bash` shell — run the
-> `bash deploy/mcp-server/deploy.sh` line.** The `.ps1` is **Windows PowerShell only**; running
-> `./deploy/mcp-server/deploy.ps1` in bash fails with
-> `bash: ./deploy/mcp-server/deploy.ps1: Permission denied`. Both lines run the *same* deploy with
-> the same auto-discovery — just pick the one for your shell.
-
 The script builds the image, creates the Container App with **external HTTPS ingress**, turns on a
 **system-assigned managed identity**, and grants it a data-plane role on your Foundry account so the
 server's own tools can call your models. It echoes what it discovered, then prints your endpoint:
@@ -224,29 +299,28 @@ server's own tools can call your models. It echoes what it discovered, then prin
      https://clm-mcp.<region>.azurecontainerapps.io/mcp
 ```
 
-> [!TIP]
-> Everything is still overridable if the auto-discovery guesses wrong (e.g. multiple AI accounts in the
-> subscription) — just set the value on the command line: `RESOURCE_GROUP=<rg>
-> FOUNDRY_ACCOUNT_ID=<id> bash deploy/mcp-server/deploy.sh` (or `-ResourceGroup`/`-FoundryAccountId` for
-> the `.ps1`). Prereq: `az login` on your lab subscription. See
-> [`deploy/mcp-server/README.md`](../deploy/mcp-server/README.md) for the full override list.
-
 > [!IMPORTANT]
 > The server's tools **call Foundry agents themselves**, so the container needs its **own** Foundry
-> access — that's the managed identity + role the script sets up. Without it the MCP endpoint answers but
-> the tools return auth errors. Role propagation can take ~1 minute after assignment.
+> access — the managed identity + role the script sets up. Without it the MCP endpoint answers but the
+> tools return auth errors; role propagation can take ~1 minute after assignment.
 
-> [!NOTE]
-> For hack simplicity the endpoint is **public with no auth** — anyone with the URL can call the tools.
-> Securing it (add a key header, front it with APIM, or make the endpoint private on a dedicated MCP
-> subnet) is out of scope for this hack, but it's the recommended next step before any real use.
+**Security:** for hack simplicity the endpoint is **public with no auth** — fine for the lab; add a key
+header/APIM or a private endpoint before any real use.
 
 #### Part B · Connect it to a Foundry agent (portal Playground)
 
 In the **[Foundry portal](https://ai.azure.com)**, create an agent and give it the **MCP tool** pointing
-at your URL. *(Task 2's orchestrator ran **in-process** from your terminal — nothing was published to the
-portal — so you create a fresh agent here whose **only** tool is the MCP server. The drafting & clause-risk
-grounding still runs, but **server-side**, behind that tool.)*
+at your URL.
+
+> [!NOTE]
+> **Why a *new* agent — didn't we already build the orchestrator?** That *is* the point. Task 2's
+> orchestrator ran **in-process** in your terminal — nothing was ever published to Foundry — so there's no
+> portal agent to attach the tool to. More importantly, this fresh agent is an **arbitrary external
+> consumer**, your stand-in for "another team's agent": you create it by *clicking in the portal* (no code,
+> no access to your repo) and its **only** tool is the MCP server. It has no drafting or clause-risk ability
+> of its own — the real work still runs **server-side**, behind the tool. When it returns the **same** risk
+> result as Task 1, you've proven the MCP payoff: any agent, anywhere, can reuse your whole workflow by URL
+> with **zero coupling** to your code.
 
 1. Open your project → **Agents** → **+ New agent** → pick **Build an agent**. In the **Create an agent**
    dialog, set **Agent name** = `clm-contract-agent` and click **Create** (the portal used to drop you on a
@@ -272,32 +346,6 @@ grounding still runs, but **server-side**, behind that tool.)*
 ✅ **You'll know it worked when:** the Playground shows an **MCP tool call to `clm-mcp`** and returns the
 **same** risk result as Task 1 — a Foundry-hosted agent just consumed your *remote* server by URL.
 
-<details>
-<summary>💻 <b>Part C <i>(optional)</i> · Point your own agent at the remote server — click to expand</b></summary>
-
-Same `orchestrator_mcp.py`, but now over the **network** instead of stdio — just set `CLM_MCP_URL`:
-
-```bash
-CLM_MCP_URL=https://<your-app>.azurecontainerapps.io/mcp python src/orchestrator_mcp.py
-```
-
-With `CLM_MCP_URL` set, the client switches from `MCPStdioTool` (local subprocess) to
-`MCPStreamableHTTPTool` (remote HTTPS) with **no code change** — the same Orchestrator now drives your
-**hosted** tools. *(If you protect the endpoint with a key, also set `CLM_MCP_KEY`.)* This is the
-"same brain, swappable transport" idea from the Context note, taken all the way to a hosted endpoint.
-
-> [!TIP]
-> **`MCP server failed to initialize: Cancelled via cancel scope`?** Your `CLM_MCP_URL` is pointing at a
-> server that isn't ready. Check it directly — `curl -s -o /dev/null -w '%{http_code}\n' "$CLM_MCP_URL"`.
-> A **421** means the container is running an **old image**: redeploy with `bash deploy/mcp-server/deploy.sh`
-> and retry. (`orchestrator_mcp.py` now prints this diagnosis for you automatically.)
-
-> 📸 **What you'll see:** `orchestrator_mcp.py` printing that it's calling `clm-mcp` **via your remote `/mcp` URL**.
->
-> <img src="../images/challenge-04/steps/07-orchestrator-remote.png" alt="Local orchestrator (gpt-5.4) calling the remote clm-mcp server by URL as an MCP client" width="80%">
-
-</details>
-
 ## ✔️ Success criteria
 
 - One orchestrator thread runs **draft → extract → risk** by delegating to the two specialists.
@@ -305,7 +353,7 @@ With `CLM_MCP_URL` set, the client switches from `MCPStdioTool` (local subproces
 - The MCP server is **discoverable and callable** from an MCP client — locally (VS Code/Copilot or
   `orchestrator_mcp.py`) **and** as a **remote** endpoint, returning the same results as the agents.
 - **(Task 4)** The server is **hosted on Azure Container Apps** and a **Foundry agent calls it by URL**
-  from the Playground. *(Optional: the same URL also works from the local orchestrator via `CLM_MCP_URL`.)*
+  from the Playground.
 
 ## 🛠️ Troubleshooting
 

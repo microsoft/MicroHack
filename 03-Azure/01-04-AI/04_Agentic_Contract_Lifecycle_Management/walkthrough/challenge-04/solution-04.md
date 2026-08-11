@@ -113,8 +113,7 @@ python src/mcp_server/server.py          # stdio: waits for a local client (VS C
 ```
 
 **Consume it locally (optional):** run `python src/orchestrator_mcp.py` — a terminal MCP **client** that
-spawns the stdio server for you (no IDE) and runs draft → analyze → status over MCP. Same
-"agent-as-MCP-client" shape as Task 4 · Part C, just over stdio instead of HTTPS. Prefer an IDE? Open the
+spawns the stdio server for you (no IDE) and runs draft → analyze → status over MCP. Prefer an IDE? Open the
 **repo root** in VS Code (it loads [`.vscode/mcp.json`](../../.vscode/mcp.json)) → **MCP: List Servers** →
 start **clm-mcp** → call `#analyze_contract` in Copilot Chat.
 
@@ -130,15 +129,14 @@ The script reads the repo-root `.env` and auto-discovers the resource group, Fou
 managed identity** and grants it a data-plane role on the Foundry account so the server's own tools can
 call your models.
 
-Watch the tail of the output — it prints the exact endpoint to paste into **Part B** (and to export as
-`CLM_MCP_URL` for **Part C**):
+Watch the tail of the output — it prints the exact endpoint to paste into **Part B**:
 
 <img src="../../images/challenge-04/steps/parta-01-deploy.png" alt="deploy.sh output: image built and pushed to ACR, Container App clm-mcp created, system-assigned managed identity enabled, ending with the live MCP endpoint URL" width="90%">
 
 The run builds and pushes the image (`…azurecr.io/clm-mcp`), creates the **`clm-mcp`** Container App, and
 turns on its **system-assigned managed identity** — finishing with the banner
 `clm-mcp is live. Use this MCP endpoint in Foundry / CLM_MCP_URL: https://clm-mcp.<random>.<region>.azurecontainerapps.io/mcp`.
-**Copy that `…/mcp` URL** — it's what Part B step 4 and Part C consume. *(The `Azure AI User` role grant near
+**Copy that `…/mcp` URL** — it's what Part B step 4 consumes. *(The `Azure AI User` role grant near
 the end can print a transient `ERROR: Role … doesn't exist` / propagation notice; it's non-fatal — identity
 propagation takes ~1 min, so just re-run the script or wait if a later model call returns 401.)*
 
@@ -166,37 +164,6 @@ propagation takes ~1 min, so just re-run the script or wait if a later model cal
    agent calls `analyze_contract` on your remote server.
 
    <img src="../../images/challenge-04/steps/partb-05-approve.png" alt="Playground: approve the MCP tool call (Approve once)" width="80%">
-
-**Part C — local agent → remote server.** Same script, tools over HTTPS instead of stdio:
-```bash
-CLM_MCP_URL=https://…/mcp python src/orchestrator_mcp.py   # MCPStreamableHTTPTool, no code change
-```
-
-> 📸 **What you'll see (Part C):** the local orchestrator against the remote URL.
->
-> <img src="../../images/challenge-04/steps/07-orchestrator-remote.png" alt="Local orchestrator (gpt-5.4) calling the remote clm-mcp server by URL as an MCP client" width="80%">
-
-### Task 5 · (Optional) One client, two transports
-[`src/orchestrator_mcp.py`](../../src/orchestrator_mcp.py) is the mirror of Task 2, but the tools come
-over MCP. It picks the transport from `CLM_MCP_URL` — `MCPStdioTool` (spawns `server.py`) when unset,
-`MCPStreamableHTTPTool` (remote) when set:
-```python
-# src/orchestrator_mcp.py
-def build_mcp_tool():
-    url = os.getenv("CLM_MCP_URL")
-    if url:                                           # remote streamable HTTP
-        return MCPStreamableHTTPTool(name="clm-mcp", url=url, headers=_headers())
-    return MCPStdioTool(name="clm-mcp", command=sys.executable,   # local stdio
-                        args=[str(SERVER_PATH)], env={"PYTHONPATH": str(SRC_DIR)})
-
-async with build_mcp_tool() as mcp_tool:              # local subprocess *or* remote URL
-    orchestrator = build_orchestrator(mcp_tool)       # gpt-5.4, tools=[mcp_tool]
-    ...
-```
-```bash
-python src/orchestrator_mcp.py                        # local: you don't start the server yourself
-CLM_MCP_URL=https://…/mcp python src/orchestrator_mcp.py   # remote: same run, over HTTPS
-```
 
 ## Key files
 

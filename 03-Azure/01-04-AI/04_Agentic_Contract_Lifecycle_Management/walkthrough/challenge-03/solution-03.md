@@ -72,6 +72,9 @@ python src/agents/intake_drafting_agent.py     # or orchestrator.py / clause_ris
 
 ### Task 3 · The `clm_rubric` evaluator — define "good" before you measure
 
+🖥️ **Portal (UI).** The rubric is first shown *defined in code* (`src/evaluators.py`) for reference,
+then you build the **same rubric in the Foundry portal — no code**. **Task 4 runs it from the terminal.**
+
 Before the scorecard makes sense, meet the metric this challenge is really about: **`clm_rubric`**. A *rubric evaluator* is Foundry's **recommended primary measure** of agent quality — an LLM judge scores each response against **weighted, domain-specific dimensions you define**, so "good" means what it means for *your* use case. A single generic score (groundedness) can't tell you whether the agent cited the **right** clause, flagged the deviation, recommended the standard fallback, or deferred authority to a human — but those are exactly the rubric's dimensions.
 
 **Where it's created (code).** The rubric lives **entirely in [`src/evaluators.py`](../../src/evaluators.py)** — two pieces, no extra service:
@@ -154,6 +157,10 @@ That's why **Task 4**'s scorecard shows a `clm_rubric` line and **Task 6**'s gat
 Docs: [Rubric evaluators](https://learn.microsoft.com/azure/foundry/concepts/evaluation-evaluators/rubric-evaluators) · [Custom evaluators](https://learn.microsoft.com/azure/foundry/concepts/evaluation-evaluators/custom-evaluators)
 
 ### Task 4 · Run the evaluation
+
+💻 **Code · your terminal.** This runs the *same* rubric you built in the portal in Task 3, scoring
+every dataset row with the five evaluators.
+
 [`src/evaluators.py`](../../src/evaluators.py) builds a *target* that runs the agent per row, then scores each response with the **five evaluators above** over `evaluation_dataset.jsonl`:
 ```python
 result = evaluate(data=str(DATASET), target=target, evaluators=evaluators_dict(), ...)

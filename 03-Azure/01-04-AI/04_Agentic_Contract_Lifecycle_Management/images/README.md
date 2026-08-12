@@ -23,7 +23,7 @@ what each step should look like.
 | [`challenge-02/`](challenge-02/) | Grounded Agent with Foundry IQ + Tools |
 | [`challenge-03/`](challenge-03/) | Observability, Tracing & Evaluation |
 | [`challenge-04/`](challenge-04/) | Orchestration + MCP Server |
-| [`challenge-05/`](challenge-05/) | Publish to M365 Copilot & Teams + Proactive Alerts |
+| [`challenge-05/`](challenge-05/) | Publish to M365 Copilot & Teams |
 | [`challenge-06/`](challenge-06/) | Safety, Red-Teaming & Continuous Evaluation |
 
 > Regenerate the generated assets with the scripts in

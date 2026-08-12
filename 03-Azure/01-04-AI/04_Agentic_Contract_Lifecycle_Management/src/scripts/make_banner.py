@@ -45,7 +45,7 @@ draw.text((M, y), "Multi-model, multi-agent CLM on Microsoft Foundry \u2014 grou
           font=f_sub, fill=(230, 238, 250))
 
 # chips
-chips = ["4.5 hours", "5 challenges + bonus", "Claude + GPT", "Foundry IQ \u00b7 MCP \u00b7 Teams"]
+chips = ["4.5 hours", "5 challenges + bonus", "Multi-model GPT", "Foundry IQ \u00b7 MCP \u00b7 Teams"]
 cy = 372
 cx = M
 for c in chips:

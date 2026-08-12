@@ -280,6 +280,9 @@ def build_search_index() -> None:
             "  SharePoint needed — see the challenge-0 README)."
         )
         seed_local_pdfs()
+    from clm_common.foundry_iq import ensure_foundry_iq
+
+    ensure_foundry_iq()
 
 
 def main() -> None:

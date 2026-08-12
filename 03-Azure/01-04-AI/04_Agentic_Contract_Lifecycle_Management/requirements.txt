@@ -5,26 +5,25 @@
 # --- Microsoft Agent Framework (every agent in this repo is built on it) ---
 # `agent-framework-foundry` pulls in `agent-framework-core` (the Agent, tool
 # and orchestration APIs) and `agent-framework-openai`, and targets Foundry as
-# the chat-client provider so the multi-model fleet (Claude + GPT in one
-# Foundry project) and Foundry IQ / Azure AI Search grounding keep working.
+# the chat-client provider so the multi-model GPT fleet (one deployment per
+# specialist in a single Foundry project) and Foundry IQ / Azure AI Search
+# grounding keep working.
 agent-framework-core>=1.11.0,<2
 agent-framework-foundry>=1.10.1,<2
 
 # --- Foundry project client + auth ----------------------------------------
-# azure-ai-projects v2 is required by agent-framework-foundry and is used here
-# only to resolve the default Azure AI Search connection for grounding.
+# azure-ai-projects v2 is required by agent-framework-foundry and supplies the
+# MCP/AI Search tool models plus project-connection discovery.
 azure-ai-projects>=2.2.0,<2.3.0
 azure-identity>=1.19.0
 openai>=1.108.0
 # NOTE: azure-ai-agents (the older Foundry Agent Service SDK) is no longer a
 # direct dependency — agents are built with the Microsoft Agent Framework above.
-# Fallback path for calling Claude directly if the Foundry chat client doesn't
-# yet support a non-OpenAI model in your region (see challenge-1 README).
-anthropic>=0.50.0
 
 # --- Grounding / knowledge (Foundry IQ over Azure AI Search) --------------
-# The Azure AI Search SDK also creates the SharePoint Online data source +
-# indexer that crawls the corpus library into the clm-corpus index (Ch0 seeding).
+# Stable Search SDK types create the corpus index/indexer. Foundry IQ knowledge
+# source/base provisioning uses the 2026-05-01-preview REST API through requests,
+# avoiding a preview-SDK pin in the participant environment.
 azure-search-documents>=11.5.0
 # Text extraction from the corpus PDFs (executed contracts, templates, clause
 # library, policy, counterparty drafts) so the Clause & Risk agent (Ch3) can
@@ -45,12 +44,6 @@ pyodbc>=5.1.0
 
 # --- MCP server (Challenge 3) — official SDK, pin to stable v1.x ----------
 mcp>=1.9,<2
-
-# --- Publish + proactive Teams alerts (Challenge 4) -----------------------
-botbuilder-core>=4.16.0
-botbuilder-schema>=4.16.0
-botbuilder-integration-aiohttp>=4.16.0
-aiohttp>=3.10.0
 
 # --- Utilities ------------------------------------------------------------
 python-dotenv>=1.0.1

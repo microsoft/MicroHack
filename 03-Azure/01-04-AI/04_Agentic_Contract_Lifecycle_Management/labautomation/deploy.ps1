@@ -1,7 +1,7 @@
 <#
   Challenge 1 — provision the Foundry CLM microhack resources and write .env (Windows).
   Usage:   ./labautomation/deploy.ps1 [-WithSql] [-WithBing]
-  Requires: az CLI (az login), rights to deploy GPT + Anthropic Claude models.
+  Requires: az CLI (az login), rights to deploy GPT models.
   The bash script (labautomation/deploy.sh) is the primary path for Codespaces.
 #>
 param([switch]$WithSql, [switch]$WithBing)
@@ -15,64 +15,18 @@ $Project     = $env:PROJECT     ?? "clm-project"
 $Search      = $env:SEARCH      ?? "clmsearch$Suffix"
 $AppInsights = "clm-appinsights"
 
-$GptOrch = "gpt-5.4"; $GptMini = "gpt-5-mini"; $Gpt56Sol = "gpt-5.6-sol"; $Claude = "claude-opus-4-8"
+$GptOrch = "gpt-5.4"; $GptMini = "gpt-5.4-nano"; $Gpt56Sol = "gpt-5.6-sol"
 
-# Claude can be skipped (no Anthropic quota / marketplace offer): set
-# $env:DEPLOY_CLAUDE = "false". The drafting agent then uses the orchestrator (Clause & Risk stays on gpt-5.6-sol).
-# When $env:DEPLOY_CLAUDE is NOT set, auto-probe Anthropic Claude Opus 4.8 quota in
-# $Location and skip Claude when it is 0 — otherwise the deployment fails with
-# "InsufficientQuota ... Claude Opus 4.8 ... available capacity 0". Availability !=
-# quota: even in a region that offers the model a fresh sandbox sub usually starts at 0.
-function Test-ClaudeQuota {
-  param([string]$Region, [int]$RequiredCapacity = 20)
-  $quotaFamily = "AIServices.GlobalStandard.claude-opus-4-8"
-  try {
-    $subId = az account show --query id -o tsv
-    if (-not $subId) { throw "could not resolve subscription id (run az login)" }
-    $uri = "https://management.azure.com/subscriptions/$subId/providers/Microsoft.CognitiveServices/locations/$Region/usages?api-version=2024-10-01"
-    $json = az rest --method get --url $uri -o json 2>$null
-    if ($LASTEXITCODE -ne 0 -or -not $json) { throw "usages query failed" }
-    $usages = ($json | ConvertFrom-Json).value
-    $entry = $usages | Where-Object { $_.name.value -eq $quotaFamily } | Select-Object -First 1
-    if (-not $entry) {
-      $entry = $usages | Where-Object { $_.name.value -match 'claude-opus-4-8' } |
-        Sort-Object { [double]$_.limit } -Descending | Select-Object -First 1
-    }
-    if (-not $entry) { Write-Host "  · Claude preflight: no quota entry for claude-opus-4-8 in $Region — skipping Claude (GPT-only)."; return $false }
-    $limit = [double]$entry.limit; $used = [double]$entry.currentValue
-    if ($limit -le 0 -or ($limit - $used) -lt $RequiredCapacity) {
-      Write-Host "  · Claude preflight: insufficient quota in $Region (limit=$limit, used=$used, need=$RequiredCapacity) — skipping Claude (GPT-only)."
-      return $false
-    }
-    Write-Host "  ✓ Claude preflight: claude-opus-4-8 deployable in $Region (limit=$limit, used=$used)."
-    return $true
-  }
-  catch {
-    Write-Host "  · Claude preflight: quota probe failed ($($_.Exception.Message)) — skipping Claude (GPT-only). Set `$env:DEPLOY_CLAUDE='true' to force it."
-    return $false
-  }
-}
-
-if ([string]::IsNullOrWhiteSpace($env:DEPLOY_CLAUDE)) {
-  $DeployClaude = Test-ClaudeQuota -Region $Location
-} else {
-  $DeployClaude = $env:DEPLOY_CLAUDE.ToLower() -eq "true"
-}
-$DraftingModel = if ($DeployClaude) { $Claude } else { $GptOrch }
-
-# Anthropic Marketplace attestation — REQUIRED by the Cognitive Services RP for
-# every Claude deployment. Override via $env:CLAUDE_ORGANIZATION_NAME / _COUNTRY_CODE /
-# _INDUSTRY. Omitting these is what triggers InvalidModelProviderData.
-$ClaudeOrg      = $env:CLAUDE_ORGANIZATION_NAME ?? "Contoso"
-$ClaudeCountry  = $env:CLAUDE_COUNTRY_CODE       ?? "US"
-$ClaudeIndustry = $env:CLAUDE_INDUSTRY           ?? "technology"
+# The Intake & Drafting agent shares the gpt-5.4 orchestrator deployment (the
+# highest-quota flagship in the project), so no separate drafting model is deployed.
+$DraftingModel = $GptOrch
 
 Write-Host "▶ Resource group: $Rg ($Location); Foundry $Foundry / project $Project"
 
 az group create -n $Rg -l $Location -o none
 
 az cognitiveservices account create -n $Foundry -g $Rg -l $Location `
-  --kind AIServices --sku S0 --custom-domain $Foundry --yes -o none
+  --kind AIServices --sku S0 --custom-domain $Foundry --assign-identity --yes -o none
 Write-Host "  ✓ Foundry account created"
 
 az cognitiveservices account project create --account-name $Foundry -g $Rg --project-name $Project -o none 2>$null `
@@ -86,46 +40,50 @@ function Deploy-Model($name, $model, $version, $format, $cap) {
   if ($LASTEXITCODE -ne 0) { Write-Host "    ! $name failed — check availability in $Location." }
 }
 Deploy-Model $GptOrch  "gpt-5.4"          "2026-03-05" "OpenAI"    30
-Deploy-Model $GptMini  "gpt-5-mini"       "2025-08-07" "OpenAI"    30
-# Clause & Risk runs on gpt-5.6-sol — its own deployment, independent of Claude.
+Deploy-Model $GptMini  "gpt-5.4-nano"     "2026-03-17" "OpenAI"    30
+# Clause & Risk runs on gpt-5.6-sol — its own dedicated deployment.
 Deploy-Model $Gpt56Sol "gpt-5.6-sol"      "2026-07-09" "OpenAI"    30
-# Claude: Anthropic deployments REQUIRE a modelProviderData block the CLI can't
-# send, so deploy via the ARM REST API (auto-accepts the marketplace offer).
-function Deploy-Claude {
-  $subId = az account show --query id -o tsv
-  $url = "https://management.azure.com/subscriptions/$subId/resourceGroups/$Rg/providers/Microsoft.CognitiveServices/accounts/$Foundry/deployments/$Claude`?api-version=2025-04-01-preview"
-  $bodyObj = @{
-    sku = @{ name = "GlobalStandard"; capacity = 20 }
-    properties = @{
-      model = @{ format = "Anthropic"; name = "claude-opus-4-8"; version = "2" }
-      modelProviderData = @{ organizationName = $ClaudeOrg; countryCode = $ClaudeCountry; industry = $ClaudeIndustry }
-    }
-  }
-  $tmp = New-TemporaryFile
-  ($bodyObj | ConvertTo-Json -Depth 5) | Set-Content -Path $tmp -Encoding utf8
-  Write-Host "  → deploying $Claude (Anthropic claude-opus-4-8 v2) with modelProviderData"
-  az rest --method put --url $url --body "@$tmp" -o none 2>$null
-  Remove-Item $tmp -Force -ErrorAction SilentlyContinue
-  if ($LASTEXITCODE -ne 0) {
-    Write-Host "    ! Claude deployment request failed — check Anthropic eligibility in $Location, or set `$env:DEPLOY_CLAUDE='false' to skip."
-    return
-  }
-  foreach ($i in 1..30) {
-    $state = az rest --method get --url $url --query "properties.provisioningState" -o tsv 2>$null
-    if ($state -eq "Succeeded") { Write-Host "    ✓ Claude deployment succeeded"; return }
-    if ($state -eq "Failed" -or $state -eq "Canceled") { Write-Host "    ! Claude deployment $state — set `$env:DEPLOY_CLAUDE='false' to skip."; return }
-    Start-Sleep -Seconds 10
-  }
-  Write-Host "    · Claude still provisioning — check the Foundry portal before the smoke test."
-}
-if ($DeployClaude) {
-  Deploy-Claude
-} else {
-  Write-Host "  · Skipping Claude (DEPLOY_CLAUDE=false) — drafting uses $GptOrch"
-}
 
-az search service create -n $Search -g $Rg -l $Location --sku basic --partition-count 1 --replica-count 1 -o none
+az search service create -n $Search -g $Rg -l $Location --sku basic --partition-count 1 --replica-count 1 --identity-type SystemAssigned -o none
 Write-Host "  ✓ Azure AI Search created"
+
+# Foundry IQ uses managed identity end-to-end: the project reads the Search
+# index and the Search service calls gpt-5.4 for query planning.
+$SubId = az account show --query id -o tsv
+$AccountId = "/subscriptions/$SubId/resourceGroups/$Rg/providers/Microsoft.CognitiveServices/accounts/$Foundry"
+$ProjectArmId = "$AccountId/projects/$Project"
+$SearchId = "/subscriptions/$SubId/resourceGroups/$Rg/providers/Microsoft.Search/searchServices/$Search"
+az resource update --ids $ProjectArmId --api-version "2025-04-01-preview" --set identity.type=SystemAssigned -o none
+$AccountMi = az resource show --ids $AccountId --api-version "2025-06-01" --query identity.principalId -o tsv
+$ProjectMi = az resource show --ids $ProjectArmId --api-version "2025-04-01-preview" --query identity.principalId -o tsv
+$SearchMi = az search service show -n $Search -g $Rg --query identity.principalId -o tsv
+foreach ($Principal in @($AccountMi, $ProjectMi)) {
+  az role assignment create --assignee-object-id $Principal --assignee-principal-type ServicePrincipal `
+    --role "Search Index Data Reader" --scope $SearchId -o none
+  az role assignment create --assignee-object-id $Principal --assignee-principal-type ServicePrincipal `
+    --role "Search Service Contributor" --scope $SearchId -o none
+}
+az role assignment create --assignee-object-id $SearchMi --assignee-principal-type ServicePrincipal `
+  --role "Cognitive Services User" --scope $AccountId -o none
+
+$SearchEndpoint = "https://$Search.search.windows.net"
+$SearchConnectionBody = @{ properties = @{ category = "CognitiveSearch"; target = $SearchEndpoint; authType = "AAD";
+  isSharedToAll = $true; metadata = @{ ApiType = "Azure"; ResourceId = $SearchId; location = $Location } } } |
+  ConvertTo-Json -Depth 6 -Compress
+$IqConnectionBody = @{ properties = @{ category = "RemoteTool";
+  target = "$SearchEndpoint/knowledgebases/clm-contracts-kb/mcp?api-version=2026-05-01-preview";
+  authType = "ProjectManagedIdentity"; isSharedToAll = $true; audience = "https://search.azure.com/";
+  metadata = @{ ApiType = "Azure" } } } | ConvertTo-Json -Depth 6 -Compress
+foreach ($Connection in @(
+  @{ Name = "clm-search"; Body = $SearchConnectionBody },
+  @{ Name = "clm-knowledge-mcp"; Body = $IqConnectionBody }
+)) {
+  $Tmp = New-TemporaryFile
+  $Connection.Body | Out-File -FilePath $Tmp -Encoding utf8
+  az rest --method put --url "https://management.azure.com$ProjectArmId/connections/$($Connection.Name)`?api-version=2025-04-01-preview" --body "@$($Tmp.FullName)" -o none
+  Remove-Item $Tmp -ErrorAction SilentlyContinue
+}
+Write-Host "  ✓ Foundry IQ identity and project connections configured"
 
 # Corpus source is SharePoint (BYO) — nothing to create; seed_corpus.py wires the
 # AI Search SharePoint indexer. Fill SHAREPOINT_* in .env first (see challenge-0 README).
@@ -140,8 +98,6 @@ Write-Host "  ✓ Application Insights created"
 # connection to it, otherwise Tracing stays empty even when spans reach App
 # Insights. (Challenge 3.)
 $AppInsightsId = az monitor app-insights component show --app $AppInsights -g $Rg --query id -o tsv
-$SubId = az account show --query id -o tsv
-$ProjectArmId = "/subscriptions/$SubId/resourceGroups/$Rg/providers/Microsoft.CognitiveServices/accounts/$Foundry/projects/$Project"
 if ($AppInsightsId -and $AppInsightsConn) {
   $AiBody = @{ properties = @{ category = "AppInsights"; target = $AppInsightsId; authType = "ApiKey";
     credentials = @{ key = $AppInsightsConn }; isSharedToAll = $true;
@@ -153,6 +109,22 @@ if ($AppInsightsId -and $AppInsightsConn) {
   if ($LASTEXITCODE -eq 0) { Write-Host "  ✓ Application Insights connected to project '$Project' — portal Tracing enabled" }
   else { Write-Host "    ! App Insights connection failed — in the portal open project '$Project' → Tracing → Connect and pick '$AppInsights'." }
   Remove-Item $AiTmp -ErrorAction SilentlyContinue
+}
+
+# Grant the signed-in user monitoring read access so the Foundry portal Monitor
+# dashboard (Challenge 3) passes its "Verifying access" check. Owner/Contributor
+# deployers already inherit this; the explicit grant covers non-owner deployers
+# and teammates who open the dashboard. Non-fatal — skip quietly if it can't run.
+$SignedInUserId = az ad signed-in-user show --query id -o tsv 2>$null
+if ($SignedInUserId -and $AppInsightsId) {
+  az role assignment create --assignee-object-id $SignedInUserId --assignee-principal-type User `
+    --role "Monitoring Reader" --scope $AppInsightsId -o none 2>$null
+  $LogAnalyticsId = az monitor app-insights component show --app $AppInsights -g $Rg --query WorkspaceResourceId -o tsv 2>$null
+  if ($LogAnalyticsId) {
+    az role assignment create --assignee-object-id $SignedInUserId --assignee-principal-type User `
+      --role "Log Analytics Reader" --scope $LogAnalyticsId -o none 2>$null
+  }
+  Write-Host "  ✓ Monitoring read access granted to signed-in user — portal Monitor dashboard enabled"
 }
 
 # Grounding with Bing Search (optional web grounding for the Clause & Risk agent).
@@ -198,7 +170,6 @@ if ($WithSql) {
 }
 
 $ProjectEndpoint = "https://$Foundry.services.ai.azure.com/api/projects/$Project"
-$SearchEndpoint  = "https://$Search.search.windows.net"
 
 @"
 # Autogenerated by labautomation/deploy.ps1 — do not commit.
@@ -212,6 +183,10 @@ MODEL_RENEWAL=$GptMini
 AZURE_SEARCH_ENDPOINT=$SearchEndpoint
 AZURE_SEARCH_INDEX=clm-corpus
 AZURE_SEARCH_CONNECTION_NAME=clm-search
+FOUNDRY_IQ_KNOWLEDGE_SOURCE=clm-corpus-ks
+FOUNDRY_IQ_KNOWLEDGE_BASE=clm-contracts-kb
+FOUNDRY_IQ_CONNECTION_NAME=clm-knowledge-mcp
+FOUNDRY_IQ_API_VERSION=2026-05-01-preview
 
 # Web grounding (Grounding with Bing Search) — set when deployed with -WithBing.
 AZURE_BING_CONNECTION_NAME=$BingConnName
@@ -227,12 +202,6 @@ APPLICATIONINSIGHTS_CONNECTION_STRING=$AppInsightsConn
 AZURE_TRACING_GEN_AI_CONTENT_RECORDING_ENABLED=true
 
 AZURE_SQL_CONNECTION_STRING=$SqlConn
-
-MICROSOFT_APP_ID=
-MICROSOFT_APP_PASSWORD=
-MICROSOFT_APP_TENANT_ID=
-TEAMS_SERVICE_URL=
-TEAMS_CONVERSATION_ID=
 "@ | Out-File -FilePath ".env" -Encoding utf8
 
 Write-Host "`n✅ Deployment complete. Wrote .env. Next: python src/scripts/seed_corpus.py; python src/scripts/smoke_test.py"

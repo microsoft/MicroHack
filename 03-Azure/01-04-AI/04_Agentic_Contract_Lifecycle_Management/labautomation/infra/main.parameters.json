@@ -14,18 +14,6 @@
     "principalType": {
       "value": "${AZURE_PRINCIPAL_TYPE=User}"
     },
-    "deployClaudeModel": {
-      "value": "${DEPLOY_CLAUDE_MODEL=true}"
-    },
-    "claudeOrganizationName": {
-      "value": "${CLAUDE_ORGANIZATION_NAME=Contoso}"
-    },
-    "claudeCountryCode": {
-      "value": "${CLAUDE_COUNTRY_CODE=US}"
-    },
-    "claudeIndustry": {
-      "value": "${CLAUDE_INDUSTRY=technology}"
-    },
     "deploySql": {
       "value": "${DEPLOY_SQL=false}"
     },

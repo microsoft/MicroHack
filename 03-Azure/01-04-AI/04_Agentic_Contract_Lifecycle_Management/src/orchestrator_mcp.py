@@ -1,4 +1,4 @@
-"""Challenge 4 (Go Further) — Orchestrator that calls the CLM MCP server as a *client*.
+"""Challenge 4 (optional) — Orchestrator that calls the CLM MCP server as a *client*.
 
 This is the mirror image of ``orchestrator.py``. The plain orchestrator wires the
 two specialists in-process with ``agent.as_tool(...)``; this variant reaches the
@@ -9,19 +9,24 @@ themselves are what the server *exposes* (``draft_contract`` = Intake & Drafting
 call itself. The orchestrator is the front door and is never an MCP tool, so it
 can safely fan out over MCP.
 
-The Microsoft Agent Framework ships the client side as ``MCPStdioTool``: it spawns
-``src/mcp_server/server.py`` over stdio, discovers its tools, and hands
-them to the model exactly like any other tool — no remote hosting required. To go
-fully remote instead, expose the server over HTTP/SSE (behind APIM) and swap
-``MCPStdioTool`` for ``MCPStreamableHTTPTool`` (or a Foundry hosted ``MCPTool``);
-the orchestrator code below is otherwise unchanged.
+The Microsoft Agent Framework ships the client side as two tools that share one
+API: ``MCPStdioTool`` spawns ``src/mcp_server/server.py`` over stdio (local dev),
+and ``MCPStreamableHTTPTool`` connects to a **remote** server over HTTPS — the
+same ``clm-mcp`` container you host on Azure in Task 4. This script picks between
+them from the ``CLM_MCP_URL`` env var (unset → local stdio; set → remote HTTP), so
+the exact same orchestrator can drive the workflow in-process, over local stdio,
+or over the network with no code change. To use a Foundry-hosted MCP tool instead,
+swap in ``MCPTool``; the orchestrator wiring below is otherwise unchanged.
 
 Run:
-    python src/orchestrator_mcp.py      # one session: draft -> analyze -> status, over MCP
+    python src/orchestrator_mcp.py      # LOCAL: spawns server.py over stdio, one session
+    #  REMOTE (hosted MCP): point it at the Container Apps URL from Task 4 —
+    #  CLM_MCP_URL=https://<your-app>.azurecontainerapps.io/mcp python src/orchestrator_mcp.py
 """
 from __future__ import annotations
 
 import asyncio
+import os
 import sys
 from pathlib import Path
 
@@ -61,13 +66,31 @@ Summarize each tool's output for the user and state which tool you used.
 
 
 def build_mcp_tool():
-    """Return the client-side MCP tool that launches and connects to the clm-mcp server.
+    """Return the client-side MCP tool that connects to the clm-mcp server.
 
-    ``MCPStdioTool`` spawns ``server.py`` over stdio and discovers its tools. It is an
-    async context manager, so use it inside ``async with`` before building the agent.
-    ``PYTHONPATH`` mirrors ``src/.vscode/mcp.json`` so the server resolves
-    ``clm_common`` regardless of the caller's working directory.
+    Two transports, selected by the ``CLM_MCP_URL`` env var:
+
+    * **``CLM_MCP_URL`` set** → ``MCPStreamableHTTPTool``: connect to the **remote**
+      server over HTTPS at that ``/mcp`` URL (the Azure Container Apps deployment
+      from Task 4). If the endpoint is key-protected, set ``CLM_MCP_KEY`` and it is
+      sent as an ``x-api-key`` header.
+    * **``CLM_MCP_URL`` unset** → ``MCPStdioTool``: spawn a **local** ``server.py``
+      over stdio. ``PYTHONPATH`` mirrors ``.vscode/mcp.json`` so the server resolves
+      ``clm_common`` regardless of the caller's working directory.
+
+    Both are async context managers, so use inside ``async with`` before building
+    the agent.
     """
+    url = os.getenv("CLM_MCP_URL")
+    if url:
+        from agent_framework import MCPStreamableHTTPTool
+
+        headers: dict[str, str] = {}
+        key = os.getenv("CLM_MCP_KEY")
+        if key:
+            headers["x-api-key"] = key
+        return MCPStreamableHTTPTool(name="clm-mcp", url=url, headers=headers or None)
+
     from agent_framework import MCPStdioTool
 
     return MCPStdioTool(
@@ -99,21 +122,81 @@ DEMO = [
 ]
 
 
+def _diagnose_remote_mcp(url: str) -> str:
+    """Best-effort probe of a remote clm-mcp URL to explain a failed connection.
+
+    The most common cause is a server still running the pre-fix image: it rejects
+    the request's Host header with HTTP 421 ("Invalid Host header"), so the MCP
+    handshake never completes and Agent Framework surfaces it as an opaque
+    "MCP server failed to initialize: Cancelled via cancel scope".
+    """
+    body = {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "initialize",
+        "params": {
+            "protocolVersion": "2025-06-18",
+            "capabilities": {},
+            "clientInfo": {"name": "clm-preflight", "version": "0"},
+        },
+    }
+    headers = {"Content-Type": "application/json", "Accept": "application/json, text/event-stream"}
+    try:
+        import httpx
+
+        # Stream so we read only the status line (a healthy server answers with a
+        # long-lived SSE body that a plain GET/read would hang on).
+        with httpx.stream(
+            "POST", url, json=body, headers=headers, timeout=httpx.Timeout(15.0, read=5.0)
+        ) as resp:
+            code = resp.status_code
+    except Exception as probe_exc:  # DNS / TLS / timeout / connection refused
+        return f"the server could not be reached ({type(probe_exc).__name__}: {probe_exc})."
+    if code == 421:
+        return (
+            "the server returned HTTP 421 'Invalid Host header' — it is running an OLD image from "
+            "before the Host-header fix. Redeploy it with the latest code."
+        )
+    return f"the server answered HTTP {code}; the MCP handshake still failed (see the error above)."
+
+
 async def main() -> None:
+    url = os.getenv("CLM_MCP_URL")
     # The MCP server is launched for the lifetime of this `async with`; the orchestrator
     # calls it as a standard tool client (the same workflow as orchestrator.py, over MCP).
-    async with build_mcp_tool() as mcp_tool:
-        orchestrator = build_orchestrator(mcp_tool)
-        print(
-            f"✓ Orchestrator on '{settings.model_orchestrator}' calling the clm-mcp server "
-            f"as an MCP client\n"
-        )
+    try:
+        async with build_mcp_tool() as mcp_tool:
+            orchestrator = build_orchestrator(mcp_tool)
+            target = url or f"local stdio ({SERVER_PATH.name})"
+            print(
+                f"✓ Orchestrator on '{settings.model_orchestrator}' calling the clm-mcp server "
+                f"as an MCP client via {target}\n"
+            )
 
-        session = orchestrator.create_session()
-        for prompt in DEMO:
-            print("―" * 80)
-            print("USER:", prompt)
-            print("ORCHESTRATOR:", await run_agent(orchestrator, prompt, session=session), "\n")
+            session = orchestrator.create_session()
+            for prompt in DEMO:
+                print("―" * 80)
+                print("USER:", prompt)
+                print("ORCHESTRATOR:", await run_agent(orchestrator, prompt, session=session), "\n")
+    except Exception as exc:
+        if not url:  # local stdio failure — let the real traceback surface
+            raise
+        print(
+            "\n".join(
+                [
+                    "",
+                    f"✗ Could not connect to the remote clm-mcp server at {url}",
+                    f"    ({type(exc).__name__}: {exc})",
+                    f"  Diagnosis: {_diagnose_remote_mcp(url)}",
+                    "  Fix — redeploy the server with the latest code, then retry:",
+                    "      bash deploy/mcp-server/deploy.sh",
+                    f"      curl -s -o /dev/null -w '%{{http_code}}\\n' {url}   # must NOT be 421",
+                    "",
+                ]
+            ),
+            file=sys.stderr,
+        )
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":

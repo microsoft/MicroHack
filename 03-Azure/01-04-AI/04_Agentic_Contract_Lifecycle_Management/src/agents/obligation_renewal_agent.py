@@ -1,9 +1,8 @@
-"""Challenge 5 — Obligation & Renewal agent (GPT-5-mini).
+"""Challenge 5 — Obligation & Renewal agent (GPT-5.4-nano).
 
 A small, cheap, high-frequency Microsoft Agent Framework agent that scans
 contract renewal dates and obligations (via the contract-status tools) and
-produces alert-ready summaries of what's coming due. Its output feeds the
-proactive Teams alerts in proactive_alerts.py.
+produces alert-ready summaries of what's coming due.
 
 Run:
     python src/agents/obligation_renewal_agent.py            # summarize upcoming renewals
@@ -47,7 +46,7 @@ def create_agent(model: str | None = None):
     from agent_framework import Agent
 
     return Agent(
-        client=build_chat_client(model or settings.model_renewal),  # gpt-5-mini
+        client=build_chat_client(model or settings.model_renewal),  # gpt-5.4-nano
         name=AGENT_NAME,
         instructions=INSTRUCTIONS,
         tools=[function_tool(get_contract_status), function_tool(list_upcoming_renewals)],

@@ -50,7 +50,7 @@ The data lives in **Microsoft Fabric** (a governed Lakehouse with inventory, dem
    > [!NOTE]
    > **The model name in the screenshots is only for illustration.** Some captures may show `gpt-4o-mini` (or another model) selected — that's just what was deployed when the screenshot was taken. Use **whatever model is deployed in your project** (check **Models + endpoints**, e.g. `gpt-5.4-mini`). The model is swappable; every step in this hack works the same regardless of which chat model is deployed.
 
-3. **Provision your own Fabric workspace and Data Agent.** *(~15 min)*
+3. **Provision your own Fabric workspace and lakehouse.** *(~5 min)*
 
    Your lab dashboard gives you a **`FabricCapacityName`** — your own Fabric **F2 capacity**. You'll stand up a workspace on it and publish your own Data Agent by running one notebook. Follow each step carefully — this is the data backend every later challenge depends on.
 
@@ -72,7 +72,91 @@ The data lives in **Microsoft Fabric** (a governed Lakehouse with inventory, dem
 
    ![The New Lakehouse dialog with the name InventoryLakehouse and Location inventory-hack](../images/challenge-00-lakehouse-name.png)
 
-   **c. Import the setup notebook.**
+4(a). **Load the data and create a Data Agent (manually).** *(~20 min)*
+
+   > [!NOTE]
+   > Follow either this section or section 4(b) if you'd like to load the data and create the data agent using code.
+
+   **a. Download and upload the seed data.**
+   Download all seven `.parquet` files from the hack repo's [`data/`](../data/) folder to your computer. Open **`InventoryLakehouse`**, select **Upload files**, and use the folder button to select all seven files. Click **Upload** and wait until every file shows a green completion check.
+
+   ![The InventoryLakehouse home page with Upload files selected](../images/challenge-00-lakehouse-upload-files.png)
+
+   ![The Upload files panel showing all seven Parquet files uploaded successfully](../images/challenge-00-lakehouse-upload-files-select.png)
+
+   **b. Load each file into a new table.**
+   In the Lakehouse **Explorer**, expand **Files**. For each `.parquet` file, select its **...** menu, then **Load to tables -> New table**.
+
+   ![The menu for a Parquet file with Load to tables and New table selected](../images/challenge-00-lakehouse-load-to-tables.png)
+
+   Keep the schema as **`dbo`**, set the table name to the file name without the `.parquet` extension, and click **Load**. For example, load `demandhistory.parquet` into a table named `demandhistory`. Repeat this for all seven files.
+
+   ![The Load file to new table dialog using the dbo schema and demandhistory table name](../images/challenge-00-lakehouse-load-table.png)
+
+   **c. Verify the tables.**
+   Expand **Tables -> dbo** and confirm that these seven tables appear: `demandhistory`, `externalsignals`, `inventory`, `products`, `replenishmentorders`, `stores`, and `suppliers`.
+
+   ![The InventoryLakehouse Explorer showing all seven tables under the dbo schema](../images/challenge-00-lakehouse-data-loaded.png)
+
+   **d. Create the Data Agent.**
+   Return to the **`inventory-hack`** workspace, select **+ New item**, search for `agent`, and choose **Data agent**. Name it  **`inventory-hack-agent`**.
+
+   ![The Fabric New item panel filtered to show the Data agent item](../images/challenge-00-new-data-agent.png)
+
+   **e. Add the Lakehouse data source.**
+   On the agent's **Data** tab, select **Add Data -> Data source**. Choose **`InventoryLakehouse`**, select all seven tables, and add them to the agent.
+
+   ![The new inventory-hack-agent with Add Data and Data source selected](../images/challenge-00-agent-add-data.png)
+
+   **f. Add the agent instructions.**
+   Open **Setup -> Agent instructions** and enter the following instructions:
+
+   ```text
+   You answer questions about Zava retail inventory. Use these tables: Inventory (onHand, reorderPoint, safetyStock per product per location), Products (name, category, unitCost, leadTimeDays, supplierId), Stores (retail stores and warehouses with region/city/state), DemandHistory (weekly units sold per product per store), ExternalSignals (market signals with affectedCategories), Suppliers, and ReplenishmentOrders (past purchase/transfer orders). Always return exact numbers. Flag a product as CRITICAL when onHand is below safetyStock.
+   ```
+
+   Save the Data Agent.
+
+   ![The Agent instructions page containing the Zava retail inventory grounding instructions](../images/challenge-00-agent-add-instructions.png)
+
+   **g. Publish the Data Agent.**
+
+   Click **Publish** in the top toolbar. In the **Publish data agent** dialog, enter a short description of the agent's purpose and capabilities, for example: `Zava inventory data agent for the Agentic Inventory Planning MicroHack.` Leave **Also publish to the Agent Store in Microsoft 365 Copilot** turned off, then click **Publish**.
+
+   ![Publish data agent dialog with a purpose description entered and the Publish button highlighted](../images/challenge-00-agent-publish.png)
+
+   **h. Get your two IDs.**
+
+   After publishing, click the **Settings** gear in the data agent toolbar. Select **Publishing**, then copy the **Published URL** using the copy icon.
+
+   ![The Settings gear in the data agent toolbar](../images/challenge-00-agent-settings.png)
+   ![The Publishing settings page with the Published URL copy button highlighted](../images/challenge-00-agent-url.png)
+
+   Paste the URL into a text editor. It has this format:
+
+   ```text
+   https://api.fabric.microsoft.com/v1/workspaces/<workspace-id>/dataagents/<agent-id>/aiassistant/openai
+   ```
+
+   Copy and note these two values:
+   - **Workspace ID** — the value between `/workspaces/` and `/dataagents/`
+   - **Agent ID** — the value between `/dataagents/` and `/aiassistant/`
+
+   You paste both IDs into the Fabric Data Agent tool in Challenge 2.
+
+   ![Published URL with the Workspace ID and Agent ID segments identified](../images/challenge-00-agent-ids.png)
+
+   **i. Verify your agent answers.** *(1 min)*
+   Open the data agent's **Test data agent** pane and ask: *"How many Leaf Blower X2 units are on hand at the Portland and Seattle stores, and are they below safety stock?"* You should get exact numbers with **CRITICAL** flags — proof that your tables are selected and the agent is published.
+
+   ![The published data agent answering the Leaf Blower X2 test question with exact CRITICAL stock levels for Portland and Seattle](../images/challenge-00-agent-test.png)
+
+4(b). **Load the data and create a Data Agent (with code).** *(~20 min)*
+
+   > [!NOTE]
+   > Follow either this section or section 4(a) if you'd like to load the data and create the data agent manually.
+
+   **a. Import the setup notebook.**
    Download **`Setup-InventoryDataAgent.ipynb`** from the hack repo's **`setup/`** folder (or the link your facilitator shares). In the workspace toolbar, click **Import → Notebook → From this computer**, then **Upload** and choose the file. You'll see an **Imported successfully** confirmation — open the notebook.
 
    ![The workspace Import menu open on Notebook then From this computer](../images/challenge-00-import-notebook.png)
@@ -81,22 +165,22 @@ The data lives in **Microsoft Fabric** (a governed Lakehouse with inventory, dem
 
    ![The imported notebook open with an Imported successfully confirmation popover](../images/challenge-00-notebook-imported.png)
 
-   **d. Attach your Lakehouse to the notebook.**
+   **b. Attach your Lakehouse to the notebook.**
    Open the imported notebook. In the left **Explorer** pane click **Add** (Lakehouses) → **Existing Lakehouse**. In the **OneLake catalog** dialog, tick **`InventoryLakehouse`** and click **Add** — if more than one appears, pick the row whose **Location** is **`inventory-hack`** (your workspace). It becomes the notebook's **default** Lakehouse. **Without this, the table-write cells fail.**
 
    ![OneLake catalog dialog selecting InventoryLakehouse in the inventory-hack workspace as the notebook's lakehouse](../images/challenge-00-attach-lakehouse.png)
 
-   **e. Run all.**
+   **c. Run all.**
    Click **Run all**. The notebook installs the preview SDKs (the kernel restarts once — that's expected), loads its embedded seed data, writes **7 tables**, and **publishes** your `inventory-hack-agent` Data Agent (~5–10 min).
 
    ![The notebook with InventoryLakehouse attached as the default Lakehouse and the Run all button highlighted](../images/challenge-00-run-all.png)
 
-   **f. Copy your two IDs.**
+   **d. Copy your two IDs.**
    When it finishes, the **last cell prints your Workspace ID and Agent ID**. Note both — you paste them into the Fabric Data Agent tool in Challenge 2.
 
    ![Final notebook cell output printing the Workspace ID and Data Agent ID](../images/challenge-00-notebook-ids.png)
 
-   **g. Verify your agent answers.** *(1 min)*
+   **e. Verify your agent answers.** *(1 min)*
    Open the data agent's **Test data agent** pane and ask: *"How many Leaf Blower X2 units are on hand at the Portland and Seattle stores, and are they below safety stock?"* You should get exact numbers with **CRITICAL** flags — proof that your tables are selected and the agent is published.
 
    ![The published data agent answering the Leaf Blower X2 test question with exact CRITICAL stock levels for Portland and Seattle](../images/challenge-00-agent-test.png)
@@ -113,7 +197,7 @@ The data lives in **Microsoft Fabric** (a governed Lakehouse with inventory, dem
    > [!TIP]
    > **No "Fabric Data Agent" in the Foundry tool catalogue later?** Your F2 capacity must be **running** (Azure portal → your Fabric capacity → **Resume**) and the setup notebook must have finished publishing the agent.
 
-4. **Understand the three-agent pattern.**
+5. **Understand the three-agent pattern.**
    Draw (on paper or a whiteboard) the flow:
    ```
    Real-world event
@@ -127,7 +211,7 @@ The data lives in **Microsoft Fabric** (a governed Lakehouse with inventory, dem
    ```
    Be able to answer: *What tool does each agent use and why?*
 
-5. **Answer the grounding questions** (discuss with your team):
+6. **Answer the grounding questions** (discuss with your team):
    - What would go wrong if the Demand Sensing Agent only looked at web signals and ignored the governed inventory data?
    - Why does the Replenishment Action Agent need a human approval step?
    - What data does the Fabric Data Agent abstract away for you?

@@ -365,4 +365,4 @@ kubectl describe $constraint_name
 
 You successfully completed challenge 2! 🚀🚀🚀
 
-[Back to challenge 01](../challenge-01/solution.md) - [Next challenge](../../challenges/challenge-03.md) - [Next Challenge's Solution](../challenge-03/solution.md)
+[Back to challenge 01](../challenge-01/solution-01.md) - [Next challenge](../../challenges/challenge-03.md) - [Next Challenge's Solution](../challenge-03/solution-03.md)

@@ -1,6 +1,6 @@
 # Walkthrough Challenge 3 - Deploy CPU based Large & Small Language Models (LLM/SLM)
 
-[Back to challenge](../../challenges/challenge-03.md) - [Next Challenge's Solution](../challenge-04/solution.md)
+[Back to challenge](../../challenges/challenge-03.md) - [Next Challenge's Solution](../challenge-04/solution-04.md)
 
 ## Prerequisites
 * You have an arc-connected k8s cluster/finisched challenge 01.
@@ -80,4 +80,4 @@ echo "Open http://$NODE_IP:$NODE_PORT"
 
 You successfully completed challenge 3! 🚀🚀🚀
 
-[Next challenge](../../challenges/challenge-04.md) - [Next Challenge's Solution](../challenge-04/solution.md)
+[Next challenge](../../challenges/challenge-04.md) - [Next Challenge's Solution](../challenge-04/solution-04.md)

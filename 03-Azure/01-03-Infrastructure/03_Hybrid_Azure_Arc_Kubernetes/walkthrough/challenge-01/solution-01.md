@@ -216,4 +216,4 @@ Now, reload the resources page in the Azure portl. You should see at least the f
 
 You successfully completed challenge 1! 🚀🚀🚀
 
-[Next challenge](../../challenges/challenge-02.md) - [Next Challenge's Solution](../challenge-02/solution.md)
+[Next challenge](../../challenges/challenge-02.md) - [Next Challenge's Solution](../challenge-02/solution-02.md)

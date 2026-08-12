@@ -21,6 +21,6 @@ Configure GitOps with Flux for cluster management. In this microhack we chose to
 * [Flux documentation - Get started](https://fluxcd.io/docs/get-started/)
 
 ## Solution - Spoilerwarning
-[Solution Steps](../walkthrough/challenge-05/solution.md)
+[Solution Steps](../walkthrough/challenge-05/solution-05.md)
 
 [Back](../Readme.md)

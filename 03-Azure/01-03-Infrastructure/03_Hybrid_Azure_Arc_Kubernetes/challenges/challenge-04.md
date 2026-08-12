@@ -25,6 +25,6 @@ In challenge 4 you will deploy Azure Arc-enabled Data Services to your cluster a
 * [Azure Arc Data Controller deployment](https://learn.microsoft.com/en-us/azure/azure-arc/data/create-data-controller)
 
 ## Solution - Spoilerwarning
-[Solution Steps](../walkthrough/challenge-04/solution.md)
+[Solution Steps](../walkthrough/challenge-04/solution-04.md)
 
 [Next challenge](challenge-05.md) | [Back](../Readme.md)

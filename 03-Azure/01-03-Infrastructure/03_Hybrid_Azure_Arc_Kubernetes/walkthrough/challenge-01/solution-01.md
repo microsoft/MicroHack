@@ -62,7 +62,7 @@ kubectl get nodes
 ## Task 2 - Connect K8s cluster using script
 
 * In your shell go to the folder where you cloned the microhack repository
-* Change to the sub-folder '03-Azure/01-03-Infrastructure/03_Hybrid_Azure_Arc_Kubernetes/walkthroughs/challenge-01'
+* Change to the sub-folder '03-Azure/01-03-Infrastructure/03_Hybrid_Azure_Arc_Kubernetes/walkthrough/challenge-01'
 * Execute the script to
     * register required resource providers in your subscription (this step may take several minutes if the resource providers have not been registered before):
         * Microsoft.Kubernetes
@@ -216,4 +216,4 @@ Now, reload the resources page in the Azure portl. You should see at least the f
 
 You successfully completed challenge 1! 🚀🚀🚀
 
-[Next challenge](../../challenges/challenge-02.md) - [Next Challenge's Solution](../challenge-02/solution.md)
+[Next challenge](../../challenges/challenge-02.md) - [Next Challenge's Solution](../challenge-02/solution-02.md)

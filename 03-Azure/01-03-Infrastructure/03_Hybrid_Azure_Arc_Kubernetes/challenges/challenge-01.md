@@ -26,6 +26,6 @@ In challenge 1 you will connect/onboard your existing K8s cluster to Azure Arc.
 * (https://learn.microsoft.com/en-us/cli/azure/connectedk8s?view=azure-cli-latest)
 
 ## Solution - Spoilerwarning
-[Solution Steps](../walkthrough/challenge-01/solution.md)
+[Solution Steps](../walkthrough/challenge-01/solution-01.md)
 
 [Next challenge](challenge-02.md) | [Back](../Readme.md)

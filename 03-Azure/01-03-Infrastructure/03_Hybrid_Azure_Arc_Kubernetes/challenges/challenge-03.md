@@ -20,6 +20,6 @@ In challenge 3 you will deploy a LLM/SLM to your Azure Arc-enabled Kubernetes Cl
 * (https://github.com/kaito-project/kaito) GPU Based LLM/SLM
 
 ### Solution - Spoilerwarning
-[Solution Steps](../walkthrough/challenge-03/solution.md)
+[Solution Steps](../walkthrough/challenge-03/solution-03.md)
 
 [Next challenge](challenge-04.md) | [Back](../Readme.md)

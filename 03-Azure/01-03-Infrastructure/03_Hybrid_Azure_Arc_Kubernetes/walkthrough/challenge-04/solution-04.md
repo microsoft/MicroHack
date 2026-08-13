@@ -1,6 +1,6 @@
 # Walkthrough Challenge 4 - Deploy SQL Managed Instance to your cluster
 
-[Back to challenge](../../challenges/challenge-04.md) - [Next Challenge's Solution](../challenge-05/solution.md)
+[Back to challenge](../../challenges/challenge-04.md) - [Next Challenge's Solution](../challenge-05/solution-05.md)
 
 ## prerequisites
 - [client tools](https://learn.microsoft.com/en-us/azure/azure-arc/data/install-client-tools)
@@ -200,4 +200,4 @@ echo "Server=$master_ip,$node_port;Database=master;User Id=sa;Password=<your-pas
 
 You successfully completed challenge 4! 🚀🚀🚀
 
-[Next challenge](../../challenges/challenge-05.md) - [Next Challenge's Solution](../challenge-05/solution.md)
+[Next challenge](../../challenges/challenge-05.md) - [Next Challenge's Solution](../challenge-05/solution-05.md)

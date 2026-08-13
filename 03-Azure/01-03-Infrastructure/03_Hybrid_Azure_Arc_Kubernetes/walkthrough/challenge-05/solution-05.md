@@ -61,7 +61,7 @@ az k8s-extension create \
      git config core.sparseCheckout true
      
      # Specify the folder to checkout (the namespaces folder for this challenge)
-     echo "03-Azure/01-03-Infrastructure/03_Hybrid_Azure_Arc_Kubernetes/walkthroughs/challenge-05/namespaces" >> .git/info/sparse-checkout
+     echo "03-Azure/01-03-Infrastructure/03_Hybrid_Azure_Arc_Kubernetes/walkthrough/challenge-05/namespaces" >> .git/info/sparse-checkout
      
      # Pull the content
      git pull origin main
@@ -73,7 +73,7 @@ az k8s-extension create \
 In order to manage a namespace via flux, you need a repository. In this microhack we're using a public github repository. If using a private repo make sure to add credentials so flux is able to access your repository. The following command creates a flux configuration which watches the namespaces folder within this repository. All namespace definitions found in this folder will be applied to the cluster.
 ```bash
 repository="https://github.com/<your-github-username>/MicroHack" #Change to your own fork of the Microhack repository
-path="/03-Azure/01-03-Infrastructure/03_Hybrid_Azure_Arc_Kubernetes/walkthroughs/challenge-05/namespaces"
+path="/03-Azure/01-03-Infrastructure/03_Hybrid_Azure_Arc_Kubernetes/walkthrough/challenge-05/namespaces"
 
 az k8s-configuration flux create \
   --resource-group $arc_resource_group \

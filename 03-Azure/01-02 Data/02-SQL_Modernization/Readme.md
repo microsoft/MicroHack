@@ -1,7 +1,7 @@
 
-![image](./Images/SQLMicroHack.jpg)
+![image](./Images/SQLMicroHack_SmartModernization.jpeg)
 
-# MicroHack - SQL modernization 
+# MicroHack - Smart Modernization : SQL + AI in Action 
 
 - [**MicroHack introduction**](#MicroHack-introduction)
 - [**MicroHack context**](#microhack-context)
@@ -11,9 +11,9 @@
 
 # MicroHack introduction
 
-This MicroHack scenario walks through the use of database migration with a focus on the best practices and the design principles. Specifically, this builds up to include working with an existing infrastructure.
+This MicroHack scenario walks through the use of database migration with a focus on the best practices and the design principles. Specifically, this builds up to include working with an existing infrastructure. It also includes the usage of Github Copilot to make your work with databases smarter.
 
-This MicroHack will enhance your understanding of SQL modernization and migration paths, including how to assess and migrate SQL Server databases to Azure SQL, administer and monitor Azure SQL Managed Instance, and ensure the security of Azure SQL Managed Instance services. Specifically, to bring Azure SQL family closer to the participants, making the value of platform services more concrete and understandable through hands-on labs and presentations.
+This MicroHack will enhance your understanding of SQL modernization and migration paths, including how to assess and migrate SQL Server databases to Azure SQL, administer and monitor Azure SQL Managed Instance, and ensure the security of Azure SQL Managed Instance services. Specifically, to bring Azure SQL family closer to the participants, making the value of platform services more concrete and understandable through hands-on labs and presentations. Finally leveraging the new capabilities of AI for your database environment on-premises, hybrid and in the cloud.
 
 
 # MicroHack context
@@ -23,11 +23,12 @@ This MicroHack scenario walks through modernizing SQL Server workloads to Azure,
 
 After completing this MicroHack you will be able to:
 
-* Implement a proof-of-concept (PoC) for migrating an on-premises SQL Server 2012 or SQL Server 2016 database into Azure SQL Database Managed Instance  (SQL MI)  
+* Implement a proof-of-concept (PoC) for migrating an on-premises SQL Server 2016 database into Azure SQL Database Managed Instance  (SQL MI)  
 * Perform assessments to reveal any feature parity and compatibility issues between the on-premises SQL Server database and the managed database offerings in Azure   
 * Migrate the on-premises databases into Azure, using Azure migration services  
 * Enable some of the advanced SQL features available in SQL MI to improve security and performance in your customer's application  
 * Understand how to to implement a cloud migration solution for business-critical applications and databases  
+* Learn how to leverage Github Copilot to work smarter and get easier insights
 
 # MicroHack challenges
 
@@ -57,5 +58,5 @@ This MicroHack has a few but important prerequisites
 
 ## Contributors
 * Cornel Sukalla [LinkedIn](https://www.linkedin.com/in/cornelsukalla/)
-* Mert Següner [LinkedIn](https://www.linkedin.com/in/mertsenguner/)
+* Oliver Hahn [LinkedIn](https://www.linkedin.com/in/oliver-hahn-ms/)
 * Sean Cowburn [LinkedIn](https://www.linkedin.com/in/sean-cowburn/)

@@ -24,6 +24,8 @@
 
 [Advanced Threat Protection](#advanced-threat-protection)
 
+[**6.** Use Github Copilot to identify security issues in your database](#use-github-copilot-to-identify-security-issues-in-your-database)
+
 # 
 
 # **Introduction**
@@ -45,7 +47,7 @@ So this lab will focus on the Threat Protection, Information Protection and Cust
 
 All the labs run against the **TEAMXX_TenantDataDb** that you migrated earlier using either SQL Server Management Studio or the Azure Portal.
 
-Your Win10 VM (vm-TEAMXX) login credentials are also a member of SQL Server sysadmin role.
+Your Win11 VM (vm-TEAMXX) login credentials are also a member of SQL Server sysadmin role.
 
 **Username:** _Will be provided during hack_
 **Password:** _Will be provided during hack_
@@ -128,9 +130,22 @@ More information in Azure Defender for SQL – Advanced Threat Protection can be
 |Scroll down the Overview screen until you see the list of databases and click on your **TEAMXX_TenantDataDB** database.|||
 |In the **TEAMXX_TenantDataDB** database screen, on the left-hand blade click **Microsoft Defender for Cloud** in the Security section   Scroll down to the **Security incidents and alters heading** – note no incidents or alerts are listed:|  **![](../../Images/eec68b37bb4694ee925c4cc6f5c34938.png)**||
 |On the team VM, open a new query window in SQL Server Management Studio connected to your **TEAMXX_TenantDataDB** database.|||
-|To simulate a potential SQL injection query copy the following SELECT into the new query window **BUT DON’T RUN IT YET**:|--Advanced Threat Protection <br> SELECT \* <br>  FROM sys.databases<br>  WHERE database_id like '' or 1 = 1 -- ' and family = 'test1';|Notice that the logic in the WHERE clause will always equate to true and the positioning of single-quotes including in the comment represents a potential SQL injection vulnerability|
+|To simulate a potential SQL injection query copy the following SELECT into the new query window **BUT DON’T RUN IT YET**:|--Advanced Threat Protection <br> DECLARE @UserInput nvarchar(max) = ''' OR 1=1--'; <br> DECLARE @SQL nvarchar(max) = 'SELECT * FROM sys.databases WHERE name = ''' + @UserInput + ''''; <br>  EXEC(@SQL); <br>|Notice that the logic in the WHERE clause will always equate to true and the positioning of single-quotes including in the comment represents a potential SQL injection vulnerability|
 |Before running the query change the connection properties as show opposite using the **Query\\Connection\\Change Connection**… menu in SSMS.<br><br>  Click **Connect**| Specify the name of the team Azure SQL Database: **TEAMXX_TenantDataDB**  ![Graphical user interface, application Description automatically generated](../../Images/82b9ed825ade0d643bc7758660735c06.png) <br> On “Additional Connection Parameters add a connection string option to specify the application name: **Application Name=webappname** <br> ![](../../Images/1684cc725d25a813222954105a73f264.png) |
 |Run the query. <br> <br>    It will return a list of databases on the server.||
 |Back in the Azure Portal **Microsoft Defender for Cloud** screen, after a few minutes an Alert should be generated: <br> <br>**NOTE:** It might take up to 10mins for the alert to appear in the portal| ![Graphical user interface Description automatically generated with low confidence](../../Images/a181cd65084cdd5f3515875e20bea999.png)|
 |Once the Later appears click on it to see the details. <br><br> Depending on the progress of other teams you may see multiple entries in the details table.|![A screenshot of a computer Description automatically generated](../../Images/619ec45260df07ebfec33d52e66706f2.png)|
 |Try clicking on the Alert.<br><br> Note that you can drill further into the alert to see more details, get explanations and links to documentation on the alert and even advice on how negate and remediate the problem.||
+
+## Use Github Copilot to identify security issues in your database
+
+In this exercise you will leverage Github Copilot to identify security issues and try mitigate those.
+
+|**Narrative/Instructions**| **Screenshot**| **Notes**|
+|:------------|:--------------|:---------|
+|On your Team Win11 VM open **SQL Server Management Studio (SSMS)** and connect to the Azure SQL Managed Instance using these details from the readme.txt file. **Authentication: SQL Login** **Login:** **_Will be provided during hack_**<br> **Password:**  **_Will be provided during hack_**| **![](../../Images/4b05bbceae6c4c0d2c4e37e53e60dfd4.png)**||
+|Enter a prompt similar to the following to the Github Copilot Chat window *Please check for security issues and options to mitigate them in the TenantCRM database.*|![](../../Images/GithubCopilot_performance_prompt.png)||
+|Github Copilot may request several times approval to execute queries to analyze the problem. Please approve the requests.|![](../../Images/GithubCopilot_Approve.png)||
+|Github Copilot identified the stored procedure AdminExecuteSQLCommand to be vulnerable to SQL Code Injections. Copilot recommends to use sp_executesql for proper parameter handling.|![](../../Images/GithubCopilot_SqlInjectionProc.png)||
+
+We have seen how Github Copilot can help us analyze and mitigate security issues.

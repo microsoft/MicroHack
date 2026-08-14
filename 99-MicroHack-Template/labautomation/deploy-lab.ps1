@@ -48,7 +48,12 @@ if($DeploymentType -eq 'subscription') {
     $stableHash = Get-MhhStablehash $AllowedEntraUserIds -Length 24
     $effectiveResourceGroup = "lab-$stableHash"
     Write-Host "Deploying lab resources at the subscription level in subscription $SubscriptionId..."
-    New-AzResourceGroup -Name $effectiveResourceGroup -Location $effectiveLocation -Verbose
+    if(-not (Get-AzResourceGroup -Name $effectiveResourceGroup -ErrorAction SilentlyContinue)) {
+        Write-Host "Creating resource group '$effectiveResourceGroup' in location '$effectiveLocation'..."
+        New-AzResourceGroup -Name $effectiveResourceGroup -Location $effectiveLocation -Verbose
+    } else {
+        Write-Host "Resource group '$effectiveResourceGroup' already exists."
+    }
 }
 else {
     $effectiveResourceGroup = $ResourceGroupName
@@ -56,9 +61,19 @@ else {
 # feed the effective resource group back to the console
 @{"HackboxCredential" = @{ name = "ResourceGroupName" ; value = $effectiveResourceGroup; note = "The name of the resource group where lab resources are deployed" }}
 
+
 # $template = Join-Path $scriptPath "template.bicep"
 # $template = Join-Path $scriptPath "template.json"
-# New-AzResourceGroupDeployment -ResourceGroupName $effectiveResourceGroup -TemplateFile $template -Verbose
+<#
+$result = Invoke-MhhDeploymentWithRegionFallback `
+    -PreferredLocations      $PreferredLocation `
+    -ResourceGroupName       $effectiveResourceGroup `
+    -RgOwnerEntraObjectIds   $AllowedEntraUserIds `
+    -TemplateFile            $template `
+    -TemplateParameterObject @{
+        userObjectId = $AllowedEntraUserIds[0]
+    }
+#>
 
 # You can send back information to the hackbox console (credentials) - Simply return a hashtable like this:
 # @{"HackboxCredential" = @{ name = "AdminPassword" ; value = "TopSecret"; note = "Useful info here" }}

@@ -6,7 +6,11 @@ Azure provisioning.
 When present, the MicroHack platform reads [lab-defaults.json](lab-defaults.json)
 to decide *how* to scope lab environments, and (optionally) invokes
 [deploy-lab.ps1](deploy-lab.ps1) once per participant to deploy
-MicroHack-specific resources into a pre-provisioned Azure scope.
+MicroHack-specific resources into a pre-provisioned Azure scope. One further
+optional script, [shared-deploy-lab.ps1](shared-deploy-lab.ps1), runs once per
+subscription *ahead of* that fan-out to lay down whatever the individual labs
+build on. See
+[Optional hook](#optional-hook-shared-deploy-labps1).
 
 **One deployment fans out into N identical labs, one per participant.** The
 platform runs *your one script* many times over, in a separate process each
@@ -19,20 +23,31 @@ as if it only ever deploys a single lab for a single user,
 ## How the platform runs your lab automation
 
 ```mermaid
-flowchart LR
+flowchart TD
     A[Deployment start] --> B[Read lab-defaults.json]
-    B --> C{"Fan out:<br/>one lab per participant"}
-    C --> D[Pre-provision Azure scope<br/>subscription / resource group<br/>+ user RBAC]
-    D --> E[Run deploy-lab.ps1<br/>one isolated process per participant]
+    B --> C["Reserve the event's subscriptions"]
+    C --> D["Pre-provision each participant's scope<br/>subscription / resource group<br/>+ user RBAC"]
+    D --> SH["shared-deploy-lab.ps1 (optional)<br/>once per subscription, in parallel<br/>receives all its participants"]
+    SH --> G{"Shared stage<br/>succeeded?"}
+    G -- no --> X["No deploy-lab.ps1 runs at all<br/>deployment marked failed"]
 
-    subgraph job["One process = one participant's lab (identical content, isolated state)"]
+    subgraph fan["Fan out: one isolated process per participant, identical content"]
         direction LR
-        E --> F[Your script deploys<br/>MicroHack resources]
-        F --> G["Emit @{ HackboxCredential = ... }<br/>to output stream"]
+        L1["deploy-lab.ps1<br/>participant 1"]
+        L2["deploy-lab.ps1<br/>participant 2"]
+        LN["deploy-lab.ps1<br/>participant N"]
     end
 
-    G --> H[(Credential repository<br/>per-lab credentials)]
-    H --> I[User dashboard]
+    G -- yes --> L1
+    G -- yes --> L2
+    G -- yes --> LN
+
+    SH -. HackboxCredential for every lab in that subscription .-> CR
+    L1 -. HackboxCredential .-> CR
+    L2 -. HackboxCredential .-> CR
+    LN -. HackboxCredential .-> CR
+
+    CR[(Credential repository<br/>per-lab credentials)] --> DASH[User dashboard]
 ```
 
 Key points for integration:
@@ -54,6 +69,12 @@ Key points for integration:
   [`Invoke-MhhTofuCommand`](#invoke-mhhtofucommand). Use `Get-MhhStableHash`
   over `$AllowedEntraUserIds` if you need a deterministic, per-participant
   resource name.
+- **Anything that must happen once, not N times, belongs in the shared hook.**
+  Resources several labs in one subscription share (a hub network, a central
+  workspace, …), and one-off subscription preparation every parallel
+  `deploy-lab.ps1` would otherwise race on (registering resource providers, …),
+  go into `shared-deploy-lab.ps1`. It is optional and independent of
+  `deploy-lab.ps1`, and it always completes before the first lab starts.
 
 - [Lab automation](#lab-automation)
   - [How the platform runs your lab automation](#how-the-platform-runs-your-lab-automation)
@@ -72,6 +93,12 @@ Key points for integration:
       - [Passwords and re-runs](#passwords-and-re-runs)
     - [Cleaning up](#cleaning-up)
     - [Local testing](#local-testing)
+  - [Optional hook: `shared-deploy-lab.ps1`](#optional-hook-shared-deploy-labps1)
+    - [Where it fits in the pipeline](#where-it-fits-in-the-pipeline)
+    - [Shared hook parameter contract](#shared-hook-parameter-contract)
+    - [Rules for the shared hook](#rules-for-the-shared-hook)
+    - [Example: a shared hub network](#example-a-shared-hub-network)
+    - [Testing the shared hook locally](#testing-the-shared-hook-locally)
   - [Available helper cmdlets](#available-helper-cmdlets)
     - [`New-MhhStablePassword`](#new-mhhstablepassword)
     - [`Get-MhhStableHash`](#get-mhhstablehash)
@@ -88,15 +115,17 @@ Key points for integration:
 
 ```text
 labautomation/
-├── lab-defaults.json   # Platform-facing configuration (required if folder exists)
-├── deploy-lab.ps1      # Optional: per-user Azure deployment script
-├── main.bicep          # Optional: Bicep/ARM template your script deploys  (Recommended)
-└── tofu/               # Optional: OpenTofu (.tf) module your script deploys (NOT Recommended)
+├── lab-defaults.json        # Platform-facing configuration (required if folder exists)
+├── shared-deploy-lab.ps1    # Optional: runs once per subscription, before the labs
+├── deploy-lab.ps1           # Optional: per-user Azure deployment script
+├── main.bicep               # Optional: Bicep/ARM template your script deploys  (Recommended)
+└── tofu/                    # Optional: OpenTofu (.tf) module your script deploys (NOT Recommended)
 ```
 
-`lab-defaults.json` and `deploy-lab.ps1` are picked up automatically, no
-registration step is required. Anything else in the folder is yours; reference
-it from your script with `Join-Path $PSScriptRoot '<name>'`.
+`lab-defaults.json`, `deploy-lab.ps1` and `shared-deploy-lab.ps1` are picked up
+automatically by file name, no registration step is required. Anything else in
+the folder is yours; reference it from your script with
+`Join-Path $PSScriptRoot '<name>'`.
 
 ## `lab-defaults.json`
 
@@ -482,6 +511,167 @@ required parameters from the [contract](#required-parameter-contract):
 
 > The helper cmdlets (`New-MhhStablePassword`, `Get-MhhStableHash`,
 > `Update-MhhToken`, `Invoke-MhhTofuCommand`, …) are simplified local-dev stand-ins.
+
+## Optional hook: `shared-deploy-lab.ps1`
+
+`deploy-lab.ps1` deliberately only ever sees one lab. That is what makes it safe
+to run 50 times in parallel, but it also means there is no place in it for work
+that must happen **once per subscription** rather than once per participant.
+[`shared-deploy-lab.ps1`](shared-deploy-lab.ps1) fills exactly that gap: the
+platform runs it once for every subscription that holds labs, **before** the
+first `deploy-lab.ps1` starts, so whatever it provisions is already in place
+when the individual labs are built on top of it.
+
+Use it for:
+
+- **Shared resources** several labs in the same subscription are meant to use:
+  a hub VNet the participant spokes peer into, a central Log Analytics
+  workspace, a shared AI Foundry / OpenAI resource whose quota you do not want
+  to multiply by the number of participants.
+- **One-off subscription preparation** that every parallel `deploy-lab.ps1`
+  would otherwise race on or duplicate: registering resource providers,
+  accepting Azure Marketplace image terms — anything that is a property of the
+  *subscription* rather than of a lab.
+
+The script is optional and independent: you can ship it without a
+`deploy-lab.ps1`, and vice versa. As with `deploy-lab.ps1`, its param block is
+validated before it runs — a mismatch means the hook is skipped with a warning
+in the job log and the labs are built without it, so keep the parameter names
+and types exactly as documented below.
+
+### Where it fits in the pipeline
+
+| | `shared-deploy-lab.ps1` | `deploy-lab.ps1` |
+| --- | --- | --- |
+| Invocations | once per subscription | once per lab |
+| Timing | after every lab's scope + RBAC exist, **before any lab is built** | after the shared stage finished successfully |
+| Concurrency | parallel, one job per subscription | parallel, one job per lab |
+| Azure scope handed in | one subscription, **no** resource group (create your own) | one subscription **+** that lab's resource group |
+| lab handed in | **every** lab in that subscription | exactly one |
+| `HackboxCredential` output | stored for **every** lab in that subscription | stored for that one lab |
+| On failure | **no** `deploy-lab.ps1` runs at all, in any subscription; deployment marked failed | the lab is marked failed |
+| Helper cmdlets, Az / Azure CLI login, `Get-MhhLabUser` | available | available |
+
+> **One failing subscription blocks the whole event.** The gate is global, not
+> per subscription: if the shared hook fails for *one* subscription, the
+> platform skips `deploy-lab.ps1` for *every* participant and fails the
+> deployment. Idempotency is therefore critical!
+
+### Shared hook parameter contract
+
+```powershell
+param(
+    [Parameter(Mandatory=$true)]
+    [string]$SubscriptionId,
+
+    [Parameter(Mandatory=$true)]
+    [string]$PreferredLocation,
+
+    [Parameter(Mandatory=$false)]
+    [string[]]$AllowedEntraUserIds = @()
+)
+```
+
+| Parameter | Provided by | Notes |
+| --- | --- | --- |
+| `SubscriptionId` | platform | The subscription this invocation is responsible for. Az PowerShell and the Azure CLI already point at it. |
+| `PreferredLocation` | platform | The regions from `lab-defaults.json`, in priority order. May be declared as `[string]` (comma-separated) or `[string[]]`; the platform detects the type and adapts, exactly as for `deploy-lab.ps1`. |
+| `AllowedEntraUserIds` | platform | **All** participants holding a lab in this subscription — up to `labsPerSubscription` of them, or exactly one when `deploymentType` is `subscription`. |
+
+### Rules for the shared hook
+
+- **`$AllowedEntraUserIds` is a list, not a single user.** Grant RBAC on
+  everything you create to *all* of them; the platform assigns no roles on the
+  resources this hook provisions.
+- **There is no `$ResourceGroupName`.** Create your own resource group and never
+  deploy into a participant's. A fixed name such as `rg-shared` is fine — the
+  subscription only ever holds this one event's labs — or derive one with
+  [`Get-MhhStableHash`](#get-mhhstablehash).
+- **`Invoke-MhhDeploymentWithRegionFallback` wipes the resource group it deploys
+  into.** Harmless for a dedicated shared RG, catastrophic if you ever point it
+  at a participant's RG.
+- **Emitted credentials fan out to every participant in the subscription.** The
+  right behaviour for a shared endpoint, hostname or resource group name; never
+  emit a per-participant secret from here.
+- **Hand results down through the dashboard, not through variables.**
+  `deploy-lab.ps1` runs in a separate process and receives nothing from this
+  hook. If a lab needs to find the shared resources, either look them up in the
+  lab (`Get-AzResource`, a well-known name or tag) or surface them as a
+  `HackboxCredential`.
+- **`deploy-lab.ps1` may assume the shared resources exist** — that is the whole
+  point of the ordering — but only if this hook is genuinely finished. Don't
+  submit long ARM deployments with `-AsJob` and return before they complete.
+- **Be idempotent.** The hook re-runs whenever the deployment is re-run,
+  including after a partial failure. Guard with
+  `-ErrorAction SilentlyContinue` + `if (-not …)`, or redeploy the same template.
+- **Registration is asynchronous.** `Register-AzResourceProvider` returns
+  immediately; a provider may still be `Registering` when the labs start.
+  Register here, and re-check in `deploy-lab.ps1` if a provider is mandatory.
+- **Everything else matches `deploy-lab.ps1`:** its own process, Az PowerShell
+  and the Azure CLI logged in against `$SubscriptionId` with a private
+  `AZURE_CONFIG_DIR`, the lab-user cache pre-seeded (so
+  [`Get-MhhLabUser`](#get-mhhlabuser) is free) and all helper cmdlets
+  auto-imported. [`Update-MhhToken`](#update-mhhtoken) is scoped to the
+  subscription and takes no arguments here either. Do not call
+  `Connect-AzAccount`, `Set-AzContext` or `az login`.
+
+### Example: a shared hub network
+
+```powershell
+param(
+    [Parameter(Mandatory=$true)]
+    [string]$SubscriptionId,
+
+    [Parameter(Mandatory=$true)]
+    [string[]]$PreferredLocation,
+
+    [Parameter(Mandatory=$false)]
+    [string[]]$AllowedEntraUserIds = @()
+)
+
+$sharedResourceGroup = 'rg-shared'
+
+$result = Invoke-MhhDeploymentWithRegionFallback `
+    -PreferredLocations      $PreferredLocation `
+    -ResourceGroupName       $sharedResourceGroup `
+    -RgOwnerEntraObjectIds   $AllowedEntraUserIds `
+    -TemplateFile            (Join-Path $PSScriptRoot 'shared.bicep') `
+    -TemplateParameterObject @{ userIds = $AllowedEntraUserIds } `
+    -DeploymentNamePrefix    'shared'
+
+# Shown on the dashboard of every participant in this subscription.
+@{ HackboxCredential = @{
+    name  = 'Shared Resource Group'
+    value = $sharedResourceGroup
+    note  = 'Shared by all labs in your subscription'
+} }
+@{ HackboxCredential = @{
+    name  = 'Hub VNet'
+    value = [string]$result.Outputs['hubVnetName']
+    note  = ''
+} }
+```
+
+`deploy-lab.ps1` can then peer each participant's spoke into `rg-shared`,
+because the hub is guaranteed to exist by the time it runs.
+
+### Testing the shared hook locally
+
+Same [`adminpwsh`](https://github.com/qxsch/adminpwsh) container and login steps
+as in [Local testing](#local-testing); only the invocation differs:
+
+```powershell
+./shared-deploy-lab.ps1 `
+    -SubscriptionId       (Get-AzContext).Subscription.Id `
+    -PreferredLocation    "swedencentral" `
+    -AllowedEntraUserIds  (Get-AzADUser -SignedIn).Id
+```
+
+Pass `-PreferredLocation` as a comma-separated string or as an array, matching
+however you declared it. Run the scripts in the real order —
+`shared-deploy-lab.ps1` first, then `deploy-lab.ps1` — if you want to reproduce
+what the platform does. Pass more than one object ID to `-AllowedEntraUserIds`
+to check that your RBAC really covers every participant.
 
 ## Available helper cmdlets
 

@@ -390,7 +390,7 @@ You're done when:
 | `get_contract_status` says "not found" | Use a known id (`CT-4821`, `CT-3390`, `CT-5102`, `CT-2765`, `CT-6033`) — the error message lists them. |
 | `400 … Access denied` during retrieval or setup | The Foundry account/project identities need Search reader/contributor roles, and the Search identity needs Cognitive Services User on the Foundry account. Re-run provisioning and allow time for RBAC propagation. |
 | `429 rate_limit_exceeded` on `gpt-5.4` mid-demo | Deployment throughput throttling. The demo now retries with exponential backoff and isolates each prompt (`run_agent_with_retry`), so it rides through and continues. If it persists, raise the deployment capacity or space out prompts. |
-| `Missing required environment variable 'AZURE_AI_PROJECT_ENDPOINT'` | Re-run Challenge 1's deploy (which writes `.env`) or copy `.env.example` → `.env` and fill it in. |
+| `Missing required environment variable 'AZURE_AI_PROJECT_ENDPOINT'` | Re-run Challenge 1's deploy (which writes `.env`) or copy `src/.env.example` → `.env` and fill it in. |
 
 ## 🔗 How this fits
 

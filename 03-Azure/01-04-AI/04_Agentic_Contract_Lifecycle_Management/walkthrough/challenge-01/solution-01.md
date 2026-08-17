@@ -46,7 +46,7 @@ az account set --subscription "<your-subscription-id>"
 ### Task 3 · Connect to your provisioned resources
 **MicroHack event — resources are already provisioned; you don't deploy.** Point `.env` at the values on your **lab dashboard**:
 ```bash
-cp .env.example .env
+cp src/.env.example .env
 # then paste the dashboard values into .env (the two endpoints + the App Insights connection string)
 ```
 
@@ -57,7 +57,7 @@ cp .env.example .env
 | **AppInsightsConnectionString** | `APPLICATIONINSIGHTS_CONNECTION_STRING` |
 | **ModelOrchestrator / Drafting / ClauseRisk / Renewal** | `MODEL_ORCHESTRATOR` / `MODEL_DRAFTING` / `MODEL_CLAUSE_RISK` / `MODEL_RENEWAL` |
 
-The model names + `AZURE_SEARCH_INDEX` (`clm-corpus`) / `AZURE_SEARCH_CONNECTION_NAME` (`clm-search`) already default in `.env.example`, so at minimum paste the two **endpoints** + the **App Insights** string. Leave `SHAREPOINT_*` and the Challenge 5 `MICROSOFT_APP_*` / `TEAMS_*` blank for now.
+The model names + `AZURE_SEARCH_INDEX` (`clm-corpus`) / `AZURE_SEARCH_CONNECTION_NAME` (`clm-search`) already default in `src/.env.example`, so at minimum paste the two **endpoints** + the **App Insights** string. Leave `SHAREPOINT_*` and the Challenge 5 `MICROSOFT_APP_*` / `TEAMS_*` blank for now.
 
 <details>
 <summary><strong>Self-hosting? One <code>azd up</code> provisions everything and writes <code>.env</code> for you</strong></summary>

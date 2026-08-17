@@ -33,7 +33,7 @@ def _get(name: str, default: str | None = None, required: bool = False) -> str |
     if required and not value:
         raise RuntimeError(
             f"Missing required environment variable '{name}'. "
-            f"Run Challenge 1's deploy script or copy .env.example → .env and fill it in."
+            f"Run Challenge 1's deploy script or copy src/.env.example → .env and fill it in."
         )
     return value
 

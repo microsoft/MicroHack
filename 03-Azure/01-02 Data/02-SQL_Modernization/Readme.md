@@ -43,14 +43,14 @@ This MicroHack has a few but important prerequisites
 
 ## Challenges
 
-* [Challenge 1 - Assessment and migration with Azure Data Studio](challenges/challenge-01.md)  **<- Start here**
+* [Challenge 1 - Assessment and migration with SQL Server Management Studio (SSMS)](challenges/challenge-01.md)  **<- Start here**
 * [Challenge 2 - Monitoring and Performance on Azure SQL Managed Instance](challenges/challenge-02.md)
 * [Challenge 3 - Security on Azure SQL Managed Instance](challenges/challenge-03.md)
 
 
 ## Solutions - Spoilerwarning
 
-* [Solution 1 - Assessment and migration with Azure Data Studio](./walkthrough/challenge-01/solution-01.md)
+* [Solution 1 - Assessment and migration with SQL Server Management Studio (SSMS)](./walkthrough/challenge-01/solution-01.md)
 * [Solution 2 - Monitoring and Performance on Azure SQL Managed Instance](./walkthrough/challenge-02/solution-02.md)
 * [Solution 3 - Security on Azure SQL Managed Instance](./walkthrough/challenge-03/solution-03.md)
 

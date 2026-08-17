@@ -81,7 +81,7 @@ def get_token() -> str:
         _fail(
             "Missing SharePoint settings: "
             + ", ".join(missing)
-            + ".\n  Set them in .env (see .env.example / challenge-0 README)."
+            + ".\n  Set them in .env (see src/.env.example / challenge-0 README)."
         )
 
     from azure.identity import ClientSecretCredential

@@ -50,12 +50,19 @@ foreach($provider in $requiredProviders) {
 # EXAMPLE: shared resources, e.g. hub networks, bastion host, etc. can be deployed here...
 # no resource group is pre-created for this hook, so pick your own name and never use a participant's resource group
 $sharedResourceGroup = "shareddeployment"
+if(-not (Get-AzResourceGroup -Name $sharedResourceGroup -ErrorAction SilentlyContinue)) {
+    Write-Host "[$SubscriptionId] Creating shared resource group: $sharedResourceGroup"
+    New-AzResourceGroup -Name $sharedResourceGroup -Location $PreferredLocation[0] -ErrorAction Stop
+}
+else {
+    Write-Host "[$SubscriptionId] Shared resource group $sharedResourceGroup already exists."
+}
 
 # deploy shared resources in the shared resource group (do not forget to assign the correct rbac roles to the allowed Entra users)
 # Invoke-MhhDeploymentWithRegionFallback creates/recreates the resource group, re-grants Owner and falls back to the next region
 
 # $template = Join-Path $scriptPath "template-shared.bicep"
-$template = Join-Path $scriptPath "template-shared.json"
+# $template = Join-Path $scriptPath "template-shared.json"
 $result = Invoke-MhhDeploymentWithRegionFallback `
     -PreferredLocations      $PreferredLocation `
     -ResourceGroupName       $sharedResourceGroup `

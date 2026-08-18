@@ -201,7 +201,7 @@ point your `.env` at them using the values on your **lab dashboard**.
 **Step 3a — create your `.env`** from the template (Codespace terminal, at the repo root):
 
 ```bash
-cp .env.example .env
+cp src/.env.example .env
 ```
 
 **Step 3b — copy your dashboard values into `.env`.** Open `.env` in the Codespace editor and fill in
@@ -219,7 +219,7 @@ the values shown on your lab dashboard:
 
 > [!TIP]
 > The model names plus `AZURE_SEARCH_INDEX` (`clm-corpus`) and `AZURE_SEARCH_CONNECTION_NAME`
-> (`clm-search`) already have the right defaults in `.env.example`, so at minimum you only need to
+> (`clm-search`) already have the right defaults in `src/.env.example`, so at minimum you only need to
 > paste the two **endpoints** and the **App Insights connection string**. Paste the model names too if
 > your dashboard shows different values.
 

@@ -22,7 +22,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 ENV_PATH = REPO_ROOT / ".env"
 
-# Keys sourced from Bicep outputs (via azd env). Fall back to the .env.example
+# Keys sourced from Bicep outputs (via azd env). Fall back to the src/.env.example
 # defaults for the constant-valued ones if an output is missing.
 DEFAULTS = {
     "MODEL_ORCHESTRATOR": "gpt-5.4",

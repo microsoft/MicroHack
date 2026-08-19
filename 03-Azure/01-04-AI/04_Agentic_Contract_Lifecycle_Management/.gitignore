@@ -1,0 +1,24 @@
+# Secrets / local config
+# The repo-root .env is written by src/scripts/write_env.py and holds live
+# secrets (SharePoint app secret, connection strings). Never commit it.
+.env
+.env.*
+!.env.example
+
+# Python (local runs at the repo root)
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.python-version
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Azure / tooling
+.azure/
+*.azd

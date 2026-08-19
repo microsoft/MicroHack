@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Invoke with Bash from the Adaptive Apps MicroHack root; executable bits are not required.
 set -euo pipefail
 
 TARGET_PLATFORM="${1:-all}"

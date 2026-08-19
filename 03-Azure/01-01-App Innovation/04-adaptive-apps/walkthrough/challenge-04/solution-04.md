@@ -335,19 +335,16 @@ consistently.
 The manual tutorial is the intended learning path. To automate the same configuration:
 
 ```bash
-cd "03-Azure/01-01-App Innovation/04-adaptive-apps"
-chmod +x resources/configure-recipes.sh
-
 export AZURE_SUBSCRIPTION="<subscription-id>"
 export RESOURCE_GROUP="rg-adaptive-apps"
 export ACR_NAME="<globally-unique-acr-name>"
 
 # Configure both defaults:
-./resources/configure-recipes.sh all
+bash resources/configure-recipes.sh all
 
 # Or configure one:
-./resources/configure-recipes.sh aks
-./resources/configure-recipes.sh k3s
+bash resources/configure-recipes.sh aks
+bash resources/configure-recipes.sh k3s
 ```
 
 The script creates or reuses ACR, publishes the custom SQL recipe for AKS, deploys the

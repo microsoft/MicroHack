@@ -314,7 +314,6 @@ who choose to skip the manual tutorial.
 ### AKS
 
 ```bash
-cd "03-Azure/01-01-App Innovation/04-adaptive-apps"
 unset KUBECONFIG
 kubectl config use-context aks-adaptive-apps
 
@@ -322,17 +321,16 @@ export AZURE_SUBSCRIPTION="<subscription-id>"
 export RESOURCE_GROUP="rg-adaptive-apps"
 export AKS_CLUSTER="aks-adaptive-apps"
 
-chmod +x resources/deploy-radius-aks.sh
-./resources/deploy-radius-aks.sh
+# Run from the Adaptive Apps MicroHack root.
+bash resources/deploy-radius-aks.sh
 ```
 
 ### K3s
 
 ```bash
-cd "03-Azure/01-01-App Innovation/04-adaptive-apps"
 export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
 kubectl config use-context k3s-azure-vm
 
-chmod +x resources/deploy-radius-k3s.sh
-./resources/deploy-radius-k3s.sh
+# Run from the Adaptive Apps MicroHack root.
+bash resources/deploy-radius-k3s.sh
 ```

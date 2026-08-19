@@ -42,18 +42,20 @@ The script creates or updates an Azure resource group and a two-node AKS cluster
 enables OIDC issuer and workload identity, refreshes kubeconfig, and runs health checks.
 It does not create ACR, Key Vault, Storage, Radius, or portfolio resources.
 
-From the MicroHack directory:
+The devcontainer opens at the Adaptive Apps MicroHack root. Confirm the working
+directory before running the script:
 
 ```bash
-cd "03-Azure/01-01-App Innovation/04-adaptive-apps"
+test -f resources/prepare-aks.sh &&
+  test -f resources/prepare-k3s-azure-vm.sh
+pwd
 
 export AZURE_SUBSCRIPTION="<subscription-id>"
 export AZURE_LOCATION="westeurope"
 export RESOURCE_GROUP="rg-adaptive-apps"
 export AKS_CLUSTER="aks-adaptive-apps"
 
-chmod +x resources/prepare-aks.sh
-./resources/prepare-aks.sh
+bash resources/prepare-aks.sh
 ```
 
 Optional settings:
@@ -81,8 +83,7 @@ export K3S_VM_NAME="vm-adaptive-apps-k3s"
 # Recommended: set this explicitly to the coach or workshop egress IP.
 export ADMIN_CIDR="<public-ip>/32"
 
-chmod +x resources/prepare-k3s-azure-vm.sh
-./resources/prepare-k3s-azure-vm.sh
+bash resources/prepare-k3s-azure-vm.sh
 ```
 
 Optional settings:

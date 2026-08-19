@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Invoke with Bash from the Adaptive Apps MicroHack root; executable bits are not required.
 set -euo pipefail
 
 for command_name in curl helm kubectl mktemp rad tar; do

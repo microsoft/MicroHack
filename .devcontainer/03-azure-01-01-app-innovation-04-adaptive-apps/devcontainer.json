@@ -22,6 +22,9 @@
   ],
   "postCreateCommand": "bash /workspaces/microhack/.devcontainer/03-azure-01-01-app-innovation-04-adaptive-apps/post-create.sh",
   "postAttachCommand": "code Readme.md",
+  "remoteEnv": {
+    "PATH": "${containerEnv:PATH}:/home/vscode/.local/bin"
+  },
   "forwardPorts": [
     7007
   ],

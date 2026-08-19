@@ -11,8 +11,8 @@ export AZURE_LOCATION="westeurope"
 export RESOURCE_GROUP="rg-adaptive-apps"
 export AKS_CLUSTER="aks-adaptive-apps"
 
-chmod +x resources/prepare-aks.sh
-./resources/prepare-aks.sh
+# Run from the Adaptive Apps MicroHack root.
+bash resources/prepare-aks.sh
 ```
 
 Optional settings are `AKS_NODE_COUNT` and `AKS_NODE_VM_SIZE`.

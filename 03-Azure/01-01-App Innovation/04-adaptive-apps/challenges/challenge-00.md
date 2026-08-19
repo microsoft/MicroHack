@@ -127,6 +127,13 @@ or rebuilding the container preserves them; removing the volumes resets the stat
 The workspace files are mounted separately by VS Code. The host Docker socket and host
 credential directories are not mounted.
 
+When the repository root is a Windows Git worktree, its `.git` file points to metadata
+using a Windows path that Linux cannot resolve. The devcontainer uses a simple
+non-Git-aware Bash prompt in that case so normal MicroHack commands do not emit
+recurring `fatal: not a git repository` messages. Repository-aware Git commands remain
+unavailable inside that container session. The challenges do not require them; use a
+normal clone instead of a worktree if you need Git operations inside the container.
+
 ### Task 4: Verify the toolchain
 
 Run the appropriate version command for every required tool:
@@ -147,9 +154,10 @@ tar --version
 
 Resolve missing commands and `PATH` problems before continuing.
 
-If the devcontainer setup did not complete, run **Dev Containers: Rebuild Container**
-and inspect the creation log. Reopening a terminal is sufficient after a successful
-build.
+If `kubectl` or another required tool is missing, first pull the current branch on the
+host. Then run **Dev Containers: Rebuild Container** and inspect the creation log. A
+Windows worktree cannot pull from inside the container; use the host shell. Reopen a
+Bash terminal after a successful build.
 
 ### Task 5: Select and validate the Azure subscription
 
@@ -233,6 +241,8 @@ You are ready to continue when:
 - If a rebuilt container appears signed out or has no Kubernetes contexts, confirm
   that the four `adaptive-apps-microhack-*` named volumes for that devcontainer still
   exist.
+- If a Windows worktree still shows Git errors in an already running terminal, rebuild
+  the container and open a new Bash terminal so the prompt fallback is loaded.
 - Resolve quota or role-assignment blockers before the event; they are difficult to
   fix within a timed MicroHack.
 

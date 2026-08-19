@@ -143,6 +143,23 @@ The configuration deliberately does not:
 - Mount the host's `~/.azure`, `~/.kube`, `~/.rad`, or `~/.ssh`
 - Mount the host Docker socket
 
+### Windows Git worktrees
+
+A Windows Git worktree stores a `.git` text pointer containing a Windows path such as
+`C:/.../.git/worktrees/...`. Linux cannot resolve that host path through the repository
+bind mount. Git-aware shell prompts can therefore print `fatal: not a git repository`
+before otherwise unrelated commands.
+
+The post-create script detects this pointer without changing it and appends a simple
+non-Git-aware Bash prompt inside the container. It does not mount arbitrary host paths,
+replace Git metadata, or mutate the host worktree. The MicroHack scripts do not require
+repository-aware Git commands.
+
+If participants need Git operations inside the container, use a normal repository
+clone, whose `.git` metadata is contained in the bound directory, rather than a Windows
+worktree. Git remains installed for normal clones, but do not claim repository Git
+functionality for a Windows worktree bind mount.
+
 Without a Docker socket, use the temporary `DOCKER_CONFIG` and `az acr login
 --expose-token` flow documented in Solution 04 when publishing the recipe. The
 `configure-recipes.sh` helper already uses this token-based approach.
@@ -222,13 +239,27 @@ tar --version
 If creation fails:
 
 1. Inspect the Dev Containers creation log for the first failed download or command.
-2. Run **Dev Containers: Rebuild Container** to retry the pinned tool installation.
-3. Confirm Docker Desktop is running and the container can reach GitHub, Microsoft,
+2. If using a Windows worktree, pull or check out the fix on the Windows host because
+   repository-aware Git commands are unavailable inside the container.
+3. Run **Dev Containers: Rebuild Container** to apply the LF-normalized setup script,
+   prompt fallback, and explicit tool `PATH`.
+4. Open a new Bash terminal and rerun the verification commands above.
+5. If a rebuild is temporarily unavailable after the host has the corrected files,
+   rerun setup safely from the existing container:
+
+   ```bash
+   bash /workspaces/microhack/.devcontainer/03-azure-01-01-app-innovation-04-adaptive-apps/post-create.sh
+   exec bash
+   ```
+
+6. Confirm `command -v kubectl` returns `/home/vscode/.local/bin/kubectl`.
+7. Confirm Docker Desktop is running and the container can reach GitHub, Microsoft,
    Kubernetes, and Helm download endpoints.
-4. If tools are installed but not found, open a new terminal so `.bashrc` updates
+8. If tools are installed but not found, open a new terminal so `.bashrc` and the
+   devcontainer `remoteEnv` update
    `PATH`.
-5. If state is unexpectedly missing, verify that the four named volumes still exist.
-6. Delete a named volume only when intentionally resetting its credential state.
+9. If state is unexpectedly missing, verify that the four named volumes still exist.
+10. Delete a named volume only when intentionally resetting its credential state.
 
 ## Manual installation instructions
 
@@ -458,6 +489,7 @@ az provider show \
 | WSL cannot see native Windows tools | Install the complete toolchain inside WSL rather than mixing environments. |
 | Devcontainer creation fails | Inspect the creation log, confirm network access, and run **Dev Containers: Rebuild Container**. |
 | Devcontainer lost authentication or contexts | Confirm the named Azure, Kubernetes, Radius, and SSH volumes were not deleted. |
+| Repeated `fatal: not a git repository` in a Windows worktree | Rebuild the container and open a new Bash terminal. Git operations require a normal clone; MicroHack commands do not require Git. |
 
 Azure Cloud Shell can temporarily help with Azure resource inspection, but the K3s
 kubeconfig and later local files still require a consistent participant workstation.

@@ -13,8 +13,8 @@ export RESOURCE_GROUP="rg-adaptive-apps"
 export K3S_VM_NAME="vm-adaptive-apps-k3s"
 export ADMIN_CIDR="<workshop-public-ip>/32"
 
-chmod +x resources/prepare-k3s-azure-vm.sh
-./resources/prepare-k3s-azure-vm.sh
+# Run from the Adaptive Apps MicroHack root.
+bash resources/prepare-k3s-azure-vm.sh
 ```
 
 Optional settings are `K3S_VM_SIZE`, `K3S_ADMIN_USERNAME`, and `K3S_KUBECONFIG`.

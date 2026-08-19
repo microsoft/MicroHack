@@ -46,9 +46,9 @@ with that name in the other.
 - Prompt for the frontend password. Do not put credentials in source, shell history,
   screenshots, or evidence files.
 - Keep AI disabled. Challenge 08 owns AI adaptation.
-- Do not create application workload identities in this challenge. Challenge 06 owns
-  identity adaptation. The Azure deployment may therefore prove graph and resource
-  portability before Azure MQTT publish/subscribe reaches full runtime parity.
+- Do not complete Azure Event Grid MQTT authorization in this challenge. The Azure
+  deployment may prove graph and resource portability before MQTT publish/subscribe
+  reaches full runtime parity; preserve that gap rather than adding shared secrets.
 - Reach the frontend only through `rad resource expose` or Kubernetes port-forwarding.
   Do not expose ports on the private K3s VM.
 

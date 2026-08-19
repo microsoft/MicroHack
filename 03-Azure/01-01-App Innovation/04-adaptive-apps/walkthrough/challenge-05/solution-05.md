@@ -1,6 +1,6 @@
 # Walkthrough Challenge 05 - Port the App Across Environments
 
-[< Previous Solution](../challenge-04/solution-04.md) - **[Home](../../Readme.md)** - [Next Challenge](../../challenges/challenge-06.md)
+[< Previous Solution](../challenge-04/solution-04.md) - **[Home](../../Readme.md)** - [Next Solution](../challenge-06/solution-06.md)
 
 Duration: 45-75 minutes
 
@@ -480,8 +480,8 @@ rad resource expose Applications.Core/containers frontend `
 ```
 
 Open <http://localhost:3000>. A reachable frontend and a complete Radius graph are the
-core proof. MQTT-backed features can remain incomplete until Challenge 06 establishes
-federated workload identities and Event Grid permissions.
+core proof. MQTT-backed features can remain incomplete because Event Grid data-plane
+authorization is outside this challenge's portability proof.
 
 ## Stage 4: Compare the deployments
 
@@ -614,7 +614,8 @@ not committed.
 This is the documented runtime gap. The Azure recipe creates the Event Grid namespace
 and endpoint, but secure publish/subscribe also needs topic spaces, permission bindings,
 federated credentials, and appropriate Event Grid data-plane roles. Preserve the
-identity boundary and continue with Challenge 06 rather than adding shared secrets.
+identity boundary and track this as separate platform work rather than adding shared
+secrets. Challenge 06 addresses end-user authentication, not MQTT authorization.
 
 ### A second exposure cannot bind port 3000
 

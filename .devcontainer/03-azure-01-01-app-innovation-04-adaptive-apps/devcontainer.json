@@ -30,11 +30,16 @@
   },
   "forwardPorts": [
     3000,
+    8080,
     7007
   ],
   "portsAttributes": {
     "3000": {
       "label": "Adaptive Apps frontend",
+      "onAutoForward": "notify"
+    },
+    "8080": {
+      "label": "Keycloak identity broker",
       "onAutoForward": "notify"
     },
     "7007": {

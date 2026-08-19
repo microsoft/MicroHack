@@ -1,7 +1,7 @@
 // Portable stock-trading application adapted from microsoft/adaptive-apps.
-// Challenge 05 intentionally keeps AI, OIDC, and governance out of the core
-// deployment. Later challenges add those capabilities without changing the
-// platform boundary demonstrated here.
+// Challenge 05 keeps AI, OIDC, and governance out of the core deployment.
+// Optional parameters let later challenges add those capabilities without
+// changing the platform boundary demonstrated here.
 
 extension radius
 extension radiusResources
@@ -26,6 +26,31 @@ param authPassword string
 @secure()
 #disable-next-line secure-parameter-default
 param sessionSecret string = uniqueString(environment, 'session')
+
+@description('OIDC client ID presented by the frontend. Leave empty to keep OIDC disabled.')
+param oidcClientId string = ''
+
+@description('OIDC client secret presented by the frontend. Leave empty to keep OIDC disabled.')
+@secure()
+param oidcClientSecret string = ''
+
+@description('OIDC issuer reachable from the frontend container.')
+param oidcIssuer string = ''
+
+@description('OIDC authorization endpoint reachable from the frontend container.')
+param oidcAuthEndpoint string = ''
+
+@description('OIDC authorization endpoint reachable from the participant browser.')
+param oidcBrowserAuthEndpoint string = ''
+
+@description('OIDC token endpoint reachable from the frontend container.')
+param oidcTokenEndpoint string = ''
+
+@description('OIDC user-info endpoint reachable from the frontend container.')
+param oidcUserInfoEndpoint string = ''
+
+@description('Public frontend URL used to build the OIDC callback URI.')
+param appBaseUrl string = 'http://localhost:3000'
 
 @description('Pre-provisioned managed identity client ID for the backend. Leave empty for Challenge 05.')
 param backendClientId string = ''
@@ -201,6 +226,30 @@ resource frontend 'Applications.Core/containers@2023-10-01-preview' = {
         }
         SESSION_SECRET: {
           value: sessionSecret
+        }
+        OIDC_CLIENT_ID: {
+          value: oidcClientId
+        }
+        OIDC_CLIENT_SECRET: {
+          value: oidcClientSecret
+        }
+        OIDC_ISSUER: {
+          value: oidcIssuer
+        }
+        OIDC_AUTH_ENDPOINT: {
+          value: oidcAuthEndpoint
+        }
+        OIDC_BROWSER_AUTH_ENDPOINT: {
+          value: oidcBrowserAuthEndpoint
+        }
+        OIDC_TOKEN_ENDPOINT: {
+          value: oidcTokenEndpoint
+        }
+        OIDC_USERINFO_ENDPOINT: {
+          value: oidcUserInfoEndpoint
+        }
+        APP_BASE_URL: {
+          value: appBaseUrl
         }
       }
     }

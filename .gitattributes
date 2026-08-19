@@ -1,7 +1,11 @@
+"/.gitattributes" text eol=lf
 "/03-Azure/01-01-App Innovation/04-adaptive-apps/**/*.sh" text eol=lf
 "/.devcontainer/03-azure-01-01-app-innovation-04-adaptive-apps/*.sh" text eol=lf
+"/03-Azure/01-01-App Innovation/04-adaptive-apps/Readme.md" text eol=lf
 "/03-Azure/01-01-App Innovation/04-adaptive-apps/challenges/challenge-05.md" text eol=lf
+"/03-Azure/01-01-App Innovation/04-adaptive-apps/challenges/challenge-06.md" text eol=lf
 "/03-Azure/01-01-App Innovation/04-adaptive-apps/walkthrough/challenge-05/solution-05.md" text eol=lf
+"/03-Azure/01-01-App Innovation/04-adaptive-apps/walkthrough/challenge-06/solution-06.md" text eol=lf
 "/03-Azure/01-01-App Innovation/04-adaptive-apps/iac/app.bicep" text eol=lf
 "/03-Azure/01-01-App Innovation/04-adaptive-apps/iac/bicepconfig.json" text eol=lf
 "/.devcontainer/03-azure-01-01-app-innovation-04-adaptive-apps/devcontainer.json" text eol=lf

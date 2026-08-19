@@ -27,7 +27,7 @@ contract corpus the later challenges ground on.
 ## 🛠️ Task-by-task walkthrough
 
 ### Task 1 · Open the Codespace
-No fork — the code lives in this repo. **`< > Code` ▸ Codespaces ▸ Create codespace on `main`**; the devcontainer builds and `pip install -r requirements.txt` runs automatically. *(Local alt: `git clone` then **Reopen in Container**.)*
+No fork — the code lives in this repo. **`< > Code` ▸ Codespaces ▸ Create codespace on `main`**; the devcontainer builds and `pip install -r src/requirements.txt` runs automatically. *(Local alt: `git clone` then **Reopen in Container**.)*
 
 > 📸 **Screenshot slot:** creating the **Codespace**.
 >
@@ -63,9 +63,10 @@ The model names + `AZURE_SEARCH_INDEX` (`clm-corpus`) / `AZURE_SEARCH_CONNECTION
 <summary><strong>Self-hosting? One <code>azd up</code> provisions everything and writes <code>.env</code> for you</strong></summary>
 
 ```bash
+cd src                  # azure.yaml (the azd project) lives here
 azd auth login          # separate from az login above
 azd up                  # env name, subscription, region = Sweden Central (offers all three models)
-# — or the scripted path — LOCATION=swedencentral ./labautomation/deploy.sh   (deploy.ps1 on Windows)
+# — or the scripted path — LOCATION=swedencentral ./labautomation/deploy.sh   (deploy.ps1 on Windows; from repo root)
 ```
 The `postprovision` hook → [`src/scripts/write_env.py`](../../src/scripts/write_env.py) reads the deployment outputs (`azd env get-values`, or `--deployment` for the ARM path) and writes every env var the agents use — filling constants from a `DEFAULTS` map when an output is absent, so you can skip the manual paste above:
 ```python

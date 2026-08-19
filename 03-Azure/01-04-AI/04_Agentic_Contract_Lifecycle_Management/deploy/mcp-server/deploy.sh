@@ -3,8 +3,8 @@
 # Challenge 4 · Deploy the CLM MCP server to Azure Container Apps (remote MCP)
 # -----------------------------------------------------------------------------
 # Builds the image in the cloud (no local Docker needed) and prints the /mcp URL
-# a Foundry agent connects to. Run this from the REPO ROOT so the Docker build
-# context (requirements.txt + src/) is correct.
+# a Foundry agent connects to. Run this from the REPO ROOT; the Docker build
+# context is the src/ folder (Dockerfile + requirements.txt + app code).
 #
 # ZERO-CONFIG by default: it reads your repo-root `.env` (the same file the
 # agents use) for AZURE_AI_PROJECT_ENDPOINT + MODEL_*, then auto-discovers the
@@ -85,7 +85,7 @@ az containerapp up \
   --name "$APP_NAME" \
   --resource-group "$RESOURCE_GROUP" \
   --location "$LOCATION" \
-  --source . \
+  --source src \
   --ingress external \
   --target-port 8000 \
   --env-vars \

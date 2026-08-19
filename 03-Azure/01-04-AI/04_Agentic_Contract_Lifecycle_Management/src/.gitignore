@@ -1,11 +1,9 @@
 # Secrets / local config
-# The repo-root .env is written by src/scripts/write_env.py and holds live
-# secrets (SharePoint app secret, connection strings). Never commit it.
 .env
 .env.*
 !.env.example
 
-# Python (local runs at the repo root)
+# Python
 __pycache__/
 *.py[cod]
 .venv/
@@ -14,6 +12,17 @@ venv/
 .mypy_cache/
 .ruff_cache/
 .python-version
+
+# Node / MCP tooling
+node_modules/
+
+# Build / conversion artifacts
+*.log
+*.pdf
+# ...but the Challenge 1 CLM corpus PDFs ARE seed data and must be tracked.
+!data/**/*.pdf
+dist/
+build/
 
 # OS
 .DS_Store

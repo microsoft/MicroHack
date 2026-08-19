@@ -150,7 +150,7 @@ of the challenge, what "done" looks like, where teams get stuck, and the hint to
 - **Watch for:**
   - *Orchestrator routes wrong* → sharpen `INSTRUCTIONS` routing rules and make each specialist's
     `as_tool(description=...)` specific.
-  - *`agent_framework` import error* → `pip install agent-framework-core agent-framework-foundry` (see requirements.txt).
+  - *`agent_framework` import error* → `pip install agent-framework-core agent-framework-foundry` (see src/requirements.txt).
   - *MCP server not listed in VS Code* → the workspace config must be at the repo-root `.vscode/mcp.json`
     and you must open the **repo root** (not `src/`); confirm the server imports cleanly first (`python src/mcp_server/server.py --list`).
   - *(Task 4) Remote deploy* → run `bash deploy/mcp-server/deploy.sh` from the **repo root** (needs the

@@ -17,7 +17,7 @@ called from a **Foundry** agent by URL.
   `draft_contract` · `analyze_contract` · `get_contract_status` over **stdio** (local) and
   **streamable HTTP** (`--http`, for hosting); VS Code loads the stdio server from
   [`.vscode/mcp.json`](../../.vscode/mcp.json) (repo root).
-- [`Dockerfile`](../../Dockerfile) + [`deploy/mcp-server/deploy.sh`](../../deploy/mcp-server/deploy.sh)
+- [`Dockerfile`](../../src/Dockerfile) + [`deploy/mcp-server/deploy.sh`](../../deploy/mcp-server/deploy.sh)
   host it on **Azure Container Apps** as a remote `https://…/mcp` endpoint a Foundry agent can call.
 - [`src/orchestrator_mcp.py`](../../src/orchestrator_mcp.py) runs the same GPT-5.4
   orchestrator as an **MCP client** — local stdio, or the remote server via `CLM_MCP_URL`.
@@ -118,9 +118,9 @@ spawns the stdio server for you (no IDE) and runs draft → analyze → status o
 start **clm-mcp** → call `#analyze_contract` in Copilot Chat.
 
 ### Task 4 · Host it remotely + call it from Foundry
-**Part A — host on Azure Container Apps.** The repo-root [`Dockerfile`](../../Dockerfile) runs
+**Part A — host on Azure Container Apps.** The src/ [`Dockerfile`](../../src/Dockerfile) runs
 `server.py --http` (streamable HTTP at `/mcp`). Deploy from the repo root — the image builds in the
-cloud, no local Docker:
+cloud (from the `src/` context), no local Docker:
 ```bash
 bash deploy/mcp-server/deploy.sh    # reads .env, auto-discovers RG/account/region → https://clm-mcp.<region>.azurecontainerapps.io/mcp
 ```
@@ -174,7 +174,7 @@ propagation takes ~1 min, so just re-run the script or wait if a later model cal
 | [`src/mcp_server/server.py`](../../src/mcp_server/server.py) | MCP server exposing the CLM workflow (stdio **and** streamable HTTP via `--http`) |
 | [`.vscode/mcp.json`](../../.vscode/mcp.json) | VS Code MCP client config (`clm-mcp`, repo root) |
 | [`src/orchestrator_mcp.py`](../../src/orchestrator_mcp.py) | Orchestrator as MCP client — local stdio, or remote via `CLM_MCP_URL` |
-| [`Dockerfile`](../../Dockerfile) + [`deploy/mcp-server/deploy.sh`](../../deploy/mcp-server/deploy.sh) | Containerize + deploy the server to Azure Container Apps as a remote `/mcp` endpoint |
+| [`Dockerfile`](../../src/Dockerfile) + [`deploy/mcp-server/deploy.sh`](../../deploy/mcp-server/deploy.sh) | Containerize + deploy the server to Azure Container Apps as a remote `/mcp` endpoint |
 
 ## Run it
 

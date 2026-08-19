@@ -25,7 +25,7 @@ SLOTS: list[tuple[str, str, str, str]] = [
     ("challenge-0", "02-create-codespace", "GitHub · Create Codespace",
      "Code button → Codespaces tab → 'Create codespace on main' green button."),
     ("challenge-0", "03-codespace-ready", "Codespace · Ready",
-     "The VS Code-in-browser Codespace with a terminal open and 'pip install -r requirements.txt' finished."),
+     "The VS Code-in-browser Codespace with a terminal open and 'pip install -r src/requirements.txt' finished."),
     ("challenge-0", "04-az-login-device", "Azure · Device-code login",
      "The https://microsoft.com/devicelogin page where you paste the code printed by 'az login --use-device-code'."),
     ("challenge-0", "05-azd-up-prompts", "azd up · Prompts",

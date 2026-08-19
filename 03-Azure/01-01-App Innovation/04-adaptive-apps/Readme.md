@@ -126,7 +126,7 @@ communication, and AI capabilities.
 - [Challenge 05 - Port the App Across Environments](challenges/challenge-05.md)
 - [Challenge 06 - Adapt Identity Services - Configure User Authentication](challenges/challenge-06.md)
 - [Challenge 07 - Secure service communication](challenges/challenge-07.md)
-- [Challenge 08 - Adapt AI services](challenges/challenge-08.md)
+- [Challenge 08 - Adapt AI Services](challenges/challenge-08.md)
 
 ### Bucket 4: Advanced challenges
 

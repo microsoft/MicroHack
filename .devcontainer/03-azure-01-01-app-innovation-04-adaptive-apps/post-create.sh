@@ -150,7 +150,7 @@ verify_tooling() {
 
   echo
   echo "Adaptive Apps MicroHack tool verification:"
-  for command_name in az kubectl helm rad git jq yq curl ssh tar; do
+  for command_name in az kubectl helm rad git jq yq curl pwsh ssh tar; do
     if ! command -v "$command_name" >/dev/null 2>&1; then
       echo "ERROR: required command not found: ${command_name}" >&2
       missing=1
@@ -203,6 +203,7 @@ az bicep version
 kubectl version --client
 helm version --short
 rad version
+pwsh --version
 git --version
 jq --version
 yq --version

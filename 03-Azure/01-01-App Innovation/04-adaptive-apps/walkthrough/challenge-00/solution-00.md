@@ -113,6 +113,7 @@ Azure CLI state volume and also installs:
 - `kubectl` 1.36.3
 - Helm 3.21.4
 - Radius CLI 0.60.0 and its Radius Bicep support
+- PowerShell 7 through the official Dev Containers feature
 - `yq` 4.53.4
 - Git, `jq`, `curl`, OpenSSH client, `tar`, and CA certificates
 
@@ -120,9 +121,9 @@ Version pins make participant environments repeatable. Updating a pin requires s
 validation of this MicroHack and compatibility with the Kubernetes versions offered by
 AKS.
 
-Rust, PowerShell, k3d, and application-development extensions from the source
-repository devcontainer are intentionally omitted. Challenges 00-04 use Bash, create
-K3s on an Azure VM, and do not build the Adaptive Apps application source.
+Rust, k3d, and application-development extensions from the source repository
+devcontainer are intentionally omitted. Challenges 00-05 use Bash and PowerShell 7,
+create K3s on an Azure VM, and do not build the Adaptive Apps application source.
 
 ### Persistent state and security
 
@@ -233,6 +234,7 @@ az bicep version
 kubectl version --client
 helm version --short
 rad version
+pwsh --version
 git --version
 jq --version
 yq --version

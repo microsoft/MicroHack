@@ -1,6 +1,6 @@
 # Walkthrough Challenge 04 - Implement the platform abstractions with recipes
 
-[< Previous Solution](../challenge-03/solution-03.md) - **[Home](../../Readme.md)** - [Next Challenge](../../challenges/challenge-05.md)
+[< Previous Solution](../challenge-03/solution-03.md) - **[Home](../../Readme.md)** - [Next Solution](../challenge-05/solution-05.md)
 
 Duration: 60-90 minutes
 

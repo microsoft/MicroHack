@@ -12,6 +12,9 @@
       "installZsh": false,
       "installOhMyZsh": false,
       "upgradePackages": false
+    },
+    "ghcr.io/devcontainers/features/powershell:2": {
+      "version": "stable"
     }
   },
   "mounts": [
@@ -26,9 +29,14 @@
     "PATH": "${containerEnv:PATH}:/home/vscode/.local/bin"
   },
   "forwardPorts": [
+    3000,
     7007
   ],
   "portsAttributes": {
+    "3000": {
+      "label": "Adaptive Apps frontend",
+      "onAutoForward": "notify"
+    },
     "7007": {
       "label": "Radius dashboard",
       "onAutoForward": "notify"
@@ -39,6 +47,7 @@
       "extensions": [
         "ms-azuretools.vscode-bicep",
         "ms-kubernetes-tools.vscode-kubernetes-tools",
+        "ms-vscode.powershell",
         "timonwong.shellcheck"
       ],
       "settings": {

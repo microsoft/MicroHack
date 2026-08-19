@@ -81,8 +81,8 @@ lives under the repository's root `.devcontainer` directory and opens
 `03-Azure/01-01-App Innovation/04-adaptive-apps` as the container workspace.
 
 The container installs Azure CLI, its `bastion` extension, Bicep, `kubectl`, Helm 3,
-Radius CLI, Git, `jq`, `yq`, `curl`, SSH, and `tar`. These tools can run every command
-in Challenges 00-04.
+Radius CLI, PowerShell 7, Git, `jq`, `yq`, `curl`, SSH, and `tar`. These tools can run
+every command in Challenges 00-05.
 The container is only a workstation: AKS, the Linux VM, K3s, Radius control planes,
 portfolio workloads, and recipes are still created on the remote Azure and Kubernetes
 targets by the commands you run.

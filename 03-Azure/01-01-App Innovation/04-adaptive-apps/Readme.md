@@ -86,7 +86,7 @@ To use the MicroHack time effectively, have the following available:
 
 The recommended option is the repository
 [devcontainer](../../../.devcontainer/03-azure-01-01-app-innovation-04-adaptive-apps/devcontainer.json),
-which installs the Challenges 00-04 toolchain while retaining the manual host setup
+which installs the Challenges 00-05 toolchain while retaining the manual host setup
 path. Clone the contribution, open the repository root in VS Code, run **Dev
 Containers: Reopen in Container**, and select
 `03-azure-01-01-app-innovation-04-adaptive-apps` when prompted. The container then
@@ -123,7 +123,7 @@ Define portable platform capabilities and implement them with recipes.
 Deploy the application across environments and adapt its identity,
 communication, and AI capabilities.
 
-- [Challenge 05 - Port the app across environments](challenges/challenge-05.md)
+- [Challenge 05 - Port the App Across Environments](challenges/challenge-05.md)
 - [Challenge 06 - Adapt identity services](challenges/challenge-06.md)
 - [Challenge 07 - Secure service communication](challenges/challenge-07.md)
 - [Challenge 08 - Adapt AI services](challenges/challenge-08.md)

@@ -1,6 +1,9 @@
 # Exclude .vscode directory
 .vscode
 
+# Adaptive Apps Bicep resource-type extension generated during Challenge 03.
+/03-Azure/01-01-App Innovation/04-adaptive-apps/artifacts/*.tgz
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

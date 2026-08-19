@@ -1,6 +1,7 @@
 {
   "extensions": {
-    "radius": "br:biceptypes.azurecr.io/radius:latest"
+    "radius": "br:biceptypes.azurecr.io/radius:latest",
+    "radiusResources": "../artifacts/types.tgz"
   },
   "implicitExtensions": [
     "az"

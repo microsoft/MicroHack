@@ -53,8 +53,9 @@ Confirm that your workshop team has:
 
 ### Task 2: Choose a workstation setup
 
-The scoped devcontainer is the recommended setup because it provides a consistent
-Linux toolchain for Challenges 00-04. A manual host installation remains supported.
+The Adaptive Apps devcontainer is the recommended setup because it provides a
+consistent Linux toolchain for Challenges 00-04. A manual host installation remains
+supported.
 
 #### Option A: Use the recommended devcontainer
 
@@ -71,12 +72,13 @@ Clone the fork and check out this MicroHack branch:
 git clone https://github.com/djong1/MicroHack.git
 cd MicroHack
 git switch djong1-adaptive-apps-microhack
-code "03-Azure/01-01-App Innovation/04-adaptive-apps"
+code .
 ```
 
-In VS Code, run **Dev Containers: Reopen in Container**. Open the
-`04-adaptive-apps` folder itself, not the repository root, because the configuration is
-intentionally scoped at `.devcontainer/devcontainer.json` inside that folder.
+In VS Code, run **Dev Containers: Reopen in Container** and select
+`03-azure-01-01-app-innovation-04-adaptive-apps` when prompted. The configuration
+lives under the repository's root `.devcontainer` directory and opens
+`03-Azure/01-01-App Innovation/04-adaptive-apps` as the container workspace.
 
 The container installs Azure CLI, Bicep, `kubectl`, Helm 3, Radius CLI, Git, `jq`,
 `yq`, `curl`, SSH, and `tar`. These tools can run every command in Challenges 00-04.

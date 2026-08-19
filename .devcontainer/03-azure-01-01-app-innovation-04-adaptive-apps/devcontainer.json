@@ -1,6 +1,8 @@
 {
-  "name": "Adaptive Apps MicroHack",
+  "name": "Azure / App Innovation / Adaptive Apps",
   "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/microhack,type=bind,consistency=cached",
+  "workspaceFolder": "/workspaces/microhack/03-Azure/01-01-App Innovation/04-adaptive-apps",
   "remoteUser": "vscode",
   "features": {
     "ghcr.io/devcontainers/features/azure-cli:1": {
@@ -18,7 +20,8 @@
     "source=adaptive-apps-microhack-radius-${devcontainerId},target=/home/vscode/.rad,type=volume",
     "source=adaptive-apps-microhack-ssh-${devcontainerId},target=/home/vscode/.ssh,type=volume"
   ],
-  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "postCreateCommand": "bash /workspaces/microhack/.devcontainer/03-azure-01-01-app-innovation-04-adaptive-apps/post-create.sh",
+  "postAttachCommand": "code Readme.md",
   "forwardPorts": [
     7007
   ],
@@ -34,7 +37,10 @@
         "ms-azuretools.vscode-bicep",
         "ms-kubernetes-tools.vscode-kubernetes-tools",
         "timonwong.shellcheck"
-      ]
+      ],
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
     }
   }
 }

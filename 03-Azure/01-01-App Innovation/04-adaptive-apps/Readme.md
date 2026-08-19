@@ -82,12 +82,15 @@ To use the MicroHack time effectively, have the following available:
 - [Visual Studio Code](https://code.visualstudio.com/)
 - Bash or PowerShell 7; Windows users can also use WSL 2
 
-The recommended option is the scoped
-[devcontainer](.devcontainer/devcontainer.json), which installs the Challenges 00-04
-toolchain while retaining the manual host setup path. Clone the contribution, open the
-`04-adaptive-apps` folder itself in VS Code, and run **Dev Containers: Reopen in
-Container**. See [Challenge 00](challenges/challenge-00.md) for host prerequisites,
-credential persistence, verification, and troubleshooting.
+The recommended option is the repository
+[devcontainer](../../../.devcontainer/03-azure-01-01-app-innovation-04-adaptive-apps/devcontainer.json),
+which installs the Challenges 00-04 toolchain while retaining the manual host setup
+path. Clone the contribution, open the repository root in VS Code, run **Dev
+Containers: Reopen in Container**, and select
+`03-azure-01-01-app-innovation-04-adaptive-apps` when prompted. The container then
+opens this MicroHack as its workspace. See
+[Challenge 00](challenges/challenge-00.md) for host prerequisites, credential
+persistence, verification, and troubleshooting.
 
 ### Challenge 00: universal prerequisite
 

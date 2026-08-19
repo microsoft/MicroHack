@@ -50,10 +50,11 @@ available.
 
 ## Recommended devcontainer
 
-The MicroHack includes a scoped devcontainer at
-`04-adaptive-apps/.devcontainer/devcontainer.json`. It is recommended for participants
-who can run containers locally because it keeps Challenges 00-04 on one tested Linux
-toolchain. Manual installation remains available below.
+The MicroHack includes a repository-level devcontainer at
+`.devcontainer/03-azure-01-01-app-innovation-04-adaptive-apps/devcontainer.json`. It is
+recommended for participants who can run containers locally because it keeps
+Challenges 00-04 on one tested Linux toolchain. Manual installation remains available
+below.
 
 ### Host prerequisites
 
@@ -66,12 +67,11 @@ Confirm each participant has:
   volumes
 
 On Windows, use Docker Desktop's WSL 2 backend. The repository can be cloned in the
-WSL filesystem for better filesystem performance, but VS Code must still open the
-scoped MicroHack folder.
+WSL filesystem for better filesystem performance.
 
-This nested configuration is designed for local VS Code Dev Containers. Do not
-advertise Codespaces for this contribution: Codespaces normally discovers configuration
-from the repository root, while this file is intentionally scoped to one MicroHack.
+This configuration follows the MicroHack repository's multi-configuration convention.
+It is documented for local VS Code Dev Containers; do not advertise Codespaces unless
+the repository later adds and validates an explicit Codespaces selection workflow.
 
 ### Start the container
 
@@ -79,18 +79,28 @@ from the repository root, while this file is intentionally scoped to one MicroHa
 git clone https://github.com/djong1/MicroHack.git
 cd MicroHack
 git switch djong1-adaptive-apps-microhack
-code "03-Azure/01-01-App Innovation/04-adaptive-apps"
+code .
 ```
 
 In VS Code:
 
-1. Confirm the Explorer root is `04-adaptive-apps`.
+1. Confirm the Explorer root is the MicroHack repository.
 2. Run **Dev Containers: Reopen in Container**.
-3. Wait for `.devcontainer/post-create.sh` to finish.
-4. Open a new Bash terminal in the container.
+3. Select `03-azure-01-01-app-innovation-04-adaptive-apps` from the available
+   configurations.
+4. Wait for
+   `.devcontainer/03-azure-01-01-app-innovation-04-adaptive-apps/post-create.sh` to
+   finish.
+5. Confirm VS Code reopens
+   `03-Azure/01-01-App Innovation/04-adaptive-apps` as the workspace and opens
+   `Readme.md`.
+6. Open a new Bash terminal in the container.
 
-Opening the whole MicroHack repository will not discover this scoped configuration.
-Use **File: Open Folder** to select `04-adaptive-apps` first.
+The configuration binds the repository root to `/workspaces/microhack` and sets the
+container workspace to
+`/workspaces/microhack/03-Azure/01-01-App Innovation/04-adaptive-apps`. Therefore,
+commands in Challenges 00-04 start in the MicroHack directory even though VS Code
+discovers the configuration from the repository root.
 
 ### Installed toolchain
 

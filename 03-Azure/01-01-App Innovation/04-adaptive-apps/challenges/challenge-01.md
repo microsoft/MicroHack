@@ -38,9 +38,9 @@ Agree on names and values for:
 - Azure subscription and location
 - Lab resource group
 - AKS cluster
-- K3s VM
+- Private K3s VNet, VM, and Azure Bastion names
 - AKS node and K3s VM sizes
-- Public administrator CIDR for K3s management access
+- Nonoverlapping VNet, workload-subnet, and `/26` `AzureBastionSubnet` CIDRs
 
 The local helper scripts use these defaults:
 
@@ -50,6 +50,8 @@ AKS context: aks-adaptive-apps
 K3s VM: vm-adaptive-apps-k3s
 K3s context: k3s-azure-vm
 K3s kubeconfig: ~/.kube/adaptive-apps-k3s.yaml
+K3s API endpoint: https://127.0.0.1:16443
+Azure Bastion: bas-adaptive-apps
 ```
 
 ### Task 2: Provision AKS
@@ -69,14 +71,18 @@ and cluster values explicitly, then validate the result independently.
 
 Create an Ubuntu VM with:
 
-- A static public IP
-- SSH and Kubernetes API access restricted to the workshop administrator CIDR
-- HTTP and HTTPS open for later application exercises
+- A private NIC and no VM public IP
+- A workload subnet plus a correctly named `/26` or larger `AzureBastionSubnet`
+- Azure Bastion Standard with native client tunneling enabled
+- VM NSG access on TCP 22 and 6443 only from `AzureBastionSubnet`
 - K3s installed without its bundled Traefik ingress controller
-- A dedicated local kubeconfig using context `k3s-azure-vm`
+- A dedicated local kubeconfig using context `k3s-azure-vm` and a localhost endpoint
+- A persistent localhost tunnel from port 16443 to the private K3s API
 
 The repository includes `resources/prepare-k3s-azure-vm.sh`. Review its network and
 kubeconfig behavior before running it. Treat the generated kubeconfig as a credential.
+Use its `connect` mode after a devcontainer restart. JIT is not a route to a private VM,
+and RDP does not apply to Linux; Bastion supplies the private path.
 
 ### Task 4: Validate both platforms
 
@@ -90,8 +96,8 @@ kubectl get nodes -o wide
 ```
 
 For AKS, also confirm that OIDC issuer, workload identity, and managed Istio are
-enabled. For K3s, confirm that the K3s service is active on the VM and that the API is
-reachable only from an approved network.
+enabled. For K3s, confirm the VM has no public IP, Bastion native tunneling is enabled,
+the recorded localhost tunnel is healthy, and the K3s service is active.
 
 ### Task 5: Practice explicit context switching
 
@@ -108,10 +114,12 @@ Record the active kubeconfig and context whenever you switch platforms.
 - AKS provisioning state is `Succeeded`.
 - AKS has OIDC issuer, workload identity, and managed Istio enabled.
 - The K3s VM is running and its K3s service is active.
+- The K3s VM has no public IP or Internet-sourced inbound rule.
+- Azure Bastion is `Succeeded`, Standard or Premium, and native tunneling is enabled.
 - Both Kubernetes APIs return `ok`.
 - Every node reports `Ready`.
 - The team can identify and switch between the AKS and K3s kubeconfig/context pairs.
-- K3s management access is restricted to the intended administrator CIDR.
+- K3s management access is restricted to `AzureBastionSubnet`.
 - No Radius control plane, portfolio, recipe, or application workload is installed.
 
 ## Hints
@@ -119,8 +127,10 @@ Record the active kubeconfig and context whenever you switch platforms.
 - If Azure cannot allocate a requested VM size, select another size or region rather
   than repeatedly retrying the same deployment.
 - Check AKS provisioning state and node readiness before rerunning provisioning.
-- A K3s API timeout often means the current public address is not included in the
-  network security rule.
+- A K3s API timeout often means the Bastion tunnel must be reconnected after the
+  devcontainer restarted.
+- The tunnel exposes only the Kubernetes API on localhost. Use `kubectl port-forward`
+  for application and Radius services without opening workload ports on the VM.
 - `KUBECONFIG` can override the default configuration even when the context name looks
   familiar. Check both before every platform operation.
 - Arc enablement projects an existing cluster into Azure management; it does not create

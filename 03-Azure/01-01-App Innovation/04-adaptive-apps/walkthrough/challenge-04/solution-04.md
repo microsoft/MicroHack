@@ -16,6 +16,14 @@ The teaching sequence is deliberate:
 Do not let teams skip directly to automation. The optional script at the end exists
 for setup recovery and participants who explicitly choose not to follow the tutorial.
 
+Before any K3s work after a devcontainer restart, restore the localhost API tunnel:
+
+```bash
+export AZURE_SUBSCRIPTION="<subscription-id>"
+bash resources/prepare-k3s-azure-vm.sh connect
+export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
+```
+
 ## Recipe concepts
 
 A recipe is a Bicep file or Terraform module that Radius invokes when a developer
@@ -263,6 +271,8 @@ rad deploy iac/aks-env.bicep \
 Switch both kube context and Radius workspace:
 
 ```bash
+export AZURE_SUBSCRIPTION="<subscription-id>"
+bash resources/prepare-k3s-azure-vm.sh connect
 export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
 kubectl config use-context k3s-azure-vm
 rad workspace switch ws-local-prod

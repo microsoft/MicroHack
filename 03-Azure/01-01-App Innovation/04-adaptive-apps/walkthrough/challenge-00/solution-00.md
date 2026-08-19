@@ -17,12 +17,13 @@ Confirm the workshop has:
 - An Azure subscription
 - Permission to create a resource group, AKS cluster, Linux VM, networking, and role
   assignments
+- Permission to create Azure Bastion Standard and its managed public IP, invoke VM Run
+  Command, and open Bastion native-client tunnels
 - Permission to create a Microsoft Entra application and service principal
 - Sufficient regional quota for:
   - A two-node AKS cluster using `Standard_D4s_v5` by default
   - One K3s VM using `Standard_D4s_v5` by default
-  - Standard public IP addresses
-- A known public egress CIDR for secure K3s management access
+  - One Standard Azure Bastion host and its managed public IP
 
 The default scripts assign the Radius identity `Owner` at the lab resource-group
 scope because later exercises can create role assignments. Use a dedicated lab
@@ -31,6 +32,7 @@ subscription or resource group.
 ## Required tools
 
 - Azure CLI
+- Azure CLI `bastion` extension
 - Bicep CLI
 - `kubectl`
 - Helm
@@ -105,7 +107,8 @@ discovers the configuration from the repository root.
 ### Installed toolchain
 
 The Azure CLI devcontainer feature installs Azure CLI 2.89.1. The post-create script
-installs Bicep 0.46.1 into the persisted Azure CLI state volume and also installs:
+installs Bicep 0.46.1 and the Azure CLI `bastion` extension 1.4.3 into the persisted
+Azure CLI state volume and also installs:
 
 - `kubectl` 1.36.3
 - Helm 3.21.4
@@ -182,15 +185,17 @@ Radius CLI state is separate. Challenge 02 creates `ws-azure-prod` and
 used by the Radius control plane on AKS. Rebuilding the container preserves those
 local workspace definitions.
 
-### Kubeconfig and SSH behavior
+### Kubeconfig, tunnel, and SSH-key behavior
 
 Challenge 01 writes:
 
 - AKS credentials to the default `~/.kube/config`
-- K3s credentials to `~/.kube/adaptive-apps-k3s.yaml`
-- The generated VM SSH key and accepted host key under `~/.ssh`
+- K3s credentials and Bastion tunnel state under `~/.kube`
+- The generated VM SSH key under `~/.ssh` for optional Bastion-only troubleshooting
 
-The named volumes preserve all three. Participants must still switch safely:
+The named volumes preserve this state. The tunnel process itself does not survive a
+container restart; Challenge 01 documents its `connect` mode. Participants must still
+switch safely:
 
 ```bash
 # AKS
@@ -231,6 +236,7 @@ rad version
 git --version
 jq --version
 yq --version
+az extension show --name bastion --query version --output tsv
 curl --version
 ssh -V
 tar --version
@@ -401,6 +407,17 @@ az bicep install
 
 ## Verify the workstation
 
+Install or update the stable Bastion extension on a manual workstation:
+
+```bash
+az extension add \
+  --name bastion \
+  --version 1.4.3 \
+  --upgrade \
+  --yes \
+  --allow-preview false
+```
+
 Run:
 
 ```bash
@@ -412,6 +429,7 @@ rad version
 git --version
 jq --version
 yq --version
+az extension show --name bastion --query version --output tsv
 curl --version
 ssh -V
 tar --version
@@ -485,6 +503,7 @@ az provider show \
 | Helm permission error | Verify the Helm binary and local cache ownership; do not default to running Helm as root. |
 | Wrong Azure subscription | Run `az account set --subscription "<subscription-id>"`. |
 | Azure authorization error | Confirm the participant's role and scope before troubleshooting scripts. |
+| Bastion tunnel authorization error | Confirm the role includes `Microsoft.Network/bastionHosts/tunnels/action` and the participant can read the VM/NIC. |
 | AKS or VM quota error | Select another VM size or region, or request quota before the event. |
 | WSL cannot see native Windows tools | Install the complete toolchain inside WSL rather than mixing environments. |
 | Devcontainer creation fails | Inspect the creation log, confirm network access, and run **Dev Containers: Rebuild Container**. |
@@ -499,7 +518,10 @@ kubeconfig and later local files still require a consistent participant workstat
 - Send these instructions early and ask participants to return the verification output.
 - Validate AKS and VM quota before the event.
 - Agree on one Azure region and one lab resource-group naming convention.
-- Determine the workshop's public egress CIDR for the K3s network rules.
+- Confirm Azure Bastion Standard is allowed in the selected region and budget for its
+  hourly cost until cleanup.
+- Confirm delegated-network participants have Network Contributor plus VM Run Command
+  and Bastion tunnel permissions.
 - Decide who runs shared cluster deployment scripts; only one person should provision
   each shared environment.
 - Encourage participants to use manual tutorials for learning. Automation is an
@@ -512,6 +534,6 @@ After Challenge 00, participants can:
 
 - Use Azure CLI and select the correct subscription.
 - Run `kubectl`, Helm, and Radius CLI.
-- Use Git, `curl`, SSH, and `tar`.
+- Use Git, `curl`, SSH, `tar`, and the Azure CLI Bastion extension.
 - Explain where their kubeconfig and Radius workspace configuration will be stored.
 - Proceed to [Challenge 01](../challenge-01/solution-01.md) to provision AKS and K3s.

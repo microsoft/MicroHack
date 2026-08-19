@@ -72,10 +72,12 @@ To use the MicroHack time effectively, have the following available:
 
 - An Azure subscription with **Owner** access to the lab resource group
 - Capacity to create the default two-environment topology: one Azure Kubernetes
-  Service cluster and one Linux VM hosting self-managed K3s
+  Service cluster, one private Linux VM hosting self-managed K3s, and one Standard
+  Azure Bastion host with its managed public endpoint
 - Alternatively, an existing Azure Local or Arc-enabled Kubernetes environment to
   use in place of K3s
 - [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli)
+- Azure CLI `bastion` extension for native client tunneling
 - [kubectl](https://kubernetes.io/docs/tasks/tools/)
 - [Helm](https://helm.sh/docs/intro/install/)
 - [Radius CLI (`rad`)](https://docs.radapp.io/getting-started/install/)
@@ -91,6 +93,9 @@ Containers: Reopen in Container**, and select
 opens this MicroHack as its workspace. See
 [Challenge 00](challenges/challenge-00.md) for host prerequisites, credential
 persistence, verification, and troubleshooting.
+
+The default K3s VM has no public IP. Its Kubernetes API is reached through an Azure
+Bastion native-client tunnel bound only to localhost in the participant environment.
 
 ### Challenge 00: universal prerequisite
 

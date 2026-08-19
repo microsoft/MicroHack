@@ -40,11 +40,11 @@ Confirm that your workshop team has:
 
 - An Azure subscription
 - Permission to create a resource group, AKS cluster, Linux VM, networking resources,
-  public IP addresses, and role assignments
+  Azure Bastion Standard, its managed public IP, VM Run Command, and role assignments
 - Permission to create a Microsoft Entra application and service principal
-- Regional quota for the AKS nodes, K3s VM, and standard public IP addresses
-- A known public egress CIDR that can be used to restrict SSH and Kubernetes API access
-  to the K3s VM
+- Regional quota for the AKS nodes, K3s VM, Azure Bastion, and Bastion public IP
+- Contributor or equivalent resource permissions, Network Contributor where networking
+  is delegated, and permission to open Bastion native-client tunnels
 
 > [!IMPORTANT]
 > Later challenges grant a Radius identity `Owner` on the dedicated lab resource group
@@ -80,8 +80,9 @@ In VS Code, run **Dev Containers: Reopen in Container** and select
 lives under the repository's root `.devcontainer` directory and opens
 `03-Azure/01-01-App Innovation/04-adaptive-apps` as the container workspace.
 
-The container installs Azure CLI, Bicep, `kubectl`, Helm 3, Radius CLI, Git, `jq`,
-`yq`, `curl`, SSH, and `tar`. These tools can run every command in Challenges 00-04.
+The container installs Azure CLI, its `bastion` extension, Bicep, `kubectl`, Helm 3,
+Radius CLI, Git, `jq`, `yq`, `curl`, SSH, and `tar`. These tools can run every command
+in Challenges 00-04.
 The container is only a workstation: AKS, the Linux VM, K3s, Radius control planes,
 portfolio workloads, and recipes are still created on the remote Azure and Kubernetes
 targets by the commands you run.
@@ -95,6 +96,7 @@ targets by the commands you run.
 Install the following tools in one consistent shell environment:
 
 - [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli)
+- [Azure CLI `bastion` extension](https://learn.microsoft.com/cli/azure/network/bastion)
 - [Bicep CLI](https://learn.microsoft.com/azure/azure-resource-manager/bicep/install)
 - [`kubectl`](https://kubernetes.io/docs/tasks/tools/)
 - [Helm 3](https://helm.sh/docs/intro/install/)
@@ -147,6 +149,7 @@ rad version
 git --version
 jq --version
 yq --version
+az extension show --name bastion --query version --output tsv
 curl --version
 ssh -V
 tar --version
@@ -222,7 +225,9 @@ You are ready to continue when:
 - The team has the permissions and quota needed for AKS, the K3s VM, networking, and
   later identity configuration.
 - The required Azure resource providers are registered or registration is underway.
-- The workshop's public egress CIDR is known.
+- Azure Bastion Standard is permitted in the chosen region and its hourly cost is
+  understood.
+- Participants have VM Run Command and Bastion tunnel permissions.
 - Windows participants have a complete toolchain in one shell environment.
 - The team knows where its Kubernetes and Radius CLI configuration will be stored.
 - Devcontainer users can rebuild and reopen the container without losing Azure,

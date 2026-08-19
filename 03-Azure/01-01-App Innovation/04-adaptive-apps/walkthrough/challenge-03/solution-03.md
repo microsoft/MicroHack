@@ -23,6 +23,14 @@ Do not let teams confuse a resource type with a recipe:
 The manual steps are the learning path. Optional scripts at the end perform the same
 registration for participants who need an automated setup.
 
+Before any K3s work after a devcontainer restart, restore the localhost API tunnel:
+
+```bash
+export AZURE_SUBSCRIPTION="<subscription-id>"
+bash resources/prepare-k3s-azure-vm.sh connect
+export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
+```
+
 ## Capability portfolio
 
 The portfolio establishes the baseline capabilities offered by the platform before
@@ -71,6 +79,8 @@ helm upgrade --install "$PORTFOLIO" \
 ### Install manually on K3s
 
 ```bash
+export AZURE_SUBSCRIPTION="<subscription-id>"
+bash resources/prepare-k3s-azure-vm.sh connect
 export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
 kubectl config use-context k3s-azure-vm
 
@@ -315,6 +325,8 @@ bash resources/configure-resource-types-aks.sh
 ### K3s
 
 ```bash
+export AZURE_SUBSCRIPTION="<subscription-id>"
+bash resources/prepare-k3s-azure-vm.sh connect
 export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
 kubectl config use-context k3s-azure-vm
 

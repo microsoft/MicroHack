@@ -26,6 +26,15 @@ control plane and can operate independently.
 - Configure Azure workload identity for the AKS Radius control plane.
 - Validate Radius through Kubernetes, the CLI, and the dashboard.
 
+Before the first K3s command in this challenge, re-establish the private API tunnel if
+the devcontainer was reopened or rebuilt:
+
+```bash
+export AZURE_SUBSCRIPTION="<subscription-id>"
+bash resources/prepare-k3s-azure-vm.sh connect
+export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
+```
+
 ## Tasks
 
 ### Task 1: Select the control-plane model

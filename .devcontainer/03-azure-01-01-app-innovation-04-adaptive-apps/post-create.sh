@@ -7,6 +7,7 @@ readonly HELM_VERSION="v3.21.4"
 readonly RADIUS_VERSION="v0.60.0"
 readonly YQ_VERSION="v4.53.4"
 readonly BICEP_VERSION="v0.46.1"
+readonly BASTION_EXTENSION_VERSION="1.4.3"
 
 retry() {
   local attempts="$1"
@@ -164,6 +165,12 @@ verify_tooling() {
   else
     printf '%-8s %s\n' "bicep" "az bicep"
   fi
+  if ! az network bastion tunnel --help >/dev/null 2>&1; then
+    echo "ERROR: Azure CLI Bastion tunnel support is not available." >&2
+    missing=1
+  else
+    printf '%-8s %s\n' "bastion" "$(az extension show --name bastion --query version --output tsv)"
+  fi
 
   if [[ "$missing" -ne 0 ]]; then
     echo "Devcontainer setup is incomplete. Rebuild the container or rerun:" >&2
@@ -177,6 +184,13 @@ install_kubectl
 install_helm
 install_radius
 install_yq
+retry 3 az extension add \
+  --name bastion \
+  --version "$BASTION_EXTENSION_VERSION" \
+  --upgrade \
+  --yes \
+  --allow-preview false \
+  --output none
 retry 3 az bicep install \
   --version "$BICEP_VERSION" \
   --target-platform "$BICEP_PLATFORM"
@@ -192,6 +206,7 @@ rad version
 git --version
 jq --version
 yq --version
+az extension show --name bastion --query version --output tsv | sed 's/^/bastion extension: /'
 ssh -V
 
 echo

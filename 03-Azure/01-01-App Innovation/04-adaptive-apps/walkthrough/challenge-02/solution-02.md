@@ -13,6 +13,17 @@ Duration: 30-45 minutes per environment
 - Radius startup can take 5-10 minutes. Inspect pod state before rerunning commands.
 - Always compare `kubectl config current-context` with the active Radius workspace.
 
+Before any K3s work after a devcontainer restart, restore the private API tunnel:
+
+```bash
+export AZURE_SUBSCRIPTION="<subscription-id>"
+bash resources/prepare-k3s-azure-vm.sh connect
+export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
+```
+
+The tunnel exposes only the Kubernetes API on localhost. Radius dashboard access still
+uses `kubectl port-forward` through that API connection.
+
 ## Control-plane deployment options
 
 ### Federated control planes
@@ -231,6 +242,8 @@ rad credential register azure wi \
 ### 1. Select and verify K3s
 
 ```bash
+export AZURE_SUBSCRIPTION="<subscription-id>"
+bash resources/prepare-k3s-azure-vm.sh connect
 export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
 kubectl config use-context k3s-azure-vm
 kubectl config current-context
@@ -328,6 +341,8 @@ bash resources/deploy-radius-aks.sh
 ### K3s
 
 ```bash
+export AZURE_SUBSCRIPTION="<subscription-id>"
+bash resources/prepare-k3s-azure-vm.sh connect
 export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
 kubectl config use-context k3s-azure-vm
 

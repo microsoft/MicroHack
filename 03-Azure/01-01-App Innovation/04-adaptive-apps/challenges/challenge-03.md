@@ -25,6 +25,15 @@ The sequence is deliberate:
 - Register resource types independently with each Radius control plane.
 - Generate a Bicep extension from a Radius resource-type catalog.
 
+Before the first K3s command, restore the localhost API tunnel after any container
+restart:
+
+```bash
+export AZURE_SUBSCRIPTION="<subscription-id>"
+bash resources/prepare-k3s-azure-vm.sh connect
+export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
+```
+
 ## Tasks
 
 ### Task 1: Install the `core` capability portfolio

@@ -21,6 +21,15 @@ implementations.
 - Publish a Bicep recipe to an OCI registry and register it with an environment.
 - Compare recipe mappings for the same types across Azure and Local environments.
 
+Before the first K3s command, restore the localhost API tunnel after any container
+restart:
+
+```bash
+export AZURE_SUBSCRIPTION="<subscription-id>"
+bash resources/prepare-k3s-azure-vm.sh connect
+export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
+```
+
 ## Tasks
 
 ### Task 1: Design the custom Azure SQL recipe

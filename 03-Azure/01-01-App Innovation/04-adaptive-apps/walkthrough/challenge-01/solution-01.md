@@ -32,8 +32,8 @@ Common blockers:
 | --- | --- |
 | Azure cannot allocate the requested VM size | Set `AKS_NODE_VM_SIZE` or `K3S_VM_SIZE` to an available size, or choose another `AZURE_LOCATION`. |
 | AKS nodes remain `NotReady` | Check `az aks show --query provisioningState` and allow time for the initial node image pull. |
-| K3s API is unreachable | Confirm the caller is included in `ADMIN_CIDR` and TCP 6443 is allowed by the VM network security group. |
-| A teammate cannot access K3s | Add the teammate's public CIDR deliberately; do not expose management ports to the internet. |
+| K3s API is unreachable | Run the helper in `connect` mode and inspect the recorded tunnel log. |
+| Bastion or networking is denied | Confirm FDPO policy, region/SKU, Network Contributor, VM Run Command, and Bastion tunnel permissions. |
 | Commands target the wrong cluster | Check both `KUBECONFIG` and `kubectl config current-context`. |
 
 ## Task 1: Provision AKS
@@ -70,18 +70,22 @@ context named after `AKS_CLUSTER`.
 
 ## Task 2: Provision K3s on an Azure VM
 
-The script creates or reuses an Ubuntu VM with a static public IP, restricts SSH and
-the Kubernetes API to the coach's CIDR, opens HTTP/HTTPS for later exercises, installs
-K3s, writes a dedicated kubeconfig, and runs health checks.
+The script creates or reuses a VNet, private Ubuntu VM, least-privilege NIC NSG, and
+Azure Bastion Standard host. Only Bastion-subnet traffic can reach VM ports 22 and 6443;
+all other inbound traffic is denied. The VM has no public IP. K3s installation and
+kubeconfig retrieval use Azure VM Run Command, then a native Bastion tunnel maps the
+private API to localhost.
+
+JIT is not used because it only changes when an NSG rule is open; it does not create a
+route to a private VM. RDP is a Windows protocol and does not apply to this Ubuntu host.
+Azure Bastion supplies the private network path, with SSH retained only as an optional
+Bastion-restricted Linux troubleshooting route.
 
 ```bash
 export AZURE_SUBSCRIPTION="<subscription-id>"
 export AZURE_LOCATION="westeurope"
 export RESOURCE_GROUP="rg-adaptive-apps"
 export K3S_VM_NAME="vm-adaptive-apps-k3s"
-
-# Recommended: set this explicitly to the coach or workshop egress IP.
-export ADMIN_CIDR="<public-ip>/32"
 
 bash resources/prepare-k3s-azure-vm.sh
 ```
@@ -92,15 +96,35 @@ Optional settings:
 export K3S_VM_SIZE="Standard_D4s_v5"
 export K3S_ADMIN_USERNAME="azureuser"
 export K3S_KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
+export VNET_PREFIX="10.42.0.0/16"
+export K3S_SUBNET_PREFIX="10.42.0.0/24"
+export BASTION_SUBNET_PREFIX="10.42.1.0/26"
+export K3S_LOCAL_PORT=16443
 ```
 
-Use K3s:
+The generated kubeconfig points to `https://127.0.0.1:16443`. Its credentials are
+retrieved in bounded chunks and are never printed. After reopening or rebuilding the
+devcontainer, re-establish the tunnel without changing Azure resources:
 
 ```bash
+export AZURE_SUBSCRIPTION="<subscription-id>"
+bash resources/prepare-k3s-azure-vm.sh connect
+
 export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
 kubectl config use-context k3s-azure-vm
 kubectl get nodes
 ```
+
+Inspect or stop the tunnel safely:
+
+```bash
+bash resources/prepare-k3s-azure-vm.sh status
+bash resources/prepare-k3s-azure-vm.sh disconnect
+```
+
+The script records the exact PID and verifies its command line before sending
+`SIGTERM`; it never kills by process name. The tunnel exposes only the Kubernetes API.
+Use `kubectl port-forward` for later Radius and application access.
 
 Return to AKS:
 
@@ -112,7 +136,9 @@ kubectl get nodes
 
 > [!IMPORTANT]
 > Treat kubeconfig files as credentials. Share the K3s kubeconfig only through an
-> approved secure channel and remove access when the workshop ends.
+> approved secure channel and remove access when the workshop ends. Azure Bastion
+> accrues hourly cost while deployed; follow the
+> [K3s cleanup guidance](../../docs/prepare-k3s.md#cost-and-cleanup).
 
 ## Health checks
 
@@ -131,6 +157,8 @@ kubectl wait --for=condition=Ready nodes --all --timeout=10m
 kubectl get nodes -o wide
 
 # K3s
+export AZURE_SUBSCRIPTION="<subscription-id>"
+bash resources/prepare-k3s-azure-vm.sh connect
 export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
 kubectl config use-context k3s-azure-vm
 kubectl get --raw="/readyz"
@@ -157,4 +185,5 @@ into Azure management; it does not create the cluster and is not required by Rad
 - Both scripts finish successfully.
 - Coaches can switch explicitly between AKS and K3s.
 - Both Kubernetes APIs and all nodes are healthy.
+- The K3s VM is private and reachable only through the localhost Bastion tunnel.
 - No Radius control plane, portfolio, recipes, or application workloads are installed.

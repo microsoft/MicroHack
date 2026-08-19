@@ -337,14 +337,15 @@ def upsert_env(values: dict[str, str]) -> None:
     print(f"  ✓ wrote SHAREPOINT_* values to {ENV_PATH}")
 
     # Best-effort: mirror into the azd environment so a later `azd provision`/`azd up`
-    # regenerates .env with these values instead of blanking them.
+    # regenerates .env with these values instead of blanking them. azure.yaml lives
+    # in src/, so run azd from there.
     azd = shutil.which("azd")
     if azd:
         for key in SHAREPOINT_KEYS:
             if key in values:
                 subprocess.run(
                     [azd, "env", "set", key, values[key]],
-                    cwd=REPO_ROOT, capture_output=True, text=True, check=False,
+                    cwd=REPO_ROOT / "src", capture_output=True, text=True, check=False,
                 )
 
 

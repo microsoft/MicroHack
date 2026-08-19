@@ -1,7 +1,8 @@
 # ==========================================================================
 # Foundry CLM Microhack — Azure Developer CLI (azd) configuration
-# `azd up` provisions the full Foundry environment defined in labautomation/infra/ and then
-# writes a repo-root .env matching labautomation/deploy.sh.
+# This file lives in src/, so run azd from there: `cd src && azd up`.
+# `azd up` provisions the full Foundry environment defined in ../labautomation/infra/
+# and then writes a repo-root .env matching labautomation/deploy.sh.
 # Docs: https://aka.ms/azure-dev/schema
 # ==========================================================================
 name: foundry-clm-microhack
@@ -10,7 +11,7 @@ metadata:
 
 infra:
   provider: bicep
-  path: labautomation/infra
+  path: ../labautomation/infra
   module: main
 
 hooks:
@@ -19,11 +20,11 @@ hooks:
   postprovision:
     windows:
       shell: pwsh
-      run: python src/scripts/write_env.py
+      run: python scripts/write_env.py
       continueOnError: false
       interactive: false
     posix:
       shell: sh
-      run: python3 src/scripts/write_env.py
+      run: python3 scripts/write_env.py
       continueOnError: false
       interactive: false

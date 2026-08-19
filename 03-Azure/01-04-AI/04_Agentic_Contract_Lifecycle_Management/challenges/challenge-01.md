@@ -128,7 +128,6 @@ text at crawl time); regenerate the PDFs with `python src/scripts/make_corpus_pd
 
 **Before you begin — tick these off:**
 
-- [ ] You can sign in to [github.com](https://github.com).
 - [ ] You can sign in to the [Azure Portal](https://portal.azure.com) with the account your lab was provisioned for (or, if self-hosting, one that can **create resources**).
 - [ ] *(Self-hosting only)* Your Azure subscription can deploy **GPT** models (ask your coach if unsure).
 - [ ] You have ~30 minutes and a stable connection (provisioning takes 5–10 min on its own).
@@ -139,17 +138,17 @@ text at crawl time); regenerate the PDFs with `python src/scripts/make_corpus_pd
 Code** using the **Dev Containers** extension (a prebuilt container with Python, Azure CLI, `azd`, and Node — no manual installs); because you work off the source repo, `git pull`
 always gets the latest fixes. *(The **one exception** is the optional **Challenge 6** CI bonus — it runs in **GitHub Actions**, so it needs **your own fork**; you'll create it there, not now.)*
 
-1. `git clone` this repo, then open the folder in **VS Code** (e.g. `code microhack-aiagents`). When VS
+1. Open the folder in **VS Code** (e.g. `code microhack-aiagents`). When VS
    Code prompts **"Reopen in Container"**, click it — or run **Dev Containers: Reopen in Container** from
    the Command Palette (**F1**). Requires the **Dev Containers** extension and **Docker Desktop**.
-2. Wait for the container to build — it installs dependencies with `pip install -r requirements.txt`
+2. Wait for the container to build — it installs dependencies with `pip install -r src/requirements.txt`
    automatically. When the terminal stops scrolling and shows a prompt, it's ready.
 
 ✅ **You'll know it worked when:** a **VS Code** window opens (locally or in the browser) with a **Terminal** panel showing a
-ready prompt (e.g. `@your-username ➜ /workspaces/microhack-aiagents (main) $`).
+ready prompt.
 
 > [!NOTE]
-> **Prefer the browser? Use GitHub Codespaces instead.** On the repo's GitHub page, click **`< > Code` → Codespaces → Create codespace on `main`** — the same dev container builds in the cloud, so you need no local Docker. If Codespaces isn't enabled in your org, see [enabling Codespaces](https://docs.github.com/en/codespaces/managing-codespaces-for-your-organization/enabling-or-disabling-github-codespaces-for-your-organization) or use a [free personal account](https://github.com/signup) (120 core-hours/month free).
+> **Prefer the browser? Use GitHub Codespaces instead.** On the repo's GitHub page, click **`< > Code` → Codespaces → Create codespace on `main`** — the same dev container builds in the cloud, so you need no local Docker.
 >
 > While it builds, skim the [scenario & architecture](../README.md#the-scenario--contoso-global) so the pieces you deploy here make sense.
 
@@ -245,6 +244,7 @@ everything. First pick a region that offers **all three** models — this repo's
 > old template is what triggers `DeploymentModelNotSupported` / `ServiceModelDeprecating`.
 
 ```bash
+cd src                  # azure.yaml (the azd project) lives here
 azd auth login          # separate from az login above
 azd up                  # answer: environment name (e.g. clm-microhack), your subscription, region = Sweden Central
 ```

@@ -300,10 +300,10 @@ challenges are a single story:
 ## Getting started
 
 1. **Open this repo in Codespaces** (no fork needed — the optional Challenge 6 CI bonus is the only part that needs a fork) — **Code → Codespaces → Create codespace**. The devcontainer installs
-   Python 3.11, Azure CLI, `azd`, Node, and `requirements.txt` automatically.
+   Python 3.11, Azure CLI, `azd`, Node, and `src/requirements.txt` automatically.
 2. `az login` (and `azd auth login` if you use the `azd up` path)
 3. Do **[Challenge 1](challenges/challenge-01.md)** to deploy resources and seed the corpus — provision with
-   **`azd up`** (Bicep in `labautomation/infra/`), the **`labautomation/deploy`** script, or the one-click
+   **`azd up`** (run from `src/`; Bicep in `labautomation/infra/`), the **`labautomation/deploy`** script, or the one-click
    **Deploy to Azure** button (`infra/azuredeploy.json`). The first two autofill your `.env`.
    - **Seeding the corpus — default is Path B** (Challenge 1 · Task 6): **Path B (local-PDF)** needs
      no SharePoint and no admin consent, works in every tenant, and builds the `clm-corpus` index —
@@ -317,12 +317,14 @@ challenges are a single story:
 
 ```
 .
-├── .devcontainer/            # Codespaces definition
-├── azure.yaml                # azd config (points at labautomation/infra, write-.env hook)
+├── .devcontainer/            # Codespaces / Dev Containers definition
 ├── README.md                 # this file
 ├── challenges/               # challenge-01 … challenge-06 (one markdown brief per challenge)
 ├── walkthrough/              # challenge-0N/solution-0N.md — reference solution per challenge
-├── src/                      # all source code: agents/, clm_common/, mcp_server/, data/, scripts/ …
+├── src/                      # all source code + build/config: agents/, clm_common/, mcp_server/, data/, scripts/ …
+│   ├── azure.yaml            # azd config (points at ../labautomation/infra, write-.env hook) — run `cd src && azd up`
+│   ├── Dockerfile            # Challenge 4 MCP server image (.dockerignore alongside; build context = src/)
+│   ├── requirements.txt      # Python dependencies
 │   └── data/                 # CLM corpus (PDF contracts/templates/clauses/policies) + eval datasets
 ├── labautomation/            # infra (Bicep) + deploy, seed corpus/SQL, write .env, smoke test
 ├── images/                   # rendered images + per-challenge screenshots + diagrams

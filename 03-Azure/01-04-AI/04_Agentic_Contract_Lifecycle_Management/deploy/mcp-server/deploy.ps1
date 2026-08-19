@@ -5,7 +5,7 @@
  -----------------------------------------------------------------------------
  Windows/PowerShell twin of deploy.sh. Builds the image in the cloud (no local
  Docker) and prints the /mcp URL a Foundry agent connects to. Run it from the
- REPO ROOT so the build context (requirements.txt + src/) is correct.
+ REPO ROOT; the build context is the src/ folder (Dockerfile + requirements.txt + app code).
 
  ZERO-CONFIG by default: reads your repo-root .env for AZURE_AI_PROJECT_ENDPOINT
  + MODEL_*, then auto-discovers the resource group, Foundry account id and region
@@ -94,7 +94,7 @@ az containerapp up `
   --name $AppName `
   --resource-group $ResourceGroup `
   --location $Location `
-  --source . `
+  --source src `
   --ingress external `
   --target-port 8000 `
   --env-vars `

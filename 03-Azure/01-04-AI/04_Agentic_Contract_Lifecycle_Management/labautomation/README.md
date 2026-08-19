@@ -41,7 +41,7 @@ same resources from `infra/`.
 [`infra/`](infra/) holds the Bicep templates (plus `azuredeploy.json` for the
 one-click **Deploy to Azure** button) that create the Microsoft Foundry project, the
 three GPT model deployments (`gpt-5.4`, `gpt-5.6-sol`, `gpt-5.4-nano`), Azure AI Search, Azure SQL, and Application Insights.
-`azure.yaml` at the repo root points `azd` at this folder.
+`src/azure.yaml` points `azd` at this folder (`../labautomation/infra`); run `azd up` from `src/`.
 
 ## Scripts
 
@@ -68,7 +68,7 @@ Seeding, setup & gate scripts — run by participants/coaches during the hack �
 
 ```bash
 az login
-./labautomation/deploy.sh          # or: azd up   (Windows: labautomation\deploy.ps1)
+./labautomation/deploy.sh          # or: (cd src && azd up)   (Windows: labautomation\deploy.ps1)
 # Default corpus path (own admin tenant): SharePoint app + consent + site + upload + index
 python src/scripts/setup_sharepoint_corpus.py
 # — or the no-SharePoint fallback: python src/scripts/seed_corpus.py

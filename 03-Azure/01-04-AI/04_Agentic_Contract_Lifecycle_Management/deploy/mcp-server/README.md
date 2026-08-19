@@ -7,7 +7,7 @@ network — no local process required.
 ## What gets deployed
 
 - A single **Azure Container App** named `clm-mcp` (external HTTPS ingress on
-  port `8000`) built from the repo‑root [`Dockerfile`](../../Dockerfile).
+  port `8000`) built from the src/ [`Dockerfile`](../../src/Dockerfile).
 - The app runs `python src/mcp_server/server.py --http`, exposing the MCP
   endpoint at `https://<app>.<region>.azurecontainerapps.io/mcp`.
 - A **system‑assigned managed identity** granted a data‑plane role on your

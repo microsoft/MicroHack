@@ -1,0 +1,40 @@
+{
+  "name": "Adaptive Apps MicroHack",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+  "remoteUser": "vscode",
+  "features": {
+    "ghcr.io/devcontainers/features/azure-cli:1": {
+      "version": "2.89.1"
+    },
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": false,
+      "installOhMyZsh": false,
+      "upgradePackages": false
+    }
+  },
+  "mounts": [
+    "source=adaptive-apps-microhack-azure-${devcontainerId},target=/home/vscode/.azure,type=volume",
+    "source=adaptive-apps-microhack-kube-${devcontainerId},target=/home/vscode/.kube,type=volume",
+    "source=adaptive-apps-microhack-radius-${devcontainerId},target=/home/vscode/.rad,type=volume",
+    "source=adaptive-apps-microhack-ssh-${devcontainerId},target=/home/vscode/.ssh,type=volume"
+  ],
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "forwardPorts": [
+    7007
+  ],
+  "portsAttributes": {
+    "7007": {
+      "label": "Radius dashboard",
+      "onAutoForward": "notify"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-azuretools.vscode-bicep",
+        "ms-kubernetes-tools.vscode-kubernetes-tools",
+        "timonwong.shellcheck"
+      ]
+    }
+  }
+}

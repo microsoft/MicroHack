@@ -31,10 +31,13 @@ subscription or resource group.
 ## Required tools
 
 - Azure CLI
+- Bicep CLI
 - `kubectl`
 - Helm
 - Radius CLI (`rad`)
 - Git
+- `jq`
+- `yq`
 - `curl`
 - OpenSSH client
 - `tar`
@@ -45,7 +48,179 @@ Windows participants should use WSL 2 for the Bash automation scripts. Manual
 instructions can also be followed from PowerShell 7 where equivalent commands are
 available.
 
-## Installation instructions
+## Recommended devcontainer
+
+The MicroHack includes a scoped devcontainer at
+`04-adaptive-apps/.devcontainer/devcontainer.json`. It is recommended for participants
+who can run containers locally because it keeps Challenges 00-04 on one tested Linux
+toolchain. Manual installation remains available below.
+
+### Host prerequisites
+
+Confirm each participant has:
+
+- Docker Desktop or another runtime compatible with VS Code Dev Containers
+- Visual Studio Code
+- The Dev Containers extension
+- Enough local storage for the Ubuntu base image, features, and four small state
+  volumes
+
+On Windows, use Docker Desktop's WSL 2 backend. The repository can be cloned in the
+WSL filesystem for better filesystem performance, but VS Code must still open the
+scoped MicroHack folder.
+
+This nested configuration is designed for local VS Code Dev Containers. Do not
+advertise Codespaces for this contribution: Codespaces normally discovers configuration
+from the repository root, while this file is intentionally scoped to one MicroHack.
+
+### Start the container
+
+```bash
+git clone https://github.com/djong1/MicroHack.git
+cd MicroHack
+git switch djong1-adaptive-apps-microhack
+code "03-Azure/01-01-App Innovation/04-adaptive-apps"
+```
+
+In VS Code:
+
+1. Confirm the Explorer root is `04-adaptive-apps`.
+2. Run **Dev Containers: Reopen in Container**.
+3. Wait for `.devcontainer/post-create.sh` to finish.
+4. Open a new Bash terminal in the container.
+
+Opening the whole MicroHack repository will not discover this scoped configuration.
+Use **File: Open Folder** to select `04-adaptive-apps` first.
+
+### Installed toolchain
+
+The Azure CLI devcontainer feature installs Azure CLI 2.89.1. The post-create script
+installs Bicep 0.46.1 into the persisted Azure CLI state volume and also installs:
+
+- `kubectl` 1.36.3
+- Helm 3.21.4
+- Radius CLI 0.60.0 and its Radius Bicep support
+- `yq` 4.53.4
+- Git, `jq`, `curl`, OpenSSH client, `tar`, and CA certificates
+
+Version pins make participant environments repeatable. Updating a pin requires static
+validation of this MicroHack and compatibility with the Kubernetes versions offered by
+AKS.
+
+Rust, PowerShell, k3d, and application-development extensions from the source
+repository devcontainer are intentionally omitted. Challenges 00-04 use Bash, create
+K3s on an Azure VM, and do not build the Adaptive Apps application source.
+
+### Persistent state and security
+
+The configuration mounts four Docker named volumes. `${devcontainerId}` gives each
+devcontainer its own stable suffix, so separate clones do not share credentials:
+
+| Volume | Container path | Contents |
+| --- | --- | --- |
+| `adaptive-apps-microhack-azure-${devcontainerId}` | `/home/vscode/.azure` | Azure tokens, CLI settings, and Bicep |
+| `adaptive-apps-microhack-kube-${devcontainerId}` | `/home/vscode/.kube` | AKS and K3s kubeconfig files |
+| `adaptive-apps-microhack-radius-${devcontainerId}` | `/home/vscode/.rad` | Radius workspaces and components |
+| `adaptive-apps-microhack-ssh-${devcontainerId}` | `/home/vscode/.ssh` | K3s VM SSH key and known hosts |
+
+This state survives **Rebuild Container**. It does not survive deletion of the named
+volumes. The files contain credentials and must be protected like the corresponding
+host directories.
+
+The configuration deliberately does not:
+
+- Bake tokens, kubeconfig files, SSH keys, or Radius workspace state into the image
+- Mount the host's `~/.azure`, `~/.kube`, `~/.rad`, or `~/.ssh`
+- Mount the host Docker socket
+
+Without a Docker socket, use the temporary `DOCKER_CONFIG` and `az acr login
+--expose-token` flow documented in Solution 04 when publishing the recipe. The
+`configure-recipes.sh` helper already uses this token-based approach.
+
+### Azure and Radius authentication
+
+Sign in from the container and select the lab subscription:
+
+```bash
+az login
+az account set --subscription "<subscription-id>"
+az account show --output table
+```
+
+Azure CLI may open a browser on the host or show a device-code prompt. Tokens are saved
+only in the `~/.azure` volume.
+
+Radius CLI state is separate. Challenge 02 creates `ws-azure-prod` and
+`ws-local-prod` under `~/.rad/config.yaml`; it also configures the workload identity
+used by the Radius control plane on AKS. Rebuilding the container preserves those
+local workspace definitions.
+
+### Kubeconfig and SSH behavior
+
+Challenge 01 writes:
+
+- AKS credentials to the default `~/.kube/config`
+- K3s credentials to `~/.kube/adaptive-apps-k3s.yaml`
+- The generated VM SSH key and accepted host key under `~/.ssh`
+
+The named volumes preserve all three. Participants must still switch safely:
+
+```bash
+# AKS
+unset KUBECONFIG
+kubectl config use-context aks-adaptive-apps
+
+# K3s
+export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
+kubectl config use-context k3s-azure-vm
+```
+
+Do not copy kubeconfig files or private keys into the Git workspace. If teammates need
+K3s access, distribute credentials through an approved secure channel.
+
+### What runs where
+
+The devcontainer runs only participant tools. Commands executed inside it create or
+configure remote resources:
+
+- Challenge 01 creates AKS and an Azure VM, then installs K3s on that VM.
+- Challenge 02 installs separate Radius control planes into AKS and K3s.
+- Challenge 03 installs the portfolio and registers resource types remotely.
+- Challenge 04 publishes a Bicep recipe to ACR and registers recipes with both Radius
+  environments.
+
+No Kubernetes cluster or Docker daemon runs inside this devcontainer.
+
+### Verify and troubleshoot
+
+Run:
+
+```bash
+az --version
+az bicep version
+kubectl version --client
+helm version --short
+rad version
+git --version
+jq --version
+yq --version
+curl --version
+ssh -V
+tar --version
+```
+
+If creation fails:
+
+1. Inspect the Dev Containers creation log for the first failed download or command.
+2. Run **Dev Containers: Rebuild Container** to retry the pinned tool installation.
+3. Confirm Docker Desktop is running and the container can reach GitHub, Microsoft,
+   Kubernetes, and Helm download endpoints.
+4. If tools are installed but not found, open a new terminal so `.bashrc` updates
+   `PATH`.
+5. If state is unexpectedly missing, verify that the four named volumes still exist.
+6. Delete a named volume only when intentionally resetting its credential state.
+
+## Manual installation instructions
 
 ### macOS
 
@@ -70,7 +245,8 @@ brew install helm
 Install Git and supporting command-line tools:
 
 ```bash
-brew install git curl
+brew install git curl jq yq
+az bicep install
 ```
 
 Install Radius CLI:
@@ -119,7 +295,16 @@ Install supporting tools:
 
 ```bash
 sudo apt-get update
-sudo apt-get install --yes git curl openssh-client tar
+sudo apt-get install --yes git curl jq openssh-client tar
+az bicep install
+
+YQ_VERSION="v4.53.4"
+YQ_ARCH="amd64"
+[[ "$(uname -m)" == "aarch64" ]] && YQ_ARCH="arm64"
+sudo curl --fail --location \
+  "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_${YQ_ARCH}" \
+  --output /usr/local/bin/yq
+sudo chmod 0755 /usr/local/bin/yq
 ```
 
 Install Radius CLI:
@@ -162,8 +347,11 @@ winget install Kubernetes.kubectl
 winget install Helm.Helm
 winget install RadiusProject.rad
 winget install Git.Git
+winget install jqlang.jq
+winget install MikeFarah.yq
 winget install Microsoft.VisualStudioCode
 winget install Microsoft.PowerShell
+az bicep install
 ```
 
 > [!IMPORTANT]
@@ -176,14 +364,16 @@ Run:
 
 ```bash
 az --version
+az bicep version
 kubectl version --client
 helm version
 rad version
 git --version
+jq --version
+yq --version
 curl --version
 ssh -V
 tar --version
-code --version
 ```
 
 Sign in and select the intended subscription:
@@ -241,6 +431,8 @@ az provider show \
 - Bash can run the optional automation scripts.
 - Git, `curl`, SSH, and `tar` are available.
 - On Windows, the team has agreed whether commands run in WSL or native PowerShell.
+- Devcontainer participants have confirmed that rebuilds preserve the expected named
+  volumes and understand that those volumes contain credentials.
 
 ## Troubleshooting
 
@@ -254,6 +446,8 @@ az provider show \
 | Azure authorization error | Confirm the participant's role and scope before troubleshooting scripts. |
 | AKS or VM quota error | Select another VM size or region, or request quota before the event. |
 | WSL cannot see native Windows tools | Install the complete toolchain inside WSL rather than mixing environments. |
+| Devcontainer creation fails | Inspect the creation log, confirm network access, and run **Dev Containers: Rebuild Container**. |
+| Devcontainer lost authentication or contexts | Confirm the named Azure, Kubernetes, Radius, and SSH volumes were not deleted. |
 
 Azure Cloud Shell can temporarily help with Azure resource inspection, but the K3s
 kubeconfig and later local files still require a consistent participant workstation.

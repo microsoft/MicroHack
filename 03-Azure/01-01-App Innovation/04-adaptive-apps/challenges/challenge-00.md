@@ -51,41 +51,105 @@ Confirm that your workshop team has:
 > because recipes can create role assignments. Use an isolated workshop subscription
 > or resource group rather than a production scope.
 
-### Task 2: Install the workstation tools
+### Task 2: Choose a workstation setup
+
+The scoped devcontainer is the recommended setup because it provides a consistent
+Linux toolchain for Challenges 00-04. A manual host installation remains supported.
+
+#### Option A: Use the recommended devcontainer
+
+Host prerequisites:
+
+- Docker Desktop or another runtime compatible with VS Code Dev Containers
+- [Visual Studio Code](https://code.visualstudio.com/)
+- The [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+- On Windows, Docker Desktop configured with its WSL 2 backend
+
+Clone the fork and check out this MicroHack branch:
+
+```bash
+git clone https://github.com/djong1/MicroHack.git
+cd MicroHack
+git switch djong1-adaptive-apps-microhack
+code "03-Azure/01-01-App Innovation/04-adaptive-apps"
+```
+
+In VS Code, run **Dev Containers: Reopen in Container**. Open the
+`04-adaptive-apps` folder itself, not the repository root, because the configuration is
+intentionally scoped at `.devcontainer/devcontainer.json` inside that folder.
+
+The container installs Azure CLI, Bicep, `kubectl`, Helm 3, Radius CLI, Git, `jq`,
+`yq`, `curl`, SSH, and `tar`. These tools can run every command in Challenges 00-04.
+The container is only a workstation: AKS, the Linux VM, K3s, Radius control planes,
+portfolio workloads, and recipes are still created on the remote Azure and Kubernetes
+targets by the commands you run.
+
+> [!IMPORTANT]
+> The configuration does not mount the host Docker socket. Challenge 04 supports
+> token-based ACR authentication when Docker is unavailable.
+
+#### Option B: Install tools on the host
 
 Install the following tools in one consistent shell environment:
 
 - [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli)
+- [Bicep CLI](https://learn.microsoft.com/azure/azure-resource-manager/bicep/install)
 - [`kubectl`](https://kubernetes.io/docs/tasks/tools/)
 - [Helm 3](https://helm.sh/docs/intro/install/)
 - [Radius CLI (`rad`)](https://docs.radapp.io/getting-started/install/)
 - [Git](https://git-scm.com/downloads)
-- `curl`, OpenSSH client, and `tar`
+- `jq`, `yq`, `curl`, OpenSSH client, and `tar`
 - [Visual Studio Code](https://code.visualstudio.com/)
 
 Windows participants should use WSL 2 for the Bash automation supplied with this
 MicroHack. Install the complete toolchain inside WSL rather than mixing WSL and native
 Windows executables or configuration files.
 
-### Task 3: Verify the toolchain
+### Task 3: Understand devcontainer state and security
+
+The devcontainer stores these directories in per-container Docker named volumes so
+they survive a container rebuild without sharing credentials across separate clones:
+
+| Path | Purpose |
+| --- | --- |
+| `~/.azure` | Azure CLI sign-in tokens, settings, and Bicep |
+| `~/.kube` | Default AKS kubeconfig and the dedicated K3s kubeconfig |
+| `~/.rad` | Radius CLI workspaces and downloaded components |
+| `~/.ssh` | SSH keys and known hosts used by the K3s VM |
+
+No credentials are baked into the image or committed to the repository. Treat the
+named volumes as credentials: use only a trusted workstation, do not copy their
+contents into the workspace, and remove the volumes when the lab is retired. Reopening
+or rebuilding the container preserves them; removing the volumes resets the state.
+
+The workspace files are mounted separately by VS Code. The host Docker socket and host
+credential directories are not mounted.
+
+### Task 4: Verify the toolchain
 
 Run the appropriate version command for every required tool:
 
 ```bash
 az --version
+az bicep version
 kubectl version --client
 helm version
 rad version
 git --version
+jq --version
+yq --version
 curl --version
 ssh -V
 tar --version
-code --version
 ```
 
 Resolve missing commands and `PATH` problems before continuing.
 
-### Task 4: Select and validate the Azure subscription
+If the devcontainer setup did not complete, run **Dev Containers: Rebuild Container**
+and inspect the creation log. Reopening a terminal is sufficient after a successful
+build.
+
+### Task 5: Select and validate the Azure subscription
 
 Sign in, select the intended subscription, and verify the active account:
 
@@ -107,7 +171,13 @@ az provider register --namespace Microsoft.Network
 Provider registration is asynchronous. Inspect the registration state instead of
 repeatedly submitting the registration command.
 
-### Task 5: Agree on local configuration locations
+Inside the devcontainer, `az login` performs an interactive browser or device-code
+sign-in. The resulting Azure CLI state persists in the `~/.azure` volume. Radius does
+not reuse the Azure CLI token as a workspace: Challenge 02 creates separate Radius
+workspaces under `~/.rad` and registers the Azure workload-identity credential needed
+by the AKS control plane.
+
+### Task 6: Agree on local configuration locations
 
 Before sharing access with teammates, decide:
 
@@ -118,6 +188,20 @@ Before sharing access with teammates, decide:
 - How the team will transfer kubeconfig files securely
 
 No cluster connection is required yet. Challenge 01 creates the default platforms.
+When those platforms exist, switch safely by changing both `KUBECONFIG` and context:
+
+```bash
+# AKS uses the default ~/.kube/config.
+unset KUBECONFIG
+kubectl config use-context aks-adaptive-apps
+
+# K3s uses a dedicated persisted file.
+export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
+kubectl config use-context k3s-azure-vm
+```
+
+Always run `kubectl config current-context` before a platform operation. Never copy a
+kubeconfig or SSH private key into the Git workspace.
 
 ## Success criteria
 
@@ -131,6 +215,8 @@ You are ready to continue when:
 - The workshop's public egress CIDR is known.
 - Windows participants have a complete toolchain in one shell environment.
 - The team knows where its Kubernetes and Radius CLI configuration will be stored.
+- Devcontainer users can rebuild and reopen the container without losing Azure,
+  kubeconfig, Radius workspace, or SSH state.
 
 ## Hints
 
@@ -140,6 +226,11 @@ You are ready to continue when:
   the intended subscription explicitly.
 - Azure Cloud Shell can help inspect Azure resources, but it does not replace the
   consistent local environment needed for K3s kubeconfig files and later authoring.
+- If the browser cannot complete `az login` from a container, follow the device-code
+  prompt shown by Azure CLI.
+- If a rebuilt container appears signed out or has no Kubernetes contexts, confirm
+  that the four `adaptive-apps-microhack-*` named volumes for that devcontainer still
+  exist.
 - Resolve quota or role-assignment blockers before the event; they are difficult to
   fix within a timed MicroHack.
 

@@ -18,7 +18,7 @@ team's environment by invoking **`deploy-lab.ps1`** with a fixed parameter contr
 | [`lab-defaults.json`](lab-defaults.json) | Platform config (`$schema`-validated): deployment type, region priority, per-user daily cost estimate. |
 
 `deploy-lab.ps1` is the **platform** path; `deploy.sh` / `deploy.ps1` below remain the
-**local / Codespaces** path (they autofill `.env` via `az` after `az login`). Both provision the
+**local** path (they autofill `.env` via `az` after `az login`). Both provision the
 same resources from `infra/`.
 
 **What `deploy-lab.ps1` does beyond a single deployment:**
@@ -45,7 +45,7 @@ three GPT model deployments (`gpt-5.4`, `gpt-5.6-sol`, `gpt-5.4-nano`), Azure AI
 
 ## Scripts
 
-Provisioning scripts in **this folder** (local / Codespaces path):
+Provisioning scripts in **this folder** (local path):
 
 | Path | Role |
 |------|------|

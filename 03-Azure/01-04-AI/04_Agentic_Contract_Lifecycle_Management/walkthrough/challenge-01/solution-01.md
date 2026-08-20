@@ -8,7 +8,7 @@ contract corpus the later challenges ground on.
 
 ## Expected end state
 
-- Codespace (or local devcontainer) built and dependencies installed.
+- Repo cloned and opened in VS Code, a Python virtual environment (`.venv`) created, and dependencies from `src/requirements.txt` installed.
 - `az login --use-device-code` completed and the target subscription selected.
 - **MicroHack event:** resources are **already provisioned** — you point `.env` at your
   **lab-dashboard** values. **Self-hosting:** one `azd up` (Bicep in
@@ -26,16 +26,19 @@ contract corpus the later challenges ground on.
 
 ## 🛠️ Task-by-task walkthrough
 
-### Task 1 · Open the Codespace
-No fork — the code lives in this repo. **`< > Code` ▸ Codespaces ▸ Create codespace on `main`**; the devcontainer builds and `pip install -r src/requirements.txt` runs automatically. *(Local alt: `git clone` then **Reopen in Container**.)*
-
-> 📸 **Screenshot slot:** creating the **Codespace**.
->
-> <img src="../../images/challenge-01/steps/02-create-codespace.png" alt="Screenshot slot: create a Codespace" width="80%">
+### Task 1 · Clone the project and set up your environment
+No fork for the main hack — the code lives in this repo. Clone it, open it in **VS Code**, then in a terminal at the repo root create a virtual environment and install the dependencies:
+```bash
+python -m venv .venv
+source .venv/bin/activate             # Windows (PowerShell): .venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+pip install -r src/requirements.txt   # prompt should now show (.venv)
+```
+Then **Command Palette ▸ Python: Select Interpreter ▸ `.venv`** so the editor, terminal, and later scripts share one environment. The repo-root `.venv` is git-ignored and is where the Ch2 eval / Ch5 red-team scripts expect it; a venv also avoids the `externally-managed-environment` error on Python 3.12+. *(Challenge 6's CI bonus is the one exception — it runs in GitHub Actions and needs your own fork.)*
 
 ### Task 2 · Log in to Azure
 ```bash
-az login --use-device-code                             # device code is required in Codespaces
+az login --use-device-code                             # paste the code at microsoft.com/devicelogin
 az account set --subscription "<your-subscription-id>"
 ```
 
@@ -56,6 +59,16 @@ cp src/.env.example .env
 | **SearchEndpoint** | `AZURE_SEARCH_ENDPOINT` |
 | **AppInsightsConnectionString** | `APPLICATIONINSIGHTS_CONNECTION_STRING` |
 | **ModelOrchestrator / Drafting / ClauseRisk / Renewal** | `MODEL_ORCHESTRATOR` / `MODEL_DRAFTING` / `MODEL_CLAUSE_RISK` / `MODEL_RENEWAL` |
+
+**Where to copy the two endpoints from** — if you'd rather read them straight off the portal than the dashboard, these are the two values you actually have to paste:
+
+**1 · `AZURE_AI_PROJECT_ENDPOINT`** — Foundry portal ([ai.azure.com](https://ai.azure.com)) → your **`clm-project`** → **Home**. Use the copy button on **Project endpoint** (`https://<foundry>.services.ai.azure.com/api/projects/clm-project`) — **not** the *Azure OpenAI endpoint* next to it.
+
+<img src="../../images/challenge-01/steps/endpoint-foundry-project.png" alt="Foundry portal Home with the Project endpoint field and its copy button highlighted" width="80%">
+
+**2 · `AZURE_SEARCH_ENDPOINT`** — Azure Portal → your resource group → the **Search service (Foundry IQ)** (`clmsearch****`) → **Overview** → copy the **Url** (`https://clmsearch****.search.windows.net`).
+
+<img src="../../images/challenge-01/steps/endpoint-azure-search.png" alt="Azure Portal Search service Overview with the Url endpoint highlighted" width="80%">
 
 The model names + `AZURE_SEARCH_INDEX` (`clm-corpus`) / `AZURE_SEARCH_CONNECTION_NAME` (`clm-search`) already default in `src/.env.example`, so at minimum paste the two **endpoints** + the **App Insights** string. Leave `SHAREPOINT_*` and the Challenge 5 `MICROSOFT_APP_*` / `TEAMS_*` blank for now.
 
@@ -224,6 +237,6 @@ Smoke test: ✅ PASS
 | Symptom | Cause / fix |
 |---------|-------------|
 | A model isn't offered in your region | *(Self-host only — provisioned labs don't deploy.)* Pick a region with `gpt-5.4`, `gpt-5.6-sol`, and `gpt-5.4-nano`; verify in the Foundry model catalog. |
-| `az login` fails / no browser in Codespaces | Use `az login --use-device-code` and paste the code at [microsoft.com/devicelogin](https://microsoft.com/devicelogin). |
+| `az login` doesn't open a browser (headless / remote terminal) | Use `az login --use-device-code` and paste the code at [microsoft.com/devicelogin](https://microsoft.com/devicelogin). |
 | SharePoint (Path A): *"Tenant does not have a SPO license"* / **"Grant admin consent" greyed out** | You're not a tenant admin — expected. Use **Path B** (blank `SHAREPOINT_*`, run `python src/scripts/seed_corpus.py`); it builds the identical `clm-corpus` index. |
 | Corpus / index empty | Re-run `python src/scripts/seed_corpus.py` (idempotent); if a doc 403s, wait a minute for Search-role propagation and retry. |

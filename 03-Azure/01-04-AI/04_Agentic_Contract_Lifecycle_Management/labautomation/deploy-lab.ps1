@@ -26,7 +26,7 @@
     - Console output: [INFO]/[OK]/[WARN] progress plus @{ HackboxCredential = ... }
       records that surface every endpoint / model name to the team dashboard.
 
-  deploy.ps1 / deploy.sh remain the local/Codespaces path; this script is the platform path.
+  deploy.ps1 / deploy.sh remain the local path; this script is the platform path.
 #>
 param(
     [Parameter(Mandatory = $true)]

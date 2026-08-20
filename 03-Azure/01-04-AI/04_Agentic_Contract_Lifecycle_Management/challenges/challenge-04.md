@@ -279,10 +279,10 @@ from the **repo root**. The script **reads your `.env`** (the same one the agent
 nothing to fill in:
 
 ```bash
-bash deploy/mcp-server/deploy.sh            # Codespaces / Linux / macOS / Cloud Shell
+bash deploy/mcp-server/deploy.sh            # Linux / macOS / WSL / Cloud Shell
 ```
 ```powershell
-./deploy/mcp-server/deploy.ps1              # Windows PowerShell ONLY — not for Codespaces/bash
+./deploy/mcp-server/deploy.ps1              # Windows PowerShell ONLY — not for bash
 ```
 
 The script builds the image, creates the Container App with **external HTTPS ingress**, turns on a

@@ -21,13 +21,13 @@ use) for `AZURE_AI_PROJECT_ENDPOINT` + `MODEL_*`, then **auto-discovers** the
 resource group, Foundry account id and region from that endpoint. Usually just:
 
 ```bash
-bash deploy/mcp-server/deploy.sh          # Codespaces / Linux / macOS / Azure Cloud Shell
+bash deploy/mcp-server/deploy.sh          # Linux / macOS / WSL / Azure Cloud Shell
 ```
 ```powershell
-./deploy/mcp-server/deploy.ps1            # Windows PowerShell ONLY — not for Codespaces/bash
+./deploy/mcp-server/deploy.ps1            # Windows PowerShell ONLY — not for bash
 ```
 
-> **Codespaces / Cloud Shell = a Linux `bash` shell.** Use the `bash deploy/mcp-server/deploy.sh`
+> **Cloud Shell / WSL = a Linux `bash` shell.** Use the `bash deploy/mcp-server/deploy.sh`
 > line above — the `.ps1` is Windows PowerShell only and, run in bash, fails with
 > `bash: ./deploy/mcp-server/deploy.ps1: Permission denied`.
 

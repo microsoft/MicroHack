@@ -156,7 +156,7 @@ Only include fields you want to set; missing fields fall back to platform defaul
 | `deploymentType` | `"resourcegroup"` \| `"subscription"` \| `"resourcegroup-with-subscriptionowner"` | Azure scope each user receives. See [details](#deploymenttype-what-each-value-means-for-your-script). |
 | `labsPerSubscription` | `integer` (1–100) | How many users to pack into a single Azure subscription. Ignored when `deploymentType` is `subscription`. |
 | `preferredLocation` | `string` | Comma-separated Azure regions, **in priority order** (e.g. `"swedencentral, norwayeast"`). The first region is used as the default deployment location. List multiple regions so your script can fall back if the first region doesn't support every service your lab needs; see [authoring guidelines](#authoring-guidelines). |
-| `estimatedDailyCostsUsd` | `number` (≥ 0) | Estimated daily cost per lab environment in USD. Used for cost forecasting in the lab lifecycle wizard. |
+| `estimatedDailyCostsUsd` | `number` (≥ 0) | Estimated daily cost per lab environment in USD. Based on the resources created by `deploy-lab.ps1`. Used for cost forecasting in the lab lifecycle wizard. |
 | `estimatedSharedDeploymentDailyCostsUsd` | `number` (≥ 0) | Estimated daily cost in USD of resources created once per subscription by `shared-deploy-lab.ps1`. Cost forecasting multiplies this value by the subscription count: labs divided by `labsPerSubscription`, rounded up, for resource-group deployments; one subscription per lab for `subscription` deployments. Defaults to `0` when absent. |
 
 ### Cost forecasting formula

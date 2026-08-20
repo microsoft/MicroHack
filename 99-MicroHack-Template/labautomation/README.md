@@ -141,7 +141,8 @@ and is validated when your MicroHack is loaded.
   "deploymentType": "resourcegroup",
   "labsPerSubscription": 4,
   "preferredLocation": "swedencentral, norwayeast, spaincentral",
-  "estimatedDailyCostsUsd": 25.0
+  "estimatedDailyCostsUsd": 25.0,
+  "estimatedSharedDeploymentDailyCostsUsd": 0.0
 }
 ```
 
@@ -156,6 +157,36 @@ Only include fields you want to set; missing fields fall back to platform defaul
 | `labsPerSubscription` | `integer` (1–100) | How many users to pack into a single Azure subscription. Ignored when `deploymentType` is `subscription`. |
 | `preferredLocation` | `string` | Comma-separated Azure regions, **in priority order** (e.g. `"swedencentral, norwayeast"`). The first region is used as the default deployment location. List multiple regions so your script can fall back if the first region doesn't support every service your lab needs; see [authoring guidelines](#authoring-guidelines). |
 | `estimatedDailyCostsUsd` | `number` (≥ 0) | Estimated daily cost per lab environment in USD. Used for cost forecasting in the lab lifecycle wizard. |
+| `estimatedSharedDeploymentDailyCostsUsd` | `number` (≥ 0) | Estimated daily cost in USD of resources created once per subscription by `shared-deploy-lab.ps1`. Cost forecasting multiplies this value by the subscription count: labs divided by `labsPerSubscription`, rounded up, for resource-group deployments; one subscription per lab for `subscription` deployments. Defaults to `0` when absent. |
+
+### Cost forecasting formula
+
+The number of Azure subscriptions required for a deployment is:
+
+$$
+	ext{subs} =
+\begin{cases}
+	ext{units} & \text{deploymentType} = \texttt{subscription} \\[4pt]
+\left\lceil \dfrac{\text{units}}{\text{labsPerSubscription}} \right\rceil
+& \text{deploymentType} \in \{\texttt{resourcegroup}, \texttt{resourcegroup-with-subscriptionowner}\}
+\end{cases}
+$$
+
+The final estimated cost in USD is:
+
+$$
+	ext{est} = \text{days} \times \left(
+	ext{units} \times
+\underbrace{\left(\text{estimatedDailyCostsUsd} + \textstyle\sum \text{groupSurcharge}\right)}_{\text{per-lab}}
++ \text{subs} \times
+\underbrace{\text{estimatedSharedDeploymentDailyCostsUsd}}_{\text{per-subscription}}
+\right)
+$$
+
+Here, `units` is the number of lab environments, `days` is the deployment duration,
+and $\sum \text{groupSurcharge}$ represents the license costs for `groups` per lab.
+Per-lab costs and group surcharges are multiplied by `units`; shared deployment costs are multiplied by `subs`
+because `shared-deploy-lab.ps1` runs once per subscription.
 
 ### `groups`: supported values
 

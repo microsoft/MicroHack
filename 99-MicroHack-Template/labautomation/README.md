@@ -163,25 +163,25 @@ Only include fields you want to set; missing fields fall back to platform defaul
 
 The number of Azure subscriptions required for a deployment is:
 
-$$
-  ext{subs} =
+```math
+\displaystyle \text{subs} =
 \begin{cases}
-  ext{units} & \text{deploymentType} = \texttt{subscription} \\[4pt]
+\displaystyle \text{units} & \text{deploymentType} = \texttt{subscription} \\[4pt]
 \left\lceil \dfrac{\text{units}}{\text{labsPerSubscription}} \right\rceil
 & \text{deploymentType} \in \{\texttt{resourcegroup}, \texttt{resourcegroup-with-subscriptionowner}\}
 \end{cases}
-$$
+```
 
 The final estimated cost in USD is:
 
-$$
-  ext{est} = \text{days} \times \left(
-  ext{units} \times
+```math
+\displaystyle \text{est} = \text{days} \times \left(
+\displaystyle \text{units} \times
 \underbrace{\left(\text{estimatedDailyCostsUsd} + \textstyle\sum \text{groupSurcharge}\right)}_{\text{per-lab}}
 + \text{subs} \times
 \underbrace{\text{estimatedSharedDeploymentDailyCostsUsd}}_{\text{per-subscription}}
 \right)
-$$
+```
 
 Here, `units` is the number of lab environments, `days` is the deployment duration,
 and $\sum \text{groupSurcharge}$ represents the license costs for `groups` per lab.

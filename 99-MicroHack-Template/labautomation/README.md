@@ -166,8 +166,8 @@ The number of Azure subscriptions required for a deployment is:
 ```math
 \displaystyle \text{subs} =
 \begin{cases}
-\displaystyle \text{units} & \text{deploymentType} = \texttt{subscription} \\[4pt]
-\left\lceil \dfrac{\text{units}}{\text{labsPerSubscription}} \right\rceil
+\displaystyle \text{labs} & \text{deploymentType} = \texttt{subscription} \\[4pt]
+\left\lceil \dfrac{\text{labs}}{\text{labsPerSubscription}} \right\rceil
 & \text{deploymentType} \in \{\texttt{resourcegroup}, \texttt{resourcegroup-with-subscriptionowner}\}
 \end{cases}
 ```
@@ -176,16 +176,16 @@ The final estimated cost in USD is:
 
 ```math
 \displaystyle \text{est} = \text{days} \times \left(
-\displaystyle \text{units} \times
+\displaystyle \text{labs} \times
 \underbrace{\left(\text{estimatedDailyCostsUsd} + \textstyle\sum \text{groupSurcharge}\right)}_{\text{per-lab}}
 + \text{subs} \times
 \underbrace{\text{estimatedSharedDeploymentDailyCostsUsd}}_{\text{per-subscription}}
 \right)
 ```
 
-Here, `units` is the number of lab environments, `days` is the deployment duration,
+Here, `labs` is the number of lab environments, `days` is the deployment duration,
 and $\sum \text{groupSurcharge}$ represents the license costs for `groups` per lab.
-Per-lab costs and group surcharges are multiplied by `units`; shared deployment costs are multiplied by `subs`
+Per-lab costs and group surcharges are multiplied by `labs`; shared deployment costs are multiplied by `subs`
 because `shared-deploy-lab.ps1` runs once per subscription.
 
 ### `groups`: supported values

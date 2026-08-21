@@ -77,8 +77,19 @@ echo "    project endpoint = $PROJECT_ENDPOINT"
 
 echo "==> Ensuring the containerapp CLI extension + providers are ready"
 az extension add --name containerapp --upgrade --only-show-errors >/dev/null || true
-az provider register --namespace Microsoft.App --wait >/dev/null || true
-az provider register --namespace Microsoft.OperationalInsights --wait >/dev/null || true
+# Provider registration is a SUBSCRIPTION-scope action. In a resource-group lab you
+# only own the RG, so re-registering fails with AuthorizationFailed — but the platform
+# already registered these when it provisioned the lab. Check first; only try to register
+# if actually needed, and never let it abort the deploy.
+for ns in Microsoft.App Microsoft.OperationalInsights; do
+  state=$(az provider show --namespace "$ns" --query registrationState -o tsv 2>/dev/null || true)
+  if [ "$state" = "Registered" ]; then
+    echo "    $ns already registered"
+  else
+    echo "    registering $ns (needs subscription rights; skipping if not allowed)"
+    az provider register --namespace "$ns" --only-show-errors >/dev/null 2>&1 || true
+  fi
+done
 
 echo "==> Building + deploying '$APP_NAME' to Azure Container Apps (image builds in the cloud)"
 az containerapp up \

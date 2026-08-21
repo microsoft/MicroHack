@@ -86,8 +86,20 @@ Write-Host "    project endpoint = $ProjectEndpoint"
 
 Write-Host "==> Ensuring the containerapp CLI extension + providers are ready"
 az extension add --name containerapp --upgrade --only-show-errors 2>$null | Out-Null
-az provider register --namespace Microsoft.App --wait 2>$null | Out-Null
-az provider register --namespace Microsoft.OperationalInsights --wait 2>$null | Out-Null
+# Provider registration is a SUBSCRIPTION-scope action. In a resource-group lab you
+# only own the RG, so re-registering fails with AuthorizationFailed — but the platform
+# already registered these when it provisioned the lab. Check first; only try to register
+# if actually needed. EAP is relaxed here because PowerShell 5.1 treats az's stderr as a
+# terminating error under $ErrorActionPreference='Stop' — these calls must stay best-effort.
+$eapSaved = $ErrorActionPreference
+$ErrorActionPreference = "Continue"
+foreach ($ns in @("Microsoft.App", "Microsoft.OperationalInsights")) {
+  $state = az provider show --namespace $ns --query registrationState -o tsv 2>$null
+  if ($state -eq "Registered") { Write-Host "    $ns already registered"; continue }
+  Write-Host "    registering $ns (needs subscription rights; skipping if not allowed)"
+  az provider register --namespace $ns --only-show-errors 2>$null | Out-Null
+}
+$ErrorActionPreference = $eapSaved
 
 Write-Host "==> Building + deploying '$AppName' to Azure Container Apps (image builds in the cloud)"
 az containerapp up `

@@ -111,6 +111,15 @@ foreach ($ns in @("Microsoft.App", "Microsoft.OperationalInsights")) {
 $ErrorActionPreference = $eapSaved
 
 Write-Host "==> Building + deploying '$AppName' to Azure Container Apps (image builds in the cloud)"
+# Self-heal: az containerapp up auto-names the env '<app>-env' and REUSES it by name.
+# A prior crashed/aborted run can leave that env stuck in a non-Succeeded state, which
+# then fails every re-run with 'ManagedEnvironmentNotProvisioned'. Delete a bad one first.
+$EnvName = "$AppName-env"
+$envState = az containerapp env show -n $EnvName -g $ResourceGroup --query "properties.provisioningState" -o tsv 2>$null
+if ($envState -and $envState -ne "Succeeded") {
+  Write-Host "!! Container Apps environment '$EnvName' is '$envState' (a prior failed run) - deleting it so it can be recreated cleanly" -ForegroundColor Yellow
+  az containerapp env delete -n $EnvName -g $ResourceGroup --yes 2>$null | Out-Null
+}
 $eapUp = $ErrorActionPreference
 $ErrorActionPreference = 'Continue'   # handle a cloud-build failure with a clear message, not a raw NativeCommandError
 az containerapp up `
@@ -132,10 +141,12 @@ $ErrorActionPreference = $eapUp
 if ($upExit -ne 0) {
   Write-Host ""
   Write-Host "!! 'az containerapp up' failed (exit $upExit) - stopping before the identity/role steps." -ForegroundColor Red
-  Write-Host "   If the traceback above mentions 'NoneType' object has no attribute 'linux' (in queue_acr_build)," -ForegroundColor Red
-  Write-Host "   your Azure CLI has the 2.86.0 cloud-build bug (Azure/azure-cli#33369)." -ForegroundColor Red
-  Write-Host "   Fix: run 'az upgrade' (need >= 2.87.0) then 'az extension update -n containerapp', and re-run." -ForegroundColor Red
-  Write-Host "   The half-created ACR + Container Apps environment are reused, so re-running is safe." -ForegroundColor Red
+  Write-Host "   Read the FIRST error above; the two common ones are:" -ForegroundColor Red
+  Write-Host "   - \"'NoneType' object has no attribute 'linux'\" (in queue_acr_build): Azure CLI 2.86.0 bug" -ForegroundColor Red
+  Write-Host "     (Azure/azure-cli#33369). Fix: 'az upgrade' (need >= 2.87.0), reopen the shell, re-run." -ForegroundColor Red
+  Write-Host "   - 'ManagedEnvironmentNotProvisioned': the env '$EnvName' is stuck from a prior run." -ForegroundColor Red
+  Write-Host "     Fix: az containerapp env delete -n $EnvName -g $ResourceGroup --yes , then re-run." -ForegroundColor Red
+  Write-Host "   Re-running is safe - the ACR image + a healthy env are reused." -ForegroundColor Red
   exit 1
 }
 
@@ -143,6 +154,11 @@ Write-Host "==> Enabling the app's system-assigned managed identity"
 az containerapp identity assign --name $AppName --resource-group $ResourceGroup --system-assigned | Out-Null
 $PrincipalId = az containerapp show -n $AppName -g $ResourceGroup --query identity.principalId -o tsv
 Write-Host "    principalId = $PrincipalId"
+if (-not $PrincipalId) {
+  Write-Host "!! Could not read the app's managed-identity principalId - the app may not have been created." -ForegroundColor Red
+  Write-Host "   Skipping the role assignment. Re-run the deploy once the app exists." -ForegroundColor Red
+  exit 1
+}
 
 if ($FoundryAccountId) {
   Write-Host "==> Granting the identity access to your Foundry models"

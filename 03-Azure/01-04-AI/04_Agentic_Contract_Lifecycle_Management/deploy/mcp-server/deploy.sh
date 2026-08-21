@@ -99,6 +99,15 @@ for ns in Microsoft.App Microsoft.OperationalInsights; do
 done
 
 echo "==> Building + deploying '$APP_NAME' to Azure Container Apps (image builds in the cloud)"
+# Self-heal: az containerapp up auto-names the env '<app>-env' and REUSES it by name.
+# A prior crashed/aborted run can leave that env stuck in a non-Succeeded state, which
+# then fails every re-run with 'ManagedEnvironmentNotProvisioned'. Delete a bad one first.
+ENV_NAME="${APP_NAME}-env"
+env_state="$(az containerapp env show -n "$ENV_NAME" -g "$RESOURCE_GROUP" --query "properties.provisioningState" -o tsv 2>/dev/null || true)"
+if [[ -n "$env_state" && "$env_state" != "Succeeded" ]]; then
+  echo "!! Container Apps environment '$ENV_NAME' is '$env_state' (a prior failed run) - deleting it so it can be recreated cleanly" >&2
+  az containerapp env delete -n "$ENV_NAME" -g "$RESOURCE_GROUP" --yes >/dev/null 2>&1 || true
+fi
 set +e   # handle a cloud-build failure with a clear message instead of a bare abort
 az containerapp up \
   --name "$APP_NAME" \
@@ -119,10 +128,12 @@ set -e
 if [ "$up_rc" -ne 0 ]; then
   echo "" >&2
   echo "!! 'az containerapp up' failed (exit $up_rc) - stopping before the identity/role steps." >&2
-  echo "   If the traceback mentions \"'NoneType' object has no attribute 'linux'\" (in queue_acr_build)," >&2
-  echo "   your Azure CLI has the 2.86.0 cloud-build bug (Azure/azure-cli#33369)." >&2
-  echo "   Fix: run 'az upgrade' (need >= 2.87.0) then 'az extension update -n containerapp', and re-run -" >&2
-  echo "   the half-created ACR + Container Apps environment are reused, so re-running is safe." >&2
+  echo "   Read the FIRST error above; the two common ones are:" >&2
+  echo "   - \"'NoneType' object has no attribute 'linux'\" (in queue_acr_build): Azure CLI 2.86.0 bug" >&2
+  echo "     (Azure/azure-cli#33369). Fix: 'az upgrade' (need >= 2.87.0), reopen the shell, re-run." >&2
+  echo "   - 'ManagedEnvironmentNotProvisioned': the env '$ENV_NAME' is stuck from a prior run." >&2
+  echo "     Fix: az containerapp env delete -n $ENV_NAME -g $RESOURCE_GROUP --yes , then re-run." >&2
+  echo "   Re-running is safe - the ACR image + a healthy env are reused." >&2
   exit 1
 fi
 
@@ -132,6 +143,11 @@ az containerapp identity assign \
 PRINCIPAL_ID="$(az containerapp show -n "$APP_NAME" -g "$RESOURCE_GROUP" \
   --query identity.principalId -o tsv)"
 echo "    principalId = $PRINCIPAL_ID"
+if [[ -z "$PRINCIPAL_ID" ]]; then
+  echo "!! Could not read the app's managed-identity principalId - the app may not have been created." >&2
+  echo "   Skipping the role assignment. Re-run the deploy once the app exists." >&2
+  exit 1
+fi
 
 if [[ -n "$FOUNDRY_ACCOUNT_ID" ]]; then
   echo "==> Granting the identity access to your Foundry models"

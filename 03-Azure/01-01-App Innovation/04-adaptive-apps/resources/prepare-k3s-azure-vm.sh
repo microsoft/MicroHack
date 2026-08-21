@@ -36,6 +36,16 @@ K3S_ADMIN_USERNAME="${K3S_ADMIN_USERNAME:-azureuser}"
 BASTION_PUBLIC_IP_NAME="${BASTION_PUBLIC_IP_NAME:-pip-adaptive-apps-bastion}"
 BASTION_NAME="${BASTION_NAME:-bas-adaptive-apps}"
 K3S_LOCAL_PORT="${K3S_LOCAL_PORT:-16443}"
+# Outbound internet is required to install K3s and pull container images. Azure is
+# retiring implicit default outbound access: for API versions released after
+# 2026-03-31, new virtual networks default to private subnets with no outbound path.
+# The script therefore sets the subnet's outbound posture explicitly instead of relying
+# on the platform default, which would otherwise change silently under a newer CLI.
+# Set K3S_ENABLE_NAT_GATEWAY=true for an explicit, future-proof NAT gateway. It adds
+# hourly cost and per-GB data processing charges.
+K3S_ENABLE_NAT_GATEWAY="${K3S_ENABLE_NAT_GATEWAY:-false}"
+NAT_GATEWAY_NAME="${NAT_GATEWAY_NAME:-natgw-adaptive-apps}"
+NAT_PUBLIC_IP_NAME="${NAT_PUBLIC_IP_NAME:-pip-adaptive-apps-nat}"
 K3S_KUBECONFIG="${K3S_KUBECONFIG:-$HOME/.kube/adaptive-apps-k3s.yaml}"
 K3S_CONTEXT="${K3S_CONTEXT:-k3s-azure-vm}"
 K3S_TUNNEL_STATE_DIR="${K3S_TUNNEL_STATE_DIR:-$HOME/.kube/adaptive-apps-bastion}"
@@ -496,7 +506,9 @@ create_k3s_vm() {
 create_or_validate_subnet() {
   local subnet_name="$1"
   local subnet_prefix="$2"
+  local default_outbound="${3:-}"
   local existing_prefix
+  local -a create_args=()
 
   existing_prefix="$(az network vnet subnet show \
     --resource-group "$RESOURCE_GROUP" \
@@ -505,16 +517,91 @@ create_or_validate_subnet() {
     --query addressPrefix \
     --output tsv 2>/dev/null || true)"
   if [[ -z "$existing_prefix" ]]; then
+    if [[ -n "$default_outbound" ]]; then
+      create_args+=(--default-outbound "$default_outbound")
+    fi
     az network vnet subnet create \
       --resource-group "$RESOURCE_GROUP" \
       --vnet-name "$VNET_NAME" \
       --name "$subnet_name" \
       --address-prefixes "$subnet_prefix" \
+      "${create_args[@]}" \
       --output none
   elif [[ "$existing_prefix" != "$subnet_prefix" ]]; then
     echo "Subnet ${subnet_name} uses ${existing_prefix}, expected ${subnet_prefix}." >&2
     echo "Choose matching variables or use a new VNET_NAME; the script will not reshape an existing subnet." >&2
     return 1
+  fi
+}
+
+# Guarantee the K3s subnet has a working outbound path, whichever posture is selected.
+ensure_k3s_outbound() {
+  local current_nat
+  local current_default_outbound
+
+  current_nat="$(az network vnet subnet show \
+    --resource-group "$RESOURCE_GROUP" \
+    --vnet-name "$VNET_NAME" \
+    --name "$K3S_SUBNET_NAME" \
+    --query "natGateway.id" \
+    --output tsv 2>/dev/null || true)"
+
+  if [[ "${K3S_ENABLE_NAT_GATEWAY,,}" == "true" ]]; then
+    if [[ -z "$current_nat" ]]; then
+      echo "Configuring an explicit NAT gateway for outbound access."
+      az network public-ip show \
+        --resource-group "$RESOURCE_GROUP" \
+        --name "$NAT_PUBLIC_IP_NAME" >/dev/null 2>&1 ||
+        az network public-ip create \
+          --resource-group "$RESOURCE_GROUP" \
+          --name "$NAT_PUBLIC_IP_NAME" \
+          --location "$AZURE_LOCATION" \
+          --sku Standard \
+          --allocation-method Static \
+          --version IPv4 \
+          --output none
+      az network nat gateway show \
+        --resource-group "$RESOURCE_GROUP" \
+        --name "$NAT_GATEWAY_NAME" >/dev/null 2>&1 ||
+        az network nat gateway create \
+          --resource-group "$RESOURCE_GROUP" \
+          --name "$NAT_GATEWAY_NAME" \
+          --location "$AZURE_LOCATION" \
+          --public-ip-addresses "$NAT_PUBLIC_IP_NAME" \
+          --idle-timeout 10 \
+          --output none
+      az network vnet subnet update \
+        --resource-group "$RESOURCE_GROUP" \
+        --vnet-name "$VNET_NAME" \
+        --name "$K3S_SUBNET_NAME" \
+        --nat-gateway "$NAT_GATEWAY_NAME" \
+        --output none
+    fi
+    return 0
+  fi
+
+  if [[ -n "$current_nat" ]]; then
+    return 0
+  fi
+
+  current_default_outbound="$(az network vnet subnet show \
+    --resource-group "$RESOURCE_GROUP" \
+    --vnet-name "$VNET_NAME" \
+    --name "$K3S_SUBNET_NAME" \
+    --query "defaultOutboundAccess" \
+    --output tsv 2>/dev/null || true)"
+
+  # An explicit false blocks the K3s installer. Reopening the subnet only takes effect
+  # after the VM is deallocated and started again, which the caller handles.
+  if [[ "${current_default_outbound,,}" == "false" ]]; then
+    echo "Subnet ${K3S_SUBNET_NAME} is private and has no NAT gateway; enabling default outbound access." >&2
+    az network vnet subnet update \
+      --resource-group "$RESOURCE_GROUP" \
+      --vnet-name "$VNET_NAME" \
+      --name "$K3S_SUBNET_NAME" \
+      --default-outbound true \
+      --output none
+    K3S_OUTBOUND_REOPENED=1
   fi
 }
 
@@ -540,8 +627,15 @@ elif ! az network vnet show \
   exit 1
 fi
 
-create_or_validate_subnet "$K3S_SUBNET_NAME" "$K3S_SUBNET_PREFIX"
+K3S_OUTBOUND_REOPENED=0
+
+if [[ "${K3S_ENABLE_NAT_GATEWAY,,}" == "true" ]]; then
+  create_or_validate_subnet "$K3S_SUBNET_NAME" "$K3S_SUBNET_PREFIX"
+else
+  create_or_validate_subnet "$K3S_SUBNET_NAME" "$K3S_SUBNET_PREFIX" true
+fi
 create_or_validate_subnet "AzureBastionSubnet" "$BASTION_SUBNET_PREFIX"
+ensure_k3s_outbound
 
 az network nsg create \
   --resource-group "$RESOURCE_GROUP" \
@@ -612,6 +706,11 @@ if az vm show --resource-group "$RESOURCE_GROUP" --name "$K3S_VM_NAME" >/dev/nul
     --ids "$EXISTING_NIC_ID" \
     --network-security-group "$K3S_NSG_NAME" \
     --output none
+  # A subnet reopened for outbound only applies to a VM after a deallocate/start cycle.
+  if ((K3S_OUTBOUND_REOPENED == 1)); then
+    echo "Restarting ${K3S_VM_NAME} so it picks up the restored outbound path."
+    az vm deallocate --resource-group "$RESOURCE_GROUP" --name "$K3S_VM_NAME" --output none
+  fi
   az vm start --resource-group "$RESOURCE_GROUP" --name "$K3S_VM_NAME" --output none
 else
   if ! az network nic show --resource-group "$RESOURCE_GROUP" --name "$K3S_NIC_NAME" >/dev/null 2>&1; then
@@ -777,6 +876,10 @@ if command -v k3s >/dev/null 2>&1; then
   systemctl enable --now k3s
   systemctl restart k3s
 else
+  if ! curl -sfI --max-time 20 https://get.k3s.io >/dev/null 2>&1; then
+    printf 'K3S_NO_OUTBOUND\n'
+    exit 1
+  fi
   curl -sfL https://get.k3s.io --output /tmp/install-k3s.sh
   sh /tmp/install-k3s.sh
   rm -f /tmp/install-k3s.sh
@@ -786,6 +889,15 @@ printf 'K3S_INSTALL_OK\n'
 " \
   --output json)"
 readonly K3S_INSTALL_RESPONSE
+if jq -r '.value[]?.message // empty' <<<"$K3S_INSTALL_RESPONSE" |
+  grep -qx 'K3S_NO_OUTBOUND'; then
+  echo "The K3s VM has no outbound internet access, so the installer could not be downloaded." >&2
+  echo "Azure is retiring implicit default outbound access; subnets created by newer API" >&2
+  echo "versions are private by default and need an explicit outbound method." >&2
+  echo "Re-run with a NAT gateway: K3S_ENABLE_NAT_GATEWAY=true bash resources/prepare-k3s-azure-vm.sh" >&2
+  echo "If an Azure Policy denies default outbound access, the NAT gateway is required." >&2
+  exit 1
+fi
 jq -r '.value[]?.message // empty' <<<"$K3S_INSTALL_RESPONSE" |
   grep -qx 'K3S_INSTALL_OK' || {
   echo "K3s guest installation did not return its success marker." >&2

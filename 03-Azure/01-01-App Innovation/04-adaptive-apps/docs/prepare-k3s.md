@@ -26,6 +26,39 @@ An enterprise with stricter requirements can substitute Azure Bastion Premium wi
 private-only deployment capability. That substitution requires platform-owned networking
 and is not the workshop default.
 
+## Outbound internet access
+
+The VM has no public IP and no inbound internet exposure, but it still needs *outbound*
+access to install K3s from `get.k3s.io` and to pull container images.
+
+Azure is retiring implicit default outbound access. For API versions released after
+2026-03-31, new virtual networks default to private subnets, where a VM has no outbound
+path at all unless an explicit method is configured. The behavior therefore depends on
+the Azure CLI version that creates the subnet, not on the calendar date.
+
+The script does not rely on the platform default. It selects one of two explicit
+postures:
+
+| Posture | How to select | Behavior | Cost |
+| --- | --- | --- | --- |
+| Default outbound access, set explicitly | default | Creates `snet-k3s` with `defaultOutboundAccess=true`, so the subnet keeps a working outbound path even under a newer CLI. | None |
+| NAT gateway | `K3S_ENABLE_NAT_GATEWAY=true` | Leaves the subnet private and attaches `natgw-adaptive-apps` with a Standard public IP. Deterministic egress IP. | Hourly NAT gateway charge plus per-GB data processing |
+
+```bash
+export K3S_ENABLE_NAT_GATEWAY=true
+bash resources/prepare-k3s-azure-vm.sh
+```
+
+Choose the NAT gateway when an Azure Policy forbids default outbound access, when a
+firewall must allowlist a stable egress IP, or to align with the long-term Azure
+direction. Default outbound access is scheduled for retirement, so the NAT gateway is the
+durable option.
+
+If the subnet already exists and is private with no NAT gateway, the script reopens it
+and restarts the VM, because a change to `defaultOutboundAccess` only takes effect after
+the VM is deallocated and started again. When the installer still cannot reach the
+internet, the script fails with an explicit message instead of a generic K3s error.
+
 ## Provision and connect
 
 From the Adaptive Apps MicroHack root:
@@ -124,6 +157,7 @@ role containing `Microsoft.Network/bastionHosts/tunnels/action`.
 | Local port is occupied | Stop the known owner or set a different `K3S_LOCAL_PORT`; the script will not kill an unrecorded process. |
 | `kubectl` cannot reach 127.0.0.1 | Run `connect`, confirm `status`, and verify the kubeconfig local port matches `K3S_LOCAL_PORT`. |
 | Existing VM has a public IP | Follow the script's migration message. It deliberately refuses to leave the legacy public topology in place. |
+| K3s installer cannot be downloaded | The subnet has no outbound path. Re-run with `K3S_ENABLE_NAT_GATEWAY=true`, which is also required when policy forbids default outbound access. |
 
 JIT access is not used. JIT only opens an NSG rule for a limited time; it does not create
 a network route to a private VM. RDP is irrelevant to this Linux VM. Bastion provides the
@@ -145,6 +179,17 @@ az network public-ip delete \
   --name pip-adaptive-apps-bastion
 ```
 
+A NAT gateway, when enabled, also bills hourly. Remove it and its public IP as well:
+
+```bash
+az network nat gateway delete \
+  --resource-group "$RESOURCE_GROUP" \
+  --name natgw-adaptive-apps
+az network public-ip delete \
+  --resource-group "$RESOURCE_GROUP" \
+  --name pip-adaptive-apps-nat
+```
+
 If the resource group is dedicated to this MicroHack and its contents have been reviewed,
 the coach can remove the entire group separately. The script does not automate deletion.
 
@@ -159,3 +204,5 @@ in Challenge 02.
 - [Configure Bastion native-client connections](https://learn.microsoft.com/azure/bastion/native-client)
 - [Azure Bastion NSG guidance](https://learn.microsoft.com/azure/bastion/bastion-nsg)
 - [Azure CLI Bastion reference](https://learn.microsoft.com/cli/azure/network/bastion)
+- [Default outbound access in Azure](https://learn.microsoft.com/azure/virtual-network/ip-services/default-outbound-access)
+- [Design virtual networks with NAT gateway](https://learn.microsoft.com/azure/nat-gateway/nat-gateway-resource)

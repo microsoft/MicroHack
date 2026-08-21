@@ -34,6 +34,7 @@ Common blockers:
 | AKS nodes remain `NotReady` | Check `az aks show --query provisioningState` and allow time for the initial node image pull. |
 | K3s API is unreachable | Run the helper in `connect` mode and inspect the recorded tunnel log. |
 | Bastion or networking is denied | Confirm FDPO policy, region/SKU, Network Contributor, VM Run Command, and Bastion tunnel permissions. |
+| K3s installer cannot be downloaded | The subnet has no outbound path. Re-run with `K3S_ENABLE_NAT_GATEWAY=true`. |
 | Commands target the wrong cluster | Check both `KUBECONFIG` and `kubectl config current-context`. |
 
 Both scripts resolve the node or VM size before creating anything. They list the sizes
@@ -111,7 +112,33 @@ export VNET_PREFIX="10.42.0.0/16"
 export K3S_SUBNET_PREFIX="10.42.0.0/24"
 export BASTION_SUBNET_PREFIX="10.42.1.0/26"
 export K3S_LOCAL_PORT=16443
+export K3S_ENABLE_NAT_GATEWAY=false
 ```
+
+### Outbound access for the private VM
+
+The VM has no inbound internet exposure, but it needs outbound access to download K3s and
+pull images. Azure is retiring implicit default outbound access: for API versions released
+after 2026-03-31, new virtual networks default to private subnets with no outbound path,
+so the behavior depends on the Azure CLI version rather than the date.
+
+The script sets the posture explicitly instead of inheriting the platform default:
+
+| Posture | Selection | Cost |
+| --- | --- | --- |
+| Default outbound access, set explicitly on `snet-k3s` | default | None |
+| NAT gateway, subnet stays private | `K3S_ENABLE_NAT_GATEWAY=true` | Hourly charge plus per-GB data processing |
+
+```bash
+export K3S_ENABLE_NAT_GATEWAY=true
+bash resources/prepare-k3s-azure-vm.sh
+```
+
+Use the NAT gateway when an Azure Policy forbids default outbound access, when a firewall
+must allowlist a stable egress IP, or to match the long-term Azure direction. If the
+subnet is already private without a NAT gateway, the script reopens it and restarts the
+VM, because the change only applies after a deallocate and start. Remember to delete the
+NAT gateway and its public IP during cleanup.
 
 The generated kubeconfig points to `https://127.0.0.1:16443`. Its credentials are
 retrieved in bounded chunks and are never printed. The script also registers the

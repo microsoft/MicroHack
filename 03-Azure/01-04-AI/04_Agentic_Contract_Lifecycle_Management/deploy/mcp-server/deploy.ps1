@@ -25,9 +25,18 @@ param(
   [string]$Location         = $env:LOCATION,
   [string]$ProjectEndpoint  = $env:AZURE_AI_PROJECT_ENDPOINT,
   [string]$FoundryAccountId = $env:FOUNDRY_ACCOUNT_ID,
-  [string]$EnvFile          = $(if ($env:ENV_FILE) { $env:ENV_FILE } else { ".env" })
+  [string]$EnvFile          = $env:ENV_FILE
 )
 $ErrorActionPreference = "Stop"
+
+# Zero-config: default to the repo-root .env, but fall back to src/.env - many
+# participants copy src/.env.example in place and keep their .env there (it's the
+# CWD their agents run from). An explicit -EnvFile / $env:ENV_FILE always wins.
+if (-not $EnvFile) {
+  if     (Test-Path ".env")     { $EnvFile = ".env" }
+  elseif (Test-Path "src/.env") { $EnvFile = "src/.env" }
+  else                          { $EnvFile = ".env" }
+}
 
 # ---- Load repo-root .env (only fills values you haven't already set) ---------
 $envMap = @{}
@@ -49,7 +58,7 @@ function Get-Val([string]$explicit, [string]$key, [string]$default) {
 
 $AppName          = if ($AppName) { $AppName } else { "clm-mcp" }
 $ProjectEndpoint  = Get-Val $ProjectEndpoint "AZURE_AI_PROJECT_ENDPOINT" ""
-if (-not $ProjectEndpoint) { throw "set AZURE_AI_PROJECT_ENDPOINT (in .env or as -ProjectEndpoint)" }
+if (-not $ProjectEndpoint) { throw "AZURE_AI_PROJECT_ENDPOINT is not set. Fill it in your .env (repo-root .env or src/.env), pass -EnvFile <path> (e.g. -EnvFile .\src\.env), or pass -ProjectEndpoint <url>. See Challenge 1, Step 3." }
 $ModelOrchestrator = Get-Val "" "MODEL_ORCHESTRATOR" "gpt-5.4"
 $ModelDrafting     = Get-Val "" "MODEL_DRAFTING"     "gpt-5.4"
 $ModelClauseRisk   = Get-Val "" "MODEL_CLAUSE_RISK"  "gpt-5.6-sol"

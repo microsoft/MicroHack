@@ -21,7 +21,14 @@
 set -euo pipefail
 
 # ---- Load repo-root .env (only fills vars you haven't already set) ----------
-ENV_FILE="${ENV_FILE:-.env}"
+# Zero-config: default to the repo-root .env, but fall back to src/.env - many
+# participants copy src/.env.example in place and keep their .env there. An
+# explicit ENV_FILE always wins.
+if [[ -z "${ENV_FILE:-}" ]]; then
+  if   [[ -f ".env" ]];     then ENV_FILE=".env"
+  elif [[ -f "src/.env" ]]; then ENV_FILE="src/.env"
+  else ENV_FILE=".env"; fi
+fi
 if [[ -f "$ENV_FILE" ]]; then
   echo "==> Reading $ENV_FILE"
   while IFS= read -r line || [[ -n "$line" ]]; do
@@ -37,7 +44,7 @@ fi
 
 # ---- Inputs (all overridable via env) ---------------------------------------
 APP_NAME="${APP_NAME:-clm-mcp}"
-PROJECT_ENDPOINT="${AZURE_AI_PROJECT_ENDPOINT:?set AZURE_AI_PROJECT_ENDPOINT (in .env or env)}"
+PROJECT_ENDPOINT="${AZURE_AI_PROJECT_ENDPOINT:?set AZURE_AI_PROJECT_ENDPOINT in your .env (repo-root .env or src/.env), via ENV_FILE=<path>, or export it. See Challenge 1, Step 3}"
 MODEL_ORCHESTRATOR="${MODEL_ORCHESTRATOR:-gpt-5.4}"
 MODEL_DRAFTING="${MODEL_DRAFTING:-gpt-5.4}"
 MODEL_CLAUSE_RISK="${MODEL_CLAUSE_RISK:-gpt-5.6-sol}"

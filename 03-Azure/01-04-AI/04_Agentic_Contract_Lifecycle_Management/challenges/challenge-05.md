@@ -37,7 +37,7 @@ This challenge is about **delivery** — taking the agent to where legal actuall
 | Service | What it is | Why it's here |
 |---|---|---|
 | **M365 Copilot & Teams** (channels) | The surfaces you publish your CLM agent (`clm-contract-agent`) to. From the Foundry portal you add the "Teams and Microsoft 365 Copilot" channel — **no conversational bot code** — and users chat with your grounded agent where they already work. | An agent legal never opens isn't used; meeting people in Teams is what makes it real. → [Agent Framework](https://learn.microsoft.com/agent-framework/overview/agent-framework-overview) |
-| **Azure Bot Service** | The managed bot hosting + channel layer. Publishing a Foundry agent **auto-provisions an Azure Bot** that brokers messages between the channel and your agent (connectivity, auth, routing). First run: `az provider register --namespace Microsoft.BotService`. | The plumbing that connects Teams to your agent. |
+| **Azure Bot Service** | The managed bot hosting + channel layer. Publishing a Foundry agent **auto-provisions an Azure Bot** that brokers messages between the channel and your agent (connectivity, auth, routing). The lab **pre-registers** its `Microsoft.BotService` provider for you (once per subscription), so you normally do nothing here. | The plumbing that connects Teams to your agent. |
 
 ## ✅ Tasks
 
@@ -60,11 +60,13 @@ Open the agent and select **Publish** (top of the page) → **Publish to Teams a
 Copilot** → **Continue**. This provisions an **Azure Bot Service** behind the scenes — no bot code.
 
 > **Provider registration:** publishing needs the `Microsoft.BotService` resource provider
-> registered on the **subscription**. The lab deploy (`labautomation/deploy-lab.ps1`) now does
-> this for you. If the dropdown still errors with **`MissingSubscriptionRegistration` /
-> `Microsoft.BotService`**, a **subscription Owner** registers it once — it's subscription-wide,
-> so it unblocks every lab: `az provider register --namespace Microsoft.BotService`. In an
-> RG-scoped lab you (RG-Owner) can't run this yourself — ask your coach / lab admin.
+> registered on the **subscription**. The lab's shared deploy hook
+> (`labautomation/shared-deploy-lab.ps1`) registers it **once per subscription, before any lab
+> starts**, so this is already done for you. If the dropdown still errors with
+> **`MissingSubscriptionRegistration` / `Microsoft.BotService`**, a **subscription Owner**
+> registers it once — it's subscription-wide, so it unblocks every lab:
+> `az provider register --namespace Microsoft.BotService`. In an RG-scoped lab you (RG-Owner)
+> can't run this yourself — ask your coach / lab admin.
 >
 > Leave the **Azure bot services** dropdown on *auto* — let Foundry provision a fresh,
 > properly-wired bot. Re-publishing? **Delete any stale Azure Bot** from earlier attempts first, or
@@ -134,7 +136,7 @@ same grounded, cited answers you saw in the terminal in Challenges 2 & 4.
 | Symptom | Fix |
 |---------|-----|
 | Publish option missing | Ensure `Microsoft.BotService` is registered and you have rights to create an Azure Bot. |
-| **`Azure bot services`** dropdown → **`MissingSubscriptionRegistration` / "subscription is not registered to use namespace 'Microsoft.BotService'"** (409) | The `Microsoft.BotService` provider isn't registered on the **subscription**. The lab deploy now registers it, but if it's still unregistered a **subscription Owner** runs it once (subscription-wide, unblocks all labs): `az provider register --namespace Microsoft.BotService`. In an RG-scoped lab you (RG-Owner) **can't** register it yourself — ask your coach / lab admin. Once it shows `Registered` (~1–2 min), reopen the publish dialog. |
+| **`Azure bot services`** dropdown → **`MissingSubscriptionRegistration` / "subscription is not registered to use namespace 'Microsoft.BotService'"** (409) | The `Microsoft.BotService` provider isn't registered on the **subscription**. The lab's shared deploy hook (`shared-deploy-lab.ps1`) registers it once per subscription before the labs, but if it's still unregistered a **subscription Owner** runs it once (subscription-wide, unblocks all labs): `az provider register --namespace Microsoft.BotService`. In an RG-scoped lab you (RG-Owner) **can't** register it yourself — ask your coach / lab admin. Once it shows `Registered` (~1–2 min), reopen the publish dialog. |
 | Bot responds in Teams but not Copilot | Confirm the app is approved for M365 Copilot and the manifest scopes include it. |
 
 ## 🔗 How this fits

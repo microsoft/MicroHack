@@ -46,8 +46,21 @@ helm upgrade --install "$PORTFOLIO" \
   --values "${SOURCE_ROOT}/charts/adaptive-apps/profiles/${PORTFOLIO}.yaml" \
   --namespace "$PORTFOLIO" \
   --create-namespace
-kubectl rollout status deployment --all --namespace "$PORTFOLIO" --timeout=15m
-kubectl rollout status statefulset --all --namespace "$PORTFOLIO" --timeout=15m
+
+# kubectl rollout status accepts one object at a time; it has no --all flag.
+wait_for_portfolio_rollout() {
+  local kind="$1"
+  local object
+  local -a objects=()
+
+  mapfile -t objects < <(kubectl get "$kind" --namespace "$PORTFOLIO" --output name)
+  for object in "${objects[@]}"; do
+    kubectl rollout status "$object" --namespace "$PORTFOLIO" --timeout=15m
+  done
+}
+
+wait_for_portfolio_rollout deployment
+wait_for_portfolio_rollout statefulset
 
 rad workspace switch "$RADIUS_WORKSPACE"
 rad resource-type create --workspace "$RADIUS_WORKSPACE" --from-file "$SQL_TYPE_FILE"

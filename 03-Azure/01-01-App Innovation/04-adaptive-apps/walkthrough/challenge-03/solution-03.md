@@ -101,10 +101,13 @@ Run against each context:
 
 ```bash
 helm status core --namespace core
-kubectl rollout status deployment --all --namespace core --timeout=15m
-kubectl rollout status statefulset --all --namespace core --timeout=15m
+kubectl wait --for=condition=Available deployments --all --namespace core --timeout=15m
+kubectl rollout status statefulset/core-keycloak-postgresql --namespace core --timeout=15m
 kubectl get pods --namespace core
 ```
+
+`kubectl rollout status` accepts a single object, so use `kubectl wait` for the
+deployments and name each statefulset explicitly.
 
 Do not continue until the workloads are healthy.
 

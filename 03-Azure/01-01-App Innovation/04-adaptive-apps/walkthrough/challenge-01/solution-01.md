@@ -30,11 +30,17 @@ Common blockers:
 
 | Blocker | Guidance |
 | --- | --- |
-| Azure cannot allocate the requested VM size | Set `AKS_NODE_VM_SIZE` or `K3S_VM_SIZE` to an available size, or choose another `AZURE_LOCATION`. |
+| Azure cannot allocate the requested VM size | The scripts detect this and fall back automatically. Override the ordered list with `AKS_NODE_VM_SIZE_CANDIDATES` or `K3S_VM_SIZE_CANDIDATES`, or choose another `AZURE_LOCATION`. |
 | AKS nodes remain `NotReady` | Check `az aks show --query provisioningState` and allow time for the initial node image pull. |
 | K3s API is unreachable | Run the helper in `connect` mode and inspect the recorded tunnel log. |
 | Bastion or networking is denied | Confirm FDPO policy, region/SKU, Network Contributor, VM Run Command, and Bastion tunnel permissions. |
 | Commands target the wrong cluster | Check both `KUBECONFIG` and `kubectl config current-context`. |
+
+Both scripts resolve the node or VM size before creating anything. They list the sizes
+the subscription can use in the target region, ignore `Zone`-only restrictions because
+the deployment is regional, and pick the first candidate that is offered. If the
+allocation still fails with a capacity or quota error, the failed resource is removed and
+the next candidate is tried. Authorization and policy failures are not retried.
 
 ## Task 1: Provision AKS
 
@@ -63,7 +69,11 @@ Optional settings:
 ```bash
 export AKS_NODE_COUNT=2
 export AKS_NODE_VM_SIZE="Standard_D4s_v5"
+export AKS_NODE_VM_SIZE_CANDIDATES="Standard_D4s_v5 Standard_D4s_v4 Standard_D4s_v3"
 ```
+
+`AKS_NODE_VM_SIZE` is the preferred size. `AKS_NODE_VM_SIZE_CANDIDATES` replaces the
+whole ordered fallback list when a region needs different sizes.
 
 The script merges AKS credentials into the default kubeconfig and activates the
 context named after `AKS_CLUSTER`.
@@ -94,6 +104,7 @@ Optional settings:
 
 ```bash
 export K3S_VM_SIZE="Standard_D4s_v5"
+export K3S_VM_SIZE_CANDIDATES="Standard_D4s_v5 Standard_D4s_v4 Standard_D4s_v3"
 export K3S_ADMIN_USERNAME="azureuser"
 export K3S_KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
 export VNET_PREFIX="10.42.0.0/16"
@@ -103,8 +114,14 @@ export K3S_LOCAL_PORT=16443
 ```
 
 The generated kubeconfig points to `https://127.0.0.1:16443`. Its credentials are
-retrieved in bounded chunks and are never printed. After reopening or rebuilding the
-devcontainer, re-establish the tunnel without changing Azure resources:
+retrieved in bounded chunks and are never printed. The script also registers the
+`k3s-azure-vm` context in the default `~/.kube/config` without changing the active
+context, because the Radius CLI resolves part of its installation through the default
+kubeconfig rather than through `KUBECONFIG`. Explicitly exporting `KUBECONFIG` remains
+the documented way to target K3s.
+
+After reopening or rebuilding the devcontainer, re-establish the tunnel without changing
+Azure resources:
 
 ```bash
 export AZURE_SUBSCRIPTION="<subscription-id>"
@@ -123,8 +140,11 @@ bash resources/prepare-k3s-azure-vm.sh disconnect
 ```
 
 The script records the exact PID and verifies its command line before sending
-`SIGTERM`; it never kills by process name. The tunnel exposes only the Kubernetes API.
-Use `kubectl port-forward` for later Radius and application access.
+`SIGTERM`; it never kills by process name. The Azure CLI launcher runs its Python entry
+point as a child process, so `disconnect` stops every process whose command line matches
+this tunnel's Bastion name, resource group, and both ports. A tunnel orphaned by a
+crashed shell is reclaimed automatically on the next `connect`. The tunnel exposes only
+the Kubernetes API. Use `kubectl port-forward` for later Radius and application access.
 
 Return to AKS:
 

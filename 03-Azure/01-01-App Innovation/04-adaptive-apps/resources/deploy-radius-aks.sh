@@ -182,7 +182,7 @@ rad credential register azure wi \
 kubectl wait --for=condition=Available deployments --all \
   --namespace radius-system \
   --timeout=10m
-kubectl get crd applications.radapp.io >/dev/null
+kubectl get crd recipes.radapp.io deploymenttemplates.radapp.io deploymentresources.radapp.io >/dev/null
 rad env show "$RADIUS_ENVIRONMENT" >/dev/null
 rad group show "$RADIUS_GROUP" >/dev/null
 rad credential show azure >/dev/null

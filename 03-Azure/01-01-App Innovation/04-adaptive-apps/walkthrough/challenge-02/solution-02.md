@@ -284,7 +284,7 @@ kubectl wait --for=condition=Available deployments --all \
   --namespace radius-system \
   --timeout=10m
 kubectl get pods --namespace radius-system
-kubectl get crd applications.radapp.io
+kubectl get crd recipes.radapp.io deploymenttemplates.radapp.io deploymentresources.radapp.io
 
 rad workspace list
 rad env list

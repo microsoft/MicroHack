@@ -27,6 +27,11 @@ K3S_NSG_NAME="${K3S_NSG_NAME:-nsg-adaptive-apps-k3s}"
 K3S_NIC_NAME="${K3S_NIC_NAME:-nic-adaptive-apps-k3s}"
 K3S_VM_NAME="${K3S_VM_NAME:-vm-adaptive-apps-k3s}"
 K3S_VM_SIZE="${K3S_VM_SIZE:-Standard_D4s_v5}"
+# Four-vCPU, 16 GiB x64 sizes in decreasing order of preference. Regions and
+# subscriptions differ in what they offer, so the script falls back automatically.
+# These are Azure VM sizes: an arm64 workstation still provisions an x64 Azure VM,
+# and the Ubuntu2204 image alias used below resolves to an x64 image.
+read -r -a K3S_VM_SIZE_CANDIDATES <<<"${K3S_VM_SIZE_CANDIDATES:-${K3S_VM_SIZE} Standard_D4as_v5 Standard_D4s_v4 Standard_D4as_v4 Standard_D4s_v3 Standard_D4a_v4}"
 K3S_ADMIN_USERNAME="${K3S_ADMIN_USERNAME:-azureuser}"
 BASTION_PUBLIC_IP_NAME="${BASTION_PUBLIC_IP_NAME:-pip-adaptive-apps-bastion}"
 BASTION_NAME="${BASTION_NAME:-bas-adaptive-apps}"
@@ -92,13 +97,53 @@ tunnel_pid_matches() {
   is_pid_running "$pid" || return 1
   [[ -r "/proc/${pid}/cmdline" ]] || return 1
   command_line="$(tr '\0' ' ' <"/proc/${pid}/cmdline")"
-  [[ "$command_line" == *"az network bastion tunnel"* ]] &&
+  # The Azure CLI launcher is a Bash wrapper that runs its Python entry point as a child
+  # process rather than replacing itself, so both processes carry the same argument
+  # signature. Match either one; the Bastion name, resource group, and both ports keep
+  # the signature specific to this tunnel.
+  [[ "$command_line" == *"network bastion tunnel"* ]] &&
     [[ "$command_line" == *"--name ${BASTION_NAME}"* ]] &&
     [[ "$command_line" == *"--resource-group ${RESOURCE_GROUP}"* ]] &&
     [[ "$command_line" == *"--resource-port ${K3S_API_PORT}"* ]] &&
     [[ "$command_line" == *"--port ${K3S_LOCAL_PORT}"* ]]
 }
 
+# Every live process carrying this tunnel's exact signature, including the Azure CLI
+# Python child that actually owns the local listening socket.
+list_tunnel_pids() {
+  local pid_directory
+  local pid
+
+  for pid_directory in /proc/[0-9]*; do
+    pid="${pid_directory#/proc/}"
+    if tunnel_pid_matches "$pid"; then
+      printf '%s\n' "$pid"
+    fi
+  done
+}
+
+stop_tunnel_pids() {
+  local pid
+  local remaining
+
+  (($# > 0)) || return 0
+  for pid in "$@"; do
+    kill "$pid" 2>/dev/null || true
+  done
+  for _ in {1..20}; do
+    remaining=0
+    for pid in "$@"; do
+      if is_pid_running "$pid"; then
+        remaining=1
+      fi
+    done
+    if ((remaining == 0)); then
+      return 0
+    fi
+    sleep 1
+  done
+  return 1
+}
 local_port_ready() {
   timeout 1 bash -c "exec 3<>/dev/tcp/127.0.0.1/${K3S_LOCAL_PORT}" 2>/dev/null
 }
@@ -130,38 +175,32 @@ tunnel_status() {
 }
 
 disconnect_tunnel() {
-  local pid
+  local recorded
+  local -a pids=()
 
-  if ! pid="$(read_recorded_pid)" || ! is_integer "$pid"; then
+  if recorded="$(read_recorded_pid 2>/dev/null)" && is_integer "$recorded"; then
+    if is_pid_running "$recorded" && ! tunnel_pid_matches "$recorded"; then
+      echo "Refusing to stop PID ${recorded}: it is not the recorded Adaptive Apps Bastion tunnel." >&2
+      echo "Remove ${TUNNEL_PID_FILE} manually only after investigating that process." >&2
+      return 1
+    fi
+  fi
+
+  mapfile -t pids < <(list_tunnel_pids)
+
+  if ((${#pids[@]} == 0)); then
     rm -f "$TUNNEL_PID_FILE"
-    echo "No K3s Bastion tunnel is recorded."
-    return
+    echo "No K3s Bastion tunnel is running."
+    return 0
   fi
 
-  if ! is_pid_running "$pid"; then
-    rm -f "$TUNNEL_PID_FILE"
-    echo "Removed stale K3s Bastion tunnel PID ${pid}."
-    return
-  fi
-
-  if ! tunnel_pid_matches "$pid"; then
-    echo "Refusing to stop PID ${pid}: it is not the recorded Adaptive Apps Bastion tunnel." >&2
-    echo "Remove ${TUNNEL_PID_FILE} manually only after investigating that process." >&2
-    return 1
-  fi
-
-  kill "$pid"
-  for _ in {1..20}; do
-    is_pid_running "$pid" || break
-    sleep 1
-  done
-  if is_pid_running "$pid"; then
-    echo "Tunnel PID ${pid} did not stop after SIGTERM; it was not force-killed." >&2
+  if ! stop_tunnel_pids "${pids[@]}"; then
+    echo "Tunnel PIDs ${pids[*]} did not stop after SIGTERM; they were not force-killed." >&2
     return 1
   fi
 
   rm -f "$TUNNEL_PID_FILE"
-  echo "Stopped K3s Bastion tunnel PID ${pid}."
+  echo "Stopped K3s Bastion tunnel PIDs ${pids[*]}."
 }
 
 if [[ "$MODE" == "status" ]]; then
@@ -239,7 +278,20 @@ ensure_tunnel() {
   fi
 
   if local_port_ready; then
-    echo "Local port ${K3S_LOCAL_PORT} is already in use by an unrecorded process." >&2
+    local -a orphan_pids=()
+    mapfile -t orphan_pids < <(list_tunnel_pids)
+    if ((${#orphan_pids[@]} > 0)); then
+      echo "Reclaiming orphaned Adaptive Apps Bastion tunnel PIDs ${orphan_pids[*]}."
+      if ! stop_tunnel_pids "${orphan_pids[@]}"; then
+        echo "Orphaned Bastion tunnel PIDs ${orphan_pids[*]} did not stop after SIGTERM." >&2
+        return 1
+      fi
+      rm -f "$TUNNEL_PID_FILE"
+    fi
+  fi
+
+  if local_port_ready; then
+    echo "Local port ${K3S_LOCAL_PORT} is in use by a process that is not an Adaptive Apps tunnel." >&2
     echo "Choose another K3S_LOCAL_PORT or stop that process explicitly." >&2
     return 1
   fi
@@ -305,6 +357,28 @@ validate_k3s() {
   kubectl get nodes -o wide
 }
 
+# The Radius CLI resolves part of its installation through the default kubeconfig rather
+# than through KUBECONFIG, so the K3s context must also be registered there. The
+# dedicated K3s file remains the documented way to target K3s explicitly.
+register_k3s_context_in_default_kubeconfig() {
+  local default_kubeconfig="$HOME/.kube/config"
+  local merged_file
+
+  merged_file="$(mktemp)"
+  chmod 0600 "$merged_file"
+  TEMP_FILES+=("$merged_file")
+
+  KUBECONFIG="${default_kubeconfig}:${K3S_KUBECONFIG}" \
+    kubectl config view --flatten >"$merged_file"
+  KUBECONFIG="$merged_file" kubectl config get-contexts --output name |
+    grep -qx "$K3S_CONTEXT" || {
+    echo "Could not register the ${K3S_CONTEXT} context in ${default_kubeconfig}." >&2
+    return 1
+  }
+  install -m 0600 "$merged_file" "$default_kubeconfig"
+  rm -f "$merged_file"
+}
+
 if [[ "$MODE" == "connect" ]]; then
   az vm show --resource-group "$RESOURCE_GROUP" --name "$K3S_VM_NAME" >/dev/null || {
     echo "K3s VM ${K3S_VM_NAME} was not found; run provision mode first." >&2
@@ -338,8 +412,86 @@ if [[ "$MODE" == "connect" ]]; then
   }
   ensure_tunnel
   validate_k3s
+  register_k3s_context_in_default_kubeconfig
   exit
 fi
+
+AVAILABLE_VM_SIZES=""
+
+# az vm list-skus already omits sizes the subscription cannot use. A Location
+# restriction blocks the whole region; a Zone restriction only removes individual
+# availability zones and does not block the regional, non-zonal deployment used here.
+load_available_vm_sizes() {
+  [[ -z "$AVAILABLE_VM_SIZES" ]] || return 0
+  AVAILABLE_VM_SIZES="$(az vm list-skus \
+    --location "$AZURE_LOCATION" \
+    --resource-type virtualMachines \
+    --query "[?length(restrictions[?type=='Location']) == \`0\`].name" \
+    --output tsv)"
+}
+
+vm_size_is_available() {
+  load_available_vm_sizes
+  grep -qx -- "$1" <<<"$AVAILABLE_VM_SIZES"
+}
+
+# Capacity and quota problems only surface when the control plane tries to allocate.
+is_capacity_error() {
+  grep -Eqi 'AllocationFailed|SkuNotAvailable|ZonalAllocationFailed|OverconstrainedAllocationRequest|QuotaExceeded|exceeding approved .* quota|InsufficientCapacity' "$1"
+}
+
+create_k3s_vm() {
+  local size
+  local create_log
+  local attempted=0
+
+  create_log="$(mktemp)"
+  TEMP_FILES+=("$create_log")
+
+  for size in "${K3S_VM_SIZE_CANDIDATES[@]}"; do
+    if ! vm_size_is_available "$size"; then
+      echo "VM size ${size} is not offered in ${AZURE_LOCATION} for this subscription; trying the next candidate." >&2
+      continue
+    fi
+    attempted=1
+    echo "Creating K3s VM ${K3S_VM_NAME} with size ${size}."
+    if az vm create \
+      --resource-group "$RESOURCE_GROUP" \
+      --name "$K3S_VM_NAME" \
+      --location "$AZURE_LOCATION" \
+      --image Ubuntu2204 \
+      --size "$size" \
+      --admin-username "$K3S_ADMIN_USERNAME" \
+      --authentication-type ssh \
+      --generate-ssh-keys \
+      --nics "$K3S_NIC_NAME" \
+      --os-disk-size-gb 64 \
+      --storage-sku StandardSSD_LRS \
+      --output none 2>"$create_log"; then
+      return 0
+    fi
+
+    cat "$create_log" >&2
+    if ! is_capacity_error "$create_log"; then
+      return 1
+    fi
+
+    echo "VM size ${size} has no capacity or quota in ${AZURE_LOCATION}; removing the failed VM and trying the next size." >&2
+    az vm delete \
+      --resource-group "$RESOURCE_GROUP" \
+      --name "$K3S_VM_NAME" \
+      --yes \
+      --output none 2>/dev/null || true
+  done
+
+  if ((attempted == 0)); then
+    echo "None of the candidate VM sizes is offered in ${AZURE_LOCATION}: ${K3S_VM_SIZE_CANDIDATES[*]}" >&2
+  else
+    echo "Every candidate VM size failed to allocate in ${AZURE_LOCATION}: ${K3S_VM_SIZE_CANDIDATES[*]}" >&2
+  fi
+  echo "Set K3S_VM_SIZE_CANDIDATES to sizes offered in your region, or choose another AZURE_LOCATION." >&2
+  return 1
+}
 
 create_or_validate_subnet() {
   local subnet_name="$1"
@@ -493,19 +645,7 @@ else
       --network-security-group "$K3S_NSG_NAME" \
       --output none
   fi
-  az vm create \
-    --resource-group "$RESOURCE_GROUP" \
-    --name "$K3S_VM_NAME" \
-    --location "$AZURE_LOCATION" \
-    --image Ubuntu2204 \
-    --size "$K3S_VM_SIZE" \
-    --admin-username "$K3S_ADMIN_USERNAME" \
-    --authentication-type ssh \
-    --generate-ssh-keys \
-    --nics "$K3S_NIC_NAME" \
-    --os-disk-size-gb 64 \
-    --storage-sku StandardSSD_LRS \
-    --output none
+  create_k3s_vm
 fi
 
 NIC_ID="$(az vm show \
@@ -601,7 +741,7 @@ fi
 az network bastion wait \
   --resource-group "$RESOURCE_GROUP" \
   --name "$BASTION_NAME" \
-  --custom "provisioningState=='Succeeded'" \
+  --created \
   --timeout 1800
 
 BASTION_STATE="$(az network bastion show \
@@ -721,6 +861,7 @@ retrieve_kubeconfig() {
       "$current_context" "$K3S_CONTEXT" >/dev/null
   fi
   rm -f "$encoded_file" "$decoded_file"
+  register_k3s_context_in_default_kubeconfig
 }
 
 retrieve_kubeconfig

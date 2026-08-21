@@ -359,3 +359,17 @@ bash resources/configure-recipes.sh k3s
 
 The script creates or reuses ACR, publishes the custom SQL recipe for AKS, deploys the
 appropriate environment definition, and verifies the registered recipes.
+
+> [!IMPORTANT]
+> Run Challenge 03 first, on the same platform. `iac/aks-env.bicep` and
+> `iac/local-env.bicep` register recipes against the `Radius.Resources` types that
+> `resources/configure-resource-types-aks.sh` and
+> `resources/configure-resource-types-k3s.sh` create. Skipping Challenge 03 makes this
+> script fail on unknown resource types.
+
+The AKS path needs the K3s tunnel only when it is run as `all`. Reconnect first if the
+devcontainer was restarted:
+
+```bash
+bash resources/prepare-k3s-azure-vm.sh connect
+```

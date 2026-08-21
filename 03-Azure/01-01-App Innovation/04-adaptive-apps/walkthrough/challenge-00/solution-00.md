@@ -62,14 +62,29 @@ below.
 
 Confirm each participant has:
 
-- Docker Desktop or another runtime compatible with VS Code Dev Containers
+- A container runtime (see the options below)
 - Visual Studio Code
-- The Dev Containers extension
-- Enough local storage for the Ubuntu base image, features, and four small state
-  volumes
+- The Dev Containers extension (`ms-vscode-remote.remote-containers`)
+- Git on the host, because the repository is cloned before the container starts
+- Roughly 10 GB of free disk for the Ubuntu base image, features, and four small state
+  volumes, and at least 4 GB of memory available to the runtime
 
-On Windows, use Docker Desktop's WSL 2 backend. The repository can be cloned in the
-WSL filesystem for better filesystem performance.
+On Windows, WSL 2 must be enabled first (`wsl --install`, then `wsl --set-default-version 2`
+in an elevated PowerShell, and `wsl --list --verbose` to confirm the distribution reports
+`2`). The repository can be cloned in the WSL filesystem for better filesystem
+performance.
+
+Three container runtimes are known to work with this configuration:
+
+| Runtime | Coach notes |
+| --- | --- |
+| Docker Desktop | Simplest to support. Keep the WSL 2 based engine enabled on Windows. Docker Desktop requires a paid subscription for larger organizations, so confirm participants are licensed before recommending it as the default. |
+| Docker Engine inside WSL 2 or Linux | Avoids the Docker Desktop subscription. Participants install Docker Engine in the distribution, add themselves to the `docker` group, and open the repository through **WSL: Connect to WSL** so the extension targets that engine. |
+| Podman Desktop or Rancher Desktop | Usable where an organization standardizes on a Docker Desktop alternative. |
+
+Have participants prove the runtime works before the workshop starts. `docker info` must
+print server details rather than a connection error. This single check removes most
+day-one delays.
 
 This configuration follows the MicroHack repository's multi-configuration convention.
 It is documented for local VS Code Dev Containers; do not advertise Codespaces unless
@@ -120,6 +135,12 @@ Azure CLI state volume and also installs:
 Version pins make participant environments repeatable. Updating a pin requires static
 validation of this MicroHack and compatibility with the Kubernetes versions offered by
 AKS.
+
+Every pinned tool ships both `amd64` and `arm64` Linux builds, and `post-create.sh`
+selects the matching one from `uname -m`. The configuration is validated on `x86_64` and
+`arm64` hosts, including Apple Silicon and Windows on Arm. Do not tell participants to
+force `--platform linux/amd64`. The workstation architecture does not affect Azure: the
+AKS nodes and the K3s VM are x64 Azure VM sizes in every case.
 
 Rust, k3d, and application-development extensions from the source repository
 devcontainer are intentionally omitted. Challenges 00-05 use Bash and PowerShell 7,
@@ -178,8 +199,14 @@ az account set --subscription "<subscription-id>"
 az account show --output table
 ```
 
-Azure CLI may open a browser on the host or show a device-code prompt. Tokens are saved
-only in the `~/.azure` volume.
+Azure CLI may open a browser on the host or show a device-code prompt. When the
+container cannot reach a browser at all, force the device-code flow:
+
+```bash
+az login --use-device-code
+```
+
+Tokens are saved only in the `~/.azure` volume.
 
 Radius CLI state is separate. Challenge 02 creates `ws-azure-prod` and
 `ws-local-prod` under `~/.rad/config.yaml`; it also configures the workload identity

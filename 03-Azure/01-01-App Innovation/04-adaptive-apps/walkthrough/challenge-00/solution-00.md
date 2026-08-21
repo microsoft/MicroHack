@@ -17,13 +17,14 @@ Confirm the workshop has:
 - An Azure subscription
 - Permission to create a resource group, AKS cluster, Linux VM, networking, and role
   assignments
-- Permission to create Azure Bastion Standard and its managed public IP, invoke VM Run
-  Command, and open Bastion native-client tunnels
+- Permission to create Azure Bastion Standard and its managed public IP, a NAT gateway
+  and its public IP, invoke VM Run Command, and open Bastion native-client tunnels
 - Permission to create a Microsoft Entra application and service principal
 - Sufficient regional quota for:
   - A two-node AKS cluster using `Standard_D4s_v5` by default
   - One K3s VM using `Standard_D4s_v5` by default
   - One Standard Azure Bastion host and its managed public IP
+  - One NAT gateway and one Standard public IP for K3s outbound access
 
 The default scripts assign the Radius identity `Owner` at the lab resource-group
 scope because later exercises can create role assignments. Use a dedicated lab

@@ -40,9 +40,11 @@ Confirm that your workshop team has:
 
 - An Azure subscription
 - Permission to create a resource group, AKS cluster, Linux VM, networking resources,
-  Azure Bastion Standard, its managed public IP, VM Run Command, and role assignments
+  Azure Bastion Standard, its managed public IP, a NAT gateway and its public IP, VM Run
+  Command, and role assignments
 - Permission to create a Microsoft Entra application and service principal
-- Regional quota for the AKS nodes, K3s VM, Azure Bastion, and Bastion public IP
+- Regional quota for the AKS nodes, K3s VM, Azure Bastion, and two Standard public IP
+  addresses
 - Contributor or equivalent resource permissions, Network Contributor where networking
   is delegated, and permission to open Bastion native-client tunnels
 

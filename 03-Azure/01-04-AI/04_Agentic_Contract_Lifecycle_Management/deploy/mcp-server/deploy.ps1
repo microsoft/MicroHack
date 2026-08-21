@@ -102,6 +102,8 @@ foreach ($ns in @("Microsoft.App", "Microsoft.OperationalInsights")) {
 $ErrorActionPreference = $eapSaved
 
 Write-Host "==> Building + deploying '$AppName' to Azure Container Apps (image builds in the cloud)"
+$eapUp = $ErrorActionPreference
+$ErrorActionPreference = 'Continue'   # handle a cloud-build failure with a clear message, not a raw NativeCommandError
 az containerapp up `
   --name $AppName `
   --resource-group $ResourceGroup `
@@ -116,6 +118,17 @@ az containerapp up `
       "MODEL_CLAUSE_RISK=$ModelClauseRisk" `
       "MCP_TRANSPORT=streamable-http" `
       "MCP_PORT=8000"
+$upExit = $LASTEXITCODE
+$ErrorActionPreference = $eapUp
+if ($upExit -ne 0) {
+  Write-Host ""
+  Write-Host "!! 'az containerapp up' failed (exit $upExit) - stopping before the identity/role steps." -ForegroundColor Red
+  Write-Host "   If the traceback above mentions 'NoneType' object has no attribute 'linux' (in queue_acr_build)," -ForegroundColor Red
+  Write-Host "   your Azure CLI has the 2.86.0 cloud-build bug (Azure/azure-cli#33369)." -ForegroundColor Red
+  Write-Host "   Fix: run 'az upgrade' (need >= 2.87.0) then 'az extension update -n containerapp', and re-run." -ForegroundColor Red
+  Write-Host "   The half-created ACR + Container Apps environment are reused, so re-running is safe." -ForegroundColor Red
+  exit 1
+}
 
 Write-Host "==> Enabling the app's system-assigned managed identity"
 az containerapp identity assign --name $AppName --resource-group $ResourceGroup --system-assigned | Out-Null

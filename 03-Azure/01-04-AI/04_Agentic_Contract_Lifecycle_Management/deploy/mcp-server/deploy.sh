@@ -92,6 +92,7 @@ for ns in Microsoft.App Microsoft.OperationalInsights; do
 done
 
 echo "==> Building + deploying '$APP_NAME' to Azure Container Apps (image builds in the cloud)"
+set +e   # handle a cloud-build failure with a clear message instead of a bare abort
 az containerapp up \
   --name "$APP_NAME" \
   --resource-group "$RESOURCE_GROUP" \
@@ -106,6 +107,17 @@ az containerapp up \
       "MODEL_CLAUSE_RISK=$MODEL_CLAUSE_RISK" \
       "MCP_TRANSPORT=streamable-http" \
       "MCP_PORT=8000"
+up_rc=$?
+set -e
+if [ "$up_rc" -ne 0 ]; then
+  echo "" >&2
+  echo "!! 'az containerapp up' failed (exit $up_rc) - stopping before the identity/role steps." >&2
+  echo "   If the traceback mentions \"'NoneType' object has no attribute 'linux'\" (in queue_acr_build)," >&2
+  echo "   your Azure CLI has the 2.86.0 cloud-build bug (Azure/azure-cli#33369)." >&2
+  echo "   Fix: run 'az upgrade' (need >= 2.87.0) then 'az extension update -n containerapp', and re-run -" >&2
+  echo "   the half-created ACR + Container Apps environment are reused, so re-running is safe." >&2
+  exit 1
+fi
 
 echo "==> Enabling the app's system-assigned managed identity"
 az containerapp identity assign \

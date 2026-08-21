@@ -526,6 +526,197 @@ Open <http://localhost:3000>. A reachable frontend and a complete Radius graph a
 core proof. MQTT-backed features can remain incomplete because Event Grid data-plane
 authorization is outside this challenge's portability proof.
 
+### 6. Prove database initialization and backend readiness
+
+Run this acceptance check once on K3s after Stage 2 and once on AKS after Stage 3. It
+waits for the recipe-owned Job because Kubernetes-extension deployment records API
+acceptance, not Job completion. The backend readiness probe calls `/api/accounts`, so
+Kubernetes does not mark the backend Ready until the schema is queryable.
+
+The verification pod reuses the recipe-created Secret through `secretKeyRef`; no command,
+manifest, or output contains the database password. It prints only table names and the
+number of `Demo Account` rows.
+
+**Bash:**
+
+```bash
+SCHEMA_JOB="$(kubectl get jobs \
+  --namespace "$APP_NAMESPACE" \
+  --selector app=postgres-schema-initializer,resource=trading-db \
+  --output jsonpath='{.items[0].metadata.name}')"
+test -n "$SCHEMA_JOB"
+kubectl wait \
+  --namespace "$APP_NAMESPACE" \
+  --for=condition=complete \
+  "job/$SCHEMA_JOB" \
+  --timeout=15m
+
+DB_HOST="$(kubectl get job "$SCHEMA_JOB" --namespace "$APP_NAMESPACE" \
+  --output jsonpath='{.spec.template.spec.containers[0].env[?(@.name=="PGHOST")].value}')"
+DB_NAME="$(kubectl get job "$SCHEMA_JOB" --namespace "$APP_NAMESPACE" \
+  --output jsonpath='{.spec.template.spec.containers[0].env[?(@.name=="PGDATABASE")].value}')"
+DB_USER="$(kubectl get job "$SCHEMA_JOB" --namespace "$APP_NAMESPACE" \
+  --output jsonpath='{.spec.template.spec.containers[0].env[?(@.name=="PGUSER")].value}')"
+DB_SECRET="$(kubectl get job "$SCHEMA_JOB" --namespace "$APP_NAMESPACE" \
+  --output jsonpath='{.spec.template.spec.containers[0].env[?(@.name=="PGPASSWORD")].valueFrom.secretKeyRef.name}')"
+DB_SSLMODE="$(kubectl get job "$SCHEMA_JOB" --namespace "$APP_NAMESPACE" \
+  --output jsonpath='{.spec.template.spec.containers[0].env[?(@.name=="PGSSLMODE")].value}')"
+DB_SSLMODE="${DB_SSLMODE:-prefer}"
+
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: trading-db-verify
+  namespace: ${APP_NAMESPACE}
+spec:
+  restartPolicy: Never
+  containers:
+    - name: psql
+      image: postgres:16-alpine
+      command:
+        - sh
+        - -ceu
+        - |
+          psql --set=ON_ERROR_STOP=1 --tuples-only --no-align <<'SQL'
+          SELECT table_name
+          FROM information_schema.tables
+          WHERE table_schema = 'public'
+            AND table_name IN ('accounts', 'orders', 'trades', 'positions')
+          ORDER BY table_name;
+          SELECT 'demo_seed_count=' || count(*)
+          FROM accounts
+          WHERE name = 'Demo Account';
+          SQL
+      env:
+        - name: PGHOST
+          value: "${DB_HOST}"
+        - name: PGDATABASE
+          value: "${DB_NAME}"
+        - name: PGUSER
+          value: "${DB_USER}"
+        - name: PGSSLMODE
+          value: "${DB_SSLMODE}"
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: "${DB_SECRET}"
+              key: password
+EOF
+kubectl wait --namespace "$APP_NAMESPACE" \
+  --for=jsonpath='{.status.phase}'=Succeeded \
+  pod/trading-db-verify \
+  --timeout=5m
+kubectl logs --namespace "$APP_NAMESPACE" pod/trading-db-verify
+kubectl delete --namespace "$APP_NAMESPACE" pod/trading-db-verify --wait=true
+
+kubectl wait --namespace "$APP_NAMESPACE" \
+  --for=condition=Available \
+  deployment/backend \
+  --timeout=5m
+kubectl run backend-db-verify \
+  --namespace "$APP_NAMESPACE" \
+  --rm --restart=Never --attach \
+  --image=curlimages/curl:8.12.1 \
+  --silent --show-error --fail \
+  http://backend:8080/api/accounts |
+  grep -F '"Demo Account"'
+```
+
+**PowerShell 7:**
+
+```powershell
+$SchemaJob = kubectl get jobs `
+    --namespace $AppNamespace `
+    --selector app=postgres-schema-initializer,resource=trading-db `
+    --output jsonpath='{.items[0].metadata.name}'
+if (-not $SchemaJob) { throw "PostgreSQL schema Job was not created." }
+kubectl wait `
+    --namespace $AppNamespace `
+    --for=condition=complete `
+    "job/$SchemaJob" `
+    --timeout=15m
+
+$Job = kubectl get job $SchemaJob --namespace $AppNamespace |
+    ConvertFrom-Json
+$Environment = $Job.spec.template.spec.containers[0].env
+$DbHost = ($Environment | Where-Object name -eq "PGHOST").value
+$DbName = ($Environment | Where-Object name -eq "PGDATABASE").value
+$DbUser = ($Environment | Where-Object name -eq "PGUSER").value
+$DbSecret = ($Environment | Where-Object name -eq "PGPASSWORD").valueFrom.secretKeyRef.name
+$DbSslMode = ($Environment | Where-Object name -eq "PGSSLMODE").value
+if (-not $DbSslMode) { $DbSslMode = "prefer" }
+
+@"
+apiVersion: v1
+kind: Pod
+metadata:
+  name: trading-db-verify
+  namespace: $AppNamespace
+spec:
+  restartPolicy: Never
+  containers:
+    - name: psql
+      image: postgres:16-alpine
+      command:
+        - sh
+        - -ceu
+        - |
+          psql --set=ON_ERROR_STOP=1 --tuples-only --no-align <<'SQL'
+          SELECT table_name
+          FROM information_schema.tables
+          WHERE table_schema = 'public'
+            AND table_name IN ('accounts', 'orders', 'trades', 'positions')
+          ORDER BY table_name;
+          SELECT 'demo_seed_count=' || count(*)
+          FROM accounts
+          WHERE name = 'Demo Account';
+          SQL
+      env:
+        - name: PGHOST
+          value: "$DbHost"
+        - name: PGDATABASE
+          value: "$DbName"
+        - name: PGUSER
+          value: "$DbUser"
+        - name: PGSSLMODE
+          value: "$DbSslMode"
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: "$DbSecret"
+              key: password
+"@ | kubectl apply -f -
+
+kubectl wait `
+    --namespace $AppNamespace `
+    --for=jsonpath='{.status.phase}'=Succeeded `
+    pod/trading-db-verify `
+    --timeout=5m
+kubectl logs --namespace $AppNamespace pod/trading-db-verify
+kubectl delete --namespace $AppNamespace pod/trading-db-verify --wait=true
+
+kubectl wait `
+    --namespace $AppNamespace `
+    --for=condition=Available `
+    deployment/backend `
+    --timeout=5m
+$Accounts = kubectl run backend-db-verify `
+    --namespace $AppNamespace `
+    --rm --restart=Never --attach `
+    --image=curlimages/curl:8.12.1 `
+    --silent --show-error --fail `
+    http://backend:8080/api/accounts
+if ($Accounts -notmatch '"Demo Account"') {
+    throw "Backend did not return the Demo Account seed."
+}
+```
+
+Expected metadata output is the four table names and `demo_seed_count=1`. On AKS,
+`PGSSLMODE=require` proves the initializer uses TLS. Azure PostgreSQL also keeps
+`require_secure_transport` enabled, so the external backend image's Npgsql connection
+negotiates TLS; the server rejects plaintext sessions.
+
 ## Stage 4: Compare the deployments
 
 Stop the AKS exposure before running comparison commands.
@@ -607,6 +798,8 @@ rad recipe list --environment env-azure-prod
 | Workload identity | Local no-op mapping | Azure workload-identity mapping |
 | AI | Disabled | Disabled |
 | Access path | Port-forward over Bastion API tunnel | Port-forward to AKS API |
+| Schema source | `iac/recipes/trading-schema.sql` | `iac/recipes/trading-schema.sql` |
+| Seed result | One `Demo Account` | One `Demo Account` |
 
 The application team owns `iac/app.bicep`, image versions, and safe deployment
 parameters. The platform team owns the clusters, Radius control planes, environments,

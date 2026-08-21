@@ -74,6 +74,9 @@ To use the MicroHack time effectively, have the following available:
 - Capacity to create the default two-environment topology: one Azure Kubernetes
   Service cluster, one private Linux VM hosting self-managed K3s, and one Standard
   Azure Bastion host with its managed public endpoint
+- Permission and budget for a Standard Azure Container Registry in Challenge 04. Its
+  non-secret pinned recipe artifacts allow anonymous pull so both Radius control planes
+  can resolve them; publishing remains authenticated.
 - Alternatively, an existing Azure Local or Arc-enabled Kubernetes environment to
   use in place of K3s
 - [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli)

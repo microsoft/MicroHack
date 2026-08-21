@@ -7,6 +7,8 @@ extension kubernetes with {
 param namespace string = 'env-local-prod'
 param environmentName string = namespace
 param recipeRegistry string = 'ghcr.io/microsoft/adaptive-apps/recipes'
+@description('Pinned workshop OCI path for the corrected Kubernetes PostgreSQL recipe.')
+param postgresRecipeTemplatePath string
 
 resource appNamespace 'core/Namespace@v1' = {
   metadata: {
@@ -32,7 +34,7 @@ resource localEnvironment 'Applications.Core/environments@2023-10-01-preview' = 
       'Radius.Resources/postgreSqlDatabases': {
         default: {
           templateKind: 'bicep'
-          templatePath: '${recipeRegistry}/postgres:latest'
+          templatePath: postgresRecipeTemplatePath
         }
       }
       'Radius.Resources/mqttBrokers': {

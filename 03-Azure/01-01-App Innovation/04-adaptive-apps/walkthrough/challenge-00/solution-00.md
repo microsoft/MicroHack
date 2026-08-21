@@ -187,7 +187,7 @@ worktree. Git remains installed for normal clones, but do not claim repository G
 functionality for a Windows worktree bind mount.
 
 Without a Docker socket, use the temporary `DOCKER_CONFIG` and `az acr login
---expose-token` flow documented in Solution 04 when publishing the recipe. The
+--expose-token` flow documented in Solution 04 when publishing the recipes. The
 `configure-recipes.sh` helper already uses this token-based approach.
 
 ### Azure and Radius authentication
@@ -247,8 +247,9 @@ configure remote resources:
 - Challenge 01 creates AKS and an Azure VM, then installs K3s on that VM.
 - Challenge 02 installs separate Radius control planes into AKS and K3s.
 - Challenge 03 installs the portfolio and registers resource types remotely.
-- Challenge 04 publishes a Bicep recipe to ACR and registers recipes with both Radius
-  environments.
+- Challenge 04 publishes the teaching recipe and two corrected PostgreSQL recipes to a
+  Standard ACR, then registers pinned recipes with both Radius environments. Anonymous
+  pull applies only to those non-secret recipe artifacts.
 
 No Kubernetes cluster or Docker daemon runs inside this devcontainer.
 

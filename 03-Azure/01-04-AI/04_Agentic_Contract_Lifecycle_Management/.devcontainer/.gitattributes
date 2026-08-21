@@ -1,3 +1,0 @@
-# Keep the post-create hook LF so bash inside the dev container doesn't choke on
-# CRLF when the repo is checked out on Windows.
-*.sh text eol=lf

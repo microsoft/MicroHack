@@ -6,7 +6,7 @@ Build a **multi-model, multi-agent** contract assistant on **Microsoft Foundry**
 **Foundry IQ**, traced and evaluated, exposed as an **MCP server**, and published to **Microsoft 365
 Copilot & Teams**.
 
-> A 4.5-hour microhack · 5 challenges (+ optional bonus) · code-first (Python) · GitHub Codespaces.
+> A 4.5-hour microhack · 5 challenges (+ optional bonus) · code-first (Python) · runs locally in VS Code.
 
 ## Introduction
 
@@ -264,7 +264,7 @@ challenges are a single story:
 
 | # | Challenge | Focus | Duration |
 |---|-----------|-------|----------|
-| [1](challenges/challenge-01.md) | Resource deployment · Codespaces · `.env` · corpus seeding | Setup | 30 min |
+| [1](challenges/challenge-01.md) | Resource deployment · local venv setup · `.env` · corpus seeding | Setup | 30 min |
 | [2](challenges/challenge-02.md) | Intake & Drafting agent + Foundry IQ + tools | Grounding · tools · guardrails | 60 min |
 | [3](challenges/challenge-03.md) | Observability, tracing & evaluation | Tracing · eval | 60 min |
 | [4](challenges/challenge-04.md) | Clause & Risk agent + Orchestrator + MCP server | Orchestration · MCP | 55 min |
@@ -293,14 +293,19 @@ challenges are a single story:
 
 - An **Azure subscription** with rights to create a Foundry project and deploy GPT models (confirm
   availability in your target region via the model catalog).
-- **GitHub account** (to open the repo in Codespaces).
-- Basic Python. No local install needed — the devcontainer has everything.
+- **GitHub account** (to clone the repo).
+- **Python 3.11+**, **Git**, the **Azure CLI** (`az`), and the **Azure Developer CLI** (`azd`) installed locally. Basic Python knowledge; a virtual environment keeps the pinned deps isolated.
 - For Challenge 5: a Microsoft 365 tenant where you can sideload a Teams app (or a coach-provided one).
 
 ## Getting started
 
-1. **Open this repo in Codespaces** (no fork needed — the optional Challenge 6 CI bonus is the only part that needs a fork) — **Code → Codespaces → Create codespace**. The devcontainer installs
-   Python 3.11, Azure CLI, `azd`, Node, and `src/requirements.txt` automatically.
+1. **Clone this repo and open it in VS Code** (no fork needed — the optional Challenge 6 CI bonus is the only part that needs a fork). Create a virtual environment and install the dependencies:
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate            # Windows (PowerShell): .venv\Scripts\Activate.ps1
+   python -m pip install --upgrade pip
+   pip install -r src/requirements.txt
+   ```
 2. `az login` (and `azd auth login` if you use the `azd up` path)
 3. Do **[Challenge 1](challenges/challenge-01.md)** to deploy resources and seed the corpus — provision with
    **`azd up`** (run from `src/`; Bicep in `labautomation/infra/`), the **`labautomation/deploy`** script, or the one-click
@@ -317,7 +322,6 @@ challenges are a single story:
 
 ```
 .
-├── .devcontainer/            # Codespaces / Dev Containers definition
 ├── README.md                 # this file
 ├── challenges/               # challenge-01 … challenge-06 (one markdown brief per challenge)
 ├── walkthrough/              # challenge-0N/solution-0N.md — reference solution per challenge

@@ -5,7 +5,7 @@
 Welcome to your very first challenge! Here you lay the foundation for the whole microhack: you'll
 deploy the Azure resources, wire up your development environment, and seed the contract corpus the
 later challenges build on. By the end you'll have the full **Microsoft Foundry** environment
-running in a **prebuilt dev container** — so the rest of the hack is pure agent-building.
+wired up to **VS Code** on your own machine — so the rest of the hack is pure agent-building.
 
 If something isn't working as expected, please let your coach know.
 
@@ -14,7 +14,8 @@ If something isn't working as expected, please let your coach know.
 > **📋 Prerequisites:**
 > - An **Azure subscription** your lab was provisioned in *(or, if self-hosting, one with rights to create a Foundry project and deploy GPT models)*.
 > - A **GitHub account** (to clone the repo).
-> - **VS Code** with the **Dev Containers** extension and **Docker Desktop** — the repo's dev container has everything preinstalled *(or **GitHub Codespaces**, if you'd rather run in the browser)*.
+> - **VS Code** with the **Python** extension.
+> - Installed locally: **Python 3.11+**, **Git**, the **Azure CLI** (`az`), and the **Azure Developer CLI** (`azd`). *(Node 20+ only for the optional Teams publish in Challenge 4.)*
 
 > 🧩 **How to use this challenge:** for a MicroHack event your Azure resources are **provisioned for
 > you** — you just point your `.env` at them (Task 3) and **confirm you understand what got created**:
@@ -30,8 +31,7 @@ If something isn't working as expected, please let your coach know.
 
 ## 🧭 Context
 
-Everything runs inside the **dev container** in this repo (Python 3.11, Azure
-CLI, `azd`, Node) — open it locally in **VS Code** (Dev Containers) or in **GitHub Codespaces**. For a MicroHack event the resources below are **already provisioned** into **one
+You run everything from a local clone of this repo in **VS Code**, inside a Python **virtual environment** (Python 3.11+, plus the Azure CLI, `azd`, and — optionally — Node). For a MicroHack event the resources below are **already provisioned** into **one
 resource group** and their endpoints appear on your **lab dashboard**; you copy them into `.env` in
 Task 3. *(Self-hosting? One **`azd up`** — Bicep in [`infra/`](../labautomation/infra/) — provisions the
 same resource group and autofills `.env`.)*
@@ -130,27 +130,48 @@ text at crawl time); regenerate the PDFs with `python src/scripts/make_corpus_pd
 
 - [ ] You can sign in to the [Azure Portal](https://portal.azure.com) with the account your lab was provisioned for (or, if self-hosting, one that can **create resources**).
 - [ ] *(Self-hosting only)* Your Azure subscription can deploy **GPT** models (ask your coach if unsure).
-- [ ] You have ~30 minutes and a stable connection (provisioning takes 5–10 min on its own).
 
-### Task 1 · Open the project in VS Code (~7 min)
+### Task 1 · Clone the project and set up your environment (~7 min)
 
-**No fork needed for the main hack (Challenges 1–5)** — the code you run lives in this repo. Clone it and open it in **VS
-Code** using the **Dev Containers** extension (a prebuilt container with Python, Azure CLI, `azd`, and Node — no manual installs); because you work off the source repo, `git pull`
+**No fork needed for the main hack (Challenges 1–5)** — the code you run lives in this repo. Clone it, open it in **VS
+Code**, and create a Python **virtual environment** for the dependencies; because you work off the source repo, `git pull`
 always gets the latest fixes. *(The **one exception** is the optional **Challenge 6** CI bonus — it runs in **GitHub Actions**, so it needs **your own fork**; you'll create it there, not now.)*
 
-1. Open the folder in **VS Code** (e.g. `code microhack-aiagents`). When VS
-   Code prompts **"Reopen in Container"**, click it — or run **Dev Containers: Reopen in Container** from
-   the Command Palette (**F1**). Requires the **Dev Containers** extension and **Docker Desktop**.
-2. Wait for the container to build — it installs dependencies with `pip install -r src/requirements.txt`
-   automatically. When the terminal stops scrolling and shows a prompt, it's ready.
+1. **Create and activate a virtual environment** in a **VS Code Terminal** (`` Ctrl+` ``), from the repo root:
 
-✅ **You'll know it worked when:** a **VS Code** window opens (locally or in the browser) with a **Terminal** panel showing a
-ready prompt.
+   ```bash
+   python -m venv .venv
+   ```
+
+   ```powershell
+   # Windows (PowerShell)
+   .venv\Scripts\Activate.ps1
+   ```
+
+   ```bash
+   # macOS / Linux
+   source .venv/bin/activate
+   ```
+
+   Your prompt should now start with `(.venv)`.
+
+2. **Install the dependencies** into the venv:
+
+   ```bash
+   python -m pip install --upgrade pip
+   pip install -r src/requirements.txt
+   ```
+
+   When the terminal stops scrolling and shows a prompt, it's ready.
+
+3. **Point VS Code at the venv:** open the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`) → **Python: Select Interpreter** → choose the interpreter under **`.venv`**. This makes the editor, terminal, and later tasks use the same environment.
+
+✅ **You'll know it worked when:** the terminal prompt shows **`(.venv)`**, `pip install` finishes with no red errors, and **Python: Select Interpreter** shows `.venv` selected.
 
 > [!NOTE]
-> **Prefer the browser? Use GitHub Codespaces instead.** On the repo's GitHub page, click **`< > Code` → Codespaces → Create codespace on `main`** — the same dev container builds in the cloud, so you need no local Docker.
+> **Why a virtual environment?** It isolates this hack's pinned dependencies from your system Python — and on macOS/Linux with Python 3.12+ it avoids the `externally-managed-environment` error that blocks a global `pip install`. The `.venv` folder lives at the repo root, is already git-ignored, and is where some later scripts (evaluation, red-team) expect it.
 >
-> While it builds, skim the [scenario & architecture](../README.md#the-scenario--contoso-global) so the pieces you deploy here make sense.
+> While `pip install` runs, skim the [scenario & architecture](../README.md#the-scenario--contoso-global) so the pieces you deploy here make sense.
 
 ---
 
@@ -423,7 +444,7 @@ Requires the Azure CLI signed in (`az login`) **and** rights to grant admin cons
 Privileged Role Admin / Application Administrator — in your own sandbox tenant, that's you):
 
 ```bash
-bash src/scripts/setup_sharepoint_app.sh          # Codespaces / Linux / macOS
+bash src/scripts/setup_sharepoint_app.sh          # Linux / macOS / WSL
 # — or on Windows PowerShell —
 pwsh src/scripts/setup_sharepoint_app.ps1
 ```
@@ -604,7 +625,7 @@ Smoke test: ✅ PASS
 | `Project can only be created under AIServices Kind account with allowProjectManagement set to true` | Fixed in the template (`account.properties.allowProjectManagement: true`). If you hit it, your checkout is behind — run `git pull` and redeploy. |
 | SharePoint: *"Tenant does not have a SPO license"*, or you can't grant the app's Graph **admin consent** (only Global Reader / **"Grant admin consent" greyed out**) | Only happens if you're **not** an admin of the tenant — in your own sandbox tenant the Path A script self-grants consent. If you hit it, it's **not** a failure: use the **local-PDF fallback (Path B)** — leave the `SHAREPOINT_*` values blank in `.env` and run `python src/scripts/seed_corpus.py`. It extracts `src/data/**/*.pdf` and populates `clm-corpus` directly (needs the Search Index Data Contributor role, granted during provisioning) — the **same index** the SharePoint path builds, so Challenges 2–6 are unaffected. See [Task 5, Path B](#task-5--seed-the-corpus). |
 | `account project create` unavailable | The CLI project command is preview. Create the project in the **Foundry portal**, then set `AZURE_AI_PROJECT_ENDPOINT` in `.env` manually (Overview → Endpoint). |
-| `az login` in a dev container / Codespaces | Use `az login --use-device-code`. |
+| `az login` doesn't open a browser (headless / remote terminal) | Use `az login --use-device-code`. |
 | Search / quota errors | Ensure the subscription has quota for Basic Search + the model SKUs; request quota if needed. |
 | `PermissionDenied` after deploy | RBAC can take 5–10 min to propagate. Wait, run `az login --use-device-code` again, and retry. |
 

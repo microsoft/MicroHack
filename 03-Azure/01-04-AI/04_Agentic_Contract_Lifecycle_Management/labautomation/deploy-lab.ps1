@@ -26,7 +26,7 @@
     - Console output: [INFO]/[OK]/[WARN] progress plus @{ HackboxCredential = ... }
       records that surface every endpoint / model name to the team dashboard.
 
-  deploy.ps1 / deploy.sh remain the local/Codespaces path; this script is the platform path.
+  deploy.ps1 / deploy.sh remain the local path; this script is the platform path.
 #>
 param(
     [Parameter(Mandatory = $true)]
@@ -107,6 +107,14 @@ if ($AllowedEntraUserIds.Count -eq 0) {
     Write-Host "[WARN]  The platform normally sets this per lab; for a manual run pass"
     Write-Host "[WARN]  -AllowedEntraUserIds <entraObjectId> (comma-separate ids for a team lab)."
 }
+
+# --- Resource providers -----------------------------------------------------
+# Subscription-scoped resource-provider registration (e.g. 'Microsoft.BotService' for the
+# Challenge 5 Teams / M365 publish) is handled ONCE PER SUBSCRIPTION by shared-deploy-lab.ps1,
+# which the platform runs before this per-participant fan-out. It does NOT belong here: in a
+# 'resourcegroup' lab this script runs with only subscription-Reader (RG-Owner), so it could not
+# register a provider anyway, and running it in every parallel lab job would just race. See
+# labautomation/shared-deploy-lab.ps1.
 
 $deployOutputs          = $null
 $effectiveResourceGroup = $null

@@ -1,7 +1,7 @@
 # src — developer guide
 
 All the source code the participant runs during the microhack lives here. It runs
-unchanged in a Codespace / devcontainer or locally. Shared config and Foundry client
+unchanged locally inside a Python virtual environment. Shared config and Foundry client
 helpers live in [`clm_common/`](clm_common/); every entry-point script adds `src/`
 (and `src/agents/`) to `sys.path`, so run them from the **repo root**.
 

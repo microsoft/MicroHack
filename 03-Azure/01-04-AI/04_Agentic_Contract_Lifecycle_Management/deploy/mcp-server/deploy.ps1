@@ -162,20 +162,24 @@ if (-not $PrincipalId) {
 
 if ($FoundryAccountId) {
   Write-Host "==> Granting the identity access to your Foundry models"
+  # 53ca6127... is the built-in role "Azure AI User" (recently RENAMED to "Foundry User").
+  # Assign it by role-definition GUID, because the display name "Azure AI User" no longer
+  # resolves ('az ... --role "Azure AI User"' fails with "Role ... doesn't exist"). Fall
+  # back to the older inference roles by name if the GUID ever isn't present in the tenant.
   $ok = $false
-  foreach ($role in @("Azure AI User", "Cognitive Services User")) {
-    az role assignment create --assignee-object-id $PrincipalId `
+  foreach ($role in @("53ca6127-db72-4b80-b1b0-d745d6d5456d", "Cognitive Services User", "Cognitive Services OpenAI User")) {
+    $out = az role assignment create --assignee-object-id $PrincipalId `
         --assignee-principal-type ServicePrincipal `
-        --role $role --scope $FoundryAccountId 2>$null | Out-Null
-    if ($LASTEXITCODE -eq 0) { $ok = $true; break }
+        --role $role --scope $FoundryAccountId 2>&1
+    if ($LASTEXITCODE -eq 0 -or ($out -match "already exists")) { $ok = $true; break }
   }
   if ($ok) { Write-Host "    role assigned (identity propagation can take ~1 minute)" }
-  else { Write-Host "!! role assignment failed - grant 'Azure AI User' on $FoundryAccountId to $PrincipalId yourself" }
+  else { Write-Host "!! role assignment failed - grant 'Azure AI User' (role id 53ca6127-db72-4b80-b1b0-d745d6d5456d) on $FoundryAccountId to $PrincipalId yourself" -ForegroundColor Yellow }
 } else {
   Write-Host "!! FOUNDRY_ACCOUNT_ID not found - grant a data-plane role to the identity yourself:"
   Write-Host "     az role assignment create --assignee-object-id $PrincipalId ``"
   Write-Host "       --assignee-principal-type ServicePrincipal ``"
-  Write-Host "       --role 'Azure AI User' --scope <your Foundry account resource id>"
+  Write-Host "       --role 53ca6127-db72-4b80-b1b0-d745d6d5456d --scope <your Foundry account resource id>"
 }
 
 $Fqdn = az containerapp show -n $AppName -g $ResourceGroup --query properties.configuration.ingress.fqdn -o tsv

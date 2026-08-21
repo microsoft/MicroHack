@@ -151,18 +151,29 @@ fi
 
 if [[ -n "$FOUNDRY_ACCOUNT_ID" ]]; then
   echo "==> Granting the identity access to your Foundry models"
-  az role assignment create --assignee-object-id "$PRINCIPAL_ID" \
-      --assignee-principal-type ServicePrincipal \
-      --role "Azure AI User" --scope "$FOUNDRY_ACCOUNT_ID" >/dev/null \
-  || az role assignment create --assignee-object-id "$PRINCIPAL_ID" \
-      --assignee-principal-type ServicePrincipal \
-      --role "Cognitive Services User" --scope "$FOUNDRY_ACCOUNT_ID" >/dev/null
-  echo "    role assigned (identity propagation can take ~1 minute)"
+  # 53ca6127... is the built-in role "Azure AI User" (recently RENAMED to "Foundry User").
+  # Assign by GUID because the display name "Azure AI User" no longer resolves. Fall back to
+  # the older inference roles by name. Wrapped in set +e so a failed try can't abort the run.
+  set +e
+  role_ok=0
+  for role in "53ca6127-db72-4b80-b1b0-d745d6d5456d" "Cognitive Services User" "Cognitive Services OpenAI User"; do
+    out="$(az role assignment create --assignee-object-id "$PRINCIPAL_ID" \
+        --assignee-principal-type ServicePrincipal \
+        --role "$role" --scope "$FOUNDRY_ACCOUNT_ID" 2>&1)"
+    rc=$?
+    if [[ "$rc" -eq 0 || "$out" == *"already exists"* ]]; then role_ok=1; break; fi
+  done
+  set -e
+  if [[ "$role_ok" -eq 1 ]]; then
+    echo "    role assigned (identity propagation can take ~1 minute)"
+  else
+    echo "!! role assignment failed - grant 'Azure AI User' (role id 53ca6127-db72-4b80-b1b0-d745d6d5456d) on $FOUNDRY_ACCOUNT_ID to $PRINCIPAL_ID yourself" >&2
+  fi
 else
   echo "!! FOUNDRY_ACCOUNT_ID not set — grant a data-plane role to the identity yourself:"
   echo "     az role assignment create --assignee-object-id $PRINCIPAL_ID \\"
   echo "       --assignee-principal-type ServicePrincipal \\"
-  echo "       --role 'Azure AI User' --scope <your Foundry account resource id>"
+  echo "       --role 53ca6127-db72-4b80-b1b0-d745d6d5456d --scope <your Foundry account resource id>"
 fi
 
 FQDN="$(az containerapp show -n "$APP_NAME" -g "$RESOURCE_GROUP" \

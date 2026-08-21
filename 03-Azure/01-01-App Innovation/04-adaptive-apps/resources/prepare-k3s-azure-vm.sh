@@ -39,11 +39,11 @@ K3S_LOCAL_PORT="${K3S_LOCAL_PORT:-16443}"
 # Outbound internet is required to install K3s and pull container images. Azure is
 # retiring implicit default outbound access: for API versions released after
 # 2026-03-31, new virtual networks default to private subnets with no outbound path.
-# The script therefore sets the subnet's outbound posture explicitly instead of relying
-# on the platform default, which would otherwise change silently under a newer CLI.
-# Set K3S_ENABLE_NAT_GATEWAY=true for an explicit, future-proof NAT gateway. It adds
-# hourly cost and per-GB data processing charges.
-K3S_ENABLE_NAT_GATEWAY="${K3S_ENABLE_NAT_GATEWAY:-false}"
+# The default here is an explicit NAT gateway, which keeps the subnet private, gives a
+# deterministic egress IP, and is the durable option. It adds an hourly charge plus
+# per-GB data processing. Set K3S_ENABLE_NAT_GATEWAY=false to fall back to explicitly
+# enabled default outbound access, which is free but is itself being retired.
+K3S_ENABLE_NAT_GATEWAY="${K3S_ENABLE_NAT_GATEWAY:-true}"
 NAT_GATEWAY_NAME="${NAT_GATEWAY_NAME:-natgw-adaptive-apps}"
 NAT_PUBLIC_IP_NAME="${NAT_PUBLIC_IP_NAME:-pip-adaptive-apps-nat}"
 K3S_KUBECONFIG="${K3S_KUBECONFIG:-$HOME/.kube/adaptive-apps-k3s.yaml}"
@@ -545,6 +545,12 @@ ensure_k3s_outbound() {
     --name "$K3S_SUBNET_NAME" \
     --query "natGateway.id" \
     --output tsv 2>/dev/null || true)"
+  current_default_outbound="$(az network vnet subnet show \
+    --resource-group "$RESOURCE_GROUP" \
+    --vnet-name "$VNET_NAME" \
+    --name "$K3S_SUBNET_NAME" \
+    --query "defaultOutboundAccess" \
+    --output tsv 2>/dev/null || true)"
 
   if [[ "${K3S_ENABLE_NAT_GATEWAY,,}" == "true" ]]; then
     if [[ -z "$current_nat" ]]; then
@@ -577,19 +583,25 @@ ensure_k3s_outbound() {
         --nat-gateway "$NAT_GATEWAY_NAME" \
         --output none
     fi
+
+    # A nonprivate subnet can still receive a platform-assigned fallback outbound IP
+    # alongside the NAT gateway. Keeping it private makes the NAT public IP the only
+    # egress address. Removing an already-assigned fallback IP needs a VM restart.
+    if [[ "${current_default_outbound,,}" != "false" ]]; then
+      az network vnet subnet update \
+        --resource-group "$RESOURCE_GROUP" \
+        --vnet-name "$VNET_NAME" \
+        --name "$K3S_SUBNET_NAME" \
+        --default-outbound false \
+        --output none
+      [[ -z "$current_default_outbound" ]] || K3S_OUTBOUND_REOPENED=1
+    fi
     return 0
   fi
 
   if [[ -n "$current_nat" ]]; then
     return 0
   fi
-
-  current_default_outbound="$(az network vnet subnet show \
-    --resource-group "$RESOURCE_GROUP" \
-    --vnet-name "$VNET_NAME" \
-    --name "$K3S_SUBNET_NAME" \
-    --query "defaultOutboundAccess" \
-    --output tsv 2>/dev/null || true)"
 
   # An explicit false blocks the K3s installer. Reopening the subnet only takes effect
   # after the VM is deallocated and started again, which the caller handles.
@@ -630,7 +642,7 @@ fi
 K3S_OUTBOUND_REOPENED=0
 
 if [[ "${K3S_ENABLE_NAT_GATEWAY,,}" == "true" ]]; then
-  create_or_validate_subnet "$K3S_SUBNET_NAME" "$K3S_SUBNET_PREFIX"
+  create_or_validate_subnet "$K3S_SUBNET_NAME" "$K3S_SUBNET_PREFIX" false
 else
   create_or_validate_subnet "$K3S_SUBNET_NAME" "$K3S_SUBNET_PREFIX" true
 fi

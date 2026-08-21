@@ -58,8 +58,8 @@ While targeting AKS and workspace `ws-azure-prod`:
 
 1. Create or select a globally unique, lowercase Azure Container Registry.
 2. Authenticate to the registry.
-3. Publish `iac/recipes/sql-server.bicep` as version `1.0.0` under
-   `recipes/sql-server`.
+3. Publish `iac/recipes/sql-server.bicep` and the workshop-owned Azure and Kubernetes
+   PostgreSQL recipes as version `1.0.0`.
 4. Register it as the default recipe for `Radius.Resources/sqlDatabases` in
    `env-azure-prod`.
 5. Verify that the registration refers to the expected OCI artifact.
@@ -76,8 +76,10 @@ Deploy `iac/aks-env.bicep` as environment-as-code for:
 - Environment `env-azure-prod`
 - Kubernetes namespace `env-azure-prod`
 
-Provide the Azure subscription, lab resource group, managed Istio revision, and custom
-SQL recipe path as parameters.
+Provide the Azure subscription, lab resource group, managed Istio revision, custom SQL
+recipe path, pinned Azure PostgreSQL recipe path, and every exact static AKS egress IP as
+parameters. Reject unsupported outbound configurations rather than using broad firewall
+rules.
 
 The resulting mappings should include Azure-backed PostgreSQL, MQTT, workload
 identity, and AI implementations; in-cluster identity, governance, and guardrail
@@ -93,7 +95,7 @@ Switch both the Kubernetes context and Radius workspace to K3s, then deploy
 - Environment `env-local-prod`
 - Kubernetes namespace `env-local-prod`
 
-The Local mappings should use in-cluster implementations for PostgreSQL, MQTT,
+The Local mappings should use the pinned workshop PostgreSQL recipe and in-cluster implementations for MQTT,
 identity, workload identity, AI, governance, and agent guardrails.
 
 Registering an AI recipe does not deploy a model. GPU capacity is needed only when the
@@ -114,6 +116,9 @@ Prepare a comparison that answers:
 ## Success criteria
 
 - The custom SQL recipe is published to ACR at version `1.0.0`.
+- Both corrected PostgreSQL recipes are published to ACR at version `1.0.0` and
+  registered without mutable `latest` references.
+- Azure PostgreSQL permits only the exact static AKS egress IPs.
 - The recipe is registered as the default `Radius.Resources/sqlDatabases`
   implementation in `env-azure-prod`.
 - AKS has the expected Azure-backed and in-cluster recipe mappings.

@@ -7,6 +7,10 @@ extension kubernetes with {
 param namespace string = 'env-azure-prod'
 param environmentName string = namespace
 param recipeRegistry string = 'ghcr.io/microsoft/adaptive-apps/recipes'
+@description('Pinned workshop OCI path for the corrected Azure PostgreSQL recipe.')
+param postgresRecipeTemplatePath string
+@description('Comma-separated static AKS public egress IP addresses allowed by PostgreSQL.')
+param aksEgressIps string
 param sqlDatabasesRecipeTemplatePath string = ''
 param istioRevision string
 param azureSubscriptionId string
@@ -25,7 +29,10 @@ var baseRecipes = {
   'Radius.Resources/postgreSqlDatabases': {
     default: {
       templateKind: 'bicep'
-      templatePath: '${recipeRegistry}/postgres-azure-flex:latest'
+      templatePath: postgresRecipeTemplatePath
+      parameters: {
+        aksEgressIps: aksEgressIps
+      }
     }
   }
   'Radius.Resources/mqttBrokers': {

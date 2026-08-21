@@ -143,6 +143,11 @@ resource backend 'Applications.Core/containers@2023-10-01-preview' = {
           containerPort: 8080
         }
       }
+      readinessProbe: {
+        kind: 'httpGet'
+        path: '/api/accounts'
+        containerPort: 8080
+      }
       env: {
         ASPNETCORE_URLS: {
           value: 'http://+:8080'

@@ -78,8 +78,10 @@ Restore the Bastion tunnel if needed, then explicitly select:
 Verify that the generated Bicep extension from Challenge 03 is available and that the
 required PostgreSQL, MQTT, and workload-identity recipes are registered.
 
-Deploy `iac/app.bicep`, inspect the graph and resources, check Kubernetes workload
-health, and expose the frontend through the active K3s Radius control plane.
+Deploy `iac/app.bicep`, wait for recipe-owned schema initialization, prove the four
+tables and single `Demo Account` seed through safe metadata checks, inspect the graph and
+resources, check backend database access, and expose the frontend through the active K3s
+Radius control plane.
 
 ### Task 3: Prove the AKS deployment
 
@@ -93,7 +95,8 @@ Stop the K3s frontend exposure before switching targets. Explicitly select:
 Verify the Azure credential registration from Challenge 02 and the required recipe
 mappings from Challenge 04. Deploy the same `iac/app.bicep` file with the same image
 inputs, then inspect the graph, Kubernetes resources, Azure backing resources, and
-frontend exposure.
+frontend exposure. Repeat the same schema, seed, and backend database-access checks and
+confirm the initializer requires TLS.
 
 ### Task 4: Compare evidence and ownership
 
@@ -114,6 +117,8 @@ Capture a side-by-side comparison that shows:
 - Both Radius control planes show an `adaptive-apps` graph with frontend, backend,
   PostgreSQL, MQTT, and workload-identity resources.
 - The backing implementations differ according to each environment's recipes.
+- Both implementations contain `accounts`, `orders`, `trades`, and `positions`, exactly
+  one `Demo Account`, and a backend that is Ready only after `/api/accounts` succeeds.
 - The frontend can be exposed through each active control plane, one at a time.
 - No password or cluster credential is committed or captured in evidence.
 - The team can explain why deployment portability is proven even though Azure MQTT

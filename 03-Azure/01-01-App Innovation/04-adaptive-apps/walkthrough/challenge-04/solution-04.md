@@ -179,8 +179,19 @@ az acr show \
   az acr create \
     --resource-group "$RESOURCE_GROUP" \
     --name "$ACR_NAME" \
-    --sku Basic
+    --sku Standard
+
+az acr update \
+  --resource-group "$RESOURCE_GROUP" \
+  --name "$ACR_NAME" \
+  --sku Standard \
+  --anonymous-pull-enabled true
 ```
+
+Anonymous pull is limited to the workshop's non-secret compiled recipe modules so both
+independent Radius control planes can resolve the same pinned artifacts. Publishing still
+requires an authenticated short-lived token. Database credentials are never stored in
+ACR.
 
 Authenticate with Docker:
 
@@ -208,15 +219,41 @@ cat >"${DOCKER_CONFIG}/config.json" <<EOF
 EOF
 ```
 
-Publish the recipe:
+Publish the teaching recipe and both workshop-owned PostgreSQL recipes. The PostgreSQL
+recipes compile the same `iac/recipes/trading-schema.sql` into each implementation and
+use immutable workshop tags rather than the external `latest` recipes.
 
 ```bash
 rad bicep publish \
   --file iac/recipes/sql-server.bicep \
   --target "br:${ACR_NAME}.azurecr.io/recipes/sql-server:1.0.0"
+
+rad bicep publish \
+  --file iac/recipes/postgres-azure-flex.bicep \
+  --target "br:${ACR_NAME}.azurecr.io/recipes/postgres-azure-flex:1.0.0"
+
+rad bicep publish \
+  --file iac/recipes/postgres-kubernetes.bicep \
+  --target "br:${ACR_NAME}.azurecr.io/recipes/postgres-kubernetes:1.0.0"
 ```
 
-Register it:
+**PowerShell 7:**
+
+```powershell
+rad bicep publish `
+    --file iac/recipes/sql-server.bicep `
+    --target "br:$env:ACR_NAME.azurecr.io/recipes/sql-server:1.0.0"
+
+rad bicep publish `
+    --file iac/recipes/postgres-azure-flex.bicep `
+    --target "br:$env:ACR_NAME.azurecr.io/recipes/postgres-azure-flex:1.0.0"
+
+rad bicep publish `
+    --file iac/recipes/postgres-kubernetes.bicep `
+    --target "br:$env:ACR_NAME.azurecr.io/recipes/postgres-kubernetes:1.0.0"
+```
+
+Register the Azure SQL teaching recipe:
 
 ```bash
 rad recipe register default \
@@ -235,13 +272,60 @@ rad recipe list --environment env-azure-prod
 ## Manual tutorial, Stage 3: Register the complete AKS recipe set
 
 The AKS environment definition registers Azure-backed implementations and the custom
-SQL recipe:
+SQL recipe. PostgreSQL public access is restricted to the cluster's exact effective
+outbound IPs. The commands reject unsupported outbound types, public IP prefixes, and
+non-static IP resources rather than widening the database firewall.
 
 ```bash
 export ISTIO_REVISION="$(kubectl get deployment \
   --namespace aks-istio-system \
   --selector app=istiod \
   --output jsonpath='{.items[0].metadata.labels.istio\.io/rev}')"
+
+OUTBOUND_TYPE="$(az aks show \
+  --resource-group "$RESOURCE_GROUP" \
+  --name aks-adaptive-apps \
+  --query networkProfile.outboundType \
+  --output tsv)"
+case "$OUTBOUND_TYPE" in
+  loadBalancer)
+    OUTBOUND_QUERY='networkProfile.loadBalancerProfile.effectiveOutboundIPs[].id'
+    ;;
+  managedNATGateway|userAssignedNATGateway)
+    OUTBOUND_QUERY='networkProfile.natGatewayProfile.effectiveOutboundIPs[].id'
+    ;;
+  *)
+    echo "Unsupported AKS outbound type: $OUTBOUND_TYPE" >&2
+    exit 1
+    ;;
+esac
+
+mapfile -t OUTBOUND_IDS < <(az aks show \
+  --resource-group "$RESOURCE_GROUP" \
+  --name aks-adaptive-apps \
+  --query "$OUTBOUND_QUERY" \
+  --output tsv)
+((${#OUTBOUND_IDS[@]} > 0)) || {
+  echo "AKS has no effective outbound public IPs." >&2
+  exit 1
+}
+
+AKS_EGRESS_IPS=""
+for OUTBOUND_ID in "${OUTBOUND_IDS[@]}"; do
+  [[ "${OUTBOUND_ID,,}" == *"/providers/microsoft.network/publicipaddresses/"* ]] || {
+    echo "Only exact public IP resources are supported: $OUTBOUND_ID" >&2
+    exit 1
+  }
+  read -r IP ALLOCATION SKU < <(az network public-ip show \
+    --ids "$OUTBOUND_ID" \
+    --query "[ipAddress,publicIPAllocationMethod,sku.name]" \
+    --output tsv)
+  [[ "$ALLOCATION" == "Static" && "$SKU" == "Standard" && -n "$IP" ]] || {
+    echo "AKS egress IP must be Standard and static: $OUTBOUND_ID" >&2
+    exit 1
+  }
+  AKS_EGRESS_IPS="${AKS_EGRESS_IPS:+${AKS_EGRESS_IPS},}${IP}"
+done
 
 rad deploy iac/aks-env.bicep \
   --workspace ws-azure-prod \
@@ -252,7 +336,62 @@ rad deploy iac/aks-env.bicep \
   --parameters azureSubscriptionId="$AZURE_SUBSCRIPTION" \
   --parameters azureResourceGroup="$RESOURCE_GROUP" \
   --parameters istioRevision="$ISTIO_REVISION" \
+  --parameters postgresRecipeTemplatePath="${ACR_NAME}.azurecr.io/recipes/postgres-azure-flex:1.0.0" \
+  --parameters aksEgressIps="$AKS_EGRESS_IPS" \
   --parameters sqlDatabasesRecipeTemplatePath="${ACR_NAME}.azurecr.io/recipes/sql-server:1.0.0"
+```
+
+**PowerShell 7:**
+
+```powershell
+$IstioRevision = kubectl get deployment `
+    --namespace aks-istio-system `
+    --selector app=istiod `
+    --output jsonpath='{.items[0].metadata.labels.istio\.io/rev}'
+$Cluster = az aks show `
+    --resource-group $env:RESOURCE_GROUP `
+    --name aks-adaptive-apps | ConvertFrom-Json
+
+switch ($Cluster.networkProfile.outboundType) {
+    "loadBalancer" {
+        $OutboundIds = @($Cluster.networkProfile.loadBalancerProfile.effectiveOutboundIPs.id)
+    }
+    { $_ -in "managedNATGateway", "userAssignedNATGateway" } {
+        $OutboundIds = @($Cluster.networkProfile.natGatewayProfile.effectiveOutboundIPs.id)
+    }
+    default {
+        throw "Unsupported AKS outbound type: $($Cluster.networkProfile.outboundType)"
+    }
+}
+if ($OutboundIds.Count -eq 0) {
+    throw "AKS has no effective outbound public IPs."
+}
+
+$EgressIps = foreach ($OutboundId in $OutboundIds) {
+    if ($OutboundId -notmatch "/providers/Microsoft.Network/publicIPAddresses/") {
+        throw "Only exact public IP resources are supported: $OutboundId"
+    }
+    $PublicIp = az network public-ip show --ids $OutboundId | ConvertFrom-Json
+    if ($PublicIp.publicIPAllocationMethod -ne "Static" -or
+        $PublicIp.sku.name -ne "Standard" -or
+        -not $PublicIp.ipAddress) {
+        throw "AKS egress IP must be Standard and static: $OutboundId"
+    }
+    $PublicIp.ipAddress
+}
+
+rad deploy iac/aks-env.bicep `
+    --workspace ws-azure-prod `
+    --group rg-trading `
+    --environment env-azure-prod `
+    --parameters environmentName=env-azure-prod `
+    --parameters namespace=env-azure-prod `
+    --parameters azureSubscriptionId=$env:AZURE_SUBSCRIPTION `
+    --parameters azureResourceGroup=$env:RESOURCE_GROUP `
+    --parameters istioRevision=$IstioRevision `
+    --parameters "postgresRecipeTemplatePath=$env:ACR_NAME.azurecr.io/recipes/postgres-azure-flex:1.0.0" `
+    --parameters "aksEgressIps=$($EgressIps -join ',')" `
+    --parameters "sqlDatabasesRecipeTemplatePath=$env:ACR_NAME.azurecr.io/recipes/sql-server:1.0.0"
 ```
 
 | Resource type | AKS/Azure backend |
@@ -288,7 +427,20 @@ rad deploy iac/local-env.bicep \
   --group rg-trading \
   --environment env-local-prod \
   --parameters environmentName=env-local-prod \
-  --parameters namespace=env-local-prod
+  --parameters namespace=env-local-prod \
+  --parameters postgresRecipeTemplatePath="${ACR_NAME}.azurecr.io/recipes/postgres-kubernetes:1.0.0"
+```
+
+**PowerShell 7:**
+
+```powershell
+rad deploy iac/local-env.bicep `
+    --workspace ws-local-prod `
+    --group rg-trading `
+    --environment env-local-prod `
+    --parameters environmentName=env-local-prod `
+    --parameters namespace=env-local-prod `
+    --parameters "postgresRecipeTemplatePath=$env:ACR_NAME.azurecr.io/recipes/postgres-kubernetes:1.0.0"
 ```
 
 | Resource type | K3s/local backend |
@@ -305,6 +457,23 @@ Registering the Kaito recipe does not deploy a model. A GPU-enabled platform is
 required only when that recipe is exercised in the AI challenge.
 
 ## Validate
+
+Before connecting to either cluster, run the automated semantic parity and security
+assertions. They prove both recipes embed the same SQL source, the seed has an explicit
+idempotency guard, Azure initialization requires TLS, firewall ranges are not broad, and
+the corrected recipe registrations are not mutable `latest` references.
+
+**Bash:**
+
+```bash
+bash resources/validate-postgres-recipes.sh
+```
+
+**PowerShell 7:**
+
+```powershell
+bash resources/validate-postgres-recipes.sh
+```
 
 AKS:
 
@@ -358,7 +527,37 @@ bash resources/configure-recipes.sh k3s
 ```
 
 The script creates or reuses ACR, publishes the custom SQL recipe for AKS, deploys the
-appropriate environment definition, and verifies the registered recipes.
+two corrected PostgreSQL recipes plus the custom SQL recipe, deploys the appropriate
+environment definition, and verifies the registered recipes. `k3s` also needs
+`AZURE_SUBSCRIPTION`, `RESOURCE_GROUP`, and `ACR_NAME` because it republishes the pinned
+workshop recipe before registration.
+
+## Upgrade an existing workshop
+
+Existing participants must republish and re-register before redeploying Challenge 05.
+Do not keep the old external PostgreSQL `latest` registration.
+
+**Bash:**
+
+```bash
+export AZURE_SUBSCRIPTION="<subscription-id>"
+export RESOURCE_GROUP="rg-adaptive-apps"
+export ACR_NAME="<workshop-acr-name>"
+bash resources/configure-recipes.sh all
+```
+
+**PowerShell 7:**
+
+```powershell
+$env:AZURE_SUBSCRIPTION = "<subscription-id>"
+$env:RESOURCE_GROUP = "rg-adaptive-apps"
+$env:ACR_NAME = "<workshop-acr-name>"
+bash resources/configure-recipes.sh all
+```
+
+Then redeploy the unchanged `iac/app.bicep` to `env-local-prod` and `env-azure-prod` in
+Challenge 05. Recipe initialization is idempotent, so existing tables remain and the
+`Demo Account` seed is inserted only when no account with that name exists.
 
 > [!IMPORTANT]
 > Run Challenge 03 first, on the same platform. `iac/aks-env.bicep` and

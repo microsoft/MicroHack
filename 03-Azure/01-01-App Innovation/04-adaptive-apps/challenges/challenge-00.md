@@ -238,7 +238,9 @@ az account show --output table
 
 > [!IMPORTANT]
 > The configuration does not mount the host Docker socket. Challenge 04 supports
-> token-based ACR authentication when Docker is unavailable.
+> token-based ACR authentication when Docker is unavailable. It creates or upgrades a
+> Standard ACR and enables anonymous pull only for the non-secret compiled recipe
+> artifacts needed by both Radius control planes.
 
 #### Option B: Install tools on the host
 

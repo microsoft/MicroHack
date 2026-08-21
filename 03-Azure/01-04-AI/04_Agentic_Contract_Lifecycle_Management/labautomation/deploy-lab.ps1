@@ -108,6 +108,27 @@ if ($AllowedEntraUserIds.Count -eq 0) {
     Write-Host "[WARN]  -AllowedEntraUserIds <entraObjectId> (comma-separate ids for a team lab)."
 }
 
+# --- Resource providers -----------------------------------------------------
+# Challenge 5 publishes the Foundry agent to Teams / M365 Copilot, which auto-creates an
+# Azure Bot — that needs the 'Microsoft.BotService' resource provider registered on the
+# SUBSCRIPTION. The platform pre-registers Microsoft.App / Microsoft.OperationalInsights but
+# NOT this one, and in a 'resourcegroup' lab the participant only holds RG-Owner and cannot
+# register it themselves (registration is a subscription-scope action). Register it here,
+# best-effort: it is idempotent and subscription-wide, so one lab job covers every lab in the
+# subscription and it is ready long before teams reach Challenge 5. If the provisioning
+# identity lacks subscription rights this is a harmless [WARN] and a subscription Owner must
+# run 'az provider register --namespace Microsoft.BotService' once.
+try {
+    Write-Host "[INFO]  Ensuring resource provider 'Microsoft.BotService' is registered (Challenge 5 Teams publish)..."
+    Register-AzResourceProvider -ProviderNamespace 'Microsoft.BotService' -ErrorAction Stop | Out-Null
+    Write-Host "[OK]    'Microsoft.BotService' registration ensured (async, idempotent, subscription-wide)."
+}
+catch {
+    Write-Host "[WARN]  Could not register 'Microsoft.BotService' (likely needs subscription rights): $_"
+    Write-Host "[WARN]  A subscription Owner must run once: az provider register --namespace Microsoft.BotService --subscription $SubscriptionId"
+    Write-Host "[WARN]  Otherwise Challenge 5 'Publish to Teams' fails with MissingSubscriptionRegistration."
+}
+
 $deployOutputs          = $null
 $effectiveResourceGroup = $null
 $effectiveLocation      = $null

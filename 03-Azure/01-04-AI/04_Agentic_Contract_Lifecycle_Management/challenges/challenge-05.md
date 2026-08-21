@@ -59,8 +59,14 @@ In the **[Foundry portal](https://ai.azure.com)**, open the **`clm-contract-agen
 Open the agent and select **Publish** (top of the page) → **Publish to Teams and Microsoft 365
 Copilot** → **Continue**. This provisions an **Azure Bot Service** behind the scenes — no bot code.
 
-> First time only: `az provider register --namespace Microsoft.BotService` (so the portal can create
-> the bot). Leave the **Azure bot services** dropdown on *auto* — let Foundry provision a fresh,
+> **Provider registration:** publishing needs the `Microsoft.BotService` resource provider
+> registered on the **subscription**. The lab deploy (`labautomation/deploy-lab.ps1`) now does
+> this for you. If the dropdown still errors with **`MissingSubscriptionRegistration` /
+> `Microsoft.BotService`**, a **subscription Owner** registers it once — it's subscription-wide,
+> so it unblocks every lab: `az provider register --namespace Microsoft.BotService`. In an
+> RG-scoped lab you (RG-Owner) can't run this yourself — ask your coach / lab admin.
+>
+> Leave the **Azure bot services** dropdown on *auto* — let Foundry provision a fresh,
 > properly-wired bot. Re-publishing? **Delete any stale Azure Bot** from earlier attempts first, or
 > you'll hit an **App ID collision**.
 
@@ -128,6 +134,7 @@ same grounded, cited answers you saw in the terminal in Challenges 2 & 4.
 | Symptom | Fix |
 |---------|-----|
 | Publish option missing | Ensure `Microsoft.BotService` is registered and you have rights to create an Azure Bot. |
+| **`Azure bot services`** dropdown → **`MissingSubscriptionRegistration` / "subscription is not registered to use namespace 'Microsoft.BotService'"** (409) | The `Microsoft.BotService` provider isn't registered on the **subscription**. The lab deploy now registers it, but if it's still unregistered a **subscription Owner** runs it once (subscription-wide, unblocks all labs): `az provider register --namespace Microsoft.BotService`. In an RG-scoped lab you (RG-Owner) **can't** register it yourself — ask your coach / lab admin. Once it shows `Registered` (~1–2 min), reopen the publish dialog. |
 | Bot responds in Teams but not Copilot | Confirm the app is approved for M365 Copilot and the manifest scopes include it. |
 
 ## 🔗 How this fits

@@ -51,6 +51,83 @@ Confirm that your workshop team has:
 > because recipes can create role assignments. Use an isolated workshop subscription
 > or resource group rather than a production scope.
 
+Register the resource providers the MicroHack uses. A subscription that has never
+deployed these services silently fails later with provider or feature errors:
+
+```bash
+az account set --subscription "<subscription-id>"
+
+for provider in Microsoft.Network Microsoft.Compute Microsoft.ContainerService \
+  Microsoft.ContainerRegistry Microsoft.KeyVault Microsoft.Storage; do
+  az provider register --namespace "$provider" --wait
+done
+
+az provider list \
+  --query "[?namespace=='Microsoft.Network' || namespace=='Microsoft.Compute' || namespace=='Microsoft.ContainerService' || namespace=='Microsoft.ContainerRegistry'].{provider:namespace,state:registrationState}" \
+  --output table
+```
+
+Every provider must report `Registered`.
+
+Then confirm the subscription can actually create a public IP address, because
+Challenge 01 needs one for Azure Bastion:
+
+```bash
+az group create --name rg-adaptive-apps-preflight --location westeurope --output none
+az network public-ip create \
+  --resource-group rg-adaptive-apps-preflight \
+  --name pip-preflight \
+  --sku Standard \
+  --allocation-method Static \
+  --output none
+az group delete --name rg-adaptive-apps-preflight --yes --no-wait
+```
+
+If that fails with
+`SubscriptionNotRegisteredForFeature ... Microsoft.Network/AllowBringYourOwnPublicIpAddress`,
+the subscription's networking registration is incomplete. Repair it and retry:
+
+```bash
+az feature register --namespace Microsoft.Network --name AllowBringYourOwnPublicIpAddress
+az provider register --namespace Microsoft.Network --wait
+```
+
+### Task 1b: Check regional VM capacity
+
+Regions differ in which VM sizes they offer, and quota is granted per size family. List
+the four-vCPU sizes your subscription can actually use in the target region:
+
+```bash
+az vm list-skus \
+  --location westeurope \
+  --resource-type virtualMachines \
+  --query "[?length(restrictions[?type=='Location']) == \`0\`].name" \
+  --output tsv | grep -E '^Standard_D4(a|as|s|ds)?_v[345]$' | sort
+```
+
+A `Zone` restriction is not a problem, because the MicroHack deploys regionally rather
+than into a specific availability zone. A `Location` restriction means the size is
+unavailable to you in that region.
+
+Then confirm the family quota covers 12 vCPUs (two AKS nodes plus the K3s VM):
+
+```bash
+az vm list-usage --location westeurope --output table |
+  grep -E 'Total Regional vCPUs|Standard DSv5 Family'
+```
+
+`resources/prepare-aks.sh` and `resources/prepare-k3s-azure-vm.sh` perform this check
+themselves. Each script picks the first size that the region offers and, if allocation
+still fails because of capacity or quota, automatically retries the next size in
+`AKS_NODE_VM_SIZE_CANDIDATES` or `K3S_VM_SIZE_CANDIDATES`. Override either variable to
+supply your own ordered list:
+
+```bash
+export K3S_VM_SIZE_CANDIDATES="Standard_D4s_v5 Standard_D4s_v4 Standard_D4s_v3"
+```
+
+If no size in the region works, choose a different `AZURE_LOCATION`.
+
 ### Task 2: Choose a workstation setup
 
 The Adaptive Apps devcontainer is the recommended setup because it provides a
@@ -59,12 +136,69 @@ supported.
 
 #### Option A: Use the recommended devcontainer
 
-Host prerequisites:
+The devcontainer gives every participant the same tested Linux toolchain, so this is the
+recommended path. It needs a container runtime on the host. If you have never used
+containers before, work through A1 to A4 once; budget about 20 minutes.
 
-- Docker Desktop or another runtime compatible with VS Code Dev Containers
+##### A1. Windows only: enable WSL 2
+
+Windows runs Linux containers inside WSL 2. In an elevated PowerShell window:
+
+```powershell
+wsl --install
+wsl --set-default-version 2
+```
+
+Restart if prompted, then confirm that a distribution is installed and reports `2`:
+
+```powershell
+wsl --list --verbose
+```
+
+macOS and Linux hosts skip this step.
+
+##### A2. Install a container runtime
+
+Any of the following works with the Dev Containers extension. Choose one.
+
+| Runtime | When to choose it |
+| --- | --- |
+| [Docker Desktop](https://www.docker.com/products/docker-desktop/) | Simplest option. On Windows keep **Settings > General > Use the WSL 2 based engine** enabled. Docker Desktop requires a paid subscription for larger organizations, so check the [Docker Desktop license terms](https://docs.docker.com/subscription/desktop-license/) before using it for work. |
+| [Docker Engine](https://docs.docker.com/engine/install/ubuntu/) inside WSL 2 or Linux | No Docker Desktop subscription. Install Docker Engine in the WSL 2 distribution, add your user to the `docker` group, then open the repository through **WSL: Connect to WSL** in VS Code so the extension uses that engine. |
+| [Podman Desktop](https://podman-desktop.io/) or [Rancher Desktop](https://rancherdesktop.io/) | Organizations that standardize on a Docker Desktop alternative. Set the runtime as the active Docker-compatible endpoint. |
+
+Confirm the runtime responds before continuing. The command must print server details
+rather than a connection error:
+
+```bash
+docker info
+```
+
+##### A3. Install Visual Studio Code, the Dev Containers extension, and Git
+
 - [Visual Studio Code](https://code.visualstudio.com/)
-- The [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
-- On Windows, Docker Desktop configured with its WSL 2 backend
+- [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+  (`ms-vscode-remote.remote-containers`)
+- [Git](https://git-scm.com/downloads) on the host, because the repository is cloned
+  before the container starts
+
+##### A4. Size the runtime
+
+The container image, devcontainer features, and four small state volumes need roughly
+10 GB of free disk. Allow the runtime at least 4 GB of memory. On Docker Desktop these
+limits are under **Settings > Resources**.
+
+##### A5. Processor architecture
+
+Both `x86_64` and `arm64` workstations are supported, including Apple Silicon Macs and
+Windows on Arm devices. The devcontainer selects matching Linux builds of `kubectl`,
+Helm, the Radius CLI, `yq`, and Bicep automatically, so no extra configuration is
+needed. Do not force `--platform linux/amd64`: emulation is slower and is not required.
+
+The workstation architecture is independent of Azure. The AKS nodes and the K3s VM are
+always x64 Azure VM sizes even when the devcontainer runs on arm64.
+
+##### Start the container
 
 Clone the fork and check out this MicroHack branch:
 
@@ -80,12 +214,25 @@ In VS Code, run **Dev Containers: Reopen in Container** and select
 lives under the repository's root `.devcontainer` directory and opens
 `03-Azure/01-01-App Innovation/04-adaptive-apps` as the container workspace.
 
+The first build downloads the base image and every pinned tool, so it takes several
+minutes. The build is finished when the terminal prints
+`The container is ready. Sign in with 'az login' and select the lab subscription.`
+
 The container installs Azure CLI, its `bastion` extension, Bicep, `kubectl`, Helm 3,
 Radius CLI, PowerShell 7, Git, `jq`, `yq`, `curl`, SSH, and `tar`. These tools can run
 every command in Challenges 00-05.
 The container is only a workstation: AKS, the Linux VM, K3s, Radius control planes,
 portfolio workloads, and recipes are still created on the remote Azure and Kubernetes
 targets by the commands you run.
+
+Sign in to Azure from inside the container. If the container cannot open a browser, use
+the device-code flow:
+
+```bash
+az login --use-device-code
+az account set --subscription "<subscription-id>"
+az account show --output table
+```
 
 > [!IMPORTANT]
 > The configuration does not mount the host Docker socket. Challenge 04 supports

@@ -59,8 +59,8 @@ fi
 export PATH="$HOME/.local/bin:$PATH"
 
 configure_windows_worktree_shell() {
-  local readonly git_pointer="/workspaces/microhack/.git"
-  local readonly marker="# Adaptive Apps Windows worktree prompt"
+  local git_pointer="/workspaces/microhack/.git"
+  local marker="# Adaptive Apps Windows worktree prompt"
 
   if [[ ! -f "$git_pointer" ]] ||
     ! grep -Eq '^gitdir: [A-Za-z]:[/\\]' "$git_pointer"; then
@@ -128,7 +128,7 @@ install_radius() {
 install_yq() {
   local checksum
   local checksums
-  local readonly yq_asset="yq_linux_${ARCH}"
+  local yq_asset="yq_linux_${ARCH}"
 
   retry 3 curl --fail --location --silent --show-error \
     "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/${yq_asset}" \

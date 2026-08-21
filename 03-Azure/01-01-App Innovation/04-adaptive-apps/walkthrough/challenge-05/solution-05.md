@@ -6,8 +6,48 @@ Duration: 45-75 minutes
 
 ## Coach notes
 
-Challenge 04 established environment-specific recipes. Challenge 05 uses those recipes
-to prove the portability boundary:
+### How we arrived here
+
+1. **Challenge 01 prepared two Kubernetes targets.** `aks-adaptive-apps` is the
+   Azure-managed AKS target. `k3s-azure-vm` is the private K3s target used for the Local
+   platform and reached through the Azure Bastion API tunnel.
+2. **Challenge 02 installed two independent Radius control planes.** The local workspace
+   `ws-azure-prod` targets AKS and contains `env-azure-prod`; `ws-local-prod` targets K3s
+   and contains `env-local-prod`. Each control plane has its own `rg-trading` group.
+   Identical names do not imply shared state.
+3. **Challenge 03 established contracts and the shared platform baseline.** The `core`
+   capability portfolio installed identity, observability, and the applicable Istio
+   strict-mTLS baseline on each cluster. The challenge then registered the portable
+   `Radius.Resources/*` resource-type contracts separately in both Radius control planes
+   and generated the local `artifacts/types.tgz` Bicep extension. A contract describes
+   application-facing inputs and recipe-produced outputs; registering it does not create
+   PostgreSQL, Event Grid, or application containers.
+4. **Challenge 04 registered environment-specific recipes.** For the contracts exercised
+   here, the selected environment now determines these implementations:
+
+   | Portable contract | `env-azure-prod` on AKS/Azure | `env-local-prod` on K3s |
+   | --- | --- | --- |
+   | `Radius.Resources/postgreSqlDatabases` | Azure Database for PostgreSQL Flexible Server | In-cluster PostgreSQL |
+   | `Radius.Resources/mqttBrokers` | Azure Event Grid MQTT | In-cluster Eclipse Mosquitto |
+   | `Radius.Resources/workloadIdentities` | Azure/AKS workload identity mapping | Local Kubernetes mapping/no-op implementation |
+
+   Challenge 04 also prepared Keycloak, AI, governance, and agent-guardrail recipe
+   mappings for later challenges; the Challenge 05 core model does not exercise all of
+   them.
+
+   > [!IMPORTANT]
+   > The manually authored Azure SQL recipe in Challenge 04 is a teaching example for
+   > `Radius.Resources/sqlDatabases`. The Trading application in `iac/app.bicep` requests
+   > `Radius.Resources/postgreSqlDatabases`, so Radius uses the PostgreSQL recipes shown
+   > above rather than the custom Azure SQL recipe.
+
+5. **Challenge 05 deploys the Trading application for the first time.** The same
+   `iac/app.bicep` declares one `Applications.Core/applications` resource, the `backend`
+   and `frontend` containers, and PostgreSQL, MQTT, and workload-identity capability
+   requests in both environments. Radius resolves those requests through the recipes
+   registered on the selected environment.
+
+This handoff defines the portability boundary:
 
 ```text
 Application team                         Platform team
@@ -22,9 +62,12 @@ contracts. Local password authentication keeps the frontend usable. OIDC adaptat
 belongs to Challenge 06, service communication to Challenge 07, and AI to Challenge 08.
 Do not provision per-workload managed identities or AI services here.
 
-Azure Event Grid MQTT exposes a broker endpoint, but end-to-end MQTT requires topic
-spaces, permission bindings, and federated workload identities. A green Radius
-deployment proves model portability; it does not claim complete MQTT runtime parity.
+Deployment parity is not runtime parity. On AKS, recipe execution can create Azure
+Database for PostgreSQL Flexible Server and Event Grid resources; on K3s it creates
+in-cluster PostgreSQL and Mosquitto workloads. Event Grid MQTT still needs topic spaces,
+permission bindings, and federated workload identities for end-to-end messaging. That
+runtime work is deferred or discussed in later identity and communication challenges; a
+green Radius deployment proves model portability, not complete messaging parity.
 
 ## Target discipline
 

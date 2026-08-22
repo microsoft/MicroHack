@@ -3,13 +3,28 @@
   "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/microhack,type=bind,consistency=cached",
   "workspaceFolder": "/workspaces/microhack/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud",
+  "remoteUser": "vscode",
+  "postAttachCommand": "bash /workspaces/microhack/.devcontainer/welcome.sh",
+  "features": {
+    "ghcr.io/devcontainers/features/azure-cli:1": {},
+    "ghcr.io/devcontainers/features/rust:1": {
+      "version": "stable"
+    },
+    "ghcr.io/devcontainers/features/powershell:1": {}
+  },
+  "postCreateCommand": "bash /workspaces/microhack/.devcontainer/03-azure-01-03-infrastructure-01-sovereign-cloud/post-create.sh",
   "customizations": {
     "vscode": {
+      "extensions": [
+        "ms-azuretools.vscode-bicep",
+        "ms-kubernetes-tools.vscode-kubernetes-tools",
+        "rust-lang.rust-analyzer",
+        "tamasfe.even-better-toml",
+        "ms-vscode.powershell"
+      ],
       "settings": {
         "terminal.integrated.defaultProfile.linux": "bash"
       }
     }
-  },
-  "remoteUser": "vscode",
-  "postAttachCommand": "bash /workspaces/microhack/.devcontainer/welcome.sh"
+  }
 }

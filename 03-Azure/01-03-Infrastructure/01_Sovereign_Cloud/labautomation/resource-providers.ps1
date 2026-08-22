@@ -3,8 +3,8 @@
     Register required Azure resource providers for the Sovereign Cloud MicroHack.
 
 .DESCRIPTION
-    This script registers all required Azure resource providers needed for the
-    Sovereign Cloud MicroHack across all available subscriptions.
+    This script idempotently registers all Azure resource providers needed for
+    the Sovereign Cloud MicroHack in the current subscription.
 
     Required providers include:
     - Azure Arc and hybrid connectivity
@@ -14,7 +14,7 @@
     - Monitoring and policy
 
 .EXAMPLE
-    .\1-resource-providers.ps1
+    .\resource-providers.ps1
     Registers all required resource providers
 
 .NOTES
@@ -26,48 +26,18 @@
 #>
 
 [CmdletBinding()]
-param(
-)
-
-# Ensure required modules are available
-$requiredModules = @('Az.Accounts', 'Az.Resources')
-foreach ($module in $requiredModules) {
-    if (-not (Get-Module -ListAvailable -Name $module)) {
-        Write-Error "$module module is not installed. Please run: Install-Module -Name $module"
-        exit 1
-    }
-}
-
-# Import required modules
-Import-Module Az.Accounts, Az.Resources -ErrorAction Stop
+param()
 
 Write-Host "`n=== Resource Provider Registration Utility ===" -ForegroundColor Cyan
 Write-Host "This script will register all required resource providers for the Sovereign Cloud MicroHack."
 Write-Host ""
 
-# Check if user is logged in
-try {
-    $context = Get-AzContext
-    if (-not $context) {
-        Write-Host "No Azure context found. Please login..." -ForegroundColor Yellow
-        $context = Get-AzContext
-    } else {
-        Write-Host "Using Azure account: $($context.Account.Id)" -ForegroundColor Green
-    }
-} catch {
-    Write-Error "Failed to get Azure context. Please run Connect-AzAccount first."
-    exit 1
+$context = Get-AzContext -ErrorAction Stop
+if (-not $context.Subscription.Id) {
+    throw "The current Azure context does not contain a subscription."
 }
-
-# Get all subscriptions
-$subscriptions = Get-AzSubscription
-
-if ($subscriptions.Count -eq 0) {
-    Write-Error "No subscriptions found. Please ensure you have access to at least one subscription."
-    exit 1
-}
-
-Write-Host "Found $($subscriptions.Count) subscription(s)" -ForegroundColor Green
+$subscriptionId = $context.Subscription.Id
+Write-Host "Registering providers in subscription: $subscriptionId" -ForegroundColor Green
 
 # List of resource providers to register for Sovereign Cloud MicroHack
 $providers = @(
@@ -124,28 +94,23 @@ foreach ($provider in $providers) {
     Write-Host "  - $provider" -ForegroundColor Gray
 }
 
-# Register resource providers for current subscription
+# Register resource providers for the current subscription
+foreach ($provider in $providers) {
+    $existingProvider = Get-AzResourceProvider -ProviderNamespace $provider -ErrorAction Stop
 
-    foreach ($provider in $providers) {
-        $existingProvider = Get-AzResourceProvider -ProviderNamespace $provider -ErrorAction SilentlyContinue
-
-        if ($existingProvider.RegistrationState -eq 'Registered') {
-            Write-Host "  [REGISTERED] $provider" -ForegroundColor Green
-        } else {
-            Write-Host "  [REGISTERING] $provider..." -ForegroundColor Yellow
-            try {
-                Register-AzResourceProvider -ProviderNamespace $provider | Out-Null
-                Write-Host "    Registration initiated" -ForegroundColor Gray
-            } catch {
-                Write-Host "    Failed to register: $($_.Exception.Message)" -ForegroundColor Red
-            }
-        }
+    if ($existingProvider.RegistrationState -eq 'Registered') {
+        Write-Host "  [REGISTERED] $provider" -ForegroundColor Green
+        continue
     }
 
+    Write-Host "  [REGISTERING] $provider..." -ForegroundColor Yellow
+    Register-AzResourceProvider -ProviderNamespace $provider -ErrorAction Stop | Out-Null
+    Write-Host "    Registration initiated" -ForegroundColor Gray
+}
 
 Write-Host "`n" + ("=" * 80) -ForegroundColor Cyan
 Write-Host "SUMMARY" -ForegroundColor Cyan
 Write-Host ("=" * 80) -ForegroundColor Cyan
-Write-Host "Resource provider registration initiated for subscription: $($SubscriptionId)" -ForegroundColor Green
+Write-Host "Resource provider registration initiated for subscription: $subscriptionId" -ForegroundColor Green
 Write-Host "`nNote: Some providers may take a few minutes to fully register." -ForegroundColor Yellow
 Write-Host "You can check registration status with: Get-AzResourceProvider -ProviderNamespace <namespace>" -ForegroundColor Gray

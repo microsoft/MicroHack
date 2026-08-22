@@ -37,6 +37,7 @@ After completing this MicroHack you will:
 - Enforce sovereign cloud controls in Azure using native platform capabilities (Policy, RBAC, region restrictions).
 - Protect data through encryption at rest, in transit, and in use (CMK, TLS, ACC).
 - Operate a sovereign hybrid cloud environment by connecting local infrastructure using Azure Arc and Azure Local.
+- Deploy one adaptive application model across Azure-managed and self-managed Kubernetes environments using federated Radius control planes.
 
 ## MicroHack challenges
 
@@ -48,6 +49,7 @@ After completing this MicroHack you will:
 | 4         | Encryption in use with Azure Confidential Compute - VM | [Challenge](./challenges/challenge-04.md) | [Solution](./walkthrough/challenge-04/solution-04.md) | 90-120 min | Murali Rao Yelamanchili |
 | 5         | Encryption in use with Confidential VMs/Node Pools in Azure Kubernetes Service (AKS) | [Challenge](./challenges/challenge-05.md) | [Solution](./walkthrough/challenge-05/solution-05.md) | 90-120 min | Murali Rao Yelamanchili |
 | 6         | Operating Sovereign in a hybrid environment with Azure Local and Azure Arc | [Challenge](./challenges/challenge-06.md) | [Solution](./walkthrough/challenge-06/solution-06.md) | 60-90 min | Jan Egil Ring / Thomas Maurer |
+| 7         | Adaptive Apps across sovereign Azure and private-cloud environments with Radius | [Challenge](./challenges/challenge-07.md) | [Solution](./walkthrough/challenge-07/solution-07.md) | 60 min | Dylan de Jong / Jan Egil Ring / Wesley Backelant |
 
 ### General prerequisites
 
@@ -62,6 +64,7 @@ In order to use the MicroHack time most effectively, the following tasks should 
 2. Contributor or Owner permissions on your subscription or resource group
 3. Optional: Access to Azure Arc Jumpstart ArcBox & LocalBox for hybrid challenges
 4. [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli). **Hint:** Make sure to use the latest version available.
+5. Challenge 7: `kubectl`, `jq`, OpenSSL, the [Radius CLI](https://docs.radapp.io/getting-started/install/), and the Azure CLI `bastion` extension
 
 ### Cost estimates
 
@@ -70,8 +73,9 @@ The main cost driver for this MicroHack is virtual machines:
 - **ArcBox for ITPro** cost is approximately 7 USD per day. We recommend setting it up the week before the event, so for example 5 days before the event would result in a cost between 30-40 USD.
 - **LocalBox** cost is approximately 100-110 USD per day. We recommend setting it up the week before the event, so for example 5 days before the event would result in a cost between 5-600 USD.
 - Challenge 4 and 5 contains a Confidential Compute VM (Standard_DC2as_v5) which costs approximately 5 USD per day. These 2 VMs will run only for a few hours as they will be created by the students, so using 50 students as an example running the VMs for 8 hours would results in 2 VMs x 8 hours = 230 USD.
+- **Challenge 7** provisions two AKS nodes, one K3s VM, Azure Bastion Standard, and a NAT Gateway per participant. Budget approximately 30-40 USD per participant per day, depending on region and data transfer. Deploy it only for participants completing Challenge 7 and remove the resource group after the session.
 
-This would result in a total cost of 789 USD.
+This would result in a total cost of 789 USD, excluding the optional Challenge 7 environment.
 In addition, there would be some smaller costs for other services like Key Vault, so a rough estimate is 1000 USD for one Sovereign Cloud MicroHack if following the above example.
 An Azure Pricing Calculator estimate is available [here](https://azure.com/e/1a7aec76a3e049cba57cda6742025373).
 This estimate can be adjusted for fewer/more students, running the VMs shorter/longer and adding additional services if desired.

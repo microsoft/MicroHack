@@ -1,6 +1,6 @@
 # Walkthrough Challenge 6 - Operating a Sovereign Hybrid Cloud with Azure Arc & Azure Local
 
-[Previous Challenge Solution](../challenge-05/solution-05.md) - **[Home](../../Readme.md)**
+[Previous Challenge Solution](../challenge-05/solution-05.md) - **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-07/solution-07.md)
 
 **Estimated Duration:** 60-90 minutes
 

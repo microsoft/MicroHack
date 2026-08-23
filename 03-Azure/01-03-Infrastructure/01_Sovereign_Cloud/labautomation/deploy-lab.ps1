@@ -57,14 +57,15 @@ $effectiveLocation = $deploymentLocations[0]
 @{"HackboxCredential" = @{ name = "Resource Group Name"; value = $ResourceGroupName; note = "Your dedicated resource group (you have Owner)" }}
 
 # Provider registration is initiated once per subscription by shared-deploy-lab.ps1.
-# Registration is asynchronous, so verify the providers required by Challenge 7.
-$adaptiveAppsProviders = @(
+# Registration is asynchronous, so verify the providers required by the shared lab.
+$sovereignLabProviders = @(
+    'Microsoft.Attestation',
     'Microsoft.Compute',
     'Microsoft.ContainerService',
     'Microsoft.ManagedIdentity',
     'Microsoft.Network'
 )
-foreach($providerNamespace in $adaptiveAppsProviders) {
+foreach($providerNamespace in $sovereignLabProviders) {
     $registered = $false
     for($attempt = 1; $attempt -le 30; $attempt++) {
         Update-MhhToken | Out-Null
@@ -81,25 +82,27 @@ foreach($providerNamespace in $adaptiveAppsProviders) {
     }
 }
 
-# Deploy the Adaptive Apps topology first. The helper recreates the resource group
+# Deploy the shared Sovereign Cloud topology first. The helper recreates the resource group
 # on retries, so subscription and resource-group role assignments are applied after it.
 $nameSuffix = $stableHash.Substring(0, 8)
 $k3sAdminPassword = New-MhhStablePassword -Purpose 'adaptive-apps-k3s-admin' -Length 24
+$cvmAdminPassword = New-MhhStablePassword -Purpose 'sovereign-cvm-admin' -Length 24
 
-Write-Host "Deploying the Challenge 7 AKS and private K3s platforms..."
-$adaptiveAppsResult = Invoke-MhhDeploymentWithRegionFallback `
+Write-Host "Deploying the shared Sovereign Cloud platform for Challenges 4, 5, and 7..."
+$sovereignLabResult = Invoke-MhhDeploymentWithRegionFallback `
     -PreferredLocations      $deploymentLocations `
     -ResourceGroupName       $ResourceGroupName `
     -RgOwnerEntraObjectIds   $AllowedEntraUserIds `
-    -TemplateFile            (Join-Path $PSScriptRoot 'adaptive-apps.bicep') `
+    -TemplateFile            (Join-Path $PSScriptRoot 'sovereign-lab.bicep') `
     -TemplateParameterObject @{
         nameSuffix = $nameSuffix
         adminPassword = $k3sAdminPassword
+        cvmAdminPassword = $cvmAdminPassword
     } `
-    -DeploymentNamePrefix    'adaptive-apps' `
+    -DeploymentNamePrefix    'sovereign-lab' `
     -Tag                     @{
-        workload = 'sovereign-adaptive-apps'
-        challenge = '7'
+        workload = 'sovereign-lab'
+        challenges = '4,5,7'
     }
 
 # Assign the lab-specific subscription-scoped RBAC (Security Reader + Resource Policy
@@ -116,10 +119,15 @@ New-AzSubscriptionDeployment `
         resourceGroupName = $ResourceGroupName
     } | Out-Null
 
-@{"HackboxCredential" = @{ name = "Adaptive Apps Region"; value = $adaptiveAppsResult.LocationUsed; note = "Region selected after capacity checks" }}
-@{"HackboxCredential" = @{ name = "Adaptive Apps AKS Cluster"; value = $adaptiveAppsResult.Outputs.aksClusterName; note = "Azure execution environment" }}
-@{"HackboxCredential" = @{ name = "Adaptive Apps K3s VM"; value = $adaptiveAppsResult.Outputs.k3sVmName; note = "Private local/edge execution environment" }}
-@{"HackboxCredential" = @{ name = "Adaptive Apps Bastion"; value = $adaptiveAppsResult.Outputs.bastionName; note = "Use native-client tunneling to reach K3s" }}
-@{"HackboxCredential" = @{ name = "K3s VM Admin Username"; value = "azureuser"; note = $adaptiveAppsResult.Outputs.k3sVmName }}
-@{"HackboxCredential" = @{ name = "K3s VM Admin Password"; value = $k3sAdminPassword; note = $adaptiveAppsResult.Outputs.k3sVmName }}
-@{"HackboxCredential" = @{ name = "K3s NAT Egress IP"; value = $adaptiveAppsResult.Outputs.natEgressIp; note = "Deterministic outbound address" }}
+@{"HackboxCredential" = @{ name = "Sovereign Lab Region"; value = $sovereignLabResult.LocationUsed; note = "Region selected after capacity checks" }}
+@{"HackboxCredential" = @{ name = "Sovereign Lab AKS Cluster"; value = $sovereignLabResult.Outputs.aksClusterName; note = "Shared by Challenges 5 and 7" }}
+@{"HackboxCredential" = @{ name = "AKS Confidential Node Pool"; value = $sovereignLabResult.Outputs.confidentialNodePoolName; note = "Challenge 5" }}
+@{"HackboxCredential" = @{ name = "Confidential VM"; value = $sovereignLabResult.Outputs.confidentialVmName; note = "Challenge 4" }}
+@{"HackboxCredential" = @{ name = "Confidential VM Admin Username"; value = "azureuser"; note = $sovereignLabResult.Outputs.confidentialVmName }}
+@{"HackboxCredential" = @{ name = "Confidential VM Admin Password"; value = $cvmAdminPassword; note = $sovereignLabResult.Outputs.confidentialVmName }}
+@{"HackboxCredential" = @{ name = "Attestation Provider"; value = $sovereignLabResult.Outputs.attestationProviderName; note = $sovereignLabResult.Outputs.attestationProviderUri }}
+@{"HackboxCredential" = @{ name = "Sovereign Lab K3s VM"; value = $sovereignLabResult.Outputs.k3sVmName; note = "Private local/edge execution environment" }}
+@{"HackboxCredential" = @{ name = "Sovereign Lab Bastion"; value = $sovereignLabResult.Outputs.bastionName; note = "Shared private access path" }}
+@{"HackboxCredential" = @{ name = "K3s VM Admin Username"; value = "azureuser"; note = $sovereignLabResult.Outputs.k3sVmName }}
+@{"HackboxCredential" = @{ name = "K3s VM Admin Password"; value = $k3sAdminPassword; note = $sovereignLabResult.Outputs.k3sVmName }}
+@{"HackboxCredential" = @{ name = "K3s NAT Egress IP"; value = $sovereignLabResult.Outputs.natEgressIp; note = "Deterministic outbound address" }}

@@ -312,6 +312,7 @@ resource aks 'Microsoft.ContainerService/managedClusters@2024-10-01' = {
     }
     serviceMeshProfile: {
       mode: 'Istio'
+      istio: {}
     }
     agentPoolProfiles: [
       {

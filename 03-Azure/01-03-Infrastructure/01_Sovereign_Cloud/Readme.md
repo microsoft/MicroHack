@@ -72,15 +72,15 @@ The main cost driver for this MicroHack is virtual machines:
 
 - **ArcBox for ITPro** cost is approximately 7 USD per day. We recommend setting it up the week before the event, so for example 5 days before the event would result in a cost between 30-40 USD.
 - **LocalBox** cost is approximately 100-110 USD per day. We recommend setting it up the week before the event, so for example 5 days before the event would result in a cost between 5-600 USD.
-- Challenge 4 and 5 contains a Confidential Compute VM (Standard_DC2as_v5) which costs approximately 5 USD per day. These 2 VMs will run only for a few hours as they will be created by the students, so using 50 students as an example running the VMs for 8 hours would results in 2 VMs x 8 hours = 230 USD.
-- **Challenge 7** provisions two AKS nodes, one K3s VM, Azure Bastion Standard, and a NAT Gateway per participant. Budget approximately 30-40 USD per participant per day, depending on region and data transfer. Deploy it only for participants completing Challenge 7 and remove the resource group after the session.
+- **Challenges 4, 5, and 7** share one pre-provisioned participant platform: a two-node AKS system pool, one Confidential VM AKS node, one standalone Confidential VM, one K3s VM, Azure Bastion Standard, and a NAT Gateway. Budget approximately 45-55 USD per participant per day, depending on region and data transfer. The platform starts during lab deployment so participants can focus on validation rather than waiting for capacity-sensitive resources.
+- Plan subscription quotas for at least 12 general-purpose vCPUs and 4 DCasv5-family confidential vCPUs per participant. The default automation places no more than two participants in each subscription; validate regional quota before increasing that value.
 
-This would result in a total cost of 789 USD, excluding the optional Challenge 7 environment.
-In addition, there would be some smaller costs for other services like Key Vault, so a rough estimate is 1000 USD for one Sovereign Cloud MicroHack if following the above example.
+For a 50-participant event, the shared participant platforms cost approximately 2,250-2,750 USD per day while deployed, in addition to the optional ArcBox and LocalBox environments.
+There will also be smaller costs for services such as Key Vault, storage, and monitoring.
 An Azure Pricing Calculator estimate is available [here](https://azure.com/e/1a7aec76a3e049cba57cda6742025373).
 This estimate can be adjusted for fewer/more students, running the VMs shorter/longer and adding additional services if desired.
 
-If you plan to run this MicroHack in your own subscription on a limited budget, you may skip deploying the prerequisites for Challenge 6, this would leave you with a cost of less than 50 USD for one day as long as resources are deleted when finished with the challenges.
+If you plan to run this MicroHack in your own subscription on a limited budget, skip the optional Challenge 6 environments and remove the participant resource group immediately after finishing the event.
 
 ## Contributors
 

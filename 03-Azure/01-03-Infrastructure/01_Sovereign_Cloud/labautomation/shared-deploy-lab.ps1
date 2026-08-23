@@ -2,8 +2,8 @@
 .SYNOPSIS
 Prepares a subscription for Sovereign Cloud MicroHack labs.
 .DESCRIPTION
-Runs once per subscription before participant lab deployments, registers the
-required Azure resource providers, and submits the shared LocalBox deployment.
+Runs once per subscription before participant lab deployments and registers the
+required Azure resource providers. LocalBox deployment is temporarily disabled.
 #>
 param(
     [Parameter(Mandatory=$true)]

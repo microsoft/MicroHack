@@ -86,6 +86,34 @@ Choose the appropriate deployment script:
 Deployments can take 2-6 hours depending on the environment. Monitor progress in:
 - Azure Portal > Resource Groups > Deployments
 
+#### Hackathons console deployment behavior
+
+The Hackathons console runs `labautomation/shared-deploy-lab.ps1` once per
+subscription. The shared hook creates `rg-localbox-shared`, validates the
+LocalBox template, and submits the deployment asynchronously. Step 2 is
+considered successful when Azure accepts that deployment; it does not wait for
+the full LocalBox environment to finish provisioning.
+
+After Step 2 completes, a facilitator must verify the deployment manually:
+
+1. Open `rg-localbox-shared` in the Azure Portal and select **Deployments**.
+2. Confirm that the `localbox-*` deployment is progressing without a failed
+    operation.
+3. Confirm that the `LocalBox-Client` VM appears after approximately 15-20
+    minutes. Its presence confirms that the deployment has started, not that the
+    complete LocalBox environment is ready.
+4. Before signing in to the VM, use **Help > Reset password** on
+    `LocalBox-Client` to set a facilitator-known password for the `arcdemo`
+    account. The unattended shared deployment uses an automatically generated
+    password and does not publish it to participants.
+5. Continue monitoring the deployment and complete the storage, VM image,
+    logical network, and role-assignment checks below before participants start
+    Challenge 6. Full provisioning can take 4-6 hours.
+
+Re-running Step 2 does not submit another LocalBox deployment while an existing
+`localbox-*` deployment is active or has succeeded. If the existing deployment
+failed, correct the Azure deployment error before retrying Step 2.
+
 ### Step 4: Expand UserStorage Volumes
 
 > [!IMPORTANT]

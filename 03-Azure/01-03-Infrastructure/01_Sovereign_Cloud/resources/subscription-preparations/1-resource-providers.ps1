@@ -147,6 +147,52 @@ foreach ($subscription in $subscriptions) {
             }
         }
     }
+
+    $networkFeatureName = "AllowBringYourOwnPublicIpAddress"
+    $networkFeature = Get-AzProviderFeature `
+        -ProviderNamespace "Microsoft.Network" `
+        -FeatureName $networkFeatureName `
+        -ErrorAction Stop
+
+    if ($networkFeature.RegistrationState -ne 'Registered') {
+        Write-Host "  [REGISTERING] Microsoft.Network/$networkFeatureName..." -ForegroundColor Yellow
+        Register-AzProviderFeature `
+            -ProviderNamespace "Microsoft.Network" `
+            -FeatureName $networkFeatureName `
+            -ErrorAction Stop | Out-Null
+
+        for ($attempt = 1; $attempt -le 90; $attempt++) {
+            Start-Sleep -Seconds 10
+            $networkFeature = Get-AzProviderFeature `
+                -ProviderNamespace "Microsoft.Network" `
+                -FeatureName $networkFeatureName `
+                -ErrorAction Stop
+            if ($networkFeature.RegistrationState -eq 'Registered') {
+                break
+            }
+            Write-Host "    Waiting for feature registration ($attempt/90): $($networkFeature.RegistrationState)" -ForegroundColor Gray
+        }
+    }
+
+    if ($networkFeature.RegistrationState -ne 'Registered') {
+        throw "Provider feature Microsoft.Network/$networkFeatureName did not reach Registered state within 15 minutes (current state: $($networkFeature.RegistrationState))."
+    }
+
+    Write-Host "  [REGISTERED] Microsoft.Network/$networkFeatureName" -ForegroundColor Green
+    Register-AzResourceProvider -ProviderNamespace "Microsoft.Network" -ErrorAction Stop | Out-Null
+
+    for ($attempt = 1; $attempt -le 30; $attempt++) {
+        $networkProvider = Get-AzResourceProvider -ProviderNamespace "Microsoft.Network" -ErrorAction Stop
+        if ($networkProvider.RegistrationState -eq 'Registered') {
+            break
+        }
+        Write-Host "    Waiting for Microsoft.Network propagation ($attempt/30)..." -ForegroundColor Gray
+        Start-Sleep -Seconds 10
+    }
+
+    if ($networkProvider.RegistrationState -ne 'Registered') {
+        throw "Resource provider Microsoft.Network did not return to Registered state within 5 minutes."
+    }
 }
 
 Write-Host "`n" + ("=" * 80) -ForegroundColor Cyan

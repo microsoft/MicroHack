@@ -12,6 +12,11 @@
     },
     "ghcr.io/devcontainers/features/powershell:1": {}
   },
+  "overrideFeatureInstallOrder": [
+    "ghcr.io/devcontainers/features/azure-cli",
+    "ghcr.io/devcontainers/features/rust",
+    "ghcr.io/devcontainers/features/powershell"
+  ],
   "postCreateCommand": "bash /workspaces/microhack/.devcontainer/03-azure-01-03-infrastructure-01-sovereign-cloud/post-create.sh",
   "customizations": {
     "vscode": {

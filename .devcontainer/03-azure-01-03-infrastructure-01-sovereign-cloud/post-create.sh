@@ -41,6 +41,12 @@ if ! command -v jq >/dev/null 2>&1; then
   retry 3 sudo apt-get install -y jq
 fi
 
+# Node.js, npm, and npx
+if ! command -v npx >/dev/null 2>&1; then
+  retry 3 sudo apt-get update
+  retry 3 sudo apt-get install -y nodejs npm
+fi
+
 # Azure CLI (fallback when the devcontainer feature is unavailable)
 if ! command -v az >/dev/null 2>&1; then
   AZ_INSTALL_SCRIPT="$(mktemp)"
@@ -106,7 +112,7 @@ fi
 retry 3 az bicep install --target-platform "$BICEP_PLATFORM"
 
 echo "Installed tool versions:"
-for cmd in az kubectl helm rad bicep k3d rustc cargo jq yq pwsh; do
+for cmd in az kubectl helm rad bicep k3d node npm npx rustc cargo jq yq pwsh; do
   if [[ "$cmd" == "k3d" && "$K3D_SKIPPED" -eq 1 ]]; then
     echo "k3d: skipped (docker unavailable)"
     continue
@@ -136,7 +142,7 @@ for cmd in az kubectl helm rad bicep k3d rustc cargo jq yq pwsh; do
     k3d)
       k3d version 2>/dev/null | head -n 1 || true
       ;;
-    rustc|cargo|jq|yq|pwsh)
+    node|npm|npx|rustc|cargo|jq|yq|pwsh)
       "$cmd" --version 2>/dev/null | head -n 1 || true
       ;;
   esac

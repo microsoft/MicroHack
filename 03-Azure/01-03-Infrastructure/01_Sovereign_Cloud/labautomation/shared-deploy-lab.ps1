@@ -22,6 +22,10 @@ Write-Host "Preparing subscription $SubscriptionId for Sovereign Cloud labs..."
 if (-not $?) {
     throw "Resource provider registration failed for subscription $SubscriptionId."
 }
+<#
+
+The Sovereign Cloud shared deployment needs to resolve the tenant-specific object ID of the Microsoft.AzureStackHCI enterprise application (appId: 1412d89f-b8a8-4111-b4fd-e82905cbd85d).
+Disabled Localbox until this is resolved, as the deployment will fail with an InsufficientPermissions error when the service principal cannot be resolved.
 
 $localBoxResourceGroupName = 'rg-localbox-shared'
 $localBoxLocation = if ($PreferredLocation.Count -gt 0) { $PreferredLocation[0] } else { 'swedencentral' }
@@ -83,3 +87,4 @@ foreach ($participantObjectId in $AllowedEntraUserIds) {
         note = 'Shared Challenge 6 environment; readiness is verified by the facilitator'
     }
 }
+#>

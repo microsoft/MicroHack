@@ -68,7 +68,7 @@ function New-LocalBoxPassword {
     $upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ'
     $lower = 'abcdefghijkmnopqrstuvwxyz'
     $digits = '23456789'
-    $special = '!@#%+=' 
+    $special = '!@#%+='
     $all = $upper + $lower + $digits + $special
     $characters = @(
         $upper[(Get-Random -Maximum $upper.Length)]
@@ -106,11 +106,68 @@ $requiredProviders = @(
     'Microsoft.Storage'
 )
 foreach ($providerNamespace in $requiredProviders) {
-    $state = & az provider show --subscription $SubscriptionId --namespace $providerNamespace --query registrationState --output tsv --only-show-errors
-    if ($LASTEXITCODE -ne 0 -or $state -ne 'Registered') {
-        throw "Resource provider $providerNamespace must be registered before deploying LocalBox (current state: $state)."
+    for ($attempt = 1; $attempt -le 60; $attempt++) {
+        $state = & az provider show --subscription $SubscriptionId --namespace $providerNamespace --query registrationState --output tsv --only-show-errors
+        if ($LASTEXITCODE -ne 0) {
+            throw "Unable to query resource provider $providerNamespace."
+        }
+        if ($state -eq 'Registered') {
+            break
+        }
+        Write-Host "Waiting for resource provider $providerNamespace ($attempt/60): $state" -ForegroundColor Gray
+        Start-Sleep -Seconds 10
+    }
+    if ($state -ne 'Registered') {
+        throw "Resource provider $providerNamespace did not reach Registered state within 10 minutes (current state: $state)."
     }
 }
+
+$networkFeatureName = 'AllowBringYourOwnPublicIpAddress'
+$networkFeatureState = & az feature show `
+    --subscription $SubscriptionId `
+    --namespace Microsoft.Network `
+    --name $networkFeatureName `
+    --query properties.state `
+    --output tsv `
+    --only-show-errors
+if ($LASTEXITCODE -ne 0) {
+    throw "Unable to query provider feature Microsoft.Network/$networkFeatureName."
+}
+
+if ($networkFeatureState -ne 'Registered') {
+    Write-Host "Registering provider feature Microsoft.Network/$networkFeatureName..." -ForegroundColor Yellow
+    Invoke-AzJson -Arguments @(
+        'feature', 'register', '--subscription', $SubscriptionId,
+        '--namespace', 'Microsoft.Network', '--name', $networkFeatureName
+    ) | Out-Null
+
+    for ($attempt = 1; $attempt -le 90; $attempt++) {
+        Start-Sleep -Seconds 10
+        $networkFeatureState = & az feature show `
+            --subscription $SubscriptionId `
+            --namespace Microsoft.Network `
+            --name $networkFeatureName `
+            --query properties.state `
+            --output tsv `
+            --only-show-errors
+        if ($LASTEXITCODE -ne 0) {
+            throw "Unable to query provider feature Microsoft.Network/$networkFeatureName."
+        }
+        if ($networkFeatureState -eq 'Registered') {
+            break
+        }
+        Write-Host "Waiting for feature registration ($attempt/90): $networkFeatureState" -ForegroundColor Gray
+    }
+}
+
+if ($networkFeatureState -ne 'Registered') {
+    throw "Provider feature Microsoft.Network/$networkFeatureName did not reach Registered state within 15 minutes (current state: $networkFeatureState)."
+}
+
+Invoke-AzJson -Arguments @(
+    'provider', 'register', '--subscription', $SubscriptionId,
+    '--namespace', 'Microsoft.Network', '--wait'
+) | Out-Null
 
 $availableVmSize = & az vm list-sizes `
     --subscription $SubscriptionId `

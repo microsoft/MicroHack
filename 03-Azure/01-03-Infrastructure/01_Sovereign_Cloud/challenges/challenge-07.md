@@ -14,7 +14,7 @@ The lab platform has already provisioned:
 
 | Environment | Platform | Access model |
 | --- | --- | --- |
-| Azure | Two-node AKS with OIDC issuer, workload identity, and managed Istio | Azure-managed Kubernetes API |
+| Azure | AKS with a two-node system pool, a shared Challenge 5 confidential pool, OIDC issuer, workload identity, and managed Istio | Azure-managed Kubernetes API |
 | Local/edge | Single-node K3s on a private Azure VM | Kubernetes API through an Azure Bastion localhost tunnel |
 
 > [!IMPORTANT]

@@ -18,11 +18,11 @@ Install these tools on your workstation or use a development container that incl
 Set the values shown on your lab dashboard:
 
 ```bash
-export AZURE_SUBSCRIPTION="{{subscriptionId}}"
-export RESOURCE_GROUP="{{resourceGroup}}"
-export AKS_CLUSTER="{{adaptiveAppsAksCluster}}"
-export K3S_VM="{{adaptiveAppsK3sVm}}"
-export BASTION_NAME="{{adaptiveAppsBastion}}"
+export AZURE_SUBSCRIPTION="<Subscription ID>"
+export RESOURCE_GROUP="<Resource Group Name>"
+export AKS_CLUSTER="<Sovereign Lab AKS Cluster>"
+export K3S_VM="<Sovereign Lab K3s VM>"
+export BASTION_NAME="<Sovereign Lab Bastion>"
 export K3S_KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
 export K3S_CONTEXT="k3s-azure-vm"
 
@@ -45,8 +45,8 @@ az aks get-credentials \
   --name "$AKS_CLUSTER" \
   --overwrite-existing
 
-kubectl config rename-context "$AKS_CLUSTER" aks-adaptive-apps 2>/dev/null || true
-kubectl config use-context aks-adaptive-apps
+kubectl config rename-context "$AKS_CLUSTER" aks-sovereign-lab 2>/dev/null || true
+kubectl config use-context aks-sovereign-lab
 kubectl get --raw='/readyz'
 kubectl wait --for=condition=Ready nodes --all --timeout=10m
 ```
@@ -179,11 +179,11 @@ kubectl wait --for=condition=Available deployments --all \
 
 ```bash
 unset KUBECONFIG
-kubectl config use-context aks-adaptive-apps
+kubectl config use-context aks-sovereign-lab
 
-rad install kubernetes --kubecontext aks-adaptive-apps
+rad install kubernetes --kubecontext aks-sovereign-lab
 rad workspace create kubernetes ws-azure-prod \
-  --context aks-adaptive-apps \
+  --context aks-sovereign-lab \
   --force
 rad workspace switch ws-azure-prod
 rad group show rg-trading >/dev/null 2>&1 || rad group create rg-trading
@@ -275,12 +275,12 @@ rad resource expose Applications.Core/containers web \
 
 ```bash
 unset KUBECONFIG
-kubectl config use-context aks-adaptive-apps
+kubectl config use-context aks-sovereign-lab
 rad workspace switch ws-azure-prod
 rad group switch rg-trading
 rad env switch env-azure-prod
 
-test "$(kubectl config current-context)" = 'aks-adaptive-apps'
+test "$(kubectl config current-context)" = 'aks-sovereign-lab'
 rad deploy sovereign-web.bicep \
   --workspace ws-azure-prod \
   --group rg-trading \

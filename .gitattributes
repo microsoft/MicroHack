@@ -1,0 +1,26 @@
+# Shell scripts execute inside Linux containers and must retain LF line endings.
+*.sh text eol=lf
+
+# Enforce consistent line endings across Windows + Linux environments.
+* text=auto eol=lf
+
+# Keep Windows command scripts with CRLF for compatibility.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Treat common binary formats as binary.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.tgz binary
+*.gz binary
+*.jar binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary

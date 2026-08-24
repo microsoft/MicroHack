@@ -73,7 +73,7 @@ The main cost driver for this MicroHack is virtual machines:
 - **ArcBox for ITPro** cost is approximately 7 USD per day. We recommend setting it up the week before the event, so for example 5 days before the event would result in a cost between 30-40 USD.
 - **LocalBox** cost is approximately 100-110 USD per day. We recommend setting it up the week before the event, so for example 5 days before the event would result in a cost between 5-600 USD.
 - **Challenges 4, 5, and 7** share one pre-provisioned participant platform: a two-node AKS system pool, one Confidential VM AKS node, one standalone Confidential VM, one K3s VM, Azure Bastion Standard, and a NAT Gateway. Budget approximately 45-55 USD per participant per day, depending on region and data transfer. The platform starts during lab deployment so participants can focus on validation rather than waiting for capacity-sensitive resources.
-- Plan subscription quotas for at least 12 general-purpose vCPUs and 4 DCasv5-family confidential vCPUs per participant. The default automation places no more than two participants in each subscription; validate regional quota before increasing that value.
+- Plan subscription quotas for at least 12 general-purpose vCPUs and 4 DCasv6-family confidential vCPUs per participant. The default automation places no more than two participants in each subscription; validate regional quota before increasing that value.
 
 For a 50-participant event, the shared participant platforms cost approximately 2,250-2,750 USD per day while deployed, in addition to the optional ArcBox and LocalBox environments.
 There will also be smaller costs for services such as Key Vault, storage, and monitoring.

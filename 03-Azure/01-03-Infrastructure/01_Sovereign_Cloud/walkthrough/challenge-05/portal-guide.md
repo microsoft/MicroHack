@@ -18,7 +18,7 @@ Please ensure that you successfully verified the [General prerequisites](../../R
 - Familiarity with Azure Portal navigation
 - Basic understanding of confidential computing concepts
 
-**Pre-Provisioned Infrastructure:** The shared lab automation has already deployed an AKS cluster with a standard system node pool and a Confidential VM user node pool named `cvmnodepool` (`Standard_DC2as_v5`). This cluster is shared with Challenge 7 — do not delete it. Retrieve the following values from your lab dashboard credentials:
+**Pre-Provisioned Infrastructure:** The shared lab automation has already deployed an AKS cluster with a standard system node pool and a Confidential VM user node pool named `cvmnodepool` (`Standard_DC2as_v6`). This cluster is shared with Challenge 7 — do not delete it. Retrieve the following values from your lab dashboard credentials:
 
 | Dashboard Credential | Description |
 |---|---|
@@ -147,12 +147,12 @@ The AKS deployment patterns and attestation verification workflows have been ada
    ![Screenshot placeholder: Node pool details page]
 
 3. Verify the following details:
-   - **Node size**: `Standard_DC2as_v5`
+   - **Node size**: `Standard_DC2as_v6`
    - **Mode**: `User`
    - **OS SKU**: `Azure Linux`
    - **Status**: `Running`
 
-   ![Screenshot placeholder: Node pool details showing DC2as_v5]
+   ![Screenshot placeholder: Node pool details showing DC2as_v6]
 
 ### Using Cloud Shell
 
@@ -193,7 +193,7 @@ kubectl get nodes -l kubernetes.azure.com/agentpool=cvmnodepool \
   -o custom-columns=NAME:.metadata.name,OS_SKU:.metadata.labels.kubernetes\\.azure\\.com/os-sku,VM_SIZE:.metadata.labels.node\\.kubernetes\\.io/instance-type
 ```
 
-The `OS_SKU` value of `AzureLinux` and the `VM_SIZE` of `Standard_DC2as_v5` confirm the node is running on AMD SEV-SNP confidential compute hardware.
+The `OS_SKU` value of `AzureLinux` and the `VM_SIZE` of `Standard_DC2as_v6` confirm the node is running on AMD SEV-SNP confidential compute hardware.
 
 ---
 
@@ -416,7 +416,7 @@ In this challenge, you successfully validated Azure Confidential Computing in AK
 
 ### Production Best Practices
 
-✅ **Node Pool Sizing** - Start with DC-series VMs (e.g., Standard_DC2as_v5) and scale based on workload requirements
+✅ **Node Pool Sizing** - Start with DC-series VMs (e.g., Standard_DC2as_v6) and scale based on workload requirements
 
 ✅ **Workload Isolation** - Use Kubernetes namespaces, network policies, and RBAC in addition to confidential computing
 

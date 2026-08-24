@@ -1,6 +1,9 @@
 # Exclude .vscode directory
 .vscode
 
+# Dev Containers feature lock file generated on the first container build.
+.devcontainer/**/devcontainer-lock.json
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

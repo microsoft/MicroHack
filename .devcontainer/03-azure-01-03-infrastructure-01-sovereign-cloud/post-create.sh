@@ -1,8 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
+trap 'echo "ERROR: Sovereign Cloud devcontainer setup failed at line ${LINENO}." >&2' ERR
+
+readonly KUBECTL_VERSION="v1.36.3"
+readonly HELM_VERSION="v3.21.4"
+readonly RADIUS_VERSION="v0.60.0"
+readonly YQ_VERSION="v4.53.4"
+readonly BICEP_VERSION="v0.46.1"
+readonly BASTION_EXTENSION_VERSION="1.4.3"
 
 retry() {
-  local attempts=$1
+  local attempts="$1"
   shift
   local count=1
   until "$@"; do
@@ -14,38 +22,67 @@ retry() {
   done
 }
 
-ARCH="$(uname -m)"
-case "$ARCH" in
+case "$(uname -m)" in
   x86_64)
-    BICEP_PLATFORM="linux-x64"
-    YQ_ARCH="amd64"
+    readonly ARCH="amd64"
+    readonly BICEP_PLATFORM="linux-x64"
     ;;
   aarch64|arm64)
-    BICEP_PLATFORM="linux-arm64"
-    YQ_ARCH="arm64"
+    readonly ARCH="arm64"
+    readonly BICEP_PLATFORM="linux-arm64"
     ;;
   *)
-    echo "Unsupported architecture: $ARCH"
+    echo "Unsupported architecture: $(uname -m)" >&2
     exit 1
     ;;
 esac
 
+for state_directory in "$HOME/.azure" "$HOME/.kube" "$HOME/.rad" "$HOME/.ssh"; do
+  sudo install -d -m 0700 -o "$(id -u)" -g "$(id -g)" "$state_directory"
+done
+
+sudo apt-get update
+sudo apt-get install --yes --no-install-recommends \
+  ca-certificates \
+  curl \
+  git \
+  jq \
+  nodejs \
+  npm \
+  openssh-client \
+  tar
+sudo rm -rf /var/lib/apt/lists/*
+
 mkdir -p "$HOME/.local/bin"
-if ! grep -q 'export PATH="$HOME/.local/bin:$PATH"' "$HOME/.bashrc"; then
-  echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.bashrc"
+if ! grep -Fqx 'export PATH="$HOME/.local/bin:$PATH"' "$HOME/.bashrc"; then
+  echo 'export PATH="$HOME/.local/bin:$PATH"' >>"$HOME/.bashrc"
 fi
 export PATH="$HOME/.local/bin:$PATH"
 
-if ! command -v jq >/dev/null 2>&1; then
-  retry 3 sudo apt-get update
-  retry 3 sudo apt-get install -y jq
-fi
+configure_windows_worktree_shell() {
+  local git_pointer="/workspaces/microhack/.git"
+  local marker="# Sovereign Cloud Windows worktree prompt"
 
-# Node.js, npm, and npx
-if ! command -v npx >/dev/null 2>&1; then
-  retry 3 sudo apt-get update
-  retry 3 sudo apt-get install -y nodejs npm
-fi
+  if [[ ! -f "$git_pointer" ]] ||
+    ! grep -Eq '^gitdir: [A-Za-z]:[/\\]' "$git_pointer"; then
+    return
+  fi
+
+  if ! grep -Fqx "$marker" "$HOME/.bashrc"; then
+    cat >>"$HOME/.bashrc" <<'EOF'
+
+# Sovereign Cloud Windows worktree prompt
+# The bound .git file points to Windows-only worktree metadata. Avoid probing it.
+unset PROMPT_COMMAND
+PS1='\u@\h:\w\$ '
+EOF
+  fi
+
+  echo "Windows Git worktree detected. Repository-aware Git commands are unavailable"
+  echo "inside this container; the MicroHack commands do not require them."
+}
+
+configure_windows_worktree_shell
 
 # Azure CLI (fallback when the devcontainer feature is unavailable)
 if ! command -v az >/dev/null 2>&1; then
@@ -56,40 +93,53 @@ if ! command -v az >/dev/null 2>&1; then
 fi
 
 # kubectl
-if ! command -v kubectl >/dev/null 2>&1; then
-  KUBECTL_VERSION="$(retry 3 curl -fsSL https://dl.k8s.io/release/stable.txt)"
-  retry 3 curl -fsSL "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/${YQ_ARCH}/kubectl" -o "$HOME/.local/bin/kubectl"
-  chmod +x "$HOME/.local/bin/kubectl"
-fi
+retry 3 curl --fail --location --silent --show-error \
+  "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/${ARCH}/kubectl" \
+  --output "$HOME/.local/bin/kubectl"
+KUBECTL_CHECKSUM="$(retry 3 curl --fail --location --silent --show-error \
+  "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/${ARCH}/kubectl.sha256")"
+printf '%s  %s\n' "$KUBECTL_CHECKSUM" "$HOME/.local/bin/kubectl" | sha256sum --check
+chmod 0755 "$HOME/.local/bin/kubectl"
 
 # Helm
-if ! command -v helm >/dev/null 2>&1; then
-  HELM_ARCH="$YQ_ARCH"
-  HELM_VERSION="$(curl -fsSL https://api.github.com/repos/helm/helm/releases/latest | jq -r .tag_name || true)"
-  if [[ -z "${HELM_VERSION}" || "${HELM_VERSION}" == "null" ]]; then
-    HELM_VERSION="v3.16.4"
-    echo "Helm latest lookup failed; falling back to ${HELM_VERSION}."
-  fi
-  TMP_DIR="$(mktemp -d)"
-  retry 3 curl -fsSL "https://get.helm.sh/helm-${HELM_VERSION}-linux-${HELM_ARCH}.tar.gz" -o "$TMP_DIR/helm.tgz"
-  tar -xzf "$TMP_DIR/helm.tgz" -C "$TMP_DIR"
-  install -m 0755 "$TMP_DIR/linux-${HELM_ARCH}/helm" "$HOME/.local/bin/helm"
-  rm -rf "$TMP_DIR"
-fi
+HELM_TEMPORARY_DIRECTORY="$(mktemp -d)"
+retry 3 curl --fail --location --silent --show-error \
+  "https://get.helm.sh/helm-${HELM_VERSION}-linux-${ARCH}.tar.gz" \
+  --output "$HELM_TEMPORARY_DIRECTORY/helm.tgz"
+HELM_CHECKSUM="$(retry 3 curl --fail --location --silent --show-error \
+  "https://get.helm.sh/helm-${HELM_VERSION}-linux-${ARCH}.tar.gz.sha256sum" |
+  awk '{ print $1 }')"
+printf '%s  %s\n' "$HELM_CHECKSUM" "$HELM_TEMPORARY_DIRECTORY/helm.tgz" |
+  sha256sum --check
+tar -xzf "$HELM_TEMPORARY_DIRECTORY/helm.tgz" -C "$HELM_TEMPORARY_DIRECTORY"
+install -m 0755 \
+  "$HELM_TEMPORARY_DIRECTORY/linux-${ARCH}/helm" \
+  "$HOME/.local/bin/helm"
+rm -rf "$HELM_TEMPORARY_DIRECTORY"
 
 # Radius CLI (rad)
-if ! command -v rad >/dev/null 2>&1; then
-  wget -q "https://raw.githubusercontent.com/radius-project/radius/main/deploy/install.sh" -O - | /bin/bash
-fi
-if [[ -x "$HOME/.rad/bin/rad" ]]; then
-  ln -sf "$HOME/.rad/bin/rad" "$HOME/.local/bin/rad"
-fi
+retry 3 curl --fail --location --silent --show-error \
+  "https://raw.githubusercontent.com/radius-project/radius/${RADIUS_VERSION}/deploy/install.sh" \
+  --output /tmp/install-radius.sh
+bash /tmp/install-radius.sh \
+  --version "$RADIUS_VERSION" \
+  --install-dir "$HOME/.local/bin"
+rm -f /tmp/install-radius.sh
 
 # yq for YAML processing used in scripting/tutorials
-if ! command -v yq >/dev/null 2>&1; then
-  retry 3 curl -fsSL "https://github.com/mikefarah/yq/releases/latest/download/yq_linux_${YQ_ARCH}" -o "$HOME/.local/bin/yq"
-  chmod +x "$HOME/.local/bin/yq"
-fi
+YQ_ASSET="yq_linux_${ARCH}"
+retry 3 curl --fail --location --silent --show-error \
+  "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/${YQ_ASSET}" \
+  --output "$HOME/.local/bin/yq"
+YQ_CHECKSUMS="$(retry 3 curl --fail --location --silent --show-error \
+  "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/checksums")"
+YQ_CHECKSUM="$(awk -v asset="$YQ_ASSET" '$1 == asset { print $19 }' <<<"$YQ_CHECKSUMS")"
+[[ -n "$YQ_CHECKSUM" ]] || {
+  echo "No SHA-256 checksum found for ${YQ_ASSET}." >&2
+  exit 1
+}
+printf '%s  %s\n' "$YQ_CHECKSUM" "$HOME/.local/bin/yq" | sha256sum --check
+chmod 0755 "$HOME/.local/bin/yq"
 
 # k3d for local k3s workflows (only when Docker is available)
 K3D_SKIPPED=0
@@ -103,16 +153,26 @@ else
 fi
 
 # Standalone Bicep CLI for authoring and PowerShell workflows
-if ! command -v bicep >/dev/null 2>&1; then
-  retry 3 curl -fsSL "https://github.com/Azure/bicep/releases/latest/download/bicep-${BICEP_PLATFORM}" -o "$HOME/.local/bin/bicep"
-  chmod +x "$HOME/.local/bin/bicep"
-fi
+retry 3 curl --fail --location --silent --show-error \
+  "https://github.com/Azure/bicep/releases/download/${BICEP_VERSION}/bicep-${BICEP_PLATFORM}" \
+  --output "$HOME/.local/bin/bicep"
+chmod 0755 "$HOME/.local/bin/bicep"
 
 # Azure CLI manages its own Bicep instance for az deployment commands.
-retry 3 az bicep install --target-platform "$BICEP_PLATFORM"
+retry 3 az extension add \
+  --name bastion \
+  --version "$BASTION_EXTENSION_VERSION" \
+  --upgrade \
+  --yes \
+  --allow-preview false \
+  --output none
+retry 3 az bicep install \
+  --version "$BICEP_VERSION" \
+  --target-platform "$BICEP_PLATFORM"
 
 echo "Installed tool versions:"
-for cmd in az kubectl helm rad bicep k3d node npm npx rustc cargo jq yq pwsh; do
+MISSING_TOOLING=0
+for cmd in az kubectl helm rad bicep k3d node npm npx rustc cargo git jq yq pwsh ssh tar; do
   if [[ "$cmd" == "k3d" && "$K3D_SKIPPED" -eq 1 ]]; then
     echo "k3d: skipped (docker unavailable)"
     continue
@@ -120,6 +180,7 @@ for cmd in az kubectl helm rad bicep k3d node npm npx rustc cargo jq yq pwsh; do
 
   if ! command -v "$cmd" >/dev/null 2>&1; then
     echo "$cmd: not found"
+    MISSING_TOOLING=1
     continue
   fi
 
@@ -147,3 +208,20 @@ for cmd in az kubectl helm rad bicep k3d node npm npx rustc cargo jq yq pwsh; do
       ;;
   esac
 done
+
+if ! az bicep version >/dev/null 2>&1; then
+  echo "Azure CLI Bicep: not found" >&2
+  MISSING_TOOLING=1
+fi
+
+if ! az network bastion tunnel --help >/dev/null 2>&1; then
+  echo "Azure CLI Bastion tunnel support: not found" >&2
+  MISSING_TOOLING=1
+else
+  az extension show --name bastion --query version -o tsv | sed 's/^/bastion extension: /'
+fi
+
+if [[ "$MISSING_TOOLING" -ne 0 ]]; then
+  echo "Devcontainer setup is incomplete. Rebuild the container or rerun post-create.sh." >&2
+  exit 1
+fi

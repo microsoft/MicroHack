@@ -1,23 +1,42 @@
 {
   "name": "Azure / Infra / Sovereign Cloud",
-  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/microhack,type=bind,consistency=cached",
   "workspaceFolder": "/workspaces/microhack/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud",
   "remoteUser": "vscode",
   "postAttachCommand": "bash /workspaces/microhack/.devcontainer/welcome.sh",
   "features": {
-    "ghcr.io/devcontainers/features/azure-cli:1": {},
+    "ghcr.io/devcontainers/features/azure-cli:1": {
+      "version": "2.89.1"
+    },
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": false,
+      "installOhMyZsh": false,
+      "upgradePackages": false
+    },
     "ghcr.io/devcontainers/features/rust:1": {
       "version": "stable"
     },
-    "ghcr.io/devcontainers/features/powershell:1": {}
+    "ghcr.io/devcontainers/features/powershell:2": {
+      "version": "stable"
+    }
   },
   "overrideFeatureInstallOrder": [
+    "ghcr.io/devcontainers/features/common-utils",
     "ghcr.io/devcontainers/features/azure-cli",
     "ghcr.io/devcontainers/features/rust",
     "ghcr.io/devcontainers/features/powershell"
   ],
+  "mounts": [
+    "source=sovereign-cloud-microhack-azure-${devcontainerId},target=/home/vscode/.azure,type=volume",
+    "source=sovereign-cloud-microhack-kube-${devcontainerId},target=/home/vscode/.kube,type=volume",
+    "source=sovereign-cloud-microhack-radius-${devcontainerId},target=/home/vscode/.rad,type=volume",
+    "source=sovereign-cloud-microhack-ssh-${devcontainerId},target=/home/vscode/.ssh,type=volume"
+  ],
   "postCreateCommand": "bash /workspaces/microhack/.devcontainer/03-azure-01-03-infrastructure-01-sovereign-cloud/post-create.sh",
+  "remoteEnv": {
+    "PATH": "${containerEnv:PATH}:/home/vscode/.local/bin"
+  },
   "customizations": {
     "vscode": {
       "extensions": [
@@ -25,7 +44,8 @@
         "ms-kubernetes-tools.vscode-kubernetes-tools",
         "rust-lang.rust-analyzer",
         "tamasfe.even-better-toml",
-        "ms-vscode.powershell"
+        "ms-vscode.powershell",
+        "timonwong.shellcheck"
       ],
       "settings": {
         "terminal.integrated.defaultProfile.linux": "bash"

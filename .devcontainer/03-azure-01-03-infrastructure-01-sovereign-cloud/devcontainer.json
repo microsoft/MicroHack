@@ -4,7 +4,7 @@
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/microhack,type=bind,consistency=cached",
   "workspaceFolder": "/workspaces/microhack/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud",
   "remoteUser": "vscode",
-  "postAttachCommand": "bash /workspaces/microhack/.devcontainer/welcome.sh",
+  "postAttachCommand": "sed 's/\\r$//' /workspaces/microhack/.devcontainer/welcome.sh | bash",
   "features": {
     "ghcr.io/devcontainers/features/azure-cli:1": {
       "version": "2.89.1"

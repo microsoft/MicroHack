@@ -104,6 +104,8 @@ Key points for integration:
     - [`Get-MhhStableHash`](#get-mhhstablehash)
     - [`Get-MhhLabUser`](#get-mhhlabuser)
     - [`Update-MhhToken`](#update-mhhtoken)
+    - [`Invoke-MhhSynchronized`](#invoke-mhhsynchronized)
+    - [`Set-MhhManagedIdentityRoleMember`](#set-mhhmanagedidentityrolemember)
     - [`Invoke-MhhTofuCommand`](#invoke-mhhtofucommand)
     - [`Remove-MhhTofuWorkspace`](#remove-mhhtofuworkspace)
     - [`Invoke-MhhDeploymentWithRegionFallback`](#invoke-mhhdeploymentwithregionfallback)
@@ -813,6 +815,78 @@ Update-MhhToken
 Returns `@{ Mode; Rotated; TokenLifetimeSeconds; RemainingSeconds; Refreshed; Skipped }`
 and **throws** if any attempted target fails, so you can't silently continue with
 dead credentials.
+
+### `Invoke-MhhSynchronized`
+
+Run a script block under a container-wide exclusive lock. Use it around short
+critical sections that mutate shared state and could otherwise race when
+participant deployments run in parallel, such as adding subnets to a shared
+VNet.
+
+```powershell
+Invoke-MhhSynchronized -Name 'shared-vnet' {
+    $vnet = Get-AzVirtualNetwork -Name $vnetName -ResourceGroupName $sharedRg
+    Add-AzVirtualNetworkSubnetConfig `
+        -VirtualNetwork $vnet `
+        -Name $subnetName `
+        -AddressPrefix $addressPrefix |
+        Set-AzVirtualNetwork
+}
+```
+
+| Parameter | Description |
+| --- | --- |
+| `ScriptBlock` (`scriptblock`, required, positional 0) | Critical section to run while holding the lock. Its output and exceptions pass through unchanged. |
+| `Name` (`string`, positional 1) | Case-insensitive lock name. Use 1-64 characters from `[A-Za-z0-9_-]`; Must start with a letter or number. Default `Default`. |
+| `TimeoutSeconds` (`int`, 1-86400) | Maximum time to wait for the lock before throwing. Default 900. |
+| `MaxSleepDelayMilliseconds` (`int`, 250-1000000) | Maximum random delay after releasing a lock, applied only when this call had to queue. Default 1000. |
+
+- **Locks are container-wide and keyed only by `Name`.** Calls using the same name serialize even if
+  they target different subscriptions, so give unrelated critical sections different names.
+- **Keep the script block short.** Every other job waiting for that name remains
+  blocked until the block finishes. The lock is released even if the block
+  throws, and a timeout includes details about the current lock holder.
+- **Closures work normally.** The block runs in the caller's scope, so it can use
+  local variables without `$using:`. Nested calls using the same name in the
+  same process are supported.
+
+### `Set-MhhManagedIdentityRoleMember`
+
+Grant an Entra ID directory role to the system-assigned managed identities of
+supported Azure resources. The helper collects all resource IDs from the
+parameter and pipeline, then processes them in one synchronized operation. It
+is safe to re-run: existing memberships return `AlreadyAssigned` rather than
+failing.
+
+Currently, the helper supports only **Azure SQL Managed Instances**
+(`Microsoft.Sql/managedInstances`) and only the **Directory Readers** role.
+Unsupported or invalid resource IDs are returned with status `Skipped` and
+produce a warning.
+
+```powershell
+# One SQL Managed Instance
+Set-MhhManagedIdentityRoleMember -ResourceId $sqlManagedInstance.Id -Role 'Directory Readers'
+
+# Every SQL Managed Instance in a resource group
+Get-AzSqlInstance -ResourceGroupName $ResourceGroupName |
+    Set-MhhManagedIdentityRoleMember -Role 'Directory Readers'
+```
+
+| Parameter | Description |
+| --- | --- |
+| `ResourceId` (`string[]`, required, positional 0) | Azure resource IDs whose system-assigned identities receive the role. Accepts pipeline input and the aliases `Id` and `ResourceIds`. Duplicate IDs are processed once. |
+| `Role` (`string[]`, positional 1) | Directory roles to grant. Only `Directory Readers` (or `Directory Reader`) is currently supported. Default `Directory Readers`. |
+| `TimeoutSeconds` (`int`, 60-3600) | Maximum time to wait for the container-wide directory-role lock. Default 900. |
+
+**Return value:** one result object per resource and role combination:
+
+| Field | Description |
+| --- | --- |
+| `resourceId` | Azure resource ID supplied to the helper. |
+| `principalId` | Resolved managed identity object ID, or `$null` when it could not be resolved. |
+| `displayName` | Azure resource / managed identity display name. |
+| `role` | Resolved directory role name. |
+| `status` | `Assigned`, `AlreadyAssigned`, `Skipped` or `Failed`. |
 
 ### `Invoke-MhhTofuCommand`
 

@@ -82,7 +82,25 @@ EOF
   echo "inside this container; the MicroHack commands do not require them."
 }
 
+configure_git_safe_directories() {
+  local safe_directory
+  local -a safe_directories=()
+
+  mapfile -t safe_directories < <(git config --global --get-all safe.directory 2>/dev/null || true)
+  git config --global --unset-all safe.directory 2>/dev/null || true
+
+  for safe_directory in "${safe_directories[@]}"; do
+    if [[ "$safe_directory" != "/workspaces/microhack" ]] &&
+      [[ "$safe_directory" == /* || "$safe_directory" == '~/'* || "$safe_directory" == '*' ]]; then
+      git config --global --add safe.directory "$safe_directory"
+    fi
+  done
+
+  git config --global --add safe.directory /workspaces/microhack
+}
+
 configure_windows_worktree_shell
+configure_git_safe_directories
 
 # Azure CLI (fallback when the devcontainer feature is unavailable)
 if ! command -v az >/dev/null 2>&1; then

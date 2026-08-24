@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-trap 'echo "ERROR: Sovereign Cloud devcontainer setup failed at line ${LINENO}." >&2' ERR
+trap 'status=$?; echo "ERROR: Sovereign Cloud devcontainer setup failed at line ${LINENO}: ${BASH_COMMAND} (exit ${status})." >&2' ERR
 
 readonly KUBECTL_VERSION="v1.36.3"
 readonly HELM_VERSION="v3.21.4"
@@ -141,17 +141,6 @@ YQ_CHECKSUM="$(awk -v asset="$YQ_ASSET" '$1 == asset { print $19 }' <<<"$YQ_CHEC
 printf '%s  %s\n' "$YQ_CHECKSUM" "$HOME/.local/bin/yq" | sha256sum --check
 chmod 0755 "$HOME/.local/bin/yq"
 
-# k3d for local k3s workflows (only when Docker is available)
-K3D_SKIPPED=0
-if command -v docker >/dev/null 2>&1; then
-  if ! command -v k3d >/dev/null 2>&1; then
-    curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
-  fi
-else
-  K3D_SKIPPED=1
-  echo "Skipping k3d install: docker CLI/socket not available in this container runtime."
-fi
-
 # Standalone Bicep CLI for authoring and PowerShell workflows
 retry 3 curl --fail --location --silent --show-error \
   "https://github.com/Azure/bicep/releases/download/${BICEP_VERSION}/bicep-${BICEP_PLATFORM}" \
@@ -172,12 +161,7 @@ retry 3 az bicep install \
 
 echo "Installed tool versions:"
 MISSING_TOOLING=0
-for cmd in az kubectl helm rad bicep k3d node npm npx rustc cargo git jq yq pwsh ssh tar; do
-  if [[ "$cmd" == "k3d" && "$K3D_SKIPPED" -eq 1 ]]; then
-    echo "k3d: skipped (docker unavailable)"
-    continue
-  fi
-
+for cmd in az kubectl helm rad bicep node npm npx rustc cargo git jq yq pwsh ssh tar; do
   if ! command -v "$cmd" >/dev/null 2>&1; then
     echo "$cmd: not found"
     MISSING_TOOLING=1
@@ -199,9 +183,6 @@ for cmd in az kubectl helm rad bicep k3d node npm npx rustc cargo git jq yq pwsh
       ;;
     bicep)
       bicep --version 2>/dev/null || true
-      ;;
-    k3d)
-      k3d version 2>/dev/null | head -n 1 || true
       ;;
     node|npm|npx|rustc|cargo|jq|yq|pwsh)
       "$cmd" --version 2>/dev/null | head -n 1 || true

@@ -26,7 +26,7 @@ param aksNodeVmSize string = 'Standard_D4s_v5'
 param k3sVmSize string = 'Standard_D4s_v5'
 
 @description('Confidential VM size used by Challenge 4 and the Challenge 5 AKS node pool.')
-param confidentialVmSize string = 'Standard_DC2as_v5'
+param confidentialVmSize string = 'Standard_DC2as_v6'
 
 var aksName = 'aks-sovereign-${nameSuffix}'
 var vmName = 'vm-k3s-${nameSuffix}'

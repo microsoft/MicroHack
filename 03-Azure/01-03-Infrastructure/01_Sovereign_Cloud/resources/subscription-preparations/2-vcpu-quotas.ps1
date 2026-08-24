@@ -9,7 +9,7 @@
     For Azure Arc Jumpstart environments (ArcBox/LocalBox), significant vCPU quotas are required:
     - ArcBox: ~16-32 vCPUs per instance
     - LocalBox: ~48-64 vCPUs per instance
-    - Confidential VMs: Additional vCPUs for DCasv5/DCadsv5 series
+    - Confidential VMs: Additional vCPUs for DCasv6/DCadsv6 series
 
     The script can optionally submit quota increase requests using the Azure Quota REST API.
 
@@ -300,8 +300,8 @@ $quotaNameMapping = @{
     "Standard DSv5 Family vCPUs"                   = "StandardDSv5Family"
     "Standard DSv6 Family vCPUs"                   = "StandardDSv6Family"
     "Standard DASv5 Family vCPUs"                  = "StandardDASv5Family"
-    "Standard DCasv5 Family vCPUs (Confidential)"  = "StandardDCasv5Family"
-    "Standard DCadsv5 Family vCPUs (Confidential)" = "StandardDCadsv5Family"
+    "Standard DCasv6 Family vCPUs (Confidential)"  = "StandardDCasv6Family"
+    "Standard DCadsv6 Family vCPUs (Confidential)" = "StandardDCadsv6Family"
     "Standard ESv5 Family vCPUs"                   = "StandardESv5Family"
 }
 
@@ -349,8 +349,8 @@ foreach ($subscription in $selectedSubscriptions) {
         "StandardDSv5Family"       = "Standard DSv5 Family vCPUs"
         "StandardDSv6Family"       = "Standard DSv6 Family vCPUs"
         "StandardDASv5Family"      = "Standard DASv5 Family vCPUs"
-        "StandardDCasv5Family"     = "Standard DCasv5 Family vCPUs (Confidential)"
-        "StandardDCadsv5Family"    = "Standard DCadsv5 Family vCPUs (Confidential)"
+        "StandardDCasv6Family"     = "Standard DCasv6 Family vCPUs (Confidential)"
+        "StandardDCadsv6Family"    = "Standard DCadsv6 Family vCPUs (Confidential)"
         "StandardESv5Family"       = "Standard ESv5 Family vCPUs"
     }
 
@@ -394,7 +394,7 @@ foreach ($subscription in $selectedSubscriptions) {
     # Calculate requirements for Sovereign Cloud MicroHack
     # ArcBox: ~16 vCPUs (Standard DSv5/v6)
     # LocalBox: ~48 vCPUs (Standard DSv5/v6)
-    # Confidential VMs: ~8 vCPUs (DCasv5)
+    # Confidential VMs: 4 vCPUs per participant (DCasv6)
     # Per-user VMs: ~6 vCPUs each
 
     Write-Host "`n=== Lab Requirements Calculation ===" -ForegroundColor Cyan
@@ -417,10 +417,10 @@ foreach ($subscription in $selectedSubscriptions) {
             Shared  = 32
             Name    = "Standard DSv6 Family vCPUs"
         }
-        "StandardDCasv5Family" = @{
-            PerUser = 6
+        "StandardDCasv6Family" = @{
+            PerUser = 4
             Shared  = 0
-            Name    = "Standard DCasv5 Family vCPUs (Confidential)"
+            Name    = "Standard DCasv6 Family vCPUs (Confidential)"
         }
     }
 

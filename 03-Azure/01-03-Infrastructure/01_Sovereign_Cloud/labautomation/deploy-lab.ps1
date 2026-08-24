@@ -29,6 +29,8 @@ param(
     [string[]]$AllowedEntraUserIds = @()
 )
 
+. (Join-Path $PSScriptRoot 'quota-helpers.ps1')
+
 # Validate parameters
 if($DeploymentType -in @('resourcegroup', 'resourcegroup-with-subscriptionowner') -and [string]::IsNullOrEmpty($ResourceGroupName)) {
     throw "ResourceGroupName must be provided for a resource-group deployment."
@@ -52,47 +54,60 @@ if($PreferredLocation.Count -gt 0) {
     $deploymentLocations = @('swedencentral')
 }
 
-$confidentialVmSize = 'Standard_DC2as_v6'
-$confidentialVcpusPerParticipant = 4
-$confidentialQuotaRequired = $confidentialVcpusPerParticipant
-$eligibleDeploymentLocations = @()
+$selection = Get-MhhConfidentialComputeSelection -SubscriptionId $SubscriptionId
+$validCandidates = @(Get-MhhConfidentialComputeCandidates -PreferredLocation $deploymentLocations)
+$selectedCandidate = $validCandidates |
+    Where-Object {
+        $_.Location -ieq $selection.Location -and
+        $_.VmSize -ieq $selection.VmSize -and
+        $_.QuotaName -ieq $selection.QuotaName
+    } |
+    Select-Object -First 1
+if(-not $selectedCandidate) {
+    throw 'The shared subscription preparation did not persist a valid confidential compute selection for this deployment.'
+}
+
+$confidentialVmSize = $selectedCandidate.VmSize
+$confidentialQuotaName = $selectedCandidate.QuotaName
+$deploymentLocations = @($selectedCandidate.Location)
+$quotaRequirements = @(
+    @{ Name = $confidentialQuotaName; Required = 4 }
+    @{ Name = 'StandardDSv5Family'; Required = 12 }
+    @{ Name = 'cores'; Required = 16 }
+)
 $regionReadinessSummary = @()
 foreach($candidateLocation in $deploymentLocations) {
-    $skuAvailable = Get-AzComputeResourceSku -Location $candidateLocation -ErrorAction Stop |
+    $requiredVmSizes = @($confidentialVmSize, 'Standard_D4s_v5')
+    $availableVmSizes = Get-AzComputeResourceSku -Location $candidateLocation -ErrorAction Stop |
         Where-Object {
             $_.ResourceType -ieq 'virtualMachines' -and
-            $_.Name -ieq $confidentialVmSize -and
+            $_.Name -iin $requiredVmSizes -and
             -not ($_.Restrictions | Where-Object { $_.Type -ieq 'Location' })
         } |
-        Select-Object -First 1
+        Select-Object -ExpandProperty Name -Unique
+    $unavailableVmSizes = @($requiredVmSizes | Where-Object { $_ -inotin $availableVmSizes })
 
-    if($null -eq $skuAvailable) {
-        $regionReadinessSummary += "${candidateLocation}: $confidentialVmSize unavailable"
-        Write-Warning "Skipping $candidateLocation because $confidentialVmSize is unavailable for this subscription."
+    if($unavailableVmSizes.Count -gt 0) {
+        $regionReadinessSummary += "${candidateLocation}: unavailable VM sizes $($unavailableVmSizes -join ', ')"
         continue
     }
 
-    $quota = Get-AzVMUsage -Location $candidateLocation -ErrorAction Stop |
-        Where-Object { $_.Name.Value -ieq 'standardDCasv6Family' } |
-        Select-Object -First 1
+    $regionalUsage = Get-AzVMUsage -Location $candidateLocation -ErrorAction Stop
+    foreach($requirement in $quotaRequirements) {
+        $quota = $regionalUsage |
+            Where-Object { $_.Name.Value -ieq $requirement.Name } |
+            Select-Object -First 1
+        $current = if($null -eq $quota) { 0 } else { $quota.CurrentValue }
+        $limit = if($null -eq $quota) { 0 } else { $quota.Limit }
+        $available = $limit - $current
+        $regionReadinessSummary += "${candidateLocation}/$($requirement.Name): ${current}/${limit} vCPUs used"
 
-    $current = if($null -eq $quota) { 0 } else { $quota.CurrentValue }
-    $limit = if($null -eq $quota) { 0 } else { $quota.Limit }
-    $available = $limit - $current
-    $regionReadinessSummary += "${candidateLocation}: $confidentialVmSize available, ${current}/${limit} DCasv6 vCPUs used"
-
-    if($available -ge $confidentialQuotaRequired) {
-        $eligibleDeploymentLocations += $candidateLocation
-    } else {
-        Write-Warning "Skipping $candidateLocation because only $available of $confidentialQuotaRequired required Standard DCasv6 Family vCPUs are available."
+        if($available -lt $requirement.Required) {
+            throw "The shared compute selection is no longer ready ($($regionReadinessSummary -join '; ')). $($requirement.Required) available $($requirement.Name) vCPUs are required per participant."
+        }
     }
 }
 
-if($eligibleDeploymentLocations.Count -eq 0) {
-    throw "No preferred region satisfies the confidential compute requirements ($($regionReadinessSummary -join '; ')). The shared subscription preparation must provide at least $confidentialQuotaRequired available Standard DCasv6 Family vCPUs per participant before lab deployment."
-}
-
-$deploymentLocations = $eligibleDeploymentLocations
 $effectiveLocation = $deploymentLocations[0]
 
 # With deploymentType = resourcegroup the platform has already created one resource
@@ -165,6 +180,7 @@ New-AzSubscriptionDeployment `
     } | Out-Null
 
 @{"HackboxCredential" = @{ name = "Sovereign Lab Region"; value = $sovereignLabResult.LocationUsed; note = "Region selected after capacity checks" }}
+@{"HackboxCredential" = @{ name = "Confidential VM Size"; value = $confidentialVmSize; note = "AMD SEV-SNP size selected during shared preparation" }}
 @{"HackboxCredential" = @{ name = "Sovereign Lab AKS Cluster"; value = $sovereignLabResult.Outputs.aksClusterName; note = "Shared by Challenges 5 and 7" }}
 @{"HackboxCredential" = @{ name = "AKS Confidential Node Pool"; value = $sovereignLabResult.Outputs.confidentialNodePoolName; note = "Challenge 5" }}
 @{"HackboxCredential" = @{ name = "Confidential VM"; value = $sovereignLabResult.Outputs.confidentialVmName; note = "Challenge 4" }}

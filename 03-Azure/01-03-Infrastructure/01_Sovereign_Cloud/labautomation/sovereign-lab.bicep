@@ -19,14 +19,14 @@ param adminPassword string
 @secure()
 param cvmAdminPassword string
 
-@description('AKS system-pool VM size. The deployment wrapper retries in the next preferred region on capacity or quota failures.')
+@description('AKS system-pool VM size deployed in the region selected during shared preparation.')
 param aksNodeVmSize string = 'Standard_D4s_v5'
 
-@description('Private K3s VM size. The deployment wrapper retries in the next preferred region on capacity or quota failures.')
+@description('Private K3s VM size deployed in the region selected during shared preparation.')
 param k3sVmSize string = 'Standard_D4s_v5'
 
-@description('Confidential VM size used by Challenge 4 and the Challenge 5 AKS node pool.')
-param confidentialVmSize string = 'Standard_DC2as_v6'
+@description('AMD SEV-SNP VM size used by Challenge 4 and the Challenge 5 AKS node pool.')
+param confidentialVmSize string = 'Standard_DC2as_v5'
 
 var aksName = 'aks-sovereign-${nameSuffix}'
 var vmName = 'vm-k3s-${nameSuffix}'

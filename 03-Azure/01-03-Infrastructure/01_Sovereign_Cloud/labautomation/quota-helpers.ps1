@@ -8,6 +8,65 @@ function Get-MhhResponseHeaderValue {
     return @($header.Value)[0]
 }
 
+function Get-MhhConfidentialComputeCandidates {
+    param(
+        [string[]]$PreferredLocation
+    )
+
+    $families = @(
+        [PSCustomObject]@{
+            VmSize = 'Standard_DC2as_v5'
+            QuotaName = 'standardDCASv5Family'
+        }
+        [PSCustomObject]@{
+            VmSize = 'Standard_DC2as_v6'
+            QuotaName = 'standardDCasv6Family'
+        }
+    )
+
+    foreach($family in $families) {
+        foreach($location in $PreferredLocation) {
+            [PSCustomObject]@{
+                Location = $location
+                VmSize = $family.VmSize
+                QuotaName = $family.QuotaName
+            }
+        }
+    }
+}
+
+function Set-MhhConfidentialComputeSelection {
+    param(
+        [string]$SubscriptionId,
+        [PSCustomObject]$Candidate
+    )
+
+    $subscriptionResourceId = "/subscriptions/$SubscriptionId"
+    Update-AzTag -ResourceId $subscriptionResourceId -Operation Merge -Tag @{
+        'microhack-sovereign-location' = $Candidate.Location
+        'microhack-sovereign-confidential-vm-size' = $Candidate.VmSize
+        'microhack-sovereign-confidential-quota' = $Candidate.QuotaName
+    } -ErrorAction Stop | Out-Null
+}
+
+function Get-MhhConfidentialComputeSelection {
+    param(
+        [string]$SubscriptionId
+    )
+
+    $subscriptionResourceId = "/subscriptions/$SubscriptionId"
+    $tags = (Get-AzTag -ResourceId $subscriptionResourceId -ErrorAction Stop).Properties.TagsProperty
+    if(-not $tags) {
+        return $null
+    }
+
+    return [PSCustomObject]@{
+        Location = $tags.'microhack-sovereign-location'
+        VmSize = $tags.'microhack-sovereign-confidential-vm-size'
+        QuotaName = $tags.'microhack-sovereign-confidential-quota'
+    }
+}
+
 function Wait-MhhQuotaRequest {
     param(
         [string]$OperationStatusUrl,

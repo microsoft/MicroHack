@@ -66,13 +66,15 @@ In order to use the MicroHack time most effectively, the following tasks should 
 4. [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli). **Hint:** Make sure to use the latest version available.
 5. Challenge 7: `kubectl`, `jq`, OpenSSL, the [Radius CLI](https://docs.radapp.io/getting-started/install/), and the Azure CLI `bastion` extension
 
-The shared Challenge 4/5/7 platform requires **4 Standard DCasv6 Family vCPUs per participant**. With the default two labs per subscription, request a minimum quota of 8 vCPUs in at least one configured region before running Step 2. For example:
+The shared Challenge 4/5/7 platform requires **4 AMD SEV-SNP confidential-family vCPUs per participant**. Automation evaluates `Standard_DC2as_v5` and `Standard_DC2as_v6` across the configured regions, preferring the generally available v5 family. With the default two labs per subscription, prepare a minimum family quota of 8 vCPUs in at least one configured region. For example:
+
+The default candidate order is Sweden Central/v5, Spain Central/v5, Sweden Central/v6, then Spain Central/v6. Shared preparation persists the first candidate with supported VM sizes and sufficient confidential-family, DSv5-family, and regional quota so every participant deployment in that subscription uses the same selection.
 
 ```powershell
-./resources/subscription-preparations/2-vcpu-quotas.ps1 -Region swedencentral -NumberOfLabUsers 2 -SubmitQuotaRequests
+./resources/subscription-preparations/2-vcpu-quotas.ps1 -Region swedencentral -NumberOfLabUsers 2 -ConfidentialVmGeneration v5 -SubmitQuotaRequests
 ```
 
-Run the check for `spaincentral` as well if it should remain available for fallback.
+Run the check for `spaincentral` as well if it should remain available for fallback. If v5 is restricted for the subscription, repeat the checks with `-ConfidentialVmGeneration v6`.
 
 Organizers can optionally use [Azure Quick Review (AZQR)](https://github.com/Azure/azqr) 4.0 or later to compare the curated candidate regions and export SKU, quota, and capacity-reservation inventory:
 
@@ -84,7 +86,7 @@ azqr region-selection \
 	--output-name sovereign-region-assessment
 ```
 
-Use the AZQR report for planning and preferred-region ordering, not as the deployment gate. Region Selection derives required SKUs from existing resources, so a greenfield subscription might not include the planned `Standard_DC2as_v6` SKU in its score. Capacity Reservation Group inventory also does not guarantee on-demand capacity. Step 2 therefore checks `Standard_DC2as_v6` subscription availability and DCasv6 quota directly, then retains regional fallback for deployment-time capacity failures.
+Use the AZQR report for planning and preferred-region ordering, not as the deployment gate. Region Selection derives required SKUs from existing resources, so a greenfield subscription might not include the planned confidential SKU in its score. Capacity Reservation Group inventory also does not guarantee on-demand capacity. Shared preparation therefore checks the v5/v6 candidate matrix, family quota, standard-family quota, and regional quota directly, then persists the selected region and SKU for participant deployments.
 
 ### Cost estimates
 
@@ -93,7 +95,7 @@ The main cost driver for this MicroHack is virtual machines:
 - **ArcBox for ITPro** cost is approximately 7 USD per day. We recommend setting it up the week before the event, so for example 5 days before the event would result in a cost between 30-40 USD.
 - **LocalBox** cost is approximately 100-110 USD per day. We recommend setting it up the week before the event, so for example 5 days before the event would result in a cost between 5-600 USD.
 - **Challenges 4, 5, and 7** share one pre-provisioned participant platform: a two-node AKS system pool, one Confidential VM AKS node, one standalone Confidential VM, one K3s VM, Azure Bastion Standard, and a NAT Gateway. Budget approximately 45-55 USD per participant per day, depending on region and data transfer. The platform starts during lab deployment so participants can focus on validation rather than waiting for capacity-sensitive resources.
-- Plan subscription quotas for at least 12 general-purpose vCPUs and 4 DCasv6-family confidential vCPUs per participant. The default automation places no more than two participants in each subscription; validate regional quota before increasing that value.
+- Plan subscription quotas for at least 12 general-purpose vCPUs and 4 DCasv5- or DCasv6-family confidential vCPUs per participant. Keep the default maximum of two participants per subscription unless larger aggregate increases have been approved in advance.
 
 For a 50-participant event, the shared participant platforms cost approximately 2,250-2,750 USD per day while deployed, in addition to the optional ArcBox and LocalBox environments.
 There will also be smaller costs for services such as Key Vault, storage, and monitoring.

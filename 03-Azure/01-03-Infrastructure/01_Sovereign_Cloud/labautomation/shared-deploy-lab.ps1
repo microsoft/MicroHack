@@ -41,13 +41,8 @@ if($participantCount -lt 1) {
     throw 'Unable to determine the number of participants for confidential compute quota preparation.'
 }
 
-$requiredVmSizes = @('Standard_DC2as_v6', 'Standard_D4s_v5')
-$quotaRequirements = @(
-    @{ Name = 'standardDCasv6Family'; PerParticipant = 4 }
-    @{ Name = 'StandardDSv5Family'; PerParticipant = 12 }
-    @{ Name = 'cores'; PerParticipant = 16 }
-)
-$quotaReadyLocation = $null
+$confidentialCandidates = @(Get-MhhConfidentialComputeCandidates -PreferredLocation $PreferredLocation)
+$selectedCandidate = $null
 $quotaReadinessSummary = @()
 
 for($attempt = 1; $attempt -le 30; $attempt++) {
@@ -63,8 +58,10 @@ if($quotaProvider.RegistrationState -ne 'Registered') {
     throw 'Microsoft.Quota did not reach Registered state within 5 minutes.'
 }
 
-foreach($candidateLocation in $PreferredLocation) {
+foreach($candidate in $confidentialCandidates) {
     Update-MhhToken | Out-Null
+    $candidateLocation = $candidate.Location
+    $requiredVmSizes = @($candidate.VmSize, 'Standard_D4s_v5')
     $availableVmSizes = Get-AzComputeResourceSku -Location $candidateLocation -ErrorAction Stop |
         Where-Object {
             $_.ResourceType -ieq 'virtualMachines' -and
@@ -75,12 +72,17 @@ foreach($candidateLocation in $PreferredLocation) {
     $unavailableVmSizes = @($requiredVmSizes | Where-Object { $_ -inotin $availableVmSizes })
 
     if($unavailableVmSizes.Count -gt 0) {
-        $quotaReadinessSummary += "${candidateLocation}: unavailable VM sizes $($unavailableVmSizes -join ', ')"
+        $quotaReadinessSummary += "$candidateLocation/$($candidate.VmSize): unavailable VM sizes $($unavailableVmSizes -join ', ')"
         continue
     }
 
     $regionalUsage = Get-AzVMUsage -Location $candidateLocation -ErrorAction Stop
     $locationReady = $true
+    $quotaRequirements = @(
+        @{ Name = $candidate.QuotaName; PerParticipant = 4 }
+        @{ Name = 'StandardDSv5Family'; PerParticipant = 12 }
+        @{ Name = 'cores'; PerParticipant = 16 }
+    )
     foreach($requirement in $quotaRequirements) {
         $quotaName = $requirement.Name
         $quotaRequired = $requirement.PerParticipant * $participantCount
@@ -113,23 +115,24 @@ foreach($candidateLocation in $PreferredLocation) {
             $quotaResult.Message
         ) | Where-Object { $_ }
         $quotaFailureDetails = $quotaFailureDetails -join ' - '
-        $quotaReadinessSummary += "${candidateLocation}/${quotaName}: $quotaFailureDetails"
+        $quotaReadinessSummary += "$candidateLocation/$($candidate.VmSize)/${quotaName}: $quotaFailureDetails"
         Write-Warning "Quota request failed for $quotaName in ${candidateLocation}: $quotaFailureDetails"
         $locationReady = $false
         break
     }
 
     if($locationReady) {
-        $quotaReadyLocation = $candidateLocation
+        $selectedCandidate = $candidate
         break
     }
 }
 
-if(-not $quotaReadyLocation) {
+if(-not $selectedCandidate) {
     throw "No preferred region satisfies the aggregate compute requirements for $participantCount participants ($($quotaReadinessSummary -join '; '))."
 }
 
-Write-Host "Compute SKUs and quotas are ready in $quotaReadyLocation for $participantCount participants." -ForegroundColor Green
+Set-MhhConfidentialComputeSelection -SubscriptionId $SubscriptionId -Candidate $selectedCandidate
+Write-Host "Selected $($selectedCandidate.VmSize) in $($selectedCandidate.Location); compute SKUs and quotas are ready for $participantCount participants." -ForegroundColor Green
 <#
 
 The Sovereign Cloud shared deployment needs to resolve the tenant-specific object ID of the Microsoft.AzureStackHCI enterprise application (appId: 1412d89f-b8a8-4111-b4fd-e82905cbd85d).

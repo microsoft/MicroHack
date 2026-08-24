@@ -8,7 +8,7 @@
 
     The shared Challenge 4/5/7 platform requires per participant:
     - 12 Standard DSv5 Family vCPUs
-    - 4 Standard DCasv6 Family vCPUs
+    - 4 Standard DCasv5 or DCasv6 Family vCPUs
     - 16 Total Regional vCPUs
 
     The script can optionally submit quota increase requests using the Azure Quota REST API.
@@ -25,6 +25,9 @@
 .PARAMETER SubmitQuotaRequests
     Automatically submit quota increase requests via REST API if needed
 
+.PARAMETER ConfidentialVmGeneration
+    AMD SEV-SNP confidential VM generation to prepare. Defaults to the generally available v5 family.
+
 .PARAMETER ExportToJson
     Export results to a JSON file
 
@@ -33,7 +36,7 @@
     Interactive mode - prompts for region and user count
 
 .EXAMPLE
-    .\2-vcpu-quotas.ps1 -Region "swedencentral" -NumberOfLabUsers 2 -SubmitQuotaRequests
+    .\2-vcpu-quotas.ps1 -Region "swedencentral" -NumberOfLabUsers 2 -ConfidentialVmGeneration v5 -SubmitQuotaRequests
     Check quotas for two participants in Sweden Central and submit increase requests if needed
 
 .NOTES
@@ -59,6 +62,10 @@ param(
 
     [Parameter(Mandatory = $false)]
     [switch]$SubmitQuotaRequests,
+
+    [Parameter(Mandatory = $false)]
+    [ValidateSet('v5', 'v6')]
+    [string]$ConfidentialVmGeneration = 'v5',
 
     [Parameter(Mandatory = $false)]
     [switch]$ExportToJson
@@ -344,6 +351,7 @@ $quotaNameMapping = @{
     "Standard DSv5 Family vCPUs"                   = "StandardDSv5Family"
     "Standard DSv6 Family vCPUs"                   = "StandardDSv6Family"
     "Standard DASv5 Family vCPUs"                  = "StandardDASv5Family"
+    "Standard DCasv5 Family vCPUs (Confidential)"  = "standardDCASv5Family"
     "Standard DCasv6 Family vCPUs (Confidential)"  = "standardDCasv6Family"
     "Standard DCadsv6 Family vCPUs (Confidential)" = "standardDCadsv6Family"
     "Standard ESv5 Family vCPUs"                   = "StandardESv5Family"
@@ -419,6 +427,7 @@ foreach ($subscription in $selectedSubscriptions) {
         "StandardDSv5Family"       = "Standard DSv5 Family vCPUs"
         "StandardDSv6Family"       = "Standard DSv6 Family vCPUs"
         "StandardDASv5Family"      = "Standard DASv5 Family vCPUs"
+        "standardDCASv5Family"     = "Standard DCasv5 Family vCPUs (Confidential)"
         "standardDCasv6Family"     = "Standard DCasv6 Family vCPUs (Confidential)"
         "standardDCadsv6Family"    = "Standard DCadsv6 Family vCPUs (Confidential)"
         "StandardESv5Family"       = "Standard ESv5 Family vCPUs"
@@ -467,6 +476,8 @@ foreach ($subscription in $selectedSubscriptions) {
     Write-Host ("=" * 80)
     Write-Host "`nNumber of lab users: $NumberOfLabUsers" -ForegroundColor Green
 
+    $confidentialQuotaName = if($ConfidentialVmGeneration -eq 'v5') { 'standardDCASv5Family' } else { 'standardDCasv6Family' }
+    $confidentialQuotaDisplayName = "Standard DCas$ConfidentialVmGeneration Family vCPUs (Confidential)"
     $requirements = @{
         "cores" = @{
             PerUser = 16
@@ -478,11 +489,11 @@ foreach ($subscription in $selectedSubscriptions) {
             Shared  = 0
             Name    = "Standard DSv5 Family vCPUs"
         }
-        "standardDCasv6Family" = @{
-            PerUser = 4
-            Shared  = 0
-            Name    = "Standard DCasv6 Family vCPUs (Confidential)"
-        }
+    }
+    $requirements[$confidentialQuotaName] = @{
+        PerUser = 4
+        Shared  = 0
+        Name    = $confidentialQuotaDisplayName
     }
 
     Write-Host "`nRequired vCPUs per lab user + shared infrastructure:"

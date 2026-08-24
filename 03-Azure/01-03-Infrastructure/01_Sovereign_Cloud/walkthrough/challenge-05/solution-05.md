@@ -21,12 +21,13 @@ Please ensure that you successfully verified the [General prerequisites](../../R
 
 ## Pre-Provisioned Infrastructure
 
-The shared lab automation has already deployed an AKS cluster with a standard system node pool and a Confidential VM user node pool named `cvmnodepool` (`Standard_DC2as_v6`). This cluster is shared with Challenge 7 — do not delete it. Retrieve the following values from your lab dashboard credentials:
+The shared lab automation has already deployed an AKS cluster with a standard system node pool and an AMD SEV-SNP Confidential VM user node pool named `cvmnodepool`. The exact v5 or v6 size is selected from subscription availability and quota. This cluster is shared with Challenge 7 — do not delete it. Retrieve the following values from your lab dashboard credentials:
 
 | Dashboard Credential | Description |
 |---|---|
 | **Resource Group Name** | Your dedicated resource group |
 | **Sovereign Lab Region** | Region selected after capacity checks |
+| **Confidential VM Size** | AMD SEV-SNP size selected during shared preparation |
 | **Sovereign Lab AKS Cluster** | Name of the pre-provisioned AKS cluster |
 | **AKS Confidential Node Pool** | Name of the Confidential VM node pool (`cvmnodepool`) |
 
@@ -98,6 +99,7 @@ The AKS deployment patterns and attestation verification workflows have been ada
 # Populate these from your lab dashboard credentials
 RESOURCE_GROUP="<Resource Group Name>"          # From the "Resource Group Name" credential
 LOCATION="<Sovereign Lab Region>"                # From the "Sovereign Lab Region" credential
+CONFIDENTIAL_VM_SIZE="<Confidential VM Size>"    # From the "Confidential VM Size" credential
 AKS_CLUSTER_NAME="<Sovereign Lab AKS Cluster>"   # From the "Sovereign Lab AKS Cluster" credential
 NODE_POOL_NAME="cvmnodepool"                     # From the "AKS Confidential Node Pool" credential
 ```
@@ -156,7 +158,7 @@ kubectl get nodes -l kubernetes.azure.com/agentpool=$NODE_POOL_NAME \
   -o custom-columns=NAME:.metadata.name,OS_SKU:.metadata.labels.kubernetes\\.azure\\.com/os-sku,VM_SIZE:.metadata.labels.node\\.kubernetes\\.io/instance-type
 ```
 
-The `OS_SKU` value of `AzureLinux` and the `VM_SIZE` of `Standard_DC2as_v6` confirm the node is running on AMD SEV-SNP confidential compute hardware.
+The `OS_SKU` value of `AzureLinux` and a `VM_SIZE` matching `$CONFIDENTIAL_VM_SIZE` confirm that the node uses the selected AMD SEV-SNP confidential compute family.
 
 ---
 
@@ -333,7 +335,7 @@ In this challenge, you successfully validated Azure Confidential Computing in AK
 
 ### Production Best Practices
 
-✅ **Node Pool Sizing** - Start with DC-series VMs (e.g., Standard_DC2as_v6) and scale based on workload requirements
+✅ **Node Pool Sizing** - Start with an AMD SEV-SNP DCasv5/DCasv6 size and scale based on workload requirements
 
 ✅ **Workload Isolation** - Use Kubernetes namespaces, network policies, and RBAC in addition to confidential computing
 

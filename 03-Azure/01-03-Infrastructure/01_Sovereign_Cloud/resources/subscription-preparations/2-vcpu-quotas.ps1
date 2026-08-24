@@ -231,10 +231,22 @@ function Wait-QuotaRequestStatus {
             return $true
         }
 
-        $errorCode = $content.properties.error.code
-        $message = $content.properties.error.message
+        if ($state -in @('InProgress', 'Accepted', 'Running')) {
+            Write-Host "  Request is still processing (attempt $attempt of $MaxAttempts)..." -ForegroundColor Gray
+            continue
+        }
+
+        $error = if($content.properties.error) { $content.properties.error } else { $content.error }
+        $errorCode = if($error.code) { $error.code } else { $content.properties.errorCode }
+        $message = $error.message
         if (-not $message) {
             $message = $content.properties.message
+        }
+        if (-not $message) {
+            $message = $content.properties.errorMessage
+        }
+        if (-not $message) {
+            $message = "Quota request ended without error details."
         }
 
         Write-Host "  Quota request ended in state '$state'." -ForegroundColor Red

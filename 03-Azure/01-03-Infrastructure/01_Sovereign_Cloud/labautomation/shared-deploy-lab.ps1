@@ -3,9 +3,9 @@
 Prepares a subscription for Sovereign Cloud MicroHack labs.
 .DESCRIPTION
 Runs once per subscription before participant lab deployments and registers the
-required Azure resource providers. It ensures one preferred region has exactly
-the DCasv6 quota required by the subscription's participant count. LocalBox
-deployment is temporarily disabled.
+required Azure resource providers. It ensures one preferred region has the VM
+SKUs and compute quota required by the subscription's participant count.
+LocalBox deployment is temporarily disabled.
 #>
 param(
     [Parameter(Mandatory=$true)]
@@ -41,10 +41,12 @@ if($participantCount -lt 1) {
     throw 'Unable to determine the number of participants for confidential compute quota preparation.'
 }
 
-$confidentialVmSize = 'Standard_DC2as_v6'
-$confidentialQuotaName = 'standardDCasv6Family'
-$confidentialVcpusPerParticipant = 4
-$confidentialQuotaRequired = $confidentialVcpusPerParticipant * $participantCount
+$requiredVmSizes = @('Standard_DC2as_v6', 'Standard_D4s_v5')
+$quotaRequirements = @(
+    @{ Name = 'standardDCasv6Family'; PerParticipant = 4 }
+    @{ Name = 'StandardDSv5Family'; PerParticipant = 12 }
+    @{ Name = 'cores'; PerParticipant = 16 }
+)
 $quotaReadyLocation = $null
 $quotaReadinessSummary = @()
 
@@ -63,55 +65,71 @@ if($quotaProvider.RegistrationState -ne 'Registered') {
 
 foreach($candidateLocation in $PreferredLocation) {
     Update-MhhToken | Out-Null
-    $skuAvailable = Get-AzComputeResourceSku -Location $candidateLocation -ErrorAction Stop |
+    $availableVmSizes = Get-AzComputeResourceSku -Location $candidateLocation -ErrorAction Stop |
         Where-Object {
             $_.ResourceType -ieq 'virtualMachines' -and
-            $_.Name -ieq $confidentialVmSize -and
+            $_.Name -iin $requiredVmSizes -and
             -not ($_.Restrictions | Where-Object { $_.Type -ieq 'Location' })
         } |
-        Select-Object -First 1
+        Select-Object -ExpandProperty Name -Unique
+    $unavailableVmSizes = @($requiredVmSizes | Where-Object { $_ -inotin $availableVmSizes })
 
-    if($null -eq $skuAvailable) {
-        $quotaReadinessSummary += "${candidateLocation}: $confidentialVmSize unavailable"
+    if($unavailableVmSizes.Count -gt 0) {
+        $quotaReadinessSummary += "${candidateLocation}: unavailable VM sizes $($unavailableVmSizes -join ', ')"
         continue
     }
 
-    $quota = Get-AzVMUsage -Location $candidateLocation -ErrorAction Stop |
-        Where-Object { $_.Name.Value -ieq $confidentialQuotaName } |
-        Select-Object -First 1
-    $current = if($null -eq $quota) { 0 } else { $quota.CurrentValue }
-    $limit = if($null -eq $quota) { 0 } else { $quota.Limit }
-    $available = $limit - $current
+    $regionalUsage = Get-AzVMUsage -Location $candidateLocation -ErrorAction Stop
+    $locationReady = $true
+    foreach($requirement in $quotaRequirements) {
+        $quotaName = $requirement.Name
+        $quotaRequired = $requirement.PerParticipant * $participantCount
+        $quota = $regionalUsage |
+            Where-Object { $_.Name.Value -ieq $quotaName } |
+            Select-Object -First 1
+        $current = if($null -eq $quota) { 0 } else { $quota.CurrentValue }
+        $limit = if($null -eq $quota) { 0 } else { $quota.Limit }
+        $available = $limit - $current
 
-    if($available -ge $confidentialQuotaRequired) {
-        $quotaReadyLocation = $candidateLocation
-        $quotaReadinessSummary += "${candidateLocation}: ${available} DCasv6 vCPUs available"
+        if($available -ge $quotaRequired) {
+            continue
+        }
+
+        $newLimit = $current + $quotaRequired
+        Write-Host "Requesting exactly $newLimit $quotaName vCPUs in $candidateLocation for $participantCount participants..."
+        $quotaResult = Request-MhhComputeQuota `
+            -SubscriptionId $SubscriptionId `
+            -Location $candidateLocation `
+            -QuotaName $quotaName `
+            -NewLimit $newLimit
+
+        if($quotaResult.Succeeded) {
+            continue
+        }
+
+        $quotaFailureDetails = @(
+            $quotaResult.State
+            $quotaResult.ErrorCode
+            $quotaResult.Message
+        ) | Where-Object { $_ }
+        $quotaFailureDetails = $quotaFailureDetails -join ' - '
+        $quotaReadinessSummary += "${candidateLocation}/${quotaName}: $quotaFailureDetails"
+        Write-Warning "Quota request failed for $quotaName in ${candidateLocation}: $quotaFailureDetails"
+        $locationReady = $false
         break
     }
 
-    $newLimit = $current + $confidentialQuotaRequired
-    Write-Host "Requesting exactly $newLimit $confidentialQuotaName vCPUs in $candidateLocation for $participantCount participants..."
-    $quotaResult = Request-MhhComputeQuota `
-        -SubscriptionId $SubscriptionId `
-        -Location $candidateLocation `
-        -QuotaName $confidentialQuotaName `
-        -NewLimit $newLimit
-
-    if($quotaResult.Succeeded) {
+    if($locationReady) {
         $quotaReadyLocation = $candidateLocation
-        $quotaReadinessSummary += "${candidateLocation}: quota request succeeded with limit $newLimit"
         break
     }
-
-    $quotaReadinessSummary += "${candidateLocation}: $($quotaResult.State) $($quotaResult.ErrorCode) $($quotaResult.Message)"
-    Write-Warning "DCasv6 quota request failed in ${candidateLocation}: $($quotaResult.ErrorCode) - $($quotaResult.Message)"
 }
 
 if(-not $quotaReadyLocation) {
-    throw "No preferred region has the required $confidentialQuotaRequired DCasv6 vCPUs for $participantCount participants ($($quotaReadinessSummary -join '; '))."
+    throw "No preferred region satisfies the aggregate compute requirements for $participantCount participants ($($quotaReadinessSummary -join '; '))."
 }
 
-Write-Host "DCasv6 quota is ready in $quotaReadyLocation for $participantCount participants." -ForegroundColor Green
+Write-Host "Compute SKUs and quotas are ready in $quotaReadyLocation for $participantCount participants." -ForegroundColor Green
 <#
 
 The Sovereign Cloud shared deployment needs to resolve the tenant-specific object ID of the Microsoft.AzureStackHCI enterprise application (appId: 1412d89f-b8a8-4111-b4fd-e82905cbd85d).

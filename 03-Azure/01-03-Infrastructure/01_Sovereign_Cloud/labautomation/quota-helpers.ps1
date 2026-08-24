@@ -44,15 +44,29 @@ function Wait-MhhQuotaRequest {
 
         $content = $response.Content | ConvertFrom-Json
         $state = $content.properties.provisioningState
+
+        if($state -in @('InProgress', 'Accepted', 'Running')) {
+            Write-Host "Quota request is still processing ($attempt/$MaxAttempts)..."
+            continue
+        }
+
+        $error = if($content.properties.error) { $content.properties.error } else { $content.error }
+        $errorCode = if($error.code) { $error.code } else { $content.properties.errorCode }
+        $message = if($error.message) {
+            $error.message
+        } elseif($content.properties.message) {
+            $content.properties.message
+        } elseif($content.properties.errorMessage) {
+            $content.properties.errorMessage
+        } else {
+            "Quota request ended in state '$state' without error details."
+        }
+
         return [PSCustomObject]@{
             Succeeded = $state -eq 'Succeeded'
             State = $state
-            ErrorCode = $content.properties.error.code
-            Message = if($content.properties.error.message) {
-                $content.properties.error.message
-            } else {
-                $content.properties.message
-            }
+            ErrorCode = $errorCode
+            Message = $message
         }
     }
 

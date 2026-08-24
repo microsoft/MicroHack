@@ -6,10 +6,10 @@
     This script checks current vCPU quota usage in a specified Azure region and calculates
     the required quotas for running the MicroHack lab based on the number of lab users.
 
-    For Azure Arc Jumpstart environments (ArcBox/LocalBox), significant vCPU quotas are required:
-    - ArcBox: ~16-32 vCPUs per instance
-    - LocalBox: ~48-64 vCPUs per instance
-    - Confidential VMs: Additional vCPUs for DCasv6/DCadsv6 series
+    The shared Challenge 4/5/7 platform requires per participant:
+    - 12 Standard DSv5 Family vCPUs
+    - 4 Standard DCasv6 Family vCPUs
+    - 16 Total Regional vCPUs
 
     The script can optionally submit quota increase requests using the Azure Quota REST API.
 
@@ -191,6 +191,66 @@ function Register-QuotaProvider {
     }
 }
 
+function Get-ResponseHeaderValue {
+    param(
+        [System.Net.Http.Headers.HttpResponseHeaders]$Headers,
+        [string]$Name
+    )
+
+    $header = $Headers | Where-Object { $_.Key -ieq $Name } | Select-Object -First 1
+    return @($header.Value)[0]
+}
+
+# Wait for an asynchronous quota request to reach a terminal state
+function Wait-QuotaRequestStatus {
+    param(
+        [string]$OperationStatusUrl,
+        [int]$RetryAfterSeconds = 5,
+        [int]$MaxAttempts = 20
+    )
+
+    for ($attempt = 1; $attempt -le $MaxAttempts; $attempt++) {
+        Start-Sleep -Seconds $RetryAfterSeconds
+        $response = Invoke-AzRestMethod -Uri $OperationStatusUrl -Method GET
+
+        if ($response.StatusCode -eq 202) {
+            Write-Host "  Request is still processing (attempt $attempt of $MaxAttempts)..." -ForegroundColor Gray
+            continue
+        }
+
+        if ($response.StatusCode -ne 200) {
+            Write-Host "  Status check failed with HTTP $($response.StatusCode)." -ForegroundColor Red
+            return $false
+        }
+
+        $content = $response.Content | ConvertFrom-Json
+        $state = $content.properties.provisioningState
+
+        if ($state -eq 'Succeeded') {
+            Write-Host "  Quota request completed successfully." -ForegroundColor Green
+            return $true
+        }
+
+        $errorCode = $content.properties.error.code
+        $message = $content.properties.error.message
+        if (-not $message) {
+            $message = $content.properties.message
+        }
+
+        Write-Host "  Quota request ended in state '$state'." -ForegroundColor Red
+        if ($errorCode) {
+            Write-Host "  Azure error: $errorCode - $message" -ForegroundColor Red
+        } elseif ($message) {
+            Write-Host "  Azure message: $message" -ForegroundColor Red
+        }
+        return $false
+    }
+
+    Write-Host "  Timed out waiting for the quota request to complete." -ForegroundColor Red
+    Write-Host "  Check status at: $OperationStatusUrl" -ForegroundColor Gray
+    return $false
+}
+
 # Function to submit quota increase request via REST API
 function Submit-QuotaIncreaseRequest {
     param(
@@ -238,17 +298,20 @@ function Submit-QuotaIncreaseRequest {
             }
 
             if ($response.StatusCode -eq 202) {
-                # Async operation - get the operation status URL
-                $locationHeader = $response.Headers['Location']
-                if ($locationHeader) {
-                    Write-Host "  This is an asynchronous operation. Check status at:" -ForegroundColor Yellow
-                    Write-Host "  $locationHeader" -ForegroundColor Gray
+                $locationHeader = Get-ResponseHeaderValue -Headers $response.Headers -Name 'Location'
+                if (-not $locationHeader) {
+                    Write-Host "  Azure accepted the request but did not return a status URL." -ForegroundColor Red
+                    return $false
                 }
 
-                $retryAfter = $response.Headers['Retry-After']
-                if ($retryAfter) {
-                    Write-Host "  Recommended retry after: $retryAfter seconds" -ForegroundColor Gray
-                }
+                $retryAfter = Get-ResponseHeaderValue -Headers $response.Headers -Name 'Retry-After'
+                $retryAfterSeconds = if ($retryAfter -as [int]) { [int]$retryAfter } else { 5 }
+
+                Write-Host "  Waiting for the asynchronous request to complete..." -ForegroundColor Yellow
+                Write-Host "  $locationHeader" -ForegroundColor Gray
+                return Wait-QuotaRequestStatus `
+                    -OperationStatusUrl $locationHeader `
+                    -RetryAfterSeconds $retryAfterSeconds
             }
 
             return $true
@@ -260,29 +323,6 @@ function Submit-QuotaIncreaseRequest {
     } catch {
         Write-Host "  Error submitting quota request: $($_.Exception.Message)" -ForegroundColor Red
         return $false
-    }
-}
-
-# Function to check quota request status
-function Get-QuotaRequestStatus {
-    param(
-        [string]$OperationStatusUrl
-    )
-
-    try {
-        $response = Invoke-AzRestMethod -Uri $OperationStatusUrl -Method GET
-
-        if ($response.StatusCode -eq 200) {
-            $content = $response.Content | ConvertFrom-Json
-            Write-Host "Quota request status: $($content.properties.provisioningState)" -ForegroundColor Cyan
-            return $content
-        } else {
-            Write-Warning "Failed to get quota request status. Status Code: $($response.StatusCode)"
-            return $null
-        }
-    } catch {
-        Write-Warning "Error checking quota request status: $($_.Exception.Message)"
-        return $null
     }
 }
 
@@ -301,8 +341,34 @@ $quotaNameMapping = @{
 try {
     $context = Get-AzContext
     if (-not $context) {
-        Write-Host "`nNo Azure context found. Please login..." -ForegroundColor Yellow
-        Connect-AzAccount
+        $cliAccountJson = if (Get-Command az -ErrorAction SilentlyContinue) {
+            az account show --output json 2>$null
+        }
+
+        if ($LASTEXITCODE -eq 0 -and $cliAccountJson) {
+            $cliAccount = $cliAccountJson | ConvertFrom-Json
+            $accessToken = az account get-access-token `
+                --resource https://management.azure.com/ `
+                --query accessToken `
+                --output tsv
+
+            if ($LASTEXITCODE -ne 0 -or -not $accessToken) {
+                throw "Failed to acquire an Azure Resource Manager token from Azure CLI."
+            }
+
+            Write-Host "`nUsing current Azure CLI subscription: $($cliAccount.name)" -ForegroundColor Green
+            Connect-AzAccount `
+                -AccessToken $accessToken `
+                -AccountId $cliAccount.user.name `
+                -Tenant $cliAccount.tenantId `
+                -Subscription $cliAccount.id `
+                -SkipValidation `
+                -Scope Process | Out-Null
+        } else {
+            Write-Host "`nNo Azure context found. Please login..." -ForegroundColor Yellow
+            Connect-AzAccount | Out-Null
+        }
+
         $context = Get-AzContext
     }
 } catch {
@@ -383,11 +449,7 @@ foreach ($subscription in $selectedSubscriptions) {
     # Get number of lab users
     $NumberOfLabUsers = Get-LabUserCount
 
-    # Calculate requirements for Sovereign Cloud MicroHack
-    # ArcBox: ~16 vCPUs (Standard DSv5/v6)
-    # LocalBox: ~48 vCPUs (Standard DSv5/v6)
-    # Confidential VMs: 4 vCPUs per participant (DCasv6)
-    # Per-user VMs: ~6 vCPUs each
+    # Calculate requirements for the shared Challenge 4/5/7 participant platform.
 
     Write-Host "`n=== Lab Requirements Calculation ===" -ForegroundColor Cyan
     Write-Host ("=" * 80)
@@ -395,19 +457,14 @@ foreach ($subscription in $selectedSubscriptions) {
 
     $requirements = @{
         "cores" = @{
-            PerUser = 4
-            Shared  = 64  # ArcBox + LocalBox shared environment
+            PerUser = 16
+            Shared  = 0
             Name    = "Total Regional vCPUs"
         }
         "StandardDSv5Family" = @{
-            PerUser = 0
-            Shared  = 32
+            PerUser = 12
+            Shared  = 0
             Name    = "Standard DSv5 Family vCPUs"
-        }
-        "StandardDSv6Family" = @{
-            PerUser = 0
-            Shared  = 32
-            Name    = "Standard DSv6 Family vCPUs"
         }
         "standardDCasv6Family" = @{
             PerUser = 4
@@ -445,7 +502,7 @@ foreach ($subscription in $selectedSubscriptions) {
 
             if ($available -lt $totalNeeded) {
                 $shortfall = $totalNeeded - $available
-                $newLimit = $current.Current + $totalNeeded + 10  # Add buffer
+                $newLimit = $current.Current + $totalNeeded
                 Write-Host ("  STATUS           : INSUFFICIENT") -ForegroundColor Red
                 Write-Host ("  Shortfall        : {0,6} vCPUs" -f $shortfall) -ForegroundColor Red
                 Write-Host ("  Recommended Limit: {0,6} vCPUs" -f $newLimit) -ForegroundColor Yellow

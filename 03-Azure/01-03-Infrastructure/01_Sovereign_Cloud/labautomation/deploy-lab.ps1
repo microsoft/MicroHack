@@ -38,6 +38,8 @@ if($AllowedEntraUserIds.Count -eq 0) {
     throw "AllowedEntraUserIds must contain at least one participant object ID."
 }
 
+$PreferredLocation = @($PreferredLocation | ForEach-Object { $_ -split ',' } | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+
 $stableHash = Get-MhhStableHash -Value $AllowedEntraUserIds -Length 24
 if($DeploymentType -eq 'subscription') {
     $ResourceGroupName = "rg-sovereign-$($stableHash.Substring(0, 8))"
@@ -51,7 +53,8 @@ if($PreferredLocation.Count -gt 0) {
 }
 
 $confidentialVmSize = 'Standard_DC2as_v6'
-$confidentialQuotaRequired = 4
+$confidentialVcpusPerParticipant = 4
+$confidentialQuotaRequired = $confidentialVcpusPerParticipant
 $eligibleDeploymentLocations = @()
 $regionReadinessSummary = @()
 foreach($candidateLocation in $deploymentLocations) {
@@ -86,7 +89,7 @@ foreach($candidateLocation in $deploymentLocations) {
 }
 
 if($eligibleDeploymentLocations.Count -eq 0) {
-    throw "No preferred region satisfies the confidential compute requirements ($($regionReadinessSummary -join '; ')). Ensure $confidentialVmSize is available and request at least $confidentialQuotaRequired available Standard DCasv6 Family vCPUs per participant in one configured region before rerunning Step 2."
+    throw "No preferred region satisfies the confidential compute requirements ($($regionReadinessSummary -join '; ')). The shared subscription preparation must provide at least $confidentialQuotaRequired available Standard DCasv6 Family vCPUs per participant before lab deployment."
 }
 
 $deploymentLocations = $eligibleDeploymentLocations

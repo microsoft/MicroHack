@@ -55,6 +55,7 @@ $providers = @(
     # Compute and Confidential Computing
     "Microsoft.Compute",
     "Microsoft.ConfidentialLedger",
+    "Microsoft.Quota",
 
     # Security and Compliance
     "Microsoft.Security",

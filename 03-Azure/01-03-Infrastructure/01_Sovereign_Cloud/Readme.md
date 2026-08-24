@@ -66,6 +66,26 @@ In order to use the MicroHack time most effectively, the following tasks should 
 4. [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli). **Hint:** Make sure to use the latest version available.
 5. Challenge 7: `kubectl`, `jq`, OpenSSL, the [Radius CLI](https://docs.radapp.io/getting-started/install/), and the Azure CLI `bastion` extension
 
+The shared Challenge 4/5/7 platform requires **4 Standard DCasv6 Family vCPUs per participant**. With the default two labs per subscription, request a minimum quota of 8 vCPUs in at least one configured region before running Step 2. For example:
+
+```powershell
+./resources/subscription-preparations/2-vcpu-quotas.ps1 -Region swedencentral -NumberOfLabUsers 2 -SubmitQuotaRequests
+```
+
+Run the check for `spaincentral` as well if it should remain available for fallback.
+
+Organizers can optionally use [Azure Quick Review (AZQR)](https://github.com/Azure/azqr) 4.0 or later to compare the curated candidate regions and export SKU, quota, and capacity-reservation inventory:
+
+```bash
+azqr region-selection \
+	--subscription-id <subscription-id> \
+	--target-regions swedencentral,spaincentral \
+	--json \
+	--output-name sovereign-region-assessment
+```
+
+Use the AZQR report for planning and preferred-region ordering, not as the deployment gate. Region Selection derives required SKUs from existing resources, so a greenfield subscription might not include the planned `Standard_DC2as_v6` SKU in its score. Capacity Reservation Group inventory also does not guarantee on-demand capacity. Step 2 therefore checks `Standard_DC2as_v6` subscription availability and DCasv6 quota directly, then retains regional fallback for deployment-time capacity failures.
+
 ### Cost estimates
 
 The main cost driver for this MicroHack is virtual machines:

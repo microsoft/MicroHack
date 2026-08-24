@@ -3,6 +3,6 @@
   "groups": [],
   "deploymentType": "resourcegroup",
   "labsPerSubscription": 2,
-  "preferredLocation": "swedencentral, italynorth, spaincentral",
+  "preferredLocation": "swedencentral, spaincentral",
   "estimatedDailyCostsUsd": 55.0
 }

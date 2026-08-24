@@ -49,6 +49,47 @@ if($PreferredLocation.Count -gt 0) {
 } else {
     $deploymentLocations = @('swedencentral')
 }
+
+$confidentialVmSize = 'Standard_DC2as_v6'
+$confidentialQuotaRequired = 4
+$eligibleDeploymentLocations = @()
+$regionReadinessSummary = @()
+foreach($candidateLocation in $deploymentLocations) {
+    $skuAvailable = Get-AzComputeResourceSku -Location $candidateLocation -ErrorAction Stop |
+        Where-Object {
+            $_.ResourceType -ieq 'virtualMachines' -and
+            $_.Name -ieq $confidentialVmSize -and
+            -not ($_.Restrictions | Where-Object { $_.Type -ieq 'Location' })
+        } |
+        Select-Object -First 1
+
+    if($null -eq $skuAvailable) {
+        $regionReadinessSummary += "${candidateLocation}: $confidentialVmSize unavailable"
+        Write-Warning "Skipping $candidateLocation because $confidentialVmSize is unavailable for this subscription."
+        continue
+    }
+
+    $quota = Get-AzVMUsage -Location $candidateLocation -ErrorAction Stop |
+        Where-Object { $_.Name.Value -ieq 'standardDCasv6Family' } |
+        Select-Object -First 1
+
+    $current = if($null -eq $quota) { 0 } else { $quota.CurrentValue }
+    $limit = if($null -eq $quota) { 0 } else { $quota.Limit }
+    $available = $limit - $current
+    $regionReadinessSummary += "${candidateLocation}: $confidentialVmSize available, ${current}/${limit} DCasv6 vCPUs used"
+
+    if($available -ge $confidentialQuotaRequired) {
+        $eligibleDeploymentLocations += $candidateLocation
+    } else {
+        Write-Warning "Skipping $candidateLocation because only $available of $confidentialQuotaRequired required Standard DCasv6 Family vCPUs are available."
+    }
+}
+
+if($eligibleDeploymentLocations.Count -eq 0) {
+    throw "No preferred region satisfies the confidential compute requirements ($($regionReadinessSummary -join '; ')). Ensure $confidentialVmSize is available and request at least $confidentialQuotaRequired available Standard DCasv6 Family vCPUs per participant in one configured region before rerunning Step 2."
+}
+
+$deploymentLocations = $eligibleDeploymentLocations
 $effectiveLocation = $deploymentLocations[0]
 
 # With deploymentType = resourcegroup the platform has already created one resource
@@ -98,6 +139,7 @@ $sovereignLabResult = Invoke-MhhDeploymentWithRegionFallback `
         nameSuffix = $nameSuffix
         adminPassword = $k3sAdminPassword
         cvmAdminPassword = $cvmAdminPassword
+        confidentialVmSize = $confidentialVmSize
     } `
     -DeploymentNamePrefix    'sovereign-lab' `
     -Tag                     @{

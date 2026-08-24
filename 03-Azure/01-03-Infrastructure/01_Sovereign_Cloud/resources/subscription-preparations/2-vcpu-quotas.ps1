@@ -17,7 +17,7 @@
     Azure region for quota check (e.g., eastus, northeurope). If not provided, the script will prompt for selection.
 
 .PARAMETER NumberOfLabUsers
-    Number of lab users to calculate quota requirements for
+    Number of lab participants hosted by each selected subscription
 
 .PARAMETER ShowCurrentUsageOnly
     Only display current quota usage without calculating requirements
@@ -33,8 +33,8 @@
     Interactive mode - prompts for region and user count
 
 .EXAMPLE
-    .\2-vcpu-quotas.ps1 -Region "northeurope" -NumberOfLabUsers 10 -SubmitQuotaRequests
-    Check quotas for 10 users in North Europe and submit increase requests if needed
+    .\2-vcpu-quotas.ps1 -Region "swedencentral" -NumberOfLabUsers 2 -SubmitQuotaRequests
+    Check quotas for two participants in Sweden Central and submit increase requests if needed
 
 .NOTES
     Author: MicroHack Team
@@ -81,27 +81,19 @@ function Get-AzureRegion {
     if ([string]::IsNullOrWhiteSpace($Region)) {
         Write-Host "`n=== Select Azure Region ===" -ForegroundColor Cyan
         Write-Host "Recommended regions for Sovereign Cloud MicroHack:"
-        Write-Host "  1. North Europe (northeurope)"
-        Write-Host "  2. Norway East (norwayeast)"
-        Write-Host "  3. West Europe (westeurope)"
-        Write-Host "  4. Germany West Central (germanywestcentral)"
-        Write-Host "  5. UK South (uksouth)"
-        Write-Host "  6. Switzerland North (switzerlandnorth)"
-        Write-Host "  7. Enter custom region"
+        Write-Host "  1. Sweden Central (swedencentral)"
+        Write-Host "  2. Spain Central (spaincentral)"
+        Write-Host "  3. Enter custom region"
 
-        $choice = Read-Host "`nEnter your choice (1-7)"
+        $choice = Read-Host "`nEnter your choice (1-3)"
 
         $script:Region = switch ($choice) {
-            "1" { "northeurope" }
-            "2" { "norwayeast" }
-            "3" { "westeurope" }
-            "4" { "germanywestcentral" }
-            "5" { "uksouth" }
-            "6" { "switzerlandnorth" }
-            "7" { Read-Host "Enter Azure region (e.g., eastus, westeurope)" }
+            "1" { "swedencentral" }
+            "2" { "spaincentral" }
+            "3" { Read-Host "Enter Azure region (e.g., swedencentral, spaincentral)" }
             default {
-                Write-Warning "Invalid choice. Defaulting to North Europe (northeurope)."
-                "northeurope"
+                Write-Warning "Invalid choice. Defaulting to Sweden Central (swedencentral)."
+                "swedencentral"
             }
         }
     }
@@ -112,7 +104,7 @@ function Get-AzureRegion {
 function Get-LabUserCount {
     if ($NumberOfLabUsers -eq 0 -and -not $ShowCurrentUsageOnly) {
         do {
-            $userInput = Read-Host "`nEnter the number of lab users (1-60)"
+            $userInput = Read-Host "`nEnter the number of participants hosted by each selected subscription (1-60)"
             $script:NumberOfLabUsers = [int]$userInput
         } while ($NumberOfLabUsers -lt 1 -or $NumberOfLabUsers -gt 60)
     }
@@ -300,8 +292,8 @@ $quotaNameMapping = @{
     "Standard DSv5 Family vCPUs"                   = "StandardDSv5Family"
     "Standard DSv6 Family vCPUs"                   = "StandardDSv6Family"
     "Standard DASv5 Family vCPUs"                  = "StandardDASv5Family"
-    "Standard DCasv6 Family vCPUs (Confidential)"  = "StandardDCasv6Family"
-    "Standard DCadsv6 Family vCPUs (Confidential)" = "StandardDCadsv6Family"
+    "Standard DCasv6 Family vCPUs (Confidential)"  = "standardDCasv6Family"
+    "Standard DCadsv6 Family vCPUs (Confidential)" = "standardDCadsv6Family"
     "Standard ESv5 Family vCPUs"                   = "StandardESv5Family"
 }
 
@@ -349,8 +341,8 @@ foreach ($subscription in $selectedSubscriptions) {
         "StandardDSv5Family"       = "Standard DSv5 Family vCPUs"
         "StandardDSv6Family"       = "Standard DSv6 Family vCPUs"
         "StandardDASv5Family"      = "Standard DASv5 Family vCPUs"
-        "StandardDCasv6Family"     = "Standard DCasv6 Family vCPUs (Confidential)"
-        "StandardDCadsv6Family"    = "Standard DCadsv6 Family vCPUs (Confidential)"
+        "standardDCasv6Family"     = "Standard DCasv6 Family vCPUs (Confidential)"
+        "standardDCadsv6Family"    = "Standard DCadsv6 Family vCPUs (Confidential)"
         "StandardESv5Family"       = "Standard ESv5 Family vCPUs"
     }
 
@@ -417,7 +409,7 @@ foreach ($subscription in $selectedSubscriptions) {
             Shared  = 32
             Name    = "Standard DSv6 Family vCPUs"
         }
-        "StandardDCasv6Family" = @{
+        "standardDCasv6Family" = @{
             PerUser = 4
             Shared  = 0
             Name    = "Standard DCasv6 Family vCPUs (Confidential)"

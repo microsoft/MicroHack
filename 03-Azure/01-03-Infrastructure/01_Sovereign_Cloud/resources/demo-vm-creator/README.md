@@ -94,6 +94,11 @@ LocalBox template, and submits the deployment asynchronously. Step 2 is
 considered successful when Azure accepts that deployment; it does not wait for
 the full LocalBox environment to finish provisioning.
 
+The LocalBox host, network, Bastion, and Log Analytics resources use the selected
+lab region. Azure Local registration and its staging storage account use Australia East,
+which is a supported Azure Local registration region and is not blocked by the hosted
+lab subscription policy that denies West Europe.
+
 After Step 2 completes, a facilitator must verify the deployment manually:
 
 1. Open `rg-localbox-shared` in the Azure Portal and select **Deployments**.

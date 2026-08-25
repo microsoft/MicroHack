@@ -184,6 +184,7 @@ else {
                 -ResourceGroupName $localBoxResourceGroupName `
                 -Location $localBoxLocation `
                 -AzureLocalResourceProviderObjectId $azureLocalResourceProviderObjectIds[0] `
+                -AzureLocalInstanceLocation 'australiaeast' `
                 -NoWait
 
             if (-not $localBoxDeployment -or $localBoxDeployment.ProvisioningState -ne 'Submitted') {

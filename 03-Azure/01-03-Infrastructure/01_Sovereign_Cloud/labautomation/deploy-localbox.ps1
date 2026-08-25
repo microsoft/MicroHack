@@ -48,7 +48,7 @@ param(
     [string]$AzureLocalResourceProviderObjectId,
 
     [ValidateSet('australiaeast', 'southcentralus', 'eastus', 'westeurope', 'southeastasia', 'canadacentral', 'japaneast', 'centralindia')]
-    [string]$AzureLocalInstanceLocation = 'westeurope',
+    [string]$AzureLocalInstanceLocation = 'australiaeast',
 
     [switch]$NoWait
 )

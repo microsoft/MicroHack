@@ -881,7 +881,7 @@ Get-AzSqlInstance -ResourceGroupName $ResourceGroupName |
 
 | Parameter | Description |
 | --- | --- |
-| `ResourceId` (`string[]`, required, positional 0) | Azure resource IDs whose system-assigned identities receive the role. Accepts pipeline input and the aliases `Id` and `ResourceIds`. Duplicate IDs are processed once. |
+| `ResourceId` (`string[]`, required, positional 0) | Azure resource IDs whose system-assigned identities receive the role.<br><br>Supported providers:<br>• `Microsoft.Sql/managedInstances`<br>• `Microsoft.Compute/virtualMachines`<br>• `Microsoft.Web/sites`<br>• `Microsoft.App/containerApps`<br><br>Accepts pipeline input and the aliases `Id` and `ResourceIds`. Duplicate IDs are processed once. |
 | `Role` (`string[]`, positional 1) | Directory roles to grant. Only `Directory Readers` (or `Directory Reader`) is currently supported. Default `Directory Readers`. |
 | `TimeoutSeconds` (`int`, 60-3600) | Maximum time to wait for the container-wide directory-role lock. Default 900. |
 

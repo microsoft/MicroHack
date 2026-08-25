@@ -215,10 +215,30 @@ elseif ([string]::IsNullOrEmpty($WindowsAdminPassword)) {
     $generatedPassword = $true
 }
 
-$resourceGroup = Invoke-AzJson -Arguments @(
-    'group', 'create', '--subscription', $SubscriptionId, '--name', $ResourceGroupName,
-    '--location', $Location, '--tags', 'workload=sovereign-localbox', 'challenge=6'
-)
+$resourceGroupExists = & az group exists `
+    --subscription $SubscriptionId `
+    --name $ResourceGroupName `
+    --output tsv `
+    --only-show-errors
+if ($LASTEXITCODE -ne 0) {
+    throw "Unable to determine whether resource group $ResourceGroupName exists."
+}
+
+if ($resourceGroupExists -eq 'true') {
+    $resourceGroup = Invoke-AzJson -Arguments @(
+        'group', 'show', '--subscription', $SubscriptionId, '--name', $ResourceGroupName
+    )
+    Invoke-AzJson -Arguments @(
+        'group', 'update', '--subscription', $SubscriptionId, '--name', $ResourceGroupName,
+        '--set', 'tags.workload=sovereign-localbox', 'tags.challenge=6'
+    ) | Out-Null
+}
+else {
+    $resourceGroup = Invoke-AzJson -Arguments @(
+        'group', 'create', '--subscription', $SubscriptionId, '--name', $ResourceGroupName,
+        '--location', $Location, '--tags', 'workload=sovereign-localbox', 'challenge=6'
+    )
+}
 Write-Host "Resource group ready: $($resourceGroup.name) ($($resourceGroup.location))" -ForegroundColor Green
 
 $tempDirectory = Join-Path ([System.IO.Path]::GetTempPath()) "localbox-bicep-$([guid]::NewGuid())"

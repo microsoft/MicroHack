@@ -89,7 +89,7 @@ Deployments can take 2-6 hours depending on the environment. Monitor progress in
 #### Hackathons console deployment behavior
 
 The Hackathons console runs `labautomation/shared-deploy-lab.ps1` once per
-subscription. The shared hook creates `rg-localbox-shared`, validates the
+subscription. The shared hook creates or reuses `rg-localbox-shared`, validates the
 LocalBox template, and submits the deployment asynchronously. Step 2 is
 considered successful when Azure accepts that deployment; it does not wait for
 the full LocalBox environment to finish provisioning.

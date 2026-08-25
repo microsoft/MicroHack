@@ -5,7 +5,7 @@ Prepares a subscription for Sovereign Cloud MicroHack labs.
 Runs once per subscription before participant lab deployments and registers the
 required Azure resource providers. It ensures one preferred region has the VM
 SKUs and compute quota required by the subscription's participant count.
-LocalBox deployment is temporarily disabled.
+It also submits one shared LocalBox environment per subscription for Challenge 6.
 #>
 param(
     [Parameter(Mandatory=$true)]
@@ -151,10 +151,6 @@ if(-not $selectedCandidate) {
 
 Set-MhhConfidentialComputeSelection -SubscriptionId $SubscriptionId -Candidate $selectedCandidate
 Write-Host "Selected $($selectedCandidate.VmSize) in $($selectedCandidate.Location); compute SKUs and quotas are ready for $participantCount participants." -ForegroundColor Green
-<#
-
-The Sovereign Cloud shared deployment needs to resolve the tenant-specific object ID of the Microsoft.AzureStackHCI enterprise application (appId: 1412d89f-b8a8-4111-b4fd-e82905cbd85d).
-Disabled Localbox until this is resolved, as the deployment will fail with an InsufficientPermissions error when the service principal cannot be resolved.
 
 $localBoxResourceGroupName = 'rg-localbox-shared'
 $localBoxLocation = if ($PreferredLocation.Count -gt 0) { $PreferredLocation[0] } else { 'swedencentral' }
@@ -181,6 +177,7 @@ else {
         -SubscriptionId $SubscriptionId `
         -ResourceGroupName $localBoxResourceGroupName `
         -Location $localBoxLocation `
+        -AzureLocalResourceProviderObjectId $azureLocalResourceProviderObjectIds[0] `
         -NoWait
 
     if (-not $? -or -not $localBoxDeployment -or $localBoxDeployment.ProvisioningState -ne 'Submitted') {
@@ -216,4 +213,3 @@ foreach ($participantObjectId in $AllowedEntraUserIds) {
         note = 'Shared Challenge 6 environment; readiness is verified by the facilitator'
     }
 }
-#>

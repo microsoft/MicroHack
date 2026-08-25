@@ -17,6 +17,9 @@ LOCALBOX_ADMIN_PASSWORD environment variable so the secret is not in the process
 A random password is generated when neither value is supplied.
 .PARAMETER GithubRef
 The azure_arc branch, tag, or commit used for both Bicep and runtime artifacts.
+.PARAMETER AzureLocalResourceProviderObjectId
+Optional tenant-specific object ID of the Microsoft.AzureStackHCI enterprise
+application. The script resolves it through Microsoft Graph when omitted.
 .PARAMETER NoWait
 Submit the deployment without waiting for ARM completion.
 #>
@@ -41,6 +44,8 @@ param(
     [string]$GithubAccount = 'microsoft',
 
     [string]$GithubRef = 'main',
+
+    [string]$AzureLocalResourceProviderObjectId,
 
     [ValidateSet('australiaeast', 'southcentralus', 'eastus', 'westeurope', 'southeastasia', 'canadacentral', 'japaneast', 'centralindia')]
     [string]$AzureLocalInstanceLocation = 'westeurope',
@@ -191,12 +196,14 @@ if (-not $usage -or ($usage.limit - $usage.currentValue) -lt 32) {
     throw "At least 32 unused $familyName vCPUs are required in $Location."
 }
 
-$servicePrincipals = Invoke-AzJson -Arguments @(
-    'ad', 'sp', 'list', '--display-name', 'Microsoft.AzureStackHCI',
-    '--query', "[?appId=='1412d89f-b8a8-4111-b4fd-e82905cbd85d']"
-)
-if ($servicePrincipals.Count -ne 1) {
-    throw "Expected one Microsoft.AzureStackHCI resource-provider service principal, found $($servicePrincipals.Count)."
+if ([string]::IsNullOrWhiteSpace($AzureLocalResourceProviderObjectId)) {
+    $servicePrincipals = Invoke-AzJson -Arguments @(
+        'ad', 'sp', 'list', '--filter', "appId eq '1412d89f-b8a8-4111-b4fd-e82905cbd85d'"
+    )
+    if ($servicePrincipals.Count -ne 1) {
+        throw "Expected one Microsoft.AzureStackHCI resource-provider service principal, found $($servicePrincipals.Count)."
+    }
+    $AzureLocalResourceProviderObjectId = $servicePrincipals[0].id
 }
 
 $generatedPassword = $false
@@ -243,7 +250,7 @@ try {
         parameters = @{
             windowsAdminUsername = @{ value = $WindowsAdminUsername }
             windowsAdminPassword = @{ value = $WindowsAdminPassword }
-            spnProviderId = @{ value = $servicePrincipals[0].id }
+            spnProviderId = @{ value = $AzureLocalResourceProviderObjectId }
             tenantId = @{ value = $account.tenantId }
             location = @{ value = $Location }
             githubAccount = @{ value = $GithubAccount }

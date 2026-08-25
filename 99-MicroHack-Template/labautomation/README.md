@@ -510,18 +510,18 @@ Rules:
 
 ### Local testing
 
-You can run `deploy-lab.ps1` on your own machine, in the same PowerShell
-environment the platform uses, via the [`adminpwsh`](https://github.com/qxsch/adminpwsh)
-container image:
+You can run `deploy-lab.ps1` and `shared-deploy-lab.ps1` on your own machine in
+a PowerShell environment similar to the one used by the platform. Use the
+[`adminpwsh`](https://github.com/qxsch/adminpwsh) container image:
 
 ```powershell
 docker run -it -v '.\:/app' --rm "ghcr.io/qxsch/adminpwsh:latest"
 ```
 
-This mounts the current folder (the folder containing `deploy-lab.ps1`) into
-`/app` inside the container. Once you're inside the container's shell,
-authenticate Az PowerShell and the Azure CLI. Unlike a platform-triggered run,
-you need to log in yourself here:
+This mounts the current folder (the `labautomation` folder containing
+`deploy-lab.ps1` and `shared-deploy-lab.ps1`) at `/app` inside the container.
+Once inside the container's shell, authenticate Az PowerShell and the Azure
+CLI. Unlike a platform-triggered run, you need to log in yourself:
 
 ```powershell
 Connect-AzAccount -UseDeviceAuthentication
@@ -544,6 +544,8 @@ required parameters from the [contract](#required-parameter-contract):
 
 > The helper cmdlets (`New-MhhStablePassword`, `Get-MhhStableHash`,
 > `Update-MhhToken`, `Invoke-MhhTofuCommand`, …) are simplified local-dev stand-ins.
+> They are not identical to the platform versions, but they are sufficient for
+> testing your script logic and parameter contract.
 
 ## Optional hook: `shared-deploy-lab.ps1`
 
@@ -858,10 +860,15 @@ parameter and pipeline, then processes them in one synchronized operation. It
 is safe to re-run: existing memberships return `AlreadyAssigned` rather than
 failing.
 
-Currently, the helper supports only **Azure SQL Managed Instances**
-(`Microsoft.Sql/managedInstances`) and only the **Directory Readers** role.
-Unsupported or invalid resource IDs are returned with status `Skipped` and
-produce a warning.
+The helper supports only the following provider types:
+
+- `Microsoft.Sql/managedInstances`
+- `Microsoft.Compute/virtualMachines`
+- `Microsoft.Web/sites`
+- `Microsoft.App/containerApps`
+
+Only the **Directory Readers** role is supported. Unsupported or invalid
+resource IDs are returned with status `Skipped` and produce a warning.
 
 ```powershell
 # One SQL Managed Instance
@@ -874,7 +881,7 @@ Get-AzSqlInstance -ResourceGroupName $ResourceGroupName |
 
 | Parameter | Description |
 | --- | --- |
-| `ResourceId` (`string[]`, required, positional 0) | Azure resource IDs whose system-assigned identities receive the role. Accepts pipeline input and the aliases `Id` and `ResourceIds`. Duplicate IDs are processed once. |
+| `ResourceId` (`string[]`, required, positional 0) | Azure resource IDs whose system-assigned identities receive the role.<br><br>Supported providers:<br>• `Microsoft.Sql/managedInstances`<br>• `Microsoft.Compute/virtualMachines`<br>• `Microsoft.Web/sites`<br>• `Microsoft.App/containerApps`<br><br>Accepts pipeline input and the aliases `Id` and `ResourceIds`. Duplicate IDs are processed once. |
 | `Role` (`string[]`, positional 1) | Directory roles to grant. Only `Directory Readers` (or `Directory Reader`) is currently supported. Default `Directory Readers`. |
 | `TimeoutSeconds` (`int`, 60-3600) | Maximum time to wait for the container-wide directory-role lock. Default 900. |
 

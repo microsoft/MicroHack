@@ -153,7 +153,11 @@ Set-MhhConfidentialComputeSelection -SubscriptionId $SubscriptionId -Candidate $
 Write-Host "Selected $($selectedCandidate.VmSize) in $($selectedCandidate.Location); compute SKUs and quotas are ready for $participantCount participants." -ForegroundColor Green
 
 $localBoxResourceGroupName = 'rg-localbox-shared'
-$localBoxLocation = if ($PreferredLocation.Count -gt 0) { $PreferredLocation[0] } else { 'swedencentral' }
+$localBoxLocations = @(
+    @($selectedCandidate.Location) + $PreferredLocation |
+        Where-Object { $_ } |
+        Select-Object -Unique
+)
 $activeDeploymentStates = @('Accepted', 'Running', 'Ready', 'Creating', 'Created', 'Succeeded')
 $resourceGroup = Get-AzResourceGroup -Name $localBoxResourceGroupName -ErrorAction SilentlyContinue
 $localBoxDeployment = if ($resourceGroup) {
@@ -172,16 +176,40 @@ if ($localBoxDeployment) {
     Write-Host "Reusing LocalBox deployment '$($localBoxDeployment.DeploymentName)' ($($localBoxDeployment.ProvisioningState))." -ForegroundColor Green
 }
 else {
-    Write-Host "Submitting shared LocalBox deployment in $localBoxLocation..." -ForegroundColor Cyan
-    $localBoxDeployment = & (Join-Path $PSScriptRoot 'deploy-localbox.ps1') `
-        -SubscriptionId $SubscriptionId `
-        -ResourceGroupName $localBoxResourceGroupName `
-        -Location $localBoxLocation `
-        -AzureLocalResourceProviderObjectId $azureLocalResourceProviderObjectIds[0] `
-        -NoWait
+    foreach ($localBoxLocation in $localBoxLocations) {
+        try {
+            Write-Host "Submitting shared LocalBox deployment in $localBoxLocation..." -ForegroundColor Cyan
+            $localBoxDeployment = & (Join-Path $PSScriptRoot 'deploy-localbox.ps1') `
+                -SubscriptionId $SubscriptionId `
+                -ResourceGroupName $localBoxResourceGroupName `
+                -Location $localBoxLocation `
+                -AzureLocalResourceProviderObjectId $azureLocalResourceProviderObjectIds[0] `
+                -NoWait
 
-    if (-not $? -or -not $localBoxDeployment -or $localBoxDeployment.ProvisioningState -ne 'Submitted') {
-        throw "LocalBox deployment submission failed for subscription $SubscriptionId."
+            if (-not $localBoxDeployment -or $localBoxDeployment.ProvisioningState -ne 'Submitted') {
+                throw "LocalBox deployment submission did not return the expected Submitted state."
+            }
+            break
+        }
+        catch {
+            $failureDetails = @(
+                $_.Exception.ToString()
+                $_.ErrorDetails.Message
+            ) | Where-Object { $_ }
+            $failureDetails = $failureDetails -join ' '
+            $retryableRegionalFailure = $failureDetails -match 'RequestDisallowedByAzure|locationineligible|SkuNotAvailable|QuotaExceeded|OperationNotAllowed|AllocationFailed|VM size .+ unavailable|At least 32 unused'
+
+            if ($retryableRegionalFailure -and $localBoxLocation -ne $localBoxLocations[-1]) {
+                Write-Warning "LocalBox is unavailable in $localBoxLocation; trying the next preferred region. $($_.Exception.Message)"
+                $localBoxDeployment = $null
+                continue
+            }
+            throw
+        }
+    }
+
+    if (-not $localBoxDeployment) {
+        throw "LocalBox deployment submission failed in all candidate regions for subscription $SubscriptionId."
     }
 }
 

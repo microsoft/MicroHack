@@ -81,8 +81,9 @@ To complete this MicroHack you'll need:
   can bridge those credentials into a local `azd` environment the (unchanged) workshop
   notebooks read via `azd env get-value`.
 - The Azure CLI (`az`), logged in (`az login`) against your lab's subscription/tenant.
-- The workshop's Python environment set up (`uv sync` or `pip install -r requirements.txt`
-  from the `reference/ai-hub-gateway-solution-accelerator/workshop/` folder).
+- The workshop's Python environment set up (`uv sync` — see
+  [`challenges/workshop/readme.md`](challenges/workshop/readme.md) — or
+  `pip install -r requirements.txt` from the `challenges/workshop/` folder).
 - Comfort running and reading Jupyter notebooks in VS Code.
 
 > [!TIP]

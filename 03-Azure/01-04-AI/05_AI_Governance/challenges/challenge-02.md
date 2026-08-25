@@ -28,7 +28,7 @@ been run for your attendee credentials.
 ### Part B — Run the Universal LLM API validation notebook (25 min)
 
 1. Open
-   `../reference/ai-hub-gateway-solution-accelerator/workshop/2. citadel-universal-llm-api-all-models-tests.ipynb`.
+   `workshop/2. citadel-universal-llm-api-all-models-tests.ipynb`
 2. Run the notebook's sections in order:
    - `0️⃣ Initialize Notebook Variables`
    - `1️⃣ Verify Azure CLI and Connected Subscription`

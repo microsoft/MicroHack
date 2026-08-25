@@ -31,7 +31,7 @@ Same prerequisite as every notebook in this MicroHack — see
 ### Part B — Run the agent frameworks notebook (30 min)
 
 1. Open
-   `../reference/ai-hub-gateway-solution-accelerator/workshop/4. citadel-agent-frameworks-tests.ipynb`.
+   `workshop/4. citadel-agent-frameworks-tests.ipynb`
 2. Run the notebook's sections in order:
    - `0️⃣ Initialize Notebook Variables`
    - `1️⃣ Verify Azure CLI and Connected Subscription`

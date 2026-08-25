@@ -1,0 +1,18 @@
+<policies>
+  <inbound>
+    <base />
+    <set-backend-service backend-id="__BACKEND_NAME__" />
+    <set-header name="Host" exists-action="override">
+      <value>__BACKEND_HOST__</value>
+    </set-header>
+  </inbound>
+  <backend>
+    <base />
+  </backend>
+  <outbound>
+    <base />
+  </outbound>
+  <on-error>
+    <base />
+  </on-error>
+</policies>

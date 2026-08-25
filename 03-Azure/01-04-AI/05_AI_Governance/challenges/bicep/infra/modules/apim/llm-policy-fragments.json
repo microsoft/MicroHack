@@ -1,0 +1,158 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.39.26.7824",
+      "templateHash": "18094385805605856491"
+    }
+  },
+  "parameters": {
+    "apimServiceName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the API Management service"
+      }
+    },
+    "policyFragmentConfig": {
+      "type": "object",
+      "metadata": {
+        "description": "Policy fragment configuration from backend pools module"
+      }
+    },
+    "managedIdentityClientId": {
+      "type": "string",
+      "metadata": {
+        "description": "User-assigned managed identity client ID for authentication"
+      }
+    },
+    "llmBackendConfig": {
+      "type": "array",
+      "defaultValue": [],
+      "metadata": {
+        "description": "LLM backend configuration with model metadata for available models response"
+      }
+    }
+  },
+  "variables": {
+    "copy": [
+      {
+        "name": "backendPoolsArray",
+        "count": "[length(variables('allPools'))]",
+        "input": "[replace(replace(replace(replace('// Pool: POOLNAME (Type: POOLTYPE)\r\nvar pool_INDEX = new JObject()\r\n{\r\n    { \"poolName\", \"POOLNAME\" },\r\n    { \"poolType\", \"POOLTYPE\" },\r\n    { \"supportedModels\", new JArray(MODELS) }\r\n};\r\nbackendPools.Add(pool_INDEX);\r\n', 'POOLNAME', variables('allPools')[copyIndex('backendPoolsArray')].poolName), 'POOLTYPE', variables('allPools')[copyIndex('backendPoolsArray')].poolType), 'INDEX', string(copyIndex('backendPoolsArray'))), 'MODELS', join(map(variables('allPools')[copyIndex('backendPoolsArray')].supportedModels, lambda('model', format('\"{0}\"', lambdaVariables('model')))), ', '))]"
+      }
+    ],
+    "$fxv#0": "<fragment>\r\n    <!--\r\n        Fragment: Set Target Backend Pool\r\n        Purpose: Determines which backend pool to route the request to based on the requested model and access permissions\r\n        \r\n        Expected Input Variables:\r\n        - requestedModel: The model name extracted from the request payload\r\n        - defaultBackendPool: Default backend pool to use when model is not mapped (empty string = error for unmapped models)\r\n        - allowedBackendPools: Comma-separated list of allowed backend pool IDs (empty string = all pools allowed)\r\n        - backendPools: JArray containing all backend pool configurations\r\n        \r\n        Output Variables:\r\n        - targetBackendPool: The selected backend pool name or error code (ERROR_NO_MODEL, ERROR_NO_ALLOWED_POOLS)\r\n        - targetPoolType: The type of the selected backend pool (e.g., \"azure-openai\", \"ai-foundry\")\r\n    -->\r\n    \r\n    <!-- Determine target backend pool based on requested model and RBAC permissions -->\r\n    <set-variable name=\"targetBackendPool\" value=\"@{\r\n        string requestedModel = (string)context.Variables[\"requestedModel\"];\r\n        string defaultBackendPool = (string)context.Variables[\"defaultBackendPool\"];\r\n        string allowedBackendPools = (string)context.Variables[\"allowedBackendPools\"];\r\n        JArray backendPools = (JArray)context.Variables[\"backendPools\"];\r\n\r\n        var allowedPools = string.IsNullOrWhiteSpace(allowedBackendPools)\r\n            ? null\r\n            : allowedBackendPools.Split(',').Select(s => s.Trim()).Where(s => s.Length > 0).ToArray();\r\n\r\n        // Find all backend pools that support the requested model\r\n        List<JObject> matchingPools = new List<JObject>();\r\n        foreach (JObject pool in backendPools)\r\n        {\r\n            JArray supportedModels = (JArray)pool[\"supportedModels\"];\r\n            if (supportedModels.Any(model => model.ToString().Equals(requestedModel, StringComparison.OrdinalIgnoreCase)))\r\n            {\r\n                matchingPools.Add(pool);\r\n            }\r\n        }\r\n\r\n        // If we have matching pools, filter by allowed pools if necessary\r\n        if (matchingPools.Count > 0)\r\n        {\r\n            // If there are no restrictions, use the first matching pool\r\n            if (allowedPools == null || allowedPools.Length == 0)\r\n            {\r\n                return matchingPools[0][\"poolName\"].ToString();\r\n            }\r\n            \r\n            // Otherwise, find the first matching pool that is also in allowed pools\r\n            foreach (var pool in matchingPools)\r\n            {\r\n                string poolName = pool[\"poolName\"].ToString();\r\n                if (allowedPools.Contains(poolName))\r\n                {\r\n                    return poolName;\r\n                }\r\n            }\r\n            \r\n            // If no allowed pools match, check if default backend pool should be used\r\n            if (!string.IsNullOrWhiteSpace(defaultBackendPool))\r\n            {\r\n                return defaultBackendPool;\r\n            }\r\n            \r\n            // If no default is specified, return error that no allowed pools match\r\n            return \"ERROR_NO_ALLOWED_POOLS\";\r\n        }\r\n\r\n        // If no matching pools at all, check for default backend pool\r\n        if (!string.IsNullOrWhiteSpace(defaultBackendPool))\r\n        {\r\n            return defaultBackendPool;\r\n        }\r\n        \r\n        // No matching pools and no default - error\r\n        return \"ERROR_NO_MODEL\";\r\n    }\" />\r\n\r\n    <!-- Validate target backend pool and return appropriate error response if needed -->\r\n    <choose>\r\n        <when condition=\"@(((string)context.Variables[\"targetBackendPool\"]).StartsWith(\"ERROR_\"))\">\r\n            <choose>\r\n                <when condition=\"@(((string)context.Variables[\"targetBackendPool\"]) == \"ERROR_NO_MODEL\")\">\r\n                    <return-response>\r\n                        <set-status code=\"400\" reason=\"Bad Request\" />\r\n                        <set-header name=\"Content-Type\" exists-action=\"override\">\r\n                            <value>application/json</value>\r\n                        </set-header>\r\n                        <set-body>@{\r\n                            return new JObject(\r\n                                new JProperty(\"error\", new JObject(\r\n                                    new JProperty(\"message\", \"Model parameter is required in the request payload\"),\r\n                                    new JProperty(\"type\", \"invalid_request_error\"),\r\n                                    new JProperty(\"code\", \"missing_model_parameter\")\r\n                                ))\r\n                            ).ToString();\r\n                        }</set-body>\r\n                    </return-response>\r\n                </when>\r\n                <when condition=\"@(((string)context.Variables[\"targetBackendPool\"]) == \"ERROR_MODEL_NOT_SUPPORTED\")\">\r\n                    <return-response>\r\n                        <set-status code=\"400\" reason=\"Bad Request\" />\r\n                        <set-header name=\"Content-Type\" exists-action=\"override\">\r\n                            <value>application/json</value>\r\n                        </set-header>\r\n                        <set-body>@{\r\n                            string requestedModel = (string)context.Variables[\"requestedModel\"];\r\n                            JObject modelMappings = (JObject)context.Variables[\"modelMappings\"];\r\n                            JArray supportedModels = new JArray();\r\n                            \r\n                            foreach (var kvp in modelMappings)\r\n                            {\r\n                                supportedModels.Add(kvp.Key);\r\n                            }\r\n                            \r\n                            return new JObject(\r\n                                new JProperty(\"error\", new JObject(\r\n                                    new JProperty(\"message\", $\"Model '{requestedModel}' is not supported. Supported models: {string.Join(\", \", supportedModels.Select(m => m.ToString()))}\"),\r\n                                    new JProperty(\"type\", \"invalid_request_error\"),\r\n                                    new JProperty(\"code\", \"unsupported_model\"),\r\n                                    new JProperty(\"param\", \"model\"),\r\n                                    new JProperty(\"supported_models\", supportedModels)\r\n                                ))\r\n                            ).ToString();\r\n                        }</set-body>\r\n                    </return-response>\r\n                </when>\r\n                <when condition=\"@(((string)context.Variables[\"targetBackendPool\"]) == \"ERROR_NO_ALLOWED_POOLS\")\">\r\n                    <return-response>\r\n                        <set-status code=\"403\" reason=\"Forbidden\" />\r\n                        <set-header name=\"Content-Type\" exists-action=\"override\">\r\n                            <value>application/json</value>\r\n                        </set-header>\r\n                        <set-body>@{\r\n                            string requestedModel = (string)context.Variables[\"requestedModel\"];\r\n                            string allowedBackendPools = (string)context.Variables[\"allowedBackendPools\"];\r\n                            \r\n                            return new JObject(\r\n                                new JProperty(\"error\", new JObject(\r\n                                    new JProperty(\"message\", $\"Access to model '{requestedModel}' is not allowed for this client. You do not have access to any of the backend pools that support this model.\"),\r\n                                    new JProperty(\"type\", \"access_error\"),\r\n                                    new JProperty(\"code\", \"backend_pool_access_forbidden\"),\r\n                                    new JProperty(\"allowed_backend_pools\", allowedBackendPools)\r\n                                ))\r\n                            ).ToString();\r\n                        }</set-body>\r\n                    </return-response>\r\n                </when>\r\n            </choose>\r\n        </when>\r\n    </choose>\r\n\r\n    <!-- Set poolType variable based on the target backend pool -->\r\n    <set-variable name=\"targetPoolType\" value=\"@{\r\n        string targetBackendPool = (string)context.Variables[\"targetBackendPool\"];\r\n        JArray backendPools = (JArray)context.Variables[\"backendPools\"];\r\n\r\n        foreach (JObject pool in backendPools)\r\n        {\r\n            if (pool[\"poolName\"].ToString() == targetBackendPool)\r\n            {\r\n                return pool[\"poolType\"].ToString();\r\n            }\r\n        }\r\n\r\n        return string.Empty;\r\n    }\" />\r\n</fragment>\r\n",
+    "$fxv#1": "<fragment>\r\n    <!-- NOTE: emit-tokens has limited support for up to 6 custom dimensions -->\r\n    <!-- Using of optional dimensions require setting up variables before executing the policy fragment -->\r\n    <llm-emit-token-metric namespace=\"llm-usage\">\r\n        <!-- Use case or agentic platform name-->\r\n        <dimension name=\"productName\" value=\"@(context.Product?.Name?.ToString() ?? \"Portal-Admin\")\" />\r\n        \r\n        <!-- Target model or deployment name -->\r\n        <dimension name=\"deploymentName\" value=\"@((string)context.Variables.GetValueOrDefault<string>(\"requestedModel\", \"DefaultModel\"))\" />\r\n        \r\n        <!-- This is the backend processed the request-->\r\n        <dimension name=\"Backend ID\" />\r\n        \r\n        <!-- This can be your agent Id or APIM subscription id-->\r\n        <dimension name=\"appId\" value=\"@((string)context.Variables.GetValueOrDefault<string>(\"appId\", context.Subscription?.Id ?? \"Portal-Admin-Sub\"))\" />\r\n\r\n        <!-- CUSTOM DIMENSIONS: Allows defining additional context for LLM usage -->\r\n        <dimension name=\"customDimension1\" value=\"@((string)context.Variables.GetValueOrDefault<string>(\"customDimension1\", \"NA\"))\" />\r\n        <dimension name=\"customDimension2\" value=\"@((string)context.Variables.GetValueOrDefault<string>(\"customDimension2\", \"NA\"))\" />\r\n\r\n    </llm-emit-token-metric>\r\n</fragment>",
+    "$fxv#2": "<fragment>\r\n    <!--\r\n        Extract Requested Model Fragment\r\n        Purpose: Extracts the requested model from either Azure OpenAI endpoint or inference endpoint\r\n        \r\n        Supported Patterns:\r\n        1. Azure OpenAI: Model from deployment-id path parameter (/deployments/{deployment-id}/chat/completions)\r\n        2. Inference Endpoint: Model from request body JSON ({\"model\": \"model-name\", ...})\r\n        \r\n        Output Variable:\r\n        - requestedModel: The extracted model name (empty string if not found)\r\n        \r\n        Logic:\r\n        - First attempts to extract from deployment-id path parameter (Azure OpenAI pattern)\r\n        - If not found, attempts to extract from request body model field (Inference pattern)\r\n        - Returns empty string if neither pattern matches\r\n    -->\r\n    \r\n    <set-variable name=\"requestedModel\" value=\"@{\r\n        try\r\n        {\r\n            // First try to get model from deployment-id path parameter (Azure OpenAI pattern)\r\n            var deploymentId = context.Request.MatchedParameters.ContainsKey(\"deployment-id\") \r\n                ? context.Request.MatchedParameters[\"deployment-id\"] \r\n                : null;\r\n            \r\n            if (!string.IsNullOrEmpty(deploymentId))\r\n            {\r\n                return deploymentId;\r\n            }\r\n            \r\n            // If not found, try to get model from request body (Inference endpoint pattern)\r\n            var bodyText = context.Request.Body.As<string>(preserveContent: true);\r\n            if (string.IsNullOrEmpty(bodyText))\r\n            {\r\n                return string.Empty;\r\n            }\r\n            \r\n            var body = JObject.Parse(bodyText);\r\n            return body[\"model\"] != null ? body[\"model\"].ToString() : string.Empty;\r\n        }\r\n        catch\r\n        {\r\n            return string.Empty;\r\n        }\r\n    }\" />\r\n    \r\n    <!-- Validate that model parameter is present -->\r\n    <choose>\r\n        <when condition=\"@(string.IsNullOrEmpty((string)context.Variables[\"requestedModel\"]))\">\r\n            <!-- If requested model is not identified, return 400 error -->\r\n            <return-response>\r\n                <set-status code=\"400\" reason=\"Bad Request\" />\r\n                <set-header name=\"Content-Type\" exists-action=\"override\">\r\n                    <value>application/json</value>\r\n                </set-header>\r\n                <set-body>@{\r\n                    return new JObject(\r\n                        new JProperty(\"error\", new JObject(\r\n                            new JProperty(\"message\", \"Model could not be detected\"),\r\n                            new JProperty(\"type\", \"invalid_request_error\"),\r\n                            new JProperty(\"code\", \"missing_model_parameter\"),\r\n                            new JProperty(\"param\", \"model\")\r\n                        ))\r\n                    ).ToString();\r\n                }</set-body>\r\n            </return-response>\r\n            <!-- Alternatively you can set default model by uncommenting below -->\r\n            <!-- \r\n                <set-variable name=\"requestedModel\" value=\"default-model-name\" />\r\n            -->\r\n        </when>\r\n    </choose>\r\n</fragment>\r\n",
+    "allPools": "[union(parameters('policyFragmentConfig').backendPools, parameters('policyFragmentConfig').directBackends)]",
+    "backendPoolsCode": "[join(variables('backendPoolsArray'), '\n')]",
+    "modelDeploymentsCodeResult": "[reduce(parameters('llmBackendConfig'), createObject('code', '', 'index', 0), lambda('acc', 'config', reduce(lambdaVariables('config').supportedModels, lambdaVariables('acc'), lambda('modelAcc', 'model', createObject('code', format('{0}\n// Model: {1} from backend: {2}\nvar deployment_{3} = new JObject()\n{{\n    {{ \"id\", \"{4}\" }},\n    {{ \"type\", \"{5}\" }},\n    {{ \"name\", \"{6}\" }},\n    {{ \"sku\", new JObject() {{ {{ \"name\", \"{7}\" }}, {{ \"capacity\", {8} }} }} }},\n    {{ \"properties\", new JObject() {{\n        {{ \"model\", new JObject() {{ {{ \"format\", \"{9}\" }}, {{ \"name\", \"{10}\" }}, {{ \"version\", \"{11}\" }} }} }},\n        {{ \"capabilities\", new JObject() {{ {{ \"chatCompletion\", \"true\" }} }} }},\n        {{ \"provisioningState\", \"Succeeded\" }}\n    }}}}\n}};\nmodelDeployments.Add(deployment_{12});', lambdaVariables('modelAcc').code, lambdaVariables('model').name, lambdaVariables('config').backendId, lambdaVariables('modelAcc').index, lambdaVariables('config').backendId, lambdaVariables('config').backendType, lambdaVariables('model').name, coalesce(tryGet(lambdaVariables('model'), 'sku'), 'Standard'), coalesce(tryGet(lambdaVariables('model'), 'capacity'), 100), coalesce(tryGet(lambdaVariables('model'), 'modelFormat'), 'OpenAI'), lambdaVariables('model').name, coalesce(tryGet(lambdaVariables('model'), 'modelVersion'), '1'), lambdaVariables('modelAcc').index), 'index', add(lambdaVariables('modelAcc').index, 1))))))]",
+    "modelDeploymentsCode": "[variables('modelDeploymentsCodeResult').code]",
+    "setBackendPoolsFragmentXml": "<fragment>\r\n    <!--\r\n        Fragment: Set Backend Pools\r\n        Purpose: Defines backend pool configurations with their supported models and routing settings\r\n        \r\n        Expected Input Variables:\r\n        - requestedModel: The model name extracted from the request payload\r\n        - defaultBackendPool: Default backend pool to use when model is not mapped (empty string = error for unmapped models)\r\n        - allowedBackendPools: Comma-separated list of allowed backend pool IDs (empty string = all pools allowed)\r\n        \r\n        Output Variables:\r\n        - backendPools: JArray containing all backend pool configurations\r\n    -->\r\n    \r\n    <!-- Define backend pools with their supported models and routing configurations -->\r\n    <set-variable name=\"backendPools\" value=\"@{\r\n        JArray backendPools = new JArray();\r\n        \r\n        // Update the below if condition when using multiple APIM gateway regions/SHGW to get different configurations for each region\r\n        if(context.Deployment.Region == \"All Regions\" || true)\r\n        {\r\n            // Backend Pools Configuration (Auto-generated from Bicep deployment)\r\n            //{backendPoolsCode}\r\n        }\r\n        else\r\n        {\r\n            // No backend pools found for selected region\r\n            // Either return error (default behavior) or set default pools in the else section\r\n        }\r\n        \r\n        return backendPools;   \r\n    }\" />\r\n</fragment>",
+    "updatedSetBackendPoolsFragmentXml": "[replace(variables('setBackendPoolsFragmentXml'), '//{backendPoolsCode}', variables('backendPoolsCode'))]",
+    "setBackendAuthorizationFragmentXml": "<fragment>\r\n    <!--\r\n        Fragment: Set Target Authorization\r\n        Purpose: Configures authentication headers and URL rewriting based on backend pool type\r\n        \r\n        Expected Input Variables:\r\n        - targetPoolType: The type of the target backend pool (e.g., \"azure-openai\", \"ai-foundry\")\r\n        - targetBackendPool: The selected backend pool name\r\n        - requestedModel: The model name extracted from the request payload\r\n        \r\n        Expected Named Values:\r\n        - uami-client-id: User-assigned managed identity client ID for authentication\r\n        \r\n        Side Effects:\r\n        - Sets Authorization header with managed identity token\r\n        - Rewrites request URL for Azure OpenAI to include deployment path\r\n        - Sets backend service to the target backend pool\r\n    -->\r\n    \r\n    <!-- Configure authentication and URL rewriting based on backend pool type -->\r\n    <choose>\r\n        <when condition=\"@(((string)context.Variables[\"targetPoolType\"]) == \"azure-openai\")\">\r\n            <!-- Azure OpenAI: Use managed identity authentication with Cognitive Services resource -->\r\n            <authentication-managed-identity resource=\"https://cognitiveservices.azure.com\" output-token-variable-name=\"msi-access-token\" client-id=\"{{uami-client-id}}\" ignore-error=\"false\" />\r\n            <set-header name=\"Authorization\" exists-action=\"override\">\r\n                <value>@(\"Bearer \" + (string)context.Variables[\"msi-access-token\"])</value>\r\n            </set-header>\r\n            \r\n            <!-- Rewrite URL to inject /deployments/{model}/ path for Azure OpenAI API format -->\r\n            <set-variable name=\"rewriteTemplate\" value=\"@{\r\n                string requestedModel = (string)context.Variables[\"requestedModel\"];\r\n                return string.Format(\"/deployments/{0}/chat/completions\", requestedModel);\r\n            }\" />\r\n            <rewrite-uri template=\"@((string)context.Variables[\"rewriteTemplate\"])\" copy-unmatched-params=\"true\" />\r\n        </when>\r\n        <when condition=\"@(((string)context.Variables[\"targetPoolType\"]) == \"ai-foundry\")\">\r\n            <!-- AI Foundry: Use managed identity authentication with Cognitive Services resource -->\r\n            <!-- No URL rewriting needed - AI Foundry uses standard OpenAI-compatible paths -->\r\n            <authentication-managed-identity resource=\"https://cognitiveservices.azure.com\" output-token-variable-name=\"msi-access-token\" client-id=\"{{uami-client-id}}\" ignore-error=\"false\" />\r\n            <set-header name=\"Authorization\" exists-action=\"override\">\r\n                <value>@(\"Bearer \" + (string)context.Variables[\"msi-access-token\"])</value>\r\n            </set-header>\r\n        </when>\r\n        <when condition=\"@(((string)context.Variables[\"targetPoolType\"]) == \"external\")\">\r\n            <!-- External LLM Provider: Authentication handled by backend credentials configuration -->\r\n            <!-- No URL rewriting or additional headers needed -->\r\n        </when>\r\n        <otherwise>\r\n            <!-- Default case: Use managed identity authentication -->\r\n            <authentication-managed-identity resource=\"https://cognitiveservices.azure.com\" output-token-variable-name=\"msi-access-token\" client-id=\"{{uami-client-id}}\" ignore-error=\"false\" />\r\n            <set-header name=\"Authorization\" exists-action=\"override\">\r\n                <value>@(\"Bearer \" + (string)context.Variables[\"msi-access-token\"])</value>\r\n            </set-header>\r\n        </otherwise>\r\n    </choose>\r\n    \r\n    <!-- Route request to the selected backend pool -->\r\n    <set-backend-service backend-id=\"@((string)context.Variables[\"targetBackendPool\"])\" />\r\n</fragment>",
+    "getAvailableModelsFragmentTemplate": "<fragment>\r\n    <!--\r\n        Fragment: Get Available Models\r\n        Purpose: Returns a JSON response listing all available model deployments with their capabilities\r\n        \r\n        Expected Input Variables: None (uses static configuration generated at deployment time)\r\n        \r\n        Output: HTTP 200 response with JSON body containing model deployment information\r\n        \r\n        Usage: Include this fragment in an API operation to return available models:\r\n        <include-fragment fragment-id=\"get-available-models\" />\r\n    -->\r\n    <return-response>\r\n        <set-status code=\"200\" reason=\"OK\" />\r\n        <set-header name=\"Content-Type\" exists-action=\"override\">\r\n            <value>application/json</value>\r\n        </set-header>\r\n        <set-body>@{\r\n            JObject response = new JObject();\r\n            JArray modelDeployments = new JArray();\r\n            \r\n            //{modelDeploymentsCode}\r\n            \r\n            response[\"value\"] = modelDeployments;\r\n            return response.ToString();\r\n        }</set-body>\r\n    </return-response>\r\n</fragment>\r\n",
+    "updatedGetAvailableModelsFragmentXml": "[replace(variables('getAvailableModelsFragmentTemplate'), '//{modelDeploymentsCode}', variables('modelDeploymentsCode'))]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.ApiManagement/service/policyFragments",
+      "apiVersion": "2024-06-01-preview",
+      "name": "[format('{0}/{1}', parameters('apimServiceName'), 'set-backend-pools')]",
+      "properties": {
+        "description": "Dynamically generated backend pool configurations for LLM routing",
+        "format": "rawxml",
+        "value": "[variables('updatedSetBackendPoolsFragmentXml')]"
+      }
+    },
+    {
+      "type": "Microsoft.ApiManagement/service/policyFragments",
+      "apiVersion": "2024-06-01-preview",
+      "name": "[format('{0}/{1}', parameters('apimServiceName'), 'set-backend-authorization')]",
+      "properties": {
+        "description": "Authentication and routing configuration for different LLM backend types",
+        "format": "rawxml",
+        "value": "[variables('setBackendAuthorizationFragmentXml')]"
+      }
+    },
+    {
+      "type": "Microsoft.ApiManagement/service/policyFragments",
+      "apiVersion": "2024-06-01-preview",
+      "name": "[format('{0}/{1}', parameters('apimServiceName'), 'set-target-backend-pool')]",
+      "properties": {
+        "description": "Determines the target backend pool for LLM requests",
+        "value": "[variables('$fxv#0')]",
+        "format": "rawxml"
+      }
+    },
+    {
+      "type": "Microsoft.ApiManagement/service/policyFragments",
+      "apiVersion": "2024-06-01-preview",
+      "name": "[format('{0}/{1}', parameters('apimServiceName'), 'set-llm-usage')]",
+      "properties": {
+        "description": "Collects usage metrics for LLM requests",
+        "value": "[variables('$fxv#1')]",
+        "format": "rawxml"
+      }
+    },
+    {
+      "type": "Microsoft.ApiManagement/service/policyFragments",
+      "apiVersion": "2024-06-01-preview",
+      "name": "[format('{0}/{1}', parameters('apimServiceName'), 'set-llm-requested-model')]",
+      "properties": {
+        "description": "Extracts the requested model from deployment-id (Azure OpenAI) or request body (Inference)",
+        "value": "[variables('$fxv#2')]",
+        "format": "rawxml"
+      }
+    },
+    {
+      "type": "Microsoft.ApiManagement/service/policyFragments",
+      "apiVersion": "2024-06-01-preview",
+      "name": "[format('{0}/{1}', parameters('apimServiceName'), 'get-available-models')]",
+      "properties": {
+        "description": "Returns a JSON response listing all available model deployments with their capabilities",
+        "value": "[variables('updatedGetAvailableModelsFragmentXml')]",
+        "format": "rawxml"
+      }
+    }
+  ],
+  "outputs": {
+    "setBackendPoolsFragmentName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the set-backend-pools fragment"
+      },
+      "value": "set-backend-pools"
+    },
+    "setBackendAuthorizationFragmentName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the set-backend-authorization fragment"
+      },
+      "value": "set-backend-authorization"
+    },
+    "setTargetBackendPoolFragmentName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the set-target-backend-pool fragment"
+      },
+      "value": "set-target-backend-pool"
+    },
+    "getAvailableModelsFragmentName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the get-available-models fragment"
+      },
+      "value": "get-available-models"
+    },
+    "backendPoolsCode": {
+      "type": "string",
+      "metadata": {
+        "description": "Generated backend pools configuration code"
+      },
+      "value": "[variables('backendPoolsCode')]"
+    }
+  }
+}

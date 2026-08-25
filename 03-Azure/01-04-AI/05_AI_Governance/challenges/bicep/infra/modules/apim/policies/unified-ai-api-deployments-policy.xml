@@ -1,0 +1,32 @@
+<policies>
+    <inbound>
+        <base />
+        <!-- CORS Configuration for AI Foundry Compatibility -->
+        <include-fragment fragment-id="ai-foundry-compatibility" />
+
+        <!-- Get deployments using on-boarded backends -->
+        <include-fragment fragment-id="get-available-models" />
+
+        <!-- Return filtered list of available models -->
+        <return-response>
+            <set-status code="200" reason="OK" />
+            <set-header name="Content-Type" exists-action="override">
+                <value>application/json</value>
+            </set-header>
+            <set-body>@{
+                JObject response = new JObject();
+                response["value"] = JArray.Parse((string)context.Variables["availableFilteredModels"]);
+                return response.ToString();
+            }</set-body>
+        </return-response>
+    </inbound>
+    <backend>
+        <base />
+    </backend>
+    <outbound>
+        <base />
+    </outbound>
+    <on-error>
+        <base />
+    </on-error>
+</policies>

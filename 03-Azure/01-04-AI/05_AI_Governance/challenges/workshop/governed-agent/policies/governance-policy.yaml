@@ -1,0 +1,25 @@
+name: citadel-governance-policy
+version: "1.0"
+description: Governance policy for citadel governed agent
+
+defaults:
+  action: allow
+
+rules:
+  - name: block-pii-ssn
+    condition:
+      field: input_text
+      operator: matches
+      value: "\\b\\d{3}-\\d{2}-\\d{4}\\b"
+    action: deny
+    message: "PII detected (SSN pattern) - blocked for data protection"
+    priority: 900
+
+  - name: block-pii-email-body
+    condition:
+      field: input_text
+      operator: matches
+      value: "(?i)(password|credit.card|social.security)"
+    action: deny
+    message: "Sensitive information detected - blocked for data protection"
+    priority: 800

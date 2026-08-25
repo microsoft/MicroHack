@@ -2,7 +2,7 @@
 
 **Date Generated:** 2026-08-20  
 **Scope:** Citadel Agentic Governance Hub → MicroHack Adaptation  
-**Validation Method:** Exhaustive local file inspection (Citadel workshop cloned to `reference/ai-hub-gateway-solution-accelerator/`)  
+**Validation Method:** Exhaustive local file inspection (Citadel workshop copied to `challenges/`)  
 **Evidence Quality:** ALL data source-backed with exact file paths and line numbers  
 **Target:** Full workshop parity (Notebooks 1–9 unchanged)
 
@@ -10,7 +10,7 @@
 
 ## Source Files Location
 
-All evidence extracted from: `reference/ai-hub-gateway-solution-accelerator/`  
+All evidence extracted from: `challenges/` (originally cloned from the Citadel workshop repo)  
 Inspection method: Local grep + file reading (NOT GitHub API inferences)
 
 ---

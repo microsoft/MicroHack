@@ -1,0 +1,12 @@
+[project]
+name = "hr-mcp-server"
+version = "0.1.0"
+description = "HR-focused MCP server for the Citadel workshop"
+requires-python = ">=3.13"
+dependencies = [
+    "azure-monitor-opentelemetry>=1.6.0",
+    "fastapi>=0.124.0",
+    "pyjwt[crypto]>=2.12.1",
+    "uvicorn[standard]>=0.38.0",
+]
+

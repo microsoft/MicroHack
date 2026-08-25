@@ -217,7 +217,7 @@ var aiFoundryModels = [
   {
     name: 'gpt-4.1'
     publisher: 'OpenAI'
-    version: '2025-04-01-preview'
+    version: '2025-04-14'
     sku: 'GlobalStandard'
     capacity: 100
     retirementDate: '2026-10-14'
@@ -239,12 +239,12 @@ var aiFoundryModels = [
     retirementDate: '2027-02-05'
   }
   {
-    name: 'DeepSeek-R1'
-    publisher: 'DeepSeek'
+    name: 'text-embedding-3-large'
+    publisher: 'OpenAI'
     version: '1'
     sku: 'GlobalStandard'
-    capacity: 1
-    retirementDate: '2099-12-30'
+    capacity: 100
+    retirementDate: '2027-04-14'
   }
   {
     name: 'Mistral-Large-3'
@@ -257,23 +257,17 @@ var aiFoundryModels = [
   {
     name: 'Phi-4'
     publisher: 'Microsoft'
-    version: '1'
+    version: '7'
     sku: 'GlobalStandard'
     capacity: 1
     retirementDate: '2099-10-14'
-  }
-  {
-    name: 'text-embedding-3-large'
-    publisher: 'OpenAI'
-    version: '1'
-    sku: 'GlobalStandard'
-    capacity: 100
-    retirementDate: '2027-04-14'
   }
 ]
 
 // ===== Phase 4: Model Deployments to Hub Foundry Account =====
 // Each model deployed to support Notebooks 1-6
+// @batchSize(1) serializes deployments to avoid Cognitive Services account conflicts
+@batchSize(1)
 resource hubFoundryModelDeployments 'Microsoft.CognitiveServices/accounts/deployments@2025-04-01-preview' = [for (model, index) in aiFoundryModels: {
   parent: hubFoundryAccount
   name: replace(model.name, '.', '-')
@@ -283,7 +277,7 @@ resource hubFoundryModelDeployments 'Microsoft.CognitiveServices/accounts/deploy
   }
   properties: {
     model: {
-      format: 'OpenAI'
+      format: model.publisher
       name: model.name
       version: model.version
     }
@@ -296,7 +290,7 @@ resource apimNamedValueUamiClientId 'Microsoft.ApiManagement/service/namedValues
   parent: apim
   name: 'uami-client-id'
   properties: {
-    displayName: 'Hub Foundry UAMI Client ID'
+    displayName: 'Hub.Foundry.UAMI.Client.ID'
     value: apimMI.properties.clientId
     secret: false
   }
@@ -312,12 +306,6 @@ resource apimBackendHubFoundry 'Microsoft.ApiManagement/service/backends@2023-09
     description: 'Hub Foundry AI Services backend for model inference via managed identity'
     url: 'https://${hubFoundryAccountName}.openai.azure.com'
     protocol: 'http'
-    credentials: {
-      authorization: {
-        scheme: 'Bearer'
-        parameter: '@{context.Variables["hubFoundryAccessToken"]}'
-      }
-    }
     circuitBreaker: {
       rules: [
         {
@@ -331,19 +319,19 @@ resource apimBackendHubFoundry 'Microsoft.ApiManagement/service/backends@2023-09
             ]
           }
         }
-        {
-          name: 'clientErrorRule'
-          tripDuration: 'PT1M'
-          failureCondition: {
-            count: 10
-            interval: 'PT1M'
-            statusCodeRanges: [
-              { min: 400, max: 499 }
-            ]
-          }
-        }
       ]
     }
+  }
+}
+
+// RBAC: allow the APIM managed identity to call the hub Foundry account (Cognitive Services OpenAI User)
+resource roleAssignmentApimMiOpenAiUser 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(hubFoundryAccount.id, apimMI.id, 'CognitiveServicesOpenAIUser')
+  scope: hubFoundryAccount
+  properties: {
+    principalId: apimMI.properties.principalId
+    principalType: 'ServicePrincipal'
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd')
   }
 }
 
@@ -354,11 +342,12 @@ resource policyFragmentGetAvailableModels 'Microsoft.ApiManagement/service/polic
   name: 'get-available-models'
   properties: {
     format: 'xml'
-    value: '<fragment><!-- Returns deployed models array to client --><return-response><set-header name="Content-Type" exists-action="override"><value>application/json</value></set-header><set-body>@{var models = new JArray(); models.Add("gpt-4.1"); models.Add("gpt-5.4-mini"); models.Add("gpt-5.2"); models.Add("DeepSeek-R1"); models.Add("Mistral-Large-3"); models.Add("Phi-4"); models.Add("text-embedding-3-large"); return models.ToString();}</set-body></return-response></fragment>'
+    value: '<fragment><!-- Returns deployed models array to client --><return-response><set-header name="Content-Type" exists-action="override"><value>application/json</value></set-header><set-body>@{var models = new JArray(); models.Add("gpt-4.1"); models.Add("gpt-5.4-mini"); models.Add("gpt-5.2"); models.Add("text-embedding-3-large"); models.Add("Mistral-Large-3"); models.Add("Phi-4"); return models.ToString();}</set-body></return-response></fragment>'
   }
 }
 
-// Policy fragment: Validate model access per subscription
+// Policy fragment: Validate model access per subscription (DISABLED - XML syntax pending)
+/*
 resource policyFragmentValidateModelAccess 'Microsoft.ApiManagement/service/policyFragments@2023-09-01-preview' = {
   parent: apim
   name: 'validate-model-access'
@@ -367,8 +356,10 @@ resource policyFragmentValidateModelAccess 'Microsoft.ApiManagement/service/poli
     value: '<fragment><!-- Validate requested model against subscription allowedModels list --><choose><when condition="@{string requestedModel = context.Request.BodyAsString; string allowedModels = context.Product.Name; !allowedModels.Contains(requestedModel)}"><set-status code="403" reason="Model not allowed for this subscription"/></when></choose></fragment>'
   }
 }
+*/
 
-// Policy fragment: Set backend pools for model routing
+// Policy fragment: Set backend pools for model routing (DISABLED)
+/*
 resource policyFragmentSetBackendPools 'Microsoft.ApiManagement/service/policyFragments@2023-09-01-preview' = {
   parent: apim
   name: 'set-backend-pools'
@@ -377,8 +368,10 @@ resource policyFragmentSetBackendPools 'Microsoft.ApiManagement/service/policyFr
     value: '<fragment><!-- Define backend pools for routing based on model type --><set-variable name="selectedBackend" value="backend-hub-foundry"/></fragment>'
   }
 }
+*/
 
-// Policy fragment: Set backend authorization
+// Policy fragment: Set backend authorization (DISABLED - XML syntax pending)
+/*
 resource policyFragmentSetBackendAuthorization 'Microsoft.ApiManagement/service/policyFragments@2023-09-01-preview' = {
   parent: apim
   name: 'set-backend-authorization'
@@ -387,8 +380,10 @@ resource policyFragmentSetBackendAuthorization 'Microsoft.ApiManagement/service/
     value: '<fragment><!-- Acquire managed identity token for hub Foundry backend --><set-variable name="hubFoundryAccessToken" value="@{var ma = new ManagedIdentity(); return ma.GetToken("https://${hubFoundryAccountName}.openai.azure.com/"); }"/></fragment>'
   }
 }
+*/
 
-// Policy fragment: Set target backend pool
+// Policy fragment: Set target backend pool (DISABLED - requires authorization to work)
+/*
 resource policyFragmentSetTargetBackendPool 'Microsoft.ApiManagement/service/policyFragments@2023-09-01-preview' = {
   parent: apim
   name: 'set-target-backend-pool'
@@ -397,8 +392,10 @@ resource policyFragmentSetTargetBackendPool 'Microsoft.ApiManagement/service/pol
     value: '<fragment><!-- Route to selected backend --><set-backend-service base-id="backend-hub-foundry" backend-id="backend-hub-foundry"/></fragment>'
   }
 }
+*/
 
-// Policy fragment: Extract LLM requested model
+// Policy fragment: Extract LLM requested model (DISABLED)
+/*
 resource policyFragmentSetLlmRequestedModel 'Microsoft.ApiManagement/service/policyFragments@2023-09-01-preview' = {
   parent: apim
   name: 'set-llm-requested-model'
@@ -407,8 +404,10 @@ resource policyFragmentSetLlmRequestedModel 'Microsoft.ApiManagement/service/pol
     value: '<fragment><!-- Extract model from request path or body --><set-variable name="requestedModel" value="@{var path = context.Request.Url.Path; var model = path.Split(new[]{"/"}, System.StringSplitOptions.None)[3]; return model; }"/></fragment>'
   }
 }
+*/
 
-// Policy fragment: Track LLM usage
+// Policy fragment: Track LLM usage (DISABLED)
+/*
 resource policyFragmentSetLlmUsage 'Microsoft.ApiManagement/service/policyFragments@2023-09-01-preview' = {
   parent: apim
   name: 'set-llm-usage'
@@ -417,8 +416,10 @@ resource policyFragmentSetLlmUsage 'Microsoft.ApiManagement/service/policyFragme
     value: '<fragment><!-- Log usage to Application Insights --><trace severity="information" message="@{return "LLM Usage: Model=" + context.Variables["requestedModel"] + ", Product=" + context.Product.Name; }"/></fragment>'
   }
 }
+*/
 
-// Policy fragment: PII Anonymization
+// Policy fragment: PII Anonymization (DISABLED)
+/*
 resource policyFragmentPiiAnonymization 'Microsoft.ApiManagement/service/policyFragments@2023-09-01-preview' = {
   parent: apim
   name: 'pii-anonymization'
@@ -447,6 +448,7 @@ resource policyFragmentPiiStateSaving 'Microsoft.ApiManagement/service/policyFra
     value: '<fragment><!-- Save PII state to Cosmos DB pii-usage-container --><send-request mode="new" response-variable-name="piiStateResponse" timeout="20"><set-url>https://${cosmosAccountName}.documents.azure.com/dbs/${cosmosDatabaseName}/colls/pii-usage-container/docs</set-url><set-method>POST</set-method></send-request></fragment>'
   }
 }
+*/
 
 // ===== Phase 4: APIM API - Universal LLM API =====
 // Universal endpoint for all LLM backends (/models/*)
@@ -480,6 +482,17 @@ resource apiUniversalLlmOpGetModels 'Microsoft.ApiManagement/service/apis/operat
   }
 }
 
+// Universal LLM API: Operation policy - GET /models/models
+// Simplest possible policy: static JSON list of the 6 deployed models, no backend call
+resource apiUniversalLlmOpGetModelsPolicy 'Microsoft.ApiManagement/service/apis/operations/policies@2023-09-01-preview' = {
+  parent: apiUniversalLlmOpGetModels
+  name: 'policy'
+  properties: {
+    format: 'xml'
+    value: '<policies><inbound><base/><return-response><set-status code="200" reason="OK"/><set-header name="Content-Type" exists-action="override"><value>application/json</value></set-header><set-body>["gpt-4.1","gpt-5.4-mini","gpt-5.2","text-embedding-3-large","Mistral-Large-3","Phi-4"]</set-body></return-response></inbound><backend><base/></backend><outbound><base/></outbound><on-error><base/></on-error></policies>'
+  }
+}
+
 // Universal LLM API: Operation - POST /models/chat/completions
 resource apiUniversalLlmOpChatCompletions 'Microsoft.ApiManagement/service/apis/operations@2023-09-01-preview' = {
   parent: apiUniversalLlm
@@ -492,6 +505,23 @@ resource apiUniversalLlmOpChatCompletions 'Microsoft.ApiManagement/service/apis/
   }
 }
 
+// Model-routing policy: read the requested "model" from the request body, validate it
+// against the chat-capable models deployed to backend-hub-foundry, then route to that
+// model's own deployment. Auth via APIM managed identity. No access-contract/token-limit/
+// PII fragments are referenced here - those remain disabled.
+resource apiUniversalLlmOpChatCompletionsPolicy 'Microsoft.ApiManagement/service/apis/operations/policies@2023-09-01-preview' = {
+  parent: apiUniversalLlmOpChatCompletions
+  name: 'policy'
+  properties: {
+    format: 'xml'
+    value: '<policies><inbound><base/><authentication-managed-identity resource="https://cognitiveservices.azure.com" client-id="{{Hub.Foundry.UAMI.Client.ID}}" output-token-variable-name="msi-access-token" ignore-error="false"/><set-header name="Authorization" exists-action="override"><value>@("Bearer " + (string)context.Variables["msi-access-token"])</value></set-header><set-variable name="requestedModel" value="@{var body = context.Request.Body?.As&lt;JObject&gt;(preserveContent: true); string m = body != null ? (string)body[&quot;model&quot;] : null; return string.IsNullOrEmpty(m) ? &quot;gpt-4.1&quot; : m;}"/><choose><when condition="@{string[] allowed = new string[] {&quot;gpt-4.1&quot;,&quot;gpt-5.4-mini&quot;,&quot;gpt-5.2&quot;,&quot;Mistral-Large-3&quot;,&quot;Phi-4&quot;}; string requested = (string)context.Variables[&quot;requestedModel&quot;]; return !allowed.Contains(requested);}"><return-response><set-status code="400" reason="Bad Request"/><set-header name="Content-Type" exists-action="override"><value>application/json</value></set-header><set-body>@{return new JObject(new JProperty("error","unsupported model requested for chat completions"),new JProperty("requestedModel",(string)context.Variables["requestedModel"])).ToString();}</set-body></return-response></when></choose><set-variable name="deploymentName" value="@(((string)context.Variables[&quot;requestedModel&quot;]).Replace(&quot;.&quot;, &quot;-&quot;))"/><set-backend-service backend-id="backend-hub-foundry"/><rewrite-uri template="@(&quot;/openai/deployments/&quot; + (string)context.Variables[&quot;deploymentName&quot;] + &quot;/chat/completions?api-version=2024-10-21&quot;)"/></inbound><backend><base/></backend><outbound><base/></outbound><on-error><base/></on-error></policies>'
+  }
+  dependsOn: [
+    apimNamedValueUamiClientId
+    apimBackendHubFoundry
+  ]
+}
+
 // Universal LLM API: Operation - POST /models/embeddings
 resource apiUniversalLlmOpEmbeddings 'Microsoft.ApiManagement/service/apis/operations@2023-09-01-preview' = {
   parent: apiUniversalLlm
@@ -502,6 +532,21 @@ resource apiUniversalLlmOpEmbeddings 'Microsoft.ApiManagement/service/apis/opera
     urlTemplate: '/embeddings'
     description: 'Generate embeddings using text-embedding-3-large'
   }
+}
+
+// Embeddings policy: same shape as chat-completions, but only one embedding model is
+// deployed (text-embedding-3-large), so routing is a straight validate-then-route.
+resource apiUniversalLlmOpEmbeddingsPolicy 'Microsoft.ApiManagement/service/apis/operations/policies@2023-09-01-preview' = {
+  parent: apiUniversalLlmOpEmbeddings
+  name: 'policy'
+  properties: {
+    format: 'xml'
+    value: '<policies><inbound><base/><authentication-managed-identity resource="https://cognitiveservices.azure.com" client-id="{{Hub.Foundry.UAMI.Client.ID}}" output-token-variable-name="msi-access-token" ignore-error="false"/><set-header name="Authorization" exists-action="override"><value>@("Bearer " + (string)context.Variables["msi-access-token"])</value></set-header><set-variable name="requestedModel" value="@{var body = context.Request.Body?.As&lt;JObject&gt;(preserveContent: true); string m = body != null ? (string)body[&quot;model&quot;] : null; return string.IsNullOrEmpty(m) ? &quot;text-embedding-3-large&quot; : m;}"/><choose><when condition="@{return (string)context.Variables[&quot;requestedModel&quot;] != &quot;text-embedding-3-large&quot;;}"><return-response><set-status code="400" reason="Bad Request"/><set-header name="Content-Type" exists-action="override"><value>application/json</value></set-header><set-body>@{return new JObject(new JProperty("error","unsupported model requested for embeddings"),new JProperty("requestedModel",(string)context.Variables["requestedModel"])).ToString();}</set-body></return-response></when></choose><set-backend-service backend-id="backend-hub-foundry"/><rewrite-uri template="/openai/deployments/text-embedding-3-large/embeddings?api-version=2024-10-21"/></inbound><backend><base/></backend><outbound><base/></outbound><on-error><base/></on-error></policies>'
+  }
+  dependsOn: [
+    apimNamedValueUamiClientId
+    apimBackendHubFoundry
+  ]
 }
 
 // Universal LLM API: Operation - POST /models/responses (response tracking)
@@ -1131,28 +1176,28 @@ output SPOKE_FOUNDRY_PROJECT_ENDPOINT string = 'https://${spokeFoundryAccountNam
 output APIM_GATEWAY_URL string = 'https://${apim.name}.azure-api.net'
 
 // Phase 4: Subscription keys for products (for HackboxCredential distribution to notebooks)
-output SALES_ASSISTANT_SUBSCRIPTION_KEY string = subscriptionSalesAssistant.properties.primaryKey
+output SALES_ASSISTANT_SUBSCRIPTION_KEY string = listSecrets(subscriptionSalesAssistant.id, '2023-09-01-preview').primaryKey
 output SALES_ASSISTANT_SUBSCRIPTION_ID string = subscriptionSalesAssistant.name
 
-output HR_CHATAGENT_SUBSCRIPTION_KEY string = subscriptionHrChatAgent.properties.primaryKey
+output HR_CHATAGENT_SUBSCRIPTION_KEY string = listSecrets(subscriptionHrChatAgent.id, '2023-09-01-preview').primaryKey
 output HR_CHATAGENT_SUBSCRIPTION_ID string = subscriptionHrChatAgent.name
 
-output SUPPORT_BOT_SUBSCRIPTION_KEY string = subscriptionSupportBot.properties.primaryKey
+output SUPPORT_BOT_SUBSCRIPTION_KEY string = listSecrets(subscriptionSupportBot.id, '2023-09-01-preview').primaryKey
 output SUPPORT_BOT_SUBSCRIPTION_ID string = subscriptionSupportBot.name
 
-output UNIVERSAL_LLM_TEST_SUBSCRIPTION_KEY string = subscriptionUniversalLlmTest.properties.primaryKey
+output UNIVERSAL_LLM_TEST_SUBSCRIPTION_KEY string = listSecrets(subscriptionUniversalLlmTest.id, '2023-09-01-preview').primaryKey
 output UNIVERSAL_LLM_TEST_SUBSCRIPTION_ID string = subscriptionUniversalLlmTest.name
 
-output UNIFIED_AI_TEST_SUBSCRIPTION_KEY string = subscriptionUnifiedAiTest.properties.primaryKey
+output UNIFIED_AI_TEST_SUBSCRIPTION_KEY string = listSecrets(subscriptionUnifiedAiTest.id, '2023-09-01-preview').primaryKey
 output UNIFIED_AI_TEST_SUBSCRIPTION_ID string = subscriptionUnifiedAiTest.name
 
-output PII_MASKING_SUBSCRIPTION_KEY string = subscriptionHrPiiMasking.properties.primaryKey
+output PII_MASKING_SUBSCRIPTION_KEY string = listSecrets(subscriptionHrPiiMasking.id, '2023-09-01-preview').primaryKey
 output PII_MASKING_SUBSCRIPTION_ID string = subscriptionHrPiiMasking.name
 
-output PII_BLOCKING_SUBSCRIPTION_KEY string = subscriptionCompliancePiiBlocking.properties.primaryKey
+output PII_BLOCKING_SUBSCRIPTION_KEY string = listSecrets(subscriptionCompliancePiiBlocking.id, '2023-09-01-preview').primaryKey
 output PII_BLOCKING_SUBSCRIPTION_ID string = subscriptionCompliancePiiBlocking.name
 
-output PII_ANALYTICS_SUBSCRIPTION_KEY string = subscriptionHrPiiAnalytics.properties.primaryKey
+output PII_ANALYTICS_SUBSCRIPTION_KEY string = listSecrets(subscriptionHrPiiAnalytics.id, '2023-09-01-preview').primaryKey
 output PII_ANALYTICS_SUBSCRIPTION_ID string = subscriptionHrPiiAnalytics.name
 
 // Phase 4: LLM Backend Config (JSON array for Notebook 1 dynamic discovery)
@@ -1176,10 +1221,10 @@ output LLM_BACKEND_CONFIG string = base64(string([
     models: [ 'gpt-5.2' ]
   }
   {
-    name: 'DeepSeek-R1'
+    name: 'text-embedding-3-large'
     publisher: 'Azure OpenAI'
     endpoint: 'https://${hubFoundryAccountName}.openai.azure.com'
-    models: [ 'DeepSeek-R1' ]
+    models: [ 'text-embedding-3-large' ]
   }
   {
     name: 'Mistral-Large-3'
@@ -1192,12 +1237,6 @@ output LLM_BACKEND_CONFIG string = base64(string([
     publisher: 'Azure OpenAI'
     endpoint: 'https://${hubFoundryAccountName}.openai.azure.com'
     models: [ 'Phi-4' ]
-  }
-  {
-    name: 'text-embedding-3-large'
-    publisher: 'Azure OpenAI'
-    endpoint: 'https://${hubFoundryAccountName}.openai.azure.com'
-    models: [ 'text-embedding-3-large' ]
   }
 ]))
 

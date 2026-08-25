@@ -27,7 +27,7 @@ Same prerequisite as every notebook in this MicroHack — see
 ### Part B — Run the PII processing notebook (35 min)
 
 1. Open
-   `../reference/ai-hub-gateway-solution-accelerator/workshop/5. citadel-pii-processing-tests.ipynb`.
+   `workshop/5. citadel-pii-processing-tests.ipynb`
 2. Run the notebook's sections in order:
    - `0️⃣ Initialize Notebook Variables`
    - `1️⃣ Verify Azure CLI and Connected Subscription`

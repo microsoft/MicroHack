@@ -38,7 +38,7 @@ Same prerequisite as every notebook in this MicroHack — see
 ### Part B — Run the hosted agent notebook (40 min)
 
 1. Open
-   `../reference/ai-hub-gateway-solution-accelerator/workshop/7. citadel-hosted-agent-with-agt.ipynb`.
+   `workshop/7. citadel-hosted-agent-with-agt.ipynb`
 2. Run the notebook's sections in order:
    - `0️⃣ Initialize Notebook Variables`
    - `1️⃣ Verify Azure CLI Login`

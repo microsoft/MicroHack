@@ -30,7 +30,7 @@ Part A below); every workshop notebook reads its configuration via `azd env get-
 ### Part B — Run the LLM backend onboarding notebook (30 min)
 
 1. Open
-   `../reference/ai-hub-gateway-solution-accelerator/workshop/1. llm-backend-onboarding-runner.ipynb`
+   `workshop/1. llm-backend-onboarding-runner.ipynb`
    in VS Code / Jupyter.
 2. Run the notebook's sections in order:
    - `0️⃣ Initialize Notebook Variables`

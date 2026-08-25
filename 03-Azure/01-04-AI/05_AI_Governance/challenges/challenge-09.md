@@ -45,7 +45,7 @@ Same prerequisite as every notebook in this MicroHack — see
 ### Part B — Run as far as your environment allows
 
 1. Open
-   `../reference/ai-hub-gateway-solution-accelerator/workshop/9. publish-and-use-hr-mcp-via-apim.ipynb`.
+   `workshop/9. publish-and-use-hr-mcp-via-apim.ipynb`
 2. **If the HR MCP backend has not been provisioned for you**, run only the read-only
    setup sections and stop before acquiring a token:
    - `0️⃣ Initialize notebook variables from azd env and environment variables`

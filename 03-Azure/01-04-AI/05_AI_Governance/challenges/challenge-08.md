@@ -36,7 +36,7 @@ Same prerequisite as every notebook in this MicroHack — see
 ### Part B — Run the A2A publish & consume notebook (35 min)
 
 1. Open
-   `../reference/ai-hub-gateway-solution-accelerator/workshop/8. publish-and-use-a2a-endpoint.ipynb`.
+   `workshop/8. publish-and-use-a2a-endpoint.ipynb`
 2. Run the notebook's sections in order:
    - `1. Configuration`
    - `2. Helpers`

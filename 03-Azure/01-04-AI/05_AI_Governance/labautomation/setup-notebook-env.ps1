@@ -1,8 +1,8 @@
 <#
 .SYNOPSIS
     Bootstraps a local azd environment so the unchanged Citadel workshop
-    notebooks (under reference/ai-hub-gateway-solution-accelerator/workshop)
-    can keep calling `azd env get-value <KEY>` unmodified.
+    notebooks (under challenges/workshop) can keep calling
+    `azd env get-value <KEY>` unmodified.
 
 .DESCRIPTION
     The workshop notebooks were written against `azd up` and read their
@@ -18,7 +18,7 @@
     working directory for the nearest `azure.yaml` (its project-root marker),
     the same way git finds `.git`. The workshop's `azure.yaml` lives at:
 
-        reference/ai-hub-gateway-solution-accelerator/azure.yaml
+        challenges/azure.yaml
 
     ...one level above the `workshop/` folder that contains the notebooks.
     For `azd env get-value` calls made *inside* a notebook (cwd = workshop/)
@@ -102,10 +102,10 @@ if (-not (Get-Command azd -ErrorAction SilentlyContinue)) {
 # upward from cwd for this marker, so we must run every azd command from
 # here (or a descendant of it) for notebooks to see the same environment.
 $scriptRoot = Split-Path -Parent $MyInvocation.MyCommand.Definition
-$azdProjectRoot = Resolve-Path (Join-Path $scriptRoot "../reference/ai-hub-gateway-solution-accelerator") -ErrorAction SilentlyContinue
+$azdProjectRoot = Resolve-Path (Join-Path $scriptRoot "../challenges") -ErrorAction SilentlyContinue
 
 if (-not $azdProjectRoot) {
-    throw "Could not resolve the azd project root at '../reference/ai-hub-gateway-solution-accelerator' relative to this script. Ensure the workshop reference folder exists."
+    throw "Could not resolve the azd project root at '../challenges' relative to this script. Ensure the challenges folder exists."
 }
 
 $azureYaml = Join-Path $azdProjectRoot "azure.yaml"

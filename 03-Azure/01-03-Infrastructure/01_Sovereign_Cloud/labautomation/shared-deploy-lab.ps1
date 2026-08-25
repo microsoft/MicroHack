@@ -20,6 +20,24 @@ param(
 
 . (Join-Path $PSScriptRoot 'quota-helpers.ps1')
 
+$azureLocalResourceProviderAppId = '1412d89f-b8a8-4111-b4fd-e82905cbd85d'
+Update-MhhToken | Out-Null
+$azureLocalResourceProviderObjectIds = @(
+    & az ad sp list `
+        --filter "appId eq '$azureLocalResourceProviderAppId'" `
+        --query '[].id' `
+        --output tsv `
+        --only-show-errors
+)
+if($LASTEXITCODE -ne 0) {
+    throw 'Unable to query Microsoft Graph for the Microsoft.AzureStackHCI service principal.'
+}
+$azureLocalResourceProviderObjectIds = @($azureLocalResourceProviderObjectIds | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+if($azureLocalResourceProviderObjectIds.Count -ne 1) {
+    throw "Expected exactly one Microsoft.AzureStackHCI service principal, found $($azureLocalResourceProviderObjectIds.Count)."
+}
+Write-Host "Resolved Microsoft.AzureStackHCI service-principal object ID: $($azureLocalResourceProviderObjectIds[0])" -ForegroundColor Green
+
 Write-Host "Preparing subscription $SubscriptionId for Sovereign Cloud labs..."
 & (Join-Path $PSScriptRoot 'resource-providers.ps1')
 

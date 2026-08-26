@@ -38,15 +38,15 @@ In this task, you will set up a Data Agent to enable intelligent data interactio
 </colgroup>
 <tr><th>Narrative</th><th>Notes</th></tr>
 <tr><td>Click <b>New item (Top Left)</b>. Search Data agent in <b>search bar (1)</b> and select <b>Data agent(2)</b>.</td><td></td></tr>
-<tr><td colspan="2" align="center"><img src="../../Images/image066.png" style="width: 100%; display: block;"></td></tr>
+<tr><td colspan="2" align="center"><img src="../../images/image066.png" style="width: 100%; display: block;"></td></tr>
 <tr><td>In the Create data agent dialog: <b>Enter a name for the agent (1)</b>and click <b>Create(2)</b></td><td> Example Name: <code>SpaceRangerAgent</code> </td></tr>
-<tr><td colspan="2" align="center"><img src="../../Images/image067.png" style="width: 100%; display: block;"></td></tr>
+<tr><td colspan="2" align="center"><img src="../../images/image067.png" style="width: 100%; display: block;"></td></tr>
 <tr><td>On the Set up your data agent screen, click Add data source.</td><td></td></tr>
-<tr><td colspan="2" align="center"><img src="../../Images/image068.png" style="width: 100%; display: block;"></td></tr>
+<tr><td colspan="2" align="center"><img src="../../images/image068.png" style="width: 100%; display: block;"></td></tr>
 <tr><td>Select the Lakehouse by clicking the checkbox next to it. Click Add to attach the Lakehouse to the Data Agent.</td><td></td></tr>
-<tr><td colspan="2" align="center"><img src="../../Images/image069.png" style="width: 100%; display: block;"></td></tr>
+<tr><td colspan="2" align="center"><img src="../../images/image069.png" style="width: 100%; display: block;"></td></tr>
 <tr><td>In the Explorer pane on the left, confirm the Lakehouse is listed as an data source</td><td>Leave the Page open, you will work with this agent in the next chapter.</td></tr>
-<tr><td colspan="2" align="center"><img src="../../Images/image070.png" style="width: 100%; display: block;"></td></tr>
+<tr><td colspan="2" align="center"><img src="../../images/image070.png" style="width: 100%; display: block;"></td></tr>
 <tr><td><b>Expand the Lakehouse node in the Explorer pane and verify that all required tables are visible and Ensure that all tables are checked and accessible. The Data Agent requires access to these tables to function properly.</td><td>If any tables are not visible, refresh the Lakehouse connection or check that the tables were successfully created in Challenge 1. Without proper table access, the Data Agent cannot answer questions accurately.</td></tr>
 </table>
 
@@ -96,7 +96,7 @@ Consider role and purpose/tone, structure, and verbosity/Language/Rules for unce
 
 | **Narrative** | **Screenshot** | 
 |:------------|:--------------|
-|Agent Instruction|![](../../Images/image074.png)|
+|Agent Instruction|![](../../images/image074.png)|
 
 ## 4.2. Data source description and instructions
 Consider the data schema.
@@ -105,8 +105,8 @@ Consider the data schema.
 
 | **Narrative** | **Screenshot** | 
 |:------------|:--------------|
-|Data Source Description|![](../../Images/image073.png)|
-|Data Source Instruction(Box bottom)|![](../../Images/image075.png)|
+|Data Source Description|![](../../images/image073.png)|
+|Data Source Instruction(Box bottom)|![](../../images/image075.png)|
 
 # 5. Compare our agent instructions and data source guidance with yours
 In this task, you will see how answer quality improves based on how clearly you define the agent instructions and the data source description/instructions.
@@ -123,10 +123,10 @@ Identify the months with the highest toy sales. Then analyze whether those month
 
 | Agent Instructions | Data Source Description and Instructions |
 |:--|:--|
-| <img src="../../Images/image133.png" style="width: 100%; display: block;"><br><br>Default state:<br>- No agent instruction text is provided.<br>- The agent must infer intent on its own. | <img src="../../Images/image134.png" style="width: 100%; display: block;"><br><br>Default state:<br>- No data source description or instruction text is provided.<br>- The agent has no routing context for the data. |
+| <img src="../../images/image133.png" style="width: 100%; display: block;"><br><br>Default state:<br>- No agent instruction text is provided.<br>- The agent must infer intent on its own. | <img src="../../images/image134.png" style="width: 100%; display: block;"><br><br>Default state:<br>- No data source description or instruction text is provided.<br>- The agent has no routing context for the data. |
 
 **Data Agent Answer**  
-<img src="../../Images/image135.png" style="width: 72%; display: block; margin: 0 auto;">  
+<img src="../../images/image135.png" style="width: 72%; display: block; margin: 0 auto;">  
 What to notice:
 - The agent reports no matching data for the request.
 - It cannot provide month-by-month sales and satisfaction analysis.
@@ -136,10 +136,10 @@ What to notice:
 
 | Agent Instructions | Data Source Description and Instructions |
 |:--|:--|
-| <img src="../../Images/image136.png" style="width: 100%; display: block;"><br><br><details><summary><b>Text Details</b></summary><code>You are a Microsoft Fabric Data Agent.</code><br><code>Answer questions using the connected data.</code></details><br>Included in this step:<br>- A basic role is introduced.<br><br> | <img src="../../Images/image137.png" style="width: 100%; display: block;"><br><br><details><summary><b>Text Details</b></summary><b>Data Source Description</b><br><code>The dataset contains sales, products, customers, and dates.</code><br><b>Data Source Instructions</b><br><code>Use the dataset to answer questions.</code></details><br>Included in this step:<br>- A minimal data source description and instructions are added.<br>|
+| <img src="../../images/image136.png" style="width: 100%; display: block;"><br><br><details><summary><b>Text Details</b></summary><code>You are a Microsoft Fabric Data Agent.</code><br><code>Answer questions using the connected data.</code></details><br>Included in this step:<br>- A basic role is introduced.<br><br> | <img src="../../images/image137.png" style="width: 100%; display: block;"><br><br><details><summary><b>Text Details</b></summary><b>Data Source Description</b><br><code>The dataset contains sales, products, customers, and dates.</code><br><b>Data Source Instructions</b><br><code>Use the dataset to answer questions.</code></details><br>Included in this step:<br>- A minimal data source description and instructions are added.<br>|
 
 **Data Agent Answer**  
-<img src="../../Images/image138.png" style="width: 72%; display: block; margin: 0 auto;">  
+<img src="../../images/image138.png" style="width: 72%; display: block; margin: 0 auto;">  
 What to notice:
 - The agent now returns top sales months with numeric values.
 - The satisfaction analysis is still inconsistent.
@@ -149,10 +149,10 @@ What to notice:
 
 | Agent Instructions | Data Source Description and Instructions |
 |:--|:--|
-| <img src="../../Images/image139.png" style="width: 100%; display: block;"><br><br><details><summary><b>Text Details</b></summary><code>You are a Microsoft Fabric Data Agent.</code><br><code>Answer business questions using only the connected tables.</code><br><br><code>Consider the data schema:</code><br><code>- Sales contains transactional data.</code><br><code>- Product represents toys.</code><br><code>- Customer contains customer attributes.</code><br><code>- DimDate must be used for all time-based filtering.</code><br><br><code>Avoid guessing when data is not available.</code></details><br>Included in this step:<br>- Role and scope are enforced for connected tables only.<br>- Schema-aware guidance is added (Sales, Product, Customer, DimDate).<br>- The agent is told to avoid guessing when data is missing.<br> | <img src="../../Images/image140.png" style="width: 100%; display: block;"><br><br><details><summary><b>Text Details</b></summary><b>Data Source Description</b><br><code>Dataset includes Sales, Product (toys), Customer, and DimDate.</code><br><br><code>Sales is the main fact table and is connected to Product, Customer,</code><br><code>and DimDate via foreign keys.</code><br><br><b>Data Source Instructions</b><br><code>Use Sales for revenue and quantity.</code><br><code>Join Product for toy names.</code><br><code>Use DimDate for filtering by time.</code><br><code>Do not expose customer emails.</code></details><br>Included in this step:<br>- Main dataset entities and relationships are clarified.<br>- Usage rules are added for joins and time filtering.<br>- Privacy guidance is added to avoid exposing customer emails.<br> |
+| <img src="../../images/image139.png" style="width: 100%; display: block;"><br><br><details><summary><b>Text Details</b></summary><code>You are a Microsoft Fabric Data Agent.</code><br><code>Answer business questions using only the connected tables.</code><br><br><code>Consider the data schema:</code><br><code>- Sales contains transactional data.</code><br><code>- Product represents toys.</code><br><code>- Customer contains customer attributes.</code><br><code>- DimDate must be used for all time-based filtering.</code><br><br><code>Avoid guessing when data is not available.</code></details><br>Included in this step:<br>- Role and scope are enforced for connected tables only.<br>- Schema-aware guidance is added (Sales, Product, Customer, DimDate).<br>- The agent is told to avoid guessing when data is missing.<br> | <img src="../../images/image140.png" style="width: 100%; display: block;"><br><br><details><summary><b>Text Details</b></summary><b>Data Source Description</b><br><code>Dataset includes Sales, Product (toys), Customer, and DimDate.</code><br><br><code>Sales is the main fact table and is connected to Product, Customer,</code><br><code>and DimDate via foreign keys.</code><br><br><b>Data Source Instructions</b><br><code>Use Sales for revenue and quantity.</code><br><code>Join Product for toy names.</code><br><code>Use DimDate for filtering by time.</code><br><code>Do not expose customer emails.</code></details><br>Included in this step:<br>- Main dataset entities and relationships are clarified.<br>- Usage rules are added for joins and time filtering.<br>- Privacy guidance is added to avoid exposing customer emails.<br> |
 
 **Data Agent Answer**  
-<img src="../../Images/image141.png" style="width: 72%; display: block; margin: 0 auto;">  
+<img src="../../images/image141.png" style="width: 72%; display: block; margin: 0 auto;">  
 What to notice:
 - The answer clearly separates sales results and satisfaction results.
 - It explicitly flags missing rating data for one top-sales month.
@@ -162,10 +162,10 @@ What to notice:
 
 | Agent Instructions | Data Source Description and Instructions |
 |:--|:--|
-| <img src="../../Images/image142.png" style="width: 100%; display: block;"><br><br><details><summary><b>Text Details</b></summary><code>You are a Microsoft Fabric Data Agent acting as a data analyst.</code><br><code>Before answering:</code><br><code>- Identify the metric (Revenue, Quantity, Orders, Avg Rating).</code><br><code>- Identify the grain (Product, Customer, State, Month, etc.).</code><br><code>- Identify required filters (date, geography, category).</code><br><code>Always:</code><br><code>- Use Sales for performance metrics.</code><br><code>- Use Product.ProductName as the toy name.</code><br><code>- Use DimDate for all time logic.</code><br><code>- Explain clearly if requested data is not available.</code></details><br>Included in this step:<br>- Guardrails for behavior and wording are strengthened.<br>- The agent is guided to avoid over-claiming. | <img src="../../Images/image143.png" style="width: 100%; display: block;"><br><br><details><summary><b>Text Details</b></summary><b>Data Source Description</b><br><code>The dataset follows a star-schema-like structure.</code><br><br><code>Sales is the central fact table.</code><br><code>Dimensions include Product (toys), Customer, State/Region, and DimDate.</code><br><code>Feedback-related tables are used only for ratings and reviews.</code><br><br><b>Data Source Instructions</b><br><code>- Revenue = SUM(Sales.TotalPrice)</code><br><code>- Quantity = SUM(Sales.Quantity)</code><br><code>- Orders = COUNT(DISTINCT Sales.OrderNumber)</code><br><br><code>Join rules:</code><br><code>Sales -> Product via ProductID</code><br><code>Sales -> DimDate via OrderDate</code><br><br><code>Avoid PII fields unless explicitly requested.</code></details><br>Included in this step:<br>- Routing and usage guidance is expanded.<br>- More explicit rules are added for safer interpretation. |
+| <img src="../../images/image142.png" style="width: 100%; display: block;"><br><br><details><summary><b>Text Details</b></summary><code>You are a Microsoft Fabric Data Agent acting as a data analyst.</code><br><code>Before answering:</code><br><code>- Identify the metric (Revenue, Quantity, Orders, Avg Rating).</code><br><code>- Identify the grain (Product, Customer, State, Month, etc.).</code><br><code>- Identify required filters (date, geography, category).</code><br><code>Always:</code><br><code>- Use Sales for performance metrics.</code><br><code>- Use Product.ProductName as the toy name.</code><br><code>- Use DimDate for all time logic.</code><br><code>- Explain clearly if requested data is not available.</code></details><br>Included in this step:<br>- Guardrails for behavior and wording are strengthened.<br>- The agent is guided to avoid over-claiming. | <img src="../../images/image143.png" style="width: 100%; display: block;"><br><br><details><summary><b>Text Details</b></summary><b>Data Source Description</b><br><code>The dataset follows a star-schema-like structure.</code><br><br><code>Sales is the central fact table.</code><br><code>Dimensions include Product (toys), Customer, State/Region, and DimDate.</code><br><code>Feedback-related tables are used only for ratings and reviews.</code><br><br><b>Data Source Instructions</b><br><code>- Revenue = SUM(Sales.TotalPrice)</code><br><code>- Quantity = SUM(Sales.Quantity)</code><br><code>- Orders = COUNT(DISTINCT Sales.OrderNumber)</code><br><br><code>Join rules:</code><br><code>Sales -> Product via ProductID</code><br><code>Sales -> DimDate via OrderDate</code><br><br><code>Avoid PII fields unless explicitly requested.</code></details><br>Included in this step:<br>- Routing and usage guidance is expanded.<br>- More explicit rules are added for safer interpretation. |
 
 **Data Agent Answer**  
-<img src="../../Images/image144.png" style="width: 72%; display: block; margin: 0 auto;">  
+<img src="../../images/image144.png" style="width: 72%; display: block; margin: 0 auto;">  
 What to notice:
 - The response is concise and avoids over-claiming when feedback data is missing.
 - It gives a clear summary of what is known vs unknown.
@@ -175,10 +175,10 @@ What to notice:
 
 | Agent Instructions | Data Source Description and Instructions |
 |:--|:--|
-| <img src="../../Images/image145.png" style="width: 100%; display: block;"><br><br>Included in this step:<br>- Full planning, validation, and response guardrails are defined.<br>- Behavior is tuned for consistency under complex prompts. | <img src="../../Images/image146.png" style="width: 100%; display: block;"><br><br>Included in this step:<br>- Data model and usage rules are comprehensive.<br>- Time logic, routing, and safety constraints are explicit. |
+| <img src="../../images/image145.png" style="width: 100%; display: block;"><br><br>Included in this step:<br>- Full planning, validation, and response guardrails are defined.<br>- Behavior is tuned for consistency under complex prompts. | <img src="../../images/image146.png" style="width: 100%; display: block;"><br><br>Included in this step:<br>- Data model and usage rules are comprehensive.<br>- Time logic, routing, and safety constraints are explicit. |
 
 **Data Agent Answer**  
-<img src="../../Images/image147.png" style="width: 72%; display: block; margin: 0 auto;">  
+<img src="../../images/image147.png" style="width: 72%; display: block; margin: 0 auto;">  
 What to notice:
 - The answer includes a direct comparison table for sales vs ratings.
 - Numeric evidence is clear and easy to verify.
@@ -568,13 +568,13 @@ In this task, you will publish and open the Data Agent so it can be used for tes
 </colgroup>
 <tr><th>Narrative</th><th>Notes</th></tr>
 <tr><td>In the Data Agent editor, locate the Publish button in the top menu (1). Enable Also publish to the Agent Store in Microsoft 365 Copilot by turning the toggle On (2). Click Publish (3) to complete the publishing process.</td><td>Once published, the agent moves from Draft to Published status.</td></tr>
-<tr><td colspan="2" align="center"><img src="../../Images/image076.png" style="width: 100%; display: block;"></td></tr>
+<tr><td colspan="2" align="center"><img src="../../images/image076.png" style="width: 100%; display: block;"></td></tr>
 <tr><td>Open the Notifications panel from the top right corner (1). Verify the message "Successfully published data agent" appears (2).</td><td>This confirms the agent was published without errors.</td></tr>
-<tr><td colspan="2" align="center"><img src="../../Images/image077.png" style="width: 100%; display: block;"></td></tr>
+<tr><td colspan="2" align="center"><img src="../../images/image077.png" style="width: 100%; display: block;"></td></tr>
 <tr><td>Return to the Data Agent main page. In the top right status indicator (1), confirm: Status shows Published.</td><td>A published version is available. The agent is now ready to be used for testing natural language questions, sharing with others, and integration with Copilot experiences.</td></tr>
-<tr><td colspan="2" align="center"><img src="../../Images/image078.png" style="width: 100%; display: block;"></td></tr>
+<tr><td colspan="2" align="center"><img src="../../images/image078.png" style="width: 100%; display: block;"></td></tr>
 <tr><td>Open the Fabric Agent at <a href="https://m365.cloud.microsoft/chat">m365.cloud.microsoft/chat</a>.</td><td></td></tr>
-<tr><td colspan="2" align="center"><img src="../../Images/image079.png" style="width: 100%; display: block;"></td></tr>
+<tr><td colspan="2" align="center"><img src="../../images/image079.png" style="width: 100%; display: block;"></td></tr>
 </table>
 
 

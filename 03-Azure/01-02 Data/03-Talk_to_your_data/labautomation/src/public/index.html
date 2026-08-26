@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Fabric Space Ranger — SQL Konferenz 2026</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<main class="container page">
+  <section class="hero">
+
+    <div class="hero__left">
+      <h1 class="hero__title">Order the Fabric Space Ranger</h1>
+      <h2>Limited MicroHack day drop</h2>
+
+      <div class="productCard">
+        <div class="productMedia">
+          <img class="productImage"
+               src="images/SpaceRanger.png"
+               alt="Fabric Space Ranger" />
+        </div>
+        <div class="productInfo">
+          <div class="productName">Fabric Space Ranger</div>
+          <div class="trust">
+            <div class="trustItem">✅ MicroHack exclusive</div>
+            <div class="trustItem">⚡ Ships to the universe*</div>
+            <div class="trustItem">🔒 Secure form submission</div>
+            <div class="trustNote">*Simulation only 😉</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkout -->
+    <aside class="checkout">
+      <div class="checkout__card">
+        <h2>Checkout</h2>
+
+        <form id="orderForm" class="form">
+          <div class="field">
+            <label for="customerName">Full name</label>
+            <input id="customerName" required maxlength="200" />
+          </div>
+
+          <div class="field">
+            <label for="email">Email</label>
+            <input id="email" type="email" required maxlength="320" />
+          </div>
+
+          <div class="field">
+            <label for="amount">Quantity</label>
+            <div class="qty">
+              <button type="button" id="qtyMinus">−</button>
+              <input id="amount" type="number" min="1" value="1" />
+              <button type="button" id="qtyPlus">+</button>
+            </div>
+          </div>
+
+          <div class="summary">
+            <div class="summaryRow">
+              <span>Unit price</span>
+              <strong id="unitPrice">$49.99</strong>
+            </div>
+            <div class="summaryRow">
+              <span>Launch day discount</span>
+              <strong id="discount">-$10.00</strong>
+            </div>
+            <div class="summaryRow">
+              <span>Quantity</span>
+              <strong id="qtyOut">1</strong>
+            </div>
+            <div class="summaryRow total">
+              <span>Total</span>
+              <strong id="total">$39.99</strong>
+            </div>
+          </div>
+
+          <button id="submitBtn" class="cta">Place order</button>
+          <div id="status" class="status"></div>
+        </form>
+      </div>
+    </aside>
+
+  </section>
+</main>
+
+<script>
+  const BASE_PRICE = 49.99;
+  const DISCOUNT = 10.0;
+  const NOW_PRICE = BASE_PRICE - DISCOUNT;
+
+  const amountEl = document.getElementById("amount");
+  const qtyOut = document.getElementById("qtyOut");
+  const unitPriceEl = document.getElementById("unitPrice");
+  const discountEl = document.getElementById("discount");
+  const totalEl = document.getElementById("total");
+
+  function fmtMoney(n) {
+    return "$" + n.toFixed(2);
+  }
+
+  function clampQty(v) {
+    const n = parseInt(v, 10);
+    return Number.isFinite(n) && n >= 1 ? n : 1;
+  }
+
+  function renderSummary() {
+    const qty = clampQty(amountEl.value);
+    amountEl.value = qty;
+    qtyOut.textContent = qty;
+    unitPriceEl.textContent = fmtMoney(BASE_PRICE);
+    discountEl.textContent = "-$" + DISCOUNT.toFixed(2);
+    totalEl.textContent = fmtMoney(qty * NOW_PRICE);
+  }
+
+  document.getElementById("qtyMinus").onclick = () => {
+    amountEl.value = clampQty(amountEl.value - 1);
+    renderSummary();
+  };
+
+  document.getElementById("qtyPlus").onclick = () => {
+    amountEl.value = clampQty(+amountEl.value + 1);
+    renderSummary();
+  };
+
+  amountEl.addEventListener("input", renderSummary);
+  renderSummary();
+
+  // --- Form submission ---
+  const orderForm = document.getElementById("orderForm");
+  const statusEl = document.getElementById("status");
+
+  orderForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const customerName = document.getElementById("customerName").value;
+    const email = document.getElementById("email").value;
+    const amount = parseInt(document.getElementById("amount").value, 10);
+
+    statusEl.textContent = "Submitting your order...";
+    statusEl.style.color = "var(--info)";
+
+    try {
+      const response = await fetch("/api/purchase", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ customerName, email, amount })
+      });
+
+      const result = await response.json();
+
+      if (result.ok) {
+        statusEl.textContent = "✅ " + result.message;
+        statusEl.style.color = "var(--success)";
+        orderForm.reset();
+        renderSummary();
+      } else {
+        statusEl.textContent = "❌ " + result.message;
+        statusEl.style.color = "var(--danger)";
+      }
+    } catch (err) {
+      console.error("Submit error:", err);
+      statusEl.textContent = "❌ Network error. Please try again.";
+      statusEl.style.color = "var(--danger)";
+    }
+  });
+</script>
+
+</body>
+</html>

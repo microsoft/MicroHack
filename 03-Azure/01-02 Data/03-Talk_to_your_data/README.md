@@ -1,4 +1,4 @@
-![image](./Images/Preview.png)
+![image](./images/Preview.png)
 
 # Ask Analyze Act - Talk to Your Data in the Era of AI
 

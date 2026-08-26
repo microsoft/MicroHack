@@ -1,0 +1,154 @@
+EmployeeID,FirstName,LastName,Email,Title,Department,HireDate,Salary,SalesOfficeID
+1,Levi,Kelly,levi.kelly@tailspintoys.com,HR Generalist,IT,2014-10-16,90000,3
+2,Ella,Edwards,ella.edwards@tailspintoys.com,Sales Associate,HR,2023-10-17,63000,2
+3,Andrew,Wright,andrew.wright@tailspintoys.com,Customer Success Manager,Customer Success,2018-10-14,75000,1
+4,Anthony,Carter,anthony.carter@tailspintoys.com,Marketing Specialist,Customer Success,2019-11-02,72000,2
+5,Hannah,King,hannah.king@tailspintoys.com,Customer Success Manager,IT,2019-06-25,78000,1
+6,Jack,Clark,jack.clark@tailspintoys.com,Account Executive,IT,2022-03-26,113000,9
+7,Camila,Collins,camila.collins@tailspintoys.com,IT Support,HR,2024-11-16,90000,10
+8,Leah,Peterson,leah.peterson@tailspintoys.com,HR Generalist,HR,2017-08-31,87000,3
+9,Leah,Lopez,leah.lopez@tailspintoys.com,IT Support,Marketing,2023-12-04,58000,5
+10,Mason,King,mason.king@tailspintoys.com,HR Generalist,Operations,2025-11-04,84000,2
+11,Aurora,Gray,aurora.gray@tailspintoys.com,Sales Manager,Finance,2015-11-29,82000,2
+12,Hazel,Rodriguez,hazel.rodriguez@tailspintoys.com,Marketing Specialist,Customer Success,2014-10-09,79000,1
+13,Avery,Baker,avery.baker@tailspintoys.com,Marketing Specialist,Customer Success,2018-12-28,90000,2
+14,Anthony,Moore,anthony.moore@tailspintoys.com,Sales Associate,IT,2014-07-26,75000,10
+15,Lincoln,Murphy,lincoln.murphy@tailspintoys.com,IT Support,HR,2015-09-21,89000,10
+16,Brooklyn,Sanchez,brooklyn.sanchez@tailspintoys.com,Sales Manager,IT,2024-05-10,102000,8
+17,Amelia,Brown,amelia.brown@tailspintoys.com,IT Support,Sales,2016-12-21,55000,4
+18,Charlotte,Reyes,charlotte.reyes@tailspintoys.com,Sales Manager,Operations,2013-09-20,73000,7
+19,Matthew,Collins,matthew.collins@tailspintoys.com,HR Generalist,IT,2016-04-07,98000,9
+20,Emily,Garcia,emily.garcia@tailspintoys.com,Sales Manager,HR,2014-05-04,54000,8
+21,Angel,Nguyen,angel.nguyen@tailspintoys.com,HR Generalist,IT,2022-04-03,93000,2
+22,Hannah,Stewart,hannah.stewart@tailspintoys.com,Marketing Specialist,Finance,2017-05-24,71000,7
+23,Abigail,Parker,abigail.parker@tailspintoys.com,Account Executive,Legal,2019-11-07,83000,4
+24,Camila,Clark,camila.clark@tailspintoys.com,Account Executive,Customer Success,2016-09-12,56000,3
+25,Gabriel,Mendoza,gabriel.mendoza@tailspintoys.com,Legal Counsel,Marketing,2022-04-06,82000,4
+26,Grayson,Mitchell,grayson.mitchell@tailspintoys.com,Legal Counsel,Operations,2024-05-04,75000,1
+27,David,Diaz,david.diaz@tailspintoys.com,Marketing Specialist,HR,2021-11-20,66000,9
+28,Andrew,Watson,andrew.watson@tailspintoys.com,Sales Associate,Operations,2017-02-16,66000,5
+29,Aubrey,Jenkins,aubrey.jenkins@tailspintoys.com,IT Support,Operations,2021-08-18,94000,7
+30,John,Price,john.price@tailspintoys.com,Account Executive,IT,2019-09-24,77000,9
+31,David,Hernandez,david.hernandez@tailspintoys.com,HR Generalist,Customer Success,2016-03-13,79000,2
+32,Daniel,Nelson,daniel.nelson@tailspintoys.com,Customer Success Manager,IT,2015-12-14,68000,8
+33,Grayson,Green,grayson.green@tailspintoys.com,Marketing Specialist,Marketing,2020-04-07,99000,6
+34,John,Alvarez,john.alvarez@tailspintoys.com,HR Generalist,HR,2017-09-07,56000,5
+35,Camila,Green,camila.green@tailspintoys.com,Sales Associate,HR,2025-08-25,53000,8
+36,Leah,Nelson,leah.nelson@tailspintoys.com,Account Executive,Marketing,2021-06-20,95000,3
+37,Julian,Walker,julian.walker@tailspintoys.com,Legal Counsel,Customer Success,2020-05-20,80000,3
+38,Hazel,Cox,hazel.cox@tailspintoys.com,Legal Counsel,Sales,2020-05-09,107000,6
+39,Levi,Chavez,levi.chavez@tailspintoys.com,Marketing Specialist,HR,2017-12-16,65000,3
+40,Anna,Ramos,anna.ramos@tailspintoys.com,Marketing Specialist,HR,2022-01-26,75000,8
+41,Gabriel,Hernandez,gabriel.hernandez@tailspintoys.com,Customer Success Manager,Sales,2016-09-23,88000,1
+42,Angel,Thomas,angel.thomas@tailspintoys.com,Operations Coordinator,Operations,2018-07-13,66000,8
+43,Natalie,Jackson,natalie.jackson@tailspintoys.com,Sales Associate,Marketing,2012-06-02,83000,10
+44,Penelope,Cook,penelope.cook@tailspintoys.com,Customer Success Manager,Marketing,2017-06-26,99000,3
+45,Zoe,Gonzalez,zoe.gonzalez@tailspintoys.com,Legal Counsel,IT,2020-08-08,83000,7
+46,Jack,Cox,jack.cox@tailspintoys.com,IT Support,Marketing,2023-06-21,77000,6
+47,Ezra,Mendoza,ezra.mendoza@tailspintoys.com,HR Generalist,Sales,2012-07-04,74000,9
+48,Isabella,Ward,isabella.ward@tailspintoys.com,IT Support,Customer Success,2025-06-04,65000,10
+49,Jack,Thomas,jack.thomas@tailspintoys.com,Account Executive,Operations,2013-05-04,78000,8
+50,Aubrey,Allen,aubrey.allen@tailspintoys.com,Finance Analyst,Legal,2024-07-13,94000,9
+51,Carter,Turner,carter.turner@tailspintoys.com,Marketing Specialist,Operations,2019-02-23,58000,3
+52,Noah,Evans,noah.evans@tailspintoys.com,Sales Manager,Finance,2018-03-08,77000,2
+53,Dylan,Campbell,dylan.campbell@tailspintoys.com,IT Support,Sales,2022-07-25,55000,6
+54,Alexander,Cruz,alexander.cruz@tailspintoys.com,IT Support,Marketing,2023-03-28,66000,1
+55,Ella,Sanchez,ella.sanchez@tailspintoys.com,Marketing Specialist,Legal,2017-03-18,137000,3
+56,Charlotte,Hill,charlotte.hill@tailspintoys.com,HR Generalist,Marketing,2013-07-29,95000,6
+57,Wyatt,Kelly,wyatt.kelly@tailspintoys.com,Sales Associate,HR,2015-10-19,81000,3
+58,Lillian,Hernandez,lillian.hernandez@tailspintoys.com,IT Support,HR,2015-05-12,86000,4
+59,Carter,Ross,carter.ross@tailspintoys.com,Legal Counsel,Finance,2022-03-20,92000,5
+60,Carter,Martinez,carter.martinez@tailspintoys.com,Account Executive,Legal,2019-08-04,127000,8
+61,Wyatt,Reed,wyatt.reed@tailspintoys.com,IT Support,Operations,2020-09-12,64000,3
+62,Stella,Wilson,stella.wilson@tailspintoys.com,Legal Counsel,Operations,2016-12-16,81000,2
+63,Gabriel,Jackson,gabriel.jackson@tailspintoys.com,Customer Success Manager,HR,2014-12-23,51000,7
+64,Michael,Stewart,michael.stewart@tailspintoys.com,Marketing Specialist,Marketing,2024-02-05,82000,4
+65,Lincoln,Phillips,lincoln.phillips@tailspintoys.com,IT Support,Sales,2021-02-08,58000,3
+66,Samuel,Walker,samuel.walker@tailspintoys.com,Customer Success Manager,Customer Success,2025-08-31,88000,10
+67,Savannah,Clark,savannah.clark@tailspintoys.com,Legal Counsel,Sales,2017-05-03,82000,1
+68,Noah,Bennett,noah.bennett@tailspintoys.com,Finance Analyst,Customer Success,2017-08-20,69000,2
+69,Ava,Powell,ava.powell@tailspintoys.com,IT Support,IT,2024-02-21,103000,1
+70,Lucas,Lopez,lucas.lopez@tailspintoys.com,Sales Associate,Sales,2012-04-12,71000,9
+71,Amelia,Morris,amelia.morris@tailspintoys.com,Finance Analyst,HR,2024-09-09,52000,5
+72,Liam,Gonzalez,liam.gonzalez@tailspintoys.com,Sales Associate,Sales,2015-01-26,120000,9
+73,Harper,Nelson,harper.nelson@tailspintoys.com,Sales Associate,HR,2016-11-06,64000,8
+74,Nora,Peterson,nora.peterson@tailspintoys.com,IT Support,Finance,2013-03-06,86000,4
+75,Paisley,Jimenez,paisley.jimenez@tailspintoys.com,Account Executive,Marketing,2017-08-01,53000,7
+76,Jackson,Price,jackson.price@tailspintoys.com,Marketing Specialist,Customer Success,2012-08-28,94000,6
+77,Violet,Cruz,violet.cruz@tailspintoys.com,Sales Manager,IT,2023-07-05,67000,9
+78,Jayden,Miller,jayden.miller@tailspintoys.com,Legal Counsel,Marketing,2024-06-08,51000,9
+79,Noah,Jimenez,noah.jimenez@tailspintoys.com,IT Support,Sales,2021-02-25,100000,5
+80,Christopher,Reed,christopher.reed@tailspintoys.com,Operations Coordinator,Legal,2024-02-01,94000,1
+81,Ryan,Alvarez,ryan.alvarez@tailspintoys.com,IT Support,HR,2015-07-22,61000,10
+82,Angel,Moore,angel.moore@tailspintoys.com,Customer Success Manager,Finance,2012-03-12,79000,5
+83,Isaac,Long,isaac.long@tailspintoys.com,Sales Manager,Operations,2016-07-22,65000,9
+84,Natalie,Hall,natalie.hall@tailspintoys.com,Sales Manager,Operations,2014-03-17,61000,1
+85,Isabella,Roberts,isabella.roberts@tailspintoys.com,Sales Associate,Marketing,2015-08-21,65000,2
+86,Stella,Reed,stella.reed@tailspintoys.com,Account Executive,IT,2017-10-14,103000,8
+87,Harper,Allen,harper.allen@tailspintoys.com,HR Generalist,Customer Success,2017-09-03,76000,7
+88,Anthony,Davis,anthony.davis@tailspintoys.com,Sales Associate,Marketing,2022-09-04,58000,7
+89,Grayson,Garcia,grayson.garcia@tailspintoys.com,Legal Counsel,Legal,2024-10-31,97000,7
+90,Anthony,Richardson,anthony.richardson@tailspintoys.com,HR Generalist,HR,2023-04-16,79000,3
+91,Camila,Jenkins,camila.jenkins@tailspintoys.com,Operations Coordinator,Customer Success,2014-04-30,85000,6
+92,Brooklyn,Mitchell,brooklyn.mitchell@tailspintoys.com,Customer Success Manager,Customer Success,2020-10-29,72000,10
+93,John,Torres,john.torres@tailspintoys.com,Customer Success Manager,HR,2018-11-14,89000,10
+94,Dylan,Jackson,dylan.jackson@tailspintoys.com,Sales Manager,Marketing,2020-08-15,73000,1
+95,Savannah,Carter,savannah.carter@tailspintoys.com,Sales Manager,Legal,2016-08-27,118000,3
+96,Abigail,Mendoza,abigail.mendoza@tailspintoys.com,HR Generalist,Finance,2018-12-29,88000,4
+97,Jackson,Mitchell,jackson.mitchell@tailspintoys.com,Operations Coordinator,Sales,2019-08-12,106000,8
+98,James,Castillo,james.castillo@tailspintoys.com,Finance Analyst,IT,2014-09-09,64000,10
+99,Carter,Morris,carter.morris@tailspintoys.com,Operations Coordinator,Operations,2013-04-01,53000,9
+100,Lily,Ward,lily.ward@tailspintoys.com,Legal Counsel,Legal,2018-04-14,130000,10
+101,Leah,King,leah.king@tailspintoys.com,Operations Coordinator,IT,2014-12-11,105000,3
+102,Amelia,Foster,amelia.foster@tailspintoys.com,Marketing Specialist,Marketing,2014-05-19,88000,3
+103,Henry,Jackson,henry.jackson@tailspintoys.com,Finance Analyst,Legal,2021-12-21,129000,4
+104,Ryan,Ross,ryan.ross@tailspintoys.com,IT Support,IT,2025-12-21,84000,6
+105,Scarlett,Ortiz,scarlett.ortiz@tailspintoys.com,Legal Counsel,IT,2016-08-06,96000,7
+106,Hazel,Carter,hazel.carter@tailspintoys.com,Operations Coordinator,Sales,2015-06-04,92000,8
+107,Caleb,Gomez,caleb.gomez@tailspintoys.com,Sales Associate,IT,2020-09-19,71000,8
+108,Luke,Johnson,luke.johnson@tailspintoys.com,Finance Analyst,Operations,2021-06-15,74000,4
+109,Ryan,Parker,ryan.parker@tailspintoys.com,Sales Manager,Customer Success,2021-09-16,56000,5
+110,Penelope,Bailey,penelope.bailey@tailspintoys.com,Operations Coordinator,Sales,2019-03-08,73000,8
+111,Amelia,Chavez,amelia.chavez@tailspintoys.com,Legal Counsel,Operations,2022-05-23,59000,6
+112,Aurora,Edwards,aurora.edwards@tailspintoys.com,Marketing Specialist,HR,2023-12-20,52000,9
+113,Lucy,Cooper,lucy.cooper@tailspintoys.com,Marketing Specialist,IT,2012-11-26,108000,2
+114,Abigail,Johnson,abigail.johnson@tailspintoys.com,Account Executive,IT,2017-07-12,103000,6
+115,Joshua,Davis,joshua.davis@tailspintoys.com,Finance Analyst,Legal,2025-06-11,110000,2
+116,Avery,Brooks,avery.brooks@tailspintoys.com,Sales Manager,Customer Success,2019-06-13,75000,3
+117,Josiah,Martinez,josiah.martinez@tailspintoys.com,Finance Analyst,Sales,2012-09-23,113000,7
+118,Oliver,Sanders,oliver.sanders@tailspintoys.com,Legal Counsel,Customer Success,2015-07-11,67000,7
+119,Jacob,Reed,jacob.reed@tailspintoys.com,Customer Success Manager,Customer Success,2012-05-02,84000,5
+120,Olivia,Wright,olivia.wright@tailspintoys.com,Customer Success Manager,Operations,2012-08-08,88000,9
+121,Charlotte,Harris,charlotte.harris@tailspintoys.com,Sales Manager,HR,2024-05-21,85000,6
+122,Anna,Anderson,anna.anderson@tailspintoys.com,Customer Success Manager,IT,2012-09-08,66000,2
+123,Sophia,Sanchez,sophia.sanchez@tailspintoys.com,Sales Associate,HR,2020-05-15,84000,2
+124,Harper,Clark,harper.clark@tailspintoys.com,Sales Associate,Finance,2013-08-29,102000,4
+125,Harper,Bailey,harper.bailey@tailspintoys.com,IT Support,Customer Success,2020-03-03,70000,7
+126,Christian,King,christian.king@tailspintoys.com,Customer Success Manager,Customer Success,2014-03-29,87000,5
+127,Jacob,Wilson,jacob.wilson@tailspintoys.com,Customer Success Manager,Operations,2021-10-10,89000,7
+128,Eleanor,Baker,eleanor.baker@tailspintoys.com,Sales Associate,Marketing,2020-06-03,88000,8
+129,Violet,Ward,violet.ward@tailspintoys.com,Sales Associate,Marketing,2021-04-20,86000,7
+130,James,Rogers,james.rogers@tailspintoys.com,Sales Associate,Sales,2016-05-09,99000,3
+131,Scarlett,Murphy,scarlett.murphy@tailspintoys.com,Legal Counsel,Legal,2016-04-12,105000,7
+132,Logan,Jenkins,logan.jenkins@tailspintoys.com,Sales Associate,Finance,2022-01-28,67000,7
+133,Lillian,Lee,lillian.lee@tailspintoys.com,Finance Analyst,Marketing,2014-04-14,82000,7
+134,Jayden,Powell,jayden.powell@tailspintoys.com,Sales Manager,Sales,2012-10-26,64000,10
+135,James,Davis,james.davis@tailspintoys.com,Sales Associate,IT,2013-01-17,57000,10
+136,Ezra,Garcia,ezra.garcia@tailspintoys.com,HR Generalist,Legal,2020-01-06,83000,2
+137,Audrey,Brown,audrey.brown@tailspintoys.com,Operations Coordinator,Finance,2021-04-10,104000,10
+138,Mason,Martin,mason.martin@tailspintoys.com,Marketing Specialist,Sales,2015-10-03,93000,4
+139,Carter,Gonzalez,carter.gonzalez@tailspintoys.com,Sales Associate,Marketing,2015-06-15,73000,5
+140,Leah,Long,leah.long@tailspintoys.com,Finance Analyst,HR,2024-12-09,81000,1
+141,Claire,Campbell,claire.campbell@tailspintoys.com,HR Generalist,Finance,2018-02-22,104000,2
+142,Christopher,Williams,christopher.williams@tailspintoys.com,Account Executive,HR,2017-07-08,87000,7
+143,Zoey,Powell,zoey.powell@tailspintoys.com,Customer Success Manager,Finance,2022-06-02,77000,5
+144,Noah,Mitchell,noah.mitchell@tailspintoys.com,Sales Manager,Sales,2014-06-11,117000,8
+145,Jackson,Williams,jackson.williams@tailspintoys.com,IT Support,Marketing,2022-03-12,94000,1
+146,Jack,Rivera,jack.rivera@tailspintoys.com,IT Support,Finance,2019-08-23,62000,4
+147,Luke,Johnson,luke.johnson+147@tailspintoys.com,Operations Coordinator,Operations,2025-05-16,72000,2
+148,Audrey,Lee,audrey.lee@tailspintoys.com,IT Support,Marketing,2018-04-09,59000,9
+149,Bella,Garcia,bella.garcia@tailspintoys.com,Customer Success Manager,Customer Success,2020-01-18,87000,5
+150,Emma,Murphy,emma.murphy@tailspintoys.com,Marketing Specialist,Finance,2023-05-22,88000,2
+151,Joshua,Reed,joshua.reed@tailspintoys.com,Sales Manager,Legal,2016-11-05,86000,10
+152,Oliver,Cook,oliver.cook@tailspintoys.com,Sales Associate,HR,2015-08-14,71000,4
+153,Benjamin,Torres,benjamin.torres@tailspintoys.com,Finance Analyst,Finance,2019-11-26,87000,5

@@ -1,0 +1,32 @@
+# Node.js application
+
+# Dependencies
+node_modules/
+jspm_packages/
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment variables / secrets
+.env
+.env.*
+!.env.example
+
+# Build output
+dist/
+build/
+coverage/
+
+# Caches
+.npm
+.eslintcache
+
+# Runtime logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,7 @@
+# The build context is this directory; keep only what the image needs.
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.DS_Store

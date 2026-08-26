@@ -1,0 +1,89 @@
+<fragment>
+    <!--
+        Fragment: Set Response Headers
+        Purpose: Adds UAIG-* response headers exposing internal gateway state for debugging
+                 and observability. These headers help trace request processing through the gateway.
+                 Headers are only injected when enableResponseHeaders is set to true.
+
+        Requires: enableResponseHeaders (bool, default: false) - Controls whether headers are injected
+
+        Input Variables (all optional, from upstream fragments):
+        - auth-type, user-id, subscription-name (from security-handler)
+        - requestedModel (from request-processor)
+        - api-type, routing-processed-path, selected-api-version, is-streaming (from request-processor)
+        - selected-backend (aliased from targetBackendPool in unified-ai-api-policy)
+        - cache-operation (from central-cache-manager)
+        - config-models (from central-cache-manager)
+        - finalPath (from path-builder)
+
+        Output: UAIG-* HTTP response headers (when enableResponseHeaders is true)
+    -->
+
+    <choose>
+        <when condition="@(context.Variables.GetValueOrDefault<bool>("enableResponseHeaders", false))">
+            <!-- Authentication Context -->
+            <set-header name="UAIG-Auth-Type" exists-action="override">
+                <value>@(context.Variables.GetValueOrDefault<string>("auth-type", "not-set"))</value>
+            </set-header>
+            <set-header name="UAIG-User-Id" exists-action="override">
+                <value>@(context.Variables.GetValueOrDefault<string>("user-id", "not-set"))</value>
+            </set-header>
+            <set-header name="UAIG-Subscription" exists-action="override">
+                <value>@(context.Variables.GetValueOrDefault<string>("subscription-name", "not-set"))</value>
+            </set-header>
+
+            <!-- Request Processing Context -->
+            <set-header name="UAIG-Model-Id" exists-action="override">
+                <value>@(context.Variables.GetValueOrDefault<string>("requestedModel", "not-set"))</value>
+            </set-header>
+            <set-header name="UAIG-API-Type" exists-action="override">
+                <value>@(context.Variables.GetValueOrDefault<string>("api-type", "not-set"))</value>
+            </set-header>
+            <set-header name="UAIG-Processed-Path" exists-action="override">
+                <value>@(context.Variables.GetValueOrDefault<string>("routing-processed-path", "not-set"))</value>
+            </set-header>
+            <set-header name="UAIG-API-Version" exists-action="override">
+                <value>@(context.Variables.GetValueOrDefault<string>("selected-api-version", "not-set"))</value>
+            </set-header>
+            <set-header name="UAIG-Is-Streaming" exists-action="override">
+                <value>@(context.Variables.GetValueOrDefault<bool>("is-streaming", false).ToString().ToLower())</value>
+            </set-header>
+
+            <!-- Backend Context -->
+            <set-header name="UAIG-Backend" exists-action="override">
+                <value>@(context.Variables.GetValueOrDefault<string>("selected-backend", "not-set"))</value>
+            </set-header>
+            <set-header name="UAIG-Final-Path" exists-action="override">
+                <value>@(context.Variables.GetValueOrDefault<string>("finalPath", "not-set"))</value>
+            </set-header>
+            <set-header name="UAIG-Auth-Type-Backend" exists-action="override">
+                <value>@(context.Variables.GetValueOrDefault<string>("targetAuthType", "not-set"))</value>
+            </set-header>
+
+            <!-- Model Alias Context -->
+            <choose>
+                <when condition="@(context.Variables.GetValueOrDefault<bool>("is-alias", false))">
+                    <set-header name="UAIG-Alias" exists-action="override">
+                        <value>@(context.Variables.GetValueOrDefault<string>("original-model-alias", ""))</value>
+                    </set-header>
+                    <set-header name="UAIG-Resolved-Model" exists-action="override">
+                        <value>@(context.Variables.GetValueOrDefault<string>("requestedModel", ""))</value>
+                    </set-header>
+                </when>
+            </choose>
+
+            <!-- Cache Context -->
+            <set-header name="UAIG-Cache-Operation" exists-action="override">
+                <value>@(context.Variables.GetValueOrDefault<string>("cache-operation", "not-set"))</value>
+            </set-header>
+
+            <!-- Gateway Metadata -->
+            <set-header name="UAIG-Request-Id" exists-action="override">
+                <value>@(context.RequestId.ToString())</value>
+            </set-header>
+            <set-header name="UAIG-Gateway-Region" exists-action="override">
+                <value>@(context.Deployment.Region)</value>
+            </set-header>
+        </when>
+    </choose>
+</fragment>

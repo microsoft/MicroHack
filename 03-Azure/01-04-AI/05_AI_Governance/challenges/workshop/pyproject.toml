@@ -1,0 +1,24 @@
+[project]
+name = "workshop"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "agent-framework-core>=1.2.0",
+    "agent-framework-openai>=1.2.0",
+    "agent-framework-foundry-hosting>=1.0.0a260507",
+    "azure-ai-projects>=2.1.0",
+    "azure-cosmos>=4.9.0",
+    "azure-identity>=1.25.3",
+    "azure-keyvault>=4.2.0",
+    "azure-mgmt-apimanagement>=5.0.0",
+    "azure-monitor-opentelemetry>=1.6.0",
+    "ipykernel>=7.2.0",
+    "langchain>=1.2.15",
+    "langchain-openai>=1.2.1",
+    "matplotlib>=3.10.9",
+    "openai>=2.32.0",
+    "opentelemetry-semantic-conventions-ai>=0.5.1",
+    "pandas>=3.0.2",
+]

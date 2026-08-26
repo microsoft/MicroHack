@@ -1,0 +1,93 @@
+[
+    {
+        "id": "1",
+        "model": "text-embedding-3-large",
+        "deploymentName": "text-embedding-3-large",
+        "isActive": true,
+        "CostPerInputUnit": 0.000143,
+        "CostPerOutputUnit": 0,
+        "CostUnit": 1000,
+        "BaseCost": 0,
+        "Currency": "USD",
+        "CalculationMethod": "tokens",
+        "region": "ALL"
+    },
+    {
+        "id": "2",
+        "model": "gpt-4.1",
+        "deploymentName": "gpt-4.1",
+        "isActive": true,
+        "CostPerInputUnit": 2,
+        "CostPerOutputUnit": 8,
+        "CostUnit": 1000000,
+        "BaseCost": 0,
+        "Currency": "USD",
+        "CalculationMethod": "tokens",
+        "region": "ALL"
+    },
+    {
+        "id": "3",
+        "model": "gpt-5.4-mini",
+        "deploymentName": "gpt-5.4-mini",
+        "isActive": true,
+        "CostPerInputUnit": 0.75,
+        "CostPerOutputUnit": 4.50,
+        "CostUnit": 1000000,
+        "BaseCost": 0,
+        "Currency": "USD",
+        "CalculationMethod": "tokens",
+        "region": "ALL"
+    },
+    {
+        "id": "4",
+        "model": "DeepSeek-R1",
+        "deploymentName": "DeepSeek-R1",
+        "isActive": true,
+        "CostPerInputUnit": 0.00135,
+        "CostPerOutputUnit": 0.0054,
+        "CostUnit": 1000,
+        "BaseCost": 0,
+        "Currency": "USD",
+        "CalculationMethod": "tokens",
+        "region": "ALL"
+    },
+    {
+        "id": "5",
+        "model": "Mistral-Large-3",
+        "deploymentName": "Mistral-Large-3",
+        "isActive": true,
+        "CostPerInputUnit": 0.5,
+        "CostPerOutputUnit": 1.5,
+        "CostUnit": 1000000,
+        "BaseCost": 0,
+        "Currency": "USD",
+        "CalculationMethod": "tokens",
+        "region": "ALL"
+    },
+    {
+        "id": "6",
+        "model": "gpt-5.2",
+        "deploymentName": "gpt-5.2",
+        "isActive": true,
+        "CostPerInputUnit": 1.75,
+        "CostPerOutputUnit": 14,
+        "CostUnit": 1000000,
+        "BaseCost": 0,
+        "Currency": "USD",
+        "CalculationMethod": "tokens",
+        "region": "ALL"
+    },
+    {
+        "id": "7",
+        "model": "ai-search",
+        "deploymentName": "ai-search-marketing",
+        "isActive": true,
+        "CostPerInputUnit": 1,
+        "CostPerOutputUnit": 0,
+        "CostUnit": 1,
+        "BaseCost": 1000,
+        "Currency": "USD",
+        "CalculationMethod": "percentage",
+        "region": "ALL"
+    }
+]

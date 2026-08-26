@@ -1,0 +1,43 @@
+name: contoso-hr-policy
+version: "1.0"
+description: Governance policy for the Contoso HR hosted agent.
+
+defaults:
+  action: allow
+
+rules:
+  - name: block-ssn-disclosure
+    condition:
+      field: message
+      operator: matches
+      value: "\\b\\d{3}-\\d{2}-\\d{4}\\b"
+    action: deny
+    message: "SSN detected in request — blocked for PII protection."
+    priority: 1000
+
+  - name: block-user-deletion
+    condition:
+      field: message
+      operator: matches
+      value: "(?i)(\\b(delete|remove|deactivate|disable|terminate)\\b.{0,80}\\b(user|employee|account|profile|E\\d{3,})\\b|\\b(user|employee|account|profile|E\\d{3,})\\b.{0,80}\\b(delete|remove|deactivate|disable|terminate)\\b)"
+    action: deny
+    message: "User deletion and deactivation requests are blocked by HR policy."
+    priority: 950
+
+  - name: block-third-party-salary-lookup
+    condition:
+      field: message
+      operator: matches
+      value: "(?i)(?=.*\\b(salary|compensation|pay|bonus|paycheck)\\b)(?=.*\\b(other|coworker|co-worker|colleague|teammate|someone\\s+else|another\\s+employee|employee\\s+[A-Za-z]?\\d+|my\\s+manager|my\\s+boss|my\\s+report)\\b).*"
+    action: deny
+    message: "Disclosing another employee's compensation is not permitted by HR policy."
+    priority: 900
+
+  - name: audit-benefits-and-pto
+    condition:
+      field: message
+      operator: matches
+      value: "(?i)(pto|paid\\s+time\\s+off|leave|holiday|benefits?|enrollment|401k|medical|dental|vision)"
+    action: audit
+    message: "HR self-service query logged for compliance trail."
+    priority: 100

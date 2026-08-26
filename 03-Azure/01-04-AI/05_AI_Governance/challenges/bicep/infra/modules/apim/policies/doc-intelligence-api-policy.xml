@@ -1,0 +1,87 @@
+<policies>
+    <inbound>
+        <base />
+        
+        <authentication-managed-identity resource="https://cognitiveservices.azure.com" output-token-variable-name="msi-access-token" client-id="{{uami-client-id}}" ignore-error="false" />
+        <set-header name="Authorization" exists-action="override">
+            <value>@("Bearer " + (string)context.Variables["msi-access-token"])</value>
+        </set-header>
+    </inbound>
+    <backend>
+        <base />
+    </backend>
+    <outbound>
+        <base />
+        <set-variable name="idPrefix" value="doc-Intel" />
+        <set-variable name="targetService" value="AI-Document-Intelligence" />
+        <set-variable name="model" value="@((string)context.Variables.GetValueOrDefault<string>("deployment-id", "AI-Document-Intelligence-Model"))" />
+        <set-variable name="deploymentName" value="@((string)context.Variables.GetValueOrDefault<string>("deployment-id", "AI-DOCUMENT-INTELLIGENCE"))" />
+
+        <!-- Store original response body -->
+        <set-variable name="responseBody" value="@(context.Response.Body.As<string>())" />
+
+        <!-- Attempt to parse JSON and set variables -->
+        <set-variable name="isValidJson" value="@{
+            try 
+            {
+                var responseJson = JObject.Parse((string)context.Variables["responseBody"]);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }" />
+
+        <choose>
+            <when condition="@((bool)context.Variables["isValidJson"])">
+                <set-variable name="numberOfPages" value="@{
+                    try 
+                    {
+                        var parsedBody = (JObject)context.Variables["parsedBody"];
+                        var pages = parsedBody.SelectToken("analyzeResult.pages");
+                        return pages != null ? pages.Count() : 1;
+                    }
+                    catch
+                    {
+                        return 1;
+                    }
+                }" />
+
+                <set-variable name="modelId" value="@{
+                    try 
+                    {
+                        var parsedBody = (JObject)context.Variables["parsedBody"];
+                        var modelId = parsedBody.SelectToken("analyzeResult.modelId");
+                        return modelId != null ? modelId.ToString() : "Document-Intelligence";
+                    }
+                    catch
+                    {
+                        return "Document-Intelligence";
+                    }
+                }" />
+            </when>
+        </choose>
+
+        <!-- Add dynamic header transformation -->
+        <set-header name="operation-location" exists-action="override">
+            <value>@{
+                var originalLocation = context.Response.Headers.GetValueOrDefault("operation-location","");
+                if (!string.IsNullOrEmpty(originalLocation)) {
+                    var uri = new Uri(originalLocation);
+                    return originalLocation.Replace(
+                        uri.Host,
+                        context.Request.OriginalUrl.Host
+                    );
+                }
+                return originalLocation;
+            }</value>
+        </set-header>
+
+        <!-- Return response body -->
+        <set-body>@((string)context.Variables["responseBody"])</set-body>
+    </outbound>
+    <on-error>
+        <base />
+    </on-error>
+</policies>

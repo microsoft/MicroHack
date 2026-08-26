@@ -1,0 +1,106 @@
+<fragment>
+    <!--
+        Fragment: Central Cache Manager
+        Purpose: Loads the metadata-config JSON, caches it using APIM internal cache for performance,
+                 and parses it into individual typed variables for downstream fragments.
+
+        Input Variables:
+        - metadata-config: String - Raw JSON configuration from metadata-config fragment
+
+        Output Variables:
+        - config-models: JObject - Parsed models configuration (model name -> backend, apiVersion, timeout)
+        - config-api-types: JObject - Parsed API types configuration (api-type -> base-path, path-segment, api-version)
+        - config-timeout-settings: JObject - Parsed timeout settings (streaming-multiplier)
+        - cache-operation: String - Whether config was loaded from "cache-hit" or "cache-miss"
+
+        Cache Behavior:
+        - Uses APIM internal cache with version-based key: "metadata-config-v{config-version}"
+        - TTL from cache-settings.ttl-seconds (default 300 seconds)
+        - Bypass cache by sending header: UAIG-Config-Cache-Bypass: true
+
+        Upstream Dependencies:
+        - metadata-config fragment: Provides the raw JSON configuration string
+    -->
+
+    <!-- Check for cache bypass header -->
+    <set-variable name="cache-bypass" value="@(context.Request.Headers.GetValueOrDefault("UAIG-Config-Cache-Bypass", "false").Equals("true", StringComparison.OrdinalIgnoreCase))" />
+
+    <!-- Parse the raw metadata config to extract cache settings -->
+    <set-variable name="raw-config" value="@{
+        var configStr = (string)context.Variables["metadata-config"];
+        try {
+            return JObject.Parse(configStr.Replace('\'', '\"'));
+        } catch {
+            return new JObject();
+        }
+    }" />
+
+    <!-- Extract cache key from config version -->
+    <set-variable name="config-cache-key" value="@{
+        var config = (JObject)context.Variables["raw-config"];
+        var version = config?["cache-settings"]?["config-version"]?.ToString() ?? "1.0.0";
+        return "metadata-config-v" + version;
+    }" />
+
+    <!-- Extract cache TTL -->
+    <set-variable name="config-cache-ttl" value="@{
+        var config = (JObject)context.Variables["raw-config"];
+        return config?["cache-settings"]?["ttl-seconds"]?.Value<int>() ?? 300;
+    }" />
+
+    <!-- Try to retrieve cached config (skip if bypass requested) -->
+    <choose>
+        <when condition="@(!(bool)context.Variables["cache-bypass"])">
+            <cache-lookup-value key="@((string)context.Variables["config-cache-key"])" variable-name="cached-config" default-value="" />
+        </when>
+        <otherwise>
+            <set-variable name="cached-config" value="" />
+        </otherwise>
+    </choose>
+
+    <!-- Determine if we have a cache hit -->
+    <set-variable name="cache-operation" value="@{
+        var cached = context.Variables.GetValueOrDefault<string>("cached-config", "");
+        return string.IsNullOrEmpty(cached) ? "cache-miss" : "cache-hit";
+    }" />
+
+    <!-- On cache miss, store the parsed config -->
+    <choose>
+        <when condition="@((string)context.Variables["cache-operation"] == "cache-miss")">
+            <set-variable name="parsed-config" value="@((JObject)context.Variables["raw-config"])" />
+            <!-- Store in cache for future requests -->
+            <cache-store-value key="@((string)context.Variables["config-cache-key"])" value="@(((JObject)context.Variables["parsed-config"]).ToString())" duration="@((int)context.Variables["config-cache-ttl"])" />
+        </when>
+        <otherwise>
+            <!-- Parse the cached config string back to JObject -->
+            <set-variable name="parsed-config" value="@{
+                try {
+                    return JObject.Parse((string)context.Variables["cached-config"]);
+                } catch {
+                    return (JObject)context.Variables["raw-config"];
+                }
+            }" />
+        </otherwise>
+    </choose>
+
+    <!-- Extract individual config sections as typed variables for downstream fragments -->
+    <set-variable name="config-models" value="@{
+        return ((JObject)context.Variables["parsed-config"])["models"] as JObject ?? new JObject();
+    }" />
+    <set-variable name="config-api-types" value="@{
+        return ((JObject)context.Variables["parsed-config"])["api-types"] as JObject ?? new JObject();
+    }" />
+    <set-variable name="config-timeout-settings" value="@{
+        return ((JObject)context.Variables["parsed-config"])["timeout-settings"] as JObject ?? new JObject();
+    }" />
+    <set-variable name="config-model-aliases" value="@{
+        return ((JObject)context.Variables["parsed-config"])["model-aliases"] as JObject ?? new JObject();
+    }" />
+    <set-variable name="config-backend-path-templates" value="@{
+        return ((JObject)context.Variables["parsed-config"])["backend-path-templates"] as JObject ?? new JObject();
+    }" />
+
+    <trace source="Cache-Manager" severity="information">
+        <message>@($"Unified AI - Config loaded ({context.Variables["cache-operation"]}), models: {((JObject)context.Variables["config-models"]).Count}, api-types: {((JObject)context.Variables["config-api-types"]).Count}")</message>
+    </trace>
+</fragment>

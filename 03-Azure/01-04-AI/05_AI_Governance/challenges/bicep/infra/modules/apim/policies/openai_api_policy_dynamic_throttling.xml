@@ -1,0 +1,165 @@
+<policies>
+    <inbound>
+        <base />
+        <!-- AAD Authorization -->
+        <!-- Enabled if entra-validate named value is set to true -->
+        <include-fragment fragment-id="aad-auth" />
+        
+        <!-- Detecting streaming request to adjust token calculations -->
+        <choose>
+            <when condition="@(context.Request.Body.As<JObject>(true)["stream"] != null && context.Request.Body.As<JObject>(true)["stream"].Type != JTokenType.Null)">
+                <set-variable name="isStream" value="@{
+                var content = (context.Request.Body?.As<JObject>(true));
+                string streamValue = content["stream"].ToString();
+                return streamValue;
+            }" />
+            </when>
+        </choose>
+        
+        <!-- Deleting api-key header to it is not passed to OpenAI endpoint-->
+        <set-header name="api-key" exists-action="delete" />
+        
+        <!-- Setting cache keys -->
+        <set-variable name="deployment-id" value="@((string)context.Request.MatchedParameters["deployment-id"])" />
+        <set-variable name="routesCacheKey" value="@((string)context.Variables["deployment-id"] + "Routes" + context.Deployment.Region + context.Api.Revision)" />
+        <set-variable name="oaClustersCacheKey" value="@("oaClusters" + context.Deployment.Region + context.Api.Revision)" />
+
+        <!-- Getting OpenAI clusters configuration -->
+        <cache-lookup-value key="@((string)context.Variables.GetValueOrDefault<string>("oaClustersCacheKey", "ALL-CLUSTERS"))" variable-name="oaClusters" />
+        <!-- If we can't find the configuration cached, it will be loaded -->
+        <choose>
+            <when condition="@(context.Variables.ContainsKey("oaClusters") == false)">
+                <set-variable name="oaClusters" value="@{
+                        // route is an Azure OpenAI API endpoints
+                        JArray routes = new JArray();
+                        // cluster is a group of routes that are capable of serving a specific deployment name (model and version)
+                        JArray clusters = new JArray();
+                        // Update the below if condition when using multiple APIM gateway regions/SHGW to get different configuartions for each region
+                        if(context.Deployment.Region == "West Europe" || true)
+                        {
+                            // Adding all Azure OpenAI endpoints routes (which are set as APIM Backend)
+                            // Notice targetTPMLimit is set to 500 TPM to guide APIM to switch suspend traffic to this backend
+                            routes.Add(new JObject()
+                            {
+                                { "name", "EastUS" },
+                                { "location", "eastus" },
+                                { "backend-id", "openai-backend-0" },
+                                { "priority", 1},
+                                { "targetTPMLimit", 500 },
+                                { "isThrottling", false }, 
+                                { "retryAfter", DateTime.MinValue } 
+                            });
+
+                            routes.Add(new JObject()
+                            {
+                                { "name", "NorthCentralUS" },
+                                { "location", "northcentralus" },
+                                { "backend-id", "openai-backend-1" },
+                                { "priority", 2},
+                                { "isThrottling", false },
+                                { "retryAfter", DateTime.MinValue }
+                            });
+
+                            routes.Add(new JObject()
+                            {
+                                { "name", "EastUS2" },
+                                { "location", "eastus2" },
+                                { "backend-id", "openai-backend-2" },
+                                { "priority", 2},
+                                { "isThrottling", false },
+                                { "retryAfter", DateTime.MinValue }
+                            });
+
+                            // For each deployment name, create a cluster with the routes that can serve it
+                            // It is important in you OpenAI deployments to use the same name across instances
+                            clusters.Add(new JObject()
+                            {
+                                { "deploymentName", "chat" },
+                                { "routes", new JArray(routes[0], routes[1], routes[2]) }
+                            });
+
+                            clusters.Add(new JObject()
+                            {
+                                { "deploymentName", "embedding" },
+                                { "routes", new JArray(routes[0], routes[1], routes[2]) }
+                            });
+
+                            clusters.Add(new JObject()
+                            {
+                                { "deploymentName", "dall-e-3" },
+                                { "routes", new JArray(routes[0]) }
+                            });
+
+                            clusters.Add(new JObject()
+                            {
+                                { "deploymentName", "gpt-4o" },
+                                { "routes", new JArray(routes[0]) }
+                            });
+
+                            //If you want to add additional speical models like DALL-E or GPT-4, you can add them here
+                            //In this cluster, DALL-E is served by one OpenAI endpoint route and GPT-4 is served by two OpenAI endpoint routes
+                            //clusters.Add(new JObject()
+                            //{
+                            //    { "deploymentName", "dall-e-3" },
+                            //    { "routes", new JArray(routes[0]) }
+                            //});
+
+                            //clusters.Add(new JObject()
+                            //{
+                            //    { "deploymentName", "gpt-4" },
+                            //    { "routes", new JArray(routes[0], routes[1]) }
+                            //});
+                            
+                        }
+                        else
+                        {
+                            //No clusters found for selected region, either return error (defult behavior) or set default cluster in the else section
+                        }
+                        
+                        return clusters;   
+                    }" />
+                <!-- Add cluster configurations to cache -->
+                <cache-store-value key="@((string)context.Variables.GetValueOrDefault<string>("oaClustersCacheKey", "ALL-CLUSTERS"))" value="@((JArray)context.Variables["oaClusters"])" duration="86400" />
+            </when>
+        </choose>
+        <include-fragment fragment-id="validate-routes" />
+        <!-- Backend Managed Identity -->
+        <authentication-managed-identity resource="https://cognitiveservices.azure.com" output-token-variable-name="msi-access-token" client-id="{{uami-client-id}}" ignore-error="false" />
+        <set-header name="Authorization" exists-action="override">
+            <value>@("Bearer " + (string)context.Variables["msi-access-token"])</value>
+        </set-header>
+
+        <!-- Setting gobal TPM limit to collect usage for streaming requests -->
+        <azure-openai-token-limit counter-key="APIMOpenAI" tokens-per-minute="50000000" estimate-prompt-tokens="false" tokens-consumed-variable-name="TotalConsumedTokens" remaining-tokens-variable-name="TotalRemainingTokens" />
+        
+        <!-- Dynamic Throttling Assignment TPM counters (work only if the backend/deployment is not throttling) -->
+        <choose>
+            <when condition="@(context.Request.MatchedParameters["deployment-id"] == "chat" && ((JArray)context.Variables["routes"])[0]["isThrottling"].ToString() == "False")">
+                <azure-openai-token-limit counter-key="openai-backend-0-chat" tokens-per-minute="1000000" estimate-prompt-tokens="true" tokens-consumed-variable-name="openai-backend-0-chat-ConsumedTokens" remaining-tokens-variable-name="openai-backend-0-chat-RemainingTokens" />
+            </when>
+        </choose>
+        
+
+        <!-- Handling usage for streaming requests -->
+        <include-fragment fragment-id="openai-usage-streaming" />
+    </inbound>
+    <backend>
+        <include-fragment fragment-id="backend-routing" />
+    </backend>
+    <outbound>
+        <base />
+        <!-- Update Dynamic Priority Assignment based on TPM counters -->
+        <include-fragment fragment-id="dynamic-throttling-assignment" />
+
+        <!-- Handling usage for non-streaming requests -->
+        <include-fragment fragment-id="openai-usage" />
+    </outbound>
+    <on-error>
+        <base />
+        <!-- This is used to push custom metrics related to 429 throttleing errors -->
+        <!-- It is designed to premit setting up Azure Monitor Alerts notifying the team of potential service degredation -->
+        <set-variable name="service-name" value="Azure Open AI" />
+        <set-variable name="target-deployment" value="@((string)context.Request.MatchedParameters["deployment-id"])" />
+        <include-fragment fragment-id="throttling-events" />
+    </on-error>
+</policies>

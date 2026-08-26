@@ -1,0 +1,4 @@
+agent-framework>=1.2.0
+agent-framework-foundry-hosting>=1.0.0a260507
+azure-identity>=1.25.0
+azure-monitor-opentelemetry>=1.6.0

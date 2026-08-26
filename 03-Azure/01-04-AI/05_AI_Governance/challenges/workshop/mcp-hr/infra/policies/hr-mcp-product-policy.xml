@@ -1,0 +1,120 @@
+<policies>
+  <inbound>
+    <base />
+    <validate-jwt header-name="Authorization" failed-validation-httpcode="401" failed-validation-error-message="Unauthorized: a valid Entra bearer token for HR MCP is required." require-expiration-time="true" require-scheme="Bearer" require-signed-tokens="true" output-token-variable-name="validatedJwt">
+      <openid-config url="https://login.microsoftonline.com/__TENANT_ID__/v2.0/.well-known/openid-configuration" />
+      <audiences>
+        <audience>__JWT_AUDIENCE__</audience>
+        <audience>__JWT_AUDIENCE_CLIENT_ID__</audience>
+      </audiences>
+      <issuers>
+        <issuer>https://login.microsoftonline.com/__TENANT_ID__/v2.0</issuer>
+        <issuer>https://sts.windows.net/__TENANT_ID__/</issuer>
+      </issuers>
+    </validate-jwt>
+    <!-- Accept either a delegated scope (scp, interactive users / MCP Inspector / notebooks)
+         or an application role (roles, the hosted agent's managed identity). -->
+    <set-variable name="hrMcpScopeOk" value="@{
+        var jwt = (Jwt)context.Variables[&quot;validatedJwt&quot;];
+        var requiredScope = &quot;__REQUIRED_SCOPE__&quot;;
+        var requiredRole = &quot;__REQUIRED_ROLE__&quot;;
+        var vals = new System.Collections.Generic.List&lt;string&gt;();
+        if (jwt.Claims.ContainsKey(&quot;scp&quot;)) {
+            foreach (var s in jwt.Claims[&quot;scp&quot;]) { foreach (var p in s.Split(' ')) { vals.Add(p); } }
+        }
+        if (jwt.Claims.ContainsKey(&quot;roles&quot;)) {
+            foreach (var r in jwt.Claims[&quot;roles&quot;]) { vals.Add(r); }
+        }
+        return vals.Contains(requiredScope) || vals.Contains(requiredRole);
+    }" />
+    <choose>
+      <when condition="@(!(bool)context.Variables[&quot;hrMcpScopeOk&quot;])">
+        <return-response>
+          <set-status code="403" reason="Forbidden" />
+          <set-header name="Content-Type" exists-action="override">
+            <value>application/json</value>
+          </set-header>
+          <set-body>{"error":"insufficient_scope","message":"Token is missing the required HR MCP scope or app role.","required":"__REQUIRED_SCOPE__"}</set-body>
+        </return-response>
+      </when>
+    </choose>
+    <set-variable name="hrMcpBearerToken" value="@(context.Request.Headers.GetValueOrDefault(&quot;Authorization&quot;, &quot;&quot;))" />
+    <set-header name="Authorization" exists-action="override">
+      <value>@((string)context.Variables["hrMcpBearerToken"])</value>
+    </set-header>
+    <set-variable name="hrMcpShouldInspectJson" value="@(context.Request.Method == &quot;POST&quot; &amp;&amp; context.Request.Headers.GetValueOrDefault(&quot;Content-Type&quot;, &quot;&quot;).IndexOf(&quot;application/json&quot;, StringComparison.OrdinalIgnoreCase) &gt;= 0)" />
+    <choose>
+      <when condition="@((bool)context.Variables[&quot;hrMcpShouldInspectJson&quot;])">
+        <set-variable name="hrMcpRequestBody" value="@(context.Request.Body.As&lt;string&gt;(preserveContent: true) ?? string.Empty)" />
+        <set-variable name="hrMcpJsonRpcMethod" value="@{
+          var body = (string)context.Variables.GetValueOrDefault(&quot;hrMcpRequestBody&quot;, string.Empty);
+          if (string.IsNullOrWhiteSpace(body)) { return string.Empty; }
+          try
+          {
+            var token = Newtonsoft.Json.Linq.JToken.Parse(body);
+            if (token.Type == Newtonsoft.Json.Linq.JTokenType.Array) { return &quot;__batch__&quot;; }
+            return token.SelectToken(&quot;method&quot;)?.ToString() ?? string.Empty;
+          }
+          catch { return string.Empty; }
+        }" />
+        <choose>
+          <when condition="@((string)context.Variables[&quot;hrMcpJsonRpcMethod&quot;] == &quot;__batch__&quot;)">
+            <return-response>
+              <set-status code="400" reason="JSON-RPC batch payloads are not supported" />
+              <set-header name="Content-Type" exists-action="override">
+                <value>application/json</value>
+              </set-header>
+              <set-body>{"jsonrpc":"2.0","error":{"code":-32600,"message":"JSON-RPC batch payloads are rejected by the HR MCP APIM access contract because per-tool rate accounting is enforced only for single requests."},"id":null}</set-body>
+            </return-response>
+          </when>
+        </choose>
+        <set-variable name="hrMcpIsToolCall" value="@((string)context.Variables[&quot;hrMcpJsonRpcMethod&quot;] == &quot;tools/call&quot;)" />
+        <choose>
+          <when condition="@((bool)context.Variables[&quot;hrMcpIsToolCall&quot;])">
+            <set-variable name="hrMcpRateLimitKey" value="@{
+              var jwt = (Jwt)context.Variables[&quot;validatedJwt&quot;];
+              var oid = jwt.Claims.ContainsKey(&quot;oid&quot;) ? jwt.Claims[&quot;oid&quot;].FirstOrDefault() : &quot;no-oid&quot;;
+              var product = context.Product?.Id ?? &quot;no-product&quot;;
+              var subscription = context.Subscription?.Id ?? &quot;no-subscription&quot;;
+              return oid + &quot;|&quot; + product + &quot;|&quot; + subscription;
+            }" />
+            <rate-limit-by-key calls="5" renewal-period="30" counter-key="@((string)context.Variables[&quot;hrMcpRateLimitKey&quot;])" retry-after-header-name="Retry-After" remaining-calls-header-name="x-hr-mcp-remaining-tool-calls" total-calls-header-name="x-hr-mcp-tool-call-limit" />
+            <trace source="hr-mcp-apim" severity="information">
+              <message>@{
+                var body = (string)context.Variables.GetValueOrDefault(&quot;hrMcpRequestBody&quot;, string.Empty);
+                var snippet = body.Length &gt; 2048 ? body.Substring(0, 2048) : body;
+                var tool = string.Empty;
+                try { tool = Newtonsoft.Json.Linq.JToken.Parse(body).SelectToken(&quot;params.name&quot;)?.ToString() ?? string.Empty; } catch { }
+                return &quot;HR MCP tools/call request; tool=&quot; + tool + &quot;; participantKey=&quot; + (string)context.Variables[&quot;hrMcpRateLimitKey&quot;] + &quot;; bodySnippet=&quot; + snippet;
+              }</message>
+            </trace>
+          </when>
+        </choose>
+      </when>
+      <otherwise>
+        <set-variable name="hrMcpIsToolCall" value="@(false)" />
+      </otherwise>
+    </choose>
+  </inbound>
+  <backend>
+    <base />
+  </backend>
+  <outbound>
+    <base />
+    <choose>
+      <when condition="@((bool)context.Variables.GetValueOrDefault(&quot;hrMcpIsToolCall&quot;, false) &amp;&amp; context.Response.Headers.GetValueOrDefault(&quot;Content-Type&quot;, &quot;&quot;).IndexOf(&quot;text/event-stream&quot;, StringComparison.OrdinalIgnoreCase) &lt; 0)">
+        <set-variable name="hrMcpResponseBody" value="@(context.Response.Body.As&lt;string&gt;(preserveContent: true) ?? string.Empty)" />
+        <trace source="hr-mcp-apim" severity="information">
+          <message>@{
+            var body = (string)context.Variables.GetValueOrDefault(&quot;hrMcpResponseBody&quot;, string.Empty);
+            var snippet = body.Length &gt; 2048 ? body.Substring(0, 2048) : body;
+            return &quot;HR MCP tools/call response; status=&quot; + context.Response.StatusCode + &quot;; bodySnippet=&quot; + snippet;
+          }</message>
+        </trace>
+      </when>
+    </choose>
+  </outbound>
+  <on-error>
+    <base />
+  </on-error>
+</policies>

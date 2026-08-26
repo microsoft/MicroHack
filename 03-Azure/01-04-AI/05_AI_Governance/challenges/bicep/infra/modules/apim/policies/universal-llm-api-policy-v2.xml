@@ -1,0 +1,95 @@
+<policies>
+    <inbound>
+        <base />
+        
+        <!--
+            Universal LLM API Policy v2
+            Purpose: Routes requests to appropriate backend pools based on model selection and RBAC permissions
+            
+            Flow:
+            1. Authenticate request (API Key always required, JWT optional per-product)
+            2. Extract and validate model parameter from request payload
+            3. Configure backend pools and routing rules
+            4. Determine target backend pool based on model and permissions
+            5. Set up authentication and route to selected backend
+            6. Configure collecting usage metrics
+            
+            Configuration:
+            - Modify allowedBackendPools for RBAC (comma-separated pool IDs, empty = all allowed)
+            - Set defaultBackendPool for unmapped models (empty = return error)
+            - Backend pool definitions are in frag-set-backend-pools fragment
+        -->
+        
+        <!-- Step 1: Unified authentication (API Key + optional JWT per-product) -->
+        <include-fragment fragment-id="security-handler" />
+        
+        <!-- Step 2: Extract and validate model parameter from request -->
+        <include-fragment fragment-id="set-llm-requested-model" />
+
+        <!-- Step 2.1: Responses API ownership enforcement (cross-API shared fragment).
+             For /responses* operations: validates that response_id (URL or previous_response_id)
+             belongs to the calling subscription, returns 403 on mismatch / 404 on cache miss,
+             and hydrates `requestedModel` from cache so backend routing works for GET/DELETE. -->
+        <include-fragment fragment-id="responses-id-security" />
+
+        <!-- Step 4: Configure RBAC and default routing behavior -->
+        <!-- RBAC: Set allowed backend pools (comma-separated pool IDs, empty = all pools allowed) -->
+        <set-variable name="allowedBackendPools" value="" />
+        
+        <!-- Set default backend pool (empty = return error for unmapped models) -->
+        <set-variable name="defaultBackendPool" value="" />
+
+        <!-- Validate model access based on allowedModels -->
+        <include-fragment fragment-id="validate-model-access" />
+
+        <!-- Step 4: Load backend pool configurations -->
+        <include-fragment fragment-id="set-backend-pools" />
+
+        <!-- Step 5: Determine target backend pool based on model and permissions -->
+        <include-fragment fragment-id="set-target-backend-pool" />
+
+        <!-- Step 6: Configure authentication and route to selected backend -->
+        <include-fragment fragment-id="set-backend-authorization" />
+
+        <!-- Step 6.1: Strip browser / App Service / X-Forwarded-* headers before forwarding to backend -->
+        <include-fragment fragment-id="strip-backend-headers" />
+
+        <!-- Step 7: Configure collecting usage metrics -->
+        <include-fragment fragment-id="set-llm-usage" />
+
+        <!-- CORS Configuration for AI Foundry Compatibility -->
+        <include-fragment fragment-id="ai-foundry-compatibility" />
+    </inbound>
+    <backend>
+        <!--
+            Backend Retry Logic
+            Purpose: Implements retry mechanism for transient failures (429 throttling, 503 service unavailable)
+            
+            Configuration:
+            - Retry count: Set to one less than number of backends in pool to try all backends
+            - Condition: Retries on 429 (throttling) or 503 (except when backend pool is unavailable)
+            - Strategy: First fast retry with zero interval, buffer request body for replay
+        -->
+        <retry count="2" interval="0" first-fast-retry="true" condition="@(context.Response.StatusCode == 429 || (context.Response.StatusCode >= 500 && !context.Response.StatusReason.Contains("Backend pool") && !context.Response.StatusReason.Contains("is temporarily unavailable")))">
+            <forward-request buffer-request-body="true" />
+        </retry>
+    </backend>
+    <outbound>
+        <base />
+        <!-- Cache response_id → owner mapping for successful POST /responses (cross-API shared fragment). -->
+        <include-fragment fragment-id="responses-id-cache-store" />
+        <include-fragment fragment-id="set-response-headers" />
+    </outbound>
+    <on-error>
+        <base />
+        <!--
+            Error Handling
+            Purpose: Pushes custom metrics for errors to enable Azure Monitor alerts
+            
+            Integration: Uses raise-throttling-events fragment to send metrics to monitoring system for 429 responses
+        -->
+        
+        <include-fragment fragment-id="raise-throttling-events" />
+        <include-fragment fragment-id="set-response-headers" />
+    </on-error>
+</policies>

@@ -1,0 +1,33 @@
+<policies>
+    <inbound>
+        <base />
+        <!-- Product access validation - ensure access is through valid product -->
+        <choose>
+            <when condition="@(context.Product == null)">
+                <return-response>
+                    <set-status code="401" reason="Unauthorized" />
+                    <set-header name="Content-Type" exists-action="override">
+                        <value>application/json</value>
+                    </set-header>
+                    <set-body>@{
+                        return new JObject(
+                            new JProperty("error", new JObject(
+                                new JProperty("message", "Access denied. API requests must be made through a product subscription."),
+                                new JProperty("code", "product_required")
+                            ))
+                        ).ToString();
+                    }</set-body>
+                </return-response>
+            </when>
+        </choose>
+    </inbound>
+    <backend>
+        <base />
+    </backend>
+    <outbound>
+        <base />
+    </outbound>
+    <on-error>
+        <base />
+    </on-error>
+</policies>

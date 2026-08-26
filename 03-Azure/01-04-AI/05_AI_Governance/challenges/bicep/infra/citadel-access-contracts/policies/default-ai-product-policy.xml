@@ -1,0 +1,42 @@
+<!--
+    - Policies are applied in the order they appear.
+    - Position <base/> inside a section to inherit policies from the outer scope.
+    - Comments within policies are not preserved.
+-->
+<!-- Add policies as children to the <inbound>, <outbound>, <backend>, and <on-error> elements -->
+<policies>
+    <!-- Throttle, authorize, validate, cache, or transform the requests -->
+    <inbound>
+        <base />
+        <!-- Extract and validate model parameter from request -->
+        <include-fragment fragment-id="set-llm-requested-model" />
+        
+        <!-- Setting allowed models variable (comma-separated list) - uses validate-model-access fragment -->
+        <set-variable name="allowedModels" value="gpt-4o,deepseek-r1,gpt-4.1,gpt-5.4-mini" />
+
+        <!-- Capacity management - Subscription Level: allow only assigned tpm for each HR use case subscription -->
+        <llm-token-limit counter-key="@(context.Subscription.Id)" tokens-per-minute="1000" estimate-prompt-tokens="false" token-quota="100000" token-quota-period="Monthly" />
+
+        <!-- Enable advanced response headers offered by set-response-headers fragment -->
+        <set-variable name="enableResponseHeaders" value="@(true)" />
+        
+    </inbound>
+    <!-- Control if and how the requests are forwarded to services  -->
+    <backend>
+        <base />
+    </backend>
+    <!-- Customize the responses -->
+    <outbound>
+        <base />
+    </outbound>
+    <!-- Handle exceptions and customize error responses  -->
+    <on-error>
+        <base />
+        <!-- Raising throttling events (http 429 only) can help in setting up alerts in App Insights -->
+        <!-- Set the following variables to customize the throttling event details -->
+        <!-- <set-variable name="productName" value="@(context.Product?.Name?.ToString() ?? "Portal-Admin")" />
+        <set-variable name="deploymentName" value="@((string)context.Variables.GetValueOrDefault<string>("requestedModel", "DefaultModel"))" />
+        <set-variable name="appId" value="@((string)context.Variables.GetValueOrDefault<string>("appId", context.Subscription?.Id ?? "Portal-Admin-Sub"))" />
+        <include-fragment fragment-id="raise-throttling-events" /> -->
+    </on-error>
+</policies>

@@ -1,7 +1,7 @@
 # src — developer guide
 
 All the source code the participant runs during the microhack lives here. It runs
-unchanged in a Codespace / devcontainer or locally. Shared config and Foundry client
+unchanged locally inside a Python virtual environment. Shared config and Foundry client
 helpers live in [`clm_common/`](clm_common/); every entry-point script adds `src/`
 (and `src/agents/`) to `sys.path`, so run them from the **repo root**.
 
@@ -21,7 +21,7 @@ helpers live in [`clm_common/`](clm_common/); every entry-point script adds `src
 | [`mcp_server/server.py`](mcp_server/server.py) | MCP server exposing the CLM workflow — stdio (local) **and** streamable HTTP (`--http`, for hosting) | 4 |
 | [`../.vscode/mcp.json`](../.vscode/mcp.json) | VS Code MCP client config (`clm-mcp`, repo root) | 4 |
 | [`orchestrator_mcp.py`](orchestrator_mcp.py) | Orchestrator as MCP client — local stdio, or remote via `CLM_MCP_URL` | 4 |
-| [`../Dockerfile`](../Dockerfile) + [`../deploy/mcp-server/`](../deploy/mcp-server/) | Containerize + deploy the MCP server to Azure Container Apps (remote `/mcp` for Foundry) | 4 |
+| [`Dockerfile`](Dockerfile) + [`../deploy/mcp-server/`](../deploy/mcp-server/) | Containerize + deploy the MCP server to Azure Container Apps (remote `/mcp` for Foundry) | 4 |
 | [`manifest/`](manifest/) | Teams / M365 Copilot app package (manifest + icons) | 5 |
 | [`red_team.py`](red_team.py) | Automated red-teaming → `redteam_scorecard.json` | 6 |
 | [`safety_eval.py`](safety_eval.py) | Safety evaluation + CLM guardrail gate | 6 |
@@ -40,5 +40,5 @@ python src/orchestrator.py                    # Challenge 4 — orchestration
 ```
 
 > Config is read from the repo-root `.env` via `clm_common/config.py`. Run
-> [`../labautomation/deploy.sh`](../labautomation/deploy.sh) (or `azd up`) first so the
+> [`../labautomation/deploy.sh`](../labautomation/deploy.sh) (or `cd src && azd up`) first so the
 > `.env` is populated and the corpus is seeded.

@@ -26,7 +26,7 @@ def read_document_text(path: str | Path) -> str:
         except ImportError as exc:  # pragma: no cover - dependency hint
             raise RuntimeError(
                 "Reading PDF documents requires 'pypdf'. Install it with "
-                "`pip install pypdf` (it is listed in requirements.txt)."
+                "`pip install pypdf` (it is listed in src/requirements.txt)."
             ) from exc
 
         reader = PdfReader(str(path))

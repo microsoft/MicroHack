@@ -34,7 +34,7 @@ tips. Participants never see this file; it's for the people running the room.
 
 - [ ] Team has an **Azure subscription** with Owner/Contributor + rights to create role assignments.
 - [ ] Region confirmed to offer all three model deployments.
-- [ ] They can **open the repo in a Codespace** (no fork needed) or run the devcontainer locally.
+- [ ] They can **clone the repo and create a Python virtual environment** (no fork needed) — `python -m venv .venv`, activate it, then `pip install -r src/requirements.txt`.
 - [ ] `Microsoft.BotService` provider registered (needed in Ch5): `az provider register --namespace Microsoft.BotService`.
 
 ---
@@ -91,7 +91,7 @@ of the challenge, what "done" looks like, where teams get stuck, and the hint to
     or adjust the version in `deploy.sh`. **This is the single most common Ch1 blocker.**
   - *`account project create` unavailable* → the CLI project command is preview. Create the project in
     the **portal**, then set `AZURE_AI_PROJECT_ENDPOINT` in `.env` by hand.
-  - *`az login` in Codespaces* → must use `az login --use-device-code`.
+  - *`az login` with no browser (headless / remote terminal)* → use `az login --use-device-code`.
   - *RBAC not propagated* → role assignments can take a few minutes; a retry usually fixes "auth" errors
     right after `azd up`.
 - **Coach hint if stuck on region:** "Open the Foundry model catalog filtered to *your* subscription and
@@ -150,7 +150,7 @@ of the challenge, what "done" looks like, where teams get stuck, and the hint to
 - **Watch for:**
   - *Orchestrator routes wrong* → sharpen `INSTRUCTIONS` routing rules and make each specialist's
     `as_tool(description=...)` specific.
-  - *`agent_framework` import error* → `pip install agent-framework-core agent-framework-foundry` (see requirements.txt).
+  - *`agent_framework` import error* → `pip install agent-framework-core agent-framework-foundry` (see src/requirements.txt).
   - *MCP server not listed in VS Code* → the workspace config must be at the repo-root `.vscode/mcp.json`
     and you must open the **repo root** (not `src/`); confirm the server imports cleanly first (`python src/mcp_server/server.py --list`).
   - *(Task 4) Remote deploy* → run `bash deploy/mcp-server/deploy.sh` from the **repo root** (needs the

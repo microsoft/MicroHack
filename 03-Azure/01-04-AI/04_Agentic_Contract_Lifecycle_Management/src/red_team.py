@@ -15,7 +15,7 @@ Run (scan is async; this wraps it):
     python src/red_team.py --num-objectives 3 --output redteam_scorecard.json
 
 Requires: `pip install "azure-ai-evaluation[redteam]"` (pulls PyRIT) and an
-Azure AI (Foundry) project + login. See requirements.txt.
+Azure AI (Foundry) project + login. See src/requirements.txt.
 """
 from __future__ import annotations
 

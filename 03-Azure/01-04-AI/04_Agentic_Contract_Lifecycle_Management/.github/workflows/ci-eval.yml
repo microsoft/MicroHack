@@ -45,7 +45,7 @@ jobs:
 
       - name: Install dependencies
         if: steps.guard.outputs.configured == 'true'
-        run: pip install -r requirements.txt "azure-ai-evaluation[redteam]"
+        run: pip install -r src/requirements.txt "azure-ai-evaluation[redteam]"
 
       - name: Azure login (OIDC)
         if: steps.guard.outputs.configured == 'true'

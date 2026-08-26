@@ -1,0 +1,55 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.excalidraw-copilot
+# VS Code
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.copilot-tracking
+
+# Environment
+.env
+.env.local
+local.settings.json
+
+# Node
+node_modules/
+package-lock.json
+yarn.lock
+
+# Azure Functions
+AzureFunctionsProject.csproj
+bin/
+obj/
+
+# Azurite
+__azurite_db_*.json
+__blobstorage__/
+
+# macOS
+.DS_Store

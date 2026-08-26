@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Lab Defaults",
-  "description": "Smart defaults for the lab lifecycle wizard. Only include fields you want to override — missing fields are ignored.",
+  "description": "Smart defaults for the lab lifecycle wizard. Place as lab-defaults.json in hackcontent/<slug>/lab/. Only include fields you want to override — missing fields are ignored.",
   "type": "object",
   "properties": {
     "groups": {
@@ -27,7 +27,12 @@
     "estimatedDailyCostsUsd": {
       "type": "number",
       "minimum": 0,
-      "description": "Estimated daily cost per lab environment in USD. Used for cost forecasting in the lab lifecycle wizard."
+      "description": "Estimated daily cost per lab environment in USD: the running cost of the resources deploy-lab.ps1 creates. Used for cost forecasting in the lab lifecycle wizard. Defaults to 25 when absent or < 1."
+    },
+    "estimatedSharedDeploymentDailyCostsUsd": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Estimated daily cost in USD of the resources shared-deploy-lab.ps1 creates. That hook runs once per Azure subscription, so this is multiplied by the subscription count: labs / labsPerSubscription (rounded up) for deploymentType resourcegroup and resourcegroup-with-subscriptionowner, or one per lab for deploymentType subscription. Defaults to 0 when absent or negative."
     }
   },
   "additionalProperties": false

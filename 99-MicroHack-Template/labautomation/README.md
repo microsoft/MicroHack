@@ -104,6 +104,8 @@ Key points for integration:
     - [`Get-MhhStableHash`](#get-mhhstablehash)
     - [`Get-MhhLabUser`](#get-mhhlabuser)
     - [`Update-MhhToken`](#update-mhhtoken)
+    - [`Invoke-MhhSynchronized`](#invoke-mhhsynchronized)
+    - [`Set-MhhManagedIdentityRoleMember`](#set-mhhmanagedidentityrolemember)
     - [`Invoke-MhhTofuCommand`](#invoke-mhhtofucommand)
     - [`Remove-MhhTofuWorkspace`](#remove-mhhtofuworkspace)
     - [`Invoke-MhhDeploymentWithRegionFallback`](#invoke-mhhdeploymentwithregionfallback)
@@ -141,7 +143,8 @@ and is validated when your MicroHack is loaded.
   "deploymentType": "resourcegroup",
   "labsPerSubscription": 4,
   "preferredLocation": "swedencentral, norwayeast, spaincentral",
-  "estimatedDailyCostsUsd": 25.0
+  "estimatedDailyCostsUsd": 25.0,
+  "estimatedSharedDeploymentDailyCostsUsd": 0.0
 }
 ```
 
@@ -155,7 +158,37 @@ Only include fields you want to set; missing fields fall back to platform defaul
 | `deploymentType` | `"resourcegroup"` \| `"subscription"` \| `"resourcegroup-with-subscriptionowner"` | Azure scope each user receives. See [details](#deploymenttype-what-each-value-means-for-your-script). |
 | `labsPerSubscription` | `integer` (1–100) | How many users to pack into a single Azure subscription. Ignored when `deploymentType` is `subscription`. |
 | `preferredLocation` | `string` | Comma-separated Azure regions, **in priority order** (e.g. `"swedencentral, norwayeast"`). The first region is used as the default deployment location. List multiple regions so your script can fall back if the first region doesn't support every service your lab needs; see [authoring guidelines](#authoring-guidelines). |
-| `estimatedDailyCostsUsd` | `number` (≥ 0) | Estimated daily cost per lab environment in USD. Used for cost forecasting in the lab lifecycle wizard. |
+| `estimatedDailyCostsUsd` | `number` (≥ 0) | Estimated daily cost per lab environment in USD. Based on the resources created by `deploy-lab.ps1`. Used for cost forecasting in the lab lifecycle wizard. |
+| `estimatedSharedDeploymentDailyCostsUsd` | `number` (≥ 0) | Estimated daily cost in USD of resources created once per subscription by `shared-deploy-lab.ps1`. Cost forecasting multiplies this value by the subscription count: labs divided by `labsPerSubscription`, rounded up, for resource-group deployments; one subscription per lab for `subscription` deployments. Defaults to `0` when absent. |
+
+### Cost forecasting formula
+
+The number of Azure subscriptions required for a deployment is:
+
+```math
+\displaystyle \text{subs} =
+\begin{cases}
+\displaystyle \text{labs} & \text{deploymentType} = \texttt{subscription} \\[4pt]
+\left\lceil \dfrac{\text{labs}}{\text{labsPerSubscription}} \right\rceil
+& \text{deploymentType} \in \{\texttt{resourcegroup}, \texttt{resourcegroup-with-subscriptionowner}\}
+\end{cases}
+```
+
+The final estimated cost in USD is:
+
+```math
+\displaystyle \text{est} = \text{days} \times \left(
+\displaystyle \text{labs} \times
+\underbrace{\left(\text{estimatedDailyCostsUsd} + \textstyle\sum \text{groupSurcharge}\right)}_{\text{per-lab}}
++ \text{subs} \times
+\underbrace{\text{estimatedSharedDeploymentDailyCostsUsd}}_{\text{per-subscription}}
+\right)
+```
+
+Here, `labs` is the number of lab environments, `days` is the deployment duration,
+and $\sum \text{groupSurcharge}$ represents the license costs for `groups` per lab.
+Per-lab costs and group surcharges are multiplied by `labs`; shared deployment costs are multiplied by `subs`
+because `shared-deploy-lab.ps1` runs once per subscription.
 
 ### `groups`: supported values
 
@@ -477,18 +510,18 @@ Rules:
 
 ### Local testing
 
-You can run `deploy-lab.ps1` on your own machine, in the same PowerShell
-environment the platform uses, via the [`adminpwsh`](https://github.com/qxsch/adminpwsh)
-container image:
+You can run `deploy-lab.ps1` and `shared-deploy-lab.ps1` on your own machine in
+a PowerShell environment similar to the one used by the platform. Use the
+[`adminpwsh`](https://github.com/qxsch/adminpwsh) container image:
 
 ```powershell
 docker run -it -v '.\:/app' --rm "ghcr.io/qxsch/adminpwsh:latest"
 ```
 
-This mounts the current folder (the folder containing `deploy-lab.ps1`) into
-`/app` inside the container. Once you're inside the container's shell,
-authenticate Az PowerShell and the Azure CLI. Unlike a platform-triggered run,
-you need to log in yourself here:
+This mounts the current folder (the `labautomation` folder containing
+`deploy-lab.ps1` and `shared-deploy-lab.ps1`) at `/app` inside the container.
+Once inside the container's shell, authenticate Az PowerShell and the Azure
+CLI. Unlike a platform-triggered run, you need to log in yourself:
 
 ```powershell
 Connect-AzAccount -UseDeviceAuthentication
@@ -511,6 +544,8 @@ required parameters from the [contract](#required-parameter-contract):
 
 > The helper cmdlets (`New-MhhStablePassword`, `Get-MhhStableHash`,
 > `Update-MhhToken`, `Invoke-MhhTofuCommand`, …) are simplified local-dev stand-ins.
+> They are not identical to the platform versions, but they are sufficient for
+> testing your script logic and parameter contract.
 
 ## Optional hook: `shared-deploy-lab.ps1`
 
@@ -783,6 +818,83 @@ Returns `@{ Mode; Rotated; TokenLifetimeSeconds; RemainingSeconds; Refreshed; Sk
 and **throws** if any attempted target fails, so you can't silently continue with
 dead credentials.
 
+### `Invoke-MhhSynchronized`
+
+Run a script block under a container-wide exclusive lock. Use it around short
+critical sections that mutate shared state and could otherwise race when
+participant deployments run in parallel, such as adding subnets to a shared
+VNet.
+
+```powershell
+Invoke-MhhSynchronized -Name 'shared-vnet' {
+    $vnet = Get-AzVirtualNetwork -Name $vnetName -ResourceGroupName $sharedRg
+    Add-AzVirtualNetworkSubnetConfig `
+        -VirtualNetwork $vnet `
+        -Name $subnetName `
+        -AddressPrefix $addressPrefix |
+        Set-AzVirtualNetwork
+}
+```
+
+| Parameter | Description |
+| --- | --- |
+| `ScriptBlock` (`scriptblock`, required, positional 0) | Critical section to run while holding the lock. Its output and exceptions pass through unchanged. |
+| `Name` (`string`, positional 1) | Case-insensitive lock name. Use 1-64 characters from `[A-Za-z0-9_-]`; Must start with a letter or number. Default `Default`. |
+| `TimeoutSeconds` (`int`, 1-86400) | Maximum time to wait for the lock before throwing. Default 900. |
+| `MaxSleepDelayMilliseconds` (`int`, 250-1000000) | Maximum random delay after releasing a lock, applied only when this call had to queue. Default 1000. |
+
+- **Locks are container-wide and keyed only by `Name`.** Calls using the same name serialize even if
+  they target different subscriptions, so give unrelated critical sections different names.
+- **Keep the script block short.** Every other job waiting for that name remains
+  blocked until the block finishes. The lock is released even if the block
+  throws, and a timeout includes details about the current lock holder.
+- **Closures work normally.** The block runs in the caller's scope, so it can use
+  local variables without `$using:`. Nested calls using the same name in the
+  same process are supported.
+
+### `Set-MhhManagedIdentityRoleMember`
+
+Grant an Entra ID directory role to the system-assigned managed identities of
+supported Azure resources. The helper collects all resource IDs from the
+parameter and pipeline, then processes them in one synchronized operation. It
+is safe to re-run: existing memberships return `AlreadyAssigned` rather than
+failing.
+
+The helper supports only the following provider types:
+
+- `Microsoft.Sql/managedInstances`
+- `Microsoft.Compute/virtualMachines`
+- `Microsoft.Web/sites`
+- `Microsoft.App/containerApps`
+
+Only the **Directory Readers** role is supported. Unsupported or invalid
+resource IDs are returned with status `Skipped` and produce a warning.
+
+```powershell
+# One SQL Managed Instance
+Set-MhhManagedIdentityRoleMember -ResourceId $sqlManagedInstance.Id -Role 'Directory Readers'
+
+# Every SQL Managed Instance in a resource group
+Get-AzSqlInstance -ResourceGroupName $ResourceGroupName |
+    Set-MhhManagedIdentityRoleMember -Role 'Directory Readers'
+```
+
+| Parameter | Description |
+| --- | --- |
+| `ResourceId` (`string[]`, required, positional 0) | Azure resource IDs whose system-assigned identities receive the role.<br><br>Supported providers:<br>• `Microsoft.Sql/managedInstances`<br>• `Microsoft.Compute/virtualMachines`<br>• `Microsoft.Web/sites`<br>• `Microsoft.App/containerApps`<br><br>Accepts pipeline input and the aliases `Id` and `ResourceIds`. Duplicate IDs are processed once. |
+| `Role` (`string[]`, positional 1) | Directory roles to grant. Only `Directory Readers` (or `Directory Reader`) is currently supported. Default `Directory Readers`. |
+| `TimeoutSeconds` (`int`, 60-3600) | Maximum time to wait for the container-wide directory-role lock. Default 900. |
+
+**Return value:** one result object per resource and role combination:
+
+| Field | Description |
+| --- | --- |
+| `resourceId` | Azure resource ID supplied to the helper. |
+| `principalId` | Resolved managed identity object ID, or `$null` when it could not be resolved. |
+| `displayName` | Azure resource / managed identity display name. |
+| `role` | Resolved directory role name. |
+| `status` | `Assigned`, `AlreadyAssigned`, `Skipped` or `Failed`. |
+
 ### `Invoke-MhhTofuCommand`
 
 Run one OpenTofu command in a working directory isolated by subscription +
@@ -926,6 +1038,23 @@ $result = Invoke-MhhDeploymentWithRegionFallback `
 foreach ($k in $result.Outputs.Keys) {
     @{ HackboxCredential = @{ name = $k; value = [string]$result.Outputs[$k]; note = "" } }
 }
+```
+
+**Example: setting static tags on the resource group via `-Tag`:**
+
+For plain, known-upfront tag values, pass `-Tag` directly: the helper applies
+it to the RG on every (re)create, no hook required.
+
+```powershell
+$result = Invoke-MhhDeploymentWithRegionFallback `
+    -PreferredLocations      $PreferredLocation `
+    -ResourceGroupName       $ResourceGroupName `
+    -RgOwnerEntraObjectIds   $AllowedEntraUserIds `
+    -TemplateFile            (Join-Path $PSScriptRoot 'main.bicep') `
+    -TemplateParameterObject @{
+        userObjectId = $AllowedEntraUserIds[0]
+    } `
+    -Tag                     @{ 'some-tag' = 'myvalue' }
 ```
 
 **When *not* to use it:**

@@ -22,10 +22,6 @@ SLOTS: list[tuple[str, str, str, str]] = [
     # ---- Challenge 1 · Setup ------------------------------------------------
     ("challenge-0", "01-fork", "GitHub · Fork the repo",
      "The GitHub 'Create a new fork' page for glejdis/microhack-aiagents with the green 'Create fork' button."),
-    ("challenge-0", "02-create-codespace", "GitHub · Create Codespace",
-     "Code button → Codespaces tab → 'Create codespace on main' green button."),
-    ("challenge-0", "03-codespace-ready", "Codespace · Ready",
-     "The VS Code-in-browser Codespace with a terminal open and 'pip install -r requirements.txt' finished."),
     ("challenge-0", "04-az-login-device", "Azure · Device-code login",
      "The https://microsoft.com/devicelogin page where you paste the code printed by 'az login --use-device-code'."),
     ("challenge-0", "05-azd-up-prompts", "azd up · Prompts",

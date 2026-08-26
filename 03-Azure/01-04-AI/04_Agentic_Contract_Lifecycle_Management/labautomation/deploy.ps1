@@ -2,7 +2,7 @@
   Challenge 1 — provision the Foundry CLM microhack resources and write .env (Windows).
   Usage:   ./labautomation/deploy.ps1 [-WithSql] [-WithBing]
   Requires: az CLI (az login), rights to deploy GPT models.
-  The bash script (labautomation/deploy.sh) is the primary path for Codespaces.
+  The bash script (labautomation/deploy.sh) is the primary path for Linux / macOS / WSL.
 #>
 param([switch]$WithSql, [switch]$WithBing)
 $ErrorActionPreference = "Stop"

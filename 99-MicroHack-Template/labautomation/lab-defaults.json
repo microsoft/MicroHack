@@ -4,5 +4,6 @@
   "deploymentType": "resourcegroup",
   "labsPerSubscription": 4,
   "preferredLocation": "swedencentral, norwayeast, spaincentral",
-  "estimatedDailyCostsUsd": 25.0
+  "estimatedDailyCostsUsd": 25.0,
+  "estimatedSharedDeploymentDailyCostsUsd": 0.0
 }

@@ -1,0 +1,18 @@
+# The build context IS this src/ folder — it holds the Dockerfile, requirements.txt
+# and all the app code the CLM MCP server needs (Dockerfile does COPY . ./src/).
+# Exclude only caches, local secrets, and build/config files not needed at runtime.
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/.pytest_cache
+
+# Never bake local secrets into the image
+.env
+.env.*
+!.env.example
+
+# Build/config files the running server image doesn't need
+.gitignore
+.gitattributes
+.dockerignore
+azure.yaml

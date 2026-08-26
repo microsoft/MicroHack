@@ -18,7 +18,7 @@ Copilot & Teams** so people chat with it live where contract managers already wo
 In the **Foundry portal**, open the **`clm-contract-agent`** you published in **Challenge 4 (Task 4 Part B)** — the MCP-backed portal agent. *(The `clm-orchestrator` from Ch4 Task 2 was in-process and isn't in the portal.)*
 
 ### Task 2 · Publish to Teams & M365 Copilot
-Select **Publish** → **Publish to Teams and Microsoft 365 Copilot** → **Continue** (provisions an **Azure Bot Service**; first time: `az provider register --namespace Microsoft.BotService`). Leave the **Azure bot services** dropdown on *auto*; delete any stale bot from earlier attempts to avoid an **App ID collision**.
+Select **Publish** → **Publish to Teams and Microsoft 365 Copilot** → **Continue** (provisions an **Azure Bot Service**; needs the `Microsoft.BotService` provider registered on the **subscription** — the lab's shared deploy hook `shared-deploy-lab.ps1` does this once per subscription before the labs, else a **subscription Owner** runs `az provider register --namespace Microsoft.BotService` once). Leave the **Azure bot services** dropdown on *auto*; delete any stale bot from earlier attempts to avoid an **App ID collision**.
 
 <img src="../../images/challenge-05/steps/task2-publish-menu.png" alt="Foundry portal: the Publish dropdown on clm-contract-agent with Teams & Microsoft 365 Copilot selected" width="80%">
 
@@ -97,4 +97,4 @@ Select **Publish** → **Publish to Teams and Microsoft 365 Copilot** → **Cont
 | Published, but "nothing in Teams" | Publish with **Individual scope → Submit**, then look under **Apps → Your agents** (wait 1–2 min). If direct publish 400s, use **Download & customize** and sideload the zip. |
 | Can't sideload the Teams app | Many corp tenants block sideloading — use a coach-provided tenant. |
 | App ID collision on re-publish | Delete the stale Azure Bot from the earlier attempt, then re-publish (Foundry provisions a fresh one). |
-| `Microsoft.BotService` errors | Register the provider: `az provider register --namespace Microsoft.BotService`. |
+| `Microsoft.BotService` errors / **`MissingSubscriptionRegistration`** (409) on the bot dropdown | The provider isn't registered on the **subscription**. The lab's shared deploy hook (`shared-deploy-lab.ps1`) registers it once per subscription before the labs; if it's still missing, a **subscription Owner** runs once (subscription-wide): `az provider register --namespace Microsoft.BotService`. In an RG-scoped lab the participant (RG-Owner) can't self-register — ask the coach / lab admin. Wait for `Registered` (~1–2 min), then reopen the publish dialog. |

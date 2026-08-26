@@ -1,0 +1,75 @@
+<fragment>
+    <!--
+        Fragment: Responses API ID Cache Store (outbound)
+        Purpose: Records ownership of newly created Responses API objects so that
+                 subsequent GET/DELETE/chained calls can be authorized by
+                 frag-responses-id-security.
+
+        Companion to: frag-responses-id-security.xml (inbound).
+        Reusable across Azure OpenAI, Universal LLM, and Unified AI API surfaces.
+
+        Activation conditions (all must hold):
+        - The current request was identified as a Responses API call
+          (`isResponsesApi` set to true by the inbound fragment).
+        - The HTTP method is POST (i.e. a `responses.create` operation).
+        - The backend returned a 2xx status code.
+
+        Cache write:
+            key   = "response-id-" + <id from response body>
+            value = "<subscriptionId>|<requestedModel>|<userId>"
+            ttl   = 86400 seconds (24h) – matches typical OpenAI server-side retention.
+
+        Variables consumed (all populated upstream):
+        - isResponsesApi          – set by frag-responses-id-security
+        - context.Subscription.Id – APIM
+        - requestedModel          – set by frag-set-llm-requested-model / frag-request-processor
+        - user-id                 – set by frag-security-handler (falls back to subscription id)
+
+        Diagnostic headers (added only for cached responses):
+        - x-aihub-response-id-cached: response_id that was just cached
+    -->
+
+    <choose>
+        <when condition="@(
+            context.Variables.GetValueOrDefault<bool>("isResponsesApi", false)
+            && (context.Request.Method ?? string.Empty).Equals("POST", StringComparison.OrdinalIgnoreCase)
+            && context.Response != null
+            && context.Response.StatusCode >= 200
+            && context.Response.StatusCode < 300
+        )">
+            <set-variable name="newResponseId" value="@{
+                try
+                {
+                    var raw = context.Response.Body.As<string>(preserveContent: true);
+                    if (string.IsNullOrEmpty(raw)) { return string.Empty; }
+                    var json = JObject.Parse(raw);
+                    return json["id"]?.ToString() ?? string.Empty;
+                }
+                catch { return string.Empty; }
+            }" />
+
+            <choose>
+                <when condition="@(!string.IsNullOrEmpty(context.Variables.GetValueOrDefault<string>("newResponseId", string.Empty)))">
+                    <cache-store-value
+                        key="@("response-id-" + (string)context.Variables["newResponseId"])"
+                        value="@{
+                            var subId = context.Subscription?.Id ?? string.Empty;
+                            var model = context.Variables.GetValueOrDefault<string>("requestedModel", string.Empty);
+                            var userId = context.Variables.GetValueOrDefault<string>("user-id", subId);
+                            return string.Concat(subId, "|", model, "|", userId);
+                        }"
+                        duration="86400"
+                        caching-type="internal" />
+
+                    <set-header name="x-aihub-response-id-cached" exists-action="override">
+                        <value>@((string)context.Variables["newResponseId"])</value>
+                    </set-header>
+
+                    <trace source="Responses-API-Security" severity="information">
+                        <message>@($"Cached response-id ownership: id={context.Variables.GetValueOrDefault<string>("newResponseId", string.Empty)} sub={context.Subscription?.Id ?? string.Empty} model={context.Variables.GetValueOrDefault<string>("requestedModel", string.Empty)}")</message>
+                    </trace>
+                </when>
+            </choose>
+        </when>
+    </choose>
+</fragment>

@@ -1,0 +1,72 @@
+<fragment>
+    <!--
+        Fragment: Get Available Models
+        Purpose: Returns a JSON response listing all available model deployments with their capabilities
+        
+        Expected Input Variables: 
+        - allowedModels (optional): Comma-separated string of model names to filter (e.g., "gpt-4o,deepseek-r1")
+                                    If empty or not set, returns all available models
+        
+        Output: HTTP 200 response with JSON body containing unique model deployment information
+        
+        Usage: Include this fragment in an API operation to return available models:
+        <include-fragment fragment-id="get-available-models" />
+    -->
+    <set-variable name="availableModels" value="@{
+        JArray modelDeployments = new JArray();
+        
+        //{modelDeploymentsCode}
+        
+        return modelDeployments.ToString();
+    }" />
+    <set-variable name="availableFilteredModels" value="@{
+        JArray allModels = JArray.Parse((string)context.Variables["availableModels"]);
+        
+        // Get unique models by name (case-insensitive)
+        var seenNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        JArray uniqueModels = new JArray();
+        foreach (var model in allModels)
+        {
+            string modelName = model["name"]?.ToString() ?? "";
+            if (!seenNames.Contains(modelName))
+            {
+                seenNames.Add(modelName);
+                uniqueModels.Add(model);
+            }
+        }
+        
+        // Get allowedModels filter (comma-separated string)
+        string allowedModelsStr = context.Variables.ContainsKey("allowedModels") 
+            ? (string)context.Variables["allowedModels"] 
+            : "";
+        
+        JArray filteredModels;
+        if (string.IsNullOrWhiteSpace(allowedModelsStr))
+        {
+            // No filter - return all unique models
+            filteredModels = uniqueModels;
+        }
+        else
+        {
+            // Parse allowed models and filter (case-insensitive)
+            var allowedSet = new HashSet<string>(
+                allowedModelsStr.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                                .Select(m => m.Trim()),
+                StringComparer.OrdinalIgnoreCase
+            );
+            
+            filteredModels = new JArray();
+            foreach (var model in uniqueModels)
+            {
+                string modelName = model["name"]?.ToString() ?? "";
+                if (allowedSet.Contains(modelName))
+                {
+                    filteredModels.Add(model);
+                }
+            }
+        }
+        
+        return filteredModels.ToString();
+    }" />
+    
+</fragment>

@@ -1,0 +1,77 @@
+<fragment>
+    <!--
+        Fragment: Strip Backend Headers
+        Purpose: Removes headers that should not be forwarded to AI backends. These headers
+                 are added by browsers (sec-*, Sec-Fetch-*), the Azure portal "Test" pane
+                 (Referer, Max-Forwards, Cache-Control), and the Azure App Service / ARR
+                 front-end that hosts APIM (X-ARR-*, X-Forwarded-*, X-AppService-*,
+                 DISGUISED-HOST, CLIENT-IP, WAS-DEFAULT-HOSTNAME, X-SITE-DEPLOYMENT-ID,
+                 X-Original-URL, X-WAWS-Unencoded-URL, X-Azure-JA4-Fingerprint, etc.).
+
+                 Forwarding them to AI backends:
+                   - Increases request size and CPU cost on the backend
+                   - Leaks internal infrastructure details (host names, deployment ids,
+                     client IPs, TLS versions, fingerprints)
+                   - Can interfere with backend caching / routing logic
+                   - Adds noise to backend telemetry
+
+                 Headers explicitly preserved (NOT stripped):
+                   - Content-Type, Content-Length, Accept, Accept-Encoding
+                   - Authorization, api-key, Ocp-Apim-Subscription-Key (auth)
+                   - User-Agent, traceparent, tracestate (tracing)
+                   - x-ms-*, openai-*, anthropic-* (AI backend specific)
+
+        Usage: Include in the inbound section of an API policy AFTER backend authentication
+               headers have been set (e.g. after set-backend-authorization fragment), and
+               BEFORE the request is forwarded to the backend.
+
+        Configuration:
+            - stripBackendHeaders (bool, default: true) - set to false to disable stripping
+              for debugging purposes. Example to disable in a product policy:
+                  <set-variable name="stripBackendHeaders" value="@(false)" />
+    -->
+    <choose>
+        <when condition="@(context.Variables.GetValueOrDefault<bool>("stripBackendHeaders", true))">
+            <!-- Browser / user-agent client hints -->
+            <set-header name="Accept-Language" exists-action="delete" />
+            <set-header name="Cache-Control" exists-action="delete" />
+            <set-header name="Referer" exists-action="delete" />
+            <set-header name="Origin" exists-action="delete" />
+            <set-header name="sec-ch-ua" exists-action="delete" />
+            <set-header name="sec-ch-ua-mobile" exists-action="delete" />
+            <set-header name="sec-ch-ua-platform" exists-action="delete" />
+            <set-header name="Sec-Fetch-Site" exists-action="delete" />
+            <set-header name="Sec-Fetch-Mode" exists-action="delete" />
+            <set-header name="Sec-Fetch-Dest" exists-action="delete" />
+            <set-header name="Sec-Fetch-User" exists-action="delete" />
+            <set-header name="Upgrade-Insecure-Requests" exists-action="delete" />
+            <set-header name="DNT" exists-action="delete" />
+
+            <!-- Azure portal test-pane / proxy artifacts -->
+            <set-header name="Max-Forwards" exists-action="delete" />
+            <set-header name="Request-Id" exists-action="delete" />
+            <set-header name="Request-Context" exists-action="delete" />
+
+            <!-- ARR / App Service front-end headers (leak internal infra details) -->
+            <set-header name="X-ARR-LOG-ID" exists-action="delete" />
+            <set-header name="X-ARR-SSL" exists-action="delete" />
+            <set-header name="CLIENT-IP" exists-action="delete" />
+            <set-header name="DISGUISED-HOST" exists-action="delete" />
+            <set-header name="WAS-DEFAULT-HOSTNAME" exists-action="delete" />
+            <set-header name="X-SITE-DEPLOYMENT-ID" exists-action="delete" />
+            <set-header name="X-AppService-Proto" exists-action="delete" />
+            <set-header name="X-Original-URL" exists-action="delete" />
+            <set-header name="X-WAWS-Unencoded-URL" exists-action="delete" />
+            <set-header name="X-Azure-JA4-Fingerprint" exists-action="delete" />
+
+            <!-- Forwarded-* family (we don't want backends to see client IP / TLS info) -->
+            <set-header name="X-Forwarded-For" exists-action="delete" />
+            <set-header name="X-Forwarded-Proto" exists-action="delete" />
+            <set-header name="X-Forwarded-Host" exists-action="delete" />
+            <set-header name="X-Forwarded-Port" exists-action="delete" />
+            <set-header name="X-Forwarded-TlsVersion" exists-action="delete" />
+            <set-header name="Forwarded" exists-action="delete" />
+            <set-header name="Via" exists-action="delete" />
+        </when>
+    </choose>
+</fragment>

@@ -1,0 +1,206 @@
+targetScope = 'subscription'
+
+@description('APIM resource coordinates')
+param apim object
+
+@description('Target Key Vault for storing endpoint and API key secrets')
+param keyVault object
+
+@description('Whether to use Azure Key Vault for storing secrets. If false, secrets will be output instead.')
+param useTargetAzureKeyVault bool = true
+
+@description('Use case descriptor used in naming: <code>-<businessUnit>-<useCaseName>-<environment>')
+param useCase object
+
+@description('Map of service codes to their API names in APIM. Example: { OAI: ["azure-openai-service-api"], DOC: ["document-intelligence-api"] }')
+param apiNameMapping object
+
+@description('Required AI services for this use case. Each item: { code: "OAI", endpointSecretName: "OAI_ENDPOINT", apiKeySecretName: "OAI_KEY", policyXmlPath?: "path/to/policy.xml" }')
+param services array
+
+@description('Optional product terms shown to subscribers')
+param productTerms string = ''
+
+// ============================================================================
+// AZURE AI FOUNDRY INTEGRATION PARAMETERS
+// ============================================================================
+
+@description('Whether to create Azure AI Foundry connection for this use case. If true, foundry parameter must be provided.')
+param useTargetFoundry bool = false
+
+@description('Azure AI Foundry configuration for creating APIM connections. Required if useTargetFoundry is true.')
+param foundry object = {
+  subscriptionId: ''
+  resourceGroupName: ''
+  accountName: ''
+  projectName: ''
+}
+
+@description('Foundry connection configuration options')
+param foundryConfig object = {
+  // Connection naming: if empty, uses useCase naming convention
+  connectionNamePrefix: ''
+  // Foundry connection category: ApiManagement or ModelGateway
+  connectionCategory: 'ApiManagement'
+  // Whether deployment name is in URL path (true) or request body (false)
+  deploymentInPath: 'false'
+  // Share connection to all project users
+  isSharedToAll: false
+  // API version for inference calls (empty = APIM defaults)
+  inferenceAPIVersion: ''
+  // API version for deployment discovery (empty = APIM defaults)
+  deploymentAPIVersion: ''
+  // Static model list (optional)
+  staticModels: []
+  // Custom discovery endpoints (optional - leave empty for APIM defaults)
+  listModelsEndpoint: ''
+  getModelEndpoint: ''
+  deploymentProvider: ''
+  // Custom headers for requests
+  customHeaders: {}
+  // Custom auth configuration
+  authConfig: {}
+}
+
+var productPostfix = '${useCase.businessUnit}-${useCase.useCaseName}-${useCase.environment}'
+
+// Default APIM product policy (applied when a service item does not provide policyXmlPath)
+var defaultProductPolicyXml = loadTextContent('./policies/default-ai-product-policy.xml')
+
+resource apimRg 'Microsoft.Resources/resourceGroups@2022-09-01' existing = {
+  scope: subscription(apim.subscriptionId)
+  name: apim.resourceGroupName
+}
+
+resource apimSvc 'Microsoft.ApiManagement/service@2024-05-01' existing = {
+  scope: apimRg
+  name: apim.name
+}
+
+resource kvRg 'Microsoft.Resources/resourceGroups@2022-09-01' existing = if (useTargetAzureKeyVault) {
+  scope: subscription(keyVault.subscriptionId)
+  name: keyVault.resourceGroupName
+}
+
+resource kv 'Microsoft.KeyVault/vaults@2023-07-01' existing = if (useTargetAzureKeyVault) {
+  scope: kvRg
+  name: keyVault.name
+}
+
+// Onboard each requested service into APIM
+module onboard 'modules/apimOnboardService.bicep' = [for s in services: {
+  name: 'onboard-${s.code}-${productPostfix}'
+  scope: apimRg
+  params: {
+    apimName: apim.name
+    productId: '${s.code}-${productPostfix}'
+    productDisplayName: '${s.code} ${useCase.businessUnit} ${useCase.useCaseName} ${useCase.environment}'
+    productDescription: 'AI Gateway product for ${s.code} - ${useCase.useCaseName}'
+    productTerms: productTerms
+    apiNames: apiNameMapping[s.code]
+    // Use provided policy XML or default
+    productPolicyXml: contains(s, 'policyXml') && !empty(s.policyXml) ? s.policyXml : defaultProductPolicyXml
+    subscriptionName: '${s.code}-${productPostfix}-SUB-01'
+    subscriptionDisplayName: '${s.code}-${productPostfix}-SUB-01'
+  }
+}]
+
+// Write Key Vault secrets per service (only if useTargetAzureKeyVault is true)
+// Create/update KV secrets; normalize names (Key Vault does not allow underscores)
+module kvWrites 'modules/kvSecrets.bicep' = [for (s, i) in services: if (useTargetAzureKeyVault) {
+  name: 'kv-${s.code}-${productPostfix}'
+  scope: kvRg
+  params: {
+    keyVaultName: kv.name
+    secretNames: [ toLower(replace(s.endpointSecretName, '_', '-')), toLower(replace(s.apiKeySecretName, '_', '-')) ]
+    secretValues: {
+      '${toLower(replace(s.endpointSecretName, '_', '-'))}': '${apimSvc.properties.gatewayUrl}/${onboard[i].outputs.apiPath}'
+      '${toLower(replace(s.apiKeySecretName, '_', '-'))}': onboard[i].outputs.subscriptionPrimaryKey
+    }
+  }
+}]
+
+// ============================================================================
+// AZURE AI FOUNDRY CONNECTION DEPLOYMENT
+// ============================================================================
+// Create Foundry APIM connections per service (only if useTargetFoundry is true)
+// This enables Foundry agents to access AI models through the APIM gateway
+
+resource foundryRg 'Microsoft.Resources/resourceGroups@2022-09-01' existing = if (useTargetFoundry) {
+  scope: subscription(foundry.subscriptionId)
+  name: foundry.resourceGroupName
+}
+
+// Generate connection name based on config or use case naming
+var foundryConnectionPrefix = !empty(foundryConfig.connectionNamePrefix) ? foundryConfig.connectionNamePrefix : 'Hub-${useCase.businessUnit}-${useCase.useCaseName}-${useCase.environment}'
+
+module foundryConnections 'modules/foundryConnection.bicep' = [for (s, i) in services: if (useTargetFoundry) {
+  name: 'foundry-${s.code}-${productPostfix}'
+  scope: foundryRg
+  params: {
+    aiFoundryAccountName: foundry.accountName
+    aiFoundryProjectName: foundry.projectName
+    connectionName: '${foundryConnectionPrefix}-${s.code}'
+    targetUrl: '${apimSvc.properties.gatewayUrl}/${onboard[i].outputs.apiPath}'
+    apimSubscriptionKey: onboard[i].outputs.subscriptionPrimaryKey
+    connectionCategory: foundryConfig.?connectionCategory ?? 'ApiManagement'
+    isSharedToAll: foundryConfig.?isSharedToAll ?? false
+    deploymentInPath: foundryConfig.?deploymentInPath ?? 'false'
+    inferenceAPIVersion: foundryConfig.?inferenceAPIVersion ?? ''
+    deploymentAPIVersion: foundryConfig.?deploymentAPIVersion ?? ''
+    staticModels: foundryConfig.?staticModels ?? []
+    listModelsEndpoint: foundryConfig.?listModelsEndpoint ?? ''
+    getModelEndpoint: foundryConfig.?getModelEndpoint ?? ''
+    deploymentProvider: foundryConfig.?deploymentProvider ?? ''
+    customHeaders: foundryConfig.?customHeaders ?? {}
+    authConfig: foundryConfig.?authConfig ?? {}
+  }
+  dependsOn: [
+    onboard
+  ]
+}]
+
+output apimGatewayUrl string = apimSvc.properties.gatewayUrl
+output useKeyVault bool = useTargetAzureKeyVault
+
+output products array = [for s in services: {
+  productId: '${s.code}-${productPostfix}'
+  displayName: '${s.code} ${useCase.businessUnit} ${useCase.useCaseName} ${useCase.environment}'
+}]
+
+// When using Key Vault, output references to the secret names in Key Vault
+output subscriptions array = [for s in services: {
+  name: '${s.code}-${productPostfix}-SUB-01'
+  productId: '${s.code}-${productPostfix}'
+  keyVaultApiKeySecretName: useTargetAzureKeyVault ? toLower(replace(s.apiKeySecretName, '_', '-')) : ''
+  keyVaultEndpointSecretName: useTargetAzureKeyVault ? toLower(replace(s.endpointSecretName, '_', '-')) : ''
+}]
+
+// When NOT using Key Vault, output the actual endpoints and keys
+// These outputs contain runtime values from the onboarding modules
+// Note: When useTargetAzureKeyVault=false, the 'endpoints' output will contain sensitive API keys.
+// Consumers should handle these values securely (e.g., store in environment variables, CI/CD secrets, etc.)
+// The linter warning about secrets in outputs is intentional when Key Vault is disabled
+#disable-next-line outputs-should-not-contain-secrets
+output endpoints array = [for (s, i) in services: {
+  code: s.code
+  productId: '${s.code}-${productPostfix}'
+  subscriptionName: '${s.code}-${productPostfix}-SUB-01'
+  endpoint: useTargetAzureKeyVault ? '' : '${apimSvc.properties.gatewayUrl}/${onboard[i].outputs.apiPath}'
+  // API key is marked secure in the module output, consumers should treat this as sensitive when not using Key Vault
+  #disable-next-line outputs-should-not-contain-secrets
+  apiKey: useTargetAzureKeyVault ? '' : string(onboard[i].outputs.subscriptionPrimaryKey)
+}]
+
+// ============================================================================
+// FOUNDRY CONNECTION OUTPUTS
+// ============================================================================
+output useFoundry bool = useTargetFoundry
+
+output foundryConnections array = [for (s, i) in services: useTargetFoundry ? {
+  code: s.code
+  connectionName: '${foundryConnectionPrefix}-${s.code}'
+  targetUrl: '${apimSvc.properties.gatewayUrl}/${onboard[i].outputs.apiPath}'
+  foundryAccount: foundry.accountName
+  foundryProject: foundry.projectName
+} : {}]

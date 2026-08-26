@@ -1,0 +1,63 @@
+<fragment>
+    <!--
+        Fragment: Validate Model Access
+        Purpose: Restricts access to specific models based on the allowedModels variable
+        
+        Expected Input Variables:
+        - requestedModel: The model name extracted from the request (set by set-llm-requested-model fragment)
+        - allowedModels: Comma-separated list of allowed model names (e.g., "gpt-4o,deepseek-r1")
+        
+        Behavior:
+        - Non-LLM requests (e.g., GET operations like listing models) are always allowed
+        - If allowedModels is empty, all models are allowed
+        - If requestedModel is not in allowedModels, returns 403 Forbidden
+        
+        Usage:
+        1. Set allowedModels variable before including this fragment
+        2. Include this fragment after set-llm-requested-model
+        
+        Example:
+        <set-variable name="allowedModels" value="gpt-4o,deepseek-r1" />
+        <include-fragment fragment-id="validate-model-access" />
+    -->
+    
+    <!-- Restrict access for this product to specific models (skip for non-LLM requests like GET operations) -->
+    <choose>
+        <when condition="@((context.Variables.GetValueOrDefault<string>("requestedModel") ?? string.Empty).Equals("non-llm-request", StringComparison.OrdinalIgnoreCase))">
+            <!-- Non-LLM request (e.g., GET operations) - skip model access control -->
+        </when>
+        <when condition="@{
+            var allowedModelsVar = context.Variables.GetValueOrDefault<string>("allowedModels") ?? string.Empty;
+            
+            // If no allowed models specified, allow all models
+            if (string.IsNullOrWhiteSpace(allowedModelsVar))
+            {
+                return false; // Don't block
+            }
+            
+            var allowedModels = allowedModelsVar.Split(',').Select(m => m.Trim().ToLowerInvariant()).ToArray();
+            var requestedModel = (context.Variables.GetValueOrDefault<string>("requestedModel") ?? string.Empty).ToLowerInvariant();
+            return !allowedModels.Any(m => m == requestedModel);
+        }">
+            <return-response>
+                <set-status code="403" reason="Forbidden model access" />
+                <set-header name="Content-Type" exists-action="override">
+                    <value>application/json</value>
+                </set-header>
+                <set-body>@{
+                    string requestedModel = context.Variables.GetValueOrDefault<string>("requestedModel") ?? string.Empty;
+                    string allowedModels = context.Variables.GetValueOrDefault<string>("allowedModels") ?? string.Empty;
+                    
+                    return new JObject(
+                        new JProperty("error", new JObject(
+                            new JProperty("message", $"Access to model '{requestedModel}' is not allowed for this product."),
+                            new JProperty("type", "access_error"),
+                            new JProperty("code", "unauthorized_model_access"),
+                            new JProperty("allowed_models", allowedModels)
+                        ))
+                    ).ToString();
+                }</set-body>
+            </return-response>
+        </when>
+    </choose>
+</fragment>

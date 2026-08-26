@@ -1,0 +1,191 @@
+<policies>
+    <inbound>
+        <base />
+
+        <!--
+            Unified AI API Policy
+            Purpose: Main orchestration policy for the Unified AI Gateway that coordinates all policy
+                     fragments to provide comprehensive AI model routing, authentication, rate limiting,
+                     and monitoring across multiple API types and model providers.
+                     
+                     Uses shared fragments (set-backend-pools, set-target-backend-pool,
+                     set-backend-authorization, validate-model-access, set-llm-usage) unified across
+                     all 3 API flavors (Azure OpenAI, Universal LLM, Unified AI).
+                     Uses Unified-AI-specific fragments (metadata-config, central-cache-manager,
+                     request-processor, security-handler, path-builder, set-response-headers) for
+                     wildcard routing, multi-API-type support, and JWT authentication.
+
+            Fragment Execution Order:
+            1. metadata-config: Load centralized configuration (models, api-types, timeouts) [Unified AI specific]
+            2. central-cache-manager: Cache management for configuration [Unified AI specific]
+            3. request-processor: Request analysis (URL routing + body parsing + model extraction) [Unified AI specific]
+            4. security-handler: Frontend authentication (API Key + optional JWT) [Unified AI specific]
+            5. validate-model-access: Model access control per product [SHARED]
+            6. set-backend-pools: Load backend pool configurations [SHARED]
+            7. set-target-backend-pool: Select target backend (with api-type override support) [SHARED]
+            8. set-backend-authorization: Backend auth + set-backend-service [SHARED]
+            9. path-builder: Backend path construction and URI rewriting [Unified AI specific]
+            10. set-llm-usage: Token usage metrics [SHARED]
+            11. set-response-headers: Response header injection (outbound) [Unified AI specific]
+        -->
+
+        <!-- Validate product context -->
+        <choose>
+            <when condition="@(context.Product == null)">
+                <return-response>
+                    <set-status code="401" reason="Unauthorized" />
+                    <set-header name="Content-Type" exists-action="override">
+                        <value>application/json</value>
+                    </set-header>
+                    <set-body>@{
+                        return new JObject(
+                            new JProperty("error", new JObject(
+                                new JProperty("message", "Access denied. API requests must be made through a product subscription."),
+                                new JProperty("code", "product_required")
+                            ))
+                        ).ToString();
+                    }</set-body>
+                </return-response>
+            </when>
+        </choose>
+
+        <!-- Step 1-2: Load and cache configuration [Unified AI specific] -->
+        <include-fragment fragment-id="metadata-config" />
+        <include-fragment fragment-id="central-cache-manager" />
+
+        <!-- Step 3: Analyze request - extracts api-type, requestedModel, path info, -->
+        <!--         apiTypeOverrideBackend, and skipBackendUrlRewrite [Unified AI specific] -->
+        <include-fragment fragment-id="request-processor" />
+
+        <!-- Step 4: Frontend authentication (API Key + optional JWT) [Unified AI specific] -->
+        <include-fragment fragment-id="security-handler" />
+
+        <!-- Step 4.1: Responses API ownership enforcement [SHARED with Azure OpenAI / Universal LLM]
+             For /responses* operations: validates that response_id (URL or previous_response_id)
+             belongs to the calling subscription, returns 403 on mismatch / 404 on cache miss,
+             and hydrates `requestedModel` from cache for GET/DELETE so model-based routing still works
+             alongside any apiTypeOverrideBackend setting. Reuses `response-id` and `parsed-request-body`
+             that frag-request-processor already extracts. -->
+        <include-fragment fragment-id="responses-id-security" />
+
+        <!-- Step 5: Model access control per product [SHARED with Azure OpenAI / Universal LLM] -->
+        <include-fragment fragment-id="validate-model-access" />
+
+        <!-- RBAC: Set allowed backend pools (comma-separated pool IDs, empty = all pools allowed) -->
+        <set-variable name="allowedBackendPools" value="" />
+        <!-- Set default backend pool (empty = return error for unmapped models) -->
+        <set-variable name="defaultBackendPool" value="" />
+
+        <!-- Step 6: Load backend pool configurations [SHARED with Azure OpenAI / Universal LLM] -->
+        <include-fragment fragment-id="set-backend-pools" />
+
+        <!-- Step 7: Select target backend pool [SHARED - extended with apiTypeOverrideBackend for Unified AI] -->
+        <include-fragment fragment-id="set-target-backend-pool" />
+
+        <!-- Alias targetBackendPool to selected-backend for set-response-headers compatibility -->
+        <set-variable name="selected-backend" value="@(context.Variables.GetValueOrDefault<string>("targetBackendPool", ""))" />
+
+        <!-- Step 8: Backend auth + set-backend-service [SHARED with Azure OpenAI / Universal LLM] -->
+        <!-- skipBackendUrlRewrite is set by request-processor, so URL rewriting is handled by path-builder -->
+        <include-fragment fragment-id="set-backend-authorization" />
+
+        <!-- Step 9: Build backend path and rewrite URI [Unified AI specific] -->
+        <include-fragment fragment-id="path-builder" />
+
+        <!-- Step 10: Format translation extension point [FUTURE] -->
+        <!-- When format translation is added, insert a format-translator fragment here.
+             It would check if the client api-type format differs from the backend's expected format
+             and transform request body accordingly (e.g., OpenAI → Anthropic Messages, Bedrock Converse).
+             Response body transformation would be added in the outbound section.
+             <include-fragment fragment-id="format-translator" /> -->
+
+        <!-- Step 11: Token usage metrics [SHARED with Azure OpenAI / Universal LLM] -->
+        <include-fragment fragment-id="set-llm-usage" />
+
+        <!-- CORS Configuration for AI Foundry Compatibility -->
+        <include-fragment fragment-id="ai-foundry-compatibility" />
+
+        <!-- Calculate request timeout based on model config and streaming status -->
+        <set-variable name="request-timeout" value="@{
+            var models = context.Variables.GetValueOrDefault<JObject>("config-models");
+            var timeoutSettings = context.Variables.GetValueOrDefault<JObject>("config-timeout-settings");
+            var model = context.Variables.GetValueOrDefault<string>("requestedModel", "");
+            var streaming = context.Variables.GetValueOrDefault<bool>("is-streaming", false);
+
+            // Get model-specific timeout (fallback to 120 if not configured)
+            var modelConfig = models?[model];
+            var baseTimeout = modelConfig?["timeout"]?.Value<int>() ?? 120;
+
+            // Apply streaming multiplier if applicable
+            if (streaming) {
+                var multiplier = timeoutSettings?["streaming-multiplier"]?.Value<int>() ?? 3;
+                return baseTimeout * multiplier;
+            }
+            return baseTimeout;
+        }" />
+    </inbound>
+    <backend>
+        <!--
+            Backend Retry Logic
+            Retries on 429 (throttling) or 5xx server errors.
+            Skips retry when backend pool itself is unavailable.
+            When model aliases are active (is-alias=true), supports cross-model fallback:
+            after pool-level retries are exhausted, switches to the next model in the alias list.
+            Note: Cross-model fallback only works for pre-stream errors. Once streaming has started,
+            the response is committed and fallback is not possible.
+        -->
+        <retry count="@{
+            var isAlias = context.Variables.GetValueOrDefault<bool>("is-alias", false);
+            var aliasModels = context.Variables.GetValueOrDefault<JArray>("alias-models");
+            // Standard retries + one retry per additional alias model
+            return isAlias && aliasModels != null ? 2 + Math.Max(aliasModels.Count - 1, 0) : 2;
+        }" interval="0" first-fast-retry="true" condition="@(context.Response.StatusCode == 429 || (context.Response.StatusCode >= 500 && !context.Response.StatusReason.Contains("Backend pool") && !context.Response.StatusReason.Contains("is temporarily unavailable")))">
+            <!-- Cross-model fallback: on retry, try next model in alias if pool retries exhausted -->
+            <choose>
+                <when condition="@{
+                    var isAlias = context.Variables.GetValueOrDefault<bool>("is-alias", false);
+                    if (!isAlias) { return false; }
+                    // Check if we should switch to next alias model (on 429 or 5xx from current model)
+                    var statusCode = context.Response.StatusCode;
+                    return statusCode == 429 || statusCode >= 500;
+                }">
+                    <set-variable name="alias-retry-index" value="@{
+                        var current = context.Variables.GetValueOrDefault<int>("alias-retry-index", 0);
+                        return current + 1;
+                    }" />
+                    <choose>
+                        <when condition="@{
+                            var idx = context.Variables.GetValueOrDefault<int>("alias-retry-index", 0);
+                            var aliasModels = context.Variables.GetValueOrDefault<JArray>("alias-models");
+                            return aliasModels != null && idx < aliasModels.Count;
+                        }">
+                            <!-- Switch to next model in alias -->
+                            <set-variable name="requestedModel" value="@{
+                                var idx = context.Variables.GetValueOrDefault<int>("alias-retry-index", 0);
+                                var aliasModels = context.Variables.GetValueOrDefault<JArray>("alias-models");
+                                return aliasModels[idx].ToString();
+                            }" />
+                            <!-- Re-resolve backend pool for new model -->
+                            <include-fragment fragment-id="set-target-backend-pool" />
+                            <set-variable name="selected-backend" value="@(context.Variables.GetValueOrDefault<string>("targetBackendPool", ""))" />
+                            <include-fragment fragment-id="set-backend-authorization" />
+                            <include-fragment fragment-id="path-builder" />
+                        </when>
+                    </choose>
+                </when>
+            </choose>
+            <forward-request timeout="@(context.Variables.GetValueOrDefault<int>("request-timeout", 120))" buffer-request-body="true" />
+        </retry>
+    </backend>
+    <outbound>
+        <base />
+        <!-- Cache response_id → owner mapping for successful POST /responses [SHARED]. -->
+        <include-fragment fragment-id="responses-id-cache-store" />
+        <include-fragment fragment-id="set-response-headers" />
+    </outbound>
+    <on-error>
+        <base />
+        <include-fragment fragment-id="raise-throttling-events" />
+        <include-fragment fragment-id="set-response-headers" />
+    </on-error>
+</policies>

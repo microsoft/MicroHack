@@ -1,0 +1,243 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Models Inference API",
+    "description": "AI Models Inference API endpoint for unified model access following the Azure AI model inference specification",
+    "version": "2024-05-01-preview"
+  },
+  "servers": [
+    {
+      "url": "/"
+    }
+  ],
+  "paths": {
+    "/chat/completions": {
+      "post": {
+        "operationId": "createModelChatCompletion",
+        "summary": "Creates a model response for the given chat conversation",
+        "parameters": [
+          {
+            "name": "api-version",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateChatCompletionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateChatCompletionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/completions": {
+      "post": {
+        "operationId": "createModelCompletion",
+        "summary": "Creates a completion for the provided prompt",
+        "parameters": [
+          {
+            "name": "api-version",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCompletionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/embeddings": {
+      "post": {
+        "operationId": "createModelEmbedding",
+        "summary": "Creates an embedding vector representing the input text",
+        "parameters": [
+          {
+            "name": "api-version",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateEmbeddingRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/info": {
+      "get": {
+        "operationId": "getModelInfo",
+        "summary": "Returns information about the deployed model",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CreateChatCompletionRequest": {
+        "type": "object",
+        "required": ["model", "messages"],
+        "properties": {
+          "model": {
+            "type": "string",
+            "description": "ID of the model to use"
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["role", "content"],
+              "properties": {
+                "role": {
+                  "type": "string",
+                  "enum": ["system", "user", "assistant", "tool"]
+                },
+                "content": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "temperature": {
+            "type": "number"
+          },
+          "max_tokens": {
+            "type": "integer"
+          },
+          "stream": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CreateChatCompletionResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "object": {
+            "type": "string"
+          },
+          "created": {
+            "type": "integer"
+          },
+          "model": {
+            "type": "string"
+          },
+          "choices": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "usage": {
+            "type": "object"
+          }
+        }
+      },
+      "CreateCompletionRequest": {
+        "type": "object",
+        "required": ["model", "prompt"],
+        "properties": {
+          "model": {
+            "type": "string"
+          },
+          "prompt": {
+            "type": "string"
+          },
+          "max_tokens": {
+            "type": "integer"
+          },
+          "temperature": {
+            "type": "number"
+          }
+        }
+      },
+      "CreateEmbeddingRequest": {
+        "type": "object",
+        "required": ["model", "input"],
+        "properties": {
+          "model": {
+            "type": "string"
+          },
+          "input": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "apiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "api-key"
+      }
+    }
+  },
+  "security": [
+    {
+      "apiKey": []
+    }
+  ]
+}

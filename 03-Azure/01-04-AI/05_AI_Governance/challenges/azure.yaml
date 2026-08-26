@@ -1,0 +1,12 @@
+# Application name
+name: ai-citadel-governance-hub
+metadata:
+  template: ai-citadel-governance-hub
+infra:
+  path: bicep/infra
+  provider: bicep
+services:
+  usageProcessingLogicApp:
+    project: ./src/usage-ingestion-logicapp
+    language: js
+    host: function

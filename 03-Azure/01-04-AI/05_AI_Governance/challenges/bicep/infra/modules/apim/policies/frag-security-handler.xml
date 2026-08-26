@@ -1,0 +1,220 @@
+<fragment>
+    <!--
+        Fragment: Security Handler (Unified)
+        Purpose: Provides unified authentication across all AI Hub Gateway API endpoints
+                 (Azure OpenAI API, Universal LLM API, Unified AI API).
+                 Supports layered auth: API Key is always required (APIM subscription validation),
+                 JWT is optionally enforced per-product via the 'jwtRequired' context variable.
+                 
+                 Compatible with any OAuth 2.0 / OpenID Connect identity provider
+                 (Microsoft Entra ID, Auth0, Okta, etc.) via configurable APIM named values.
+
+        Input Variables:
+        - api-key header: API key for subscription-based authentication
+        - Authorization header: Bearer token for JWT authentication
+        - jwtRequired (optional): Set by product policy to "true" to enforce JWT validation in addition to API key.
+                                    When not set or "false", JWT validation is skipped even if a Bearer token is present.
+        - jwtAudience (optional): Custom audience override. Falls back to {{JWT-AppRegistrationId}} named value
+        - jwtIssuer (optional): Custom issuer override. Falls back to {{JWT-Issuer}} named value
+        - jwtOpenIdConfigUrl (optional): Custom OpenID config URL override. Falls back to {{JWT-OpenIdConfigUrl}} named value
+        - requiredRoles (optional): Set by product policy. Comma-separated list of required app roles (e.g., "Models.Read,Agent.Read").
+                                    If set, at least one role must be present in the JWT 'roles' claim. If empty/unset, no role check is performed.
+
+        Output Variables:
+        - auth-type: String - Authentication type ("api-key", "jwt", "api-key-jwt", "none")
+        - subscription-name: String - Subscription name or JWT username
+        - user-id: String - User identifier from JWT claim or subscription name
+        - jwt-roles: String - Comma-separated list of app roles from the JWT token (empty if no JWT or no roles claim)
+
+        Upstream Dependencies (required only when JWT is enabled and no custom overrides are set):
+        - APIM named values:
+          - JWT-OpenIdConfigUrl: OpenID Connect discovery endpoint (e.g., https://login.microsoftonline.com/{tenant}/v2.0/.well-known/openid-configuration)
+          - JWT-Issuer: Expected token issuer (e.g., https://login.microsoftonline.com/{tenant}/v2.0)
+          - JWT-AppRegistrationId: Expected audience claim (e.g., api://{client-id})
+    -->
+
+    <!-- Determine authentication method used in request -->
+    <set-variable name="auth-type" value="@{
+        var apiKey = context.Request.Headers.GetValueOrDefault("api-key", String.Empty);
+        var authHeader = context.Request.Headers.GetValueOrDefault("Authorization", String.Empty);
+        var hasApiKey = !string.IsNullOrEmpty(apiKey);
+        var hasBearer = authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase);
+
+        if (hasApiKey && hasBearer) { return "api-key-jwt"; }
+        if (hasApiKey) { return "api-key"; }
+        if (hasBearer) { return "jwt"; }
+        return "none";
+    }" />
+
+    <!-- Get subscription name for tracking -->
+    <set-variable name="subscription-name" value="@(context.Subscription?.Name ?? "anonymous")" />
+
+    <!-- API Key validation: subscription must exist (APIM validates the key itself via subscription_required=true) -->
+    <choose>
+        <when condition="@(context.Subscription == null)">
+            <return-response>
+                <set-status code="401" reason="Unauthorized" />
+                <set-header name="Content-Type" exists-action="override">
+                    <value>application/json</value>
+                </set-header>
+                <set-body>@{
+                    return new JObject(
+                        new JProperty("error", new JObject(
+                            new JProperty("message", "Access denied. A valid API key is required via 'api-key' header."),
+                            new JProperty("code", "unauthorized")
+                        ))
+                    ).ToString();
+                }</set-body>
+            </return-response>
+        </when>
+    </choose>
+
+    <!-- Set default user-id from subscription -->
+    <set-variable name="user-id" value="@(context.Subscription?.Name ?? "anonymous")" />
+
+    <!-- Pre-load APIM named values as fallback defaults for JWT settings -->
+    <!-- Product policies can override these by setting jwtAudience, jwtIssuer, jwtOpenIdConfigUrl -->
+    <set-variable name="_nv-jwt-audience" value="{{JWT-AppRegistrationId}}" />
+    <set-variable name="_nv-jwt-openid-config" value="{{JWT-OpenIdConfigUrl}}" />
+    <set-variable name="_nv-jwt-issuer" value="{{JWT-Issuer}}" />
+
+    <!-- JWT validation (only when jwtRequired is set to "true" by product policy) -->
+    <choose>
+        <when condition="@(context.Variables.GetValueOrDefault<string>("jwtRequired", "false").Equals("true", StringComparison.OrdinalIgnoreCase))">
+            <!-- Check if JWT Bearer token is actually present -->
+            <choose>
+                <when condition="@{
+                    var authType = context.Variables.GetValueOrDefault<string>("auth-type", "none");
+                    return !authType.Contains("jwt");
+                }">
+                    <!-- JWT required but no Bearer token provided -->
+                    <choose>
+                        <when condition="@(context.Variables.GetValueOrDefault<string>("jwtRequired", "false").Equals("true", StringComparison.OrdinalIgnoreCase))">
+                            <return-response>
+                                <set-status code="401" reason="Unauthorized" />
+                                <set-header name="Content-Type" exists-action="override">
+                                    <value>application/json</value>
+                                </set-header>
+                                <set-body>@{
+                                    return new JObject(
+                                        new JProperty("error", new JObject(
+                                            new JProperty("message", "JWT Bearer token is required for this product. Provide via 'Authorization: Bearer {token}' header."),
+                                            new JProperty("code", "jwt_required")
+                                        ))
+                                    ).ToString();
+                                }</set-body>
+                            </return-response>
+                        </when>
+                    </choose>
+                </when>
+                <otherwise>
+                    <!-- JWT token is present, validate it -->
+                    <!-- Resolve JWT settings: use product-level overrides if set, otherwise fall back to APIM named values -->
+                    <set-variable name="jwt-audience" value="@{
+                        var custom = context.Variables.GetValueOrDefault<string>("jwtAudience", "");
+                        return !string.IsNullOrEmpty(custom) ? custom : context.Variables.GetValueOrDefault<string>("_nv-jwt-audience", "");
+                    }" />
+                    <set-variable name="jwt-openid-config" value="@{
+                        var custom = context.Variables.GetValueOrDefault<string>("jwtOpenIdConfigUrl", "");
+                        return !string.IsNullOrEmpty(custom) ? custom : context.Variables.GetValueOrDefault<string>("_nv-jwt-openid-config", "");
+                    }" />
+                    <set-variable name="jwt-issuer" value="@{
+                        var custom = context.Variables.GetValueOrDefault<string>("jwtIssuer", "");
+                        return !string.IsNullOrEmpty(custom) ? custom : context.Variables.GetValueOrDefault<string>("_nv-jwt-issuer", "");
+                    }" />
+
+                    <!-- Verify JWT settings are configured -->
+                    <choose>
+                        <when condition="@{
+                            var audience = context.Variables.GetValueOrDefault<string>("jwt-audience");
+                            var openidConfig = context.Variables.GetValueOrDefault<string>("jwt-openid-config");
+                            var issuer = context.Variables.GetValueOrDefault<string>("jwt-issuer");
+                            return string.IsNullOrEmpty(audience) || string.IsNullOrEmpty(openidConfig) || string.IsNullOrEmpty(issuer);
+                        }">
+                            <return-response>
+                                <set-status code="503" reason="Service Unavailable" />
+                                <set-header name="Content-Type" exists-action="override">
+                                    <value>application/json</value>
+                                </set-header>
+                                <set-body>@{
+                                    return new JObject(
+                                        new JProperty("error", new JObject(
+                                            new JProperty("message", "JWT authentication is not configured properly on the gateway."),
+                                            new JProperty("code", "jwt_not_configured")
+                                        ))
+                                    ).ToString();
+                                }</set-body>
+                            </return-response>
+                        </when>
+                    </choose>
+
+                    <!-- Validate JWT Bearer token -->
+                    <validate-jwt header-name="Authorization" require-scheme="Bearer" output-token-variable-name="validated-jwt" failed-validation-httpcode="401" failed-validation-error-message="Access denied due to invalid or expired JWT bearer token.">
+                        <openid-config url="@(context.Variables.GetValueOrDefault<string>("jwt-openid-config"))" />
+                        <audiences>
+                            <audience>@(context.Variables.GetValueOrDefault<string>("jwt-audience"))</audience>
+                        </audiences>
+                        <issuers>
+                            <issuer>@(context.Variables.GetValueOrDefault<string>("jwt-issuer"))</issuer>
+                        </issuers>
+                    </validate-jwt>
+
+                    <!-- Extract identity from JWT token (azp claim for client credentials flow) -->
+                    <set-variable name="user-id" value="@{
+                        var jwt = (Jwt)context.Variables["validated-jwt"];
+                        return jwt.Claims.GetValueOrDefault("azp", context.Subscription?.Name ?? "anonymous");
+                    }" />
+
+                    <!-- Extract app roles from JWT token -->
+                    <set-variable name="jwt-roles" value="@{
+                        var jwt = (Jwt)context.Variables["validated-jwt"];
+                        var roles = jwt.Claims.GetValueOrDefault("roles", "");
+                        return roles ?? "";
+                    }" />
+
+                    <trace source="Authentication-JWT" severity="information">
+                        <message>@($"Unified AI - JWT authenticated: {context.Variables.GetValueOrDefault<string>("user-id", "unknown")} | Roles: {context.Variables.GetValueOrDefault<string>("jwt-roles", "none")} | Path: {context.Request.Url.Path}")</message>
+                    </trace>
+
+                    <!-- App role authorization: enforce requiredRoles if set by product policy -->
+                    <choose>
+                        <when condition="@{
+                            var requiredRoles = context.Variables.GetValueOrDefault<string>("requiredRoles", "");
+                            if (string.IsNullOrWhiteSpace(requiredRoles)) { return false; }
+                            var tokenRoles = context.Variables.GetValueOrDefault<string>("jwt-roles", "");
+                            var required = requiredRoles.Split(',').Select(r => r.Trim()).Where(r => !string.IsNullOrEmpty(r));
+                            var actual = tokenRoles.Split(',').Select(r => r.Trim()).Where(r => !string.IsNullOrEmpty(r));
+                            return !required.Any(r => actual.Any(a => a.Equals(r, StringComparison.OrdinalIgnoreCase)));
+                        }">
+                            <return-response>
+                                <set-status code="403" reason="Forbidden" />
+                                <set-header name="Content-Type" exists-action="override">
+                                    <value>application/json</value>
+                                </set-header>
+                                <set-body>@{
+                                    var requiredRoles = context.Variables.GetValueOrDefault<string>("requiredRoles", "");
+                                    var tokenRoles = context.Variables.GetValueOrDefault<string>("jwt-roles", "");
+                                    return new JObject(
+                                        new JProperty("error", new JObject(
+                                            new JProperty("message", "Access denied. Required app role not found in token."),
+                                            new JProperty("code", "insufficient_role"),
+                                            new JProperty("required_roles", requiredRoles),
+                                            new JProperty("token_roles", string.IsNullOrEmpty(tokenRoles) ? "none" : tokenRoles)
+                                        ))
+                                    ).ToString();
+                                }</set-body>
+                            </return-response>
+                        </when>
+                    </choose>
+                </otherwise>
+            </choose>
+        </when>
+    </choose>
+
+    <!-- Remove api-key header to prevent it from being passed to backend endpoints -->
+    <set-header name="api-key" exists-action="delete" />
+
+    <trace source="Authentication-Complete" severity="information">
+        <message>@($"Unified AI - Auth: {context.Variables.GetValueOrDefault<string>("auth-type", "none")} | User: {context.Variables.GetValueOrDefault<string>("user-id", "anonymous")} | Roles: {context.Variables.GetValueOrDefault<string>("jwt-roles", "none")} | Sub: {context.Variables.GetValueOrDefault<string>("subscription-name", "none")}")</message>
+    </trace>
+</fragment>

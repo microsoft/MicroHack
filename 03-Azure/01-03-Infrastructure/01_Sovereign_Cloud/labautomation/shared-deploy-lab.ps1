@@ -160,6 +160,18 @@ $localBoxLocations = @(
 )
 $activeDeploymentStates = @('Accepted', 'Running', 'Ready', 'Creating', 'Created', 'Succeeded')
 $resourceGroup = Get-AzResourceGroup -Name $localBoxResourceGroupName -ErrorAction SilentlyContinue
+if ($resourceGroup) {
+    Update-AzTag `
+        -ResourceId $resourceGroup.ResourceId `
+        -Operation Merge `
+        -Tag @{
+            workload = 'sovereign-localbox'
+            challenge = '6'
+            SecurityControl = 'Ignore'
+        } `
+        -ErrorAction Stop | Out-Null
+    Write-Host "Applied the temporary MCAPS security-control exemption to $localBoxResourceGroupName." -ForegroundColor Green
+}
 $localBoxDeployment = if ($resourceGroup) {
     Get-AzResourceGroupDeployment `
         -ResourceGroupName $localBoxResourceGroupName `

@@ -99,6 +99,21 @@ lab region. Azure Local registration and its staging storage account use Austral
 which is a supported Azure Local registration region and is not blocked by the hosted
 lab subscription policy that denies West Europe.
 
+The shared hook applies `SecurityControl=Ignore` to `rg-localbox-shared`, and the
+outer LocalBox template applies the same tag to its resources. This temporary MCAPS
+exemption is required during Azure Local deployment because cluster validation uses
+storage account key authentication and requires public access to its validation
+storage account and Key Vault. The exemption is scoped to the LocalBox resource
+group and expires after 14 days under MCAPS governance automation. Deploy or rerun
+the shared hook early enough for the exemption to take effect before validating the
+Azure Local cluster.
+
+If MCAPS policy modified resources before the exemption took effect, applying the
+tag does not revert those existing settings. After the exemption is active, enable
+storage account key access and public network access on the validation storage
+account, enable public network access on the validation Key Vault, and rerun the
+Azure Local validate and deploy workflow from `LocalBox-Client`.
+
 After Step 2 completes, a facilitator must verify the deployment manually:
 
 1. Open `rg-localbox-shared` in the Azure Portal and select **Deployments**.

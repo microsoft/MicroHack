@@ -1040,6 +1040,23 @@ foreach ($k in $result.Outputs.Keys) {
 }
 ```
 
+**Example: setting static tags on the resource group via `-Tag`:**
+
+For plain, known-upfront tag values, pass `-Tag` directly: the helper applies
+it to the RG on every (re)create, no hook required.
+
+```powershell
+$result = Invoke-MhhDeploymentWithRegionFallback `
+    -PreferredLocations      $PreferredLocation `
+    -ResourceGroupName       $ResourceGroupName `
+    -RgOwnerEntraObjectIds   $AllowedEntraUserIds `
+    -TemplateFile            (Join-Path $PSScriptRoot 'main.bicep') `
+    -TemplateParameterObject @{
+        userObjectId = $AllowedEntraUserIds[0]
+    } `
+    -Tag                     @{ 'some-tag' = 'myvalue' }
+```
+
 **When *not* to use it:**
 
 - You are not doing an ARM/Bicep deployment (e.g. you only call individual

@@ -1,0 +1,132 @@
+{
+    "openapi": "3.0.1",
+    "info": {
+        "title": "unified-ai-wildcard-api",
+        "description": "Unified AI Gateway Wildcard API - Routes requests to multiple AI model providers (Azure OpenAI, AI Foundry, Gemini) using dynamic path-based routing.",
+        "version": "1.0"
+    },
+    "paths": {
+        "/deployments": {
+            "get": {
+                "operationId": "deployments",
+                "summary": "List available model deployments",
+                "description": "Returns a list of all available model deployments that the caller has access to.",
+                "responses": {
+                    "200": {
+                        "description": "Successful response with deployment list"
+                    }
+                }
+            }
+        },
+        "/deployments/{deployment-id}": {
+            "get": {
+                "operationId": "deployment-by-name",
+                "summary": "Get a specific model deployment",
+                "description": "Returns details of a specific model deployment by name.",
+                "parameters": [
+                    {
+                        "name": "deployment-id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response with deployment details"
+                    },
+                    "404": {
+                        "description": "Deployment not found"
+                    }
+                }
+            }
+        },
+        "/*": {
+            "get": {
+                "operationId": "wildcard-get",
+                "summary": "Wildcard GET",
+                "description": "Handles all GET requests not matched by specific operations.",
+                "responses": {
+                    "200": {
+                        "description": "Successful response"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "wildcard-post",
+                "summary": "Wildcard POST",
+                "description": "Handles all POST requests (chat completions, embeddings, etc.).",
+                "responses": {
+                    "200": {
+                        "description": "Successful response"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "wildcard-put",
+                "summary": "Wildcard PUT",
+                "description": "Handles all PUT requests.",
+                "responses": {
+                    "200": {
+                        "description": "Successful response"
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "wildcard-patch",
+                "summary": "Wildcard PATCH",
+                "description": "Handles all PATCH requests.",
+                "responses": {
+                    "200": {
+                        "description": "Successful response"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "wildcard-delete",
+                "summary": "Wildcard DELETE",
+                "description": "Handles all DELETE requests (e.g., responses API).",
+                "responses": {
+                    "200": {
+                        "description": "Successful response"
+                    }
+                }
+            },
+            "options": {
+                "operationId": "wildcard-options",
+                "summary": "Wildcard OPTIONS (CORS preflight)",
+                "description": "Handles CORS preflight requests.",
+                "responses": {
+                    "200": {
+                        "description": "Successful response"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "apiKeyHeader": {
+                "type": "apiKey",
+                "name": "api-key",
+                "in": "header"
+            },
+            "apiKeyQuery": {
+                "type": "apiKey",
+                "name": "api-key",
+                "in": "query"
+            }
+        }
+    },
+    "security": [
+        {},
+        {
+            "apiKeyHeader": []
+        },
+        {
+            "apiKeyQuery": []
+        }
+    ]
+}

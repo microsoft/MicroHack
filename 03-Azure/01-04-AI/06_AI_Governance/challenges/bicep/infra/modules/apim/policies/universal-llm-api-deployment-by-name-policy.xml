@@ -1,0 +1,76 @@
+<policies>
+    <inbound>
+        <base />
+        <!-- CORS Configuration for AI Foundry Compatibility -->
+        <include-fragment fragment-id="ai-foundry-compatibility" />
+        
+        <!-- Get deployments from specific Foundry resource using ARM-->
+        <!--<include-fragment fragment-id="ai-foundry-deployments" />-->
+
+        <!-- Get deployments using Citadel on-boarded backends -->
+        <include-fragment fragment-id="get-available-models" />
+
+        <!-- Find deployment by deployment-id URL parameter -->
+        <return-response>
+            <set-status code="@{
+                string deploymentId = context.Request.MatchedParameters["deployment-id"];
+                JArray models = JArray.Parse((string)context.Variables["availableFilteredModels"]);
+                
+                foreach (var model in models)
+                {
+                    if (string.Equals(model["name"]?.ToString(), deploymentId, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return 200;
+                    }
+                }
+                return 404;
+            }" reason="@{
+                string deploymentId = context.Request.MatchedParameters["deployment-id"];
+                JArray models = JArray.Parse((string)context.Variables["availableFilteredModels"]);
+                
+                foreach (var model in models)
+                {
+                    if (string.Equals(model["name"]?.ToString(), deploymentId, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return "OK";
+                    }
+                }
+                return "Not Found";
+            }" />
+            <set-header name="Content-Type" exists-action="override">
+                <value>application/json</value>
+            </set-header>
+            <set-body>@{
+                string deploymentId = context.Request.MatchedParameters["deployment-id"];
+                JArray models = JArray.Parse((string)context.Variables["availableFilteredModels"]);
+                
+                foreach (var model in models)
+                {
+                    if (string.Equals(model["name"]?.ToString(), deploymentId, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return model.ToString();
+                    }
+                }
+                
+                // Return error response if not found
+                JObject error = new JObject();
+                error["error"] = new JObject()
+                {
+                    { "code", "DeploymentNotFound" },
+                    { "message", $"The deployment '{deploymentId}' does not exist." }
+                };
+                return error.ToString();
+            }</set-body>
+        </return-response>
+        
+    </inbound>
+    <backend>
+        <base />
+    </backend>
+    <outbound>
+        <base />
+    </outbound>
+    <on-error>
+        <base />
+    </on-error>
+</policies>

@@ -1,0 +1,19 @@
+kind: hosted
+name: citadel-hr-agent
+protocols:
+  - protocol: responses
+    version: 1.0.0
+resources:
+  cpu: "1"
+  memory: 2Gi
+environment_variables:
+  - name: AZURE_AI_MODEL_DEPLOYMENT_NAME
+    value: Hub-HR-ChatAgent-DEV-LLM/gpt-4.1
+  - name: ENABLE_INSTRUMENTATION
+    value: "true"
+  - name: ENABLE_SENSITIVE_DATA
+    value: "true"
+  - name: OTEL_SERVICE_NAME
+    value: citadel-hr-agent
+  - name: OTEL_RESOURCE_ATTRIBUTES
+    value: service.name=citadel-hr-agent,service.namespace=citadel,deployment.environment=workshop

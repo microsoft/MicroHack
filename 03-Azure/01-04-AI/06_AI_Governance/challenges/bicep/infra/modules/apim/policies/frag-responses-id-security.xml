@@ -1,0 +1,224 @@
+<fragment>
+    <!--
+        Fragment: Responses API ID Security (inbound)
+        Purpose: Provides per-subscription ownership enforcement and backend-routing hydration
+                 for the OpenAI-compatible Responses API (`/responses` family of operations).
+
+                 Designed to be reused unchanged by all three AI Hub Gateway API surfaces
+                 (Azure OpenAI, Universal LLM, Unified AI) by relying only on standard
+                 context variables and (optionally) the `response-id` / `parsed-request-body`
+                 variables already produced by `frag-request-processor` (Unified AI).
+
+        Scope (only when the request targets the Responses API):
+        - POST /<base>/responses                            → first-time creation; cache will be set in outbound
+        - GET  /<base>/responses/{response_id}              → ownership check + hydrate routing
+        - GET  /<base>/responses/{response_id}/input_items  → ownership check + hydrate routing
+        - DELETE /<base>/responses/{response_id}            → ownership check + hydrate routing
+        - POST with `previous_response_id` in body          → ownership check on the chained response_id
+
+        Cache contract (APIM internal cache, key prefix `response-id-`):
+            key   = "response-id-" + response_id
+            value = "<subscriptionId>|<requestedModel>|<userId>"
+            ttl   = 24h (86400s) – matches typical Responses API server-side retention window
+
+        Behaviour summary:
+        1. Detect Responses API requests by path (segment `/responses`).
+        2. Resolve the response_id from URL (GET/DELETE) or from `previous_response_id` (POST chained).
+           Reuses `response-id` already extracted by frag-request-processor when available.
+        3. Look up the cached owner. If the cached subscription does NOT match the calling
+           subscription → return 403 Forbidden (cross-subscription access blocked).
+        4. For GET/DELETE on /responses/{id}: hydrate `requestedModel` from the cache so that
+           the existing `set-target-backend-pool` fragment selects the same backend pool that
+           served the original POST – this fixes routing for these previously model-less ops.
+        5. For GET/DELETE with NO cached entry (e.g., id was never created via this gateway, or
+           cache evicted past the 24h TTL) → return 404 Not Found with a deterministic error.
+
+        Required upstream variables:
+        - context.Subscription           – APIM subscription that authenticated the call.
+        - user-id (optional)             – Set by frag-security-handler from JWT or subscription.
+        - response-id (optional)         – Set by frag-request-processor (Unified AI). Reused if present.
+        - parsed-request-body (optional) – Set by frag-request-processor (Unified AI). Reused if present.
+
+        Output variables (consumed by frag-set-target-backend-pool and outbound store fragment):
+        - isResponsesApi    : bool  – True when the request targets a /responses* operation.
+        - responseId        : string – Resolved response_id (empty when none present).
+        - cachedResponseOwner : string – Raw cache value, empty if cache miss.
+        - requestedModel    : string – Hydrated from cache for GET/DELETE on existing responses.
+    -->
+
+    <!-- 1. Detect Responses API operations from path segments and (when available) from
+            an upstream `response-id` already extracted by frag-request-processor. Segment-based
+            matching avoids false negatives from substring/encoding edge cases and matches both
+            `/responses` and `/v1/responses`. -->
+    <set-variable name="isResponsesApi" value="@{
+        // Reuse signal from frag-request-processor when present (Unified AI path).
+        var existingResponseId = context.Variables.GetValueOrDefault<string>("response-id", string.Empty);
+        if (!string.IsNullOrEmpty(existingResponseId)) { return true; }
+
+        // Try Url.Path and OriginalUrl.Path (some APIM flows expose only one).
+        var path = context.Request.Url?.Path ?? string.Empty;
+        if (string.IsNullOrEmpty(path))
+        {
+            try { path = context.Request.OriginalUrl?.Path ?? string.Empty; } catch { }
+        }
+        if (string.IsNullOrEmpty(path)) { return false; }
+
+        // Segment-based match: any path segment equal to "responses" (case-insensitive).
+        var segments = path.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+        foreach (var seg in segments)
+        {
+            if (seg.Equals("responses", StringComparison.OrdinalIgnoreCase)) { return true; }
+        }
+        return false;
+    }" />
+
+    <choose>
+        <when condition="@(context.Variables.GetValueOrDefault<bool>("isResponsesApi", false))">
+
+            <!-- 2. Resolve response_id (URL for GET/DELETE, `previous_response_id` body field for POST). -->
+            <set-variable name="responseId" value="@{
+                // Reuse value already extracted by frag-request-processor (Unified AI) when available.
+                var existing = context.Variables.GetValueOrDefault<string>("response-id", string.Empty);
+                if (!string.IsNullOrEmpty(existing)) { return existing.Trim(); }
+
+                var method = context.Request.Method ?? string.Empty;
+
+                // Prefer APIM-matched route parameter when the operation defines one (e.g., {response_id}).
+                try
+                {
+                    if (context.Request.MatchedParameters != null
+                        && context.Request.MatchedParameters.ContainsKey("response_id"))
+                    {
+                        var matched = context.Request.MatchedParameters["response_id"];
+                        if (!string.IsNullOrEmpty(matched)) { return matched.Trim(); }
+                    }
+                }
+                catch { }
+
+                var path = context.Request.Url?.Path ?? string.Empty;
+                if (string.IsNullOrEmpty(path))
+                {
+                    try { path = context.Request.OriginalUrl?.Path ?? string.Empty; } catch { }
+                }
+
+                // GET / DELETE / sub-collections like /input_items live under /responses/{id}/...
+                if (!method.Equals("POST", StringComparison.OrdinalIgnoreCase))
+                {
+                    var segments = path.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+                    for (int i = 0; i < segments.Length - 1; i++)
+                    {
+                        if (segments[i].Equals("responses", StringComparison.OrdinalIgnoreCase))
+                        {
+                            return segments[i + 1].Trim();
+                        }
+                    }
+                    return string.Empty;
+                }
+
+                // POST – chained calls may carry previous_response_id in the body.
+                try
+                {
+                    var bodyObj = context.Variables.GetValueOrDefault<JObject>("parsed-request-body");
+                    if (bodyObj == null)
+                    {
+                        var raw = context.Request.Body.As<string>(preserveContent: true);
+                        if (string.IsNullOrEmpty(raw)) { return string.Empty; }
+                        bodyObj = JObject.Parse(raw);
+                    }
+                    var prev = bodyObj["previous_response_id"]?.ToString();
+                    return string.IsNullOrEmpty(prev) ? string.Empty : prev.Trim();
+                }
+                catch { return string.Empty; }
+            }" />
+
+            <!-- 3. Look up cached owner (only when we actually have a response_id to validate). -->
+            <choose>
+                <when condition="@(!string.IsNullOrEmpty(context.Variables.GetValueOrDefault<string>("responseId", string.Empty)))">
+                    <cache-lookup-value key="@("response-id-" + (string)context.Variables["responseId"])" variable-name="cachedResponseOwner" caching-type="internal" />
+
+                    <!-- 3a. Ownership enforcement: cached subscription must match current subscription. -->
+                    <choose>
+                        <when condition="@{
+                            var cached = context.Variables.GetValueOrDefault<string>("cachedResponseOwner", string.Empty);
+                            if (string.IsNullOrEmpty(cached)) { return false; }
+                            var parts = cached.Split('|');
+                            var cachedSubId = parts.Length > 0 ? parts[0] : string.Empty;
+                            var currentSubId = context.Subscription?.Id ?? string.Empty;
+                            return !string.IsNullOrEmpty(cachedSubId)
+                                && !cachedSubId.Equals(currentSubId, StringComparison.Ordinal);
+                        }">
+                            <trace source="Responses-API-Security" severity="error">
+                                <message>@($"Response-id ownership mismatch. responseId={context.Variables.GetValueOrDefault<string>("responseId", string.Empty)} requestSub={context.Subscription?.Id ?? string.Empty}")</message>
+                            </trace>
+                            <return-response>
+                                <set-status code="403" reason="Forbidden" />
+                                <set-header name="Content-Type" exists-action="override">
+                                    <value>application/json</value>
+                                </set-header>
+                                <set-body>@{
+                                    return new JObject(
+                                        new JProperty("error", new JObject(
+                                            new JProperty("message", "Access denied. The supplied response_id was created by a different subscription and cannot be accessed."),
+                                            new JProperty("type", "access_error"),
+                                            new JProperty("code", "response_id_forbidden")
+                                        ))
+                                    ).ToString();
+                                }</set-body>
+                            </return-response>
+                        </when>
+                    </choose>
+
+                    <!-- 3b. For non-POST methods, hydrate `requestedModel` from cache so that
+                              the existing set-target-backend-pool routes to the original backend. -->
+                    <choose>
+                        <when condition="@{
+                            var method = context.Request.Method ?? string.Empty;
+                            if (method.Equals("POST", StringComparison.OrdinalIgnoreCase)) { return false; }
+                            var cached = context.Variables.GetValueOrDefault<string>("cachedResponseOwner", string.Empty);
+                            if (string.IsNullOrEmpty(cached)) { return false; }
+                            var parts = cached.Split('|');
+                            return parts.Length >= 2 && !string.IsNullOrEmpty(parts[1]);
+                        }">
+                            <set-variable name="requestedModel" value="@{
+                                var cached = context.Variables.GetValueOrDefault<string>("cachedResponseOwner", string.Empty);
+                                return cached.Split('|')[1];
+                            }" />
+                            <trace source="Responses-API-Security" severity="information">
+                                <message>@($"Hydrated requestedModel='{context.Variables.GetValueOrDefault<string>("requestedModel", string.Empty)}' from response-id cache for {context.Request.Method} {context.Request.Url.Path}")</message>
+                            </trace>
+                        </when>
+                    </choose>
+
+                    <!-- 3c. GET/DELETE on /responses/{id} with no cache entry → 404 (unknown id at gateway). -->
+                    <choose>
+                        <when condition="@{
+                            var method = context.Request.Method ?? string.Empty;
+                            if (method.Equals("POST", StringComparison.OrdinalIgnoreCase)) { return false; }
+                            var cached = context.Variables.GetValueOrDefault<string>("cachedResponseOwner", string.Empty);
+                            return string.IsNullOrEmpty(cached);
+                        }">
+                            <trace source="Responses-API-Security" severity="information">
+                                <message>@($"Response-id cache miss on {context.Request.Method} {context.Request.Url.Path}. Returning 404.")</message>
+                            </trace>
+                            <return-response>
+                                <set-status code="404" reason="Not Found" />
+                                <set-header name="Content-Type" exists-action="override">
+                                    <value>application/json</value>
+                                </set-header>
+                                <set-body>@{
+                                    return new JObject(
+                                        new JProperty("error", new JObject(
+                                            new JProperty("message", $"The supplied response_id '{context.Variables.GetValueOrDefault<string>("responseId", string.Empty)}' is not known to the gateway. It was either never created here or the ownership cache entry has expired."),
+                                            new JProperty("type", "invalid_request_error"),
+                                            new JProperty("code", "response_id_not_found")
+                                        ))
+                                    ).ToString();
+                                }</set-body>
+                            </return-response>
+                        </when>
+                    </choose>
+                </when>
+            </choose>
+        </when>
+    </choose>
+</fragment>

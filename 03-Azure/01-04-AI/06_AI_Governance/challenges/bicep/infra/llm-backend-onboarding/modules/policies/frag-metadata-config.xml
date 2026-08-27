@@ -1,0 +1,107 @@
+<fragment>
+    <!--
+        Fragment: Metadata Configuration
+        Purpose: Provides centralized configuration for AI models, API routing, and system behavior
+                 across the Unified AI Gateway. Acts as the single source of truth for model definitions,
+                 backend pool mappings, API type specifications, and cache settings.
+
+        Input Variables:
+        - None (this is the base foundational configuration fragment)
+
+        Output Variables:
+        - metadata-config: String - Complete JSON configuration containing all model, auth, and routing settings
+
+        Downstream Consumers:
+        - central-cache-manager fragment: Processes and caches the configuration
+        - set-target-backend-pool fragment: Uses models config via apiTypeOverrideBackend for routing
+        - path-builder fragment: Uses api-types for path reconstruction
+        - request-processor fragment: Uses api-types for API type detection and apiTypeOverrideBackend
+        - set-response-headers fragment: References model and API information for debug headers
+
+        Note: The 'models' section is dynamically generated from llmBackendConfig during Bicep deployment.
+              The 'api-types', 'cache-settings', and 'timeout-settings' sections are static definitions.
+    -->
+    <set-variable name="metadata-config" value="@{return @"{
+        'models': {
+            //{modelsConfigCode}
+        },
+        'api-types': {
+            'responses-v1': {
+                'base-path': '/openai/v1/responses',
+                'path-segment': '/openai/v1/responses',
+                'api-version': 'v1'
+            },
+            'openai-v1': {
+                'base-path': '/openai/v1',
+                'path-segment': '/deployments',
+                'api-version': 'v1'
+            },
+            'responses': {
+                'base-path': '/openai/responses',
+                'path-segment': '/responses',
+                'api-version': '2025-03-01-preview'
+            },
+            'geminiopenai': {
+                'base-path': '/v1beta/openai',
+                'path-segment': '/v1beta/openai',
+                'api-version': 'v1beta'
+            },
+            'openai': {
+                'base-path': '/openai',
+                'path-segment': '/deployments',
+                'api-version': '2024-02-15-preview'
+            },
+            'inference': {
+                'base-path': '/models',
+                'path-segment': '/models',
+                'api-version': '2024-05-01-preview'
+            },
+            'bedrock': {
+                'base-path': '/model',
+                'path-segment': '/model',
+                'api-version': 'bedrock-2024-04-15'
+            },
+            'openai-compat': {
+                'base-path': '/v1',
+                'path-segment': '',
+                'api-version': 'v1'
+            }
+        },
+        'model-aliases': {
+            //{modelAliasesCode}
+        },
+        'backend-path-templates': {
+            'ai-foundry': {
+                'chat/completions': '/openai/deployments/{model}/chat/completions',
+                'embeddings': '/openai/deployments/{model}/embeddings',
+                'responses': '/openai/responses',
+                'images/generations': '/openai/deployments/{model}/images/generations',
+                'models': '/models'
+            },
+            'azure-openai': {
+                'chat/completions': '/openai/deployments/{model}/chat/completions',
+                'embeddings': '/openai/deployments/{model}/embeddings',
+                'responses': '/openai/responses',
+                'images/generations': '/openai/deployments/{model}/images/generations'
+            },
+            'aws-bedrock-mantle': {
+                'chat/completions': '/v1/chat/completions',
+                'responses': '/v1/responses',
+                'models': '/v1/models'
+            },
+            'gemini-openai': {
+                'chat/completions': '/v1beta/openai/chat/completions'
+            },
+            'aws-bedrock': {
+                'chat/completions': '/model/{model}/converse'
+            }
+        },
+        'cache-settings': {
+            'config-version': '1.0.0',
+            'ttl-seconds': 300
+        },
+        'timeout-settings': {
+            'streaming-multiplier': 3
+        }
+    }";}" />
+</fragment>

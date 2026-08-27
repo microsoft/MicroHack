@@ -41,6 +41,23 @@ function Get-MhhStableHash {
     return $hex.Substring(0, $Length)
 }
 
+# Platform-provided helper shim: classifies deployment failures as retryable-in-another-region
+# (capacity/quota/SKU availability) or not. Without this shim a local run treats EVERY failure as
+# retryable and burns all three regions on errors that are region-independent.
+function Test-MhhDeploymentFailureRetryable {
+    param([Parameter(Mandatory = $true)]$ErrorRecord)
+    $msg = "$ErrorRecord"
+    $retryablePatterns = @(
+        'SkuNotAvailable', 'QuotaExceeded', 'InsufficientQuota', 'capacity',
+        'not available in .* region', 'LocationNotAvailable', 'ServiceUnavailable',
+        'SubscriptionDoesNotHaveServer', 'NotAvailableForSubscription'
+    )
+    foreach ($p in $retryablePatterns) {
+        if ($msg -match $p) { return $true }
+    }
+    return $false
+}
+
 # Pre-create the resource group (the platform does this for 'resourcegroup' type).
 if (-not (Get-AzResourceGroup -Name $ResourceGroupName -ErrorAction SilentlyContinue)) {
     Write-Host "[INFO]  Creating resource group '$ResourceGroupName' in '$Location'..."

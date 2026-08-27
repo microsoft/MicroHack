@@ -199,6 +199,17 @@ $foundryRoles = [ordered]@{
     'Cognitive Services User' = 'a97b65f3-24c7-4388-baec-2e87135dc908'
 }
 
+# The spoke is the attendee's own build space: challenges 7-9 create and manage Foundry
+# agents, hosted-agent versions and project connections there. Those are project data-plane
+# management operations, which RG-Owner does NOT cover (Owner grants actions:* but no
+# dataActions). The original workshop grants the signed-in user 'Azure AI Project Manager'
+# on the spoke account in deploy-spoke-foundry.ps1 for exactly this reason. Kept as its own
+# Optional target so a tenant that restricts this role fails challenges 7-9 only, rather
+# than failing the whole provision for the core challenges 1-6.
+$spokeProjectMgmtRoles = [ordered]@{
+    'Azure AI Project Manager' = 'eadc314b-1a2d-4efa-be10-5d325db5065e'
+}
+
 $keyVaultRoles = [ordered]@{
     'Key Vault Secrets Officer' = 'b86a8fe4-44ce-4948-aee5-eccb2c155090'
 }
@@ -230,6 +241,7 @@ $acrRoles = [ordered]@{
 $rbacTargets = @(
     @{ Label = 'hub Foundry account';   Scope = $hubFoundryId;   Roles = $foundryRoles;    Required = $true }
     @{ Label = 'spoke Foundry account'; Scope = $spokeFoundryId; Roles = $foundryRoles;    Required = $true }
+    @{ Label = 'spoke Foundry account (project management, challenges 7-9)'; Scope = $spokeFoundryId; Roles = $spokeProjectMgmtRoles; Required = $false }
     @{ Label = 'hub Key Vault';         Scope = $hubKvId;        Roles = $keyVaultRoles;   Required = $true }
     @{ Label = 'spoke Key Vault';       Scope = $spokeKvId;      Roles = $keyVaultRoles;   Required = $true }
     @{ Label = 'APIM service';          Scope = $apimResourceId; Roles = $apimRoles;       Required = $true }

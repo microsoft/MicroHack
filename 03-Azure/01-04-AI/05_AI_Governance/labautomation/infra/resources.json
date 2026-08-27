@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.41.2.15936",
-      "templateHash": "5133357958444612862"
+      "templateHash": "17782287074782196978"
     }
   },
   "parameters": {
@@ -1141,9 +1141,24 @@
         "name": "Basic"
       },
       "properties": {
-        "adminUserEnabled": true,
+        "adminUserEnabled": false,
         "publicNetworkAccess": "Enabled"
       }
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "scope": "[resourceId('Microsoft.ContainerRegistry/registries', replace(variables('spokeAcrName'), '-', ''))]",
+      "name": "[guid(resourceId('Microsoft.ContainerRegistry/registries', replace(variables('spokeAcrName'), '-', '')), resourceId('Microsoft.CognitiveServices/accounts/projects', variables('spokeFoundryAccountName'), variables('spokeFoundryProjectName')), '7f951dda-4ed3-4680-a7ca-43fe172d538d')]",
+      "properties": {
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d')]",
+        "principalId": "[reference(resourceId('Microsoft.CognitiveServices/accounts/projects', variables('spokeFoundryAccountName'), variables('spokeFoundryProjectName')), '2025-04-01-preview', 'full').identity.principalId]",
+        "principalType": "ServicePrincipal"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ContainerRegistry/registries', replace(variables('spokeAcrName'), '-', ''))]",
+        "[resourceId('Microsoft.CognitiveServices/accounts/projects', variables('spokeFoundryAccountName'), variables('spokeFoundryProjectName'))]"
+      ]
     },
     {
       "type": "Microsoft.CognitiveServices/accounts/connections",

@@ -1124,8 +1124,32 @@ resource acrSpoke 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
     name: 'Basic'
   }
   properties: {
-    adminUserEnabled: true
+    // Challenge 7 builds with `az acr build` (cloud build) and the hosted agent pulls via
+    // the project managed identity below, so no admin username/password is ever needed.
+    // Matches the workshop's `--admin-enabled false`.
+    adminUserEnabled: false
     publicNetworkAccess: 'Enabled'
+  }
+}
+
+// ===== Spoke: AcrPull for the Foundry project managed identity =====
+// Challenge 7 deploys a hosted agent whose image lives in the spoke ACR. The Foundry
+// project's managed identity is what pulls that image at agent-start time, so without
+// this grant the agent version deploys and then fails to start with an image-pull error.
+// The original workshop applies this in deploy-spoke-foundry.ps1 ("Assigning AcrPull to
+// Foundry project managed identity"); it is reproduced here because this lab has no
+// separate spoke script. Participant-facing RBAC stays in deploy-lab.ps1 — this one is
+// service-to-service, so it belongs with the resources.
+resource acrPullForSpokeProject 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: acrSpoke
+  name: guid(acrSpoke.id, spokeFoundryProject.id, '7f951dda-4ed3-4680-a7ca-43fe172d538d')
+  properties: {
+    roleDefinitionId: subscriptionResourceId(
+      'Microsoft.Authorization/roleDefinitions',
+      '7f951dda-4ed3-4680-a7ca-43fe172d538d' // AcrPull
+    )
+    principalId: spokeFoundryProject.identity.principalId
+    principalType: 'ServicePrincipal'
   }
 }
 

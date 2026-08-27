@@ -53,6 +53,39 @@ Adapted from the Citadel workshop (`azd up`), the lab deploys:
   spoke** copies of Foundry, Key Vault, Cosmos DB, APIM, ACR, and monitoring, so the notebooks
   work out-of-the-box.
 
+## Spoke Deployment (workshop step 3.7)
+
+The original workshop provisions the hub with `azd up` and then requires a **separate**
+`scripts/deploy-spoke-foundry.ps1` run, which creates a *distinct spoke resource group*.
+MicroHack gives each participant exactly **one** resource group, so that step is not run
+separately here — the spoke is part of `infra/resources.bicep` and lands in the **same
+platform-provided resource group** as the hub. Name collisions are avoided by the `-spoke`
+infix plus the shared `resourceToken`.
+
+| Workshop `deploy-spoke-foundry.ps1` step | Equivalent here |
+|---|---|
+| Create spoke resource group | *Not applicable* — hub and spoke share the participant's single RG |
+| Foundry account (`allowProjectManagement`, system-assigned identity) | `spokeFoundryAccount` → `aif-spoke-<token>` |
+| Foundry project (system-assigned identity) | `spokeFoundryProject` → `citadel-agents-project` |
+| Log Analytics workspace | `laSpoke` → `law-spoke-<token>` |
+| Application Insights | `aiSpoke` → `appi-spoke-<token>` |
+| App Insights → Foundry connection (agent tracing) | `spokeFoundryAppInsightsConnection` |
+| Key Vault (RBAC authorization) | `kvSpoke` → `kv-spoke-<token>` |
+| Container Registry (Basic, admin disabled) | `acrSpoke` → `acrcitadel<token>` |
+| **AcrPull → Foundry *project* managed identity** | `acrPullForSpokeProject` role assignment |
+| `Azure AI Project Manager` / `Key Vault Secrets User` to the user | Granted by `deploy-lab.ps1` to every id in `$AllowedEntraUserIds` |
+| Write `SPOKE_*` values to the azd environment | Emitted as `HackboxCredential`s, applied by `setup-notebook-env.ps1` |
+
+Two details are load-bearing for **challenge 7**, which builds a hosted agent container:
+
+- The Foundry **project** managed identity holds **AcrPull** on the spoke ACR. Without it the
+  agent version deploys and then fails to start with an image-pull error — the notebook itself
+  states this grant is expected to come from the spoke deployment.
+- The ACR has **`adminUserEnabled: false`**. The notebook builds with `az acr build` (cloud
+  build, no local Docker) and the agent pulls via managed identity, so admin credentials are
+  never needed. `SPOKE_RESOURCE_GROUP` is emitted as the same value as `ResourceGroup`, which
+  is what the unchanged notebooks read.
+
 ## What the Attendee Receives
 
 The platform dashboard surfaces these credentials as `HackboxCredential` objects.

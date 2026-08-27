@@ -1,0 +1,12 @@
+# CSV seed / sample data
+
+# Tracked: the *.csv data files used to seed the demo.
+
+# Ignore editor lock files and temporary exports:
+~$*
+*.tmp
+*.bak
+
+# Ignore spreadsheet copies that may be created while editing the data
+*.xlsx
+*.xls

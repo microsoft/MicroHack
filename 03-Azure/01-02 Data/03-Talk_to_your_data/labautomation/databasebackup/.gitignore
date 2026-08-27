@@ -1,0 +1,10 @@
+# Database backups
+
+# Tracked: the *.bak restore files required by the microhack.
+
+# Ignore other backup / temporary artifacts:
+*.trn        # transaction log backups
+*.zip        # compressed backups
+*.7z
+*.gz
+*.tmp

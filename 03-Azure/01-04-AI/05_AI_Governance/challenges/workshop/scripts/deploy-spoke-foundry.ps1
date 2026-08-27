@@ -5,8 +5,43 @@ param(
     [string]$FoundryAccountName = $env:FOUNDRY_ACCOUNT_NAME,
     [string]$FoundryProjectName = $env:FOUNDRY_PROJECT_NAME,
     [string]$KeyVaultName = $env:KEY_VAULT_NAME,
-    [string]$KeyVaultEnablePurgeProtection = $(if ($env:KEY_VAULT_ENABLE_PURGE_PROTECTION) { $env:KEY_VAULT_ENABLE_PURGE_PROTECTION } else { 'false' })
+    [string]$KeyVaultEnablePurgeProtection = $(if ($env:KEY_VAULT_ENABLE_PURGE_PROTECTION) { $env:KEY_VAULT_ENABLE_PURGE_PROTECTION } else { 'false' }),
+
+    # MicroHack guard. Not part of the upstream workshop script.
+    [switch]$Force
 )
+
+# ---------------------------------------------------------------------------
+# MicroHack guard (added for the MicroHack port — not in the upstream workshop)
+#
+# Upstream, this script is step 3.7: it creates a SEPARATE spoke resource group after
+# `azd up` has built the hub. In the MicroHack each participant gets exactly ONE resource
+# group, and the spoke is already provisioned into it by
+# labautomation/infra/resources.bicep. Running this script here would create a second,
+# unbudgeted resource group whose resource names do not match the lab dashboard
+# credentials, and would silently diverge from the environment the notebooks are wired to.
+#
+# The script is kept (rather than deleted) because notebook 7 and the workshop guide refer
+# to it, and because it is still the correct tool outside the MicroHack. Pass -Force to run
+# it deliberately.
+# ---------------------------------------------------------------------------
+if (-not $Force) {
+    Write-Host ''
+    Write-Host 'This script is NOT used in the MicroHack.' -ForegroundColor Yellow
+    Write-Host ''
+    Write-Host 'Your Citadel spoke (Foundry account + project, Key Vault, Log Analytics,'
+    Write-Host 'Application Insights, and ACR) is already deployed into the single resource'
+    Write-Host 'group shown on your lab dashboard. There is nothing to run here.'
+    Write-Host ''
+    Write-Host 'To connect the notebooks to it, run from the labautomation folder:'
+    Write-Host '    ./setup-notebook-env.ps1 -ResourceGroup <ResourceGroup> ...' -ForegroundColor Cyan
+    Write-Host 'See labautomation/README.md -> "Notebook Environment Setup".'
+    Write-Host ''
+    Write-Host 'If you are running the ORIGINAL workshop outside the MicroHack and really do'
+    Write-Host 'want a separate spoke resource group, re-run with -Force.'
+    Write-Host ''
+    exit 0
+}
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'

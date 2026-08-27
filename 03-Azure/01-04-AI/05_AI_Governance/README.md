@@ -134,17 +134,51 @@ Each challenge follows the same anatomy, so you always know where to look:
 
 ```
 05_AI_Governance/
-  README.md                 This file
-  challenges/                Challenge instructions (challenge-01.md … challenge-09.md)
-  labautomation/              Platform entry point — provisions the Hub + Spoke per attendee
-    deploy-lab.ps1            Called once per attendee by the MicroHack platform
+  README.md                    This file
+  challenges/                  Participant-facing content
+    challenge-01.md … challenge-09.md   The challenge instructions
+    finish.md                  Wrap-up and cleanup
+    azure.yaml                 azd project-root marker — makes the notebooks'
+                               `azd env get-value` calls resolve. Not used to deploy.
+    workshop/                  The 9 unchanged Citadel workshop notebooks this
+                               MicroHack is built on (plus their agent/MCP sources)
+    shared/                    utils.py / apimtools.py — imported by the notebooks
+                               via `sys.path.insert(1, '../shared')`
+    bicep/                     Per-challenge Bicep the notebooks deploy themselves
+                               (`../bicep/infra/llm-backend-onboarding`,
+                               `../bicep/infra/citadel-access-contracts`)
+  walkthrough/                 Coach solutions — challenge-0N/solution-0N.md
+  labautomation/               Platform entry point — provisions the Hub + Spoke per attendee
+    deploy-lab.ps1             Called once per attendee by the MicroHack platform
+    shared-deploy-lab.ps1      Called once per subscription (resource-provider registration)
+    infra/resources.bicep      The hub + spoke template, resource-group scoped
     run-local.ps1              Local-only dry-run wrapper (not used by the platform)
     setup-notebook-env.ps1     Bridges dashboard credentials into a local azd environment
     README.md                  Full provisioning + notebook-environment-setup reference
-  reference/
-    ai-hub-gateway-solution-accelerator/
-      workshop/                 The 9 unchanged Citadel workshop notebooks this MicroHack is built on
 ```
+
+> [!NOTE]
+> `challenges/workshop/`, `challenges/shared/`, `challenges/bicep/` and `challenges/azure.yaml`
+> reproduce the upstream repository's own layout. That nesting is deliberate: the workshop
+> notebooks are **unmodified**, and they resolve `../shared` and `../bicep/infra` relative to
+> their own folder. Moving or flattening these breaks challenges 1, 2, 3, 5, 6, 8 and 9.
+
+## Solutions — spoiler warning
+
+Coach-facing walkthroughs live in [`walkthrough/`](walkthrough/), one folder per challenge.
+Participants should attempt each challenge first.
+
+* [Solution 1 — Onboard a New LLM Backend](walkthrough/challenge-01/solution-01.md)
+* [Solution 2 — Universal LLM API Across Every Model](walkthrough/challenge-02/solution-02.md)
+* [Solution 3 — Access Contracts: Model RBAC & Capacity](walkthrough/challenge-03/solution-03.md)
+* [Solution 4 — Drive Access Contracts from Agent Frameworks](walkthrough/challenge-04/solution-04.md)
+* [Solution 5 — PII Anonymization, Blocking & Analytics](walkthrough/challenge-05/solution-05.md)
+* [Solution 6 — Unified AI API Across Providers](walkthrough/challenge-06/solution-06.md)
+* [Solution 7 — Build a Governed Hosted Agent with AGT](walkthrough/challenge-07/solution-07.md)
+* [Solution 8 — Publish a Foundry Agent as an A2A Endpoint](walkthrough/challenge-08/solution-08.md)
+* [Solution 9 — HR MCP via APIM](walkthrough/challenge-09/solution-09.md)
+
+➡️ [Finish](challenges/finish.md)
 
 ## Contributors
 

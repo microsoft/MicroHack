@@ -1,12 +1,21 @@
 # Application name
+#
+# In the MicroHack this file is NOT used to deploy anything — the lab is provisioned by
+# labautomation/deploy-lab.ps1 (Bicep, resource-group scoped), not by `azd up`.
+#
+# It is kept because it is azd's project-root marker: the unchanged workshop notebooks read
+# their configuration with `azd env get-value <KEY>`, and azd locates the current environment
+# by searching upward from the working directory for the nearest azure.yaml — exactly as git
+# searches for .git. Notebooks run from ./workshop/, so this file one level up is what makes
+# those calls resolve. labautomation/setup-notebook-env.ps1 depends on it and fails fast if
+# it is missing. Do not move or delete it.
 name: ai-citadel-governance-hub
 metadata:
   template: ai-citadel-governance-hub
 infra:
   path: bicep/infra
   provider: bicep
-services:
-  usageProcessingLogicApp:
-    project: ./src/usage-ingestion-logicapp
-    language: js
-    host: function
+# NOTE: the upstream workshop declares a `services:` block here for the usage-ingestion
+# Logic App (./src/usage-ingestion-logicapp). That source folder is not vendored into this
+# MicroHack module, and the lab never runs `azd deploy`, so the block is intentionally
+# omitted — leaving it in place made `azd` fail on a path that does not exist.

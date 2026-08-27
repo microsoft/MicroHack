@@ -1,5 +1,22 @@
 # Citadel AI Governance Hub - Hands-On Workshop Lab Guide 🏛️
 
+> [!CAUTION]
+> **MicroHack participants: do NOT follow the deployment steps in this file.**
+>
+> This is the **unmodified upstream workshop guide**, kept here because the notebooks are
+> unchanged and reference it. It assumes you provision everything yourself with `azd up`
+> plus `scripts/deploy-spoke-foundry.*`, into **two** resource groups.
+>
+> In the MicroHack, **your hub and spoke are already deployed for you**, both inside the
+> **single** resource group listed on your lab dashboard. Running `azd up` or
+> `deploy-spoke-foundry.*` here will fail or create duplicate resources you will be billed
+> for, and it will not match the credentials on your dashboard.
+>
+> **Start at [`../challenge-01.md`](../challenge-01.md) instead**, and use
+> `labautomation/setup-notebook-env.ps1` to wire the notebooks to your environment.
+> Sections 4 onward of this file (notebook walkthroughs, architecture, concepts) are still
+> accurate and worth reading.
+
 **Duration:** ~3 hours  
 **Level:** Intermediate  
 **Last updated:** June 2026
@@ -11,6 +28,7 @@ This hands-on lab deploys a governed AI hub-and-spoke architecture into your Azu
 - **Lab environment** — your local machine or the included Devcontainer, where deployment commands, notebooks, and validation traffic originate.
 
 You deploy the hub with `azd up`, then deploy the sample spoke with `workshop/scripts/deploy-spoke-foundry.*`.
+*(MicroHack: both are already deployed into your single resource group — see the caution above.)*
 
 ---
 

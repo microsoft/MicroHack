@@ -133,7 +133,7 @@ Each challenge follows the same anatomy, so you always know where to look:
 ## Repository layout
 
 ```
-05_AI_Governance/
+06_AI_Governance/
   README.md                    This file
   challenges/                  Participant-facing content
     challenge-01.md … challenge-09.md   The challenge instructions

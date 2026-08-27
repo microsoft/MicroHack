@@ -1,0 +1,9 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/MicroHack/refs/heads/main/lab-defaults-schema.json",
+  "groups": [ "GHCPUsers" ],
+  "deploymentType": "resourcegroup",
+  "labsPerSubscription": 40,
+  "preferredLocation": "swedencentral, norwayeast, spaincentral",
+  "estimatedDailyCostsUsd": 5.0,
+  "estimatedSharedDeploymentDailyCostsUsd": 50.0
+}

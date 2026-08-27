@@ -1,0 +1,107 @@
+<fragment>
+    <!--
+        Extract Requested Model Fragment
+        Purpose: Extracts the requested model from Azure OpenAI, Inference, or Unified AI endpoints
+        
+        Supported Patterns:
+        1. Azure OpenAI: Model from deployment-id path parameter (/deployments/{deployment-id}/chat/completions)
+        2. Unified AI:   Model from URL path segment (/openai/deployments/{model}/... via wildcard operations)
+        3. Inference:    Model from request body JSON ({"model": "model-name", ...})
+        
+        Output Variable:
+        - requestedModel: The extracted model name (empty string if not found)
+        
+        Logic:
+        - GET/DELETE requests return "non-llm-request" (no model routing needed)
+        - First attempts to extract from deployment-id path parameter (Azure OpenAI named operations)
+        - If not found, attempts to extract model from URL path by detecting /deployments/{model}/ pattern
+          (Unified AI wildcard operations where APIM has no named path parameters)
+        - If not found, attempts to extract from request body model field (Inference pattern)
+        - Returns empty string if no pattern matches
+    -->
+    
+    <set-variable name="requestedModel" value="@{
+        try
+        {
+            var method = context.Request.Method;
+
+            // GET and DELETE requests are non-LLM operations (listing models, deleting responses)
+            if (method.Equals("GET", StringComparison.OrdinalIgnoreCase) ||
+                method.Equals("DELETE", StringComparison.OrdinalIgnoreCase))
+            {
+                return "non-llm-request";
+            }
+            
+            // 1. Try deployment-id path parameter (Azure OpenAI named operations)
+            var deploymentId = context.Request.MatchedParameters.ContainsKey("deployment-id") 
+                ? context.Request.MatchedParameters["deployment-id"] 
+                : null;
+            
+            if (!string.IsNullOrEmpty(deploymentId))
+            {
+                return deploymentId;
+            }
+            
+            // 2. Try extracting model from URL path (Unified AI wildcard operations)
+            //    Handles paths like /openai/deployments/{model}/chat/completions
+            //    where APIM wildcard routes don't define named parameters
+            var path = context.Request.Url.Path;
+            var deploymentsSegment = "/deployments/";
+            var idx = path.IndexOf(deploymentsSegment, StringComparison.OrdinalIgnoreCase);
+            if (idx >= 0)
+            {
+                var afterSegment = path.Substring(idx + deploymentsSegment.Length);
+                var slashPos = afterSegment.IndexOf('/');
+                var modelName = slashPos >= 0 ? afterSegment.Substring(0, slashPos) : afterSegment;
+                if (!string.IsNullOrEmpty(modelName))
+                {
+                    return modelName;
+                }
+            }
+            
+            // 3. Try request body model field (Inference endpoint pattern)
+            var bodyText = context.Request.Body.As<string>(preserveContent: true);
+            if (string.IsNullOrEmpty(bodyText))
+            {
+                return string.Empty;
+            }
+            
+            var body = JObject.Parse(bodyText);
+            return body["model"] != null ? body["model"].ToString() : string.Empty;
+        }
+        catch
+        {
+            return string.Empty;
+        }
+    }" />
+    
+    <!-- Validate that model parameter is present (skip for non-LLM requests like GET/DELETE operations) -->
+    <choose>
+        <when condition="@((string)context.Variables["requestedModel"] == "non-llm-request")">
+            <!-- Non-LLM request (e.g., GET operations like listing models) - skip model validation -->
+        </when>
+        <when condition="@(string.IsNullOrEmpty((string)context.Variables["requestedModel"]))">
+            <!-- If requested model is not identified, return 400 error -->
+            <return-response>
+                <set-status code="400" reason="Bad Request" />
+                <set-header name="Content-Type" exists-action="override">
+                    <value>application/json</value>
+                </set-header>
+                <set-body>@{
+                    return new JObject(
+                        new JProperty("error", new JObject(
+                            new JProperty("message", "Model could not be detected from request body or path"),
+                            new JProperty("type", "invalid_request_error"),
+                            new JProperty("code", "missing_model_parameter"),
+                            new JProperty("param", "model")
+                        ))
+                    ).ToString();
+                }</set-body>
+            </return-response>
+            <!-- Alternatively you can set default model by uncommenting below -->
+            <!-- 
+                <set-variable name="requestedModel" value="default-model-name" />
+            -->
+        </when>
+    </choose>
+</fragment>

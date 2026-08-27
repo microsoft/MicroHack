@@ -1,0 +1,13 @@
+# Pinned to the verified-good set from the foundry-hosted-agents skill.
+# The umbrella `agent-framework` meta-package resolves to versions with
+# the AsyncStreamWrapper.parse() regression that breaks streamed tool
+# calls in the hosted-agent server.
+agent-framework-core~=1.6.0
+agent-framework-foundry~=1.6.0
+agent-framework-foundry-hosting==1.0.0a260521
+mcp~=1.10.0
+pydantic==2.12.5
+azure-identity>=1.19.0,<1.26.0a0
+agent-os-kernel
+agentmesh-platform
+agent-sre

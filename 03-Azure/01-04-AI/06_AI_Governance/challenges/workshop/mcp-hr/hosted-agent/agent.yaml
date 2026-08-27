@@ -1,0 +1,29 @@
+## HR MCP hosted agent — Foundry hosted-agent manifest (reference).
+##
+## The workshop notebook deploys this agent with AIProjectClient.create_version()
+## and injects the environment_variables below at deploy time (the MCP URL,
+## audience, and subscription key are read from azd/APIM). This file documents
+## the expected shape; the platform injects FOUNDRY_PROJECT_ENDPOINT automatically.
+kind: hosted
+name: citadel-hr-mcp-agent
+protocols:
+  - protocol: responses
+    version: 1.0.0
+resources:
+  cpu: "1"
+  memory: 2Gi
+environment_variables:
+  - name: AZURE_AI_MODEL_DEPLOYMENT_NAME
+    value: Hub-HR-ChatAgent-DEV-LLM/gpt-4.1
+  - name: HR_MCP_APIM_MCP_URL
+    value: https://<apim-name>.azure-api.net/hr-mcp/mcp
+  - name: HR_MCP_AUDIENCE
+    value: api://<hr-mcp-api-client-id>
+  - name: HR_MCP_APIM_SUBSCRIPTION_KEY
+    value: <apim-subscription-key>
+  - name: ENABLE_INSTRUMENTATION
+    value: "true"
+  - name: OTEL_SERVICE_NAME
+    value: citadel-hr-mcp-agent
+  - name: OTEL_RESOURCE_ATTRIBUTES
+    value: service.name=citadel-hr-mcp-agent,service.namespace=citadel,deployment.environment=workshop

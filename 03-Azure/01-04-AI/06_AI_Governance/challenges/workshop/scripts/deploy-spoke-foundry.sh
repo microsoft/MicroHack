@@ -1,6 +1,55 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# ---------------------------------------------------------------------------
+# MicroHack guard (added for the MicroHack port — not in the upstream workshop)
+#
+# Upstream, this script is step 3.7: it creates a SEPARATE spoke resource group after
+# `azd up` has built the hub. In the MicroHack each participant gets exactly ONE resource
+# group, and the spoke is already provisioned into it by
+# labautomation/infra/resources.bicep. Running this script here would create a second,
+# unbudgeted resource group whose resource names do not match the lab dashboard
+# credentials, and would silently diverge from the environment the notebooks are wired to.
+#
+# The script is kept (rather than deleted) because notebook 7 and the workshop guide refer
+# to it, and because it is still the correct tool outside the MicroHack. Pass --force to
+# run it deliberately.
+# ---------------------------------------------------------------------------
+microhack_force="false"
+for _arg in "$@"; do
+    if [[ "$_arg" == "--force" ]]; then
+        microhack_force="true"
+    fi
+done
+
+if [[ "$microhack_force" != "true" ]]; then
+    cat <<'MICROHACK_GUARD'
+
+This script is NOT used in the MicroHack.
+
+Your Citadel spoke (Foundry account + project, Key Vault, Log Analytics,
+Application Insights, and ACR) is already deployed into the single resource
+group shown on your lab dashboard. There is nothing to run here.
+
+To connect the notebooks to it, run from the labautomation folder:
+    ./setup-notebook-env.ps1 -ResourceGroup <ResourceGroup> ...
+See labautomation/README.md -> "Notebook Environment Setup".
+
+If you are running the ORIGINAL workshop outside the MicroHack and really do
+want a separate spoke resource group, re-run with --force.
+
+MICROHACK_GUARD
+    exit 0
+fi
+
+# Drop the MicroHack-only --force flag so the upstream argument parser below never sees it.
+_filtered_args=()
+for _arg in "$@"; do
+    [[ "$_arg" == "--force" ]] && continue
+    _filtered_args+=("$_arg")
+done
+set -- ${_filtered_args[@]+"${_filtered_args[@]}"}
+
 # Silence a known Azure CLI Python SyntaxWarning from an upstream dependency.
 export PYTHONWARNINGS="${PYTHONWARNINGS:+$PYTHONWARNINGS,}ignore::SyntaxWarning"
 

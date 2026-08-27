@@ -16,12 +16,11 @@ param location string
 @description('Deterministic suffix for resource naming (DNS-safe, lowercase).')
 param resourceToken string
 
-@description('Primary Entra user object ID for initial RBAC grants. Multi-user RBAC is applied post-deployment.')
-param principalId string = ''
-
-@description('Principal type for RBAC assignments: User (interactive) or ServicePrincipal (CI/CD).')
-@allowed(['User', 'ServicePrincipal'])
-param principalType string = 'User'
+// Participant RBAC is applied by labautomation/deploy-lab.ps1 AFTER this deployment,
+// so that EVERY id in $AllowedEntraUserIds is granted the roles (a template can only
+// conveniently grant the first one) and so that hub AND spoke resources are both
+// covered. This template therefore takes no principalId: it exports the resource ids
+// the script needs as RBAC scopes (see the *_RESOURCE_ID outputs at the bottom).
 
 @description('Tags to apply to all resources.')
 param tags object = {}
@@ -1125,8 +1124,32 @@ resource acrSpoke 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
     name: 'Basic'
   }
   properties: {
-    adminUserEnabled: true
+    // Challenge 7 builds with `az acr build` (cloud build) and the hosted agent pulls via
+    // the project managed identity below, so no admin username/password is ever needed.
+    // Matches the workshop's `--admin-enabled false`.
+    adminUserEnabled: false
     publicNetworkAccess: 'Enabled'
+  }
+}
+
+// ===== Spoke: AcrPull for the Foundry project managed identity =====
+// Challenge 7 deploys a hosted agent whose image lives in the spoke ACR. The Foundry
+// project's managed identity is what pulls that image at agent-start time, so without
+// this grant the agent version deploys and then fails to start with an image-pull error.
+// The original workshop applies this in deploy-spoke-foundry.ps1 ("Assigning AcrPull to
+// Foundry project managed identity"); it is reproduced here because this lab has no
+// separate spoke script. Participant-facing RBAC stays in deploy-lab.ps1 — this one is
+// service-to-service, so it belongs with the resources.
+resource acrPullForSpokeProject 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: acrSpoke
+  name: guid(acrSpoke.id, spokeFoundryProject.id, '7f951dda-4ed3-4680-a7ca-43fe172d538d')
+  properties: {
+    roleDefinitionId: subscriptionResourceId(
+      'Microsoft.Authorization/roleDefinitions',
+      '7f951dda-4ed3-4680-a7ca-43fe172d538d' // AcrPull
+    )
+    principalId: spokeFoundryProject.identity.principalId
+    principalType: 'ServicePrincipal'
   }
 }
 
@@ -1282,3 +1305,24 @@ output SPOKE_ACR_LOGIN_SERVER string = '${replace(spokeAcrName, '-', '')}.azurec
 
 output RESOURCE_GROUP_NAME string = resourceGroup().name
 output LOCATION string = location
+
+// ==========================================================================
+// RBAC scopes consumed by labautomation/deploy-lab.ps1
+//
+// The lab packs a hub AND a spoke of four resource types (Foundry account, Key
+// Vault, Log Analytics workspace, Application Insights) into ONE resource group,
+// so the script must not discover them with `Get-AzResource ... | Select -First 1`
+// — that grants the participant access to only one of each pair. These outputs
+// give it the exact scope for every grant.
+// ==========================================================================
+output COSMOS_ACCOUNT_RESOURCE_ID string = cosmosAccount.id
+output APIM_RESOURCE_ID string = apim.id
+
+output KEY_VAULT_RESOURCE_ID string = kvHub.id
+output APP_INSIGHTS_RESOURCE_ID string = aiHub.id
+
+output SPOKE_FOUNDRY_PROJECT_RESOURCE_ID string = spokeFoundryProject.id
+output SPOKE_KEY_VAULT_RESOURCE_ID string = kvSpoke.id
+output SPOKE_LOG_ANALYTICS_WORKSPACE_RESOURCE_ID string = laSpoke.id
+output SPOKE_APP_INSIGHTS_RESOURCE_ID string = aiSpoke.id
+output SPOKE_ACR_RESOURCE_ID string = acrSpoke.id

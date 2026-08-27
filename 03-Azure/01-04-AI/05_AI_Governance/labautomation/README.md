@@ -37,14 +37,21 @@ Adapted from the Citadel workshop (`azd up`), the lab deploys:
 ## Platform Contract
 
 - The parameter block matches the MicroHack platform contract exactly.
-- The platform **pre-creates the resource group** and pre-sets the Azure context.
-  The script does **not** call `Connect-AzAccount` or `New-AzResourceGroup`.
+- The platform **pre-creates the resource group** and pre-sets the Azure context for the
+  `resourcegroup` / `resourcegroup-with-subscriptionowner` deployment types, so the script
+  does **not** call `Connect-AzAccount` or `New-AzResourceGroup` in those modes. In
+  `subscription` mode the platform hands over an empty subscription instead, and the script
+  creates its own `rg-citadel-microhack-<hash>` resource group.
+- [`shared-deploy-lab.ps1`](shared-deploy-lab.ps1) is picked up automatically by file name and
+  runs **once per subscription, before** the per-participant fan-out, to register the resource
+  providers this lab needs (see [Subscription Scope Prerequisites](#subscription-scope-prerequisites)).
 - Hub and spoke resources are deployed into **the same platform-provided ResourceGroupName**
   using deterministic suffixes to avoid name collisions.
 - Foundry accounts, projects, Log Analytics, App Insights, Key Vault, and APIM are all
   provisioned with **managed identities** — no keys or secrets in logs.
-- RBAC is assigned **per attendee** (via `$AllowedEntraUserIds`) across Foundry, Key Vault,
-  Cosmos DB, and monitoring services, so the notebooks work out-of-the-box.
+- RBAC is assigned **per attendee** (via `$AllowedEntraUserIds`) across **both the hub and the
+  spoke** copies of Foundry, Key Vault, Cosmos DB, APIM, ACR, and monitoring, so the notebooks
+  work out-of-the-box.
 
 ## What the Attendee Receives
 
@@ -113,9 +120,13 @@ can then be opened and run without modification.
 The script follows MicroHack conventions:
 
 - **Region fallback** — Retries across `$PreferredLocation` (honoring platform preference),
-  falling back to [swedencentral, westeurope, norwayeast] if all fail.
+  falling back to [swedencentral, westeurope, norwayeast] if all fail. Retries are gated on
+  `Test-MhhDeploymentFailureRetryable`: a non-retryable failure (template or permission bug)
+  aborts immediately with the real error rather than being retried in every region.
 - **Deterministic naming** — `Get-MhhStableHash` generates a stable suffix per attendee,
-  ensuring names are DNS-safe, globally unique, and consistent across re-runs.
+  ensuring names are DNS-safe, globally unique, and consistent across re-runs. The hash is
+  computed **once** and passed to Bicep as `resourceToken`; the template is the single source
+  of truth for every resource name.
 - **Idempotent provisioning** — All resources are created once; re-runs skip existing resources.
 - **Managed identities** — No hardcoded keys or connection strings; all auth uses Entra ID +
   Azure RBAC (DefaultAzureCredential in notebooks).
@@ -129,26 +140,41 @@ The script follows MicroHack conventions:
     roles cannot create/update products or subscriptions).
   - **`AcrPush`** on the spoke ACR — required only for Notebook 7's container publishing;
     granted by default since the ACR already exists in the core deployment.
-  
+
+  Grants are driven off the **template's own resource-ID outputs**, not a resource-group
+  lookup, so the hub *and* spoke instances of each duplicated type (Foundry, Key Vault, Log
+  Analytics, App Insights) are both covered. Every grant is classified Required or Optional:
+  if any **Required** grant fails, the script throws with a per-scope summary instead of
+  handing the attendee a lab whose notebooks silently 403. Optional grants (challenges 7–9)
+  only warn.
+
   So team labs work for all members.
 - **Robust output** — `[INFO]`, `[OK]`, `[WARN]` prefixes guide troubleshooting.
 
 ## Subscription Scope Prerequisites
 
-Before the platform runs `deploy-lab.ps1`, these must be pre-registered at the subscription level:
+[`shared-deploy-lab.ps1`](shared-deploy-lab.ps1) registers these providers automatically,
+once per subscription, before any `deploy-lab.ps1` runs — participants only hold RG-Owner and
+subscription-Reader, so they cannot self-register:
 
-- `Microsoft.ApiManagement`
-- `Microsoft.CognitiveServices`
-- `Microsoft.EventHub`
-- `Microsoft.KeyVault`
-- `Microsoft.OperationalInsights`
-- `Microsoft.DocumentDB`
-- `Microsoft.Insights`
-- `Microsoft.Storage`
-- `Microsoft.ContainerRegistry`
-- `Microsoft.Logic` (if Logic App is deployed)
+| Provider | Needed for |
+|---|---|
+| `Microsoft.ApiManagement` | APIM AI gateway (all challenges) |
+| `Microsoft.CognitiveServices` | Foundry hub + spoke accounts, model deployments |
+| `Microsoft.DocumentDB` | Cosmos DB usage tracking (challenge 2) |
+| `Microsoft.KeyVault` | Hub and spoke Key Vaults |
+| `Microsoft.OperationalInsights` | Log Analytics workspaces (challenge 3) |
+| `Microsoft.Insights` | Application Insights / agent tracing (challenge 3) |
+| `Microsoft.EventHub` | Usage event streaming pipeline |
+| `Microsoft.Storage` | Usage ingestion storage account |
+| `Microsoft.ManagedIdentity` | User-assigned identities for APIM backend auth |
+| `Microsoft.ContainerRegistry` | Spoke ACR (challenge 7) |
+| `Microsoft.App` *(optional)* | HR MCP Container App (challenge 9, instructor-led) |
+| `Microsoft.AlertsManagement` *(optional)* | Governance alert rules (optional extension) |
 
-If a provider is not registered, the script will fail with a clear message: *"Provider X must be registered at subscription scope before lab deployment."*
+Registration is best-effort by design: if the shared hook throws, the platform runs **no** labs
+in that subscription. A provider that cannot be registered is reported with the exact
+`az provider register` command for a subscription Owner to run.
 
 ## Local Dry Run
 
@@ -172,9 +198,31 @@ After a successful dry run, run `setup-notebook-env.ps1` (see
 
 ## Configuration
 
-Edit [`lab-defaults.json`](lab-defaults.json) to tune:
-- Regional preferences (adjust for availability)
-- Labs per subscription (8 labs × ~15 USD/day = ~120 USD/day per subscription)
-- Estimated daily cost estimate
+Edit [`lab-defaults.json`](lab-defaults.json) to tune regional preferences, density, and budget.
+
+**`estimatedDailyCostsUsd: 32.0`** — the Console uses this to size participant budgets, so it
+must reflect the real burn rate. Breakdown per lab:
+
+| Component | ~USD/day |
+|---|---|
+| API Management **Standard v2** (~$0.95–1.00/hr, always-on) | ~23 |
+| Cosmos DB (serverless), Event Hub (Basic), Storage | ~2 |
+| 2× Log Analytics + 2× Application Insights (ingestion) | ~3 |
+| ACR (Basic), Key Vaults, managed identities | ~1 |
+| Model inference (6 deployments, pay-per-token, workshop-scale usage) | ~3 |
+| **Total** | **~32** |
+
+> APIM Standard v2 dominates the cost. Dropping to **Basic v2** would cut the APIM line by
+> roughly 7×, but it changes gateway capabilities — treat that as a functional decision, not a
+> pure cost tweak.
+
+**`labsPerSubscription: 8`** — bounded by Azure OpenAI regional quota, not cost:
+`8 labs × 100 capacity units per model = 800` units, inside the typical 1 000-unit
+GlobalStandard quota per model per region. **If you raise `labsPerSubscription`, or raise the
+model `capacity` in `infra/resources.bicep`, re-check that product against the subscription's
+quota in the target region** — exceeding it makes later labs fail to deploy their models.
+
+`estimatedSharedDeploymentDailyCostsUsd: 0.0` — `shared-deploy-lab.ps1` only registers resource
+providers and deploys nothing billable.
 
 No credentials or secrets are stored in this folder.

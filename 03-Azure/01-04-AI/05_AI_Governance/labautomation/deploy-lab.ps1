@@ -61,26 +61,6 @@ $ErrorActionPreference = "Stop"
 
 # Resolve effective values — honour $PreferredLocation, fall back across the list
 $candidateRegions = if ($PreferredLocation.Count -gt 0) { $PreferredLocation } else { @("swedencentral", "westeurope", "norwayeast") }
-$effectiveLocation = $candidateRegions[0]
-$effectiveRG = $ResourceGroupName
-
-# Deterministic token for resource naming (based on subscription + RG).
-# Ensures hub and spoke resources don't collide and survive re-runs.
-$stableHash = (Get-MhhStableHash $AllowedEntraUserIds -Length 12).ToLower()
-$resourceToken = (Get-MhhStableHash "$SubscriptionId-$effectiveRG" -Length 13).ToLower()
-
-# Resource naming
-$hubFoundryAccountName = "aif-hub-$stableHash"
-$hubFoundryProjectName = "citadel-hub-project"
-$spokeFoundryAccountName = "aif-spoke-$stableHash"
-$spokeFoundryProjectName = "citadel-agents-project"
-$apimName = "apim-citadel-$stableHash"
-$cosmosName = "cos-citadel-$stableHash"
-$keyVaultName = "kv-hub-$stableHash"
-$laName = "law-citadel-$stableHash"
-$aiName = "appi-citadel-$stableHash"
-
-Write-Host "[INFO]  Deploying Citadel Agentic Governance Hub + Spoke into RG '$effectiveRG'..."
 
 $scriptPath = Split-Path -Parent $MyInvocation.MyCommand.Definition
 $bicepFile = Join-Path $scriptPath 'infra/resources.bicep'
@@ -89,7 +69,33 @@ if (-not (Test-Path $bicepFile)) {
     throw "Bicep template not found at '$bicepFile'. Ensure infra/resources.bicep exists."
 }
 
-$primaryPrincipalId = if ($AllowedEntraUserIds.Count -gt 0) { $AllowedEntraUserIds[0] } else { '' }
+# --- Resolve the resource group per the platform contract -------------------
+# 'resourcegroup' / 'resourcegroup-with-subscriptionowner': the platform pre-created the
+# RG and granted Owner on it, so we must NOT create it.
+# 'subscription': the platform granted Owner on the subscription and created nothing —
+# we create the RG ourselves under a deterministic per-lab name. lab-defaults.json pins
+# this lab to 'resourcegroup', but the parameter contract allows all three values, so
+# the subscription path is implemented rather than left to fail with an empty RG name.
+if ($DeploymentType -eq 'subscription') {
+    $hashInput = if ($AllowedEntraUserIds.Count -gt 0) { $AllowedEntraUserIds } else { @($SubscriptionId) }
+    $rgHash = (Get-MhhStableHash $hashInput -Length 24).ToLower()
+    $effectiveRG = "rg-citadel-microhack-$rgHash"
+    Write-Host "[INFO]  Subscription-scoped lab — creating resource group '$effectiveRG' in '$($candidateRegions[0])'..."
+    New-AzResourceGroup -Name $effectiveRG -Location $candidateRegions[0] -Force | Out-Null
+}
+else {
+    $effectiveRG = $ResourceGroupName
+    if ([string]::IsNullOrWhiteSpace($effectiveRG)) {
+        throw "DeploymentType '$DeploymentType' requires the platform to pass a pre-created -ResourceGroupName, but it was empty."
+    }
+}
+
+# Deterministic token for resource naming (subscription + RG based, so it is stable
+# across region retries and re-runs). infra/resources.bicep derives EVERY hub and spoke
+# resource name from this token — resource names must not be recomputed here, or the
+# script and the template disagree about what was actually deployed.
+$resourceToken = (Get-MhhStableHash "$SubscriptionId-$effectiveRG" -Length 13).ToLower()
+
 $tags = @{ project = 'citadel-agentic-governance'; 'lab-deployment-type' = $DeploymentType }
 
 # Guard: ALL participant data-plane RBAC is keyed off $AllowedEntraUserIds.
@@ -101,21 +107,20 @@ if ($AllowedEntraUserIds.Count -eq 0) {
     Write-Host "[WARN]  pass -AllowedEntraUserIds <entraObjectId> (comma-separate ids for a team lab)."
 }
 
+Write-Host "[INFO]  Deploying Citadel Agentic Governance Hub + Spoke into RG '$effectiveRG'..."
+Write-Host "[INFO]  Engine: Bicep (infra/resources.bicep), resource-group-scoped."
+
 $deployOutputs = $null
 $effectiveLocation = $null
 
-Write-Host "[INFO]  Engine: Bicep (infra/resources.bicep), resource-group-scoped."
-
 foreach ($region in $candidateRegions) {
-    Write-Host "[INFO]  Deploying Bicep → RG '$effectiveRG' in '$region'..."
+    Write-Host "[INFO]  Deploying Bicep → RG '$effectiveRG' in '$region' (token '$resourceToken')..."
     try {
         $d = New-AzResourceGroupDeployment `
             -ResourceGroupName $effectiveRG `
             -TemplateFile $bicepFile `
             -location $region `
             -resourceToken $resourceToken `
-            -principalId $primaryPrincipalId `
-            -principalType 'User' `
             -tags $tags `
             -ErrorAction Stop
         $deployOutputs = $d.Outputs
@@ -123,6 +128,16 @@ foreach ($region in $candidateRegions) {
         break
     }
     catch {
+        # Only capacity/quota/region-availability failures are worth retrying elsewhere.
+        # A template or permission bug fails identically in every region, so retrying it
+        # just triples the runtime and buries the real error under the last region's message.
+        $retryable = $true
+        if (Get-Command Test-MhhDeploymentFailureRetryable -ErrorAction SilentlyContinue) {
+            $retryable = [bool](Test-MhhDeploymentFailureRetryable -ErrorRecord $_)
+        }
+        if (-not $retryable) {
+            throw "Bicep deployment failed in '$region' with a non-retryable error (retrying other regions would fail the same way): $_"
+        }
         Write-Host "[WARN]  Bicep deployment failed in '$region': $_ — trying next region."
     }
 }
@@ -133,279 +148,200 @@ if (-not $deployOutputs) {
 
 Write-Host "[OK]    Provisioning complete in '$effectiveLocation' (resource group '$effectiveRG')."
 
-# --- Managed Identity Readiness Check ---
-# Hub and Spoke Foundry accounts have system-assigned managed identities that may not be
-# immediately available after creation. Wait for them to be readable before granting RBAC.
-Write-Host "[INFO]  Verifying managed identity availability..."
-$hubAccount = Get-AzResource `
-    -ResourceGroupName $effectiveRG `
-    -ResourceType 'Microsoft.CognitiveServices/accounts' `
-    -ErrorAction SilentlyContinue | Where-Object { $_.Name -like "aif-hub-*" } | Select-Object -First 1
-
-$spokeAccount = Get-AzResource `
-    -ResourceGroupName $effectiveRG `
-    -ResourceType 'Microsoft.CognitiveServices/accounts' `
-    -ErrorAction SilentlyContinue | Where-Object { $_.Name -like "aif-spoke-*" } | Select-Object -First 1
-
-$maxWaitSecs = 120
-$waitInterval = 10
-$elapsed = 0
-
-while ($elapsed -lt $maxWaitSecs) {
-    $hubMIReady = $false
-    $spokeMIReady = $false
-
-    if ($hubAccount) {
-        $hubMI = Get-AzResource -ResourceId $hubAccount.ResourceId -ExpandProperties -ErrorAction SilentlyContinue
-        if ($hubMI -and $hubMI.Identity.PrincipalId) {
-            $hubMIReady = $true
-        }
-    }
-
-    if ($spokeAccount) {
-        $spokeMI = Get-AzResource -ResourceId $spokeAccount.ResourceId -ExpandProperties -ErrorAction SilentlyContinue
-        if ($spokeMI -and $spokeMI.Identity.PrincipalId) {
-            $spokeMIReady = $true
-        }
-    }
-
-    if ($hubMIReady -and $spokeMIReady) {
-        Write-Host "[OK]    Managed identities are ready."
-        break
-    }
-
-    if ($elapsed -eq 0) {
-        Write-Host "[INFO]  Waiting for managed identities to become available... (up to ${maxWaitSecs}s)"
-    }
-
-    Start-Sleep -Seconds $waitInterval
-    $elapsed += $waitInterval
-}
-
-if ($hubAccount -and -not $hubMIReady) {
-    Write-Host "[WARN]  Hub Foundry managed identity did not become ready within ${maxWaitSecs}s. RBAC grants may fail."
-}
-
-# --- Multi-user data-plane RBAC ---
-# Grant Foundry and Cosmos DB access to all attendees so team labs work for every member.
-if ($AllowedEntraUserIds.Count -gt 0 -and $effectiveRG) {
-    $account = $hubAccount
-
-    $cosmos = Get-AzResource `
-        -ResourceGroupName $effectiveRG `
-        -ResourceType 'Microsoft.DocumentDB/databaseAccounts' `
-        -ErrorAction SilentlyContinue | Select-Object -First 1
-
-    $keyVault = Get-AzResource `
-        -ResourceGroupName $effectiveRG `
-        -ResourceType 'Microsoft.KeyVault/vaults' `
-        -ErrorAction SilentlyContinue | Select-Object -First 1
-
-    $appInsightsRes = Get-AzResource `
-        -ResourceGroupName $effectiveRG `
-        -ResourceType 'Microsoft.Insights/components' `
-        -ErrorAction SilentlyContinue | Select-Object -First 1
-
-    $logAnalyticsRes = Get-AzResource `
-        -ResourceGroupName $effectiveRG `
-        -ResourceType 'Microsoft.OperationalInsights/workspaces' `
-        -ErrorAction SilentlyContinue | Select-Object -First 1
-
-    $apim = Get-AzResource `
-        -ResourceGroupName $effectiveRG `
-        -ResourceType 'Microsoft.ApiManagement/service' `
-        -ErrorAction SilentlyContinue | Select-Object -First 1
-
-    $acr = Get-AzResource `
-        -ResourceGroupName $effectiveRG `
-        -ResourceType 'Microsoft.ContainerRegistry/registries' `
-        -ErrorAction SilentlyContinue | Select-Object -First 1
-
-    # RBAC role IDs (built-in)
-    $foundryRoles = [ordered]@{
-        'Azure AI User'           = '53ca6127-db72-4b80-b1b0-d745d6d5456d'
-        'Cognitive Services User' = 'a97b65f3-24c7-4388-baec-2e87135dc908'
-    }
-
-    $cosmosDataRole = '00000000-0000-0000-0000-000000000002'  # Cosmos DB Built-in Data Contributor
-
-    $keyVaultRoles = [ordered]@{
-        'Key Vault Secrets Officer' = 'b86a8fe4-44ce-4948-aee5-eccb2c155090'
-    }
-
-    $monitoringRoles = [ordered]@{
-        'Monitoring Reader' = '43d0d8ad-25c7-4714-9337-8ba259a9fe05'
-    }
-
-    # APIMClientTool (used by notebooks 3-7, 9) is an ARM control-plane client — it needs
-    # a management-plane role on the APIM resource, not just a gateway subscription key,
-    # to list APIs/subscriptions and to create products/subscriptions dynamically.
-    # 'API Management Service Contributor' is the least-privileged BUILT-IN role that covers
-    # both the service and its entities (APIs, products, subscriptions, policies).
-    # 'API Management Service Operator Role' only manages the service itself (not entities),
-    # and 'API Management Service Reader Role' is read-only — neither supports the
-    # create/update-product/subscription flows the notebooks perform.
-    $apimRoles = [ordered]@{
-        'API Management Service Contributor' = '312a565d-c81f-4fd8-895a-4e21e48d571c'
-    }
-
-    # Notebook 7 pushes container images to the spoke ACR — AcrPush is the least-privileged
-    # built-in role for that (data-plane push/pull only, no control-plane permissions).
-    $acrRoles = [ordered]@{
-        'AcrPush' = '8311e382-0749-4cb8-b61a-304f252e45ec'
-    }
-
-    foreach ($userId in $AllowedEntraUserIds) {
-        # Foundry data-plane RBAC
-        if ($account) {
-            foreach ($roleName in $foundryRoles.Keys) {
-                $roleId = $foundryRoles[$roleName]
-                $existing = Get-AzRoleAssignment -ObjectId $userId -Scope $account.ResourceId -RoleDefinitionId $roleId -ErrorAction SilentlyContinue
-                if ($existing) {
-                    Write-Host "[OK]    '$roleName' already granted to $userId on Foundry."
-                    continue
-                }
-                try {
-                    New-AzRoleAssignment -ObjectId $userId -RoleDefinitionId $roleId -Scope $account.ResourceId -ErrorAction Stop | Out-Null
-                    Write-Host "[OK]    Granted '$roleName' to $userId on Foundry."
-                } catch {
-                    Write-Host "[WARN]  Could not grant '$roleName' to ${userId}: $_"
-                }
-            }
-        }
-
-        # Cosmos DB data-plane RBAC (via REST because Az.CosmosDB module is complex)
-        if ($cosmos) {
-            $cosmosBase = $cosmos.ResourceId
-            $cosmosApi = "2024-11-15"
-            $cosmosRoleUri = "$cosmosBase/sqlRoleDefinitions/00000000-0000-0000-0000-000000000002?api-version=$cosmosApi"
-            $existingRAs = Invoke-AzRestMethod -Method GET -Path "$cosmosBase/sqlRoleAssignments?api-version=$cosmosApi" -ErrorAction SilentlyContinue
-            $raList = if ($existingRAs.StatusCode -eq 200) { ($existingRAs.Content | ConvertFrom-Json).value } else { @() }
-
-            $already = $raList | Where-Object { $_.properties.principalId -eq $userId -and $_.properties.roleDefinitionId -like "*000000000002" }
-            if ($already) {
-                Write-Host "[OK]    Cosmos DB data role already granted to $userId."
-                continue
-            }
-
-            try {
-                $assignId = [guid]::NewGuid().ToString()
-                $raBody = @{ properties = @{
-                    roleDefinitionId = $cosmosRoleUri
-                    principalId = $userId
-                    scope = $cosmosBase
-                } } | ConvertTo-Json -Depth 5
-                Invoke-AzRestMethod -Method PUT -Path "$cosmosBase/sqlRoleAssignments/${assignId}?api-version=$cosmosApi" -Payload $raBody -ErrorAction Stop | Out-Null
-                Write-Host "[OK]    Cosmos DB data-plane role granted to $userId."
-            } catch {
-                Write-Host "[WARN]  Could not grant Cosmos DB role to ${userId}: $_"
-            }
-        }
-
-        # Key Vault RBAC
-        if ($keyVault) {
-            foreach ($roleName in $keyVaultRoles.Keys) {
-                $roleId = $keyVaultRoles[$roleName]
-                $existing = Get-AzRoleAssignment -ObjectId $userId -Scope $keyVault.ResourceId -RoleDefinitionId $roleId -ErrorAction SilentlyContinue
-                if ($existing) {
-                    Write-Host "[OK]    '$roleName' already granted to $userId on Key Vault."
-                    continue
-                }
-                try {
-                    New-AzRoleAssignment -ObjectId $userId -RoleDefinitionId $roleId -Scope $keyVault.ResourceId -ErrorAction Stop | Out-Null
-                    Write-Host "[OK]    Granted '$roleName' to $userId on Key Vault."
-                } catch {
-                    Write-Host "[WARN]  Could not grant '$roleName' to ${userId}: $_"
-                }
-            }
-        }
-
-        # Monitoring RBAC (Log Analytics + App Insights)
-        if ($logAnalyticsRes) {
-            foreach ($roleName in $monitoringRoles.Keys) {
-                $roleId = $monitoringRoles[$roleName]
-                $existing = Get-AzRoleAssignment -ObjectId $userId -Scope $logAnalyticsRes.ResourceId -RoleDefinitionId $roleId -ErrorAction SilentlyContinue
-                if ($existing) {
-                    Write-Host "[OK]    '$roleName' already granted to $userId on Log Analytics."
-                    continue
-                }
-                try {
-                    New-AzRoleAssignment -ObjectId $userId -RoleDefinitionId $roleId -Scope $logAnalyticsRes.ResourceId -ErrorAction Stop | Out-Null
-                    Write-Host "[OK]    Granted '$roleName' to $userId on Log Analytics."
-                } catch {
-                    Write-Host "[WARN]  Could not grant '$roleName' to ${userId}: $_"
-                }
-            }
-        }
-
-        if ($appInsightsRes) {
-            foreach ($roleName in $monitoringRoles.Keys) {
-                $roleId = $monitoringRoles[$roleName]
-                $existing = Get-AzRoleAssignment -ObjectId $userId -Scope $appInsightsRes.ResourceId -RoleDefinitionId $roleId -ErrorAction SilentlyContinue
-                if ($existing) {
-                    Write-Host "[OK]    '$roleName' already granted to $userId on Application Insights."
-                    continue
-                }
-                try {
-                    New-AzRoleAssignment -ObjectId $userId -RoleDefinitionId $roleId -Scope $appInsightsRes.ResourceId -ErrorAction Stop | Out-Null
-                    Write-Host "[OK]    Granted '$roleName' to $userId on Application Insights."
-                } catch {
-                    Write-Host "[WARN]  Could not grant '$roleName' to ${userId}: $_"
-                }
-            }
-        }
-
-        # APIM management RBAC (APIMClientTool: list APIs/subscriptions, create/update
-        # products/subscriptions dynamically — notebooks 3-7, 9)
-        if ($apim) {
-            foreach ($roleName in $apimRoles.Keys) {
-                $roleId = $apimRoles[$roleName]
-                $existing = Get-AzRoleAssignment -ObjectId $userId -Scope $apim.ResourceId -RoleDefinitionId $roleId -ErrorAction SilentlyContinue
-                if ($existing) {
-                    Write-Host "[OK]    '$roleName' already granted to $userId on APIM."
-                    continue
-                }
-                try {
-                    New-AzRoleAssignment -ObjectId $userId -RoleDefinitionId $roleId -Scope $apim.ResourceId -ErrorAction Stop | Out-Null
-                    Write-Host "[OK]    Granted '$roleName' to $userId on APIM."
-                } catch {
-                    Write-Host "[WARN]  Could not grant '$roleName' to ${userId}: $_"
-                }
-            }
-        } else {
-            Write-Host "[WARN]  No APIM resource found in RG '$effectiveRG' — skipping APIM management RBAC."
-        }
-
-        # ACR RBAC (optional — required only for Notebook 7's container publishing)
-        if ($acr) {
-            foreach ($roleName in $acrRoles.Keys) {
-                $roleId = $acrRoles[$roleName]
-                $existing = Get-AzRoleAssignment -ObjectId $userId -Scope $acr.ResourceId -RoleDefinitionId $roleId -ErrorAction SilentlyContinue
-                if ($existing) {
-                    Write-Host "[OK]    '$roleName' already granted to $userId on ACR."
-                    continue
-                }
-                try {
-                    New-AzRoleAssignment -ObjectId $userId -RoleDefinitionId $roleId -Scope $acr.ResourceId -ErrorAction Stop | Out-Null
-                    Write-Host "[OK]    Granted '$roleName' to $userId on ACR."
-                } catch {
-                    Write-Host "[WARN]  Could not grant '$roleName' to ${userId}: $_"
-                }
-            }
-        } else {
-            Write-Host "[WARN]  No ACR found in RG '$effectiveRG' — Notebook 7 (container publishing) will be blocked."
-        }
-    }
-}
-
-# --- Return credentials to the attendee dashboard ---
-Write-Host "[OK]    Lab provisioning complete."
-
+# --- Deployment output helper (used by the RBAC block and the dashboard block) ---
 function Get-OutVal {
     param($Outputs, [string]$Key)
     if ($Outputs -and $Outputs.ContainsKey($Key)) { return "$($Outputs[$Key].Value)" }
     return ''
 }
+
+# --- Managed identity sanity check ---
+# The hub and spoke Foundry accounts carry system-assigned identities that APIM and the
+# notebooks depend on. The template exports their principal ids, so an empty value here
+# means the account came up without an identity and downstream auth will fail.
+foreach ($mi in @(
+        @{ Label = 'hub Foundry';   Value = (Get-OutVal $deployOutputs 'HUB_FOUNDRY_MANAGED_IDENTITY_PRINCIPAL_ID') }
+        @{ Label = 'spoke Foundry'; Value = (Get-OutVal $deployOutputs 'SPOKE_FOUNDRY_MANAGED_IDENTITY_PRINCIPAL_ID') }
+    )) {
+    if ([string]::IsNullOrWhiteSpace($mi.Value)) {
+        Write-Host "[WARN]  The $($mi.Label) account reported no managed identity — agent tracing and backend auth may fail."
+    }
+}
+
+# ---------------------------------------------------------------------------
+# Participant RBAC
+#
+# Scopes come from the template outputs, NOT from `Get-AzResource ... | Select -First 1`.
+# This lab packs a hub AND a spoke of four resource types (Foundry account, Key Vault,
+# Log Analytics workspace, Application Insights) into ONE resource group, so a
+# first-match probe granted the participant access to only one of each pair and left
+# notebooks 3, 4 and 7-9 failing at runtime with an authorization error.
+#
+# Grants flagged Required are the ones the core challenges (1-6) cannot run without.
+# If any of them fails, the script throws at the end so the platform reports a failed
+# provision instead of handing the attendee a lab whose notebooks break on first use.
+# ---------------------------------------------------------------------------
+$hubFoundryId   = Get-OutVal $deployOutputs 'HUB_FOUNDRY_ACCOUNT_RESOURCE_ID'
+$spokeFoundryId = Get-OutVal $deployOutputs 'SPOKE_FOUNDRY_ACCOUNT_RESOURCE_ID'
+$cosmosId       = Get-OutVal $deployOutputs 'COSMOS_ACCOUNT_RESOURCE_ID'
+$hubKvId        = Get-OutVal $deployOutputs 'KEY_VAULT_RESOURCE_ID'
+$spokeKvId      = Get-OutVal $deployOutputs 'SPOKE_KEY_VAULT_RESOURCE_ID'
+$hubLaId        = Get-OutVal $deployOutputs 'LOG_ANALYTICS_WORKSPACE_RESOURCE_ID'
+$spokeLaId      = Get-OutVal $deployOutputs 'SPOKE_LOG_ANALYTICS_WORKSPACE_RESOURCE_ID'
+$hubAiId        = Get-OutVal $deployOutputs 'APP_INSIGHTS_RESOURCE_ID'
+$spokeAiId      = Get-OutVal $deployOutputs 'SPOKE_APP_INSIGHTS_RESOURCE_ID'
+$apimResourceId = Get-OutVal $deployOutputs 'APIM_RESOURCE_ID'
+$acrId          = Get-OutVal $deployOutputs 'SPOKE_ACR_RESOURCE_ID'
+
+# RBAC role IDs (built-in)
+$foundryRoles = [ordered]@{
+    'Azure AI User'           = '53ca6127-db72-4b80-b1b0-d745d6d5456d'
+    'Cognitive Services User' = 'a97b65f3-24c7-4388-baec-2e87135dc908'
+}
+
+$keyVaultRoles = [ordered]@{
+    'Key Vault Secrets Officer' = 'b86a8fe4-44ce-4948-aee5-eccb2c155090'
+}
+
+$monitoringRoles = [ordered]@{
+    'Monitoring Reader' = '43d0d8ad-25c7-4714-9337-8ba259a9fe05'
+}
+
+# APIMClientTool (used by notebooks 3-7, 9) is an ARM control-plane client — it needs
+# a management-plane role on the APIM resource, not just a gateway subscription key,
+# to list APIs/subscriptions and to create products/subscriptions dynamically.
+# 'API Management Service Contributor' is the least-privileged BUILT-IN role that covers
+# both the service and its entities (APIs, products, subscriptions, policies).
+# 'API Management Service Operator Role' only manages the service itself (not entities),
+# and 'API Management Service Reader Role' is read-only — neither supports the
+# create/update-product/subscription flows the notebooks perform.
+$apimRoles = [ordered]@{
+    'API Management Service Contributor' = '312a565d-c81f-4fd8-895a-4e21e48d571c'
+}
+
+# Notebook 7 pushes container images to the spoke ACR — AcrPush is the least-privileged
+# built-in role for that (data-plane push/pull only, no control-plane permissions).
+$acrRoles = [ordered]@{
+    'AcrPush' = '8311e382-0749-4cb8-b61a-304f252e45ec'
+}
+
+# Required = a core challenge (1-6) breaks without it.
+# Optional = only an observability view or a follow-on challenge (7-9) is affected.
+$rbacTargets = @(
+    @{ Label = 'hub Foundry account';   Scope = $hubFoundryId;   Roles = $foundryRoles;    Required = $true }
+    @{ Label = 'spoke Foundry account'; Scope = $spokeFoundryId; Roles = $foundryRoles;    Required = $true }
+    @{ Label = 'hub Key Vault';         Scope = $hubKvId;        Roles = $keyVaultRoles;   Required = $true }
+    @{ Label = 'spoke Key Vault';       Scope = $spokeKvId;      Roles = $keyVaultRoles;   Required = $true }
+    @{ Label = 'APIM service';          Scope = $apimResourceId; Roles = $apimRoles;       Required = $true }
+    @{ Label = 'hub Log Analytics';     Scope = $hubLaId;        Roles = $monitoringRoles; Required = $false }
+    @{ Label = 'spoke Log Analytics';   Scope = $spokeLaId;      Roles = $monitoringRoles; Required = $false }
+    @{ Label = 'hub App Insights';      Scope = $hubAiId;        Roles = $monitoringRoles; Required = $false }
+    @{ Label = 'spoke App Insights';    Scope = $spokeAiId;      Roles = $monitoringRoles; Required = $false }
+    @{ Label = 'spoke ACR';             Scope = $acrId;          Roles = $acrRoles;        Required = $false }
+)
+
+$rbacFailures = New-Object System.Collections.Generic.List[string]
+
+function Grant-MhhRole {
+    param([string]$ObjectId, [string]$RoleName, [string]$RoleId, [string]$Scope, [string]$Label)
+
+    $existing = Get-AzRoleAssignment -ObjectId $ObjectId -Scope $Scope -RoleDefinitionId $RoleId -ErrorAction SilentlyContinue
+    if ($existing) {
+        Write-Host "[OK]    '$RoleName' already granted to $ObjectId on the $Label."
+        return $true
+    }
+    try {
+        New-AzRoleAssignment -ObjectId $ObjectId -RoleDefinitionId $RoleId -Scope $Scope -ErrorAction Stop | Out-Null
+        Write-Host "[OK]    Granted '$RoleName' to $ObjectId on the $Label."
+        return $true
+    }
+    catch {
+        Write-Host "[WARN]  Could not grant '$RoleName' to $ObjectId on the ${Label}: $_"
+        return $false
+    }
+}
+
+function Grant-MhhCosmosDataRole {
+    param([string]$ObjectId, [string]$CosmosResourceId)
+
+    $cosmosApi = '2024-11-15'
+    $roleDefinitionId = "$CosmosResourceId/sqlRoleDefinitions/00000000-0000-0000-0000-000000000002"  # Built-in Data Contributor
+
+    $list = Invoke-AzRestMethod -Method GET -Path "$CosmosResourceId/sqlRoleAssignments?api-version=$cosmosApi" -ErrorAction SilentlyContinue
+    if ($list -and $list.StatusCode -eq 200) {
+        $already = ($list.Content | ConvertFrom-Json).value | Where-Object {
+            $_.properties.principalId -eq $ObjectId -and $_.properties.roleDefinitionId -like '*000000000002'
+        }
+        if ($already) {
+            Write-Host "[OK]    Cosmos DB data role already granted to $ObjectId."
+            return $true
+        }
+    }
+
+    $body = @{ properties = @{
+            roleDefinitionId = $roleDefinitionId
+            principalId      = $ObjectId
+            scope            = $CosmosResourceId
+        }
+    } | ConvertTo-Json -Depth 5
+
+    $assignId = [guid]::NewGuid().ToString()
+    try {
+        $resp = Invoke-AzRestMethod -Method PUT -Path "$CosmosResourceId/sqlRoleAssignments/${assignId}?api-version=$cosmosApi" -Payload $body -ErrorAction Stop
+    }
+    catch {
+        Write-Host "[WARN]  Could not grant the Cosmos DB data role to ${ObjectId}: $_"
+        return $false
+    }
+
+    # Invoke-AzRestMethod does NOT throw on an HTTP error status, so it must be checked
+    # explicitly — otherwise a 403/404 was reported to the coach as a successful grant.
+    if ($resp.StatusCode -ge 200 -and $resp.StatusCode -lt 300) {
+        Write-Host "[OK]    Cosmos DB data-plane role granted to $ObjectId."
+        return $true
+    }
+
+    Write-Host "[WARN]  Cosmos DB role assignment for $ObjectId failed with HTTP $($resp.StatusCode): $($resp.Content)"
+    return $false
+}
+
+# --- Multi-user data-plane RBAC ---
+# Every id in $AllowedEntraUserIds is granted every role, so team labs work for all members.
+foreach ($userId in $AllowedEntraUserIds) {
+    foreach ($target in $rbacTargets) {
+        if ([string]::IsNullOrWhiteSpace($target.Scope)) {
+            $message = "the $($target.Label) was not returned by the deployment, so its roles were skipped"
+            if ($target.Required) { $rbacFailures.Add("$userId : $message") }
+            else { Write-Host "[WARN]  Skipping the $($target.Label) — the deployment returned no resource id for it." }
+            continue
+        }
+
+        foreach ($roleName in $target.Roles.Keys) {
+            $granted = Grant-MhhRole -ObjectId $userId -RoleName $roleName -RoleId $target.Roles[$roleName] -Scope $target.Scope -Label $target.Label
+            if (-not $granted -and $target.Required) {
+                $rbacFailures.Add("$userId is missing '$roleName' on the $($target.Label)")
+            }
+        }
+    }
+
+    # Cosmos DB data-plane RBAC (REST — the data roles are not ARM role assignments)
+    if ([string]::IsNullOrWhiteSpace($cosmosId)) {
+        $rbacFailures.Add("$userId is missing the Cosmos DB data role (the deployment returned no Cosmos account id)")
+    }
+    elseif (-not (Grant-MhhCosmosDataRole -ObjectId $userId -CosmosResourceId $cosmosId)) {
+        $rbacFailures.Add("$userId is missing 'Cosmos DB Built-in Data Contributor' on the usage-tracking account")
+    }
+}
+
+# Fail loudly rather than reporting a green provision over a broken lab.
+if ($rbacFailures.Count -gt 0) {
+    Write-Host "[ERROR] Provisioning finished, but required participant access is incomplete:"
+    foreach ($failure in $rbacFailures) { Write-Host "[ERROR]   - $failure" }
+    throw "Required participant RBAC could not be applied ($($rbacFailures.Count) grant(s) failed). Resources exist in '$effectiveRG', but the notebooks would fail at runtime, so this lab is reported as failed."
+}
+
+# --- Return credentials to the attendee dashboard ---
+Write-Host "[OK]    Lab provisioning complete."
 
 # Extract outputs from Bicep deployment
 $hubFoundryEndpoint = Get-OutVal $deployOutputs 'HUB_FOUNDRY_PROJECT_ENDPOINT'

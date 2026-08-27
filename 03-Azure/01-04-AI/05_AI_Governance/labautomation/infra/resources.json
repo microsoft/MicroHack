@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.41.2.15936",
-      "templateHash": "1184583719695337759"
+      "templateHash": "5133357958444612862"
     }
   },
   "parameters": {
@@ -21,24 +21,6 @@
       "minLength": 1,
       "metadata": {
         "description": "Deterministic suffix for resource naming (DNS-safe, lowercase)."
-      }
-    },
-    "principalId": {
-      "type": "string",
-      "defaultValue": "",
-      "metadata": {
-        "description": "Primary Entra user object ID for initial RBAC grants. Multi-user RBAC is applied post-deployment."
-      }
-    },
-    "principalType": {
-      "type": "string",
-      "defaultValue": "User",
-      "allowedValues": [
-        "User",
-        "ServicePrincipal"
-      ],
-      "metadata": {
-        "description": "Principal type for RBAC assignments: User (interactive) or ServicePrincipal (CI/CD)."
       }
     },
     "tags": {
@@ -72,7 +54,6 @@
     "cosmosApi": "2024-11-15",
     "aiServicesApi": "2025-04-01-preview",
     "cosmosDatabaseName": "citadel-hub",
-    "deployPolicyFragments": false,
     "cosmosContainers": [
       {
         "name": "usage-events",
@@ -367,8 +348,22 @@
         }
       },
       "dependsOn": [
-        "[resourceId('Microsoft.ApiManagement/service', variables('apimName'))]",
-        "[resourceId('Microsoft.CognitiveServices/accounts/projects', variables('hubFoundryAccountName'), variables('hubFoundryProjectName'))]"
+        "[resourceId('Microsoft.ApiManagement/service', variables('apimName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "scope": "[resourceId('Microsoft.CognitiveServices/accounts', variables('hubFoundryAccountName'))]",
+      "name": "[guid(resourceId('Microsoft.CognitiveServices/accounts', variables('hubFoundryAccountName')), resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('apimMIName')), 'CognitiveServicesOpenAIUser')]",
+      "properties": {
+        "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('apimMIName')), '2023-01-31').principalId]",
+        "principalType": "ServicePrincipal",
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd')]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('apimMIName'))]",
+        "[resourceId('Microsoft.CognitiveServices/accounts', variables('hubFoundryAccountName'))]"
       ]
     },
     {
@@ -377,7 +372,7 @@
       "name": "[format('{0}/{1}', variables('apimName'), 'get-available-models')]",
       "properties": {
         "format": "xml",
-        "value": "<fragment><!-- Returns deployed models array to client --><return-response><set-header name=\"Content-Type\" exists-action=\"override\"><value>application/json</value></set-header><set-body>@{var models = new JArray(); models.Add(\"gpt-4.1\"); models.Add(\"gpt-5.4-mini\"); models.Add(\"gpt-5.2\"); models.Add(\"Mistral-Large-3\"); models.Add(\"Phi-4\"); models.Add(\"text-embedding-3-large\"); return models.ToString();}</set-body></return-response></fragment>"
+        "value": "<fragment><!-- Returns deployed models array to client --><return-response><set-header name=\"Content-Type\" exists-action=\"override\"><value>application/json</value></set-header><set-body>@{var models = new JArray(); models.Add(\"gpt-4.1\"); models.Add(\"gpt-5.4-mini\"); models.Add(\"gpt-5.2\"); models.Add(\"text-embedding-3-large\"); models.Add(\"Mistral-Large-3\"); models.Add(\"Phi-4\"); return models.ToString();}</set-body></return-response></fragment>"
       },
       "dependsOn": [
         "[resourceId('Microsoft.ApiManagement/service', variables('apimName'))]"
@@ -419,6 +414,18 @@
       ]
     },
     {
+      "type": "Microsoft.ApiManagement/service/apis/operations/policies",
+      "apiVersion": "2023-09-01-preview",
+      "name": "[format('{0}/{1}/{2}/{3}', variables('apimName'), 'universal-llm-api', 'get-models', 'policy')]",
+      "properties": {
+        "format": "xml",
+        "value": "<policies><inbound><base/><return-response><set-status code=\"200\" reason=\"OK\"/><set-header name=\"Content-Type\" exists-action=\"override\"><value>application/json</value></set-header><set-body>[\"gpt-4.1\",\"gpt-5.4-mini\",\"gpt-5.2\",\"text-embedding-3-large\",\"Mistral-Large-3\",\"Phi-4\"]</set-body></return-response></inbound><backend><base/></backend><outbound><base/></outbound><on-error><base/></on-error></policies>"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service/apis/operations', variables('apimName'), 'universal-llm-api', 'get-models')]"
+      ]
+    },
+    {
       "type": "Microsoft.ApiManagement/service/apis/operations",
       "apiVersion": "2023-09-01-preview",
       "name": "[format('{0}/{1}/{2}', variables('apimName'), 'universal-llm-api', 'post-chat-completions')]",
@@ -433,6 +440,20 @@
       ]
     },
     {
+      "type": "Microsoft.ApiManagement/service/apis/operations/policies",
+      "apiVersion": "2023-09-01-preview",
+      "name": "[format('{0}/{1}/{2}/{3}', variables('apimName'), 'universal-llm-api', 'post-chat-completions', 'policy')]",
+      "properties": {
+        "format": "xml",
+        "value": "<policies><inbound><base/><authentication-managed-identity resource=\"https://cognitiveservices.azure.com\" client-id=\"{{Hub.Foundry.UAMI.Client.ID}}\" output-token-variable-name=\"msi-access-token\" ignore-error=\"false\"/><set-header name=\"Authorization\" exists-action=\"override\"><value>@(\"Bearer \" + (string)context.Variables[\"msi-access-token\"])</value></set-header><set-variable name=\"requestedModel\" value=\"@{var body = context.Request.Body?.As&lt;JObject&gt;(preserveContent: true); string m = body != null ? (string)body[&quot;model&quot;] : null; return string.IsNullOrEmpty(m) ? &quot;gpt-4.1&quot; : m;}\"/><choose><when condition=\"@{string[] allowed = new string[] {&quot;gpt-4.1&quot;,&quot;gpt-5.4-mini&quot;,&quot;gpt-5.2&quot;,&quot;Mistral-Large-3&quot;,&quot;Phi-4&quot;}; string requested = (string)context.Variables[&quot;requestedModel&quot;]; return !allowed.Contains(requested);}\"><return-response><set-status code=\"400\" reason=\"Bad Request\"/><set-header name=\"Content-Type\" exists-action=\"override\"><value>application/json</value></set-header><set-body>@{return new JObject(new JProperty(\"error\",\"unsupported model requested for chat completions\"),new JProperty(\"requestedModel\",(string)context.Variables[\"requestedModel\"])).ToString();}</set-body></return-response></when></choose><set-variable name=\"deploymentName\" value=\"@(((string)context.Variables[&quot;requestedModel&quot;]).Replace(&quot;.&quot;, &quot;-&quot;))\"/><set-backend-service backend-id=\"backend-hub-foundry\"/><rewrite-uri template=\"@(&quot;/openai/deployments/&quot; + (string)context.Variables[&quot;deploymentName&quot;] + &quot;/chat/completions?api-version=2024-10-21&quot;)\"/></inbound><backend><base/></backend><outbound><base/></outbound><on-error><base/></on-error></policies>"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service/backends', variables('apimName'), 'backend-hub-foundry')]",
+        "[resourceId('Microsoft.ApiManagement/service/namedValues', variables('apimName'), 'uami-client-id')]",
+        "[resourceId('Microsoft.ApiManagement/service/apis/operations', variables('apimName'), 'universal-llm-api', 'post-chat-completions')]"
+      ]
+    },
+    {
       "type": "Microsoft.ApiManagement/service/apis/operations",
       "apiVersion": "2023-09-01-preview",
       "name": "[format('{0}/{1}/{2}', variables('apimName'), 'universal-llm-api', 'post-embeddings')]",
@@ -444,6 +465,20 @@
       },
       "dependsOn": [
         "[resourceId('Microsoft.ApiManagement/service/apis', variables('apimName'), 'universal-llm-api')]"
+      ]
+    },
+    {
+      "type": "Microsoft.ApiManagement/service/apis/operations/policies",
+      "apiVersion": "2023-09-01-preview",
+      "name": "[format('{0}/{1}/{2}/{3}', variables('apimName'), 'universal-llm-api', 'post-embeddings', 'policy')]",
+      "properties": {
+        "format": "xml",
+        "value": "<policies><inbound><base/><authentication-managed-identity resource=\"https://cognitiveservices.azure.com\" client-id=\"{{Hub.Foundry.UAMI.Client.ID}}\" output-token-variable-name=\"msi-access-token\" ignore-error=\"false\"/><set-header name=\"Authorization\" exists-action=\"override\"><value>@(\"Bearer \" + (string)context.Variables[\"msi-access-token\"])</value></set-header><set-variable name=\"requestedModel\" value=\"@{var body = context.Request.Body?.As&lt;JObject&gt;(preserveContent: true); string m = body != null ? (string)body[&quot;model&quot;] : null; return string.IsNullOrEmpty(m) ? &quot;text-embedding-3-large&quot; : m;}\"/><choose><when condition=\"@{return (string)context.Variables[&quot;requestedModel&quot;] != &quot;text-embedding-3-large&quot;;}\"><return-response><set-status code=\"400\" reason=\"Bad Request\"/><set-header name=\"Content-Type\" exists-action=\"override\"><value>application/json</value></set-header><set-body>@{return new JObject(new JProperty(\"error\",\"unsupported model requested for embeddings\"),new JProperty(\"requestedModel\",(string)context.Variables[\"requestedModel\"])).ToString();}</set-body></return-response></when></choose><set-backend-service backend-id=\"backend-hub-foundry\"/><rewrite-uri template=\"/openai/deployments/text-embedding-3-large/embeddings?api-version=2024-10-21\"/></inbound><backend><base/></backend><outbound><base/></outbound><on-error><base/></on-error></policies>"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service/backends', variables('apimName'), 'backend-hub-foundry')]",
+        "[resourceId('Microsoft.ApiManagement/service/namedValues', variables('apimName'), 'uami-client-id')]",
+        "[resourceId('Microsoft.ApiManagement/service/apis/operations', variables('apimName'), 'universal-llm-api', 'post-embeddings')]"
       ]
     },
     {
@@ -1234,7 +1269,7 @@
     },
     "LLM_BACKEND_CONFIG": {
       "type": "string",
-      "value": "[base64(string(createArray(createObject('name', 'gpt-4.1', 'publisher', 'Azure OpenAI', 'endpoint', format('https://{0}.openai.azure.com', variables('hubFoundryAccountName')), 'models', createArray('gpt-4.1')), createObject('name', 'gpt-5.4-mini', 'publisher', 'Azure OpenAI', 'endpoint', format('https://{0}.openai.azure.com', variables('hubFoundryAccountName')), 'models', createArray('gpt-5.4-mini')), createObject('name', 'gpt-5.2', 'publisher', 'Azure OpenAI', 'endpoint', format('https://{0}.openai.azure.com', variables('hubFoundryAccountName')), 'models', createArray('gpt-5.2')), createObject('name', 'Mistral-Large-3', 'publisher', 'Azure OpenAI', 'endpoint', format('https://{0}.openai.azure.com', variables('hubFoundryAccountName')), 'models', createArray('Mistral-Large-3')), createObject('name', 'Phi-4', 'publisher', 'Azure OpenAI', 'endpoint', format('https://{0}.openai.azure.com', variables('hubFoundryAccountName')), 'models', createArray('Phi-4')), createObject('name', 'text-embedding-3-large', 'publisher', 'Azure OpenAI', 'endpoint', format('https://{0}.openai.azure.com', variables('hubFoundryAccountName')), 'models', createArray('text-embedding-3-large')))))]"
+      "value": "[base64(string(createArray(createObject('name', 'gpt-4.1', 'publisher', 'Azure OpenAI', 'endpoint', format('https://{0}.openai.azure.com', variables('hubFoundryAccountName')), 'models', createArray('gpt-4.1')), createObject('name', 'gpt-5.4-mini', 'publisher', 'Azure OpenAI', 'endpoint', format('https://{0}.openai.azure.com', variables('hubFoundryAccountName')), 'models', createArray('gpt-5.4-mini')), createObject('name', 'gpt-5.2', 'publisher', 'Azure OpenAI', 'endpoint', format('https://{0}.openai.azure.com', variables('hubFoundryAccountName')), 'models', createArray('gpt-5.2')), createObject('name', 'text-embedding-3-large', 'publisher', 'Azure OpenAI', 'endpoint', format('https://{0}.openai.azure.com', variables('hubFoundryAccountName')), 'models', createArray('text-embedding-3-large')), createObject('name', 'Mistral-Large-3', 'publisher', 'Azure OpenAI', 'endpoint', format('https://{0}.openai.azure.com', variables('hubFoundryAccountName')), 'models', createArray('Mistral-Large-3')), createObject('name', 'Phi-4', 'publisher', 'Azure OpenAI', 'endpoint', format('https://{0}.openai.azure.com', variables('hubFoundryAccountName')), 'models', createArray('Phi-4')))))]"
     },
     "COSMOS_ENDPOINT": {
       "type": "string",
@@ -1351,6 +1386,42 @@
     "LOCATION": {
       "type": "string",
       "value": "[parameters('location')]"
+    },
+    "COSMOS_ACCOUNT_RESOURCE_ID": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosAccountName'))]"
+    },
+    "APIM_RESOURCE_ID": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.ApiManagement/service', variables('apimName'))]"
+    },
+    "KEY_VAULT_RESOURCE_ID": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
+    },
+    "APP_INSIGHTS_RESOURCE_ID": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Insights/components', variables('aiName'))]"
+    },
+    "SPOKE_FOUNDRY_PROJECT_RESOURCE_ID": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.CognitiveServices/accounts/projects', variables('spokeFoundryAccountName'), variables('spokeFoundryProjectName'))]"
+    },
+    "SPOKE_KEY_VAULT_RESOURCE_ID": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.KeyVault/vaults', variables('spokeKeyVaultName'))]"
+    },
+    "SPOKE_LOG_ANALYTICS_WORKSPACE_RESOURCE_ID": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('spokeLaName'))]"
+    },
+    "SPOKE_APP_INSIGHTS_RESOURCE_ID": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Insights/components', variables('spokeAiName'))]"
+    },
+    "SPOKE_ACR_RESOURCE_ID": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.ContainerRegistry/registries', replace(variables('spokeAcrName'), '-', ''))]"
     }
   }
 }

@@ -117,11 +117,12 @@ $tags = @{
     SecurityControl = "Ignore"
 }
 
+Write-Host "Calling Invoke-MhhDeploymentWithRegionFallback ..."
 $result = Invoke-MhhDeploymentWithRegionFallback `
     -PreferredLocations      $PreferredLocation `
     -RgOwnerEntraObjectIds   @($AllowedEntraUserIds) `
     -ResourceGroupName       $sharedResourceGroup `
-    -CleanupTimeoutSeconds   1800
+    -CleanupTimeoutSeconds   1800 `
     -TemplateFile            $template `
     -Tag                     $tags `
     -TemplateParameterObject @{

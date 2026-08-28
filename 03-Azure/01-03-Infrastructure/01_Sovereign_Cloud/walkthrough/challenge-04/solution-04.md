@@ -10,21 +10,96 @@ Deploy the newer Visual Attestation Demo v2 to both Confidential and Standard
 ACI. The automation builds one image, generates its confidential-computing
 enforcement policy, and deploys both variants for a falsifiable comparison.
 
+> [!IMPORTANT]
+> **Execution environment changes in this challenge.**
+> Challenges 1-3 are completed in **Azure Cloud Shell (Bash)**. From Challenge 4
+> onward you must switch to a **local PowerShell 7+ session on your own machine**
+> (Windows is the validated platform).
+>
+> Azure Cloud Shell **cannot** complete this challenge: it does not provide a
+> local Docker engine, and `az confcom acipolicygen` requires one to inspect the
+> image layers when generating the CCE policy. See
+> [why Challenge 4 requires `confcom` and Docker](CONFCOM-AND-CCE-POLICY.md).
+
 ## Prerequisites
 
 - The [general MicroHack prerequisites](../../Readme.md#general-prerequisites).
-- PowerShell 7 or later.
+- PowerShell 7 or later, running locally (not Cloud Shell).
 - Azure CLI signed in to the target subscription.
-- Docker Desktop running. The `confcom` extension uses it to calculate the CCE
-	policy. See [why Challenge 4 requires `confcom` and Docker](CONFCOM-AND-CCE-POLICY.md).
+- Docker Desktop installed **and running**. The `confcom` extension uses it to
+  calculate the CCE policy.
 - Contributor access to the attendee resource group.
-- Confidential ACI capacity in the selected region.
+- Confidential ACI capacity in the selected region. This walkthrough uses
+  `northeurope`, which is validated for Confidential ACI. Confidential ACI is
+  available in fewer regions than standard ACI - if you change the region,
+  confirm support first in
+  [Confidential containers on ACI](https://learn.microsoft.com/azure/container-instances/container-instances-confidential-overview).
+
+### Verify your environment before you start
+
+Run this block and confirm every line succeeds:
+
+```powershell
+# 1. PowerShell must be 7.0 or later
+$PSVersionTable.PSVersion
+
+# 2. Azure CLI present and signed in (run 'az login' if this fails)
+az version
+az account show --output table
+
+# 3. Docker Desktop must be running (this fails if the daemon is stopped)
+docker info --format '{{.ServerVersion}}'
+
+# 4. Register the resource providers used by this challenge (safe to re-run)
+az provider register --namespace Microsoft.ContainerInstance
+az provider register --namespace Microsoft.ContainerRegistry
+```
+
+> [!NOTE]
+> Provider registration is asynchronous and can take a few minutes on a new
+> subscription. Check progress with:
+> `az provider show --namespace Microsoft.ContainerInstance --query registrationState -o tsv`
 
 > [!IMPORTANT]
 > The automation creates resources in the existing attendee resource group. It
 > does not create or delete the resource group.
 
+## Task 0: Get the challenge files
+
+The deployment script is **not standalone**. It resolves the application source,
+`Dockerfile`, and ARM templates from `resources/visual-attestation-demo-v2`
+relative to its own location, so it must be run from inside a full clone of the
+repository.
+
+```powershell
+git clone https://github.com/yelamanchili-murali/MicroHack.git
+cd MicroHack/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/walkthrough/challenge-04
+
+# Confirm both the script and its resources directory are present
+Get-ChildItem
+```
+
+You should see `Deploy-VisualAttestationV2.ps1` and a `resources` directory.
+Running the script from any other location (for example your home directory)
+fails with `The term './Deploy-VisualAttestationV2.ps1' is not recognized...`.
+
+If PowerShell blocks the script with an `UnauthorizedAccess` or "running scripts
+is disabled on this system" error, allow it for the current session only:
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+
+# If you downloaded the file instead of cloning, also clear the internet mark:
+Unblock-File ./Deploy-VisualAttestationV2.ps1
+```
+
 ## Task 1: Configure the MicroHack environment
+
+> [!WARNING]
+> **The variable syntax differs from Challenges 1-3.** Those challenges use Bash
+> variables (`RESOURCE_GROUP="labuser-xx"`). PowerShell requires the `$env:`
+> prefix shown below. Copying the Bash form into PowerShell fails silently and
+> the script will not see your values.
 
 Use the same variable names as the other challenges. If these variables are
 already present in your PowerShell session, do not generate a new suffix.
@@ -49,6 +124,12 @@ az group show --name $env:RESOURCE_GROUP --query "{name:name, location:location}
 
 ## Task 2: Build and deploy the comparison
 
+> [!IMPORTANT]
+> **If you have run Challenge 4 before with the same environment values -
+> including a run that failed part-way - run `./Deploy-VisualAttestationV2.ps1 -Cleanup`
+> first.** The script uses a clean build/deploy/cleanup lifecycle and does not
+> update an existing run.
+
 From this walkthrough directory, run:
 
 ```powershell
@@ -60,10 +141,27 @@ From this walkthrough directory, run:
 this walkthrough: it deploys both the Confidential and Standard container
 groups. You do not need to run `-Deploy` before `-Compare`.
 
-> [!IMPORTANT]
-> Before repeating Challenge 4 with the same environment values, run
-> `./Deploy-VisualAttestationV2.ps1 -Cleanup`. The script intentionally uses a
-> clean build/deploy/cleanup lifecycle rather than updating an existing run.
+The build phase confirms your environment variables, the target subscription and
+resource group, then creates the ACR and starts the server-side image build:
+
+![PowerShell output of the build phase: environment variables set, subscription and resource group confirmed, Basic ACR created, and az acr build queued for server-side image build](./images/01-build-phase-start.png)
+
+The build finishes with the pushed image digest and tag, and the script prints
+the next available commands:
+
+![PowerShell output showing the completed ACR run with provisioningState Succeeded, the pushed image digest for cc-attest:1.0, and the Build complete summary](./images/02-build-complete.png)
+
+> [!NOTE]
+> **Expect several minutes of quiet output.** `az acr build` runs the image build
+> server-side, and `az confcom acipolicygen` hashes every image layer locally.
+> Both steps can each take a few minutes with little or no progress on screen.
+> This is normal - do not interrupt the script.
+
+`-Compare` verifies the prerequisites, generates the CCE policy, deploys both
+container groups, waits for each to respond, and prints a deployment summary
+with both URLs:
+
+![PowerShell output of the compare phase: Docker and confcom prerequisite check passed, CCE policy generated, Confidential and Standard containers deployed, both responding, and a summary listing both endpoint URLs](./images/03-compare-deployment-summary.png)
 
 The script performs the time-consuming setup:
 
@@ -171,8 +269,26 @@ input. The repository's source template remains unchanged.
 5. Open the **Standard** URL and select **Attest**.
 6. Confirm attestation fails because `/dev/sev-guest` is absent.
 
+The generated `side-by-side-compare.html` page places both endpoints next to
+each other. The Confidential pane returns a signed MAA token, while the Standard
+pane fails because the SEV-SNP device is absent:
+
+![Side-by-side browser comparison. Left pane, Confidential SKU, shows an attestation result with TEE sevsnpvm and verdict azure-compliant-uvm. Right pane, Standard SKU, shows Attestation failed because neither /dev/sev-guest nor /dev/sev is present](./images/04-side-by-side-attestation.png)
+
 This negative control matters: identical application code cannot produce the
 hardware report on a non-confidential host.
+
+## Troubleshooting
+
+| Message | Cause | Fix |
+| --- | --- | --- |
+| `The term './Deploy-VisualAttestationV2.ps1' is not recognized...` | Not in the challenge directory, or the repository was not cloned. | Complete Task 0 and `cd` into `walkthrough/challenge-04`. |
+| `running scripts is disabled on this system` | PowerShell execution policy. | `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` |
+| `Not logged in. Run: az login` | Azure CLI has no active session. | `az login`, then confirm with `az account show`. |
+| `Docker is not running. Required by 'az confcom acipolicygen'...` | Docker Desktop is not started. | Start Docker Desktop, wait for it to report *Running*, verify with `docker info`. |
+| `az confcom acipolicygen failed` | Usually Docker not ready, or the ACR login used for layer inspection expired. | Confirm `docker info` works, then run `-Cleanup` and retry from `-Build`. |
+| Container group name already exists / conflicting resources | A previous Challenge 4 run was not cleaned up. | `./Deploy-VisualAttestationV2.ps1 -Cleanup`, then retry. |
+| Confidential SKU capacity or SKU-not-available errors | The region has no Confidential ACI capacity. | Retry later, or select a region that supports Confidential ACI. |
 
 ## Optional deployment modes
 

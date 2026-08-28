@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.41.2.15936",
-      "templateHash": "17782287074782196978"
+      "templateHash": "9296888080003196804"
     }
   },
   "parameters": {
@@ -29,9 +29,32 @@
       "metadata": {
         "description": "Tags to apply to all resources."
       }
+    },
+    "modelCapacity": {
+      "type": "int",
+      "defaultValue": 20,
+      "minValue": 1,
+      "maxValue": 500,
+      "metadata": {
+        "description": "TPM capacity (thousands of tokens/min) for each chat + embedding model\ndeployment. Sized so that a full subscription of labs fits inside the default\nCognitive Services GlobalStandard quota: the platform packs `labsPerSubscription`\n(8) labs into one subscription and region, so the per-region cost of this lab is\n`modelCapacity x 5 x 8`. At the default of 20 that is 800 of the typical 1000-unit\nper-model quota, leaving headroom for other labs sharing the subscription. Raise it\nonly after confirming quota with `az cognitiveservices usage list -l <region>`."
+      }
     }
   },
   "variables": {
+    "copy": [
+      {
+        "name": "llmSupportedModels",
+        "count": "[length(variables('aiFoundryModels'))]",
+        "input": {
+          "name": "[variables('aiFoundryModels')[copyIndex('llmSupportedModels')].name]",
+          "sku": "[variables('aiFoundryModels')[copyIndex('llmSupportedModels')].sku]",
+          "capacity": "[variables('aiFoundryModels')[copyIndex('llmSupportedModels')].capacity]",
+          "modelFormat": "[variables('aiFoundryModels')[copyIndex('llmSupportedModels')].publisher]",
+          "modelVersion": "[variables('aiFoundryModels')[copyIndex('llmSupportedModels')].version]",
+          "retirementDate": "[variables('aiFoundryModels')[copyIndex('llmSupportedModels')].retirementDate]"
+        }
+      }
+    ],
     "hubFoundryAccountName": "[format('aif-hub-{0}', parameters('resourceToken'))]",
     "hubFoundryProjectName": "citadel-hub-project",
     "apimName": "[format('apim-citadel-{0}', parameters('resourceToken'))]",
@@ -79,40 +102,40 @@
         "publisher": "OpenAI",
         "version": "2025-04-14",
         "sku": "GlobalStandard",
-        "capacity": 100,
-        "retirementDate": "2026-10-14"
+        "capacity": "[parameters('modelCapacity')]",
+        "retirementDate": "2027-04-14"
       },
       {
         "name": "gpt-5.4-mini",
         "publisher": "OpenAI",
         "version": "2026-03-17",
         "sku": "GlobalStandard",
-        "capacity": 100,
-        "retirementDate": "2026-09-30"
+        "capacity": "[parameters('modelCapacity')]",
+        "retirementDate": "2027-09-21"
       },
       {
         "name": "gpt-5.2",
         "publisher": "OpenAI",
         "version": "2025-12-11",
         "sku": "GlobalStandard",
-        "capacity": 100,
-        "retirementDate": "2027-02-05"
+        "capacity": "[parameters('modelCapacity')]",
+        "retirementDate": "2027-06-08"
       },
       {
         "name": "text-embedding-3-large",
         "publisher": "OpenAI",
         "version": "1",
         "sku": "GlobalStandard",
-        "capacity": 100,
-        "retirementDate": "2027-04-14"
+        "capacity": "[parameters('modelCapacity')]",
+        "retirementDate": "2028-02-09"
       },
       {
         "name": "Mistral-Large-3",
         "publisher": "Mistral AI",
         "version": "1",
         "sku": "GlobalStandard",
-        "capacity": 100,
-        "retirementDate": "2099-12-30"
+        "capacity": "[parameters('modelCapacity')]",
+        "retirementDate": "2099-12-31"
       },
       {
         "name": "Phi-4",
@@ -120,7 +143,19 @@
         "version": "7",
         "sku": "GlobalStandard",
         "capacity": 1,
-        "retirementDate": "2099-10-14"
+        "retirementDate": "2099-12-31"
+      }
+    ],
+    "llmBackendConfig": [
+      {
+        "backendId": "[variables('hubFoundryAccountName')]",
+        "backendType": "ai-foundry",
+        "endpoint": "[format('https://{0}.openai.azure.com', variables('hubFoundryAccountName'))]",
+        "authScheme": "managedIdentity",
+        "authType": "managed-identity",
+        "priority": 1,
+        "weight": 100,
+        "supportedModels": "[variables('llmSupportedModels')]"
       }
     ]
   },
@@ -1284,7 +1319,11 @@
     },
     "LLM_BACKEND_CONFIG": {
       "type": "string",
-      "value": "[base64(string(createArray(createObject('name', 'gpt-4.1', 'publisher', 'Azure OpenAI', 'endpoint', format('https://{0}.openai.azure.com', variables('hubFoundryAccountName')), 'models', createArray('gpt-4.1')), createObject('name', 'gpt-5.4-mini', 'publisher', 'Azure OpenAI', 'endpoint', format('https://{0}.openai.azure.com', variables('hubFoundryAccountName')), 'models', createArray('gpt-5.4-mini')), createObject('name', 'gpt-5.2', 'publisher', 'Azure OpenAI', 'endpoint', format('https://{0}.openai.azure.com', variables('hubFoundryAccountName')), 'models', createArray('gpt-5.2')), createObject('name', 'text-embedding-3-large', 'publisher', 'Azure OpenAI', 'endpoint', format('https://{0}.openai.azure.com', variables('hubFoundryAccountName')), 'models', createArray('text-embedding-3-large')), createObject('name', 'Mistral-Large-3', 'publisher', 'Azure OpenAI', 'endpoint', format('https://{0}.openai.azure.com', variables('hubFoundryAccountName')), 'models', createArray('Mistral-Large-3')), createObject('name', 'Phi-4', 'publisher', 'Azure OpenAI', 'endpoint', format('https://{0}.openai.azure.com', variables('hubFoundryAccountName')), 'models', createArray('Phi-4')))))]"
+      "value": "[string(variables('llmBackendConfig'))]"
+    },
+    "A2A_FOUNDRY_ACCOUNT_NAME": {
+      "type": "string",
+      "value": "[variables('spokeFoundryAccountName')]"
     },
     "COSMOS_ENDPOINT": {
       "type": "string",

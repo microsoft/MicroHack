@@ -37,7 +37,7 @@
 .PARAMETER SubscriptionId
     Value of the HackboxCredential 'SubscriptionId'.
 .PARAMETER LlmBackendConfig
-    Value of the HackboxCredential 'LlmBackendConfig' (base64 JSON).
+    Value of the HackboxCredential 'LlmBackendConfig' (raw JSON).
 .PARAMETER SpokeKeyVaultName
     Value of the HackboxCredential 'SpokeKeyVaultName'.
 .PARAMETER SpokeAiFoundryAccountName

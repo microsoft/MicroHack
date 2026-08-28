@@ -19,6 +19,15 @@ don't need to provision anything extra beyond confirming your notebook environme
 
 ## ✅ Tasks
 
+> [!IMPORTANT]
+> **Challenge 1 must be completed first — not just its environment setup.**
+> Notebook 1 deploys the APIM **policy fragments** (`set-llm-requested-model`,
+> `validate-model-access`, `set-backend-pools`, `set-target-backend-pool`,
+> `set-backend-authorization`, `set-llm-usage`) that this challenge's product
+> policy includes with `<include-fragment>`. The lab's hub deployment
+> intentionally ships only a minimal gateway, so if you jump straight here the
+> Bicep deployment fails with a *"Policy fragment not found"* error.
+
 ### Part A — Confirm your notebook environment is ready (2 min)
 
 Same prerequisite as every notebook in this MicroHack — see
@@ -56,7 +65,7 @@ Same prerequisite as every notebook in this MicroHack — see
 
 | Symptom | Fix |
 |---------|-----|
-| `azd env get-value` errors | `setup-notebook-env.ps1` hasn't been run — see Part A. |
+| Setup cell raises a missing-key error | Your `challenges/workshop/.env` is missing that key (or you haven't run the `azd` bridge) — see [Challenge 1, Part A](challenge-01.md#part-a--confirm-your-notebook-environment-is-ready-5-min). |
 | Cosmos DB query returns nothing / `Forbidden` | Section `5️⃣.1.1` grants your identity Cosmos DB data-plane access — re-run it and wait a minute for RBAC to propagate. |
 | PII detection doesn't fire on a sample | Confirm the Azure AI Language Service instance is configured and reachable; some PII types need the exact regex/entity category the notebook defines. |
 | Deanonymization returns masked text unchanged | The masking/deanonymization state must be saved via Event Hub first — confirm section `3️⃣.5` ran before attempting deanonymization. |

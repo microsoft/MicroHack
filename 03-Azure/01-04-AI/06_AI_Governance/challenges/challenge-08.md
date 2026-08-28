@@ -13,7 +13,7 @@ disabled.
 
 This notebook:
 
-1. Resolves the agent-hosting Foundry account (the `-0` account) and project from `azd` —
+1. Resolves the agent-hosting Foundry account and project from the environment —
    no hardcoded names.
 2. Temporarily enables public network access on that account so the notebook can reach
    its data plane.
@@ -25,6 +25,13 @@ This notebook:
    [Challenge 3](challenge-03.md).
 7. Calls the agent through APIM with just a subscription key — proving APIM reaches it
    over its private endpoint even with public access disabled.
+
+> [!IMPORTANT]
+> Upstream, this notebook finds the agent-hosting account by looking for a backend id
+> ending in `-0`. This lab names its Foundry accounts `aif-hub-*` / `aif-spoke-*`, so
+> that lookup finds nothing. Set **`A2A_FOUNDRY_ACCOUNT_NAME`** in your
+> `challenges/workshop/.env` to the **`A2aFoundryAccountName`** value from your
+> dashboard (it's the spoke Foundry account) and the notebook resolves it directly.
 
 ## ✅ Tasks
 
@@ -71,7 +78,7 @@ Same prerequisite as every notebook in this MicroHack — see
 
 | Symptom | Fix |
 |---------|-----|
-| `azd env get-value` errors | `setup-notebook-env.ps1` hasn't been run — see Part A. |
+| Setup cell raises a missing-key error | Your `challenges/workshop/.env` is missing that key (or you haven't run the `azd` bridge) — see [Challenge 1, Part A](challenge-01.md#part-a--confirm-your-notebook-environment-is-ready-5-min). |
 | `500` — backend "name is valid, but no data of the requested type was found" | A DNS/network error: APIM can't reach the agent's Foundry host. Confirm you're publishing through the APIM in the **same** azd environment as the agent. |
 | `500` with a managed-identity error in the trace | APIM had no usable identity — section `10.3` auto-detects system- vs. user-assigned identity; if user-assigned, confirm the `client-id` was pinned. |
 | `401`/`403` from the backend | The APIM managed identity lacks an Azure AI role (e.g. **Cognitive Services User**) on the agent's Foundry account — `azd up` grants this by default, but role propagation can take a few minutes. |

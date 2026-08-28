@@ -63,10 +63,25 @@ $ErrorActionPreference = "Stop"
 $candidateRegions = if ($PreferredLocation.Count -gt 0) { $PreferredLocation } else { @("swedencentral", "westeurope", "norwayeast") }
 
 $scriptPath = Split-Path -Parent $MyInvocation.MyCommand.Definition
-$bicepFile = Join-Path $scriptPath 'infra/resources.bicep'
 
-if (-not (Test-Path $bicepFile)) {
-    throw "Bicep template not found at '$bicepFile'. Ensure infra/resources.bicep exists."
+# Prefer the pre-compiled ARM template. New-AzResourceGroupDeployment -TemplateFile *.bicep
+# shells out to the standalone Bicep CLI, which is NOT guaranteed to exist on the platform
+# deployment host (the az-CLI-bundled bicep in ~/.azure/bin is invisible to Az PowerShell).
+# infra/resources.json is committed alongside the Bicep source precisely so deployment has no
+# local toolchain dependency; fall back to the .bicep source only if it is missing.
+$armFile   = Join-Path $scriptPath 'infra/resources.json'
+$bicepSrc  = Join-Path $scriptPath 'infra/resources.bicep'
+
+if (Test-Path $armFile) {
+    $templateFile = $armFile
+    $templateKind = 'compiled ARM (infra/resources.json)'
+}
+elseif (Test-Path $bicepSrc) {
+    $templateFile = $bicepSrc
+    $templateKind = 'Bicep source (infra/resources.bicep, requires Bicep CLI)'
+}
+else {
+    throw "No deployment template found. Expected 'infra/resources.json' (preferred) or 'infra/resources.bicep' under '$scriptPath'."
 }
 
 # --- Resolve the resource group per the platform contract -------------------
@@ -108,17 +123,17 @@ if ($AllowedEntraUserIds.Count -eq 0) {
 }
 
 Write-Host "[INFO]  Deploying Citadel Agentic Governance Hub + Spoke into RG '$effectiveRG'..."
-Write-Host "[INFO]  Engine: Bicep (infra/resources.bicep), resource-group-scoped."
+Write-Host "[INFO]  Engine: $templateKind, resource-group-scoped."
 
 $deployOutputs = $null
 $effectiveLocation = $null
 
 foreach ($region in $candidateRegions) {
-    Write-Host "[INFO]  Deploying Bicep → RG '$effectiveRG' in '$region' (token '$resourceToken')..."
+    Write-Host "[INFO]  Deploying → RG '$effectiveRG' in '$region' (token '$resourceToken')..."
     try {
         $d = New-AzResourceGroupDeployment `
             -ResourceGroupName $effectiveRG `
-            -TemplateFile $bicepFile `
+            -TemplateFile $templateFile `
             -location $region `
             -resourceToken $resourceToken `
             -tags $tags `
@@ -136,22 +151,36 @@ foreach ($region in $candidateRegions) {
             $retryable = [bool](Test-MhhDeploymentFailureRetryable -ErrorRecord $_)
         }
         if (-not $retryable) {
-            throw "Bicep deployment failed in '$region' with a non-retryable error (retrying other regions would fail the same way): $_"
+            throw "Deployment failed in '$region' with a non-retryable error (retrying other regions would fail the same way): $_"
         }
-        Write-Host "[WARN]  Bicep deployment failed in '$region': $_ — trying next region."
+        Write-Host "[WARN]  Deployment failed in '$region': $_ — trying next region."
     }
 }
 
 if (-not $deployOutputs) {
-    throw "Bicep deployment failed in all candidate regions: $($candidateRegions -join ', ')"
+    throw "Deployment failed in all candidate regions: $($candidateRegions -join ', ')"
 }
 
 Write-Host "[OK]    Provisioning complete in '$effectiveLocation' (resource group '$effectiveRG')."
 
 # --- Deployment output helper (used by the RBAC block and the dashboard block) ---
+# ARM does NOT preserve the casing of output names. A template output declared as
+# APIM_GATEWAY_URL comes back from Azure as 'apiM_GATEWAY_URL' (ARM lowercases the leading
+# run of capitals, keeping only the last one), and APPLICATIONINSIGHTS_CONNECTION_STRING
+# comes back as 'applicationinsightS_CONNECTION_STRING'. The returned collection is a
+# case-SENSITIVE dictionary, so a literal ContainsKey($Key) misses every single output —
+# which silently blanks both participant RBAC and every dashboard credential.
+# Normalising both sides to upper case is exact: mangling only ever changes letter casing.
 function Get-OutVal {
     param($Outputs, [string]$Key)
-    if ($Outputs -and $Outputs.ContainsKey($Key)) { return "$($Outputs[$Key].Value)" }
+    if (-not $Outputs) { return '' }
+
+    if ($Outputs.ContainsKey($Key)) { return "$($Outputs[$Key].Value)" }
+
+    $target = $Key.ToUpperInvariant()
+    foreach ($k in $Outputs.Keys) {
+        if ($k.ToUpperInvariant() -eq $target) { return "$($Outputs[$k].Value)" }
+    }
     return ''
 }
 
@@ -193,9 +222,12 @@ $spokeAiId      = Get-OutVal $deployOutputs 'SPOKE_APP_INSIGHTS_RESOURCE_ID'
 $apimResourceId = Get-OutVal $deployOutputs 'APIM_RESOURCE_ID'
 $acrId          = Get-OutVal $deployOutputs 'SPOKE_ACR_RESOURCE_ID'
 
-# RBAC role IDs (built-in)
+# RBAC role IDs (built-in). Matched by GUID, never by display name: Azure has since renamed
+# 'Azure AI User' to 'Foundry User' and 'Azure AI Project Manager' to 'Foundry Project Manager'.
+# The GUIDs are stable, so the grants still work — but expect the NEW names in the portal and
+# in `az role assignment list` when verifying a participant's access.
 $foundryRoles = [ordered]@{
-    'Azure AI User'           = '53ca6127-db72-4b80-b1b0-d745d6d5456d'
+    'Azure AI User'           = '53ca6127-db72-4b80-b1b0-d745d6d5456d'  # portal: 'Foundry User'
     'Cognitive Services User' = 'a97b65f3-24c7-4388-baec-2e87135dc908'
 }
 
@@ -207,11 +239,14 @@ $foundryRoles = [ordered]@{
 # Optional target so a tenant that restricts this role fails challenges 7-9 only, rather
 # than failing the whole provision for the core challenges 1-6.
 $spokeProjectMgmtRoles = [ordered]@{
-    'Azure AI Project Manager' = 'eadc314b-1a2d-4efa-be10-5d325db5065e'
+    'Azure AI Project Manager' = 'eadc314b-1a2d-4efa-be10-5d325db5065e'  # portal: 'Foundry Project Manager'
 }
 
 $keyVaultRoles = [ordered]@{
-    'Key Vault Secrets Officer' = 'b86a8fe4-44ce-4948-aee5-eccb2c155090'
+    # Verified against the live built-in role definition. Do not "correct" this GUID by hand:
+    # the suffix is ...155cd7, NOT ...155090 (an earlier typo here silently failed every
+    # Key Vault grant with RoleDefinitionDoesNotExist).
+    'Key Vault Secrets Officer' = 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7'
 }
 
 $monitoringRoles = [ordered]@{
@@ -530,12 +565,13 @@ if ($piiAnalyticsId) {
 }
 
 if ($llmBackendConfig) {
-    @{ HackboxCredential = @{ name = 'LlmBackendConfig'; value = $llmBackendConfig; note = 'Base64-encoded LLM backend routing config. Maps to notebook azd env key LLM_BACKEND_CONFIG' } }
+    @{ HackboxCredential = @{ name = 'LlmBackendConfig'; value = $llmBackendConfig; note = 'LLM backend routing config as raw JSON. Maps to notebook azd env key LLM_BACKEND_CONFIG' } }
 }
 
 if ($spokeFoundryAccountNameOut) {
     @{ HackboxCredential = @{ name = 'SpokeFoundryAccountName'; value = $spokeFoundryAccountNameOut; note = 'Spoke Foundry account name (Notebooks 7-9)' } }
     @{ HackboxCredential = @{ name = 'SpokeAiFoundryAccountName'; value = $spokeFoundryAccountNameOut; note = 'Alias of SpokeFoundryAccountName. Maps to notebook azd env key SPOKE_AI_FOUNDRY_ACCOUNT_NAME' } }
+    @{ HackboxCredential = @{ name = 'A2aFoundryAccountName'; value = $spokeFoundryAccountNameOut; note = 'Agent-hosting Foundry account for Challenge 8. Maps to notebook env key A2A_FOUNDRY_ACCOUNT_NAME' } }
 }
 if ($spokeFoundryProjectNameOut) {
     @{ HackboxCredential = @{ name = 'SpokeFoundryProjectName'; value = $spokeFoundryProjectNameOut; note = 'Spoke Foundry project name (Notebooks 7-9)' } }

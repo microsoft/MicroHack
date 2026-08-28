@@ -67,9 +67,11 @@ Your lab automation deploys:
   the later challenges call for.
 
 Each challenge exercises one governance capability against these resources, using the
-Citadel workshop's own Jupyter notebooks — unmodified, and already fully documented with
-their own numbered sections, so the challenge files here exist to orient you and point
-you at the right notebook, not to restate what's already in it.
+Citadel workshop's own Jupyter notebooks — kept as close to upstream as possible, and
+already fully documented with their own numbered sections, so the challenge files here
+exist to orient you and point you at the right notebook, not to restate what's already
+in it. (The only change made to them is in each notebook's first setup cell, so that
+configuration can be read from the environment as well as from `azd`.)
 
 ## Requirements
 
@@ -77,19 +79,29 @@ To complete this MicroHack you'll need:
 
 - Your lab's attendee credentials (`HackboxCredential` values) from the MicroHack
   dashboard — resource group, subscription, and the Spoke Foundry/Key Vault/ACR names.
-- `azd` installed, so [`setup-notebook-env.ps1`](labautomation/README.md#notebook-environment-setup)
-  can bridge those credentials into a local `azd` environment the (unchanged) workshop
-  notebooks read via `azd env get-value`.
 - The Azure CLI (`az`), logged in (`az login`) against your lab's subscription/tenant.
 - The workshop's Python environment set up (`uv sync` — see
   [`challenges/workshop/readme.md`](challenges/workshop/readme.md) — or
   `pip install -r requirements.txt` from the `challenges/workshop/` folder).
 - Comfort running and reading Jupyter notebooks in VS Code.
 
+`azd` is **optional**. The notebooks read their configuration from the environment
+first, so you can simply paste your dashboard values into a `.env` file:
+
+```bash
+cd challenges/workshop
+cp .env.template .env      # then fill in the values from your dashboard
+```
+
+If you'd rather use the original `azd`-based workflow, install `azd` and run
+[`setup-notebook-env.ps1`](labautomation/README.md#notebook-environment-setup)
+instead — the notebooks fall back to `azd env get-value` for any key that isn't
+already set in the environment. Both routes work; you only need one.
+
 > [!TIP]
-> **You're ready to start when** you've run `setup-notebook-env.ps1` once with your
-> dashboard's credentials (see [Challenge 1, Part A](challenges/challenge-01.md)) and can
-> open the first workshop notebook without any `azd env get-value` errors.
+> **You're ready to start when** `challenges/workshop/.env` holds your dashboard
+> values (see [Challenge 1, Part A](challenges/challenge-01.md)) and you can open the
+> first workshop notebook and run its setup cell without errors.
 
 ## Challenges
 

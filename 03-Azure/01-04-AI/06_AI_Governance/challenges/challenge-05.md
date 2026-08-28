@@ -56,7 +56,7 @@ Same prerequisite as every notebook in this MicroHack — see
 
 | Symptom | Fix |
 |---------|-----|
-| `azd env get-value` errors | `setup-notebook-env.ps1` hasn't been run — see Part A. |
+| Setup cell raises a missing-key error | Your `challenges/workshop/.env` is missing that key (or you haven't run the `azd` bridge) — see [Challenge 1, Part A](challenge-01.md#part-a--confirm-your-notebook-environment-is-ready-5-min). |
 | Cosmos DB query returns nothing / `Forbidden` | Section `5️⃣.1.1` grants your identity Cosmos DB data-plane access — re-run it and wait a minute for RBAC to propagate. |
 | PII detection doesn't fire on a sample | Confirm the Azure AI Language Service instance is configured and reachable; some PII types need the exact regex/entity category the notebook defines. |
 | Deanonymization returns masked text unchanged | The masking/deanonymization state must be saved via Event Hub first — confirm section `3️⃣.5` ran before attempting deanonymization. |

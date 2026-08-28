@@ -12,7 +12,8 @@ Duration: 30 min
 
 This challenge is driven by
 [`challenges/workshop/4. citadel-agent-frameworks-tests.ipynb`](../../challenges/workshop/4.%20citadel-agent-frameworks-tests.ipynb).
-The notebook is the **unmodified upstream Citadel workshop notebook** and is the
+The notebook is the upstream Citadel workshop notebook (unchanged apart from its
+setup cell, which now also reads configuration from the environment) and is the
 authoritative solution — it contains the working code, the expected output, and its own
 `📊 Results Summary` cell.
 

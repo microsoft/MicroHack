@@ -16,7 +16,8 @@ Duration: 35 min
 
 This challenge is driven by
 [`challenges/workshop/8. publish-and-use-a2a-endpoint.ipynb`](../../challenges/workshop/8.%20publish-and-use-a2a-endpoint.ipynb).
-The notebook is the **unmodified upstream Citadel workshop notebook** and is the
+The notebook is the upstream Citadel workshop notebook (unchanged apart from its
+setup cell, which now also reads configuration from the environment) and is the
 authoritative solution — it contains the working code, the expected output, and its own
 `📊 Results Summary` cell.
 

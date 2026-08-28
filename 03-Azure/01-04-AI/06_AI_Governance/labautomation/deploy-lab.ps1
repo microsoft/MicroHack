@@ -571,6 +571,7 @@ if ($llmBackendConfig) {
 if ($spokeFoundryAccountNameOut) {
     @{ HackboxCredential = @{ name = 'SpokeFoundryAccountName'; value = $spokeFoundryAccountNameOut; note = 'Spoke Foundry account name (Notebooks 7-9)' } }
     @{ HackboxCredential = @{ name = 'SpokeAiFoundryAccountName'; value = $spokeFoundryAccountNameOut; note = 'Alias of SpokeFoundryAccountName. Maps to notebook azd env key SPOKE_AI_FOUNDRY_ACCOUNT_NAME' } }
+    @{ HackboxCredential = @{ name = 'A2aFoundryAccountName'; value = $spokeFoundryAccountNameOut; note = 'Agent-hosting Foundry account for Challenge 8. Maps to notebook env key A2A_FOUNDRY_ACCOUNT_NAME' } }
 }
 if ($spokeFoundryProjectNameOut) {
     @{ HackboxCredential = @{ name = 'SpokeFoundryProjectName'; value = $spokeFoundryProjectNameOut; note = 'Spoke Foundry project name (Notebooks 7-9)' } }

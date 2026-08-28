@@ -13,7 +13,7 @@ right operation for each model (chat completions, embeddings, or the Responses A
 
 This challenge deploys its own **Access Contract** (an APIM product + subscription) via
 Bicep — a dynamically generated product policy with no model RBAC restriction and a
-generous capacity allocation. Make sure your `setup-notebook-env.ps1` bridge is already
+generous capacity allocation. Make sure your notebook configuration is already
 in place (see [Challenge 1, Part A](challenge-01.md#part-a--confirm-your-notebook-environment-is-ready-5-min))
 before you start.
 
@@ -21,9 +21,9 @@ before you start.
 
 ### Part A — Confirm your notebook environment is ready (2 min)
 
-Same prerequisite as every notebook in this MicroHack: confirm
-[`setup-notebook-env.ps1`](../labautomation/README.md#notebook-environment-setup) has
-been run for your attendee credentials.
+Same prerequisite as every notebook in this MicroHack: confirm your attendee
+credentials are in `challenges/workshop/.env` (or bridged via `azd`) — see
+[Challenge 1, Part A](challenge-01.md#part-a--confirm-your-notebook-environment-is-ready-5-min).
 
 ### Part B — Run the Universal LLM API validation notebook (25 min)
 
@@ -59,7 +59,7 @@ been run for your attendee credentials.
 
 | Symptom | Fix |
 |---------|-----|
-| `azd env get-value` errors | `setup-notebook-env.ps1` hasn't been run — see Part A. |
+| Setup cell raises a missing-key error | Your `challenges/workshop/.env` is missing that key (or you haven't run the `azd` bridge) — see [Challenge 1, Part A](challenge-01.md#part-a--confirm-your-notebook-environment-is-ready-5-min). |
 | A model in the catalogue fails every operation | Check whether that backend was onboarded in [Challenge 1](challenge-01.md) or is otherwise disabled in APIM. |
 | Responses API calls fail for a `gpt` model | Some models don't implement the Responses API trio — the notebook's classification is a heuristic based on the model name, not a guarantee. |
 

@@ -84,13 +84,13 @@ Two details are load-bearing for **challenge 7**, which builds a hosted agent co
 - The ACR has **`adminUserEnabled: false`**. The notebook builds with `az acr build` (cloud
   build, no local Docker) and the agent pulls via managed identity, so admin credentials are
   never needed. `SPOKE_RESOURCE_GROUP` is emitted as the same value as `ResourceGroup`, which
-  is what the unchanged notebooks read.
+  is what the notebooks read.
 
 ## What the Attendee Receives
 
 The platform dashboard surfaces these credentials as `HackboxCredential` objects.
 The **Notebook azd Key** column is what the corresponding value must be set to via
-`setup-notebook-env.ps1` for the unchanged workshop notebooks to consume it via
+`setup-notebook-env.ps1` for the workshop notebooks to consume it via
 `azd env get-value` (see [Notebook Environment Setup](#notebook-environment-setup) below).
 
 | Credential | Used For | Notebook azd Key |
@@ -120,9 +120,17 @@ dashboard label matches the `SPOKE_AI_FOUNDRY_*` key the notebooks expect.
 
 ## Notebook Environment Setup
 
-The workshop notebooks are unchanged and call `azd env get-value <KEY>` for their
+The workshop notebooks read their settings from the environment first and fall back
+to `azd env get-value <KEY>` for their
 configuration — but this lab deploys with `deploy-lab.ps1` (PowerShell/Bicep), not
 `azd up`, so there's no azd environment for them to read by default.
+
+> [!NOTE]
+> This script is **optional**. Because the notebooks now read `os.environ` first, the
+> simpler path for attendees is to copy `challenges/workshop/.env.template` to `.env`
+> and paste in their dashboard values — no `azd` install required. Use this script when
+> you want the original azd-based workflow, or to provision attendees' environments
+> programmatically.
 
 Run [`setup-notebook-env.ps1`](setup-notebook-env.ps1) once per attendee, using the
 `HackboxCredential` values from the dashboard, to bridge the gap:

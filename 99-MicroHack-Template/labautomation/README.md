@@ -81,6 +81,7 @@ Key points for integration:
   - [Folder layout](#folder-layout)
   - [`lab-defaults.json`](#lab-defaultsjson)
     - [Fields](#fields)
+    - [Cost forecasting formula](#cost-forecasting-formula)
     - [`groups`: supported values](#groups-supported-values)
     - [`deploymentType`: what each value means for your script](#deploymenttype-what-each-value-means-for-your-script)
   - [`deploy-lab.ps1`](#deploy-labps1)
@@ -110,8 +111,8 @@ Key points for integration:
     - [`Remove-MhhTofuWorkspace`](#remove-mhhtofuworkspace)
     - [`Invoke-MhhDeploymentWithRegionFallback`](#invoke-mhhdeploymentwithregionfallback)
     - [`Test-MhhDeploymentFailureRetryable`](#test-mhhdeploymentfailureretryable)
+    - [`Remove-MhhResourceGroup`](#remove-mhhresourcegroup)
   - [Authoring guidelines](#authoring-guidelines)
-  - [Image scope](#image-scope)
 
 ## Folder layout
 
@@ -508,6 +509,64 @@ Rules:
   `Resource Group Name`, `Entra ID *`, `Portal URL *`) and emits them itself.
   Attempts to emit a reserved name are silently dropped.
 
+#### Passwords and re-runs
+
+A credential is stored the moment you emit it, and the participant may already
+be using it. If a re-run (an idempotent redeploy, or a region-fallback retry that
+wipes and recreates the resource group) generates a *new* random password, the
+one on the dashboard silently stops working.
+
+So **derive credentials, do not randomise them**:
+
+```powershell
+$vmPassword = New-MhhStablePassword -Purpose 'vm-admin'
+```
+
+[`New-MhhStablePassword`](#new-mhhstablepassword) returns the same value on every
+run for a given lab and purpose, so the dashboard stays correct no matter how
+often the script runs.
+
+### Cleaning up
+
+You normally **do not clean up**: the platform deletes the participant's scope when
+the event ends. Two cases need action from your script:
+
+- **You hand-roll a region fallback with the Azure CLI or OpenTofu.** Neither path
+  can use [`Invoke-MhhDeploymentWithRegionFallback`](#invoke-mhhdeploymentwithregionfallback),
+  so when the first region does not offer capacity, you have to wipe the resource
+  group and recreate it in the next `$PreferredLocation` region yourself. Two
+  things to get right:
+
+  1. Use [`Remove-MhhResourceGroup`](#remove-mhhresourcegroup) rather than
+     `Remove-AzResourceGroup`, so backup vaults are drained first and
+     soft-deletable names (Key Vault, Cognitive Services / AI Foundry, App
+     Configuration, APIM, ML workspaces) are purged afterwards. Otherwise the
+     retry in the next region collides with its own leftovers.
+  2. **Deleting the resource group also deletes the participant's `Owner`
+     assignment on it.** Re-grant `Owner` to every ID in `$AllowedEntraUserIds`
+     after you recreate the group, or the user loses access to their own lab.
+
+  ```powershell
+  Remove-MhhResourceGroup -ResourceGroupName $ResourceGroupName | Out-Null
+  New-AzResourceGroup -Name $ResourceGroupName -Location $nextLocation | Out-Null
+
+  foreach ($id in $AllowedEntraUserIds) {
+      New-AzRoleAssignment -ObjectId $id -RoleDefinitionName 'Owner' `
+          -ResourceGroupName $ResourceGroupName -ErrorAction SilentlyContinue | Out-Null
+  }
+  ```
+
+- **You used OpenTofu and deleted the resource group.** Drop the isolated working
+  directory too with
+  [`Remove-MhhTofuWorkspace`](#remove-mhhtofuworkspace), so the next run does not
+  reuse the previous run's state.
+
+For Bicep/ARM labs none of this applies:
+[`Invoke-MhhDeploymentWithRegionFallback`](#invoke-mhhdeploymentwithregionfallback)
+does the teardown, the recreate in the next region and the `Owner` re-grant on
+every attempt, as long as you pass `$AllowedEntraUserIds` to
+`-RgOwnerEntraObjectIds`.
+
 ### Local testing
 
 You can run `deploy-lab.ps1` and `shared-deploy-lab.ps1` on your own machine in
@@ -734,10 +793,15 @@ $sqlPassword = New-MhhStablePassword -Purpose 'sql-admin' -Length 24
 | --- | --- |
 | `Purpose` (`string`, positional 0) | Distinguishes multiple passwords within one lab (`vm-admin`, `sql-admin`, …). Different purposes give unrelated passwords for the same lab. Default `default`. |
 | `Length` (`int`, 16 - 128) | Default 16. |
+| `SubscriptionId` (`string`) | Scope override. Defaults to the lab's subscription (`$env:MHH_LAB_SUBSCRIPTION_ID`). Leave it alone. |
+| `ResourceGroupName` (`string`) | Scope override. Defaults to the lab's resource group (`$env:MHH_LAB_RESOURCE_GROUP`), empty for subscription-scoped labs. Leave it alone. |
+| `Secret` (`string`) | Overrides the derivation seed. Local development and tests only; on the platform the seed is injected for you. |
 | `AsSecureString` (`switch`) | Return a `SecureString`, useful for a Bicep `@secure()` parameter. |
 
 - **Scoped to the lab, so no two participants share a password.** The scope comes
-  from the platform, so in practice you pass only `-Purpose`.
+  from the platform via `SubscriptionId` / `ResourceGroupName`, so in practice you
+  pass only `-Purpose`. Overriding either of them changes the derived password and
+  breaks the "same value on every re-run" guarantee.
 - **Output is `[A-Za-z0-9]` only**, so it survives connection strings, YAML, JSON
   and shell quoting with no escaping, and always contains at least one lowercase,
   one uppercase and one digit, enough for the Azure VM and SQL "3 of 4 character
@@ -839,7 +903,7 @@ Invoke-MhhSynchronized -Name 'shared-vnet' {
 | Parameter | Description |
 | --- | --- |
 | `ScriptBlock` (`scriptblock`, required, positional 0) | Critical section to run while holding the lock. Its output and exceptions pass through unchanged. |
-| `Name` (`string`, positional 1) | Case-insensitive lock name. Use 1-64 characters from `[A-Za-z0-9_-]`; Must start with a letter or number. Default `Default`. |
+| `Name` (`string`, positional 1) | Case-insensitive lock name. 1-64 characters from `[A-Za-z0-9._-]`; `.` and `..` are rejected because the name becomes a path component. Default `Default`. |
 | `TimeoutSeconds` (`int`, 1-86400) | Maximum time to wait for the lock before throwing. Default 900. |
 | `MaxSleepDelayMilliseconds` (`int`, 250-1000000) | Maximum random delay after releasing a lock, applied only when this call had to queue. Default 1000. |
 
@@ -976,7 +1040,7 @@ On failure the error is classified by
 If every region is exhausted, the helper throws
 `RegionFallbackExhausted: …` with a per-attempt summary.
 
-**Key parameters (integration view):**
+**Parameters:**
 
 | Parameter | What to pass |
 | --- | --- |
@@ -987,7 +1051,8 @@ If every region is exhausted, the helper throws
 | `TemplateParameterObject` (`hashtable`) | Your template parameters. Mutually exclusive with `TemplateParameterFile`. |
 | `TemplateParameterFile` (`string`) | Parameter file path. Mutually exclusive with `TemplateParameterObject`. |
 | `DeploymentNamePrefix` (`string`) | Prefix for the ARM deployment name (final name includes region + timestamp). Default `mhh`. |
-| `MaxAttempts` (`int`) | Caps total attempts. Default `0` = one per region. |
+| `MaxAttempts` (`int`, 0–50) | Caps total attempts. Default `0` = one per region. |
+| `CleanupTimeoutSeconds` (`int`, 60–3600) | Per-attempt poll timeout for "is the resource group gone yet?" before the recreate. Raise it for labs whose resources are slow to delete; the helper throws `RegionFallbackCleanupTimeout: …` when it expires. Default `600`. |
 | `SameRegionRetryBudget` (`int`, 0–5) | Extra retries inside the same region for transient codes before rotating. Default `1`. |
 | `Tag` (`hashtable`) | Tags applied to the RG on each recreate. |
 | `PreDeployHook` (`scriptblock`) | Optional. Invoked after RG create, before deployment. Receives the chosen location as a positional argument. Use it to e.g. `Register-AzResourceProvider` for that region. |
@@ -1115,6 +1180,38 @@ For most labs, prefer
 [`Invoke-MhhDeploymentWithRegionFallback`](#invoke-mhhdeploymentwithregionfallback)
 and you won't need to call this directly.
 
+### `Remove-MhhResourceGroup`
+
+Hard-delete a resource group **and release every name it held**, so the same
+template can be redeployed with the same names. A plain
+`Remove-AzResourceGroup` is not enough: backup vaults block the delete, and
+soft-deletable resources (Key Vault, Cognitive Services / OpenAI / AI Foundry,
+Managed HSM, App Configuration, API Management, ML workspaces) keep their names
+reserved afterwards, so a retry collides with its own leftovers.
+
+This is what
+[`Invoke-MhhDeploymentWithRegionFallback`](#invoke-mhhdeploymentwithregionfallback)
+uses internally. Call it directly only if you tear an RG down outside that
+helper. It requires an active Az context, or an explicit `-SubscriptionId`.
+
+```powershell
+$teardown = Remove-MhhResourceGroup -ResourceGroupName $ResourceGroupName
+if ($teardown.Errors.Count -gt 0) { $teardown.Errors | ForEach-Object { Write-Warning $_ } }
+```
+
+| Parameter | Description |
+| --- | --- |
+| `ResourceGroupName` (`string`, required) | The resource group to tear down. Owned entirely by this cmdlet. |
+| `SubscriptionId` (`string`) | Defaults to the current Az context's subscription. |
+| `CleanupTimeoutSeconds` (`int`, 60-3600) | Poll timeout for "is the RG gone?". Throws `RegionFallbackCleanupTimeout: …` when it expires. Default 600. |
+| `SkipSoftDeletePurge` (`switch`) | Delete the RG but leave soft-deleted names reserved. Off by default. |
+
+**Return value** (a hashtable): `ResourceGroupName`, `Existed`,
+`ManifestCaptured`, `LocksRemoved`, `VaultsDrained`, `WorkspacesPurged`,
+`SoftDeletedPurged`, `Errors`. `ManifestCaptured` is `$false` when the
+pre-delete resource enumeration failed, which means the RG was deleted without a
+complete soft-delete purge.
+
 ## Authoring guidelines
 
 - **Write for exactly one lab.** Your script is executed once per participant in
@@ -1128,18 +1225,25 @@ and you won't need to call this directly.
   `-ErrorAction SilentlyContinue` + `if (-not …)` patterns, or
   `New-AzResourceGroupDeployment` with the same deployment name. For generated
   secrets, see [Passwords and re-runs](#passwords-and-re-runs).
-- **Prefer `Invoke-MhhDeploymentWithRegionFallback` for RG-scoped Bicep/ARM
-  deployments.** It handles RG recreate, Owner re-grant, region fallback, and
+- **Prefer `Invoke-MhhDeploymentWithRegionFallback` for RG-scoped Bicep/ARM deployments.**
+  It handles RG recreate, Owner re-grant, region fallback, and
   failure classification for you; see
   [the helper docs](#invoke-mhhdeploymentwithregionfallback).
+- **Never delete a resource group with `Remove-AzResourceGroup` or `az group delete`.**
+  Both leave the lab in a state a redeploy cannot recover from:
+  backup vaults block the delete, and soft-deletable resources (Key Vault,
+  Cognitive Services / AI Foundry, Managed HSM, App Configuration, APIM, ML
+  workspaces) keep their names reserved, so recreating the same lab collides
+  with its own leftovers. Use [`Remove-MhhResourceGroup`](#remove-mhhresourcegroup) instead, and re-grant
+  `Owner` to `$AllowedEntraUserIds` after you recreate the group; see [Cleaning up](#cleaning-up).
+- **It is not recommended use `Remove-MhhResourceGroup` for bicep / ARM deployments to recover from failures.** Instead use `Invoke-MhhDeploymentWithRegionFallback` to deploy and handle the cleanup safely.
 - **Prefer Bicep/ARM over OpenTofu.** OpenTofu is supported, but it has three major drawbacks in the environment:
 
    1. OpenTofu state does not survive a rescheduled deployment,
    2. OpenTofu has currently no region-fallback or failure-classification helper.
    3. OpenTofu deployments running past ~90 minutes cannot be refreshed, so a single `tofu apply` that takes too long will fail with `AADSTS700024` and leave the lab in an unknown state.
 
-   If you do use it, **never shell out to `tofu` directly, always use
-  `Invoke-MhhTofuCommand`**; a bare `tofu` misses the isolated working directory,
+   If you do use it, **never shell out to `tofu` directly, always use  `Invoke-MhhTofuCommand`**; a bare `tofu` misses the isolated working directory,
   the authentication and the credential refresh. See
   [Deploying with OpenTofu](#deploying-with-opentofu).
 - **Honour `$PreferredLocation`, but skip unsupported regions.** Iterate

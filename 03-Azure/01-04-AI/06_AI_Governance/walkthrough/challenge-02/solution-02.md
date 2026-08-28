@@ -12,7 +12,8 @@ Duration: 25 min
 
 This challenge is driven by
 [`challenges/workshop/2. citadel-universal-llm-api-all-models-tests.ipynb`](../../challenges/workshop/2.%20citadel-universal-llm-api-all-models-tests.ipynb).
-The notebook is the **unmodified upstream Citadel workshop notebook** and is the
+The notebook is the upstream Citadel workshop notebook (unchanged apart from its
+setup cell, which now also reads configuration from the environment) and is the
 authoritative solution — it contains the working code, the expected output, and its own
 `📊 Results Summary` cell.
 

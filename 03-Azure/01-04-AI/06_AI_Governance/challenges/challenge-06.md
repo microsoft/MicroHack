@@ -19,6 +19,15 @@ start.
 
 ## ✅ Tasks
 
+> [!IMPORTANT]
+> **Challenge 1 must be completed first — not just its environment setup.**
+> Notebook 1 deploys the APIM **policy fragments** (`set-llm-requested-model`,
+> `validate-model-access`, `set-backend-pools`, `set-target-backend-pool`,
+> `set-backend-authorization`, `set-llm-usage`) that this challenge's product
+> policy includes with `<include-fragment>`. The lab's hub deployment
+> intentionally ships only a minimal gateway, so if you jump straight here the
+> Bicep deployment fails with a *"Policy fragment not found"* error.
+
 ### Part A — Confirm your notebook environment is ready (2 min)
 
 Same prerequisite as every notebook in this MicroHack — see
@@ -69,7 +78,7 @@ Same prerequisite as every notebook in this MicroHack — see
 
 | Symptom | Fix |
 |---------|-----|
-| `azd env get-value` errors | `setup-notebook-env.ps1` hasn't been run — see Part A. |
+| Setup cell raises a missing-key error | Your `challenges/workshop/.env` is missing that key (or you haven't run the `azd` bridge) — see [Challenge 1, Part A](challenge-01.md#part-a--confirm-your-notebook-environment-is-ready-5-min). |
 | Test 3 (Responses API) or Test 4 (Gemini) show as skipped | These are conditional on your onboarded backends supporting that pattern — not every lab environment configures a Gemini backend. |
 | Load test (Test 6) shows only `200`s, no `429`s | Capacity limits are per-contract; the load may not be high enough to trip the token bucket — increase the burst size in that cell. |
 

@@ -19,11 +19,19 @@ explore optional Key Vault and Microsoft Foundry connection integrations.
 
 The Foundry connection name(s) this notebook prints are consumed by
 [Challenge 4](challenge-04.md), so keep this notebook's output around before moving on.
-As always, confirm
-[`setup-notebook-env.ps1`](../labautomation/README.md#notebook-environment-setup) has
-already been run.
+As always, confirm your notebook configuration is in place — see
+[Challenge 1, Part A](challenge-01.md#part-a--confirm-your-notebook-environment-is-ready-5-min).
 
 ## ✅ Tasks
+
+> [!IMPORTANT]
+> **Challenge 1 must be completed first — not just its environment setup.**
+> Notebook 1 deploys the APIM **policy fragments** (`set-llm-requested-model`,
+> `validate-model-access`, `set-backend-pools`, `set-target-backend-pool`,
+> `set-backend-authorization`, `set-llm-usage`) that this challenge's product
+> policy includes with `<include-fragment>`. The lab's hub deployment
+> intentionally ships only a minimal gateway, so if you jump straight here the
+> Bicep deployment fails with a *"Policy fragment not found"* error.
 
 ### Part A — Confirm your notebook environment is ready (2 min)
 
@@ -64,9 +72,9 @@ Same prerequisite as every notebook in this MicroHack — see
 
 | Symptom | Fix |
 |---------|-----|
-| `azd env get-value` errors | `setup-notebook-env.ps1` hasn't been run — see Part A. |
+| Setup cell raises a missing-key error | Your `challenges/workshop/.env` is missing that key (or you haven't run the `azd` bridge) — see [Challenge 1, Part A](challenge-01.md#part-a--confirm-your-notebook-environment-is-ready-5-min). |
 | Key Vault integration fails to resolve a secret | Confirm the spoke Key Vault name resolved correctly and your identity has data-plane access (RBAC propagation can take a minute). |
-| Foundry connection step fails | Confirm the spoke Foundry account/project names resolved from `azd env get-value` — re-check `setup-notebook-env.ps1` was run with the correct `SpokeAiFoundryAccountName` / `SpokeAiFoundryProjectName` values. |
+| Foundry connection step fails | Confirm `SPOKE_AI_FOUNDRY_ACCOUNT_NAME` and `SPOKE_AI_FOUNDRY_PROJECT_NAME` match the `SpokeAiFoundryAccountName` / `SpokeAiFoundryProjectName` credentials on your dashboard. |
 | Load test results look flat (no 429s) | Capacity limits are per-contract; make sure you're hitting the right subscription key for the contract you're testing. |
 
 ## 🚀 Go further

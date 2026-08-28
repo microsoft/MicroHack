@@ -78,6 +78,39 @@ Write-Host "[$SubscriptionId] Deploying shared resources from template $template
 
 Write-Host $AllowedEntraUserIds
 
+#Check if shared-rg was successfully deployed already
+$SkipSharedDeployment = $false
+$rg = Get-AzResourceGroup -Name $sharedResourceGroup -ErrorAction SilentlyContinue
+if ($rg) {
+    if ($null -eq $rg.Tags) {
+        $tags = @{}
+    }
+    else {
+        $tags = $rg.Tags
+    }
+    if ($tags["microhack-shared-deployment"] -eq "Succeeded") {
+        $SkipSharedDeployment = $true
+    }
+}
+
+if ($SkipSharedDeployment) {
+    $managedInstance = Get-AzSqlInstance -ResourceGroupName $sharedResourceGroup -ErrorAction SilentlyContinue | Select-Object -First 1
+    $managedInstanceName = $managedInstance.ManagedInstanceName
+    $managedInstanceFQDN = $managedInstance.FullyQualifiedDomainName
+
+    @{"HackboxCredential" = @{name = 'Legacy SQL Server Name'; value = $legacySQLName; note = 'Name of legacy SQL Server'; group = 'Lab-General'}}
+    @{"HackboxCredential" = @{name = 'SQLMI FQDN'; value = $managedInstanceFQDN; note = 'FQDN of SQLMI'; group = 'Lab-General'}}
+    @{"HackboxCredential" = @{name = 'Arc SQL Server Name'; value = $arcSQLName; note = 'Name of new SQL Server'; group = 'Lab-General'}}
+
+    @{"HackboxCredential" = @{name = 'VM User Name'; value = $adminUsername; note = 'Username to connect for every VM'; group = 'Lab-Credentials'}}
+    @{"HackboxCredential" = @{name = 'VM User Password'; value = $adminPassword; note = 'Password to connect to every VM'; group = 'Lab-Credentials'}}
+    @{"HackboxCredential" = @{name = 'SQLMI User Name'; value = $sqlMiAdminUsername; note = 'Username to connect to SQLMI'; group = 'Lab-Credentials'}}
+    @{"HackboxCredential" = @{name = 'SQLMI User Password'; value = $sqlMiAdminPassword; note = 'Password to connect to SQLMI'; group = 'Lab-Credentials'}}
+
+    return
+}
+
+
 New-AzResourceGroup -Name $sharedResourceGroup -Location $PreferredLocation[0] -Force -ErrorAction Stop
 
 $tags = @{
@@ -88,6 +121,7 @@ $result = Invoke-MhhDeploymentWithRegionFallback `
     -PreferredLocations      $PreferredLocation `
     -RgOwnerEntraObjectIds   @($AllowedEntraUserIds) `
     -ResourceGroupName       $sharedResourceGroup `
+    -CleanupTimeoutSeconds   1800
     -TemplateFile            $template `
     -Tag                     $tags `
     -TemplateParameterObject @{
@@ -111,14 +145,14 @@ $managedInstance = Get-AzSqlInstance -ResourceGroupName $sharedResourceGroup -Er
 $managedInstanceName = $managedInstance.ManagedInstanceName
 $managedInstanceFQDN = $managedInstance.FullyQualifiedDomainName
 
-@{"HackboxCredential" = @{name = 'Legacy SQL Server Name'; value = $legacySQLName; note = 'Name of legacy SQL Server'}}
-@{"HackboxCredential" = @{name = 'SQLMI FQDN'; value = $managedInstanceFQDN; note = 'FQDN of SQLMI'}}
-@{"HackboxCredential" = @{name = 'Arc SQL Server Name'; value = $arcSQLName; note = 'Name of new SQL Server'}}
+@{"HackboxCredential" = @{name = 'Legacy SQL Server Name'; value = $legacySQLName; note = 'Name of legacy SQL Server'; group = 'Lab-General'}}
+@{"HackboxCredential" = @{name = 'SQLMI FQDN'; value = $managedInstanceFQDN; note = 'FQDN of SQLMI'; group = 'Lab-General'}}
+@{"HackboxCredential" = @{name = 'Arc SQL Server Name'; value = $arcSQLName; note = 'Name of new SQL Server'; group = 'Lab-General'}}
 
-@{"HackboxCredential" = @{name = 'VM User Name'; value = $adminUsername; note = 'Username to connect for every VM'}}
-@{"HackboxCredential" = @{name = 'VM User Password'; value = $adminPassword; note = 'Password to connect to every VM'}}
-@{"HackboxCredential" = @{name = 'SQLMI User Name'; value = $sqlMiAdminUsername; note = 'Username to connect to SQLMI'}}
-@{"HackboxCredential" = @{name = 'SQLMI User Password'; value = $sqlMiAdminPassword; note = 'Password to connect to SQLMI'}}
+@{"HackboxCredential" = @{name = 'VM User Name'; value = $adminUsername; note = 'Username to connect for every VM'; group = 'Lab-Credentials'}}
+@{"HackboxCredential" = @{name = 'VM User Password'; value = $adminPassword; note = 'Password to connect to every VM'; group = 'Lab-Credentials'}}
+@{"HackboxCredential" = @{name = 'SQLMI User Name'; value = $sqlMiAdminUsername; note = 'Username to connect to SQLMI'; group = 'Lab-Credentials'}}
+@{"HackboxCredential" = @{name = 'SQLMI User Password'; value = $sqlMiAdminPassword; note = 'Password to connect to SQLMI'; group = 'Lab-Credentials'}}
 
 [string]$managedInstanceResourceId = $managedInstance.Id
 #$managedInstancePrincipalId = $managedInstance.Identity.PrincipalId
@@ -204,3 +238,8 @@ if (-not $found)
 {
     throw "Expected Entra ID Admin was not configured within 2 minutes."
 }
+
+$rg = Get-AzResourceGroup -Name $sharedResourceGroup -ErrorAction SilentlyContinue
+$tags = $rg.Tags
+$tags["microhack-shared-deployment"] = "Succeeded"
+Set-AzResourceGroup -Name $sharedResourceGroup -Tags $tags | Out-Null

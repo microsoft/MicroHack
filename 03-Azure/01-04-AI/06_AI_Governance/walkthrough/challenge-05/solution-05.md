@@ -12,7 +12,8 @@ Duration: 35 min
 
 This challenge is driven by
 [`challenges/workshop/5. citadel-pii-processing-tests.ipynb`](../../challenges/workshop/5.%20citadel-pii-processing-tests.ipynb).
-The notebook is the **unmodified upstream Citadel workshop notebook** and is the
+The notebook is the upstream Citadel workshop notebook (unchanged apart from its
+setup cell, which now also reads configuration from the environment) and is the
 authoritative solution — it contains the working code, the expected output, and its own
 `📊 Results Summary` cell.
 

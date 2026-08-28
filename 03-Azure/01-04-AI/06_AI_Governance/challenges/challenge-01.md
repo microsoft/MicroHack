@@ -13,19 +13,46 @@ fragments, then prove it works through multiple API formats.
 
 This challenge runs entirely against **Hub** resources — the APIM instance and its
 backend pools sit in front of every model your governance hub serves. Before you start,
-confirm your attendee credentials have been bridged into a local `azd` environment (see
-Part A below); every workshop notebook reads its configuration via `azd env get-value`.
+confirm your attendee credentials are available to the notebooks (see Part A below);
+every workshop notebook reads its configuration from the environment, falling back to
+`azd env get-value`.
 
 ## ✅ Tasks
 
 ### Part A — Confirm your notebook environment is ready (5 min)
 
-1. Check with your facilitator (or your own setup) that
+Every notebook in this MicroHack reads its settings from the environment, so do this
+once and it applies to all nine challenges. Pick **either** route:
+
+**Route 1 — `.env` file (recommended, no extra tooling):**
+
+1. From the `challenges/workshop/` folder, copy the template:
+
+   ```bash
+   cd challenges/workshop
+   cp .env.template .env
+   ```
+
+2. Open `.env` and paste in the matching `HackboxCredential` values from your MicroHack
+   dashboard. The template names the exact dashboard credential for every key.
+   For challenges 1-6 you only need `AZURE_RESOURCE_GROUP`, `AZURE_LOCATION`,
+   `AZURE_SUBSCRIPTION_ID` and `LLM_BACKEND_CONFIG`.
+3. Paste `LLM_BACKEND_CONFIG` as a **single line**, exactly as the dashboard shows it —
+   it's a JSON document, so a stray line break will break it.
+
+`.env` is gitignored, so your credentials stay out of source control.
+
+**Route 2 — `azd` bridge (the original workshop workflow):**
+
+1. Install `azd`, then run
    [`setup-notebook-env.ps1`](../labautomation/README.md#notebook-environment-setup)
-   has already been run with your dashboard's `HackboxCredential` values.
-2. If it hasn't, run it now — the workshop notebooks are **unchanged** and call
-   `azd env get-value` for every setting, so this step is required once before any
-   notebook in this MicroHack.
+   with your dashboard's `HackboxCredential` values. It writes a local `azd`
+   environment that the notebooks fall back to for any key not already set.
+
+> [!TIP]
+> To confirm you're ready, run the first setup cell of notebook 1. It prints your
+> resource group, location, and the number of configured LLM backends. If it raises
+> instead, the message tells you which key is missing and whether a `.env` was found.
 
 ### Part B — Run the LLM backend onboarding notebook (30 min)
 
@@ -61,7 +88,8 @@ Part A below); every workshop notebook reads its configuration via `azd env get-
 
 | Symptom | Fix |
 |---------|-----|
-| `azd env get-value` errors / empty values | `setup-notebook-env.ps1` hasn't been run for your attendee credentials yet — see Part A. |
+| Setup cell raises a missing-key error | That key isn't in your `.env` (and no `azd` environment supplied it) — see Part A. The error message tells you which key is missing and whether a `.env` file was found. |
+| `LLM_BACKEND_CONFIG` fails to parse | It must be on a single line, pasted exactly as the dashboard shows it. A line break or a truncated copy will break the JSON. |
 | Backend deployment succeeds but test calls 401/403 | APIM RBAC / managed-identity propagation can take a minute after a fresh deployment — wait and retry. |
 | A model call fails with a region/quota error | Model availability is region-specific; double-check the model/SKU you configured is available in your lab's region. |
 

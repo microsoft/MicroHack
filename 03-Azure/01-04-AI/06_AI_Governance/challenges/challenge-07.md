@@ -24,9 +24,10 @@ questions.
 
 **This notebook requires [Challenge 3](challenge-03.md)** to have created the
 `Hub-HR-ChatAgent-DEV-LLM` BYO Gateway connection. Your lab's spoke Foundry resources and
-Azure Container Registry are already provisioned — check
-[`setup-notebook-env.ps1`](../labautomation/README.md#notebook-environment-setup) has
-run so the notebook can resolve them.
+Azure Container Registry are already provisioned — make sure `SPOKE_ACR_NAME` and
+`SPOKE_ACR_LOGIN_SERVER` are set (see
+[Challenge 1, Part A](challenge-01.md#part-a--confirm-your-notebook-environment-is-ready-5-min))
+so the notebook can resolve them.
 
 ## ✅ Tasks
 
@@ -72,7 +73,7 @@ Same prerequisite as every notebook in this MicroHack — see
 
 | Symptom | Fix |
 |---------|-----|
-| `azd env get-value` errors | `setup-notebook-env.ps1` hasn't been run — see Part A. |
+| Setup cell raises a missing-key error | Your `challenges/workshop/.env` is missing that key (or you haven't run the `azd` bridge) — see [Challenge 1, Part A](challenge-01.md#part-a--confirm-your-notebook-environment-is-ready-5-min). |
 | Connection `Hub-HR-ChatAgent-DEV-LLM` not found | Run [Challenge 3](challenge-03.md) first — it creates this Foundry connection. |
 | Agent stays in a non-active state after step `5️⃣` | Container deployments can take a few minutes to come up; re-run the wait cell rather than assuming failure. |
 | Step `6a` doesn't deny the disallowed request | Confirm `policies/hr-policy.yaml` was actually bundled into the container image built in step `3️⃣` — re-run `2️⃣`–`4️⃣` if the source files changed after the last build. |

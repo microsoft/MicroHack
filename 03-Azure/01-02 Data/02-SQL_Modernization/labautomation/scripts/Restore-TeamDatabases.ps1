@@ -585,15 +585,6 @@ END;
 # Main
 # ---------------------------------------------------------------------------
 
-if (-not (Test-Path -LiteralPath $DownloadDirectory))
-{
-    New-Item `
-        -ItemType Directory `
-        -Path $DownloadDirectory `
-        -Force |
-        Out-Null
-}
-
 Write-Host "Testing SQL Server connection to [$ServerInstance]..."
 
 $serverInformation = Invoke-DatabaseQuery -Query @"
@@ -621,75 +612,6 @@ foreach ($backupName in $backupNames)
 {
     $fileName       = "$backupName.bak"
     $destination    = Join-Path $DownloadDirectory $fileName
-    $downloadUri    = Get-BackupDownloadUri `
-        -BaseUri $BackupBaseUri `
-        -FileName $fileName
-
-    if ((Test-Path -LiteralPath $destination) -and
-        -not $ForceDownload.IsPresent)
-    {
-        Write-Host "Using existing backup: $destination"
-    }
-    else
-    {
-        Write-Host "Downloading [$fileName] from $downloadUri ..."
-
-        $temporaryFile = "$destination.download"
-
-        Remove-Item `
-            -LiteralPath $temporaryFile `
-            -Force `
-            -ErrorAction SilentlyContinue
-
-        try
-        {
-            $invokeWebRequestParameters = @{
-                Uri         = $downloadUri
-                OutFile     = $temporaryFile
-                ErrorAction = "Stop"
-            }
-
-            # UseBasicParsing exists in Windows PowerShell 5.1 but not in
-            # newer editions in the same form.
-            if ($PSVersionTable.PSEdition -eq "Desktop")
-            {
-                $invokeWebRequestParameters.UseBasicParsing = $true
-            }
-
-            $lastProgressPreference = $ProgressPreference
-            $ProgressPreference = 'SilentlyContinue'
-            Invoke-WebRequest @invokeWebRequestParameters
-            $ProgressPreference = $lastProgressPreference
-
-            if (-not (Test-Path -LiteralPath $temporaryFile))
-            {
-                throw "The downloaded file was not created."
-            }
-
-            if ((Get-Item -LiteralPath $temporaryFile).Length -eq 0)
-            {
-                throw "The downloaded file is empty."
-            }
-
-            Move-Item `
-                -LiteralPath $temporaryFile `
-                -Destination $destination `
-                -Force
-        }
-        catch
-        {
-            Remove-Item `
-                -LiteralPath $temporaryFile `
-                -Force `
-                -ErrorAction SilentlyContinue
-
-            throw "Download of [$fileName] failed: $($_.Exception.Message)"
-        }
-
-        Write-Host "Downloaded [$fileName] to [$destination]." `
-            -ForegroundColor Green
-    }
-
     $downloadedBackups[$backupName] = $destination
 }
 

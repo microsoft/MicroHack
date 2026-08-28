@@ -34,18 +34,7 @@ $Connection = New-Object System.Data.SqlClient.SqlConnection($connectionString)
 $SQLPwd.MakeReadOnly()
 $cred = New-Object System.Data.SqlClient.SqlCredential($sqlusername,$SQLPwd)
 $Connection.credential = $cred
-#$Connection.open()
 
-#$command = New-Object system.Data.SqlClient.SqlCommand($Connection)
-#$command.Connection = $Connection
-#$command.CommandTimeout = $QueryTimeout
-
-#$command.CommandText = $ConfigureSql
-#$result = $command.ExecuteReader()
-#$table = New-Object System.Data.DataTable
-#$table.Load($result)
-
-# 5. SMO-Serververbindung initialisieren
 $serverConnection = New-Object Microsoft.SqlServer.Management.Common.ServerConnection($Connection)
 $server = New-Object Microsoft.SqlServer.Management.Smo.Server($serverConnection)
 
@@ -55,7 +44,8 @@ try {
     #Write-Host "Skript erfolgreich auf SQL MI ausgeführt." -ForegroundColor Green
 }
 catch {
-    Write-Error "Fehler bei der Ausführung: $_"
+    $ErrorString = $_ | format-list -force | Out-String
+    Write-Error "ERR: $ErrorString"
 }
 finally {
     if ($null -ne $serverConnection -and $serverConnection.IsOpen) {
@@ -72,11 +62,13 @@ Try {
     Write-Host "Installing and configuring Windows Failover Cluster..." -ForegroundColor Green
     Install-WindowsFeature -Name Failover-Clustering -IncludeManagementTools -IncludeAllSubFeature
     $clus = New-Cluster -Name "CLU01" -AdministrativeAccessPoint None -Verbose -Force
-    Enable-SqlAlwaysOn -Path SQLSERVER:\SQL\legacysql2016\default -Force    
+    Enable-SqlAlwaysOn -Path "SQLSERVER:\SQL\$($ServerInstance)\default" -Force    
     Restart-Service -Name "MSSQLSERVER" -Force
 }
 Catch {
-    Write-Host "Error configuring SQL legacy Instance: $_"
+    Write-Host "Error configuring SQL legacy Instance."
+    $ErrorString = $_ | format-list -force | Out-String
+    Write-Error "ERR: $ErrorString"
 }
 
 Stop-Transcript

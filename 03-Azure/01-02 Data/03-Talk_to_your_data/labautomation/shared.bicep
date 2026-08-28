@@ -22,6 +22,15 @@ param sqlAdminLogin string
 @secure()
 param sqlPassword string
 
+@description('Entra admin display name for the SQL MI (label only).')
+param sqlAadAdminLogin string
+
+@description('Entra admin object ID (sid) for the SQL MI.')
+param sqlAadAdminSid string
+
+@description('Entra admin tenant ID for the SQL MI.')
+param sqlAadAdminTenantId string
+
 @description('Fabric capacity SKU name.')
 param fabricSkuName string = 'F32'
 
@@ -30,6 +39,9 @@ param fabricAdminMembers array
 
 @description('Base database the shared webshop connects to.')
 param webshopSqlDatabase string = 'TailspinToys_Demo_Final'
+
+@description('When true, the SQL MI subnet NSG and route table already exist and are referenced instead of redeployed (avoids ConflictWithNetworkIntentPolicy on shared hook re-runs).')
+param sqlMiNetworkingExists bool = false
 
 var commonTags = {
   SecurityControl: 'Ignore'
@@ -41,6 +53,7 @@ module vnet 'infra/modules/vnet.bicep' = {
     location: location
     envName: envName
     tags: commonTags
+    sqlMiNetworkingExists: sqlMiNetworkingExists
   }
 }
 
@@ -53,6 +66,9 @@ module sqlManagedInstance 'infra/modules/sqlManagedInstance.bicep' = {
     subnetId: vnet.outputs.managedInstanceSubnetId
     administratorLogin: sqlAdminLogin
     administratorLoginPassword: sqlPassword
+    aadAdminLogin: sqlAadAdminLogin
+    aadAdminSid: sqlAadAdminSid
+    aadAdminTenantId: sqlAadAdminTenantId
     tags: commonTags
   }
 }

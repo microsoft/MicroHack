@@ -23,6 +23,15 @@ param administratorLogin string
 @secure()
 param administratorLoginPassword string
 
+@description('Entra admin display name (label only).')
+param aadAdminLogin string
+
+@description('Entra admin object ID (sid). Set explicitly so ARM does not resolve the principal.')
+param aadAdminSid string
+
+@description('Entra admin tenant ID.')
+param aadAdminTenantId string
+
 @description('Tags to apply to all resources.')
 param tags object = {}
 
@@ -52,6 +61,18 @@ resource managedInstance 'Microsoft.Sql/managedInstances@2023-08-01-preview' = {
     proxyOverride: 'Default'
     publicDataEndpointEnabled: true
     databaseFormat: 'AlwaysUpToDate'
+  }
+}
+
+// Entra admin enables Azure AD authentication on the instance (SQL auth stays enabled). Explicit sid so ARM does not have to resolve the principal.
+resource sqlAadAdmin 'Microsoft.Sql/managedInstances/administrators@2023-08-01-preview' = {
+  parent: managedInstance
+  name: 'ActiveDirectory'
+  properties: {
+    administratorType: 'ActiveDirectory'
+    login: aadAdminLogin
+    sid: aadAdminSid
+    tenantId: aadAdminTenantId
   }
 }
 

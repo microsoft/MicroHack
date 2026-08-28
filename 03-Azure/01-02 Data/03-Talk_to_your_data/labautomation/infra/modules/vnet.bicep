@@ -18,6 +18,9 @@ param addressSpace array = [
 @description('Tags to apply to all resources.')
 param tags object = {}
 
+@description('When true, the SQL MI subnet NSG and route table already exist (the MI has injected network intent policies). They are then referenced instead of redeployed, which avoids ConflictWithNetworkIntentPolicy on shared hook re-runs.')
+param sqlMiNetworkingExists bool = false
+
 var mergedTags = union(tags, {
   environment: envName
 })
@@ -28,7 +31,7 @@ var mergedTags = union(tags, {
 
 // ManagedInstance subnet NSG. In the Terraform version the NSG was created empty
 // and the 3342 rule was added by the SQL MI module; here it is inlined.
-resource sqlMiNsg 'Microsoft.Network/networkSecurityGroups@2023-11-01' = {
+resource sqlMiNsg 'Microsoft.Network/networkSecurityGroups@2023-11-01' = if (!sqlMiNetworkingExists) {
   name: 'nsg-sqlhackmi'
   location: location
   tags: mergedTags
@@ -49,6 +52,11 @@ resource sqlMiNsg 'Microsoft.Network/networkSecurityGroups@2023-11-01' = {
       }
     ]
   }
+}
+
+// Referenced (not redeployed) when the SQL MI has already injected its network intent policies.
+resource sqlMiNsgExisting 'Microsoft.Network/networkSecurityGroups@2023-11-01' existing = {
+  name: 'nsg-sqlhackmi'
 }
 
 resource bastionNsg 'Microsoft.Network/networkSecurityGroups@2023-11-01' = {
@@ -415,13 +423,17 @@ resource streamingNsg 'Microsoft.Network/networkSecurityGroups@2023-11-01' = {
 // ─────────────────────────────────────────────
 // Route table for the ManagedInstance subnet
 // ─────────────────────────────────────────────
-resource sqlMiRouteTable 'Microsoft.Network/routeTables@2023-11-01' = {
+resource sqlMiRouteTable 'Microsoft.Network/routeTables@2023-11-01' = if (!sqlMiNetworkingExists) {
   name: 'rt-sqlhackmi'
   location: location
   tags: mergedTags
   properties: {
     disableBgpRoutePropagation: false
   }
+}
+
+resource sqlMiRouteTableExisting 'Microsoft.Network/routeTables@2023-11-01' existing = {
+  name: 'rt-sqlhackmi'
 }
 
 // ─────────────────────────────────────────────
@@ -453,10 +465,10 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-11-01' = {
           ]
           defaultOutboundAccess: false
           networkSecurityGroup: {
-            id: sqlMiNsg.id
+            id: sqlMiNetworkingExists ? sqlMiNsgExisting.id : sqlMiNsg.id
           }
           routeTable: {
-            id: sqlMiRouteTable.id
+            id: sqlMiNetworkingExists ? sqlMiRouteTableExisting.id : sqlMiRouteTable.id
           }
           delegations: [
             {
@@ -565,4 +577,4 @@ output vnetId string = vnet.id
 output managedInstanceSubnetId string = resourceId('Microsoft.Network/virtualNetworks/subnets', vnet.name, 'ManagedInstance')
 output appServiceSubnetId string = resourceId('Microsoft.Network/virtualNetworks/subnets', vnet.name, 'snet-appservice')
 output fabricSubnetName string = 'fabric_vnet'
-output sqlMiNsgName string = sqlMiNsg.name
+output sqlMiNsgName string = 'nsg-sqlhackmi'

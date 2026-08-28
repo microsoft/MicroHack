@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.41.2.15936",
-      "templateHash": "17782287074782196978"
+      "templateHash": "2827733326238294768"
     }
   },
   "parameters": {
@@ -32,6 +32,20 @@
     }
   },
   "variables": {
+    "copy": [
+      {
+        "name": "llmSupportedModels",
+        "count": "[length(variables('aiFoundryModels'))]",
+        "input": {
+          "name": "[variables('aiFoundryModels')[copyIndex('llmSupportedModels')].name]",
+          "sku": "[variables('aiFoundryModels')[copyIndex('llmSupportedModels')].sku]",
+          "capacity": "[variables('aiFoundryModels')[copyIndex('llmSupportedModels')].capacity]",
+          "modelFormat": "[variables('aiFoundryModels')[copyIndex('llmSupportedModels')].publisher]",
+          "modelVersion": "[variables('aiFoundryModels')[copyIndex('llmSupportedModels')].version]",
+          "retirementDate": "[variables('aiFoundryModels')[copyIndex('llmSupportedModels')].retirementDate]"
+        }
+      }
+    ],
     "hubFoundryAccountName": "[format('aif-hub-{0}', parameters('resourceToken'))]",
     "hubFoundryProjectName": "citadel-hub-project",
     "apimName": "[format('apim-citadel-{0}', parameters('resourceToken'))]",
@@ -121,6 +135,18 @@
         "sku": "GlobalStandard",
         "capacity": 1,
         "retirementDate": "2099-10-14"
+      }
+    ],
+    "llmBackendConfig": [
+      {
+        "backendId": "[variables('hubFoundryAccountName')]",
+        "backendType": "ai-foundry",
+        "endpoint": "[format('https://{0}.openai.azure.com', variables('hubFoundryAccountName'))]",
+        "authScheme": "managedIdentity",
+        "authType": "managed-identity",
+        "priority": 1,
+        "weight": 100,
+        "supportedModels": "[variables('llmSupportedModels')]"
       }
     ]
   },
@@ -1284,7 +1310,11 @@
     },
     "LLM_BACKEND_CONFIG": {
       "type": "string",
-      "value": "[base64(string(createArray(createObject('name', 'gpt-4.1', 'publisher', 'Azure OpenAI', 'endpoint', format('https://{0}.openai.azure.com', variables('hubFoundryAccountName')), 'models', createArray('gpt-4.1')), createObject('name', 'gpt-5.4-mini', 'publisher', 'Azure OpenAI', 'endpoint', format('https://{0}.openai.azure.com', variables('hubFoundryAccountName')), 'models', createArray('gpt-5.4-mini')), createObject('name', 'gpt-5.2', 'publisher', 'Azure OpenAI', 'endpoint', format('https://{0}.openai.azure.com', variables('hubFoundryAccountName')), 'models', createArray('gpt-5.2')), createObject('name', 'text-embedding-3-large', 'publisher', 'Azure OpenAI', 'endpoint', format('https://{0}.openai.azure.com', variables('hubFoundryAccountName')), 'models', createArray('text-embedding-3-large')), createObject('name', 'Mistral-Large-3', 'publisher', 'Azure OpenAI', 'endpoint', format('https://{0}.openai.azure.com', variables('hubFoundryAccountName')), 'models', createArray('Mistral-Large-3')), createObject('name', 'Phi-4', 'publisher', 'Azure OpenAI', 'endpoint', format('https://{0}.openai.azure.com', variables('hubFoundryAccountName')), 'models', createArray('Phi-4')))))]"
+      "value": "[string(variables('llmBackendConfig'))]"
+    },
+    "A2A_FOUNDRY_ACCOUNT_NAME": {
+      "type": "string",
+      "value": "[variables('spokeFoundryAccountName')]"
     },
     "COSMOS_ENDPOINT": {
       "type": "string",

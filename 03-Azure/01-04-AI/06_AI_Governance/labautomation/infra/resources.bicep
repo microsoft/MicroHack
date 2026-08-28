@@ -263,6 +263,32 @@ var aiFoundryModels = [
   }
 ]
 
+// ===== Phase 4: LLM Backend Config (consumed by Notebook 1 / Notebook 8) =====
+// Shape must match the llmBackendConfig contract documented in
+// challenges/bicep/infra/llm-backend-onboarding/main.bicep (lines 30-68).
+// Notebook 1 requires backendId / backendType / endpoint / supportedModels[].
+var llmSupportedModels = [for model in aiFoundryModels: {
+  name: model.name
+  sku: model.sku
+  capacity: model.capacity
+  modelFormat: model.publisher
+  modelVersion: model.version
+  retirementDate: model.retirementDate
+}]
+
+var llmBackendConfig = [
+  {
+    backendId: hubFoundryAccountName
+    backendType: 'ai-foundry'
+    endpoint: 'https://${hubFoundryAccountName}.openai.azure.com'
+    authScheme: 'managedIdentity'
+    authType: 'managed-identity'
+    priority: 1
+    weight: 100
+    supportedModels: llmSupportedModels
+  }
+]
+
 // ===== Phase 4: Model Deployments to Hub Foundry Account =====
 // Each model deployed to support Notebooks 1-6
 // @batchSize(1) serializes deployments to avoid Cognitive Services account conflicts
@@ -1224,44 +1250,11 @@ output PII_ANALYTICS_SUBSCRIPTION_KEY string = listSecrets(subscriptionHrPiiAnal
 output PII_ANALYTICS_SUBSCRIPTION_ID string = subscriptionHrPiiAnalytics.name
 
 // Phase 4: LLM Backend Config (JSON array for Notebook 1 dynamic discovery)
-output LLM_BACKEND_CONFIG string = base64(string([
-  {
-    name: 'gpt-4.1'
-    publisher: 'Azure OpenAI'
-    endpoint: 'https://${hubFoundryAccountName}.openai.azure.com'
-    models: [ 'gpt-4.1' ]
-  }
-  {
-    name: 'gpt-5.4-mini'
-    publisher: 'Azure OpenAI'
-    endpoint: 'https://${hubFoundryAccountName}.openai.azure.com'
-    models: [ 'gpt-5.4-mini' ]
-  }
-  {
-    name: 'gpt-5.2'
-    publisher: 'Azure OpenAI'
-    endpoint: 'https://${hubFoundryAccountName}.openai.azure.com'
-    models: [ 'gpt-5.2' ]
-  }
-  {
-    name: 'text-embedding-3-large'
-    publisher: 'Azure OpenAI'
-    endpoint: 'https://${hubFoundryAccountName}.openai.azure.com'
-    models: [ 'text-embedding-3-large' ]
-  }
-  {
-    name: 'Mistral-Large-3'
-    publisher: 'Azure OpenAI'
-    endpoint: 'https://${hubFoundryAccountName}.openai.azure.com'
-    models: [ 'Mistral-Large-3' ]
-  }
-  {
-    name: 'Phi-4'
-    publisher: 'Azure OpenAI'
-    endpoint: 'https://${hubFoundryAccountName}.openai.azure.com'
-    models: [ 'Phi-4' ]
-  }
-]))
+// Emitted as raw JSON (NOT base64) because the notebooks call json.loads() directly.
+output LLM_BACKEND_CONFIG string = string(llmBackendConfig)
+
+// Foundry account hosting agents (Notebook 8 override: A2A_FOUNDRY_ACCOUNT_NAME)
+output A2A_FOUNDRY_ACCOUNT_NAME string = spokeFoundryAccountName
 
 output COSMOS_ENDPOINT string = cosmosAccount.properties.documentEndpoint
 output COSMOS_DATABASE string = cosmosDatabaseName

@@ -565,7 +565,7 @@ if ($piiAnalyticsId) {
 }
 
 if ($llmBackendConfig) {
-    @{ HackboxCredential = @{ name = 'LlmBackendConfig'; value = $llmBackendConfig; note = 'Base64-encoded LLM backend routing config. Maps to notebook azd env key LLM_BACKEND_CONFIG' } }
+    @{ HackboxCredential = @{ name = 'LlmBackendConfig'; value = $llmBackendConfig; note = 'LLM backend routing config as raw JSON. Maps to notebook azd env key LLM_BACKEND_CONFIG' } }
 }
 
 if ($spokeFoundryAccountNameOut) {

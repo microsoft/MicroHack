@@ -230,7 +230,7 @@ var aiFoundryModels = [
     version: '2025-04-14'
     sku: 'GlobalStandard'
     capacity: modelCapacity
-    retirementDate: '2026-10-14'
+    retirementDate: '2027-04-14'
   }
   {
     name: 'gpt-5.4-mini'
@@ -238,7 +238,7 @@ var aiFoundryModels = [
     version: '2026-03-17'
     sku: 'GlobalStandard'
     capacity: modelCapacity
-    retirementDate: '2026-09-30'
+    retirementDate: '2027-09-21'
   }
   {
     name: 'gpt-5.2'
@@ -246,7 +246,7 @@ var aiFoundryModels = [
     version: '2025-12-11'
     sku: 'GlobalStandard'
     capacity: modelCapacity
-    retirementDate: '2027-02-05'
+    retirementDate: '2027-06-08'
   }
   {
     name: 'text-embedding-3-large'
@@ -254,7 +254,7 @@ var aiFoundryModels = [
     version: '1'
     sku: 'GlobalStandard'
     capacity: modelCapacity
-    retirementDate: '2027-04-14'
+    retirementDate: '2028-02-09'
   }
   {
     name: 'Mistral-Large-3'
@@ -262,7 +262,7 @@ var aiFoundryModels = [
     version: '1'
     sku: 'GlobalStandard'
     capacity: modelCapacity
-    retirementDate: '2099-12-30'
+    retirementDate: '2099-12-31'
   }
   {
     name: 'Phi-4'
@@ -270,7 +270,7 @@ var aiFoundryModels = [
     version: '7'
     sku: 'GlobalStandard'
     capacity: 1
-    retirementDate: '2099-10-14'
+    retirementDate: '2099-12-31'
   }
 ]
 

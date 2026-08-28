@@ -80,6 +80,7 @@ resource virtualMachine 'Microsoft.Compute/virtualMachines@2024-11-01' = {
   }
 }
 
+/* 
 resource autoShutdownConfig 'Microsoft.DevTestLab/schedules@2018-09-15' = {
   name: 'shutdown-computevm-${vmName}'
   location: location
@@ -98,7 +99,8 @@ resource autoShutdownConfig 'Microsoft.DevTestLab/schedules@2018-09-15' = {
      targetResourceId: virtualMachine.id
   }
 }
-
+ */
+ 
 resource sqlVirtualMachine 'Microsoft.SqlVirtualMachine/sqlVirtualMachines@2023-10-01' = {
   name: vmName
   location: location

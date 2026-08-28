@@ -90,9 +90,9 @@ $TeamName = $me.ShortName
 $TeamName = $TeamName.ToUpper()
 
 # feed the effective resource group back to the console
-@{"HackboxCredential" = @{ name = "ResourceGroupName" ; value = $effectiveResourceGroup; note = "The name of the resource group where lab resources are deployed" }}
-@{"HackboxCredential" = @{ name = "Team VM Name" ; value = $vmName; note = "The name of the Team VM" }}
-@{"HackboxCredential" = @{ name = "Team / Link Name" ; value = $TeamName; note = "Name of the Team (Prefix for DBs and to use as Link Name for SQLMI)" }}
+#@{"HackboxCredential" = @{ name = "ResourceGroupName" ; value = $effectiveResourceGroup; note = "The name of the resource group where lab resources are deployed" }}
+@{"HackboxCredential" = @{ name = "Team VM Name" ; value = $vmName; note = "The name of the Team VM"; group = 'Lab-General'}}
+@{"HackboxCredential" = @{ name = "Team / Link Name" ; value = $TeamName; note = "Name of the Team (Prefix for DBs and to use as Link Name for SQLMI)"; group = 'Lab-General'}}
 
 $legacySQLName = "legacySQL2016"
 

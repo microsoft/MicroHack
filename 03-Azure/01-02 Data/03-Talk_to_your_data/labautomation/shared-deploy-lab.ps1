@@ -32,8 +32,8 @@ $ErrorActionPreference = 'Stop'
 $SharedResourceGroup = 'rg-shared'
 $SqlAdminLogin = 'sqlmiadmin'
 $FabricApi = 'https://api.fabric.microsoft.com/v1'
-$GraphApi = 'https://graph.microsoft.com/v1.0'
-$RequiredProviders = @('Microsoft.Sql', 'Microsoft.Fabric', 'Microsoft.Storage', 'Microsoft.Web', 'Microsoft.Network')
+# Microsoft.PowerPlatform is required for the Fabric VNet data gateway's subnet delegation.
+$RequiredProviders = @('Microsoft.Sql', 'Microsoft.Fabric', 'Microsoft.Storage', 'Microsoft.Web', 'Microsoft.Network', 'Microsoft.PowerPlatform')
 
 # Demo databases restored once for the whole subscription: DB name -> backup file.
 $TailspinToysBak = 'tailspintoys_before_launch.bak'
@@ -53,10 +53,9 @@ if (-not (Get-Module -ListAvailable -Name SqlServer)) {
 }
 Import-Module SqlServer -ErrorAction Stop
 
-function Get-DbAccessToken {
-    $t = (Get-AzAccessToken -ResourceUrl 'https://database.windows.net/').Token
-    if ($t -is [System.Security.SecureString]) { return (ConvertFrom-SecureString $t -AsPlainText) }
-    return $t
+function Update-MhhTokenQuiet {
+    # Refresh Azure credentials; Update-MhhToken's status object is shown only with -Verbose.
+    Update-MhhToken | Out-String | Write-Verbose
 }
 
 function Invoke-MiSql {
@@ -67,10 +66,12 @@ function Invoke-MiSql {
         [string]$InputFile,
         [int]$QueryTimeout = 0
     )
+    # SQL authentication with the MI admin login: the platform cannot set an Entra admin on the MI.
+    $cred = [pscredential]::new($SqlAdminLogin, (ConvertTo-SecureString $sqlPassword -AsPlainText -Force))
     $splat = @{
         ServerInstance    = $Server
         Database          = $Database
-        AccessToken       = (Get-DbAccessToken)
+        Credential        = $cred
         ConnectionTimeout = 30
         QueryTimeout      = $QueryTimeout
         ErrorAction       = 'Stop'
@@ -97,33 +98,6 @@ function Invoke-FabricApi {
     }
     if ([string]::IsNullOrWhiteSpace($raw)) { return $null }
     return ($raw | ConvertFrom-Json)
-}
-
-function Ensure-DirectoryReadersForIdentity {
-    param([Parameter(Mandatory = $true)][string]$PrincipalId)
-
-    # Directory Readers well-known template id.
-    $templateId = '88d8e3e3-8f55-4a1e-953a-9b9898b8876b'
-    # Activate the directory role if it is only present as a template.
-    $roles = (az rest --method GET --url "$GraphApi/directoryRoles" --resource 'https://graph.microsoft.com' 2>$null | ConvertFrom-Json).value
-    $role = $roles | Where-Object { $_.roleTemplateId -eq $templateId } | Select-Object -First 1
-    if (-not $role) {
-        $activated = az rest --method POST --url "$GraphApi/directoryRoles" --resource 'https://graph.microsoft.com' `
-            --headers 'Content-Type=application/json' --body (@{ roleTemplateId = $templateId } | ConvertTo-Json -Compress) 2>&1 | ConvertFrom-Json
-        $role = $activated
-    }
-    # Is the identity already a member?
-    $members = (az rest --method GET --url "$GraphApi/directoryRoles/$($role.id)/members" --resource 'https://graph.microsoft.com' 2>$null | ConvertFrom-Json).value
-    if ($members | Where-Object { $_.id -eq $PrincipalId }) {
-        Write-Host "[shared] SQL MI identity already has Directory Readers."
-        return
-    }
-    $ref = @{ '@odata.id' = "$GraphApi/directoryObjects/$PrincipalId" } | ConvertTo-Json -Compress
-    az rest --method POST --url "$GraphApi/directoryRoles/$($role.id)/members/`$ref" --resource 'https://graph.microsoft.com' `
-        --headers 'Content-Type=application/json' --body $ref 2>&1 | Out-Null
-    if ($LASTEXITCODE -ne 0) { throw "Failed to add SQL MI identity to Directory Readers." }
-    Write-Host "[shared] Granted Directory Readers to SQL MI identity. Waiting for propagation."
-    Start-Sleep -Seconds 60
 }
 
 # ─────────────────────────────────────────────
@@ -155,18 +129,48 @@ foreach ($uid in ($AllowedEntraUserIds | Where-Object { $_ })) {
 # ─────────────────────────────────────────────
 # 2. Resolve the deploying service principal (becomes SQL MI Entra admin)
 # ─────────────────────────────────────────────
-$spObjectId = (Get-AzADServicePrincipal -ApplicationId (Get-AzContext).Account.Id -ErrorAction SilentlyContinue).Id
-if (-not $spObjectId) {
-    $spObjectId = az ad sp show --id (Get-AzContext).Account.Id --query id -o tsv 2>$null
+$account = (Get-AzContext).Account.Id
+$spObjectId = $null
+if ($account -as [guid]) {
+    $spObjectId = (Get-AzADServicePrincipal -ApplicationId $account -ErrorAction SilentlyContinue).Id
+    if (-not $spObjectId) {
+        $spObjectId = az ad sp show --id $account --query id -o tsv 2>$null
+    }
 }
-if (-not $spObjectId) { throw "Could not resolve the deploying service principal object id." }
+if (-not $spObjectId) {
+    # Local testing runs as a user, not an SP; fall back to the signed-in user.
+    $spObjectId = (Get-AzADUser -SignedIn -ErrorAction SilentlyContinue).Id
+}
+if (-not $spObjectId) { throw "Could not resolve the deploying principal object id." }
 
-$fabricAdminMembers = @($spObjectId) + ($AllowedEntraUserIds | Where-Object { $_ }) | Select-Object -Unique
+# Entra admin for the SQL MI (enables Entra auth; set declaratively with an explicit sid so ARM does not resolve the principal).
+$aadTenantId = (Get-AzContext).Tenant.Id
+$aadAdminLogin = if ($account -as [guid]) { (Get-AzADServicePrincipal -Id $spObjectId -ErrorAction SilentlyContinue).DisplayName } else { $account }
+if (-not $aadAdminLogin) { $aadAdminLogin = 'MicroHackDeployer' }
+
+# Fabric capacity admin members: users must be UPNs (object IDs are rejected); a service principal uses its object ID.
+$fabricMemberList = [System.Collections.Generic.List[string]]::new()
+if ($account -as [guid]) {
+    $fabricMemberList.Add($spObjectId)   # deploying service principal
+}
+else {
+    $fabricMemberList.Add($account)       # deploying user's UPN
+}
+foreach ($uid in ($AllowedEntraUserIds | Where-Object { $_ })) {
+    $memberUpn = (Get-MhhLabUser -UserId $uid -ErrorAction SilentlyContinue).UserPrincipalName
+    if (-not $memberUpn) { $memberUpn = (Get-AzADUser -ObjectId $uid -ErrorAction SilentlyContinue).UserPrincipalName }
+    if ($memberUpn) { $fabricMemberList.Add($memberUpn) }
+    else { Write-Warning "[shared] Could not resolve a UPN for '$uid'; omitting it from Fabric admin members." }
+}
+$fabricAdminMembers = @($fabricMemberList | Select-Object -Unique)
 $sqlPassword = New-MhhStablePassword -Purpose 'sql-admin' -Length 24
 
 # ─────────────────────────────────────────────
 # 3. Deploy the shared ARM stack (async; SQL MI can exceed the 90-min command limit)
 # ─────────────────────────────────────────────
+# Once the SQL MI exists it has injected network intent policies into its subnet's NSG/route table;
+# redeploying those conflicts, so tell the template to reference them as existing on re-runs.
+$sqlMiNetworkingExists = -not [string]::IsNullOrWhiteSpace((az sql mi list -g $SharedResourceGroup --query "[0].id" -o tsv 2>$null))
 $depName = "shared-$(Get-Date -f yyyyMMddHHmmss)"
 Write-Host "[shared] Submitting shared.bicep deployment '$depName' into '$SharedResourceGroup'."
 New-AzResourceGroupDeployment `
@@ -174,17 +178,24 @@ New-AzResourceGroupDeployment `
     -ResourceGroupName $SharedResourceGroup `
     -TemplateFile (Join-Path $PSScriptRoot 'shared.bicep') `
     -TemplateParameterObject @{
-    location           = $location
-    sqlAdminLogin      = $SqlAdminLogin
-    sqlPassword        = (ConvertTo-SecureString $sqlPassword -AsPlainText -Force)
-    fabricAdminMembers = $fabricAdminMembers
+    location              = $location
+    sqlAdminLogin         = $SqlAdminLogin
+    # Plain string, not SecureString: -AsJob cannot serialize a SecureString across the job boundary. Bicep param stays @secure().
+    sqlPassword           = $sqlPassword
+    fabricAdminMembers    = $fabricAdminMembers
+    sqlMiNetworkingExists = $sqlMiNetworkingExists
+    sqlAadAdminLogin      = $aadAdminLogin
+    sqlAadAdminSid        = $spObjectId
+    sqlAadAdminTenantId   = $aadTenantId
 } `
     -AsJob | Out-Null
 
 do {
     Start-Sleep -Seconds 30
-    Update-MhhToken
-    $state = (Get-AzResourceGroupDeployment -ResourceGroupName $SharedResourceGroup -Name $depName -ErrorAction SilentlyContinue).ProvisioningState
+    Update-MhhTokenQuiet
+    # Guard the property access: under Set-StrictMode the deployment may not be registered yet (returns $null).
+    $dep = Get-AzResourceGroupDeployment -ResourceGroupName $SharedResourceGroup -Name $depName -ErrorAction SilentlyContinue
+    $state = if ($dep) { $dep.ProvisioningState } else { $null }
     Write-Host "[shared] deployment state: $state"
 } while ($state -notin 'Succeeded', 'Failed', 'Canceled')
 
@@ -195,7 +206,6 @@ if ($state -ne 'Succeeded') {
 $out = (Get-AzResourceGroupDeployment -ResourceGroupName $SharedResourceGroup -Name $depName).Outputs
 $miName = $out.sqlManagedInstanceName.Value
 $miFqdn = $out.sqlManagedInstanceFqdn.Value
-$miIdentity = $out.sqlManagedInstanceIdentityPrincipalId.Value
 $capacityName = $out.fabricCapacityName.Value
 $vnetName = $out.vnetName.Value
 $fabricSubnet = $out.fabricSubnetName.Value
@@ -208,23 +218,21 @@ $publicFqdn = $miFqdn -replace '^([^.]+)\.', '$1.public.'
 $server = "$publicFqdn,3342"
 
 # ─────────────────────────────────────────────
-# 4. Entra: Directory Readers for the MI identity + MI Entra admin (deploying SP)
+# 4. Entra: Directory Readers for the MI identity (needed for external-provider logins)
 # ─────────────────────────────────────────────
-Update-MhhToken
-Ensure-DirectoryReadersForIdentity -PrincipalId $miIdentity
-
-$existingAdmin = az sql mi ad-admin list --resource-group $SharedResourceGroup --managed-instance $miName --query "[0].sid" -o tsv 2>$null
-if (-not $existingAdmin) {
-    Write-Host "[shared] Setting SQL MI Entra admin to the deploying principal."
-    az sql mi ad-admin create --resource-group $SharedResourceGroup --managed-instance $miName `
-        --display-name 'MicroHackDeployer' --object-id $spObjectId 2>&1 | Out-Null
-    if ($LASTEXITCODE -ne 0) { throw "Failed to set SQL MI Entra admin." }
+Update-MhhTokenQuiet
+# Grant the SQL MI managed identity Directory Readers via the platform helper (handles the tenant-wide directory-role lock and is idempotent).
+$drResult = @(Get-AzSqlInstance -ResourceGroupName $SharedResourceGroup -Name $miName |
+        Set-MhhManagedIdentityRoleMember -Role 'Directory Readers')
+if ($drResult.status -contains 'Failed') {
+    throw "Failed to grant Directory Readers to the SQL MI identity."
 }
+Write-Host "[shared] SQL MI identity Directory Readers: $($drResult.status -join ', ')."
 
 # ─────────────────────────────────────────────
 # 5. Upload the .bak files and restore the demo databases
 # ─────────────────────────────────────────────
-Update-MhhToken
+Update-MhhTokenQuiet
 $storageKey = az storage account keys list --resource-group $SharedResourceGroup --account-name $storageAccount --query "[0].value" -o tsv
 if ($LASTEXITCODE -ne 0) { throw "Failed to read storage key for '$storageAccount'." }
 
@@ -286,7 +294,7 @@ if ($jobExists -ne 1) {
 # ─────────────────────────────────────────────
 # 7. Fabric VNet data gateway + ConnectionCreator for every attendee
 # ─────────────────────────────────────────────
-Update-MhhToken
+Update-MhhTokenQuiet
 $capacity = (Invoke-FabricApi -Method GET -Path 'capacities').value | Where-Object { $_.displayName -eq $capacityName } | Select-Object -First 1
 if (-not $capacity) { throw "Fabric capacity '$capacityName' not visible via the Fabric API (check tenant setting 'Service principals can use Fabric APIs')." }
 

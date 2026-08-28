@@ -3,8 +3,8 @@
 // resources and are created by deploy-lab.ps1 against the shared MI/capacity.
 // The employee CSV blob is uploaded by deploy-lab.ps1 (not an ARM operation).
 
-@description('Azure region.')
-param location string
+@description('Azure region. Defaults to the resource group location so it follows the region-fallback helper.')
+param location string = resourceGroup().location
 
 @description('Entra object ID of the attendee, granted data access to the CSV storage.')
 param attendeeObjectId string

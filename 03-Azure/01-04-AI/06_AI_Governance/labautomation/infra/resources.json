@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.41.2.15936",
-      "templateHash": "2827733326238294768"
+      "templateHash": "6800554561438851249"
     }
   },
   "parameters": {
@@ -28,6 +28,15 @@
       "defaultValue": {},
       "metadata": {
         "description": "Tags to apply to all resources."
+      }
+    },
+    "modelCapacity": {
+      "type": "int",
+      "defaultValue": 20,
+      "minValue": 1,
+      "maxValue": 500,
+      "metadata": {
+        "description": "TPM capacity (thousands of tokens/min) for each chat + embedding model\ndeployment. Sized so that a full subscription of labs fits inside the default\nCognitive Services GlobalStandard quota: the platform packs `labsPerSubscription`\n(8) labs into one subscription and region, so the per-region cost of this lab is\n`modelCapacity x 5 x 8`. At the default of 20 that is 800 of the typical 1000-unit\nper-model quota, leaving headroom for other labs sharing the subscription. Raise it\nonly after confirming quota with `az cognitiveservices usage list -l <region>`."
       }
     }
   },
@@ -93,7 +102,7 @@
         "publisher": "OpenAI",
         "version": "2025-04-14",
         "sku": "GlobalStandard",
-        "capacity": 100,
+        "capacity": "[parameters('modelCapacity')]",
         "retirementDate": "2026-10-14"
       },
       {
@@ -101,7 +110,7 @@
         "publisher": "OpenAI",
         "version": "2026-03-17",
         "sku": "GlobalStandard",
-        "capacity": 100,
+        "capacity": "[parameters('modelCapacity')]",
         "retirementDate": "2026-09-30"
       },
       {
@@ -109,7 +118,7 @@
         "publisher": "OpenAI",
         "version": "2025-12-11",
         "sku": "GlobalStandard",
-        "capacity": 100,
+        "capacity": "[parameters('modelCapacity')]",
         "retirementDate": "2027-02-05"
       },
       {
@@ -117,7 +126,7 @@
         "publisher": "OpenAI",
         "version": "1",
         "sku": "GlobalStandard",
-        "capacity": 100,
+        "capacity": "[parameters('modelCapacity')]",
         "retirementDate": "2027-04-14"
       },
       {
@@ -125,7 +134,7 @@
         "publisher": "Mistral AI",
         "version": "1",
         "sku": "GlobalStandard",
-        "capacity": 100,
+        "capacity": "[parameters('modelCapacity')]",
         "retirementDate": "2099-12-30"
       },
       {

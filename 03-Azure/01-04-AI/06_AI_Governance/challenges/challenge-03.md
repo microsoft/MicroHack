@@ -24,6 +24,15 @@ As always, confirm your notebook configuration is in place — see
 
 ## ✅ Tasks
 
+> [!IMPORTANT]
+> **Challenge 1 must be completed first — not just its environment setup.**
+> Notebook 1 deploys the APIM **policy fragments** (`set-llm-requested-model`,
+> `validate-model-access`, `set-backend-pools`, `set-target-backend-pool`,
+> `set-backend-authorization`, `set-llm-usage`) that this challenge's product
+> policy includes with `<include-fragment>`. The lab's hub deployment
+> intentionally ships only a minimal gateway, so if you jump straight here the
+> Bicep deployment fails with a *"Policy fragment not found"* error.
+
 ### Part A — Confirm your notebook environment is ready (2 min)
 
 Same prerequisite as every notebook in this MicroHack — see

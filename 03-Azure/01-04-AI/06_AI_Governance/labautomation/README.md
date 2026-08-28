@@ -257,11 +257,28 @@ must reflect the real burn rate. Breakdown per lab:
 > roughly 7×, but it changes gateway capabilities — treat that as a functional decision, not a
 > pure cost tweak.
 
-**`labsPerSubscription: 8`** — bounded by Azure OpenAI regional quota, not cost:
-`8 labs × 100 capacity units per model = 800` units, inside the typical 1 000-unit
-GlobalStandard quota per model per region. **If you raise `labsPerSubscription`, or raise the
-model `capacity` in `infra/resources.bicep`, re-check that product against the subscription's
-quota in the target region** — exceeding it makes later labs fail to deploy their models.
+**`labsPerSubscription: 8`** — bounded by Azure OpenAI regional quota, not cost.
+The per-model cost of a full subscription is `labsPerSubscription × modelCapacity`,
+against a typical **1 000-unit** GlobalStandard quota per model per region.
+
+The `modelCapacity` parameter in `infra/resources.bicep` defaults to **20**
+(20 K TPM per model per attendee), giving `8 × 20 = 160` units per model —
+comfortably inside quota even when other labs share the subscription. 20 K TPM is
+far more than the notebooks need; the earlier value of 100 exhausted the
+`text-embedding-3-large` quota before all 8 labs could deploy.
+
+**Before an event, verify the target region actually has the headroom:**
+
+```bash
+az cognitiveservices usage list -l <region> -o table \
+  | grep -E 'GlobalStandard\.(gpt4\.1|gpt-5\.2|gpt-5\.4-mini|text-embedding-3-large|Mistral-Large-3|Phi-4)'
+```
+
+For each row confirm `limit - currentValue >= labsPerSubscription × modelCapacity`
+(Phi-4 uses capacity 1, so it needs only `labsPerSubscription`). Note that the
+per-model quota row does not appear for a model until one deployment of it exists
+in that region. **If you raise `labsPerSubscription` or `modelCapacity`, re-check
+this** — exceeding quota makes later labs fail to deploy their models.
 
 `estimatedSharedDeploymentDailyCostsUsd: 0.0` — `shared-deploy-lab.ps1` only registers resource
 providers and deploys nothing billable.

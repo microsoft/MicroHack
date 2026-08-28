@@ -25,6 +25,17 @@ param resourceToken string
 @description('Tags to apply to all resources.')
 param tags object = {}
 
+@minValue(1)
+@maxValue(500)
+@description('''TPM capacity (thousands of tokens/min) for each chat + embedding model
+deployment. Sized so that a full subscription of labs fits inside the default
+Cognitive Services GlobalStandard quota: the platform packs `labsPerSubscription`
+(8) labs into one subscription and region, so the per-region cost of this lab is
+`modelCapacity x 5 x 8`. At the default of 20 that is 800 of the typical 1000-unit
+per-model quota, leaving headroom for other labs sharing the subscription. Raise it
+only after confirming quota with `az cognitiveservices usage list -l <region>`.''')
+param modelCapacity int = 20
+
 // ===== Hub Resource Naming =====
 var hubFoundryAccountName = 'aif-hub-${resourceToken}'
 var hubFoundryProjectName = 'citadel-hub-project'
@@ -218,7 +229,7 @@ var aiFoundryModels = [
     publisher: 'OpenAI'
     version: '2025-04-14'
     sku: 'GlobalStandard'
-    capacity: 100
+    capacity: modelCapacity
     retirementDate: '2026-10-14'
   }
   {
@@ -226,7 +237,7 @@ var aiFoundryModels = [
     publisher: 'OpenAI'
     version: '2026-03-17'
     sku: 'GlobalStandard'
-    capacity: 100
+    capacity: modelCapacity
     retirementDate: '2026-09-30'
   }
   {
@@ -234,7 +245,7 @@ var aiFoundryModels = [
     publisher: 'OpenAI'
     version: '2025-12-11'
     sku: 'GlobalStandard'
-    capacity: 100
+    capacity: modelCapacity
     retirementDate: '2027-02-05'
   }
   {
@@ -242,7 +253,7 @@ var aiFoundryModels = [
     publisher: 'OpenAI'
     version: '1'
     sku: 'GlobalStandard'
-    capacity: 100
+    capacity: modelCapacity
     retirementDate: '2027-04-14'
   }
   {
@@ -250,7 +261,7 @@ var aiFoundryModels = [
     publisher: 'Mistral AI'
     version: '1'
     sku: 'GlobalStandard'
-    capacity: 100
+    capacity: modelCapacity
     retirementDate: '2099-12-30'
   }
   {

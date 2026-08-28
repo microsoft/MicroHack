@@ -27,7 +27,9 @@
       "installGradle": false
     },
     "ghcr.io/devcontainers/features/github-cli:1": {},
-    "ghcr.io/devcontainers/features/azure-cli:1": {}
+    "ghcr.io/devcontainers/features/azure-cli:1": {
+      "installBicep": true
+    }
   },
   "forwardPorts": [
     3000,

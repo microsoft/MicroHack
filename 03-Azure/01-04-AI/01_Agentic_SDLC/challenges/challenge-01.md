@@ -2,6 +2,10 @@
 
 **[Home](../Readme.md)** - [Next Challenge](challenge-02.md)
 
+> **⚠️ Important — before you start.** Log into GitHub using the **hackathon-provided GitHub account** (not your personal or corporate account), then **fork the MicroHack repo** with that hackathon account set as the **owner** of the fork. All later challenges — commits, pull requests, Actions runs, and OIDC federation — assume you're working from that fork under the hackathon account.
+>
+> When you create your Codespace, the repo offers **many** dev container configurations (one per MicroHack track). Be sure to select **"Azure / AI / Agentic SDLC"** from the configuration picker — picking the wrong one (or the default) leaves you without the tools this track needs.
+
 ## Goal
 
 Configure your development environment, confirm GitHub Copilot access, and get familiar with the **Octocat Supply** application so the later challenges run without setup interruptions.

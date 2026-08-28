@@ -110,6 +110,16 @@ Write-Host "[$SubscriptionId] Result: $($result)"
 $managedInstance = Get-AzSqlInstance -ResourceGroupName $sharedResourceGroup -ErrorAction SilentlyContinue | Select-Object -First 1
 $managedInstanceName = $managedInstance.ManagedInstanceName
 $managedInstanceFQDN = $managedInstance.FullyQualifiedDomainName
+
+@{"HackboxCredential" = @{name = 'Legacy SQL Server Name'; value = $legacySQLName; note = 'Name of legacy SQL Server'}}
+@{"HackboxCredential" = @{name = 'SQLMI FQDN'; value = $managedInstanceFQDN; note = 'FQDN of SQLMI'}}
+@{"HackboxCredential" = @{name = 'Arc SQL Server Name'; value = $arcSQLName; note = 'Name of new SQL Server'}}
+
+@{"HackboxCredential" = @{name = 'VM User Name'; value = $adminUsername; note = 'Username to connect for every VM'}}
+@{"HackboxCredential" = @{name = 'VM User Password'; value = $adminPassword; note = 'Password to connect to every VM'}}
+@{"HackboxCredential" = @{name = 'SQLMI User Name'; value = $sqlMiAdminUsername; note = 'Username to connect to SQLMI'}}
+@{"HackboxCredential" = @{name = 'SQLMI User Password'; value = $sqlMiAdminPassword; note = 'Password to connect to SQLMI'}}
+
 [string]$managedInstanceResourceId = $managedInstance.Id
 #$managedInstancePrincipalId = $managedInstance.Identity.PrincipalId
 
@@ -123,9 +133,9 @@ try {
 }
 catch {
     Write-Host "Failed to grant 'Directory Readers' to Managed Identity of $managedInstanceFQDN." -ForegroundColor Red
-    $ErrorString = $_ | format-list -force | Out-String
-    Write-Host "ERR: $ErrorString" -ForegroundColor Red
     Write-Host $return
+    $ErrorString = $_ | format-list -force | Out-String
+    Write-Error "ERR: $ErrorString"
 }
 
 Start-Sleep -Seconds 30
@@ -160,7 +170,7 @@ try {
 catch {
     Write-Host "Failed to set Entra ID Admin on $managedInstanceFQDN." -ForegroundColor Red
     $ErrorString = $_ | format-list -force | Out-String
-    Write-Host "ERR: $ErrorString" -ForegroundColor Red
+    Write-Error "ERR: $ErrorString"
 }
 
 $timeoutSeconds = 120
@@ -194,12 +204,3 @@ if (-not $found)
 {
     throw "Expected Entra ID Admin was not configured within 2 minutes."
 }
-
-@{"HackboxCredential" = @{name = 'Legacy SQL Server Name'; value = $legacySQLName; note = 'Name of legacy SQL Server'}}
-@{"HackboxCredential" = @{name = 'SQLMI FQDN'; value = $managedInstanceFQDN; note = 'FQDN of SQLMI'}}
-@{"HackboxCredential" = @{name = 'Arc SQL Server Name'; value = $arcSQLName; note = 'Name of new SQL Server'}}
-
-@{"HackboxCredential" = @{name = 'VM User Name'; value = $adminUsername; note = 'Username to connect for every VM'}}
-@{"HackboxCredential" = @{name = 'VM User Password'; value = $adminPassword; note = 'Password to connect to every VM'}}
-@{"HackboxCredential" = @{name = 'SQLMI User Name'; value = $sqlMiAdminUsername; note = 'Username to connect to SQLMI'}}
-@{"HackboxCredential" = @{name = 'SQLMI User Password'; value = $sqlMiAdminPassword; note = 'Password to connect to SQLMI'}}

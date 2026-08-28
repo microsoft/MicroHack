@@ -88,8 +88,13 @@ $vmPostfix = $vmPostfix -replace "_", "-"
 $vmName = "VM-$vmPostfix"
 $TeamName = $me.ShortName
 $TeamName = $TeamName.ToUpper()
-$legacySQLName = "legacySQL2016"
 
+# feed the effective resource group back to the console
+@{"HackboxCredential" = @{ name = "ResourceGroupName" ; value = $effectiveResourceGroup; note = "The name of the resource group where lab resources are deployed" }}
+@{"HackboxCredential" = @{ name = "Team VM Name" ; value = $vmName; note = "The name of the Team VM" }}
+@{"HackboxCredential" = @{ name = "Team / Link Name" ; value = $TeamName; note = "Name of the Team (Prefix for DBs and to use as Link Name for SQLMI)" }}
+
+$legacySQLName = "legacySQL2016"
 
 $storageAccountName = Get-AzStorageAccount -ResourceGroupName $sharedResourceGroupName -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty StorageAccountName
 $managedInstanceFQDN = Get-AzSqlInstance -ResourceGroupName $sharedResourceGroupName -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty FullyQualifiedDomainName
@@ -121,8 +126,3 @@ Write-Host "[$SubscriptionId] Lab deployment completed successfully"
 Write-Host "[$SubscriptionId] Lab Resource Group: $effectiveResourceGroup"
 Write-Host "[$SubscriptionId] Shared Resource Group: $sharedResourceGroupName"
 Write-Host "[$SubscriptionId] Result: $($result)"
-
-# feed the effective resource group back to the console
-@{"HackboxCredential" = @{ name = "ResourceGroupName" ; value = $effectiveResourceGroup; note = "The name of the resource group where lab resources are deployed" }}
-@{"HackboxCredential" = @{ name = "Team VM Name" ; value = $vmName; note = "The name of the Team VM" }}
-@{"HackboxCredential" = @{ name = "Team / Link Name" ; value = $TeamName; note = "Name of the Team (Prefix for DBs and to use as Link Name for SQLMI)" }}

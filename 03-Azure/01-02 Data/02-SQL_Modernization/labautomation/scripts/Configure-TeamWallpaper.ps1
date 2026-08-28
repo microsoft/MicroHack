@@ -79,6 +79,8 @@ try {
 }
 catch {
     Write-Host "An error occurred while configuring the team wallpaper: $_"
+    $ErrorString = $_ | format-list -force | Out-String
+    Write-Error "ERR: $ErrorString"
 }
 
 Stop-Transcript

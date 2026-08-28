@@ -26,29 +26,20 @@ WHERE
 
 DECLARE @DBName VARCHAR(255)
 DECLARE @SQLCmd NVARCHAR(MAX)
-DECLARE DB_Crs CURSOR READ_ONLY FORWARD_ONLY FOR SELECT name FROM sys.databases WHERE name = '$($TeamName)_TenantDataDB' AND state_desc = 'ONLINE'
-OPEN DB_Crs
-FETCH NEXT FROM DB_Crs INTO @DBName
+SET @DBName = '$($TeamName)_TenantDataDB'
 
-WHILE @@FETCH_STATUS = 0
-BEGIN
-	SET @SQLCmd = 'USE [' + @DBName + ']
-	ALTER ASSEMBLY CLRUFDS WITH PERMISSION_SET = UNSAFE;
-	ALTER ASSEMBLY Database1 WITH PERMISSION_SET = UNSAFE;
-	'
-	--PRINT @SQLCmd
-	EXEC (@SQLCmd)
+SET @SQLCmd = 'USE [' + @DBName + '];
+ALTER ASSEMBLY CLRUFDS WITH PERMISSION_SET = UNSAFE;
+ALTER ASSEMBLY Database1 WITH PERMISSION_SET = UNSAFE;
+'
+--PRINT @SQLCmd
+EXEC (@SQLCmd)
 
-	SET @SQLCmd = 'ALTER DATABASE [' + @DBName + ']
-	ADD LOG FILE (NAME = N''' + @DBName + '_Log2'', FILENAME = N''' + @DefaultLogPath + @DBName + '_Log2.ldf'');
-	'
-	--PRINT @SQLCmd
-	EXEC (@SQLCmd)
-
-	FETCH NEXT FROM DB_Crs INTO @DBName
-END
-CLOSE DB_Crs
-DEALLOCATE DB_Crs
+SET @SQLCmd = 'ALTER DATABASE [' + @DBName + ']
+ADD LOG FILE (NAME = N''' + @DBName + '_Log2'', FILENAME = N''' + @DefaultLogPath + @DBName + '_Log2.ldf'');
+'
+--PRINT @SQLCmd
+EXEC (@SQLCmd)
 "@
 
 $connectionString = "Data Source=$ServerInstance;Initial Catalog=master;TrustServerCertificate=True;"
@@ -66,12 +57,15 @@ try {
     $command.CommandTimeout = $QueryTimeout
 
     $command.CommandText = $ConfigureSql
-    $result = $command.ExecuteReader()
-    $table = New-Object System.Data.DataTable
-    $table.Load($result)
+    $result = $command.ExecuteNonQuery()
+    #$result = $command.ExecuteReader()
+    #$table = New-Object System.Data.DataTable
+    #$table.Load($result)
 }
 catch {
-    Write-Error "Fehler bei der Ausführung: $_"
+    Write-Host $result
+    $ErrorString = $_ | format-list -force | Out-String
+    Write-Error "ERR: $ErrorString"
 }
 finally {
     if ($null -ne $serverConnection -and $serverConnection.IsOpen) {

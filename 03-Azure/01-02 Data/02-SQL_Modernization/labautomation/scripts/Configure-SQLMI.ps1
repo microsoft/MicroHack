@@ -499,7 +499,8 @@ try {
     #Write-Host "Skript erfolgreich auf SQL MI ausgeführt." -ForegroundColor Green
 }
 catch {
-    Write-Error "Fehler bei der Ausführung: $_"
+    $ErrorString = $_ | format-list -force | Out-String
+    Write-Error "ERR: $ErrorString"
 }
 finally {
     if ($null -ne $serverConnection -and $serverConnection.IsOpen) {

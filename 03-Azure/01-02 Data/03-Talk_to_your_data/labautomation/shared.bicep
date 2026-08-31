@@ -3,7 +3,8 @@
 // infra/modules.
 //
 // Non-ARM follow-up performed by shared-deploy-lab.ps1 after this template:
-//   - SQL MI Directory-Readers grant + Entra admin
+//   - SQL MI Directory-Readers grant + Entra admin (the admin is set via REST against
+//     the first lab user; ARM cannot resolve the principal in the lab tenant)
 //   - demo database restores, stored proc, product, Agent job
 //   - Fabric VNet gateway + gateway role assignments
 // Per-attendee resources (user databases, Fabric workspaces) are created by
@@ -21,15 +22,6 @@ param sqlAdminLogin string
 @description('SQL Managed Instance administrator password.')
 @secure()
 param sqlPassword string
-
-@description('Entra admin display name for the SQL MI (label only).')
-param sqlAadAdminLogin string
-
-@description('Entra admin object ID (sid) for the SQL MI.')
-param sqlAadAdminSid string
-
-@description('Entra admin tenant ID for the SQL MI.')
-param sqlAadAdminTenantId string
 
 @description('Fabric capacity SKU name.')
 param fabricSkuName string = 'F32'
@@ -66,9 +58,6 @@ module sqlManagedInstance 'infra/modules/sqlManagedInstance.bicep' = {
     subnetId: vnet.outputs.managedInstanceSubnetId
     administratorLogin: sqlAdminLogin
     administratorLoginPassword: sqlPassword
-    aadAdminLogin: sqlAadAdminLogin
-    aadAdminSid: sqlAadAdminSid
-    aadAdminTenantId: sqlAadAdminTenantId
     tags: commonTags
   }
 }

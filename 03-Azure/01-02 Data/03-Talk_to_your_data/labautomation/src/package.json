@@ -13,6 +13,6 @@
   "dependencies": {
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
-    "mssql": "^12.7.0"
+    "mssql": "^10.0.2"
   }
 }

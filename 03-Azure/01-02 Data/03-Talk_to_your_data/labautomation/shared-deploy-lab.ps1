@@ -32,6 +32,12 @@ $ErrorActionPreference = 'Stop'
 $SharedResourceGroup = 'rg-shared'
 $SqlAdminLogin = 'sqlmiadmin'
 $FabricApi = 'https://api.fabric.microsoft.com/v1'
+$GraphApi = 'https://graph.microsoft.com/v1.0'
+# Power BI Free. Assigning it to a user is what makes the tenant known to Fabric; without it
+# Microsoft.Fabric/capacities fails with "Tenant ... wasn't recognized by Microsoft Fabric".
+$FabricLicenseSkuPartNumber = 'POWER_BI_STANDARD'
+# Only needs to be a country Power BI is offered in; it gates license assignment, nothing else.
+$FabricUsageLocation = 'DE'
 # Microsoft.PowerPlatform is required for the Fabric VNet data gateway's subnet delegation.
 $RequiredProviders = @('Microsoft.Sql', 'Microsoft.Fabric', 'Microsoft.Storage', 'Microsoft.Web', 'Microsoft.Network', 'Microsoft.PowerPlatform')
 
@@ -78,6 +84,24 @@ function Invoke-MiSql {
     }
     if ($InputFile) { $splat['InputFile'] = $InputFile } else { $splat['Query'] = $Query }
     Invoke-Sqlcmd @splat
+}
+
+function Invoke-GraphApi {
+    param(
+        [Parameter(Mandatory = $true)][ValidateSet('GET', 'POST', 'PATCH')][string]$Method,
+        [Parameter(Mandatory = $true)][string]$Path,
+        [object]$Body
+    )
+    $azArgs = @('rest', '--method', $Method, '--url', "$GraphApi/$($Path.TrimStart('/'))", '--resource', 'https://graph.microsoft.com')
+    if ($Body) {
+        $azArgs += @('--headers', 'Content-Type=application/json', '--body', ($Body | ConvertTo-Json -Depth 10 -Compress))
+    }
+    $raw = az @azArgs 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        throw "Graph $Method $Path failed: $raw"
+    }
+    if ([string]::IsNullOrWhiteSpace($raw)) { return $null }
+    return ($raw | ConvertFrom-Json)
 }
 
 function Invoke-FabricApi {
@@ -127,7 +151,7 @@ foreach ($uid in ($AllowedEntraUserIds | Where-Object { $_ })) {
 }
 
 # ─────────────────────────────────────────────
-# 2. Resolve the deploying service principal (becomes SQL MI Entra admin)
+# 2. Resolve principals and bootstrap the Fabric tenant
 # ─────────────────────────────────────────────
 $account = (Get-AzContext).Account.Id
 $spObjectId = $null
@@ -143,10 +167,77 @@ if (-not $spObjectId) {
 }
 if (-not $spObjectId) { throw "Could not resolve the deploying principal object id." }
 
-# Entra admin for the SQL MI (enables Entra auth; set declaratively with an explicit sid so ARM does not resolve the principal).
-$aadTenantId = (Get-AzContext).Tenant.Id
-$aadAdminLogin = if ($account -as [guid]) { (Get-AzADServicePrincipal -Id $spObjectId -ErrorAction SilentlyContinue).DisplayName } else { $account }
-if (-not $aadAdminLogin) { $aadAdminLogin = 'MicroHackDeployer' }
+# Resolve every attendee once; reused for Fabric licensing, capacity admins and the SQL MI Entra admin.
+$labUsers = [System.Collections.Generic.List[object]]::new()
+foreach ($uid in ($AllowedEntraUserIds | Where-Object { $_ })) {
+    $mhhUser = Get-MhhLabUser -UserId $uid -ErrorAction SilentlyContinue
+    $memberUpn = $mhhUser.UserPrincipalName
+    if (-not $memberUpn) { $memberUpn = (Get-AzADUser -ObjectId $uid -ErrorAction SilentlyContinue).UserPrincipalName }
+    if (-not $memberUpn) {
+        Write-Warning "[shared] Could not resolve a UPN for '$uid'; skipping it."
+        continue
+    }
+    $labUsers.Add([pscustomobject]@{
+            Id                = $uid
+            UserPrincipalName = $memberUpn
+            ShortName         = $mhhUser.ShortName
+        })
+}
+if ($labUsers.Count -eq 0) { throw "Could not resolve any lab user from AllowedEntraUserIds." }
+
+$firstLabUser = $labUsers | Where-Object { $_.ShortName -match '(?i)labuser-[0-9]{4}' } | Sort-Object ShortName | Select-Object -First 1
+if (-not $firstLabUser) { $firstLabUser = $labUsers | Sort-Object ShortName | Select-Object -First 1 }
+
+# A service principal cannot sign a tenant up for Fabric; only a licensed user can. Every attendee is
+# licensed anyway (they need it to open Fabric), and the first assignment provisions the tenant.
+$fabricSku = (Invoke-GraphApi -Method GET -Path 'subscribedSkus').value |
+    Where-Object { $_.skuPartNumber -eq $FabricLicenseSkuPartNumber } | Select-Object -First 1
+if (-not $fabricSku) {
+    throw "SKU '$FabricLicenseSkuPartNumber' is not available in this tenant, so Fabric cannot be provisioned. Enable Power BI self-service sign-up or add the SKU."
+}
+
+foreach ($labUser in $labUsers) {
+    $isBootstrapUser = $labUser.Id -eq $firstLabUser.Id
+    try {
+        $graphUser = Invoke-GraphApi -Method GET -Path "users/$($labUser.Id)?`$select=id,usageLocation,assignedLicenses"
+        if ($graphUser.assignedLicenses.skuId -contains $fabricSku.skuId) {
+            Write-Host "[shared] $($labUser.UserPrincipalName) already holds $FabricLicenseSkuPartNumber."
+            continue
+        }
+        # assignLicense rejects users without a usage location.
+        if (-not $graphUser.usageLocation) {
+            Invoke-GraphApi -Method PATCH -Path "users/$($labUser.Id)" -Body @{ usageLocation = $FabricUsageLocation } | Out-Null
+        }
+        Invoke-GraphApi -Method POST -Path "users/$($labUser.Id)/assignLicense" -Body @{
+            addLicenses    = @(@{ skuId = $fabricSku.skuId; disabledPlans = @() })
+            removeLicenses = @()
+        } | Out-Null
+        Write-Host "[shared] Assigned $FabricLicenseSkuPartNumber to $($labUser.UserPrincipalName)."
+    }
+    catch {
+        if ($isBootstrapUser) { throw "Could not license '$($labUser.UserPrincipalName)' for Fabric, so the tenant cannot be provisioned: $($_.Exception.Message)" }
+        Write-Warning "[shared] Fabric license for $($labUser.UserPrincipalName) failed: $($_.Exception.Message)"
+    }
+}
+
+# Tenant provisioning is asynchronous. Poll until the Fabric API answers rather than letting the
+# capacity deployment fail; on timeout continue anyway so ARM produces the authoritative error.
+$fabricTenantReady = $false
+for ($elapsed = 0; $elapsed -lt 600; $elapsed += 30) {
+    try {
+        Invoke-FabricApi -Method GET -Path 'capacities' | Out-Null
+        $fabricTenantReady = $true
+        Write-Host "[shared] Fabric recognises this tenant."
+        break
+    }
+    catch {
+        Write-Host "[shared] Waiting for Fabric tenant provisioning ($elapsed s)..."
+        Start-Sleep -Seconds 30
+    }
+}
+if (-not $fabricTenantReady) {
+    Write-Warning "[shared] Fabric did not confirm the tenant within 10 minutes. Continuing; the capacity deployment will report the real cause."
+}
 
 # Fabric capacity admin members: users must be UPNs (object IDs are rejected); a service principal uses its object ID.
 $fabricMemberList = [System.Collections.Generic.List[string]]::new()
@@ -156,12 +247,7 @@ if ($account -as [guid]) {
 else {
     $fabricMemberList.Add($account)       # deploying user's UPN
 }
-foreach ($uid in ($AllowedEntraUserIds | Where-Object { $_ })) {
-    $memberUpn = (Get-MhhLabUser -UserId $uid -ErrorAction SilentlyContinue).UserPrincipalName
-    if (-not $memberUpn) { $memberUpn = (Get-AzADUser -ObjectId $uid -ErrorAction SilentlyContinue).UserPrincipalName }
-    if ($memberUpn) { $fabricMemberList.Add($memberUpn) }
-    else { Write-Warning "[shared] Could not resolve a UPN for '$uid'; omitting it from Fabric admin members." }
-}
+foreach ($labUser in $labUsers) { $fabricMemberList.Add($labUser.UserPrincipalName) }
 $fabricAdminMembers = @($fabricMemberList | Select-Object -Unique)
 $sqlPassword = New-MhhStablePassword -Purpose 'sql-admin' -Length 24
 
@@ -184,9 +270,6 @@ New-AzResourceGroupDeployment `
     sqlPassword           = $sqlPassword
     fabricAdminMembers    = $fabricAdminMembers
     sqlMiNetworkingExists = $sqlMiNetworkingExists
-    sqlAadAdminLogin      = $aadAdminLogin
-    sqlAadAdminSid        = $spObjectId
-    sqlAadAdminTenantId   = $aadTenantId
 } `
     -AsJob | Out-Null
 
@@ -228,6 +311,45 @@ if ($drResult.status -contains 'Failed') {
     throw "Failed to grant Directory Readers to the SQL MI identity."
 }
 Write-Host "[shared] SQL MI identity Directory Readers: $($drResult.status -join ', ')."
+
+# ─────────────────────────────────────────────
+# 4b. Entra admin on the SQL MI = first lab user
+# ─────────────────────────────────────────────
+# Deliberately not done in Bicep: ARM cannot resolve the principal in the lab tenant.
+# Set-AzSqlInstanceActiveDirectoryAdministrator is unreliable here too, so PUT the
+# administrator sub-resource directly. Directory Readers must be granted first.
+Start-Sleep -Seconds 30
+Update-MhhTokenQuiet
+
+$sqlEntraAdmin = Get-AzADUser -ObjectId $firstLabUser.Id -ErrorAction Stop
+$mi = Get-AzSqlInstance -ResourceGroupName $SharedResourceGroup -Name $miName
+Write-Host "[shared] Configuring $($sqlEntraAdmin.UserPrincipalName) as SQL MI Entra admin."
+
+# Concatenated, not interpolated: "$($mi.Id)/...?api-version=..." would swallow the '?' into the variable scope.
+$adminPath = $mi.Id + '/administrators/ActiveDirectory?api-version=2023-08-01-preview'
+$adminPayload = @{
+    properties = @{
+        administratorType = 'ActiveDirectory'
+        login             = $sqlEntraAdmin.UserPrincipalName
+        sid               = $sqlEntraAdmin.Id
+        tenantId          = (Get-AzContext).Tenant.Id
+    }
+} | ConvertTo-Json -Depth 5
+$adminResp = Invoke-AzRestMethod -Method PUT -Path $adminPath -Payload $adminPayload
+if ($adminResp.StatusCode -notin 200, 201, 202) {
+    throw "Setting the SQL MI Entra admin failed (HTTP $($adminResp.StatusCode)): $($adminResp.Content)"
+}
+
+# The PUT is accepted asynchronously; confirm the admin actually landed before continuing.
+$adminConfirmed = $false
+for ($elapsed = 0; $elapsed -lt 120; $elapsed += 10) {
+    Start-Sleep -Seconds 10
+    $current = Get-AzSqlInstanceActiveDirectoryAdministrator -ResourceGroupName $SharedResourceGroup -InstanceName $miName -ErrorAction SilentlyContinue
+    if ($current -and $current.ObjectId -eq $sqlEntraAdmin.Id) { $adminConfirmed = $true; break }
+    Write-Host "[shared] Waiting for the Entra admin to appear ($elapsed s)..."
+}
+if (-not $adminConfirmed) { throw "The SQL MI Entra admin was not configured within 2 minutes." }
+Write-Host "[shared] SQL MI Entra admin is $($sqlEntraAdmin.UserPrincipalName)."
 
 # ─────────────────────────────────────────────
 # 5. Upload the .bak files and restore the demo databases

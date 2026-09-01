@@ -27,7 +27,7 @@ AKS_ENVIRONMENT="${AKS_ENVIRONMENT:-env-azure-prod}"
 K3S_ENVIRONMENT="${K3S_ENVIRONMENT:-env-local-prod}"
 RADIUS_GROUP="${RADIUS_GROUP:-rg-trading}"
 RECIPE_REGISTRY="${RECIPE_REGISTRY:-ghcr.io/microsoft/adaptive-apps/recipes}"
-WORKSHOP_RECIPE_VERSION="${WORKSHOP_RECIPE_VERSION:-1.0.3}"
+WORKSHOP_RECIPE_VERSION="${WORKSHOP_RECIPE_VERSION:-1.0.4}"
 [[ "$WORKSHOP_RECIPE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
   echo "WORKSHOP_RECIPE_VERSION must be an immutable semantic version such as 1.0.0." >&2
   exit 1

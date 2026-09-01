@@ -68,4 +68,16 @@ if grep -Fq "radapp.io/" "$SQL_RECIPE"; then
   exit 1
 fi
 
+# PostgreSQL Flexible Server serializes control-plane operations, so the server's child
+# resources must be chained rather than deployed in parallel or they fail with ServerIsBusy.
+grep -Fq "@batchSize(1)" "$AZURE_RECIPE" || {
+  echo "Azure PostgreSQL recipe must deploy firewall rules one at a time." >&2
+  exit 1
+}
+dependency_blocks="$(grep -c "dependsOn:" "$AZURE_RECIPE" || true)"
+if (( dependency_blocks < 4 )); then
+  echo "Azure PostgreSQL recipe must chain the flexible server's child resources; found ${dependency_blocks} dependsOn blocks, expected at least 4." >&2
+  exit 1
+fi
+
 echo "PostgreSQL recipe parity and security assertions passed."

@@ -80,4 +80,18 @@ if (( dependency_blocks < 4 )); then
   exit 1
 fi
 
+# Radius surfaces a recipe's `values` map as the resource's properties. A top-level `secrets`
+# sibling is not part of that contract and causes every output to be discarded, so `secrets`
+# must be nested inside `values` alongside host/port/database/username.
+for recipe in "$AZURE_RECIPE" "$KUBERNETES_RECIPE" "$SQL_RECIPE"; do
+  if grep -Eq "^  secrets:" "$recipe"; then
+    echo "$(basename "$recipe") declares a top-level 'secrets' output; nest it inside 'values'." >&2
+    exit 1
+  fi
+  grep -Eq "^    secrets:" "$recipe" || {
+    echo "$(basename "$recipe") must return 'secrets' nested inside the 'values' map." >&2
+    exit 1
+  }
+done
+
 echo "PostgreSQL recipe parity and security assertions passed."

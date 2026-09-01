@@ -48,8 +48,9 @@ output result object = {
     port: 1433
     database: databaseName
     username: 'sqladmin'
-  }
-  secrets: {
-    password: adminPassword
+    secrets: {
+      #disable-next-line outputs-should-not-contain-secrets
+      password: adminPassword
+    }
   }
 }

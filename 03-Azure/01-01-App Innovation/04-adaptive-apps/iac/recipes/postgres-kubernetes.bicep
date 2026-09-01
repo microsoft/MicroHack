@@ -281,9 +281,9 @@ output result object = {
     port: port
     database: database
     username: user
-  }
-  secrets: {
-    #disable-next-line outputs-should-not-contain-secrets
-    password: password
+    secrets: {
+      #disable-next-line outputs-should-not-contain-secrets
+      password: password
+    }
   }
 }

@@ -326,7 +326,7 @@ resource apimNamedValueUamiClientId 'Microsoft.ApiManagement/service/namedValues
   parent: apim
   name: 'uami-client-id'
   properties: {
-    displayName: 'Hub.Foundry.UAMI.Client.ID'
+    displayName: 'uami-client-id'
     value: apimMI.properties.clientId
     secret: false
   }
@@ -550,7 +550,7 @@ resource apiUniversalLlmOpChatCompletionsPolicy 'Microsoft.ApiManagement/service
   name: 'policy'
   properties: {
     format: 'xml'
-    value: '<policies><inbound><base/><authentication-managed-identity resource="https://cognitiveservices.azure.com" client-id="{{Hub.Foundry.UAMI.Client.ID}}" output-token-variable-name="msi-access-token" ignore-error="false"/><set-header name="Authorization" exists-action="override"><value>@("Bearer " + (string)context.Variables["msi-access-token"])</value></set-header><set-variable name="requestedModel" value="@{var body = context.Request.Body?.As&lt;JObject&gt;(preserveContent: true); string m = body != null ? (string)body[&quot;model&quot;] : null; return string.IsNullOrEmpty(m) ? &quot;gpt-4.1&quot; : m;}"/><choose><when condition="@{string[] allowed = new string[] {&quot;gpt-4.1&quot;,&quot;gpt-5.4-mini&quot;,&quot;gpt-5.2&quot;,&quot;Mistral-Large-3&quot;,&quot;Phi-4&quot;}; string requested = (string)context.Variables[&quot;requestedModel&quot;]; return !allowed.Contains(requested);}"><return-response><set-status code="400" reason="Bad Request"/><set-header name="Content-Type" exists-action="override"><value>application/json</value></set-header><set-body>@{return new JObject(new JProperty("error","unsupported model requested for chat completions"),new JProperty("requestedModel",(string)context.Variables["requestedModel"])).ToString();}</set-body></return-response></when></choose><set-variable name="deploymentName" value="@(((string)context.Variables[&quot;requestedModel&quot;]).Replace(&quot;.&quot;, &quot;-&quot;))"/><set-backend-service backend-id="backend-hub-foundry"/><rewrite-uri template="@(&quot;/openai/deployments/&quot; + (string)context.Variables[&quot;deploymentName&quot;] + &quot;/chat/completions?api-version=2024-10-21&quot;)"/></inbound><backend><base/></backend><outbound><base/></outbound><on-error><base/></on-error></policies>'
+    value: '<policies><inbound><base/><authentication-managed-identity resource="https://cognitiveservices.azure.com" client-id="{{uami-client-id}}" output-token-variable-name="msi-access-token" ignore-error="false"/><set-header name="Authorization" exists-action="override"><value>@("Bearer " + (string)context.Variables["msi-access-token"])</value></set-header><set-variable name="requestedModel" value="@{var body = context.Request.Body?.As&lt;JObject&gt;(preserveContent: true); string m = body != null ? (string)body[&quot;model&quot;] : null; return string.IsNullOrEmpty(m) ? &quot;gpt-4.1&quot; : m;}"/><choose><when condition="@{string[] allowed = new string[] {&quot;gpt-4.1&quot;,&quot;gpt-5.4-mini&quot;,&quot;gpt-5.2&quot;,&quot;Mistral-Large-3&quot;,&quot;Phi-4&quot;}; string requested = (string)context.Variables[&quot;requestedModel&quot;]; return !allowed.Contains(requested);}"><return-response><set-status code="400" reason="Bad Request"/><set-header name="Content-Type" exists-action="override"><value>application/json</value></set-header><set-body>@{return new JObject(new JProperty("error","unsupported model requested for chat completions"),new JProperty("requestedModel",(string)context.Variables["requestedModel"])).ToString();}</set-body></return-response></when></choose><set-variable name="deploymentName" value="@(((string)context.Variables[&quot;requestedModel&quot;]).Replace(&quot;.&quot;, &quot;-&quot;))"/><set-backend-service backend-id="backend-hub-foundry"/><rewrite-uri template="@(&quot;/openai/deployments/&quot; + (string)context.Variables[&quot;deploymentName&quot;] + &quot;/chat/completions?api-version=2024-10-21&quot;)"/></inbound><backend><base/></backend><outbound><base/></outbound><on-error><base/></on-error></policies>'
   }
   dependsOn: [
     apimNamedValueUamiClientId
@@ -577,7 +577,7 @@ resource apiUniversalLlmOpEmbeddingsPolicy 'Microsoft.ApiManagement/service/apis
   name: 'policy'
   properties: {
     format: 'xml'
-    value: '<policies><inbound><base/><authentication-managed-identity resource="https://cognitiveservices.azure.com" client-id="{{Hub.Foundry.UAMI.Client.ID}}" output-token-variable-name="msi-access-token" ignore-error="false"/><set-header name="Authorization" exists-action="override"><value>@("Bearer " + (string)context.Variables["msi-access-token"])</value></set-header><set-variable name="requestedModel" value="@{var body = context.Request.Body?.As&lt;JObject&gt;(preserveContent: true); string m = body != null ? (string)body[&quot;model&quot;] : null; return string.IsNullOrEmpty(m) ? &quot;text-embedding-3-large&quot; : m;}"/><choose><when condition="@{return (string)context.Variables[&quot;requestedModel&quot;] != &quot;text-embedding-3-large&quot;;}"><return-response><set-status code="400" reason="Bad Request"/><set-header name="Content-Type" exists-action="override"><value>application/json</value></set-header><set-body>@{return new JObject(new JProperty("error","unsupported model requested for embeddings"),new JProperty("requestedModel",(string)context.Variables["requestedModel"])).ToString();}</set-body></return-response></when></choose><set-backend-service backend-id="backend-hub-foundry"/><rewrite-uri template="/openai/deployments/text-embedding-3-large/embeddings?api-version=2024-10-21"/></inbound><backend><base/></backend><outbound><base/></outbound><on-error><base/></on-error></policies>'
+    value: '<policies><inbound><base/><authentication-managed-identity resource="https://cognitiveservices.azure.com" client-id="{{uami-client-id}}" output-token-variable-name="msi-access-token" ignore-error="false"/><set-header name="Authorization" exists-action="override"><value>@("Bearer " + (string)context.Variables["msi-access-token"])</value></set-header><set-variable name="requestedModel" value="@{var body = context.Request.Body?.As&lt;JObject&gt;(preserveContent: true); string m = body != null ? (string)body[&quot;model&quot;] : null; return string.IsNullOrEmpty(m) ? &quot;text-embedding-3-large&quot; : m;}"/><choose><when condition="@{return (string)context.Variables[&quot;requestedModel&quot;] != &quot;text-embedding-3-large&quot;;}"><return-response><set-status code="400" reason="Bad Request"/><set-header name="Content-Type" exists-action="override"><value>application/json</value></set-header><set-body>@{return new JObject(new JProperty("error","unsupported model requested for embeddings"),new JProperty("requestedModel",(string)context.Variables["requestedModel"])).ToString();}</set-body></return-response></when></choose><set-backend-service backend-id="backend-hub-foundry"/><rewrite-uri template="/openai/deployments/text-embedding-3-large/embeddings?api-version=2024-10-21"/></inbound><backend><base/></backend><outbound><base/></outbound><on-error><base/></on-error></policies>'
   }
   dependsOn: [
     apimNamedValueUamiClientId
@@ -730,6 +730,92 @@ resource apiUnifiedAiOpGeminiCompletions 'Microsoft.ApiManagement/service/apis/o
     method: 'POST'
     urlTemplate: '/v1beta/openai/chat/completions'
     description: 'Create chat completions using Google Gemini (optional, deferred to Phase 5)'
+  }
+}
+
+
+// ===== Phase 4: Operation policies for the remaining APIM operations =====
+// Every APIM operation needs a policy; without one the operation has no backend
+// and returns HTTP 500. These eight complete the surface exercised by
+// challenges 1, 2 and 6.
+
+// POST /models/responses -> Foundry Responses API
+resource apiUniversalLlmOpPostResponsesPolicy 'Microsoft.ApiManagement/service/apis/operations/policies@2023-09-01-preview' = {
+  parent: apiUniversalLlmOpPostResponses
+  name: 'policy'
+  properties: {
+    format: 'xml'
+    value: '<policies><inbound><base/><set-variable name="requestedModel" value="@{var body = context.Request.Body?.As&lt;JObject&gt;(preserveContent: true); string m = body != null ? (string)body[&quot;model&quot;] : null; return string.IsNullOrEmpty(m) ? &quot;gpt-4.1&quot; : m;}"/><choose><when condition="@{ var allowed = new string[]{&quot;gpt-4.1&quot;,&quot;gpt-5.4-mini&quot;,&quot;gpt-5.2&quot;,&quot;text-embedding-3-large&quot;,&quot;Mistral-Large-3&quot;,&quot;Phi-4&quot;}; return !allowed.Contains((string)context.Variables[&quot;requestedModel&quot;]); }"><return-response><set-status code="400" reason="Bad Request"/><set-header name="Content-Type" exists-action="override"><value>application/json</value></set-header><set-body>{"error":"unsupported model requested for responses"}</set-body></return-response></when></choose><authentication-managed-identity resource="https://cognitiveservices.azure.com" client-id="{{uami-client-id}}" output-token-variable-name="msi-access-token" ignore-error="false"/><set-header name="Authorization" exists-action="override"><value>@(&quot;Bearer &quot; + (string)context.Variables[&quot;msi-access-token&quot;])</value></set-header><set-backend-service backend-id="backend-hub-foundry"/><set-body>@{var body = context.Request.Body.As&lt;JObject&gt;(preserveContent: true); string m = (string)body[&quot;model&quot;]; if (string.IsNullOrEmpty(m)) { m = &quot;gpt-4.1&quot;; } body[&quot;model&quot;] = m.Replace(&quot;.&quot;, &quot;-&quot;); return body.ToString();}</set-body><rewrite-uri template="/openai/responses?api-version=2025-03-01-preview"/></inbound><backend><base/></backend><outbound><base/></outbound><on-error><base/></on-error></policies>'
+  }
+}
+
+// GET /models/responses/{response_id}
+resource apiUniversalLlmOpGetResponsePolicy 'Microsoft.ApiManagement/service/apis/operations/policies@2023-09-01-preview' = {
+  parent: apiUniversalLlmOpGetResponse
+  name: 'policy'
+  properties: {
+    format: 'xml'
+    value: '<policies><inbound><base/><authentication-managed-identity resource="https://cognitiveservices.azure.com" client-id="{{uami-client-id}}" output-token-variable-name="msi-access-token" ignore-error="false"/><set-header name="Authorization" exists-action="override"><value>@(&quot;Bearer &quot; + (string)context.Variables[&quot;msi-access-token&quot;])</value></set-header><set-backend-service backend-id="backend-hub-foundry"/><rewrite-uri template="@(&quot;/openai/responses/&quot; + context.Request.MatchedParameters[&quot;response_id&quot;] + &quot;?api-version=2025-03-01-preview&quot;)"/></inbound><backend><base/></backend><outbound><base/></outbound><on-error><base/></on-error></policies>'
+  }
+}
+
+// GET /models/responses/{response_id}/input_items
+resource apiUniversalLlmOpGetResponseInputItemsPolicy 'Microsoft.ApiManagement/service/apis/operations/policies@2023-09-01-preview' = {
+  parent: apiUniversalLlmOpGetResponseInputItems
+  name: 'policy'
+  properties: {
+    format: 'xml'
+    value: '<policies><inbound><base/><authentication-managed-identity resource="https://cognitiveservices.azure.com" client-id="{{uami-client-id}}" output-token-variable-name="msi-access-token" ignore-error="false"/><set-header name="Authorization" exists-action="override"><value>@(&quot;Bearer &quot; + (string)context.Variables[&quot;msi-access-token&quot;])</value></set-header><set-backend-service backend-id="backend-hub-foundry"/><rewrite-uri template="@(&quot;/openai/responses/&quot; + context.Request.MatchedParameters[&quot;response_id&quot;] + &quot;/input_items?api-version=2025-03-01-preview&quot;)"/></inbound><backend><base/></backend><outbound><base/></outbound><on-error><base/></on-error></policies>'
+  }
+}
+
+// GET /unified-ai/deployments (static deployment inventory)
+resource apiUnifiedAiOpGetDeploymentsPolicy 'Microsoft.ApiManagement/service/apis/operations/policies@2023-09-01-preview' = {
+  parent: apiUnifiedAiOpGetDeployments
+  name: 'policy'
+  properties: {
+    format: 'xml'
+    value: '<policies><inbound><base/><return-response><set-status code="200" reason="OK"/><set-header name="Content-Type" exists-action="override"><value>application/json</value></set-header><set-body>{"value":[{"id":"/deployments/gpt-4.1","name":"gpt-4.1","type":"Microsoft.CognitiveServices/accounts/deployments","sku":{"name":"GlobalStandard","capacity":20},"properties":{"model":{"name":"gpt-4.1","format":"OpenAI","version":"2025-04-14"},"deploymentName":"gpt-4-1","capabilities":{"chatCompletion":"true"},"provisioningState":"Succeeded"}},{"id":"/deployments/gpt-5.4-mini","name":"gpt-5.4-mini","type":"Microsoft.CognitiveServices/accounts/deployments","sku":{"name":"GlobalStandard","capacity":20},"properties":{"model":{"name":"gpt-5.4-mini","format":"OpenAI","version":"2026-03-17"},"deploymentName":"gpt-5-4-mini","capabilities":{"chatCompletion":"true"},"provisioningState":"Succeeded"}},{"id":"/deployments/gpt-5.2","name":"gpt-5.2","type":"Microsoft.CognitiveServices/accounts/deployments","sku":{"name":"GlobalStandard","capacity":20},"properties":{"model":{"name":"gpt-5.2","format":"OpenAI","version":"2025-12-11"},"deploymentName":"gpt-5-2","capabilities":{"chatCompletion":"true"},"provisioningState":"Succeeded"}},{"id":"/deployments/text-embedding-3-large","name":"text-embedding-3-large","type":"Microsoft.CognitiveServices/accounts/deployments","sku":{"name":"GlobalStandard","capacity":20},"properties":{"model":{"name":"text-embedding-3-large","format":"OpenAI","version":"1"},"deploymentName":"text-embedding-3-large","capabilities":{"embeddings":"true"},"provisioningState":"Succeeded"}},{"id":"/deployments/Mistral-Large-3","name":"Mistral-Large-3","type":"Microsoft.CognitiveServices/accounts/deployments","sku":{"name":"GlobalStandard","capacity":20},"properties":{"model":{"name":"Mistral-Large-3","format":"Mistral AI","version":"1"},"deploymentName":"Mistral-Large-3","capabilities":{"chatCompletion":"true"},"provisioningState":"Succeeded"}},{"id":"/deployments/Phi-4","name":"Phi-4","type":"Microsoft.CognitiveServices/accounts/deployments","sku":{"name":"GlobalStandard","capacity":1},"properties":{"model":{"name":"Phi-4","format":"Microsoft","version":"7"},"deploymentName":"Phi-4","capabilities":{"chatCompletion":"true"},"provisioningState":"Succeeded"}}]}</set-body></return-response></inbound><backend><base/></backend><outbound><base/></outbound><on-error><base/></on-error></policies>'
+  }
+}
+
+// GET /unified-ai/deployments/{model_name} (404 when unknown)
+resource apiUnifiedAiOpGetDeploymentPolicy 'Microsoft.ApiManagement/service/apis/operations/policies@2023-09-01-preview' = {
+  parent: apiUnifiedAiOpGetDeployment
+  name: 'policy'
+  properties: {
+    format: 'xml'
+    value: '<policies><inbound><base/><choose><when condition="@{ var n = context.Request.MatchedParameters[&quot;model_name&quot;]; var allowed = new string[]{&quot;gpt-4.1&quot;,&quot;gpt-5.4-mini&quot;,&quot;gpt-5.2&quot;,&quot;text-embedding-3-large&quot;,&quot;Mistral-Large-3&quot;,&quot;Phi-4&quot;}; return !allowed.Contains(n); }"><return-response><set-status code="404" reason="Not Found"/><set-header name="Content-Type" exists-action="override"><value>application/json</value></set-header><set-body>{"error":{"code":"DeploymentNotFound","message":"The specified deployment was not found."}}</set-body></return-response></when><otherwise><return-response><set-status code="200" reason="OK"/><set-header name="Content-Type" exists-action="override"><value>application/json</value></set-header><set-body>@{ var n = context.Request.MatchedParameters["model_name"]; string fmt = "OpenAI"; if (n == "Mistral-Large-3") { fmt = "Mistral AI"; } if (n == "Phi-4") { fmt = "Microsoft"; } var m = new JObject(); m["name"] = n; m["format"] = fmt; var o = new JObject(); o["id"] = "/deployments/" + n; o["name"] = n; o["type"] = "Microsoft.CognitiveServices/accounts/deployments"; o["properties"] = new JObject(new JProperty("model", m)); return o.ToString(); }</set-body></return-response></otherwise></choose></inbound><backend><base/></backend><outbound><base/></outbound><on-error><base/></on-error></policies>'
+  }
+}
+
+// POST /unified-ai/openai/deployments/{model}/chat/completions
+resource apiUnifiedAiOpOpenAiCompletionsPolicy 'Microsoft.ApiManagement/service/apis/operations/policies@2023-09-01-preview' = {
+  parent: apiUnifiedAiOpOpenAiCompletions
+  name: 'policy'
+  properties: {
+    format: 'xml'
+    value: '<policies><inbound><base/><choose><when condition="@{ var n = context.Request.MatchedParameters[&quot;model&quot;]; var allowed = new string[]{&quot;gpt-4.1&quot;,&quot;gpt-5.4-mini&quot;,&quot;gpt-5.2&quot;,&quot;text-embedding-3-large&quot;,&quot;Mistral-Large-3&quot;,&quot;Phi-4&quot;}; return !allowed.Contains(n); }"><return-response><set-status code="400" reason="Bad Request"/><set-header name="Content-Type" exists-action="override"><value>application/json</value></set-header><set-body>{"error":"unsupported model requested"}</set-body></return-response></when></choose><authentication-managed-identity resource="https://cognitiveservices.azure.com" client-id="{{uami-client-id}}" output-token-variable-name="msi-access-token" ignore-error="false"/><set-header name="Authorization" exists-action="override"><value>@(&quot;Bearer &quot; + (string)context.Variables[&quot;msi-access-token&quot;])</value></set-header><set-backend-service backend-id="backend-hub-foundry"/><rewrite-uri template="@(&quot;/openai/deployments/&quot; + context.Request.MatchedParameters[&quot;model&quot;].Replace(&quot;.&quot;,&quot;-&quot;) + &quot;/chat/completions?api-version=2024-10-21&quot;)"/></inbound><backend><base/></backend><outbound><base/><set-header name="UAIG-Backend" exists-action="override"><value>backend-hub-foundry</value></set-header><set-header name="UAIG-API-Type" exists-action="override"><value>azure-openai</value></set-header><set-header name="UAIG-Model" exists-action="override"><value>@(context.Request.MatchedParameters[&quot;model&quot;])</value></set-header><set-header name="UAIG-Is-Streaming" exists-action="override"><value>@(context.Response.Headers.GetValueOrDefault(&quot;Content-Type&quot;,&quot;&quot;).Contains(&quot;event-stream&quot;).ToString().ToLower())</value></set-header></outbound><on-error><base/></on-error></policies>'
+  }
+}
+
+// POST /unified-ai/models/chat/completions (model in body)
+resource apiUnifiedAiOpFoundryCompletionsPolicy 'Microsoft.ApiManagement/service/apis/operations/policies@2023-09-01-preview' = {
+  parent: apiUnifiedAiOpFoundryCompletions
+  name: 'policy'
+  properties: {
+    format: 'xml'
+    value: '<policies><inbound><base/><set-variable name="requestedModel" value="@{var body = context.Request.Body?.As&lt;JObject&gt;(preserveContent: true); string m = body != null ? (string)body[&quot;model&quot;] : null; return string.IsNullOrEmpty(m) ? &quot;gpt-4.1&quot; : m;}"/><choose><when condition="@{ var allowed = new string[]{&quot;gpt-4.1&quot;,&quot;gpt-5.4-mini&quot;,&quot;gpt-5.2&quot;,&quot;text-embedding-3-large&quot;,&quot;Mistral-Large-3&quot;,&quot;Phi-4&quot;}; return !allowed.Contains((string)context.Variables[&quot;requestedModel&quot;]); }"><return-response><set-status code="400" reason="Bad Request"/><set-header name="Content-Type" exists-action="override"><value>application/json</value></set-header><set-body>{"error":"unsupported model requested for chat completions"}</set-body></return-response></when></choose><authentication-managed-identity resource="https://cognitiveservices.azure.com" client-id="{{uami-client-id}}" output-token-variable-name="msi-access-token" ignore-error="false"/><set-header name="Authorization" exists-action="override"><value>@(&quot;Bearer &quot; + (string)context.Variables[&quot;msi-access-token&quot;])</value></set-header><set-backend-service backend-id="backend-hub-foundry"/><rewrite-uri template="@(&quot;/openai/deployments/&quot; + ((string)context.Variables[&quot;requestedModel&quot;]).Replace(&quot;.&quot;,&quot;-&quot;) + &quot;/chat/completions?api-version=2024-10-21&quot;)"/></inbound><backend><base/></backend><outbound><base/><set-header name="UAIG-Backend" exists-action="override"><value>backend-hub-foundry</value></set-header><set-header name="UAIG-API-Type" exists-action="override"><value>foundry-inference</value></set-header><set-header name="UAIG-Model" exists-action="override"><value>@((string)context.Variables[&quot;requestedModel&quot;])</value></set-header><set-header name="UAIG-Is-Streaming" exists-action="override"><value>@(context.Response.Headers.GetValueOrDefault(&quot;Content-Type&quot;,&quot;&quot;).Contains(&quot;event-stream&quot;).ToString().ToLower())</value></set-header></outbound><on-error><base/></on-error></policies>'
+  }
+}
+
+// POST /unified-ai/v1beta/openai/chat/completions (no Gemini backend in this lab)
+resource apiUnifiedAiOpGeminiCompletionsPolicy 'Microsoft.ApiManagement/service/apis/operations/policies@2023-09-01-preview' = {
+  parent: apiUnifiedAiOpGeminiCompletions
+  name: 'policy'
+  properties: {
+    format: 'xml'
+    value: '<policies><inbound><base/><return-response><set-status code="501" reason="Not Implemented"/><set-header name="Content-Type" exists-action="override"><value>application/json</value></set-header><set-body>{"error":{"code":"BackendNotConfigured","message":"No Gemini backend is provisioned in this MicroHack lab. Onboard one in challenge 1 to enable this path."}}</set-body></return-response></inbound><backend><base/></backend><outbound><base/></outbound><on-error><base/></on-error></policies>'
   }
 }
 

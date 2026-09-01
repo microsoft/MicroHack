@@ -532,43 +532,4 @@ environment definition, and verifies the registered recipes. `k3s` also needs
 `AZURE_SUBSCRIPTION`, `RESOURCE_GROUP`, and `ACR_NAME` because it republishes the pinned
 workshop recipe before registration.
 
-## Upgrade an existing workshop
 
-Existing participants must republish and re-register before redeploying Challenge 05.
-Do not keep the old external PostgreSQL `latest` registration.
-
-**Bash:**
-
-```bash
-export AZURE_SUBSCRIPTION="<subscription-id>"
-export RESOURCE_GROUP="rg-adaptive-apps"
-export ACR_NAME="<workshop-acr-name>"
-bash resources/configure-recipes.sh all
-```
-
-**PowerShell 7:**
-
-```powershell
-$env:AZURE_SUBSCRIPTION = "<subscription-id>"
-$env:RESOURCE_GROUP = "rg-adaptive-apps"
-$env:ACR_NAME = "<workshop-acr-name>"
-bash resources/configure-recipes.sh all
-```
-
-Then redeploy the unchanged `iac/app.bicep` to `env-local-prod` and `env-azure-prod` in
-Challenge 05. Recipe initialization is idempotent, so existing tables remain and the
-`Demo Account` seed is inserted only when no account with that name exists.
-
-> [!IMPORTANT]
-> Run Challenge 03 first, on the same platform. `iac/aks-env.bicep` and
-> `iac/local-env.bicep` register recipes against the `Radius.Resources` types that
-> `resources/configure-resource-types-aks.sh` and
-> `resources/configure-resource-types-k3s.sh` create. Skipping Challenge 03 makes this
-> script fail on unknown resource types.
-
-The AKS path needs the K3s tunnel only when it is run as `all`. Reconnect first if the
-devcontainer was restarted:
-
-```bash
-bash resources/prepare-k3s-azure-vm.sh connect
-```

@@ -10,7 +10,7 @@ if [[ "$TARGET_PLATFORM" != "aks" &&
   exit 1
 fi
 
-for command_name in az base64 kubectl mktemp rad tr; do
+for command_name in az base64 grep kubectl mktemp rad tr; do
   command -v "$command_name" >/dev/null 2>&1 || {
     echo "Required command not found: $command_name" >&2
     exit 1
@@ -52,6 +52,7 @@ get_aks_egress_ips() {
   local allocation
   local sku
   local ip
+  local -a ip_fields=()
   local -a resource_ids=()
   local -a ips=()
 
@@ -59,7 +60,7 @@ get_aks_egress_ips() {
     --resource-group "$RESOURCE_GROUP" \
     --name "$AKS_CLUSTER_NAME" \
     --query networkProfile.outboundType \
-    --output tsv)"
+    --output tsv | tr -d '\r')"
 
   case "$outbound_type" in
     loadBalancer)
@@ -79,7 +80,7 @@ get_aks_egress_ips() {
     --resource-group "$RESOURCE_GROUP" \
     --name "$AKS_CLUSTER_NAME" \
     --query "$id_query" \
-    --output tsv)
+    --output tsv | tr -d '\r')
   ((${#resource_ids[@]} > 0)) || {
     echo "AKS reports no effective outbound public IP resources for '${outbound_type}'." >&2
     return 1
@@ -90,12 +91,17 @@ get_aks_egress_ips() {
       echo "Unsupported AKS egress resource '${resource_id}'; public IP prefixes and broad ranges are not allowed." >&2
       return 1
     }
-    read -r ip allocation sku < <(az network public-ip show \
+    # Azure CLI renders a JMESPath multi-select list as one value per line rather than as
+    # tab-separated columns, so collect the fields as rows instead of reading a single row.
+    mapfile -t ip_fields < <(az network public-ip show \
       --ids "$resource_id" \
       --query "[ipAddress,publicIPAllocationMethod,sku.name]" \
-      --output tsv)
+      --output tsv | tr -d '\r')
+    ip="${ip_fields[0]:-}"
+    allocation="${ip_fields[1]:-}"
+    sku="${ip_fields[2]:-}"
     [[ "$allocation" == "Static" && "$sku" == "Standard" ]] || {
-      echo "AKS egress IP '${resource_id}' must be a Standard, statically allocated public IP." >&2
+      echo "AKS egress IP '${resource_id}' must be a Standard, statically allocated public IP (observed sku='${sku}', allocation='${allocation}')." >&2
       return 1
     }
     is_ipv4 "$ip" || {
@@ -164,6 +170,40 @@ EOF
     --target "br:${ACR_NAME}.azurecr.io/recipes/postgres-kubernetes:${WORKSHOP_RECIPE_VERSION}"
 }
 
+# `rad recipe list` prints an empty table and still exits 0 when no recipes are
+# registered, so assert the registrations that the later challenges depend on.
+assert_recipes() {
+  local workspace="$1"
+  local environment="$2"
+  shift 2
+  local recipe_json
+  local resource_type
+  local missing=0
+
+  rad recipe list \
+    --workspace "$workspace" \
+    --group "$RADIUS_GROUP" \
+    --environment "$environment"
+
+  recipe_json="$(rad recipe list \
+    --workspace "$workspace" \
+    --group "$RADIUS_GROUP" \
+    --environment "$environment" \
+    --output json)"
+
+  for resource_type in "$@"; do
+    grep -Fq "$resource_type" <<<"$recipe_json" || {
+      echo "Missing 'default' recipe for ${resource_type} in ${environment}." >&2
+      missing=1
+    }
+  done
+
+  ((missing == 0)) || {
+    echo "Recipe verification failed for ${environment}; the environment definition did not register the expected recipes." >&2
+    return 1
+  }
+}
+
 configure_aks() {
   unset KUBECONFIG
   kubectl config use-context "$AKS_CONTEXT" >/dev/null
@@ -194,10 +234,15 @@ configure_aks() {
     --parameters "aksEgressIps=${aks_egress_ips}" \
     --parameters "sqlDatabasesRecipeTemplatePath=${ACR_NAME}.azurecr.io/recipes/sql-server:1.0.0"
 
-  rad recipe list \
-    --workspace "$AKS_WORKSPACE" \
-    --group "$RADIUS_GROUP" \
-    --environment "$AKS_ENVIRONMENT"
+  assert_recipes "$AKS_WORKSPACE" "$AKS_ENVIRONMENT" \
+    Radius.Resources/postgreSqlDatabases \
+    Radius.Resources/mqttBrokers \
+    Radius.Resources/idProviders \
+    Radius.Resources/workloadIdentities \
+    Radius.Resources/aiModels \
+    Radius.Resources/governance \
+    Radius.Resources/agentGuardrails \
+    Radius.Resources/sqlDatabases
 }
 
 configure_k3s() {
@@ -214,10 +259,14 @@ configure_k3s() {
     --parameters "recipeRegistry=${RECIPE_REGISTRY}" \
     --parameters "postgresRecipeTemplatePath=${ACR_NAME}.azurecr.io/recipes/postgres-kubernetes:${WORKSHOP_RECIPE_VERSION}"
 
-  rad recipe list \
-    --workspace "$K3S_WORKSPACE" \
-    --group "$RADIUS_GROUP" \
-    --environment "$K3S_ENVIRONMENT"
+  assert_recipes "$K3S_WORKSPACE" "$K3S_ENVIRONMENT" \
+    Radius.Resources/postgreSqlDatabases \
+    Radius.Resources/mqttBrokers \
+    Radius.Resources/idProviders \
+    Radius.Resources/workloadIdentities \
+    Radius.Resources/aiModels \
+    Radius.Resources/governance \
+    Radius.Resources/agentGuardrails
 }
 
 publish_workshop_recipes

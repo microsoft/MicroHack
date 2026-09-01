@@ -819,6 +819,81 @@ resource apiUnifiedAiOpGeminiCompletionsPolicy 'Microsoft.ApiManagement/service/
   }
 }
 
+
+// ===== Phase 4: APIM API - Azure OpenAI API =====
+// Azure OpenAI compatible surface (deployment name in the URL path). Challenge 1
+// discovers an API on the `openai` path to exercise the Azure OpenAI request
+// format, the AzureOpenAI Python SDK and streaming; without it those cells skip.
+// Products intentionally do not include this API - it is reached with the master
+// subscription, leaving product membership governed by the challenge 3 contracts.
+resource apiAzureOpenAi 'Microsoft.ApiManagement/service/apis@2023-09-01-preview' = {
+  parent: apim
+  name: 'azure-openai-api'
+  properties: {
+    displayName: 'Azure OpenAI API'
+    description: 'Azure OpenAI compatible surface (deployment name in URL path)'
+    path: 'openai'
+    protocols: [
+      'https'
+    ]
+    subscriptionRequired: true
+    subscriptionKeyParameterNames: {
+      header: 'api-key'
+      query: 'api-key'
+    }
+  }
+}
+
+// Azure OpenAI API: Operation - GET /openai/deployments
+resource apiAzureOpenAiOpGetDeployments 'Microsoft.ApiManagement/service/apis/operations@2023-09-01-preview' = {
+  parent: apiAzureOpenAi
+  name: 'get-deployments'
+  properties: {
+    displayName: 'List Deployments'
+    method: 'GET'
+    urlTemplate: '/deployments'
+    description: 'Returns available model deployments'
+  }
+}
+
+resource apiAzureOpenAiOpGetDeploymentsPolicy 'Microsoft.ApiManagement/service/apis/operations/policies@2023-09-01-preview' = {
+  parent: apiAzureOpenAiOpGetDeployments
+  name: 'policy'
+  properties: {
+    format: 'xml'
+    value: '<policies><inbound><base/><return-response><set-status code="200" reason="OK"/><set-header name="Content-Type" exists-action="override"><value>application/json</value></set-header><set-body>{"value":[{"id":"/deployments/gpt-4.1","name":"gpt-4.1","type":"Microsoft.CognitiveServices/accounts/deployments","sku":{"name":"GlobalStandard","capacity":20},"properties":{"model":{"name":"gpt-4.1","format":"OpenAI","version":"2025-04-14"},"deploymentName":"gpt-4-1","capabilities":{"chatCompletion":"true"},"provisioningState":"Succeeded"}},{"id":"/deployments/gpt-5.4-mini","name":"gpt-5.4-mini","type":"Microsoft.CognitiveServices/accounts/deployments","sku":{"name":"GlobalStandard","capacity":20},"properties":{"model":{"name":"gpt-5.4-mini","format":"OpenAI","version":"2026-03-17"},"deploymentName":"gpt-5-4-mini","capabilities":{"chatCompletion":"true"},"provisioningState":"Succeeded"}},{"id":"/deployments/gpt-5.2","name":"gpt-5.2","type":"Microsoft.CognitiveServices/accounts/deployments","sku":{"name":"GlobalStandard","capacity":20},"properties":{"model":{"name":"gpt-5.2","format":"OpenAI","version":"2025-12-11"},"deploymentName":"gpt-5-2","capabilities":{"chatCompletion":"true"},"provisioningState":"Succeeded"}},{"id":"/deployments/text-embedding-3-large","name":"text-embedding-3-large","type":"Microsoft.CognitiveServices/accounts/deployments","sku":{"name":"GlobalStandard","capacity":20},"properties":{"model":{"name":"text-embedding-3-large","format":"OpenAI","version":"1"},"deploymentName":"text-embedding-3-large","capabilities":{"embeddings":"true"},"provisioningState":"Succeeded"}},{"id":"/deployments/Mistral-Large-3","name":"Mistral-Large-3","type":"Microsoft.CognitiveServices/accounts/deployments","sku":{"name":"GlobalStandard","capacity":20},"properties":{"model":{"name":"Mistral-Large-3","format":"Mistral AI","version":"1"},"deploymentName":"Mistral-Large-3","capabilities":{"chatCompletion":"true"},"provisioningState":"Succeeded"}},{"id":"/deployments/Phi-4","name":"Phi-4","type":"Microsoft.CognitiveServices/accounts/deployments","sku":{"name":"GlobalStandard","capacity":1},"properties":{"model":{"name":"Phi-4","format":"Microsoft","version":"7"},"deploymentName":"Phi-4","capabilities":{"chatCompletion":"true"},"provisioningState":"Succeeded"}}]}</set-body></return-response></inbound><backend><base/></backend><outbound><base/></outbound><on-error><base/></on-error></policies>'
+  }
+}
+
+// Azure OpenAI API: Operation - POST /openai/deployments/{model}/chat/completions
+resource apiAzureOpenAiOpChatCompletions 'Microsoft.ApiManagement/service/apis/operations@2023-09-01-preview' = {
+  parent: apiAzureOpenAi
+  name: 'post-chat-completions'
+  properties: {
+    displayName: 'Create Chat Completion'
+    method: 'POST'
+    urlTemplate: '/deployments/{model}/chat/completions'
+    templateParameters: [
+      {
+        name: 'model'
+        required: true
+        type: 'string'
+        description: 'Deployment/model name'
+      }
+    ]
+    description: 'Azure OpenAI style chat completions (supports streaming)'
+  }
+}
+
+resource apiAzureOpenAiOpChatCompletionsPolicy 'Microsoft.ApiManagement/service/apis/operations/policies@2023-09-01-preview' = {
+  parent: apiAzureOpenAiOpChatCompletions
+  name: 'policy'
+  properties: {
+    format: 'xml'
+    value: '<policies><inbound><base/><choose><when condition="@{ var n = context.Request.MatchedParameters[&quot;model&quot;]; var allowed = new string[]{&quot;gpt-4.1&quot;,&quot;gpt-5.4-mini&quot;,&quot;gpt-5.2&quot;,&quot;text-embedding-3-large&quot;,&quot;Mistral-Large-3&quot;,&quot;Phi-4&quot;}; return !allowed.Contains(n); }"><return-response><set-status code="400" reason="Bad Request"/><set-header name="Content-Type" exists-action="override"><value>application/json</value></set-header><set-body>{"error":"unsupported model requested"}</set-body></return-response></when></choose><authentication-managed-identity resource="https://cognitiveservices.azure.com" client-id="{{uami-client-id}}" output-token-variable-name="msi-access-token" ignore-error="false"/><set-header name="Authorization" exists-action="override"><value>@(&quot;Bearer &quot; + (string)context.Variables[&quot;msi-access-token&quot;])</value></set-header><set-backend-service backend-id="backend-hub-foundry"/><rewrite-uri template="@(&quot;/openai/deployments/&quot; + context.Request.MatchedParameters[&quot;model&quot;].Replace(&quot;.&quot;,&quot;-&quot;) + &quot;/chat/completions?api-version=2024-10-21&quot;)"/></inbound><backend><base/></backend><outbound><base/><set-header name="UAIG-Backend" exists-action="override"><value>backend-hub-foundry</value></set-header><set-header name="UAIG-API-Type" exists-action="override"><value>azure-openai</value></set-header><set-header name="UAIG-Model" exists-action="override"><value>@(context.Request.MatchedParameters[&quot;model&quot;])</value></set-header><set-header name="UAIG-Is-Streaming" exists-action="override"><value>@(context.Response.Headers.GetValueOrDefault(&quot;Content-Type&quot;,&quot;&quot;).Contains(&quot;event-stream&quot;).ToString().ToLower())</value></set-header></outbound><on-error><base/></on-error></policies>'
+  }
+}
+
 // ===== Phase 4: APIM Products (Access Contracts) =====
 // Product 1: LLM-Sales-Assistant-DEV
 resource productSalesAssistant 'Microsoft.ApiManagement/service/products@2023-09-01-preview' = {

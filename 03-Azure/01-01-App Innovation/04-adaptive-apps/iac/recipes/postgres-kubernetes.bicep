@@ -25,6 +25,10 @@ var uniqueName = 'postgres-${uniqueString(context.resource.id)}'
 var schemaSql = loadTextContent('trading-schema.sql')
 var schemaRevision = take(uniqueString(schemaSql), 8)
 var port = 5432
+var initializerName = '${uniqueName}-schema-${schemaRevision}'
+// app.bicep binds this Secret by name and is shared by both environments, so the name must
+// match the Azure recipe's stable naming rather than the generated deployment name.
+var credentialsName = '${context.resource.name}-credentials'
 
 extension kubernetes with {
   kubeConfig: ''
@@ -33,7 +37,7 @@ extension kubernetes with {
 
 resource credentials 'core/Secret@v1' = {
   metadata: {
-    name: '${uniqueName}-credentials'
+    name: credentialsName
     labels: {
       resource: context.resource.name
       'radapp.io/application': context.application == null ? '' : context.application.name
@@ -47,7 +51,7 @@ resource credentials 'core/Secret@v1' = {
 
 resource initSql 'core/ConfigMap@v1' = {
   metadata: {
-    name: '${uniqueName}-schema-${schemaRevision}'
+    name: initializerName
     labels: {
       resource: context.resource.name
       'radapp.io/application': context.application == null ? '' : context.application.name
@@ -179,7 +183,7 @@ resource service 'core/Service@v1' = {
 
 resource schemaInitializer 'batch/Job@v1' = {
   metadata: {
-    name: '${uniqueName}-schema-${schemaRevision}'
+    name: initializerName
     labels: {
       app: 'postgres-schema-initializer'
       resource: context.resource.name
@@ -268,22 +272,26 @@ exit 1
   ]
 }
 
+// The `result` output must be evaluated without any runtime reference() call. The Radius
+// deployment engine resolves those lookups against the template's resource metadata, which does
+// not expose the same shape, so a `<k8s-resource>.metadata.name` dereference inside `output result`
+// throws while the outputs are evaluated. That failure is logged only as a warning: the deployment
+// still reports success but returns no outputs at all, so Radius silently records none of the
+// recipe values. Build the names from compile-time variables instead.
 output result object = {
   resources: [
-    '/planes/kubernetes/local/namespaces/${context.runtime.kubernetes.namespace}/providers/core/Secret/${credentials.metadata.name}'
-    '/planes/kubernetes/local/namespaces/${context.runtime.kubernetes.namespace}/providers/core/ConfigMap/${initSql.metadata.name}'
-    '/planes/kubernetes/local/namespaces/${context.runtime.kubernetes.namespace}/providers/apps/Deployment/${postgresql.metadata.name}'
-    '/planes/kubernetes/local/namespaces/${context.runtime.kubernetes.namespace}/providers/core/Service/${service.metadata.name}'
-    '/planes/kubernetes/local/namespaces/${context.runtime.kubernetes.namespace}/providers/batch/Job/${schemaInitializer.metadata.name}'
+    '/planes/kubernetes/local/namespaces/${context.runtime.kubernetes.namespace}/providers/core/Secret/${credentialsName}'
+    '/planes/kubernetes/local/namespaces/${context.runtime.kubernetes.namespace}/providers/core/ConfigMap/${initializerName}'
+    '/planes/kubernetes/local/namespaces/${context.runtime.kubernetes.namespace}/providers/apps/Deployment/${uniqueName}'
+    '/planes/kubernetes/local/namespaces/${context.runtime.kubernetes.namespace}/providers/core/Service/${uniqueName}'
+    '/planes/kubernetes/local/namespaces/${context.runtime.kubernetes.namespace}/providers/batch/Job/${initializerName}'
   ]
   values: {
-    host: '${service.metadata.name}.${context.runtime.kubernetes.namespace}.svc.cluster.local'
+    host: '${uniqueName}.${context.runtime.kubernetes.namespace}.svc.cluster.local'
     port: port
     database: database
     username: user
-    secrets: {
-      #disable-next-line outputs-should-not-contain-secrets
-      password: password
-    }
+    // The password is deliberately not returned as a recipe value; see the matching comment in
+    // postgres-azure-flex.bicep. Consumers bind the Kubernetes Secret above by name.
   }
 }

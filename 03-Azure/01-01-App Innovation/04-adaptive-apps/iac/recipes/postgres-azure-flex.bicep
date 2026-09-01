@@ -42,7 +42,10 @@ var egressIps = map(filter(split(aksEgressIps, ','), ip => !empty(trim(ip))), ip
 var schemaSql = loadTextContent('trading-schema.sql')
 var schemaRevision = take(uniqueString(schemaSql), 8)
 var initializerName = 'postgres-${uniqueString(context.resource.id)}-schema-${schemaRevision}'
-var credentialsName = '${initializerName}-credentials'
+// app.bicep binds this Secret by name, so the name must stay stable and predictable. Deriving
+// it from the schema revision or the resource ID hash would change it whenever the schema
+// changes and make it impossible to reference from the application template.
+var credentialsName = '${context.resource.name}-credentials'
 var port = 5432
 
 // The `result` output must be evaluated without any runtime reference() call.
@@ -293,9 +296,12 @@ output result object = {
     port: port
     database: databaseResource.name
     username: user
-    secrets: {
-      #disable-next-line outputs-should-not-contain-secrets
-      password: password
-    }
+    // The password is deliberately not returned as a recipe value. Radius treats `secrets` as a
+    // framework-owned property (pkg/resourceutil.BasicProperties), so a `secrets` map nested in
+    // `values` is dropped by the recipe-output copier, and a top-level `secrets` object is instead
+    // materialized into a managed Radius.Security/secrets resource that is surfaced only through a
+    // reserved `secrets.name` reference this resource type does not declare. Either way
+    // `properties.secrets.password` never resolves. Consumers bind the Kubernetes Secret above by
+    // name. See resources/validate-postgres-recipes.sh for the regression guard.
   }
 }

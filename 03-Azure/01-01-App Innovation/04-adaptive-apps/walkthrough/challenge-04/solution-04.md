@@ -81,6 +81,43 @@ Every recipe returns:
 - `result.values`: read-only properties returned to the application
 - `result.secrets`: sensitive values stored through Radius secret handling
 
+Two constraints on the `result` object are worth calling out, because breaking either one
+fails in a way that is hard to diagnose.
+
+**The result block must be evaluable without runtime lookups.** Radius resolves a
+`references(<collection>, 'full')` call against the template's resource metadata, which
+exposes `resourceId` rather than `id`. A `map(<collection>, r => r.id)` or a
+`<k8s-resource>.metadata.name` dereference inside `output result` therefore throws while the
+outputs are evaluated. That failure is logged only as a warning, so the deployment still
+reports success while returning no outputs at all, and the resource silently comes back with
+none of its declared properties. Build IDs and names from compile-time variables instead.
+
+**Radius never writes secret values onto the resource.** `secrets` is a framework-owned
+property, so a `secrets` map nested inside `values` is discarded, and a top-level
+`result.secrets` object is materialized into a managed `Radius.Security/secrets` resource that
+is surfaced only through a reserved `secrets.name` reference. Either way
+`db.properties.secrets.password` never resolves. The PostgreSQL recipes therefore write the
+password into a Kubernetes Secret named `<resource-name>-credentials` and the application binds
+it with `valueFrom.secretRef`, which is also how the recipe's own schema-initializer Job reads
+it:
+
+```bicep
+env: {
+  CONNECTION_DB_SECRETS_PASSWORD: {
+    valueFrom: {
+      secretRef: {
+        source: '${tradingDbName}-credentials'
+        key: 'password'
+      }
+    }
+  }
+}
+```
+
+Derive that name from a compile-time variable rather than from `tradingDb.name`, which would
+compile to a runtime `reference('tradingDb').name` call that cannot resolve.
+`resources/validate-postgres-recipes.sh` guards all of these.
+
 ## Manual tutorial, Stage 1: Author the Azure SQL recipe
 
 Open `iac/recipes/sql-server.bicep` and walk through:
@@ -227,15 +264,15 @@ use immutable workshop tags rather than the external `latest` recipes.
 ```bash
 rad bicep publish \
   --file iac/recipes/sql-server.bicep \
-  --target "br:${ACR_NAME}.azurecr.io/recipes/sql-server:1.0.4"
+  --target "br:${ACR_NAME}.azurecr.io/recipes/sql-server:1.0.5"
 
 rad bicep publish \
   --file iac/recipes/postgres-azure-flex.bicep \
-  --target "br:${ACR_NAME}.azurecr.io/recipes/postgres-azure-flex:1.0.4"
+  --target "br:${ACR_NAME}.azurecr.io/recipes/postgres-azure-flex:1.0.5"
 
 rad bicep publish \
   --file iac/recipes/postgres-kubernetes.bicep \
-  --target "br:${ACR_NAME}.azurecr.io/recipes/postgres-kubernetes:1.0.4"
+  --target "br:${ACR_NAME}.azurecr.io/recipes/postgres-kubernetes:1.0.5"
 ```
 
 **PowerShell 7:**
@@ -243,15 +280,15 @@ rad bicep publish \
 ```powershell
 rad bicep publish `
     --file iac/recipes/sql-server.bicep `
-    --target "br:$env:ACR_NAME.azurecr.io/recipes/sql-server:1.0.4"
+    --target "br:$env:ACR_NAME.azurecr.io/recipes/sql-server:1.0.5"
 
 rad bicep publish `
     --file iac/recipes/postgres-azure-flex.bicep `
-    --target "br:$env:ACR_NAME.azurecr.io/recipes/postgres-azure-flex:1.0.4"
+    --target "br:$env:ACR_NAME.azurecr.io/recipes/postgres-azure-flex:1.0.5"
 
 rad bicep publish `
     --file iac/recipes/postgres-kubernetes.bicep `
-    --target "br:$env:ACR_NAME.azurecr.io/recipes/postgres-kubernetes:1.0.4"
+    --target "br:$env:ACR_NAME.azurecr.io/recipes/postgres-kubernetes:1.0.5"
 ```
 
 Register the Azure SQL teaching recipe:
@@ -261,7 +298,7 @@ rad recipe register default \
   --environment env-azure-prod \
   --resource-type Radius.Resources/sqlDatabases \
   --template-kind bicep \
-  --template-path "${ACR_NAME}.azurecr.io/recipes/sql-server:1.0.4"
+  --template-path "${ACR_NAME}.azurecr.io/recipes/sql-server:1.0.5"
 ```
 
 Verify:
@@ -340,9 +377,9 @@ rad deploy iac/aks-env.bicep \
   --parameters azureSubscriptionId="$AZURE_SUBSCRIPTION" \
   --parameters azureResourceGroup="$RESOURCE_GROUP" \
   --parameters istioRevision="$ISTIO_REVISION" \
-  --parameters postgresRecipeTemplatePath="${ACR_NAME}.azurecr.io/recipes/postgres-azure-flex:1.0.4" \
+  --parameters postgresRecipeTemplatePath="${ACR_NAME}.azurecr.io/recipes/postgres-azure-flex:1.0.5" \
   --parameters aksEgressIps="$AKS_EGRESS_IPS" \
-  --parameters sqlDatabasesRecipeTemplatePath="${ACR_NAME}.azurecr.io/recipes/sql-server:1.0.4"
+  --parameters sqlDatabasesRecipeTemplatePath="${ACR_NAME}.azurecr.io/recipes/sql-server:1.0.5"
 ```
 
 **PowerShell 7:**
@@ -393,9 +430,9 @@ rad deploy iac/aks-env.bicep `
     --parameters azureSubscriptionId=$env:AZURE_SUBSCRIPTION `
     --parameters azureResourceGroup=$env:RESOURCE_GROUP `
     --parameters istioRevision=$IstioRevision `
-    --parameters "postgresRecipeTemplatePath=$env:ACR_NAME.azurecr.io/recipes/postgres-azure-flex:1.0.4" `
+    --parameters "postgresRecipeTemplatePath=$env:ACR_NAME.azurecr.io/recipes/postgres-azure-flex:1.0.5" `
     --parameters "aksEgressIps=$($EgressIps -join ',')" `
-    --parameters "sqlDatabasesRecipeTemplatePath=$env:ACR_NAME.azurecr.io/recipes/sql-server:1.0.4"
+    --parameters "sqlDatabasesRecipeTemplatePath=$env:ACR_NAME.azurecr.io/recipes/sql-server:1.0.5"
 ```
 
 | Resource type | AKS/Azure backend |
@@ -432,7 +469,7 @@ rad deploy iac/local-env.bicep \
   --environment env-local-prod \
   --parameters environmentName=env-local-prod \
   --parameters namespace=env-local-prod \
-  --parameters postgresRecipeTemplatePath="${ACR_NAME}.azurecr.io/recipes/postgres-kubernetes:1.0.4"
+  --parameters postgresRecipeTemplatePath="${ACR_NAME}.azurecr.io/recipes/postgres-kubernetes:1.0.5"
 ```
 
 **PowerShell 7:**
@@ -444,7 +481,7 @@ rad deploy iac/local-env.bicep `
     --environment env-local-prod `
     --parameters environmentName=env-local-prod `
     --parameters namespace=env-local-prod `
-    --parameters "postgresRecipeTemplatePath=$env:ACR_NAME.azurecr.io/recipes/postgres-kubernetes:1.0.4"
+    --parameters "postgresRecipeTemplatePath=$env:ACR_NAME.azurecr.io/recipes/postgres-kubernetes:1.0.5"
 ```
 
 | Resource type | K3s/local backend |

@@ -45,7 +45,7 @@ below are the high-level steps to deploy the use case onboarding Bicep package b
 5. **Deploy template with the prepared parameter file**:
 ```bash
 # This can be executed in CLI or through a DevOps pipeline
-az deployment sub create --name <use-case-contract-name> --location <location> --template-file main.bicep --parameters contracts/<businessunit-usecasename>/<environment>/main.bicepparam
+az deployment group create --name <use-case-contract-name> --resource-group <your-resource-group> --template-file main.bicep --parameters contracts/<businessunit-usecasename>/<environment>/main.bicepparam
 ```
 
 >NOTE: Ensure that you are updating values according to your environment and folder structure.
@@ -355,17 +355,17 @@ az deployment sub what-if `
 ### Step 4: Deploy
 
 ```powershell
-# Deploy at subscription scope (run from the environment folder)
-az deployment sub create `
+# Deploy at resource-group scope (run from the environment folder)
+az deployment group create `
   --name healthcare-chatbot-dev-onboarding `
-  --location swedencentral `
+  --resource-group <your-resource-group> `
   --template-file ../../../main.bicep `
   --parameters main.bicepparam
 
 # Or run from the citadel-access-contracts root folder:
-az deployment sub create `
+az deployment group create `
   --name healthcare-chatbot-dev-onboarding `
-  --location swedencentral `
+  --resource-group <your-resource-group> `
   --template-file main.bicep `
   --parameters contracts/healthcare-chatbot/dev/main.bicepparam
 ```

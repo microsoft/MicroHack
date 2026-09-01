@@ -195,6 +195,8 @@ resource group, your location, and `LLM Backends: 1 backend(s) configured`.
 | Setup cell raises a missing-key error | That key isn't in your `.env` (and no `azd` environment supplied it) — see Part A. The error message tells you which key is missing and whether a `.env` file was found. |
 | `LLM_BACKEND_CONFIG` fails to parse | It must be one unbroken line, with no surrounding quotes, ending in `}]}]`. A missing final bracket is the usual cause — run the validation snippet in Part A.5, which reports the exact position. |
 | You fixed `.env` but the notebook reports the old error | The kernel caches environment values from startup. Restart the Jupyter kernel and re-run. |
+| `ResourceGroupNotFound` for a resource group you can see in the portal | Your `az` CLI is signed in to a *different* tenant (commonly your corporate account). The portal session and the CLI session are independent. Run `az account show` — if the user isn't `labuser-XXXX@emea.microhack.cloud`, redo the `az login` in Part A.1. |
+| `AuthorizationFailed` on `Microsoft.Resources/deployments/...` over a **subscription** scope | You're running an older copy of the notebooks. All deployments must be resource-group scoped (`az deployment group create`); you hold Owner on your own resource group but only Reader on the subscription. Re-download the challenge files. |
 | Backend deployment succeeds but test calls 401/403 | APIM RBAC / managed-identity propagation can take a minute after a fresh deployment — wait and retry. |
 | A model call fails with a region/quota error | Model availability is region-specific; double-check the model/SKU you configured is available in your lab's region. |
 

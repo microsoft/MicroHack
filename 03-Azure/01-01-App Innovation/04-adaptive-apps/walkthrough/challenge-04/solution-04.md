@@ -316,10 +316,13 @@ for OUTBOUND_ID in "${OUTBOUND_IDS[@]}"; do
     echo "Only exact public IP resources are supported: $OUTBOUND_ID" >&2
     exit 1
   }
-  read -r IP ALLOCATION SKU < <(az network public-ip show \
+  mapfile -t IP_FIELDS < <(az network public-ip show \
     --ids "$OUTBOUND_ID" \
     --query "[ipAddress,publicIPAllocationMethod,sku.name]" \
-    --output tsv)
+    --output tsv | tr -d '\r')
+  IP="${IP_FIELDS[0]:-}"
+  ALLOCATION="${IP_FIELDS[1]:-}"
+  SKU="${IP_FIELDS[2]:-}"
   [[ "$ALLOCATION" == "Static" && "$SKU" == "Standard" && -n "$IP" ]] || {
     echo "AKS egress IP must be Standard and static: $OUTBOUND_ID" >&2
     exit 1

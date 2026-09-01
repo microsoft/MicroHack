@@ -75,10 +75,13 @@ resource server 'Microsoft.DBforPostgreSQL/flexibleServers@2024-08-01' = {
     }
     createMode: 'Default'
   }
+  // Azure rejects tag names containing '/', so Radius metadata uses a hyphen on Azure
+  // resources. The Kubernetes resources below keep the 'radapp.io/...' label form,
+  // which is a valid Kubernetes label key.
   tags: {
-    'radapp.io/environment': context.environment.id
-    'radapp.io/resource': context.resource.id
-    'radapp.io/application': context.application == null ? '' : context.application.name
+    'radapp.io-environment': context.environment.id
+    'radapp.io-resource': context.resource.id
+    'radapp.io-application': context.application == null ? '' : context.application.name
   }
 }
 

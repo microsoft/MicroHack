@@ -94,6 +94,10 @@ resource databaseResource 'Microsoft.DBforPostgreSQL/flexibleServers/databases@2
   }
 }
 
+// PostgreSQL Flexible Server serializes control-plane operations per server. Bicep infers
+// dependencies only from `parent:`, so without the explicit chain below ARM fans every child
+// out in parallel and the losers fail with ServerIsBusy. Each child therefore waits on the
+// previous one. This also makes the schema initializer transitively wait for the database.
 resource requireSecureTransport 'Microsoft.DBforPostgreSQL/flexibleServers/configurations@2024-08-01' = {
   parent: server
   name: 'require_secure_transport'
@@ -101,6 +105,9 @@ resource requireSecureTransport 'Microsoft.DBforPostgreSQL/flexibleServers/confi
     value: 'on'
     source: 'user-override'
   }
+  dependsOn: [
+    databaseResource
+  ]
 }
 
 resource minimumTlsVersion 'Microsoft.DBforPostgreSQL/flexibleServers/configurations@2024-08-01' = {
@@ -110,8 +117,12 @@ resource minimumTlsVersion 'Microsoft.DBforPostgreSQL/flexibleServers/configurat
     value: 'TLSv1.2'
     source: 'user-override'
   }
+  dependsOn: [
+    requireSecureTransport
+  ]
 }
 
+@batchSize(1)
 resource aksFirewallRules 'Microsoft.DBforPostgreSQL/flexibleServers/firewallRules@2024-08-01' = [
   for (egressIp, index) in egressIps: {
     parent: server
@@ -120,6 +131,9 @@ resource aksFirewallRules 'Microsoft.DBforPostgreSQL/flexibleServers/firewallRul
       startIpAddress: egressIp
       endIpAddress: egressIp
     }
+    dependsOn: [
+      minimumTlsVersion
+    ]
   }
 ]
 

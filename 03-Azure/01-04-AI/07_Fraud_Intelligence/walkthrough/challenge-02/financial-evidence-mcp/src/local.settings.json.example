@@ -1,0 +1,11 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "FUNCTIONS_WORKER_RUNTIME": "python",
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "COSMOS_ENDPOINT": "https://<account>.documents.azure.com:443/",
+    "COSMOS_DATABASE_NAME": "<database-name>",
+    "COSMOS_BANK_CONTAINER": "dim-bank",
+    "COSMOS_TRANSACTION_CONTAINER": "fact-laundering-pattern-txn"
+  }
+}

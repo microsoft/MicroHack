@@ -1,0 +1,5 @@
+local.settings.json
+.azurite/
+__pycache__/
+.pytest_cache/
+.venv/

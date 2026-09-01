@@ -1,0 +1,4 @@
+azure-cosmos==4.16.3
+azure-identity==1.25.3
+aiohttp==3.14.3
+pyarrow==25.0.1

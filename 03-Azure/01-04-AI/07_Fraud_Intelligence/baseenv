@@ -1,0 +1,3 @@
+rootHome=$(pwd)
+walkthroughHome=$rootHome/walkthrough
+challengesHome=$rootHome/challenges

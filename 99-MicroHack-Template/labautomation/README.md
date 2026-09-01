@@ -585,6 +585,7 @@ CLI. Unlike a platform-triggered run, you need to log in yourself:
 ```powershell
 Connect-AzAccount -UseDeviceAuthentication
 az login --use-device-code
+# optional, if you use Set-MhhManagedIdentityRoleMember cmdlet:    Connect-MgGraph -UseDeviceCode -Scopes 'Application.Read.All','RoleManagement.ReadWrite.Directory'
 
 $rg = "lab-local-test"
 if (Get-AzResourceGroup -Name "$rg" -ErrorAction SilentlyContinue) {

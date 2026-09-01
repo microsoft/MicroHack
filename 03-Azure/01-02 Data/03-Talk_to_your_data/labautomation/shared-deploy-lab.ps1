@@ -25,6 +25,15 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+$script:SharedCurrentStep = 'initialization'
+trap {
+    Write-Warning "[shared] FAILED during step '$script:SharedCurrentStep'."
+    Write-Warning "[shared] Exception: $($_.Exception.Message)"
+    if ($_.InvocationInfo -and $_.InvocationInfo.PositionMessage) {
+        Write-Warning "[shared] Location: $($_.InvocationInfo.PositionMessage)"
+    }
+    throw
+}
 
 # ─────────────────────────────────────────────
 # Constants
@@ -33,7 +42,14 @@ $SharedResourceGroup = 'rg-shared'
 $SqlAdminLogin = 'sqlmiadmin'
 $FabricApi = 'https://api.fabric.microsoft.com/v1'
 $GraphApi = 'https://graph.microsoft.com/v1.0'
-$RequiredProviders = @('Microsoft.Sql', 'Microsoft.Fabric', 'Microsoft.Storage', 'Microsoft.Web', 'Microsoft.Network')
+# Power BI Free. Assigning it to a user is what makes the tenant known to Fabric; without it
+# Microsoft.Fabric/capacities fails with "Tenant ... wasn't recognized by Microsoft Fabric".
+$FabricLicenseSkuPartNumber = 'POWER_BI_STANDARD'
+$FabricLicenseSkuId = 'a403ebcc-fae0-4ca2-8c8c-7a907fd6c235'
+# Only needs to be a country Power BI is offered in; it gates license assignment, nothing else.
+$FabricUsageLocation = 'DE'
+# Microsoft.PowerPlatform is required for the Fabric VNet data gateway's subnet delegation.
+$RequiredProviders = @('Microsoft.Sql', 'Microsoft.Fabric', 'Microsoft.Storage', 'Microsoft.Web', 'Microsoft.Network', 'Microsoft.PowerPlatform')
 
 # Demo databases restored once for the whole subscription: DB name -> backup file.
 $TailspinToysBak = 'tailspintoys_before_launch.bak'
@@ -53,10 +69,24 @@ if (-not (Get-Module -ListAvailable -Name SqlServer)) {
 }
 Import-Module SqlServer -ErrorAction Stop
 
-function Get-DbAccessToken {
-    $t = (Get-AzAccessToken -ResourceUrl 'https://database.windows.net/').Token
-    if ($t -is [System.Security.SecureString]) { return (ConvertFrom-SecureString $t -AsPlainText) }
-    return $t
+function Update-MhhTokenQuiet {
+    # Refresh Azure credentials; Update-MhhToken's status object is shown only with -Verbose.
+    Update-MhhToken | Out-String | Write-Verbose
+}
+
+function Write-SharedTrace {
+    param(
+        [Parameter(Mandatory = $true)][string]$Message
+    )
+    Write-Host "[shared][trace] $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') $Message"
+}
+
+function Start-SharedStep {
+    param(
+        [Parameter(Mandatory = $true)][string]$Name
+    )
+    $script:SharedCurrentStep = $Name
+    Write-SharedTrace "STEP: $Name"
 }
 
 function Invoke-MiSql {
@@ -67,16 +97,43 @@ function Invoke-MiSql {
         [string]$InputFile,
         [int]$QueryTimeout = 0
     )
+    # SQL authentication with the MI admin login: the platform cannot set an Entra admin on the MI.
+    $cred = [pscredential]::new($SqlAdminLogin, (ConvertTo-SecureString $sqlPassword -AsPlainText -Force))
     $splat = @{
         ServerInstance    = $Server
         Database          = $Database
-        AccessToken       = (Get-DbAccessToken)
+        Credential        = $cred
         ConnectionTimeout = 30
         QueryTimeout      = $QueryTimeout
         ErrorAction       = 'Stop'
     }
     if ($InputFile) { $splat['InputFile'] = $InputFile } else { $splat['Query'] = $Query }
+    $source = if ($InputFile) { "file '$InputFile'" } else { 'inline query' }
+    Write-SharedTrace "SQL $Database on $Server using $source. Timeout=$QueryTimeout."
     Invoke-Sqlcmd @splat
+}
+
+function Invoke-GraphApi {
+    param(
+        [Parameter(Mandatory = $true)][ValidateSet('GET', 'POST', 'PATCH')][string]$Method,
+        [Parameter(Mandatory = $true)][string]$Path,
+        [object]$Body
+    )
+    $url = "$GraphApi/$($Path.TrimStart('/'))"
+    Write-SharedTrace "Graph $Method $Path"
+    $azArgs = @('rest', '--method', $Method, '--url', $url, '--resource', 'https://graph.microsoft.com')
+    if ($Body) {
+        Write-SharedTrace "Graph $Method $Path includes body properties: $(($Body.Keys | Sort-Object) -join ', ')"
+        $azArgs += @('--headers', 'Content-Type=application/json', '--body', ($Body | ConvertTo-Json -Depth 10 -Compress))
+    }
+    $raw = az @azArgs 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        Write-Warning "[shared] Graph $Method $Path failed with exit code $LASTEXITCODE. Raw response: $raw"
+        throw "Graph $Method $Path failed: $raw"
+    }
+    Write-SharedTrace "Graph $Method $Path succeeded."
+    if ([string]::IsNullOrWhiteSpace($raw)) { return $null }
+    return ($raw | ConvertFrom-Json)
 }
 
 function Invoke-FabricApi {
@@ -86,55 +143,35 @@ function Invoke-FabricApi {
         [object]$Body
     )
     $url = "$FabricApi/$($Path.TrimStart('/'))"
+    Write-SharedTrace "Fabric API $Method $Path"
     $azArgs = @('rest', '--method', $Method, '--url', $url, '--resource', 'https://api.fabric.microsoft.com')
     if ($Body) {
         $json = ($Body | ConvertTo-Json -Depth 10 -Compress)
+        Write-SharedTrace "Fabric API $Method $Path includes body properties: $(($Body.Keys | Sort-Object) -join ', ')"
         $azArgs += @('--headers', 'Content-Type=application/json', '--body', $json)
     }
     $raw = az @azArgs 2>&1
     if ($LASTEXITCODE -ne 0) {
+        Write-Warning "[shared] Fabric API $Method $Path failed with exit code $LASTEXITCODE. Raw response: $raw"
         throw "Fabric API $Method $Path failed: $raw"
     }
+    Write-SharedTrace "Fabric API $Method $Path succeeded."
     if ([string]::IsNullOrWhiteSpace($raw)) { return $null }
     return ($raw | ConvertFrom-Json)
-}
-
-function Ensure-DirectoryReadersForIdentity {
-    param([Parameter(Mandatory = $true)][string]$PrincipalId)
-
-    # Directory Readers well-known template id.
-    $templateId = '88d8e3e3-8f55-4a1e-953a-9b9898b8876b'
-    # Activate the directory role if it is only present as a template.
-    $roles = (az rest --method GET --url "$GraphApi/directoryRoles" --resource 'https://graph.microsoft.com' 2>$null | ConvertFrom-Json).value
-    $role = $roles | Where-Object { $_.roleTemplateId -eq $templateId } | Select-Object -First 1
-    if (-not $role) {
-        $activated = az rest --method POST --url "$GraphApi/directoryRoles" --resource 'https://graph.microsoft.com' `
-            --headers 'Content-Type=application/json' --body (@{ roleTemplateId = $templateId } | ConvertTo-Json -Compress) 2>&1 | ConvertFrom-Json
-        $role = $activated
-    }
-    # Is the identity already a member?
-    $members = (az rest --method GET --url "$GraphApi/directoryRoles/$($role.id)/members" --resource 'https://graph.microsoft.com' 2>$null | ConvertFrom-Json).value
-    if ($members | Where-Object { $_.id -eq $PrincipalId }) {
-        Write-Host "[shared] SQL MI identity already has Directory Readers."
-        return
-    }
-    $ref = @{ '@odata.id' = "$GraphApi/directoryObjects/$PrincipalId" } | ConvertTo-Json -Compress
-    az rest --method POST --url "$GraphApi/directoryRoles/$($role.id)/members/`$ref" --resource 'https://graph.microsoft.com' `
-        --headers 'Content-Type=application/json' --body $ref 2>&1 | Out-Null
-    if ($LASTEXITCODE -ne 0) { throw "Failed to add SQL MI identity to Directory Readers." }
-    Write-Host "[shared] Granted Directory Readers to SQL MI identity. Waiting for propagation."
-    Start-Sleep -Seconds 60
 }
 
 # ─────────────────────────────────────────────
 # 0. Location + resource providers
 # ─────────────────────────────────────────────
+Start-SharedStep "Validate deployment inputs"
 $locations = @($PreferredLocation | ForEach-Object { $_ -split ',' } | ForEach-Object { $_.Trim() } | Where-Object { $_ })
 if ($locations.Count -eq 0) { throw "No PreferredLocation supplied." }
 $location = $locations[0]
+Write-SharedTrace "Starting shared deployment. SubscriptionId=$SubscriptionId; PreferredLocations=$($locations -join ', '); AllowedEntraUserIds=$($AllowedEntraUserIds.Count)."
 Write-Host "[shared] Using location '$location' (SQL MI + Fabric F32 do not auto-fall-back across regions; re-run with a different preferredLocation order if capacity is unavailable)."
 
 foreach ($rp in $RequiredProviders) {
+    Write-SharedTrace "Registering resource provider '$rp'."
     Register-AzResourceProvider -ProviderNamespace $rp -ErrorAction SilentlyContinue | Out-Null
 }
 
@@ -142,60 +179,182 @@ foreach ($rp in $RequiredProviders) {
 # 1. Shared resource group + Owner for every attendee in this subscription
 # ─────────────────────────────────────────────
 if (-not (Get-AzResourceGroup -Name $SharedResourceGroup -ErrorAction SilentlyContinue)) {
+    Start-SharedStep "Create shared resource group"
     New-AzResourceGroup -Name $SharedResourceGroup -Location $location -Tag @{ SecurityControl = 'Ignore' } | Out-Null
     Write-Host "[shared] Created resource group '$SharedResourceGroup'."
 }
 $rgId = (Get-AzResourceGroup -Name $SharedResourceGroup).ResourceId
+Write-SharedTrace "Shared resource group id: $rgId"
+Start-SharedStep "Ensure attendee Owner assignments"
 foreach ($uid in ($AllowedEntraUserIds | Where-Object { $_ })) {
+    Write-SharedTrace "Ensuring Owner role on shared resource group for attendee object id '$uid'."
     if (-not (Get-AzRoleAssignment -ObjectId $uid -Scope $rgId -RoleDefinitionName 'Owner' -ErrorAction SilentlyContinue)) {
         New-AzRoleAssignment -ObjectId $uid -Scope $rgId -RoleDefinitionName 'Owner' -ErrorAction SilentlyContinue | Out-Null
     }
 }
 
 # ─────────────────────────────────────────────
-# 2. Resolve the deploying service principal (becomes SQL MI Entra admin)
+# 2. Resolve principals and bootstrap the Fabric tenant
 # ─────────────────────────────────────────────
-$spObjectId = (Get-AzADServicePrincipal -ApplicationId (Get-AzContext).Account.Id -ErrorAction SilentlyContinue).Id
-if (-not $spObjectId) {
-    $spObjectId = az ad sp show --id (Get-AzContext).Account.Id --query id -o tsv 2>$null
+Start-SharedStep "Resolve deploying principal"
+$azContext = Get-AzContext
+$account = $azContext.Account.Id
+Write-SharedTrace "Azure context account='$account'; tenant='$($azContext.Tenant.Id)'; subscription='$($azContext.Subscription.Id)'."
+$spObjectId = $null
+if ($account -as [guid]) {
+    Write-SharedTrace "Context account looks like an application id; resolving service principal object id."
+    $spObjectId = (Get-AzADServicePrincipal -ApplicationId $account -ErrorAction SilentlyContinue).Id
+    if (-not $spObjectId) {
+        Write-SharedTrace "Az PowerShell did not resolve the service principal; trying Azure CLI."
+        $spObjectId = az ad sp show --id $account --query id -o tsv 2>$null
+    }
 }
-if (-not $spObjectId) { throw "Could not resolve the deploying service principal object id." }
+if (-not $spObjectId) {
+    # Local testing runs as a user, not an SP; fall back to the signed-in user.
+    Write-SharedTrace "Resolving signed-in user object id for local/user context."
+    $spObjectId = (Get-AzADUser -SignedIn -ErrorAction SilentlyContinue).Id
+}
+if (-not $spObjectId) { throw "Could not resolve the deploying principal object id." }
+Write-SharedTrace "Deploying principal object id resolved: $spObjectId"
 
-$fabricAdminMembers = @($spObjectId) + ($AllowedEntraUserIds | Where-Object { $_ }) | Select-Object -Unique
+# Resolve every attendee once; reused for Fabric licensing, capacity admins and the SQL MI Entra admin.
+Start-SharedStep "Resolve lab users"
+$labUsers = [System.Collections.Generic.List[object]]::new()
+foreach ($uid in ($AllowedEntraUserIds | Where-Object { $_ })) {
+    Write-SharedTrace "Resolving lab user '$uid'."
+    $mhhUser = Get-MhhLabUser -UserId $uid -ErrorAction SilentlyContinue
+    $memberUpn = $mhhUser.UserPrincipalName
+    if (-not $memberUpn) { $memberUpn = (Get-AzADUser -ObjectId $uid -ErrorAction SilentlyContinue).UserPrincipalName }
+    if (-not $memberUpn) {
+        Write-Warning "[shared] Could not resolve a UPN for '$uid'; skipping it."
+        continue
+    }
+    $labUsers.Add([pscustomobject]@{
+            Id                = $uid
+            UserPrincipalName = $memberUpn
+            ShortName         = $mhhUser.ShortName
+        })
+}
+if ($labUsers.Count -eq 0) { throw "Could not resolve any lab user from AllowedEntraUserIds." }
+Write-SharedTrace "Resolved $($labUsers.Count) lab users: $((@($labUsers | ForEach-Object { $_.UserPrincipalName }) -join ', '))"
+
+$firstLabUser = $labUsers | Where-Object { $_.ShortName -match '(?i)labuser-[0-9]{4}' } | Sort-Object ShortName | Select-Object -First 1
+if (-not $firstLabUser) { $firstLabUser = $labUsers | Sort-Object ShortName | Select-Object -First 1 }
+Write-SharedTrace "Fabric bootstrap user: $($firstLabUser.UserPrincipalName) ($($firstLabUser.Id))."
+
+# A service principal cannot sign a tenant up for Fabric; only a licensed user can. Every attendee is
+# licensed anyway (they need it to open Fabric), and the first assignment provisions the tenant.
+Start-SharedStep "Assume Fabric license SKU"
+Write-SharedTrace "Skipping Graph subscribedSkus lookup; using known SKU '$FabricLicenseSkuPartNumber' with skuId '$FabricLicenseSkuId'."
+
+foreach ($labUser in $labUsers) {
+    Start-SharedStep "Ensure Fabric license for $($labUser.UserPrincipalName)"
+    $isBootstrapUser = $labUser.Id -eq $firstLabUser.Id
+    try {
+        Write-SharedTrace "Checking Fabric license for $($labUser.UserPrincipalName) ($($labUser.Id))."
+        $graphUser = Invoke-GraphApi -Method GET -Path "users/$($labUser.Id)?`$select=id,usageLocation,assignedLicenses"
+        if ($graphUser.assignedLicenses.skuId -contains $FabricLicenseSkuId) {
+            Write-Host "[shared] $($labUser.UserPrincipalName) already holds $FabricLicenseSkuPartNumber."
+            continue
+        }
+        # assignLicense rejects users without a usage location.
+        if (-not $graphUser.usageLocation) {
+            Write-SharedTrace "Setting usageLocation '$FabricUsageLocation' for $($labUser.UserPrincipalName)."
+            Invoke-GraphApi -Method PATCH -Path "users/$($labUser.Id)" -Body @{ usageLocation = $FabricUsageLocation } | Out-Null
+        }
+        Write-SharedTrace "Assigning SKU '$FabricLicenseSkuPartNumber' to $($labUser.UserPrincipalName)."
+        Invoke-GraphApi -Method POST -Path "users/$($labUser.Id)/assignLicense" -Body @{
+            addLicenses    = @(@{ skuId = $FabricLicenseSkuId; disabledPlans = @() })
+            removeLicenses = @()
+        } | Out-Null
+        Write-Host "[shared] Assigned $FabricLicenseSkuPartNumber to $($labUser.UserPrincipalName)."
+    }
+    catch {
+        if ($isBootstrapUser) { throw "Could not license '$($labUser.UserPrincipalName)' for Fabric, so the tenant cannot be provisioned: $($_.Exception.Message)" }
+        Write-Warning "[shared] Fabric license for $($labUser.UserPrincipalName) failed: $($_.Exception.Message)"
+    }
+}
+
+# Tenant provisioning is asynchronous. Poll until the Fabric API answers rather than letting the
+# capacity deployment fail; on timeout continue anyway so ARM produces the authoritative error.
+$fabricTenantReady = $false
+Start-SharedStep "Wait for Fabric tenant provisioning"
+for ($elapsed = 0; $elapsed -lt 600; $elapsed += 30) {
+    try {
+        Invoke-FabricApi -Method GET -Path 'capacities' | Out-Null
+        $fabricTenantReady = $true
+        Write-Host "[shared] Fabric recognises this tenant."
+        break
+    }
+    catch {
+        Write-Host "[shared] Waiting for Fabric tenant provisioning ($elapsed s)..."
+        Start-Sleep -Seconds 30
+    }
+}
+if (-not $fabricTenantReady) {
+    Write-Warning "[shared] Fabric did not confirm the tenant within 10 minutes. Continuing; the capacity deployment will report the real cause."
+}
+
+# Fabric capacity admin members: users must be UPNs (object IDs are rejected); a service principal uses its object ID.
+$fabricMemberList = [System.Collections.Generic.List[string]]::new()
+if ($account -as [guid]) {
+    $fabricMemberList.Add($spObjectId)   # deploying service principal
+}
+else {
+    $fabricMemberList.Add($account)       # deploying user's UPN
+}
+foreach ($labUser in $labUsers) { $fabricMemberList.Add($labUser.UserPrincipalName) }
+$fabricAdminMembers = @($fabricMemberList | Select-Object -Unique)
 $sqlPassword = New-MhhStablePassword -Purpose 'sql-admin' -Length 24
+Write-SharedTrace "Prepared $($fabricAdminMembers.Count) Fabric capacity admin members. SQL admin password generated but not printed."
 
 # ─────────────────────────────────────────────
 # 3. Deploy the shared ARM stack (async; SQL MI can exceed the 90-min command limit)
 # ─────────────────────────────────────────────
+# Once the SQL MI exists it has injected network intent policies into its subnet's NSG/route table;
+# redeploying those conflicts, so tell the template to reference them as existing on re-runs.
+Start-SharedStep "Submit shared ARM deployment"
+$sqlMiNetworkingExists = -not [string]::IsNullOrWhiteSpace((az sql mi list -g $SharedResourceGroup --query "[0].id" -o tsv 2>$null))
 $depName = "shared-$(Get-Date -f yyyyMMddHHmmss)"
 Write-Host "[shared] Submitting shared.bicep deployment '$depName' into '$SharedResourceGroup'."
+Write-SharedTrace "sqlMiNetworkingExists=$sqlMiNetworkingExists; template='$(Join-Path $PSScriptRoot 'shared.bicep')'."
 New-AzResourceGroupDeployment `
     -Name $depName `
     -ResourceGroupName $SharedResourceGroup `
     -TemplateFile (Join-Path $PSScriptRoot 'shared.bicep') `
     -TemplateParameterObject @{
-    location           = $location
-    sqlAdminLogin      = $SqlAdminLogin
-    sqlPassword        = (ConvertTo-SecureString $sqlPassword -AsPlainText -Force)
-    fabricAdminMembers = $fabricAdminMembers
+    location              = $location
+    sqlAdminLogin         = $SqlAdminLogin
+    # Plain string, not SecureString: -AsJob cannot serialize a SecureString across the job boundary. Bicep param stays @secure().
+    sqlPassword           = $sqlPassword
+    fabricAdminMembers    = $fabricAdminMembers
+    sqlMiNetworkingExists = $sqlMiNetworkingExists
 } `
     -AsJob | Out-Null
 
+Start-SharedStep "Poll shared ARM deployment"
 do {
     Start-Sleep -Seconds 30
-    Update-MhhToken
-    $state = (Get-AzResourceGroupDeployment -ResourceGroupName $SharedResourceGroup -Name $depName -ErrorAction SilentlyContinue).ProvisioningState
+    Update-MhhTokenQuiet
+    # Guard the property access: under Set-StrictMode the deployment may not be registered yet (returns $null).
+    $dep = Get-AzResourceGroupDeployment -ResourceGroupName $SharedResourceGroup -Name $depName -ErrorAction SilentlyContinue
+    $state = if ($dep) { $dep.ProvisioningState } else { $null }
     Write-Host "[shared] deployment state: $state"
 } while ($state -notin 'Succeeded', 'Failed', 'Canceled')
 
 if ($state -ne 'Succeeded') {
+    $failedOps = @(Get-AzResourceGroupDeploymentOperation -ResourceGroupName $SharedResourceGroup -DeploymentName $depName -ErrorAction SilentlyContinue |
+            Where-Object { $_.Properties.ProvisioningState -eq 'Failed' })
+    foreach ($op in $failedOps) {
+        Write-Warning "[shared] Failed deployment operation '$($op.OperationId)' target='$($op.Properties.TargetResource.ResourceName)' type='$($op.Properties.TargetResource.ResourceType)': $($op.Properties.StatusMessage | ConvertTo-Json -Depth 8 -Compress)"
+    }
     throw "Shared deployment '$depName' ended in state '$state'. See the deployment operations in '$SharedResourceGroup'."
 }
 
+Start-SharedStep "Read shared ARM outputs"
 $out = (Get-AzResourceGroupDeployment -ResourceGroupName $SharedResourceGroup -Name $depName).Outputs
 $miName = $out.sqlManagedInstanceName.Value
 $miFqdn = $out.sqlManagedInstanceFqdn.Value
-$miIdentity = $out.sqlManagedInstanceIdentityPrincipalId.Value
 $capacityName = $out.fabricCapacityName.Value
 $vnetName = $out.vnetName.Value
 $fabricSubnet = $out.fabricSubnetName.Value
@@ -206,29 +365,74 @@ $webshopHost = $out.webshopDefaultHostname.Value
 # Public endpoint FQDN: insert 'public.' after the instance short name; port 3342.
 $publicFqdn = $miFqdn -replace '^([^.]+)\.', '$1.public.'
 $server = "$publicFqdn,3342"
+Write-SharedTrace "Shared outputs: miName=$miName; capacityName=$capacityName; vnetName=$vnetName; fabricSubnet=$fabricSubnet; storageAccount=$storageAccount; containerName=$containerName; webshopHost=$webshopHost."
 
 # ─────────────────────────────────────────────
-# 4. Entra: Directory Readers for the MI identity + MI Entra admin (deploying SP)
+# 4. Entra: Directory Readers for the MI identity (needed for external-provider logins)
 # ─────────────────────────────────────────────
-Update-MhhToken
-Ensure-DirectoryReadersForIdentity -PrincipalId $miIdentity
-
-$existingAdmin = az sql mi ad-admin list --resource-group $SharedResourceGroup --managed-instance $miName --query "[0].sid" -o tsv 2>$null
-if (-not $existingAdmin) {
-    Write-Host "[shared] Setting SQL MI Entra admin to the deploying principal."
-    az sql mi ad-admin create --resource-group $SharedResourceGroup --managed-instance $miName `
-        --display-name 'MicroHackDeployer' --object-id $spObjectId 2>&1 | Out-Null
-    if ($LASTEXITCODE -ne 0) { throw "Failed to set SQL MI Entra admin." }
+Update-MhhTokenQuiet
+# Grant the SQL MI managed identity Directory Readers via the platform helper (handles the tenant-wide directory-role lock and is idempotent).
+Start-SharedStep "Grant SQL MI Directory Readers"
+$drResult = @(Get-AzSqlInstance -ResourceGroupName $SharedResourceGroup -Name $miName |
+        Set-MhhManagedIdentityRoleMember -Role 'Directory Readers')
+if ($drResult.status -contains 'Failed') {
+    throw "Failed to grant Directory Readers to the SQL MI identity."
 }
+Write-Host "[shared] SQL MI identity Directory Readers: $($drResult.status -join ', ')."
+
+# ─────────────────────────────────────────────
+# 4b. Entra admin on the SQL MI = first lab user
+# ─────────────────────────────────────────────
+# Deliberately not done in Bicep: ARM cannot resolve the principal in the lab tenant.
+# Set-AzSqlInstanceActiveDirectoryAdministrator is unreliable here too, so PUT the
+# administrator sub-resource directly. Directory Readers must be granted first.
+Start-Sleep -Seconds 30
+Update-MhhTokenQuiet
+
+Start-SharedStep "Configure SQL MI Entra admin"
+$sqlEntraAdmin = Get-AzADUser -ObjectId $firstLabUser.Id -ErrorAction Stop
+$mi = Get-AzSqlInstance -ResourceGroupName $SharedResourceGroup -Name $miName
+Write-Host "[shared] Configuring $($sqlEntraAdmin.UserPrincipalName) as SQL MI Entra admin."
+
+# Concatenated, not interpolated: "$($mi.Id)/...?api-version=..." would swallow the '?' into the variable scope.
+$adminPath = $mi.Id + '/administrators/ActiveDirectory?api-version=2023-08-01-preview'
+$adminPayload = @{
+    properties = @{
+        administratorType = 'ActiveDirectory'
+        login             = $sqlEntraAdmin.UserPrincipalName
+        sid               = $sqlEntraAdmin.Id
+        tenantId          = (Get-AzContext).Tenant.Id
+    }
+} | ConvertTo-Json -Depth 5
+Write-SharedTrace "PUT SQL MI Entra admin path: $adminPath"
+$adminResp = Invoke-AzRestMethod -Method PUT -Path $adminPath -Payload $adminPayload
+if ($adminResp.StatusCode -notin 200, 201, 202) {
+    throw "Setting the SQL MI Entra admin failed (HTTP $($adminResp.StatusCode)): $($adminResp.Content)"
+}
+
+# The PUT is accepted asynchronously; confirm the admin actually landed before continuing.
+$adminConfirmed = $false
+Start-SharedStep "Confirm SQL MI Entra admin"
+for ($elapsed = 0; $elapsed -lt 120; $elapsed += 10) {
+    Start-Sleep -Seconds 10
+    $current = Get-AzSqlInstanceActiveDirectoryAdministrator -ResourceGroupName $SharedResourceGroup -InstanceName $miName -ErrorAction SilentlyContinue
+    if ($current -and $current.ObjectId -eq $sqlEntraAdmin.Id) { $adminConfirmed = $true; break }
+    Write-Host "[shared] Waiting for the Entra admin to appear ($elapsed s)..."
+}
+if (-not $adminConfirmed) { throw "The SQL MI Entra admin was not configured within 2 minutes." }
+Write-Host "[shared] SQL MI Entra admin is $($sqlEntraAdmin.UserPrincipalName)."
 
 # ─────────────────────────────────────────────
 # 5. Upload the .bak files and restore the demo databases
 # ─────────────────────────────────────────────
-Update-MhhToken
+Update-MhhTokenQuiet
+Start-SharedStep "Read shared backup storage key"
 $storageKey = az storage account keys list --resource-group $SharedResourceGroup --account-name $storageAccount --query "[0].value" -o tsv
 if ($LASTEXITCODE -ne 0) { throw "Failed to read storage key for '$storageAccount'." }
+Write-SharedTrace "Storage key retrieved for '$storageAccount'. Key value is not printed."
 
 foreach ($bak in @($TailspinToysBak, $TailspinToysFeedbackBak)) {
+    Start-SharedStep "Upload backup $bak"
     $localBak = Join-Path $PSScriptRoot "databasebackup/$bak"
     if (-not (Test-Path $localBak)) { throw "Backup file not found: $localBak" }
     Write-Host "[shared] Uploading $bak."
@@ -238,11 +442,13 @@ foreach ($bak in @($TailspinToysBak, $TailspinToysFeedbackBak)) {
 }
 
 $expiry = (Get-Date).ToUniversalTime().AddHours(4).ToString('yyyy-MM-ddTHH:mmZ')
+Start-SharedStep "Generate backup container SAS"
 $sasToken = az storage container generate-sas --account-name $storageAccount --name $containerName `
     --account-key $storageKey --permissions rl --https-only --expiry $expiry -o tsv
 if ($LASTEXITCODE -ne 0) { throw "Failed to generate container SAS." }
 
 $credentialName = "https://$storageAccount.blob.core.windows.net/$containerName"
+Start-SharedStep "Create SQL restore credential"
 Invoke-MiSql -Server $server -Database 'master' -QueryTimeout 60 -Query @"
 IF EXISTS (SELECT 1 FROM sys.credentials WHERE name = N'$credentialName')
     DROP CREDENTIAL [$credentialName];
@@ -251,6 +457,7 @@ WITH IDENTITY = 'Shared Access Signature', SECRET = '$sasToken';
 "@ | Out-Null
 
 foreach ($db in $DemoDatabases.Keys) {
+    Start-SharedStep "Restore or verify demo database $db"
     $exists = (Invoke-MiSql -Server $server -Database 'master' -QueryTimeout 60 `
             -Query "SELECT COUNT(*) AS C FROM sys.databases WHERE name = N'$db'").C
     if ($exists -gt 0) {
@@ -265,6 +472,7 @@ foreach ($db in $DemoDatabases.Keys) {
 # ─────────────────────────────────────────────
 # 6. Seed Demo_Final: product, stored procedure, Agent job
 # ─────────────────────────────────────────────
+Start-SharedStep "Seed Demo_Final product"
 $productExists = (Invoke-MiSql -Server $server -Database 'TailspinToys_Demo_Final' -QueryTimeout 60 `
         -Query "SELECT CASE WHEN EXISTS (SELECT 1 FROM dbo.Product WHERE ProductSKU = '9000-FABRIC-RANGER') THEN 1 ELSE 0 END AS C").C
 if ($productExists -ne 1) {
@@ -273,9 +481,11 @@ if ($productExists -ne 1) {
     Write-Host "[shared] Inserted Fabric Space Ranger product into Demo_Final."
 }
 
+Start-SharedStep "Ensure shared stored procedure"
 Invoke-MiSql -Server $server -Database 'master' -InputFile (Join-Path $PSScriptRoot 'sql/StoredProcedure.sql') | Out-Null
 Write-Host "[shared] Ensured stored procedure usp_PurchaseSpaceRanger."
 
+Start-SharedStep "Ensure shared SQL Agent job"
 $jobExists = (Invoke-MiSql -Server $server -Database 'master' -QueryTimeout 60 `
         -Query "SELECT CASE WHEN EXISTS (SELECT 1 FROM msdb.dbo.sysjobs WHERE name = N'2 Fabric Space Ranger Workload') THEN 1 ELSE 0 END AS C").C
 if ($jobExists -ne 1) {
@@ -286,13 +496,17 @@ if ($jobExists -ne 1) {
 # ─────────────────────────────────────────────
 # 7. Fabric VNet data gateway + ConnectionCreator for every attendee
 # ─────────────────────────────────────────────
-Update-MhhToken
+Update-MhhTokenQuiet
+Start-SharedStep "Resolve Fabric capacity"
 $capacity = (Invoke-FabricApi -Method GET -Path 'capacities').value | Where-Object { $_.displayName -eq $capacityName } | Select-Object -First 1
 if (-not $capacity) { throw "Fabric capacity '$capacityName' not visible via the Fabric API (check tenant setting 'Service principals can use Fabric APIs')." }
+Write-SharedTrace "Fabric capacity id: $($capacity.id)"
 
 $gatewayName = "fabric-gateway-shared"
+Start-SharedStep "Resolve Fabric VNet gateway"
 $gateway = (Invoke-FabricApi -Method GET -Path 'gateways').value | Where-Object { $_.displayName -eq $gatewayName } | Select-Object -First 1
 if (-not $gateway) {
+    Start-SharedStep "Create Fabric VNet gateway"
     Write-Host "[shared] Creating Fabric VNet data gateway."
     $gateway = Invoke-FabricApi -Method POST -Path 'gateways' -Body @{
         type                         = 'VirtualNetwork'
@@ -308,8 +522,10 @@ if (-not $gateway) {
         }
     }
 }
+Write-SharedTrace "Fabric gateway id: $($gateway.id)"
 foreach ($uid in ($AllowedEntraUserIds | Where-Object { $_ })) {
     try {
+        Start-SharedStep "Grant Fabric gateway ConnectionCreator to $uid"
         Invoke-FabricApi -Method POST -Path "gateways/$($gateway.id)/roleAssignments" -Body @{
             principal = @{ id = $uid; type = 'User' }
             role      = 'ConnectionCreator'

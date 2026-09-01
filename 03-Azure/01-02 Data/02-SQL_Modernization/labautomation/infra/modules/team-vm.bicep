@@ -86,6 +86,7 @@ resource virtualMachine 'Microsoft.Compute/virtualMachines@2024-11-01' = {
   }
 }
 
+/* 
 resource autoShutdownConfigs 'Microsoft.DevTestLab/schedules@2018-09-15' = {
   name: 'shutdown-computevm-${vmName}'
   location: location
@@ -104,5 +105,6 @@ resource autoShutdownConfigs 'Microsoft.DevTestLab/schedules@2018-09-15' = {
     targetResourceId: virtualMachine.id
   }
 }
-
+ */
+ 
 output vmName string = virtualMachine.name

@@ -3,7 +3,8 @@
 // infra/modules.
 //
 // Non-ARM follow-up performed by shared-deploy-lab.ps1 after this template:
-//   - SQL MI Directory-Readers grant + Entra admin
+//   - SQL MI Directory-Readers grant + Entra admin (the admin is set via REST against
+//     the first lab user; ARM cannot resolve the principal in the lab tenant)
 //   - demo database restores, stored proc, product, Agent job
 //   - Fabric VNet gateway + gateway role assignments
 // Per-attendee resources (user databases, Fabric workspaces) are created by
@@ -31,6 +32,9 @@ param fabricAdminMembers array
 @description('Base database the shared webshop connects to.')
 param webshopSqlDatabase string = 'TailspinToys_Demo_Final'
 
+@description('When true, the SQL MI subnet NSG and route table already exist and are referenced instead of redeployed (avoids ConflictWithNetworkIntentPolicy on shared hook re-runs).')
+param sqlMiNetworkingExists bool = false
+
 var commonTags = {
   SecurityControl: 'Ignore'
 }
@@ -41,6 +45,7 @@ module vnet 'infra/modules/vnet.bicep' = {
     location: location
     envName: envName
     tags: commonTags
+    sqlMiNetworkingExists: sqlMiNetworkingExists
   }
 }
 

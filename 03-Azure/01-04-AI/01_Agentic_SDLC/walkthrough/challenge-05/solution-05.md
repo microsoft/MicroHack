@@ -32,7 +32,7 @@ Deploy and verify                        ~10 min
 
 ### Task 3: Configure secure auth
 
-- 🔑 Use **OIDC federated credentials** for Azure auth, not long-lived secrets. The **most common wall** is the federated-credential subject (`repo:<owner>/<repo>:ref:refs/heads/main` or an environment subject) or a missing role. If auth fails in the pipeline, check this first and confirm the identity has Contributor on your scope.
+- 🔑 Use **OIDC federated credentials** (with User-Assigned Managed Identity) for Azure auth, not long-lived secrets. The **most common wall** is the federated-credential subject (`repo:<owner>/<repo>:ref:refs/heads/main` or an environment subject) or a missing role. If auth fails in the pipeline, check this first and confirm the identity has Contributor on your scope. Note that [`setup-oidc.sh`](../../scripts/setup-oidc.sh) is bundled in `scripts/` to help with this configuration.
 
 ### Task 4: Deploy and verify
 

@@ -16,7 +16,7 @@
 # Actions secrets. If the gh write fails the values are printed for manual entry.
 #
 # Usage:
-#   ./scripts/setup-oidc-uami.sh [-g <resource-group>] [-l <location>] [-r <owner/repo>] [-b <branch>] [-e <gh-environment>] [-n <identity-name>]
+#   ./scripts/setup-oidc.sh [-g <resource-group>] [-l <location>] [-r <owner/repo>] [-b <branch>] [-e <gh-environment>] [-n <identity-name>]
 
 set -euo pipefail
 

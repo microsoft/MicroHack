@@ -7,8 +7,9 @@ SCHEMA_FILE="${RECIPE_DIR}/trading-schema.sql"
 AZURE_RECIPE="${RECIPE_DIR}/postgres-azure-flex.bicep"
 KUBERNETES_RECIPE="${RECIPE_DIR}/postgres-kubernetes.bicep"
 SQL_RECIPE="${RECIPE_DIR}/sql-server.bicep"
+APP_TEMPLATE="${ROOT_DIR}/iac/app.bicep"
 
-for file in "$SCHEMA_FILE" "$AZURE_RECIPE" "$KUBERNETES_RECIPE" "$SQL_RECIPE"; do
+for file in "$SCHEMA_FILE" "$AZURE_RECIPE" "$KUBERNETES_RECIPE" "$SQL_RECIPE" "$APP_TEMPLATE"; do
   [[ -f "$file" ]] || {
     echo "Missing PostgreSQL recipe input: $file" >&2
     exit 1
@@ -80,35 +81,61 @@ if (( dependency_blocks < 4 )); then
   exit 1
 fi
 
-# Radius surfaces a recipe's `values` map as the resource's properties, and a schema-declared
-# `secrets` property is populated from that map. Returning `secrets` as a top-level sibling
-# instead routes it into a managed Radius.Security/secrets resource, which leaves only
-# `properties.secrets.name` on the resource and makes `db.properties.secrets.password`
-# unresolvable in app.bicep. Keep `secrets` nested inside `values`.
-for recipe in "$AZURE_RECIPE" "$KUBERNETES_RECIPE" "$SQL_RECIPE"; do
-  if grep -Eq "^  secrets:" "$recipe"; then
-    echo "$(basename "$recipe") declares a top-level 'secrets' output; nest it inside 'values'." >&2
+# Radius treats `secrets` as a framework-owned property (pkg/resourceutil.BasicProperties). A
+# `secrets` map nested inside `values` is discarded by the recipe-output copier, and a top-level
+# `secrets` object is instead materialized into a managed Radius.Security/secrets resource that is
+# surfaced only through a reserved `secrets.name` sub-property these resource types do not declare.
+# Either shape leaves `properties.secrets.password` unresolvable, so the PostgreSQL recipes must not
+# return the password as a recipe value at all; consumers bind the credentials Secret by name.
+#
+# The Radius deployment engine also resolves `references(<collection>, 'full')` to the template's
+# resource metadata, which exposes 'resourceId' rather than 'id'. A `map(<collection>, r => r.id)`
+# or a `<k8s-resource>.metadata.name` lookup inside `output result` therefore throws while the
+# outputs are evaluated. That failure is only a warning: the deployment still reports success but
+# returns no outputs, so Radius records none of the recipe's values and the resource silently comes
+# back without host/port/database/username. Keep the result block reference-free.
+for recipe in "$AZURE_RECIPE" "$KUBERNETES_RECIPE"; do
+  output_block="$(sed -n '/^output result object = {/,$p' "$recipe")"
+  if grep -Eq "^[[:space:]]*secrets:" <<<"$output_block"; then
+    echo "$(basename "$recipe") returns 'secrets' from the recipe result, which Radius never surfaces as properties.secrets.password." >&2
     exit 1
   fi
-  grep -Eq "^    secrets:" "$recipe" || {
-    echo "$(basename "$recipe") must return 'secrets' nested inside the 'values' map." >&2
+  if grep -Eq "map\([a-zA-Z]" <<<"$output_block"; then
+    echo "$(basename "$recipe") maps over a resource collection in 'output result'; build the IDs with resourceId() instead." >&2
+    exit 1
+  fi
+  if grep -Fq ".metadata.name" <<<"$output_block"; then
+    echo "$(basename "$recipe") dereferences a Kubernetes resource in 'output result'; use the compile-time name variable instead." >&2
+    exit 1
+  fi
+done
+
+# Both PostgreSQL recipes must name their credentials Secret deterministically from the Radius
+# resource name so that the shared application template can bind it in either environment.
+for recipe in "$AZURE_RECIPE" "$KUBERNETES_RECIPE"; do
+  grep -Fq "context.resource.name}-credentials" "$recipe" || {
+    echo "$(basename "$recipe") must name its credentials Secret '<resource-name>-credentials'." >&2
     exit 1
   }
 done
 
-# The Radius deployment engine resolves `references(<collection>, 'full')` to the template's
-# resource metadata, which exposes 'resourceId' rather than 'id'. A `map(<collection>, r => r.id)`
-# or a `<k8s-resource>.metadata.name` lookup inside `output result` therefore throws while the
-# outputs are evaluated. That failure is only a warning: the deployment still reports success but
-# returns no outputs, so Radius records none of the recipe's values and the resource silently
-# comes back without host/port/database/username/secrets. Keep the result block reference-free.
-output_block="$(sed -n '/^output result object = {/,$p' "$AZURE_RECIPE")"
-if grep -Eq "map\([a-zA-Z]" <<<"$output_block"; then
-  echo "Azure PostgreSQL recipe maps over a resource collection in 'output result'; build the IDs with resourceId() instead." >&2
+# The application template must consume that Secret rather than a property Radius never populates.
+if grep -v '^[[:space:]]*//' "$APP_TEMPLATE" | grep -Fq "properties.secrets.password"; then
+  echo "app.bicep reads properties.secrets.password, which Radius never populates." >&2
   exit 1
 fi
-if grep -Fq ".metadata.name" <<<"$output_block"; then
-  echo "Azure PostgreSQL recipe dereferences a Kubernetes resource in 'output result'; use the compile-time name variable instead." >&2
+grep -Fq "tradingDbName}-credentials" "$APP_TEMPLATE" || {
+  echo "app.bicep must bind the database password from the recipe's credentials Secret." >&2
+  exit 1
+}
+grep -Fq "secretRef:" "$APP_TEMPLATE" || {
+  echo "app.bicep must inject the database password with valueFrom.secretRef." >&2
+  exit 1
+}
+# Deriving the Secret name from `tradingDb.name` compiles to a runtime `reference('tradingDb').name`
+# call, and the resource's property bag does not expose `name`. Keep the name compile-time.
+if grep -v '^[[:space:]]*//' "$APP_TEMPLATE" | grep -Fq 'tradingDb.name'; then
+  echo "app.bicep derives a name from tradingDb.name, which compiles to an unresolvable runtime reference()." >&2
   exit 1
 fi
 grep -Fq "var firewallRuleIds = [" "$AZURE_RECIPE" || {

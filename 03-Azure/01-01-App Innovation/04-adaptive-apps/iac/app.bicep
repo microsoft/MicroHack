@@ -93,8 +93,14 @@ resource tradingApp 'Applications.Core/applications@2023-10-01-preview' = {
   }
 }
 
+// The PostgreSQL recipe names its credentials Secret '<resource-name>-credentials'. The backend
+// binds that Secret by name, so the name is declared once here as a compile-time value. Deriving
+// it from `tradingDb.name` instead would compile to a runtime `reference('tradingDb').name` call,
+// and the resource's property bag does not expose `name`.
+var tradingDbName = 'trading-db'
+
 resource tradingDb 'Radius.Resources/postgreSqlDatabases@2025-08-01-preview' = {
-  name: 'trading-db'
+  name: tradingDbName
   properties: {
     environment: environment
     application: tradingApp.id
@@ -153,7 +159,12 @@ resource backend 'Applications.Core/containers@2023-10-01-preview' = {
           value: 'http://+:8080'
         }
         CONNECTION_DB_SECRETS_PASSWORD: {
-          value: tradingDb.properties.secrets.password
+          valueFrom: {
+            secretRef: {
+              source: '${tradingDbName}-credentials'
+              key: 'password'
+            }
+          }
         }
         AZURE_CLIENT_ID: {
           value: backendIdentity.properties.clientId

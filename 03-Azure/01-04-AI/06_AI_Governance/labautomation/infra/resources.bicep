@@ -637,6 +637,30 @@ resource apiUniversalLlmOpGetResponseInputItems 'Microsoft.ApiManagement/service
   }
 }
 
+
+// Universal LLM API: Operation - GET /models/deployments
+// Challenge 1 tests /deployments against both the Universal LLM API and the
+// Azure OpenAI API, so both surfaces expose the deployment inventory.
+resource apiUniversalLlmOpGetDeployments 'Microsoft.ApiManagement/service/apis/operations@2023-09-01-preview' = {
+  parent: apiUniversalLlm
+  name: 'get-deployments'
+  properties: {
+    displayName: 'List Deployments'
+    method: 'GET'
+    urlTemplate: '/deployments'
+    description: 'Returns available model deployments'
+  }
+}
+
+resource apiUniversalLlmOpGetDeploymentsPolicy 'Microsoft.ApiManagement/service/apis/operations/policies@2023-09-01-preview' = {
+  parent: apiUniversalLlmOpGetDeployments
+  name: 'policy'
+  properties: {
+    format: 'xml'
+    value: '<policies><inbound><base/><return-response><set-status code="200" reason="OK"/><set-header name="Content-Type" exists-action="override"><value>application/json</value></set-header><set-body>{"value":[{"id":"/deployments/gpt-4.1","name":"gpt-4.1","type":"Microsoft.CognitiveServices/accounts/deployments","sku":{"name":"GlobalStandard","capacity":20},"properties":{"model":{"name":"gpt-4.1","format":"OpenAI","version":"2025-04-14"},"deploymentName":"gpt-4-1","capabilities":{"chatCompletion":"true"},"provisioningState":"Succeeded"}},{"id":"/deployments/gpt-5.4-mini","name":"gpt-5.4-mini","type":"Microsoft.CognitiveServices/accounts/deployments","sku":{"name":"GlobalStandard","capacity":20},"properties":{"model":{"name":"gpt-5.4-mini","format":"OpenAI","version":"2026-03-17"},"deploymentName":"gpt-5-4-mini","capabilities":{"chatCompletion":"true"},"provisioningState":"Succeeded"}},{"id":"/deployments/gpt-5.2","name":"gpt-5.2","type":"Microsoft.CognitiveServices/accounts/deployments","sku":{"name":"GlobalStandard","capacity":20},"properties":{"model":{"name":"gpt-5.2","format":"OpenAI","version":"2025-12-11"},"deploymentName":"gpt-5-2","capabilities":{"chatCompletion":"true"},"provisioningState":"Succeeded"}},{"id":"/deployments/text-embedding-3-large","name":"text-embedding-3-large","type":"Microsoft.CognitiveServices/accounts/deployments","sku":{"name":"GlobalStandard","capacity":20},"properties":{"model":{"name":"text-embedding-3-large","format":"OpenAI","version":"1"},"deploymentName":"text-embedding-3-large","capabilities":{"embeddings":"true"},"provisioningState":"Succeeded"}},{"id":"/deployments/Mistral-Large-3","name":"Mistral-Large-3","type":"Microsoft.CognitiveServices/accounts/deployments","sku":{"name":"GlobalStandard","capacity":20},"properties":{"model":{"name":"Mistral-Large-3","format":"Mistral AI","version":"1"},"deploymentName":"Mistral-Large-3","capabilities":{"chatCompletion":"true"},"provisioningState":"Succeeded"}},{"id":"/deployments/Phi-4","name":"Phi-4","type":"Microsoft.CognitiveServices/accounts/deployments","sku":{"name":"GlobalStandard","capacity":1},"properties":{"model":{"name":"Phi-4","format":"Microsoft","version":"7"},"deploymentName":"Phi-4","capabilities":{"chatCompletion":"true"},"provisioningState":"Succeeded"}}]}</set-body></return-response></inbound><backend><base/></backend><outbound><base/></outbound><on-error><base/></on-error></policies>'
+  }
+}
+
 // ===== Phase 4: APIM API - Unified AI API =====
 // Multi-backend routing API for OpenAI, Foundry, Gemini formats
 resource apiUnifiedAi 'Microsoft.ApiManagement/service/apis@2023-09-01-preview' = {

@@ -80,9 +80,11 @@ if (( dependency_blocks < 4 )); then
   exit 1
 fi
 
-# Radius surfaces a recipe's `values` map as the resource's properties. A top-level `secrets`
-# sibling is not part of that contract and causes every output to be discarded, so `secrets`
-# must be nested inside `values` alongside host/port/database/username.
+# Radius surfaces a recipe's `values` map as the resource's properties, and a schema-declared
+# `secrets` property is populated from that map. Returning `secrets` as a top-level sibling
+# instead routes it into a managed Radius.Security/secrets resource, which leaves only
+# `properties.secrets.name` on the resource and makes `db.properties.secrets.password`
+# unresolvable in app.bicep. Keep `secrets` nested inside `values`.
 for recipe in "$AZURE_RECIPE" "$KUBERNETES_RECIPE" "$SQL_RECIPE"; do
   if grep -Eq "^  secrets:" "$recipe"; then
     echo "$(basename "$recipe") declares a top-level 'secrets' output; nest it inside 'values'." >&2
@@ -93,5 +95,25 @@ for recipe in "$AZURE_RECIPE" "$KUBERNETES_RECIPE" "$SQL_RECIPE"; do
     exit 1
   }
 done
+
+# The Radius deployment engine resolves `references(<collection>, 'full')` to the template's
+# resource metadata, which exposes 'resourceId' rather than 'id'. A `map(<collection>, r => r.id)`
+# or a `<k8s-resource>.metadata.name` lookup inside `output result` therefore throws while the
+# outputs are evaluated. That failure is only a warning: the deployment still reports success but
+# returns no outputs, so Radius records none of the recipe's values and the resource silently
+# comes back without host/port/database/username/secrets. Keep the result block reference-free.
+output_block="$(sed -n '/^output result object = {/,$p' "$AZURE_RECIPE")"
+if grep -Eq "map\([a-zA-Z]" <<<"$output_block"; then
+  echo "Azure PostgreSQL recipe maps over a resource collection in 'output result'; build the IDs with resourceId() instead." >&2
+  exit 1
+fi
+if grep -Fq ".metadata.name" <<<"$output_block"; then
+  echo "Azure PostgreSQL recipe dereferences a Kubernetes resource in 'output result'; use the compile-time name variable instead." >&2
+  exit 1
+fi
+grep -Fq "var firewallRuleIds = [" "$AZURE_RECIPE" || {
+  echo "Azure PostgreSQL recipe must precompute firewall rule IDs with resourceId()." >&2
+  exit 1
+}
 
 echo "PostgreSQL recipe parity and security assertions passed."

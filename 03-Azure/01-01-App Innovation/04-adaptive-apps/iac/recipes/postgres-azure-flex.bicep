@@ -42,7 +42,24 @@ var egressIps = map(filter(split(aksEgressIps, ','), ip => !empty(trim(ip))), ip
 var schemaSql = loadTextContent('trading-schema.sql')
 var schemaRevision = take(uniqueString(schemaSql), 8)
 var initializerName = 'postgres-${uniqueString(context.resource.id)}-schema-${schemaRevision}'
+var credentialsName = '${initializerName}-credentials'
 var port = 5432
+
+// The `result` output must be evaluated without any runtime reference() call.
+// The Radius deployment engine resolves `references(<collection>, 'full')` to the
+// template's resource metadata, which exposes `resourceId` rather than `id`, so a
+// `map(aksFirewallRules, rule => rule.id)` throws while the outputs are evaluated.
+// That failure is logged only as a warning: the deployment still reports success but
+// returns no outputs at all, so Radius silently records none of the recipe values.
+// Building the IDs and Kubernetes names from compile-time values keeps the output
+// evaluable. See resources/validate-postgres-recipes.sh for the regression guard.
+var firewallRuleIds = [
+  for (egressIp, index) in egressIps: resourceId(
+    'Microsoft.DBforPostgreSQL/flexibleServers/firewallRules',
+    serverName,
+    'aks-egress-${index + 1}'
+  )
+]
 
 extension kubernetes with {
   kubeConfig: ''
@@ -139,7 +156,7 @@ resource aksFirewallRules 'Microsoft.DBforPostgreSQL/flexibleServers/firewallRul
 
 resource credentials 'core/Secret@v1' = {
   metadata: {
-    name: '${initializerName}-credentials'
+    name: credentialsName
     labels: {
       resource: context.resource.name
       'radapp.io/application': context.application == null ? '' : context.application.name
@@ -267,10 +284,10 @@ output result object = {
     databaseResource.id
     requireSecureTransport.id
     minimumTlsVersion.id
-    '/planes/kubernetes/local/namespaces/${context.runtime.kubernetes.namespace}/providers/core/Secret/${credentials.metadata.name}'
-    '/planes/kubernetes/local/namespaces/${context.runtime.kubernetes.namespace}/providers/core/ConfigMap/${initSql.metadata.name}'
-    '/planes/kubernetes/local/namespaces/${context.runtime.kubernetes.namespace}/providers/batch/Job/${schemaInitializer.metadata.name}'
-  ], map(aksFirewallRules, rule => rule.id))
+    '/planes/kubernetes/local/namespaces/${context.runtime.kubernetes.namespace}/providers/core/Secret/${credentialsName}'
+    '/planes/kubernetes/local/namespaces/${context.runtime.kubernetes.namespace}/providers/core/ConfigMap/${initializerName}'
+    '/planes/kubernetes/local/namespaces/${context.runtime.kubernetes.namespace}/providers/batch/Job/${initializerName}'
+  ], firewallRuleIds)
   values: {
     host: server.properties.fullyQualifiedDomainName
     port: port

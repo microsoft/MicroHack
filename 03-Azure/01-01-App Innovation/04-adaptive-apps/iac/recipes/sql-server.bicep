@@ -30,10 +30,11 @@ module sqlServer 'br/public:avm/res/sql/server:0.12.0' = {
         }
       }
     ]
+    // Azure rejects tag names containing '/', so Radius metadata uses a hyphen.
     tags: {
-      'radapp.io/environment': context.environment.id
-      'radapp.io/resource': context.resource.id
-      'radapp.io/application': context.application == null ? '' : context.application.name
+      'radapp.io-environment': context.environment.id
+      'radapp.io-resource': context.resource.id
+      'radapp.io-application': context.application == null ? '' : context.application.name
     }
   }
 }

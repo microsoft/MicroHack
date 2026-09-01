@@ -126,10 +126,11 @@ module sqlServer 'br/public:avm/res/sql/server:0.12.0' = {
         }
       }
     ]
+    // Azure rejects tag names containing '/', so Radius metadata uses a hyphen.
     tags: {
-      'radapp.io/environment': context.environment.id
-      'radapp.io/resource': context.resource.id
-      'radapp.io/application': context.application == null ? '' : context.application.name
+      'radapp.io-environment': context.environment.id
+      'radapp.io-resource': context.resource.id
+      'radapp.io-application': context.application == null ? '' : context.application.name
     }
   }
 }
@@ -226,15 +227,15 @@ use immutable workshop tags rather than the external `latest` recipes.
 ```bash
 rad bicep publish \
   --file iac/recipes/sql-server.bicep \
-  --target "br:${ACR_NAME}.azurecr.io/recipes/sql-server:1.0.0"
+  --target "br:${ACR_NAME}.azurecr.io/recipes/sql-server:1.0.1"
 
 rad bicep publish \
   --file iac/recipes/postgres-azure-flex.bicep \
-  --target "br:${ACR_NAME}.azurecr.io/recipes/postgres-azure-flex:1.0.0"
+  --target "br:${ACR_NAME}.azurecr.io/recipes/postgres-azure-flex:1.0.1"
 
 rad bicep publish \
   --file iac/recipes/postgres-kubernetes.bicep \
-  --target "br:${ACR_NAME}.azurecr.io/recipes/postgres-kubernetes:1.0.0"
+  --target "br:${ACR_NAME}.azurecr.io/recipes/postgres-kubernetes:1.0.1"
 ```
 
 **PowerShell 7:**
@@ -242,15 +243,15 @@ rad bicep publish \
 ```powershell
 rad bicep publish `
     --file iac/recipes/sql-server.bicep `
-    --target "br:$env:ACR_NAME.azurecr.io/recipes/sql-server:1.0.0"
+    --target "br:$env:ACR_NAME.azurecr.io/recipes/sql-server:1.0.1"
 
 rad bicep publish `
     --file iac/recipes/postgres-azure-flex.bicep `
-    --target "br:$env:ACR_NAME.azurecr.io/recipes/postgres-azure-flex:1.0.0"
+    --target "br:$env:ACR_NAME.azurecr.io/recipes/postgres-azure-flex:1.0.1"
 
 rad bicep publish `
     --file iac/recipes/postgres-kubernetes.bicep `
-    --target "br:$env:ACR_NAME.azurecr.io/recipes/postgres-kubernetes:1.0.0"
+    --target "br:$env:ACR_NAME.azurecr.io/recipes/postgres-kubernetes:1.0.1"
 ```
 
 Register the Azure SQL teaching recipe:
@@ -260,7 +261,7 @@ rad recipe register default \
   --environment env-azure-prod \
   --resource-type Radius.Resources/sqlDatabases \
   --template-kind bicep \
-  --template-path "${ACR_NAME}.azurecr.io/recipes/sql-server:1.0.0"
+  --template-path "${ACR_NAME}.azurecr.io/recipes/sql-server:1.0.1"
 ```
 
 Verify:
@@ -339,9 +340,9 @@ rad deploy iac/aks-env.bicep \
   --parameters azureSubscriptionId="$AZURE_SUBSCRIPTION" \
   --parameters azureResourceGroup="$RESOURCE_GROUP" \
   --parameters istioRevision="$ISTIO_REVISION" \
-  --parameters postgresRecipeTemplatePath="${ACR_NAME}.azurecr.io/recipes/postgres-azure-flex:1.0.0" \
+  --parameters postgresRecipeTemplatePath="${ACR_NAME}.azurecr.io/recipes/postgres-azure-flex:1.0.1" \
   --parameters aksEgressIps="$AKS_EGRESS_IPS" \
-  --parameters sqlDatabasesRecipeTemplatePath="${ACR_NAME}.azurecr.io/recipes/sql-server:1.0.0"
+  --parameters sqlDatabasesRecipeTemplatePath="${ACR_NAME}.azurecr.io/recipes/sql-server:1.0.1"
 ```
 
 **PowerShell 7:**
@@ -392,9 +393,9 @@ rad deploy iac/aks-env.bicep `
     --parameters azureSubscriptionId=$env:AZURE_SUBSCRIPTION `
     --parameters azureResourceGroup=$env:RESOURCE_GROUP `
     --parameters istioRevision=$IstioRevision `
-    --parameters "postgresRecipeTemplatePath=$env:ACR_NAME.azurecr.io/recipes/postgres-azure-flex:1.0.0" `
+    --parameters "postgresRecipeTemplatePath=$env:ACR_NAME.azurecr.io/recipes/postgres-azure-flex:1.0.1" `
     --parameters "aksEgressIps=$($EgressIps -join ',')" `
-    --parameters "sqlDatabasesRecipeTemplatePath=$env:ACR_NAME.azurecr.io/recipes/sql-server:1.0.0"
+    --parameters "sqlDatabasesRecipeTemplatePath=$env:ACR_NAME.azurecr.io/recipes/sql-server:1.0.1"
 ```
 
 | Resource type | AKS/Azure backend |
@@ -431,7 +432,7 @@ rad deploy iac/local-env.bicep \
   --environment env-local-prod \
   --parameters environmentName=env-local-prod \
   --parameters namespace=env-local-prod \
-  --parameters postgresRecipeTemplatePath="${ACR_NAME}.azurecr.io/recipes/postgres-kubernetes:1.0.0"
+  --parameters postgresRecipeTemplatePath="${ACR_NAME}.azurecr.io/recipes/postgres-kubernetes:1.0.1"
 ```
 
 **PowerShell 7:**
@@ -443,7 +444,7 @@ rad deploy iac/local-env.bicep `
     --environment env-local-prod `
     --parameters environmentName=env-local-prod `
     --parameters namespace=env-local-prod `
-    --parameters "postgresRecipeTemplatePath=$env:ACR_NAME.azurecr.io/recipes/postgres-kubernetes:1.0.0"
+    --parameters "postgresRecipeTemplatePath=$env:ACR_NAME.azurecr.io/recipes/postgres-kubernetes:1.0.1"
 ```
 
 | Resource type | K3s/local backend |

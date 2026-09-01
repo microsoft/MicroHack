@@ -27,7 +27,7 @@ AKS_ENVIRONMENT="${AKS_ENVIRONMENT:-env-azure-prod}"
 K3S_ENVIRONMENT="${K3S_ENVIRONMENT:-env-local-prod}"
 RADIUS_GROUP="${RADIUS_GROUP:-rg-trading}"
 RECIPE_REGISTRY="${RECIPE_REGISTRY:-ghcr.io/microsoft/adaptive-apps/recipes}"
-WORKSHOP_RECIPE_VERSION="${WORKSHOP_RECIPE_VERSION:-1.0.0}"
+WORKSHOP_RECIPE_VERSION="${WORKSHOP_RECIPE_VERSION:-1.0.1}"
 [[ "$WORKSHOP_RECIPE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
   echo "WORKSHOP_RECIPE_VERSION must be an immutable semantic version such as 1.0.0." >&2
   exit 1
@@ -161,7 +161,7 @@ EOF
 
   DOCKER_CONFIG="${TEMP_DIR}/docker" rad bicep publish \
     --file iac/recipes/sql-server.bicep \
-    --target "br:${ACR_NAME}.azurecr.io/recipes/sql-server:1.0.0"
+    --target "br:${ACR_NAME}.azurecr.io/recipes/sql-server:${WORKSHOP_RECIPE_VERSION}"
   DOCKER_CONFIG="${TEMP_DIR}/docker" rad bicep publish \
     --file iac/recipes/postgres-azure-flex.bicep \
     --target "br:${ACR_NAME}.azurecr.io/recipes/postgres-azure-flex:${WORKSHOP_RECIPE_VERSION}"
@@ -232,7 +232,7 @@ configure_aks() {
     --parameters "recipeRegistry=${RECIPE_REGISTRY}" \
     --parameters "postgresRecipeTemplatePath=${ACR_NAME}.azurecr.io/recipes/postgres-azure-flex:${WORKSHOP_RECIPE_VERSION}" \
     --parameters "aksEgressIps=${aks_egress_ips}" \
-    --parameters "sqlDatabasesRecipeTemplatePath=${ACR_NAME}.azurecr.io/recipes/sql-server:1.0.0"
+    --parameters "sqlDatabasesRecipeTemplatePath=${ACR_NAME}.azurecr.io/recipes/sql-server:${WORKSHOP_RECIPE_VERSION}"
 
   assert_recipes "$AKS_WORKSPACE" "$AKS_ENVIRONMENT" \
     Radius.Resources/postgreSqlDatabases \

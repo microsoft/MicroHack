@@ -13,7 +13,7 @@ across frameworks.
 
 | Access Contract | Agent Framework | Integration | Target model |
 |---|---|---|---|
-| Sales-Assistant | Microsoft Agent Framework | Azure Key Vault (endpoint + key) | gpt-4.1 |
+| Sales-Assistant | Microsoft Agent Framework | Azure Key Vault (endpoint + key), with an APIM fallback — see Troubleshooting | gpt-4.1 |
 | HR-ChatAgent | Microsoft Foundry Agent SDK | Foundry Project Connection | gpt-4.1 |
 | Support-Bot | LangChain | Local (direct endpoint + key) | phi-4 |
 
@@ -60,6 +60,7 @@ Same prerequisite as every notebook in this MicroHack — see
 | Symptom | Fix |
 |---------|-----|
 | API key retrieval fails | This notebook does not create access contracts — run [Challenge 3](challenge-03.md) first. |
+| `Key Vault unreachable … using APIM credentials instead` | Expected in this environment, and not an error. The lab tenant enforces an Azure Policy that disables public network access on every Key Vault, so the Sales agent cannot read its secrets from the vault data plane. Challenge 3 still writes those secrets successfully, because that goes through the ARM control plane. The agent falls back to the same endpoint and contract subscription key read from APIM, so the run continues normally. |
 | Foundry SDK connection step fails | Confirm the Foundry connection name printed at the end of Challenge 3 (`4️⃣.2`) matches what this notebook resolves. |
 | Package install errors in step `4️⃣` | Some agent framework packages (`agent-framework`, `langchain`, `langchain-openai`) pin specific versions — re-run the cell after resolving any dependency conflict shown in the error. |
 

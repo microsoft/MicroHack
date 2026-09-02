@@ -528,18 +528,46 @@ rad resource expose Applications.Core/containers frontend `
     --remote-port 3000
 ```
 
-Open <http://localhost:3000>. A reachable frontend and a complete Radius graph are the
-core proof. Order and trade streaming works in both environments because the
-`mqttBrokers` recipe resolves to an in-cluster Mosquitto broker on AKS as well; see
+Open <http://localhost:3000> and sign in with the credentials you passed to `rad deploy`:
+the `authUsername` value (`admin`) and the `authPassword` you typed at the prompt. The
+frontend checks these itself; Challenge 06 replaces them with an OIDC identity provider.
+
+#### Place several trade orders
+
+Do not stop at the dashboard. Place orders now, because they are the evidence that
+[step 6](#6-prove-database-initialization-and-backend-readiness) reads back out of Azure:
+
+1. Choose a symbol the backend offers at `/api/symbols`: `AAPL`, `MSFT`, `GOOGL`, `AMZN`,
+   `TSLA`, `NVDA`, `META`, `NFLX`, `AMD`, or `INTC`.
+2. Submit at least three **BUY** orders with different symbols and quantities. The
+   backend stores each one with status `processed` and records a matching trade.
+3. Optionally submit a **SELL** order for a symbol you do not hold. The backend rejects
+   it server-side and stores it with status `rejected`, so the `orders` table ends up
+   showing both outcomes.
+
+The frontend posts these to the backend's `/api/orders` endpoint, and the backend writes
+them to whatever database the `postgreSqlDatabases` recipe resolved to. On AKS that is a
+managed Azure server outside the cluster, which is what makes step 6 worth running.
+
+A reachable frontend and a complete Radius graph are the core proof. Order and trade
+streaming works in both environments because the `mqttBrokers` recipe resolves to an
+in-cluster Mosquitto broker on AKS as well; see
 [Why AKS uses Mosquitto for `mqttBrokers`](#why-aks-uses-mosquitto-for-mqttbrokers) for
 the reason the Event Grid implementation is not selected.
 
 ### 6. Prove database initialization and backend readiness
 
-Run this acceptance check once on K3s after Stage 2 and once on AKS after Stage 3. It
-waits for the recipe-owned Job because Kubernetes-extension deployment records API
-acceptance, not Job completion. The backend readiness probe calls `/api/accounts`, so
+`app.bicep` never changes, but the database it resolves to does, so the evidence differs
+per platform. On K3s the database is a pod inside the cluster. On AKS it is an Azure
+Database for PostgreSQL Flexible Server outside the cluster, so the check runs against
+Azure and doubles as proof that the orders you placed in step 5 really left Kubernetes.
+
+Both checks depend on the recipe-owned schema Job. Wait for it: a Kubernetes-extension
+deployment records API acceptance, not Job completion, so the deployment can report
+success before the tables exist. The backend readiness probe calls `/api/accounts`, so
 Kubernetes does not mark the backend Ready until the schema is queryable.
+
+#### K3s: check the in-cluster database
 
 The verification pod reuses the recipe-created Secret through `secretKeyRef`; no command,
 manifest, or output contains the database password. It prints only table names and the
@@ -645,7 +673,7 @@ kubectl wait `
     "job/$SchemaJob" `
     --timeout=15m
 
-$Job = kubectl get job $SchemaJob --namespace $AppNamespace |
+$Job = kubectl get job $SchemaJob --namespace $AppNamespace --output json |
     ConvertFrom-Json
 $Environment = $Job.spec.template.spec.containers[0].env
 $DbHost = ($Environment | Where-Object name -eq "PGHOST").value
@@ -720,10 +748,188 @@ if ($Accounts -notmatch '"Demo Account"') {
 }
 ```
 
-Expected metadata output is the four table names and `demo_seed_count=1`. On AKS,
-`PGSSLMODE=require` proves the initializer uses TLS. Azure PostgreSQL also keeps
-`require_secure_transport` enabled, so the external backend image's Npgsql connection
-negotiates TLS; the server rejects plaintext sessions.
+Expected metadata output is the four table names and `demo_seed_count=1`.
+
+#### AKS: check the managed Azure database
+
+On AKS the same `postgreSqlDatabases` resource resolves to an Azure Database for
+PostgreSQL Flexible Server, so verify it the way you would verify any managed Azure
+database: connect to it and query the `orders` table you just filled from the frontend.
+
+> [!NOTE]
+> Flexible Server has no query editor blade in the Azure portal. The portal route is
+> Cloud Shell, which runs the same Azure CLI commands shown below.
+
+Ask Radius where the database lives. The recipe returns the connection metadata but
+deliberately never returns the password, so that still comes from the recipe-created
+Kubernetes Secret.
+
+**Bash:**
+
+```bash
+az extension add --name rdbms-connect
+
+DB_JSON="$(rad resource show Radius.Resources/postgreSqlDatabases trading-db \
+  --output json)"
+PG_HOST="$(jq -r '.properties.host' <<<"$DB_JSON")"
+PG_DATABASE="$(jq -r '.properties.database' <<<"$DB_JSON")"
+PG_USER="$(jq -r '.properties.username' <<<"$DB_JSON")"
+PG_SERVER="${PG_HOST%%.*}"
+PG_GROUP="$(az postgres flexible-server list \
+  --query "[?name=='$PG_SERVER'].resourceGroup | [0]" \
+  --output tsv)"
+PG_PASSWORD="$(kubectl get secret trading-db-credentials \
+  --namespace "$APP_NAMESPACE" \
+  --output jsonpath='{.data.password}' | base64 --decode)"
+
+echo "server=$PG_SERVER group=$PG_GROUP database=$PG_DATABASE user=$PG_USER"
+```
+
+The recipe allowlisted only the AKS egress IPs, so your own client — laptop, dev
+container, or Cloud Shell — cannot reach the server yet. Open a rule for it, then close
+it again once the queries are done:
+
+```bash
+CLIENT_IP="$(curl -sf https://api.ipify.org)"
+az postgres flexible-server firewall-rule create \
+  --resource-group "$PG_GROUP" \
+  --server-name "$PG_SERVER" \
+  --name workshop-client \
+  --start-ip-address "$CLIENT_IP" \
+  --end-ip-address "$CLIENT_IP" \
+  --output none
+```
+
+Confirm the schema Job created the tables, then read back your orders:
+
+> [!IMPORTANT]
+> Keep each `--querytext` value on a single line. `az postgres flexible-server execute`
+> splits the query on newlines and runs only the first fragment, which fails with a
+> confusing `column "..." does not exist` instead of an obvious syntax error. The `id`
+> alias and the `::text` cast are also deliberate: the CLI's table renderer drops a bare
+> `id` column and native timestamp columns. Use `--output json` to see raw values.
+
+```bash
+az postgres flexible-server execute \
+  --name "$PG_SERVER" \
+  --admin-user "$PG_USER" \
+  --admin-password "$PG_PASSWORD" \
+  --database-name "$PG_DATABASE" \
+  --querytext "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name;" \
+  --output table
+
+az postgres flexible-server execute \
+  --name "$PG_SERVER" \
+  --admin-user "$PG_USER" \
+  --admin-password "$PG_PASSWORD" \
+  --database-name "$PG_DATABASE" \
+  --querytext "SELECT id AS order_id, symbol, side, order_type, quantity, price, status, created_at::text AS placed_at FROM orders ORDER BY id;" \
+  --output table
+
+az postgres flexible-server firewall-rule delete \
+  --resource-group "$PG_GROUP" \
+  --server-name "$PG_SERVER" \
+  --name workshop-client \
+  --yes
+```
+
+**PowerShell 7:**
+
+```powershell
+az extension add --name rdbms-connect
+
+$Database = rad resource show Radius.Resources/postgreSqlDatabases trading-db `
+    --output json |
+    ConvertFrom-Json
+$PgHost = $Database.properties.host
+$PgDatabase = $Database.properties.database
+$PgUser = $Database.properties.username
+$PgServer = $PgHost.Split(".")[0]
+$PgGroup = az postgres flexible-server list `
+    --query "[?name=='$PgServer'].resourceGroup | [0]" `
+    --output tsv
+$PgPassword = [Text.Encoding]::UTF8.GetString(
+    [Convert]::FromBase64String((kubectl get secret trading-db-credentials `
+        --namespace $AppNamespace `
+        --output jsonpath='{.data.password}')))
+
+"server=$PgServer group=$PgGroup database=$PgDatabase user=$PgUser"
+
+$ClientIp = "$(Invoke-RestMethod -Uri 'https://api.ipify.org')".Trim()
+az postgres flexible-server firewall-rule create `
+    --resource-group $PgGroup `
+    --server-name $PgServer `
+    --name workshop-client `
+    --start-ip-address $ClientIp `
+    --end-ip-address $ClientIp `
+    --output none
+
+az postgres flexible-server execute `
+    --name $PgServer `
+    --admin-user $PgUser `
+    --admin-password $PgPassword `
+    --database-name $PgDatabase `
+    --querytext "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name;" `
+    --output table
+
+az postgres flexible-server execute `
+    --name $PgServer `
+    --admin-user $PgUser `
+    --admin-password $PgPassword `
+    --database-name $PgDatabase `
+    --querytext "SELECT id AS order_id, symbol, side, order_type, quantity, price, status, created_at::text AS placed_at FROM orders ORDER BY id;" `
+    --output table
+
+az postgres flexible-server firewall-rule delete `
+    --resource-group $PgGroup `
+    --server-name $PgServer `
+    --name workshop-client `
+    --yes
+```
+
+The first query lists `accounts`, `orders`, `positions`, and `trades`. The second returns
+one row per order you placed in step 5:
+
+```text
+Order_id    Order_type    Placed_at                      Price    Quantity    Side    Status     Symbol
+----------  ------------  -----------------------------  -------  ----------  ------  ---------  --------
+1           MARKET        2026-09-02 12:34:15.020938+00  100.00   10          BUY     processed  AAPL
+2           MARKET        2026-09-02 12:36:09.462464+00  384.04   10          BUY     processed  TSLA
+```
+
+An uncovered SELL shows up here too, with `status` `rejected`. Those rows are in Azure,
+not in the cluster: the pods you were talking to contain no database at all. Nothing in
+`app.bicep` changed to make that happen; only the recipe registered for
+`Radius.Resources/postgreSqlDatabases` differs between the two environments.
+
+`PGSSLMODE=require` on the schema Job proves the initializer uses TLS. The recipe also
+enables `require_secure_transport` and a TLS 1.2 floor on the server, so the backend's
+Npgsql connection negotiates TLS and the server rejects plaintext sessions.
+
+> [!TIP]
+> To avoid touching the firewall at all, run the query from inside the cluster, whose
+> egress IP the recipe already allowlisted. This also avoids the CLI's table-rendering
+> quirks, because you get raw `psql` output, and the pod deletes itself on exit:
+>
+> ```bash
+> kubectl run pg-shell --namespace "$APP_NAMESPACE" --rm -i --restart=Never \
+>   --image=postgres:16-alpine --env="PGPASSWORD=$PG_PASSWORD" \
+>   -- psql "host=$PG_HOST dbname=$PG_DATABASE user=$PG_USER sslmode=require" \
+>   -c "SELECT id, symbol, side, quantity, status FROM orders ORDER BY id;"
+> ```
+>
+> ```text
+>  id | symbol | side | quantity |  status
+> ----+--------+------+----------+-----------
+>   1 | AAPL   | BUY  |       10 | processed
+>   2 | TSLA   | BUY  |       10 | processed
+> (2 rows)
+> ```
+
+> [!WARNING]
+> Delete the `workshop-client` firewall rule when you are finished. Leaving a public IP
+> allowlisted on a database server outlives the workshop, and home or office IPs are
+> reassigned to someone else.
 
 ## Stage 4: Compare the deployments
 
@@ -834,6 +1040,83 @@ rad env show
 
 Kubernetes context and Radius workspace are independent selectors.
 
+### The deployment reported a failure that already succeeded
+
+`rad deploy` can fail on a container that is actually healthy:
+
+```text
+"code": "Internal",
+"message": "Container state is 'Waiting' Reason: CrashLoopBackOff, Message: back-off
+5m0s restarting failed container=backend pod=backend-757d95b986-dbhw7"
+```
+
+or:
+
+```text
+"message": "deployment timed out, name: backend, namespace env-azure-prod-adaptive-apps,
+error occurred while fetching latest status: client rate limiter Wait returned an error:
+context deadline exceeded"
+```
+
+Radius polls the pods that already exist. When an earlier attempt left a pod crash-looping,
+Kubernetes has backed that pod off by up to five minutes, so it does not restart promptly
+even though the new specification is correct. Radius reads that stale status and gives up
+while the replacement ReplicaSet is still rolling out.
+
+**The tell-tale is the pod name.** If the hash in the error matches a pod from the previous
+attempt rather than a newly created one, the status is stale. Check what is actually
+running:
+
+```bash
+kubectl get pods --namespace "$APP_NAMESPACE"
+kubectl get replicasets --namespace "$APP_NAMESPACE"
+```
+
+If a new pod is `1/1 Running`, the deployment succeeded and the error is a reporting
+artifact; continue with the walkthrough. Otherwise simply run `rad deploy` again — the
+back-off window has usually expired by then. Deleting the crash-looping pod first also
+clears it.
+
+### The cluster or the database stopped between sessions
+
+Both Azure back ends can be stopped to save cost, and each fails in its own way. A stopped
+AKS cluster stops resolving its API server name, so every `rad` and `kubectl` command
+fails before it reaches Radius:
+
+```text
+Error: Get "https://<cluster>.hcp.<region>.azmk8s.io:443/apis/api.ucp.dev/v1alpha3":
+dial tcp: lookup <cluster>.hcp.<region>.azmk8s.io: no such host
+```
+
+A stopped PostgreSQL Flexible Server instead surfaces as an opaque Azure error nested
+inside the recipe deployment:
+
+```text
+"code": "RecipeDeploymentFailed",
+"message": "failed to deploy recipe default of type Radius.Resources/postgreSqlDatabases"
+...
+"code": "InternalServerError",
+"message": "An unexpected error occured while processing the request. Tracking ID: ..."
+```
+
+Neither is a defect in the application model. Start whichever is stopped and retry:
+
+```bash
+az aks show --resource-group "$RESOURCE_GROUP" --name "<cluster>" --query powerState.code -o tsv
+az aks start --resource-group "$RESOURCE_GROUP" --name "<cluster>"
+
+az postgres flexible-server show --resource-group "$RESOURCE_GROUP" \
+  --name "<server>" --query state -o tsv
+az postgres flexible-server start --resource-group "$RESOURCE_GROUP" --name "<server>"
+```
+
+If DNS still fails after the cluster is running, refresh the kubeconfig — a stale context
+can point at a cluster that no longer exists:
+
+```bash
+az aks get-credentials --resource-group "$RESOURCE_GROUP" --name "<cluster>" --overwrite-existing
+```
+
 ### K3s reports connection refused on localhost
 
 The devcontainer restart stopped the tunnel process. Reconnect, then restore the
@@ -866,6 +1149,9 @@ never inspects. No amount of platform work fixes that from the outside — a use
 managed identity, federated credentials, topic spaces, permission bindings, and Event
 Grid data-plane role assignments would all be correct and the broker would still refuse
 the connection.
+
+This is tracked upstream as
+[microsoft/adaptive-apps#44](https://github.com/microsoft/adaptive-apps/issues/44).
 
 The failure is not graceful. `MqttOrderListener` calls `SubscribeAsync` on an
 unconnected client, which throws `MqttClientNotConnectedException`. .NET's default

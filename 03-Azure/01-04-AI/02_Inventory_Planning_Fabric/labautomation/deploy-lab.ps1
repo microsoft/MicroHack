@@ -63,7 +63,11 @@ $ErrorActionPreference = "Stop"
 $candidateRegions   = if ($PreferredLocation.Count -gt 0) { $PreferredLocation } else { @("swedencentral", "westeurope", "norwayeast") }
 $effectiveLocation  = $candidateRegions[0]
 $effectiveRG        = $ResourceGroupName
-$stableHash         = (Get-MhhStableHash $AllowedEntraUserIds -Length 12).ToLower()
+
+if ($AllowedEntraUserIds.Count -eq 0) {
+    throw "At least one attendee object ID must be supplied in AllowedEntraUserIds."
+}
+$stableHash = (Get-MhhStableHash $AllowedEntraUserIds -Length 12).ToLower()
 
 # For 'subscription' deployments the platform does NOT pre-create a resource group
 # ($ResourceGroupName arrives empty). Create one ourselves with a deterministic,
@@ -170,28 +174,101 @@ if ($existingAccount) {
 # ---------------------------------------------------------------------------
 # Foundry project
 # ---------------------------------------------------------------------------
+$accountScope = "/subscriptions/$SubscriptionId/resourceGroups/$effectiveRG" +
+    "/providers/Microsoft.CognitiveServices/accounts/$foundryAccountName"
 $projectUri = "/subscriptions/$SubscriptionId/resourceGroups/$effectiveRG" +
     "/providers/Microsoft.CognitiveServices/accounts/$foundryAccountName" +
     "/projects/${foundryProjectName}?api-version=2025-04-01-preview"
 
-$existingProject = Invoke-AzRestMethod -Method GET -Path $projectUri -ErrorAction SilentlyContinue
-if ($existingProject.StatusCode -ne 200) {
-    $projectBody = @{
-        location   = $effectiveLocation
-        properties = @{ description = "Agentic Inventory Planning MicroHack" }
-    } | ConvertTo-Json -Depth 3
+$projectBody = @{
+    location = $effectiveLocation
+    identity = @{ type = "SystemAssigned" }
+    properties = @{
+        description = "Agentic Inventory Planning MicroHack"
+        displayName = "Inventory Planning MicroHack"
+    }
+} | ConvertTo-Json -Depth 4
 
-    Invoke-AzRestMethod -Method PUT -Path $projectUri -Payload $projectBody | Out-Null
-
-    $elapsed = 0
-    do { Start-Sleep -Seconds 8; $elapsed += 8
-         $r = Invoke-AzRestMethod -Method GET -Path $projectUri -ErrorAction SilentlyContinue
-    } while (($r.StatusCode -ne 200) -and ($elapsed -lt 90))
-
-    Write-Host "[OK]    Foundry project '$foundryProjectName' created."
-} else {
-    Write-Host "[OK]    Foundry project already exists — skipping."
+$projectResponse = Invoke-AzRestMethod -Method PUT -Path $projectUri -Payload $projectBody
+if ($projectResponse.StatusCode -ge 400) {
+    throw "Foundry project create or update failed (HTTP $($projectResponse.StatusCode)): $($projectResponse.Content)"
 }
+
+$projectResource = $null
+$elapsed = 0
+do {
+    Start-Sleep -Seconds 8
+    $elapsed += 8
+    $projectResponse = Invoke-AzRestMethod -Method GET -Path $projectUri -ErrorAction SilentlyContinue
+    if ($projectResponse.StatusCode -eq 200) {
+        $projectResource = $projectResponse.Content | ConvertFrom-Json
+        if ($projectResource.properties.provisioningState -eq "Failed") {
+            throw "Foundry project provisioning failed: $($projectResponse.Content)"
+        }
+    }
+} while (
+    ($projectResponse.StatusCode -ne 200 -or
+     $projectResource.properties.provisioningState -ne "Succeeded" -or
+     -not $projectResource.identity.principalId) -and
+    ($elapsed -lt 180)
+)
+
+if ($projectResponse.StatusCode -ne 200 -or
+    $projectResource.properties.provisioningState -ne "Succeeded" -or
+    -not $projectResource.identity.principalId) {
+    throw "Foundry project did not reach Succeeded with a managed identity within 180 seconds. Last response: $($projectResponse.Content)"
+}
+Write-Host "[OK]    Foundry project '$foundryProjectName' is ready."
+
+# Foundry User (formerly Azure AI User) enables project access and agent operations.
+$foundryUserRoleId = "53ca6127-db72-4b80-b1b0-d745d6d5456d"
+
+function Grant-FoundryUserRole {
+    param(
+        [Parameter(Mandatory=$true)]
+        [string]$PrincipalId,
+
+        [Parameter(Mandatory=$true)]
+        [string]$PrincipalDescription
+    )
+
+    $existingAssignment = Get-AzRoleAssignment `
+        -ObjectId $PrincipalId `
+        -Scope $accountScope `
+        -RoleDefinitionId $foundryUserRoleId `
+        -ErrorAction SilentlyContinue
+    if ($existingAssignment) {
+        Write-Host "[OK]    Foundry User already assigned to $PrincipalDescription."
+        return
+    }
+
+    $lastError = $null
+    for ($attempt = 1; $attempt -le 6; $attempt++) {
+        try {
+            New-AzRoleAssignment `
+                -ObjectId $PrincipalId `
+                -RoleDefinitionId $foundryUserRoleId `
+                -Scope $accountScope `
+                -ErrorAction Stop | Out-Null
+            Write-Host "[OK]    Granted Foundry User to $PrincipalDescription."
+            return
+        } catch {
+            $lastError = $_
+            if ($attempt -lt 6) {
+                Start-Sleep -Seconds 10
+            }
+        }
+    }
+
+    throw "Could not grant Foundry User to $PrincipalDescription after 6 attempts: $lastError"
+}
+
+foreach ($userId in $AllowedEntraUserIds) {
+    Grant-FoundryUserRole -PrincipalId $userId -PrincipalDescription "attendee '$userId'"
+}
+Grant-FoundryUserRole `
+    -PrincipalId $projectResource.identity.principalId `
+    -PrincipalDescription "project managed identity '$($projectResource.identity.principalId)'"
 
 # ---------------------------------------------------------------------------
 # gpt-5.4-mini model deployment (ACCOUNT-scoped, GlobalStandard capacity 100).

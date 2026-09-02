@@ -189,4 +189,53 @@ for pattern in '*.bicep' '*.sql'; do
   }
 done
 
+# Azure Event Grid accepts a Microsoft Entra JWT only through the MQTT v5 enhanced
+# authentication fields (Authentication Method 'OAUTH2-JWT' plus Authentication Data). The
+# workshop application instead sends the token as a CONNECT password, so Event Grid rejects
+# every connection, the MQTT background service throws, and .NET's default
+# BackgroundServiceExceptionBehavior.StopHost crash-loops the whole backend. Until the
+# application supports enhanced authentication, the AKS environment must not select the
+# Event Grid recipe as the default mqttBrokers implementation.
+AKS_ENVIRONMENT_TEMPLATE="${ROOT_DIR}/iac/aks-env.bicep"
+[[ -f "$AKS_ENVIRONMENT_TEMPLATE" ]] || {
+  echo "Missing AKS environment template: $AKS_ENVIRONMENT_TEMPLATE" >&2
+  exit 1
+}
+if grep -v '^[[:space:]]*//' "$AKS_ENVIRONMENT_TEMPLATE" | grep -Fq 'mqtt-azure-event-grid'; then
+  echo "aks-env.bicep must not default Radius.Resources/mqttBrokers to the Event Grid recipe; the application cannot authenticate to it." >&2
+  exit 1
+fi
+grep -Fq "'\${recipeRegistry}/mqtt:latest'" "$AKS_ENVIRONMENT_TEMPLATE" || {
+  echo "aks-env.bicep must fall back to the in-cluster Mosquitto recipe for Radius.Resources/mqttBrokers." >&2
+  exit 1
+}
+
+# The workloadIdentities recipe already returns the correct tenant, so the shared application
+# template must consume it rather than the optional override parameter. Wiring AZURE_TENANT_ID
+# straight to the parameter injected an empty tenant and broke token acquisition.
+for identity in backendIdentity frontendIdentity; do
+  grep -Fq "${identity}.properties.tenantId" "$APP_TEMPLATE" || {
+    echo "app.bicep must derive AZURE_TENANT_ID from ${identity}.properties.tenantId, not from the bare override parameter." >&2
+    exit 1
+  }
+done
+
+# The MQTT authentication method belongs to the broker, and the mqttBrokers resource type
+# exposes it. The workloadIdentities recipe hard-codes 'OAUTH2-JWT' on Azure, so reading it
+# from the identity makes the application ignore which broker recipe is registered.
+for identity in backendIdentity frontendIdentity; do
+  for property in authMethod tokenAudience; do
+    if grep -Fq "${identity}.properties.${property}" "$APP_TEMPLATE"; then
+      echo "app.bicep must read MQTT ${property} from the mqttBrokers resource, not from ${identity}." >&2
+      exit 1
+    fi
+  done
+done
+for property in authMethod tokenAudience; do
+  if (( $(grep -c -F "tradingMqtt.properties.${property}" "$APP_TEMPLATE") < 2 )); then
+    echo "app.bicep must wire MQTT ${property} from tradingMqtt for both containers." >&2
+    exit 1
+  fi
+done
+
 echo "PostgreSQL recipe parity and security assertions passed."

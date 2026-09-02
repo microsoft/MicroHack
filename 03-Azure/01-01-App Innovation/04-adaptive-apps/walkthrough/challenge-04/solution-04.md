@@ -468,13 +468,21 @@ rad deploy iac/aks-env.bicep `
 | Resource type | AKS/Azure backend |
 | --- | --- |
 | `postgreSqlDatabases` | Azure Database for PostgreSQL Flexible Server |
-| `mqttBrokers` | Azure Event Grid MQTT |
+| `mqttBrokers` | In-cluster Eclipse Mosquitto |
 | `idProviders` | In-cluster Keycloak |
 | `workloadIdentities` | AKS workload identity |
 | `aiModels` | Azure OpenAI |
 | `governance` | In-cluster OPA |
 | `agentGuardrails` | Agent Governance Toolkit sidecar support |
 | `sqlDatabases` | Custom Azure SQL recipe |
+
+> [!NOTE]
+> `mqttBrokers` maps to in-cluster Mosquitto on AKS as well as K3s. The Event Grid recipe
+> exists and provisions correctly, but the published application sends its Entra token as
+> an MQTT CONNECT password, while Event Grid requires MQTT v5 enhanced authentication.
+> Selecting it therefore crash-loops the backend. Challenge 05 explains this in
+> [Why AKS uses Mosquitto for `mqttBrokers`](../challenge-05/solution-05.md#why-aks-uses-mosquitto-for-mqttbrokers),
+> including the `mqttRecipeTemplatePath` override that restores the Event Grid recipe.
 
 ## Manual tutorial, Stage 4: Register the complete K3s recipe set
 

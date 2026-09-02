@@ -12,6 +12,11 @@ param postgresRecipeTemplatePath string
 @description('Comma-separated static AKS public egress IP addresses allowed by PostgreSQL.')
 param aksEgressIps string
 param sqlDatabasesRecipeTemplatePath string = ''
+@description('''
+Override for the Radius.Resources/mqttBrokers recipe. Empty selects the in-cluster
+Mosquitto recipe, which is the AKS default for the reason documented on mqttTemplatePath.
+''')
+param mqttRecipeTemplatePath string = ''
 param istioRevision string
 param azureSubscriptionId string
 param azureResourceGroup string
@@ -24,6 +29,22 @@ resource appNamespace 'core/Namespace@v1' = {
     }
   }
 }
+
+// The AKS environment deliberately uses the in-cluster Mosquitto broker rather than
+// 'mqtt-azure-event-grid'. Azure Event Grid accepts a Microsoft Entra JWT only through the
+// MQTT v5 enhanced-authentication fields (Authentication Method 'OAUTH2-JWT' plus
+// Authentication Data). The workshop application sends the token as a CONNECT password
+// instead, which Event Grid always rejects, so the backend never connects and crash-loops
+// the whole deployment. Provisioning topic spaces, federated credentials and the Event Grid
+// data-plane roles does not change that outcome, because the defect is in the MQTT client.
+//
+// Only the recipe changes: app.bicep, the resource types and the K3s environment are
+// untouched, so this stays a platform-implementation choice rather than an application one.
+// Set mqttRecipeTemplatePath to '<registry>/mqtt-azure-event-grid:latest' once the
+// application supports MQTT v5 enhanced authentication.
+var mqttTemplatePath = empty(mqttRecipeTemplatePath)
+  ? '${recipeRegistry}/mqtt:latest'
+  : mqttRecipeTemplatePath
 
 var baseRecipes = {
   'Radius.Resources/postgreSqlDatabases': {
@@ -38,7 +59,7 @@ var baseRecipes = {
   'Radius.Resources/mqttBrokers': {
     default: {
       templateKind: 'bicep'
-      templatePath: '${recipeRegistry}/mqtt-azure-event-grid:latest'
+      templatePath: mqttTemplatePath
     }
   }
   'Radius.Resources/idProviders': {

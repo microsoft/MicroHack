@@ -46,9 +46,11 @@ with that name in the other.
 - Prompt for the frontend password. Do not put credentials in source, shell history,
   screenshots, or evidence files.
 - Keep AI disabled. Challenge 08 owns AI adaptation.
-- Do not complete Azure Event Grid MQTT authorization in this challenge. The Azure
-  deployment may prove graph and resource portability before MQTT publish/subscribe
-  reaches full runtime parity; preserve that gap rather than adding shared secrets.
+- Do not add Azure Event Grid MQTT authorization in this challenge. On AKS the
+  `mqttBrokers` contract intentionally resolves to an in-cluster broker, because the
+  published application cannot perform the MQTT v5 enhanced authentication that Event
+  Grid requires. Change the recipe registration if you must, never the application model,
+  and never add a shared secret.
 - Reach the frontend only through `rad resource expose` or Kubernetes port-forwarding.
   Do not expose ports on the private K3s VM.
 
@@ -104,11 +106,11 @@ Capture a side-by-side comparison that shows:
 
 - The same application model and resource-type contracts on both targets.
 - A local PostgreSQL and MQTT implementation on K3s.
-- Azure Database for PostgreSQL and Azure Event Grid MQTT implementations on AKS.
+- Azure Database for PostgreSQL on AKS, and the same in-cluster MQTT broker on both.
 - Independent application state in each Radius control plane.
 - Parameters that changed and parameters that stayed the same.
 - Application-team responsibilities versus platform-team responsibilities.
-- Known runtime gaps, especially Azure Event Grid MQTT authorization.
+- Known runtime gaps, and why a recipe can differ from the "obvious" cloud service.
 
 ## Success criteria
 
@@ -121,8 +123,8 @@ Capture a side-by-side comparison that shows:
   one `Demo Account`, and a backend that is Ready only after `/api/accounts` succeeds.
 - The frontend can be exposed through each active control plane, one at a time.
 - No password or cluster credential is committed or captured in evidence.
-- The team can explain why deployment portability is proven even though Azure MQTT
-  publish/subscribe still requires topic-space and permission configuration.
+- The team can explain why deployment portability is proven even though the AKS
+  environment resolves `mqttBrokers` to an in-cluster broker rather than Event Grid.
 - The ownership split is clear: application teams own the model and safe parameters;
   platform teams own control planes, environments, provider scopes, recipes, and
   backing-service policy.
@@ -151,10 +153,14 @@ Capture a side-by-side comparison that shows:
 
 ### Runtime parity
 
-1. Successful provisioning and a reachable frontend do not prove every MQTT flow.
-2. Event Grid MQTT requires topic spaces, permission bindings, and federated workload
-   identities in addition to an endpoint.
-3. Record the gap; do not bypass identity with a shared secret.
+1. A recipe that provisions successfully does not prove the application can use what it
+   provisioned.
+2. Event Grid MQTT accepts an Entra token only through MQTT v5 enhanced authentication,
+   not as a CONNECT password. A client that gets this wrong is refused at connect time.
+3. A crash-looping background service can fail a whole deployment: .NET stops the host by
+   default when a `BackgroundService` throws.
+4. The fix belongs in the recipe registration, not in `iac/app.bicep`. Never bypass
+   identity with a shared secret.
 
 ## Learning resources
 

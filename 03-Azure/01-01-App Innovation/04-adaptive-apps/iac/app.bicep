@@ -61,7 +61,10 @@ param frontendClientId string = ''
 @description('Kubernetes service account bound by the workload-identity recipe.')
 param workloadIdentityServiceAccountName string = 'default'
 
-@description('Entra tenant ID for workload identity. Leave empty for Challenge 05.')
+@description('''
+Entra tenant ID override for workload identity. Leave empty to use the tenant returned by
+the workloadIdentities recipe, which is the correct value in every environment.
+''')
 param workloadIdentityTenantId string = ''
 
 @description('Enable Istio sidecar injection when the platform portfolio includes Istio.')
@@ -170,13 +173,18 @@ resource backend 'Applications.Core/containers@2023-10-01-preview' = {
           value: backendIdentity.properties.clientId
         }
         AZURE_TENANT_ID: {
-          value: workloadIdentityTenantId
+          value: empty(workloadIdentityTenantId)
+            ? backendIdentity.properties.tenantId
+            : workloadIdentityTenantId
         }
+        // How to authenticate to MQTT is a property of the broker, not of the workload
+        // identity. Reading it from the identity hard-codes 'OAUTH2-JWT' on Azure and
+        // ignores which mqttBrokers recipe the environment actually registered.
         MQTT_AUTH_METHOD: {
-          value: backendIdentity.properties.authMethod
+          value: tradingMqtt.properties.authMethod
         }
         MQTT_TOKEN_AUDIENCE: {
-          value: backendIdentity.properties.tokenAudience
+          value: tradingMqtt.properties.tokenAudience
         }
         MQTT_TOPIC: {
           value: 'orders/new'
@@ -226,13 +234,15 @@ resource frontend 'Applications.Core/containers@2023-10-01-preview' = {
           value: frontendIdentity.properties.clientId
         }
         AZURE_TENANT_ID: {
-          value: workloadIdentityTenantId
+          value: empty(workloadIdentityTenantId)
+            ? frontendIdentity.properties.tenantId
+            : workloadIdentityTenantId
         }
         MQTT_AUTH_METHOD: {
-          value: frontendIdentity.properties.authMethod
+          value: tradingMqtt.properties.authMethod
         }
         MQTT_TOKEN_AUDIENCE: {
-          value: frontendIdentity.properties.tokenAudience
+          value: tradingMqtt.properties.tokenAudience
         }
         AUTH_USERNAME: {
           value: authUsername

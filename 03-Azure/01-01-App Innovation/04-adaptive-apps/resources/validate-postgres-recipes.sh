@@ -143,4 +143,50 @@ grep -Fq "var firewallRuleIds = [" "$AZURE_RECIPE" || {
   exit 1
 }
 
+# Bicep preserves on-disk line endings verbatim through loadTextContent() and multi-line
+# strings, so a CRLF checkout embeds carriage returns into the schema initializer's shell
+# script. `sh` does not treat CR as whitespace, so `do<CR>` stops being the `do` keyword and
+# the container exits immediately with "syntax error: unexpected word" without ever reaching
+# the database. The Job then burns through its backoff limit and the schema is silently never
+# applied, because the recipe does not wait for the Job to succeed.
+for recipe in "$AZURE_RECIPE" "$KUBERNETES_RECIPE"; do
+  if (( $(grep -c -F "'\r', ''" "$recipe") < 2 )); then
+    echo "$(basename "$recipe") must strip carriage returns from both the schema SQL and the initializer script." >&2
+    exit 1
+  fi
+  grep -A1 -F "'-ceu'" "$recipe" | grep -Fq "initializerScript" || {
+    echo "$(basename "$recipe") must run the schema initializer from the CR-stripped initializerScript variable, not an inline multi-line string." >&2
+    exit 1
+  }
+done
+
+# A Job's `spec.template` is immutable, so the Job must be replaced rather than updated
+# whenever anything in the pod template changes. Hashing only the schema SQL leaves the Job
+# name unchanged when the script, the image tag or the credentials Secret name changes, and
+# Kubernetes then rejects the deployment with "spec.template: field is immutable".
+for recipe in "$AZURE_RECIPE" "$KUBERNETES_RECIPE"; do
+  revision_expr="$(sed -n '/^var schemaRevision = take(/,/^)$/p' "$recipe")"
+  for input in initializerScript credentialsName; do
+    grep -Fq "$input" <<<"$revision_expr" || {
+      echo "$(basename "$recipe") must include ${input} in the schema revision hash so pod template changes produce a new Job name." >&2
+      exit 1
+    }
+  done
+done
+
+# The line-ending fix above is a safety net; the root cause is that .gitattributes pinned
+# eol=lf with a per-file allowlist that omitted the recipes. Keep the glob so new files are
+# covered by default.
+GITATTRIBUTES="$(cd "${ROOT_DIR}/../../.." && pwd)/.gitattributes"
+[[ -f "$GITATTRIBUTES" ]] || {
+  echo "Missing .gitattributes at repository root: $GITATTRIBUTES" >&2
+  exit 1
+}
+for pattern in '*.bicep' '*.sql'; do
+  grep -Fq "04-adaptive-apps/**/${pattern}\" text eol=lf" "$GITATTRIBUTES" || {
+    echo ".gitattributes must pin '${pattern}' under 04-adaptive-apps to eol=lf." >&2
+    exit 1
+  }
+done
+
 echo "PostgreSQL recipe parity and security assertions passed."

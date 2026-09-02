@@ -22,13 +22,40 @@ var memoryBySize = {
 }
 var sizeKey = context.resource.properties.?size ?? 'S'
 var uniqueName = 'postgres-${uniqueString(context.resource.id)}'
-var schemaSql = loadTextContent('trading-schema.sql')
-var schemaRevision = take(uniqueString(schemaSql), 8)
+// Strip carriage returns from everything that is executed or interpreted inside the cluster.
+// Both files are stored in git with LF, but a Windows checkout rewrites them to CRLF unless
+// .gitattributes pins them, and Bicep preserves the on-disk line endings verbatim through
+// loadTextContent() and multi-line strings. A CR then reaches the container: `sh` does not
+// treat it as whitespace, so `do<CR>` stops being the `do` keyword and the script dies with
+// "syntax error: unexpected word" before it ever contacts the database. .gitattributes now
+// pins these files, and this keeps the recipe correct even when it does not.
+var schemaSql = replace(loadTextContent('trading-schema.sql'), '\r', '')
+var initializerScript = replace('''
+for attempt in $(seq 1 60); do
+  if psql --set=ON_ERROR_STOP=1 --file=/schema/init.sql; then
+    exit 0
+  fi
+  echo "PostgreSQL is not ready for schema initialization (attempt ${attempt}/60)." >&2
+  sleep 5
+done
+exit 1
+''', '\r', '')
 var port = 5432
-var initializerName = '${uniqueName}-schema-${schemaRevision}'
 // app.bicep binds this Secret by name and is shared by both environments, so the name must
 // match the Azure recipe's stable naming rather than the generated deployment name.
 var credentialsName = '${context.resource.name}-credentials'
+// A Job's `spec.template` is immutable, so the Job has to be replaced rather than updated
+// whenever anything inside the pod template changes. Hashing only the schema SQL is not
+// enough: a change to the script, the image tag or the name of the Secret holding the
+// password leaves the Job name identical and Kubernetes rejects the update with
+// "spec.template: field is immutable". Hash every input the pod template embeds so that any
+// such change yields a new Job name, which Radius then creates while garbage-collecting the
+// old Job through result.resources.
+var schemaRevision = take(
+  uniqueString(schemaSql, initializerScript, credentialsName, user, database, string(port), tag),
+  8
+)
+var initializerName = '${uniqueName}-schema-${schemaRevision}'
 
 extension kubernetes with {
   kubeConfig: ''
@@ -209,16 +236,7 @@ resource schemaInitializer 'batch/Job@v1' = {
             command: [
               'sh'
               '-ceu'
-              '''
-for attempt in $(seq 1 60); do
-  if psql --set=ON_ERROR_STOP=1 --file=/schema/init.sql; then
-    exit 0
-  fi
-  echo "PostgreSQL is not ready for schema initialization (attempt ${attempt}/60)." >&2
-  sleep 5
-done
-exit 1
-'''
+              initializerScript
             ]
             env: [
               {

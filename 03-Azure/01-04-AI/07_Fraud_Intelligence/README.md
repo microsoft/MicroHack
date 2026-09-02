@@ -1,7 +1,5 @@
 # Agentic AI Hacks | Fraud Intelligence 🔍
 
-> ⚠️ **This repository is under construction.** All information found here is a work in progress and is likely to change at any time without prior notice.
-
 Welcome to the **Fraud Intelligence Hackathon**! In this workshop you will explore how agentic AI systems can transform financial compliance — moving from slow, manual review to a continuously monitoring, reasoning, and auditing multi-agent solution. You will build a modern, reusable, Python-based solution with Microsoft Foundry, the Microsoft Agent Framework, MCP, Foundry IQ, and Azure observability services.
 
 ---
@@ -165,11 +163,11 @@ Each challenge follows a consistent structure:
 | # | Challenge | Description | Duration |
 |---|---|---|---|
 | **1** | [Prepare the Environment](./challenges/challenge-01.md) | Validate access to the Azure resources, Microsoft Foundry project, models, data store, and development tools used throughout the hack | 30 min |
-| **2** | [Build the Evidence Enrichment Agent](./challenges/challenge-02.md) | Build a **Financial Evidence MCP** over Azure Cosmos DB, integrate it with the **Evidence Enrichment Agent**, and validate evidence-backed transaction enrichment | 60 min |
-| **3** | [Build the Regulatory Assessment Agent](./challenges/challenge-03.md) | Configure **Foundry IQ** with global, internal, and regional AML sources, then use agentic retrieval to assess rules for both bank account countries | 75 min |
-| **4** | [Build and Orchestrate the Investigation](./challenges/challenge-04.md) | Build the **AML Report Agent**, compose the first three agents with the **Microsoft Agent Framework**, and deploy the orchestration as a Foundry hosted agent | 75 min |
-| **5** | [Govern Models and MCP Servers](./challenges/challenge-05.md) | Introduce the **AI Gateway tier (preview)**, configure model access, proxy the Financial Evidence MCP, create a new MCP from the Fraud Alert Manager API, and add the parallel **Alert Manager Agent** | 75 min |
-| **6** | [Observe Fraud Intelligence](./challenges/challenge-06.md) | Add end-to-end **OTLP tracing**, publish technical and business metrics to **Application Insights**, and build an **Azure Managed Grafana** dashboard for business decision makers | 60 min |
+| **2** | [Build the Evidence Enrichment Agent](./challenges/challenge-02.md) | Build a **Financial Evidence MCP** over Azure Cosmos DB, integrate it with the **Evidence Enrichment Agent**, and validate evidence-backed transaction enrichment | 30 min |
+| **3** | [Build the Regulatory Assessment Agent](./challenges/challenge-03.md) | Configure **Foundry IQ** with global, internal, and regional AML sources, then use agentic retrieval to assess rules for both bank account countries | 45 min |
+| **4** | [Build and Orchestrate the Investigation](./challenges/challenge-04.md) | Build the **AML Report Agent**, compose the first three agents with the **Microsoft Agent Framework**, and deploy the orchestration as a Foundry hosted agent | 45 min |
+| **5** | [Govern Models and MCP Servers](./challenges/challenge-05.md) | Introduce the **AI Gateway tier (preview)**, configure model access, proxy the Financial Evidence MCP, create a new MCP from the Fraud Alert Manager API, and add the parallel **Alert Manager Agent** | 45 min |
+| **6** | [Observe Fraud Intelligence](./challenges/challenge-06.md) | Add end-to-end **OTLP tracing**, publish technical and business metrics to **Application Insights**, and build a **Grafana** dashboard for business decision makers | 30 min |
 
 > **Tip:** While it is possible to rush through the challenges, we encourage you to pause and reflect. Consider how each pattern relates to your own context: what business processes in your environment could benefit from coordinated AI agents? How might agents help orchestrate decisions across teams and systems?
 

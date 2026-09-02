@@ -332,6 +332,19 @@ resource apimNamedValueUamiClientId 'Microsoft.ApiManagement/service/namedValues
   }
 }
 
+// Endpoint the PII policy fragments call for Language/PII detection. The hub
+// AIServices account exposes the Language PII API on its cognitiveservices host
+// (note: not the openai.azure.com host used for inference).
+resource namedValuePiiServiceUrl 'Microsoft.ApiManagement/service/namedValues@2023-09-01-preview' = {
+  parent: apim
+  name: 'piiserviceurl'
+  properties: {
+    displayName: 'piiServiceUrl'
+    value: 'https://${hubFoundryAccountName}.cognitiveservices.azure.com'
+    secret: false
+  }
+}
+
 // ===== Phase 4: APIM Backends =====
 // Hub Foundry backend with managed identity
 resource apimBackendHubFoundry 'Microsoft.ApiManagement/service/backends@2023-09-01-preview' = {
@@ -368,6 +381,29 @@ resource roleAssignmentApimMiOpenAiUser 'Microsoft.Authorization/roleAssignments
     principalId: apimMI.properties.principalId
     principalType: 'ServicePrincipal'
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd')
+  }
+}
+
+// RBAC: the PII fragments call the Language service on the same account, which is
+// gated by Cognitive Services User rather than the OpenAI-specific role above.
+resource roleAssignmentApimMiCognitiveServicesUser 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(hubFoundryAccount.id, apimMI.id, 'CognitiveServicesUser')
+  scope: hubFoundryAccount
+  properties: {
+    principalId: apimMI.properties.principalId
+    principalType: 'ServicePrincipal'
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'a97b65f3-24c7-4388-baec-2e87135dc908')
+  }
+}
+
+// RBAC: the Event Hub logger below authenticates as the APIM managed identity.
+resource roleAssignmentApimMiEventHubSender 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(eventHubNamespace_resource.id, apimMI.id, 'AzureEventHubsDataSender')
+  scope: eventHubNamespace_resource
+  properties: {
+    principalId: apimMI.properties.principalId
+    principalType: 'ServicePrincipal'
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '2b629674-e913-4c01-ae53-ef4638d8f975')
   }
 }
 
@@ -454,37 +490,49 @@ resource policyFragmentSetLlmUsage 'Microsoft.ApiManagement/service/policyFragme
 }
 */
 
-// Policy fragment: PII Anonymization (DISABLED)
-/*
+// ===== Phase 4: PII policy fragments (challenge 5) =====
+// These are the real fragments from the workshop, not placeholders. Challenge 5
+// deploys access contracts whose product policy includes all three by id, so if
+// they are absent the contract deployment fails outright with
+// "Policy fragment with id 'pii-anonymization' could not be found".
+// They are loaded from the workshop sources so the two copies cannot drift.
 resource policyFragmentPiiAnonymization 'Microsoft.ApiManagement/service/policyFragments@2023-09-01-preview' = {
   parent: apim
   name: 'pii-anonymization'
   properties: {
-    format: 'xml'
-    value: '<fragment><!-- PII masking: replace sensitive patterns --><set-body>@{string body = context.Request.Body.AsString(); body = System.Text.RegularExpressions.Regex.Replace(body, @"\\b\\d{3}-\\d{2}-\\d{4}\\b", "***-**-****"); return body; }</set-body></fragment>'
+    format: 'rawxml'
+    description: 'Detects PII with the Language service and masks it before the request reaches the model'
+    value: loadTextContent('../../challenges/bicep/infra/modules/apim/policies/frag-pii-anonymization.xml')
   }
+  dependsOn: [
+    namedValuePiiServiceUrl
+  ]
 }
 
-// Policy fragment: PII Deanonymization
 resource policyFragmentPiiDeanonymization 'Microsoft.ApiManagement/service/policyFragments@2023-09-01-preview' = {
   parent: apim
   name: 'pii-deanonymization'
   properties: {
-    format: 'xml'
-    value: '<fragment><!-- PII deanonymization: restore from masking layer --><set-variable name="piiRestored" value="true"/></fragment>'
+    format: 'rawxml'
+    description: 'Restores the original PII values in the response returned to the caller'
+    value: loadTextContent('../../challenges/bicep/infra/modules/apim/policies/frag-pii-deanonymization.xml')
   }
 }
 
-// Policy fragment: PII State Saving
 resource policyFragmentPiiStateSaving 'Microsoft.ApiManagement/service/policyFragments@2023-09-01-preview' = {
   parent: apim
   name: 'pii-state-saving'
   properties: {
-    format: 'xml'
-    value: '<fragment><!-- Save PII state to Cosmos DB pii-usage-container --><send-request mode="new" response-variable-name="piiStateResponse" timeout="20"><set-url>https://${cosmosAccountName}.documents.azure.com/dbs/${cosmosDatabaseName}/colls/pii-usage-container/docs</set-url><set-method>POST</set-method></send-request></fragment>'
+    format: 'rawxml'
+    description: 'Emits PII handling events to Event Hub for audit'
+    value: loadTextContent('../../challenges/bicep/infra/modules/apim/policies/frag-pii-state-saving.xml')
   }
+  // The fragment uses log-to-eventhub with this logger id. Without the logger,
+  // APIM accepts the PUT and then discards the fragment, leaving no error behind.
+  dependsOn: [
+    apimLoggerPiiUsageEventHub
+  ]
 }
-*/
 
 // ===== Phase 4: APIM API - Universal LLM API =====
 // Universal endpoint for all LLM backends (/models/*)
@@ -1263,6 +1311,27 @@ resource apimLoggerAppInsights 'Microsoft.ApiManagement/service/loggers@2023-09-
     }
     isBuffered: true
   }
+}
+
+// Referenced by the pii-state-saving fragment. It must exist before that fragment
+// is created, otherwise APIM accepts the fragment and then silently drops it.
+resource apimLoggerPiiUsageEventHub 'Microsoft.ApiManagement/service/loggers@2023-09-01-preview' = {
+  parent: apim
+  name: 'pii-usage-eventhub-logger'
+  properties: {
+    loggerType: 'azureEventHub'
+    description: 'PII handling audit events'
+    credentials: {
+      endpointAddress: '${eventHubNamespace}.servicebus.windows.net'
+      identityClientId: apimMI.properties.clientId
+      name: eventHubName
+    }
+    isBuffered: true
+  }
+  dependsOn: [
+    eventHub
+    roleAssignmentApimMiEventHubSender
+  ]
 }
 
 // ===== Spoke: Azure AI Foundry Account (AIServices) =====

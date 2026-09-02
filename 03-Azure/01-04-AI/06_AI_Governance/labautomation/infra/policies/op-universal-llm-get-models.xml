@@ -1,0 +1,22 @@
+<policies>
+    <inbound>
+        <base />
+        <!-- The fragment fills availableFilteredModels, honouring the access
+             contract's allowedModels. Challenge 1 replaces the fragment with one
+             generated from the real deployments; this operation is unaffected. -->
+        <include-fragment fragment-id="get-available-models" />
+        <return-response>
+            <set-status code="200" reason="OK" />
+            <set-header name="Content-Type" exists-action="override">
+                <value>application/json</value>
+            </set-header>
+            <set-body>@{
+                JArray models = JArray.Parse((string)context.Variables["availableFilteredModels"]);
+                return new JObject(new JProperty("object", "list"), new JProperty("data", models)).ToString();
+            }</set-body>
+        </return-response>
+    </inbound>
+    <backend><base /></backend>
+    <outbound><base /></outbound>
+    <on-error><base /></on-error>
+</policies>

@@ -413,8 +413,9 @@ resource policyFragmentGetAvailableModels 'Microsoft.ApiManagement/service/polic
   parent: apim
   name: 'get-available-models'
   properties: {
-    format: 'xml'
-    value: '<fragment><!-- Returns deployed models array to client --><return-response><set-header name="Content-Type" exists-action="override"><value>application/json</value></set-header><set-body>@{var models = new JArray(); models.Add("gpt-4.1"); models.Add("gpt-5.4-mini"); models.Add("gpt-5.2"); models.Add("text-embedding-3-large"); models.Add("Mistral-Large-3"); models.Add("Phi-4"); return models.ToString();}</set-body></return-response></fragment>'
+    format: 'rawxml'
+    description: 'Sets availableModels/availableFilteredModels for the list-models operation'
+    value: loadTextContent('policies/frag-get-available-models-lab.xml')
   }
 }
 
@@ -567,14 +568,21 @@ resource apiUniversalLlmOpGetModels 'Microsoft.ApiManagement/service/apis/operat
 }
 
 // Universal LLM API: Operation policy - GET /models/models
-// Simplest possible policy: static JSON list of the 6 deployed models, no backend call
+// Delegates to the get-available-models fragment rather than hardcoding the list,
+// so the response honours each access contract's allowedModels and stays correct
+// once challenge 1 replaces the fragment with one generated from real deployments.
+// Shape is the OpenAI list form { "object": "list", "data": [...] } that the
+// notebooks parse; a bare array causes discovery to silently find zero models.
 resource apiUniversalLlmOpGetModelsPolicy 'Microsoft.ApiManagement/service/apis/operations/policies@2023-09-01-preview' = {
   parent: apiUniversalLlmOpGetModels
   name: 'policy'
   properties: {
-    format: 'xml'
-    value: '<policies><inbound><base/><return-response><set-status code="200" reason="OK"/><set-header name="Content-Type" exists-action="override"><value>application/json</value></set-header><set-body>["gpt-4.1","gpt-5.4-mini","gpt-5.2","text-embedding-3-large","Mistral-Large-3","Phi-4"]</set-body></return-response></inbound><backend><base/></backend><outbound><base/></outbound><on-error><base/></on-error></policies>'
+    format: 'rawxml'
+    value: loadTextContent('policies/op-universal-llm-get-models.xml')
   }
+  dependsOn: [
+    policyFragmentGetAvailableModels
+  ]
 }
 
 // Universal LLM API: Operation - POST /models/chat/completions

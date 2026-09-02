@@ -39,14 +39,41 @@ var skuBySize = {
 }
 var serverName = 'pg-${uniqueString(context.resource.id)}'
 var egressIps = map(filter(split(aksEgressIps, ','), ip => !empty(trim(ip))), ip => trim(ip))
-var schemaSql = loadTextContent('trading-schema.sql')
-var schemaRevision = take(uniqueString(schemaSql), 8)
-var initializerName = 'postgres-${uniqueString(context.resource.id)}-schema-${schemaRevision}'
+// Strip carriage returns from everything that is executed or interpreted inside the cluster.
+// Both files are stored in git with LF, but a Windows checkout rewrites them to CRLF unless
+// .gitattributes pins them, and Bicep preserves the on-disk line endings verbatim through
+// loadTextContent() and multi-line strings. A CR then reaches the container: `sh` does not
+// treat it as whitespace, so `do<CR>` stops being the `do` keyword and the script dies with
+// "syntax error: unexpected word" before it ever contacts the database. .gitattributes now
+// pins these files, and this keeps the recipe correct even when it does not.
+var schemaSql = replace(loadTextContent('trading-schema.sql'), '\r', '')
+var initializerScript = replace('''
+for attempt in $(seq 1 60); do
+  if psql --set=ON_ERROR_STOP=1 --file=/schema/init.sql; then
+    exit 0
+  fi
+  echo "Azure PostgreSQL is not ready for TLS schema initialization (attempt ${attempt}/60)." >&2
+  sleep 5
+done
+exit 1
+''', '\r', '')
 // app.bicep binds this Secret by name, so the name must stay stable and predictable. Deriving
 // it from the schema revision or the resource ID hash would change it whenever the schema
 // changes and make it impossible to reference from the application template.
 var credentialsName = '${context.resource.name}-credentials'
 var port = 5432
+// A Job's `spec.template` is immutable, so the Job has to be replaced rather than updated
+// whenever anything inside the pod template changes. Hashing only the schema SQL is not
+// enough: a change to the script, the image tag or the name of the Secret holding the
+// password leaves the Job name identical and Kubernetes rejects the update with
+// "spec.template: field is immutable". Hash every input the pod template embeds so that any
+// such change yields a new Job name, which Radius then creates while garbage-collecting the
+// old Job through result.resources.
+var schemaRevision = take(
+  uniqueString(schemaSql, initializerScript, credentialsName, user, database, string(port), clientTag),
+  8
+)
+var initializerName = 'postgres-${uniqueString(context.resource.id)}-schema-${schemaRevision}'
 
 // The `result` output must be evaluated without any runtime reference() call.
 // The Radius deployment engine resolves `references(<collection>, 'full')` to the
@@ -212,16 +239,7 @@ resource schemaInitializer 'batch/Job@v1' = {
             command: [
               'sh'
               '-ceu'
-              '''
-for attempt in $(seq 1 60); do
-  if psql --set=ON_ERROR_STOP=1 --file=/schema/init.sql; then
-    exit 0
-  fi
-  echo "Azure PostgreSQL is not ready for TLS schema initialization (attempt ${attempt}/60)." >&2
-  sleep 5
-done
-exit 1
-'''
+              initializerScript
             ]
             env: [
               {

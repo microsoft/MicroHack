@@ -118,6 +118,36 @@ Derive that name from a compile-time variable rather than from `tradingDb.name`,
 compile to a runtime `reference('tradingDb').name` call that cannot resolve.
 `resources/validate-postgres-recipes.sh` guards all of these.
 
+### Kubernetes resources created by a recipe
+
+The PostgreSQL recipes also create a Kubernetes Job that applies the trading schema. Two
+properties of that Job are easy to get wrong and fail silently.
+
+**A Job's `spec.template` is immutable.** Kubernetes rejects an update that changes the pod
+template of an existing Job with `spec.template: field is immutable`, so the Job has to be
+replaced rather than updated. That only happens if its *name* changes, which means the name
+must be derived from everything the pod template embeds — the script, the image tag and the
+name of the Secret holding the password, not just the schema SQL. The recipes hash all of
+those into `schemaRevision`. Radius then creates the new Job and garbage-collects the old one
+through `result.resources`.
+
+**Line endings reach the container verbatim.** Bicep preserves the on-disk line endings of
+`loadTextContent()` and of `'''…'''` multi-line strings, so a CRLF checkout embeds carriage
+returns in the Job's shell script. `sh` does not treat CR as whitespace, so `do<CR>` stops
+being the `do` keyword and the container exits immediately with
+`syntax error: unexpected word`. Because the recipe does not wait for the Job to succeed, the
+deployment still reports success and the database is simply left empty. The repository pins
+these files to LF in `.gitattributes`, and the recipes additionally strip carriage returns
+with `replace(..., '\r', '')` so they stay correct on any checkout.
+
+Verify the Job actually completed rather than trusting the deployment result:
+
+```bash
+kubectl get jobs -n <application-namespace>
+```
+
+`COMPLETIONS` must read `1/1`.
+
 ## Manual tutorial, Stage 1: Author the Azure SQL recipe
 
 Open `iac/recipes/sql-server.bicep` and walk through:
@@ -264,15 +294,15 @@ use immutable workshop tags rather than the external `latest` recipes.
 ```bash
 rad bicep publish \
   --file iac/recipes/sql-server.bicep \
-  --target "br:${ACR_NAME}.azurecr.io/recipes/sql-server:1.0.5"
+  --target "br:${ACR_NAME}.azurecr.io/recipes/sql-server:1.0.6"
 
 rad bicep publish \
   --file iac/recipes/postgres-azure-flex.bicep \
-  --target "br:${ACR_NAME}.azurecr.io/recipes/postgres-azure-flex:1.0.5"
+  --target "br:${ACR_NAME}.azurecr.io/recipes/postgres-azure-flex:1.0.6"
 
 rad bicep publish \
   --file iac/recipes/postgres-kubernetes.bicep \
-  --target "br:${ACR_NAME}.azurecr.io/recipes/postgres-kubernetes:1.0.5"
+  --target "br:${ACR_NAME}.azurecr.io/recipes/postgres-kubernetes:1.0.6"
 ```
 
 **PowerShell 7:**
@@ -280,15 +310,15 @@ rad bicep publish \
 ```powershell
 rad bicep publish `
     --file iac/recipes/sql-server.bicep `
-    --target "br:$env:ACR_NAME.azurecr.io/recipes/sql-server:1.0.5"
+    --target "br:$env:ACR_NAME.azurecr.io/recipes/sql-server:1.0.6"
 
 rad bicep publish `
     --file iac/recipes/postgres-azure-flex.bicep `
-    --target "br:$env:ACR_NAME.azurecr.io/recipes/postgres-azure-flex:1.0.5"
+    --target "br:$env:ACR_NAME.azurecr.io/recipes/postgres-azure-flex:1.0.6"
 
 rad bicep publish `
     --file iac/recipes/postgres-kubernetes.bicep `
-    --target "br:$env:ACR_NAME.azurecr.io/recipes/postgres-kubernetes:1.0.5"
+    --target "br:$env:ACR_NAME.azurecr.io/recipes/postgres-kubernetes:1.0.6"
 ```
 
 Register the Azure SQL teaching recipe:
@@ -298,7 +328,7 @@ rad recipe register default \
   --environment env-azure-prod \
   --resource-type Radius.Resources/sqlDatabases \
   --template-kind bicep \
-  --template-path "${ACR_NAME}.azurecr.io/recipes/sql-server:1.0.5"
+  --template-path "${ACR_NAME}.azurecr.io/recipes/sql-server:1.0.6"
 ```
 
 Verify:
@@ -377,9 +407,9 @@ rad deploy iac/aks-env.bicep \
   --parameters azureSubscriptionId="$AZURE_SUBSCRIPTION" \
   --parameters azureResourceGroup="$RESOURCE_GROUP" \
   --parameters istioRevision="$ISTIO_REVISION" \
-  --parameters postgresRecipeTemplatePath="${ACR_NAME}.azurecr.io/recipes/postgres-azure-flex:1.0.5" \
+  --parameters postgresRecipeTemplatePath="${ACR_NAME}.azurecr.io/recipes/postgres-azure-flex:1.0.6" \
   --parameters aksEgressIps="$AKS_EGRESS_IPS" \
-  --parameters sqlDatabasesRecipeTemplatePath="${ACR_NAME}.azurecr.io/recipes/sql-server:1.0.5"
+  --parameters sqlDatabasesRecipeTemplatePath="${ACR_NAME}.azurecr.io/recipes/sql-server:1.0.6"
 ```
 
 **PowerShell 7:**
@@ -430,9 +460,9 @@ rad deploy iac/aks-env.bicep `
     --parameters azureSubscriptionId=$env:AZURE_SUBSCRIPTION `
     --parameters azureResourceGroup=$env:RESOURCE_GROUP `
     --parameters istioRevision=$IstioRevision `
-    --parameters "postgresRecipeTemplatePath=$env:ACR_NAME.azurecr.io/recipes/postgres-azure-flex:1.0.5" `
+    --parameters "postgresRecipeTemplatePath=$env:ACR_NAME.azurecr.io/recipes/postgres-azure-flex:1.0.6" `
     --parameters "aksEgressIps=$($EgressIps -join ',')" `
-    --parameters "sqlDatabasesRecipeTemplatePath=$env:ACR_NAME.azurecr.io/recipes/sql-server:1.0.5"
+    --parameters "sqlDatabasesRecipeTemplatePath=$env:ACR_NAME.azurecr.io/recipes/sql-server:1.0.6"
 ```
 
 | Resource type | AKS/Azure backend |
@@ -469,7 +499,7 @@ rad deploy iac/local-env.bicep \
   --environment env-local-prod \
   --parameters environmentName=env-local-prod \
   --parameters namespace=env-local-prod \
-  --parameters postgresRecipeTemplatePath="${ACR_NAME}.azurecr.io/recipes/postgres-kubernetes:1.0.5"
+  --parameters postgresRecipeTemplatePath="${ACR_NAME}.azurecr.io/recipes/postgres-kubernetes:1.0.6"
 ```
 
 **PowerShell 7:**
@@ -481,7 +511,7 @@ rad deploy iac/local-env.bicep `
     --environment env-local-prod `
     --parameters environmentName=env-local-prod `
     --parameters namespace=env-local-prod `
-    --parameters "postgresRecipeTemplatePath=$env:ACR_NAME.azurecr.io/recipes/postgres-kubernetes:1.0.5"
+    --parameters "postgresRecipeTemplatePath=$env:ACR_NAME.azurecr.io/recipes/postgres-kubernetes:1.0.6"
 ```
 
 | Resource type | K3s/local backend |

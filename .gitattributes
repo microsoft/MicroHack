@@ -8,9 +8,14 @@
 "/03-Azure/01-01-App Innovation/04-adaptive-apps/walkthrough/challenge-05/solution-05.md" text eol=lf
 "/03-Azure/01-01-App Innovation/04-adaptive-apps/walkthrough/challenge-06/solution-06.md" text eol=lf
 "/03-Azure/01-01-App Innovation/04-adaptive-apps/walkthrough/challenge-08/solution-08.md" text eol=lf
-"/03-Azure/01-01-App Innovation/04-adaptive-apps/iac/app.bicep" text eol=lf
+# Anything that is executed or interpreted inside a container must keep LF endings. Bicep
+# preserves on-disk line endings verbatim through loadTextContent() and multi-line strings,
+# so a CRLF checkout embeds carriage returns into recipe shell scripts and breaks them at
+# runtime. These are globs rather than a per-file allowlist: listing files individually is
+# how iac/recipes/postgres-*.bicep came to be missed.
+"/03-Azure/01-01-App Innovation/04-adaptive-apps/**/*.bicep" text eol=lf
+"/03-Azure/01-01-App Innovation/04-adaptive-apps/**/*.sql" text eol=lf
+"/03-Azure/01-01-App Innovation/04-adaptive-apps/**/*.yaml" text eol=lf
+"/03-Azure/01-01-App Innovation/04-adaptive-apps/**/*.yml" text eol=lf
 "/03-Azure/01-01-App Innovation/04-adaptive-apps/iac/bicepconfig.json" text eol=lf
-"/03-Azure/01-01-App Innovation/04-adaptive-apps/iac/ai.bicep" text eol=lf
-"/03-Azure/01-01-App Innovation/04-adaptive-apps/iac/recipes/ai-model-*.bicep" text eol=lf
-"/03-Azure/01-01-App Innovation/04-adaptive-apps/resources/local-recipe-registry.yaml" text eol=lf
 "/.devcontainer/03-azure-01-01-app-innovation-04-adaptive-apps/devcontainer.json" text eol=lf

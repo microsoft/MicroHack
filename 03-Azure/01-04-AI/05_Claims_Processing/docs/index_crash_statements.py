@@ -20,6 +20,49 @@ from dotenv import load_dotenv
 REPO_ROOT = Path(__file__).resolve().parent.parent
 load_dotenv(REPO_ROOT / ".env")
 STATEMENTS_GLOB = "data/claims/*/raw/statements/*.jpeg"
+SEARCH_API_VERSION = "2023-11-01"
+
+
+def _search_config() -> tuple[str, str, str]:
+    search_endpoint = os.getenv("FOUNDRY_IQ_SEARCH_ENDPOINT", "").rstrip("/")
+    search_key = os.getenv("FOUNDRY_IQ_SEARCH_KEY", "")
+    index_name = os.getenv("FOUNDRY_IQ_SEARCH_INDEX_NAME", "crash-statements")
+
+    if not search_endpoint or not search_key:
+        raise RuntimeError("Missing FOUNDRY_IQ_SEARCH_ENDPOINT or FOUNDRY_IQ_SEARCH_KEY in .env")
+
+    return search_endpoint, search_key, index_name
+
+
+def ensure_search_index(client: httpx.Client) -> None:
+    search_endpoint, search_key, index_name = _search_config()
+    index_url = f"{search_endpoint}/indexes/{index_name}?api-version={SEARCH_API_VERSION}"
+    headers = {"api-key": search_key, "Content-Type": "application/json"}
+
+    response = client.get(index_url, headers=headers)
+    if response.status_code == 200:
+        return
+    if response.status_code != 404:
+        response.raise_for_status()
+
+    index = {
+        "name": index_name,
+        "fields": [
+            {"name": "id", "type": "Edm.String", "key": True, "filterable": True},
+            {"name": "content", "type": "Edm.String", "searchable": True},
+            {"name": "source_file", "type": "Edm.String", "filterable": True},
+            {
+                "name": "claimant_name",
+                "type": "Edm.String",
+                "searchable": True,
+                "filterable": True,
+            },
+            {"name": "policy_number", "type": "Edm.String", "filterable": True},
+        ],
+    }
+    response = client.put(index_url, headers=headers, json=index)
+    response.raise_for_status()
+    print(f"Created Azure AI Search index {index_name}.")
 
 
 def _document_annotation_format() -> dict[str, Any]:
@@ -91,12 +134,7 @@ def run_mistral_ocr(image_path: Path, client: httpx.Client) -> dict[str, Any]:
 
 
 def upload_document(client: httpx.Client, doc_id: str, source_file: str, ocr_result: dict[str, Any]) -> None:
-    search_endpoint = os.getenv("FOUNDRY_IQ_SEARCH_ENDPOINT", "").rstrip("/")
-    search_key = os.getenv("FOUNDRY_IQ_SEARCH_KEY", "")
-    index_name = os.getenv("FOUNDRY_IQ_SEARCH_INDEX_NAME", "crash-statements")
-
-    if not search_endpoint or not search_key:
-        raise RuntimeError("Missing FOUNDRY_IQ_SEARCH_ENDPOINT or FOUNDRY_IQ_SEARCH_KEY in .env")
+    search_endpoint, search_key, index_name = _search_config()
 
     annotation = ocr_result["annotation"]
     document = {
@@ -109,7 +147,7 @@ def upload_document(client: httpx.Client, doc_id: str, source_file: str, ocr_res
     }
 
     response = client.post(
-        f"{search_endpoint}/indexes/{index_name}/docs/index?api-version=2023-11-01",
+        f"{search_endpoint}/indexes/{index_name}/docs/index?api-version={SEARCH_API_VERSION}",
         headers={"api-key": search_key, "Content-Type": "application/json"},
         json={"value": [document]},
     )
@@ -123,6 +161,7 @@ def main() -> int:
         return 1
 
     with httpx.Client(timeout=300.0) as client:
+        ensure_search_index(client)
         for image_path in image_paths:
             doc_id = image_path.stem
             print(f"Processing {image_path.relative_to(REPO_ROOT)} -> id={doc_id}")

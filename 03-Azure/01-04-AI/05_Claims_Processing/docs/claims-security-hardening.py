@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Protect Challenge 3's decision with a FIDES-secured action agent."""
+"""Protect Challenge 4's decision with a FIDES-secured action agent."""
 
 import argparse
 import asyncio
@@ -29,7 +29,7 @@ FOUNDRY_QUARANTINE_MODEL = os.environ.get("FOUNDRY_QUARANTINE_MODEL", FOUNDRY_MO
 
 SECURITY_ACTION_INSTRUCTIONS = (
     "You are the Claims Security Action Agent for ClaimSight Insurance. "
-    "The three-agent workflow has already made the coverage decision. Do not recalculate it.\n"
+    "The two-agent workflow has already made the coverage decision. Do not recalculate it.\n"
     "1. Call read_coverage_decision for the trusted adjudication result.\n"
     "2. Call read_claimant_message for the untrusted claimant follow-up.\n"
     "3. If the trusted decision is APPROVED, attempt approve_payout for exactly the approved amount.\n"
@@ -77,7 +77,7 @@ def _require_agent_framework() -> None:
         from agent_framework.security import SecureAgentConfig  # noqa: F401
     except (ImportError, PackageNotFoundError) as exc:
         raise RuntimeError(
-            "Challenge 4 requires agent-framework-core==1.13.0 and "
+            "Challenge 5 requires agent-framework-core==1.13.0 and "
             "agent-framework-foundry==1.10.4. Run: python -m pip install "
             "--upgrade \"agent-framework-core==1.13.0\" "
             "\"agent-framework-foundry==1.10.4\" azure-identity"
@@ -117,7 +117,7 @@ async def run_secure_actions(
 
     @tool(additional_properties={"source_integrity": "trusted"})
     async def read_coverage_decision(claim_id: str) -> str:
-        """Read the trusted result produced by the three-agent claims workflow."""
+        """Read the trusted result produced by the two-agent claims workflow."""
         if decision.get("claim_id") != claim_id:
             return json.dumps({"error": f"No decision found for {claim_id}"})
         return json.dumps(decision)
@@ -210,7 +210,7 @@ def main() -> None:
     )
     parser.add_argument(
         "image_path",
-        help="Path to the accident statement image used by Challenges 1 and 3",
+        help="Path to the accident statement image used by Challenges 2 and 4",
     )
     parser.add_argument(
         "--claim-id", default="CLM-2026-001",
@@ -241,7 +241,7 @@ def main() -> None:
     args = parser.parse_args()
 
     if not FOUNDRY_PROJECT_ENDPOINT:
-        print("FOUNDRY_PROJECT_ENDPOINT is not set. Complete Challenges 1-3 first.")
+        print("FOUNDRY_PROJECT_ENDPOINT is not set. Complete Challenges 2-4 first.")
         sys.exit(1)
 
     try:
@@ -255,7 +255,7 @@ def main() -> None:
         "claims_sequential_workflow", "claims-sequential-workflow.py"
     )
 
-    print("\nRunning Challenge 3 three-agent workflow...")
+    print("\nRunning Challenge 4 two-agent workflow...")
     decision = workflow_module.run_claims_pipeline(
         image_path=image_path,
         claim_id=args.claim_id,
@@ -281,9 +281,9 @@ def main() -> None:
     print(json.dumps(output["audit_log"], indent=2, default=str))
 
     print("\n" + "=" * 60)
-    print("CHALLENGE 4 COMPLETE")
+    print("CHALLENGE 5 COMPLETE")
     print("=" * 60)
-    print("  Challenge 3 three-agent decision  complete")
+    print("  Challenge 4 two-agent decision    complete")
     print("  FIDES-secured downstream actions  complete")
 
 

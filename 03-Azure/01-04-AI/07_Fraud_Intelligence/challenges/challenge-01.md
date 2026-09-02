@@ -16,7 +16,7 @@ Complete this setup with the credentials provided in your Hackbox. Use the assig
 
 ### 1. Sign in to Azure
 
-Open the [Azure portal](https://portal.azure.com) and sign in with the credentials provided in your Hackbox.
+Open the [Azure portal](https://portal.azure.com) and sign in with the credentials provided in your Hackbox (See the **Credentials** section at the top of this web page).
 
 When prompted to choose an account, select **Use another account** and enter the credentials provided. Do not use your personal or work account.
 
@@ -36,7 +36,7 @@ Verify that you can access the resources used in the later challenges, including
 
 Open [GitHub](https://github.com) and sign in with the credentials provided in your Hackbox.
 
-When prompted to choose an account, select **Use another account**. Do not use your personal or work account.
+When prompted to choose an account, select **Use another account**. Do not use your personal or work account. 
 
 ![Sign in to GitHub with another account](/challenges/images/github-login.png)
 
@@ -46,7 +46,15 @@ Open the GitHub organization assigned to your lab account.
 
 ![GitHub organization selector](/challenges/images/github-organization.png)
 
-Select the assigned organization, then open the `microhack` repository. Confirm that you can see the repository files and folders.
+Select the assigned organization, then open the `microhack` repository. You need to fork the repository before you can create a Codespace. To fork the repository, click the **Fork** button in the top-right corner of the repository page and follow the prompts:
+
+![Create fork](/challenges/images/create-fork-1.png)
+
+Use a unique name for the repository name to avoid conflicts with other forks. For example, you can append your lab username to the repository name (e.g., `microhack-labuser-0001`):
+
+![Fork repository with unique name](/challenges/images/create-fork-2.png)
+
+Finally, you should see your forked repository with the unique name you provided and all files and folders from the original repository:
 
 ![Files and folders in the GitHub repository](/challenges/images/github-repository.png)
 
@@ -56,27 +64,34 @@ From the repository page, select **Code**, then open the **Codespaces** tab. Sel
 
 ![Create a GitHub Codespace with options](/challenges/images/github-codespaces.png)
 
-For **Dev container configuration**, select **Azure / AI / Fraud Intelligence**, then select **Create codespace**.
+For **Dev container configuration**, select **Azure / AI / Fraud Intelligence**, then select **Create codespace**:
+
+![Select Azure / AI / Fraud Intelligence dev container configuration](/challenges/images/select-dev-container.png)
 
 GitHub opens the Codespace in a new browser tab. Wait for the container setup to finish, then confirm that the repository files are visible in the Explorer and that the integrated terminal opens without errors.
 
-Open a terminal in the Codespace (Terminal > New Terminal) and run the following command to verify that Azure CLI is installed:
+You should have a terminal ready to use, otherwise open a terminal in the Codespace (Terminal > New Terminal). Then run the following command to verify that Azure CLI is installed:
 
 ```bash
 az --version
 ```
 
-Then sign in to Azure from the Codespace terminal:
+Then sign in to Azure from the Codespace terminal and follow the link shown to authenticate with a web browser and the device code:
 
 ```bash
 az login
 ```
 
-Next, initialize a local environment file with the following commands:
+First, create a `rg` environment variable with your Resource Group name provided in Hackbox:
 
 ```bash
 # init RG with your Resource Group name provided in Hackbox
 rg=<your-resource-group-name>
+```
+
+Next, initialize a local environment file with the following commands:
+
+```bash
 DEPLOYMENT=$(az deployment group list -g "$rg" \
   --query "sort_by([?starts_with(name, 'mhh')], &properties.timestamp)[-1].name" \
   -o tsv)
@@ -99,7 +114,6 @@ chmod 600 hackenv
 echo "rg=$rg" >> hackenv
 cat hackenv
 source hackenv
-source baseenv
 ``` 
 
 ## 🚀 Go Further

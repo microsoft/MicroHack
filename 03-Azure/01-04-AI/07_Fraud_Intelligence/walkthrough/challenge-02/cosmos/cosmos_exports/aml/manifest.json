@@ -1,0 +1,26 @@
+{
+  "formatVersion": 1,
+  "format": "jsonl+gzip",
+  "database": "aml",
+  "exportedAt": "2026-08-20T15:42:20.446069Z",
+  "containers": [
+    {
+      "name": "dim-bank",
+      "file": "dim-bank.jsonl.gz",
+      "partitionKeyPaths": [
+        "/partition_key"
+      ],
+      "documents": 2578,
+      "sha256": "3d67c3f82ce7759f965bfb716a61afb475e974194ae5dadccf9334418a5c1659"
+    },
+    {
+      "name": "fact-laundering-pattern-txn",
+      "file": "fact-laundering-pattern-txn.jsonl.gz",
+      "partitionKeyPaths": [
+        "/partition_key"
+      ],
+      "documents": 22743,
+      "sha256": "e9c8c12b84ffad3b26a26ff953c5b9c7febaa97f9c5d6fdf98d6b710c7cba55f"
+    }
+  ]
+}

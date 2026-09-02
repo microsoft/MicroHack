@@ -1,0 +1,8 @@
+.git*
+.venv/
+tests/
+local.settings.json
+local.settings.json.example
+requirements-dev.txt
+__pycache__/
+.pytest_cache/

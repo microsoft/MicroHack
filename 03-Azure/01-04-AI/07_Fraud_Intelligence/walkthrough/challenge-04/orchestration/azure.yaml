@@ -1,0 +1,41 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+
+requiredVersions:
+  extensions:
+    azure.ai.agents: '>=1.0.0-beta.4'
+name: fraud-intelligence-orchestration
+services:
+  ai-project:
+    host: azure.ai.project
+  fraud-intelligence-orchestration:
+    host: azure.ai.agent
+    metadata:
+      tags:
+        - Agent Framework
+        - AI Agent Hosting
+        - Azure AI AgentServer
+        - Responses Protocol
+        - Streaming
+    project: src
+    language: python
+    uses:
+      - ai-project
+    kind: hosted
+    name: fraud-intelligence-orchestration
+    description: An orchestration of AI agents for fraud intelligence
+    protocols:
+      - protocol: responses
+        version: 2.0.0
+    container:
+      resources:
+        cpu: '0.5'
+        memory: 1.0Gi
+    environmentVariables:
+      - name: AZURE_AI_AGENTSERVER_DISABLE_EXPERIMENTAL_WARNING
+        value: true
+    codeConfiguration:
+      runtime: python_3_14
+      entryPoint: main.py
+      dependencyResolution: remote_build
+infra:
+  provider: microsoft.foundry

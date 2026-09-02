@@ -385,14 +385,31 @@ if ($adminUpns.Count -eq 0) {
 # ---------------------------------------------------------------------------
 # Return credentials to the attendee dashboard
 # ---------------------------------------------------------------------------
+$tenantId        = (Get-AzContext).Tenant.Id
 $projectEndpoint = "https://$foundryAccountName.services.ai.azure.com/api/projects/$foundryProjectName"
+
+# Clickable Foundry portal deep-link to THIS project. The ai.azure.com portal encodes the
+# subscription GUID as a base64url token (in string/hex byte order — NOT Guid.ToByteArray()),
+# followed by <rg>,,<account>,<project>. Giving attendees this link means they don't have to
+# hunt for their project in the portal.
+$subHex   = $SubscriptionId -replace '-', ''
+$subBytes = for ($i = 0; $i -lt $subHex.Length; $i += 2) { [Convert]::ToByte($subHex.Substring($i, 2), 16) }
+$subToken = [Convert]::ToBase64String([byte[]]$subBytes).TrimEnd('=').Replace('+', '-').Replace('/', '_')
+$projectPortalUrl = "https://ai.azure.com/nextgen/r/$subToken,$effectiveRG,,$foundryAccountName,$foundryProjectName/home?tid=$tenantId"
+$fabricPortalUrl  = "https://app.fabric.microsoft.com/home?tid=$tenantId"
 
 Write-Host "[OK]    Lab provisioning complete."
 
 @{ HackboxCredential = @{
+    name  = "FoundryProjectUrl"
+    value = $projectPortalUrl
+    note  = "Open your Foundry project directly (sign in with your lab user). This is where you build the agents in Challenges 2-5."
+} }
+
+@{ HackboxCredential = @{
     name  = "FoundryProjectEndpoint"
     value = $projectEndpoint
-    note  = "Open ai.azure.com → select this project OR use as SDK endpoint"
+    note  = "SDK / API endpoint for your project (optional - the hack is done in the portal via FoundryProjectUrl)"
 } }
 
 @{ HackboxCredential = @{
@@ -405,6 +422,12 @@ Write-Host "[OK]    Lab provisioning complete."
     name  = "FabricCapacityName"
     value = $fabricCapacityName
     note  = "Your own Fabric F2 capacity. In Challenge 1 you create a workspace and assign it to this capacity, then Run All the setup notebook to publish your Data Agent."
+} }
+
+@{ HackboxCredential = @{
+    name  = "FabricPortalUrl"
+    value = $fabricPortalUrl
+    note  = "Open the Fabric portal (sign in with your lab user) to create your workspace on your FabricCapacityName in Challenge 1. Your workspace URL doesn't exist until you create it there."
 } }
 
 @{ HackboxCredential = @{

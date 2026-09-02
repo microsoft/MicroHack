@@ -24,9 +24,11 @@ The script grants the **Foundry User** role to each attendee and to the Foundry 
 
 | Key | Value |
 |-----|-------|
-| `FoundryProjectEndpoint` | `https://<account>.services.ai.azure.com/api/projects/inventory-hack` |
+| `FoundryProjectUrl` | Clickable deep-link to the attendee's `inventory-hack` project in the Foundry portal (`ai.azure.com`) — where they build the agents in Challenges 2-5 |
+| `FoundryProjectEndpoint` | `https://<account>.services.ai.azure.com/api/projects/inventory-hack` (SDK/API endpoint; optional — the hack is done in the portal) |
 | `ModelDeploymentName` | `gpt-5.4-mini` |
 | `FabricCapacityName` | The attendee's own F2 capacity (assign your workspace to it in Challenge 1) |
+| `FabricPortalUrl` | Link to the Fabric portal (`app.fabric.microsoft.com`) to create the workspace on `FabricCapacityName` — the workspace URL itself only exists once the attendee creates it in Challenge 1 |
 | `ResourceGroupName` | The attendee's resource group |
 
 Attendees use these in the Foundry and Fabric portals — no SDK or code required.

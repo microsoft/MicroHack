@@ -175,6 +175,15 @@ The data lives in **Microsoft Fabric** (a governed Lakehouse with inventory, dem
 
    ![The notebook with InventoryLakehouse attached as the default Lakehouse and the Run all button highlighted](../images/challenge-00-run-all.png)
 
+   > [!IMPORTANT]
+   > **First run on a fresh capacity — the table-selection step may need a moment (or a manual tick).** The publish cell selects your 7 tables automatically, but on a **cold F2 capacity** the Lakehouse's **SQL analytics endpoint** can take a couple of minutes to expose the newly-written tables. Until that schema sync finishes you may see **either**:
+   > - the notebook raise **`No tables were selected (schema may still be syncing)`**, or
+   > - an **`Error updating data agent data source selection(s)`** toast if you tick tables in the portal too early.
+   >
+   > This is expected first-run timing, **not** a failure — your 7 tables always write successfully; only the *agent's selection* waits on the sync. To finish it:
+   > 1. Open **`InventoryLakehouse`** → switch the view (top-right) from **Lakehouse** to **SQL analytics endpoint** → expand **`dbo → Tables`** and confirm all **7 tables** are listed. If they aren't yet, wait ~1–2 min and **Refresh** (opening the endpoint also nudges the sync).
+   > 2. Then **either** re-run the notebook's publish cell (it's idempotent), **or** open the **`inventory-hack-agent`** data agent → tick **all 7 tables** in the **Explorer** (left pane) → **Publish**.
+
    **d. Copy your two IDs.**
    When it finishes, the **last cell prints your Workspace ID and Agent ID**. Note both — you paste them into the Fabric Data Agent tool in Challenge 2.
 
@@ -233,6 +242,8 @@ The data lives in **Microsoft Fabric** (a governed Lakehouse with inventory, dem
 | The setup notebook errors on `%pip install` or the publish cell | Preview SDK drift — re-run the failed cell; if a method name differs, check the [SDK reference](https://learn.microsoft.com/fabric/data-science/fabric-data-agent-sdk). Make sure your F2 capacity is **running**. |
 | **Fabric Data Agent** isn't in the tool catalogue (previewing ahead) | Your F2 capacity must be running, and the setup notebook must have **published** the agent. |
 | The agent replies *"I'm unable to access the data source"* (or *"No tables selected yet"*) | Its tables aren't selected. The setup notebook selects all seven automatically, but if it didn't: open the data agent → **Data** tab → tick **all** tables under `InventoryLakehouse → dbo` → **Publish**, then re-test. |
+| The publish cell raises **`No tables were selected (schema may still be syncing)`** | Expected on a **cold F2** — the 7 tables wrote fine, but the Lakehouse **SQL analytics endpoint** hasn't exposed them yet. Open `InventoryLakehouse` → **SQL analytics endpoint** → confirm all 7 tables under `dbo`, then **re-run the publish cell** (idempotent) or tick the tables in the data agent's **Explorer** and **Publish**. |
+| Ticking tables in the data agent shows **`Error updating data agent data source selection(s)`** | Same root cause — the SQL endpoint schema isn't fully synced. Wait until all 7 tables show under the Lakehouse's **SQL analytics endpoint**, **refresh** the data agent page (F5), then re-tick and **Publish**. If it persists, remove and re-add the `InventoryLakehouse` data source (**+ Add data source → OneLake catalog**), tick the 7 tables, and **Publish**. |
 
 ![The data agent's Data tab showing InventoryLakehouse tables unselected and the agent replying that it cannot access the data source](../images/challenge-00-no-tables.png)
 

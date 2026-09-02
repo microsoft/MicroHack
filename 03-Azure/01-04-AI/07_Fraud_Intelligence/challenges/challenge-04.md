@@ -28,10 +28,9 @@ The orchestration owns sequencing, state transfer, failure handling, and the fin
 
 ## ✅ Tasks
 
-Before starting, source `baseenv` and `hackenv` to load the environment variables used by this challenge.
+Before starting, source `hackenv` to load the environment variables used by this challenge.
 
 ```bash
-source baseenv
 source hackenv
 ```
 

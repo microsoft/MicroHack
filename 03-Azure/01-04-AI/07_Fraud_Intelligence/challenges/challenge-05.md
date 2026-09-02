@@ -28,10 +28,9 @@ The Alert Manager Agent must treat the regulatory assessment as authoritative. I
 
 ## ✅ Tasks
 
-Before starting, source `baseenv` and `hackenv` to load the environment variables used by this challenge.
+Before starting, source `hackenv` to load the environment variables used by this challenge.
 
 ```bash
-source baseenv
 source hackenv
 ```
 

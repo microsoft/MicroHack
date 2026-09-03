@@ -92,6 +92,46 @@ Mistral Document AI key and endpoint, Azure AI Search key and endpoint, and Stor
 connection string required by Challenges 2 through 6. The file is excluded from Git,
 written with permissions `600`, and its secret values are not displayed.
 
+### 4. Verify the Blob Storage assets
+
+Before continuing, confirm that the lab deployment uploaded the claim and policy files.
+Find the Storage account name in the output from `get-keys.sh`, then run these commands
+from the repository root:
+
+```bash
+STORAGE_ACCOUNT="<storage-account-name>"
+STORAGE_CONNECTION_STRING="$(sed -n 's/^AZURE_STORAGE_CONNECTION_STRING=//p' .env)"
+
+az storage blob list \
+	--connection-string "$STORAGE_CONNECTION_STRING" \
+	--container-name claims-data \
+	--query "length(@)" \
+	--output tsv
+
+az storage blob list \
+	--connection-string "$STORAGE_CONNECTION_STRING" \
+	--container-name policies \
+	--query "length(@)" \
+	--output tsv
+```
+
+The expected results are `17` claim files and `5` policy documents. You can also open
+the Storage account in the Azure portal, select **Data storage > Containers**, and
+inspect the `claims-data` and `policies` containers directly.
+
+If either count is lower than expected, upload and verify only the missing lab assets
+without redeploying the infrastructure:
+
+```bash
+bash labautomation/upload-assets.sh \
+	--subscription "<your-subscription-id>" \
+	--resource-group "<your-resource-group-name>" \
+	--storage-account "$STORAGE_ACCOUNT"
+```
+
+The command finishes with `Asset upload complete and verified: 17 claims, 5 policies.`
+It does not deploy or modify the lab infrastructure.
+
 Confirm that the participant CLI is available:
 
 ```bash
@@ -111,6 +151,8 @@ Review the [solution architecture](../README.md#architecture) and identify where
 
 - **The Azure resource group is missing:** Confirm that you signed in with the assigned lab account and selected the assigned subscription in the Azure portal.
 - **The setup script reports an authorization error:** Confirm that the Codespace is signed in with the assigned lab account. That account must be able to read deployment outputs and list keys for the Foundry, Azure AI Search, and Storage resources.
+- **The Blob Storage verification reports an authorization error:** Run `get-keys.sh` again and confirm that `.env` contains a non-empty `AZURE_STORAGE_CONNECTION_STRING` value. Do not print or share the value.
+- **A Blob Storage container is empty or incomplete:** Run `labautomation/upload-assets.sh` with your subscription, resource group, and Storage account values, then repeat the verification commands.
 - **The GitHub organization or repository is missing:** Sign out of GitHub, then sign in again through **Sign in with your identity provider** using the Hackbox credentials.
 - **The dev container configuration is unavailable:** Confirm that you opened the assigned `microhack` repository before creating the Codespace.
 - **The Codespace does not finish starting:** Review the creation log for the failing step, then rebuild the container or recreate the Codespace.

@@ -2,8 +2,10 @@
   // Fraud Intelligence Hack — Codespaces / Dev Container
   // Python agents + Microsoft Agent Framework orchestration + Azure tooling.
   "name": "Azure / AI / Fraud Intelligence",
-  "image": "mcr.microsoft.com/devcontainers/python:3.12-bookworm",
-
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  
   "features": {
     "ghcr.io/devcontainers/features/azure-cli:1": {
       "version": "latest",

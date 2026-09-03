@@ -53,6 +53,19 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+trim_whitespace() {
+  local value="$1"
+  value="${value#"${value%%[![:space:]]*}"}"
+  value="${value%"${value##*[![:space:]]}"}"
+  printf '%s' "$value"
+}
+
+subscription_id="$(trim_whitespace "$subscription_id")"
+resource_group="$(trim_whitespace "$resource_group")"
+storage_account="$(trim_whitespace "$storage_account")"
+claims_container="$(trim_whitespace "$claims_container")"
+policies_container="$(trim_whitespace "$policies_container")"
+
 if [[ -z "$subscription_id" || -z "$resource_group" ]]; then
   usage >&2
   exit 2

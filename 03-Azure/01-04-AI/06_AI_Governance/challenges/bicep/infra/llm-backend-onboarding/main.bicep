@@ -1,4 +1,4 @@
-targetScope = 'subscription'
+targetScope = 'resourceGroup'
 
 /**
  * @module LLM Backend Onboarding
@@ -10,9 +10,14 @@ targetScope = 'subscription'
  * - Automatic failover when backends are unavailable
  * - Flexible authentication schemes per backend
  * 
+ * MicroHack note: this template is resource-group scoped. Lab participants hold
+ * Owner on their own resource group and only Reader on the subscription, so a
+ * subscription-scoped deployment would fail authorization. APIM and its managed
+ * identity are expected to live in the resource group being deployed to.
+ * 
  * Usage:
- *   az deployment sub create \
- *     --location <location> \
+ *   az deployment group create \
+ *     --resource-group <resource-group> \
  *     --template-file main.bicep \
  *     --parameters main.bicepparam
  */
@@ -106,24 +111,16 @@ param keyVaultName string = ''
 // ============================================================================
 // EXISTING RESOURCES
 // ============================================================================
-
-resource apimRg 'Microsoft.Resources/resourceGroups@2022-09-01' existing = {
-  scope: subscription(apim.subscriptionId)
-  name: apim.resourceGroupName
-}
+// Resource-group scoped: APIM and the managed identity are resolved in the
+// resource group this deployment targets. The subscriptionId /
+// resourceGroupName fields on the `apim` and `apimManagedIdentity` parameters
+// are retained for backwards compatibility but are no longer used for scoping.
 
 resource apimService 'Microsoft.ApiManagement/service@2024-06-01-preview' existing = {
-  scope: apimRg
   name: apim.name
 }
 
-resource identityRg 'Microsoft.Resources/resourceGroups@2022-09-01' existing = {
-  scope: subscription(apimManagedIdentity.subscriptionId)
-  name: apimManagedIdentity.resourceGroupName
-}
-
 resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
-  scope: identityRg
   name: apimManagedIdentity.name
 }
 
@@ -137,7 +134,6 @@ resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-
  */
 module llmBackends 'modules/llm-backends.bicep' = {
   name: 'llm-backends-deployment-${uniqueString(deployment().name)}'
-  scope: apimRg
   params: {
     apimServiceName: apim.name
     managedIdentityClientId: managedIdentity.properties.clientId
@@ -152,7 +148,6 @@ module llmBackends 'modules/llm-backends.bicep' = {
  */
 module llmBackendPools 'modules/llm-backend-pools.bicep' = {
   name: 'llm-backend-pools-deployment-${uniqueString(deployment().name)}'
-  scope: apimRg
   params: {
     apimServiceName: apim.name
     backendDetails: llmBackends.outputs.backendDetails
@@ -165,7 +160,6 @@ module llmBackendPools 'modules/llm-backend-pools.bicep' = {
  */
 module llmPolicyFragments 'modules/llm-policy-fragments.bicep' = {
   name: 'llm-policy-fragments-deployment-${uniqueString(deployment().name)}'
-  scope: apimRg
   params: {
     apimServiceName: apim.name
     policyFragmentConfig: llmBackendPools.outputs.policyFragmentConfig
@@ -185,7 +179,6 @@ module llmPolicyFragments 'modules/llm-policy-fragments.bicep' = {
 //  */
 // module universalLlmApi 'modules/universal-llm-api.bicep' = if (deployUniversalLlmApi) {
 //   name: 'universal-llm-api-deployment-${uniqueString(deployment().name)}'
-//   scope: apimRg
 //   params: {
 //     apimServiceName: apim.name
 //     apiPath: universalLlmApiPath

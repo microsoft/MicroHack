@@ -1,0 +1,53 @@
+{
+  "name": "Azure / AI / Claims Processing",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/azure-cli:1": {
+      "installBicep": true
+    },
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "version": "latest",
+      "enableNonRootDocker": "true"
+    },
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "lts"
+    }
+  },
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/microhack,type=bind,consistency=cached",
+  "workspaceFolder": "/workspaces/microhack/03-Azure/01-04-AI/05_Claims_Processing",
+  "postCreateCommand": "pip3 install --user uv==0.9.17 && uv sync --frozen",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "github.copilot",
+        "github.copilot-chat",
+        "ms-azuretools.vscode-azurefunctions",
+        "ms-python.autopep8",
+        "ms-python.debugpy",
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-python.vscode-python-envs",
+        "ms-toolsai.jupyter",
+        "ms-toolsai.jupyter-keymap",
+        "ms-toolsai.jupyter-renderers",
+        "ms-toolsai.vscode-jupyter-cell-tags",
+        "ms-toolsai.vscode-jupyter-slideshow",
+        "benjaminbenais.copilot-theme",
+        "Azurite.azurite",
+        "ms-azuretools.vscode-azurestorage",
+        "ms-azuretools.vscode-bicep",
+        "vs-publisher-1448185.keyoti-changeallendoflinesequence",
+        "ms-windows-ai-studio.windows-ai-studio",
+        "mechatroner.rainbow-csv"
+      ],
+      "settings": {
+        "workbench.colorTheme": "Copilot Theme",
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  },
+  "remoteUser": "vscode",
+  "postAttachCommand": "bash /workspaces/microhack/.devcontainer/welcome.sh"
+}

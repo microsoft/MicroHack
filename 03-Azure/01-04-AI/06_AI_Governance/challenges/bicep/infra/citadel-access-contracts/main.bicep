@@ -1,4 +1,4 @@
-targetScope = 'subscription'
+targetScope = 'resourceGroup'
 
 @description('APIM resource coordinates')
 param apim object
@@ -67,30 +67,22 @@ var productPostfix = '${useCase.businessUnit}-${useCase.useCaseName}-${useCase.e
 // Default APIM product policy (applied when a service item does not provide policyXmlPath)
 var defaultProductPolicyXml = loadTextContent('./policies/default-ai-product-policy.xml')
 
-resource apimRg 'Microsoft.Resources/resourceGroups@2022-09-01' existing = {
-  scope: subscription(apim.subscriptionId)
-  name: apim.resourceGroupName
-}
+// Resource-group scoped: APIM, Key Vault and Foundry all live in the resource
+// group this deployment targets. The subscriptionId / resourceGroupName fields
+// on the apim, keyVault and foundry parameters are kept for backwards
+// compatibility but are no longer used for scoping.
 
 resource apimSvc 'Microsoft.ApiManagement/service@2024-05-01' existing = {
-  scope: apimRg
   name: apim.name
 }
 
-resource kvRg 'Microsoft.Resources/resourceGroups@2022-09-01' existing = if (useTargetAzureKeyVault) {
-  scope: subscription(keyVault.subscriptionId)
-  name: keyVault.resourceGroupName
-}
-
 resource kv 'Microsoft.KeyVault/vaults@2023-07-01' existing = if (useTargetAzureKeyVault) {
-  scope: kvRg
   name: keyVault.name
 }
 
 // Onboard each requested service into APIM
 module onboard 'modules/apimOnboardService.bicep' = [for s in services: {
   name: 'onboard-${s.code}-${productPostfix}'
-  scope: apimRg
   params: {
     apimName: apim.name
     productId: '${s.code}-${productPostfix}'
@@ -109,7 +101,6 @@ module onboard 'modules/apimOnboardService.bicep' = [for s in services: {
 // Create/update KV secrets; normalize names (Key Vault does not allow underscores)
 module kvWrites 'modules/kvSecrets.bicep' = [for (s, i) in services: if (useTargetAzureKeyVault) {
   name: 'kv-${s.code}-${productPostfix}'
-  scope: kvRg
   params: {
     keyVaultName: kv.name
     secretNames: [ toLower(replace(s.endpointSecretName, '_', '-')), toLower(replace(s.apiKeySecretName, '_', '-')) ]
@@ -126,17 +117,11 @@ module kvWrites 'modules/kvSecrets.bicep' = [for (s, i) in services: if (useTarg
 // Create Foundry APIM connections per service (only if useTargetFoundry is true)
 // This enables Foundry agents to access AI models through the APIM gateway
 
-resource foundryRg 'Microsoft.Resources/resourceGroups@2022-09-01' existing = if (useTargetFoundry) {
-  scope: subscription(foundry.subscriptionId)
-  name: foundry.resourceGroupName
-}
-
 // Generate connection name based on config or use case naming
 var foundryConnectionPrefix = !empty(foundryConfig.connectionNamePrefix) ? foundryConfig.connectionNamePrefix : 'Hub-${useCase.businessUnit}-${useCase.useCaseName}-${useCase.environment}'
 
 module foundryConnections 'modules/foundryConnection.bicep' = [for (s, i) in services: if (useTargetFoundry) {
   name: 'foundry-${s.code}-${productPostfix}'
-  scope: foundryRg
   params: {
     aiFoundryAccountName: foundry.accountName
     aiFoundryProjectName: foundry.projectName

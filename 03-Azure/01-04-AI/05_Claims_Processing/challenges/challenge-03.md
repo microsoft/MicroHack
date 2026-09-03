@@ -1,164 +1,222 @@
-# Challenge 3 - Orchestrate the Three-Agent Claims Workflow
+# Challenge 3 - Build the Claims Intelligence Agent
 
 [Home](../README.md)
 
-**Expected Duration:** 45 minutes
+**Expected Duration:** 30 minutes
 
 ## Overview
 
-Challenges 1 and 2 created three Foundry agents. This challenge runs those existing
-agents in sequence without redefining their instructions or duplicating their policy
-rules:
+In this challenge, you will build the Claims Intelligence Agent, the core
+decision-making component of the claims processing pipeline.
 
-1. `claims-intake-agent` from Challenge 1
-2. `policy-extraction-agent` from Challenge 2
-3. `coverage-decision-agent` from Challenge 2
+Like Challenge 2, this component is built in two steps: first you create a Foundry IQ
+knowledge base over the policy documents in Blob Storage, then you create one
+specialized Foundry agent. The agent receives the knowledge base as an MCP retrieval
+tool and handles policy extraction and coverage adjudication in one resource.
 
-The name "Claims Intelligence Agent" refers to the Challenge 2 application component
-that coordinates policy extraction and coverage adjudication. It is not a fourth
-Foundry agent.
-
-In short: **accident statement image -> intake agent -> structured claim -> policy
-extraction agent -> structured policy -> coverage decision agent -> conditional human
-review -> final decision**.
+Together, the Claims Intake Agent and Claims Intelligence Agent form this flow:
 
 ```mermaid
-flowchart TD
-        A[Accident statement image] --> B[claims-intake-agent<br/>Step 1]
-        B --> C[Structured claim]
-        C --> D[policy-extraction-agent<br/>Step 2]
-        D --> E[Structured policy]
-        E --> F[coverage-decision-agent<br/>Step 3]
-        F --> G{Escalated or low confidence?}
-        G -- No --> H[Final decision]
-        G -- Yes --> I[Human review<br/>Step 4]
-        I --> H
+flowchart LR
+  A[Claim statement image] --> B[Mistral Document AI OCR]
+  B --> C[Claims Intake Agent]
+  D[Foundry IQ crash statements] --> C
+  C --> E[Intake artifact]
+  G[Policy documents in Blob Storage] --> H[Foundry IQ policies knowledge base]
+  E --> P[Claims Intelligence Agent]
+  H --> P
+  P --> I{Coverage decision}
+  I --> J[Approve]
+  I --> K[Deny]
+  I --> L[Escalate]
 ```
 
-The structured intake and policy objects stay in memory. The workflow prints the final
-decision and does not create another local JSON file.
+Challenge 2 creates `claims-intake-agent`. This challenge creates
+`claims-intelligence-agent`. After completing both challenges, the two Foundry agents
+required by Challenge 4 are available.
+
+### From mock policies to real policy documents
+
+Enterprise claims adjudication starts with the model, but it only becomes useful when
+the model can read the same policy documents your organization uses. In this challenge,
+the Claims Intelligence Agent is the reasoning component, and the Foundry IQ knowledge
+base over the Storage account `policies` container is its enterprise grounding layer.
+
+In short: **policy documents → Foundry IQ knowledge base → Claims Intelligence Agent →
+coverage decision**. The policy documents remain the source of truth. The agent
+retrieves the matching document, structures its policy fields, and adjudicates the
+claim in one Foundry resource.
+
+The Claims Intelligence Agent combines Policy Matching and Coverage Validation into a
+single orchestrated flow:
+
+1. Retrieve the policy document that matches the claim's policy number through the Foundry IQ knowledge base.
+2. Extract structured policy fields (coverage types, limits, deductibles, exclusions) from the grounded document using a dedicated Foundry agent.
+3. Run multi-factor coverage analysis using an LLM-backed adjudicator.
+4. Apply the compliance rules engine to identify exclusions and limits.
+5. Score how consistent the reported crash details are with the policy on a 1-100 scale, driving the approve/deny/escalate outcome.
+6. Escalate edge cases with structured reasoning and severity levels.
+7. Emit a detailed coverage decision with confidence scores, a consistency score, and a full audit trail.
+
+> [!IMPORTANT]
+> The supplied Claims Intelligence implementation is complete. Do not modify the
+> Python code in this challenge. Run the commands below and validate each result.
 
 ## Prerequisites
 
-- Complete [Challenge 1](./challenge-01.md) and [Challenge 2](./challenge-02.md).
-- Keep the repository-root `.env` configuration used by those challenges.
-- Synchronize the root Python environment if you have not already done so:
+* Complete [Challenge 2](./challenge-02.md).
+* Keep the repository-root `.env` configuration from the participant setup.
+* Confirm the MicroHack platform or your event coach supplied access to the Foundry
+  project and the Azure Storage account.
 
-```bash
-uv sync
-```
+## Tasks
 
-- Confirm that `claims-intake-agent`, `policy-extraction-agent`, and
-    `coverage-decision-agent` appear under **Agents** in your Foundry project. The
-    coverage agent is created the first time you complete Challenge 2 Task 3.
+### Task 1: Create the policies knowledge base
 
+Create a Foundry IQ Blob knowledge source over the Storage account's `policies`
+container and a `policies-kb` knowledge base over that source:
 
-## Task 1: Confirm the three Foundry agents (no action needed)
-
-Open your Foundry project and confirm that these agents are available:
-
-- `claims-intake-agent`
-- `policy-extraction-agent`
-- `coverage-decision-agent`
-
-> [!IMPORTANT]
-> The supplied workflow implementation is complete. Do not modify the Python code. The
-> workflow reuses the agents above and does not create replacement agents.
-
-The workflow calls each agent for one responsibility. Human review is regular workflow
-logic and does not appear as an agent in Foundry.
-
-## Task 2: Run the sequential workflow
+From the `docs` directory, run:
 
 ```bash
 cd docs
-python claims-sequential-workflow.py ../data/claims/crash1/raw/statements/crash1_front.jpeg --policy COMP-AUTO-001
+python create_knowledge_base.py --policies
 ```
 
-This runs the approval path against the comprehensive policy. The workflow passes the
-intake result and structured policy in memory, then prints the final decision.
+Foundry IQ creates and runs the ingestion resources asynchronously. The five Markdown
+documents already uploaded to the `policies` container become retrievable through the
+knowledge base without application code downloading the blobs.
 
-Test the default liability-only denial path:
-
-```bash
-python claims-sequential-workflow.py ../data/claims/crash1/raw/statements/crash1_front.jpeg
-```
-
-Override the claim identifier and amount when needed:
-
-```bash
-python claims-sequential-workflow.py ../data/claims/crash1/raw/statements/crash1_front.jpeg --policy COMM-AUTO-001 --claim-id CLM-2026-007 --amount 28000
-```
-
-If the decision is escalated or its confidence is below the configured threshold, the
-workflow prompts you to approve, escalate, or deny it before printing the final result.
-
-## How the workflow operates
-
-| Step | Foundry resource | Input | Output |
-|---|---|---|---|
-| 1 | `claims-intake-agent` | OCR text from the accident statement | Structured claim and grounded statement context |
-| 2 | `policy-extraction-agent` | Matching Markdown policy document | Typed policy coverage, limits, deductibles, and exclusions |
-| 3 | `coverage-decision-agent` | Structured claim and structured policy | Approved, denied, or escalated coverage decision |
-| 4 | None | Escalated or low-confidence decision | Human-confirmed or overridden final status |
-
-The workflow cannot start Step 2 until the intake result supplies a policy number. Step
-3 reuses the policy object produced by Step 2, so it does not extract the policy twice.
-
-## Expected console output
+Expected result:
 
 ```text
-Claims Sequential Workflow
-  Endpoint : https://<resource>.services.ai.azure.com/api/projects/<project>
-  Model    : gpt-5.4
-    Image    : <repo>/data/claims/crash1/raw/statements/crash1_front.jpeg
-  Policy   : COMP-AUTO-001
-  Claim ID : CLM-2026-001
-
-    [Step 1] claims-intake-agent running...
-    [Step 1] Intake complete.
-    [Step 2] policy-extraction-agent running...
-    [Step 2] Policy extraction complete.
-    [Step 3] coverage-decision-agent running...
-    [Step 3] Coverage decision complete.
-
---- Final Decision ---
-{
-    "claim_id": "CLM-2026-001",
-    "status": "APPROVED",
-    "policy_info": {
-        "policy_number": "COMP-AUTO-001"
-    },
-    "coverage_decision": {
-        "is_covered": true,
-        "applicable_deductible": 500.0,
-        "approved_amount": 14500.0,
-        "confidence_score": 0.97,
-        "requires_escalation": false
-    }
-}
-
-============================================================
-CHALLENGE 3 COMPLETE
-============================================================
-    Step 1 - claims-intake-agent        complete
-    Step 2 - policy-extraction-agent    complete
-    Step 3 - coverage-decision-agent    complete
-    Step 4 - human review (conditional) not required
+Knowledge source 'policies-blob-ks' created or updated from Blob container 'policies'.
+Knowledge base 'policies-kb' created or updated.
 ```
+
+Open the Azure AI Search service in the Azure portal. Under **Agentic retrieval**,
+confirm that `policies-blob-ks` appears under **Knowledge sources** and `policies-kb`
+appears under **Knowledge bases**. Wait for the knowledge source synchronization to
+finish before continuing.
+
+### Task 2: Prepare the Claims Intelligence Agent
+
+Create or update `claims-intelligence-agent`. It retrieves policy documents through
+the `policies-kb` MCP tool, converts them into structured policy information, and
+compares that policy with the structured claim to produce a coverage decision.
+
+```bash
+python claims-intelligence-agent.py --setup-agent
+```
+
+Expected result:
+
+```text
+Foundry agent 'claims-intelligence-agent' is ready.
+```
+
+Open your Foundry project and confirm that `claims-intelligence-agent` appears under
+**Agents** with `policies-knowledge-base` and `crash-statements-knowledge-base` MCP
+tools. It calls `knowledge_base_retrieve` against the policies tool when extracting
+coverage types, limits, deductibles, and exclusions. The crash-statements tool lets the
+same agent inspect indexed accident evidence when requested.
+
+Verify the crash-statements connection with a known indexed statement:
+
+```bash
+python claims-intelligence-agent.py --verify-crash-statement crash1_front
+```
+
+At this point, your project contains the two Foundry agents used in Challenge 4:
+`claims-intake-agent` from Challenge 2 and `claims-intelligence-agent` from this
+challenge.
+
+### Task 3: Verify the enterprise policy documents
+
+Run the policy verification command from the `docs` directory:
+
+```bash
+python claims-intelligence-agent.py --verify-policies
+```
+
+The command asks `claims-intelligence-agent` to retrieve each lab policy through Foundry
+IQ. It does not download policy files from Blob Storage in application code.
+
+Expected result:
+
+```text
+Found 5 policy document(s) through Foundry IQ:
+  - COMM-AUTO-001
+  - COMP-AUTO-001
+  - HV-AUTO-001
+  - LIAB-AUTO-001
+  - MOTO-001
+```
+
+This confirms that the Claims Intelligence Agent can retrieve the real policy documents
+uploaded from [`data/policies/`](../data/policies/) through the knowledge base.
+
+If the command reports that no policy documents were found, ask your coach to
+verify the lab deployment and policy upload, then run the verification command
+again.
+
+### Task 4: Run the Claims Intelligence Agent
+
+Feed the intake artifact produced by the Claims Intake Agent in [Challenge 2](./challenge-02.md) straight into the Intelligence Agent:
+
+```bash
+cd docs
+python claims-intelligence-agent.py ../data/claims/crash1/derived/statements/crash1_front.intake.json
+```
+
+The command prints the coverage decision to the terminal. It does not save another
+local JSON file.
+
+The intake artifact's `policy_number` is `LIAB-AUTO-001` (Liability Only), so this run exercises the exclusion path: a liability-only policy denying a collision claim, with `own_vehicle_damage` or `collision` listed in `exclusions_matched`.
+
+Optional: override the policy number to test the approval path:
+
+```bash
+python claims-intelligence-agent.py ../data/claims/crash1/derived/statements/crash1_front.intake.json --policy-number COMP-AUTO-001
+```
+
+Optional: override the claim amount to test the escalation path:
+
+```bash
+python claims-intelligence-agent.py ../data/claims/crash1/derived/statements/crash1_front.intake.json --policy-number LIAB-AUTO-001 --claim-amount 95000
+```
+
+When the adjudicator returns `"requires_escalation": true`, confirm that `state.errors` contains an `ESCALATION_REQUIRED` entry with severity `WARN`.
+
+## Expected output
+
+### What the agent does
+
+1. Retrieves the exact policy number from the `policies-kb` Foundry IQ knowledge base.
+2. Parses the retrieved policy into a structured `PolicyInfo` object and caches it for the current process.
+3. Builds a contextualized decision prompt combining claim details and policy fields.
+4. Submits the prompt to the LLM adjudicator, which evaluates type match, limits, deductibles, exclusions, and crash-to-policy consistency simultaneously.
+5. Parses the structured JSON response into a typed `CoverageDecision` object:
+   - Approved amount after deductible
+   - Matched exclusions
+   - Risk flags and confidence score
+   - `consistency_score`: a 1-100 rating of how well the crash details line up with what the policy should cover, and therefore whether the claim should be approved
+6. Escalates to `ESCALATED` status and records a `WARN`-severity error when the adjudicator signals manual review is needed.
+7. Appends a complete audit trail entry for every significant action, including agent name, action type, outcome, and structured metadata (including the consistency score).
+
 
 ## Validation checklist
 
-- The console lists the three agent steps in order.
-- No agent named `claims-intelligence-agent` is created by Challenge 3.
-- The final output contains `policy_info` from the extraction agent and
-    `coverage_decision` from the decision agent.
-- `status` is `APPROVED`, `DENIED`, or `ESCALATED`.
-- `approved_amount` uses the deductible and limit extracted from the real policy file.
-- The liability-only command returns `DENIED` with `collision` or
-    `own_vehicle_damage` in `exclusions_matched`.
-- Human review runs only for an escalated or low-confidence decision.
+- Policy retrieval succeeds through the `policies-kb` Foundry IQ knowledge base and the cache is populated on the first call.
+- The `claims-intelligence-agent` appears under your Foundry project's agents with its MCP retrieval tool.
+- The LLM adjudicator returns a valid JSON decision with all required fields.
+- `approved_amount` reflects the claim amount minus the applicable deductible, capped at the policy limit.
+- The audit trail contains at least two entries: `retrieve_policy` and `validate_coverage`.
+- Escalation path sets `status` to `ESCALATED` and populates `errors`.
+- A liability-only policy correctly denies a collision claim and lists `own_vehicle_damage` or `collision` in `exclusions_matched`.
+- `consistency_score` is an integer between 1 and 100 that agrees with the decision: scores below 30 do not coincide with `is_covered: true`, and scores of 90+ do not require escalation unless a hard policy limit is exceeded.
 
 ## Next step
 
-Continue with [Challenge 4](./challenge-04.md) to harden this pipeline against prompt injection and data exfiltration using FIDES.
+Continue with [Challenge 4](./challenge-04.md) to orchestrate the two Foundry agents
+from Challenges 2 and 3 as one sequential workflow.

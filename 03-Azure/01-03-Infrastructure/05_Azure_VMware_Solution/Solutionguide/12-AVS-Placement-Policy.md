@@ -7,7 +7,9 @@ There is no defined limit to the number of policies that you create. However, th
 
 Make sure to review the requirements for the policy type.
 
-In your Azure VMware Solution private cloud, under Manage, select Placement policies > + Create.
+In your Azure VMware Solution private cloud, under Manage, select Placement policies > + Create Policy.
+
+![](./Images/12-AVS-Placement-Policy/AVS_Placement_image1.png)
 
 ### Tip
 
@@ -23,9 +25,10 @@ If you selected VM-Host affinity or VM-Host anti-affinity as the type, select + 
 
 ### Note
 
-The select hosts pane shows how many VM-Host policies are associated with the host and the total number of VMs contained in those associated policies.
+The select hosts pane shows how many VM-Host policies are associated with the host and the total number of VMs contained in those associated policies. And then select the affected VM. In our case they will be the usual suspects.
 
-Select + Add virtual machine and the VMs to include in the policy. You can select multiple VMs.
+![](./Images/12-AVS-Placement-Policy/AVS_Placement_image2.png)
+
 
 ### Note
 
@@ -34,6 +37,8 @@ The select hosts pane shows how many VM-Host policies are associated with the ho
 Once you've finished adding the VMs you want, select Add virtual machines.
 
 Select Next: Review and create to review your policy.
+
+![](./Images/12-AVS-Placement-Policy/AVS_Placement_image3.png)
 
 Select Create policy. If you want to make changes, select Back: Basics.
 

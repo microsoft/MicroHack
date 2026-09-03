@@ -1,6 +1,6 @@
 # NSX Add Firewall
 
-[Previous Challenge](./10-AVS-Migrate-VM.md) - **[Home](../Readme.md)** - [Next Challenge](./12-AVS-ANF-Datastores.md)
+[Previous Challenge](./10-AVS-Migrate-VM.md) - **[Home](../Readme.md)** - [Next Challenge](./12-AVS-Placement-Policy)
 
 ## Introduction
 

@@ -2,6 +2,10 @@
 
 **[Home](../Readme.md)** - [Next Challenge Solution](./02-NSX-Add-Segment.md)
 
+### Note
+
+ All the data needed is in the excel file: [AVSMicroHackData](../Lab/info/datos_Microhack_300925.xlsx). Prefixes, credentials .. 
+
 ## Instructions
 
 Here you will be using NSX-T to host your DHCP server and you will create a DHCP. Then you'll add a network segment and specify the DHCP IP address range.
@@ -20,12 +24,4 @@ Here you will be using NSX-T to host your DHCP server and you will create a DHCP
 
 ### Note
 This DHCP server automatically gets connected to the default Tier 1 Gateway
-
-4.	You can now log on to NSX Manager in AVS and verify that the DHCP server is attached to the Tier1 Gateway
-
-![](./Images/01-NSX-DHCP/NSX_image4.png)
-
-> [!NOTE]
-> The settings and changes above are for demonstration purposes only and are not required for the lab to function.
-
 

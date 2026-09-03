@@ -338,7 +338,7 @@ if ($storageAccounts) {
         "claims-data"
     }
 
-    $claimsDataRoot = Join-Path (Split-Path -Parent $scriptPath) "data\claims"
+    $claimsDataRoot = Join-Path $scriptPath "data\claims"
 
     if (Test-Path $claimsDataRoot) {
         try {
@@ -364,7 +364,7 @@ if ($storageAccounts) {
     Write-Host ""
     Write-Host "Uploading policy documents to blob storage..." -ForegroundColor Yellow
 
-    $policiesDataRoot = Join-Path (Split-Path -Parent $scriptPath) "data\policies"
+    $policiesDataRoot = Join-Path $scriptPath "data\policies"
 
     if (Test-Path $policiesDataRoot) {
         try {

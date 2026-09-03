@@ -199,15 +199,6 @@ wheels = [
 ]
 
 [[package]]
-name = "azure-functions"
-version = "1.21.3"
-source = { registry = "https://packagefeedproxy.microsoft.io/pypi/simple/" }
-sdist = { url = "https://ms-feed-2.pkgs.visualstudio.com/f5581750-f66a-4ee8-b9cc-8269930bd7c4/_packaging/637e612b-d5d4-45c1-8a31-e0deb2a5a828/pypi/download/azure-functions/1.21.3/azure-functions-1.21.3.tar.gz", hash = "sha256:c359b9dbd2998c84d8595e31a28ffad4e8ca8dcfb4a3798327f776a67f964351" }
-wheels = [
-    { url = "https://ms-feed-2.pkgs.visualstudio.com/f5581750-f66a-4ee8-b9cc-8269930bd7c4/_packaging/637e612b-d5d4-45c1-8a31-e0deb2a5a828/pypi/download/azure-functions/1.21.3/azure_functions-1.21.3-py3-none-any.whl", hash = "sha256:6c45f5e61fe59328c81928a428d43c838e9ead52f1cde1628fcabb372fa10cc8" },
-]
-
-[[package]]
 name = "azure-identity"
 version = "1.25.3"
 source = { registry = "https://packagefeedproxy.microsoft.io/pypi/simple/" }
@@ -316,7 +307,6 @@ dependencies = [
     { name = "agent-framework-foundry" },
     { name = "azure-ai-projects" },
     { name = "azure-core" },
-    { name = "azure-functions" },
     { name = "azure-identity" },
     { name = "azure-search-documents" },
     { name = "azure-storage-blob" },
@@ -340,7 +330,6 @@ requires-dist = [
     { name = "agent-framework-foundry", specifier = "==1.10.4" },
     { name = "azure-ai-projects", specifier = "==2.3.0" },
     { name = "azure-core", specifier = "==1.41.0" },
-    { name = "azure-functions", specifier = "==1.21.3" },
     { name = "azure-identity", specifier = "==1.25.3" },
     { name = "azure-search-documents", specifier = "==12.0.0" },
     { name = "azure-storage-blob", specifier = "==12.27.1" },

@@ -5,6 +5,7 @@ import argparse
 import base64
 import json
 import os
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -218,6 +219,94 @@ def _extract_foundry_iq_matches(response: Any, index_name: str) -> dict[str, Any
     return {"index_name": index_name, "match_count": len(matches), "matches": matches}
 
 
+def _extract_indexed_claim(content: str) -> dict[str, Any]:
+    """Convert an indexed accident statement into the intake annotation shape."""
+    def field(label: str) -> str | None:
+        match = re.search(rf"^{re.escape(label)}:\s*(.+)$", content, re.MULTILINE)
+        return match.group(1).strip() if match else None
+
+    incident_match = re.search(
+        r"## Description of Incident\s*\n+(.*?)(?=\n(?:## |[^\n]+\.jpeg\s*$)|\Z)",
+        content,
+        re.DOTALL | re.MULTILINE,
+    )
+    incident_description = (
+        incident_match.group(1).strip() if incident_match else content.strip()
+    )
+    vehicle_parts = (field("Year/Make/Model") or "").split(maxsplit=2)
+
+    return {
+        "claimant_name": field("Name") or "Unknown",
+        "claim_date": field("Date of Incident"),
+        "policy_number": field("Policy Number"),
+        "incident_description": incident_description,
+        "vehicle_info": {
+            "year": vehicle_parts[0] if vehicle_parts else None,
+            "make": vehicle_parts[1] if len(vehicle_parts) > 1 else None,
+            "model": vehicle_parts[2] if len(vehicle_parts) > 2 else None,
+            "license_plate": field("License Plate"),
+            "vin": field("VIN"),
+        },
+        "damage_description": incident_description,
+        "estimated_damage_amount": None,
+        "witnesses": [],
+        "signature_present": None,
+        "date_signed": None,
+    }
+
+
+def run_indexed_claim_intake(claim_reference: str) -> dict[str, Any]:
+    """Retrieve an existing front statement from Foundry IQ without rerunning OCR."""
+    project_endpoint = os.getenv("AI_FOUNDRY_PROJECT_ENDPOINT", "").strip()
+    if not project_endpoint:
+        raise RuntimeError("AI_FOUNDRY_PROJECT_ENDPOINT is not set. Complete Task 1 first.")
+
+    normalized_reference = claim_reference.removesuffix(".jpeg")
+    statement_id = (
+        normalized_reference
+        if normalized_reference.endswith("_front")
+        else f"{normalized_reference}_front"
+    )
+    source_file = f"{statement_id}.jpeg"
+    index_name = os.getenv("FOUNDRY_IQ_SEARCH_INDEX_NAME", "crash-statements")
+    model_deployment = os.getenv("MODEL_DEPLOYMENT_NAME", "gpt-5.4")
+    client = AIProjectClient(
+        endpoint=project_endpoint,
+        credential=DefaultAzureCredential(process_timeout=30),
+        allow_preview=True,
+    )
+    _ensure_foundry_agent(client, model_deployment, index_name)
+
+    response = client.get_openai_client(agent_name=FOUNDRY_AGENT_NAME).responses.create(
+        model=model_deployment,
+        input=(
+            "Retrieve the already indexed crash statement whose source file is exactly "
+            f"{source_file}. Summarize the matching statement."
+        ),
+    )
+    foundry_iq = _extract_foundry_iq_matches(response, index_name)
+    exact_match = next(
+        (match for match in foundry_iq["matches"] if match["id"] == statement_id),
+        None,
+    )
+    if exact_match is None:
+        raise RuntimeError(
+            f"Foundry IQ did not return indexed statement '{statement_id}'."
+        )
+
+    return {
+        "status": "success",
+        "input_mode": "foundry_iq",
+        "claim_reference": claim_reference,
+        "processed_at_utc": datetime.now(timezone.utc).isoformat(),
+        "ocr": None,
+        "extracted_data": _extract_indexed_claim(exact_match["content"]),
+        "foundry_iq": foundry_iq,
+        "foundry_agent": {"name": FOUNDRY_AGENT_NAME},
+        "agent_summary": response.output_text,
+    }
+
+
 def run_claims_intake(image_path: Path) -> dict[str, Any]:
     if not image_path.exists():
         raise FileNotFoundError(f"Image not found: {image_path}")
@@ -231,7 +320,11 @@ def run_claims_intake(image_path: Path) -> dict[str, Any]:
     index_name = os.getenv("FOUNDRY_IQ_SEARCH_INDEX_NAME", "crash-statements")
     model_deployment = os.getenv("MODEL_DEPLOYMENT_NAME", "gpt-5.4")
 
-    client = AIProjectClient(endpoint=project_endpoint, credential=DefaultAzureCredential(), allow_preview=True)
+    client = AIProjectClient(
+        endpoint=project_endpoint,
+        credential=DefaultAzureCredential(process_timeout=30),
+        allow_preview=True,
+    )
     _ensure_foundry_agent(client, model_deployment, index_name)
 
     openai_client = client.get_openai_client(agent_name=FOUNDRY_AGENT_NAME)

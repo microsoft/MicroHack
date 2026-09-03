@@ -1,22 +1,26 @@
 #!/usr/bin/env python3
-"""Create the Foundry IQ knowledge source + knowledge base on top of the crash-statements index.
+"""Create Foundry IQ knowledge sources and knowledge bases for the claims agents.
 
-Run this after `index_crash_statements.py` has populated the index. It:
+Without arguments, run this after `index_crash_statements.py` has populated the index. It:
 
 1. Adds a semantic configuration to the existing `crash-statements` index (required for
    agentic retrieval knowledge sources).
 2. Creates a `SearchIndexKnowledgeSource` that wraps the index.
 3. Creates a `KnowledgeBase` that orchestrates retrieval from that knowledge source.
 
-`claims-intake-agent.py` connects its agent to the knowledge base's MCP endpoint instead of
-querying the raw index directly with an `AzureAISearchTool`.
+Pass `--policies` to create a Blob knowledge source over the policies container and the
+knowledge base used by `claims-intelligence-agent`.
 """
 
+import argparse
 import os
+from pathlib import Path
 
 from azure.core.credentials import AzureKeyCredential
 from azure.search.documents.indexes import SearchIndexClient
 from azure.search.documents.indexes.models import (
+    AzureBlobKnowledgeSource,
+    AzureBlobKnowledgeSourceParameters,
     KnowledgeBase,
     KnowledgeSourceReference,
     SearchIndexFieldReference,
@@ -33,6 +37,8 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 load_dotenv(REPO_ROOT / ".env")
 
 SEMANTIC_CONFIG_NAME = "crash-statements-semantic-config"
+POLICIES_KNOWLEDGE_SOURCE_NAME = "policies-blob-ks"
+POLICIES_KNOWLEDGE_BASE_NAME = "policies-kb"
 
 
 def _client_and_endpoint() -> tuple[SearchIndexClient, str]:
@@ -105,11 +111,15 @@ def ensure_knowledge_source(client: SearchIndexClient, index_name: str, knowledg
 
 
 def ensure_knowledge_base(
-    client: SearchIndexClient, search_endpoint: str, knowledge_source_name: str, knowledge_base_name: str
+    client: SearchIndexClient,
+    search_endpoint: str,
+    knowledge_source_name: str,
+    knowledge_base_name: str,
+    description: str = "Grounds the claims intake agent in crash statement evidence",
 ) -> str:
     knowledge_base = KnowledgeBase(
         name=knowledge_base_name,
-        description="Grounds the claims intake agent in crash statement evidence",
+        description=description,
         knowledge_sources=[KnowledgeSourceReference(name=knowledge_source_name)],
     )
     client.create_or_update_knowledge_base(knowledge_base=knowledge_base)
@@ -117,12 +127,66 @@ def ensure_knowledge_base(
     return f"{search_endpoint.rstrip('/')}/knowledgebases/{knowledge_base_name}/mcp?api-version=2026-04-01"
 
 
+def ensure_policies_knowledge_source(
+    client: SearchIndexClient,
+    knowledge_source_name: str,
+) -> None:
+    """Create a Foundry IQ Blob knowledge source over the policy documents."""
+    connection_string = os.getenv("AZURE_STORAGE_CONNECTION_STRING", "")
+    container_name = os.getenv("AZURE_POLICIES_CONTAINER_NAME", "policies")
+    if not connection_string:
+        raise RuntimeError("Missing AZURE_STORAGE_CONNECTION_STRING in .env")
+
+    knowledge_source = AzureBlobKnowledgeSource(
+        name=knowledge_source_name,
+        description="Insurance policy Markdown documents used for claims adjudication",
+        azure_blob_parameters=AzureBlobKnowledgeSourceParameters(
+            connection_string=connection_string,
+            container_name=container_name,
+        ),
+    )
+    client.create_or_update_knowledge_source(knowledge_source=knowledge_source)
+    print(
+        f"Knowledge source '{knowledge_source_name}' created or updated from "
+        f"Blob container '{container_name}'."
+    )
+
+
 def main() -> None:
+    parser = argparse.ArgumentParser(description="Create a Foundry IQ knowledge base")
+    parser.add_argument(
+        "--policies",
+        action="store_true",
+        help="Create the policies Blob knowledge source and policies knowledge base",
+    )
+    args = parser.parse_args()
+
+    client, search_endpoint = _client_and_endpoint()
+    if args.policies:
+        knowledge_source_name = os.getenv(
+            "FOUNDRY_IQ_POLICIES_KNOWLEDGE_SOURCE_NAME",
+            POLICIES_KNOWLEDGE_SOURCE_NAME,
+        )
+        knowledge_base_name = os.getenv(
+            "FOUNDRY_IQ_POLICIES_KNOWLEDGE_BASE_NAME",
+            POLICIES_KNOWLEDGE_BASE_NAME,
+        )
+        ensure_policies_knowledge_source(client, knowledge_source_name)
+        mcp_endpoint = ensure_knowledge_base(
+            client,
+            search_endpoint,
+            knowledge_source_name,
+            knowledge_base_name,
+            description="Grounds the policy extraction agent in insurance policy documents",
+        )
+        print(f"\nPolicy knowledge base MCP endpoint:\n  {mcp_endpoint}")
+        print("Blob ingestion starts asynchronously and can take several minutes.")
+        return
+
     index_name = os.getenv("FOUNDRY_IQ_SEARCH_INDEX_NAME", "crash-statements")
     knowledge_source_name = os.getenv("FOUNDRY_IQ_KNOWLEDGE_SOURCE_NAME", "crash-statements-ks")
     knowledge_base_name = os.getenv("FOUNDRY_IQ_KNOWLEDGE_BASE_NAME", "crash-statements-kb")
 
-    client, search_endpoint = _client_and_endpoint()
     ensure_index_ready_for_agentic_retrieval(client, index_name)
     ensure_knowledge_source(client, index_name, knowledge_source_name)
     mcp_endpoint = ensure_knowledge_base(client, search_endpoint, knowledge_source_name, knowledge_base_name)

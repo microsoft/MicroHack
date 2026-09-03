@@ -14,26 +14,25 @@ Key Enterprise Features:
 """
 
 import argparse
-import os
 import json
 import logging
-import re
+import os
 import time
-from datetime import datetime
 from pathlib import Path
-from dotenv import load_dotenv
-from typing import Optional
-from functools import lru_cache
 
 from azure.ai.projects import AIProjectClient
-from azure.ai.projects.models import PromptAgentDefinition
+from azure.ai.projects.models import MCPTool, PromptAgentDefinition
 from azure.core.exceptions import ResourceNotFoundError
 from azure.identity import DefaultAzureCredential
-from azure.storage.blob import BlobServiceClient
-
+from dotenv import load_dotenv
 from enterprise_models import (
-    ClaimProcessingState, PolicyInfo, CoverageDecision, ErrorInfo,
-    SeverityLevel, ClaimStatus, StructuredClaim
+    ClaimProcessingState,
+    ClaimStatus,
+    CoverageDecision,
+    ErrorInfo,
+    PolicyInfo,
+    SeverityLevel,
+    StructuredClaim,
 )
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -44,9 +43,23 @@ logger = logging.getLogger(__name__)
 PROJECT_ENDPOINT = os.environ.get("AI_FOUNDRY_PROJECT_ENDPOINT")
 MODEL_DEPLOYMENT_NAME = os.environ.get("MODEL_DEPLOYMENT_NAME", "gpt-5.4")
 
-POLICY_EXTRACTION_AGENT_NAME = "policy-extraction-agent"
-COVERAGE_DECISION_AGENT_NAME = "coverage-decision-agent"
-POLICY_EXTRACTION_INSTRUCTIONS = """You extract structured insurance policy fields from a raw policy document.
+CLAIMS_INTELLIGENCE_AGENT_NAME = "claims-intelligence-agent"
+POLICIES_KNOWLEDGE_BASE_NAME = os.environ.get(
+    "FOUNDRY_IQ_POLICIES_KNOWLEDGE_BASE_NAME", "policies-kb"
+)
+CRASH_STATEMENTS_KNOWLEDGE_BASE_NAME = os.environ.get(
+    "FOUNDRY_IQ_KNOWLEDGE_BASE_NAME", "crash-statements-kb"
+)
+REQUIRED_MCP_TOOL_LABELS = {
+    "policies-knowledge-base",
+    "crash-statements-knowledge-base",
+}
+POLICY_EXTRACTION_INSTRUCTIONS = """When the input starts with POLICY_EXTRACTION_TASK, retrieve and
+structure an enterprise insurance policy. You MUST call the policies-knowledge-base server's
+knowledge_base_retrieve tool exactly once and retrieve the policy whose Policy Code exactly matches
+the policy number supplied by the user. Never use the crash-statements-knowledge-base server for
+policy extraction. Never answer from general insurance knowledge. If no exact policy is retrieved, return JSON with
+"policy_type" set to "NOT_FOUND" and empty coverage fields.
 Return ONLY strict JSON (no markdown fences, no commentary) matching this shape:
 {
   "policy_type": "string, e.g. Liability Only Auto Insurance",
@@ -59,8 +72,6 @@ Use the Standard/State Minimum coverage limits section for limits, and the Stand
 section for deductibles (0 if the policy has none). Coverage labels must be short snake_case
 tokens usable as dict keys, not full sentences."""
 
-POLICY_CODE_PATTERN = re.compile(r"\*\*Policy Code:\*\*\s*([\w-]+)")
-
 
 class ClaimsIntelligenceAgent:
     """Enterprise claims decision making with policy matching and coverage validation"""
@@ -70,16 +81,29 @@ class ClaimsIntelligenceAgent:
             raise ValueError("AI_FOUNDRY_PROJECT_ENDPOINT is not set. Complete Task 1 first.")
         self.client = AIProjectClient(
             endpoint=PROJECT_ENDPOINT,
-            credential=DefaultAzureCredential(),
+            credential=DefaultAzureCredential(process_timeout=30),
             allow_preview=True
         )
         self.model = MODEL_DEPLOYMENT_NAME
         self.policy_cache = {}
-        self.policy_documents_cache: dict[str, str] | None = None
     
     def get_intelligence_instructions(self) -> str:
         """System prompt for intelligence agent"""
-        return """You are an enterprise insurance claims adjudicator. Your role is to:
+        return (
+            "You are the enterprise Claims Intelligence Agent. You perform policy retrieval, "
+            "policy extraction, crash-evidence retrieval, and coverage adjudication in three "
+            "explicitly selected modes.\n\n"
+            + POLICY_EXTRACTION_INSTRUCTIONS
+            + """
+
+When the input starts with CRASH_EVIDENCE_TASK, you MUST call the
+crash-statements-knowledge-base server's knowledge_base_retrieve tool exactly once. Retrieve the
+statement whose source filename or indexed statement ID exactly matches the supplied reference.
+Never use the policies-knowledge-base server for crash evidence. Return a concise summary that
+includes the source filename, claimant, policy number, vehicle, date, location, and incident.
+
+When the input starts with COVERAGE_DECISION_TASK, use the structured claim and policy supplied in
+the input. Do not call either knowledge-base tool in this mode. Your role is to:
 1. Analyze whether a claim is covered under the insurance policy
 2. Determine the approved payment amount
 3. Identify any exclusions or limitations that apply
@@ -124,71 +148,154 @@ class ClaimsIntelligenceAgent:
   "requires_escalation": false,
   "escalation_reason": null
 }"""
+                )
     
-    def _get_policies_container_client(self):
-        """Connect to the Storage Account's policies blob container (enterprise policy files)."""
-        connection_string = os.environ.get("AZURE_STORAGE_CONNECTION_STRING")
-        if not connection_string:
-            raise ValueError("AZURE_STORAGE_CONNECTION_STRING is not set. Complete Task 1 first.")
-        container_name = os.environ.get("AZURE_POLICIES_CONTAINER_NAME", "policies")
-        blob_service = BlobServiceClient.from_connection_string(connection_string)
-        return blob_service.get_container_client(container_name)
+    def _get_knowledge_connection_id(
+        self,
+        knowledge_base_name: str,
+        connection_environment_variable: str,
+    ) -> str:
+        """Find a RemoteTool connection for a Foundry IQ knowledge base."""
+        expected_name = os.environ.get(connection_environment_variable, "")
+        connections = [
+            connection
+            for connection in self.client.connections.list()
+            if getattr(connection.type, "value", connection.type)
+            in {"RemoteTool", "RemoteTool_Preview"}
+        ]
+        if expected_name:
+            connection = next(
+                (
+                    item
+                    for item in connections
+                    if item.name == expected_name or item.id == expected_name
+                ),
+                None,
+            )
+        else:
+            connection = next(
+                (
+                    item
+                    for item in connections
+                    if knowledge_base_name in (getattr(item, "target", "") or "")
+                ),
+                None,
+            )
 
-    def _load_policy_documents(self) -> dict[str, str]:
-        """Download and cache every policy markdown file from the Storage Account, keyed by
-        the policy's `Policy Code` field (e.g. LIAB-AUTO-001)."""
-        if self.policy_documents_cache is not None:
-            return self.policy_documents_cache
-
-        container_client = self._get_policies_container_client()
-        documents: dict[str, str] = {}
-        for blob in container_client.list_blobs():
-            text = container_client.download_blob(blob.name).readall().decode("utf-8")
-            match = POLICY_CODE_PATTERN.search(text)
-            if match:
-                documents[match.group(1)] = text
-            else:
-                logger.warning(f"No Policy Code found in blob {blob.name}; skipping")
-
-        if not documents:
-            container_name = os.environ.get("AZURE_POLICIES_CONTAINER_NAME", "policies")
+        if connection is None:
             raise RuntimeError(
-                f"No policy documents with a Policy Code were found in Azure Storage container "
-                f"'{container_name}'. Upload data/policies/*.md by rerunning deploy-lab.ps1."
+                f"No Foundry RemoteTool connection targets '{knowledge_base_name}'. "
+                "Redeploy labautomation/azuredeploy.json, then rerun --setup-agent."
             )
+        return connection.id
 
-        logger.info(f"Loaded {len(documents)} policy document(s) from Storage Account: {sorted(documents)}")
-        self.policy_documents_cache = documents
-        return documents
+    def _build_policy_knowledge_tool(self) -> MCPTool:
+        """Build the MCP tool that retrieves policy documents from Foundry IQ."""
+        search_endpoint = (
+            os.environ.get("FOUNDRY_IQ_SEARCH_ENDPOINT")
+            or os.environ.get("SEARCH_SERVICE_ENDPOINT", "")
+        ).rstrip("/")
+        if not search_endpoint:
+            raise RuntimeError("FOUNDRY_IQ_SEARCH_ENDPOINT is not set. Complete Task 1 first.")
 
-    def _ensure_policy_extraction_agent(self) -> None:
-        """Register (or reuse) the agent that extracts structured fields from raw policy files."""
+        return MCPTool(
+            server_label="policies-knowledge-base",
+            server_url=(
+                f"{search_endpoint}/knowledgebases/{POLICIES_KNOWLEDGE_BASE_NAME}"
+                "/mcp?api-version=2026-04-01"
+            ),
+            require_approval="never",
+            allowed_tools=["knowledge_base_retrieve"],
+            project_connection_id=self._get_knowledge_connection_id(
+                POLICIES_KNOWLEDGE_BASE_NAME,
+                "FOUNDRY_IQ_POLICIES_CONNECTION_NAME",
+            ),
+        )
+
+    def _build_crash_statements_knowledge_tool(self) -> MCPTool:
+        """Build the MCP tool that retrieves indexed crash statements."""
+        search_endpoint = (
+            os.environ.get("FOUNDRY_IQ_SEARCH_ENDPOINT")
+            or os.environ.get("SEARCH_SERVICE_ENDPOINT", "")
+        ).rstrip("/")
+        if not search_endpoint:
+            raise RuntimeError("FOUNDRY_IQ_SEARCH_ENDPOINT is not set. Complete Task 1 first.")
+
+        return MCPTool(
+            server_label="crash-statements-knowledge-base",
+            server_url=(
+                f"{search_endpoint}/knowledgebases/{CRASH_STATEMENTS_KNOWLEDGE_BASE_NAME}"
+                "/mcp?api-version=2026-04-01"
+            ),
+            require_approval="never",
+            allowed_tools=["knowledge_base_retrieve"],
+            project_connection_id=self._get_knowledge_connection_id(
+                CRASH_STATEMENTS_KNOWLEDGE_BASE_NAME,
+                "FOUNDRY_IQ_CRASH_STATEMENTS_CONNECTION_NAME",
+            ),
+        )
+
+    def _ensure_claims_intelligence_agent(self) -> None:
+        """Register the unified intelligence agent with its policy knowledge tool."""
         try:
-            self.client.agents.get(POLICY_EXTRACTION_AGENT_NAME)
+            self.client.agents.get(CLAIMS_INTELLIGENCE_AGENT_NAME)
+            versions = list(self.client.agents.list_versions(CLAIMS_INTELLIGENCE_AGENT_NAME))
+            latest_version = max(versions, key=lambda version: int(version.version))
+            latest_tools = getattr(latest_version.definition, "tools", None) or []
+            latest_tool_labels = {
+                getattr(tool, "server_label", None)
+                for tool in latest_tools
+                if getattr(tool, "type", None) == "mcp"
+            }
+            if (
+                latest_version.definition.model == self.model
+                and REQUIRED_MCP_TOOL_LABELS.issubset(latest_tool_labels)
+            ):
+                return
         except ResourceNotFoundError:
-            definition = PromptAgentDefinition(model=self.model, instructions=POLICY_EXTRACTION_INSTRUCTIONS)
-            self.client.agents.create_version(agent_name=POLICY_EXTRACTION_AGENT_NAME, definition=definition)
+            pass
 
-    def _ensure_coverage_decision_agent(self) -> None:
-        """Register or reuse the agent that adjudicates structured claims and policies."""
-        try:
-            self.client.agents.get(COVERAGE_DECISION_AGENT_NAME)
-        except ResourceNotFoundError:
-            definition = PromptAgentDefinition(
-                model=self.model,
-                instructions=self.get_intelligence_instructions(),
-            )
-            self.client.agents.create_version(
-                agent_name=COVERAGE_DECISION_AGENT_NAME,
-                definition=definition,
-            )
+        definition = PromptAgentDefinition(
+            model=self.model,
+            instructions=self.get_intelligence_instructions(),
+            tools=[
+                self._build_policy_knowledge_tool(),
+                self._build_crash_statements_knowledge_tool(),
+            ],
+        )
+        self.client.agents.create_version(
+            agent_name=CLAIMS_INTELLIGENCE_AGENT_NAME,
+            definition=definition,
+        )
 
-    def _extract_policy_info(self, policy_number: str, raw_text: str) -> PolicyInfo:
-        """Use the policy-extraction agent to parse structured coverage fields from the raw policy file."""
-        self._ensure_policy_extraction_agent()
-        openai_client = self.client.get_openai_client(agent_name=POLICY_EXTRACTION_AGENT_NAME)
-        result = openai_client.responses.create(model=self.model, input=raw_text)
+    def retrieve_crash_evidence(self, statement_reference: str) -> str:
+        """Retrieve one indexed crash statement through the agent's Foundry IQ tool."""
+        self._ensure_claims_intelligence_agent()
+        result = self.client.get_openai_client(
+            agent_name=CLAIMS_INTELLIGENCE_AGENT_NAME
+        ).responses.create(
+            model=self.model,
+            input=(
+                "CRASH_EVIDENCE_TASK\nRetrieve the crash statement whose exact source filename "
+                f"or indexed statement ID is {statement_reference}."
+            ),
+        )
+        return result.output_text
+
+    def _extract_policy_info(self, policy_number: str) -> PolicyInfo | None:
+        """Retrieve and structure one policy through the Foundry IQ-backed agent."""
+        self._ensure_claims_intelligence_agent()
+        openai_client = self.client.get_openai_client(agent_name=CLAIMS_INTELLIGENCE_AGENT_NAME)
+        result = openai_client.responses.create(
+            model=self.model,
+            input=(
+                f"POLICY_EXTRACTION_TASK\nRetrieve the policy with exact Policy Code "
+                f"{policy_number} and extract its coverage fields."
+            ),
+        )
         extracted = json.loads(result.output_text)
+        if extracted.get("policy_type") == "NOT_FOUND":
+            return None
 
         return PolicyInfo(
             policy_id=policy_number.lower().replace("-", "_"),
@@ -203,21 +310,18 @@ class ClaimsIntelligenceAgent:
             retrieval_score=1.0
         )
 
-    def _get_policy(self, policy_number: str) -> Optional[PolicyInfo]:
-        """Retrieve policy from the Storage Account policies container (cached after first fetch)"""
+    def _get_policy(self, policy_number: str) -> PolicyInfo | None:
+        """Retrieve a policy through Foundry IQ, caching it after the first fetch."""
         if policy_number in self.policy_cache:
             logger.info(f"Policy {policy_number} retrieved from cache")
             return self.policy_cache[policy_number]
 
-        documents = self._load_policy_documents()
-        raw_text = documents.get(policy_number)
-
-        if raw_text:
-            policy = self._extract_policy_info(policy_number, raw_text)
+        policy = self._extract_policy_info(policy_number)
+        if policy:
             self.policy_cache[policy_number] = policy
             return policy
 
-        logger.warning(f"Policy {policy_number} not found in Storage Account policies container")
+        logger.warning(f"Policy {policy_number} not found in Foundry IQ policies knowledge base")
         return None
 
     def retrieve_policy(self, policy_number: str) -> PolicyInfo:
@@ -252,7 +356,7 @@ class ClaimsIntelligenceAgent:
             
             state.policy_info = policy
             state.add_audit_entry(
-                agent_name=POLICY_EXTRACTION_AGENT_NAME,
+                agent_name=CLAIMS_INTELLIGENCE_AGENT_NAME,
                 action="retrieve_policy",
                 status="completed",
                 message=f"Retrieved policy {policy.policy_type}",
@@ -263,11 +367,11 @@ class ClaimsIntelligenceAgent:
             logger.info(f"[{state.claim_id}] Validating coverage")
             decision_prompt = self._build_decision_prompt(claim, policy)
             
-            self._ensure_coverage_decision_agent()
-            openai_client = self.client.get_openai_client(agent_name=COVERAGE_DECISION_AGENT_NAME)
+            self._ensure_claims_intelligence_agent()
+            openai_client = self.client.get_openai_client(agent_name=CLAIMS_INTELLIGENCE_AGENT_NAME)
             result = openai_client.responses.create(
                 model=self.model,
-                input=decision_prompt
+                input=f"COVERAGE_DECISION_TASK\n{decision_prompt}",
             )
             
             response_text = result.output_text
@@ -295,7 +399,7 @@ class ClaimsIntelligenceAgent:
                     severity=SeverityLevel.WARN,
                     retry_eligible=False,
                     recommendation="Escalate to claims adjuster for manual review",
-                    agent_name=COVERAGE_DECISION_AGENT_NAME
+                    agent_name=CLAIMS_INTELLIGENCE_AGENT_NAME
                 ))
             else:
                 state.update_status(
@@ -304,7 +408,7 @@ class ClaimsIntelligenceAgent:
                 )
             
             state.add_audit_entry(
-                agent_name=COVERAGE_DECISION_AGENT_NAME,
+                agent_name=CLAIMS_INTELLIGENCE_AGENT_NAME,
                 action="validate_coverage",
                 status="completed",
                 message=f"Coverage decision: {'APPROVED' if state.coverage_decision.is_covered else 'DENIED'}",
@@ -322,14 +426,14 @@ class ClaimsIntelligenceAgent:
             return state
             
         except Exception as e:
-            logger.error(f"[{state.claim_id}] Coverage validation failed: {str(e)}")
+            logger.error(f"[{state.claim_id}] Coverage validation failed: {e!s}")
             state.add_error(ErrorInfo(
                 error_code="COVERAGE_VALIDATION_FAILED",
                 error_message=str(e),
                 severity=SeverityLevel.ERROR,
                 retry_eligible=False,
                 recommendation="Manual review required",
-                agent_name=COVERAGE_DECISION_AGENT_NAME
+                agent_name=CLAIMS_INTELLIGENCE_AGENT_NAME
             ))
             state.update_status(ClaimStatus.COVERAGE_VALIDATION_FAILED)
             raise
@@ -395,12 +499,17 @@ def main() -> None:
     setup_group.add_argument(
         "--setup-agent",
         action="store_true",
-        help="Create or reuse the Foundry policy-extraction agent, then exit",
+        help="Create or reuse the Foundry claims intelligence agent, then exit",
     )
     setup_group.add_argument(
         "--verify-policies",
         action="store_true",
-        help="List policy codes discovered in the configured Storage container, then exit",
+        help="Retrieve the five lab policies through Foundry IQ, then exit",
+    )
+    setup_group.add_argument(
+        "--verify-crash-statement",
+        metavar="REFERENCE",
+        help="Retrieve an indexed crash statement through Foundry IQ, then exit",
     )
     parser.add_argument("--claim-id", default="CLM-2026-001", help="Claim identifier (default: CLM-2026-001)")
     parser.add_argument("--claim-amount", type=float, default=15000.00, help="Claim amount (default: 15000.00)")
@@ -414,19 +523,37 @@ def main() -> None:
 
     agent = ClaimsIntelligenceAgent()
     if args.setup_agent:
-        agent._ensure_policy_extraction_agent()
-        print(f"Foundry agent '{POLICY_EXTRACTION_AGENT_NAME}' is ready.")
+        agent._ensure_claims_intelligence_agent()
+        print(f"Foundry agent '{CLAIMS_INTELLIGENCE_AGENT_NAME}' is ready.")
         return
 
     if args.verify_policies:
-        documents = agent._load_policy_documents()
-        print(f"Found {len(documents)} policy document(s):")
-        for policy_code in sorted(documents):
+        policy_codes = [
+            "COMM-AUTO-001",
+            "COMP-AUTO-001",
+            "HV-AUTO-001",
+            "LIAB-AUTO-001",
+            "MOTO-001",
+        ]
+        found = [code for code in policy_codes if agent._get_policy(code) is not None]
+        print(f"Found {len(found)} policy document(s) through Foundry IQ:")
+        for policy_code in found:
             print(f"  - {policy_code}")
+        missing = sorted(set(policy_codes) - set(found))
+        if missing:
+            raise RuntimeError(
+                "Foundry IQ did not retrieve the following policies: " + ", ".join(missing)
+            )
+        return
+
+    if args.verify_crash_statement:
+        print(agent.retrieve_crash_evidence(args.verify_crash_statement))
         return
 
     if not args.intake_path:
-        parser.error("intake_path is required unless --setup-agent or --verify-policies is used")
+        parser.error(
+            "intake_path is required unless a setup or verification option is used"
+        )
 
     intake_path = Path(args.intake_path).expanduser().resolve()
 

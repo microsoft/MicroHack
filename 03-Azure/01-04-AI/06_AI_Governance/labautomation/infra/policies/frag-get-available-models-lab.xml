@@ -1,0 +1,34 @@
+<fragment>
+    <!--
+        Lab placeholder for get-available-models.
+
+        Contract (must match the real fragment deployed by challenge 1):
+          reads  : allowedModels (optional, comma-separated)
+          writes : availableModels          - all deployments, JArray of objects
+                   availableFilteredModels  - the above filtered by allowedModels
+        It deliberately does NOT return a response, so callers stay identical
+        before and after challenge 1 replaces this fragment.
+    -->
+    <set-variable name="availableModels" value="@{
+        JArray modelDeployments = new JArray();
+        modelDeployments.Add(new JObject(new JProperty("name","gpt-4.1"), new JProperty("id","gpt-4.1"), new JProperty("object","model"), new JProperty("modelFormat","OpenAI"), new JProperty("modelVersion","2025-04-14")));
+        modelDeployments.Add(new JObject(new JProperty("name","gpt-5.4-mini"), new JProperty("id","gpt-5.4-mini"), new JProperty("object","model"), new JProperty("modelFormat","OpenAI"), new JProperty("modelVersion","2026-03-17")));
+        modelDeployments.Add(new JObject(new JProperty("name","gpt-5.2"), new JProperty("id","gpt-5.2"), new JProperty("object","model"), new JProperty("modelFormat","OpenAI"), new JProperty("modelVersion","2025-12-11")));
+        modelDeployments.Add(new JObject(new JProperty("name","text-embedding-3-large"), new JProperty("id","text-embedding-3-large"), new JProperty("object","model"), new JProperty("modelFormat","OpenAI"), new JProperty("modelVersion","1")));
+        modelDeployments.Add(new JObject(new JProperty("name","Mistral-Large-3"), new JProperty("id","Mistral-Large-3"), new JProperty("object","model"), new JProperty("modelFormat","Mistral AI"), new JProperty("modelVersion","1")));
+        modelDeployments.Add(new JObject(new JProperty("name","Phi-4"), new JProperty("id","Phi-4"), new JProperty("object","model"), new JProperty("modelFormat","Microsoft"), new JProperty("modelVersion","7")));
+        return modelDeployments.ToString();
+    }" />
+    <set-variable name="availableFilteredModels" value="@{
+        JArray allModels = JArray.Parse((string)context.Variables["availableModels"]);
+        string allowedModelsStr = context.Variables.ContainsKey("allowedModels") ? (string)context.Variables["allowedModels"] : "";
+        if (string.IsNullOrWhiteSpace(allowedModelsStr)) { return allModels.ToString(); }
+        var allowedSet = new HashSet<string>(allowedModelsStr.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(m => m.Trim()), StringComparer.OrdinalIgnoreCase);
+        JArray filteredModels = new JArray();
+        foreach (var model in allModels) {
+            string modelName = model["name"]?.ToString() ?? "";
+            if (allowedSet.Contains(modelName)) { filteredModels.Add(model); }
+        }
+        return filteredModels.ToString();
+    }" />
+</fragment>

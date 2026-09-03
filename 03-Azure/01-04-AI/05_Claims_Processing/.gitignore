@@ -30,7 +30,10 @@ wheels/
 *.swp
 *.swo
 *~
-.copilot-tracking
+.copilot-tracking/
+.ruff_cache/
+.pytest_cache/
+.github
 
 # Environment
 .env
@@ -42,14 +45,6 @@ node_modules/
 package-lock.json
 yarn.lock
 
-# Azure Functions
-AzureFunctionsProject.csproj
-bin/
-obj/
-
-# Azurite
-__azurite_db_*.json
-__blobstorage__/
-
 # macOS
 .DS_Store
+.github/

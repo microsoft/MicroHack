@@ -63,7 +63,11 @@ $ErrorActionPreference = "Stop"
 $candidateRegions   = if ($PreferredLocation.Count -gt 0) { $PreferredLocation } else { @("swedencentral", "westeurope", "norwayeast") }
 $effectiveLocation  = $candidateRegions[0]
 $effectiveRG        = $ResourceGroupName
-$stableHash         = (Get-MhhStableHash $AllowedEntraUserIds -Length 12).ToLower()
+
+if ($AllowedEntraUserIds.Count -eq 0) {
+    throw "At least one attendee object ID must be supplied in AllowedEntraUserIds."
+}
+$stableHash = (Get-MhhStableHash $AllowedEntraUserIds -Length 12).ToLower()
 
 # For 'subscription' deployments the platform does NOT pre-create a resource group
 # ($ResourceGroupName arrives empty). Create one ourselves with a deterministic,
@@ -170,28 +174,101 @@ if ($existingAccount) {
 # ---------------------------------------------------------------------------
 # Foundry project
 # ---------------------------------------------------------------------------
+$accountScope = "/subscriptions/$SubscriptionId/resourceGroups/$effectiveRG" +
+    "/providers/Microsoft.CognitiveServices/accounts/$foundryAccountName"
 $projectUri = "/subscriptions/$SubscriptionId/resourceGroups/$effectiveRG" +
     "/providers/Microsoft.CognitiveServices/accounts/$foundryAccountName" +
     "/projects/${foundryProjectName}?api-version=2025-04-01-preview"
 
-$existingProject = Invoke-AzRestMethod -Method GET -Path $projectUri -ErrorAction SilentlyContinue
-if ($existingProject.StatusCode -ne 200) {
-    $projectBody = @{
-        location   = $effectiveLocation
-        properties = @{ description = "Agentic Inventory Planning MicroHack" }
-    } | ConvertTo-Json -Depth 3
+$projectBody = @{
+    location = $effectiveLocation
+    identity = @{ type = "SystemAssigned" }
+    properties = @{
+        description = "Agentic Inventory Planning MicroHack"
+        displayName = "Inventory Planning MicroHack"
+    }
+} | ConvertTo-Json -Depth 4
 
-    Invoke-AzRestMethod -Method PUT -Path $projectUri -Payload $projectBody | Out-Null
-
-    $elapsed = 0
-    do { Start-Sleep -Seconds 8; $elapsed += 8
-         $r = Invoke-AzRestMethod -Method GET -Path $projectUri -ErrorAction SilentlyContinue
-    } while (($r.StatusCode -ne 200) -and ($elapsed -lt 90))
-
-    Write-Host "[OK]    Foundry project '$foundryProjectName' created."
-} else {
-    Write-Host "[OK]    Foundry project already exists — skipping."
+$projectResponse = Invoke-AzRestMethod -Method PUT -Path $projectUri -Payload $projectBody
+if ($projectResponse.StatusCode -ge 400) {
+    throw "Foundry project create or update failed (HTTP $($projectResponse.StatusCode)): $($projectResponse.Content)"
 }
+
+$projectResource = $null
+$elapsed = 0
+do {
+    Start-Sleep -Seconds 8
+    $elapsed += 8
+    $projectResponse = Invoke-AzRestMethod -Method GET -Path $projectUri -ErrorAction SilentlyContinue
+    if ($projectResponse.StatusCode -eq 200) {
+        $projectResource = $projectResponse.Content | ConvertFrom-Json
+        if ($projectResource.properties.provisioningState -eq "Failed") {
+            throw "Foundry project provisioning failed: $($projectResponse.Content)"
+        }
+    }
+} while (
+    ($projectResponse.StatusCode -ne 200 -or
+     $projectResource.properties.provisioningState -ne "Succeeded" -or
+     -not $projectResource.identity.principalId) -and
+    ($elapsed -lt 180)
+)
+
+if ($projectResponse.StatusCode -ne 200 -or
+    $projectResource.properties.provisioningState -ne "Succeeded" -or
+    -not $projectResource.identity.principalId) {
+    throw "Foundry project did not reach Succeeded with a managed identity within 180 seconds. Last response: $($projectResponse.Content)"
+}
+Write-Host "[OK]    Foundry project '$foundryProjectName' is ready."
+
+# Foundry User (formerly Azure AI User) enables project access and agent operations.
+$foundryUserRoleId = "53ca6127-db72-4b80-b1b0-d745d6d5456d"
+
+function Grant-FoundryUserRole {
+    param(
+        [Parameter(Mandatory=$true)]
+        [string]$PrincipalId,
+
+        [Parameter(Mandatory=$true)]
+        [string]$PrincipalDescription
+    )
+
+    $existingAssignment = Get-AzRoleAssignment `
+        -ObjectId $PrincipalId `
+        -Scope $accountScope `
+        -RoleDefinitionId $foundryUserRoleId `
+        -ErrorAction SilentlyContinue
+    if ($existingAssignment) {
+        Write-Host "[OK]    Foundry User already assigned to $PrincipalDescription."
+        return
+    }
+
+    $lastError = $null
+    for ($attempt = 1; $attempt -le 6; $attempt++) {
+        try {
+            New-AzRoleAssignment `
+                -ObjectId $PrincipalId `
+                -RoleDefinitionId $foundryUserRoleId `
+                -Scope $accountScope `
+                -ErrorAction Stop | Out-Null
+            Write-Host "[OK]    Granted Foundry User to $PrincipalDescription."
+            return
+        } catch {
+            $lastError = $_
+            if ($attempt -lt 6) {
+                Start-Sleep -Seconds 10
+            }
+        }
+    }
+
+    throw "Could not grant Foundry User to $PrincipalDescription after 6 attempts: $lastError"
+}
+
+foreach ($userId in $AllowedEntraUserIds) {
+    Grant-FoundryUserRole -PrincipalId $userId -PrincipalDescription "attendee '$userId'"
+}
+Grant-FoundryUserRole `
+    -PrincipalId $projectResource.identity.principalId `
+    -PrincipalDescription "project managed identity '$($projectResource.identity.principalId)'"
 
 # ---------------------------------------------------------------------------
 # gpt-5.4-mini model deployment (ACCOUNT-scoped, GlobalStandard capacity 100).
@@ -308,14 +385,31 @@ if ($adminUpns.Count -eq 0) {
 # ---------------------------------------------------------------------------
 # Return credentials to the attendee dashboard
 # ---------------------------------------------------------------------------
+$tenantId        = (Get-AzContext).Tenant.Id
 $projectEndpoint = "https://$foundryAccountName.services.ai.azure.com/api/projects/$foundryProjectName"
+
+# Clickable Foundry portal deep-link to THIS project. The ai.azure.com portal encodes the
+# subscription GUID as a base64url token (in string/hex byte order — NOT Guid.ToByteArray()),
+# followed by <rg>,,<account>,<project>. Giving attendees this link means they don't have to
+# hunt for their project in the portal.
+$subHex   = $SubscriptionId -replace '-', ''
+$subBytes = for ($i = 0; $i -lt $subHex.Length; $i += 2) { [Convert]::ToByte($subHex.Substring($i, 2), 16) }
+$subToken = [Convert]::ToBase64String([byte[]]$subBytes).TrimEnd('=').Replace('+', '-').Replace('/', '_')
+$projectPortalUrl = "https://ai.azure.com/nextgen/r/$subToken,$effectiveRG,,$foundryAccountName,$foundryProjectName/home?tid=$tenantId"
+$fabricPortalUrl  = "https://app.fabric.microsoft.com/home?tid=$tenantId"
 
 Write-Host "[OK]    Lab provisioning complete."
 
 @{ HackboxCredential = @{
+    name  = "FoundryProjectUrl"
+    value = $projectPortalUrl
+    note  = "Open your Foundry project directly (sign in with your lab user). This is where you build the agents in Challenges 2-5."
+} }
+
+@{ HackboxCredential = @{
     name  = "FoundryProjectEndpoint"
     value = $projectEndpoint
-    note  = "Open ai.azure.com → select this project OR use as SDK endpoint"
+    note  = "SDK / API endpoint for your project (optional - the hack is done in the portal via FoundryProjectUrl)"
 } }
 
 @{ HackboxCredential = @{
@@ -328,6 +422,12 @@ Write-Host "[OK]    Lab provisioning complete."
     name  = "FabricCapacityName"
     value = $fabricCapacityName
     note  = "Your own Fabric F2 capacity. In Challenge 1 you create a workspace and assign it to this capacity, then Run All the setup notebook to publish your Data Agent."
+} }
+
+@{ HackboxCredential = @{
+    name  = "FabricPortalUrl"
+    value = $fabricPortalUrl
+    note  = "Open the Fabric portal (sign in with your lab user) to create your workspace on your FabricCapacityName in Challenge 1. Your workspace URL doesn't exist until you create it there."
 } }
 
 @{ HackboxCredential = @{

@@ -1,0 +1,68 @@
+{
+  "status": "success",
+  "image_path": "C:\\Users\\martasantos\\OneDrive - Microsoft\\FY27\\claims-microhack\\data\\claims\\crash1\\raw\\statements\\crash1_front.jpeg",
+  "processed_at_utc": "2026-09-02T10:49:09.985496+00:00",
+  "ocr": {
+    "model": "mistral-document-ai-2512",
+    "text": "# ACCIDENT STATEMENT FORM\n\n## Policyholder Information\n\nName: John Peterson\nAddress: 1142 Pinecrest Avenue, Springfield, OH 45503\nPhone: (937) 555-2319\nEmail: john.peterson@email.com\nPolicy Number: LIAB-AUTO-001\nClaimant ID:\n\n## Vehicle Information\n\nYear/Make/Model: 2004 Honda Accord\nColor: Silver\nVIN: 1HGCH56404A123456\nLicense Plate: OH-GHR1984\n\n## Accident Information\n\nDate of Incident: July 17, 2025\nTime: 8:30 AM\nLocation: Parking Lot, 2325 Main Street, Springfield, OH 45503\n\n## Description of Incident\n\nOn the morning of July 17, 2025, my vehicle was legally parked in a market parking space at 2325 Main Street, Springfield. At approximately 8:30 AM, while I was inside a nearby store, I was notified by a witness that a gray pickup truck attempting to park beside my car, struck the front end and driver's side of my vehicle. The other car's driver failed to properly judge the distance and collided with my vehicle, causing significant damage. The other driver left their information and waited for the police to arrive.",
+    "character_count": 1032,
+    "pages_processed": 1,
+    "document_annotation": {
+      "claimant_name": "John Peterson",
+      "claim_date": "07/17/2025",
+      "policy_number": "LIAB-AUTO-001",
+      "incident_description": "On the morning of July 17, 2025, my vehicle was legally parked in a market parking space at 2325 Main Street, Springfield. At approximately 8:30 AM, while I was inside a nearby store, I was notified by a witness that a gray pickup truck attempting to park beside my car, struck the front end and driver's side of my vehicle. The other car's driver failed to properly judge the distance and collided with my vehicle, causing significant damage. The other driver left their information and waited for the police to arrive.",
+      "vehicle_info": {
+        "make": "Honda",
+        "model": "Accord",
+        "year": "2004",
+        "license_plate": "OH-GHR1984",
+        "vin": "1HGCH56404A123456"
+      },
+      "witnesses": [],
+      "signature_present": null,
+      "date_signed": null
+    }
+  },
+  "extracted_data": {
+    "claimant_name": "John Peterson",
+    "claim_date": "07/17/2025",
+    "policy_number": "LIAB-AUTO-001",
+    "incident_description": "On the morning of July 17, 2025, my vehicle was legally parked in a market parking space at 2325 Main Street, Springfield. At approximately 8:30 AM, while I was inside a nearby store, I was notified by a witness that a gray pickup truck attempting to park beside my car, struck the front end and driver's side of my vehicle. The other car's driver failed to properly judge the distance and collided with my vehicle, causing significant damage. The other driver left their information and waited for the police to arrive.",
+    "vehicle_info": {
+      "make": "Honda",
+      "model": "Accord",
+      "year": "2004",
+      "license_plate": "OH-GHR1984",
+      "vin": "1HGCH56404A123456"
+    },
+    "witnesses": [],
+    "signature_present": null,
+    "date_signed": null
+  },
+  "foundry_iq": {
+    "index_name": "crash-statements",
+    "match_count": 3,
+    "matches": [
+      {
+        "id": "crash1_front",
+        "content": "# ACCIDENT STATEMENT FORM\n\n## Policyholder Information\n\nName: John Peterson\nAddress: 1142 Pinecrest Avenue, Springfield, OH 45503\nPhone: (937) 555-2319\nEmail: john.peterson@email.com\nPolicy Number: LIAB-AUTO-001\nClaimant ID:\n\n## Vehicle Information\n\nYear/Make/Model: 2004 Honda Accord\nColor: Silver\nVIN: 1HGCH56404A123456\nLicense Plate: OH-GHR1984\n\n## Accident Information\n\nDate of Incident: July 17, 2025\nTime: 8:30 AM\nLocation: Parking Lot, 2325 Main Street, Springfield, OH 45503\n\n## Description of Incident\n\nOn the morning of July 17, 2025, my vehicle was legally parked in a market parking space at 2325 Main Street, Springfield. At approximately 8:30 AM, while I was inside a nearby store, I was notified by a witness that a gray pickup truck attempting to park beside my car, struck the front end and driver's side of my vehicle. The other car's driver failed to properly judge the distance and collided with my vehicle, causing significant damage. The other driver left their information and waited for the police to arrive.\ncrash1_front.jpeg\nJohn Peterson\nLIAB-AUTO-001\n",
+        "score": 10.11591
+      },
+      {
+        "id": "crash4_front",
+        "content": "# ACCIDENT STATEMENT FORM\n\n## Policyholder Information\n\nName: John Peterson\nAddress: 1142 Pinecrest Ave, Springfield, OH 45503\nPhone: (937) 555 2319\nEmail: andreatennett@email.com\nPolicy Number: COMM-AUTO-001\nClaimant ID:\n\n## Vehicle Information\n\nYear/Make/Model: 2011 Show Outback\nColor: Red\nVIN: 4S4BRBCC2B3378210\nLicense Plate: OH-CRV4413\n\n## Accident Information\n\nDate of Incident: July 19, 2025\nTime: 11:15 AM\nLocation: 6400 Westbrook Road, Dayton, OH 45415\nWeather Conditions: Clear, dry roads\n\n## Description of Incident\n\nOn July 19, 2025, at approximately 11:15 AM, I was driving my 2011 Show Outback westbound on Westbrook Road in Dayton, Ohio. While waiting in line with traffic for a stop sign, my vehicle was rear-ended by a blue sedan at moderate speed. The impact pushed my vehicle into the adjacent lane and forced my front end into the left lane's shoulder. The other driver remained at the scene and promptly called local authorities. A police report was filed.\ncrash4_front.jpeg\nJohn Peterson\nCOMM-AUTO-001\n",
+        "score": 3.7560692
+      },
+      {
+        "id": "crash1_back",
+        "content": "Description of Damages\nFront bumper dislodged and partially detached; severe denting and scraping on the driver's side front quarter panel; wheel and tire on driver's side front damaged; paint tensifer and deformity on the driver's door; head lamp assembly and grille potentially damaged; possible niden damage to mechanical components behind the bumper\n\nWitness Information\nName: Melissa Grant\nPhone: (937) 555-8741\n\nPolice Report\nReport Number: 25-52814\nPolice Department: Springfield Police Department\n\nSignature\nSignature: John Peterson\nPrinted Name: John Peterson\nDate: July 20, 2025\ncrash1_back.jpeg\nJohn Peterson\n\n",
+        "score": 2.8624763
+      }
+    ]
+  },
+  "foundry_agent": {
+    "name": "claims-intake-agent"
+  },
+  "agent_summary": "The new OCR statement identifies claimant John Peterson, driving a silver 2004 Honda Accord, for a July 17, 2025 parking lot loss at 2325 Main Street in Springfield, Ohio, where a gray pickup truck struck the front end and driver\u2019s side while his car was parked\u30104:0\u2020source\u3011. The retrieved match is consistent with the OCR text, including the claimant, vehicle, date, location, and incident description, and the related record also notes corresponding front/driver-side damage and a Springfield Police report\u30104:0\u2020source\u3011\u30104:2\u2020source\u3011."
+}

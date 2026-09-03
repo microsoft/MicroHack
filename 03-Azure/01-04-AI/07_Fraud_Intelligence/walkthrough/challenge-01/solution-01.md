@@ -70,6 +70,10 @@ For **Dev container configuration**, select **Azure / AI / Fraud Intelligence**,
 
 GitHub opens the Codespace in a new browser tab. Wait for the container setup to finish, then confirm that the repository files are visible in the Explorer and that the integrated terminal opens without errors.
 
+> Important: When the Codespace finishes setting up, you are asked to open the full repository, select **Never**.
+
+![Never open full repository prompt in GitHub Codespace](/challenges/images/never-open-full-repository.png)
+
 You should have a terminal ready to use, otherwise open a terminal in the Codespace (Terminal > New Terminal). Then run the following command to verify that Azure CLI is installed:
 
 ```bash
@@ -115,6 +119,12 @@ echo "rg=$rg" >> hackenv
 cat hackenv
 source hackenv
 ``` 
+
+Finally, prepare the walkthrough scripts so that your Codespace user can run them in the remaining challenges:
+
+```bash
+bash "$walkthroughHome/challenge-01/prepare-scripts.sh"
+```
 
 ## 🚀 Go Further
 

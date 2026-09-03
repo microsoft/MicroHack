@@ -360,9 +360,9 @@ param foundryConfig = {
 //    - Foundry Resource Group: Contributor (if using Foundry)
 //
 // Deployment command:
-// az deployment sub create \
+// az deployment group create \
 //   --name <deployment-name> \
-//   --location <region> \
+//   --resource-group <your-resource-group> \
 //   --template-file main.bicep \
 //   --parameters main.bicepparam
 //

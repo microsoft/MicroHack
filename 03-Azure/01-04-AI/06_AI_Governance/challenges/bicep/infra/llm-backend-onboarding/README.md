@@ -90,7 +90,7 @@ param llmBackendConfig = [
 ### 3. Deploy
 
 ```bash
-az deployment sub create --name llm-backend-onboarding --location swedencentral --template-file main.bicep --parameters llm-backends-generated-local.bicepparam
+az deployment group create --name llm-backend-onboarding --resource-group <your-resource-group> --template-file main.bicep --parameters llm-backends-generated-local.bicepparam
 ```
 
 ## Configuration Reference

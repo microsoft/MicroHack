@@ -3,7 +3,7 @@
   "groups": ["GHCPUsers"],
   "deploymentType": "resourcegroup-with-subscriptionowner",
   "labsPerSubscription": 5,
-  "preferredLocation": "swedencentral",
+  "preferredLocation": "swedencentral, germanywestcentral, francecentral",
   "estimatedDailyCostsUsd": 5.0,
   "estimatedSharedDeploymentDailyCostsUsd": 0.0
 }

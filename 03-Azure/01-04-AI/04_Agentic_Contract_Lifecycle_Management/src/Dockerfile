@@ -2,10 +2,11 @@
 # =============================================================================
 # Challenge 4 — container image for the CLM MCP server (remote / streamable-HTTP)
 # -----------------------------------------------------------------------------
-# The build CONTEXT must be the REPO ROOT — the image needs requirements.txt and
-# src/. Deploy it with one command (builds in the cloud, no local Docker needed):
+# The build CONTEXT is this `src/` folder — it holds this Dockerfile,
+# requirements.txt and all the app code (COPY . ./src/). Deploy it with one
+# command (builds in the cloud, no local Docker needed) by pointing at src/:
 #
-#     az containerapp up -n clm-mcp -g <rg> --source . \
+#     az containerapp up -n clm-mcp -g <rg> --source ./src \
 #         --target-port 8000 --ingress external \
 #         --env-vars AZURE_AI_PROJECT_ENDPOINT=<your-project-endpoint>
 #
@@ -34,7 +35,9 @@ RUN apt-get update \
 COPY requirements.txt ./
 RUN pip install -r requirements.txt
 
-COPY src/ ./src/
+# The build context IS this src/ folder, so copy it all into /app/src/ (caches and
+# build/config files are pruned by .dockerignore). CMD below runs src/mcp_server/server.py.
+COPY . ./src/
 
 EXPOSE 8000
 

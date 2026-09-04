@@ -1,7 +1,7 @@
 """Shared helpers for the Foundry CLM microhack (importable as `clm_common`)."""
 
 # Ensure UTF-8 stdout/stderr so emoji status markers (✓ ✅ 🔴) print on any
-# console (Windows cp1252 included). Harmless on Linux/Codespaces where it's
+# console (Windows cp1252 included). Harmless on Linux/macOS where it's
 # already UTF-8. Guarded so it never breaks import.
 import sys as _sys
 

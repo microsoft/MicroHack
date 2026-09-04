@@ -17,7 +17,7 @@ called from a **Foundry** agent by URL.
   `draft_contract` · `analyze_contract` · `get_contract_status` over **stdio** (local) and
   **streamable HTTP** (`--http`, for hosting); VS Code loads the stdio server from
   [`.vscode/mcp.json`](../../.vscode/mcp.json) (repo root).
-- [`Dockerfile`](../../Dockerfile) + [`deploy/mcp-server/deploy.sh`](../../deploy/mcp-server/deploy.sh)
+- [`Dockerfile`](../../src/Dockerfile) + [`deploy/mcp-server/deploy.sh`](../../deploy/mcp-server/deploy.sh)
   host it on **Azure Container Apps** as a remote `https://…/mcp` endpoint a Foundry agent can call.
 - [`src/orchestrator_mcp.py`](../../src/orchestrator_mcp.py) runs the same GPT-5.4
   orchestrator as an **MCP client** — local stdio, or the remote server via `CLM_MCP_URL`.
@@ -118,9 +118,9 @@ spawns the stdio server for you (no IDE) and runs draft → analyze → status o
 start **clm-mcp** → call `#analyze_contract` in Copilot Chat.
 
 ### Task 4 · Host it remotely + call it from Foundry
-**Part A — host on Azure Container Apps.** The repo-root [`Dockerfile`](../../Dockerfile) runs
+**Part A — host on Azure Container Apps.** The src/ [`Dockerfile`](../../src/Dockerfile) runs
 `server.py --http` (streamable HTTP at `/mcp`). Deploy from the repo root — the image builds in the
-cloud, no local Docker:
+cloud (from the `src/` context), no local Docker:
 ```bash
 bash deploy/mcp-server/deploy.sh    # reads .env, auto-discovers RG/account/region → https://clm-mcp.<region>.azurecontainerapps.io/mcp
 ```
@@ -174,7 +174,7 @@ propagation takes ~1 min, so just re-run the script or wait if a later model cal
 | [`src/mcp_server/server.py`](../../src/mcp_server/server.py) | MCP server exposing the CLM workflow (stdio **and** streamable HTTP via `--http`) |
 | [`.vscode/mcp.json`](../../.vscode/mcp.json) | VS Code MCP client config (`clm-mcp`, repo root) |
 | [`src/orchestrator_mcp.py`](../../src/orchestrator_mcp.py) | Orchestrator as MCP client — local stdio, or remote via `CLM_MCP_URL` |
-| [`Dockerfile`](../../Dockerfile) + [`deploy/mcp-server/deploy.sh`](../../deploy/mcp-server/deploy.sh) | Containerize + deploy the server to Azure Container Apps as a remote `/mcp` endpoint |
+| [`Dockerfile`](../../src/Dockerfile) + [`deploy/mcp-server/deploy.sh`](../../deploy/mcp-server/deploy.sh) | Containerize + deploy the server to Azure Container Apps as a remote `/mcp` endpoint |
 
 ## Run it
 
@@ -194,5 +194,10 @@ CLM_MCP_URL=https://…/mcp python src/orchestrator_mcp.py   # drive the remote 
 |---------|-------------|
 | `orchestrator_mcp.py` finds no tools / hangs | The stdio server failed to import — confirm `python src/mcp_server/server.py` starts standalone; run from repo root (`PYTHONPATH=src`). |
 | MCP server not listed in VS Code | VS Code reads `.vscode/mcp.json` only from the **root of the opened folder** — open the repo root (not `src/`) and confirm the file is at `<repo>/.vscode/mcp.json`. |
-| Remote tools return `401/403` from Foundry | The Container App's **managed identity** needs a data-plane role (Azure AI User) on the Foundry account — `deploy.sh` sets it; allow ~1 min to propagate. |
+| Remote tools return `401/403` from Foundry | The Container App's **managed identity** needs a data-plane role (**Azure AI User / Foundry User**, GUID `53ca6127-db72-4b80-b1b0-d745d6d5456d`) on the Foundry account — `deploy.ps1`/`deploy.sh` sets it; allow ~1 min to propagate. |
+| `az provider register … AuthorizationFailed` (Microsoft.App) | Registering a provider is a **subscription-scope** action; in a resource-group lab you only own the RG. It's **harmless** — the platform already registered these providers, so the current script checks first and skips. On an older download, comment out the two `az provider register` lines and re-run, or ask a coach to register once at subscription scope. |
+| `deploy.ps1`/`deploy.sh` exits with **`AZURE_AI_PROJECT_ENDPOINT is not set`** | It couldn't find your `.env`. The script checks repo-root `.env` then `src/.env`; if yours is elsewhere pass `-EnvFile .\src\.env` (PS) / `ENV_FILE=src/.env` (bash), or copy it to the repo root. Make sure the value isn't blank/placeholder. |
+| `az containerapp up` → **`ManagedEnvironmentNotProvisioned`** (`clm-mcp-env` not provisioned), then `clm-mcp does not exist` / empty `principalId` | A prior failed run left the env `clm-mcp-env` stuck; `up` reuses it by name. Delete it and re-run: `az containerapp env delete -n clm-mcp-env -g <rg> --yes` (the current script auto-deletes a non-`Succeeded` env). If the fresh env also fails, it's usually region capacity — retry or set `LOCATION` to e.g. `westeurope`. |
+| `az role assignment create` → **`Role 'Azure AI User' doesn't exist.`** (final step, app already created) | "Azure AI User" was **renamed to "Foundry User"** — the display name no longer resolves, but the GUID is stable. Assign by GUID: `--role 53ca6127-db72-4b80-b1b0-d745d6d5456d`. Current script does this automatically (falls back to `Cognitive Services User` / `Cognitive Services OpenAI User`). The app is already live; this just grants its identity model access. |
+| `az containerapp up` → **`'NoneType' object has no attribute 'linux'`** (then `clm-mcp does not exist`, empty `principalId`, `--assignee-object-id: expected one argument`) | Azure CLI **core 2.86.0** regression in the cloud-build path ([#33369](https://github.com/Azure/azure-cli/issues/33369)); fixed in **2.87.0+**. Run **`az upgrade`** then `az extension update -n containerapp` and re-run — the partial ACR/env are reused and the follow-on errors are pure cascade that clear once the app is created. |
 | Foundry can't reach the server | Ingress must be **external** and the Server URL must end with `/mcp`; open `https://<app>.azurecontainerapps.io/mcp` to confirm it responds. |

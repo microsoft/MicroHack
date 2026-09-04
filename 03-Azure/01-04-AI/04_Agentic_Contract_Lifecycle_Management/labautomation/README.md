@@ -18,7 +18,7 @@ team's environment by invoking **`deploy-lab.ps1`** with a fixed parameter contr
 | [`lab-defaults.json`](lab-defaults.json) | Platform config (`$schema`-validated): deployment type, region priority, per-user daily cost estimate. |
 
 `deploy-lab.ps1` is the **platform** path; `deploy.sh` / `deploy.ps1` below remain the
-**local / Codespaces** path (they autofill `.env` via `az` after `az login`). Both provision the
+**local** path (they autofill `.env` via `az` after `az login`). Both provision the
 same resources from `infra/`.
 
 **What `deploy-lab.ps1` does beyond a single deployment:**
@@ -41,11 +41,11 @@ same resources from `infra/`.
 [`infra/`](infra/) holds the Bicep templates (plus `azuredeploy.json` for the
 one-click **Deploy to Azure** button) that create the Microsoft Foundry project, the
 three GPT model deployments (`gpt-5.4`, `gpt-5.6-sol`, `gpt-5.4-nano`), Azure AI Search, Azure SQL, and Application Insights.
-`azure.yaml` at the repo root points `azd` at this folder.
+`src/azure.yaml` points `azd` at this folder (`../labautomation/infra`); run `azd up` from `src/`.
 
 ## Scripts
 
-Provisioning scripts in **this folder** (local / Codespaces path):
+Provisioning scripts in **this folder** (local path):
 
 | Path | Role |
 |------|------|
@@ -68,7 +68,7 @@ Seeding, setup & gate scripts — run by participants/coaches during the hack �
 
 ```bash
 az login
-./labautomation/deploy.sh          # or: azd up   (Windows: labautomation\deploy.ps1)
+./labautomation/deploy.sh          # or: (cd src && azd up)   (Windows: labautomation\deploy.ps1)
 # Default corpus path (own admin tenant): SharePoint app + consent + site + upload + index
 python src/scripts/setup_sharepoint_corpus.py
 # — or the no-SharePoint fallback: python src/scripts/seed_corpus.py

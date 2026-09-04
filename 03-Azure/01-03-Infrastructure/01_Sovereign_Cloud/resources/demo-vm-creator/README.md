@@ -86,6 +86,54 @@ Choose the appropriate deployment script:
 Deployments can take 2-6 hours depending on the environment. Monitor progress in:
 - Azure Portal > Resource Groups > Deployments
 
+#### Hackathons console deployment behavior
+
+The Hackathons console runs `labautomation/shared-deploy-lab.ps1` once per
+subscription. The shared hook creates or reuses `rg-localbox-shared`, validates the
+LocalBox template, and submits the deployment asynchronously. Step 2 is
+considered successful when Azure accepts that deployment; it does not wait for
+the full LocalBox environment to finish provisioning.
+
+The LocalBox host, network, Bastion, and Log Analytics resources use the selected
+lab region. Azure Local registration and its staging storage account use Australia East,
+which is a supported Azure Local registration region and is not blocked by the hosted
+lab subscription policy that denies West Europe.
+
+The shared hook applies `SecurityControl=Ignore` to `rg-localbox-shared`, and the
+outer LocalBox template applies the same tag to its resources. This temporary MCAPS
+exemption is required during Azure Local deployment because cluster validation uses
+storage account key authentication and requires public access to its validation
+storage account and Key Vault. The exemption is scoped to the LocalBox resource
+group and expires after 14 days under MCAPS governance automation. Deploy or rerun
+the shared hook early enough for the exemption to take effect before validating the
+Azure Local cluster.
+
+If MCAPS policy modified resources before the exemption took effect, applying the
+tag does not revert those existing settings. After the exemption is active, enable
+storage account key access and public network access on the validation storage
+account, enable public network access on the validation Key Vault, and rerun the
+Azure Local validate and deploy workflow from `LocalBox-Client`.
+
+After Step 2 completes, a facilitator must verify the deployment manually:
+
+1. Open `rg-localbox-shared` in the Azure Portal and select **Deployments**.
+2. Confirm that the `localbox-*` deployment is progressing without a failed
+    operation.
+3. Confirm that the `LocalBox-Client` VM appears after approximately 15-20
+    minutes. Its presence confirms that the deployment has started, not that the
+    complete LocalBox environment is ready.
+4. Before signing in to the VM, use **Help > Reset password** on
+    `LocalBox-Client` to set a facilitator-known password for the `arcdemo`
+    account. The unattended shared deployment uses an automatically generated
+    password and does not publish it to participants.
+5. Continue monitoring the deployment and complete the storage, VM image,
+    logical network, and role-assignment checks below before participants start
+    Challenge 6. Full provisioning can take 4-6 hours.
+
+Re-running Step 2 does not submit another LocalBox deployment while an existing
+`localbox-*` deployment is active or has succeeded. If the existing deployment
+failed, correct the Azure deployment error before retrying Step 2.
+
 ### Step 4: Expand UserStorage Volumes
 
 > [!IMPORTANT]

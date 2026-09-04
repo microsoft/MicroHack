@@ -4,16 +4,14 @@
 
 ## Goal
 
-Deploy and validate guest attestation on Azure Confidential VMs to ensure business logic only executes in trusted, compliant confidential computing environments. You'll build and deploy a sample application that implements secure attestation flows using Azure Confidential VMs. The application leverages Microsoft Azure Attestation (MAA) to validate VM integrity before executing protected business logic, demonstrating "encryption in use" capabilities.
+Validate guest attestation on a pre-provisioned Azure Confidential VM to confirm that business logic only executes in a trusted, hardware-backed confidential computing environment. You will inspect the VM's security configuration, connect through Azure Bastion using username/password credentials, build and run a sample attestation application, and verify the cryptographic JWT proof of VM integrity using a dedicated Microsoft Azure Attestation (MAA) provider.
 
 ## Actions
 
-* Create Key Vault and SSH Keys
-* Create Attestation Provider
-* Create Virtual Network and Confidential VM
-* Create Azure Bastion
-* Configure Confidential VM (Run on the CVM)
-* Review the attestation token output
+* Inspect the pre-provisioned Confidential VM security settings (security type, secure boot, vTPM, no public IP)
+* Connect to the Confidential VM via Azure Bastion using username/password credentials from your lab dashboard
+* Install dependencies, build, and run the CVM guest attestation sample application
+* Inspect the attestation token JWT claims to verify the confidential computing environment
 
 ## Success criteria
 

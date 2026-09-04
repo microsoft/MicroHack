@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Write the repo-root .env from deployment outputs.
 
-By default this runs as the azd `postprovision` hook (see azure.yaml) and reads
+By default this runs as the azd `postprovision` hook (see src/azure.yaml) and reads
 the provisioned values via `azd env get-values`. Pass `--deployment <name>` to
 instead read the outputs of a subscription-scoped ARM deployment (the plain-ARM
 / "Deploy to Azure" path using infra/azuredeploy.json), e.g.:
@@ -21,6 +21,8 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 ENV_PATH = REPO_ROOT / ".env"
+# azure.yaml (the azd project) lives in src/, so azd commands must run from there.
+AZD_DIR = REPO_ROOT / "src"
 
 # Keys sourced from Bicep outputs (via azd env). Fall back to the src/.env.example
 # defaults for the constant-valued ones if an output is missing.
@@ -40,12 +42,12 @@ DEFAULTS = {
 }
 
 
-def _run(cmd: list[str]) -> str:
-    """Run a command in the repo root, exiting with a friendly message on error."""
+def _run(cmd: list[str], cwd: Path = REPO_ROOT) -> str:
+    """Run a command (default cwd = repo root), exiting with a friendly message on error."""
     try:
         proc = subprocess.run(
             cmd,
-            cwd=REPO_ROOT,
+            cwd=cwd,
             capture_output=True,
             text=True,
             check=True,
@@ -59,7 +61,7 @@ def _run(cmd: list[str]) -> str:
 
 def azd_env_values() -> dict[str, str]:
     """Return azd environment values as a dict (parsing KEY="value" lines)."""
-    stdout = _run(["azd", "env", "get-values"])
+    stdout = _run(["azd", "env", "get-values"], cwd=AZD_DIR)
     values: dict[str, str] = {}
     for line in stdout.splitlines():
         line = line.strip()

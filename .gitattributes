@@ -1,26 +1,21 @@
-# Shell scripts execute inside Linux containers and must retain LF line endings.
-*.sh text eol=lf
-
-# Enforce consistent line endings across Windows + Linux environments.
-* text=auto eol=lf
-
-# Keep Windows command scripts with CRLF for compatibility.
-*.bat text eol=crlf
-*.cmd text eol=crlf
-
-# Treat common binary formats as binary.
-*.png binary
-*.jpg binary
-*.jpeg binary
-*.gif binary
-*.webp binary
-*.ico binary
-*.pdf binary
-*.zip binary
-*.tgz binary
-*.gz binary
-*.jar binary
-*.woff binary
-*.woff2 binary
-*.ttf binary
-*.eot binary
+"/.gitattributes" text eol=lf
+"/03-Azure/01-01-App Innovation/04-adaptive-apps/**/*.sh" text eol=lf
+"/.devcontainer/03-azure-01-01-app-innovation-04-adaptive-apps/*.sh" text eol=lf
+"/03-Azure/01-01-App Innovation/04-adaptive-apps/Readme.md" text eol=lf
+"/03-Azure/01-01-App Innovation/04-adaptive-apps/challenges/challenge-05.md" text eol=lf
+"/03-Azure/01-01-App Innovation/04-adaptive-apps/challenges/challenge-06.md" text eol=lf
+"/03-Azure/01-01-App Innovation/04-adaptive-apps/challenges/challenge-08.md" text eol=lf
+"/03-Azure/01-01-App Innovation/04-adaptive-apps/walkthrough/challenge-05/solution-05.md" text eol=lf
+"/03-Azure/01-01-App Innovation/04-adaptive-apps/walkthrough/challenge-06/solution-06.md" text eol=lf
+"/03-Azure/01-01-App Innovation/04-adaptive-apps/walkthrough/challenge-08/solution-08.md" text eol=lf
+# Anything that is executed or interpreted inside a container must keep LF endings. Bicep
+# preserves on-disk line endings verbatim through loadTextContent() and multi-line strings,
+# so a CRLF checkout embeds carriage returns into recipe shell scripts and breaks them at
+# runtime. These are globs rather than a per-file allowlist: listing files individually is
+# how iac/recipes/postgres-*.bicep came to be missed.
+"/03-Azure/01-01-App Innovation/04-adaptive-apps/**/*.bicep" text eol=lf
+"/03-Azure/01-01-App Innovation/04-adaptive-apps/**/*.sql" text eol=lf
+"/03-Azure/01-01-App Innovation/04-adaptive-apps/**/*.yaml" text eol=lf
+"/03-Azure/01-01-App Innovation/04-adaptive-apps/**/*.yml" text eol=lf
+"/03-Azure/01-01-App Innovation/04-adaptive-apps/iac/bicepconfig.json" text eol=lf
+"/.devcontainer/03-azure-01-01-app-innovation-04-adaptive-apps/devcontainer.json" text eol=lf

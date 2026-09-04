@@ -65,6 +65,7 @@
     "cognitiveServicesUserRoleId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'a97b65f3-24c7-4388-baec-2e87135dc908')]",
     "searchServiceContributorRoleId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '7ca78c08-252a-4471-8644-bb5ff32d4ba0')]",
     "searchIndexDataReaderRoleId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '1407120a-92aa-4202-b7e9-c0e197c71c8f')]",
+    "foundryUserRoleId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '53ca6127-db72-4b80-b1b0-d745d6d5456d')]",
     "tags": {
       "SecurityControl": "Ignore",
       "CostControl": "Ignore"
@@ -155,6 +156,24 @@
       }
     },
     {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "name": "[guid(resourceId('Microsoft.CognitiveServices/accounts', variables('aiFoundryName')), parameters('allowedEntraUserIds')[copyIndex()], variables('foundryUserRoleId'))]",
+      "scope": "[format('Microsoft.CognitiveServices/accounts/{0}', variables('aiFoundryName'))]",
+      "copy": {
+        "name": "foundryUserAssignments",
+        "count": "[length(parameters('allowedEntraUserIds'))]"
+      },
+      "properties": {
+        "roleDefinitionId": "[variables('foundryUserRoleId')]",
+        "principalId": "[parameters('allowedEntraUserIds')[copyIndex()]]",
+        "principalType": "User"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.CognitiveServices/accounts', variables('aiFoundryName'))]"
+      ]
+    },
+    {
       "type": "Microsoft.CognitiveServices/accounts/projects",
       "apiVersion": "2025-04-01-preview",
       "name": "[format('{0}/{1}', variables('aiFoundryName'), variables('aiProjectName'))]",
@@ -165,7 +184,8 @@
       },
       "properties": {},
       "dependsOn": [
-        "[resourceId('Microsoft.CognitiveServices/accounts', variables('aiFoundryName'))]"
+        "[resourceId('Microsoft.CognitiveServices/accounts', variables('aiFoundryName'))]",
+        "[resourceId('Microsoft.CognitiveServices/accounts/deployments', variables('aiFoundryName'), 'mistral-document-ai-2512')]"
       ]
     },
     {
@@ -253,7 +273,8 @@
       },
       "dependsOn": [
         "[resourceId('Microsoft.CognitiveServices/accounts', variables('aiFoundryName'))]",
-        "[resourceId('Microsoft.Search/searchServices', variables('searchServiceName'))]"
+        "[resourceId('Microsoft.Search/searchServices', variables('searchServiceName'))]",
+        "[resourceId('Microsoft.CognitiveServices/accounts/projects', variables('aiFoundryName'), variables('aiProjectName'))]"
       ]
     },
     {
@@ -311,7 +332,8 @@
       "dependsOn": [
         "[resourceId('Microsoft.CognitiveServices/accounts', variables('aiFoundryName'))]",
         "[resourceId('Microsoft.CognitiveServices/accounts/projects', variables('aiFoundryName'), variables('aiProjectName'))]",
-        "[resourceId('Microsoft.Search/searchServices', variables('searchServiceName'))]"
+        "[resourceId('Microsoft.Search/searchServices', variables('searchServiceName'))]",
+        "[resourceId('Microsoft.CognitiveServices/accounts/connections', variables('aiFoundryName'), format('{0}-aisearch', variables('aiFoundryName')))]"
       ]
     },
     {
@@ -331,7 +353,8 @@
       "dependsOn": [
         "[resourceId('Microsoft.CognitiveServices/accounts', variables('aiFoundryName'))]",
         "[resourceId('Microsoft.CognitiveServices/accounts/projects', variables('aiFoundryName'), variables('aiProjectName'))]",
-        "[resourceId('Microsoft.Search/searchServices', variables('searchServiceName'))]"
+        "[resourceId('Microsoft.Search/searchServices', variables('searchServiceName'))]",
+        "[resourceId('Microsoft.CognitiveServices/accounts/projects/connections', variables('aiFoundryName'), variables('aiProjectName'), format('{0}-policies-kb', variables('aiFoundryName')))]"
       ]
     }
   ],
@@ -362,7 +385,7 @@
     },
     "aiFoundryProjectName": {
       "type": "string",
-      "value": "[variables('aiProjectName')]" 
+      "value": "[variables('aiProjectName')]"
     },
     "searchServiceEndpoint": {
       "type": "string",

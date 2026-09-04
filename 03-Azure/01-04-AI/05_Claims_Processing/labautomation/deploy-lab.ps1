@@ -140,8 +140,10 @@ if (-not (Test-Path $templateFile)) {
 
 # Deploy resources.
 Write-Host "Deploying infrastructure resources..." -ForegroundColor Yellow
+$deploymentName = [System.IO.Path]::GetFileNameWithoutExtension($templateFile)
 try {
     $deploymentParameters = @{
+        Name = $deploymentName
         ResourceGroupName = $effectiveResourceGroup
         TemplateFile = $templateFile
         location = $effectiveLocation
@@ -156,7 +158,28 @@ try {
     Write-Host "Deployment succeeded." -ForegroundColor Green
 }
 catch {
-    Write-Host "[ERROR] Deployment failed: $_" -ForegroundColor Red
+    $deploymentError = $_
+    Write-Host "[ERROR] Deployment failed: $deploymentError" -ForegroundColor Red
+
+    try {
+        $failedOperations = @(
+            Get-AzResourceGroupDeploymentOperation `
+                -ResourceGroupName $effectiveResourceGroup `
+                -DeploymentName $deploymentName `
+                -ErrorAction Stop |
+            Where-Object { $_.ProvisioningState -eq 'Failed' }
+        )
+
+        foreach ($failedOperation in $failedOperations) {
+            $target = $failedOperation.TargetResource
+            Write-Host "[ERROR] Failed resource: $($target.ResourceType)/$($target.ResourceName)" -ForegroundColor Red
+            Write-Host ($failedOperation.StatusMessage | ConvertTo-Json -Depth 20) -ForegroundColor Red
+        }
+    }
+    catch {
+        Write-Host "[WARN] Could not retrieve failed deployment operations: $_" -ForegroundColor Yellow
+    }
+
     exit 1
 }
 

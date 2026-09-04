@@ -87,9 +87,9 @@ environment decides *how* that need is met:
 flowchart LR
     DEF["<b>Application definition</b><br/>Frontend<br/>Backend<br/>Broker<br/>Database<br/>Identity<br/>AI service"]
     DEF --> REC{{"Radius recipe"}}
-    REC --> AZ["<b>Azure</b><br/>ACA / AKS<br/>Entra ID<br/>Azure PostgreSQL<br/>Azure OpenAI"]
-    REC --> AL["<b>Azure Local</b><br/>Kubernetes<br/>Keycloak<br/>PostgreSQL<br/>Azure OpenAI"]
-    REC --> ED["<b>Edge K3s</b><br/>K3s<br/>Keycloak<br/>PostgreSQL<br/>Local LLM"]
+    REC --> AZ["<b>Azure</b><br/>ACA / AKS<br/>Entra ID<br/>Eventgrid<br/>Azure PostgreSQL<br/>Azure OpenAI"]
+    REC --> AL["<b>Azure Local</b><br/>Kubernetes<br/>Keycloak<br/>Rabit MQ<br/>PostgreSQL container<br/>Azure OpenAI"]
+    REC --> ED["<b>Edge K3s</b><br/>K3s<br/>Keycloak<br/>Rabit MQ<br/>PostgreSQL vm<br/>Local LLM"]
 ```
 
 The application model stays identical in all three columns. Only the recipes

@@ -52,7 +52,7 @@ After the resource is created, select **Create a knowledge base** and set the fo
 
 - **Name**: kb-aml
 - **Description**: Synthetic AML / CFT / KYC corpus for Fraud Intelligence
-- **Chat completion model**: gpt-5-mini
+- **Chat completion model**: gpt-5-mini (or gpt-5.4-mini, new models are being added/delete to/from this configuration section)
 - **Retrieval reasoning effort**: Minimal
 - **Output mode**: Extractive data
 - **Retrieval instructions**: You have to always retrieve first the global policies and rules.

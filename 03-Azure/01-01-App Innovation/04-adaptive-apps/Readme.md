@@ -58,6 +58,8 @@ After completing this MicroHack, you will:
   environment-only configuration changes.
 - Adapt identity, secure service communication, and AI services without
   changing the application model.
+- Model, review, and deploy the application from the GitHub Copilot app with
+  Radius Canvas, and judge what that preview does and does not solve.
 - Apply the Adaptive Apps approach to an existing containerized application.
 
 ## MicroHack challenges
@@ -100,6 +102,11 @@ persistence, verification, and troubleshooting.
 The default K3s VM has no public IP. Its Kubernetes API is reached through an Azure
 Bastion native-client tunnel bound only to localhost in the participant environment.
 
+> [!NOTE]
+> Challenge 09 is the exception to the devcontainer workflow. Radius Canvas runs only in
+> the GitHub Copilot app, so that challenge is completed on the host machine and needs the
+> Azure CLI, GitHub CLI, and `kubectl` available there.
+
 ### Challenge 00: universal prerequisite
 
 Complete Challenge 00 before starting a challenge in any bucket.
@@ -133,10 +140,10 @@ communication, and AI capabilities.
 
 ### Bucket 4: Advanced challenges
 
-Extend the application model and apply the Adaptive Apps approach to an
-existing application.
+Bring the application model into the developer inner loop and apply the
+Adaptive Apps approach to an existing application.
 
-- [Challenge 09 - Extend the application model with custom Radius resources](challenges/challenge-09.md)
+- [Challenge 09 - Model, review, and deploy with Radius Canvas](challenges/challenge-09.md)
 - [Challenge 10 - Modernize a brownfield application](challenges/challenge-10.md)
 
 ## Contributors

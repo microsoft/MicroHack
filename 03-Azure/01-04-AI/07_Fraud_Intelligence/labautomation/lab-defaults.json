@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/microsoft/MicroHack/refs/heads/main/lab-defaults-schema.json",
-  "groups": [],
+  "groups": ["GHCPUsers"],
   "deploymentType": "resourcegroup-with-subscriptionowner",
   "labsPerSubscription": 5,
   "preferredLocation": "swedencentral",

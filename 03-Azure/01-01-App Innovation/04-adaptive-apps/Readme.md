@@ -56,9 +56,6 @@ Microsoft Adaptive Apps project, and it consumes that project's assets directly.
 | --- | --- | --- |
 | **Adaptive Apps** | [microsoft/adaptive-apps](https://github.com/microsoft/adaptive-apps) | The reference architecture, capability portfolios, resource types, and recipes that the challenges install and extend. |
 | **Simplified Trading App** | [`src/` in microsoft/adaptive-apps](https://github.com/microsoft/adaptive-apps/tree/main/src) | The example application used in every challenge: a Node.js frontend, a C# backend with MQTT order processing, a C# AI agent, an MQTT broker, and PostgreSQL. |
-| **Resource types and recipes** | [`radius/` in microsoft/adaptive-apps](https://github.com/microsoft/adaptive-apps/tree/main/radius) | The `Radius.*` capability contracts imported in Challenge 03 and implemented in Challenge 04. |
-| **Container images and recipe artifacts** | `ghcr.io/microsoft/adaptive-apps` | The published trading app images and recipe packages deployed from Challenge 05 onward. |
-| **Radius** | [radapp.io](https://radapp.io) | The application platform behind the whole approach. |
 
 Because the trading app is the same in every challenge, any difference you see
 between environments comes from the platform, never from the application code.

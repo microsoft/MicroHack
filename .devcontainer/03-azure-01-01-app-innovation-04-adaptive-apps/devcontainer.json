@@ -1,0 +1,63 @@
+{
+  "name": "Azure / App Innovation / Adaptive Apps",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/microhack,type=bind,consistency=cached",
+  "workspaceFolder": "/workspaces/microhack/03-Azure/01-01-App Innovation/04-adaptive-apps",
+  "remoteUser": "vscode",
+  "features": {
+    "ghcr.io/devcontainers/features/azure-cli:1": {
+      "version": "2.89.1"
+    },
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": false,
+      "installOhMyZsh": false,
+      "upgradePackages": false
+    },
+    "ghcr.io/devcontainers/features/powershell:2": {
+      "version": "stable"
+    }
+  },
+  "mounts": [
+    "source=adaptive-apps-microhack-azure-${devcontainerId},target=/home/vscode/.azure,type=volume",
+    "source=adaptive-apps-microhack-kube-${devcontainerId},target=/home/vscode/.kube,type=volume",
+    "source=adaptive-apps-microhack-radius-${devcontainerId},target=/home/vscode/.rad,type=volume",
+    "source=adaptive-apps-microhack-ssh-${devcontainerId},target=/home/vscode/.ssh,type=volume"
+  ],
+  "postCreateCommand": "bash /workspaces/microhack/.devcontainer/03-azure-01-01-app-innovation-04-adaptive-apps/post-create.sh",
+  "postAttachCommand": "code Readme.md",
+  "remoteEnv": {
+    "PATH": "${containerEnv:PATH}:/home/vscode/.local/bin"
+  },
+  "forwardPorts": [
+    3000,
+    8080,
+    7007
+  ],
+  "portsAttributes": {
+    "3000": {
+      "label": "Adaptive Apps frontend",
+      "onAutoForward": "notify"
+    },
+    "8080": {
+      "label": "Keycloak identity broker",
+      "onAutoForward": "notify"
+    },
+    "7007": {
+      "label": "Radius dashboard",
+      "onAutoForward": "notify"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-azuretools.vscode-bicep",
+        "ms-kubernetes-tools.vscode-kubernetes-tools",
+        "ms-vscode.powershell",
+        "timonwong.shellcheck"
+      ],
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  }
+}

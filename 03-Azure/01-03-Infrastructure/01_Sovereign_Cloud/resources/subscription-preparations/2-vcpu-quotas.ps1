@@ -6,10 +6,10 @@
     This script checks current vCPU quota usage in a specified Azure region and calculates
     the required quotas for running the MicroHack lab based on the number of lab users.
 
-    For Azure Arc Jumpstart environments (ArcBox/LocalBox), significant vCPU quotas are required:
-    - ArcBox: ~16-32 vCPUs per instance
-    - LocalBox: ~48-64 vCPUs per instance
-    - Confidential VMs: Additional vCPUs for DCasv5/DCadsv5 series
+    The shared Challenge 4/5/7 platform requires per participant:
+    - 12 Standard DSv5 Family vCPUs
+    - 4 Standard DCasv5 or DCasv6 Family vCPUs
+    - 16 Total Regional vCPUs
 
     The script can optionally submit quota increase requests using the Azure Quota REST API.
 
@@ -17,13 +17,16 @@
     Azure region for quota check (e.g., eastus, northeurope). If not provided, the script will prompt for selection.
 
 .PARAMETER NumberOfLabUsers
-    Number of lab users to calculate quota requirements for
+    Number of lab participants hosted by each selected subscription
 
 .PARAMETER ShowCurrentUsageOnly
     Only display current quota usage without calculating requirements
 
 .PARAMETER SubmitQuotaRequests
     Automatically submit quota increase requests via REST API if needed
+
+.PARAMETER ConfidentialVmGeneration
+    AMD SEV-SNP confidential VM generation to prepare. Defaults to the generally available v5 family.
 
 .PARAMETER ExportToJson
     Export results to a JSON file
@@ -33,8 +36,8 @@
     Interactive mode - prompts for region and user count
 
 .EXAMPLE
-    .\2-vcpu-quotas.ps1 -Region "northeurope" -NumberOfLabUsers 10 -SubmitQuotaRequests
-    Check quotas for 10 users in North Europe and submit increase requests if needed
+    .\2-vcpu-quotas.ps1 -Region "swedencentral" -NumberOfLabUsers 2 -ConfidentialVmGeneration v5 -SubmitQuotaRequests
+    Check quotas for two participants in Sweden Central and submit increase requests if needed
 
 .NOTES
     Author: MicroHack Team
@@ -61,6 +64,10 @@ param(
     [switch]$SubmitQuotaRequests,
 
     [Parameter(Mandatory = $false)]
+    [ValidateSet('v5', 'v6')]
+    [string]$ConfidentialVmGeneration = 'v5',
+
+    [Parameter(Mandatory = $false)]
     [switch]$ExportToJson
 )
 
@@ -81,27 +88,19 @@ function Get-AzureRegion {
     if ([string]::IsNullOrWhiteSpace($Region)) {
         Write-Host "`n=== Select Azure Region ===" -ForegroundColor Cyan
         Write-Host "Recommended regions for Sovereign Cloud MicroHack:"
-        Write-Host "  1. North Europe (northeurope)"
-        Write-Host "  2. Norway East (norwayeast)"
-        Write-Host "  3. West Europe (westeurope)"
-        Write-Host "  4. Germany West Central (germanywestcentral)"
-        Write-Host "  5. UK South (uksouth)"
-        Write-Host "  6. Switzerland North (switzerlandnorth)"
-        Write-Host "  7. Enter custom region"
+        Write-Host "  1. Sweden Central (swedencentral)"
+        Write-Host "  2. Spain Central (spaincentral)"
+        Write-Host "  3. Enter custom region"
 
-        $choice = Read-Host "`nEnter your choice (1-7)"
+        $choice = Read-Host "`nEnter your choice (1-3)"
 
         $script:Region = switch ($choice) {
-            "1" { "northeurope" }
-            "2" { "norwayeast" }
-            "3" { "westeurope" }
-            "4" { "germanywestcentral" }
-            "5" { "uksouth" }
-            "6" { "switzerlandnorth" }
-            "7" { Read-Host "Enter Azure region (e.g., eastus, westeurope)" }
+            "1" { "swedencentral" }
+            "2" { "spaincentral" }
+            "3" { Read-Host "Enter Azure region (e.g., swedencentral, spaincentral)" }
             default {
-                Write-Warning "Invalid choice. Defaulting to North Europe (northeurope)."
-                "northeurope"
+                Write-Warning "Invalid choice. Defaulting to Sweden Central (swedencentral)."
+                "swedencentral"
             }
         }
     }
@@ -112,7 +111,7 @@ function Get-AzureRegion {
 function Get-LabUserCount {
     if ($NumberOfLabUsers -eq 0 -and -not $ShowCurrentUsageOnly) {
         do {
-            $userInput = Read-Host "`nEnter the number of lab users (1-60)"
+            $userInput = Read-Host "`nEnter the number of participants hosted by each selected subscription (1-60)"
             $script:NumberOfLabUsers = [int]$userInput
         } while ($NumberOfLabUsers -lt 1 -or $NumberOfLabUsers -gt 60)
     }
@@ -199,6 +198,78 @@ function Register-QuotaProvider {
     }
 }
 
+function Get-ResponseHeaderValue {
+    param(
+        [System.Net.Http.Headers.HttpResponseHeaders]$Headers,
+        [string]$Name
+    )
+
+    $header = $Headers | Where-Object { $_.Key -ieq $Name } | Select-Object -First 1
+    return @($header.Value)[0]
+}
+
+# Wait for an asynchronous quota request to reach a terminal state
+function Wait-QuotaRequestStatus {
+    param(
+        [string]$OperationStatusUrl,
+        [int]$RetryAfterSeconds = 5,
+        [int]$MaxAttempts = 20
+    )
+
+    for ($attempt = 1; $attempt -le $MaxAttempts; $attempt++) {
+        Start-Sleep -Seconds $RetryAfterSeconds
+        $response = Invoke-AzRestMethod -Uri $OperationStatusUrl -Method GET
+
+        if ($response.StatusCode -eq 202) {
+            Write-Host "  Request is still processing (attempt $attempt of $MaxAttempts)..." -ForegroundColor Gray
+            continue
+        }
+
+        if ($response.StatusCode -ne 200) {
+            Write-Host "  Status check failed with HTTP $($response.StatusCode)." -ForegroundColor Red
+            return $false
+        }
+
+        $content = $response.Content | ConvertFrom-Json
+        $state = $content.properties.provisioningState
+
+        if ($state -eq 'Succeeded') {
+            Write-Host "  Quota request completed successfully." -ForegroundColor Green
+            return $true
+        }
+
+        if ($state -in @('InProgress', 'Accepted', 'Running')) {
+            Write-Host "  Request is still processing (attempt $attempt of $MaxAttempts)..." -ForegroundColor Gray
+            continue
+        }
+
+        $error = if($content.properties.error) { $content.properties.error } else { $content.error }
+        $errorCode = if($error.code) { $error.code } else { $content.properties.errorCode }
+        $message = $error.message
+        if (-not $message) {
+            $message = $content.properties.message
+        }
+        if (-not $message) {
+            $message = $content.properties.errorMessage
+        }
+        if (-not $message) {
+            $message = "Quota request ended without error details."
+        }
+
+        Write-Host "  Quota request ended in state '$state'." -ForegroundColor Red
+        if ($errorCode) {
+            Write-Host "  Azure error: $errorCode - $message" -ForegroundColor Red
+        } elseif ($message) {
+            Write-Host "  Azure message: $message" -ForegroundColor Red
+        }
+        return $false
+    }
+
+    Write-Host "  Timed out waiting for the quota request to complete." -ForegroundColor Red
+    Write-Host "  Check status at: $OperationStatusUrl" -ForegroundColor Gray
+    return $false
+}
+
 # Function to submit quota increase request via REST API
 function Submit-QuotaIncreaseRequest {
     param(
@@ -246,17 +317,20 @@ function Submit-QuotaIncreaseRequest {
             }
 
             if ($response.StatusCode -eq 202) {
-                # Async operation - get the operation status URL
-                $locationHeader = $response.Headers['Location']
-                if ($locationHeader) {
-                    Write-Host "  This is an asynchronous operation. Check status at:" -ForegroundColor Yellow
-                    Write-Host "  $locationHeader" -ForegroundColor Gray
+                $locationHeader = Get-ResponseHeaderValue -Headers $response.Headers -Name 'Location'
+                if (-not $locationHeader) {
+                    Write-Host "  Azure accepted the request but did not return a status URL." -ForegroundColor Red
+                    return $false
                 }
 
-                $retryAfter = $response.Headers['Retry-After']
-                if ($retryAfter) {
-                    Write-Host "  Recommended retry after: $retryAfter seconds" -ForegroundColor Gray
-                }
+                $retryAfter = Get-ResponseHeaderValue -Headers $response.Headers -Name 'Retry-After'
+                $retryAfterSeconds = if ($retryAfter -as [int]) { [int]$retryAfter } else { 5 }
+
+                Write-Host "  Waiting for the asynchronous request to complete..." -ForegroundColor Yellow
+                Write-Host "  $locationHeader" -ForegroundColor Gray
+                return Wait-QuotaRequestStatus `
+                    -OperationStatusUrl $locationHeader `
+                    -RetryAfterSeconds $retryAfterSeconds
             }
 
             return $true
@@ -271,37 +345,15 @@ function Submit-QuotaIncreaseRequest {
     }
 }
 
-# Function to check quota request status
-function Get-QuotaRequestStatus {
-    param(
-        [string]$OperationStatusUrl
-    )
-
-    try {
-        $response = Invoke-AzRestMethod -Uri $OperationStatusUrl -Method GET
-
-        if ($response.StatusCode -eq 200) {
-            $content = $response.Content | ConvertFrom-Json
-            Write-Host "Quota request status: $($content.properties.provisioningState)" -ForegroundColor Cyan
-            return $content
-        } else {
-            Write-Warning "Failed to get quota request status. Status Code: $($response.StatusCode)"
-            return $null
-        }
-    } catch {
-        Write-Warning "Error checking quota request status: $($_.Exception.Message)"
-        return $null
-    }
-}
-
 # Map display names to API resource names
 $quotaNameMapping = @{
     "Total Regional vCPUs"                         = "cores"
     "Standard DSv5 Family vCPUs"                   = "StandardDSv5Family"
     "Standard DSv6 Family vCPUs"                   = "StandardDSv6Family"
     "Standard DASv5 Family vCPUs"                  = "StandardDASv5Family"
-    "Standard DCasv5 Family vCPUs (Confidential)"  = "StandardDCasv5Family"
-    "Standard DCadsv5 Family vCPUs (Confidential)" = "StandardDCadsv5Family"
+    "Standard DCasv5 Family vCPUs (Confidential)"  = "standardDCASv5Family"
+    "Standard DCasv6 Family vCPUs (Confidential)"  = "standardDCasv6Family"
+    "Standard DCadsv6 Family vCPUs (Confidential)" = "standardDCadsv6Family"
     "Standard ESv5 Family vCPUs"                   = "StandardESv5Family"
 }
 
@@ -309,8 +361,34 @@ $quotaNameMapping = @{
 try {
     $context = Get-AzContext
     if (-not $context) {
-        Write-Host "`nNo Azure context found. Please login..." -ForegroundColor Yellow
-        Connect-AzAccount
+        $cliAccountJson = if (Get-Command az -ErrorAction SilentlyContinue) {
+            az account show --output json 2>$null
+        }
+
+        if ($LASTEXITCODE -eq 0 -and $cliAccountJson) {
+            $cliAccount = $cliAccountJson | ConvertFrom-Json
+            $accessToken = az account get-access-token `
+                --resource https://management.azure.com/ `
+                --query accessToken `
+                --output tsv
+
+            if ($LASTEXITCODE -ne 0 -or -not $accessToken) {
+                throw "Failed to acquire an Azure Resource Manager token from Azure CLI."
+            }
+
+            Write-Host "`nUsing current Azure CLI subscription: $($cliAccount.name)" -ForegroundColor Green
+            Connect-AzAccount `
+                -AccessToken $accessToken `
+                -AccountId $cliAccount.user.name `
+                -Tenant $cliAccount.tenantId `
+                -Subscription $cliAccount.id `
+                -SkipValidation `
+                -Scope Process | Out-Null
+        } else {
+            Write-Host "`nNo Azure context found. Please login..." -ForegroundColor Yellow
+            Connect-AzAccount | Out-Null
+        }
+
         $context = Get-AzContext
     }
 } catch {
@@ -349,8 +427,9 @@ foreach ($subscription in $selectedSubscriptions) {
         "StandardDSv5Family"       = "Standard DSv5 Family vCPUs"
         "StandardDSv6Family"       = "Standard DSv6 Family vCPUs"
         "StandardDASv5Family"      = "Standard DASv5 Family vCPUs"
-        "StandardDCasv5Family"     = "Standard DCasv5 Family vCPUs (Confidential)"
-        "StandardDCadsv5Family"    = "Standard DCadsv5 Family vCPUs (Confidential)"
+        "standardDCASv5Family"     = "Standard DCasv5 Family vCPUs (Confidential)"
+        "standardDCasv6Family"     = "Standard DCasv6 Family vCPUs (Confidential)"
+        "standardDCadsv6Family"    = "Standard DCadsv6 Family vCPUs (Confidential)"
         "StandardESv5Family"       = "Standard ESv5 Family vCPUs"
     }
 
@@ -391,37 +470,30 @@ foreach ($subscription in $selectedSubscriptions) {
     # Get number of lab users
     $NumberOfLabUsers = Get-LabUserCount
 
-    # Calculate requirements for Sovereign Cloud MicroHack
-    # ArcBox: ~16 vCPUs (Standard DSv5/v6)
-    # LocalBox: ~48 vCPUs (Standard DSv5/v6)
-    # Confidential VMs: ~8 vCPUs (DCasv5)
-    # Per-user VMs: ~6 vCPUs each
+    # Calculate requirements for the shared Challenge 4/5/7 participant platform.
 
     Write-Host "`n=== Lab Requirements Calculation ===" -ForegroundColor Cyan
     Write-Host ("=" * 80)
     Write-Host "`nNumber of lab users: $NumberOfLabUsers" -ForegroundColor Green
 
+    $confidentialQuotaName = if($ConfidentialVmGeneration -eq 'v5') { 'standardDCASv5Family' } else { 'standardDCasv6Family' }
+    $confidentialQuotaDisplayName = "Standard DCas$ConfidentialVmGeneration Family vCPUs (Confidential)"
     $requirements = @{
         "cores" = @{
-            PerUser = 4
-            Shared  = 64  # ArcBox + LocalBox shared environment
+            PerUser = 16
+            Shared  = 0
             Name    = "Total Regional vCPUs"
         }
         "StandardDSv5Family" = @{
-            PerUser = 0
-            Shared  = 32
+            PerUser = 12
+            Shared  = 0
             Name    = "Standard DSv5 Family vCPUs"
         }
-        "StandardDSv6Family" = @{
-            PerUser = 0
-            Shared  = 32
-            Name    = "Standard DSv6 Family vCPUs"
-        }
-        "StandardDCasv5Family" = @{
-            PerUser = 6
-            Shared  = 0
-            Name    = "Standard DCasv5 Family vCPUs (Confidential)"
-        }
+    }
+    $requirements[$confidentialQuotaName] = @{
+        PerUser = 4
+        Shared  = 0
+        Name    = $confidentialQuotaDisplayName
     }
 
     Write-Host "`nRequired vCPUs per lab user + shared infrastructure:"
@@ -453,7 +525,7 @@ foreach ($subscription in $selectedSubscriptions) {
 
             if ($available -lt $totalNeeded) {
                 $shortfall = $totalNeeded - $available
-                $newLimit = $current.Current + $totalNeeded + 10  # Add buffer
+                $newLimit = $current.Current + $totalNeeded
                 Write-Host ("  STATUS           : INSUFFICIENT") -ForegroundColor Red
                 Write-Host ("  Shortfall        : {0,6} vCPUs" -f $shortfall) -ForegroundColor Red
                 Write-Host ("  Recommended Limit: {0,6} vCPUs" -f $newLimit) -ForegroundColor Yellow

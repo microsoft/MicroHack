@@ -2,9 +2,9 @@
 
 [Previous Challenge Solution](../challenge-04/solution-04.md) - **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-06/solution-06.md)
 
-**Estimated Duration:** 90-120 minutes
+**Estimated Duration:** 45-60 minutes
 
-> 💡 **Objective:** Learn how to deploy and validate guest attestation on Azure Confidential VMs in AKS to ensure business logic only executes in trusted, hardware-backed confidential computing environments. You will create an AKS cluster using Azure CLI, add a Confidential VM node pool, deploy attestation workloads, and verify cryptographic proof of node integrity before processing sensitive operations.
+> 💡 **Objective:** Learn how to validate guest attestation on Azure Confidential VMs in AKS to ensure business logic only executes in trusted, hardware-backed confidential computing environments. Using the AKS cluster and Confidential VM node pool that have already been provisioned for this lab, you will inspect the node pool configuration, deploy attestation workloads, and verify cryptographic proof of node integrity before processing sensitive operations.
 
 ---
 
@@ -12,12 +12,24 @@
 
 Please ensure that you successfully verified the [General prerequisites](../../Readme.md#general-prerequisites) before continuing with this challenge.
 
-- Azure subscription with Contributor permissions on your resource group
+- Azure subscription with Reader/Contributor permissions on your resource group (pre-assigned)
 - Azure CLI >= 2.54 or access to Azure Portal
 - **Linux/Bash environment** — Azure Cloud Shell (Bash), WSL2 on Windows, or a native Linux/macOS terminal
 - `kubectl` command-line tool (can be installed via `az aks install-cli`)
 - Basic understanding of Kubernetes concepts (pods, deployments, node pools)
 - Basic understanding of confidential computing concepts
+
+## Pre-Provisioned Infrastructure
+
+The shared lab automation has already deployed an AKS cluster with a standard system node pool and an AMD SEV-SNP Confidential VM user node pool named `cvmnodepool`. The exact v5 or v6 size is selected from subscription availability and quota. This cluster is shared with Challenge 7 — do not delete it. Retrieve the following values from your lab dashboard credentials:
+
+| Dashboard Credential | Description |
+|---|---|
+| **Resource Group Name** | Your dedicated resource group |
+| **Sovereign Lab Region** | Region selected after capacity checks |
+| **Confidential VM Size** | AMD SEV-SNP size selected during shared preparation |
+| **Sovereign Lab AKS Cluster** | Name of the pre-provisioned AKS cluster |
+| **AKS Confidential Node Pool** | Name of the Confidential VM node pool (`cvmnodepool`) |
 
 ## Scenario Context
 
@@ -31,7 +43,7 @@ Your mandate includes:
 - **Zero Trust for Kubernetes**: Validate the integrity of worker nodes before deploying sensitive workloads
 - **Compliance and Auditability**: Provide cryptographic evidence that workloads execute in compliant infrastructure
 
-In this challenge, you'll deploy Azure Confidential Computing node pools in AKS using Azure CLI. You'll configure a confidential VM node pool with AMD SEV-SNP technology, deploy attestation-aware workloads, and verify that containers run in hardware-protected environments before processing sensitive operations.
+In this challenge, you'll inspect the pre-provisioned Azure Confidential Computing node pool in AKS using Azure CLI and kubectl. You'll validate the confidential VM node pool configuration (AMD SEV-SNP technology), deploy attestation-aware workloads, and verify that containers run in hardware-protected environments before processing sensitive operations.
 
 ### Understanding Confidential VMs in AKS
 
@@ -68,9 +80,9 @@ The AKS deployment patterns and attestation verification workflows have been ada
 
 ---
 
-## Task 1: Configure Environment and Register Preview Features
+## Task 1: Configure Environment Variables
 
-💡 **Set up your environment variables and register the required Azure preview features for Confidential VM support in AKS.**
+💡 **Set up your environment variables using the values from your lab dashboard credentials for the pre-provisioned AKS cluster.**
 
 ### Step 1: Configure Environment Variables
 
@@ -84,108 +96,79 @@ The AKS deployment patterns and attestation verification workflows have been ada
 ### Linux/Bash
 
 ```bash
-# Set common variables
-# Customize ATTENDEE_ID for each participant
-RESOURCE_GROUP="labuser-xx"  # Change this for each participant (e.g., labuser-01, labuser-02,...)
-
-ATTENDEE_ID="${RESOURCE_GROUP}"
-
-# Generate a unique random hash suffix (different on each run)
-HASH_SUFFIX=$(echo -n "$ATTENDEE_ID-$(date +%s)-$RANDOM" | md5sum | cut -c1-6)
-
-LOCATION="northeurope"
-AKS_CLUSTER_NAME="aks-cvmcluster$HASH_SUFFIX"
-DNS_LABEL="cvmcluster$HASH_SUFFIX"
-ADMIN_USERNAME="azureuser"
-KEYVAULT_NAME="kv-cc-${HASH_SUFFIX}"  # Must be globally unique
-SSH_KEY_NAME="cc-${ATTENDEE_ID}-key"
-ATTESTATION_NAME="attest${HASH_SUFFIX}"
+# Populate these from your lab dashboard credentials
+RESOURCE_GROUP="<Resource Group Name>"          # From the "Resource Group Name" credential
+LOCATION="<Sovereign Lab Region>"                # From the "Sovereign Lab Region" credential
+CONFIDENTIAL_VM_SIZE="<Confidential VM Size>"    # From the "Confidential VM Size" credential
+AKS_CLUSTER_NAME="<Sovereign Lab AKS Cluster>"   # From the "Sovereign Lab AKS Cluster" credential
+NODE_POOL_NAME="cvmnodepool"                     # From the "AKS Confidential Node Pool" credential
 ```
 
 > [!WARNING]
 > If your Azure Cloud Shell session times out (e.g. during a break), the variables defined above will be lost and must be re-defined before continuing. We recommend saving them in a local text file on your machine so you can quickly copy and paste them back into a new session.
 
-### Step 2: Install Required AKS Extensions
-
-```bash
-# Install / Update `aks-preview` extension
-az extension add --name aks-preview
-az extension update --name aks-preview
-
-# Register the `AzureLinuxCVMPreview` feature flag
-az feature register --namespace "Microsoft.ContainerService" --name "AzureLinuxCVMPreview"
-
-# Verify the registration status - status should show "Registered"
-az feature show --namespace Microsoft.ContainerService --name AzureLinuxCVMPreview
-
-# Refresh the registration of the `Microsoft.ContainerService` resource provider
-az provider register --namespace Microsoft.ContainerService
-```
-
-> [!WARNING]
-> For all Microsoft-hosted events, these features and providers below are already registered. Ignore any error messages due to lack of permissions.
-
 ---
 
-## Task 2: Create Azure Kubernetes Service cluster
+## Task 2: Connect to the Pre-Provisioned AKS Cluster
 
-💡 **Deploy the foundational AKS cluster with a standard system node pool. You'll add the Confidential VM node pool in the next task.**
+💡 **Retrieve credentials for the AKS cluster that has already been deployed for you and confirm connectivity.**
 
-### Step 1: Create  AKS cluster
+### Step 1: Connect to the Cluster
 
 ```bash
-# Create an AKS cluster
-az aks create --resource-group $RESOURCE_GROUP --name $AKS_CLUSTER_NAME --node-count 1 --location $LOCATION --generate-ssh-keys --node-vm-size Standard_D2s_v5
+# Connect to the pre-provisioned cluster
+az aks get-credentials --resource-group $RESOURCE_GROUP --name $AKS_CLUSTER_NAME --overwrite-existing
 
-# Connect to the cluster
-az aks get-credentials --resource-group $RESOURCE_GROUP --name $AKS_CLUSTER_NAME
+# Confirm connectivity and list nodes
+kubectl get nodes
 ```
 
-At this point, you should see an AKS cluster in your resource group:
+At this point, you should see the pre-provisioned AKS cluster in your resource group:
 
 ![AKS](./images//aks.png)
 
 ---
 
-## Task 3: Add Confidential VM Node Pool
+## Task 3: Inspect the Confidential VM Node Pool
 
-💡 **Create a dedicated node pool with Confidential VM compute resources for running sensitive workloads.**
-
-### Step 1: Add the Confidential Node Pool
-
-```bash
-az aks nodepool add --resource-group $RESOURCE_GROUP --cluster-name $AKS_CLUSTER_NAME --name cvmnodepool --node-count 1 --node-vm-size Standard_DC2as_v5
-```
-
-At this point, you should see another AKS node pool in your cluster:
-
-![AKS](./images//aks-02.png)
-
----
-
-## Task 4: Verify Confidential Node Pool Configuration
-
-💡 **Validate that the Confidential VM node pool is properly configured and running with the correct VM size and image.**
+💡 **Validate that the pre-provisioned Confidential VM node pool is configured correctly using both the Azure CLI and kubectl.**
 
 ### Step 1: Verify VM Size and Image
 
 ```bash
 # Verify that the node pool uses a Confidential VM
-az aks nodepool show --resource-group $RESOURCE_GROUP --cluster-name $AKS_CLUSTER_NAME --name cvmnodepool --query 'vmSize'
+az aks nodepool show --resource-group $RESOURCE_GROUP --cluster-name $AKS_CLUSTER_NAME --name $NODE_POOL_NAME --query 'vmSize'
 
 # Verify that the node pool uses a Confidential VM image
-az aks nodepool list --resource-group $RESOURCE_GROUP --cluster-name $AKS_CLUSTER_NAME --query "[?name=='cvmnodepool'].nodeImageVersion" -o tsv
+az aks nodepool list --resource-group $RESOURCE_GROUP --cluster-name $AKS_CLUSTER_NAME --query "[?name=='$NODE_POOL_NAME'].nodeImageVersion" -o tsv
 ```
+
+At this point, you should see the confidential node pool alongside the system node pool:
+
+![AKS](./images//aks-02.png)
+
+### Step 2: Inspect Node Labels and Security Type
+
+```bash
+# List all nodes with their labels and identify the confidential node pool members
+kubectl get nodes --show-labels | grep "$NODE_POOL_NAME"
+
+# Confirm the OS SKU and VM size labels on the confidential node(s)
+kubectl get nodes -l kubernetes.azure.com/agentpool=$NODE_POOL_NAME \
+  -o custom-columns=NAME:.metadata.name,OS_SKU:.metadata.labels.kubernetes\\.azure\\.com/os-sku,VM_SIZE:.metadata.labels.node\\.kubernetes\\.io/instance-type
+```
+
+The `OS_SKU` value of `AzureLinux` and a `VM_SIZE` matching `$CONFIDENTIAL_VM_SIZE` confirm that the node uses the selected AMD SEV-SNP confidential compute family.
 
 ---
 
-## Task 5: Deploy and Verify Attestation Pod
+## Task 4: Deploy and Verify Attestation Pod
 
 💡 **Deploy a sample pod that retrieves attestation data to prove it's running on a confidential VM node.**
 
 ### Step 1: Deploy the Attestation Pod
 
-1. The attestation pod YAML file is located at `walkthrough/challenge-5/resources/cvm-attestation-pod.yaml` in this repository (if using Cloud Shell, upload the file via the **Manage files** menu option).
+1. The attestation pod YAML file is located at `walkthrough/challenge-05/resources/cvm-attestation-pod.yaml` in this repository (if using Cloud Shell, upload the file via the **Manage files** menu option).
 
 2. Apply the YAML file using the file from the repository:
 
@@ -317,25 +300,14 @@ The attestation report contains important security validation fields:
 - **x-ms-sevsnpvm-is-debuggable**: `false` - VM is not debuggable (production setting)
 - **x-ms-sevsnpvm-launchmeasurement**: Launch measurement for integrity verification
 
----
-
-## Task 6: Clean Up Resources
-
-💡 **Delete all resources to avoid ongoing charges.**
-
-### Step 1: Delete Resource Group
-
-```bash
-az group delete --name $RESOURCE_GROUP --yes --no-wait
-```
-
-⚠️ **Warning**: This command will permanently delete all resources in the resource group including the AKS cluster, node pools, and all associated resources.
+> [!NOTE]
+> This AKS cluster and its node pools are shared lab infrastructure also used in Challenge 7. Do not delete the resource group, the cluster, or the node pools.
 
 ---
 
 ## Key Takeaways
 
-In this challenge, you successfully deployed and validated Azure Confidential Computing in AKS with guest attestation. Here are the key concepts and best practices:
+In this challenge, you successfully validated Azure Confidential Computing in AKS with guest attestation. Here are the key concepts and best practices:
 
 ### Confidential Computing in Kubernetes
 
@@ -357,13 +329,13 @@ In this challenge, you successfully deployed and validated Azure Confidential Co
 
 ✅ **Mixed Node Pools** - Combine standard and confidential node pools in the same cluster for cost optimization (use confidential nodes only for sensitive workloads)
 
-✅ **Preview Features** - Confidential VM support in AKS requires feature registration via `az feature register`
+✅ **Idempotent Infrastructure** - The AKS cluster and Confidential VM node pool were provisioned ahead of time via idempotent Bicep, letting you focus on validation and attestation
 
-✅ **CLI Management** - Azure CLI provides efficient commands for managing AKS clusters and confidential node pools
+✅ **CLI Management** - Azure CLI provides efficient commands for inspecting and validating AKS clusters and confidential node pools
 
 ### Production Best Practices
 
-✅ **Node Pool Sizing** - Start with DC-series VMs (e.g., Standard_DC2as_v5) and scale based on workload requirements
+✅ **Node Pool Sizing** - Start with an AMD SEV-SNP DCasv5/DCasv6 size and scale based on workload requirements
 
 ✅ **Workload Isolation** - Use Kubernetes namespaces, network policies, and RBAC in addition to confidential computing
 

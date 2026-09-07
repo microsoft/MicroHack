@@ -2,19 +2,18 @@
 
 [Previous Challenge Solution](../challenge-03/solution-03.md) - **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-05/solution-05.md)
 
-**Estimated Duration:** 90-120 minutes
+**Estimated Duration:** 45-60 minutes
 
-> 💡 **Objective:** Learn how to implement and validate guest attestation on Azure Confidential VMs to ensure business logic only executes in trusted, hardware-backed confidential computing environments. You will deploy a Confidential VM, configure secure access through Azure Bastion, build and run attestation client applications, and verify cryptographic proof of VM integrity before processing sensitive workloads.
+> 💡 **Objective:** Validate guest attestation on a pre-provisioned Azure Confidential VM to confirm that workloads execute only in trusted, hardware-backed confidential computing environments. You will inspect the VM's security configuration, connect through Azure Bastion, build and run attestation client applications, and verify cryptographic proof of VM integrity using your dedicated Microsoft Azure Attestation (MAA) provider.
 
 ## Prerequisites
 
 Please ensure that you successfully verified the [General prerequisites](../../Readme.md#general-prerequisites) before continuing with this challenge.
 
-- Azure subscription with Contributor permissions on your resource group
-- Azure CLI >= 2.54 or access to Azure Portal
-- **Linux/Bash environment** — Azure Cloud Shell (Bash), WSL2 on Windows, or a native Linux/macOS terminal
-- Basic understanding of Azure Virtual Machines, networking, and SSH key authentication
-- Basic understanding of confidential computing concepts
+- Access to the Azure Portal or Azure CLI
+- Lab dashboard credentials (Resource Group Name, Confidential VM, Confidential VM Admin Username, Confidential VM Admin Password, Attestation Provider, Sovereign Lab Bastion)
+- **Linux/Bash environment** — Azure Cloud Shell (Bash), WSL2 on Windows, or a native Linux/macOS terminal (for optional CLI steps)
+- Basic understanding of Azure Virtual Machines, networking, and confidential computing concepts
 
 ## Scenario Context
 
@@ -80,267 +79,128 @@ The sample application and deployment patterns have been adapted for this MicroH
 
 ---
 
-## Task 1: Understand the Deployment Architecture
+## Task 1: Locate Pre-Provisioned Resources and Verify CVM Security Settings
 
-💡 **Before deploying resources, it's important to understand the security architecture and components you'll be creating.**
+💡 **The platform has pre-provisioned a private Ubuntu Confidential VM, a shared Azure Bastion, and a custom Attestation Provider in your resource group. Inspect the VM's security configuration before connecting.**
 
-### Resources Being Deployed
+### Pre-Provisioned Resources
 
-The following resources will be created in the `North Europe` Azure region:
+Locate the following values on your lab dashboard before proceeding:
 
-- **1 Attestation Provider** - Microsoft Azure Attestation (MAA) service for verifying TEE integrity
-- **1 Virtual Network** - Isolated network with VM and Bastion subnets
-- **1 Confidential VM** - Ubuntu 22.04 with AMD SEV-SNP hardware encryption
-- **1 Azure Bastion** - Secure remote access without public IP exposure
-- **1 Azure Key Vault** - Secure storage for SSH keys
-- **Associated Resources** - NSGs, NICs, OS Disks (auto-created)
-
-### Security Architecture
-
-This setup implements a zero-trust security model:
-
-- **No Public IPs on VMs** - VMs are not directly accessible from internet
-- **Azure Bastion (Basic SKU)** - Provides secure RDP/SSH access through Azure Portal
-- **Azure Key Vault** - Stores SSH private keys securely with RBAC controls
-- **Fresh SSH Key Pair** - Generated specifically for this deployment, never stored locally
-- **Hardware-Based Encryption** - AMD SEV-SNP encrypts VM memory at the hardware level
-- **Secure Boot** - Protects boot chain integrity from firmware through kernel
-
-🔑 **Security Best Practice**: This architecture ensures VM access is authenticated through Azure AD, encrypted with TLS, and never exposes SSH directly to the internet.
-
----
-
-## Task 2: Set Up Your Environment and Deploy Infrastructure
-
-💡 **You'll create the foundational Azure resources including Resource Group, Key Vault, SSH keys, Attestation Provider, Virtual Network, Confidential VM, and Azure Bastion.**
+| Dashboard Field | Description |
+|---|---|
+| **Resource Group Name** | Your dedicated resource group containing all lab resources |
+| **Sovereign Lab Region** | Azure region where the CVM and Attestation Provider are deployed |
+| **Confidential VM** | Name of the pre-provisioned private Ubuntu 22.04 Confidential VM |
+| **Confidential VM Admin Username** | Username for Bastion login |
+| **Confidential VM Admin Password** | Password for Bastion login |
+| **Attestation Provider** | Name of the custom MAA provider (note field contains the full Attest URI) |
+| **Sovereign Lab Bastion** | Name of the shared Standard Azure Bastion for private VNet access |
 
 > [!IMPORTANT]
-> **Prerequisite — Challenge 1 policy adjustment:** This challenge deploys a **public IP address** for Azure Bastion and creates resources that require tags. If you completed Challenge 1, make sure you ran the **"Preparing for Next Challenges"** section at the end of that walkthrough to switch the tag-requirement and public-IP-block policies to **DoNotEnforce** mode. Otherwise the deployments below will fail.
+> Copy the **Attestation Provider** Attest URI from the dashboard note field — you will need it in Task 4 when running the attestation client inside the VM.
+
+### Step 1: Verify Confidential VM Security Settings via Azure CLI
+
+```bash
+# Set variables from your dashboard
+RESOURCE_GROUP="<Resource Group Name from dashboard>"
+VM_NAME="<Confidential VM from dashboard>"
+
+# Verify security type, secure boot, and vTPM
+az vm show \
+  --resource-group $RESOURCE_GROUP \
+  --name $VM_NAME \
+  --query "{securityType: securityProfile.securityType, secureBootEnabled: securityProfile.uefiSettings.secureBootEnabled, vTpmEnabled: securityProfile.uefiSettings.vTpmEnabled}" \
+  -o table
+```
+
+Expected output:
+
+```
+SecurityType       SecureBootEnabled    VTpmEnabled
+-----------------  -------------------  -----------
+ConfidentialVM     True                 True
+```
+
+### Step 2: Confirm No Public IP Address
+
+```bash
+# Verify the VM has no public IP (private access via Bastion only)
+az vm list-ip-addresses \
+  --resource-group $RESOURCE_GROUP \
+  --name $VM_NAME \
+  --query "[].virtualMachine.network.publicIpAddresses" \
+  -o table
+```
+
+The output should be empty — no public IP is assigned to the Confidential VM.
+
+> **Why these settings matter:**
+> - `ConfidentialVM` security type activates AMD SEV-SNP hardware memory encryption
+> - Secure Boot prevents unauthorized firmware or bootloaders from running
+> - vTPM is required for cryptographic attestation
+> - No public IP enforces network isolation; all access routes through Azure Bastion
+
+---
+
+## Task 2: Connect to the Confidential VM via Azure Bastion
+
+💡 **Connect to the private Confidential VM through your pre-provisioned Azure Bastion using username/password credentials from your dashboard.**
 
 > [!IMPORTANT]
-> The Azure CLI commands in this walkthrough use **bash** syntax and will not work directly in PowerShell. Use **Azure Cloud Shell (Bash)** for the best experience. If running locally on Windows, use **WSL2** (Windows Subsystem for Linux) to run a bash shell. You can install the Azure CLI inside WSL with:
->
-> ```bash
-> curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
-> ```
+> The Azure CLI commands in this walkthrough use **bash** syntax and will not work directly in PowerShell. Use **Azure Cloud Shell (Bash)** or a local bash terminal.
 
----
+### Step 1: Connect via Azure Bastion (Portal)
 
-### Step 1: Configure Environment Variables
-
-Set up the variables that will be used throughout the deployment:
-
-```bash
-# Set common variables
-# Customize ATTENDEE_ID for each participant
-RESOURCE_GROUP="labuser-xx"  # Change this for each participant (e.g., labuser-01, labuser-02, ...)
-
-ATTENDEE_ID="${RESOURCE_GROUP}"
-# Generate a short hash from ATTENDEE_ID with random component for uniqueness
-HASH_SUFFIX=$(echo -n "${ATTENDEE_ID}-${RANDOM}-${RANDOM}" | md5sum | cut -c1-8)
-
-LOCATION="northeurope"
-ADMIN_USERNAME="azureuser"
-KEYVAULT_NAME="kv-cc-${HASH_SUFFIX}"  # Must be globally unique
-SSH_KEY_NAME="cc-${ATTENDEE_ID}-key"
-ATTESTATION_NAME="attest${HASH_SUFFIX}"
-```
-
-🔑 **Best Practice**: Using hash-based suffixes ensures globally unique resource names even if multiple participants use similar attendee IDs.
-
-> [!WARNING]
-> If your Azure Cloud Shell session times out (e.g. during a break), the variables defined above will be lost and must be re-defined before continuing. We recommend saving them in a local text file on your machine so you can quickly copy and paste them back into a new session.
-
-### Step 2: Create Key Vault
-
-Create a Key Vault with RBAC-based permissions:
-
-```bash
-# Create Key Vault with Azure RBAC permission model
-az keyvault create \
-  --name $KEYVAULT_NAME \
-  --resource-group $RESOURCE_GROUP \
-  --location $LOCATION \
-  --sku standard \
-  --enable-rbac-authorization true \
-  --enabled-for-deployment true \
-  --enabled-for-template-deployment true
-
-# Get current user's object ID
-CURRENT_USER_ID=$(az ad signed-in-user show --query id -o tsv)
-
-# Assign Key Vault Secrets Officer role to current user
-az role assignment create \
-  --role "Key Vault Secrets Officer" \
-  --assignee $CURRENT_USER_ID \
-  --scope $(az keyvault show --name $KEYVAULT_NAME --resource-group $RESOURCE_GROUP --query id -o tsv)
-
-# Wait for RBAC permissions to propagate
-echo "Waiting for RBAC permissions to propagate..."
-sleep 30
-```
-
-🔑 **Best Practice**: Using Azure RBAC for Key Vault instead of access policies provides more granular control and better integration with Azure AD identity governance.
-
-### Step 3: Generate and Store SSH Keys
-
-Generate SSH key pair and store securely in Key Vault:
-
-```bash
-# Generate SSH key pair using temporary file
-SSH_TEMP_FILE="/tmp/cc_ssh_key_${ATTENDEE_ID}_${RANDOM}"
-ssh-keygen -t rsa -b 4096 -f "$SSH_TEMP_FILE" -N "" -C "microhack-cc"
-
-# Store private key in Key Vault
-az keyvault secret set \
-  --vault-name $KEYVAULT_NAME \
-  --name "ssh-private-key" \
-  --file "$SSH_TEMP_FILE"
-
-# Store public key in Key Vault
-az keyvault secret set \
-  --vault-name $KEYVAULT_NAME \
-  --name "ssh-public-key" \
-  --file "${SSH_TEMP_FILE}.pub"
-
-# Read public key for VM creation
-SSH_PUBLIC_KEY=$(cat "${SSH_TEMP_FILE}.pub")
-
-# Clean up temporary files
-rm -f "$SSH_TEMP_FILE" "${SSH_TEMP_FILE}.pub"
-
-echo "SSH key pair generated and stored in Key Vault: $KEYVAULT_NAME"
-echo "Public key: $SSH_PUBLIC_KEY"
-```
-
-🔑 **Security Insight**: SSH keys are never stored persistently on your local machine. They exist only in Azure Key Vault, reducing the risk of key compromise.
-
-### Step 4: Create Attestation Provider
-
-Create the Microsoft Azure Attestation provider:
-
-```bash
-# Create Attestation Provider
-az attestation create \
-  --name $ATTESTATION_NAME \
-  --resource-group $RESOURCE_GROUP \
-  --location $LOCATION
-```
-
-💡 **Understanding MAA**: Microsoft Azure Attestation is a unified solution for remotely verifying the trustworthiness of platforms and integrity of binaries running inside them.
-
-### Step 5: Create Virtual Network with Subnets
-
-Create virtual network with separate subnets for VMs and Azure Bastion:
-
-```bash
-# Create Virtual Network with VM and Bastion subnets for CVM
-az network vnet create \
-  --resource-group $RESOURCE_GROUP \
-  --name "vm-ubuntu-cvm-vnet" \
-  --location $LOCATION \
-  --address-prefix "10.10.0.0/24" \
-  --subnet-name "vm-subnet" \
-  --subnet-prefix "10.10.0.0/26"
-
-# Create Bastion subnet (must be named AzureBastionSubnet)
-az network vnet subnet create \
-  --resource-group $RESOURCE_GROUP \
-  --vnet-name "vm-ubuntu-cvm-vnet" \
-  --name "AzureBastionSubnet" \
-  --address-prefix "10.10.0.64/26"
-```
-
-🔑 **Networking Best Practice**: Separating VM and Bastion subnets provides network segmentation and allows for different security policies.
-
-### Step 6: Deploy Confidential VM
-
-Create the Confidential VM with AMD SEV-SNP hardware encryption:
-
-```bash
-# Create Confidential VM - No public IP
-az vm create \
-  --resource-group $RESOURCE_GROUP \
-  --name "vm-ubuntu-cvm" \
-  --location $LOCATION \
-  --size "Standard_DC2as_v6" \
-  --admin-username $ADMIN_USERNAME \
-  --ssh-key-value "$SSH_PUBLIC_KEY" \
-  --authentication-type ssh \
-  --enable-vtpm true \
-  --image "Canonical:0001-com-ubuntu-confidential-vm-jammy:22_04-lts-cvm:latest" \
-  --security-type "ConfidentialVM" \
-  --os-disk-security-encryption-type "VMGuestStateOnly" \
-  --enable-secure-boot true \
-  --vnet-name "vm-ubuntu-cvm-vnet" \
-  --subnet "vm-subnet" \
-  --public-ip-address ""
-
-# Enable system-assigned managed identity for CVM
-az vm identity assign \
-  --resource-group $RESOURCE_GROUP \
-  --name "vm-ubuntu-cvm"
-```
-
-💡 **Key Configuration Details**:
-
-- `--security-type "ConfidentialVM"` - Enables hardware-based confidential computing
-- `--os-disk-security-encryption-type "VMGuestStateOnly"` - Encrypts VM guest state with platform-managed keys
-- `--enable-secure-boot true` - Protects boot integrity
-- `--enable-vtpm true` - Enables virtual Trusted Platform Module for attestation
-- `--public-ip-address ""` - No public IP for enhanced security
-
-### Step 7: Deploy Azure Bastion
-
-Create Azure Bastion for secure remote access:
-
-```bash
-# Create Public IP for Bastion
-az network public-ip create \
-  --resource-group $RESOURCE_GROUP \
-  --name "bastion-ip" \
-  --location $LOCATION \
-  --sku "Standard" \
-  --allocation-method "Static"
-
-# Create Azure Bastion (Basic SKU)
-
-echo "Bastion deployment initiated (this may take 5-10 minutes)"
-
-az network bastion create \
-  --resource-group $RESOURCE_GROUP \
-  --name "bastion" \
-  --location $LOCATION \
-  --vnet-name "vm-ubuntu-cvm-vnet" \
-  --public-ip-address "bastion-ip" \
-  --sku "Basic"
-```
-
-⏱️ **Deployment Time**: Azure Bastion typically takes 5-10 minutes to deploy. You can proceed with reviewing the next sections while waiting.
-
----
-
-## Task 3: Connect to Confidential VM and Install Attestation Tools
-
-💡 **Now you'll connect to the Confidential VM through Azure Bastion and install the necessary dependencies to build and run the attestation client.**
-
-### Step 1: Connect via Azure Bastion
-
-> **📝 Note: These commands run ON the Linux VM itself after connecting via Bastion (not on your local machine or in Azure Cloud Shell)**
-
-1. Navigate to the Azure Portal
-2. Go to **Virtual Machines** > **vm-ubuntu-cvm** (select the one in your resource group)
-3. Click **Connect** > **Connect via Bastion**
-4. **Authentication Type**: SSH Private Key from Azure Key Vault
-5. **Username**: `azureuser`
-6. **Azure Key Vault Secret**: Select your Key Vault and choose `ssh-private-key`
-7. Click **Connect**
+1. Navigate to the [Azure Portal](https://portal.azure.com)
+2. Open your resource group (**Resource Group Name** from your dashboard)
+3. Click on the Confidential VM (**Confidential VM** from your dashboard)
+4. Click **Connect** > **Connect via Bastion**
+5. In the connection panel:
+   - **Authentication Type**: `Password`
+   - **Username**: value of **Confidential VM Admin Username** from your dashboard
+   - **Password**: value of **Confidential VM Admin Password** from your dashboard
+6. Click **Connect** — a new browser tab opens with the VM terminal
 
 ![Connect via Azure Bastion](./images/vm-connect-via-bastion.png)
 
-### Step 2: Install System Dependencies and Build Tools
+> [!NOTE]
+> All commands in Tasks 3 and 4 run **inside this VM terminal**, not in Azure Cloud Shell or your local machine.
 
-Once connected to the VM via Bastion, run the following commands:
+### Alternative: Connect via Azure CLI Bastion Tunnel
+
+```bash
+# Set variables from your dashboard
+RESOURCE_GROUP="<Resource Group Name from dashboard>"
+VM_NAME="<Confidential VM from dashboard>"
+BASTION_NAME="<Sovereign Lab Bastion from dashboard>"
+ADMIN_USERNAME="<Confidential VM Admin Username from dashboard>"
+
+# Get the VM resource ID
+VM_RESOURCE_ID=$(az vm show --resource-group $RESOURCE_GROUP --name $VM_NAME --query id -o tsv)
+
+# Open SSH tunnel via Bastion
+az network bastion ssh \
+  --name $BASTION_NAME \
+  --resource-group $RESOURCE_GROUP \
+  --target-resource-id $VM_RESOURCE_ID \
+  --auth-type "password" \
+  --username $ADMIN_USERNAME
+```
+
+---
+
+## Task 3: Install System Dependencies and Attestation Package
+
+💡 **Install the required build tools and attestation library on the Confidential VM.**
+
+> **📝 Note: These commands run ON the Linux VM itself inside the Bastion terminal (not on your local machine or in Azure Cloud Shell)**
+
+> [!NOTE]
+> If you encounter prompts to restart services during installation, press `<Enter>` to confirm and continue.
+
+### Step 1: Install System Dependencies and Build Tools
 
 ```bash
 # Install system dependencies
@@ -361,14 +221,14 @@ sudo -E apt-get install -y build-essential libcurl4-openssl-dev libjsoncpp-dev l
 - CMake for build orchestration
 - jq for JSON parsing and token inspection
 
-### Step 3: Clone Attestation Repository
+### Step 2: Clone Attestation Repository
 
 ```bash
 # Clone the attestation repository
 git clone https://github.com/Azure/confidential-computing-cvm-guest-attestation.git
 ```
 
-### Step 4: Install Azure Guest Attestation Package
+### Step 3: Download and Install Azure Guest Attestation Package
 
 ```bash
 # Download the attestation package
@@ -418,28 +278,19 @@ make
 
 ### Step 2: Run Attestation and Inspect JWT Token
 
-To use the dedicated Attestation Provider you created in Task 2 Step 4, you need to pass its URI using the `-a` argument.
+To use the dedicated Attestation Provider from your lab dashboard, pass its Attest URI using the `-a` argument.
 
-#### Retrieve Your Attestation URI via Azure CLI from your Azure CLI session in Cloud Shell or your local machine
+#### Retrieve Your Attestation Provider URI
 
-```bash
-# Retrieve your attestation provider URI
-ATTESTATION_URI=$(az attestation show \
-  --name $ATTESTATION_NAME \
-  --resource-group $RESOURCE_GROUP \
-  --query "attestUri" \
-  -o tsv)
-echo $ATTESTATION_URI
-```
+Use the **Attestation Provider** URI from your lab dashboard note field:
 
-Alternatively, you may also retrieve the URL from the Azure portal (navigate to your resource group and click on the Attestation provider resource):
-
-![Attestation Client - Specified Provider](./images/attestation-provider.png)
+> On your dashboard, the **Attestation Provider** row shows the provider name as the value and the full Attest URI in the note field (e.g., `https://<name>.<region>.attest.azure.net`).
 
 #### Run attestation with your custom provider (inside the Linux VM)
 
 ```bash
-ATTESTATION_URI= <insert value from previous command>
+# Set the Attestation URI from your dashboard note field
+ATTESTATION_URI="<Attestation Provider URI from dashboard note>"
 # Run attestation with your custom provider
 sudo ./AttestationClient -a $ATTESTATION_URI -o token | jq -R 'split(".") | .[0],.[1] | @base64d | fromjson'
 ```
@@ -534,11 +385,11 @@ In this challenge, you successfully implemented and validated Azure Confidential
 
 ### Security Architecture
 
-✅ **Defense in Depth** - Combining multiple security layers (no public IPs, Azure Bastion, Key Vault, hardware encryption, attestation)
+✅ **Defense in Depth** - Combining multiple security layers (no public IPs, Azure Bastion, hardware encryption, attestation)
 
-✅ **Secure Key Management** - SSH keys stored exclusively in Azure Key Vault with RBAC controls, never persisted locally
+✅ **Custom Attestation Provider** - A dedicated MAA provider enables organization-specific policies, audit logs, and compliance requirements separate from shared services
 
-✅ **Network Isolation** - VMs without public IPs, accessed only through Azure Bastion with Azure AD authentication
+✅ **Network Isolation** - Confidential VM has no public IP; all access routes through Azure Bastion with lab-scoped credentials
 
 ### Production Best Practices
 
@@ -596,41 +447,12 @@ In this challenge, you successfully implemented and validated Azure Confidential
 - [Microsoft Azure Attestation](https://learn.microsoft.com/azure/attestation/overview)
 - [AMD SEV-SNP Technology](https://www.amd.com/en/developer/sev.html)
 - [Azure Bastion Documentation](https://learn.microsoft.com/azure/bastion/bastion-overview)
-- [Azure Key Vault Best Practices](https://learn.microsoft.com/azure/key-vault/general/best-practices)
 
 ---
 
 ## Technical Notes
 
-1. **Attendee Identification**:
-   - Set `ATTENDEE_ID` to a unique value for each participant (e.g., attendee01, attendee02, etc.)
-   - A hash-based suffix is automatically generated from ATTENDEE_ID plus random numbers for globally unique resources
-   - The hash output is alphanumeric (hexadecimal) and safe for all Azure resource naming requirements
-   - This prevents resource name collisions even if multiple students use the same ATTENDEE_ID
-
-2. **SSH Key Generation**:
-   - Fresh SSH key pair is generated and stored directly in Key Vault
-   - No local SSH key files are created or retained
-   - Keys are only accessible through Key Vault
-
-3. **Security Compliance**:
-   - VMs have **no public IPs** - not directly accessible from internet
-   - Access only through Azure Bastion (Basic SKU)
-   - Private SSH key stored securely in Azure Key Vault
-   - Bastion uses Key Vault integration for authentication
-
-4. **Network Range**:
-   - VNet (North Europe): `10.10.0.0/24`
-     - VM Subnet: `10.10.0.0/26`
-     - Bastion Subnet: `10.10.0.64/26`
-
-5. **VM Pricing**: VMs use standard (pay-as-you-go) pricing for microhack reliability
-
-6. **Bastion Deployment**: Takes 5-10 minutes to complete. You can proceed with other steps while it deploys
-
-7. **Auto-Created Resources**:
-   - NSGs (Network Security Groups) - Created automatically by `az vm create`
-   - NICs (Network Interfaces) - Created automatically and named `<vm-name>VMNic`
-   - OS Disks - Created automatically with the VMs
-
-8. **Key Vault Access**: Ensure your Azure account has appropriate permissions to read secrets from Key Vault when using Bastion
+1. **Security**: Confidential VM has no public IP; all access routes through Azure Bastion
+2. **Credentials**: Use the username and password from your lab dashboard for Bastion login
+3. **Attestation URI**: Copy the Attest URI from the dashboard note field — it follows the pattern `https://<name>.<region>.attest.azure.net`
+4. **Regional Fallback**: The Attestation Provider is deployed with regional fallback; the URI region code reflects the actual deployment region

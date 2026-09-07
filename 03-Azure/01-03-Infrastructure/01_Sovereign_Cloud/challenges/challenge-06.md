@@ -1,6 +1,6 @@
 # Challenge 6 - Operating a Sovereign Hybrid Cloud with Azure Arc & Azure Local
 
-[Previous Challenge](challenge-05.md) - **[Home](../Readme.md)** - [Finish](finish.md)
+[Previous Challenge](challenge-05.md) - **[Home](../Readme.md)** - [Next Challenge](challenge-07.md)
 
 ## Goal
 

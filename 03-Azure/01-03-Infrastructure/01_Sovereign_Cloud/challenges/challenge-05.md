@@ -4,14 +4,13 @@
 
 ## Goal
 
-Deploy and validate guest attestation on Azure Confidential VMs to ensure business logic only executes in trusted, compliant confidential computing environments. You'll build and deploy a sample application that implements secure attestation flows using Confidential VMs in AKS. The application leverages Microsoft Azure Attestation (MAA) to validate VM integrity before executing protected business logic, demonstrating "encryption in use" capabilities.
+Validate guest attestation on a pre-provisioned Azure Confidential VM node pool in AKS to ensure business logic only executes in trusted, compliant confidential computing environments. You'll inspect the AKS cluster and Confidential VM node pool that were deployed for you, then deploy a sample application that implements secure attestation flows. The application leverages Microsoft Azure Attestation (MAA) to validate VM integrity before executing protected business logic, demonstrating "encryption in use" capabilities.
 
 ## Actions
 
-* Create an AKS Cluster
-* Add a Confidential VM Node Pool
-* Verify Node Pool Configuration
-* Run Attestation Verification Sample
+* Inspect the pre-provisioned AKS cluster and Confidential VM node pool
+* Validate node pool configuration (VM size, node image, node labels)
+* Deploy the attestation verification sample
 * Review the attestation token output
 
 ## Success criteria

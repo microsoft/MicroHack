@@ -1,0 +1,45 @@
+namespace: Radius.Resources
+types:
+  sqlDatabases:
+    description: A portable Microsoft SQL Server database resource.
+    apiVersions:
+      '2025-08-01-preview':
+        schema:
+          type: object
+          properties:
+            environment:
+              type: string
+              description: (Required) The Radius Environment ID.
+            application:
+              type: string
+              description: (Required) The Radius Application ID.
+            size:
+              type: string
+              enum: [S, M, L]
+              description: (Optional) Size tier.
+            host:
+              type: string
+              readOnly: true
+              description: SQL Server hostname or IP.
+            port:
+              type: integer
+              readOnly: true
+              description: SQL Server port.
+            database:
+              type: string
+              readOnly: true
+              description: Database name.
+            username:
+              type: string
+              readOnly: true
+              description: Login username.
+            secrets:
+              type: object
+              readOnly: true
+              properties:
+                password:
+                  type: string
+                  readOnly: true
+                  description: Login password.
+              required: [password]
+          required: [environment, application]

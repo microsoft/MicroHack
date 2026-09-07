@@ -10,7 +10,7 @@ Fraud moves faster than manual review. Analysts piecing together transactions, c
 
 An **agentic fraud intelligence system** continuously investigates operations and turns raw activity into evidence-backed decisions. It retrieves historical transaction evidence from **Azure Cosmos DB through an MCP server**, reasons over global, internal, and country-specific AML policies with **Foundry IQ agentic retrieval**, evaluates the rules that apply to both the origin and destination bank account countries, and produces audit-ready investigation reports and operational alerts.
 
-Unlike earlier rule-based systems limited to rudimentary patterns, agentic systems reason through the *why* behind a flag. The complete workflow runs as a **hosted agent in Microsoft Foundry**, uses the **Microsoft Agent Framework** for orchestration, routes models and MCP servers through the new **AI Gateway tier (preview)**, and emits end-to-end telemetry to **Application Insights and Azure Managed Grafana**.
+Unlike earlier rule-based systems limited to rudimentary patterns, agentic systems reason through the *why* behind a flag. The complete workflow runs as a **hosted agent in Microsoft Foundry**, uses the **Microsoft Agent Framework** for orchestration, routes MCP servers through the new **AI Gateway tier (preview)**, and emits end-to-end telemetry to **Application Insights and Azure Managed Grafana**.
 
 While Fraud Intelligence is highly relevant for FSI — where fraud, money laundering, and insider trading draw constant regulatory scrutiny — the hack extends cleanly to any regulated industry. With a diverse audience, the goal is to broaden attendees' thinking: they leave with a **modern, reusable, Python-based component set** they can apply to their own domains.
 
@@ -22,7 +22,7 @@ A transaction enters the system. The fraud intelligence workflow must:
 2. **Regulatory Assessment Agent** — use **Foundry IQ agentic retrieval** to apply global AML guidance, internal policies, and the regional regulations relevant to the origin and destination bank account countries.
 3. **AML Report Agent** — transform the enriched evidence and regulatory assessment into a professional, audit-ready AML investigation report.
 4. **Alert Manager Agent** — run in parallel with the AML Report Agent and use the Fraud Alert Manager MCP to create an operational alert when the regulatory status requires one.
-5. **Fraud Intelligence Orchestration** — coordinate the agents with the **Microsoft Agent Framework**, deploy the workflow as a hosted agent in Microsoft Foundry, govern model and MCP traffic through **AI Gateway (preview)**, and emit traces and business metrics through OTLP.
+5. **Fraud Intelligence Orchestration** — coordinate the agents with the **Microsoft Agent Framework**, deploy the workflow as a hosted agent in Microsoft Foundry, govern MCP traffic through **AI Gateway (preview)**, and emit traces and business metrics through OTLP.
 
 The image below illustrates the conceptual scenario and agent roles:
 
@@ -47,7 +47,7 @@ flowchart LR
 
 ## Architecture
 
-The hackathon builds a **Python-based, multi-agent Fraud Intelligence system**. Individual Microsoft Foundry agents are composed into a hosted workflow with the Microsoft Agent Framework. Foundry IQ supplies agentic retrieval over AML knowledge, while MCP servers provide access to financial evidence and alert-management actions. The AI Gateway tier (preview) provides a common control plane for model and MCP traffic.
+The hackathon builds a **Python-based, multi-agent Fraud Intelligence system**. Individual Microsoft Foundry agents are composed into a hosted workflow with the Microsoft Agent Framework. Foundry IQ supplies agentic retrieval over AML knowledge, while MCP servers provide access to financial evidence and alert-management actions. The AI Gateway tier (preview) provides a common control plane for MCP traffic.
 
 ```mermaid
 flowchart TB
@@ -65,7 +65,6 @@ flowchart TB
 	end
 
 	subgraph Gateway["AI Gateway tier (preview)"]
-		MODELS["Model gateway<br/>Routing + policies"]
 		MCPPROXY["Proxied MCP<br/>Financial Evidence MCP"]
 		MCPAPI["MCP generated from API<br/>Fraud Alert Manager"]
 	end
@@ -74,7 +73,6 @@ flowchart TB
 	FINMCP --> MCPPROXY
 	ALERTAPI["Fraud Alert Manager API"] --> MCPAPI
 	IQ --> AGENTS
-	ORCH --> MODELS
 	AGENTS --> MCPPROXY
 	AGENTS --> MCPAPI
 
@@ -100,7 +98,7 @@ By participating in this hackathon, you will learn how to:
 - Build and integrate an **MCP server backed by Azure Cosmos DB** with a Microsoft Foundry agent
 - Configure **Foundry IQ** with global, internal, and regional AML sources and use agentic retrieval for country-aware regulatory assessment
 - Compose remote agents with the **Microsoft Agent Framework** and deploy the orchestration as a **hosted agent in Microsoft Foundry**
-- Configure the **AI Gateway tier (preview)** for model and MCP traffic, including proxying an existing MCP and creating an MCP from an existing API
+- Configure the **AI Gateway tier (preview)** for MCP traffic, including proxying an existing MCP and creating an MCP from an existing API
 - Add end-to-end **OTLP tracing** and business metrics with **Application Insights**, then visualize operational and business outcomes in **Azure Managed Grafana**
 
 ---
@@ -166,7 +164,7 @@ Each challenge follows a consistent structure:
 | **2** | [Build the Evidence Enrichment Agent](./challenges/challenge-02.md) | Build a **Financial Evidence MCP** over Azure Cosmos DB, integrate it with the **Evidence Enrichment Agent**, and validate evidence-backed transaction enrichment | 30 min |
 | **3** | [Build the Regulatory Assessment Agent](./challenges/challenge-03.md) | Configure **Foundry IQ** with global, internal, and regional AML sources, then use agentic retrieval to assess rules for both bank account countries | 45 min |
 | **4** | [Build and Orchestrate the Investigation](./challenges/challenge-04.md) | Build the **AML Report Agent**, compose the first three agents with the **Microsoft Agent Framework**, and deploy the orchestration as a Foundry hosted agent | 45 min |
-| **5** | [Govern Models and MCP Servers](./challenges/challenge-05.md) | Introduce the **AI Gateway tier (preview)**, configure model access, proxy the Financial Evidence MCP, create a new MCP from the Fraud Alert Manager API, and add the parallel **Alert Manager Agent** | 45 min |
+| **5** | [Govern MCP Servers](./challenges/challenge-05.md) | Introduce the **AI Gateway tier (preview)**, proxy the Financial Evidence MCP, create a new MCP from the Fraud Alert Manager API, and add the parallel **Alert Manager Agent** | 45 min |
 | **6** | [Observe Fraud Intelligence](./challenges/challenge-06.md) | Add end-to-end **OTLP tracing**, publish technical and business metrics to **Application Insights**, and build a **Grafana** dashboard for business decision makers | 30 min |
 
 > **Tip:** While it is possible to rush through the challenges, we encourage you to pause and reflect. Consider how each pattern relates to your own context: what business processes in your environment could benefit from coordinated AI agents? How might agents help orchestrate decisions across teams and systems?

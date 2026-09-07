@@ -103,7 +103,7 @@ echo "financialEvidenceMcpEndpoint=https://$functionAppName.azurewebsites.net/ru
 
 In the Azure portal, open the Function App and select **Functions** > **App keys** > **System keys**.
 
-![MCP extension system key](/challenges/images/fin-evidence-mcp-key.png)
+![MCP extension system key](./images/fin-evidence-mcp-key.png)
 
 Copy the value of the `mcp_extension` key and add it to `hackenv`:
 
@@ -123,7 +123,7 @@ The agent will use the Financial Evidence MCP to retrieve evidence from Cosmos D
 
 In the Azure portal, open your **Microsoft Foundry** resource and select **Go to Foundry Portal**. Sign in using your Hackbox credentials.
 
-![Microsoft Foundry login](/challenges/images/foundry-login.png)
+![Microsoft Foundry login](./images/foundry-login.png)
 
 #### Explore the Foundry project
 
@@ -133,7 +133,7 @@ Next, connect the Application Insights resource deployed in your environment to 
 
 Open **Manage** and select **Project details** from the left menu. Select **Connected resources**, then **Add connection**.
 
-![Connected resources in Microsoft Foundry](/challenges/images/foundry-connected-resources.png)
+![Connected resources in Microsoft Foundry](./images/foundry-connected-resources.png)
 
 Select **Application Insights**, then select **Continue**. Choose the Application Insights resource deployed for your lab, leave **API key** as the authentication method, and select **Connect**.
 
@@ -141,13 +141,13 @@ Select **Application Insights**, then select **Continue**. Choose the Applicatio
 
 Under **Build**, open **Agents**, select **New agent**, then select **Build an agent**.
 
-![Create a new agent in Microsoft Foundry](/challenges/images/foundry-new-agent.png)
+![Create a new agent in Microsoft Foundry](./images/foundry-new-agent.png)
 
 Name the agent `EvidenceEnrichmentAgent`.
 
 The new agent opens with a blank configuration:
 
-![Blank agent in Microsoft Foundry](/challenges/images/foundry-blank-agent.png)
+![Blank agent in Microsoft Foundry](./images/foundry-blank-agent.png)
 
 The chat model is selected automatically because it is the only deployed model that can power this agent. The embedding deployment is not a chat model.
 
@@ -161,7 +161,7 @@ Select **Add** > **Add tools**, open the **Custom** tab, select **Model Context 
 
 The MCP configuration form opens:
 
-![Configure MCP tool in Microsoft Foundry](/challenges/images/foundry-configure-mcp-tool.png)
+![Configure MCP tool in Microsoft Foundry](./images/foundry-configure-mcp-tool.png)
 
 Configure these values:
 
@@ -175,11 +175,11 @@ Select **Connect**. Foundry returns to the agent page and displays the new MCP t
 
 Open the MCP tool's `...` menu and select **Configure**:
 
-![Configure MCP tool menu in Microsoft Foundry](/challenges/images/foundry-configure-mcp-tool-menu.png)
+![Configure MCP tool menu in Microsoft Foundry](./images/foundry-configure-mcp-tool-menu.png)
 
 Then enable **Always auto-approve all tools**.
 
-![Configure auto approve for all tools in Microsoft Foundry](/challenges/images/foundry-auto-approve-tools.png)
+![Configure auto approve for all tools in Microsoft Foundry](./images/foundry-auto-approve-tools.png)
 
 This setting allows the agent to use the MCP tools without requesting approval for every call.
 
@@ -189,7 +189,7 @@ Select **Save**. Foundry creates a new version of the agent.
 
 Open the **Playground** to test the agent.
 
-![Test the agent in Microsoft Foundry Playground](/challenges/images/foundry-test-agent.png)
+![Test the agent in Microsoft Foundry Playground](./images/foundry-test-agent.png)
 
 Submit this transaction:
 
@@ -211,7 +211,7 @@ The response should be a JSON object that contains the original transaction enri
 
 For this example, the agent should find three pieces of evidence. To inspect the trace, scroll to the bottom and select **Traces**. It shows the agent calling the MCP tools according to its instructions and using the returned evidence to enrich the transaction.
 
-![Traces showing evidence data returned by the MCP tool](/challenges/images/foundry-traces-evidence.png)
+![Traces showing evidence data returned by the MCP tool](./images/foundry-traces-evidence.png)
 
 Select any **Execute tool** span to inspect the data returned by the MCP.
 

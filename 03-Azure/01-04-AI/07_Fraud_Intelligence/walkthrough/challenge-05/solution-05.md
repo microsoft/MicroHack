@@ -1,14 +1,14 @@
-# Challenge 5 - Govern Models and MCP Servers
+# Challenge 5 - Govern MCP Servers
 
 [Previous challenge](solution-04.md) | **[Home](../README.md)** | [Next challenge](solution-06.md)
 
 ## 🎯 Objective
 
-Introduce the **AI Gateway tier (preview)** for governed model and MCP access, generate an MCP interface from the Fraud Alert Manager API, build an **Alert Manager Agent**, and run alert creation in parallel with report generation.
+Introduce the **AI Gateway tier (preview)** for MCP access, generate an MCP interface from the Fraud Alert Manager API, build an **Alert Manager Agent**, and run alert creation in parallel with report generation.
 
 ## 🧭 Context and Background
 
-The investigation workflow now produces a decision, but a decision that requires action must also reach the operational alert system. AI Gateway provides a shared policy and observability boundary for model and tool traffic.
+The investigation workflow now produces a decision, but a decision that requires action must also reach the operational alert system. AI Gateway provides a shared policy and observability boundary for MCP traffic.
 
 ```mermaid
 flowchart LR
@@ -19,7 +19,6 @@ flowchart LR
 	AMCP --> API[Fraud Alert Manager API]
 
 	ORCH[Hosted orchestration] --> GATEWAY[AI Gateway tier]
-	GATEWAY --> MODEL[Model deployment]
 	GATEWAY --> FMCP[Financial Evidence MCP]
 	GATEWAY --> AMCP
 ```
@@ -36,9 +35,9 @@ source hackenv
 
 ### 1. Deploy the AI Gateway
 
-An **AI Gateway** is a centralized control point for securing and managing interactions among AI agents, models, and external services. It routes requests and responses through a governance layer that can enforce authentication, authorization, rate limiting, and other policies. This helps protect sensitive information, support compliance, and provide observability into AI-driven workflows.
+An **AI Gateway** is a centralized control point for securing and managing MCP traffic between AI agents and external services. It routes requests and responses through a governance layer that can enforce authentication, authorization, rate limiting, and other policies. This helps protect sensitive information, support compliance, and provide observability into AI-driven workflows.
 
-In Azure, API Management provides the AI Gateway. In this lab, you will deploy a dedicated API Management instance using the preview `AIGateway` SKU, then route model requests and MCP calls through this centralized governance layer.
+In Azure, API Management provides the AI Gateway. In this lab, you will deploy a dedicated API Management instance using the preview `AIGateway` SKU, then route MCP calls through this centralized governance layer.
 
 #### Create the Gateway
 
@@ -52,143 +51,19 @@ Open the [AI Gateway portal](https://ai.gateway.azure.com/) and sign in with the
 - **Resource group**: the existing lab resource group
 - **Enable managed identity**
 
-![AI Gateway deployment screenshot](images/ai-gateway-deployment.png)
+![AI Gateway deployment screenshot](../../challenges/images/ai-gateway-deployment.png)
 
-### 2. Configure Governed Model Access
-
-#### Import Models
-
-In the AI Gateway left navigation pane, select **Models**, then select **Add Models**.
-
-Models can be imported from several sources and providers. For this lab, select models deployed in **Microsoft Foundry**:
-
-![Import models from Microsoft Foundry](images/import-models-from-microsoft-foundry.png)
-
-Choose the lab subscription and Foundry resource, then select **Next**:
-
-![Select subscription and Foundry resource](images/select-subscription-and-foundry-resource.png)
-
-Keep the default settings, or adjust the names if needed, then select **Create** to import the models into the AI Gateway:
-
-![Import models into the AI Gateway](images/import-models-into-ai-gateway.png)
-
-After a successful import, the newly added models appear under **Models**:
-
-![Models listed under the AI Gateway](images/models-listed-under-ai-gateway.png)
-
-#### Configure Agents to Access Models Through the AI Gateway
-
-After importing the models, configure the agents to access them through the AI Gateway. In **Microsoft Foundry**, open **Manage**, select **Resource details**, and then select **Admin-connected models**:
-
-![Admin-connected models in Microsoft Foundry](images/admin-connected-models-in-microsoft-foundry.png)
-
-Select **Add** to open the connection dialog.
-
-Because the **AI Gateway** SKU is still in preview, select **Other source** instead of **Azure API Management**. Enter the following details:
-
-- **Connection name**: unique identifier, for instance, `aigateway<random>`
-- **Base URL**
-	1) Get the Gateway models endpoint from the **AI Gateway** portal:
-
-	![Get the Gateway models endpoint from the AI Gateway portal](images/get-gateway-models-endpoint.png)
-
-	2) Get the access key. Create new ones:
-
-	![Create new access key in the AI Gateway portal](images/create-new-access-key.png)
-
-	Copy the access key and keep it for next steps. Click **Next**.
-
-- **Authentication**: Select **API Key** and enter the access key you obtained in the previous step. As header name, use `api-key`. Then, **Next**
-
-Finally, select **Add Model** and configure the following values:
-
-- **Name**: gpt-5.6-luna
-- **Display name**: gpt-5.6-luna
-- **Version**: leave it empty
-- **Format**: OpenAI
-
-Select **Save** to finish adding the model, then select **Add** to complete the connection.
-
-The newly added models should now appear under **Admin-connected models** in Microsoft Foundry:
-
-![Admin-connected models in Microsoft Foundry](images/admin-connected-models-in-microsoft-foundry-after-adding.png)
-
-Next, add the new admin-connected model to your agents so they can use it through the AI Gateway.
-
-Open the **Agents** section in Microsoft Foundry, select the agent you want to configure, such as `EvidenceEnrichmentAgent`, and change its **Model** to the newly added admin-connected model:
-
-![Select the newly added admin-connected model for the agent](images/select-admin-connected-model-for-agent.png)
-
-Select **Save** to apply the configuration changes. This creates a new agent version.
-
-Then test the agent. If you configured `EvidenceEnrichmentAgent`, use this JSON payload:
-
-```json
-{
-  "transaction_id": "TX-TEST-0001",
-  "originator_name": "James Carter",
-  "origin_account": "83D4B1F30",
-  "bank_origin": "0121",
-  "beneficiary_name": "Emily Foster",
-  "destination_account": "818CCA030",
-  "bank_destination": "29196",
-  "amount": 15000,
-  "currency": "EUR"
-}
-```
-
-The agent should use the newly added admin-connected model to return a response based on the transaction details.
-
-Return to the **AI Gateway** portal to monitor requests and responses for the newly added admin-connected model. Open **Monitoring** and select **Configure telemetry**.
-
-![Configure telemetry in the AI Gateway portal](images/configure-telemetry-in-ai-gateway-portal.png)
-
-Use the existing **Application Insights** instance to monitor telemetry. Select the appropriate instance, then select **Next**:
-
-![Select Application Insights instance for telemetry in the AI Gateway portal](images/select-application-insights-instance-for-telemetry-in-ai-gateway-portal.png)
-
-Keep **System-assigned managed identity** as the authentication method, review the configuration, and select **Apply**.
-
-Allow a minute for the configuration to take effect before looking for telemetry.
-
-Test the agent again, then review the **Monitoring** section in the AI Gateway portal. Telemetry may take a few moments to appear. You should see a metrics view similar to the following:
-
-![Telemetry graphs in the AI Gateway portal](images/telemetry-graphs-in-ai-gateway-portal.png)
-
-If time permits, apply the same model changes to all prompt agents.
-
-#### Apply a Rate-Limiting Policy
-
-When multiple agents call the same admin-connected model simultaneously, unrestricted usage can degrade the service. Apply a rate-limiting policy to control usage for each caller identity.
-
-Open **Models**, select `gpt-5.6-luna`, switch to the **Policies** tab, and select **Add policy**:
-
-![Add rate limiting policy for the admin-connected model](images/add-rate-limiting-policy-for-admin-connected-model.png)
-
-Select the **Token rate limit** policy:
-
-![Select Token rate limit policy in the AI Gateway portal](images/select-token-rate-limit-policy-in-ai-gateway-portal.png)
-
-Set the desired rate-limit parameters. Keep **Caller identity** as the target; in this case, the identity is the key used to connect Microsoft Foundry to the AI Gateway model:
-
-![Set rate limit parameters in the AI Gateway portal](images/set-rate-limit-parameters-in-ai-gateway-portal.png)
-
-Select **Create** to apply the rate-limiting policy.
-
-Requests that exceed the configured limit will now be throttled, helping to maintain fair usage and service availability.
-
-
-### 3. Proxy the Financial Evidence MCP
+### 2. Proxy the Financial Evidence MCP
 
 The **AI Gateway** can proxy existing Model Context Protocol (MCP) servers. This applies access, authentication, and rate-limiting policies at the gateway without requiring changes to the MCP implementation.
 
 Next, onboard the existing `financial evidence` MCP to the AI Gateway. In the **AI Gateway** portal, open the **MCP servers** section and select **Add MCP server**:
 
-![Add MCP server in the AI Gateway portal](images/add-mcp-server-in-ai-gateway-portal.png)
+![Add MCP server in the AI Gateway portal](../../challenges/images/add-mcp-server-in-ai-gateway-portal.png)
 
 The portal supports three backend types:
 
-![Supported backend types in the AI Gateway portal](images/supported-backend-types-in-ai-gateway-portal.png)
+![Supported backend types in the AI Gateway portal](../../challenges/images/supported-backend-types-in-ai-gateway-portal.png)
 
 Select **MCP server**, then provide the details required to connect to the existing Financial Evidence MCP:
 
@@ -202,19 +77,19 @@ Select **Next**, validate the configuration, and select **Create** to add the MC
 
 You can now test the MCP from the **AI Gateway**. Select **Use**:
 
-![Test the MCP from the AI Gateway](images/test-mcp-from-ai-gateway.png)
+![Test the MCP from the AI Gateway](../../challenges/images/test-mcp-from-ai-gateway.png)
 
 Select the **Try it** tab, then select **List tools**. You should see all tools exposed by the Financial Evidence MCP:
 
-![List tools in the financial evidence MCP](images/list-tools-in-financial-evidence-mcp.png)
+![List tools in the financial evidence MCP](../../challenges/images/list-tools-in-financial-evidence-mcp.png)
 
 Select the **Get Bank Information** operation, enter `0121` as the bank ID, and select **Run tool**:
 
-![Run Get Bank Information tool in the financial evidence MCP](images/run-get-bank-information-tool-in-financial-evidence-mcp.png)
+![Run Get Bank Information tool in the financial evidence MCP](../../challenges/images/run-get-bank-information-tool-in-financial-evidence-mcp.png)
 
 The result should display information for bank ID `0121`. Expand the `data` element to view the details:
 
-![View detailed bank information in the financial evidence MCP](images/view-detailed-bank-information-in-financial-evidence-mcp.png)
+![View detailed bank information in the financial evidence MCP](../../challenges/images/view-detailed-bank-information-in-financial-evidence-mcp.png)
 
 You can now interact with the Financial Evidence MCP through the **AI Gateway**. Next, configure `EvidenceEnrichmentAgent` to use it.
 
@@ -222,7 +97,7 @@ You can now interact with the Financial Evidence MCP through the **AI Gateway**.
 
 Return to the **Microsoft Foundry** portal. Under **Build**, select **Agents**, then select `EvidenceEnrichmentAgent`. Remove the existing tool to ensure that the agent uses the latest MCP configuration:
 
-![Remove existing tool from the EvidenceEnrichmentAgent](images/remove-existing-tool-from-evidenceenrichmentagent.png)
+![Remove existing tool from the EvidenceEnrichmentAgent](../../challenges/images/remove-existing-tool-from-evidenceenrichmentagent.png)
 
 Select **Save**, then open the **Tools** menu on the left side of the page.
 
@@ -235,13 +110,13 @@ Then select **Update**.
 
 On the same MCP configuration page, select **Use in an agent**:
 
-![Use the MCP in an agent](images/use-mcp-in-agent.png)
+![Use the MCP in an agent](../../challenges/images/use-mcp-in-agent.png)
 
 Select `EvidenceEnrichmentAgent` as the agent that will use this MCP.
 
 Under the `EvidenceEnrichmentAgent` **Tools** section, verify that the `financial-evidence-mcp` endpoint shows the new **AI Gateway** configuration. Enable **Always auto-approve all tools**:
 
-![Configure Always auto-approve all tools](images/configure-always-auto-approve-all-tools.png)
+![Configure Always auto-approve all tools](../../challenges/images/configure-always-auto-approve-all-tools.png)
 
 **Save** the agent again to apply the new configuration.
 
@@ -250,7 +125,7 @@ Test the agent and inspect its traces to verify that it uses `financial-evidence
 To explore additional gateway policies, open the **Policies** section for `financial-evidence-mcp`. Because the **AI Gateway** is in preview, some MCP features, including the **Monitoring** tab, may still be unavailable.
 
 
-### 4. Generate an MCP from the Fraud Alert Manager API
+### 3. Generate an MCP from the Fraud Alert Manager API
 
 The **AI Gateway** can also expose an existing API as an MCP, bringing agent integration and policy management to APIs that were not originally designed as MCP servers.
 
@@ -273,25 +148,25 @@ Select **Add MCP server**, choose **OpenAPI Specification**, and complete the fo
 - **Spec URL**: Paste the URL you obtained from the previous step.
 - **Authentication**: Select **None** because the lab API does not require authentication.
 
-![Add MCP server](images/add-mcp-server-from-api.png)
+![Add MCP server](../../challenges/images/add-mcp-server-from-api.png)
 
 Select **Next**, validate the configuration, and select **Create** to add the MCP server.
 
 Explore the new MCP server in the **AI Gateway** playground. For example, list the existing alerts:
 
-![List existing alerts](images/list-existing-alerts.png)
+![List existing alerts](../../challenges/images/list-existing-alerts.png)
 
 
 Next, create `AlertManagerAgent` to interact with `alert-manager-mcp` through the **AI Gateway**, then add the agent to the full orchestration.
 
-### 5. Create the AlertManagerAgent
+### 4. Create the AlertManagerAgent
 
 This is the fourth agent in the workflow. `AlertManagerAgent` uses `alert-manager-mcp` to manage financial alerts through the **AI Gateway**.
 
 Use the following configuration:
 
 - Use the agent instructions in `walkthrough/challenge-05/alert-manager-agent/instructions.md`.
-- Select the model routed through the **AI Gateway**.
+- Select the model: `gpt-5.6-luna`
 - Onboard the MCP in **Microsoft Foundry** following the usual steps for MCP integration. Remember to add authentication with **API Key**, using header name `api-key` and value a valid API key provided by the **AI Gateway**.
 - Configure the MCP for the agent and enable auto-approval for all tools.
 - Save the agent configuration.
@@ -311,7 +186,7 @@ echo "https://$endpoint"
 
 Open the URL. Before testing, the dashboard contains five alerts:
 
-![List of current alerts](images/list-of-current-alerts.png)
+![List of current alerts](../../challenges/images/list-of-current-alerts.png)
 
 Test `AlertManagerAgent` by sending it the following JSON payload:
 
@@ -881,12 +756,12 @@ Test `AlertManagerAgent` by sending it the following JSON payload:
 
 Confirm that the new alert appears on the Alert Management dashboard:
 
-![Alert Management dashboard showing the new alert](images/alert-management-dashboard.png)
+![Alert Management dashboard showing the new alert](../../challenges/images/alert-management-dashboard.png)
 
 You can view the alert details or remove the alert to avoid duplicates in later tests.
 
 
-### 6. Add the Alert Manager Agent to the Orchestration
+### 5. Add the Alert Manager Agent to the Orchestration
 
 The final task is to add `AlertManagerAgent` to the orchestration so it can process transactions that require operational alerting.
 
@@ -982,7 +857,7 @@ Use these additional JSON payloads to test the orchestration:
 }
 ```
 
-Finally, inspect the AI Gateway telemetry and agent traces to verify that model calls and both MCP integrations traverse the gateway. Confirm that logs do not expose credentials or unnecessary financial payloads. Where possible, send an unauthorized request and verify that the gateway rejects it.
+Finally, inspect the AI Gateway telemetry and agent traces to verify that both MCP integrations traverse the gateway. Confirm that logs do not expose credentials or unnecessary financial payloads. Where possible, send an unauthorized request and verify that the gateway rejects it.
 
 ## 🚀 Go Further
 
@@ -999,4 +874,4 @@ Add per-agent quotas and compare their effects under a short concurrent workload
 
 ## 🧠 Conclusion
 
-You have placed model and MCP traffic behind a governance boundary and added operational alerting in parallel with report generation. Continue to [Challenge 6](solution-06.md) to add operational and business observability to the complete workflow.
+You have placed MCP traffic behind a governance boundary and added operational alerting in parallel with report generation. Continue to [Challenge 6](solution-06.md) to add operational and business observability to the complete workflow.

@@ -34,11 +34,11 @@ In Challenge 2, you connected **App Insights** to **Microsoft Foundry**, but you
 
 Open the **Monitor** tab for any agent to review its captured metrics. To access the underlying traces, logs, and custom telemetry, select **Open in Azure Monitor**:
 
-![Open in Azure Monitor](/challenges/images/open-in-azure-monitor.png)
+![Open in Azure Monitor](./images/open-in-azure-monitor.png)
 
 You should see a dashboard similar to the one below, showing the default telemetry captured by Application Insights:
 
-![Application Insights Dashboard](/challenges/images/agents-appins-dashboard.png)
+![Application Insights Dashboard](./images/agents-appins-dashboard.png)
 
 Explore the sections and panels to understand the default telemetry and how it reflects agent behavior.
 
@@ -46,17 +46,17 @@ Next, inspect a complete orchestration trace to see how the components interact 
 
 Select **View Traces with Agent Runs**, then choose a **Dependency**:
 
-![View Traces with Agent Runs](/challenges/images/view-traces-with-agent-runs.png)
+![View Traces with Agent Runs](./images/view-traces-with-agent-runs.png)
 
 The detailed trace shows the selected dependency within its orchestration run, including its interactions with other components and the telemetry correlation across the workflow.
 
 To explore and filter all traces, open **Search** in the **Investigate** section of the left sidebar:
 
-![Search in Investigate section](/challenges/images/search-in-investigate-section.png)
+![Search in Investigate section](./images/search-in-investigate-section.png)
 
 Select a trace to review its execution details, including spans, attributes, and related telemetry:
 
-![Trace Details](/challenges/images/trace-details.png)
+![Trace Details](./images/trace-details.png)
 
 These insights are provided by Application Insights through the agents' default auto-instrumentation.
 
@@ -69,7 +69,7 @@ The updated orchestration adds executors after specific agent executions. These 
 The new code is under `/walkthrough/challenge-06/orchestration`.
 Review the main orchestration code to see where the custom telemetry executors run after specific agent executions. The following image highlights the main changes:
 
-![Main Orchestration Code with Custom Telemetry Executors](/challenges/images/main-orchestration-code-with-custom-telemetry-executors.png)
+![Main Orchestration Code with Custom Telemetry Executors](./images/main-orchestration-code-with-custom-telemetry-executors.png)
 
 The metric definitions and configuration are in `walkthrough/challenge-06/orchestration/src/business_metrics.py`.
 
@@ -112,15 +112,15 @@ The script sends the number of requests specified by the `--count` argument.
 
 In **Application Insights**, verify that the custom telemetry is being captured. Open **Logs** under **Monitoring**, select the `customMetrics` table, and run a query to view the recorded metrics.
 
-![Custom Telemetry in Application Insights](/challenges/images/custom-telemetry-in-application-insights.png)
+![Custom Telemetry in Application Insights](./images/custom-telemetry-in-application-insights.png)
 
 You should see metrics similar to those shown below:
 
-![Custom Metrics in Application Insights](/challenges/images/custom-metrics-in-application-insights.png)
+![Custom Metrics in Application Insights](./images/custom-metrics-in-application-insights.png)
 
 You can also query specific custom metrics directly from **Logs**. Open the selector on the right, choose **KQL mode**, enter a query in the editor, and select **Run**:
 
-![Custom Metrics Query in Application Insights](/challenges/images/custom-metrics-query-in-application-insights.png)
+![Custom Metrics Query in Application Insights](./images/custom-metrics-query-in-application-insights.png)
 
 
 The following example queries provide several views of the custom metrics:
@@ -177,7 +177,7 @@ customMetrics
 
 The following image shows the result of the last query:
 
-![Result of AML Typology Detected by Pattern Type Query](/challenges/images/result-of-aml-typology-detected-by-pattern-type-query.png)
+![Result of AML Typology Detected by Pattern Type Query](./images/result-of-aml-typology-detected-by-pattern-type-query.png)
 
 Explore additional queries and visualizations as needed.
 
@@ -189,11 +189,11 @@ Use Grafana to create interactive dashboards for the custom metrics queried in A
 
 Return to the **Agents (Preview)** section introduced at the beginning of the lab, then select **Explore in Grafana** to open the Grafana integration:
 
-![Explore in Grafana](/challenges/images/explore-in-grafana.png)
+![Explore in Grafana](./images/explore-in-grafana.png)
 
 Grafana provides prebuilt dashboards and panels for visualizing the default telemetry:
 
-![Pre-built Dashboards in Grafana](/challenges/images/pre-built-dashboards-in-grafana.png)
+![Pre-built Dashboards in Grafana](./images/pre-built-dashboards-in-grafana.png)
 
 Explore these dashboards to become familiar with the interface.
 
@@ -212,7 +212,7 @@ Then, use the following settings:
 
 Select the correct **Application Insights** resource, whose name starts with `appi-fraud`. The imported dashboard should display panels similar to those below:
 
-![Custom metrics Grafana Dashboards](/challenges/images/custom-metrics-grafana-dashboards.png)
+![Custom metrics Grafana Dashboards](./images/custom-metrics-grafana-dashboards.png)
 
 You have now imported the dashboard and visualized the custom metrics in Grafana.
 

@@ -807,7 +807,7 @@ Ensure that the agents are defined correctly in the `main.py` file and that thei
 
 Those names and versions should be set correctly in the `main.py` file:
 
-![Agents versions](images/agents-versions.png)
+![Agents versions](./images/agents-versions.png)
 
 ### 4. Configure and Run the Orchestration Locally
 
@@ -833,16 +833,16 @@ The script will set up a virtual environment, install the required dependencies,
 
 In the logs, you should see the initialization of each agent:
 
-![Agents initialization](images/agents-initialization.png)
+![Agents initialization](./images/agents-initialization.png)
 
 
 The final trace shows the port on which the agent is listening:
 
-![Final trace showing the port the agent is listening on](images/orchestration-started.png)
+![Final trace showing the port the agent is listening on](./images/orchestration-started.png)
 
 To test the orchestration locally, select the **Foundry Toolkit** icon in Visual Studio Code and use the **Agent inspector** tool to interact with the running agents:
 
-![Agent inspector tool in Foundry Toolkit](images/agent-inspector.png)
+![Agent inspector tool in Foundry Toolkit](./images/agent-inspector.png)
 
 Then use the initial JSON request from Challenge 2 to interact with the agents:
 ```json
@@ -868,17 +868,17 @@ The result should be a Markdown report containing the transaction details and th
 
 Before deploying, ensure that you are signed in to your Azure account. Use the Azure extension in Visual Studio Code for this process. Select the **Azure** icon in the left sidebar to open the extension panel:
 
-![Azure Extension new account](images/azure-extension-new-account.png)
+![Azure Extension new account](./images/azure-extension-new-account.png)
 
 Select **Sign in with new account** and enter the credentials for the Azure account provided for the lab.
 
 Before proceeding, confirm that the correct Azure subscription is selected. Open **View** > **Command Palette**, then search for `Azure: Select Subscriptions` and choose the appropriate subscription:
 
-![Command Palette](images/command-palette.png)
+![Command Palette](./images/command-palette.png)
 
 Then:
 
-![Select Subscription in Azure](images/select-azure-subscription.png)
+![Select Subscription in Azure](./images/select-azure-subscription.png)
 
 Return to the **Foundry Toolkit** extension and set your **Foundry project** as the default. Under **My resources**, select **Set Foundry project**, then choose the project used for this lab.
 
@@ -902,27 +902,27 @@ Follow these steps to deploy your orchestration. Ensure you use:
 - **Package mode**: Remote
 - **Deploy to**: New agent, as it is the first deployment of this orchestration
 
-![Deploy to Microsoft Foundry](images/deploy-to-microsoft-foundry.png)
+![Deploy to Microsoft Foundry](./images/deploy-to-microsoft-foundry.png)
 
 Finally, review the deployment options before confirming the deployment:
 
-![Review deployment options](images/review-deployment-options.png)
+![Review deployment options](./images/review-deployment-options.png)
 
 Track the deployment progress in the **Output** panel in Visual Studio Code by selecting **Foundry Toolkit** as the output source:
 
-![Deployment progress in Output panel](images/deployment-progress-in-output-panel.png)
+![Deployment progress in Output panel](./images/deployment-progress-in-output-panel.png)
 
 Once the deployment is complete, you can run a test using the **Hosted Agent Playground**:
 
-![Hosted Agent Playground](images/hosted-agent-playground.png)
+![Hosted Agent Playground](./images/hosted-agent-playground.png)
 
 The new hosted agent also appears under **Agents** in the **Microsoft Foundry** portal, where you can interact with it and test its functionality:
 
-![Microsoft Foundry Agents](images/microsoft-foundry-hosted-agents.png)
+![Microsoft Foundry Agents](./images/microsoft-foundry-hosted-agents.png)
 
 Test it from the playground as well:
 
-![Try from the playground](images/try-from-the-playground.png)
+![Try from the playground](./images/try-from-the-playground.png)
 
 ### 6. Review Traces
 
@@ -930,11 +930,11 @@ Challenge 6 explores this topic in depth. For now, take a preliminary look at th
 
 In the agent playground, select **Traces**:
 
-![Traces in the agent's playground](images/traces-in-agents-playground.png)
+![Traces in the agent's playground](./images/traces-in-agents-playground.png)
 
 Open the last trace to inspect the detailed execution flow of your orchestration:
 
-![Detailed execution flow of the last trace](images/detailed-execution-flow-of-last-trace.png)
+![Detailed execution flow of the last trace](./images/detailed-execution-flow-of-last-trace.png)
 
 We will explore tracing and metrics in more depth in Challenge 6. For now, this preliminary view is enough to confirm that the three agents ran in the expected sequence.
 
@@ -952,4 +952,4 @@ Add idempotent case identifiers and checkpointing so a transient failure can res
 
 ## 🧠 Conclusion
 
-You have composed evidence enrichment, regulatory assessment, and reporting into a deployable investigation workflow. Continue to [Challenge 5](challenge-05.md) to govern model and MCP traffic and add operational alerting.
+You have composed evidence enrichment, regulatory assessment, and reporting into a deployable investigation workflow. Continue to [Challenge 5](challenge-05.md) to govern MCP traffic and add operational alerting.

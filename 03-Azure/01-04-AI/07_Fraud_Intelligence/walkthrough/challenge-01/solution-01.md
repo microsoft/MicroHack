@@ -20,15 +20,15 @@ Open the [Azure portal](https://portal.azure.com) and sign in with the credentia
 
 When prompted to choose an account, select **Use another account** and enter the credentials provided. Do not use your personal or work account.
 
-![Sign in to the Azure portal with another account](/challenges/images/azureportal.png)
+![Sign in to the Azure portal with another account](../../challenges/images/azureportal.png)
 
 In the Azure portal, select **Resource groups** from the navigation menu.
 
-![Resource groups in the Azure portal navigation menu](/challenges/images/resource-groups.png)
+![Resource groups in the Azure portal navigation menu](../../challenges/images/resource-groups.png)
 
 Open the resource group assigned to you and confirm that its resources have been deployed successfully.
 
-![Resources deployed in the assigned resource group](/challenges/images/resource-group-resources.png)
+![Resources deployed in the assigned resource group](../../challenges/images/resource-group-resources.png)
 
 Verify that you can access the resources used in the later challenges, including the Microsoft Foundry project, model deployments, Azure Cosmos DB account, and Application Insights resource.
 
@@ -38,41 +38,41 @@ Open [GitHub](https://github.com) and sign in with the credentials provided in y
 
 When prompted to choose an account, select **Use another account**. Do not use your personal or work account. 
 
-![Sign in to GitHub with another account](/challenges/images/github-login.png)
+![Sign in to GitHub with another account](../../challenges/images/github-login.png)
 
 Select **Sign in with your identity provider**, then use the assigned lab account to authenticate.
 
 Open the GitHub organization assigned to your lab account.
 
-![GitHub organization selector](/challenges/images/github-organization.png)
+![GitHub organization selector](../../challenges/images/github-organization.png)
 
 Select the assigned organization, then open the `microhack` repository. You need to fork the repository before you can create a Codespace. To fork the repository, click the **Fork** button in the top-right corner of the repository page and follow the prompts:
 
-![Create fork](/challenges/images/create-fork-1.png)
+![Create fork](../../challenges/images/create-fork-1.png)
 
 Use a unique name for the repository name to avoid conflicts with other forks. For example, you can append your lab username to the repository name (e.g., `microhack-labuser-0001`):
 
-![Fork repository with unique name](/challenges/images/create-fork-2.png)
+![Fork repository with unique name](../../challenges/images/create-fork-2.png)
 
 Finally, you should see your forked repository with the unique name you provided and all files and folders from the original repository:
 
-![Files and folders in the GitHub repository](/challenges/images/github-repository.png)
+![Files and folders in the GitHub repository](../../challenges/images/github-repository.png)
 
 ### 3. Create the development environment
 
 From the repository page, select **Code**, then open the **Codespaces** tab. Select the `...` menu and choose **New with options**.
 
-![Create a GitHub Codespace with options](/challenges/images/github-codespaces.png)
+![Create a GitHub Codespace with options](../../challenges/images/github-codespaces.png)
 
 For **Dev container configuration**, select **Azure / AI / Fraud Intelligence**, then select **Create codespace**:
 
-![Select Azure / AI / Fraud Intelligence dev container configuration](/challenges/images/select-dev-container.png)
+![Select Azure / AI / Fraud Intelligence dev container configuration](../../challenges/images/select-dev-container.png)
 
 GitHub opens the Codespace in a new browser tab. Wait for the container setup to finish, then confirm that the repository files are visible in the Explorer and that the integrated terminal opens without errors.
 
 > Important: When the Codespace finishes setting up, you are asked to open the full repository, select **Never**.
 
-![Never open full repository prompt in GitHub Codespace](/challenges/images/never-open-full-repository.png)
+![Never open full repository prompt in GitHub Codespace](../../challenges/images/never-open-full-repository.png)
 
 You should have a terminal ready to use, otherwise open a terminal in the Codespace (Terminal > New Terminal). Then run the following command to verify that Azure CLI is installed:
 

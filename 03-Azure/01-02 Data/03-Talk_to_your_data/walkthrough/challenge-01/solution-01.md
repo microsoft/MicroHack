@@ -47,11 +47,18 @@ In this task, you will enable managed identity authentication on your Azure SQL 
 
   <tr><th>Narrative</th><th>Notes</th></tr>
   <tr>
-    <td>Go to <a href="https://app.fabric.microsoft.com">Microsoft Fabric</a>. On the <b>Fabric Home</b> page, select <b>Fabric</b> in the bottom-left corner (1), select <b>Workspaces</b> (2), and open your predeployed workspace (3).</td>
+    <td>Go to <a href="https://app.fabric.microsoft.com">Microsoft Fabric</a> and sign in with the credentials provided for your lab environment. On the <b>Fabric Home</b> page, select <b>Fabric</b> in the bottom-left corner (1), select <b>Workspaces</b> (2), and open your predeployed workspace (3).</td>
     <td>Use the workspace assigned to you for this lab.</td>
   </tr>
   <tr>
     <td colspan="2" align="center"><img src="../../images/image001.png" width="100%"></td>
+  </tr>
+  <tr>
+    <td>After signing in for the first time, check the <b>Workspaces</b> list. If your predeployed workspace is not visible, perform a hard refresh using <b>Ctrl+Shift+R</b> in Edge or Chrome, then open <b>Workspaces</b> again.</td>
+    <td><b>Troubleshooting:</b> The workspace list may initially show only <b>My workspace</b>. A hard refresh reloads the list so the assigned workspace becomes visible.</td>
+  </tr>
+  <tr>
+    <td colspan="2" align="center"><img src="../../images/WorkspaceEmpty.png" style="width: 100%; display: block;"></td>
   </tr>
   <tr>
     <td>In your workspace, select <b>New item (2)</b>. In the <b>New item</b> window, search for <b>Mirror (3)</b>, then select <b>Mirrored Azure SQL Managed Instance (4)</b> to start creating a mirrored database.</td>

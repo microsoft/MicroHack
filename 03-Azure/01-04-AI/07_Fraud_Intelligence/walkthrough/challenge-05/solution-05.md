@@ -51,7 +51,7 @@ Open the [AI Gateway portal](https://ai.gateway.azure.com/) and sign in with the
 - **Resource group**: the existing lab resource group
 - **Enable managed identity**
 
-![AI Gateway deployment screenshot](images/ai-gateway-deployment.png)
+![AI Gateway deployment screenshot](../../challenges/images/ai-gateway-deployment.png)
 
 ### 2. Proxy the Financial Evidence MCP
 
@@ -59,11 +59,11 @@ The **AI Gateway** can proxy existing Model Context Protocol (MCP) servers. This
 
 Next, onboard the existing `financial evidence` MCP to the AI Gateway. In the **AI Gateway** portal, open the **MCP servers** section and select **Add MCP server**:
 
-![Add MCP server in the AI Gateway portal](images/add-mcp-server-in-ai-gateway-portal.png)
+![Add MCP server in the AI Gateway portal](../../challenges/images/add-mcp-server-in-ai-gateway-portal.png)
 
 The portal supports three backend types:
 
-![Supported backend types in the AI Gateway portal](images/supported-backend-types-in-ai-gateway-portal.png)
+![Supported backend types in the AI Gateway portal](../../challenges/images/supported-backend-types-in-ai-gateway-portal.png)
 
 Select **MCP server**, then provide the details required to connect to the existing Financial Evidence MCP:
 
@@ -77,19 +77,19 @@ Select **Next**, validate the configuration, and select **Create** to add the MC
 
 You can now test the MCP from the **AI Gateway**. Select **Use**:
 
-![Test the MCP from the AI Gateway](images/test-mcp-from-ai-gateway.png)
+![Test the MCP from the AI Gateway](../../challenges/images/test-mcp-from-ai-gateway.png)
 
 Select the **Try it** tab, then select **List tools**. You should see all tools exposed by the Financial Evidence MCP:
 
-![List tools in the financial evidence MCP](images/list-tools-in-financial-evidence-mcp.png)
+![List tools in the financial evidence MCP](../../challenges/images/list-tools-in-financial-evidence-mcp.png)
 
 Select the **Get Bank Information** operation, enter `0121` as the bank ID, and select **Run tool**:
 
-![Run Get Bank Information tool in the financial evidence MCP](images/run-get-bank-information-tool-in-financial-evidence-mcp.png)
+![Run Get Bank Information tool in the financial evidence MCP](../../challenges/images/run-get-bank-information-tool-in-financial-evidence-mcp.png)
 
 The result should display information for bank ID `0121`. Expand the `data` element to view the details:
 
-![View detailed bank information in the financial evidence MCP](images/view-detailed-bank-information-in-financial-evidence-mcp.png)
+![View detailed bank information in the financial evidence MCP](../../challenges/images/view-detailed-bank-information-in-financial-evidence-mcp.png)
 
 You can now interact with the Financial Evidence MCP through the **AI Gateway**. Next, configure `EvidenceEnrichmentAgent` to use it.
 
@@ -97,7 +97,7 @@ You can now interact with the Financial Evidence MCP through the **AI Gateway**.
 
 Return to the **Microsoft Foundry** portal. Under **Build**, select **Agents**, then select `EvidenceEnrichmentAgent`. Remove the existing tool to ensure that the agent uses the latest MCP configuration:
 
-![Remove existing tool from the EvidenceEnrichmentAgent](images/remove-existing-tool-from-evidenceenrichmentagent.png)
+![Remove existing tool from the EvidenceEnrichmentAgent](../../challenges/images/remove-existing-tool-from-evidenceenrichmentagent.png)
 
 Select **Save**, then open the **Tools** menu on the left side of the page.
 
@@ -110,13 +110,13 @@ Then select **Update**.
 
 On the same MCP configuration page, select **Use in an agent**:
 
-![Use the MCP in an agent](images/use-mcp-in-agent.png)
+![Use the MCP in an agent](../../challenges/images/use-mcp-in-agent.png)
 
 Select `EvidenceEnrichmentAgent` as the agent that will use this MCP.
 
 Under the `EvidenceEnrichmentAgent` **Tools** section, verify that the `financial-evidence-mcp` endpoint shows the new **AI Gateway** configuration. Enable **Always auto-approve all tools**:
 
-![Configure Always auto-approve all tools](images/configure-always-auto-approve-all-tools.png)
+![Configure Always auto-approve all tools](../../challenges/images/configure-always-auto-approve-all-tools.png)
 
 **Save** the agent again to apply the new configuration.
 
@@ -148,13 +148,13 @@ Select **Add MCP server**, choose **OpenAPI Specification**, and complete the fo
 - **Spec URL**: Paste the URL you obtained from the previous step.
 - **Authentication**: Select **None** because the lab API does not require authentication.
 
-![Add MCP server](images/add-mcp-server-from-api.png)
+![Add MCP server](../../challenges/images/add-mcp-server-from-api.png)
 
 Select **Next**, validate the configuration, and select **Create** to add the MCP server.
 
 Explore the new MCP server in the **AI Gateway** playground. For example, list the existing alerts:
 
-![List existing alerts](images/list-existing-alerts.png)
+![List existing alerts](../../challenges/images/list-existing-alerts.png)
 
 
 Next, create `AlertManagerAgent` to interact with `alert-manager-mcp` through the **AI Gateway**, then add the agent to the full orchestration.
@@ -186,7 +186,7 @@ echo "https://$endpoint"
 
 Open the URL. Before testing, the dashboard contains five alerts:
 
-![List of current alerts](images/list-of-current-alerts.png)
+![List of current alerts](../../challenges/images/list-of-current-alerts.png)
 
 Test `AlertManagerAgent` by sending it the following JSON payload:
 
@@ -756,7 +756,7 @@ Test `AlertManagerAgent` by sending it the following JSON payload:
 
 Confirm that the new alert appears on the Alert Management dashboard:
 
-![Alert Management dashboard showing the new alert](images/alert-management-dashboard.png)
+![Alert Management dashboard showing the new alert](../../challenges/images/alert-management-dashboard.png)
 
 You can view the alert details or remove the alert to avoid duplicates in later tests.
 

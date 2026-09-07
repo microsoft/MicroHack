@@ -1,7 +1,7 @@
 # Prepare the AKS environment
 
 The default Azure environment is AKS with OIDC issuer, workload identity, and the
-managed Istio add-on enabled. Challenge 01 provisions Kubernetes only.
+managed Istio add-on enabled. Challenge 02 provisions Kubernetes only.
 
 ## Automated preparation
 
@@ -69,4 +69,4 @@ az aks show \
   --query "{state:provisioningState,oidc:oidcIssuerProfile.enabled,workloadIdentity:securityProfile.workloadIdentity.enabled,serviceMesh:serviceMeshProfile.mode}"
 ```
 
-Radius is installed in Challenge 02.
+Radius is installed in Challenge 03.

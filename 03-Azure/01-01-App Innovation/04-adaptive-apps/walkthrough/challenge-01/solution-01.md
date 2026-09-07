@@ -1,241 +1,570 @@
-# Walkthrough Challenge 01 - Prepare the platforms
+# Walkthrough Challenge 01 - Prerequisites: ready, set, go
 
-[< Previous Solution](../challenge-00/solution-00.md) - **[Home](../../Readme.md)** - [Next Solution](../challenge-02/solution-02.md)
+**[Home](../../Readme.md)** - [Next Solution](../challenge-02/solution-02.md)
 
-Duration: 30-60 minutes
+## Coach notes
 
-## Prerequisites
+Challenge 01 verifies prerequisites. Participants should arrive with most tools
+installed or be prepared to install them quickly. Coaches should unblock environment
+issues so teams can proceed to Challenge 02, where they provision AKS and K3s.
 
-Complete [Challenge 00](../challenge-00/solution-00.md) and the
-[general prerequisites](../../Readme.md#general-prerequisites) before starting.
+Share these instructions one or two weeks before the MicroHack when possible.
 
-This challenge provisions Kubernetes only. Do not install Radius, the Adaptive Apps
-portfolio, recipes, or application workloads yet.
+## Required access and capacity
 
-## Default workshop topology
+Confirm the workshop has:
 
-| Logical environment | Platform | Purpose |
-| --- | --- | --- |
-| Azure | Azure Kubernetes Service (AKS) | Azure-managed Kubernetes with OIDC issuer, workload identity, and managed Istio enabled. |
-| Local | Single-node K3s on an Azure Linux VM | Self-managed Kubernetes representative of an on-premises or edge platform. |
+- An Azure subscription
+- Permission to create a resource group, AKS cluster, Linux VM, networking, and role
+  assignments
+- Permission to create Azure Bastion Standard and its managed public IP, a NAT gateway
+  and its public IP, invoke VM Run Command, and open Bastion native-client tunnels
+- Permission to create a Microsoft Entra application and service principal
+- Sufficient regional quota for:
+  - A two-node AKS cluster using `Standard_D4s_v5` by default
+  - One K3s VM using `Standard_D4s_v5` by default
+  - One Standard Azure Bastion host and its managed public IP
+  - One NAT gateway and one Standard public IP for K3s outbound access
 
-Both clusters run in Azure for workshop convenience, but only one is AKS. K3s does not
-inherit AKS cluster identity, networking, ACR integration, or managed add-ons. Those
-differences form the portability boundary used in later challenges.
+The default scripts assign the Radius identity `Owner` at the lab resource-group
+scope because later exercises can create role assignments. Use a dedicated lab
+subscription or resource group.
 
-The scripts are idempotent: rerunning one reuses its resource group and cluster or VM,
-refreshes credentials, and repeats the health check.
+## Required tools
 
-Common blockers:
+- Azure CLI
+- Azure CLI `bastion` extension
+- Bicep CLI
+- `kubectl`
+- Helm
+- Radius CLI (`rad`)
+- Git
+- `jq`
+- `yq`
+- `curl`
+- OpenSSH client
+- `tar`
+- Visual Studio Code
+- Bash for the optional automation scripts
 
-| Blocker | Guidance |
+Windows participants should use WSL 2 for the Bash automation scripts. Manual
+instructions can also be followed from PowerShell 7 where equivalent commands are
+available.
+
+## Recommended devcontainer
+
+The MicroHack includes a repository-level devcontainer at
+`.devcontainer/03-azure-01-01-app-innovation-04-adaptive-apps/devcontainer.json`. It is
+recommended for participants who can run containers locally because it keeps
+Challenges 01-05 on one tested Linux toolchain. Manual installation remains available
+below.
+
+### Host prerequisites
+
+Confirm each participant has:
+
+- A container runtime (see the options below)
+- Visual Studio Code
+- The Dev Containers extension (`ms-vscode-remote.remote-containers`)
+- Git on the host, because the repository is cloned before the container starts
+- Roughly 10 GB of free disk for the Ubuntu base image, features, and four small state
+  volumes, and at least 4 GB of memory available to the runtime
+
+On Windows, WSL 2 must be enabled first (`wsl --install`, then `wsl --set-default-version 2`
+in an elevated PowerShell, and `wsl --list --verbose` to confirm the distribution reports
+`2`). The repository can be cloned in the WSL filesystem for better filesystem
+performance.
+
+Three container runtimes are known to work with this configuration:
+
+| Runtime | Coach notes |
 | --- | --- |
-| Azure cannot allocate the requested VM size | The scripts detect this and fall back automatically. Override the ordered list with `AKS_NODE_VM_SIZE_CANDIDATES` or `K3S_VM_SIZE_CANDIDATES`, or choose another `AZURE_LOCATION`. |
-| AKS nodes remain `NotReady` | Check `az aks show --query provisioningState` and allow time for the initial node image pull. |
-| K3s API is unreachable | Run the helper in `connect` mode and inspect the recorded tunnel log. |
-| Bastion or networking is denied | Confirm FDPO policy, region/SKU, Network Contributor, VM Run Command, and Bastion tunnel permissions. |
-| K3s installer cannot be downloaded | The subnet has no outbound path. Confirm the NAT gateway is attached, or re-run with `K3S_ENABLE_NAT_GATEWAY=false` where policy allows it. |
-| Commands target the wrong cluster | Check both `KUBECONFIG` and `kubectl config current-context`. |
+| Docker Desktop | Simplest to support. Keep the WSL 2 based engine enabled on Windows. Docker Desktop requires a paid subscription for larger organizations, so confirm participants are licensed before recommending it as the default. |
+| Docker Engine inside WSL 2 or Linux | Avoids the Docker Desktop subscription. Participants install Docker Engine in the distribution, add themselves to the `docker` group, and open the repository through **WSL: Connect to WSL** so the extension targets that engine. |
+| Podman Desktop or Rancher Desktop | Usable where an organization standardizes on a Docker Desktop alternative. |
 
-Both scripts resolve the node or VM size before creating anything. They list the sizes
-the subscription can use in the target region, ignore `Zone`-only restrictions because
-the deployment is regional, and pick the first candidate that is offered. If the
-allocation still fails with a capacity or quota error, the failed resource is removed and
-the next candidate is tried. Authorization and policy failures are not retried.
+Have participants prove the runtime works before the workshop starts. `docker info` must
+print server details rather than a connection error. This single check removes most
+day-one delays.
 
-## Task 1: Provision AKS
+This configuration follows the MicroHack repository's multi-configuration convention.
+It is documented for local VS Code Dev Containers; do not advertise Codespaces unless
+the repository later adds and validates an explicit Codespaces selection workflow.
 
-The script creates or updates an Azure resource group and a two-node AKS cluster,
-enables OIDC issuer and workload identity, refreshes kubeconfig, and runs health checks.
-It does not create ACR, Key Vault, Storage, Radius, or portfolio resources.
-
-The devcontainer opens at the Adaptive Apps MicroHack root. Confirm the working
-directory before running the script:
+### Start the container
 
 ```bash
-test -f resources/prepare-aks.sh &&
-  test -f resources/prepare-k3s-azure-vm.sh
-pwd
-
-export AZURE_SUBSCRIPTION="<subscription-id>"
-export AZURE_LOCATION="westeurope"
-export RESOURCE_GROUP="rg-adaptive-apps"
-export AKS_CLUSTER="aks-adaptive-apps"
-
-bash resources/prepare-aks.sh
+git clone https://github.com/djong1/MicroHack.git
+cd MicroHack
+git switch djong1-adaptive-apps-microhack
+code .
 ```
 
-Optional settings:
+In VS Code:
 
-```bash
-export AKS_NODE_COUNT=2
-export AKS_NODE_VM_SIZE="Standard_D4s_v5"
-export AKS_NODE_VM_SIZE_CANDIDATES="Standard_D4s_v5 Standard_D4s_v4 Standard_D4s_v3"
-```
+1. Confirm the Explorer root is the MicroHack repository.
+2. Run **Dev Containers: Reopen in Container**.
+3. Select `03-azure-01-01-app-innovation-04-adaptive-apps` from the available
+   configurations.
+4. Wait for
+   `.devcontainer/03-azure-01-01-app-innovation-04-adaptive-apps/post-create.sh` to
+   finish.
+5. Confirm VS Code reopens
+   `03-Azure/01-01-App Innovation/04-adaptive-apps` as the workspace and opens
+   `Readme.md`.
+6. Open a new Bash terminal in the container.
 
-`AKS_NODE_VM_SIZE` is the preferred size. `AKS_NODE_VM_SIZE_CANDIDATES` replaces the
-whole ordered fallback list when a region needs different sizes.
+The configuration binds the repository root to `/workspaces/microhack` and sets the
+container workspace to
+`/workspaces/microhack/03-Azure/01-01-App Innovation/04-adaptive-apps`. Therefore,
+commands in Challenges 01-05 start in the MicroHack directory even though VS Code
+discovers the configuration from the repository root.
 
-The script merges AKS credentials into the default kubeconfig and activates the
-context named after `AKS_CLUSTER`.
+### Installed toolchain
 
-## Task 2: Provision K3s on an Azure VM
+The Azure CLI devcontainer feature installs Azure CLI 2.89.1. The post-create script
+installs Bicep 0.46.1 and the Azure CLI `bastion` extension 1.4.3 into the persisted
+Azure CLI state volume and also installs:
 
-The script creates or reuses a VNet, private Ubuntu VM, least-privilege NIC NSG, and
-Azure Bastion Standard host. Only Bastion-subnet traffic can reach VM ports 22 and 6443;
-all other inbound traffic is denied. The VM has no public IP. K3s installation and
-kubeconfig retrieval use Azure VM Run Command, then a native Bastion tunnel maps the
-private API to localhost.
+- `kubectl` 1.36.3
+- Helm 3.21.4
+- Radius CLI 0.60.0 and its Radius Bicep support
+- PowerShell 7 through the official Dev Containers feature
+- `yq` 4.53.4
+- Git, `jq`, `curl`, OpenSSH client, `tar`, and CA certificates
 
-JIT is not used because it only changes when an NSG rule is open; it does not create a
-route to a private VM. RDP is a Windows protocol and does not apply to this Ubuntu host.
-Azure Bastion supplies the private network path, with SSH retained only as an optional
-Bastion-restricted Linux troubleshooting route.
+Version pins make participant environments repeatable. Updating a pin requires static
+validation of this MicroHack and compatibility with the Kubernetes versions offered by
+AKS.
 
-```bash
-export AZURE_SUBSCRIPTION="<subscription-id>"
-export AZURE_LOCATION="westeurope"
-export RESOURCE_GROUP="rg-adaptive-apps"
-export K3S_VM_NAME="vm-adaptive-apps-k3s"
+Every pinned tool ships both `amd64` and `arm64` Linux builds, and `post-create.sh`
+selects the matching one from `uname -m`. The configuration is validated on `x86_64` and
+`arm64` hosts, including Apple Silicon and Windows on Arm. Do not tell participants to
+force `--platform linux/amd64`. The workstation architecture does not affect Azure: the
+AKS nodes and the K3s VM are x64 Azure VM sizes in every case.
 
-bash resources/prepare-k3s-azure-vm.sh
-```
+Rust, k3d, and application-development extensions from the source repository
+devcontainer are intentionally omitted. Challenges 01-06 use Bash and PowerShell 7,
+create K3s on an Azure VM, and do not build the Adaptive Apps application source.
 
-Optional settings:
+### Persistent state and security
 
-```bash
-export K3S_VM_SIZE="Standard_D4s_v5"
-export K3S_VM_SIZE_CANDIDATES="Standard_D4s_v5 Standard_D4s_v4 Standard_D4s_v3"
-export K3S_ADMIN_USERNAME="azureuser"
-export K3S_KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
-export VNET_PREFIX="10.42.0.0/16"
-export K3S_SUBNET_PREFIX="10.42.0.0/24"
-export BASTION_SUBNET_PREFIX="10.42.1.0/26"
-export K3S_LOCAL_PORT=16443
-export K3S_ENABLE_NAT_GATEWAY=true
-```
+The configuration mounts four Docker named volumes. `${devcontainerId}` gives each
+devcontainer its own stable suffix, so separate clones do not share credentials:
 
-### Outbound access for the private VM
-
-The VM has no inbound internet exposure, but it needs outbound access to download K3s and
-pull images. Azure is retiring implicit default outbound access: for API versions released
-after 2026-03-31, new virtual networks default to private subnets with no outbound path,
-so the behavior depends on the Azure CLI version rather than the date.
-
-The script sets the posture explicitly instead of inheriting the platform default:
-
-| Posture | Selection | Cost |
+| Volume | Container path | Contents |
 | --- | --- | --- |
-| NAT gateway, subnet stays private | default | Hourly charge plus per-GB data processing |
-| Default outbound access, set explicitly on `snet-k3s` | `K3S_ENABLE_NAT_GATEWAY=false` | None |
+| `adaptive-apps-microhack-azure-${devcontainerId}` | `/home/vscode/.azure` | Azure tokens, CLI settings, and Bicep |
+| `adaptive-apps-microhack-kube-${devcontainerId}` | `/home/vscode/.kube` | AKS and K3s kubeconfig files |
+| `adaptive-apps-microhack-radius-${devcontainerId}` | `/home/vscode/.rad` | Radius workspaces and components |
+| `adaptive-apps-microhack-ssh-${devcontainerId}` | `/home/vscode/.ssh` | K3s VM SSH key and known hosts |
+
+This state survives **Rebuild Container**. It does not survive deletion of the named
+volumes. The files contain credentials and must be protected like the corresponding
+host directories.
+
+The configuration deliberately does not:
+
+- Bake tokens, kubeconfig files, SSH keys, or Radius workspace state into the image
+- Mount the host's `~/.azure`, `~/.kube`, `~/.rad`, or `~/.ssh`
+- Mount the host Docker socket
+
+### Windows Git worktrees
+
+A Windows Git worktree stores a `.git` text pointer containing a Windows path such as
+`C:/.../.git/worktrees/...`. Linux cannot resolve that host path through the repository
+bind mount. Git-aware shell prompts can therefore print `fatal: not a git repository`
+before otherwise unrelated commands.
+
+The post-create script detects this pointer without changing it and appends a simple
+non-Git-aware Bash prompt inside the container. It does not mount arbitrary host paths,
+replace Git metadata, or mutate the host worktree. The MicroHack scripts do not require
+repository-aware Git commands.
+
+If participants need Git operations inside the container, use a normal repository
+clone, whose `.git` metadata is contained in the bound directory, rather than a Windows
+worktree. Git remains installed for normal clones, but do not claim repository Git
+functionality for a Windows worktree bind mount.
+
+Without a Docker socket, use the temporary `DOCKER_CONFIG` and `az acr login
+--expose-token` flow documented in Solution 05 when publishing the recipes. The
+`configure-recipes.sh` helper already uses this token-based approach.
+
+### Azure and Radius authentication
+
+Sign in from the container and select the lab subscription:
 
 ```bash
-export K3S_ENABLE_NAT_GATEWAY=false
-bash resources/prepare-k3s-azure-vm.sh
+az login
+az account set --subscription "<subscription-id>"
+az account show --output table
 ```
 
-The NAT gateway is the default because it is explicit, survives the retirement of default
-outbound access, and gives a deterministic egress IP that a firewall can allowlist. The
-subnet is deliberately kept private, because a nonprivate subnet can still receive a
-platform-assigned fallback outbound IP alongside the NAT gateway.
-
-Use `K3S_ENABLE_NAT_GATEWAY=false` only to avoid the NAT gateway cost, and only where
-Azure Policy still permits default outbound access. If the posture changes on an existing
-deployment, the script reconciles it and restarts the VM, because the change only applies
-after a deallocate and start. Remember to delete the NAT gateway and its public IP during
-cleanup.
-
-The generated kubeconfig points to `https://127.0.0.1:16443`. Its credentials are
-retrieved in bounded chunks and are never printed. The script also registers the
-`k3s-azure-vm` context in the default `~/.kube/config` without changing the active
-context, because the Radius CLI resolves part of its installation through the default
-kubeconfig rather than through `KUBECONFIG`. Explicitly exporting `KUBECONFIG` remains
-the documented way to target K3s.
-
-After reopening or rebuilding the devcontainer, re-establish the tunnel without changing
-Azure resources:
+Azure CLI may open a browser on the host or show a device-code prompt. When the
+container cannot reach a browser at all, force the device-code flow:
 
 ```bash
-export AZURE_SUBSCRIPTION="<subscription-id>"
-bash resources/prepare-k3s-azure-vm.sh connect
-
-export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
-kubectl config use-context k3s-azure-vm
-kubectl get nodes
+az login --use-device-code
 ```
 
-Inspect or stop the tunnel safely:
+Tokens are saved only in the `~/.azure` volume.
 
-```bash
-bash resources/prepare-k3s-azure-vm.sh status
-bash resources/prepare-k3s-azure-vm.sh disconnect
-```
+Radius CLI state is separate. Challenge 03 creates `ws-azure-prod` and
+`ws-local-prod` under `~/.rad/config.yaml`; it also configures the workload identity
+used by the Radius control plane on AKS. Rebuilding the container preserves those
+local workspace definitions.
 
-The script records the exact PID and verifies its command line before sending
-`SIGTERM`; it never kills by process name. The Azure CLI launcher runs its Python entry
-point as a child process, so `disconnect` stops every process whose command line matches
-this tunnel's Bastion name, resource group, and both ports. A tunnel orphaned by a
-crashed shell is reclaimed automatically on the next `connect`. The tunnel exposes only
-the Kubernetes API. Use `kubectl port-forward` for later Radius and application access.
+### Kubeconfig, tunnel, and SSH-key behavior
 
-Return to AKS:
+Challenge 02 writes:
 
-```bash
-unset KUBECONFIG
-kubectl config use-context aks-adaptive-apps
-kubectl get nodes
-```
+- AKS credentials to the default `~/.kube/config`
+- K3s credentials and Bastion tunnel state under `~/.kube`
+- The generated VM SSH key under `~/.ssh` for optional Bastion-only troubleshooting
 
-> [!IMPORTANT]
-> Treat kubeconfig files as credentials. Share the K3s kubeconfig only through an
-> approved secure channel and remove access when the workshop ends. Azure Bastion
-> accrues hourly cost while deployed; follow the
-> [K3s cleanup guidance](../../docs/prepare-k3s.md#cost-and-cleanup).
-
-## Health checks
-
-Each script exits with a nonzero status when its environment is unhealthy. Checks
-cover Azure provisioning, the active context, Kubernetes API readiness, node
-readiness, AKS identity features, and the K3s service.
-
-Repeat the Kubernetes checks manually:
+The named volumes preserve this state. The tunnel process itself does not survive a
+container restart; Challenge 02 documents its `connect` mode. Participants must still
+switch safely:
 
 ```bash
 # AKS
 unset KUBECONFIG
 kubectl config use-context aks-adaptive-apps
-kubectl get --raw="/readyz"
-kubectl wait --for=condition=Ready nodes --all --timeout=10m
-kubectl get nodes -o wide
 
 # K3s
-export AZURE_SUBSCRIPTION="<subscription-id>"
-bash resources/prepare-k3s-azure-vm.sh connect
 export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
 kubectl config use-context k3s-azure-vm
-kubectl get --raw="/readyz"
-kubectl wait --for=condition=Ready nodes --all --timeout=10m
-kubectl get nodes -o wide
 ```
 
-Do not continue until both APIs return `ok` and every node is `Ready`.
+Do not copy kubeconfig files or private keys into the Git workspace. If teammates need
+K3s access, distribute credentials through an approved secure channel.
 
-## Optional platforms
+### What runs where
 
-Use these manual paths only when the workshop already has suitable infrastructure:
+The devcontainer runs only participant tools. Commands executed inside it create or
+configure remote resources:
 
-| Platform | Manual preparation |
+- Challenge 02 creates AKS and an Azure VM, then installs K3s on that VM.
+- Challenge 03 installs separate Radius control planes into AKS and K3s.
+- Challenge 04 installs the portfolio and registers resource types remotely.
+- Challenge 05 publishes the teaching recipe and two corrected PostgreSQL recipes to a
+  Standard ACR, then registers pinned recipes with both Radius environments. Anonymous
+  pull applies only to those non-secret recipe artifacts.
+
+No Kubernetes cluster or Docker daemon runs inside this devcontainer.
+
+### Verify and troubleshoot
+
+Run:
+
+```bash
+az --version
+az bicep version
+kubectl version --client
+helm version --short
+rad version
+pwsh --version
+git --version
+jq --version
+yq --version
+az extension show --name bastion --query version --output tsv
+curl --version
+ssh -V
+tar --version
+```
+
+If creation fails:
+
+1. Inspect the Dev Containers creation log for the first failed download or command.
+2. If using a Windows worktree, pull or check out the fix on the Windows host because
+   repository-aware Git commands are unavailable inside the container.
+3. Run **Dev Containers: Rebuild Container** to apply the LF-normalized setup script,
+   prompt fallback, and explicit tool `PATH`.
+4. Open a new Bash terminal and rerun the verification commands above.
+5. If a rebuild is temporarily unavailable after the host has the corrected files,
+   rerun setup safely from the existing container:
+
+   ```bash
+   bash /workspaces/microhack/.devcontainer/03-azure-01-01-app-innovation-04-adaptive-apps/post-create.sh
+   exec bash
+   ```
+
+6. Confirm `command -v kubectl` returns `/home/vscode/.local/bin/kubectl`.
+7. Confirm Docker Desktop is running and the container can reach GitHub, Microsoft,
+   Kubernetes, and Helm download endpoints.
+8. If tools are installed but not found, open a new terminal so `.bashrc` and the
+   devcontainer `remoteEnv` update
+   `PATH`.
+9. If state is unexpectedly missing, verify that the four named volumes still exist.
+10. Delete a named volume only when intentionally resetting its credential state.
+
+## Manual installation instructions
+
+### macOS
+
+Install Azure CLI:
+
+```bash
+brew install azure-cli
+```
+
+Install `kubectl`:
+
+```bash
+brew install kubectl
+```
+
+Install Helm:
+
+```bash
+brew install helm
+```
+
+Install Git and supporting command-line tools:
+
+```bash
+brew install git curl jq yq
+az bicep install
+```
+
+Install Radius CLI:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/radius-project/radius/main/deploy/install.sh |
+  /bin/bash
+```
+
+If `rad` is not found, add the installer path and reload the shell:
+
+```bash
+echo 'export PATH="$HOME/.local/bin:$PATH"' >>~/.zshrc
+source ~/.zshrc
+```
+
+Install Visual Studio Code:
+
+```bash
+brew install --cask visual-studio-code
+```
+
+### Linux: Ubuntu or Debian
+
+Install Azure CLI:
+
+```bash
+curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+```
+
+Install `kubectl`:
+
+```bash
+curl -LO "https://dl.k8s.io/release/$(curl -L -s \
+  https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+```
+
+Install Helm:
+
+```bash
+curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+```
+
+Install supporting tools:
+
+```bash
+sudo apt-get update
+sudo apt-get install --yes git curl jq openssh-client tar
+az bicep install
+
+YQ_VERSION="v4.53.4"
+YQ_ARCH="amd64"
+[[ "$(uname -m)" == "aarch64" ]] && YQ_ARCH="arm64"
+sudo curl --fail --location \
+  "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_${YQ_ARCH}" \
+  --output /usr/local/bin/yq
+sudo chmod 0755 /usr/local/bin/yq
+```
+
+Install Radius CLI:
+
+```bash
+wget -q "https://raw.githubusercontent.com/radius-project/radius/main/deploy/install.sh" \
+  -O - | /bin/bash
+```
+
+Add Radius to `PATH` if needed:
+
+```bash
+echo 'export PATH="$HOME/.local/bin:$PATH"' >>~/.bashrc
+source ~/.bashrc
+```
+
+Install Visual Studio Code from
+[code.visualstudio.com](https://code.visualstudio.com/) or with Snap:
+
+```bash
+sudo snap install code --classic
+```
+
+### Windows: WSL 2 and PowerShell 7
+
+Install WSL 2 with Ubuntu from an elevated PowerShell prompt:
+
+```powershell
+wsl --install -d Ubuntu
+```
+
+Restart if requested, open Ubuntu, and follow the Linux installation instructions.
+This is the recommended environment for the Bash automation scripts.
+
+Tools can alternatively be installed on Windows with `winget`:
+
+```powershell
+winget install Microsoft.AzureCLI
+winget install Kubernetes.kubectl
+winget install Helm.Helm
+winget install RadiusProject.rad
+winget install Git.Git
+winget install jqlang.jq
+winget install MikeFarah.yq
+winget install Microsoft.VisualStudioCode
+winget install Microsoft.PowerShell
+az bicep install
+```
+
+> [!IMPORTANT]
+> Keep a toolchain together. If automation runs in WSL, install Azure CLI, `kubectl`,
+> Helm, `rad`, Git, SSH, and `tar` inside WSL and keep kubeconfig files there.
+
+## Verify the workstation
+
+Install or update the stable Bastion extension on a manual workstation:
+
+```bash
+az extension add \
+  --name bastion \
+  --version 1.4.3 \
+  --upgrade \
+  --yes \
+  --allow-preview false
+```
+
+Run:
+
+```bash
+az --version
+az bicep version
+kubectl version --client
+helm version
+rad version
+git --version
+jq --version
+yq --version
+az extension show --name bastion --query version --output tsv
+curl --version
+ssh -V
+tar --version
+```
+
+Sign in and select the intended subscription:
+
+```bash
+az login
+az account list --output table
+az account set --subscription "<subscription-id>"
+az account show --output table
+```
+
+Confirm the required resource providers can be registered:
+
+```bash
+az provider register --namespace Microsoft.ContainerService
+az provider register --namespace Microsoft.Compute
+az provider register --namespace Microsoft.Network
+```
+
+Provider registration is asynchronous:
+
+```bash
+az provider show \
+  --namespace Microsoft.ContainerService \
+  --query registrationState \
+  --output tsv
+```
+
+## Verification checklist
+
+### Azure access
+
+- `az account show` returns the intended subscription.
+- The participant can create resources in the lab resource group.
+- The coach can create Entra applications or has arranged an identity in advance.
+- AKS and VM quota are sufficient in the selected region.
+
+### Kubernetes tooling
+
+- `kubectl version --client` succeeds.
+- No cluster connection is required yet; Challenge 02 creates the clusters.
+
+### Helm
+
+- `helm version` succeeds.
+- Helm 3 is installed.
+
+### Radius
+
+- `rad version` succeeds.
+- Use the latest stable CLI so the installed control plane uses the matching version.
+
+### Shell and supporting tools
+
+- Bash can run the optional automation scripts.
+- Git, `curl`, SSH, and `tar` are available.
+- On Windows, the team has agreed whether commands run in WSL or native PowerShell.
+- Devcontainer participants have confirmed that rebuilds preserve the expected named
+  volumes and understand that those volumes contain credentials.
+
+## Troubleshooting
+
+| Tool or symptom | Guidance |
 | --- | --- |
-| Azure Local with AKS enabled by Azure Arc | [Prepare Azure Local](../../docs/prepare-azure-local.md) |
-| Existing Kubernetes connected with Azure Arc | [Prepare Azure Arc-enabled Kubernetes](../../docs/prepare-arc.md) |
+| `az: command not found` | Reinstall Azure CLI, restart the shell, and inspect `PATH`. |
+| `kubectl: command not found` | Reinstall `kubectl` and inspect `PATH`. |
+| `rad: command not found` | Add `$HOME/.local/bin` to `PATH` or reinstall from the Radius releases page. |
+| Helm permission error | Verify the Helm binary and local cache ownership; do not default to running Helm as root. |
+| Wrong Azure subscription | Run `az account set --subscription "<subscription-id>"`. |
+| Azure authorization error | Confirm the participant's role and scope before troubleshooting scripts. |
+| Bastion tunnel authorization error | Confirm the role includes `Microsoft.Network/bastionHosts/tunnels/action` and the participant can read the VM/NIC. |
+| AKS or VM quota error | Select another VM size or region, or request quota before the event. |
+| WSL cannot see native Windows tools | Install the complete toolchain inside WSL rather than mixing environments. |
+| Devcontainer creation fails | Inspect the creation log, confirm network access, and run **Dev Containers: Rebuild Container**. |
+| Devcontainer lost authentication or contexts | Confirm the named Azure, Kubernetes, Radius, and SSH volumes were not deleted. |
+| Repeated `fatal: not a git repository` in a Windows worktree | Rebuild the container and open a new Bash terminal. Git operations require a normal clone; MicroHack commands do not require Git. |
 
-Arc enablement is optional for the default K3s VM. Arc projects an existing cluster
-into Azure management; it does not create the cluster and is not required by Radius.
+Azure Cloud Shell can temporarily help with Azure resource inspection, but the K3s
+kubeconfig and later local files still require a consistent participant workstation.
 
-## Completion criteria
+## Tips for coaches
 
-- Both scripts finish successfully.
-- Coaches can switch explicitly between AKS and K3s.
-- Both Kubernetes APIs and all nodes are healthy.
-- The K3s VM is private and reachable only through the localhost Bastion tunnel.
-- No Radius control plane, portfolio, recipes, or application workloads are installed.
+- Send these instructions early and ask participants to return the verification output.
+- Validate AKS and VM quota before the event.
+- Agree on one Azure region and one lab resource-group naming convention.
+- Confirm Azure Bastion Standard is allowed in the selected region and budget for its
+  hourly cost until cleanup.
+- Confirm delegated-network participants have Network Contributor plus VM Run Command
+  and Bastion tunnel permissions.
+- Decide who runs shared cluster deployment scripts; only one person should provision
+  each shared environment.
+- Encourage participants to use manual tutorials for learning. Automation is an
+  optional shortcut, not the primary path.
+- Keep Challenge 01 focused on verification. Challenge 02 contains the platform work.
+
+## Expected outcome
+
+After Challenge 01, participants can:
+
+- Use Azure CLI and select the correct subscription.
+- Run `kubectl`, Helm, and Radius CLI.
+- Use Git, `curl`, SSH, `tar`, and the Azure CLI Bastion extension.
+- Explain where their kubeconfig and Radius workspace configuration will be stored.
+- Proceed to [Challenge 02](../challenge-02/solution-02.md) to provision AKS and K3s.

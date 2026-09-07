@@ -1,159 +1,156 @@
-# Challenge 02 - Deploy and explore Radius
+# Challenge 02 - Prepare the platforms
 
 [< Previous Challenge](challenge-01.md) - **[Home](../Readme.md)** - [Next Challenge >](challenge-03.md)
 
-Estimated time: 30-45 minutes per environment | Difficulty: intermediate
+Estimated time: 30-60 minutes | Difficulty: intermediate
 
 ## Challenge objective
 
-Install and explore independent Radius control planes on both default platforms.
-Configure the matching local CLI workspaces, Radius environments, and groups:
+Prepare and validate the two Kubernetes platforms used throughout the MicroHack:
 
-| Platform | Workspace | Environment | Group |
-| --- | --- | --- | --- |
-| AKS | `ws-azure-prod` | `env-azure-prod` | `rg-trading` |
-| K3s on an Azure VM | `ws-local-prod` | `env-local-prod` | `rg-trading` |
+| Logical environment | Platform | Purpose |
+| --- | --- | --- |
+| Azure | Azure Kubernetes Service (AKS) | Azure-managed Kubernetes with workload identity and managed Istio |
+| Local | K3s on an Azure Linux VM | Self-managed Kubernetes representing an on-premises or edge platform |
 
-The default workshop architecture is federated: each platform has its own Radius
-control plane and can operate independently.
+Both environments run in Azure for workshop convenience, but only one is AKS. Their
+different identity, networking, registry, and managed-service capabilities create the
+portability boundary explored in later challenges.
+
+> [!IMPORTANT]
+> This challenge provisions Kubernetes only. Do not install Radius, the Adaptive Apps
+> portfolio, recipes, or application workloads.
 
 ## Learning goals
 
-- Compare centralized and federated Radius control-plane models.
-- Install Radius manually on Azure-managed and self-managed Kubernetes.
-- Distinguish a control plane, local CLI workspace, environment, group, and
-  application.
-- Configure Azure workload identity for the AKS Radius control plane.
-- Validate Radius through Kubernetes, the CLI, and the dashboard.
-
-Before the first K3s command in this challenge, re-establish the private API tunnel if
-the devcontainer was reopened or rebuilt:
-
-```bash
-export AZURE_SUBSCRIPTION="<subscription-id>"
-bash resources/prepare-k3s-azure-vm.sh connect
-export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
-```
+- Prepare Azure-managed and self-managed Kubernetes platforms.
+- Configure AKS features needed by later identity and service-mesh exercises.
+- Secure access to a K3s API running on an Azure VM.
+- Switch deliberately between kubeconfig files and Kubernetes contexts.
+- Establish a healthy baseline before adding platform components.
 
 ## Tasks
 
-### Task 1: Select the control-plane model
+### Task 1: Plan the environment
 
-Compare these approaches:
+Agree on names and values for:
 
-- **Centralized:** one management control plane governs multiple execution
-  environments.
-- **Federated:** each site runs an independent control plane and receives configuration
-  from shared source control.
+- Azure subscription and location
+- Lab resource group
+- AKS cluster
+- Private K3s VNet, VM, and Azure Bastion names
+- AKS node and K3s VM sizes
+- Nonoverlapping VNet, workload-subnet, and `/26` `AzureBastionSubnet` CIDRs
 
-Document why the federated model is appropriate for a scenario that includes an
-intermittently connected or disconnected site. Identify the availability and
-governance trade-offs.
+The local helper scripts use these defaults:
 
-### Task 2: Install Radius manually on AKS
-
-Before installation:
-
-1. Select kube context `aks-adaptive-apps`.
-2. Create a Microsoft Entra application and service principal for Radius.
-3. Use the AKS OIDC issuer to create federated credentials for the Radius service
-   accounts in namespace `radius-system`.
-4. Grant the Radius identity the required role on the isolated lab resource group.
-
-Install Radius with Azure workload identity enabled. Only one team member should run
-the control-plane installation.
-
-Create and select:
-
-- Workspace `ws-azure-prod`, targeting context `aks-adaptive-apps`
-- Group `rg-trading`
-- Environment `env-azure-prod`, using Kubernetes namespace `env-azure-prod`
-
-Configure the environment's Azure subscription and resource group, then register the
-Azure workload-identity credential.
-
-### Task 3: Install Radius manually on K3s
-
-Select the dedicated K3s kubeconfig and context `k3s-azure-vm`, then install a second,
-independent Radius control plane.
-
-Create and select:
-
-- Workspace `ws-local-prod`, targeting context `k3s-azure-vm`
-- Group `rg-trading`
-- Environment `env-local-prod`, using Kubernetes namespace `env-local-prod`
-
-Do not register Azure credentials or configure an Azure provider for K3s.
-
-### Task 4: Validate and explore both installations
-
-For each platform, activate the matching Kubernetes context and Radius workspace, then
-verify:
-
-```bash
-kubectl wait --for=condition=Available deployments --all \
-  --namespace radius-system \
-  --timeout=10m
-kubectl get pods --namespace radius-system
-kubectl get crd recipes.radapp.io deploymenttemplates.radapp.io deploymentresources.radapp.io
-
-rad workspace list
-rad env list
-rad group list
+```text
+Resource group: rg-adaptive-apps
+AKS context: aks-adaptive-apps
+K3s VM: vm-adaptive-apps-k3s
+K3s context: k3s-azure-vm
+K3s kubeconfig: ~/.kube/adaptive-apps-k3s.yaml
+K3s API endpoint: https://127.0.0.1:16443
+Azure Bastion: bas-adaptive-apps
 ```
 
-Port-forward the Radius dashboard service in `radius-system`, explore the active
-environment, and then repeat with the other platform.
+### Task 2: Provision AKS
 
-Prepare a short team explanation of:
+Create a two-node AKS cluster with:
 
-- Which objects live in Kubernetes and which configuration is local to a workstation
-- Why both control planes can use a group named `rg-trading` without sharing one group
-- Which environment can provision Azure-managed resources
-- What happens to applications on K3s if AKS is unavailable
+- OIDC issuer enabled
+- Microsoft Entra workload identity enabled
+- Managed Istio enabled
+- Credentials merged into the default kubeconfig
+
+The repository includes `resources/prepare-aks.sh` as the supported provisioning path.
+Review its inputs before running it, set the subscription, location, resource-group,
+and cluster values explicitly, then validate the result independently.
+
+### Task 3: Provision K3s on an Azure VM
+
+Create an Ubuntu VM with:
+
+- A private NIC and no VM public IP
+- A workload subnet plus a correctly named `/26` or larger `AzureBastionSubnet`
+- Azure Bastion Standard with native client tunneling enabled
+- VM NSG access on TCP 22 and 6443 only from `AzureBastionSubnet`
+- K3s installed without its bundled Traefik ingress controller
+- A dedicated local kubeconfig using context `k3s-azure-vm` and a localhost endpoint
+- A persistent localhost tunnel from port 16443 to the private K3s API
+
+The repository includes `resources/prepare-k3s-azure-vm.sh`. Review its network and
+kubeconfig behavior before running it. Treat the generated kubeconfig as a credential.
+Use its `connect` mode after a devcontainer restart. JIT is not a route to a private VM,
+and RDP does not apply to Linux; Bastion supplies the private path.
+
+### Task 4: Validate both platforms
+
+For each platform, verify:
+
+```bash
+kubectl config current-context
+kubectl get --raw="/readyz"
+kubectl wait --for=condition=Ready nodes --all --timeout=10m
+kubectl get nodes -o wide
+```
+
+For AKS, also confirm that OIDC issuer, workload identity, and managed Istio are
+enabled. For K3s, confirm the VM has no public IP, Bastion native tunneling is enabled,
+the recorded localhost tunnel is healthy, and the K3s service is active.
+
+### Task 5: Practice explicit context switching
+
+Demonstrate that your team can:
+
+1. Use the default kubeconfig and select `aks-adaptive-apps`.
+2. Set `KUBECONFIG` to the dedicated K3s file and select `k3s-azure-vm`.
+3. Return to AKS without accidentally continuing to target K3s.
+
+Record the active kubeconfig and context whenever you switch platforms.
 
 ## Success criteria
 
-- The team can explain why the default topology uses federated control planes.
-- Radius deployments in `radius-system` are healthy on AKS and K3s.
-- Radius CRDs exist on both clusters.
-- `ws-azure-prod` targets AKS and exposes `env-azure-prod` and `rg-trading`.
-- `ws-local-prod` targets K3s and exposes `env-local-prod` and `rg-trading`.
-- AKS has a Radius Azure workload-identity credential and Azure provider settings.
-- K3s has neither Azure credentials nor an Azure provider.
-- The dashboard is accessible for each control plane.
-- No capability portfolio, resource type, recipe, or application deployment has
-  started.
+- AKS provisioning state is `Succeeded`.
+- AKS has OIDC issuer, workload identity, and managed Istio enabled.
+- The K3s VM is running and its K3s service is active.
+- The K3s VM has no public IP or Internet-sourced inbound rule.
+- Azure Bastion is `Succeeded`, Standard or Premium, and native tunneling is enabled.
+- Both Kubernetes APIs return `ok`.
+- Every node reports `Ready`.
+- The team can identify and switch between the AKS and K3s kubeconfig/context pairs.
+- K3s management access is restricted to `AzureBastionSubnet`.
+- No Radius control plane, portfolio, recipe, or application workload is installed.
 
 ## Hints
 
-- Check both `kubectl config current-context` and the selected Radius workspace before
-  every operation.
-- Radius startup can take 5-10 minutes. Inspect pod state before rerunning an install.
-- A workspace is local CLI configuration in `~/.rad/config.yaml`; it is not stored in
-  the cluster.
-- The environment points applications at a Kubernetes namespace and can hold provider
-  and recipe configuration.
-- Microsoft Entra and Azure role assignments can take time to propagate.
-- If GHCR returns HTTP 403, clear stale registry credentials before retrying the
-  Radius installation.
+- If Azure cannot allocate a requested VM size, select another size or region rather
+  than repeatedly retrying the same deployment.
+- Check AKS provisioning state and node readiness before rerunning provisioning.
+- A K3s API timeout often means the Bastion tunnel must be reconnected after the
+  devcontainer restarted.
+- The tunnel exposes only the Kubernetes API on localhost. Use `kubectl port-forward`
+  for application and Radius services without opening workload ports on the VM.
+- `KUBECONFIG` can override the default configuration even when the context name looks
+  familiar. Check both before every platform operation.
+- Arc enablement projects an existing cluster into Azure management; it does not create
+  the Kubernetes cluster and is not required for the default K3s path.
 
-## Optional automation and platforms
+## Optional platform alternatives
 
-Manual installation is the intended learning path. If a participant must skip or
-recover the exercise, these scripts perform the same setup:
+If the workshop already provides suitable infrastructure, Azure Local or an existing
+Arc-enabled Kubernetes cluster can replace K3s:
 
-- `resources/deploy-radius-aks.sh`
-- `resources/deploy-radius-k3s.sh`
+- [Prepare Azure Local](../docs/prepare-azure-local.md)
+- [Prepare Azure Arc-enabled Kubernetes](../docs/prepare-arc.md)
 
-If Azure Local or an existing Arc-enabled cluster replaces K3s, use its active context,
-create a distinct Radius workspace and environment, and decide explicitly whether it
-needs an Azure provider.
+These are optional manual alternatives. Keep distinct kubeconfig, context, and logical
+environment names when substituting a platform.
 
 ## Learning resources
 
-- [What is Radius?](https://docs.radapp.io/concepts/)
-- [Install Radius on Kubernetes](https://docs.radapp.io/guides/operations/kubernetes/install/)
-- [Radius workspaces](https://docs.radapp.io/guides/operations/workspaces/overview/)
-- [Radius environments](https://docs.radapp.io/guides/deploy-apps/environments/overview/)
-- [Radius dashboard](https://docs.radapp.io/guides/tooling/dashboard/)
+- [Azure Kubernetes Service documentation](https://learn.microsoft.com/azure/aks/)
+- [K3s documentation](https://docs.k3s.io/)
+- [Microsoft Entra workload identity on AKS](https://learn.microsoft.com/azure/aks/workload-identity-overview)
+- [Managed Istio on AKS](https://learn.microsoft.com/azure/aks/istio-about)
+- [Azure Arc-enabled Kubernetes overview](https://learn.microsoft.com/azure/azure-arc/kubernetes/overview)

@@ -33,4 +33,4 @@ kubectl get nodes
 kubectl get pods -n azure-arc
 ```
 
-Radius is installed separately in Challenge 02.
+Radius is installed separately in Challenge 03.

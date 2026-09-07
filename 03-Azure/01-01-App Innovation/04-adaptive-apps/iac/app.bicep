@@ -1,5 +1,5 @@
 // Portable stock-trading application adapted from microsoft/adaptive-apps.
-// Challenge 05 keeps AI, OIDC, and governance out of the core deployment.
+// Challenge 06 keeps AI, OIDC, and governance out of the core deployment.
 // Optional parameters let later challenges add those capabilities without
 // changing the platform boundary demonstrated here.
 
@@ -52,10 +52,10 @@ param oidcUserInfoEndpoint string = ''
 @description('Public frontend URL used to build the OIDC callback URI.')
 param appBaseUrl string = 'http://localhost:3000'
 
-@description('Pre-provisioned managed identity client ID for the backend. Leave empty for Challenge 05.')
+@description('Pre-provisioned managed identity client ID for the backend. Leave empty for Challenge 06.')
 param backendClientId string = ''
 
-@description('Pre-provisioned managed identity client ID for the frontend. Leave empty for Challenge 05.')
+@description('Pre-provisioned managed identity client ID for the frontend. Leave empty for Challenge 06.')
 param frontendClientId string = ''
 
 @description('Kubernetes service account bound by the workload-identity recipe.')

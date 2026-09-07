@@ -1,25 +1,29 @@
-# Challenge 04 - Implement the platform abstractions with recipes
+# Challenge 04 - Build the platform abstractions
 
 [< Previous Challenge](challenge-03.md) - **[Home](../Readme.md)** - [Next Challenge >](challenge-05.md)
 
-Estimated time: 60-90 minutes | Difficulty: advanced
+Estimated time: 45-75 minutes | Difficulty: intermediate
 
 ## Challenge objective
 
-Implement the portable resource-type contracts from Challenge 03. Manually author,
-publish, and register an Azure SQL recipe before registering the complete
-environment-specific recipe sets for AKS and K3s.
+Install the Adaptive Apps capability portfolio, then define the portable contracts that
+application developers use in later challenges. Create one resource type manually
+before importing and inspecting the complete catalog on both Radius control planes.
 
-AKS will use Azure-backed implementations where appropriate. K3s will use in-cluster
-implementations.
+The sequence is deliberate:
+
+1. Establish the platform capability baseline.
+2. Define and register a resource-type contract.
+3. Import the shared contract catalog.
+4. Implement the contracts with recipes in Challenge 05.
 
 ## Learning goals
 
-- Explain how a recipe implements a resource-type contract.
-- Use Radius recipe `context` without coupling an application to a platform.
-- Return ordinary values, secrets, and managed resource identifiers correctly.
-- Publish a Bicep recipe to an OCI registry and register it with an environment.
-- Compare recipe mappings for the same types across Azure and Local environments.
+- Explain the difference between a resource type and a recipe.
+- Install the same capability portfolio across Azure and Local platforms.
+- Model developer inputs, read-only outputs, and secrets in a resource type.
+- Register resource types independently with each Radius control plane.
+- Generate a Bicep extension from a Radius resource-type catalog.
 
 Before the first K3s command, restore the localhost API tunnel after any container
 restart:
@@ -32,128 +36,124 @@ export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
 
 ## Tasks
 
-### Task 1: Design the custom Azure SQL recipe
+### Task 1: Install the `core` capability portfolio
 
-Author `iac/recipes/sql-server.bicep` to implement
+Use the Adaptive Apps source pinned by the coach and install the `core` profile on both
+platforms.
+
+On AKS:
+
+- Use context `aks-adaptive-apps`.
+- Install release `core` in namespace `core`.
+- Reuse the AKS managed Istio add-on rather than installing Istio from the portfolio.
+
+On K3s:
+
+- Use the dedicated K3s kubeconfig and context `k3s-azure-vm`.
+- Install release `core` in namespace `core`.
+- Allow the portfolio to install its own Istio components.
+
+Validate the Helm release, deployments, stateful sets, and pods on each platform. Do
+not proceed while a portfolio workload is unhealthy.
+
+### Task 2: Design a portable SQL database contract
+
+Create `iac/sql-databases.yaml` with a resource type named
 `Radius.Resources/sqlDatabases`.
 
-Your recipe should:
+The contract must:
 
-- Accept the Radius-provided `context` object.
-- Read the requested size from `context.resource.properties`.
-- Map `S`, `M`, and `L` to appropriate SQL SKU values.
-- Create deterministic resource names from the Radius resource ID.
-- Use an [Azure Verified Module](https://aka.ms/avm) for Azure SQL.
-- Add tags that identify the Radius environment, resource, and application.
-- Return the SQL server resource ID in `result.resources`.
-- Return host, port, database, and username in `result.values`.
-- Return the administrator password in `result.secrets`.
+- Belong to the `Radius.Resources` namespace.
+- Use API version `2025-08-01-preview`.
+- Require Radius environment and application identifiers.
+- Accept a size input with tiers `S`, `M`, and `L`.
+- Return host, port, database, and username as read-only values.
+- Return the database password through a read-only `secrets` object.
 
-Explain why the application developer does not provide an Azure resource group or
-administrator password.
+Before registration, explain which properties an application developer supplies and
+which properties a recipe supplies.
 
-### Task 2: Publish and register the custom recipe on AKS
+### Task 3: Register the custom type on both control planes
 
-While targeting AKS and workspace `ws-azure-prod`:
+Register `iac/sql-databases.yaml` separately:
 
-1. Create or select a globally unique, lowercase Azure Container Registry.
-2. Authenticate to the registry.
-3. Publish `iac/recipes/sql-server.bicep` and the workshop-owned Azure and Kubernetes
-   PostgreSQL recipes as version `1.0.0`.
-4. Register it as the default recipe for `Radius.Resources/sqlDatabases` in
-   `env-azure-prod`.
-5. Verify that the registration refers to the expected OCI artifact.
+- In workspace `ws-azure-prod` while targeting AKS
+- In workspace `ws-local-prod` while targeting K3s
 
-If Docker is unavailable, use a temporary OCI authentication configuration rather than
-putting a registry token in source files.
+Inspect `Radius.Resources/sqlDatabases` after each registration and confirm that its
+schema matches the intended contract.
 
-### Task 3: Register the complete AKS recipe set
+### Task 4: Import the shared resource-type catalog
 
-Deploy `iac/aks-env.bicep` as environment-as-code for:
+Download the catalog from the pinned Adaptive Apps source, review it, and register it
+on both Radius control planes.
 
-- Workspace `ws-azure-prod`
-- Group `rg-trading`
-- Environment `env-azure-prod`
-- Kubernetes namespace `env-azure-prod`
+The catalog should provide these portable types:
 
-Provide the Azure subscription, lab resource group, managed Istio revision, custom SQL
-recipe path, pinned Azure PostgreSQL recipe path, and every exact static AKS egress IP as
-parameters. Reject unsupported outbound configurations rather than using broad firewall
-rules.
+```text
+Radius.Resources/agentGuardrails
+Radius.Resources/aiModels
+Radius.Resources/governance
+Radius.Resources/idProviders
+Radius.Resources/mqttBrokers
+Radius.Resources/postgreSqlDatabases
+Radius.Resources/sqlDatabases
+Radius.Resources/workloadIdentities
+```
 
-The resulting mappings should include Azure-backed PostgreSQL, MQTT, workload
-identity, and AI implementations; in-cluster identity, governance, and guardrail
-components; and the custom Azure SQL recipe.
+Generate a local Bicep extension package at `artifacts/types.tgz` from the same catalog.
+This artifact is generated once per workstation.
 
-### Task 4: Register the complete K3s recipe set
+### Task 5: Explore the contracts
 
-Switch both the Kubernetes context and Radius workspace to K3s, then deploy
-`iac/local-env.bicep` for:
+Use the Radius CLI and dashboard on both platforms to inspect:
 
-- Workspace `ws-local-prod`
-- Group `rg-trading`
-- Environment `env-local-prod`
-- Kubernetes namespace `env-local-prod`
+- Required developer inputs
+- Read-only outputs
+- Secret properties
+- API versions
 
-The Local mappings should use the pinned workshop PostgreSQL recipe and in-cluster implementations for MQTT,
-identity, workload identity, AI, governance, and agent guardrails.
-
-Registering an AI recipe does not deploy a model. GPU capacity is needed only when the
-recipe is exercised in a later challenge.
-
-### Task 5: Validate and compare
-
-List the recipes in `env-azure-prod` and `env-local-prod`, then inspect them in the
-dashboard for each control plane.
-
-Prepare a comparison that answers:
-
-- Which types resolve to Azure-managed services on AKS?
-- Which types resolve to containers or Kubernetes resources on K3s?
-- How do `result.values` and `result.secrets` satisfy the contract from Challenge 03?
-- Why can the application declaration remain unchanged?
+Prepare a short explanation of how the same resource type can use an Azure-managed
+implementation on AKS and an in-cluster implementation on K3s without changing the
+application declaration.
 
 ## Success criteria
 
-- The custom SQL recipe is published to ACR at version `1.0.0`.
-- Both corrected PostgreSQL recipes are published to ACR at version `1.0.0` and
-  registered without mutable `latest` references.
-- Azure PostgreSQL permits only the exact static AKS egress IPs.
-- The recipe is registered as the default `Radius.Resources/sqlDatabases`
-  implementation in `env-azure-prod`.
-- AKS has the expected Azure-backed and in-cluster recipe mappings.
-- K3s has the expected in-cluster recipe mappings.
-- Both environments expose their recipe registrations through the CLI and dashboard.
-- The team can explain `context`, `result.resources`, `result.values`, and
-  `result.secrets`.
-- No application workload has been deployed yet.
+- The `core` Helm release is healthy on AKS and K3s.
+- `Radius.Resources/sqlDatabases` exists in both Radius installations.
+- The complete Adaptive Apps resource-type catalog exists in both installations.
+- The team can distinguish developer inputs, recipe outputs, and secrets.
+- `artifacts/types.tgz` is generated successfully.
+- The team can explain why a resource type is platform-independent.
+- No recipes are registered yet.
 
 ## Hints
 
-- Start from the resource-type schema. Every recipe output must satisfy that contract.
-- Radius injects `context`; application developers do not pass it.
-- Publishing an artifact and registering a recipe are separate steps. Validate each
-  one before continuing.
-- ACR names must be globally unique and lowercase.
-- Check Kubernetes context, Radius workspace, group, and environment before each
-  deployment.
-- The Azure environment needs an Azure provider scope; the K3s environment does not.
-- Environment-as-code makes a complete mapping repeatable, but author and register the
-  custom recipe manually first.
+- A resource type is a versioned schema and contract; it has no implementation by
+  itself.
+- Use `readOnly` for properties returned by a recipe.
+- Keep sensitive output under `secrets` rather than exposing it as an ordinary value.
+- Resource types are stored in the selected control plane, so repeat registration in
+  both workspaces.
+- The Bicep extension package is local to the workstation and does not need to be
+  generated once per cluster.
+- Verify both Kubernetes context and Radius workspace before every registration.
 
 ## Optional automation and platforms
 
-Manual authoring, publishing, and registration are the intended learning path. For
-setup recovery or an explicit skip, `resources/configure-recipes.sh` can configure AKS,
-K3s, or both after its required Azure values are supplied.
+Manual portfolio installation and type registration are the intended learning path.
+For setup recovery or an explicit skip, these scripts perform the same sequence for one
+environment:
 
-If Azure Local or Arc-enabled Kubernetes replaces K3s, start with
-`iac/local-env.bicep` for in-cluster implementations unless the platform team
-intentionally offers managed services.
+- `resources/configure-resource-types-aks.sh`
+- `resources/configure-resource-types-k3s.sh`
+
+If Azure Local or Arc-enabled Kubernetes replaces K3s, register the same
+platform-independent schemas with that platform's Radius workspace.
 
 ## Learning resources
 
+- [Radius resource types](https://docs.radapp.io/guides/author-apps/custom-resources/)
+- [Resource type CLI reference](https://docs.radapp.io/reference/cli/rad_resource-type/)
 - [Radius recipes](https://docs.radapp.io/guides/recipes/overview/)
-- [Author Bicep recipes](https://docs.radapp.io/guides/recipes/author-recipes/bicep/)
-- [Azure Verified Modules](https://aka.ms/avm)
-- [Publish Bicep to an OCI registry](https://docs.radapp.io/reference/cli/rad_bicep_publish/)
+- [Bicep extensions](https://learn.microsoft.com/azure/azure-resource-manager/bicep/bicep-extension)

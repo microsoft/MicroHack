@@ -1,99 +1,165 @@
-# Walkthrough Challenge 06 - Adapt Identity Services - Configure User Authentication
+# Walkthrough Challenge 06 - Port the App Across Environments
 
-[< Previous Solution](../challenge-05/solution-05.md) - **[Home](../../Readme.md)** - [Next Challenge >](../../challenges/challenge-07.md)
+[< Previous Solution](../challenge-05/solution-05.md) - **[Home](../../Readme.md)** - [Next Solution](../challenge-07/solution-07.md)
 
-Duration: 60-90 minutes
+Duration: 45-75 minutes
 
 ## Coach notes
 
-This challenge is about **end-user authentication**. It does not replace the federated
-identity Radius uses to deploy Azure resources, and it does not complete the workload
-identity and authorization needed by Event Grid MQTT.
+### How we arrived here
+
+1. **Challenge 02 prepared two Kubernetes targets.** `aks-adaptive-apps` is the
+   Azure-managed AKS target. `k3s-azure-vm` is the private K3s target used for the Local
+   platform and reached through the Azure Bastion API tunnel.
+2. **Challenge 03 installed two independent Radius control planes.** The local workspace
+   `ws-azure-prod` targets AKS and contains `env-azure-prod`; `ws-local-prod` targets K3s
+   and contains `env-local-prod`. Each control plane has its own `rg-trading` group.
+   Identical names do not imply shared state.
+3. **Challenge 04 established contracts and the shared platform baseline.** The `core`
+   capability portfolio installed identity, observability, and the applicable Istio
+   strict-mTLS baseline on each cluster. The challenge then registered the portable
+   `Radius.Resources/*` resource-type contracts separately in both Radius control planes
+   and generated the local `artifacts/types.tgz` Bicep extension. A contract describes
+   application-facing inputs and recipe-produced outputs; registering it does not create
+   PostgreSQL, Event Grid, or application containers.
+4. **Challenge 05 registered environment-specific recipes.** For the contracts exercised
+   here, the selected environment now determines these implementations:
+
+   | Portable contract | `env-azure-prod` on AKS/Azure | `env-local-prod` on K3s |
+   | --- | --- | --- |
+   | `Radius.Resources/postgreSqlDatabases` | Azure Database for PostgreSQL Flexible Server | In-cluster PostgreSQL |
+   | `Radius.Resources/mqttBrokers` | In-cluster Eclipse Mosquitto | In-cluster Eclipse Mosquitto |
+   | `Radius.Resources/workloadIdentities` | Azure/AKS workload identity mapping | Local Kubernetes mapping/no-op implementation |
+
+   Challenge 05 also prepared Keycloak, AI, governance, and agent-guardrail recipe
+   mappings for later challenges; the Challenge 06 core model does not exercise all of
+   them.
+
+   > [!IMPORTANT]
+   > The manually authored Azure SQL recipe in Challenge 05 is a teaching example for
+   > `Radius.Resources/sqlDatabases`. The Trading application in `iac/app.bicep` requests
+   > `Radius.Resources/postgreSqlDatabases`, so Radius uses the PostgreSQL recipes shown
+   > above rather than the custom Azure SQL recipe.
+
+5. **Challenge 06 deploys the Trading application for the first time.** The same
+   `iac/app.bicep` declares one `Applications.Core/applications` resource, the `backend`
+   and `frontend` containers, and PostgreSQL, MQTT, and workload-identity capability
+   requests in both environments. Radius resolves those requests through the recipes
+   registered on the selected environment.
+
+This handoff defines the portability boundary:
 
 ```text
-Radius control-plane identity    Radius -> Azure Resource Manager
-Application workload identity   pod -> platform service
-End-user authentication         browser -> frontend -> Keycloak -> user authority
+Application team                         Platform team
+------------------------------------     --------------------------------------
+iac/app.bicep                            Radius control plane and environment
+portable resource type contracts        recipe registrations
+published image and safe parameters      Kubernetes and Azure implementations
 ```
 
-The authoritative Challenge 06 pattern is:
+The core deployment intentionally uses PostgreSQL, MQTT, and workload-identity
+contracts. Local password authentication keeps the frontend usable. OIDC adaptation
+belongs to Challenge 07, service communication to Challenge 08, and AI to Challenge 09.
+Do not provision per-workload managed identities or AI services here.
 
-```text
-K3s: browser -> frontend OIDC -> Keycloak -> local Keycloak user
-AKS: browser -> frontend OIDC -> Keycloak -> Entra SAML -> Keycloak -> frontend
-```
+Deployment parity is not runtime parity. On AKS, recipe execution creates Azure
+Database for PostgreSQL Flexible Server; on K3s it creates an in-cluster PostgreSQL
+workload. The `mqttBrokers` contract is the exception: both environments currently
+resolve it to in-cluster Mosquitto, because the published application image cannot
+authenticate to Azure Event Grid. Event Grid's MQTT broker accepts a Microsoft Entra
+token only through MQTT v5 *enhanced authentication*, and the application sends the
+token as an ordinary CONNECT password instead, so every connection is refused. The
+portable contract is unchanged and the swap is a recipe decision, which is exactly the
+seam Radius exists to provide. See
+[Why AKS uses Mosquitto for `mqttBrokers`](#why-aks-uses-mosquitto-for-mqttbrokers).
 
-Keycloak is the protocol and portability boundary. The frontend always uses the same
-confidential OIDC client, callback, and endpoint shape. The two Keycloak databases,
-client secrets, user sources, and Radius application states remain independent.
+## Target discipline
 
-The `core` portfolio from Challenge 03 already deployed `core-keycloak` in namespace
-`core`. Do not instantiate the application-scoped `idProviders` recipe here: its
-current workshop implementation assumes a separate ingress path, while this challenge
-deliberately reuses the shared portfolio broker through foreground port-forwarding.
+Use these names without translation:
 
-The local target uses a Keycloak-local test user because this MicroHack does not deploy
-AD DS. If a site already has AD DS, the optional LDAPS extension at the end preserves
-the source challenge's local-directory scenario.
-
-## Fixed target map
-
-| Platform | Kubernetes context | Radius workspace | Environment | Radius group |
+| Platform | Kubernetes context | Radius workspace | Environment | Group |
 | --- | --- | --- | --- | --- |
-| Private K3s through Bastion | `k3s-azure-vm` | `ws-local-prod` | `env-local-prod` | `rg-trading` |
+| Private K3s | `k3s-azure-vm` | `ws-local-prod` | `env-local-prod` | `rg-trading` |
 | AKS | `aks-adaptive-apps` | `ws-azure-prod` | `env-azure-prod` | `rg-trading` |
 
-Before every stage, select and verify Kubernetes context, Radius workspace, group, and
-environment. Keycloak follows the Kubernetes context; the application deployment
-follows the Radius workspace.
+The K3s kubeconfig points to `https://127.0.0.1:16443`. That endpoint works only while
+the Azure Bastion native-client tunnel is running. The tunnel exposes the Kubernetes
+API on localhost; it does not expose application HTTP, HTTPS, MQTT, or SSH ports.
 
-## Stage 1: Understand the stable application contract
+Each workspace targets an independent Radius control plane. Switching `kubectl`
+context without switching the Radius workspace can deploy to the wrong platform.
 
-Challenge 06 extends `iac/app.bicep` once with optional parameters:
+## Stage 1: Inspect the invariant application model
 
-| Parameter | Ownership | Purpose |
-| --- | --- | --- |
-| `oidcClientId` | Application contract | Stable client ID `adaptive-apps` |
-| `oidcClientSecret` | Broker instance | Target-specific confidential-client secret |
-| `oidcIssuer` | Environment | Internal Keycloak realm URL |
-| `oidcAuthEndpoint` | Environment | Internal authorization endpoint |
-| `oidcBrowserAuthEndpoint` | Workshop access | Browser-reachable localhost endpoint |
-| `oidcTokenEndpoint` | Environment | Internal token endpoint |
-| `oidcUserInfoEndpoint` | Environment | Internal user-info endpoint |
-| `appBaseUrl` | Application exposure | Builds the callback URL |
+Open `iac/app.bicep`. The core model declares:
 
-All OIDC parameters default to empty except `appBaseUrl`. Omitting them preserves
-Challenge 05 behavior. Enabling them adds these frontend variables without introducing
-Entra or K3s resource declarations into the model:
+| Resource | Portable contract or Radius resource |
+| --- | --- |
+| Application | `Applications.Core/applications` |
+| Database | `Radius.Resources/postgreSqlDatabases` |
+| Broker | `Radius.Resources/mqttBrokers` |
+| Workload identities | `Radius.Resources/workloadIdentities` |
+| Workloads | `Applications.Core/containers` for `backend` and `frontend` |
 
-```text
-OIDC_CLIENT_ID
-OIDC_CLIENT_SECRET
-OIDC_ISSUER
-OIDC_AUTH_ENDPOINT
-OIDC_BROWSER_AUTH_ENDPOINT
-OIDC_TOKEN_ENDPOINT
-OIDC_USERINFO_ENDPOINT
-APP_BASE_URL
-```
+The model does not name a PostgreSQL server, Event Grid namespace, Kubernetes
+Deployment, Azure resource group, or VM address. Recipes own those choices.
 
-For this workshop:
+The same published images are used on both targets:
 
 ```text
-Internal realm: http://core-keycloak.core.svc.cluster.local:8080/realms/master
-Browser auth:   http://localhost:8080/realms/master/protocol/openid-connect/auth
-Callback:       http://localhost:3000/auth/oidc/callback
+ghcr.io/microsoft/adaptive-apps/backend:latest
+ghcr.io/microsoft/adaptive-apps/frontend:latest
 ```
 
-The split endpoints matter. The participant browser cannot resolve a cluster-local
-service name, and the frontend pod cannot reach the devcontainer's localhost.
+### Generate the local Bicep extension when needed
 
-## Stage 2: Configure the private K3s identity path
+Challenge 04 generated `artifacts/types.tgz`. The archive is intentionally ignored by
+Git because it is generated for the installed Radius/Bicep toolchain.
 
-### 1. Restore and verify the K3s target
+**Bash:**
 
-The kubeconfig endpoint is localhost because `prepare-k3s-azure-vm.sh connect` maintains
-an Azure Bastion native-client tunnel to the private VM's Kubernetes API.
+```bash
+mkdir -p artifacts
+if [[ ! -f artifacts/types.tgz ]]; then
+  TYPES_FILE="$(mktemp)"
+  curl --fail --location \
+    "https://raw.githubusercontent.com/microsoft/adaptive-apps/885627980684e5bcc6fe4bbd2848c1ec247b0a0b/radius/resource-types/types.yaml" \
+    --output "$TYPES_FILE"
+  rad bicep publish-extension \
+    --from-file "$TYPES_FILE" \
+    --target artifacts/types.tgz \
+    --force
+  rm -f "$TYPES_FILE"
+fi
+```
+
+**PowerShell 7:**
+
+```powershell
+New-Item -ItemType Directory -Path artifacts -Force | Out-Null
+if (-not (Test-Path artifacts/types.tgz)) {
+    $TypesFile = Join-Path ([System.IO.Path]::GetTempPath()) "adaptive-apps-types.yaml"
+    Invoke-WebRequest `
+        -Uri "https://raw.githubusercontent.com/microsoft/adaptive-apps/885627980684e5bcc6fe4bbd2848c1ec247b0a0b/radius/resource-types/types.yaml" `
+        -OutFile $TypesFile
+    rad bicep publish-extension `
+        --from-file $TypesFile `
+        --target artifacts/types.tgz `
+        --force
+    Remove-Item $TypesFile -Force
+}
+```
+
+`iac/bicepconfig.json` maps the `radiusResources` extension to this generated archive.
+Do not commit `types.tgz`.
+
+## Stage 2: Deploy to private K3s
+
+### 1. Restore and select the K3s target
+
+After every devcontainer restart, re-establish the tunnel before K3s commands.
+PowerShell also invokes the provisioning tool through Bash because that tool remains a
+Bash script.
 
 **Bash:**
 
@@ -110,7 +176,6 @@ rad env switch env-local-prod
 test "$(kubectl config current-context)" = "k3s-azure-vm"
 test "$(rad workspace show --output json | jq -r '.connection.context')" = "k3s-azure-vm"
 rad env show env-local-prod
-kubectl rollout status deployment/core-keycloak --namespace core --timeout=10m
 ```
 
 **PowerShell 7:**
@@ -133,416 +198,47 @@ if ($Workspace.connection.context -ne "k3s-azure-vm") {
     throw "Radius target drift: ws-local-prod must target k3s-azure-vm."
 }
 rad env show env-local-prod
-kubectl rollout status deployment/core-keycloak --namespace core --timeout=10m
 ```
 
-### 2. Reconcile the confidential OIDC client
-
-Use Keycloak's administration CLI inside the pod. The bootstrap administrator password
-is consumed inside the container and never crosses the Kubernetes API or terminal.
+### 2. Verify the Challenge 05 handoff
 
 **Bash:**
 
 ```bash
-KEYCLOAK_POD="$(
-  kubectl get pods --namespace core \
-    --selector app.kubernetes.io/component=keycloak \
-    --field-selector status.phase=Running \
-    --output jsonpath='{.items[0].metadata.name}'
-)"
-test -n "$KEYCLOAK_POD"
-
-kubectl exec --namespace core "$KEYCLOAK_POD" -- /bin/sh -c \
-  '/opt/keycloak/bin/kcadm.sh config credentials \
-    --config /tmp/kcadm.config \
-    --server http://127.0.0.1:8080 \
-    --realm master \
-    --user "$KC_BOOTSTRAP_ADMIN_USERNAME" \
-    --password "$KC_BOOTSTRAP_ADMIN_PASSWORD"'
-
-CLIENT_SPEC="$(
-  jq -n '{
-    clientId: "adaptive-apps",
-    name: "Adaptive Apps frontend",
-    enabled: true,
-    protocol: "openid-connect",
-    publicClient: false,
-    clientAuthenticatorType: "client-secret",
-    standardFlowEnabled: true,
-    implicitFlowEnabled: false,
-    directAccessGrantsEnabled: false,
-    serviceAccountsEnabled: false,
-    redirectUris: ["http://localhost:3000/*"],
-    webOrigins: ["http://localhost:3000"]
-  }'
-)"
-
-CLIENT_UUID="$(
-  kubectl exec --namespace core "$KEYCLOAK_POD" -- \
-    /opt/keycloak/bin/kcadm.sh get clients \
-      --config /tmp/kcadm.config \
-      --realm master \
-      --query clientId=adaptive-apps |
-    jq -r '.[] | select(.clientId == "adaptive-apps") | .id' |
-    head -n 1
-)"
-
-if [ -z "$CLIENT_UUID" ]; then
-  printf '%s' "$CLIENT_SPEC" |
-    kubectl exec --stdin --namespace core "$KEYCLOAK_POD" -- \
-      /opt/keycloak/bin/kcadm.sh create clients \
-        --config /tmp/kcadm.config \
-        --realm master \
-        --file -
-  CLIENT_UUID="$(
-    kubectl exec --namespace core "$KEYCLOAK_POD" -- \
-      /opt/keycloak/bin/kcadm.sh get clients \
-        --config /tmp/kcadm.config \
-        --realm master \
-        --query clientId=adaptive-apps |
-      jq -r '.[] | select(.clientId == "adaptive-apps") | .id' |
-      head -n 1
-  )"
-else
-  printf '%s' "$CLIENT_SPEC" |
-    kubectl exec --stdin --namespace core "$KEYCLOAK_POD" -- \
-      /opt/keycloak/bin/kcadm.sh update "clients/$CLIENT_UUID" \
-        --config /tmp/kcadm.config \
-        --realm master \
-        --file -
-fi
-
-test -n "$CLIENT_UUID"
-OIDC_CLIENT_SECRET="$(
-  kubectl exec --namespace core "$KEYCLOAK_POD" -- \
-    /opt/keycloak/bin/kcadm.sh get "clients/$CLIENT_UUID/client-secret" \
-      --config /tmp/kcadm.config \
-      --realm master |
-    jq -er '.value'
-)"
-test -n "$OIDC_CLIENT_SECRET"
-unset CLIENT_SPEC
+rad resource-type list
+rad recipe list \
+  --workspace ws-local-prod \
+  --group rg-trading \
+  --environment env-local-prod
 ```
 
 **PowerShell 7:**
 
 ```powershell
-$KeycloakPod = kubectl get pods --namespace core `
-    --selector app.kubernetes.io/component=keycloak `
-    --field-selector status.phase=Running `
-    --output jsonpath='{.items[0].metadata.name}'
-if ([string]::IsNullOrWhiteSpace($KeycloakPod)) {
-    throw "No running Keycloak pod found in namespace core."
-}
-
-kubectl exec --namespace core $KeycloakPod -- /bin/sh -c `
-    '/opt/keycloak/bin/kcadm.sh config credentials --config /tmp/kcadm.config --server http://127.0.0.1:8080 --realm master --user "$KC_BOOTSTRAP_ADMIN_USERNAME" --password "$KC_BOOTSTRAP_ADMIN_PASSWORD"'
-if ($LASTEXITCODE -ne 0) {
-    throw "Keycloak admin authentication failed."
-}
-
-$ClientSpec = @{
-    clientId = "adaptive-apps"
-    name = "Adaptive Apps frontend"
-    enabled = $true
-    protocol = "openid-connect"
-    publicClient = $false
-    clientAuthenticatorType = "client-secret"
-    standardFlowEnabled = $true
-    implicitFlowEnabled = $false
-    directAccessGrantsEnabled = $false
-    serviceAccountsEnabled = $false
-    redirectUris = @("http://localhost:3000/*")
-    webOrigins = @("http://localhost:3000")
-} | ConvertTo-Json -Compress
-
-$Clients = kubectl exec --namespace core $KeycloakPod -- `
-    /opt/keycloak/bin/kcadm.sh get clients `
-    --config /tmp/kcadm.config `
-    --realm master `
-    --query clientId=adaptive-apps | ConvertFrom-Json
-$ClientUuid = @($Clients | Where-Object clientId -eq "adaptive-apps")[0].id
-
-if ([string]::IsNullOrWhiteSpace($ClientUuid)) {
-    $ClientSpec | kubectl exec --stdin --namespace core $KeycloakPod -- `
-        /opt/keycloak/bin/kcadm.sh create clients `
-        --config /tmp/kcadm.config `
-        --realm master `
-        --file -
-    if ($LASTEXITCODE -ne 0) {
-        throw "Could not create the Keycloak client."
-    }
-    $Clients = kubectl exec --namespace core $KeycloakPod -- `
-        /opt/keycloak/bin/kcadm.sh get clients `
-        --config /tmp/kcadm.config `
-        --realm master `
-        --query clientId=adaptive-apps | ConvertFrom-Json
-    $ClientUuid = @($Clients | Where-Object clientId -eq "adaptive-apps")[0].id
-}
-else {
-    $ClientSpec | kubectl exec --stdin --namespace core $KeycloakPod -- `
-        /opt/keycloak/bin/kcadm.sh update "clients/$ClientUuid" `
-        --config /tmp/kcadm.config `
-        --realm master `
-        --file -
-    if ($LASTEXITCODE -ne 0) {
-        throw "Could not update the Keycloak client."
-    }
-}
-
-if ([string]::IsNullOrWhiteSpace($ClientUuid)) {
-    throw "Keycloak did not return an adaptive-apps client ID."
-}
-$OidcClientSecret = (
-    kubectl exec --namespace core $KeycloakPod -- `
-        /opt/keycloak/bin/kcadm.sh get "clients/$ClientUuid/client-secret" `
-        --config /tmp/kcadm.config `
-        --realm master |
-    ConvertFrom-Json
-).value
-if ([string]::IsNullOrWhiteSpace($OidcClientSecret)) {
-    throw "Keycloak did not return a client secret."
-}
-$ClientSpec = $null
+rad resource-type list
+rad recipe list `
+    --workspace ws-local-prod `
+    --group rg-trading `
+    --environment env-local-prod
 ```
 
-The client secret is held only in memory. Do not run a command that writes it to the
-terminal, shell profile, transcript, or parameters file.
+Confirm default recipes exist for:
 
-### 3. Create a local application user
+- `Radius.Resources/postgreSqlDatabases`
+- `Radius.Resources/mqttBrokers`
+- `Radius.Resources/workloadIdentities`
 
-The application user must not be the Keycloak administrator.
+If one is missing, rerun the K3s portion of Challenge 05. Do not edit `iac/app.bicep`.
+
+### 3. Deploy the model
+
+Prompt for the local frontend password. The plaintext exists only long enough to pass
+it across the CLI process boundary.
 
 **Bash:**
 
 ```bash
-LOCAL_USERNAME="local-trader"
-
-LOCAL_USER_ID="$(
-  kubectl exec --namespace core "$KEYCLOAK_POD" -- \
-    /opt/keycloak/bin/kcadm.sh get users \
-      --config /tmp/kcadm.config \
-      --realm master \
-      --query "username=$LOCAL_USERNAME" |
-    jq -r --arg username "$LOCAL_USERNAME" \
-      '.[] | select(.username == $username) | .id' |
-    head -n 1
-)"
-
-if [ -z "$LOCAL_USER_ID" ]; then
-  kubectl exec --namespace core "$KEYCLOAK_POD" -- \
-    /opt/keycloak/bin/kcadm.sh create users \
-      --config /tmp/kcadm.config \
-      --realm master \
-      --set "username=$LOCAL_USERNAME" \
-      --set enabled=true
-fi
-
-read -rsp "Password for $LOCAL_USERNAME: " LOCAL_USER_PASSWORD
-echo
-if ! printf '%s\n%s\n' "$LOCAL_USERNAME" "$LOCAL_USER_PASSWORD" |
-  kubectl exec --stdin --namespace core "$KEYCLOAK_POD" -- /bin/sh -c \
-    'IFS= read -r USERNAME
-     IFS= read -r PASSWORD
-     exec /opt/keycloak/bin/kcadm.sh set-password \
-       --config /tmp/kcadm.config \
-       --realm master \
-       --username "$USERNAME" \
-       --new-password "$PASSWORD" \
-       --temporary=false'; then
-  echo "Local user password update failed. Resolve the error before continuing." >&2
-fi
-unset LOCAL_USER_PASSWORD LOCAL_USER_ID
-```
-
-**PowerShell 7:**
-
-```powershell
-$LocalUsername = "local-trader"
-$LocalUsers = kubectl exec --namespace core $KeycloakPod -- `
-    /opt/keycloak/bin/kcadm.sh get users `
-    --config /tmp/kcadm.config `
-    --realm master `
-    --query "username=$LocalUsername" | ConvertFrom-Json
-$LocalUser = @($LocalUsers | Where-Object username -eq $LocalUsername)[0]
-
-if ($null -eq $LocalUser) {
-    kubectl exec --namespace core $KeycloakPod -- `
-        /opt/keycloak/bin/kcadm.sh create users `
-        --config /tmp/kcadm.config `
-        --realm master `
-        --set "username=$LocalUsername" `
-        --set enabled=true
-    if ($LASTEXITCODE -ne 0) {
-        throw "Could not create the local Keycloak user."
-    }
-}
-
-$SecureLocalPassword = Read-Host "Password for $LocalUsername" -AsSecureString
-$LocalCredential = [System.Management.Automation.PSCredential]::new(
-    $LocalUsername,
-    $SecureLocalPassword
-)
-$PlainLocalPassword = $LocalCredential.GetNetworkCredential().Password
-try {
-    "$LocalUsername`n$PlainLocalPassword`n" |
-        kubectl exec --stdin --namespace core $KeycloakPod -- /bin/sh -c `
-        'IFS= read -r USERNAME; IFS= read -r PASSWORD; exec /opt/keycloak/bin/kcadm.sh set-password --config /tmp/kcadm.config --realm master --username "$USERNAME" --new-password "$PASSWORD" --temporary=false'
-    if ($LASTEXITCODE -ne 0) {
-        throw "Could not set the local Keycloak user password."
-    }
-}
-finally {
-    $PlainLocalPassword = $null
-    $LocalCredential = $null
-    $SecureLocalPassword = $null
-}
-```
-
-The password travels over `kubectl exec` standard input and becomes a `kcadm.sh`
-argument only inside the pod. It is not placed in the Kubernetes API request URL or the
-local process argument list. Use a trusted workshop workstation, keep terminal
-transcription disabled, and clear the variable immediately.
-
-### 4. Rotate the workshop broker administrator
-
-The portfolio bootstrap credential initializes Keycloak but is not suitable for ongoing
-administration. Rotate it before exposing the broker to the browser. This target-neutral
-block changes the database password and updates the Helm-managed Kubernetes Secret
-without placing the password in an API URL or local process argument list.
-
-**Bash:**
-
-```bash
-KEYCLOAK_ADMIN_USERNAME="$(
-  kubectl get secret core-keycloak-admin --namespace core \
-    --output jsonpath='{.data.username}' |
-  base64 --decode
-)"
-test -n "$KEYCLOAK_ADMIN_USERNAME"
-
-read -rsp "New workshop Keycloak admin password: " KEYCLOAK_ADMIN_PASSWORD
-echo
-if printf '%s\n%s\n' "$KEYCLOAK_ADMIN_USERNAME" "$KEYCLOAK_ADMIN_PASSWORD" |
-  kubectl exec --stdin --namespace core "$KEYCLOAK_POD" -- /bin/sh -c \
-    'IFS= read -r USERNAME
-     IFS= read -r PASSWORD
-     exec /opt/keycloak/bin/kcadm.sh set-password \
-       --config /tmp/kcadm.config \
-       --realm master \
-       --username "$USERNAME" \
-       --new-password "$PASSWORD" \
-       --temporary=false'; then
-  export KEYCLOAK_ADMIN_USERNAME KEYCLOAK_ADMIN_PASSWORD
-  ADMIN_SECRET_MANIFEST="$(
-    jq -n '{
-        apiVersion: "v1",
-        kind: "Secret",
-        metadata: {
-          name: "core-keycloak-admin",
-          namespace: "core"
-        },
-        type: "Opaque",
-        stringData: {
-          username: env.KEYCLOAK_ADMIN_USERNAME,
-          password: env.KEYCLOAK_ADMIN_PASSWORD
-        }
-      }'
-  )"
-  export -n KEYCLOAK_ADMIN_USERNAME KEYCLOAK_ADMIN_PASSWORD
-  if printf '%s' "$ADMIN_SECRET_MANIFEST" | kubectl apply --filename -; then
-    unset ADMIN_SECRET_MANIFEST KEYCLOAK_ADMIN_PASSWORD
-    kubectl rollout restart deployment/core-keycloak --namespace core
-    kubectl rollout status deployment/core-keycloak --namespace core --timeout=10m
-    unset KEYCLOAK_POD
-  else
-    unset ADMIN_SECRET_MANIFEST
-    echo "Secret update failed. Do not restart Keycloak." >&2
-    echo "Retry the Secret update while KEYCLOAK_ADMIN_PASSWORD remains available." >&2
-  fi
-else
-  unset KEYCLOAK_ADMIN_PASSWORD
-  echo "Password change failed. The Secret was not updated; do not restart Keycloak." >&2
-fi
-```
-
-**PowerShell 7:**
-
-```powershell
-$KeycloakAdminUsername = kubectl get secret core-keycloak-admin `
-    --namespace core `
-    --output jsonpath='{.data.username}'
-$KeycloakAdminUsername = [Text.Encoding]::UTF8.GetString(
-    [Convert]::FromBase64String($KeycloakAdminUsername)
-)
-if ([string]::IsNullOrWhiteSpace($KeycloakAdminUsername)) {
-    throw "The Keycloak administrator username is missing."
-}
-
-$SecureAdminPassword = Read-Host "New workshop Keycloak admin password" -AsSecureString
-$AdminCredential = [System.Management.Automation.PSCredential]::new(
-    $KeycloakAdminUsername,
-    $SecureAdminPassword
-)
-$PlainAdminPassword = $AdminCredential.GetNetworkCredential().Password
-try {
-    "$KeycloakAdminUsername`n$PlainAdminPassword`n" |
-        kubectl exec --stdin --namespace core $KeycloakPod -- /bin/sh -c `
-        'IFS= read -r USERNAME; IFS= read -r PASSWORD; exec /opt/keycloak/bin/kcadm.sh set-password --config /tmp/kcadm.config --realm master --username "$USERNAME" --new-password "$PASSWORD" --temporary=false'
-    if ($LASTEXITCODE -ne 0) {
-        throw "Could not rotate the Keycloak administrator password."
-    }
-
-    $AdminSecretManifest = @{
-        apiVersion = "v1"
-        kind = "Secret"
-        metadata = @{
-            name = "core-keycloak-admin"
-            namespace = "core"
-        }
-        type = "Opaque"
-        stringData = @{
-            username = $KeycloakAdminUsername
-            password = $PlainAdminPassword
-        }
-    } | ConvertTo-Json -Compress
-    $AdminSecretManifest | kubectl apply --filename -
-    if ($LASTEXITCODE -ne 0) {
-        throw "The database password changed but the Secret update failed. Do not restart Keycloak; retry the Secret apply with the chosen password."
-    }
-}
-finally {
-    $AdminSecretManifest = $null
-    $PlainAdminPassword = $null
-    $AdminCredential = $null
-    $SecureAdminPassword = $null
-}
-
-kubectl rollout restart deployment/core-keycloak --namespace core
-kubectl rollout status deployment/core-keycloak --namespace core --timeout=10m
-$KeycloakPod = $null
-```
-
-Keep the chosen password in the participant's approved password manager. The rollout
-invalidates the previous pod name and `/tmp/kcadm.config`; repeat the pod-discovery and
-`kcadm.sh config credentials` block from step 2 before any later admin CLI operation.
-Do not use the administrator account for application sign-in.
-
-### 5. Redeploy the application with OIDC enabled
-
-The Keycloak client secret and frontend break-glass password are separate. Retain a
-strong local frontend password for the workshop, but validate the OIDC path.
-
-**Bash:**
-
-```bash
-OIDC_ISSUER="http://core-keycloak.core.svc.cluster.local:8080/realms/master"
-OIDC_AUTH_ENDPOINT="$OIDC_ISSUER/protocol/openid-connect/auth"
-OIDC_TOKEN_ENDPOINT="$OIDC_ISSUER/protocol/openid-connect/token"
-OIDC_USERINFO_ENDPOINT="$OIDC_ISSUER/protocol/openid-connect/userinfo"
-OIDC_BROWSER_AUTH_ENDPOINT="http://localhost:8080/realms/master/protocol/openid-connect/auth"
-
-read -rsp "Frontend break-glass password: " AUTH_PASSWORD
+read -rsp "Frontend password: " AUTH_PASSWORD
 echo
 rad deploy iac/app.bicep \
   --workspace ws-local-prod \
@@ -551,28 +247,14 @@ rad deploy iac/app.bicep \
   --parameters imageRegistry=ghcr.io/microsoft/adaptive-apps \
   --parameters imageTag=latest \
   --parameters authUsername=admin \
-  --parameters "authPassword=$AUTH_PASSWORD" \
-  --parameters oidcClientId=adaptive-apps \
-  --parameters "oidcClientSecret=$OIDC_CLIENT_SECRET" \
-  --parameters "oidcIssuer=$OIDC_ISSUER" \
-  --parameters "oidcAuthEndpoint=$OIDC_AUTH_ENDPOINT" \
-  --parameters "oidcBrowserAuthEndpoint=$OIDC_BROWSER_AUTH_ENDPOINT" \
-  --parameters "oidcTokenEndpoint=$OIDC_TOKEN_ENDPOINT" \
-  --parameters "oidcUserInfoEndpoint=$OIDC_USERINFO_ENDPOINT" \
-  --parameters appBaseUrl=http://localhost:3000
-unset AUTH_PASSWORD OIDC_CLIENT_SECRET
+  --parameters "authPassword=$AUTH_PASSWORD"
+unset AUTH_PASSWORD
 ```
 
 **PowerShell 7:**
 
 ```powershell
-$OidcIssuer = "http://core-keycloak.core.svc.cluster.local:8080/realms/master"
-$OidcAuthEndpoint = "$OidcIssuer/protocol/openid-connect/auth"
-$OidcTokenEndpoint = "$OidcIssuer/protocol/openid-connect/token"
-$OidcUserInfoEndpoint = "$OidcIssuer/protocol/openid-connect/userinfo"
-$OidcBrowserAuthEndpoint = "http://localhost:8080/realms/master/protocol/openid-connect/auth"
-
-$SecurePassword = Read-Host "Frontend break-glass password" -AsSecureString
+$SecurePassword = Read-Host "Frontend password" -AsSecureString
 $Credential = [System.Management.Automation.PSCredential]::new("admin", $SecurePassword)
 $PlainPassword = $Credential.GetNetworkCredential().Password
 try {
@@ -583,30 +265,20 @@ try {
         --parameters imageRegistry=ghcr.io/microsoft/adaptive-apps `
         --parameters imageTag=latest `
         --parameters authUsername=admin `
-        --parameters "authPassword=$PlainPassword" `
-        --parameters oidcClientId=adaptive-apps `
-        --parameters "oidcClientSecret=$OidcClientSecret" `
-        --parameters "oidcIssuer=$OidcIssuer" `
-        --parameters "oidcAuthEndpoint=$OidcAuthEndpoint" `
-        --parameters "oidcBrowserAuthEndpoint=$OidcBrowserAuthEndpoint" `
-        --parameters "oidcTokenEndpoint=$OidcTokenEndpoint" `
-        --parameters "oidcUserInfoEndpoint=$OidcUserInfoEndpoint" `
-        --parameters appBaseUrl=http://localhost:3000
+        --parameters "authPassword=$PlainPassword"
 }
 finally {
     $PlainPassword = $null
     $Credential = $null
     $SecurePassword = $null
-    $OidcClientSecret = $null
 }
 ```
 
-### 6. Validate K3s without disclosing secret values
+Do not save the password in a parameters file or command transcript.
+The CLI argument is briefly visible to local process inspection, so run the lab only
+on a trusted, single-user workstation or devcontainer host.
 
-The frontend image logs whether OIDC is enabled without logging its client secret. Use
-that startup diagnostic rather than rendering the container resource or Deployment:
-the current Radius container contract stores the client secret as an inline environment
-value, so `rad resource show` and `kubectl get deployment -o yaml` are not safe evidence.
+### 4. Validate graph, resources, and workloads
 
 **Bash:**
 
@@ -620,28 +292,6 @@ APP_NAMESPACE="${ENV_NAMESPACE}-adaptive-apps"
 kubectl get namespace "$APP_NAMESPACE" >/dev/null 2>&1 ||
   APP_NAMESPACE="$ENV_NAMESPACE"
 kubectl get pods --namespace "$APP_NAMESPACE"
-kubectl rollout status deployment/frontend \
-  --namespace "$APP_NAMESPACE" \
-  --timeout=5m
-
-FRONTEND_POD="$(
-  kubectl get pods --namespace "$APP_NAMESPACE" --output json |
-    jq -r '
-      .items |
-      map(select(
-        .status.phase == "Running" and
-        any(.spec.containers[]; .name == "frontend")
-      )) |
-      sort_by(.metadata.creationTimestamp) |
-      last |
-      .metadata.name // empty
-    '
-)"
-test -n "$FRONTEND_POD"
-kubectl logs "$FRONTEND_POD" \
-  --namespace "$APP_NAMESPACE" \
-  --container frontend |
-  grep -E "OIDC auth[[:space:]]*:[[:space:]]*enabled" >/dev/null
 ```
 
 **PowerShell 7:**
@@ -658,92 +308,42 @@ if ($LASTEXITCODE -ne 0) {
     $AppNamespace = $EnvironmentNamespace
 }
 kubectl get pods --namespace $AppNamespace
-kubectl rollout status deployment/frontend `
-    --namespace $AppNamespace `
-    --timeout=5m
-
-$Pods = kubectl get pods --namespace $AppNamespace --output json |
-    ConvertFrom-Json
-$FrontendPod = @(
-    $Pods.items |
-        Where-Object {
-            $_.status.phase -eq "Running" -and
-            "frontend" -in $_.spec.containers.name
-        } |
-        Sort-Object { [datetime]$_.metadata.creationTimestamp } -Descending
-)[0].metadata.name
-if ([string]::IsNullOrWhiteSpace($FrontendPod)) {
-    throw "No frontend pod found."
-}
-$FrontendLogs = kubectl logs $FrontendPod `
-    --namespace $AppNamespace `
-    --container frontend
-if (-not ($FrontendLogs -match "OIDC auth\s*:\s*enabled")) {
-    throw "The frontend did not report OIDC as enabled."
-}
 ```
 
-### 7. Validate local-user sign-in
+The local recipes should produce in-cluster PostgreSQL and Mosquitto resources. The
+local workload-identity recipe returns a compatible no-auth mapping.
 
-Use two foreground terminals. Keep the Bastion tunnel process managed by
-`prepare-k3s-azure-vm.sh`; these commands add only Kubernetes/Radius port-forwards.
+### 5. Expose the K3s frontend
 
-**Terminal A - Bash:**
+This command runs in the foreground:
+
+**Bash:**
 
 ```bash
-export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
-kubectl config use-context k3s-azure-vm
-kubectl port-forward --namespace core service/core-keycloak 8080:8080
-```
-
-**Terminal A - PowerShell 7:**
-
-```powershell
-$env:KUBECONFIG = "$HOME/.kube/adaptive-apps-k3s.yaml"
-kubectl config use-context k3s-azure-vm
-kubectl port-forward --namespace core service/core-keycloak 8080:8080
-```
-
-**Terminal B - Bash:**
-
-```bash
-export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
-kubectl config use-context k3s-azure-vm
-rad workspace switch ws-local-prod
-rad group switch rg-trading
-rad env switch env-local-prod
 rad resource expose Applications.Core/containers frontend \
   --application adaptive-apps \
   --port 3000 \
   --remote-port 3000
 ```
 
-**Terminal B - PowerShell 7:**
+**PowerShell 7:**
 
 ```powershell
-$env:KUBECONFIG = "$HOME/.kube/adaptive-apps-k3s.yaml"
-kubectl config use-context k3s-azure-vm
-rad workspace switch ws-local-prod
-rad group switch rg-trading
-rad env switch env-local-prod
 rad resource expose Applications.Core/containers frontend `
     --application adaptive-apps `
     --port 3000 `
     --remote-port 3000
 ```
 
-Open <http://localhost:3000>, choose the OIDC sign-in path, and authenticate as
-`local-trader`. The browser visits Keycloak on <http://localhost:8080>; the frontend
-exchanges the authorization code through `core-keycloak.core.svc.cluster.local`.
+Open <http://localhost:3000> and sign in with the prompted password. Press
+<kbd>Ctrl</kbd>+<kbd>C</kbd> to stop the exposure before switching to AKS.
 
-Successful evidence is the authenticated frontend identity, not a screenshot containing
-cookies, tokens, passwords, or client secrets.
+The browser path travels through Radius/Kubernetes port-forwarding over the Bastion API
+tunnel. No inbound application port is opened on the K3s VM.
 
-Press <kbd>Ctrl</kbd>+<kbd>C</kbd> in both terminals before continuing.
+## Stage 3: Deploy the same model to AKS
 
-## Stage 3: Configure Entra federation on AKS
-
-### 1. Stop K3s forwarding and verify the AKS target
+### 1. Select AKS and its Radius control plane
 
 **Bash:**
 
@@ -757,7 +357,6 @@ rad env switch env-azure-prod
 test "$(kubectl config current-context)" = "aks-adaptive-apps"
 test "$(rad workspace show --output json | jq -r '.connection.context')" = "aks-adaptive-apps"
 rad env show env-azure-prod
-kubectl rollout status deployment/core-keycloak --namespace core --timeout=10m
 ```
 
 **PowerShell 7:**
@@ -777,140 +376,50 @@ if ($Workspace.connection.context -ne "aks-adaptive-apps") {
     throw "Radius target drift: ws-azure-prod must target aks-adaptive-apps."
 }
 rad env show env-azure-prod
-kubectl rollout status deployment/core-keycloak --namespace core --timeout=10m
 ```
 
-### 2. Create the same OIDC client on AKS
+### 2. Reuse Azure credentials and recipes
 
-Repeat **Stage 2, step 2** now that the active context is `aks-adaptive-apps`. Do not
-reuse the K3s `KEYCLOAK_POD`, `$KeycloakPod`, `CLIENT_UUID`, `$ClientUuid`, or client
-secret. The commands reconcile an `adaptive-apps` client with the same settings in the
-independent AKS Keycloak database and capture a new secret in:
-
-- Bash: `OIDC_CLIENT_SECRET`
-- PowerShell: `$OidcClientSecret`
-
-Before proceeding, verify non-secret settings only:
+Challenge 03 registered federated Azure credentials for the AKS Radius control plane.
+Verify them; do not create a client secret.
 
 **Bash:**
 
 ```bash
-kubectl exec --namespace core "$KEYCLOAK_POD" -- \
-  /opt/keycloak/bin/kcadm.sh get "clients/$CLIENT_UUID" \
-    --config /tmp/kcadm.config \
-    --realm master |
-  jq '{
-    clientId,
-    enabled,
-    publicClient,
-    standardFlowEnabled,
-    redirectUris,
-    webOrigins
-  }'
+rad credential show azure
+rad recipe list \
+  --workspace ws-azure-prod \
+  --group rg-trading \
+  --environment env-azure-prod
 ```
 
 **PowerShell 7:**
 
 ```powershell
-$Client = kubectl exec --namespace core $KeycloakPod -- `
-    /opt/keycloak/bin/kcadm.sh get "clients/$ClientUuid" `
-    --config /tmp/kcadm.config `
-    --realm master | ConvertFrom-Json
-$Client | Select-Object `
-    clientId, enabled, publicClient, standardFlowEnabled, redirectUris, webOrigins
+rad credential show azure
+rad recipe list `
+    --workspace ws-azure-prod `
+    --group rg-trading `
+    --environment env-azure-prod
 ```
 
-Expected: `adaptive-apps`, enabled, confidential (`publicClient: false`), standard flow
-enabled, redirect URI `http://localhost:3000/*`, and web origin
-`http://localhost:3000`.
+The required resource types are the same as K3s, but their recipes should map to Azure
+Database for PostgreSQL and AKS workload identity. `mqttBrokers` deliberately maps to
+the same in-cluster Mosquitto recipe on both platforms; see
+[Why AKS uses Mosquitto for `mqttBrokers`](#why-aks-uses-mosquitto-for-mqttbrokers).
 
-### 3. Rotate the AKS broker administrator
+If the credential is missing, return to Challenge 03 and repeat its workload-identity
+registration. Do not fall back to a long-lived service-principal secret.
 
-Repeat **Stage 2, step 4** while the AKS context is active. Use a different approved
-password from the K3s broker. The block restarts Keycloak and deliberately clears the
-now-stale pod variable; no later step depends on the old admin CLI session.
+### 3. Deploy the unchanged model
 
-### 4. Configure Entra as an upstream SAML provider
-
-Start the AKS Keycloak forward in a foreground terminal:
-
-**Bash or PowerShell 7:**
-
-```text
-kubectl port-forward --namespace core service/core-keycloak 8080:8080
-```
-
-Open the [Keycloak admin console](http://localhost:8080/admin/master/console/) and sign
-in with the administrator username and the password chosen in the previous step.
-
-In the [Microsoft Entra admin center](https://entra.microsoft.com):
-
-1. Go to **Entra ID** > **Enterprise applications** > **New application** >
-   **Create your own application**.
-2. Name it `Adaptive Apps Keycloak workshop` and choose the non-gallery option that
-   integrates another application.
-3. Under **Single sign-on**, select **SAML**.
-4. Choose a short team identifier that is unique within the shared Entra tenant, such
-   as `team-07`. Configure **Basic SAML Configuration**, replacing `<team-id>`:
-
-   | Setting | Workshop value |
-   | --- | --- |
-   | Identifier (Entity ID) | `urn:adaptive-apps:keycloak:<team-id>` |
-   | Reply URL (ACS) | `http://localhost:8080/realms/master/broker/entra/endpoint` |
-
-5. Keep the minimum default claims required for sign-in. Ensure the Name ID identifies
-   the assigned user and that email, given name, and surname claims are available when
-   your tenant policy permits them.
-6. Under **Users and groups**, assign only the workshop test user or a narrowly scoped
-   workshop group. Do not disable assignment merely to make the demo pass.
-7. Download **Federation Metadata XML** from **SAML Certificates**. Treat certificates
-   and metadata as configuration; never download browser session data or tokens.
-
-In the Keycloak admin console:
-
-1. Select realm **master**.
-2. Open **Identity providers** and choose **SAML v2.0**.
-3. Set alias `entra` and display name `Microsoft Entra ID`.
-4. Import the downloaded Entra Federation Metadata XML.
-5. Confirm the provider is enabled, the single sign-on service URL targets the intended
-   tenant, signature validation is enabled, and sync mode is `FORCE` for this workshop
-   so mapping changes are visible at the next login.
-6. Set **Service provider entity ID** to the same
-   `urn:adaptive-apps:keycloak:<team-id>` value registered in Entra.
-7. Save, open **Mappers**, and add these **Attribute Importer** mappings with
-   **Name Format** `ATTRIBUTE_FORMAT_BASIC` and sync mode `INHERIT`:
-
-   | Name | SAML attribute name | Keycloak user attribute |
-   | --- | --- | --- |
-   | `email` | `http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress` | `email` |
-   | `firstName` | `http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname` | `firstName` |
-   | `lastName` | `http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname` | `lastName` |
-
-The Keycloak login page should now show **Microsoft Entra ID**. The frontend still uses
-OIDC only; Keycloak performs the SAML protocol bridge.
-
-> [!IMPORTANT]
-> The localhost entity ID and reply URL are for this foreground, port-forwarded lab.
-> Production requires a stable HTTPS Keycloak hostname, a matching SAML entity ID and
-> reply URL, managed certificates, restricted origins/redirects, durable secret
-> rotation, and an availability plan.
-
-### 5. Deploy the same model to the Azure environment
-
-Use the AKS client secret captured in Stage 3, step 2. The endpoint values match K3s
-because both portfolios use the same service and realm names; the secret and upstream
-provider differ.
+Use the same password for a direct UI comparison, but prompt again rather than retaining
+it from the K3s command.
 
 **Bash:**
 
 ```bash
-OIDC_ISSUER="http://core-keycloak.core.svc.cluster.local:8080/realms/master"
-OIDC_AUTH_ENDPOINT="$OIDC_ISSUER/protocol/openid-connect/auth"
-OIDC_TOKEN_ENDPOINT="$OIDC_ISSUER/protocol/openid-connect/token"
-OIDC_USERINFO_ENDPOINT="$OIDC_ISSUER/protocol/openid-connect/userinfo"
-OIDC_BROWSER_AUTH_ENDPOINT="http://localhost:8080/realms/master/protocol/openid-connect/auth"
-
-read -rsp "Frontend break-glass password: " AUTH_PASSWORD
+read -rsp "Frontend password: " AUTH_PASSWORD
 echo
 rad deploy iac/app.bicep \
   --workspace ws-azure-prod \
@@ -919,28 +428,14 @@ rad deploy iac/app.bicep \
   --parameters imageRegistry=ghcr.io/microsoft/adaptive-apps \
   --parameters imageTag=latest \
   --parameters authUsername=admin \
-  --parameters "authPassword=$AUTH_PASSWORD" \
-  --parameters oidcClientId=adaptive-apps \
-  --parameters "oidcClientSecret=$OIDC_CLIENT_SECRET" \
-  --parameters "oidcIssuer=$OIDC_ISSUER" \
-  --parameters "oidcAuthEndpoint=$OIDC_AUTH_ENDPOINT" \
-  --parameters "oidcBrowserAuthEndpoint=$OIDC_BROWSER_AUTH_ENDPOINT" \
-  --parameters "oidcTokenEndpoint=$OIDC_TOKEN_ENDPOINT" \
-  --parameters "oidcUserInfoEndpoint=$OIDC_USERINFO_ENDPOINT" \
-  --parameters appBaseUrl=http://localhost:3000
-unset AUTH_PASSWORD OIDC_CLIENT_SECRET
+  --parameters "authPassword=$AUTH_PASSWORD"
+unset AUTH_PASSWORD
 ```
 
 **PowerShell 7:**
 
 ```powershell
-$OidcIssuer = "http://core-keycloak.core.svc.cluster.local:8080/realms/master"
-$OidcAuthEndpoint = "$OidcIssuer/protocol/openid-connect/auth"
-$OidcTokenEndpoint = "$OidcIssuer/protocol/openid-connect/token"
-$OidcUserInfoEndpoint = "$OidcIssuer/protocol/openid-connect/userinfo"
-$OidcBrowserAuthEndpoint = "http://localhost:8080/realms/master/protocol/openid-connect/auth"
-
-$SecurePassword = Read-Host "Frontend break-glass password" -AsSecureString
+$SecurePassword = Read-Host "Frontend password" -AsSecureString
 $Credential = [System.Management.Automation.PSCredential]::new("admin", $SecurePassword)
 $PlainPassword = $Credential.GetNetworkCredential().Password
 try {
@@ -951,27 +446,530 @@ try {
         --parameters imageRegistry=ghcr.io/microsoft/adaptive-apps `
         --parameters imageTag=latest `
         --parameters authUsername=admin `
-        --parameters "authPassword=$PlainPassword" `
-        --parameters oidcClientId=adaptive-apps `
-        --parameters "oidcClientSecret=$OidcClientSecret" `
-        --parameters "oidcIssuer=$OidcIssuer" `
-        --parameters "oidcAuthEndpoint=$OidcAuthEndpoint" `
-        --parameters "oidcBrowserAuthEndpoint=$OidcBrowserAuthEndpoint" `
-        --parameters "oidcTokenEndpoint=$OidcTokenEndpoint" `
-        --parameters "oidcUserInfoEndpoint=$OidcUserInfoEndpoint" `
-        --parameters appBaseUrl=http://localhost:3000
+        --parameters "authPassword=$PlainPassword"
 }
 finally {
     $PlainPassword = $null
     $Credential = $null
     $SecurePassword = $null
-    $OidcClientSecret = $null
 }
 ```
 
-### 6. Validate Entra-backed sign-in
+Azure Database for PostgreSQL can take several minutes to provision.
 
-Keep the Keycloak forward running on port 8080. In a second foreground terminal:
+### 4. Validate AKS, Radius, and Azure resources
+
+**Bash:**
+
+```bash
+export AZURE_SUBSCRIPTION="<subscription-id>"
+export RESOURCE_GROUP="rg-adaptive-apps"
+az account set --subscription "$AZURE_SUBSCRIPTION"
+
+rad app graph --application adaptive-apps
+rad resource list --application adaptive-apps
+
+ENV_NAMESPACE="$(rad env show env-azure-prod --output json |
+  jq -r '.properties.compute.namespace')"
+APP_NAMESPACE="${ENV_NAMESPACE}-adaptive-apps"
+kubectl get namespace "$APP_NAMESPACE" >/dev/null 2>&1 ||
+  APP_NAMESPACE="$ENV_NAMESPACE"
+kubectl get pods --namespace "$APP_NAMESPACE"
+
+az resource list \
+  --resource-group "$RESOURCE_GROUP" \
+  --output table
+```
+
+**PowerShell 7:**
+
+```powershell
+$env:AZURE_SUBSCRIPTION = "<subscription-id>"
+$env:RESOURCE_GROUP = "rg-adaptive-apps"
+az account set --subscription $env:AZURE_SUBSCRIPTION
+
+rad app graph --application adaptive-apps
+rad resource list --application adaptive-apps
+
+$Environment = rad env show env-azure-prod --output json | ConvertFrom-Json
+$EnvironmentNamespace = $Environment.properties.compute.namespace
+$AppNamespace = "$EnvironmentNamespace-adaptive-apps"
+kubectl get namespace $AppNamespace --no-headers *> $null
+if ($LASTEXITCODE -ne 0) {
+    $AppNamespace = $EnvironmentNamespace
+}
+kubectl get pods --namespace $AppNamespace
+
+az resource list `
+    --resource-group $env:RESOURCE_GROUP `
+    --output table
+```
+
+### 5. Expose the AKS frontend
+
+The K3s exposure must already be stopped. Start a new foreground exposure against the
+active AKS control plane:
+
+**Bash:**
+
+```bash
+rad resource expose Applications.Core/containers frontend \
+  --application adaptive-apps \
+  --port 3000 \
+  --remote-port 3000
+```
+
+**PowerShell 7:**
+
+```powershell
+rad resource expose Applications.Core/containers frontend `
+    --application adaptive-apps `
+    --port 3000 `
+    --remote-port 3000
+```
+
+Open <http://localhost:3000> and sign in with the credentials you passed to `rad deploy`:
+the `authUsername` value (`admin`) and the `authPassword` you typed at the prompt. The
+frontend checks these itself; Challenge 07 replaces them with an OIDC identity provider.
+
+#### Place several trade orders
+
+Do not stop at the dashboard. Place orders now, because they are the evidence that
+[step 6](#6-prove-database-initialization-and-backend-readiness) reads back out of Azure:
+
+1. Choose a symbol the backend offers at `/api/symbols`: `AAPL`, `MSFT`, `GOOGL`, `AMZN`,
+   `TSLA`, `NVDA`, `META`, `NFLX`, `AMD`, or `INTC`.
+2. Submit at least three **BUY** orders with different symbols and quantities. The
+   backend stores each one with status `processed` and records a matching trade.
+3. Optionally submit a **SELL** order for a symbol you do not hold. The backend rejects
+   it server-side and stores it with status `rejected`, so the `orders` table ends up
+   showing both outcomes.
+
+The frontend posts these to the backend's `/api/orders` endpoint, and the backend writes
+them to whatever database the `postgreSqlDatabases` recipe resolved to. On AKS that is a
+managed Azure server outside the cluster, which is what makes step 6 worth running.
+
+A reachable frontend and a complete Radius graph are the core proof. Order and trade
+streaming works in both environments because the `mqttBrokers` recipe resolves to an
+in-cluster Mosquitto broker on AKS as well; see
+[Why AKS uses Mosquitto for `mqttBrokers`](#why-aks-uses-mosquitto-for-mqttbrokers) for
+the reason the Event Grid implementation is not selected.
+
+### 6. Prove database initialization and backend readiness
+
+`app.bicep` never changes, but the database it resolves to does, so the evidence differs
+per platform. On K3s the database is a pod inside the cluster. On AKS it is an Azure
+Database for PostgreSQL Flexible Server outside the cluster, so the check runs against
+Azure and doubles as proof that the orders you placed in step 5 really left Kubernetes.
+
+Both checks depend on the recipe-owned schema Job. Wait for it: a Kubernetes-extension
+deployment records API acceptance, not Job completion, so the deployment can report
+success before the tables exist. The backend readiness probe calls `/api/accounts`, so
+Kubernetes does not mark the backend Ready until the schema is queryable.
+
+#### K3s: check the in-cluster database
+
+The verification pod reuses the recipe-created Secret through `secretKeyRef`; no command,
+manifest, or output contains the database password. It prints only table names and the
+number of `Demo Account` rows.
+
+**Bash:**
+
+```bash
+SCHEMA_JOB="$(kubectl get jobs \
+  --namespace "$APP_NAMESPACE" \
+  --selector app=postgres-schema-initializer,resource=trading-db \
+  --output jsonpath='{.items[0].metadata.name}')"
+test -n "$SCHEMA_JOB"
+kubectl wait \
+  --namespace "$APP_NAMESPACE" \
+  --for=condition=complete \
+  "job/$SCHEMA_JOB" \
+  --timeout=15m
+
+DB_HOST="$(kubectl get job "$SCHEMA_JOB" --namespace "$APP_NAMESPACE" \
+  --output jsonpath='{.spec.template.spec.containers[0].env[?(@.name=="PGHOST")].value}')"
+DB_NAME="$(kubectl get job "$SCHEMA_JOB" --namespace "$APP_NAMESPACE" \
+  --output jsonpath='{.spec.template.spec.containers[0].env[?(@.name=="PGDATABASE")].value}')"
+DB_USER="$(kubectl get job "$SCHEMA_JOB" --namespace "$APP_NAMESPACE" \
+  --output jsonpath='{.spec.template.spec.containers[0].env[?(@.name=="PGUSER")].value}')"
+DB_SECRET="$(kubectl get job "$SCHEMA_JOB" --namespace "$APP_NAMESPACE" \
+  --output jsonpath='{.spec.template.spec.containers[0].env[?(@.name=="PGPASSWORD")].valueFrom.secretKeyRef.name}')"
+DB_SSLMODE="$(kubectl get job "$SCHEMA_JOB" --namespace "$APP_NAMESPACE" \
+  --output jsonpath='{.spec.template.spec.containers[0].env[?(@.name=="PGSSLMODE")].value}')"
+DB_SSLMODE="${DB_SSLMODE:-prefer}"
+
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: trading-db-verify
+  namespace: ${APP_NAMESPACE}
+spec:
+  restartPolicy: Never
+  containers:
+    - name: psql
+      image: postgres:16-alpine
+      command:
+        - sh
+        - -ceu
+        - |
+          psql --set=ON_ERROR_STOP=1 --tuples-only --no-align <<'SQL'
+          SELECT table_name
+          FROM information_schema.tables
+          WHERE table_schema = 'public'
+            AND table_name IN ('accounts', 'orders', 'trades', 'positions')
+          ORDER BY table_name;
+          SELECT 'demo_seed_count=' || count(*)
+          FROM accounts
+          WHERE name = 'Demo Account';
+          SQL
+      env:
+        - name: PGHOST
+          value: "${DB_HOST}"
+        - name: PGDATABASE
+          value: "${DB_NAME}"
+        - name: PGUSER
+          value: "${DB_USER}"
+        - name: PGSSLMODE
+          value: "${DB_SSLMODE}"
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: "${DB_SECRET}"
+              key: password
+EOF
+kubectl wait --namespace "$APP_NAMESPACE" \
+  --for=jsonpath='{.status.phase}'=Succeeded \
+  pod/trading-db-verify \
+  --timeout=5m
+kubectl logs --namespace "$APP_NAMESPACE" pod/trading-db-verify
+kubectl delete --namespace "$APP_NAMESPACE" pod/trading-db-verify --wait=true
+
+kubectl wait --namespace "$APP_NAMESPACE" \
+  --for=condition=Available \
+  deployment/backend \
+  --timeout=5m
+kubectl run backend-db-verify \
+  --namespace "$APP_NAMESPACE" \
+  --rm --restart=Never --attach \
+  --image=curlimages/curl:8.12.1 \
+  --silent --show-error --fail \
+  http://backend:8080/api/accounts |
+  grep -F '"Demo Account"'
+```
+
+**PowerShell 7:**
+
+```powershell
+$SchemaJob = kubectl get jobs `
+    --namespace $AppNamespace `
+    --selector app=postgres-schema-initializer,resource=trading-db `
+    --output jsonpath='{.items[0].metadata.name}'
+if (-not $SchemaJob) { throw "PostgreSQL schema Job was not created." }
+kubectl wait `
+    --namespace $AppNamespace `
+    --for=condition=complete `
+    "job/$SchemaJob" `
+    --timeout=15m
+
+$Job = kubectl get job $SchemaJob --namespace $AppNamespace --output json |
+    ConvertFrom-Json
+$Environment = $Job.spec.template.spec.containers[0].env
+$DbHost = ($Environment | Where-Object name -eq "PGHOST").value
+$DbName = ($Environment | Where-Object name -eq "PGDATABASE").value
+$DbUser = ($Environment | Where-Object name -eq "PGUSER").value
+$DbSecret = ($Environment | Where-Object name -eq "PGPASSWORD").valueFrom.secretKeyRef.name
+$DbSslMode = ($Environment | Where-Object name -eq "PGSSLMODE").value
+if (-not $DbSslMode) { $DbSslMode = "prefer" }
+
+@"
+apiVersion: v1
+kind: Pod
+metadata:
+  name: trading-db-verify
+  namespace: $AppNamespace
+spec:
+  restartPolicy: Never
+  containers:
+    - name: psql
+      image: postgres:16-alpine
+      command:
+        - sh
+        - -ceu
+        - |
+          psql --set=ON_ERROR_STOP=1 --tuples-only --no-align <<'SQL'
+          SELECT table_name
+          FROM information_schema.tables
+          WHERE table_schema = 'public'
+            AND table_name IN ('accounts', 'orders', 'trades', 'positions')
+          ORDER BY table_name;
+          SELECT 'demo_seed_count=' || count(*)
+          FROM accounts
+          WHERE name = 'Demo Account';
+          SQL
+      env:
+        - name: PGHOST
+          value: "$DbHost"
+        - name: PGDATABASE
+          value: "$DbName"
+        - name: PGUSER
+          value: "$DbUser"
+        - name: PGSSLMODE
+          value: "$DbSslMode"
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: "$DbSecret"
+              key: password
+"@ | kubectl apply -f -
+
+kubectl wait `
+    --namespace $AppNamespace `
+    --for=jsonpath='{.status.phase}'=Succeeded `
+    pod/trading-db-verify `
+    --timeout=5m
+kubectl logs --namespace $AppNamespace pod/trading-db-verify
+kubectl delete --namespace $AppNamespace pod/trading-db-verify --wait=true
+
+kubectl wait `
+    --namespace $AppNamespace `
+    --for=condition=Available `
+    deployment/backend `
+    --timeout=5m
+$Accounts = kubectl run backend-db-verify `
+    --namespace $AppNamespace `
+    --rm --restart=Never --attach `
+    --image=curlimages/curl:8.12.1 `
+    --silent --show-error --fail `
+    http://backend:8080/api/accounts
+if ($Accounts -notmatch '"Demo Account"') {
+    throw "Backend did not return the Demo Account seed."
+}
+```
+
+Expected metadata output is the four table names and `demo_seed_count=1`.
+
+#### AKS: check the managed Azure database
+
+On AKS the same `postgreSqlDatabases` resource resolves to an Azure Database for
+PostgreSQL Flexible Server, so verify it the way you would verify any managed Azure
+database: connect to it and query the `orders` table you just filled from the frontend.
+
+> [!NOTE]
+> Flexible Server has no query editor blade in the Azure portal. The portal route is
+> Cloud Shell, which runs the same Azure CLI commands shown below.
+
+Ask Radius where the database lives. The recipe returns the connection metadata but
+deliberately never returns the password, so that still comes from the recipe-created
+Kubernetes Secret.
+
+**Bash:**
+
+```bash
+az extension add --name rdbms-connect
+
+DB_JSON="$(rad resource show Radius.Resources/postgreSqlDatabases trading-db \
+  --output json)"
+PG_HOST="$(jq -r '.properties.host' <<<"$DB_JSON")"
+PG_DATABASE="$(jq -r '.properties.database' <<<"$DB_JSON")"
+PG_USER="$(jq -r '.properties.username' <<<"$DB_JSON")"
+PG_SERVER="${PG_HOST%%.*}"
+PG_GROUP="$(az postgres flexible-server list \
+  --query "[?name=='$PG_SERVER'].resourceGroup | [0]" \
+  --output tsv)"
+PG_PASSWORD="$(kubectl get secret trading-db-credentials \
+  --namespace "$APP_NAMESPACE" \
+  --output jsonpath='{.data.password}' | base64 --decode)"
+
+echo "server=$PG_SERVER group=$PG_GROUP database=$PG_DATABASE user=$PG_USER"
+```
+
+The recipe allowlisted only the AKS egress IPs, so your own client — laptop, dev
+container, or Cloud Shell — cannot reach the server yet. Open a rule for it, then close
+it again once the queries are done:
+
+```bash
+CLIENT_IP="$(curl -sf https://api.ipify.org)"
+az postgres flexible-server firewall-rule create \
+  --resource-group "$PG_GROUP" \
+  --server-name "$PG_SERVER" \
+  --name workshop-client \
+  --start-ip-address "$CLIENT_IP" \
+  --end-ip-address "$CLIENT_IP" \
+  --output none
+```
+
+Confirm the schema Job created the tables, then read back your orders:
+
+> [!IMPORTANT]
+> Keep each `--querytext` value on a single line. `az postgres flexible-server execute`
+> splits the query on newlines and runs only the first fragment, which fails with a
+> confusing `column "..." does not exist` instead of an obvious syntax error. The `id`
+> alias and the `::text` cast are also deliberate: the CLI's table renderer drops a bare
+> `id` column and native timestamp columns. Use `--output json` to see raw values.
+
+```bash
+az postgres flexible-server execute \
+  --name "$PG_SERVER" \
+  --admin-user "$PG_USER" \
+  --admin-password "$PG_PASSWORD" \
+  --database-name "$PG_DATABASE" \
+  --querytext "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name;" \
+  --output table
+
+az postgres flexible-server execute \
+  --name "$PG_SERVER" \
+  --admin-user "$PG_USER" \
+  --admin-password "$PG_PASSWORD" \
+  --database-name "$PG_DATABASE" \
+  --querytext "SELECT id AS order_id, symbol, side, order_type, quantity, price, status, created_at::text AS placed_at FROM orders ORDER BY id;" \
+  --output table
+
+az postgres flexible-server firewall-rule delete \
+  --resource-group "$PG_GROUP" \
+  --server-name "$PG_SERVER" \
+  --name workshop-client \
+  --yes
+```
+
+**PowerShell 7:**
+
+```powershell
+az extension add --name rdbms-connect
+
+$Database = rad resource show Radius.Resources/postgreSqlDatabases trading-db `
+    --output json |
+    ConvertFrom-Json
+$PgHost = $Database.properties.host
+$PgDatabase = $Database.properties.database
+$PgUser = $Database.properties.username
+$PgServer = $PgHost.Split(".")[0]
+$PgGroup = az postgres flexible-server list `
+    --query "[?name=='$PgServer'].resourceGroup | [0]" `
+    --output tsv
+$PgPassword = [Text.Encoding]::UTF8.GetString(
+    [Convert]::FromBase64String((kubectl get secret trading-db-credentials `
+        --namespace $AppNamespace `
+        --output jsonpath='{.data.password}')))
+
+"server=$PgServer group=$PgGroup database=$PgDatabase user=$PgUser"
+
+$ClientIp = "$(Invoke-RestMethod -Uri 'https://api.ipify.org')".Trim()
+az postgres flexible-server firewall-rule create `
+    --resource-group $PgGroup `
+    --server-name $PgServer `
+    --name workshop-client `
+    --start-ip-address $ClientIp `
+    --end-ip-address $ClientIp `
+    --output none
+
+az postgres flexible-server execute `
+    --name $PgServer `
+    --admin-user $PgUser `
+    --admin-password $PgPassword `
+    --database-name $PgDatabase `
+    --querytext "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name;" `
+    --output table
+
+az postgres flexible-server execute `
+    --name $PgServer `
+    --admin-user $PgUser `
+    --admin-password $PgPassword `
+    --database-name $PgDatabase `
+    --querytext "SELECT id AS order_id, symbol, side, order_type, quantity, price, status, created_at::text AS placed_at FROM orders ORDER BY id;" `
+    --output table
+
+az postgres flexible-server firewall-rule delete `
+    --resource-group $PgGroup `
+    --server-name $PgServer `
+    --name workshop-client `
+    --yes
+```
+
+The first query lists `accounts`, `orders`, `positions`, and `trades`. The second returns
+one row per order you placed in step 5:
+
+```text
+Order_id    Order_type    Placed_at                      Price    Quantity    Side    Status     Symbol
+----------  ------------  -----------------------------  -------  ----------  ------  ---------  --------
+1           MARKET        2026-09-02 12:34:15.020938+00  100.00   10          BUY     processed  AAPL
+2           MARKET        2026-09-02 12:36:09.462464+00  384.04   10          BUY     processed  TSLA
+```
+
+An uncovered SELL shows up here too, with `status` `rejected`. Those rows are in Azure,
+not in the cluster: the pods you were talking to contain no database at all. Nothing in
+`app.bicep` changed to make that happen; only the recipe registered for
+`Radius.Resources/postgreSqlDatabases` differs between the two environments.
+
+`PGSSLMODE=require` on the schema Job proves the initializer uses TLS. The recipe also
+enables `require_secure_transport` and a TLS 1.2 floor on the server, so the backend's
+Npgsql connection negotiates TLS and the server rejects plaintext sessions.
+
+> [!TIP]
+> To avoid touching the firewall at all, run the query from inside the cluster, whose
+> egress IP the recipe already allowlisted. This also avoids the CLI's table-rendering
+> quirks, because you get raw `psql` output, and the pod deletes itself on exit:
+>
+> ```bash
+> kubectl run pg-shell --namespace "$APP_NAMESPACE" --rm -i --restart=Never \
+>   --image=postgres:16-alpine --env="PGPASSWORD=$PG_PASSWORD" \
+>   -- psql "host=$PG_HOST dbname=$PG_DATABASE user=$PG_USER sslmode=require" \
+>   -c "SELECT id, symbol, side, quantity, status FROM orders ORDER BY id;"
+> ```
+>
+> ```text
+>  id | symbol | side | quantity |  status
+> ----+--------+------+----------+-----------
+>   1 | AAPL   | BUY  |       10 | processed
+>   2 | TSLA   | BUY  |       10 | processed
+> (2 rows)
+> ```
+
+> [!WARNING]
+> Delete the `workshop-client` firewall rule when you are finished. Leaving a public IP
+> allowlisted on a database server outlives the workshop, and home or office IPs are
+> reassigned to someone else.
+
+## Stage 4: Compare the deployments
+
+Stop the AKS exposure before running comparison commands.
+
+### K3s evidence
+
+**Bash:**
+
+```bash
+export AZURE_SUBSCRIPTION="<subscription-id>"
+bash resources/prepare-k3s-azure-vm.sh connect
+export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
+kubectl config use-context k3s-azure-vm
+rad workspace switch ws-local-prod
+rad group switch rg-trading
+rad env switch env-local-prod
+
+rad app graph --application adaptive-apps
+rad resource list --application adaptive-apps
+rad recipe list --environment env-local-prod
+```
+
+**PowerShell 7:**
+
+```powershell
+$env:AZURE_SUBSCRIPTION = "<subscription-id>"
+bash resources/prepare-k3s-azure-vm.sh connect
+$env:KUBECONFIG = "$HOME/.kube/adaptive-apps-k3s.yaml"
+kubectl config use-context k3s-azure-vm
+rad workspace switch ws-local-prod
+rad group switch rg-trading
+rad env switch env-local-prod
+
+rad app graph --application adaptive-apps
+rad resource list --application adaptive-apps
+rad recipe list --environment env-local-prod
+```
+
+### AKS evidence
 
 **Bash:**
 
@@ -984,10 +982,7 @@ rad env switch env-azure-prod
 
 rad app graph --application adaptive-apps
 rad resource list --application adaptive-apps
-rad resource expose Applications.Core/containers frontend \
-  --application adaptive-apps \
-  --port 3000 \
-  --remote-port 3000
+rad recipe list --environment env-azure-prod
 ```
 
 **PowerShell 7:**
@@ -1001,215 +996,216 @@ rad env switch env-azure-prod
 
 rad app graph --application adaptive-apps
 rad resource list --application adaptive-apps
-rad resource expose Applications.Core/containers frontend `
-    --application adaptive-apps `
-    --port 3000 `
-    --remote-port 3000
+rad recipe list --environment env-azure-prod
 ```
 
-Open a private browser window at <http://localhost:3000>, choose OIDC sign-in, select
-**Microsoft Entra ID** at Keycloak, and authenticate as an assigned Entra user. A private
-window prevents the earlier K3s Keycloak cookie from masquerading as AKS evidence.
-
-The expected sequence is:
-
-```text
-frontend -> localhost Keycloak authorization endpoint
-         -> Entra SAML sign-in
-         -> localhost Keycloak broker endpoint
-         -> frontend callback on localhost:3000
-```
-
-Stop both foreground processes when validation completes.
-
-## Stage 4: Compare and debrief
+### Expected comparison
 
 | Area | K3s / `ws-local-prod` | AKS / `ws-azure-prod` |
 | --- | --- | --- |
-| App model | `iac/app.bicep` | `iac/app.bicep` |
-| App-facing protocol | OIDC | OIDC |
-| Client ID | `adaptive-apps` | `adaptive-apps` |
-| Redirect URI | `http://localhost:3000/*` | `http://localhost:3000/*` |
-| Broker | `core-keycloak` | `core-keycloak` |
-| Client secret | K3s-specific | AKS-specific |
-| User authority | Local Keycloak user | Microsoft Entra ID |
-| Upstream protocol | Keycloak local authentication | SAML |
-| Browser access | Local 8080 and 3000 forwards over Bastion-backed API access | Local 8080 and 3000 forwards to AKS |
-| Radius state | Independent | Independent |
+| Application file | `iac/app.bicep` | `iac/app.bicep` |
+| Radius application | Independent `adaptive-apps` state | Independent `adaptive-apps` state |
+| Database contract | `postgreSqlDatabases` | `postgreSqlDatabases` |
+| Database implementation | In-cluster PostgreSQL | Azure Database for PostgreSQL |
+| MQTT contract | `mqttBrokers` | `mqttBrokers` |
+| MQTT implementation | In-cluster Mosquitto | In-cluster Mosquitto |
+| Workload identity | Local no-op mapping | Azure workload-identity mapping |
+| AI | Disabled | Disabled |
+| Access path | Port-forward over Bastion API tunnel | Port-forward to AKS API |
+| Schema source | `iac/recipes/trading-schema.sql` | `iac/recipes/trading-schema.sql` |
+| Seed result | One `Demo Account` | One `Demo Account` |
 
-The application team owns the OIDC client contract and callback behavior. The platform
-team owns Keycloak availability, upstream federation, certificates, client-secret
-rotation, user/group mapping, and production ingress. The identity team owns Entra app
-policy, assignments, claims, conditional access, and lifecycle.
-
-### What did not change
-
-- Application Bicep resource graph
-- Frontend image
-- OIDC client ID and authorization-code flow
-- Redirect URI and local browser ports
-- Radius resource contracts
-
-### What changed by environment
-
-- Active Kubernetes context and Radius workspace/environment
-- Keycloak database and client secret
-- User authority and upstream protocol
-- Broker-side provider and user configuration
+The application team owns `iac/app.bicep`, image versions, and safe deployment
+parameters. The platform team owns the clusters, Radius control planes, environments,
+Azure provider scope, resource types, recipes, and backing-service authorization.
 
 ## Troubleshooting
 
-### K3s reports connection refused on `127.0.0.1:16443`
+### `RecipeNotFoundFailure`
 
-The devcontainer restarted and the Bastion process is no longer running:
+Run `rad recipe list --environment <environment>` in the matching workspace. Return to
+Challenge 05 and deploy `iac/local-env.bicep` or `iac/aks-env.bicep`. Do not replace a
+portable resource with a platform-specific declaration.
+
+### The deployment reached the wrong platform
+
+Check all four dimensions:
+
+```bash
+kubectl config current-context
+rad workspace list
+rad group list
+rad env show
+```
+
+Kubernetes context and Radius workspace are independent selectors.
+
+### The deployment reported a failure that already succeeded
+
+`rad deploy` can fail on a container that is actually healthy:
+
+```text
+"code": "Internal",
+"message": "Container state is 'Waiting' Reason: CrashLoopBackOff, Message: back-off
+5m0s restarting failed container=backend pod=backend-757d95b986-dbhw7"
+```
+
+or:
+
+```text
+"message": "deployment timed out, name: backend, namespace env-azure-prod-adaptive-apps,
+error occurred while fetching latest status: client rate limiter Wait returned an error:
+context deadline exceeded"
+```
+
+Radius polls the pods that already exist. When an earlier attempt left a pod crash-looping,
+Kubernetes has backed that pod off by up to five minutes, so it does not restart promptly
+even though the new specification is correct. Radius reads that stale status and gives up
+while the replacement ReplicaSet is still rolling out.
+
+**The tell-tale is the pod name.** If the hash in the error matches a pod from the previous
+attempt rather than a newly created one, the status is stale. Check what is actually
+running:
+
+```bash
+kubectl get pods --namespace "$APP_NAMESPACE"
+kubectl get replicasets --namespace "$APP_NAMESPACE"
+```
+
+If a new pod is `1/1 Running`, the deployment succeeded and the error is a reporting
+artifact; continue with the walkthrough. Otherwise simply run `rad deploy` again — the
+back-off window has usually expired by then. Deleting the crash-looping pod first also
+clears it.
+
+### The cluster or the database stopped between sessions
+
+Both Azure back ends can be stopped to save cost, and each fails in its own way. A stopped
+AKS cluster stops resolving its API server name, so every `rad` and `kubectl` command
+fails before it reaches Radius:
+
+```text
+Error: Get "https://<cluster>.hcp.<region>.azmk8s.io:443/apis/api.ucp.dev/v1alpha3":
+dial tcp: lookup <cluster>.hcp.<region>.azmk8s.io: no such host
+```
+
+A stopped PostgreSQL Flexible Server instead surfaces as an opaque Azure error nested
+inside the recipe deployment:
+
+```text
+"code": "RecipeDeploymentFailed",
+"message": "failed to deploy recipe default of type Radius.Resources/postgreSqlDatabases"
+...
+"code": "InternalServerError",
+"message": "An unexpected error occured while processing the request. Tracking ID: ..."
+```
+
+Neither is a defect in the application model. Start whichever is stopped and retry:
+
+```bash
+az aks show --resource-group "$RESOURCE_GROUP" --name "<cluster>" --query powerState.code -o tsv
+az aks start --resource-group "$RESOURCE_GROUP" --name "<cluster>"
+
+az postgres flexible-server show --resource-group "$RESOURCE_GROUP" \
+  --name "<server>" --query state -o tsv
+az postgres flexible-server start --resource-group "$RESOURCE_GROUP" --name "<server>"
+```
+
+If DNS still fails after the cluster is running, refresh the kubeconfig — a stale context
+can point at a cluster that no longer exists:
+
+```bash
+az aks get-credentials --resource-group "$RESOURCE_GROUP" --name "<cluster>" --overwrite-existing
+```
+
+### K3s reports connection refused on localhost
+
+The devcontainer restart stopped the tunnel process. Reconnect, then restore the
+dedicated kubeconfig:
 
 ```bash
 export AZURE_SUBSCRIPTION="<subscription-id>"
 bash resources/prepare-k3s-azure-vm.sh connect
 export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
-kubectl config use-context k3s-azure-vm
 ```
 
-In PowerShell, set `$env:AZURE_SUBSCRIPTION`, invoke the same script through `bash`,
-and set `$env:KUBECONFIG`.
+In PowerShell, set `$env:AZURE_SUBSCRIPTION`, invoke the same script through `bash`, and
+set `$env:KUBECONFIG`.
 
-### Local port 8080 or 3000 is already in use
+### The generated extension is missing
 
-Stop the stale foreground `kubectl port-forward` or `rad resource expose` process with
-<kbd>Ctrl</kbd>+<kbd>C</kbd>. Do not kill processes by name. Confirm the intended
-Kubernetes context and Radius workspace before starting a replacement.
+Repeat Stage 1's `rad bicep publish-extension` command. The archive is generated and is
+not committed.
 
-### The frontend shows no OIDC sign-in option
+### Why AKS uses Mosquitto for `mqttBrokers`
 
-Check that `rad deploy` received a non-empty client ID and secret. Inspect only
-environment-variable names with a JSONPath that cannot render their values. Review
-frontend pod logs for the non-secret `OIDC disabled: missing config` diagnostic; never
-dump all environment values.
+The AKS environment registers the in-cluster Eclipse Mosquitto recipe for
+`Radius.Resources/mqttBrokers`, the same implementation K3s uses. This is deliberate.
 
-**Bash:**
+Azure Event Grid's MQTT broker accepts a Microsoft Entra token only through MQTT v5
+*enhanced authentication*: the CONNECT packet must carry `Authentication Method`
+`OAUTH2-JWT` and put the bearer token in `Authentication Data`. The published Trading
+backend instead passes the token as an ordinary CONNECT *password*, which Event Grid
+never inspects. No amount of platform work fixes that from the outside — a user-assigned
+managed identity, federated credentials, topic spaces, permission bindings, and Event
+Grid data-plane role assignments would all be correct and the broker would still refuse
+the connection.
 
-```bash
-kubectl get deployment frontend \
-  --namespace "$APP_NAMESPACE" \
-  --output jsonpath='{.spec.template.spec.containers[?(@.name=="frontend")].env[*].name}'
-echo
-```
+This is tracked upstream as
+[microsoft/adaptive-apps#44](https://github.com/microsoft/adaptive-apps/issues/44).
 
-**PowerShell 7:**
-
-```powershell
-kubectl get deployment frontend `
-    --namespace $AppNamespace `
-    --output jsonpath='{.spec.template.spec.containers[?(@.name=="frontend")].env[*].name}'
-Write-Output ""
-```
-
-### Keycloak reports an invalid redirect URI
-
-The client must include `http://localhost:3000/*`, while `appBaseUrl` must be
-`http://localhost:3000`. Keep the callback generated by the frontend at
-`/auth/oidc/callback`.
-
-### The browser cannot reach the authorization endpoint
-
-The browser endpoint must use `http://localhost:8080`. Cluster-local
-`core-keycloak.core.svc.cluster.local` addresses are only for frontend-to-Keycloak
-token and user-info calls.
-
-### Login succeeds at Keycloak but the callback fails
-
-Check:
-
-1. Keycloak client secret matches the active control plane.
-2. Internal issuer, token, and user-info endpoints use the `core-keycloak` service.
-3. Frontend and Keycloak forwards belong to the same cluster stage.
-4. The frontend callback is on the current port-3000 exposure.
-
-Do not copy the other cluster's client secret as a shortcut.
-
-### Entra authenticates the user but denies application access
-
-Check the enterprise application's **Users and groups** assignments and
-**Assignment required** setting. Assign the intended test identity; do not disable
-assignment globally just to pass the workshop.
-
-### Keycloak does not show the Entra option
-
-Verify the SAML provider is enabled, has alias `entra`, and imported metadata from the
-intended tenant. Check that the Keycloak forward is still attached to
-`aks-adaptive-apps`, not K3s.
-
-### Entra reports a reply URL mismatch
-
-For this lab the reply URL is exactly:
+The failure is not graceful. `MqttOrderListener` calls `SubscribeAsync` on an
+unconnected client, which throws `MqttClientNotConnectedException`. .NET's default
+`BackgroundServiceExceptionBehavior.StopHost` then stops the host, so the backend
+container crash-loops, never becomes Ready, and `rad deploy` fails before the `frontend`
+container is created:
 
 ```text
-http://localhost:8080/realms/master/broker/entra/endpoint
+"code": "Internal",
+"message": "Container state is 'Waiting' Reason: CrashLoopBackOff, ..."
 ```
 
-The alias is part of the URL. A production HTTPS hostname requires corresponding changes
-in Entra, Keycloak, the OIDC browser endpoint, redirect origins, and application base
-URL.
+The in-cluster recipe returns `authMethod: 'none'`, so the application skips the token
+branch entirely and connects over plain MQTT inside the cluster.
 
-### Entra reports that the identifier is already in use
+Changing the recipe is not sufficient on its own. `iac/app.bicep` originally read
+`MQTT_AUTH_METHOD` and `MQTT_TOKEN_AUDIENCE` from the *workload identity* resource, and
+the Azure workload-identity recipe hard-codes `authMethod: 'OAUTH2-JWT'`. The
+application therefore attempted token authentication no matter which broker recipe the
+environment registered. Both variables now come from the broker, which is what the
+`mqttBrokers` resource type documents:
 
-Another workshop application in the tenant already owns the SAML entity ID. Choose a
-different `<team-id>`, then update both the Entra **Identifier (Entity ID)** and
-Keycloak **Service provider entity ID** to the same unique
-`urn:adaptive-apps:keycloak:<team-id>` value.
+```bicep
+MQTT_AUTH_METHOD: {
+  value: tradingMqtt.properties.authMethod
+}
+MQTT_TOKEN_AUDIENCE: {
+  value: tradingMqtt.properties.tokenAudience
+}
+```
 
-### The callback fails intermittently with an invalid authorization code
+This is a correction, not a platform branch: the expression is identical in both
+environments and each recipe supplies its own answer. K3s is unaffected, because its
+no-op identity recipe already reported `none`.
 
-The portfolio runs multiple Keycloak replicas. Check both Keycloak pod logs for a
-healthy Infinispan/JGroups cluster view. The browser forward can stay pinned to one pod
-while the frontend token request reaches another through `core-keycloak`; a broken
-Keycloak cache cluster makes authorization codes appear invalid on alternate requests.
-Repair Keycloak clustering rather than weakening OIDC validation.
-
-### A later portfolio upgrade breaks admin CLI authentication
-
-`core-keycloak-admin` is managed by Helm. Re-running the Challenge 03
-`helm upgrade --install core` command with the original chart values can restore the
-old Kubernetes Secret while the Keycloak database retains the rotated password. Repeat
-the target-specific administrator rotation with approved values after a portfolio
-upgrade; do not print or recover the old password from command output.
-
-### Do not use token output as evidence
-
-Tokens, authorization codes, cookies, client secrets, and passwords are credentials.
-Validate user identity in the frontend and use non-secret configuration metadata. Do
-not paste tokens into JWT inspection sites or workshop notes.
-
-## Optional enterprise local-directory extension
-
-If a local AD DS deployment already exists, Keycloak can replace the local workshop
-user source with LDAP federation:
-
-1. Use `ldaps://<domain-controller>:636`; do not use cleartext LDAP.
-2. Mount the issuing CA into Keycloak's trust store.
-3. Use a dedicated read-only bind account stored in an approved secret store.
-4. Scope the users DN and group search to the workshop organizational units.
-5. Use read-only edit mode and test connection, authentication, and user sync.
-6. Validate an AD user through the full frontend OIDC flow.
-
-Do not claim this extension is complete when only TCP connectivity or user import works.
-Certificate validation, credential protection, group mapping, account lifecycle, and an
-end-to-end sign-in are part of the identity boundary.
-
-## Cleanup
-
-Stop foreground port-forwards with <kbd>Ctrl</kbd>+<kbd>C</kbd>. Remove only
-workshop-scoped Entra assignments or the non-gallery enterprise application when it is
-no longer needed, following your organization's change process. Do not delete shared
-Keycloak, Radius, AKS, K3s, or Bastion resources as part of this challenge.
-
-For the K3s Bastion tunnel itself:
+This is the portability boundary working as designed. `iac/app.bicep` still requests the
+portable `mqttBrokers` contract and names no broker; only the platform team's recipe
+registration in `iac/aks-env.bicep` differs. To restore the Event Grid implementation
+once the application supports enhanced authentication, pass the override rather than
+editing the environment template:
 
 ```bash
-bash resources/prepare-k3s-azure-vm.sh status
-bash resources/prepare-k3s-azure-vm.sh disconnect
+rad deploy iac/aks-env.bicep \
+  --workspace ws-azure-prod \
+  --group rg-trading \
+  --parameters mqttRecipeTemplatePath=ghcr.io/microsoft/adaptive-apps/recipes/mqtt-azure-event-grid:latest
 ```
 
-Disconnecting the local tunnel does not delete Azure Bastion, which continues to incur
-cost until the workshop resource group or Bastion resource is removed through the
-narrow cleanup process in [Prepare K3s on a private Azure VM](../../docs/prepare-k3s.md).
+The browser-side MQTT-over-WebSocket connection from the frontend is a separate,
+pre-existing gap: the in-cluster broker is not exposed outside the cluster, so live
+streaming in the browser still depends on the backend's REST endpoints.
+
+### A second exposure cannot bind port 3000
+
+Stop the previous `rad resource expose` process with <kbd>Ctrl</kbd>+<kbd>C</kbd>.
+Switch context and workspace, then start the exposure again. A foreground exposure
+belongs to the control plane active when it starts.

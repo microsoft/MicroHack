@@ -1,20 +1,27 @@
-# Walkthrough Challenge 04 - Implement the platform abstractions with recipes
+# Walkthrough Challenge 04 - Build the platform abstractions
 
 [< Previous Solution](../challenge-03/solution-03.md) - **[Home](../../Readme.md)** - [Next Solution](../challenge-05/solution-05.md)
 
-Duration: 60-90 minutes
+Duration: 45-75 minutes
 
 ## Coach notes
 
-Challenge 03 defined contracts. Challenge 04 implements them.
+This challenge makes the platform-engineering story concrete. Teams define the
+vocabulary that application developers use in later challenges.
 
-The teaching sequence is deliberate:
+The sequence is deliberate:
 
-1. Manually author one Azure SQL recipe to understand `context`, AVM, and `result`.
-2. Register the complete recipe sets as environment-as-code.
+1. Install a capability portfolio that represents the platform contract.
+2. Create one resource type manually to understand the schema.
+3. Import the full catalog to establish a realistic platform foundation.
 
-Do not let teams skip directly to automation. The optional script at the end exists
-for setup recovery and participants who explicitly choose not to follow the tutorial.
+Do not let teams confuse a resource type with a recipe:
+
+- A **resource type** is a versioned schema and contract.
+- A **recipe** is an environment-specific implementation of that contract.
+
+The manual steps are the learning path. Optional scripts at the end perform the same
+registration for participants who need an automated setup.
 
 Before any K3s work after a devcontainer restart, restore the localhost API tunnel:
 
@@ -24,469 +31,265 @@ bash resources/prepare-k3s-azure-vm.sh connect
 export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
 ```
 
-## Recipe concepts
+## Capability portfolio
 
-A recipe is a Bicep file or Terraform module that Radius invokes when a developer
-deploys a matching resource type.
+The portfolio establishes the baseline capabilities offered by the platform before
+teams define and implement portable contracts. This is the cleanest point in the
+storyline to install it: platform infrastructure and Radius are ready, and recipes are
+introduced next in Challenge 05.
 
-```text
-Resource type contract                    Recipe implementation
-----------------------------------        -----------------------------------
-Radius.Resources/sqlDatabases             iac/recipes/sql-server.bicep
-input: size, environment                  reads context.resource.properties
-output: host, port, database              returns result.values
-secret: password                          returns result.secrets
-```
+The default profile is `core` on both platforms:
 
-The application developer declares only the portable resource:
+- Identity through Keycloak and PostgreSQL
+- Service mesh with strict mTLS
+- Observability through OpenTelemetry, Prometheus, and Zipkin
 
-```bicep
-resource db 'Radius.Resources/sqlDatabases@2025-08-01-preview' = {
-  properties: {
-    environment: environment
-    application: app.id
-    size: 'S'
-  }
-}
-```
+AKS uses its managed Istio add-on. K3s installs Istio through the portfolio chart.
 
-Radius looks up the recipe registered in the current environment, executes it, and
-projects the recipe result back onto the resource.
+## Manual tutorial, Stage 0: Install the portfolio
 
-### The context object
-
-Radius injects `context` into every recipe:
-
-| Field | Purpose |
-| --- | --- |
-| `context.resource.id` | Full Radius resource ID |
-| `context.resource.name` | Developer-assigned resource name |
-| `context.resource.properties` | Developer inputs such as `size` |
-| `context.environment.id` | Radius environment ID |
-| `context.environment.providers.azure.scope` | Azure subscription and resource-group scope |
-| `context.runtime.kubernetes.namespace` | Kubernetes namespace |
-| `context.application.name` | Application name for tags and labels |
-
-### Azure Verified Modules
-
-Azure recipes should use [Azure Verified Modules](https://aka.ms/avm) when a suitable
-module exists. The recipe remains thin and maps Radius inputs and outputs; AVM provides
-maintained Azure resource patterns and security defaults.
-
-### The result object
-
-Every recipe returns:
-
-- `result.resources`: provisioned resources tracked for lifecycle operations
-- `result.values`: read-only properties returned to the application
-- `result.secrets`: sensitive values stored through Radius secret handling
-
-Two constraints on the `result` object are worth calling out, because breaking either one
-fails in a way that is hard to diagnose.
-
-**The result block must be evaluable without runtime lookups.** Radius resolves a
-`references(<collection>, 'full')` call against the template's resource metadata, which
-exposes `resourceId` rather than `id`. A `map(<collection>, r => r.id)` or a
-`<k8s-resource>.metadata.name` dereference inside `output result` therefore throws while the
-outputs are evaluated. That failure is logged only as a warning, so the deployment still
-reports success while returning no outputs at all, and the resource silently comes back with
-none of its declared properties. Build IDs and names from compile-time variables instead.
-
-**Radius never writes secret values onto the resource.** `secrets` is a framework-owned
-property, so a `secrets` map nested inside `values` is discarded, and a top-level
-`result.secrets` object is materialized into a managed `Radius.Security/secrets` resource that
-is surfaced only through a reserved `secrets.name` reference. Either way
-`db.properties.secrets.password` never resolves. The PostgreSQL recipes therefore write the
-password into a Kubernetes Secret named `<resource-name>-credentials` and the application binds
-it with `valueFrom.secretRef`, which is also how the recipe's own schema-initializer Job reads
-it:
-
-```bicep
-env: {
-  CONNECTION_DB_SECRETS_PASSWORD: {
-    valueFrom: {
-      secretRef: {
-        source: '${tradingDbName}-credentials'
-        key: 'password'
-      }
-    }
-  }
-}
-```
-
-Derive that name from a compile-time variable rather than from `tradingDb.name`, which would
-compile to a runtime `reference('tradingDb').name` call that cannot resolve.
-`resources/validate-postgres-recipes.sh` guards all of these.
-
-### Kubernetes resources created by a recipe
-
-The PostgreSQL recipes also create a Kubernetes Job that applies the trading schema. Two
-properties of that Job are easy to get wrong and fail silently.
-
-**A Job's `spec.template` is immutable.** Kubernetes rejects an update that changes the pod
-template of an existing Job with `spec.template: field is immutable`, so the Job has to be
-replaced rather than updated. That only happens if its *name* changes, which means the name
-must be derived from everything the pod template embeds — the script, the image tag and the
-name of the Secret holding the password, not just the schema SQL. The recipes hash all of
-those into `schemaRevision`. Radius then creates the new Job and garbage-collects the old one
-through `result.resources`.
-
-**Line endings reach the container verbatim.** Bicep preserves the on-disk line endings of
-`loadTextContent()` and of `'''…'''` multi-line strings, so a CRLF checkout embeds carriage
-returns in the Job's shell script. `sh` does not treat CR as whitespace, so `do<CR>` stops
-being the `do` keyword and the container exits immediately with
-`syntax error: unexpected word`. Because the recipe does not wait for the Job to succeed, the
-deployment still reports success and the database is simply left empty. The repository pins
-these files to LF in `.gitattributes`, and the recipes additionally strip carriage returns
-with `replace(..., '\r', '')` so they stay correct on any checkout.
-
-Verify the Job actually completed rather than trusting the deployment result:
+Clone the pinned Adaptive Apps source used by this MicroHack, or point
+`ADAPTIVE_APPS_REPO` at an existing checkout of the same commit:
 
 ```bash
-kubectl get jobs -n <application-namespace>
+export MICROHACK_DIR="$(pwd)"
+git clone https://github.com/microsoft/adaptive-apps.git /tmp/adaptive-apps
+cd /tmp/adaptive-apps
+git checkout 885627980684e5bcc6fe4bbd2848c1ec247b0a0b
+export ADAPTIVE_APPS_REPO="$(pwd)"
+cd "$MICROHACK_DIR"
 ```
 
-`COMPLETIONS` must read `1/1`.
+### Install manually on AKS
 
-## Manual tutorial, Stage 1: Author the Azure SQL recipe
+```bash
+unset KUBECONFIG
+kubectl config use-context aks-adaptive-apps
 
-Open `iac/recipes/sql-server.bicep` and walk through:
-
-- Size-to-SKU mapping
-- Deterministic naming from `context.resource.id`
-- AVM SQL Server usage
-- Radius and application tags
-- Values and secret output mapping
-
-The complete recipe is provided so students can compare their work:
-
-```bicep
-@description('Injected by Radius.')
-param context object
-
-@description('Database name.')
-param databaseName string = context.resource.name
-
-var skuMap = {
-  S: { name: 'GP_Gen5', capacity: 2 }
-  M: { name: 'GP_Gen5', capacity: 4 }
-  L: { name: 'GP_Gen5', capacity: 8 }
-}
-var sizeKey = context.resource.properties.?size ?? 'S'
-var sku = skuMap[sizeKey]
-var seed = uniqueString(context.resource.id)
-var serverName = 'sql-${take(seed, 10)}'
-var adminPassword = '${uniqueString(context.resource.id)}Aa1!'
-
-module sqlServer 'br/public:avm/res/sql/server:0.12.0' = {
-  name: 'sql-server-${seed}'
-  params: {
-    name: serverName
-    location: resourceGroup().location
-    administratorLogin: 'sqladmin'
-    administratorLoginPassword: adminPassword
-    databases: [
-      {
-        name: databaseName
-        sku: {
-          name: '${sku.name}_${sku.capacity}'
-        }
-      }
-    ]
-    // Azure rejects tag names containing '/', so Radius metadata uses a hyphen.
-    tags: {
-      'radapp.io-environment': context.environment.id
-      'radapp.io-resource': context.resource.id
-      'radapp.io-application': context.application == null ? '' : context.application.name
-    }
-  }
-}
-
-output result object = {
-  resources: [
-    sqlServer.outputs.resourceId
-  ]
-  values: {
-    host: sqlServer.outputs.fullyQualifiedDomainName
-    port: 1433
-    database: databaseName
-    username: 'sqladmin'
-    secrets: {
-      password: adminPassword
-    }
-  }
-}
+export PORTFOLIO=core
+helm upgrade --install "$PORTFOLIO" \
+  "$ADAPTIVE_APPS_REPO/charts/adaptive-apps" \
+  --values "$ADAPTIVE_APPS_REPO/charts/adaptive-apps/profiles/${PORTFOLIO}.yaml" \
+  --set features.istio.install=false \
+  --set istio.namespace=aks-istio-system \
+  --namespace "$PORTFOLIO" \
+  --create-namespace
 ```
 
-Discuss why the password belongs in `secrets`, why the developer never supplies the
-Azure resource group, and what changes when a different recipe implements the type.
+### Install manually on K3s
 
-## Manual tutorial, Stage 2: Publish and register the SQL recipe on AKS
+```bash
+export AZURE_SUBSCRIPTION="<subscription-id>"
+bash resources/prepare-k3s-azure-vm.sh connect
+export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
+kubectl config use-context k3s-azure-vm
 
-Select AKS and its Radius workspace:
+export PORTFOLIO=core
+helm upgrade --install "$PORTFOLIO" \
+  "$ADAPTIVE_APPS_REPO/charts/adaptive-apps" \
+  --values "$ADAPTIVE_APPS_REPO/charts/adaptive-apps/profiles/${PORTFOLIO}.yaml" \
+  --namespace "$PORTFOLIO" \
+  --create-namespace
+```
+
+K3s was prepared without its bundled Traefik ingress controller so the portfolio can
+install and use its own Istio stack without an ingress-controller conflict.
+
+### Validate the portfolio
+
+Run against each context:
+
+```bash
+helm status core --namespace core
+kubectl wait --for=condition=Available deployments --all --namespace core --timeout=15m
+kubectl rollout status statefulset/core-keycloak-postgresql --namespace core --timeout=15m
+kubectl get pods --namespace core
+```
+
+`kubectl rollout status` accepts a single object, so use `kubectl wait` for the
+deployments and name each statefulset explicitly.
+
+Do not continue until the workloads are healthy.
+
+## Resource-type concepts
+
+A Radius resource type defines:
+
+- Input properties supplied by an application developer
+- Read-only outputs returned by a recipe
+- Secrets that must not appear in plain text
+
+```text
+Application developer writes              Platform returns
+------------------------------------       --------------------------------
+size: S                                   host: sql.prod.svc
+environment: <environment-id>              port: 1433
+application: <application-id>              secrets.password: <secret>
+```
+
+Resource types live in a namespace such as `Radius.Resources`. A type has no
+implementation by itself. Different environments can register different recipes for
+the same type while the application declaration remains unchanged.
+
+## Manual tutorial, Stage 1: Create a SQL Server type
+
+Create `iac/sql-databases.yaml`:
+
+```yaml
+namespace: Radius.Resources
+types:
+  sqlDatabases:
+    description: A portable Microsoft SQL Server database resource.
+    apiVersions:
+      '2025-08-01-preview':
+        schema:
+          type: object
+          properties:
+            environment:
+              type: string
+              description: (Required) The Radius Environment ID.
+            application:
+              type: string
+              description: (Required) The Radius Application ID.
+            size:
+              type: string
+              enum: [S, M, L]
+              description: (Optional) Size tier.
+            host:
+              type: string
+              readOnly: true
+              description: SQL Server hostname or IP.
+            port:
+              type: integer
+              readOnly: true
+              description: SQL Server port.
+            database:
+              type: string
+              readOnly: true
+              description: Database name.
+            username:
+              type: string
+              readOnly: true
+              description: Login username.
+            secrets:
+              type: object
+              readOnly: true
+              properties:
+                password:
+                  type: string
+                  readOnly: true
+                  description: Login password.
+              required: [password]
+          required: [environment, application]
+```
+
+### Register manually on AKS
 
 ```bash
 unset KUBECONFIG
 kubectl config use-context aks-adaptive-apps
 rad workspace switch ws-azure-prod
-rad env switch env-azure-prod
-rad group switch rg-trading
-```
 
-Create an ACR. Its name must be globally unique and lowercase:
-
-```bash
-export AZURE_SUBSCRIPTION="<subscription-id>"
-export RESOURCE_GROUP="rg-adaptive-apps"
-export ACR_NAME="<globally-unique-acr-name>"
-
-az account set --subscription "$AZURE_SUBSCRIPTION"
-az acr show \
-  --resource-group "$RESOURCE_GROUP" \
-  --name "$ACR_NAME" >/dev/null 2>&1 ||
-  az acr create \
-    --resource-group "$RESOURCE_GROUP" \
-    --name "$ACR_NAME" \
-    --sku Standard
-
-az acr update \
-  --resource-group "$RESOURCE_GROUP" \
-  --name "$ACR_NAME" \
-  --sku Standard \
-  --anonymous-pull-enabled true
-```
-
-Anonymous pull is limited to the workshop's non-secret compiled recipe modules so both
-independent Radius control planes can resolve the same pinned artifacts. Publishing still
-requires an authenticated short-lived token. Database credentials are never stored in
-ACR.
-
-Authenticate with Docker:
-
-```bash
-az acr login --name "$ACR_NAME"
-```
-
-When Docker is unavailable, create temporary OCI authentication:
-
-```bash
-export DOCKER_CONFIG="$(mktemp -d)"
-TOKEN="$(az acr login --name "$ACR_NAME" --expose-token \
-  --query accessToken --output tsv)"
-AUTH="$(printf '00000000-0000-0000-0000-000000000000:%s' "$TOKEN" |
-  base64 | tr -d '\n')"
-
-cat >"${DOCKER_CONFIG}/config.json" <<EOF
-{
-  "auths": {
-    "${ACR_NAME}.azurecr.io": {
-      "auth": "${AUTH}"
-    }
-  }
-}
-EOF
-```
-
-Publish the teaching recipe and both workshop-owned PostgreSQL recipes. The PostgreSQL
-recipes compile the same `iac/recipes/trading-schema.sql` into each implementation and
-use immutable workshop tags rather than the external `latest` recipes.
-
-```bash
-rad bicep publish \
-  --file iac/recipes/sql-server.bicep \
-  --target "br:${ACR_NAME}.azurecr.io/recipes/sql-server:1.0.6"
-
-rad bicep publish \
-  --file iac/recipes/postgres-azure-flex.bicep \
-  --target "br:${ACR_NAME}.azurecr.io/recipes/postgres-azure-flex:1.0.6"
-
-rad bicep publish \
-  --file iac/recipes/postgres-kubernetes.bicep \
-  --target "br:${ACR_NAME}.azurecr.io/recipes/postgres-kubernetes:1.0.6"
-```
-
-**PowerShell 7:**
-
-```powershell
-rad bicep publish `
-    --file iac/recipes/sql-server.bicep `
-    --target "br:$env:ACR_NAME.azurecr.io/recipes/sql-server:1.0.6"
-
-rad bicep publish `
-    --file iac/recipes/postgres-azure-flex.bicep `
-    --target "br:$env:ACR_NAME.azurecr.io/recipes/postgres-azure-flex:1.0.6"
-
-rad bicep publish `
-    --file iac/recipes/postgres-kubernetes.bicep `
-    --target "br:$env:ACR_NAME.azurecr.io/recipes/postgres-kubernetes:1.0.6"
-```
-
-Register the Azure SQL teaching recipe:
-
-```bash
-rad recipe register default \
-  --environment env-azure-prod \
-  --resource-type Radius.Resources/sqlDatabases \
-  --template-kind bicep \
-  --template-path "${ACR_NAME}.azurecr.io/recipes/sql-server:1.0.6"
-```
-
-Verify:
-
-```bash
-rad recipe list --environment env-azure-prod
-```
-
-## Manual tutorial, Stage 3: Register the complete AKS recipe set
-
-The AKS environment definition registers Azure-backed implementations and the custom
-SQL recipe. PostgreSQL public access is restricted to the cluster's exact effective
-outbound IPs. The commands reject unsupported outbound types, public IP prefixes, and
-non-static IP resources rather than widening the database firewall.
-
-```bash
-export ISTIO_REVISION="$(kubectl get deployment \
-  --namespace aks-istio-system \
-  --selector app=istiod \
-  --output jsonpath='{.items[0].metadata.labels.istio\.io/rev}')"
-
-OUTBOUND_TYPE="$(az aks show \
-  --resource-group "$RESOURCE_GROUP" \
-  --name aks-adaptive-apps \
-  --query networkProfile.outboundType \
-  --output tsv)"
-case "$OUTBOUND_TYPE" in
-  loadBalancer)
-    OUTBOUND_QUERY='networkProfile.loadBalancerProfile.effectiveOutboundIPs[].id'
-    ;;
-  managedNATGateway|userAssignedNATGateway)
-    OUTBOUND_QUERY='networkProfile.natGatewayProfile.effectiveOutboundIPs[].id'
-    ;;
-  *)
-    echo "Unsupported AKS outbound type: $OUTBOUND_TYPE" >&2
-    exit 1
-    ;;
-esac
-
-mapfile -t OUTBOUND_IDS < <(az aks show \
-  --resource-group "$RESOURCE_GROUP" \
-  --name aks-adaptive-apps \
-  --query "$OUTBOUND_QUERY" \
-  --output tsv)
-((${#OUTBOUND_IDS[@]} > 0)) || {
-  echo "AKS has no effective outbound public IPs." >&2
-  exit 1
-}
-
-AKS_EGRESS_IPS=""
-for OUTBOUND_ID in "${OUTBOUND_IDS[@]}"; do
-  [[ "${OUTBOUND_ID,,}" == *"/providers/microsoft.network/publicipaddresses/"* ]] || {
-    echo "Only exact public IP resources are supported: $OUTBOUND_ID" >&2
-    exit 1
-  }
-  mapfile -t IP_FIELDS < <(az network public-ip show \
-    --ids "$OUTBOUND_ID" \
-    --query "[ipAddress,publicIPAllocationMethod,sku.name]" \
-    --output tsv | tr -d '\r')
-  IP="${IP_FIELDS[0]:-}"
-  ALLOCATION="${IP_FIELDS[1]:-}"
-  SKU="${IP_FIELDS[2]:-}"
-  [[ "$ALLOCATION" == "Static" && "$SKU" == "Standard" && -n "$IP" ]] || {
-    echo "AKS egress IP must be Standard and static: $OUTBOUND_ID" >&2
-    exit 1
-  }
-  AKS_EGRESS_IPS="${AKS_EGRESS_IPS:+${AKS_EGRESS_IPS},}${IP}"
-done
-
-rad deploy iac/aks-env.bicep \
+rad resource-type create \
   --workspace ws-azure-prod \
-  --group rg-trading \
-  --environment env-azure-prod \
-  --parameters environmentName=env-azure-prod \
-  --parameters namespace=env-azure-prod \
-  --parameters azureSubscriptionId="$AZURE_SUBSCRIPTION" \
-  --parameters azureResourceGroup="$RESOURCE_GROUP" \
-  --parameters istioRevision="$ISTIO_REVISION" \
-  --parameters postgresRecipeTemplatePath="${ACR_NAME}.azurecr.io/recipes/postgres-azure-flex:1.0.6" \
-  --parameters aksEgressIps="$AKS_EGRESS_IPS" \
-  --parameters sqlDatabasesRecipeTemplatePath="${ACR_NAME}.azurecr.io/recipes/sql-server:1.0.6"
+  --from-file iac/sql-databases.yaml
 ```
 
-**PowerShell 7:**
+### Register manually on K3s
 
-```powershell
-$IstioRevision = kubectl get deployment `
-    --namespace aks-istio-system `
-    --selector app=istiod `
-    --output jsonpath='{.items[0].metadata.labels.istio\.io/rev}'
-$Cluster = az aks show `
-    --resource-group $env:RESOURCE_GROUP `
-    --name aks-adaptive-apps | ConvertFrom-Json
+```bash
+export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
+kubectl config use-context k3s-azure-vm
+rad workspace switch ws-local-prod
 
-switch ($Cluster.networkProfile.outboundType) {
-    "loadBalancer" {
-        $OutboundIds = @($Cluster.networkProfile.loadBalancerProfile.effectiveOutboundIPs.id)
-    }
-    { $_ -in "managedNATGateway", "userAssignedNATGateway" } {
-        $OutboundIds = @($Cluster.networkProfile.natGatewayProfile.effectiveOutboundIPs.id)
-    }
-    default {
-        throw "Unsupported AKS outbound type: $($Cluster.networkProfile.outboundType)"
-    }
-}
-if ($OutboundIds.Count -eq 0) {
-    throw "AKS has no effective outbound public IPs."
-}
-
-$EgressIps = foreach ($OutboundId in $OutboundIds) {
-    if ($OutboundId -notmatch "/providers/Microsoft.Network/publicIPAddresses/") {
-        throw "Only exact public IP resources are supported: $OutboundId"
-    }
-    $PublicIp = az network public-ip show --ids $OutboundId | ConvertFrom-Json
-    if ($PublicIp.publicIPAllocationMethod -ne "Static" -or
-        $PublicIp.sku.name -ne "Standard" -or
-        -not $PublicIp.ipAddress) {
-        throw "AKS egress IP must be Standard and static: $OutboundId"
-    }
-    $PublicIp.ipAddress
-}
-
-rad deploy iac/aks-env.bicep `
-    --workspace ws-azure-prod `
-    --group rg-trading `
-    --environment env-azure-prod `
-    --parameters environmentName=env-azure-prod `
-    --parameters namespace=env-azure-prod `
-    --parameters azureSubscriptionId=$env:AZURE_SUBSCRIPTION `
-    --parameters azureResourceGroup=$env:RESOURCE_GROUP `
-    --parameters istioRevision=$IstioRevision `
-    --parameters "postgresRecipeTemplatePath=$env:ACR_NAME.azurecr.io/recipes/postgres-azure-flex:1.0.6" `
-    --parameters "aksEgressIps=$($EgressIps -join ',')" `
-    --parameters "sqlDatabasesRecipeTemplatePath=$env:ACR_NAME.azurecr.io/recipes/sql-server:1.0.6"
+rad resource-type create \
+  --workspace ws-local-prod \
+  --from-file iac/sql-databases.yaml
 ```
 
-| Resource type | AKS/Azure backend |
-| --- | --- |
-| `postgreSqlDatabases` | Azure Database for PostgreSQL Flexible Server |
-| `mqttBrokers` | In-cluster Eclipse Mosquitto |
-| `idProviders` | In-cluster Keycloak |
-| `workloadIdentities` | AKS workload identity |
-| `aiModels` | Azure OpenAI |
-| `governance` | In-cluster OPA |
-| `agentGuardrails` | Agent Governance Toolkit sidecar support |
-| `sqlDatabases` | Custom Azure SQL recipe |
+Discuss:
 
-> [!NOTE]
-> `mqttBrokers` maps to in-cluster Mosquitto on AKS as well as K3s. The Event Grid recipe
-> exists and provisions correctly, but the published application sends its Entra token as
-> an MQTT CONNECT password, while Event Grid requires MQTT v5 enhanced authentication.
-> Selecting it therefore crash-loops the backend. Challenge 05 explains this in
-> [Why AKS uses Mosquitto for `mqttBrokers`](../challenge-05/solution-05.md#why-aks-uses-mosquitto-for-mqttbrokers),
-> including the `mqttRecipeTemplatePath` override that restores the Event Grid recipe.
+- Which properties are developer inputs?
+- Why are outputs marked `readOnly`?
+- Why is the password nested under `secrets`?
+- Would an Azure SQL recipe require this contract to change?
 
-## Manual tutorial, Stage 4: Register the complete K3s recipe set
+## Manual tutorial, Stage 2: Import the catalog
 
-Switch both kube context and Radius workspace:
+The source catalog is pinned to the Adaptive Apps commit used to author this
+MicroHack:
+
+```bash
+export TYPES_URL="https://raw.githubusercontent.com/microsoft/adaptive-apps/885627980684e5bcc6fe4bbd2848c1ec247b0a0b/radius/resource-types/types.yaml"
+curl --fail --location "$TYPES_URL" --output /tmp/adaptive-apps-types.yaml
+```
+
+Review the downloaded schema before registering it.
+
+### Import manually on AKS
+
+```bash
+unset KUBECONFIG
+kubectl config use-context aks-adaptive-apps
+rad workspace switch ws-azure-prod
+
+rad resource-type create \
+  --workspace ws-azure-prod \
+  --from-file /tmp/adaptive-apps-types.yaml
+```
+
+### Import manually on K3s
+
+```bash
+export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
+kubectl config use-context k3s-azure-vm
+rad workspace switch ws-local-prod
+
+rad resource-type create \
+  --workspace ws-local-prod \
+  --from-file /tmp/adaptive-apps-types.yaml
+```
+
+Generate the Bicep extension once per workstation:
+
+```bash
+mkdir -p artifacts
+rad bicep publish-extension \
+  --from-file /tmp/adaptive-apps-types.yaml \
+  --target artifacts/types.tgz \
+  --force
+```
+
+The catalog includes portable types for PostgreSQL, MQTT, workload identity, identity
+providers, AI models, governance, and agent guardrails.
+
+## Explore and validate
+
+Run this section once for each target pair:
+
+| Platform | Kubernetes context | Radius workspace | Group | Environment |
+| --- | --- | --- | --- | --- |
+| AKS | `aks-adaptive-apps` | `ws-azure-prod` | `rg-trading` | `env-azure-prod` |
+| Private K3s through Bastion | `k3s-azure-vm` | `ws-local-prod` | `rg-trading` | `env-local-prod` |
+
+The Kubernetes context selects cluster objects such as the portfolio and Radius
+dashboard. The Radius workspace selects the independent Radius control plane queried by
+`rad resource-type`. Those selectors do not change each other.
+
+### 1. Select and confirm one target
+
+For AKS:
+
+```bash
+unset KUBECONFIG
+kubectl config use-context aks-adaptive-apps
+rad workspace switch ws-azure-prod
+rad group switch rg-trading
+rad env switch env-azure-prod
+```
+
+For K3s, restore the localhost Bastion API tunnel first. The dedicated kubeconfig points
+to that local endpoint; it does not expose K3s publicly.
 
 ```bash
 export AZURE_SUBSCRIPTION="<subscription-id>"
@@ -494,121 +297,224 @@ bash resources/prepare-k3s-azure-vm.sh connect
 export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
 kubectl config use-context k3s-azure-vm
 rad workspace switch ws-local-prod
-rad env switch env-local-prod
 rad group switch rg-trading
+rad env switch env-local-prod
 ```
 
-Deploy the local environment definition:
+These commands select existing objects; they do not create another cluster, workspace,
+group, or environment. `kubectl config use-context` reports the context it selected,
+the three `rad ... switch` commands update local CLI defaults, and
+`prepare-k3s-azure-vm.sh connect` starts or reuses the localhost Bastion tunnel needed
+to reach the private K3s API.
+
+Now inspect the four selectors:
 
 ```bash
-rad deploy iac/local-env.bicep \
-  --workspace ws-local-prod \
-  --group rg-trading \
-  --environment env-local-prod \
-  --parameters environmentName=env-local-prod \
-  --parameters namespace=env-local-prod \
-  --parameters postgresRecipeTemplatePath="${ACR_NAME}.azurecr.io/recipes/postgres-kubernetes:1.0.6"
+kubectl config current-context
+rad workspace show
+rad group show rg-trading
+rad env show
 ```
 
-**PowerShell 7:**
+| Command | Stable indicators | Why it exists and when it was created | Scope |
+| --- | --- | --- | --- |
+| `kubectl config current-context` | Exactly `aks-adaptive-apps` or `k3s-azure-vm` for the row being validated | Challenge 02 created or retrieved the cluster credentials; Challenge 03 selected the context before installing Radius | Local kubeconfig selection; subsequent `kubectl` commands reach that Kubernetes cluster |
+| `rad workspace show` | Workspace name `ws-azure-prod` with connection context `aks-adaptive-apps`, or `ws-local-prod` with `k3s-azure-vm` | Solution 03 **AKS Step 4** or **K3s Step 3** ran `rad workspace create kubernetes`; `rad workspace switch` selected it | Local CLI configuration in `~/.rad/config.yaml` that points to one Radius control plane |
+| `rad group show rg-trading` | Group name `rg-trading`; it is a Radius group, not an Azure resource group | Solution 03 **AKS Step 4** or **K3s Step 3** ran `rad group create rg-trading` independently on each control plane | Active Radius workspace/control plane |
+| `rad env show` | `env-azure-prod` with Kubernetes namespace `env-azure-prod` and Azure provider scope, or `env-local-prod` with namespace `env-local-prod` and no Azure provider | Solution 03 **AKS Step 4** or **K3s Step 3** ran `rad env create`; the AKS step then ran `rad env update` to add its Azure scope | Active Radius workspace, group, and environment |
 
-```powershell
-rad deploy iac/local-env.bicep `
-    --workspace ws-local-prod `
-    --group rg-trading `
-    --environment env-local-prod `
-    --parameters environmentName=env-local-prod `
-    --parameters namespace=env-local-prod `
-    --parameters "postgresRecipeTemplatePath=$env:ACR_NAME.azurecr.io/recipes/postgres-kubernetes:1.0.6"
+Output formatting can vary by Radius CLI version. Validate the names and connection or
+compute fields rather than column order. Resource types are control-plane-wide
+definitions selected by the workspace; the group and environment do not own them. The
+group and environment checks confirm the complete target state that later recipe and
+application commands will use.
+
+Do not continue with a mixed pair. For example, `k3s-azure-vm` plus
+`ws-azure-prod` would inspect the K3s portfolio but query the AKS Radius control plane.
+
+### 2. Recheck the capability portfolio
+
+```bash
+helm status core --namespace core
+helm list --namespace core --filter '^core$'
+kubectl get deployments,statefulsets,services,pods --namespace core
+kubectl get crd peerauthentications.security.istio.io
+kubectl get peerauthentication --all-namespaces --output yaml
 ```
 
-| Resource type | K3s/local backend |
+| Command or object | Stable indicators | Role | Created by |
+| --- | --- | --- | --- |
+| `helm status core --namespace core` | Release `core`, namespace `core`, and status `deployed`; revision and timestamps may differ | Reports health and release metadata for the selected `core` capability profile | Stage 0 `helm upgrade --install core ... --namespace core --create-namespace`, or the matching optional `configure-resource-types-*.sh` script |
+| `helm list --namespace core --filter '^core$'` | One `core` row with chart `adaptive-apps-0.1.0` and status `deployed` | Confirms that the expected pinned portfolio chart backs the release | The same Stage 0 Helm command |
+| Namespace `core` | The namespace exists and contains the release objects below | Isolates the shared identity and observability portfolio from Radius and application namespaces | Stage 0's Helm command through `--create-namespace` |
+| Deployment `core-keycloak` and StatefulSet `core-keycloak-postgresql` | Workloads report their desired replicas ready; pod names include generated suffixes and are not stable | Keycloak is the shared identity broker; PostgreSQL persists its configuration and users | The identity feature in the Stage 0 `core` profile |
+| Deployments and Services `otel-collector`, `prometheus`, and `zipkin` | Deployments become Available and Services are `ClusterIP`; exact pod counts or suffixes are not part of the contract | Receive OTLP data and provide workshop metrics and trace collection/query paths | The observability feature in the Stage 0 `core` profile |
+| CRD `peerauthentications.security.istio.io` | The CRD exists and normally reports condition `Established=True` | Defines Istio's `PeerAuthentication` policy object | On AKS, the managed Istio add-on enabled in Challenge 02; on K3s, the Istio base release launched by the Stage 0 portfolio pre-install hook |
+| `PeerAuthentication/default` | Namespace `aks-istio-system` on AKS or `istio-system` on K3s, with `spec.mtls.mode: STRICT` | Establishes mesh-wide strict mutual TLS for workloads enrolled in the mesh | The Stage 0 portfolio post-install hook |
+
+The `core` profile does not enable OPA, AI, or agent-guardrail workloads. Do not expect
+those objects here. On K3s the Stage 0 hook also installs separate `istio-base` and
+`istiod` Helm releases in `istio-system`; on AKS the portfolio reuses the managed Istio
+add-on in `aks-istio-system`. Stable workload readiness matters more than an exact pod
+count because chart and platform versions can change replicas and generated pod names.
+
+These are Kubernetes objects selected by the current kube context. They are not Radius
+resource types and are not stored in `ws-azure-prod` or `ws-local-prod`.
+
+### 3. Inspect the registered contracts
+
+In each workspace, preserve the following commands:
+
+```bash
+rad resource-type list
+rad resource-type show Radius.Resources/sqlDatabases
+rad resource-type show Radius.Resources/postgreSqlDatabases
+rad resource-type show Radius.Resources/aiModels
+```
+
+| Command | Stable indicators | Why the object exists and when it was registered | Scope |
+| --- | --- | --- | --- |
+| `rad resource-type list` | At least the eight `Radius.Resources/*` types listed below; other configured or built-in types and the total row count can vary with the installed Radius version | Lists contracts known to the selected control plane. `sqlDatabases` came from Stage 1; the other seven came from the Stage 2 catalog import | Radius control plane selected by the active workspace; not Kubernetes, group, or environment scoped |
+| `rad resource-type show Radius.Resources/sqlDatabases` | API version `2025-08-01-preview`; required inputs `environment` and `application`; optional `size` values `S`, `M`, or `L`; read-only `host`, `port`, `database`, `username`, and `secrets.password` | This is the manually designed SQL contract from `iac/sql-databases.yaml`, registered separately by the Stage 1 `rad resource-type create` command | One independent definition in each Radius control plane |
+| `rad resource-type show Radius.Resources/postgreSqlDatabases` | API version `2025-08-01-preview`; writable `environment`, `application`, and `size`; read-only `host`, `port`, `database`, `username`, and `secrets.password` | Provides the portable PostgreSQL vocabulary used by the application. Stage 2 imported it from `/tmp/adaptive-apps-types.yaml` | One independent definition in each Radius control plane |
+| `rad resource-type show Radius.Resources/aiModels` | API version `2025-08-01-preview`; writable `environment`, `application`, and `model`; read-only `endpoint`, `provider`, and `secrets.apiKey` | Provides the portable AI-model vocabulary used in Challenge 09. Stage 2 imported it from the same catalog | One independent definition in each Radius control plane |
+
+`rad resource-type show` displays a **definition**, not a deployed resource instance.
+There is no provisioning status, Kubernetes pod, database, or AI model to find at this
+stage. The schema tells Radius and Bicep which values an application may write and which
+values a future recipe must return.
+
+The complete expected custom catalog and its origin are:
+
+| Resource type | Registered by |
 | --- | --- |
-| `postgreSqlDatabases` | PostgreSQL container |
-| `mqttBrokers` | Eclipse Mosquitto container |
-| `idProviders` | Keycloak container |
-| `workloadIdentities` | Local Kubernetes no-op mapping |
-| `aiModels` | Kaito recipe, requiring a GPU when deployed |
-| `governance` | In-cluster OPA |
-| `agentGuardrails` | Agent Governance Toolkit sidecar support |
+| `Radius.Resources/sqlDatabases` | Stage 1 manual `rad resource-type create --from-file iac/sql-databases.yaml` |
+| `Radius.Resources/agentGuardrails` | Stage 2 catalog import |
+| `Radius.Resources/aiModels` | Stage 2 catalog import |
+| `Radius.Resources/governance` | Stage 2 catalog import |
+| `Radius.Resources/idProviders` | Stage 2 catalog import |
+| `Radius.Resources/mqttBrokers` | Stage 2 catalog import |
+| `Radius.Resources/postgreSqlDatabases` | Stage 2 catalog import |
+| `Radius.Resources/workloadIdentities` | Stage 2 catalog import |
 
-Registering the Kaito recipe does not deploy a model. A GPU-enabled platform is
-required only when that recipe is exercised in the AI challenge.
+Every custom type currently uses API version `2025-08-01-preview`. Each Stage 1 and
+Stage 2 `rad resource-type create --workspace ...` command was run twice because the
+control planes are federated. Registering a type on AKS does not make it available on
+K3s, or vice versa.
 
-## Validate
-
-Before connecting to either cluster, run the automated semantic parity and security
-assertions. They prove both recipes embed the same SQL source, the seed has an explicit
-idempotency guard, Azure initialization requires TLS, firewall ranges are not broad, and
-the corrected recipe registrations are not mutable `latest` references.
-
-**Bash:**
+### 4. Confirm the local Bicep extension
 
 ```bash
-bash resources/validate-postgres-recipes.sh
+test -s artifacts/types.tgz
+ls -lh artifacts/types.tgz
+grep -n '"radiusResources"' iac/bicepconfig.json
 ```
 
-**PowerShell 7:**
+| Object | Expected | Why and when it was created | Scope |
+| --- | --- | --- | --- |
+| `artifacts/types.tgz` | A non-empty generated archive; size and timestamp depend on the tool version | Stage 2 ran `rad bicep publish-extension` after downloading the catalog. The optional scripts run the same command and overwrite this path with `--force` | Local generated artifact on the participant workstation; intentionally not registered with either control plane |
+| `radiusResources` entry in `iac/bicepconfig.json` | Maps the extension name to `../artifacts/types.tgz` | Lets Bicep compile declarations such as `Radius.Resources/postgreSqlDatabases@2025-08-01-preview` with the catalog's types | Repository configuration consumed locally by Bicep |
 
-```powershell
-bash resources/validate-postgres-recipes.sh
-```
+The extension contains compile-time type metadata generated from the catalog. It does
+not contain a recipe or deploy a backing service. The generated archive is gitignored.
+One workstation copy can compile models for both platforms, while each control plane
+still needs its own Stage 1 and Stage 2 type registration.
 
-AKS:
+### 5. Confirm the recipe boundary
 
 ```bash
-unset KUBECONFIG
-kubectl config use-context aks-adaptive-apps
-rad workspace switch ws-azure-prod
-rad recipe list --environment env-azure-prod
+rad recipe list
 ```
 
-K3s:
+After Challenges 01-04 only, the active environment should have no recipe rows for the
+custom `Radius.Resources/*` contracts introduced here. A Radius version may show
+built-in environment recipes; custom rows indicate that the environment was
+preconfigured or has already advanced into Challenge 05. In every case, the type import
+itself did not create a recipe.
 
-```bash
-export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
-kubectl config use-context k3s-azure-vm
-rad workspace switch ws-local-prod
-rad recipe list --environment env-local-prod
-```
+A **resource type** declares the portable contract in the Radius control plane.
+A **recipe** associates an implementation template with that contract in a particular
+Radius environment. Challenge 05 registers different recipes in `env-azure-prod` and
+`env-local-prod`; that is when declarations can provision Azure-managed or in-cluster
+implementations.
 
-For either active platform:
+### 6. Inspect the matching Radius control plane
+
+Open the dashboard for the matching kube context:
 
 ```bash
 kubectl port-forward service/dashboard \
   --namespace radius-system 7007:80
 ```
 
-Open <http://localhost:7007>, navigate to the environment, and inspect **Recipes**.
+Expect a foreground message that local port `7007` is forwarding to the dashboard
+Service. Open <http://localhost:7007>. The `dashboard` Service and the `radius-system`
+namespace were created by `rad install kubernetes` in Solution 03 **AKS Step 3** or
+**K3s Step 2**. They belong to the Kubernetes-hosted Radius control plane, not to the
+`core` portfolio.
+
+The dashboard shows the control plane in the current Kubernetes context. Compare it
+with `rad workspace show`; a mismatched workspace can make CLI and dashboard results
+appear inconsistent even though both are functioning.
+
+Inspect each contract for:
+
+- Developer inputs
+- Read-only outputs
+- Secret properties
+- API versions
+
+At least these types should be present:
+
+```text
+Radius.Resources/agentGuardrails
+Radius.Resources/aiModels
+Radius.Resources/governance
+Radius.Resources/idProviders
+Radius.Resources/mqttBrokers
+Radius.Resources/postgreSqlDatabases
+Radius.Resources/sqlDatabases
+Radius.Resources/workloadIdentities
+```
+
+Stop the foreground port-forward before switching clusters. K3s dashboard access
+depends on the active Bastion API tunnel, but the dashboard itself is never exposed
+through a public K3s or VM endpoint.
 
 ## Optional platforms
 
-If Azure Local or Arc-enabled Kubernetes replaces K3s, use `iac/local-env.bicep` for
-in-cluster implementations unless the platform team intentionally provides managed
-services. Always use a distinct workspace and translate context and environment names
-consistently.
+If Azure Local or Arc-enabled Kubernetes replaces K3s, run the same resource-type
+commands against that platform's Radius workspace. Resource-type schemas are
+platform-independent.
 
 ## Optional automation
 
-The manual tutorial is the intended learning path. To automate the same configuration:
+These scripts install the portfolio and perform both resource-type stages against one
+environment. Use them only when the participant chooses to skip the step-by-step
+tutorial.
+
+### AKS
+
+```bash
+unset KUBECONFIG
+kubectl config use-context aks-adaptive-apps
+
+# Run from the Adaptive Apps MicroHack root.
+bash resources/configure-resource-types-aks.sh
+```
+
+### K3s
 
 ```bash
 export AZURE_SUBSCRIPTION="<subscription-id>"
-export RESOURCE_GROUP="rg-adaptive-apps"
-export ACR_NAME="<globally-unique-acr-name>"
+bash resources/prepare-k3s-azure-vm.sh connect
+export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
+kubectl config use-context k3s-azure-vm
 
-# Configure both defaults:
-bash resources/configure-recipes.sh all
-
-# Or configure one:
-bash resources/configure-recipes.sh aks
-bash resources/configure-recipes.sh k3s
+# Run from the Adaptive Apps MicroHack root.
+bash resources/configure-resource-types-k3s.sh
 ```
 
-The script creates or reuses ACR, publishes the custom SQL recipe for AKS, deploys the
-two corrected PostgreSQL recipes plus the custom SQL recipe, deploys the appropriate
-environment definition, and verifies the registered recipes. `k3s` also needs
-`AZURE_SUBSCRIPTION`, `RESOURCE_GROUP`, and `ACR_NAME` because it republishes the pinned
-workshop recipe before registration.
-
-
+Both scripts accept `TYPES_URL` to override the pinned catalog and
+`BICEP_EXTENSION_TARGET` to choose the generated package location. Set `PORTFOLIO` to
+choose another profile.

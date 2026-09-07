@@ -1,172 +1,159 @@
-# Challenge 05 - Port the App Across Environments
+# Challenge 05 - Implement the platform abstractions with recipes
 
 [< Previous Challenge](challenge-04.md) - **[Home](../Readme.md)** - [Next Challenge >](challenge-06.md)
 
-Estimated time: 45-75 minutes | Difficulty: intermediate to advanced
+Estimated time: 60-90 minutes | Difficulty: advanced
 
 ## Challenge objective
 
-Prove that the same application model can be deployed to the private K3s platform and
-AKS without embedding either platform's implementation details in the application.
-Only the selected target, environment parameters, and platform-managed recipes may
-change.
+Implement the portable resource-type contracts from Challenge 04. Manually author,
+publish, and register an Azure SQL recipe before registering the complete
+environment-specific recipe sets for AKS and K3s.
+
+AKS will use Azure-backed implementations where appropriate. K3s will use in-cluster
+implementations.
 
 ## Learning goals
 
-- Define the portability boundary between application and platform concerns.
-- Prevent deployment drift by checking Kubernetes context, Radius workspace, group,
-  and environment together.
-- Deploy one application model through two independent Radius control planes.
-- Compare application graphs, resource implementations, and runtime outcomes.
-- Distinguish deployment portability from complete runtime parity.
+- Explain how a recipe implements a resource-type contract.
+- Use Radius recipe `context` without coupling an application to a platform.
+- Return ordinary values, secrets, and managed resource identifiers correctly.
+- Publish a Bicep recipe to an OCI registry and register it with an environment.
+- Compare recipe mappings for the same types across Azure and Local environments.
 
-## Fixed target map
+Before the first K3s command, restore the localhost API tunnel after any container
+restart:
 
-Use the exact target map established in Challenges 01-04:
-
-| Platform | Kubernetes context | Radius workspace | Environment | Radius group |
-| --- | --- | --- | --- | --- |
-| Private K3s through Bastion | `k3s-azure-vm` | `ws-local-prod` | `env-local-prod` | `rg-trading` |
-| AKS | `aks-adaptive-apps` | `ws-azure-prod` | `env-azure-prod` | `rg-trading` |
-
-The two workspaces target independent Radius control planes. An application named
-`adaptive-apps` in one control plane is not the same Radius object as the application
-with that name in the other.
-
-## Constraints
-
-- Deploy `iac/app.bicep` unchanged to both platforms.
-- Use the published `ghcr.io/microsoft/adaptive-apps` images; do not rebuild the
-  application.
-- Explicitly switch both Kubernetes and Radius targets before every deployment.
-- Restore the K3s localhost API tunnel after a devcontainer restart. The dedicated
-  kubeconfig is `~/.kube/adaptive-apps-k3s.yaml`, and its API endpoint is localhost.
-- Use the resource types and recipes produced in Challenges 03 and 04. Repair a missing
-  platform mapping in the environment layer, not in the application model.
-- Prompt for the frontend password. Do not put credentials in source, shell history,
-  screenshots, or evidence files.
-- Keep AI disabled. Challenge 08 owns AI adaptation.
-- Do not add Azure Event Grid MQTT authorization in this challenge. On AKS the
-  `mqttBrokers` contract intentionally resolves to an in-cluster broker, because the
-  published application cannot perform the MQTT v5 enhanced authentication that Event
-  Grid requires. Change the recipe registration if you must, never the application model,
-  and never add a shared secret.
-- Reach the frontend only through `rad resource expose` or Kubernetes port-forwarding.
-  Do not expose ports on the private K3s VM.
+```bash
+export AZURE_SUBSCRIPTION="<subscription-id>"
+bash resources/prepare-k3s-azure-vm.sh connect
+export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
+```
 
 ## Tasks
 
-### Task 1: Define the portability boundary
+### Task 1: Design the custom Azure SQL recipe
 
-Review `iac/app.bicep` and identify:
+Author `iac/recipes/sql-server.bicep` to implement
+`Radius.Resources/sqlDatabases`.
 
-- Application-team inputs and resources that remain identical.
-- Environment-specific choices supplied at deployment time.
-- Platform implementations selected through recipes.
-- Features intentionally deferred to later challenges.
+Your recipe should:
 
-Create a parity checklist covering target selection, resource-type availability,
-recipes, deployment, graph validation, backing resources, and frontend exposure.
+- Accept the Radius-provided `context` object.
+- Read the requested size from `context.resource.properties`.
+- Map `S`, `M`, and `L` to appropriate SQL SKU values.
+- Create deterministic resource names from the Radius resource ID.
+- Use an [Azure Verified Module](https://aka.ms/avm) for Azure SQL.
+- Add tags that identify the Radius environment, resource, and application.
+- Return the SQL server resource ID in `result.resources`.
+- Return host, port, database, and username in `result.values`.
+- Return the administrator password in `result.secrets`.
 
-### Task 2: Prove the K3s deployment
+Explain why the application developer does not provide an Azure resource group or
+administrator password.
 
-Restore the Bastion tunnel if needed, then explicitly select:
+### Task 2: Publish and register the custom recipe on AKS
 
-- Kubernetes context `k3s-azure-vm`
-- Radius workspace `ws-local-prod`
-- Radius group `rg-trading`
-- Radius environment `env-local-prod`
+While targeting AKS and workspace `ws-azure-prod`:
 
-Verify that the generated Bicep extension from Challenge 03 is available and that the
-required PostgreSQL, MQTT, and workload-identity recipes are registered.
+1. Create or select a globally unique, lowercase Azure Container Registry.
+2. Authenticate to the registry.
+3. Publish `iac/recipes/sql-server.bicep` and the workshop-owned Azure and Kubernetes
+   PostgreSQL recipes as version `1.0.0`.
+4. Register it as the default recipe for `Radius.Resources/sqlDatabases` in
+   `env-azure-prod`.
+5. Verify that the registration refers to the expected OCI artifact.
 
-Deploy `iac/app.bicep`, wait for recipe-owned schema initialization, prove the four
-tables and single `Demo Account` seed through safe metadata checks, inspect the graph and
-resources, check backend database access, and expose the frontend through the active K3s
-Radius control plane.
+If Docker is unavailable, use a temporary OCI authentication configuration rather than
+putting a registry token in source files.
 
-### Task 3: Prove the AKS deployment
+### Task 3: Register the complete AKS recipe set
 
-Stop the K3s frontend exposure before switching targets. Explicitly select:
+Deploy `iac/aks-env.bicep` as environment-as-code for:
 
-- Kubernetes context `aks-adaptive-apps`
-- Radius workspace `ws-azure-prod`
-- Radius group `rg-trading`
-- Radius environment `env-azure-prod`
+- Workspace `ws-azure-prod`
+- Group `rg-trading`
+- Environment `env-azure-prod`
+- Kubernetes namespace `env-azure-prod`
 
-Verify the Azure credential registration from Challenge 02 and the required recipe
-mappings from Challenge 04. Deploy the same `iac/app.bicep` file with the same image
-inputs, then inspect the graph, Kubernetes resources, Azure backing resources, and
-frontend exposure. Repeat the same schema, seed, and backend database-access checks and
-confirm the initializer requires TLS.
+Provide the Azure subscription, lab resource group, managed Istio revision, custom SQL
+recipe path, pinned Azure PostgreSQL recipe path, and every exact static AKS egress IP as
+parameters. Reject unsupported outbound configurations rather than using broad firewall
+rules.
 
-### Task 4: Compare evidence and ownership
+The resulting mappings should include Azure-backed PostgreSQL, MQTT, workload
+identity, and AI implementations; in-cluster identity, governance, and guardrail
+components; and the custom Azure SQL recipe.
 
-Capture a side-by-side comparison that shows:
+### Task 4: Register the complete K3s recipe set
 
-- The same application model and resource-type contracts on both targets.
-- A local PostgreSQL and MQTT implementation on K3s.
-- Azure Database for PostgreSQL on AKS, and the same in-cluster MQTT broker on both.
-- Independent application state in each Radius control plane.
-- Parameters that changed and parameters that stayed the same.
-- Application-team responsibilities versus platform-team responsibilities.
-- Known runtime gaps, and why a recipe can differ from the "obvious" cloud service.
+Switch both the Kubernetes context and Radius workspace to K3s, then deploy
+`iac/local-env.bicep` for:
+
+- Workspace `ws-local-prod`
+- Group `rg-trading`
+- Environment `env-local-prod`
+- Kubernetes namespace `env-local-prod`
+
+The Local mappings should use the pinned workshop PostgreSQL recipe and in-cluster implementations for MQTT,
+identity, workload identity, AI, governance, and agent guardrails.
+
+Registering an AI recipe does not deploy a model. GPU capacity is needed only when the
+recipe is exercised in a later challenge.
+
+### Task 5: Validate and compare
+
+List the recipes in `env-azure-prod` and `env-local-prod`, then inspect them in the
+dashboard for each control plane.
+
+Prepare a comparison that answers:
+
+- Which types resolve to Azure-managed services on AKS?
+- Which types resolve to containers or Kubernetes resources on K3s?
+- How do `result.values` and `result.secrets` satisfy the contract from Challenge 04?
+- Why can the application declaration remain unchanged?
 
 ## Success criteria
 
-- `iac/app.bicep` is deployed unchanged to both target environments.
-- Every deployment is preceded by an explicit four-part target check.
-- Both Radius control planes show an `adaptive-apps` graph with frontend, backend,
-  PostgreSQL, MQTT, and workload-identity resources.
-- The backing implementations differ according to each environment's recipes.
-- Both implementations contain `accounts`, `orders`, `trades`, and `positions`, exactly
-  one `Demo Account`, and a backend that is Ready only after `/api/accounts` succeeds.
-- The frontend can be exposed through each active control plane, one at a time.
-- No password or cluster credential is committed or captured in evidence.
-- The team can explain why deployment portability is proven even though the AKS
-  environment resolves `mqttBrokers` to an in-cluster broker rather than Event Grid.
-- The ownership split is clear: application teams own the model and safe parameters;
-  platform teams own control planes, environments, provider scopes, recipes, and
-  backing-service policy.
+- The custom SQL recipe is published to ACR at version `1.0.0`.
+- Both corrected PostgreSQL recipes are published to ACR at version `1.0.0` and
+  registered without mutable `latest` references.
+- Azure PostgreSQL permits only the exact static AKS egress IPs.
+- The recipe is registered as the default `Radius.Resources/sqlDatabases`
+  implementation in `env-azure-prod`.
+- AKS has the expected Azure-backed and in-cluster recipe mappings.
+- K3s has the expected in-cluster recipe mappings.
+- Both environments expose their recipe registrations through the CLI and dashboard.
+- The team can explain `context`, `result.resources`, `result.values`, and
+  `result.secrets`.
+- No application workload has been deployed yet.
 
-## Progressive hints
+## Hints
 
-### Targeting
+- Start from the resource-type schema. Every recipe output must satisfy that contract.
+- Radius injects `context`; application developers do not pass it.
+- Publishing an artifact and registering a recipe are separate steps. Validate each
+  one before continuing.
+- ACR names must be globally unique and lowercase.
+- Check Kubernetes context, Radius workspace, group, and environment before each
+  deployment.
+- The Azure environment needs an Azure provider scope; the K3s environment does not.
+- Environment-as-code makes a complete mapping repeatable, but author and register the
+  custom recipe manually first.
 
-1. A valid Kubernetes context does not select the Radius control plane.
-2. Compare the active context with the workspace target before deploying.
-3. On K3s, the Bastion process must be running because the kubeconfig endpoint is
-   `https://127.0.0.1:16443`.
+## Optional automation and platforms
 
-### Resource readiness
+Manual authoring, publishing, and registration are the intended learning path. For
+setup recovery or an explicit skip, `resources/configure-recipes.sh` can configure AKS,
+K3s, or both after its required Azure values are supplied.
 
-1. Radius installation alone does not make custom resource types deployable.
-2. The application needs the extension package generated from the Challenge 03 catalog.
-3. A `RecipeNotFoundFailure` is an environment-layer problem. Return to Challenge 04.
-
-### Deployment and validation
-
-1. Keep the Bicep file path and image values identical.
-2. Each Radius control plane has its own application graph and state.
-3. Stop a foreground exposure before switching workspaces, then start a new exposure
-   against the newly active control plane.
-
-### Runtime parity
-
-1. A recipe that provisions successfully does not prove the application can use what it
-   provisioned.
-2. Event Grid MQTT accepts an Entra token only through MQTT v5 enhanced authentication,
-   not as a CONNECT password. A client that gets this wrong is refused at connect time.
-3. A crash-looping background service can fail a whole deployment: .NET stops the host by
-   default when a `BackgroundService` throws.
-4. The fix belongs in the recipe registration, not in `iac/app.bicep`. Never bypass
-   identity with a shared secret.
+If Azure Local or Arc-enabled Kubernetes replaces K3s, start with
+`iac/local-env.bicep` for in-cluster implementations unless the platform team
+intentionally offers managed services.
 
 ## Learning resources
 
-- [Deploy applications with Radius](https://docs.radapp.io/guides/deploy-apps/)
-- [Radius environments](https://docs.radapp.io/guides/deploy-apps/environments/overview/)
-- [Radius workspaces](https://docs.radapp.io/guides/operations/workspaces/overview/)
 - [Radius recipes](https://docs.radapp.io/guides/recipes/overview/)
-- [AKS workload identity](https://learn.microsoft.com/azure/aks/workload-identity-overview)
-- [Azure Event Grid MQTT](https://learn.microsoft.com/azure/event-grid/mqtt-overview)
+- [Author Bicep recipes](https://docs.radapp.io/guides/recipes/author-recipes/bicep/)
+- [Azure Verified Modules](https://aka.ms/avm)
+- [Publish Bicep to an OCI registry](https://docs.radapp.io/reference/cli/rad_bicep_publish/)

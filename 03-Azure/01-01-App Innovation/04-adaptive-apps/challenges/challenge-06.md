@@ -1,245 +1,172 @@
-# Challenge 06 - Adapt Identity Services - Configure User Authentication
+# Challenge 06 - Port the App Across Environments
 
 [< Previous Challenge](challenge-05.md) - **[Home](../Readme.md)** - [Next Challenge >](challenge-07.md)
 
-Estimated time: 60-90 minutes | Difficulty: intermediate to advanced
+Estimated time: 45-75 minutes | Difficulty: intermediate to advanced
 
 ## Challenge objective
 
-Add user authentication to the portable trading application without coupling the
-frontend to one enterprise identity system. The frontend must keep one OpenID Connect
-(OIDC) contract with Keycloak while each platform supplies a different user source:
-
-- `ws-local-prod` uses users held locally by Keycloak on private K3s.
-- `ws-azure-prod` brokers Microsoft Entra ID through Keycloak on AKS.
-
-The application model changes once to express the stable OIDC contract. That same model
-is then deployed to both independent Radius control planes with target-specific
-parameters and broker configuration.
-
-## Scenario
-
-The trading firm requires cloud users to sign in with Microsoft Entra ID. A local site
-must retain an authentication path even when no cloud directory or route to a domain
-controller is available. Application developers do not want provider-specific login
-code for every location.
-
-The platform team already deployed a `core` portfolio containing Keycloak on each
-cluster. Use those Keycloak instances as identity brokers. In a production design they
-would use stable HTTPS hostnames; this workshop reaches Keycloak and the frontend only
-through local port-forwarding.
+Prove that the same application model can be deployed to the private K3s platform and
+AKS without embedding either platform's implementation details in the application.
+Only the selected target, environment parameters, and platform-managed recipes may
+change.
 
 ## Learning goals
 
-- Separate end-user authentication from Radius control-plane and application workload
-  identities.
-- Use Keycloak as a stable OIDC boundary in front of different user authorities.
-- Keep client ID, redirect URI, and application model consistent while client secrets
-  and upstream federation remain target-specific.
-- Prevent identity changes from reaching the wrong Kubernetes or Radius control plane.
-- Validate the complete browser, broker, upstream-provider, and callback path.
+- Define the portability boundary between application and platform concerns.
+- Prevent deployment drift by checking Kubernetes context, Radius workspace, group,
+  and environment together.
+- Deploy one application model through two independent Radius control planes.
+- Compare application graphs, resource implementations, and runtime outcomes.
+- Distinguish deployment portability from complete runtime parity.
 
 ## Fixed target map
+
+Use the exact target map established in Challenges 02-05:
 
 | Platform | Kubernetes context | Radius workspace | Environment | Radius group |
 | --- | --- | --- | --- | --- |
 | Private K3s through Bastion | `k3s-azure-vm` | `ws-local-prod` | `env-local-prod` | `rg-trading` |
 | AKS | `aks-adaptive-apps` | `ws-azure-prod` | `env-azure-prod` | `rg-trading` |
 
-The Keycloak database and the Radius application state are independent on each target.
-An OIDC client secret or user created on one target does not exist on the other.
-
-## Additional prerequisites
-
-- Completion of Challenge 05 with healthy `core-keycloak` workloads on both clusters.
-- A Microsoft Entra role that can create/configure the workshop enterprise application
-  and assign its test users, such as **Cloud Application Administrator**,
-  **Application Administrator**, or ownership delegated for the application.
-- A non-privileged Entra test user permitted by your organization's Conditional Access
-  policy.
-- Permission to update Kubernetes resources and Secrets in namespace `core` on both
-  workshop clusters.
-- A browser that can reach forwarded localhost ports 3000 and 8080.
-
-## Identity boundaries
-
-Do not conflate these three identity planes:
-
-| Plane | Purpose | Established by |
-| --- | --- | --- |
-| Radius control-plane identity | Lets Radius deploy Azure resources | Challenge 02 |
-| Application workload identity | Lets pods call platform services | Challenges 04-05 recipes |
-| End-user authentication | Signs users into the frontend | This challenge |
-
-Challenge 06 changes only the third plane. Do not create service-principal secrets,
-change the Challenge 02 federated credential, or claim that user login completes Azure
-Event Grid MQTT authorization.
+The two workspaces target independent Radius control planes. An application named
+`adaptive-apps` in one control plane is not the same Radius object as the application
+with that name in the other.
 
 ## Constraints
 
-- Start from the application and environments completed in Challenge 05.
-- Use the exact target map above and verify all four selectors before each stage.
-- After a devcontainer restart, reconnect K3s with
-  `bash resources/prepare-k3s-azure-vm.sh connect` and use
-  `~/.kube/adaptive-apps-k3s.yaml`.
-- Keep one app-facing contract:
-  - Client ID `adaptive-apps`
-  - Confidential OIDC client with authorization-code flow
-  - Redirect URI `http://localhost:3000/*`
-  - Browser Keycloak endpoint on `http://localhost:8080`
-- Do not commit, echo, screenshot, or save passwords and client secrets in the
-  repository. Use secure prompts and clear plaintext variables after the CLI boundary.
-- Keep all port-forwards in the foreground. Stop Keycloak and frontend forwarding before
-  switching targets.
-- Do not expose the private K3s VM, Kubernetes API, Keycloak, or frontend to the
-  Internet.
-- Use Keycloak-local users for the default K3s path. LDAP/AD DS is an optional
-  enterprise extension only when the site already has a reachable directory and trust
-  chain.
-- Use Microsoft Entra SAML federation as the AKS upstream identity path. The frontend
-  still speaks OIDC only to Keycloak.
-- Keep AI disabled and do not expand the MQTT runtime scope.
+- Deploy `iac/app.bicep` unchanged to both platforms.
+- Use the published `ghcr.io/microsoft/adaptive-apps` images; do not rebuild the
+  application.
+- Explicitly switch both Kubernetes and Radius targets before every deployment.
+- Restore the K3s localhost API tunnel after a devcontainer restart. The dedicated
+  kubeconfig is `~/.kube/adaptive-apps-k3s.yaml`, and its API endpoint is localhost.
+- Use the resource types and recipes produced in Challenges 04 and 05. Repair a missing
+  platform mapping in the environment layer, not in the application model.
+- Prompt for the frontend password. Do not put credentials in source, shell history,
+  screenshots, or evidence files.
+- Keep AI disabled. Challenge 09 owns AI adaptation.
+- Do not add Azure Event Grid MQTT authorization in this challenge. On AKS the
+  `mqttBrokers` contract intentionally resolves to an in-cluster broker, because the
+  published application cannot perform the MQTT v5 enhanced authentication that Event
+  Grid requires. Change the recipe registration if you must, never the application model,
+  and never add a shared secret.
+- Reach the frontend only through `rad resource expose` or Kubernetes port-forwarding.
+  Do not expose ports on the private K3s VM.
 
 ## Tasks
 
-### Task 1: Define the portable authentication contract
+### Task 1: Define the portability boundary
 
-Review `iac/app.bicep` and identify the optional OIDC parameters and frontend
-environment variables. Draw both authentication sequences:
+Review `iac/app.bicep` and identify:
 
-1. Browser -> K3s Keycloak -> local Keycloak user -> frontend callback.
-2. Browser -> AKS Keycloak -> Microsoft Entra ID -> Keycloak -> frontend callback.
+- Application-team inputs and resources that remain identical.
+- Environment-specific choices supplied at deployment time.
+- Platform implementations selected through recipes.
+- Features intentionally deferred to later challenges.
 
-Label each value as application-owned, broker-owned, or upstream-provider-owned.
-Explain why the app model can remain identical even though each Keycloak instance has a
-different client secret.
+Create a parity checklist covering target selection, resource-type availability,
+recipes, deployment, graph validation, backing resources, and frontend exposure.
 
-### Task 2: Configure and validate the K3s identity path
+### Task 2: Prove the K3s deployment
 
-Reconnect the Bastion API tunnel and explicitly select `k3s-azure-vm`,
-`ws-local-prod`, `rg-trading`, and `env-local-prod`.
+Restore the Bastion tunnel if needed, then explicitly select:
 
-On the K3s `core` Keycloak instance:
+- Kubernetes context `k3s-azure-vm`
+- Radius workspace `ws-local-prod`
+- Radius group `rg-trading`
+- Radius environment `env-local-prod`
 
-- Create or reconcile the confidential `adaptive-apps` client.
-- Create a non-administrator local test user with a securely entered password.
-- Rotate the portfolio bootstrap administrator without exposing its password.
-- Capture the generated client secret only into a protected shell variable.
-- Redeploy `iac/app.bicep` with the OIDC contract enabled.
-- Forward Keycloak to local port 8080 and the frontend to local port 3000.
-- Sign in through the OIDC path and verify the returned user identity.
+Verify that the generated Bicep extension from Challenge 04 is available and that the
+required PostgreSQL, MQTT, and workload-identity recipes are registered.
 
-Record why this is a local availability pattern rather than an enterprise directory
-replacement.
+Deploy `iac/app.bicep`, wait for recipe-owned schema initialization, prove the four
+tables and single `Demo Account` seed through safe metadata checks, inspect the graph and
+resources, check backend database access, and expose the frontend through the active K3s
+Radius control plane.
 
-### Task 3: Configure Microsoft Entra federation on AKS
+### Task 3: Prove the AKS deployment
 
-Stop both K3s foreground processes, clear the dedicated K3s kubeconfig, and explicitly
-select `aks-adaptive-apps`, `ws-azure-prod`, `rg-trading`, and `env-azure-prod`.
+Stop the K3s frontend exposure before switching targets. Explicitly select:
 
-On the AKS `core` Keycloak instance:
+- Kubernetes context `aks-adaptive-apps`
+- Radius workspace `ws-azure-prod`
+- Radius group `rg-trading`
+- Radius environment `env-azure-prod`
 
-- Create the same `adaptive-apps` OIDC client contract.
-- Rotate this broker's portfolio bootstrap administrator independently from K3s.
-- Configure a non-gallery Microsoft Entra enterprise application for SAML SSO.
-- Use the Keycloak realm as the SAML service provider and add Entra as an upstream
-  identity provider with alias `entra`.
-- Give the SAML service provider a team-unique entity ID so multiple workshop teams can
-  share one Entra tenant.
-- Assign only the workshop test users or group to the enterprise application.
-- Map the user attributes needed by the frontend.
-- Redeploy the same `iac/app.bicep` with this target's Keycloak client secret.
-- Forward Keycloak and the frontend, then complete an Entra-backed sign-in.
+Verify the Azure credential registration from Challenge 03 and the required recipe
+mappings from Challenge 05. Deploy the same `iac/app.bicep` file with the same image
+inputs, then inspect the graph, Kubernetes resources, Azure backing resources, and
+frontend exposure. Repeat the same schema, seed, and backend database-access checks and
+confirm the initializer requires TLS.
 
-The localhost SAML and OIDC URLs are acceptable only for this port-forwarded workshop.
-Document the stable HTTPS hostnames and certificate ownership a production deployment
-would require.
+### Task 4: Compare evidence and ownership
 
-### Task 4: Compare evidence and troubleshoot by layer
+Capture a side-by-side comparison that shows:
 
-For both targets, capture non-secret evidence of:
-
-- The active Kubernetes context, Radius workspace, group, and environment.
-- The `adaptive-apps` client settings without its secret.
-- Frontend and Keycloak workload health.
-- The Radius application graph and frontend OIDC environment-variable names.
-- Successful login through the intended user authority.
-
-Create a layered diagnostic checklist covering:
-
-1. Local port-forward and browser reachability.
-2. OIDC client, redirect URI, and secret alignment.
-3. Keycloak realm and upstream provider state.
-4. Entra enterprise-app assignment or local-user state.
-5. Callback, issuer, token, user-info, and browser endpoint alignment.
+- The same application model and resource-type contracts on both targets.
+- A local PostgreSQL and MQTT implementation on K3s.
+- Azure Database for PostgreSQL on AKS, and the same in-cluster MQTT broker on both.
+- Independent application state in each Radius control plane.
+- Parameters that changed and parameters that stayed the same.
+- Application-team responsibilities versus platform-team responsibilities.
+- Known runtime gaps, and why a recipe can differ from the "obvious" cloud service.
 
 ## Success criteria
 
-- `iac/app.bicep` contains one optional, platform-neutral OIDC contract and still deploys
-  with OIDC disabled when its parameters are omitted.
-- The same app model, client ID, redirect URI, and browser ports are used on both
-  targets.
-- K3s login succeeds with a non-administrator local Keycloak user.
-- AKS login succeeds with an assigned Microsoft Entra user brokered through Keycloak.
-- Client secrets and user passwords differ per target, remain out of source and
-  evidence, and are cleared from plaintext variables.
-- The team can explain why Keycloak changes upstream providers without changing the
-  frontend's OIDC protocol.
-- The team can distinguish user authentication from Radius control-plane identity and
-  pod workload identity.
-- No public endpoint or inbound VM rule is introduced for the workshop login flow.
+- `iac/app.bicep` is deployed unchanged to both target environments.
+- Every deployment is preceded by an explicit four-part target check.
+- Both Radius control planes show an `adaptive-apps` graph with frontend, backend,
+  PostgreSQL, MQTT, and workload-identity resources.
+- The backing implementations differ according to each environment's recipes.
+- Both implementations contain `accounts`, `orders`, `trades`, and `positions`, exactly
+  one `Demo Account`, and a backend that is Ready only after `/api/accounts` succeeds.
+- The frontend can be exposed through each active control plane, one at a time.
+- No password or cluster credential is committed or captured in evidence.
+- The team can explain why deployment portability is proven even though the AKS
+  environment resolves `mqttBrokers` to an in-cluster broker rather than Event Grid.
+- The ownership split is clear: application teams own the model and safe parameters;
+  platform teams own control planes, environments, provider scopes, recipes, and
+  backing-service policy.
 
 ## Progressive hints
 
-### Architecture and targeting
+### Targeting
 
-1. The app should not know whether its user originated in Keycloak or Entra.
-2. Kubernetes context selects the Keycloak instance; Radius workspace selects the app
-   deployment. Verify both.
-3. Each control plane has its own client secret even when the client ID is identical.
+1. A valid Kubernetes context does not select the Radius control plane.
+2. Compare the active context with the workspace target before deploying.
+3. On K3s, the Bastion process must be running because the kubeconfig endpoint is
+   `https://127.0.0.1:16443`.
 
-### OIDC client
+### Resource readiness
 
-1. Validate Keycloak health and client configuration before debugging federation.
-2. The browser reaches `localhost:8080`, while the frontend container reaches Keycloak
-   through its `core` cluster service.
-3. A redirect mismatch usually means the client does not include
-   `http://localhost:3000/*`.
+1. Radius installation alone does not make custom resource types deployable.
+2. The application needs the extension package generated from the Challenge 04 catalog.
+3. A `RecipeNotFoundFailure` is an environment-layer problem. Return to Challenge 05.
 
-### K3s local identity
+### Deployment and validation
 
-1. A local Keycloak user is enough to prove the broker and OIDC contract without
-   introducing AD DS into the workshop.
-2. Use a non-administrator account for application sign-in.
-3. If the callback fails after successful credentials, inspect frontend logs and the
-   OIDC endpoints rather than changing the user.
+1. Keep the Bicep file path and image values identical.
+2. Each Radius control plane has its own application graph and state.
+3. Stop a foreground exposure before switching workspaces, then start a new exposure
+   against the newly active control plane.
 
-### Entra federation
+### Runtime parity
 
-1. Keycloak is the SAML service provider; Entra is the upstream SAML identity provider.
-2. The reply URL ends in `/broker/entra/endpoint`.
-3. An Entra user may authenticate successfully but still be denied when assignment is
-   required and the user or group is not assigned.
-
-### Port-forwarding
-
-1. Keycloak needs local port 8080 and the frontend needs local port 3000.
-2. A foreground forward belongs to the cluster active when it started.
-3. Stop both forwards before switching targets; do not reuse a stale browser session as
-   evidence.
+1. A recipe that provisions successfully does not prove the application can use what it
+   provisioned.
+2. Event Grid MQTT accepts an Entra token only through MQTT v5 enhanced authentication,
+   not as a CONNECT password. A client that gets this wrong is refused at connect time.
+3. A crash-looping background service can fail a whole deployment: .NET stops the host by
+   default when a `BackgroundService` throws.
+4. The fix belongs in the recipe registration, not in `iac/app.bicep`. Never bypass
+   identity with a shared secret.
 
 ## Learning resources
 
-- [Keycloak identity brokering](https://www.keycloak.org/docs/latest/server_admin/#_identity_broker)
-- [Keycloak OIDC clients](https://www.keycloak.org/docs/latest/server_admin/#assembly-managing-clients_server_administration_guide)
-- [Microsoft Entra SAML single sign-on](https://learn.microsoft.com/entra/identity/enterprise-apps/add-application-portal-setup-sso)
-- [Assign users and groups to an enterprise application](https://learn.microsoft.com/entra/identity/enterprise-apps/assign-user-or-group-access-portal)
-- [OpenID Connect overview](https://openid.net/developers/how-connect-works/)
-- [Kubernetes port forwarding](https://kubernetes.io/docs/tasks/access-application-cluster/port-forward-access-application-cluster/)
-
-## Optional stretch
-
-If an actual local AD DS environment is already available, replace the K3s local user
-source with Keycloak LDAP user federation over LDAPS. Validate DNS, certificate trust,
-bind-account scope, read-only user search, and group/claim mapping. Do not describe this
-optional path as complete unless an AD user signs in end to end.
+- [Deploy applications with Radius](https://docs.radapp.io/guides/deploy-apps/)
+- [Radius environments](https://docs.radapp.io/guides/deploy-apps/environments/overview/)
+- [Radius workspaces](https://docs.radapp.io/guides/operations/workspaces/overview/)
+- [Radius recipes](https://docs.radapp.io/guides/recipes/overview/)
+- [AKS workload identity](https://learn.microsoft.com/azure/aks/workload-identity-overview)
+- [Azure Event Grid MQTT](https://learn.microsoft.com/azure/event-grid/mqtt-overview)

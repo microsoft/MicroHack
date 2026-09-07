@@ -205,7 +205,7 @@ the coach can remove the entire group separately. The script does not automate d
 K3s can optionally be connected to Azure Arc by following
 [Prepare an Azure Arc-enabled cluster](prepare-arc.md). Establish the Bastion API tunnel
 before running Arc commands that access the private Kubernetes API. Radius is installed
-in Challenge 02.
+in Challenge 03.
 
 ## References
 

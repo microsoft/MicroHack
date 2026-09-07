@@ -17,4 +17,4 @@ kubectl wait --for=condition=Ready nodes --all --timeout=10m
 kubectl get nodes -o wide
 ```
 
-Radius is installed separately in Challenge 02.
+Radius is installed separately in Challenge 03.

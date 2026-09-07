@@ -952,4 +952,4 @@ Add idempotent case identifiers and checkpointing so a transient failure can res
 
 ## 🧠 Conclusion
 
-You have composed evidence enrichment, regulatory assessment, and reporting into a deployable investigation workflow. Continue to [Challenge 5](challenge-05.md) to govern model and MCP traffic and add operational alerting.
+You have composed evidence enrichment, regulatory assessment, and reporting into a deployable investigation workflow. Continue to [Challenge 5](challenge-05.md) to govern MCP traffic and add operational alerting.

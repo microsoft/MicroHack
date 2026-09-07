@@ -1,4 +1,4 @@
-# Challenge 5 - Govern Models and MCP Servers
+# Challenge 5 - Govern MCP Servers
 
 [Previous challenge](challenge-04.md) | **[Home](../README.md)** | [Next challenge](challenge-06.md)
 
@@ -8,7 +8,7 @@ Introduce the **AI Gateway tier (preview)** for MCP access, generate an MCP inte
 
 ## 🧭 Context and Background
 
-The investigation workflow now produces a decision, but a decision that requires action must also reach the operational alert system. AI Gateway provides a shared policy and observability boundary for model and tool traffic.
+The investigation workflow now produces a decision, but a decision that requires action must also reach the operational alert system. AI Gateway provides a shared policy and observability boundary for MCP traffic.
 
 ```mermaid
 flowchart LR
@@ -35,7 +35,7 @@ source hackenv
 
 ### 1. Deploy the AI Gateway
 
-An **AI Gateway** is a centralized control point for securing and managing interactions among AI agents, models, and external services. It routes requests and responses through a governance layer that can enforce authentication, authorization, rate limiting, and other policies. This helps protect sensitive information, support compliance, and provide observability into AI-driven workflows.
+An **AI Gateway** is a centralized control point for securing and managing MCP traffic between AI agents and external services. It routes requests and responses through a governance layer that can enforce authentication, authorization, rate limiting, and other policies. This helps protect sensitive information, support compliance, and provide observability into AI-driven workflows.
 
 In Azure, API Management provides the AI Gateway. In this lab, you will deploy a dedicated API Management instance using the preview `AIGateway` SKU, then route MCP calls through this centralized governance layer.
 
@@ -857,7 +857,7 @@ Use these additional JSON payloads to test the orchestration:
 }
 ```
 
-Finally, inspect the AI Gateway telemetry and agent traces to verify that model calls and both MCP integrations traverse the gateway. Confirm that logs do not expose credentials or unnecessary financial payloads. Where possible, send an unauthorized request and verify that the gateway rejects it.
+Finally, inspect the AI Gateway telemetry and agent traces to verify that both MCP integrations traverse the gateway. Confirm that logs do not expose credentials or unnecessary financial payloads. Where possible, send an unauthorized request and verify that the gateway rejects it.
 
 ## 🚀 Go Further
 
@@ -874,4 +874,4 @@ Add per-agent quotas and compare their effects under a short concurrent workload
 
 ## 🧠 Conclusion
 
-You have placed model and MCP traffic behind a governance boundary and added operational alerting in parallel with report generation. Continue to [Challenge 6](challenge-06.md) to add operational and business observability to the complete workflow.
+You have placed MCP traffic behind a governance boundary and added operational alerting in parallel with report generation. Continue to [Challenge 6](challenge-06.md) to add operational and business observability to the complete workflow.

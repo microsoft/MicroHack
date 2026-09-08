@@ -54,8 +54,8 @@ In this task, you will enable managed identity authentication on your Azure SQL 
     <td colspan="2" align="center"><img src="../../images/image001.png" width="100%"></td>
   </tr>
   <tr>
-    <td>After signing in for the first time, check the <b>Workspaces</b> list. If your predeployed workspace is not visible, perform a hard refresh using <b>Ctrl+Shift+R</b> in Edge or Chrome, then open <b>Workspaces</b> again.</td>
-    <td><b>Troubleshooting:</b> The workspace list may initially show only <b>My workspace</b>. A hard refresh reloads the list so the assigned workspace becomes visible.</td>
+    <td><b>Troubleshooting:</b> After signing in for the first time, check the <b>Workspaces</b> list. If your predeployed workspace is not visible, perform a hard refresh using <b>Ctrl+Shift+R</b> in Edge or Chrome, then open <b>Workspaces</b> again.</td>
+    <td>The workspace list may initially show only <b>My workspace</b>. A hard refresh reloads the list so the assigned workspace becomes visible.</td>
   </tr>
   <tr>
     <td colspan="2" align="center"><img src="../../images/WorkspaceEmpty.png" style="width: 100%; display: block;"></td>
@@ -229,6 +229,20 @@ In this task, you will repeat the setup and monitoring procedures for additional
   <tr>
     <td colspan="2" align="center"><img src="../../images/ConnectionName.png" width="100%"></td>
   </tr>
+    <tr>
+    <td>
+      <div style="background-color:#fff3cd; color:#000; padding:12px; margin:8px 0;">
+        <b>Troubleshooting</b><br>
+        If you see the error <b>"The specified connection name already exists. Try choosing a different name."</b>, go back to the connection name and choose another <b>short, descriptive name</b>.<br>
+        Keep the same Server, Database, Data gateway, Authentication kind, Username, and Password values, then click <b>Connect</b> again.
+      </div>
+    </td>
+    <td>This happens when a connection with the same name already exists in your workspace.</td>
+  </tr>
+  <tr>
+    <td colspan="2" align="center"><img src="../../images/image148.png" width="100%">
+    </td>
+  </tr>
   <tr>
     <td>Under <b>Data gateway (3)</b>, select the preconfigured gateway for the lab.</td>
     <td>If no gateway is listed, contact the lab facilitator before continuing.</td>
@@ -242,20 +256,6 @@ In this task, you will repeat the setup and monitoring procedures for additional
   </tr>
   <tr>
     <td colspan="2" align="center"><img src="../../images/image015.png" width="100%"></td>
-  </tr>
-  <tr>
-    <td>
-      <div style="background-color:#fff3cd; color:#000; padding:12px; margin:8px 0;">
-        <b>Troubleshooting</b><br>
-        If you see the error <b>"The specified connection name already exists. Try choosing a different name."</b>, go back to the connection name and choose another <b>short, descriptive name</b>.<br>
-        Keep the same Server, Database, Data gateway, Authentication kind, Username, and Password values, then click <b>Connect</b> again.
-      </div>
-    </td>
-    <td>This happens when a connection with the same name already exists in your workspace.</td>
-  </tr>
-  <tr>
-    <td colspan="2" align="center"><img src="../../images/image148.png" width="100%">
-    </td>
   </tr>
   <tr>
     <td>On the <b>Choose data</b> screen, select all tables, then click <b>Connect</b>.</td>

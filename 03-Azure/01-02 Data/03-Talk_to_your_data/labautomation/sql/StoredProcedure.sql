@@ -1,5 +1,5 @@
 -- usp_PurchaseSpaceRanger: shared purchase entry point called by the webshop.
--- Rewritten for the MicroHack framework: instead of a hardcoded TailspinToys_User001..100
+-- Rewritten for the MicroHack framework: instead of a hardcoded TailspinToys_User0001..0100
 -- loop, it discovers every per-attendee database by name pattern and fans a purchase
 -- out to Demo_Final plus each attendee database that currently exists.
 USE [TailspinToys_Demo_Final]

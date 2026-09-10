@@ -36,6 +36,8 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   }
   properties: {
     allowBlobPublicAccess: false
+    // SQL MI RESTORE FROM URL requires an account-key-backed service SAS for these .bak files.
+    allowSharedKeyAccess: true
     minimumTlsVersion: 'TLS1_2'
   }
 }

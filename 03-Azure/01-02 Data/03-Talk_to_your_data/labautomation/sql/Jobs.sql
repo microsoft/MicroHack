@@ -3,7 +3,7 @@ GO
 
 /****** Job: [2 Fabric Space Ranger Workload] ******/
 -- Rewritten for the MicroHack framework: both job steps now discover the per-attendee
--- databases by name pattern instead of iterating a fixed TailspinToys_User001..100 range.
+-- databases by name pattern instead of iterating a fixed TailspinToys_User0001..0100 range.
 BEGIN TRANSACTION
 DECLARE @ReturnCode INT
 SELECT @ReturnCode = 0

@@ -120,6 +120,9 @@ resource foundryAccount 'Microsoft.CognitiveServices/accounts@2025-06-01' = {
 resource foundryProject 'Microsoft.CognitiveServices/accounts/projects@2025-06-01' = {
 	parent: foundryAccount
 	name: foundryProjectName
+	dependsOn: [
+		foundryAccount
+	]
 	location: location
 	identity: {
 		type: 'SystemAssigned'

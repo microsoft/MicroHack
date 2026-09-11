@@ -63,9 +63,9 @@ Key points for integration:
   emitted by one participant's run can never leak into another's.
 - **No cross-lab state:** sibling processes are building the *same* lab for
   *other* participants at the same time, so nothing may be shared between them.
-  Each process automatically gets its own Azure CLI profile, keyed by
-  subscription + resource group. OpenTofu is opt-in: its equally isolated
-  working directory is created the first time your script calls
+  Each process automatically gets its own isolated Azure CLI login. OpenTofu is
+  opt-in: its equally isolated workspace is created the first time your script
+  calls
   [`Invoke-MhhTofuCommand`](#invoke-mhhtofucommand). Use `Get-MhhStableHash`
   over `$AllowedEntraUserIds` if you need a deterministic, per-participant
   resource name.
@@ -270,13 +270,12 @@ You never need to authenticate. Before your first line executes:
 - **Az PowerShell** is logged in from the current federated token, with the
   subscription context set to `$SubscriptionId`. The `Az.Accounts` and
   `Az.Resources` modules are imported.
-- **Azure CLI** is logged in against a **private `AZURE_CONFIG_DIR`**, keyed by
-  subscription + resource group, with the correct subscription already selected.
-  This isolation matters because your sibling processes are building the *same*
-  lab for *other* participants right now: on a shared profile, one lab's
-  `az account set` would silently change which subscription another lab
-  resolves. Yours is already private, so `az` calls in your script are safe
-  as-is, just never point them at a shared profile.
+- **Azure CLI** is logged in with the correct subscription already selected, and
+  its login is **isolated to your lab**. That isolation matters because your
+  sibling processes are building the *same* lab for *other* participants right
+  now: without it, one lab's `az account set` would silently change which
+  subscription another lab resolves. `az` calls in your script are therefore
+  safe as-is.
 - **Lab users are cached**, so [`Get-MhhLabUser`](#get-mhhlabuser) resolves
   `$AllowedEntraUserIds` to UPNs without an Entra round-trip.
 - The script runs as a service principal with subscription `Owner`.
@@ -303,20 +302,19 @@ of them ship full help: `Get-Help Invoke-MhhTofuCommand -Full`.
 
 ### Keeping credentials alive in long-running scripts
 
-**The rule:** any *single* command must finish within ~90 minutes. Total script
-runtime is unlimited, as long as you refresh between commands.
+**The rule:** any *single* command should finish within ~90 minutes. Total
+script runtime is unlimited, as long as you refresh between commands.
 
-Az PowerShell, the Azure CLI and OpenTofu each cache the runner's Azure
-credential when they log in, and none of them renew it on their own. A script
-that runs for hours therefore drifts out of date and starts failing with
-`AADSTS700024`. Refreshing is one call; you just have to make it at the right
-moments:
+Az PowerShell, the Azure CLI and OpenTofu each keep using the credential they
+logged in with and never renew it themselves, so a script that runs for hours
+eventually fails with `AADSTS700024`. Refreshing is one call; you just have to
+make it at the right moments:
 
 | Situation | What to do |
 | --- | --- |
 | Script start | Nothing, already handled |
-| `Invoke-MhhDeploymentWithRegionFallback` | Nothing, refreshes automatically during retries |
-| `Invoke-MhhTofuCommand` | Nothing, refreshes automatically before each run |
+| `Invoke-MhhDeploymentWithRegionFallback` | Nothing, it refreshes between attempts |
+| `Invoke-MhhTofuCommand` | Nothing, it refreshes before each run |
 | **Between long phases** | Call [`Update-MhhToken`](#update-mhhtoken) |
 | **Before shelling out to raw `az`** | Call [`Update-MhhToken`](#update-mhhtoken) |
 | **Polling / waiting loops** | Call [`Update-MhhToken`](#update-mhhtoken) |
@@ -329,7 +327,7 @@ moments:
 Update-MhhToken
 ```
 
-One call refreshes Az PowerShell, the Azure CLI and OpenTofu's environment
+One call refreshes Az PowerShell, the Azure CLI and OpenTofu authentication
 together. It takes **no scope arguments**: the subscription and resource group
 come from the platform, so you cannot accidentally point a refresh at another
 participant's lab. It is cheap and a no-op when there is nothing new, so just
@@ -337,36 +335,42 @@ call it unconditionally at the top of every iteration:
 
 ```powershell
 foreach ($phase in $phases) {
-    Update-MhhToken
+    Update-MhhToken | Out-Null
     & $phase
 }
 ```
 
-**What this cannot fix:** a *single* `tofu apply` or `New-AzResourceGroupDeployment`
-running past ~90 minutes. A command already in flight holds the credential it
-started with, and no refresh can reach into it. Split long deployments into
-phases.
+The wrappers refresh best-effort and only warn when that fails, while
+`Update-MhhToken` throws. Call it yourself whenever a dead credential must stop
+the script.
 
-**If a single deployment genuinely needs longer, submit it asynchronously and
-poll.** The submit returns immediately, ARM carries on server-side, and the poll
-loop refreshes the credential on every pass, so nothing your script holds is
-ever more than one iteration old:
+**What this cannot fix:** a command that is already running. It keeps the
+credential it started with, so split long work into phases.
+
+**If a single deployment genuinely needs longer, submit it in the background and
+poll.** ARM carries on server-side, and the poll loop refreshes on every pass:
 
 ```powershell
-$name = "lab-$(Get-Date -f yyyyMMddHHmmss)"
-New-AzResourceGroupDeployment -Name $name -ResourceGroupName $rg -TemplateFile $t -AsJob | Out-Null
+$deploymentName = "lab-$(Get-Date -Format yyyyMMddHHmmss)"
+New-AzResourceGroupDeployment -Name $deploymentName -ResourceGroupName $ResourceGroupName `
+    -TemplateFile (Join-Path $PSScriptRoot 'main.bicep') -AsJob -ErrorAction Stop | Out-Null
 
+$deadline = [DateTime]::UtcNow.AddHours(3)
 do {
     Start-Sleep -Seconds 30
-    Update-MhhToken
-    $state = (Get-AzResourceGroupDeployment -ResourceGroupName $rg -Name $name -ErrorAction SilentlyContinue).ProvisioningState
+    Update-MhhToken | Out-Null
+    if ([DateTime]::UtcNow -ge $deadline) { throw "Timed out waiting for '$deploymentName'." }
+    $state = (Get-AzResourceGroupDeployment -ResourceGroupName $ResourceGroupName `
+        -Name $deploymentName -ErrorAction SilentlyContinue).ProvisioningState
 } while ($state -notin 'Succeeded', 'Failed', 'Canceled')
+
+if ($state -ne 'Succeeded') { throw "Deployment '$deploymentName' ended as '$state'." }
 ```
 
-The deployment name is captured up front because the poll needs it, and
 `-ErrorAction SilentlyContinue` covers the moment before ARM has registered the
-deployment. Check `$state` afterwards: the loop exits on `Failed` and `Canceled`
-just as it does on `Succeeded`.
+deployment, and the deadline stops the loop from waiting forever. Always check
+`$state` afterwards: the loop also exits on `Failed` and `Canceled`. Note that
+this plain Az pattern gives you no region fallback and no cleanup.
 
 ### Deploying when `deploymentType = subscription`
 
@@ -378,34 +382,36 @@ Use `Get-MhhStableHash` to derive a deterministic name from
 `$AllowedEntraUserIds` so re-runs target the same RG:
 
 ```powershell
-$location = if ($PreferredLocation.Count -gt 0) { $PreferredLocation[0] } else { 'swedencentral' }
+if ($PreferredLocation.Count -eq 0) { throw 'At least one preferred region is required.' }
+$location = $PreferredLocation[0]
 $rgName   = "lab-{0}" -f (Get-MhhStableHash -Value $AllowedEntraUserIds -Length 12)
 
 if (-not (Get-AzResourceGroup -Name $rgName -ErrorAction SilentlyContinue)) {
-    New-AzResourceGroup -Name $rgName -Location $location | Out-Null
+    New-AzResourceGroup -Name $rgName -Location $location -ErrorAction Stop | Out-Null
 }
 
 # Surface the RG name so the user can find it
-@{ HackboxCredential = @{ name = "Resource Group Name"; value = $rgName; note = "" } }
+@{ HackboxCredential = @{ name = "Lab Resource Group"; value = $rgName; note = "" } }
 ```
 
-> The `Resource Group Name` credential is normally emitted by the platform for
+> The `Resource Group Name` credential is emitted by the platform for
 > `resourcegroup` / `resourcegroup-with-subscriptionowner` deployments. In
-> `subscription` mode it is *not* emitted; emit it yourself if you want it
-> shown on the user's dashboard.
+> `subscription` mode it is *not* emitted, so surface the group you created
+> yourself, under a non-reserved name such as `Lab Resource Group`.
 
 **Option B: do a subscription-scoped deployment.**
 Use `New-AzDeployment` (or `New-AzSubscriptionDeployment`) with a template
 whose `targetScope` is `subscription`:
 
 ```powershell
-$location = if ($PreferredLocation.Count -gt 0) { $PreferredLocation[0] } else { 'swedencentral' }
+if ($PreferredLocation.Count -eq 0) { throw 'At least one preferred region is required.' }
+$location = $PreferredLocation[0]
 
 New-AzDeployment `
     -Name       ("lab-" + (Get-MhhStableHash -Value $AllowedEntraUserIds -Length 12)) `
     -Location   $location `
     -TemplateFile (Join-Path $PSScriptRoot 'main.bicep') `
-    -TemplateParameterObject @{ allowedEntraUserIds = $AllowedEntraUserIds } `
+    -TemplateParameterObject @{ allowedEntraUserIds = $AllowedEntraUserIds } -ErrorAction Stop `
     | Out-Null
 ```
 
@@ -413,9 +419,13 @@ Either option is fine; pick the one that matches what your lab actually needs
 at the subscription scope (e.g. policy assignments, multiple RGs, management
 group operations).
 
+Both examples simply take the first preferred region, so check that the services
+your lab needs are available there. For `New-AzDeployment`, `-Location` only
+stores the deployment record; your template still decides where resources go.
+
 ### Deploying with OpenTofu
 
-> **Not recommended, prefer Bicep/ARM.** Two reasons:
+> **Not recommended, prefer Bicep/ARM.** Three reasons:
 >
 > - **State does not survive the run.** The working directory lives inside the
 >   deployment container, which is thrown away when the job ends. If the whole
@@ -430,8 +440,10 @@ group operations).
 >   which turn a capacity or quota error into an automatic retry in the next
 >   `$PreferredLocation` region. There is no equivalent for OpenTofu: a
 >   `SkuNotAvailable` in your first region simply fails the lab.
-> - **Longer deployments fail.**  Deployments running past ~90 minutes cannot be refreshed
->   and will fail with `AADSTS700024` and leave the lab in an unknown state.
+> - **A running process cannot be refreshed by the wrapper.** With workload
+>   identity, an apply that outlives its credential can fail with `AADSTS700024`
+>   and leave partial resources. Keep individual commands short enough for the
+>   remaining credential lifetime; ~90 minutes is not a guaranteed allowance.
 >
 > Use OpenTofu only when your lab genuinely needs something Bicep/ARM cannot
 > reach, and design it to be **idempotent from scratch every time**.
@@ -444,14 +456,19 @@ must go through this cmdlet: never invoke `tofu` yourself.
 
 ```powershell
 $tofuDir = Join-Path $PSScriptRoot 'tofu'
+if ($PreferredLocation.Count -eq 0) { throw 'At least one preferred region is required.' }
+$prefix = 'lab' + (Get-MhhStableHash -Value $AllowedEntraUserIds -Length 12)
 
 Invoke-MhhTofuCommand -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName `
-    -ModulePath $tofuDir -Clean init -input=false
+  -ModulePath $tofuDir -ArgumentList @('init', '-input=false') | Out-Null
 
 Invoke-MhhTofuCommand -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName `
-    -Variable @{ location = $PreferredLocation[0]; prefix = $user.ShortName } `
-    -TimeoutSeconds 3600 apply -auto-approve
+  -Variable @{ location = $PreferredLocation[0]; prefix = $prefix } `
+  -TimeoutSeconds 3600 -ArgumentList @('apply', '-auto-approve') | Out-Null
 ```
+
+The example simply takes the first preferred region: OpenTofu labs get no
+automatic region fallback, so check availability yourself.
 
 Points that will save you time:
 
@@ -460,15 +477,16 @@ Points that will save you time:
   that is unique to this lab; that is what keeps every participant's copy of
   the *same* module on its own state file and provider tree. Omit `-ModulePath`
   on follow-up calls to reuse what's already there.
-- **`-Clean` on `init` only**: it wipes the workspace so no state survives a re-run.
+- **`-Clean` starts over**: it wipes the workspace, including state, but deletes
+  nothing in Azure. Use it on `init` when you deliberately want a fresh start.
 - **Never write a `backend` block.** A shared remote backend would make every
   participant's lab write to the same state. State stays local to the
   per-lab working directory, which is already isolated.
-- **`init` is offline.** The `azurerm` provider is baked into the image, so there
-  is nothing to download; don't add `-upgrade`, it will reach for the network.
+- **Keep `init` offline.** The `azurerm` provider ships in the image, so there is
+  nothing to download; don't add `-upgrade` and don't reference remote modules.
 - **Pass secrets via `-Variable`, never `-var`.** `-Variable` writes them to a
   private file; command lines are readable by anything else in the pod.
-- **Auth is automatic.** Don't set `ARM_*` yourself and don't put credentials in
+- **Auth is automatic.** Don't override provider authentication or put credentials in
   the provider block.
 
 For Bicep/ARM instead, use
@@ -479,12 +497,14 @@ it retries in your other `$PreferredLocation` regions on capacity errors.
 
 Anything your script writes to the output stream as a `HackboxCredential`
 hashtable is captured and surfaced to the user on their personal lab dashboard.
+The examples below assume the resources already exist and `$vmPassword` is the
+stable password successfully applied to the VM.
 
 ```powershell
 # Single credential
 @{ HackboxCredential = @{
     name  = "AdminPassword"
-    value = "TopSecret!"
+    value = $vmPassword
     note  = "Initial password for the VM admin account"
 } }
 
@@ -547,12 +567,16 @@ the event ends. Two cases need action from your script:
      after you recreate the group, or the user loses access to their own lab.
 
   ```powershell
-  Remove-MhhResourceGroup -ResourceGroupName $ResourceGroupName | Out-Null
-  New-AzResourceGroup -Name $ResourceGroupName -Location $nextLocation | Out-Null
+  Update-MhhToken | Out-Null
+  $teardown = Remove-MhhResourceGroup -ResourceGroupName $ResourceGroupName
+  if (-not $teardown.ManifestCaptured -or $teardown.Errors.Count -gt 0 -or $teardown.SoftDeletedResidual.Count -gt 0) {
+    throw "Cleanup incomplete: $($teardown.Errors -join '; ')"
+  }
+  New-AzResourceGroup -Name $ResourceGroupName -Location $nextLocation -ErrorAction Stop | Out-Null
 
-  foreach ($id in $AllowedEntraUserIds) {
-      New-AzRoleAssignment -ObjectId $id -RoleDefinitionName 'Owner' `
-          -ResourceGroupName $ResourceGroupName -ErrorAction SilentlyContinue | Out-Null
+  foreach ($userId in $AllowedEntraUserIds) {
+    New-AzRoleAssignment -ObjectId $userId -RoleDefinitionName 'Owner' `
+      -ResourceGroupName $ResourceGroupName -ErrorAction Stop | Out-Null
   }
   ```
 
@@ -561,11 +585,11 @@ the event ends. Two cases need action from your script:
   [`Remove-MhhTofuWorkspace`](#remove-mhhtofuworkspace), so the next run does not
   reuse the previous run's state.
 
-For Bicep/ARM labs none of this applies:
+For RG-scoped Bicep/ARM labs,
 [`Invoke-MhhDeploymentWithRegionFallback`](#invoke-mhhdeploymentwithregionfallback)
-does the teardown, the recreate in the next region and the `Owner` re-grant on
-every attempt, as long as you pass `$AllowedEntraUserIds` to
-`-RgOwnerEntraObjectIds`.
+handles reuse, any required teardown/recreation and Owner assignment. Pass
+`$AllowedEntraUserIds` to `-RgOwnerEntraObjectIds` and inspect teardown warnings:
+the helper reports incomplete cleanup but can still proceed to deployment.
 
 ### Local testing
 
@@ -599,7 +623,7 @@ required parameters from the [contract](#required-parameter-contract):
 
 ```powershell
 # like this for resourcegroup deployments
-./deploy-lab.ps1 -DeploymentType resourcegroup -SubscriptionId (Get-AzContext).Subscription.Id -ResourceGroupName "$rg" -AllowedEntraUserIds (Get-AzADUser -SignedIn).Id
+./deploy-lab.ps1 -DeploymentType resourcegroup -SubscriptionId (Get-AzContext).Subscription.Id -ResourceGroupName "$rg" -PreferredLocation 'swedencentral' -AllowedEntraUserIds (Get-AzADUser -SignedIn).Id
 ```
 
 > The helper cmdlets (`New-MhhStablePassword`, `Get-MhhStableHash`,
@@ -682,9 +706,10 @@ param(
   deploy into a participant's. A fixed name such as `rg-shared` is fine — the
   subscription only ever holds this one event's labs — or derive one with
   [`Get-MhhStableHash`](#get-mhhstablehash).
-- **`Invoke-MhhDeploymentWithRegionFallback` wipes the resource group it deploys
-  into.** Harmless for a dedicated shared RG, catastrophic if you ever point it
-  at a participant's RG.
+- **`Invoke-MhhDeploymentWithRegionFallback` can delete its target RG** during
+  recycle or region changes. Use a dedicated shared RG that the template can
+  fully rebuild, never a participant's RG. Initial reuse is not a guarantee of
+  preservation if a later phase fails.
 - **Emitted credentials fan out to every participant in the subscription.** The
   right behaviour for a shared endpoint, hostname or resource group name; never
   emit a per-participant secret from here.
@@ -703,11 +728,11 @@ param(
   immediately; a provider may still be `Registering` when the labs start.
   Register here, and re-check in `deploy-lab.ps1` if a provider is mandatory.
 - **Everything else matches `deploy-lab.ps1`:** its own process, Az PowerShell
-  and the Azure CLI logged in against `$SubscriptionId` with a private
-  `AZURE_CONFIG_DIR`, the lab-user cache pre-seeded (so
+  and the Azure CLI logged in against `$SubscriptionId` with an isolated CLI
+  login, the lab-user cache pre-seeded (so
   [`Get-MhhLabUser`](#get-mhhlabuser) is free) and all helper cmdlets
   auto-imported. [`Update-MhhToken`](#update-mhhtoken) is scoped to the
-  subscription and takes no arguments here either. Do not call
+  subscription and takes no scope arguments here either. Do not call
   `Connect-AzAccount`, `Set-AzContext` or `az login`.
 
 ### Example: a shared hub network
@@ -777,15 +802,21 @@ is required. Every cmdlet has full comment-based help:
 
 ### `New-MhhStablePassword`
 
-Derive a password that is **the same on every re-run** for a given lab. An
-idempotent redeploy, or a region-fallback retry that wipes and recreates the
+Derive a password that is **the same on every re-run** for a given lab, purpose
+and length. An idempotent redeploy, or
+a region-fallback retry that wipes and recreates the
 resource group, keeps the credential already shown on the participant's
 dashboard valid.
 
 ```powershell
 $vmPassword  = New-MhhStablePassword -Purpose 'vm-admin'
 $sqlPassword = New-MhhStablePassword -Purpose 'sql-admin' -Length 24
+```
 
+Emit these values **only after** the corresponding resources have successfully
+accepted them:
+
+```powershell
 @{ HackboxCredential = @{ name = 'VM Admin Password'; value = $vmPassword; note = 'vm-01' } }
 @{ HackboxCredential = @{ name = 'SQL Admin Password'; value = $sqlPassword; note = 'sql-01' } }
 ```
@@ -794,15 +825,18 @@ $sqlPassword = New-MhhStablePassword -Purpose 'sql-admin' -Length 24
 | --- | --- |
 | `Purpose` (`string`, positional 0) | Distinguishes multiple passwords within one lab (`vm-admin`, `sql-admin`, …). Different purposes give unrelated passwords for the same lab. Default `default`. |
 | `Length` (`int`, 16 - 128) | Default 16. |
-| `SubscriptionId` (`string`) | Scope override. Defaults to the lab's subscription (`$env:MHH_LAB_SUBSCRIPTION_ID`). Leave it alone. |
-| `ResourceGroupName` (`string`) | Scope override. Defaults to the lab's resource group (`$env:MHH_LAB_RESOURCE_GROUP`), empty for subscription-scoped labs. Leave it alone. |
-| `Secret` (`string`) | Overrides the derivation seed. Local development and tests only; on the platform the seed is injected for you. |
+| `SubscriptionId` (`string`) | Scope override. Defaults to the lab's subscription. Leave it alone. |
+| `ResourceGroupName` (`string`) | Scope override. Defaults to the lab's resource group, empty for subscription-scoped labs. Leave it alone. |
+| `Secret` (`string`) | Local development and tests only; on the platform this is provided for you. |
 | `AsSecureString` (`switch`) | Return a `SecureString`, useful for a Bicep `@secure()` parameter. |
 
-- **Scoped to the lab, so no two participants share a password.** The scope comes
-  from the platform via `SubscriptionId` / `ResourceGroupName`, so in practice you
-  pass only `-Purpose`. Overriding either of them changes the derived password and
-  breaks the "same value on every re-run" guarantee.
+**Return value:** one plaintext `string`, or one `SecureString` with
+`-AsSecureString`.
+
+- **Scoped to the lab, so no two participants share a password.** The platform
+  supplies the lab scope, so in practice you pass only `-Purpose` (and `-Length`
+  when the default is too short). Overriding the scope changes the derived
+  password and breaks the "same value on every re-run" guarantee.
 - **Output is `[A-Za-z0-9]` only**, so it survives connection strings, YAML, JSON
   and shell quoting with no escaping, and always contains at least one lowercase,
   one uppercase and one digit, enough for the Azure VM and SQL "3 of 4 character
@@ -823,11 +857,14 @@ $rgName = "lab-$hash"
 
 | Parameter | Description |
 | --- | --- |
-| `Value` (`string[]`, required) | One or more strings to hash. Accepts pipeline input. **Every element must be non-empty**; filter the input first if a value can be blank. |
+| `Value` (`string[]`, required, positional 0) | One or more non-empty strings to hash. Accepts pipeline input. |
 | `Length` (`int`, optional) | Number of hex chars to return. Range 12 - 64. Default 24. |
 
-The same set of inputs (in any order, any casing) always produces the same hash.
-It is an unkeyed SHA-256, so use it for resource **names**. For passwords use
+**Return value:** a lowercase hex `string` of the requested length. Order and
+casing do not matter, but duplicates and surrounding whitespace do, so pass a
+clean list.
+
+It is an unkeyed hash, so use it for resource **names**. For passwords use
 [`New-MhhStablePassword`](#new-mhhstablepassword), which is keyed.
 
 ### `Get-MhhLabUser`
@@ -859,8 +896,10 @@ $AllowedEntraUserIds | Get-MhhLabUser | ForEach-Object { $_.ShortName }
 | `UserPrincipalName` | The user's UPN (e.g. `user01@contoso.onmicrosoft.com`). |
 | `ShortName` | The lowercase local part of the UPN (the bit before `@`), handy for resource names and greetings. |
 
-Resolution is served from a cache that the platform pre-seeds before your script runs,
-so hits cost nothing.
+The platform pre-seeds a cache before your script runs, so lookups normally cost
+nothing; an ID that is not cached is fetched from Entra ID, and a failed fetch
+throws. `ShortName` is not sanitised, so check the naming rules of whatever you
+name with it.
 
 ### `Update-MhhToken`
 
@@ -877,11 +916,13 @@ Update-MhhToken
 | Parameter | Description |
 | --- | --- |
 | `Target` (`string[]`) | Restrict to `AzPowerShell`, `AzureCli` and/or `OpenTofu`. Defaults to every client installed in the image. Naming a target that isn't installed is an error. |
-| `MinimumRemainingMinutes` (`int`, 0 - 1440) | Warn when the refreshed credential has less life left than the longest single command still to run. |
+| `MinimumRemainingMinutes` (`int`, 0 - 1440) | Warn when the refreshed credential has less life left than the longest single command still to run. `0` (default) disables the check, which only ever warns. |
+
+Clients that are already current are skipped, so calling this in a loop is cheap.
 
 Returns `@{ Mode; Rotated; TokenLifetimeSeconds; RemainingSeconds; Refreshed; Skipped }`
-and **throws** if any attempted target fails, so you can't silently continue with
-dead credentials.
+and **throws** if a refresh it attempted fails, so you can't silently continue
+with dead credentials.
 
 ### `Invoke-MhhSynchronized`
 
@@ -891,82 +932,96 @@ participant deployments run in parallel, such as adding subnets to a shared
 VNet.
 
 ```powershell
-Invoke-MhhSynchronized -Name 'shared-vnet' {
-    $vnet = Get-AzVirtualNetwork -Name $vnetName -ResourceGroupName $sharedRg
+$lockName = 'vnet-' + (Get-MhhStableHash -Value $SubscriptionId, $sharedRg, $vnetName)
+Invoke-MhhSynchronized -Name $lockName {
+  $vnet = Get-AzVirtualNetwork -Name $vnetName -ResourceGroupName $sharedRg -ErrorAction Stop
+  if ($vnet.Subnets.Name -notcontains $subnetName) {
     Add-AzVirtualNetworkSubnetConfig `
-        -VirtualNetwork $vnet `
-        -Name $subnetName `
-        -AddressPrefix $addressPrefix |
-        Set-AzVirtualNetwork
+      -VirtualNetwork $vnet `
+      -Name $subnetName `
+      -AddressPrefix $addressPrefix -ErrorAction Stop |
+      Set-AzVirtualNetwork -ErrorAction Stop | Out-Null
+  }
 }
 ```
 
 | Parameter | Description |
 | --- | --- |
 | `ScriptBlock` (`scriptblock`, required, positional 0) | Critical section to run while holding the lock. Its output and exceptions pass through unchanged. |
-| `Name` (`string`, positional 1) | Case-insensitive lock name. 1-64 characters from `[A-Za-z0-9._-]`; `.` and `..` are rejected because the name becomes a path component. Default `Default`. |
-| `TimeoutSeconds` (`int`, 1-86400) | Maximum time to wait for the lock before throwing. Default 900. |
-| `MaxSleepDelayMilliseconds` (`int`, 250-1000000) | Maximum random delay after releasing a lock, applied only when this call had to queue. Default 1000. |
+| `Name` (`string`, positional 1) | Case-insensitive lock name, 1-64 characters from `[A-Za-z0-9._-]`. Default `Default`. |
+| `TimeoutSeconds` (`int`, 1-86400) | How long to wait *for the lock* before throwing. Default 900. |
+| `MaxSleepDelayMilliseconds` (`int`, 250-1000000) | Upper bound for the small random delay after a call that had to queue. Default 1000. |
 
-- **Locks are container-wide and keyed only by `Name`.** Calls using the same name serialize even if
-  they target different subscriptions, so give unrelated critical sections different names.
-- **Keep the script block short.** Every other job waiting for that name remains
-  blocked until the block finishes. The lock is released even if the block
-  throws, and a timeout includes details about the current lock holder.
-- **Closures work normally.** The block runs in the caller's scope, so it can use
-  local variables without `$using:`. Nested calls using the same name in the
-  same process are supported.
+- **Locks are container-wide and keyed only by `Name`.** Calls using the same
+  name serialize even across subscriptions, so give unrelated critical sections
+  different names, and every writer to one shared resource the same name.
+- **Keep the script block short.** Every other job waiting for that name stays
+  blocked until it finishes. The lock is released even if the block throws.
+- **Local variables work without `$using:`**, but assignments inside the block do
+  not update the caller's variables: return a value instead. Nested calls using
+  the same name are supported.
+
+**Return value:** whatever the script block emits. Errors propagate after the
+lock is released, so use `-ErrorAction Stop` inside the block when a failure
+must stop your script.
 
 ### `Set-MhhManagedIdentityRoleMember`
 
 Grant an Entra ID directory role to the system-assigned managed identities of
-supported Azure resources. The helper collects all resource IDs from the
-parameter and pipeline, then processes them in one synchronized operation. It
-is safe to re-run: existing memberships return `AlreadyAssigned` rather than
-failing.
+supported Azure resources. Your lab has no Graph permissions of its own, so the
+platform performs the assignment for you and waits for the result. Existing
+memberships come back as `AlreadyAssigned`, so re-running is safe.
 
-The helper supports only the following provider types:
+**Only works inside a platform-run lab**, so this is the one helper you cannot
+try out locally.
+
+Supported resource types:
 
 - `Microsoft.Sql/managedInstances`
 - `Microsoft.Compute/virtualMachines`
 - `Microsoft.Web/sites`
 - `Microsoft.App/containerApps`
 
-Only the **Directory Readers** role is supported. Unsupported or invalid
-resource IDs are returned with status `Skipped` and produce a warning.
+Only the **Directory Readers** role is supported, and each ID must point at a
+top-level resource of one of those types.
+
+**It is all-or-nothing:** if one ID is unsupported, or its managed identity is
+not visible in Entra ID yet, the whole request fails and nothing is assigned.
+Create the identities first and allow for a short propagation delay.
 
 ```powershell
-# One SQL Managed Instance
-Set-MhhManagedIdentityRoleMember -ResourceId $sqlManagedInstance.Id -Role 'Directory Readers'
-
-# Every SQL Managed Instance in a resource group
-Get-AzSqlInstance -ResourceGroupName $ResourceGroupName |
-    Set-MhhManagedIdentityRoleMember -Role 'Directory Readers'
+$roleResults = @(Get-AzSqlInstance -ResourceGroupName $ResourceGroupName -ErrorAction Stop |
+  Set-MhhManagedIdentityRoleMember -Role 'Directory Readers')
+if ($roleResults.Count -eq 0 -or @($roleResults | Where-Object { $_.status -ne 'Assigned' -and $_.status -ne 'AlreadyAssigned' }).Count -gt 0) {
+  throw 'Not every managed identity received Directory Readers.'
+}
 ```
 
 | Parameter | Description |
 | --- | --- |
 | `ResourceId` (`string[]`, required, positional 0) | Azure resource IDs whose system-assigned identities receive the role.<br><br>Supported providers:<br>• `Microsoft.Sql/managedInstances`<br>• `Microsoft.Compute/virtualMachines`<br>• `Microsoft.Web/sites`<br>• `Microsoft.App/containerApps`<br><br>Accepts pipeline input and the aliases `Id` and `ResourceIds`. Duplicate IDs are processed once. |
-| `Role` (`string[]`, positional 1) | Directory roles to grant. Only `Directory Readers` (or `Directory Reader`) is currently supported. Default `Directory Readers`. |
-| `TimeoutSeconds` (`int`, 60-3600) | Maximum time to wait for the container-wide directory-role lock. Default 900. |
+| `Role` (`string[]`, positional 1) | Directory roles to grant. Only `Directory Readers` is supported. Default `Directory Readers`. |
+| `TimeoutSeconds` (`int`, 60-3600) | How long to wait for the platform to finish the assignment. Default 900. |
 
 **Return value:** one result object per resource and role combination:
 
 | Field | Description |
 | --- | --- |
 | `resourceId` | Azure resource ID supplied to the helper. |
-| `principalId` | Resolved managed identity object ID, or `$null` when it could not be resolved. |
+| `principalId` | The managed identity's object ID. |
 | `displayName` | Azure resource / managed identity display name. |
 | `role` | Resolved directory role name. |
 | `status` | `Assigned`, `AlreadyAssigned`, `Skipped` or `Failed`. |
 
+A failed request throws, but a single resource can still come back as `Failed`
+while the rest succeed, so check every status as in the example.
+
 ### `Invoke-MhhTofuCommand`
 
-Run one OpenTofu command in a working directory isolated by subscription +
-resource group. Every participant's process runs the *same* `.tf` module, so
-this isolation is what stops them sharing a state file, a provider link tree or
-a plan file. See [Deploying with OpenTofu](#deploying-with-opentofu) for the
-usage rules.
+Run one OpenTofu command in a workspace that is isolated to this lab. Every
+participant's process runs the *same* `.tf` module, so this isolation is what
+stops them sharing OpenTofu state. See
+[Deploying with OpenTofu](#deploying-with-opentofu) for the usage rules.
 
 ```powershell
 Invoke-MhhTofuCommand -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName `
@@ -975,19 +1030,34 @@ Invoke-MhhTofuCommand -SubscriptionId $SubscriptionId -ResourceGroupName $Resour
 
 | Parameter | Description |
 | --- | --- |
-| `ArgumentList` (`string[]`, required, positional) | Arguments passed to `tofu`. Trailing arguments are accepted positionally; use the explicit array form for a bare flag that could prefix-match a parameter here (e.g. tofu's `-var` vs `-Variable`). |
-| `SubscriptionId` (`string`, required) | The **lab's** subscription. Sets `ARM_SUBSCRIPTION_ID` and scopes the isolated working directory. |
-| `ResourceGroupName` (`string`) | Narrows the isolation further. Omit for subscription-scoped labs. |
-| `ModulePath` (`string`) | Directory holding the `.tf` files. Copied into the working directory before the command runs. Required on the first call; omit afterwards. |
-| `Variable` (`hashtable`) | Template variables, written to a private variables file rather than the command line. Use this for secrets; never `-var`. |
+| `ArgumentList` (`string[]`, required, positional 0) | Arguments passed to `tofu`. Trailing arguments are accepted positionally; use the explicit array form for a bare flag that could clash with a parameter name here (e.g. tofu's `-var`). |
+| `SubscriptionId` (`string`, required) | The lab's subscription. Selects the provider subscription and the isolated workspace. Pass `$SubscriptionId` straight through. |
+| `ResourceGroupName` (`string`) | Pass `$ResourceGroupName`. Omit for subscription-scoped labs, which get their own workspace. |
+| `ModulePath` (`string`) | Directory holding the `.tf` files. Copied into the workspace before the command runs. Required on the first call and after `-Clean`; omit afterwards. |
+| `Variable` (`hashtable`) | Template variables, kept off the command line and reused by later calls. Pass the full set, not an incremental update. |
 | `AuthMode` (`string`) | `Auto` (default), `WorkloadIdentity`, `Msi` or `AzureCli`. |
 | `TimeoutSeconds` (`int`, 0–86400) | Kill the process tree after this many seconds. `0` (default) waits indefinitely. |
-| `Clean` (`switch`) | Delete the working directory before running. Use on the first command so no state survives an earlier run. |
-| `IgnoreExitCode` (`switch`) | Return the result instead of throwing when `tofu` exits non-zero. |
-| `SkipCredentialRefresh` (`switch`) | Skip the throttled credential refresh that otherwise runs before each invocation. |
+| `Clean` (`switch`) | Delete the workspace before running, including state. Deletes nothing in Azure. |
+| `IgnoreExitCode` (`switch`) | Return the result instead of throwing when `tofu` exits non-zero or times out. |
+| `SkipCredentialRefresh` (`switch`) | Skip the credential refresh that otherwise runs before each invocation. |
 
-Returns `@{ Success; ExitCode; WorkingDirectory; Output; DurationSeconds; TimedOut }`
-and throws on failure unless `-IgnoreExitCode` is supplied.
+**Return value:** one hashtable:
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `Success` | `bool` | `tofu` exited `0` and did not time out. |
+| `ExitCode` | `int` | Native `tofu` exit code. |
+| `WorkingDirectory` | `string` | The workspace the command ran in. |
+| `Output` | `array` | Captured stdout and stderr lines, also written to the job log. |
+| `DurationSeconds` | `int` | How long `tofu` ran. |
+| `TimedOut` | `bool` | The command hit `TimeoutSeconds` and was killed. |
+
+Non-zero exits and timeouts throw unless `-IgnoreExitCode` is set. A failed
+credential refresh only warns, so call `Update-MhhToken` first if that must stop
+your script.
+
+Variables, state and output can contain secrets, so don't print them and don't
+pass secrets in `ArgumentList`. Run only one OpenTofu command at a time per lab.
 
 ### `Remove-MhhTofuWorkspace`
 
@@ -998,16 +1068,28 @@ building concurrently are untouched.
 **Purpose:** if your script deletes the resource group itself, drop the OpenTofu working directory too so the next run starts with a clean workspace and does not accidentally reuse the previous run's state.
 
 ```powershell
-Remove-MhhTofuWorkspace -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName
+$cleanup = Remove-MhhTofuWorkspace -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName
+if ($cleanup.Errors.Count -gt 0) { throw ($cleanup.Errors -join '; ') }
 ```
 
 | Parameter | Description |
 | --- | --- |
-| `SubscriptionId` (`string`, required, positional 0) | Lab subscription. |
-| `ResourceGroupName` (`string`, positional 1) | Omit for subscription-scoped labs. |
-| `IncludeAzCliContext` (`switch`) | Also delete the isolated Azure CLI profile directory for the same key. |
+| `SubscriptionId` (`string`, required, positional 0) | Lab subscription. Pass `$SubscriptionId` straight through. |
+| `ResourceGroupName` (`string`, positional 1) | Pass `$ResourceGroupName`. Omit for subscription-scoped labs. |
+| `IncludeAzCliContext` (`switch`) | Also delete this lab's isolated Azure CLI login. |
 
-Returns `@{ WorkspacePath; Removed; AzCliConfigPath; AzCliRemoved; Errors }`.
+**Return value:** a hashtable:
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `WorkspacePath` | `string` | The workspace that was targeted. |
+| `Removed` | `bool` | This call actually removed the workspace. `false` for a missing workspace or a deletion error. |
+| `AzCliConfigPath` | `string` or `$null` | The Azure CLI login that was targeted, when you asked for it to go too. |
+| `AzCliRemoved` | `bool` | This call actually removed that CLI login. |
+| `Errors` | `array` | Deletion errors. A missing workspace is not an error. |
+
+Nothing in Azure is deleted and `tofu destroy` is not run, so tear the resource
+group down separately. Wait for any running OpenTofu command to finish first.
 
 ### `Invoke-MhhDeploymentWithRegionFallback`
 
@@ -1018,16 +1100,24 @@ This is the recommended way to ship an RG-scoped Bicep template from
 `foreach ($region in $PreferredLocation) { try { … } }` loop documented in the
 [authoring guidelines](#authoring-guidelines).
 
-On every attempt the helper:
+An existing RG that is not `Deleting` and sits in one of your preferred regions
+is **reused**, and that region is tried first. A re-run therefore updates a
+working lab instead of rebuilding it. To start from an empty RG, call
+[`Remove-MhhResourceGroup`](#remove-mhhresourcegroup) first.
 
-1. Force-deletes the resource group if it already exists (synchronous, with
-   forced VM/VMSS teardown).
-2. Recreates an **empty** RG in the current candidate region.
-3. Re-grants `Owner` on the RG to every Entra object ID in
-   `-RgOwnerEntraObjectIds` (**you must pass `$AllowedEntraUserIds` here**) or
-   the user will lose access to the RG the platform originally granted them.
-4. Runs your optional `-PreDeployHook` (e.g. to register resource providers).
-5. Submits `New-AzResourceGroupDeployment` with your template.
+| Phase | What happens |
+| --- | --- |
+| `Reuse` | Deploy into the existing RG, in its current region, without touching its resources. |
+| `Recycle` | Reuse failed retryably: wipe the RG and try again in the **same region** before moving on. |
+| `Fresh` | Create the RG in the next region, wiping an existing one first if its region differs. |
+
+Every phase grants `Owner` to `RgOwnerEntraObjectIds` (so **pass
+`$AllowedEntraUserIds`**, or the user loses access after a recreate), runs your
+optional hook, and submits an incremental deployment.
+
+Your template must follow the chosen region — normally a location parameter
+defaulting to `resourceGroup().location`. A location hardcoded in your parameters
+would keep deploying to the old region even after a fallback.
 
 On failure the error is classified by
 [`Test-MhhDeploymentFailureRetryable`](#test-mhhdeploymentfailureretryable):
@@ -1035,28 +1125,29 @@ On failure the error is classified by
 | Classification | Behaviour |
 | --- | --- |
 | Fatal (template bug, RBAC, policy, name collision…) | Re-throws immediately. No further regions are tried. |
-| Retry-next-region (`SkuNotAvailable`, `QuotaExceeded`, `LocationNotAvailableForResourceType`, `ResourceProviderUnavailable`, …) | Rotates to the next region in `-PreferredLocations`. |
-| Same-region transient (`TooManyRequests`, `OperationTimedOut`, `ServiceUnavailable`, `5xx`) | Bounded retry in the same region first (`-SameRegionRetryBudget`, default 1), then rotates. |
+| Retry-next-region (`SkuNotAvailable`, `QuotaExceeded`, `LocationNotAvailableForResourceType`, `ResourceProviderUnavailable`, …) | Moves on to the next phase or region. |
+| Same-region transient (`TooManyRequests`, `OperationTimedOut`, `ServiceUnavailable`, conflicts, a name still held by a soft-deleted resource) | Resubmits into the same RG (`-SameRegionRetryBudget`, default 1), then moves on. |
 
-If every region is exhausted, the helper throws
-`RegionFallbackExhausted: …` with a per-attempt summary.
+If every region is exhausted, the helper throws `RegionFallbackExhausted` with a
+per-attempt summary. Credentials are refreshed automatically between attempts.
 
 **Parameters:**
 
 | Parameter | What to pass |
 | --- | --- |
-| `PreferredLocations` (`string[]`, required) | Pass `$PreferredLocation` straight through. |
+| `PreferredLocations` (`string[]`, required) | Pass `$PreferredLocation` straight through. If your script declared it as a comma-separated string, split it first. |
 | `ResourceGroupName` (`string`, required) | For `resourcegroup` / `resourcegroup-with-subscriptionowner`: pass `$ResourceGroupName`. For `subscription`: derive a stable name with `Get-MhhStableHash`. |
-| `RgOwnerEntraObjectIds` (`string[]`) | **Pass `$AllowedEntraUserIds`**: the helper wipes and recreates the RG, so this is required to preserve the user's `Owner` role. |
+| `RgOwnerEntraObjectIds` (`string[]`) | **Pass `$AllowedEntraUserIds`**, so the user keeps `Owner` on the RG after a recreate. |
 | `TemplateFile` (`string`, required) | Path to your `.bicep` / `.json` template (e.g. `Join-Path $PSScriptRoot 'main.bicep'`). |
 | `TemplateParameterObject` (`hashtable`) | Your template parameters. Mutually exclusive with `TemplateParameterFile`. |
 | `TemplateParameterFile` (`string`) | Parameter file path. Mutually exclusive with `TemplateParameterObject`. |
-| `DeploymentNamePrefix` (`string`) | Prefix for the ARM deployment name (final name includes region + timestamp). Default `mhh`. |
-| `MaxAttempts` (`int`, 0–50) | Caps total attempts. Default `0` = one per region. |
-| `CleanupTimeoutSeconds` (`int`, 60–3600) | Per-attempt poll timeout for "is the resource group gone yet?" before the recreate. Raise it for labs whose resources are slow to delete; the helper throws `RegionFallbackCleanupTimeout: …` when it expires. Default `600`. |
-| `SameRegionRetryBudget` (`int`, 0–5) | Extra retries inside the same region for transient codes before rotating. Default `1`. |
-| `Tag` (`hashtable`) | Tags applied to the RG on each recreate. |
-| `PreDeployHook` (`scriptblock`) | Optional. Invoked after RG create, before deployment. Receives the chosen location as a positional argument. Use it to e.g. `Register-AzResourceProvider` for that region. |
+| `DeploymentNamePrefix` (`string`) | Prefix for the ARM deployment name (the final name adds region and timestamp). Default `mhh`. |
+| `MaxAttempts` (`int`, 0-50) | Caps how many **regions** are tried. Default `0` = one per region; same-region retries don't count. |
+| `CleanupTimeoutSeconds` (`int`, 60-3600) | How long to wait for a resource-group delete before retrying it. Default `600`. |
+| `CleanupRetryBudget` (`int`, 0-5) | Extra delete attempts when an RG is slow to disappear. Default `2`. |
+| `SameRegionRetryBudget` (`int`, 0-5) | Extra submissions into the same RG on transient errors before rotating. Default `1`. |
+| `Tag` (`hashtable`) | Tags for the RG, applied on every attempt and merged when the RG is reused. The helper adds its own `microhack-attempt-*` keys on top. |
+| `PreDeployHook` (`scriptblock`) | Runs once the RG is ready, before the deployment, with the chosen location as its argument — e.g. `Register-AzResourceProvider`. Best-effort: if it throws, the deployment still runs. |
 | `AssumeRetryableOnUnknown` (`switch`) | Treat unknown ARM error codes as retryable instead of fatal. Off by default; leave it off so real template bugs fail fast. |
 
 **Return value on success** (a hashtable):
@@ -1068,12 +1159,19 @@ If every region is exhausted, the helper throws
 | `DeploymentName` | Full ARM deployment name. |
 | `Outputs` | Hashtable of template outputs (`name → value`), flattened for direct use. |
 | `DeploymentResult` | Raw `PSResourceGroupDeployment` object. |
-| `Attempts` | Per-attempt diagnostic records (region, outcome, classification, duration). |
+| `Attempts` | One record per try: region, phase, outcome, classification and duration. |
+| `ReusedExistingResourceGroup` | `$true` when the successful deployment went into an RG that already existed. |
 
-Feed `Outputs` straight into `HackboxCredential` hashtables: that is the
-typical bridge between your Bicep `output` blocks and the user's dashboard.
+Feed `Outputs` into `HackboxCredential` hashtables: that is the typical bridge
+between your Bicep `output` blocks and the user's dashboard. Publish only what
+the participant should see.
 
 **Example: RG-scoped Bicep deployment with region fallback:**
+
+These examples assume you have implemented `main.bicep` with a `userObjectId`
+parameter and resource locations derived from `resourceGroup().location`.
+Adapt the parameter names to your template; the template in this folder is a
+placeholder.
 
 ```powershell
 param(
@@ -1089,6 +1187,10 @@ param(
     [string[]]$AllowedEntraUserIds = @()
 )
 
+if ($DeploymentType -eq 'subscription') {
+    $ResourceGroupName = 'myrg'
+}
+
 $result = Invoke-MhhDeploymentWithRegionFallback `
     -PreferredLocations      $PreferredLocation `
     -ResourceGroupName       $ResourceGroupName `
@@ -1099,17 +1201,15 @@ $result = Invoke-MhhDeploymentWithRegionFallback `
     } `
     -DeploymentNamePrefix    'lab'
 
-# Surface region used + any template outputs to the user's dashboard.
 @{ HackboxCredential = @{ name = "Region"; value = $result.LocationUsed; note = "" } }
-foreach ($k in $result.Outputs.Keys) {
-    @{ HackboxCredential = @{ name = $k; value = [string]$result.Outputs[$k]; note = "" } }
-}
+@{ HackboxCredential = @{ name = "Lab Resource Group"; value = $ResourceGroupName; note = "" } }
 ```
 
 **Example: setting static tags on the resource group via `-Tag`:**
 
 For plain, known-upfront tag values, pass `-Tag` directly: the helper applies
-it to the RG on every (re)create, no hook required.
+them on every attempt, whether it creates the RG or reuses an existing one. No
+follow-up tagging call is required.
 
 ```powershell
 $result = Invoke-MhhDeploymentWithRegionFallback `
@@ -1130,8 +1230,9 @@ $result = Invoke-MhhDeploymentWithRegionFallback `
   [region-iteration pattern](#authoring-guidelines) instead.
 - You need a `subscription`-scoped deployment (`New-AzDeployment`). This helper
   is RG-scoped only.
-- You need to preserve resources across retries. The helper **wipes the RG on
-  every attempt**: your template must be self-contained.
+- You must preserve resources across **all** retries. Initial reuse is
+  non-destructive, but recycle and region changes can delete the entire RG.
+  The template must be able to rebuild a complete lab.
 
 ### `Test-MhhDeploymentFailureRetryable`
 
@@ -1145,37 +1246,54 @@ fatal / retry-next-region / same-region-transient decision.
 | Parameter | Description |
 | --- | --- |
 | `ErrorRecord` (`ErrorRecord`, required) | The terminating error caught from `New-AzResourceGroupDeployment`. |
-| `ResourceGroupName` (`string`) | Used to drill into deployment operations when the outer exception is an opaque wrapper (`DeploymentFailed` / `InvalidTemplateDeployment`). |
-| `DeploymentName` (`string`) | Same as above; required for the drill-in to work. |
+| `ResourceGroupName` (`string`) | Lets the helper drill into the deployment's operations, and re-validate the template when the outer error is only an opaque wrapper (`DeploymentFailed` / `InvalidTemplateDeployment`). |
+| `DeploymentName` (`string`) | Name of the failed deployment; needed for that drill-in. |
+| `TemplateFile` (`string`) | Enables the re-validation. Without it, a wrapper-only failure stays blind. |
+| `TemplateParameterObject` (`hashtable`) | Parameters for the re-validation. Pass what the deployment used. Mutually exclusive with `TemplateParameterFile`. |
+| `TemplateParameterFile` (`string`) | Parameter file for the re-validation. Mutually exclusive with `TemplateParameterObject`. |
 | `AssumeRetryableOnUnknown` (`switch`) | Treat unknown ARM error codes as retryable instead of fatal. Off by default. |
 
+This diagnostic example assumes `$splat` contains `Name`, `ResourceGroupName`,
+`TemplateFile` and `TemplateParameterObject` for the deployment. It reports the
+verdict and deliberately rethrows; use the verdict inside a bounded retry loop
+only when you own that loop's cleanup and access-restoration logic.
+
 ```powershell
+$splat.ErrorAction = 'Stop'
 try {
     New-AzResourceGroupDeployment @splat
 }
 catch {
     $verdict = Test-MhhDeploymentFailureRetryable `
         -ErrorRecord       $_ `
-        -ResourceGroupName $ResourceGroupName `
-        -DeploymentName    $depName
+    -ResourceGroupName $splat.ResourceGroupName `
+    -DeploymentName    $splat.Name `
+    -TemplateFile      $splat.TemplateFile `
+    -TemplateParameterObject $splat.TemplateParameterObject
 
-    if (-not $verdict.IsRetryable)  { throw }                  # Fatal
-    if ($verdict.SameRegionRetry)   { Start-Sleep 30; <retry> } # Transient
-    # else: rotate to next region in your loop
+  Write-Warning "Deployment failed: $($verdict.Classification), code=$($verdict.MatchedCode), retryable=$($verdict.IsRetryable), sameRegion=$($verdict.SameRegionRetry), backoff=$($verdict.RetryAfterSeconds)s."
+  throw
 }
 ```
+
+It reads the error, the failed deployment operations and, when those say nothing
+useful, a re-validation of your template. It only inspects — it never deploys,
+deletes or retries anything itself.
 
 **Return value** (a hashtable):
 
 | Field | Type | Description |
 | --- | --- | --- |
 | `IsRetryable` | `bool` | `$true` if you should retry (in this region or the next), `$false` if you must give up. |
-| `SameRegionRetry` | `bool` | When `IsRetryable` is `$true`: `$true` = retry in the **same** region first (transient throttling / timeout / 5xx), `$false` = rotate to the **next** region (capacity / quota / region-unsupported). |
-| `Classification` | `string` | One of `Fatal`, `CapacityShortage`, `QuotaExceeded`, `RegionUnsupported`, `ResourceProviderUnavailable`, `RegionalFailure`, `TransientThrottle`, `UnknownAssumedFatal`, `UnknownAssumedRetryable`. |
-| `MatchedCode` | `string` | The specific ARM error code that drove the decision (e.g. `SkuNotAvailable`, `QuotaExceeded`, `TooManyRequests`). `$null` for unknown classifications. |
-| `AllCodes` | `string[]` | Every ARM error code discovered while walking the error tree, useful for diagnostics / logging. |
-| `Reason` | `string` | The surface error message from the original exception. |
-| `RetryAfterSeconds` | `int` | Suggested backoff before retrying. Default `30`. |
+| `SameRegionRetry` | `bool` | When retryable: `$true` = resubmit into the **same** region first, `$false` = rotate to the **next** region. |
+| `Classification` | `string` | `Fatal`, `CapacityShortage`, `QuotaExceeded`, `RegionUnsupported`, `ResourceProviderUnavailable`, `RegionalFailure`, `TransientThrottle`, `ResourceConflict`, `SoftDeletedNameInUse`, `OpaqueNoEvidence`, `UnknownAssumedFatal` or `UnknownAssumedRetryable`. |
+| `MatchedCode` | `string` | The ARM error code that drove the decision (e.g. `SkuNotAvailable`, `QuotaExceeded`, `TooManyRequests`). `$null` when none was recognised. |
+| `AllCodes` | `array` | Every error code that was considered, useful for logging. |
+| `Reason` | `string` | The error message, truncated to 500 characters. |
+| `RetryAfterSeconds` | `int` | Suggested backoff: `60` for conflicts, `120` for soft-deleted names, otherwise `30`. |
+
+A code that is not recognised is fatal by default, so a real template bug fails
+fast instead of burning quota in every region.
 
 For most labs, prefer
 [`Invoke-MhhDeploymentWithRegionFallback`](#invoke-mhhdeploymentwithregionfallback)
@@ -1183,8 +1301,8 @@ and you won't need to call this directly.
 
 ### `Remove-MhhResourceGroup`
 
-Hard-delete a resource group **and release every name it held**, so the same
-template can be redeployed with the same names. A plain
+Delete a resource group and **attempt to release the names it held**, so the
+same template can be redeployed with the same names. A plain
 `Remove-AzResourceGroup` is not enough: backup vaults block the delete, and
 soft-deletable resources (Key Vault, Cognitive Services / OpenAI / AI Foundry,
 Managed HSM, App Configuration, API Management, ML workspaces) keep their names
@@ -1193,25 +1311,48 @@ reserved afterwards, so a retry collides with its own leftovers.
 This is what
 [`Invoke-MhhDeploymentWithRegionFallback`](#invoke-mhhdeploymentwithregionfallback)
 uses internally. Call it directly only if you tear an RG down outside that
-helper. It requires an active Az context, or an explicit `-SubscriptionId`.
+helper. It works against the current Az context, which the platform has already
+pointed at the lab's subscription.
+
+**It deletes everything in the group**, so use it only on a resource group your
+lab owns. It first clears what normally blocks a clean redeploy — resource
+locks, backup vaults, Log Analytics workspaces and Fabric capacities — then
+deletes the group and purges the soft-deleted names it held.
 
 ```powershell
 $teardown = Remove-MhhResourceGroup -ResourceGroupName $ResourceGroupName
-if ($teardown.Errors.Count -gt 0) { $teardown.Errors | ForEach-Object { Write-Warning $_ } }
+if (-not $teardown.ManifestCaptured -or $teardown.Errors.Count -gt 0 -or $teardown.SoftDeletedResidual.Count -gt 0) {
+  $teardown.Errors | ForEach-Object { Write-Warning $_ }
+  throw "Cleanup was incomplete. Remaining soft-deleted resources: $($teardown.SoftDeletedResidual -join ', ')"
+}
 ```
 
 | Parameter | Description |
 | --- | --- |
 | `ResourceGroupName` (`string`, required) | The resource group to tear down. Owned entirely by this cmdlet. |
 | `SubscriptionId` (`string`) | Defaults to the current Az context's subscription. |
-| `CleanupTimeoutSeconds` (`int`, 60-3600) | Poll timeout for "is the RG gone?". Throws `RegionFallbackCleanupTimeout: …` when it expires. Default 600. |
+| `CleanupTimeoutSeconds` (`int`, 60-3600) | How long to wait for the group to disappear before retrying the delete. Default `600`. |
+| `CleanupRetryBudget` (`int`, 0-5) | Extra delete attempts when the group is slow to disappear. Default `2`. |
+| `PurgeVerifyTimeoutSeconds` (`int`, 0-1800) | How long to wait for purged names to actually become free. Default `180`, `0` disables the check. |
 | `SkipSoftDeletePurge` (`switch`) | Delete the RG but leave soft-deleted names reserved. Off by default. |
 
-**Return value** (a hashtable): `ResourceGroupName`, `Existed`,
-`ManifestCaptured`, `LocksRemoved`, `VaultsDrained`, `WorkspacesPurged`,
-`SoftDeletedPurged`, `Errors`. `ManifestCaptured` is `$false` when the
-pre-delete resource enumeration failed, which means the RG was deleted without a
-complete soft-delete purge.
+**Return value:** a hashtable. The fields worth acting on:
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `Existed` | `bool` | `$false` when there was nothing to delete. |
+| `ManifestCaptured` | `bool` | `$false` means the resource list could not be read, so the name purge is incomplete. |
+| `SoftDeletedResidual` | `array` | Names that are *still* reserved and **will** collide if you redeploy them. |
+| `Errors` | `array` | Non-fatal problems along the way. |
+
+It also returns `ResourceGroupName` and counters for what was cleaned up
+(`LocksRemoved`, `VaultsDrained`, `WorkspacesPurged`, `SoftDeletedPurged`,
+`Fabric*`).
+
+A delete that never completes throws; most other problems are collected in
+`Errors` so the remaining steps still run. Check `Errors` and
+`SoftDeletedResidual` before you redeploy the same names, and keep per-lab
+resource names unique inside the subscription.
 
 ## Authoring guidelines
 
@@ -1227,22 +1368,24 @@ complete soft-delete purge.
   `New-AzResourceGroupDeployment` with the same deployment name. For generated
   secrets, see [Passwords and re-runs](#passwords-and-re-runs).
 - **Prefer `Invoke-MhhDeploymentWithRegionFallback` for RG-scoped Bicep/ARM deployments.**
-  It handles RG recreate, Owner re-grant, region fallback, and
+  It handles initial RG reuse, conditional recreation, Owner assignment, region fallback, and
   failure classification for you; see
   [the helper docs](#invoke-mhhdeploymentwithregionfallback).
-- **Never delete a resource group with `Remove-AzResourceGroup` or `az group delete`.**
-  Both leave the lab in a state a redeploy cannot recover from:
+- **Use `Remove-MhhResourceGroup` for explicit lab RG teardown.**
+  Plain resource-group deletion can leave resources that block redeployment:
   backup vaults block the delete, and soft-deletable resources (Key Vault,
   Cognitive Services / AI Foundry, Managed HSM, App Configuration, APIM, ML
   workspaces) keep their names reserved, so recreating the same lab collides
   with its own leftovers. Use [`Remove-MhhResourceGroup`](#remove-mhhresourcegroup) instead, and re-grant
   `Owner` to `$AllowedEntraUserIds` after you recreate the group; see [Cleaning up](#cleaning-up).
-- **It is not recommended use `Remove-MhhResourceGroup` for bicep / ARM deployments to recover from failures.** Instead use `Invoke-MhhDeploymentWithRegionFallback` to deploy and handle the cleanup safely.
+- **Let `Invoke-MhhDeploymentWithRegionFallback` own Bicep/ARM retry cleanup.**
+  Don't pre-delete a reusable RG on every run, and keep your resource names
+  stable and unique per lab.
 - **Prefer Bicep/ARM over OpenTofu.** OpenTofu is supported, but it has three major drawbacks in the environment:
 
    1. OpenTofu state does not survive a rescheduled deployment,
    2. OpenTofu has currently no region-fallback or failure-classification helper.
-   3. OpenTofu deployments running past ~90 minutes cannot be refreshed, so a single `tofu apply` that takes too long will fail with `AADSTS700024` and leave the lab in an unknown state.
+  3. A running OpenTofu process cannot be refreshed by the wrapper. With workload identity, a command that outlives its credential can fail with `AADSTS700024` and leave partial resources.
 
    If you do use it, **never shell out to `tofu` directly, always use  `Invoke-MhhTofuCommand`**; a bare `tofu` misses the isolated working directory,
   the authentication and the credential refresh. See
@@ -1252,7 +1395,9 @@ complete soft-delete purge.
   supports every Azure service your lab needs. If you have to skip a region,
   emit a `Write-Warning` so the operator can see *why* the lab landed in a
   fallback region. If none of the preferred regions work, `throw` with a clear
-  message. Never hardcode regions, and never silently ignore the list.
+  message. Never hardcode regions, and never silently ignore the list. If your
+  script declared `$PreferredLocation` as a comma-separated string, split it
+  before handing it to the region-fallback helper.
 
   ```powershell
   $location = $null
@@ -1274,27 +1419,13 @@ complete soft-delete purge.
   identities (managed identities, service principals, etc.) and want the user
   to manage them, grant the user access explicitly.
 - **Keep any single command under ~90 minutes.** Total script runtime is
-  unlimited, but a command that is already in flight holds the credential it
+  unlimited, but a command that is already running holds the credential it
   started with. Split long deployments into phases and call
   [`Update-MhhToken`](#update-mhhtoken) between them.
-- **Use async for long-running deployments.** If a deployment could outlive the
-  ~90-minute ceiling, submit it in the background and poll, rather than blocking
-  on it. The submit returns immediately, ARM carries on server-side, and the poll
-  loop refreshes the credential (if applicable) on every pass:
-
-  ```powershell
-  $name = "lab-$(Get-Date -f yyyyMMddHHmmss)"
-  New-AzResourceGroupDeployment -Name $name -ResourceGroupName $ResourceGroupName -TemplateFile $t -AsJob | Out-Null
-
-  do {
-      Start-Sleep -Seconds 30
-      Update-MhhToken
-      $state = (Get-AzResourceGroupDeployment -ResourceGroupName $ResourceGroupName -Name $name -ErrorAction SilentlyContinue).ProvisioningState
-  } while ($state -notin 'Succeeded', 'Failed', 'Canceled')
-  ```
-
-  The same pattern with the Azure CLI with `--no-wait`, and
-  `2>$null` replaces `-ErrorAction SilentlyContinue`:
+- **Use a bounded poll for long ARM deployments.** See the
+  [submit-and-poll example](#keeping-credentials-alive-in-long-running-scripts).
+  The Azure CLI equivalent uses `--no-wait`, with `2>$null` in place of
+  `-ErrorAction SilentlyContinue`:
 
   ```powershell
   $name = "lab-$(Get-Date -f yyyyMMddHHmmss)"
@@ -1302,22 +1433,19 @@ complete soft-delete purge.
 
   do {
       Start-Sleep -Seconds 30
-      Update-MhhToken
+      Update-MhhToken | Out-Null
       $state = az deployment group show --resource-group $ResourceGroupName --name $name --query provisioningState -o tsv 2>$null
   } while ($state -notin 'Succeeded', 'Failed', 'Canceled')
   ```
 
-  Poll on the *deployment*, not the PowerShell job: the job holds the credential
-  it started with, while the `Get-AzResourceGroupDeployment` / `az deployment
-  group show` call uses the freshly refreshed one. Capture the deployment name up
-  front, swallow the error from the moment before ARM has registered it, and
-  check `$state` afterwards: the loop also exits on `Failed` and `Canceled`.
   For subscription-scoped templates use `New-AzDeployment -AsJob` or
-  `az deployment sub create --no-wait`.
+  `az deployment sub create --no-wait`. Either way, poll the *deployment* rather
+  than the PowerShell job, and remember this plain Az path gives you no region
+  fallback and no cleanup.
 - **Keep total runtime reasonable.** The same script runs concurrently for every
   participant; long synchronous deployments slow down the whole event start.
 - **Do not call `Connect-AzAccount`, `Set-AzContext` or `az login`.** The platform
-  manages authentication, subscription context and Azure CLI profile isolation
-  for you.
+  manages authentication and subscription context, and keeps each lab's Azure
+  CLI login isolated for you.
 
 

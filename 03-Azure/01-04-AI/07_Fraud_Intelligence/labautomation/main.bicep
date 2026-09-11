@@ -153,6 +153,9 @@ resource embeddingDeployment 'Microsoft.CognitiveServices/accounts/deployments@2
 resource chatDeployment 'Microsoft.CognitiveServices/accounts/deployments@2025-06-01' = {
 	parent: foundryAccount
 	name: 'gpt-5.6-luna'
+	dependsOn: [
+		foundryProject
+	]
 	properties: {
 		model: {
 			format: 'OpenAI'

@@ -6,28 +6,40 @@
 
 1.	To migrate a virtual machine from and On Prem Environment to AVS, sign in to your on-premises HCX.
 
-2.	Under Services, select Migration, and then select Migrate
+2.	Under Services, select Migration, and then select Create Mobility Group
 
-![](./Images/10-AVS-Migrate-VM/HCX_image46.png)
+![](./Images/10-AVS-Migrate-VM/HCX_migrate_image1.png)
 
-3.	Once the Workload Mobility window is opened, ensure your site pairing is available from On Prem to AVS. 
+3.	Once the Mobility Group screen is opened: click the checkbox and select the vm workload-1-1-1
 
-4.	Select Workload-1-1-1 as a VM that will be migrated from On-Prem to AVS and press Add 
 
-![](./Images/10-AVS-Migrate-VM/HCX_image47.png)
+![](./Images/10-AVS-Migrate-VM/HCX_migrate_image2.png)
 
-5.	Once the virtual machine is added, select the transfer and placement parameters for the virtual machine post migration to AVS and then press validate
+5.	Give it a name to the mobility group (optional), select Compute Container, Destination Folder, Storage and Migration Profile as  shown in the picture.
+    
+    ![](./Images/10-AVS-Migrate-VM/HCX_migrate_image3.png)
+
+    ![](./Images/10-AVS-Migrate-VM/HCX_migrate_image4.png)
+
+    ![](./Images/10-AVS-Migrate-VM/HCX_migrate_image5.png)
+
+    ![](./Images/10-AVS-Migrate-VM/HCX_migrate_image6.png)
+
+6. Select validate
+   
+   ![](./Images/10-AVS-Migrate-VM/HCX_migrate_image7.png)
+   
+7. If validate OK, select GO.
+
+    ![](./Images/10-AVS-Migrate-VM/HCX_migrate_image7.png)
+
+8. Check the progression until the migration is done (hit refresh to update the status)
+
+    ![](./Images/10-AVS-Migrate-VM/HCX_migrate_image8.png)
  
-![](./Images/10-AVS-Migrate-VM/HCX_image48.png)
+7.	Once the VM is migrated into AVS, check the IP address of the VM.
 
-6.	Once the transfer and placement validation of the virtual machine has gone through, press go for the migration of the virtual machine
-
-
-![](./Images/10-AVS-Migrate-VM/HCX_image49.png)
-
-![](./Images/10-AVS-Migrate-VM/HCX_image50.png)
- 
-7.	Once the VM is migrated into AVS, check the IP address of the VM. 
+     ![](./Images/10-AVS-Migrate-VM/HCX_migrate_image9.png)
 
 Note : 
 
@@ -35,10 +47,8 @@ As the VM that was migrated was on a extended network, the IP address of the VM 
 
 8. Optionally if time permits please also try out the reverse migration.
 
-9. Try to ping Workload-1-1-2 from Workload-1-1-2.
+9. Try to ping Workload-1-1-1 from Workload-1-1-2.
 > [!NOTE]
-> The login details can be found in the Azure Key Vault or [Visit AVS Hub](https://www.avshub.io/workshop-guide/#credentials-for-the-workload-vms) for VM Credentials
+> The vcenter login details can be found in the Excel File or [MicroHack Data](/Lab/info/datos_Microhack_300925.xlsx) for VM Credentials
 
-
-
-11. Move the second VM accordingly to AVS.
+10. Move the second VM (Workload-1-1-2) accordingly (steps 2-7) to AVS.

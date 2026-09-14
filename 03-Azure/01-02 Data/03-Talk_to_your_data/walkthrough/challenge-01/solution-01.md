@@ -329,7 +329,7 @@ In this task, you will integrate operational data mirrored from Azure SQL Manage
 <tr><td colspan="2" align="center"><img src="../../images/image029.png" style="width: 100%; display: block;"></td></tr>
 <tr><td>In the <b>New shortcut</b> window, under <b>External sources</b>, select <b>Azure Data Lake Storage Gen2</b>.</td><td>This connects the Lakehouse to the external files used in the lab.</td></tr>
 <tr><td colspan="2" align="center"><img src="../../images/image030.jpg" style="width: 100%; display: block;"></td></tr>
-<tr><td>Select <b>New connection</b> and paste <code>https://employeedata0409.dfs.core.windows.net/</code> (1). Click <b>Next (2)</b> to continue.</td><td>Confirm the deployment date with the lab facilitator or deployment output if needed.</td></tr>
+<tr><td>Select <b>New connection</b> and paste <code>https://employeedata1309.dfs.core.windows.net/</code> (1). Click <b>Next (2)</b> to continue.</td><td>Confirm the deployment date with the lab facilitator or deployment output if needed.</td></tr>
 <tr><td colspan="2" align="center"><img src="../../images/image031.png" style="width: 100%; display: block;"></td></tr>
 <tr><td>Select the folder with <b><code>your user number</code> (1)</b>. Click <b>Next (2)</b> to continue.</td><td>Selecting your user-specific folder ensures you only access and work with the files intended for your lab activities.</td></tr>
 <tr><td colspan="2" align="center"><img src="../../images/image032.png" style="width: 100%; display: block;"></td></tr>

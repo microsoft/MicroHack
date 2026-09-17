@@ -1,6 +1,6 @@
 # AVS Managed SNAT
 
-[Previous Challenge](./14-AVS-Placement-Policy.md) - **[Home](../Readme.md)** - [Next Challenge](./16-AVS-Automation-ESLZ.md)
+[Previous Challenge](./12-AVS-Placement-Policy.md) - **[Home](../Readme.md)**
 
 ## Introduction
 

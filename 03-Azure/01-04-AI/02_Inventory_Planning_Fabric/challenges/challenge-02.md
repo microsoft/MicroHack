@@ -28,20 +28,27 @@ Your agent must sense this signal from the web, query the governed inventory dat
    Your role is to detect real-world signals that could affect product demand and reconcile
    them against the company's current inventory position.
 
-   IMPORTANT - tool use: You have a Fabric Data Agent tool connected to the governed Zava
-   inventory data (Inventory, Products, Stores, DemandHistory, ExternalSignals, Suppliers,
-   ReplenishmentOrders). For ANY question about stock, on-hand units, reorder points, safety
-   stock, sales velocity, or any inventory number, you MUST call the Fabric Data Agent and
-   answer from its result. Never answer inventory questions from memory, and never use Web
-   Search for internal inventory data (Web Search is only for external market signals).
+   IMPORTANT - tool use (non-negotiable): You have a Fabric Data Agent tool connected to the
+   governed Zava inventory data (Inventory, Products, Stores, DemandHistory, ExternalSignals,
+   Suppliers, ReplenishmentOrders). EVERY response that gives a demand assessment MUST include
+   at least one Fabric Data Agent call - this is mandatory and NOT conditional on Web Search.
+   For ANY inventory number (stock, on-hand units, reorder points, safety stock, sales
+   velocity), you MUST call the Fabric Data Agent and answer from its result. Never answer
+   inventory questions from memory, and never use Web Search for internal inventory data.
 
-   When given a scenario or event:
+   Do NOT conclude with "I couldn't verify inventory" or "based on external signals only" as a
+   substitute for calling the tool - the Fabric Data Agent is available to you, so call it. If
+   you have not called it yet in this run, call it now before writing any assessment. If you
+   don't know exact SKUs, query the Fabric Data Agent by affected category (snake_case values,
+   e.g. outdoor_power_tools) or by productId/SKU (e.g. P004).
+
+   When given a scenario or event, do these steps in order:
    1. Use Web Search to find relevant market signals, news, and trend data about the affected
       product categories. Cite your sources.
-   2. Use the Fabric Data Agent to query current stock levels and recent sales velocity for
-      the relevant SKUs and warehouses.
+   2. REQUIRED - Use the Fabric Data Agent to query current stock levels and recent sales
+      velocity for the relevant SKUs/categories and warehouses. Do not skip this step.
    3. Synthesise both sources into a demand assessment: state whether current stock is
-      adequate, at risk, or critically exposed — with a clear reason for each conclusion.
+      adequate, at risk, or critically exposed - grounded in the Fabric numbers you retrieved.
    4. Always distinguish between what you found externally (web) and what the governed data
       shows (Fabric). Never blend them without attribution.
 
@@ -71,6 +78,9 @@ Your agent must sense this signal from the web, query the governed inventory dat
 
 This is the first agent where you attach the Fabric Data Agent, so you'll **create** the `inventory-hack-agent` connection here using the two IDs from Challenge 1. Every later challenge just selects it.
 
+> [!IMPORTANT]
+> **Use the *Fabric Data Agent* connector — not auto-suggested function tools.** When you create an agent from instructions, the New Foundry portal may **auto-generate custom `fx` function stubs** (e.g. `query_inventory`, `list_low_stock`, `get_external_signals`). These are **empty placeholders** — they don't reach your Lakehouse, so the agent replies that it *"can't verify inventory"* even with perfect instructions. **Delete any such `fx` functions** (each tool row → **⋮ → Remove**) and add the **Fabric Data Agent** tool as below instead.
+
 1. In the agent editor, expand **Tools** and select **Add**.
 2. Choose **Fabric Data Agent** from the tool catalogue.
 3. Create the connection with the two IDs your **setup notebook printed in Challenge 1**:
@@ -97,6 +107,9 @@ This is the first agent where you attach the Fabric Data Agent, so you'll **crea
    - A clear demand assessment: adequate / at risk / critically exposed.
 
    ![Playground response citing a web source and a Fabric inventory query result with a demand assessment](../images/challenge-01-playground.png)
+
+   > [!TIP]
+   > **Agent answered from web only and said it "couldn't verify inventory"?** It skipped the Fabric Data Agent call — `gpt-5.4-mini` is a reasoning model and occasionally skips an available tool. Recover it by replying: *"Call the Fabric Data Agent now and pull current stock and sales velocity for the affected SKUs (e.g. P004, P006) before giving your assessment."* If it keeps skipping, set **tool choice = required** in the agent's tool/run settings so a tool call is mandatory. The strengthened instructions above make this rare.
 4. Ask a follow-up question: *"Which store or warehouse has the lowest stock of outdoor power tools relative to its reorder point?"*
 5. Ask: *"What external signals in the last 30 days could affect demand for outdoor power tools in the Pacific Northwest?"*
 
@@ -114,6 +127,9 @@ This is the first agent where you attach the Fabric Data Agent, so you'll **crea
 | **Web Search** isn't in the tool catalogue | It's in Public Preview and may need project-level enablement — ask your facilitator, or skip it and rely on the `ExternalSignals` table via the Fabric Data Agent. |
 | **Fabric Data Agent** isn't in the catalogue | The integration needs **your** F2 Fabric capacity to be running — resume it (Azure portal → your Fabric capacity → **Resume**) and confirm the setup notebook published the agent. |
 | The agent answers inventory questions from memory | Strengthen the *IMPORTANT – tool use* line in the instructions; it must call the Fabric Data Agent for any stock number. |
+| The agent gives a demand assessment from web signals only (says it *"couldn't verify inventory"*) | It skipped the Fabric call. Reply *"Call the Fabric Data Agent now for current stock + sales velocity of the affected SKUs before assessing,"* or set **tool choice = required** in the agent's tool settings. `gpt-5.4-mini` (a reasoning model) sometimes skips available tools. |
+| The agent has `fx` functions like `query_inventory` / `list_low_stock` instead of the Fabric Data Agent | The portal **auto-generated stub functions** from your instructions — they're empty and never reach your Lakehouse. Remove them (each tool row → **⋮ → Remove**) and add the **Fabric Data Agent** connector (Part C). |
+| The run fails with **`Stage configuration not found`** (or *configuration not found*) | Your Fabric Data Agent works in Fabric's **Test data agent** pane but isn't **published** — the Foundry tool consumes the *published* stage, not the draft/Preview runtime. In Fabric, open `inventory-hack-agent` → confirm the 7 tables → click **Publish**, then retry. |
 | The connection dialog asks for IDs you don't have | Copy the **Workspace ID** and **Agent ID** your setup notebook printed in its last cell (Challenge 1). |
 
 ## 🚀 Go further

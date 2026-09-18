@@ -8,8 +8,8 @@ Everything for this hack is provisioned per attendee by [`deploy-lab.ps1`](deplo
 |----------|------|-------|
 | Azure AI Foundry account | `Microsoft.CognitiveServices/accounts` | One per attendee (AIServices kind) |
 | Foundry project | `…/projects/inventory-hack` | System-assigned managed identity; provisioning is verified before the lab continues |
-| gpt-5.4-mini model deployment | GlobalStandard, 100K TPM | Used by all three hack agents |
-| Fabric **F2 capacity** | `Microsoft.Fabric/capacities` | One per attendee; attendee set as **capacity admin** |
+| gpt-5.4-mini model deployment | GlobalStandard, 200K TPM | Used by all three hack agents |
+| Fabric capacity (default **F2**) | `Microsoft.Fabric/capacities` | One per attendee; attendee set as **capacity admin**. SKU via `-FabricSkuName` (F2 default; use F4 if attendees hit throttling). |
 
 The script grants the **Foundry User** role to each attendee and to the Foundry project's managed identity at the Foundry account scope. It also sets each attendee as **admin of their own F2 capacity** (resolving their Entra object ID to a UPN via the platform `Get-MhhLabUser` helper), so they can create a workspace, assign it to the capacity, and publish their own Data Agent — no shared state, no cross-attendee contention.
 
@@ -38,7 +38,8 @@ Attendees use these in the Foundry and Fabric portals — no SDK or code require
 - The deploying identity (the platform **service principal**) needs **Owner** on each attendee resource group so it can create resources and assign the **Foundry User** role to the attendee and project managed identity — the platform grants this automatically for `resourcegroup` deployments.
 - **`groups: ["M365-E5-Users"]`** in [`lab-defaults.json`](lab-defaults.json) — each attendee's lab Entra user gets a **Microsoft 365 E5** license (includes **Power BI Pro**), which is what lets them sign into the Fabric portal ([app.fabric.microsoft.com](https://app.fabric.microsoft.com)) and create a workspace. Without a Fabric/Power BI license the attendee cannot open the portal.
 - **The lab tenant must have Fabric enabled** — a Fabric **tenant-admin** setting (*“Users can create Fabric items”* / workspaces). This is **not** settable via `lab-defaults.json`; the tenant administrator for the lab tenant must turn it on, or attendees cannot create a workspace even with a license.
-- **Fabric F-SKU quota** in a preferred region (F2 = 2 CU; a 512-CU subscription supports ~256 attendees). `swedencentral` and `norwayeast` are good defaults.
+- **Fabric F-SKU quota** in a preferred region (F2 = 2 CU → ~256 attendees per 512-CU subscription; F4 = 4 CU halves that). `swedencentral` and `norwayeast` are good defaults.
+- **Model TPM vs. subscription packing** — each attendee's `gpt-5.4-mini` deploys at **200K TPM** (GlobalStandard capacity 200) and [`lab-defaults.json`](lab-defaults.json) packs **`labsPerSubscription: 5`** (5 × 200 = 1,000, right at the ~1,000 GlobalStandard quota ceiling per region). If attendees hit token rate limits, request a GlobalStandard quota increase or use **one subscription per attendee**.
 - The **`Microsoft.Fabric`** resource provider is registered on the subscription (the script registers it if needed).
 
 > [!NOTE]
@@ -46,6 +47,6 @@ Attendees use these in the Foundry and Fabric portals — no SDK or code require
 
 ## Cost estimate
 
-- **Fabric F2 capacity** (~$0.36/hr pay-as-you-go) is the dominant cost — roughly **$8–9/attendee/day** if left running. Attendees (or facilitators) should **suspend** the capacity when idle.
-- gpt-5.4-mini (GlobalStandard, 100K TPM) — a few cents of tokens per attendee across the hack's ~50 agent calls; Foundry account base ~$2/day.
+- **Fabric capacity** (default **F2**, ~$0.36/hr pay-as-you-go) is the dominant cost — roughly **$8–9/attendee/day** if left running. Attendees (or facilitators) should **suspend** the capacity when idle. Bumping to **F4** (`-FabricSkuName F4`, or a live **on-demand resize** when throttling appears) roughly **doubles** this — update `estimatedDailyCostsUsd` in [`lab-defaults.json`](lab-defaults.json) accordingly.
+- gpt-5.4-mini (GlobalStandard, 200K TPM) — a few cents of tokens per attendee across the hack's ~50 agent calls; Foundry account base ~$2/day.
 - Total ≈ **$9/attendee/day** — reflected in [`lab-defaults.json`](lab-defaults.json) (`estimatedDailyCostsUsd`).

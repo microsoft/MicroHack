@@ -1,41 +1,17 @@
-# Deploy Azure Arc Jumpstart Lab Environments
+# Deploy Azure Arc Jumpstart LocalBox
 
-This folder contains scripts to deploy lab environments for the Sovereign Cloud MicroHack using Azure Arc Jumpstart.
+This folder contains the manual deployment entry point and preparation instructions for the Sovereign Cloud MicroHack's Azure Arc Jumpstart LocalBox environment.
 
 ## Overview
 
-For Challenge 6 (Operating a Sovereign Hybrid Cloud with Azure Arc & Azure Local), we leverage the official Azure Arc Jumpstart environments rather than creating custom templates. This ensures:
+For Challenge 6 (Operating a Sovereign Hybrid Cloud with Azure Arc & Azure Local), we use the official Azure Arc Jumpstart LocalBox environment. Participants provision their own Azure Local VMs and use those VMs for the Defender for Cloud and Azure Update Manager exercises. This provides:
 
 - **Maintained templates** - Arc Jumpstart is actively maintained by Microsoft
 - **Latest features** - Always uses the newest Azure Arc and Azure Local capabilities
 - **Validated configurations** - Tested and proven deployment patterns
 - **Comprehensive documentation** - Extensive guides available
 
-## Available Environments
-
-### 1. ArcBox for IT Pros
-A pre-packaged Azure Arc sandbox environment with nested VMs onboarded to Azure Arc.
-
-**Features:**
-- Multiple Arc-enabled servers (Windows and Linux)
-- Pre-configured Azure Arc extensions
-- Log Analytics workspace integration
-- Azure Policy integration
-
-**Requirements:**
-- 8 vCPUs
-- ~30 minutes deployment time
-
-**Deployment:**
-```powershell
-.\deploy-arcbox.ps1 -ResourceGroupName "rg-arcbox-shared" -Location "swedencentral"
-```
-
-**Cost**
-
-ArcBox for ITPro cost is approximately 7 USD per day. We recommend setting it up the week before the event, so for example 5 days before the event would result in a cost between 30-40 USD.
-
-### 2. LocalBox
+## LocalBox
 Azure Local environment simulating an on-premises private cloud.
 
 **Features:**
@@ -57,9 +33,10 @@ Azure Local environment simulating an on-premises private cloud.
 
 LocalBox cost is approximately 100-110 USD per day. We recommend setting it up the week before the event, so for example 5 days before the event would result in a cost between 5-600 USD.
 
+Budget separately for the approved Defender for Servers plan and review its scope and charges before enabling it on the shared subscription.
+
 ## Arc Jumpstart Resources
 
-- **ArcBox Documentation**: https://jumpstart.azure.com/azure_jumpstart_arcbox
 - **LocalBox Documentation**: https://jumpstart.azure.com/azure_jumpstart_localbox
 - **GitHub Repository**: https://github.com/microsoft/azure_arc
 
@@ -72,18 +49,14 @@ Before deploying, ensure you have:
 3. Azure CLI and Az PowerShell modules installed
 
 ### Step 2: Deploy Environment
-Choose the appropriate deployment script:
+Run the LocalBox deployment script:
 
 ```powershell
-# For Arc-enabled servers challenge
-.\deploy-arcbox.ps1 -ResourceGroupName "rg-arcbox-shared" -Location "swedencentral"
-
-# For Azure Local challenge
 .\deploy-localbox.ps1 -ResourceGroupName "rg-localbox-shared" -Location "swedencentral"
 ```
 
 ### Step 3: Wait for Deployment
-Deployments can take 2-6 hours depending on the environment. Monitor progress in:
+LocalBox provisioning can take 4-6 hours, with additional time for the VM image and preparation steps below. Monitor progress in:
 - Azure Portal > Resource Groups > Deployments
 
 #### Hackathons console deployment behavior
@@ -243,7 +216,7 @@ You should also see updated values in the Azure Portal:
 6. Select **Review + create** and wait for the deployment to finish
 
 Role assignments:
-1. In the Azure Portal, navigate to your resource group where LocalBox is deployed (e.g. rg-localbox)
+1. In the Azure Portal, navigate to your resource group where LocalBox is deployed (e.g. `rg-localbox-shared`)
 2. Select **Access control (IAM)** in the left menu
 3. Click **+ Add -> Add role assignment** to start the role assignment wizard
 ![Create role assignment](./img/add_rbac_01.jpg)
@@ -256,16 +229,31 @@ Role assignments:
 ![Create role assignment](./img/add_rbac_04.jpg)
 8. Repeat steps 1-7 to add a role assignment for the **Azure Stack HCI VM Contributor** role
 ![Create role assignment](./img/add_rbac_05.jpg)
-8. Repeat steps 1-7 to add a role assignment for the **Reader** role and **User Access Administrator** role for the resource group where **ArcBox** is deployed (e.g. rg-arcbox)
-- For the **User Access Administrator** role, select **Allow user to assign all roles except privileged administrator roles Owner, UAA, RBAC (Recommended)** on the **Conditions** tab:
-![Create role assignment](./img/add_rbac_06.jpg)
+
+Hosted lab automation grants participants access to shared LocalBox resources, **Owner** on their own resource group, and subscription-level **Security Reader** for Defender visibility. For manual setups, verify equivalent scoped permissions before testing. Students must be able to create their own VM, manage its extensions, and assess updates without managing other participants' VMs. Do not grant subscription-level Owner or User Access Administrator to perform these exercises.
+
+#### Defender for Servers readiness (organizer)
+
+1. Confirm the Defender for Servers plan approved for the event, including its subscription scope and charges
+2. As an authorized subscription administrator, open **Microsoft Defender for Cloud -> Environment settings** and select the lab subscription
+3. Under **Defender plans**, enable **Servers** with the approved plan if it is not already enabled, and save the changes
+4. Verify that the [Defender for Endpoint integration](https://learn.microsoft.com/azure/defender-for-cloud/enable-defender-for-endpoint) is enabled and that required onboarding settings and extensions can apply to the participant VMs
+5. Verify that participants have **Security Reader** access to review coverage and recommendations. Students verify protection on their own VM; subscription-level plan changes remain an organizer responsibility
 
 ### Step 6: Test the Environment
-Once deployed:
-- Follow Challenge 6 walkthrough for lab exercises verification
+
+Before participants begin, follow the [Challenge 6 walkthrough](../../walkthrough/challenge-06/solution-06.md) using a normal participant identity:
+
+1. Create a Windows Server 2025 VM in that participant's assigned resource group on the prepared LocalBox logical network, with **Enable guest management** selected
+2. Verify that the VM has a valid IP address, working DNS, and outbound access to the required Azure Arc, Defender, and configured Windows update-source endpoints. Confirm **Guest management: Enabled (Connected)** on the VM's **Overview -> Properties -> Configuration** page; see [Enable guest management](https://learn.microsoft.com/azure/azure-local/manage/manage-arc-virtual-machines#enable-guest-management) if onboarding fails
+3. Confirm that the same VM appears in Defender for Cloud **Inventory**, verify Defender for Servers coverage and onboarding, and review its assessment status. Allow time for recommendations to populate; an empty list is not proof of completed assessment
+4. Locate that VM in Azure Update Manager **Resources -> Machines**, run **Check for updates**, and verify a successful assessment and its timestamp. Zero pending updates is a valid result; a pending or failed assessment is not
+5. Confirm that neither exercise requires selecting shared cluster nodes, the LocalBox host, Arc Resource Bridge, or another participant's VM, or changing subscription-level settings
+
+Resolve connectivity, extension provisioning, or permission failures before the event. Keep any permission changes limited to the operation and resource scope actually required. Do not install patches or restart shared resources during this readiness test.
 
 ## Notes
 
-- **Shared Environment**: For MicroHack events, typically one ArcBox and one LocalBox instance is shared among participants
-- **Resource Costs**: These environments consume significant Azure resources; clean up after the event
+- **Shared Environment**: For MicroHack events, typically one LocalBox instance per subscription is shared among participants; each participant creates a VM in their assigned resource group
+- **Resource Costs**: LocalBox and the enabled security services consume Azure resources; clean up lab resources after the event and review lab-specific paid plans with the subscription owner
 - **Deployment Time**: Plan for deployment time when scheduling your MicroHack

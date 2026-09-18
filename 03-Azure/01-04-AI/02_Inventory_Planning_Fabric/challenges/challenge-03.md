@@ -38,22 +38,31 @@ Your Inventory Optimisation Agent answers these questions by querying the Fabric
    you MUST call the Fabric Data Agent and answer from its result. Never answer from memory
    and never invent numbers.
 
+   Data model note: DemandHistory records WEEKLY units sold per SKU per RETAIL STORE - there
+   are no sales rows for distribution warehouses. Convert to a daily rate with
+   average_daily_sales = average weekly units / 7. Query demand at the STORES where the SKU
+   sells; do NOT query "warehouses" for sales, or average daily sales comes back as 0.
+
    For each at-risk or critically exposed SKU:
-   1. Use the Fabric Data Agent to query current stock level, reorder point, and
-      average daily sales for that SKU across all warehouses.
+   1. Use the Fabric Data Agent to query current stock level, reorder point, and average
+      weekly units sold for that SKU at each stocking location (its stores). Derive
+      average_daily_sales = average weekly units / 7.
    2. Calculate the suggested reorder quantity using this rule:
          reorder_qty = max(0, (30-day_demand - current_stock))
       where 30-day_demand = average_daily_sales × 30.
-   3. Identify the warehouse with the lowest stock relative to demand — that is the
+   3. Identify the location with the lowest stock relative to demand - that is the
       priority replenishment location.
    4. Return a structured recommendation table:
-         | SKU | Warehouse | Current Stock | Suggested Reorder Qty | Priority |
+         | SKU | Location | Current Stock | Suggested Reorder Qty | Priority |
    5. Flag any SKU where current stock is already below the reorder point as CRITICAL.
 
-   If you cannot find a SKU in the data, say so clearly — do not invent numbers.
+   If you cannot find a SKU in the data, say so clearly - do not invent numbers.
    ```
 
 5. Add the **Fabric Data Agent** tool and select the existing **`inventory-hack-agent`** connection (created in Challenge 2). Do **not** add Web Search — this agent works only with internal data.
+
+   > [!NOTE]
+   > If the portal auto-added custom `fx` function stubs (e.g. `query_inventory`), **remove them** and use only the **Fabric Data Agent** connector — see Challenge 2, Part C.
 6. Click **Save**.
 
 ### Part B — Run the agent (15 min)
@@ -61,7 +70,10 @@ Your Inventory Optimisation Agent answers these questions by querying the Fabric
 1. Open the **Agents playground**.
 2. Paste the demand assessment you received in Challenge 2 as your first message. Copy it directly from your Challenge 2 playground chat, for example:
 
-   > *"Outdoor power tools are critically exposed. Leaf blowers and chainsaws show demand uplift signals but stock at both Chicago and Dallas warehouses is near reorder point. The Portland and Seattle stores are already below safety stock on leaf blowers."*
+   > *"Outdoor power tools are critically exposed. For SKU P004 at Portland and P006 at Seattle, query current stock, reorder point, and average weekly units sold, then return the reorder recommendation table (SKU, Location, Current Stock, Suggested Reorder Qty, Priority). Flag any SKU below its reorder point as CRITICAL."*
+
+   > [!TIP]
+   > **Phrasing matters — name the SKUs.** A purely prose prompt (e.g. *"leaf blowers and chainsaws are exposed"*) often makes the Fabric Data Agent generate a query that filters on a friendly category label and returns **nothing**. Naming the **SKUs/productIds** (e.g. `P004`, `P006`) and the exact fields you want — as in the example above — reliably returns data. If a prompt comes back empty, re-ask it by SKU.
 
 3. The agent should query Fabric and return a recommendation table.
 4. Ask a follow-up: *"Show me only the CRITICAL items."*
@@ -74,7 +86,7 @@ Your Inventory Optimisation Agent answers these questions by querying the Fabric
 > [!IMPORTANT]
 > This is the most important part of the challenge. Understanding what an agent did — and why — is essential for building trust with stakeholders and catching errors before they reach production.
 
-1. In the left navigation, click **Tracing**.
+1. Open the `inventory-optimisation-agent` and select **Traces → Response view**. (In the current Foundry portal, tracing lives on the agent as **Traces** — there is no top-level *Tracing* menu.)
 2. Find the most recent run of `inventory-optimisation-agent`.
 3. Open the trace and locate:
    - The **model call** — what instructions and context were sent to gpt-5.4-mini?
@@ -83,6 +95,9 @@ Your Inventory Optimisation Agent answers these questions by querying the Fabric
    - The **final generation** — how did the model synthesise the data into the recommendation?
 
    ![Expanded trace view showing the model call, Fabric tool call, tool response, and final generation spans](../images/challenge-02-trace.png)
+
+   > [!NOTE]
+   > The **Traces → Response view** on the agent gives the full span tree shown above. The quick **Traces** link at the bottom of a playground chat opens a lighter, differently-laid-out view of the same run — either works, but the Response view is the one this challenge describes.
 4. Answer these questions by reading the trace:
    - Did the agent query Fabric once or multiple times? Why?
    - Was the reorder quantity calculation visible in the trace?
@@ -99,10 +114,13 @@ Your Inventory Optimisation Agent answers these questions by querying the Fabric
 
 | Symptom | Fix |
 |---------|-----|
-| The run doesn't appear under **Tracing** | Give it a few seconds and refresh; make sure you ran the agent from the playground, not just saved it. |
+| The run doesn't appear under **Traces** | Give it a few seconds and refresh; make sure you ran the agent from the playground, not just saved it. |
 | The agent invents stock numbers | Reinforce the *IMPORTANT – tool use* instruction — every inventory number must come from a Fabric Data Agent call. |
+| The agent replies it can't reach Fabric / the tool call errors intermittently | Known preview flake. Start a **new playground session** and retry the same prompt (it usually succeeds within a try or two); confirm your F2 capacity is **running**. |
+| A prompt returns no data (empty table) | The generated query likely filtered on a friendly category label. Re-ask by **SKU/productId** (e.g. `P004`) and name the exact fields; ensure the Data Agent instructions include the snake_case category-mapping line from Challenge 1. |
 | No item is flagged **CRITICAL** | Use a scenario/SKU that is genuinely below reorder point (e.g. leaf blowers at Portland/Seattle), or ask the agent to list items below their reorder point. |
 | The reorder quantity looks wrong | Check the trace — confirm the agent used `average_daily_sales × 30 − current_stock` and pulled real numbers from Fabric. |
+| Every **Suggested Reorder Qty is 0** (agent says average daily sales is 0) | The agent queried demand *"across warehouses"* — but `DemandHistory` only records sales at **retail stores** (weekly units). The instructions must query demand **at the stores** and convert weekly→daily (÷ 7). Re-check the Part A instruction block. |
 
 ## 🚀 Go further
 

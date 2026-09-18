@@ -16,7 +16,7 @@ This agent should have **only the Fabric Data Agent tool** — no Web Search. If
 
 ### Reading the trace — what to look for
 
-In **Tracing**, each run shows a tree of spans:
+In the agent's **Traces → Response view**, each run shows a tree of spans:
 
 ```
 run
@@ -34,17 +34,18 @@ run
 
 | Symptom | Cause | Fix |
 |---------|-------|-----|
-| Agent returns "I don't have enough information" | Product/category words don't match Fabric values | Ask by the real product name or category, e.g. "Leaf Blower X2" or "outdoor power tools" |
+| Agent returns "I don't have enough information" or an empty table | Product/category words don't match Fabric values | Ask by **SKU/productId** (e.g. `P004`) or the exact snake_case category value (`outdoor_power_tools`), not a friendly label like "Outdoor Power Tools" |
 | Reorder quantity seems wrong | Agent used a different formula | Remind the agent of the formula in a follow-up: "Use the rule: reorder_qty = max(0, 30-day demand - current stock)" |
-| Trace not appearing | Tracing may take 30–60 seconds to update | Refresh the Tracing page |
+| Trace not appearing | Tracing may take 30–60 seconds to update | Refresh the agent's **Traces → Response view** |
 
 ### Sample recommendation table
 
+> Illustrative — exact quantities depend on the agent's rounding. `DemandHistory` is **weekly per retail store**, so `average_daily_sales = average weekly units / 7` (~0.8/day for P004). 30-day demand is then ~24, so a store with 6–8 on hand yields a small positive reorder and a **CRITICAL** flag (on hand below safety stock 30).
+
 ```
-| SKU  | Product        | Location  | Current Stock | Suggested Reorder Qty | Priority |
-|------|----------------|-----------|---------------|-----------------------|----------|
-| P004 | Leaf Blower X2 | Seattle   | 6             | 54                    | CRITICAL |
-| P004 | Leaf Blower X2 | Portland  | 8             | 52                    | CRITICAL |
-| P005 | Chainsaw 16in  | Portland  | 5             | 31                    | CRITICAL |
-| P004 | Leaf Blower X2 | Chicago   | 45            | 15                    | At Risk  |
+| SKU  | Product        | Location | Current Stock | Suggested Reorder Qty | Priority |
+|------|----------------|----------|---------------|-----------------------|----------|
+| P004 | Leaf Blower X2 | Seattle  | 6             | 18                    | CRITICAL |
+| P004 | Leaf Blower X2 | Portland | 8             | 16                    | CRITICAL |
+| P006 | Hedge Trimmer  | Portland | 12            | 8                     | CRITICAL |
 ```

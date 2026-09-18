@@ -44,7 +44,7 @@ This human-in-the-loop pattern is critical for **agentic AI in enterprise settin
          Date: <today>
          Requested by: Inventory Optimisation Agent
          ─────────────────────────────────────────────
-         | Line | SKU | Warehouse | Qty | Unit Cost (est.) | Line Total |
+         | Line | SKU | Location | Qty | Unit Cost (est.) | Line Total |
          ─────────────────────────────────────────────
          TOTAL ESTIMATED VALUE: $X,XXX
          ─────────────────────────────────────────────
@@ -82,6 +82,9 @@ You only need one tool here:
 3. Select **Add tool**, then **Save**.
 
 > [!NOTE]
+> If the portal auto-added custom `fx` function stubs (e.g. `query_inventory`), **remove them** and use only the **Fabric Data Agent** connector — see Challenge 2, Part C.
+
+> [!NOTE]
 > **Want a *real* submit action?** In production you'd add an **OpenAPI tool** (New Foundry) or a custom function that writes to the `ReplenishmentOrders` table / your ERP. That needs a hosted endpoint, so it's out of scope for this no-code lab — see **Part E — Stretch** at the end of this challenge.
 
 ### Part C — Run the complete planning loop (30 min)
@@ -97,7 +100,7 @@ You only need one tool here:
    - Then reply `YES` — verify the agent responds with the simulated submission confirmation (`✅ Purchase order PO-... submitted to ERP.`).
 
    ![Playground showing the MODIFY 1 50 adjustment followed by a YES approval and the submission confirmation](../images/challenge-03-approval-flow.png)
-5. Open **Tracing** and find this run. Trace the complete sequence:
+5. Open the agent's **Traces → Response view** and find this run. Trace the complete sequence:
    - Model call (format PO from the recommendation) → **Fabric tool call** (unit-cost lookup from `Products`) → model call (present proposal) → model call (apply MODIFY, re-present) → model call (confirm submission after YES).
 6. **Discuss with your team:** At which step did the human add value that an automated pipeline could not?
 

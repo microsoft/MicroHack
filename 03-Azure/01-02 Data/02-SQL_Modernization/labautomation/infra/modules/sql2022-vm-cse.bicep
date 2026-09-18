@@ -10,7 +10,7 @@ param sqlMiAdminUsername string
 @secure()
 param sqlMiAdminPassword string
 
-var ConfigureSQLMachineCommand = 'powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "bootstrap-newsql.ps1" -BackupUri "https://github.com/Microsoft/sql-server-samples/releases/download/wide-world-importers-v1.0/WideWorldImporters-Full.bak" -adminUsername ${adminUsername} -adminPassword ${adminPassword}'
+var ConfigureSQLMachineCommand = 'powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "bootstrap-newsql.ps1" -BackupUri "https://github.com/Microsoft/sql-server-samples/releases/download/wide-world-importers-v1.0/WideWorldImporters-Full.bak" -adminUsername ${adminUsername} -adminPassword ${adminPassword} -sqlMiAdminUsername ${sqlMiAdminUsername} -sqlMiAdminPassword ${sqlMiAdminPassword}'
 
 resource virtualMachine 'Microsoft.Compute/virtualMachines@2024-11-01' existing = {
   name: vmName

@@ -79,6 +79,7 @@ $providers = @(
 
     # Azure Local (Stack HCI)
     "Microsoft.AzureStackHCI",
+    "Microsoft.EdgeMarketplace",
     "Microsoft.ResourceConnector",
     "Microsoft.HybridContainerService",
 

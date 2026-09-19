@@ -58,7 +58,7 @@ This MicroHack has a few but important prerequisites
 In order to use the MicroHack time most effectively, the following tasks should be completed prior to starting the session.
 
 > [!NOTE]
-> Prerequisites 1 - 3 are handled by the organizers for events hosted by Microsoft.
+> For eligible Microsoft-hosted events, use the [Hacks Console runbook](./resources/hosted-events/readme.md). Outside those events, use [manual infrastructure setup](./resources/manual-setup/readme.md). Both paths require LocalBox preparation and health validation before participants begin.
 
 1. Your own Azure subscription with Owner RBAC rights at the subscription level
 2. Contributor or Owner permissions on your subscription or resource group
@@ -71,7 +71,7 @@ The shared Challenge 4/5/7 platform requires **4 AMD SEV-SNP confidential-family
 The default candidate order is Sweden Central/v5, Spain Central/v5, Sweden Central/v6, then Spain Central/v6. Shared preparation persists the first candidate with supported VM sizes and sufficient confidential-family, DSv5-family, and regional quota so every participant deployment in that subscription uses the same selection.
 
 ```powershell
-./resources/subscription-preparations/2-vcpu-quotas.ps1 -Region swedencentral -NumberOfLabUsers 2 -ConfidentialVmGeneration v5 -SubmitQuotaRequests
+./resources/manual-setup/subscription-preparations/2-vcpu-quotas.ps1 -Region swedencentral -NumberOfLabUsers 2 -ConfidentialVmGeneration v5 -SubmitQuotaRequests
 ```
 
 Run the check for `spaincentral` as well if it should remain available for fallback. If v5 is restricted for the subscription, repeat the checks with `-ConfidentialVmGeneration v6`.
@@ -92,7 +92,7 @@ Use the AZQR report for planning and preferred-region ordering, not as the deplo
 
 The main cost driver for this MicroHack is virtual machines:
 
-- **LocalBox** cost is approximately 100-110 USD per day. We recommend setting it up the week before the event, so for example 5 days before the event would result in a cost between 5-600 USD.
+- **LocalBox** cost is approximately 100-110 USD per subscription per day. For hosted events, schedule provisioning at least 24 hours ahead and budget for preparation time; avoid leaving it running for a week by default. Follow the [hosted-event budget guidance](./resources/hosted-events/readme.md).
 - **Challenges 4, 5, and 7** share one pre-provisioned participant platform: a two-node AKS system pool, one Confidential VM AKS node, one standalone Confidential VM, one K3s VM, Azure Bastion Standard, and a NAT Gateway. Budget approximately 45-55 USD per participant per day, depending on region and data transfer. The platform starts during lab deployment so participants can focus on validation rather than waiting for capacity-sensitive resources.
 - Plan subscription quotas for at least 12 general-purpose vCPUs and 4 DCasv5- or DCasv6-family confidential vCPUs per participant. Keep the default maximum of two participants per subscription unless larger aggregate increases have been approved in advance.
 

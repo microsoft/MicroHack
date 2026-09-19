@@ -168,6 +168,7 @@ if ($resourceGroup) {
             workload = 'sovereign-localbox'
             challenge = '6'
             SecurityControl = 'Ignore'
+            CostControl = 'Ignore'
         } `
         -ErrorAction Stop | Out-Null
     Write-Host "Applied the temporary MCAPS security-control exemption to $localBoxResourceGroupName." -ForegroundColor Green
@@ -186,6 +187,18 @@ $localBoxDeployment = if ($resourceGroup) {
 
 if ($localBoxDeployment) {
     Write-Host "Reusing LocalBox deployment '$($localBoxDeployment.DeploymentName)' ($($localBoxDeployment.ProvisioningState))." -ForegroundColor Green
+    $localBoxClient = Get-AzResource `
+        -ResourceGroupName $localBoxResourceGroupName `
+        -ResourceType 'Microsoft.Compute/virtualMachines' `
+        -ErrorAction Stop |
+        Where-Object Name -eq 'LocalBox-Client'
+    if ($localBoxClient) {
+        Update-AzTag `
+            -ResourceId $localBoxClient.ResourceId `
+            -Operation Merge `
+            -Tag @{ CostControl = 'Ignore' } `
+            -ErrorAction Stop | Out-Null
+    }
 }
 else {
     foreach ($localBoxLocation in $localBoxLocations) {

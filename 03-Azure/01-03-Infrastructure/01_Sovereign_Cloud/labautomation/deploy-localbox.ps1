@@ -230,13 +230,13 @@ if ($resourceGroupExists -eq 'true') {
     )
     Invoke-AzJson -Arguments @(
         'group', 'update', '--subscription', $SubscriptionId, '--name', $ResourceGroupName,
-        '--set', 'tags.workload=sovereign-localbox', 'tags.challenge=6', 'tags.SecurityControl=Ignore'
+        '--set', 'tags.workload=sovereign-localbox', 'tags.challenge=6', 'tags.SecurityControl=Ignore', 'tags.CostControl=Ignore'
     ) | Out-Null
 }
 else {
     $resourceGroup = Invoke-AzJson -Arguments @(
         'group', 'create', '--subscription', $SubscriptionId, '--name', $ResourceGroupName,
-        '--location', $Location, '--tags', 'workload=sovereign-localbox', 'challenge=6', 'SecurityControl=Ignore'
+        '--location', $Location, '--tags', 'workload=sovereign-localbox', 'challenge=6', 'SecurityControl=Ignore', 'CostControl=Ignore'
     )
 }
 Write-Host "Resource group ready: $($resourceGroup.name) ($($resourceGroup.location))" -ForegroundColor Green
@@ -281,6 +281,7 @@ try {
             tags = @{ value = @{
                 Project = 'jumpstart_LocalBox'
                 SecurityControl = 'Ignore'
+                CostControl = 'Ignore'
             } }
             governResourceTags = @{ value = $false }
         }

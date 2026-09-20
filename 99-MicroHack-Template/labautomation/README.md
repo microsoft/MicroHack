@@ -856,14 +856,6 @@ The lookup uses `mailNickname`, not display name. `mailNickname` contains the
 full event hash, while the sanitised and truncated display name can repeat
 across distinct events.
 
-Successful results are cached per derived `GroupName` for the life of the
-process. Repeated calls, including calls from a content `deploy-lab.ps1`
-invoked with `&` in that process, therefore make one Graph request in total.
-Missing groups are not cached, so a group created after a failed lookup can be
-found by the next call.
-
-Requires the Microsoft Graph application permission `Group.Read.All`.
-
 ### `New-MhhStablePassword`
 
 Derive a password that is **the same on every re-run** for a given lab, purpose

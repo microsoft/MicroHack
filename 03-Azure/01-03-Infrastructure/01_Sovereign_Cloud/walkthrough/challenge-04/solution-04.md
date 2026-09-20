@@ -1,7 +1,5 @@
 # Walkthrough Challenge 4 - Encryption in use with Azure Confidential Compute – VM
 
-[Previous Challenge Solution](../challenge-03/solution-03.md) - **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-05/solution-05.md)
-
 **Estimated Duration:** 45-60 minutes
 
 > 💡 **Objective:** Validate guest attestation on a pre-provisioned Azure Confidential VM to confirm that workloads execute only in trusted, hardware-backed confidential computing environments. You will inspect the VM's security configuration, connect through Azure Bastion, build and run attestation client applications, and verify cryptographic proof of VM integrity using your dedicated Microsoft Azure Attestation (MAA) provider.

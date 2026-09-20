@@ -1,7 +1,5 @@
 # Challenge 6 - Operating a Sovereign Hybrid Cloud with Azure Arc & Azure Local
 
-[Previous Challenge](challenge-05.md) - **[Home](../Readme.md)** - [Next Challenge](challenge-07.md)
-
 ## Goal
 
 The goal of this challenge is to operate a sovereign hybrid cloud environment by combining Microsoft Sovereign Public Cloud and Sovereign Private Cloud components. You will work with Azure Local, simulated via Azure Arc Jumpstart LocalBox, and provision your own VM. You will use Azure Arc to manage that VM through Azure, review its security posture with Microsoft Defender for Cloud, and assess its OS updates with Azure Update Manager.
@@ -34,15 +32,3 @@ Your organization must run workloads in a sovereign cloud while still leveraging
 * [Microsoft Defender for Cloud with Arc-enabled servers](https://learn.microsoft.com/azure/defender-for-cloud/quickstart-onboard-machines)
 * [Azure Update Manager overview](https://learn.microsoft.com/azure/update-manager/overview)
 * [Azure Arc Jumpstart - LocalBox](https://jumpstart.azure.com/azure_jumpstart_localbox)
-
-## Solution
-
-> [!TIP]
-> We encourage you to try solving the challenge on your own before looking at the solution. This will help you learn and understand the concepts better.
-
-<details>
-<summary>Click here to view the solution</summary>
-
-[Solution for Challenge 6](../walkthrough/challenge-06/solution-06.md)
-
-</details>

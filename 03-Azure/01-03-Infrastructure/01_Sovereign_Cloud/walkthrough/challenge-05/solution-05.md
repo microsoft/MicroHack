@@ -1,7 +1,5 @@
 # Walkthrough Challenge 5 - Encryption in use with Confidential VMs/Node Pools in Azure Kubernetes Service (AKS)
 
-[Previous Challenge Solution](../challenge-04/solution-04.md) - **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-06/solution-06.md)
-
 **Estimated Duration:** 45-60 minutes
 
 > 💡 **Objective:** Learn how to validate guest attestation on Azure Confidential VMs in AKS to ensure business logic only executes in trusted, hardware-backed confidential computing environments. Using the AKS cluster and Confidential VM node pool that have already been provisioned for this lab, you will inspect the node pool configuration, deploy attestation workloads, and verify cryptographic proof of node integrity before processing sensitive operations.

@@ -15,6 +15,10 @@ The Azure region for the LocalBox Azure resources.
 Optional host administrator password. For unattended deployment, prefer the
 LOCALBOX_ADMIN_PASSWORD environment variable so the secret is not in the process list.
 A random password is generated when neither value is supplied.
+.PARAMETER UseConsoleCredentials
+Use the Console's stable LocalBox password instead of a supplied or random password.
+It is not published as a participant credential. Coach/event-lead-only retrieval
+requires a supported mechanism from the Console owner.
 .PARAMETER GithubRef
 The azure_arc branch, tag, or commit used for both Bicep and runtime artifacts.
 .PARAMETER AzureLocalResourceProviderObjectId
@@ -35,6 +39,8 @@ param(
     [string]$WindowsAdminUsername = 'arcdemo',
 
     [string]$WindowsAdminPassword,
+
+    [switch]$UseConsoleCredentials,
 
     [bool]$DeployBastion = $true,
 
@@ -207,7 +213,16 @@ if ([string]::IsNullOrWhiteSpace($AzureLocalResourceProviderObjectId)) {
 }
 
 $generatedPassword = $false
-if ([string]::IsNullOrEmpty($WindowsAdminPassword) -and -not [string]::IsNullOrEmpty($env:LOCALBOX_ADMIN_PASSWORD)) {
+if ($UseConsoleCredentials) {
+    if (-not [string]::IsNullOrEmpty($WindowsAdminPassword) -or -not [string]::IsNullOrEmpty($env:LOCALBOX_ADMIN_PASSWORD)) {
+        throw 'UseConsoleCredentials cannot be combined with WindowsAdminPassword or LOCALBOX_ADMIN_PASSWORD.'
+    }
+    $WindowsAdminPassword = New-MhhStablePassword -Purpose 'localbox-admin-v1' -Length 24 -ErrorAction Stop
+    if ([string]::IsNullOrWhiteSpace($WindowsAdminPassword)) {
+        throw 'Console did not provide a LocalBox password.'
+    }
+}
+elseif ([string]::IsNullOrEmpty($WindowsAdminPassword) -and -not [string]::IsNullOrEmpty($env:LOCALBOX_ADMIN_PASSWORD)) {
     $WindowsAdminPassword = $env:LOCALBOX_ADMIN_PASSWORD
 }
 elseif ([string]::IsNullOrEmpty($WindowsAdminPassword)) {
@@ -230,13 +245,13 @@ if ($resourceGroupExists -eq 'true') {
     )
     Invoke-AzJson -Arguments @(
         'group', 'update', '--subscription', $SubscriptionId, '--name', $ResourceGroupName,
-        '--set', 'tags.workload=sovereign-localbox', 'tags.challenge=6', 'tags.SecurityControl=Ignore'
+        '--set', 'tags.workload=sovereign-localbox', 'tags.challenge=6', 'tags.SecurityControl=Ignore', 'tags.CostControl=Ignore'
     ) | Out-Null
 }
 else {
     $resourceGroup = Invoke-AzJson -Arguments @(
         'group', 'create', '--subscription', $SubscriptionId, '--name', $ResourceGroupName,
-        '--location', $Location, '--tags', 'workload=sovereign-localbox', 'challenge=6', 'SecurityControl=Ignore'
+        '--location', $Location, '--tags', 'workload=sovereign-localbox', 'challenge=6', 'SecurityControl=Ignore', 'CostControl=Ignore'
     )
 }
 Write-Host "Resource group ready: $($resourceGroup.name) ($($resourceGroup.location))" -ForegroundColor Green
@@ -264,6 +279,12 @@ try {
         Invoke-WebRequest -Uri "$baseUri/$file" -OutFile (Join-Path $tempDirectory $file) -UseBasicParsing
     }
 
+    $resourceTags = @{
+        Project = 'jumpstart_LocalBox'
+        SecurityControl = 'Ignore'
+        CostControl = 'Ignore'
+    }
+
     @{
         '$schema' = 'https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#'
         contentVersion = '1.0.0.0'
@@ -278,10 +299,7 @@ try {
             azureLocalInstanceLocation = @{ value = $AzureLocalInstanceLocation }
             deployBastion = @{ value = $DeployBastion }
             vmSize = @{ value = $VmSize }
-            tags = @{ value = @{
-                Project = 'jumpstart_LocalBox'
-                SecurityControl = 'Ignore'
-            } }
+            tags = @{ value = $resourceTags }
             governResourceTags = @{ value = $false }
         }
     } | ConvertTo-Json -Depth 10 | Set-Content -Path $parametersFile -Encoding utf8NoBOM

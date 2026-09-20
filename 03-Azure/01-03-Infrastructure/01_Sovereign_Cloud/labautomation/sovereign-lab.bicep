@@ -46,6 +46,7 @@ var cvmPrivateIp = '10.42.2.4'
 var tags = {
   workload: 'sovereign-lab'
   challenges: '4,5,7'
+  CostControl: 'Ignore'
 }
 
 var k3sInstallScript = '''
@@ -430,6 +431,7 @@ resource aks 'Microsoft.ContainerService/managedClusters@2024-10-01' = {
       {
         name: 'system'
         count: 2
+        tags: tags
         vmSize: aksNodeVmSize
         osType: 'Linux'
         osSKU: 'Ubuntu'
@@ -453,6 +455,7 @@ resource confidentialNodePool 'Microsoft.ContainerService/managedClusters/agentP
   parent: aks
   properties: {
     count: 1
+    tags: tags
     vmSize: confidentialVmSize
     osType: 'Linux'
     osSKU: 'AzureLinux'

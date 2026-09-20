@@ -5,6 +5,9 @@ Prepares an already deployed Jumpstart LocalBox for the Sovereign Cloud MicroHac
 .DESCRIPTION
 Run elevated on LocalBox-Client. Azure operations use its managed identity;
 nested Windows operations use a separately supplied PSCredential.
+Missing required Azure CLI extensions are installed without upgrading existing
+versions, including during WhatIf. Azure, Hyper-V and storage changes remain
+simulated during WhatIf.
 Dot-source this file to load its functions without running provisioning.
 #>
 [CmdletBinding(SupportsShouldProcess)]
@@ -126,6 +129,29 @@ function Invoke-LocalBoxAz {
         Receive-Job $job -ErrorAction Stop
     }
     finally { Remove-Job $job -Force -ErrorAction SilentlyContinue -WhatIf:$false -Confirm:$false }
+}
+
+function Initialize-LocalBoxCliExtension {
+    [CmdletBinding(SupportsShouldProcess)]
+    param()
+    $installed = @(Invoke-LocalBoxAz @('extension', 'list'))
+    $ready = $true
+    foreach ($extension in @('stack-hci-vm', 'customlocation', 'aksarc')) {
+        if ($extension -notin $installed.name) {
+            if (-not $PSCmdlet.ShouldProcess($extension, 'Install missing Azure CLI extension')) {
+                $ready = $false
+                continue
+            }
+            Write-Host "Installing missing Azure CLI extension $extension..."
+            Invoke-LocalBoxAz @('extension', 'add', '--name', $extension) -TimeoutSeconds 900 | Out-Null
+        }
+        $details = Invoke-LocalBoxAz @('extension', 'show', '--name', $extension)
+        if ($details.name -ne $extension -or [string]::IsNullOrWhiteSpace($details.version)) {
+            throw "Azure CLI extension $extension could not be verified. Preparation has stopped."
+        }
+        Write-Host "$extension $($details.version)"
+    }
+    return $ready
 }
 
 function Get-LocalBoxResource {
@@ -392,9 +418,9 @@ function Invoke-LocalBoxPreparation {
         Write-Host 'Checking managed identity, Azure resources and CLI prerequisites...'
         Invoke-LocalBoxAz @('login', '--identity') | Out-Null
         Invoke-LocalBoxAz @('account', 'set', '--subscription', $Settings.SubscriptionId) | Out-Null
-        foreach ($extension in @('stack-hci-vm', 'customlocation', 'aksarc')) {
-            $version = Invoke-LocalBoxAz @('extension', 'show', '--name', $extension)
-            Write-Host "$extension $($version.version)"
+        if (-not (Initialize-LocalBoxCliExtension -WhatIf:$false)) {
+            Write-Warning 'Required CLI extension installation was declined. Remaining preparation checks were not run.'
+            return
         }
         $scope = "/subscriptions/$($Settings.SubscriptionId)/resourceGroups/$($Settings.ResourceGroupName)"
         $resources = @(Invoke-LocalBoxAz @('resource', 'list', '--resource-group', $Settings.ResourceGroupName))

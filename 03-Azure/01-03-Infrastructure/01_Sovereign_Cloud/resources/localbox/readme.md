@@ -4,14 +4,16 @@ Run [prepare-localbox.ps1](../prepare-localbox.ps1) **inside LocalBox-Client**, 
 
 ## Prerequisites
 
-- Elevated PowerShell 7 on `LocalBox-Client`; installed Azure CLI with `stack-hci-vm`, `customlocation` and `aksarc` extensions. Install missing extensions explicitly before running; the script neither installs nor upgrades tooling. Record the versions used for your event.
-- Do not assume a new Jumpstart Client includes these CLI extensions. Check `az extension list` in the profile you will use. Keep any existing extensions; install only missing ones. Health checks additionally require Pester 5.7.1 or later within major version 5; an installed Pester 6 is not a substitute for the runner's supported version.
+- Elevated PowerShell 7 on `LocalBox-Client` and an installed Azure CLI. Preparation automatically installs missing `stack-hci-vm`, `customlocation` and `aksarc` extensions, including during `-WhatIf`, verifies their versions and leaves existing versions unchanged. Internet access to the extension downloads is required; installation failure stops preparation before infrastructure changes. Record the versions printed by the script for your event.
+- Extensions are installed in your persistent CLI extension directory (`AZURE_EXTENSION_DIR`, if set), not the temporary authentication profile. The script does not install or upgrade the Azure CLI itself. Health checks additionally require Pester 5.7.1 or later within major version 5; an installed Pester 6 is not a substitute for the runner's supported version.
 - Healthy Azure Local nodes, storage, Arc Resource Bridge, `jumpstart` custom location and `hybridaksextension`.
 - The Client VM's system-assigned managed identity and its existing LocalBox resource-group permissions. The script uses a temporary isolated CLI login and restores the caller's profile. No subscription-wide or Graph permissions are added.
 - An existing Entra AKS admin-group object ID. Hosted events obtain this from the Console owner; [group provisioning is a documented dependency](../hosted-events/readme.md#console-group-dependency). Group membership is not validated through Graph by this script.
 - Windows administrator credentials for `AzLHOST1`/`AzLHOST2`. Enter these in the local `Get-Credential` prompt. Azure managed identity cannot authenticate Windows PowerShell Direct inside nested nodes.
 - `Microsoft.EdgeMarketplace` registered by the subscription owner. The Marketplace image workflow also requires the Azure Connected Machine Resource Manager role for the `Microsoft.AzureStackHCI` resource-provider identity on the image resource group; ask the deployment owner to verify this prerequisite. No automatic privilege escalation is attempted.
 - Verified DHCP exclusions/static reservations for both pools, sufficient backing `V:` capacity and event budget. Dynamic disks do not add physical backing capacity.
+
+For the standard Jumpstart configuration, the nested-node administrator is `jumpstart\Administrator`. The Client VM's `arcdemo` account is not the nested-node administrator. Use the nested domain's credentials (adjust the domain if customized), not a password reset solely on the Client VM.
 
 ## Download and run
 
@@ -20,7 +22,7 @@ Download files, inspect them, then execute. Do not pipe downloaded content into 
 ```powershell
 $base = 'https://raw.githubusercontent.com/microsoft/MicroHack/refs/heads/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/resources'
 Invoke-WebRequest "$base/prepare-localbox.ps1" -OutFile './prepare-localbox.ps1'
-$nodeCredential = Get-Credential -Message 'Nested Azure Local Windows administrator'
+$nodeCredential = Get-Credential -UserName 'jumpstart\Administrator' -Message 'Nested Azure Local Windows administrator'
 ./prepare-localbox.ps1 -NodeCredential $nodeCredential -AddressReservationsConfirmed -WhatIf
 ./prepare-localbox.ps1 -NodeCredential $nodeCredential -AddressReservationsConfirmed
 ```
@@ -29,7 +31,7 @@ The script prompts for the Entra group object ID, or accepts `-AksAdminGroupObje
 
 If the Console-owned group is not available yet, `-SkipAks` explicitly prepares only storage, the VM image and both networks. It does not fabricate a group or grant anyone cluster access. The manifest records this as a partial run, and full health checks fail until preparation is rerun without `-SkipAks` using a valid admin-group ID.
 
-`-WhatIf` performs authenticated reads and local validation, but no Azure/Hyper-V/storage provisioning. It can create and remove a temporary local CLI profile. It does not establish that later resource creation will succeed.
+`-WhatIf` installs missing CLI extensions as a deliberate local-tooling exception, then performs authenticated reads and validation. It does not provision Azure resources or change Hyper-V or storage. It can create and remove a temporary local CLI profile. It does not establish that later resource creation will succeed.
 
 ## Prepared resources
 

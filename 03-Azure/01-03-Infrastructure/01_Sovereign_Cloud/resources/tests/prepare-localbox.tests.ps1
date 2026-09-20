@@ -160,6 +160,71 @@ Describe 'CLI process cleanup' {
     }
 }
 
+Describe 'Missing CLI extension installation' {
+    BeforeEach {
+        Mock Invoke-LocalBoxAz {
+            if ($Arguments[1] -eq 'list') { return @(@{ name = 'customlocation'; version = '0.1.4' }) }
+            if ($Arguments[1] -eq 'show') { return @{ name = $Arguments[3]; version = '1.0.0' } }
+        }
+    }
+    It 'installs only missing extensions and verifies all required versions' {
+        Initialize-LocalBoxCliExtension | Should -BeTrue
+        Should -Invoke Invoke-LocalBoxAz -Times 2 -Exactly -ParameterFilter { $Arguments[1] -eq 'add' }
+        Should -Invoke Invoke-LocalBoxAz -Times 1 -Exactly -ParameterFilter { $Arguments[1] -eq 'add' -and $Arguments[3] -eq 'stack-hci-vm' }
+        Should -Invoke Invoke-LocalBoxAz -Times 1 -Exactly -ParameterFilter { $Arguments[1] -eq 'add' -and $Arguments[3] -eq 'aksarc' }
+        Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments[1] -eq 'add' -and $Arguments[3] -eq 'customlocation' }
+        Should -Invoke Invoke-LocalBoxAz -Times 3 -Exactly -ParameterFilter { $Arguments[1] -eq 'show' }
+        Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments -contains '--upgrade' -or $Arguments[1] -eq 'update' }
+    }
+    It 'leaves an already prepared Client unchanged' {
+        Mock Invoke-LocalBoxAz { @(@{ name = 'stack-hci-vm' }, @{ name = 'customlocation' }, @{ name = 'aksarc' }) } -ParameterFilter { $Arguments[1] -eq 'list' }
+        Initialize-LocalBoxCliExtension | Should -BeTrue
+        Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments[1] -eq 'add' }
+    }
+    It 'installs all required extensions on a fresh Client' {
+        Mock Invoke-LocalBoxAz { @() } -ParameterFilter { $Arguments[1] -eq 'list' }
+        Initialize-LocalBoxCliExtension | Should -BeTrue
+        Should -Invoke Invoke-LocalBoxAz -Times 3 -Exactly -ParameterFilter { $Arguments[1] -eq 'add' -and $TimeoutSeconds -eq 900 }
+    }
+    It 'honors helper-level WhatIf when the preparation override is not applied' {
+        Initialize-LocalBoxCliExtension -WhatIf | Should -BeFalse
+        Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments[1] -eq 'add' }
+        Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments[1] -eq 'show' -and $Arguments[3] -in @('stack-hci-vm', 'aksarc') }
+    }
+    It 'installs missing prerequisites under inherited WhatIf without allowing resource creation' {
+        $WhatIfPreference = $true
+        Initialize-LocalBoxCliExtension -WhatIf:$false | Should -BeTrue
+        $WhatIfPreference | Should -BeTrue
+        Sync-LocalBoxResource -Id '/subscriptions/test/resourceGroups/localbox/providers/Microsoft.AzureStackHCI/logicalNetworks/test-net' `
+            -Expected @{} -CreateArguments @('resource', 'create')
+        Should -Invoke Invoke-LocalBoxAz -Times 2 -Exactly -ParameterFilter { $Arguments[0] -eq 'extension' -and $Arguments[1] -eq 'add' }
+        Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments[0] -eq 'resource' -and $Arguments[1] -eq 'create' }
+    }
+    It 'limits the preparation WhatIf exception to the extension-setup call' {
+        ${function:Invoke-LocalBoxPreparation}.ToString() | Should -Match 'Initialize-LocalBoxCliExtension -WhatIf:\$false'
+        ${function:Invoke-LocalBoxPreparation}.ToString() | Should -Not -Match '\$WhatIfPreference\s*=\s*\$false'
+    }
+    It 'allows a complete dry run when all required extensions already exist' {
+        Mock Invoke-LocalBoxAz { @(@{ name = 'stack-hci-vm' }, @{ name = 'customlocation' }, @{ name = 'aksarc' }) } -ParameterFilter { $Arguments[1] -eq 'list' }
+        Initialize-LocalBoxCliExtension -WhatIf | Should -BeTrue
+        Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments[1] -eq 'add' }
+    }
+    It 'propagates discovery errors rather than assuming extensions are missing' {
+        Mock Invoke-LocalBoxAz { throw 'Extension directory cannot be read' } -ParameterFilter { $Arguments[1] -eq 'list' }
+        { Initialize-LocalBoxCliExtension } | Should -Throw '*cannot be read*'
+        Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments[1] -eq 'add' }
+    }
+    It 'stops after a failed installation' {
+        Mock Invoke-LocalBoxAz { throw 'Download failed' } -ParameterFilter { $Arguments[1] -eq 'add' }
+        { Initialize-LocalBoxCliExtension } | Should -Throw '*Download failed*'
+        Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments[1] -eq 'show' }
+    }
+    It 'rejects an installation that cannot be verified' {
+        Mock Invoke-LocalBoxAz { @{ name = 'stack-hci-vm' } } -ParameterFilter { $Arguments[1] -eq 'show' }
+        { Initialize-LocalBoxCliExtension } | Should -Throw '*could not be verified*'
+    }
+}
+
 Describe 'Windows Azure CLI argument transport' {
     It 'bypasses the batch wrapper using its bundled Python' {
         Mock Test-Path { $true }

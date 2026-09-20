@@ -19,6 +19,32 @@ Describe 'Lab cost-control tags' {
 }
 
 Describe 'LocalBox input validation' {
+    It 'defaults to three AKS worker nodes' {
+        . "$PSScriptRoot/../prepare-localbox.ps1"
+        $NodeCount | Should -Be 3
+    }
+    It 'allows an explicit AKS worker-count override' {
+        . "$PSScriptRoot/../prepare-localbox.ps1" -NodeCount 1
+        $NodeCount | Should -Be 1
+    }
+    It 'uses the image resource name shown in the walkthrough' {
+        . "$PSScriptRoot/../prepare-localbox.ps1"
+        $ImageName | Should -Be '2025-datacenter-azure-edition-smalldisk-01'
+    }
+    It 'allows an explicit image resource-name override' {
+        . "$PSScriptRoot/../prepare-localbox.ps1" -ImageName 'existing-lab-image'
+        $ImageName | Should -Be 'existing-lab-image'
+    }
+    It 'does not prompt or fabricate a group ID when AKS is explicitly skipped' {
+        Mock Read-Host { throw 'Unexpected prompt' }
+        Read-LocalBoxGroupId -SkipAks | Should -BeNullOrEmpty
+        Should -Invoke Read-Host -Times 0
+    }
+    It 'fails on an empty group response instead of repeatedly prompting unattended runs' {
+        Mock Read-Host { '' }
+        { Read-LocalBoxGroupId } | Should -Throw
+        Should -Invoke Read-Host -Times 1
+    }
     It 'accepts the AKS node range while reserving control plane and VIP addresses' {
         { Test-LocalBoxAddressPool '10.10.0.0/24' '10.10.0.101' '10.10.0.199' '10.10.0.1' @('10.10.0.5', '10.10.0.10', '10.10.0.100') } | Should -Not -Throw
     }
@@ -41,6 +67,15 @@ Describe 'LocalBox input validation' {
     }
     It 'normalizes a group ID' {
         Assert-LocalBoxGroupId 'A0000000-0000-0000-0000-000000000001' | Should -Be 'a0000000-0000-0000-0000-000000000001'
+    }
+}
+
+Describe 'AKS Local resource API selection' {
+    It 'specifies the API version for nested AKS Local node pools' {
+        Mock Invoke-LocalBoxAz { @{} }
+        $identifier = '/subscriptions/test/resourceGroups/localbox/providers/Microsoft.Kubernetes/connectedClusters/localbox-aks/providers/Microsoft.HybridContainerService/provisionedClusterInstances/default/agentPools/nodepool1'
+        Get-LocalBoxResource $identifier
+        Should -Invoke Invoke-LocalBoxAz -Times 1 -ParameterFilter { $Arguments -contains '--api-version' -and $Arguments -contains '2024-01-01' }
     }
 }
 
@@ -93,6 +128,57 @@ Describe 'Resource reconciliation' {
     }
 }
 
+Describe 'CLI process cleanup' {
+    BeforeEach {
+        Mock Get-LocalBoxAzInvocation { @{ Executable = 'az'; Prefix = @() } }
+    }
+    It 'cleans up read-only CLI jobs even during WhatIf' {
+        Mock Start-Job { 1 }
+        Mock Wait-Job { 1 }
+        Mock Receive-Job { @{ name = 'read-only-result' } }
+        Mock Remove-Job {}
+        $WhatIfPreference = $true
+        (Invoke-LocalBoxAz @('account', 'show')).name | Should -Be 'read-only-result'
+        Should -Invoke Remove-Job -Times 1 -ParameterFilter { -not $WhatIf -and -not $Confirm }
+    }
+    It 'propagates a failed CLI job and still cleans it up' {
+        Mock Start-Job { 1 }
+        Mock Wait-Job { 1 }
+        Mock Receive-Job { throw 'Azure CLI returned a nonzero exit code' }
+        Mock Remove-Job {}
+        { Invoke-LocalBoxAz @('resource', 'list') } | Should -Throw '*nonzero*'
+        Should -Invoke Remove-Job -Times 1
+    }
+    It 'bounds a stalled CLI job without claiming the Azure operation was canceled' {
+        Mock Start-Job { 1 }
+        Mock Wait-Job { $null }
+        Mock Receive-Job {}
+        Mock Remove-Job {}
+        { Invoke-LocalBoxAz @('resource', 'create') -TimeoutSeconds 1 } | Should -Throw '*may still be running*'
+        Should -Invoke Receive-Job -Times 0
+        Should -Invoke Remove-Job -Times 1
+    }
+}
+
+Describe 'Windows Azure CLI argument transport' {
+    It 'bypasses the batch wrapper using its bundled Python' {
+        Mock Test-Path { $true }
+        $command = Join-Path $TestDrive 'CLI2/wbin/az.cmd'
+        $invocation = Get-LocalBoxAzInvocation -CommandPath $command
+        $invocation.Executable | Should -Be ([IO.Path]::GetFullPath((Join-Path $TestDrive 'CLI2/python.exe')))
+        $invocation.Prefix | Should -Be @('-IBm', 'azure.cli')
+    }
+    It 'rejects a batch installation without its bundled Python' {
+        Mock Test-Path { $false }
+        { Get-LocalBoxAzInvocation -CommandPath (Join-Path $TestDrive 'az.cmd') } | Should -Throw '*bundled Python*'
+    }
+    It 'leaves non-batch CLI executables unchanged' {
+        $invocation = Get-LocalBoxAzInvocation -CommandPath '/usr/bin/az'
+        $invocation.Executable | Should -Be '/usr/bin/az'
+        $invocation.Prefix.Count | Should -Be 0
+    }
+}
+
 Describe 'Storage removal guard' {
     BeforeEach {
         $state = @{ NodesUp = $true; PoolHealth = 'Healthy'; StorageJobs = 0; SecondaryFiles = @(); UnhealthyPhysicalDisks = 0 }
@@ -120,7 +206,49 @@ Describe 'Storage removal guard' {
     }
 }
 
+Describe 'Generated Azure Local storage names' {
+    BeforeEach {
+        Mock Get-LocalBoxResource { @{ id = $Id; extendedLocation = @{ name = '/custom/jumpstart' }; properties = @{ provisioningState = 'Succeeded' } } }
+        $resources = @(@{ name = 'UserStorage1-ae41ccf444cc4b64a24de6d2a4b69e07'; type = 'Microsoft.AzureStackHCI/storageContainers'; id = '/storage/primary' })
+    }
+    It 'resolves a generated storage name to its real resource ID' {
+        (Resolve-LocalBoxStoragePath $resources UserStorage1 '/custom/jumpstart').id | Should -Be '/storage/primary'
+    }
+    It 'refuses ambiguous storage paths' {
+        $resources += @{ name = 'UserStorage1'; type = 'Microsoft.AzureStackHCI/storageContainers'; id = '/storage/another' }
+        { Resolve-LocalBoxStoragePath $resources UserStorage1 '/custom/jumpstart' } | Should -Throw '*exactly one*'
+    }
+    It 'refuses storage from another custom location' {
+        { Resolve-LocalBoxStoragePath $resources UserStorage1 '/custom/other' } | Should -Throw '*different custom location*'
+    }
+    It 'allows an absent secondary path only when explicitly requested' {
+        Resolve-LocalBoxStoragePath $resources UserStorage2 '/custom/jumpstart' -AllowMissing | Should -BeNullOrEmpty
+        { Resolve-LocalBoxStoragePath $resources UserStorage2 '/custom/jumpstart' } | Should -Throw '*exactly one*'
+    }
+}
+
 Describe 'Health checks do not report false readiness' {
+    It 'accepts one Ready control-plane node and three Ready workers' {
+        $control = @{ metadata = @{ labels = @{ 'node-role.kubernetes.io/control-plane' = '' } }; status = @{ conditions = @(@{ type = 'Ready'; status = 'True' }) } }
+        $worker = @{ metadata = @{ labels = @{} }; status = @{ conditions = @(@{ type = 'Ready'; status = 'True' }) } }
+        { Assert-SovereignLocalNodeCount @{ items = @($control, $worker, $worker, $worker) } 3 1 } | Should -Not -Throw
+    }
+    It 'rejects four Ready nodes with the wrong roles' {
+        $worker = @{ metadata = @{ labels = @{} }; status = @{ conditions = @(@{ type = 'Ready'; status = 'True' }) } }
+        { Assert-SovereignLocalNodeCount @{ items = @($worker, $worker, $worker, $worker) } 3 1 } | Should -Throw '*found 0 and 4*'
+    }
+    It 'rejects a pending worker even when the node count matches' {
+        $control = @{ metadata = @{ labels = @{ 'node-role.kubernetes.io/control-plane' = '' } }; status = @{ conditions = @(@{ type = 'Ready'; status = 'True' }) } }
+        $worker = @{ metadata = @{ labels = @{} }; status = @{ conditions = @(@{ type = 'Ready'; status = 'False' }) } }
+        { Assert-SovereignLocalNodeCount @{ items = @($control, $worker, $worker, $worker) } 3 1 } | Should -Throw '*not Ready*'
+    }
+    It 'accepts a fork and branch for the health suite download' {
+        . "$PSScriptRoot/../test-sovereign-cloud.ps1" -GitHubRepository 'janegilring/MicroHack' -GitHubRef 'sov-cloud-localbox-post-automation'
+        $GitHubRepository | Should -Be 'janegilring/MicroHack'
+        $GitHubRef | Should -Be 'sov-cloud-localbox-post-automation'
+        $source = Get-Content "$PSScriptRoot/../test-sovereign-cloud.ps1" -Raw
+        $source | Should -Match 'https://raw.githubusercontent.com/\$GitHubRepository/\$GitHubRef/'
+    }
     It 'rejects empty node collections and NotReady nodes' {
         { Assert-SovereignNodes @{ items = @() } 1 } | Should -Throw
         { Assert-SovereignNodes @{ items = @(@{ metadata = @{ name = 'worker' }; status = @{ conditions = @(@{ type = 'Ready'; status = 'False' }) } }) } 1 } | Should -Throw '*not Ready*'
@@ -181,7 +309,7 @@ Describe 'Storage execution safety' {
         Mock New-VHD {}
         Mock Add-VMHardDiskDrive {}
         Mock Invoke-Command {}
-        Mock Get-LocalBoxNodeState { @{ PoolHealth = 'Healthy'; DiskHealth = 'Healthy'; NodesUp = $true; StorageJobs = 0; UnhealthyPhysicalDisks = 0; Size = 679GB } }
+        Mock Get-LocalBoxNodeState { @{ PoolHealth = 'Healthy'; DiskHealth = 'Healthy'; VolumeHealth = 'Healthy'; NodesUp = $true; StorageJobs = 0; UnhealthyPhysicalDisks = 0; Size = 679GB } }
     }
     It 'does not create, attach or resize anything during WhatIf' {
         Initialize-LocalBoxStorage -Configuration $configuration -Credential $credential -DesiredSizeGB 1024 -WhatIf
@@ -192,10 +320,37 @@ Describe 'Storage execution safety' {
     It 'does not duplicate disks or grow an already sized virtual disk on rerun' {
         Mock Test-Path { $true }
         Mock Get-VMHardDiskDrive { @(@{ Path = Join-Path $TestDrive "$VMName-microhack-s2d.vhdx" }) }
-        Mock Get-LocalBoxNodeState { @{ PoolHealth = 'Healthy'; DiskHealth = 'Healthy'; NodesUp = $true; StorageJobs = 0; UnhealthyPhysicalDisks = 0; Size = 1TB } }
+        Mock Get-LocalBoxNodeState { @{ PoolHealth = 'Healthy'; DiskHealth = 'Healthy'; VolumeHealth = 'Healthy'; NodesUp = $true; StorageJobs = 0; UnhealthyPhysicalDisks = 0; Size = 1TB } }
         Initialize-LocalBoxStorage -Configuration $configuration -Credential $credential -DesiredSizeGB 1024 -Confirm:$false
         Should -Invoke New-VHD -Times 0
         Should -Invoke Add-VMHardDiskDrive -Times 0
         Should -Invoke Invoke-Command -Times 0 -ParameterFilter { $ScriptBlock.ToString() -match 'Resize-VirtualDisk' }
+    }
+}
+
+Describe 'Storage convergence' {
+    It 'ignores retained completed storage jobs' {
+        Mock Invoke-Command { @{ StorageJobs = 0; StorageJobStates = @('Completed', 'Completed') } }
+        $credential = [pscredential]::new('test-user', [Security.SecureString]::new())
+        (Get-LocalBoxNodeState 'node' $credential).StorageJobs | Should -Be 0
+    }
+    It 'does not ignore active, failed or suspended storage jobs' {
+        Mock Invoke-Command { @{ StorageJobs = 0; StorageJobStates = @('Completed', 'Running', 'Exception', 'Suspended') } }
+        $credential = [pscredential]::new('test-user', [Security.SecureString]::new())
+        (Get-LocalBoxNodeState 'node' $credential).StorageJobs | Should -Be 3
+    }
+    It 'waits for post-attachment storage jobs without ignoring health' {
+        $script:storagePoll = 0
+        Mock Start-Sleep {}
+        Mock Get-LocalBoxNodeState {
+            $script:storagePoll++
+            @{ PoolHealth = 'Healthy'; DiskHealth = 'Healthy'; VolumeHealth = 'Healthy'; NodesUp = $true; UnhealthyPhysicalDisks = 0; StorageJobs = $(if ($script:storagePoll -eq 1) { 1 } else { 0 }) }
+        }
+        (Wait-LocalBoxStorageReady 'node').StorageJobs | Should -Be 0
+        Should -Invoke Start-Sleep -Times 1
+    }
+    It 'fails when storage never becomes healthy' {
+        Mock Get-LocalBoxNodeState { @{ PoolHealth = 'Warning'; StorageJobs = 1 } }
+        { Wait-LocalBoxStorageReady 'node' -TimeoutSeconds 0 } | Should -Throw '*Timed out*'
     }
 }

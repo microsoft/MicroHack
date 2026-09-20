@@ -22,6 +22,8 @@ param(
     [switch]$AllowGuestRunCommand,
     [ValidateRange(1, 120)][int]$TimeoutMinutes = 15,
     [string]$OutputDirectory = './health-results',
+    [ValidatePattern('^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$')]
+    [string]$GitHubRepository = 'microsoft/MicroHack',
     [string]$GitHubRef = 'main',
     [switch]$DownloadTests
 )
@@ -40,6 +42,19 @@ function Assert-SovereignNodes {
     foreach ($node in $Nodes.items) {
         $ready = @($node.status.conditions | Where-Object { $_.type -eq 'Ready' -and $_.status -eq 'True' })
         if ($ready.Count -ne 1) { throw "Node $($node.metadata.name) is not Ready." }
+    }
+}
+
+function Assert-SovereignLocalNodeCount {
+    param($Nodes, [int]$WorkerCount, [int]$ControlPlaneCount = 1)
+    Assert-SovereignNodes $Nodes ($WorkerCount + $ControlPlaneCount)
+    $controlPlaneNodes = @($Nodes.items | Where-Object {
+        $labels = $_.metadata.labels
+        $labels -and ($labels.ContainsKey('node-role.kubernetes.io/control-plane') -or $labels.ContainsKey('node-role.kubernetes.io/master'))
+    })
+    $workers = @($Nodes.items).Count - $controlPlaneNodes.Count
+    if ($controlPlaneNodes.Count -ne $ControlPlaneCount -or $workers -ne $WorkerCount) {
+        throw "Expected $ControlPlaneCount control-plane nodes and $WorkerCount workers; found $($controlPlaneNodes.Count) and $workers."
     }
 }
 
@@ -110,7 +125,7 @@ if ($MyInvocation.InvocationName -ne '.') {
     if ($DownloadTests) {
         $root = Join-Path ([IO.Path]::GetTempPath()) "microhack-health-$([guid]::NewGuid())"
         New-Item -ItemType Directory -Path "$root/tests" -Force | Out-Null
-        $base = "https://raw.githubusercontent.com/microsoft/MicroHack/$GitHubRef/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/resources"
+        $base = "https://raw.githubusercontent.com/$GitHubRepository/$GitHubRef/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/resources"
         foreach ($file in @('prepare-localbox.ps1', 'test-sovereign-cloud.ps1', 'tests/localbox.health.tests.ps1', 'tests/sovereign-lab.health.tests.ps1')) {
             Invoke-WebRequest -Uri "$base/$file" -OutFile (Join-Path $root $file)
         }

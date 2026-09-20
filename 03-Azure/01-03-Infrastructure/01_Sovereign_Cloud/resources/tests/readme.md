@@ -14,6 +14,8 @@ Full Kubernetes checks take dedicated kubeconfigs that already authenticate to t
 
 Download [test-sovereign-cloud.ps1](../test-sovereign-cloud.ps1) from the same trusted ref as preparation. The runner's `-DownloadTests` downloads the helper and two suites to a temporary directory; `-GitHubRef` must identify that **same ref**, preferably a commit SHA. Downloaded scripts execute under your privileges, so review and pin them.
 
+For a fork, also specify `-GitHubRepository 'owner/MicroHack'`. For example, testing this branch uses `-GitHubRepository 'janegilring/MicroHack' -GitHubRef 'sov-cloud-localbox-post-automation'`. The default repository remains `microsoft/MicroHack`.
+
 ```powershell
 $ref = 'main'
 $base = "https://raw.githubusercontent.com/microsoft/MicroHack/$ref/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/resources"
@@ -35,6 +37,31 @@ $nodeCredential = Get-Credential -Message 'Nested Azure Local Windows administra
 ```
 
 Checks cover the Client and bootstrap, cluster/Arc bridge/custom location/AKS extension, supporting Azure resources, image download/storage placement, exact network settings, expected AKS topology/admin group, nested-node/storage health and capacity, Kubernetes node readiness and system pods/controllers. Gateway/DNS/HTTPS probes run from a nested node; these do not prove connectivity from a participant VM that has not yet been created.
+
+## Rerun from a local copy
+
+In elevated PowerShell 7 on LocalBox-Client, change to your local resources directory containing the runner, preparation script and `tests` folder. Use the manifest written by preparation (`-ManifestPath`, default `C:\LocalBox\sovereign-localbox.json`) and an existing authenticated kubeconfig. Keep all scripts from the same reviewed revision; do not overwrite unpublished local fixes with an older download.
+
+The commands below retain your existing Azure CLI authentication. Confirm that it has access to the selected lab resources as described in [Tooling and authentication](#tooling-and-authentication).
+
+```powershell
+$manifestPath = Read-Host 'Path to the manifest written by prepare-localbox.ps1'
+$kubeconfigPath = Read-Host 'Path to your authenticated AKS kubeconfig'
+$outputDirectory = Join-Path (Get-Location) 'health-results'
+Import-Module Pester -RequiredVersion 5.7.1
+Invoke-Pester .\tests\prepare-localbox.tests.ps1 -Output Detailed
+
+$nodeCredential = Get-Credential -Message 'Administrator of the nested Azure Local nodes'
+.\test-sovereign-cloud.ps1 -Scope LocalBox -Mode Full `
+  -LocalBoxManifestPath $manifestPath `
+  -LocalBoxKubeconfig $kubeconfigPath `
+  -NodeCredential $nodeCredential -OutputDirectory $outputDirectory
+Get-Content (Join-Path $outputDirectory 'health.json')
+```
+
+Use a group-member kubeconfig to exercise Entra-based access. An explicitly supplied cluster-admin certificate can verify Kubernetes runtime health, but **not Entra group-member sign-in**. Restrict kubeconfig file access and never publish its contents. The health suite only reads the supplied credential; it does not create a kubeconfig, retrieve credentials or grant roles.
+
+After an intentional scale operation, the manifest must contain the new expected worker count. Preparation defaults to one control-plane node and three workers. Use `-NodeCount` to override the worker count; preparation does not silently scale an existing cluster whose configuration differs.
 
 ## Participant lab inventory
 

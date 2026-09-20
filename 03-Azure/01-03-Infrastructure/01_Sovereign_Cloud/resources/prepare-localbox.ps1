@@ -13,9 +13,10 @@ param(
     [string]$ResourceGroupName = $env:resourceGroup,
     [string]$ConfigPath = $env:LocalBoxConfigFile,
     [string]$AksAdminGroupObjectId,
+    [switch]$SkipAks,
     [pscredential]$NodeCredential,
     [string]$VmSwitchName,
-    [string]$ImageName = 'localbox-windows-server-2025',
+    [string]$ImageName = '2025-datacenter-azure-edition-smalldisk-01',
     [string]$ImageVersion = 'latest',
     [string]$VmPoolStart = '192.168.200.10',
     [string]$VmPoolEnd = '192.168.200.199',
@@ -23,7 +24,7 @@ param(
     [string]$KubernetesVersion,
     [string]$NodeVmSize = 'Standard_A4_v2',
     [string]$ControlPlaneVmSize = 'Standard_A4_v2',
-    [ValidateRange(1, 10)][int]$NodeCount = 1,
+    [ValidateRange(1, 10)][int]$NodeCount = 3,
     [ValidateRange(512, 4096)][int]$StorageSizeGB = 1024,
     [switch]$RemoveUserStorage2,
     [switch]$AddressReservationsConfirmed,
@@ -88,11 +89,32 @@ function Assert-LocalBoxGroupId {
     return $identifier.ToString()
 }
 
+function Read-LocalBoxGroupId {
+    param([string]$Value, [switch]$SkipAks)
+    if ($SkipAks) { return $null }
+    if (-not $Value) { $Value = Read-Host 'Entra AKS admin-group object ID (provided by Console; group must already exist)' }
+    return Assert-LocalBoxGroupId $Value
+}
+
+function Get-LocalBoxAzInvocation {
+    param([string]$CommandPath = (Get-Command az -ErrorAction Stop).Source)
+    if ([IO.Path]::GetExtension($CommandPath) -in @('.cmd', '.bat')) {
+        $python = [IO.Path]::GetFullPath((Join-Path (Split-Path $CommandPath) '../python.exe'))
+        if (-not (Test-Path -LiteralPath $python -PathType Leaf)) {
+            throw 'Cannot locate the Azure CLI bundled Python. Use a supported Azure CLI installation; the batch wrapper is unsafe for switch names containing parentheses.'
+        }
+        return @{ Executable = $python; Prefix = @('-IBm', 'azure.cli') }
+    }
+    return @{ Executable = $CommandPath; Prefix = @() }
+}
+
 function Invoke-LocalBoxAz {
     param([Parameter(Mandatory)][string[]]$Arguments, [int]$TimeoutSeconds = 300)
-    $job = Start-Job -ArgumentList (, $Arguments) -ScriptBlock {
-        param($CommandArguments)
-        $output = & az @CommandArguments --only-show-errors --output json 2>&1
+    $invocation = Get-LocalBoxAzInvocation
+    $job = Start-Job -ArgumentList $invocation, (, $Arguments) -ScriptBlock {
+        param($Invocation, $CommandArguments)
+        $prefix = $Invocation.Prefix
+        $output = & $Invocation.Executable @prefix @CommandArguments --only-show-errors --output json 2>&1
         if ($LASTEXITCODE -ne 0) { throw ($output -join "`n") }
         $text = $output -join "`n"
         if ($text.Trim()) { $text | ConvertFrom-Json -AsHashtable -ErrorAction Stop }
@@ -103,12 +125,34 @@ function Invoke-LocalBoxAz {
         }
         Receive-Job $job -ErrorAction Stop
     }
-    finally { Remove-Job $job -Force -ErrorAction SilentlyContinue }
+    finally { Remove-Job $job -Force -ErrorAction SilentlyContinue -WhatIf:$false -Confirm:$false }
 }
 
 function Get-LocalBoxResource {
     param([string]$Id)
-    Invoke-LocalBoxAz @('resource', 'show', '--ids', $Id)
+    $arguments = @('resource', 'show', '--ids', $Id)
+    if ($Id -match '/providers/Microsoft\.HybridContainerService/provisionedClusterInstances/') {
+        $arguments += @('--api-version', '2024-01-01')
+    }
+    Invoke-LocalBoxAz $arguments
+}
+
+function Resolve-LocalBoxStoragePath {
+    param(
+        [array]$Resources,
+        [ValidateSet('UserStorage1', 'UserStorage2')][string]$Name,
+        [string]$CustomLocationId,
+        [switch]$AllowMissing
+    )
+    $matches = @($Resources | Where-Object {
+        $_.type -ieq 'Microsoft.AzureStackHCI/storageContainers' -and $_.name -match "^$Name(-[a-zA-Z0-9]+)?$"
+    })
+    if ($matches.Count -eq 0 -and $AllowMissing) { return $null }
+    if ($matches.Count -ne 1) { throw "Expected exactly one $Name storage path; found $($matches.Count)." }
+    $storage = Get-LocalBoxResource $matches[0].id
+    if ($storage.extendedLocation.name -ine $CustomLocationId) { throw "$Name belongs to a different custom location." }
+    if ($storage.properties.provisioningState -ne 'Succeeded') { throw "$Name storage path is not ready." }
+    return $storage
 }
 
 function Wait-LocalBoxResource {
@@ -166,7 +210,7 @@ function Sync-LocalBoxResource {
 
 function Get-LocalBoxNodeState {
     param([string]$Node, [pscredential]$Credential)
-    Invoke-Command -VMName $Node -Credential $Credential -ErrorAction Stop -ScriptBlock {
+    $state = Invoke-Command -VMName $Node -Credential $Credential -ErrorAction Stop -ScriptBlock {
         $ErrorActionPreference = 'Stop'
         $pool = Get-StoragePool -FriendlyName 'SU1_Pool'
         $disk = Get-VirtualDisk -FriendlyName 'UserStorage_1'
@@ -193,10 +237,13 @@ function Get-LocalBoxNodeState {
             SecondaryFiles = @($files | Select-Object -ExpandProperty Name)
             SecondaryCsv = if ($secondaryCsv.Count) { $secondaryCsv[0].Name } else { '' }
             NodesUp = @(Get-ClusterNode | Where-Object State -ne 'Up').Count -eq 0
-            StorageJobs = @(Get-StorageJob).Count
+            StorageJobs = 0
+            StorageJobStates = @(Get-StorageJob | ForEach-Object { [string]$_.JobState })
             UnhealthyPhysicalDisks = @(Get-PhysicalDisk -StoragePool $pool | Where-Object HealthStatus -ne 'Healthy').Count
         }
     }
+    $state.StorageJobs = @($state.StorageJobStates | Where-Object { $_ -ne 'Completed' }).Count
+    return $state
 }
 
 function Assert-LocalBoxStorageRemoval {
@@ -211,6 +258,19 @@ function Assert-LocalBoxStorageRemoval {
             'Microsoft.AzureStackHCI/marketplaceGalleryImages', 'Microsoft.Kubernetes/connectedClusters')
     })
     if ($workloads.Count) { throw 'Existing LocalBox workloads/images/disks found. Review and consolidate storage manually before provisioning.' }
+}
+
+function Wait-LocalBoxStorageReady {
+    param([string]$Node, [pscredential]$Credential, [int]$TimeoutSeconds = 1800)
+    $deadline = [datetime]::UtcNow.AddSeconds($TimeoutSeconds)
+    do {
+        $state = Get-LocalBoxNodeState $Node $Credential
+        if ($state.PoolHealth -eq 'Healthy' -and $state.DiskHealth -eq 'Healthy' -and $state.VolumeHealth -eq 'Healthy' -and
+            $state.NodesUp -and $state.StorageJobs -eq 0 -and $state.UnhealthyPhysicalDisks -eq 0) { return $state }
+        if ([datetime]::UtcNow -ge $deadline) { throw "Timed out waiting for healthy, idle storage on $Node. No dependent operations were started." }
+        Write-Host "Waiting for storage on $Node (pool=$($state.PoolHealth), jobs=$($state.StorageJobs), unhealthy disks=$($state.UnhealthyPhysicalDisks))..."
+        Start-Sleep -Seconds 15
+    } while ($true)
 }
 
 function Initialize-LocalBoxStorage {
@@ -238,17 +298,15 @@ function Initialize-LocalBoxStorage {
             Add-VMHardDiskDrive -VMName $node -Path $path -ErrorAction Stop
         }
     }
-    $state = Get-LocalBoxNodeState $nodes[0] $Credential
-    if ($state.PoolHealth -ne 'Healthy' -or $state.DiskHealth -ne 'Healthy' -or -not $state.NodesUp -or $state.StorageJobs -or $state.UnhealthyPhysicalDisks) {
-        throw 'Storage is not healthy/idle. Allow disk discovery and storage jobs to finish, then rerun.'
-    }
+    $state = Wait-LocalBoxStorageReady $nodes[0] $Credential
     if ($RemoveSecondary) {
         $resources = @(Invoke-LocalBoxAz @('resource', 'list', '--subscription', $Subscription, '--resource-group', $ResourceGroup))
-        $path = @($resources | Where-Object { $_.type -ieq 'Microsoft.AzureStackHCI/storagecontainers' -and $_.name -ieq 'UserStorage2' })
-        if ($state.SecondaryPresent -or $path.Count) {
+        $customLocationId = "/subscriptions/$Subscription/resourceGroups/$ResourceGroup/providers/Microsoft.ExtendedLocation/customLocations/$($Configuration.rbCustomLocationName)"
+        $path = Resolve-LocalBoxStoragePath -Resources $resources -Name UserStorage2 -CustomLocationId $customLocationId -AllowMissing
+        if ($state.SecondaryPresent -or $path) {
             Assert-LocalBoxStorageRemoval $state $resources
             if ($PSCmdlet.ShouldProcess('UserStorage2 / UserStorage_2', 'Permanently remove EMPTY storage path, CSV and virtual disk')) {
-                if ($path.Count) { Invoke-LocalBoxAz @('resource', 'delete', '--ids', $path[0].id) | Out-Null }
+                if ($path) { Invoke-LocalBoxAz @('resource', 'delete', '--ids', $path.id) | Out-Null }
                 if ($state.SecondaryPresent) {
                     Invoke-Command -VMName $nodes[0] -Credential $Credential -ErrorAction Stop -ScriptBlock {
                         $ErrorActionPreference = 'Stop'
@@ -306,12 +364,7 @@ function Invoke-LocalBoxPreparation {
     if ($Settings.SubscriptionId -ine $env:subscriptionId -or $Settings.ResourceGroupName -ine $env:resourceGroup) {
         throw 'Requested Azure scope does not match this LocalBox deployment.'
     }
-    $groupId = $Settings.AksAdminGroupObjectId
-    while (-not $groupId) {
-        $candidate = Read-Host 'Entra AKS admin-group object ID (provided by Console; group must already exist)'
-        try { $groupId = Assert-LocalBoxGroupId $candidate } catch { Write-Warning $_.Exception.Message }
-    }
-    $groupId = Assert-LocalBoxGroupId $groupId
+    $groupId = Read-LocalBoxGroupId -Value $Settings.AksAdminGroupObjectId -SkipAks:$Settings.SkipAks
     Test-LocalBoxAddressPool $config.vmIpPrefix $Settings.VmPoolStart $Settings.VmPoolEnd $config.vmGateway @($config.dcVLAN200IP)
     $vipRange = @{ Start = $config.AKSVIPStartIP; End = $config.AKSVIPEndIP }
     Test-LocalBoxAddressPool $config.AKSIPPrefix $config.AKSNodeStartIP $config.AKSNodeEndIP $config.AKSGWIP @($config.AKSControlPlaneIP) -ReservedRanges @($vipRange)
@@ -336,6 +389,7 @@ function Invoke-LocalBoxPreparation {
         }
         $env:AZURE_CONFIG_DIR = $profile
         $env:AZURE_EXTENSION_USE_DYNAMIC_INSTALL = 'no'
+        Write-Host 'Checking managed identity, Azure resources and CLI prerequisites...'
         Invoke-LocalBoxAz @('login', '--identity') | Out-Null
         Invoke-LocalBoxAz @('account', 'set', '--subscription', $Settings.SubscriptionId) | Out-Null
         foreach ($extension in @('stack-hci-vm', 'customlocation', 'aksarc')) {
@@ -357,6 +411,7 @@ function Invoke-LocalBoxPreparation {
         $extensions = @($custom.properties.clusterExtensionIds | Where-Object { $_ -match '/hybridaksextension$' })
         if ($extensions.Count -ne 1 -or (Get-LocalBoxResource $extensions[0]).properties.provisioningState -ne 'Succeeded') { throw 'hybridaksextension is not ready.' }
         foreach ($node in $config.NodeHostConfig.Hostname) {
+            Write-Host "Checking nested node $node and storage health..."
             if ((Get-VM -Name $node).State -ne 'Running') { throw "Nested node $node is not running." }
             $state = Get-LocalBoxNodeState $node $Settings.NodeCredential
             if (-not $state.NodesUp -or $state.PoolHealth -ne 'Healthy') { throw "Nested cluster/storage is not healthy on $node." }
@@ -368,13 +423,13 @@ function Invoke-LocalBoxPreparation {
         }
         $provider = Invoke-LocalBoxAz @('provider', 'show', '--namespace', 'Microsoft.EdgeMarketplace')
         if ($provider.registrationState -ne 'Registered') { throw 'Ask the subscription administrator to register Microsoft.EdgeMarketplace before importing the image.' }
+        Write-Host 'Preparing nested disks and UserStorage_1; secondary storage is preserved unless explicitly requested...'
         Initialize-LocalBoxStorage -Configuration $config -Credential $Settings.NodeCredential -DesiredSizeGB $Settings.StorageSizeGB `
             -Subscription $Settings.SubscriptionId -ResourceGroup $Settings.ResourceGroupName -RemoveSecondary:$Settings.RemoveUserStorage2
         $state = Get-LocalBoxNodeState $config.NodeHostConfig[0].Hostname $Settings.NodeCredential
         if (-not $WhatIfPreference -and ($state.Size -lt ($Settings.StorageSizeGB * 1GB) -or $state.Free -lt 100GB)) { throw 'UserStorage_1 is too small or has less than 100 GiB free.' }
-        $storageId = "$scope/providers/Microsoft.AzureStackHCI/storageContainers/UserStorage1"
-        $storage = Get-LocalBoxResource $storageId
-        if ($storage.properties.provisioningState -ne 'Succeeded') { throw 'UserStorage1 Azure storage path is not ready.' }
+        $storage = Resolve-LocalBoxStoragePath -Resources $resources -Name UserStorage1 -CustomLocationId $custom.id
+        $storageId = $storage.id
         $location = $custom.location
         $timeout = $Settings.TimeoutMinutes * 60
         $common = @('--subscription', $Settings.SubscriptionId, '--resource-group', $Settings.ResourceGroupName, '--location', $location, '--custom-location', $custom.id)
@@ -386,6 +441,7 @@ function Invoke-LocalBoxPreparation {
             } }
         }
         if ($Settings.ImageVersion -ne 'latest') { $imageExpected.properties.version = @{ name = $Settings.ImageVersion } }
+        Write-Host "Preparing VM image $($Settings.ImageName); download can take several hours..."
         $image = Sync-LocalBoxResource -Id $imageId -Expected $imageExpected -TimeoutSeconds $timeout -CreateArguments (@('stack-hci-vm', 'image', 'create') + $common + @(
             '--name', $Settings.ImageName, '--os-type', 'Windows', '--publisher', 'microsoftwindowsserver', '--offer', 'windowsserver',
             '--sku', '2025-datacenter-azure-edition-smalldisk', '--version', $Settings.ImageVersion, '--storage-path-id', $storageId))
@@ -394,6 +450,7 @@ function Invoke-LocalBoxPreparation {
             @{ Name = 'localbox-aks-lnet-vlan110'; Prefix = $config.AKSIPPrefix; Gateway = $config.AKSGWIP; Dns = $config.AKSDNSIP; Vlan = $config.AKSVLAN; Start = $config.AKSNodeStartIP; End = $config.AKSNodeEndIP }
         )
         foreach ($network in $networks) {
+            Write-Host "Preparing logical network $($network.Name)..."
             $network.Id = "$scope/providers/Microsoft.AzureStackHCI/logicalNetworks/$($network.Name)"
             $network.Expected = @{
                 extendedLocation = @{ name = $custom.id }; location = $location
@@ -416,7 +473,7 @@ function Invoke-LocalBoxPreparation {
         } }
         if ($Settings.KubernetesVersion) { $aksExpected.properties.kubernetesVersion = $Settings.KubernetesVersion }
         $existingAks = @((Invoke-LocalBoxAz @('resource', 'list', '--resource-group', $Settings.ResourceGroupName)) | Where-Object id -ieq $aksId)
-        if (-not $existingAks.Count) {
+        if (-not $Settings.SkipAks -and -not $existingAks.Count) {
             $arguments = @('aksarc', 'create') + $common + @('--name', $Settings.AksClusterName, '--vnet-ids', $networks[1].Id,
                 '--aad-admin-group-object-ids', $groupId, '--generate-ssh-keys', '--control-plane-ip', $config.AKSControlPlaneIP,
                 '--node-count', [string]$Settings.NodeCount, '--node-vm-size', $Settings.NodeVmSize, '--control-plane-count', '1', '--control-plane-vm-size', $Settings.ControlPlaneVmSize)
@@ -426,7 +483,7 @@ function Invoke-LocalBoxPreparation {
                 Invoke-LocalBoxAz $arguments -TimeoutSeconds $timeout | Out-Null
             }
         }
-        if (-not $WhatIfPreference) {
+        if (-not $Settings.SkipAks -and -not $WhatIfPreference) {
             $instance = Wait-LocalBoxResource $instanceId -TimeoutSeconds $timeout
             Assert-LocalBoxProperties $instance $aksExpected
             $connected = Wait-LocalBoxResource $aksId -TimeoutSeconds $timeout
@@ -445,10 +502,12 @@ function Invoke-LocalBoxPreparation {
             Networks = $networks; AksId = $aksId; AksInstanceId = $instanceId; AksExpected = $aksExpected; AksAdminGroupObjectId = $groupId
             NodeNames = @($config.NodeHostConfig.Hostname); StorageSizeGB = $Settings.StorageSizeGB; PreparedAt = [datetime]::UtcNow.ToString('o')
             FullHealthVerified = $false
+            AksPreparationSkipped = [bool]$Settings.SkipAks
         }
         if ($PSCmdlet.ShouldProcess($Settings.ManifestPath, 'Write nonsecret preparation manifest')) {
             $manifest | ConvertTo-Json -Depth 30 | Set-Content -LiteralPath $Settings.ManifestPath -Encoding utf8
         }
+        if ($Settings.SkipAks) { Write-Warning 'AKS was explicitly skipped. Rerun with an admin-group ID before full health validation; this environment is not event-ready.' }
         Write-Host 'Preparation finished. Run test-sovereign-cloud.ps1 before declaring the environment ready.'
     }
     finally {
@@ -464,7 +523,7 @@ function Invoke-LocalBoxPreparation {
 if ($MyInvocation.InvocationName -ne '.') {
     $settings = @{
         SubscriptionId = $SubscriptionId; ResourceGroupName = $ResourceGroupName; ConfigPath = $ConfigPath
-        AksAdminGroupObjectId = $AksAdminGroupObjectId; NodeCredential = $NodeCredential; VmSwitchName = $VmSwitchName
+        AksAdminGroupObjectId = $AksAdminGroupObjectId; SkipAks = [bool]$SkipAks; NodeCredential = $NodeCredential; VmSwitchName = $VmSwitchName
         ImageName = $ImageName; ImageVersion = $ImageVersion; VmPoolStart = $VmPoolStart; VmPoolEnd = $VmPoolEnd
         AksClusterName = $AksClusterName; KubernetesVersion = $KubernetesVersion; NodeVmSize = $NodeVmSize
         ControlPlaneVmSize = $ControlPlaneVmSize; NodeCount = $NodeCount; StorageSizeGB = $StorageSizeGB

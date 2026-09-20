@@ -5,6 +5,7 @@ Run [prepare-localbox.ps1](../prepare-localbox.ps1) **inside LocalBox-Client**, 
 ## Prerequisites
 
 - Elevated PowerShell 7 on `LocalBox-Client`; installed Azure CLI with `stack-hci-vm`, `customlocation` and `aksarc` extensions. Install missing extensions explicitly before running; the script neither installs nor upgrades tooling. Record the versions used for your event.
+- Do not assume a new Jumpstart Client includes these CLI extensions. Check `az extension list` in the profile you will use. Keep any existing extensions; install only missing ones. Health checks additionally require Pester 5.7.1 or later within major version 5; an installed Pester 6 is not a substitute for the runner's supported version.
 - Healthy Azure Local nodes, storage, Arc Resource Bridge, `jumpstart` custom location and `hybridaksextension`.
 - The Client VM's system-assigned managed identity and its existing LocalBox resource-group permissions. The script uses a temporary isolated CLI login and restores the caller's profile. No subscription-wide or Graph permissions are added.
 - An existing Entra AKS admin-group object ID. Hosted events obtain this from the Console owner; [group provisioning is a documented dependency](../hosted-events/readme.md#console-group-dependency). Group membership is not validated through Graph by this script.
@@ -26,6 +27,8 @@ $nodeCredential = Get-Credential -Message 'Nested Azure Local Windows administra
 
 The script prompts for the Entra group object ID, or accepts `-AksAdminGroupObjectId`. Subscription, resource group and configuration path default from Jumpstart's machine environment. Explicit scope values must match this Client's deployment. Run only one preparation session at a time.
 
+If the Console-owned group is not available yet, `-SkipAks` explicitly prepares only storage, the VM image and both networks. It does not fabricate a group or grant anyone cluster access. The manifest records this as a partial run, and full health checks fail until preparation is rerun without `-SkipAks` using a valid admin-group ID.
+
 `-WhatIf` performs authenticated reads and local validation, but no Azure/Hyper-V/storage provisioning. It can create and remove a temporary local CLI profile. It does not establish that later resource creation will succeed.
 
 ## Prepared resources
@@ -33,14 +36,18 @@ The script prompts for the Entra group object ID, or accepts `-AksAdminGroupObje
 | Resource | Default |
 | --- | --- |
 | Storage | One stable-named 1 TiB dynamic VHDX per node; grow `UserStorage_1` to 1 TiB, never shrink or grow it again on every rerun |
-| VM image | `localbox-windows-server-2025`, Marketplace Windows Server 2025 Azure Edition smalldisk, explicitly on `UserStorage1` |
+| VM image | `2025-datacenter-azure-edition-smalldisk-01`, matching the walkthrough screenshot; Marketplace Windows Server 2025 Azure Edition smalldisk, explicitly on `UserStorage1` |
 | VM network | `localbox-vm-lnet-vlan200`, VLAN 200, `192.168.200.0/24`, pool `.10-.199` after reservation review |
 | AKS network | `localbox-aks-lnet-vlan110`, VLAN 110, `10.10.0.0/24`, nodes `.101-.199` |
 | AKS control plane / service reservation | `10.10.0.5`; `.10-.100` reserved for future service VIPs; this script does not install a load balancer |
-| AKS cluster | `localbox-aks`, one control-plane and one Linux worker; `Standard_A4_v2` defaults, subject to installed-version capacity/CLI validation |
+| AKS cluster | `localbox-aks`, one control-plane node and three Linux workers; `Standard_A4_v2` defaults, subject to installed-version capacity/CLI validation |
 | Output | `C:\LocalBox\sovereign-localbox.json`, nonsecret IDs and expected configuration for health tests |
 
 Topology defaults come from the installed Jumpstart config, except the VM pool bounds and configurable resource names/sizes. The network/broadcast addresses, gateways and Jumpstart infrastructure reservations must not be allocated. `-AddressReservationsConfirmed` is your explicit confirmation that DHCP/static reservations were reviewed; the script cannot safely infer all DHCP leases from Azure. It does not change routers or DHCP configuration.
+
+Azure Local may append generated suffixes to its `UserStorage1` and `UserStorage2` resource names. The script resolves the actual storage-container ID and verifies its custom location; ambiguous names fail rather than selecting the first match.
+
+On Windows, the script invokes Azure CLI through its bundled Python executable rather than `az.cmd`. This preserves arguments such as `ConvergedSwitch(compute_management)` that the batch wrapper otherwise interprets as command syntax. Keep the standard Azure CLI installation layout intact.
 
 Use `-ImageVersion` to pin a Marketplace version, `-KubernetesVersion` for a supported AKS version, and size/count overrides when required. Images can take several hours; `-TimeoutMinutes` defaults to 360 per long operation. A timed-out local command does not cancel an already submitted Azure operation. Inspect status before rerunning. Matching resources are reused; incompatible resources produce an error, never automatic replacement.
 

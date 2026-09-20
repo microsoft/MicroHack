@@ -7,6 +7,7 @@ BeforeAll {
 
 Describe 'Shared LocalBox control plane' {
     It 'has all mandatory manifest fields' {
+        $LocalBox.AksPreparationSkipped | Should -Not -BeTrue -Because 'a partial preparation is not full LocalBox readiness'
         foreach ($field in @('SubscriptionId', 'ResourceGroupName', 'ClusterId', 'BridgeId', 'ExtensionId', 'CustomLocationId', 'StorageId', 'ImageId', 'AksId', 'AksInstanceId', 'AksAdminGroupObjectId', 'ImageExpected', 'AksExpected', 'NodeNames', 'StorageSizeGB')) {
             $LocalBox[$field] | Should -Not -BeNullOrEmpty -Because "$field is part of the expected inventory"
         }
@@ -79,9 +80,13 @@ Describe 'LocalBox runtime health' -Skip:($Mode -ne 'Full') {
             $state.Free | Should -BeGreaterOrEqual 100GB
         }
     }
-    It 'allows the supplied AKS group-member kubeconfig to query healthy nodes and workloads' {
-        $minimum = 1 + [int]$LocalBox.AksExpected.properties.agentPoolProfiles[0].count
-        Wait-SovereignCheck -TimeoutSeconds $TimeoutSeconds -Check { Test-SovereignKubernetes $LocalBox.Kubeconfig $minimum }
+    It 'allows the supplied AKS kubeconfig to query the expected ready workers, control plane and system workloads' {
+        $workers = [int]$LocalBox.AksExpected.properties.agentPoolProfiles[0].count
+        $controlPlane = [int]$LocalBox.AksExpected.properties.controlPlane.count
+        Wait-SovereignCheck -TimeoutSeconds $TimeoutSeconds -Check {
+            Assert-SovereignLocalNodeCount (Invoke-SovereignKubectl $LocalBox.Kubeconfig @('get', 'nodes')) $workers $controlPlane
+            Test-SovereignKubernetes $LocalBox.Kubeconfig ($workers + $controlPlane)
+        }
     }
     It 'can resolve Azure and reach configured gateways from the nested environment' {
         $NodeCredential | Should -Not -BeNullOrEmpty

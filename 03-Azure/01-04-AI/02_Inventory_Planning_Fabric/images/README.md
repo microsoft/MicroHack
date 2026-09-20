@@ -4,6 +4,8 @@ This folder holds the screenshots embedded throughout the challenge guides and w
 
 > **Model name in captures is illustrative.** Where a screenshot shows a selected chat model (e.g. `gpt-4o-mini` or `gpt-5.4-mini`), that name reflects only what was deployed when the capture was taken. The model is **swappable** — attendees use whatever their facilitator provisioned. You do **not** need to re-shoot screenshots when the deployed model changes; challenge-01 tells attendees this explicitly.
 
+> **Portal UI captures pending re-shoot.** The Fabric/Foundry portals changed after some captures were taken; the guide text is already updated for the current UI. Re-capture when convenient: the Data Agent **Settings → Model Context Protocol → MCP server URL** page (replaces the retired *Publishing → Published URL*; used by `challenge-00-agent-settings.png`, `challenge-00-agent-url.png`, `challenge-00-agent-ids.png`) and the agent **Traces → Response view** (`challenge-02-trace.png`, `challenge-03-trace.png`).
+
 | Filename | Challenge | Shows |
 |----------|-----------|-------|
 | `challenge-00-model-deployments.png` | 0 | Foundry **Models + endpoints** with `gpt-5.4-mini` deployed, status **Succeeded**. |
@@ -25,7 +27,7 @@ This folder holds the screenshots embedded throughout the challenge guides and w
 | `challenge-01-add-tool.png` | 1 | The tool catalogue in the agent editor with **Web Search** and **Fabric Data Agent** available. |
 | `challenge-01-playground.png` | 1 | Playground response with a Fabric inventory result (and a web source if Web Search is on) ending in a demand assessment. |
 | `challenge-02-recommendation.png` | 2 | Reorder **recommendation table** (SKU / Warehouse / Current Stock / Suggested Reorder Qty / Priority) with a **CRITICAL** item. |
-| `challenge-02-trace.png` | 2 | **Tracing** detail expanded to the model call, Fabric tool call, tool response, and final generation spans. |
+| `challenge-02-trace.png` | 2 | **Traces → Response view** detail expanded to the model call, Fabric tool call, tool response, and final generation spans. |
 | `challenge-03-approval-flow.png` | 3 | The `MODIFY 1 50` → `YES` approval exchange and the simulated submission confirmation. |
 | `challenge-03-trace.png` | 3 | Trace of the approval run: model calls plus the Fabric unit-cost lookup across propose → MODIFY → YES. |
 | `challenge-04-orchestrator.png` | 4 *(stretch)* | The `inventory-planning-workflow` canvas: Start → demand-sensing → inventory-optimisation → replenishment-action. |

@@ -25,16 +25,16 @@ Understand the inventory scenario, provision your own Fabric workspace + Data Ag
 ### Foundry portal navigation
 
 1. Sign in at [ai.azure.com](https://ai.azure.com) with the credentials provided by your facilitator.
-2. Select your project from the **Projects** list.
-3. In the left navigation: **Models + endpoints** → confirm `gpt-5.4-mini` is listed with status **Succeeded**.
-4. **Agents → Playground** → send "Hello" → confirm a response is returned.
+2. Select your project — in a shared tenant, match the **`FoundryProjectEndpoint`** from your lab dashboard (Credentials tab) to the project's **Parent resource** to be sure it's yours.
+3. Open your **model deployments** → confirm `gpt-5.4-mini` is listed with status **Succeeded**.
+4. Open a **deployed model → Playground** → send "Hello" → confirm a response is returned. (The current portal opens the Playground from a model or agent, not a top-level *Agents → Playground* menu.)
 5. You attach the **Fabric Data Agent** as a *tool* on each agent you build — the `inventory-hack-agent` connection is created the first time (Challenge 2) via **Tools → Add → Fabric Data Agent**, using the **Workspace ID and Agent ID your setup notebook printed** in Challenge 1. No standalone connection page is needed.
 
 ### Provision your Fabric workspace + Data Agent (Challenge 1 Task 3)
 
-1. **Create the workspace on your capacity.** [app.fabric.microsoft.com](https://app.fabric.microsoft.com) → **Workspaces → + New workspace** → name `inventory-hack` → expand **Advanced** → **Workspace type: Fabric** → under **Details** select your **`FabricCapacityName`** (the `invcap…` value from your dashboard) → **Apply**. If the capacity isn't listed, resume it in Azure (your Fabric capacity → **Resume**) and confirm you're signed in as your lab user.
+1. **Create the workspace on your capacity.** [app.fabric.microsoft.com](https://app.fabric.microsoft.com) → **Workspaces → + New workspace** → name **`inventory-hack-<your-lab-user>`** (workspace names are **tenant-unique**, so plain `inventory-hack` is rejected once taken) → expand **Advanced** → **Workspace type: Fabric** → under **Details** select your **`FabricCapacityName`** (the `invcap…` value from your dashboard) → **Apply**. If the capacity isn't listed, resume it in Azure (your Fabric capacity → **Resume**) and confirm you're signed in as your lab user.
 2. **Create the Lakehouse.** **+ New item → Lakehouse**, named exactly **`InventoryLakehouse`**.
-3. **Import + attach.** Download **`Setup-InventoryDataAgent.ipynb`** from the repo's **`setup/`** folder (or your facilitator's link), then **Import → Notebook → From this computer → Upload** in the workspace toolbar. Open it and, in the **Explorer**, **Add → Existing Lakehouse → `InventoryLakehouse`** as the **default** — if names collide, pick the one whose **Location** is your `inventory-hack` workspace (the write cells fail without a default Lakehouse).
+3. **Import + attach.** Download **`Setup-InventoryDataAgent.ipynb`** from the repo's **`setup/`** folder (or your facilitator's link), then **Import → Notebook → From this computer → Upload** in the workspace toolbar. Open it and, in the **Explorer**, **Add data items → From OneLake catalog → `InventoryLakehouse`** as the **default** — if names collide, pick the one whose **Location** is your `inventory-hack-…` workspace (the write cells fail without a default Lakehouse).
 4. **Run all** (~5–10 min). The kernel restarts once after the `%pip` cell — expected. It writes 7 tables and publishes `inventory-hack-agent`.
 5. Copy the **Workspace ID** and **Agent ID** the final cell prints — you'll use them in Challenge 2.
 

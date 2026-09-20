@@ -101,6 +101,8 @@ module legacySqlVm 'modules/sql2016-vm.bicep' = {
     vmSize: legacyVmSize
     adminUsername: adminUsername
     adminPassword: adminPassword
+    sqlMiAdminUsername: sqlMiAdminUsername
+    sqlMiAdminPassword: sqlMiAdminPassword
     tags: tags
   }
 }
@@ -116,6 +118,8 @@ module sqlarcSqlVm 'modules/sql2022-vm.bicep' = {
     vmSize: sqlarcVmSize
     adminUsername: adminUsername
     adminPassword: adminPassword
+    sqlMiAdminUsername: sqlMiAdminUsername
+    sqlMiAdminPassword: sqlMiAdminPassword
     tags: tags
   }
 }
@@ -193,6 +197,8 @@ module sqlarcSqlVm_cse 'modules/sql2022-vm-cse.bicep' = {
     vmName: 'arcSQL2022'
     adminUsername: adminUsername
     adminPassword: adminPassword
+    sqlMiAdminUsername: sqlMiAdminUsername
+    sqlMiAdminPassword: sqlMiAdminPassword
     repoBaseURL: repoBaseURL
   }
 }

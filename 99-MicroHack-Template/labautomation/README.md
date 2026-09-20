@@ -832,8 +832,7 @@ truncate to the same value.
 ### `Get-MhhDefaultLabGroup`
 
 Resolve this event's Entra security group. The cmdlet takes no arguments: it
-calls [`Get-MhhGroupName`](#get-mhhgroupname), which reads `MHH_EVENTID`, and
-then performs a read-only lookup for the group provisioned by `create-users.ps1`.
+calls [`Get-MhhGroupName`](#get-mhhgroupname).
 It throws if the group does not exist and never creates one.
 
 ```powershell

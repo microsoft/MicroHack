@@ -1,7 +1,5 @@
 # Walkthrough Challenge 3 - Encryption in transit: enforcing TLS
 
-[Previous Challenge Solution](../challenge-02/solution-02.md) - **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-04/solution-04.md)
-
 **Estimated Duration:** 30 minutes
 
 > 💡 **Objective:** Understand encryption in transit considerations for sovereign scenarios. Verify that Azure Storage accounts require secure transfer (HTTPS only), confirm the TLS 1.2+ baseline, apply Azure Policy for governance, and monitor client protocol usage through Log Analytics.
@@ -281,5 +279,3 @@ Confirm that requests use TLS 1.2 or TLS 1.3.
 ---
 
 You successfully completed challenge 3! 🚀🚀🚀
-
- **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-04/solution-04.md)

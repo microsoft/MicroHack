@@ -1,7 +1,5 @@
 # Walkthrough Challenge 7 - Adaptive Apps Across Sovereign Environments
 
-[Previous Challenge Solution](../challenge-06/solution-06.md) - **[Home](../../Readme.md)**
-
 Duration: 60 minutes
 
 ## Prerequisites

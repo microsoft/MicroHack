@@ -4,7 +4,8 @@
 Prepares an already deployed Jumpstart LocalBox for the Sovereign Cloud MicroHack.
 .DESCRIPTION
 Run elevated on LocalBox-Client. Azure operations use its managed identity;
-nested Windows operations use a separately supplied PSCredential.
+nested Windows operations use a supplied PSCredential or the administrator
+credential from the installed Jumpstart configuration. Passwords are not logged.
 Missing required Azure CLI extensions are installed without upgrading existing
 versions, including during WhatIf. Azure, Hyper-V and storage changes remain
 simulated during WhatIf.
@@ -34,6 +35,23 @@ param(
     [ValidateRange(1, 720)][int]$TimeoutMinutes = 360,
     [string]$ManifestPath = 'C:\LocalBox\sovereign-localbox.json'
 )
+
+function Resolve-LocalBoxNodeCredential {
+    param([hashtable]$Configuration, [pscredential]$Credential)
+    if ($Credential) { return $Credential }
+    $domain = ([string]$Configuration.SDNDomainFQDN).Split('.')[0]
+    if ($domain -notmatch '^[a-zA-Z0-9][a-zA-Z0-9-]{0,14}$' -or
+        $Configuration.SDNAdminPassword -isnot [string] -or
+        [string]::IsNullOrWhiteSpace($Configuration.SDNAdminPassword)) {
+        throw 'The installed LocalBox configuration lacks a usable SDNDomainFQDN or SDNAdminPassword. Supply -NodeCredential for the nested administrator; do not print or share the configuration.'
+    }
+    $password = [Security.SecureString]::new()
+    foreach ($character in $Configuration.SDNAdminPassword.GetEnumerator()) {
+        $password.AppendChar($character)
+    }
+    $password.MakeReadOnly()
+    return [pscredential]::new("$domain\Administrator", $password)
+}
 
 function ConvertTo-LocalBoxIPv4Number {
     param([Parameter(Mandatory)][string]$Address)
@@ -234,6 +252,15 @@ function Sync-LocalBoxResource {
     }
 }
 
+function Assert-LocalBoxImagePlacement {
+    param([array]$Resources, [string]$ImageId, [string]$StorageId)
+    if (@($Resources | Where-Object { $_.id -ieq $ImageId }).Count -eq 0) { return }
+    $image = Get-LocalBoxResource $ImageId
+    if ($image.properties.containerId -ine $StorageId) {
+        throw "Image '$ImageId' is on storage '$($image.properties.containerId)', but preparation requires '$StorageId' (UserStorage1). Have the facilitator review image dependencies and resolve the conflicting placement, then rerun with the documented image name. Existing images are never deleted or moved automatically."
+    }
+}
+
 function Get-LocalBoxNodeState {
     param([string]$Node, [pscredential]$Credential)
     $state = Invoke-Command -VMName $Node -Credential $Credential -ErrorAction Stop -ScriptBlock {
@@ -399,7 +426,7 @@ function Invoke-LocalBoxPreparation {
     if (-not $Settings.AddressReservationsConfirmed) {
         throw 'Verify BOTH pools against DHCP leases/exclusions and static reservations, then pass -AddressReservationsConfirmed. The script does not alter DHCP/router configuration.'
     }
-    if (-not $Settings.NodeCredential) { $Settings.NodeCredential = Get-Credential -Message 'Windows administrator of the nested Azure Local nodes (not the Azure identity)' }
+    $Settings.NodeCredential = Resolve-LocalBoxNodeCredential -Configuration $config -Credential $Settings.NodeCredential
     $previousConfig = $env:AZURE_CONFIG_DIR
     $previousExtensions = $env:AZURE_EXTENSION_DIR
     $previousDynamicInstall = $env:AZURE_EXTENSION_USE_DYNAMIC_INSTALL
@@ -449,17 +476,18 @@ function Invoke-LocalBoxPreparation {
         }
         $provider = Invoke-LocalBoxAz @('provider', 'show', '--namespace', 'Microsoft.EdgeMarketplace')
         if ($provider.registrationState -ne 'Registered') { throw 'Ask the subscription administrator to register Microsoft.EdgeMarketplace before importing the image.' }
+        $storage = Resolve-LocalBoxStoragePath -Resources $resources -Name UserStorage1 -CustomLocationId $custom.id
+        $storageId = $storage.id
+        $imageId = "$scope/providers/Microsoft.AzureStackHCI/marketplaceGalleryImages/$($Settings.ImageName)"
+        Assert-LocalBoxImagePlacement -Resources $resources -ImageId $imageId -StorageId $storageId
         Write-Host 'Preparing nested disks and UserStorage_1; secondary storage is preserved unless explicitly requested...'
         Initialize-LocalBoxStorage -Configuration $config -Credential $Settings.NodeCredential -DesiredSizeGB $Settings.StorageSizeGB `
             -Subscription $Settings.SubscriptionId -ResourceGroup $Settings.ResourceGroupName -RemoveSecondary:$Settings.RemoveUserStorage2
         $state = Get-LocalBoxNodeState $config.NodeHostConfig[0].Hostname $Settings.NodeCredential
         if (-not $WhatIfPreference -and ($state.Size -lt ($Settings.StorageSizeGB * 1GB) -or $state.Free -lt 100GB)) { throw 'UserStorage_1 is too small or has less than 100 GiB free.' }
-        $storage = Resolve-LocalBoxStoragePath -Resources $resources -Name UserStorage1 -CustomLocationId $custom.id
-        $storageId = $storage.id
         $location = $custom.location
         $timeout = $Settings.TimeoutMinutes * 60
         $common = @('--subscription', $Settings.SubscriptionId, '--resource-group', $Settings.ResourceGroupName, '--location', $location, '--custom-location', $custom.id)
-        $imageId = "$scope/providers/Microsoft.AzureStackHCI/marketplaceGalleryImages/$($Settings.ImageName)"
         $imageExpected = @{
             extendedLocation = @{ name = $custom.id }; location = $location
             properties = @{ containerId = $storageId; osType = 'Windows'; identifier = @{

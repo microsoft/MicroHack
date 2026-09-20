@@ -1,6 +1,164 @@
 BeforeAll {
     . "$PSScriptRoot/../prepare-localbox.ps1"
     . "$PSScriptRoot/../test-sovereign-cloud.ps1"
+    . "$PSScriptRoot/../../labautomation/localbox-credentials.ps1"
+}
+
+Describe 'Console lab group credentials' {
+    BeforeAll {
+        function Get-MhhDefaultLabGroup { [CmdletBinding()] param() }
+    }
+    BeforeEach {
+        Mock Get-MhhDefaultLabGroup {
+            @{ ObjectId = 'a0000000-0000-0000-0000-000000000001'; GroupName = 'lab-group'; DisplayName = 'Test event' }
+        }
+    }
+    It 'emits the three separate Console credential hashtables' {
+        $credentials = @(Get-LocalBoxConsoleGroupCredential)
+        $credentials.Count | Should -Be 3
+        foreach ($credential in $credentials) {
+            $credential | Should -BeOfType [hashtable]
+            $credential.HackboxCredential | Should -BeOfType [hashtable]
+        }
+        $credentials[0].HackboxCredential.name | Should -Be 'Lab Group ObjectId'
+        $credentials[0].HackboxCredential.value | Should -Be 'a0000000-0000-0000-0000-000000000001'
+        $credentials[1].HackboxCredential.name | Should -Be 'Lab Group GroupName'
+        $credentials[1].HackboxCredential.value | Should -Be 'lab-group'
+        $credentials[2].HackboxCredential.name | Should -Be 'Lab Group DisplayName'
+        $credentials[2].HackboxCredential.value | Should -Be 'Test event'
+        Should -Invoke Get-MhhDefaultLabGroup -Times 1 -Exactly
+    }
+    It 'rejects incomplete or invalid group metadata before emitting anything' -TestCases @(
+        @{ Group = $null }
+        @{ Group = @{ ObjectId = 'not-a-guid'; GroupName = 'lab'; DisplayName = 'Event' } }
+        @{ Group = @{ ObjectId = [guid]::Empty; GroupName = 'lab'; DisplayName = 'Event' } }
+        @{ Group = @{ ObjectId = 'a0000000-0000-0000-0000-000000000001'; GroupName = ''; DisplayName = 'Event' } }
+        @{ Group = @{ ObjectId = 'a0000000-0000-0000-0000-000000000001'; GroupName = 'lab'; DisplayName = '' } }
+    ) {
+        param($Group)
+        Mock Get-MhhDefaultLabGroup { $Group }
+        $captured = [System.Collections.Generic.List[object]]::new()
+        { Get-LocalBoxConsoleGroupCredential | ForEach-Object { $captured.Add($_) } } | Should -Throw '*valid default lab group*'
+        $captured.Count | Should -Be 0
+    }
+    It 'stops if the Console helper fails' {
+        Mock Get-MhhDefaultLabGroup { throw 'Console unavailable' }
+        { Get-LocalBoxConsoleGroupCredential } | Should -Throw '*Console unavailable*'
+    }
+}
+
+Describe 'Console LocalBox credential isolation' {
+    BeforeAll {
+        function New-MhhStablePassword { [CmdletBinding()] param($Purpose, $Length) }
+        function Update-MhhToken { [CmdletBinding()] param() }
+        function Get-AzResourceGroupDeployment { [CmdletBinding()] param($ResourceGroupName, $Name) }
+    }
+    BeforeEach {
+        $deployment = @{
+            ProvisioningState = 'Succeeded'
+        }
+        Mock Update-MhhToken {}
+        Mock Get-AzResourceGroupDeployment { $deployment }
+        Mock New-MhhStablePassword { 'mock-password-not-a-secret' }
+        Mock Start-Sleep {}
+    }
+    It 'emits no administrator credentials on success or reruns' {
+        $first = @(Wait-LocalBoxDeployment -ResourceGroupName 'shared' -DeploymentName 'localbox-test')
+        $second = @(Wait-LocalBoxDeployment -ResourceGroupName 'shared' -DeploymentName 'localbox-test')
+        $first.Count | Should -Be 0
+        $second.Count | Should -Be 0
+        Should -Invoke New-MhhStablePassword -Times 0
+        Should -Invoke Get-AzResourceGroupDeployment -Times 2 -Exactly -ParameterFilter { $ResourceGroupName -eq 'shared' -and $Name -eq 'localbox-test' }
+    }
+    It 'waits for ARM success and refreshes authentication before each check' {
+        $deployment.ProvisioningState = 'Running'
+        Mock Start-Sleep { $deployment.ProvisioningState = 'Succeeded' }
+        @(Wait-LocalBoxDeployment -ResourceGroupName 'shared' -DeploymentName 'localbox-test').Count | Should -Be 0
+        Should -Invoke Update-MhhToken -Times 2 -Exactly
+        Should -Invoke Start-Sleep -Times 1 -Exactly
+        Should -Invoke New-MhhStablePassword -Times 0
+    }
+    It 'does not publish passwords from failed or canceled deployments' -TestCases @(
+        @{ State = 'Failed' }
+        @{ State = 'Canceled' }
+    ) {
+        param($State)
+        $deployment.ProvisioningState = $State
+        { Wait-LocalBoxDeployment -ResourceGroupName 'shared' -DeploymentName 'localbox-test' } | Should -Throw '*ended as*'
+        Should -Invoke New-MhhStablePassword -Times 0
+    }
+    It 'times out without publishing a password' {
+        $deployment.ProvisioningState = 'Running'
+        $script:clock = [DateTime]'2026-01-01T00:00:00Z'
+        Mock Get-Date {
+            $script:clock = $script:clock.AddSeconds(2)
+            $script:clock
+        }
+        { Wait-LocalBoxDeployment -ResourceGroupName 'shared' -DeploymentName 'localbox-test' -TimeoutSeconds 1 } | Should -Throw '*Timed out*'
+        Should -Invoke New-MhhStablePassword -Times 0
+    }
+    It 'propagates deployment lookup errors without publishing a password' {
+        Mock Get-AzResourceGroupDeployment { throw 'Deployment lookup failed' }
+        { Wait-LocalBoxDeployment -ResourceGroupName 'shared' -DeploymentName 'localbox-test' } | Should -Throw '*Deployment lookup failed*'
+        Should -Invoke New-MhhStablePassword -Times 0
+    }
+    It 'keeps group metadata and deployment checks without password publication in the shared hook' {
+        $source = Get-Content "$PSScriptRoot/../../labautomation/shared-deploy-lab.ps1" -Raw
+        $source | Should -Match '-UseConsoleCredentials'
+        $source | Should -Match 'Get-LocalBoxConsoleGroupCredential'
+        $source | Should -Match 'Wait-LocalBoxDeployment -ResourceGroupName \$localBoxResourceGroupName -DeploymentName \$localBoxDeployment.DeploymentName'
+        $source | Should -Not -Match 'Get-LocalBoxConsoleCredential|LocalBox Admin Password|LocalBox Client Username'
+        $helper = Get-Content "$PSScriptRoot/../../labautomation/localbox-credentials.ps1" -Raw
+        $helper | Should -Not -Match 'New-MhhStablePassword|LocalBox Admin Password|LocalBox Client Username'
+        $deployer = Get-Content "$PSScriptRoot/../../labautomation/deploy-localbox.ps1" -Raw
+        $deployer | Should -Match "New-MhhStablePassword -Purpose 'localbox-admin-v1' -Length 24"
+    }
+}
+
+Describe 'Console LocalBox password selection' {
+    BeforeAll {
+        function New-MhhStablePassword { [CmdletBinding()] param($Purpose, $Length) }
+        $deployer = [System.Management.Automation.Language.Parser]::ParseFile(
+            "$PSScriptRoot/../../labautomation/deploy-localbox.ps1", [ref]$null, [ref]$null)
+        $selection = $deployer.Find({
+            param($node)
+            $node -is [System.Management.Automation.Language.IfStatementAst] -and
+            $node.Clauses[0].Item1.Extent.Text -eq '$UseConsoleCredentials' -and
+            $node.Extent.Text -match 'New-MhhStablePassword'
+        }, $true)
+        $passwordSelection = [scriptblock]::Create($selection.Extent.Text)
+    }
+    BeforeEach {
+        $originalEnvironmentPassword = $env:LOCALBOX_ADMIN_PASSWORD
+        $env:LOCALBOX_ADMIN_PASSWORD = $null
+        $UseConsoleCredentials = $true
+        $WindowsAdminPassword = $null
+        Mock New-MhhStablePassword { 'mock-password-not-a-secret' }
+    }
+    AfterEach { $env:LOCALBOX_ADMIN_PASSWORD = $originalEnvironmentPassword }
+    It 'assigns the stable password to the secure template input without emitting it' {
+        $output = @(. $passwordSelection)
+        $output.Count | Should -Be 0
+        $WindowsAdminPassword | Should -Be 'mock-password-not-a-secret'
+        Should -Invoke New-MhhStablePassword -Times 1 -Exactly -ParameterFilter { $Purpose -eq 'localbox-admin-v1' -and $Length -eq 24 }
+    }
+    It 'rejects competing explicit or environment passwords' -TestCases @(
+        @{ Source = 'Parameter' }
+        @{ Source = 'Environment' }
+    ) {
+        param($Source)
+        if ($Source -eq 'Parameter') { $WindowsAdminPassword = 'mock-existing-password' }
+        else { $env:LOCALBOX_ADMIN_PASSWORD = 'mock-existing-password' }
+        { . $passwordSelection } | Should -Throw '*cannot be combined*'
+        Should -Invoke New-MhhStablePassword -Times 0
+    }
+    It 'preserves manually supplied passwords outside Console' {
+        $UseConsoleCredentials = $false
+        $WindowsAdminPassword = 'mock-manual-password'
+        . $passwordSelection
+        $WindowsAdminPassword | Should -Be 'mock-manual-password'
+        Should -Invoke New-MhhStablePassword -Times 0
+    }
 }
 
 Describe 'Lab cost-control tags' {
@@ -15,6 +173,41 @@ Describe 'Lab cost-control tags' {
         $source | Should -Match "(?s)var tags = \{[^}]*CostControl: 'Ignore'"
         $source | Should -Match "(?s)name: 'system'\s+count: 2\s+tags: tags"
         $source | Should -Match "(?s)resource confidentialNodePool .*?properties: \{\s+count: 1\s+tags: tags"
+    }
+}
+
+Describe 'Nested LocalBox credential resolution' {
+    It 'constructs only a credential from the installed configuration without printing secrets' {
+        $configuration = @{ SDNDomainFQDN = 'jumpstart.local'; SDNAdminPassword = 'mock-config-password' }
+        $output = @(Resolve-LocalBoxNodeCredential -Configuration $configuration *>&1)
+        $output.Count | Should -Be 1
+        $output[0] | Should -BeOfType [pscredential]
+        $output[0].UserName | Should -Be 'jumpstart\Administrator'
+        $output[0].GetNetworkCredential().Password | Should -Be 'mock-config-password'
+    }
+    It 'uses the configured domain rather than a hardcoded account' {
+        $credential = Resolve-LocalBoxNodeCredential -Configuration @{ SDNDomainFQDN = 'event.example.test'; SDNAdminPassword = 'mock-config-password' }
+        $credential.UserName | Should -Be 'event\Administrator'
+    }
+    It 'preserves an explicit credential even when configuration credentials are missing' {
+        $explicit = [pscredential]::new('custom\operator', [Security.SecureString]::new())
+        $actual = Resolve-LocalBoxNodeCredential -Configuration @{} -Credential $explicit
+        [object]::ReferenceEquals($actual, $explicit) | Should -BeTrue
+    }
+    It 'fails without exposing configuration values when credentials are missing or invalid' -TestCases @(
+        @{ Configuration = @{} }
+        @{ Configuration = @{ SDNDomainFQDN = 'jumpstart.local'; SDNAdminPassword = '' } }
+        @{ Configuration = @{ SDNDomainFQDN = '.local'; SDNAdminPassword = 'mock-config-password' } }
+        @{ Configuration = @{ SDNDomainFQDN = 'invalid\domain'; SDNAdminPassword = 'mock-config-password' } }
+    ) {
+        param($Configuration)
+        { Resolve-LocalBoxNodeCredential -Configuration $Configuration } | Should -Throw '*Supply -NodeCredential*'
+        try { Resolve-LocalBoxNodeCredential -Configuration $Configuration }
+        catch { $_.ToString() | Should -Not -Match 'mock-config-password' }
+    }
+    It 'uses the resolver during preparation without an unconditional credential prompt' {
+        ${function:Invoke-LocalBoxPreparation}.ToString() | Should -Match 'Resolve-LocalBoxNodeCredential -Configuration \$config -Credential \$Settings.NodeCredential'
+        ${function:Invoke-LocalBoxPreparation}.ToString() | Should -Not -Match 'Get-Credential'
     }
 }
 
@@ -125,6 +318,59 @@ Describe 'Resource reconciliation' {
         }
         (Wait-LocalBoxResource $resourceId).properties.provisioningState | Should -Be 'Succeeded'
         Should -Invoke Start-Sleep -Times 1
+    }
+}
+
+Describe 'LocalBox image storage conflicts' {
+    BeforeEach {
+        $scope = '/subscriptions/test/resourceGroups/localbox/providers/Microsoft.AzureStackHCI'
+        $imageName = '2025-datacenter-azure-edition-smalldisk-01'
+        $imageId = "$scope/marketplaceGalleryImages/$imageName"
+        $storageId = "$scope/storageContainers/UserStorage1-generated"
+        $resources = @(@{ id = $imageId })
+        Mock Get-LocalBoxResource { @{ properties = @{ containerId = "$scope/storageContainers/UserStorage2-generated" } } }
+        Mock Invoke-LocalBoxAz { $resources }
+    }
+    It 'rejects an existing image on secondary storage even in WhatIf with actionable guidance' {
+        $WhatIfPreference = $true
+        { Assert-LocalBoxImagePlacement -Resources $resources -ImageId $imageId -StorageId $storageId } | Should -Throw '*review image dependencies*documented image name*never deleted or moved automatically*'
+        Should -Invoke Invoke-LocalBoxAz -Times 0
+    }
+    It 'accepts matching storage IDs case-insensitively without writes' {
+        Mock Get-LocalBoxResource { @{ properties = @{ containerId = $storageId.ToUpperInvariant() } } }
+        { Assert-LocalBoxImagePlacement -Resources $resources -ImageId $imageId -StorageId $storageId } | Should -Not -Throw
+        Should -Invoke Invoke-LocalBoxAz -Times 0
+    }
+    It 'rejects missing placement instead of assuming primary storage' {
+        Mock Get-LocalBoxResource { @{ properties = @{} } }
+        { Assert-LocalBoxImagePlacement -Resources $resources -ImageId $imageId -StorageId $storageId } | Should -Throw '*preparation requires*'
+    }
+    It 'permits the documented image when it does not yet exist without writes' {
+        Assert-LocalBoxImagePlacement -Resources @() -ImageId $imageId -StorageId $storageId
+        Should -Invoke Get-LocalBoxResource -Times 0
+        Should -Invoke Invoke-LocalBoxAz -Times 0
+    }
+    It 'checks placement before storage mutations' {
+        $source = ${function:Invoke-LocalBoxPreparation}.ToString()
+        $source.IndexOf('Assert-LocalBoxImagePlacement -Resources') | Should -BeGreaterOrEqual 0
+        $source.IndexOf('Assert-LocalBoxImagePlacement -Resources') | Should -BeLessThan $source.IndexOf('Initialize-LocalBoxStorage -Configuration')
+    }
+    It 'creates the documented image on primary storage when it does not yet exist' {
+        Mock Invoke-LocalBoxAz { @() }
+        $expected = @{ properties = @{ containerId = $storageId } }
+        Mock Wait-LocalBoxResource { $expected }
+        Sync-LocalBoxResource -Id $imageId -Expected $expected -CreateArguments @('stack-hci-vm', 'image', 'create', '--name', $imageName, '--storage-path-id', $storageId) | Out-Null
+        Should -Invoke Invoke-LocalBoxAz -Times 1 -Exactly -ParameterFilter {
+            $Arguments[2] -eq 'create' -and $Arguments -contains $imageName -and $Arguments -contains $storageId
+        }
+        Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments -contains 'delete' -or $Arguments -contains 'update' }
+        Should -Invoke Wait-LocalBoxResource -Times 1 -Exactly -ParameterFilter { $Id -eq $imageId }
+    }
+    It 'does not import the documented image during WhatIf' {
+        Mock Invoke-LocalBoxAz { @() }
+        Sync-LocalBoxResource -Id $imageId -Expected @{ properties = @{ containerId = $storageId } } `
+            -CreateArguments @('stack-hci-vm', 'image', 'create') -WhatIf
+        Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments -contains 'create' }
     }
 }
 

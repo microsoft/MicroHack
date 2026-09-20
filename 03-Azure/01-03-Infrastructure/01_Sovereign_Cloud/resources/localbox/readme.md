@@ -8,12 +8,14 @@ Run [prepare-localbox.ps1](../prepare-localbox.ps1) **inside LocalBox-Client**, 
 - Extensions are installed in your persistent CLI extension directory (`AZURE_EXTENSION_DIR`, if set), not the temporary authentication profile. The script does not install or upgrade the Azure CLI itself. Health checks additionally require Pester 5.7.1 or later within major version 5; an installed Pester 6 is not a substitute for the runner's supported version.
 - Healthy Azure Local nodes, storage, Arc Resource Bridge, `jumpstart` custom location and `hybridaksextension`.
 - The Client VM's system-assigned managed identity and its existing LocalBox resource-group permissions. The script uses a temporary isolated CLI login and restores the caller's profile. No subscription-wide or Graph permissions are added.
-- An existing Entra AKS admin-group object ID. Hosted events obtain this from the Console owner; [group provisioning is a documented dependency](../hosted-events/readme.md#console-group-dependency). Group membership is not validated through Graph by this script.
-- Windows administrator credentials for `AzLHOST1`/`AzLHOST2`. Enter these in the local `Get-Credential` prompt. Azure managed identity cannot authenticate Windows PowerShell Direct inside nested nodes.
+- An existing Entra AKS admin-group object ID. Hosted events use **Lab Group ObjectId** from the Console's **Credentials** tab, published by [shared automation](../hosted-events/readme.md#console-group-dependency). Group membership is not validated through Graph by this script.
+- The installed Jumpstart configuration referenced by `$env:LocalBoxConfigFile` (or `-ConfigPath`), containing `SDNDomainFQDN` and `SDNAdminPassword`. Preparation constructs the nested administrator credential locally without printing it. Supply `-NodeCredential` to override it if the nested password/account has changed. Azure managed identity cannot authenticate Windows PowerShell Direct inside nested nodes.
 - `Microsoft.EdgeMarketplace` registered by the subscription owner. The Marketplace image workflow also requires the Azure Connected Machine Resource Manager role for the `Microsoft.AzureStackHCI` resource-provider identity on the image resource group; ask the deployment owner to verify this prerequisite. No automatic privilege escalation is attempted.
 - Verified DHCP exclusions/static reservations for both pools, sufficient backing `V:` capacity and event budget. Dynamic disks do not add physical backing capacity.
 
 For the standard Jumpstart configuration, the nested-node administrator is `jumpstart\Administrator`. The Client VM's `arcdemo` account is not the nested-node administrator. Use the nested domain's credentials (adjust the domain if customized), not a password reset solely on the Client VM.
+
+LocalBox administrator credentials are not published to participants. If the Client password is unknown, an authorized event lead/coach can reset the Client's `arcdemo` account through the Azure portal, connect via Bastion and open elevated PowerShell 7. A Client-only reset leaves the nested password unchanged; the installed Jumpstart configuration retains the value that preparation uses. Do not open, print, screenshot or share the configuration to obtain the password. Restricted Console retrieval remains optional future work, not a prerequisite for this local workflow; see [LocalBox credentials](../hosted-events/readme.md#localbox-credentials).
 
 ## Download and run
 
@@ -22,10 +24,11 @@ Download files, inspect them, then execute. Do not pipe downloaded content into 
 ```powershell
 $base = 'https://raw.githubusercontent.com/microsoft/MicroHack/refs/heads/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/resources'
 Invoke-WebRequest "$base/prepare-localbox.ps1" -OutFile './prepare-localbox.ps1'
-$nodeCredential = Get-Credential -UserName 'jumpstart\Administrator' -Message 'Nested Azure Local Windows administrator'
-./prepare-localbox.ps1 -NodeCredential $nodeCredential -AddressReservationsConfirmed -WhatIf
-./prepare-localbox.ps1 -NodeCredential $nodeCredential -AddressReservationsConfirmed
+./prepare-localbox.ps1 -AddressReservationsConfirmed -WhatIf
+./prepare-localbox.ps1 -AddressReservationsConfirmed
 ```
+
+If the nested account was rotated, pass a current `PSCredential` through `-NodeCredential`; do not substitute the reset Client password. Missing configuration credentials produce an actionable error instead of exposing their contents or prompting unexpectedly.
 
 The script prompts for the Entra group object ID, or accepts `-AksAdminGroupObjectId`. Subscription, resource group and configuration path default from Jumpstart's machine environment. Explicit scope values must match this Client's deployment. Run only one preparation session at a time.
 
@@ -52,6 +55,8 @@ Azure Local may append generated suffixes to its `UserStorage1` and `UserStorage
 On Windows, the script invokes Azure CLI through its bundled Python executable rather than `az.cmd`. This preserves arguments such as `ConvergedSwitch(compute_management)` that the batch wrapper otherwise interprets as command syntax. Keep the standard Azure CLI installation layout intact.
 
 Use `-ImageVersion` to pin a Marketplace version, `-KubernetesVersion` for a supported AKS version, and size/count overrides when required. Images can take several hours; `-TimeoutMinutes` defaults to 360 per long operation. A timed-out local command does not cancel an already submitted Azure operation. Inspect status before rerunning. Matching resources are reused; incompatible resources produce an error, never automatic replacement.
+
+If an image was imported manually before preparation under the documented name but on another storage path, preparation stops before disk expansion. The facilitator must review its dependencies; only if the image is confirmed unused should it be removed manually so preparation can import it on `UserStorage1` under the same documented name. Otherwise, resolve placement with the Azure Local administrator before proceeding. Do not change image names or use `-RemoveUserStorage2` to work around this conflict. Automation never deletes or moves an existing image.
 
 ## Optional storage consolidation
 

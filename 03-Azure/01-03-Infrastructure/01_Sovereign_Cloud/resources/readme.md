@@ -17,7 +17,7 @@ Both paths use [LocalBox preparation](localbox/readme.md) and the [Pester health
 | Participant Azure AKS, confidential VM, K3s, attestation and networking | Console content automation | Subscription owner using the lab template |
 | Shared LocalBox deployment | Console submits once per subscription; full readiness still requires verification | Subscription owner deploys LocalBox |
 | Storage, Windows image, VM/AKS networks, AKS on Azure Local | Event Lead runs preparation on each LocalBox Client | Same preparation script |
-| AKS Local Entra admin group | Console-owned dependency; obtain the object ID from the Console owner | Supply an existing security group with intended users as members |
+| AKS Local Entra admin group | Console-owned event group; use **Lab Group ObjectId** from the Credentials tab | Supply an existing security group with intended users as members |
 | Runtime health and participant access | Event Lead | Organizer/subscription owner |
 | Teardown | Console lifecycle; verify shared resources and group cleanup | Explicit owner-managed cleanup |
 

@@ -19,6 +19,9 @@ param(
 )
 
 . (Join-Path $PSScriptRoot 'quota-helpers.ps1')
+. (Join-Path $PSScriptRoot 'localbox-credentials.ps1')
+
+Get-LocalBoxConsoleGroupCredential
 
 $azureLocalResourceProviderAppId = '1412d89f-b8a8-4111-b4fd-e82905cbd85d'
 Update-MhhToken | Out-Null
@@ -210,6 +213,7 @@ else {
                 -Location $localBoxLocation `
                 -AzureLocalResourceProviderObjectId $azureLocalResourceProviderObjectIds[0] `
                 -AzureLocalInstanceLocation 'australiaeast' `
+                -UseConsoleCredentials `
                 -NoWait
 
             if (-not $localBoxDeployment -or $localBoxDeployment.ProvisioningState -ne 'Submitted') {
@@ -259,6 +263,8 @@ foreach ($participantObjectId in $AllowedEntraUserIds) {
         }
     }
 }
+
+Wait-LocalBoxDeployment -ResourceGroupName $localBoxResourceGroupName -DeploymentName $localBoxDeployment.DeploymentName
 
 @{
     'HackboxCredential' = @{

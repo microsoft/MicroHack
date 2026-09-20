@@ -28,8 +28,11 @@ For a checkout, run the same command without `-DownloadTests`.
 
 ## Full LocalBox check
 
+Keep a reviewed [prepare-localbox.ps1](../prepare-localbox.ps1) from the same ref beside the runner. The following builds the nested credential locally without printing the installed configuration; use `Get-Credential` instead if that account has been rotated. The health runner still requires the explicit `-NodeCredential` argument.
+
 ```powershell
-$nodeCredential = Get-Credential -Message 'Nested Azure Local Windows administrator'
+. ./prepare-localbox.ps1
+$nodeCredential = Resolve-LocalBoxNodeCredential -Configuration (Import-PowerShellDataFile -LiteralPath $env:LocalBoxConfigFile)
 ./test-sovereign-cloud.ps1 -Scope LocalBox -Mode Full `
     -LocalBoxManifestPath 'C:\LocalBox\sovereign-localbox.json' `
     -LocalBoxKubeconfig 'C:\LocalBox\aks-local.kubeconfig' `
@@ -40,7 +43,7 @@ Checks cover the Client and bootstrap, cluster/Arc bridge/custom location/AKS ex
 
 ## Rerun from a local copy
 
-In elevated PowerShell 7 on LocalBox-Client, change to your local resources directory containing the runner, preparation script and `tests` folder. Use the manifest written by preparation (`-ManifestPath`, default `C:\LocalBox\sovereign-localbox.json`) and an existing authenticated kubeconfig. Keep all scripts from the same reviewed revision; do not overwrite unpublished local fixes with an older download.
+In elevated PowerShell 7 on LocalBox-Client, change to your local resources directory containing the runner, preparation script and `tests` folder. The offline unit suite also requires the sibling `labautomation` folder, including `localbox-credentials.ps1`, from the same checkout; it mocks the Console helpers and makes no live deployment calls. Use the manifest written by preparation (`-ManifestPath`, default `C:\LocalBox\sovereign-localbox.json`) and an existing authenticated kubeconfig. Keep all scripts from the same reviewed revision; do not overwrite unpublished local fixes with an older download.
 
 The commands below retain your existing Azure CLI authentication. Confirm that it has access to the selected lab resources as described in [Tooling and authentication](#tooling-and-authentication).
 
@@ -51,7 +54,8 @@ $outputDirectory = Join-Path (Get-Location) 'health-results'
 Import-Module Pester -RequiredVersion 5.7.1
 Invoke-Pester .\tests\prepare-localbox.tests.ps1 -Output Detailed
 
-$nodeCredential = Get-Credential -Message 'Administrator of the nested Azure Local nodes'
+. .\prepare-localbox.ps1
+$nodeCredential = Resolve-LocalBoxNodeCredential -Configuration (Import-PowerShellDataFile -LiteralPath $env:LocalBoxConfigFile)
 .\test-sovereign-cloud.ps1 -Scope LocalBox -Mode Full `
   -LocalBoxManifestPath $manifestPath `
   -LocalBoxKubeconfig $kubeconfigPath `

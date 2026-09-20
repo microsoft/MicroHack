@@ -72,7 +72,7 @@ relative to its own location, so it must be run from inside a full clone of the
 repository.
 
 ```powershell
-git clone https://github.com/yelamanchili-murali/MicroHack.git
+git clone https://github.com/microsoft/MicroHack.git
 cd MicroHack/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/walkthrough/challenge-04
 
 # Confirm both the script and its resources directory are present

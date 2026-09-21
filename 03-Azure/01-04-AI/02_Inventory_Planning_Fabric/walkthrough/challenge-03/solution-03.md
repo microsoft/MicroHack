@@ -12,7 +12,7 @@ Build the Inventory Optimisation Agent and use agent tracing to inspect its reas
 
 ### Agent — key configuration point
 
-This agent should have **only the Fabric Data Agent tool** — no Web Search. If attendees add Web Search, the agent may use it unnecessarily. The instructions say "governed data only" for a reason: optimisation decisions should be traceable to authoritative internal data, not unverified web content.
+This agent should have **only the Fabric Data Agent tool** — no Web Search. New prompt agents ship with **Web Search attached by default**, so the key step is to **remove it**; otherwise `gpt-5.4-mini` tends to reach for the web instead of the governed data. The instructions say "governed data only" for a reason: optimisation decisions should be traceable to authoritative internal data, not unverified web content.
 
 ### Reading the trace — what to look for
 

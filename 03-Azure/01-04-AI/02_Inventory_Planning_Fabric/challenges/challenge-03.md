@@ -59,8 +59,9 @@ Your Inventory Optimisation Agent answers these questions by querying the Fabric
    If you cannot find a SKU in the data, say so clearly - do not invent numbers.
    ```
 
-5. Add the **Fabric Data Agent** tool and select the existing **`inventory-hack-agent`** connection (created in Challenge 2). Do **not** add Web Search — this agent works only with internal data.
-6. Click **Save**.
+5. Add the **Fabric Data Agent** tool and select the existing **`inventory-hack-agent`** connection (created in Challenge 2).
+6. **Remove the Web Search tool.** New prompt agents ship with **Web Search** attached by default, and `gpt-5.4-mini` will happily reach for it instead of the governed data. Under **Tools**, delete **Web Search** so the **only** tool is the Fabric Data Agent — this agent works from internal data only.
+7. Click **Save**.
 
 ### Part B — Run the agent (15 min)
 

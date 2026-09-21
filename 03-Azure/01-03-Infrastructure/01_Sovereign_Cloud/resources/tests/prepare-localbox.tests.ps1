@@ -4,6 +4,589 @@ BeforeAll {
     . "$PSScriptRoot/../../labautomation/localbox-credentials.ps1"
 }
 
+Describe 'LocalBox capacity safety' {
+    BeforeAll { . "$PSScriptRoot/../test-localbox-capacity.ps1" }
+    BeforeEach {
+        $snapshot = @{ HostHealthy = $true; HostFreeGB = 1200; Nodes = @(
+            @{ Name = 'node1'; Healthy = $true; CsvFreeGB = 926; Copies = 2; FreeMemoryGB = 48 }
+            @{ Name = 'node2'; Healthy = $true; CsvFreeGB = 926; Copies = 2; FreeMemoryGB = 48 }
+        ) }
+        $limits = @{ MinimumHostFreeGB = 300; MinimumCsvFreeGB = 150; MinimumNodeFreeGB = 12; DiskBudgetGB = 40; MemoryMB = 4096 }
+    }
+    It 'allows one VM within all reserves' {
+        { Assert-LocalBoxCapacityHeadroom $snapshot $limits } | Should -Not -Throw
+    }
+    It 'reserves mirrored growth on the backing host, not just CSV free space' {
+        $snapshot.HostFreeGB = 379
+        { Assert-LocalBoxCapacityHeadroom $snapshot $limits } | Should -Throw '*backing-volume*'
+    }
+    It 'reserves disk growth for the entire in-flight batch' {
+        $snapshot.HostFreeGB = 699
+        { Assert-LocalBoxCapacityHeadroom $snapshot $limits -AdditionalVMs 5 } | Should -Throw '*backing-volume*'
+        $snapshot.HostFreeGB = 700
+        { Assert-LocalBoxCapacityHeadroom $snapshot $limits -AdditionalVMs 5 } | Should -Not -Throw
+    }
+    It 'reserves batch memory on each node without assuming balanced placement' {
+        $snapshot.Nodes[0].FreeMemoryGB = 31
+        { Assert-LocalBoxCapacityHeadroom $snapshot $limits -AdditionalVMs 5 } | Should -Throw '*node1*'
+    }
+    It 'reserves primary CSV space for every in-flight VM' {
+        $snapshot.Nodes[0].CsvFreeGB = 349
+        { Assert-LocalBoxCapacityHeadroom $snapshot $limits -AdditionalVMs 5 } | Should -Throw '*UserStorage_1*'
+    }
+    It 'protects the primary CSV' {
+        $snapshot.Nodes[0].CsvFreeGB = 189
+        { Assert-LocalBoxCapacityHeadroom $snapshot $limits } | Should -Throw '*UserStorage_1*'
+    }
+    It 'requires placement headroom on each node' {
+        $snapshot.Nodes[1].FreeMemoryGB = 15
+        { Assert-LocalBoxCapacityHeadroom $snapshot $limits } | Should -Throw '*node2*'
+    }
+    It 'stops on an unhealthy node or storage' {
+        $snapshot.Nodes[1].Healthy = $false
+        { Assert-LocalBoxCapacityHeadroom $snapshot $limits } | Should -Throw '*not healthy*'
+    }
+    It 'does not estimate capacity without a known resiliency factor' {
+        $snapshot.Nodes | ForEach-Object { $_.Copies = 0 }
+        { Assert-LocalBoxCapacityHeadroom $snapshot $limits } | Should -Throw '*copy count*'
+    }
+}
+
+Describe 'LocalBox capacity lifecycle' {
+    BeforeAll { . "$PSScriptRoot/../test-localbox-capacity.ps1" }
+    BeforeEach {
+        $runId = '123456781234123412341234567890ab'
+        $groupId = "/subscriptions/test/resourceGroups/rg-lbcap-$runId"
+        $clusterId = '/subscriptions/test/resourceGroups/localbox/providers/Microsoft.AzureStackHCI/clusters/localboxcluster'
+        $entry = @{ Index = 1; Name = 'lc12345678-001'; Status = 'Submitting'; SubmittedAt = [datetime]::UtcNow.AddSeconds(-60).ToString('o') }
+        $state = @{ SchemaVersion = 1; RunId = $runId; SubscriptionId = 'test'; ResourceGroupName = "rg-lbcap-$runId"; ClusterId = $clusterId; VMs = @($entry) }
+        $localBox = @{ SubscriptionId = 'test'; ResourceGroupName = 'localbox'; ClusterId = $clusterId }
+        $group = @{ id = $groupId; tags = @{ MicroHackPurpose = 'LocalBoxCapacityTest'; MicroHackRunId = $runId } }
+        $machineId = "$groupId/providers/Microsoft.HybridCompute/machines/$($entry.Name)"
+        $resources = @(@{ id = $machineId }, @{ id = "$groupId/providers/Microsoft.AzureStackHCI/networkInterfaces/$($entry.Name)-nic" })
+        Mock Invoke-LocalBoxAz { throw 'Unexpected CLI call' }
+        Mock Save-LocalBoxCapacityState {}
+    }
+    It 'accepts only matching run ownership' {
+        { Assert-LocalBoxCapacityOwnership $state $localBox $group $resources } | Should -Not -Throw
+    }
+    It 'rejects mismatched tags' {
+        $group.tags.MicroHackRunId = 'another-run'
+        { Assert-LocalBoxCapacityOwnership $state $localBox $group $resources } | Should -Throw '*ownership*'
+    }
+    It 'cannot target the shared resource group' {
+        $state.ResourceGroupName = 'localbox'
+        { Assert-LocalBoxCapacityOwnership $state $localBox $group $resources } | Should -Throw '*mismatched*'
+    }
+    It 'cannot target another LocalBox or subscription' -TestCases @(
+        @{ Key = 'SubscriptionId'; Value = 'other' }
+        @{ Key = 'ClusterId'; Value = '/subscriptions/test/resourceGroups/another-cluster' }
+    ) {
+        param($Key, $Value)
+        $state[$Key] = $Value
+        { Assert-LocalBoxCapacityOwnership $state $localBox $group $resources } | Should -Throw '*mismatched*'
+    }
+    It 'rejects unrelated resources even inside a tagged group' {
+        $resources += @{ id = "$groupId/providers/Microsoft.HybridCompute/machines/student-vm" }
+        { Assert-LocalBoxCapacityOwnership $state $localBox $group $resources } | Should -Throw '*Unrelated resource*'
+    }
+    It 'accepts only children of its own machines' {
+        $resources += @{ id = "$machineId/providers/Microsoft.AzureStackHCI/virtualMachineInstances/default" }
+        $resources += @{ id = "$machineId/extensions/MDE.Windows" }
+        { Assert-LocalBoxCapacityOwnership $state $localBox $group $resources } | Should -Not -Throw
+        $resources += @{ id = "$groupId/providers/Microsoft.HybridCompute/machines/student-vm/extensions/MDE.Windows" }
+        { Assert-LocalBoxCapacityOwnership $state $localBox $group $resources } | Should -Throw '*Unrelated resource*'
+    }
+    It 'rejects journal VM names that do not belong to this run' {
+        $entry.Name = 'student-vm'
+        { Assert-LocalBoxCapacityOwnership $state $localBox $group $resources } | Should -Throw '*Invalid VM name*'
+    }
+    It 'does not delete under WhatIf' {
+        Mock Invoke-LocalBoxAz { $true } -ParameterFilter { $Arguments[0] -eq 'group' -and $Arguments[1] -eq 'exists' }
+        Mock Invoke-LocalBoxAz { $group } -ParameterFilter { $Arguments[0] -eq 'group' -and $Arguments[1] -eq 'show' }
+        Mock Invoke-LocalBoxAz { $resources } -ParameterFilter { $Arguments[0] -eq 'resource' -and $Arguments[1] -eq 'list' }
+        Remove-LocalBoxCapacityRun $state $localBox 'state.json' -WhatIf
+        Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments -contains 'delete' }
+        Should -Invoke Save-LocalBoxCapacityState -Times 0
+    }
+    It 'refuses cleanup when an unrelated resource exists' {
+        $resources += @{ id = "$groupId/providers/Microsoft.Storage/storageAccounts/unrelated" }
+        Mock Invoke-LocalBoxAz { $true } -ParameterFilter { $Arguments[1] -eq 'exists' }
+        Mock Invoke-LocalBoxAz { $group } -ParameterFilter { $Arguments[1] -eq 'show' }
+        Mock Invoke-LocalBoxAz { $resources } -ParameterFilter { $Arguments[1] -eq 'list' }
+        { Remove-LocalBoxCapacityRun $state $localBox 'state.json' -Confirm:$false } | Should -Throw '*Unrelated*'
+        Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments -contains 'delete' }
+    }
+    It 'deletes only the exact owned group and verifies it is gone' {
+        $checks = @{ Count = 0 }
+        Mock Invoke-LocalBoxAz { $checks.Count++; return $checks.Count -eq 1 } -ParameterFilter { $Arguments[1] -eq 'exists' }
+        Mock Invoke-LocalBoxAz { $group } -ParameterFilter { $Arguments[1] -eq 'show' }
+        Mock Invoke-LocalBoxAz { $resources } -ParameterFilter { $Arguments[1] -eq 'list' }
+        Mock Invoke-LocalBoxAz {} -ParameterFilter { $Arguments[1] -eq 'delete' }
+        Remove-LocalBoxCapacityRun $state $localBox 'state.json' -Confirm:$false
+        Should -Invoke Invoke-LocalBoxAz -Times 1 -Exactly -ParameterFilter {
+            $Arguments[0] -eq 'group' -and $Arguments[1] -eq 'delete' -and $Arguments -contains $state.ResourceGroupName -and $Arguments -contains 'test'
+        }
+        $state.Status | Should -Be 'Deleted'
+        Should -Invoke Save-LocalBoxCapacityState -Times 1
+    }
+    It 'requires running and connected status after deployment succeeds' -TestCases @(
+        @{ Power = 'Running'; Guest = 'Connected'; Expected = 'Ready' }
+        @{ Power = 'Stopped'; Guest = 'Connected'; Expected = 'WaitingForGuest' }
+        @{ Power = 'Running'; Guest = 'Disconnected'; Expected = 'WaitingForGuest' }
+    ) {
+        param($Power, $Guest, $Expected)
+        Mock Invoke-LocalBoxAz { @{ properties = @{ provisioningState = 'Succeeded' } } } -ParameterFilter { $Arguments[0] -eq 'deployment' }
+        Mock Invoke-LocalBoxAz { @{ properties = @{ provisioningState = 'Succeeded'; status = @{ powerState = $Power } } } } -ParameterFilter { $Arguments -contains '2024-01-01' }
+        Mock Invoke-LocalBoxAz { @{ properties = @{ status = $Guest } } } -ParameterFilter { $Arguments -contains '2023-10-03-preview' }
+        Update-LocalBoxCapacityVM $state $entry
+        $entry.Status | Should -Be $Expected
+        if ($Expected -eq 'Ready') { $entry.ElapsedSeconds | Should -BeGreaterOrEqual 60 }
+    }
+    It 'does not count a pending or failed deployment as ready' -TestCases @(
+        @{ DeploymentState = 'Running'; Expected = 'Provisioning' }
+        @{ DeploymentState = 'Failed'; Expected = 'Failed' }
+    ) {
+        param($DeploymentState, $Expected)
+        Mock Invoke-LocalBoxAz { @{ properties = @{ provisioningState = $DeploymentState } } } -ParameterFilter { $Arguments[0] -eq 'deployment' }
+        Update-LocalBoxCapacityVM $state $entry
+        $entry.Status | Should -Be $Expected
+        Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments[0] -eq 'resource' }
+    }
+    It 'uses a secure password parameter and explicitly targets the prepared storage and network' {
+        $template = New-LocalBoxCapacityTemplate
+        $template.parameters.adminPassword.type | Should -Be 'securestring'
+        $template.resources.Count | Should -Be 3
+        $vm = $template.resources | Where-Object type -eq 'Microsoft.AzureStackHCI/virtualMachineInstances'
+        $vm.properties.storageProfile.vmConfigStoragePathId | Should -Be "[parameters('storageId')]"
+        $vm.properties.storageProfile.imageReference.id | Should -Be "[parameters('imageId')]"
+        $vm.properties.hardwareProfile.memoryMB | Should -Be "[parameters('memoryMB')]"
+        $vm.properties.hardwareProfile.ContainsKey('dynamicMemoryConfig') | Should -BeFalse
+        $vm.properties.osProfile.windowsConfiguration.provisionVMAgent | Should -BeTrue
+        $vm.properties.osProfile.windowsConfiguration.provisionVMConfigAgent | Should -BeTrue
+        $nic = $template.resources | Where-Object type -eq 'Microsoft.AzureStackHCI/networkInterfaces'
+        $nic.properties.ipConfigurations[0].properties.subnet.id | Should -Be "[parameters('networkId')]"
+        $nic.properties.ipConfigurations[0].properties.ContainsKey('privateIPAddress') | Should -BeFalse
+    }
+}
+
+Describe 'LocalBox capacity orchestration' {
+    BeforeAll { . "$PSScriptRoot/../test-localbox-capacity.ps1" }
+    BeforeEach {
+        $oldSubscription = $env:subscriptionId
+        $oldGroup = $env:resourceGroup
+        $oldConfigPath = $env:LocalBoxConfigFile
+        $env:subscriptionId = 'test'
+        $env:resourceGroup = 'localbox'
+        $env:LocalBoxConfigFile = 'mock-config.psd1'
+        $localBox = @{
+            SubscriptionId = 'test'; ResourceGroupName = 'localbox'; ClusterId = '/subscriptions/test/resourceGroups/localbox/providers/Microsoft.AzureStackHCI/clusters/localboxcluster'
+            CustomLocationId = 'custom-location'; StorageId = 'storage1'; ImageId = 'image'; NodeNames = @('node1', 'node2')
+            Networks = @(@{ Name = 'localbox-vm-lnet-vlan200'; Id = 'vm-network' })
+        }
+        $credential = [pscredential]::new('localadmin', [Security.SecureString]::new())
+        $settings = @{
+            Mode = 'Deploy'; LocalBoxManifestPath = 'manifest.json'; StatePath = 'state.json'; VmCount = 2
+            ProcessorCount = 2; MemoryMB = 4096; MinimumHostFreeGB = 300; MinimumCsvFreeGB = 150
+            MinimumNodeFreeGB = 12; DiskBudgetGB = 40; TimeoutMinutes = 1; NodeCredential = $credential; VmCredential = $credential
+        }
+        $snapshot = @{ HostHealthy = $true; HostFreeGB = 1200; Nodes = @(
+            @{ Name = 'node1'; Healthy = $true; CsvFreeGB = 926; Copies = 2; FreeMemoryGB = 48 }
+            @{ Name = 'node2'; Healthy = $true; CsvFreeGB = 926; Copies = 2; FreeMemoryGB = 48 }
+        ) }
+        $journal = @{ State = $null }
+        Mock Assert-LocalBoxCapacityHost {}
+        Mock Import-PowerShellDataFile { @{} }
+        Mock Resolve-LocalBoxNodeCredential { $credential }
+        Mock Get-LocalBoxCapacitySnapshot { $snapshot }
+        Mock Test-Path { $false }
+        Mock Get-Content { $localBox | ConvertTo-Json -Depth 10 }
+        Mock Get-LocalBoxResource { @{ location = 'westeurope'; properties = @{ provisioningState = 'Succeeded'; containerId = 'storage1'; status = @{ progressPercentage = 100 } } } }
+        Mock Invoke-LocalBoxAz { $false }
+        Mock Submit-LocalBoxCapacityVM {}
+        Mock Update-LocalBoxCapacityVM { $Entry.Status = 'Ready'; $Entry.GuestStatus = 'Connected'; $Entry.PowerState = 'Running' }
+        Mock Save-LocalBoxCapacityState { $journal.State = $State }
+        Mock Start-Sleep { throw 'Unexpected sleep' }
+        Mock Get-Credential { throw 'Unexpected prompt' }
+    }
+    AfterEach { $env:subscriptionId = $oldSubscription; $env:resourceGroup = $oldGroup; $env:LocalBoxConfigFile = $oldConfigPath }
+    It 'creates a bounded run and records only nonsecret state' {
+        Invoke-LocalBoxCapacityRun $settings
+        Should -Invoke Submit-LocalBoxCapacityVM -Times 2 -Exactly
+        $journal.State.VMs.Count | Should -Be 2
+        $journal.State.Status | Should -Be 'TargetReached'
+        $journal.State.ResourceGroupName | Should -Match '^rg-lbcap-[a-f0-9]{32}$'
+        ($journal.State | ConvertTo-Json -Depth 20) | Should -Not -Match 'Password|Credential'
+    }
+    It 'does no writes or credential prompts during WhatIf' {
+        $settings.VmCredential = $null
+        Invoke-LocalBoxCapacityRun $settings -WhatIf
+        Should -Invoke Submit-LocalBoxCapacityVM -Times 0
+        Should -Invoke Save-LocalBoxCapacityState -Times 0
+        Should -Invoke Get-Credential -Times 0
+        Should -Invoke Invoke-LocalBoxAz -Times 0
+    }
+    It 'submits only one additional VM without a long-running local monitor' {
+        $settings.SubmitNext = $true
+        Invoke-LocalBoxCapacityRun $settings
+        Should -Invoke Submit-LocalBoxCapacityVM -Times 1 -Exactly
+        Should -Invoke Start-Sleep -Times 0
+        $journal.State.Status | Should -Be 'AwaitingReadiness'
+        $journal.State.VMs.Count | Should -Be 1
+        $journal.State.VMs[0].Status | Should -Be 'Submitted'
+    }
+    It 'submits five VMs before checking their readiness' {
+        $settings.VmCount = 5
+        $settings.BatchSize = 5
+        $submissions = @{ Count = 0 }
+        Mock Submit-LocalBoxCapacityVM { $submissions.Count++ }
+        Mock Update-LocalBoxCapacityVM {
+            $submissions.Count | Should -Be 5
+            $Entry.Status = 'Ready'
+        }
+        Invoke-LocalBoxCapacityRun $settings
+        Should -Invoke Submit-LocalBoxCapacityVM -Times 5 -Exactly
+        $journal.State.Status | Should -Be 'TargetReached'
+        @($journal.State.VMs.BatchId | Select-Object -Unique).Count | Should -Be 1
+    }
+    It 'submits one bounded batch and exits without starting a second' {
+        $settings.VmCount = 10
+        $settings.BatchSize = 5
+        $settings.SubmitBatch = $true
+        Invoke-LocalBoxCapacityRun $settings
+        Should -Invoke Submit-LocalBoxCapacityVM -Times 5 -Exactly
+        Should -Invoke Start-Sleep -Times 0
+        $journal.State.Status | Should -Be 'AwaitingReadiness'
+        $journal.State.VMs.Count | Should -Be 5
+    }
+    It 'limits the last batch to the remaining target count' {
+        $settings.VmCount = 3
+        $settings.BatchSize = 5
+        Invoke-LocalBoxCapacityRun $settings
+        Should -Invoke Submit-LocalBoxCapacityVM -Times 3 -Exactly
+        $journal.State.VMs.Count | Should -Be 3
+    }
+    It 'does not submit any of a batch that cannot fit the reserves' {
+        $settings.VmCount = 5
+        $settings.BatchSize = 5
+        $snapshot.HostFreeGB = 600
+        { Invoke-LocalBoxCapacityRun $settings } | Should -Throw '*backing-volume*'
+        Should -Invoke Submit-LocalBoxCapacityVM -Times 0
+    }
+    It 'does not start a second batch after a failure in the first' {
+        $settings.VmCount = 10
+        $settings.BatchSize = 5
+        Mock Update-LocalBoxCapacityVM { $Entry.Status = 'Failed' }
+        { Invoke-LocalBoxCapacityRun $settings } | Should -Throw '*batch deployment failed*'
+        Should -Invoke Submit-LocalBoxCapacityVM -Times 5 -Exactly
+    }
+    It 'stops after one submission fails and preserves the journal' {
+        Mock Submit-LocalBoxCapacityVM { throw 'Submission failed; inspect deployment' }
+        { Invoke-LocalBoxCapacityRun $settings } | Should -Throw '*Submission failed*'
+        Should -Invoke Submit-LocalBoxCapacityVM -Times 1
+        $journal.State.Status | Should -Be 'Stopped'
+        $journal.State.VMs.Count | Should -Be 1
+    }
+    It 'stops on readiness timeout without retrying VM creation' {
+        $settings.TimeoutMinutes = 0
+        Mock Update-LocalBoxCapacityVM { $Entry.Status = 'WaitingForGuest' }
+        { Invoke-LocalBoxCapacityRun $settings } | Should -Throw '*Timed out*'
+        Should -Invoke Submit-LocalBoxCapacityVM -Times 1
+        Should -Invoke Start-Sleep -Times 0
+        $journal.State.VMs[0].Status | Should -Be 'WaitingForGuest'
+    }
+    It 'does not create the resource group when headroom is insufficient' {
+        $snapshot.HostFreeGB = 250
+        { Invoke-LocalBoxCapacityRun $settings } | Should -Throw '*backing-volume*'
+        Should -Invoke Invoke-LocalBoxAz -Times 0
+        Should -Invoke Submit-LocalBoxCapacityVM -Times 0
+    }
+    It 'rechecks headroom before each subsequent VM' {
+        $samples = @{ Count = 0 }
+        Mock Get-LocalBoxCapacitySnapshot {
+            $samples.Count++
+            if ($samples.Count -gt 2) { $snapshot.HostFreeGB = 350 }
+            $snapshot
+        }
+        { Invoke-LocalBoxCapacityRun $settings } | Should -Throw '*backing-volume*'
+        Should -Invoke Submit-LocalBoxCapacityVM -Times 1
+        $journal.State.Status | Should -Be 'Stopped'
+    }
+    It 'extends an existing ready run without recreating its VMs' {
+        $settings.VmCount = 1
+        Invoke-LocalBoxCapacityRun $settings
+        $saved = $journal.State | ConvertTo-Json -Depth 20
+        Mock Test-Path { $true }
+        Mock Get-Content { $saved } -ParameterFilter { $LiteralPath -eq 'state.json' }
+        Mock Assert-LocalBoxCapacityOwnership {}
+        $settings.VmCount = 2
+        Invoke-LocalBoxCapacityRun $settings
+        Should -Invoke Submit-LocalBoxCapacityVM -Times 2 -Exactly
+        $journal.State.VMs.Count | Should -Be 2
+        $journal.State.VMs[0].Name | Should -Not -Be $journal.State.VMs[1].Name
+        Should -Invoke Invoke-LocalBoxAz -Times 1 -Exactly -ParameterFilter { $Arguments[0] -eq 'group' -and $Arguments[1] -eq 'create' }
+    }
+    It 'refuses to extend a run whose existing VM is unhealthy' {
+        $settings.VmCount = 1
+        Invoke-LocalBoxCapacityRun $settings
+        $saved = $journal.State | ConvertTo-Json -Depth 20
+        Mock Test-Path { $true }
+        Mock Get-Content { $saved } -ParameterFilter { $LiteralPath -eq 'state.json' }
+        Mock Assert-LocalBoxCapacityOwnership {}
+        Mock Update-LocalBoxCapacityVM { $Entry.Status = 'Failed' }
+        $settings.VmCount = 2
+        { Invoke-LocalBoxCapacityRun $settings } | Should -Throw '*Existing test VM*'
+        Should -Invoke Submit-LocalBoxCapacityVM -Times 1
+    }
+}
+
+Describe 'LocalBox capacity pending submission recovery' {
+    BeforeAll { . "$PSScriptRoot/../test-localbox-capacity.ps1" }
+    BeforeEach {
+        $scope = '/subscriptions/test/resourceGroups/rg-test'
+        $pending = @{ Name = 'lc-test-002'; Status = 'Submitting'; SubmittedAt = '2026-09-21T00:00:00Z' }
+        $state = @{ SubscriptionId = 'test'; ResourceGroupName = 'rg-test'; VMs = @(@{ Name = 'lc-test-001'; Status = 'Ready' }, $pending) }
+        Mock Invoke-LocalBoxAz { @() }
+    }
+    It 'retries only a verified absent trailing submission and retains its history' {
+        Repair-LocalBoxCapacityPendingSubmission $state
+        $state.VMs.Count | Should -Be 1
+        $state.VMs[0].Name | Should -Be 'lc-test-001'
+        $state.UnsubmittedAttempts[0].Name | Should -Be 'lc-test-002'
+        Should -Invoke Invoke-LocalBoxAz -Times 2 -Exactly
+    }
+    It 'does not resubmit when a deployment record exists' {
+        Mock Invoke-LocalBoxAz { @(@{ name = 'lc-test-002' }) } -ParameterFilter { $Arguments[0] -eq 'deployment' }
+        Repair-LocalBoxCapacityPendingSubmission $state
+        $state.VMs.Count | Should -Be 2
+        Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments[0] -eq 'resource' }
+    }
+    It 'refuses to retry when any resource already exists' -TestCases @(
+        @{ Suffix = '/providers/Microsoft.HybridCompute/machines/lc-test-002' }
+        @{ Suffix = '/providers/Microsoft.AzureStackHCI/networkInterfaces/lc-test-002-nic' }
+        @{ Suffix = '/providers/Microsoft.HybridCompute/machines/lc-test-002/extensions/MDE.Windows' }
+    ) {
+        param($Suffix)
+        Mock Invoke-LocalBoxAz { @(@{ id = "$scope$Suffix" }) } -ParameterFilter { $Arguments[0] -eq 'resource' }
+        { Repair-LocalBoxCapacityPendingSubmission $state } | Should -Throw '*resources but no deployment*'
+        $state.VMs.Count | Should -Be 2
+    }
+    It 'does not treat a failed read as an absent deployment' {
+        Mock Invoke-LocalBoxAz { throw 'AuthorizationFailed' }
+        { Repair-LocalBoxCapacityPendingSubmission $state } | Should -Throw '*AuthorizationFailed*'
+        $state.VMs.Count | Should -Be 2
+    }
+    It 'rejects ambiguous journal entries' {
+        $state.VMs[0].Status = 'Submitting'
+        { Repair-LocalBoxCapacityPendingSubmission $state } | Should -Throw '*Ambiguous*'
+        Should -Invoke Invoke-LocalBoxAz -Times 0
+    }
+}
+
+Describe 'LocalBox capacity remote execution' {
+    BeforeAll { . "$PSScriptRoot/../test-localbox-capacity.ps1" }
+    BeforeEach {
+        $cluster = '/subscriptions/a0000000-0000-0000-0000-000000000001/resourceGroups/localbox/providers/Microsoft.AzureStackHCI/clusters/cluster'
+        $context = @{ LocalBox = @{ ClusterId = $cluster; SubscriptionId = 'a0000000-0000-0000-0000-000000000001'; ResourceGroupName = 'localbox' }; Snapshot = @{ HostFreeGB = 1200 } }
+        Mock Invoke-LocalBoxAz { @{ value = @(@{ message = "[stdout]`nLB_CAPACITY_BEGIN`n$($context | ConvertTo-Json -Depth 8 -Compress)`nLB_CAPACITY_END`n[stderr]" }) } }
+    }
+    It 'targets the exact subscription and Client and returns only parsed telemetry' {
+        $result = Get-LocalBoxRemoteCapacityContext $cluster 'C:\LocalBox\sovereign-localbox.json'
+        $result.Snapshot.HostFreeGB | Should -Be 1200
+        $result.LocalBox.RemoteClusterId | Should -Be $cluster
+        Should -Invoke Invoke-LocalBoxAz -Times 1 -Exactly -ParameterFilter {
+            $Arguments -contains 'run-command' -and $Arguments -contains 'a0000000-0000-0000-0000-000000000001' -and
+            $Arguments -contains 'localbox' -and $Arguments -contains 'LocalBox-Client'
+        }
+    }
+    It 'fails closed on truncated telemetry' {
+        Mock Invoke-LocalBoxAz { @{ value = @(@{ message = 'LB_CAPACITY_BEGIN {}' }) } }
+        { Get-LocalBoxRemoteCapacityContext $cluster 'manifest.json' } | Should -Throw '*no complete result*'
+    }
+    It 'rejects a result from another cluster' {
+        $context.LocalBox.ClusterId = '/some/other/cluster'
+        { Get-LocalBoxRemoteCapacityContext $cluster 'manifest.json' } | Should -Throw '*does not match*'
+    }
+    It 'rejects an invalid target before invoking Run Command' {
+        { Get-LocalBoxRemoteCapacityContext '/subscriptions/other/resourceGroups/shared' 'manifest.json' } | Should -Throw '*exact Azure Local cluster*'
+        Should -Invoke Invoke-LocalBoxAz -Times 0
+    }
+}
+
+Describe 'LocalBox capacity secure submission' {
+    BeforeAll { . "$PSScriptRoot/../test-localbox-capacity.ps1" }
+    BeforeEach {
+        $state = @{
+            SubscriptionId = 'test'; ResourceGroupName = 'rg-test'; Location = 'westeurope'; RunId = 'test'
+            CustomLocationId = 'custom'; ImageId = 'image'; NetworkId = 'network'; StorageId = 'storage'
+            ProcessorCount = 2; MemoryMB = 4096
+        }
+        $entry = @{ Name = 'lc-test-001' }
+        $mockPassword = [Security.SecureString]::new()
+        foreach ($character in 'Mock!Password9-not-real'.GetEnumerator()) { $mockPassword.AppendChar($character) }
+        $mockPassword.MakeReadOnly()
+        $credential = [pscredential]::new('localadmin', $mockPassword)
+        $paths = [Collections.Generic.List[string]]::new()
+        $machineId = '/subscriptions/test/resourceGroups/rg-test/providers/Microsoft.HybridCompute/machines/lc-test-001'
+        $preview = @{ status = 'Succeeded'; changes = @(
+            @{ resourceId = $machineId; changeType = 'Create' }
+            @{ resourceId = "$machineId/providers/Microsoft.AzureStackHCI/virtualMachineInstances/default"; changeType = 'Create' }
+            @{ resourceId = '/subscriptions/test/resourceGroups/rg-test/providers/Microsoft.AzureStackHCI/networkInterfaces/lc-test-001-nic'; changeType = 'Create' }
+        ) }
+        Mock Invoke-LocalBoxAz {
+            $Arguments | Should -Not -Contain 'Mock!Password9-not-real'
+            $parameterFile = $Arguments[$Arguments.IndexOf('--parameters') + 1].Substring(1)
+            $paths.Add($parameterFile)
+            (Get-Content -LiteralPath $parameterFile -Raw | ConvertFrom-Json).parameters.adminPassword.value | Should -Be 'Mock!Password9-not-real'
+            if (-not $IsWindows) {
+                $directory = [IO.Path]::GetDirectoryName($parameterFile)
+                [int][IO.File]::GetUnixFileMode($directory) | Should -Be 448
+            }
+            if ($Arguments[2] -eq 'what-if') { $preview }
+        }
+    }
+    It 'previews then submits and removes credential files' {
+        Submit-LocalBoxCapacityVM $state $entry $credential
+        Should -Invoke Invoke-LocalBoxAz -Times 1 -Exactly -ParameterFilter { $Arguments[2] -eq 'what-if' }
+        Should -Invoke Invoke-LocalBoxAz -Times 1 -Exactly -ParameterFilter { $Arguments[2] -eq 'create' -and $NoOutput -and $Arguments -contains '--no-wait' }
+        foreach ($path in $paths) { Test-Path -LiteralPath $path | Should -BeFalse }
+    }
+    It 'rejects changes outside the three new VM resources' -TestCases @(
+        @{ Field = 'changeType'; Value = 'Modify' }
+        @{ Field = 'resourceId'; Value = '/subscriptions/test/resourceGroups/shared/providers/Microsoft.HybridCompute/machines/student' }
+    ) {
+        param($Field, $Value)
+        $preview.changes[0][$Field] = $Value
+        { Submit-LocalBoxCapacityVM $state $entry $credential } | Should -Throw '*submission failed*'
+        Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments[2] -eq 'create' }
+        foreach ($path in $paths) { Test-Path -LiteralPath $path | Should -BeFalse }
+    }
+    It 'permits harmless existing-resource entries during incremental deployment' -TestCases @(
+        @{ ChangeType = 'Ignore' }
+        @{ ChangeType = 'NoChange' }
+    ) {
+        param($ChangeType)
+        $preview.changes += @{ resourceId = '/subscriptions/test/resourceGroups/rg-test/providers/Microsoft.HybridCompute/machines/earlier-vm'; changeType = $ChangeType }
+        Submit-LocalBoxCapacityVM $state $entry $credential
+        Should -Invoke Invoke-LocalBoxAz -Times 1 -Exactly -ParameterFilter { $Arguments[2] -eq 'create' }
+    }
+    It 'still rejects modifications or deletions of an existing VM' -TestCases @(
+        @{ ChangeType = 'Modify' }
+        @{ ChangeType = 'Delete' }
+        @{ ChangeType = 'Unsupported' }
+    ) {
+        param($ChangeType)
+        $preview.changes += @{ resourceId = '/subscriptions/test/resourceGroups/rg-test/providers/Microsoft.HybridCompute/machines/earlier-vm'; changeType = $ChangeType }
+        { Submit-LocalBoxCapacityVM $state $entry $credential } | Should -Throw '*submission failed*'
+        $entry.SubmissionError | Should -Match 'ARM what-if'
+        Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments[2] -eq 'create' }
+    }
+    It 'rejects duplicate create entries instead of accepting a missing resource' {
+        $preview.changes[2] = $preview.changes[0]
+        { Submit-LocalBoxCapacityVM $state $entry $credential } | Should -Throw '*submission failed*'
+        Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments[2] -eq 'create' }
+    }
+    It 'redacts CLI errors and cleans credential files on failure' {
+        Mock Invoke-LocalBoxAz {
+            $paths.Add($Arguments[$Arguments.IndexOf('--parameters') + 1].Substring(1))
+            throw 'Mock!Password9-not-real'
+        }
+        try { Submit-LocalBoxCapacityVM $state $entry $credential; throw 'Expected failure' }
+        catch {
+            $_.Exception.Message | Should -Match 'CLI details are withheld'
+            $_.Exception.Message | Should -Not -Match 'Mock!Password9-not-real'
+        }
+        foreach ($path in $paths) { Test-Path -LiteralPath $path | Should -BeFalse }
+    }
+}
+
+Describe 'Health runner defaults and feedback' {
+    BeforeAll {
+        function kubectl {}
+    }
+    It 'defaults to the home kubeconfig and downloads without side effects when dot-sourced' {
+        Mock Invoke-WebRequest { throw 'Unexpected download' }
+        . "$PSScriptRoot/../test-sovereign-cloud.ps1"
+        $LocalBoxKubeconfig | Should -Be (Join-Path $HOME '.kube/config')
+        [bool]$DownloadTests | Should -BeTrue
+        Should -Invoke Invoke-WebRequest -Times 0
+    }
+    It 'accepts an explicit kubeconfig and disables downloads for a local checkout' {
+        . "$PSScriptRoot/../test-sovereign-cloud.ps1" -LocalBoxKubeconfig 'custom.kubeconfig' -DownloadTests:$false
+        $LocalBoxKubeconfig | Should -Be 'custom.kubeconfig'
+        [bool]$DownloadTests | Should -BeFalse
+    }
+    It 'preserves inventory precedence and only applies the default to LocalBox scopes' -TestCases @(
+        @{ TestScope = 'LocalBox'; Existing = 'inventory.kubeconfig'; Explicit = $false; Expected = 'inventory.kubeconfig' }
+        @{ TestScope = 'All'; Existing = 'inventory.kubeconfig'; Explicit = $true; Expected = 'chosen.kubeconfig' }
+        @{ TestScope = 'LocalBox'; Existing = $null; Explicit = $false; Expected = 'chosen.kubeconfig' }
+        @{ TestScope = 'ParticipantLabs'; Existing = 'inventory.kubeconfig'; Explicit = $true; Expected = 'inventory.kubeconfig' }
+        @{ TestScope = 'ParticipantLabs'; Existing = $null; Explicit = $false; Expected = $null }
+    ) {
+        param($TestScope, $Existing, $Explicit, $Expected)
+        $ast = [Management.Automation.Language.Parser]::ParseFile("$PSScriptRoot/../test-sovereign-cloud.ps1", [ref]$null, [ref]$null)
+        $assignment = $ast.Find({ param($node)
+            $node -is [Management.Automation.Language.IfStatementAst] -and
+            $node.Clauses[0].Item1.Extent.Text -eq '$Scope -in @(''LocalBox'', ''All'') -and $inventory.LocalBox'
+        }, $true)
+        $assignment | Should -Not -BeNullOrEmpty
+        $Scope = $TestScope
+        $inventory = if ($TestScope -eq 'ParticipantLabs' -and -not $Existing) { @{ Labs = @() } } else { @{ LocalBox = @{ Kubeconfig = $Existing } } }
+        $parameters = if ($Explicit) { @{ LocalBoxKubeconfig = 'chosen.kubeconfig' } } else { @{} }
+        $resolve = [scriptblock]::Create('param([string]$LocalBoxKubeconfig = ''chosen.kubeconfig'')' + "`n" + $assignment.Extent.Text)
+        & $resolve @parameters
+        $inventory.LocalBox.Kubeconfig | Should -Be $Expected
+        if ($TestScope -eq 'ParticipantLabs' -and -not $Existing) { $inventory.ContainsKey('LocalBox') | Should -BeFalse }
+    }
+    It 'reports the waiting condition and remaining time before retrying' {
+        Mock Write-Host {}
+        Mock Start-Sleep {}
+        $attempts = @{ Count = 0 }
+        $output = @(Wait-SovereignCheck -TimeoutSeconds 60 -Check {
+            $attempts.Count++
+            if ($attempts.Count -eq 1) { throw 'System pod kube-system/test-pod is not healthy.' }
+        })
+        $attempts.Count | Should -Be 2
+        $output.Count | Should -Be 0
+        Should -Invoke Write-Host -Times 1 -ParameterFilter {
+            $Object -match 'attempt 1 not ready.*remaining; retry in 15s.*test-pod'
+        }
+        Should -Invoke Start-Sleep -Times 1 -Exactly -ParameterFilter { $Seconds -eq 15 }
+    }
+    It 'does not retry terminal authorization errors' {
+        Mock Write-Host {}
+        Mock Start-Sleep {}
+        { Wait-SovereignCheck -Check { throw 'Forbidden: cannot list pods' } } | Should -Throw '*Forbidden*'
+        Should -Invoke Start-Sleep -Times 0
+        Should -Invoke Write-Host -Times 0
+    }
+    It 'throws the final failed condition at the timeout instead of claiming readiness' {
+        Mock Write-Host {}
+        Mock Start-Sleep {}
+        { Wait-SovereignCheck -TimeoutSeconds 0 -Check { throw 'Deployment coredns is unavailable.' } } | Should -Throw '*coredns*'
+        Should -Invoke Start-Sleep -Times 0
+    }
+    It 'shows the Kubernetes query without mixing progress into JSON results' {
+        Mock Test-Path { $true }
+        Mock Write-Host {}
+        Mock kubectl {
+            $global:LASTEXITCODE = 0
+            '{"items":[{"metadata":{"name":"node-1"}}]}'
+        }
+        $result = @(Invoke-SovereignKubectl 'test.kubeconfig' @('get', 'nodes'))
+        $result.Count | Should -Be 1
+        $result[0].items[0].metadata.name | Should -Be 'node-1'
+        Should -Invoke Write-Host -Times 1 -ParameterFilter { $Object -match 'Querying Kubernetes: kubectl get nodes.*20s' }
+        Should -Invoke kubectl -Times 1 -ParameterFilter { $args -contains '--request-timeout=20s' -and $args -contains 'test.kubeconfig' }
+    }
+    It 'does not claim authentication when the default kubeconfig is absent' {
+        Mock Test-Path { $false }
+        Mock kubectl {}
+        { Invoke-SovereignKubectl (Join-Path $HOME '.kube/config') @('get', 'nodes') } | Should -Throw '*independently authenticated*'
+        Should -Invoke kubectl -Times 0
+    }
+}
+
 Describe 'Console lab group credentials' {
     BeforeAll {
         function Get-MhhDefaultLabGroup { [CmdletBinding()] param() }
@@ -272,6 +855,123 @@ Describe 'AKS Local resource API selection' {
     }
 }
 
+Describe 'AKS Local Arc proxy RBAC' {
+    BeforeEach {
+        $clusterId = '/subscriptions/test/resourceGroups/localbox/providers/Microsoft.Kubernetes/connectedClusters/localbox-aks'
+        $groupId = 'a0000000-0000-0000-0000-000000000001'
+        $roleId = '/subscriptions/test/providers/Microsoft.Authorization/roleDefinitions/00493d72-78f6-4148-b6c5-d3ce8e4799dd'
+        $assignment = @{ scope = $clusterId; principalId = $groupId; principalType = 'Group'; roleDefinitionId = $roleId }
+        Mock Invoke-LocalBoxAz { @() }
+        Mock Invoke-LocalBoxAz { $assignment } -ParameterFilter { $Arguments[2] -eq 'create' }
+    }
+    It 'creates only the group proxy role at connected-cluster scope without Graph lookups' {
+        Sync-LocalBoxAksProxyRole $clusterId $groupId
+        Should -Invoke Invoke-LocalBoxAz -Times 1 -Exactly -ParameterFilter {
+            $Arguments[2] -eq 'list' -and $Arguments -contains '--include-inherited' -and
+            $Arguments[$Arguments.IndexOf('--fill-principal-name') + 1] -eq 'false' -and
+            $Arguments[$Arguments.IndexOf('--fill-role-definition-name') + 1] -eq 'false'
+        }
+        Should -Invoke Invoke-LocalBoxAz -Times 1 -Exactly -ParameterFilter {
+            $Arguments[2] -eq 'create' -and $Arguments -contains '--assignee-object-id' -and $Arguments -notcontains '--assignee' -and
+            $Arguments[$Arguments.IndexOf('--assignee-object-id') + 1] -eq $groupId -and
+            $Arguments[$Arguments.IndexOf('--assignee-principal-type') + 1] -eq 'Group' -and
+            $Arguments[$Arguments.IndexOf('--scope') + 1] -eq $clusterId -and
+            $Arguments[$Arguments.IndexOf('--role') + 1] -eq $roleId -and
+            $Arguments[$Arguments.IndexOf('--subscription') + 1] -eq 'test' -and
+            $Arguments[$Arguments.IndexOf('--name') + 1] -match '^[0-9a-f-]{36}$'
+        }
+    }
+    It 'reuses direct and inherited grants without writes' -TestCases @(
+        @{ AssignmentScope = '/subscriptions/test/resourceGroups/localbox/providers/Microsoft.Kubernetes/connectedClusters/localbox-aks' }
+        @{ AssignmentScope = '/subscriptions/test/resourceGroups/localbox' }
+        @{ AssignmentScope = '/subscriptions/test' }
+    ) {
+        param($AssignmentScope)
+        $assignment.scope = $AssignmentScope.ToUpperInvariant()
+        Mock Invoke-LocalBoxAz { @($assignment) } -ParameterFilter { $Arguments[2] -eq 'list' }
+        Sync-LocalBoxAksProxyRole $clusterId $groupId
+        Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments[2] -eq 'create' }
+    }
+    It 'does not accept a grant for another group, role or resource' -TestCases @(
+        @{ Property = 'principalId'; Value = 'b0000000-0000-0000-0000-000000000002' }
+        @{ Property = 'roleDefinitionId'; Value = '/subscriptions/test/providers/Microsoft.Authorization/roleDefinitions/00000000-0000-0000-0000-000000000001' }
+        @{ Property = 'scope'; Value = '/subscriptions/test/resourceGroups/other' }
+    ) {
+        param($Property, $Value)
+        $other = $assignment.Clone()
+        $other[$Property] = $Value
+        Mock Invoke-LocalBoxAz { @($other) } -ParameterFilter { $Arguments[2] -eq 'list' }
+        Sync-LocalBoxAksProxyRole $clusterId $groupId
+        Should -Invoke Invoke-LocalBoxAz -Times 1 -ParameterFilter { $Arguments[2] -eq 'create' }
+    }
+    It 'uses a stable assignment name on retries regardless of ID casing' {
+        $names = [Collections.Generic.List[string]]::new()
+        Mock Invoke-LocalBoxAz {
+            $names.Add($Arguments[$Arguments.IndexOf('--name') + 1])
+            $assignment
+        } -ParameterFilter { $Arguments[2] -eq 'create' }
+        Sync-LocalBoxAksProxyRole $clusterId $groupId
+        Sync-LocalBoxAksProxyRole $clusterId.ToUpperInvariant() $groupId.ToUpperInvariant()
+        $names.Count | Should -Be 2
+        $names[0] | Should -Be $names[1]
+    }
+    It 'does not query or create RBAC in WhatIf even before the cluster exists' {
+        Sync-LocalBoxAksProxyRole $clusterId $groupId -WhatIf
+        Should -Invoke Invoke-LocalBoxAz -Times 0
+    }
+    It 'rejects resource-group scope and malformed groups before CLI calls' {
+        { Sync-LocalBoxAksProxyRole '/subscriptions/test/resourceGroups/localbox' $groupId } | Should -Throw '*connected-cluster*'
+        { Sync-LocalBoxAksProxyRole $clusterId 'not-a-group-id' } | Should -Throw '*object ID*'
+        Should -Invoke Invoke-LocalBoxAz -Times 0
+    }
+    It 'does not replace or bypass an existing conditional grant' -TestCases @(
+        @{ AssignmentScope = '/subscriptions/test/resourceGroups/localbox/providers/Microsoft.Kubernetes/connectedClusters/localbox-aks' }
+        @{ AssignmentScope = '/subscriptions/test/resourceGroups/localbox' }
+    ) {
+        param($AssignmentScope)
+        $assignment.scope = $AssignmentScope
+        $assignment.condition = 'restricted'
+        Mock Invoke-LocalBoxAz { @($assignment) } -ParameterFilter { $Arguments[2] -eq 'list' }
+        { Sync-LocalBoxAksProxyRole $clusterId $groupId } | Should -Throw '*will not replace*'
+        Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments[2] -eq 'create' }
+    }
+    It 'stops on read authorization failures without attempting creation' {
+        Mock Invoke-LocalBoxAz { throw 'AuthorizationFailed' } -ParameterFilter { $Arguments[2] -eq 'list' }
+        { Sync-LocalBoxAksProxyRole $clusterId $groupId } | Should -Throw '*roleAssignments/read*AuthorizationFailed*'
+        Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments[2] -eq 'create' }
+    }
+    It 'reports missing write permission without elevating the managed identity' {
+        Mock Invoke-LocalBoxAz { throw 'AuthorizationFailed' } -ParameterFilter { $Arguments[2] -eq 'create' }
+        { Sync-LocalBoxAksProxyRole $clusterId $groupId } | Should -Throw '*roleAssignments/write*does not elevate*AuthorizationFailed*'
+        Should -Invoke Invoke-LocalBoxAz -Times 2 -Exactly
+    }
+    It 'rejects an empty or mismatched creation response' -TestCases @(
+        @{ Response = $null }
+        @{ Response = @{ scope = '/subscriptions/test/resourceGroups/localbox' } }
+    ) {
+        param($Response)
+        Mock Invoke-LocalBoxAz { $Response } -ParameterFilter { $Arguments[2] -eq 'create' }
+        { Sync-LocalBoxAksProxyRole $clusterId $groupId } | Should -Throw
+    }
+    It 'wires reconciliation for existing and new AKS clusters but skips it with SkipAks' {
+        $ast = [Management.Automation.Language.Parser]::ParseFile("$PSScriptRoot/../prepare-localbox.ps1", [ref]$null, [ref]$null)
+        $guard = $ast.Find({ param($node)
+            $node -is [Management.Automation.Language.IfStatementAst] -and
+            $node.Clauses[0].Item1.Extent.Text -eq '-not $Settings.SkipAks'
+        }, $true)
+        $guard | Should -Not -BeNullOrEmpty
+        $reconcile = [scriptblock]::Create($guard.Extent.Text)
+        $aksId = $clusterId
+        $Settings = @{ SkipAks = $true }
+        Mock Sync-LocalBoxAksProxyRole {}
+        & $reconcile
+        Should -Invoke Sync-LocalBoxAksProxyRole -Times 0
+        $Settings.SkipAks = $false
+        & $reconcile
+        Should -Invoke Sync-LocalBoxAksProxyRole -Times 1 -Exactly -ParameterFilter { $ClusterId -eq $aksId -and $GroupObjectId -eq $groupId }
+    }
+}
+
 Describe 'Resource reconciliation' {
     BeforeEach {
         $resourceId = '/subscriptions/test/resourceGroups/localbox/providers/Microsoft.AzureStackHCI/logicalNetworks/vm-net'
@@ -373,7 +1073,6 @@ Describe 'LocalBox image storage conflicts' {
         Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments -contains 'create' }
     }
 }
-<
 Describe 'CLI output streams' {
     BeforeEach {
         $script:cliTestExecutable = (Get-Process -Id $PID).Path
@@ -622,6 +1321,58 @@ Describe 'Generated Azure Local storage names' {
     It 'allows an absent secondary path only when explicitly requested' {
         Resolve-LocalBoxStoragePath $resources UserStorage2 '/custom/jumpstart' -AllowMissing | Should -BeNullOrEmpty
         { Resolve-LocalBoxStoragePath $resources UserStorage2 '/custom/jumpstart' } | Should -Throw '*exactly one*'
+    }
+}
+
+Describe 'Kubernetes DaemonSet readiness' {
+    BeforeEach {
+        $controllers = @{ items = @(
+            @{ kind = 'DaemonSet'; metadata = @{ name = 'calico-node' }; status = @{ desiredNumberScheduled = 4; numberReady = 4 } }
+            @{ kind = 'DaemonSet'; metadata = @{ name = 'calico-node-windows' }; spec = @{ template = @{ spec = @{ nodeSelector = @{ 'kubernetes.io/os' = 'windows' } } } }; status = @{ desiredNumberScheduled = 0; numberReady = 0 } }
+            @{ kind = 'Deployment'; metadata = @{ name = 'coredns' }; spec = @{ replicas = 2 }; status = @{ availableReplicas = 2 } }
+        ) }
+        Mock Invoke-SovereignKubectl {
+            switch ($Arguments[1]) {
+                'nodes' { return @{ items = @(@{ metadata = @{ name = 'linux-node' }; status = @{ conditions = @(@{ type = 'Ready'; status = 'True' }) } }) } }
+                'pods' { return @{ items = @(@{ metadata = @{ name = 'calico-node-pod'; namespace = 'kube-system' }; status = @{ phase = 'Running'; conditions = @(@{ type = 'Ready'; status = 'True' }); containerStatuses = @(@{ name = 'calico-node'; ready = $true; state = @{ running = @{} } }) } }) } }
+                'deployments,daemonsets' { return $controllers }
+                default { throw 'Unexpected query' }
+            }
+        }
+    }
+    It 'accepts healthy Linux controllers alongside a Windows DaemonSet with no eligible nodes' {
+        { Test-SovereignKubernetes 'test.kubeconfig' 1 } | Should -Not -Throw
+    }
+    It 'uses scheduling counts rather than a special case for Windows controller names' {
+        $controllers.items[1].metadata.name = 'optional-agent'
+        { Test-SovereignKubernetes 'test.kubeconfig' 1 } | Should -Not -Throw
+    }
+    It 'fails when a Linux DaemonSet is missing a Ready pod' {
+        $controllers.items[0].status.numberReady = 3
+        { Test-SovereignKubernetes 'test.kubeconfig' 1 } | Should -Throw '*calico-node is unavailable (3 Ready / 4 desired)*'
+    }
+    It 'fails when a Windows DaemonSet has eligible nodes but no Ready pods' {
+        $controllers.items[1].status.desiredNumberScheduled = 1
+        { Test-SovereignKubernetes 'test.kubeconfig' 1 } | Should -Throw '*calico-node-windows is unavailable (0 Ready / 1 desired)*'
+    }
+    It 'does not treat missing or invalid status as zero desired pods' -TestCases @(
+        @{ Status = @{} }
+        @{ Status = @{ desiredNumberScheduled = 0 } }
+        @{ Status = @{ numberReady = 0 } }
+        @{ Status = @{ desiredNumberScheduled = -1; numberReady = 0 } }
+        @{ Status = @{ desiredNumberScheduled = 0; numberReady = -1 } }
+    ) {
+        param($Status)
+        $controllers.items[1].status = $Status
+        { Test-SovereignKubernetes 'test.kubeconfig' 1 } | Should -Throw '*missing or invalid scheduling status*'
+    }
+    It 'still fails an unavailable deployment alongside a zero-target DaemonSet' {
+        $controllers.items[2].status.availableReplicas = 1
+        { Test-SovereignKubernetes 'test.kubeconfig' 1 } | Should -Throw '*Deployment coredns is unavailable*'
+    }
+    It 'still rejects an empty controller collection' {
+        $controllers.items = @()
+        { Test-SovereignKubernetes 'test.kubeconfig' 1 } | Should -Throw '*No kube-system controllers found*'
     }
 }
 

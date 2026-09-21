@@ -8,11 +8,11 @@ Use PowerShell 7, Pester 5.7.1 or later within major version 5, Azure CLI, and `
 
 The runner uses the caller's existing Azure CLI login and never changes it. LocalBox control-plane checks can use its managed identity. Participant-lab checks need an operator authorized for those explicitly listed resource groups; the LocalBox identity is not automatically authorized there. Full LocalBox checks run on LocalBox-Client with a nested-node Windows credential. Do not serialize passwords or tokens in JSON.
 
-Full Kubernetes checks take dedicated kubeconfigs that already authenticate to the intended clusters. For AKS Local, use an Entra group member in a separate CLI profile/session and the [Jumpstart proxy workflow](https://jumpstart.azure.com/azure_jumpstart_localbox/AKS). Keep the proxy/tunnel running throughout testing. For K3s, use its existing private/Bastion access path. Tests never switch the current kubeconfig or retrieve admin credentials automatically.
+Full Kubernetes checks require kubeconfigs that already authenticate to the intended clusters. LocalBox defaults to `$HOME/.kube/config` (on Windows, `$HOME\.kube\config`), the usual path updated by `az connectedk8s proxy`. An explicit `-LocalBoxKubeconfig` takes precedence; otherwise a `LocalBox.Kubeconfig` value in the inventory is preserved before using the default. The selected file's current context must target `localbox-aks`; do not switch it during testing. For AKS Local, use an Entra group member in a separate CLI profile/session and the [Jumpstart proxy workflow](https://jumpstart.azure.com/azure_jumpstart_localbox/AKS). Keep the proxy/tunnel running throughout testing. For K3s, use its existing private/Bastion access path. Tests never switch the current kubeconfig or retrieve admin credentials automatically.
 
 ## Download without cloning
 
-Download [test-sovereign-cloud.ps1](../test-sovereign-cloud.ps1) from the same trusted ref as preparation. The runner's `-DownloadTests` downloads the helper and two suites to a temporary directory; `-GitHubRef` must identify that **same ref**, preferably a commit SHA. Downloaded scripts execute under your privileges, so review and pin them.
+Download [test-sovereign-cloud.ps1](../test-sovereign-cloud.ps1) from the same trusted ref as preparation. `-DownloadTests` defaults to `$true`: every run downloads the helpers and two suites to a temporary directory and prints the repository/ref being used. Internet access is required unless you pass `-DownloadTests:$false` with a complete local checkout. `-GitHubRef` must identify the **same reviewed ref** as the runner, preferably a commit SHA; it defaults to `main`. Downloaded scripts execute under your privileges, so review and pin them. Download failures stop the run rather than silently falling back to other code.
 
 For a fork, also specify `-GitHubRepository 'owner/MicroHack'`. For example, testing this branch uses `-GitHubRepository 'janegilring/MicroHack' -GitHubRef 'sov-cloud-localbox-post-automation'`. The default repository remains `microsoft/MicroHack`.
 
@@ -21,10 +21,10 @@ $ref = 'main'
 $base = "https://raw.githubusercontent.com/microsoft/MicroHack/$ref/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/resources"
 Invoke-WebRequest "$base/test-sovereign-cloud.ps1" -OutFile './test-sovereign-cloud.ps1'
 ./test-sovereign-cloud.ps1 -Scope LocalBox -Mode ControlPlane `
-    -LocalBoxManifestPath 'C:\LocalBox\sovereign-localbox.json' -DownloadTests -GitHubRef $ref
+    -LocalBoxManifestPath 'C:\LocalBox\sovereign-localbox.json' -GitHubRef $ref
 ```
 
-For a checkout, run the same command without `-DownloadTests`.
+For a checkout, pass `-DownloadTests:$false` explicitly to use its local helpers and suites. Omitting the switch now downloads tests.
 
 ## Full LocalBox check
 
@@ -35,9 +35,10 @@ Keep a reviewed [prepare-localbox.ps1](../prepare-localbox.ps1) from the same re
 $nodeCredential = Resolve-LocalBoxNodeCredential -Configuration (Import-PowerShellDataFile -LiteralPath $env:LocalBoxConfigFile)
 ./test-sovereign-cloud.ps1 -Scope LocalBox -Mode Full `
     -LocalBoxManifestPath 'C:\LocalBox\sovereign-localbox.json' `
-    -LocalBoxKubeconfig 'C:\LocalBox\aks-local.kubeconfig' `
-    -NodeCredential $nodeCredential -DownloadTests -GitHubRef $ref
+    -NodeCredential $nodeCredential -GitHubRef $ref
 ```
+
+  This example uses the default `$HOME/.kube/config`. Use `-LocalBoxKubeconfig 'C:\LocalBox\aks-local.kubeconfig'` for a dedicated file instead. Changing the defaults does not authenticate kubectl or start the Arc proxy.
 
 Checks cover the Client and bootstrap, cluster/Arc bridge/custom location/AKS extension, supporting Azure resources, image download/storage placement, exact network settings, expected AKS topology/admin group, nested-node/storage health and capacity, Kubernetes node readiness and system pods/controllers. Gateway/DNS/HTTPS probes run from a nested node; these do not prove connectivity from a participant VM that has not yet been created.
 
@@ -59,7 +60,7 @@ $nodeCredential = Resolve-LocalBoxNodeCredential -Configuration (Import-PowerShe
 .\test-sovereign-cloud.ps1 -Scope LocalBox -Mode Full `
   -LocalBoxManifestPath $manifestPath `
   -LocalBoxKubeconfig $kubeconfigPath `
-  -NodeCredential $nodeCredential -OutputDirectory $outputDirectory
+  -NodeCredential $nodeCredential -OutputDirectory $outputDirectory -DownloadTests:$false
 Get-Content (Join-Path $outputDirectory 'health.json')
 ```
 
@@ -89,7 +90,7 @@ For manual deployments without retained deployment records, replace `DeploymentN
 
 ```powershell
 ./test-sovereign-cloud.ps1 -Scope ParticipantLabs -InventoryPath './inventory.json' `
-    -Mode Full -AllowGuestRunCommand -DownloadTests -GitHubRef $ref
+    -Mode Full -AllowGuestRunCommand -GitHubRef $ref
 ```
 
 `-AllowGuestRunCommand` permits Azure VM Run Command on the selected K3s VM solely to check K3s service state, DNS and HTTPS egress. This transport is an Azure management action and requires scoped Run Command permission even though the guest commands are read-only. It can create transient Run Command execution artifacts. Without consent, that mandatory Full check fails; it is not silently skipped.
@@ -105,7 +106,19 @@ For both paths together, use `-Scope All`, supply the participant inventory and 
 - Nonzero exit: a failure, or incomplete Full coverage. Missing credentials/permissions/connectivity is not a healthy result.
 - A successful `ControlPlane` run is explicitly partial and never sets `FullReadiness`. Full readiness covers the checks described above, not application functionality or uncreated student resources.
 
-Waits are bounded by `-TimeoutMinutes` per check. Terminal provisioning failures and authorization errors stop promptly. Secure the reports as operational metadata; underlying tool errors in XML may include resource IDs and tenant information. Retest after resolving failures rather than mutating infrastructure from the health suite.
+Readiness retries use `-TimeoutMinutes` per check (default 15 minutes). The runner prints each Kubernetes query, then reports the failed condition, attempt number and remaining time before each 15-second retry. Nodes can be Ready while a system pod, Deployment or DaemonSet is not; the same test verifies all of them. Authorization errors stop without retrying.
+
+DaemonSets are checked against their desired scheduling count. Windows-only DaemonSets such as `calico-node-windows` can legitimately report zero desired and zero Ready pods on a Linux-only cluster; that is not a failure. Missing scheduling status or fewer Ready pods than desired still fails. An older runner that reports a zero-target DaemonSet as unavailable needs the corrected runner and downloaded helpers from the same ref, not deletion of the DaemonSet or a longer timeout.
+
+Each kubectl API request uses `--request-timeout=20s`. The readiness deadline is checked between attempts, not as a hard process timeout; an external authentication plugin can take longer or require attention. If the last query stays on screen without retry messages, check the proxy terminal and authentication state. In a separate terminal, inspect the same kubeconfig without changing its context:
+
+```powershell
+kubectl --kubeconfig "$HOME/.kube/config" --request-timeout=20s get nodes
+kubectl --kubeconfig "$HOME/.kube/config" --request-timeout=20s get pods -A
+kubectl --kubeconfig "$HOME/.kube/config" --request-timeout=20s get deployments,daemonsets -n kube-system
+```
+
+Use your explicit kubeconfig path instead when testing a dedicated file. Secure the reports as operational metadata; underlying tool errors in XML may include resource IDs and tenant information. Retest after resolving failures rather than mutating infrastructure from the health suite.
 
 ## Offline regression tests
 

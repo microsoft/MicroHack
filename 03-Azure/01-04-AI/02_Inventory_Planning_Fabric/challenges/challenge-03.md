@@ -60,9 +60,6 @@ Your Inventory Optimisation Agent answers these questions by querying the Fabric
    ```
 
 5. Add the **Fabric Data Agent** tool and select the existing **`inventory-hack-agent`** connection (created in Challenge 2). Do **not** add Web Search — this agent works only with internal data.
-
-   > [!NOTE]
-   > If the portal auto-added custom `fx` function stubs (e.g. `query_inventory`), **remove them** and use only the **Fabric Data Agent** connector — see Challenge 2, Part C.
 6. Click **Save**.
 
 ### Part B — Run the agent (15 min)
@@ -70,14 +67,24 @@ Your Inventory Optimisation Agent answers these questions by querying the Fabric
 1. Open the **Agents playground**.
 2. Paste the demand assessment you received in Challenge 2 as your first message. Copy it directly from your Challenge 2 playground chat, for example:
 
-   > *"Outdoor power tools are critically exposed. For SKU P004 at Portland and P006 at Seattle, query current stock, reorder point, and average weekly units sold, then return the reorder recommendation table (SKU, Location, Current Stock, Suggested Reorder Qty, Priority). Flag any SKU below its reorder point as CRITICAL."*
+   ```text
+   Outdoor power tools are critically exposed. For SKU P004 at Portland and P006 at Seattle, query current stock, reorder point, and average weekly units sold, then return the reorder recommendation table (SKU, Location, Current Stock, Suggested Reorder Qty, Priority). Flag any SKU below its reorder point as CRITICAL.
+   ```
 
    > [!TIP]
    > **Phrasing matters — name the SKUs.** A purely prose prompt (e.g. *"leaf blowers and chainsaws are exposed"*) often makes the Fabric Data Agent generate a query that filters on a friendly category label and returns **nothing**. Naming the **SKUs/productIds** (e.g. `P004`, `P006`) and the exact fields you want — as in the example above — reliably returns data. If a prompt comes back empty, re-ask it by SKU.
 
 3. The agent should query Fabric and return a recommendation table.
-4. Ask a follow-up: *"Show me only the CRITICAL items."*
-5. Ask: *"Can the Chicago warehouse cover Portland's shortfall with a transfer instead of a new purchase order?"*
+4. Ask a follow-up:
+
+   ```text
+   Show me only the CRITICAL items.
+   ```
+5. Ask:
+
+   ```text
+   Can the Chicago warehouse cover Portland's shortfall with a transfer instead of a new purchase order?
+   ```
 
 ![Playground showing a structured reorder recommendation table with a CRITICAL item flagged](../images/challenge-02-recommendation.png)
 

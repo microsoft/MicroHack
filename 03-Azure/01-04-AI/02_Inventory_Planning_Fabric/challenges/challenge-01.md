@@ -84,8 +84,8 @@ The data lives in **Microsoft Fabric** (a governed Lakehouse with inventory, dem
    > [!NOTE]
    > Follow either this section or section 4(b) if you'd like to load the data and create the data agent using code.
 
-   **a. Download and upload the seed data.**
-   Download all seven `.parquet` files from the hack repo's [`data/`](../data/) folder to your computer. Open **`InventoryLakehouse`**, select **Upload files**, and use the folder button to select all seven files. Click **Upload** and wait until every file shows a green completion check.
+   **a. Upload the seed data.**
+   The seven `.parquet` files are in the hack repo's [`data/`](../data/) folder. Open **`InventoryLakehouse`**, select **Upload files**, use the folder button to select all seven files, click **Upload**, and wait until every file shows a green completion check.
 
    ![The InventoryLakehouse home page with Upload files selected](../images/challenge-00-lakehouse-upload-files.png)
 
@@ -99,7 +99,11 @@ The data lives in **Microsoft Fabric** (a governed Lakehouse with inventory, dem
    Keep the schema as **`dbo`**, set the table name to the file name without the `.parquet` extension, and click **Load**. For example, load `demandhistory.parquet` into a table named `demandhistory`. Repeat this for all seven files.
 
    > [!NOTE]
-   > **Load the files one at a time.** *Load to tables* runs as a background job; starting the next load before the previous one finishes can fail with a *load already in progress* error. If a load errors, open **Monitor** (left rail), **cancel** any still-running load activity, then retry that file into a new table.
+   > **Load the files one at a time.** *Load to tables* runs as a background Spark job; starting the next load before the previous one finishes can fail with a *load already in progress* error. If a load errors, cancel the stuck job first:
+   > 1. Open the **Monitor** hub from the left navigation rail.
+   > 2. Find the running **Load to tables** / Spark activity for `InventoryLakehouse` (Status **In progress**).
+   > 3. Select it (or its **…** menu) and choose **Cancel**, then confirm.
+   > 4. Wait until the status shows **Cancelled**, then retry that file into a new table.
 
    ![The Load file to new table dialog using the dbo schema and demandhistory table name](../images/challenge-00-lakehouse-load-table.png)
 
@@ -125,17 +129,20 @@ The data lives in **Microsoft Fabric** (a governed Lakehouse with inventory, dem
    You answer questions about Zava retail inventory. Use these tables: Inventory (onHand, reorderPoint, safetyStock per product per location), Products (name, category, unitCost, leadTimeDays, supplierId), Stores (retail stores and warehouses with region/city/state), DemandHistory (weekly units sold per product per store), ExternalSignals (market signals with affectedCategories), Suppliers, and ReplenishmentOrders (past purchase/transfer orders). Category values are stored as lowercase snake_case: garden_and_lawn, outdoor_power_tools, paint_and_supplies, smart_home. When a question names a category in plain English (e.g. "Outdoor Power Tools"), map it to the exact snake_case value before filtering; the same applies to affectedCategories in ExternalSignals. Prefer filtering by productId/SKU (e.g. P004) when the question names specific products. Always return exact numbers. Flag a product as CRITICAL when onHand is below safetyStock.
    ```
 
-   Save the Data Agent.
-
    ![The Agent instructions page containing the Zava retail inventory grounding instructions](../images/challenge-00-agent-add-instructions.png)
 
-   **g. Publish the Data Agent.**
+   **g. Test the Data Agent (before publishing).**
+   Open the **Test data agent** pane and ask: *"How many Leaf Blower X2 units are on hand at the Portland and Seattle stores, and are they below safety stock?"* You should get exact numbers with **CRITICAL** flags — proof your tables are selected and the agent reasons correctly. Testing the draft here confirms it works *before* you publish.
+
+   ![The published data agent answering the Leaf Blower X2 test question with exact CRITICAL stock levels for Portland and Seattle](../images/challenge-00-agent-test.png)
+
+   **h. Publish the Data Agent.**
 
    Click **Publish** in the top toolbar. In the **Publish data agent** dialog, enter a short description of the agent's purpose and capabilities, for example: `Zava inventory data agent for the Agentic Inventory Planning MicroHack.` Leave **Also publish to the Agent Store in Microsoft 365 Copilot** turned off, then click **Publish**.
 
    ![Publish data agent dialog with a purpose description entered and the Publish button highlighted](../images/challenge-00-agent-publish.png)
 
-   **h. Get your two IDs.**
+   **i. Get your two IDs.**
 
    After publishing, click the **Settings** gear in the data agent toolbar. Select **Model Context Protocol (MCP)**, then copy the **MCP server URL** using the copy icon.
 
@@ -158,11 +165,6 @@ The data lives in **Microsoft Fabric** (a governed Lakehouse with inventory, dem
    You paste both IDs into the Fabric Data Agent tool in Challenge 2.
 
    ![MCP server URL with the Workspace ID and Agent ID segments identified](../images/challenge-00-agent-ids.png)
-
-   **i. Verify your agent answers.** *(1 min)*
-   Open the data agent's **Test data agent** pane and ask: *"How many Leaf Blower X2 units are on hand at the Portland and Seattle stores, and are they below safety stock?"* You should get exact numbers with **CRITICAL** flags — proof that your tables are selected and the agent is published.
-
-   ![The published data agent answering the Leaf Blower X2 test question with exact CRITICAL stock levels for Portland and Seattle](../images/challenge-00-agent-test.png)
 
 4(b). **Load the data and create a Data Agent (with code).** *(~20 min)*
 
@@ -216,9 +218,6 @@ The data lives in **Microsoft Fabric** (a governed Lakehouse with inventory, dem
    > [!NOTE]
    > You attach the **Fabric Data Agent** as a *tool* on each Foundry agent, and the connection is created the **first time** you add it (Challenge 2). After that you simply **select** it. It points your Foundry agents at the data agent on top of **your** inventory Lakehouse.
 
-   > [!TIP]
-   > **No "Fabric Data Agent" in the Foundry tool catalogue later?** Your F2 capacity must be **running** (Azure portal → your Fabric capacity → **Resume**) and the setup notebook must have finished publishing the agent.
-
 5. **Understand the three-agent pattern.**
    Draw (on paper or a whiteboard) the flow:
    ```
@@ -253,7 +252,6 @@ The data lives in **Microsoft Fabric** (a governed Lakehouse with inventory, dem
 | `gpt-5.4-mini` is missing from your **model deployments** | Flag your facilitator before starting — the model deployment is part of your provisioned lab. |
 | Your **`FabricCapacityName`** isn't selectable when creating the workspace | The F2 capacity must be **running** — resume it (Azure portal → your Fabric capacity → **Resume**). |
 | The setup notebook errors on `%pip install` or the publish cell | Preview SDK drift — re-run the failed cell; if a method name differs, check the [SDK reference](https://learn.microsoft.com/fabric/data-science/fabric-data-agent-sdk). Make sure your F2 capacity is **running**. |
-| **Fabric Data Agent** isn't in the tool catalogue (previewing ahead) | Your F2 capacity must be running, and the setup notebook must have **published** the agent. |
 | The agent replies *"I'm unable to access the data source"* (or *"No tables selected yet"*) | Its tables aren't selected. The setup notebook selects all seven automatically, but if it didn't: open the data agent → **Data** tab → tick **all** tables under `InventoryLakehouse → dbo` → **Publish**, then re-test. |
 | Loading a `.parquet` file fails with a *load already in progress* error | Load the files **one at a time**. Open **Monitor** (left rail), **cancel** the still-running load activity, then retry that file into a new table. |
 | The agent returns nothing when you name a category (e.g. *"Outdoor Power Tools"*) | Category values are lowercase snake_case (`outdoor_power_tools`). Ask by the exact value or by **SKU/productId** (e.g. `P004`), and confirm the agent instructions include the category-mapping line from step 4(a)f / the setup notebook. |

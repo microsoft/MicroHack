@@ -82,9 +82,6 @@ You only need one tool here:
 3. Select **Add tool**, then **Save**.
 
 > [!NOTE]
-> If the portal auto-added custom `fx` function stubs (e.g. `query_inventory`), **remove them** and use only the **Fabric Data Agent** connector — see Challenge 2, Part C.
-
-> [!NOTE]
 > **Want a *real* submit action?** In production you'd add an **OpenAPI tool** (New Foundry) or a custom function that writes to the `ReplenishmentOrders` table / your ERP. That needs a hosted endpoint, so it's out of scope for this no-code lab — see **Part E — Stretch** at the end of this challenge.
 
 ### Part C — Run the complete planning loop (30 min)
@@ -93,7 +90,15 @@ You only need one tool here:
 > This is the payoff: running the full sense → plan → approve → act cycle in one session.
 
 1. Open a **new chat** in the Agents playground with `replenishment-action-agent`.
-2. Paste the recommendation table from Challenge 3 as your first message.
+2. Paste the recommendation table from Challenge 3 as your first message. If you don't have it handy, use this sample:
+
+   ```text
+   | SKU  | Location | Current Stock | Suggested Reorder Qty | Priority |
+   |------|----------|---------------|-----------------------|----------|
+   | P004 | Seattle  | 6             | 18                    | CRITICAL |
+   | P004 | Portland | 8             | 16                    | CRITICAL |
+   | P006 | Portland | 12            | 8                     | CRITICAL |
+   ```
 3. The agent should present a formatted purchase order proposal.
 4. **Test the approval flow:**
    - First, reply `MODIFY 1 50` — adjust the first line quantity. Verify the agent updates and re-presents the order.

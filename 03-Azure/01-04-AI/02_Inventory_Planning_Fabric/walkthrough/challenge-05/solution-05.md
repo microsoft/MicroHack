@@ -10,9 +10,9 @@ Chain the three agents in a Foundry **Workflow** (Sequential pattern + human-in-
 
 ## Solution walkthrough
 
-### Why a workflow, not connected agents
+### Why a workflow
 
-The classic **connected agents** tool (one agent added as another's tool) is **not available** in the New Foundry portal — Microsoft replaced it with **Workflows** for multi-agent orchestration. A workflow is a *deterministic* graph: each agent is a **node**, and edges pass one node's output to the next. That's a better fit than an LLM-driven orchestrator for this hack's fixed sense → plan → approve → act chain, and it keeps everything no-code.
+Use a Foundry **Workflow** for multi-agent orchestration. A workflow is a *deterministic* graph: each agent is a **node**, and edges pass one node's output to the next. That's a better fit than an LLM-driven orchestrator for this hack's fixed sense → plan → approve → act chain, and it keeps everything no-code.
 
 Wire the three specialists in order and name each node's output so the next node can consume it:
 - `demand-sensing-agent` → output `demandAssessment`

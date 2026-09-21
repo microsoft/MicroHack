@@ -90,6 +90,16 @@ module bastion 'modules/bastion.bicep' = {
   }
 }
 
+module logAnalytics 'modules/loganalytics.bicep' = {
+  name: 'loganalytics'
+  scope: resourceGroup
+  params: {
+    location: location
+    workspaceName: 'sqlhack-loganalytics'
+    retentionInDays: 30
+  }
+}
+
 module legacySqlVm 'modules/sql2016-vm.bicep' = {
   name: '${legacySQLName}-vm'
   scope: resourceGroup

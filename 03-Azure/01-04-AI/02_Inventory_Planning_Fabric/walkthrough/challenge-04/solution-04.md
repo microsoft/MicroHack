@@ -10,6 +10,10 @@ Build the Replenishment Action Agent, implement the human approval loop, and tra
 
 ## Solution walkthrough
 
+### Tools — one tool, and remove the default Web Search
+
+This agent needs **only the Fabric Data Agent tool** (to look up unit costs from the `Products` table). New prompt agents ship with **Web Search attached by default** — **remove it**, or `gpt-5.4-mini` will reach for the web instead of the governed cost data. After configuring, confirm the Fabric Data Agent is the only tool listed.
+
 ### Simulated submission (no function tool)
 
 The current **New Foundry** portal has no no-code custom-function tool — the Custom tab offers only OpenAPI, MCP, and A2A connectors, which all need a hosted endpoint. Because the Fabric Data Agent is read-only, the "act" step is **simulated by the agent**: on `YES`, its instructions have it generate a confirmation message (`✅ Purchase order PO-... submitted`). This keeps the lab fully no-code while still demonstrating the approve → act gate. In production you'd swap this for an OpenAPI tool that writes to the `ReplenishmentOrders` table / ERP (see Challenge 4, Part E).

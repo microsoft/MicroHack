@@ -35,7 +35,9 @@ $requiredProviders = @(
     "Microsoft.Storage",
     "Microsoft.Sql",
     "Microsoft.SqlVirtualMachine",
-    "Microsoft.DevTestLab"
+    "Microsoft.DevTestLab",
+    "Microsoft.OperationalInsights",
+    "Microsoft.Insights"
 )
 foreach($provider in $requiredProviders) {
     $state = (Get-AzResourceProvider -ProviderNamespace $provider -ErrorAction SilentlyContinue | Select-Object -First 1).RegistrationState
@@ -240,146 +242,72 @@ if (-not $found)
     throw "Expected Entra ID Admin was not configured within 2 minutes."
 }
 
-#Adding Sysadmin role to the Entra ID Admin on the SQLMI
-# SQL MI connection details
-$server   = $managedInstanceFQDN
-$database = "master"
-$username = $sqlMiAdminUsername
-$password = $sqlMiAdminPassword
-
-# Entra ID users/groups to add
-$principals = Get-MhhLabUser -UserId @($AllowedEntraUserIds) | Where-Object { $_.ShortName.ToLower() -match "labuser-[0-9]{4}"} | Select-Object -ExpandProperty UserPrincipalName
-
-# Connection string
-$connectionString = @"
-Server=tcp:$server;
-Initial Catalog=$database;
-User ID=$username;
-Password=$password;
-Encrypt=True;
-TrustServerCertificate=False;
-Connection Timeout=30;
-"@
-
-# Load SqlClient
-Add-Type -AssemblyName System.Data
-
-$conn = New-Object System.Data.SqlClient.SqlConnection($connectionString)
-
+#Configure Log Settings for SQLMI
+$ErrorOccurred = $false
 try {
-    $conn.Open()
 
-    foreach ($principal in $principals) {
+    $databaseName   = "TenantCRM"
+    $workspaceName  = "sqlhack-loganalytics"
+    $workspace = Get-AzOperationalInsightsWorkspace -ResourceGroupName $sharedResourceGroup -Name $WorkspaceName -ErrorAction Stop
+    $workspaceResourceId = $workspace.ResourceId
 
-        Write-Host "Processing $principal ..."
-
-        #
-        # Check whether login exists
-        #
-        $cmd = $conn.CreateCommand()
-        $cmd.CommandText = @"
-        SELECT COUNT(*)
-        FROM sys.server_principals
-        WHERE name = @name;
-"@
-
-        $null = $cmd.Parameters.Add(
-            "@name",
-            [System.Data.SqlDbType]::NVarChar,
-            256
-        )
-
-        $cmd.Parameters["@name"].Value = $principal
-
-        $exists = [int]$cmd.ExecuteScalar()
-
-        if ($exists -eq 0) {
-
-            Write-Host "  Creating Entra login"
-
-            # Object names cannot be parameterised, therefore QUOTENAME()
-            $createCmd = $conn.CreateCommand()
-            $createCmd.CommandText = @"
-            DECLARE @sql nvarchar(max);
-
-            SET @sql =
-                N'CREATE LOGIN ' +
-                QUOTENAME(@name) +
-                N' FROM EXTERNAL PROVIDER';
-
-            EXEC (@sql);
-"@
-
-            $null = $createCmd.Parameters.Add(
-                "@name",
-                [System.Data.SqlDbType]::NVarChar,
-                256
-            )
-
-            $createCmd.Parameters["@name"].Value = $principal
-
-            $createCmd.ExecuteNonQuery() | Out-Null
-        }
-
-        #
-        # Add to sysadmin if not already a member
-        #
-        $roleCheck = $conn.CreateCommand()
-        $roleCheck.CommandText = @"
-        SELECT COUNT(*)
-        FROM sys.server_role_members rm
-        JOIN sys.server_principals r
-            ON rm.role_principal_id = r.principal_id
-        JOIN sys.server_principals p
-            ON rm.member_principal_id = p.principal_id
-        WHERE r.name = N'sysadmin'
-        AND p.name = @name;
-"@
-
-        $null = $roleCheck.Parameters.Add(
-            "@name",
-            [System.Data.SqlDbType]::NVarChar,
-            256
-        )
-
-        $roleCheck.Parameters["@name"].Value = $principal
-
-        $isSysAdmin = [int]$roleCheck.ExecuteScalar()
-
-        if ($isSysAdmin -eq 0) {
-
-            Write-Host "  Adding to sysadmin"
-
-            $roleCmd = $conn.CreateCommand()
-            $roleCmd.CommandText = @"
-            DECLARE @sql nvarchar(max);
-
-            SET @sql =
-                N'ALTER SERVER ROLE [sysadmin] ADD MEMBER ' +
-                QUOTENAME(@name);
-
-            EXEC (@sql);
-"@
-
-            $null = $roleCmd.Parameters.Add(
-                "@name",
-                [System.Data.SqlDbType]::NVarChar,
-                256
-            )
-
-            $roleCmd.Parameters["@name"].Value = $principal
-
-            $roleCmd.ExecuteNonQuery() | Out-Null
-        }
-        else {
-            Write-Host "  Already sysadmin"
+    #----------------------------------------------------------
+    # Managed Instance
+    #----------------------------------------------------------
+    $miCategories = Get-AzDiagnosticSettingCategory -ResourceId $managedInstance.Id
+    $miLogs = @()
+    foreach ($category in $miCategories)
+    {
+        if ($category.CategoryType -eq "Logs")
+        {
+            $miLogs += New-AzDiagnosticSettingLogSettingsObject -Enabled $true -Category $category.Name
         }
     }
+    $miMetrics = @()
+    foreach ($category in $miCategories)
+    {
+        if ($category.CategoryType -eq "Metrics")
+        {
+            $miMetrics += New-AzDiagnosticSettingMetricSettingsObject -Enabled $true -Category $category.Name
+        }
+    }
+    New-AzDiagnosticSetting -Name "sqlmi-alllogs" -ResourceId $managedInstance.Id -WorkspaceId $workspaceResourceId -Log $miLogs -Metric $miMetrics -ErrorAction Stop
+
+    #----------------------------------------------------------
+    # Datenbank TENANTCRM
+    #----------------------------------------------------------
+    $db = Get-AzResource -ResourceType "Microsoft.Sql/managedInstances/databases" | Where-Object { $_.Name -eq "$managedInstanceName/$databaseName" }
+    if (-not $db)
+    {
+        throw "Datenbank $databaseName wurde nicht gefunden."
+    }
+    $dbCategories = Get-AzDiagnosticSettingCategory -ResourceId $db.ResourceId
+    $dbLogs = @()
+    foreach ($category in $dbCategories)
+    {
+        if ($category.CategoryType -eq "Logs")
+        {
+            $dbLogs += New-AzDiagnosticSettingLogSettingsObject -Enabled $true -Category $category.Name
+        }
+    }
+    $dbMetrics = @()
+    foreach ($category in $dbCategories)
+    {
+        if ($category.CategoryType -eq "Metrics")
+        {
+            $dbMetrics += New-AzDiagnosticSettingMetricSettingsObject -Enabled $true -Category $category.Name
+        }
+    }
+    New-AzDiagnosticSetting -Name "$databaseName-alllogs" -ResourceId $db.ResourceId -WorkspaceId $workspaceResourceId -Log $dbLogs -Metric $dbMetrics -ErrorAction Stop
 }
-finally {
-    if ($conn.State -eq 'Open') {
-        $conn.Close()
-    }
+catch {
+    Write-Host "Could not configure log settings."
+    $ErrorString = $_ | format-list -force | Out-String
+    Write-Error "ERR: $ErrorString"
+    $ErrorOccurred = $true
+}
+if ($ErrorOccurred) {
+    throw "Errors occurred during log settings configuration. Please check the logs for details."
 }
 
 $rg = Get-AzResourceGroup -Name $sharedResourceGroup -ErrorAction SilentlyContinue

@@ -7,7 +7,7 @@
 
 ## 🎯 Objective
 
-Wire your three agents together in a Foundry **Workflow** so the entire sense → plan → approve → act loop runs from one prompt. You'll use the visual workflow designer to chain the agents in sequence with a human-approval gate, then read the trace to see each node execute. This is Microsoft's sanctioned replacement for the older "connected agents" tool and the pattern behind real multi-agent systems.
+Wire your three agents together in a Foundry **Workflow** so the entire sense → plan → approve → act loop runs from one prompt. You'll use the visual workflow designer to chain the agents in sequence with a human-approval gate, then read the trace to see each node execute — the pattern behind real multi-agent systems.
 
 ## 🧭 Context
 
@@ -18,11 +18,11 @@ The planning team doesn't want to talk to three separate agents. They want to ty
 ### Part A — Create the workflow (15 min)
 
 > [!NOTE]
-> The classic **connected agents** tool (adding one agent as another's tool) is **not available** in the New Foundry portal — Microsoft replaced it with **Workflows** for multi-agent orchestration. The visual workflow designer is in preview and is supported in-portal until **1 December 2026**, after which you run the same logic by exporting the workflow **YAML** and deploying it as a hosted agent (see Learning resources). For this hack's timeframe the visual designer is the fastest no-code path.
+> The visual workflow designer is in preview and is supported in-portal until **1 December 2026**, after which you run the same logic by exporting the workflow **YAML** and deploying it as a hosted agent (see Learning resources). For this hack's timeframe the visual designer is the fastest no-code path.
 
 1. In the Foundry portal, go to **Agents → Workflows → + New workflow** (or **Create**).
-2. Choose the **Sequential** template (it pre-wires a Start node you can extend). If you start from **Blank**, you'll add the Start node yourself.
-3. Name it `inventory-planning-workflow` and open the **Build** canvas (Visualizer view).
+2. Choose the **Blank** workflow — it already includes a **Start** node you extend.
+3. Open the **Build** canvas (Visualizer view). You'll name it `inventory-planning-workflow` when you **Save** in Part B.
 
 ### Part B — Add and wire the three agent nodes (20 min)
 
@@ -54,10 +54,12 @@ You'll chain the three specialist agents you built in Challenges 2–4. **You do
 
 ### Part C — Run the full loop from one prompt (20 min)
 
-1. Click **Preview** (or **Run**) to open the workflow playground.
+1. Click **Preview** to open the workflow playground.
 2. Send a single request, e.g.:
 
-   > *"A prolonged heatwave is hitting the Pacific Northwest. Check our exposure on outdoor power tools and prepare a replenishment order for approval."*
+   ```text
+   A prolonged heatwave is hitting the Pacific Northwest. Check our exposure on outdoor power tools and prepare a replenishment order for approval.
+   ```
 
 3. Watch the nodes execute in order: demand sensing → optimisation → replenishment. When the replenishment node presents the PO proposal, reply `YES` (or `MODIFY <line> <qty>`).
 4. Open **Traces** and find the run. Confirm you can see the **node-by-node execution** — each agent node's model call with its **Fabric Data Agent** tool call underneath, and the human approval turn on the replenishment node.
@@ -83,22 +85,24 @@ If you want a second stretch (or the visual designer is unavailable), evaluate o
 > [!NOTE]
 > This part is a **look-ahead showcase**, not a required lab step. You don't need to publish anything to finish the hack — it's here to show where a working workflow goes next and what a business rollout looks like.
 
-Everything so far lives in the Foundry portal — great for builders, but the **planners who actually place orders live in Teams**. Publishing the workflow to **Microsoft 365 Copilot & Teams** would let a non-technical user run the whole sense → plan → approve → act loop by typing one sentence in a Teams chat, and approve the PO right there.
+Everything so far lives in the Foundry portal — great for builders, but the **planners who actually place orders live in Teams**. Publishing an agent to **Microsoft 365 Copilot & Teams** lets a non-technical user chat with it right inside a Teams conversation.
 
-> [!NOTE]
-> Publishing to Microsoft 365 Copilot and Teams is an **Early Access Preview**. Org-wide publishing needs a **Microsoft 365 admin** to approve the agent — so if you *do* try it, use the **Just you** scope, which is available immediately with no approval.
+> [!IMPORTANT]
+> **Publish a *prompt agent*, not the workflow.** Teams / Microsoft 365 publishing supports only **prompt and hosted agents** — a **workflow** can't be chatted through the published endpoint (you'll get *"Agent kind 'workflow' is not supported"*). For this showcase, publish one of your prompt agents (e.g. **`demand-sensing-agent`**). Org-wide publishing needs a **Microsoft 365 admin** to approve the agent, so use the **Just you** scope — available immediately with no approval.
 
-1. Open your published `inventory-planning-workflow` (or any of the agents), select **Publish → Publish to Teams and Microsoft 365 Copilot**. Foundry provisions an **Azure Bot Service** resource behind the scenes.
+1. Open your **`demand-sensing-agent`** (a prompt agent) and select **Publish → Publish to Teams and Microsoft 365 Copilot**. Foundry provisions an **Azure Bot Service** resource behind the scenes.
 
-   ![The inventory-planning-workflow with the Publish menu open, showing the Teams & Microsoft 365 Copilot publish target](../images/challenge-04-teams.png)
-2. Fill in the metadata: **Name** (e.g. *Inventory Planning Assistant*), **Publish version** `1.0.0`, a one-line **Short description**, a longer **Description**, and your **Developer** name.
+   ![A prompt agent with the Publish menu open, showing the Teams & Microsoft 365 Copilot publish target](../images/challenge-04-teams.png)
+2. Fill in the metadata: **Name** (e.g. *Inventory Planning Assistant*), **Publish version** `1.0.0`, **Short description** (e.g. *"Senses demand signals and checks inventory exposure over governed data."*), a longer **Description** (e.g. *"Chats over governed Zava inventory data to sense demand and report whether stock is adequate, at risk, or critically exposed."*), and your **Developer** name (your name or team).
    > Don't put secrets/keys in any field — this metadata is user-visible.
 3. Select **Next: Publish options → Direct publish**, choose **Just you** under *Choose who can use this agent*, then **Publish**. (Org-wide = *People in your organization* → M365 admin approval → appears under **Built by your org** in the agent store.)
-4. In **Microsoft 365 Copilot** or **Teams**, open the **agent store → Your agents**, pick your agent, and chat like a business user:
+4. Open **Microsoft 365 Copilot** ([m365.cloud.microsoft](https://m365.cloud.microsoft)) or **Teams** ([teams.microsoft.com](https://teams.microsoft.com)) — **sign in with the same lab user** you used in Foundry, not your corporate account — then open the **agent store → Your agents**, pick your agent, and chat like a business user:
 
-   > *"A heatwave is hitting the Pacific Northwest — check our outdoor power tool exposure and prepare a replenishment order for approval."*
+   ```text
+   A heatwave is hitting the Pacific Northwest — check our outdoor power tool exposure and tell me whether we're covered or exposed.
+   ```
 
-5. Watch the loop run inside the Teams chat and reply `YES` at the approval gate — no portal, no code.
+5. The agent responds in the Teams chat, grounded in your Fabric data — no portal, no code. *(Running the full sense → plan → approve loop as one Teams conversation needs the **workflow** published, which isn't supported yet — see the note above.)*
 
 **Discuss:** what governance would you add before letting hundreds of planners trigger real purchase orders from Teams? (Think: the approval gate, a spend cap, `BotServiceRbac` vs `BotServiceTenant` calling scope, and audit via the trace.)
 
@@ -106,7 +110,7 @@ Everything so far lives in the Foundry portal — great for builders, but the **
 
 | Symptom | Fix |
 |---------|-----|
-| There's no **connected agents** tool | Correct — the New Foundry portal replaced it with **Workflows**. Use the visual workflow designer as described above. |
+| Chatting a published **workflow** in Teams/M365 fails: *"Agent kind 'workflow' is not supported"* | Teams / Microsoft 365 publishing supports only **prompt and hosted agents**. Publish a **prompt agent** (e.g. `demand-sensing-agent`) instead — see Part E. |
 | The replenishment node never stops looping | The **Loop condition** `Find` is **case-sensitive** — keep the Challenge 4 confirmation wording (`submitted to ERP`, `Order cancelled`) exactly. |
 | A node doesn't receive the previous agent's output | Set **Save agent output message as** on the upstream node and reference that variable in the next node's **Input message**. |
 | The visual designer isn't available | Do the **Part D** evaluation bonus instead, or export the workflow **YAML** and run it as a hosted agent (see Learning resources). |
@@ -114,7 +118,7 @@ Everything so far lives in the Foundry portal — great for builders, but the **
 ## 🚀 Go further
 
 - Do the **Part D** evaluation pass to score `inventory-optimisation-agent` on groundedness and relevance.
-- Follow the **Part E** showcase to publish the workflow to **Teams & Microsoft 365 Copilot** (use the *Just you* scope).
+- Follow the **Part E** showcase to publish a **prompt agent** to **Teams & Microsoft 365 Copilot** (use the *Just you* scope).
 - Swap the **Sequential** template for **Group chat** and observe how dynamic hand-off changes the run.
 
 ## 🧠 Reflection

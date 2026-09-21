@@ -26,7 +26,7 @@ Write-Host "Downloading Team Databases..."
 
 Write-Host "Configuring legacy SQL Server..."
 
-& .\Configure-legacySQL.ps1 -sqlusername $adminUsername -sqlpassword $adminPassword
+& .\Configure-legacySQL.ps1 -sqlusername $sqlMiAdminUsername -sqlpassword $sqlMiAdminPassword
 
 Write-Host "Installing AzureCLI..."
 

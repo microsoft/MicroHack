@@ -11,6 +11,7 @@ Your organization must run workloads in a sovereign cloud while still leveraging
 ## Actions
 
 * Explore the LocalBox hybrid infrastructure in the Azure Portal
+* Deploy a sample application to AKS on Azure Local
 * Deploy your own VM on Azure Local using Azure Arc VM management and verify that guest management is connected
 * Verify Microsoft Defender for Cloud coverage and review security recommendations for the VM you provisioned
 * Use Azure Update Manager to assess OS updates on the VM you provisioned
@@ -21,6 +22,7 @@ Your organization must run workloads in a sovereign cloud while still leveraging
 * You have deployed your own VM on Azure Local via the Azure Portal and verified that guest management is Enabled (Connected)
 * You have verified Defender for Servers coverage for your VM and reviewed its available recommendations, or identified that its assessment is still pending
 * You have completed an Azure Update Manager assessment for your VM and reviewed the results, including when no updates are pending
+* You have deployed a sample application to AKS on Azure Local
 * You understand how Azure Arc provides a unified control plane for sovereign hybrid scenarios
 
 ## Learning resources

@@ -20,17 +20,12 @@ the workshop adaptations.
 
 ## MicroHack adaptations
 
-1. Read `RESOURCE_GROUP`, `ATTENDEE_ID`, `HASH_SUFFIX`, and `LOCATION` from the
-   established MicroHack environment variables.
-2. Derive the subscription from the active Azure CLI account and retain the
-   upstream requirement for the Az PowerShell context to target that same
-   subscription.
-3. Reuse the attendee resource group instead of creating or deleting a resource
-   group.
-4. Derive a deterministic AKS cluster name from `HASH_SUFFIX` and make cluster
-   and confidential node-pool creation rerunnable.
+1. Read `RESOURCE_GROUP` and the Console-provided `AKS_CLUSTER`, with explicit parameter overrides.
+2. Use the active Azure CLI subscription; no Az PowerShell session or unused-quota preflight is required for application deployment.
+3. Validate the existing shared AKS cluster and its two labeled Ubuntu confidential nodes; never create, scale or delete infrastructure.
+4. Use a temporary kubeconfig, explicit context and owned `challenge-05` namespace for every Kubernetes command. Preserve Challenge 7's Radius namespaces.
 5. Resolve attestation assets from the unchanged local snapshot.
-6. Delete only the Challenge 5 AKS cluster during cleanup.
+6. Delete only the named Challenge 5 deployments, services and ConfigMap during cleanup. Retain the cluster and node pools.
 
 When updating the sample, replace the complete snapshot from one upstream
 commit, update the commit above, and review the top-level script diff against

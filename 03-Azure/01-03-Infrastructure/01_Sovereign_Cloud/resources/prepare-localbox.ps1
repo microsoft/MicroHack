@@ -130,15 +130,27 @@ function Get-LocalBoxAzInvocation {
 }
 
 function Invoke-LocalBoxAz {
-    param([Parameter(Mandatory)][string[]]$Arguments, [int]$TimeoutSeconds = 300)
+    param([Parameter(Mandatory)][string[]]$Arguments, [int]$TimeoutSeconds = 300, [switch]$NoOutput)
     $invocation = Get-LocalBoxAzInvocation
-    $job = Start-Job -ArgumentList $invocation, (, $Arguments) -ScriptBlock {
-        param($Invocation, $CommandArguments)
+    $job = Start-Job -ArgumentList $invocation, $Arguments, ([bool]$NoOutput) -ScriptBlock {
+        param($Invocation, $CommandArguments, $DiscardOutput)
+        $PSNativeCommandUseErrorActionPreference = $false
         $prefix = $Invocation.Prefix
-        $output = & $Invocation.Executable @prefix @CommandArguments --only-show-errors --output json 2>&1
-        if ($LASTEXITCODE -ne 0) { throw ($output -join "`n") }
-        $text = $output -join "`n"
-        if ($text.Trim()) { $text | ConvertFrom-Json -AsHashtable -ErrorAction Stop }
+        $format = if ($DiscardOutput) { 'none' } else { 'json' }
+        $output = @(& $Invocation.Executable @prefix @CommandArguments --only-show-errors --output $format 2>&1)
+        $exitCode = $LASTEXITCODE
+        $operation = (@($CommandArguments | Select-Object -First 2) -join ' ')
+        if ($CommandArguments -contains '--validate') { $operation += ' --validate' }
+        $stderr = @($output | Where-Object { $_ -is [System.Management.Automation.ErrorRecord] })
+        $text = ($output | Where-Object { $_ -isnot [System.Management.Automation.ErrorRecord] }) -join "`n"
+        if ($exitCode -ne 0) { throw "Azure CLI 'az $operation' failed (exit code $exitCode): $($stderr -join "`n")" }
+        if ($DiscardOutput) { return }
+        if ($text.Trim()) {
+            try { $text | ConvertFrom-Json -AsHashtable -ErrorAction Stop }
+            catch {
+                throw "Azure CLI 'az $operation' returned non-JSON stdout despite --output json (exit code $exitCode). Raw output is omitted because it may contain sensitive data. Inspect the resource state before retrying; a submitted operation may still be running."
+            }
+        }
     }
     try {
         if (-not (Wait-Job $job -Timeout $TimeoutSeconds)) {
@@ -533,8 +545,10 @@ function Invoke-LocalBoxPreparation {
                 '--node-count', [string]$Settings.NodeCount, '--node-vm-size', $Settings.NodeVmSize, '--control-plane-count', '1', '--control-plane-vm-size', $Settings.ControlPlaneVmSize)
             if ($Settings.KubernetesVersion) { $arguments += @('--kubernetes-version', $Settings.KubernetesVersion) }
             if ($PSCmdlet.ShouldProcess($aksId, 'Validate and create AKS on Azure Local')) {
-                Invoke-LocalBoxAz ($arguments + @('--validate')) -TimeoutSeconds $timeout | Out-Null
-                Invoke-LocalBoxAz $arguments -TimeoutSeconds $timeout | Out-Null
+                Write-Host "Validating AKS on Azure Local $($Settings.AksClusterName)..."
+                Invoke-LocalBoxAz ($arguments + @('--validate')) -TimeoutSeconds $timeout -NoOutput
+                Write-Host "Creating AKS on Azure Local $($Settings.AksClusterName)..."
+                Invoke-LocalBoxAz $arguments -TimeoutSeconds $timeout -NoOutput
             }
         }
         if (-not $Settings.SkipAks -and -not $WhatIfPreference) {

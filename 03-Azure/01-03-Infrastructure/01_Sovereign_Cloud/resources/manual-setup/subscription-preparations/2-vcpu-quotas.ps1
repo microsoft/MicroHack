@@ -6,10 +6,13 @@
     This script checks current vCPU quota usage in a specified Azure region and calculates
     the required quotas for running the MicroHack lab based on the number of lab users.
 
-    The shared Challenge 4/5/7 platform requires per participant:
-    - 12 Standard DSv5 Family vCPUs
-    - 4 Standard DCasv5 or DCasv6 Family vCPUs
+    The shared Challenge 5/7 platform requires per participant:
+    - 12 Standard DSv5 Family vCPUs (two AKS system nodes and one K3s VM)
+    - 4 Standard DCasv5 or DCasv6 Family vCPUs (two Ubuntu AKS confidential nodes)
     - 16 Total Regional vCPUs
+
+    These are steady-state totals; reserve additional upgrade surge headroom separately.
+    Challenge 4 ACI capacity/quota is separate from these VM-family quotas.
 
     The script can optionally submit quota increase requests using the Azure Quota REST API.
 
@@ -470,7 +473,7 @@ foreach ($subscription in $selectedSubscriptions) {
     # Get number of lab users
     $NumberOfLabUsers = Get-LabUserCount
 
-    # Calculate requirements for the shared Challenge 4/5/7 participant platform.
+    # Calculate requirements for the shared Challenge 5/7 participant platform.
 
     Write-Host "`n=== Lab Requirements Calculation ===" -ForegroundColor Cyan
     Write-Host ("=" * 80)
@@ -480,18 +483,18 @@ foreach ($subscription in $selectedSubscriptions) {
     $confidentialQuotaDisplayName = "Standard DCas$ConfidentialVmGeneration Family vCPUs (Confidential)"
     $requirements = @{
         "cores" = @{
-            PerUser = 16
+            PerUser = ((2 + 1) * 4) + (2 * 2)
             Shared  = 0
             Name    = "Total Regional vCPUs"
         }
         "StandardDSv5Family" = @{
-            PerUser = 12
+            PerUser = (2 + 1) * 4
             Shared  = 0
             Name    = "Standard DSv5 Family vCPUs"
         }
     }
     $requirements[$confidentialQuotaName] = @{
-        PerUser = 4
+        PerUser = 2 * 2
         Shared  = 0
         Name    = $confidentialQuotaDisplayName
     }

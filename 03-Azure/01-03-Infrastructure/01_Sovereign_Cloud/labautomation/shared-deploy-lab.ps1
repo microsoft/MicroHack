@@ -99,11 +99,7 @@ foreach($candidate in $confidentialCandidates) {
 
     $regionalUsage = Get-AzVMUsage -Location $candidateLocation -ErrorAction Stop
     $locationReady = $true
-    $quotaRequirements = @(
-        @{ Name = $candidate.QuotaName; PerParticipant = 4 }
-        @{ Name = 'StandardDSv5Family'; PerParticipant = 12 }
-        @{ Name = 'cores'; PerParticipant = 16 }
-    )
+    $quotaRequirements = @(Get-MhhSovereignComputeRequirements -ConfidentialQuotaName $candidate.QuotaName)
     foreach($requirement in $quotaRequirements) {
         $quotaName = $requirement.Name
         $quotaRequired = $requirement.PerParticipant * $participantCount

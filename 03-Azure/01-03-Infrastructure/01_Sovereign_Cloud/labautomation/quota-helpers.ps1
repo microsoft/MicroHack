@@ -8,6 +8,18 @@ function Get-MhhResponseHeaderValue {
     return @($header.Value)[0]
 }
 
+function Get-MhhSovereignComputeRequirements {
+    param([Parameter(Mandatory)][string]$ConfidentialQuotaName)
+
+    $generalVcpus = (2 + 1) * 4
+    $confidentialVcpus = 2 * 2
+    @(
+        @{ Name = $ConfidentialQuotaName; PerParticipant = $confidentialVcpus }
+        @{ Name = 'StandardDSv5Family'; PerParticipant = $generalVcpus }
+        @{ Name = 'cores'; PerParticipant = $generalVcpus + $confidentialVcpus }
+    )
+}
+
 function Get-MhhConfidentialComputeCandidates {
     param(
         [string[]]$PreferredLocation

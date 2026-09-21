@@ -172,7 +172,7 @@ Describe 'Lab cost-control tags' {
         $source = Get-Content "$PSScriptRoot/../../labautomation/sovereign-lab.bicep" -Raw
         $source | Should -Match "(?s)var tags = \{[^}]*CostControl: 'Ignore'"
         $source | Should -Match "(?s)name: 'system'\s+count: 2\s+tags: tags"
-        $source | Should -Match "(?s)resource confidentialNodePool .*?properties: \{\s+count: 1\s+tags: tags"
+        $source | Should -Match "(?s)resource confidentialNodePool .*?properties: \{\s+count: 2\s+tags: tags"
     }
 }
 

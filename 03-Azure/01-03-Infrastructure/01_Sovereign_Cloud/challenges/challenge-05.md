@@ -8,12 +8,12 @@ VM node pool and verify the execution environment with a fresh MAA token.
 
 ## Actions
 
-- Deploy an AKS cluster with managed identity and automatic upgrade channels.
-- Add and label an AMD SEV-SNP Confidential VM node pool.
+- Connect to the provided AKS cluster shared with Challenge 7.
+- Validate its two Ubuntu AMD SEV-SNP nodes labelled `workload=confidential`.
 - Deploy the Azure Voting App to the confidential nodes.
 - Deploy the newer runtime attestation UI to the same node pool.
 - Verify pod placement and inspect the attestation claims.
-- Remove the AKS cluster without deleting the shared attendee resource group.
+- Remove only Challenge 5 applications from `challenge-05`, retaining AKS and its pools for Challenge 7.
 
 ## Success criteria
 

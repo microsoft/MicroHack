@@ -12,7 +12,9 @@ Install PowerShell 7, Azure CLI and the Az modules required by each script. Auth
 
 ## Deploy participant infrastructure
 
-The [Sovereign lab Bicep template](../../labautomation/sovereign-lab.bicep) provisions the Azure AKS cluster and confidential node pool, confidential VM, K3s VM, attestation, Bastion and networking used across Challenges 4, 5 and 7. Deploy it into your chosen resource group with your selected region, a unique `nameSuffix`, and secure `adminPassword`/`cvmAdminPassword` inputs using Azure's deployment tooling. Do not put passwords in source control or shell history. Retain the successful deployment name and outputs for health testing.
+The [Sovereign lab Bicep template](../../labautomation/sovereign-lab.bicep) provisions the shared Challenge 5/7 AKS cluster with two system and two Ubuntu confidential nodes, K3s VM, Bastion and networking. Deploy it with your selected region, a unique `nameSuffix`, a supported `confidentialVmSize`, and a secure `adminPassword` for K3s. No standalone CVM password or attestation provider is required. Do not put passwords in source control or shell history. Retain the successful deployment name and outputs for health testing; provide `aksClusterName` and `confidentialNodePoolName` to participants.
+
+Challenge 4 provisions its own ACI/ACR comparison in North Europe. Challenge 5 consumes the shared cluster in its actual region; its cleanup deletes only applications. See [regional findings, quotas and migration guidance](../../Readme.md#general-prerequisites) before using an existing lab.
 
 For organizers reproducing the full Console workflow locally, follow the [template's local testing instructions](../../../../../99-MicroHack-Template/labautomation/README.md#local-testing), including its helper container and shared preparation before per-lab deployment. The Console hooks are not general standalone deployment scripts.
 

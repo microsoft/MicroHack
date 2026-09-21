@@ -92,9 +92,9 @@ For manual deployments without retained deployment records, replace `DeploymentN
     -Mode Full -AllowGuestRunCommand -DownloadTests -GitHubRef $ref
 ```
 
-`-AllowGuestRunCommand` permits Azure VM Run Command on the two selected VMs solely to check K3s service state, DNS and HTTPS egress. This transport is an Azure management action and requires scoped Run Command permission even though the guest commands are read-only. It can create transient Run Command execution artifacts. Without consent, that mandatory Full check fails; it is not silently skipped.
+`-AllowGuestRunCommand` permits Azure VM Run Command on the selected K3s VM solely to check K3s service state, DNS and HTTPS egress. This transport is an Azure management action and requires scoped Run Command permission even though the guest commands are read-only. It can create transient Run Command execution artifacts. Without consent, that mandatory Full check fails; it is not silently skipped.
 
-Participant checks include VM power/agent state, confidential VM security settings, K3s install and runtime health, Azure AKS/system/confidential pools with OIDC/workload identity/Istio, private networking/NSG/NAT/Bastion configuration and attestation discovery/JWKS. Bastion's interactive user access and an actual confidential-computing attestation exchange remain separate participant smoke tests, not claims made by ARM health queries.
+Participant baseline checks cover K3s VM power/agent/install/runtime health, two system and two labeled Ubuntu confidential AKS nodes, OIDC/workload identity/Istio and upgrade settings, and private networking/NSG/NAT/Bastion configuration. They no longer require a standalone CVM or custom attestation provider. Challenge 4 ACI/ACR, Challenge 5 applications, Bastion interactive access and actual signed attestation exchanges are participant smoke tests, not claims made by baseline ARM health checks.
 
 For both paths together, use `-Scope All`, supply the participant inventory and LocalBox manifest/kubeconfig/Windows credential. Use an operator context authorized for all specified scopes, not a newly broadened managed identity.
 
@@ -111,6 +111,7 @@ Waits are bounded by `-TimeoutMinutes` per check. Terminal provisioning failures
 
 ```powershell
 Invoke-Pester ./tests/prepare-localbox.tests.ps1 -Output Detailed
+Invoke-Pester ./tests/shared-aks.tests.ps1 -Output Detailed
 ```
 
-Run from the resources directory. This suite tests address and group validation, resource reuse/conflicts, partial-state polling/timeouts, destructive-operation guards, and refusal to report incomplete Kubernetes results as full readiness. It needs no Azure login or infrastructure. Do not run the entire tests folder by default: the two `*.health.tests.ps1` suites require runner-supplied data and live access.
+Run from the resources directory. These suites test LocalBox validation/reconciliation and shared-AKS workload targeting, namespace ownership, cleanup safety, pool compatibility and quota contracts. They need no Azure login or infrastructure. Do not run the entire tests folder by default: the two `*.health.tests.ps1` suites require runner-supplied data and live access.

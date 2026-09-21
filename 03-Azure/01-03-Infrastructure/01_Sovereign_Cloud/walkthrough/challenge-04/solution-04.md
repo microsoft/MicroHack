@@ -115,6 +115,12 @@ $env:HASH_SUFFIX = [Convert]::ToHexString($hash).Substring(0, 8).ToLowerInvarian
 
 Confirm the target resource group and subscription:
 
+`LOCATION` here selects the ACI/ACR deployment region only. Keep North Europe
+for this validated exercise even if Console created the resource group and
+shared AKS cluster in Sweden Central or Spain Central. A resource group's
+metadata location does not force every resource into that region. In Challenge 5,
+use the existing Console AKS cluster and its actual region instead.
+
 ```powershell
 az account show --query "{subscription:name, id:id}" --output table
 az group show --name $env:RESOURCE_GROUP --query "{name:name, location:location}" --output table

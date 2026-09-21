@@ -14,7 +14,8 @@ Both paths use [LocalBox preparation](localbox/readme.md) and the [Pester health
 | Task | Hosted event | Manual delivery |
 | --- | --- | --- |
 | Subscriptions, users, initial lab RBAC, provider/quota preparation | Console and content automation | Subscription owner |
-| Participant Azure AKS, confidential VM, K3s, attestation and networking | Console content automation | Subscription owner using the lab template |
+| Participant shared Azure AKS with Ubuntu confidential pool, K3s and networking | Console content automation for Challenges 5/7 | Subscription owner using the lab template |
+| Challenge 4 ACI/ACR comparison and Challenge 5 applications | Participants using walkthrough scripts | Same walkthrough scripts against the prepared scope |
 | Shared LocalBox deployment | Console submits once per subscription; full readiness still requires verification | Subscription owner deploys LocalBox |
 | Storage, Windows image, VM/AKS networks, AKS on Azure Local | Event Lead runs preparation on each LocalBox Client | Same preparation script |
 | AKS Local Entra admin group | Console-owned event group; use **Lab Group ObjectId** from the Credentials tab | Supply an existing security group with intended users as members |

@@ -4,15 +4,13 @@
 
 .DESCRIPTION
   Adapts the upstream Azure Voting App confidential-computing sample to the
-  MicroHack environment variables and existing attendee resource group.
+  provided MicroHack AKS cluster shared with Challenge 7. Only Challenge 5
+  workloads in its owned namespace are deployed or removed.
 
 .EXAMPLE
   ./Deploy-VotingAppCC.ps1 -Deploy
   ./Deploy-VotingAppCC.ps1 -Cleanup
 #>
-# Hands-off script to build a small AKS cluster with an AMD SEV-SNP Confidential Computing node pool
-# and deploy the public Microsoft "Azure Voting App" multi-container sample to it, exposed via a public
-# LoadBalancer. Derived from the upstream sample with MicroHack naming and resource-group lifecycle.
 #
 # Simon Gallagher, ACC Product Group
 # Use at your own risk, no warranties implied, test in a non-production environment first
@@ -25,25 +23,20 @@
 #   - https://github.com/Azure-Samples/azure-voting-app-redis            (the demo app)
 #
 # Usage:
-#   ./Deploy-VotingAppCC.ps1 -Deploy [-SkipSkuPreflight]
+#   ./Deploy-VotingAppCC.ps1 -Deploy -ClusterName <Console cluster name>
 #   ./Deploy-VotingAppCC.ps1 -Cleanup
 #
 # Requirements:
-#   - Azure PowerShell (Az) module + Azure CLI (az), both logged in to the same subscription
-#   - kubectl on PATH (az aks install-cli will install it if missing)
+#   - Azure CLI signed in to the subscription containing the provided AKS cluster
+#   - kubectl installed on PATH
 
 [CmdletBinding(DefaultParameterSetName='Help')]
 param (
   [Parameter(ParameterSetName='Deploy')][switch]$Deploy,
   [Parameter(ParameterSetName='Cleanup')][switch]$Cleanup,
-  [Parameter(ParameterSetName='Deploy')][switch]$SkipSkuPreflight,
   [string]$ResourceGroup = $env:RESOURCE_GROUP,
-  [string]$AttendeeId = $env:ATTENDEE_ID,
-  [string]$HashSuffix = $env:HASH_SUFFIX,
-  [string]$Location = $env:LOCATION,
-  [string]$CcVmSize = "Standard_DC2as_v5",    # smallest AMD SEV-SNP CVM (2 vCPU / 8 GiB)
-  [string]$SystemVmSize = "Standard_D2as_v6", # tiny non-CC system pool (AMD, allowed by typical Allowed-VM-SKUs policies)
-  [ValidateRange(1, 10)][int]$CcNodeCount = 2
+  [string]$ClusterName = $env:AKS_CLUSTER,
+  [string]$ConfidentialNodePool = 'cvmnodepool'
 )
 
 if ($PSCmdlet.ParameterSetName -eq 'Help') {
@@ -51,223 +44,80 @@ if ($PSCmdlet.ParameterSetName -eq 'Help') {
   return
 }
 
+$ErrorActionPreference = 'Stop'
+$PSNativeCommandUseErrorActionPreference = $false
+
 foreach ($requiredValue in @{
-    RESOURCE_GROUP = $ResourceGroup
-    ATTENDEE_ID = $AttendeeId
-    HASH_SUFFIX = $HashSuffix
-    LOCATION = $Location
+  RESOURCE_GROUP = $ResourceGroup
+  AKS_CLUSTER = $ClusterName
   }.GetEnumerator()) {
   if ([string]::IsNullOrWhiteSpace($requiredValue.Value)) {
     throw "$($requiredValue.Key) is not set. Define the MicroHack environment variables before running this script."
   }
 }
 
-$nameSuffix = (($HashSuffix -replace '[^a-zA-Z0-9]', '').ToLowerInvariant())
-if ($nameSuffix.Length -gt 10) { $nameSuffix = $nameSuffix.Substring(0, 10) }
-if (-not $nameSuffix) { throw 'HASH_SUFFIX must contain at least one letter or number.' }
-
 $subsID = (az account show --query id --output tsv 2>$null)
 if ($LASTEXITCODE -ne 0 -or -not $subsID) { throw 'Azure CLI is not signed in. Run az login.' }
-$basename = "cvmcluster$nameSuffix"
-$description = "MicroHack Challenge 5"
-$region = $Location
-$ccVmSize = $CcVmSize
-$systemVmSize = $SystemVmSize
-$ccNodeCount = $CcNodeCount
-$smoketest = $false
 $sampleDirectory = Join-Path $PSScriptRoot 'resources/azure-voting-app'
-
 $startTime = Get-Date
-$scriptName = $MyInvocation.MyCommand.Name
-
-# Get GitHub repository URL from git remote (used as a tag)
-$gitRemoteUrl = ""
-try { $gitRemoteUrl = (git remote get-url origin) -replace "\.git$","" } catch {}
-if (-not $gitRemoteUrl) { $gitRemoteUrl = "[Originally from] https://github.com/Microsoft/confidential-computing" }
-
-# ACR names cannot contain hyphens, AKS cluster names should be conservative as well.
-if ($basename -match '[^a-z0-9]') {
-    write-host "basename must contain only lowercase letters and digits (no hyphens, no uppercase). ACR does not allow hyphens." -ForegroundColor Red
-    exit 1
-}
-
-# MicroHack uses stable names so deployment and selective cleanup address the same cluster.
-$resgrp        = $ResourceGroup
-$aksName       = "aks-cvmcluster$nameSuffix"
-$acrName       = $basename + "acr"
-$ccPoolName    = "ccpool"          # 12-char max, lowercase, AMD SEV-SNP node pool
-$systemPool    = "syspool"
-
-write-host "----------------------------------------------------------------------------------------------------------------"
-write-host "Building AKS cluster '$aksName' with AMD SEV-SNP CC node pool in '$region' (subscription $subsID)"
-write-host "  System pool : $systemPool   1x $systemVmSize"
-write-host "  CC pool     : $ccPoolName   ${ccNodeCount}x $ccVmSize  (AMD SEV-SNP)"
-write-host "  Resource Gp : $resgrp"
-if ($smoketest) { write-host "SMOKETEST MODE: Resources will be auto-deleted after the front-end is verified" -ForegroundColor Yellow }
-write-host "Script: $scriptName"
-write-host "Repository URL: $gitRemoteUrl"
-write-host "----------------------------------------------------------------------------------------------------------------"
-
-# Set subscription context for both Az and az CLI
-Set-AzContext -SubscriptionId $subsID | Out-Null
-if (!$?) { write-host "Failed to Set-AzContext to $subsID" -ForegroundColor Red; exit 1 }
-az account set --subscription $subsID | Out-Null
-if (!$?) { write-host "Failed to az account set --subscription $subsID" -ForegroundColor Red; exit 1 }
-
-$tmp = Get-AzContext
-$ownername = $AttendeeId
-
-if ($Cleanup) {
-  az group show --name $resgrp --output none
-  if ($LASTEXITCODE -ne 0) { throw "Resource group '$resgrp' was not found." }
-
-  az aks show --resource-group $resgrp --name $aksName --output none 2>$null
-  if ($LASTEXITCODE -eq 0) {
-    write-host "Deleting AKS cluster '$aksName'..." -ForegroundColor Cyan
-    az aks delete --resource-group $resgrp --name $aksName --yes --no-wait --output none
-    if ($LASTEXITCODE -ne 0) { throw "Failed to delete AKS cluster '$aksName'." }
+$resgrp = $ResourceGroup
+$aksName = $ClusterName
+$ccPoolName = $ConfidentialNodePool
+$namespace = 'challenge-05'
+$contextName = "challenge-05-$subsID-$aksName"
+$basename = [guid]::NewGuid().ToString('N')
+$kubeconfigPath = Join-Path ([IO.Path]::GetTempPath()) "challenge-05-$basename.kubeconfig"
+$manifestFile = $null
+$cmFile = $null
+$attestManifestFile = $null
+$kubectlScope = @('--kubeconfig', $kubeconfigPath, '--context', $contextName, '--namespace', $namespace)
+$clusterJson = az aks show --subscription $subsID --resource-group $resgrp --name $aksName --output json --only-show-errors
+if ($LASTEXITCODE -ne 0) { throw 'Cannot read the provided AKS cluster. Verify the Console cluster name and subscription.' }
+$cluster = ($clusterJson -join "`n") | ConvertFrom-Json
+if ($cluster.provisioningState -ne 'Succeeded') { throw 'The provided AKS cluster is not ready. Ask the facilitator to finish provisioning.' }
+if ($Deploy) {
+  $poolJson = az aks nodepool show --subscription $subsID --resource-group $resgrp --cluster-name $aksName --name $ccPoolName --output json --only-show-errors
+  if ($LASTEXITCODE -ne 0) { throw 'The provided confidential pool is missing. This script does not create node pools.' }
+  $pool = ($poolJson -join "`n") | ConvertFrom-Json
+  if ($pool.provisioningState -ne 'Succeeded' -or $pool.count -ne 2 -or $pool.osSKU -ne 'Ubuntu' -or
+    $pool.vmSize -notmatch '^Standard_DC2as_v[56]$' -or $pool.mode -ne 'User' -or
+    $pool.nodeLabels.workload -ne 'confidential') {
+    throw 'Expected two ready Ubuntu Standard_DC2as_v5/v6 user nodes labelled workload=confidential. Ask the facilitator to align the shared pool; no infrastructure was changed.'
   }
-  write-host "Cleanup initiated. Resource group '$resgrp' was retained." -ForegroundColor Green
+  $ccVmSize = $pool.vmSize
+  $ccNodeCount = $pool.count
+}
+Write-Host "Using provided AKS cluster '$aksName' in '$($cluster.location)' (subscription $subsID), namespace $namespace."
+if (-not (Get-Command kubectl -ErrorAction SilentlyContinue)) {
+  throw 'kubectl is required. Install it before running Challenge 5.'
+}
+try {
+az aks get-credentials --subscription $subsID --resource-group $resgrp --name $aksName --file $kubeconfigPath --context $contextName --overwrite-existing --only-show-errors | Out-Null
+if ($LASTEXITCODE -ne 0) { throw 'az aks get-credentials failed.' }
+$namespaceJson = kubectl @kubectlScope get namespace $namespace --ignore-not-found -o json
+if ($LASTEXITCODE -ne 0) { throw 'Cannot read the Challenge 5 namespace.' }
+$existingNamespace = if ($namespaceJson) { ($namespaceJson -join "`n") | ConvertFrom-Json }
+if ($existingNamespace -and $existingNamespace.metadata.labels.'microhack-challenge' -ne '05') {
+  throw 'The challenge-05 namespace exists without the expected ownership label. No changes were made.'
+}
+if ($Cleanup) {
+  if ($existingNamespace) {
+    kubectl @kubectlScope delete deployment/azure-vote-back deployment/azure-vote-front deployment/cc-attest service/azure-vote-back service/azure-vote-front service/cc-attest configmap/cc-attest-app --ignore-not-found --timeout=5m
+    if ($LASTEXITCODE -ne 0) { throw 'Challenge 5 application cleanup failed.' }
+  }
+  Write-Host 'Challenge 5 applications removed. Shared AKS, node pools, namespace and Challenge 7 resources were retained.'
   return
 }
-
-# ---------- Pre-flight: SKU + quota check for the CC pool -----------------------------------------
-if ($SkipSkuPreflight) {
-    write-host "Pre-flight check SKIPPED (-SkipSkuPreflight)." -ForegroundColor Yellow
-} else {
-    write-host "Pre-flight: confirming '$ccVmSize' is available in '$region' with sufficient AMD CVM vCPU quota..." -ForegroundColor Cyan
-
-    # Hard-fail on Intel SGX SKUs - this script targets full-VM CC (SEV-SNP)
-    if ($ccVmSize -match '^Standard_DC\d+s_v[23]$') {
-        write-host "ERROR: '$ccVmSize' is an Intel SGX SKU; this script targets AMD SEV-SNP Confidential VM nodes." -ForegroundColor Red
-        exit 1
-    }
-    if ($ccVmSize -notmatch '^Standard_(DC|EC)\d+a[a-z]*_v\d+$') {
-        write-host "Warning: '$ccVmSize' does not look like an AMD SEV-SNP CVM SKU (expected DCa*/ECa*v5 family)." -ForegroundColor Yellow
-    }
-
-    $skuInfo = $null
-    try {
-        $skuInfo = Get-AzComputeResourceSku -Location $region -ErrorAction Stop |
-            Where-Object { $_.ResourceType -eq 'virtualMachines' -and $_.Name -eq $ccVmSize } |
-            Select-Object -First 1
-    } catch {
-        write-host "Warning: Get-AzComputeResourceSku failed: $($_.Exception.Message)" -ForegroundColor Yellow
-    }
-
-    if ($null -eq $skuInfo) {
-        write-host "ERROR: '$ccVmSize' is not offered in '$region'." -ForegroundColor Red
-        write-host "Find available regions: Get-AzComputeResourceSku | ? { `$_.Name -eq '$ccVmSize' -and -not `$_.Restrictions } | Select Locations" -ForegroundColor Gray
-        exit 1
-    }
-
-    $subRestriction = $skuInfo.Restrictions | Where-Object {
-        $_.ReasonCode -eq 'NotAvailableForSubscription' -or
-        ($_.RestrictionInfo -and $_.RestrictionInfo.Locations -contains $region)
-    }
-    if ($subRestriction) {
-        $reason = ($skuInfo.Restrictions | ForEach-Object { $_.ReasonCode }) -join ', '
-        write-host "ERROR: '$ccVmSize' is restricted for this subscription in '$region' (reason: $reason)." -ForegroundColor Red
-        exit 1
-    }
-
-    $skuVCpus  = ($skuInfo.Capabilities | Where-Object Name -eq 'vCPUs' | Select-Object -First 1).Value -as [int]
-    if (-not $skuVCpus) { $skuVCpus = 2 }
-    $needed    = $skuVCpus * $ccNodeCount
-    $skuFamily = $skuInfo.Family
-    try {
-        $usage = Get-AzVMUsage -Location $region -ErrorAction Stop |
-            Where-Object { $_.Name.Value -eq $skuFamily } | Select-Object -First 1
-        if ($usage) {
-            $available = [int]$usage.Limit - [int]$usage.CurrentValue
-            write-host ("Quota for {0} in {1}: {2}/{3} used, {4} vCPUs available, this pool needs {5}." -f `
-                $skuFamily, $region, $usage.CurrentValue, $usage.Limit, $available, $needed) -ForegroundColor Cyan
-            if ($available -lt $needed) {
-                write-host "ERROR: Insufficient AMD CVM vCPU quota in '$skuFamily' / '$region' ($needed needed, $available available)." -ForegroundColor Red
-                exit 1
-            }
-        }
-    } catch {
-        write-host "Warning: Get-AzVMUsage failed: $($_.Exception.Message). Continuing." -ForegroundColor Yellow
-    }
-    write-host "Pre-flight passed: '$ccVmSize' available with quota in '$region'." -ForegroundColor Green
+if ($existingNamespace -and ($existingNamespace.metadata.labels.'istio.io/rev' -or
+    $existingNamespace.metadata.labels.'istio-injection' -eq 'enabled')) {
+  throw 'Challenge 5 requires its namespace without Istio sidecar injection. Ask the facilitator to review the namespace labels.'
 }
-
-# ---------- Resource group ------------------------------------------------------------------------
-$rgTags = @{
-    owner   = $ownername
-    BuiltBy = $scriptName
-    GitRepo = $gitRemoteUrl
-    Workload = "azure-voting-app"
-    CCType  = "AMD-SEV-SNP"
+if (-not $existingNamespace) {
+  @{ apiVersion = 'v1'; kind = 'Namespace'; metadata = @{ name = $namespace; labels = @{ 'microhack-challenge' = '05'; 'istio-injection' = 'disabled' } } } |
+    ConvertTo-Json -Depth 5 | kubectl @kubectlScope apply -f -
+  if ($LASTEXITCODE -ne 0) { throw 'Cannot create the Challenge 5 namespace.' }
 }
-if ($description -ne "") { $rgTags.Add("description", $description) }
-if ($smoketest)          { $rgTags.Add("smoketest", "true") }
-
-az group show --name $resgrp --output none
-if ($LASTEXITCODE -ne 0) { throw "Resource group '$resgrp' was not found." }
-
-# ---------- AKS cluster ---------------------------------------------------------------------------
-# Auto-patching strategy (no preview features required, safe defaults that reflect the recommended
-# Azure Policies "Kubernetes clusters should have auto-upgrade enabled" and node-image auto-upgrade):
-#   --auto-upgrade-channel stable        cluster K8s version auto-upgrades to stable
-#   --node-os-upgrade-channel NodeImage  node OS images auto-upgrade weekly
-#   --enable-managed-identity            system-assigned MI for the cluster
-#   --tier standard                      uptime SLA + financially-backed (cheap insurance)
-# We deliberately keep local accounts enabled so 'az aks get-credentials' just works for the demo.
-az aks show --resource-group $resgrp --name $aksName --output none 2>$null
-if ($LASTEXITCODE -ne 0) {
-  write-host "Creating AKS cluster '$aksName' (this takes ~5 minutes)..." -ForegroundColor Cyan
-  az aks create `
-    --resource-group $resgrp `
-    --name $aksName `
-    --location $region `
-    --node-count 1 `
-    --nodepool-name $systemPool `
-    --node-vm-size $systemVmSize `
-    --os-sku Ubuntu `
-    --enable-managed-identity `
-    --generate-ssh-keys `
-    --auto-upgrade-channel stable `
-    --node-os-upgrade-channel NodeImage `
-    --tier standard `
-    --network-plugin azure `
-    --tags owner=$ownername BuiltBy=$scriptName Workload=azure-voting-app Challenge=05 `
-    --only-show-errors
-  if ($LASTEXITCODE -ne 0) { write-host "az aks create failed" -ForegroundColor Red; exit 1 }
-}
-
-# ---------- AMD SEV-SNP Confidential Computing node pool ------------------------------------------
-# AMD SEV-SNP CVM node pools require Ubuntu and a DCa*/ECa* v5 SKU. Secure Boot + vTPM are enabled
-# implicitly by the platform when a CVM SKU is selected; no extra flags are needed.
-az aks nodepool show --resource-group $resgrp --cluster-name $aksName --name $ccPoolName --output none 2>$null
-if ($LASTEXITCODE -ne 0) {
-  write-host "Adding AMD SEV-SNP CC node pool '$ccPoolName' (${ccNodeCount}x $ccVmSize)..." -ForegroundColor Cyan
-  az aks nodepool add `
-    --resource-group $resgrp `
-    --cluster-name $aksName `
-    --name $ccPoolName `
-    --node-count $ccNodeCount `
-    --node-vm-size $ccVmSize `
-    --os-sku Ubuntu `
-    --mode User `
-    --labels workload=confidential sku=amd-sev-snp `
-    --tags owner=$ownername CCType=AMD-SEV-SNP `
-    --only-show-errors
-  if ($LASTEXITCODE -ne 0) { write-host "az aks nodepool add failed for CC pool" -ForegroundColor Red; exit 1 }
-}
-
-# ---------- kubectl access ------------------------------------------------------------------------
-if (-not (Get-Command kubectl -ErrorAction SilentlyContinue)) {
-    write-host "kubectl not found - installing via 'az aks install-cli'" -ForegroundColor Yellow
-    az aks install-cli --only-show-errors | Out-Null
-}
-write-host "Fetching cluster credentials..." -ForegroundColor Cyan
-az aks get-credentials --resource-group $resgrp --name $aksName --overwrite-existing --only-show-errors | Out-Null
-if ($LASTEXITCODE -ne 0) { write-host "az aks get-credentials failed" -ForegroundColor Red; exit 1 }
-
-# Sanity: list nodes
-kubectl get nodes -o wide
+kubectl @kubectlScope get nodes -o wide
 if ($LASTEXITCODE -ne 0) { write-host "kubectl get nodes failed - cluster not reachable" -ForegroundColor Red; exit 1 }
 
 # ---------- Deploy public Azure Voting App (multi-container) --------------------------------------
@@ -391,31 +241,31 @@ spec:
     app: azure-vote-front
 '@
 
-$manifestFile = Join-Path $env:TEMP "azure-vote-$basename.yaml"
+$manifestFile = Join-Path ([IO.Path]::GetTempPath()) "azure-vote-$basename.yaml"
 $votingManifest | Out-File -FilePath $manifestFile -Encoding utf8 -Force
 write-host "Applying voting-app manifest from $manifestFile..." -ForegroundColor Cyan
-kubectl apply -f $manifestFile
+kubectl @kubectlScope apply -f $manifestFile
 if ($LASTEXITCODE -ne 0) { write-host "kubectl apply failed" -ForegroundColor Red; exit 1 }
 
 # ---------- Wait for rollouts ---------------------------------------------------------------------
 write-host "Waiting for deployments to become available..." -ForegroundColor Cyan
-kubectl rollout status deployment/azure-vote-back  --timeout=5m
-if ($LASTEXITCODE -ne 0) { write-host "azure-vote-back rollout failed" -ForegroundColor Red; kubectl describe deployment azure-vote-back; exit 1 }
-kubectl rollout status deployment/azure-vote-front --timeout=10m
-if ($LASTEXITCODE -ne 0) { write-host "azure-vote-front rollout failed" -ForegroundColor Red; kubectl describe deployment azure-vote-front; kubectl get pods -l app=azure-vote-front -o wide; exit 1 }
+kubectl @kubectlScope rollout status deployment/azure-vote-back  --timeout=5m
+if ($LASTEXITCODE -ne 0) { write-host "azure-vote-back rollout failed" -ForegroundColor Red; kubectl @kubectlScope describe deployment azure-vote-back; exit 1 }
+kubectl @kubectlScope rollout status deployment/azure-vote-front --timeout=10m
+if ($LASTEXITCODE -ne 0) { write-host "azure-vote-front rollout failed" -ForegroundColor Red; kubectl @kubectlScope describe deployment azure-vote-front; kubectl @kubectlScope get pods -l app=azure-vote-front -o wide; exit 1 }
 
 # ---------- Wait for LoadBalancer external IP -----------------------------------------------------
 write-host "Waiting for LoadBalancer to allocate a public IP (up to 5 minutes)..." -ForegroundColor Cyan
 $externalIP = $null
 for ($i = 1; $i -le 30; $i++) {
-    $externalIP = kubectl get service azure-vote-front -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>$null
+    $externalIP = kubectl @kubectlScope get service azure-vote-front -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>$null
     if ($externalIP) { break }
     Start-Sleep -Seconds 10
     write-host "  ...still waiting for external IP (attempt $i/30)"
 }
 if (-not $externalIP) {
     write-host "Timed out waiting for external IP" -ForegroundColor Red
-    kubectl describe service azure-vote-front
+    kubectl @kubectlScope describe service azure-vote-front
     exit 1
 }
 write-host "Voting app external IP: $externalIP" -ForegroundColor Green
@@ -435,8 +285,8 @@ for ($i = 1; $i -le 30; $i++) {
 }
 if (-not $ok) {
     write-host "Front-end did not respond with expected content within 5 minutes" -ForegroundColor Red
-    kubectl get pods -o wide
-    kubectl logs -l app=azure-vote-front --tail=50
+    kubectl @kubectlScope get pods -o wide
+    kubectl @kubectlScope logs -l app=azure-vote-front --tail=50
     exit 1
 }
 
@@ -445,7 +295,7 @@ write-host "SUCCESS: Azure Voting App is live at  http://$externalIP/" -Foregrou
 write-host "Cluster        : $aksName"
 write-host "Resource group : $resgrp"
 write-host "CC node pool   : $ccPoolName  (${ccNodeCount}x $ccVmSize - AMD SEV-SNP)"
-write-host "Auto-upgrade   : cluster=stable  node-os=NodeImage"
+write-host "Namespace      : $namespace"
 write-host "----------------------------------------------------------------------------------------------------------------"
 
 # ---------- Deploy the runtime-attestation web UI -------------------------------------------------
@@ -456,9 +306,7 @@ write-host "Deploying CC runtime-attestation web UI..." -ForegroundColor Cyan
 $attestDir = Join-Path $sampleDirectory 'attestation'
 foreach ($f in @('app.py','config_snp.json','templates/index.html')) {
     if (-not (Test-Path (Join-Path $attestDir $f))) {
-        write-host "Missing $f under $attestDir - skipping attestation deployment." -ForegroundColor Yellow
-        $attestDir = $null
-        break
+        throw "Missing attestation asset $f under $attestDir. Use a complete repository checkout."
     }
 }
 
@@ -467,15 +315,16 @@ if ($attestDir) {
   $attestAppPath = Join-Path $attestDir 'app.py'
   $attestConfigPath = Join-Path $attestDir 'config_snp.json'
   $attestTemplatePath = Join-Path $attestDir 'templates/index.html'
-    $cmYaml = kubectl create configmap cc-attest-app `
+    $cmYaml = kubectl @kubectlScope create configmap cc-attest-app `
     "--from-file=app.py=$attestAppPath" `
     "--from-file=config_snp.json=$attestConfigPath" `
     "--from-file=index.html=$attestTemplatePath" `
         --dry-run=client -o yaml
     if ($LASTEXITCODE -ne 0) { write-host "Failed to build attestation ConfigMap" -ForegroundColor Red; exit 1 }
-    $cmFile = Join-Path $env:TEMP "cc-attest-cm-$basename.yaml"
+    $cmFile = Join-Path ([IO.Path]::GetTempPath()) "cc-attest-cm-$basename.yaml"
     $cmYaml | Out-File -FilePath $cmFile -Encoding utf8 -Force
-    kubectl apply -f $cmFile | Out-Null
+    kubectl @kubectlScope apply -f $cmFile | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw 'Cannot apply the attestation ConfigMap.' }
 
     $attestManifest = @'
 apiVersion: apps/v1
@@ -566,24 +415,26 @@ spec:
     targetPort: 80
 '@
 
-    $attestManifestFile = Join-Path $env:TEMP "cc-attest-$basename.yaml"
+    $attestManifestFile = Join-Path ([IO.Path]::GetTempPath()) "cc-attest-$basename.yaml"
     $attestManifest | Out-File -FilePath $attestManifestFile -Encoding utf8 -Force
-    kubectl apply -f $attestManifestFile
+    kubectl @kubectlScope apply -f $attestManifestFile
     if ($LASTEXITCODE -ne 0) { write-host "kubectl apply failed for attestation manifest" -ForegroundColor Red; exit 1 }
 
     # Restart deployment so any ConfigMap changes from re-runs are picked up.
-    kubectl rollout restart deployment/cc-attest | Out-Null
+    kubectl @kubectlScope rollout restart deployment/cc-attest | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw 'Cannot restart the attestation deployment.' }
     write-host "Waiting for cc-attest rollout (first run installs tpm2-tools + clones upstream)..." -ForegroundColor Cyan
-    kubectl rollout status deployment/cc-attest --timeout=10m
+    kubectl @kubectlScope rollout status deployment/cc-attest --timeout=10m
     if ($LASTEXITCODE -ne 0) {
         write-host "cc-attest rollout failed" -ForegroundColor Red
-        kubectl describe deployment cc-attest
-        kubectl logs -l app=cc-attest --tail=80
+        kubectl @kubectlScope describe deployment cc-attest
+        kubectl @kubectlScope logs -l app=cc-attest --tail=80
+        throw 'Attestation rollout failed.'
     } else {
         # Wait for the attestation LoadBalancer.
         $attestIP = $null
         for ($i = 1; $i -le 30; $i++) {
-            $attestIP = kubectl get service cc-attest -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>$null
+            $attestIP = kubectl @kubectlScope get service cc-attest -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>$null
             if ($attestIP) { break }
             Start-Sleep -Seconds 10
             write-host "  ...still waiting for cc-attest external IP (attempt $i/30)"
@@ -594,7 +445,7 @@ spec:
             write-host "  Click 'Attest' to fetch a fresh MAA-signed SEV-SNP token with every claim explained."
             write-host "----------------------------------------------------------------------------------------------------------------"
         } else {
-            write-host "cc-attest LoadBalancer did not get an external IP in time." -ForegroundColor Yellow
+            throw 'Attestation LoadBalancer did not get an external IP in time.'
         }
     }
 }
@@ -606,3 +457,11 @@ write-host "To clean up:  ./Deploy-VotingAppCC.ps1 -Cleanup"
 
 $myTimeSpan = New-TimeSpan -Start $startTime -End (Get-Date)
 Write-Output ("Execution time was {0} minutes and {1} seconds." -f $myTimeSpan.Minutes, $myTimeSpan.Seconds)
+}
+finally {
+  foreach ($temporaryFile in @($kubeconfigPath, $manifestFile, $cmFile, $attestManifestFile)) {
+    if ($temporaryFile -and (Test-Path -LiteralPath $temporaryFile)) {
+      Remove-Item -LiteralPath $temporaryFile -Force
+    }
+  }
+}

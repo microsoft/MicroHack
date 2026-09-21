@@ -10,6 +10,7 @@
       - Azure AI Foundry project inside the account
       - gpt-5.4-mini model deployment (capacity 200 GlobalStandard = 200K TPM)
       - A per-attendee Fabric capacity (default F2; -FabricSkuName to override), with the attendee set as capacity admin
+      - Application Insights (+ Log Analytics) connected to the project for agent tracing
     
     Each attendee gets their OWN Fabric capacity (no shared backend, no shared
     Spark contention). The attendee then creates a workspace, assigns it to their
@@ -282,6 +283,63 @@ foreach ($userId in $AllowedEntraUserIds) {
 Grant-FoundryUserRole `
     -PrincipalId $projectResource.identity.principalId `
     -PrincipalDescription "project managed identity '$($projectResource.identity.principalId)'"
+
+# ---------------------------------------------------------------------------
+# Application Insights for agent tracing (per attendee).
+# The Foundry portal Traces tab (and server-side tracing) only lights up once the
+# project is connected to an Application Insights resource. We create a
+# workspace-based App Insights and add it as an 'AppInsights' project connection so
+# attendees see agent + Fabric Data Agent traces in Challenges 3-5 with no manual
+# setup. Non-fatal: a failure here doesn't block the rest of the lab (attendees can
+# still connect one via Agents -> Traces -> Connect).
+# ---------------------------------------------------------------------------
+try {
+    foreach ($ns in 'Microsoft.OperationalInsights', 'Microsoft.Insights') {
+        $prov = Invoke-AzRestMethod -Method GET -Path "/subscriptions/$SubscriptionId/providers/$ns`?api-version=2021-04-01"
+        if ($prov.StatusCode -eq 200 -and ($prov.Content | ConvertFrom-Json).registrationState -ne 'Registered') {
+            Invoke-AzRestMethod -Method POST -Path "/subscriptions/$SubscriptionId/providers/$ns/register?api-version=2021-04-01" | Out-Null
+        }
+    }
+
+    $laName = "inv-la-$stableHash"
+    $aiName = "inv-appi-$stableHash"
+    $laId   = "/subscriptions/$SubscriptionId/resourceGroups/$effectiveRG/providers/Microsoft.OperationalInsights/workspaces/$laName"
+    $aiId   = "/subscriptions/$SubscriptionId/resourceGroups/$effectiveRG/providers/Microsoft.Insights/components/$aiName"
+
+    $laBody = @{ location = $effectiveLocation; properties = @{ sku = @{ name = 'PerGB2018' }; retentionInDays = 30 } } | ConvertTo-Json -Depth 5
+    $laResp = Invoke-AzRestMethod -Method PUT -Path "$laId`?api-version=2023-09-01" -Payload $laBody
+    if ($laResp.StatusCode -ge 400) { throw "Log Analytics workspace create failed (HTTP $($laResp.StatusCode)): $($laResp.Content)" }
+
+    # Workspace-based App Insights (classic is retired); WorkspaceResourceId links it to the Log Analytics workspace.
+    $aiBody = @{ location = $effectiveLocation; kind = 'web'; properties = @{ Application_Type = 'web'; WorkspaceResourceId = $laId } } | ConvertTo-Json -Depth 5
+    $aiResp = Invoke-AzRestMethod -Method PUT -Path "$aiId`?api-version=2020-02-02" -Payload $aiBody
+    if ($aiResp.StatusCode -ge 400) { throw "Application Insights create failed (HTTP $($aiResp.StatusCode)): $($aiResp.Content)" }
+
+    # ConnectionString populates asynchronously — poll briefly.
+    $aiConnString = $null
+    for ($i = 0; $i -lt 6 -and -not $aiConnString; $i++) {
+        Start-Sleep -Seconds 5
+        $aiConnString = ((Invoke-AzRestMethod -Method GET -Path "$aiId`?api-version=2020-02-02").Content | ConvertFrom-Json).properties.ConnectionString
+    }
+    if (-not $aiConnString) { throw "Application Insights connection string not available yet." }
+
+    # Connect App Insights to the project (category 'AppInsights') — same as the portal's Traces -> Connect.
+    $aiConnUri  = "/subscriptions/$SubscriptionId/resourceGroups/$effectiveRG/providers/Microsoft.CognitiveServices/accounts/$foundryAccountName/projects/$foundryProjectName/connections/appinsights?api-version=2025-04-01-preview"
+    $aiConnBody = @{ properties = @{
+        category      = 'AppInsights'
+        target        = $aiId
+        authType      = 'ApiKey'
+        isSharedToAll = $true
+        credentials   = @{ key = $aiConnString }
+        metadata      = @{ ApiType = 'Azure'; ResourceId = $aiId }
+    } } | ConvertTo-Json -Depth 6
+    $aiConnResp = Invoke-AzRestMethod -Method PUT -Path $aiConnUri -Payload $aiConnBody
+    if ($aiConnResp.StatusCode -ge 400) { throw "App Insights project connection failed (HTTP $($aiConnResp.StatusCode)): $($aiConnResp.Content)" }
+
+    Write-Host "[OK]    Application Insights '$aiName' connected to the project for agent tracing."
+} catch {
+    Write-Warning "Application Insights tracing setup skipped: $_ - attendees can still connect one manually (Agents -> Traces -> Connect)."
+}
 
 # ---------------------------------------------------------------------------
 # gpt-5.4-mini model deployment (ACCOUNT-scoped, GlobalStandard capacity 200).

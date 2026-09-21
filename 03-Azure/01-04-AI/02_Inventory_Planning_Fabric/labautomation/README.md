@@ -10,6 +10,7 @@ Everything for this hack is provisioned per attendee by [`deploy-lab.ps1`](deplo
 | Foundry project | `…/projects/inventory-hack` | System-assigned managed identity; provisioning is verified before the lab continues |
 | gpt-5.4-mini model deployment | GlobalStandard, 200K TPM | Used by all three hack agents |
 | Fabric capacity (default **F2**) | `Microsoft.Fabric/capacities` | One per attendee; attendee set as **capacity admin**. SKU via `-FabricSkuName` (F2 default; use F4 if attendees hit throttling). |
+| Application Insights (+ Log Analytics) | `Microsoft.Insights/components` + `Microsoft.OperationalInsights/workspaces` | Connected to the project as an `AppInsights` connection so the **Traces** tab works in Challenges 3–5 with no manual setup. Non-fatal if it fails. |
 
 The script grants the **Foundry User** role to each attendee and to the Foundry project's managed identity at the Foundry account scope. It also sets each attendee as **admin of their own F2 capacity** (resolving their Entra object ID to a UPN via the platform `Get-MhhLabUser` helper), so they can create a workspace, assign it to the capacity, and publish their own Data Agent — no shared state, no cross-attendee contention.
 
@@ -40,7 +41,7 @@ Attendees use these in the Foundry and Fabric portals — no SDK or code require
 - **The lab tenant must have Fabric enabled** — a Fabric **tenant-admin** setting (*“Users can create Fabric items”* / workspaces). This is **not** settable via `lab-defaults.json`; the tenant administrator for the lab tenant must turn it on, or attendees cannot create a workspace even with a license.
 - **Fabric F-SKU quota** in a preferred region (F2 = 2 CU → ~256 attendees per 512-CU subscription; F4 = 4 CU halves that). `swedencentral` and `norwayeast` are good defaults.
 - **Model TPM vs. subscription packing** — each attendee's `gpt-5.4-mini` deploys at **200K TPM** (GlobalStandard capacity 200) and [`lab-defaults.json`](lab-defaults.json) packs **`labsPerSubscription: 5`** (5 × 200 = 1,000, right at the ~1,000 GlobalStandard quota ceiling per region). If attendees hit token rate limits, request a GlobalStandard quota increase or use **one subscription per attendee**.
-- The **`Microsoft.Fabric`** resource provider is registered on the subscription (the script registers it if needed).
+- The **`Microsoft.Fabric`**, **`Microsoft.Insights`**, and **`Microsoft.OperationalInsights`** resource providers are registered on the subscription (the script registers them if needed).
 
 > [!NOTE]
 > Attendee object IDs → UPNs are resolved with the platform **`Get-MhhLabUser`** helper (served from a platform-seeded cache), so the service principal does **not** need Microsoft Graph directory-read permission.
@@ -49,4 +50,5 @@ Attendees use these in the Foundry and Fabric portals — no SDK or code require
 
 - **Fabric capacity** (default **F2**, ~$0.36/hr pay-as-you-go) is the dominant cost — roughly **$8–9/attendee/day** if left running. Attendees (or facilitators) should **suspend** the capacity when idle. Bumping to **F4** (`-FabricSkuName F4`, or a live **on-demand resize** when throttling appears) roughly **doubles** this — update `estimatedDailyCostsUsd` in [`lab-defaults.json`](lab-defaults.json) accordingly.
 - gpt-5.4-mini (GlobalStandard, 200K TPM) — a few cents of tokens per attendee across the hack's ~50 agent calls; Foundry account base ~$2/day.
+- **Application Insights + Log Analytics** — trace ingestion for the hack's ~50 agent calls is a few MB; effectively **negligible** (well within the Log Analytics free ingestion allowance).
 - Total ≈ **$9/attendee/day** — reflected in [`lab-defaults.json`](lab-defaults.json) (`estimatedDailyCostsUsd`).

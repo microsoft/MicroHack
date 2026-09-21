@@ -1,24 +1,32 @@
-# Challenge 4 - Encryption in use with Azure Confidential Compute – VM
+# Challenge 4 - Runtime attestation with Confidential ACI
 
 ## Goal
 
-Validate guest attestation on a pre-provisioned Azure Confidential VM to confirm that business logic only executes in a trusted, hardware-backed confidential computing environment. You will inspect the VM's security configuration, connect through Azure Bastion using username/password credentials, build and run a sample attestation application, and verify the cryptographic JWT proof of VM integrity using a dedicated Microsoft Azure Attestation (MAA) provider.
+Deploy the same visual attestation application to Confidential and Standard
+Azure Container Instances (ACI). Use the side-by-side result to prove that
+runtime attestation depends on AMD SEV-SNP hardware rather than application
+logic alone.
 
 ## Actions
 
-* Inspect the pre-provisioned Confidential VM security settings (security type, secure boot, vTPM, no public IP)
-* Connect to the Confidential VM via Azure Bastion using username/password credentials from your lab dashboard
-* Install dependencies, build, and run the CVM guest attestation sample application
-* Inspect the attestation token JWT claims to verify the confidential computing environment
+- Build the visual attestation image server-side in Azure Container Registry.
+- Generate a confidential-computing enforcement policy for the image.
+- Deploy the image to Confidential and Standard ACI container groups.
+- Run attestation in both applications and compare the results.
+- Inspect the Microsoft Azure Attestation claims from the confidential instance.
+- Remove only the resources created by this challenge.
 
 ## Success criteria
 
-* Attestation token output proving the VM is running in a trusted confidential environment
+- Confidential ACI returns a signed MAA token with `x-ms-attestation-type` set to `sevsnpvm`.
+- The compliance status is `azure-compliant-uvm`.
+- Standard ACI fails because `/dev/sev-guest` is unavailable.
+- Both instances use the same container image.
 
 ## Learning resources
 
-* [Azure confidential computing](https://learn.microsoft.com/azure/confidential-computing/)
-* [Azure encryption overview](https://learn.microsoft.com/azure/security/fundamentals/encryption-overview)
-* [Azure Confidential Computing Overview](https://learn.microsoft.com/azure/confidential-computing/overview)
-* [Microsoft Azure Attestation](https://learn.microsoft.com/azure/attestation/overview)
-* [About Azure confidential VMs](https://learn.microsoft.com/azure/confidential-computing/confidential-vm-overview)
+- [Why Challenge 4 uses `confcom` and Docker](../walkthrough/challenge-04/CONFCOM-AND-CCE-POLICY.md)
+- [Confidential containers on Azure Container Instances](https://learn.microsoft.com/azure/container-instances/container-instances-confidential-overview)
+- [Microsoft Azure Attestation](https://learn.microsoft.com/azure/attestation/overview)
+- [Confidential computing enforcement policies](https://learn.microsoft.com/azure/container-instances/confidential-containers-attestation-concepts)
+- [Source sample: Visual Attestation Demo v2](https://github.com/Azure/confidential-computing/tree/main/aci-samples/visual-attestation-demo-v2)

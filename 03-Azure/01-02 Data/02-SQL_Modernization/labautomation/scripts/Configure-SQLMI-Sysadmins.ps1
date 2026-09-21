@@ -27,9 +27,6 @@ END
 ALTER SERVER ROLE [sysadmin] ADD MEMBER [$sqlMiSysadminUser];
 "@
 
-[System.Reflection.Assembly]::LoadWithPartialName("Microsoft.SqlServer.ConnectionInfo") | Out-Null
-[System.Reflection.Assembly]::LoadWithPartialName("Microsoft.SqlServer.Smo") | Out-Null
-
 $connectionString = "Data Source=$ManagedInstanceServer;Initial Catalog=master;TrustServerCertificate=True;"
 $Connection = New-Object System.Data.SqlClient.SqlConnection($connectionString)
 [System.Security.SecureString]$SQLPwd = $sqlpassword | ConvertTo-SecureString -AsPlainText -Force
@@ -37,16 +34,21 @@ $SQLPwd.MakeReadOnly()
 $cred = New-Object System.Data.SqlClient.SqlCredential($sqlusername,$SQLPwd)
 $Connection.credential = $cred
 
-# 5. SMO-Serververbindung initialisieren
-$serverConnection = New-Object Microsoft.SqlServer.Management.Common.ServerConnection($Connection)
-$server = New-Object Microsoft.SqlServer.Management.Smo.Server($serverConnection)
-
 try {
-    # Ausführung des Skripts inkl. GO-Trenner
-    [void]$server.ConnectionContext.ExecuteNonQuery($ConfigureSql)
-    #Write-Host "Skript erfolgreich auf SQL MI ausgeführt." -ForegroundColor Green
+    $Connection.open()
+
+    $command = New-Object system.Data.SqlClient.SqlCommand($Connection)
+    $command.Connection = $Connection
+    $command.CommandTimeout = $QueryTimeout
+
+    $command.CommandText = $ConfigureSql
+    $result = $command.ExecuteNonQuery()
+    #$result = $command.ExecuteReader()
+    #$table = New-Object System.Data.DataTable
+    #$table.Load($result)
 }
 catch {
+    Write-Host $result
     $ErrorString = $_ | format-list -force | Out-String
     Write-Error "ERR: $ErrorString"
 }

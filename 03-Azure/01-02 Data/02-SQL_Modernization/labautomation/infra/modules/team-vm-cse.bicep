@@ -39,6 +39,7 @@ resource ConfigureTeamMachine 'Microsoft.Compute/virtualMachines/extensions@2024
         '${repoBaseURL}/scripts/Download-Samples.ps1'
         '${repoBaseURL}/scripts/bootstrap-teamvm.ps1'
         '${repoBaseURL}/scripts/Configure-Teams-Shortcuts.ps1'
+        '${repoBaseURL}/scripts/Configure-TeamVM.ps1'
         '${repoBaseURL}/scripts/Restore-TeamDatabases.ps1'
         '${repoBaseURL}/scripts/Configure-legacySQL-DB.ps1'
         '${repoBaseURL}/scripts/Configure-SQLMI-Sysadmins.ps1'

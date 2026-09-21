@@ -9,6 +9,8 @@ credential from the installed Jumpstart configuration. Passwords are not logged.
 Missing required Azure CLI extensions are installed without upgrading existing
 versions, including during WhatIf. Azure, Hyper-V and storage changes remain
 simulated during WhatIf.
+AKS preparation grants its Entra admin group the cluster-scoped Azure Arc Enabled
+Kubernetes Cluster User Role for proxy access, reusing applicable existing grants.
 Dot-source this file to load its functions without running provisioning.
 #>
 [CmdletBinding(SupportsShouldProcess)]
@@ -261,6 +263,54 @@ function Sync-LocalBoxResource {
         $resource = Wait-LocalBoxResource $Id -TimeoutSeconds $TimeoutSeconds
         Assert-LocalBoxProperties $resource $Expected
         return $resource
+    }
+}
+
+function Sync-LocalBoxAksProxyRole {
+    [CmdletBinding(SupportsShouldProcess)]
+    param([Parameter(Mandatory)][string]$ClusterId, [Parameter(Mandatory)][string]$GroupObjectId)
+    if ($ClusterId -notmatch '^/subscriptions/([^/]+)/resourceGroups/[^/]+/providers/Microsoft\.Kubernetes/connectedClusters/[^/]+$') {
+        throw 'The Arc proxy role must be scoped to an Azure Arc connected-cluster resource.'
+    }
+    $subscription = $Matches[1]
+    $groupId = Assert-LocalBoxGroupId $GroupObjectId
+    $roleId = '00493d72-78f6-4148-b6c5-d3ce8e4799dd'
+    $roleDefinitionId = "/subscriptions/$subscription/providers/Microsoft.Authorization/roleDefinitions/$roleId"
+    $action = "Assign Azure Arc Enabled Kubernetes Cluster User Role to group $groupId"
+    if ($WhatIfPreference) {
+        $null = $PSCmdlet.ShouldProcess($ClusterId, $action)
+        return
+    }
+    try {
+        $assignments = @(Invoke-LocalBoxAz @('role', 'assignment', 'list', '--subscription', $subscription,
+            '--scope', $ClusterId, '--include-inherited', '--fill-principal-name', 'false', '--fill-role-definition-name', 'false'))
+    }
+    catch { throw "Cannot inspect Arc proxy RBAC on $ClusterId. The Client managed identity needs Microsoft.Authorization/roleAssignments/read at this scope. $($_.Exception.Message)" }
+    $matching = @($assignments | Where-Object {
+        $_.principalId -ieq $groupId -and ([string]$_.roleDefinitionId).Split('/')[-1] -ieq $roleId -and
+        $_.scope -and ($_.scope -ieq $ClusterId -or $ClusterId.StartsWith(([string]$_.scope).TrimEnd('/') + '/', [StringComparison]::OrdinalIgnoreCase))
+    })
+    if (@($matching | Where-Object { -not $_.condition }).Count) {
+        Write-Host "Reusing Azure Arc Enabled Kubernetes Cluster User Role for group $groupId on $ClusterId (direct or inherited)."
+        return
+    }
+    if ($matching.Count) {
+        throw 'An existing applicable Arc proxy role assignment has a condition. Have the access administrator review it; preparation will not replace or bypass its restrictions.'
+    }
+    if ($PSCmdlet.ShouldProcess($ClusterId, $action)) {
+        $algorithm = [Security.Cryptography.SHA256]::Create()
+        try { $hash = $algorithm.ComputeHash([Text.Encoding]::UTF8.GetBytes("$ClusterId|$groupId|$roleId".ToLowerInvariant())) }
+        finally { $algorithm.Dispose() }
+        $assignmentName = [guid]::new([byte[]]$hash[0..15]).ToString()
+        Write-Host "Assigning Azure Arc Enabled Kubernetes Cluster User Role to group $groupId on $ClusterId..."
+        try {
+            $assignment = Invoke-LocalBoxAz @('role', 'assignment', 'create', '--subscription', $subscription,
+                '--name', $assignmentName, '--assignee-object-id', $groupId, '--assignee-principal-type', 'Group',
+                '--role', $roleDefinitionId, '--scope', $ClusterId)
+        }
+        catch { throw "Cannot assign Arc proxy RBAC on $ClusterId. Have an authorized administrator grant this role to group $groupId, or authorize the Client managed identity for Microsoft.Authorization/roleAssignments/write at this scope, then rerun. Preparation does not elevate its identity. $($_.Exception.Message)" }
+        Assert-LocalBoxProperties $assignment @{ scope = $ClusterId; principalId = $groupId; principalType = 'Group'; roleDefinitionId = $roleDefinitionId }
+        if ($assignment.condition) { throw 'The returned Arc proxy role assignment is conditional; access has not been established.' }
     }
 }
 
@@ -562,6 +612,9 @@ function Invoke-LocalBoxPreparation {
                 Start-Sleep -Seconds 15
                 $connected = Get-LocalBoxResource $aksId
             }
+        }
+        if (-not $Settings.SkipAks) {
+            Sync-LocalBoxAksProxyRole -ClusterId $aksId -GroupObjectId $groupId -WhatIf:$WhatIfPreference
         }
         $manifest = @{
             SubscriptionId = $Settings.SubscriptionId; ResourceGroupName = $Settings.ResourceGroupName; CustomLocationId = $custom.id

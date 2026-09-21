@@ -57,7 +57,9 @@ You'll chain the three specialist agents you built in Challenges 2–4. **You do
 1. Click **Preview** to open the workflow playground.
 2. Send a single request, e.g.:
 
-   > *"A prolonged heatwave is hitting the Pacific Northwest. Check our exposure on outdoor power tools and prepare a replenishment order for approval."*
+   ```text
+   A prolonged heatwave is hitting the Pacific Northwest. Check our exposure on outdoor power tools and prepare a replenishment order for approval.
+   ```
 
 3. Watch the nodes execute in order: demand sensing → optimisation → replenishment. When the replenishment node presents the PO proposal, reply `YES` (or `MODIFY <line> <qty>`).
 4. Open **Traces** and find the run. Confirm you can see the **node-by-node execution** — each agent node's model call with its **Fabric Data Agent** tool call underneath, and the human approval turn on the replenishment node.

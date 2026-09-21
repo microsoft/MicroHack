@@ -102,8 +102,16 @@ This is the first agent where you attach the Fabric Data Agent, so you'll **crea
 
    > [!TIP]
    > **Agent answered from web only and said it "couldn't verify inventory"?** It skipped the Fabric Data Agent call — `gpt-5.4-mini` is a reasoning model and occasionally skips an available tool. Recover it by replying: *"Call the Fabric Data Agent now and pull current stock and sales velocity for the affected SKUs (e.g. P004, P006) before giving your assessment."* If it keeps skipping, set **tool choice = required** in the agent's tool/run settings so a tool call is mandatory. The strengthened instructions above make this rare.
-4. Ask a follow-up question: *"Which store or warehouse has the lowest stock of outdoor power tools relative to its reorder point?"*
-5. Ask: *"What external signals in the last 30 days could affect demand for outdoor power tools in the Pacific Northwest?"*
+4. Ask a follow-up question:
+
+   ```text
+   Which store or warehouse has the lowest stock of outdoor power tools relative to its reorder point?
+   ```
+5. Ask:
+
+   ```text
+   What external signals in the last 30 days could affect demand for outdoor power tools in the Pacific Northwest?
+   ```
 
 ## 🏁 Success criteria
 

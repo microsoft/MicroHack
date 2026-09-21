@@ -44,7 +44,11 @@ The data lives in **Microsoft Fabric** (a governed Lakehouse with inventory, dem
    > **Shared tenant — make sure you open *your* project.** Every attendee's projects are listed together at [ai.azure.com](https://ai.azure.com) and the names look alike. To find yours, match the **`FoundryProjectEndpoint`** on your lab dashboard (the **Credentials** tab of the MicroHack portal) to the project's **Parent resource** shown in Foundry. Work only in that project.
 
    - Locate your **model deployments** — confirm `gpt-5.4-mini` is deployed.
-   - Open a **deployed model → Playground** and send a test message: *"What can you do?"* (In the current Foundry portal you open the Playground from a model or an agent — there is no top-level *Agents → Playground* menu.)
+   - Open a **deployed model → Playground** and send this test message (in the current Foundry portal you open the Playground from a model or an agent — there is no top-level *Agents → Playground* menu):
+
+     ```text
+     What can you do?
+     ```
    - You will inspect agent decisions in Challenges 3 and 4 via **Traces → Response view** on an agent (not a top-level *Tracing* menu).
 
    ![Models and endpoints view in the Foundry portal showing gpt-5.4-mini deployed with status Succeeded](../images/challenge-00-model-deployments.png)
@@ -132,7 +136,13 @@ The data lives in **Microsoft Fabric** (a governed Lakehouse with inventory, dem
    ![The Agent instructions page containing the Zava retail inventory grounding instructions](../images/challenge-00-agent-add-instructions.png)
 
    **g. Test the Data Agent (before publishing).**
-   Open the **Test data agent** pane and ask: *"How many Leaf Blower X2 units are on hand at the Portland and Seattle stores, and are they below safety stock?"* You should get exact numbers with **CRITICAL** flags — proof your tables are selected and the agent reasons correctly. Testing the draft here confirms it works *before* you publish.
+   Open the **Test data agent** pane and ask:
+
+   ```text
+   How many Leaf Blower X2 units are on hand at the Portland and Seattle stores, and are they below safety stock?
+   ```
+
+   You should get exact numbers with **CRITICAL** flags — proof your tables are selected and the agent reasons correctly. Testing the draft here confirms it works *before* you publish.
 
    ![The published data agent answering the Leaf Blower X2 test question with exact CRITICAL stock levels for Portland and Seattle](../images/challenge-00-agent-test.png)
 
@@ -205,7 +215,13 @@ The data lives in **Microsoft Fabric** (a governed Lakehouse with inventory, dem
    ![Final notebook cell output printing the Workspace ID and Data Agent ID](../images/challenge-00-notebook-ids.png)
 
    **e. Verify your agent answers.** *(1 min)*
-   Open the data agent's **Test data agent** pane and ask: *"How many Leaf Blower X2 units are on hand at the Portland and Seattle stores, and are they below safety stock?"* You should get exact numbers with **CRITICAL** flags — proof that your tables are selected and the agent is published.
+   Open the data agent's **Test data agent** pane and ask:
+
+   ```text
+   How many Leaf Blower X2 units are on hand at the Portland and Seattle stores, and are they below safety stock?
+   ```
+
+   You should get exact numbers with **CRITICAL** flags — proof that your tables are selected and the agent is published.
 
    ![The published data agent answering the Leaf Blower X2 test question with exact CRITICAL stock levels for Portland and Seattle](../images/challenge-00-agent-test.png)
 
@@ -264,7 +280,11 @@ The data lives in **Microsoft Fabric** (a governed Lakehouse with inventory, dem
 ## 🚀 Go further
 
 - Sketch the three-agent flow from memory and label which tool each agent uses and why.
-- In the playground, ask the agent *“What data can you see?”* and compare its answer to the table list above.
+- In the playground, ask the agent this and compare its answer to the table list above:
+
+  ```text
+  What data can you see?
+  ```
 - Predict which tables Challenge 3 and Challenge 4 will lean on before you get there.
 
 ## 🧠 Reflection

@@ -4,6 +4,93 @@ BeforeAll {
     . "$PSScriptRoot/../../labautomation/localbox-credentials.ps1"
 }
 
+Describe 'Health runner defaults and feedback' {
+    BeforeAll {
+        function kubectl {}
+    }
+    It 'defaults to the home kubeconfig and downloads without side effects when dot-sourced' {
+        Mock Invoke-WebRequest { throw 'Unexpected download' }
+        . "$PSScriptRoot/../test-sovereign-cloud.ps1"
+        $LocalBoxKubeconfig | Should -Be (Join-Path $HOME '.kube/config')
+        [bool]$DownloadTests | Should -BeTrue
+        Should -Invoke Invoke-WebRequest -Times 0
+    }
+    It 'accepts an explicit kubeconfig and disables downloads for a local checkout' {
+        . "$PSScriptRoot/../test-sovereign-cloud.ps1" -LocalBoxKubeconfig 'custom.kubeconfig' -DownloadTests:$false
+        $LocalBoxKubeconfig | Should -Be 'custom.kubeconfig'
+        [bool]$DownloadTests | Should -BeFalse
+    }
+    It 'preserves inventory precedence and only applies the default to LocalBox scopes' -TestCases @(
+        @{ TestScope = 'LocalBox'; Existing = 'inventory.kubeconfig'; Explicit = $false; Expected = 'inventory.kubeconfig' }
+        @{ TestScope = 'All'; Existing = 'inventory.kubeconfig'; Explicit = $true; Expected = 'chosen.kubeconfig' }
+        @{ TestScope = 'LocalBox'; Existing = $null; Explicit = $false; Expected = 'chosen.kubeconfig' }
+        @{ TestScope = 'ParticipantLabs'; Existing = 'inventory.kubeconfig'; Explicit = $true; Expected = 'inventory.kubeconfig' }
+        @{ TestScope = 'ParticipantLabs'; Existing = $null; Explicit = $false; Expected = $null }
+    ) {
+        param($TestScope, $Existing, $Explicit, $Expected)
+        $ast = [Management.Automation.Language.Parser]::ParseFile("$PSScriptRoot/../test-sovereign-cloud.ps1", [ref]$null, [ref]$null)
+        $assignment = $ast.Find({ param($node)
+            $node -is [Management.Automation.Language.IfStatementAst] -and
+            $node.Clauses[0].Item1.Extent.Text -eq '$Scope -in @(''LocalBox'', ''All'') -and $inventory.LocalBox'
+        }, $true)
+        $assignment | Should -Not -BeNullOrEmpty
+        $Scope = $TestScope
+        $inventory = if ($TestScope -eq 'ParticipantLabs' -and -not $Existing) { @{ Labs = @() } } else { @{ LocalBox = @{ Kubeconfig = $Existing } } }
+        $parameters = if ($Explicit) { @{ LocalBoxKubeconfig = 'chosen.kubeconfig' } } else { @{} }
+        $resolve = [scriptblock]::Create('param([string]$LocalBoxKubeconfig = ''chosen.kubeconfig'')' + "`n" + $assignment.Extent.Text)
+        & $resolve @parameters
+        $inventory.LocalBox.Kubeconfig | Should -Be $Expected
+        if ($TestScope -eq 'ParticipantLabs' -and -not $Existing) { $inventory.ContainsKey('LocalBox') | Should -BeFalse }
+    }
+    It 'reports the waiting condition and remaining time before retrying' {
+        Mock Write-Host {}
+        Mock Start-Sleep {}
+        $attempts = @{ Count = 0 }
+        $output = @(Wait-SovereignCheck -TimeoutSeconds 60 -Check {
+            $attempts.Count++
+            if ($attempts.Count -eq 1) { throw 'System pod kube-system/test-pod is not healthy.' }
+        })
+        $attempts.Count | Should -Be 2
+        $output.Count | Should -Be 0
+        Should -Invoke Write-Host -Times 1 -ParameterFilter {
+            $Object -match 'attempt 1 not ready.*remaining; retry in 15s.*test-pod'
+        }
+        Should -Invoke Start-Sleep -Times 1 -Exactly -ParameterFilter { $Seconds -eq 15 }
+    }
+    It 'does not retry terminal authorization errors' {
+        Mock Write-Host {}
+        Mock Start-Sleep {}
+        { Wait-SovereignCheck -Check { throw 'Forbidden: cannot list pods' } } | Should -Throw '*Forbidden*'
+        Should -Invoke Start-Sleep -Times 0
+        Should -Invoke Write-Host -Times 0
+    }
+    It 'throws the final failed condition at the timeout instead of claiming readiness' {
+        Mock Write-Host {}
+        Mock Start-Sleep {}
+        { Wait-SovereignCheck -TimeoutSeconds 0 -Check { throw 'Deployment coredns is unavailable.' } } | Should -Throw '*coredns*'
+        Should -Invoke Start-Sleep -Times 0
+    }
+    It 'shows the Kubernetes query without mixing progress into JSON results' {
+        Mock Test-Path { $true }
+        Mock Write-Host {}
+        Mock kubectl {
+            $global:LASTEXITCODE = 0
+            '{"items":[{"metadata":{"name":"node-1"}}]}'
+        }
+        $result = @(Invoke-SovereignKubectl 'test.kubeconfig' @('get', 'nodes'))
+        $result.Count | Should -Be 1
+        $result[0].items[0].metadata.name | Should -Be 'node-1'
+        Should -Invoke Write-Host -Times 1 -ParameterFilter { $Object -match 'Querying Kubernetes: kubectl get nodes.*20s' }
+        Should -Invoke kubectl -Times 1 -ParameterFilter { $args -contains '--request-timeout=20s' -and $args -contains 'test.kubeconfig' }
+    }
+    It 'does not claim authentication when the default kubeconfig is absent' {
+        Mock Test-Path { $false }
+        Mock kubectl {}
+        { Invoke-SovereignKubectl (Join-Path $HOME '.kube/config') @('get', 'nodes') } | Should -Throw '*independently authenticated*'
+        Should -Invoke kubectl -Times 0
+    }
+}
+
 Describe 'Console lab group credentials' {
     BeforeAll {
         function Get-MhhDefaultLabGroup { [CmdletBinding()] param() }
@@ -373,7 +460,6 @@ Describe 'LocalBox image storage conflicts' {
         Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments -contains 'create' }
     }
 }
-<
 Describe 'CLI output streams' {
     BeforeEach {
         $script:cliTestExecutable = (Get-Process -Id $PID).Path
@@ -622,6 +708,58 @@ Describe 'Generated Azure Local storage names' {
     It 'allows an absent secondary path only when explicitly requested' {
         Resolve-LocalBoxStoragePath $resources UserStorage2 '/custom/jumpstart' -AllowMissing | Should -BeNullOrEmpty
         { Resolve-LocalBoxStoragePath $resources UserStorage2 '/custom/jumpstart' } | Should -Throw '*exactly one*'
+    }
+}
+
+Describe 'Kubernetes DaemonSet readiness' {
+    BeforeEach {
+        $controllers = @{ items = @(
+            @{ kind = 'DaemonSet'; metadata = @{ name = 'calico-node' }; status = @{ desiredNumberScheduled = 4; numberReady = 4 } }
+            @{ kind = 'DaemonSet'; metadata = @{ name = 'calico-node-windows' }; spec = @{ template = @{ spec = @{ nodeSelector = @{ 'kubernetes.io/os' = 'windows' } } } }; status = @{ desiredNumberScheduled = 0; numberReady = 0 } }
+            @{ kind = 'Deployment'; metadata = @{ name = 'coredns' }; spec = @{ replicas = 2 }; status = @{ availableReplicas = 2 } }
+        ) }
+        Mock Invoke-SovereignKubectl {
+            switch ($Arguments[1]) {
+                'nodes' { return @{ items = @(@{ metadata = @{ name = 'linux-node' }; status = @{ conditions = @(@{ type = 'Ready'; status = 'True' }) } }) } }
+                'pods' { return @{ items = @(@{ metadata = @{ name = 'calico-node-pod'; namespace = 'kube-system' }; status = @{ phase = 'Running'; conditions = @(@{ type = 'Ready'; status = 'True' }); containerStatuses = @(@{ name = 'calico-node'; ready = $true; state = @{ running = @{} } }) } }) } }
+                'deployments,daemonsets' { return $controllers }
+                default { throw 'Unexpected query' }
+            }
+        }
+    }
+    It 'accepts healthy Linux controllers alongside a Windows DaemonSet with no eligible nodes' {
+        { Test-SovereignKubernetes 'test.kubeconfig' 1 } | Should -Not -Throw
+    }
+    It 'uses scheduling counts rather than a special case for Windows controller names' {
+        $controllers.items[1].metadata.name = 'optional-agent'
+        { Test-SovereignKubernetes 'test.kubeconfig' 1 } | Should -Not -Throw
+    }
+    It 'fails when a Linux DaemonSet is missing a Ready pod' {
+        $controllers.items[0].status.numberReady = 3
+        { Test-SovereignKubernetes 'test.kubeconfig' 1 } | Should -Throw '*calico-node is unavailable (3 Ready / 4 desired)*'
+    }
+    It 'fails when a Windows DaemonSet has eligible nodes but no Ready pods' {
+        $controllers.items[1].status.desiredNumberScheduled = 1
+        { Test-SovereignKubernetes 'test.kubeconfig' 1 } | Should -Throw '*calico-node-windows is unavailable (0 Ready / 1 desired)*'
+    }
+    It 'does not treat missing or invalid status as zero desired pods' -TestCases @(
+        @{ Status = @{} }
+        @{ Status = @{ desiredNumberScheduled = 0 } }
+        @{ Status = @{ numberReady = 0 } }
+        @{ Status = @{ desiredNumberScheduled = -1; numberReady = 0 } }
+        @{ Status = @{ desiredNumberScheduled = 0; numberReady = -1 } }
+    ) {
+        param($Status)
+        $controllers.items[1].status = $Status
+        { Test-SovereignKubernetes 'test.kubeconfig' 1 } | Should -Throw '*missing or invalid scheduling status*'
+    }
+    It 'still fails an unavailable deployment alongside a zero-target DaemonSet' {
+        $controllers.items[2].status.availableReplicas = 1
+        { Test-SovereignKubernetes 'test.kubeconfig' 1 } | Should -Throw '*Deployment coredns is unavailable*'
+    }
+    It 'still rejects an empty controller collection' {
+        $controllers.items = @()
+        { Test-SovereignKubernetes 'test.kubeconfig' 1 } | Should -Throw '*No kube-system controllers found*'
     }
 }
 

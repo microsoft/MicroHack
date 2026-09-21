@@ -373,6 +373,93 @@ Describe 'LocalBox image storage conflicts' {
         Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments -contains 'create' }
     }
 }
+<
+Describe 'CLI output streams' {
+    BeforeEach {
+        $script:cliTestExecutable = (Get-Process -Id $PID).Path
+        Mock Get-LocalBoxAzInvocation {
+            @{ Executable = $script:cliTestExecutable; Prefix = @('-NoProfile', '-NonInteractive', '-Command', ($script:cliTestCommand + "`n#")) }
+        }
+    }
+    It 'parses JSON stdout when a successful native command also writes progress to stderr' {
+        $script:cliTestCommand = {
+            [Console]::Error.WriteLine('Progress: completing operation')
+            [Console]::Out.WriteLine('{"name":"ready"}')
+            exit 0
+        }.ToString()
+        (Invoke-LocalBoxAz @('resource', 'show')).name | Should -Be 'ready'
+    }
+    It 'parses array output without stderr records leaking into resource discovery' {
+        $script:cliTestCommand = {
+            [Console]::Error.WriteLine('Progress: completing discovery')
+            [Console]::Out.WriteLine('[{"name":"first"},{"name":"second"}]')
+            exit 0
+        }.ToString()
+        $result = @(Invoke-LocalBoxAz @('resource', 'list'))
+        $result.Count | Should -Be 2
+        $result[0].name | Should -Be 'first'
+        $result[1].name | Should -Be 'second'
+    }
+    It 'accepts empty successful stdout without leaking stderr into results' {
+        $script:cliTestCommand = {
+            [Console]::Error.WriteLine('Progress: completing operation')
+            exit 0
+        }.ToString()
+        @(Invoke-LocalBoxAz @('account', 'set')).Count | Should -Be 0
+    }
+    It 'accepts a first-use notice with no JSON for an exit-code-only validation command' {
+        $script:cliTestCommand = {
+            [Console]::Out.WriteLine('Privacy notice: first invocation')
+            exit 0
+        }.ToString()
+        @(Invoke-LocalBoxAz @('aksarc', 'create', '--validate') -NoOutput).Count | Should -Be 0
+    }
+    It 'discards notice and JSON output when creation results are checked through ARM reads' {
+        $script:cliTestCommand = {
+            [Console]::Out.WriteLine('Privacy notice: first invocation')
+            [Console]::Out.WriteLine('{"name":"cluster"}')
+            exit 0
+        }.ToString()
+        @(Invoke-LocalBoxAz @('aksarc', 'create') -NoOutput).Count | Should -Be 0
+    }
+    It 'rejects a failed exit-code-only command and retains command context and stderr' {
+        $script:cliTestCommand = {
+            [Console]::Out.WriteLine('Privacy notice: first invocation')
+            [Console]::Error.WriteLine('AuthorizationFailed: test failure')
+            exit 17
+        }.ToString()
+        { Invoke-LocalBoxAz @('aksarc', 'create', '--validate') -NoOutput } | Should -Throw '*az aksarc create --validate*exit code 17*AuthorizationFailed*'
+    }
+    It 'rejects a nonzero exit even when stdout contains valid JSON' {
+        $script:cliTestCommand = {
+            [Console]::Out.WriteLine('{"name":"not-success"}')
+            [Console]::Error.WriteLine('Resource read failed')
+            exit 9
+        }.ToString()
+        { Invoke-LocalBoxAz @('resource', 'show') } | Should -Throw '*az resource show*exit code 9*Resource read failed*'
+    }
+    It 'rejects malformed read output with context but without exposing raw stdout' {
+        $script:cliTestCommand = {
+            [Console]::Out.WriteLine('mock-sensitive-payload')
+            exit 0
+        }.ToString()
+        $failure = $null
+        try { Invoke-LocalBoxAz @('resource', 'show') }
+        catch { $failure = $_ }
+        $failure | Should -Not -BeNullOrEmpty
+        $failure.Exception.Message | Should -Match 'az resource show.*non-JSON stdout'
+        $failure.Exception.Message | Should -Not -Match 'mock-sensitive-payload'
+        $failure.Exception.Message | Should -Match 'Inspect the resource state before retrying'
+    }
+    It 'limits non-JSON handling to AKS validate and create while retaining ARM verification' {
+        $source = ${function:Invoke-LocalBoxPreparation}.ToString()
+        $source | Should -Match 'Invoke-LocalBoxAz \(\$arguments \+ @\(''--validate''\)\) -TimeoutSeconds \$timeout -NoOutput'
+        $source | Should -Match 'Invoke-LocalBoxAz \$arguments -TimeoutSeconds \$timeout -NoOutput'
+        $source | Should -Match 'Wait-LocalBoxResource \$instanceId'
+        $source | Should -Match 'Assert-LocalBoxProperties \$instance \$aksExpected'
+        $source | Should -Match 'Assert-LocalBoxProperties \$connected'
+    }
+}
 
 Describe 'CLI process cleanup' {
     BeforeEach {

@@ -11,7 +11,7 @@ This folder holds the screenshots embedded throughout the challenge guides and w
 | `challenge-00-model-deployments.png` | 0 | Foundry **Models + endpoints** with `gpt-5.4-mini` deployed, status **Succeeded**. |
 | `challenge-00-playground-what-can-you-do.png` | 0 | Agents playground grounding test — *"What can you do?"* and the agent's reply. |
 | `challenge-00-new-workspace-button.png` | 0 | Fabric left navigation with **Workspaces** open and the **+ New workspace** button highlighted. |
-| `challenge-00-create-workspace.png` | 0 | The Fabric **Create a workspace** dialog: **Advanced** expanded, **Workspace type: Fabric**, and the attendee's `invcap…` F2 capacity selected under **Details**. |
+| `challenge-00-create-workspace.png` | 0 | The Fabric **Create a workspace** dialog: **Advanced** expanded, **Workspace type: Fabric**, and the attendee's `invcap…` Fabric capacity selected under **Details**. |
 | `challenge-00-new-lakehouse.png` | 0 | The **+ New item** panel filtered to *"lake"* with the **Lakehouse** tile selected, inside the `inventory-hack` workspace. |
 | `challenge-00-lakehouse-name.png` | 0 | The **New Lakehouse** dialog with the name **`InventoryLakehouse`** and Location `inventory-hack`. |
 | `challenge-00-import-notebook.png` | 0 | The workspace **Import → Notebook → From this computer** menu, for `Setup-InventoryDataAgent.ipynb`. |

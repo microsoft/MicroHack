@@ -9,7 +9,7 @@
       - Azure AI Services account (AIServices kind — this is the Foundry account)
       - Azure AI Foundry project inside the account
       - gpt-5.4-mini model deployment (capacity 200 GlobalStandard = 200K TPM)
-      - A per-attendee Fabric capacity (default F2; -FabricSkuName to override), with the attendee set as capacity admin
+      - A per-attendee Fabric capacity (default F4; -FabricSkuName to override), with the attendee set as capacity admin
       - Application Insights (+ Log Analytics) connected to the project for agent tracing
     
     Each attendee gets their OWN Fabric capacity (no shared backend, no shared
@@ -43,10 +43,10 @@
     Entra user object IDs for this lab — passed in by the platform.
 
 .PARAMETER FabricSkuName
-    Per-attendee Fabric capacity SKU (default F2). Bump to F4 if attendees hit
-    capacity throttling. If you override it, ALSO raise estimatedDailyCostsUsd in
-    lab-defaults.json to match — Fabric is the dominant cost and each SKU step
-    roughly doubles it.
+    Per-attendee Fabric capacity SKU (default F4). Drop to F2 to halve cost if
+    attendees don't hit capacity throttling. If you change it, ALSO adjust
+    estimatedDailyCostsUsd in lab-defaults.json to match — Fabric is the dominant
+    cost and each SKU step roughly doubles it.
 #>
 param(
     [Parameter(Mandatory=$true)]
@@ -62,12 +62,12 @@ param(
 
     [string[]]$AllowedEntraUserIds = @(),
 
-    # Per-attendee Fabric capacity SKU. Default F2 keeps cost low; bump to F4 if
-    # attendees hit capacity throttling. If you override this, ALSO raise
-    # estimatedDailyCostsUsd in lab-defaults.json (Fabric is the dominant cost;
-    # each SKU step roughly doubles it).
+    # Per-attendee Fabric capacity SKU. Default F4 avoids capacity throttling; drop
+    # to F2 to halve cost. If you change this, ALSO adjust estimatedDailyCostsUsd
+    # in lab-defaults.json (Fabric is the dominant cost; each SKU step roughly
+    # doubles it).
     [ValidateSet('F2','F4','F8','F16','F32','F64')]
-    [string]$FabricSkuName = "F2"
+    [string]$FabricSkuName = "F4"
 )
 
 $scriptPath = Split-Path -Parent $MyInvocation.MyCommand.Definition
@@ -389,9 +389,9 @@ if ($existingDeploy.StatusCode -ne 200) {
 # Per-attendee Fabric capacity (ARM REST — no az CLI / Fabric extension needed).
 # The attendee is set as capacity ADMIN so they can create a workspace, assign it
 # to this capacity, and Run All the setup notebook themselves (Challenge 1).
-# Default F2 = 2 CU; a 512-CU subscription supports ~256 attendees. F4 doubles CU
-# (halving attendees/subscription) — override with -FabricSkuName and raise
-# estimatedDailyCostsUsd in lab-defaults.json to match.
+# Default F4 = 4 CU; a 512-CU subscription supports ~128 attendees. Drop to F2 (2 CU)
+# to double attendees/subscription and halve cost — override with -FabricSkuName and
+# adjust estimatedDailyCostsUsd in lab-defaults.json to match.
 #
 # Capacity admin members must be UPNs (or service principals) — bare object IDs are
 # rejected — so resolve each attendee object ID to a UPN with the platform helper
@@ -496,7 +496,7 @@ Write-Host "[OK]    Lab provisioning complete."
 @{ HackboxCredential = @{
     name  = "FabricCapacityName"
     value = $fabricCapacityName
-    note  = "Your own Fabric F2 capacity. In Challenge 1 you create a workspace and assign it to this capacity, then Run All the setup notebook to publish your Data Agent."
+    note  = "Your own Fabric $FabricSkuName capacity. In Challenge 1 you create a workspace and assign it to this capacity, then Run All the setup notebook to publish your Data Agent."
 } }
 
 @{ HackboxCredential = @{

@@ -18,7 +18,7 @@ Navigate to **Agents → + New agent**. If the portal shows a wizard, select **P
 
 | Symptom | Cause | Fix |
 |---------|-------|-----|
-| Fabric tool call returns "unauthorized" | The Fabric Data Agent isn't published, or your F2 capacity is paused | You own this agent — confirm the setup notebook finished **publishing** it (Challenge 1) and that your F2 capacity is **running** (Azure portal → your Fabric capacity → **Resume**) |
+| Fabric tool call returns "unauthorized" | The Fabric Data Agent isn't published, or your Fabric capacity is paused | You own this agent — confirm the setup notebook finished **publishing** it (Challenge 1) and that your Fabric capacity is **running** (Azure portal → your Fabric capacity → **Resume**) |
 | Web Search returns no results | Web Search tool not enabled in the project | Go to **Project settings** and verify Web Search is listed under enabled tools |
 | Agent ignores the Fabric tool (trace shows only Web Search, or it replies "I can't access your data") | `gpt-5.4-mini` is a GPT-5 reasoning model and may skip a tool it treats as optional; the portal may also flag the Fabric tool as "not supported" (cosmetic — it still runs via the Responses API) | Keep the **IMPORTANT - tool use** block in the instructions **and set tool choice = required** in the run settings so the Fabric Data Agent tool is always invoked. |
 

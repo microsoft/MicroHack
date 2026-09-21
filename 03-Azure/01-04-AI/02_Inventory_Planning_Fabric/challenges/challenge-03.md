@@ -123,7 +123,7 @@ Your Inventory Optimisation Agent answers these questions by querying the Fabric
 |---------|-----|
 | The run doesn't appear under **Traces** | Give it a few seconds and refresh; make sure you ran the agent from the playground, not just saved it. |
 | The agent invents stock numbers | Reinforce the *IMPORTANT – tool use* instruction — every inventory number must come from a Fabric Data Agent call. |
-| The agent replies it can't reach Fabric / the tool call errors intermittently | Known preview flake. Start a **new playground session** and retry the same prompt (it usually succeeds within a try or two); confirm your F2 capacity is **running**. |
+| The agent replies it can't reach Fabric / the tool call errors intermittently | Known preview flake. Start a **new playground session** and retry the same prompt (it usually succeeds within a try or two); confirm your Fabric capacity is **running**. |
 | A prompt returns no data (empty table) | The generated query likely filtered on a friendly category label. Re-ask by **SKU/productId** (e.g. `P004`) and name the exact fields; ensure the Data Agent instructions include the snake_case category-mapping line from Challenge 1. |
 | No item is flagged **CRITICAL** | Use a scenario/SKU that is genuinely below reorder point (e.g. leaf blowers at Portland/Seattle), or ask the agent to list items below their reorder point. |
 | The reorder quantity looks wrong | Check the trace — confirm the agent used `average_daily_sales × 30 − current_stock` and pulled real numbers from Fabric. |

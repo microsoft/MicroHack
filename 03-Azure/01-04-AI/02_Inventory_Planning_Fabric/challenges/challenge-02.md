@@ -80,7 +80,7 @@ This is the first agent where you attach the Fabric Data Agent, so you'll **crea
 ![The Add tool → Fabric Data Agent connection dialog with the Workspace ID and Artifact ID fields, named inventory-hack-agent](../images/challenge-01-new-connection.png)
 
 > [!TIP]
-> **No "Fabric Data Agent" in the catalogue?** Your F2 capacity must be running (Azure portal → your Fabric capacity → **Resume**) and the setup notebook must have published the agent.
+> **No "Fabric Data Agent" in the catalogue?** Your Fabric capacity must be running (Azure portal → your Fabric capacity → **Resume**) and the setup notebook must have published the agent.
 
 > [!NOTE]
 > **Why two tools?** Web Search gives the agent access to what is happening *outside* the business. The Fabric Data Agent gives access to what is happening *inside* — including the `ExternalSignals` table of pre-loaded market signals. Combining live web context with governed internal data is the core pattern of this hack.
@@ -125,7 +125,7 @@ This is the first agent where you attach the Fabric Data Agent, so you'll **crea
 | Symptom | Fix |
 |---------|-----|
 | **Web Search** isn't listed on the agent | Add it via **+ Add tool → Web Search** — it needs no extra configuration. |
-| **Fabric Data Agent** isn't in the catalogue | The integration needs **your** F2 Fabric capacity to be running — resume it (Azure portal → your Fabric capacity → **Resume**) and confirm the setup notebook published the agent. |
+| **Fabric Data Agent** isn't in the catalogue | The integration needs **your** Fabric capacity to be running — resume it (Azure portal → your Fabric capacity → **Resume**) and confirm the setup notebook published the agent. |
 | The agent answers inventory questions from memory | Strengthen the *IMPORTANT – tool use* line in the instructions; it must call the Fabric Data Agent for any stock number. |
 | The agent gives a demand assessment from web signals only (says it *"couldn't verify inventory"*) | It skipped the Fabric call. Reply *"Call the Fabric Data Agent now for current stock + sales velocity of the affected SKUs before assessing,"* or set **tool choice = required** in the agent's tool settings. `gpt-5.4-mini` (a reasoning model) sometimes skips available tools. |
 | The agent has `fx` functions like `query_inventory` / `list_low_stock` instead of the Fabric Data Agent | The portal **auto-generated stub functions** from your instructions — they're empty and never reach your Lakehouse. Remove them (each tool row → **⋮ → Remove**) and add the **Fabric Data Agent** connector (Part C). |

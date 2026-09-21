@@ -1,6 +1,6 @@
 # Lab Automation — Agentic Inventory Planning MicroHack
 
-Everything for this hack is provisioned per attendee by [`deploy-lab.ps1`](deploy-lab.ps1) — there is **no shared Fabric backend**. Each attendee gets their own Foundry project **and** their own Fabric F2 capacity, then builds their own Fabric workspace + Data Agent by running [`Setup-InventoryDataAgent.ipynb`](../setup/Setup-InventoryDataAgent.ipynb) in Challenge 1.
+Everything for this hack is provisioned per attendee by [`deploy-lab.ps1`](deploy-lab.ps1) — there is **no shared Fabric backend**. Each attendee gets their own Foundry project **and** their own Fabric F4 capacity, then builds their own Fabric workspace + Data Agent by running [`Setup-InventoryDataAgent.ipynb`](../setup/Setup-InventoryDataAgent.ipynb) in Challenge 1.
 
 ## What `deploy-lab.ps1` provisions (per attendee)
 
@@ -9,14 +9,14 @@ Everything for this hack is provisioned per attendee by [`deploy-lab.ps1`](deplo
 | Azure AI Foundry account | `Microsoft.CognitiveServices/accounts` | One per attendee (AIServices kind) |
 | Foundry project | `…/projects/inventory-hack` | System-assigned managed identity; provisioning is verified before the lab continues |
 | gpt-5.4-mini model deployment | GlobalStandard, 200K TPM | Used by all three hack agents |
-| Fabric capacity (default **F2**) | `Microsoft.Fabric/capacities` | One per attendee; attendee set as **capacity admin**. SKU via `-FabricSkuName` (F2 default; use F4 if attendees hit throttling). |
+| Fabric capacity (default **F4**) | `Microsoft.Fabric/capacities` | One per attendee; attendee set as **capacity admin**. SKU via `-FabricSkuName` (F4 default; drop to F2 to halve cost if attendees don't hit throttling). |
 | Application Insights (+ Log Analytics) | `Microsoft.Insights/components` + `Microsoft.OperationalInsights/workspaces` | Connected to the project as an `AppInsights` connection so the **Traces** tab works in Challenges 3–5 with no manual setup. Non-fatal if it fails. |
 
-The script grants the **Foundry User** role to each attendee and to the Foundry project's managed identity at the Foundry account scope. It also sets each attendee as **admin of their own F2 capacity** (resolving their Entra object ID to a UPN via the platform `Get-MhhLabUser` helper), so they can create a workspace, assign it to the capacity, and publish their own Data Agent — no shared state, no cross-attendee contention.
+The script grants the **Foundry User** role to each attendee and to the Foundry project's managed identity at the Foundry account scope. It also sets each attendee as **admin of their own F4 capacity** (resolving their Entra object ID to a UPN via the platform `Get-MhhLabUser` helper), so they can create a workspace, assign it to the capacity, and publish their own Data Agent — no shared state, no cross-attendee contention.
 
 ## What the attendee does themselves (Challenge 1)
 
-1. Create a Fabric **workspace** and assign it to their **F2 capacity** (`FabricCapacityName`).
+1. Create a Fabric **workspace** and assign it to their **F4 capacity** (`FabricCapacityName`).
 2. Create a Lakehouse named **`InventoryLakehouse`** and attach it to the notebook.
 3. Import and **Run All** [`Setup-InventoryDataAgent.ipynb`](../setup/Setup-InventoryDataAgent.ipynb) — it loads its **embedded** seed data, writes 7 tables, publishes their **`inventory-hack-agent`** Data Agent, and prints **their** Workspace ID + Agent ID.
 4. Use those two IDs when adding the Fabric Data Agent tool to their Foundry agent (Challenge 2).
@@ -28,7 +28,7 @@ The script grants the **Foundry User** role to each attendee and to the Foundry 
 | `FoundryProjectUrl` | Clickable deep-link to the attendee's `inventory-hack` project in the Foundry portal (`ai.azure.com`) — where they build the agents in Challenges 2-5 |
 | `FoundryProjectEndpoint` | `https://<account>.services.ai.azure.com/api/projects/inventory-hack` (SDK/API endpoint; optional — the hack is done in the portal) |
 | `ModelDeploymentName` | `gpt-5.4-mini` |
-| `FabricCapacityName` | The attendee's own F2 capacity (assign your workspace to it in Challenge 1) |
+| `FabricCapacityName` | The attendee's own F4 capacity (assign your workspace to it in Challenge 1) |
 | `FabricPortalUrl` | Link to the Fabric portal (`app.fabric.microsoft.com`) to create the workspace on `FabricCapacityName` — the workspace URL itself only exists once the attendee creates it in Challenge 1 |
 | `ResourceGroupName` | The attendee's resource group |
 
@@ -39,7 +39,7 @@ Attendees use these in the Foundry and Fabric portals — no SDK or code require
 - The deploying identity (the platform **service principal**) needs **Owner** on each attendee resource group so it can create resources and assign the **Foundry User** role to the attendee and project managed identity — the platform grants this automatically for `resourcegroup` deployments.
 - **`groups: ["M365-E5-Users"]`** in [`lab-defaults.json`](lab-defaults.json) — each attendee's lab Entra user gets a **Microsoft 365 E5** license (includes **Power BI Pro**), which is what lets them sign into the Fabric portal ([app.fabric.microsoft.com](https://app.fabric.microsoft.com)) and create a workspace. Without a Fabric/Power BI license the attendee cannot open the portal.
 - **The lab tenant must have Fabric enabled** — a Fabric **tenant-admin** setting (*“Users can create Fabric items”* / workspaces). This is **not** settable via `lab-defaults.json`; the tenant administrator for the lab tenant must turn it on, or attendees cannot create a workspace even with a license.
-- **Fabric F-SKU quota** in a preferred region (F2 = 2 CU → ~256 attendees per 512-CU subscription; F4 = 4 CU halves that). `swedencentral` and `norwayeast` are good defaults.
+- **Fabric F-SKU quota** in a preferred region (F4 = 4 CU → ~128 attendees per 512-CU subscription; drop to F2 = 2 CU to double that). `swedencentral` and `norwayeast` are good defaults.
 - **Model TPM vs. subscription packing** — each attendee's `gpt-5.4-mini` deploys at **200K TPM** (GlobalStandard capacity 200) and [`lab-defaults.json`](lab-defaults.json) packs **`labsPerSubscription: 5`** (5 × 200 = 1,000, right at the ~1,000 GlobalStandard quota ceiling per region). If attendees hit token rate limits, request a GlobalStandard quota increase or use **one subscription per attendee**.
 - The **`Microsoft.Fabric`**, **`Microsoft.Insights`**, and **`Microsoft.OperationalInsights`** resource providers are registered on the subscription (the script registers them if needed).
 
@@ -48,7 +48,7 @@ Attendees use these in the Foundry and Fabric portals — no SDK or code require
 
 ## Cost estimate
 
-- **Fabric capacity** (default **F2**, ~$0.36/hr pay-as-you-go) is the dominant cost — roughly **$8–9/attendee/day** if left running. Attendees (or facilitators) should **suspend** the capacity when idle. Bumping to **F4** (`-FabricSkuName F4`, or a live **on-demand resize** when throttling appears) roughly **doubles** this — update `estimatedDailyCostsUsd` in [`lab-defaults.json`](lab-defaults.json) accordingly.
+- **Fabric capacity** (default **F4**, ~$0.72/hr pay-as-you-go) is the dominant cost — roughly **$16–17/attendee/day** if left running. Attendees (or facilitators) should **suspend** the capacity when idle. Dropping to **F2** (`-FabricSkuName F2`) roughly **halves** this — update `estimatedDailyCostsUsd` in [`lab-defaults.json`](lab-defaults.json) accordingly.
 - gpt-5.4-mini (GlobalStandard, 200K TPM) — a few cents of tokens per attendee across the hack's ~50 agent calls; Foundry account base ~$2/day.
 - **Application Insights + Log Analytics** — trace ingestion for the hack's ~50 agent calls is a few MB; effectively **negligible** (well within the Log Analytics free ingestion allowance).
-- Total ≈ **$9/attendee/day** — reflected in [`lab-defaults.json`](lab-defaults.json) (`estimatedDailyCostsUsd`).
+- Total ≈ **$18/attendee/day** — reflected in [`lab-defaults.json`](lab-defaults.json) (`estimatedDailyCostsUsd`).

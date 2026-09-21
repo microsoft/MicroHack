@@ -24,6 +24,7 @@
 
 ![generated](../../Images/MigrationArchitecturev2.png)
 
+<a id="generic-migration-content"></a>
 # Generic Migration Content
 
 | **Narrative**  | **Notes**  |
@@ -33,13 +34,13 @@
 # Connect to your Win11 VM
 |**Narrative**| **Screenshot**| **Notes**|
 |:------------|:--------------|:---------|
-|The instructors will share URLs to connect to your Win11 VM. Credentials will be provided during the Hack.|![Bastion Logon](<../../Images/Bastion-VM11.png>)| |
+|Connect to the Azure Portal with <secret group="Azure" name="Entra ID Username" show="true"></secret> and password <secret group="Azure" name="Entra ID TAP"></secret>. In the Azure Portal open your Win11 VM <secret group="Lab-General" name="Team VM Name" show="true"></secret>. Connect to the VM with Bastion with the following VM connection credentials Username <secret group="Lab-Credential" name="VM User Name" show="true"></secret> and password <secret group="Lab-Credential" name="VM User Password"></secret>. Please make sure to select the correct keyboard layout.|![Bastion Logon](../../Images/Bastion-VM11.png)| |
 
 
 
 |**Narrative**| **Screenshot**| **Notes**|
 |:------------|:--------------|:---------|
-| On the Win11 VM you will find a shortcurt for SQL Server Management Studio (SSMS) and a readme.txt that comtains the information about the lab environment | ![Shortcuts](<../../Images/shortcuts.png>)
+| On the Win11 VM you will find a shortcurt for SQL Server Management Studio (SSMS).| ![Shortcuts](../../Images/shortcuts.png)
 
 # Assess the application databases for Azure SQL suitability using the SQL Server Management Studio (SSMS)
 
@@ -47,8 +48,8 @@ In this section we will use the SQL Server Management Studio to assess the SQL S
 
 |**Narrative**| **Screenshot**| **Notes**|
 |:------------|:--------------|:---------|
-|We need to determine the suitability of the database(s) for migration to Azure. This includes checking for compatibility and feature support with Azure Database. You should already have a remote (Bastion) session open to your teams Win11 Management VM**,** if so run SSMS from the Start menus or Desktop icon.|![SQL Server Management Studio](<../../Images/SSMS start menu.png>)|SQL Server Management Studio (SSMS) is a free download from Microsoft. Since SSMS 22.5 it supports the assessment and migration of SQL Server databases to Azure SQL.|
-|Connect to legacySQL2016 by using Wndows Authentivation. Please check the Trust Server Certifcate checkbox|||
+|We need to determine the suitability of the database(s) for migration to Azure. This includes checking for compatibility and feature support with Azure Database. You should already have a remote (Bastion) session open to your teams Win11 Management VM**,** if so run SSMS from the Start menus or Desktop icon.|![SQL Server Management Studio](../../Images/SSMS%20start%20menu.png)|SQL Server Management Studio (SSMS) is a free download from Microsoft. Since SSMS 22.5 it supports the assessment and migration of SQL Server databases to Azure SQL.|
+|Connect to legacySQL2016 by using Windows Authentication. Please check the Trust Server Certifcate checkbox|||
 |From the context menu of the SQL Server instance select Migrate SQL Server|![Migrate SQL Server](../../Images/Migrate%20SQL%20Server.png)|If the context menu is not visible the Hybrid and Migration workload was not installed with SSMS |
 |This opens the main screen for the migration experience|![Migrate SQL Server](../../Images/Migrate%20Screen.png)||
 |Click  **Run Readiness Assessment**|![](../../Images/Run%20Readiness%20Assessment.png)|The assessment will take some seconds to minutes depending on the number of databases and the amount of database objects.|

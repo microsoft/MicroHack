@@ -1,38 +1,31 @@
-# Challenge 5 - Encryption in use with Confidential VMs/Node Pools in Azure Kubernetes Service (AKS)
-
-[Previous Challenge](challenge-04.md) - **[Home](../Readme.md)** - [Next Challenge](challenge-06.md)
+# Challenge 5 - Confidential workloads on AKS
 
 ## Goal
 
-Validate guest attestation on a pre-provisioned Azure Confidential VM node pool in AKS to ensure business logic only executes in trusted, compliant confidential computing environments. You'll inspect the AKS cluster and Confidential VM node pool that were deployed for you, then deploy a sample application that implements secure attestation flows. The application leverages Microsoft Azure Attestation (MAA) to validate VM integrity before executing protected business logic, demonstrating "encryption in use" capabilities.
+Deploy the Azure Voting App and a runtime attestation UI to an Azure Kubernetes
+Service cluster. Pin the user-facing workloads to an AMD SEV-SNP Confidential
+VM node pool and verify the execution environment with a fresh MAA token.
 
 ## Actions
 
-* Inspect the pre-provisioned AKS cluster and Confidential VM node pool
-* Validate node pool configuration (VM size, node image, node labels)
-* Deploy the attestation verification sample
-* Review the attestation token output
+- Connect to the provided AKS cluster shared with Challenge 7.
+- Validate its two Ubuntu AMD SEV-SNP nodes labelled `workload=confidential`.
+- Deploy the Azure Voting App to the confidential nodes.
+- Deploy the newer runtime attestation UI to the same node pool.
+- Verify pod placement and inspect the attestation claims.
+- Remove only Challenge 5 applications from `challenge-05`, retaining AKS and its pools for Challenge 7.
 
 ## Success criteria
 
-* Attestation token output proving the App is running in a trusted confidential environment
+- Voting front-end pods run on nodes labelled `workload=confidential`.
+- The voting application is reachable through its LoadBalancer service.
+- The attestation UI returns an MAA-signed SEV-SNP token.
+- The token reports `azure-compliant-cvm` and a non-debuggable TEE.
 
 ## Learning resources
 
-* [Azure confidential computing](https://learn.microsoft.com/azure/confidential-computing/)
-* [Azure encryption overview](https://learn.microsoft.com/azure/security/fundamentals/encryption-overview)
-* [Azure Confidential Computing Overview](https://learn.microsoft.com/azure/confidential-computing/overview)
-* [Microsoft Azure Attestation](https://learn.microsoft.com/azure/attestation/overview)
-* [Confidential containers on Azure](https://learn.microsoft.com/azure/confidential-computing/confidential-containers)
-
-## Solution
-
-> [!TIP]
-> We encourage you to try solving the challenge on your own before looking at the solution. This will help you learn and understand the concepts better.
-
-<details>
-<summary>Click here to view the solution</summary>
-
-[Solution for Challenge 5](../walkthrough/challenge-05/solution-05.md)
-
-</details>
+- [When Confidential VM Orchestrator is required](../walkthrough/challenge-05/CVM-ORCHESTRATOR.md)
+- [Use Confidential VMs in AKS](https://learn.microsoft.com/azure/aks/use-cvm)
+- [AKS confidential computing overview](https://learn.microsoft.com/azure/aks/confidential-computing-overview)
+- [Microsoft Azure Attestation](https://learn.microsoft.com/azure/attestation/overview)
+- [Source sample: Azure Voting App on confidential AKS nodes](https://github.com/Azure/confidential-computing/tree/main/aks-samples/azure-voting-app)

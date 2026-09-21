@@ -19,6 +19,9 @@ param(
 )
 
 . (Join-Path $PSScriptRoot 'quota-helpers.ps1')
+. (Join-Path $PSScriptRoot 'localbox-credentials.ps1')
+
+Get-LocalBoxConsoleGroupCredential
 
 $azureLocalResourceProviderAppId = '1412d89f-b8a8-4111-b4fd-e82905cbd85d'
 Update-MhhToken | Out-Null
@@ -96,11 +99,7 @@ foreach($candidate in $confidentialCandidates) {
 
     $regionalUsage = Get-AzVMUsage -Location $candidateLocation -ErrorAction Stop
     $locationReady = $true
-    $quotaRequirements = @(
-        @{ Name = $candidate.QuotaName; PerParticipant = 4 }
-        @{ Name = 'StandardDSv5Family'; PerParticipant = 12 }
-        @{ Name = 'cores'; PerParticipant = 16 }
-    )
+    $quotaRequirements = @(Get-MhhSovereignComputeRequirements -ConfidentialQuotaName $candidate.QuotaName)
     foreach($requirement in $quotaRequirements) {
         $quotaName = $requirement.Name
         $quotaRequired = $requirement.PerParticipant * $participantCount
@@ -168,6 +167,7 @@ if ($resourceGroup) {
             workload = 'sovereign-localbox'
             challenge = '6'
             SecurityControl = 'Ignore'
+            CostControl = 'Ignore'
         } `
         -ErrorAction Stop | Out-Null
     Write-Host "Applied the temporary MCAPS security-control exemption to $localBoxResourceGroupName." -ForegroundColor Green
@@ -186,6 +186,18 @@ $localBoxDeployment = if ($resourceGroup) {
 
 if ($localBoxDeployment) {
     Write-Host "Reusing LocalBox deployment '$($localBoxDeployment.DeploymentName)' ($($localBoxDeployment.ProvisioningState))." -ForegroundColor Green
+    $localBoxClient = Get-AzResource `
+        -ResourceGroupName $localBoxResourceGroupName `
+        -ResourceType 'Microsoft.Compute/virtualMachines' `
+        -ErrorAction Stop |
+        Where-Object Name -eq 'LocalBox-Client'
+    if ($localBoxClient) {
+        Update-AzTag `
+            -ResourceId $localBoxClient.ResourceId `
+            -Operation Merge `
+            -Tag @{ CostControl = 'Ignore' } `
+            -ErrorAction Stop | Out-Null
+    }
 }
 else {
     foreach ($localBoxLocation in $localBoxLocations) {
@@ -197,6 +209,7 @@ else {
                 -Location $localBoxLocation `
                 -AzureLocalResourceProviderObjectId $azureLocalResourceProviderObjectIds[0] `
                 -AzureLocalInstanceLocation 'australiaeast' `
+                -UseConsoleCredentials `
                 -NoWait
 
             if (-not $localBoxDeployment -or $localBoxDeployment.ProvisioningState -ne 'Submitted') {
@@ -246,6 +259,8 @@ foreach ($participantObjectId in $AllowedEntraUserIds) {
         }
     }
 }
+
+Wait-LocalBoxDeployment -ResourceGroupName $localBoxResourceGroupName -DeploymentName $localBoxDeployment.DeploymentName
 
 @{
     'HackboxCredential' = @{

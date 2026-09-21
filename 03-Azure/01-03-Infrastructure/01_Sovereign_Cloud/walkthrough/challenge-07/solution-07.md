@@ -1,7 +1,5 @@
 # Walkthrough Challenge 7 - Adaptive Apps Across Sovereign Environments
 
-[Previous Challenge Solution](../challenge-06/solution-06.md) - **[Home](../../Readme.md)**
-
 Duration: 60 minutes
 
 ## Prerequisites
@@ -31,6 +29,11 @@ az account set --subscription "$AZURE_SUBSCRIPTION"
 
 > [!NOTE]
 > The platform creates stable resource names and credentials. Re-running the lab deployment converges on the same names and replaces the isolated resource group only when region fallback is required.
+
+The Azure AKS cluster is the same one used in Challenge 5. Its applications
+live in `challenge-05`; Radius uses `radius-system` and `env-azure-prod` here.
+Challenge 5 cleanup does not delete this cluster or either node pool. Switch to
+the explicit context below rather than relying on the context used in Challenge 5.
 
 ## Task 1: Connect to and validate both platforms (10 minutes)
 

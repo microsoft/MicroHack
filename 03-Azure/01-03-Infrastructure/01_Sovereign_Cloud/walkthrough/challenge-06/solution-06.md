@@ -1,15 +1,10 @@
 # Walkthrough Challenge 6 - Operating a Sovereign Hybrid Cloud with Azure Arc & Azure Local
 
-[Previous Challenge Solution](../challenge-05/solution-05.md) - **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-07/solution-07.md)
-
 **Estimated Duration:** 60-90 minutes
 
 > 💡 **Objective:** Operate a sovereign hybrid cloud environment combining Azure Local and Azure Arc. You'll learn how to apply consistent governance, security, and management across on-premises sovereign infrastructure and Azure.
 
-This challenge uses the Azure Arc Jumpstart environments:
-
-- **ArcBox for IT Pros** - Provides Arc-enabled servers in a sandbox environment
-- **LocalBox** - Simulates an Azure Local on-premises environment
+This challenge uses **Azure Arc Jumpstart LocalBox** to simulate an Azure Local on-premises environment. You will provision your own Windows Server VM and use that same VM for the Defender for Cloud and Azure Update Manager exercises.
 
 ---
 
@@ -19,83 +14,50 @@ Please ensure that you successfully verified the [General prerequisites](../../R
 
 **Additional requirements for this challenge:**
 
-- Access to a pre-deployed ArcBox/LocalBox environment (shared lab or individual deployment)
-- **Reader** and **Azure Stack HCI VM Contributor** role permissions on the resource group containing the hybrid resources
+- Access to a pre-deployed LocalBox environment with Arc Resource Bridge, a VM image, storage, and a logical network ready for VM creation
+- **Reader** and **Azure Stack HCI VM Contributor** role permissions on the resource group containing the shared LocalBox resources
+- Your assigned resource group (for example, `labuser-XX`) with permission to create and manage your VM and its extensions and assess updates. Hosted labs grant **Owner** on your own resource group
+- **Security Reader** access at subscription scope to review Defender for Cloud coverage and recommendations
+- Defender for Servers enabled by the organizer on the lab subscription, using an approved plan and the required Defender for Endpoint integration
+- A guest network with a valid IP address, working DNS, and outbound access to the required Azure Arc, Defender, and configured Windows update-source endpoints
 
 > [!NOTE]
-> ArcBox and LocalBox are typically deployed by the workshop facilitator due to resource requirements and deployment time. If deploying yourself, see the [ArcBox and LocalBox deployment guide](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/resources/demo-vm-creator/README.md).
+> LocalBox is typically deployed by the workshop facilitator due to resource requirements and deployment time. See the [LocalBox deployment and readiness guide](../../resources/demo-vm-creator/README.md). For a personal subscription, an authorized owner must also enable Defender for Servers before this challenge and review the plan's charges. Students in hosted labs should not change subscription-level Defender plans.
 
 ---
 
 ## Lab Environment Architecture
 
+```text
+Azure management plane
+  Azure Portal / Azure Resource Manager
+    |                                      Defender for Cloud
+    | VM lifecycle management              Azure Update Manager
+    |                                        |
+    v                                        | Guest management
+LocalBox (simulated on-premises environment)  |
+  Azure Local cluster                        |
+    Arc Resource Bridge / Custom Location    |
+    Gallery images / Storage / Network       |
+    |                                        |
+    +--> Your VM: labuserXX-vm-01 <------------+
+           Windows Server 2025
+           Azure Connected Machine agent
+           Azure resource in your assigned resource group
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                         Azure Cloud                                  │
-│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────────┐  │
-│  │   Azure Policy  │  │   Defender for  │  │   Azure Monitor     │  │
-│  │   & Machine     │  │   Cloud         │  │   & Log Analytics   │  │
-│  │   Configuration │  │                 │  │                     │  │
-│  └────────┬────────┘  └────────┬────────┘  └──────────┬──────────┘  │
-│           │                    │                      │             │
-│  ┌────────┴────────────────────┴──────────────────────┴──────────┐  │
-│  │                    Azure Resource Manager                      │  │
-│  └────────┬────────────────────────────────────────────┬─────────┘  │
-│           │                                            │            │
-│  ┌────────┴────────┐                          ┌────────┴─────────┐  │
-│  │  Arc-enabled    │                          │  Azure Local     │  │
-│  │  Servers        │                          │  Instance        │  │
-│  │  (ArcBox)       │                          │  (LocalBox)      │  │
-│  └────────┬────────┘                          └────────┬─────────┘  │
-└───────────┼────────────────────────────────────────────┼────────────┘
-            │              Azure Arc                      │
-┌───────────┴────────────────────────────────────────────┴────────────┐
-│                    On-Premises / Sovereign Private Cloud             │
-│  ┌─────────────────────────┐    ┌───────────────────────────────┐   │
-│  │  Nested VMs             │    │  Azure Local Cluster          │   │
-│  │  - Windows Server       │    │  - Arc Resource Bridge        │   │
-│  │  - Ubuntu Linux         │    │  - Custom Location            │   │
-│  │  - SQL Server           │    │  - VM Gallery Images          │   │
-│  └─────────────────────────┘    └───────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────────────┘
-```
+
+LocalBox runs as a nested lab environment hosted in Azure. In a production sovereign private cloud, Azure Local and the workload VMs run on-premises; Azure provides the connected management plane. Arc Resource Bridge manages VM lifecycle operations, while guest management enables services inside your VM's operating system.
 
 ---
 
-## Task 1: Explore Hybrid Resources in Azure Portal
+## Task 1: Explore LocalBox Resources in Azure Portal
 
-💡 **Familiarize yourself with the ArcBox and LocalBox resources in Azure Portal to understand the hybrid architecture.**
-
-### 1.1 Navigate to the ArcBox Resource Group
+**Familiarize yourself with the LocalBox resources in Azure Portal to understand the hybrid architecture.**
 
 1. Sign in to the [Azure Portal](https://portal.azure.com)
-2. Navigate to **Resource groups**
-3. Locate and select the ArcBox resource group (e.g., `rg-arcbox`)
-4. Review the resources deployed:
-   - **Arc-enabled servers** - Machines connected to Azure via the Connected Machine Agent
-   - **Log Analytics workspace** - Central logging for all hybrid resources
-   - **Virtual Network** - Network infrastructure for the sandbox
-
-💥 **Explore the Arc-enabled servers:**
-
-1. In the Azure portal, navigate to **Azure Arc** by using the search bar at the top, and then navigate to the **Machines** menu option under **Infrastructure**
-![ArcBox](./images/arcbox_01.jpg)
-2. Click on one of the Arc-enabled servers (e.g., `ArcBox-Win2k25`)
-3. Review the **Overview** blade:
-   - Operating system and version
-   - Agent status and version
-   - Resource location (Azure region for metadata)
-   - Machine location (actual physical location)
-4. Check **Settings -> Extensions** to see installed Azure extensions
-5. Navigate through other menu items such as **Monitoring** and **Operations** to see available features and functionality.
-
-🔑 **Key insight:** Arc-enabled servers appear as Azure resources with resource IDs, allowing you to apply Azure management constructs (tags, RBAC, policies) to on-premises machines.
-
-### 1.2 Explore LocalBox resources (if available)
-
-1. Navigate to the LocalBox resource group (e.g., `rg-localbox`)
-2. Locate the **Azure Local** instance resource
-3. Review the following connected resources:
+2. Navigate to the shared LocalBox resource group (e.g., `rg-localbox-shared`)
+3. Locate the **Azure Local** instance resource
+4. Review the following connected resources:
    - **Arc Resource Bridge** - Connects Azure Local to Azure
    - **Custom Location** - Represents the on-premises location for VM deployment
    - **Gallery Images** - VM images available for deployment
@@ -105,59 +67,14 @@ Please ensure that you successfully verified the [General prerequisites](../../R
 
 ---
 
-## Task 2: Governance via Azure Policy and Machine Configuration
-
-💡 **Assign and verify an Azure Policy that uses Machine Configuration to audit security settings on Arc-enabled Linux servers.**
-
-### 2.1 Understanding Machine Configuration
-
-Azure Machine Configuration (formerly Guest Configuration) extends Azure Policy inside the operating system. It uses Desired State Configuration (DSC) to:
-- **Audit** OS-level settings (passwords, services, registry, files)
-- **Enforce/Remediate** configurations when non-compliant
-
-This provides "policy as code" governance across your hybrid environment, similar to Group Policy but managed through Azure.
-
-### 2.2 Assign the Linux SSH Posture Control
-
-💥 **Assign a built-in policy to audit Linux SSH Posture compliance:**
-
-For background and conceptual reference, review the article [What is SSH Posture Control?](https://learn.microsoft.com/azure/osconfig/overview-ssh-posture-control-mc) before proceeding.
-
-#### Azure Portal
-
-1. Navigate to **Azure Policy** in the Azure Portal
-2. Select **Definitions** in the left menu
-3. Search for: `Configure SSH security posture`
-![ArcBox](./images/ssh_posture_04.jpg)
-4. Click on the policy definition **Configure SSH security posture for Linux (powered by OSConfig)** to view details
-5. Click **Assign policy**
-6. Configure the assignment:
-   - **Scope**: Select the resource group containing Arc-enabled servers (e.g. **rg-arcbox**)
-   - **Assignment name**: `labuserXX - Configure SSH security posture for Linux (powered by OSConfig)` (change XX to your suffix)
-   - ![ArcBox](./images/ssh_posture_01.jpg)
-   - Click **Next**
-   - Change **Include Arc connected servers** to **true** and click **Next**
-   - ![ArcBox](./images/ssh_posture_02.jpg)
-7. Click **Next** on the remaining tabs without making any changes to default values, then **Review + create**
-8. ![ArcBox](./images/ssh_posture_03.jpg)
-9. After 15 minutes, navigate to the Arc-enabled server **Arcbox-Ubuntu-01** -> **Operations** -> **Machine Configuration** to see individual configuration status
-10. Click on the **SetLinuxSshServerSecurityBaseline** Configuration Name
-11. ![ArcBox](./images/ssh_posture_06.jpg)
-12. Enable the checkbox **Compliant** to view both compliant and non-compliant SSH settings
-13. ![ArcBox](./images/ssh_posture_07.jpg)
-
-🔑 **Key insight:** Azure Policy with Machine Configuration provides unified compliance visibility across Azure VMs and Arc-enabled servers. This is essential for maintaining sovereign compliance requirements across hybrid environments.
-
----
-
-## Task 3: Deploy a VM on Azure Local via Azure Portal
+## Task 2: Deploy a VM on Azure Local via Azure Portal
 
 💡 **Use Azure Arc VM management to deploy a virtual machine on your Azure Local cluster directly from the Azure Portal.**
 
-> [!NOTE]
-> This task requires access to a LocalBox environment with Arc Resource Bridge configured. If you don't have access, review the steps to understand the process.
+> [!IMPORTANT]
+> Complete this deployment and verify connected guest management before starting Tasks 3 and 4. Both exercises use your own VM, not the LocalBox host, cluster nodes, Arc Resource Bridge, or another participant's VM. Ask the facilitator for access if LocalBox is not available.
 
-### 3.1 Navigate to Azure Local VM Management
+### 2.1 Navigate to Azure Local VM Management
 
 1. In the Azure portal, navigate to **Azure Arc** by using the search bar at the top, and then navigate to the **Azure Local** menu option under **Supported environments**. Click on **All systems**.
 ![Azure Local](./images/localbox_01.jpg)
@@ -166,12 +83,12 @@ For background and conceptual reference, review the article [What is SSH Posture
 4. Select **Virtual machines** option
 5. Click **+ Create VM** to start the VM creation wizard
 
-### 3.2 Configure the Virtual Machine
+### 2.2 Configure the Virtual Machine
 
 💥 **Basic settings:**
 
 1. **Subscription**: Select your subscription (e.g. **Micro-Hack-1**)
-2. **Resource group**: `labuser-XX` (replace XX with your own suffix)
+2. **Resource group**: Select your assigned resource group (e.g., `labuser-XX`; use the exact name provided by the facilitator)
 3. **Virtual machine name**: `labuserXX-vm-01` (replace XX with your own suffix)
 4. **Security type**: Select **Standard**
 
@@ -182,6 +99,8 @@ For background and conceptual reference, review the article [What is SSH Posture
 7. **Memory (MB)**: 4096
 
 ![Azure Local](./images/localbox_03.jpg)
+
+8. Under **VM extensions**, select **Enable guest management**. This installs the Azure Connected Machine agent so that Defender for Cloud and Azure Update Manager can manage the guest OS.
 
 💥 **Administrator account:**
 
@@ -208,29 +127,33 @@ For **Name** use the same value as for **Virtual machine name**: `labuserXX-vm-0
 For **Network** choose **localbox-vm-lnet-vlan200**
 Select **Add** and then **Next**
 
+The VM needs a valid IP address, working DNS, and outbound connectivity to the required Azure Arc and Defender endpoints and its configured Windows update source. Use the logical network prepared by the facilitator; VM provisioning alone does not prove that guest connectivity works.
+
 ![Azure Local](./images/localbox_07.jpg)
 
 Click **Next** twice
 
 ![Azure Local](./images/localbox_08.jpg)
 
-Click **Create**
-
-![Azure Local](./images/localbox_09.jpg)
-
-### 3.3 Review and Create
+### 2.3 Review and Create
 
 1. Review all settings
 2. Click **Create** to deploy the VM
 
+![Azure Local](./images/localbox_09.jpg)
 
-### 3.4 Validate VM Deployment
+### 2.4 Validate VM Deployment and Guest Management
 
 1. Click **Go to resource** when the deployment is finished
 2. Verify the VM is running
 3. Review the VM properties and available operations
+4. On **Overview -> Properties -> Configuration**, verify that **Guest management** shows **Enabled (Connected)**
+5. Record your VM name, subscription, resource group, and resource ID. Use this same VM in the following exercises
 
 ![Azure Local](./images/localbox_10.jpg)
+
+> [!IMPORTANT]
+> If guest management is disabled or still connecting, resolve this before continuing. Check the guest network with the facilitator and follow [Enable guest management on an Azure Local VM](https://learn.microsoft.com/azure/azure-local/manage/manage-arc-virtual-machines#enable-guest-management). Do not separately onboard a duplicate Arc-enabled server resource for a VM whose guest management is already connected.
 
 🔑 **Key insight:** Azure Arc VM management enables self-service VM provisioning on Azure Local using familiar Azure tools and RBAC. This allows organizations to maintain data sovereignty by keeping workloads on-premises while benefiting from Azure management capabilities.
 
@@ -246,129 +169,111 @@ To learn more, see [SSH access to Azure Arc-enabled servers](https://learn.micro
 
 ---
 
-## Task 4: Security Monitoring with Microsoft Defender for Cloud
+## Task 3: Security Monitoring with Microsoft Defender for Cloud
 
-💡 **Enable Microsoft Defender for Cloud and review security recommendations for your Arc-enabled resources.**
+**Verify Defender for Servers coverage and review security recommendations for the VM you created in Task 2.**
 
-### 4.1 Enable Defender for Servers
+### 3.1 Verify Coverage for Your VM
 
-💥 **Enable Defender for Servers on your subscription:**
+1. Navigate to **Microsoft Defender for Cloud** in the Azure Portal
+2. Open **Inventory** and filter by your subscription and assigned resource group
+3. Search for `labuserXX-vm-01` (using your own suffix). Match its resource ID to the VM recorded in Task 2, rather than selecting a shared machine with a similar name
+4. Open the resource details and review its Defender for Servers coverage and onboarding status. The organizer should already have enabled the approved Servers plan and Defender for Endpoint integration
 
-**Azure Portal**
+![Screenshot placeholder: Defender for Servers coverage and onboarding status for your Azure Local VM](./images/dfc_01.jpg)
 
-1. Navigate to **Microsoft Defender for Cloud**
-2. Select **Management -> Environment settings** in the left menu
-3. Expand your **Tenant Root Group** and select your subscription
-4. Under **Defender plans**, locate **Servers**
-5. If not already enabled, toggle to **On** (select Plan 1 or Plan 2 based on requirements)
-6. Review available features when selecting **Change plan** and **Settings** for the **Servers** plan.
-7. Click **Save**
+> [!NOTE]
+> A newly created VM can take time to appear and complete onboarding. If it is missing, first recheck **Guest management: Enabled (Connected)** and the selected subscription/resource group, then refresh Inventory. Ask the facilitator to check plan coverage and extension onboarding if it remains missing or unprotected. An Inventory entry alone does not prove that Defender for Servers protection is active. Do not enable a paid subscription-level plan yourself in a hosted lab.
 
-### 4.2 Review Security Posture
+### 3.2 Review Your VM's Security Posture
 
-1. Navigate to **Microsoft Defender for Cloud** -> **General** -> **Overview**
-2. Review the **Secure Score** for your environment
-3. Click on **Recommendations** to see security recommendations
+1. From your VM's resource details, open its **Recommendations**
+2. Review the assessment status and any recommendations for that VM. If navigating from the subscription-wide **Recommendations** view, verify the affected resource is your VM by resource ID
+3. For an available recommendation, inspect its severity, reason, and remediation guidance
 
-![Defender for Cloud](./images/dfc_01.jpg)
+![Screenshot placeholder: Defender for Cloud recommendations and assessment status for your Azure Local VM](./images/dfc_02.jpg)
 
-💥 **Filter for Arc-enabled servers:**
+Depending on the enabled plan and completed assessments, recommendations may concern:
 
-1. In **Recommendations**, use filters:
-   - **Resource type**: `Machine - Azure Arc`
-2. Review recommendations specific to your Arc-enabled servers
+| Area | What to investigate |
+|------|---------------------|
+| System updates | Missing OS security updates |
+| Endpoint protection | Defender for Endpoint onboarding or protection status |
+| Vulnerabilities | Detected software vulnerabilities and remediation guidance |
 
-![Defender for Cloud](./images/dfc_02.jpg)
+Only investigate or remediate your own VM. Do not apply subscription-wide fixes or change shared LocalBox infrastructure as part of this exercise.
 
-### 4.3 Explore Common Recommendations for Arc-enabled Servers
+> [!NOTE]
+> Recommendations may still be pending on a fresh VM, and an assessed VM may have no active recommendations. Record the displayed assessment status separately from the verified protection status. An empty recommendations list does not demonstrate completed assessment or compliance. You can complete Task 4 while waiting, then return to review your VM's results.
 
-You may see recommendations such as:
-
-| Recommendation | Severity | Description |
-|----------------|----------|-------------|
-| Guest configuration extension should be installed | High | Required for Machine Configuration policies |
-| System updates should be installed | High | OS patches are available |
-| Endpoint protection should be installed | High | Antimalware solution needed |
-| Azure Monitor agent should be installed | Medium | Required for advanced monitoring |
-| Vulnerabilities should be remediated | Varies | Software vulnerabilities detected |
-
-💥 **Investigate a recommendation:**
-
-1. Click on a recommendation to see affected resources
-2. Review the remediation steps provided
-3. For quick fixes, use the **Fix** button if available
-
-### 4.4 Review Security Alerts (if any)
+### 3.3 Review Security Alerts (if any)
 
 1. Navigate to **Security alerts** in Defender for Cloud
-2. Review any active alerts for your hybrid resources
-3. Click on an alert to see:
+2. Filter by your subscription and inspect only alerts whose affected resource matches your VM's resource ID
+3. If an alert exists, review:
    - Attack description
    - Affected resources
    - Recommended actions
+
+No alerts is an expected outcome for a new lab VM; do not generate an alert or select another participant's resources to complete this step.
 
 🔑 **Key insight:** Microsoft Defender for Cloud provides unified security management across Azure and Arc-enabled resources. This enables consistent security posture management for sovereign hybrid deployments.
 
 ---
 
-## Task 5: Explore Azure Update Manager for Hybrid Patching
+## Task 4: Assess Your VM with Azure Update Manager
 
-💡 **Use Azure Update Manager to assess and manage OS updates across your Arc-connected machines.**
+**Use Azure Update Manager to assess OS updates on the same Windows Server VM you created in Task 2.**
 
-### 5.1 Navigate to Azure Update Manager
+### 4.1 Locate Your VM
 
-1. In the Azure Portal, search for **Azure Update Manager** in the middle-top search bar
-2. Go to **Overview** to review the dashboard overview showing:
-   - Machines pending updates
-   - Compliance status
-   - Recent update deployments
+1. In the Azure Portal, search for **Azure Update Manager**
+2. Select **Resources -> Machines**
+3. Filter by your subscription and assigned resource group, then search for `labuserXX-vm-01` (using your own suffix)
+4. Select your VM and verify its resource ID matches the VM recorded in Task 2. Azure Local guest VMs use Azure Arc guest management; do not select the shared cluster nodes, LocalBox host, or Arc Resource Bridge
 
-### 5.2 Assess Update Compliance
+![Screenshot placeholder: Azure Update Manager Machines view filtered to your Azure Local VM and assigned resource group](./images/aum_01.jpg)
 
-💥 **Check update status for Arc-enabled servers:**
+> [!IMPORTANT]
+> This exercise assesses the guest operating system of your VM. It does not update the Azure Local cluster infrastructure. If your VM is not listed, recheck its running state, connected guest management, and your filters before continuing. Ask the facilitator to verify permissions and connectivity if needed.
 
-1. Select **Resources -> Machines** in the left menu
-2. Filter by:
-   - **Machine type**: `Arc-enabled servers`
-   - **Resource group**: Your ArcBox resource group (e.g. **rg-arcbox**)
-![Azure Update Manager](./images/aum_01.jpg)
-3. Review the update status for one machine
-![Azure Update Manager](./images/aum_02.jpg)
+### 4.2 Trigger an Update Assessment
 
-### 5.3 Trigger an Update Assessment
+1. Review the current update assessment status for your VM. A new VM may not have been assessed yet
+2. Click **Check for updates** and confirm that only your VM is selected
+3. Wait for the assessment to finish, then refresh the VM's update status and verify the latest assessment time and successful result
 
-1. Select an Arc-enabled server
-2. Click **Check for updates**
-![Azure Update Manager](./images/aum_03.jpg)
-1. Wait for the assessment to complete
+![Screenshot placeholder: Azure Update Manager Check for updates action targeting only your Azure Local VM](./images/aum_02.jpg)
 
-### 5.4 Review Available Updates
+The first assessment can take additional time while the required update extension is deployed. If the assessment fails, review the error and check guest connectivity, extension provisioning, permissions, and access to the configured Windows update source with the facilitator. A pending or failed assessment is not a successful result.
 
-1. Click on the previously selected machine to see an updated status
-2. Review:
+### 4.3 Review Available Updates
+
+1. Open the completed assessment results for your VM
+2. Review the available update classifications, such as:
    - **Critical and security updates** - High priority
    - **Other updates** - Feature and quality updates
    - **Definition updates** - Antimalware definitions
+3. Record the assessment time and pending update counts. A successful assessment with zero pending updates is also a valid outcome
+
+![Screenshot placeholder: Successful update assessment for your Azure Local VM showing the assessment time and pending update counts](./images/aum_03.jpg)
+
+This exercise stops at assessment. Do not install updates, schedule patching, or restart shared resources.
 
 🔑 **Key insight:** Azure Update Manager provides centralized patch management across Azure VMs and Arc-enabled servers. This is critical for maintaining security compliance in sovereign environments where you need to control when and how updates are applied.
 
 ---
 
-## Task 6: Wrap-up and Discussion
+## Task 5: Wrap-up and Discussion
 
-### 6.1 Review Key Learnings
+### 5.1 Review Key Learnings
 
 After completing this challenge, you should understand:
 
 ✅ **Azure Arc as the Hybrid Bridge**
-- Arc-enabled servers represent on-premises machines as Azure resources
+- Azure Local VMs are represented as Azure resources
 - Enables unified management through Azure Resource Manager
 - Supports Azure RBAC, tags, and policies for hybrid resources
-
-✅ **Sovereign Hybrid Governance**
-- Azure Policy with Machine Configuration extends compliance to the OS level
-- Provides consistent governance across cloud and on-premises
-- Essential for meeting sovereign regulatory requirements
 
 ✅ **Azure Local as Sovereign Private Cloud**
 - Azure Local enables sovereign on-premises cloud infrastructure
@@ -376,11 +281,11 @@ After completing this challenge, you should understand:
 - Self-service VM provisioning using Azure Portal (also available via CLI and Infrastructure as Code)
 
 ✅ **Security and Compliance**
-- Microsoft Defender for Cloud provides unified security posture management
-- Azure Update Manager enables centralized patch management
-- Consistent security monitoring across hybrid estate
+- Connected guest management enables Azure services inside your VM's operating system
+- Microsoft Defender for Cloud provides security coverage and recommendations for your VM
+- Azure Update Manager assesses updates on that same VM without changing shared infrastructure
 
-### 6.2 Real-World Applications
+### 5.2 Real-World Applications
 
 Consider how these capabilities apply to sovereign cloud scenarios:
 
@@ -392,7 +297,7 @@ Consider how these capabilities apply to sovereign cloud scenarios:
 | Operational efficiency | Single control plane for hybrid management |
 | Disaster recovery | Azure Site Recovery integration for failover |
 
-### 6.3 Further Exploration
+### 5.3 Further Exploration
 
 For additional learning, explore:
 
@@ -406,17 +311,12 @@ For additional learning, explore:
 
 Before completing this challenge, verify:
 
-- [ ] You can navigate and understand the ArcBox/LocalBox hybrid environment in the Azure Portal
-- [ ] You have assigned at least one Azure Policy (e.g., SSH Posture Control) to Arc-enabled servers
-- [ ] You can verify the compliance status of Arc-enabled servers in the Azure Policy dashboard
-- [ ] You can verify the compliance status of Arc-enabled servers in the Azure Machine Configuration blade
-- [ ] You have deployed a VM on Azure Local via the Azure Portal
-- [ ] You have enabled or verified Defender for Cloud coverage and reviewed security recommendations
-- [ ] You can navigate Azure Update Manager for hybrid patching
+- [ ] You can navigate and understand the LocalBox hybrid environment in the Azure Portal
+- [ ] You have deployed your own VM on Azure Local and verified that guest management is Enabled (Connected)
+- [ ] You have verified Defender for Servers coverage for your VM and reviewed its available recommendations, or recorded that its assessment is still pending
+- [ ] You have completed an Azure Update Manager assessment for your VM and reviewed its timestamp and results, including when no updates are pending
 - [ ] You understand how Azure Arc provides a unified control plane for sovereign hybrid scenarios
 
 ---
 
 You successfully completed Challenge 6! 🚀🚀🚀
-
-**[Home](../../Readme.md)** - [Previous Challenge Solution](../challenge-05/solution-05.md)

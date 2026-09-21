@@ -4,9 +4,11 @@ param subnetId string
 param privateIPAddress string
 param vmSize string
 param adminUsername string
-
 @secure()
 param adminPassword string
+param sqlMiAdminUsername string
+@secure()
+param sqlMiAdminPassword string
 
 param tags object
 
@@ -119,8 +121,8 @@ resource sqlVirtualMachine 'Microsoft.SqlVirtualMachine/sqlVirtualMachines@2023-
         connectivityType: 'PRIVATE'
         port: 1433
 
-        sqlAuthUpdateUserName: adminUsername
-        sqlAuthUpdatePassword: adminPassword
+        sqlAuthUpdateUserName: sqlMiAdminUsername
+        sqlAuthUpdatePassword: sqlMiAdminPassword
       }
     }
   }

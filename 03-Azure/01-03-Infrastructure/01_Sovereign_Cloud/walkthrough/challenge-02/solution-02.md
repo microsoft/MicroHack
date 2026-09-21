@@ -1,7 +1,5 @@
 # Walkthrough Challenge 2 - Encryption at Rest with Customer-Managed Keys (CMKs) in Azure Key Vault
 
-[Previous Challenge Solution](../challenge-01/solution-01.md) - **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-03/solution-03.md)
-
 **Estimated Duration:** 30 minutes
 
 > 💡 **Objective:** Understand Customer-Managed Keys in Azure Key Vault. Configure an Azure Storage account to use a customer-managed key stored in Azure Key Vault (or Azure Managed HSM) for encryption at rest. Validate the configuration and understand operational considerations for sovereign scenarios.
@@ -268,5 +266,3 @@ If you navigate to the key inside your Key Vault, you should now see a new versi
 ---
 
 You successfully completed challenge 2! 🚀🚀🚀
-
- **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-03/solution-03.md)

@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>ACI CC - Runtime Attestation</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    :root {
+      --fg:#1f2937; --muted:#475569; --subtle:#64748b;
+      --bg:#f8fafc; --card:#ffffff; --border:#e5e7eb; --th:#f1f5f9;
+      --accent:#0ea5e9; --accent-h:#0284c7; --good:#16a34a; --bad:#dc2626;
+      --ok-bg:#dcfce7; --bad-bg:#fee2e2; --err-bg:#fef2f2; --err-border:#fecaca; --err-fg:#7f1d1d;
+      --link:#0369a1; --code:#0f172a; --header-from:#0369a1; --header-to:#0ea5e9;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    html[data-theme="dark"] {
+      --fg:#e2e8f0; --muted:#94a3b8; --subtle:#94a3b8;
+      --bg:#0b1220; --card:#111827; --border:#1f2937; --th:#1e293b;
+      --accent:#38bdf8; --accent-h:#0ea5e9; --good:#4ade80; --bad:#f87171;
+      --ok-bg:#064e3b; --bad-bg:#7f1d1d; --err-bg:#3f1d1d; --err-border:#7f1d1d; --err-fg:#fecaca;
+      --link:#7dd3fc; --code:#e2e8f0; --header-from:#0c4a6e; --header-to:#075985;
+    }
+    @media (prefers-color-scheme: dark) {
+      html:not([data-theme]) {
+        --fg:#e2e8f0; --muted:#94a3b8; --subtle:#94a3b8;
+        --bg:#0b1220; --card:#111827; --border:#1f2937; --th:#1e293b;
+        --accent:#38bdf8; --accent-h:#0ea5e9; --good:#4ade80; --bad:#f87171;
+        --ok-bg:#064e3b; --bad-bg:#7f1d1d; --err-bg:#3f1d1d; --err-border:#7f1d1d; --err-fg:#fecaca;
+        --link:#7dd3fc; --code:#e2e8f0; --header-from:#0c4a6e; --header-to:#075985;
+      }
+    }
+    * { box-sizing:border-box; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; color:var(--fg); background:var(--bg); margin:0; padding:0; }
+    a { color:var(--link); }
+    header { background:linear-gradient(90deg,var(--header-from),var(--header-to)); color:white; padding:24px 24px; position:relative; }
+    header h1 { margin:0; font-size:1.6rem; }
+    header p { margin:.4rem 0 0; opacity:.92; max-width:1100px; }
+    .theme-toggle { position:absolute; top:20px; right:24px; background:rgba(255,255,255,.15); color:white; border:1px solid rgba(255,255,255,.3); border-radius:6px; padding:6px 12px; font-size:.85rem; cursor:pointer; }
+    .theme-toggle:hover { background:rgba(255,255,255,.25); }
+    main { max-width: 1280px; margin: 24px auto; padding: 0 24px; }
+    .card { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:20px 24px; margin-bottom:20px; box-shadow:0 1px 2px rgba(0,0,0,.04); overflow:hidden; }
+    button.attest { background:var(--accent); color:white; border:none; border-radius:6px; padding:14px 28px; font-size:1.05rem; cursor:pointer; }
+    button.attest:hover { background:var(--accent-h); }
+    button.attest:disabled { background:#94a3b8; cursor:not-allowed; }
+    .meta { font-family: var(--mono); font-size:.85rem; color:var(--muted); word-break:break-all; }
+    .spinner { display:inline-block; width:14px; height:14px; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin 0.7s linear infinite; vertical-align:-2px; margin-right:6px; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .table-wrap { width:100%; overflow-x:auto; }
+    table { width:100%; border-collapse:collapse; font-size:.92rem; table-layout:fixed; }
+    col.col-k { width:22%; }
+    col.col-v { width:38%; }
+    col.col-e { width:40%; }
+    th, td { text-align:left; padding:8px 12px; border-bottom:1px solid var(--border); vertical-align:top; }
+    th { background:var(--th); font-weight:600; color:var(--fg); }
+    td.k { font-family:var(--mono); color:var(--code); word-break:break-word; overflow-wrap:anywhere; }
+    td.v { font-family:var(--mono); font-size:.85rem; word-break:break-all; overflow-wrap:anywhere; color:var(--code); }
+    td.v pre { margin:0; white-space:pre-wrap; word-break:break-all; max-height:340px; overflow:auto; font-size:.78rem; }
+    td.e { color:var(--fg); line-height:1.45; }
+    .pill { display:inline-block; padding:2px 10px; border-radius:9999px; font-size:.78rem; font-weight:600; }
+    .pill.ok { background:var(--ok-bg); color:var(--good); }
+    .pill.bad { background:var(--bad-bg); color:var(--bad); }
+    details > summary { cursor:pointer; font-weight:600; padding:6px 0; color:var(--fg); }
+    details pre { background:var(--th); padding:10px; border-radius:6px; overflow:auto; }
+    .error { background:var(--err-bg); border:1px solid var(--err-border); color:var(--err-fg); padding:14px; border-radius:6px; }
+    .ts { color:var(--subtle); font-size:.78rem; }
+    .legend { color:var(--muted); font-size:.88rem; line-height:1.55; }
+    code, code.token { font-family:var(--mono); font-size:.75rem; word-break:break-all; color:var(--code); background:var(--th); padding:1px 4px; border-radius:3px; }
+    code.token { display:block; padding:10px; max-height:220px; overflow:auto; }
+    @media (max-width: 900px) {
+      table { table-layout:auto; }
+      col.col-k, col.col-v, col.col-e { width:auto; }
+      td.v { font-size:.8rem; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <button id="themeBtn" class="theme-toggle" type="button" onclick="toggleTheme()" aria-label="Toggle dark mode">Dark mode</button>
+    <h1>ACI {% if is_confidential %}Confidential{% else %}Standard{% endif %} Containers - Runtime Attestation</h1>
+    {% if is_confidential %}
+    <p>This container is running in an ACI Confidential Container group on AMD SEV-SNP hardware. Click <strong>Attest</strong> to fetch a fresh hardware-rooted attestation token from Microsoft Azure Attestation (MAA) and inspect the claims.</p>
+    {% else %}
+    <p>This container is running in a <strong>Standard</strong> ACI container group - <em>not</em> on AMD SEV-SNP hardware and with no <code>/dev/sev-guest</code> device. Click <strong>Attest</strong> to see the expected hardware-rooted attestation failure.</p>
+    {% endif %}
+  </header>
+  <main>
+    <div class="card">
+      <p>The attestation flow runs <strong>inside this single container</strong> - no SKR sidecar - using the upstream <a href="https://github.com/microsoft/confidential-sidecar-containers/tree/main/tools/get-snp-report" target="_blank" rel="noopener"><code>get-snp-report</code></a> tool baked into the image:</p>
+      <ol>
+        <li>The app builds a runtime data blob (<code>{nonce, client}</code>) and computes <code>REPORT_DATA = SHA-256(runtime_data) || 0&times;32</code>.</li>
+        <li><code>get-snp-report</code> opens <code>/dev/sev-guest</code> and issues <code>SNP_GUEST_REQUEST</code>; the AMD Secure Processor returns a 1184-byte report signed by this chip's VCEK and bound to the supplied <code>REPORT_DATA</code>.</li>
+        <li>The app reads the THIM cert chain and UVM endorsements from <code>UVM_SECURITY_CONTEXT_DIR</code> (injected by the ACI control plane) and POSTs <code>{report, runtimeData, nonce}</code> to <code>https://&lt;maa&gt;/attest/SevSnpVm</code>.</li>
+        <li>MAA verifies the SNP report against the AMD root CA chain and the UVM endorsements, then returns a signed JWT whose <code>x-ms-sevsnpvm-*</code> claims describe the TEE state at this moment.</li>
+      </ol>
+      <p class="meta">On ACI <strong>Standard</strong> SKU there is no SEV-SNP hardware and no <code>/dev/sev-guest</code> device, so step 2 fails before MAA is ever called - that is the educational contrast.</p>
+      <p>
+        <button id="btn" class="attest" type="button" onclick="runAttest()">Attest</button>
+        <span id="status" class="meta" style="margin-left:12px;"></span>
+      </p>
+    </div>
+
+    <div id="result"></div>
+  </main>
+
+<script>
+function applyTheme(t){
+  if (t === 'dark' || t === 'light') document.documentElement.setAttribute('data-theme', t);
+  else document.documentElement.removeAttribute('data-theme');
+  const btn = document.getElementById('themeBtn');
+  if (btn) {
+    const eff = t || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    btn.textContent = eff === 'dark' ? 'Light mode' : 'Dark mode';
+  }
+}
+function toggleTheme(){
+  const cur = document.documentElement.getAttribute('data-theme');
+  const sysDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const eff = cur || (sysDark ? 'dark' : 'light');
+  const next = eff === 'dark' ? 'light' : 'dark';
+  try { localStorage.setItem('theme', next); } catch(e) {}
+  applyTheme(next);
+}
+(function(){
+  let saved = null;
+  try { saved = localStorage.getItem('theme'); } catch(e) {}
+  applyTheme(saved);
+})();
+
+function esc(s){ return String(s).replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
+function fmtVal(v){
+  if (v === null || v === undefined) return '';
+  if (typeof v === 'object') return '<pre>'+esc(JSON.stringify(v, null, 2))+'</pre>';
+  return esc(String(v));
+}
+
+async function runAttest(){
+  const btn = document.getElementById('btn');
+  const status = document.getElementById('status');
+  const out = document.getElementById('result');
+  btn.disabled = true;
+  status.innerHTML = '<span class="spinner"></span>Fetching SNP report and asking MAA...';
+  out.innerHTML = '';
+  try {
+    const r = await fetch('/api/attest', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({}) });
+    const data = await r.json();
+    if (!data.ok) {
+      out.innerHTML = '<div class="card"><div class="error"><strong>Attestation failed.</strong><br>'+esc(data.error||'')+'<details><summary>Trace</summary><pre>'+esc(data.trace||'')+'</pre></details></div></div>';
+      return;
+    }
+    render(data);
+  } catch(e){
+    out.innerHTML = '<div class="card"><div class="error">'+esc(e.message)+'</div></div>';
+  } finally {
+    btn.disabled = false;
+    status.textContent = '';
+  }
+}
+
+function render(data){
+  const compliance = (data.payload['x-ms-compliance-status'] || '').toString();
+  const isCompliant = compliance.includes('compliant');
+  const pill = '<span class="pill '+(isCompliant?'ok':'bad')+'">'+esc(compliance||'unknown')+'</span>';
+  const ttype = (data.payload['x-ms-attestation-type']||'').toString();
+
+  const rows = (data.claims||[]).map(c => {
+    const ts = c.timestamp ? '<div class="ts">'+esc(c.timestamp)+'</div>' : '';
+    return '<tr><td class="k">'+esc(c.key)+'</td><td class="v">'+fmtVal(c.value)+ts+'</td><td class="e">'+esc(c.explanation)+'</td></tr>';
+  }).join('');
+  const claimsHtml =
+    '<div class="card"><h3 style="margin-top:0">MAA token claims</h3>'+
+    '<div class="table-wrap"><table>'+
+    '<colgroup><col class="col-k"><col class="col-v"><col class="col-e"></colgroup>'+
+    '<thead><tr><th>Claim</th><th>Value</th><th>What it means</th></tr></thead>'+
+    '<tbody>'+rows+'</tbody></table></div></div>';
+
+  const hw = data.hardware_evidence || {};
+  const summary = hw.snp_summary || {};
+  const hwRows = [
+    ['MAA endpoint', hw.maa_endpoint],
+    ['UVM context source', hw.uvm_source],
+    ['SNP report size', hw.snp_report_size + ' bytes'],
+    ['SNP version / VMPL', summary.version + ' / VMPL ' + summary.vmpl],
+    ['Launch measurement', summary.measurement],
+    ['Host data', summary.host_data],
+    ['Chip ID', summary.chip_id],
+    ['REPORT_DATA (in report)', summary.report_data],
+    ['Runtime data', JSON.stringify(hw.runtime_data)],
+    ['SHA-256(runtime data)', hw.runtime_data_sha256],
+  ].map(([k,v]) => '<tr><td class="k">'+esc(k)+'</td><td class="v">'+fmtVal(v)+'</td></tr>').join('');
+
+  document.getElementById('result').innerHTML =
+    '<div class="card"><h2 style="margin-top:0">Attestation result</h2>'+
+    '<p class="meta">MAA endpoint: '+esc(data.endpoint)+'<br>Region: '+esc(data.region)+'<br>Isolation type: '+esc(data.isolation_type)+'<br>Nonce: '+esc(data.nonce)+'</p>'+
+    '<p>TEE: <strong>'+esc(ttype||'?')+'</strong> &nbsp; Verdict: '+pill+'</p>'+
+    '<p class="legend">For ACI Confidential Containers MAA returns a single-layer <code>sevsnpvm</code> token. Every <code>x-ms-sevsnpvm-*</code> claim - launch measurement, VMPL, REPORT_DATA, TCB SVNs, chip ID - sits at the top level. The token is signed by MAA after MAA verified the AMD SEV-SNP report against the AMD root CA chain. <code>x-ms-sevsnpvm-reportdata</code> binds <code>SHA-256(runtime data)</code>, so the relying party can prove the caller-supplied data was witnessed by AMD silicon.</p>'+
+    '</div>'+
+    claimsHtml+
+    '<div class="card"><h3 style="margin-top:0">Hardware evidence (summary)</h3><div class="table-wrap"><table><colgroup><col class="col-k"><col><col></colgroup><tbody>'+hwRows+'</tbody></table></div></div>'+
+    '<div class="card"><details><summary>JWT header</summary><pre>'+esc(JSON.stringify(data.header,null,2))+'</pre></details>'+
+    '<details><summary>Raw token (compact JWS)</summary><code class="token">'+esc(data.token)+'</code></details>'+
+    '<details><summary>Raw SNP report (hex, '+esc(hw.snp_report_size)+' bytes)</summary><code class="token">'+esc(hw.snp_report_hex)+'</code></details></div>';
+}
+</script>
+</body>
+</html>

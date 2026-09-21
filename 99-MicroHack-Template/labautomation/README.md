@@ -101,6 +101,8 @@ Key points for integration:
     - [Example: a shared hub network](#example-a-shared-hub-network)
     - [Testing the shared hook locally](#testing-the-shared-hook-locally)
   - [Available helper cmdlets](#available-helper-cmdlets)
+    - [`Get-MhhGroupName`](#get-mhhgroupname)
+    - [`Get-MhhDefaultLabGroup`](#get-mhhdefaultlabgroup)
     - [`New-MhhStablePassword`](#new-mhhstablepassword)
     - [`Get-MhhStableHash`](#get-mhhstablehash)
     - [`Get-MhhLabUser`](#get-mhhlabuser)
@@ -799,6 +801,60 @@ The platform ships a PowerShell module that is auto-imported into your script
 (and into any `Start-Job` child runspaces you spawn). No `Import-Module` call
 is required. Every cmdlet has full comment-based help:
 `Get-Help Invoke-MhhTofuCommand -Full`.
+
+### `Get-MhhGroupName`
+
+Derive stable management-group names for a MicroHack event. The group name
+contains the full SHA-256 digest of the event ID encoded as lowercase Base36;
+the display name is sanitised and may be truncated.
+
+```powershell
+$names = Get-MhhGroupName -EventId 'BCDR 2026'
+Write-Host "Group name: $($names.GroupName)"
+Write-Host "Display name: $($names.DisplayName)"
+```
+
+| Parameter | Description |
+| --- | --- |
+| `EventId` (`string`) | Unique identifier for the MicroHack event. When omitted or empty, defaults to `MHH_EVENTID`. The cmdlet throws if neither source provides a non-empty value. |
+
+**Return value:** one `PSCustomObject`:
+
+| Field | Description |
+| --- | --- |
+| `GroupName` | Stable management-group name containing the event ID's full SHA-256 digest encoded as lowercase Base36. |
+| `DisplayName` | Sanitised, potentially truncated display name for the event. |
+
+Use `GroupName` for identity and lookups. Unlike `DisplayName`, it retains the
+full event hash and therefore does not become ambiguous when two sanitised names
+truncate to the same value.
+
+### `Get-MhhDefaultLabGroup`
+
+Resolve this event's Entra security group. The cmdlet takes no arguments: it
+calls [`Get-MhhGroupName`](#get-mhhgroupname).
+It throws if the group does not exist and never creates one.
+
+```powershell
+$group = Get-MhhDefaultLabGroup
+Write-Host "ObjectId: $($group.ObjectId)"
+Write-Host "GroupName: $($group.GroupName)"
+Write-Host "DisplayName: $($group.DisplayName)"
+```
+
+**Parameters:** none.
+
+**Return value:** one `PSCustomObject`:
+
+| Field | Description |
+| --- | --- |
+| `ObjectId` | Entra object ID of the resolved security group. |
+| `GroupName` | Stable group name derived from `MHH_EVENTID`. |
+| `DisplayName` | Display name of the resolved group. |
+
+The lookup uses `mailNickname`, not display name. `mailNickname` contains the
+full event hash, while the sanitised and truncated display name can repeat
+across distinct events.
 
 ### `New-MhhStablePassword`
 

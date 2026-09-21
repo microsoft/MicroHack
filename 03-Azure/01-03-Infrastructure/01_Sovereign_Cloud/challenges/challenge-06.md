@@ -1,10 +1,8 @@
 # Challenge 6 - Operating a Sovereign Hybrid Cloud with Azure Arc & Azure Local
 
-[Previous Challenge](challenge-05.md) - **[Home](../Readme.md)** - [Next Challenge](challenge-07.md)
-
 ## Goal
 
-The goal of this challenge is to operate a sovereign hybrid cloud environment by combining Microsoft Sovereign Public Cloud and Sovereign Private Cloud components. You will work with Azure Local and Arc-enabled Servers (simulated via Arc Jumpstart ArcBox and LocalBox) as a sovereign on-premises cloud environment and use Azure Arc to bridge on-premises resources with Azure for unified governance, security, and management.
+The goal of this challenge is to operate a sovereign hybrid cloud environment by combining Microsoft Sovereign Public Cloud and Sovereign Private Cloud components. You will work with Azure Local, simulated via Azure Arc Jumpstart LocalBox, and provision your own VM. You will use Azure Arc to manage that VM through Azure, review its security posture with Microsoft Defender for Cloud, and assess its OS updates with Azure Update Manager.
 
 ## Scenario
 
@@ -12,42 +10,27 @@ Your organization must run workloads in a sovereign cloud while still leveraging
 
 ## Actions
 
-* Explore the ArcBox and LocalBox hybrid infrastructure in the Azure Portal
-* Navigate Arc-enabled servers and understand their Azure resource representation
-* Assign Azure Policy with Machine Configuration to audit/enforce OS settings on Arc-enabled Linux servers
-* Deploy a VM on Azure Local using Azure Arc VM management
-* Enable and review Microsoft Defender for Cloud security posture for Arc-enabled resources
-* Explore Azure Update Manager for hybrid patching across Arc-connected machines
+* Explore the LocalBox hybrid infrastructure in the Azure Portal
+* Deploy a sample application to AKS on Azure Local
+* Deploy your own VM on Azure Local using Azure Arc VM management and verify that guest management is connected
+* Verify Microsoft Defender for Cloud coverage and review security recommendations for the VM you provisioned
+* Use Azure Update Manager to assess OS updates on the VM you provisioned
 
 ## Success criteria
 
-* You can navigate and understand the ArcBox/LocalBox hybrid environment in the Azure Portal
-* You have successfully assigned an Azure Policy (e.g., SSH Posture Control) to Arc-enabled servers
-* You can verify the compliance status of Arc-enabled servers in the Azure Policy dashboard
-* You can verify the compliance status of Arc-enabled servers in the Azure Machine Configuration blade
-* You have deployed a VM on Azure Local via the Azure Portal
-* You have enabled Microsoft Defender for Cloud and reviewed security recommendations for hybrid resources
+* You can navigate and understand the LocalBox hybrid environment in the Azure Portal
+* You have deployed your own VM on Azure Local via the Azure Portal and verified that guest management is Enabled (Connected)
+* You have verified Defender for Servers coverage for your VM and reviewed its available recommendations, or identified that its assessment is still pending
+* You have completed an Azure Update Manager assessment for your VM and reviewed the results, including when no updates are pending
+* You have deployed a sample application to AKS on Azure Local
 * You understand how Azure Arc provides a unified control plane for sovereign hybrid scenarios
 
 ## Learning resources
 
-* [Azure Arc-enabled Servers overview](https://learn.microsoft.com/azure/azure-arc/servers/overview)
+* [Azure Arc-enabled Servers overview (background for guest management)](https://learn.microsoft.com/azure/azure-arc/servers/overview)
 * [Azure Local hybrid capabilities](https://learn.microsoft.com/azure/azure-local/hybrid-capabilities-with-azure-services-23h2)
-* [Azure Machine Configuration (Guest Configuration)](https://learn.microsoft.com/azure/governance/machine-configuration/overview)
-* [What is SSH Posture Control?](https://learn.microsoft.com/azure/osconfig/overview-ssh-posture-control-mc)
-* [Azure Policy built-in definitions for Arc-enabled servers](https://learn.microsoft.com/azure/azure-arc/servers/policy-reference)
+* [Create Azure Local VMs](https://learn.microsoft.com/azure/azure-local/manage/create-arc-virtual-machines)
+* [Enable guest management on Azure Local VMs](https://learn.microsoft.com/azure/azure-local/manage/manage-arc-virtual-machines#enable-guest-management)
 * [Microsoft Defender for Cloud with Arc-enabled servers](https://learn.microsoft.com/azure/defender-for-cloud/quickstart-onboard-machines)
+* [Azure Update Manager overview](https://learn.microsoft.com/azure/update-manager/overview)
 * [Azure Arc Jumpstart - LocalBox](https://jumpstart.azure.com/azure_jumpstart_localbox)
-* [Govern Azure Arc-enabled servers (Microsoft Learn Training)](https://learn.microsoft.com/training/modules/govern-azure-arc-enabled-servers/)
-
-## Solution
-
-> [!TIP]
-> We encourage you to try solving the challenge on your own before looking at the solution. This will help you learn and understand the concepts better.
-
-<details>
-<summary>Click here to view the solution</summary>
-
-[Solution for Challenge 6](../walkthrough/challenge-06/solution-06.md)
-
-</details>

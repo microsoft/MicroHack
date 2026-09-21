@@ -1,7 +1,5 @@
 # Challenge 7 - Adaptive Apps Across Sovereign Environments
 
-[Previous Challenge](challenge-06.md) - **[Home](../Readme.md)** - [Finish](finish.md)
-
 ## Goal
 
 Deploy one unchanged application model to two sovereign execution environments: Azure Kubernetes Service (AKS) and a private, self-managed K3s cluster representing an on-premises or edge location. Use independent [Radius](https://radapp.io/) control planes so either site can continue operating when the other site or its network connection is unavailable.
@@ -53,15 +51,3 @@ The lab platform has already provisioned:
 * [Azure Bastion native client connections](https://learn.microsoft.com/azure/bastion/connect-vm-native-client-windows)
 * [Azure Arc-enabled Kubernetes overview](https://learn.microsoft.com/azure/azure-arc/kubernetes/overview)
 * [Full Adaptive Apps MicroHack source](https://github.com/djong1/MicroHack/tree/djong1-adaptive-apps-microhack/03-Azure/01-01-App%20Innovation/04-adaptive-apps)
-
-## Solution
-
-> [!TIP]
-> Attempt the challenge before opening the worked solution. Use the success criteria to decide when you are finished.
-
-<details>
-<summary>Click here to view the solution</summary>
-
-[Solution for Challenge 7](../walkthrough/challenge-07/solution-07.md)
-
-</details>

@@ -49,6 +49,7 @@ $providers = @(
 
     # Azure Local (Stack HCI)
     "Microsoft.AzureStackHCI",
+    "Microsoft.EdgeMarketplace",
     "Microsoft.ResourceConnector",
     "Microsoft.HybridContainerService",
 
@@ -85,6 +86,8 @@ $providers = @(
     "Microsoft.Kubernetes",
     "Microsoft.KubernetesConfiguration",
     "Microsoft.ContainerService",
+    "Microsoft.ContainerInstance",
+    "Microsoft.ContainerRegistry",
 
     # Extended Location (for Azure Local)
     "Microsoft.ExtendedLocation"
@@ -155,37 +158,6 @@ if ($networkProvider.RegistrationState -ne 'Registered') {
     throw "Resource provider Microsoft.Network did not return to Registered state within 5 minutes."
 }
 
-$aksFeatureName = "AzureLinuxCVMPreview"
-$aksFeature = Get-AzProviderFeature `
-    -ProviderNamespace "Microsoft.ContainerService" `
-    -FeatureName $aksFeatureName `
-    -ErrorAction Stop
-
-if ($aksFeature.RegistrationState -ne 'Registered') {
-    Write-Host "  [REGISTERING] Microsoft.ContainerService/$aksFeatureName..." -ForegroundColor Yellow
-    Register-AzProviderFeature `
-        -ProviderNamespace "Microsoft.ContainerService" `
-        -FeatureName $aksFeatureName `
-        -ErrorAction Stop | Out-Null
-
-    for ($attempt = 1; $attempt -le 90; $attempt++) {
-        Start-Sleep -Seconds 10
-        $aksFeature = Get-AzProviderFeature `
-            -ProviderNamespace "Microsoft.ContainerService" `
-            -FeatureName $aksFeatureName `
-            -ErrorAction Stop
-        if ($aksFeature.RegistrationState -eq 'Registered') {
-            break
-        }
-        Write-Host "    Waiting for feature registration ($attempt/90): $($aksFeature.RegistrationState)" -ForegroundColor Gray
-    }
-}
-
-if ($aksFeature.RegistrationState -ne 'Registered') {
-    throw "Provider feature Microsoft.ContainerService/$aksFeatureName did not reach Registered state within 15 minutes (current state: $($aksFeature.RegistrationState))."
-}
-
-Write-Host "  [REGISTERED] Microsoft.ContainerService/$aksFeatureName" -ForegroundColor Green
 Register-AzResourceProvider -ProviderNamespace "Microsoft.ContainerService" -ErrorAction Stop | Out-Null
 
 for ($attempt = 1; $attempt -le 30; $attempt++) {

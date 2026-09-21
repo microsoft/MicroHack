@@ -1,7 +1,5 @@
 # Walkthrough Challenge 4 - Runtime attestation with Confidential ACI
 
-[Previous Challenge Solution](../challenge-03/solution-03.md) - **[Home](../../Readme.md)** - [Challenge](../../challenges/challenge-04.md) - [Next Challenge Solution](../challenge-05/solution-05.md)
-
 **Estimated duration:** 30-45 minutes
 
 ## Objective

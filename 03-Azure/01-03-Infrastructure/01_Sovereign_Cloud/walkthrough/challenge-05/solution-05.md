@@ -1,7 +1,5 @@
 # Walkthrough Challenge 5 - Azure Voting App on confidential AKS nodes
 
-[Previous walkthrough](../challenge-04/solution-04.md) - **[Home](../../Readme.md)** - [Challenge](../../challenges/challenge-05.md)
-
 **Estimated duration:** 30-45 minutes
 
 ## Objective

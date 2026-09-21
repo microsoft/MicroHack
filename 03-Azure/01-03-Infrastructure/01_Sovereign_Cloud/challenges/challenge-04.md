@@ -1,7 +1,5 @@
 # Challenge 4 - Runtime attestation with Confidential ACI
 
-[Previous Challenge](challenge-03.md) - **[Home](../Readme.md)** - [Next Challenge](challenge-05.md)
-
 ## Goal
 
 Deploy the same visual attestation application to Confidential and Standard
@@ -32,15 +30,3 @@ logic alone.
 - [Microsoft Azure Attestation](https://learn.microsoft.com/azure/attestation/overview)
 - [Confidential computing enforcement policies](https://learn.microsoft.com/azure/container-instances/confidential-containers-attestation-concepts)
 - [Source sample: Visual Attestation Demo v2](https://github.com/Azure/confidential-computing/tree/main/aci-samples/visual-attestation-demo-v2)
-
-## Solution
-
-> [!TIP]
-> Try to identify which hardware evidence the application needs before opening the walkthrough.
-
-<details>
-<summary>Click here to view the solution</summary>
-
-[Solution for Challenge 4](../walkthrough/challenge-04/solution-04.md)
-
-</details>

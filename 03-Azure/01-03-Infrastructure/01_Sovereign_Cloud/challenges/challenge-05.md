@@ -1,7 +1,5 @@
 # Challenge 5 - Confidential workloads on AKS
 
-[Previous Challenge](challenge-04.md) - **[Home](../Readme.md)** - [Next Challenge](challenge-06.md)
-
 ## Goal
 
 Deploy the Azure Voting App and a runtime attestation UI to an Azure Kubernetes
@@ -31,10 +29,3 @@ VM node pool and verify the execution environment with a fresh MAA token.
 - [AKS confidential computing overview](https://learn.microsoft.com/azure/aks/confidential-computing-overview)
 - [Microsoft Azure Attestation](https://learn.microsoft.com/azure/attestation/overview)
 - [Source sample: Azure Voting App on confidential AKS nodes](https://github.com/Azure/confidential-computing/tree/main/aks-samples/azure-voting-app)
-
-## Solution
-
-> [!TIP]
-> Before opening the walkthrough, decide how Kubernetes can constrain a workload to confidential nodes.
-
-[Automated walkthrough for Challenge 5](../walkthrough/challenge-05/solution-05.md)

@@ -1,24 +1,25 @@
-# **MicroHack Microsoft Sovereign Cloud**
+# **Microsoft Sovereign Cloud Hackathon**
 
-- [**MicroHack introduction**](#MicroHack-introduction)
-- [**MicroHack context**](#microhack-context)
+- [**Hackathon introduction**](#Hackathon-introduction)
+- [**Hackathon context**](#Hackathon-context)
 - [**Objectives**](#objectives)
-- [**MicroHack Challenges**](#microhack-challenges)
+- [**Hackathon Challenges**](#Hackathon-challenges)
 - [**Contributors**](#contributors)
 
-# MicroHack introduction
+# Hackathon introduction
 
-This Microsoft Sovereign Cloud MicroHack introduces engineers and architects to the core concepts, technical controls, and hands-on deployment models of Microsoft Sovereign Cloud offerings — across both Microsoft Sovereign Public Cloud and Microsoft Sovereign Private Cloud environments.
+This Microsoft Sovereign Cloud Hackathon introduces engineers and architects to the core concepts, technical controls, and hands-on deployment models of Microsoft Sovereign Cloud offerings — across both Microsoft Sovereign Public Cloud and Microsoft Sovereign Private Cloud environments.
 
 ![image](./img/Microsoft_Sovereign_Cloud.png)
 
 Participants will explore how to design and operate cloud workloads that meet sovereignty, regulatory, and compliance requirements, leveraging Azure native capabilities such as Policy, RBAC, encryption, confidential compute, and hybrid enablement through Azure Arc and Azure Local.
 
-## MicroHack context
+## Hackathon context
 
-This MicroHack scenario walks through the use of Microsoft Sovereign Cloud technologies with a focus on the best practices and the design principles and some interesting challenges for real world scenarios. Specifically, this builds up to include working with different solutions around the Microsoft Sovereign Public Cloud and the Microsoft Sovereign Private Cloud,
+This Hackathon scenario walks through the use of Microsoft Sovereign Cloud technologies with a focus on the best practices and the design principles and some interesting challenges for real world scenarios. Specifically, this builds up to include working with different solutions around the Microsoft Sovereign Public Cloud and the Microsoft Sovereign Private Cloud,
 
 - [Microsoft Sovereign Cloud](https://www.microsoft.com/ai/sovereign-cloud?msockid=35d465bce58561e42620737ce487605e)
+- [Cloud Adoption Framework - Digital sovereignty adoption](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/sovereignty/executive-strategy?tabs=overview)
 - [Microsoft Sovereign Cloud documentation](https://learn.microsoft.com/industry/sovereign-cloud/)
 - [What is Sovereign Public Cloud?](https://learn.microsoft.com/industry/sovereign-cloud/sovereign-public-cloud/overview-sovereign-public-cloud)
 - [Sovereign Private Cloud](https://learn.microsoft.com/industry/sovereign-cloud/sovereign-private-cloud/overview-sovereign-private-cloud)
@@ -29,36 +30,37 @@ This MicroHack scenario walks through the use of Microsoft Sovereign Cloud techn
 - [Azure Confidential Computing Overview](https://learn.microsoft.com/azure/confidential-computing/overview)
 - [Azure Local](https://learn.microsoft.com/azure/azure-local/)
 - [Azure Arc](https://learn.microsoft.com/azure/azure-arc/)
+- [Designing for cloud sovereignty with Radius and Dapr](https://techcommunity.microsoft.com/blog/linuxandopensourceblog/designing-for-cloud-sovereignty-with-radius-and-dapr/4535067)
 
 ## Objectives
 
-After completing this MicroHack you will:
+After completing this Hackathon you will:
 
 - Enforce sovereign cloud controls in Azure using native platform capabilities (Policy, RBAC, region restrictions).
 - Protect data through encryption at rest, in transit, and in use (CMK, TLS, ACC).
 - Operate a sovereign hybrid cloud environment by connecting local infrastructure using Azure Arc and Azure Local.
 - Deploy one adaptive application model across Azure-managed and self-managed Kubernetes environments using federated Radius control planes.
 
-## MicroHack challenges
+## Hackathon challenges
 
 | Challenge | Topic    | Challenge | Solution | Duration  | Maker     |
 |:---------:|----------|-----------|----------|-----------|-----------|
 | 1         | Using Azure native platform controls (e.g. Policy, RBAC etc) to enforce sovereign controls in the public cloud | [Challenge](./challenges/challenge-01.md) | [Solution](./walkthrough/challenge-01/solution-01.md) | 45 min | Jan Egil Ring |
 | 2         | Encryption at rest with Customer Managed Keys in Azure Key Vault | [Challenge](./challenges/challenge-02.md) | [Solution](./walkthrough/challenge-02/solution-02.md) | 30 min | Ye Zhang |
 | 3         | Encryption in transit - enforcing TLS | [Challenge](./challenges/challenge-03.md) | [Solution](./walkthrough/challenge-03/solution-03.md) | 30 min | Ye Zhang |
-| 4         | Encryption in use with Azure Confidential Compute - VM | [Challenge](./challenges/challenge-04.md) | [Solution](./walkthrough/challenge-04/solution-04.md) | 90-120 min | Murali Rao Yelamanchili |
-| 5         | Encryption in use with Confidential VMs/Node Pools in Azure Kubernetes Service (AKS) | [Challenge](./challenges/challenge-05.md) | [Solution](./walkthrough/challenge-05/solution-05.md) | 90-120 min | Murali Rao Yelamanchili |
+| 4         | Encryption in use with Azure Confidential Compute - VM | [Challenge](./challenges/challenge-04.md) | [Solution](./walkthrough/challenge-04/solution-04.md) | 30 min | Murali Rao Yelamanchili / Ye Zhang |
+| 5         | Encryption in use with Confidential VMs/Node Pools in Azure Kubernetes Service (AKS) | [Challenge](./challenges/challenge-05.md) | [Solution](./walkthrough/challenge-05/solution-05.md) | 30 min | Murali Rao Yelamanchili / Ye Zhang |
 | 6         | Operating Sovereign in a hybrid environment with Azure Local and Azure Arc | [Challenge](./challenges/challenge-06.md) | [Solution](./walkthrough/challenge-06/solution-06.md) | 60-90 min | Jan Egil Ring / Thomas Maurer |
 | 7         | Adaptive Apps across sovereign Azure and private-cloud environments with Radius | [Challenge](./challenges/challenge-07.md) | [Solution](./walkthrough/challenge-07/solution-07.md) | 60 min | Dylan de Jong / Jan Egil Ring / Wesley Backelant |
 
 ### General prerequisites
 
-This MicroHack has a few but important prerequisites
+This Hackathon has a few but important prerequisites
 
-In order to use the MicroHack time most effectively, the following tasks should be completed prior to starting the session.
+In order to use the Hackathon time most effectively, the following tasks should be completed prior to starting the session.
 
 > [!NOTE]
-> Prerequisites 1 - 3 are handled by the organizers for events hosted by Microsoft.
+> For eligible Microsoft-hosted events, use the [Hacks Console runbook](./resources/hosted-events/readme.md). Outside those events, use [manual infrastructure setup](./resources/manual-setup/readme.md). Both paths require LocalBox preparation and health validation before participants begin.
 
 1. Your own Azure subscription with Owner RBAC rights at the subscription level
 2. Contributor or Owner permissions on your subscription or resource group
@@ -71,7 +73,7 @@ The shared Challenge 4/5/7 platform requires **4 AMD SEV-SNP confidential-family
 The default candidate order is Sweden Central/v5, Spain Central/v5, Sweden Central/v6, then Spain Central/v6. Shared preparation persists the first candidate with supported VM sizes and sufficient confidential-family, DSv5-family, and regional quota so every participant deployment in that subscription uses the same selection.
 
 ```powershell
-./resources/subscription-preparations/2-vcpu-quotas.ps1 -Region swedencentral -NumberOfLabUsers 2 -ConfidentialVmGeneration v5 -SubmitQuotaRequests
+./resources/manual-setup/subscription-preparations/2-vcpu-quotas.ps1 -Region swedencentral -NumberOfLabUsers 2 -ConfidentialVmGeneration v5 -SubmitQuotaRequests
 ```
 
 Run the check for `spaincentral` as well if it should remain available for fallback. If v5 is restricted for the subscription, repeat the checks with `-ConfidentialVmGeneration v6`.
@@ -90,9 +92,9 @@ Use the AZQR report for planning and preferred-region ordering, not as the deplo
 
 ### Cost estimates
 
-The main cost driver for this MicroHack is virtual machines:
+The main cost driver for this Hackathon is virtual machines:
 
-- **LocalBox** cost is approximately 100-110 USD per day. We recommend setting it up the week before the event, so for example 5 days before the event would result in a cost between 5-600 USD.
+- **LocalBox** cost is approximately 100-110 USD per subscription per day. For hosted events, schedule provisioning at least 24 hours ahead and budget for preparation time; avoid leaving it running for a week by default. Follow the [hosted-event budget guidance](./resources/hosted-events/readme.md).
 - **Challenges 4, 5, and 7** share one pre-provisioned participant platform: a two-node AKS system pool, one Confidential VM AKS node, one standalone Confidential VM, one K3s VM, Azure Bastion Standard, and a NAT Gateway. Budget approximately 45-55 USD per participant per day, depending on region and data transfer. The platform starts during lab deployment so participants can focus on validation rather than waiting for capacity-sensitive resources.
 - Plan subscription quotas for at least 12 general-purpose vCPUs and 4 DCasv5- or DCasv6-family confidential vCPUs per participant. Keep the default maximum of two participants per subscription unless larger aggregate increases have been approved in advance.
 
@@ -101,7 +103,7 @@ There will also be smaller costs for services such as Key Vault, storage, and mo
 An Azure Pricing Calculator estimate is available [here](https://azure.com/e/1a7aec76a3e049cba57cda6742025373).
 This estimate can be adjusted for fewer/more students, running the VMs shorter/longer and adding additional services if desired.
 
-If you plan to run this MicroHack in your own subscription on a limited budget, skip the optional Challenge 6 environment and remove the participant resource group immediately after finishing the event.
+If you plan to run this Hackathon in your own subscription on a limited budget, skip the optional Challenge 6 environment and remove the participant resource group immediately after finishing the event.
 
 ## Contributors
 

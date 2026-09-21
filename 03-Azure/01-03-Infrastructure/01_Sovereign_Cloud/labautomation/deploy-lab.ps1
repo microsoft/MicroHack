@@ -163,6 +163,7 @@ $sovereignLabResult = Invoke-MhhDeploymentWithRegionFallback `
     -Tag                     @{
         workload = 'sovereign-lab'
         challenges = '4,5,7'
+        CostControl = 'Ignore'
     }
 
 # Assign the lab-specific subscription-scoped RBAC (Security Reader + Resource Policy

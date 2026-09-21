@@ -76,19 +76,19 @@ Complete the following before the hack session:
 - No local software installation required — all participant work is browser-based.
 
 > [!NOTE]
-> Your Foundry project, gpt-5.4-mini model deployment, and your **own Fabric F2 capacity** are provisioned for you by the lab automation. In **Challenge 1** you stand up your own Fabric workspace and publish your **Fabric Data Agent** by running one notebook (Run All). You'll be handed a project endpoint and your capacity name at the start of the hack. Web Search is optional and may need project-level enablement.
+> Your Foundry project, gpt-5.4-mini model deployment, and your **own Fabric capacity** are provisioned for you by the lab automation. In **Challenge 1** you stand up your own Fabric workspace and publish your **Fabric Data Agent** by running one notebook (Run All). You'll be handed a project endpoint and your capacity name at the start of the hack. Web Search is optional and may need project-level enablement.
 
 > [!TIP]
 > **You're ready to start when**, in the Foundry portal, you can: (1) see `gpt-5.4-mini` in your **model deployments** with status *Succeeded*, and (2) add the **Fabric Data Agent** tool to an agent and create the `inventory-hack-agent` connection (you do this in Challenge 2). If `gpt-5.4-mini` is missing, flag your facilitator before starting.
 
 > [!IMPORTANT]
-> **Facilitators:** there is **no shared Fabric backend** — [`labautomation/deploy-lab.ps1`](labautomation/deploy-lab.ps1) provisions each attendee's Foundry project, model, and their **own Fabric F2 capacity**, and each attendee builds their workspace + Data Agent in Challenge 1. Ensure: the platform service principal has **Owner** on the attendee resource groups; [`lab-defaults.json`](labautomation/lab-defaults.json) sets **`groups: ["M365-E5-Users"]`** so attendees get a Power BI Pro license for the Fabric portal; the **lab tenant has Fabric enabled** (tenant-admin setting *“Users can create Fabric items / workspaces”* — **not** settable via `lab-defaults.json`); and the subscription has **Fabric F-SKU quota** (F2 = 2 CU; ~256 attendees per 512-CU subscription). See [`labautomation/README.md`](labautomation/README.md).
+> **Facilitators:** there is **no shared Fabric backend** — [`labautomation/deploy-lab.ps1`](labautomation/deploy-lab.ps1) provisions each attendee's Foundry project, model, and their **own Fabric capacity**, and each attendee builds their workspace + Data Agent in Challenge 1. Ensure: the platform service principal has **Owner** on the attendee resource groups; [`lab-defaults.json`](labautomation/lab-defaults.json) sets **`groups: ["M365-E5-Users"]`** so attendees get a Power BI Pro license for the Fabric portal; the **lab tenant has Fabric enabled** (tenant-admin setting *“Users can create Fabric items / workspaces”* — **not** settable via `lab-defaults.json`); and the subscription has **Fabric F-SKU quota** (F4 = 4 CU; ~128 attendees per 512-CU subscription). See [`labautomation/README.md`](labautomation/README.md).
 
 > [!NOTE]
 > **Facilitator guidance (from run feedback):**
 > - **Audience & expectations:** pitch this at a **no-code / low-code** audience (e.g. technical decision-makers, level 150–200) and set that expectation in the invite — it is *not* a hardcore-developer hack.
 > - **Token throughput:** the model deploys at **200K TPM** and the lab packs **5 attendees per subscription**. If attendees hit rate limits, prefer **one subscription per attendee** (or raise the deployment's TPM). See [`labautomation/README.md`](labautomation/README.md).
-> - **Fabric capacity:** the per-attendee **F2** covers this hack. If attendees hit **capacity throttling** (e.g. the parquet-load contention or intermittent Data Agent failures), bump to **F4** — either **resize live** (F SKUs support on-demand resize, no redeploy) or deploy with **`-FabricSkuName F4`**, and raise `estimatedDailyCostsUsd` to match (each SKU step roughly doubles the Fabric cost). For the **ontology** feature, F2 is likely undersized — size up (F4+) for that path.
+> - **Fabric capacity:** the per-attendee **F4** default covers this hack comfortably, including capacity-heavy steps (parquet-load contention, intermittent Data Agent calls). To cut cost, drop to **F2** (`-FabricSkuName F2`, or **resize live** — F SKUs support on-demand resize, no redeploy) if attendees aren't hitting throttling, and lower `estimatedDailyCostsUsd` to match (each SKU step roughly doubles the Fabric cost). For the **ontology** feature, size up further (F8+) for that path.
 
 ### Challenge overview
 

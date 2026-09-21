@@ -44,7 +44,11 @@ The data lives in **Microsoft Fabric** (a governed Lakehouse with inventory, dem
    > **Shared tenant — make sure you open *your* project.** Every attendee's projects are listed together at [ai.azure.com](https://ai.azure.com) and the names look alike. To find yours, match the **`FoundryProjectEndpoint`** on your lab dashboard (the **Credentials** tab of the MicroHack portal) to the project's **Parent resource** shown in Foundry. Work only in that project.
 
    - Locate your **model deployments** — confirm `gpt-5.4-mini` is deployed.
-   - Open a **deployed model → Playground** and send a test message: *"What can you do?"* (In the current Foundry portal you open the Playground from a model or an agent — there is no top-level *Agents → Playground* menu.)
+   - Open a **deployed model → Playground** and send this test message (in the current Foundry portal you open the Playground from a model or an agent — there is no top-level *Agents → Playground* menu):
+
+     ```text
+     What can you do?
+     ```
    - You will inspect agent decisions in Challenges 3 and 4 via **Traces → Response view** on an agent (not a top-level *Tracing* menu).
 
    ![Models and endpoints view in the Foundry portal showing gpt-5.4-mini deployed with status Succeeded](../images/challenge-00-model-deployments.png)
@@ -56,9 +60,9 @@ The data lives in **Microsoft Fabric** (a governed Lakehouse with inventory, dem
 
 3. **Provision your own Fabric workspace and lakehouse.** *(~5 min)*
 
-   Your lab dashboard gives you a **`FabricCapacityName`** — your own Fabric **F2 capacity**. You'll stand up a workspace on it and publish your own Data Agent by running one notebook. Follow each step carefully — this is the data backend every later challenge depends on.
+   Your lab dashboard gives you a **`FabricCapacityName`** — your own Fabric **capacity**. You'll stand up a workspace on it and publish your own Data Agent by running one notebook. Follow each step carefully — this is the data backend every later challenge depends on.
 
-   **a. Create your workspace on your F2 capacity.**
+   **a. Create your workspace on your Fabric capacity.**
    Go to [app.fabric.microsoft.com](https://app.fabric.microsoft.com) → **Workspaces** (left rail) → **+ New workspace**.
 
    ![Fabric left navigation with Workspaces open and the New workspace button highlighted](../images/challenge-00-new-workspace-button.png)
@@ -68,7 +72,7 @@ The data lives in **Microsoft Fabric** (a governed Lakehouse with inventory, dem
    > [!NOTE]
    > Wherever the rest of this hack refers to the **`inventory-hack`** workspace, it means **your** uniquely-named workspace. The Lakehouse (`InventoryLakehouse`) and Data Agent (`inventory-hack-agent`) names live *inside* your workspace, so keep those exactly as written.
 
-   ![Create a workspace dialog with Workspace type set to Fabric and the attendee's F2 capacity selected under Details](../images/challenge-00-create-workspace.png)
+   ![Create a workspace dialog with Workspace type set to Fabric and the attendee's Fabric capacity selected under Details](../images/challenge-00-create-workspace.png)
 
    > If your capacity isn't in the dropdown: it must be **running** (Azure portal → your Fabric capacity → **Resume**), and you must be signed in as the lab user it was assigned to. Ask your facilitator if it still doesn't appear.
 
@@ -84,8 +88,8 @@ The data lives in **Microsoft Fabric** (a governed Lakehouse with inventory, dem
    > [!NOTE]
    > Follow either this section or section 4(b) if you'd like to load the data and create the data agent using code.
 
-   **a. Download and upload the seed data.**
-   Download all seven `.parquet` files from the hack repo's [`data/`](../data/) folder to your computer. Open **`InventoryLakehouse`**, select **Upload files**, and use the folder button to select all seven files. Click **Upload** and wait until every file shows a green completion check.
+   **a. Upload the seed data.**
+   The seven `.parquet` files are in the hack repo's [`data/`](../data/) folder. Open **`InventoryLakehouse`**, select **Upload files**, use the folder button to select all seven files, click **Upload**, and wait until every file shows a green completion check.
 
    ![The InventoryLakehouse home page with Upload files selected](../images/challenge-00-lakehouse-upload-files.png)
 
@@ -99,7 +103,11 @@ The data lives in **Microsoft Fabric** (a governed Lakehouse with inventory, dem
    Keep the schema as **`dbo`**, set the table name to the file name without the `.parquet` extension, and click **Load**. For example, load `demandhistory.parquet` into a table named `demandhistory`. Repeat this for all seven files.
 
    > [!NOTE]
-   > **Load the files one at a time.** *Load to tables* runs as a background job; starting the next load before the previous one finishes can fail with a *load already in progress* error. If a load errors, open **Monitor** (left rail), **cancel** any still-running load activity, then retry that file into a new table.
+   > **Load the files one at a time.** *Load to tables* runs as a background Spark job; starting the next load before the previous one finishes can fail with a *load already in progress* error. If a load errors, cancel the stuck job first:
+   > 1. Open the **Monitor** hub from the left navigation rail.
+   > 2. Find the running **Load to tables** / Spark activity for `InventoryLakehouse` (Status **In progress**).
+   > 3. Select it (or its **…** menu) and choose **Cancel**, then confirm.
+   > 4. Wait until the status shows **Cancelled**, then retry that file into a new table.
 
    ![The Load file to new table dialog using the dbo schema and demandhistory table name](../images/challenge-00-lakehouse-load-table.png)
 
@@ -125,17 +133,26 @@ The data lives in **Microsoft Fabric** (a governed Lakehouse with inventory, dem
    You answer questions about Zava retail inventory. Use these tables: Inventory (onHand, reorderPoint, safetyStock per product per location), Products (name, category, unitCost, leadTimeDays, supplierId), Stores (retail stores and warehouses with region/city/state), DemandHistory (weekly units sold per product per store), ExternalSignals (market signals with affectedCategories), Suppliers, and ReplenishmentOrders (past purchase/transfer orders). Category values are stored as lowercase snake_case: garden_and_lawn, outdoor_power_tools, paint_and_supplies, smart_home. When a question names a category in plain English (e.g. "Outdoor Power Tools"), map it to the exact snake_case value before filtering; the same applies to affectedCategories in ExternalSignals. Prefer filtering by productId/SKU (e.g. P004) when the question names specific products. Always return exact numbers. Flag a product as CRITICAL when onHand is below safetyStock.
    ```
 
-   Save the Data Agent.
-
    ![The Agent instructions page containing the Zava retail inventory grounding instructions](../images/challenge-00-agent-add-instructions.png)
 
-   **g. Publish the Data Agent.**
+   **g. Test the Data Agent (before publishing).**
+   Open the **Test data agent** pane and ask:
+
+   ```text
+   How many Leaf Blower X2 units are on hand at the Portland and Seattle stores, and are they below safety stock?
+   ```
+
+   You should get exact numbers with **CRITICAL** flags — proof your tables are selected and the agent reasons correctly. Testing the draft here confirms it works *before* you publish.
+
+   ![The published data agent answering the Leaf Blower X2 test question with exact CRITICAL stock levels for Portland and Seattle](../images/challenge-00-agent-test.png)
+
+   **h. Publish the Data Agent.**
 
    Click **Publish** in the top toolbar. In the **Publish data agent** dialog, enter a short description of the agent's purpose and capabilities, for example: `Zava inventory data agent for the Agentic Inventory Planning MicroHack.` Leave **Also publish to the Agent Store in Microsoft 365 Copilot** turned off, then click **Publish**.
 
    ![Publish data agent dialog with a purpose description entered and the Publish button highlighted](../images/challenge-00-agent-publish.png)
 
-   **h. Get your two IDs.**
+   **i. Get your two IDs.**
 
    After publishing, click the **Settings** gear in the data agent toolbar. Select **Model Context Protocol (MCP)**, then copy the **MCP server URL** using the copy icon.
 
@@ -158,11 +175,6 @@ The data lives in **Microsoft Fabric** (a governed Lakehouse with inventory, dem
    You paste both IDs into the Fabric Data Agent tool in Challenge 2.
 
    ![MCP server URL with the Workspace ID and Agent ID segments identified](../images/challenge-00-agent-ids.png)
-
-   **i. Verify your agent answers.** *(1 min)*
-   Open the data agent's **Test data agent** pane and ask: *"How many Leaf Blower X2 units are on hand at the Portland and Seattle stores, and are they below safety stock?"* You should get exact numbers with **CRITICAL** flags — proof that your tables are selected and the agent is published.
-
-   ![The published data agent answering the Leaf Blower X2 test question with exact CRITICAL stock levels for Portland and Seattle](../images/challenge-00-agent-test.png)
 
 4(b). **Load the data and create a Data Agent (with code).** *(~20 min)*
 
@@ -189,7 +201,7 @@ The data lives in **Microsoft Fabric** (a governed Lakehouse with inventory, dem
    ![The notebook with InventoryLakehouse attached as the default Lakehouse and the Run all button highlighted](../images/challenge-00-run-all.png)
 
    > [!IMPORTANT]
-   > **First run on a fresh capacity — the table-selection step may need a moment (or a manual tick).** The publish cell selects your 7 tables automatically, but on a **cold F2 capacity** the Lakehouse's **SQL analytics endpoint** can take a couple of minutes to expose the newly-written tables. Until that schema sync finishes you may see **either**:
+   > **First run on a fresh capacity — the table-selection step may need a moment (or a manual tick).** The publish cell selects your 7 tables automatically, but on a **cold capacity** the Lakehouse's **SQL analytics endpoint** can take a couple of minutes to expose the newly-written tables. Until that schema sync finishes you may see **either**:
    > - the notebook raise **`No tables were selected (schema may still be syncing)`**, or
    > - an **`Error updating data agent data source selection(s)`** toast if you tick tables in the portal too early.
    >
@@ -203,7 +215,13 @@ The data lives in **Microsoft Fabric** (a governed Lakehouse with inventory, dem
    ![Final notebook cell output printing the Workspace ID and Data Agent ID](../images/challenge-00-notebook-ids.png)
 
    **e. Verify your agent answers.** *(1 min)*
-   Open the data agent's **Test data agent** pane and ask: *"How many Leaf Blower X2 units are on hand at the Portland and Seattle stores, and are they below safety stock?"* You should get exact numbers with **CRITICAL** flags — proof that your tables are selected and the agent is published.
+   Open the data agent's **Test data agent** pane and ask:
+
+   ```text
+   How many Leaf Blower X2 units are on hand at the Portland and Seattle stores, and are they below safety stock?
+   ```
+
+   You should get exact numbers with **CRITICAL** flags — proof that your tables are selected and the agent is published.
 
    ![The published data agent answering the Leaf Blower X2 test question with exact CRITICAL stock levels for Portland and Seattle](../images/challenge-00-agent-test.png)
 
@@ -215,9 +233,6 @@ The data lives in **Microsoft Fabric** (a governed Lakehouse with inventory, dem
 
    > [!NOTE]
    > You attach the **Fabric Data Agent** as a *tool* on each Foundry agent, and the connection is created the **first time** you add it (Challenge 2). After that you simply **select** it. It points your Foundry agents at the data agent on top of **your** inventory Lakehouse.
-
-   > [!TIP]
-   > **No "Fabric Data Agent" in the Foundry tool catalogue later?** Your F2 capacity must be **running** (Azure portal → your Fabric capacity → **Resume**) and the setup notebook must have finished publishing the agent.
 
 5. **Understand the three-agent pattern.**
    Draw (on paper or a whiteboard) the flow:
@@ -242,7 +257,7 @@ The data lives in **Microsoft Fabric** (a governed Lakehouse with inventory, dem
 
 - [ ] You can name the key inventory tables and explain what each one is used for.
 - [ ] You have confirmed the `gpt-5.4-mini` model is deployed in your Foundry project.
-- [ ] You have created your own Fabric workspace on your F2 capacity, run the setup notebook, and published your `inventory-hack-agent` Data Agent — and noted its **Workspace ID** and **Agent ID** (used in Challenge 2).
+- [ ] You have created your own Fabric workspace on your Fabric capacity, run the setup notebook, and published your `inventory-hack-agent` Data Agent — and noted its **Workspace ID** and **Agent ID** (used in Challenge 2).
 - [ ] You can describe, in one sentence each, what each of the three agents does.
 - [ ] You can explain why combining web signals with governed data produces better decisions than either source alone.
 
@@ -251,22 +266,25 @@ The data lives in **Microsoft Fabric** (a governed Lakehouse with inventory, dem
 | Symptom | Fix |
 |---------|-----|
 | `gpt-5.4-mini` is missing from your **model deployments** | Flag your facilitator before starting — the model deployment is part of your provisioned lab. |
-| Your **`FabricCapacityName`** isn't selectable when creating the workspace | The F2 capacity must be **running** — resume it (Azure portal → your Fabric capacity → **Resume**). |
-| The setup notebook errors on `%pip install` or the publish cell | Preview SDK drift — re-run the failed cell; if a method name differs, check the [SDK reference](https://learn.microsoft.com/fabric/data-science/fabric-data-agent-sdk). Make sure your F2 capacity is **running**. |
-| **Fabric Data Agent** isn't in the tool catalogue (previewing ahead) | Your F2 capacity must be running, and the setup notebook must have **published** the agent. |
+| Your **`FabricCapacityName`** isn't selectable when creating the workspace | The capacity must be **running** — resume it (Azure portal → your Fabric capacity → **Resume**). |
+| The setup notebook errors on `%pip install` or the publish cell | Preview SDK drift — re-run the failed cell; if a method name differs, check the [SDK reference](https://learn.microsoft.com/fabric/data-science/fabric-data-agent-sdk). Make sure your Fabric capacity is **running**. |
 | The agent replies *"I'm unable to access the data source"* (or *"No tables selected yet"*) | Its tables aren't selected. The setup notebook selects all seven automatically, but if it didn't: open the data agent → **Data** tab → tick **all** tables under `InventoryLakehouse → dbo` → **Publish**, then re-test. |
 | Loading a `.parquet` file fails with a *load already in progress* error | Load the files **one at a time**. Open **Monitor** (left rail), **cancel** the still-running load activity, then retry that file into a new table. |
 | The agent returns nothing when you name a category (e.g. *"Outdoor Power Tools"*) | Category values are lowercase snake_case (`outdoor_power_tools`). Ask by the exact value or by **SKU/productId** (e.g. `P004`), and confirm the agent instructions include the category-mapping line from step 4(a)f / the setup notebook. |
-| The publish cell raises **`No tables were selected (schema may still be syncing)`** | Expected on a **cold F2** — the 7 tables wrote fine, but the Lakehouse **SQL analytics endpoint** hasn't exposed them yet. Open `InventoryLakehouse` → **SQL analytics endpoint** → confirm all 7 tables under `dbo`, then **re-run the publish cell** (idempotent) or tick the tables in the data agent's **Explorer** and **Publish**. |
+| The publish cell raises **`No tables were selected (schema may still be syncing)`** | Expected on a **cold capacity** — the 7 tables wrote fine, but the Lakehouse **SQL analytics endpoint** hasn't exposed them yet. Open `InventoryLakehouse` → **SQL analytics endpoint** → confirm all 7 tables under `dbo`, then **re-run the publish cell** (idempotent) or tick the tables in the data agent's **Explorer** and **Publish**. |
 | Ticking tables in the data agent shows **`Error updating data agent data source selection(s)`** | Same root cause — the SQL endpoint schema isn't fully synced. Wait until all 7 tables show under the Lakehouse's **SQL analytics endpoint**, **refresh** the data agent page (F5), then re-tick and **Publish**. If it persists, remove and re-add the `InventoryLakehouse` data source (**+ Add data source → OneLake catalog**), tick the 7 tables, and **Publish**. |
-| The agent answers in the **Test data agent** pane but a Foundry agent later errors **`Stage configuration not found`** | The test pane runs the **draft/Preview** runtime; Foundry consumes the **published** version. On a cold F2 the notebook's publish can leave the agent in draft. Open `inventory-hack-agent` → confirm all 7 tables → click **Publish**, then retry. |
+| The agent answers in the **Test data agent** pane but a Foundry agent later errors **`Stage configuration not found`** | The test pane runs the **draft/Preview** runtime; Foundry consumes the **published** version. On a cold capacity the notebook's publish can leave the agent in draft. Open `inventory-hack-agent` → confirm all 7 tables → click **Publish**, then retry. |
 
 ![The data agent's Data tab showing InventoryLakehouse tables unselected and the agent replying that it cannot access the data source](../images/challenge-00-no-tables.png)
 
 ## 🚀 Go further
 
 - Sketch the three-agent flow from memory and label which tool each agent uses and why.
-- In the playground, ask the agent *“What data can you see?”* and compare its answer to the table list above.
+- In the playground, ask the agent this and compare its answer to the table list above:
+
+  ```text
+  What data can you see?
+  ```
 - Predict which tables Challenge 3 and Challenge 4 will lean on before you get there.
 
 ## 🧠 Reflection

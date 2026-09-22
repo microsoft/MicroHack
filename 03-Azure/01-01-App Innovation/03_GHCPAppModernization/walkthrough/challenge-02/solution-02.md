@@ -27,7 +27,7 @@ Reference: <https://learn.microsoft.com/en-gb/azure/developer/github-copilot-app
 
 ## 2.3. Run the batch assessment
 
-In your terminal, run the modernize CLI agent and accept execution in your working directory.
+In your terminal, run the modernize CLI agent by typing _modernize_ (you can verify the Modernize CLI is properly installed and see the available commands by typing _modernize --help_) and accept execution in your working directory.
 
 Run "Assess" to analyze the code of the 2 apps and generate a report.
 

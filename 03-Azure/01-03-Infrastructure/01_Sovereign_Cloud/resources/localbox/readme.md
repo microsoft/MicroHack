@@ -79,6 +79,37 @@ Rerunning preparation repairs a missing proxy assignment on an existing cluster,
 
 Finally, use the [participant VM exercise](manual-preparation.md#step-6-test-the-environment) to validate actual VM guest networking, guest management, Defender coverage and update assessment. These participant-created VMs are not created by the preparation script.
 
+## Tested participant VM capacity
+
+On **21-22 September 2026**, one LocalBox instance successfully hosted **23 additional Challenge 6 test VMs**, with all 23 ARM deployments reporting `Succeeded` and all 23 guest agents reporting `Connected` before teardown. This is an observed deployment/onboarding result, **not a supported maximum, a production sizing recommendation or a guarantee for every workshop**. The test environment has since been deleted.
+
+| Test condition | Configuration |
+| --- | --- |
+| Azure host | `LocalBox-Client`, `Standard_E32s_v6`: 32 vCPUs, 256 GiB RAM |
+| Nested Azure Local nodes | Two nodes, 96 GiB RAM each; both available during testing |
+| Existing shared workloads | LocalBox management infrastructure, Arc Resource Bridge, and one AKS Local cluster with three Linux workers and one control-plane node (`Standard_A4_v2`) |
+| Each participant VM | Windows Server 2025, 2 vCPUs, fixed 4096 MiB RAM, guest management enabled, no additional data disks |
+| Image and placement | `2025-datacenter-azure-edition-smalldisk-01`, `UserStorage_1` expanded to 1 TiB, prepared VLAN 200 logical network |
+| Test method | [Capacity-test script](../test-localbox-capacity.ps1); retain existing VMs while adding batches of up to five, then smaller batches near the memory guard |
+
+The 23 participant VMs were **in addition to**, not inclusive of, the shared infrastructure and four AKS node VMs. All workloads ultimately shared the Azure host's CPU and backing storage; nested vCPU counts do not represent additional physical compute capacity.
+
+Observed ARM deployment durations increased as the instance filled:
+
+| VMs added | Batch size | Deployment duration per VM |
+| --- | --- | --- |
+| 003-007 | 5 | About 8.5-9.6 minutes |
+| 008-012 | 5 | About 10.6-11.4 minutes |
+| 013-017 | 5 | About 13.5-14.8 minutes |
+| 018-021 | 4 | About 13.3-16.4 minutes |
+| 022 and 023 | 1 at a time | About 8.2 and 9.6 minutes respectively |
+
+Batch submissions were staggered, with Azure provisioning overlapping. These are ARM-reported durations, not the journal's first-observed readiness times, which can include delays between status checks. Smaller final batches were faster; these observations do not establish a performance curve or simultaneous classroom deployment limit.
+
+The last headroom snapshot with 23 deployed VMs showed approximately **1,004 GiB free on the backing `V:` volume**, **523 GiB free on the primary CSV**, and **20.1 / 16.2 GiB free RAM** on the two nested nodes. Storage and node health were healthy. Under the unchanged 12-GiB-per-node reserve and conservative placement checks described below, one further VM passed the snapshot check but two together did not. The subsequent attempt to add VM 024 stopped on an authorization error before submission; neither VM 024 nor VM 025 was validated. **The test did not establish a hard limit of 23 VMs.**
+
+For event planning, use **15-20 participants per equivalently sized LocalBox as a conservative starting point**, with one VM each, then rehearse the actual workload and deployment concurrency. This planning range leaves headroom below the observed count; it is not itself a validated service-level guarantee. The test did not validate simultaneous Update Manager assessments, Defender protection/assessment completion, sustained application load, or operation after a node failure. Guest-agent connectivity alone does not prove those outcomes. Retest after changing host/node sizing, images, shared workloads or VM specifications; do not use the two CSVs' advertised free space as a substitute for backing-volume capacity.
+
 ## Measure participant VM capacity
 
 Use [test-localbox-capacity.ps1](../test-localbox-capacity.ps1) beside [prepare-localbox.ps1](../prepare-localbox.ps1) to test the Challenge 6 VM footprint: 2 vCPUs, fixed 4096 MiB RAM, the prepared Windows image, VLAN 200 and `UserStorage_1`, with guest management enabled. It does not install updates, alter Defender plans, change RBAC or resize shared infrastructure. Existing subscription policies and paid plans still apply to the test VMs.

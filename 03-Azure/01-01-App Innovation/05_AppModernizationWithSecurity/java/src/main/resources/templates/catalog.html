@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MicroHack Figure Catalog</title>
+    <style>
+        body { font-family: system-ui, sans-serif; margin: 2rem auto; max-width: 1100px; padding: 0 1rem; }
+        header, form { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+        main { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-top: 2rem; }
+        article { border: 1px solid #ccc; border-radius: .5rem; padding: 1rem; }
+        img { width: 100%; aspect-ratio: 1; object-fit: cover; }
+    </style>
+</head>
+<body>
+<header>
+    <h1>Figure Catalog</h1>
+    <a href="/import">Import catalog</a>
+</header>
+<form method="get" action="/">
+    <label>Name <input name="search" th:value="${search}"></label>
+    <label>Category
+        <select name="category">
+            <option value="">All categories</option>
+            <option th:each="entry : ${categories}"
+                    th:value="${entry.slug}"
+                    th:text="${entry.name}"
+                    th:selected="${entry.slug == selectedCategory}"></option>
+        </select>
+    </label>
+    <button type="submit">Filter</button>
+</form>
+<p th:if="${#lists.isEmpty(figures)}" data-catalog-empty>No figures match the filters.</p>
+<main>
+    <article th:each="figure : ${figures}"
+             th:attr="data-figure-id=${figure.productId},
+                      data-figure-name=${figure.name},
+                      data-figure-description=${figure.description},
+                      data-category-name=${figure.category},
+                      data-category-slug=${figure.categorySlug},
+                      data-image-filename=${figure.filename}">
+        <img th:src="@{/images/{filename}(filename=${figure.filename})}"
+             th:alt="${figure.name}">
+        <h2><a th:href="@{/figure/{id}(id=${figure.productId})}" th:text="${figure.name}"></a></h2>
+        <p th:text="${figure.description}"></p>
+        <small th:text="${figure.category}"></small>
+    </article>
+</main>
+</body>
+</html>

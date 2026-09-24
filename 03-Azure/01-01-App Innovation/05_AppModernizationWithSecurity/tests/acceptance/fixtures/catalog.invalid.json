@@ -1,0 +1,18 @@
+[
+  {
+    "productId": "10000000-0000-4000-8000-000000000003",
+    "name": "Transient Harbor Planner",
+    "description": "This valid record appears before an invalid record so the acceptance harness can prove that imports never publish a valid prefix.",
+    "category": "City Workers",
+    "filename": "10000000-0000-4000-8000-000000000003.png",
+    "imagePrompt": "Photorealistic construction-toy figure, harbor planner with charts, clean background, high detail, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "10000000-0000-4000-8000-000000000004",
+    "name": "Invalid Storage Key",
+    "description": "This structurally representative record deliberately uses a filename that does not correspond to its product identifier.",
+    "category": "City Workers",
+    "filename": "../10000000-0000-4000-8000-000000000004.png",
+    "imagePrompt": "Photorealistic construction-toy figure, safety tester with clipboard, clean background, high detail, evenly lit, 1024x1024"
+  }
+]

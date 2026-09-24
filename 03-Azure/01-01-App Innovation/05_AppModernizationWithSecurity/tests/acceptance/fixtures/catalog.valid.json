@@ -1,0 +1,18 @@
+[
+  {
+    "productId": "10000000-0000-4000-8000-000000000001",
+    "name": "Orbital Weather Analyst",
+    "description": "An analyst studies cloud systems and records changing atmospheric patterns from a compact orbital station.",
+    "category": "L’Été Ártists",
+    "filename": "10000000-0000-4000-8000-000000000001.png",
+    "imagePrompt": "Photorealistic construction-toy figure, orbital weather analyst with instruments, clean background, high detail, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "10000000-0000-4000-8000-000000000002",
+    "name": "Harbor Safety Inspector",
+    "description": "An inspector checks a busy harbor’s safety equipment and records maintenance findings before vessels depart.",
+    "category": "City Workers",
+    "filename": "10000000-0000-4000-8000-000000000002.png",
+    "imagePrompt": "Photorealistic construction-toy figure, harbor safety inspector with clipboard, clean background, high detail, evenly lit, 1024x1024"
+  }
+]

@@ -39,13 +39,13 @@ var location = resourceGroup().location
 var stacks = [
   {
     name: 'dotnet'
-    computerName: 'dotnet-${labSuffix}'
+    computerName: 'd-${labSuffix}'
     customData: dotnetCustomData
     bootstrapCommand: dotnetBootstrapCommand
   }
   {
     name: 'java'
-    computerName: 'java-${labSuffix}'
+    computerName: 'j-${labSuffix}'
     customData: javaCustomData
     bootstrapCommand: javaBootstrapCommand
   }

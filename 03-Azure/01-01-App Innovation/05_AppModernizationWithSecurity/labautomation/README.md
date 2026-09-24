@@ -21,6 +21,8 @@ group rather than Terraform's global participant index; the VNet CIDR
 `10.1.0.0/22` is reused safely in separate resource groups. When no RDP
 source CIDRs are specified, no inbound RDP rule is created; participants open
 it only for their own IP in Challenge 0.
+The bundled provisioner retries VS Code Marketplace extension installs up to
+three times and reports the CLI error if all attempts fail.
 Azure VM resource names retain the stack name, while Windows computer names
 use `d-` and `j-` plus the 12-character lab suffix to stay within the
 15-character Windows limit.

@@ -615,20 +615,27 @@ function Install-CommonTools {
     foreach ($Extension in $Extensions.GetEnumerator()) {
         # The refusal message is joined onto one line because VS Code wraps it, and a wrapped
         # message would not match the check below.
-        $Output = (Get-NativeCommandOutput -Path $CodeCommand -Arguments @(
-                '--install-extension', "$($Extension.Key)@$($Extension.Value)",
-                '--force', '--extensions-dir', $ExtensionRoot
-            )) -join ' '
-        if ($LASTEXITCODE -ne 0) {
+        for ($Attempt = 1; $Attempt -le 3; $Attempt++) {
+            $Output = (Get-NativeCommandOutput -Path $CodeCommand -Arguments @(
+                    '--install-extension', "$($Extension.Key)@$($Extension.Value)",
+                    '--force', '--extensions-dir', $ExtensionRoot
+                )) -join ' '
+            if ($LASTEXITCODE -eq 0) {
+                break
+            }
             if ($Output -match 'is a built-in extension') {
                 Write-ProvisionLog -Message (
                     "$($Extension.Key) is built into Visual Studio Code at a newer version " +
                     "than the pinned $($Extension.Value); keeping the built-in."
                 )
                 $BuiltInExtensions += $Extension.Key
-                continue
+                break
             }
-            throw "Visual Studio Code failed to install $($Extension.Key)@$($Extension.Value)."
+            if ($Attempt -eq 3) {
+                throw "Visual Studio Code failed to install $($Extension.Key)@$($Extension.Value) after 3 attempts: $($Output.Substring([Math]::Max(0, $Output.Length - 500)))"
+            }
+            Write-Warning "Visual Studio Code could not install $($Extension.Key)@$($Extension.Value) on attempt $Attempt; retrying."
+            Start-Sleep -Seconds 15
         }
     }
     $InstalledExtensions = @(

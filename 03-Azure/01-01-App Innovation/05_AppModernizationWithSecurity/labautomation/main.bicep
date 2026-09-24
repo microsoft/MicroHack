@@ -35,6 +35,14 @@ param rdpSourceAddressPrefixes array = []
 @description('The participant identities granted Security Reader on this resource group.')
 param allowedEntraUserIds array = []
 
+@description('Existing VMs in dotnet, java order. Existing VMs are referenced, not redeployed, because custom data is immutable.')
+@minLength(2)
+@maxLength(2)
+param existingVms array = [
+  false
+  false
+]
+
 var location = resourceGroup().location
 var stacks = [
   {
@@ -132,7 +140,11 @@ resource nics 'Microsoft.Network/networkInterfaces@2023-04-01' = [for (stack, i)
   }
 }]
 
-resource vms 'Microsoft.Compute/virtualMachines@2024-11-01' = [for (stack, i) in stacks: {
+resource vmReferences 'Microsoft.Compute/virtualMachines@2024-11-01' existing = [for stack in stacks: {
+  name: 'vm-${stack.name}-${labSuffix}'
+}]
+
+resource vms 'Microsoft.Compute/virtualMachines@2024-11-01' = [for (stack, i) in stacks: if (!existingVms[i]) {
   name: 'vm-${stack.name}-${labSuffix}'
   location: location
   identity: {
@@ -189,12 +201,13 @@ resource vms 'Microsoft.Compute/virtualMachines@2024-11-01' = [for (stack, i) in
 }]
 
 resource vmOwners 'Microsoft.Authorization/roleAssignments@2022-04-01' = [for (stack, i) in stacks: {
-  name: guid(resourceGroup().id, vms[i].name, ownerRoleId)
+  name: guid(resourceGroup().id, vmReferences[i].name, ownerRoleId)
   properties: {
     roleDefinitionId: ownerRoleId
-    principalId: vms[i].identity.principalId
+    principalId: vmReferences[i].identity.principalId
     principalType: 'ServicePrincipal'
   }
+  dependsOn: [vms]
 }]
 
 resource securityReaders 'Microsoft.Authorization/roleAssignments@2022-04-01' = [for userId in allowedEntraUserIds: {
@@ -206,8 +219,8 @@ resource securityReaders 'Microsoft.Authorization/roleAssignments@2022-04-01' = 
   }
 }]
 
-resource vmSetup 'Microsoft.Compute/virtualMachines/extensions@2024-11-01' = [for (stack, i) in stacks: {
-  parent: vms[i]
+resource vmSetup 'Microsoft.Compute/virtualMachines/extensions@2024-11-01' = [for (stack, i) in stacks: if (!existingVms[i]) {
+  parent: vmReferences[i]
   name: 'provision-${stack.name}'
   location: location
   properties: {
@@ -224,8 +237,8 @@ resource vmSetup 'Microsoft.Compute/virtualMachines/extensions@2024-11-01' = [fo
 }]
 
 output vmNames object = {
-  dotnet: vms[0].name
-  java: vms[1].name
+  dotnet: vmReferences[0].name
+  java: vmReferences[1].name
 }
 output publicIpAddresses object = {
   dotnet: publicIps[0].properties.ipAddress

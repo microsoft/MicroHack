@@ -27,6 +27,16 @@ Azure VM resource names retain the stack name, while Windows computer names
 use `d-` and `j-` plus the 12-character lab suffix to stay within the
 15-character Windows limit.
 
+On a rerun, `deploy-lab.ps1` checks each existing VM's provisioning extension.
+Successful VMs are left untouched, because Azure does not allow changes to
+`osProfile.customData`. A VM with a failed or missing provisioning extension is
+deleted along with its OS disk and recreated with the current bundled script;
+its old managed-identity Owner assignment is removed first. **VM-local data on
+that VM is lost.** VMs whose extensions are still running are not deleted.
+Updates to the provisioner apply to newly created or recreated VMs, not to
+already-successful VMs. Never retry a failed VM that contains participant work
+you need to keep without preserving that data separately.
+
 ## Facilitator prerequisites
 
 Before starting the event:

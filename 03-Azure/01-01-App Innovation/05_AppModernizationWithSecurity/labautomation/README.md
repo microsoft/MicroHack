@@ -29,32 +29,19 @@ Before starting the event:
 1. Run [`preflight-capacity.ps1`](../baseInfra/scripts/preflight-capacity.ps1)
    against the actual subscription, participant count, preferred regions,
    `Standard_D2as_v5`, and **two** 127-GiB Premium OS disks per participant.
-   Include two VMs and two Standard public IPs in the quota/cost gate. The
+   Include two VMs and two Standard public IPs in the quota/cost review.
+   This is a facilitator preparation step, not a check run by `deploy-lab.ps1`. The
    [baseline cost estimate](../docs/CostEstimate.md) puts 30 base labs at
    approximately $315/day; the `lab-defaults.json` $11/day estimate rounds up
    that baseline, **not** participant-created workloads or licensing.
-2. Publish a current immutable workshop source commit; download its archive
-   and review its SHA-256 as in the
-   [facilitator guide](../docs/Facilitator.md). Never use the historical
-   `fd298de6...` commit, a branch, or a placeholder.
-3. Fill in [lab-settings.json](lab-settings.json) **before uploading or
-   redeploying the labautomation folder**. The platform copies the file with
-   each participant job, unlike environment variables set in your own shell.
-   These settings are nonsecret; leave the file's fields empty or false until
-   their prerequisite is complete. Missing or invalid settings fail closed:
-
-   | Field | Meaning |
-   | --- | --- |
-   | `capacityPreflightConfirmed` | Set to `true` only after the capacity/cost preflight for this cohort |
-   | `sourceCommit` | Published lowercase 40-character source commit |
-   | `sourceArchiveSha256` | Reviewed lowercase SHA-256 digest of that commit archive |
-   | `facilitatorPrincipalName` | Facilitator UPN or group name for migration deployment parameters |
-   | `facilitatorPrincipalObjectId` | Object GUID for the same facilitator principal |
-
-   If the platform explicitly supplies the original `MHH_*` environment
-   variables to each job, they override the corresponding file fields. Setting
-   variables in your local terminal alone does **not** pass them to platform
-   jobs. After editing the file, upload the updated folder and retry the labs.
+2. The VM bootstrap is pinned in `deploy-lab.ps1` to the published workshop
+   commit `4e3d090e252fd7197b529ed06d5cd427f158b2df` and its verified
+   GitHub archive SHA-256. When updating workshop content, review and update
+   both values together as in the [facilitator guide](../docs/Facilitator.md).
+   No additional settings file or job environment variables are required.
+   The platform-provided participant identity is used for the provisioner's
+   migration-principal fields because that participant owns the lab's scope;
+   this differs from the facilitator identity used by standalone Terraform.
 
 The per-lab VM administrator password, database passwords, and performance
 API keys use the platform's `New-MhhStablePassword` helper: re-runs converge on

@@ -19,30 +19,12 @@ if ($DeploymentType -eq 'subscription') {
 if ([string]::IsNullOrWhiteSpace($ResourceGroupName) -or $PreferredLocation.Count -eq 0 -or $AllowedEntraUserIds.Count -eq 0) {
     throw 'A participant resource group, preferred region and allowed user ID are required.'
 }
-$settings = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'lab-settings.json') -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
-$preflightConfirmed = if ($env:MHH_CAPACITY_PREFLIGHT_CONFIRMED) {
-    $env:MHH_CAPACITY_PREFLIGHT_CONFIRMED -ceq 'true'
-} else {
-    $settings.capacityPreflightConfirmed -ceq $true
-}
-$sourceCommit = if ($env:MHH_SOURCE_COMMIT) { $env:MHH_SOURCE_COMMIT } else { $settings.sourceCommit }
-$sourceArchiveSha256 = if ($env:MHH_SOURCE_ARCHIVE_SHA256) { $env:MHH_SOURCE_ARCHIVE_SHA256 } else { $settings.sourceArchiveSha256 }
-$facilitatorPrincipalName = if ($env:MHH_FACILITATOR_PRINCIPAL_NAME) { $env:MHH_FACILITATOR_PRINCIPAL_NAME } else { $settings.facilitatorPrincipalName }
-$facilitatorPrincipalObjectId = if ($env:MHH_FACILITATOR_PRINCIPAL_OBJECT_ID) { $env:MHH_FACILITATOR_PRINCIPAL_OBJECT_ID } else { $settings.facilitatorPrincipalObjectId }
-
-if (-not $preflightConfirmed) {
-    throw 'Run baseInfra/scripts/preflight-capacity.ps1 for this cohort, then set capacityPreflightConfirmed=true in lab-settings.json.'
-}
-if ($sourceCommit -cnotmatch '^[0-9a-f]{40}$' -or
-    $sourceCommit -eq 'fd298de6ded4e55b5208fe3f6d8e81fbcdf836c9') {
-    throw 'Set sourceCommit in lab-settings.json to a current, published, lowercase 40-hex commit (not the historical pin).'
-}
-if ($sourceArchiveSha256 -cnotmatch '^[0-9a-f]{64}$') {
-    throw 'Set sourceArchiveSha256 in lab-settings.json to the reviewed lowercase 64-hex digest of that commit archive.'
-}
-if ([string]::IsNullOrWhiteSpace($facilitatorPrincipalName) -or
-    $facilitatorPrincipalObjectId -notmatch '^[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}$') {
-    throw 'Set facilitatorPrincipalName and facilitatorPrincipalObjectId in lab-settings.json before deployment.'
+# Pin the published workshop tree and its reviewed GitHub archive together.
+$sourceCommit = '4e3d090e252fd7197b529ed06d5cd427f158b2df'
+$sourceArchiveSha256 = '0a36f3a2ee45c893b9d95266668d248e63707956eb995145f45ecaba77ec6507'
+$labUser = Get-MhhLabUser -UserId $AllowedEntraUserIds[0]
+if ([string]::IsNullOrWhiteSpace($labUser.UserPrincipalName) -or $labUser.Id -ne $AllowedEntraUserIds[0]) {
+    throw 'Could not resolve the lab participant identity for migration parameters.'
 }
 
 function Get-GzipBase64 {
@@ -96,8 +78,8 @@ foreach ($stack in @('dotnet', 'java')) {
     $payload = @{
         databasePassword = $databasePassword
         performanceApiKey = $apiKeys[$stack]
-        facilitatorPrincipalName = $facilitatorPrincipalName
-        facilitatorPrincipalObjectId = $facilitatorPrincipalObjectId
+        facilitatorPrincipalName = $labUser.UserPrincipalName
+        facilitatorPrincipalObjectId = $labUser.Id
         resourceGroupName = $ResourceGroupName
         teamName = "user-$suffix"
         adminUsername = 'azureuser'

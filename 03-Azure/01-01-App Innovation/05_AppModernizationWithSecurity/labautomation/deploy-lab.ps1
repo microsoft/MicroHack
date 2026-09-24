@@ -19,19 +19,30 @@ if ($DeploymentType -eq 'subscription') {
 if ([string]::IsNullOrWhiteSpace($ResourceGroupName) -or $PreferredLocation.Count -eq 0 -or $AllowedEntraUserIds.Count -eq 0) {
     throw 'A participant resource group, preferred region and allowed user ID are required.'
 }
-if ($env:MHH_CAPACITY_PREFLIGHT_CONFIRMED -ne 'true') {
-    throw 'Run baseInfra/scripts/preflight-capacity.ps1 for this cohort and set MHH_CAPACITY_PREFLIGHT_CONFIRMED=true.'
+$settings = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'lab-settings.json') -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+$preflightConfirmed = if ($env:MHH_CAPACITY_PREFLIGHT_CONFIRMED) {
+    $env:MHH_CAPACITY_PREFLIGHT_CONFIRMED -ceq 'true'
+} else {
+    $settings.capacityPreflightConfirmed -ceq $true
 }
-if ($env:MHH_SOURCE_COMMIT -cnotmatch '^[0-9a-f]{40}$' -or
-    $env:MHH_SOURCE_COMMIT -eq 'fd298de6ded4e55b5208fe3f6d8e81fbcdf836c9') {
-    throw 'MHH_SOURCE_COMMIT must be a current, published, lowercase 40-hex commit (not the historical pin).'
+$sourceCommit = if ($env:MHH_SOURCE_COMMIT) { $env:MHH_SOURCE_COMMIT } else { $settings.sourceCommit }
+$sourceArchiveSha256 = if ($env:MHH_SOURCE_ARCHIVE_SHA256) { $env:MHH_SOURCE_ARCHIVE_SHA256 } else { $settings.sourceArchiveSha256 }
+$facilitatorPrincipalName = if ($env:MHH_FACILITATOR_PRINCIPAL_NAME) { $env:MHH_FACILITATOR_PRINCIPAL_NAME } else { $settings.facilitatorPrincipalName }
+$facilitatorPrincipalObjectId = if ($env:MHH_FACILITATOR_PRINCIPAL_OBJECT_ID) { $env:MHH_FACILITATOR_PRINCIPAL_OBJECT_ID } else { $settings.facilitatorPrincipalObjectId }
+
+if (-not $preflightConfirmed) {
+    throw 'Run baseInfra/scripts/preflight-capacity.ps1 for this cohort, then set capacityPreflightConfirmed=true in lab-settings.json.'
 }
-if ($env:MHH_SOURCE_ARCHIVE_SHA256 -cnotmatch '^[0-9a-f]{64}$') {
-    throw 'MHH_SOURCE_ARCHIVE_SHA256 must be the reviewed lowercase 64-hex digest of that commit archive.'
+if ($sourceCommit -cnotmatch '^[0-9a-f]{40}$' -or
+    $sourceCommit -eq 'fd298de6ded4e55b5208fe3f6d8e81fbcdf836c9') {
+    throw 'Set sourceCommit in lab-settings.json to a current, published, lowercase 40-hex commit (not the historical pin).'
 }
-if ([string]::IsNullOrWhiteSpace($env:MHH_FACILITATOR_PRINCIPAL_NAME) -or
-    $env:MHH_FACILITATOR_PRINCIPAL_OBJECT_ID -notmatch '^[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}$') {
-    throw 'Set MHH_FACILITATOR_PRINCIPAL_NAME and MHH_FACILITATOR_PRINCIPAL_OBJECT_ID before deployment.'
+if ($sourceArchiveSha256 -cnotmatch '^[0-9a-f]{64}$') {
+    throw 'Set sourceArchiveSha256 in lab-settings.json to the reviewed lowercase 64-hex digest of that commit archive.'
+}
+if ([string]::IsNullOrWhiteSpace($facilitatorPrincipalName) -or
+    $facilitatorPrincipalObjectId -notmatch '^[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}$') {
+    throw 'Set facilitatorPrincipalName and facilitatorPrincipalObjectId in lab-settings.json before deployment.'
 }
 
 function Get-GzipBase64 {
@@ -85,8 +96,8 @@ foreach ($stack in @('dotnet', 'java')) {
     $payload = @{
         databasePassword = $databasePassword
         performanceApiKey = $apiKeys[$stack]
-        facilitatorPrincipalName = $env:MHH_FACILITATOR_PRINCIPAL_NAME
-        facilitatorPrincipalObjectId = $env:MHH_FACILITATOR_PRINCIPAL_OBJECT_ID
+        facilitatorPrincipalName = $facilitatorPrincipalName
+        facilitatorPrincipalObjectId = $facilitatorPrincipalObjectId
         resourceGroupName = $ResourceGroupName
         teamName = "user-$suffix"
         adminUsername = 'azureuser'
@@ -101,7 +112,7 @@ foreach ($stack in @('dotnet', 'java')) {
     }
     $customData[$stack] = [Convert]::ToBase64String($bundleBytes)
 
-    $bootstrapScript = "`$ErrorActionPreference='Stop'`n$bootstrap`nInvoke-ProvisioningBootstrap -Stack '$stack' -SourceCommit '$($env:MHH_SOURCE_COMMIT)' -SourceArchiveSha256 '$($env:MHH_SOURCE_ARCHIVE_SHA256)'`nexit 0"
+    $bootstrapScript = "`$ErrorActionPreference='Stop'`n$bootstrap`nInvoke-ProvisioningBootstrap -Stack '$stack' -SourceCommit '$sourceCommit' -SourceArchiveSha256 '$sourceArchiveSha256'`nexit 0"
     $commands[$stack] = 'powershell.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -EncodedCommand ' +
         [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($bootstrapScript))
     if ($commands[$stack].Length -gt 7800) {
@@ -116,7 +127,7 @@ $parameters = @{
     javaCustomData = $customData.java
     dotnetBootstrapCommand = $commands.dotnet
     javaBootstrapCommand = $commands.java
-    sourceCommit = $env:MHH_SOURCE_COMMIT
+    sourceCommit = $sourceCommit
     provisionerVersion = "$( (Get-FileHash $provisionerPath -Algorithm SHA256).Hash )-$( (Get-FileHash $bootstrapPath -Algorithm SHA256).Hash )"
     allowedEntraUserIds = $AllowedEntraUserIds
 }

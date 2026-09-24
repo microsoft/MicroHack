@@ -37,17 +37,24 @@ Before starting the event:
    and review its SHA-256 as in the
    [facilitator guide](../docs/Facilitator.md). Never use the historical
    `fd298de6...` commit, a branch, or a placeholder.
-3. Supply these nonsecret settings to the labautomation process environment
-   for **every** participant job. The platform must be configured to provide
-   them before triggering deployment; missing or invalid settings fail closed:
+3. Fill in [lab-settings.json](lab-settings.json) **before uploading or
+   redeploying the labautomation folder**. The platform copies the file with
+   each participant job, unlike environment variables set in your own shell.
+   These settings are nonsecret; leave the file's fields empty or false until
+   their prerequisite is complete. Missing or invalid settings fail closed:
 
-   | Variable | Meaning |
+   | Field | Meaning |
    | --- | --- |
-   | `MHH_CAPACITY_PREFLIGHT_CONFIRMED` | Literal `true` after the capacity/cost preflight |
-   | `MHH_SOURCE_COMMIT` | Published lowercase 40-character source commit |
-   | `MHH_SOURCE_ARCHIVE_SHA256` | Reviewed lowercase SHA-256 digest of that commit archive |
-   | `MHH_FACILITATOR_PRINCIPAL_NAME` | Facilitator UPN or group name for migration deployment parameters |
-   | `MHH_FACILITATOR_PRINCIPAL_OBJECT_ID` | Object GUID for the same facilitator principal |
+   | `capacityPreflightConfirmed` | Set to `true` only after the capacity/cost preflight for this cohort |
+   | `sourceCommit` | Published lowercase 40-character source commit |
+   | `sourceArchiveSha256` | Reviewed lowercase SHA-256 digest of that commit archive |
+   | `facilitatorPrincipalName` | Facilitator UPN or group name for migration deployment parameters |
+   | `facilitatorPrincipalObjectId` | Object GUID for the same facilitator principal |
+
+   If the platform explicitly supplies the original `MHH_*` environment
+   variables to each job, they override the corresponding file fields. Setting
+   variables in your local terminal alone does **not** pass them to platform
+   jobs. After editing the file, upload the updated folder and retry the labs.
 
 The per-lab VM administrator password, database passwords, and performance
 API keys use the platform's `New-MhhStablePassword` helper: re-runs converge on

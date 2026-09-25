@@ -1,0 +1,18 @@
+[
+  {
+    "productId": "10000000-0000-4000-8000-000000000005",
+    "name": "Transient Signal Planner",
+    "description": "This valid record precedes an invalid empty-slug category so the acceptance harness can prove atomic rejection.",
+    "category": "City Workers",
+    "filename": "10000000-0000-4000-8000-000000000005.png",
+    "imagePrompt": "Photorealistic construction-toy figure, signal planner with route charts, clean background, high detail, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "10000000-0000-4000-8000-000000000006",
+    "name": "Empty Slug Category",
+    "description": "This structurally representative record uses a category that normalizes to an empty storage slug.",
+    "category": "!!!",
+    "filename": "10000000-0000-4000-8000-000000000006.png",
+    "imagePrompt": "Photorealistic construction-toy figure, validation specialist with clipboard, clean background, high detail, evenly lit, 1024x1024"
+  }
+]

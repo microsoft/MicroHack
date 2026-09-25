@@ -1,0 +1,18 @@
+@page "/import"
+
+<h1>Import Catalog Data</h1>
+<p>
+    Upload a contract-valid <code>catalog.json</code>. The complete document is
+    validated before new figures and categories are committed in one transaction.
+</p>
+
+<form method="post"
+      action="/import"
+      enctype="multipart/form-data"
+      target="_self">
+    <input type="file"
+           name="catalogFile"
+           accept="application/json,.json"
+           required />
+    <button class="btn primary" type="submit">Upload and import</button>
+</form>

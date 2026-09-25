@@ -9,18 +9,26 @@ In this step you will extend any the on-premises environment to Azure VMware Sol
 
 2.	Select each of the networks you want to extend to Azure VMware Solution, and then select Next
 
-![](./Images/09-HCX-Network-Extension/NetworkExtension.PNG)
+    ![](./Images/09-HCX-Network-Extension/network_extension_image3.PNG)
 
 3.	Enter the on-premises gateway IP for each of the networks you're extending, and then select Submit.
 
-![](./Images/09-HCX-Network-Extension/NetworkExtension2.PNG)
+    ![](./Images/09-HCX-Network-Extension/network_extension_image4.PNG)
 
 The information for this Microhack will be as follows:
 
 Gateway IP: 10.1.11.1/25
 
+4.  Validate the configuration and then submit
+
+    ![](./Images/09-HCX-Network-Extension/network_extension_image4.PNG)    
 
 It takes a few minutes for the network extension to finish. When it does, you see the status change to Extension complete.
+
+5. Check the Network Extension is up and running
+
+    ![](./Images/09-HCX-Network-Extension/network_extension_image5.PNG) 
+
 
 ## Next steps
 If the HCX interconnect tunnel status is UP and green, you can migrate and protect Azure VMware Solution VMs by using VMware HCX. Azure VMware Solution supports workload migrations (with or without a network extension). You can still migrate workloads in your vSphere environment, along with on-premises creation of networks and deployment of VMs onto those networks.

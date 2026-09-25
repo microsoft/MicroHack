@@ -110,8 +110,9 @@ foreach ($stack in @('dotnet', 'java')) {
     if ([string]::IsNullOrWhiteSpace($vm.identity.principalId)) {
         throw "Cannot safely remove ${vmName}: its managed identity principal ID is unavailable."
     }
-    $assignmentsJson = az role assignment list --scope $rgId --all --subscription $SubscriptionId `
-        --only-show-errors --output json
+    $assignmentsJson = az role assignment list --scope $rgId `
+        --assignee-object-id $vm.identity.principalId --fill-principal-name false `
+        --subscription $SubscriptionId --only-show-errors --output json
     if ($LASTEXITCODE -ne 0) { throw "Could not inspect role assignments for $vmName." }
     $oldVmOwnerAssignments = @(@($assignmentsJson | ConvertFrom-Json) | Where-Object {
         $_.scope -eq $rgId -and $_.principalId -eq $vm.identity.principalId -and
@@ -123,8 +124,9 @@ foreach ($stack in @('dotnet', 'java')) {
     }
     for ($attempt = 1; $attempt -le 12 -and $oldVmOwnerAssignments.Count -gt 0; $attempt++) {
         Update-MhhToken | Out-Null
-        $remainingJson = az role assignment list --scope $rgId --all --subscription $SubscriptionId `
-            --only-show-errors --output json
+        $remainingJson = az role assignment list --scope $rgId `
+            --assignee-object-id $vm.identity.principalId --fill-principal-name false `
+            --subscription $SubscriptionId --only-show-errors --output json
         if ($LASTEXITCODE -ne 0) { throw "Could not verify role assignment removal for $vmName." }
         $remaining = @(@($remainingJson | ConvertFrom-Json) | Where-Object {
             $_.scope -eq $rgId -and $_.principalId -eq $vm.identity.principalId -and

@@ -1,0 +1,222 @@
+{
+  "schemaVersion": "1.0.0",
+  "vectors": [
+    {
+      "field": "name",
+      "fragment": "a",
+      "repeat": 2,
+      "valid": false,
+      "reason": "name minimum is three Unicode code points"
+    },
+    {
+      "field": "name",
+      "fragment": "\ud83d\ude00",
+      "repeat": 2,
+      "valid": false,
+      "reason": "name minimum counts supplementary characters as two code points"
+    },
+    {
+      "field": "name",
+      "fragment": "a",
+      "repeat": 3,
+      "valid": true,
+      "reason": "name accepts exactly three Unicode code points"
+    },
+    {
+      "field": "name",
+      "fragment": "\ud83d\ude00",
+      "repeat": 40,
+      "valid": true,
+      "reason": "forty supplementary characters occupy eighty UTF-16 code units"
+    },
+    {
+      "field": "name",
+      "fragment": "a",
+      "repeat": 81,
+      "valid": false,
+      "reason": "name rejects eighty-one UTF-16 code units"
+    },
+    {
+      "field": "name",
+      "fragment": "\ud83d\ude00",
+      "repeat": 41,
+      "valid": false,
+      "reason": "name storage maximum counts supplementary characters as two UTF-16 units"
+    },
+    {
+      "field": "name",
+      "fragment": " ",
+      "repeat": 3,
+      "valid": false,
+      "reason": "name must not be blank"
+    },
+    {
+      "field": "description",
+      "fragment": "a",
+      "repeat": 19,
+      "valid": false,
+      "reason": "description minimum is twenty Unicode code points"
+    },
+    {
+      "field": "description",
+      "fragment": "\ud83d\ude00",
+      "repeat": 19,
+      "valid": false,
+      "reason": "description minimum counts supplementary characters as nineteen code points"
+    },
+    {
+      "field": "description",
+      "fragment": "a",
+      "repeat": 20,
+      "valid": true,
+      "reason": "description accepts exactly twenty Unicode code points"
+    },
+    {
+      "field": "description",
+      "fragment": "\ud83d\ude00",
+      "repeat": 600,
+      "valid": true,
+      "reason": "description accepts exactly twelve hundred UTF-16 code units"
+    },
+    {
+      "field": "description",
+      "fragment": "a",
+      "repeat": 1201,
+      "valid": false,
+      "reason": "description rejects twelve hundred and one UTF-16 code units"
+    },
+    {
+      "field": "description",
+      "fragment": "\ud83d\ude00",
+      "repeat": 601,
+      "valid": false,
+      "reason": "description storage maximum counts supplementary characters as two UTF-16 units"
+    },
+    {
+      "field": "description",
+      "fragment": " ",
+      "repeat": 20,
+      "valid": false,
+      "reason": "description must not be blank"
+    },
+    {
+      "field": "category",
+      "fragment": "a",
+      "repeat": 1,
+      "valid": false,
+      "reason": "category minimum is two Unicode code points"
+    },
+    {
+      "field": "category",
+      "fragment": "\ud835\udc00",
+      "repeat": 1,
+      "valid": false,
+      "reason": "category minimum counts one supplementary letter as one code point"
+    },
+    {
+      "field": "category",
+      "fragment": "a",
+      "repeat": 2,
+      "valid": true,
+      "reason": "category accepts exactly two Unicode code points"
+    },
+    {
+      "field": "category",
+      "fragment": "\ud835\udc00",
+      "repeat": 30,
+      "valid": true,
+      "reason": "thirty supplementary letters occupy exactly sixty UTF-16 units and normalize to a slug"
+    },
+    {
+      "field": "category",
+      "fragment": "a",
+      "repeat": 60,
+      "valid": true,
+      "reason": "category accepts exactly sixty UTF-16 code units"
+    },
+    {
+      "field": "category",
+      "fragment": "a",
+      "repeat": 61,
+      "valid": false,
+      "reason": "category rejects sixty-one UTF-16 code units"
+    },
+    {
+      "field": "category",
+      "fragment": "\ud835\udc00",
+      "repeat": 31,
+      "valid": false,
+      "reason": "category storage maximum counts supplementary letters as two UTF-16 units"
+    },
+    {
+      "field": "category",
+      "fragment": " ",
+      "repeat": 2,
+      "valid": false,
+      "reason": "category must not be blank"
+    },
+    {
+      "field": "category",
+      "fragment": "!!!",
+      "repeat": 1,
+      "valid": false,
+      "reason": "category must normalize to a non-empty slug"
+    },
+    {
+      "field": "category",
+      "fragment": "\ufb03\ufb03\ufb03\ufb03\ufb03\ufb03\ufb03\ufb03\ufb03\ufb03\ufb03\ufb03\ufb03\ufb03\ufb03\ufb03\ufb03\ufb03\ufb03\ufb03\ufb03a",
+      "repeat": 1,
+      "valid": true,
+      "reason": "NFKD expansion produces exactly a sixty-four character slug"
+    },
+    {
+      "field": "category",
+      "fragment": "\ufb03\ufb03\ufb03\ufb03\ufb03\ufb03\ufb03\ufb03\ufb03\ufb03\ufb03\ufb03\ufb03\ufb03\ufb03\ufb03\ufb03\ufb03\ufb03\ufb03\ufb03aa",
+      "repeat": 1,
+      "valid": false,
+      "reason": "NFKD expansion produces a sixty-five character slug"
+    },
+    {
+      "field": "imagePrompt",
+      "fragment": "a",
+      "repeat": 29,
+      "valid": false,
+      "reason": "image prompt minimum is thirty Unicode code points"
+    },
+    {
+      "field": "imagePrompt",
+      "fragment": "\ud83d\ude00",
+      "repeat": 29,
+      "valid": false,
+      "reason": "image prompt minimum counts supplementary characters as twenty-nine code points"
+    },
+    {
+      "field": "imagePrompt",
+      "fragment": "a",
+      "repeat": 30,
+      "valid": true,
+      "reason": "image prompt accepts exactly thirty Unicode code points"
+    },
+    {
+      "field": "imagePrompt",
+      "fragment": "\ud83d\ude00",
+      "repeat": 260,
+      "valid": true,
+      "reason": "image prompt maximum counts Unicode code points"
+    },
+    {
+      "field": "imagePrompt",
+      "fragment": "\ud83d\ude00",
+      "repeat": 261,
+      "valid": false,
+      "reason": "image prompt rejects two hundred and sixty-one code points"
+    },
+    {
+      "field": "imagePrompt",
+      "fragment": " ",
+      "repeat": 30,
+      "valid": false,
+      "reason": "image prompt must not be blank"
+    }
+  ]
+}

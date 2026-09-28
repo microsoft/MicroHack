@@ -1,0 +1,62 @@
+# Example configuration file for Terraform variables
+
+# Number of user environments to provision (adjust based on your workshop size)
+n = 10
+
+# Azure regions to distribute environments across (choose regions close to your participants)
+locations = ["swedencentral", "germanywestcentral", "francecentral", "norwayeast"]
+
+# Your Azure subscription ID
+subscription_id = "00000000-0000-0000-0000-000000000000"
+
+# VM administrator credentials
+admin_username = "azureuser"
+# Set TF_VAR_admin_password in the facilitator shell. Do not put it in this file.
+
+# VM size for user environments (adjust based on workshop requirements)
+vm_size           = "Standard_D2as_v5"
+vm_vcpus          = 2
+os_disk_size_gb   = 127
+
+# Immutable application source. REQUIRED - there is no default, and the historical
+# fd298de6 pin is rejected. Set this to the published workshop commit for THIS delivery
+# and verify the archive before provisioning: see "Re-pin the VM source commit" in
+# docs/Facilitator.md.
+source_commit = ""
+# Set TF_VAR_source_archive_sha256 to the reviewed 64-hex archive digest.
+
+# Facilitator identity recorded on every participant VM.
+# REQUIRED - there are no defaults.
+# Read the object ID with: az ad signed-in-user show --query id -o tsv
+facilitator_principal_name      = "facilitator@yourcompany.onmicrosoft.com"
+facilitator_principal_object_id = "00000000-0000-0000-0000-000000000000"
+
+# Entra ID domain for creating workshop users
+entra_user_domain = "yourcompany.onmicrosoft.com"
+
+# Terraform generates a separate initial password per user; read them with
+# `terraform output -json entra_user_credentials`. Optionally override the length:
+# entra_user_password_length = 24
+
+# Whether to create Entra ID users for the workshop
+manage_entra_users = true
+
+# Whether to deploy Azure infrastructure resources
+manage_azure_resources = true
+
+# Whether to register Azure resource providers in the subscription
+manage_sub_providers = true
+
+# Set true only after preflight-capacity.ps1 succeeds for these exact inputs.
+capacity_preflight_confirmed = false
+
+# Paid Defender plans and the subscription budget are disabled by default.
+enable_defender_foundation      = false
+defender_facilitator_authorized = false
+
+# Before enabling the foundation, set and review all explicit budget inputs.
+# defender_budget_name                = "mh-defender-workshop"
+# defender_budget_amount              = 500
+# defender_budget_start_date          = "2026-09-01T00:00:00Z"
+# defender_budget_end_date            = "2026-12-31T00:00:00Z"
+# defender_budget_notification_emails = ["facilitator@example.com"]

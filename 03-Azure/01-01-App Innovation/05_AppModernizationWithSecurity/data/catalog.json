@@ -1,0 +1,1586 @@
+[
+  {
+    "productId": "a65f6658-bd91-4b60-9200-45dab2403f04",
+    "name": "Comet Trail Navigator",
+    "description": "This explorer charts safe routes through debris fields. The set emphasizes careful observation and calm decision-making.",
+    "category": "Space Explorers",
+    "filename": "a65f6658-bd91-4b60-9200-45dab2403f04.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure, white and orange spacesuit with chest control panel, translucent bubble helmet, handheld star map tablet, compact thruster pack, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "ff56a2b8-682c-43eb-823a-4876abf844ea",
+    "name": "Lunar Rock Analyst",
+    "description": "A specialist who studies samples from crater rims. Tools and containers support methodical research on remote surfaces.",
+    "category": "Space Explorers",
+    "filename": "ff56a2b8-682c-43eb-823a-4876abf844ea.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure, gray and teal spacesuit, clear visor helmet, handheld spectrometer, satchel with sample vials, boots dusted with lunar grit, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "1a88c51c-36a6-4776-8af0-abda432ef2cc",
+    "name": "Zero-Gravity Mechanic",
+    "description": "This technician keeps spacecraft systems running under weightless conditions. The figure focuses on maintenance and problem solving.",
+    "category": "Space Explorers",
+    "filename": "1a88c51c-36a6-4776-8af0-abda432ef2cc.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure, navy spacesuit with utility straps, tinted visor helmet, magnetic wrench and cable reel, small repair drone accessory, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "6ee0f608-48e6-43bb-b2f4-00ebd151203f",
+    "name": "Sapphire Shield Knight",
+    "description": "A stalwart defender of the realm. The figure highlights duty, vigilance, and honor on patrol.",
+    "category": "Medieval Knights",
+    "filename": "6ee0f608-48e6-43bb-b2f4-00ebd151203f.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure, steel armor with blue accents, crested helmet, broad kite shield with geometric pattern, longsword at side, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "d9bedbd5-0d9b-458e-b905-2a93be7bbbd9",
+    "name": "Oak Keep Lancer",
+    "description": "This rider safeguards castle roads and fields. The set reflects readiness and disciplined training.",
+    "category": "Medieval Knights",
+    "filename": "d9bedbd5-0d9b-458e-b905-2a93be7bbbd9.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure, chainmail with brown surcoat, open-face helmet, long lance and round buckler, leather belt with pouches, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "67cb92ec-9978-4c2c-be2c-15cf9ed3687c",
+    "name": "Torchlight Squire",
+    "description": "An eager assistant who carries supplies and learns the code of chivalry. The figure represents patience and support skills.",
+    "category": "Medieval Knights",
+    "filename": "67cb92ec-9978-4c2c-be2c-15cf9ed3687c.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure, simple tunic over light mail, tousled hair, burning torch piece, backpack with spare straps, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "1d50d7aa-5a00-4e7a-a0ce-068f0b2a8904",
+    "name": "Urban Street Sweeper",
+    "description": "Keeps sidewalks and plazas tidy for everyone. The figure focuses on steady work and civic pride.",
+    "category": "City Workers",
+    "filename": "1d50d7aa-5a00-4e7a-a0ce-068f0b2a8904.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure, orange safety vest over blue workwear, brimmed cap, push broom and trash grabber, small rolling bin accessory, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "7a3e12e5-6f04-445f-ad69-10238a0141f5",
+    "name": "Bridge Maintenance Engineer",
+    "description": "Inspects structures and coordinates routine repairs. The set highlights planning and attention to detail.",
+    "category": "City Workers",
+    "filename": "7a3e12e5-6f04-445f-ad69-10238a0141f5.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure, high-visibility jacket, hard hat, clipboard with checkmarks, harness with tool pouch, measuring gauge in hand, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "7b53783d-90d4-4a6d-b339-7acee0e52dcd",
+    "name": "City Park Gardener",
+    "description": "Tends flowerbeds and young trees across public spaces. The figure encourages care for green areas and seasonal upkeep.",
+    "category": "City Workers",
+    "filename": "7b53783d-90d4-4a6d-b339-7acee0e52dcd.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure, green overalls and tan shirt, straw hat, watering can and pruning shears, small tray of seedlings, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "009f7b99-db28-4fff-bbf4-fd68860b968c",
+    "name": "Ember Rune Adept",
+    "description": "A scholar of glowing sigils and careful rituals. The figure centers on study and controlled power.",
+    "category": "Fantasy Wizards",
+    "filename": "009f7b99-db28-4fff-bbf4-fd68860b968c.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure, dark red robes with gold trim, fiery translucent spell in hand, runed staff, short beard and stern expression, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "fab5541b-95b1-4df7-9a65-3bc2b3b51a01",
+    "name": "Mistwood Enchanter",
+    "description": "This wanderer weaves illusions among ancient trees. The set features calm focus and natural themes.",
+    "category": "Fantasy Wizards",
+    "filename": "fab5541b-95b1-4df7-9a65-3bc2b3b51a01.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure, moss-green cloak with hood, wooden wand, satchel of crystals, swirling translucent mist element, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "a39fa4bd-6cd6-4355-a464-57ca44671e53",
+    "name": "Crystal Orb Seer",
+    "description": "A quiet observer who reads threads of possibility. The figure suggests contemplation and careful guidance.",
+    "category": "Fantasy Wizards",
+    "filename": "a39fa4bd-6cd6-4355-a464-57ca44671e53.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure, midnight-blue robes, silver circlet, clear crystal orb on stand, parchment scroll, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "dba00a7a-4372-4519-9c88-779e5593daa2",
+    "name": "Quartermaster of Charts",
+    "description": "Keeps track of supplies and maps for long voyages. The figure promotes order and preparedness on deck.",
+    "category": "Pirate Crew",
+    "filename": "dba00a7a-4372-4519-9c88-779e5593daa2.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure, weathered tan coat, striped shirt, tricorn hat, rolled map and compass, belt with rope coil, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "72deca73-df07-4ebf-9e04-391c05fc3461",
+    "name": "Deck Cannon Loader",
+    "description": "Manages powder and shot with practiced care. The set underscores teamwork and safety during battles.",
+    "category": "Pirate Crew",
+    "filename": "72deca73-df07-4ebf-9e04-391c05fc3461.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure, sleeveless vest and bandana, fingerless gloves, ramrod and powder keg, soot-smudged face, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "e7b4dee2-b003-486e-8ee3-2d58ca448c54",
+    "name": "Island Scout Lookout",
+    "description": "Spots reefs and coves from afar. The figure represents vigilance and quick signaling.",
+    "category": "Pirate Crew",
+    "filename": "e7b4dee2-b003-486e-8ee3-2d58ca448c54.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure, light shirt with sash, headscarf, spyglass and signal flag, bare feet print on legs, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "ab22da5c-66d9-4d11-abdf-27fe6d065271",
+    "name": "Solar Sentinel",
+    "description": "A protector who channels radiant energy for defense. The figure stands for courage and quick response.",
+    "category": "Super Heroes",
+    "filename": "ab22da5c-66d9-4d11-abdf-27fe6d065271.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure, white and gold suit with sunburst motif, translucent yellow energy shields, confident smile, windswept cape, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "b76cdf46-c633-4442-a54c-ee26f340f489",
+    "name": "Midnight Glide Hero",
+    "description": "Moves quietly over rooftops to help at night. The set emphasizes agility and calm focus.",
+    "category": "Super Heroes",
+    "filename": "b76cdf46-c633-4442-a54c-ee26f340f489.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure, charcoal suit with subtle blue lines, glide wings folded on back, grapnel launcher, masked face with narrow eyes, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "6d8e4839-61ea-4c6a-af74-b81903afd1e3",
+    "name": "Thunder Gauntlet Guardian",
+    "description": "Harnesses controlled bursts to shield the city. The figure highlights strength balanced with restraint.",
+    "category": "Super Heroes",
+    "filename": "6d8e4839-61ea-4c6a-af74-b81903afd1e3.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure, cobalt suit with silver bracers, crackling translucent bolts around hands, short cape, determined expression, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "ae5d97bc-1fa2-45de-a242-446b44a6e99a",
+    "name": "Coral Reef Diver",
+    "description": "Explores shallow reefs to document marine life. The set focuses on careful observation and respect for habitats.",
+    "category": "Underwater Adventurers",
+    "filename": "ae5d97bc-1fa2-45de-a242-446b44a6e99a.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure, teal wetsuit with dark flippers, clear dive mask, air tank, handheld underwater camera, coral piece accessory, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "7e96de58-6778-41e4-a3f8-eee74edbcb08",
+    "name": "Bioluminescent Cave Explorer",
+    "description": "Charts glowing caverns in deep water zones. The figure centers on mapping and safe navigation.",
+    "category": "Underwater Adventurers",
+    "filename": "7e96de58-6778-41e4-a3f8-eee74edbcb08.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure, black and lime dive suit, dual lights on helmet, rebreather pack, sonar tablet, small glow-stick element, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "8b49ee10-2cd4-4fe3-ab02-904f05e102a3",
+    "name": "Submersible Pilot Captain",
+    "description": "Operates research craft for extended missions. The set encourages teamwork and steady piloting skills.",
+    "category": "Underwater Adventurers",
+    "filename": "8b49ee10-2cd4-4fe3-ab02-904f05e102a3.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure, orange pressure suit with harness, domed helmet, control joystick, data slate clipped to belt, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "3afe92ce-d25c-4837-ad2f-18ead1879b5d",
+    "name": "Canopy Path Finder",
+    "description": "Guides teams through dense foliage safely. The figure focuses on route planning and steady pace.",
+    "category": "Jungle Rangers",
+    "filename": "3afe92ce-d25c-4837-ad2f-18ead1879b5d.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure, olive shirt with rolled sleeves, tan cargo pants, machete and coil of rope, wide-brim hat, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "3f1af6b6-1a5c-4f48-98c0-f7278ba5afe2",
+    "name": "River Crossing Guide",
+    "description": "Assists with safe fords and raft setups. The set features practical tools and calm coordination.",
+    "category": "Jungle Rangers",
+    "filename": "3f1af6b6-1a5c-4f48-98c0-f7278ba5afe2.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure, dark green vest, waterproof boots, pole staff and anchor line, whistle on lanyard, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "b2adccbb-6a36-4890-b70e-c4c40f5d341c",
+    "name": "Trail Medic Ranger",
+    "description": "Provides first aid during remote treks. The figure highlights readiness and careful care.",
+    "category": "Jungle Rangers",
+    "filename": "b2adccbb-6a36-4890-b70e-c4c40f5d341c.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure, khaki uniform, red cross armband style print, compact medical kit, canteen and radio, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "ac5c406d-2140-4572-b027-6be82e0b27b3",
+    "name": "Ice Core Driller",
+    "description": "Extracts samples to study long-term climate records. The set emphasizes precision and patience in cold conditions.",
+    "category": "Arctic Researchers",
+    "filename": "ac5c406d-2140-4572-b027-6be82e0b27b3.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure, thick white parka with fur trim, snow goggles, auger drill tool, sample tube rack, insulated gloves, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "f2148221-c333-4168-a73d-6d109583cb27",
+    "name": "Aurora Weather Analyst",
+    "description": "Monitors atmospheric data beneath shimmering skies. The figure focuses on instruments and calm observation.",
+    "category": "Arctic Researchers",
+    "filename": "f2148221-c333-4168-a73d-6d109583cb27.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure, light blue cold-weather suit, hood up, handheld anemometer and tablet, neck gaiter, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "4bcf41d7-fa8c-42d0-a507-d08260c191d5",
+    "name": "Snowmobile Logistics Lead",
+    "description": "Coordinates supplies between field stations. The set represents planning and reliable transport.",
+    "category": "Arctic Researchers",
+    "filename": "4bcf41d7-fa8c-42d0-a507-d08260c191d5.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure, red parka with gray pants, insulated cap and chin strap, cargo crate and radio handset, utility belt, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "b46f04c8-bdb2-44ba-8ef5-408a3d5bf6a5",
+    "name": "Tri-Eyed Scout Captain",
+    "description": "Leads small units to survey new worlds. The figure conveys alertness and quick reporting.",
+    "category": "Alien Invaders",
+    "filename": "b46f04c8-bdb2-44ba-8ef5-408a3d5bf6a5.png",
+    "imagePrompt": "Photorealistic LEGO-style figure, lime-green alien with three eyes and ridged head, purple armor plates, clawed hands holding scanner, slender spear-like tool, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "0f99a33a-1dec-4d58-9b19-3cfc8304f0e6",
+    "name": "Graviton Harvester",
+    "description": "Collects energy from distorted fields before assaults. The set features specialized tools and focused intent.",
+    "category": "Alien Invaders",
+    "filename": "0f99a33a-1dec-4d58-9b19-3cfc8304f0e6.png",
+    "imagePrompt": "Photorealistic LEGO-style figure, dark violet alien with segmented limbs, floating harness with coils, glowing energy canister, angular mouthparts, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "847c05fa-bdb1-438b-9035-4cc1113092fa",
+    "name": "Microbot Assembly Tech",
+    "description": "Builds tiny helpers for factories and labs. The figure highlights precision and steady hands.",
+    "category": "Robot Builders",
+    "filename": "847c05fa-bdb1-438b-9035-4cc1113092fa.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure, light gray jumpsuit with fine tool prints, magnifier visor, microbot on palm, slim screwdriver and tweezers, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "66468305-cc53-435f-a183-792392359544",
+    "name": "Exo-Frame Designer",
+    "description": "Drafts sturdy frames for heavy tasks. The set emphasizes engineering creativity and testing.",
+    "category": "Robot Builders",
+    "filename": "66468305-cc53-435f-a183-792392359544.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure, dark blue work suit, safety glasses, exo-frame arm prototype in hand, laptop tile with schematics, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "7e020a5e-8055-44fb-89d7-4b07b4a93b51",
+    "name": "Workshop Diagnostics Lead",
+    "description": "Oversees repairs and system checks for bots. The figure represents methodical analysis and teamwork.",
+    "category": "Robot Builders",
+    "filename": "7e020a5e-8055-44fb-89d7-4b07b4a93b51.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure, charcoal utility apron, rolled sleeves, handheld scanner with green readout, tool rack piece, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "a3348425-ff6f-4500-b32b-355e2caf37b5",
+    "name": "Dune Caravan Guide",
+    "description": "Navigates shifting sands between distant outposts. The set features calm leadership and water planning.",
+    "category": "Desert Nomads",
+    "filename": "a3348425-ff6f-4500-b32b-355e2caf37b5.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure, sand-colored robes with sash, face scarf and goggles, walking staff, waterskin and map strip, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "1bf1a071-a0d5-4416-af88-d11d4121ac19",
+    "name": "Oasis Water Keeper",
+    "description": "Guards wells and manages fair distribution. The figure highlights care and community service.",
+    "category": "Desert Nomads",
+    "filename": "1bf1a071-a0d5-4416-af88-d11d4121ac19.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure, beige tunic with blue belt, headwrap, ceramic jug and testing rod, sandals detail, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "78506d0f-cd5f-4bfc-90ca-3dce31e4aaa9",
+    "name": "Alpine Rope Leader",
+    "description": "Sets lines and anchors on steep routes. The set emphasizes safety and clear communication.",
+    "category": "Mountain Climbers",
+    "filename": "78506d0f-cd5f-4bfc-90ca-3dce31e4aaa9.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure, red climbing jacket, helmet with headlamp, coiled rope and carabiners, ice axe in hand, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "9ca4e8a8-ddd2-40f4-9e55-c397f4f52882",
+    "name": "Summit Base Cook",
+    "description": "Prepares warm meals at high camps. The figure showcases practicality and team support.",
+    "category": "Mountain Climbers",
+    "filename": "9ca4e8a8-ddd2-40f4-9e55-c397f4f52882.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure, teal insulated vest over sweater, knit hat, portable stove and pan, mug with steam print, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "b2ab057c-e1e4-429a-94bd-4c9934ffde5e",
+    "name": "Asteroid Raider Bosun",
+    "description": "Keeps the crew organized during swift raids. The set underscores discipline and readiness.",
+    "category": "Space Pirates",
+    "filename": "b2ab057c-e1e4-429a-94bd-4c9934ffde5e.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure, dark leather-like coat with straps, cyber eyepatch print, hook hand and spanner, jet thruster boots, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "491143b5-c0bf-463d-9620-78c6cc4ebb90",
+    "name": "Plasma Cutlass Marauder",
+    "description": "Favored duelist aboard raiding craft. The figure suggests daring tactics and close-quarters skill.",
+    "category": "Space Pirates",
+    "filename": "491143b5-c0bf-463d-9620-78c6cc4ebb90.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure, black and crimson suit with shoulder pads, glowing plasma cutlass, respirator mask, utility belt with vials, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "44c4d6ae-1da8-4023-95ff-9d440da3b6ec",
+    "name": "Gatehouse Halberdier",
+    "description": "Stands watch at the main entry. The set highlights discipline and routine duty.",
+    "category": "Castle Guards",
+    "filename": "44c4d6ae-1da8-4023-95ff-9d440da3b6ec.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure, steel breastplate over red tunic, open-faced helmet, long halberd, keyring at belt, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "9cd09a1f-c7a7-4d6c-94ab-8eaab5b5160c",
+    "name": "Royal Banner Sentinel",
+    "description": "Protects the standard during ceremonies and marches. The figure represents loyalty and careful bearing.",
+    "category": "Castle Guards",
+    "filename": "9cd09a1f-c7a7-4d6c-94ab-8eaab5b5160c.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure, polished armor with blue sash, plumed helmet, tall banner on pole, short sword sheathed, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "55c83678-2c01-4aae-be4b-2a121b6a75ec",
+    "name": "Shadow Step Scout",
+    "description": "Moves silently to observe before action. The set emphasizes stealth and patience.",
+    "category": "Ninja Warriors",
+    "filename": "55c83678-2c01-4aae-be4b-2a121b6a75ec.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure, matte black gi with gray wraps, hooded mask, short ninjato and smoke bomb, tabi-style foot printing, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "6717214a-e231-4ea3-a514-2ded1c5d92f1",
+    "name": "Moonblade Duelist",
+    "description": "Trains under lantern light to perfect technique. The figure highlights discipline and balance.",
+    "category": "Ninja Warriors",
+    "filename": "6717214a-e231-4ea3-a514-2ded1c5d92f1.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure, indigo ninja outfit with silver crescent emblem, twin curved blades, calm eyes, waist sash flowing, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "4f6e0c64-5e10-45b1-9abc-75f13bedae12",
+    "name": "Street Freestyle Skater",
+    "description": "Practices tricks at the local plaza. The set focuses on creativity, balance, and safety gear.",
+    "category": "Sports Champions",
+    "filename": "4f6e0c64-5e10-45b1-9abc-75f13bedae12.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure, casual hoodie and knee pads, snapback cap, skateboard with simple stripes, wrist guards, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "7bad1371-b40a-4794-b787-5b2aa1eec11e",
+    "name": "Sand Court Volleyball Pro",
+    "description": "Excels at dives and quick sets on the beach. The figure showcases teamwork and fair play.",
+    "category": "Sports Champions",
+    "filename": "7bad1371-b40a-4794-b787-5b2aa1eec11e.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure, athletic tank and shorts, sweatband, volleyball in hand, bare feet print on legs, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "dc8c33ce-a3de-4560-a4da-a3442e692797",
+    "name": "Winter Cookie Baker",
+    "description": "Prepares festive treats for gatherings. The set highlights warmth, routine, and shared moments.",
+    "category": "Holiday Festivities",
+    "filename": "dc8c33ce-a3de-4560-a4da-a3442e692797.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure, red sweater with snowflake pattern, white apron dusted with flour, mixing bowl and whisk, tray of cookies, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "b439ffc7-e9f5-48eb-857f-b9392cd7fda3",
+    "name": "Holiday Parade Drummer",
+    "description": "Keeps a steady rhythm in cheerful processions. The figure represents coordination and celebration.",
+    "category": "Holiday Festivities",
+    "filename": "b439ffc7-e9f5-48eb-857f-b9392cd7fda3.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure, bright green jacket with gold trim, tall hat, snare drum with sticks, smiling face with rosy cheeks, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "cdd70603-c9b2-4846-b413-dd6828971e4d",
+    "name": "Stone Grotto Golem",
+    "description": "A sturdy guardian shaped from ancient rock. The figure suggests patient strength and calm presence.",
+    "category": "Mythic Creatures",
+    "filename": "cdd70603-c9b2-4846-b413-dd6828971e4d.png",
+    "imagePrompt": "Photorealistic LEGO-style figure, bulky stone-textured body, glowing teal cracks, heavy hands with runes, moss accents on shoulders, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "8682aa92-6ff4-4091-a93f-d0e9e2cbf0d6",
+    "name": "Crystal Horned Unicorn",
+    "description": "A gentle being that symbolizes clarity and hope. The set focuses on grace and quiet wonder.",
+    "category": "Mythic Creatures",
+    "filename": "8682aa92-6ff4-4091-a93f-d0e9e2cbf0d6.png",
+    "imagePrompt": "Photorealistic LEGO-style figure, white horse-like body, translucent crystal horn, flowing pastel mane, delicate silver hoof details, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "0f14e694-09ed-4b3e-8622-0f68fd74dc2b",
+    "name": "Savanna Lens Specialist",
+    "description": "Captures wildlife behavior from a respectful distance. The figure emphasizes patience and careful framing.",
+    "category": "Safari Photographers",
+    "filename": "0f14e694-09ed-4b3e-8622-0f68fd74dc2b.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure, tan safari shirt and shorts, wide hat with chin cord, long telephoto camera, small tripod strapped to backpack, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "358a7555-3ad3-4c60-81f0-6a09baf6a516",
+    "name": "Canopy Hide Photographer",
+    "description": "Waits in blinds to document rare birds. The set highlights quiet focus and field notes.",
+    "category": "Safari Photographers",
+    "filename": "358a7555-3ad3-4c60-81f0-6a09baf6a516.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure, olive camo jacket, netted head cover, compact camera with monopod, notebook and pencil, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "d9f75418-bb73-46ef-ad77-999873dbc6e3",
+    "name": "Nebula Drift Pilot",
+    "description": "This pilot charts safe passages through turbulent nebulae. The figure carries a compact thruster pack and a navigation stick.",
+    "category": "Space Explorers",
+    "filename": "d9f75418-bb73-46ef-ad77-999873dbc6e3.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in white and teal flight suit with reflective visor helmet, handheld joystick and star map tile, small thruster pack, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "e31bd8de-2d69-4b7a-a714-2e5385f7fbdb",
+    "name": "Starfield Cartography Officer",
+    "description": "They compile deep-space maps from sensor data. A folding star chart tile and data pad help verify routes.",
+    "category": "Space Explorers",
+    "filename": "e31bd8de-2d69-4b7a-a714-2e5385f7fbdb.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in navy spacesuit with orange accents, transparent blue visor, tablet and rolled chart accessory, utility belt, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "7e9c6fc9-8a36-4e44-9acf-cbb04301695a",
+    "name": "Comet Dust Collector",
+    "description": "This specialist gathers particle samples from icy tails. They log findings to support propulsion research.",
+    "category": "Space Explorers",
+    "filename": "7e9c6fc9-8a36-4e44-9acf-cbb04301695a.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in gray sampling suit with filter mask, backpack vacuum canister hose, sample vial and tongs, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "999fd1cc-e9ed-4754-858c-c73f853fc7ae",
+    "name": "Magnet Boots EVA Specialist",
+    "description": "Equipped for exterior repairs, this expert uses magnetic boots to stay anchored. They inspect hull panels and replace worn parts.",
+    "category": "Space Explorers",
+    "filename": "999fd1cc-e9ed-4754-858c-c73f853fc7ae.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in silver EVA suit with magnetic boot prints, wrench and tether line, dark blue visor, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "50a722fa-2834-4033-b37a-52f74ce09656",
+    "name": "Iron Vale Longsword Knight",
+    "description": "A disciplined defender trained for formation combat. The knight maintains polished armor and keeps the field orderly.",
+    "category": "Medieval Knights",
+    "filename": "50a722fa-2834-4033-b37a-52f74ce09656.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in steel plate armor with green tabard, longsword and round shield, closed helmet with plume, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "8fe5656e-36d0-4c05-b807-ee8ed7407d2c",
+    "name": "Ember Keep Crossbow Guard",
+    "description": "Positioned along the battlements, this guard watches the horizon. Bolts are counted, gear is kept dry, and signals are ready.",
+    "category": "Medieval Knights",
+    "filename": "8fe5656e-36d0-4c05-b807-ee8ed7407d2c.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in chainmail with red surcoat, crossbow and bolt quiver, open sallet helmet, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "733de40d-de83-4a0f-a06e-e6f8d90b91e1",
+    "name": "Harbor Tug Operator",
+    "description": "This worker maneuvers vessels safely through tight docks. Radio calls and steady throttle keep the harbor flowing.",
+    "category": "City Workers",
+    "filename": "733de40d-de83-4a0f-a06e-e6f8d90b91e1.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in navy jacket with reflective stripes, orange life vest, radio and rope coil accessory, cap and stubble face, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "20da9a4c-0240-4b1f-b074-1924cc6c5adb",
+    "name": "City Power Line Technician",
+    "description": "Charged with maintaining urban power, this technician inspects lines and transformers. Safety gear and careful planning guide each repair.",
+    "category": "City Workers",
+    "filename": "20da9a4c-0240-4b1f-b074-1924cc6c5adb.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in yellow hard hat and blue utility jacket, safety harness, insulated gloves, handheld tester and wrench, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "ab04ee03-85fa-46e2-b381-bacd94884bf0",
+    "name": "Metro Ticket Clerk",
+    "description": "A helpful clerk assists travelers with fares and directions. The workstation stays organized for the rush.",
+    "category": "City Workers",
+    "filename": "ab04ee03-85fa-46e2-b381-bacd94884bf0.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in light blue shirt with name badge, ticket scanner and cash drawer tile, friendly smile, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "b9e50611-4ad6-4e80-be75-b743773eef97",
+    "name": "Recycling Center Sorter",
+    "description": "This sorter separates materials for efficient processing. Clear labels and steady rhythm keep the line moving.",
+    "category": "City Workers",
+    "filename": "b9e50611-4ad6-4e80-be75-b743773eef97.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in green work vest and gloves, sorting bin accessories with bottle and paper tiles, safety goggles, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "e5aa7567-e1dd-4aa4-aafa-11401ee00d70",
+    "name": "Storm Spiral Magus",
+    "description": "A scholar of winds and arcs, this magus studies charged clouds. Notes and sigils support controlled experiments.",
+    "category": "Fantasy Wizards",
+    "filename": "e5aa7567-e1dd-4aa4-aafa-11401ee00d70.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in dark indigo robe with silver swirl patterns, crackling staff tip, spellbook tile, windswept hood, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "7e5a628c-b0fe-419f-963d-147c4ea6a116",
+    "name": "Twilight Grove Druid",
+    "description": "Caretaker of quiet woods, this druid listens to rustle and root. Herbs and carved charms aid the work.",
+    "category": "Fantasy Wizards",
+    "filename": "7e5a628c-b0fe-419f-963d-147c4ea6a116.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in moss-green cloak with leaf clasp, wooden staff, satchel with herbs, calm expression, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "d183cd72-1bf8-4996-87be-1e4ed33e32ce",
+    "name": "Powder Keg Specialist",
+    "description": "Responsible for safe handling of cannon powder, this crew member checks seals and measures charges. Calm procedures prevent mishaps.",
+    "category": "Pirate Crew",
+    "filename": "d183cd72-1bf8-4996-87be-1e4ed33e32ce.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in brown vest with soot marks, bandana, powder keg barrel and scoop, flint tool on belt, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "1f7cb9bc-e59a-4809-9e9e-d0a506ee302b",
+    "name": "Coral Bay Cartographer",
+    "description": "This mapmaker records reefs and hidden channels. Accurate charts help the crew avoid shoals and find shelter.",
+    "category": "Pirate Crew",
+    "filename": "1f7cb9bc-e59a-4809-9e9e-d0a506ee302b.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in sea-blue coat with compass medallion, rolled map and quill, tricorne-style hat, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "4814058f-8c0a-45bc-ac4b-990c7ec30dd2",
+    "name": "Dockside Smuggler Lookout",
+    "description": "A wary lookout watches patrol patterns near the pier. Silent signals coordinate quick lifts and departures.",
+    "category": "Pirate Crew",
+    "filename": "4814058f-8c0a-45bc-ac4b-990c7ec30dd2.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in dark hooded cloak, spyglass and signal flag, fingerless gloves, wary expression, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "d37df32f-1ea9-4676-b6cf-ff480103459c",
+    "name": "Solar Flare Sprinter",
+    "description": "A swift protector channels bursts of light for rapid response. They favor quick action and steady focus.",
+    "category": "Super Heroes",
+    "filename": "d37df32f-1ea9-4676-b6cf-ff480103459c.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in bright orange and white suit with sunburst emblem, translucent yellow energy streaks, visor mask, dynamic running pose, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "ca1a0ed3-23f6-4ba1-8f82-6e2cc10cf81d",
+    "name": "Granite Skin Protector",
+    "description": "This sturdy guardian stands firm during crises. Slow steps and reliable strength reassure bystanders.",
+    "category": "Super Heroes",
+    "filename": "ca1a0ed3-23f6-4ba1-8f82-6e2cc10cf81d.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure with stone-textured torso and arms, gray utility belt, heavy gauntlets, calm heroic stance, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "a7606160-0030-476f-b1e0-3f538af250fe",
+    "name": "Kelp Forest Botanist",
+    "description": "This diver catalogs plant species among tall fronds. Samples and photos are taken with care.",
+    "category": "Underwater Adventurers",
+    "filename": "a7606160-0030-476f-b1e0-3f538af250fe.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in lime and black dive suit, transparent dome helmet, sample jar and shears, small kelp frond accessory, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "956b57da-266e-4bd9-9986-1cf8270ba0f2",
+    "name": "Trench Sonar Navigator",
+    "description": "Guiding a submersible near the abyss, this navigator reads sonograms for safe paths. Patience is essential at depth.",
+    "category": "Underwater Adventurers",
+    "filename": "956b57da-266e-4bd9-9986-1cf8270ba0f2.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in dark teal sub suit with sonar panel tile, headset and control stick, reinforced helmet, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "5828fb1c-ffe0-46a9-b1e2-fff9337ed7cf",
+    "name": "Shipwreck Artifact Curator",
+    "description": "Artifacts are located, tagged, and preserved for study. The diver respects boundaries and records each find.",
+    "category": "Underwater Adventurers",
+    "filename": "5828fb1c-ffe0-46a9-b1e2-fff9337ed7cf.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in aqua dive gear, mesh bag with relic tile, flashlight and brush, open-face mask with regulator, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "8022c410-91c3-4633-a8a1-ed39728432ad",
+    "name": "Waterfall Rope Technician",
+    "description": "This ranger sets anchors near slick rock faces. Regular checks keep crossing lines secure.",
+    "category": "Jungle Rangers",
+    "filename": "8022c410-91c3-4633-a8a1-ed39728432ad.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in olive field jacket, harness with carabiners, coil of rope and piton hammer, helmet with headlamp, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "c794f4bf-b516-4a3a-bded-aee287b0f103",
+    "name": "Canopy Insect Researcher",
+    "description": "Observations of pollinators and beetles help track forest health. Notes are cross-referenced with seasonal changes.",
+    "category": "Jungle Rangers",
+    "filename": "c794f4bf-b516-4a3a-bded-aee287b0f103.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in tan shirt with netted hat, specimen jar and magnifier, small beetle print on torso, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "6038b093-ca8a-4c0c-8a4a-05a583d1ce69",
+    "name": "Polar Map Surveyor",
+    "description": "This surveyor updates ice edge charts under changing conditions. Markers and GPS readings ensure accuracy.",
+    "category": "Arctic Researchers",
+    "filename": "6038b093-ca8a-4c0c-8a4a-05a583d1ce69.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in white parka with blue trim, snow goggles, survey tablet and marker flag, fur-lined hood, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "37de29d1-4fcc-4d97-9640-1c37a54cc676",
+    "name": "Ice Shelf Safety Officer",
+    "description": "The officer assesses crevasse risk and flags safe routes. Team briefings happen before each venture.",
+    "category": "Arctic Researchers",
+    "filename": "37de29d1-4fcc-4d97-9640-1c37a54cc676.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in orange cold-weather suit, rope reel and warning sign tile, whistle and radio, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "564766f0-714a-46a7-98ca-1d0bb884f17c",
+    "name": "Chitin Plated Breacher",
+    "description": "An armored infiltrator designed to force entry points. Precision tools and strong limbs make quick work of barriers.",
+    "category": "Alien Invaders",
+    "filename": "564766f0-714a-46a7-98ca-1d0bb884f17c.png",
+    "imagePrompt": "Photorealistic LEGO-style figure with segmented purple armor, clawed hands, breaching tool, glow-green eyes, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "d23fec54-7d7e-4c5e-a335-f40b92d4051f",
+    "name": "Nebular Mind Whisperer",
+    "description": "This entity communicates through resonant waves. Subtle gestures suggest coordination across distance.",
+    "category": "Alien Invaders",
+    "filename": "d23fec54-7d7e-4c5e-a335-f40b92d4051f.png",
+    "imagePrompt": "Photorealistic LEGO-style figure with translucent blue head crest, slender limbs, psychic wave accessory, calm pose, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "2d508882-5ca8-4c11-9191-d603aa5238fa",
+    "name": "Gravity Net Trapper",
+    "description": "It deploys gravitic nets to immobilize targets. Calibration nodes are adjusted for field stability.",
+    "category": "Alien Invaders",
+    "filename": "2d508882-5ca8-4c11-9191-d603aa5238fa.png",
+    "imagePrompt": "Photorealistic LEGO-style figure in dark exosuit with neon nodes, deployable net launcher, three-eyed helmet, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "ee169428-c633-4739-99ec-3b771248cab8",
+    "name": "Servo Calibration Engineer",
+    "description": "This engineer fine-tunes articulated joints for reliable motion. Logs track torque values and response times.",
+    "category": "Robot Builders",
+    "filename": "ee169428-c633-4739-99ec-3b771248cab8.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in gray lab overcoat, micro wrench and diagnostic tablet, pen behind ear print, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "8df96baa-70c8-413f-9335-03f5e4060a22",
+    "name": "Drone Swarm Programmer",
+    "description": "Algorithms are tested to maintain formation and avoid collision. Updates roll out in careful increments.",
+    "category": "Robot Builders",
+    "filename": "8df96baa-70c8-413f-9335-03f5e4060a22.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in black hoodie with circuit motif, handheld controller, two mini drone accessories, glasses face print, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "f4c297bf-2688-4ed5-9463-4b8f3f5e2063",
+    "name": "Power Core Fabricator",
+    "description": "This fabricator assembles energy modules with strict tolerances. Cooling cycles are monitored throughout production.",
+    "category": "Robot Builders",
+    "filename": "f4c297bf-2688-4ed5-9463-4b8f3f5e2063.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in dark blue apron, glowing core canister and welding torch, safety visor lifted, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "4511f9fc-22b1-4c92-af57-0ccf68c92e6b",
+    "name": "Sandstorm Wayfinder",
+    "description": "A seasoned traveler reads dunes and wind seams. Routes are chosen to conserve water and shade.",
+    "category": "Desert Nomads",
+    "filename": "4511f9fc-22b1-4c92-af57-0ccf68c92e6b.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in tan wraps with face scarf, tall staff, water gourd and compass, dusty boots, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "476b31bf-61f6-4c78-ad28-a18ecaf624ab",
+    "name": "Mirage Water Scout",
+    "description": "This scout checks old wells and rock basins. Clear markers guide others toward reliable sources.",
+    "category": "Desert Nomads",
+    "filename": "476b31bf-61f6-4c78-ad28-a18ecaf624ab.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in light brown tunic, head cloth, rolled map and spyglass, satchel, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "69da8271-0403-4cb7-9d29-2fe0d85879e2",
+    "name": "Ridge Line Navigator",
+    "description": "This climber selects safe traverses along exposed ridges. Weather is watched and anchors are doubled when needed.",
+    "category": "Mountain Climbers",
+    "filename": "69da8271-0403-4cb7-9d29-2fe0d85879e2.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in red softshell jacket, topo map tile and trekking poles, helmet and sunglasses, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "5f95056f-0de1-4694-b6b4-d568c498f8dd",
+    "name": "Glacier Crampon Specialist",
+    "description": "They maintain sharp points and proper fit for icy terrain. Steps are deliberate over blue ice and snow bridges.",
+    "category": "Mountain Climbers",
+    "filename": "5f95056f-0de1-4694-b6b4-d568c498f8dd.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in cyan insulated suit, ice axe and crampon pieces, neck gaiter and goggles, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "9500937d-6130-4557-9913-a8941fb15256",
+    "name": "Ion Cannon Gunner",
+    "description": "The gunner manages power draw and cooling during volleys. Targeting relies on timing and teamwork.",
+    "category": "Space Pirates",
+    "filename": "9500937d-6130-4557-9913-a8941fb15256.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in black and silver raider armor, targeting monocle, heavy cannon shell accessory, stern pose, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "6af41b26-afa6-47f1-a00c-ae93c3ed284d",
+    "name": "Starboard Boarding Raider",
+    "description": "This raider leads quick crossings between hulls. Gear is secured and plans are kept simple.",
+    "category": "Space Pirates",
+    "filename": "6af41b26-afa6-47f1-a00c-ae93c3ed284d.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in patched spacecoat, grappling hook and plasma cutlass, visor mask, dynamic boarding stance, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "6c65373f-686c-4998-b7c0-ded270277932",
+    "name": "Courtyard Pike Watch",
+    "description": "Stationed by the gate, this guard manages lines and deliveries. Records are kept short and clear.",
+    "category": "Castle Guards",
+    "filename": "6c65373f-686c-4998-b7c0-ded270277932.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in blue livery with chainmail, long pike, belt pouch and keys, open helmet, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "c51e6e11-01b5-4f2a-abc4-ce1cf0ee34b3",
+    "name": "Stone Bridge Archer",
+    "description": "Over a narrow span, this archer monitors traffic. Arrows remain sheathed unless signals change.",
+    "category": "Castle Guards",
+    "filename": "c51e6e11-01b5-4f2a-abc4-ce1cf0ee34b3.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in brown leather jerkin, longbow and quiver, hood and stern expression, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "536b2284-d5dc-4866-98a5-1cd063f90380",
+    "name": "Night Veil Infiltrator",
+    "description": "This operative moves quietly under cover. Tools are chosen for silence and precision.",
+    "category": "Ninja Warriors",
+    "filename": "536b2284-d5dc-4866-98a5-1cd063f90380.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in charcoal ninja garb, short blade and smoke bomb, masked face with narrow eyes, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "ed51e87b-e6c7-4a1a-a0d9-53a6b6fa94eb",
+    "name": "Bamboo Rooftop Runner",
+    "description": "Agility and balance define this scout. Roof routes are mapped to avoid noise.",
+    "category": "Ninja Warriors",
+    "filename": "ed51e87b-e6c7-4a1a-a0d9-53a6b6fa94eb.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in forest-green ninja suit, climbing claws and bamboo pole, wind-swept headband, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "94ba5cdc-05b5-4924-8c92-c48389b6e9fa",
+    "name": "Silent River Saboteur",
+    "description": "Working near water, this agent disassembles obstacles with care. Exit paths are planned in advance.",
+    "category": "Ninja Warriors",
+    "filename": "94ba5cdc-05b5-4924-8c92-c48389b6e9fa.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in navy stealth suit, rebreather and rope saw, wet-look prints, crouched pose, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "098e63aa-a7fd-473c-bde2-563035e930b6",
+    "name": "Streetball Point Guard",
+    "description": "A quick handler coordinates plays and spacing. Focus stays on timing and teamwork.",
+    "category": "Sports Champions",
+    "filename": "098e63aa-a7fd-473c-bde2-563035e930b6.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in sleeveless jersey with number, orange basketball, headband and sneakers print, action dribble pose, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "d3a8e691-b482-4bbc-bb48-3a89cd88bce2",
+    "name": "Mountain Bike Downhill Racer",
+    "description": "Speed meets control on steep trails. Protective gear and line choice decide the run.",
+    "category": "Sports Champions",
+    "filename": "d3a8e691-b482-4bbc-bb48-3a89cd88bce2.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in lime racing kit, full-face helmet, number plate tile, lifted bike wheel accessory, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "c24d2bf1-1893-4c21-beec-1ddf0704c228",
+    "name": "Lantern Festival Organizer",
+    "description": "This organizer arranges lantern displays and safe routes. Volunteers receive clear instructions and schedules.",
+    "category": "Holiday Festivities",
+    "filename": "c24d2bf1-1893-4c21-beec-1ddf0704c228.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in festive red jacket, bundle of paper lanterns and list clipboard, warm smile, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "44957bf7-6272-4b54-b74e-9c1f28a28d3b",
+    "name": "Winter Gift Wrapper",
+    "description": "Packages are measured, folded, and tied neatly. Labels ensure each parcel reaches the right spot.",
+    "category": "Holiday Festivities",
+    "filename": "44957bf7-6272-4b54-b74e-9c1f28a28d3b.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in cozy sweater, roll of wrapping paper and ribbon spool, small present accessory, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "df2a5948-2249-4b2b-8343-977f47cdc33c",
+    "name": "Sapphire Lake Mermaid",
+    "description": "A serene swimmer watches over quiet waters. Songs are said to calm nearby waves.",
+    "category": "Mythic Creatures",
+    "filename": "df2a5948-2249-4b2b-8343-977f47cdc33c.png",
+    "imagePrompt": "Photorealistic LEGO-style figure with pearlescent blue mermaid tail, long flowing hair, shell pendant, holding a trident, serene face, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "dab5058d-9198-48ae-b286-76edd5cf3dd6",
+    "name": "Emberwing Dragon Hatchling",
+    "description": "A young dragon practices short glides and warm puffs. Curiosity guides every step.",
+    "category": "Mythic Creatures",
+    "filename": "dab5058d-9198-48ae-b286-76edd5cf3dd6.png",
+    "imagePrompt": "Photorealistic LEGO-style figure small dragon with orange translucent wings, red scales, curious eyes, tiny flame piece, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "6c8d79e1-ec5e-4061-b4b6-5ff3fa576373",
+    "name": "Forest Antlered Guardian",
+    "description": "This guardian moves softly through moss and light. Trails remain balanced under its watch.",
+    "category": "Mythic Creatures",
+    "filename": "6c8d79e1-ec5e-4061-b4b6-5ff3fa576373.png",
+    "imagePrompt": "Photorealistic LEGO-style figure woodland spirit with stag antlers, moss-green cloak, wooden staff, glowing rune tile, calm stance, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "7b7c4c17-7c03-457e-bc3e-a10fa83fc310",
+    "name": "Dusk Savannah Tracker",
+    "description": "This tracker locates vantage points as light fades. Footprints and wind direction inform the approach.",
+    "category": "Safari Photographers",
+    "filename": "7b7c4c17-7c03-457e-bc3e-a10fa83fc310.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in khaki safari shirt, binoculars and tracking notebook, wide-brim hat, dusty boots, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "8d23d1d5-3820-44a9-9105-f104442e9626",
+    "name": "Waterhole Cam Operator",
+    "description": "A patient operator sets remote cameras near wildlife paths. Batteries and angles are checked at sunrise.",
+    "category": "Safari Photographers",
+    "filename": "8d23d1d5-3820-44a9-9105-f104442e9626.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in olive vest, tripod camera accessory and radio, sun hat and scarf, focused expression, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "ff780764-a82e-42af-9c24-7315dc48a435",
+    "name": "Orbital Docking Specialist",
+    "description": "This technician coordinates precise spacecraft linkups. They carry tools for alignment and safety checks. Calm procedures guide each mission task.",
+    "category": "Space Explorers",
+    "filename": "ff780764-a82e-42af-9c24-7315dc48a435.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in white EVA suit with orange accents, gold-tinted visor helmet, handheld docking alignment tool, utility belt, confident stance, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "28769299-65c5-4425-bde5-5ef2789b2fde",
+    "name": "Meteor Sample Courier",
+    "description": "This courier secures and transports extraterrestrial specimens. Containment protocols are followed carefully. Logs are kept between labs and field sites.",
+    "category": "Space Explorers",
+    "filename": "28769299-65c5-4425-bde5-5ef2789b2fde.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in gray space suit with blue trim, clear sample canister, backpack thrusters, visor up revealing neutral expression, glove details, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "79307174-268a-443e-8cf4-4539b132938f",
+    "name": "Radiation Shield Engineer",
+    "description": "This engineer designs protective arrays for long missions. Panels are tested and exposure levels monitored. Team coordination is essential.",
+    "category": "Space Explorers",
+    "filename": "79307174-268a-443e-8cf4-4539b132938f.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in dark charcoal technician suit with yellow hazard markings, handheld scanner, shield panel piece, sturdy boots, focused face, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "e58e15a9-97a6-4915-8a6a-3416465cbbcc",
+    "name": "Bronze Gate Vanguard",
+    "description": "A stalwart defender posted at the main gates. The line is held during tense standoffs. Daily training maintains readiness.",
+    "category": "Medieval Knights",
+    "filename": "e58e15a9-97a6-4915-8a6a-3416465cbbcc.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in bronze armor with simple beast crest, plume helmet, tower shield, spear, firm stance, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "1b22be00-03bc-4cf9-8ae4-031fa15b21b6",
+    "name": "Verdant Meadow Rider",
+    "description": "This rider patrols farmland around the keep. Roads are kept clear and safe. Responses are swift and steady.",
+    "category": "Medieval Knights",
+    "filename": "1b22be00-03bc-4cf9-8ae4-031fa15b21b6.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in green surcoat over chainmail, simple conical helmet, lance and round shield, leather belt, poised stance, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "b8848777-66c7-419e-8414-42e615cd80e2",
+    "name": "Firehouse Ladder Operator",
+    "description": "A specialist who operates aerial ladders during rescues. Equipment is maintained before each call. Ground teams receive clear signals.",
+    "category": "City Workers",
+    "filename": "b8848777-66c7-419e-8414-42e615cd80e2.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in red firefighter gear with reflective stripes, black rescue helmet with visor, control panel tile, heavy gloves, steady posture, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "2aa5593b-14c8-4474-9590-e2519a4f3ca3",
+    "name": "Urban Traffic Director",
+    "description": "This worker manages busy intersections at peak hours. Signals keep vehicles moving safely. Attention remains high in all weather.",
+    "category": "City Workers",
+    "filename": "2aa5593b-14c8-4474-9590-e2519a4f3ca3.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in neon safety vest over navy uniform, whistle, handheld stop sign, headset, calm expression, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "63277f5b-03f8-4fda-93c6-13baf2f6fadc",
+    "name": "Riverside Ferry Captain",
+    "description": "The captain oversees smooth river crossings. Currents and schedules are monitored closely. The crew remains coordinated and alert.",
+    "category": "City Workers",
+    "filename": "63277f5b-03f8-4fda-93c6-13baf2f6fadc.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in navy jacket with captain stripes, peaked cap, binoculars, life ring accessory, confident stance, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "b7ed7530-f46f-4ca4-9639-059839df760e",
+    "name": "Cinder Ash Warlock",
+    "description": "A practitioner of ember-themed magic. Fire and shadow are carefully balanced. Focus guides each incantation.",
+    "category": "Fantasy Wizards",
+    "filename": "b7ed7530-f46f-4ca4-9639-059839df760e.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in charcoal robes with ember-orange runes, staff topped with red crystal, soot-swirled cape, stern expression, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "3575f37d-2cc9-43da-b7a7-b3380b755dd1",
+    "name": "Moonwell Healer",
+    "description": "This healer restores vitality with calm rituals. Herbs are gathered beneath soft moonlight. Travelers are guided to safe rest.",
+    "category": "Fantasy Wizards",
+    "filename": "3575f37d-2cc9-43da-b7a7-b3380b755dd1.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in pale blue robes with silver accents, crescent amulet, glowing vial, serene face, flowing sash, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "383d9296-6fea-4209-9ac0-34b2adf70242",
+    "name": "Gale Rune Summoner",
+    "description": "A summoner who channels swift winds. Sigils are marked to shape the gusts. Actions are precise and measured.",
+    "category": "Fantasy Wizards",
+    "filename": "383d9296-6fea-4209-9ac0-34b2adf70242.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in teal robes, wind-patterned cloak, rune-etched tome, translucent swirl piece, focused gaze, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "d38ab6fa-c363-48a7-89b0-4846b2e63362",
+    "name": "Rigging Sail Fixer",
+    "description": "This deckhand climbs high to mend torn sails. Ropes and knots are kept in order. Work is quick and careful.",
+    "category": "Pirate Crew",
+    "filename": "d38ab6fa-c363-48a7-89b0-4846b2e63362.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in striped shirt and patched vest, red bandana, rope coil, needle and sail patch tile, confident stance, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "83e9d76a-05a2-4f4c-882b-cef7b00fbdbe",
+    "name": "Galley Cook Mate",
+    "description": "A steady hand in the ship\u2019s kitchen. Rations and fresh water are managed wisely. Warm meals lift morale at sea.",
+    "category": "Pirate Crew",
+    "filename": "83e9d76a-05a2-4f4c-882b-cef7b00fbdbe.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in rolled-sleeve shirt with apron, simple headscarf, ladle, cooking pot accessory, friendly smile, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "fea99004-aced-4bd5-a70a-47c70b1939e2",
+    "name": "Quantum Pulse Flyer",
+    "description": "This hero soars using controlled energy bursts. City alerts get rapid responses. A calm presence reassures bystanders.",
+    "category": "Super Heroes",
+    "filename": "fea99004-aced-4bd5-a70a-47c70b1939e2.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in sleek white and cyan suit, soft glow chest detail, translucent blue wing elements, flight pose, determined face, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "d9be96f1-d44e-4d7a-8d6d-12ec915e6be7",
+    "name": "Aurora Ward Sentinel",
+    "description": "A guardian projecting radiant shields. Rooftops are patrolled at night. A watchful eye keeps danger away.",
+    "category": "Super Heroes",
+    "filename": "d9be96f1-d44e-4d7a-8d6d-12ec915e6be7.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in dark suit with iridescent green-purple armor plates, translucent shield disk, masked headgear, confident stance, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "17852a0b-0c09-446b-bf4a-1e8c74543934",
+    "name": "Seagrass Cartographer",
+    "description": "A diver mapping dense coastal meadows. Habitats and currents are noted. Findings are shared with the team.",
+    "category": "Underwater Adventurers",
+    "filename": "17852a0b-0c09-446b-bf4a-1e8c74543934.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in aqua dive suit, clear dome helmet, underwater slate and pencil, flippers, small plant sample, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "81712473-76dd-462b-8eb2-3766a71751e9",
+    "name": "Abyss Lantern Guide",
+    "description": "This guide leads dives into shadowed trenches. Marker lights are set for safe return. Hazard reports are calm and precise.",
+    "category": "Underwater Adventurers",
+    "filename": "81712473-76dd-462b-8eb2-3766a71751e9.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in dark blue deep-sea suit, heavy chest lamps, tether reel, reinforced helmet, steady posture, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "636a874b-b5ec-40d2-89bf-17cc81f99806",
+    "name": "Vine Bridge Builder",
+    "description": "A builder who spans ravines with sturdy crossings. Spans are measured and anchors secured. Work is careful and methodical.",
+    "category": "Jungle Rangers",
+    "filename": "636a874b-b5ec-40d2-89bf-17cc81f99806.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in khaki outfit, climbing harness, rope spool, wooden plank piece, focused expression, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "c6376991-c687-412e-8df4-4926dfadb4d6",
+    "name": "Jungle Weather Spotter",
+    "description": "This ranger monitors storms and humidity. Wind patterns near the canopy are logged. Teams are alerted to changes.",
+    "category": "Jungle Rangers",
+    "filename": "c6376991-c687-412e-8df4-4926dfadb4d6.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in green field jacket, handheld anemometer, compact radio, wide-brim hat, calm face, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "d4706911-b860-4faa-b6de-8be68d436599",
+    "name": "Sea Ice Navigator",
+    "description": "A specialist who charts safe routes across floes. Thickness and fractures are tracked. Sled teams benefit from guidance.",
+    "category": "Arctic Researchers",
+    "filename": "d4706911-b860-4faa-b6de-8be68d436599.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in orange parka with fur trim, ice probe, map tablet, snow goggles, sturdy boots, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "b8398dbb-ba33-4d55-869e-981c6b17c940",
+    "name": "Snow Drift Analyst",
+    "description": "This analyst studies surface layers and wind transport. Measurements are taken carefully. Travel risks are forecast for the group.",
+    "category": "Arctic Researchers",
+    "filename": "b8398dbb-ba33-4d55-869e-981c6b17c940.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in blue insulated suit, sample scoop, measuring rod, face scarf, calm eyes, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "8c480ebd-12a2-4cae-aa36-499c833416a5",
+    "name": "Chrome Tendril Scout",
+    "description": "A reconnaissance unit with flexible limbs. Terrain and resource data are reported quickly. Movements are smooth and precise.",
+    "category": "Alien Invaders",
+    "filename": "8c480ebd-12a2-4cae-aa36-499c833416a5.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure with metallic silver torso and limbs, tentacle harness, narrow glowing eyes, handheld sensor orb, crouched stance, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "59a511e7-3631-4383-a417-eb7ebaaced66",
+    "name": "Violet Crest Commander",
+    "description": "This commander leads squads with precise gestures. Order and efficiency are valued. Distant incursions are coordinated calmly.",
+    "category": "Alien Invaders",
+    "filename": "59a511e7-3631-4383-a417-eb7ebaaced66.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in purple bio-armor, crest-shaped helmet, command staff, geometric-patterned cape, authoritative pose, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "68e47112-b146-4c71-9269-0c809dd2a718",
+    "name": "Circuit Armature Fitter",
+    "description": "The fitter installs frames for small automatons. Joints and servos are aligned. The workbench remains organized.",
+    "category": "Robot Builders",
+    "filename": "68e47112-b146-4c71-9269-0c809dd2a718.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in orange workshop overalls, safety glasses, micro wrench, small armature frame, tidy tools, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "cdfb87b5-a4ba-4f5b-9cbd-1f4e039b4077",
+    "name": "Hydraulic Test Operator",
+    "description": "This operator verifies pressure seals on new builds. Readings and calibrations are recorded. Safety remains a priority.",
+    "category": "Robot Builders",
+    "filename": "cdfb87b5-a4ba-4f5b-9cbd-1f4e039b4077.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in gray jumpsuit with blue gloves, portable pressure gauge, clipboard, neutral expression, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "462d3da5-5338-4284-9efe-9395cf0119df",
+    "name": "Salt Flat Scout",
+    "description": "A traveler crossing bright cracked plains. Water routes and resting spots are scouted. Maps are shared with caravans.",
+    "category": "Desert Nomads",
+    "filename": "462d3da5-5338-4284-9efe-9395cf0119df.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in tan robes, dust goggles, walking staff, rolled map, light backpack, steady stance, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "0c814a99-b093-4251-a43f-cf0acbb6976c",
+    "name": "Dune Oasis Healer",
+    "description": "This healer tends to travelers at sheltered springs. Herbs are gathered under palms. Quiet guidance eases long journeys.",
+    "category": "Desert Nomads",
+    "filename": "0c814a99-b093-4251-a43f-cf0acbb6976c.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in flowing beige garments, blue sash, satchel of herbs, clay flask, gentle smile, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "cc64e117-0fba-4b2a-a7c5-1c22b425554e",
+    "name": "Base Camp Quartermaster",
+    "description": "The quartermaster manages supplies and gear. Tents and fuel are assigned fairly. Inventory is kept up to date.",
+    "category": "Mountain Climbers",
+    "filename": "cc64e117-0fba-4b2a-a7c5-1c22b425554e.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in red fleece jacket, cargo pants print, clipboard, crate of ropes, knit beanie, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "07088099-a258-46d3-bb13-b88775212374",
+    "name": "Avalanche Watch Lookout",
+    "description": "This lookout observes slopes for unstable layers. Warning markers are placed when needed. Route advice keeps teams safe.",
+    "category": "Mountain Climbers",
+    "filename": "07088099-a258-46d3-bb13-b88775212374.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in yellow jacket, binoculars, avalanche probe, helmet with headlamp, alert eyes, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "af940f1b-6d68-4bcd-a6f6-f3b03104cedc",
+    "name": "Hull Breach Sapper",
+    "description": "A specialist for opening sealed compartments. Charges are timed with precision. Raids demand fast work.",
+    "category": "Space Pirates",
+    "filename": "af940f1b-6d68-4bcd-a6f6-f3b03104cedc.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in patched space suit with red stripes, breaching charge pack, visor helmet, magnetic boots, determined pose, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "916db6bf-7122-42e3-98a5-f0bb37c79068",
+    "name": "Nebula Chart Smuggler",
+    "description": "This smuggler trades forbidden star maps. Data hides in trinkets and keepsakes. A calm demeanor masks intent.",
+    "category": "Space Pirates",
+    "filename": "916db6bf-7122-42e3-98a5-f0bb37c79068.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in dark coat over spacesuit, hood up, data chip tile, small star map tile, sly smile, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "17d84a22-2f5e-4097-82dd-0066a23c84ff",
+    "name": "Portcullis Chain Keeper",
+    "description": "A keeper who maintains heavy lift chains. Links and pulleys are inspected often. Fast closure is ensured when needed.",
+    "category": "Castle Guards",
+    "filename": "17d84a22-2f5e-4097-82dd-0066a23c84ff.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in brown gambeson with iron pauldrons, chain tool, key ring, stout helmet, steady stance, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "fa53c709-c51b-4edf-a558-4756d156d152",
+    "name": "Courtyard Torch Warden",
+    "description": "This warden lights paths at dusk and dawn. Inner walls are watched with care. Unusual movement is reported quickly.",
+    "category": "Castle Guards",
+    "filename": "fa53c709-c51b-4edf-a558-4756d156d152.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in blue livery over mail, lantern, halberd, kettle helm, calm face, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "903a4825-940c-4759-99db-0b16d832a7ba",
+    "name": "Fog Alley Lookout",
+    "description": "A watcher posted in narrow passages. Subtle gestures send signals. Patience is preferred over haste.",
+    "category": "Ninja Warriors",
+    "filename": "903a4825-940c-4759-99db-0b16d832a7ba.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in dark gray ninja garb, scarf mask, collapsible spyglass, wall perch accessory, crouched pose, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "d970fe98-6d49-43a3-87d6-4ad80890f191",
+    "name": "Thorn Leaf Duelist",
+    "description": "This duelist trains with slender blades. Movements are quiet and precise. Balance and focus guide every step.",
+    "category": "Ninja Warriors",
+    "filename": "d970fe98-6d49-43a3-87d6-4ad80890f191.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in forest-green ninja suit, twin short swords, leaf-patterned cape, narrowed eyes, poised stance, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "e89e8604-1cc6-4af8-bceb-72167fd8529b",
+    "name": "Street Sprint Champion",
+    "description": "An athlete excelling in short urban races. Starts are timed with precision. Agility drills are practiced daily.",
+    "category": "Sports Champions",
+    "filename": "e89e8604-1cc6-4af8-bceb-72167fd8529b.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in athletic tank and shorts, race bib print, starting blocks accessory, sweatband, dynamic pose, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "28025ef9-3dfd-4169-bb34-04d1ca91c683",
+    "name": "Cliffside Bouldering Ace",
+    "description": "This climber masters technical routes on real rock. Plans are made carefully before each attempt. Safety remains first.",
+    "category": "Sports Champions",
+    "filename": "28025ef9-3dfd-4169-bb34-04d1ca91c683.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure with chalked hands print, harness, climbing shoes, crash pad tile, focused face, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "071d56d7-3ae5-4149-8d73-efc7d76476db",
+    "name": "Spring Lantern Painter",
+    "description": "A cheerful decorator of seasonal lanterns. Bright patterns are applied with care. Sharing colors brings joy.",
+    "category": "Holiday Festivities",
+    "filename": "071d56d7-3ae5-4149-8d73-efc7d76476db.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in festive red jacket, paintbrush, small lantern accessory, decorative palette tile, smiling expression, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "54850519-8481-4749-a63e-b53d5f60704b",
+    "name": "Harvest Feast Coordinator",
+    "description": "This organizer plans a seasonal meal. Helpers and seating are scheduled. Everything is kept running smoothly.",
+    "category": "Holiday Festivities",
+    "filename": "54850519-8481-4749-a63e-b53d5f60704b.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in warm-toned sweater, clipboard, basket of produce, scarf, welcoming smile, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "02c28922-6365-4106-a7d2-8a7c2eb12c5e",
+    "name": "Silver Antler Stag",
+    "description": "A majestic guardian of hidden glades. It moves silently between ancient trees. The presence feels calm and steady.",
+    "category": "Mythic Creatures",
+    "filename": "02c28922-6365-4106-a7d2-8a7c2eb12c5e.png",
+    "imagePrompt": "Photorealistic LEGO-style figure quadruped stag with metallic silver antlers, deep brown body, gentle eyes, small leaf piece at hooves, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "80f52ea8-37d1-4caf-b795-6612c4479de2",
+    "name": "Glade Whisper Dryad",
+    "description": "A spirit of the living forest. Leaves rustle softly when it speaks. Saplings and streams are watched over.",
+    "category": "Mythic Creatures",
+    "filename": "80f52ea8-37d1-4caf-b795-6612c4479de2.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure with wood-textured torso and limbs, leafy hairpiece, vine-print cloak, small sprout accessory, serene expression, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "a35847f0-2f4b-4ad1-9a9f-6085c1848f1b",
+    "name": "Desert Dune Cameraperson",
+    "description": "This photographer captures wildlife crossing sands. Footprints are tracked to frame shots. Gear is protected from grit.",
+    "category": "Safari Photographers",
+    "filename": "a35847f0-2f4b-4ad1-9a9f-6085c1848f1b.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in tan field attire, telephoto camera, neck scarf, small tripod, sun hat, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "68c5ec25-7e63-4104-b90d-b85a6efc6ea7",
+    "name": "Night Blind Spotter",
+    "description": "An observer focused on nocturnal animals at waterholes. Red-light filters reduce disturbance. Sightings are logged quietly.",
+    "category": "Safari Photographers",
+    "filename": "68c5ec25-7e63-4104-b90d-b85a6efc6ea7.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in dark olive jacket, binoculars with red filter, notebook tile, headlamp, calm stance, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "385e4720-ef09-47c2-ad53-1538c6ae38c0",
+    "name": "Deep Space Botanist",
+    "description": "This specialist studies plant life grown in orbit. Growth is recorded under varied light. Samples are tended with care.",
+    "category": "Space Explorers",
+    "filename": "385e4720-ef09-47c2-ad53-1538c6ae38c0.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in white lab coat over space suit, clear sample dome with sprout, tablet tile, soft smile, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "fa711639-222b-4a0d-8aa7-69d049c5ce66",
+    "name": "City Flood Responder",
+    "description": "A responder assisting during heavy rain events. Barriers and pumps are deployed quickly. Coordination with residents is steady.",
+    "category": "City Workers",
+    "filename": "fa711639-222b-4a0d-8aa7-69d049c5ce66.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in waterproof yellow gear, rubber boots print, portable pump hose, handheld radio, determined face, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "aad72589-7a48-4954-b46f-d68e2531b356",
+    "name": "Sensor Array Programmer",
+    "description": "This programmer codes detection routines for new bots. Responses to light and sound are tested. Results are documented carefully.",
+    "category": "Robot Builders",
+    "filename": "aad72589-7a48-4954-b46f-d68e2531b356.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in teal hoodie with tool belt, laptop tile, small sensor module, glasses, focused posture, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "41a7dfdf-3e2e-4889-ace2-ff74e013a115",
+    "name": "Star Compass Navigator",
+    "description": "A guide who reads the night sky. Paths are marked with discreet signs. Knowledge is shared with apprentices.",
+    "category": "Desert Nomads",
+    "filename": "41a7dfdf-3e2e-4889-ace2-ff74e013a115.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in midnight-blue cloak over tan robes, star chart tile, compass accessory, calm gaze, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "e00943f0-9a8e-4c92-9ec4-7b9e1c08d4fa",
+    "name": "Urban Parkour Prodigy",
+    "description": "This athlete moves swiftly across city obstacles. Safe landings and vaults are practiced. Friendly meets encourage improvement.",
+    "category": "Sports Champions",
+    "filename": "e00943f0-9a8e-4c92-9ec4-7b9e1c08d4fa.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in athletic hoodie, fingerless gloves, sneakers print, low wall obstacle piece, dynamic leap, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "bf4bc830-3d08-4748-894d-aa2181ef6666",
+    "name": "Fireworks Safety Marshal",
+    "description": "A marshal overseeing safe celebrations during displays. Distances and wind are checked. Emergency gear is kept ready.",
+    "category": "Holiday Festivities",
+    "filename": "bf4bc830-3d08-4748-894d-aa2181ef6666.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure in reflective vest over dark outfit, hard hat, clipboard, small extinguisher, confident stance, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "ff7c6517-ef2e-4408-8ac3-9054e167db0a",
+    "name": "Starlight Terrain Mapper",
+    "description": "Charts uneven planetary ground using portable lidar. Records surface hazards for rover paths.",
+    "category": "Space Explorers",
+    "filename": "ff7c6517-ef2e-4408-8ac3-9054e167db0a.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure white and charcoal EVA suit with orange accents, helmet with transparent visor, handheld mapping tablet with green screen, backpack antenna, utility belt with pouches, clean background, high detail, vibrant, evenly lit, 102"
+  },
+  {
+    "productId": "a98fc1a9-3630-424d-8089-e26542cfd7ea",
+    "name": "Orbital Ice Prospector",
+    "description": "Analyzes frozen deposits in low gravity. Collects core samples for water extraction studies.",
+    "category": "Space Explorers",
+    "filename": "a98fc1a9-3630-424d-8089-e26542cfd7ea.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure pale blue EVA suit with silver panels, drill core sampler, transparent ice canister, thruster pack, frost-dusted boots, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "e6588265-d011-49e8-96a1-c43e07a449b2",
+    "name": "Vacuum Seal Technician",
+    "description": "Maintains airtight couplings on station modules. Performs routine leak checks and gasket replacements.",
+    "category": "Space Explorers",
+    "filename": "e6588265-d011-49e8-96a1-c43e07a449b2.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure gray maintenance suit with yellow hazard stripes, repair wrench, seal tester device, open-face helmet, utility belt, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "da6e2625-c0ce-42c1-b4da-3a3d565f54d6",
+    "name": "Deep Void Communications Lead",
+    "description": "Oversees long-range signal relays. Ensures clear telemetry across distant probes.",
+    "category": "Space Explorers",
+    "filename": "da6e2625-c0ce-42c1-b4da-3a3d565f54d6.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure dark navy space suit, headset visor, handheld comms pad with blue waveform, tall antenna backpack, chest console, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "3c4b4b0f-5afc-42a1-a738-a8f61ec34031",
+    "name": "Ironwood Tower Sentinel",
+    "description": "Watches the horizon from wooden ramparts. Signals approaching riders with horn calls.",
+    "category": "Medieval Knights",
+    "filename": "3c4b4b0f-5afc-42a1-a738-a8f61ec34031.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure brown leather vest over chainmail, horn in one hand, spear in the other, hooded coif, belt pouch, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "03855f30-410c-42bc-bd2c-dfdbf75f98be",
+    "name": "River Gate Spearman",
+    "description": "Guards the water gate at dawn and dusk. Checks cargo boats entering the keep.",
+    "category": "Medieval Knights",
+    "filename": "03855f30-410c-42bc-bd2c-dfdbf75f98be.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure blue tabard with simple emblem, long spear, round wooden shield, cap helm, boots, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "95b3da51-8e27-4986-9508-38be24644407",
+    "name": "Dawn Patrol Cavalier",
+    "description": "Patrols outer roads before sunrise. Escorts messengers between villages.",
+    "category": "Medieval Knights",
+    "filename": "95b3da51-8e27-4986-9508-38be24644407.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure steel breastplate, plume helmet tucked under arm, lance, flowing red cape, leather gloves, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "3e698a6c-7173-41fc-a93e-57d47ba372e3",
+    "name": "Storm Drain Inspector",
+    "description": "Surveys city drains after rainfall. Clears blockages to prevent street flooding.",
+    "category": "City Workers",
+    "filename": "3e698a6c-7173-41fc-a93e-57d47ba372e3.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure orange safety vest over navy workwear, white hard hat, manhole hook tool, flashlight, rubber boots, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "4fd6e71c-6b1f-48e1-b7dc-c2d061e95bee",
+    "name": "City Tree Pruner",
+    "description": "Trims branches around power lines. Keeps public parks maintained throughout the season.",
+    "category": "City Workers",
+    "filename": "4fd6e71c-6b1f-48e1-b7dc-c2d061e95bee.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure green work jacket, yellow safety helmet with ear guards, pruning saw, harness straps, utility belt, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "e93e9651-3890-4eab-bac2-f475eafaef93",
+    "name": "Metro Signal Maintainer",
+    "description": "Services trackside signal boxes. Calibrates lights for smooth train flow.",
+    "category": "City Workers",
+    "filename": "e93e9651-3890-4eab-bac2-f475eafaef93.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure navy coveralls with reflective stripes, cap, multimeter in hand, small toolkit, radio clipped to belt, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "850a79b4-6e8c-4a43-bddc-21d46a4e5919",
+    "name": "Urban Bridge Painter",
+    "description": "Applies protective coats to steel beams. Works section by section with safety rigging.",
+    "category": "City Workers",
+    "filename": "850a79b4-6e8c-4a43-bddc-21d46a4e5919.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure paint-splattered overalls, white hard hat, roller on handle, paint bucket, safety harness, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "39ab2ad5-1fd7-4f57-be1f-a8c8a8e7c679",
+    "name": "Emberglass Illusionist",
+    "description": "Bends light into mirage forms. Uses crystal shards to distract foes.",
+    "category": "Fantasy Wizards",
+    "filename": "39ab2ad5-1fd7-4f57-be1f-a8c8a8e7c679.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure ember-orange robe with dark trim, translucent crystal staff, glowing shard accessories, ornate belt, calm expression, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "24fc76e7-76b5-40c6-8760-55ee23748408",
+    "name": "Starfall Rune Binder",
+    "description": "Inscribes meteor runes for warding. Studies the night sky for new symbols.",
+    "category": "Fantasy Wizards",
+    "filename": "24fc76e7-76b5-40c6-8760-55ee23748408.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure deep blue robe with silver constellations, quill pen, rune tablet, crescent amulet, hood, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "294d04d1-85c0-4f78-94ae-78d35191a0a6",
+    "name": "Whisper Grove Soothsayer",
+    "description": "Listens to rustling leaves for omens. Interprets signs to guide travelers.",
+    "category": "Fantasy Wizards",
+    "filename": "294d04d1-85c0-4f78-94ae-78d35191a0a6.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure moss-green robe, wooden staff with tiny chimes, leaf-pattern mask, satchel of herbs, bare feet, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "191073c6-20b8-493d-8dd7-5c9f9fc16ccb",
+    "name": "Bilge Pump Tender",
+    "description": "Keeps the lower decks dry during squalls. Checks valves and pump handles regularly.",
+    "category": "Pirate Crew",
+    "filename": "191073c6-20b8-493d-8dd7-5c9f9fc16ccb.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure striped shirt, red bandana, wrench, wooden bucket, rope belt, weathered boots, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "af8a4493-0e4e-4e81-883d-e18ca2874931",
+    "name": "Cannon Fuse Runner",
+    "description": "Delivers fresh fuses along the gun deck. Coordinates timing with gunners.",
+    "category": "Pirate Crew",
+    "filename": "af8a4493-0e4e-4e81-883d-e18ca2874931.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure dark vest, red sash, coil of fuses over shoulder, flint striker, fingerless gloves, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "7bc45d00-6bd0-4d7e-a2ed-fda88ff19897",
+    "name": "Lantern Deck Navigator",
+    "description": "Charts courses by lantern and compass at night. Logs currents and reef markers.",
+    "category": "Pirate Crew",
+    "filename": "7bc45d00-6bd0-4d7e-a2ed-fda88ff19897.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure long dark coat, hooded lantern, brass compass, rolled map, tricorn-style cap, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "2bc2c518-d490-47c2-924c-eeefd9244200",
+    "name": "Prism Shield Defender",
+    "description": "Projects angled shields of refracted light. Protects bystanders during fast rescues.",
+    "category": "Super Heroes",
+    "filename": "2bc2c518-d490-47c2-924c-eeefd9244200.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure sleek white suit with rainbow trim, translucent wedge shield, mirrored visor helmet, energy belt, dynamic pose, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "45bf69c2-2994-40f2-b293-39cc4d0d3f82",
+    "name": "Tempest Wing Racer",
+    "description": "Rides gust fronts to reach emergencies. Responds quickly across city skylines.",
+    "category": "Super Heroes",
+    "filename": "45bf69c2-2994-40f2-b293-39cc4d0d3f82.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure teal aerodynamic suit, turbine wing pack, wind streak decals, lightweight boots, visor up, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "928f0b0c-ac6f-4264-b152-55dd430dce76",
+    "name": "Tide Pool Chemist",
+    "description": "Tests salinity and pH in shallow pools. Catalogs small lifeforms along rocky coasts.",
+    "category": "Underwater Adventurers",
+    "filename": "928f0b0c-ac6f-4264-b152-55dd430dce76.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure teal wetsuit, snorkel mask lifted, rack of sample vials, waterproof tablet, neoprene gloves, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "a4507cbe-0b42-464d-aeb5-ce962c8d5f4e",
+    "name": "Reef Survey Drone Pilot",
+    "description": "Guides small drones through coral passages. Records health metrics and structure maps.",
+    "category": "Underwater Adventurers",
+    "filename": "a4507cbe-0b42-464d-aeb5-ce962c8d5f4e.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure dark blue dive suit, wrist controller, compact sub drone accessory, utility belt, fins clipped to side, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "4bfe7e11-1753-4e2f-a368-21ae0410578b",
+    "name": "Underwater Light Rigger",
+    "description": "Positions lamps for cave dives. Adjusts beams to reduce silt disturbance.",
+    "category": "Underwater Adventurers",
+    "filename": "4bfe7e11-1753-4e2f-a368-21ae0410578b.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure black wetsuit with gray panels, twin lamp rig in hands, tool pouch, hood, flippers, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "30580270-1df9-4b8a-aef9-51f598e9af1b",
+    "name": "Canopy Rescue Medic",
+    "description": "Stabilizes injuries high among vines. Coordinates pulley lifts for safe descent.",
+    "category": "Jungle Rangers",
+    "filename": "30580270-1df9-4b8a-aef9-51f598e9af1b.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure green ranger outfit, rope harness, medical pouch, helmet with visor, carabiners, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "250391a1-4851-4d40-899d-fa7c2354b126",
+    "name": "Jungle River Navigator",
+    "description": "Reads currents and eddies to plan crossings. Marks safe fords for teams.",
+    "category": "Jungle Rangers",
+    "filename": "250391a1-4851-4d40-899d-fa7c2354b126.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure olive gear, long pole staff, waterproof boots, map case slung, neck scarf, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "aa446036-27b6-4f1e-82f7-f3cd0816c298",
+    "name": "Understory Wildlife Tracker",
+    "description": "Follows prints and scat beneath thick foliage. Logs sightings with quiet patience.",
+    "category": "Jungle Rangers",
+    "filename": "aa446036-27b6-4f1e-82f7-f3cd0816c298.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure khaki outfit, binoculars, notebook and pencil, foliage backpack, mud-splashed boots, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "a3dd6179-8488-489c-afd4-b4036095128c",
+    "name": "Sea Ice Buoy Deployer",
+    "description": "Places monitoring buoys across shifting ice. Transmits temperature and drift data.",
+    "category": "Arctic Researchers",
+    "filename": "a3dd6179-8488-489c-afd4-b4036095128c.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure white parka with blue stripes, buoy device in hand, ice axe on belt, snow goggles, thick gloves, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "42847df5-06e8-405f-833a-dbd344b6d9ad",
+    "name": "Permafrost Sample Archivist",
+    "description": "Preserves frozen cores for lab study. Labels layers with precise records.",
+    "category": "Arctic Researchers",
+    "filename": "42847df5-06e8-405f-833a-dbd344b6d9ad.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure gray insulated suit, cold storage crate, marker pen, fur-lined hood, ID tags, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "691f04a5-e80b-4181-8918-0e376cb6c68b",
+    "name": "Glacier Melt Monitor",
+    "description": "Measures meltwater flow at outfalls. Reports changes across the season.",
+    "category": "Arctic Researchers",
+    "filename": "691f04a5-e80b-4181-8918-0e376cb6c68b.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure bright orange parka, handheld flow gauge, clipboard, crampon boots, radio, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "a2479c17-ed9d-4fc8-ae4a-8e61479613d4",
+    "name": "Luminous Hive Scout",
+    "description": "Searches ahead for resource-rich zones. Leaves bio-lights to mark territory.",
+    "category": "Alien Invaders",
+    "filename": "a2479c17-ed9d-4fc8-ae4a-8e61479613d4.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure iridescent chitin armor, glowing eye visor, clawed gauntlets, back spines, luminescent trail pods, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "8b6982a6-07bd-4f4e-b073-62e315f58a39",
+    "name": "Phase Rift Captain",
+    "description": "Commands squads through short-space rifts. Coordinates returns with strict timing.",
+    "category": "Alien Invaders",
+    "filename": "8b6982a6-07bd-4f4e-b073-62e315f58a39.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure purple-black carapace armor, segmented cape, curved phase blade, crest helm, command wristband, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "bcfb30e1-f131-43c7-93c3-c0529d2265fa",
+    "name": "Acid Spore Grenadier",
+    "description": "Deploys corrosive spore pods against obstacles. Clears paths for advancing units.",
+    "category": "Alien Invaders",
+    "filename": "bcfb30e1-f131-43c7-93c3-c0529d2265fa.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure green exosuit, bandolier of spore canisters, throwing claw poised, respirator mask, heavy boots, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "45c49e76-e635-4c04-afd0-c6220e20d27f",
+    "name": "Servo Arm Welder",
+    "description": "Fuses joints on articulated limbs. Checks alignment before final power-up.",
+    "category": "Robot Builders",
+    "filename": "45c49e76-e635-4c04-afd0-c6220e20d27f.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure orange workshop jacket, welding torch with blue spark, visor mask, robotic arm on stand, tool belt, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "3ab68daa-8c86-4da5-9d1c-060c7882d118",
+    "name": "Optic Sensor Installer",
+    "description": "Mounts camera arrays onto frames. Tunes focus for depth accuracy.",
+    "category": "Robot Builders",
+    "filename": "3ab68daa-8c86-4da5-9d1c-060c7882d118.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure blue overalls, precision screwdrivers, lens module in hand, cable spool over shoulder, safety glasses, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "b0e9ed91-5e94-4d32-9553-eca450b56718",
+    "name": "Chassis Frame Planner",
+    "description": "Lays out plates for weight balance. Marks attachment points for modules.",
+    "category": "Robot Builders",
+    "filename": "b0e9ed91-5e94-4d32-9553-eca450b56718.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure gray engineer vest, measuring caliper, rolled blueprint tile, yellow hard hat, utility pockets, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "826e1153-e697-45f9-8a49-1aa95bfadd50",
+    "name": "Caravan Wind Scout",
+    "description": "Reads dunes and wind patterns ahead. Picks shaded rest sites for caravans.",
+    "category": "Desert Nomads",
+    "filename": "826e1153-e697-45f9-8a49-1aa95bfadd50.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure tan robes, face scarf and sand goggles, brass compass, walking staff, light satchel, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "e0f553d6-bdd5-4cf5-b362-fedf131ac01b",
+    "name": "Scorpion Dune Forager",
+    "description": "Gathers edible roots and desert herbs. Shares finds with the traveling camp.",
+    "category": "Desert Nomads",
+    "filename": "e0f553d6-bdd5-4cf5-b362-fedf131ac01b.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure light brown attire, satchel filled with plants, curved knife, water skin, ankle wraps, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "686de63a-2fc6-4511-9139-c4840c4f3e63",
+    "name": "Mirage Camp Lookout",
+    "description": "Watches ridge lines during midday glare. Signals approaching riders with a mirror flash.",
+    "category": "Desert Nomads",
+    "filename": "686de63a-2fc6-4511-9139-c4840c4f3e63.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure beige cloak, head wrap, signal mirror in hand, short spear, leather belt, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "f8eef3c2-5c26-46ce-b571-b747b6b7642b",
+    "name": "Crevasse Ladder Fixer",
+    "description": "Secures crossing ladders over ice gaps. Checks anchors before teams advance.",
+    "category": "Mountain Climbers",
+    "filename": "f8eef3c2-5c26-46ce-b571-b747b6b7642b.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure red climbing jacket, ladder segment carried, ice screws on harness, helmet with headlamp, crampons, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "b41b6945-1365-4d85-9cc8-53ef2aa2ec76",
+    "name": "High Altitude Medic",
+    "description": "Monitors oxygen levels at thin air camps. Treats headaches and frostbite.",
+    "category": "Mountain Climbers",
+    "filename": "b41b6945-1365-4d85-9cc8-53ef2aa2ec76.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure blue parka, medical kit case, pulse oximeter tile, snow boots, wool cap, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "fb3ee7f9-d2c0-435b-bd60-17f3b7eaf16b",
+    "name": "Summit Weather Logger",
+    "description": "Records wind and pressure at peaks. Maintains a small ridge station.",
+    "category": "Mountain Climbers",
+    "filename": "fb3ee7f9-d2c0-435b-bd60-17f3b7eaf16b.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure gray shell coat, handheld anemometer, notebook, compact radio, wind goggles, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "ce7e73f3-0c1b-4c59-91a3-221841513240",
+    "name": "Riftwing Grapple Specialist",
+    "description": "Hooks cargo pods from drifting freighters. Times thruster bursts for precise pulls.",
+    "category": "Space Pirates",
+    "filename": "ce7e73f3-0c1b-4c59-91a3-221841513240.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure dark spacecoat with stitched patches, grappling gun, magnet boots, scratched helmet visor, utility cords, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "ce29692a-14f1-48e9-9a05-87972080875a",
+    "name": "Keep Gate Crossbowman",
+    "description": "Stands duty over the inner gate. Practices bolts at straw targets between shifts.",
+    "category": "Castle Guards",
+    "filename": "ce29692a-14f1-48e9-9a05-87972080875a.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure chainmail torso, crossbow held ready, quiver on back, kettle helm, leather belt, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "cc6936da-ca0c-4ab0-9a7b-9bd4ff99fd26",
+    "name": "Windstep Blade Courier",
+    "description": "Delivers coded messages across rooftops. Moves lightly to avoid attention.",
+    "category": "Ninja Warriors",
+    "filename": "cc6936da-ca0c-4ab0-9a7b-9bd4ff99fd26.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure black and gray gi, short cloak, kunai, scroll case strapped, tabi boots, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "7e1c23f8-2fd5-44d4-90ad-07ea5942125c",
+    "name": "Track Hurdles Sprinter",
+    "description": "Trains to clear hurdles with steady rhythm. Competes with focus and speed.",
+    "category": "Sports Champions",
+    "filename": "7e1c23f8-2fd5-44d4-90ad-07ea5942125c.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure athletic jersey and shorts, headband, starting block, hurdle piece beside, running spikes, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "408be892-0386-4cd4-a816-a93f017a4df0",
+    "name": "Festival Light Stringer",
+    "description": "Hangs decorative lights along streets. Tests each bulb before the evening show.",
+    "category": "Holiday Festivities",
+    "filename": "408be892-0386-4cd4-a816-a93f017a4df0.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure festive sweater, coil of lights over shoulder, step stool, gloves, small tester device, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "cbdd4b55-d8d0-4f97-b332-1c47f09c7735",
+    "name": "Stormcloud Griffin",
+    "description": "Rules winds over cliff peaks. Its feathers crackle softly with charged air.",
+    "category": "Mythic Creatures",
+    "filename": "cbdd4b55-d8d0-4f97-b332-1c47f09c7735.png",
+    "imagePrompt": "Photorealistic LEGO-style figure dark gray griffin body, storm-blue eyes, spread wings, subtle lightning accents on feathers, stone pedestal base, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "9bdc6df9-3a13-4e28-97a8-f9d745baa3f1",
+    "name": "Obsidian Shell Basilisk",
+    "description": "Glides through ruins with patient grace. Its scaled hide reflects a glassy sheen.",
+    "category": "Mythic Creatures",
+    "filename": "9bdc6df9-3a13-4e28-97a8-f9d745baa3f1.png",
+    "imagePrompt": "Photorealistic LEGO-style figure black reptilian body with glossy plates, gemstone green eyes, spined tail, rocky rubble base, poised stance, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "d84676f9-e7c5-483e-a0a9-9cb0bfab95e6",
+    "name": "Elephant Trail Documenter",
+    "description": "Tracks gentle herds at sunrise. Records family behavior from a safe distance.",
+    "category": "Safari Photographers",
+    "filename": "d84676f9-e7c5-483e-a0a9-9cb0bfab95e6.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure khaki photographer outfit, telephoto camera, wide-brim hat, field pack, ankle-high boots, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  },
+  {
+    "productId": "4fbe3e99-14f9-443b-aabe-134863bfd38a",
+    "name": "Riverside Bird Photographer",
+    "description": "Waits quietly near reed beds. Captures quick wingbeats along winding rivers.",
+    "category": "Safari Photographers",
+    "filename": "4fbe3e99-14f9-443b-aabe-134863bfd38a.png",
+    "imagePrompt": "Photorealistic LEGO-style minifigure olive vest, binoculars, compact camera, lightweight tripod, sun cap, clean background, high detail, vibrant, evenly lit, 1024x1024"
+  }
+]

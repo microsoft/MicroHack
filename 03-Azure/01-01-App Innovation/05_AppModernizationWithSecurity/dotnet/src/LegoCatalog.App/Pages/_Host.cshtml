@@ -1,0 +1,28 @@
+@page "/"
+@namespace LegoCatalog.App.Pages
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lego Catalog</title>
+    <base href="/" />
+    <meta name="color-scheme" content="dark light" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/site.css" />
+    <script>
+        // Persist theme preference
+        (()=>{const key='theme-pref';const pref=localStorage.getItem(key);if(pref==='light') document.addEventListener('DOMContentLoaded',()=>document.body.classList.add('light'));})();
+        window.themeToggle=()=>{const b=document.body;const key='theme-pref';const light=b.classList.toggle('light');localStorage.setItem(key, light? 'light':'dark');};
+    </script>
+</head>
+<body>
+    <app>
+        <component type="typeof(App)" render-mode="ServerPrerendered" />
+    </app>
+    <script src="_framework/blazor.server.js"></script>
+</body>
+</html>

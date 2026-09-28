@@ -25,13 +25,10 @@ param(
 
 $scriptPath = Split-Path -Parent $MyInvocation.MyCommand.Definition
 
-
-<#
-# EXAMPLE: Register Resource Providers here if needed
 $requiredProviders = @(
-    "Microsoft.Compute",
-    "Microsoft.Network",
-    "Microsoft.Storage"
+    "Microsoft.Apps",
+    "Microsoft.ContainerRegistry",
+    "Microsoft.DBforPostgreSQL"
 )
 foreach($provider in $requiredProviders) {
     $state = (Get-AzResourceProvider -ProviderNamespace $provider -ErrorAction SilentlyContinue | Select-Object -First 1).RegistrationState
@@ -43,7 +40,6 @@ foreach($provider in $requiredProviders) {
         Write-Host "[$SubscriptionId] Resource provider $provider is already registered."
     }
 }
-#>
 
 
 <#

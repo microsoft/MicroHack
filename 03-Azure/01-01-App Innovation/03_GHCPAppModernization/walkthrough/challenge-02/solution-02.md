@@ -4,20 +4,43 @@
 
 ## 2.1. Fork the sample repositories
 
-Start by logging in your Github account and fork both the .NET and the Java app.
+Complete the [environment setup guide](../../docs/environment-setup.md) before continuing. It explains how to start the recommended GHCP App Modernization Codespace, authenticate GitHub CLI for GitHub Copilot, authenticate Azure CLI, and verify the required tools.
 
-- <https://github.com/Azure-Samples/PhotoAlbum-Java>
-- <https://github.com/Azure-Samples/PhotoAlbum>
+Fork both applications while signed in with the same GitHub account used by `gh`:
+
+- [Fork PhotoAlbum-Java](https://github.com/Azure-Samples/PhotoAlbum-Java/fork)
+- [Fork PhotoAlbum](https://github.com/Azure-Samples/PhotoAlbum/fork)
 
 <img src="img/1.png" width="700" alt="Forking the PhotoAlbum sample repositories" />
 
 ## 2.2. Set up your working directory
 
-Create a working directory in a location at your choice.
+The recommended Codespace opens in the GHCP App Modernization hack directory. Clone your forks into a `repos/` working directory:
 
-Install the Github Copilot modernization agent (modernize CLI). We will use it for the modernization end-to-end (upgrade, assessment, plan, execute). 
+```bash
+mkdir -p repos
+cd repos
 
-Download source: <https://learn.microsoft.com/en-us/azure/developer/github-copilot-app-modernization/modernization-agent/quickstart?tabs=windows%2Cjava#prerequisites>
+GH_USER="$(gh api user --jq .login)"
+git clone "https://github.com/${GH_USER}/PhotoAlbum-Java.git"
+git clone "https://github.com/${GH_USER}/PhotoAlbum.git"
+```
+
+If your forks belong to an organization, use the organization name instead of `${GH_USER}`. Verify that the remotes point to repositories where you can push:
+
+```bash
+git -C PhotoAlbum-Java remote -v
+git -C PhotoAlbum remote -v
+```
+
+The modernization CLI is already installed in the recommended Codespace. Confirm the installation and GitHub authentication:
+
+```bash
+modernize --version
+gh auth status
+```
+
+For a local workstation, follow the installation instructions in the [environment setup guide](../../docs/environment-setup.md#option-b-local-workstation). We will use the modernization CLI end-to-end for upgrade, assessment, planning, and execution.
 
 For batch operations across many repositories, create a JSON config file to list all repositories. For example, create it at `.github/modernize/repos.json` in your working directory, or provide a custom path.
 

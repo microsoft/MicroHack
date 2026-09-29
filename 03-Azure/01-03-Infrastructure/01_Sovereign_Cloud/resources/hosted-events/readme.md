@@ -25,13 +25,30 @@ The shared hook submits `localbox-*` in `rg-localbox-shared`, then waits up to s
 5. Run [Pester health checks](../tests/readme.md) for LocalBox and every selected participant lab. A control-plane-only pass does not establish full readiness.
 6. Complete the [participant VM readiness exercise](../localbox/manual-preparation.md#step-6-test-the-environment), including guest management, Defender and Update Manager. Subscription-wide paid-plan changes require the authorized owner and approved budget.
 
-### Policy failures
+### Hosted MCAPS control-tag initiative
 
-The hosted wrapper applies a temporary, resource-group-scoped `SecurityControl=Ignore` exemption for Azure Local validation. It expires under hosted governance automation after 14 days. Its tag alone does not prove that policy processing is complete, and it does not undo earlier policy changes. Ask the content/platform owner to verify the exemption and repair the validation storage/Key Vault settings if provisioning was already affected. The preparation script does not disable policy, change those security settings or renew exemptions.
+The organizer-owned [shared hook](../../labautomation/shared-deploy-lab.ps1) deploys the [hosted tag initiative](../../labautomation/infra/hosted-tag-policy.bicep) once per subscription, before LocalBox deployment and participant lab fan-out. This is specific to MCAPS governance in Microsoft-internal hosted environments. **Do not deploy it for bring-your-own-subscription or manual setup.** The Console deployment identity must be authorized to create subscription-scoped policy initiatives and assignments, as well as the lab resources.
+
+The initiative `sovereign-hosted-control-tags` and assignment `sov-hosted-control-tags` use four built-in **modify** policies:
+
+| Target | Tag | Required value |
+|--------|-----|----------------|
+| Taggable resources | `SecurityControl` | `Ignore` |
+| Taggable resources | `CostControl` | `Ignore` |
+| Resource groups | `SecurityControl` | `Ignore` |
+| Resource groups | `CostControl` | `Ignore` |
+
+The policies add or replace only these tags during resource creation or update, preserving unrelated tags. This also covers participant-created resources such as the Challenge 2 Key Vault, without requiring participants to add hosted-only tags. Resource-group tags are not automatically inherited; the initiative applies the resource tags explicitly. Non-taggable resource types are outside its scope. The Challenge 1 `DataClassification` policy exercise is unchanged.
+
+Assignment creation alone does not prove propagation. [Setup](../../labautomation/hosted-tag-policy.ps1) writes a temporary `rg-sov-tag-check-*` resource group and an unattached NSG without either control tag, then reads both back to verify that the policies added both `Ignore` values and preserved an unrelated tag. It retries up to 30 times, 10 seconds apart, and removes only its temporary group in a `finally` block. Deployment, permission, verification timeout, or cleanup failures stop shared setup instead of proceeding with an unprotected lab.
+
+This setup targets newly provisioned test/event environments. Azure requires a system-assigned managed identity on the **modify** assignment, even when no remediation is planned. The assignment creates that identity in the deployment location but grants it no remediation RBAC and creates no remediation tasks. Request-time tag modification does not use the assignment identity to update existing resources. See [built-in tag policies](https://learn.microsoft.com/azure/azure-resource-manager/management/tag-policies) and [modify evaluation](https://learn.microsoft.com/azure/governance/policy/concepts/effect-modify#modify-evaluation).
+
+The tags request exemptions from hosted governance automation; they are not Azure Policy exemption resources and do not disable Defender or other Azure security services. The readiness check verifies Azure tags, not completion of downstream MCAPS processing. Confirm hosted governance honors the tags and its exemption lifetime with the platform owner.
 
 ### Automatic shutdown
 
-Deployment automation also applies `CostControl=Ignore` to the LocalBox resource group and its deployed resources, and to the participant lab resource groups, resources and Azure AKS node pools. This requests exemption from hosted cost-control shutdown automation so LocalBox and the other lab VMs remain running during preparation and delivery. Resource-group tags are not inherited, so the resources are tagged explicitly. Re-running shared preparation also merges the tag onto an existing `LocalBox-Client` VM when reusing its deployment; participant resources receive it on their next deployment.
+The initiative applies `CostControl=Ignore` to new or updated taggable resources and resource groups throughout the dedicated hosted subscription, including resources created by participants later in the workshop. Existing explicit deployment tags remain in place. This requests exemption from hosted cost-control shutdown automation so LocalBox and the other lab VMs remain running during preparation and delivery.
 
 Verify that the hosted governance system honors the tag. It does not disable independent VM shutdown schedules, restart already stopped VMs or prevent the Console's scheduled teardown. Keep monitoring costs and retain the event end time and cleanup process.
 

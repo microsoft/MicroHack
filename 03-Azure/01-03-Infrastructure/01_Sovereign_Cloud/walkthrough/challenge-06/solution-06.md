@@ -87,12 +87,16 @@ LocalBox runs as a nested lab environment hosted in Azure. In a production sover
 
 💥 **Basic settings:**
 
-1. **Subscription**: Select your subscription (e.g. **Micro-Hack-1**)
-2. **Resource group**: Select your assigned resource group (e.g., `labuser-XX`; use the exact name provided by the facilitator)
+1. **Subscription**: Select your subscription (e.g. **traininglab-01**)
+2. **Resource group**: Select your assigned resource group (e.g., `rg-labuser-0024`; use the exact name provided by the facilitator)
 3. **Virtual machine name**: `labuserXX-vm-01` (replace XX with your own suffix)
 4. **Security type**: Select **Standard**
 
-![Azure Local](./images/localbox_02.jpg)
+![Azure Arc VM creation Basics showing the assigned resource group, VM name, Standard security, and automatic storage selection](./images/localbox_02.png)
+
+Verify that **Custom location** points to the shared LocalBox environment and **Virtual machine kind** is **Azure Local**. Leave **Storage path** set to **Choose automatically** unless the facilitator instructs otherwise.
+
+The creation screenshots use `labuser24-vm-01`, while the validation and management screenshots use `labuser23-vm-01`. These are examples from different participants; create and use only your own VM throughout the challenge.
 
 5. **Image**: Select the available gallery image **2025-datacenter-azure-edition-smalldisk-01** (Windows Server 2025)
 6. **Virtual processor count**: 2
@@ -137,20 +141,22 @@ Click **Next** twice
 
 ### 2.3 Review and Create
 
-1. Review all settings
+1. Review all settings, especially your assigned resource group, VM name, **Guest management: Enabled**, and a network interface count of **1**
 2. Click **Create** to deploy the VM
 
-![Azure Local](./images/localbox_09.jpg)
+![Azure Arc VM Review and create page showing two virtual processors, 4096 MB memory, guest management enabled, and one network interface](./images/localbox_09.png)
 
 ### 2.4 Validate VM Deployment and Guest Management
 
 1. Click **Go to resource** when the deployment is finished
 2. Verify the VM is running
 3. Review the VM properties and available operations
-4. On **Overview -> Properties -> Configuration**, verify that **Guest management** shows **Enabled (Connected)**
+4. On **Overview -> Properties -> Configuration**, verify that **Arc agent** shows **Enabled (connected)**. Depending on the portal version, this may be labeled **Guest management**
 5. Record your VM name, subscription, resource group, and resource ID. Use this same VM in the following exercises
 
-![Azure Local](./images/localbox_10.jpg)
+![Azure Local VM Overview showing Running status, an assigned IP address, and Arc agent Enabled (connected)](./images/localbox_10.png)
+
+The example also lists the **MDE.Windows** extension under **Extensions**. Its presence alone does not confirm completed Defender for Endpoint onboarding; verify protection status in Task 3.
 
 > [!IMPORTANT]
 > If guest management is disabled or still connecting, resolve this before continuing. Check the guest network with the facilitator and follow [Enable guest management on an Azure Local VM](https://learn.microsoft.com/azure/azure-local/manage/manage-arc-virtual-machines#enable-guest-management). Do not separately onboard a duplicate Arc-enabled server resource for a VM whose guest management is already connected.
@@ -173,6 +179,8 @@ To learn more, see [SSH access to Azure Arc-enabled servers](https://learn.micro
 
 **Verify Defender for Servers coverage and review security recommendations for the VM you created in Task 2.**
 
+The screenshots in Tasks 3 and 4 use `labuser23-vm-01` in resource group `rg-labuser-0023` as an example. Use your own VM, assigned resource group, and subscription throughout; names and assessment results may differ.
+
 ### 3.1 Verify Coverage for Your VM
 
 1. Navigate to **Microsoft Defender for Cloud** in the Azure Portal
@@ -180,18 +188,30 @@ To learn more, see [SSH access to Azure Arc-enabled servers](https://learn.micro
 3. Search for `labuserXX-vm-01` (using your own suffix). Match its resource ID to the VM recorded in Task 2, rather than selecting a shared machine with a similar name
 4. Open the resource details and review its Defender for Servers coverage and onboarding status. The organizer should already have enabled the approved Servers plan and Defender for Endpoint integration
 
-![Screenshot placeholder: Defender for Servers coverage and onboarding status for your Azure Local VM](./images/dfc_01.jpg)
+You can also open your VM resource and select **Settings -> Security** to see its **Microsoft Defender for Servers** status, as illustrated in Task 3.2. The **On** indicator shows the displayed plan status; it does not by itself confirm that Defender for Endpoint onboarding has completed.
+
+For subscription-level context, open **Management -> Environment settings** in Defender for Cloud and locate your lab subscription in the hierarchy:
+
+![Defender for Cloud Environment settings showing the subscription hierarchy and Defender coverage](./images/dfc_01.png)
+
+Select the subscription and review **Defender plans**, including the **Servers** row under **Cloud Workload Protection (CWPP)**. This is a read-only check: do not change plan settings or select **Save**. If you cannot access this view, ask the facilitator to confirm the configured plan.
+
+![Subscription Defender plans showing Servers Plan 2 and Full monitoring coverage](./images/dfc_03.png)
+
+The example subscription uses **Servers Plan 2** with **Full** monitoring coverage. Your lab's approved plan may differ. These subscription-level settings are context, not evidence that your individual VM has completed onboarding.
 
 > [!NOTE]
 > A newly created VM can take time to appear and complete onboarding. If it is missing, first recheck **Guest management: Enabled (Connected)** and the selected subscription/resource group, then refresh Inventory. Ask the facilitator to check plan coverage and extension onboarding if it remains missing or unprotected. An Inventory entry alone does not prove that Defender for Servers protection is active. Do not enable a paid subscription-level plan yourself in a hosted lab.
 
 ### 3.2 Review Your VM's Security Posture
 
-1. From your VM's resource details, open its **Recommendations**
+1. From your VM's resource details in Defender for Cloud, open its **Recommendations**. Alternatively, open your Azure Local VM resource and select **Settings -> Security** to view its recommendations
 2. Review the assessment status and any recommendations for that VM. If navigating from the subscription-wide **Recommendations** view, verify the affected resource is your VM by resource ID
 3. For an available recommendation, inspect its severity, reason, and remediation guidance
 
-![Screenshot placeholder: Defender for Cloud recommendations and assessment status for your Azure Local VM](./images/dfc_02.jpg)
+![Azure Local VM Security page showing Microsoft Defender for Servers On, zero recommendations, and zero security alerts](./images/dfc_02.png)
+
+The example VM shows **Microsoft Defender for Servers On** and **No recommendations to display**. Use **View all recommendations in Defender for Cloud** to investigate further, keeping the results scoped to your own VM.
 
 Depending on the enabled plan and completed assessments, recommendations may concern:
 
@@ -215,6 +235,10 @@ Only investigate or remediate your own VM. Do not apply subscription-wide fixes 
    - Affected resources
    - Recommended actions
 
+![Defender for Cloud Security alerts page showing No alerts found](./images/dfs_alerts_01.png)
+
+The screenshot shows an empty alerts list with **Subscription == All**. In your lab, narrow this filter to your subscription and use the search box to find your VM before reviewing any results.
+
 No alerts is an expected outcome for a new lab VM; do not generate an alert or select another participant's resources to complete this step.
 
 🔑 **Key insight:** Microsoft Defender for Cloud provides unified security management across Azure and Arc-enabled resources. This enables consistent security posture management for sovereign hybrid deployments.
@@ -232,7 +256,9 @@ No alerts is an expected outcome for a new lab VM; do not generate an alert or s
 3. Filter by your subscription and assigned resource group, then search for `labuserXX-vm-01` (using your own suffix)
 4. Select your VM and verify its resource ID matches the VM recorded in Task 2. Azure Local guest VMs use Azure Arc guest management; do not select the shared cluster nodes, LocalBox host, or Arc Resource Bridge
 
-![Screenshot placeholder: Azure Update Manager Machines view filtered to your Azure Local VM and assigned resource group](./images/aum_01.jpg)
+![Azure Update Manager Machines view filtered to the example VM and resource group, showing No updates data before assessment](./images/aum_02.png)
+
+Before the first assessment, your VM may show **No updates data**, as in this example. The screenshot has multiple subscriptions selected; narrow the subscription filter to your own lab subscription as well. The VM appears as an **Arc-enabled server** because Update Manager manages its guest OS through Azure Arc.
 
 > [!IMPORTANT]
 > This exercise assesses the guest operating system of your VM. It does not update the Azure Local cluster infrastructure. If your VM is not listed, recheck its running state, connected guest management, and your filters before continuing. Ask the facilitator to verify permissions and connectivity if needed.
@@ -240,25 +266,29 @@ No alerts is an expected outcome for a new lab VM; do not generate an alert or s
 ### 4.2 Trigger an Update Assessment
 
 1. Review the current update assessment status for your VM. A new VM may not have been assessed yet
-2. Click **Check for updates** and confirm that only your VM is selected
+2. In the **Machines** list, select the checkbox beside your VM to enable **Check for updates**, then click it and confirm that only your VM is selected
 3. Wait for the assessment to finish, then refresh the VM's update status and verify the latest assessment time and successful result
 
-![Screenshot placeholder: Azure Update Manager Check for updates action targeting only your Azure Local VM](./images/aum_02.jpg)
+![Azure Update Manager showing Assessment successful for the selected example VM and three pending updates](./images/aum_01.png)
+
+The screenshot shows the result after **Check for updates** completes: **Assessment successful** for one machine and **3 pending updates** on that VM's row. The **Pending updates** summary tile counts machines with pending updates, not individual updates.
 
 The first assessment can take additional time while the required update extension is deployed. If the assessment fails, review the error and check guest connectivity, extension provisioning, permissions, and access to the configured Windows update source with the facilitator. A pending or failed assessment is not a successful result.
 
 ### 4.3 Review Available Updates
 
-1. Open the completed assessment results for your VM
+1. Open the completed assessment results for your VM. You can also open the VM resource and select **Operations -> Updates -> Recommended updates**
 2. Review the available update classifications, such as:
    - **Critical and security updates** - High priority
    - **Other updates** - Feature and quality updates
    - **Definition updates** - Antimalware definitions
 3. Record the assessment time and pending update counts. A successful assessment with zero pending updates is also a valid outcome
 
-![Screenshot placeholder: Successful update assessment for your Azure Local VM showing the assessment time and pending update counts](./images/aum_03.jpg)
+![Azure Local VM Updates page showing the last assessment time and three available updates, including Definition and UpdateRollup classifications](./images/aum_03.png)
 
-This exercise stops at assessment. Do not install updates, schedule patching, or restart shared resources.
+In this example, **Total updates** is **3**, with **0** critical updates, **0** security updates, and **3** other updates. The table provides the individual classifications, KB IDs, and reboot requirements; definition updates are included under **Other updates** in this summary. Record your own **Last assessed** time and results rather than copying the example values.
+
+This exercise stops at assessment. Leave periodic assessment unchanged; the **Enable now** banner is not required for this manual check. Do not install updates, schedule patching, or restart shared resources.
 
 🔑 **Key insight:** Azure Update Manager provides centralized patch management across Azure VMs and Arc-enabled servers. This is critical for maintaining security compliance in sovereign environments where you need to control when and how updates are applied.
 

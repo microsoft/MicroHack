@@ -9,8 +9,10 @@
 Please ensure that you successfully verified the [General prerequisites](../../Readme.md#general-prerequisites) before continuing with this challenge.
 
 - Azure subscription with Contributor permissions on your resource group
+- Permission to assign the Key Vault roles used below (for example, Owner or User Access Administrator at the relevant scope), or organizer assistance. Contributor alone cannot grant those roles.
 - Azure CLI >= 2.54 or access to Azure Portal
 - Basic understanding of Azure Key Vault and Storage encryption concepts
+- For **Audit Key Usage**, an existing Log Analytics workspace or permission to create one and configure diagnostic settings. The audit section below includes workspace setup; it can be reused in Challenge 3.
 
 ## Task 1: Understand Azure Key Management Options
 
@@ -42,27 +44,24 @@ Please ensure that you successfully verified the [General prerequisites](../../R
 ### Step-by-Step Walkthrough (Azure CLI)
 
 > [!IMPORTANT]
-> **Prerequisite — Challenge 1 policy adjustment:** Before proceeding, make sure you completed the **"Preparing for Next Challenges"** section at the end of Challenge 1's walkthrough. The tag-requirement and public-IP-block policies must be switched to **DoNotEnforce** mode, otherwise the resource creation commands below will fail.
+> **Prerequisite — Challenge 1 policy adjustment:** Complete [Preparing for Next Challenges](../challenge-01/solution-01.md#preparing-for-next-challenges). All your Challenge 1 governance assignments, including the storage public-network-access restriction and bonus initiative, must be in **DoNotEnforce**. Do not disable organizer-managed or inherited policies.
 
 > [!IMPORTANT]
-> The Azure CLI commands in this walkthrough use **bash** syntax and will not work directly in PowerShell. Use **Azure Cloud Shell (Bash)** for the best experience. If running locally on Windows, use **WSL2** (Windows Subsystem for Linux) to run a bash shell. You can install the Azure CLI inside WSL with:
->
-> ```bash
-> curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
-> ```
+> Use a **Bash terminal in your [Sovereign Cloud Codespace](../../Readme.md#recommended-environment-github-codespaces)**. These commands use Bash syntax, not PowerShell. Azure Cloud Shell (Bash) or a local Bash terminal with Azure CLI is an alternative for this challenge.
 
 Set up the common variables that will be used throughout this challenge:
 
 ```bash
 # Set common variables
 # Customize RESOURCE_GROUP for each participant
-RESOURCE_GROUP="labuser-xx"  # Change this for each participant (e.g., labuser-01, labuser-02, ...)
+RESOURCE_GROUP="rg-labuser-0024"  # Replace with your exact assigned resource-group name
 SUBSCRIPTION_ID="xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx"  # Replace with your subscription ID
 LOCATION="norwayeast"  # If attending a MicroHack event, change to the location provided by your local MicroHack organizers
+az account set --subscription "$SUBSCRIPTION_ID"
 ```
 
 > [!WARNING]
-> If your Azure Cloud Shell session times out (e.g. during a break), the variables defined above will be lost and must be re-defined before continuing. We recommend saving them in a local text file on your machine so you can quickly copy and paste them back into a new session.
+> Reinitialize your variables in a new terminal or after restarting your environment. Save the actual generated resource names too, so you can reuse them instead of generating new names. See [saving and restoring your work](../../Readme.md#terminals-breaks-and-saved-work).
 
 #### 1) Create Resource Group (only if needed, for Microsoft-hosted events this is pre-provisioned)
 
@@ -84,12 +83,28 @@ az keyvault create \
   -n $KEYVAULT_NAME \
   -g $RESOURCE_GROUP \
   -l $LOCATION \
+  --enable-rbac-authorization true \
   --enable-purge-protection true \
   --sku standard
 
 ```
 
-> **Note:** Soft-delete is enabled by default. Purge protection prevents hard deletion even by administrators, supporting regulatory retention requirements. Ensure the vault resides in-region with the storage account.
+> **Soft-delete explained:** Deleting a vault or a key does not immediately destroy it permanently. It becomes unavailable for normal use but remains **recoverable during the retention period**. New vaults default to 90 days; a retention period of 7-90 days can be chosen at creation and cannot be changed later. **Purge protection** prevents permanent deletion before that period expires, even by administrators, and cannot be disabled once enabled. Deleted vault names remain reserved until the vault is purged. Do not delete the CMK to test this: Azure Storage depends on access to it. See [Key Vault soft-delete](https://learn.microsoft.com/azure/key-vault/general/soft-delete-overview).
+
+#### 2a) Configure Key Vault Connectivity
+
+For this lab, allow public access from all networks so the portal and Codespaces can reach the vault without client-IP rules.
+
+**Azure Portal:** Open **Key Vault > Networking > Firewalls and virtual networks**, select **Allow public access from all networks**, and **Save**.
+
+**CLI equivalent:**
+
+```bash
+az keyvault update --name "$KEYVAULT_NAME" --resource-group "$RESOURCE_GROUP" \
+  --public-network-access Enabled --default-action Allow
+```
+
+> **Lab-only simplification:** Public network access does not grant access to keys; Microsoft Entra authentication and the Key Vault roles below are still required. Use private endpoints or restricted networks for production workloads.
 
 #### 3) Generate or Import a Key
 
@@ -100,7 +115,7 @@ az keyvault create \
 ```bash
 CURRENT_USER_ID=$(az ad signed-in-user show --query id -o tsv)
 
-# Assign Key Vault Secrets Officer role to current user
+# Assign Key Vault Crypto Officer role to current user
 az role assignment create \
   --role "Key Vault Crypto Officer" \
   --assignee $CURRENT_USER_ID \
@@ -216,8 +231,55 @@ Expected values:
 
 #### C) Audit Key Usage
 
-- In **Key Vault** > **Monitoring** > **Diagnostic settings**, send logs to Log Analytics or Event Hub to track wrap/unwrap operations.
-- Use `az monitor activity-log list --status Succeeded --caller $STORAGEACCOUNT_PRINCIPAL_ID` to cross-check control-plane events.
+Key Vault resource logs are not collected automatically. A **Log Analytics workspace (LAW) must exist before you select it as a diagnostic destination**. Reuse your assigned workspace, or create one in your own resource group and approved region. Log ingestion can incur charges.
+
+**Using Azure Portal:**
+
+1. Search for **Log Analytics workspaces > Create**. Select your subscription, existing resource group, approved region, and a name such as `law-rg-labuser-0024`. Select **Review + create > Create**. Skip creation if you already have a workspace.
+2. Open **Key Vault > Monitoring > Diagnostic settings > Add diagnostic setting**.
+3. Name it `keyvault-audit`, select the **AuditEvent** log category (or the **audit** category group), and choose **Send to Log Analytics workspace**.
+4. Select your subscription and workspace. If a destination-table choice is shown, choose **Azure diagnostics** to match the query below, then **Save**.
+
+**Using Azure CLI:**
+
+```bash
+LOG_ANALYTICS_WORKSPACE="law-$RESOURCE_GROUP"  # Or the name of your existing workspace
+
+# Run only if you need a new workspace
+az monitor log-analytics workspace create \
+  --resource-group "$RESOURCE_GROUP" --workspace-name "$LOG_ANALYTICS_WORKSPACE" \
+  --location "$LOCATION"
+```
+
+```bash
+LOG_ANALYTICS_WORKSPACE_ID=$(az monitor log-analytics workspace show \
+  --resource-group "$RESOURCE_GROUP" --workspace-name "$LOG_ANALYTICS_WORKSPACE" \
+  --query id -o tsv)
+KEYVAULT_ID=$(az keyvault show --name "$KEYVAULT_NAME" --resource-group "$RESOURCE_GROUP" \
+  --query id -o tsv)
+
+az monitor diagnostic-settings create --name keyvault-audit \
+  --resource "$KEYVAULT_ID" --workspace "$LOG_ANALYTICS_WORKSPACE_ID" \
+  --export-to-resource-specific false \
+  --logs '[{"category":"AuditEvent","enabled":true}]'
+
+# Generate a read event after enabling diagnostics; this does not rotate or export the private key
+az keyvault key show --vault-name "$KEYVAULT_NAME" --name cmk-storage-rsa-4096 \
+  --query key.kid -o tsv
+```
+
+In the workspace's **Logs** pane, switch to **KQL mode** and run the following, replacing the vault-name placeholder:
+
+```kusto
+AzureDiagnostics
+| where TimeGenerated > ago(1h)
+| where ResourceProvider == "MICROSOFT.KEYVAULT" and Category == "AuditEvent"
+| where Resource =~ "<your-key-vault-name>"
+| project TimeGenerated, OperationName, ResultType, Resource
+| order by TimeGenerated desc
+```
+
+Wait for ingestion before retrying; earlier operations are not backfilled. The read above should produce a key-read event. Wrap/unwrap events depend on Azure Storage actually accessing the key, so they may not appear immediately because of caching. Empty results (or a table not yet created) are not proof that audit logging works. Verify the workspace, diagnostic category, and newly generated activity. Azure **Activity Log** covers control-plane operations and is not a substitute for these key-operation logs. Keep the workspace name for Challenge 3. See [Enable Key Vault logging](https://learn.microsoft.com/azure/key-vault/general/howto-logging).
 
 ---
 
@@ -241,7 +303,7 @@ If you navigate to the key inside your Key Vault, you should now see a new versi
 
 - **403 Forbidden when wrapping key:** Confirm the storage account managed identity has `get`, `wrapKey`, `unwrapKey` permissions and the key state is `enabled`.
 - **Key not found or disabled:** Verify `keyVaultUri`, `keyName`, and version. Check key attributes in Key Vault > Keys.
-- **Network access denied:** Review Key Vault networking restrictions; allow trusted services or configure private endpoints/VNet integration.
+- **Network access denied / ForbiddenByFirewall:** Confirm public access from all networks is enabled as in Step 2a. If an inherited policy blocks the change, contact the organizer rather than disabling the policy.
 - **Rotation failures:** If you specified a key version, update the storage encryption settings after rotation; otherwise the service continues referencing the old version.
 - **RBAC latency:** Newly granted roles can take several minutes to propagate—wait or reauthenticate before retrying operations.
 
@@ -252,7 +314,7 @@ If you navigate to the key inside your Key Vault, you should now see a new versi
 - **Regional co-location:** Place Key Vault/Managed HSM and Storage in the **same sovereign region** to meet residency mandates and reduce latency.
 - **Soft-delete & purge protection:** Required to ensure keys cannot be permanently removed without oversight; verify per policy on vault creation.
 - **Role separation:** Use Azure RBAC to separate key custodians (Key Vault Administrator) from storage data operators (Storage Account Contributor).
-- **Connectivity:** Enforce **private endpoints**, network rules, and Azure Firewall to keep traffic within trusted boundaries.
+- **Production connectivity:** Use **private endpoints**, network rules, and Azure Firewall to keep traffic within trusted boundaries; this lab uses public endpoints for simplicity.
 - **Service scope:** Confirm dependent services (Azure Data Lake Storage Gen2, Synapse, etc.) support CMKs in the target region using the Microsoft Learn compatibility list.
 
 ---
@@ -262,6 +324,9 @@ If you navigate to the key inside your Key Vault, you should now see a new versi
 - [Azure Key & Certificate Management — Microsoft Learn](https://learn.microsoft.com/azure/key-vault/general/overview)
 - [Services that support CMKs with Key Vault & Managed HSM — Microsoft Learn](https://learn.microsoft.com/azure/security/fundamentals/encryption-customer-managed-keys-support)
 - [Customer-managed keys for account encryption — Azure Storage — Microsoft Learn](https://learn.microsoft.com/azure/storage/common/customer-managed-keys-overview)
+- [Key Vault soft-delete and purge protection](https://learn.microsoft.com/azure/key-vault/general/soft-delete-overview)
+- [Key Vault network security](https://learn.microsoft.com/azure/key-vault/general/network-security)
+- [Enable Key Vault logging](https://learn.microsoft.com/azure/key-vault/general/howto-logging)
 
 ---
 

@@ -10,6 +10,26 @@ The runner uses the caller's existing Azure CLI login and never changes it. Loca
 
 Full Kubernetes checks require kubeconfigs that already authenticate to the intended clusters. LocalBox defaults to `$HOME/.kube/config` (on Windows, `$HOME\.kube\config`), the usual path updated by `az connectedk8s proxy`. An explicit `-LocalBoxKubeconfig` takes precedence; otherwise a `LocalBox.Kubeconfig` value in the inventory is preserved before using the default. The selected file's current context must target `localbox-aks`; do not switch it during testing. For AKS Local, use an Entra group member in a separate CLI profile/session and the [Jumpstart proxy workflow](https://jumpstart.azure.com/azure_jumpstart_localbox/AKS). Keep the proxy/tunnel running throughout testing. For K3s, use its existing private/Bastion access path. Tests never switch the current kubeconfig or retrieve admin credentials automatically.
 
+## Challenge 4 browser-behavior unit tests
+
+From this directory, run `Invoke-Pester ./visual-attestation.tests.ps1 -Output Detailed`. These offline tests mock Azure and Docker commands. They cover `-SkipBrowser` output and comparison HTML generation for Codespaces, while preserving automatic browser launch for desktop users.
+
+A fresh Codespace smoke test is still required to validate the devcontainer build, Docker daemon, `confcom` policy generation and Azure deployment together; the mocked tests do not establish end-to-end Codespaces support.
+
+## Hosted tag-policy unit tests
+
+From this directory, run `Invoke-Pester ./hosted-tag-policy.tests.ps1 -Output Detailed`. These offline tests mock all Azure and Console commands. They cover hosted-only wiring, subscription targeting, tag-policy propagation, both tag values on resources and resource groups, preservation of unrelated tags, bounded failure, and temporary probe cleanup. Compile the initiative separately with `az bicep build --file ../../labautomation/infra/hosted-tag-policy.bicep --stdout`.
+
+The next fresh hosted environment must also pass the setup's live tag-policy probe and confirm that a participant-created Challenge 2 Key Vault receives both tags. No existing-resource remediation or BYOS policy deployment is part of this test.
+
+### Live validation
+
+On 2026-09-29, the initiative and assignment were deployed using Azure CLI in a hosted test subscription. A new empty Key Vault in an existing participant resource group was created with only `MicroHackPurpose=HostedTagPolicyLiveTest`; a separate read confirmed `SecurityControl=Ignore`, `CostControl=Ignore`, and preservation of the purpose tag. The existing resource group lacked `SecurityControl`, demonstrating subscription-policy application rather than inheritance from that group's tags. No remediation roles were granted to the assignment identity.
+
+The test vault was deleted and its soft-deleted state verified, with seven-day purge-protected retention. The assignment remains deployed; existing participant resources and resource-group tags were not changed. Fresh resource-group creation was blocked by the participant identity's permissions, so resource-group tagging and the PowerShell setup probe still require organizer-level live validation. Downstream MCAPS processing was not tested.
+
+Live deployment also established that this subscription supports policy API version `2026-06-01`, not `2026-07-01`, and requires a managed identity for the modify assignment even without remediation. The template and offline tests reflect both requirements; a successful what-if alone did not catch either deployment failure.
+
 ## Download without cloning
 
 Download [test-sovereign-cloud.ps1](../test-sovereign-cloud.ps1) from the same trusted ref as preparation. `-DownloadTests` defaults to `$true`: every run downloads the helpers and two suites to a temporary directory and prints the repository/ref being used. Internet access is required unless you pass `-DownloadTests:$false` with a complete local checkout. `-GitHubRef` must identify the **same reviewed ref** as the runner, preferably a commit SHA; it defaults to `main`. Downloaded scripts execute under your privileges, so review and pin them. Download failures stop the run rather than silently falling back to other code.

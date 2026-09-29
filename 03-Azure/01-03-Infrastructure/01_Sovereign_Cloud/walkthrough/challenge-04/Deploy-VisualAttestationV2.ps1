@@ -33,7 +33,8 @@
     With -Deploy: use the Standard SKU template (attestation will fail).
 
 .PARAMETER SkipBrowser
-    Don't auto-open Edge after a successful deploy.
+    Don't launch a browser after deployment (use in Codespaces/headless terminals).
+    Compare still generates side-by-side-compare.html for download and local viewing.
 
 .PARAMETER RegistryName
     Optional ACR name to reuse. If omitted, a deterministic name is generated
@@ -63,6 +64,10 @@
 .EXAMPLE
     # Side-by-side comparison
     ./Deploy-VisualAttestationV2.ps1 -Compare
+
+.EXAMPLE
+    # Codespaces: generate the comparison page without launching a remote browser
+    ./Deploy-VisualAttestationV2.ps1 -Compare -SkipBrowser
 
 .EXAMPLE
     ./Deploy-VisualAttestationV2.ps1 -Cleanup
@@ -241,7 +246,7 @@ function Test-ConfidentialPrereqs {
     Write-Host "Checking prerequisites for Confidential ACI deploy..."
     docker info 2>&1 | Out-Null
     if ($LASTEXITCODE -ne 0) {
-        throw "Docker is not running. Required by 'az confcom acipolicygen' for CCE policy generation. Start Docker Desktop, or pass -NoAcc to deploy on Standard SKU."
+        throw "Docker Engine is not reachable. Required by 'az confcom acipolicygen' for CCE policy generation. Start or repair your Linux Docker Engine (Codespaces devcontainer or local host), then verify with 'docker info'."
     }
     az extension show -n confcom 2>&1 | Out-Null
     if ($LASTEXITCODE -ne 0) {
@@ -494,6 +499,9 @@ function Invoke-Deploy {
     if (-not $SkipBrowser) {
         Start-Process "http://$fqdn"
     }
+    else {
+        Write-Host "Browser launch skipped. Open http://$fqdn in your own browser."
+    }
 
     Write-Host ""
     Write-Host "To view logs:    az container logs -g $($cfg.resourceGroup) -n $name --container-name cc-attest"
@@ -587,14 +595,23 @@ function Invoke-Compare {
     Write-Host "  • Standard:     Attestation fails (no /dev/sev-guest)"
     Write-Host ""
 
+    $confUrl = "http://$fqdn_conf"
+    $stdUrl = "http://$fqdn_std"
+    $comparePage = Join-Path $PSScriptRoot 'side-by-side-compare.html'
+    New-ComparePage -ConfidentialUrl $confUrl -StandardUrl $stdUrl -OutputPath $comparePage
+    Write-Success "Generated: $comparePage"
     if (-not $SkipBrowser) {
-        $confUrl = "http://$fqdn_conf"
-        $stdUrl = "http://$fqdn_std"
-        $comparePage = Join-Path $PSScriptRoot 'side-by-side-compare.html'
-        New-ComparePage -ConfidentialUrl $confUrl -StandardUrl $stdUrl -OutputPath $comparePage
-        Write-Success "Generated: $comparePage"
         Write-Host "Opening in new browser window..."
         Start-Process $comparePage
+    }
+    else {
+        Write-Host "Browser launch skipped. Open these Azure endpoints in your own browser:"
+        Write-Host "  Confidential: $confUrl"
+        Write-Host "  Standard:     $stdUrl"
+        Write-Host "For side-by-side viewing in Codespaces, right-click side-by-side-compare.html"
+        Write-Host "in VS Code Explorer, select Download, and open the downloaded file locally."
+        Write-Host "If browser security blocks its embedded pages, use the two URLs in separate tabs."
+        Write-Host "No local web server or Codespaces port forwarding is required."
     }
 }
 

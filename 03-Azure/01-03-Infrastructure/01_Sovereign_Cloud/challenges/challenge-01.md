@@ -1,7 +1,8 @@
 # Challenge 1 - Enforce Sovereign Controls with Azure Policy and RBAC
 
-- All policy assignments in this challenge should be scoped to your own resource group (e.g. "LabUser-01")
-- All resources created in Microsoft Entra should be prefixed with your prefix (e.g. "LabUser01")
+- All policy assignments in this challenge should be scoped to your own resource group (e.g. `rg-labuser-0024`).
+- Use a consistent friendly prefix for assignments (`Lab User-0024`) and Microsoft Entra groups (`Lab-User-0024`), replacing the number with your own.
+- Start the governance assignments in **DoNotEnforce**. In walkthrough Task 9, temporarily enable only the location, tag, and public-IP assignments in your group for the deny tests, then restore **DoNotEnforce** before continuing.
 
 ## Goal
 
@@ -11,7 +12,7 @@ The goal of this exercise is to establish foundational sovereign cloud governanc
 
 - Create and assign Azure Policy controls to restrict deployments to EU sovereign regions (Norway East, Germany North, North Europe).
 - Enforce resource tagging requirements for data classification and compliance tracking.
-- Block public IP exposure by enforcing private endpoints for sensitive resources.
+- Block public IP resource creation and evaluate storage public-network-access restrictions. Disabling public network access does not create or verify a private endpoint.
 - Assign least-privilege RBAC roles for the SovereignOps team.
 - Create a custom RBAC role for compliance officers with audit-only permissions.
 - Review the Azure Policy Compliance Dashboard to identify non-compliant resources.
@@ -20,11 +21,12 @@ The goal of this exercise is to establish foundational sovereign cloud governanc
 ## Success criteria
 
 - You have successfully assigned Azure Policy to restrict deployments to sovereign regions only.
-- Resources require the `DataClassification=Sovereign` tag before deployment.
-- Public IP addresses are blocked for new deployments.
+- During the temporary enforcement test, resources require the `DataClassification=Sovereign` tag before deployment.
+- During that test, public IP addresses are blocked for new deployments.
 - You have created and assigned a custom RBAC role for compliance auditing.
 - The Azure Policy Compliance Dashboard shows your compliance status.
 - Non-compliant resources have been successfully remediated.
+- Your exercise assignments are returned to **DoNotEnforce** before the next challenge; organizer-managed policies remain unchanged.
 
 ## Learning resources
 

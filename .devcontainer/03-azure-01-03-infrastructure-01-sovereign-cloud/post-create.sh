@@ -179,7 +179,7 @@ retry 3 az bicep install \
 
 echo "Installed tool versions:"
 MISSING_TOOLING=0
-for cmd in az kubectl helm rad bicep node npm npx rustc cargo git jq yq pwsh ssh tar; do
+for cmd in az kubectl helm rad bicep node npm npx rustc cargo git jq yq pwsh ssh tar docker; do
   if ! command -v "$cmd" >/dev/null 2>&1; then
     echo "$cmd: not found"
     MISSING_TOOLING=1
@@ -202,7 +202,7 @@ for cmd in az kubectl helm rad bicep node npm npx rustc cargo git jq yq pwsh ssh
     bicep)
       bicep --version 2>/dev/null || true
       ;;
-    node|npm|npx|rustc|cargo|jq|yq|pwsh)
+    node|npm|npx|rustc|cargo|jq|yq|pwsh|docker)
       "$cmd" --version 2>/dev/null | head -n 1 || true
       ;;
   esac

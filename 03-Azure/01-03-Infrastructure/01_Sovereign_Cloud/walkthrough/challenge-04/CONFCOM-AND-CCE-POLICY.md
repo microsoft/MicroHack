@@ -4,6 +4,13 @@ This supplement explains the Confidential Computing Enforcement (CCE) policy in
 Challenge 4 from two perspectives. It is not an additional task and does not add
 commands to the walkthrough.
 
+Start with [Understand Runtime Attestation Fundamentals](solution-04.md#understand-runtime-attestation-fundamentals)
+for the experiment's goal. Use the
+[recommended GitHub Codespaces environment](../../Readme.md#recommended-environment-github-codespaces)
+for all challenges, then run the [engine preflight](solution-04.md#verify-your-environment-before-you-start).
+[Local Windows Docker Desktop setup](solution-04.md#windows-docker-desktop-setup-before-the-workshop)
+is an optional alternative.
+
 ## The short answer
 
 For the custom Confidential Azure Container Instances (ACI) deployment used in
@@ -12,8 +19,10 @@ this challenge:
 - A CCE policy is part of the Azure confidential-container security model.
 - Microsoft's supported tool for generating that policy is the Azure CLI
   `confcom` extension.
-- The policy generator uses a local Docker engine to inspect the exact container
-  image and calculate its permitted layer hashes.
+- The policy generator uses a Docker engine reachable from the CLI environment
+  to inspect the exact container image and calculate its permitted layer hashes.
+  In the Sovereign Codespaces devcontainer, Docker-in-Docker provides this Linux
+  engine; no Docker Desktop installation on the participant's laptop is needed.
 - Docker is needed while preparing the deployment. It is not installed in the
   ACI container group and is not needed by the application at runtime.
 - Standard ACI does not use this CCE policy flow. That is why the Standard side
@@ -122,8 +131,12 @@ The distinction in this challenge is:
 | `az confcom acipolicygen` | Yes | The tool inspects and hashes image layers through a local Docker engine. |
 | Running application in ACI | No | Azure runs the resulting image and enforces the submitted policy. |
 
-Azure Cloud Shell does not provide a Docker daemon, so Microsoft's documented
-workflow requires Azure CLI and Docker Engine on a local computer.
+Azure Cloud Shell does not provide a Docker daemon and cannot perform this
+policy-generation step. The required Azure CLI and Linux Docker Engine run in
+the recommended Sovereign Codespaces devcontainer, or on an optional local
+workstation. "Local" here means reachable by `confcom`, not necessarily on the
+participant's laptop. Neither environment needs SEV-SNP hardware: attestation
+runs in Confidential ACI in Azure.
 
 ### Why cleanup matters before a rerun
 
@@ -135,12 +148,16 @@ Challenge 4 uses a simple lifecycle:
 
 ```powershell
 ./Deploy-VisualAttestationV2.ps1 -Build
-./Deploy-VisualAttestationV2.ps1 -Compare
+./Deploy-VisualAttestationV2.ps1 -Compare -SkipBrowser
 ./Deploy-VisualAttestationV2.ps1 -Cleanup
 ```
 
 Cleanup removes the tagged local image as well as the Challenge 4 Azure
 resources. Run it before rebuilding with the same workshop values.
+In Codespaces, run these commands in `pwsh`. `-SkipBrowser` still generates the
+comparison HTML: download it from VS Code Explorer and open it locally, or open
+the printed Azure URLs in separate browser tabs. No port forwarding is needed.
+On a desktop with a browser, omit `-SkipBrowser` to open the page automatically.
 
 ### What a CCE policy does not replace
 

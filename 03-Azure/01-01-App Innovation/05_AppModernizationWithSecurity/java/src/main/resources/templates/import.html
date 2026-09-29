@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Import catalog</title>
+</head>
+<body>
+<a href="/">Back to catalog</a>
+<h1>Import catalog</h1>
+<p>The complete JSON document is validated before any figure is published.</p>
+<form method="post" action="/import" enctype="multipart/form-data">
+    <label>Catalog JSON <input type="file" name="catalogFile" accept="application/json" required></label>
+    <button type="submit">Import</button>
+</form>
+</body>
+</html>

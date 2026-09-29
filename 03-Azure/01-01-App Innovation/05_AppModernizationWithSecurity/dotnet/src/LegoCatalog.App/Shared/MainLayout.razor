@@ -1,0 +1,19 @@
+@inherits LayoutComponentBase
+
+<header class="app-header">
+    <div class="container nav-inner" style="justify-content:flex-end;">
+        <div class="header-actions">
+            <button type="button" class="icon-btn" title="Toggle dark mode" @onclick="ToggleTheme">🌓</button>
+            <a class="github-link" href="https://github.com/tkubica12/MicroHack-AppInnovation" target="_blank" rel="noopener" title="Repository">GitHub</a>
+        </div>
+    </div>
+</header>
+<main class="main-content container" tabindex="-1">
+    @Body
+</main>
+
+@code {
+    [Inject] IJSRuntime JS { get; set; } = default!;
+
+    private async Task ToggleTheme() => await JS.InvokeVoidAsync("themeToggle");
+}

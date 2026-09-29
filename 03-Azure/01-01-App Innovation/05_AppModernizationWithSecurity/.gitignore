@@ -1,0 +1,75 @@
+
+# Python / uv
+__pycache__/
+.venv/
+*.egg-info/
+
+# Environment files
+.env
+dataGenerator/.env
+
+# Logs
+*.log
+logs/
+
+# .NET / Visual Studio
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.vcxproj.*
+.vs/
+TestResult*/
+[Tt]est[Rr]esult*/
+*.VisualState.xml
+*.cache
+*.ide
+*.orig
+*.rsuser
+
+# Build artifacts
+artifacts/
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+*.nuget.props
+*.nuget.targets
+
+# Rider / JetBrains
+.idea/
+
+# Coverage
+coverage*/
+*.coverage
+*.coveragexml
+lcov.info
+.pytest_cache/
+
+# Logs (dotnet)
+*.trx
+
+
+# Provisioner-generated SDK pin (written into the source tree after the baseline commit)
+global.json
+
+# Golden handoffs are facilitator- and delivery-specific: they carry live Azure resource
+# IDs and an image digest that go stale the moment that environment is torn down.
+# Build your own with catalog-migrate render-handoff. See workshop/golden/README.md.
+workshop/golden/*/evidence/
+
+# Terraform - state and plans contain the VM administrator password, generated database
+# passwords, performance API keys, and per-user Entra passwords. Never commit them.
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+tfplan
+*.tfplan
+backend.hcl
+backend_override.tf

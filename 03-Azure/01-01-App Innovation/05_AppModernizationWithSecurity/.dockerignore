@@ -1,0 +1,17 @@
+.git
+.github
+.azure
+baseInfra
+challenges
+solutions
+docs
+infra
+workshop
+tests
+data/categories.json
+data/images
+dotnet/**/bin
+dotnet/**/obj
+dotnet/**/TestResults
+java/target
+**/.DS_Store

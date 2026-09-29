@@ -1,0 +1,13 @@
+# Copy to backend.hcl (git-ignored) and fill in the values produced by the remote-state
+# bootstrap in docs/Facilitator.md, then run:
+#   terraform init -backend-config=backend.hcl
+#
+# use_azuread_auth keeps the state container free of shared storage keys; the facilitator
+# identity needs "Storage Blob Data Contributor" on the container, which already
+# covers the blob leases Terraform uses for state locking.
+
+resource_group_name  = "rg-microhack-tfstate"
+storage_account_name = "stmhtfstate<unique-suffix>"
+container_name       = "baseinfra"
+key                  = "baseinfra.tfstate"
+use_azuread_auth     = true

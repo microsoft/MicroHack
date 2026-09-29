@@ -47,11 +47,7 @@ Please ensure that you successfully verified the [General prerequisites](../../R
 > **Prerequisite — Challenge 1 policy adjustment:** Complete [Preparing for Next Challenges](../challenge-01/solution-01.md#preparing-for-next-challenges). All your Challenge 1 governance assignments, including the storage public-network-access restriction and bonus initiative, must be in **DoNotEnforce**. Do not disable organizer-managed or inherited policies.
 
 > [!IMPORTANT]
-> The Azure CLI commands in this walkthrough use **bash** syntax and will not work directly in PowerShell. Use **Azure Cloud Shell (Bash)** for the best experience. If running locally on Windows, use **WSL2** (Windows Subsystem for Linux) to run a bash shell. You can install the Azure CLI inside WSL with:
->
-> ```bash
-> curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
-> ```
+> Use a **Bash terminal in your [Sovereign Cloud Codespace](../../Readme.md#recommended-environment-github-codespaces)**. These commands use Bash syntax, not PowerShell. Azure Cloud Shell (Bash) or a local Bash terminal with Azure CLI is an alternative for this challenge.
 
 Set up the common variables that will be used throughout this challenge:
 
@@ -65,7 +61,7 @@ az account set --subscription "$SUBSCRIPTION_ID"
 ```
 
 > [!WARNING]
-> If your Azure Cloud Shell session times out (e.g. during a break), the variables defined above will be lost and must be re-defined before continuing. We recommend saving them in a local text file on your machine so you can quickly copy and paste them back into a new session.
+> Reinitialize your variables in a new terminal or after restarting your environment. Save the actual generated resource names too, so you can reuse them instead of generating new names. See [saving and restoring your work](../../Readme.md#terminals-breaks-and-saved-work).
 
 #### 1) Create Resource Group (only if needed, for Microsoft-hosted events this is pre-provisioned)
 
@@ -97,7 +93,7 @@ az keyvault create \
 
 #### 2a) Configure Key Vault Connectivity
 
-For this lab, allow public access from all networks so the portal and Cloud Shell can reach the vault without client-IP rules.
+For this lab, allow public access from all networks so the portal and Codespaces can reach the vault without client-IP rules.
 
 **Azure Portal:** Open **Key Vault > Networking > Firewalls and virtual networks**, select **Allow public access from all networks**, and **Save**.
 

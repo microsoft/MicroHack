@@ -12,6 +12,8 @@ This challenge uses **Azure Arc Jumpstart LocalBox** to simulate an Azure Local 
 
 Please ensure that you successfully verified the [General prerequisites](../../Readme.md#general-prerequisites) before continuing with this challenge.
 
+Keep your [Sovereign Cloud Codespace](../../Readme.md#recommended-environment-github-codespaces) for lab work, but complete the core tasks below in the Azure portal. No local Windows installation or remote desktop connection is required.
+
 **Additional requirements for this challenge:**
 
 - Access to a pre-deployed LocalBox environment with Arc Resource Bridge, a VM image, storage, and a logical network ready for VM creation
@@ -164,6 +166,8 @@ The example also lists the **MDE.Windows** extension under **Extensions**. Its p
 🔑 **Key insight:** Azure Arc VM management enables self-service VM provisioning on Azure Local using familiar Azure tools and RBAC. This allows organizations to maintain data sovereignty by keeping workloads on-premises while benefiting from Azure management capabilities.
 
 #### **Bonus tip**
+
+This optional Remote Desktop example requires a local computer with an RDP client; it is not part of the browser-only Codespaces workflow and can be skipped.
 
 By appending **--rdp** to the Azure CLI command generated on the **Connect** blade for the VM, it is possible to connect to Windows machines running on Azure Local (and any Arc-enabled Windows machine) via Remote Desktop when running the command from Azure CLI on your local computer:
 

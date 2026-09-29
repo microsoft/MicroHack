@@ -65,11 +65,7 @@ The portal's **Assignment name** field sets the friendly display name; its under
 
 ### Step 1: Configure Environment Variables
 
-Open Azure Cloud Shell:
-
-![image](./img/cloud-shell.jpg)
-
-![image](./img/cloud-shell2.jpg)
+Open a **Bash terminal in your [Sovereign Cloud Codespace](../../Readme.md#recommended-environment-github-codespaces)**. Azure Cloud Shell (Bash) or a local Bash terminal with Azure CLI is an alternative for this challenge.
 
 Set up the variables that will be used throughout this challenge:
 
@@ -78,11 +74,7 @@ Set up the variables that will be used throughout this challenge:
 **Using Azure CLI:**
 
 > [!IMPORTANT]
-> The Azure CLI commands in this walkthrough use **bash** syntax and will not work directly in PowerShell. Use **Azure Cloud Shell (Bash)** for the best experience. If running locally on Windows, use **WSL2** (Windows Subsystem for Linux) to run a bash shell. You can install the Azure CLI inside WSL with:
->
-> ```bash
-> curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
-> ```
+> The Azure CLI commands in this walkthrough use **Bash** syntax, not PowerShell. Bash is the default terminal in the Sovereign Cloud Codespace; no installation is needed there.
 
 ```bash
 # Set common variables
@@ -107,7 +99,7 @@ For `rg-labuser-0024`, the resulting group name is `Lab-User-0024-Compliance-Off
 🔑 **Best Practice**: Setting variables once at the beginning ensures consistency across all commands and reduces the chance of errors from manual editing.
 
 > [!WARNING]
-> If your Azure Cloud Shell session times out (e.g. during a break), the variables defined above will be lost and must be re-defined before continuing. We recommend saving them in a local text file on your machine so you can quickly copy and paste them back into a new session.
+> Reinitialize these variables in a new terminal or after restarting your environment. See [saving and restoring your work](../../Readme.md#terminals-breaks-and-saved-work).
 
 ### Step 2: Identify the Built-in Policy
 
@@ -467,7 +459,7 @@ az policy assignment create \
 ```
 
 > [!TIP]
-> When using Cloud Shell instead of a local terminal to run Azure CLI commands, create the files locally in a text editor (Notepad or similar). Then you can upload the files to Cloud Shell by using the **Manage files -> Upload** feature before running the command in the following step:
+> In Codespaces, create and save the JSON file using the VS Code Explorer in your terminal's current directory. If using Cloud Shell instead, upload it with **Manage files > Upload** before running the next command.
 
 ![image](./img/cloud-shell4.jpg)
 
@@ -742,7 +734,7 @@ az policy state list -g $RESOURCE_GROUP \
 
 ### Step 5: Request an On-Demand Compliance Evaluation
 
-There is no portal **Trigger compliance evaluation** button required by this walkthrough. From the portal, open **Cloud Shell** using the terminal icon in the top toolbar, choose **Bash**, initialize the Task 2 variables if necessary, and run:
+There is no portal **Trigger compliance evaluation** button required by this walkthrough. In your Codespaces **Bash** terminal (or Cloud Shell), initialize the Task 2 variables if necessary, and run:
 
 ```bash
 az policy state trigger-scan \

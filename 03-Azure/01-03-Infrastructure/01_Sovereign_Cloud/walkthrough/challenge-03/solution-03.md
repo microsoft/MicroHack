@@ -16,11 +16,7 @@ Please ensure that you successfully verified the [General prerequisites](../../R
 - A client with network access to the Blob endpoint. Creating or viewing an account does not prove you can access its containers; complete the connectivity check in Task 5 before creating a container.
 
 > [!IMPORTANT]
-> The Azure CLI commands in this walkthrough use **bash** syntax and will not work directly in PowerShell. Use **Azure Cloud Shell (Bash)** for the best experience. If running locally on Windows, use **WSL2** (Windows Subsystem for Linux) to run a bash shell. You can install the Azure CLI inside WSL with:
->
-> ```bash
-> curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
-> ```
+> Use a **Bash terminal in your [Sovereign Cloud Codespace](../../Readme.md#recommended-environment-github-codespaces)**. These commands use Bash syntax, not PowerShell. Azure Cloud Shell (Bash) or a local Bash terminal with Azure CLI is an alternative for this challenge.
 
 Set up the common variables that will be used in the CLI alternatives throughout this challenge:
 
@@ -41,7 +37,7 @@ az account set --subscription "$SUBSCRIPTION_ID"
 ```
 
 > [!WARNING]
-> If your Azure Cloud Shell session times out (e.g. during a break), the variables defined above will be lost and must be re-defined before continuing. We recommend saving them in a local text file on your machine so you can quickly copy and paste them back into a new session.
+> Reinitialize these variables in a new terminal or after restarting your environment. See [saving and restoring your work](../../Readme.md#terminals-breaks-and-saved-work).
 
 ## Task 1: Understand Encryption in transit
 
@@ -222,7 +218,7 @@ az monitor diagnostic-settings create \
 Container creation and blob upload/download use the **data plane**. They need both network connectivity and a data role; an account's **Overview** page and `az storage account show` use the control plane and can work even when blob access is blocked.
 
 1. Confirm you selected the storage account from **Challenge 2**, not one of Challenge 1's empty test accounts, which deliberately had public access disabled.
-2. Open **Security + networking > Networking**, set **Public network access** to **Enabled from all networks**, and **Save**. This keeps the portal and Cloud Shell exercises simple; no client-IP rules are needed.
+2. Open **Security + networking > Networking**, set **Public network access** to **Enabled from all networks**, and **Save**. This keeps the portal and Codespaces exercises simple; no client-IP rules are needed.
 3. Check that your Challenge 1 storage-networking assignment and bonus initiative remain **DoNotEnforce**. If an inherited policy blocks the change, contact the organizer rather than disabling it.
 
 **CLI equivalent:**
@@ -254,7 +250,7 @@ Allow time for the data role to propagate. In **Storage browser**, choose **Micr
 
 #### Create a Container
 
-In the portal, open **Data storage > Containers > + Container**, name it `test-container`, and keep anonymous access level **Private**. Alternatively, run the CLI below in Cloud Shell or your local terminal.
+In the portal, open **Data storage > Containers > + Container**, name it `test-container`, and keep anonymous access level **Private**. Alternatively, run the CLI below in your Codespaces Bash terminal.
 
 ```bash
 # Create a blob storage container

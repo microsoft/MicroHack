@@ -3,6 +3,7 @@
 - [**Hackathon introduction**](#Hackathon-introduction)
 - [**Hackathon context**](#Hackathon-context)
 - [**Objectives**](#objectives)
+- [**Recommended environment: GitHub Codespaces**](#recommended-environment-github-codespaces)
 - [**Hackathon Challenges**](#Hackathon-challenges)
 - [**Contributors**](#contributors)
 
@@ -41,6 +42,41 @@ After completing this Hackathon you will:
 - Operate a sovereign hybrid cloud environment by connecting local infrastructure using Azure Arc and Azure Local.
 - Deploy one adaptive application model across Azure-managed and self-managed Kubernetes environments using federated Radius control planes.
 
+## Recommended environment: GitHub Codespaces
+
+Use **GitHub Codespaces with the Azure / Infra / Sovereign Cloud devcontainer** throughout all seven challenges. It provides VS Code in your browser with Azure CLI, PowerShell, Docker, `kubectl`, Radius CLI and the other lab tools, without requiring Windows or local installations. Continue to use the Azure portal for portal-based tasks.
+
+### Set up before Challenge 1
+
+1. Sign in with a **personal GitHub account**. Optionally set **Settings > Codespaces > Default idle timeout** at [github.com/settings/codespaces](https://github.com/settings/codespaces) **before creating the Codespace**. The default is 30 minutes; you can choose 5-240 minutes, subject to organization policy. The setting applies to new Codespaces.
+2. Open [microsoft/MicroHack](https://github.com/microsoft/MicroHack), then select **Code > Codespaces > ... > New with options**.
+3. Select **Azure / Infra / Sovereign Cloud** and **2-core**, then **Create codespace**. Wait for setup to finish before using the terminal.
+
+   ![Codespace creation options showing the Sovereign Cloud devcontainer and a 2-core machine](./img/codespaces-create.png)
+
+4. In **Terminal > New Terminal**, sign in to Azure using the tenant and subscription shown in the Hackathon Console:
+
+   ```bash
+   az login --use-device-code --tenant "<Tenant ID>"
+   az account set --subscription "<Subscription ID>"
+   az account show --query "{Account:user.name,Subscription:name,Tenant:tenantId}" --output table
+   ```
+
+   Open the device-login URL printed by Azure CLI and enter its **device code**. Sign in with your **hacker account**, using the **Temporary Access Pass (TAP)** from the Console when prompted. The TAP and device code are different; never put either in files or commands. Use a private browser window if necessary to avoid signing in with your normal work account. For bring-your-own-subscription labs, use your own Azure identity instead.
+5. Use this same Codespace for all challenges. The Explorer opens at the Sovereign Cloud folder, with the repository already cloned. Use **Bash** for Challenges 1-3 and 7; for Challenges 4-5, open a terminal and run `pwsh` to enter **PowerShell 7**. Challenge 6 is primarily portal-based.
+
+### Terminals, breaks and saved work
+
+- **Multiple terminals:** use **Terminal > New Terminal** or the terminal panel's **+** button. In Challenge 7, leave the Bastion tunnel running in one Bash terminal and work in another. They share files and networking, **not shell variables**; initialize the required variables in each terminal as directed.
+- **After a restart:** saved files persist when a Codespace stops, but running processes, tunnels and shell variables do not. Save non-secret variable assignments in a file (for example `~/challenge-07-env.sh`), then reload them with `source ~/challenge-07-env.sh` in each new Bash terminal. For PowerShell, use a `.ps1` file and dot-source it. Recheck Azure sign-in and restart tunnels. Do not save TAPs, tokens or passwords in these files or commit credentials.
+- **Finish for the day:** use the Command Palette's **Codespaces: Stop Codespace**, or stop it at [github.com/codespaces](https://github.com/codespaces). Closing the browser tab alone does not stop it immediately. When the event is over, download any work you want to keep and delete the Codespace; stopped Codespaces still consume storage and are subject to automatic deletion after their retention period.
+
+**Included usage:** GitHub Free personal accounts include **120 core-hours per month**, equivalent to **60 hours (3,600 minutes) on a 2-core machine**, plus **15 GB-months of storage**. Larger machines consume compute allowance faster. Check your remaining allowance before the event: custom container images and Docker data also consume storage, and a longer idle timeout uses more compute. Azure resource costs are separate; stopping the Codespace does not stop Azure resources.
+
+Sources: [Codespaces timeout](https://docs.github.com/en/codespaces/setting-your-user-preferences/setting-your-timeout-period-for-github-codespaces) · [Included usage and billing](https://docs.github.com/en/billing/concepts/product-billing/github-codespaces) · [Devcontainer configuration](../../../.devcontainer/03-azure-01-03-infrastructure-01-sovereign-cloud/devcontainer.json).
+
+**Alternatives:** a local workstation with the required tools remains supported. Azure Cloud Shell (Bash) can be used for individual CLI tasks, but is not the recommended end-to-end environment: [idle sessions end after 20 minutes](https://learn.microsoft.com/azure/cloud-shell/faq-troubleshooting), losing shell variables and running tunnels, and [no Docker daemon is available](https://learn.microsoft.com/azure/container-registry/container-registry-authentication#use-az-acr-login-without-docker-daemon) for Challenge 4's policy generation.
+
 ## Hackathon challenges
 
 | Challenge | Topic    | Challenge | Solution | Duration  | Maker     |
@@ -62,11 +98,11 @@ In order to use the Hackathon time most effectively, the following tasks should 
 > [!NOTE]
 > For eligible Microsoft-hosted events, use the [Hacks Console runbook](./resources/hosted-events/readme.md). Outside those events, use [manual infrastructure setup](./resources/manual-setup/readme.md). Both paths require LocalBox preparation and health validation before participants begin.
 
-1. Your own Azure subscription with Owner RBAC rights at the subscription level
-2. Contributor or Owner permissions on your subscription or resource group
+1. For hosted events, the hacker account and assigned Azure subscription/resource group from the Hackathon Console; otherwise, your own Azure subscription with Owner RBAC rights at the subscription level
+2. The resource, policy and role-assignment permissions specified by each challenge in your assigned scope
 3. Access to Azure Arc Jumpstart LocalBox if completing Challenge 6, including the [guest-management and Defender readiness checks](./resources/demo-vm-creator/README.md#step-6-test-the-environment)
-4. [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli). **Hint:** Make sure to use the latest version available.
-5. Challenge 7: `kubectl`, `jq`, OpenSSL, the [Radius CLI](https://docs.radapp.io/getting-started/install/), and the Azure CLI `bastion` extension
+4. The [recommended Codespaces environment](#recommended-environment-github-codespaces), or a local workstation with [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli) and the tools listed in each walkthrough
+5. Challenge 7: `kubectl`, `jq`, OpenSSL, the [Radius CLI](https://docs.radapp.io/getting-started/install/), and the Azure CLI `bastion` extension (included in the Sovereign Cloud devcontainer)
 
 The shared Challenge 5/7 AKS platform requires **4 AMD SEV-SNP confidential-family vCPUs per participant** for two Ubuntu nodes, plus **12 DSv5 vCPUs** for two system nodes and one K3s VM: **16 regional vCPUs** in total. There is no standalone Confidential VM. Automation evaluates `Standard_DC2as_v5` and `Standard_DC2as_v6` across the configured regions. With two labs per subscription, allow 8 confidential-family, 24 DSv5 and 32 regional vCPUs before deployment. These are steady-state requirements; also reserve upgrade surge headroom (for example one additional node per pool: 2 confidential plus 4 DSv5 vCPUs per concurrent cluster upgrade).
 

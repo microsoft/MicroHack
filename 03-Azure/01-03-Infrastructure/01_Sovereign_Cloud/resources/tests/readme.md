@@ -10,6 +10,12 @@ The runner uses the caller's existing Azure CLI login and never changes it. Loca
 
 Full Kubernetes checks require kubeconfigs that already authenticate to the intended clusters. LocalBox defaults to `$HOME/.kube/config` (on Windows, `$HOME\.kube\config`), the usual path updated by `az connectedk8s proxy`. An explicit `-LocalBoxKubeconfig` takes precedence; otherwise a `LocalBox.Kubeconfig` value in the inventory is preserved before using the default. The selected file's current context must target `localbox-aks`; do not switch it during testing. For AKS Local, use an Entra group member in a separate CLI profile/session and the [Jumpstart proxy workflow](https://jumpstart.azure.com/azure_jumpstart_localbox/AKS). Keep the proxy/tunnel running throughout testing. For K3s, use its existing private/Bastion access path. Tests never switch the current kubeconfig or retrieve admin credentials automatically.
 
+## Challenge 4 browser-behavior unit tests
+
+From this directory, run `Invoke-Pester ./visual-attestation.tests.ps1 -Output Detailed`. These offline tests mock Azure and Docker commands. They cover `-SkipBrowser` output and comparison HTML generation for Codespaces, while preserving automatic browser launch for desktop users.
+
+A fresh Codespace smoke test is still required to validate the devcontainer build, Docker daemon, `confcom` policy generation and Azure deployment together; the mocked tests do not establish end-to-end Codespaces support.
+
 ## Hosted tag-policy unit tests
 
 From this directory, run `Invoke-Pester ./hosted-tag-policy.tests.ps1 -Output Detailed`. These offline tests mock all Azure and Console commands. They cover hosted-only wiring, subscription targeting, tag-policy propagation, both tag values on resources and resource groups, preservation of unrelated tags, bounded failure, and temporary probe cleanup. Compile the initiative separately with `az bicep build --file ../../labautomation/infra/hosted-tag-policy.bicep --stdout`.

@@ -6,7 +6,7 @@ Duration: 60 minutes
 
 Please ensure that you successfully verified the [General prerequisites](../../Readme.md#general-prerequisites) before continuing.
 
-Install these tools on your workstation or use a development container that includes them:
+Use a **Bash terminal in your [Sovereign Cloud Codespace](../../Readme.md#recommended-environment-github-codespaces)**. It already includes the tools below. If using a local workstation instead, install them first:
 
 * Azure CLI with the `bastion` extension
 * `kubectl`
@@ -122,7 +122,7 @@ install -m 0600 "$MERGED_KUBECONFIG" "$HOME/.kube/config"
 rm -f "$MERGED_KUBECONFIG"
 ```
 
-Start the Bastion tunnel in a second terminal and leave it running:
+In Codespaces, select **Terminal > New Terminal** (or **+** in the terminal panel) to open a second **Bash** terminal. Run the **variable setup block from Prerequisites again in that terminal**, using the same values; terminals share files and networking, but not shell variables. Then start the Bastion tunnel and leave it running:
 
 ```bash
 az network bastion tunnel \
@@ -132,6 +132,8 @@ az network bastion tunnel \
   --resource-port 6443 \
   --port 16443
 ```
+
+Keep both terminals open in the same Codespace. No Codespaces port forwarding is needed: `kubectl` connects to the tunnel on `127.0.0.1:16443` inside the Codespace. Do not make this Kubernetes API port public. If the Codespace stops, reinitialize variables and restart the tunnel before continuing.
 
 Return to the first terminal and validate K3s:
 

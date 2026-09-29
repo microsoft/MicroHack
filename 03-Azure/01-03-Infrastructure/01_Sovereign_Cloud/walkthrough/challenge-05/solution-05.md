@@ -10,14 +10,12 @@ AMD SEV-SNP nodes labelled `workload=confidential`. This script deploys only
 applications and never creates, scales or deletes the cluster or its pools.
 
 > [!IMPORTANT]
-> **Execution environment.** Like Challenge 4, this challenge runs in a **local
-> PowerShell 7+ session**, not in Azure Cloud Shell. It requires `kubectl` access
-> and Azure CLI signed in locally.
+> **Execution environment.** Use your [Sovereign Cloud Codespace](../../Readme.md#recommended-environment-github-codespaces), as in Challenge 4. Open a new terminal and run `pwsh` to enter **PowerShell 7**. Azure CLI and `kubectl` are already installed. A local PowerShell 7+ session with the same tools is an alternative.
 
 ## Prerequisites
 
 - The [general MicroHack prerequisites](../../Readme.md#general-prerequisites).
-- PowerShell 7 or later, running locally.
+- PowerShell 7 or later (included in the Sovereign Cloud Codespace).
 - Azure CLI signed in to the target subscription.
 - Contributor access to the attendee resource group.
 - A provided AKS cluster and `cvmnodepool` with two Ubuntu `Standard_DC2as_v5/v6` nodes. The four confidential vCPUs are already allocated; application deployment needs no additional free VM quota.
@@ -30,7 +28,8 @@ and `AzureLinuxCVMPreview` feature registration are not used.
 ### Sign in and verify
 
 ```powershell
-az login --tenant '<your-tenant-id>'
+# Only if your Azure CLI session has expired or uses the wrong account:
+az login --use-device-code --tenant '<your-tenant-id>'
 az account set --subscription '<your-subscription-id>'
 az account show --query "{sub:name, id:id, tenant:tenantId}" --output table
 kubectl version --client
@@ -69,7 +68,13 @@ az aks list --output table
 
 ## Task 1: Configure the MicroHack environment
 
-Use a full repository checkout and run from the Challenge 5 walkthrough directory.
+In Codespaces, the repository is already cloned. In your PowerShell terminal, run:
+
+```powershell
+Set-Location /workspaces/microhack/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/walkthrough/challenge-05
+```
+
+For local setup, use a full repository checkout and navigate to the same walkthrough directory.
 Set the **Sovereign Lab AKS Cluster** name from Console's Credentials tab. For
 manual delivery, use the shared lab template's `aksClusterName` output.
 

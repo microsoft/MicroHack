@@ -9,9 +9,11 @@
 Please ensure that you successfully verified the [General prerequisites](../../Readme.md#general-prerequisites) before continuing with this challenge.
 
 - Azure subscription with Contributor permissions on your resource group
+- Permission to create the resource-group policy assignment and grant yourself **Storage Blob Data Contributor**, or organizer assistance. Contributor alone does not grant either policy-assignment or role-assignment permissions.
 - Azure CLI >= 2.54 or access to Azure Portal
 - Existing StorageV2 account with Blob service enabled (created in Challenge 2)
-- Log Analytics workspace (or permissions to create one) for collecting Storage diagnostic logs
+- Log Analytics workspace (reuse the one from Challenge 2, or create one in Task 5) for collecting Storage diagnostic logs
+- A client with network access to the Blob endpoint. Creating or viewing an account does not prove you can access its containers; complete the connectivity check in Task 5 before creating a container.
 
 > [!IMPORTANT]
 > The Azure CLI commands in this walkthrough use **bash** syntax and will not work directly in PowerShell. Use **Azure Cloud Shell (Bash)** for the best experience. If running locally on Windows, use **WSL2** (Windows Subsystem for Linux) to run a bash shell. You can install the Azure CLI inside WSL with:
@@ -25,9 +27,9 @@ Set up the common variables that will be used in the CLI alternatives throughout
 ```bash
 # Set common variables
 # Customize RESOURCE_GROUP for each participant
-RESOURCE_GROUP="labuser-xx"  # Change this for each participant (e.g., labuser-01, labuser-02, ...)
+RESOURCE_GROUP="rg-labuser-0024"  # Replace with your exact assigned resource-group name
 
-ATTENDEE_ID="${RESOURCE_GROUP}"
+ATTENDEE_ID="${RESOURCE_GROUP#rg-}"
 SUBSCRIPTION_ID="xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx"  # Replace with your subscription ID
 LOCATION="norwayeast"  # If attending a MicroHack event, change to the location provided by your local MicroHack organizers
 # Generate friendly display names with attendee ID
@@ -35,6 +37,7 @@ DISPLAY_PREFIX="Lab User-${ATTENDEE_ID#labuser-}"  # Converts "labuser-01" to "L
 GROUP_PREFIX="Lab-User-${ATTENDEE_ID#labuser-}"    # Converts "labuser-01" to "Lab-User-01"
 
 STORAGEACCOUNT_NAME="yourStorageAccountName"  # Replace with the name of your storage account from Challenge 2
+az account set --subscription "$SUBSCRIPTION_ID"
 ```
 
 > [!WARNING]
@@ -62,19 +65,25 @@ When you create a storage account in the Azure Portal, the minimum TLS version i
 - Contributor permissions on the resource group hosting the account.
 
 ### Azure Portal steps
+
+Use the **existing Challenge 2 account** for the rest of this challenge. The new-account instructions below are an alternative for learning the creation wizard, not a requirement to deploy another account.
+
 #### Require secure transfer for a new storage account
 1. In the top center search bar in the Azure portal, search for **Storage accounts**
 1. Click on **Create**
 1. Select your own resource group, provide a unique name for the **Storage account name** and select "**Azure Blob Storage or Azure Data Lake Storage Gen2** for the **Preferred storage type** parameter
-1. Click next and in the **Advanced** page, select the **Require secure transfer for REST API operations** checkbox if not already enabled.
+1. Open the **Security** tab and select **Require secure transfer for REST API operations** if it is not already enabled. Older portal layouts place the same setting under **Advanced > Security**.
 1. Leave the rest of the parameters as-is and click **Review + create**
 
 ![desc](./images/storage_01.png)
+
+*This screenshot shows the older **Advanced > Security** layout. In the refreshed wizard, use the **Security** tab; the setting has the same name.*
 
 #### Require secure transfer for an existing storage account
 1. Select an existing storage account in the Azure portal.
 2. In the storage account menu pane, under **Settings**, select **Configuration**.
 3. Under **Secure transfer required**, select **Enabled**.
+4. Select **Save** if you changed the setting.
 
 ![desc](./images/storage_02.png)
 
@@ -102,9 +111,9 @@ Goal: verify the storage account uses **Minimum TLS Version = TLS 1.2** and appl
 1. In the Azure Portal, navigate to **Policy**
 2. Select **Definitions**, search for **"Storage accounts should have the specified minimum TLS version"** (Policy ID `fe83a0eb-a853-422d-aac2-1bffd182c5d0`).
 3. Choose **Assign**.
-4. Set **Scope** to your **Labuser-xxx** resource group. **Do NOT select the subscription** — assigning at subscription scope will affect all other participants.
-5. Uncheck the box: **Only show parameters that need input or review**
-6. Under **Parameters**, set **Minimum TLS version** to `TLS 1.2` and (optionally) effect to `Deny`.
+4. On **Basics**, set **Scope** to your own resource group (for example, `rg-labuser-0024`). **Do NOT select the subscription** — assigning at subscription scope will affect all other participants. Use assignment name `Lab User-0024 - Enforce storage min TLS 1.2` (your number) and **Policy enforcement: Default** for the deny exercise.
+5. Open the **Parameters** tab, then clear **Only show parameters that need input or review**.
+6. Still on **Parameters**, set **Minimum TLS version** to `TLS 1.2` and **Effect** to `Deny` to match the CLI exercise below (or `Audit` if you only want to observe).
 7. Complete **Review + Create**, then select **Create**.
 
 ![Azure Policy](./images/policy_01.png)
@@ -153,9 +162,11 @@ az policy assignment create \
 
 ```bash
 # Create Log Analytics workspace
-LOG_ANALYTICS_WORKSPACE=law-$RESOURCE_GROUP
-az monitor log-analytics workspace create --resource-group $RESOURCE_GROUP \
-       --workspace-name $LOG_ANALYTICS_WORKSPACE
+LOG_ANALYTICS_WORKSPACE="law-$RESOURCE_GROUP"  # Reuse the Challenge 2 name, or your assigned workspace
+
+# Run only if the workspace does not already exist
+az monitor log-analytics workspace create --resource-group "$RESOURCE_GROUP" \
+  --workspace-name "$LOG_ANALYTICS_WORKSPACE" --location "$LOCATION"
 ```
 
 ```bash
@@ -180,6 +191,7 @@ az monitor diagnostic-settings create \
   --name blob-tls-insights \
   --resource ${STORAGE_ACCOUNT_ID}/blobServices/default \
   --workspace $LOG_ANALYTICS_WORKSPACE_ID \
+  --export-to-resource-specific true \
   --logs '[
     {
       "category": "StorageRead",
@@ -194,18 +206,37 @@ az monitor diagnostic-settings create \
 
 ### Azure Portal steps
 
-1. Open the storage account and go to **Monitoring > Diagnostic settings**.
-2. Select **+ Add diagnostic setting**.
-3. Name the setting (e.g., `blob-tls-insights`).
-4. Check **Blob** under **Logs**.
-5. Choose **Send to Log Analytics workspace** and select an existing workspace (or create one beforehand).
-6. Save the diagnostic setting.
+1. Reuse your Challenge 2 workspace. If needed, first go to **Log Analytics workspaces > Create**, choose your existing resource group and approved region, and create a workspace such as `law-rg-labuser-0024`.
+2. Open the storage account and go to **Monitoring > Diagnostic settings**, then select the **Blob** service (`blobServices/default`). Do not configure only account-level metrics.
+3. Select **+ Add diagnostic setting** and name it `blob-tls-insights`.
+4. Enable the **StorageRead** and **StorageWrite** log categories.
+5. Choose **Send to Log Analytics workspace**, select your workspace, and set **Destination table** to **Resource specific**.
+6. Save. This destination choice matches the `StorageBlobLogs` queries below; **Azure diagnostics** would write to a different table. Logs are collected only after diagnostics are enabled, and ingestion can incur charges.
 
 ![Diagnostic settings](./images/storage_03.png)
 
 ### Create a Container and perform a blob upload and download
 
+#### Check network access before creating the container
+
+Container creation and blob upload/download use the **data plane**. They need both network connectivity and a data role; an account's **Overview** page and `az storage account show` use the control plane and can work even when blob access is blocked.
+
+1. Confirm you selected the storage account from **Challenge 2**, not one of Challenge 1's empty test accounts, which deliberately had public access disabled.
+2. Open **Security + networking > Networking**, set **Public network access** to **Enabled from all networks**, and **Save**. This keeps the portal and Cloud Shell exercises simple; no client-IP rules are needed.
+3. Check that your Challenge 1 storage-networking assignment and bonus initiative remain **DoNotEnforce**. If an inherited policy blocks the change, contact the organizer rather than disabling it.
+
+**CLI equivalent:**
+
+```bash
+az storage account update --resource-group "$RESOURCE_GROUP" --name "$STORAGEACCOUNT_NAME" \
+  --public-network-access Enabled --default-action Allow --allow-blob-public-access false
+```
+
+> **Lab-only simplification:** Public network access does not mean anonymous blob access. Keep **Allow Blob anonymous access** disabled, container access level **Private**, and use Microsoft Entra authentication. For production, use private endpoints or restricted networks.
+
 #### Grant access to the current user id to the Blob storage service
+
+In the portal, use **Storage account > Access control (IAM) > Add role assignment > Storage Blob Data Contributor**, select your signed-in user, and **Review + assign**. If you cannot grant roles, ask the organizer. Having Contributor on the resource group is not a substitute for this data role.
 
 ```bash
 # Get your current user's object ID
@@ -219,9 +250,11 @@ az role assignment create \
 
 ```
 
+Allow time for the data role to propagate. In **Storage browser**, choose **Microsoft Entra user account** authentication if a choice is shown; do not switch to account keys to work around a missing role.
+
 #### Create a Container
 
-Use the Azure Portal to create a new container or use CLI below
+In the portal, open **Data storage > Containers > + Container**, name it `test-container`, and keep anonymous access level **Private**. Alternatively, run the CLI below in Cloud Shell or your local terminal.
 
 ```bash
 # Create a blob storage container
@@ -234,8 +267,18 @@ az storage container create \
 
 - In the Azure portal, search for **Storage accounts** in the top center search bar and navigate to the storage account which resides in your resource group.
 - Click on the menu blade **Storage browser**, navigate to **Blob containers** -> **test-container** and click the **Upload**-button to upload a sample file (e.g. an image or text-file) from your local computer to generate some traffic/logs
+- Select the uploaded blob and choose **Download** to generate a read operation too. Use only non-sensitive sample data.
 
 ![Storage account](./images/storage_04.png)
+
+If container creation or upload fails, distinguish these causes before retrying:
+
+| Symptom | Check |
+|---|---|
+| Public access disabled or firewall/network denial | Confirm **Public network access** is **Enabled from all networks**. A new RBAC role does not fix a blocked network path. |
+| `AuthorizationPermissionMismatch` or missing data permissions | Storage Blob Data Contributor on this account, the signed-in identity, role propagation, and Entra authentication. |
+| CMK/Key Vault access error | Challenge 2's storage managed-identity role, key enabled state, and vault public-network access. Opening the Blob firewall does not fix CMK access. |
+| Policy rejects the networking change | Confirm your Challenge 1 assignments are non-enforcing; ask the organizer about inherited policy. Do not remove it. |
 
 - In the Azure portal, search for **Log Analytics workspaces** in the top center search bar and navigate to the workspace which resides in your resource group.
 - Click on **Logs**, close any welcome/introduction-notifications, select **KQL mode** and run the following queries:
@@ -243,6 +286,7 @@ az storage container create \
 ```kusto
 StorageBlobLogs
 | where TimeGenerated > ago(1d)
+| where AccountName =~ "<your-storage-account-name>"
 | summarize requests = count() by TlsVersion
 ```
 
@@ -251,6 +295,7 @@ StorageBlobLogs
 ```kusto
 StorageBlobLogs
 | where TimeGenerated > ago(1d)
+| where AccountName =~ "<your-storage-account-name>"
 | where TlsVersion !in ("TLS 1.2","TLS 1.3")
 | project TimeGenerated, TlsVersion, CallerIpAddress, UserAgentHeader, OperationName
 | sort by TimeGenerated desc
@@ -258,7 +303,7 @@ StorageBlobLogs
 
 ![Log Analytics](./images/log_analytics_02.png)
 
-Confirm that requests use TLS 1.2 or TLS 1.3.
+Replace the account-name placeholder in both queries. Confirm the first query contains your newly generated requests using TLS 1.2 or TLS 1.3, and the second returns no weaker-protocol requests. Logs can take time to arrive; an empty table or zero rows in both queries is **not a successful validation**. Check the Blob service diagnostic setting, **Resource specific** destination, workspace, time window, and successful upload/download, then allow ingestion time.
 
 > **Tip:** If older TLS usage appears in historical logs, upgrade client frameworks (e.g., .NET, Java, Python SDKs), avoid hardcoded protocol versions, and rely on OS defaults that negotiate TLS 1.2+ ([learn.microsoft.com](https://learn.microsoft.com/azure/storage/common/transport-layer-security-configure-minimum-version)).
 
@@ -266,7 +311,7 @@ Confirm that requests use TLS 1.2 or TLS 1.3.
 
 - ✅ Storage accounts reject HTTP requests and enforce HTTPS (secure transfer required) ([learn.microsoft.com](https://learn.microsoft.com/en-us/azure/storage/common/storage-require-secure-transfer)).
 - ✅ Policy compliance shows all storage accounts governed with **Minimum TLS Version = TLS 1.2** ([learn.microsoft.com](https://learn.microsoft.com/azure/storage/common/transport-layer-security-configure-minimum-version?toc=%2Fazure%2Fstorage%2Fblobs%2Ftoc.json&tabs=portal#use-azure-policy-to-audit-for-compliance)).
-- ✅ Log Analytics reports only TLS 1.2 or TLS 1.3 requests in the past 7 days ([learn.microsoft.com](https://learn.microsoft.com/azure/storage/common/transport-layer-security-configure-minimum-version?toc=%2Fazure%2Fstorage%2Fblobs%2Ftoc.json&tabs=portal#detect-the-tls-version-used-by-client-applications)).
+- ✅ Log Analytics contains the newly generated requests for your account in the past day, and they use only TLS 1.2 or TLS 1.3. Empty results alone do not pass this check ([learn.microsoft.com](https://learn.microsoft.com/azure/storage/common/transport-layer-security-configure-minimum-version?toc=%2Fazure%2Fstorage%2Fblobs%2Ftoc.json&tabs=portal#detect-the-tls-version-used-by-client-applications)).
 
 ## References
 

@@ -207,6 +207,24 @@ kubectl wait --for=condition=Available deployments --all \
 
 💥 **Create a Radius Bicep file that contains no AKS cluster name, VM address, namespace, or cloud-specific resource.**
 
+First configure the `radius` extension in `bicepconfig.json` **in the directory where you will create `sovereign-web.bicep`**. The extension declaration needs this mapping; installing Radius on the clusters does not configure the local Bicep compiler.
+
+```bash
+if [[ -e bicepconfig.json ]]; then
+  printf '%s\n' 'Keep the existing configuration; merge the radius extension mapping shown below into its extensions object.'
+else
+  cat >bicepconfig.json <<'JSON'
+{
+  "extensions": {
+    "radius": "br:biceptypes.azurecr.io/radius:latest"
+  }
+}
+JSON
+fi
+```
+
+If the file already exists, add or update `extensions.radius` with the value above without removing other settings. The first build downloads the extension types from the registry, so registry access is required. Keep this configuration beside the application for both deployments.
+
 ```bash
 cat >sovereign-web.bicep <<'BICEP'
 extension radius
@@ -237,6 +255,15 @@ resource web 'Applications.Core/containers@2023-10-01-preview' = {
 }
 BICEP
 ```
+
+Compile with the same Radius-managed Bicep binary used by `rad deploy` before contacting either control plane:
+
+```bash
+"$HOME/.rad/bin/bicep" build --stdout sovereign-web.bicep >/dev/null
+```
+
+> [!IMPORTANT]
+> Continue only if compilation succeeds. `BCP204: Extension "radius" is not recognized` means the extension mapping is missing from the effective Bicep configuration. Check the configuration beside the Bicep file, not just the terminal's current directory. The later `Application "sovereign-web" does not exist` message is expected after a failed build: no application was deployed. Fix compilation and rerun `rad deploy` before running the graph or resource-list commands; do not reinstall either cluster to resolve this local compiler error.
 
 Review the file and identify the portability boundary:
 

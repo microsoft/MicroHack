@@ -40,24 +40,33 @@ function Initialize-MhhHostedTagPolicy {
             $group = Get-AzResourceGroup -Name $probeGroupName -ErrorAction Stop
             $resource = Get-AzNetworkSecurityGroup -Name 'tag-policy-check' `
                 -ResourceGroupName $probeGroupName -ErrorAction Stop
-            $ready = $true
-            foreach ($target in @($group, $resource)) {
-                if ($target.Tags.SecurityControl -cne 'Ignore' -or
-                    $target.Tags.CostControl -cne 'Ignore' -or
-                    $target.Tags.MicroHackPurpose -cne $probeTags.MicroHackPurpose) {
-                    $ready = $false
+            # Az.Resources exposes Tags; Az.Network exposes Tag (singular).
+            $targets = @(
+                @{ Name = 'resource group'; Tags = $group.Tags }
+                @{ Name = 'network security group'; Tags = $resource.Tag }
+            )
+            $mismatches = @(
+                foreach ($target in $targets) {
+                    foreach ($tagName in @('SecurityControl', 'CostControl', 'MicroHackPurpose')) {
+                        $expected = if ($tagName -eq 'MicroHackPurpose') { $probeTags.MicroHackPurpose } else { 'Ignore' }
+                        $actual = if ($null -ne $target.Tags) { $target.Tags[$tagName] } else { $null }
+                        if ($actual -cne $expected) {
+                            $observed = if ($null -eq $actual) { '<missing>' } else { $actual }
+                            "$($target.Name)/${tagName}: expected '$expected', observed '$observed'"
+                        }
+                    }
                 }
-            }
-            if ($ready) {
+            )
+            if ($mismatches.Count -eq 0) {
                 Write-Host 'Hosted control-tag policies are effective for resource groups and resources.' -ForegroundColor Green
                 return
             }
             if ($attempt -lt 30) {
-                Write-Host "Waiting for hosted control-tag policy propagation ($attempt/30)..."
+                Write-Host "Waiting for hosted control-tag policy propagation ($attempt/30): $($mismatches -join '; ')"
                 Start-Sleep -Seconds 10
             }
         }
-        throw 'Hosted control-tag policies did not apply both Ignore tags after 30 attempts. Stop provisioning and inspect the subscription policy assignment.'
+        throw "Hosted control-tag policy verification failed after 30 attempts in subscription ${SubscriptionId}: $($mismatches -join '; '). Stop provisioning and inspect assignment sov-hosted-control-tags."
     }
     finally {
         if ($probeGroupCreated) {

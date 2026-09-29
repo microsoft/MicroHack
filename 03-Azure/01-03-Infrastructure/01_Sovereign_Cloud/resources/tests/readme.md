@@ -20,6 +20,8 @@ A fresh Codespace smoke test is still required to validate the devcontainer buil
 
 From this directory, run `Invoke-Pester ./hosted-tag-policy.tests.ps1 -Output Detailed`. These offline tests mock all Azure and Console commands. They cover hosted-only wiring, subscription targeting, tag-policy propagation, both tag values on resources and resource groups, preservation of unrelated tags, bounded failure, and temporary probe cleanup. Compile the initiative separately with `az bicep build --file ../../labautomation/infra/hosted-tag-policy.bicep --stdout`.
 
+The mocks preserve Azure PowerShell's different output shapes: resource groups expose `Tags`, while network security groups expose `Tag`. A Console run on 2026-09-29 exposed a false timeout caused by reading `Tags` from both. Regression tests reproduce that failure with the old check and verify the corrected check, including null tag collections and target-specific timeout diagnostics. The probe still requires both control tags and the purpose tag, and does not bypass genuine propagation failures.
+
 The next fresh hosted environment must also pass the setup's live tag-policy probe and confirm that a participant-created Challenge 2 Key Vault receives both tags. No existing-resource remediation or BYOS policy deployment is part of this test.
 
 ### Live validation

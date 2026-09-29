@@ -74,7 +74,14 @@ In Codespaces, the repository is already cloned. In your PowerShell terminal, ru
 Set-Location /workspaces/microhack/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/walkthrough/challenge-05
 ```
 
-For local setup, use a full repository checkout and navigate to the same walkthrough directory.
+**Continuing from Challenge 4 locally:** if your terminal is still in `walkthrough/challenge-04`, switch to the sibling directory:
+
+```powershell
+Set-Location ../challenge-05
+```
+
+Otherwise, navigate to `03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/walkthrough/challenge-05` within your local checkout. Stay in this directory for the commands below.
+
 Set the **Sovereign Lab AKS Cluster** name from Console's Credentials tab. For
 manual delivery, use the shared lab template's `aksClusterName` output.
 
@@ -92,7 +99,7 @@ az aks show --resource-group $env:RESOURCE_GROUP --name $env:AKS_CLUSTER --query
 
 ## Task 2: Run the automated deployment
 
-From this walkthrough directory, run:
+From the `walkthrough/challenge-05` directory containing [Deploy-VotingAppCC.ps1](./Deploy-VotingAppCC.ps1), run:
 
 ```powershell
 ./Deploy-VotingAppCC.ps1 -Deploy

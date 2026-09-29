@@ -22,13 +22,13 @@ Describe 'Hosted control-tag setup' {
         Mock New-AzSubscriptionDeployment { @{ ProvisioningState = 'Succeeded' } }
         Mock New-AzResourceGroup { $script:probeGroupName = $Name }
         Mock New-AzNetworkSecurityGroup {}
-        Mock Get-AzResourceGroup { @{ Tags = $script:groupTags } }
-        Mock Get-AzNetworkSecurityGroup { @{ Tags = $script:resourceTags } }
+        Mock Get-AzResourceGroup { [pscustomobject]@{ Tags = $script:groupTags } }
+        Mock Get-AzNetworkSecurityGroup { [pscustomobject]@{ Tag = $script:resourceTags } }
         Mock Remove-AzResourceGroup {}
         Mock Start-Sleep {}
     }
 
-    It 'deploys the initiative and verifies both target types without supplying the required tags' {
+    It 'verifies resource group Tags and network resource Tag without supplying the required tags' {
         Initialize-MhhHostedTagPolicy -SubscriptionId 'hosted-subscription' -Location 'swedencentral'
         Should -Invoke New-AzSubscriptionDeployment -Times 1 -Exactly -ParameterFilter {
             $Name -eq 'sov-hosted-tags-swedencentral' -and
@@ -55,8 +55,8 @@ Describe 'Hosted control-tag setup' {
         $script:reads = 0
         Mock Get-AzNetworkSecurityGroup {
             $script:reads++
-            if ($script:reads -eq 1) { return @{ Tags = @{} } }
-            return @{ Tags = $script:resourceTags }
+            if ($script:reads -eq 1) { return [pscustomobject]@{ Tag = @{} } }
+            return [pscustomobject]@{ Tag = $script:resourceTags }
         }
         Initialize-MhhHostedTagPolicy -SubscriptionId 'hosted-subscription' -Location 'swedencentral'
         Should -Invoke New-AzNetworkSecurityGroup -Times 2 -Exactly
@@ -67,6 +67,7 @@ Describe 'Hosted control-tag setup' {
     It 'fails closed for missing or incorrect tags and cleans up' -TestCases @(
         @{ Target = 'group'; Key = 'SecurityControl'; Value = $null }
         @{ Target = 'group'; Key = 'CostControl'; Value = 'Enforce' }
+        @{ Target = 'group'; Key = 'MicroHackPurpose'; Value = $null }
         @{ Target = 'resource'; Key = 'SecurityControl'; Value = 'ignore' }
         @{ Target = 'resource'; Key = 'CostControl'; Value = $null }
         @{ Target = 'resource'; Key = 'MicroHackPurpose'; Value = $null }
@@ -77,6 +78,26 @@ Describe 'Hosted control-tag setup' {
         { Initialize-MhhHostedTagPolicy -SubscriptionId 'hosted-subscription' -Location 'swedencentral' } |
             Should -Throw '*after 30 attempts*'
         Should -Invoke New-AzNetworkSecurityGroup -Times 30 -Exactly
+        Should -Invoke Start-Sleep -Times 29 -Exactly
+        Should -Invoke Remove-AzResourceGroup -Times 1 -Exactly
+    }
+
+    It 'reports the target and observed value when verification times out' {
+        $script:resourceTags.SecurityControl = 'Enforce'
+        { Initialize-MhhHostedTagPolicy -SubscriptionId 'hosted-subscription' -Location 'swedencentral' } |
+            Should -Throw "*subscription hosted-subscription: network security group/SecurityControl: expected 'Ignore', observed 'Enforce'*assignment sov-hosted-control-tags*"
+        Should -Invoke Remove-AzResourceGroup -Times 1 -Exactly
+    }
+
+    It 'fails closed when the tag collection is null' -TestCases @(
+        @{ Target = 'group'; Label = 'resource group' }
+        @{ Target = 'resource'; Label = 'network security group' }
+    ) {
+        param($Target, $Label)
+        if ($Target -eq 'group') { $script:groupTags = $null }
+        else { $script:resourceTags = $null }
+        { Initialize-MhhHostedTagPolicy -SubscriptionId 'hosted-subscription' -Location 'swedencentral' } |
+            Should -Throw "*${Label}/SecurityControl: expected 'Ignore', observed '<missing>'*"
         Should -Invoke Start-Sleep -Times 29 -Exactly
         Should -Invoke Remove-AzResourceGroup -Times 1 -Exactly
     }

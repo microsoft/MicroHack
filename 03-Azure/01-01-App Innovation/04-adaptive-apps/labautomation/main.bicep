@@ -85,6 +85,7 @@ resource cluster 'Microsoft.ContainerService/managedClusters@2025-05-01' = {
     }
     serviceMeshProfile: {
       mode: 'Istio'
+      istio: {}
     }
   }
 }

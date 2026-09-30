@@ -253,6 +253,8 @@ Describe 'Participant hook orchestration' {
                 { $_ -like 'account show *' } { "{`"id`":`"$subscription`"}"; break }
                 { $_ -like 'role assignment list *' } {
                     "$args" | Should -Match '--fill-principal-name false'
+                    "$args" | Should -Match '--scope '
+                    "$args" | Should -Not -Match '--all\b'
                     '[]'; break
                 }
                 { $_ -like 'role assignment create *' } {
@@ -483,6 +485,8 @@ Describe 'Bicep offline validation' {
         $aks.properties.oidcIssuerProfile.enabled | Should -BeTrue
         $aks.properties.securityProfile.workloadIdentity.enabled | Should -BeTrue
         $aks.properties.serviceMeshProfile.mode | Should -Be 'Istio'
+        $aks.properties.serviceMeshProfile.PSObject.Properties.Name | Should -Contain 'istio'
+        $aks.properties.serviceMeshProfile.istio | Should -BeOfType [pscustomobject]
         $vm = $template.resources | Where-Object type -eq 'Microsoft.Compute/virtualMachines'
         $vm.properties.hardwareProfile.vmSize | Should -Be 'Standard_D4s_v5'
         $template.parameters.adminPassword.type | Should -Be 'securestring'

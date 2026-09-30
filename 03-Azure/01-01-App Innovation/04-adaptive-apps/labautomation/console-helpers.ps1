@@ -72,9 +72,8 @@ function Invoke-AdaptiveBash {
     }
 }
 
-function Assert-AdaptivePackage {
-    param([Parameter(Mandatory)][string]$LabRoot)
-    foreach ($path in @(
+function Get-AdaptiveBootstrapFiles {
+    @(
         'resources/install-console-tools.sh', 'resources/bootstrap-console.sh',
         'resources/azure-session.sh', 'resources/console-session.sh', 'resources/verify-recipes.sh',
         'resources/connect-console.sh', 'resources/prepare-k3s-azure-vm.sh',
@@ -84,9 +83,70 @@ function Assert-AdaptivePackage {
         'iac/aks-env.bicep', 'iac/local-env.bicep', 'iac/sql-databases.yaml',
         'iac/recipes/postgres-azure-flex.bicep', 'iac/recipes/postgres-kubernetes.bicep',
         'iac/recipes/sql-server.bicep', 'iac/recipes/trading-schema.sql'
-    )) {
+    )
+}
+
+function Assert-AdaptivePackage {
+    param([Parameter(Mandatory)][string]$LabRoot)
+    foreach ($path in Get-AdaptiveBootstrapFiles) {
         if (-not (Test-Path -LiteralPath (Join-Path $LabRoot $path))) {
-            throw "Incomplete Adaptive Apps package: missing '$path'. Package the entire MicroHack, including resources/ and iac/, not just labautomation/."
+            throw "Incomplete Adaptive Apps sources: missing '$path'. Verify the pinned source revision and refresh the Console content before retrying."
         }
     }
+}
+
+function Read-AdaptiveSourceManifest {
+    param([Parameter(Mandatory)][string]$Path)
+    $manifest = Get-Content -LiteralPath $Path -Raw -ErrorAction Stop | ConvertFrom-Json -AsHashtable -ErrorAction Stop
+    if ($manifest.commit -isnot [string] -or $manifest.commit -cnotmatch '^[0-9a-f]{40}$') {
+        throw 'Bootstrap source must be pinned to a full, lowercase Git commit SHA; branches and tags are not accepted.'
+    }
+    $paths = @(Get-AdaptiveBootstrapFiles)
+    if ($manifest.files -isnot [Collections.IDictionary] -or $manifest.files.Count -ne $paths.Count) {
+        throw 'Bootstrap source manifest must contain exactly the required file allowlist.'
+    }
+    foreach ($path in $paths) {
+        if ($manifest.files[$path] -isnot [string] -or $manifest.files[$path] -notmatch '^[0-9a-f]{64}$') {
+            throw "Bootstrap source manifest is missing a valid SHA-256 hash for '$path'."
+        }
+    }
+    return $manifest
+}
+
+function Save-AdaptiveSourceFile {
+    param(
+        [Parameter(Mandatory)][ValidatePattern('^[0-9a-f]{40}$')][string]$Commit,
+        [Parameter(Mandatory)][string]$RelativePath,
+        [Parameter(Mandatory)][string]$Destination
+    )
+    if ($RelativePath -cnotin @(Get-AdaptiveBootstrapFiles)) {
+        throw "Bootstrap download path '$RelativePath' is not allowlisted."
+    }
+    $repositoryPath = "03-Azure/01-01-App Innovation/04-adaptive-apps/$RelativePath"
+    $encodedPath = ($repositoryPath.Split('/') | ForEach-Object { [Uri]::EscapeDataString($_) }) -join '/'
+    $uri = "https://raw.githubusercontent.com/microsoft/MicroHack/$Commit/$encodedPath"
+    New-Item -ItemType Directory -Path (Split-Path $Destination -Parent) -Force -ErrorAction Stop | Out-Null
+    try {
+        Invoke-WebRequest -Uri $uri -OutFile $Destination -TimeoutSec 60 `
+            -MaximumRetryCount 3 -RetryIntervalSec 2 -ErrorAction Stop
+    } catch {
+        throw "Unable to download '$RelativePath' at commit '$Commit': $($_.Exception.Message)"
+    }
+}
+
+function Receive-AdaptiveBootstrap {
+    param(
+        [Parameter(Mandatory)][hashtable]$Manifest,
+        [Parameter(Mandatory)][string]$Destination
+    )
+    foreach ($path in Get-AdaptiveBootstrapFiles) {
+        $target = Join-Path $Destination $path
+        Save-AdaptiveSourceFile -Commit $Manifest.commit -RelativePath $path -Destination $target
+        $hash = (Get-FileHash -LiteralPath $target -Algorithm SHA256 -ErrorAction Stop).Hash
+        if ($hash -ne $Manifest.files[$path]) {
+            throw "SHA-256 verification failed for bootstrap file '$path' at commit '$($Manifest.commit)'. No bootstrap commands will run."
+        }
+    }
+    Assert-AdaptivePackage -LabRoot $Destination
+    Write-Host "Verified all $($Manifest.files.Count) bootstrap files from microsoft/MicroHack commit $($Manifest.commit)."
 }

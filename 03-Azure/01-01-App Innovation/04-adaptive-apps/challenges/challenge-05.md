@@ -1,10 +1,14 @@
 # Challenge 05 - Implement the platform abstractions with recipes
 
-[< Previous Challenge](challenge-04.md) - **[Home](../Readme.md)** - [Next Challenge >](challenge-06.md)
+[< Previous Challenge](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/challenges/challenge-04.md) - **[Home](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/Readme.md)** - [Next Challenge >](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/challenges/challenge-06.md)
 
 Estimated time: 60-90 minutes | Difficulty: advanced
 
 ## Challenge objective
+
+**Hosted Console:** a ready lab includes published and registered recipes.
+Follow [Console setup](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/docs/console-setup.md)
+and start 06. Read this manual exercise without recreating the registry or recipes.
 
 Implement the portable resource-type contracts from Challenge 04. Manually author,
 publish, and register an Azure SQL recipe before registering the complete
@@ -153,7 +157,10 @@ intentionally offers managed services.
 
 ## Learning resources
 
-- [Radius recipes](https://docs.radapp.io/guides/recipes/overview/)
-- [Author Bicep recipes](https://docs.radapp.io/guides/recipes/author-recipes/bicep/)
+The workshop pins **Radius 0.60.0**. Current official docs describe a newer preview;
+the implementation here uses per-environment recipe registrations, not preview recipe packs.
+
+- [Radius recipes](https://docs.radapp.io/reference/recipes/)
+- [Author Bicep recipes](https://docs.radapp.io/extensibility/custom-recipes/)
 - [Azure Verified Modules](https://aka.ms/avm)
 - [Publish Bicep to an OCI registry](https://docs.radapp.io/reference/cli/rad_bicep_publish/)

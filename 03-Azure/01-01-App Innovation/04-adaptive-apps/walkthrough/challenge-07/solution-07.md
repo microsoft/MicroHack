@@ -1,10 +1,17 @@
 # Walkthrough Challenge 07 - Adapt Identity Services - Configure User Authentication
 
-[< Previous Solution](../challenge-06/solution-06.md) - **[Home](../../Readme.md)** - [Next Solution](../challenge-08/solution-08.md)
+[< Previous Solution](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/walkthrough/challenge-06/solution-06.md) - **[Home](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/Readme.md)** - [Next Solution](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/walkthrough/challenge-09/solution-09.md)
 
 Duration: 60-90 minutes
 
 ## Coach notes
+
+This is optional after hosted Challenge 06. Confirm organizer support for Entra
+enterprise-app/SAML administration; lab resource-group Owner alone is insufficient.
+Hosted participants use Bash and source `artifacts/console-env.sh` in each new
+terminal. Browser port-forwards and OIDC need the
+[hosted-browser considerations](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/docs/console-setup.md#optional-extensions-and-hosted-browsers).
+Continue directly to 09: 08 is not yet published.
 
 This challenge is about **end-user authentication**. It does not replace the federated
 identity Radius uses to deploy Azure resources, and it does not complete the workload
@@ -98,7 +105,7 @@ an Azure Bastion native-client tunnel to the private VM's Kubernetes API.
 **Bash:**
 
 ```bash
-export AZURE_SUBSCRIPTION="<subscription-id>"
+export AZURE_SUBSCRIPTION="${AZURE_SUBSCRIPTION:-<subscription-id>}"
 bash resources/prepare-k3s-azure-vm.sh connect
 export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
 
@@ -1064,7 +1071,7 @@ policy, assignments, claims, conditional access, and lifecycle.
 The devcontainer restarted and the Bastion process is no longer running:
 
 ```bash
-export AZURE_SUBSCRIPTION="<subscription-id>"
+export AZURE_SUBSCRIPTION="${AZURE_SUBSCRIPTION:-<subscription-id>}"
 bash resources/prepare-k3s-azure-vm.sh connect
 export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
 kubectl config use-context k3s-azure-vm
@@ -1212,4 +1219,4 @@ bash resources/prepare-k3s-azure-vm.sh disconnect
 
 Disconnecting the local tunnel does not delete Azure Bastion, which continues to incur
 cost until the workshop resource group or Bastion resource is removed through the
-narrow cleanup process in [Prepare K3s on a private Azure VM](../../docs/prepare-k3s.md).
+narrow cleanup process in [Prepare K3s on a private Azure VM](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/docs/prepare-k3s.md).

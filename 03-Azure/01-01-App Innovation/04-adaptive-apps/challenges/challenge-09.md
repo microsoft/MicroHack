@@ -1,6 +1,6 @@
 # Challenge 09 - Adapt AI Services
 
-[< Previous Challenge](challenge-08.md) - **[Home](../Readme.md)** - [Next Challenge >](challenge-10.md)
+[< Previous Challenge](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/challenges/challenge-07.md) - **[Home](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/Readme.md)** - [Next Challenge >](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/challenges/challenge-10.md)
 
 Estimated time: 60-90 minutes | Difficulty: advanced
 
@@ -52,6 +52,12 @@ These are independent Radius control planes. Each needs its own recipe registry,
 registration, `trading-ai` resource, and `ai-agent` workload.
 
 ## Additional prerequisites
+
+This is an **optional extension**, not part of the ready hosted baseline. Arrange
+an existing, approved Azure OpenAI deployment and inference-role assignment access
+with the organizer. Do not create an unapproved replacement. Hosted participants
+use Bash and source `artifacts/console-env.sh` in each new terminal.
+Challenge 08 is not yet published and is not a prerequisite.
 
 - Challenges 01-07 completed and the Challenge 06/07 application present on both
   targets.
@@ -235,8 +241,11 @@ Create a comparison covering:
 
 ## Learning resources
 
-- [Radius recipes](https://docs.radapp.io/guides/recipes/overview/)
-- [Radius connections](https://docs.radapp.io/guides/author-apps/containers/overview/#connections)
+The workshop pins **Radius 0.60.0**. Current official docs describe a newer preview;
+retain the workshop's contracts and per-environment recipes, not preview recipe packs.
+
+- [Radius recipes](https://docs.radapp.io/reference/recipes/)
+- [Radius connections](https://docs.radapp.io/applications/connections/)
 - [AKS workload identity](https://learn.microsoft.com/azure/aks/workload-identity-overview)
 - [Azure OpenAI role-based access control](https://learn.microsoft.com/azure/ai-services/openai/how-to/role-based-access-control)
 - [Azure OpenAI deployment types](https://learn.microsoft.com/azure/ai-services/openai/how-to/deployment-types)

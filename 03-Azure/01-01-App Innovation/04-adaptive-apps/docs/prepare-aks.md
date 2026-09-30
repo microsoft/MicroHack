@@ -1,5 +1,9 @@
 # Prepare the AKS environment
 
+**Manual platform path only.** Hosted participants use
+[Console setup](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/docs/console-setup.md)
+to connect to the supplied cluster; do not run the provisioning steps below.
+
 The default Azure environment is AKS with OIDC issuer, workload identity, and the
 managed Istio add-on enabled. Challenge 02 provisions Kubernetes only.
 

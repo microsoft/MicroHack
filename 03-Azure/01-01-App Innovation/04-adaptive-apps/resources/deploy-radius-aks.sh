@@ -20,9 +20,18 @@ RADIUS_NAMESPACE="${RADIUS_NAMESPACE:-env-azure-prod}"
 RADIUS_AZURE_ROLE="${RADIUS_AZURE_ROLE:-Owner}"
 RADIUS_APP_NAME="${RADIUS_APP_NAME:-${AKS_CLUSTER}-radius-app}"
 RADIUS_MANAGED_IDENTITY_NAME="${RADIUS_MANAGED_IDENTITY_NAME:-${AKS_CLUSTER}-radius}"
+RADIUS_IDENTITY_MODE="${RADIUS_IDENTITY_MODE:-application}"
+RADIUS_REINSTALL="${RADIUS_REINSTALL:-true}"
+case "$RADIUS_IDENTITY_MODE" in
+  application | managedidentity) ;;
+  *) echo "RADIUS_IDENTITY_MODE must be application or managedidentity." >&2; exit 2 ;;
+esac
+case "$RADIUS_REINSTALL" in
+  true | false) ;;
+  *) echo "RADIUS_REINSTALL must be true or false." >&2; exit 2 ;;
+esac
 
-az account show >/dev/null 2>&1 || az login
-az account set --subscription "$AZURE_SUBSCRIPTION"
+source "$(dirname "${BASH_SOURCE[0]}")/azure-session.sh"
 
 CURRENT_CONTEXT="$(kubectl config current-context)"
 if [[ "$CURRENT_CONTEXT" != "$AKS_CLUSTER" ]]; then
@@ -40,42 +49,44 @@ OIDC_ISSUER="$(az aks show \
   exit 1
 }
 
-APPLICATION_CLIENT_ID="$(az ad app list \
-  --filter "displayName eq '${RADIUS_APP_NAME}'" \
-  --query "[0].appId" \
-  --output tsv)"
-
-if [[ -z "$APPLICATION_CLIENT_ID" ]]; then
-  APPLICATION_CLIENT_ID="$(az ad app create \
-    --display-name "$RADIUS_APP_NAME" \
-    --query appId \
+if [[ "$RADIUS_IDENTITY_MODE" == "application" ]]; then
+  APPLICATION_CLIENT_ID="$(az ad app list \
+    --filter "displayName eq '${RADIUS_APP_NAME}'" \
+    --query "[0].appId" \
     --output tsv)"
+
+  if [[ -z "$APPLICATION_CLIENT_ID" ]]; then
+    APPLICATION_CLIENT_ID="$(az ad app create \
+      --display-name "$RADIUS_APP_NAME" \
+      --query appId \
+      --output tsv)"
+  fi
+
+  APPLICATION_OBJECT_ID="$(az ad app show \
+    --id "$APPLICATION_CLIENT_ID" \
+    --query id \
+    --output tsv)"
+
+  if ! az ad sp show --id "$APPLICATION_CLIENT_ID" >/dev/null 2>&1; then
+    az ad sp create --id "$APPLICATION_CLIENT_ID" --output none
+    for attempt in {1..30}; do
+      az ad sp show --id "$APPLICATION_CLIENT_ID" >/dev/null 2>&1 && break
+      [[ "$attempt" -lt 30 ]] || {
+        echo "Timed out waiting for the Radius service principal." >&2
+        exit 1
+      }
+      sleep 5
+    done
+  fi
+
+  SERVICE_PRINCIPAL_OBJECT_ID="$(az ad sp show \
+    --id "$APPLICATION_CLIENT_ID" \
+    --query id \
+    --output tsv)"
+
+  IDENTITY_CLIENT_ID="$APPLICATION_CLIENT_ID"
+  IDENTITY_PRINCIPAL_ID="$SERVICE_PRINCIPAL_OBJECT_ID"
 fi
-
-APPLICATION_OBJECT_ID="$(az ad app show \
-  --id "$APPLICATION_CLIENT_ID" \
-  --query id \
-  --output tsv)"
-
-if ! az ad sp show --id "$APPLICATION_CLIENT_ID" >/dev/null 2>&1; then
-  az ad sp create --id "$APPLICATION_CLIENT_ID" --output none
-  for attempt in {1..30}; do
-    az ad sp show --id "$APPLICATION_CLIENT_ID" >/dev/null 2>&1 && break
-    [[ "$attempt" -lt 30 ]] || {
-      echo "Timed out waiting for the Radius service principal." >&2
-      exit 1
-    }
-    sleep 5
-  done
-fi
-
-SERVICE_PRINCIPAL_OBJECT_ID="$(az ad sp show \
-  --id "$APPLICATION_CLIENT_ID" \
-  --query id \
-  --output tsv)"
-
-IDENTITY_CLIENT_ID="$APPLICATION_CLIENT_ID"
-IDENTITY_PRINCIPAL_ID="$SERVICE_PRINCIPAL_OBJECT_ID"
 
 TEMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TEMP_DIR"' EXIT
@@ -136,6 +147,7 @@ EOF
 ensure_managed_identity_federated_credential() {
   local name="$1"
   local service_account="$2"
+  local existing_name
   local arguments=(
     --resource-group "$RESOURCE_GROUP"
     --identity-name "$RADIUS_MANAGED_IDENTITY_NAME"
@@ -146,10 +158,11 @@ ensure_managed_identity_federated_credential() {
     --output none
   )
 
-  if az identity federated-credential show \
+  existing_name="$(az identity federated-credential list \
     --resource-group "$RESOURCE_GROUP" \
     --identity-name "$RADIUS_MANAGED_IDENTITY_NAME" \
-    --name "$name" >/dev/null 2>&1; then
+    --query "[?name=='${name}'].name | [0]" --output tsv)"
+  if [[ -n "$existing_name" ]]; then
     az identity federated-credential update "${arguments[@]}"
   else
     az identity federated-credential create "${arguments[@]}"
@@ -158,6 +171,7 @@ ensure_managed_identity_federated_credential() {
 
 use_managed_identity() {
   local aks_location
+  local existing_identity
 
   aks_location="$(az aks show \
     --resource-group "$RESOURCE_GROUP" \
@@ -165,9 +179,10 @@ use_managed_identity() {
     --query location \
     --output tsv)"
 
-  if ! az identity show \
+  existing_identity="$(az identity list \
     --resource-group "$RESOURCE_GROUP" \
-    --name "$RADIUS_MANAGED_IDENTITY_NAME" >/dev/null 2>&1; then
+    --query "[?name=='${RADIUS_MANAGED_IDENTITY_NAME}'].id | [0]" --output tsv)"
+  if [[ -z "$existing_identity" ]]; then
     az identity create \
       --resource-group "$RESOURCE_GROUP" \
       --name "$RADIUS_MANAGED_IDENTITY_NAME" \
@@ -192,7 +207,9 @@ use_managed_identity() {
   ensure_managed_identity_federated_credential radius-dynamic-rp dynamic-rp
 }
 
-if ensure_federated_credential radius-applications-rp applications-rp &&
+if [[ "$RADIUS_IDENTITY_MODE" == "managedidentity" ]]; then
+  use_managed_identity
+elif ensure_federated_credential radius-applications-rp applications-rp &&
    ensure_federated_credential radius-bicep-de bicep-de &&
    ensure_federated_credential radius-ucp ucp &&
    ensure_federated_credential radius-dynamic-rp dynamic-rp; then
@@ -229,10 +246,15 @@ INSTALL_ARGS=(
   --kubecontext "$CURRENT_CONTEXT"
   --set global.azureWorkloadIdentity.enabled=true
 )
-if kubectl get namespace radius-system >/dev/null 2>&1; then
+RADIUS_NAMESPACE_EXISTS="$(kubectl get namespace radius-system --ignore-not-found --output name)"
+if [[ -n "$RADIUS_NAMESPACE_EXISTS" && "$RADIUS_REINSTALL" == "true" ]]; then
   INSTALL_ARGS+=(--reinstall)
 fi
-rad install "${INSTALL_ARGS[@]}"
+if [[ -z "$RADIUS_NAMESPACE_EXISTS" || "$RADIUS_REINSTALL" == "true" ]]; then
+  rad install "${INSTALL_ARGS[@]}"
+else
+  echo "Keeping the existing Radius installation; validating it below."
+fi
 
 rad workspace create kubernetes "$RADIUS_WORKSPACE" \
   --context "$CURRENT_CONTEXT" \

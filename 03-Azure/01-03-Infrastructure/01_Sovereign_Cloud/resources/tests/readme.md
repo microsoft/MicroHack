@@ -22,15 +22,19 @@ From this directory, run `Invoke-Pester ./hosted-tag-policy.tests.ps1 -Output De
 
 The mocks preserve Azure PowerShell's different output shapes: resource groups expose `Tags`, while network security groups expose `Tag`. A Console run on 2026-09-29 exposed a false timeout caused by reading `Tags` from both. Regression tests reproduce that failure with the old check and verify the corrected check, including null tag collections and target-specific timeout diagnostics. The probe still requires both control tags and the purpose tag, and does not bypass genuine propagation failures.
 
-The next fresh hosted environment must also pass the setup's live tag-policy probe and confirm that a participant-created Challenge 2 Key Vault receives both tags. No existing-resource remediation or BYOS policy deployment is part of this test.
+Each fresh hosted environment must pass the setup's live tag-policy probe. The validation below covers a participant-created Key Vault and a manually created storage account. No existing-resource remediation or BYOS policy deployment is part of this test.
 
 ### Live validation
 
 On 2026-09-29, the initiative and assignment were deployed using Azure CLI in a hosted test subscription. A new empty Key Vault in an existing participant resource group was created with only `MicroHackPurpose=HostedTagPolicyLiveTest`; a separate read confirmed `SecurityControl=Ignore`, `CostControl=Ignore`, and preservation of the purpose tag. The existing resource group lacked `SecurityControl`, demonstrating subscription-policy application rather than inheritance from that group's tags. No remediation roles were granted to the assignment identity.
 
-The test vault was deleted and its soft-deleted state verified, with seven-day purge-protected retention. The assignment remains deployed; existing participant resources and resource-group tags were not changed. Fresh resource-group creation was blocked by the participant identity's permissions, so resource-group tagging and the PowerShell setup probe still require organizer-level live validation. Downstream MCAPS processing was not tested.
+The test vault was deleted and its soft-deleted state verified, with seven-day purge-protected retention. The assignment was left deployed; existing participant resources and resource-group tags were not changed. Fresh resource-group creation was blocked by the participant identity's permissions, so that test did not validate resource-group tagging or the PowerShell setup probe.
 
 Live deployment also established that this subscription supports policy API version `2026-06-01`, not `2026-07-01`, and requires a managed identity for the modify assignment even without remediation. The template and offline tests reflect both requirements; a successful what-if alone did not catch either deployment failure.
+
+On 2026-09-30, the organizer reported a successful fresh Console deployment after the probe fix. The supplied Console output for `traininglab-18` shows one retry for missing NSG control tags, followed by successful verification for both resource groups and resources and continuation to shared LocalBox deployment. This closes the outstanding organizer-level live probe validation.
+
+The organizer also manually created a storage account in `rg-labuser-0011` and observed both tags being applied automatically. The supplied portal screenshot confirms `SecurityControl=Ignore` and `CostControl=Ignore`. Together with the earlier Key Vault test, this validates automatic tag application beyond resources created by the lab scripts. Downstream MCAPS processing was not tested.
 
 ## Download without cloning
 

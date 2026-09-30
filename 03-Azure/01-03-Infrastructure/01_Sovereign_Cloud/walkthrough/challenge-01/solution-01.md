@@ -6,7 +6,7 @@
 
 ## Prerequisites
 
-Please ensure that you successfully verified the [General prerequisites](../../Readme.md#general-prerequisites) before continuing with this challenge.
+Please ensure that you successfully verified the [General prerequisites](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/Readme.md#general-prerequisites) before continuing with this challenge.
 
 - Permissions to create resources and policy assignments in your assigned resource group, plus role-assignment permissions (for example, Owner at that scope). User Access Administrator alone does not grant resource or policy creation permissions.
 - Subscription-level policy-definition permissions for the bonus initiative and custom remediation policy, and Microsoft Entra permissions to create security groups. Ask your organizer if these operations are unavailable; do not broaden the assignment scope.
@@ -65,7 +65,7 @@ The portal's **Assignment name** field sets the friendly display name; its under
 
 ### Step 1: Configure Environment Variables
 
-Open a **Bash terminal in your [Sovereign Cloud Codespace](../../Readme.md#recommended-environment-github-codespaces)**. Azure Cloud Shell (Bash) or a local Bash terminal with Azure CLI is an alternative for this challenge.
+Open a **Bash terminal in your [Sovereign Cloud Codespace](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/Readme.md#recommended-environment-github-codespaces)**. Azure Cloud Shell (Bash) or a local Bash terminal with Azure CLI is an alternative for this challenge.
 
 Set up the variables that will be used throughout this challenge:
 
@@ -99,7 +99,7 @@ For `rg-labuser-0024`, the resulting group name is `Lab-User-0024-Compliance-Off
 🔑 **Best Practice**: Setting variables once at the beginning ensures consistency across all commands and reduces the chance of errors from manual editing.
 
 > [!WARNING]
-> Reinitialize these variables in a new terminal or after restarting your environment. See [saving and restoring your work](../../Readme.md#terminals-breaks-and-saved-work).
+> Reinitialize these variables in a new terminal or after restarting your environment. See [saving and restoring your work](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/Readme.md#terminals-breaks-and-saved-work).
 
 ### Step 2: Identify the Built-in Policy
 

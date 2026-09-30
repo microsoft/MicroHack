@@ -6,7 +6,7 @@
 
 ## Prerequisites
 
-Please ensure that you successfully verified the [General prerequisites](../../Readme.md#general-prerequisites) before continuing with this challenge.
+Please ensure that you successfully verified the [General prerequisites](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/Readme.md#general-prerequisites) before continuing with this challenge.
 
 - Azure subscription with Contributor permissions on your resource group
 - Permission to assign the Key Vault roles used below (for example, Owner or User Access Administrator at the relevant scope), or organizer assistance. Contributor alone cannot grant those roles.
@@ -44,10 +44,10 @@ Please ensure that you successfully verified the [General prerequisites](../../R
 ### Step-by-Step Walkthrough (Azure CLI)
 
 > [!IMPORTANT]
-> **Prerequisite — Challenge 1 policy adjustment:** Complete [Preparing for Next Challenges](../challenge-01/solution-01.md#preparing-for-next-challenges). All your Challenge 1 governance assignments, including the storage public-network-access restriction and bonus initiative, must be in **DoNotEnforce**. Do not disable organizer-managed or inherited policies.
+> **Prerequisite — Challenge 1 policy adjustment:** Complete [Preparing for Next Challenges](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/walkthrough/challenge-01/solution-01.md#preparing-for-next-challenges). All your Challenge 1 governance assignments, including the storage public-network-access restriction and bonus initiative, must be in **DoNotEnforce**. Do not disable organizer-managed or inherited policies.
 
 > [!IMPORTANT]
-> Use a **Bash terminal in your [Sovereign Cloud Codespace](../../Readme.md#recommended-environment-github-codespaces)**. These commands use Bash syntax, not PowerShell. Azure Cloud Shell (Bash) or a local Bash terminal with Azure CLI is an alternative for this challenge.
+> Use a **Bash terminal in your [Sovereign Cloud Codespace](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/Readme.md#recommended-environment-github-codespaces)**. These commands use Bash syntax, not PowerShell. Azure Cloud Shell (Bash) or a local Bash terminal with Azure CLI is an alternative for this challenge.
 
 Set up the common variables that will be used throughout this challenge:
 
@@ -61,7 +61,7 @@ az account set --subscription "$SUBSCRIPTION_ID"
 ```
 
 > [!WARNING]
-> Reinitialize your variables in a new terminal or after restarting your environment. Save the actual generated resource names too, so you can reuse them instead of generating new names. See [saving and restoring your work](../../Readme.md#terminals-breaks-and-saved-work).
+> Reinitialize your variables in a new terminal or after restarting your environment. Save the actual generated resource names too, so you can reuse them instead of generating new names. See [saving and restoring your work](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/Readme.md#terminals-breaks-and-saved-work).
 
 #### 1) Create Resource Group (only if needed, for Microsoft-hosted events this is pre-provisioned)
 

@@ -4,11 +4,11 @@ This supplement explains the Confidential Computing Enforcement (CCE) policy in
 Challenge 4 from two perspectives. It is not an additional task and does not add
 commands to the walkthrough.
 
-Start with [Understand Runtime Attestation Fundamentals](solution-04.md#understand-runtime-attestation-fundamentals)
+Start with [Understand Runtime Attestation Fundamentals](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/walkthrough/challenge-04/solution-04.md#understand-runtime-attestation-fundamentals)
 for the experiment's goal. Use the
-[recommended GitHub Codespaces environment](../../Readme.md#recommended-environment-github-codespaces)
-for all challenges, then run the [engine preflight](solution-04.md#verify-your-environment-before-you-start).
-[Local Windows Docker Desktop setup](solution-04.md#windows-docker-desktop-setup-before-the-workshop)
+[recommended GitHub Codespaces environment](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/Readme.md#recommended-environment-github-codespaces)
+for all challenges, then run the [engine preflight](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/walkthrough/challenge-04/solution-04.md#verify-your-environment-before-you-start).
+[Local Windows Docker Desktop setup](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/walkthrough/challenge-04/solution-04.md#windows-docker-desktop-setup-before-the-workshop)
 is an optional alternative.
 
 ## The short answer

@@ -10,9 +10,9 @@ This challenge uses **Azure Arc Jumpstart LocalBox** to simulate an Azure Local 
 
 ## Prerequisites
 
-Please ensure that you successfully verified the [General prerequisites](../../Readme.md#general-prerequisites) before continuing with this challenge.
+Please ensure that you successfully verified the [General prerequisites](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/Readme.md#general-prerequisites) before continuing with this challenge.
 
-Keep your [Sovereign Cloud Codespace](../../Readme.md#recommended-environment-github-codespaces) for lab work, but complete the core tasks below in the Azure portal. No local Windows installation or remote desktop connection is required.
+Keep your [Sovereign Cloud Codespace](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/Readme.md#recommended-environment-github-codespaces) for lab work, but complete the core tasks below in the Azure portal. No local Windows installation or remote desktop connection is required.
 
 **Additional requirements for this challenge:**
 
@@ -24,7 +24,7 @@ Keep your [Sovereign Cloud Codespace](../../Readme.md#recommended-environment-gi
 - A guest network with a valid IP address, working DNS, and outbound access to the required Azure Arc, Defender, and configured Windows update-source endpoints
 
 > [!NOTE]
-> LocalBox is typically deployed by the workshop facilitator due to resource requirements and deployment time. See the [LocalBox deployment and readiness guide](../../resources/demo-vm-creator/README.md). For a personal subscription, an authorized owner must also enable Defender for Servers before this challenge and review the plan's charges. Students in hosted labs should not change subscription-level Defender plans.
+> LocalBox is typically deployed by the workshop facilitator due to resource requirements and deployment time. See the [LocalBox deployment and readiness guide](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/resources/demo-vm-creator/README.md). For a personal subscription, an authorized owner must also enable Defender for Servers before this challenge and review the plan's charges. Students in hosted labs should not change subscription-level Defender plans.
 
 ---
 

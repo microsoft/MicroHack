@@ -44,12 +44,12 @@ different attestation results, recognize the `sevsnpvm` and `azure-compliant-uvm
 claims, and distinguish workload policy enforcement from hardware evidence.
 Reading the demo's token does not replace production validation of its signature,
 issuer, freshness, and expected claims, nor does it prove regulatory compliance.
-For more detail, read [why `confcom` and Docker are involved](CONFCOM-AND-CCE-POLICY.md#the-short-answer).
+For more detail, read [why `confcom` and Docker are involved](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/walkthrough/challenge-04/CONFCOM-AND-CCE-POLICY.md#the-short-answer).
 
 > [!IMPORTANT]
 > **Keep using the same GitHub Codespace for all challenges.**
 > Open the existing Sovereign devcontainer as described in the
-> [recommended environment setup](../../Readme.md#recommended-environment-github-codespaces).
+> [recommended environment setup](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/Readme.md#recommended-environment-github-codespaces).
 > This challenge uses **PowerShell 7+**: enter `pwsh` in the default Bash
 > terminal. Docker-in-Docker supplies the Linux engine; no Windows host or
 > Docker Desktop installation is required.
@@ -57,11 +57,11 @@ For more detail, read [why `confcom` and Docker are involved](CONFCOM-AND-CCE-PO
 > Azure Cloud Shell **cannot** complete this challenge: it does not provide a
 > local Docker engine, and `az confcom acipolicygen` requires one to inspect the
 > image layers when generating the CCE policy. See
-> [why Challenge 4 requires `confcom` and Docker](CONFCOM-AND-CCE-POLICY.md#the-short-answer).
+> [why Challenge 4 requires `confcom` and Docker](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/walkthrough/challenge-04/CONFCOM-AND-CCE-POLICY.md#the-short-answer).
 
 ## Prerequisites
 
-- The [general MicroHack prerequisites](../../Readme.md#general-prerequisites).
+- The [general MicroHack prerequisites](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/Readme.md#general-prerequisites).
 - The recommended Sovereign Codespaces devcontainer, with PowerShell 7+, Git,
   Azure CLI, and a reachable Linux Docker Engine. An equivalent local environment
   is an optional alternative; Azure Cloud Shell is not sufficient.
@@ -525,8 +525,8 @@ Challenge 4 with the same `HASH_SUFFIX`.
 
 The complete Visual Attestation Demo v2 source is retained as an unchanged
 local snapshot under
-[`resources/visual-attestation-demo-v2`](resources/visual-attestation-demo-v2/README.md).
+[`resources/visual-attestation-demo-v2`](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/walkthrough/challenge-04/resources/visual-attestation-demo-v2/README.md).
 The top-level deployment script is derived from that source with only the
-MicroHack-specific changes listed in [UPSTREAM-SOURCE.md](UPSTREAM-SOURCE.md).
+MicroHack-specific changes listed in [https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/walkthrough/challenge-04/UPSTREAM-SOURCE.md](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/walkthrough/challenge-04/UPSTREAM-SOURCE.md).
 Use the top-level script for this walkthrough; the script inside `resources`
 is retained only as the unchanged upstream reference.

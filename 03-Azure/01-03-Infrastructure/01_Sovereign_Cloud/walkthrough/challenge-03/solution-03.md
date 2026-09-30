@@ -6,7 +6,7 @@
 
 ## Prerequisites
 
-Please ensure that you successfully verified the [General prerequisites](../../Readme.md#general-prerequisites) before continuing with this challenge.
+Please ensure that you successfully verified the [General prerequisites](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/Readme.md#general-prerequisites) before continuing with this challenge.
 
 - Azure subscription with Contributor permissions on your resource group
 - Permission to create the resource-group policy assignment and grant yourself **Storage Blob Data Contributor**, or organizer assistance. Contributor alone does not grant either policy-assignment or role-assignment permissions.
@@ -16,7 +16,7 @@ Please ensure that you successfully verified the [General prerequisites](../../R
 - A client with network access to the Blob endpoint. Creating or viewing an account does not prove you can access its containers; complete the connectivity check in Task 5 before creating a container.
 
 > [!IMPORTANT]
-> Use a **Bash terminal in your [Sovereign Cloud Codespace](../../Readme.md#recommended-environment-github-codespaces)**. These commands use Bash syntax, not PowerShell. Azure Cloud Shell (Bash) or a local Bash terminal with Azure CLI is an alternative for this challenge.
+> Use a **Bash terminal in your [Sovereign Cloud Codespace](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/Readme.md#recommended-environment-github-codespaces)**. These commands use Bash syntax, not PowerShell. Azure Cloud Shell (Bash) or a local Bash terminal with Azure CLI is an alternative for this challenge.
 
 Set up the common variables that will be used in the CLI alternatives throughout this challenge:
 
@@ -37,7 +37,7 @@ az account set --subscription "$SUBSCRIPTION_ID"
 ```
 
 > [!WARNING]
-> Reinitialize these variables in a new terminal or after restarting your environment. See [saving and restoring your work](../../Readme.md#terminals-breaks-and-saved-work).
+> Reinitialize these variables in a new terminal or after restarting your environment. See [saving and restoring your work](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/Readme.md#terminals-breaks-and-saved-work).
 
 ## Task 1: Understand Encryption in transit
 

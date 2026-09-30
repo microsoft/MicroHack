@@ -10,6 +10,11 @@ BeforeAll {
     function New-AzResourceGroupDeployment {
         [CmdletBinding()] param($Name, $ResourceGroupName, $TemplateFile, $TemplateParameterObject, $TemplateParameterFile, $Mode)
     }
+    function Invoke-MhhDeploymentWithRegionFallback {
+        [CmdletBinding()]
+        param($PreferredLocations, $ResourceGroupName, $RgOwnerEntraObjectIds, $TemplateFile,
+            $TemplateParameterFile, $DeploymentNamePrefix, $Tag)
+    }
     function New-AzSubscriptionDeployment { [CmdletBinding()] param($Name, $Location, $TemplateFile) }
     function New-AzResourceGroup { [CmdletBinding()] param($Name, $Location, $Tag, [switch]$Force) }
     function New-AzNetworkSecurityGroup { [CmdletBinding()] param($Name, $ResourceGroupName, $Location, $Tag, [switch]$Force) }
@@ -84,6 +89,10 @@ Describe 'Shared hook and hosted policy verification' {
         $script:blockedRegion = ''
         $script:policyTagsValid = $true
         $script:sharedTags = $null
+        $script:featureStates = [Collections.Generic.Queue[string]]::new()
+        $script:featureStates.Enqueue('Registered')
+        $script:featureState = 'Registered'
+        $script:featureCalls = [Collections.Generic.List[string]]::new()
         $script:registeredProviders = [Collections.Generic.List[string]]::new()
         Mock Update-MhhToken { }
         Mock Start-Sleep { }
@@ -110,7 +119,16 @@ Describe 'Shared hook and hosted policy verification' {
             $global:LASTEXITCODE = 0
             switch ("$args") {
                 { $_ -like 'account show *' } { "{`"id`":`"$subscription`"}"; break }
-                { $_ -like 'provider register *' } { $script:registeredProviders.Add("$args"); '{}'; break }
+                { $_ -like 'feature show *' } {
+                    $script:featureCalls.Add('show')
+                    if ($script:featureStates.Count) { $script:featureState = $script:featureStates.Dequeue() }
+                    "{`"properties`":{`"state`":`"$script:featureState`"}}"; break
+                }
+                { $_ -like 'feature register *' } { $script:featureCalls.Add('register'); '{}'; break }
+                { $_ -like 'provider register *' } {
+                    $script:featureState | Should -Be 'Registered'
+                    $script:registeredProviders.Add("$args"); '{}'; break
+                }
                 { $_ -like 'provider show *' } { '{"registrationState":"Registered"}'; break }
                 { $_ -like 'vm list-skus *' } {
                     if ($script:blockedRegion -and "$args" -like "*--location $script:blockedRegion *") { '[]' }
@@ -137,9 +155,41 @@ Describe 'Shared hook and hosted policy verification' {
         Should -Invoke New-AzSubscriptionDeployment -Times 1
         Should -Invoke Remove-AzResourceGroup -Times 1
     }
-    It 'refuses success when only an alternative region passes' {
+    It 'allows initial provisioning in the validated alternative when the primary fails' {
         $script:blockedRegion = 'westeurope'
-        { . (Join-Path $automation 'shared-deploy-lab.ps1') -SubscriptionId $subscription -PreferredLocation @('westeurope,northeurope') -AllowedEntraUserIds @('one', 'two') } | Should -Throw '*Reconfigure the event location*'
+        . (Join-Path $automation 'shared-deploy-lab.ps1') -SubscriptionId $subscription -PreferredLocation @('westeurope,northeurope') -AllowedEntraUserIds @('one', 'two')
+        $script:sharedTags['microhack-adaptive-location'] | Should -Be 'northeurope'
+        $script:sharedTags['microhack-adaptive-regions'] | Should -Be 'northeurope'
+    }
+    It 'fails when no region passes preflight' {
+        $script:blockedRegion = 'westeurope'
+        { . (Join-Path $automation 'shared-deploy-lab.ps1') -SubscriptionId $subscription -PreferredLocation @('westeurope') -AllowedEntraUserIds @('one') } |
+            Should -Throw '*No preferred region passed*'
+        Should -Invoke New-AzSubscriptionDeployment -Times 0
+    }
+    It 'registers the public IP feature before re-registering Network' {
+        $script:featureStates.Clear()
+        foreach ($state in @('NotRegistered', 'Registering', 'Registered')) { $script:featureStates.Enqueue($state) }
+        . (Join-Path $automation 'shared-deploy-lab.ps1') -SubscriptionId $subscription -PreferredLocation @('westeurope') -AllowedEntraUserIds @('one')
+        ($script:featureCalls -join ',') | Should -Be 'show,register,show,show'
+        @($script:registeredProviders | Where-Object { $_ -like 'provider register --namespace Microsoft.Network *' }) | Should -HaveCount 1
+    }
+    It 'waits for in-progress registration without resubmitting' {
+        $script:featureStates.Clear()
+        foreach ($state in @('Registering', 'Registered')) { $script:featureStates.Enqueue($state) }
+        . (Join-Path $automation 'shared-deploy-lab.ps1') -SubscriptionId $subscription -PreferredLocation @('westeurope') -AllowedEntraUserIds @('one')
+        $script:featureCalls | Should -Not -Contain 'register'
+    }
+    It 'blocks fanout when feature registration times out or fails' -ForEach @(
+        @{ State = 'Pending'; Error = '*within 15 minutes*' }
+        @{ State = 'Failed'; Error = "*ended in state 'Failed'*" }
+    ) {
+        $script:featureStates.Clear()
+        $script:featureStates.Enqueue('Registering')
+        $script:featureStates.Enqueue($State)
+        { . (Join-Path $automation 'shared-deploy-lab.ps1') -SubscriptionId $subscription -PreferredLocation @('westeurope') -AllowedEntraUserIds @('one') } |
+            Should -Throw $Error
+        $script:registeredProviders | Should -HaveCount 0
         Should -Invoke New-AzSubscriptionDeployment -Times 0
         Should -Invoke Update-AzTag -Times 0
     }
@@ -162,6 +212,8 @@ Describe 'Participant hook orchestration' {
         $script:tamperedDownload = $false
         $script:failedPhase = ''
         $script:location = 'westeurope'
+        $script:groupTags = @{ adaptiveAppsReady = 'true' }
+        $script:fallbackLocation = 'northeurope'
         $script:guestMarker = 'ADAPTIVE_K3S_READY'
         $script:deploymentState = 'Succeeded'
         $script:deploymentThrows = $false
@@ -191,10 +243,25 @@ Describe 'Participant hook orchestration' {
         Mock Update-MhhToken { $script:calls.Add('refresh') }
         Mock Get-AzContext { @{ Subscription = @{ Id = $subscription } } }
         Mock Get-AzResourceGroup {
-            @{ Location = $script:location; ResourceId = "/subscriptions/$subscription/resourceGroups/lab-one" }
+            @{ Location = $script:location; ResourceId = "/subscriptions/$subscription/resourceGroups/lab-one"; Tags = $script:groupTags }
         }
         Mock Get-AzTag { @{ Properties = @{ TagsProperty = @{ 'microhack-adaptive-regions' = 'westeurope,northeurope' } } } }
-        Mock Update-AzTag { $script:tagWrites.Add($Tag.Clone()) }
+        Mock Update-AzTag {
+            $script:tagWrites.Add($Tag.Clone())
+            foreach ($key in $Tag.Keys) { $script:groupTags[$key] = $Tag[$key] }
+        }
+        Mock Invoke-MhhDeploymentWithRegionFallback {
+            ($PreferredLocations -join ',') | Should -Be 'westeurope,northeurope'
+            $RgOwnerEntraObjectIds | Should -Not -BeNullOrEmpty
+            $Tag.adaptiveAppsReady | Should -Be 'false'
+            $Tag.SecurityControl | Should -Be 'Ignore'
+            $Tag.CostControl | Should -Be 'Ignore'
+            $script:location = $script:fallbackLocation
+            $script:groupTags = $Tag.Clone()
+            $deployment = New-AzResourceGroupDeployment -Name $DeploymentNamePrefix -ResourceGroupName $ResourceGroupName `
+                -TemplateFile $TemplateFile -TemplateParameterFile $TemplateParameterFile -Mode Incremental
+            @{ Success = $true; LocationUsed = $script:location; DeploymentResult = $deployment }
+        }
         Mock New-MhhStablePassword { 'TestOnlyStablePassword123' }
         Mock New-AzResourceGroupDeployment {
             $Mode | Should -Be 'Incremental'
@@ -209,7 +276,7 @@ Describe 'Participant hook orchestration' {
             $parameters = Get-Content -LiteralPath $TemplateParameterFile -Raw | ConvertFrom-Json
             $parameters.'$schema' | Should -Be 'https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#'
             $parameters.contentVersion | Should -Be '1.0.0.0'
-            $parameters.parameters.location.value | Should -Be $script:location
+            $parameters.parameters.PSObject.Properties.Name | Should -Not -Contain 'location'
             $parameters.parameters.adminPassword.value | Should -BeExactly 'TestOnlyStablePassword123'
             $serialized = [Management.Automation.PSSerializer]::Serialize($PesterBoundParameters, 10)
             $serialized | Should -Not -Match 'TestOnlyStablePassword|<SS[ >]'
@@ -242,7 +309,7 @@ Describe 'Participant hook orchestration' {
                 ProvisioningState = $script:deploymentState
                 Outputs = @{
                     acrName = @{ Value = 'acadtestregistry' }
-                    nodeResourceGroup = @{ Value = 'MC_lab-one_aks-adaptive-apps_westeurope' }
+                    nodeResourceGroup = @{ Value = "MC_lab-one_aks-adaptive-apps_$script:location" }
                 }
             }
         }
@@ -290,7 +357,8 @@ Describe 'Participant hook orchestration' {
             $env:HOME | Should -Not -Be $script:originalHome
             $env:PATH | Should -BeLike "$env:HOME/.local/bin:*"
             $env:AZURE_CONFIG_DIR | Should -Be (Join-Path $TestDrive 'platform-azure')
-            $env:REGION | Should -Be 'westeurope'
+            $env:REGION | Should -Be $script:location
+            $env:AZURE_LOCATION | Should -Be $script:location
             $env:BASTION_NAME | Should -Be 'bas-adaptive-apps'
             [int]$env:K3S_LOCAL_PORT | Should -BeGreaterThan 0
             $env:K3S_KUBECONFIG | Should -BeLike "$env:HOME/*"
@@ -322,6 +390,47 @@ Describe 'Participant hook orchestration' {
         $script:failedPhase = 'recipes'
         { . (Join-Path $automation 'deploy-lab.ps1') -DeploymentType resourcegroup -SubscriptionId $subscription -ResourceGroupName lab-one -AllowedEntraUserIds @('user') } | Should -Throw '*exit code 13*'
         @($script:tagWrites | Where-Object { $_.adaptiveAppsReady -eq 'true' }) | Should -HaveCount 0
+    }
+    It 'uses validated fallback regions only for initial infrastructure and bootstraps in the resulting RG region' {
+        $script:groupTags = @{}
+        $result = . (Join-Path $automation 'deploy-lab.ps1') -DeploymentType resourcegroup -SubscriptionId $subscription -ResourceGroupName lab-one -AllowedEntraUserIds @('user')
+        Should -Invoke Invoke-MhhDeploymentWithRegionFallback -Times 1 -Exactly -ParameterFilter {
+            $RgOwnerEntraObjectIds -contains 'user' -and $DeploymentNamePrefix -eq 'adaptive-apps-console'
+        }
+        ($result.HackboxCredential | Where-Object name -eq 'Adaptive Apps Region').value | Should -Be 'northeurope'
+        $script:groupTags.adaptiveAppsPreserve | Should -Be 'true'
+    }
+    It 'never invokes destructive fallback for a previously ready lab even after a failed retry' {
+        $script:deploymentThrows = $true
+        { . (Join-Path $automation 'deploy-lab.ps1') -DeploymentType resourcegroup -SubscriptionId $subscription -ResourceGroupName lab-one -AllowedEntraUserIds @('user') } |
+            Should -Throw '*Simulated ARM deployment exception*'
+        $script:groupTags.adaptiveAppsReady | Should -Be 'false'
+        $script:groupTags.adaptiveAppsPreserve | Should -Be 'true'
+        $script:downloadRoot = ''
+        { . (Join-Path $automation 'deploy-lab.ps1') -DeploymentType resourcegroup -SubscriptionId $subscription -ResourceGroupName lab-one -AllowedEntraUserIds @('user') } |
+            Should -Throw '*Simulated ARM deployment exception*'
+        Should -Invoke Invoke-MhhDeploymentWithRegionFallback -Times 0
+    }
+    It 'preserves initial infrastructure after a bootstrap failure on subsequent retries' {
+        $script:groupTags = @{}
+        $script:fallbackLocation = 'westeurope'
+        $script:failedPhase = 'recipes'
+        { . (Join-Path $automation 'deploy-lab.ps1') -DeploymentType resourcegroup -SubscriptionId $subscription -ResourceGroupName lab-one -AllowedEntraUserIds @('user') } |
+            Should -Throw '*exit code 13*'
+        $script:groupTags.adaptiveAppsPreserve | Should -Be 'true'
+        $script:downloadRoot = ''
+        $script:observedWorkingRoot = ''
+        $script:failedPhase = ''
+        . (Join-Path $automation 'deploy-lab.ps1') -DeploymentType resourcegroup -SubscriptionId $subscription -ResourceGroupName lab-one -AllowedEntraUserIds @('user') | Out-Null
+        Should -Invoke Invoke-MhhDeploymentWithRegionFallback -Times 1 -Exactly
+    }
+    It 'propagates exhausted fallback without bootstrap or readiness' {
+        $script:groupTags = @{}
+        Mock Invoke-MhhDeploymentWithRegionFallback { throw 'RegionFallbackExhausted' }
+        { . (Join-Path $automation 'deploy-lab.ps1') -DeploymentType resourcegroup -SubscriptionId $subscription -ResourceGroupName lab-one -AllowedEntraUserIds @('user') } |
+            Should -Throw '*RegionFallbackExhausted*'
+        Should -Invoke bash -Times 0
+        $script:groupTags.adaptiveAppsReady | Should -Be 'false'
     }
     It 'passes deployment arguments through a real child job without serializing a SecureString' {
         $script:useDeploymentJob = $true
@@ -370,8 +479,9 @@ Describe 'Participant hook orchestration' {
     }
     It 'rejects unvalidated RG region before deployment without deleting the scope' {
         $script:location = 'eastus'
-        { . (Join-Path $automation 'deploy-lab.ps1') -DeploymentType resourcegroup -SubscriptionId $subscription -ResourceGroupName lab-one -AllowedEntraUserIds @('user') } | Should -Throw '*was not validated*'
+        { . (Join-Path $automation 'deploy-lab.ps1') -DeploymentType resourcegroup -SubscriptionId $subscription -ResourceGroupName lab-one -AllowedEntraUserIds @('user') } | Should -Throw '*No validated region*'
         Should -Invoke New-AzResourceGroupDeployment -Times 0
+        Should -Invoke Invoke-MhhDeploymentWithRegionFallback -Times 0
     }
     It 'fails before Azure calls and cleans scratch when downloading fails' {
         $script:failedDownload = $true
@@ -391,7 +501,8 @@ Describe 'Participant hook orchestration' {
     }
     It 'stops on ARM failure without fallback or bootstrap' {
         $script:deploymentState = 'Failed'
-        { . (Join-Path $automation 'deploy-lab.ps1') -DeploymentType resourcegroup -SubscriptionId $subscription -ResourceGroupName lab-one -AllowedEntraUserIds @('user') } | Should -Throw '*no destructive fallback*'
+        { . (Join-Path $automation 'deploy-lab.ps1') -DeploymentType resourcegroup -SubscriptionId $subscription -ResourceGroupName lab-one -AllowedEntraUserIds @('user') } | Should -Throw '*Bootstrap will not run*'
+        Should -Invoke Invoke-MhhDeploymentWithRegionFallback -Times 0
         Should -Invoke bash -Times 0
     }
     It 'requires guest readiness, not just Run Command HTTP success' {
@@ -455,13 +566,13 @@ Describe 'Portable packaging and source contracts' {
             $errors | Should -BeNullOrEmpty
         }
     }
-    It 'uses configured platform defaults and shared first-region gating' {
+    It 'uses configured platform defaults and fails when no region is ready' {
         $defaults = Get-Content (Join-Path $automation 'lab-defaults.json') -Raw | ConvertFrom-Json
         $defaults.deploymentType | Should -Be 'resourcegroup'
         $defaults.labsPerSubscription | Should -Be 5
-        $defaults.preferredLocation | Should -Be 'swedencentral'
+        $defaults.preferredLocation | Should -Be 'swedencentral,spaincentral'
         $shared = Get-Content (Join-Path $automation 'shared-deploy-lab.ps1') -Raw
-        $shared | Should -Match '\$locations\[0\] -notin \$ready'
+        $shared | Should -Match '\$ready.Count -eq 0'
         $shared | Should -Match 'microhack-adaptive-regions'
         $shared | Should -Not -Match 'az ad |AzureStackHCI|LocalBox|Confidential'
     }

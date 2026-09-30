@@ -259,7 +259,20 @@ Kubernetes network calls are mocked, so no cloud resources are accessed.
 must still prove policy propagation, actual allocation, managed Istio, K3s
 installation/Bastion, image access, Radius identity federation, recipe execution
 and participant reconnect/permissions in Console before an event. No live Azure
-deployment was performed as part of authoring this automation.
+deployment success should be inferred from a passing offline test or ARM
+validation alone.
+
+The AKS template supplies an explicit empty `serviceMeshProfile.istio` object:
+the managed-cluster API requires the profile when `mode` is `Istio`, and Azure
+selects its default supported revision when no revision is specified.
+
+If a live deployment reports `AKSCapacityHeavyUsage`, quota/SKU validation has
+not reserved AKS capacity. Resolve the capacity issue or explicitly select another
+event region before retrying. A `SubscriptionNotRegisteredForFeature` error
+mentioning `AllowBringYourOwnPublicIpAddress` on these ordinary Standard public
+IPs needs subscription/provider investigation; the template does not request
+BYOIP or a custom IP prefix. Do not enable an unrelated preview feature merely
+to suppress that error. Preserve the deployment operation errors for support.
 
 ## Hosted policy provenance
 

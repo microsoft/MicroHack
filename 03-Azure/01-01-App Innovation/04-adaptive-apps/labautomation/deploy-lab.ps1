@@ -79,7 +79,7 @@ try {
     $readerId = 'acdd72a7-3385-48ef-bd42-f606fba81ae7'
     foreach ($objectId in ($AllowedEntraUserIds | Select-Object -Unique)) {
         # --assignee-object-id and --assignee-principal-type avoid all Microsoft Graph lookups.
-        $assignments = @(Invoke-AdaptiveAz -Arguments @('role', 'assignment', 'list', '--scope', $nodeScope, '--all', '--fill-principal-name', 'false'))
+        $assignments = @(Invoke-AdaptiveAz -Arguments @('role', 'assignment', 'list', '--scope', $nodeScope, '--fill-principal-name', 'false'))
         $exists = $assignments | Where-Object {
             $_.principalId -eq $objectId -and $_.roleDefinitionId -like "*/$readerId" -and $_.scope -ieq $nodeScope
         }

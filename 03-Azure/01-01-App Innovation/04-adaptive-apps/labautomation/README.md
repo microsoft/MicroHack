@@ -16,8 +16,9 @@ region, and participant object IDs. The participant already has Owner on that
 group. There is no interactive login, Graph application/service-principal creation,
 confidential computing, Azure Local, or shared participant Kubernetes cluster here.
 
-Default scope: **resourcegroup**, **five labs per subscription**, in **Sweden Central**
-(`swedencentral`). Organizers may override the event region before creating lab
+Default scope: **resourcegroup**, **five labs per subscription**, with **Sweden Central**
+first and **Spain Central** as fallback (`swedencentral,spaincentral`).
+Organizers may override the ordered regions before creating lab
 scopes; the shared preflight must pass for that subscription and region. Every participant
 gets a dedicated two-node AKS cluster and a separate private K3s VM. The organizer
 needs a **Linux runner**, PowerShell 7, current Az.Accounts/Az.Resources/Az.Network,
@@ -60,7 +61,11 @@ prerequisites. No GitHub or AI API credentials are provisioned by these hooks.
 `shared-deploy-lab.ps1` runs once per subscription:
 
 1. Verify both authenticated contexts target the supplied subscription.
-2. Register and wait for Compute, Network, ContainerService, ContainerRegistry,
+2. Register `Microsoft.Network/AllowBringYourOwnPublicIpAddress`, as required
+   by these hosted workshop subscriptions for public IP allocation (also used by
+   LocalBox). Wait up to 15 minutes for `Registered`; pending approval, failure,
+   or timeout blocks participant provisioning. Then re-register Network so the
+   feature takes effect. Register and wait for Compute, Network, ContainerService, ContainerRegistry,
    ManagedIdentity, DBforPostgreSQL, OperationalInsights, PolicyInsights, Sql,
    KeyVault and Storage. SQL supports the published SQL recipe; Key Vault and
    Storage preserve the manual challenge 01 subscription prerequisites.
@@ -89,14 +94,27 @@ regional service limits, policy and actual SKU capacity can still fail deploymen
 The stage fails explicitly rather than silently choosing a different VM size.
 Quota failure messages identify the required capacity and region.
 
-Console creates participant groups in the **first preferred region**. The
-PostgreSQL recipe defaults to `resourceGroup().location`, so the shared stage
-requires that first region to pass even if an alternative is eligible. The
-participant hook deploys everything in the **supplied RG's actual region**, and
-rejects any region absent from the shared metadata. To use an alternative,
-reconfigure the event location and explicitly recreate empty scopes through
-Console; never move resource deployment independently of the RG metadata.
-There is no destructive region fallback, automatic RG deletion or AKS recreation.
+Console creates participant groups in the **first preferred region**. Shared
+preflight retains eligible regions in preference order and fails if none pass.
+For **initial infrastructure provisioning only**, the participant hook uses
+`Invoke-MhhDeploymentWithRegionFallback` with those validated regions. The helper
+classifies deployment failures, retries supported capacity/region failures, and
+fails immediately for fatal errors rather than treating all errors as retryable.
+It can **delete the participant RG and all its contents**, retry the same region,
+or recreate it in the next region. Participant Owner access is restored on every
+attempt. Use initial provisioning only in dedicated, disposable lab groups.
+
+After infrastructure succeeds, `adaptiveAppsPreserve=true` prevents subsequent
+runs from invoking destructive fallback, including when Bash bootstrap failed.
+Existing labs with `adaptiveAppsReady=true` also receive this persistent guard
+before readiness is cleared. Do not remove the preservation tag to troubleshoot
+a working lab. Such labs receive incremental deployment in place; if their region
+fails preflight, the hook stops rather than relocating them.
+
+The parameter file deliberately omits `location`, letting the template follow
+`resourceGroup().location`. After fallback the hook re-reads the RG location for
+all bootstrap phases and credentials, keeping the PostgreSQL recipe in the same
+region. These checks do not guarantee AKS capacity or region eligibility.
 
 ## Participant infrastructure and execution
 
@@ -131,8 +149,9 @@ record its value in deployment history. Do not print or publish the parameter
 file. Stage messages identify context validation, parameter preparation and
 deployment submission without including credentials.
 
-The participant hook uses an **incremental deployment**, retaining resources and
-failed deployment records for diagnosis. It grants each supplied participant
+The participant hook uses an **incremental deployment**; initial-provisioning
+fallback may recycle failed attempts as described above. Protected labs retain
+resources and failed deployment records for diagnosis. It grants each supplied participant
 **Reader on this AKS node RG only**, so the PostgreSQL recipe can discover AKS
 egress IPs. Role operations use object IDs and explicitly disable Graph name
 resolution. No subscription-wide participant role is added.
@@ -267,12 +286,12 @@ the managed-cluster API requires the profile when `mode` is `Istio`, and Azure
 selects its default supported revision when no revision is specified.
 
 If a live deployment reports `AKSCapacityHeavyUsage`, quota/SKU validation has
-not reserved AKS capacity. Resolve the capacity issue or explicitly select another
-event region before retrying. A `SubscriptionNotRegisteredForFeature` error
-mentioning `AllowBringYourOwnPublicIpAddress` on these ordinary Standard public
-IPs needs subscription/provider investigation; the template does not request
-BYOIP or a custom IP prefix. Do not enable an unrelated preview feature merely
-to suppress that error. Preserve the deployment operation errors for support.
+not reserved AKS capacity. Initial provisioning can use the validated fallback;
+protected labs require organizer investigation. If
+`SubscriptionNotRegisteredForFeature` still mentions
+`AllowBringYourOwnPublicIpAddress`, verify shared setup completed both feature
+registration and subsequent Network provider registration. The template itself
+does not request BYOIP or a custom IP prefix.
 
 ## Hosted policy provenance
 

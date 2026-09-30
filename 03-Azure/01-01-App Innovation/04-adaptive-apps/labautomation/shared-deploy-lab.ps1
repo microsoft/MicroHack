@@ -18,6 +18,27 @@ $locations = @($PreferredLocation | ForEach-Object { $_ -split ',' } | ForEach-O
 if ($locations.Count -eq 0) { throw 'At least one preferred location is required.' }
 $labCount = @($AllowedEntraUserIds | Where-Object { $_ } | Select-Object -Unique).Count
 if ($labCount -eq 0) { $labCount = $defaults.labsPerSubscription }
+$feature = 'AllowBringYourOwnPublicIpAddress'
+$featureState = (Invoke-AdaptiveAz -Arguments @('feature', 'show', '--namespace', 'Microsoft.Network', '--name', $feature)).properties.state
+if ($featureState -ne 'Registered') {
+    if ($featureState -notin @('Registering', 'Pending')) {
+        Invoke-AdaptiveAz -Arguments @('feature', 'register', '--namespace', 'Microsoft.Network', '--name', $feature) | Out-Null
+    }
+    for ($attempt = 0; $attempt -lt 90; $attempt++) {
+        Start-Sleep -Seconds 10
+        Update-MhhToken | Out-Null
+        $featureState = (Invoke-AdaptiveAz -Arguments @('feature', 'show', '--namespace', 'Microsoft.Network', '--name', $feature)).properties.state
+        if ($featureState -eq 'Registered') { break }
+        if ($featureState -notin @('Registering', 'Pending')) {
+            throw "Microsoft.Network/$feature registration ended in state '$featureState'."
+        }
+        Write-Host "Waiting for Microsoft.Network/$feature registration ($($attempt + 1)/90): $featureState"
+    }
+}
+if ($featureState -ne 'Registered') {
+    throw "Microsoft.Network/$feature did not reach Registered within 15 minutes (state: '$featureState'). Resolve feature registration before retrying."
+}
+# Re-register Network after the feature is registered so public IP allocation sees it.
 $providers = @('Microsoft.Compute', 'Microsoft.Network', 'Microsoft.ContainerService',
     'Microsoft.ContainerRegistry', 'Microsoft.ManagedIdentity', 'Microsoft.DBforPostgreSQL',
     'Microsoft.OperationalInsights', 'Microsoft.PolicyInsights', 'Microsoft.Sql',
@@ -48,14 +69,12 @@ foreach ($location in $locations) {
         Write-Warning $failures[-1]
     }
 }
-# Console pre-creates RGs in the first preferred location. Recipes inherit that location.
-# Do not report shared success merely because a different candidate passed.
-if ($locations[0] -notin $ready) {
-    throw "The supplied participant RG region '$($locations[0])' is not ready. Eligible alternatives: $($ready -join ', '). Reconfigure the event location and recreate EMPTY lab scopes explicitly; no automatic relocation/deletion is performed. $($failures -join '; ')"
+if ($ready.Count -eq 0) {
+    throw "No preferred region passed Adaptive Apps preflight. $($failures -join '; ')"
 }
-Initialize-MhhHostedTagPolicy -SubscriptionId $SubscriptionId -Location $locations[0]
+Initialize-MhhHostedTagPolicy -SubscriptionId $SubscriptionId -Location $ready[0]
 Update-AzTag -ResourceId "/subscriptions/$SubscriptionId" -Operation Merge -Tag @{
-    'microhack-adaptive-location' = $locations[0]
+    'microhack-adaptive-location' = $ready[0]
     'microhack-adaptive-regions' = $ready -join ','
     'microhack-adaptive-lab-count' = "$labCount"
 } -ErrorAction Stop | Out-Null

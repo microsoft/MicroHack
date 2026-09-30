@@ -39,14 +39,19 @@ try {
     $group = Get-AzResourceGroup -Name $ResourceGroupName -ErrorAction Stop
     $region = $group.Location.ToLowerInvariant()
     $metadata = (Get-AzTag -ResourceId "/subscriptions/$SubscriptionId" -ErrorAction Stop).Properties.TagsProperty
-    if (-not $metadata -or $region -notin ($metadata['microhack-adaptive-regions'] -split ',')) {
-        throw "RG location '$region' was not validated by shared-deploy-lab.ps1. Run the shared hook for this region; do not relocate resources independently of their RG."
+    if (-not $metadata) { throw 'Shared region metadata is missing. Run shared-deploy-lab.ps1 first.' }
+    $regions = @($metadata['microhack-adaptive-regions'] -split ',' | Where-Object { $_ })
+    $preserve = $group.Tags -and ($group.Tags['adaptiveAppsReady'] -eq 'true' -or $group.Tags['adaptiveAppsPreserve'] -eq 'true')
+    if ($regions.Count -eq 0 -or ($preserve -and $region -notin $regions)) {
+        throw "No validated region is available for this lab. Run shared-deploy-lab.ps1 for the lab's region; an established lab will not be relocated."
     }
-    Update-AzTag -ResourceId $group.ResourceId -Operation Merge -Tag @{
+    $deploymentTags = @{
         adaptiveAppsReady = 'false'
         SecurityControl = 'Ignore'
         CostControl = 'Ignore'
-    } -ErrorAction Stop | Out-Null
+    }
+    if ($preserve) { $deploymentTags.adaptiveAppsPreserve = 'true' }
+    Update-AzTag -ResourceId $group.ResourceId -Operation Merge -Tag $deploymentTags -ErrorAction Stop | Out-Null
 
     Write-Host 'Preparing private infrastructure deployment parameters...'
     $parameterFile = Join-Path $scratch 'main.parameters.json'
@@ -54,7 +59,6 @@ try {
         '$schema' = 'https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#'
         contentVersion = '1.0.0.0'
         parameters = @{
-            location = @{ value = $region }
             adminPassword = @{ value = (New-MhhStablePassword -Purpose 'adaptive-apps-k3s-admin' -Length 24) }
         }
     } | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath $parameterFile -Encoding utf8
@@ -62,15 +66,30 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Unable to secure infrastructure parameter file.' }
     Write-Host 'Submitting incremental Adaptive Apps infrastructure deployment...'
     try {
-        $deployment = New-AzResourceGroupDeployment -Name 'adaptive-apps-console' `
-            -ResourceGroupName $ResourceGroupName -TemplateFile (Join-Path $PSScriptRoot 'main.bicep') `
-            -TemplateParameterFile $parameterFile -Mode Incremental -ErrorAction Stop
+        if ($preserve) {
+            $deployment = New-AzResourceGroupDeployment -Name 'adaptive-apps-console' `
+                -ResourceGroupName $ResourceGroupName -TemplateFile (Join-Path $PSScriptRoot 'main.bicep') `
+                -TemplateParameterFile $parameterFile -Mode Incremental -ErrorAction Stop
+        } else {
+            Write-Warning "Initial provisioning may delete and recreate '$ResourceGroupName' on retryable infrastructure failures. Validated regions: $($regions -join ', ')."
+            $result = Invoke-MhhDeploymentWithRegionFallback -PreferredLocations $regions `
+                -ResourceGroupName $ResourceGroupName -RgOwnerEntraObjectIds $AllowedEntraUserIds `
+                -TemplateFile (Join-Path $PSScriptRoot 'main.bicep') -TemplateParameterFile $parameterFile `
+                -DeploymentNamePrefix 'adaptive-apps-console' -Tag $deploymentTags -ErrorAction Stop
+            if (-not $result.Success) { throw 'Initial infrastructure fallback did not report success.' }
+            $deployment = $result.DeploymentResult
+        }
     } finally {
         Remove-Item -LiteralPath $parameterFile -Force
     }
     if ($deployment.ProvisioningState -ne 'Succeeded') {
-        throw "Infrastructure deployment failed: $($deployment.ProvisioningState). Resources are retained for diagnosis; no destructive fallback is attempted."
+        throw "Infrastructure deployment failed: $($deployment.ProvisioningState). Bootstrap will not run."
     }
+    $group = Get-AzResourceGroup -Name $ResourceGroupName -ErrorAction Stop
+    $region = $group.Location.ToLowerInvariant()
+    if ($region -notin $regions) { throw "Deployment used unvalidated region '$region'." }
+    # Keep this marker through failed reconciliations; readiness alone is not a deletion guard.
+    Update-AzTag -ResourceId $group.ResourceId -Operation Merge -Tag @{ adaptiveAppsPreserve = 'true' } -ErrorAction Stop | Out-Null
     $acrName = $deployment.Outputs.acrName.Value
     $nodeGroup = $deployment.Outputs.nodeResourceGroup.Value
     if (-not $acrName -or -not $nodeGroup) { throw 'Infrastructure deployment omitted ACR or AKS node resource group outputs.' }

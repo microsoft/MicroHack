@@ -1,6 +1,6 @@
 # Challenge 01 - Prerequisites: ready, set, go
 
-**[Home](../Readme.md)** - [Next Challenge >](challenge-02.md)
+**[Home](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/Readme.md)** - [Next Challenge >](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/challenges/challenge-02.md)
 
 Estimated time: 30-60 minutes | Difficulty: beginner
 
@@ -11,6 +11,17 @@ required by every challenge in this MicroHack.
 
 Challenge 01 is a universal prerequisite. Complete it before starting a challenge in
 any bucket.
+
+## Hosted Console participants
+
+Complete Tasks **2-4** for workstation setup and tools, then follow
+[Console setup](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/docs/console-setup.md)
+to sign in and connect from a **Bash terminal**. Skip the manual access/capacity,
+provider-registration, extra-resource-group preflight, and platform setup below.
+The helper reconstructs your local kubeconfig, Radius workspaces, and Bicep
+extension using your own credentials. Source `artifacts/console-env.sh` in every
+new Bash terminal and start **Challenge 06**, not provisioning Challenges 02-05.
+The manual bring-your-own-subscription path below is unchanged.
 
 ## Learning goals
 
@@ -202,12 +213,11 @@ always x64 Azure VM sizes even when the devcontainer runs on arm64.
 
 ##### Start the container
 
-Clone the fork and check out this MicroHack branch:
+Clone the canonical repository on `main`:
 
 ```bash
-git clone https://github.com/djong1/MicroHack.git
+git clone --branch main https://github.com/microsoft/MicroHack.git
 cd MicroHack
-git switch djong1-adaptive-apps-microhack
 code .
 ```
 
@@ -225,7 +235,7 @@ Radius CLI, PowerShell 7, Git, `jq`, `yq`, `curl`, SSH, and `tar`. These tools c
 every command in Challenges 01-06.
 The container is only a workstation: AKS, the Linux VM, K3s, Radius control planes,
 portfolio workloads, and recipes are still created on the remote Azure and Kubernetes
-targets by the commands you run.
+targets by the manual commands or the organizer's hosted setup.
 
 Sign in to Azure from inside the container. If the container cannot open a browser, use
 the device-code flow:
@@ -251,7 +261,7 @@ Install the following tools in one consistent shell environment:
 - [Bicep CLI](https://learn.microsoft.com/azure/azure-resource-manager/bicep/install)
 - [`kubectl`](https://kubernetes.io/docs/tasks/tools/)
 - [Helm 3](https://helm.sh/docs/intro/install/)
-- [Radius CLI (`rad`)](https://docs.radapp.io/getting-started/install/)
+- [Radius CLI (`rad`)](https://docs.radapp.io/installation/cli/)
 - [Git](https://git-scm.com/downloads)
 - `jq`, `yq`, `curl`, OpenSSH client, and `tar`
 - [Visual Studio Code](https://code.visualstudio.com/)
@@ -369,6 +379,10 @@ kubeconfig or SSH private key into the Git workspace.
 
 ## Success criteria
 
+For hosted labs, the success criteria are working local tools and a successful
+Console connection with both contexts/workspaces and `artifacts/types.tgz`.
+The capacity and subscription-wide checks below apply to manual setup only.
+
 You are ready to continue when:
 
 - Every required tool returns a version successfully.
@@ -404,8 +418,11 @@ You are ready to continue when:
 
 ## Learning resources
 
+Use **Radius 0.60.0** for this workshop. The current official CLI guide carries
+a preview compatibility warning; do not replace the pin with the newest release.
+
 - [Azure CLI installation](https://learn.microsoft.com/cli/azure/install-azure-cli)
 - [Install and set up kubectl](https://kubernetes.io/docs/tasks/tools/)
 - [Helm installation](https://helm.sh/docs/intro/install/)
-- [Install the Radius CLI](https://docs.radapp.io/getting-started/install/)
+- [Install the Radius CLI](https://docs.radapp.io/installation/cli/)
 - [Install WSL](https://learn.microsoft.com/windows/wsl/install)

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Invoke with Bash from the Adaptive Apps MicroHack root; executable bits are not required.
-set -euo pipefail
+set -Eeuo pipefail
 trap 'echo "ERROR: K3s preparation failed at line ${LINENO}. Review Azure Policy and role-assignment errors above." >&2' ERR
 
 TEMP_FILES=()
@@ -72,6 +72,8 @@ Required for provision/connect:
 
 The kubeconfig endpoint defaults to https://127.0.0.1:16443. Override the local port
 with K3S_LOCAL_PORT before provisioning and on every later connect command.
+Connect retrieves kubeconfig when missing. Set K3S_REFRESH_KUBECONFIG=true to
+refresh an existing file after reprovisioning or when changing the local port.
 EOF
 }
 
@@ -259,8 +261,7 @@ if ! az extension show --name bastion >/dev/null 2>&1; then
   exit 1
 fi
 
-az account show >/dev/null 2>&1 || az login
-az account set --subscription "$AZURE_SUBSCRIPTION"
+source "$(dirname "${BASH_SOURCE[0]}")/azure-session.sh"
 SUBSCRIPTION_ID="$(az account show --query id --output tsv)"
 readonly SUBSCRIPTION_ID
 readonly VM_RESOURCE_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP}/providers/Microsoft.Compute/virtualMachines/${K3S_VM_NAME}"
@@ -348,7 +349,7 @@ validate_k3s() {
   local expected_server="https://127.0.0.1:${K3S_LOCAL_PORT}"
 
   [[ -s "$K3S_KUBECONFIG" ]] || {
-    echo "Kubeconfig not found at ${K3S_KUBECONFIG}; run provision mode first." >&2
+    echo "Kubeconfig not found at ${K3S_KUBECONFIG}; rerun connect mode." >&2
     return 1
   }
   export KUBECONFIG="$K3S_KUBECONFIG"
@@ -358,7 +359,7 @@ validate_k3s() {
     --output jsonpath='{.clusters[0].cluster.server}')"
   [[ "$configured_server" == "$expected_server" ]] || {
     echo "Kubeconfig endpoint ${configured_server} does not match ${expected_server}." >&2
-    echo "Use the same K3S_LOCAL_PORT as provisioning, or rerun provision mode." >&2
+    echo "Use the same K3S_LOCAL_PORT, or reconnect with K3S_REFRESH_KUBECONFIG=true." >&2
     return 1
   }
   kubectl config use-context "$K3S_CONTEXT" >/dev/null
@@ -378,8 +379,8 @@ register_k3s_context_in_default_kubeconfig() {
   chmod 0600 "$merged_file"
   TEMP_FILES+=("$merged_file")
 
-  KUBECONFIG="${default_kubeconfig}:${K3S_KUBECONFIG}" \
-    kubectl config view --flatten >"$merged_file"
+  KUBECONFIG="${K3S_KUBECONFIG}:${default_kubeconfig}" \
+    kubectl config view --flatten --raw >"$merged_file"
   KUBECONFIG="$merged_file" kubectl config get-contexts --output name |
     grep -qx "$K3S_CONTEXT" || {
     echo "Could not register the ${K3S_CONTEXT} context in ${default_kubeconfig}." >&2
@@ -387,6 +388,70 @@ register_k3s_context_in_default_kubeconfig() {
   }
   install -m 0600 "$merged_file" "$default_kubeconfig"
   rm -f "$merged_file"
+}
+
+retrieve_kubeconfig() {
+  local encoded_length length_response start end response chunk
+  local encoded_file decoded_file current_context
+
+  install -d -m 0700 "$(dirname "$K3S_KUBECONFIG")"
+  encoded_file="$(mktemp)"
+  decoded_file="$(mktemp)"
+  chmod 0600 "$encoded_file" "$decoded_file"
+  TEMP_FILES+=("$encoded_file" "$decoded_file")
+
+  length_response="$(az vm run-command invoke \
+    --resource-group "$RESOURCE_GROUP" \
+    --name "$K3S_VM_NAME" \
+    --command-id RunShellScript \
+    --scripts 'set -eu; encoded="$(base64 -w0 /etc/rancher/k3s/k3s.yaml)"; printf "K3S_LENGTH:%s\n" "${#encoded}"' \
+    --output json)"
+  encoded_length="$(jq -r '.value[]?.message // empty' <<<"$length_response" |
+    sed -n 's/^K3S_LENGTH:\([0-9][0-9]*\)$/\1/p' |
+    tail -n 1)"
+  is_integer "$encoded_length" && ((encoded_length > 0 && encoded_length <= 65536)) || {
+    echo "Could not determine a safe K3s kubeconfig length from Run Command." >&2
+    return 1
+  }
+
+  : >"$encoded_file"
+  for ((start = 1; start <= encoded_length; start += KUBECONFIG_CHUNK_SIZE)); do
+    end=$((start + KUBECONFIG_CHUNK_SIZE - 1))
+    echo "Retrieving protected kubeconfig chunk at offset ${start}."
+    response="$(az vm run-command invoke \
+      --resource-group "$RESOURCE_GROUP" \
+      --name "$K3S_VM_NAME" \
+      --command-id RunShellScript \
+      --scripts "set -eu; printf 'K3S_CHUNK_BEGIN\n'; base64 -w0 /etc/rancher/k3s/k3s.yaml | cut -c ${start}-${end}; printf '\nK3S_CHUNK_END\n'" \
+      --output json)"
+    chunk="$(jq -r '.value[]?.message // empty' <<<"$response" |
+      sed -n '/^K3S_CHUNK_BEGIN$/,/^K3S_CHUNK_END$/p' |
+      sed '1d;$d' |
+      tr -d '\r\n')"
+    [[ "$chunk" =~ ^[A-Za-z0-9+/=]+$ ]] || {
+      echo "Run Command returned an invalid kubeconfig chunk at offset ${start}." >&2
+      return 1
+    }
+    printf '%s' "$chunk" >>"$encoded_file"
+  done
+
+  [[ "$(wc -c <"$encoded_file" | tr -d '[:space:]')" == "$encoded_length" ]] || {
+    echo "Run Command kubeconfig retrieval was incomplete." >&2
+    return 1
+  }
+  base64 --decode "$encoded_file" >"$decoded_file"
+  grep -q '^apiVersion:' "$decoded_file"
+  sed -E \
+    "s#server: https://[^[:space:]]+#server: https://127.0.0.1:${K3S_LOCAL_PORT}#" \
+    "$decoded_file" >"$encoded_file"
+  install -m 0600 "$encoded_file" "$K3S_KUBECONFIG"
+  current_context="$(KUBECONFIG="$K3S_KUBECONFIG" kubectl config current-context)"
+  if [[ "$current_context" != "$K3S_CONTEXT" ]]; then
+    KUBECONFIG="$K3S_KUBECONFIG" kubectl config rename-context \
+      "$current_context" "$K3S_CONTEXT" >/dev/null
+  fi
+  rm -f "$encoded_file" "$decoded_file"
+  register_k3s_context_in_default_kubeconfig
 }
 
 if [[ "$MODE" == "connect" ]]; then
@@ -420,6 +485,9 @@ if [[ "$MODE" == "connect" ]]; then
     echo "Bastion must be Succeeded, Standard or Premium, and have native tunneling enabled." >&2
     exit 1
   }
+  if [[ ! -s "$K3S_KUBECONFIG" || "${K3S_REFRESH_KUBECONFIG:-false}" == "true" ]]; then
+    retrieve_kubeconfig
+  fi
   ensure_tunnel
   validate_k3s
   register_k3s_context_in_default_kubeconfig
@@ -915,77 +983,6 @@ jq -r '.value[]?.message // empty' <<<"$K3S_INSTALL_RESPONSE" |
   echo "K3s guest installation did not return its success marker." >&2
   echo "Inspect Azure VM Run Command status and outbound access from the private VM." >&2
   exit 1
-}
-
-retrieve_kubeconfig() {
-  local encoded_length
-  local length_response
-  local start
-  local end
-  local response
-  local chunk
-  local encoded_file
-  local decoded_file
-  local current_context
-
-  install -d -m 0700 "$(dirname "$K3S_KUBECONFIG")"
-  encoded_file="$(mktemp)"
-  decoded_file="$(mktemp)"
-  chmod 0600 "$encoded_file" "$decoded_file"
-  TEMP_FILES+=("$encoded_file" "$decoded_file")
-
-  length_response="$(az vm run-command invoke \
-    --resource-group "$RESOURCE_GROUP" \
-    --name "$K3S_VM_NAME" \
-    --command-id RunShellScript \
-    --scripts 'set -eu; encoded="$(base64 -w0 /etc/rancher/k3s/k3s.yaml)"; printf "K3S_LENGTH:%s\n" "${#encoded}"' \
-    --output json)"
-  encoded_length="$(jq -r '.value[]?.message // empty' <<<"$length_response" |
-    sed -n 's/^K3S_LENGTH:\([0-9][0-9]*\)$/\1/p' |
-    tail -n 1)"
-  is_integer "$encoded_length" && ((encoded_length > 0 && encoded_length <= 65536)) || {
-    echo "Could not determine a safe K3s kubeconfig length from Run Command." >&2
-    return 1
-  }
-
-  : >"$encoded_file"
-  for ((start = 1; start <= encoded_length; start += KUBECONFIG_CHUNK_SIZE)); do
-    end=$((start + KUBECONFIG_CHUNK_SIZE - 1))
-    echo "Retrieving protected kubeconfig chunk at offset ${start}."
-    response="$(az vm run-command invoke \
-      --resource-group "$RESOURCE_GROUP" \
-      --name "$K3S_VM_NAME" \
-      --command-id RunShellScript \
-      --scripts "set -eu; printf 'K3S_CHUNK_BEGIN\n'; base64 -w0 /etc/rancher/k3s/k3s.yaml | cut -c ${start}-${end}; printf '\nK3S_CHUNK_END\n'" \
-      --output json)"
-    chunk="$(jq -r '.value[]?.message // empty' <<<"$response" |
-      sed -n '/^K3S_CHUNK_BEGIN$/,/^K3S_CHUNK_END$/p' |
-      sed '1d;$d' |
-      tr -d '\r\n')"
-    [[ "$chunk" =~ ^[A-Za-z0-9+/=]+$ ]] || {
-      echo "Run Command returned an invalid kubeconfig chunk at offset ${start}." >&2
-      return 1
-    }
-    printf '%s' "$chunk" >>"$encoded_file"
-  done
-
-  [[ "$(wc -c <"$encoded_file" | tr -d '[:space:]')" == "$encoded_length" ]] || {
-    echo "Run Command kubeconfig retrieval was incomplete." >&2
-    return 1
-  }
-  base64 --decode "$encoded_file" >"$decoded_file"
-  grep -q '^apiVersion:' "$decoded_file"
-  sed -E \
-    "s#server: https://[^[:space:]]+#server: https://127.0.0.1:${K3S_LOCAL_PORT}#" \
-    "$decoded_file" >"$encoded_file"
-  install -m 0600 "$encoded_file" "$K3S_KUBECONFIG"
-  current_context="$(KUBECONFIG="$K3S_KUBECONFIG" kubectl config current-context)"
-  if [[ "$current_context" != "$K3S_CONTEXT" ]]; then
-    KUBECONFIG="$K3S_KUBECONFIG" kubectl config rename-context \
-      "$current_context" "$K3S_CONTEXT" >/dev/null
-  fi
-  rm -f "$encoded_file" "$decoded_file"
-  register_k3s_context_in_default_kubeconfig
 }
 
 retrieve_kubeconfig

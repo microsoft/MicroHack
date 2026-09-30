@@ -1,10 +1,10 @@
 # **Microsoft Sovereign Cloud Hackathon**
 
-- [**Hackathon introduction**](#Hackathon-introduction)
-- [**Hackathon context**](#Hackathon-context)
+- [**Hackathon introduction**](#hackathon-introduction)
+- [**Hackathon context**](#hackathon-context)
 - [**Objectives**](#objectives)
 - [**Recommended environment: GitHub Codespaces**](#recommended-environment-github-codespaces)
-- [**Hackathon Challenges**](#Hackathon-challenges)
+- [**Hackathon Challenges**](#hackathon-challenges)
 - [**Contributors**](#contributors)
 
 # Hackathon introduction
@@ -22,7 +22,7 @@ This Hackathon scenario walks through the use of Microsoft Sovereign Cloud techn
 - [Microsoft Sovereign Cloud](https://www.microsoft.com/ai/sovereign-cloud?msockid=35d465bce58561e42620737ce487605e)
 - [Cloud Adoption Framework - Digital sovereignty adoption](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/sovereignty/executive-strategy?tabs=overview)
 - [Microsoft Sovereign Cloud documentation](https://learn.microsoft.com/industry/sovereign-cloud/)
-- [What is Sovereign Public Cloud?](https://learn.microsoft.com/industry/sovereign-cloud/sovereign-public-cloud/overview-sovereign-public-cloud)
+- [What is Sovereign Public Cloud?](https://learn.microsoft.com/azure/azure-sovereign-clouds/public/overview-sovereign-public-cloud)
 - [Sovereign Private Cloud](https://learn.microsoft.com/industry/sovereign-cloud/sovereign-private-cloud/overview-sovereign-private-cloud)
 - [Digital sovereignty](https://learn.microsoft.com/industry/sovereign-cloud/overview/digital-sovereignty)
 - [Sovereign Landing Zone (SLZ)](https://learn.microsoft.com/industry/sovereign-cloud/sovereign-public-cloud/sovereign-landing-zone/overview-slz?tabs=hubspoke)
@@ -73,7 +73,7 @@ Use **GitHub Codespaces with the Azure / Infra / Sovereign Cloud devcontainer** 
 
 **Included usage:** GitHub Free personal accounts include **120 core-hours per month**, equivalent to **60 hours (3,600 minutes) on a 2-core machine**, plus **15 GB-months of storage**. Larger machines consume compute allowance faster. Check your remaining allowance before the event: custom container images and Docker data also consume storage, and a longer idle timeout uses more compute. Azure resource costs are separate; stopping the Codespace does not stop Azure resources.
 
-Sources: [Codespaces timeout](https://docs.github.com/en/codespaces/setting-your-user-preferences/setting-your-timeout-period-for-github-codespaces) · [Included usage and billing](https://docs.github.com/en/billing/concepts/product-billing/github-codespaces) · [Devcontainer configuration](../../../.devcontainer/03-azure-01-03-infrastructure-01-sovereign-cloud/devcontainer.json).
+Sources: [Codespaces timeout](https://docs.github.com/en/codespaces/setting-your-user-preferences/setting-your-timeout-period-for-github-codespaces) · [Included usage and billing](https://docs.github.com/en/billing/concepts/product-billing/github-codespaces) · [Devcontainer configuration](https://github.com/microsoft/MicroHack/blob/main/.devcontainer/03-azure-01-03-infrastructure-01-sovereign-cloud/devcontainer.json).
 
 **Alternatives:** a local workstation with the required tools remains supported. Azure Cloud Shell (Bash) can be used for individual CLI tasks, but is not the recommended end-to-end environment: [idle sessions end after 20 minutes](https://learn.microsoft.com/azure/cloud-shell/faq-troubleshooting), losing shell variables and running tunnels, and [no Docker daemon is available](https://learn.microsoft.com/azure/container-registry/container-registry-authentication#use-az-acr-login-without-docker-daemon) for Challenge 4's policy generation.
 
@@ -81,13 +81,13 @@ Sources: [Codespaces timeout](https://docs.github.com/en/codespaces/setting-your
 
 | Challenge | Topic    | Challenge | Solution | Duration  | Maker     |
 |:---------:|----------|-----------|----------|-----------|-----------|
-| 1         | Using Azure native platform controls (e.g. Policy, RBAC etc) to enforce sovereign controls in the public cloud | [Challenge](./challenges/challenge-01.md) | [Solution](./walkthrough/challenge-01/solution-01.md) | 45 min | Jan Egil Ring |
-| 2         | Encryption at rest with Customer Managed Keys in Azure Key Vault | [Challenge](./challenges/challenge-02.md) | [Solution](./walkthrough/challenge-02/solution-02.md) | 30 min | Ye Zhang |
-| 3         | Encryption in transit - enforcing TLS | [Challenge](./challenges/challenge-03.md) | [Solution](./walkthrough/challenge-03/solution-03.md) | 30 min | Ye Zhang |
-| 4         | Runtime attestation with Confidential and Standard ACI | [Challenge](./challenges/challenge-04.md) | [Solution](./walkthrough/challenge-04/solution-04.md) | 30-45 min | Murali Rao Yelamanchili / Ye Zhang |
-| 5         | Encryption in use with Confidential VMs/Node Pools in Azure Kubernetes Service (AKS) | [Challenge](./challenges/challenge-05.md) | [Solution](./walkthrough/challenge-05/solution-05.md) | 30 min | Murali Rao Yelamanchili / Ye Zhang |
-| 6         | Operating Sovereign in a hybrid environment with Azure Local and Azure Arc | [Challenge](./challenges/challenge-06.md) | [Solution](./walkthrough/challenge-06/solution-06.md) | 60-90 min | Jan Egil Ring / Thomas Maurer |
-| 7         | Adaptive Apps across sovereign Azure and private-cloud environments with Radius | [Challenge](./challenges/challenge-07.md) | [Solution](./walkthrough/challenge-07/solution-07.md) | 60 min | Dylan de Jong / Jan Egil Ring / Wesley Backelant |
+| 1         | Using Azure native platform controls (e.g. Policy, RBAC etc) to enforce sovereign controls in the public cloud | [Challenge](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/challenges/challenge-01.md) | [Solution](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/walkthrough/challenge-01/solution-01.md) | 45 min | Jan Egil Ring |
+| 2         | Encryption at rest with Customer Managed Keys in Azure Key Vault | [Challenge](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/challenges/challenge-02.md) | [Solution](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/walkthrough/challenge-02/solution-02.md) | 30 min | Ye Zhang |
+| 3         | Encryption in transit - enforcing TLS | [Challenge](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/challenges/challenge-03.md) | [Solution](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/walkthrough/challenge-03/solution-03.md) | 30 min | Ye Zhang |
+| 4         | Runtime attestation with Confidential and Standard ACI | [Challenge](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/challenges/challenge-04.md) | [Solution](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/walkthrough/challenge-04/solution-04.md) | 30-45 min | Murali Rao Yelamanchili / Ye Zhang |
+| 5         | Encryption in use with Confidential VMs/Node Pools in Azure Kubernetes Service (AKS) | [Challenge](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/challenges/challenge-05.md) | [Solution](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/walkthrough/challenge-05/solution-05.md) | 30 min | Murali Rao Yelamanchili / Ye Zhang |
+| 6         | Operating Sovereign in a hybrid environment with Azure Local and Azure Arc | [Challenge](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/challenges/challenge-06.md) | [Solution](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/walkthrough/challenge-06/solution-06.md) | 60-90 min | Jan Egil Ring / Thomas Maurer |
+| 7         | Adaptive Apps across sovereign Azure and private-cloud environments with Radius | [Challenge](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/challenges/challenge-07.md) | [Solution](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/walkthrough/challenge-07/solution-07.md) | 60 min | Dylan de Jong / Jan Egil Ring / Wesley Backelant |
 
 ### General prerequisites
 
@@ -96,11 +96,11 @@ This Hackathon has a few but important prerequisites
 In order to use the Hackathon time most effectively, the following tasks should be completed prior to starting the session.
 
 > [!NOTE]
-> For eligible Microsoft-hosted events, use the [Hacks Console runbook](./resources/hosted-events/readme.md). Outside those events, use [manual infrastructure setup](./resources/manual-setup/readme.md). Both paths require LocalBox preparation and health validation before participants begin.
+> For eligible Microsoft-hosted events, use the [Hacks Console runbook](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/resources/hosted-events/readme.md). Outside those events, use [manual infrastructure setup](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/resources/manual-setup/readme.md). Both paths require LocalBox preparation and health validation before participants begin.
 
 1. For hosted events, the hacker account and assigned Azure subscription/resource group from the Hackathon Console; otherwise, your own Azure subscription with Owner RBAC rights at the subscription level
 2. The resource, policy and role-assignment permissions specified by each challenge in your assigned scope
-3. Access to Azure Arc Jumpstart LocalBox if completing Challenge 6, including the [guest-management and Defender readiness checks](./resources/demo-vm-creator/README.md#step-6-test-the-environment)
+3. Access to Azure Arc Jumpstart LocalBox if completing Challenge 6, including the [guest-management and Defender readiness checks](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/resources/demo-vm-creator/README.md#step-6-test-the-environment)
 4. The [recommended Codespaces environment](#recommended-environment-github-codespaces), or a local workstation with [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli) and the tools listed in each walkthrough
 5. Challenge 7: `kubectl`, `jq`, OpenSSL, the [Radius CLI](https://docs.radapp.io/getting-started/install/), and the Azure CLI `bastion` extension (included in the Sovereign Cloud devcontainer)
 
@@ -134,7 +134,7 @@ Use the AZQR report for planning and preferred-region ordering, not as the deplo
 
 The main cost driver for this Hackathon is virtual machines:
 
-- **LocalBox** cost is approximately 100-110 USD per subscription per day. Console's shared-deployment estimate is USD 110/day per subscription, separate from participant costs. For hosted events, schedule provisioning at least 24 hours ahead and budget for preparation time; avoid leaving it running for a week by default. Follow the [hosted-event budget guidance](./resources/hosted-events/readme.md).
+- **LocalBox** cost is approximately 100-110 USD per subscription per day. Console's shared-deployment estimate is USD 110/day per subscription, separate from participant costs. For hosted events, schedule provisioning at least 24 hours ahead and budget for preparation time; avoid leaving it running for a week by default. Follow the [hosted-event budget guidance](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/resources/hosted-events/readme.md).
 - **Challenges 5 and 7** share one pre-provisioned cluster: two `Standard_D4s_v5` system nodes and two Ubuntu `Standard_DC2as_v5/v6` confidential nodes, plus a `Standard_D4s_v5` K3s VM, Bastion Standard and NAT Gateway. The removed standalone CVM is replaced by the second confidential node, so baseline confidential compute remains four vCPUs; sharing also avoids a second AKS system pool.
 - Example Linux PAYG compute in Spain Central from the [Azure Retail Prices API](https://prices.azure.com/api/retail/prices), checked 2026-09-21: three D4s v5 at USD 0.214/hour plus two DC2as v6 at USD 0.117/hour equals **USD 21.02/day** for compute alone. Disks, Bastion, NAT, public IPs, LoadBalancers, storage and traffic are additional.
 - Use **USD 35-45 per participant per day** as a planning range including a modest allowance for those services and Challenge 4's two 1-vCPU/2-GiB ACI groups, Basic ACR and image build. The Console estimate is USD 45/day, not a pricing quote. ACI duration, confidential pricing, builds and egress can change the total; validate a regional Pricing Calculator estimate before approval.

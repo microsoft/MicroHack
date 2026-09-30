@@ -36,9 +36,9 @@ sovereignty-compliance solution.
 
 ## Actions
 
-- Continue in the [recommended GitHub Codespaces environment](../Readme.md#recommended-environment-github-codespaces)
+- Continue in the [recommended GitHub Codespaces environment](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/Readme.md#recommended-environment-github-codespaces)
   used for all challenges. Start `pwsh` from its Bash terminal and
-  [verify the Linux Docker Engine](../walkthrough/challenge-04/solution-04.md#verify-your-environment-before-you-start)
+  [verify the Linux Docker Engine](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/walkthrough/challenge-04/solution-04.md#verify-your-environment-before-you-start)
   before deployment; Azure Cloud Shell cannot generate this CCE policy.
 - Understand runtime attestation and the purpose of the two-environment experiment.
 - Build the visual attestation image server-side in Azure Container Registry.
@@ -57,10 +57,10 @@ sovereignty-compliance solution.
 
 ## Learning resources
 
-- [Why Challenge 4 uses `confcom` and Docker](../walkthrough/challenge-04/CONFCOM-AND-CCE-POLICY.md#the-short-answer)
-- [Codespaces setup for all challenges](../Readme.md#recommended-environment-github-codespaces)
-- [Optional local Windows Docker Desktop preparation](../walkthrough/challenge-04/solution-04.md#windows-docker-desktop-setup-before-the-workshop)
+- [Why Challenge 4 uses `confcom` and Docker](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/walkthrough/challenge-04/CONFCOM-AND-CCE-POLICY.md#the-short-answer)
+- [Codespaces setup for all challenges](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/Readme.md#recommended-environment-github-codespaces)
+- [Optional local Windows Docker Desktop preparation](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/walkthrough/challenge-04/solution-04.md#windows-docker-desktop-setup-before-the-workshop)
 - [Confidential containers on Azure Container Instances](https://learn.microsoft.com/azure/container-instances/container-instances-confidential-overview)
 - [Microsoft Azure Attestation](https://learn.microsoft.com/azure/attestation/overview)
 - [Confidential computing enforcement policies](https://learn.microsoft.com/azure/container-instances/confidential-containers-attestation-concepts)
-- [Source sample: Visual Attestation Demo v2](https://github.com/Azure/confidential-computing/tree/main/aci-samples/visual-attestation-demo-v2)
+- [Source sample: Visual Attestation Demo v2 (checked-in snapshot)](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/walkthrough/challenge-04/resources/visual-attestation-demo-v2/README.md)

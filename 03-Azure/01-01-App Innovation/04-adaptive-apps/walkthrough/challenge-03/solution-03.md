@@ -1,10 +1,15 @@
 # Walkthrough Challenge 03 - Deploy and explore Radius
 
-[< Previous Solution](../challenge-02/solution-02.md) - **[Home](../../Readme.md)** - [Next Solution](../challenge-04/solution-04.md)
+[< Previous Solution](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/walkthrough/challenge-02/solution-02.md) - **[Home](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/Readme.md)** - [Next Solution](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/walkthrough/challenge-04/solution-04.md)
 
 Duration: 30-45 minutes per environment
 
 ## Coach notes
+
+**Hosted Console:** Radius and its identities are already configured. Use
+[Console setup](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/docs/console-setup.md)
+for participant-local workspaces; do not repeat the installation or tenant app setup
+below. Continue at 06; these steps remain the manual platform-engineer path.
 
 - The goal is to install, configure, and explore Radius on both default platforms.
 - The default uses a **federated model**: one control plane on AKS and one on K3s.
@@ -313,8 +318,8 @@ Discuss:
 The same Radius installation principles apply when Azure Local or an existing
 Arc-enabled cluster replaces K3s:
 
-- [Azure Local preparation](../../docs/prepare-azure-local.md)
-- [Azure Arc-enabled Kubernetes preparation](../../docs/prepare-arc.md)
+- [Azure Local preparation](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/docs/prepare-azure-local.md)
+- [Azure Arc-enabled Kubernetes preparation](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/docs/prepare-arc.md)
 
 Use the platform's active kube context, create a distinct Radius workspace, and decide
 explicitly whether that installation needs an Azure provider.

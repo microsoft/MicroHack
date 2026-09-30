@@ -4,9 +4,9 @@ Duration: 60 minutes
 
 ## Prerequisites
 
-Please ensure that you successfully verified the [General prerequisites](../../Readme.md#general-prerequisites) before continuing.
+Please ensure that you successfully verified the [General prerequisites](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/Readme.md#general-prerequisites) before continuing.
 
-Use a **Bash terminal in your [Sovereign Cloud Codespace](../../Readme.md#recommended-environment-github-codespaces)**. It already includes the tools below. If using a local workstation instead, install them first:
+Use a **Bash terminal in your [Sovereign Cloud Codespace](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/Readme.md#recommended-environment-github-codespaces)**. It already includes the tools below. If using a local workstation instead, install them first:
 
 * Azure CLI with the `bastion` extension
 * `kubectl`
@@ -294,7 +294,7 @@ rad app graph --application sovereign-web
 rad resource list --application sovereign-web
 ```
 
-Expose the application, browse to <http://localhost:8080>, and stop the foreground process with <kbd>Ctrl</kbd>+<kbd>C</kbd>:
+Expose the application with the command below. In **Codespaces**, open the **Ports** tab, add port **8080** if it is not automatically forwarded, keep its visibility **Private**, and select **Open in Browser**. A literal `localhost` URL in your laptop's browser does not target the Codespace. For a local workstation, browse to <http://localhost:8080> instead. After viewing the application, stop the foreground process with <kbd>Ctrl</kbd>+<kbd>C</kbd>:
 
 ```bash
 rad resource expose Applications.Core/containers web \
@@ -322,7 +322,7 @@ rad app graph --application sovereign-web
 rad resource list --application sovereign-web
 ```
 
-Expose the AKS application and browse to <http://localhost:8080>:
+Expose the AKS application, then open forwarded port **8080** from the Codespaces **Ports** tab as above (or <http://localhost:8080> on a local workstation):
 
 ```bash
 rad resource expose Applications.Core/containers web \

@@ -3,6 +3,7 @@
 
 # Adaptive Apps Bicep resource-type extension generated during Challenge 03.
 /03-Azure/01-01-App Innovation/04-adaptive-apps/artifacts/*.tgz
+/03-Azure/01-01-App Innovation/04-adaptive-apps/artifacts/console-env.sh
 
 # Dev Containers feature lock file generated on the first container build.
 .devcontainer/**/devcontainer-lock.json

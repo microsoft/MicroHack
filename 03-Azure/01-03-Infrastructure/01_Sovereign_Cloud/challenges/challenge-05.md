@@ -24,8 +24,8 @@ VM node pool and verify the execution environment with a fresh MAA token.
 
 ## Learning resources
 
-- [When Confidential VM Orchestrator is required](../walkthrough/challenge-05/CVM-ORCHESTRATOR.md)
+- [When Confidential VM Orchestrator is required](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/walkthrough/challenge-05/CVM-ORCHESTRATOR.md)
 - [Use Confidential VMs in AKS](https://learn.microsoft.com/azure/aks/use-cvm)
-- [AKS confidential computing overview](https://learn.microsoft.com/azure/aks/confidential-computing-overview)
+- [Confidential VM node pools on AKS](https://learn.microsoft.com/azure/confidential-computing/confidential-node-pool-aks)
 - [Microsoft Azure Attestation](https://learn.microsoft.com/azure/attestation/overview)
-- [Source sample: Azure Voting App on confidential AKS nodes](https://github.com/Azure/confidential-computing/tree/main/aks-samples/azure-voting-app)
+- [Source sample: Azure Voting App on confidential AKS nodes (checked-in snapshot)](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/walkthrough/challenge-05/resources/azure-voting-app/README.md)

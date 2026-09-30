@@ -1,13 +1,15 @@
 # Challenge 4 upstream source
 
-The local [`resources/visual-attestation-demo-v2`](resources/visual-attestation-demo-v2/README.md)
+The local [`resources/visual-attestation-demo-v2`](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/walkthrough/challenge-04/resources/visual-attestation-demo-v2/README.md)
 directory is a byte-for-byte snapshot of the Azure Confidential Computing
 Visual Attestation Demo v2 sample.
 
-- Repository: <https://github.com/Azure/confidential-computing>
+- Original repository: `Azure/confidential-computing`
 - Source path: `aci-samples/visual-attestation-demo-v2`
-- Source commit: [`62fea0b9ce0ead5b615a3f8d19fd6d27a15cb29d`](https://github.com/Azure/confidential-computing/tree/62fea0b9ce0ead5b615a3f8d19fd6d27a15cb29d/aci-samples/visual-attestation-demo-v2)
+- Source commit: `62fea0b9ce0ead5b615a3f8d19fd6d27a15cb29d`
 - Source commit date: 2026-07-13
+
+The original repository and commit URL returned HTTP 404 during the 2026-09-30 link check. Use the checked-in snapshot linked above; the provenance values are retained for reference, and the snapshot has not been changed.
 
 Do not edit the snapshot when making MicroHack-specific changes. The
 top-level `Deploy-VisualAttestationV2.ps1` starts from the upstream script and

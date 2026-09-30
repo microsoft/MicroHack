@@ -1,10 +1,14 @@
 # Challenge 02 - Prepare the platforms
 
-[< Previous Challenge](challenge-01.md) - **[Home](../Readme.md)** - [Next Challenge >](challenge-03.md)
+[< Previous Challenge](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/challenges/challenge-01.md) - **[Home](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/Readme.md)** - [Next Challenge >](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/challenges/challenge-03.md)
 
 Estimated time: 30-60 minutes | Difficulty: intermediate
 
 ## Challenge objective
+
+**Hosted Console:** this platform setup is already supplied in a ready lab.
+Follow [Console setup](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/docs/console-setup.md)
+and start 06; read this manual path for context without rerunning provisioning.
 
 Prepare and validate the two Kubernetes platforms used throughout the MicroHack:
 
@@ -141,8 +145,8 @@ Record the active kubeconfig and context whenever you switch platforms.
 If the workshop already provides suitable infrastructure, Azure Local or an existing
 Arc-enabled Kubernetes cluster can replace K3s:
 
-- [Prepare Azure Local](../docs/prepare-azure-local.md)
-- [Prepare Azure Arc-enabled Kubernetes](../docs/prepare-arc.md)
+- [Prepare Azure Local](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/docs/prepare-azure-local.md)
+- [Prepare Azure Arc-enabled Kubernetes](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/docs/prepare-arc.md)
 
 These are optional manual alternatives. Keep distinct kubeconfig, context, and logical
 environment names when substituting a platform.

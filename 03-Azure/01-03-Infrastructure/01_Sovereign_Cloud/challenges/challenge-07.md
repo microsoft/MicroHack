@@ -42,10 +42,12 @@ The lab platform has already provisioned:
 
 ## Learning resources
 
-* [What is Radius?](https://docs.radapp.io/concepts/overview/)
-* [Radius application model](https://docs.radapp.io/guides/author-apps/application/overview/)
-* [Radius environments](https://docs.radapp.io/guides/deploy-apps/environments/overview/)
-* [Radius recipes](https://docs.radapp.io/guides/recipes/overview/)
+* [What is Radius?](https://docs.radapp.io/concepts/)
+* [Radius application model](https://docs.radapp.io/concepts/applications/)
+* [Radius environments](https://docs.radapp.io/concepts/environments/)
+* [Radius recipes reference](https://docs.radapp.io/reference/recipes/)
+
+The current Radius documentation includes newer preview resource types. Use these links for background; follow the walkthrough's commands and resource types with the lab's pinned CLI, without enabling preview mode.
 * [Azure Kubernetes Service documentation](https://learn.microsoft.com/azure/aks/)
 * [Microsoft Entra Workload ID on AKS](https://learn.microsoft.com/azure/aks/workload-identity-overview)
 * [Azure Bastion native client connections](https://learn.microsoft.com/azure/bastion/connect-vm-native-client-windows)

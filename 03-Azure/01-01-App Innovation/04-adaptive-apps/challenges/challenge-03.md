@@ -1,10 +1,14 @@
 # Challenge 03 - Deploy and explore Radius
 
-[< Previous Challenge](challenge-02.md) - **[Home](../Readme.md)** - [Next Challenge >](challenge-04.md)
+[< Previous Challenge](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/challenges/challenge-02.md) - **[Home](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/Readme.md)** - [Next Challenge >](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/challenges/challenge-04.md)
 
 Estimated time: 30-45 minutes per environment | Difficulty: intermediate
 
 ## Challenge objective
+
+**Hosted Console:** Radius is already installed in a ready lab. Use
+[Console setup](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/docs/console-setup.md)
+to create your local workspaces and start 06; do not repeat this manual installation.
 
 Install and explore independent Radius control planes on both default platforms.
 Configure the matching local CLI workspaces, Radius environments, and groups:
@@ -152,8 +156,11 @@ needs an Azure provider.
 
 ## Learning resources
 
+The workshop pins **Radius 0.60.0**. Current official docs describe a newer preview;
+use them for reference, not to switch the lab to preview resource types/recipe packs.
+
 - [What is Radius?](https://docs.radapp.io/concepts/)
-- [Install Radius on Kubernetes](https://docs.radapp.io/guides/operations/kubernetes/install/)
-- [Radius workspaces](https://docs.radapp.io/guides/operations/workspaces/overview/)
-- [Radius environments](https://docs.radapp.io/guides/deploy-apps/environments/overview/)
-- [Radius dashboard](https://docs.radapp.io/guides/tooling/dashboard/)
+- [Install Radius on Kubernetes](https://docs.radapp.io/installation/control-plane/)
+- [Radius workspaces](https://docs.radapp.io/management/workspaces/)
+- [Radius environments](https://docs.radapp.io/concepts/environments/)
+- [Radius dashboard](https://docs.radapp.io/installation/dashboard/)

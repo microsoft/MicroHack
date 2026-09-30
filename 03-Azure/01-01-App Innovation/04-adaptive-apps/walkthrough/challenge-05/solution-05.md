@@ -1,10 +1,15 @@
 # Walkthrough Challenge 05 - Implement the platform abstractions with recipes
 
-[< Previous Solution](../challenge-04/solution-04.md) - **[Home](../../Readme.md)** - [Next Solution](../challenge-06/solution-06.md)
+[< Previous Solution](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/walkthrough/challenge-04/solution-04.md) - **[Home](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/Readme.md)** - [Next Solution](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/walkthrough/challenge-06/solution-06.md)
 
 Duration: 60-90 minutes
 
 ## Coach notes
+
+**Hosted Console:** a ready lab already includes published and registered recipes.
+Use [Console setup](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/docs/console-setup.md)
+and start 06; do not recreate the ACR or repeat recipe registration. The teaching
+sequence below applies to the manual platform-engineer path.
 
 Challenge 04 defined contracts. Challenge 05 implements them.
 
@@ -13,7 +18,7 @@ The teaching sequence is deliberate:
 1. Manually author one Azure SQL recipe to understand `context`, AVM, and `result`.
 2. Register the complete recipe sets as environment-as-code.
 
-Do not let teams skip directly to automation. The optional script at the end exists
+On the manual path, do not let teams skip directly to automation. The optional script at the end exists
 for setup recovery and participants who explicitly choose not to follow the tutorial.
 
 Before any K3s work after a devcontainer restart, restore the localhost API tunnel:
@@ -481,7 +486,7 @@ rad deploy iac/aks-env.bicep `
 > exists and provisions correctly, but the published application sends its Entra token as
 > an MQTT CONNECT password, while Event Grid requires MQTT v5 enhanced authentication.
 > Selecting it therefore crash-loops the backend. Challenge 06 explains this in
-> [Why AKS uses Mosquitto for `mqttBrokers`](../challenge-06/solution-06.md#why-aks-uses-mosquitto-for-mqttbrokers),
+> [Why AKS uses Mosquitto for `mqttBrokers`](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/walkthrough/challenge-06/solution-06.md#why-aks-uses-mosquitto-for-mqttbrokers),
 > including the `mqttRecipeTemplatePath` override that restores the Event Grid recipe.
 
 ## Manual tutorial, Stage 4: Register the complete K3s recipe set
@@ -610,5 +615,4 @@ two corrected PostgreSQL recipes plus the custom SQL recipe, deploys the appropr
 environment definition, and verifies the registered recipes. `k3s` also needs
 `AZURE_SUBSCRIPTION`, `RESOURCE_GROUP`, and `ACR_NAME` because it republishes the pinned
 workshop recipe before registration.
-
 

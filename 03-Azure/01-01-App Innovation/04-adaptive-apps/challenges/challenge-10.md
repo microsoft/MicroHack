@@ -1,6 +1,6 @@
 # Challenge 10 - Model, review, and deploy with Radius Canvas
 
-[< Previous Challenge](challenge-09.md) - **[Home](../Readme.md)** - [Next Challenge >](challenge-11.md)
+[< Previous Challenge](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/challenges/challenge-09.md) - **[Finish / Home](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/Readme.md)**
 
 Estimated time: 90-150 minutes | Difficulty: intermediate to advanced
 
@@ -82,6 +82,11 @@ Radius control plane you registered recipes with in Challenge 05, and it does no
 Challenge 06 application.
 
 ## Additional prerequisites
+
+This is an **optional, host-only extension**, not supplied by hosted Console setup.
+Arrange the GitHub Actions, tenant/federation, and Azure permissions below separately;
+lab resource-group Owner does not grant tenant administration. Finish the published
+sequence here: Challenge 11 is not yet published.
 
 - Challenges 01-06 completed. Challenges 07-09 are useful context but not required.
 - The **GitHub Copilot app** (desktop), latest version.
@@ -427,13 +432,17 @@ Cover:
 
 ## Learning resources
 
+Challenges 02-09 pin **Radius 0.60.0**; current official docs describe newer preview
+resource types/recipe packs. Canvas manages its own preview toolchain: do not replace
+the workshop's existing contracts or recipe registrations with Canvas output.
+
 - [Introducing Radius Canvas](https://techcommunity.microsoft.com/blog/azuredevcommunityblog/introducing-radius-canvas-visualize-review-and-deploy-applications-in-the-github/4549760)
 - [Radius Canvas guide](https://edge.docs.radapp.io/integrations/github-copilot-app/canvas-extension/)
 - [Radius AI extensions repository](https://github.com/radius-project/ai-extensions)
 - [Radius resource types contributions](https://github.com/radius-project/resource-types-contrib)
 - [Working with canvas extensions in the GitHub Copilot app](https://docs.github.com/en/copilot/how-tos/github-copilot-app/working-with-canvas-extensions)
-- [Radius recipes](https://docs.radapp.io/guides/recipes/overview/)
-- [Radius environments](https://docs.radapp.io/guides/deploy-apps/environments/overview/)
+- [Radius recipes](https://docs.radapp.io/reference/recipes/)
+- [Radius environments](https://docs.radapp.io/concepts/environments/)
 - [Configure OpenID Connect in Azure for GitHub Actions](https://docs.github.com/actions/deployment/security-hardening-your-deployments/configuring-openid-connect-in-azure)
 
 ## Clean up

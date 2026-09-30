@@ -16,19 +16,22 @@ region, and participant object IDs. The participant already has Owner on that
 group. There is no interactive login, Graph application/service-principal creation,
 confidential computing, Azure Local, or shared participant Kubernetes cluster here.
 
-Default scope: **resourcegroup**, **two labs per subscription**, in **Sweden Central**
+Default scope: **resourcegroup**, **five labs per subscription**, in **Sweden Central**
 (`swedencentral`). Organizers may override the event region before creating lab
 scopes; the shared preflight must pass for that subscription and region. Every participant
 gets a dedicated two-node AKS cluster and a separate private K3s VM. The organizer
 needs a **Linux runner**, PowerShell 7, current Az.Accounts/Az.Resources/Az.Network,
 Azure CLI, a Bicep compiler usable by Az deployments, Bash, curl, tar, jq, awk,
 sha256sum and standard Linux utilities. The explicit
-`../resources/install-console-tools.sh` installs the versioned client toolchain
+downloaded `resources/install-console-tools.sh` installs the versioned client toolchain
 and Bastion extension before any bootstrap phase. It does not authenticate.
 Outbound access to Azure, GitHub, Kubernetes/Helm/K3s release endpoints and
-container registries is required. Package the **whole MicroHack**, including
-`resources/`, `iac/` (including `iac/bicepconfig.json` and its referenced files),
-not only this folder.
+container registries is required, including HTTPS access to
+`raw.githubusercontent.com`. Console can publish this automation folder as its
+`lab/` folder without sibling workshop source directories. The hook downloads
+only the required files from `microsoft/MicroHack`, using the immutable commit
+and per-file SHA-256 hashes in `bootstrap-source.json`. No Git installation or
+GitHub credential is required.
 
 Successful provisioning prepares **platform state through challenge 05**.
 Participants still complete **challenge 01's workstation setup** before connecting:
@@ -65,8 +68,8 @@ prerequisites. No GitHub or AI API credentials are provisioned by these hooks.
    without a **Location** restriction, and for available family and total regional
    compute quota. A Zone restriction does not exclude this non-zonal topology.
 4. Require **16 free vCPUs per lab**: 8 for the AKS nodes, 4 for the K3s VM and
-   4 for one AKS upgrade surge node. Two new labs therefore require **32 free
-   vCPUs**, although their steady-state baseline is 24. Both `standardDSv5Family`
+   4 for one AKS upgrade surge node. Five new labs therefore require **80 free
+   vCPUs**, although their steady-state baseline is 60. Both `standardDSv5Family`
    and `cores` are checked after subtracting existing usage. The shared check
    intentionally budgets the entire requested fan-out as new capacity, including
    on reruns; arrange sufficient free quota before repeating it. It does not
@@ -128,13 +131,15 @@ Console mounts the source content **read-only**. The hook uses a private,
 GUID-named HOME under the worker's writable `[IO.Path]::GetTempPath()` for `.kube`,
 `.rad`, `.ssh`, downloaded clients and scratch files; it never creates directories
 under the mounted source. The platform's **absolute,
-isolated `AZURE_CONFIG_DIR` is preserved**. The complete `resources/` and `iac/`
-directories (including `iac/bicepconfig.json` and hidden files) are copied into
-a private working lab root beneath that HOME. All Bash phases run from this copy,
-whose owner-write permissions are enabled without modifying the read-only source,
-so generated `artifacts/types.tgz` and recipe artifacts cannot race with another
-participant or modify the source checkout. Existing source `artifacts/` are not
-copied. There is no root-level Bicep configuration in the package.
+isolated `AZURE_CONFIG_DIR` is preserved**. Before participant provisioning, the
+hook downloads the allowlisted `resources/` and `iac/` files into a private working
+lab root beneath that HOME and verifies every hash. Downloads have bounded
+timeouts and retries. A missing file, network failure or hash mismatch stops the
+hook before ARM deployment or Bash execution; it never falls back to `main`.
+All six phases reuse the verified files. Generated `artifacts/types.tgz` and
+recipe artifacts cannot race with another participant or modify the source
+checkout. No credentials or local configuration are downloaded, and all temporary
+files are removed on success or failure. There is no root-level Bicep configuration.
 A host-assigned ephemeral loopback port
 is passed as `K3S_LOCAL_PORT`; tunnel startup still detects a port collision and
 fails rather than taking another lab's tunnel. HOME/PATH/environment are restored
@@ -166,7 +171,7 @@ bearer token, registry password or Kubernetes private key is emitted.
 
 ## Rough costs and cleanup
 
-Budget **US$35 per lab per 24 hours**, or about **US$70/day for the default two
+Budget **US$35 per lab per 24 hours**, or about **US$175/day for the default five
 labs**, before optional exercises and significant traffic. This is an approximate
 pay-as-you-go planning allowance, not a quote:
 
@@ -190,6 +195,28 @@ remove them when releasing a dedicated subscription, but must not remove an
 initiative still used by another hosted event. No cleanup hook deletes resources
 automatically on deployment failure.
 
+## Maintaining the bootstrap source pin
+
+The workshop's `resources/` and `iac/` are the only editable source copies.
+`bootstrap-source.json` contains only a commit identifier and file hashes, not
+duplicate code. When bootstrap inputs change, publish them to `microsoft/MicroHack`
+first, then update the pin to that published commit:
+
+```powershell
+pwsh -File "./03-Azure/01-01-App Innovation/04-adaptive-apps/labautomation/update-bootstrap-source.ps1" -Commit "<full-40-character-commit-sha>"
+```
+
+The updater downloads that revision and verifies it matches the local sources
+before writing the manifest. Use `-Check` instead of `-Commit` for an offline
+local-source/hash check. Tests reject a stale pin, so source edits deliberately
+require refreshing the pin before publishing the automation update.
+
+This is a two-step release when source changes are not yet published: first
+publish the canonical inputs, then publish the verified manifest update. If an
+input file is added, update the allowlist in `Get-AdaptiveBootstrapFiles` as well.
+After publishing the automation update, refresh/reimport the content in Console
+before retrying. A pin update is unnecessary for documentation-only changes.
+
 ## Offline tests and live acceptance
 
 With PowerShell 7, Pester 5 and Bicep installed, from the repository root:
@@ -203,7 +230,8 @@ tools outside PATH. The runner confines Pester scratch files to a unique directo
 under the current checkout and removes it on exit. Tests mock Azure and Console
 commands; they cover quota boundaries, PostgreSQL capability schemas, failure
 propagation, packaging, region consistency, token refresh, phase ordering, output
-hygiene, read-only source compatibility, private-directory cleanup, and compiled
+hygiene, a read-only lab-only Console layout with no sibling sources, immutable
+source pins, hash mismatches, download failures, private-directory cleanup, and compiled
 ARM resource properties. Only the local test runner puts its test scratch beneath
 a writable checkout; the production hook uses writable worker scratch instead.
 

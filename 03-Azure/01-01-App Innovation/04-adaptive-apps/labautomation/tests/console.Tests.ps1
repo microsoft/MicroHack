@@ -157,6 +157,9 @@ Describe 'Participant hook orchestration' {
         $script:observedHome = ''
         $script:observedWorkingRoot = ''
         $script:sourceRoot = Split-Path $automation -Parent
+        $script:downloadRoot = ''
+        $script:failedDownload = $false
+        $script:tamperedDownload = $false
         $script:failedPhase = ''
         $script:location = 'westeurope'
         $script:guestMarker = 'ADAPTIVE_K3S_READY'
@@ -166,6 +169,22 @@ Describe 'Participant hook orchestration' {
         $script:originalHome = $env:HOME
         $script:originalPath = $env:PATH
         $env:AZURE_CONFIG_DIR = Join-Path $TestDrive 'platform-azure'
+        Mock Invoke-WebRequest {
+            $MaximumRetryCount | Should -Be 3
+            $timeout = if ($null -ne $TimeoutSec) { $TimeoutSec } else { $ConnectionTimeoutSeconds }
+            $timeout | Should -Be 60
+            $address = [Uri]$Uri
+            $address.Host | Should -Be 'raw.githubusercontent.com'
+            $address.AbsolutePath | Should -Match '^/microsoft/MicroHack/[0-9a-f]{40}/03-Azure/01-01-App%20Innovation/04-adaptive-apps/'
+            if (-not $script:downloadRoot) {
+                $script:downloadRoot = Split-Path (Split-Path $OutFile -Parent) -Parent
+                $script:observedHome = Split-Path $script:downloadRoot -Parent
+            }
+            if ($script:failedDownload) { throw 'Simulated download failure' }
+            $relative = [Uri]::UnescapeDataString(($address.AbsolutePath -replace '^.*/04-adaptive-apps/', ''))
+            Copy-Item -LiteralPath (Join-Path $script:sourceRoot $relative) -Destination $OutFile
+            if ($script:tamperedDownload) { Set-Content -LiteralPath $OutFile -Value 'Unexpected content' }
+        }
         Mock Update-MhhToken { $script:calls.Add('refresh') }
         Mock Get-AzContext { @{ Subscription = @{ Id = $subscription } } }
         Mock Get-AzResourceGroup {
@@ -186,8 +205,6 @@ Describe 'Participant hook orchestration' {
                 }
             }
         }
-        # Packaging is tested separately; no dependency on work-in-progress parent Bash files.
-        Mock Test-Path { $true } -ParameterFilter { $LiteralPath -match '/(resources|iac)(/|$)' }
         Mock az {
             $global:LASTEXITCODE = 0
             $script:calls.Add("az $args")
@@ -254,26 +271,28 @@ Describe 'Participant hook orchestration' {
         $script:tagWrites[-1].adaptiveAppsReady | Should -Be 'true'
         $result.HackboxCredential.name | Should -Contain 'Adaptive Apps Connect'
         ($result | ConvertTo-Json -Depth 5) | Should -Not -Match 'TestOnlyStablePassword|client-key-data|token:'
+        Should -Invoke Invoke-WebRequest -Times 20 -Exactly
     }
     It 'does not mark ready or emit credentials when Bash fails and still removes its HOME' {
         $script:failedPhase = 'recipes'
         { . (Join-Path $automation 'deploy-lab.ps1') -DeploymentType resourcegroup -SubscriptionId $subscription -ResourceGroupName lab-one -AllowedEntraUserIds @('user') } | Should -Throw '*exit code 13*'
         @($script:tagWrites | Where-Object { $_.adaptiveAppsReady -eq 'true' }) | Should -HaveCount 0
     }
-    It 'supports a read-only source package without creating or modifying source files' {
+    It 'deploys from only a read-only Console lab folder without sibling workshop sources' {
         $readOnlyRoot = Join-Path $TestDrive 'read-only-source'
         New-Item -ItemType Directory -Path $readOnlyRoot | Out-Null
-        foreach ($directory in @('resources', 'iac', 'labautomation')) {
-            Copy-Item -LiteralPath (Join-Path $script:sourceRoot $directory) -Destination $readOnlyRoot -Recurse -Force
-        }
-        $script:sourceRoot = $readOnlyRoot
+        $consoleLab = Join-Path $readOnlyRoot 'lab'
+        Copy-Item -LiteralPath $automation -Destination $consoleLab -Recurse -Force
+        Test-Path (Join-Path $readOnlyRoot 'resources') | Should -BeFalse
+        Test-Path (Join-Path $readOnlyRoot 'iac') | Should -BeFalse
+        Test-Path (Join-Path $consoleLab 'bootstrap') | Should -BeFalse
         $before = @(Get-ChildItem $readOnlyRoot -Recurse -Force -File | Sort-Object FullName | Get-FileHash)
         $writeBits = [IO.UnixFileMode]::UserWrite -bor [IO.UnixFileMode]::GroupWrite -bor [IO.UnixFileMode]::OtherWrite
         try {
             & chmod -R a-w $readOnlyRoot
             $LASTEXITCODE | Should -Be 0
             ([IO.File]::GetUnixFileMode($readOnlyRoot) -band $writeBits) | Should -Be 0
-            $result = . (Join-Path $readOnlyRoot 'labautomation/deploy-lab.ps1') -DeploymentType resourcegroup -SubscriptionId $subscription -ResourceGroupName lab-one -AllowedEntraUserIds @('user')
+            $result = . (Join-Path $consoleLab 'deploy-lab.ps1') -DeploymentType resourcegroup -SubscriptionId $subscription -ResourceGroupName lab-one -AllowedEntraUserIds @('user')
             $result.HackboxCredential.name | Should -Contain 'Adaptive Apps Connect'
             ([IO.File]::GetUnixFileMode($readOnlyRoot) -band $writeBits) | Should -Be 0
             $after = @(Get-ChildItem $readOnlyRoot -Recurse -Force -File | Sort-Object FullName | Get-FileHash)
@@ -288,6 +307,22 @@ Describe 'Participant hook orchestration' {
         $script:location = 'eastus'
         { . (Join-Path $automation 'deploy-lab.ps1') -DeploymentType resourcegroup -SubscriptionId $subscription -ResourceGroupName lab-one -AllowedEntraUserIds @('user') } | Should -Throw '*was not validated*'
         Should -Invoke New-AzResourceGroupDeployment -Times 0
+    }
+    It 'fails before Azure calls and cleans scratch when downloading fails' {
+        $script:failedDownload = $true
+        { . (Join-Path $automation 'deploy-lab.ps1') -DeploymentType resourcegroup -SubscriptionId $subscription -ResourceGroupName lab-one -AllowedEntraUserIds @('user') } |
+            Should -Throw '*Unable to download*Simulated download failure*'
+        Should -Invoke Update-MhhToken -Times 0
+        Should -Invoke New-AzResourceGroupDeployment -Times 0
+        Should -Invoke bash -Times 0
+    }
+    It 'rejects a hash mismatch before Azure provisioning or Bash execution' {
+        $script:tamperedDownload = $true
+        { . (Join-Path $automation 'deploy-lab.ps1') -DeploymentType resourcegroup -SubscriptionId $subscription -ResourceGroupName lab-one -AllowedEntraUserIds @('user') } |
+            Should -Throw '*SHA-256 verification failed*'
+        Should -Invoke New-AzResourceGroupDeployment -Times 0
+        Should -Invoke Update-AzTag -Times 0
+        Should -Invoke bash -Times 0
     }
     It 'stops on ARM failure without fallback or bootstrap' {
         $script:deploymentState = 'Failed'
@@ -304,20 +339,38 @@ Describe 'Participant hook orchestration' {
         { . (Join-Path $automation 'deploy-lab.ps1') -DeploymentType resourcegroup -SubscriptionId $subscription -ResourceGroupName lab-one -AllowedEntraUserIds @('user') } | Should -Throw '*absolute, isolated AZURE_CONFIG_DIR*'
         Should -Invoke New-AzResourceGroupDeployment -Times 0
     }
-    It 'cleans the private working directory if packaging the copy fails' {
-        Mock Copy-Item {
-            $script:observedHome = Split-Path $Destination -Parent
-            throw 'Copy failed'
-        }
-        { . (Join-Path $automation 'deploy-lab.ps1') -DeploymentType resourcegroup -SubscriptionId $subscription -ResourceGroupName lab-one -AllowedEntraUserIds @('user') } | Should -Throw '*Copy failed*'
-        Should -Invoke bash -Times 0
-        @($script:tagWrites | Where-Object { $_.adaptiveAppsReady -eq 'true' }) | Should -HaveCount 0
-    }
 }
 
 Describe 'Portable packaging and source contracts' {
     It 'fails with an actionable packaging error' {
-        { Assert-AdaptivePackage -LabRoot $TestDrive } | Should -Throw '*Package the entire MicroHack*'
+        { Assert-AdaptivePackage -LabRoot $TestDrive } | Should -Throw '*Verify the pinned source revision*'
+    }
+    It 'keeps the pinned hashes identical to the canonical workshop sources' {
+        { & (Join-Path $automation 'update-bootstrap-source.ps1') -Check } | Should -Not -Throw
+    }
+    It 'rejects a source pin that has drifted from the workshop sources' {
+        $changedSource = Join-Path $TestDrive 'changed-source'
+        New-Item -ItemType Directory -Path $changedSource | Out-Null
+        foreach ($directory in @('resources', 'iac')) {
+            Copy-Item -LiteralPath (Join-Path (Split-Path $automation -Parent) $directory) -Destination (Join-Path $changedSource $directory) -Recurse -Force
+        }
+        Add-Content -LiteralPath (Join-Path $changedSource 'resources/bootstrap-console.sh') -Value '# Changed workshop source'
+        { & (Join-Path $automation 'update-bootstrap-source.ps1') -SourceRoot $changedSource -Check } | Should -Throw '*Bootstrap source pin is stale*'
+    }
+    It 'rejects moving branches and incomplete or unsafe source manifests' {
+        $path = Join-Path $TestDrive 'bad-source.json'
+        $manifest = Get-Content (Join-Path $automation 'bootstrap-source.json') -Raw | ConvertFrom-Json -AsHashtable
+        $manifest.commit = 'main'
+        $manifest | ConvertTo-Json -Depth 3 | Set-Content $path
+        { Read-AdaptiveSourceManifest -Path $path } | Should -Throw '*full, lowercase Git commit SHA*'
+        $manifest.commit = 'a' * 40
+        $manifest.files['../outside.sh'] = 'a' * 64
+        $manifest | ConvertTo-Json -Depth 3 | Set-Content $path
+        { Read-AdaptiveSourceManifest -Path $path } | Should -Throw '*exactly the required file allowlist*'
+        $manifest.files.Remove('../outside.sh')
+        $manifest.files['resources/bootstrap-console.sh'] = 'not-a-hash'
+        $manifest | ConvertTo-Json -Depth 3 | Set-Content $path
+        { Read-AdaptiveSourceManifest -Path $path } | Should -Throw '*valid SHA-256 hash*'
     }
     It 'rejects missing recipe input <Path> before provisioning' -ForEach @(
         @{ Path = 'iac/sql-databases.yaml' }
@@ -337,10 +390,10 @@ Describe 'Portable packaging and source contracts' {
             $errors | Should -BeNullOrEmpty
         }
     }
-    It 'uses conservative platform defaults and shared first-region gating' {
+    It 'uses configured platform defaults and shared first-region gating' {
         $defaults = Get-Content (Join-Path $automation 'lab-defaults.json') -Raw | ConvertFrom-Json
         $defaults.deploymentType | Should -Be 'resourcegroup'
-        $defaults.labsPerSubscription | Should -Be 2
+        $defaults.labsPerSubscription | Should -Be 5
         $defaults.preferredLocation | Should -Be 'swedencentral'
         $shared = Get-Content (Join-Path $automation 'shared-deploy-lab.ps1') -Raw
         $shared | Should -Match '\$locations\[0\] -notin \$ready'

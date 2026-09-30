@@ -892,7 +892,7 @@ There are multiple ways to deploy your orchestration to Microsoft Foundry. You c
 cp -Rf \
   "$walkthroughHome/challenge-04/orchestration/src" \
   "$walkthroughHome/challenge-04/orchestration/azure.yaml" \
-  "$rootHome/"
+  "$hackFolder/"
 ```
 
 Use the latter method to deploy directly from the **Foundry Toolkit** extension. Under **Developer Tools**, expand the **Build** section, then select **Deploy to Microsoft Foundry**.

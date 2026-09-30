@@ -34,6 +34,7 @@ try {
     Receive-AdaptiveBootstrap -Manifest $sourceManifest -Destination $workingRoot
 
     Update-MhhToken | Out-Null
+    Write-Host 'Validating participant Azure contexts and shared region metadata...'
     Assert-AdaptiveContext -SubscriptionId $SubscriptionId
     $group = Get-AzResourceGroup -Name $ResourceGroupName -ErrorAction Stop
     $region = $group.Location.ToLowerInvariant()
@@ -47,13 +48,26 @@ try {
         CostControl = 'Ignore'
     } -ErrorAction Stop | Out-Null
 
-    $password = New-MhhStablePassword -Purpose 'adaptive-apps-k3s-admin' -Length 24
-    $deployment = New-AzResourceGroupDeployment -Name 'adaptive-apps-console' `
-        -ResourceGroupName $ResourceGroupName -TemplateFile (Join-Path $PSScriptRoot 'main.bicep') `
-        -TemplateParameterObject @{
-            location = $region
-            adminPassword = (ConvertTo-SecureString $password -AsPlainText -Force)
-        } -Mode Incremental -ErrorAction Stop
+    Write-Host 'Preparing private infrastructure deployment parameters...'
+    $parameterFile = Join-Path $scratch 'main.parameters.json'
+    @{
+        '$schema' = 'https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#'
+        contentVersion = '1.0.0.0'
+        parameters = @{
+            location = @{ value = $region }
+            adminPassword = @{ value = (New-MhhStablePassword -Purpose 'adaptive-apps-k3s-admin' -Length 24) }
+        }
+    } | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath $parameterFile -Encoding utf8
+    & chmod 600 $parameterFile
+    if ($LASTEXITCODE -ne 0) { throw 'Unable to secure infrastructure parameter file.' }
+    Write-Host 'Submitting incremental Adaptive Apps infrastructure deployment...'
+    try {
+        $deployment = New-AzResourceGroupDeployment -Name 'adaptive-apps-console' `
+            -ResourceGroupName $ResourceGroupName -TemplateFile (Join-Path $PSScriptRoot 'main.bicep') `
+            -TemplateParameterFile $parameterFile -Mode Incremental -ErrorAction Stop
+    } finally {
+        Remove-Item -LiteralPath $parameterFile -Force
+    }
     if ($deployment.ProvisioningState -ne 'Succeeded') {
         throw "Infrastructure deployment failed: $($deployment.ProvisioningState). Resources are retained for diagnosis; no destructive fallback is attempted."
     }

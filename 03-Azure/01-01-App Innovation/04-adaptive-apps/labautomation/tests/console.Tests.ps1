@@ -8,7 +8,7 @@ BeforeAll {
     function Update-AzTag { [CmdletBinding()] param($ResourceId, $Operation, $Tag) }
     function New-MhhStablePassword { param($Purpose, $Length) }
     function New-AzResourceGroupDeployment {
-        [CmdletBinding()] param($Name, $ResourceGroupName, $TemplateFile, $TemplateParameterObject, $Mode)
+        [CmdletBinding()] param($Name, $ResourceGroupName, $TemplateFile, $TemplateParameterObject, $TemplateParameterFile, $Mode)
     }
     function New-AzSubscriptionDeployment { [CmdletBinding()] param($Name, $Location, $TemplateFile) }
     function New-AzResourceGroup { [CmdletBinding()] param($Name, $Location, $Tag, [switch]$Force) }
@@ -164,6 +164,9 @@ Describe 'Participant hook orchestration' {
         $script:location = 'westeurope'
         $script:guestMarker = 'ADAPTIVE_K3S_READY'
         $script:deploymentState = 'Succeeded'
+        $script:deploymentThrows = $false
+        $script:useDeploymentJob = $false
+        $script:observedParameterFile = ''
         $script:tagWrites = [Collections.Generic.List[object]]::new()
         $script:oldAzureConfig = $env:AZURE_CONFIG_DIR
         $script:originalHome = $env:HOME
@@ -195,8 +198,46 @@ Describe 'Participant hook orchestration' {
         Mock New-MhhStablePassword { 'TestOnlyStablePassword123' }
         Mock New-AzResourceGroupDeployment {
             $Mode | Should -Be 'Incremental'
-            $TemplateParameterObject.location | Should -Be $script:location
-            $TemplateParameterObject.adminPassword | Should -BeOfType [securestring]
+            $TemplateParameterObject | Should -BeNullOrEmpty
+            $TemplateParameterFile | Should -Not -BeNullOrEmpty
+            $script:observedParameterFile = $TemplateParameterFile
+            $TemplateParameterFile | Should -Be (Join-Path $script:observedHome 'scratch/main.parameters.json')
+            [IO.File]::GetUnixFileMode($TemplateParameterFile) |
+                Should -Be ([IO.UnixFileMode]::UserRead -bor [IO.UnixFileMode]::UserWrite)
+            [IO.File]::GetUnixFileMode((Split-Path $TemplateParameterFile -Parent)) |
+                Should -Be ([IO.UnixFileMode]::UserRead -bor [IO.UnixFileMode]::UserWrite -bor [IO.UnixFileMode]::UserExecute)
+            $parameters = Get-Content -LiteralPath $TemplateParameterFile -Raw | ConvertFrom-Json
+            $parameters.'$schema' | Should -Be 'https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#'
+            $parameters.contentVersion | Should -Be '1.0.0.0'
+            $parameters.parameters.location.value | Should -Be $script:location
+            $parameters.parameters.adminPassword.value | Should -BeExactly 'TestOnlyStablePassword123'
+            $serialized = [Management.Automation.PSSerializer]::Serialize($PesterBoundParameters, 10)
+            $serialized | Should -Not -Match 'TestOnlyStablePassword|<SS[ >]'
+            if ($script:useDeploymentJob) {
+                $job = Start-Job -ArgumentList $PesterBoundParameters, $script:deploymentThrows -ScriptBlock {
+                    param($DeploymentArguments, $Fail)
+                    function Invoke-TestDeployment {
+                        [CmdletBinding()]
+                        param($Name, $ResourceGroupName, $TemplateFile, $TemplateParameterFile, $Mode)
+                        $parameters = Get-Content -LiteralPath $TemplateParameterFile -Raw | ConvertFrom-Json
+                        if ($parameters.parameters.adminPassword.value -cne 'TestOnlyStablePassword123') {
+                            throw 'Deployment job could not read the synthetic password.'
+                        }
+                        if ($Fail) { throw 'Simulated ARM deployment exception' }
+                        'Parameter file read successfully in child job'
+                    }
+                    Invoke-TestDeployment @DeploymentArguments
+                }
+                try {
+                    $completed = $job | Wait-Job -Timeout 30
+                    if (-not $completed) { throw 'Deployment serialization test job timed out.' }
+                    Receive-Job $job -ErrorAction Stop | Should -Be 'Parameter file read successfully in child job'
+                } finally {
+                    Remove-Job $job -Force
+                }
+            } elseif ($script:deploymentThrows) {
+                throw 'Simulated ARM deployment exception'
+            }
             @{
                 ProvisioningState = $script:deploymentState
                 Outputs = @{
@@ -227,6 +268,7 @@ Describe 'Participant hook orchestration' {
             }
         }
         Mock bash {
+            Test-Path -LiteralPath $script:observedParameterFile | Should -BeFalse
             $script:calls[-1] | Should -Be 'refresh'
             $script:calls.Add("bash $args")
             $script:observedHome = $env:HOME
@@ -258,6 +300,7 @@ Describe 'Participant hook orchestration' {
         $env:HOME | Should -Be $script:originalHome
         $env:PATH | Should -Be $script:originalPath
         if ($script:observedHome) { Test-Path -LiteralPath $script:observedHome | Should -BeFalse }
+        if ($script:observedParameterFile) { Test-Path -LiteralPath $script:observedParameterFile | Should -BeFalse }
         [IO.File]::Exists((Join-Path $script:sourceRoot 'artifacts/console-mock-marker')) | Should -BeFalse
         $env:AZURE_CONFIG_DIR = $script:oldAzureConfig
     }
@@ -277,6 +320,26 @@ Describe 'Participant hook orchestration' {
         $script:failedPhase = 'recipes'
         { . (Join-Path $automation 'deploy-lab.ps1') -DeploymentType resourcegroup -SubscriptionId $subscription -ResourceGroupName lab-one -AllowedEntraUserIds @('user') } | Should -Throw '*exit code 13*'
         @($script:tagWrites | Where-Object { $_.adaptiveAppsReady -eq 'true' }) | Should -HaveCount 0
+    }
+    It 'passes deployment arguments through a real child job without serializing a SecureString' {
+        $script:useDeploymentJob = $true
+        $result = . (Join-Path $automation 'deploy-lab.ps1') -DeploymentType resourcegroup -SubscriptionId $subscription -ResourceGroupName lab-one -AllowedEntraUserIds @('user')
+        $result.HackboxCredential.name | Should -Contain 'Adaptive Apps Connect'
+        ($result | ConvertTo-Json -Depth 5) | Should -Not -Match 'TestOnlyStablePassword'
+        Should -Invoke New-AzResourceGroupDeployment -Times 1 -Exactly
+    }
+    It 'preserves deployment exceptions and removes private parameters on failure' -ForEach @(
+        @{ ChildJob = $false }
+        @{ ChildJob = $true }
+    ) {
+        $script:useDeploymentJob = $ChildJob
+        $script:deploymentThrows = $true
+        { . (Join-Path $automation 'deploy-lab.ps1') -DeploymentType resourcegroup -SubscriptionId $subscription -ResourceGroupName lab-one -AllowedEntraUserIds @('user') } |
+            Should -Throw '*Simulated ARM deployment exception*'
+        $script:observedParameterFile | Should -Not -BeNullOrEmpty
+        Test-Path -LiteralPath $script:observedParameterFile | Should -BeFalse
+        @($script:tagWrites | Where-Object { $_.adaptiveAppsReady -eq 'true' }) | Should -HaveCount 0
+        Should -Invoke bash -Times 0
     }
     It 'deploys from only a read-only Console lab folder without sibling workshop sources' {
         $readOnlyRoot = Join-Path $TestDrive 'read-only-source'

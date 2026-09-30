@@ -121,6 +121,16 @@ rotate it. It is never printed or returned to participants: connect uses Run
 Command for kubeconfig retrieval and Bastion for the API, not SSH credentials.
 Organizer troubleshooting can use Run Command.
 
+The deployment receives a temporary ARM parameter file rather than a
+`SecureString` embedded in PowerShell command arguments, avoiding secure-string
+serialization at the Console job boundary. The file contains the password in
+plaintext inside the job's private `0700` scratch directory, with file permissions
+`0600`; it is deleted as soon as the deployment command returns or throws.
+The template still declares `adminPassword` as `@secure()`, so ARM does not
+record its value in deployment history. Do not print or publish the parameter
+file. Stage messages identify context validation, parameter preparation and
+deployment submission without including credentials.
+
 The participant hook uses an **incremental deployment**, retaining resources and
 failed deployment records for diagnosis. It grants each supplied participant
 **Reader on this AKS node RG only**, so the PostgreSQL recipe can discover AKS

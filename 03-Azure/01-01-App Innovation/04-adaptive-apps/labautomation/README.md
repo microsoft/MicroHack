@@ -22,8 +22,13 @@ Organizers may override the ordered regions before creating lab
 scopes; the shared preflight must pass for that subscription and region. Every participant
 gets a dedicated two-node AKS cluster and a separate private K3s VM. The organizer
 needs a **Linux runner**, PowerShell 7, current Az.Accounts/Az.Resources/Az.Network,
-Azure CLI, a Bicep compiler usable by Az deployments, Bash, curl, tar, jq, awk,
-sha256sum and standard Linux utilities. The explicit
+Azure CLI, a Bicep compiler usable by Az deployments, Bash, curl, tar, awk,
+sha256sum and standard Linux utilities. The PowerShell hook downloads pinned
+**jq 1.8.2** for Linux x64/ARM64 into its private `$HOME/.local/bin`, checks its
+SHA-256 against the pinned release hash and verifies the executable before ARM
+provisioning. It requires neither a system jq installation nor sudo/package-manager
+access. The private tool directory is placed first on PATH for every Bash phase.
+The explicit
 downloaded `resources/install-console-tools.sh` installs the versioned client toolchain
 and Bastion extension before any bootstrap phase. It does not authenticate.
 Outbound access to Azure, GitHub, Kubernetes/Helm/K3s release endpoints and
@@ -33,6 +38,11 @@ container registries is required, including HTTPS access to
 only the required files from `microsoft/MicroHack`, using the immutable commit
 and per-file SHA-256 hashes in `bootstrap-source.json`. No Git installation or
 GitHub credential is required.
+
+The jq bootstrap lives in the automation folder, so it also supplies the jq
+prerequisite of the already-pinned Bash installer without modifying downloaded
+sources or requiring a new `bootstrap-source.json` pin. A failed jq download,
+hash or executable check stops before Azure provisioning and cleans up scratch.
 
 Successful provisioning prepares **platform state through challenge 05**.
 Participants still complete **challenge 01's workstation setup** before connecting:

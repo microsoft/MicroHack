@@ -201,6 +201,56 @@ Describe 'Shared hook and hosted policy verification' {
     }
 }
 
+Describe 'Private jq bootstrap' {
+    BeforeEach {
+        $script:jqBin = Join-Path $TestDrive 'bin'
+        $script:jqFault = ''
+        $script:jqAsset = if ([Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture -eq 'Arm64') { 'jq-linux-arm64' } else { 'jq-linux-amd64' }
+        $script:jqHash = if ($script:jqAsset -eq 'jq-linux-arm64') {
+            '8b85c817833814ddca00a144c33705546355afccf0cf39b188f3cdb48b852309'
+        } else {
+            'b1c22172dd303f3be49e935aa56aa48a8b7a46e0bc838b4997d3bb451495870f'
+        }
+        Mock Invoke-WebRequest {
+            $Uri | Should -Be "https://github.com/jqlang/jq/releases/download/jq-1.8.2/$script:jqAsset"
+            $MaximumRetryCount | Should -Be 3
+            $RetryIntervalSec | Should -Be 2
+            $timeout = if ($null -ne $TimeoutSec) { $TimeoutSec } else { $ConnectionTimeoutSeconds }
+            $timeout | Should -Be 60
+            $version = if ($script:jqFault -eq 'version') { 'wrong-version' } else { 'jq-1.8.2' }
+            Set-Content -LiteralPath $OutFile -Encoding utf8 -Value @('#!/bin/sh', "echo $version")
+            if ($script:jqFault -eq 'download') { throw 'Simulated jq download failure' }
+        }
+        Mock Get-FileHash {
+            $Algorithm | Should -Be 'SHA256'
+            @{ Hash = if ($script:jqFault -eq 'hash') { '0' * 64 } else { $script:jqHash } }
+        }
+    }
+    AfterEach {
+        @(Get-ChildItem -LiteralPath $script:jqBin -Force | Where-Object Name -like '.jq-*') | Should -HaveCount 0
+    }
+    It 'installs the verified executable into the private directory' {
+        Install-AdaptiveJq -BinDirectory $script:jqBin
+        $target = Join-Path $script:jqBin 'jq'
+        & $target --version | Should -Be 'jq-1.8.2'
+        [IO.File]::GetUnixFileMode($target) |
+            Should -Be ([IO.UnixFileMode]::UserRead -bor [IO.UnixFileMode]::UserWrite -bor [IO.UnixFileMode]::UserExecute)
+        Should -Invoke Invoke-WebRequest -Times 1 -Exactly
+    }
+    It 'rejects <Fault> failure and keeps an existing executable untouched' -ForEach @(
+        @{ Fault = 'download'; Error = '*Simulated jq download failure*' }
+        @{ Fault = 'hash'; Error = '*SHA-256 verification failed*' }
+        @{ Fault = 'version'; Error = '*failed its version check*' }
+    ) {
+        New-Item -ItemType Directory -Path $script:jqBin -Force | Out-Null
+        $target = Join-Path $script:jqBin 'jq'
+        Set-Content -LiteralPath $target -Value 'Existing executable'
+        $script:jqFault = $Fault
+        { Install-AdaptiveJq -BinDirectory $script:jqBin } | Should -Throw $Error
+        (Get-Content -LiteralPath $target -Raw).Trim() | Should -Be 'Existing executable'
+    }
+}
+
 Describe 'Participant hook orchestration' {
     BeforeEach {
         $script:calls = [Collections.Generic.List[string]]::new()
@@ -211,6 +261,7 @@ Describe 'Participant hook orchestration' {
         $script:failedDownload = $false
         $script:tamperedDownload = $false
         $script:failedPhase = ''
+        $script:jqInstalled = $false
         $script:location = 'westeurope'
         $script:groupTags = @{ adaptiveAppsReady = 'true' }
         $script:fallbackLocation = 'northeurope'
@@ -241,6 +292,10 @@ Describe 'Participant hook orchestration' {
             if ($script:tamperedDownload) { Set-Content -LiteralPath $OutFile -Value 'Unexpected content' }
         }
         Mock Update-MhhToken { $script:calls.Add('refresh') }
+        Mock Install-AdaptiveJq {
+            $BinDirectory | Should -Be (Join-Path $script:observedHome '.local/bin')
+            $script:jqInstalled = $true
+        }
         Mock Get-AzContext { @{ Subscription = @{ Id = $subscription } } }
         Mock Get-AzResourceGroup {
             @{ Location = $script:location; ResourceId = "/subscriptions/$subscription/resourceGroups/lab-one"; Tags = $script:groupTags }
@@ -264,6 +319,7 @@ Describe 'Participant hook orchestration' {
         }
         Mock New-MhhStablePassword { 'TestOnlyStablePassword123' }
         Mock New-AzResourceGroupDeployment {
+            $script:jqInstalled | Should -BeTrue
             $Mode | Should -Be 'Incremental'
             $TemplateParameterObject | Should -BeNullOrEmpty
             $TemplateParameterFile | Should -Not -BeNullOrEmpty
@@ -337,6 +393,7 @@ Describe 'Participant hook orchestration' {
             }
         }
         Mock bash {
+            $script:jqInstalled | Should -BeTrue
             Test-Path -LiteralPath $script:observedParameterFile | Should -BeFalse
             $script:calls[-1] | Should -Be 'refresh'
             $script:calls.Add("bash $args")
@@ -385,6 +442,16 @@ Describe 'Participant hook orchestration' {
         $result.HackboxCredential.name | Should -Contain 'Adaptive Apps Connect'
         ($result | ConvertTo-Json -Depth 5) | Should -Not -Match 'TestOnlyStablePassword|client-key-data|token:'
         Should -Invoke Invoke-WebRequest -Times 20 -Exactly
+        Should -Invoke Install-AdaptiveJq -Times 1 -Exactly
+    }
+    It 'stops before Azure provisioning and Bash when jq bootstrap fails' {
+        Mock Install-AdaptiveJq { throw 'Simulated jq installation failure' }
+        { . (Join-Path $automation 'deploy-lab.ps1') -DeploymentType resourcegroup -SubscriptionId $subscription -ResourceGroupName lab-one -AllowedEntraUserIds @('user') } |
+            Should -Throw '*Simulated jq installation failure*'
+        Should -Invoke Update-MhhToken -Times 0
+        Should -Invoke New-AzResourceGroupDeployment -Times 0
+        Should -Invoke Invoke-MhhDeploymentWithRegionFallback -Times 0
+        Should -Invoke bash -Times 0
     }
     It 'does not mark ready or emit credentials when Bash fails and still removes its HOME' {
         $script:failedPhase = 'recipes'

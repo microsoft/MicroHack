@@ -32,6 +32,7 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Unable to secure isolated Console HOME.' }
     New-Item -ItemType Directory -Path $workingRoot | Out-Null
     Receive-AdaptiveBootstrap -Manifest $sourceManifest -Destination $workingRoot
+    Install-AdaptiveJq -BinDirectory (Join-Path $isolatedHome '.local/bin')
 
     Update-MhhToken | Out-Null
     Write-Host 'Validating participant Azure contexts and shared region metadata...'

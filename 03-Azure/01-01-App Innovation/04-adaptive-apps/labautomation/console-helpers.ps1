@@ -72,6 +72,43 @@ function Invoke-AdaptiveBash {
     }
 }
 
+function Install-AdaptiveJq {
+    param([Parameter(Mandatory)][string]$BinDirectory)
+    if (-not $IsLinux) { throw 'The Console jq bootstrap requires Linux.' }
+    $version = '1.8.2'
+    switch ([Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture.ToString()) {
+        'X64' {
+            $asset = 'jq-linux-amd64'
+            $expectedHash = 'b1c22172dd303f3be49e935aa56aa48a8b7a46e0bc838b4997d3bb451495870f'
+        }
+        'Arm64' {
+            $asset = 'jq-linux-arm64'
+            $expectedHash = '8b85c817833814ddca00a144c33705546355afccf0cf39b188f3cdb48b852309'
+        }
+        default { throw "Unsupported jq bootstrap architecture: $([Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture)." }
+    }
+    New-Item -ItemType Directory -Path $BinDirectory -Force -ErrorAction Stop | Out-Null
+    $download = Join-Path $BinDirectory ".jq-$([guid]::NewGuid().ToString('N'))"
+    $target = Join-Path $BinDirectory 'jq'
+    try {
+        Invoke-WebRequest -Uri "https://github.com/jqlang/jq/releases/download/jq-$version/$asset" `
+            -OutFile $download -TimeoutSec 60 -MaximumRetryCount 3 -RetryIntervalSec 2 -ErrorAction Stop
+        if ((Get-FileHash -LiteralPath $download -Algorithm SHA256 -ErrorAction Stop).Hash -ne $expectedHash) {
+            throw "SHA-256 verification failed for $asset (jq $version). The downloaded file will not run."
+        }
+        & chmod 700 $download
+        if ($LASTEXITCODE -ne 0) { throw 'Unable to make the private jq binary executable.' }
+        $installedVersion = & $download --version
+        if ($LASTEXITCODE -ne 0 -or $installedVersion -cne "jq-$version") {
+            throw "The verified jq $version binary failed its version check."
+        }
+        Move-Item -LiteralPath $download -Destination $target -Force -ErrorAction Stop
+        Write-Host "Installed verified jq $version in the private Console tool directory."
+    } finally {
+        if (Test-Path -LiteralPath $download) { Remove-Item -LiteralPath $download -Force -ErrorAction Stop }
+    }
+}
+
 function Get-AdaptiveBootstrapFiles {
     @(
         'resources/install-console-tools.sh', 'resources/bootstrap-console.sh',

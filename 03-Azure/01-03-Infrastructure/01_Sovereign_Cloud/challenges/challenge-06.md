@@ -10,6 +10,13 @@ Your organization must run workloads in a sovereign cloud while still leveraging
 
 ## Actions
 
+Before deploying, confirm that your Challenge 1 exercise policies are back in
+**DoNotEnforce** and ask the facilitator to confirm that the shared LocalBox custom
+location's Azure region is permitted in your assigned resource group. This region
+can differ from the resource group's location. If a policy blocks creation, follow
+the [location-policy troubleshooting steps](../walkthrough/challenge-06/solution-06.md#if-validation-or-deployment-is-blocked-by-a-location-policy);
+do not disable organizer-managed policies or change allowlists yourself.
+
 * Explore the LocalBox hybrid infrastructure in the Azure Portal
 * Deploy a sample application to AKS on Azure Local
 * Deploy your own VM on Azure Local using Azure Arc VM management and verify that guest management is connected

@@ -24,6 +24,9 @@ The azure_arc branch, tag, or commit used for both Bicep and runtime artifacts.
 .PARAMETER AzureLocalResourceProviderObjectId
 Optional tenant-specific object ID of the Microsoft.AzureStackHCI enterprise
 application. The script resolves it through Microsoft Graph when omitted.
+.PARAMETER AzureLocalInstanceLocation
+Azure Local registration region, separate from the Azure host region.
+Defaults to West Europe to align with the Challenge 1 location allowlist.
 .PARAMETER NoWait
 Submit the deployment without waiting for ARM completion.
 #>
@@ -54,7 +57,7 @@ param(
     [string]$AzureLocalResourceProviderObjectId,
 
     [ValidateSet('australiaeast', 'southcentralus', 'eastus', 'westeurope', 'southeastasia', 'canadacentral', 'japaneast', 'centralindia')]
-    [string]$AzureLocalInstanceLocation = 'australiaeast',
+    [string]$AzureLocalInstanceLocation = 'westeurope',
 
     [switch]$NoWait
 )

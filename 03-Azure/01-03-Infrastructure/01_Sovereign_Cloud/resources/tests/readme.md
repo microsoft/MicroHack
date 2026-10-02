@@ -16,6 +16,16 @@ From this directory, run `Invoke-Pester ./visual-attestation.tests.ps1 -Output D
 
 A fresh Codespace smoke test is still required to validate the devcontainer build, Docker daemon, `confcom` policy generation and Azure deployment together; the mocked tests do not establish end-to-end Codespaces support.
 
+## LocalBox registration-region checks
+
+The LocalBox registration-region contract is checked offline with
+`Invoke-Pester ./prepare-localbox.tests.ps1 -FullName 'LocalBox registration region contract*' -Output Detailed`.
+It verifies that both deployment entry points default registration to West Europe,
+the shared hook passes that region independently of host-region selection, and
+all four Challenge 1 policy parameter examples include it. These checks make no
+Azure changes; a fresh Console deployment and participant VM creation remain
+required to validate regional service availability and effective inherited policies.
+
 ## Hosted tag-policy unit tests
 
 From this directory, run `Invoke-Pester ./hosted-tag-policy.tests.ps1 -Output Detailed`. These offline tests mock all Azure and Console commands. They cover hosted-only wiring, subscription targeting, tag-policy propagation, both tag values on resources and resource groups, preservation of unrelated tags, bounded failure, and temporary probe cleanup. Compile the initiative separately with `az bicep build --file ../../labautomation/infra/hosted-tag-policy.bicep --stdout`.

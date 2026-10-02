@@ -25,6 +25,46 @@ The shared hook submits `localbox-*` in `rg-localbox-shared`, then waits up to s
 5. Run [Pester health checks](../tests/readme.md) for LocalBox and every selected participant lab. A control-plane-only pass does not establish full readiness.
 6. Complete the [participant VM readiness exercise](../localbox/manual-preparation.md#step-6-test-the-environment), including guest management, Defender and Update Manager. Subscription-wide paid-plan changes require the authorized owner and approved budget.
 
+### LocalBox registration region and location policies
+
+There are three separate locations to check: the participant resource group's
+metadata location, the Azure region hosting the LocalBox simulator, and the
+Azure Local/custom-location registration region. The hosted
+[shared hook](../../labautomation/shared-deploy-lab.ps1) explicitly passes
+`AzureLocalInstanceLocation = westeurope`; the
+[manual deployment](../manual-setup/localbox/deploy-localbox.ps1) defaults to
+`westeurope`. Host-region fallback does not change that registration parameter.
+The hosted deployer's default also matches West Europe. This changes registration
+for fresh deployments, not the Azure host-region selection. Inspect the deployed
+custom location's **JSON View** for its actual `location`.
+
+Azure Local VM management resources use the custom location's region even when
+participants create them in a resource group whose location differs. Policy
+permission on the shared LocalBox group therefore does not establish permission
+to create the participant resources. Before the event, validate the
+[Challenge 6 VM creation flow](../../walkthrough/challenge-06/solution-06.md#23-review-and-create)
+in the designated test participant group, not only in the shared group.
+
+For a policy denial, collect the exact assignment/definition IDs and rejected
+resource type/location. First check whether a participant left their Challenge 1
+location assignment or bonus initiative enforcing; those exercise assignments
+should be **DoNotEnforce**. For an inherited or organizer-owned denial, ask the
+policy owner to review the approved locations or an appropriately scoped
+exception. Do not disable unrelated policies or automatically broaden the
+subscription allowlist. The hosted control tags below do not override arbitrary
+location-deny policies.
+
+[Microsoft's current Azure Local region list](https://learn.microsoft.com/azure/azure-local/concepts/system-requirements-23h2#azure-requirements)
+includes West Europe as its only European region for hyperconverged deployments.
+The current Challenge 1 exercise allowlists include West Europe, but older
+assignments may still use the original three-region list. This does not prove
+that West Europe is allowed by the event subscription's inherited policies, and
+it does not permit Australia East. Existing Azure assignments are not updated
+automatically. Earlier hosted test environments registered in Australia East
+are not relocated by this change; validate the next event using a fresh deployment
+from the updated content. Existing-environment cleanup is a separate organizer
+action, not part of the registration-region change.
+
 ### Hosted MCAPS control-tag initiative
 
 The organizer-owned [shared hook](../../labautomation/shared-deploy-lab.ps1) deploys the [hosted tag initiative](../../labautomation/infra/hosted-tag-policy.bicep) once per subscription, before LocalBox deployment and participant lab fan-out. This is specific to MCAPS governance in Microsoft-internal hosted environments. **Do not deploy it for bring-your-own-subscription or manual setup.** The Console deployment identity must be authorized to create subscription-scoped policy initiatives and assignments, as well as the lab resources.

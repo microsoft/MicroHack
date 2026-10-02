@@ -698,6 +698,47 @@ Describe 'Console LocalBox credential isolation' {
     }
 }
 
+Describe 'LocalBox registration region contract' {
+    It 'defaults <Path> to West Europe independently of the host region' -TestCases @(
+        @{ Path = 'labautomation/deploy-localbox.ps1' }
+        @{ Path = 'resources/manual-setup/localbox/deploy-localbox.ps1' }
+    ) {
+        param($Path)
+        $errors = $null
+        $ast = [System.Management.Automation.Language.Parser]::ParseFile(
+            "$PSScriptRoot/../../$Path", [ref]$null, [ref]$errors)
+        $errors.Count | Should -Be 0
+        $registration = $ast.ParamBlock.Parameters | Where-Object { $_.Name.VariablePath.UserPath -eq 'AzureLocalInstanceLocation' }
+        $registration.DefaultValue.SafeGetValue() | Should -Be 'westeurope'
+        $hostRegion = $ast.ParamBlock.Parameters | Where-Object { $_.Name.VariablePath.UserPath -eq 'Location' }
+        $hostRegion.DefaultValue.SafeGetValue() | Should -Be 'swedencentral'
+        $ast.Extent.Text | Should -Match 'azureLocalInstanceLocation\s*=\s*@\{\s*value\s*=\s*\$AzureLocalInstanceLocation\s*\}'
+        $ast.Extent.Text | Should -Match 'location\s*=\s*@\{\s*value\s*=\s*\$Location\s*\}'
+    }
+    It 'uses West Europe registration while preserving shared host-region selection' {
+        $errors = $null
+        $ast = [System.Management.Automation.Language.Parser]::ParseFile(
+            "$PSScriptRoot/../../labautomation/shared-deploy-lab.ps1", [ref]$null, [ref]$errors)
+        $errors.Count | Should -Be 0
+        $ast.Extent.Text | Should -Match "-AzureLocalInstanceLocation 'westeurope'"
+        $ast.Extent.Text | Should -Match '-Location \$localBoxLocation'
+        $ast.Extent.Text | Should -Not -Match "-AzureLocalInstanceLocation 'australiaeast'"
+    }
+    It 'includes the registration region in all four Challenge 1 policy parameter lists' {
+        $guide = Get-Content "$PSScriptRoot/../../walkthrough/challenge-01/solution-01.md" -Raw
+        $lists = [regex]::Matches($guide, '"listOfAllowedLocations"\s*:\s*\{\s*"value"\s*:\s*(\[[^\]]*\])')
+        $lists.Count | Should -Be 4
+        foreach ($list in $lists) {
+            $regions = @($list.Groups[1].Value | ConvertFrom-Json)
+            $regions.Count | Should -Be 4
+            foreach ($region in @('norwayeast', 'germanynorth', 'northeurope', 'westeurope')) {
+                $regions | Should -Contain $region
+            }
+            $regions | Should -Not -Contain 'australiaeast'
+        }
+    }
+}
+
 Describe 'Console LocalBox password selection' {
     BeforeAll {
         function New-MhhStablePassword { [CmdletBinding()] param($Purpose, $Length) }

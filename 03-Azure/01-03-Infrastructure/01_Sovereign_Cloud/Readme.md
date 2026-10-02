@@ -53,11 +53,11 @@ Use **GitHub Codespaces with the Azure / Infra / Sovereign Cloud devcontainer** 
 
    - Above the file list, select the green **Code** button, then the **Codespaces** tab. This is the repository's Code menu, not a menu inside VS Code.
 
-     ![GitHub documentation example of the Code menu with the Codespaces tab selected](https://docs.github.com/assets/images/help/codespaces/who-will-pay.png)
+     <a href="https://docs.github.com/assets/images/help/codespaces/who-will-pay.png"><img src="https://docs.github.com/assets/images/help/codespaces/who-will-pay.png" alt="GitHub documentation example of the Code menu with the Codespaces tab selected" width="420"></a>
 
    - In the **top-right corner of the Codespaces tab**, select **...**, then **New with options**. Do not use the quick-create button: this repository has multiple devcontainers, and you need to choose the Sovereign Cloud one.
 
-     ![GitHub documentation example showing the Codespaces three-dot menu and New with options](https://docs.github.com/assets/images/help/codespaces/default-machine-type.png)
+     <a href="https://docs.github.com/assets/images/help/codespaces/default-machine-type.png"><img src="https://docs.github.com/assets/images/help/codespaces/default-machine-type.png" alt="GitHub documentation example showing the Codespaces three-dot menu and New with options" width="420"></a>
 
    These two navigation screenshots are examples from [GitHub's Codespaces documentation](https://docs.github.com/en/codespaces/developing-in-a-codespace/creating-a-codespace-for-a-repository#creating-a-codespace-for-a-repository); repository names and existing Codespaces may differ. If the **Codespaces** tab is missing, check that you are signed in. Alternatively, open [Create a codespace](https://github.com/codespaces/new), select **microsoft/MicroHack**, and continue with the options below.
 

@@ -1,0 +1,293 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: aks-container-1-content
+data:
+  health.txt: |
+    ok
+  index.html: |
+    <!doctype html>
+    <html lang="en">
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <title>AKS Container 1</title>
+      <script>
+        (() => {
+          const param = new URLSearchParams(window.location.search).get("scoutTheme");
+          const theme =
+            param || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+          document.documentElement.setAttribute("data-theme", theme);
+        })();
+      </script>
+      <style>
+        :root {
+          color-scheme: light;
+          --cp-bg: #f7f4ef;
+          --cp-bg-elevated: #fcfbf8;
+          --cp-surface: #ffffff;
+          --cp-surface-soft: #f5f5f5;
+          --cp-border: #dedede;
+          --cp-border-strong: #919191;
+          --cp-text: #242424;
+          --cp-text-muted: #5c5c5c;
+          --cp-text-soft: #6f6f6f;
+          --cp-accent: #b11f4b;
+          --cp-accent-hover: #9a1a41;
+          --cp-accent-soft: rgba(177, 31, 75, 0.08);
+          --cp-accent-fg: #ffffff;
+          --cp-success: #16a34a;
+          --cp-danger: #dc2626;
+          --cp-warning: #f59e0b;
+          --cp-link: #0078d4;
+          --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.12);
+          --cp-overlay: rgba(255, 255, 255, 0.8);
+          --cp-panel: rgba(255, 255, 255, 0.86);
+          --cp-panel-strong: rgba(255, 255, 255, 0.96);
+          --cp-sheen: rgba(255, 255, 255, 0.55);
+          --cp-highlight: rgba(177, 31, 75, 0.12);
+        }
+        html[data-theme="dark"] {
+          color-scheme: dark;
+          --cp-bg: #3d3b3a;
+          --cp-bg-elevated: #343231;
+          --cp-surface: #292929;
+          --cp-surface-soft: #2e2e2e;
+          --cp-border: #474747;
+          --cp-border-strong: #5f5f5f;
+          --cp-text: #dedede;
+          --cp-text-muted: #919191;
+          --cp-text-soft: #b0b0b0;
+          --cp-accent: #fd8ea1;
+          --cp-accent-hover: #fb7b91;
+          --cp-accent-soft: rgba(253, 142, 161, 0.14);
+          --cp-accent-fg: #1a1a1a;
+          --cp-success: #4ade80;
+          --cp-danger: #f87171;
+          --cp-warning: #fbbf24;
+          --cp-link: #4da6ff;
+          --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+          --cp-overlay: rgba(41, 41, 41, 0.88);
+          --cp-panel: rgba(41, 41, 41, 0.72);
+          --cp-panel-strong: rgba(41, 41, 41, 0.96);
+          --cp-sheen: rgba(255, 255, 255, 0.04);
+          --cp-highlight: rgba(253, 142, 161, 0.12);
+        }
+        * { box-sizing: border-box; }
+        body {
+          min-height: 100vh;
+          margin: 0;
+          overflow: hidden;
+          background:
+            radial-gradient(circle at 15% 20%, var(--cp-accent-soft), transparent 34%),
+            radial-gradient(circle at 85% 75%, var(--cp-highlight), transparent 38%),
+            var(--cp-bg);
+          color: var(--cp-text);
+          font-family: "Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        .grid {
+          position: fixed;
+          inset: 0;
+          background-image:
+            linear-gradient(var(--cp-border) 1px, transparent 1px),
+            linear-gradient(90deg, var(--cp-border) 1px, transparent 1px);
+          background-size: 48px 48px;
+          opacity: 0.28;
+          mask-image: linear-gradient(to bottom, transparent, var(--cp-text), transparent);
+        }
+        .azure-local-mark {
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          width: min(82vw, 880px);
+          color: var(--cp-link);
+          opacity: 0.13;
+          transform: translate(-50%, -50%) rotate(-5deg);
+          filter: drop-shadow(0 24px 28px var(--cp-accent-soft));
+        }
+        main {
+          position: relative;
+          z-index: 1;
+          display: grid;
+          min-height: 100vh;
+          place-items: center;
+          padding: 24px;
+        }
+        .card {
+          width: min(760px, 100%);
+          padding: clamp(32px, 7vw, 72px);
+          border: 1px solid var(--cp-border);
+          border-radius: 16px;
+          background: var(--cp-panel);
+          box-shadow: var(--cp-shadow);
+          text-align: center;
+          backdrop-filter: blur(12px);
+        }
+        .badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 24px;
+          padding: 8px 12px;
+          border: 1px solid var(--cp-border);
+          border-radius: 0.625rem;
+          background: var(--cp-surface);
+          color: var(--cp-text-muted);
+          font-size: 14px;
+          font-weight: 600;
+          letter-spacing: 0.04em;
+          text-transform: uppercase;
+        }
+        .status {
+          width: 9px;
+          height: 9px;
+          border-radius: 50%;
+          background: var(--cp-success);
+          box-shadow: 0 0 0 5px var(--cp-accent-soft);
+        }
+        h1 {
+          max-width: 640px;
+          margin: 0 auto;
+          font-size: clamp(38px, 7vw, 72px);
+          font-weight: 700;
+          letter-spacing: -0.045em;
+          line-height: 1.03;
+        }
+        h1 span { color: var(--cp-link); }
+        p {
+          margin: 24px auto 0;
+          color: var(--cp-text-muted);
+          font-size: clamp(16px, 2vw, 20px);
+          line-height: 1.6;
+        }
+        .nodes {
+          display: flex;
+          justify-content: center;
+          gap: 12px;
+          margin-top: 32px;
+        }
+        .node {
+          width: 44px;
+          height: 8px;
+          border-radius: 0.625rem;
+          background: var(--cp-border-strong);
+        }
+        .node:first-child { background: var(--cp-link); }
+        .node:last-child { background: var(--cp-accent); }
+        @media (prefers-reduced-motion: no-preference) {
+          .azure-local-mark { animation: float 8s ease-in-out infinite; }
+          .status { animation: pulse 2s ease-out infinite; }
+        }
+        @keyframes float {
+          0%, 100% { transform: translate(-50%, -50%) rotate(-5deg); }
+          50% { transform: translate(-50%, -53%) rotate(-3deg); }
+        }
+        @keyframes pulse {
+          50% { box-shadow: 0 0 0 9px var(--cp-accent-soft); }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="grid" aria-hidden="true"></div>
+      <svg class="azure-local-mark" viewBox="0 0 800 600" aria-hidden="true">
+        <path fill="currentColor" d="M325 56 104 440l113 92 122-224 92 174 144-22L325 56Zm41 383 184-306 146 278-116 19-41-77-44 73-129 13Z"/>
+        <g fill="none" stroke="currentColor" stroke-width="18">
+          <rect x="88" y="440" width="180" height="82" rx="12"/>
+          <rect x="310" y="456" width="180" height="82" rx="12"/>
+          <rect x="532" y="423" width="180" height="82" rx="12"/>
+        </g>
+      </svg>
+      <main>
+        <section class="card" aria-labelledby="welcome-title">
+          <div class="badge"><span class="status"></span> Running on Kubernetes</div>
+          <h1 id="welcome-title">welcome to <span>AKS container 1</span> on Azure Local</h1>
+          <p>Your container is online and reachable through the cluster load balancer.</p>
+          <div class="nodes" aria-hidden="true">
+            <span class="node"></span><span class="node"></span><span class="node"></span>
+          </div>
+        </section>
+      </main>
+    </body>
+    </html>
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aks-container-1
+  labels:
+    app.kubernetes.io/name: aks-container-1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: aks-container-1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: aks-container-1
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        fsGroup: 65532
+      containers:
+        - name: web
+          image: busybox:1.37.0-musl
+          imagePullPolicy: IfNotPresent
+          args:
+            - httpd
+            - -f
+            - -p
+            - "8080"
+            - -h
+            - /www
+          ports:
+            - name: http
+              containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /health.txt
+              port: http
+            initialDelaySeconds: 1
+            periodSeconds: 3
+          livenessProbe:
+            httpGet:
+              path: /health.txt
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 5m
+              memory: 8Mi
+            limits:
+              cpu: 50m
+              memory: 32Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - name: content
+              mountPath: /www
+              readOnly: true
+      volumes:
+        - name: content
+          configMap:
+            name: aks-container-1-content
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: aks-container-1
+spec:
+  type: LoadBalancer
+  selector:
+    app.kubernetes.io/name: aks-container-1
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

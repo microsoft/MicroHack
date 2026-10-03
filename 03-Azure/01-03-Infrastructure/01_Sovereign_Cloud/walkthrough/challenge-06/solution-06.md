@@ -320,11 +320,203 @@ This exercise stops at assessment. Leave periodic assessment unchanged; the **En
 
 🔑 **Key insight:** Azure Update Manager provides centralized patch management across Azure VMs and Arc-enabled servers. This is critical for maintaining security compliance in sovereign environments where you need to control when and how updates are applied.
 
+
+## Task 5: Deploy a container to the AKS cluster deployed on Azure Local
+
+### Task 5.1: Verify the AKS Cluster
+
+The deployed AKS cluster should be setup as **Microsoft Entra authentication with Kubernetes RBAC** in the *Authentication and Authorization* setting
+
+*Look toward the bottom of the screenshot*
+
+<img src="./images/localbox61.png" alt="AKS cluster access configuration using Microsoft Entra authentication and Kubernetes RBAC" width="700" />
+
+### Task 5.2: Verify Microsoft Entra Authentication
+
+After the deployment completes:
+
+1. Open the AKS cluster in the Azure portal.
+2. Go to **Kubernetes resources > Workloads**.
+
+<img src="./images/localbox62.png" alt="Kubernetes workloads option in the Azure portal" width="700" />
+
+The cluster system workloads should be visible.
+
+<img src="./images/localbox63.png" alt="System workloads running on the AKS cluster" width="700" />
+
+Seeing these workloads without being asked for a bearer token confirms that:
+
+- The cluster is configured for Microsoft Entra authentication with Kubernetes RBAC.
+- The signed-in user is a member of the assigned `AKSAdmin` group.
+- The user has permission to view Kubernetes resources through the Azure portal.
+
+> **Important:** If the portal requests a bearer token, verify the cluster authentication configuration and confirm that the signed-in user is a direct member of the assigned Microsoft Entra administrator group.
+
+### Task 5.3 Configure the Load Balancer
+
+Before deploying the application, configure MetalLB. MetalLB assigns an IP address to Kubernetes Services of type `LoadBalancer`.
+
+### Task 5.4: Install the MetalLB Extension
+
+1. Open the AKS cluster.
+2. Go to **Settings > Networking**.
+
+<img src="./images/localbox64.png" alt="AKS cluster Networking page requesting installation of the MetalLB extension" width="700" />
+
+3. Select **Install extension**.
+4. Select **MetalLB for Azure Arc-enabled Kubernetes**.
+5. Wait for the `arcnetworking` extension to report **Succeeded**.
+
+<img src="./images/localbox65.png" alt="MetalLB extension installation in the Azure portal" width="700" />
+
+### Task 5.5: Create the MetalLB Address Pool
+
+After the extension installation completes, return to **Settings > Networking**.
+
+<img src="./images/localbox66.png" alt="AKS Networking page after installing the MetalLB extension" width="700" />
+
+Select **Add** to create a load-balancer address pool.
+
+<img src="./images/localbox67.png" alt="MetalLB address-pool configuration" width="700" />
+
+Use the following settings:
+
+| Setting | Value |
+|---|---|
+| Name | A lowercase name, such as `aks-pool` |
+| Advertisement mode | **ARP** |
+| IP address range | `10.10.0.150-10.10.0.160` |
+| Service selector | Leave blank |
+
+> **Warning:** The screenshot was captured with `10.10.0.150-10.10.0.160`. It is advisable to not use an overlapping range with the the AKS node allocation pool.
+
+### Task 5.6: Deploy the Application
+
+After MetalLB is ready, deploy the application YAML.
+
+1. Download or open the [`portal-quickstart.yaml`](./manifests/portal-quickstart.yaml) manifest.
+2. Go to **Kubernetes resources**.
+3. Select **Create from YAML**.
+
+
+
+<img src="./images/localbox68.png" alt="Create from YAML option for the AKS cluster" width="700" />
+
+<img src="./images/localbox69.png" alt="YAML editor in the Azure portal" width="700" />
+
+4. Paste the contents of `portal_quickstart.yaml` into the editor.
+5. Select **Apply**.
+
+The portal first performs a dry run and then creates the Kubernetes resources.
+
+<img src="./images/localbox610.png" alt="Successful Kubernetes YAML deployment in the Azure portal" width="700" />
+
+The deployment should complete quickly. Select the application workload to verify that the pod is running.
+
+<img src="./images/localbox611.png" alt="Running application workload on the AKS cluster" width="700" />
+
+### Task 5.7: Find the Application IP Address
+
+The application Service receives an external IP address from the MetalLB address pool.
+
+1. Go to **Kubernetes resources > Services and ingresses**.
+2. Open the application Service.
+3. Record its **External IP**.
+
+<img src="./images/localbox612.png" alt="Kubernetes Service showing its MetalLB external IP address" width="700" />
+
+> **Note:** The screenshot shows the previously assigned address `10.10.0.150`. With the corrected address pool, the Service will normally receive an address beginning at `10.10.0.50`. Always use the External IP currently displayed for the Service.
+
+### Task 5.8: Configure Routing on LocalBox-Client
+
+Before connecting to the application, ensure that `LocalBox-Client` has a route to the AKS network `10.10.0.0/24`.
+
+#### Review the Azure NIC Effective Routes
+
+Open the network interface assigned to `LocalBox-Client` and review **Effective routes**.
+
+<img src="./images/localbox613.png" alt="Effective routes for the LocalBox-Client Azure network interface" width="700" />
+
+The Azure NIC effective routes show that the Azure fabric does not provide a usable route to `10.10.0.0/24`. The required route must therefore be configured inside the Windows guest operating system.
+
+#### Connect to LocalBox-Client
+
+1. Connect to the `LocalBox-Client` VM using RDP.
+2. If required, enable just-in-time access first.
+3. Verify that you are using the current public IP address assigned to the VM.
+
+> **Note:** If you have forgotten the deployment username, check the Bicep parameter file used for the LocalBox deployment. Do not include passwords or secrets in this documentation or commit them to the repository.
+
+#### Review the Windows Route Table
+
+Open Command Prompt and run:
+
+```console
+route print
+```
+
+<img src="./images/localbox614.png" alt="Windows route table before adding the AKS network route" width="700" />
+
+The route table does not initially contain a route for the AKS network `10.10.0.0/24`.
+
+#### Add the Static Route
+
+Open PowerShell as an administrator and first verify the internal LocalBox adapter and router:
+
+```powershell
+Get-NetIPAddress -AddressFamily IPv4 |
+    Where-Object IPAddress -eq '192.168.1.20'
+
+Test-NetConnection 192.168.1.1
+```
+
+#### Add the route through the LocalBox router:
+
+```powershell
+$adapter = Get-NetIPAddress -AddressFamily IPv4 |
+    Where-Object IPAddress -eq '192.168.1.20'
+
+New-NetRoute `
+    -DestinationPrefix '10.10.0.0/24' `
+    -InterfaceIndex $adapter.InterfaceIndex `
+    -NextHop '192.168.1.1' `
+    -RouteMetric 10
+```
+
+<img src="./images/localbox615.png" alt="PowerShell command adding the static route to the AKS network" width="700" />
+
+#### Verify the new route:
+
+```powershell
+Get-NetRoute -DestinationPrefix '10.10.0.0/24'
+```
+
+Test connectivity to the External IP currently assigned to the application:
+
+```powershell
+Test-NetConnection 10.10.0.50 -Port 80
+```
+
+> **Note:** Replace `10.10.0.50` if the Service displays a different External IP.
+
+### Task 5.9: Validate the Application
+
+Open a browser on `LocalBox-Client` and connect to:
+
+```text
+http://<IP address handed out by the LB>
+```
+
+The application web page should load.
+
+<img src="./images/localbox616.png" alt="Containerized web application reached from LocalBox-Client" width="700" />
+
+
 ---
 
-## Task 5: Wrap-up and Discussion
+## Task 6: Wrap-up and Discussion
 
-### 5.1 Review Key Learnings
+### 6.1 Review Key Learnings
 
 After completing this challenge, you should understand:
 
@@ -343,7 +535,16 @@ After completing this challenge, you should understand:
 - Microsoft Defender for Cloud provides security coverage and recommendations for your VM
 - Azure Update Manager assesses updates on that same VM without changing shared infrastructure
 
-### 5.2 Real-World Applications
+✅ **Deploying a container to your AKS cluster**
+- Validated AKS on Azure Local with Microsoft Entra authentication and Kubernetes RBAC
+- Installed the MetalLB extension
+- Created a MetalLB address pool using ARP advertisement
+- Deployed a containerized application from YAML
+- Assigned the application an external IP through a Kubernetes `LoadBalancer` Service
+- Added the required Windows route on `LocalBox-Client`
+- Connected to the application from a browser
+
+### 6.2 Real-World Applications
 
 Consider how these capabilities apply to sovereign cloud scenarios:
 
@@ -355,7 +556,7 @@ Consider how these capabilities apply to sovereign cloud scenarios:
 | Operational efficiency | Single control plane for hybrid management |
 | Disaster recovery | Azure Site Recovery integration for failover |
 
-### 5.3 Further Exploration
+### 6.3 Further Exploration
 
 For additional learning, explore:
 

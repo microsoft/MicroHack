@@ -11,6 +11,9 @@ versions, including during WhatIf. Azure, Hyper-V and storage changes remain
 simulated during WhatIf.
 AKS preparation grants its Entra admin group the cluster-scoped Azure Arc Enabled
 Kubernetes Cluster User Role for proxy access, reusing applicable existing grants.
+It also installs the MetalLB Arc extension and an ARP pool from the configured
+service VIP reservation. The Runtime provider object ID comes from the organizer,
+not a Graph lookup using the Client managed identity.
 Dot-source this file to load its functions without running provisioning.
 #>
 [CmdletBinding(SupportsShouldProcess)]
@@ -19,6 +22,7 @@ param(
     [string]$ResourceGroupName = $env:resourceGroup,
     [string]$ConfigPath = $env:LocalBoxConfigFile,
     [string]$AksAdminGroupObjectId,
+    [string]$KubernetesRuntimeObjectId,
     [switch]$SkipAks,
     [pscredential]$NodeCredential,
     [string]$VmSwitchName,
@@ -192,6 +196,12 @@ function Get-LocalBoxResource {
     if ($Id -match '/providers/Microsoft\.HybridContainerService/provisionedClusterInstances/') {
         $arguments += @('--api-version', '2024-01-01')
     }
+    elseif ($Id -match '/providers/Microsoft\.KubernetesConfiguration/extensions/') {
+        $arguments += @('--api-version', '2023-05-01')
+    }
+    elseif ($Id -match '/providers/Microsoft\.KubernetesRuntime/loadBalancers/') {
+        $arguments += @('--api-version', '2024-08-01')
+    }
     Invoke-LocalBoxAz $arguments
 }
 
@@ -264,6 +274,102 @@ function Sync-LocalBoxResource {
         Assert-LocalBoxProperties $resource $Expected
         return $resource
     }
+}
+
+function Get-LocalBoxMetalLbPlan {
+    param([Parameter(Mandatory)][hashtable]$Configuration, [Parameter(Mandatory)][string]$ClusterId)
+    if ($ClusterId -notmatch '^/subscriptions/[^/]+/resourceGroups/[^/]+/providers/Microsoft\.Kubernetes/connectedClusters/[^/]+$') {
+        throw 'MetalLB must target an Azure Arc connected-cluster resource.'
+    }
+    Test-LocalBoxAddressPool $Configuration.AKSIPPrefix $Configuration.AKSVIPStartIP $Configuration.AKSVIPEndIP `
+        $Configuration.AKSGWIP @($Configuration.AKSControlPlaneIP) `
+        -ReservedRanges @(@{ Start = $Configuration.AKSNodeStartIP; End = $Configuration.AKSNodeEndIP })
+    return @{
+        ExtensionId = "$ClusterId/providers/Microsoft.KubernetesConfiguration/extensions/arcnetworking"
+        PoolId = "$ClusterId/providers/Microsoft.KubernetesRuntime/loadBalancers/aks-pool"
+        PoolExpected = @{ properties = @{
+            addresses = @("$($Configuration.AKSVIPStartIP)-$($Configuration.AKSVIPEndIP)")
+            advertiseMode = 'ARP'
+        } }
+    }
+}
+
+function Get-LocalBoxArmCollection {
+    param([Parameter(Mandatory)][string]$Url)
+    do {
+        $page = Invoke-LocalBoxAz @('rest', '--method', 'get', '--url', $Url)
+        if ($null -eq $page -or -not $page.Contains('value') -or $page.value -isnot [array]) {
+            throw "Invalid ARM collection response for $Url; existing resources cannot be determined."
+        }
+        $page.value
+        $Url = $page.nextLink
+        if ($Url -and -not $Url.StartsWith('https://management.azure.com/', [StringComparison]::OrdinalIgnoreCase)) {
+            throw 'Unexpected ARM pagination URL.'
+        }
+    } while ($Url)
+}
+
+function Sync-LocalBoxMetalLb {
+    [CmdletBinding(SupportsShouldProcess)]
+    param(
+        [Parameter(Mandatory)][string]$ClusterId,
+        [Parameter(Mandatory)][hashtable]$Plan,
+        [Parameter(Mandatory)][string]$RuntimeObjectId,
+        [int]$TimeoutSeconds = 3600
+    )
+    $objectId = [guid]::Empty
+    if (-not [guid]::TryParse($RuntimeObjectId, [ref]$objectId) -or $objectId -eq [guid]::Empty -or
+        $objectId -eq [guid]'087fca6e-4606-4d41-b3f6-5ebdf75b8b4c') {
+        throw 'Supply the tenant-specific Microsoft.KubernetesRuntime service-principal object ID, not its application ID.'
+    }
+    $extensionExpected = @{
+        identity = @{ type = 'SystemAssigned' }
+        properties = @{
+            extensionType = 'microsoft.arcnetworking'
+            configurationSettings = @{ k8sRuntimeFpaObjectId = $objectId.ToString() }
+            autoUpgradeMinorVersion = $true
+        }
+    }
+    if ($WhatIfPreference) {
+        $null = $PSCmdlet.ShouldProcess($Plan.ExtensionId, 'Install or verify MetalLB Arc extension')
+        $null = $PSCmdlet.ShouldProcess($Plan.PoolId, 'Create or verify reserved ARP address pool')
+        return
+    }
+    $provider = Invoke-LocalBoxAz @('provider', 'show', '--namespace', 'Microsoft.KubernetesRuntime')
+    if ($provider.registrationState -ne 'Registered') {
+        throw 'Ask the subscription owner to register Microsoft.KubernetesRuntime before MetalLB preparation.'
+    }
+    $resources = @(
+        @{ Id = $Plan.ExtensionId; ApiVersion = '2023-05-01'; Expected = $extensionExpected }
+        @{ Id = $Plan.PoolId; ApiVersion = '2024-08-01'; Expected = $Plan.PoolExpected }
+    )
+    # The Runtime API needs the extension before it can manage in-cluster pools.
+    foreach ($entry in $resources) {
+        $collectionId = $entry.Id.Substring(0, $entry.Id.LastIndexOf('/'))
+        $existing = @(Get-LocalBoxArmCollection "https://management.azure.com${collectionId}?api-version=$($entry.ApiVersion)")
+        $others = @($existing | Where-Object { $_.id -ine $entry.Id })
+        if ($entry.Id -eq $Plan.ExtensionId -and @($others | Where-Object { $_.properties.extensionType -ieq 'microsoft.arcnetworking' }).Count) {
+            throw 'A differently named MetalLB extension exists. Ask the organizer to review it; no second extension will be installed.'
+        }
+        if ($entry.Id -eq $Plan.PoolId -and $others.Count) {
+            throw 'An additional MetalLB address pool exists. Have the organizer review address overlap and service selection before continuing; existing pools are not changed.'
+        }
+        if (-not @($existing | Where-Object id -ieq $entry.Id).Count) {
+            if (-not $PSCmdlet.ShouldProcess($entry.Id, 'Create shared MetalLB resource')) {
+                throw 'MetalLB creation was declined; preparation is incomplete.'
+            }
+            $body = $entry.Expected | ConvertTo-Json -Depth 10 -Compress
+            Invoke-LocalBoxAz @('rest', '--method', 'put', '--url',
+                "https://management.azure.com$($entry.Id)?api-version=$($entry.ApiVersion)", '--body', $body) `
+                -TimeoutSeconds $TimeoutSeconds | Out-Null
+        }
+        $actual = Wait-LocalBoxResource $entry.Id -TimeoutSeconds $TimeoutSeconds
+        Assert-LocalBoxProperties $actual $entry.Expected
+        if ($entry.Id -eq $Plan.PoolId -and $actual.properties.serviceSelector.Count -gt 0) {
+            throw 'The MetalLB pool has a service selector; organizer review is required.'
+        }
+    }
+    Write-Host "MetalLB extension and ARP pool are provisioned: $($Plan.PoolExpected.properties.addresses -join ', '). Run Full health checks to verify in-cluster readiness."
 }
 
 function Sync-LocalBoxAksProxyRole {
@@ -486,7 +592,7 @@ function Invoke-LocalBoxPreparation {
     Test-LocalBoxAddressPool $config.AKSIPPrefix $config.AKSControlPlaneIP $config.AKSControlPlaneIP $config.AKSGWIP -ReservedRanges @($vipRange)
     if ($config.vmVLAN -eq $config.AKSVLAN -or $config.vmIpPrefix -eq $config.AKSIPPrefix) { throw 'VMs and AKS must use separate VLANs and subnets.' }
     if (-not $Settings.AddressReservationsConfirmed) {
-        throw 'Verify BOTH pools against DHCP leases/exclusions and static reservations, then pass -AddressReservationsConfirmed. The script does not alter DHCP/router configuration.'
+        throw 'Verify BOTH VM/node pools and the AKS service VIP reservation against DHCP leases/exclusions and static reservations, then pass -AddressReservationsConfirmed. The script does not alter DHCP/router configuration.'
     }
     $Settings.NodeCredential = Resolve-LocalBoxNodeCredential -Configuration $config -Credential $Settings.NodeCredential
     $previousConfig = $env:AZURE_CONFIG_DIR
@@ -512,6 +618,19 @@ function Invoke-LocalBoxPreparation {
             return
         }
         $scope = "/subscriptions/$($Settings.SubscriptionId)/resourceGroups/$($Settings.ResourceGroupName)"
+        $metalLb = $null
+        if (-not $Settings.SkipAks) {
+            $metalLb = Get-LocalBoxMetalLbPlan -Configuration $config -ClusterId "$scope/providers/Microsoft.Kubernetes/connectedClusters/$($Settings.AksClusterName)"
+            if (-not $Settings.KubernetesRuntimeObjectId) {
+                $group = Invoke-LocalBoxAz @('group', 'show', '--subscription', $Settings.SubscriptionId, '--name', $Settings.ResourceGroupName)
+                $Settings.KubernetesRuntimeObjectId = $group.tags.'microhack-k8s-runtime-object-id'
+            }
+            $runtimeId = [guid]::Empty
+            if (-not [guid]::TryParse($Settings.KubernetesRuntimeObjectId, [ref]$runtimeId) -or $runtimeId -eq [guid]::Empty -or
+                $runtimeId -eq [guid]'087fca6e-4606-4d41-b3f6-5ebdf75b8b4c') {
+                throw 'Supply -KubernetesRuntimeObjectId from the subscription organizer, or rerun the updated Console shared setup to publish its resource-group tag. The Client does not query Graph.'
+            }
+        }
         $resources = @(Invoke-LocalBoxAz @('resource', 'list', '--resource-group', $Settings.ResourceGroupName))
         $cluster = @($resources | Where-Object { $_.type -ieq 'Microsoft.AzureStackHCI/clusters' -and $_.name -eq $config.ClusterName })
         if ($cluster.Count -ne 1) { throw 'Azure Local cluster not found; complete Jumpstart provisioning first.' }
@@ -615,6 +734,8 @@ function Invoke-LocalBoxPreparation {
         }
         if (-not $Settings.SkipAks) {
             Sync-LocalBoxAksProxyRole -ClusterId $aksId -GroupObjectId $groupId -WhatIf:$WhatIfPreference
+            Sync-LocalBoxMetalLb -ClusterId $aksId -Plan $metalLb -RuntimeObjectId $Settings.KubernetesRuntimeObjectId `
+                -TimeoutSeconds $timeout -WhatIf:$WhatIfPreference
         }
         $manifest = @{
             SubscriptionId = $Settings.SubscriptionId; ResourceGroupName = $Settings.ResourceGroupName; CustomLocationId = $custom.id
@@ -624,6 +745,7 @@ function Invoke-LocalBoxPreparation {
             NodeNames = @($config.NodeHostConfig.Hostname); StorageSizeGB = $Settings.StorageSizeGB; PreparedAt = [datetime]::UtcNow.ToString('o')
             FullHealthVerified = $false
             AksPreparationSkipped = [bool]$Settings.SkipAks
+            MetalLb = $metalLb
         }
         if ($PSCmdlet.ShouldProcess($Settings.ManifestPath, 'Write nonsecret preparation manifest')) {
             $manifest | ConvertTo-Json -Depth 30 | Set-Content -LiteralPath $Settings.ManifestPath -Encoding utf8
@@ -644,7 +766,8 @@ function Invoke-LocalBoxPreparation {
 if ($MyInvocation.InvocationName -ne '.') {
     $settings = @{
         SubscriptionId = $SubscriptionId; ResourceGroupName = $ResourceGroupName; ConfigPath = $ConfigPath
-        AksAdminGroupObjectId = $AksAdminGroupObjectId; SkipAks = [bool]$SkipAks; NodeCredential = $NodeCredential; VmSwitchName = $VmSwitchName
+        AksAdminGroupObjectId = $AksAdminGroupObjectId; KubernetesRuntimeObjectId = $KubernetesRuntimeObjectId
+        SkipAks = [bool]$SkipAks; NodeCredential = $NodeCredential; VmSwitchName = $VmSwitchName
         ImageName = $ImageName; ImageVersion = $ImageVersion; VmPoolStart = $VmPoolStart; VmPoolEnd = $VmPoolEnd
         AksClusterName = $AksClusterName; KubernetesVersion = $KubernetesVersion; NodeVmSize = $NodeVmSize
         ControlPlaneVmSize = $ControlPlaneVmSize; NodeCount = $NodeCount; StorageSizeGB = $StorageSizeGB

@@ -85,6 +85,7 @@ $providers = @(
     # Kubernetes (for AKS Arc)
     "Microsoft.Kubernetes",
     "Microsoft.KubernetesConfiguration",
+    "Microsoft.KubernetesRuntime",
     "Microsoft.ContainerService",
     "Microsoft.ContainerInstance",
     "Microsoft.ContainerRegistry",

@@ -12,7 +12,7 @@ This challenge uses **Azure Arc Jumpstart LocalBox** to simulate an Azure Local 
 
 Please ensure that you successfully verified the [General prerequisites](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/Readme.md#general-prerequisites) before continuing with this challenge.
 
-Keep your [Sovereign Cloud Codespace](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/Readme.md#recommended-environment-github-codespaces) for lab work, but complete the core tasks below in the Azure portal. No local Windows installation or remote desktop connection is required.
+Use your [Sovereign Cloud Codespace](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/Readme.md#recommended-environment-github-codespaces) for the Bash commands in Task 5 and the Azure portal for Tasks 1–4. No local Windows installation or remote desktop connection is required.
 
 **Additional requirements for this challenge:**
 
@@ -22,6 +22,11 @@ Keep your [Sovereign Cloud Codespace](https://github.com/microsoft/MicroHack/blo
 - **Security Reader** access at subscription scope to review Defender for Cloud coverage and recommendations
 - Defender for Servers enabled by the organizer on the lab subscription, using an approved plan and the required Defender for Endpoint integration
 - A guest network with a valid IP address, working DNS, and outbound access to the required Azure Arc, Defender, and configured Windows update-source endpoints
+- For Task 5, the shared `localbox-aks` cluster in `rg-localbox-shared`, with Microsoft Entra authentication, Kubernetes RBAC, and organizer-prepared MetalLB networking
+- Membership in the cluster's configured Microsoft Entra administrator group, supplied through the workshop Console, and the **Azure Arc Enabled Kubernetes Cluster User Role** already assigned by the organizer's preparer for Cluster Connect. These are separate prerequisites; ask the facilitator to verify either if access fails
+
+> [!IMPORTANT]
+> Complete Challenge 1's [Preparing for Next Challenges](../challenge-01/solution-01.md#preparing-for-next-challenges): your exercise policy assignments, including **Allowed locations** and any bonus initiative, must be in **DoNotEnforce**. This does not override inherited or organizer-managed policies. The organizer must also confirm that the shared LocalBox **custom location's Azure region** is permitted for resources created in your participant resource group.
 
 > [!NOTE]
 > LocalBox is typically deployed by the workshop facilitator due to resource requirements and deployment time. See the [LocalBox deployment and readiness guide](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/resources/demo-vm-creator/README.md). For a personal subscription, an authorized owner must also enable Defender for Servers before this challenge and review the plan's charges. Students in hosted labs should not change subscription-level Defender plans.
@@ -98,6 +103,11 @@ LocalBox runs as a nested lab environment hosted in Azure. In a production sover
 
 Verify that **Custom location** points to the shared LocalBox environment and **Virtual machine kind** is **Azure Local**. Leave **Storage path** set to **Choose automatically** unless the facilitator instructs otherwise.
 
+> [!NOTE]
+> The selected custom location determines the Azure region used for the VM's management resources; it need not match your resource group's location or the Azure region hosting the LocalBox simulator. Fresh hosted deployments and the manual deployment default to **West Europe**. Earlier hosted test deployments used **Australia East**. Inspect the actual custom location in your event rather than assuming the latest default has changed an existing environment.
+>
+> In production, the workload runs on the Azure Local hardware, while Azure stores management data in the registration region. In this lab, that hardware is simulated inside Azure-hosted LocalBox. Registration in Australia East does **not** mean that the nested VM's compute has moved there, but the management-data location still matters for sovereignty and Azure Policy. See [Azure Local regions](https://learn.microsoft.com/azure/azure-local/concepts/system-requirements-23h2#azure-requirements) and [Azure Local data handling](https://learn.microsoft.com/azure/azure-local/faq#does-my-data-stored-on-azure-local-get-sent-to-the-cloud).
+
 The creation screenshots use `labuser24-vm-01`, while the validation and management screenshots use `labuser23-vm-01`. These are examples from different participants; create and use only your own VM throughout the challenge.
 
 5. **Image**: Select the available gallery image **2025-datacenter-azure-edition-smalldisk-01** (Windows Server 2025)
@@ -147,6 +157,22 @@ Click **Next** twice
 2. Click **Create** to deploy the VM
 
 ![Azure Arc VM Review and create page showing two virtual processors, 4096 MB memory, guest management enabled, and one network interface](./images/localbox_09.png)
+
+#### If validation or deployment is blocked by a location policy
+
+Do not change the resource group, select another team's custom location, or disable policies at subscription scope to bypass the error.
+
+1. Expand **Error details** on **Review + create**. If the deployment was submitted, open your resource group's **Deployments**, select the failed deployment, and open the failed operation's details. Also check **Activity log** if needed.
+2. Record the innermost error code, rejected resource name/type and requested location, **policy assignment ID**, **policy definition ID**, and correlation ID. For an initiative, also record the policy definition reference ID if present. Share only the relevant error details with the facilitator, not deployment parameters, passwords, TAPs or tokens.
+3. For `RequestDisallowedByPolicy`, open **Policy > Assignments** and locate the assignment identified by the error. Inspect its **Scope**, **Policy enforcement** and **Parameters**. Check the actual ID, not just the friendly name: an initiative or inherited assignment may enforce a second location restriction.
+   - **Your own Challenge 1 exercise assignment:** restore **Do not enforce** using the [Challenge 1 instructions](../challenge-01/solution-01.md#preparing-for-next-challenges), including your bonus initiative if applicable.
+   - **Organizer-managed or inherited assignment:** stop and ask the facilitator to review the required metadata region and the approved policy configuration. A resource-group assignment cannot relax a deny inherited from subscription or management-group scope.
+   - **Different error code or no policy identifiers:** retain the exact error for the facilitator. A message mentioning a region is not by itself proof that the Challenge 1 policy caused the failure.
+4. After the authorized correction has propagated, retry validation in your assigned resource group. Check for partially created resources before retrying a submitted deployment; do not delete shared LocalBox resources.
+
+The current Challenge 1 exercise allowlist includes West Europe to match fresh LocalBox deployments; older assignments may still have only three regions. This does not permit earlier test deployments registered in Australia East. Do not broaden organizer-managed or inherited allowlists without the policy owner's approval. The updated registration-region default applies to fresh deployments, not existing custom locations. The hosted `SecurityControl=Ignore` and `CostControl=Ignore` tags are **not** general Azure Policy exemptions.
+
+Reference: [Resolve RequestDisallowedByPolicy errors](https://learn.microsoft.com/azure/azure-resource-manager/troubleshooting/error-policy-requestdisallowedbypolicy).
 
 ### 2.4 Validate VM Deployment and Guest Management
 
@@ -299,193 +325,205 @@ This exercise stops at assessment. Leave periodic assessment unchanged; the **En
 
 ## Task 5: Deploy a container to the AKS cluster deployed on Azure Local
 
-### Task 5.1: Verify the AKS Cluster
+**Deploy only your team's application; inspect shared infrastructure without changing it.** The organizer runs `resources/prepare-localbox.ps1` to prepare the AKS cluster and MetalLB after LocalBox deployment. The Console's LocalBox deployment hook alone does not prepare MetalLB. Attendees must not install extensions, create address pools, change routes, or change shared RBAC.
 
-The deployed AKS cluster should be setup as **Microsoft Entra authentication with Kubernetes RBAC** in the *Authentication and Authorization* setting
+### Task 5.1: Verify Cluster Access and Authentication
 
-*Look toward the bottom of the screenshot*
+1. In the Azure portal, open **`localbox-aks`** in **`rg-localbox-shared`**.
+2. Confirm that its authentication configuration is **Microsoft Entra authentication with Kubernetes RBAC**. Have the facilitator confirm your Console-provided membership in the configured administrator group; the historical screenshot's group name is only an example.
+3. Open **Kubernetes resources > Workloads** and inspect the system workloads.
 
-<img src="./images/localbox61.png" alt="AKS cluster access configuration using Microsoft Entra authentication and Kubernetes RBAC" width="700" />
+The following older screenshot illustrates the authentication setting at the bottom. It is **not** an instruction to create or reconfigure the shared cluster. Its cluster name, region, and group can differ from your workshop. Click any screenshot to view it full-size.
 
-### Task 5.2: Verify Microsoft Entra Authentication
+<a href="./images/localbox61.png"><img src="./images/localbox61.png" alt="Historical cluster form illustrating Microsoft Entra authentication with Kubernetes RBAC" width="420" /></a>
 
-After the deployment completes:
+<a href="./images/localbox62.png"><img src="./images/localbox62.png" alt="Kubernetes workloads option in the Azure portal" width="360" /></a>
 
-1. Open the AKS cluster in the Azure portal.
-2. Go to **Kubernetes resources > Workloads**.
+<a href="./images/localbox63.png"><img src="./images/localbox63.png" alt="Example system workload readiness in the Azure portal" width="560" /></a>
 
-<img src="./images/localbox62.png" alt="Kubernetes workloads option in the Azure portal" width="700" />
+Successful portal workload access proves only that the current identity can perform that operation. It does **not** independently prove administrator-group membership or that CLI access is ready.
 
-The cluster system workloads should be visible.
+> [!IMPORTANT]
+> Use your workshop Microsoft Entra identity throughout. If the portal requests a bearer token or the CLI reports `Unauthorized`/`Forbidden`, stop and ask the facilitator to verify the configured group, your membership, the existing **Azure Arc Enabled Kubernetes Cluster User Role**, and Cluster Connect readiness. After membership changes, sign in again to refresh your session. Do not create a service account token, retrieve admin credentials, or grant yourself additional roles.
 
-<img src="./images/localbox63.png" alt="System workloads running on the AKS cluster" width="700" />
+### Task 5.2: Inspect Organizer-Prepared MetalLB
 
-Seeing these workloads without being asked for a bearer token confirms that:
+MetalLB assigns service virtual IP addresses (VIPs) to Kubernetes Services of type `LoadBalancer`. Before deploying:
 
-- The cluster is configured for Microsoft Entra authentication with Kubernetes RBAC.
-- The signed-in user is a member of the assigned `AKSAdmin` group.
-- The user has permission to view Kubernetes resources through the Azure portal.
+1. Open **Settings > Extensions** and inspect **`arcnetworking`**, extension type **`microsoft.arcnetworking`**. Its provisioning state must be **Succeeded**.
+2. Under **Kubernetes resources > Workloads**, inspect the MetalLB controller and speaker workloads. Check that controller replicas and speaker DaemonSet pods are ready, with no persistent pending or crashing pods. Extension provisioning success alone is not proof of healthy workloads.
+3. Open **Settings > Networking** and inspect the existing **`aks-pool`**. Confirm successful provisioning, **ARP** advertisement, and the IP range reserved by the organizer for service VIPs. Record that range; it must exclude the AKS node allocation pool, control-plane IP, gateway, and any other allocated addresses.
 
-> **Important:** If the portal requests a bearer token, verify the cluster authentication configuration and confirm that the signed-in user is a direct member of the assigned Microsoft Entra administrator group.
+The default LocalBox service VIP reservation is **`10.10.0.10-10.10.0.100`**, separate from the node allocation pool **`10.10.0.101-10.10.0.199`**, control-plane IP **`10.10.0.5`**, and gateway **`10.10.0.1`**. The preparer uses the deployment configuration's exact reservation, so confirm the actual range if the organizer customized it. The older screenshots' `10.10.0.150` address overlaps the default node range and must not be reused as a service VIP.
 
-### Task 5.3 Configure the Load Balancer
+The organizer-created ARP pool is represented in Kubernetes by an **IPAddressPool** and **L2Advertisement** in **`kube-system`**. After starting the proxy in Task 5.3, inspect these read-only resources as shown in Task 5.4; do not create or edit them. See the [official AKS enabled by Azure Arc load-balancer documentation](https://learn.microsoft.com/azure/aks/aksarc/deploy-load-balancer-cli) for background only, not participant setup instructions. Provider registration and managed-identity preparation belong to the organizer; participants need no Microsoft Graph permissions and must not run the linked installation commands.
 
-Before deploying the application, configure MetalLB. MetalLB assigns an IP address to Kubernetes Services of type `LoadBalancer`.
+If the extension, healthy workloads, or pool are missing, stop and contact the facilitator. Do not select **Install extension**, **Add**, **Delete**, or **Uninstall extension**. No participant-side MetalLB configuration is needed.
 
-### Task 5.4: Install the MetalLB Extension
+### Task 5.3: Start the Microsoft Entra Cluster Connect Proxy — Terminal 1
 
-1. Open the AKS cluster.
-2. Go to **Settings > Networking**.
+Open a **Bash** terminal in your Sovereign Cloud Codespace. This assumes you are already signed in to Azure CLI with your workshop identity and have selected the workshop subscription. Retrieve the tenant and subscription IDs from the current CLI context, then enter your **assigned participant resource group**, not `rg-localbox-shared`, when prompted. Teammates sharing an assigned resource group share one namespace; coordinate deployment and cleanup.
 
-<img src="./images/localbox64.png" alt="AKS cluster Networking page requesting installation of the MetalLB extension" width="700" />
-
-3. Select **Install extension**.
-4. Select **MetalLB for Azure Arc-enabled Kubernetes**.
-5. Wait for the `arcnetworking` extension to report **Succeeded**.
-
-<img src="./images/localbox65.png" alt="MetalLB extension installation in the Azure portal" width="700" />
-
-### Task 5.5: Create the MetalLB Address Pool
-
-After the extension installation completes, return to **Settings > Networking**.
-
-<img src="./images/localbox66.png" alt="AKS Networking page after installing the MetalLB extension" width="700" />
-
-Select **Add** to create a load-balancer address pool.
-
-<img src="./images/localbox67.png" alt="MetalLB address-pool configuration" width="700" />
-
-Use the following settings:
-
-| Setting | Value |
-|---|---|
-| Name | A lowercase name, such as `aks-pool` |
-| Advertisement mode | **ARP** |
-| IP address range | `10.10.0.150-10.10.0.160` |
-| Service selector | Leave blank |
-
-> **Warning:** The screenshot was captured with `10.10.0.150-10.10.0.160`. It is advisable to not use an overlapping range with the the AKS node allocation pool.
-
-### Task 5.6: Deploy the Application
-
-After MetalLB is ready, deploy the application YAML.
-
-1. Download or open the [`portal-quickstart.yaml`](./manifests/portal-quickstart.yaml) manifest.
-2. Go to **Kubernetes resources**.
-3. Select **Create from YAML**.
-
-
-
-<img src="./images/localbox68.png" alt="Create from YAML option for the AKS cluster" width="700" />
-
-<img src="./images/localbox69.png" alt="YAML editor in the Azure portal" width="700" />
-
-4. Paste the contents of `portal_quickstart.yaml` into the editor.
-5. Select **Apply**.
-
-The portal first performs a dry run and then creates the Kubernetes resources.
-
-<img src="./images/localbox610.png" alt="Successful Kubernetes YAML deployment in the Azure portal" width="700" />
-
-The deployment should complete quickly. Select the application workload to verify that the pod is running.
-
-<img src="./images/localbox611.png" alt="Running application workload on the AKS cluster" width="700" />
-
-### Task 5.7: Find the Application IP Address
-
-The application Service receives an external IP address from the MetalLB address pool.
-
-1. Go to **Kubernetes resources > Services and ingresses**.
-2. Open the application Service.
-3. Record its **External IP**.
-
-<img src="./images/localbox612.png" alt="Kubernetes Service showing its MetalLB external IP address" width="700" />
-
-> **Note:** The screenshot shows the previously assigned address `10.10.0.150`. With the corrected address pool, the Service will normally receive an address beginning at `10.10.0.50`. Always use the External IP currently displayed for the Service.
-
-### Task 5.8: Configure Routing on LocalBox-Client
-
-Before connecting to the application, ensure that `LocalBox-Client` has a route to the AKS network `10.10.0.0/24`.
-
-#### Review the Azure NIC Effective Routes
-
-Open the network interface assigned to `LocalBox-Client` and review **Effective routes**.
-
-<img src="./images/localbox613.png" alt="Effective routes for the LocalBox-Client Azure network interface" width="700" />
-
-The Azure NIC effective routes show that the Azure fabric does not provide a usable route to `10.10.0.0/24`. The required route must therefore be configured inside the Windows guest operating system.
-
-#### Connect to LocalBox-Client
-
-1. Connect to the `LocalBox-Client` VM using RDP.
-2. If required, enable just-in-time access first.
-3. Verify that you are using the current public IP address assigned to the VM.
-
-> **Note:** If you have forgotten the deployment username, check the Bicep parameter file used for the LocalBox deployment. Do not include passwords or secrets in this documentation or commit them to the repository.
-
-#### Review the Windows Route Table
-
-Open Command Prompt and run:
-
-```console
-route print
+```bash
+TENANT_ID=$(az account show --query tenantId --output tsv) || exit 1
+SUBSCRIPTION_ID=$(az account show --query id --output tsv) || exit 1
+read -r -p "Your assigned participant resource group: " PARTICIPANT_RG
+if [[ -z "$TENANT_ID" || -z "$SUBSCRIPTION_ID" || -z "$PARTICIPANT_RG" ||
+      "${PARTICIPANT_RG,,}" == "rg-localbox-shared" ]]; then
+  echo "Verify your current Azure CLI context and use your own assigned resource group."
+  exit 1
+fi
+printf 'Current tenant: %s\nCurrent subscription: %s\n' "$TENANT_ID" "$SUBSCRIPTION_ID"
+az group show --subscription "$SUBSCRIPTION_ID" --name "$PARTICIPANT_RG" \
+  --query '{name:name,id:id}' --output table || exit 1
 ```
 
-<img src="./images/localbox614.png" alt="Windows route table before adding the AKS network route" width="700" />
+Confirm the displayed tenant, subscription, and resource group match your workshop before continuing. The following derives a valid, bounded namespace from your resource group, adding a stable hash of the subscription and group to distinguish names that normalize alike. It saves **only nonsecret settings**, outside the repository, for the other terminals. Never commit or share your kubeconfig or authentication cache.
 
-The route table does not initially contain a route for the AKS network `10.10.0.0/24`.
-
-#### Add the Static Route
-
-Open PowerShell as an administrator and first verify the internal LocalBox adapter and router:
-
-```powershell
-Get-NetIPAddress -AddressFamily IPv4 |
-    Where-Object IPAddress -eq '192.168.1.20'
-
-Test-NetConnection 192.168.1.1
+```bash
+RG_SLUG=$(printf '%s' "${PARTICIPANT_RG,,}" |
+  sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//' | cut -c1-40)
+RG_HASH=$(printf '%s/%s' "${SUBSCRIPTION_ID,,}" "${PARTICIPANT_RG,,}" |
+  sha256sum | cut -c1-12)
+TEAM_NAMESPACE="team-${RG_SLUG:-rg}-${RG_HASH}"
+AKS_CONTEXT="sovereign-${TEAM_NAMESPACE}"
+AKS_KUBECONFIG="$HOME/.kube/${AKS_CONTEXT}.config"
+MANIFEST="$(git rev-parse --show-toplevel)/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/walkthrough/challenge-06/manifests/aks-local-sample-app.yaml"
+umask 077
+mkdir -p "$HOME/.config/microhack" "$HOME/.kube"
+printf 'export %s=%q\n' \
+  SUBSCRIPTION_ID "$SUBSCRIPTION_ID" PARTICIPANT_RG "$PARTICIPANT_RG" \
+  TEAM_NAMESPACE "$TEAM_NAMESPACE" AKS_CONTEXT "$AKS_CONTEXT" \
+  AKS_KUBECONFIG "$AKS_KUBECONFIG" MANIFEST "$MANIFEST" \
+  > "$HOME/.config/microhack/challenge06.env"
+source "$HOME/.config/microhack/challenge06.env"
+printf 'Team namespace: %s\n' "$TEAM_NAMESPACE"
+az connectedk8s proxy \
+  --subscription "$SUBSCRIPTION_ID" \
+  --resource-group rg-localbox-shared --name localbox-aks \
+  --file "$AKS_KUBECONFIG" --kube-context "$AKS_CONTEXT" --port 47011
 ```
 
-#### Add the route through the LocalBox router:
+Wait for the proxy to report that it is listening and complete any Microsoft Entra sign-in prompt. **Leave Terminal 1 running** for all following steps. This command writes an isolated kubeconfig rather than replacing your normal configuration; `--kube-context` names its context. See the official [`az connectedk8s proxy` reference and examples](https://learn.microsoft.com/cli/azure/connectedk8s#az-connectedk8s-proxy).
 
-```powershell
-$adapter = Get-NetIPAddress -AddressFamily IPv4 |
-    Where-Object IPAddress -eq '192.168.1.20'
+> [!CAUTION]
+> Port **47011** is the Kubernetes API proxy, not your application. Never publish or forward this port through Codespaces Ports; if it is automatically detected, stop forwarding it in that view (leave the proxy process running). Never make the API proxy public. Do not pass `--token` or use service-account/admin credentials.
 
-New-NetRoute `
-    -DestinationPrefix '10.10.0.0/24' `
-    -InterfaceIndex $adapter.InterfaceIndex `
-    -NextHop '192.168.1.1' `
-    -RouteMetric 10
+### Task 5.4: Deploy in Your Team Namespace — Terminal 2
+
+Open a **second Bash terminal** in the same Codespace. Environment variables do not automatically carry between terminals, so source the nonsecret settings again. Every Kubernetes operation below explicitly selects the isolated kubeconfig and context.
+
+```bash
+source "$HOME/.config/microhack/challenge06.env"
+kubectl --kubeconfig "$AKS_KUBECONFIG" --context "$AKS_CONTEXT" \
+  cluster-info
+kubectl --kubeconfig "$AKS_KUBECONFIG" --context "$AKS_CONTEXT" \
+  --namespace kube-system get ipaddresspools.metallb.io,l2advertisements.metallb.io -o yaml
 ```
 
-<img src="./images/localbox615.png" alt="PowerShell command adding the static route to the AKS network" width="700" />
+Confirm that the `aks-pool` IPAddressPool contains the organizer-reserved range and that an L2Advertisement covers that pool (an advertisement without an `ipAddressPools` restriction can cover all pools). Missing resources are a readiness issue for the facilitator, not an instruction to install or configure them.
 
-#### Verify the new route:
+Discover the actual MetalLB controller Deployment and speaker DaemonSet names from their running configuration rather than assuming names or labels:
 
-```powershell
-Get-NetRoute -DestinationPrefix '10.10.0.0/24'
+```bash
+source "$HOME/.config/microhack/challenge06.env"
+kubectl --kubeconfig "$AKS_KUBECONFIG" --context "$AKS_CONTEXT" \
+  --namespace kube-system get deployments,daemonsets \
+  -o 'custom-columns=KIND:.kind,NAME:.metadata.name,IMAGES:.spec.template.spec.containers[*].image'
+read -r -p "MetalLB controller Deployment name from the list: " METALLB_DEPLOYMENT
+read -r -p "MetalLB speaker DaemonSet name from the list: " METALLB_DAEMONSET
+kubectl --kubeconfig "$AKS_KUBECONFIG" --context "$AKS_CONTEXT" \
+  --namespace kube-system wait --for=condition=Available \
+  "deployment/${METALLB_DEPLOYMENT:?Enter the listed MetalLB Deployment name}" --timeout=180s
+kubectl --kubeconfig "$AKS_KUBECONFIG" --context "$AKS_CONTEXT" \
+  --namespace kube-system rollout status \
+  "deployment/$METALLB_DEPLOYMENT" --timeout=180s
+kubectl --kubeconfig "$AKS_KUBECONFIG" --context "$AKS_CONTEXT" \
+  --namespace kube-system rollout status \
+  "daemonset/${METALLB_DAEMONSET:?Enter the listed MetalLB DaemonSet name}" --timeout=180s
 ```
 
-Test connectivity to the External IP currently assigned to the application:
+Identify the MetalLB entries using their names and container images; ask the facilitator if uncertain. These read-only checks wait for controller availability, a completed Deployment rollout, and an available, updated speaker DaemonSet. They do not restart or modify workloads. If a workload is missing or a wait times out, stop and report the output rather than repairing shared configuration. Continue only after these checks and the pool inspection pass.
 
-```powershell
-Test-NetConnection 10.10.0.50 -Port 80
+Now create your team's namespace:
+
+```bash
+source "$HOME/.config/microhack/challenge06.env"
+kubectl --kubeconfig "$AKS_KUBECONFIG" --context "$AKS_CONTEXT" \
+  create namespace "$TEAM_NAMESPACE"
 ```
 
-> **Note:** Replace `10.10.0.50` if the Service displays a different External IP.
+If namespace creation reports `AlreadyExists`, proceed **only** if it is your team's namespace from an earlier attempt. Stop on authentication or authorization errors rather than switching identities or contexts.
 
-### Task 5.9: Validate the Application
+The supplied [`aks-local-sample-app.yaml`](./manifests/aks-local-sample-app.yaml) creates a ConfigMap, Deployment, and `LoadBalancer` Service named `aks-container-1` (the ConfigMap is `aks-container-1-content`). The manifest has no hard-coded namespace; `--namespace` below keeps these resources out of `default` and other teams' namespaces.
 
-Open a browser on `LocalBox-Client` and connect to:
-
-```text
-http://<IP address handed out by the LB>
+```bash
+source "$HOME/.config/microhack/challenge06.env"
+kubectl --kubeconfig "$AKS_KUBECONFIG" --context "$AKS_CONTEXT" \
+  --namespace "$TEAM_NAMESPACE" apply -f "$MANIFEST"
+kubectl --kubeconfig "$AKS_KUBECONFIG" --context "$AKS_CONTEXT" \
+  --namespace "$TEAM_NAMESPACE" rollout status deployment/aks-container-1 --timeout=180s
+kubectl --kubeconfig "$AKS_KUBECONFIG" --context "$AKS_CONTEXT" \
+  --namespace "$TEAM_NAMESPACE" get pods,service -l app.kubernetes.io/name=aks-container-1
+kubectl --kubeconfig "$AKS_KUBECONFIG" --context "$AKS_CONTEXT" \
+  --namespace "$TEAM_NAMESPACE" get service aks-container-1 --watch
 ```
 
-The application web page should load.
+Wait for successful rollout, ready application pods, and an **EXTERNAL-IP** from the organizer-confirmed `aks-pool` range. Record the assigned IP; do not assume the first address in the pool. Press **Ctrl+C in Terminal 2** to stop only the Service watch once the address appears. If it remains `<pending>` or is outside the reserved range, report it to the facilitator; do not create or edit pools.
 
-<img src="./images/localbox616.png" alt="Containerized web application reached from LocalBox-Client" width="700" />
+You can also inspect **Workloads** and **Services and ingresses** in the portal, filtering to **your team namespace**. These older screenshots show where to inspect a workload and its Service; their `default` namespace and `10.10.0.150` address are historical examples, **not values to reuse**. The workload screenshot shows a ready pod while its Deployment summary is still updating; rely on your own successful rollout and current readiness.
+
+<a href="./images/localbox611.png"><img src="./images/localbox611.png" alt="Historical application workload view; inspect your team namespace and current rollout" width="560" /></a>
+
+<a href="./images/localbox612.png"><img src="./images/localbox612.png" alt="Historical Services view illustrating the External IP column, not the current pool address" width="560" /></a>
+
+### Task 5.5: Forward and Open the Application — Terminals 2 and 3
+
+Keep the API proxy running in **Terminal 1**. In **Terminal 2**, start the application forward:
+
+```bash
+source "$HOME/.config/microhack/challenge06.env"
+kubectl --kubeconfig "$AKS_KUBECONFIG" --context "$AKS_CONTEXT" \
+  --namespace "$TEAM_NAMESPACE" port-forward \
+  service/aks-container-1 8080:80 --address 127.0.0.1
+```
+
+Wait for `Forwarding from 127.0.0.1:8080` and **leave Terminal 2 running too**. Use a **third Bash terminal** for the HTTP check, not either occupied terminal:
+
+```bash
+curl --fail --show-error http://127.0.0.1:8080/
+```
+
+In Codespaces, open the **Ports** view, forward **8080** if it was not detected, and confirm its visibility is **Private** before selecting **Open in Browser**. Sign in to GitHub if prompted. Open that private application URL, not port 47011 and not the MetalLB VIP.
+
+If running this same workflow directly on a local workstation with Bash, Azure CLI, and `kubectl`, instead open **http://localhost:8080/** on that workstation. A Codespace's `localhost` is not your workstation's `localhost`; use its private Ports URL when working in Codespaces.
+
+> [!IMPORTANT]
+> Production clients reach a MetalLB VIP through configured network routing and the advertised service network. This lab's Arc proxy plus `kubectl port-forward` tunnels to an application pod through the Kubernetes API. A working page verifies application access through that tunnel; it **does not validate the load-balancer network path**, ARP reachability, or routing to the VIP. No RDP session or static-route change is needed.
+
+If the forward stops after a pod restart, confirm the rollout again and restart it in Terminal 2. If either terminal is closed, restart the proxy first and then the port-forward, sourcing `challenge06.env` in each replacement terminal.
+
+### Task 5.6: Clean Up Only Your Team's Application
+
+After recording your results and coordinating with teammates, press **Ctrl+C in Terminal 2** to stop the application forward. Keep Terminal 1's proxy running while deleting **only** the application resources in your team namespace:
+
+```bash
+source "$HOME/.config/microhack/challenge06.env"
+kubectl --kubeconfig "$AKS_KUBECONFIG" --context "$AKS_CONTEXT" \
+  --namespace "$TEAM_NAMESPACE" delete -f "$MANIFEST"
+kubectl --kubeconfig "$AKS_KUBECONFIG" --context "$AKS_CONTEXT" \
+  --namespace "$TEAM_NAMESPACE" get deployment,service,configmap,pods
+```
+
+The application Deployment, Service, ConfigMap, and pods should be gone (the namespace's automatically supplied `kube-root-ca.crt` ConfigMap can remain). Delete the namespace only if your team created it exclusively for this exercise and all teammates are finished:
+
+```bash
+source "$HOME/.config/microhack/challenge06.env"
+kubectl --kubeconfig "$AKS_KUBECONFIG" --context "$AKS_CONTEXT" \
+  delete namespace "$TEAM_NAMESPACE"
+```
+
+Do not delete shared resources, system namespaces, the AKS cluster, MetalLB, its IP pool, or another team's resources. Finally, stop the proxy with **Ctrl+C in Terminal 1** and remove the application forwarding entry from the Codespaces Ports view. Retain your Task 2 VM until its assessments and workshop work are complete; any VM cleanup must target only your own VM, not shared LocalBox infrastructure.
 
 
 ---
@@ -512,13 +550,13 @@ After completing this challenge, you should understand:
 - Azure Update Manager assesses updates on that same VM without changing shared infrastructure
 
 ✅ **Deploying a container to your AKS cluster**
-- Validated AKS on Azure Local with Microsoft Entra authentication and Kubernetes RBAC
-- Installed the MetalLB extension
-- Created a MetalLB address pool using ARP advertisement
-- Deployed a containerized application from YAML
-- Assigned the application an external IP through a Kubernetes `LoadBalancer` Service
-- Added the required Windows route on `LocalBox-Client`
-- Connected to the application from a browser
+- Verified Microsoft Entra access prerequisites and connected through the Arc proxy
+- Inspected organizer-prepared MetalLB extension health and the ARP address pool without changing them
+- Deployed a containerized application from YAML in a unique team namespace
+- Recorded the Kubernetes `LoadBalancer` Service's assigned external IP
+- Opened the application through a private Codespaces port-forward, without RDP or route changes
+- Distinguished tunneled application access from production load-balancer network-path validation
+- Cleaned up only your team's application resources
 
 ### 6.2 Real-World Applications
 
@@ -550,6 +588,10 @@ Before completing this challenge, verify:
 - [ ] You have deployed your own VM on Azure Local and verified that guest management is Enabled (Connected)
 - [ ] You have verified Defender for Servers coverage for your VM and reviewed its available recommendations, or recorded that its assessment is still pending
 - [ ] You have completed an Azure Update Manager assessment for your VM and reviewed its timestamp and results, including when no updates are pending
+- [ ] You verified the organizer-prepared `arcnetworking` extension is Succeeded, MetalLB workloads are healthy, and `aks-pool` has the reserved ARP VIP range
+- [ ] Your application rolled out successfully in your team's namespace and received an IP from that pool
+- [ ] You opened the application using a Microsoft Entra Arc proxy and a private application port-forward, never exposing the API proxy
+- [ ] You understand why this tunnel does not validate the production load-balancer network path and cleaned up only your team's application
 - [ ] You understand how Azure Arc provides a unified control plane for sovereign hybrid scenarios
 
 ---

@@ -9,9 +9,10 @@ Run [prepare-localbox.ps1](../prepare-localbox.ps1) **inside LocalBox-Client**, 
 - Healthy Azure Local nodes, storage, Arc Resource Bridge, `jumpstart` custom location and `hybridaksextension`.
 - The Client VM's system-assigned managed identity and its existing LocalBox resource-group permissions. It needs `Microsoft.Authorization/roleAssignments/read` at the AKS connected-cluster scope and, if the group lacks the proxy role, `Microsoft.Authorization/roleAssignments/write` there. Contributor alone cannot create role assignments. An authorized access administrator must arrange this permission or preassign the group role before preparation; the script never elevates its own identity. It uses a temporary isolated CLI login and restores the caller's profile. No subscription-wide or Graph permissions are added.
 - An existing Entra AKS admin-group object ID. Hosted events use **Lab Group ObjectId** from the Console's **Credentials** tab, published by [shared automation](../hosted-events/readme.md#console-group-dependency). Group membership is not validated through Graph by this script.
+- `Microsoft.KubernetesRuntime` registered, and its tenant-specific service-principal **object ID** available for MetalLB. Updated Console setup stores this nonsecret ID in the shared resource group's `microhack-k8s-runtime-object-id` tag. Manual organizers supply `-KubernetesRuntimeObjectId`; see [MetalLB preparation](#metallb-preparation) below. The Client managed identity needs write access to cluster extensions and KubernetesRuntime load balancers at the AKS connected-cluster scope; do not grant participants those permissions for installation.
 - The installed Jumpstart configuration referenced by `$env:LocalBoxConfigFile` (or `-ConfigPath`), containing `SDNDomainFQDN` and `SDNAdminPassword`. Preparation constructs the nested administrator credential locally without printing it. Supply `-NodeCredential` to override it if the nested password/account has changed. Azure managed identity cannot authenticate Windows PowerShell Direct inside nested nodes.
 - `Microsoft.EdgeMarketplace` registered by the subscription owner. The Marketplace image workflow also requires the Azure Connected Machine Resource Manager role for the `Microsoft.AzureStackHCI` resource-provider identity on the image resource group; ask the deployment owner to verify this prerequisite. No automatic privilege escalation is attempted.
-- Verified DHCP exclusions/static reservations for both pools, sufficient backing `V:` capacity and event budget. Dynamic disks do not add physical backing capacity.
+- Verified DHCP exclusions/static reservations for both node/VM pools **and the AKS service VIP range**, sufficient backing `V:` capacity and event budget. Dynamic disks do not add physical backing capacity.
 
 For the standard Jumpstart configuration, the nested-node administrator is `jumpstart\Administrator`. The Client VM's `arcdemo` account is not the nested-node administrator. Use the nested domain's credentials (adjust the domain if customized), not a password reset solely on the Client VM.
 
@@ -44,12 +45,64 @@ If the Console-owned group is not available yet, `-SkipAks` explicitly prepares 
 | VM image | `2025-datacenter-azure-edition-smalldisk-01`, matching the walkthrough screenshot; Marketplace Windows Server 2025 Azure Edition smalldisk, explicitly on `UserStorage1` |
 | VM network | `localbox-vm-lnet-vlan200`, VLAN 200, `192.168.200.0/24`, pool `.10-.199` after reservation review |
 | AKS network | `localbox-aks-lnet-vlan110`, VLAN 110, `10.10.0.0/24`, nodes `.101-.199` |
-| AKS control plane / service reservation | `10.10.0.5`; `.10-.100` reserved for future service VIPs; this script does not install a load balancer |
+| AKS control plane / service reservation | `10.10.0.5`; `.10-.100` reserved for MetalLB service VIPs, separate from nodes `.101-.199` |
 | AKS cluster | `localbox-aks`, one control-plane node and three Linux workers; `Standard_A4_v2` defaults, subject to installed-version capacity/CLI validation |
 | AKS proxy access | Azure Arc Enabled Kubernetes Cluster User Role for `AksAdminGroupObjectId`, scoped to the connected-cluster resource; matching direct or inherited grants are reused |
+| MetalLB | `arcnetworking` Arc extension (`microsoft.arcnetworking`), ARP pool `aks-pool`, addresses from `AKSVIPStartIP` through `AKSVIPEndIP` (standard config: `10.10.0.10-10.10.0.100`) |
 | Output | `C:\LocalBox\sovereign-localbox.json`, nonsecret IDs and expected configuration for health tests |
 
 Topology defaults come from the installed Jumpstart config, except the VM pool bounds and configurable resource names/sizes. The network/broadcast addresses, gateways and Jumpstart infrastructure reservations must not be allocated. `-AddressReservationsConfirmed` is your explicit confirmation that DHCP/static reservations were reviewed; the script cannot safely infer all DHCP leases from Azure. It does not change routers or DHCP configuration.
+
+## MetalLB preparation
+
+MetalLB is installed automatically **after AKS is ready**, by this organizer
+preparation script, not by participants. The Console shared hook still deploys
+LocalBox only; it registers the Runtime provider and supplies the object-ID tag
+needed for this later step. No Client VM access is granted to attendees.
+
+The script uses ARM APIs for the extension and load-balancer pool, without
+adding CLI extensions or querying Microsoft Graph as the Client managed identity.
+For manual setup, an authorized organizer can resolve the provider identity from
+their own authenticated session after provider registration:
+
+```powershell
+az ad sp list --filter "appId eq '087fca6e-4606-4d41-b3f6-5ebdf75b8b4c'" --query '[].id' --output tsv
+```
+
+There must be exactly one result. Use that **object ID**, not the application ID
+in the filter, as `-KubernetesRuntimeObjectId` when running preparation on the
+Client. If the lookup is denied or empty, ask the tenant administrator; do not
+grant Graph permissions to the Client identity.
+
+The VIP reservation is checked against the AKS subnet, gateway, control-plane
+address and node pool. Do not use `10.10.0.150-10.10.0.160` from older screenshots:
+it overlaps the node pool. The address-reservation confirmation includes DHCP and
+other static consumers of the service VIPs.
+
+Matching extensions and pools are reused. Conflicting identities, address ranges,
+advertisement modes, service selectors, additional pools or differently named
+MetalLB extensions stop preparation for organizer review, rather than replacing
+shared configuration. Failed operations are reported; no rollback deletes AKS or
+an already installed extension. `-SkipAks` also skips MetalLB; `-WhatIf` reports
+the planned extension and pool without querying a not-yet-created cluster or
+changing Azure resources.
+
+The manifest records `MetalLb` extension/pool IDs and expected configuration.
+Rerun preparation to update older manifests before health validation. Control-plane
+checks verify provisioned resources; Full checks additionally verify the Kubernetes
+address pool/L2 advertisement and system workloads. Neither proves client access
+through the load-balancer VIP.
+
+Attendees follow [Challenge 6](../../walkthrough/challenge-06/solution-06.md) to
+inspect MetalLB, deploy their own namespace, and use Entra-authenticated
+`az connectedk8s proxy` plus `kubectl port-forward`. This lab path does not require
+Client VM credentials or static routes. Real-world clients use the MetalLB address
+through the site's configured network routing; proxy/port-forward access is not
+a load-balancer connectivity test.
+
+Reference: [MetalLB on AKS on Azure Local](https://learn.microsoft.com/azure/aks/aksarc/deploy-load-balancer-cli).
+
+## Preparation execution details
 
 Azure Local may append generated suffixes to its `UserStorage1` and `UserStorage2` resource names. The script resolves the actual storage-container ID and verifies its custom location; ambiguous names fail rather than selecting the first match.
 

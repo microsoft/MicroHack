@@ -49,7 +49,18 @@ Use **GitHub Codespaces with the Azure / Infra / Sovereign Cloud devcontainer** 
 ### Set up before Challenge 1
 
 1. Sign in with a **personal GitHub account**. Optionally set **Settings > Codespaces > Default idle timeout** at [github.com/settings/codespaces](https://github.com/settings/codespaces) **before creating the Codespace**. The default is 30 minutes; you can choose 5-240 minutes, subject to organization policy. The setting applies to new Codespaces.
-2. Open [microsoft/MicroHack](https://github.com/microsoft/MicroHack), then select **Code > Codespaces > ... > New with options**.
+2. Open the **repository home page**, [microsoft/MicroHack](https://github.com/microsoft/MicroHack), while signed in to GitHub:
+
+   - Above the file list, select the green **Code** button, then the **Codespaces** tab. This is the repository's Code menu, not a menu inside VS Code.
+
+     <a href="https://docs.github.com/assets/images/help/codespaces/who-will-pay.png"><img src="https://docs.github.com/assets/images/help/codespaces/who-will-pay.png" alt="GitHub documentation example of the Code menu with the Codespaces tab selected" width="420"></a>
+
+   - In the **top-right corner of the Codespaces tab**, select **...**, then **New with options**. Do not use the quick-create button: this repository has multiple devcontainers, and you need to choose the Sovereign Cloud one.
+
+     <a href="https://docs.github.com/assets/images/help/codespaces/default-machine-type.png"><img src="https://docs.github.com/assets/images/help/codespaces/default-machine-type.png" alt="GitHub documentation example showing the Codespaces three-dot menu and New with options" width="420"></a>
+
+   These two navigation screenshots are examples from [GitHub's Codespaces documentation](https://docs.github.com/en/codespaces/developing-in-a-codespace/creating-a-codespace-for-a-repository#creating-a-codespace-for-a-repository); repository names and existing Codespaces may differ. If the **Codespaces** tab is missing, check that you are signed in. Alternatively, open [Create a codespace](https://github.com/codespaces/new), select **microsoft/MicroHack**, and continue with the options below.
+
 3. Select **Azure / Infra / Sovereign Cloud** and **2-core**, then **Create codespace**. Wait for setup to finish before using the terminal.
 
    ![Codespace creation options showing the Sovereign Cloud devcontainer and a 2-core machine](./img/codespaces-create.png)

@@ -17,7 +17,7 @@ Please ensure that you successfully verified the [General prerequisites](https:/
 
 You are a cloud architect at a European organization that must comply with data sovereignty requirements. Your workloads contain sensitive data that must remain within EU sovereign regions. Additionally, regulatory requirements mandate:
 
-- **Geographic restrictions**: All resources must be deployed only in approved sovereign regions (Norway East, Germany North, North Europe)
+- **Geographic restrictions**: All resources must be deployed only in the lab-approved European regions (Norway East, Germany North, North Europe, West Europe)
 - **Data classification**: All resources must be tagged with appropriate data classification labels
 - **Network isolation**: Sensitive resources must not expose public IP addresses
 - **Access control**: Only authorized teams should have access, following least-privilege principles
@@ -152,7 +152,12 @@ az policy definition show --name e56962a6-4747-49cd-b67b-bf8b01975c4c \
    - Norway East
    - Germany North
    - North Europe
+   - West Europe
 7. Click **Review + create** and then **Create**
+
+West Europe is included to accommodate Azure Local management resources in Challenge 6 when the shared LocalBox is registered there, reducing location-policy conflicts if enforcement is accidentally left enabled. It does not authorize Australia East or relocate an existing LocalBox registration. Keep **Do not enforce** and your **own resource-group scope** as instructed; other exercise policies can still block later challenges if left enforcing.
+
+If you already created your own exercise assignment using the earlier three-region list, use **Edit assignment > Parameters** to add **West Europe**, retain **Do not enforce**, then **Review + save > Save**. Update your resource-group location assignment and bonus initiative values below too, if you created them. Do not edit inherited or organizer-managed assignments.
 
 ### Step 3 - option B: Assign the Policy Using Azure CLI
 
@@ -172,16 +177,18 @@ az policy assignment create \
   --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP" \
   --policy "$POLICY_DEFINITION_ID" \
   --enforcement-mode DoNotEnforce \
-  --params '{"listOfAllowedLocations":{"value":["norwayeast","germanynorth", "northeurope"]}}'
+  --params '{"listOfAllowedLocations":{"value":["norwayeast","germanynorth","northeurope","westeurope"]}}'
 ```
 
 ![image](./img/cloud-shell3.jpg)
+
+Older screenshots may show only three regions; use all four locations in the current instructions.
 
 ### Step 4: Also Restrict Resource Group Locations
 
 ⚠️ **Important**: The "Allowed locations" policy applies to resources, but resource groups have their own location metadata. The separate **"Allowed locations for resource groups"** policy evaluates that metadata. At your resource-group scope, this is a compliance demonstration for your existing group; it does not restrict the creation of other resource groups. Subscription-wide enforcement belongs to the organizer, not participants.
 
-**Using Azure Portal:** In **Policy > Assignments > Assign policy**, choose **Allowed locations for resource groups** (definition ID ending `e765b5de-1225-4ba3-bd56-1ac6695af988`). Set scope to your resource group, assignment name to `Lab User-0024 - Restrict Resource Groups to Sovereign Regions` (use your number), and enforcement to **Do not enforce**. Under **Parameters**, select Norway East, Germany North, and North Europe, then **Review + create > Create**.
+**Using Azure Portal:** In **Policy > Assignments > Assign policy**, choose **Allowed locations for resource groups** (definition ID ending `e765b5de-1225-4ba3-bd56-1ac6695af988`). Set scope to your resource group, assignment name to `Lab User-0024 - Restrict Resource Groups to Sovereign Regions` (use your number), and enforcement to **Do not enforce**. Under **Parameters**, select Norway East, Germany North, North Europe, and West Europe, then **Review + create > Create**.
 
 **Using Azure CLI:**
 
@@ -195,7 +202,7 @@ az policy assignment create \
   --policy "$RG_POLICY_DEFINITION_ID" \
   --params '{
     "listOfAllowedLocations": {
-      "value": ["norwayeast", "germanynorth", "northeurope"]
+      "value": ["norwayeast", "germanynorth", "northeurope", "westeurope"]
     }
   }' \
   --enforcement-mode DoNotEnforce
@@ -399,8 +406,8 @@ az policy assignment create \
 
 | Policy shown on the Policies tab | Values on the Policy parameters tab |
 |---|---|
-| Allowed locations | Norway East, Germany North, North Europe |
-| Allowed locations for resource groups | Norway East, Germany North, North Europe |
+| Allowed locations | Norway East, Germany North, North Europe, West Europe |
+| Allowed locations for resource groups | Norway East, Germany North, North Europe, West Europe |
 | Require a tag and its value on resources | Tag name: `DataClassification`; Tag value: `Sovereign` |
 | Not allowed resource types | `Microsoft.Network/publicIPAddresses` |
 
@@ -417,7 +424,8 @@ az policy assignment create \
         "value": [
           "norwayeast",
           "germanynorth",
-          "northeurope"
+          "northeurope",
+          "westeurope"
         ]
       }
     }
@@ -429,7 +437,8 @@ az policy assignment create \
         "value": [
           "norwayeast",
           "germanynorth",
-          "northeurope"
+          "northeurope",
+          "westeurope"
         ]
       }
     }

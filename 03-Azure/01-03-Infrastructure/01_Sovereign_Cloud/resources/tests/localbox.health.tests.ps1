@@ -8,7 +8,7 @@ BeforeAll {
 Describe 'Shared LocalBox control plane' {
     It 'has all mandatory manifest fields' {
         $LocalBox.AksPreparationSkipped | Should -Not -BeTrue -Because 'a partial preparation is not full LocalBox readiness'
-        foreach ($field in @('SubscriptionId', 'ResourceGroupName', 'ClusterId', 'BridgeId', 'ExtensionId', 'CustomLocationId', 'StorageId', 'ImageId', 'AksId', 'AksInstanceId', 'AksAdminGroupObjectId', 'ImageExpected', 'AksExpected', 'NodeNames', 'StorageSizeGB')) {
+        foreach ($field in @('SubscriptionId', 'ResourceGroupName', 'ClusterId', 'BridgeId', 'ExtensionId', 'CustomLocationId', 'StorageId', 'ImageId', 'AksId', 'AksInstanceId', 'AksAdminGroupObjectId', 'ImageExpected', 'AksExpected', 'NodeNames', 'StorageSizeGB', 'MetalLb')) {
             $LocalBox[$field] | Should -Not -BeNullOrEmpty -Because "$field is part of the expected inventory"
         }
         @($LocalBox.Networks).Count | Should -Be 2
@@ -61,6 +61,15 @@ Describe 'Shared LocalBox control plane' {
             foreach ($resource in $selected) { Wait-LocalBoxResource $resource.id -TimeoutSeconds $TimeoutSeconds | Should -Not -BeNullOrEmpty }
         }
     }
+    It 'has the organizer-provisioned MetalLB extension and matching ARP address pool' {
+        $LocalBox.MetalLb.ExtensionId | Should -Be "$($LocalBox.AksId)/providers/Microsoft.KubernetesConfiguration/extensions/arcnetworking"
+        $LocalBox.MetalLb.PoolId | Should -Be "$($LocalBox.AksId)/providers/Microsoft.KubernetesRuntime/loadBalancers/aks-pool"
+        $extension = Wait-LocalBoxResource $LocalBox.MetalLb.ExtensionId -TimeoutSeconds $TimeoutSeconds
+        $extension.properties.extensionType | Should -Be 'microsoft.arcnetworking'
+        $pool = Wait-LocalBoxResource $LocalBox.MetalLb.PoolId -TimeoutSeconds $TimeoutSeconds
+        Assert-LocalBoxProperties $pool $LocalBox.MetalLb.PoolExpected
+        [int]$pool.properties.serviceSelector.Count | Should -Be 0
+    }
 }
 
 Describe 'LocalBox runtime health' -Skip:($Mode -ne 'Full') {
@@ -100,5 +109,16 @@ Describe 'LocalBox runtime health' -Skip:($Mode -ne 'Full') {
             (Invoke-WebRequest 'https://management.azure.com/metadata/endpoints?api-version=2020-06-01' -UseBasicParsing -TimeoutSec 30).StatusCode
         }
         $result | Should -Be 200
+    }
+    It 'has an in-cluster MetalLB address pool and L2 advertisement' {
+        Wait-SovereignCheck -TimeoutSeconds $TimeoutSeconds -Check {
+            $pool = Invoke-SovereignKubectl $LocalBox.Kubeconfig @('get', 'ipaddresspools.metallb.io', 'aks-pool', '-n', 'kube-system')
+            Assert-LocalBoxProperties $pool.spec @{ addresses = $LocalBox.MetalLb.PoolExpected.properties.addresses }
+            $pool.spec.autoAssign | Should -Not -BeFalse
+            $advertisements = Invoke-SovereignKubectl $LocalBox.Kubeconfig @('get', 'l2advertisements.metallb.io', '-n', 'kube-system')
+            @($advertisements.items | Where-Object {
+                $_.spec.ipAddressPools -contains 'aks-pool'
+            }).Count | Should -BeGreaterThan 0
+        }
     }
 }

@@ -246,6 +246,25 @@ else {
 
 
 $localBoxScope = "/subscriptions/$SubscriptionId/resourceGroups/$localBoxResourceGroupName"
+for ($attempt = 1; $attempt -le 60; $attempt++) {
+    Update-MhhToken | Out-Null
+    $runtimeProvider = Get-AzResourceProvider -ProviderNamespace Microsoft.KubernetesRuntime -ErrorAction Stop
+    if ($runtimeProvider.RegistrationState -eq 'Registered') { break }
+    Start-Sleep -Seconds 10
+}
+if ($runtimeProvider.RegistrationState -ne 'Registered') {
+    throw 'Microsoft.KubernetesRuntime registration did not complete. LocalBox MetalLB preparation is blocked.'
+}
+$runtimeObjectIds = @(& az ad sp list --filter "appId eq '087fca6e-4606-4d41-b3f6-5ebdf75b8b4c'" --query '[].id' --output tsv --only-show-errors)
+if ($LASTEXITCODE -ne 0) { throw 'Unable to resolve the Microsoft.KubernetesRuntime service principal for MetalLB.' }
+$runtimeObjectIds = @($runtimeObjectIds | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+$runtimeObjectId = [guid]::Empty
+if ($runtimeObjectIds.Count -ne 1 -or -not [guid]::TryParse($runtimeObjectIds[0], [ref]$runtimeObjectId) -or $runtimeObjectId -eq [guid]::Empty) {
+    throw 'Expected exactly one valid Microsoft.KubernetesRuntime service-principal object ID. Have the tenant administrator verify provider registration.'
+}
+Update-AzTag -ResourceId $localBoxScope -Operation Merge `
+    -Tag @{ 'microhack-k8s-runtime-object-id' = $runtimeObjectId.ToString() } -ErrorAction Stop | Out-Null
+
 foreach ($participantObjectId in $AllowedEntraUserIds) {
     foreach ($roleName in @('Reader', 'Azure Stack HCI VM Contributor')) {
         $roleAssignment = Get-AzRoleAssignment `

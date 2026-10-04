@@ -21,9 +21,19 @@ The shared hook submits `localbox-*` in `rg-localbox-shared`, then waits up to s
 1. Inspect the Azure deployment, Client bootstrap logs and Azure Local/Arc status. Resolve failures before proceeding.
 2. If the Client password is unknown, an authorized event lead/coach uses the Azure VM's **Help > Reset password** to set a known password for the `arcdemo` host account, then connects to `LocalBox-Client` through Bastion. Do not expose this password through participant credentials or job logs. A host password reset does not change the nested-node Windows credentials. See [LocalBox credentials](#localbox-credentials).
 3. Copy **Lab Group ObjectId** from the Console's **Credentials** tab for the preparation prompt or `-AksAdminGroupObjectId`. Confirm that intended Azure lab identities/coaches are members; see the group dependency below.
-4. Follow [LocalBox preparation](../localbox/readme.md), once per shared subscription, in elevated PowerShell 7. Azure authentication uses the Client VM's managed identity; preparation constructs the nested Windows credential locally from the installed configuration without printing it. An explicit `-NodeCredential` overrides that value after a nested-account rotation.
+4. Follow [LocalBox preparation](../localbox/readme.md), once per shared subscription, in elevated PowerShell 7. It creates AKS and then installs/verifies the shared MetalLB extension and reserved ARP pool. Azure authentication uses the Client VM's managed identity; preparation constructs the nested Windows credential locally from the installed configuration without printing it. An explicit `-NodeCredential` overrides that value after a nested-account rotation.
 5. Run [Pester health checks](../tests/readme.md) for LocalBox and every selected participant lab. A control-plane-only pass does not establish full readiness.
 6. Complete the [participant VM readiness exercise](../localbox/manual-preparation.md#step-6-test-the-environment), including guest management, Defender and Update Manager. Subscription-wide paid-plan changes require the authorized owner and approved budget.
+7. Verify an intended participant can use Entra-authenticated `az connectedk8s proxy` and a private application port-forward from their Codespace. Participants inspect MetalLB, not install it, and never need LocalBox-Client access. This validates the lab access path, not routing to the MetalLB service VIP.
+
+Shared setup registers `Microsoft.KubernetesRuntime`, waits for registration,
+resolves its tenant service-principal object ID using the Console's existing
+Graph-capable identity, and records it in the shared RG tag
+`microhack-k8s-runtime-object-id`. Missing registration or identity resolution
+fails setup explicitly. Organizer preparation reads that nonsecret tag; it does
+not require Graph permissions on the Client managed identity. This does not move
+AKS or MetalLB installation into the Console hook: they remain part of the
+organizer's post-provisioning preparation.
 
 ### LocalBox registration region and location policies
 

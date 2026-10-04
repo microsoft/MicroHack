@@ -16,6 +16,19 @@ From this directory, run `Invoke-Pester ./visual-attestation.tests.ps1 -Output D
 
 A fresh Codespace smoke test is still required to validate the devcontainer build, Docker daemon, `confcom` policy generation and Azure deployment together; the mocked tests do not establish end-to-end Codespaces support.
 
+## MetalLB preparation checks
+
+MetalLB preparation tests are included in `prepare-localbox.tests.ps1`. Run
+`Invoke-Pester ./prepare-localbox.tests.ps1 -FullName 'LocalBox MetalLB preparation*','MetalLB health evidence*' -Output Detailed`
+for the focused offline checks. They cover reserved VIP validation, idempotent
+extension/pool installation, WhatIf, discovery failures, conflicting configuration
+and failure propagation without deleting shared resources. Mocked health checks
+also reject missing or mismatched address pools and L2 advertisements. The live LocalBox
+suite now requires the `MetalLb` manifest fields; rerun preparation for older
+manifests. Full checks also inspect the Kubernetes IPAddressPool and L2Advertisement.
+They do not replace the participant proxy/port-forward test or a separately
+authorized test of real network access through the load-balancer address.
+
 ## LocalBox registration-region checks
 
 The LocalBox registration-region contract is checked offline with

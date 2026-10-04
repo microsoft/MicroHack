@@ -811,7 +811,7 @@ Deploy the updated orchestration.
 cp -Rf \
   "$walkthroughHome/challenge-05/orchestration/src" \
   "$walkthroughHome/challenge-05/orchestration/azure.yaml" \
-  "$rootHome/"
+  "$hackFolder/"
 ```
 
 For the complete **Foundry Toolkit** deployment procedure, refer to [Challenge 4](challenge-04.md). For this deployment:

@@ -24,6 +24,10 @@
 .PARAMETER Location
     Azure region for deployment (default: swedencentral)
 
+.PARAMETER AzureLocalInstanceLocation
+    Azure Local registration and staging storage region (default: australiaeast).
+    This lab default is independent of the Azure host region.
+
 .PARAMETER WindowsAdminUsername
     Admin username for Windows VMs (default: arcdemo)
 
@@ -80,7 +84,7 @@ param(
 
     [Parameter(Mandatory = $false)]
     [ValidateSet('australiaeast', 'southcentralus', 'eastus', 'westeurope', 'southeastasia', 'canadacentral', 'japaneast', 'centralindia')]
-    [string]$AzureLocalInstanceLocation = "westeurope"
+    [string]$AzureLocalInstanceLocation = "australiaeast"
 )
 
 Write-Host "`n=== Azure Arc Jumpstart LocalBox Deployment ===" -ForegroundColor Cyan

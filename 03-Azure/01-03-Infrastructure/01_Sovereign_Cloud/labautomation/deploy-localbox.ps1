@@ -26,7 +26,8 @@ Optional tenant-specific object ID of the Microsoft.AzureStackHCI enterprise
 application. The script resolves it through Microsoft Graph when omitted.
 .PARAMETER AzureLocalInstanceLocation
 Azure Local registration region, separate from the Azure host region.
-Defaults to West Europe to align with the Challenge 1 location allowlist.
+Defaults to Australia East for the lab. The upstream staging storage account
+also uses this region, independently of the Azure host region.
 .PARAMETER NoWait
 Submit the deployment without waiting for ARM completion.
 #>
@@ -57,7 +58,7 @@ param(
     [string]$AzureLocalResourceProviderObjectId,
 
     [ValidateSet('australiaeast', 'southcentralus', 'eastus', 'westeurope', 'southeastasia', 'canadacentral', 'japaneast', 'centralindia')]
-    [string]$AzureLocalInstanceLocation = 'westeurope',
+    [string]$AzureLocalInstanceLocation = 'australiaeast',
 
     [switch]$NoWait
 )
@@ -68,14 +69,24 @@ $PSNativeCommandUseErrorActionPreference = $true
 function Invoke-AzJson {
     param([Parameter(Mandatory = $true)][string[]]$Arguments)
 
-    $output = & az @Arguments --only-show-errors --output json
-    if ($LASTEXITCODE -ne 0) {
-        throw "Azure CLI command failed: az $($Arguments -join ' ')"
+    # Preserve Azure's error details for the caller's regional fallback classifier.
+    $PSNativeCommandUseErrorActionPreference = $false
+    $output = @(& az @Arguments --only-show-errors --output json 2>&1)
+    $exitCode = $LASTEXITCODE
+    $stderr = @($output | Where-Object { $_ -is [System.Management.Automation.ErrorRecord] })
+    $stdout = ($output | Where-Object { $_ -isnot [System.Management.Automation.ErrorRecord] }) -join "`n"
+    $operation = ($Arguments | Select-Object -First 3) -join ' '
+    if ($exitCode -ne 0) {
+        throw "Azure CLI 'az $operation' failed (exit code ${exitCode}): $($stderr -join "`n")"
     }
-    if ([string]::IsNullOrWhiteSpace(($output -join "`n"))) {
+    foreach ($message in $stderr) { Write-Warning "$message" }
+    if ([string]::IsNullOrWhiteSpace($stdout)) {
         return $null
     }
-    return ($output -join "`n") | ConvertFrom-Json
+    try { return $stdout | ConvertFrom-Json -ErrorAction Stop }
+    catch {
+        throw "Azure CLI 'az $operation' returned invalid JSON. Raw stdout and command arguments are omitted because they may contain sensitive data. Inspect deployment state before retrying."
+    }
 }
 
 function New-LocalBoxPassword {

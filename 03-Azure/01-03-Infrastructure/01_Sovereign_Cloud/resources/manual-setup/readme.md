@@ -26,7 +26,7 @@ Run the [manual LocalBox entry point](localbox/deploy-localbox.ps1) from an auth
 ./localbox/deploy-localbox.ps1 -ResourceGroupName 'rg-localbox-shared' -Location 'swedencentral'
 ```
 
-Choose an allowed Azure Local registration region with `-AzureLocalInstanceLocation` when needed. It can differ from the Azure host region. Wait for the nested Azure Local deployment, then connect to `LocalBox-Client` and follow the shared [post-provisioning guide](../localbox/readme.md). Supply an existing Entra security-group object ID for AKS; its intended administrators must be members.
+The Azure Local registration and staging storage region defaults to **Australia East** for this lab, independently of the Azure host region. Choose another supported and subscription-eligible region with `-AzureLocalInstanceLocation` when needed; this lab default is not a European data-residency recommendation. Wait for the nested Azure Local deployment, then connect to `LocalBox-Client` and follow the shared [post-provisioning guide](../localbox/readme.md). Supply an existing Entra security-group object ID for AKS; its intended administrators must be members.
 
 Run the [health checks](../tests/readme.md) before participants begin. Verify scoped participant access and approved Defender for Servers settings using the [manual preparation and readiness reference](../localbox/manual-preparation.md).
 

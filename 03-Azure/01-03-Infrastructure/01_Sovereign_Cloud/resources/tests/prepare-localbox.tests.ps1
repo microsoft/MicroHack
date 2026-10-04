@@ -699,7 +699,7 @@ Describe 'Console LocalBox credential isolation' {
 }
 
 Describe 'LocalBox registration region contract' {
-    It 'defaults <Path> to West Europe independently of the host region' -TestCases @(
+    It 'defaults <Path> to Australia East independently of the host region' -TestCases @(
         @{ Path = 'labautomation/deploy-localbox.ps1' }
         @{ Path = 'resources/manual-setup/localbox/deploy-localbox.ps1' }
     ) {
@@ -709,20 +709,20 @@ Describe 'LocalBox registration region contract' {
             "$PSScriptRoot/../../$Path", [ref]$null, [ref]$errors)
         $errors.Count | Should -Be 0
         $registration = $ast.ParamBlock.Parameters | Where-Object { $_.Name.VariablePath.UserPath -eq 'AzureLocalInstanceLocation' }
-        $registration.DefaultValue.SafeGetValue() | Should -Be 'westeurope'
+        $registration.DefaultValue.SafeGetValue() | Should -Be 'australiaeast'
         $hostRegion = $ast.ParamBlock.Parameters | Where-Object { $_.Name.VariablePath.UserPath -eq 'Location' }
         $hostRegion.DefaultValue.SafeGetValue() | Should -Be 'swedencentral'
         $ast.Extent.Text | Should -Match 'azureLocalInstanceLocation\s*=\s*@\{\s*value\s*=\s*\$AzureLocalInstanceLocation\s*\}'
         $ast.Extent.Text | Should -Match 'location\s*=\s*@\{\s*value\s*=\s*\$Location\s*\}'
     }
-    It 'uses West Europe registration while preserving shared host-region selection' {
+    It 'uses Australia East registration while preserving shared host-region selection' {
         $errors = $null
         $ast = [System.Management.Automation.Language.Parser]::ParseFile(
             "$PSScriptRoot/../../labautomation/shared-deploy-lab.ps1", [ref]$null, [ref]$errors)
         $errors.Count | Should -Be 0
-        $ast.Extent.Text | Should -Match "-AzureLocalInstanceLocation 'westeurope'"
+        $ast.Extent.Text | Should -Match "-AzureLocalInstanceLocation 'australiaeast'"
         $ast.Extent.Text | Should -Match '-Location \$localBoxLocation'
-        $ast.Extent.Text | Should -Not -Match "-AzureLocalInstanceLocation 'australiaeast'"
+        $ast.Extent.Text | Should -Not -Match "-AzureLocalInstanceLocation 'westeurope'"
     }
     It 'includes the registration region in all four Challenge 1 policy parameter lists' {
         $guide = Get-Content "$PSScriptRoot/../../walkthrough/challenge-01/solution-01.md" -Raw
@@ -730,11 +730,108 @@ Describe 'LocalBox registration region contract' {
         $lists.Count | Should -Be 4
         foreach ($list in $lists) {
             $regions = @($list.Groups[1].Value | ConvertFrom-Json)
-            $regions.Count | Should -Be 4
-            foreach ($region in @('norwayeast', 'germanynorth', 'northeurope', 'westeurope')) {
+            $regions.Count | Should -Be 5
+            foreach ($region in @('norwayeast', 'germanynorth', 'northeurope', 'westeurope', 'australiaeast')) {
                 $regions | Should -Contain $region
             }
-            $regions | Should -Not -Contain 'australiaeast'
+        }
+    }
+}
+
+Describe 'Console LocalBox CLI failure propagation' {
+    BeforeAll {
+        $deployer = [Management.Automation.Language.Parser]::ParseFile(
+            "$PSScriptRoot/../../labautomation/deploy-localbox.ps1", [ref]$null, [ref]$null)
+        $helper = $deployer.Find({
+            param($node)
+            $node -is [Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -eq 'Invoke-AzJson'
+        }, $true)
+        . ([scriptblock]::Create($helper.Extent.Text))
+        $shared = [Management.Automation.Language.Parser]::ParseFile(
+            "$PSScriptRoot/../../labautomation/shared-deploy-lab.ps1", [ref]$null, [ref]$null)
+        $loop = $shared.Find({
+            param($node)
+            $node -is [Management.Automation.Language.ForEachStatementAst] -and
+            $node.Variable.Extent.Text -eq '$localBoxLocation'
+        }, $true)
+        $fallback = Join-Path $TestDrive 'fallback.ps1'
+        $loop.Extent.Text | Set-Content $fallback
+        $nativeExecutable = (Get-Process -Id $PID).Path
+        function az { & $nativeExecutable -NoProfile -NonInteractive -Command $cliState.Command }
+    }
+    BeforeEach {
+        $ErrorActionPreference = 'Stop'
+        $PSNativeCommandUseErrorActionPreference = $true
+        $cliState = @{ Command = '[Console]::Error.WriteLine("RequestDisallowedByAzure: locationineligible"); exit 1'; Attempts = 0 }
+    }
+    It 'retains regional error details with native error preference <Preference>' -ForEach @(
+        @{ Preference = $true }
+        @{ Preference = $false }
+    ) {
+        $PSNativeCommandUseErrorActionPreference = $Preference
+        { Invoke-AzJson @('deployment', 'group', 'validate', '--parameters', 'mock-secret') } |
+            Should -Throw '*exit code 1*RequestDisallowedByAzure*locationineligible*'
+        $PSNativeCommandUseErrorActionPreference | Should -Be $Preference
+    }
+    It 'parses successful JSON without mixing in native stderr' {
+        $cliState.Command = '[Console]::Error.WriteLine("notice"); [Console]::Out.WriteLine(''{"state":"ready"}''); exit 0'
+        Mock Write-Warning {}
+        (Invoke-AzJson @('account', 'show')).state | Should -Be 'ready'
+        Should -Invoke Write-Warning -Times 1 -Exactly -ParameterFilter { $Message -eq 'notice' }
+    }
+    It 'preserves empty successful output' {
+        $cliState.Command = 'exit 0'
+        Invoke-AzJson @('account', 'set') | Should -BeNullOrEmpty
+    }
+    It 'does not print command arguments or invalid JSON stdout on failure' {
+        $cliState.Command = '[Console]::Out.WriteLine("mock-sensitive-output"); exit 0'
+        $failure = try { Invoke-AzJson @('deployment', 'group', 'create', '--parameters', 'mock-secret') } catch { $_ }
+        $failure.Exception.Message | Should -Match 'invalid JSON'
+        $failure.Exception.Message | Should -Not -Match 'mock-sensitive-output|mock-secret'
+    }
+    It 'does not accept valid JSON from a command that failed' {
+        $cliState.Command = '[Console]::Out.WriteLine(''{"state":"ready"}''); exit 17'
+        { Invoke-AzJson @('deployment', 'group', 'validate') } | Should -Throw '*exit code 17*'
+    }
+    Context 'Shared region loop' {
+        BeforeEach {
+            @'
+param($Location)
+Invoke-AzJson @('deployment', 'group', 'validate', '--location', $Location) | Out-Null
+[pscustomobject]@{ ProvisioningState = 'Submitted'; Location = $Location }
+'@ | Set-Content (Join-Path $TestDrive 'deploy-localbox.ps1')
+            $localBoxLocations = @('first-region', 'second-region')
+            $azureLocalResourceProviderObjectIds = @('test-object-id')
+            $localBoxDeployment = $null
+            Mock az {
+                $cliState.Attempts++
+                if ($cliState.Attempts -eq 2) {
+                    & $nativeExecutable -NoProfile -NonInteractive -Command 'exit 0'
+                }
+                else {
+                    & $nativeExecutable -NoProfile -NonInteractive -Command $cliState.Command
+                }
+            }
+        }
+        It 'tries the next region after the actual native regional failure' {
+            . $fallback
+            $localBoxDeployment.ProvisioningState | Should -Be 'Submitted'
+            $localBoxDeployment.Location | Should -Be 'second-region'
+            Should -Invoke az -Times 2 -Exactly
+        }
+        It 'stops without retrying <Code>' -ForEach @(
+            @{ Code = 'RequestDisallowedByPolicy' }
+            @{ Code = 'AuthorizationFailed' }
+            @{ Code = 'UnexpectedFailure' }
+        ) {
+            $cliState.Command = "[Console]::Error.WriteLine('$Code'); exit 1"
+            { . $fallback } | Should -Throw "*$Code*"
+            Should -Invoke az -Times 1 -Exactly
+        }
+        It 'preserves the regional failure when no fallback regions remain' {
+            $localBoxLocations = @('first-region')
+            { . $fallback } | Should -Throw '*RequestDisallowedByAzure*locationineligible*'
+            Should -Invoke az -Times 1 -Exactly
         }
     }
 }

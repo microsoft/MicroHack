@@ -37,15 +37,34 @@ organizer's post-provisioning preparation.
 
 ### LocalBox registration region and location policies
 
+If LocalBox validation reports `RequestDisallowedByAzure` with
+`locationineligible` ("the selected region is currently not accepting new
+customers"), identify the rejected resource and its actual region before
+changing the host-region selection. This is distinct from an exercise policy's
+`RequestDisallowedByPolicy`. The upstream
+[LocalBox template](https://github.com/microsoft/azure_arc/blob/main/azure_jumpstart_localbox/bicep/main.bicep)
+passes `azureLocalInstanceLocation` to the staging storage module, whose account
+name is `localbox` plus a generated suffix. In the 4 October 2026 hosted test,
+this account was rejected in West Europe while the host was selected in Spain
+Central. **Host-region fallback cannot resolve a rejection in the fixed
+registration/staging-storage region.** The shared setup tries
+the next configured preferred host region for recognized regional failures;
+it does not change the Azure Local registration region or delete the shared
+resource group. The CLI wrapper retains Azure's error details in the exception
+so PowerShell's generic native-command exit error cannot hide them from the
+fallback check. Policy denials, authorization failures, and unrecognized errors
+still stop the run. If all preferred regions fail, the final error is reported;
+do not assume a region is available merely because its SKU/quota checks passed.
+
 There are three separate locations to check: the participant resource group's
 metadata location, the Azure region hosting the LocalBox simulator, and the
 Azure Local/custom-location registration region. The hosted
 [shared hook](../../labautomation/shared-deploy-lab.ps1) explicitly passes
-`AzureLocalInstanceLocation = westeurope`; the
+`AzureLocalInstanceLocation = australiaeast`; the
 [manual deployment](../manual-setup/localbox/deploy-localbox.ps1) defaults to
-`westeurope`. Host-region fallback does not change that registration parameter.
-The hosted deployer's default also matches West Europe. This changes registration
-for fresh deployments, not the Azure host-region selection. Inspect the deployed
+`australiaeast`. Host-region fallback does not change that registration parameter.
+The hosted deployer's default also matches Australia East. This changes registration
+and staging storage for fresh deployments, not the Azure host-region selection. Inspect the deployed
 custom location's **JSON View** for its actual `location`.
 
 Azure Local VM management resources use the custom location's region even when
@@ -64,16 +83,17 @@ exception. Do not disable unrelated policies or automatically broaden the
 subscription allowlist. The hosted control tags below do not override arbitrary
 location-deny policies.
 
-[Microsoft's current Azure Local region list](https://learn.microsoft.com/azure/azure-local/concepts/system-requirements-23h2#azure-requirements)
-includes West Europe as its only European region for hyperconverged deployments.
-The current Challenge 1 exercise allowlists include West Europe, but older
-assignments may still use the original three-region list. This does not prove
-that West Europe is allowed by the event subscription's inherited policies, and
-it does not permit Australia East. Existing Azure assignments are not updated
-automatically. Earlier hosted test environments registered in Australia East
-are not relocated by this change; validate the next event using a fresh deployment
-from the updated content. Existing-environment cleanup is a separate organizer
-action, not part of the registration-region change.
+The lab returns to Australia East after this West Europe rejection; this is
+not evidence that West Europe is universally unavailable for Azure Local.
+[Service region support](https://learn.microsoft.com/azure/azure-local/concepts/system-requirements-23h2#azure-requirements)
+does not guarantee subscription eligibility for every dependent resource.
+Challenge 1 retains its four European regions and adds Australia East as an
+explicit **lab-only exception**, not a European data-residency recommendation.
+Earlier assignments must be updated by their owners; inherited policies may
+still deny the region, and control tags do not bypass them. Existing Azure
+assignments and resources are not updated or relocated automatically. Validate
+the next event using a fresh deployment and the participant VM exercise.
+Existing-environment cleanup is a separate organizer action.
 
 ### Hosted MCAPS control-tag initiative
 

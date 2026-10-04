@@ -10,7 +10,7 @@ The goal of this exercise is to establish foundational sovereign cloud governanc
 
 ## Actions
 
-- Create and assign Azure Policy controls to restrict deployments to the lab-approved European regions (Norway East, Germany North, North Europe, West Europe). West Europe accommodates Azure Local management resources when LocalBox is registered there.
+- Create and assign Azure Policy controls using the lab-approved European regions (Norway East, Germany North, North Europe, West Europe), plus **Australia East as a lab-only exception** for Azure Local management resources. This exception is not a European data-residency recommendation; keep the exercise assignments in **DoNotEnforce** mode.
 - Enforce resource tagging requirements for data classification and compliance tracking.
 - Block public IP resource creation and evaluate storage public-network-access restrictions. Disabling public network access does not create or verify a private endpoint.
 - Assign least-privilege RBAC roles for the SovereignOps team.

@@ -213,7 +213,7 @@ else {
                 -ResourceGroupName $localBoxResourceGroupName `
                 -Location $localBoxLocation `
                 -AzureLocalResourceProviderObjectId $azureLocalResourceProviderObjectIds[0] `
-                -AzureLocalInstanceLocation 'westeurope' `
+                -AzureLocalInstanceLocation 'australiaeast' `
                 -UseConsoleCredentials `
                 -NoWait
 

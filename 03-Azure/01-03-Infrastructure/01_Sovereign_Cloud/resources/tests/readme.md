@@ -33,9 +33,10 @@ authorized test of real network access through the load-balancer address.
 
 The LocalBox registration-region contract is checked offline with
 `Invoke-Pester ./prepare-localbox.tests.ps1 -FullName 'LocalBox registration region contract*' -Output Detailed`.
-It verifies that both deployment entry points default registration to West Europe,
+It verifies that both deployment entry points default registration to Australia East,
 the shared hook passes that region independently of host-region selection, and
-all four Challenge 1 policy parameter examples include it. These checks make no
+all four Challenge 1 policy parameter examples include the Australia East lab-only
+exception while retaining the four European regions. These checks make no
 Azure changes; a fresh Console deployment and participant VM creation remain
 required to validate regional service availability and effective inherited policies.
 

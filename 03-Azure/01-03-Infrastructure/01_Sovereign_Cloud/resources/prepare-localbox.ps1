@@ -298,7 +298,9 @@ function Get-LocalBoxArmCollection {
     param([Parameter(Mandatory)][string]$Url)
     do {
         $page = Invoke-LocalBoxAz @('rest', '--method', 'get', '--url', $Url)
-        if ($null -eq $page -or -not $page.Contains('value') -or $page.value -isnot [array]) {
+        # Background-job deserialization turns nested JSON arrays into ArrayList.
+        if ($page -isnot [System.Collections.IDictionary] -or -not $page.Contains('value') -or
+            $page.value -isnot [System.Collections.IList]) {
             throw "Invalid ARM collection response for $Url; existing resources cannot be determined."
         }
         $page.value

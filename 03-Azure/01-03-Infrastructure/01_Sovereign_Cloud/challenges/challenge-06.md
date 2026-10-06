@@ -14,7 +14,7 @@ Before deploying, confirm that your Challenge 1 exercise policies are back in
 **DoNotEnforce** and ask the facilitator to confirm that the shared LocalBox custom
 location's Azure region is permitted in your assigned resource group. This region
 can differ from the resource group's location. If a policy blocks creation, follow
-the [location-policy troubleshooting steps](../walkthrough/challenge-06/solution-06.md#if-validation-or-deployment-is-blocked-by-a-location-policy);
+the [location-policy troubleshooting steps](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/walkthrough/challenge-06/solution-06.md#if-validation-or-deployment-is-blocked-by-a-location-policy);
 do not disable organizer-managed policies or change allowlists yourself.
 
 * Explore the LocalBox hybrid infrastructure in the Azure Portal
@@ -23,7 +23,7 @@ do not disable organizer-managed policies or change allowlists yourself.
 * Use Azure Update Manager to assess OS updates on the VM you provisioned
 * Verify your Console-provided Microsoft Entra administrator-group membership and the existing Azure Arc Enabled Kubernetes Cluster User Role with the facilitator; portal workload visibility alone does not prove group membership
 * Inspect the organizer-prepared `arcnetworking` extension (`microsoft.arcnetworking`) on `localbox-aks` in `rg-localbox-shared`: confirm **Succeeded**, healthy MetalLB workloads, and the existing **`aks-pool`** with **ARP** advertisement and organizer-reserved service VIPs. Do not install or configure shared networking
-* Follow [Task 5 of the walkthrough](../walkthrough/challenge-06/solution-06.md#task-5-deploy-a-container-to-the-aks-cluster-deployed-on-azure-local) in **Bash**: run `az connectedk8s proxy` with Microsoft Entra authentication and an isolated kubeconfig, derive a unique namespace from your assigned resource group, and deploy `aks-local-sample-app.yaml` only in that namespace
+* Follow [Task 5 of the walkthrough](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/walkthrough/challenge-06/solution-06.md#task-5-deploy-a-container-to-the-aks-cluster-deployed-on-azure-local) in **Bash**: run `az connectedk8s proxy` with Microsoft Entra authentication and an isolated kubeconfig, derive a unique namespace from your assigned resource group, and deploy `aks-local-sample-app.yaml` only in that namespace
 * Verify successful rollout and the Service's assigned IP, then keep the proxy and namespace-scoped `kubectl port-forward service/aks-container-1 8080:80` running in separate terminals. Open port **8080** through the **Private** Codespaces Ports view (or `localhost:8080` when running directly on a local workstation). Never expose the API proxy port or use service-account/admin tokens; no RDP or static routes are needed
 * Clean up only your team's application resources and, when no longer needed by teammates, your exercise namespace. Leave shared infrastructure unchanged
 

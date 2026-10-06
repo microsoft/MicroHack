@@ -1,9 +1,8 @@
 # Visual Attestation Demo v2 on Azure Container Instances
 
 A self-contained ACI port of the AKS confidential-node attestation web UI from
-`aks-samples/azure-voting-app/attestation/`. This is the **v2** of the original
-[`visual-attestation-demo`](../visual-attestation-demo/) - same goal, simpler
-footprint, and adds a one-shot `-Compare` mode that deploys both Confidential
+`aks-samples/azure-voting-app/attestation/`. This **v2** sample has a simpler
+footprint than the original demo and adds a one-shot `-Compare` mode that deploys both Confidential
 and Standard SKUs side-by-side.
 
 It demonstrates **runtime guest attestation** of an AMD SEV-SNP TEE via

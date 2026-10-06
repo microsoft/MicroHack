@@ -123,7 +123,7 @@ The creation screenshots use `labuser24-vm-01`, while the validation and managem
 1. **Username**: `localadmin`
 2. **Password**: Create a strong password and make a note of it
 
-![Azure Local](./images/localbox_04.jpg)
+<a href="./images/localbox_04.jpg"><img src="./images/localbox_04.jpg" alt="Azure Local VM proxy configuration, administrator account, and domain join options" width="560" /></a>
 
 Do not opt-in for domain join at this time, and select **Next**
 

@@ -325,7 +325,9 @@ This exercise stops at assessment. Leave periodic assessment unchanged; the **En
 
 ## Task 5: Deploy a container to the AKS cluster deployed on Azure Local
 
-**Deploy only your team's application; inspect shared infrastructure without changing it.** The organizer runs `resources/prepare-localbox.ps1` to prepare the AKS cluster and MetalLB after LocalBox deployment. The Console's LocalBox deployment hook alone does not prepare MetalLB. Attendees must not install extensions, create address pools, change routes, or change shared RBAC.
+The shared AKS cluster and MetalLB load balancer are already prepared for you. In this task, you will check the load balancer, deploy your team's sample application, and access it privately using Arc Proxy and port forwarding.
+
+**Inspect shared infrastructure without changing it; deploy only in your team's namespace.** If access or health checks fail, ask the facilitator rather than changing the shared configuration.
 
 ### Task 5.1: Verify Cluster Access and Authentication
 
@@ -354,9 +356,9 @@ MetalLB assigns service virtual IP addresses (VIPs) to Kubernetes Services of ty
 2. Under **Kubernetes resources > Workloads**, inspect the MetalLB controller and speaker workloads. Check that controller replicas and speaker DaemonSet pods are ready, with no persistent pending or crashing pods. Extension provisioning success alone is not proof of healthy workloads.
 3. Open **Settings > Networking** and inspect the existing **`aks-pool`**. Confirm successful provisioning, **ARP** advertisement, and the IP range reserved by the organizer for service VIPs. Record that range; it must exclude the AKS node allocation pool, control-plane IP, gateway, and any other allocated addresses.
 
-The default LocalBox service VIP reservation is **`10.10.0.10-10.10.0.100`**, separate from the node allocation pool **`10.10.0.101-10.10.0.199`**, control-plane IP **`10.10.0.5`**, and gateway **`10.10.0.1`**. The preparer uses the deployment configuration's exact reservation, so confirm the actual range if the organizer customized it. The older screenshots' `10.10.0.150` address overlaps the default node range and must not be reused as a service VIP.
+The default LocalBox service VIP reservation is **`10.10.0.10-10.10.0.100`**, separate from the node allocation pool **`10.10.0.101-10.10.0.199`**, control-plane IP **`10.10.0.5`**, and gateway **`10.10.0.1`**. Confirm the actual range with the facilitator if your workshop uses a different configuration. The older screenshots' `10.10.0.150` address overlaps the default node range and must not be reused as a service VIP.
 
-The organizer-created ARP pool is represented in Kubernetes by an **IPAddressPool** and **L2Advertisement** in **`kube-system`**. After starting the proxy in Task 5.3, inspect these read-only resources as shown in Task 5.4; do not create or edit them. See the [official AKS enabled by Azure Arc load-balancer documentation](https://learn.microsoft.com/azure/aks/aksarc/deploy-load-balancer-cli) for background only, not participant setup instructions. Provider registration and managed-identity preparation belong to the organizer; participants need no Microsoft Graph permissions and must not run the linked installation commands.
+The existing ARP pool is represented in Kubernetes by an **IPAddressPool** and **L2Advertisement** in **`kube-system`**. After starting the proxy in Task 5.3, inspect these read-only resources as shown in Task 5.4; do not create or edit them. See the [official AKS enabled by Azure Arc load-balancer documentation](https://learn.microsoft.com/azure/aks/aksarc/deploy-load-balancer-cli) for background only; do not run its installation commands in the shared lab.
 
 If the extension, healthy workloads, or pool are missing, stop and contact the facilitator. Do not select **Install extension**, **Add**, **Delete**, or **Uninstall extension**. No participant-side MetalLB configuration is needed.
 

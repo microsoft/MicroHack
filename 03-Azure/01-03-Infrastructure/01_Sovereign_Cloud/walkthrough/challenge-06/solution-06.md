@@ -35,23 +35,9 @@ Use your [Sovereign Cloud Codespace](https://github.com/microsoft/MicroHack/blob
 
 ## Lab Environment Architecture
 
-```text
-Azure management plane
-  Azure Portal / Azure Resource Manager
-    |                                      Defender for Cloud
-    | VM lifecycle management              Azure Update Manager
-    |                                        |
-    v                                        | Guest management
-LocalBox (simulated on-premises environment)  |
-  Azure Local cluster                        |
-    Arc Resource Bridge / Custom Location    |
-    Gallery images / Storage / Network       |
-    |                                        |
-    +--> Your VM: labuserXX-vm-01 <------------+
-           Windows Server 2025
-           Azure Connected Machine agent
-           Azure resource in your assigned resource group
-```
+<a href="./images/localbox-lab-architecture.png"><img src="./images/localbox-lab-architecture.png" alt="Azure Portal and Resource Manager manage the LocalBox Azure Local environment through Arc Resource Bridge. A participant Windows Server 2025 VM uses the Azure Connected Machine agent for guest management, Defender for Cloud, and Azure Update Manager." width="800" /></a>
+
+*VM management overview for Tasks 1–4. Click the diagram to view it full-size.*
 
 LocalBox runs as a nested lab environment hosted in Azure. In a production sovereign private cloud, Azure Local and the workload VMs run on-premises; Azure provides the connected management plane. Arc Resource Bridge manages VM lifecycle operations, while guest management enables services inside your VM's operating system.
 

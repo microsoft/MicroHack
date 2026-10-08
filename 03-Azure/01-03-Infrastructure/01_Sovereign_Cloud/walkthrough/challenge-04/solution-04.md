@@ -291,9 +291,14 @@ Unblock-File ./Deploy-VisualAttestationV2.ps1
 Use the same variable names as the other challenges. If these variables are
 already present in your PowerShell session, do not generate a new suffix.
 
+Use the **exact resource-group name assigned in the Console**, including the
+`rg-` prefix (for example, `rg-labuser-0024`). If `RESOURCE_GROUP` is already
+set, check that it matches; correct it before continuing. Only the attendee ID
+omits the `rg-` prefix.
+
 ```powershell
-if (-not $env:RESOURCE_GROUP) { $env:RESOURCE_GROUP = "labuser-xx" } # Your assigned group
-if (-not $env:ATTENDEE_ID) { $env:ATTENDEE_ID = $env:RESOURCE_GROUP }
+if (-not $env:RESOURCE_GROUP) { $env:RESOURCE_GROUP = "rg-labuser-0024" } # Replace with your exact assigned resource-group name
+if (-not $env:ATTENDEE_ID) { $env:ATTENDEE_ID = $env:RESOURCE_GROUP -replace '^rg-', '' }
 $env:LOCATION = "northeurope"
 
 if (-not $env:HASH_SUFFIX) {

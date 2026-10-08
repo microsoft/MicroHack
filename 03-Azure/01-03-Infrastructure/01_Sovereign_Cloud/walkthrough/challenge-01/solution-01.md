@@ -76,6 +76,14 @@ Set up the variables that will be used throughout this challenge:
 > [!IMPORTANT]
 > The Azure CLI commands in this walkthrough use **Bash** syntax, not PowerShell. Bash is the default terminal in the Sovereign Cloud Codespace; no installation is needed there.
 
+If you have not already signed in to Azure CLI with your workshop account, run:
+
+```bash
+az login --use-device-code
+```
+
+Open the displayed sign-in URL, enter the device code, and sign in with your **hacker account**, using the **Temporary Access Pass (TAP)** from the Console when prompted. No tenant ID is required for the workshop account. Skip this step if already signed in with the correct account, including in Azure Cloud Shell.
+
 ```bash
 # Set common variables
 # Customize RESOURCE_GROUP for each participant

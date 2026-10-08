@@ -84,9 +84,11 @@ Otherwise, navigate to `03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/walkthr
 
 Set the **Sovereign Lab AKS Cluster** name from Console's Credentials tab. For
 manual delivery, use the shared lab template's `aksClusterName` output.
+Use your **exact assigned resource-group name**, including the `rg-` prefix
+(for example, `rg-labuser-0024`), not just your attendee ID.
 
 ```powershell
-$env:RESOURCE_GROUP = "labuser-xx"
+$env:RESOURCE_GROUP = "rg-labuser-0024" # Replace with your exact assigned resource-group name
 $env:AKS_CLUSTER = "<Sovereign Lab AKS Cluster>"
 az aks show --resource-group $env:RESOURCE_GROUP --name $env:AKS_CLUSTER --query '{name:name,location:location,state:provisioningState}' --output table
 ```

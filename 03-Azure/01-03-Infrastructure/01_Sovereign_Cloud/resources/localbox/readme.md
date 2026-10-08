@@ -104,6 +104,14 @@ Reference: [MetalLB on AKS on Azure Local](https://learn.microsoft.com/azure/aks
 
 ## Preparation execution details
 
+If an older script stops at MetalLB discovery with `Invalid ARM collection response`,
+the response may be valid: PowerShell background jobs deserialize JSON arrays as
+`ArrayList`, which the earlier array-only check rejected. The corrected script
+accepts both list representations while still rejecting malformed responses.
+Use the corrected script and rerun with the same parameters after inspecting
+resource status; do not delete the AKS cluster, storage, or networks to fix this
+parsing error. Matching resources are reused.
+
 Azure Local may append generated suffixes to its `UserStorage1` and `UserStorage2` resource names. The script resolves the actual storage-container ID and verifies its custom location; ambiguous names fail rather than selecting the first match.
 
 On Windows, the script invokes Azure CLI through its bundled Python executable rather than `az.cmd`. This preserves arguments such as `ConvergedSwitch(compute_management)` that the batch wrapper otherwise interprets as command syntax. Keep the standard Azure CLI installation layout intact.

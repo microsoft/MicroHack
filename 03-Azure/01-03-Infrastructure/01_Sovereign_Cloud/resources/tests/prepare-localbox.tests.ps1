@@ -1459,6 +1459,47 @@ Describe 'CLI output streams' {
             @{ Executable = $script:cliTestExecutable; Prefix = @('-NoProfile', '-NonInteractive', '-Command', ($script:cliTestCommand + "`n#")) }
         }
     }
+    It 'reads an ARM collection through the real job transport with <Count> entries' -ForEach @(
+        @{ Json = '{"value":[],"nextLink":null}'; Count = 0 }
+        @{ Json = '{"value":[{"id":"first"}]}'; Count = 1 }
+        @{ Json = '{"value":[{"id":"first"},{"id":"second"}]}'; Count = 2 }
+    ) {
+        $script:cliTestCommand = "[Console]::Out.WriteLine('$Json'); exit 0"
+        $result = @(Get-LocalBoxArmCollection 'https://management.azure.com/test')
+        $result.Count | Should -Be $Count
+        if ($Count -ge 1) { $result[0].id | Should -Be 'first' }
+        if ($Count -eq 2) { $result[1].id | Should -Be 'second' }
+    }
+    It 'rejects malformed ARM collections through the real job transport: <Json>' -ForEach @(
+        @{ Json = '{}' }
+        @{ Json = '{"value":null}' }
+        @{ Json = '{"value":"not-a-list"}' }
+        @{ Json = '{"value":{"id":"not-a-list"}}' }
+        @{ Json = '"not-an-object"' }
+    ) {
+        $script:cliTestCommand = "[Console]::Out.WriteLine('$Json'); exit 0"
+        { Get-LocalBoxArmCollection 'https://management.azure.com/test' } | Should -Throw '*Invalid ARM collection response*'
+    }
+    It 'follows ARM pagination through the real job transport without losing entries' {
+        $script:cliTestCommand = @'
+if ($args -contains 'https://management.azure.com/next') {
+    [Console]::Out.WriteLine('{"value":[{"id":"second"}],"nextLink":null}')
+}
+else {
+    [Console]::Out.WriteLine('{"value":[{"id":"first"}],"nextLink":"https://management.azure.com/next"}')
+}
+exit 0
+'@
+        Mock Get-LocalBoxAzInvocation {
+            @{ Executable = $script:cliTestExecutable; Prefix = @('-NoProfile', '-NonInteractive', '-File', $script:collectionCliPath) }
+        }
+        $script:collectionCliPath = Join-Path $TestDrive 'collection-cli.ps1'
+        $script:cliTestCommand | Set-Content $script:collectionCliPath
+        $result = @(Get-LocalBoxArmCollection 'https://management.azure.com/first')
+        $result.Count | Should -Be 2
+        $result[0].id | Should -Be 'first'
+        $result[1].id | Should -Be 'second'
+    }
     It 'parses JSON stdout when a successful native command also writes progress to stderr' {
         $script:cliTestCommand = {
             [Console]::Error.WriteLine('Progress: completing operation')

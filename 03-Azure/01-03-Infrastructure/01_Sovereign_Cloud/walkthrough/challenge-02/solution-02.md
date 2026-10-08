@@ -49,6 +49,14 @@ Please ensure that you successfully verified the [General prerequisites](https:/
 > [!IMPORTANT]
 > Use a **Bash terminal in your [Sovereign Cloud Codespace](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/Readme.md#recommended-environment-github-codespaces)**. These commands use Bash syntax, not PowerShell. Azure Cloud Shell (Bash) or a local Bash terminal with Azure CLI is an alternative for this challenge.
 
+If you have not already signed in to Azure CLI with your workshop account, run:
+
+```bash
+az login --use-device-code
+```
+
+Open the displayed sign-in URL, enter the device code, and sign in with your **hacker account**, using the **Temporary Access Pass (TAP)** from the Console when prompted. No tenant ID is required for the workshop account. Skip this step if already signed in with the correct account, including in Azure Cloud Shell.
+
 Set up the common variables that will be used throughout this challenge:
 
 ```bash

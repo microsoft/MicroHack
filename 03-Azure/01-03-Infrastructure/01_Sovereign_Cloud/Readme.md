@@ -65,15 +65,15 @@ Use **GitHub Codespaces with the Azure / Infra / Sovereign Cloud devcontainer** 
 
    ![Codespace creation options showing the Sovereign Cloud devcontainer and a 2-core machine](./img/codespaces-create.png)
 
-4. In **Terminal > New Terminal**, sign in to Azure using the tenant and subscription shown in the Hackathon Console:
+4. In **Terminal > New Terminal**, sign in to Azure with your workshop account and select the subscription shown in the Hackathon Console. You do not need to enter a tenant ID; the workshop account belongs to a single tenant.
 
    ```bash
-   az login --use-device-code --tenant "<Tenant ID>"
+   az login --use-device-code
    az account set --subscription "<Subscription ID>"
    az account show --query "{Account:user.name,Subscription:name,Tenant:tenantId}" --output table
    ```
 
-   Open the device-login URL printed by Azure CLI and enter its **device code**. Sign in with your **hacker account**, using the **Temporary Access Pass (TAP)** from the Console when prompted. The TAP and device code are different; never put either in files or commands. Use a private browser window if necessary to avoid signing in with your normal work account. For bring-your-own-subscription labs, use your own Azure identity instead.
+   Open the device-login URL printed by Azure CLI and enter its **device code**. Sign in with your **hacker account**, using the **Temporary Access Pass (TAP)** from the Console when prompted. The TAP and device code are different; never put either in files or commands. Use a private browser window if necessary to avoid signing in with your normal work account. Confirm that the displayed account and subscription match your workshop details before continuing. For bring-your-own-subscription labs, use your own Azure identity instead.
 5. Use this same Codespace for all challenges. The Explorer opens at the Sovereign Cloud folder, with the repository already cloned. Use **Bash** for Challenges 1-3 and 7; for Challenges 4-5, open a terminal and run `pwsh` to enter **PowerShell 7**. Challenge 6 is primarily portal-based.
 
 ### Terminals, breaks and saved work

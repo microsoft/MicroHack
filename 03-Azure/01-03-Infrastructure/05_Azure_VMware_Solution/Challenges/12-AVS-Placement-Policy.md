@@ -1,6 +1,6 @@
 # NSX DHCP
 
-[Previous Challenge](./13-AVS-Storage-Policy.md) - **[Home](../Readme.md)** - [Next Challenge](./15-AVS-Managed-SNAT.md)
+[Previous Challenge](./11-NSX-Firewall.md) - **[Home](../Readme.md)** - [Next Challenge](./13-AVS-Managed-SNAT.md)
 
 ## Introduction
 
@@ -50,4 +50,4 @@ VM-Host Anti-Affinity policies instruct DRS to try running the specified VMs on 
 
 ### Solution - Spoilerwarning
 
-[Solution Steps](../Solutionguide/14-AVS-Placement-Policy.md)
+[Solution Steps](../Solutionguide/12-AVS-Placement-Policy.md)

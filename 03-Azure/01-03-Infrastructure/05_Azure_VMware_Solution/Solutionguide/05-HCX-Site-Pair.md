@@ -7,27 +7,39 @@ You can connect or pair the VMware HCX Cloud Manager in AVS with the VMware HCX 
 
 1.	Go to you onprem SDDC and login to your HCX Connector under https://10.1.1.9 
 
-![](./Images/05-HCX-Site-Pair/HCX_Sitepair1.png)
+    ![](./Images/05-HCX-Site-Pair/HCX_Sitepair7.png)
 
-2.	Under Infrastructure, select Site Pairing, and then select the Connect To Remote Site option (in the middle of the screen).
+2.	Under Infrastructure, select Site Pairing, and then select the New Site Pair option
 
-![](./Images/05-HCX-Site-Pair/HCX_Sitepair2.png)
+    ![](./Images/05-HCX-Site-Pair/HCX_Sitepair8.png)
 
- ![](./Images/05-HCX-Site-Pair/HCX_Sitepair3.png)
+    ![](./Images/05-HCX-Site-Pair/HCX_Sitepair9.png)
 
-3.	Enter the Azure VMware Solution HCX Cloud Manager URL or IP address, username and password to intiate the site pairing. 
+3.	Enter the Azure VMware Solution HCX Cloud Manager URL or IP address, username and password to initiate the site pairing. 
 
-The IP will be https://10.83.0.9 and the username and password can be found in the Azure Portal.
+    The URL will be the one of the current HHX of the Azure VMware Solution:
 
-![](./Images/05-HCX-Site-Pair/HCX_Sitepair4.png)
+    ![](./Images/05-HCX-Site-Pair/HCX_Sitepair10.png)
 
- ### Note
+    and the username and password can be found in the Azure Portal.
 
-To successfully establish a site pair:
-Your VMware HCX Connector must be able to route to your HCX Cloud Manager IP over port 443.
+    ![](./Images/05-HCX-Site-Pair/HCX_Sitepair11.png)
 
-You'll see a screen showing that your VMware HCX Cloud Manager in Azure VMware Solution and your on-premises VMware HCX Connector are connected (paired).
+    Once you have fill out the data create the site pair
 
-![](./Images/05-HCX-Site-Pair/HCX_Sitepair5.png)
+    ![](./Images/05-HCX-Site-Pair/HCX_Sitepair12.png)
 
-![](./Images/05-HCX-Site-Pair/HCX_Sitepair6.png)
+    Accept the Certificate Warning
+    
+    ![](./Images/05-HCX-Site-Pair/HCX_Sitepair13.png)
+
+     ### Note
+
+    To successfully establish a site pair:
+    Your VMware HCX Connector must be able to route to your HCX Cloud Manager IP over port 443.
+
+    You'll see a screen showing that your VMware HCX Cloud Manager in Azure VMware Solution and your on-premises VMware HCX Connector are connected (paired).
+
+    ![](./Images/05-HCX-Site-Pair/HCX_Sitepair14.png)
+
+    ![](./Images/05-HCX-Site-Pair/HCX_Sitepair15.png)

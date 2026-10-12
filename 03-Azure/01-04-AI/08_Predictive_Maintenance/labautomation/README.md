@@ -46,6 +46,9 @@ PowerShell and the `az` CLI (no bash, no Python):
 - Knowledge base articles: uploaded from [data/kb-wiki/](./data/kb-wiki/) to the `machine-wiki` blob container
   via `az storage blob upload-batch`.
 
+Blob uploads disable CLI progress reporting because its stderr output is otherwise interpreted
+as child-job errors by Hack Console. Actual errors remain visible and nonzero exit codes fail the script.
+
 Upload the entire contents of `labautomation/`, including its `data/` subfolder, to Hack Console.
 These are the only copies of the seed assets; no sibling folder or runtime download is required.
 The deployment script checks that all required JSON files and the wiki folder are present before

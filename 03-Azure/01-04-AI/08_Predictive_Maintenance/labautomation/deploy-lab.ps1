@@ -218,12 +218,14 @@ if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($storageKey)) {
     throw "Could not retrieve the storage account key for '$storageAccount'."
 }
 
+# CLI progress is written to stderr and appears as child-job errors in Hack Console.
 az storage blob upload-batch `
     --account-name $storageAccount `
     --account-key $storageKey `
     --destination $machineWikiContainer `
     --source $kbWikiFolder `
     --pattern "*.md" `
+    --no-progress `
     --overwrite | Out-Null
 
 if($LASTEXITCODE -ne 0) {

@@ -1,0 +1,65 @@
+{
+    "name": "Azure / AI / Predictive Maintenance",
+    "build": {
+        "dockerfile": "Dockerfile"
+    },
+    "forwardPorts": [
+        5231
+    ],
+    "portsAttributes": {
+        "5231": {
+            "label": "workflow-api-http",
+            "visibility": "public",
+            "protocol": "http"
+        }
+    },
+    "features": {
+        "ghcr.io/devcontainers/features/azure-cli:1": {
+            "installBicep": true
+        },
+        "ghcr.io/devcontainer-community/devcontainer-features/astral.sh-uv:1": {},
+        "ghcr.io/devcontainers/features/docker-in-docker:2": {
+            "version": "latest",
+            "enableNonRootDocker": "true"
+        },
+        "ghcr.io/devcontainers/features/node:1": {
+            "version": "lts"
+        },
+        "ghcr.io/devcontainers/features/dotnet:2": {
+            "version": "10.0",
+            "installUsingApt": true
+        }
+    },
+    "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}/03-Azure/01-04-AI/08_Predictive_Maintenance",
+    "postAttachCommand": "bash /workspaces/${localWorkspaceFolderBasename}/.devcontainer/welcome.sh",
+    "remoteUser": "vscode",
+    "postCreateCommand": "uv sync --frozen && bash /workspaces/${localWorkspaceFolderBasename}/.devcontainer/03-azure-01-04-ai-08-predictive-maintenance/setup-dotnet.sh",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "github.copilot-chat",
+                "github.github-vscode-theme",
+                "kejun.markdown-alert",
+                "ms-python.debugpy",
+                "ms-python.python",
+                "ms-python.vscode-pylance",
+                "ms-dotnettools.csdevkit",
+                "ms-dotnettools.csharp",
+                "ms-dotnettools.vscode-dotnet-runtime",
+                "ms-toolsai.jupyter",
+                "ms-toolsai.jupyter-renderers",
+                "ms-azuretools.vscode-bicep",
+                "ms-windows-ai-studio.windows-ai-studio",
+                "humao.rest-client"            
+
+            ],
+            "settings": {
+                "workbench.colorTheme": "GitHub Dark Default",
+                "git.openRepositoryInParentFolders": "always",
+                "workbench.editorAssociations": {
+                    "*.md": "vscode.markdown.preview.editor"
+                }
+            }
+        }
+    }
+}

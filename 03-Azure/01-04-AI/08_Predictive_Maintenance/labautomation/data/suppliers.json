@@ -1,0 +1,97 @@
+[
+  {
+    "id": "SUP-001",
+    "name": "Industrial Parts Co",
+    "category": "general",
+    "contactEmail": "orders@industrialparts.com",
+    "contactPhone": "+1-555-0101",
+    "address": "123 Industrial Way, Detroit, MI 48201",
+    "partsSupplied": [
+      "TUM-LC-2KN",
+      "TUM-ENC-5000",
+      "TBM-BRG-6220",
+      "TBM-LS-500N",
+      "GEN-TS-K400"
+    ],
+    "leadTimeDays": 5,
+    "reliability": "high",
+    "rating": 4.8,
+    "paymentTerms": "Net 30",
+    "minimumOrderValue": 100.00
+  },
+  {
+    "id": "SUP-002",
+    "name": "PrecisionMeasure Inc",
+    "category": "sensors",
+    "contactEmail": "sales@precisionmeasure.com",
+    "contactPhone": "+1-555-0202",
+    "address": "456 Sensor Drive, Cleveland, OH 44101",
+    "partsSupplied": [
+      "TUM-LC-2KN",
+      "TUM-ENC-5000",
+      "TBM-LS-500N",
+      "GEN-TS-K400"
+    ],
+    "leadTimeDays": 7,
+    "reliability": "high",
+    "rating": 4.9,
+    "paymentTerms": "Net 45",
+    "minimumOrderValue": 500.00
+  },
+  {
+    "id": "SUP-003",
+    "name": "TireTech Components",
+    "category": "tire_equipment",
+    "contactEmail": "supply@tiretech.com",
+    "contactPhone": "+1-555-0303",
+    "address": "789 Rubber Road, Akron, OH 44301",
+    "partsSupplied": [
+      "TCP-BLD-800",
+      "TCP-HTR-4KW",
+      "TCP-SEAL-200",
+      "BMX-TIP-500",
+      "BMX-SEAL-DP",
+      "BMX-BRG-22320"
+    ],
+    "leadTimeDays": 14,
+    "reliability": "medium",
+    "rating": 4.2,
+    "paymentTerms": "Net 30",
+    "minimumOrderValue": 250.00
+  },
+  {
+    "id": "SUP-004",
+    "name": "Precision Bearings Corp",
+    "category": "bearings",
+    "contactEmail": "orders@precisionbearings.com",
+    "contactPhone": "+1-555-0404",
+    "address": "321 Bearing Blvd, Toledo, OH 43601",
+    "partsSupplied": [
+      "TBM-BRG-6220",
+      "BMX-BRG-22320"
+    ],
+    "leadTimeDays": 10,
+    "reliability": "high",
+    "rating": 4.7,
+    "paymentTerms": "Net 30",
+    "minimumOrderValue": 200.00
+  },
+  {
+    "id": "SUP-005",
+    "name": "ExtraTech Manufacturing",
+    "category": "extrusion",
+    "contactEmail": "parts@extratech.com",
+    "contactPhone": "+1-555-0505",
+    "address": "555 Extrusion Ave, Pittsburgh, PA 15201",
+    "partsSupplied": [
+      "EXT-SCR-250",
+      "EXT-DIE-TR",
+      "EXT-HTR-BAND"
+    ],
+    "leadTimeDays": 21,
+    "reliability": "medium",
+    "rating": 4.0,
+    "paymentTerms": "Net 60",
+    "minimumOrderValue": 1000.00
+  }
+]

@@ -1,0 +1,171 @@
+[
+  {
+    "id": "threshold-curing-temp",
+    "machineType": "tire_curing_press",
+    "metric": "curing_temperature",
+    "unit": "celsius",
+    "normalRange": {
+      "min": 165,
+      "max": 175
+    },
+    "warningThreshold": 178,
+    "criticalThreshold": 182,
+    "description": "Tire curing temperature - critical for tire quality"
+  },
+  {
+    "id": "threshold-curing-pressure",
+    "machineType": "tire_curing_press",
+    "metric": "curing_pressure",
+    "unit": "bar",
+    "normalRange": {
+      "min": 150,
+      "max": 190
+    },
+    "warningThreshold": 195,
+    "criticalThreshold": 205,
+    "description": "Curing press bladder pressure"
+  },
+  {
+    "id": "threshold-curing-cycle-time",
+    "machineType": "tire_curing_press",
+    "metric": "cycle_time",
+    "unit": "minutes",
+    "normalRange": {
+      "min": 11,
+      "max": 13
+    },
+    "warningThreshold": 14,
+    "criticalThreshold": 16,
+    "description": "Curing cycle duration deviation"
+  },
+  {
+    "id": "threshold-building-drum-vibration",
+    "machineType": "tire_building_machine",
+    "metric": "drum_vibration",
+    "unit": "mm/s",
+    "normalRange": {
+      "min": 0,
+      "max": 2.5
+    },
+    "warningThreshold": 3.0,
+    "criticalThreshold": 4.0,
+    "description": "Building drum vibration indicating bearing wear"
+  },
+  {
+    "id": "threshold-building-tension",
+    "machineType": "tire_building_machine",
+    "metric": "ply_tension",
+    "unit": "newtons",
+    "normalRange": {
+      "min": 180,
+      "max": 220
+    },
+    "warningThreshold": 230,
+    "criticalThreshold": 250,
+    "description": "Ply material tension during building process"
+  },
+  {
+    "id": "threshold-extruder-temp",
+    "machineType": "tire_extruder",
+    "metric": "barrel_temperature",
+    "unit": "celsius",
+    "normalRange": {
+      "min": 95,
+      "max": 115
+    },
+    "warningThreshold": 118,
+    "criticalThreshold": 125,
+    "description": "Extruder barrel temperature"
+  },
+  {
+    "id": "threshold-extruder-pressure",
+    "machineType": "tire_extruder",
+    "metric": "extrusion_pressure",
+    "unit": "bar",
+    "normalRange": {
+      "min": 80,
+      "max": 120
+    },
+    "warningThreshold": 130,
+    "criticalThreshold": 145,
+    "description": "Extruder head pressure"
+  },
+  {
+    "id": "threshold-extruder-throughput",
+    "machineType": "tire_extruder",
+    "metric": "throughput",
+    "unit": "kg/h",
+    "normalRange": {
+      "min": 700,
+      "max": 850
+    },
+    "warningThreshold": 650,
+    "criticalThreshold": 600,
+    "description": "Material throughput rate"
+  },
+  {
+    "id": "threshold-uniformity-force-variation",
+    "machineType": "tire_uniformity_machine",
+    "metric": "radial_force_variation",
+    "unit": "newtons",
+    "normalRange": {
+      "min": 0,
+      "max": 80
+    },
+    "warningThreshold": 100,
+    "criticalThreshold": 120,
+    "description": "Tire radial force variation measurement"
+  },
+  {
+    "id": "threshold-uniformity-balance",
+    "machineType": "tire_uniformity_machine",
+    "metric": "static_balance",
+    "unit": "gram_cm",
+    "normalRange": {
+      "min": 0,
+      "max": 50
+    },
+    "warningThreshold": 60,
+    "criticalThreshold": 75,
+    "description": "Tire static balance measurement"
+  },
+  {
+    "id": "threshold-mixer-temp",
+    "machineType": "banbury_mixer",
+    "metric": "mixing_temperature",
+    "unit": "celsius",
+    "normalRange": {
+      "min": 130,
+      "max": 155
+    },
+    "warningThreshold": 160,
+    "criticalThreshold": 170,
+    "description": "Rubber compound mixing temperature"
+  },
+  {
+    "id": "threshold-mixer-power",
+    "machineType": "banbury_mixer",
+    "metric": "power_consumption",
+    "unit": "kw",
+    "normalRange": {
+      "min": 200,
+      "max": 270
+    },
+    "warningThreshold": 285,
+    "criticalThreshold": 300,
+    "description": "Mixer motor power draw indicating viscosity issues"
+  },
+  {
+    "id": "threshold-mixer-vibration",
+    "machineType": "banbury_mixer",
+    "metric": "vibration",
+    "unit": "mm/s",
+    "normalRange": {
+      "min": 0,
+      "max": 4.5
+    },
+    "warningThreshold": 5.5,
+    "criticalThreshold": 7.0,
+    "description": "Mixer rotor vibration levels"
+  }
+]

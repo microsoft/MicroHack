@@ -1,0 +1,141 @@
+[
+  {
+    "id": "telemetry-001-20241201-143022",
+    "machineId": "machine-001",
+    "timestamp": "2024-12-01T14:30:22Z",
+    "metrics": {
+      "curing_temperature": 170.5,
+      "curing_pressure": 178,
+      "cycle_time": 12.2,
+      "bladder_pressure": 175,
+      "heating_element_temp": 192,
+      "mold_close_force": 1850
+    },
+    "status": "normal"
+  },
+  {
+    "id": "telemetry-001-20241201-143522",
+    "machineId": "machine-001",
+    "timestamp": "2024-12-01T14:35:22Z",
+    "metrics": {
+      "curing_temperature": 179.2,
+      "curing_pressure": 196,
+      "cycle_time": 14.5,
+      "bladder_pressure": 188,
+      "heating_element_temp": 205,
+      "mold_close_force": 1920
+    },
+    "status": "warning",
+    "alerts": ["curing_temperature_warning", "cycle_time_warning"]
+  },
+  {
+    "id": "telemetry-002-20241201-144022",
+    "machineId": "machine-002",
+    "timestamp": "2024-12-01T14:40:22Z",
+    "metrics": {
+      "drum_vibration": 2.1,
+      "drum_speed": 45,
+      "ply_tension": 205,
+      "bead_wire_tension": 380,
+      "servo_motor_temp": 52
+    },
+    "status": "normal"
+  },
+  {
+    "id": "telemetry-002-20241201-144522",
+    "machineId": "machine-002",
+    "timestamp": "2024-12-01T14:45:22Z",
+    "metrics": {
+      "drum_vibration": 3.2,
+      "drum_speed": 43,
+      "ply_tension": 238,
+      "bead_wire_tension": 395,
+      "servo_motor_temp": 58
+    },
+    "status": "warning",
+    "alerts": ["drum_vibration_warning", "ply_tension_warning"]
+  },
+  {
+    "id": "telemetry-003-20241201-145022",
+    "machineId": "machine-003",
+    "timestamp": "2024-12-01T14:50:22Z",
+    "metrics": {
+      "barrel_temperature": 108,
+      "extrusion_pressure": 105,
+      "throughput": 780,
+      "screw_speed": 85,
+      "die_temperature": 112
+    },
+    "status": "normal"
+  },
+  {
+    "id": "telemetry-003-20241201-145522",
+    "machineId": "machine-003",
+    "timestamp": "2024-12-01T14:55:22Z",
+    "metrics": {
+      "barrel_temperature": 119,
+      "extrusion_pressure": 132,
+      "throughput": 640,
+      "screw_speed": 82,
+      "die_temperature": 124
+    },
+    "status": "warning",
+    "alerts": ["barrel_temperature_warning", "extrusion_pressure_warning", "throughput_low"]
+  },
+  {
+    "id": "telemetry-004-20241201-150022",
+    "machineId": "machine-004",
+    "timestamp": "2024-12-01T15:00:22Z",
+    "metrics": {
+      "radial_force_variation": 75,
+      "lateral_force_variation": 42,
+      "static_balance": 48,
+      "conicity": 12,
+      "load_cell_temp": 25
+    },
+    "status": "normal"
+  },
+  {
+    "id": "telemetry-004-20241201-150522",
+    "machineId": "machine-004",
+    "timestamp": "2024-12-01T15:05:22Z",
+    "metrics": {
+      "radial_force_variation": 105,
+      "lateral_force_variation": 58,
+      "static_balance": 62,
+      "conicity": 18,
+      "load_cell_temp": 26
+    },
+    "status": "warning",
+    "alerts": ["radial_force_variation_warning", "static_balance_warning"]
+  },
+  {
+    "id": "telemetry-005-20241201-151022",
+    "machineId": "machine-005",
+    "timestamp": "2024-12-01T15:10:22Z",
+    "metrics": {
+      "mixing_temperature": 148,
+      "power_consumption": 245,
+      "vibration": 4.2,
+      "rotor_speed": 45,
+      "ram_pressure": 12,
+      "batch_weight": 485
+    },
+    "status": "normal"
+  },
+  {
+    "id": "telemetry-005-20241201-151522",
+    "machineId": "machine-005",
+    "timestamp": "2024-12-01T15:15:22Z",
+    "metrics": {
+      "mixing_temperature": 162,
+      "power_consumption": 288,
+      "vibration": 5.8,
+      "rotor_speed": 43,
+      "ram_pressure": 13,
+      "batch_weight": 490
+    },
+    "status": "warning",
+    "alerts": ["mixing_temperature_warning", "power_consumption_warning", "vibration_warning"]
+  }
+]

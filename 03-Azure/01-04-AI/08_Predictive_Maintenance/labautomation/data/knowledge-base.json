@@ -1,0 +1,322 @@
+[
+  {
+    "id": "kb-curing-overheating",
+    "category": "troubleshooting",
+    "machineType": "tire_curing_press",
+    "issue": "Curing Temperature Excessive",
+    "faultType": "curing_temperature_excessive",
+    "symptoms": [ "Temperature exceeds 178°C", "Tire surface scorching", "Extended cycle times", "Bladder damage" ],
+    "possibleCauses": [
+      "Heating element malfunction",
+      "Temperature sensor drift",
+      "Steam pressure too high",
+      "Thermostat failure",
+      "Inadequate cooling water flow"
+    ],
+    "diagnosticSteps": [
+      "Verify temperature sensor calibration",
+      "Check heating element resistance",
+      "Inspect steam pressure regulator",
+      "Test thermostat response",
+      "Measure cooling water flow rate"
+    ],
+    "solutions": [
+      "Calibrate or replace temperature sensors",
+      "Replace faulty heating elements",
+      "Adjust steam pressure settings",
+      "Replace thermostat controller",
+      "Clean or replace cooling system components"
+    ],
+    "priority": "high",
+    "estimatedRepairTime": "2-4 hours",
+    "impact": "Tire quality defects, increased scrap rate"
+  },
+  {
+    "id": "kb-curing-cycle-deviation",
+    "category": "troubleshooting",
+    "machineType": "tire_curing_press",
+    "issue": "Curing Cycle Time Deviation",
+    "faultType": "curing_cycle_time_deviation",
+    "symptoms": [ "Cycle time exceeds 14 minutes", "Inconsistent cure", "Under-cured or over-cured tires" ],
+    "possibleCauses": [
+      "Mold heating inefficiency",
+      "Steam supply pressure drop",
+      "Bladder leakage",
+      "Control system programming error",
+      "Worn mold seals"
+    ],
+    "diagnosticSteps": [
+      "Monitor steam supply pressure throughout cycle",
+      "Inspect bladder for leaks or damage",
+      "Review PLC program timing sequences",
+      "Check mold seal condition",
+      "Verify heating element power draw"
+    ],
+    "solutions": [
+      "Service steam supply system",
+      "Replace damaged bladder",
+      "Reprogram or update PLC parameters",
+      "Replace mold seals",
+      "Clean or replace heating elements"
+    ],
+    "priority": "high",
+    "estimatedRepairTime": "3-6 hours",
+    "impact": "Reduced throughput, tire quality issues"
+  },
+  {
+    "id": "kb-building-vibration",
+    "category": "troubleshooting",
+    "machineType": "tire_building_machine",
+    "issue": "Building Drum Vibration",
+    "faultType": "building_drum_vibration",
+    "symptoms": [ "Vibration above 3.0 mm/s", "Uneven tire build", "Material placement errors", "Unusual noise" ],
+    "possibleCauses": [
+      "Bearing wear on drum shaft",
+      "Drum imbalance",
+      "Loose mounting bolts",
+      "Misaligned drive components",
+      "Worn coupling"
+    ],
+    "diagnosticSteps": [
+      "Perform vibration analysis on drum bearings",
+      "Check drum balance with dial indicator",
+      "Inspect all mounting hardware",
+      "Verify drive alignment",
+      "Examine coupling for wear"
+    ],
+    "solutions": [
+      "Replace drum shaft bearings",
+      "Balance drum assembly",
+      "Tighten all mounting bolts to specification",
+      "Realign servo motor and drum shaft",
+      "Replace worn coupling"
+    ],
+    "priority": "high",
+    "estimatedRepairTime": "4-8 hours",
+    "impact": "Tire build quality, uniformity issues"
+  },
+  {
+    "id": "kb-building-tension",
+    "category": "troubleshooting",
+    "machineType": "tire_building_machine",
+    "issue": "Ply Tension Excessive",
+    "faultType": "ply_tension_excessive",
+    "symptoms": [ "Tension exceeds 230N", "Material stretching", "Inconsistent tire dimensions", "Servo alarms" ],
+    "possibleCauses": [
+      "Tension roller misalignment",
+      "Servo motor tuning issues",
+      "Material property variation",
+      "Dancer arm malfunction",
+      "Load cell calibration drift"
+    ],
+    "diagnosticSteps": [
+      "Check tension roller alignment",
+      "Review servo motor parameters",
+      "Verify incoming material specifications",
+      "Test dancer arm movement",
+      "Calibrate tension load cells"
+    ],
+    "solutions": [
+      "Align tension rollers properly",
+      "Retune servo motor PID parameters",
+      "Adjust for material batch variations",
+      "Repair or replace dancer arm mechanism",
+      "Recalibrate tension measurement system"
+    ],
+    "priority": "medium",
+    "estimatedRepairTime": "2-4 hours",
+    "impact": "Tire dimensional accuracy, structural integrity"
+  },
+  {
+    "id": "kb-extruder-overheating",
+    "category": "troubleshooting",
+    "machineType": "tire_extruder",
+    "issue": "Extruder Barrel Overheating",
+    "faultType": "extruder_barrel_overheating",
+    "symptoms": [ "Temperature exceeds 118°C", "Material degradation", "Smoke from die", "Discolored compound" ],
+    "possibleCauses": [
+      "Cooling system failure",
+      "Screw wear causing excessive friction",
+      "Material residence time too long",
+      "Temperature control malfunction",
+      "Blocked cooling passages"
+    ],
+    "diagnosticSteps": [
+      "Verify cooling water flow and temperature",
+      "Inspect screw and barrel for wear",
+      "Check material feed rate consistency",
+      "Test temperature controller operation",
+      "Inspect cooling jacket for blockages"
+    ],
+    "solutions": [
+      "Repair cooling system, increase water flow",
+      "Replace worn screw or barrel",
+      "Increase feed rate or adjust process",
+      "Replace temperature controller",
+      "Clean cooling passages"
+    ],
+    "priority": "high",
+    "estimatedRepairTime": "4-12 hours",
+    "impact": "Material quality, compound properties compromised"
+  },
+  {
+    "id": "kb-extruder-low-throughput",
+    "category": "troubleshooting",
+    "machineType": "tire_extruder",
+    "issue": "Low Material Throughput",
+    "faultType": "low_material_throughput",
+    "symptoms": [ "Output below 650 kg/h", "Production bottleneck", "Inconsistent extrusion rate" ],
+    "possibleCauses": [
+      "Screw wear reducing pumping efficiency",
+      "Die restriction or blockage",
+      "Feed throat bridging",
+      "Motor drive issues",
+      "Material feed problems"
+    ],
+    "diagnosticSteps": [
+      "Measure screw wear with bore scope",
+      "Inspect die for carbon buildup",
+      "Check feed throat for material bridging",
+      "Monitor motor current and speed",
+      "Verify material feed system operation"
+    ],
+    "solutions": [
+      "Replace worn screw elements",
+      "Clean or replace die",
+      "Install or adjust feed throat heating/cooling",
+      "Service variable frequency drive",
+      "Repair material feeding equipment"
+    ],
+    "priority": "medium",
+    "estimatedRepairTime": "3-8 hours",
+    "impact": "Production capacity, downstream starvation"
+  },
+  {
+    "id": "kb-uniformity-high-rfv",
+    "category": "troubleshooting",
+    "machineType": "tire_uniformity_machine",
+    "issue": "High Radial Force Variation",
+    "faultType": "high_radial_force_variation",
+    "symptoms": [ "RFV exceeds 100N", "Tire vibration concerns", "Customer complaints", "Failed quality tests" ],
+    "possibleCauses": [
+      "Building process inconsistency",
+      "Curing press issues",
+      "Material non-uniformity",
+      "Mold damage",
+      "Green tire storage conditions"
+    ],
+    "diagnosticSteps": [
+      "Analyze RFV waveform for patterns",
+      "Trace tire back to building machine",
+      "Review curing press data for that tire",
+      "Inspect mold condition",
+      "Check material lot numbers"
+    ],
+    "solutions": [
+      "Adjust building machine parameters",
+      "Service or repair curing press",
+      "Quarantine affected material lots",
+      "Repair or replace damaged mold",
+      "Improve green tire storage practices"
+    ],
+    "priority": "high",
+    "estimatedRepairTime": "1-2 hours analysis + upstream fixes",
+    "impact": "Customer satisfaction, ride quality"
+  },
+  {
+    "id": "kb-uniformity-calibration",
+    "category": "maintenance",
+    "machineType": "tire_uniformity_machine",
+    "issue": "Load Cell Drift",
+    "faultType": "load_cell_drift",
+    "symptoms": [ "Inconsistent measurements", "Calibration check failures", "Trending data shift" ],
+    "possibleCauses": [
+      "Load cell aging",
+      "Temperature variations",
+      "Mechanical binding",
+      "Electrical noise interference",
+      "Previous mechanical shock"
+    ],
+    "diagnosticSteps": [
+      "Run master tire calibration check",
+      "Verify environmental temperature stability",
+      "Check for mechanical binding in load frame",
+      "Test signal cables for noise",
+      "Review maintenance history for impacts"
+    ],
+    "solutions": [
+      "Perform full system recalibration",
+      "Replace load cells if out of specification",
+      "Improve temperature control",
+      "Free up mechanical bindings",
+      "Replace damaged cables, add shielding"
+    ],
+    "priority": "medium",
+    "estimatedRepairTime": "2-4 hours",
+    "impact": "Measurement accuracy, false accept/reject decisions"
+  },
+  {
+    "id": "kb-mixer-overheating",
+    "category": "troubleshooting",
+    "machineType": "banbury_mixer",
+    "issue": "Mixing Temperature Excessive",
+    "faultType": "mixing_temperature_excessive",
+    "symptoms": [ "Temperature above 160°C", "Compound scorching", "Rotor drive overload", "Poor compound quality" ],
+    "possibleCauses": [
+      "Excessive mixing speed",
+      "Prolonged mixing time",
+      "Inadequate cooling water",
+      "Rotor tip wear",
+      "Overloaded batch size"
+    ],
+    "diagnosticSteps": [
+      "Review mixing recipe parameters",
+      "Check cooling water flow and temperature",
+      "Inspect rotor tip condition",
+      "Verify batch weight accuracy",
+      "Monitor power consumption profile"
+    ],
+    "solutions": [
+      "Reduce rotor speed or mixing time",
+      "Increase cooling water flow rate",
+      "Replace worn rotor tips",
+      "Reduce batch size",
+      "Optimize mixing recipe"
+    ],
+    "priority": "high",
+    "estimatedRepairTime": "2-6 hours",
+    "impact": "Compound properties, cure characteristics"
+  },
+  {
+    "id": "kb-mixer-vibration",
+    "category": "troubleshooting",
+    "machineType": "banbury_mixer",
+    "issue": "Excessive Mixer Vibration",
+    "faultType": "excessive_mixer_vibration",
+    "symptoms": [ "Vibration above 5.5 mm/s", "Unusual noise", "Foundation cracking", "Safety concerns" ],
+    "possibleCauses": [
+      "Rotor imbalance due to uneven compound buildup",
+      "Bearing wear",
+      "Misaligned drive components",
+      "Loose anchor bolts",
+      "Gear wear"
+    ],
+    "diagnosticSteps": [
+      "Perform vibration frequency analysis",
+      "Inspect rotors for compound buildup",
+      "Check bearing condition",
+      "Verify drive alignment",
+      "Inspect foundation anchor bolts"
+    ],
+    "solutions": [
+      "Clean rotors thoroughly",
+      "Replace worn bearings",
+      "Realign motor and gearbox",
+      "Tighten foundation bolts",
+      "Replace worn gears"
+    ],
+    "priority": "high",
+    "estimatedRepairTime": "4-12 hours",
+    "impact": "Safety, equipment damage risk, production downtime"
+  }
+]

@@ -1,0 +1,155 @@
+[
+  {
+    "id": "mw-2026-01-03-night",
+    "startTime": "2026-01-03T22:00:00Z",
+    "endTime": "2026-01-04T06:00:00Z",
+    "productionImpact": "Low",
+    "isAvailable": true,
+    "shift": "Night",
+    "description": "Weekend night shift - minimal production"
+  },
+  {
+    "id": "mw-2026-01-04-night",
+    "startTime": "2026-01-04T22:00:00Z",
+    "endTime": "2026-01-05T06:00:00Z",
+    "productionImpact": "Low",
+    "isAvailable": true,
+    "shift": "Night",
+    "description": "Weekend night shift - minimal production"
+  },
+  {
+    "id": "mw-2026-01-06-night",
+    "startTime": "2026-01-06T22:00:00Z",
+    "endTime": "2026-01-07T06:00:00Z",
+    "productionImpact": "Medium",
+    "isAvailable": true,
+    "shift": "Night",
+    "description": "Weekday night shift - reduced production"
+  },
+  {
+    "id": "mw-2026-01-07-night",
+    "startTime": "2026-01-07T22:00:00Z",
+    "endTime": "2026-01-08T06:00:00Z",
+    "productionImpact": "Medium",
+    "isAvailable": true,
+    "shift": "Night",
+    "description": "Weekday night shift - reduced production"
+  },
+  {
+    "id": "mw-2026-01-08-night",
+    "startTime": "2026-01-08T22:00:00Z",
+    "endTime": "2026-01-09T06:00:00Z",
+    "productionImpact": "Medium",
+    "isAvailable": true,
+    "shift": "Night",
+    "description": "Weekday night shift - reduced production"
+  },
+  {
+    "id": "mw-2026-01-09-night",
+    "startTime": "2026-01-09T22:00:00Z",
+    "endTime": "2026-01-10T06:00:00Z",
+    "productionImpact": "Medium",
+    "isAvailable": true,
+    "shift": "Night",
+    "description": "Weekday night shift - reduced production"
+  },
+  {
+    "id": "mw-2026-01-10-night",
+    "startTime": "2026-01-10T22:00:00Z",
+    "endTime": "2026-01-11T06:00:00Z",
+    "productionImpact": "Low",
+    "isAvailable": true,
+    "shift": "Night",
+    "description": "Weekend night shift - minimal production"
+  },
+  {
+    "id": "mw-2026-01-11-night",
+    "startTime": "2026-01-11T22:00:00Z",
+    "endTime": "2026-01-12T06:00:00Z",
+    "productionImpact": "Low",
+    "isAvailable": true,
+    "shift": "Night",
+    "description": "Weekend night shift - minimal production"
+  },
+  {
+    "id": "mw-2026-01-13-night",
+    "startTime": "2026-01-13T22:00:00Z",
+    "endTime": "2026-01-14T06:00:00Z",
+    "productionImpact": "Medium",
+    "isAvailable": true,
+    "shift": "Night",
+    "description": "Weekday night shift - reduced production"
+  },
+  {
+    "id": "mw-2026-01-14-night",
+    "startTime": "2026-01-14T22:00:00Z",
+    "endTime": "2026-01-15T06:00:00Z",
+    "productionImpact": "Medium",
+    "isAvailable": true,
+    "shift": "Night",
+    "description": "Weekday night shift - reduced production"
+  },
+  {
+    "id": "mw-2026-01-15-night",
+    "startTime": "2026-01-15T22:00:00Z",
+    "endTime": "2026-01-16T06:00:00Z",
+    "productionImpact": "Medium",
+    "isAvailable": true,
+    "shift": "Night",
+    "description": "Weekday night shift - reduced production"
+  },
+  {
+    "id": "mw-2026-01-16-night",
+    "startTime": "2026-01-16T22:00:00Z",
+    "endTime": "2026-01-17T06:00:00Z",
+    "productionImpact": "Medium",
+    "isAvailable": true,
+    "shift": "Night",
+    "description": "Weekday night shift - reduced production"
+  },
+  {
+    "id": "mw-2026-01-17-night",
+    "startTime": "2026-01-17T22:00:00Z",
+    "endTime": "2026-01-18T06:00:00Z",
+    "productionImpact": "Low",
+    "isAvailable": true,
+    "shift": "Night",
+    "description": "Weekend night shift - minimal production"
+  },
+  {
+    "id": "mw-2026-01-18-night",
+    "startTime": "2026-01-18T22:00:00Z",
+    "endTime": "2026-01-19T06:00:00Z",
+    "productionImpact": "Low",
+    "isAvailable": true,
+    "shift": "Night",
+    "description": "Weekend night shift - minimal production"
+  },
+  {
+    "id": "mw-2026-01-11-shutdown",
+    "startTime": "2026-01-11T06:00:00Z",
+    "endTime": "2026-01-11T18:00:00Z",
+    "productionImpact": "None",
+    "isAvailable": true,
+    "shift": "Day",
+    "description": "Planned production shutdown - ideal for major maintenance"
+  },
+  {
+    "id": "mw-2026-01-05-early",
+    "startTime": "2026-01-05T05:00:00Z",
+    "endTime": "2026-01-05T08:00:00Z",
+    "productionImpact": "Low",
+    "isAvailable": true,
+    "shift": "Early Morning",
+    "description": "Early morning window before first shift"
+  },
+  {
+    "id": "mw-2026-01-12-early",
+    "startTime": "2026-01-12T05:00:00Z",
+    "endTime": "2026-01-12T08:00:00Z",
+    "productionImpact": "Low",
+    "isAvailable": true,
+    "shift": "Early Morning",
+    "description": "Early morning window before first shift"
+  }
+]

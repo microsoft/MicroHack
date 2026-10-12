@@ -8,10 +8,12 @@ Use the GitHub Copilot App Modernization agent (modernize CLI) to assess and upg
 
 ## Actions
 
+* Complete the [environment setup guide](../docs/environment-setup.md), including GitHub and Azure authentication and the tool verification steps.
 * Fork the two sample repositories into your own GitHub account:
   * PhotoAlbum-Java (Spring Boot): `https://github.com/Azure-Samples/PhotoAlbum-Java`
   * PhotoAlbum (.NET): `https://github.com/Azure-Samples/PhotoAlbum`
-* Prepare a working directory and install the GitHub Copilot App Modernization agent (modernize CLI), which you will use end-to-end for assessment, upgrade, planning, and execution.
+* Clone both forks into the `repos/` working directory created by the environment setup. Confirm that each `origin` points to your fork.
+* Use the preinstalled GitHub Copilot App Modernization agent (modernize CLI) in the recommended Codespace, or install it as described in the environment setup for a local workstation. You will use it end-to-end for assessment, upgrade, planning, and execution.
 * Create a repositories config file so the CLI can operate on both apps in a single batch run.
 * Run a **batch assessment** across both repositories, selecting the *Upgrade* and *Cloud readiness* analyses with full analysis coverage. Let the assessment run locally and wait for it to complete.
 * Explore the assessment output: the **aggregated report** (overall recommendations, target platforms, upgrade paths, and migration waves) and the **per-repository reports** (detailed findings per app).
@@ -26,6 +28,7 @@ Use the GitHub Copilot App Modernization agent (modernize CLI) to assess and upg
 ## Success criteria
 
 * Both PhotoAlbum-Java and PhotoAlbum are forked and available in your working directory.
+* GitHub CLI is authenticated with the GitHub account that has Copilot access, and both application remotes point to forks where you can push.
 * The modernize CLI is installed and configured to target both repositories from a config file.
 * A batch assessment completes and produces both an aggregated report and per-repository reports.
 * The .NET app is upgraded to .NET 10 and the Java app is upgraded to Java 25 / Spring Boot 4.0, each reporting a successful upgrade.

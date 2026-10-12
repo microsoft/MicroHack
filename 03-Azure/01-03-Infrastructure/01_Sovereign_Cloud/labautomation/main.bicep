@@ -3,7 +3,7 @@
 // deploymentType = resourcegroup: the platform pre-creates one resource group
 // per participant in the shared subscription and grants the participant Owner on
 // that resource group plus Reader on the subscription. This template adds the
-// same subscription-scoped permissions that resources/subscription-preparations/3-rbac.ps1
+// same subscription-scoped permissions that resources/manual-setup/subscription-preparations/3-rbac.ps1
 // previously assigned to the LabUsers group:
 //   - Security Reader              (view Defender for Cloud secure score / recommendations)
 //   - Resource Policy Contributor  (author and assign Azure Policy at subscription scope)

@@ -1,0 +1,20 @@
+# Cohort roster for `main.py`: one GitHub login per line, no `@`.
+#
+# The placeholders below are intentionally non-existent handles so that an accidental run
+# invites nobody. Do NOT commit a real roster to this file — participant handles are
+# personal data and this repository is public.
+#
+# To run against a real cohort, keep this file as-is and use a local override instead:
+#
+#   1. cp users.yaml users.local.yaml      # users.local.yaml is git-ignored
+#   2. Replace the placeholders with the real logins.
+#   3. USERS_FILE=users.local.yaml uv run python main.py
+#      (PowerShell: $env:USERS_FILE = 'users.local.yaml'; uv run python main.py)
+#
+# The roster length must match `participant_count` in the Terraform variables so that every
+# GitHub repo has a matching Azure resource group. See ../../docs/Facilitator.md.
+- participant-01
+- participant-02
+- participant-03
+- participant-04
+- participant-05

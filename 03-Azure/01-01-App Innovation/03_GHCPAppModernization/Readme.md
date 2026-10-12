@@ -3,6 +3,7 @@
 - [**MicroHack introduction**](#microhack-introduction)
 - [**MicroHack context**](#microhack-context)
 - [**Objectives**](#objectives)
+- [**Environment setup**](#environment-setup)
 - [**MicroHack challenges**](#microhack-challenges)
 - [**Contributors**](#contributors)
 
@@ -30,7 +31,7 @@ After completing this MicroHack you will:
 - Know how to create a cloud modernization plan, resolve cloud readiness issues, and migrate dependencies (for example, Oracle to PostgreSQL).
 - Be able to provision Azure infrastructure and deploy modernized apps to Azure Container Apps.
 
-# MicroHack challenges
+# Environment setup
 
 ## General prerequisites
 
@@ -40,9 +41,21 @@ In order to use the MicroHack time most effectively, the following should be in 
 
 - An **Azure Subscription** with permission to create resource groups and resources (Contributor or Owner).
 - A **GitHub account** to fork the sample repositories.
-- **Visual Studio Code** and/or a terminal with the **GitHub Copilot App Modernization agent (modernize CLI)** installed.
-- **Docker Desktop**, **Git**, and the relevant SDKs (.NET and Java) installed locally.
 - An active **GitHub Copilot** subscription.
+- For the recommended Codespaces setup: permission to create a Codespace from your MicroHack fork.
+- For a local setup: **Visual Studio Code**, the **GitHub Copilot App Modernization agent (modernize CLI)**, **GitHub CLI**, **Azure CLI**, **Docker Desktop**, **Git**, and the relevant SDKs (.NET and Java).
+
+GitHub Codespaces is the recommended environment for this MicroHack. The dedicated **Azure / App Innovation / GHCP App Modernization** development container installs the required tools consistently for all participants.
+
+Complete the [environment setup guide](docs/environment-setup.md) before starting the challenges. It covers:
+
+- creating a Codespace with the correct development container,
+- verifying the modernization and platform tools,
+- signing in to GitHub for GitHub Copilot and signing in to Azure,
+- forking and cloning both sample applications, and
+- troubleshooting installation, authentication, SSO, and repository access.
+
+# MicroHack challenges
 
 ## Challenges
 
@@ -56,4 +69,3 @@ In order to use the MicroHack time most effectively, the following should be in 
 * [Solution 1 - Fundamentals: Custom Agents, Skills & MCP for App Modernization](./walkthrough/challenge-01/solution-01.md)
 * [Solution 2 - Batch Upgrade a Java App and a .NET App](./walkthrough/challenge-02/solution-02.md)
 * [Solution 3 - Modernize the Upgraded Apps and Deploy Them to Azure](./walkthrough/challenge-03/solution-03.md)
-

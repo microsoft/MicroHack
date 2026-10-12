@@ -1,101 +1,56 @@
 # Walkthrough Challenge 6 - Operating a Sovereign Hybrid Cloud with Azure Arc & Azure Local
 
-[Previous Challenge Solution](../challenge-05/solution-05.md) - **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-07/solution-07.md)
-
 **Estimated Duration:** 60-90 minutes
 
 > 💡 **Objective:** Operate a sovereign hybrid cloud environment combining Azure Local and Azure Arc. You'll learn how to apply consistent governance, security, and management across on-premises sovereign infrastructure and Azure.
 
-This challenge uses the Azure Arc Jumpstart environments:
-
-- **ArcBox for IT Pros** - Provides Arc-enabled servers in a sandbox environment
-- **LocalBox** - Simulates an Azure Local on-premises environment
+This challenge uses **Azure Arc Jumpstart LocalBox** to simulate an Azure Local on-premises environment. You will provision your own Windows Server VM and use that same VM for the Defender for Cloud and Azure Update Manager exercises.
 
 ---
 
 ## Prerequisites
 
-Please ensure that you successfully verified the [General prerequisites](../../Readme.md#general-prerequisites) before continuing with this challenge.
+Please ensure that you successfully verified the [General prerequisites](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/Readme.md#general-prerequisites) before continuing with this challenge.
+
+Use your [Sovereign Cloud Codespace](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/Readme.md#recommended-environment-github-codespaces) for the Bash commands in Task 5 and the Azure portal for Tasks 1–4. No local Windows installation or remote desktop connection is required.
 
 **Additional requirements for this challenge:**
 
-- Access to a pre-deployed ArcBox/LocalBox environment (shared lab or individual deployment)
-- **Reader** and **Azure Stack HCI VM Contributor** role permissions on the resource group containing the hybrid resources
+- Access to a pre-deployed LocalBox environment with Arc Resource Bridge, a VM image, storage, and a logical network ready for VM creation
+- **Reader** and **Azure Stack HCI VM Contributor** role permissions on the resource group containing the shared LocalBox resources
+- Your assigned resource group (for example, `labuser-XX`) with permission to create and manage your VM and its extensions and assess updates. Hosted labs grant **Owner** on your own resource group
+- **Security Reader** access at subscription scope to review Defender for Cloud coverage and recommendations
+- Defender for Servers enabled by the organizer on the lab subscription, using an approved plan and the required Defender for Endpoint integration
+- A guest network with a valid IP address, working DNS, and outbound access to the required Azure Arc, Defender, and configured Windows update-source endpoints
+- For Task 5, the shared `localbox-aks` cluster in `rg-localbox-shared`, with Microsoft Entra authentication, Kubernetes RBAC, and organizer-prepared MetalLB networking
+- Membership in the cluster's configured Microsoft Entra administrator group, supplied through the workshop Console, and the **Azure Arc Enabled Kubernetes Cluster User Role** already assigned by the organizer for Cluster Connect. These are separate prerequisites; ask the facilitator to verify either if access fails
+
+> [!IMPORTANT]
+> Complete Challenge 1's [Preparing for Next Challenges](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/walkthrough/challenge-01/solution-01.md#preparing-for-next-challenges): your exercise policy assignments, including **Allowed locations** and any bonus initiative, must be in **DoNotEnforce**. This does not override inherited or organizer-managed policies. The organizer must also confirm that the shared LocalBox **custom location's Azure region** is permitted for resources created in your participant resource group.
 
 > [!NOTE]
-> ArcBox and LocalBox are typically deployed by the workshop facilitator due to resource requirements and deployment time. If deploying yourself, see the [ArcBox and LocalBox deployment guide](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/resources/demo-vm-creator/README.md).
+> LocalBox is typically deployed by the workshop facilitator due to resource requirements and deployment time. See the [LocalBox deployment and readiness guide](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/resources/demo-vm-creator/README.md). For a personal subscription, an authorized owner must also enable Defender for Servers before this challenge and review the plan's charges. Students in hosted labs should not change subscription-level Defender plans.
 
 ---
 
 ## Lab Environment Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                         Azure Cloud                                  │
-│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────────┐  │
-│  │   Azure Policy  │  │   Defender for  │  │   Azure Monitor     │  │
-│  │   & Machine     │  │   Cloud         │  │   & Log Analytics   │  │
-│  │   Configuration │  │                 │  │                     │  │
-│  └────────┬────────┘  └────────┬────────┘  └──────────┬──────────┘  │
-│           │                    │                      │             │
-│  ┌────────┴────────────────────┴──────────────────────┴──────────┐  │
-│  │                    Azure Resource Manager                      │  │
-│  └────────┬────────────────────────────────────────────┬─────────┘  │
-│           │                                            │            │
-│  ┌────────┴────────┐                          ┌────────┴─────────┐  │
-│  │  Arc-enabled    │                          │  Azure Local     │  │
-│  │  Servers        │                          │  Instance        │  │
-│  │  (ArcBox)       │                          │  (LocalBox)      │  │
-│  └────────┬────────┘                          └────────┬─────────┘  │
-└───────────┼────────────────────────────────────────────┼────────────┘
-            │              Azure Arc                      │
-┌───────────┴────────────────────────────────────────────┴────────────┐
-│                    On-Premises / Sovereign Private Cloud             │
-│  ┌─────────────────────────┐    ┌───────────────────────────────┐   │
-│  │  Nested VMs             │    │  Azure Local Cluster          │   │
-│  │  - Windows Server       │    │  - Arc Resource Bridge        │   │
-│  │  - Ubuntu Linux         │    │  - Custom Location            │   │
-│  │  - SQL Server           │    │  - VM Gallery Images          │   │
-│  └─────────────────────────┘    └───────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────────────┘
-```
+<a href="./images/localbox-lab-architecture.png"><img src="./images/localbox-lab-architecture.png" alt="Azure Portal and Resource Manager manage the LocalBox Azure Local environment through Arc Resource Bridge. A participant Windows Server 2025 VM uses the Azure Connected Machine agent for guest management, Defender for Cloud, and Azure Update Manager." width="800" /></a>
+
+*VM management overview for Tasks 1–4. Click the diagram to view it full-size.*
+
+LocalBox runs as a nested lab environment hosted in Azure. In a production sovereign private cloud, Azure Local and the workload VMs run on-premises; Azure provides the connected management plane. Arc Resource Bridge manages VM lifecycle operations, while guest management enables services inside your VM's operating system.
 
 ---
 
-## Task 1: Explore Hybrid Resources in Azure Portal
+## Task 1: Explore LocalBox Resources in Azure Portal
 
-💡 **Familiarize yourself with the ArcBox and LocalBox resources in Azure Portal to understand the hybrid architecture.**
-
-### 1.1 Navigate to the ArcBox Resource Group
+**Familiarize yourself with the LocalBox resources in Azure Portal to understand the hybrid architecture.**
 
 1. Sign in to the [Azure Portal](https://portal.azure.com)
-2. Navigate to **Resource groups**
-3. Locate and select the ArcBox resource group (e.g., `rg-arcbox`)
-4. Review the resources deployed:
-   - **Arc-enabled servers** - Machines connected to Azure via the Connected Machine Agent
-   - **Log Analytics workspace** - Central logging for all hybrid resources
-   - **Virtual Network** - Network infrastructure for the sandbox
-
-💥 **Explore the Arc-enabled servers:**
-
-1. In the Azure portal, navigate to **Azure Arc** by using the search bar at the top, and then navigate to the **Machines** menu option under **Infrastructure**
-![ArcBox](./images/arcbox_01.jpg)
-2. Click on one of the Arc-enabled servers (e.g., `ArcBox-Win2k25`)
-3. Review the **Overview** blade:
-   - Operating system and version
-   - Agent status and version
-   - Resource location (Azure region for metadata)
-   - Machine location (actual physical location)
-4. Check **Settings -> Extensions** to see installed Azure extensions
-5. Navigate through other menu items such as **Monitoring** and **Operations** to see available features and functionality.
-
-🔑 **Key insight:** Arc-enabled servers appear as Azure resources with resource IDs, allowing you to apply Azure management constructs (tags, RBAC, policies) to on-premises machines.
-
-### 1.2 Explore LocalBox resources (if available)
-
-1. Navigate to the LocalBox resource group (e.g., `rg-localbox`)
-2. Locate the **Azure Local** instance resource
-3. Review the following connected resources:
+2. Navigate to the shared LocalBox resource group (e.g., `rg-localbox-shared`)
+3. Locate the **Azure Local** instance resource
+4. Review the following connected resources:
    - **Arc Resource Bridge** - Connects Azure Local to Azure
    - **Custom Location** - Represents the on-premises location for VM deployment
    - **Gallery Images** - VM images available for deployment
@@ -105,59 +60,14 @@ Please ensure that you successfully verified the [General prerequisites](../../R
 
 ---
 
-## Task 2: Governance via Azure Policy and Machine Configuration
-
-💡 **Assign and verify an Azure Policy that uses Machine Configuration to audit security settings on Arc-enabled Linux servers.**
-
-### 2.1 Understanding Machine Configuration
-
-Azure Machine Configuration (formerly Guest Configuration) extends Azure Policy inside the operating system. It uses Desired State Configuration (DSC) to:
-- **Audit** OS-level settings (passwords, services, registry, files)
-- **Enforce/Remediate** configurations when non-compliant
-
-This provides "policy as code" governance across your hybrid environment, similar to Group Policy but managed through Azure.
-
-### 2.2 Assign the Linux SSH Posture Control
-
-💥 **Assign a built-in policy to audit Linux SSH Posture compliance:**
-
-For background and conceptual reference, review the article [What is SSH Posture Control?](https://learn.microsoft.com/azure/osconfig/overview-ssh-posture-control-mc) before proceeding.
-
-#### Azure Portal
-
-1. Navigate to **Azure Policy** in the Azure Portal
-2. Select **Definitions** in the left menu
-3. Search for: `Configure SSH security posture`
-![ArcBox](./images/ssh_posture_04.jpg)
-4. Click on the policy definition **Configure SSH security posture for Linux (powered by OSConfig)** to view details
-5. Click **Assign policy**
-6. Configure the assignment:
-   - **Scope**: Select the resource group containing Arc-enabled servers (e.g. **rg-arcbox**)
-   - **Assignment name**: `labuserXX - Configure SSH security posture for Linux (powered by OSConfig)` (change XX to your suffix)
-   - ![ArcBox](./images/ssh_posture_01.jpg)
-   - Click **Next**
-   - Change **Include Arc connected servers** to **true** and click **Next**
-   - ![ArcBox](./images/ssh_posture_02.jpg)
-7. Click **Next** on the remaining tabs without making any changes to default values, then **Review + create**
-8. ![ArcBox](./images/ssh_posture_03.jpg)
-9. After 15 minutes, navigate to the Arc-enabled server **Arcbox-Ubuntu-01** -> **Operations** -> **Machine Configuration** to see individual configuration status
-10. Click on the **SetLinuxSshServerSecurityBaseline** Configuration Name
-11. ![ArcBox](./images/ssh_posture_06.jpg)
-12. Enable the checkbox **Compliant** to view both compliant and non-compliant SSH settings
-13. ![ArcBox](./images/ssh_posture_07.jpg)
-
-🔑 **Key insight:** Azure Policy with Machine Configuration provides unified compliance visibility across Azure VMs and Arc-enabled servers. This is essential for maintaining sovereign compliance requirements across hybrid environments.
-
----
-
-## Task 3: Deploy a VM on Azure Local via Azure Portal
+## Task 2: Deploy a VM on Azure Local via Azure Portal
 
 💡 **Use Azure Arc VM management to deploy a virtual machine on your Azure Local cluster directly from the Azure Portal.**
 
-> [!NOTE]
-> This task requires access to a LocalBox environment with Arc Resource Bridge configured. If you don't have access, review the steps to understand the process.
+> [!IMPORTANT]
+> Complete this deployment and verify connected guest management before starting Tasks 3 and 4. Both exercises use your own VM, not the LocalBox host, cluster nodes, Arc Resource Bridge, or another participant's VM. Ask the facilitator for access if LocalBox is not available.
 
-### 3.1 Navigate to Azure Local VM Management
+### 2.1 Navigate to Azure Local VM Management
 
 1. In the Azure portal, navigate to **Azure Arc** by using the search bar at the top, and then navigate to the **Azure Local** menu option under **Supported environments**. Click on **All systems**.
 ![Azure Local](./images/localbox_01.jpg)
@@ -166,16 +76,25 @@ For background and conceptual reference, review the article [What is SSH Posture
 4. Select **Virtual machines** option
 5. Click **+ Create VM** to start the VM creation wizard
 
-### 3.2 Configure the Virtual Machine
+### 2.2 Configure the Virtual Machine
 
 💥 **Basic settings:**
 
-1. **Subscription**: Select your subscription (e.g. **Micro-Hack-1**)
-2. **Resource group**: `labuser-XX` (replace XX with your own suffix)
+1. **Subscription**: Select your subscription (e.g. **traininglab-01**)
+2. **Resource group**: Select your assigned resource group (e.g., `rg-labuser-0024`; use the exact name provided by the facilitator)
 3. **Virtual machine name**: `labuserXX-vm-01` (replace XX with your own suffix)
 4. **Security type**: Select **Standard**
 
-![Azure Local](./images/localbox_02.jpg)
+![Azure Arc VM creation Basics showing the assigned resource group, VM name, Standard security, and automatic storage selection](./images/localbox_02.png)
+
+Verify that **Custom location** points to the shared LocalBox environment and **Virtual machine kind** is **Azure Local**. Leave **Storage path** set to **Choose automatically** unless the facilitator instructs otherwise.
+
+> [!NOTE]
+> The selected custom location determines the Azure region used for the VM's management resources; it need not match your resource group's location or the Azure region hosting the LocalBox simulator. Fresh hosted deployments and the manual deployment default to **Australia East**, including LocalBox's staging storage account, after a hosted test encountered a West Europe eligibility rejection. This is a lab-only choice, not a European data-residency recommendation. Inspect the actual custom location in your event rather than assuming the latest default has changed an existing environment.
+>
+> In production, the workload runs on the Azure Local hardware, while Azure stores management data in the registration region. In this lab, that hardware is simulated inside Azure-hosted LocalBox. Registration in Australia East does **not** mean that the nested VM's compute has moved there, but the management-data location still matters for sovereignty and Azure Policy. See [Azure Local regions](https://learn.microsoft.com/azure/azure-local/concepts/system-requirements-23h2#azure-requirements) and [Azure Local data handling](https://learn.microsoft.com/azure/azure-local/faq#does-my-data-stored-on-azure-local-get-sent-to-the-cloud).
+
+The creation screenshots use `labuser24-vm-01`, while the validation and management screenshots use `labuser23-vm-01`. These are examples from different participants; create and use only your own VM throughout the challenge.
 
 5. **Image**: Select the available gallery image **2025-datacenter-azure-edition-smalldisk-01** (Windows Server 2025)
 6. **Virtual processor count**: 2
@@ -183,12 +102,14 @@ For background and conceptual reference, review the article [What is SSH Posture
 
 ![Azure Local](./images/localbox_03.jpg)
 
+8. Under **VM extensions**, select **Enable guest management**. This installs the Azure Connected Machine agent so that Defender for Cloud and Azure Update Manager can manage the guest OS.
+
 💥 **Administrator account:**
 
 1. **Username**: `localadmin`
 2. **Password**: Create a strong password and make a note of it
 
-![Azure Local](./images/localbox_04.jpg)
+<a href="./images/localbox_04.jpg"><img src="./images/localbox_04.jpg" alt="Azure Local VM proxy configuration, administrator account, and domain join options" width="560" /></a>
 
 Do not opt-in for domain join at this time, and select **Next**
 
@@ -208,33 +129,57 @@ For **Name** use the same value as for **Virtual machine name**: `labuserXX-vm-0
 For **Network** choose **localbox-vm-lnet-vlan200**
 Select **Add** and then **Next**
 
+The VM needs a valid IP address, working DNS, and outbound connectivity to the required Azure Arc and Defender endpoints and its configured Windows update source. Use the logical network prepared by the facilitator; VM provisioning alone does not prove that guest connectivity works.
+
 ![Azure Local](./images/localbox_07.jpg)
 
 Click **Next** twice
 
 ![Azure Local](./images/localbox_08.jpg)
 
-Click **Create**
+### 2.3 Review and Create
 
-![Azure Local](./images/localbox_09.jpg)
-
-### 3.3 Review and Create
-
-1. Review all settings
+1. Review all settings, especially your assigned resource group, VM name, **Guest management: Enabled**, and a network interface count of **1**
 2. Click **Create** to deploy the VM
 
+![Azure Arc VM Review and create page showing two virtual processors, 4096 MB memory, guest management enabled, and one network interface](./images/localbox_09.png)
 
-### 3.4 Validate VM Deployment
+#### If validation or deployment is blocked by a location policy
+
+Do not change the resource group, select another team's custom location, or disable policies at subscription scope to bypass the error.
+
+1. Expand **Error details** on **Review + create**. If the deployment was submitted, open your resource group's **Deployments**, select the failed deployment, and open the failed operation's details. Also check **Activity log** if needed.
+2. Record the innermost error code, rejected resource name/type and requested location, **policy assignment ID**, **policy definition ID**, and correlation ID. For an initiative, also record the policy definition reference ID if present. Share only the relevant error details with the facilitator, not deployment parameters, passwords, TAPs or tokens.
+3. For `RequestDisallowedByPolicy`, open **Policy > Assignments** and locate the assignment identified by the error. Inspect its **Scope**, **Policy enforcement** and **Parameters**. Check the actual ID, not just the friendly name: an initiative or inherited assignment may enforce a second location restriction.
+   - **Your own Challenge 1 exercise assignment:** restore **Do not enforce** using the [Challenge 1 instructions](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/walkthrough/challenge-01/solution-01.md#preparing-for-next-challenges), including your bonus initiative if applicable.
+   - **Organizer-managed or inherited assignment:** stop and ask the facilitator to review the required metadata region and the approved policy configuration. A resource-group assignment cannot relax a deny inherited from subscription or management-group scope.
+   - **Different error code or no policy identifiers:** retain the exact error for the facilitator. A message mentioning a region is not by itself proof that the Challenge 1 policy caused the failure.
+4. After the authorized correction has propagated, retry validation in your assigned resource group. Check for partially created resources before retrying a submitted deployment; do not delete shared LocalBox resources.
+
+The current Challenge 1 exercise allowlist retains West Europe and includes **Australia East as a lab-only exception** for LocalBox management resources; older assignments may still have only three or four regions. Keep your exercise assignments in **DoNotEnforce** mode and update only your own assignments following Challenge 1. Do not broaden organizer-managed or inherited allowlists without the policy owner's approval. The updated registration-region default applies to fresh deployments, not existing custom locations. The hosted `SecurityControl=Ignore` and `CostControl=Ignore` tags are **not** general Azure Policy exemptions.
+
+Reference: [Resolve RequestDisallowedByPolicy errors](https://learn.microsoft.com/azure/azure-resource-manager/troubleshooting/error-policy-requestdisallowedbypolicy).
+
+### 2.4 Validate VM Deployment and Guest Management
 
 1. Click **Go to resource** when the deployment is finished
 2. Verify the VM is running
 3. Review the VM properties and available operations
+4. On **Overview -> Properties -> Configuration**, verify that **Arc agent** shows **Enabled (connected)**. Depending on the portal version, this may be labeled **Guest management**
+5. Record your VM name, subscription, resource group, and resource ID. Use this same VM in the following exercises
 
-![Azure Local](./images/localbox_10.jpg)
+![Azure Local VM Overview showing Running status, an assigned IP address, and Arc agent Enabled (connected)](./images/localbox_10.png)
+
+The example also lists the **MDE.Windows** extension under **Extensions**. Its presence alone does not confirm completed Defender for Endpoint onboarding; verify protection status in Task 3.
+
+> [!IMPORTANT]
+> If guest management is disabled or still connecting, resolve this before continuing. Check the guest network with the facilitator and follow [Enable guest management on an Azure Local VM](https://learn.microsoft.com/azure/azure-local/manage/manage-arc-virtual-machines#enable-guest-management). Do not separately onboard a duplicate Arc-enabled server resource for a VM whose guest management is already connected.
 
 🔑 **Key insight:** Azure Arc VM management enables self-service VM provisioning on Azure Local using familiar Azure tools and RBAC. This allows organizations to maintain data sovereignty by keeping workloads on-premises while benefiting from Azure management capabilities.
 
 #### **Bonus tip**
+
+This optional Remote Desktop example requires a local computer with an RDP client; it is not part of the browser-only Codespaces workflow and can be skipped.
 
 By appending **--rdp** to the Azure CLI command generated on the **Connect** blade for the VM, it is possible to connect to Windows machines running on Azure Local (and any Arc-enabled Windows machine) via Remote Desktop when running the command from Azure CLI on your local computer:
 
@@ -246,111 +191,308 @@ To learn more, see [SSH access to Azure Arc-enabled servers](https://learn.micro
 
 ---
 
-## Task 4: Security Monitoring with Microsoft Defender for Cloud
+## Task 3: Security Monitoring with Microsoft Defender for Cloud
 
-💡 **Enable Microsoft Defender for Cloud and review security recommendations for your Arc-enabled resources.**
+**Verify Defender for Servers coverage and review security recommendations for the VM you created in Task 2.**
 
-### 4.1 Enable Defender for Servers
+The screenshots in Tasks 3 and 4 use `labuser23-vm-01` in resource group `rg-labuser-0023` as an example. Use your own VM, assigned resource group, and subscription throughout; names and assessment results may differ.
 
-💥 **Enable Defender for Servers on your subscription:**
+### 3.1 Verify Coverage for Your VM
 
-**Azure Portal**
+1. Navigate to **Microsoft Defender for Cloud** in the Azure Portal
+2. Open **Inventory** and filter by your subscription and assigned resource group
+3. Search for `labuserXX-vm-01` (using your own suffix). Match its resource ID to the VM recorded in Task 2, rather than selecting a shared machine with a similar name
+4. Open the resource details and review its Defender for Servers coverage and onboarding status. The organizer should already have enabled the approved Servers plan and Defender for Endpoint integration
 
-1. Navigate to **Microsoft Defender for Cloud**
-2. Select **Management -> Environment settings** in the left menu
-3. Expand your **Tenant Root Group** and select your subscription
-4. Under **Defender plans**, locate **Servers**
-5. If not already enabled, toggle to **On** (select Plan 1 or Plan 2 based on requirements)
-6. Review available features when selecting **Change plan** and **Settings** for the **Servers** plan.
-7. Click **Save**
+You can also open your VM resource and select **Settings -> Security** to see its **Microsoft Defender for Servers** status, as illustrated in Task 3.2. The **On** indicator shows the displayed plan status; it does not by itself confirm that Defender for Endpoint onboarding has completed.
 
-### 4.2 Review Security Posture
+For subscription-level context, open **Management -> Environment settings** in Defender for Cloud and locate your lab subscription in the hierarchy:
 
-1. Navigate to **Microsoft Defender for Cloud** -> **General** -> **Overview**
-2. Review the **Secure Score** for your environment
-3. Click on **Recommendations** to see security recommendations
+![Defender for Cloud Environment settings showing the subscription hierarchy and Defender coverage](./images/dfc_01.png)
 
-![Defender for Cloud](./images/dfc_01.jpg)
+Select the subscription and review **Defender plans**, including the **Servers** row under **Cloud Workload Protection (CWPP)**. This is a read-only check: do not change plan settings or select **Save**. If you cannot access this view, ask the facilitator to confirm the configured plan.
 
-💥 **Filter for Arc-enabled servers:**
+![Subscription Defender plans showing Servers Plan 2 and Full monitoring coverage](./images/dfc_03.png)
 
-1. In **Recommendations**, use filters:
-   - **Resource type**: `Machine - Azure Arc`
-2. Review recommendations specific to your Arc-enabled servers
+The example subscription uses **Servers Plan 2** with **Full** monitoring coverage. Your lab's approved plan may differ. These subscription-level settings are context, not evidence that your individual VM has completed onboarding.
 
-![Defender for Cloud](./images/dfc_02.jpg)
+> [!NOTE]
+> A newly created VM can take time to appear and complete onboarding. If it is missing, first recheck **Guest management: Enabled (Connected)** and the selected subscription/resource group, then refresh Inventory. Ask the facilitator to check plan coverage and extension onboarding if it remains missing or unprotected. An Inventory entry alone does not prove that Defender for Servers protection is active. Do not enable a paid subscription-level plan yourself in a hosted lab.
 
-### 4.3 Explore Common Recommendations for Arc-enabled Servers
+### 3.2 Review Your VM's Security Posture
 
-You may see recommendations such as:
+1. From your VM's resource details in Defender for Cloud, open its **Recommendations**. Alternatively, open your Azure Local VM resource and select **Settings -> Security** to view its recommendations
+2. Review the assessment status and any recommendations for that VM. If navigating from the subscription-wide **Recommendations** view, verify the affected resource is your VM by resource ID
+3. For an available recommendation, inspect its severity, reason, and remediation guidance
 
-| Recommendation | Severity | Description |
-|----------------|----------|-------------|
-| Guest configuration extension should be installed | High | Required for Machine Configuration policies |
-| System updates should be installed | High | OS patches are available |
-| Endpoint protection should be installed | High | Antimalware solution needed |
-| Azure Monitor agent should be installed | Medium | Required for advanced monitoring |
-| Vulnerabilities should be remediated | Varies | Software vulnerabilities detected |
+![Azure Local VM Security page showing Microsoft Defender for Servers On, zero recommendations, and zero security alerts](./images/dfc_02.png)
 
-💥 **Investigate a recommendation:**
+The example VM shows **Microsoft Defender for Servers On** and **No recommendations to display**. Use **View all recommendations in Defender for Cloud** to investigate further, keeping the results scoped to your own VM.
 
-1. Click on a recommendation to see affected resources
-2. Review the remediation steps provided
-3. For quick fixes, use the **Fix** button if available
+Depending on the enabled plan and completed assessments, recommendations may concern:
 
-### 4.4 Review Security Alerts (if any)
+| Area | What to investigate |
+|------|---------------------|
+| System updates | Missing OS security updates |
+| Endpoint protection | Defender for Endpoint onboarding or protection status |
+| Vulnerabilities | Detected software vulnerabilities and remediation guidance |
+
+Only investigate or remediate your own VM. Do not apply subscription-wide fixes or change shared LocalBox infrastructure as part of this exercise.
+
+> [!NOTE]
+> Recommendations may still be pending on a fresh VM, and an assessed VM may have no active recommendations. Record the displayed assessment status separately from the verified protection status. An empty recommendations list does not demonstrate completed assessment or compliance. You can complete Task 4 while waiting, then return to review your VM's results.
+
+### 3.3 Review Security Alerts (if any)
 
 1. Navigate to **Security alerts** in Defender for Cloud
-2. Review any active alerts for your hybrid resources
-3. Click on an alert to see:
+2. Filter by your subscription and inspect only alerts whose affected resource matches your VM's resource ID
+3. If an alert exists, review:
    - Attack description
    - Affected resources
    - Recommended actions
+
+![Defender for Cloud Security alerts page showing No alerts found](./images/dfs_alerts_01.png)
+
+The screenshot shows an empty alerts list with **Subscription == All**. In your lab, narrow this filter to your subscription and use the search box to find your VM before reviewing any results.
+
+No alerts is an expected outcome for a new lab VM; do not generate an alert or select another participant's resources to complete this step.
 
 🔑 **Key insight:** Microsoft Defender for Cloud provides unified security management across Azure and Arc-enabled resources. This enables consistent security posture management for sovereign hybrid deployments.
 
 ---
 
-## Task 5: Explore Azure Update Manager for Hybrid Patching
+## Task 4: Assess Your VM with Azure Update Manager
 
-💡 **Use Azure Update Manager to assess and manage OS updates across your Arc-connected machines.**
+**Use Azure Update Manager to assess OS updates on the same Windows Server VM you created in Task 2.**
 
-### 5.1 Navigate to Azure Update Manager
+### 4.1 Locate Your VM
 
-1. In the Azure Portal, search for **Azure Update Manager** in the middle-top search bar
-2. Go to **Overview** to review the dashboard overview showing:
-   - Machines pending updates
-   - Compliance status
-   - Recent update deployments
+1. In the Azure Portal, search for **Azure Update Manager**
+2. Select **Resources -> Machines**
+3. Filter by your subscription and assigned resource group, then search for `labuserXX-vm-01` (using your own suffix)
+4. Select your VM and verify its resource ID matches the VM recorded in Task 2. Azure Local guest VMs use Azure Arc guest management; do not select the shared cluster nodes, LocalBox host, or Arc Resource Bridge
 
-### 5.2 Assess Update Compliance
+![Azure Update Manager Machines view filtered to the example VM and resource group, showing No updates data before assessment](./images/aum_02.png)
 
-💥 **Check update status for Arc-enabled servers:**
+Before the first assessment, your VM may show **No updates data**, as in this example. The screenshot has multiple subscriptions selected; narrow the subscription filter to your own lab subscription as well. The VM appears as an **Arc-enabled server** because Update Manager manages its guest OS through Azure Arc.
 
-1. Select **Resources -> Machines** in the left menu
-2. Filter by:
-   - **Machine type**: `Arc-enabled servers`
-   - **Resource group**: Your ArcBox resource group (e.g. **rg-arcbox**)
-![Azure Update Manager](./images/aum_01.jpg)
-3. Review the update status for one machine
-![Azure Update Manager](./images/aum_02.jpg)
+> [!IMPORTANT]
+> This exercise assesses the guest operating system of your VM. It does not update the Azure Local cluster infrastructure. If your VM is not listed, recheck its running state, connected guest management, and your filters before continuing. Ask the facilitator to verify permissions and connectivity if needed.
 
-### 5.3 Trigger an Update Assessment
+### 4.2 Trigger an Update Assessment
 
-1. Select an Arc-enabled server
-2. Click **Check for updates**
-![Azure Update Manager](./images/aum_03.jpg)
-1. Wait for the assessment to complete
+1. Review the current update assessment status for your VM. A new VM may not have been assessed yet
+2. In the **Machines** list, select the checkbox beside your VM to enable **Check for updates**, then click it and confirm that only your VM is selected
+3. Wait for the assessment to finish, then refresh the VM's update status and verify the latest assessment time and successful result
 
-### 5.4 Review Available Updates
+![Azure Update Manager showing Assessment successful for the selected example VM and three pending updates](./images/aum_01.png)
 
-1. Click on the previously selected machine to see an updated status
-2. Review:
+The screenshot shows the result after **Check for updates** completes: **Assessment successful** for one machine and **3 pending updates** on that VM's row. The **Pending updates** summary tile counts machines with pending updates, not individual updates.
+
+The first assessment can take additional time while the required update extension is deployed. If the assessment fails, review the error and check guest connectivity, extension provisioning, permissions, and access to the configured Windows update source with the facilitator. A pending or failed assessment is not a successful result.
+
+### 4.3 Review Available Updates
+
+1. Open the completed assessment results for your VM. You can also open the VM resource and select **Operations -> Updates -> Recommended updates**
+2. Review the available update classifications, such as:
    - **Critical and security updates** - High priority
    - **Other updates** - Feature and quality updates
    - **Definition updates** - Antimalware definitions
+3. Record the assessment time and pending update counts. A successful assessment with zero pending updates is also a valid outcome
+
+![Azure Local VM Updates page showing the last assessment time and three available updates, including Definition and UpdateRollup classifications](./images/aum_03.png)
+
+In this example, **Total updates** is **3**, with **0** critical updates, **0** security updates, and **3** other updates. The table provides the individual classifications, KB IDs, and reboot requirements; definition updates are included under **Other updates** in this summary. Record your own **Last assessed** time and results rather than copying the example values.
+
+This exercise stops at assessment. Leave periodic assessment unchanged; the **Enable now** banner is not required for this manual check. Do not install updates, schedule patching, or restart shared resources.
 
 🔑 **Key insight:** Azure Update Manager provides centralized patch management across Azure VMs and Arc-enabled servers. This is critical for maintaining security compliance in sovereign environments where you need to control when and how updates are applied.
+
+
+## Task 5: Deploy a container to the AKS cluster deployed on Azure Local
+
+The shared AKS cluster and MetalLB load balancer are already prepared for you. In this task, you will check the load balancer, deploy your team's sample application, and access it privately using Arc Proxy and port forwarding.
+
+**Inspect shared infrastructure without changing it; deploy only in your team's namespace.** If access or health checks fail, ask the facilitator rather than changing the shared configuration.
+
+### Task 5.1: Verify Your Cluster Access
+
+1. In the Azure portal, open **`localbox-aks`** in **`rg-localbox-shared`**.
+2. Open **Access control (IAM) > Check access > View my access**.
+3. Under **Current role assignments**, confirm that **Azure Arc Enabled Kubernetes Cluster User Role** applies to your workshop identity on this cluster. It can be assigned directly, through a group, or inherited from a parent scope. If it is missing, ask the facilitator; do not add role assignments yourself.
+
+<a href="./images/aks-local-cluster-user-access.png"><img src="./images/aks-local-cluster-user-access.png" alt="View my access on localbox-aks showing Azure Arc Enabled Kubernetes Cluster User Role for a workshop participant" width="560" /></a>
+
+This role allows the Arc proxy connection; permissions inside Kubernetes are provided separately through your workshop's configured Microsoft Entra group. There is no need to find or change authentication settings on the cluster's Configuration page.
+
+4. Open **Kubernetes resources > Workloads** to view the system workloads. Click any screenshot to view it full-size.
+
+<a href="./images/localbox62.png"><img src="./images/localbox62.png" alt="Kubernetes workloads option in the Azure portal" width="360" /></a>
+
+<a href="./images/localbox63.png"><img src="./images/localbox63.png" alt="Example system workload readiness in the Azure portal" width="560" /></a>
+
+> [!IMPORTANT]
+> Use your workshop Microsoft Entra identity throughout. If the portal requests a bearer token or the CLI reports `Unauthorized`/`Forbidden`, stop and ask the facilitator to verify the configured group, your membership, the existing **Azure Arc Enabled Kubernetes Cluster User Role**, and Cluster Connect readiness. After membership changes, sign in again to refresh your session. Do not create a service account token, retrieve admin credentials, or grant yourself additional roles.
+
+### Task 5.2: Inspect Organizer-Prepared MetalLB
+
+MetalLB assigns service virtual IP addresses (VIPs) to Kubernetes Services of type `LoadBalancer`. Before deploying:
+
+1. Open **Settings > Extensions** and inspect **`arcnetworking`**, extension type **`microsoft.arcnetworking`**. Its provisioning state must be **Succeeded**.
+2. Under **Kubernetes resources > Workloads**, inspect the MetalLB controller and speaker workloads. Check that controller replicas and speaker DaemonSet pods are ready, with no persistent pending or crashing pods. Extension provisioning success alone is not proof of healthy workloads.
+3. Open **Settings > Networking** and inspect the existing **`aks-pool`**. Confirm successful provisioning, **ARP** advertisement, and the IP range reserved by the organizer for service VIPs. Record that range; it must exclude the AKS node allocation pool, control-plane IP, gateway, and any other allocated addresses.
+
+The default LocalBox service VIP reservation is **`10.10.0.10-10.10.0.100`**, separate from the node allocation pool **`10.10.0.101-10.10.0.199`**, control-plane IP **`10.10.0.5`**, and gateway **`10.10.0.1`**. Confirm the actual range with the facilitator if your workshop uses a different configuration.
+
+The facilitator handles detailed networking and readiness checks before the workshop. The portal review above is sufficient for this exercise. For optional background, see the [official AKS enabled by Azure Arc load-balancer documentation](https://learn.microsoft.com/azure/aks/aksarc/deploy-load-balancer-cli); do not run its installation commands in the shared lab.
+
+If the extension, healthy workloads, or pool are missing, stop and contact the facilitator. Do not select **Install extension**, **Add**, **Delete**, or **Uninstall extension**. No participant-side MetalLB configuration is needed.
+
+### Task 5.3: Start the Microsoft Entra Cluster Connect Proxy — Terminal 1
+
+Open a **Bash** terminal in your Sovereign Cloud Codespace. This assumes you are already signed in to Azure CLI with your workshop identity and have selected the workshop subscription. Retrieve the tenant and subscription IDs from the current CLI context, then enter your **assigned participant resource group**, not `rg-localbox-shared`, when prompted. Teammates sharing an assigned resource group share one namespace; coordinate deployment and cleanup.
+
+```bash
+TENANT_ID=$(az account show --query tenantId --output tsv) || exit 1
+SUBSCRIPTION_ID=$(az account show --query id --output tsv) || exit 1
+read -r -p "Your assigned participant resource group: " PARTICIPANT_RG
+if [[ -z "$TENANT_ID" || -z "$SUBSCRIPTION_ID" || -z "$PARTICIPANT_RG" ||
+      "${PARTICIPANT_RG,,}" == "rg-localbox-shared" ]]; then
+  echo "Verify your current Azure CLI context and use your own assigned resource group."
+  exit 1
+fi
+printf 'Current tenant: %s\nCurrent subscription: %s\n' "$TENANT_ID" "$SUBSCRIPTION_ID"
+az group show --subscription "$SUBSCRIPTION_ID" --name "$PARTICIPANT_RG" \
+  --query '{name:name,id:id}' --output table || exit 1
+```
+
+Confirm the displayed tenant, subscription, and resource group match your workshop before continuing. The following derives a valid, bounded namespace from your resource group, adding a stable hash of the subscription and group to distinguish names that normalize alike. It saves **only nonsecret settings**, outside the repository, for the other terminals. Never commit or share your kubeconfig or authentication cache.
+
+```bash
+RG_SLUG=$(printf '%s' "${PARTICIPANT_RG,,}" |
+  sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//' | cut -c1-40)
+RG_HASH=$(printf '%s/%s' "${SUBSCRIPTION_ID,,}" "${PARTICIPANT_RG,,}" |
+  sha256sum | cut -c1-12)
+TEAM_NAMESPACE="team-${RG_SLUG:-rg}-${RG_HASH}"
+AKS_CONTEXT="sovereign-${TEAM_NAMESPACE}"
+AKS_KUBECONFIG="$HOME/.kube/${AKS_CONTEXT}.config"
+MANIFEST="$(git rev-parse --show-toplevel)/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/walkthrough/challenge-06/manifests/aks-local-sample-app.yaml"
+umask 077
+mkdir -p "$HOME/.config/microhack" "$HOME/.kube"
+printf 'export %s=%q\n' \
+  SUBSCRIPTION_ID "$SUBSCRIPTION_ID" PARTICIPANT_RG "$PARTICIPANT_RG" \
+  TEAM_NAMESPACE "$TEAM_NAMESPACE" AKS_CONTEXT "$AKS_CONTEXT" \
+  AKS_KUBECONFIG "$AKS_KUBECONFIG" MANIFEST "$MANIFEST" \
+  > "$HOME/.config/microhack/challenge06.env"
+source "$HOME/.config/microhack/challenge06.env"
+printf 'Team namespace: %s\n' "$TEAM_NAMESPACE"
+az connectedk8s proxy \
+  --subscription "$SUBSCRIPTION_ID" \
+  --resource-group rg-localbox-shared --name localbox-aks \
+  --file "$AKS_KUBECONFIG" --kube-context "$AKS_CONTEXT" --port 47011
+```
+
+Wait for the proxy to report that it is listening and complete any Microsoft Entra sign-in prompt. **Leave Terminal 1 running** for all following steps. This command writes an isolated kubeconfig rather than replacing your normal configuration; `--kube-context` names its context. See the official [`az connectedk8s proxy` reference and examples](https://learn.microsoft.com/cli/azure/connectedk8s#az-connectedk8s-proxy).
+
+> [!CAUTION]
+> Port **47011** is the Kubernetes API proxy, not your application. Never publish or forward this port through Codespaces Ports; if it is automatically detected, stop forwarding it in that view (leave the proxy process running). Never make the API proxy public. Do not pass `--token` or use service-account/admin credentials.
+
+### Task 5.4: Deploy in Your Team Namespace — Terminal 2
+
+With the proxy still running in Terminal 1, open a **second Bash terminal** in the same Codespace. Load the saved settings and create your team's namespace:
+
+```bash
+source "$HOME/.config/microhack/challenge06.env"
+kubectl --kubeconfig "$AKS_KUBECONFIG" --context "$AKS_CONTEXT" \
+  create namespace "$TEAM_NAMESPACE"
+```
+
+If namespace creation reports `AlreadyExists`, proceed **only** if it is your team's namespace from an earlier attempt. If it fails for any other reason, stop and ask the facilitator; do not switch identities or contexts.
+
+The supplied [`aks-local-sample-app.yaml`](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/walkthrough/challenge-06/manifests/aks-local-sample-app.yaml) creates a ConfigMap, Deployment, and `LoadBalancer` Service named `aks-container-1` (the ConfigMap is `aks-container-1-content`). The manifest has no hard-coded namespace; `--namespace` below keeps these resources out of `default` and other teams' namespaces.
+
+```bash
+source "$HOME/.config/microhack/challenge06.env"
+kubectl --kubeconfig "$AKS_KUBECONFIG" --context "$AKS_CONTEXT" \
+  --namespace "$TEAM_NAMESPACE" apply -f "$MANIFEST"
+kubectl --kubeconfig "$AKS_KUBECONFIG" --context "$AKS_CONTEXT" \
+  --namespace "$TEAM_NAMESPACE" rollout status deployment/aks-container-1 --timeout=180s
+kubectl --kubeconfig "$AKS_KUBECONFIG" --context "$AKS_CONTEXT" \
+  --namespace "$TEAM_NAMESPACE" get pods,service -l app.kubernetes.io/name=aks-container-1
+kubectl --kubeconfig "$AKS_KUBECONFIG" --context "$AKS_CONTEXT" \
+  --namespace "$TEAM_NAMESPACE" get service aks-container-1 --watch
+```
+
+Wait for successful rollout, ready application pods, and an **EXTERNAL-IP** from the organizer-confirmed `aks-pool` range. Record the assigned IP; do not assume the first address in the pool. Press **Ctrl+C in Terminal 2** to stop only the Service watch once the address appears. If it remains `<pending>` or is outside the reserved range, report it to the facilitator; do not create or edit pools.
+
+You can also inspect **Workloads** and **Services and ingresses** in the portal, filtering to **your team namespace**. Open the `aks-container-1` Deployment to check that its replica is available and its pod is **Running** and **1/1** ready. The screenshots show one team's example; your namespace and assigned IP may differ.
+
+<a href="./images/aks-local-app-workload.png"><img src="./images/aks-local-app-workload.png" alt="Sample application Deployment with one available replica and a running, ready pod in a team namespace" width="560" /></a>
+
+In **Services and ingresses**, locate your team's `aks-container-1` Service. Its type should be **LoadBalancer** with an **External IP** from the reserved pool, such as `10.10.0.10` in this example. Leave the other services unchanged.
+
+<a href="./images/aks-local-app-service.png"><img src="./images/aks-local-app-service.png" alt="Services view showing the team's aks-container-1 LoadBalancer Service assigned external IP 10.10.0.10" width="560" /></a>
+
+### Task 5.5: Forward and Open the Application — Terminals 2 and 3
+
+Keep the API proxy running in **Terminal 1**. In **Terminal 2**, start the application forward:
+
+```bash
+source "$HOME/.config/microhack/challenge06.env"
+kubectl --kubeconfig "$AKS_KUBECONFIG" --context "$AKS_CONTEXT" \
+  --namespace "$TEAM_NAMESPACE" port-forward \
+  service/aks-container-1 8080:80 --address 127.0.0.1
+```
+
+Wait for `Forwarding from 127.0.0.1:8080` and **leave Terminal 2 running too**.
+
+<a href="./images/aks-local-app-port-forward.png"><img src="./images/aks-local-app-port-forward.png" alt="Terminal showing the running application, assigned service IP, and active localhost port forward with a Codespaces port 8080 notification" width="560" /></a>
+
+Use a **third Bash terminal** for the HTTP check, not either occupied terminal:
+
+```bash
+curl --fail --show-error http://127.0.0.1:8080/
+```
+
+The response should contain the sample application's HTML, including **Welcome to AKS container 1 on Azure Local**.
+
+<a href="./images/aks-local-app-http-check.png"><img src="./images/aks-local-app-http-check.png" alt="Successful curl request to localhost port 8080 returning the sample application's HTML" width="560" /></a>
+
+In Codespaces, open the **Ports** view, forward **8080** if it was not detected, and confirm its visibility is **Private** before selecting **Open in Browser**. Do not select **Make Public** in the notification shown above. Sign in to GitHub if prompted. Open that private application URL, not port 47011 and not the MetalLB VIP.
+
+You should see the sample application's welcome page:
+
+<a href="./images/aks-local-app-browser.png"><img src="./images/aks-local-app-browser.png" alt="Sample application welcome page opened through a Codespaces forwarded port 8080 URL" width="560" /></a>
+
+If running this same workflow directly on a local workstation with Bash, Azure CLI, and `kubectl`, instead open **http://localhost:8080/** on that workstation. A Codespace's `localhost` is not your workstation's `localhost`; use its private Ports URL when working in Codespaces.
+
+> [!IMPORTANT]
+> Production clients reach a MetalLB VIP through configured network routing and the advertised service network. This lab's Arc proxy plus `kubectl port-forward` tunnels to an application pod through the Kubernetes API. Although the sample page mentions the cluster load balancer, a working page here verifies application access through that tunnel; it **does not validate the load-balancer network path**, ARP reachability, or routing to the VIP. No RDP session or static-route change is needed.
+
+If the forward stops after a pod restart, confirm the rollout again and restart it in Terminal 2. If either terminal is closed, restart the proxy first and then the port-forward, sourcing `challenge06.env` in each replacement terminal.
+
+### Task 5.6: Clean Up Only Your Team's Application
+
+After recording your results and coordinating with teammates, press **Ctrl+C in Terminal 2** to stop the application forward. Keep Terminal 1's proxy running while deleting **only** the application resources in your team namespace:
+
+```bash
+source "$HOME/.config/microhack/challenge06.env"
+kubectl --kubeconfig "$AKS_KUBECONFIG" --context "$AKS_CONTEXT" \
+  --namespace "$TEAM_NAMESPACE" delete -f "$MANIFEST"
+kubectl --kubeconfig "$AKS_KUBECONFIG" --context "$AKS_CONTEXT" \
+  --namespace "$TEAM_NAMESPACE" get deployment,service,configmap,pods
+```
+
+The application Deployment, Service, ConfigMap, and pods should be gone (the namespace's automatically supplied `kube-root-ca.crt` ConfigMap can remain). Delete the namespace only if your team created it exclusively for this exercise and all teammates are finished:
+
+```bash
+source "$HOME/.config/microhack/challenge06.env"
+kubectl --kubeconfig "$AKS_KUBECONFIG" --context "$AKS_CONTEXT" \
+  delete namespace "$TEAM_NAMESPACE"
+```
+
+Do not delete shared resources, system namespaces, the AKS cluster, MetalLB, its IP pool, or another team's resources. Finally, stop the proxy with **Ctrl+C in Terminal 1** and remove the application forwarding entry from the Codespaces Ports view. Retain your Task 2 VM until its assessments and workshop work are complete; any VM cleanup must target only your own VM, not shared LocalBox infrastructure.
+
 
 ---
 
@@ -361,14 +503,9 @@ You may see recommendations such as:
 After completing this challenge, you should understand:
 
 ✅ **Azure Arc as the Hybrid Bridge**
-- Arc-enabled servers represent on-premises machines as Azure resources
+- Azure Local VMs are represented as Azure resources
 - Enables unified management through Azure Resource Manager
 - Supports Azure RBAC, tags, and policies for hybrid resources
-
-✅ **Sovereign Hybrid Governance**
-- Azure Policy with Machine Configuration extends compliance to the OS level
-- Provides consistent governance across cloud and on-premises
-- Essential for meeting sovereign regulatory requirements
 
 ✅ **Azure Local as Sovereign Private Cloud**
 - Azure Local enables sovereign on-premises cloud infrastructure
@@ -376,9 +513,18 @@ After completing this challenge, you should understand:
 - Self-service VM provisioning using Azure Portal (also available via CLI and Infrastructure as Code)
 
 ✅ **Security and Compliance**
-- Microsoft Defender for Cloud provides unified security posture management
-- Azure Update Manager enables centralized patch management
-- Consistent security monitoring across hybrid estate
+- Connected guest management enables Azure services inside your VM's operating system
+- Microsoft Defender for Cloud provides security coverage and recommendations for your VM
+- Azure Update Manager assesses updates on that same VM without changing shared infrastructure
+
+✅ **Deploying a container to your AKS cluster**
+- Verified Microsoft Entra access prerequisites and connected through the Arc proxy
+- Inspected organizer-prepared MetalLB extension health and the ARP address pool without changing them
+- Deployed a containerized application from YAML in a unique team namespace
+- Recorded the Kubernetes `LoadBalancer` Service's assigned external IP
+- Opened the application through a private Codespaces port-forward, without RDP or route changes
+- Distinguished tunneled application access from production load-balancer network-path validation
+- Cleaned up only your team's application resources
 
 ### 6.2 Real-World Applications
 
@@ -406,17 +552,16 @@ For additional learning, explore:
 
 Before completing this challenge, verify:
 
-- [ ] You can navigate and understand the ArcBox/LocalBox hybrid environment in the Azure Portal
-- [ ] You have assigned at least one Azure Policy (e.g., SSH Posture Control) to Arc-enabled servers
-- [ ] You can verify the compliance status of Arc-enabled servers in the Azure Policy dashboard
-- [ ] You can verify the compliance status of Arc-enabled servers in the Azure Machine Configuration blade
-- [ ] You have deployed a VM on Azure Local via the Azure Portal
-- [ ] You have enabled or verified Defender for Cloud coverage and reviewed security recommendations
-- [ ] You can navigate Azure Update Manager for hybrid patching
+- [ ] You can navigate and understand the LocalBox hybrid environment in the Azure Portal
+- [ ] You have deployed your own VM on Azure Local and verified that guest management is Enabled (Connected)
+- [ ] You have verified Defender for Servers coverage for your VM and reviewed its available recommendations, or recorded that its assessment is still pending
+- [ ] You have completed an Azure Update Manager assessment for your VM and reviewed its timestamp and results, including when no updates are pending
+- [ ] You verified the organizer-prepared `arcnetworking` extension is Succeeded, MetalLB workloads are healthy, and `aks-pool` has the reserved ARP VIP range
+- [ ] Your application rolled out successfully in your team's namespace and received an IP from that pool
+- [ ] You opened the application using a Microsoft Entra Arc proxy and a private application port-forward, never exposing the API proxy
+- [ ] You understand why this tunnel does not validate the production load-balancer network path and cleaned up only your team's application
 - [ ] You understand how Azure Arc provides a unified control plane for sovereign hybrid scenarios
 
 ---
 
 You successfully completed Challenge 6! 🚀🚀🚀
-
-**[Home](../../Readme.md)** - [Previous Challenge Solution](../challenge-05/solution-05.md)

@@ -65,8 +65,11 @@ function Publish-HackboxCredential {
 }
 
 # Resolve effective location and enforce template constraint.
+# Only these regions support both the gpt-5.4 and mistral-document-ai-2512
+# model deployments.
+$supportedLocations = @("swedencentral", "francecentral", "germanywestcentral")
 $effectiveLocation = if ($PreferredLocation.Count -gt 0) { $PreferredLocation[0] } else { "swedencentral" }
-if ($effectiveLocation -ne "swedencentral") {
+if ($effectiveLocation -notin $supportedLocations) {
     Write-Host "[WARN] Requested location '$effectiveLocation' is not supported by this template. Using 'swedencentral'." -ForegroundColor Yellow
     $effectiveLocation = "swedencentral"
 }

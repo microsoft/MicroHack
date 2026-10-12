@@ -6,6 +6,8 @@ Runs once per subscription before participant lab deployments and registers the
 required Azure resource providers. It ensures one preferred region has the VM
 SKUs and compute quota required by the subscription's participant count.
 It also submits one shared LocalBox environment per subscription for Challenge 6.
+For Microsoft-hosted environments only: assigns and verifies the MCAPS control-tag
+initiative before deploying resources. Do not use this hook for BYOS setup.
 #>
 param(
     [Parameter(Mandatory=$true)]
@@ -19,6 +21,10 @@ param(
 )
 
 . (Join-Path $PSScriptRoot 'quota-helpers.ps1')
+. (Join-Path $PSScriptRoot 'localbox-credentials.ps1')
+. (Join-Path $PSScriptRoot 'hosted-tag-policy.ps1')
+
+Get-LocalBoxConsoleGroupCredential
 
 $azureLocalResourceProviderAppId = '1412d89f-b8a8-4111-b4fd-e82905cbd85d'
 Update-MhhToken | Out-Null
@@ -96,11 +102,7 @@ foreach($candidate in $confidentialCandidates) {
 
     $regionalUsage = Get-AzVMUsage -Location $candidateLocation -ErrorAction Stop
     $locationReady = $true
-    $quotaRequirements = @(
-        @{ Name = $candidate.QuotaName; PerParticipant = 4 }
-        @{ Name = 'StandardDSv5Family'; PerParticipant = 12 }
-        @{ Name = 'cores'; PerParticipant = 16 }
-    )
+    $quotaRequirements = @(Get-MhhSovereignComputeRequirements -ConfidentialQuotaName $candidate.QuotaName)
     foreach($requirement in $quotaRequirements) {
         $quotaName = $requirement.Name
         $quotaRequired = $requirement.PerParticipant * $participantCount
@@ -152,6 +154,8 @@ if(-not $selectedCandidate) {
 Set-MhhConfidentialComputeSelection -SubscriptionId $SubscriptionId -Candidate $selectedCandidate
 Write-Host "Selected $($selectedCandidate.VmSize) in $($selectedCandidate.Location); compute SKUs and quotas are ready for $participantCount participants." -ForegroundColor Green
 
+Initialize-MhhHostedTagPolicy -SubscriptionId $SubscriptionId -Location $selectedCandidate.Location
+
 $localBoxResourceGroupName = 'rg-localbox-shared'
 $localBoxLocations = @(
     @($selectedCandidate.Location) + $PreferredLocation |
@@ -168,6 +172,7 @@ if ($resourceGroup) {
             workload = 'sovereign-localbox'
             challenge = '6'
             SecurityControl = 'Ignore'
+            CostControl = 'Ignore'
         } `
         -ErrorAction Stop | Out-Null
     Write-Host "Applied the temporary MCAPS security-control exemption to $localBoxResourceGroupName." -ForegroundColor Green
@@ -186,6 +191,18 @@ $localBoxDeployment = if ($resourceGroup) {
 
 if ($localBoxDeployment) {
     Write-Host "Reusing LocalBox deployment '$($localBoxDeployment.DeploymentName)' ($($localBoxDeployment.ProvisioningState))." -ForegroundColor Green
+    $localBoxClient = Get-AzResource `
+        -ResourceGroupName $localBoxResourceGroupName `
+        -ResourceType 'Microsoft.Compute/virtualMachines' `
+        -ErrorAction Stop |
+        Where-Object Name -eq 'LocalBox-Client'
+    if ($localBoxClient) {
+        Update-AzTag `
+            -ResourceId $localBoxClient.ResourceId `
+            -Operation Merge `
+            -Tag @{ CostControl = 'Ignore' } `
+            -ErrorAction Stop | Out-Null
+    }
 }
 else {
     foreach ($localBoxLocation in $localBoxLocations) {
@@ -197,6 +214,7 @@ else {
                 -Location $localBoxLocation `
                 -AzureLocalResourceProviderObjectId $azureLocalResourceProviderObjectIds[0] `
                 -AzureLocalInstanceLocation 'australiaeast' `
+                -UseConsoleCredentials `
                 -NoWait
 
             if (-not $localBoxDeployment -or $localBoxDeployment.ProvisioningState -ne 'Submitted') {
@@ -228,6 +246,25 @@ else {
 
 
 $localBoxScope = "/subscriptions/$SubscriptionId/resourceGroups/$localBoxResourceGroupName"
+for ($attempt = 1; $attempt -le 60; $attempt++) {
+    Update-MhhToken | Out-Null
+    $runtimeProvider = Get-AzResourceProvider -ProviderNamespace Microsoft.KubernetesRuntime -ErrorAction Stop
+    if ($runtimeProvider.RegistrationState -eq 'Registered') { break }
+    Start-Sleep -Seconds 10
+}
+if ($runtimeProvider.RegistrationState -ne 'Registered') {
+    throw 'Microsoft.KubernetesRuntime registration did not complete. LocalBox MetalLB preparation is blocked.'
+}
+$runtimeObjectIds = @(& az ad sp list --filter "appId eq '087fca6e-4606-4d41-b3f6-5ebdf75b8b4c'" --query '[].id' --output tsv --only-show-errors)
+if ($LASTEXITCODE -ne 0) { throw 'Unable to resolve the Microsoft.KubernetesRuntime service principal for MetalLB.' }
+$runtimeObjectIds = @($runtimeObjectIds | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+$runtimeObjectId = [guid]::Empty
+if ($runtimeObjectIds.Count -ne 1 -or -not [guid]::TryParse($runtimeObjectIds[0], [ref]$runtimeObjectId) -or $runtimeObjectId -eq [guid]::Empty) {
+    throw 'Expected exactly one valid Microsoft.KubernetesRuntime service-principal object ID. Have the tenant administrator verify provider registration.'
+}
+Update-AzTag -ResourceId $localBoxScope -Operation Merge `
+    -Tag @{ 'microhack-k8s-runtime-object-id' = $runtimeObjectId.ToString() } -ErrorAction Stop | Out-Null
+
 foreach ($participantObjectId in $AllowedEntraUserIds) {
     foreach ($roleName in @('Reader', 'Azure Stack HCI VM Contributor')) {
         $roleAssignment = Get-AzRoleAssignment `
@@ -246,6 +283,8 @@ foreach ($participantObjectId in $AllowedEntraUserIds) {
         }
     }
 }
+
+Wait-LocalBoxDeployment -ResourceGroupName $localBoxResourceGroupName -DeploymentName $localBoxDeployment.DeploymentName
 
 @{
     'HackboxCredential' = @{

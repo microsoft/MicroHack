@@ -19,13 +19,15 @@
     },
     "ghcr.io/devcontainers/features/powershell:2": {
       "version": "stable"
-    }
+    },
+    "ghcr.io/devcontainers/features/docker-in-docker:4": {}
   },
   "overrideFeatureInstallOrder": [
     "ghcr.io/devcontainers/features/common-utils",
     "ghcr.io/devcontainers/features/azure-cli",
     "ghcr.io/devcontainers/features/rust",
-    "ghcr.io/devcontainers/features/powershell"
+    "ghcr.io/devcontainers/features/powershell",
+    "ghcr.io/devcontainers/features/docker-in-docker"
   ],
   "mounts": [
     "source=sovereign-cloud-microhack-azure-${devcontainerId},target=/home/vscode/.azure,type=volume",

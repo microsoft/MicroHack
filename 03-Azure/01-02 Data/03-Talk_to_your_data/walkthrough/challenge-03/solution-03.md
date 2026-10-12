@@ -567,6 +567,7 @@ In this task, you will publish and open the Data Agent so it can be used for tes
 <col style="width: 28%;">
 </colgroup>
 <tr><th>Narrative</th><th>Notes</th></tr>
+<tr><td>Before publishing, review the Data Agent description and make sure it clearly explains the agent's purpose, data scope, and the types of questions it can answer.</td><td><b>Important for Microsoft 365 Copilot:</b> A missing or vague description can cause Copilot to use alternative sources, such as general knowledge or web search, instead of this agent. A specific description helps Copilot identify and use the correct agent.</td></tr>
 <tr><td>In the Data Agent editor, locate the Publish button in the top menu (1). Enable Also publish to the Agent Store in Microsoft 365 Copilot by turning the toggle On (2). Click Publish (3) to complete the publishing process.</td><td>Once published, the agent moves from Draft to Published status.</td></tr>
 <tr><td colspan="2" align="center"><img src="../../images/image076.png" style="width: 100%; display: block;"></td></tr>
 <tr><td>Open the Notifications panel from the top right corner (1). Verify the message "Successfully published data agent" appears (2).</td><td>This confirms the agent was published without errors.</td></tr>

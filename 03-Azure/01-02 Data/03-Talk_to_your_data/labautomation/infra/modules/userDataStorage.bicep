@@ -9,28 +9,24 @@ param location string
 @description('Lab/environment name (used for tagging and the generated account name).')
 param envName string
 
-@description('Number of per-user containers to create.')
-@minValue(1)
-param userCount int
+@description('Explicit per-user container names, e.g. container0001 for lab users or containerx001 for local test users.')
+@minLength(1)
+param containerNames array
 
-@description('Prefix for generated container names (e.g. container001).')
-param containerNamePrefix string = 'container'
-
-@description('Optional explicit storage account name. Defaults to stuserdata<normalizedEnv>.')
+@description('Optional explicit storage account name. Defaults to employeedata<unique>.')
 param storageAccountName string = ''
 
 @description('Tags to apply to all resources.')
 param tags object = {}
 
 var normalizedEnv = toLower(replace(envName, '-', ''))
-var generatedName = substring('stuserdata${normalizedEnv}', 0, min(length('stuserdata${normalizedEnv}'), 24))
+var generatedNameBase = 'employeedata${uniqueString(subscription().subscriptionId, resourceGroup().id, normalizedEnv)}'
+var generatedName = substring(generatedNameBase, 0, min(length(generatedNameBase), 24))
 var effectiveName = empty(storageAccountName) ? generatedName : storageAccountName
 
 var mergedTags = union(tags, {
   environment: envName
 })
-
-var containerNames = [for i in range(0, userCount): '${containerNamePrefix}${padLeft(string(i + 1), 3, '0')}']
 
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   name: effectiveName
@@ -42,6 +38,7 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   }
   properties: {
     allowBlobPublicAccess: false
+    allowSharedKeyAccess: false
     minimumTlsVersion: 'TLS1_2'
     isHnsEnabled: true
   }
@@ -63,4 +60,5 @@ resource containers 'Microsoft.Storage/storageAccounts/blobServices/containers@2
 ]
 
 output storageAccountName string = storageAccount.name
+output storageAccountDfsEndpoint string = storageAccount.properties.primaryEndpoints.dfs
 output containerNames array = containerNames

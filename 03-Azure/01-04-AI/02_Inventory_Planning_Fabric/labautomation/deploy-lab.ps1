@@ -8,8 +8,9 @@
     Provisions:
       - Azure AI Services account (AIServices kind — this is the Foundry account)
       - Azure AI Foundry project inside the account
-      - gpt-5.4-mini model deployment (capacity 100 GlobalStandard = 100K TPM)
-      - A per-attendee Fabric F2 capacity, with the attendee set as capacity admin
+      - gpt-5.4-mini model deployment (capacity 200 GlobalStandard = 200K TPM)
+      - A per-attendee Fabric capacity (default F4; -FabricSkuName to override), with the attendee set as capacity admin
+      - Application Insights (+ Log Analytics) connected to the project for agent tracing
     
     Each attendee gets their OWN Fabric capacity (no shared backend, no shared
     Spark contention). The attendee then creates a workspace, assigns it to their
@@ -19,7 +20,7 @@
     Returns to the attendee dashboard:
       - Foundry project endpoint (format: https://{name}.services.ai.azure.com/api/projects/{proj})
       - Model deployment name
-      - The name of their Fabric F2 capacity (used when they create their workspace)
+      - The name of their Fabric capacity (used when they create their workspace)
 
     The platform pre-sets the Az context to $SubscriptionId. For 'resourcegroup'
     deployments it also pre-creates the resource group; for 'subscription'
@@ -40,6 +41,12 @@
 
 .PARAMETER AllowedEntraUserIds
     Entra user object IDs for this lab — passed in by the platform.
+
+.PARAMETER FabricSkuName
+    Per-attendee Fabric capacity SKU (default F4). Drop to F2 to halve cost if
+    attendees don't hit capacity throttling. If you change it, ALSO adjust
+    estimatedDailyCostsUsd in lab-defaults.json to match — Fabric is the dominant
+    cost and each SKU step roughly doubles it.
 #>
 param(
     [Parameter(Mandatory=$true)]
@@ -53,7 +60,14 @@ param(
 
     [string[]]$PreferredLocation = @(),
 
-    [string[]]$AllowedEntraUserIds = @()
+    [string[]]$AllowedEntraUserIds = @(),
+
+    # Per-attendee Fabric capacity SKU. Default F4 avoids capacity throttling; drop
+    # to F2 to halve cost. If you change this, ALSO adjust estimatedDailyCostsUsd
+    # in lab-defaults.json (Fabric is the dominant cost; each SKU step roughly
+    # doubles it).
+    [ValidateSet('F2','F4','F8','F16','F32','F64')]
+    [string]$FabricSkuName = "F4"
 )
 
 $scriptPath = Split-Path -Parent $MyInvocation.MyCommand.Definition
@@ -86,7 +100,7 @@ $foundryAccountName = "inv-$stableHash"
 $foundryProjectName = "inventory-hack"
 $modelDeployment    = "gpt-5.4-mini"
 
-# Per-attendee Fabric F2 capacity name (lowercase alphanumeric, 3-63 chars).
+# Per-attendee Fabric capacity name (lowercase alphanumeric, 3-63 chars).
 $fabricCapacityName = "invcap$stableHash"
 
 Write-Host "[INFO]  Deploying Foundry account '$foundryAccountName' in '$effectiveRG'..."
@@ -271,7 +285,64 @@ Grant-FoundryUserRole `
     -PrincipalDescription "project managed identity '$($projectResource.identity.principalId)'"
 
 # ---------------------------------------------------------------------------
-# gpt-5.4-mini model deployment (ACCOUNT-scoped, GlobalStandard capacity 100).
+# Application Insights for agent tracing (per attendee).
+# The Foundry portal Traces tab (and server-side tracing) only lights up once the
+# project is connected to an Application Insights resource. We create a
+# workspace-based App Insights and add it as an 'AppInsights' project connection so
+# attendees see agent + Fabric Data Agent traces in Challenges 3-5 with no manual
+# setup. Non-fatal: a failure here doesn't block the rest of the lab (attendees can
+# still connect one via Agents -> Traces -> Connect).
+# ---------------------------------------------------------------------------
+try {
+    foreach ($ns in 'Microsoft.OperationalInsights', 'Microsoft.Insights') {
+        $prov = Invoke-AzRestMethod -Method GET -Path "/subscriptions/$SubscriptionId/providers/$ns`?api-version=2021-04-01"
+        if ($prov.StatusCode -eq 200 -and ($prov.Content | ConvertFrom-Json).registrationState -ne 'Registered') {
+            Invoke-AzRestMethod -Method POST -Path "/subscriptions/$SubscriptionId/providers/$ns/register?api-version=2021-04-01" | Out-Null
+        }
+    }
+
+    $laName = "inv-la-$stableHash"
+    $aiName = "inv-appi-$stableHash"
+    $laId   = "/subscriptions/$SubscriptionId/resourceGroups/$effectiveRG/providers/Microsoft.OperationalInsights/workspaces/$laName"
+    $aiId   = "/subscriptions/$SubscriptionId/resourceGroups/$effectiveRG/providers/Microsoft.Insights/components/$aiName"
+
+    $laBody = @{ location = $effectiveLocation; properties = @{ sku = @{ name = 'PerGB2018' }; retentionInDays = 30 } } | ConvertTo-Json -Depth 5
+    $laResp = Invoke-AzRestMethod -Method PUT -Path "$laId`?api-version=2023-09-01" -Payload $laBody
+    if ($laResp.StatusCode -ge 400) { throw "Log Analytics workspace create failed (HTTP $($laResp.StatusCode)): $($laResp.Content)" }
+
+    # Workspace-based App Insights (classic is retired); WorkspaceResourceId links it to the Log Analytics workspace.
+    $aiBody = @{ location = $effectiveLocation; kind = 'web'; properties = @{ Application_Type = 'web'; WorkspaceResourceId = $laId } } | ConvertTo-Json -Depth 5
+    $aiResp = Invoke-AzRestMethod -Method PUT -Path "$aiId`?api-version=2020-02-02" -Payload $aiBody
+    if ($aiResp.StatusCode -ge 400) { throw "Application Insights create failed (HTTP $($aiResp.StatusCode)): $($aiResp.Content)" }
+
+    # ConnectionString populates asynchronously — poll briefly.
+    $aiConnString = $null
+    for ($i = 0; $i -lt 6 -and -not $aiConnString; $i++) {
+        Start-Sleep -Seconds 5
+        $aiConnString = ((Invoke-AzRestMethod -Method GET -Path "$aiId`?api-version=2020-02-02").Content | ConvertFrom-Json).properties.ConnectionString
+    }
+    if (-not $aiConnString) { throw "Application Insights connection string not available yet." }
+
+    # Connect App Insights to the project (category 'AppInsights') — same as the portal's Traces -> Connect.
+    $aiConnUri  = "/subscriptions/$SubscriptionId/resourceGroups/$effectiveRG/providers/Microsoft.CognitiveServices/accounts/$foundryAccountName/projects/$foundryProjectName/connections/appinsights?api-version=2025-04-01-preview"
+    $aiConnBody = @{ properties = @{
+        category      = 'AppInsights'
+        target        = $aiId
+        authType      = 'ApiKey'
+        isSharedToAll = $true
+        credentials   = @{ key = $aiConnString }
+        metadata      = @{ ApiType = 'Azure'; ResourceId = $aiId }
+    } } | ConvertTo-Json -Depth 6
+    $aiConnResp = Invoke-AzRestMethod -Method PUT -Path $aiConnUri -Payload $aiConnBody
+    if ($aiConnResp.StatusCode -ge 400) { throw "App Insights project connection failed (HTTP $($aiConnResp.StatusCode)): $($aiConnResp.Content)" }
+
+    Write-Host "[OK]    Application Insights '$aiName' connected to the project for agent tracing."
+} catch {
+    Write-Warning "Application Insights tracing setup skipped: $_ - attendees can still connect one manually (Agents -> Traces -> Connect)."
+}
+
+# ---------------------------------------------------------------------------
+# gpt-5.4-mini model deployment (ACCOUNT-scoped, GlobalStandard capacity 200).
 # Matches the pro-code inventory hack: a low-cost GPT-5 model whose Foundry model
 # card confirms Functions/Tools + Structured Outputs, on GlobalStandard in EU
 # regions, with the longest support horizon among the low-cost models
@@ -283,8 +354,10 @@ Grant-FoundryUserRole `
 # Fabric tool, set tool choice = required in the run settings (the challenge
 # instructions carry an "IMPORTANT - tool use" block for exactly this).
 #
-# Capacity 100 = 100K TPM per attendee. Keep labsPerSubscription x 100 <= the
-# region's GlobalStandard quota (~1,000) - 4 labs/subscription fits comfortably.
+# Capacity 200 = 200K TPM per attendee. Keep labsPerSubscription x 200 <= the
+# region's GlobalStandard quota (~1,000). At 5 labs/subscription that is 5 x 200 =
+# 1,000, i.e. right at the ceiling - request a quota increase, or use one
+# subscription per attendee, if attendees hit rate limits.
 # Model deployments are ACCOUNT-scoped (not project-scoped): the ARM path is
 # .../accounts/{account}/deployments/{deployment} - there is no /projects/ segment.
 # ---------------------------------------------------------------------------
@@ -296,7 +369,7 @@ $deploymentUri = "/subscriptions/$SubscriptionId/resourceGroups/$effectiveRG" +
 $existingDeploy = Invoke-AzRestMethod -Method GET -Path $deploymentUri -ErrorAction SilentlyContinue
 if ($existingDeploy.StatusCode -ne 200) {
     $deploymentBody = @{
-        sku        = @{ name = "GlobalStandard"; capacity = 100 }
+        sku        = @{ name = "GlobalStandard"; capacity = 200 }
         properties = @{
             model = @{ format = "OpenAI"; name = "gpt-5.4-mini"; version = "2026-03-17" }
         }
@@ -313,10 +386,12 @@ if ($existingDeploy.StatusCode -ne 200) {
 }
 
 # ---------------------------------------------------------------------------
-# Per-attendee Fabric F2 capacity (ARM REST — no az CLI / Fabric extension needed).
+# Per-attendee Fabric capacity (ARM REST — no az CLI / Fabric extension needed).
 # The attendee is set as capacity ADMIN so they can create a workspace, assign it
 # to this capacity, and Run All the setup notebook themselves (Challenge 1).
-# F2 = 2 CU; a 512-CU subscription supports ~256 attendees.
+# Default F4 = 4 CU; a 512-CU subscription supports ~128 attendees. Drop to F2 (2 CU)
+# to double attendees/subscription and halve cost — override with -FabricSkuName and
+# adjust estimatedDailyCostsUsd in lab-defaults.json to match.
 #
 # Capacity admin members must be UPNs (or service principals) — bare object IDs are
 # rejected — so resolve each attendee object ID to a UPN with the platform helper
@@ -336,7 +411,7 @@ foreach ($uid in $AllowedEntraUserIds) {
 }
 
 if ($adminUpns.Count -eq 0) {
-    Write-Warning "No attendee UPNs resolved — skipping Fabric capacity creation. Create the F2 capacity manually and set the attendee as capacity admin, or re-run once the lab-user cache is available."
+    Write-Warning "No attendee UPNs resolved — skipping Fabric capacity creation. Create the capacity manually and set the attendee as capacity admin, or re-run once the lab-user cache is available."
 } else {
     # Ensure the Microsoft.Fabric resource provider is registered (idempotent).
     $prov = Invoke-AzRestMethod -Method GET -Path "/subscriptions/$SubscriptionId/providers/Microsoft.Fabric?api-version=2021-04-01"
@@ -350,10 +425,10 @@ if ($adminUpns.Count -eq 0) {
         Write-Host "[OK]    Fabric capacity '$fabricCapacityName' already exists in '$fabricCapacityRegion' — skipping."
     } else {
         foreach ($region in $candidateRegions) {
-            Write-Host "[INFO]  Creating Fabric F2 capacity '$fabricCapacityName' in '$region'..."
+            Write-Host "[INFO]  Creating Fabric $FabricSkuName capacity '$fabricCapacityName' in '$region'..."
             $capBody = @{
                 location   = $region
-                sku        = @{ name = "F2"; tier = "Fabric" }
+                sku        = @{ name = $FabricSkuName; tier = "Fabric" }
                 properties = @{ administration = @{ members = @($adminUpns) } }
             } | ConvertTo-Json -Depth 6
             $capUri = "/subscriptions/$SubscriptionId/resourceGroups/$effectiveRG" +
@@ -371,7 +446,7 @@ if ($adminUpns.Count -eq 0) {
             } while (($cap.Properties.provisioningState -ne "Succeeded") -and ($elapsed -lt 180))
             if ($cap.Properties.provisioningState -eq "Succeeded") {
                 $fabricCapacityRegion = $region
-                Write-Host "[OK]    Fabric F2 capacity '$fabricCapacityName' created in '$region'."
+                Write-Host "[OK]    Fabric $FabricSkuName capacity '$fabricCapacityName' created in '$region'."
                 break
             }
             Write-Warning "Fabric capacity provisioning did not succeed in '$region' — trying next region."
@@ -421,7 +496,7 @@ Write-Host "[OK]    Lab provisioning complete."
 @{ HackboxCredential = @{
     name  = "FabricCapacityName"
     value = $fabricCapacityName
-    note  = "Your own Fabric F2 capacity. In Challenge 1 you create a workspace and assign it to this capacity, then Run All the setup notebook to publish your Data Agent."
+    note  = "Your own Fabric $FabricSkuName capacity. In Challenge 1 you create a workspace and assign it to this capacity, then Run All the setup notebook to publish your Data Agent."
 } }
 
 @{ HackboxCredential = @{

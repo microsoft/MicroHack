@@ -88,7 +88,7 @@ As in previous deployments, copy `src` and `azure.yaml` to the project root befo
 cp -Rf \
   "$walkthroughHome/challenge-06/orchestration/src" \
   "$walkthroughHome/challenge-06/orchestration/azure.yaml" \
-  "$rootHome/"
+  "$hackFolder/"
 ```
 
 Then redeploy using the **Foundry Toolkit**.

@@ -8,30 +8,44 @@ integration for the Talk-To-Your-Data MicroHack.
 | File | Purpose |
 | --- | --- |
 | `lab-defaults.json` | Platform sizing: `resourcegroup`, 42 labs/subscription. |
-| `shared-deploy-lab.ps1` | Runs once per subscription → `rg-shared`. Shared VNet, SQL MI, Fabric F32 capacity + gateway, backup storage, shared webshop, demo databases, stored proc, product, Agent job. |
-| `deploy-lab.ps1` | Runs once per attendee. Two databases in the shared MI, the attendee's login + Fabric workspace, a per-attendee CSV storage account. |
-| `shared.bicep` / `main.bicep` | ARM templates for the shared stack and the per-attendee resources (reuse `infra/modules`). |
+| `shared-deploy-lab.ps1` | Runs once per subscription → `rg-shared`. Shared VNet, SQL MI, Fabric F32 capacity + gateway, backup storage, shared CSV storage, shared webshop, demo databases, stored proc, product, Agent job. |
+| `deploy-lab.ps1` | Runs once per attendee. Two databases in the shared MI, the attendee's login + Fabric workspace, and CSV upload into the attendee's shared storage container. |
+| `shared.bicep` | ARM template for the shared stack (reuses `infra/modules`). There is no per-attendee ARM deployment. |
 | `sql/` | `StoredProcedure.sql`, `Jobs.sql`, `InsertProduct.sql` (discover per-attendee DBs by name pattern). |
 
 ## Split model
 
 - **Shared, once per subscription:** one SQL Managed Instance and one Fabric F32
-  capacity. The webshop and the `usp_PurchaseSpaceRanger` proc / Agent job are shared
-  and fan out to every attendee database that exists.
-- **Per attendee:** `TailspinToys_<short>` + `TailspinToysFeedback_<short>` in the
-  shared MI, one Fabric workspace on the shared capacity, one CSV storage account in
-  the attendee resource group.
+  capacity. Every lab user is a Fabric capacity administrator. The webshop and the
+  `usp_PurchaseSpaceRanger` proc / Agent job are shared and fan out to every attendee
+  database that exists. Employee CSV files live in one
+  shared `employeedata...` storage account with per-user containers such as `container0001`
+  for lab users or `containerx001` for local tests with regular tenant accounts.
+- **Per attendee:** `TailspinToys_User####` + `TailspinToysFeedback_User####` in the
+  shared MI, one Fabric workspace on the shared capacity, and one shared-storage
+  container named `container####`. Local tests with regular tenant accounts use
+  `TailspinToys_Userx001` / `TailspinToysFeedback_Userx001` and `containerx001`.
 
 ## Prerequisites
 
-- **Fabric APIs for service principals** must be enabled in the tenant admin portal
-  (the platform runs as a service principal). Without it, gateway/workspace creation
-  fails.
-- SQL is accessed with an Entra token as the deploying principal, which
-  `shared-deploy-lab.ps1` sets as the SQL MI Entra admin (plus Directory Readers on the
-  MI identity). No shared SQL password is distributed.
+- The platform runs as a service principal. A Fabric administrator must enable both
+  **Service principals can call Fabric public APIs** and **Service principals can create
+  workspaces, connections, and deployment pipelines** in the Fabric Admin portal, with
+  the platform service principal included in an allowed security group. The second
+  setting is separate and disabled by default for new tenants.
+  Instead of clicking through the portal, a Fabric/Global administrator can run
+  `enable-fabric-sp-tenant-settings.ps1 -SecurityGroupObjectId <group-object-id>`
+  (signed in as themselves, not the deployment service principal) to enable both
+  settings for the security group that contains the platform service principal.
+- The automation accesses SQL with a stable administrator password scoped to `rg-shared`;
+  both hooks derive the same value without printing or distributing it. The shared hook
+  also configures the first lab user as the SQL MI Entra admin and grants Directory Readers
+  to the MI identity for attendee login creation.
+- Fabric mirroring uses the shared SQL login `demouser` / `Demo@pass1234567`; both hooks
+  ensure the login exists and has `db_owner` access to restored lab databases.
 - The scripts read `databasebackup/*.bak` and `csvdata/*.csv` and reuse
-  `infra/modules`, all local to this folder, so **mount this `labautomation` folder** for local testing.
+  `shared.bicep` and `infra/modules`, all local to this folder, so **mount this
+  `labautomation` folder** for local testing.
 
 ## Local testing
 
@@ -66,6 +80,29 @@ Then run the two hooks in the real order. Pass more than one object id to
     -ResourceGroupName   "rg-lab-local-test" `
     -PreferredLocation   "swedencentral" `
     -AllowedEntraUserIds (Get-AzADUser -SignedIn).Id
+```
+
+For local testing with regular tenant accounts instead of framework-created
+`labuser-####` accounts, set `TTYD_LOCAL_TEST_USER_INDEX` before each attendee
+run. This keeps the hook parameters framework-compatible while producing stable
+local names such as `TailspinToys_Userx001` and `containerx001`:
+
+```powershell
+$env:TTYD_LOCAL_TEST_USER_INDEX = '1'
+./deploy-lab.ps1 `
+  -DeploymentType      resourcegroup `
+  -SubscriptionId      (Get-AzContext).Subscription.Id `
+  -ResourceGroupName   "rg-lab-local-test-x001" `
+  -PreferredLocation   "swedencentral" `
+  -AllowedEntraUserIds '<regular-user-object-id>'
+
+$env:TTYD_LOCAL_TEST_USER_INDEX = '2'
+./deploy-lab.ps1 `
+  -DeploymentType      resourcegroup `
+  -SubscriptionId      (Get-AzContext).Subscription.Id `
+  -ResourceGroupName   "rg-lab-local-test-x002" `
+  -PreferredLocation   "swedencentral" `
+  -AllowedEntraUserIds '<regular-user-object-id>'
 ```
 
 > Provisioning a SQL Managed Instance takes hours; `shared-deploy-lab.ps1` submits it

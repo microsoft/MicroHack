@@ -35,7 +35,9 @@ $requiredProviders = @(
     "Microsoft.Storage",
     "Microsoft.Sql",
     "Microsoft.SqlVirtualMachine",
-    "Microsoft.DevTestLab"
+    "Microsoft.DevTestLab",
+    "Microsoft.OperationalInsights",
+    "Microsoft.Insights"
 )
 foreach($provider in $requiredProviders) {
     $state = (Get-AzResourceProvider -ProviderNamespace $provider -ErrorAction SilentlyContinue | Select-Object -First 1).RegistrationState
@@ -238,6 +240,74 @@ for ($elapsed = 0; $elapsed -lt $timeoutSeconds; $elapsed += $pollIntervalSecond
 if (-not $found)
 {
     throw "Expected Entra ID Admin was not configured within 2 minutes."
+}
+
+#Configure Log Settings for SQLMI
+$ErrorOccurred = $false
+try {
+
+    $databaseName   = "TenantCRM"
+    $workspaceName  = "sqlhack-loganalytics"
+    $workspace = Get-AzOperationalInsightsWorkspace -ResourceGroupName $sharedResourceGroup -Name $WorkspaceName -ErrorAction Stop
+    $workspaceResourceId = $workspace.ResourceId
+
+    #----------------------------------------------------------
+    # Managed Instance
+    #----------------------------------------------------------
+    $miCategories = Get-AzDiagnosticSettingCategory -ResourceId $managedInstance.Id
+    $miLogs = @()
+    foreach ($category in $miCategories)
+    {
+        if ($category.CategoryType -eq "Logs")
+        {
+            $miLogs += New-AzDiagnosticSettingLogSettingsObject -Enabled $true -Category $category.Name
+        }
+    }
+    $miMetrics = @()
+    foreach ($category in $miCategories)
+    {
+        if ($category.CategoryType -eq "Metrics")
+        {
+            $miMetrics += New-AzDiagnosticSettingMetricSettingsObject -Enabled $true -Category $category.Name
+        }
+    }
+    New-AzDiagnosticSetting -Name "sqlmi-alllogs" -ResourceId $managedInstance.Id -WorkspaceId $workspaceResourceId -Log $miLogs -Metric $miMetrics -ErrorAction Stop
+
+    #----------------------------------------------------------
+    # Datenbank TENANTCRM
+    #----------------------------------------------------------
+    $db = Get-AzResource -ResourceType "Microsoft.Sql/managedInstances/databases" | Where-Object { $_.Name -eq "$managedInstanceName/$databaseName" }
+    if (-not $db)
+    {
+        throw "Datenbank $databaseName wurde nicht gefunden."
+    }
+    $dbCategories = Get-AzDiagnosticSettingCategory -ResourceId $db.ResourceId
+    $dbLogs = @()
+    foreach ($category in $dbCategories)
+    {
+        if ($category.CategoryType -eq "Logs")
+        {
+            $dbLogs += New-AzDiagnosticSettingLogSettingsObject -Enabled $true -Category $category.Name
+        }
+    }
+    $dbMetrics = @()
+    foreach ($category in $dbCategories)
+    {
+        if ($category.CategoryType -eq "Metrics")
+        {
+            $dbMetrics += New-AzDiagnosticSettingMetricSettingsObject -Enabled $true -Category $category.Name
+        }
+    }
+    New-AzDiagnosticSetting -Name "$databaseName-alllogs" -ResourceId $db.ResourceId -WorkspaceId $workspaceResourceId -Log $dbLogs -Metric $dbMetrics -ErrorAction Stop
+}
+catch {
+    Write-Host "Could not configure log settings."
+    $ErrorString = $_ | format-list -force | Out-String
+    Write-Error "ERR: $ErrorString"
+    $ErrorOccurred = $true
+}
+if ($ErrorOccurred) {
+    throw "Errors occurred during log settings configuration. Please check the logs for details."
 }
 
 $rg = Get-AzResourceGroup -Name $sharedResourceGroup -ErrorAction SilentlyContinue

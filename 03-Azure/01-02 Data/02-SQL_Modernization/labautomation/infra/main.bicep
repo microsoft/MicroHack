@@ -21,6 +21,12 @@ param adminUsername string
 @secure()
 param adminPassword string
 
+param sqlMiAdminUsername string
+@secure()
+param sqlMiAdminPassword string
+
+param SqlMiSysadminUser string
+
 param teamVmSize string = 'Standard_D2s_v5'
 
 param tags object = {
@@ -67,6 +73,9 @@ module teamVms_cse 'modules/team-vm-cse.bicep' = {
     legacySQLName: legacySQLName
     adminUsername: adminUsername
     adminPassword: adminPassword
+    sqlMiAdminUsername: sqlMiAdminUsername
+    sqlMiAdminPassword: sqlMiAdminPassword
+    SqlMiSysadminUser: SqlMiSysadminUser
   }
 }
 

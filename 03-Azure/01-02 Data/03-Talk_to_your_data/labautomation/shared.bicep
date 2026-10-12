@@ -7,8 +7,8 @@
 //     the first lab user; ARM cannot resolve the principal in the lab tenant)
 //   - demo database restores, stored proc, product, Agent job
 //   - Fabric VNet gateway + gateway role assignments
-// Per-attendee resources (user databases, Fabric workspaces) are created by
-// deploy-lab.ps1.
+// Per-attendee work (user databases, Fabric workspaces, SQL access, CSV upload)
+// is performed by deploy-lab.ps1. No ARM resources are deployed per attendee.
 
 @description('Azure region for the shared resources.')
 param location string
@@ -31,6 +31,9 @@ param fabricAdminMembers array
 
 @description('Base database the shared webshop connects to.')
 param webshopSqlDatabase string = 'TailspinToys_Demo_Final'
+
+@description('Exact per-user CSV container names to create.')
+param userDataContainerNames array
 
 @description('When true, the SQL MI subnet NSG and route table already exist and are referenced instead of redeployed (avoids ConflictWithNetworkIntentPolicy on shared hook re-runs).')
 param sqlMiNetworkingExists bool = false
@@ -86,6 +89,16 @@ module storageBackups 'infra/modules/storageBackups.bicep' = {
   }
 }
 
+module userDataStorage 'infra/modules/userDataStorage.bicep' = {
+  name: 'shared-user-data'
+  params: {
+    location: location
+    envName: envName
+    containerNames: userDataContainerNames
+    tags: commonTags
+  }
+}
+
 module fabricCapacity 'infra/modules/fabricCapacity.bicep' = {
   name: 'shared-fabric'
   params: {
@@ -105,5 +118,8 @@ output fabricSubnetName string = vnet.outputs.fabricSubnetName
 output fabricCapacityName string = fabricCapacity.outputs.capacityName
 output backupStorageAccountName string = storageBackups.outputs.storageAccountName
 output backupContainerName string = storageBackups.outputs.containerName
+output userDataStorageAccountName string = userDataStorage.outputs.storageAccountName
+output userDataStorageDfsEndpoint string = userDataStorage.outputs.storageAccountDfsEndpoint
+output userDataContainerNames array = userDataStorage.outputs.containerNames
 output webshopName string = appService.outputs.webAppName
 output webshopDefaultHostname string = appService.outputs.defaultHostname

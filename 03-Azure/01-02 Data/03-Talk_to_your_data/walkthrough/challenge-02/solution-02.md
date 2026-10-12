@@ -96,8 +96,12 @@ In this task, you will optimize the semantic model by creating the required rela
 <tr><td colspan="2" align="center"><img src="../../images/image108.png" style="width: 100%; display: block;"></td></tr>
 <tr><td>Create <b>Sales[ProductID] -> Product[ProductID]</b>.</td><td>This is the core product join for sales analytics.</td></tr>
 <tr><td colspan="2" align="center"><img src="../../images/image109.png" style="width: 100%; display: block;"></td></tr>
-<tr><td>Create <b>employees[SalesOfficeID] -> SalesOffice[SalesOfficeID]</b>.</td><td>Enables organizational analysis by office and region. Fabric may auto-select Email first because it is a common column, so make sure you choose <b>SalesOfficeID</b> before saving the relationship.</td></tr>
+<tr><td>Create the <b>employees[SalesOfficeID] -> SalesOffice[SalesOfficeID]</b> relationship. If <b>SalesOfficeID</b> is too far to the right to select while creating the relationship, first select a visible column such as <b>Email</b>, then correct the relationship before continuing.</td><td>Fabric may initially select <b>Email</b> or another visible column. The relationship is correct only when <b>SalesOfficeID</b> is selected on both sides.</td></tr>
 <tr><td colspan="2" align="center"><img src="../../images/image110.png" style="width: 100%; display: block;"></td></tr>
+<tr><td><b>Option 1 - Update the relationship in Model view:</b> select the <b>SalesOfficeID</b> field in the <b>employees</b> table and connect it to <b>SalesOfficeID</b> in the <b>SalesOffice</b> table. Confirm that the relationship line connects the correct fields.</td><td>This option is useful when you prefer to manage the relationship visually from the model diagram.</td></tr>
+<tr><td colspan="2" align="center"><img src="../../images/semanticmodel2.png" style="width: 100%; display: block;"></td></tr>
+<tr><td><b>Option 2 - Update the relationship in the Properties pane:</b> select the relationship line, then use the <b>Properties</b> pane to set the first table to <b>employees</b> with column <b>SalesOfficeID</b>, and the second table to <b>SalesOffice</b> with column <b>SalesOfficeID</b>. Apply the changes.</td><td>This option is useful when the field is difficult to select from the relationship dialog because it is not visible without horizontal scrolling.</td></tr>
+<tr><td colspan="2" align="center"><img src="../../images/semanticmodel.png" style="width: 100%; display: block;"></td></tr>
 <tr><td>Review all listed relationships and confirm they are <b>Active</b>, then close the dialog.</td><td>Quick validation to ensure no required join is missing.</td></tr>
 <tr><td colspan="2" align="center"><img src="../../images/image111.png" style="width: 100%; display: block;"></td></tr>
 <tr><td>Verify the model diagram now shows connected relationship lines.</td><td>The model should now reflect the intended star / multi-fact shape.</td></tr>
@@ -154,7 +158,7 @@ In this step, use the semantic model to automatically generate the first report 
 <tr><th>Narrative</th><th>Notes</th></tr>
 <tr><td>Navigate back to the workspace by clicking the workspace icon in the left navigation.</td><td></td></tr>
 <tr><td colspan="2" align="center"><img src="../../images/image153.png" style="width: 100%; display: block;"></td></tr>
-<tr><td>Open the semantic model and select <b>Explore</b> from the top menu, then click <b>Auto-create a report</b>.</td><td>This generates a first draft of the report automatically based on the available fields and data patterns.</td></tr>
+<tr><td>In the workspace, locate the semantic model and click its <b>More options (...)</b> menu (1). Select <b>Auto-create report</b> (2).</td><td>The <b>Auto-create report</b> option is available from the semantic model's context menu. It generates a first draft of the report automatically based on the available fields and data patterns.</td></tr>
 <tr><td colspan="2" align="center"><img src="../../images/image045.png" style="width: 100%; display: block;"></td></tr>
 <tr><td>Review the generated <b>Quick summary</b> page and check the suggested visuals.</td><td>You can also adjust the field selection in the <b>Your data</b> pane on the right if needed.</td></tr>
 <tr><td colspan="2" align="center"><img src="../../images/image046.png" style="width: 100%; display: block;"></td></tr>
@@ -172,8 +176,10 @@ In this step, use prompts or Copilot suggestions to improve the auto-generated r
 <tr><th>Narrative</th><th>Notes</th></tr>
 <tr><td>Switch to <b>Edit</b> mode from the report menu and confirm with <b>Continue</b>.</td><td>Use this mode to manually refine and optimize the generated report.</td></tr>
 <tr><td colspan="2" align="center"><img src="../../images/image052.png" style="width: 100%; display: block;"></td></tr>
-<tr><td> First click the <b>Copilot icon (1)</b>. Then a sidebar opens to the left where you can <b>add your prompt (2)</b> to add something on the report page, like: <code>Provide a detailed, insight-focused overview of "Sum of Quantity by RegionName" visual's data.</code> <br> Use Copilot prompts to refine the auto-generated report with better visuals, clearer wording, or additional insights.</td><td>This screenshot shows an example of how Power BI Copilot can help improve the report.</td></tr>
-<tr><td colspan="2" align="center"><img src="../../images/image-pbicopilotcreate.png" style="width: 100%; display: block;"></td></tr>
+<tr><td>Click the <b>Copilot icon</b>. In the Copilot pane, enter this prompt: <code>Generate a business insights report for this visual. Focus on major findings, anomalies, opportunities, and business impact instead of describing the chart.</code></td><td>Use this prompt when you want Copilot to analyze an existing visual and summarize its business meaning. Review the generated content because AI-generated output may be inaccurate.</td></tr>
+<tr><td colspan="2" align="center"><img src="../../images/CopilotBusinessInsights.png" style="width: 100%; display: block;"></td></tr>
+<tr><td>To enhance the overall report, enter this prompt in the Copilot pane: <code>Enhance this report by adding visuals and summaries that highlight key insights, trends, outliers, and business opportunities. Optimize the layout for executive decision-making.</code></td><td>This prompt asks Copilot to add KPI cards and narrative summaries, including an overall quantity card and a Midwest order quantity card. Review the proposed changes before applying them.</td></tr>
+<tr><td colspan="2" align="center"><img src="../../images/CopilotExecutiveSummary.png" style="width: 100%; display: block;"></td></tr>
 </table>
 
 ## 6. Manually Fine-Tune the Report
@@ -201,9 +207,9 @@ In this task, you will simplify the data schema and prepare the model for AI and
 <col style="width: 28%;">
 </colgroup>
 <tr><th>Narrative</th><th>Notes</th></tr>
-<tr><td>Open your workspace and open the semantic model in Microsoft Fabric.</td><td></td></tr>
+<tr><td>In the workspace, locate the semantic model you want to prepare and click its row. Confirm that the item is a <b>Semantic model</b>, then use the available actions to open it.</td><td>The highlighted row identifies the semantic model to prepare. Do not select the related report or SQL analytics endpoint.</td></tr>
 <tr><td colspan="2" align="center"><img src="../../images/image054.png" style="width: 100%; display: block;"></td></tr>
-<tr><td>From the top menu, select <b>Prep data for AI</b>.</td><td></td></tr>
+<tr><td>Open the semantic model. If necessary, switch to <b>Editing</b> mode (1), then select <b>Prep data for AI</b> (2) from the top menu.</td><td>The <b>Prep data for AI</b> command is available when the semantic model is open in Editing mode.</td></tr>
 <tr><td colspan="2" align="center"><img src="../../images/image055.png" style="width: 100%; display: block;"></td></tr>
 <tr><td>In the <b>Prep data for AI</b> dialog, review and configure the steps: simplify the data schema, verified answers, and AI instructions.</td><td></td></tr>
 <tr><td colspan="2" align="center"><img src="../../images/image056.png" style="width: 100%; display: block;"></td></tr>
@@ -217,7 +223,7 @@ In this task, you will simplify the data schema and prepare the model for AI and
 <tr><td colspan="2" align="center"><img src="../../images/image060.png" style="width: 100%; display: block;"></td></tr>
 <tr><td>Finalize the schema cleanup.</td><td><b>State</b>: uncheck <code>RegionID</code> and <code>StateID</code></td></tr>
 <tr><td colspan="2" align="center"><img src="../../images/image061.png" style="width: 100%; display: block;"></td></tr>
-<tr><td>After reviewing your selections, click <b>Apply</b>.</td><td></td></tr>
+<tr><td>After reviewing your selections, click <b>Apply</b>. When the button becomes unavailable, the selection has been saved; continue immediately to the next step.</td><td><b>Important:</b> Do not wait for a loading or completion message after selecting <b>Apply</b>. The wizard does not automatically advance.</td></tr>
 <tr><td colspan="2" align="center"><img src="../../images/image062.png" style="width: 100%; display: block;"></td></tr>
 </table>
 
@@ -245,7 +251,7 @@ In this task, you will add business-focused AI instructions so Copilot and other
 <col style="width: 28%;">
 </colgroup>
 <tr><th>Narrative</th><th>Notes</th></tr>
-<tr><td>In the left navigation, select <b>Add AI instructions (preview)</b>. In the text box, add clear, business-focused instructions, then click <b>Apply</b>.</td><td></td></tr>
+<tr><td>In the left navigation, select <b>Add AI instructions (preview)</b>. In the text box, add clear, business-focused instructions, then click <b>Apply</b>. Once <b>Apply</b> becomes unavailable, continue to the next step.</td><td><b>Important:</b> The wizard does not show a loading indicator or move forward automatically after applying the instructions. You can select the next step immediately.</td></tr>
 <tr><td colspan="2" align="center"><img src="../../images/image064.png" style="width: 100%; display: block;"></td></tr>
 <tr><td>See the example section below for a sample instruction set.</td><td></td></tr>
 <tr><td colspan="2" align="center"><img src="../../images/image065.png" style="width: 100%; display: block;"></td></tr>

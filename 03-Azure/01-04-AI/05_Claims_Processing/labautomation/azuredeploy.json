@@ -13,10 +13,12 @@
       "type": "string",
       "defaultValue": "swedencentral",
       "allowedValues": [
-        "swedencentral"
+        "swedencentral",
+        "francecentral",
+        "germanywestcentral"
       ],
       "metadata": {
-        "description": "Azure location where resources should be deployed (e.g., swedencentral)"
+        "description": "Azure location where resources should be deployed. Restricted to regions verified to support both the gpt-5.4 and mistral-document-ai-2512 model deployments."
       }
     },
     "deployModelDeployments": {

@@ -100,19 +100,19 @@ challenges. Both start at Challenge 01.
 | Audience | Path | What you do |
 | --- | --- | --- |
 | **Platform engineer** | Challenges **02 - 06** | Prepare the Kubernetes platforms, install and operate Radius, author the resource-type contracts and the recipes behind them, then verify that an application deploys unchanged to every environment. |
-| **Application developer** | Challenges **05 - 11** (Challenge 05 is optional) | Consume the platform contracts, deploy and port the trading application, and adapt identity, service communication, AI services, and an existing brownfield application without changing the application model. |
+| **Application developer** | Challenge **06**, then optional **07, 09, 10** | Connect to a developer-ready hosted lab, deploy and port the application, then explore identity, AI, and Radius Canvas with their separate prerequisites. |
 
 Challenges 05 and 06 are the deliberate handover point: the platform engineer
 finishes by proving the contracts work, and the application developer starts
 from the same place.
 
 > [!TIP]
-> **Challenges 02 - 04 can be provisioned automatically through the Hack
-> Console.** If your lab environment is pre-provisioned, the platforms, the
-> Radius control planes, and the resource-type catalog already exist. Application
-> developers can then skip straight to Challenge 05 (optional) or Challenge 06,
-> and platform engineers can still walk 02 - 04 manually to understand what the
-> automation did.
+> **A ready hosted Console lab covers Challenges 02-05**, including recipe
+> publication and registration. Complete the hosted section of Challenge 01 and
+> [connect your workstation](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/docs/console-setup.md)
+> before starting Challenge 06. Provisioned infrastructure does not supply your
+> local Kubernetes/Radius state. Platform engineers retain the manual 01-06 path.
+> The hosted connection flow still needs live workshop validation.
 
 ```mermaid
 flowchart LR
@@ -120,10 +120,10 @@ flowchart LR
     C24["<b>Challenges 02 - 04</b><br/>Platforms, Radius,<br/>resource types"]
     C5["<b>Challenge 05</b><br/>Recipes<br/><i>(optional for developers)</i>"]
     C6["<b>Challenge 06</b><br/>Port the app"]
-    C711["<b>Challenges 07 - 11</b><br/>Identity, communication, AI,<br/>Radius Canvas, brownfield"]
+    C711["<b>Optional 07, 09, 10</b><br/>Identity, AI, Radius Canvas"]
 
     C1 --> C24 --> C5 --> C6 --> C711
-    C1 -. "Hack Console provisions 02 - 04" .-> C5
+    C1 -. "Ready Console lab: 02 - 05 + local connection" .-> C6
 
     classDef platform fill:#dbeafe,stroke:#1d4ed8,color:#0f172a
     classDef developer fill:#dcfce7,stroke:#15803d,color:#0f172a
@@ -143,15 +143,17 @@ After completing this MicroHack, you will:
 - Offer the same capability contract on Azure, Azure Local, and edge platforms
   with environment-specific implementations.
 
-**As an application developer (Challenges 05 - 11)**
+**As an application developer (Challenge 06, optional 07, 09, 10)**
 
 - Deploy one application model across multiple environments with minimal
   environment-only configuration changes.
-- Adapt identity, secure service communication, and AI services without
+- Adapt identity and AI services without
   changing the application model.
 - Model, review, and deploy the application from the GitHub Copilot app with
   Radius Canvas, and judge what that preview does and does not solve.
-- Apply the Adaptive Apps approach to an existing containerized application.
+
+Service communication (08) and brownfield modernization (11) are not yet
+published and are excluded from the current participant path.
 
 ## MicroHack challenges
 
@@ -159,11 +161,15 @@ After completing this MicroHack, you will:
 > The challenge sequence is completed incrementally. Follow the links below for
 > the currently published student and coach material. Each bucket is labelled
 > with its primary audience, so you can follow either the platform engineer path
-> (Challenges 02 - 06) or the application developer path (Challenges 05 - 11).
+> (Challenges 02 - 06) or the hosted developer path (06, then optional 07, 09, 10).
 
 ### General prerequisites
 
-To use the MicroHack time effectively, have the following available:
+For a hosted lab, follow
+[Console setup](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/docs/console-setup.md):
+the supplied lab resource group has Owner access and the AKS node resource group
+has Reader access. Skip provider registration, extra resource-group preflight, and
+provisioning. For the manual bring-your-own-subscription path, have:
 
 - An Azure subscription with **Owner** access to the lab resource group
 - Capacity to create the default two-environment topology: one Azure Kubernetes
@@ -178,24 +184,28 @@ To use the MicroHack time effectively, have the following available:
 - Azure CLI `bastion` extension for native client tunneling
 - [kubectl](https://kubernetes.io/docs/tasks/tools/)
 - [Helm](https://helm.sh/docs/intro/install/)
-- [Radius CLI (`rad`)](https://docs.radapp.io/getting-started/install/)
+- [Radius CLI (`rad`)](https://docs.radapp.io/installation/cli/)
 - [Visual Studio Code](https://code.visualstudio.com/)
 - Bash or PowerShell 7; Windows users can also use WSL 2
 
-If the Hack Console has pre-provisioned Challenges 02 - 04 for you, the Azure
-subscription, cluster capacity, and container registry requirements are already
-satisfied. You still need the local tooling above to talk to the provisioned
-environments.
+For a ready hosted lab, cluster capacity, the registry, and recipes are supplied.
+You still need the tools above and the non-provisioning connection helper.
+Use Bash for hosted instructions, including in containers with PowerShell.
 
 The recommended option is the repository
-[devcontainer](../../../.devcontainer/03-azure-01-01-app-innovation-04-adaptive-apps/devcontainer.json),
+[devcontainer](https://github.com/microsoft/MicroHack/blob/main/.devcontainer/03-azure-01-01-app-innovation-04-adaptive-apps/devcontainer.json),
 which installs the Challenges 01-07 toolchain while retaining the manual host setup
-path. Clone the contribution, open the repository root in VS Code, run **Dev
+path. Clone `https://github.com/microsoft/MicroHack.git` on `main`, open the repository root in VS Code, run **Dev
 Containers: Reopen in Container**, and select
 `03-azure-01-01-app-innovation-04-adaptive-apps` when prompted. The container then
 opens this MicroHack as its workspace. See
-[Challenge 01](challenges/challenge-01.md) for host prerequisites, credential
+[Challenge 01](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/challenges/challenge-01.md) for host prerequisites, credential
 persistence, verification, and troubleshooting.
+
+Local Dev Containers remain the validated workstation path. Optional Codespaces
+selection and forwarded-browser/OIDC considerations are documented in
+[Console setup](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/docs/console-setup.md#optional-extensions-and-hosted-browsers)
+for organizer validation, not as a tested hosted alternative.
 
 The default K3s VM has no public IP. Its Kubernetes API is reached through an Azure
 Bastion native-client tunnel bound only to localhost in the participant environment.
@@ -210,7 +220,7 @@ Bastion native-client tunnel bound only to localhost in the participant environm
 Complete Challenge 01 before starting a challenge in any bucket, regardless of
 which audience path you follow.
 
-- [Challenge 01 - Prerequisites: ready, set, go](challenges/challenge-01.md)
+- [Challenge 01 - Prerequisites: ready, set, go](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/challenges/challenge-01.md)
   **<- Start here**
 
 ### Bucket 1: Infrastructure setup
@@ -219,12 +229,12 @@ which audience path you follow.
 Radius control plane.
 
 > [!NOTE]
-> Challenges 02 - 04 can be pre-provisioned automatically through the Hack
-> Console. Work through them manually to learn how the platform is built, or
-> use the provisioned environment and continue at Challenge 05 or 06.
+> Ready Console labs include Challenges 02-05. Hosted developers connect after
+> Challenge 01 and start 06; do not rerun the provisioning/install steps below.
+> Platform engineers work through these steps manually on their own lab.
 
-- [Challenge 02 - Prepare the platforms](challenges/challenge-02.md)
-- [Challenge 03 - Deploy and explore Radius](challenges/challenge-03.md)
+- [Challenge 02 - Prepare the platforms](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/challenges/challenge-02.md)
+- [Challenge 03 - Deploy and explore Radius](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/challenges/challenge-03.md)
 
 ### Bucket 2: Exploring Radius
 
@@ -232,10 +242,10 @@ Radius control plane.
 for application developers). Define portable platform capabilities and
 implement them with recipes.
 
-- [Challenge 04 - Build the platform abstractions](challenges/challenge-04.md)
-- [Challenge 05 - Build the platform abstractions with recipes](challenges/challenge-05.md)
-  - *Optional for application developers - complete it to understand what backs
-    each contract, or skip it and consume the registered recipes as-is.*
+- [Challenge 04 - Build the platform abstractions](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/challenges/challenge-04.md)
+- [Challenge 05 - Build the platform abstractions with recipes](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/challenges/challenge-05.md)
+  - *Required on the manual setup path; supplied by the ready hosted baseline.
+    Hosted developers may read it without republishing or reinstalling recipes.*
 
 ### Bucket 3: Portable apps across platforms
 
@@ -243,11 +253,11 @@ implement them with recipes.
 engineer path). Deploy the application across environments and adapt its
 identity, communication, and AI capabilities.
 
-- [Challenge 06 - Port the App Across Environments](challenges/challenge-06.md)
+- [Challenge 06 - Port the App Across Environments](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/challenges/challenge-06.md)
   **<- Application developer start here**
-- [Challenge 07 - Adapt Identity Services - Configure User Authentication](challenges/challenge-07.md)
-- [Challenge 08 - Secure service communication](challenges/challenge-08.md)
-- [Challenge 09 - Adapt AI Services](challenges/challenge-09.md)
+- [Challenge 07 - Adapt Identity Services - Configure User Authentication](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/challenges/challenge-07.md) - optional; Entra enterprise-app setup may need an organizer.
+- [Challenge 08 - Secure service communication](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/challenges/challenge-08.md) - **not yet published**; continue from 07 to 09.
+- [Challenge 09 - Adapt AI Services](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/challenges/challenge-09.md) - optional; requires an approved existing Azure OpenAI deployment.
 
 ### Bucket 4: Advanced challenges
 
@@ -255,8 +265,8 @@ identity, communication, and AI capabilities.
 developer inner loop and apply the Adaptive Apps approach to an existing
 application.
 
-- [Challenge 10 - Model, review, and deploy with Radius Canvas](challenges/challenge-10.md)
-- [Challenge 11 - Modernize a brownfield application](challenges/challenge-11.md)
+- [Challenge 10 - Model, review, and deploy with Radius Canvas](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/challenges/challenge-10.md) - optional, host-only with separate Canvas prerequisites; finish here.
+- [Challenge 11 - Modernize a brownfield application](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/challenges/challenge-11.md) - **not yet published**.
 
 ## Additional documentation
 
@@ -271,10 +281,16 @@ application.
 
 **Radius**
 
-- [What is Radius?](https://docs.radapp.io/concepts/overview/)
-- [Radius application model](https://docs.radapp.io/guides/author-apps/application/overview/)
-- [Radius environments](https://docs.radapp.io/guides/deploy-apps/environments/overview/)
-- [Radius recipes](https://docs.radapp.io/guides/recipes/overview/)
+This workshop pins **Radius 0.60.0**. The current official pages below carry a
+preview compatibility warning and may describe newer resource types or recipe
+packs. Use them as conceptual/reference material; keep the workshop's pinned
+`Radius.Resources/*` contracts and per-environment recipes, not preview recipe
+packs or `--preview`, for Challenges 02-09.
+
+- [What is Radius?](https://docs.radapp.io/concepts/)
+- [Radius application model](https://docs.radapp.io/concepts/applications/)
+- [Radius environments](https://docs.radapp.io/concepts/environments/)
+- [Radius recipes](https://docs.radapp.io/reference/recipes/)
 - [Introducing Radius Canvas](https://techcommunity.microsoft.com/blog/azuredevcommunityblog/introducing-radius-canvas-visualize-review-and-deploy-applications-in-the-github/4549760)
 
 **Supporting technologies**

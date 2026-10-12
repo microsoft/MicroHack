@@ -1,0 +1,98 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "containerGroupName": {
+      "type": "string"
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]"
+    },
+    "appImage": {
+      "type": "string"
+    },
+    "registryServer": {
+      "type": "string"
+    },
+    "registryUsername": {
+      "type": "string"
+    },
+    "registryPassword": {
+      "type": "securestring"
+    },
+    "dnsNameLabel": {
+      "type": "string"
+    }
+  },
+  "variables": {},
+  "resources": [
+    {
+      "type": "Microsoft.ContainerInstance/containerGroups",
+      "apiVersion": "2023-05-01",
+      "name": "[parameters('containerGroupName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "sku": "Confidential",
+        "confidentialComputeProperties": {
+          "ccePolicy": "cGFja2FnZSBwb2xpY3kKYXBpX3ZlcnNpb24gOj0gIjAuMS4wIgppbXBvcnQgZnV0dXJlLmtleXdvcmRzLmV2ZXJ5CmltcG9ydCBmdXR1cmUua2V5d29yZHMuaW4KZnJhZ21lbnRzIDo9IFtdCmNvbnRhaW5lcnMgOj0gW10KYWxsb3dfcHJvcGVydGllc19hY2Nlc3MgOj0gdHJ1ZQphbGxvd19kdW1wX3N0YWNrcyA6PSB0cnVlCmFsbG93X3J1bnRpbWVfbG9nZ2luZyA6PSB0cnVlCmFsbG93X2Vudmlyb25tZW50X3ZhcmlhYmxlX2Ryb3BwaW5nIDo9IHRydWUKYWxsb3dfdW5lbmNyeXB0ZWRfc2NyYXRjaCA6PSB0cnVlCmFsbG93X2NhcGFiaWxpdHlfZHJvcHBpbmcgOj0gdHJ1ZQ=="
+        },
+        "containers": [
+          {
+            "name": "cc-attest",
+            "properties": {
+              "image": "[parameters('appImage')]",
+              "ports": [
+                {
+                  "protocol": "TCP",
+                  "port": 80
+                }
+              ],
+              "environmentVariables": [
+                {
+                  "name": "ACI_SKU",
+                  "value": "Confidential"
+                },
+                {
+                  "name": "MAA_ENDPOINT",
+                  "value": "sharedeus.eus.attest.azure.net"
+                }
+              ],
+              "resources": {
+                "requests": {
+                  "memoryInGB": 2,
+                  "cpu": 1
+                }
+              }
+            }
+          }
+        ],
+        "imageRegistryCredentials": [
+          {
+            "server": "[parameters('registryServer')]",
+            "username": "[parameters('registryUsername')]",
+            "password": "[parameters('registryPassword')]"
+          }
+        ],
+        "ipAddress": {
+          "ports": [
+            {
+              "protocol": "TCP",
+              "port": 80
+            }
+          ],
+          "type": "Public",
+          "dnsNameLabel": "[parameters('dnsNameLabel')]"
+        },
+        "osType": "Linux",
+        "restartPolicy": "Always"
+      }
+    }
+  ],
+  "outputs": {
+    "fqdn": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.ContainerInstance/containerGroups', parameters('containerGroupName'))).ipAddress.fqdn]"
+    }
+  }
+}

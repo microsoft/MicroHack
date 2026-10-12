@@ -1,5 +1,10 @@
 # Prepare private K3s through Azure Bastion
 
+**Manual platform path.** Hosted participants first use
+[Console setup](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/docs/console-setup.md)
+and its reconnect/disconnect instructions. Do not run provisioning or resource
+cleanup below against a hosted lab; the organizer owns its lifecycle.
+
 The default Local environment is single-node K3s on a private Ubuntu VM. It represents
 self-managed on-premises or edge Kubernetes without requiring participant compute.
 The VM has no public IP and no inbound Internet rules.
@@ -203,7 +208,7 @@ If the resource group is dedicated to this MicroHack and its contents have been 
 the coach can remove the entire group separately. The script does not automate deletion.
 
 K3s can optionally be connected to Azure Arc by following
-[Prepare an Azure Arc-enabled cluster](prepare-arc.md). Establish the Bastion API tunnel
+[Prepare an Azure Arc-enabled cluster](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/docs/prepare-arc.md). Establish the Bastion API tunnel
 before running Arc commands that access the private Kubernetes API. Radius is installed
 in Challenge 03.
 

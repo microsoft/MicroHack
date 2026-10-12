@@ -1,0 +1,36 @@
+spec:
+  replicas: 2
+  template:
+    spec:
+      containers:
+      - name: azure-vote-front
+        image: docker.io/library/python:3.9-slim
+        command: ["bash","-c"]
+        args:
+        - |
+          set -e
+          apt-get update -qq && apt-get install -y -qq --no-install-recommends git ca-certificates >/dev/null
+          rm -rf /src
+          git clone --depth 1 https://github.com/Azure-Samples/azure-voting-app-redis /src
+          rm -rf /app && mkdir -p /app
+          cp -r /src/azure-vote/azure-vote/. /app/
+          cd /app
+          pip install --no-cache-dir flask redis >/dev/null
+          exec python -c "import sys; sys.path.insert(0,'.'); from main import app; app.run(host='0.0.0.0', port=80)"
+        env:
+        - name: REDIS
+          value: azure-vote-back
+        ports:
+        - containerPort: 80
+        startupProbe:
+          httpGet: { path: /, port: 80 }
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          failureThreshold: 60
+        readinessProbe:
+          httpGet: { path: /, port: 80 }
+          periodSeconds: 10
+          failureThreshold: 6
+        resources:
+          requests: { cpu: 100m, memory: 128Mi }
+          limits:   { cpu: 500m, memory: 512Mi }

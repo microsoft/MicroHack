@@ -39,6 +39,8 @@ $environmentName = "sqlhack"
 $sharedResourceGroupName = "rg-sqlhack-shared"
 $adminUsername = "DemoUser"
 $adminPassword = New-MhhStablePassword -Purpose 'vm-admin' -SubscriptionId $SubscriptionId -ResourceGroupName "Default"
+$sqlMiAdminUsername = "DemoUser"
+$sqlMiAdminPassword = New-MhhStablePassword -Purpose 'sqlmi-admin' -SubscriptionId $SubscriptionId -ResourceGroupName "Default"
 
 # Template file path
 $templatePath = Join-Path $scriptPath "infra"
@@ -88,6 +90,7 @@ $vmPostfix = $vmPostfix -replace "_", "-"
 $vmName = "VM-$vmPostfix"
 $TeamName = $me.ShortName
 $TeamName = $TeamName.ToUpper()
+$SqlMiSysadminUser = $me.UserPrincipalName
 
 # feed the effective resource group back to the console
 #@{"HackboxCredential" = @{ name = "ResourceGroupName" ; value = $effectiveResourceGroup; note = "The name of the resource group where lab resources are deployed" }}
@@ -120,6 +123,9 @@ $result = Invoke-MhhDeploymentWithRegionFallback `
         vmName                    = $vmName
         TeamName                  = $TeamName
         legacySQLName             = $legacySQLName
+        sqlMiAdminUsername        = $sqlMiAdminUsername
+        sqlMiAdminPassword        = $sqlMiAdminPassword
+        SqlMiSysadminUser         = $SqlMiSysadminUser
     }
 
 Write-Host "[$SubscriptionId] Lab deployment completed successfully"

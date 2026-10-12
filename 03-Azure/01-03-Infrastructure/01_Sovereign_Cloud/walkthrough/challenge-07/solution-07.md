@@ -1,14 +1,12 @@
 # Walkthrough Challenge 7 - Adaptive Apps Across Sovereign Environments
 
-[Previous Challenge Solution](../challenge-06/solution-06.md) - **[Home](../../Readme.md)**
-
 Duration: 60 minutes
 
 ## Prerequisites
 
-Please ensure that you successfully verified the [General prerequisites](../../Readme.md#general-prerequisites) before continuing.
+Please ensure that you successfully verified the [General prerequisites](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/Readme.md#general-prerequisites) before continuing.
 
-Install these tools on your workstation or use a development container that includes them:
+Use a **Bash terminal in your [Sovereign Cloud Codespace](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/Readme.md#recommended-environment-github-codespaces)**. It already includes the tools below. If using a local workstation instead, install them first:
 
 * Azure CLI with the `bastion` extension
 * `kubectl`
@@ -31,6 +29,11 @@ az account set --subscription "$AZURE_SUBSCRIPTION"
 
 > [!NOTE]
 > The platform creates stable resource names and credentials. Re-running the lab deployment converges on the same names and replaces the isolated resource group only when region fallback is required.
+
+The Azure AKS cluster is the same one used in Challenge 5. Its applications
+live in `challenge-05`; Radius uses `radius-system` and `env-azure-prod` here.
+Challenge 5 cleanup does not delete this cluster or either node pool. Switch to
+the explicit context below rather than relying on the context used in Challenge 5.
 
 ## Task 1: Connect to and validate both platforms (10 minutes)
 
@@ -119,7 +122,7 @@ install -m 0600 "$MERGED_KUBECONFIG" "$HOME/.kube/config"
 rm -f "$MERGED_KUBECONFIG"
 ```
 
-Start the Bastion tunnel in a second terminal and leave it running:
+In Codespaces, select **Terminal > New Terminal** (or **+** in the terminal panel) to open a second **Bash** terminal. Run the **variable setup block from Prerequisites again in that terminal**, using the same values; terminals share files and networking, but not shell variables. Then start the Bastion tunnel and leave it running:
 
 ```bash
 az network bastion tunnel \
@@ -129,6 +132,8 @@ az network bastion tunnel \
   --resource-port 6443 \
   --port 16443
 ```
+
+Keep both terminals open in the same Codespace. No Codespaces port forwarding is needed: `kubectl` connects to the tunnel on `127.0.0.1:16443` inside the Codespace. Do not make this Kubernetes API port public. If the Codespace stops, reinitialize variables and restart the tunnel before continuing.
 
 Return to the first terminal and validate K3s:
 
@@ -204,6 +209,24 @@ kubectl wait --for=condition=Available deployments --all \
 
 💥 **Create a Radius Bicep file that contains no AKS cluster name, VM address, namespace, or cloud-specific resource.**
 
+First configure the `radius` extension in `bicepconfig.json` **in the directory where you will create `sovereign-web.bicep`**. The extension declaration needs this mapping; installing Radius on the clusters does not configure the local Bicep compiler.
+
+```bash
+if [[ -e bicepconfig.json ]]; then
+  printf '%s\n' 'Keep the existing configuration; merge the radius extension mapping shown below into its extensions object.'
+else
+  cat >bicepconfig.json <<'JSON'
+{
+  "extensions": {
+    "radius": "br:biceptypes.azurecr.io/radius:latest"
+  }
+}
+JSON
+fi
+```
+
+If the file already exists, add or update `extensions.radius` with the value above without removing other settings. The first build downloads the extension types from the registry, so registry access is required. Keep this configuration beside the application for both deployments.
+
 ```bash
 cat >sovereign-web.bicep <<'BICEP'
 extension radius
@@ -235,6 +258,15 @@ resource web 'Applications.Core/containers@2023-10-01-preview' = {
 BICEP
 ```
 
+Compile with the same Radius-managed Bicep binary used by `rad deploy` before contacting either control plane:
+
+```bash
+"$HOME/.rad/bin/bicep" build --stdout sovereign-web.bicep >/dev/null
+```
+
+> [!IMPORTANT]
+> Continue only if compilation succeeds. `BCP204: Extension "radius" is not recognized` means the extension mapping is missing from the effective Bicep configuration. Check the configuration beside the Bicep file, not just the terminal's current directory. The later `Application "sovereign-web" does not exist` message is expected after a failed build: no application was deployed. Fix compilation and rerun `rad deploy` before running the graph or resource-list commands; do not reinstall either cluster to resolve this local compiler error.
+
 Review the file and identify the portability boundary:
 
 * The application team owns the application, image, and requested port.
@@ -262,7 +294,7 @@ rad app graph --application sovereign-web
 rad resource list --application sovereign-web
 ```
 
-Expose the application, browse to <http://localhost:8080>, and stop the foreground process with <kbd>Ctrl</kbd>+<kbd>C</kbd>:
+Expose the application with the command below. In **Codespaces**, open the **Ports** tab, add port **8080** if it is not automatically forwarded, keep its visibility **Private**, and select **Open in Browser**. A literal `localhost` URL in your laptop's browser does not target the Codespace. For a local workstation, browse to <http://localhost:8080> instead. After viewing the application, stop the foreground process with <kbd>Ctrl</kbd>+<kbd>C</kbd>:
 
 ```bash
 rad resource expose Applications.Core/containers web \
@@ -290,7 +322,7 @@ rad app graph --application sovereign-web
 rad resource list --application sovereign-web
 ```
 
-Expose the AKS application and browse to <http://localhost:8080>:
+Expose the AKS application, then open forwarded port **8080** from the Codespaces **Ports** tab as above (or <http://localhost:8080> on a local workstation):
 
 ```bash
 rad resource expose Applications.Core/containers web \

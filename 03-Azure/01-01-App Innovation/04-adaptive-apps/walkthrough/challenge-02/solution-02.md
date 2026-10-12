@@ -1,13 +1,17 @@
 # Walkthrough Challenge 02 - Prepare the platforms
 
-[< Previous Solution](../challenge-01/solution-01.md) - **[Home](../../Readme.md)** - [Next Solution](../challenge-03/solution-03.md)
+[< Previous Solution](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/walkthrough/challenge-01/solution-01.md) - **[Home](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/Readme.md)** - [Next Solution](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/walkthrough/challenge-03/solution-03.md)
 
 Duration: 30-60 minutes
 
 ## Prerequisites
 
-Complete [Challenge 01](../challenge-01/solution-01.md) and the
-[general prerequisites](../../Readme.md#general-prerequisites) before starting.
+**Hosted Console:** do not run this provisioning walkthrough on a ready lab.
+Use [Console setup](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/docs/console-setup.md)
+after Challenge 01 and continue at 06. The steps below are the manual platform path.
+
+Complete [Challenge 01](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/walkthrough/challenge-01/solution-01.md) and the
+[general prerequisites](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/Readme.md#general-prerequisites) before starting.
 
 This challenge provisions Kubernetes only. Do not install Radius, the Adaptive Apps
 portfolio, recipes, or application workloads yet.
@@ -190,7 +194,7 @@ kubectl get nodes
 > Treat kubeconfig files as credentials. Share the K3s kubeconfig only through an
 > approved secure channel and remove access when the workshop ends. Azure Bastion
 > accrues hourly cost while deployed; follow the
-> [K3s cleanup guidance](../../docs/prepare-k3s.md#cost-and-cleanup).
+> [K3s cleanup guidance](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/docs/prepare-k3s.md#cost-and-cleanup).
 
 ## Health checks
 
@@ -226,8 +230,8 @@ Use these manual paths only when the workshop already has suitable infrastructur
 
 | Platform | Manual preparation |
 | --- | --- |
-| Azure Local with AKS enabled by Azure Arc | [Prepare Azure Local](../../docs/prepare-azure-local.md) |
-| Existing Kubernetes connected with Azure Arc | [Prepare Azure Arc-enabled Kubernetes](../../docs/prepare-arc.md) |
+| Azure Local with AKS enabled by Azure Arc | [Prepare Azure Local](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/docs/prepare-azure-local.md) |
+| Existing Kubernetes connected with Azure Arc | [Prepare Azure Arc-enabled Kubernetes](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/docs/prepare-arc.md) |
 
 Arc enablement is optional for the default K3s VM. Arc projects an existing cluster
 into Azure management; it does not create the cluster and is not required by Radius.

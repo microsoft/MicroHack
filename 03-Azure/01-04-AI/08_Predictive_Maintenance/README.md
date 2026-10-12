@@ -214,9 +214,9 @@ and validation required before beginning the build challenges.
 ```text
 08_Predictive_Maintenance/
 |-- challenges/                 # Challenge instructions (challenge-01 through challenge-05)
-|-- data/                       # Sample factory data (machines, thresholds, work orders, knowledge base)
 |-- src/                        # Starter and required agent code, and the end-to-end workflow app
 |-- labautomation/              # MicroHack provisioning and Azure deployment template
+|   `-- data/                   # Sample factory data and knowledge base articles
 |-- walkthrough/                # Reference solutions and optional supplementary material per challenge
 |-- .github/agents/             # Custom GitHub Copilot agent used in Challenge 3
 |-- pyproject.toml              # Pinned participant Python environment
@@ -226,7 +226,7 @@ and validation required before beginning the build challenges.
 | Path                                   | Who uses it                | Purpose                                                       |
 |-----------------------------------------|-----------------------------|----------------------------------------------------------------|
 | [`challenges/`](./challenges/)         | Attendees                   | Step-by-step instructions for the five challenges              |
-| [`data/`](./data/)                     | Attendees and scripts       | Sample factory data used by the agents                         |
+| [`labautomation/data/`](./labautomation/data/) | Attendees and scripts | Sample factory data used by the agents                         |
 | [`src/`](./src/)                       | Attendees                   | Required starter agents and the end-to-end workflow application |
 | [`labautomation/`](./labautomation/)   | Platform and coaches        | Per-lab provisioning and Azure Bicep deployment template        |
 | [`walkthrough/`](./walkthrough/)       | Facilitators and attendees  | Reference solutions and optional/supplementary material per challenge |
@@ -305,4 +305,3 @@ Authorized use of Microsoft trademarks or logos is subject to the
 Use of Microsoft trademarks or logos in modified versions of this project must not
 cause confusion or imply Microsoft sponsorship. Any use of third-party trademarks or
 logos is subject to those third parties' policies.
-

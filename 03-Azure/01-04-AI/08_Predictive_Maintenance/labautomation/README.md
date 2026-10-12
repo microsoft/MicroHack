@@ -8,6 +8,7 @@ When present, the MicroHack platform reads [lab-defaults.json](lab-defaults.json
 
 ```text
 labautomation/
+|-- data/                   # Canonical seed JSON and kb-wiki markdown; included in the lab package
 |-- lab-defaults.json        # Platform-facing configuration
 |-- deploy-lab.ps1           # Per-participant deployment hook + data seeding
 |-- shared-deploy-lab.ps1    # Resource-provider registration (once per subscription)
@@ -39,11 +40,17 @@ are actual data content, not infrastructure, so they can't be expressed declarat
 `deploy-lab.ps1` seeds them automatically right after the Bicep deployment succeeds, using only
 PowerShell and the `az` CLI (no bash, no Python):
 
-- Cosmos DB documents: read from `data/*.json` at the hack root and inserted via signed Cosmos DB
+- Cosmos DB documents: read from [data/](./data/) inside this folder and inserted via signed Cosmos DB
   REST calls (HMAC-SHA256 over the account's primary key — the same authentication scheme the
   Cosmos SDKs use internally, reimplemented here in plain PowerShell).
-- Knowledge base articles: uploaded from `data/kb-wiki/*.md` to the `machine-wiki` blob container
+- Knowledge base articles: uploaded from [data/kb-wiki/](./data/kb-wiki/) to the `machine-wiki` blob container
   via `az storage blob upload-batch`.
+
+Upload the entire contents of `labautomation/`, including its `data/` subfolder, to Hack Console.
+These are the only copies of the seed assets; no sibling folder or runtime download is required.
+The deployment script checks that all required JSON files and the wiki folder are present before
+provisioning. Missing assets, document upsert failures, and blob upload failures terminate the script
+instead of reporting a successfully seeded lab.
 
 This means participants never need to run a manual seeding step — by the time they receive their
 Hackbox credentials, the data is already loaded. `walkthrough/challenge-01/solution-01.md`

@@ -339,7 +339,7 @@ The diagram above illustrates how GitHub Copilot combines multiple inputs to gen
 * [`copilot-instructions.md`](../.github/copilot-instructions.md) — general workspace-wide instructions applied to all chat requests (SDK constraints, pinned package versions, environment variables, and so on)
 * [`agentplanning.agent.md`](../.github/agents/agentplanning.agent.md) — the specific role and persona for the `agentplanning` agent, discovered by VS Code from `.github/agents/*.agent.md` and selectable from the Agents dropdown
 
-❸ **Workspace context** — Copilot examines files in your workspace to understand structure and data, such as `README.md`, `technicians.json`, `work-orders.json`, and your existing code files. This helps it generate code that fits your project.
+❸ **Workspace context** — Copilot examines files in your workspace to understand structure and data, such as [README.md](../README.md), [technicians.json](../labautomation/data/technicians.json), [work-orders.json](../labautomation/data/work-orders.json), and your existing code files. This helps it generate code that fits your project.
 
 ❹ **Tools and data (MCP)** — Copilot can be equipped with additional tools exposed via the Model Context Protocol (MCP) to accomplish more complex tasks. This is very similar to how the agents in [Challenge 2](challenge-02.md) were equipped with tools — just as you gave the Fault Diagnosis Agent access to Cosmos DB queries and a knowledge base, you can extend Copilot with external data sources and capabilities.
 

@@ -32,7 +32,36 @@ param(
 )
 
 $scriptPath = Split-Path -Parent $MyInvocation.MyCommand.Definition
-$hackRoot = Resolve-Path (Join-Path $scriptPath "..")
+$dataRoot = Join-Path $scriptPath "data"
+
+# Keep seed assets inside the folder packaged by Hack Console.
+# Partition key paths must match main.bicep's cosmosContainers.
+$dataMappings = [ordered]@{
+    "Machines"           = @{ File = "machines.json"; PartitionKeyPath = "/type" }
+    "Thresholds"         = @{ File = "thresholds.json"; PartitionKeyPath = "/machineType" }
+    "Telemetry"          = @{ File = "telemetry-samples.json"; PartitionKeyPath = "/machineId" }
+    "KnowledgeBase"      = @{ File = "knowledge-base.json"; PartitionKeyPath = "/machineType" }
+    "PartsInventory"     = @{ File = "parts-inventory.json"; PartitionKeyPath = "/category" }
+    "Technicians"        = @{ File = "technicians.json"; PartitionKeyPath = "/department" }
+    "WorkOrders"         = @{ File = "work-orders.json"; PartitionKeyPath = "/status" }
+    "MaintenanceHistory" = @{ File = "maintenance-history.json"; PartitionKeyPath = "/machineId" }
+    "MaintenanceWindows" = @{ File = "maintenance-windows.json"; PartitionKeyPath = "/isAvailable" }
+    "Suppliers"          = @{ File = "suppliers.json"; PartitionKeyPath = "/category" }
+}
+
+foreach ($mapping in $dataMappings.Values) {
+    $dataFile = Join-Path $dataRoot $mapping.File
+    if (-not (Test-Path -LiteralPath $dataFile -PathType Leaf)) {
+        throw "Required seed data file not found: '$dataFile'. Include the data folder when uploading labautomation to Hack Console."
+    }
+}
+$kbWikiFolder = Join-Path $dataRoot "kb-wiki"
+if (-not (Test-Path -LiteralPath $kbWikiFolder -PathType Container)) {
+    throw "Required knowledge base folder not found: '$kbWikiFolder'. Include the data folder when uploading labautomation to Hack Console."
+}
+if (@(Get-ChildItem -LiteralPath $kbWikiFolder -Filter "*.md" -File).Count -eq 0) {
+    throw "No knowledge base markdown files found in '$kbWikiFolder'."
+}
 
 if($DeploymentType -eq 'resourcegroup' -and [string]::IsNullOrEmpty($ResourceGroupName)) {
     throw "ResourceGroupName must be provided when DeploymentType is 'resourcegroup'."
@@ -163,30 +192,11 @@ function Invoke-CosmosDocumentUpsert {
         -Body ([System.Text.Encoding]::UTF8.GetBytes($body)) | Out-Null
 }
 
-# Maps each Cosmos container to its seed data file and partition key path at
-# the hack root. Partition key paths must match main.bicep's cosmosContainers.
-$dataMappings = [ordered]@{
-    "Machines"           = @{ File = "machines.json"; PartitionKeyPath = "/type" }
-    "Thresholds"         = @{ File = "thresholds.json"; PartitionKeyPath = "/machineType" }
-    "Telemetry"          = @{ File = "telemetry-samples.json"; PartitionKeyPath = "/machineId" }
-    "KnowledgeBase"      = @{ File = "knowledge-base.json"; PartitionKeyPath = "/machineType" }
-    "PartsInventory"     = @{ File = "parts-inventory.json"; PartitionKeyPath = "/category" }
-    "Technicians"        = @{ File = "technicians.json"; PartitionKeyPath = "/department" }
-    "WorkOrders"         = @{ File = "work-orders.json"; PartitionKeyPath = "/status" }
-    "MaintenanceHistory" = @{ File = "maintenance-history.json"; PartitionKeyPath = "/machineId" }
-    "MaintenanceWindows" = @{ File = "maintenance-windows.json"; PartitionKeyPath = "/isAvailable" }
-    "Suppliers"          = @{ File = "suppliers.json"; PartitionKeyPath = "/category" }
-}
-
 foreach($container in $dataMappings.Keys) {
     $mapping = $dataMappings[$container]
-    $dataFile = Join-Path $hackRoot "data/$($mapping.File)"
-    if(-not (Test-Path $dataFile)) {
-        Write-Warning "Seed data file not found, skipping: $dataFile"
-        continue
-    }
+    $dataFile = Join-Path $dataRoot $mapping.File
 
-    $documents = Get-Content -Raw -Path $dataFile | ConvertFrom-Json
+    $documents = Get-Content -Raw -LiteralPath $dataFile -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
     $count = 0
     foreach($document in $documents) {
         try {
@@ -195,7 +205,7 @@ foreach($container in $dataMappings.Keys) {
                 -PartitionKeyPath $mapping.PartitionKeyPath -Document $document
             $count++
         } catch {
-            Write-Warning "Failed to upsert a document into '$container': $($_.Exception.Message)"
+            throw "Failed to upsert document '$($document.id)' into '$container': $($_.Exception.Message)"
         }
     }
     Write-Host "Seeded $count document(s) into '$container'."
@@ -204,7 +214,9 @@ foreach($container in $dataMappings.Keys) {
 Write-Host "Uploading knowledge base wiki articles to '$storageAccount / $machineWikiContainer'..."
 
 $storageKey = az storage account keys list --account-name $storageAccount --resource-group $effectiveResourceGroup --query "[0].value" -o tsv
-$kbWikiFolder = Join-Path $hackRoot "data/kb-wiki"
+if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($storageKey)) {
+    throw "Could not retrieve the storage account key for '$storageAccount'."
+}
 
 az storage blob upload-batch `
     --account-name $storageAccount `
@@ -215,7 +227,7 @@ az storage blob upload-batch `
     --overwrite | Out-Null
 
 if($LASTEXITCODE -ne 0) {
-    Write-Warning "Failed to upload one or more knowledge base wiki articles to blob storage."
+    throw "Failed to upload knowledge base wiki articles from '$kbWikiFolder' to '$storageAccount / $machineWikiContainer'."
 } else {
     Write-Host "Knowledge base wiki articles uploaded successfully."
 }

@@ -118,11 +118,13 @@ From the repository page, select **Code**, then open the **Codespaces** tab. Sel
 
 <img src="./images/challenge-01-new-codespace-with-options.png" alt="New Codespace" width="60%">
 
-For Dev container configuration, select **Azure / AI / Predictive Maintenance*, then select **Create codespace**:
+For Dev container configuration, select **Azure / AI / Predictive Maintenance**, then select **Create codespace**:
+
 <img src="./images/challenge-01-select-devcontainer.png" alt="Select Dev Container" width="60%">
 
-GitHub opens the Codespace in a new browser tab. Wait for the container setup to finish, then confirm that the repository files are visible in the Explorer and that the integrated terminal opens without errors.
+Wait for the container setup to finish, then select the **Trust folders & Continue** button and confirm that the repository files are visible in the Explorer and that the integrated terminal opens without errors.
 
+<img src="./images/challenge-01-codespace-welccome.png" alt="Codespace welcome" width="60%">
 
 Open a terminal in the Codespace and verify that the required tools are installed:
 
@@ -131,14 +133,12 @@ az --version
 dotnet --version
 ```
 
-Install the pinned Python dependencies and activate the environment:
+The pinned Python dependencies were installed automatically when the Codespace was created. Verify that the virtual environment is active:
 
 ```bash
-uv sync --frozen
-source .venv/bin/activate
+which python   # should point to .../.venv/bin/python
 ```
-
-Sign in to Azure from the Codespace terminal with the assigned lab account:
+Sign in to Azure from the Codespace terminal follow the link shown to authenticate with a web browser and the device code using the assigned lab account:
 
 ```bash
 az login --use-device-code
@@ -146,10 +146,15 @@ az login --use-device-code
 
 ### 4. Retrieve environment configuration
 
-From the repository root, run the setup script with the resource group name provided in your Hackbox:
+First, define an environment variable with your Resource Group name provided in Hackbox:
+
+# init RG with your Resource Group name provided in Hackbox
+rg=<your-resource-group-name>
+
+From the repository root, run the setup script with the resource group name provided in your Hackbox under **Resource Group Name**:
 
 ```bash
-bash labautomation/get-keys.sh --resource-group "<your-resource-group-name>"
+labautomation/get-keys.sh --resource-group "<your-resource-group-name>"
 ```
 
 The script locates your deployed lab resources and creates a local `.env` file. It retrieves the Foundry project endpoint, Cosmos DB connection details, Storage account connection string, and Azure AI Search key and endpoint required by the remaining challenges. The file is excluded from Git and its secret values are not displayed.

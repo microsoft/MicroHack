@@ -53,25 +53,76 @@ The remaining challenges use this pre-provisioned environment and a repository h
 
 Complete this setup with the credentials provided in your Hackbox. Use the assigned lab account rather than a personal or work account so that you have access to the correct Azure subscription, resource group, GitHub organization, and repository.
 
+> [!TIP]
+> Use an InPrivate or Incognito browser session for this lab to avoid mixing your personal or other work accounts when signing in to Azure and GitHub.
+
 ## ✅ Tasks
 
 ### 1. Sign in to Azure
 
-Open the [Azure portal](https://portal.azure.com) and sign in with the credentials provided in your Hackbox, choosing **Use another account** when prompted.
+Open the [Azure portal](https://portal.azure.com) and sign in with the credentials provided in your Hackbox (see the **Credentials** section at the top of this web page). If you are prompted to pick an account, choose **Use another account**.
 
-In the Azure portal, select **Resource groups**, open the resource group assigned to you, and confirm that its resources have been deployed successfully. Verify that you can see the Foundry project, the Cosmos DB account, the Storage account, and the API Management instance described in [Context and Background](#-context-and-background).
+<img src="./images/challenge-01-pick-account.png" alt="Pick account for login" width="60%">
+
+Enter the provided **Entra ID Username** and **Entra ID TAP** from the **Credentials** section at the top of this page.
+
+<img src="./images/challenge-01-sign-in.png" alt="Sign in" width="60%">
+
+In the Azure portal, select **Resource groups** from the start page.
+
+<img src="./images/challenge-01-resource-groups-portal.png" alt="Sign in" width="60%">
+
+
+Open the resource group assigned to you and confirm that its resources have been deployed successfully.
+
+<img src="./images/challenge-01-azure-portal-resources.png" alt="Azure resources" width="60%">
+
+Verify that you can see the Foundry project, the Cosmos DB account, the Storage account, and the API Management instance described in [Context and Background](#-context-and-background).
+
+> [!NOTE]
+> The Location column values might differ from the screenshot since the resources are provisioned across multiple regions. 
 
 ### 2. Sign in to GitHub
 
-Open [GitHub](https://github.com) and sign in with the credentials provided in your Hackbox, choosing **Use another account** and then **Sign in with your identity provider**.
+Open [GitHub login page](https://github.com/login) and sign in with the **Github SSO Login User** username provided in your Hackbox and select **Sign in with your identity provider**.
 
-Open the organization associated with your lab account and select the `MicroHack` repository. Confirm that you can see the repository files and folders, including `03-Azure/01-04-AI/08_Predictive_Maintenance`.
+<img src="./images/challenge-01-github-login.png" alt="GitHub login" width="60%">
+
+Select **Continue** and accept the consent prompt.
+
+Open the GitHub organization assigned to your lab account by first selecting the avatar in the top right corner and then **Organizations**
+
+<img src="./images/challenge-01-github-organization.png" alt="GitHub organization" width="60%">
+
+Select the assigned organization, then open the pinned microhack repository. 
+
+<img src="./images/challenge-01-select-github-organization.png" alt="GitHub organization" width="60%">
+
+<img src="./images/challenge-01-pinned-github-repository.png" alt="Microhack repository" width="60%">
+
+You then need to fork the repository before you can create a Codespace. To fork the repository, click the Fork button in the top-right corner of the repository page and follow the prompts:
+
+<img src="./images/challenge-01-github-fork-repository.png" alt="Create fork" width="60%">
+
+Select the organization as owner and use a unique name for the repository name to avoid conflicts with other forks. For example, you can append your lab username to the repository name (e.g., `microhack-labuser-0001`):
+
+<img src="./images/challenge-01-github-fork-name.png" alt="Fork name" width="60%">
+
+Finally, you should see your forked repository with the unique name you provided and all files and folders from the original repository:
+
+<img src="./images/challenge-01-github-forked-repository.png" alt="Forked repository" width="60%">
 
 ### 3. Create the development environment
 
-From the repository page, select **Code**, open the **Codespaces** tab, then use the `...` menu to choose **New with options**. For **Dev container configuration**, select **Azure / AI / Predictive Maintenance**, then select **Create codespace**.
+From the repository page, select **Code**, then open the **Codespaces** tab. Select the ... menu and choose **New with options**.
+
+<img src="./images/challenge-01-new-codespace-with-options.png" alt="New Codespace" width="60%">
+
+For Dev container configuration, select **Azure / AI / Predictive Maintenance*, then select **Create codespace**:
+<img src="./images/challenge-01-select-devcontainer.png" alt="Select Dev Container" width="60%">
 
 GitHub opens the Codespace in a new browser tab. Wait for the container setup to finish, then confirm that the repository files are visible in the Explorer and that the integrated terminal opens without errors.
+
 
 Open a terminal in the Codespace and verify that the required tools are installed:
 

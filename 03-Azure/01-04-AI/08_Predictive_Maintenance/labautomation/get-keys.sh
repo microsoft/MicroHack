@@ -181,6 +181,8 @@ EMBEDDING_MODEL_DEPLOYMENT_NAME="text-embedding-3-large"
 AZURE_OPENAI_ENDPOINT="$azureOpenAIEndpoint"
 AZURE_OPENAI_KEY="$foundryKey"
 AZURE_OPENAI_DEPLOYMENT_NAME="gpt-5.4"
+# Read by agent_framework's OpenAIChatClient (Challenge 2 Python agents)
+AZURE_OPENAI_CHAT_MODEL="gpt-5.4-mini"
 
 # Azure Cosmos DB (SQL API)
 COSMOS_ACCOUNT_NAME="$cosmosAccountName"

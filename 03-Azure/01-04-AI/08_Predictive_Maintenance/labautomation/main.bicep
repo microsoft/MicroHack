@@ -34,6 +34,7 @@ var searchServiceContributorRoleId = subscriptionResourceId('Microsoft.Authoriza
 var searchIndexDataReaderRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '1407120a-92aa-4202-b7e9-c0e197c71c8f')
 var monitoringReaderRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '43d0d8ad-25c7-4714-9337-8ba259a9fe05')
 var foundryUserRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '53ca6127-db72-4b80-b1b0-d745d6d5456d')
+var openAiContributorRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'a001fd3d-188f-4b5d-821b-7da978bf7442')
 var storageBlobDataContributorRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')
 var cosmosDbDataContributorRoleId = '00000000-0000-0000-0000-000000000002'
 
@@ -435,6 +436,28 @@ resource participantFoundryUser 'Microsoft.Authorization/roleAssignments@2022-04
   name: guid(aiProject.id, userObjectId, foundryUserRoleId)
   properties: {
     roleDefinitionId: foundryUserRoleId
+    principalId: userObjectId
+    principalType: 'User'
+  }
+}
+
+// Account-scope access: the Responses API (/openai/v1/responses) is a data action
+// on the Foundry/AI Services account, not on the project.
+resource participantFoundryUserOnAccount 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: aiFoundry
+  name: guid(aiFoundry.id, userObjectId, foundryUserRoleId)
+  properties: {
+    roleDefinitionId: foundryUserRoleId
+    principalId: userObjectId
+    principalType: 'User'
+  }
+}
+
+resource participantOpenAiContributor 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: aiFoundry
+  name: guid(aiFoundry.id, userObjectId, openAiContributorRoleId)
+  properties: {
+    roleDefinitionId: openAiContributorRoleId
     principalId: userObjectId
     principalType: 'User'
   }

@@ -146,11 +146,6 @@ az login --use-device-code
 
 ### 4. Retrieve environment configuration
 
-First, define an environment variable with your Resource Group name provided in Hackbox:
-
-# init RG with your Resource Group name provided in Hackbox
-rg=<your-resource-group-name>
-
 From the repository root, run the setup script with the resource group name provided in your Hackbox under **Resource Group Name**:
 
 ```bash

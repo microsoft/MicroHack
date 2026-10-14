@@ -2,9 +2,6 @@
 
 **[Home](../README.md)** | [Previous challenge](challenge-04.md) | [Next: Wrap-up](finish.md)
 
-> [!TIP]
-> Stuck on a step? See the [Challenge 5 walkthrough](../walkthrough/challenge-05/solution-05.md) for exact commands, expected output, and a validation checklist.
-
 ## 🎯 Objective
 
 The goals for this challenge are:
@@ -103,6 +100,10 @@ This challenge uses the **Sequential** pattern — see [Conclusion and Reflectio
 > This workflow expects the **Anomaly Classification** and **Fault Diagnosis** agents to be hosted in **Foundry Agent Service**. Make sure you've completed [Challenge 2](challenge-02.md) before starting the workflow.
 
 ### Task 1: Start Aspire
+
+The Python app uses its own virtual environment with Python 3.13, pinned by
+`src/agent-workflow/app/.python-version`. This is separate from the workshop's
+Python 3.11 environment; `uv` selects the pinned interpreter automatically.
 
 ```bash
 cd src/agent-workflow

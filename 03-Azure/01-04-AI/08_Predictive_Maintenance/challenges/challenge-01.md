@@ -98,13 +98,15 @@ Select the assigned organization, then open the pinned microhack repository.
 
 <img src="./images/challenge-01-select-github-organization.png" alt="GitHub organization" width="60%">
 
-<img src="./images/challenge-01-pinned-github-repository.png" alt="Microhack repository" width="60%">
+<img src="./images/challenge-01-github-pinned-repository.png" alt="Microhack repository" width="60%">
 
 You then need to fork the repository before you can create a Codespace. To fork the repository, click the Fork button in the top-right corner of the repository page and follow the prompts:
 
-<img src="./images/challenge-01-github-fork-repository.png" alt="Create fork" width="60%">
+<img src="./images/challenge-01-github-fork-repo.png" alt="Create fork" width="60%">
+
 
 Select the organization as owner and use a unique name for the repository name to avoid conflicts with other forks. For example, you can append your lab username to the repository name (e.g., `microhack-labuser-0001`):
+
 
 <img src="./images/challenge-01-github-fork-name.png" alt="Fork name" width="60%">
 
@@ -118,13 +120,13 @@ From the repository page, select **Code**, then open the **Codespaces** tab. Sel
 
 <img src="./images/challenge-01-new-codespace-with-options.png" alt="New Codespace" width="60%">
 
-For Dev container configuration, select **Azure / AI / Predictive Maintenance**, then select **Create codespace**:
+For **Dev container configuration**, select **Azure / AI / Predictive Maintenance**, then select **Create codespace**:
 
 <img src="./images/challenge-01-select-devcontainer.png" alt="Select Dev Container" width="60%">
 
 Wait for the container setup to finish, then select the **Trust folders & Continue** button and confirm that the repository files are visible in the Explorer and that the integrated terminal opens without errors.
 
-<img src="./images/challenge-01-codespace-welccome.png" alt="Codespace welcome" width="60%">
+<img src="./images/challenge-01-codespace-welcome.png" alt="Codespace welcome" width="60%">
 
 Open a terminal in the Codespace and verify that the required tools are installed:
 
@@ -143,6 +145,8 @@ Sign in to Azure from the Codespace terminal follow the link shown to authentica
 ```bash
 az login --use-device-code
 ```
+
+In the **Select a subscription and tenant** terminal prompt hit enter to use the default Azure subscription 
 
 ### 4. Retrieve environment configuration
 
@@ -185,6 +189,17 @@ az storage blob list \
 ```
 
 The expected result is `5` wiki articles, one per machine type.
+
+### 6. Validate the Machine API
+
+Confirm that the provisioned Machine API in API Management can retrieve the seeded machine data:
+
+```bash
+# Get all machines
+curl -fsSL "$APIM_GATEWAY_URL/machine" -H "Ocp-Apim-Subscription-Key: $APIM_SUBSCRIPTION_KEY" -H "Accept: application/json"
+```
+
+You should receive a JSON response containing the factory machines. You will use this API when building the agents in Challenge 2.
 
 ## 🚀 Go Further
 

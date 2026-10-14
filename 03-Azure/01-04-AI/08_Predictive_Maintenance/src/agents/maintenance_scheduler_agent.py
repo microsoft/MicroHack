@@ -300,11 +300,11 @@ async def main():
 
     print("=== Predictive Maintenance Agent ===\n")
 
-    # Load configuration (use AI_FOUNDRY_PROJECT_ENDPOINT for consistency with other challenge scripts)
+    # Load configuration
     cosmos_endpoint = os.getenv("COSMOS_ENDPOINT")
     cosmos_key = os.getenv("COSMOS_KEY")
     database_name = os.getenv("COSMOS_DATABASE_NAME")
-    foundry_project_endpoint = os.getenv("AI_FOUNDRY_PROJECT_ENDPOINT")
+    foundry_project_endpoint = os.getenv("AZURE_AI_PROJECT_ENDPOINT")
     deployment_name = os.getenv("MODEL_DEPLOYMENT_NAME", "gpt-5.4")
     otel_exporter_endpoint = os.getenv(
         "OTEL_EXPORTER_OTLP_ENDPOINT")
@@ -312,7 +312,7 @@ async def main():
     # Validate
     if not all([cosmos_endpoint, cosmos_key, database_name, foundry_project_endpoint]):
         print("Error: Missing required environment variables.")
-        print("Required: COSMOS_ENDPOINT, COSMOS_KEY, COSMOS_DATABASE_NAME, AI_FOUNDRY_PROJECT_ENDPOINT")
+        print("Required: COSMOS_ENDPOINT, COSMOS_KEY, COSMOS_DATABASE_NAME, AZURE_AI_PROJECT_ENDPOINT")
         return
 
     if otel_exporter_endpoint:

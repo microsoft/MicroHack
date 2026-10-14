@@ -16,6 +16,9 @@ labautomation/
 `-- get-keys.sh              # Participant-run script: resolves resource names/keys into a repo-root .env
 ```
 
+The generated `.env` uses `AZURE_AI_PROJECT_ENDPOINT` for the Foundry project endpoint
+across the agents and workflow.
+
 ## What `main.bicep` provisions
 
 - Storage account with a `machine-wiki` blob container (knowledge base articles).

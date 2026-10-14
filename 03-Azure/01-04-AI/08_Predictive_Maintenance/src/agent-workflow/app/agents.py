@@ -38,7 +38,7 @@ logger.info(
 logger.info(f"COSMOS_ENDPOINT set: {bool(os.getenv('COSMOS_ENDPOINT'))}")
 logger.info(f"COSMOS_DATABASE set: {bool(os.getenv('COSMOS_DATABASE'))}")
 logger.info(
-    f"AI_FOUNDRY_PROJECT_ENDPOINT set: {bool(os.getenv('AI_FOUNDRY_PROJECT_ENDPOINT'))}")
+    f"AZURE_AI_PROJECT_ENDPOINT set: {bool(os.getenv('AZURE_AI_PROJECT_ENDPOINT'))}")
 
 
 # =============================================================================
@@ -141,8 +141,7 @@ def create_maintenance_scheduler_a2a_app():
                 cosmos_key = os.getenv("COSMOS_KEY")
                 database_name = os.getenv(
                     "COSMOS_DATABASE_NAME") or os.getenv("COSMOS_DATABASE")
-                project_endpoint = os.getenv("AI_FOUNDRY_PROJECT_ENDPOINT") or os.getenv(
-                    "AZURE_AI_PROJECT_ENDPOINT")
+                project_endpoint = os.getenv("AZURE_AI_PROJECT_ENDPOINT")
                 deployment_name = os.getenv("MODEL_DEPLOYMENT_NAME", "gpt-5.4")
 
                 if not all([cosmos_endpoint, cosmos_key, database_name, project_endpoint]):
@@ -305,8 +304,7 @@ def create_parts_ordering_a2a_app():
                 cosmos_key = os.getenv("COSMOS_KEY")
                 database_name = os.getenv(
                     "COSMOS_DATABASE_NAME") or os.getenv("COSMOS_DATABASE")
-                project_endpoint = os.getenv("AI_FOUNDRY_PROJECT_ENDPOINT") or os.getenv(
-                    "AZURE_AI_PROJECT_ENDPOINT")
+                project_endpoint = os.getenv("AZURE_AI_PROJECT_ENDPOINT")
                 deployment_name = os.getenv("MODEL_DEPLOYMENT_NAME", "gpt-5.4")
 
                 if not all([cosmos_endpoint, cosmos_key, database_name, project_endpoint]):

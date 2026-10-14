@@ -2,9 +2,6 @@
 
 **[Home](../README.md)** | [Previous challenge](challenge-01.md) | [Next challenge](challenge-03.md)
 
-> [!TIP]
-> Stuck on a step? See the [Challenge 2 walkthrough](../walkthrough/challenge-02/solution-02.md) for exact commands, expected output, and a validation checklist.
-
 ## 🎯 Objective
 
 The goals for this challenge are:
@@ -145,9 +142,6 @@ Machine and threshold information is typically stored in a central system and ex
 The Machine API and Maintenance API are already available in API Management and contain endpoints for getting details about a specific machine and thresholds for certain machine types. Try the APIs:
 
 ```bash
-# Get all machines
-curl -fsSL "$APIM_GATEWAY_URL/machine" -H "Ocp-Apim-Subscription-Key: $APIM_SUBSCRIPTION_KEY" -H "Accept: application/json"
-
 # Get a specific machine
 curl -fsSL "$APIM_GATEWAY_URL/machine/machine-001" -H "Ocp-Apim-Subscription-Key: $APIM_SUBSCRIPTION_KEY" -H "Accept: application/json"
 

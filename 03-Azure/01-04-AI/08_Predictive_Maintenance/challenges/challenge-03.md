@@ -2,9 +2,6 @@
 
 **[Home](../README.md)** | [Previous challenge](challenge-02.md) | [Next challenge](challenge-04.md)
 
-> [!TIP]
-> Stuck on a step? See the [Challenge 3 walkthrough](../walkthrough/challenge-03/solution-03.md) for exact commands, expected output, and a validation checklist.
-
 ## 🎯 Objective
 
 The goals for this challenge are:

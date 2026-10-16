@@ -1,0 +1,79 @@
+{
+  "repository": "microhack",
+  "upstream": "microsoft/MicroHack",
+  "branch": "main",
+  "organization": {
+    "default_repository_permission": "read",
+    "members_can_create_repositories": true,
+    "members_can_create_public_repositories": false,
+    "members_can_create_private_repositories": false,
+    "members_can_create_internal_repositories": true,
+    "members_can_fork_private_repositories": true,
+    "members_can_create_public_pages": false,
+    "members_can_create_private_pages": true,
+    "web_commit_signoff_required": false,
+    "deploy_keys_enabled_for_repositories": false
+  },
+  "organization_observed": {
+    "members_can_delete_repositories": true,
+    "members_can_change_repo_visibility": true,
+    "members_can_invite_outside_collaborators": false,
+    "members_can_create_teams": true
+  },
+  "enterprise_policies": {
+    "allowPrivateRepositoryForkingSetting": "ENABLED",
+    "allowPrivateRepositoryForkingSettingPolicyValue": "ENTERPRISE_ORGANIZATIONS",
+    "defaultRepositoryPermissionSetting": "NO_POLICY",
+    "membersCanChangeRepositoryVisibilitySetting": "NO_POLICY",
+    "membersCanCreateRepositoriesSetting": "NO_POLICY",
+    "membersCanDeleteIssuesSetting": "NO_POLICY",
+    "membersCanDeleteRepositoriesSetting": "NO_POLICY",
+    "membersCanInviteCollaboratorsSetting": "DISABLED",
+    "membersCanMakePurchasesSetting": "ENABLED",
+    "membersCanUpdateProtectedBranchesSetting": "NO_POLICY",
+    "membersCanViewDependencyInsightsSetting": "NO_POLICY",
+    "organizationProjectsSetting": "NO_POLICY",
+    "repositoryDeployKeySetting": "DISABLED",
+    "repositoryProjectsSetting": "NO_POLICY"
+  },
+  "enterprise_actions": {
+    "enabled_organizations": "all",
+    "allowed_actions": "all",
+    "sha_pinning_required": false
+  },
+  "organization_actions": {
+    "enabled_repositories": "all",
+    "allowed_actions": "all",
+    "sha_pinning_required": false
+  },
+  "repository_actions": {
+    "enabled": true,
+    "allowed_actions": "all",
+    "sha_pinning_required": false
+  },
+  "workflow_permissions": {
+    "default_workflow_permissions": "read",
+    "can_approve_pull_request_reviews": true
+  },
+  "enterprise_security": {
+    "advanced_security_enabled_for_new_repositories": false,
+    "dependabot_alerts_enabled_for_new_repositories": false,
+    "secret_scanning_enabled_for_new_repositories": false,
+    "secret_scanning_push_protection_enabled_for_new_repositories": false,
+    "secret_scanning_non_provider_patterns_enabled_for_new_repositories": false
+  },
+  "teams": {
+    "participants": {"group": "GHCPUsers", "permission": "pull"},
+    "admins": {"group": "GHCPAdmins", "permission": "admin"}
+  },
+  "copilot": {
+    "enterprise_team": "GHCPUsers",
+    "public_code_suggestions": "allow",
+    "ide_chat": "enabled",
+    "cli": "enabled",
+    "platform_chat": "enabled",
+    "coding_agent_repositories": "all"
+  },
+  "codespaces_access": "all_members",
+  "budgets_usd": {"codespaces": 6000, "actions": 100}
+}

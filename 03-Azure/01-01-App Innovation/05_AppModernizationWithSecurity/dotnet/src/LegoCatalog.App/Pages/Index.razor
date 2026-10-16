@@ -1,0 +1,148 @@
+@page "/"
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Routing
+@inject FigureCatalogService Catalog
+@inject NavigationManager Nav
+
+<div class="page-head">
+    <h1 class="page-title">Lego Catalog</h1>
+    <p class="page-sub">Browse generated minifigures. Use search and category filters to narrow results.</p>
+</div>
+
+<form class="toolbar" @onsubmit="ApplyFilters" @onsubmit:preventDefault>
+    <div class="field-group">
+        <input class="text-input"
+               placeholder="Search names"
+               @bind="search"
+               @bind:event="oninput"
+               aria-label="Search figures" />
+    </div>
+    <div class="field-group">
+        <select class="select"
+                @bind="selectedCategory"
+                aria-label="Filter by category">
+            <option value="">All Categories</option>
+            @foreach (var category in categories)
+            {
+                <option value="@category.Slug">@category.Name</option>
+            }
+        </select>
+    </div>
+    <div class="field-group">
+        <button class="btn primary" type="submit">Apply</button>
+        <button class="btn ghost"
+                type="button"
+                @onclick="ResetFilters"
+                disabled="@(!CanReset)">Reset</button>
+    </div>
+</form>
+
+@if (figures is null)
+{
+    <div class="grid skeletons">
+        @for (var index = 0; index < 12; index++)
+        {
+            <div class="card skeleton">
+                <div class="thumb"></div>
+                <div class="line short"></div>
+                <div class="line tiny"></div>
+            </div>
+        }
+    </div>
+}
+else if (figures.Count == 0)
+{
+    <div class="empty-state" data-catalog-empty>
+        <p>No figures match your filters.</p>
+    </div>
+}
+else
+{
+    <div class="grid" role="list" aria-label="Figures">
+        @foreach (var figure in figures)
+        {
+            <article class="card figure-card"
+                     role="listitem"
+                     data-figure-id="@figure.Id"
+                     data-figure-name="@figure.Name"
+                     data-figure-description="@figure.Description"
+                     data-category-name="@figure.Category!.Name"
+                     data-category-slug="@figure.Category.Slug"
+                     data-image-filename="@figure.ImageFile"
+                     @onclick="() => NavigateToFigure(figure.Id)"
+                     tabindex="0"
+                     @onkeydown="eventArgs => OnCardKeyDown(eventArgs, figure.Id)">
+                <div class="thumb-wrapper">
+                    <img src="/images/@figure.ImageFile"
+                         alt="@figure.Name"
+                         loading="lazy" />
+                </div>
+                <h2 class="card-title" title="@figure.Name">@figure.Name</h2>
+                <div class="badge">@figure.Category.Name</div>
+            </article>
+        }
+    </div>
+}
+
+@code {
+    [SupplyParameterFromQuery(Name = "search")]
+    public string? Search { get; set; }
+
+    [SupplyParameterFromQuery(Name = "category")]
+    public string? Category { get; set; }
+
+    private string? search;
+    private string? selectedCategory;
+    private IReadOnlyList<Models.Category> categories = Array.Empty<Models.Category>();
+    private IReadOnlyList<Models.LegoFigure>? figures;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        search = Search;
+        selectedCategory = Category;
+        if (categories.Count == 0)
+        {
+            categories = await Catalog.CategoriesAsync(CancellationToken.None);
+        }
+
+        figures = await Catalog.ListAsync(
+            selectedCategory,
+            search,
+            CancellationToken.None);
+    }
+
+    private void ApplyFilters()
+    {
+        var parameters = new List<string>();
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            parameters.Add($"search={Uri.EscapeDataString(search.Trim())}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(selectedCategory))
+        {
+            parameters.Add(
+                $"category={Uri.EscapeDataString(selectedCategory.Trim())}");
+        }
+
+        Nav.NavigateTo(
+            parameters.Count == 0 ? "/" : $"/?{string.Join("&", parameters)}");
+    }
+
+    private bool CanReset =>
+        !string.IsNullOrWhiteSpace(search)
+        || !string.IsNullOrWhiteSpace(selectedCategory);
+
+    private void ResetFilters() => Nav.NavigateTo("/");
+
+    private void OnCardKeyDown(KeyboardEventArgs eventArgs, Guid id)
+    {
+        if (eventArgs.Key is "Enter" or " ")
+        {
+            NavigateToFigure(id);
+        }
+    }
+
+    private void NavigateToFigure(Guid id) =>
+        Nav.NavigateTo($"/figure/{id:D}", forceLoad: true);
+}

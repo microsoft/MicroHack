@@ -698,6 +698,144 @@ Describe 'Console LocalBox credential isolation' {
     }
 }
 
+Describe 'LocalBox registration region contract' {
+    It 'defaults <Path> to Australia East independently of the host region' -TestCases @(
+        @{ Path = 'labautomation/deploy-localbox.ps1' }
+        @{ Path = 'resources/manual-setup/localbox/deploy-localbox.ps1' }
+    ) {
+        param($Path)
+        $errors = $null
+        $ast = [System.Management.Automation.Language.Parser]::ParseFile(
+            "$PSScriptRoot/../../$Path", [ref]$null, [ref]$errors)
+        $errors.Count | Should -Be 0
+        $registration = $ast.ParamBlock.Parameters | Where-Object { $_.Name.VariablePath.UserPath -eq 'AzureLocalInstanceLocation' }
+        $registration.DefaultValue.SafeGetValue() | Should -Be 'australiaeast'
+        $hostRegion = $ast.ParamBlock.Parameters | Where-Object { $_.Name.VariablePath.UserPath -eq 'Location' }
+        $hostRegion.DefaultValue.SafeGetValue() | Should -Be 'swedencentral'
+        $ast.Extent.Text | Should -Match 'azureLocalInstanceLocation\s*=\s*@\{\s*value\s*=\s*\$AzureLocalInstanceLocation\s*\}'
+        $ast.Extent.Text | Should -Match 'location\s*=\s*@\{\s*value\s*=\s*\$Location\s*\}'
+    }
+    It 'uses Australia East registration while preserving shared host-region selection' {
+        $errors = $null
+        $ast = [System.Management.Automation.Language.Parser]::ParseFile(
+            "$PSScriptRoot/../../labautomation/shared-deploy-lab.ps1", [ref]$null, [ref]$errors)
+        $errors.Count | Should -Be 0
+        $ast.Extent.Text | Should -Match "-AzureLocalInstanceLocation 'australiaeast'"
+        $ast.Extent.Text | Should -Match '-Location \$localBoxLocation'
+        $ast.Extent.Text | Should -Not -Match "-AzureLocalInstanceLocation 'westeurope'"
+    }
+    It 'includes the registration region in all four Challenge 1 policy parameter lists' {
+        $guide = Get-Content "$PSScriptRoot/../../walkthrough/challenge-01/solution-01.md" -Raw
+        $lists = [regex]::Matches($guide, '"listOfAllowedLocations"\s*:\s*\{\s*"value"\s*:\s*(\[[^\]]*\])')
+        $lists.Count | Should -Be 4
+        foreach ($list in $lists) {
+            $regions = @($list.Groups[1].Value | ConvertFrom-Json)
+            $regions.Count | Should -Be 5
+            foreach ($region in @('norwayeast', 'germanynorth', 'northeurope', 'westeurope', 'australiaeast')) {
+                $regions | Should -Contain $region
+            }
+        }
+    }
+}
+
+Describe 'Console LocalBox CLI failure propagation' {
+    BeforeAll {
+        $deployer = [Management.Automation.Language.Parser]::ParseFile(
+            "$PSScriptRoot/../../labautomation/deploy-localbox.ps1", [ref]$null, [ref]$null)
+        $helper = $deployer.Find({
+            param($node)
+            $node -is [Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -eq 'Invoke-AzJson'
+        }, $true)
+        . ([scriptblock]::Create($helper.Extent.Text))
+        $shared = [Management.Automation.Language.Parser]::ParseFile(
+            "$PSScriptRoot/../../labautomation/shared-deploy-lab.ps1", [ref]$null, [ref]$null)
+        $loop = $shared.Find({
+            param($node)
+            $node -is [Management.Automation.Language.ForEachStatementAst] -and
+            $node.Variable.Extent.Text -eq '$localBoxLocation'
+        }, $true)
+        $fallback = Join-Path $TestDrive 'fallback.ps1'
+        $loop.Extent.Text | Set-Content $fallback
+        $nativeExecutable = (Get-Process -Id $PID).Path
+        function az { & $nativeExecutable -NoProfile -NonInteractive -Command $cliState.Command }
+    }
+    BeforeEach {
+        $ErrorActionPreference = 'Stop'
+        $PSNativeCommandUseErrorActionPreference = $true
+        $cliState = @{ Command = '[Console]::Error.WriteLine("RequestDisallowedByAzure: locationineligible"); exit 1'; Attempts = 0 }
+    }
+    It 'retains regional error details with native error preference <Preference>' -ForEach @(
+        @{ Preference = $true }
+        @{ Preference = $false }
+    ) {
+        $PSNativeCommandUseErrorActionPreference = $Preference
+        { Invoke-AzJson @('deployment', 'group', 'validate', '--parameters', 'mock-secret') } |
+            Should -Throw '*exit code 1*RequestDisallowedByAzure*locationineligible*'
+        $PSNativeCommandUseErrorActionPreference | Should -Be $Preference
+    }
+    It 'parses successful JSON without mixing in native stderr' {
+        $cliState.Command = '[Console]::Error.WriteLine("notice"); [Console]::Out.WriteLine(''{"state":"ready"}''); exit 0'
+        Mock Write-Warning {}
+        (Invoke-AzJson @('account', 'show')).state | Should -Be 'ready'
+        Should -Invoke Write-Warning -Times 1 -Exactly -ParameterFilter { $Message -eq 'notice' }
+    }
+    It 'preserves empty successful output' {
+        $cliState.Command = 'exit 0'
+        Invoke-AzJson @('account', 'set') | Should -BeNullOrEmpty
+    }
+    It 'does not print command arguments or invalid JSON stdout on failure' {
+        $cliState.Command = '[Console]::Out.WriteLine("mock-sensitive-output"); exit 0'
+        $failure = try { Invoke-AzJson @('deployment', 'group', 'create', '--parameters', 'mock-secret') } catch { $_ }
+        $failure.Exception.Message | Should -Match 'invalid JSON'
+        $failure.Exception.Message | Should -Not -Match 'mock-sensitive-output|mock-secret'
+    }
+    It 'does not accept valid JSON from a command that failed' {
+        $cliState.Command = '[Console]::Out.WriteLine(''{"state":"ready"}''); exit 17'
+        { Invoke-AzJson @('deployment', 'group', 'validate') } | Should -Throw '*exit code 17*'
+    }
+    Context 'Shared region loop' {
+        BeforeEach {
+            @'
+param($Location)
+Invoke-AzJson @('deployment', 'group', 'validate', '--location', $Location) | Out-Null
+[pscustomobject]@{ ProvisioningState = 'Submitted'; Location = $Location }
+'@ | Set-Content (Join-Path $TestDrive 'deploy-localbox.ps1')
+            $localBoxLocations = @('first-region', 'second-region')
+            $azureLocalResourceProviderObjectIds = @('test-object-id')
+            $localBoxDeployment = $null
+            Mock az {
+                $cliState.Attempts++
+                if ($cliState.Attempts -eq 2) {
+                    & $nativeExecutable -NoProfile -NonInteractive -Command 'exit 0'
+                }
+                else {
+                    & $nativeExecutable -NoProfile -NonInteractive -Command $cliState.Command
+                }
+            }
+        }
+        It 'tries the next region after the actual native regional failure' {
+            . $fallback
+            $localBoxDeployment.ProvisioningState | Should -Be 'Submitted'
+            $localBoxDeployment.Location | Should -Be 'second-region'
+            Should -Invoke az -Times 2 -Exactly
+        }
+        It 'stops without retrying <Code>' -ForEach @(
+            @{ Code = 'RequestDisallowedByPolicy' }
+            @{ Code = 'AuthorizationFailed' }
+            @{ Code = 'UnexpectedFailure' }
+        ) {
+            $cliState.Command = "[Console]::Error.WriteLine('$Code'); exit 1"
+            { . $fallback } | Should -Throw "*$Code*"
+            Should -Invoke az -Times 1 -Exactly
+        }
+        It 'preserves the regional failure when no fallback regions remain' {
+            $localBoxLocations = @('first-region')
+            { . $fallback } | Should -Throw '*RequestDisallowedByAzure*locationineligible*'
+            Should -Invoke az -Times 1 -Exactly
+        }
+    }
+}
+
 Describe 'Console LocalBox password selection' {
     BeforeAll {
         function New-MhhStablePassword { [CmdletBinding()] param($Purpose, $Length) }
@@ -847,6 +985,14 @@ Describe 'LocalBox input validation' {
 }
 
 Describe 'AKS Local resource API selection' {
+    It 'pins the MetalLB extension and Runtime pool API versions' -ForEach @(
+        @{ Suffix = 'Microsoft.KubernetesConfiguration/extensions/arcnetworking'; Version = '2023-05-01' }
+        @{ Suffix = 'Microsoft.KubernetesRuntime/loadBalancers/aks-pool'; Version = '2024-08-01' }
+    ) {
+        Mock Invoke-LocalBoxAz { @{} }
+        Get-LocalBoxResource "/subscriptions/test/resourceGroups/localbox/providers/Microsoft.Kubernetes/connectedClusters/localbox-aks/providers/$Suffix"
+        Should -Invoke Invoke-LocalBoxAz -Times 1 -Exactly -ParameterFilter { $Arguments -contains '--api-version' -and $Arguments -contains $Version }
+    }
     It 'specifies the API version for nested AKS Local node pools' {
         Mock Invoke-LocalBoxAz { @{} }
         $identifier = '/subscriptions/test/resourceGroups/localbox/providers/Microsoft.Kubernetes/connectedClusters/localbox-aks/providers/Microsoft.HybridContainerService/provisionedClusterInstances/default/agentPools/nodepool1'
@@ -957,18 +1103,251 @@ Describe 'AKS Local Arc proxy RBAC' {
         $ast = [Management.Automation.Language.Parser]::ParseFile("$PSScriptRoot/../prepare-localbox.ps1", [ref]$null, [ref]$null)
         $guard = $ast.Find({ param($node)
             $node -is [Management.Automation.Language.IfStatementAst] -and
-            $node.Clauses[0].Item1.Extent.Text -eq '-not $Settings.SkipAks'
+            $node.Clauses[0].Item1.Extent.Text -eq '-not $Settings.SkipAks' -and
+            $node.Extent.Text -match 'Sync-LocalBoxAksProxyRole'
         }, $true)
         $guard | Should -Not -BeNullOrEmpty
         $reconcile = [scriptblock]::Create($guard.Extent.Text)
         $aksId = $clusterId
-        $Settings = @{ SkipAks = $true }
+        $Settings = @{ SkipAks = $true; KubernetesRuntimeObjectId = $groupId }
+        $metalLb = @{}
         Mock Sync-LocalBoxAksProxyRole {}
+        Mock Sync-LocalBoxMetalLb {}
         & $reconcile
         Should -Invoke Sync-LocalBoxAksProxyRole -Times 0
+        Should -Invoke Sync-LocalBoxMetalLb -Times 0
         $Settings.SkipAks = $false
         & $reconcile
         Should -Invoke Sync-LocalBoxAksProxyRole -Times 1 -Exactly -ParameterFilter { $ClusterId -eq $aksId -and $GroupObjectId -eq $groupId }
+        Should -Invoke Sync-LocalBoxMetalLb -Times 1 -Exactly -ParameterFilter { $ClusterId -eq $aksId -and $RuntimeObjectId -eq $groupId }
+    }
+}
+
+Describe 'LocalBox MetalLB preparation' {
+    BeforeEach {
+        $clusterId = '/subscriptions/test/resourceGroups/localbox/providers/Microsoft.Kubernetes/connectedClusters/localbox-aks'
+        $runtimeId = '11111111-2222-3333-4444-555555555555'
+        $configuration = @{
+            AKSIPPrefix = '10.10.0.0/24'; AKSVIPStartIP = '10.10.0.10'; AKSVIPEndIP = '10.10.0.100'
+            AKSGWIP = '10.10.0.1'; AKSControlPlaneIP = '10.10.0.5'
+            AKSNodeStartIP = '10.10.0.101'; AKSNodeEndIP = '10.10.0.199'
+        }
+        $plan = Get-LocalBoxMetalLbPlan $configuration $clusterId
+        $script:metalLbResources = @{}
+        $script:metalLbCalls = [Collections.Generic.List[object]]::new()
+        Mock Invoke-LocalBoxAz {
+            $script:metalLbCalls.Add($Arguments)
+            if ($Arguments[0] -eq 'provider') { return @{ registrationState = 'Registered' } }
+            $url = $Arguments[4]
+            if ($Arguments[2] -eq 'get') {
+                $collection = ($url -split '\?')[0].Replace('https://management.azure.com', '')
+                return @{ value = @($script:metalLbResources.Values | Where-Object { $_.id.StartsWith("$collection/") }) }
+            }
+            if ($Arguments[2] -eq 'put') {
+                $id = ($url -split '\?')[0].Replace('https://management.azure.com', '')
+                $resource = $Arguments[6] | ConvertFrom-Json -AsHashtable
+                $resource.id = $id
+                $resource.properties.provisioningState = 'Succeeded'
+                $script:metalLbResources[$id] = $resource
+                return $resource
+            }
+            throw "Unexpected command: $Arguments"
+        }
+        Mock Get-LocalBoxResource { $script:metalLbResources[$Id] }
+        Mock Start-Sleep {}
+    }
+    It 'uses the complete reserved VIP range without overlapping nodes or control plane' {
+        $plan.PoolExpected.properties.addresses | Should -Be @('10.10.0.10-10.10.0.100')
+        $plan.PoolExpected.properties.advertiseMode | Should -Be 'ARP'
+        $plan.ExtensionId | Should -Be "$clusterId/providers/Microsoft.KubernetesConfiguration/extensions/arcnetworking"
+    }
+    It 'rejects invalid VIP reservation <Fault> before Azure writes' -ForEach @(
+        @{ Fault = 'nodes'; Start = '10.10.0.150'; End = '10.10.0.160' }
+        @{ Fault = 'control-plane'; Start = '10.10.0.5'; End = '10.10.0.50' }
+        @{ Fault = 'gateway'; Start = '10.10.0.1'; End = '10.10.0.50' }
+        @{ Fault = 'outside'; Start = '10.11.0.10'; End = '10.11.0.100' }
+    ) {
+        $configuration.AKSVIPStartIP = $Start
+        $configuration.AKSVIPEndIP = $End
+        { Get-LocalBoxMetalLbPlan $configuration $clusterId } | Should -Throw
+        Should -Invoke Invoke-LocalBoxAz -Times 0
+    }
+    It 'creates extension before pool and reuses both unchanged on a second run without Graph' {
+        Sync-LocalBoxMetalLb $clusterId $plan $runtimeId
+        $puts = @($script:metalLbCalls | Where-Object { $_[2] -eq 'put' })
+        $puts.Count | Should -Be 2
+        $puts[0][4] | Should -Match '/extensions/arcnetworking\?api-version=2023-05-01$'
+        $puts[1][4] | Should -Match '/loadBalancers/aks-pool\?api-version=2024-08-01$'
+        $script:metalLbResources[$plan.ExtensionId].properties.configurationSettings.k8sRuntimeFpaObjectId | Should -Be $runtimeId
+        Sync-LocalBoxMetalLb $clusterId $plan $runtimeId
+        @($script:metalLbCalls | Where-Object { $_[2] -eq 'put' }).Count | Should -Be 2
+        Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments[0] -in @('ad', 'role', 'login') }
+    }
+    It 'does not query a nonexistent cluster or create resources during WhatIf' {
+        Sync-LocalBoxMetalLb $clusterId $plan $runtimeId -WhatIf
+        Should -Invoke Invoke-LocalBoxAz -Times 0
+    }
+    It 'rejects missing or invalid Runtime object IDs including the application ID' -ForEach @(
+        @{ Value = 'not-a-guid' }
+        @{ Value = '00000000-0000-0000-0000-000000000000' }
+        @{ Value = '087fca6e-4606-4d41-b3f6-5ebdf75b8b4c' }
+        @{ Value = '{087fca6e-4606-4d41-b3f6-5ebdf75b8b4c}' }
+    ) {
+        { Sync-LocalBoxMetalLb $clusterId $plan $Value } | Should -Throw '*object ID*'
+        Should -Invoke Invoke-LocalBoxAz -Times 0
+    }
+    It 'rejects an unregistered Runtime provider without registering it as the Client' {
+        Mock Invoke-LocalBoxAz { @{ registrationState = 'Registering' } } -ParameterFilter { $Arguments[0] -eq 'provider' }
+        { Sync-LocalBoxMetalLb $clusterId $plan $runtimeId } | Should -Throw '*subscription owner*'
+        Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments[0] -eq 'rest' }
+    }
+    It 'rejects the application ID before storage or AKS orchestration' {
+        $ast = [Management.Automation.Language.Parser]::ParseFile("$PSScriptRoot/../prepare-localbox.ps1", [ref]$null, [ref]$null)
+        $guard = $ast.Find({ param($node)
+            $node -is [Management.Automation.Language.IfStatementAst] -and
+            $node.Clauses[0].Item1.Extent.Text -eq '-not $Settings.SkipAks' -and
+            $node.Extent.Text -match 'Get-LocalBoxMetalLbPlan'
+        }, $true)
+        $config = $configuration
+        $scope = '/subscriptions/test/resourceGroups/localbox'
+        $Settings = @{ SkipAks = $false; AksClusterName = 'localbox-aks'; KubernetesRuntimeObjectId = '087fca6e-4606-4d41-b3f6-5ebdf75b8b4c' }
+        { & ([scriptblock]::Create($guard.Extent.Text)) } | Should -Throw '*KubernetesRuntimeObjectId*'
+        Should -Invoke Invoke-LocalBoxAz -Times 0
+    }
+    It 'rejects an unexpected selector returned immediately after pool creation' {
+        Mock Get-LocalBoxResource {
+            $resource = $script:metalLbResources[$Id]
+            if ($Id -eq $plan.PoolId) { $resource.properties.serviceSelector = @{ team = 'unexpected' } }
+            return $resource
+        }
+        { Sync-LocalBoxMetalLb $clusterId $plan $runtimeId } | Should -Throw '*service selector*'
+        Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments -contains 'delete' }
+    }
+    It 'propagates discovery failure rather than assuming the extension is missing' {
+        Mock Invoke-LocalBoxAz { throw 'AuthorizationFailed' } -ParameterFilter { $Arguments[0] -eq 'rest' }
+        { Sync-LocalBoxMetalLb $clusterId $plan $runtimeId } | Should -Throw '*AuthorizationFailed*'
+        Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments[2] -eq 'put' }
+    }
+    It 'rejects malformed discovery output rather than recreating resources' {
+        Mock Invoke-LocalBoxAz { @{} } -ParameterFilter { $Arguments[0] -eq 'rest' }
+        { Sync-LocalBoxMetalLb $clusterId $plan $runtimeId } | Should -Throw '*Invalid ARM collection*'
+        Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments[2] -eq 'put' }
+    }
+    It 'follows ARM pagination to discover an existing extension' {
+        $script:pages = 0
+        Mock Invoke-LocalBoxAz {
+            $script:pages++
+            if ($script:pages -eq 1) { return @{ value = @(); nextLink = 'https://management.azure.com/next' } }
+            @{ value = @(@{ id = 'found-on-page-two' }) }
+        }
+        @(Get-LocalBoxArmCollection 'https://management.azure.com/first')[0].id | Should -Be 'found-on-page-two'
+        Should -Invoke Invoke-LocalBoxAz -Times 2 -Exactly
+    }
+    It 'does not install a second differently named MetalLB extension' {
+        $id = "$clusterId/providers/Microsoft.KubernetesConfiguration/extensions/other"
+        $script:metalLbResources[$id] = @{ id = $id; properties = @{ extensionType = 'microsoft.arcnetworking' } }
+        { Sync-LocalBoxMetalLb $clusterId $plan $runtimeId } | Should -Throw '*differently named*'
+        Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments[2] -eq 'put' }
+    }
+    It 'does not silently replace a conflicting pool or identity' -ForEach @(
+        @{ Fault = 'pool' }
+        @{ Fault = 'identity' }
+        @{ Fault = 'selector' }
+        @{ Fault = 'extra-pool' }
+    ) {
+        Sync-LocalBoxMetalLb $clusterId $plan $runtimeId
+        switch ($Fault) {
+            'pool' { $script:metalLbResources[$plan.PoolId].properties.addresses = @('10.10.0.150-10.10.0.160') }
+            'identity' { $script:metalLbResources[$plan.ExtensionId].properties.configurationSettings.k8sRuntimeFpaObjectId = 'wrong' }
+            'selector' { $script:metalLbResources[$plan.PoolId].properties.serviceSelector = @{ app = 'other' } }
+            'extra-pool' {
+                $id = "$clusterId/providers/Microsoft.KubernetesRuntime/loadBalancers/other"
+                $script:metalLbResources[$id] = @{ id = $id; properties = @{ addresses = @('10.10.0.150-10.10.0.160') } }
+            }
+        }
+        { Sync-LocalBoxMetalLb $clusterId $plan $runtimeId } | Should -Throw
+        @($script:metalLbCalls | Where-Object { $_[2] -eq 'put' }).Count | Should -Be 2
+    }
+    It 'stops before pool creation when extension provisioning fails' {
+        Mock Get-LocalBoxResource { @{ properties = @{ provisioningState = 'Failed' } } }
+        { Sync-LocalBoxMetalLb $clusterId $plan $runtimeId } | Should -Throw '*Failed*'
+        @($script:metalLbCalls | Where-Object { $_[2] -eq 'put' }).Count | Should -Be 1
+    }
+    It 'retains the extension after pool failure rather than deleting shared resources' {
+        Mock Invoke-LocalBoxAz { throw 'Pool creation failed' } -ParameterFilter { $Arguments[2] -eq 'put' -and $Arguments[4] -match '/loadBalancers/' }
+        { Sync-LocalBoxMetalLb $clusterId $plan $runtimeId } | Should -Throw '*Pool creation failed*'
+        $script:metalLbResources.ContainsKey($plan.ExtensionId) | Should -BeTrue
+        Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments -contains 'delete' }
+    }
+    It 'keeps Runtime registration and Graph resolution in organizer setup, not the Client' {
+        foreach ($path in @('../../labautomation/resource-providers.ps1', '../manual-setup/subscription-preparations/1-resource-providers.ps1')) {
+            Get-Content "$PSScriptRoot/$path" -Raw | Should -Match '"Microsoft.KubernetesRuntime"'
+        }
+        $shared = Get-Content "$PSScriptRoot/../../labautomation/shared-deploy-lab.ps1" -Raw
+        $shared | Should -Match "appId eq '087fca6e-4606-4d41-b3f6-5ebdf75b8b4c'"
+        $shared | Should -Match 'microhack-k8s-runtime-object-id.*\$runtimeObjectId\.ToString'
+        $preparation = ${function:Invoke-LocalBoxPreparation}.ToString()
+        $preparation | Should -Match "group.tags.'microhack-k8s-runtime-object-id'"
+        $preparation | Should -Not -Match "'ad', 'sp'|az ad"
+        $preparation | Should -Match 'MetalLb = \$metalLb'
+    }
+}
+
+Describe 'MetalLB health evidence' {
+    BeforeAll {
+        $ast = [Management.Automation.Language.Parser]::ParseFile("$PSScriptRoot/localbox.health.tests.ps1", [ref]$null, [ref]$null)
+        $checks = @{}
+        foreach ($name in @('has the organizer-provisioned MetalLB extension and matching ARP address pool', 'has an in-cluster MetalLB address pool and L2 advertisement')) {
+            $command = $ast.Find({ param($node)
+                $node -is [Management.Automation.Language.CommandAst] -and $node.GetCommandName() -eq 'It' -and
+                $node.CommandElements[1].Value -eq $name
+            }, $true)
+            $checks[$name] = $command.CommandElements[-1].ScriptBlock.GetScriptBlock()
+        }
+        $controlPlaneCheck = $checks['has the organizer-provisioned MetalLB extension and matching ARP address pool']
+        $runtimeCheck = $checks['has an in-cluster MetalLB address pool and L2 advertisement']
+    }
+    BeforeEach {
+        $clusterId = '/subscriptions/test/resourceGroups/localbox/providers/Microsoft.Kubernetes/connectedClusters/localbox-aks'
+        $expected = @{ properties = @{ addresses = @('10.10.0.10-10.10.0.100'); advertiseMode = 'ARP' } }
+        $LocalBox = @{ AksId = $clusterId; Kubeconfig = 'mock'; MetalLb = @{
+            ExtensionId = "$clusterId/providers/Microsoft.KubernetesConfiguration/extensions/arcnetworking"
+            PoolId = "$clusterId/providers/Microsoft.KubernetesRuntime/loadBalancers/aks-pool"
+            PoolExpected = $expected
+        } }
+        $script:healthPool = @{ spec = @{ addresses = @('10.10.0.10-10.10.0.100'); autoAssign = $true } }
+        $script:healthAds = @{ items = @(@{ spec = @{ ipAddressPools = @('aks-pool') } }) }
+        Mock Wait-SovereignCheck { & $Check }
+        Mock Wait-LocalBoxResource {
+            if ($Id -like '*/extensions/*') { return @{ properties = @{ extensionType = 'microsoft.arcnetworking' } } }
+            return $expected
+        }
+        Mock Invoke-SovereignKubectl {
+            if ($Arguments[1] -eq 'ipaddresspools.metallb.io') { return $script:healthPool }
+            return $script:healthAds
+        }
+    }
+    It 'accepts matching provisioned configuration and in-cluster pool advertisement' {
+        { & $controlPlaneCheck; & $runtimeCheck } | Should -Not -Throw
+    }
+    It 'rejects missing or wrong in-cluster evidence <Fault>' -ForEach @(
+        @{ Fault = 'pool' }
+        @{ Fault = 'address' }
+        @{ Fault = 'advertisement' }
+        @{ Fault = 'auto-assign' }
+    ) {
+        switch ($Fault) {
+            'pool' { $script:healthPool = @{} }
+            'address' { $script:healthPool.spec.addresses = @('10.10.0.150-10.10.0.160') }
+            'advertisement' { $script:healthAds.items = @() }
+            'auto-assign' { $script:healthPool.spec.autoAssign = $false }
+        }
+        { & $runtimeCheck } | Should -Throw
+    }
+    It 'rejects control-plane configuration drift' {
+        $expected.properties.advertiseMode = 'BGP'
+        $LocalBox.MetalLb.PoolExpected = @{ properties = @{ addresses = @('10.10.0.10-10.10.0.100'); advertiseMode = 'ARP' } }
+        { & $controlPlaneCheck } | Should -Throw '*Conflicting*'
     }
 }
 
@@ -1079,6 +1458,47 @@ Describe 'CLI output streams' {
         Mock Get-LocalBoxAzInvocation {
             @{ Executable = $script:cliTestExecutable; Prefix = @('-NoProfile', '-NonInteractive', '-Command', ($script:cliTestCommand + "`n#")) }
         }
+    }
+    It 'reads an ARM collection through the real job transport with <Count> entries' -ForEach @(
+        @{ Json = '{"value":[],"nextLink":null}'; Count = 0 }
+        @{ Json = '{"value":[{"id":"first"}]}'; Count = 1 }
+        @{ Json = '{"value":[{"id":"first"},{"id":"second"}]}'; Count = 2 }
+    ) {
+        $script:cliTestCommand = "[Console]::Out.WriteLine('$Json'); exit 0"
+        $result = @(Get-LocalBoxArmCollection 'https://management.azure.com/test')
+        $result.Count | Should -Be $Count
+        if ($Count -ge 1) { $result[0].id | Should -Be 'first' }
+        if ($Count -eq 2) { $result[1].id | Should -Be 'second' }
+    }
+    It 'rejects malformed ARM collections through the real job transport: <Json>' -ForEach @(
+        @{ Json = '{}' }
+        @{ Json = '{"value":null}' }
+        @{ Json = '{"value":"not-a-list"}' }
+        @{ Json = '{"value":{"id":"not-a-list"}}' }
+        @{ Json = '"not-an-object"' }
+    ) {
+        $script:cliTestCommand = "[Console]::Out.WriteLine('$Json'); exit 0"
+        { Get-LocalBoxArmCollection 'https://management.azure.com/test' } | Should -Throw '*Invalid ARM collection response*'
+    }
+    It 'follows ARM pagination through the real job transport without losing entries' {
+        $script:cliTestCommand = @'
+if ($args -contains 'https://management.azure.com/next') {
+    [Console]::Out.WriteLine('{"value":[{"id":"second"}],"nextLink":null}')
+}
+else {
+    [Console]::Out.WriteLine('{"value":[{"id":"first"}],"nextLink":"https://management.azure.com/next"}')
+}
+exit 0
+'@
+        Mock Get-LocalBoxAzInvocation {
+            @{ Executable = $script:cliTestExecutable; Prefix = @('-NoProfile', '-NonInteractive', '-File', $script:collectionCliPath) }
+        }
+        $script:collectionCliPath = Join-Path $TestDrive 'collection-cli.ps1'
+        $script:cliTestCommand | Set-Content $script:collectionCliPath
+        $result = @(Get-LocalBoxArmCollection 'https://management.azure.com/first')
+        $result.Count | Should -Be 2
+        $result[0].id | Should -Be 'first'
+        $result[1].id | Should -Be 'second'
     }
     It 'parses JSON stdout when a successful native command also writes progress to stderr' {
         $script:cliTestCommand = {

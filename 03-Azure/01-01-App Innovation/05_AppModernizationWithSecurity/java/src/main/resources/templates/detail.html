@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${figure.name}">Figure detail</title>
+</head>
+<body>
+<a href="/">Back to catalog</a>
+<main th:attr="data-figure-detail=${figure.productId},
+               data-figure-id=${figure.productId},
+               data-figure-name=${figure.name},
+               data-figure-description=${figure.description},
+               data-category-name=${figure.category},
+               data-category-slug=${figure.categorySlug},
+               data-image-filename=${figure.filename}">
+    <h1 th:text="${figure.name}"></h1>
+    <img th:src="@{/images/{filename}(filename=${figure.filename})}" th:alt="${figure.name}">
+    <p th:text="${figure.description}"></p>
+    <p th:text="${figure.category}"></p>
+</main>
+</body>
+</html>

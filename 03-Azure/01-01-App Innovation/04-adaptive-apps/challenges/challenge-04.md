@@ -1,10 +1,14 @@
 # Challenge 04 - Build the platform abstractions
 
-[< Previous Challenge](challenge-03.md) - **[Home](../Readme.md)** - [Next Challenge >](challenge-05.md)
+[< Previous Challenge](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/challenges/challenge-03.md) - **[Home](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/Readme.md)** - [Next Challenge >](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/challenges/challenge-05.md)
 
 Estimated time: 45-75 minutes | Difficulty: intermediate
 
 ## Challenge objective
+
+**Hosted Console:** the portfolio and types are already installed in a ready lab.
+[Console setup](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/docs/console-setup.md)
+regenerates your local `artifacts/types.tgz`; start 06 without reinstalling this baseline.
 
 Install the Adaptive Apps capability portfolio, then define the portable contracts that
 application developers use in later challenges. Create one resource type manually
@@ -153,7 +157,10 @@ platform-independent schemas with that platform's Radius workspace.
 
 ## Learning resources
 
-- [Radius resource types](https://docs.radapp.io/guides/author-apps/custom-resources/)
+The workshop pins **Radius 0.60.0**. Current official docs describe a newer preview;
+keep the workshop's `Radius.Resources/*` contracts, not preview resource types/recipe packs.
+
+- [Radius resource types](https://docs.radapp.io/extensibility/resource-types/)
 - [Resource type CLI reference](https://docs.radapp.io/reference/cli/rad_resource-type/)
-- [Radius recipes](https://docs.radapp.io/guides/recipes/overview/)
+- [Radius recipes](https://docs.radapp.io/reference/recipes/)
 - [Bicep extensions](https://learn.microsoft.com/azure/azure-resource-manager/bicep/bicep-extension)

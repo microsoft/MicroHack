@@ -6,6 +6,8 @@ Runs once per subscription before participant lab deployments and registers the
 required Azure resource providers. It ensures one preferred region has the VM
 SKUs and compute quota required by the subscription's participant count.
 It also submits one shared LocalBox environment per subscription for Challenge 6.
+For Microsoft-hosted environments only: assigns and verifies the MCAPS control-tag
+initiative before deploying resources. Do not use this hook for BYOS setup.
 #>
 param(
     [Parameter(Mandatory=$true)]
@@ -20,6 +22,7 @@ param(
 
 . (Join-Path $PSScriptRoot 'quota-helpers.ps1')
 . (Join-Path $PSScriptRoot 'localbox-credentials.ps1')
+. (Join-Path $PSScriptRoot 'hosted-tag-policy.ps1')
 
 Get-LocalBoxConsoleGroupCredential
 
@@ -151,6 +154,8 @@ if(-not $selectedCandidate) {
 Set-MhhConfidentialComputeSelection -SubscriptionId $SubscriptionId -Candidate $selectedCandidate
 Write-Host "Selected $($selectedCandidate.VmSize) in $($selectedCandidate.Location); compute SKUs and quotas are ready for $participantCount participants." -ForegroundColor Green
 
+Initialize-MhhHostedTagPolicy -SubscriptionId $SubscriptionId -Location $selectedCandidate.Location
+
 $localBoxResourceGroupName = 'rg-localbox-shared'
 $localBoxLocations = @(
     @($selectedCandidate.Location) + $PreferredLocation |
@@ -241,6 +246,25 @@ else {
 
 
 $localBoxScope = "/subscriptions/$SubscriptionId/resourceGroups/$localBoxResourceGroupName"
+for ($attempt = 1; $attempt -le 60; $attempt++) {
+    Update-MhhToken | Out-Null
+    $runtimeProvider = Get-AzResourceProvider -ProviderNamespace Microsoft.KubernetesRuntime -ErrorAction Stop
+    if ($runtimeProvider.RegistrationState -eq 'Registered') { break }
+    Start-Sleep -Seconds 10
+}
+if ($runtimeProvider.RegistrationState -ne 'Registered') {
+    throw 'Microsoft.KubernetesRuntime registration did not complete. LocalBox MetalLB preparation is blocked.'
+}
+$runtimeObjectIds = @(& az ad sp list --filter "appId eq '087fca6e-4606-4d41-b3f6-5ebdf75b8b4c'" --query '[].id' --output tsv --only-show-errors)
+if ($LASTEXITCODE -ne 0) { throw 'Unable to resolve the Microsoft.KubernetesRuntime service principal for MetalLB.' }
+$runtimeObjectIds = @($runtimeObjectIds | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+$runtimeObjectId = [guid]::Empty
+if ($runtimeObjectIds.Count -ne 1 -or -not [guid]::TryParse($runtimeObjectIds[0], [ref]$runtimeObjectId) -or $runtimeObjectId -eq [guid]::Empty) {
+    throw 'Expected exactly one valid Microsoft.KubernetesRuntime service-principal object ID. Have the tenant administrator verify provider registration.'
+}
+Update-AzTag -ResourceId $localBoxScope -Operation Merge `
+    -Tag @{ 'microhack-k8s-runtime-object-id' = $runtimeObjectId.ToString() } -ErrorAction Stop | Out-Null
+
 foreach ($participantObjectId in $AllowedEntraUserIds) {
     foreach ($roleName in @('Reader', 'Azure Stack HCI VM Contributor')) {
         $roleAssignment = Get-AzRoleAssignment `

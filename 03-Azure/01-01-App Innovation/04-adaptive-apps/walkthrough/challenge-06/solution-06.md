@@ -1,10 +1,17 @@
 # Walkthrough Challenge 06 - Port the App Across Environments
 
-[< Previous Solution](../challenge-05/solution-05.md) - **[Home](../../Readme.md)** - [Next Solution](../challenge-07/solution-07.md)
+[< Previous Solution](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/walkthrough/challenge-05/solution-05.md) - **[Home](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/Readme.md)** - [Next Solution](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/walkthrough/challenge-07/solution-07.md)
 
 Duration: 45-75 minutes
 
 ## Coach notes
+
+**Hosted entry point:** complete the workstation portion of Challenge 01 and
+[Console setup](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/docs/console-setup.md).
+The ready baseline covers 02-05; the connection helper creates participant-local
+contexts/workspaces and `artifacts/types.tgz` without reinstalling the platform.
+Use the **Bash** examples and source `artifacts/console-env.sh` in each new
+terminal. Keep its discovered names; the PowerShell examples are the manual path.
 
 ### How we arrived here
 
@@ -164,7 +171,7 @@ Bash script.
 **Bash:**
 
 ```bash
-export AZURE_SUBSCRIPTION="<subscription-id>"
+export AZURE_SUBSCRIPTION="${AZURE_SUBSCRIPTION:-<subscription-id>}"
 bash resources/prepare-k3s-azure-vm.sh connect
 export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
 
@@ -462,8 +469,8 @@ Azure Database for PostgreSQL can take several minutes to provision.
 **Bash:**
 
 ```bash
-export AZURE_SUBSCRIPTION="<subscription-id>"
-export RESOURCE_GROUP="rg-adaptive-apps"
+export AZURE_SUBSCRIPTION="${AZURE_SUBSCRIPTION:-<subscription-id>}"
+export RESOURCE_GROUP="${RESOURCE_GROUP:-rg-adaptive-apps}"
 az account set --subscription "$AZURE_SUBSCRIPTION"
 
 rad app graph --application adaptive-apps
@@ -940,7 +947,7 @@ Stop the AKS exposure before running comparison commands.
 **Bash:**
 
 ```bash
-export AZURE_SUBSCRIPTION="<subscription-id>"
+export AZURE_SUBSCRIPTION="${AZURE_SUBSCRIPTION:-<subscription-id>}"
 bash resources/prepare-k3s-azure-vm.sh connect
 export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
 kubectl config use-context k3s-azure-vm
@@ -1123,7 +1130,7 @@ The devcontainer restart stopped the tunnel process. Reconnect, then restore the
 dedicated kubeconfig:
 
 ```bash
-export AZURE_SUBSCRIPTION="<subscription-id>"
+export AZURE_SUBSCRIPTION="${AZURE_SUBSCRIPTION:-<subscription-id>}"
 bash resources/prepare-k3s-azure-vm.sh connect
 export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
 ```

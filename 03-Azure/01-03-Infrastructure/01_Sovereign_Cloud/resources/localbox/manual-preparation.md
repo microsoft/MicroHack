@@ -97,6 +97,7 @@ Before participants begin, follow the [Challenge 6 walkthrough](../../walkthroug
 3. Confirm that the same VM appears in Defender for Cloud **Inventory**, verify Defender for Servers coverage and onboarding, and review its assessment status. Allow time for recommendations to populate; an empty list is not proof of completed assessment
 4. Locate that VM in Azure Update Manager **Resources -> Machines**, run **Check for updates**, and verify a successful assessment and its timestamp. Zero pending updates is a valid result; a pending or failed assessment is not
 5. Confirm that neither exercise requires selecting shared cluster nodes, the LocalBox host, Arc Resource Bridge, or another participant's VM, or changing subscription-level settings
+6. Complete the organizer [AKS and MetalLB preparation](readme.md#metallb-preparation), then use the same participant identity to inspect MetalLB, deploy the sample into a unique team namespace, and access it through `az connectedk8s proxy` plus a private `kubectl port-forward`. Follow the current Challenge 6 walkthrough; no Client VM credentials or Windows routes should be needed by the attendee. Verify the Service receives a reserved VIP, but record that port-forwarding does not validate routing through that VIP.
 
 Resolve connectivity, extension provisioning, or permission failures before the event. Keep any permission changes limited to the operation and resource scope actually required. Do not install patches or restart shared resources during this readiness test.
 

@@ -1,10 +1,16 @@
 # Walkthrough Challenge 10 - Model, review, and deploy with Radius Canvas
 
-[< Previous Solution](../challenge-09/solution-09.md) - **[Home](../../Readme.md)** - [Next Solution](../challenge-11/solution-11.md)
+[< Previous Solution](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/walkthrough/challenge-09/solution-09.md) - **[Finish / Home](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/Readme.md)**
 
 Duration: 90-150 minutes
 
 ## Coach notes
+
+This optional extension runs on the **host**, not in a devcontainer or Codespace.
+The GitHub Copilot app, GitHub Actions, tenant/federation permissions, and deployment
+access are separate prerequisites, not supplied by Console setup. Use the student
+challenge's host setup even if earlier work used a container. Finish here:
+Challenge 11 is not yet published.
 
 Radius Canvas entered public preview on 3 September 2026. It is a canvas extension for the
 GitHub Copilot app, shipped inside a plugin named `radius`, with source in

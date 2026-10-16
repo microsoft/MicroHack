@@ -9,12 +9,16 @@ Understand Customer-Managed Keys in Azure Key Vault. Configure an Azure Storage 
 * Understand Azure Key Management Options
 * Understand Customer-Managed Keys (CMK) in Azure Key Vault
 * CMK for Azure Storage - Implementation Step by Step
+* Understand soft-delete retention and purge protection.
+* Verify client and Storage-service access to Key Vault.
+* Create or reuse a Log Analytics workspace and enable Key Vault audit logs.
 
 ## Success criteria
 
 * You have deployed Azure Key Vault
 * You successfully implement CMK for an Azure Storage account using Azure CLI.
 * You have successfully verified encryption settings
+* You understand how deleted keys can be recovered during retention and have verified a new key-operation audit event in Log Analytics.
 
 ## Learning resources
 

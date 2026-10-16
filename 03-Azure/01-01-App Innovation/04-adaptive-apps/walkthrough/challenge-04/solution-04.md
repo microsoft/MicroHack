@@ -1,10 +1,15 @@
 # Walkthrough Challenge 04 - Build the platform abstractions
 
-[< Previous Solution](../challenge-03/solution-03.md) - **[Home](../../Readme.md)** - [Next Solution](../challenge-05/solution-05.md)
+[< Previous Solution](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/walkthrough/challenge-03/solution-03.md) - **[Home](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/Readme.md)** - [Next Solution](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/walkthrough/challenge-05/solution-05.md)
 
 Duration: 45-75 minutes
 
 ## Coach notes
+
+**Hosted Console:** the portfolio and resource types already exist. Use
+[Console setup](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/docs/console-setup.md)
+to regenerate the participant's local `artifacts/types.tgz`, then continue at 06.
+Do not rerun the installation/import steps below on the shared hosted baseline.
 
 This challenge makes the platform-engineering story concrete. Teams define the
 vocabulary that application developers use in later challenges.

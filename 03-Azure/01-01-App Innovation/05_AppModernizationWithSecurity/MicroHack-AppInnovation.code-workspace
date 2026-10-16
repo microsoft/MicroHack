@@ -1,0 +1,22 @@
+{
+  "folders": [
+    { "path": "." }
+  ],
+  "settings": {
+    "dotnet.defaultSolution": "dotnet/LegoCatalog.sln",
+    "files.exclude": {
+      "**/bin": true,
+      "**/obj": true
+    },
+    "bicep.analysis.verbose": true
+  },
+  "extensions": {
+    "recommendations": [
+      "ms-dotnettools.csharp",
+      "ms-azuretools.vscode-bicep",
+      "ms-azuretools.vscode-docker",
+      "GitHub.copilot",
+      "GitHub.copilot-chat"
+    ]
+  }
+}

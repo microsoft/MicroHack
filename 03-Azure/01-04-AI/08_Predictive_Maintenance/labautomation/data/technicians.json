@@ -1,0 +1,146 @@
+[
+  {
+    "id": "tech-001",
+    "employeeId": "EMP-1024",
+    "name": "John Smith",
+    "role": "Senior Tire Equipment Technician",
+    "department": "Maintenance",
+    "email": "john.smith@tirefactory.com",
+    "phone": "+1-555-0101",
+    "skills": [
+      "tire_curing_press",
+      "hydraulic_systems",
+      "mold_maintenance",
+      "bladder_replacement",
+      "plc_troubleshooting"
+    ],
+    "certifications": [
+      "Tire Manufacturing Equipment Level 3",
+      "Hydraulics Specialist",
+      "Lockout/Tagout Certified"
+    ],
+    "available": true,
+    "currentAssignments": [ ],
+    "shiftSchedule": "day"
+  },
+  {
+    "id": "tech-002",
+    "employeeId": "EMP-1087",
+    "name": "Maria Garcia",
+    "role": "Building Machine Specialist",
+    "department": "Maintenance",
+    "email": "maria.garcia@tirefactory.com",
+    "phone": "+1-555-0102",
+    "skills": [
+      "tire_building_machine",
+      "servo_systems",
+      "precision_alignment",
+      "tension_control",
+      "drum_balancing"
+    ],
+    "certifications": [
+      "Tire Building Systems",
+      "Servo Motor Specialist",
+      "Precision Mechanics"
+    ],
+    "available": true,
+    "currentAssignments": [ ],
+    "shiftSchedule": "day"
+  },
+  {
+    "id": "tech-003",
+    "employeeId": "EMP-1145",
+    "name": "David Lee",
+    "role": "Quality Systems Technician",
+    "department": "Maintenance",
+    "email": "david.lee@tirefactory.com",
+    "phone": "+1-555-0103",
+    "skills": [
+      "tire_uniformity_machine",
+      "load_cell_calibration",
+      "measurement_systems",
+      "data_analysis",
+      "sensor_alignment"
+    ],
+    "certifications": [
+      "Metrology Level 2",
+      "Calibration Specialist",
+      "Quality Control Systems"
+    ],
+    "available": false,
+    "currentAssignments": [ "WO-2024-456" ],
+    "shiftSchedule": "day"
+  },
+  {
+    "id": "tech-004",
+    "employeeId": "EMP-1203",
+    "name": "Sarah Johnson",
+    "role": "Electrical Technician",
+    "department": "Maintenance",
+    "email": "sarah.johnson@tirefactory.com",
+    "phone": "+1-555-0104",
+    "skills": [
+      "electrical_systems",
+      "plc_programming",
+      "motor_drives",
+      "control_panels",
+      "instrumentation"
+    ],
+    "certifications": [
+      "Industrial Electrician",
+      "PLC Programming Siemens/Allen-Bradley",
+      "Variable Frequency Drive Specialist"
+    ],
+    "available": true,
+    "currentAssignments": [ ],
+    "shiftSchedule": "day"
+  },
+  {
+    "id": "tech-005",
+    "employeeId": "EMP-1267",
+    "name": "Michael Chen",
+    "role": "Mixing & Extrusion Technician",
+    "department": "Maintenance",
+    "email": "michael.chen@tirefactory.com",
+    "phone": "+1-555-0105",
+    "skills": [
+      "banbury_mixer",
+      "tire_extruder",
+      "rubber_processing",
+      "temperature_control",
+      "screw_maintenance"
+    ],
+    "certifications": [
+      "Rubber Processing Equipment",
+      "Extruder Maintenance Level 2",
+      "Process Control Systems"
+    ],
+    "available": true,
+    "currentAssignments": [ ],
+    "shiftSchedule": "night"
+  },
+  {
+    "id": "tech-006",
+    "employeeId": "EMP-1312",
+    "name": "Jennifer Rodriguez",
+    "role": "Mechanical Technician",
+    "department": "Maintenance",
+    "email": "jennifer.rodriguez@tirefactory.com",
+    "phone": "+1-555-0106",
+    "skills": [
+      "bearing_replacement",
+      "alignment",
+      "vibration_analysis",
+      "mechanical_systems",
+      "preventive_maintenance"
+    ],
+    "certifications": [
+      "Vibration Analysis Level 2",
+      "Precision Alignment",
+      "Mechanical Systems Specialist"
+    ],
+    "available": true,
+    "currentAssignments": [ ],
+    "shiftSchedule": "day"
+  }
+]

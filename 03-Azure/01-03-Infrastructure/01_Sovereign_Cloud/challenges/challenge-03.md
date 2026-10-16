@@ -10,13 +10,14 @@ Understand encryption in transit considerations for sovereign scenarios. Verify 
 * Understand TLS versions and current Azure Storage defaults
 * Hands-on: Azure Blob Storage - require secure transfer (HTTPS only) in Azure Portal
 * Hands-on: Verify and govern minimum TLS version with Azure Policy
+* Verify both network access to the Blob endpoint and Microsoft Entra data permissions before creating a container.
 * Validation: detect TLS versions used by clients (Log Analytics/KQL)
 
 ## Success criteria
 
 * Storage accounts reject HTTP requests and enforce HTTPS (secure transfer required).
 * Storage accounts created through the Azure Portal use Minimum TLS Version = TLS 1.2, and policy governance is in place to prevent weaker configurations from CLI, template, or legacy deployments.
-* Log Analytics reports only TLS 1.2 or TLS 1.3 requests in the past 7 days.
+* Log Analytics contains newly generated upload/download requests for your account in the past day using only TLS 1.2 or TLS 1.3; empty results do not prove success.
 
 ## Learning resources
 

@@ -10,6 +10,59 @@ The runner uses the caller's existing Azure CLI login and never changes it. Loca
 
 Full Kubernetes checks require kubeconfigs that already authenticate to the intended clusters. LocalBox defaults to `$HOME/.kube/config` (on Windows, `$HOME\.kube\config`), the usual path updated by `az connectedk8s proxy`. An explicit `-LocalBoxKubeconfig` takes precedence; otherwise a `LocalBox.Kubeconfig` value in the inventory is preserved before using the default. The selected file's current context must target `localbox-aks`; do not switch it during testing. For AKS Local, use an Entra group member in a separate CLI profile/session and the [Jumpstart proxy workflow](https://jumpstart.azure.com/azure_jumpstart_localbox/AKS). Keep the proxy/tunnel running throughout testing. For K3s, use its existing private/Bastion access path. Tests never switch the current kubeconfig or retrieve admin credentials automatically.
 
+## Challenge 4 browser-behavior unit tests
+
+From this directory, run `Invoke-Pester ./visual-attestation.tests.ps1 -Output Detailed`. These offline tests mock Azure and Docker commands. They cover `-SkipBrowser` output and comparison HTML generation for Codespaces, while preserving automatic browser launch for desktop users.
+
+A fresh Codespace smoke test is still required to validate the devcontainer build, Docker daemon, `confcom` policy generation and Azure deployment together; the mocked tests do not establish end-to-end Codespaces support.
+
+## MetalLB preparation checks
+
+MetalLB preparation tests are included in `prepare-localbox.tests.ps1`. Run
+`Invoke-Pester ./prepare-localbox.tests.ps1 -FullName 'LocalBox MetalLB preparation*','MetalLB health evidence*','CLI output streams*' -Output Detailed`
+for the focused offline checks. They cover reserved VIP validation, idempotent
+extension/pool installation, WhatIf, discovery failures, conflicting configuration
+and failure propagation without deleting shared resources. CLI tests use real
+background-job serialization to cover empty, single-entry, multi-entry, paginated,
+and malformed ARM collection responses, including deserialized `ArrayList` values.
+Mocked health checks
+also reject missing or mismatched address pools and L2 advertisements. The live LocalBox
+suite now requires the `MetalLb` manifest fields; rerun preparation for older
+manifests. Full checks also inspect the Kubernetes IPAddressPool and L2Advertisement.
+They do not replace the participant proxy/port-forward test or a separately
+authorized test of real network access through the load-balancer address.
+
+## LocalBox registration-region checks
+
+The LocalBox registration-region contract is checked offline with
+`Invoke-Pester ./prepare-localbox.tests.ps1 -FullName 'LocalBox registration region contract*' -Output Detailed`.
+It verifies that both deployment entry points default registration to Australia East,
+the shared hook passes that region independently of host-region selection, and
+all four Challenge 1 policy parameter examples include the Australia East lab-only
+exception while retaining the four European regions. These checks make no
+Azure changes; a fresh Console deployment and participant VM creation remain
+required to validate regional service availability and effective inherited policies.
+
+## Hosted tag-policy unit tests
+
+From this directory, run `Invoke-Pester ./hosted-tag-policy.tests.ps1 -Output Detailed`. These offline tests mock all Azure and Console commands. They cover hosted-only wiring, subscription targeting, tag-policy propagation, both tag values on resources and resource groups, preservation of unrelated tags, bounded failure, and temporary probe cleanup. Compile the initiative separately with `az bicep build --file ../../labautomation/infra/hosted-tag-policy.bicep --stdout`.
+
+The mocks preserve Azure PowerShell's different output shapes: resource groups expose `Tags`, while network security groups expose `Tag`. A Console run on 2026-09-29 exposed a false timeout caused by reading `Tags` from both. Regression tests reproduce that failure with the old check and verify the corrected check, including null tag collections and target-specific timeout diagnostics. The probe still requires both control tags and the purpose tag, and does not bypass genuine propagation failures.
+
+Each fresh hosted environment must pass the setup's live tag-policy probe. The validation below covers a participant-created Key Vault and a manually created storage account. No existing-resource remediation or BYOS policy deployment is part of this test.
+
+### Live validation
+
+On 2026-09-29, the initiative and assignment were deployed using Azure CLI in a hosted test subscription. A new empty Key Vault in an existing participant resource group was created with only `MicroHackPurpose=HostedTagPolicyLiveTest`; a separate read confirmed `SecurityControl=Ignore`, `CostControl=Ignore`, and preservation of the purpose tag. The existing resource group lacked `SecurityControl`, demonstrating subscription-policy application rather than inheritance from that group's tags. No remediation roles were granted to the assignment identity.
+
+The test vault was deleted and its soft-deleted state verified, with seven-day purge-protected retention. The assignment was left deployed; existing participant resources and resource-group tags were not changed. Fresh resource-group creation was blocked by the participant identity's permissions, so that test did not validate resource-group tagging or the PowerShell setup probe.
+
+Live deployment also established that this subscription supports policy API version `2026-06-01`, not `2026-07-01`, and requires a managed identity for the modify assignment even without remediation. The template and offline tests reflect both requirements; a successful what-if alone did not catch either deployment failure.
+
+On 2026-09-30, the organizer reported a successful fresh Console deployment after the probe fix. The supplied Console output for `traininglab-18` shows one retry for missing NSG control tags, followed by successful verification for both resource groups and resources and continuation to shared LocalBox deployment. This closes the outstanding organizer-level live probe validation.
+
+The organizer also manually created a storage account in `rg-labuser-0011` and observed both tags being applied automatically. The supplied portal screenshot confirms `SecurityControl=Ignore` and `CostControl=Ignore`. Together with the earlier Key Vault test, this validates automatic tag application beyond resources created by the lab scripts. Downstream MCAPS processing was not tested.
+
 ## Download without cloning
 
 Download [test-sovereign-cloud.ps1](../test-sovereign-cloud.ps1) from the same trusted ref as preparation. `-DownloadTests` defaults to `$true`: every run downloads the helpers and two suites to a temporary directory and prints the repository/ref being used. Internet access is required unless you pass `-DownloadTests:$false` with a complete local checkout. `-GitHubRef` must identify the **same reviewed ref** as the runner, preferably a commit SHA; it defaults to `main`. Downloaded scripts execute under your privileges, so review and pin them. Download failures stop the run rather than silently falling back to other code.

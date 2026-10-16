@@ -1,0 +1,123 @@
+{
+  "$schema": "../workshop/contracts/seed-manifest.schema.json",
+  "schemaVersion": "1.0.0",
+  "verifiedAt": "2026-08-18",
+  "sources": {
+    "catalog": "catalog.json",
+    "categories": "categories.json",
+    "images": "images"
+  },
+  "counts": {
+    "figures": 198,
+    "categories": 20,
+    "images": 198,
+    "imageBytes": 323011386
+  },
+  "hashes": {
+    "catalogSha256": "01cdbfd262c409eac52b3d8a4ead4937eabf331e4a9ce4fe997bdffd1273720a",
+    "categoriesSha256": "94be3f58ff5dcca7f4b622020ff2e541fcca73de8c86bc8b85cb5f31551c6f4c",
+    "imageSetSha256": "c706eda9b7d74a2b578b02487e6527e707819bc3cdd09adc59e3cb62ffcba7be"
+  },
+  "categorySummary": [
+    {
+      "name": "Space Explorers",
+      "slug": "space-explorers",
+      "figureCount": 15
+    },
+    {
+      "name": "Medieval Knights",
+      "slug": "medieval-knights",
+      "figureCount": 10
+    },
+    {
+      "name": "City Workers",
+      "slug": "city-workers",
+      "figureCount": 15
+    },
+    {
+      "name": "Fantasy Wizards",
+      "slug": "fantasy-wizards",
+      "figureCount": 11
+    },
+    {
+      "name": "Pirate Crew",
+      "slug": "pirate-crew",
+      "figureCount": 11
+    },
+    {
+      "name": "Super Heroes",
+      "slug": "super-heroes",
+      "figureCount": 9
+    },
+    {
+      "name": "Underwater Adventurers",
+      "slug": "underwater-adventurers",
+      "figureCount": 11
+    },
+    {
+      "name": "Jungle Rangers",
+      "slug": "jungle-rangers",
+      "figureCount": 10
+    },
+    {
+      "name": "Arctic Researchers",
+      "slug": "arctic-researchers",
+      "figureCount": 10
+    },
+    {
+      "name": "Alien Invaders",
+      "slug": "alien-invaders",
+      "figureCount": 10
+    },
+    {
+      "name": "Robot Builders",
+      "slug": "robot-builders",
+      "figureCount": 12
+    },
+    {
+      "name": "Desert Nomads",
+      "slug": "desert-nomads",
+      "figureCount": 10
+    },
+    {
+      "name": "Mountain Climbers",
+      "slug": "mountain-climbers",
+      "figureCount": 9
+    },
+    {
+      "name": "Space Pirates",
+      "slug": "space-pirates",
+      "figureCount": 7
+    },
+    {
+      "name": "Castle Guards",
+      "slug": "castle-guards",
+      "figureCount": 7
+    },
+    {
+      "name": "Ninja Warriors",
+      "slug": "ninja-warriors",
+      "figureCount": 8
+    },
+    {
+      "name": "Sports Champions",
+      "slug": "sports-champions",
+      "figureCount": 8
+    },
+    {
+      "name": "Holiday Festivities",
+      "slug": "holiday-festivities",
+      "figureCount": 8
+    },
+    {
+      "name": "Mythic Creatures",
+      "slug": "mythic-creatures",
+      "figureCount": 9
+    },
+    {
+      "name": "Safari Photographers",
+      "slug": "safari-photographers",
+      "figureCount": 8
+    }
+  ]
+}

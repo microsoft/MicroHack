@@ -10,7 +10,7 @@ if [[ "$TARGET_PLATFORM" != "aks" &&
   exit 1
 fi
 
-for command_name in az base64 grep kubectl mktemp rad tr; do
+for command_name in az base64 grep jq kubectl mktemp rad tr; do
   command -v "$command_name" >/dev/null 2>&1 || {
     echo "Required command not found: $command_name" >&2
     exit 1
@@ -120,8 +120,7 @@ publish_workshop_recipes() {
   : "${RESOURCE_GROUP:?Set RESOURCE_GROUP for workshop recipe publishing.}"
   : "${ACR_NAME:?Set a globally unique lowercase ACR_NAME.}"
 
-  az account show >/dev/null 2>&1 || az login
-  az account set --subscription "$AZURE_SUBSCRIPTION"
+  source "$(dirname "${BASH_SOURCE[0]}")/azure-session.sh"
 
   if ! az acr show \
     --resource-group "$RESOURCE_GROUP" \
@@ -170,38 +169,8 @@ EOF
     --target "br:${ACR_NAME}.azurecr.io/recipes/postgres-kubernetes:${WORKSHOP_RECIPE_VERSION}"
 }
 
-# `rad recipe list` prints an empty table and still exits 0 when no recipes are
-# registered, so assert the registrations that the later challenges depend on.
 assert_recipes() {
-  local workspace="$1"
-  local environment="$2"
-  shift 2
-  local recipe_json
-  local resource_type
-  local missing=0
-
-  rad recipe list \
-    --workspace "$workspace" \
-    --group "$RADIUS_GROUP" \
-    --environment "$environment"
-
-  recipe_json="$(rad recipe list \
-    --workspace "$workspace" \
-    --group "$RADIUS_GROUP" \
-    --environment "$environment" \
-    --output json)"
-
-  for resource_type in "$@"; do
-    grep -Fq "$resource_type" <<<"$recipe_json" || {
-      echo "Missing 'default' recipe for ${resource_type} in ${environment}." >&2
-      missing=1
-    }
-  done
-
-  ((missing == 0)) || {
-    echo "Recipe verification failed for ${environment}; the environment definition did not register the expected recipes." >&2
-    return 1
-  }
+  RADIUS_GROUP="$RADIUS_GROUP" bash resources/verify-recipes.sh "$@"
 }
 
 configure_aks() {

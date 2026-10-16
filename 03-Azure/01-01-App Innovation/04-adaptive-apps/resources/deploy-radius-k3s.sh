@@ -15,6 +15,11 @@ RADIUS_WORKSPACE="${RADIUS_WORKSPACE:-ws-local-prod}"
 RADIUS_ENVIRONMENT="${RADIUS_ENVIRONMENT:-env-local-prod}"
 RADIUS_GROUP="${RADIUS_GROUP:-rg-trading}"
 RADIUS_NAMESPACE="${RADIUS_NAMESPACE:-env-local-prod}"
+RADIUS_REINSTALL="${RADIUS_REINSTALL:-true}"
+case "$RADIUS_REINSTALL" in
+  true | false) ;;
+  *) echo "RADIUS_REINSTALL must be true or false." >&2; exit 2 ;;
+esac
 
 export KUBECONFIG="${KUBECONFIG:-$K3S_KUBECONFIG}"
 
@@ -25,10 +30,15 @@ if [[ "$CURRENT_CONTEXT" != "$K3S_CONTEXT" ]]; then
 fi
 
 INSTALL_ARGS=(kubernetes --kubecontext "$CURRENT_CONTEXT")
-if kubectl get namespace radius-system >/dev/null 2>&1; then
+RADIUS_NAMESPACE_EXISTS="$(kubectl get namespace radius-system --ignore-not-found --output name)"
+if [[ -n "$RADIUS_NAMESPACE_EXISTS" && "$RADIUS_REINSTALL" == "true" ]]; then
   INSTALL_ARGS+=(--reinstall)
 fi
-rad install "${INSTALL_ARGS[@]}"
+if [[ -z "$RADIUS_NAMESPACE_EXISTS" || "$RADIUS_REINSTALL" == "true" ]]; then
+  rad install "${INSTALL_ARGS[@]}"
+else
+  echo "Keeping the existing Radius installation; validating it below."
+fi
 
 rad workspace create kubernetes "$RADIUS_WORKSPACE" \
   --context "$CURRENT_CONTEXT" \

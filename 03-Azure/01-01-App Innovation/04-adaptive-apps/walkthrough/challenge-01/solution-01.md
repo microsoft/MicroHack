@@ -1,8 +1,16 @@
 # Walkthrough Challenge 01 - Prerequisites: ready, set, go
 
-**[Home](../../Readme.md)** - [Next Solution](../challenge-02/solution-02.md)
+**[Home](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/Readme.md)** - [Next Solution](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/walkthrough/challenge-02/solution-02.md)
 
 ## Coach notes
+
+**Hosted path:** use Tasks 2-4 in the student challenge, then
+[Console setup](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/docs/console-setup.md).
+Participants use Bash and their own Azure sign-in; skip provider registration,
+extra-RG preflight, and provisioning/install steps 02-05. A ready hosted lab
+includes recipes, but each participant still needs the connection helper's local
+contexts, workspaces, and `artifacts/types.tgz`. Source `artifacts/console-env.sh`
+in every new Bash terminal, then start 06. The remaining setup is the manual path.
 
 Challenge 01 verifies prerequisites. Participants should arrive with most tools
 installed or be prepared to install them quickly. Coaches should unblock environment
@@ -88,15 +96,15 @@ print server details rather than a connection error. This single check removes m
 day-one delays.
 
 This configuration follows the MicroHack repository's multi-configuration convention.
-It is documented for local VS Code Dev Containers; do not advertise Codespaces unless
-the repository later adds and validates an explicit Codespaces selection workflow.
+Local VS Code Dev Containers remain the validated path. Optional Codespaces
+selection and forwarded identity URLs need organizer validation as described in
+[Console setup](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/docs/console-setup.md#optional-extensions-and-hosted-browsers).
 
 ### Start the container
 
 ```bash
-git clone https://github.com/djong1/MicroHack.git
+git clone --branch main https://github.com/microsoft/MicroHack.git
 cd MicroHack
-git switch djong1-adaptive-apps-microhack
 code .
 ```
 
@@ -567,4 +575,4 @@ After Challenge 01, participants can:
 - Run `kubectl`, Helm, and Radius CLI.
 - Use Git, `curl`, SSH, `tar`, and the Azure CLI Bastion extension.
 - Explain where their kubeconfig and Radius workspace configuration will be stored.
-- Proceed to [Challenge 02](../challenge-02/solution-02.md) to provision AKS and K3s.
+- Proceed to [Challenge 02](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/walkthrough/challenge-02/solution-02.md) to provision AKS and K3s.

@@ -5,8 +5,7 @@ SEV-SNP confidential computing node pool** (2 nodes, `Standard_DC2as_v5`) and de
 multi-container [Azure Voting App](https://github.com/Azure-Samples/azure-voting-app-redis) sample
 to it, exposed via a public LoadBalancer.
 
-The script follows the same conventions as [`vm-samples/BuildRandomCVM.ps1`](../../vm-samples/BuildRandomCVM.ps1):
-random 5-letter suffix on the basename, full resource-group tagging (owner, BuiltBy, GitRepo,
+The script uses a random 5-letter suffix on the basename, full resource-group tagging (owner, BuiltBy, GitRepo,
 description, smoketest), CC SKU + AMD CVM vCPU quota preflight, and an optional `-smoketest` flag
 that auto-deletes everything once the front-end is verified.
 

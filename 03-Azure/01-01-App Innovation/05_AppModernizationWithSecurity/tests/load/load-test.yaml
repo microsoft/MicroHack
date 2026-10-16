@@ -1,0 +1,12 @@
+version: v0.1
+testId: catalog-autoscaling
+displayName: Catalog autoscaling
+description: Bounded load against the handoff catalog performance endpoint
+testType: JMX
+testPlan: catalog-load.jmx
+engineInstances: 1
+failureCriteria:
+  - percentage(error) > 0
+autoStop:
+  errorPercentage: 1
+  timeWindow: 60

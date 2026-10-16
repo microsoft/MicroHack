@@ -10,14 +10,12 @@ AMD SEV-SNP nodes labelled `workload=confidential`. This script deploys only
 applications and never creates, scales or deletes the cluster or its pools.
 
 > [!IMPORTANT]
-> **Execution environment.** Like Challenge 4, this challenge runs in a **local
-> PowerShell 7+ session**, not in Azure Cloud Shell. It requires `kubectl` access
-> and Azure CLI signed in locally.
+> **Execution environment.** Use your [Sovereign Cloud Codespace](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/Readme.md#recommended-environment-github-codespaces), as in Challenge 4. Open a new terminal and run `pwsh` to enter **PowerShell 7**. Azure CLI and `kubectl` are already installed. A local PowerShell 7+ session with the same tools is an alternative.
 
 ## Prerequisites
 
-- The [general MicroHack prerequisites](../../Readme.md#general-prerequisites).
-- PowerShell 7 or later, running locally.
+- The [general MicroHack prerequisites](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/Readme.md#general-prerequisites).
+- PowerShell 7 or later (included in the Sovereign Cloud Codespace).
 - Azure CLI signed in to the target subscription.
 - Contributor access to the attendee resource group.
 - A provided AKS cluster and `cvmnodepool` with two Ubuntu `Standard_DC2as_v5/v6` nodes. The four confidential vCPUs are already allocated; application deployment needs no additional free VM quota.
@@ -30,7 +28,8 @@ and `AzureLinuxCVMPreview` feature registration are not used.
 ### Sign in and verify
 
 ```powershell
-az login --tenant '<your-tenant-id>'
+# Only if your Azure CLI session has expired or uses the wrong account:
+az login --use-device-code --tenant '<your-tenant-id>'
 az account set --subscription '<your-subscription-id>'
 az account show --query "{sub:name, id:id, tenant:tenantId}" --output table
 kubectl version --client
@@ -61,7 +60,7 @@ az aks list --output table
 > Challenge 5 does not use the Confidential VM Orchestrator enterprise
 > application. That identity is required by the customer-managed confidential
 > OS disk path demonstrated in Challenge 5.5. See
-> [when Confidential VM Orchestrator is required](CVM-ORCHESTRATOR.md).
+> [when Confidential VM Orchestrator is required](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/walkthrough/challenge-05/CVM-ORCHESTRATOR.md).
 
 > [!IMPORTANT]
 > This cluster is shared with Challenge 7. Cleanup removes only Challenge 5's
@@ -69,12 +68,27 @@ az aks list --output table
 
 ## Task 1: Configure the MicroHack environment
 
-Use a full repository checkout and run from the Challenge 5 walkthrough directory.
-Set the **Sovereign Lab AKS Cluster** name from Console's Credentials tab. For
-manual delivery, use the shared lab template's `aksClusterName` output.
+In Codespaces, the repository is already cloned. In your PowerShell terminal, run:
 
 ```powershell
-$env:RESOURCE_GROUP = "labuser-xx"
+Set-Location /workspaces/microhack/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/walkthrough/challenge-05
+```
+
+**Continuing from Challenge 4 locally:** if your terminal is still in `walkthrough/challenge-04`, switch to the sibling directory:
+
+```powershell
+Set-Location ../challenge-05
+```
+
+Otherwise, navigate to `03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/walkthrough/challenge-05` within your local checkout. Stay in this directory for the commands below.
+
+Set the **Sovereign Lab AKS Cluster** name from Console's Credentials tab. For
+manual delivery, use the shared lab template's `aksClusterName` output.
+Use your **exact assigned resource-group name**, including the `rg-` prefix
+(for example, `rg-labuser-0024`), not just your attendee ID.
+
+```powershell
+$env:RESOURCE_GROUP = "rg-labuser-0024" # Replace with your exact assigned resource-group name
 $env:AKS_CLUSTER = "<Sovereign Lab AKS Cluster>"
 az aks show --resource-group $env:RESOURCE_GROUP --name $env:AKS_CLUSTER --query '{name:name,location:location,state:provisioningState}' --output table
 ```
@@ -87,7 +101,7 @@ az aks show --resource-group $env:RESOURCE_GROUP --name $env:AKS_CLUSTER --query
 
 ## Task 2: Run the automated deployment
 
-From this walkthrough directory, run:
+From the `walkthrough/challenge-05` directory containing [Deploy-VotingAppCC.ps1](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/walkthrough/challenge-05/Deploy-VotingAppCC.ps1), run:
 
 ```powershell
 ./Deploy-VotingAppCC.ps1 -Deploy
@@ -194,8 +208,8 @@ resource group and all Challenge 7 resources. It refuses an unowned namespace.
 
 The complete Azure Voting App confidential AKS source is retained as an
 unchanged local snapshot under
-[`resources/azure-voting-app`](resources/azure-voting-app/README.md). The
+[`resources/azure-voting-app`](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/walkthrough/challenge-05/resources/azure-voting-app/README.md). The
 top-level deployment script is derived from that source with only the
-MicroHack-specific changes listed in [UPSTREAM-SOURCE.md](UPSTREAM-SOURCE.md).
+MicroHack-specific changes listed in [https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/walkthrough/challenge-05/UPSTREAM-SOURCE.md](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/walkthrough/challenge-05/UPSTREAM-SOURCE.md).
 Use the top-level script for this walkthrough; the script inside `resources`
 is retained only as the unchanged upstream reference.

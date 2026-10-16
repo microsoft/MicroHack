@@ -1,5 +1,9 @@
 # Prepare Azure Local
 
+This is an optional manual alternative, not part of the hosted baseline.
+Hosted participants use [Console setup](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/docs/console-setup.md)
+for the supplied AKS/K3s environments instead.
+
 Use this optional path when the workshop already has Azure Local and an AKS enabled by
 Azure Arc cluster available. Azure Local provisioning is environment-specific and is
 not automated by this MicroHack.

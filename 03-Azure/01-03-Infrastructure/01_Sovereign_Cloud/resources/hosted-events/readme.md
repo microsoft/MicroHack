@@ -21,17 +21,104 @@ The shared hook submits `localbox-*` in `rg-localbox-shared`, then waits up to s
 1. Inspect the Azure deployment, Client bootstrap logs and Azure Local/Arc status. Resolve failures before proceeding.
 2. If the Client password is unknown, an authorized event lead/coach uses the Azure VM's **Help > Reset password** to set a known password for the `arcdemo` host account, then connects to `LocalBox-Client` through Bastion. Do not expose this password through participant credentials or job logs. A host password reset does not change the nested-node Windows credentials. See [LocalBox credentials](#localbox-credentials).
 3. Copy **Lab Group ObjectId** from the Console's **Credentials** tab for the preparation prompt or `-AksAdminGroupObjectId`. Confirm that intended Azure lab identities/coaches are members; see the group dependency below.
-4. Follow [LocalBox preparation](../localbox/readme.md), once per shared subscription, in elevated PowerShell 7. Azure authentication uses the Client VM's managed identity; preparation constructs the nested Windows credential locally from the installed configuration without printing it. An explicit `-NodeCredential` overrides that value after a nested-account rotation.
+4. Follow [LocalBox preparation](../localbox/readme.md), once per shared subscription, in elevated PowerShell 7. It creates AKS and then installs/verifies the shared MetalLB extension and reserved ARP pool. Azure authentication uses the Client VM's managed identity; preparation constructs the nested Windows credential locally from the installed configuration without printing it. An explicit `-NodeCredential` overrides that value after a nested-account rotation.
 5. Run [Pester health checks](../tests/readme.md) for LocalBox and every selected participant lab. A control-plane-only pass does not establish full readiness.
 6. Complete the [participant VM readiness exercise](../localbox/manual-preparation.md#step-6-test-the-environment), including guest management, Defender and Update Manager. Subscription-wide paid-plan changes require the authorized owner and approved budget.
+7. Verify an intended participant can use Entra-authenticated `az connectedk8s proxy` and a private application port-forward from their Codespace. Participants inspect MetalLB, not install it, and never need LocalBox-Client access. This validates the lab access path, not routing to the MetalLB service VIP.
 
-### Policy failures
+Shared setup registers `Microsoft.KubernetesRuntime`, waits for registration,
+resolves its tenant service-principal object ID using the Console's existing
+Graph-capable identity, and records it in the shared RG tag
+`microhack-k8s-runtime-object-id`. Missing registration or identity resolution
+fails setup explicitly. Organizer preparation reads that nonsecret tag; it does
+not require Graph permissions on the Client managed identity. This does not move
+AKS or MetalLB installation into the Console hook: they remain part of the
+organizer's post-provisioning preparation.
 
-The hosted wrapper applies a temporary, resource-group-scoped `SecurityControl=Ignore` exemption for Azure Local validation. It expires under hosted governance automation after 14 days. Its tag alone does not prove that policy processing is complete, and it does not undo earlier policy changes. Ask the content/platform owner to verify the exemption and repair the validation storage/Key Vault settings if provisioning was already affected. The preparation script does not disable policy, change those security settings or renew exemptions.
+### LocalBox registration region and location policies
+
+If LocalBox validation reports `RequestDisallowedByAzure` with
+`locationineligible` ("the selected region is currently not accepting new
+customers"), identify the rejected resource and its actual region before
+changing the host-region selection. This is distinct from an exercise policy's
+`RequestDisallowedByPolicy`. The upstream
+[LocalBox template](https://github.com/microsoft/azure_arc/blob/main/azure_jumpstart_localbox/bicep/main.bicep)
+passes `azureLocalInstanceLocation` to the staging storage module, whose account
+name is `localbox` plus a generated suffix. In the 4 October 2026 hosted test,
+this account was rejected in West Europe while the host was selected in Spain
+Central. **Host-region fallback cannot resolve a rejection in the fixed
+registration/staging-storage region.** The shared setup tries
+the next configured preferred host region for recognized regional failures;
+it does not change the Azure Local registration region or delete the shared
+resource group. The CLI wrapper retains Azure's error details in the exception
+so PowerShell's generic native-command exit error cannot hide them from the
+fallback check. Policy denials, authorization failures, and unrecognized errors
+still stop the run. If all preferred regions fail, the final error is reported;
+do not assume a region is available merely because its SKU/quota checks passed.
+
+There are three separate locations to check: the participant resource group's
+metadata location, the Azure region hosting the LocalBox simulator, and the
+Azure Local/custom-location registration region. The hosted
+[shared hook](../../labautomation/shared-deploy-lab.ps1) explicitly passes
+`AzureLocalInstanceLocation = australiaeast`; the
+[manual deployment](../manual-setup/localbox/deploy-localbox.ps1) defaults to
+`australiaeast`. Host-region fallback does not change that registration parameter.
+The hosted deployer's default also matches Australia East. This changes registration
+and staging storage for fresh deployments, not the Azure host-region selection. Inspect the deployed
+custom location's **JSON View** for its actual `location`.
+
+Azure Local VM management resources use the custom location's region even when
+participants create them in a resource group whose location differs. Policy
+permission on the shared LocalBox group therefore does not establish permission
+to create the participant resources. Before the event, validate the
+[Challenge 6 VM creation flow](../../walkthrough/challenge-06/solution-06.md#23-review-and-create)
+in the designated test participant group, not only in the shared group.
+
+For a policy denial, collect the exact assignment/definition IDs and rejected
+resource type/location. First check whether a participant left their Challenge 1
+location assignment or bonus initiative enforcing; those exercise assignments
+should be **DoNotEnforce**. For an inherited or organizer-owned denial, ask the
+policy owner to review the approved locations or an appropriately scoped
+exception. Do not disable unrelated policies or automatically broaden the
+subscription allowlist. The hosted control tags below do not override arbitrary
+location-deny policies.
+
+The lab returns to Australia East after this West Europe rejection; this is
+not evidence that West Europe is universally unavailable for Azure Local.
+[Service region support](https://learn.microsoft.com/azure/azure-local/concepts/system-requirements-23h2#azure-requirements)
+does not guarantee subscription eligibility for every dependent resource.
+Challenge 1 retains its four European regions and adds Australia East as an
+explicit **lab-only exception**, not a European data-residency recommendation.
+Earlier assignments must be updated by their owners; inherited policies may
+still deny the region, and control tags do not bypass them. Existing Azure
+assignments and resources are not updated or relocated automatically. Validate
+the next event using a fresh deployment and the participant VM exercise.
+Existing-environment cleanup is a separate organizer action.
+
+### Hosted MCAPS control-tag initiative
+
+The organizer-owned [shared hook](../../labautomation/shared-deploy-lab.ps1) deploys the [hosted tag initiative](../../labautomation/infra/hosted-tag-policy.bicep) once per subscription, before LocalBox deployment and participant lab fan-out. This is specific to MCAPS governance in Microsoft-internal hosted environments. **Do not deploy it for bring-your-own-subscription or manual setup.** The Console deployment identity must be authorized to create subscription-scoped policy initiatives and assignments, as well as the lab resources.
+
+The initiative `sovereign-hosted-control-tags` and assignment `sov-hosted-control-tags` use four built-in **modify** policies:
+
+| Target | Tag | Required value |
+|--------|-----|----------------|
+| Taggable resources | `SecurityControl` | `Ignore` |
+| Taggable resources | `CostControl` | `Ignore` |
+| Resource groups | `SecurityControl` | `Ignore` |
+| Resource groups | `CostControl` | `Ignore` |
+
+The policies add or replace only these tags during resource creation or update, preserving unrelated tags. This also covers participant-created resources such as the Challenge 2 Key Vault, without requiring participants to add hosted-only tags. Resource-group tags are not automatically inherited; the initiative applies the resource tags explicitly. Non-taggable resource types are outside its scope. The Challenge 1 `DataClassification` policy exercise is unchanged.
+
+Assignment creation alone does not prove propagation. [Setup](../../labautomation/hosted-tag-policy.ps1) writes a temporary `rg-sov-tag-check-*` resource group and an unattached NSG without either control tag, then reads both back to verify that the policies added both `Ignore` values and preserved an unrelated tag. It retries up to 30 times, 10 seconds apart, and removes only its temporary group in a `finally` block. Deployment, permission, verification timeout, or cleanup failures stop shared setup instead of proceeding with an unprotected lab.
+
+This setup targets newly provisioned test/event environments. Azure requires a system-assigned managed identity on the **modify** assignment, even when no remediation is planned. The assignment creates that identity in the deployment location but grants it no remediation RBAC and creates no remediation tasks. Request-time tag modification does not use the assignment identity to update existing resources. See [built-in tag policies](https://learn.microsoft.com/azure/azure-resource-manager/management/tag-policies) and [modify evaluation](https://learn.microsoft.com/azure/governance/policy/concepts/effect-modify#modify-evaluation).
+
+The tags request exemptions from hosted governance automation; they are not Azure Policy exemption resources and do not disable Defender or other Azure security services. The readiness check verifies Azure tags, not completion of downstream MCAPS processing. Confirm hosted governance honors the tags and its exemption lifetime with the platform owner.
 
 ### Automatic shutdown
 
-Deployment automation also applies `CostControl=Ignore` to the LocalBox resource group and its deployed resources, and to the participant lab resource groups, resources and Azure AKS node pools. This requests exemption from hosted cost-control shutdown automation so LocalBox and the other lab VMs remain running during preparation and delivery. Resource-group tags are not inherited, so the resources are tagged explicitly. Re-running shared preparation also merges the tag onto an existing `LocalBox-Client` VM when reusing its deployment; participant resources receive it on their next deployment.
+The initiative applies `CostControl=Ignore` to new or updated taggable resources and resource groups throughout the dedicated hosted subscription, including resources created by participants later in the workshop. Existing explicit deployment tags remain in place. This requests exemption from hosted cost-control shutdown automation so LocalBox and the other lab VMs remain running during preparation and delivery.
 
 Verify that the hosted governance system honors the tag. It does not disable independent VM shutdown schedules, restart already stopped VMs or prevent the Console's scheduled teardown. Keep monitoring costs and retain the event end time and cleanup process.
 

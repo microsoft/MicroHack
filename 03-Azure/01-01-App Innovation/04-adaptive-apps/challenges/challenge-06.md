@@ -1,10 +1,16 @@
 # Challenge 06 - Port the App Across Environments
 
-[< Previous Challenge](challenge-05.md) - **[Home](../Readme.md)** - [Next Challenge >](challenge-07.md)
+[< Previous Challenge](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/challenges/challenge-05.md) - **[Home](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/Readme.md)** - [Next Challenge >](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/challenges/challenge-07.md)
 
 Estimated time: 45-75 minutes | Difficulty: intermediate to advanced
 
 ## Challenge objective
+
+**Hosted entry point:** after the workstation portion of Challenge 01, complete
+[Console setup](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/docs/console-setup.md).
+It supplies local contexts, workspaces, and `artifacts/types.tgz`; the ready lab
+already includes Challenges 02-05. Use Bash and source `artifacts/console-env.sh`
+in each new terminal. Do not rerun platform provisioning to obtain local state.
 
 Prove that the same application model can be deployed to the private K3s platform and
 AKS without embedding either platform's implementation details in the application.
@@ -164,9 +170,12 @@ Capture a side-by-side comparison that shows:
 
 ## Learning resources
 
-- [Deploy applications with Radius](https://docs.radapp.io/guides/deploy-apps/)
-- [Radius environments](https://docs.radapp.io/guides/deploy-apps/environments/overview/)
-- [Radius workspaces](https://docs.radapp.io/guides/operations/workspaces/overview/)
-- [Radius recipes](https://docs.radapp.io/guides/recipes/overview/)
+The workshop pins **Radius 0.60.0**. Current official docs describe a newer preview;
+retain the workshop's contracts and per-environment recipes rather than preview recipe packs.
+
+- [Deploy applications with Radius](https://docs.radapp.io/applications/deploy/)
+- [Radius environments](https://docs.radapp.io/concepts/environments/)
+- [Radius workspaces](https://docs.radapp.io/management/workspaces/)
+- [Radius recipes](https://docs.radapp.io/reference/recipes/)
 - [AKS workload identity](https://learn.microsoft.com/azure/aks/workload-identity-overview)
 - [Azure Event Grid MQTT](https://learn.microsoft.com/azure/event-grid/mqtt-overview)

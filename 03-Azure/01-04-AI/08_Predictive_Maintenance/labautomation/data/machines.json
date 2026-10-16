@@ -1,0 +1,149 @@
+[
+  {
+    "id": "machine-001",
+    "name": "Tire Curing Press A1",
+    "type": "tire_curing_press",
+    "location": "Curing Department, Line A",
+    "manufacturer": "TireTech Systems Inc",
+    "model": "TCP-4000",
+    "serialNumber": "TCP-4000-2023-001",
+    "installDate": "2023-01-15",
+    "status": "operational",
+    "operatingHours": 12450,
+    "cyclesCompleted": 45680,
+    "maintenanceHistory": [
+      {
+        "date": "2024-11-01",
+        "type": "preventive",
+        "description": "Bladder inspection and heating element check",
+        "technician": "John Smith"
+      }
+    ],
+    "specifications": {
+      "maxPressure": 200,
+      "curingTemperature": 170,
+      "operatingTemperatureRange": {
+        "min": 150,
+        "max": 180
+      },
+      "cycleTime": 12,
+      "powerConsumption": 150
+    }
+  },
+  {
+    "id": "machine-002",
+    "name": "Tire Building Machine B1",
+    "type": "tire_building_machine",
+    "location": "Building Department, Station B1",
+    "manufacturer": "AutoTire Manufacturing Ltd",
+    "model": "TBM-3000",
+    "serialNumber": "TBM-3000-2022-045",
+    "installDate": "2022-06-20",
+    "status": "operational",
+    "operatingHours": 18920,
+    "tiresBuilt": 67840,
+    "maintenanceHistory": [
+      {
+        "date": "2024-10-15",
+        "type": "corrective",
+        "description": "Drum bearing replacement and alignment",
+        "technician": "Maria Garcia"
+      }
+    ],
+    "specifications": {
+      "drumDiameter": 800,
+      "maxTireWidth": 315,
+      "operatingTemperatureRange": {
+        "min": 18,
+        "max": 35
+      },
+      "buildCycleTime": 4.5,
+      "powerConsumption": 45
+    }
+  },
+  {
+    "id": "machine-003",
+    "name": "Tire Extruder C1",
+    "type": "tire_extruder",
+    "location": "Mixing Department, Line C",
+    "manufacturer": "RubberTech Industries",
+    "model": "EXT-2500",
+    "serialNumber": "EXT-2500-2023-012",
+    "installDate": "2023-03-10",
+    "status": "operational",
+    "operatingHours": 15230,
+    "totalOutput": 1245000,
+    "maintenanceHistory": [],
+    "specifications": {
+      "screwDiameter": 250,
+      "maxThroughput": 800,
+      "operatingTemperatureRange": {
+        "min": 80,
+        "max": 120
+      },
+      "extrusionSpeed": 15,
+      "powerConsumption": 180
+    }
+  },
+  {
+    "id": "machine-004",
+    "name": "Tire Uniformity Machine D1",
+    "type": "tire_uniformity_machine",
+    "location": "Quality Control, Station D1",
+    "manufacturer": "QualityTest Systems Corp",
+    "model": "TUM-1000",
+    "serialNumber": "TUM-1000-2021-089",
+    "installDate": "2021-09-15",
+    "status": "maintenance_required",
+    "operatingHours": 24560,
+    "tiresInspected": 98450,
+    "maintenanceHistory": [
+      {
+        "date": "2024-11-20",
+        "type": "preventive",
+        "description": "Load cell calibration and sensor alignment",
+        "technician": "David Lee"
+      }
+    ],
+    "specifications": {
+      "maxLoadCapacity": 1500,
+      "measurementSpeed": 60,
+      "operatingTemperatureRange": {
+        "min": 20,
+        "max": 30
+      },
+      "powerConsumption": 35
+    }
+  },
+  {
+    "id": "machine-005",
+    "name": "Banbury Mixer E1",
+    "type": "banbury_mixer",
+    "location": "Mixing Department, Station E1",
+    "manufacturer": "RubberTech Industries",
+    "model": "BMX-500",
+    "serialNumber": "BMX-500-2020-123",
+    "installDate": "2020-08-10",
+    "status": "operational",
+    "operatingHours": 32140,
+    "batchesCompleted": 15670,
+    "maintenanceHistory": [
+      {
+        "date": "2024-09-12",
+        "type": "preventive",
+        "description": "Rotor blade inspection and seal replacement",
+        "technician": "Michael Chen"
+      }
+    ],
+    "specifications": {
+      "chamberVolume": 500,
+      "maxMixingTemp": 180,
+      "operatingTemperatureRange": {
+        "min": 100,
+        "max": 160
+      },
+      "mixingCycleTime": 8,
+      "powerConsumption": 250
+    }
+  }
+]

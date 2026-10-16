@@ -1,0 +1,25 @@
+{
+  "commit": "98b452ef419fcb1f94c78c2a6d18b125004e9bea",
+  "files": {
+    "resources/install-console-tools.sh": "dd0a4e8fd762d469e74797086164ba20ac76af5bb216bbbabdd2aefae7a61334",
+    "resources/bootstrap-console.sh": "3785f5120af2a817485e4930e476023b41ae874bfa70438b70d43a5a775b809c",
+    "resources/azure-session.sh": "31cf81870be4d08cb73da18929e49dbce1543fbd31f198b17ee281ba40bb8eca",
+    "resources/console-session.sh": "6a5af1db76fdb611882caa057d3e0d5abd3a443d5d70eaf93e7dc11a5a3a427c",
+    "resources/verify-recipes.sh": "cd0bd7a4d08473be9b2c71b94973c4eda4dc64c5477343a003e0cd83b4ff6210",
+    "resources/connect-console.sh": "2dca1544de5726dc4ff1d636566ad6f3ccf8ee1beff919532a32c0a55649c246",
+    "resources/prepare-k3s-azure-vm.sh": "ac17a02d6aa15ad99d086580afd3c3bd0da0fe86b2f3bc64e51ae4f2e27fe949",
+    "resources/deploy-radius-aks.sh": "57b85557d839702e4222f67c62b25cfb52846d64e9f3a58e7d52eea23d209f63",
+    "resources/deploy-radius-k3s.sh": "2abe585c081466b40b4c5934aa5401086d486588aeb94f5df9a53b16dedcff96",
+    "resources/configure-resource-types-aks.sh": "880fdc356ee9c253bea6a2c27a9f33e5c1aae01724cdad4cbc08dc0ce3a6a274",
+    "resources/configure-resource-types-k3s.sh": "0135477202c347c284f9978556297eb13d7bb99d2ebbe1d24d6fb86e3bd9305c",
+    "resources/configure-recipes.sh": "d1591583364163722a6fa9c076be1c0ecbf104bc19cd00188bc38f5b00abcaf2",
+    "iac/bicepconfig.json": "3f75d2cfc9f3938dad9f0db5e90d62332aab5861e3f13326fcb32c1f626051ee",
+    "iac/aks-env.bicep": "7fb58291e1380bcf4a8e1a889b1b3c7b0eb8749da98f764a6f7f42edfcb12f80",
+    "iac/local-env.bicep": "7ea33c8764e6e2d1d6475745b9b8c0fb5af94ef8c47ce90f846fe2c117f02daa",
+    "iac/sql-databases.yaml": "5b6bdbaa193f407541e81a7b148ef9b4c4886b7f5bf75256d1eb642d4a6ddf66",
+    "iac/recipes/postgres-azure-flex.bicep": "d4ab3daa3d32e41bd1403aea8425d938ceda0575d63227977272ade389819d73",
+    "iac/recipes/postgres-kubernetes.bicep": "4a4fd0991bcf5ea99e8a4e5d5922fea15d4afcd166879db00971eaf0c7d3477f",
+    "iac/recipes/sql-server.bicep": "08792c840a9dd237273a11124dcece1759c8d0dbdce7c284f63dfe4f6ec9e31c",
+    "iac/recipes/trading-schema.sql": "b9d3fa06d9c973daf6bb268effa0e94d43ad812b830a461932fa24e6817477b4"
+  }
+}

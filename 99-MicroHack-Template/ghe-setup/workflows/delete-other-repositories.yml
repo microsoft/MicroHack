@@ -1,0 +1,73 @@
+name: Delete other organization repositories
+
+on:
+  schedule:
+    # Run at 1 AM CET every day (midnight UTC)
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: delete-other-organization-repositories
+  cancel-in-progress: false
+
+jobs:
+  delete-other-repositories:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.MIRROR_TOKEN }}
+      ORG: ${{ github.repository_owner }}
+      PROTECTED_REPOSITORY: ${{ github.repository }}
+
+    steps:
+      - name: Delete all other organization repositories
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          repositories_file="$(mktemp)"
+          trap 'rm -f "$repositories_file"' EXIT
+
+          gh api --paginate \
+            "/orgs/${ORG}/repos?type=all&per_page=100" \
+            --jq '.[].full_name' > "$repositories_file"
+
+          while IFS= read -r repository; do
+            if [[ "${repository,,}" == "${PROTECTED_REPOSITORY,,}" ]]; then
+              echo "Keeping ${repository}"
+              continue
+            fi
+
+            echo "Deleting ${repository}"
+            if delete_error="$(gh api --method DELETE "/repos/${repository}" 2>&1)"; then
+              continue
+            fi
+
+            if [[ "$delete_error" == *"(HTTP 404)"* ]]; then
+              echo "${repository} is already absent or no longer accessible"
+              continue
+            fi
+
+            printf '%s\n' "$delete_error" >&2
+            exit 1
+          done < "$repositories_file"
+
+          gh api --paginate \
+            "/orgs/${ORG}/repos?type=all&per_page=100" \
+            --jq '.[].full_name' > "$repositories_file"
+
+          remaining_repositories=0
+          while IFS= read -r repository; do
+            if [[ "${repository,,}" == "${PROTECTED_REPOSITORY,,}" ]]; then
+              continue
+            fi
+
+            echo "::error::Repository still exists: ${repository}"
+            remaining_repositories=1
+          done < "$repositories_file"
+
+          if (( remaining_repositories != 0 )); then
+            exit 1
+          fi

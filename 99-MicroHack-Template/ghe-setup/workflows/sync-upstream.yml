@@ -1,0 +1,40 @@
+name: Sync upstream
+
+on:
+  schedule:
+    # Run at 4 AM UTC every day
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync-main:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout internal repo
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.MIRROR_TOKEN }}
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Sync main from upstream
+        run: |
+          git remote add upstream https://github.com/microsoft/microhack.git
+          git fetch upstream main
+
+          git checkout upstream/main -- .
+          git checkout HEAD -- .github/workflows/sync-upstream.yml
+          git checkout HEAD -- .github/workflows/delete-other-repositories.yml
+
+          git add -A
+          git diff --cached --quiet || git commit -m "Sync main from microsoft/microhack"
+          git push origin main

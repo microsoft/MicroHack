@@ -27,15 +27,15 @@ cleanup() {
   exit "$result"
 }
 trap cleanup EXIT
-for command_name in kubectl rad jq curl; do
+for command_name in kubectl jq; do
   command -v "$command_name" >/dev/null || {
     echo "Missing ${command_name}; complete Challenge 1 workstation setup." >&2
     exit 1
   }
 done
 group="$(az group show --name "$RESOURCE_GROUP" --output json)"
-if [[ "$(jq -r '.tags.adaptiveAppsReady' <<<"$group")" != "true" ]]; then
-  echo "This lab has not completed Console bootstrap. Ask the organizer to check the deployment." >&2
+if [[ "$(jq -r '.tags.adaptiveAppsInfrastructureReady' <<<"$group")" != "true" ]]; then
+  echo "This lab has not completed Console infrastructure verification. Ask the organizer to check the deployment." >&2
   exit 1
 fi
 ACR_NAME="$(jq -er '.tags.adaptiveAppsAcr | select(type == "string" and length > 0)' <<<"$group")"
@@ -44,26 +44,22 @@ export AZURE_LOCATION
 AZURE_LOCATION="$(jq -er '.location' <<<"$group")"
 export K3S_LOCAL_PORT="${K3S_LOCAL_PORT:-16443}"
 export K3S_REFRESH_KUBECONFIG=true
+export RADIUS_IDENTITY_MODE=managedidentity
+export RADIUS_REINSTALL=false
 
 mkdir -p artifacts
 rm -f artifacts/console-env.sh
 connect_aks
-select_workspace ws-azure-prod "$AKS_CONTEXT" env-azure-prod
-verify_environment ws-azure-prod env-azure-prod
 tunnel_attempted=true
 connect_k3s
-select_workspace ws-local-prod "$K3S_CONTEXT" env-local-prod
-verify_environment ws-local-prod env-local-prod
-build_local_types
 unset KUBECONFIG
 kubectl config use-context "$AKS_CONTEXT" >/dev/null
-rad workspace switch ws-azure-prod
 
 environment_file="$(mktemp artifacts/console-env.XXXXXX)"
 printf 'unset KUBECONFIG\n' >"$environment_file"
 for name in AZURE_SUBSCRIPTION RESOURCE_GROUP AZURE_LOCATION ACR_NAME AKS_CLUSTER AKS_CLUSTER_NAME \
   AKS_CONTEXT K3S_CONTEXT K3S_VM_NAME BASTION_NAME K3S_KUBECONFIG K3S_LOCAL_PORT \
-  K3S_TUNNEL_STATE_DIR RADIUS_GROUP; do
+  K3S_TUNNEL_STATE_DIR RADIUS_GROUP RADIUS_IDENTITY_MODE RADIUS_REINSTALL; do
   declare -p "$name" | sed 's/^declare -x /export /; s/^declare -- /export /' >>"$environment_file"
 done
 mv "$environment_file" artifacts/console-env.sh
@@ -71,4 +67,5 @@ echo "Connected to both platforms. The Bastion API tunnel is running in the back
 echo "In each new Bash terminal: source artifacts/console-env.sh"
 echo "Reconnect after restarting your workstation: bash resources/connect-console.sh"
 echo "Stop the tunnel: bash resources/prepare-k3s-azure-vm.sh disconnect"
-echo "Continue with Challenge 06. No platform resources or recipes were redeployed."
+echo "Continue with Challenge 03 to install Radius, then complete Challenges 04-05."
+echo "No Radius control planes, workspaces, resource types or recipes were installed or changed."

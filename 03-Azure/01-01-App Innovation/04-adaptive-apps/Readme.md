@@ -100,19 +100,17 @@ challenges. Both start at Challenge 01.
 | Audience | Path | What you do |
 | --- | --- | --- |
 | **Platform engineer** | Challenges **02 - 06** | Prepare the Kubernetes platforms, install and operate Radius, author the resource-type contracts and the recipes behind them, then verify that an application deploys unchanged to every environment. |
-| **Application developer** | Challenge **06**, then optional **07, 09, 10** | Connect to a developer-ready hosted lab, deploy and port the application, then explore identity, AI, and Radius Canvas with their separate prerequisites. |
+| **Application developer** | Challenge **06**, then optional **07, 09, 10** | Start after your team completes Challenges 03-05, deploy and port the application, then explore identity, AI, and Radius Canvas with their separate prerequisites. |
 
 Challenges 05 and 06 are the deliberate handover point: the platform engineer
 finishes by proving the contracts work, and the application developer starts
 from the same place.
 
 > [!TIP]
-> **A ready hosted Console lab covers Challenges 02-05**, including recipe
-> publication and registration. Complete the hosted section of Challenge 01 and
-> [connect your workstation](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/docs/console-setup.md)
-> before starting Challenge 06. Provisioned infrastructure does not supply your
-> local Kubernetes/Radius state. Platform engineers retain the manual 01-06 path.
-> The hosted connection flow still needs live workshop validation.
+> **Using a hosted Console lab?** Complete the workstation setup in Challenge 01
+> and follow [Console setup](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/docs/console-setup.md).
+> Your infrastructure is supplied: explore it in Challenge 02, then install Radius,
+> define resource types, and publish recipes in **03-05** before deploying the app in **06**.
 
 ```mermaid
 flowchart LR
@@ -123,7 +121,7 @@ flowchart LR
     C711["<b>Optional 07, 09, 10</b><br/>Identity, AI, Radius Canvas"]
 
     C1 --> C24 --> C5 --> C6 --> C711
-    C1 -. "Ready Console lab: 02 - 05 + local connection" .-> C6
+    C1 -. "Console: connect, validate 02, then install in 03 - 05" .-> C24
 
     classDef platform fill:#dbeafe,stroke:#1d4ed8,color:#0f172a
     classDef developer fill:#dcfce7,stroke:#15803d,color:#0f172a
@@ -161,7 +159,8 @@ published and are excluded from the current participant path.
 > The challenge sequence is completed incrementally. Follow the links below for
 > the currently published student and coach material. Each bucket is labelled
 > with its primary audience, so you can follow either the platform engineer path
-> (Challenges 02 - 06) or the hosted developer path (06, then optional 07, 09, 10).
+> (Challenges 02 - 06) or the hosted path (validate 02, complete 03-06, then
+> optional 07, 09, 10).
 
 ### General prerequisites
 
@@ -188,8 +187,9 @@ provisioning. For the manual bring-your-own-subscription path, have:
 - [Visual Studio Code](https://code.visualstudio.com/)
 - Bash or PowerShell 7; Windows users can also use WSL 2
 
-For a ready hosted lab, cluster capacity, the registry, and recipes are supplied.
-You still need the tools above and the non-provisioning connection helper.
+For an infrastructure-ready hosted lab, cluster capacity and the registry are supplied;
+Radius, abstractions, and recipes are not. You still need the tools above, a full
+repository checkout, and the non-provisioning connection helper.
 Use Bash for hosted instructions, including in containers with PowerShell.
 
 The recommended option is the repository
@@ -229,8 +229,9 @@ which audience path you follow.
 Radius control plane.
 
 > [!NOTE]
-> Ready Console labs include Challenges 02-05. Hosted developers connect after
-> Challenge 01 and start 06; do not rerun the provisioning/install steps below.
+> Console labs supply infrastructure only. Connect after Challenge 01, validate
+> and explore 02 without reprovisioning, then install Radius, abstractions, and
+> recipes in 03-05 before starting 06.
 > Platform engineers work through these steps manually on their own lab.
 
 - [Challenge 02 - Prepare the platforms](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/challenges/challenge-02.md)
@@ -244,8 +245,8 @@ implement them with recipes.
 
 - [Challenge 04 - Build the platform abstractions](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/challenges/challenge-04.md)
 - [Challenge 05 - Build the platform abstractions with recipes](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/challenges/challenge-05.md)
-  - *Required on the manual setup path; supplied by the ready hosted baseline.
-    Hosted developers may read it without republishing or reinstalling recipes.*
+  - *Required for both BYOS and hosted teams. Console supplies ACR only;
+    participants publish and register recipes in this challenge.*
 
 ### Bucket 3: Portable apps across platforms
 

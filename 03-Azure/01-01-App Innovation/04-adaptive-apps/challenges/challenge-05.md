@@ -6,9 +6,9 @@ Estimated time: 60-90 minutes | Difficulty: advanced
 
 ## Challenge objective
 
-**Hosted Console:** a ready lab includes published and registered recipes.
-Follow [Console setup](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/docs/console-setup.md)
-and start 06. Read this manual exercise without recreating the registry or recipes.
+**Hosted Console:** complete Challenges 03-04 first. Source
+`artifacts/console-env.sh` and use the supplied `ACR_NAME`, resource group, and
+region. Skip registry creation; complete the recipe exercises below.
 
 Implement the portable resource-type contracts from Challenge 04. Manually author,
 publish, and register an Azure SQL recipe before registering the complete
@@ -29,7 +29,7 @@ Before the first K3s command, restore the localhost API tunnel after any contain
 restart:
 
 ```bash
-export AZURE_SUBSCRIPTION="<subscription-id>"
+export AZURE_SUBSCRIPTION="${AZURE_SUBSCRIPTION:-<subscription-id>}"
 bash resources/prepare-k3s-azure-vm.sh connect
 export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
 ```
@@ -60,7 +60,8 @@ administrator password.
 
 While targeting AKS and workspace `ws-azure-prod`:
 
-1. Create or select a globally unique, lowercase Azure Container Registry.
+1. Hosted: use the supplied `ACR_NAME` from `artifacts/console-env.sh` without
+   recreating it. BYOS: create or select a globally unique, lowercase registry.
 2. Authenticate to the registry.
 3. Publish `iac/recipes/sql-server.bicep` and the workshop-owned Azure and Kubernetes
    PostgreSQL recipes as version `1.0.0`.

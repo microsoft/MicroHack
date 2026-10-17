@@ -6,10 +6,12 @@ Estimated time: 45-75 minutes | Difficulty: intermediate to advanced
 
 ## Challenge objective
 
-**Hosted entry point:** after the workstation portion of Challenge 01, complete
+**Hosted prerequisites:** after the workstation portion of Challenge 01, complete
 [Console setup](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/docs/console-setup.md).
-It supplies local contexts, workspaces, and `artifacts/types.tgz`; the ready lab
-already includes Challenges 02-05. Use Bash and source `artifacts/console-env.sh`
+Validate/explore the supplied platforms in 02, then complete **Challenges 03-05**:
+install Radius, create workspaces and abstractions (including `artifacts/types.tgz`),
+and publish/register recipes. Console supplies infrastructure only.
+Use Bash and source `artifacts/console-env.sh`
 in each new terminal. Do not rerun platform provisioning to obtain local state.
 
 Prove that the same application model can be deployed to the private K3s platform and

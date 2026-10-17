@@ -61,7 +61,8 @@ if command == "az":
         sys.exit(90)
     elif args[:2] == ["group", "show"]:
         print(json.dumps({"location": "westeurope", "tags": {
-            "adaptiveAppsReady": os.environ.get("READY", "true"),
+            "adaptiveAppsInfrastructureReady": os.environ.get("READY", "true"),
+            "adaptiveAppsReady": os.environ.get("LEGACY_READY", "false"),
             "adaptiveAppsAcr": "acrtest"}}))
     elif args[:2] == ["aks", "get-credentials"]:
         Path(arg("--file")).write_text(json.dumps(kubeconfig("aks-adaptive-apps")))
@@ -182,7 +183,7 @@ class ConsoleHelpers(unittest.TestCase):
                 self.assertNotIn(command[1], ("install", "deploy"))
                 self.assertNotEqual(command[1:3], ["resource-type", "create"])
 
-    def test_fresh_participant_gets_both_contexts_local_types_and_quoted_environment(self):
+    def test_fresh_participant_gets_both_contexts_and_quoted_environment_without_radius(self):
         self.env["RESOURCE_GROUP"] = "rg-test-$HOME"
         result = self.run_script("connect-console.sh")
         self.assert_no_provisioning()
@@ -192,7 +193,14 @@ class ConsoleHelpers(unittest.TestCase):
             ["bash", "-c", 'source artifacts/console-env.sh; printf "%s" "$RESOURCE_GROUP"'],
             cwd=self.lab, env=self.env, text=True)
         self.assertEqual(value, "rg-test-$HOME")
-        self.assertTrue((self.lab / "artifacts/types.tgz").is_file())
+        self.assertFalse((self.lab / "artifacts/types.tgz").exists())
+        self.assertFalse(any(c[0] == "rad" for c in self.commands()))
+        self.assertFalse(any("radius-system" in c or "core" in c for c in self.commands()))
+        self.assertIn("Challenge 03", result.stdout)
+        identity_mode = subprocess.check_output(
+            ["bash", "-c", 'source artifacts/console-env.sh; printf "%s:%s" "$RADIUS_IDENTITY_MODE" "$RADIUS_REINSTALL"'],
+            cwd=self.lab, env=self.env, text=True)
+        self.assertEqual(identity_mode, "managedidentity:false")
         merged = subprocess.check_output(
             [KUBECTL, "config", "view", "--raw", "--output", "json"],
             env={**self.env, "KUBECONFIG": str(self.home / ".kube/config")}, text=True)
@@ -210,12 +218,15 @@ class ConsoleHelpers(unittest.TestCase):
         self.run_script("connect-console.sh", success=False, AUTH_FAIL="true")
         self.assertFalse(any(c[:2] == ["az", "login"] for c in self.commands()))
 
-    def test_missing_default_recipe_fails_without_publishing_environment(self):
-        self.run_script("connect-console.sh", success=False, RECIPE_NAME="not-default")
-        self.assertFalse((self.lab / "artifacts/console-env.sh").exists())
+    def test_old_ready_tag_does_not_substitute_for_infrastructure_verification(self):
+        self.run_script("connect-console.sh", success=False, READY="false", LEGACY_READY="true")
+        self.assertFalse(any(c[1:3] == ["aks", "get-credentials"] for c in self.commands()))
 
-    def test_empty_core_portfolio_fails(self):
-        self.run_script("connect-console.sh", success=False, CORE_OBJECTS="")
+    def test_reconnect_preserves_existing_radius_state_and_does_not_require_recipes(self):
+        self.run_script("connect-console.sh", CORE_OBJECTS="", RECIPE_JSON="[]",
+                        FAIL_COMMAND="rad workspace")
+        self.assertFalse(any(c[0] == "rad" for c in self.commands()))
+        self.assertTrue((self.lab / "artifacts/console-env.sh").is_file())
 
     def test_recipe_verifier_rejects_empty_wrong_name_and_invalid_json(self):
         for payload in ("[]", "null", "invalid", '[{"resourceType":"Radius.Resources/mqttBrokers"}]'):
@@ -227,12 +238,26 @@ class ConsoleHelpers(unittest.TestCase):
         self.run_script("verify-recipes.sh", "ws-local-prod", "env-local-prod",
                         "Radius.Resources/mqttBrokers")
 
-    def test_unknown_phase_is_rejected_before_azure_calls(self):
+    def test_unknown_bootstrap_phase_is_rejected_before_azure_calls(self):
         self.run_script("bootstrap-console.sh", "wrong", success=False)
         self.assertEqual(self.commands(), [])
 
-    def test_managed_identity_bootstrap_never_uses_graph_or_reinstalls_existing_radius(self):
+    def test_retained_aks_bootstrap_preserves_existing_radius_without_graph(self):
         self.run_script("bootstrap-console.sh", "aks-radius")
+        commands = self.commands()
+        self.assertFalse(any(c[:2] == ["az", "ad"] for c in commands))
+        self.assertFalse(any(c[:2] == ["rad", "install"] for c in commands))
+        self.assertTrue(any(c[1:3] == ["identity", "federated-credential"] for c in commands))
+
+    def test_retained_k3s_bootstrap_refreshes_kubeconfig_and_cleans_tunnel(self):
+        self.run_script("bootstrap-console.sh", "k3s-radius")
+        self.assertTrue((self.home / ".kube/adaptive-apps-k3s.yaml").is_file())
+        self.assertFalse((self.home / ".kube/adaptive-apps-bastion/tunnel.pid").exists())
+        self.assertFalse(any(c[:2] == ["rad", "install"] for c in self.commands()))
+
+    def test_managed_identity_bootstrap_never_uses_graph_or_reinstalls_existing_radius(self):
+        self.run_script("connect-console.sh")
+        self.run_script("deploy-radius-aks.sh", RADIUS_REINSTALL="false")
         commands = self.commands()
         self.assertFalse(any(c[:2] == ["az", "ad"] for c in commands))
         self.assertFalse(any(c[:2] == ["rad", "install"] for c in commands))
@@ -240,37 +265,46 @@ class ConsoleHelpers(unittest.TestCase):
         self.assertTrue(any(c[1:4] == ["credential", "register", "azure"] for c in commands))
 
     def test_missing_radius_is_installed_on_first_run(self):
-        self.run_script("bootstrap-console.sh", "aks-radius", MOCK_RADIUS_NAMESPACE="")
+        self.run_script("connect-console.sh")
+        self.run_script("deploy-radius-aks.sh", MOCK_RADIUS_NAMESPACE="", RADIUS_REINSTALL="false")
         installs = [c for c in self.commands() if c[:2] == ["rad", "install"]]
         self.assertEqual(len(installs), 1)
         self.assertNotIn("--reinstall", installs[0])
 
     def test_namespace_lookup_error_is_not_interpreted_as_absence(self):
-        self.run_script("bootstrap-console.sh", "aks-radius", success=False,
+        self.run_script("connect-console.sh")
+        self.run_script("deploy-radius-aks.sh", success=False, RADIUS_REINSTALL="false",
                         FAIL_COMMAND="kubectl get namespace")
         self.assertFalse(any(c[:2] == ["rad", "install"] for c in self.commands()))
 
-    def test_k3s_bootstrap_refreshes_missing_kubeconfig_and_cleans_tunnel(self):
-        self.run_script("bootstrap-console.sh", "k3s-radius")
+    def test_k3s_connection_refreshes_missing_kubeconfig_without_installing_radius(self):
+        self.run_script("connect-console.sh")
         self.assertTrue((self.home / ".kube/adaptive-apps-k3s.yaml").is_file())
+        self.run_script("prepare-k3s-azure-vm.sh", "disconnect")
         self.assertFalse((self.home / ".kube/adaptive-apps-bastion/tunnel.pid").exists())
         self.assertFalse(any(c[:2] == ["rad", "install"] for c in self.commands()))
 
     def test_refresh_replaces_stale_default_context_credentials(self):
-        self.run_script("bootstrap-console.sh", "k3s-radius")
+        self.run_script("connect-console.sh")
         default_file = self.home / ".kube/config"
         default_file.write_text(default_file.read_text().replace("mock-token-not-a-credential", "old-token"))
         self.run_script("prepare-k3s-azure-vm.sh", "connect", K3S_REFRESH_KUBECONFIG="true")
-        self.assertNotIn("old-token", default_file.read_text())
-        self.assertIn("mock-token-not-a-credential", default_file.read_text())
+        config = json.loads(subprocess.check_output(
+            [KUBECTL, "config", "view", "--raw", "--output", "json"],
+            env={**self.env, "KUBECONFIG": str(default_file)}, text=True))
+        users = {user["name"]: user["user"]["token"] for user in config["users"]}
+        self.assertEqual(users["default"], "mock-token-not-a-credential")
+        self.assertEqual(users["aks-adaptive-apps"], "old-token")
 
     def test_failure_after_tunnel_start_stops_only_recorded_tunnel(self):
-        self.run_script("connect-console.sh", success=False, FAIL_COMMAND="rad bicep publish-extension")
+        self.run_script("connect-console.sh", success=False, FAIL_COMMAND="kubectl --request-timeout=15s get")
         self.assertFalse((self.lab / "artifacts/console-env.sh").exists())
         self.assertFalse((self.home / ".kube/adaptive-apps-bastion/tunnel.pid").exists())
 
     def test_managed_identity_lookup_error_is_not_interpreted_as_absence(self):
-        self.run_script("bootstrap-console.sh", "aks-radius", success=False, FAIL_COMMAND="az identity list")
+        self.run_script("connect-console.sh")
+        self.run_script("deploy-radius-aks.sh", success=False, RADIUS_REINSTALL="false",
+                        FAIL_COMMAND="az identity list")
         self.assertFalse(any(c[:3] == ["az", "identity", "create"] for c in self.commands()))
 
 

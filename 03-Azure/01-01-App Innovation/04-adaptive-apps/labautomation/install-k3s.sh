@@ -20,6 +20,7 @@ fi
 systemctl enable --now k3s
 for attempt in $(seq 1 60); do
   if k3s kubectl get --raw=/readyz >/dev/null 2>&1; then
+    k3s kubectl wait --for=condition=Ready nodes --all --timeout=5m
     printf 'ADAPTIVE_K3S_READY\n'
     exit 0
   fi

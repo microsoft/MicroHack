@@ -6,10 +6,9 @@ Duration: 60-90 minutes
 
 ## Coach notes
 
-**Hosted Console:** a ready lab already includes published and registered recipes.
-Use [Console setup](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/docs/console-setup.md)
-and start 06; do not recreate the ACR or repeat recipe registration. The teaching
-sequence below applies to the manual platform-engineer path.
+**Hosted Console:** after Challenges 03-04, source `artifacts/console-env.sh`.
+Use the supplied ACR, resource group, and region. Skip registry creation;
+complete the recipe exercises below.
 
 Challenge 04 defined contracts. Challenge 05 implements them.
 
@@ -24,7 +23,7 @@ for setup recovery and participants who explicitly choose not to follow the tuto
 Before any K3s work after a devcontainer restart, restore the localhost API tunnel:
 
 ```bash
-export AZURE_SUBSCRIPTION="<subscription-id>"
+export AZURE_SUBSCRIPTION="${AZURE_SUBSCRIPTION:-<subscription-id>}"
 bash resources/prepare-k3s-azure-vm.sh connect
 export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
 ```
@@ -238,12 +237,21 @@ rad env switch env-azure-prod
 rad group switch rg-trading
 ```
 
-Create an ACR. Its name must be globally unique and lowercase:
+**Hosted Console:** reuse the supplied registry; do not run the creation block.
+Source and verify your supplied values:
 
 ```bash
-export AZURE_SUBSCRIPTION="<subscription-id>"
-export RESOURCE_GROUP="rg-adaptive-apps"
-export ACR_NAME="<globally-unique-acr-name>"
+source artifacts/console-env.sh
+az acr show --resource-group "$RESOURCE_GROUP" --name "$ACR_NAME" \
+  --query '{name:name,location:location,sku:sku.name,anonymousPull:anonymousPullEnabled}'
+```
+
+**BYOS only:** create an ACR. Its name must be globally unique and lowercase:
+
+```bash
+export AZURE_SUBSCRIPTION="${AZURE_SUBSCRIPTION:-<subscription-id>}"
+export RESOURCE_GROUP="${RESOURCE_GROUP:-rg-adaptive-apps}"
+export ACR_NAME="${ACR_NAME:-<globally-unique-acr-name>}"
 
 az account set --subscription "$AZURE_SUBSCRIPTION"
 az acr show \
@@ -253,7 +261,11 @@ az acr show \
     --resource-group "$RESOURCE_GROUP" \
     --name "$ACR_NAME" \
     --sku Standard
+```
 
+**Both paths:** allow anonymous pull of the non-secret recipe artifacts:
+
+```bash
 az acr update \
   --resource-group "$RESOURCE_GROUP" \
   --name "$ACR_NAME" \
@@ -494,7 +506,7 @@ rad deploy iac/aks-env.bicep `
 Switch both kube context and Radius workspace:
 
 ```bash
-export AZURE_SUBSCRIPTION="<subscription-id>"
+export AZURE_SUBSCRIPTION="${AZURE_SUBSCRIPTION:-<subscription-id>}"
 bash resources/prepare-k3s-azure-vm.sh connect
 export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
 kubectl config use-context k3s-azure-vm
@@ -598,9 +610,9 @@ consistently.
 The manual tutorial is the intended learning path. To automate the same configuration:
 
 ```bash
-export AZURE_SUBSCRIPTION="<subscription-id>"
-export RESOURCE_GROUP="rg-adaptive-apps"
-export ACR_NAME="<globally-unique-acr-name>"
+export AZURE_SUBSCRIPTION="${AZURE_SUBSCRIPTION:-<subscription-id>}"
+export RESOURCE_GROUP="${RESOURCE_GROUP:-rg-adaptive-apps}"
+export ACR_NAME="${ACR_NAME:-<globally-unique-acr-name>}"
 
 # Configure both defaults:
 bash resources/configure-recipes.sh all
@@ -615,4 +627,3 @@ two corrected PostgreSQL recipes plus the custom SQL recipe, deploys the appropr
 environment definition, and verifies the registered recipes. `k3s` also needs
 `AZURE_SUBSCRIPTION`, `RESOURCE_GROUP`, and `ACR_NAME` because it republishes the pinned
 workshop recipe before registration.
-

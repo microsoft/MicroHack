@@ -6,10 +6,11 @@ Duration: 45-75 minutes
 
 ## Coach notes
 
-**Hosted entry point:** complete the workstation portion of Challenge 01 and
+**Hosted prerequisites:** complete the workstation portion of Challenge 01 and
 [Console setup](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/docs/console-setup.md).
-The ready baseline covers 02-05; the connection helper creates participant-local
-contexts/workspaces and `artifacts/types.tgz` without reinstalling the platform.
+Console supplies infrastructure only. Validate/explore 02 without reprovisioning,
+then complete 03-05 to install Radius, create workspaces and abstractions (including
+`artifacts/types.tgz`), and publish/register recipes before this application exercise.
 Use the **Bash** examples and source `artifacts/console-env.sh` in each new
 terminal. Keep its discovered names; the PowerShell examples are the manual path.
 

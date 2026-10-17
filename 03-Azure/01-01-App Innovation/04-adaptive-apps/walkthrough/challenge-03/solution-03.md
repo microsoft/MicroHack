@@ -6,10 +6,9 @@ Duration: 30-45 minutes per environment
 
 ## Coach notes
 
-**Hosted Console:** Radius and its identities are already configured. Use
-[Console setup](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/docs/console-setup.md)
-for participant-local workspaces; do not repeat the installation or tenant app setup
-below. Continue at 06; these steps remain the manual platform-engineer path.
+**Hosted Console:** source `artifacts/console-env.sh` and use the supplied
+resource names. Install Radius below, selecting **Option A: managed identity**
+for Azure workload identity.
 
 - The goal is to install, configure, and explore Radius on both default platforms.
 - The default uses a **federated model**: one control plane on AKS and one on K3s.
@@ -21,7 +20,7 @@ below. Continue at 06; these steps remain the manual platform-engineer path.
 Before any K3s work after a devcontainer restart, restore the private API tunnel:
 
 ```bash
-export AZURE_SUBSCRIPTION="<subscription-id>"
+export AZURE_SUBSCRIPTION="${AZURE_SUBSCRIPTION:-<subscription-id>}"
 bash resources/prepare-k3s-azure-vm.sh connect
 export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
 ```
@@ -136,16 +135,19 @@ unset KUBECONFIG
 kubectl config use-context aks-adaptive-apps
 kubectl config current-context
 kubectl get nodes
+kubectl get namespace radius-system --ignore-not-found
 ```
 
 ### 2. Prepare Azure workload identity
 
-Set the Azure values:
+Hosted participants first source `artifacts/console-env.sh`; the defaults below
+preserve those supplied values. BYOS participants set their own subscription and
+resource group. Do not replace a Console resource group with `rg-adaptive-apps`.
 
 ```bash
-export AZURE_SUBSCRIPTION="<subscription-id>"
-export RESOURCE_GROUP="rg-adaptive-apps"
-export AKS_CLUSTER="aks-adaptive-apps"
+export AZURE_SUBSCRIPTION="${AZURE_SUBSCRIPTION:-<subscription-id>}"
+export RESOURCE_GROUP="${RESOURCE_GROUP:-rg-adaptive-apps}"
+export AKS_CLUSTER="${AKS_CLUSTER:-aks-adaptive-apps}"
 export RADIUS_APP_NAME="${AKS_CLUSTER}-radius-app"
 
 az account set --subscription "$AZURE_SUBSCRIPTION"
@@ -157,7 +159,55 @@ export OIDC_ISSUER="$(az aks show \
 export TENANT_ID="$(az account show --query tenantId --output tsv)"
 ```
 
-Create an Entra application and service principal:
+Choose **one** identity option. Both use AKS OIDC federation with no client secret.
+See Microsoft's [AKS workload identity guide](https://learn.microsoft.com/azure/aks/workload-identity-deploy-cluster)
+for the managed identity and federated credential commands.
+
+#### Option A: user-assigned managed identity (required for hosted Console)
+
+Create the identity inside the supplied lab resource group. These are Azure Resource
+Manager operations, not tenant app/SP creation. The explicit principal object ID
+in the role assignment below avoids a Microsoft Graph lookup.
+
+```bash
+export RADIUS_MANAGED_IDENTITY_NAME="${AKS_CLUSTER}-radius"
+export AZURE_LOCATION="$(az aks show \
+  --resource-group "$RESOURCE_GROUP" \
+  --name "$AKS_CLUSTER" --query location --output tsv)"
+
+az identity create \
+  --resource-group "$RESOURCE_GROUP" \
+  --name "$RADIUS_MANAGED_IDENTITY_NAME" \
+  --location "$AZURE_LOCATION" --output none
+
+export IDENTITY_CLIENT_ID="$(az identity show \
+  --resource-group "$RESOURCE_GROUP" \
+  --name "$RADIUS_MANAGED_IDENTITY_NAME" --query clientId --output tsv)"
+export IDENTITY_PRINCIPAL_ID="$(az identity show \
+  --resource-group "$RESOURCE_GROUP" \
+  --name "$RADIUS_MANAGED_IDENTITY_NAME" --query principalId --output tsv)"
+
+for service_account in applications-rp bicep-de ucp dynamic-rp; do
+  az identity federated-credential create \
+    --resource-group "$RESOURCE_GROUP" \
+    --identity-name "$RADIUS_MANAGED_IDENTITY_NAME" \
+    --name "radius-${service_account}" \
+    --issuer "$OIDC_ISSUER" \
+    --subject "system:serviceaccount:radius-system:${service_account}" \
+    --audiences api://AzureADTokenExchange --output none
+done
+```
+
+Configure trust for all four Radius service accounts, including **both
+`applications-rp` and `bicep-de`**, plus `ucp` and `dynamic-rp`, matching the recovery
+script. If an identity/credential already exists, inspect it and update a mismatched
+issuer or subject rather than deleting shared state. Then skip Option B and continue
+at **Grant the identity access**.
+
+#### Option B: Entra application (BYOS with tenant permissions only)
+
+Create an Entra application and service principal. Do not run this option in a
+hosted RG-only lab:
 
 ```bash
 export APPLICATION_CLIENT_ID="$(az ad app create \
@@ -170,6 +220,10 @@ export APPLICATION_OBJECT_ID="$(az ad app show \
   --output tsv)"
 
 az ad sp create --id "$APPLICATION_CLIENT_ID"
+
+export IDENTITY_CLIENT_ID="$APPLICATION_CLIENT_ID"
+export IDENTITY_PRINCIPAL_ID="$(az ad sp show \
+  --id "$APPLICATION_CLIENT_ID" --query id --output tsv)"
 ```
 
 For each Radius service account, create a federated credential. The example below is
@@ -192,11 +246,16 @@ az ad app federated-credential create \
   --parameters @radius-applications-rp.json
 ```
 
-Grant the Radius identity access to the lab resource group:
+#### Grant the identity access (both options)
+
+Grant the Radius identity Owner on the isolated lab resource group only, because
+recipes create role assignments. Allow identity/federation/RBAC propagation before
+testing Radius; a newly created principal can take time to become available.
 
 ```bash
 az role assignment create \
-  --assignee "$APPLICATION_CLIENT_ID" \
+  --assignee-object-id "$IDENTITY_PRINCIPAL_ID" \
+  --assignee-principal-type ServicePrincipal \
   --role Owner \
   --scope "/subscriptions/${AZURE_SUBSCRIPTION}/resourceGroups/${RESOURCE_GROUP}"
 ```
@@ -238,7 +297,7 @@ rad env update env-azure-prod \
 rad env switch env-azure-prod
 
 rad credential register azure wi \
-  --client-id "$APPLICATION_CLIENT_ID" \
+  --client-id "$IDENTITY_CLIENT_ID" \
   --tenant-id "$TENANT_ID"
 ```
 
@@ -247,12 +306,13 @@ rad credential register azure wi \
 ### 1. Select and verify K3s
 
 ```bash
-export AZURE_SUBSCRIPTION="<subscription-id>"
+export AZURE_SUBSCRIPTION="${AZURE_SUBSCRIPTION:-<subscription-id>}"
 bash resources/prepare-k3s-azure-vm.sh connect
 export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
 kubectl config use-context k3s-azure-vm
 kubectl config current-context
 kubectl get nodes
+kubectl get namespace radius-system --ignore-not-found
 ```
 
 ### 2. Install Radius on K3s
@@ -331,12 +391,28 @@ who choose to skip the manual tutorial.
 
 ### AKS
 
+For hosted recovery, use the supplied configuration and explicitly select managed
+identity mode. Do not use the application-mode default:
+
+```bash
+source artifacts/console-env.sh
+unset KUBECONFIG
+kubectl config use-context aks-adaptive-apps
+RADIUS_IDENTITY_MODE=managedidentity RADIUS_REINSTALL=false bash resources/deploy-radius-aks.sh
+```
+
+The sourced Console configuration exports both settings as well. Keep
+`RADIUS_REINSTALL=false` to preserve an existing Radius installation and coordinate
+recovery with the team. The following is the BYOS application-mode alternative
+(requires tenant permissions); without overrides its script defaults can reinstall
+Radius:
+
 ```bash
 unset KUBECONFIG
 kubectl config use-context aks-adaptive-apps
 
-export AZURE_SUBSCRIPTION="<subscription-id>"
-export RESOURCE_GROUP="rg-adaptive-apps"
+export AZURE_SUBSCRIPTION="${AZURE_SUBSCRIPTION:-<subscription-id>}"
+export RESOURCE_GROUP="${RESOURCE_GROUP:-rg-adaptive-apps}"
 export AKS_CLUSTER="aks-adaptive-apps"
 
 # Run from the Adaptive Apps MicroHack root.
@@ -346,7 +422,7 @@ bash resources/deploy-radius-aks.sh
 ### K3s
 
 ```bash
-export AZURE_SUBSCRIPTION="<subscription-id>"
+export AZURE_SUBSCRIPTION="${AZURE_SUBSCRIPTION:-<subscription-id>}"
 bash resources/prepare-k3s-azure-vm.sh connect
 export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
 kubectl config use-context k3s-azure-vm

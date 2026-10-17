@@ -2,27 +2,23 @@
 
 [Home](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/Readme.md)
 
-Use this path only when the organizer has supplied a **ready, developer-ready**
-Adaptive Apps lab. Console setup covers Challenges **02-05**, including recipe
-publication and registration. It does not deploy the Challenge 06 application.
-This connection procedure requires workshop validation; it is not a claim of a
-completed live Console test.
+Console supplies AKS, a private K3s VM, networking, Bastion, and a container
+registry (ACR). You install and explore Radius, resource types, and recipes in
+**Challenges 03-05**, then deploy the application in **Challenge 06**.
 
 ## 1. Prepare your workstation
 
 Complete **Task 2 (workstation), Task 3 (local state), and Task 4 (tool checks)** in
 [Challenge 01](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/challenges/challenge-01.md).
-Use the canonical `microsoft/MicroHack` repository on `main`. The validated option
+Use a **full checkout** of the canonical `microsoft/MicroHack` repository on `main`;
+the challenges need its `iac`, `resources`, and application files, not only a
+downloaded connection script. The validated workstation option
 remains a **local VS Code devcontainer**; a manual host toolchain is also supported.
 Use a **Bash terminal**, even when PowerShell is installed in the container.
 
-Hosted participants skip subscription provider/feature registration, the extra
-preflight resource group/public IP, capacity provisioning, and the installation
-commands in Challenges 02-05. The organizer supplies **Owner on your lab resource
-group** and **Reader on its AKS node resource group**; these are not subscription-
-or tenant-administrator permissions. Do not request broader permissions just to
-repeat the manual setup. Bring-your-own-subscription participants continue with
-the original manual path.
+Skip subscription setup and infrastructure provisioning. In Challenge 02,
+explore and validate the supplied platforms instead. Use the **managed identity**
+option in Challenge 03; it works with your assigned lab permissions.
 
 ## 2. Connect with your own identity
 
@@ -42,27 +38,21 @@ bash resources/connect-console.sh
 source artifacts/console-env.sh
 ```
 
-Only `AZURE_SUBSCRIPTION` and `RESOURCE_GROUP` are required inputs. The helper checks
-the lab ready flag, discovers `ACR_NAME` from the resource group's `adaptiveAppsAcr`
-tag, obtains your cluster connections, creates the local Radius workspaces, and
-regenerates `artifacts/types.tgz`. It **does not provision infrastructure** and uses
-your own Azure CLI credentials, not credentials copied from an automation runner.
-If the lab is not ready or access is denied, stop and contact the organizer rather
-than rerunning installation scripts.
+The helper discovers your lab settings, connects to both clusters, checks their
+nodes, and saves the configuration to `artifacts/console-env.sh`. It uses your
+Azure sign-in. If the lab is not ready or access is denied, contact the organizer.
 
-| Target | Local Kubernetes context | Local Radius workspace |
+| Target | Connected Kubernetes context | Workspace you create in Challenge 03 |
 | --- | --- | --- |
 | AKS | `aks-adaptive-apps` | `ws-azure-prod` |
 | Private K3s | `k3s-azure-vm` | `ws-local-prod` |
 
-The environments remain `env-azure-prod` and `env-local-prod`, each with Radius
-group `rg-trading`. Keep the discovered Console resource names; do not replace them
+In Challenge 03 create environments `env-azure-prod` and `env-local-prod`, each
+with Radius group `rg-trading`. Keep the discovered Console resource names; do not replace them
 with manual examples such as `rg-adaptive-apps`.
 
-The default private VM is `vm-adaptive-apps-k3s` and its Bastion host is
-`bas-adaptive-apps`. The hosted region is fixed by the supplied resource group's
-location. If setup rejects that region as unsuitable, ask the organizer to correct
-the lab assignment; do not change regions or delete/recreate the supplied group.
+Keep the supplied resource group and region. If setup reports a problem with
+either, contact the organizer rather than changing or recreating them.
 
 ## 3. Every new Bash terminal
 
@@ -72,17 +62,18 @@ From the lab root, restore the generated shell assignments:
 source artifacts/console-env.sh
 ```
 
-The file uses safe shell assignments for your lab configuration. Do not commit it
-or share local credential directories. The helper leaves the Bastion API tunnel
-running in the background and prints reconnect/disconnect instructions. Follow
-those instructions after a workstation/container restart; sourcing the file alone
-does not restart a tunnel. Application and dashboard port-forwards are separate
-and must stay running while you browse their localhost URLs.
+Do not commit the generated file or share local credential directories.
+After a workstation/container restart, run `bash resources/connect-console.sh`
+again and source the file to reconnect. Sourcing the file alone does not restart
+the private API tunnel. Keep application and dashboard port-forwards running
+while you browse their localhost URLs.
 
-Continue at [Challenge 06](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/challenges/challenge-06.md).
-Read Challenges 02-05 for context, but do not reprovision or reinstall their shared
-components. The hosted control-tag policies are organizer-managed; participants
-do not need to add policy/tag checks or change those controls.
+Validate/explore the supplied platforms using the read-only checks in
+[Challenge 02](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/challenges/challenge-02.md),
+then continue at [Challenge 03](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/challenges/challenge-03.md).
+Complete the Radius, abstraction, and recipe exercises in Challenges 03-05.
+Reuse the supplied ACR in Challenge 05; do not recreate it. The Bicep extension
+`artifacts/types.tgz` is generated in Challenge 04, not during connection.
 
 ## Optional extensions and hosted browsers
 

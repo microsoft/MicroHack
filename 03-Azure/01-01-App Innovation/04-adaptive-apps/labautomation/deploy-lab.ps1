@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-Provision one dedicated Microsoft-hosted Adaptive Apps lab through challenge 05.
+Provision the infrastructure for one Microsoft-hosted Adaptive Apps lab.
 #>
 param(
     [Parameter(Mandatory)]
@@ -13,26 +13,19 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'console-helpers.ps1')
-if (-not $IsLinux) { throw 'Adaptive Apps Console automation requires a Linux runner (Bash and native Bastion tunneling).' }
+if (-not $IsLinux) { throw 'Adaptive Apps Console automation requires a Linux runner.' }
 if ($DeploymentType -ne 'resourcegroup' -or -not $ResourceGroupName) {
     throw 'This hook requires a Console-provisioned resourcegroup scope.'
 }
 if ($AllowedEntraUserIds.Count -eq 0) { throw 'Console must supply participant object IDs for node resource group Reader access.' }
-$sourceManifest = Read-AdaptiveSourceManifest -Path (Join-Path $PSScriptRoot 'bootstrap-source.json')
 if (-not $env:AZURE_CONFIG_DIR -or -not [IO.Path]::IsPathRooted($env:AZURE_CONFIG_DIR)) {
-    throw 'Console must supply an absolute, isolated AZURE_CONFIG_DIR before HOME can be isolated.'
+    throw 'Console must supply an absolute, isolated AZURE_CONFIG_DIR.'
 }
-$saved = @{}
-$isolatedHome = Join-Path ([IO.Path]::GetTempPath()) "adaptive-console-$([guid]::NewGuid().ToString('N'))"
-$workingRoot = Join-Path $isolatedHome 'work'
+$scratch = Join-Path ([IO.Path]::GetTempPath()) "adaptive-console-$([guid]::NewGuid().ToString('N'))"
 try {
-    $scratch = Join-Path $isolatedHome 'scratch'
     New-Item -ItemType Directory -Path $scratch -Force | Out-Null
-    & chmod 700 $isolatedHome $scratch
-    if ($LASTEXITCODE -ne 0) { throw 'Unable to secure isolated Console HOME.' }
-    New-Item -ItemType Directory -Path $workingRoot | Out-Null
-    Receive-AdaptiveBootstrap -Manifest $sourceManifest -Destination $workingRoot
-    Install-AdaptiveJq -BinDirectory (Join-Path $isolatedHome '.local/bin')
+    & chmod 700 $scratch
+    if ($LASTEXITCODE -ne 0) { throw 'Unable to secure private deployment scratch directory.' }
 
     Update-MhhToken | Out-Null
     Write-Host 'Validating participant Azure contexts and shared region metadata...'
@@ -42,12 +35,14 @@ try {
     $metadata = (Get-AzTag -ResourceId "/subscriptions/$SubscriptionId" -ErrorAction Stop).Properties.TagsProperty
     if (-not $metadata) { throw 'Shared region metadata is missing. Run shared-deploy-lab.ps1 first.' }
     $regions = @($metadata['microhack-adaptive-regions'] -split ',' | Where-Object { $_ })
-    $preserve = $group.Tags -and ($group.Tags['adaptiveAppsReady'] -eq 'true' -or $group.Tags['adaptiveAppsPreserve'] -eq 'true')
+    $preserve = $group.Tags -and ($group.Tags['adaptiveAppsReady'] -eq 'true' -or
+        $group.Tags['adaptiveAppsInfrastructureReady'] -eq 'true' -or $group.Tags['adaptiveAppsPreserve'] -eq 'true')
     if ($regions.Count -eq 0 -or ($preserve -and $region -notin $regions)) {
         throw "No validated region is available for this lab. Run shared-deploy-lab.ps1 for the lab's region; an established lab will not be relocated."
     }
     $deploymentTags = @{
         adaptiveAppsReady = 'false'
+        adaptiveAppsInfrastructureReady = 'false'
         SecurityControl = 'Ignore'
         CostControl = 'Ignore'
     }
@@ -84,7 +79,7 @@ try {
         Remove-Item -LiteralPath $parameterFile -Force
     }
     if ($deployment.ProvisioningState -ne 'Succeeded') {
-        throw "Infrastructure deployment failed: $($deployment.ProvisioningState). Bootstrap will not run."
+        throw "Infrastructure deployment failed: $($deployment.ProvisioningState). Infrastructure will not be marked ready."
     }
     $group = Get-AzResourceGroup -Name $ResourceGroupName -ErrorAction Stop
     $region = $group.Location.ToLowerInvariant()
@@ -109,6 +104,7 @@ try {
         }
     }
     Update-MhhToken | Out-Null
+    Write-Host 'Installing and verifying K3s through VM Run Command...'
     $guest = Invoke-AdaptiveAz -Arguments @('vm', 'run-command', 'invoke', '--resource-group', $ResourceGroupName,
         '--name', 'vm-adaptive-apps-k3s', '--command-id', 'RunShellScript',
         '--scripts', "@$(Join-Path $PSScriptRoot 'install-k3s.sh')")
@@ -118,55 +114,28 @@ try {
     Update-AzTag -ResourceId $group.ResourceId -Operation Merge -Tag @{
         adaptiveAppsAcr = $acrName
     } -ErrorAction Stop | Out-Null
-
-    $environment = @{
-        AZURE_SUBSCRIPTION = $SubscriptionId
-        RESOURCE_GROUP = $ResourceGroupName
-        REGION = $region
-        AZURE_LOCATION = $region
-        ACR_NAME = $acrName
-        AKS_CLUSTER = 'aks-adaptive-apps'
-        AKS_CLUSTER_NAME = 'aks-adaptive-apps'
-        AKS_CONTEXT = 'aks-adaptive-apps'
-        K3S_VM_NAME = 'vm-adaptive-apps-k3s'
-        K3S_CONTEXT = 'k3s-azure-vm'
-        RADIUS_GROUP = 'rg-trading'
-        BASTION_NAME = 'bas-adaptive-apps'
-        KUBECONFIG = $null
-        RAD_WORKSPACE = $null
-        HOME = $isolatedHome
-        PATH = "$(Join-Path $isolatedHome '.local/bin'):$env:PATH"
-        TMPDIR = $scratch
-        K3S_KUBECONFIG = Join-Path $isolatedHome '.kube/adaptive-apps-k3s.yaml'
-        K3S_TUNNEL_STATE_DIR = Join-Path $isolatedHome '.kube/adaptive-apps-bastion'
+    Update-MhhToken | Out-Null
+    Write-Host 'Verifying AKS nodes through Azure Run Command (no worker Kubernetes context)...'
+    $aks = Invoke-AdaptiveAz -Arguments @('aks', 'command', 'invoke', '--resource-group', $ResourceGroupName,
+        '--name', 'aks-adaptive-apps', '--command', 'kubectl wait --for=condition=Ready nodes --all --timeout=5m')
+    if ($aks.provisioningState -ne 'Succeeded' -or $null -eq $aks.exitCode -or $aks.exitCode -ne 0) {
+        throw 'AKS node readiness failed. Inspect AKS Run Command; infrastructure was not marked ready.'
     }
-    $listener = [Net.Sockets.TcpListener]::new([Net.IPAddress]::Loopback, 0)
-    try {
-        $listener.Start()
-        $environment.K3S_LOCAL_PORT = "$($listener.LocalEndpoint.Port)"
-    } finally {
-        $listener.Stop()
+    Update-MhhToken | Out-Null
+    $bastion = Invoke-AdaptiveAz -Arguments @('network', 'bastion', 'show', '--resource-group', $ResourceGroupName,
+        '--name', 'bas-adaptive-apps', '--query', '{state:provisioningState,sku:sku.name,tunneling:enableTunneling}')
+    if ($bastion.state -ne 'Succeeded' -or $bastion.sku -notin @('Standard', 'Premium') -or $bastion.tunneling -ne $true) {
+        throw 'Bastion must be provisioned with native tunneling enabled before infrastructure is ready.'
     }
-    foreach ($key in $environment.Keys) {
-        $saved[$key] = [Environment]::GetEnvironmentVariable($key)
-        [Environment]::SetEnvironmentVariable($key, $environment[$key])
-    }
-    Push-Location $workingRoot
-    try {
-        Invoke-AdaptiveBash -Script 'resources/install-console-tools.sh'
-        foreach ($phase in @('aks-radius', 'k3s-radius', 'aks-types', 'k3s-types', 'recipes', 'verify')) {
-            Write-Host "Bootstrapping Adaptive Apps: $phase"
-            Invoke-AdaptiveBash -Script 'resources/bootstrap-console.sh' -Arguments @($phase)
-        }
-    } finally {
-        Pop-Location
+    $registry = Invoke-AdaptiveAz -Arguments @('acr', 'show', '--resource-group', $ResourceGroupName, '--name', $acrName)
+    if ($registry.provisioningState -ne 'Succeeded' -or $registry.anonymousPullEnabled -ne $true) {
+        throw 'The recipe registry must be provisioned with anonymous pull enabled before infrastructure is ready.'
     }
 } finally {
-    foreach ($key in $saved.Keys) { [Environment]::SetEnvironmentVariable($key, $saved[$key]) }
-    if (Test-Path -LiteralPath $isolatedHome) { Remove-Item -LiteralPath $isolatedHome -Recurse -Force }
+    if (Test-Path -LiteralPath $scratch) { Remove-Item -LiteralPath $scratch -Recurse -Force }
 }
 Update-MhhToken | Out-Null
-Update-AzTag -ResourceId $group.ResourceId -Operation Merge -Tag @{ adaptiveAppsReady = 'true' } -ErrorAction Stop | Out-Null
+Update-AzTag -ResourceId $group.ResourceId -Operation Merge -Tag @{ adaptiveAppsInfrastructureReady = 'true' } -ErrorAction Stop | Out-Null
 @{ HackboxCredential = @{ name = 'Adaptive Apps Region'; value = $region; note = 'All resources and recipes use the supplied resource group location.' } }
 @{ HackboxCredential = @{ name = 'Adaptive Apps Registry'; value = "$acrName.azurecr.io"; note = 'Anonymous recipe pull is enabled; do not publish sensitive artifacts.' } }
 @{ HackboxCredential = @{ name = 'Adaptive Apps AKS'; value = 'aks-adaptive-apps'; note = "Node RG: $nodeGroup (Reader granted for recipe egress discovery)." } }
@@ -174,5 +143,5 @@ Update-AzTag -ResourceId $group.ResourceId -Operation Merge -Tag @{ adaptiveApps
 @{ HackboxCredential = @{
     name = 'Adaptive Apps Connect'
     value = "AZURE_SUBSCRIPTION='$SubscriptionId' RESOURCE_GROUP='$ResourceGroupName' bash resources/connect-console.sh"
-    note = 'Run from the complete Adaptive Apps checkout after signing into your own participant Azure CLI account. Ready through challenge 05; start challenge 06.'
+    note = 'Run from the complete Adaptive Apps checkout after signing into your own participant Azure CLI account. Infrastructure only: install Radius in Challenge 03, then complete Challenges 04-05.'
 } }

@@ -8,7 +8,9 @@ Estimated time: 30-60 minutes | Difficulty: intermediate
 
 **Hosted Console:** this platform setup is already supplied in a ready lab.
 Follow [Console setup](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/docs/console-setup.md)
-and start 06; read this manual path for context without rerunning provisioning.
+after Challenge 01. Skip provisioning, but complete the read-only validation and
+context-switching exercises below. Then start **Challenge 03** to install Radius.
+Keep the supplied resource group, region, and names from `artifacts/console-env.sh`.
 
 Prepare and validate the two Kubernetes platforms used throughout the MicroHack:
 
@@ -37,6 +39,8 @@ portability boundary explored in later challenges.
 
 ### Task 1: Plan the environment
 
+Hosted teams inspect and record the supplied values instead of choosing replacements.
+
 Agree on names and values for:
 
 - Azure subscription and location
@@ -60,6 +64,8 @@ Azure Bastion: bas-adaptive-apps
 
 ### Task 2: Provision AKS
 
+**Hosted:** skip creation and proceed to Task 4 for validation.
+
 Create a two-node AKS cluster with:
 
 - OIDC issuer enabled
@@ -72,6 +78,9 @@ Review its inputs before running it, set the subscription, location, resource-gr
 and cluster values explicitly, then validate the result independently.
 
 ### Task 3: Provision K3s on an Azure VM
+
+**Hosted:** skip VM/network creation and K3s installation. The connection helper
+supplies the kubeconfig/tunnel; proceed to Tasks 4-5 for validation and exploration.
 
 Create an Ubuntu VM with:
 
@@ -124,7 +133,7 @@ Record the active kubeconfig and context whenever you switch platforms.
 - Every node reports `Ready`.
 - The team can identify and switch between the AKS and K3s kubeconfig/context pairs.
 - K3s management access is restricted to `AzureBastionSubnet`.
-- No Radius control plane, portfolio, recipe, or application workload is installed.
+- The platforms are ready for Radius installation in Challenge 03.
 
 ## Hints
 

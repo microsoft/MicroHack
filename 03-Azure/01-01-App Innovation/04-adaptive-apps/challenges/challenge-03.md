@@ -6,9 +6,9 @@ Estimated time: 30-45 minutes per environment | Difficulty: intermediate
 
 ## Challenge objective
 
-**Hosted Console:** Radius is already installed in a ready lab. Use
-[Console setup](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/docs/console-setup.md)
-to create your local workspaces and start 06; do not repeat this manual installation.
+**Hosted Console:** source `artifacts/console-env.sh` from your lab directory
+and use the supplied resource names. Complete the installation below using the
+**managed identity** option.
 
 Install and explore independent Radius control planes on both default platforms.
 Configure the matching local CLI workspaces, Radius environments, and groups:
@@ -30,11 +30,13 @@ control plane and can operate independently.
 - Configure Azure workload identity for the AKS Radius control plane.
 - Validate Radius through Kubernetes, the CLI, and the dashboard.
 
-Before the first K3s command in this challenge, re-establish the private API tunnel if
-the devcontainer was reopened or rebuilt:
+Before the first K3s command, re-establish the private API tunnel if the devcontainer
+was reopened or rebuilt. Hosted participants rerun `bash resources/connect-console.sh`
+and source `artifacts/console-env.sh`, then select the dedicated K3s kubeconfig.
+The following subscription placeholder is for the bring-your-own-subscription path:
 
 ```bash
-export AZURE_SUBSCRIPTION="<subscription-id>"
+export AZURE_SUBSCRIPTION="${AZURE_SUBSCRIPTION:-<subscription-id>}"
 bash resources/prepare-k3s-azure-vm.sh connect
 export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
 ```
@@ -59,9 +61,12 @@ governance trade-offs.
 Before installation:
 
 1. Select kube context `aks-adaptive-apps`.
-2. Create a Microsoft Entra application and service principal for Radius.
+2. **Hosted:** create a user-assigned managed identity in the supplied lab resource
+   group. **Bring your own subscription:** use that same path, or create a Microsoft
+   Entra application and service principal if you have tenant permissions.
 3. Use the AKS OIDC issuer to create federated credentials for the Radius service
-   accounts in namespace `radius-system`.
+   accounts in namespace `radius-system`: `applications-rp`, `bicep-de`, `ucp`,
+   and `dynamic-rp`. Do not configure only the first service account.
 4. Grant the Radius identity the required role on the isolated lab resource group.
 
 Install Radius with Azure workload identity enabled. Only one team member should run
@@ -75,6 +80,11 @@ Create and select:
 
 Configure the environment's Azure subscription and resource group, then register the
 Azure workload-identity credential.
+
+The [manual walkthrough](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/walkthrough/challenge-03/solution-03.md#2-prepare-azure-workload-identity)
+contains both identity options and the common installation steps. The managed
+identity and its role assignment stay within the lab resource group; no tenant
+app registration or service-principal creation command is required.
 
 ### Task 3: Install Radius manually on K3s
 
@@ -149,6 +159,15 @@ recover the exercise, these scripts perform the same setup:
 
 - `resources/deploy-radius-aks.sh`
 - `resources/deploy-radius-k3s.sh`
+
+For hosted AKS recovery, first source `artifacts/console-env.sh`, unset `KUBECONFIG`,
+and select `aks-adaptive-apps`, then explicitly run
+`RADIUS_IDENTITY_MODE=managedidentity RADIUS_REINSTALL=false bash resources/deploy-radius-aks.sh`.
+The sourced Console configuration also exports these values. Keep
+`RADIUS_REINSTALL=false` to preserve an existing installation and coordinate
+recovery with the team. Without these overrides the script defaults to the
+application identity path and reinstall behavior for BYOS; do not use those defaults
+with hosted RG-only permissions.
 
 If Azure Local or an existing Arc-enabled cluster replaces K3s, use its active context,
 create a distinct Radius workspace and environment, and decide explicitly whether it

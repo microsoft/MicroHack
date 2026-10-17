@@ -1,307 +1,209 @@
 # Adaptive Apps Console automation
 
-**Microsoft-hosted, dedicated lab subscriptions only.** These hooks intentionally
-assign a subscription-wide policy initiative that applies `SecurityControl=Ignore`
-and `CostControl=Ignore` on new/updated resources and resource groups. They are
-**not BYOS preparation scripts** and must not be run against production, customer,
-or shared organizational subscriptions. BYOS participants use the manual scripts
-under `../resources/` and the preparation documentation instead.
+**Microsoft-hosted, dedicated lab subscriptions only.** Shared setup assigns a
+subscription-wide policy initiative applying `SecurityControl=Ignore` and
+`CostControl=Ignore` to resources and resource groups. These hooks are **not BYOS
+preparation scripts** and must not run against production, customer, or shared
+organizational subscriptions. BYOS participants follow the manual workshop path.
 
-## Organizer contract and readiness
+## Provisioning boundary
+
+The active Console path is the **platform-engineer scenario**: it supplies the
+**Challenge 02 infrastructure only**. Participants complete
+Challenge 01 workstation setup, connect using [Console setup](../docs/console-setup.md),
+validate and explore the supplied platforms, then perform Challenges **03-05**:
+
+- Install Radius on AKS and K3s, with their own workspaces and environments.
+- Create the Radius managed identity and federated credentials in Challenge 03.
+- Install the capability portfolio and register resource types in Challenge 04.
+- Publish and register recipes in Challenge 05.
+
+Console does **not** install Radius, Contour, capability portfolios, types or
+recipes; create Radius identities, credentials or workspaces; or deploy the
+Challenge 06 application. It never uses the worker's Kubernetes context or
+in-cluster service account. No Radius, Helm, kubectl, jq, source downloads, or
+participant checkout is needed on the worker.
 
 The [Console contract](../../../../99-MicroHack-Template/labautomation/README.md)
-supplies authenticated Az PowerShell and Azure CLI sessions, subscription Owner
-for the deployment identity, an already-created participant resource group, its
-region, and participant object IDs. The participant already has Owner on that
-group. There is no interactive login, Graph application/service-principal creation,
-confidential computing, Azure Local, or shared participant Kubernetes cluster here.
+supplies authenticated Az PowerShell and Azure CLI, subscription Owner for the
+deployment identity, participant object IDs, and a precreated participant RG.
+Participants have Owner on that RG. The hooks grant Reader on the AKS node RG for
+the later recipe's egress discovery; no subscription-wide participant role or
+tenant/Graph permissions are granted. Hosted participants use a resource-group
+scoped managed identity rather than creating an Entra application.
 
-Default scope: **resourcegroup**, **five labs per subscription**, with **Sweden Central**
-first and **Spain Central** as fallback (`swedencentral,spaincentral`).
-Organizers may override the ordered regions before creating lab
-scopes; the shared preflight must pass for that subscription and region. Every participant
-gets a dedicated two-node AKS cluster and a separate private K3s VM. The organizer
-needs a **Linux runner**, PowerShell 7, current Az.Accounts/Az.Resources/Az.Network,
-Azure CLI, a Bicep compiler usable by Az deployments, Bash, curl, tar, awk,
-sha256sum and standard Linux utilities. The PowerShell hook downloads pinned
-**jq 1.8.2** for Linux x64/ARM64 into its private `$HOME/.local/bin`, checks its
-SHA-256 against the pinned release hash and verifies the executable before ARM
-provisioning. It requires neither a system jq installation nor sudo/package-manager
-access. The private tool directory is placed first on PATH for every Bash phase.
-The explicit
-downloaded `resources/install-console-tools.sh` installs the versioned client toolchain
-and Bastion extension before any bootstrap phase. It does not authenticate.
-Outbound access to Azure, GitHub, Kubernetes/Helm/K3s release endpoints and
-container registries is required, including HTTPS access to
-`raw.githubusercontent.com`. Console can publish this automation folder as its
-`lab/` folder without sibling workshop source directories. The hook downloads
-only the required files from `microsoft/MicroHack`, using the immutable commit
-and per-file SHA-256 hashes in `bootstrap-source.json`. No Git installation or
-GitHub credential is required.
+The worker requires Linux, PowerShell 7, Az.Accounts/Az.Resources/Az.Network,
+Azure CLI with AKS Run Command support, a Bicep compiler usable by Az deployments,
+and `chmod`. VM Run Command installs K3s on the guest using its outbound NAT.
+The worker needs Azure API access; the VM and clusters need access to their
+installation and container image endpoints. Console can mount just this
+`labautomation/` folder read-only; no sibling source folders or bootstrap pin
+manifest are needed.
 
-The jq bootstrap lives in the automation folder, so it also supplies the jq
-prerequisite of the already-pinned Bash installer without modifying downloaded
-sources or requiring a new `bootstrap-source.json` pin. A failed jq download,
-hash or executable check stops before Azure provisioning and cleans up scratch.
+## Retained developer-scenario bootstrap
 
-Successful provisioning prepares **platform state through challenge 05**.
-Participants still complete **challenge 01's workstation setup** before connecting:
+Full-bootstrap artifacts are retained in their original locations for possible
+future **application-developer scenario** support. They are not invoked by the
+active Console hook, and there is no enabled or validated full-bootstrap toggle.
+Keeping the artifacts does not change the platform-engineer handoff above.
 
-- AKS with OIDC, workload identity and managed Istio, plus Radius configured with
-  the lab-scoped user-assigned managed identity created by the Bash bootstrap.
-- K3s installed through VM Run Command, Radius, both Radius workspaces and
-  environments, custom resource types and the recipe registries.
-- Verification of the bootstrap workloads, types and recipe registrations on both
-  clusters; it is not a claim that optional applications have been deployed.
+- [Bootstrap phases](../resources/bootstrap-console.sh) retain Radius installation,
+  resource-type setup, recipe publishing and verification.
+- [Tool installer](../resources/install-console-tools.sh) and
+  [PowerShell helpers](console-helpers.ps1) retain the private tool/jq installation,
+  token-refresh wrapper, allowlisted source downloads and SHA-256 verification.
+- [Session helpers](../resources/console-session.sh), the individual Radius/type/
+  recipe scripts, and [IaC sources](../iac/) remain available without duplicate copies.
+- [Source manifest](bootstrap-source.json) and [pin updater](update-bootstrap-source.ps1)
+  retain the previous immutable published snapshot. The pin is historical:
+  participant connection changes mean it no longer matches all current sources.
+  `update-bootstrap-source.ps1 -Check` reports that drift; the active hook does
+  not read or validate this unused manifest.
 
-After workstation setup, participants reconnect with the Console credential
-command and begin at challenge 06. They do not rerun manual infrastructure
-provisioning. Challenge 07 still needs
-Entra enterprise-application/SAML permissions, test users and browser callback
-access; challenge 09 needs an approved existing Azure OpenAI deployment, quota
-and inference-role assignment permission (plus the local Ollama model download).
-Challenge 10 needs the host-only GitHub Copilot desktop app/Radius Canvas, a writable
-GitHub repository with Actions/packages access, and separately arranged
-tenant/federation/Azure permissions for its workflow deployment path.
-These are not supplied by the Console baseline; follow each challenge's documented
-prerequisites. No GitHub or AI API credentials are provisioned by these hooks.
+Before enabling full bootstrapping, scenario owners must agree on the exercise
+boundary, wire an explicit scenario selection and developer-ready handoff,
+publish and re-pin the intended sources, and validate the complete flow in the
+Console. In particular, resolve the observed Radius installation using the
+worker's `jobrunner-sa` identity by ensuring the intended lab cluster context and
+credentials are used. Retaining these scripts does not resolve that failure.
+Worker tool setup, isolated HOME/kubeconfig, token refresh, parallel-job tunnel
+isolation, and full Radius/type/recipe readiness must be included in that work.
 
-## Shared stage: service, quota and region checks
+## Shared setup
+
+Defaults remain **five labs per subscription**, with **Spain Central** first and
+**Sweden Central** as fallback (`spaincentral,swedencentral`). Organizers can
+override the ordered regions before provisioning.
 
 `shared-deploy-lab.ps1` runs once per subscription:
 
 1. Verify both authenticated contexts target the supplied subscription.
-2. Register `Microsoft.Network/AllowBringYourOwnPublicIpAddress`, as required
-   by these hosted workshop subscriptions for public IP allocation (also used by
-   LocalBox). Wait up to 15 minutes for `Registered`; pending approval, failure,
-   or timeout blocks participant provisioning. Then re-register Network so the
-   feature takes effect. Register and wait for Compute, Network, ContainerService, ContainerRegistry,
+2. Register `Microsoft.Network/AllowBringYourOwnPublicIpAddress`, as also required
+   by LocalBox in these hosted subscriptions. Wait up to 15 minutes for
+   `Registered`; pending approval, failure or timeout blocks participant jobs.
+   Re-register Microsoft.Network afterward so the feature takes effect.
+3. Register and wait for Compute, Network, ContainerService, ContainerRegistry,
    ManagedIdentity, DBforPostgreSQL, OperationalInsights, PolicyInsights, Sql,
-   KeyVault and Storage. SQL supports the published SQL recipe; Key Vault and
-   Storage preserve the manual challenge 01 subscription prerequisites.
-3. Check each candidate region for a subscription-exposed `Standard_D4s_v5`
-   without a **Location** restriction, and for available family and total regional
-   compute quota. A Zone restriction does not exclude this non-zonal topology.
-4. Require **16 free vCPUs per lab**: 8 for the AKS nodes, 4 for the K3s VM and
-   4 for one AKS upgrade surge node. Five new labs therefore require **80 free
-   vCPUs**, although their steady-state baseline is 60. Both `standardDSv5Family`
-   and `cores` are checked after subtracting existing usage. The shared check
-   intentionally budgets the entire requested fan-out as new capacity, including
-   on reruns; arrange sufficient free quota before repeating it. It does not
-   submit quota increases or delete old labs.
-5. Check PostgreSQL Flexible Server capabilities for the default recipe's
-   PostgreSQL 16 / Burstable `Standard_B1ms`, rejecting offer restrictions.
-   Other recipe sizes may require additional regional SKU availability.
-6. Assign and actively verify the hosted control-tag initiative with a short-lived
-   probe RG and NSG. Both tags must read back as `Ignore`, while the probe's own
-   tag must remain intact. The probe RG is removed in `finally`.
-7. Merge subscription tags `microhack-adaptive-location`,
-   `microhack-adaptive-regions`, and `microhack-adaptive-lab-count` for the
-   participant processes. No local shared state file is needed.
+   KeyVault and Storage.
+4. Check each candidate's `Standard_D4s_v5` exposure and **16 free vCPUs per lab**
+   in both regional and DSv5-family quota: 12 baseline plus 4 for AKS surge.
+   Five labs require 80 free vCPUs (60 steady-state). The check budgets the entire
+   fan-out as new capacity, including on reruns.
+5. Check PostgreSQL 16 / Burstable `Standard_B1ms` availability for the later
+   participant recipe; this does not provision a database.
+6. Apply the hosted tag initiative and verify inheritance with a temporary RG/NSG.
+7. Persist eligible regions and lab count as subscription tags.
 
-**SKU exposure and quota are not a capacity reservation.** Azure allocation,
-regional service limits, policy and actual SKU capacity can still fail deployment.
-The stage fails explicitly rather than silently choosing a different VM size.
-Quota failure messages identify the required capacity and region.
+Preflight fails if no candidate passes. **SKU and quota checks do not reserve
+capacity or guarantee region eligibility.** Other recipe sizes need their own
+availability checks. Shared setup does not request quota increases.
 
-Console creates participant groups in the **first preferred region**. Shared
-preflight retains eligible regions in preference order and fails if none pass.
-For **initial infrastructure provisioning only**, the participant hook uses
-`Invoke-MhhDeploymentWithRegionFallback` with those validated regions. The helper
-classifies deployment failures, retries supported capacity/region failures, and
-fails immediately for fatal errors rather than treating all errors as retryable.
-It can **delete the participant RG and all its contents**, retry the same region,
-or recreate it in the next region. Participant Owner access is restored on every
-attempt. Use initial provisioning only in dedicated, disposable lab groups.
+## Infrastructure and readiness
 
-After infrastructure succeeds, `adaptiveAppsPreserve=true` prevents subsequent
-runs from invoking destructive fallback, including when Bash bootstrap failed.
-Existing labs with `adaptiveAppsReady=true` also receive this persistent guard
-before readiness is cleared. Do not remove the preservation tag to troubleshoot
-a working lab. Such labs receive incremental deployment in place; if their region
-fails preflight, the hook stops rather than relocating them.
-
-The parameter file deliberately omits `location`, letting the template follow
-`resourceGroup().location`. After fallback the hook re-reads the RG location for
-all bootstrap phases and credentials, keeping the PostgreSQL recipe in the same
-region. These checks do not guarantee AKS capacity or region eligibility.
-
-## Participant infrastructure and execution
-
-`main.bicep` is the ARM infrastructure topology. Files under `../iac/` are Radius
-application/recipe artifacts, **not** alternative ARM infrastructure templates.
+`main.bicep` supplies:
 
 | Resource | Configuration |
 | --- | --- |
-| `aks-adaptive-apps` | Two `Standard_D4s_v5` Ubuntu nodes, managed disks, free control plane tier, one-node maximum surge, OIDC/workload identity, managed Istio, standard load-balancer egress |
-| `vm-adaptive-apps-k3s` | `Standard_D4s_v5`, Ubuntu 22.04, 64-GiB Standard SSD, no public NIC/IP |
+| `aks-adaptive-apps` | Two D4s v5 Ubuntu nodes, OIDC/workload identity, managed Istio, free control-plane tier, one surge node and standard load-balancer egress |
+| `vm-adaptive-apps-k3s` | Private D4s v5 Ubuntu 22.04 VM, 64-GiB Standard SSD, K3s |
 | `vnet-adaptive-apps` | K3s subnet `10.42.0.0/24`, Bastion subnet `10.42.1.0/26` |
-| `bas-adaptive-apps` | Standard Bastion with native tunneling, two scale units, static Standard public IP; name matches existing scripts |
-| `natgw-adaptive-apps` | Explicit private-subnet outbound via a static Standard public IP |
-| `nsg-adaptive-apps-k3s` | Inbound SSH/API only from the Bastion subnet; other inbound traffic denied |
-| `acad<stable hash>` | Globally unique ACR name derived from subscription/RG, Standard, anonymous recipe pull, admin credentials disabled |
+| `bas-adaptive-apps` | Standard Bastion, native tunneling, two scale units, static Standard public IP |
+| `natgw-adaptive-apps` | Explicit outbound connectivity through a static Standard public IP |
+| `nsg-adaptive-apps-k3s` | Inbound SSH/API restricted to the Bastion subnet |
+| `acad<stable hash>` | Unique Standard ACR, anonymous recipe pull enabled, admin credentials disabled; no recipes published |
 
-The K3s pod/service ranges are `10.52.0.0/16` and `10.53.0.0/16`, avoiding the
-Azure VNet range. Run Command installs K3s only when absent and waits for API
-readiness. An existing installation is started, not wiped/reinstalled. The VM
-admin password comes from `New-MhhStablePassword`, so retries do not silently
-rotate it. It is never printed or returned to participants: connect uses Run
-Command for kubeconfig retrieval and Bastion for the API, not SSH credentials.
-Organizer troubleshooting can use Run Command.
+K3s uses pod/service CIDRs `10.52.0.0/16` and `10.53.0.0/16`, avoiding the
+VNet range. Run Command starts an existing K3s installation rather than wiping it.
+The VM password uses `New-MhhStablePassword`, so reruns do not silently rotate it.
+It is never returned to participants; kubeconfig retrieval uses VM Run Command
+and Kubernetes API access uses Bastion.
 
-The deployment receives a temporary ARM parameter file rather than a
-`SecureString` embedded in PowerShell command arguments, avoiding secure-string
-serialization at the Console job boundary. The file contains the password in
-plaintext inside the job's private `0700` scratch directory, with file permissions
-`0600`; it is deleted as soon as the deployment command returns or throws.
-The template still declares `adminPassword` as `@secure()`, so ARM does not
-record its value in deployment history. Do not print or publish the parameter
-file. Stage messages identify context validation, parameter preparation and
-deployment submission without including credentials.
+The hook passes the password through a temporary ARM parameter file in a private
+`0700` directory, with file permissions `0600`, rather than a `SecureString`
+inside command arguments. The file is removed as soon as deployment returns or
+throws, and scratch is removed in `finally`. Bicep retains `@secure()`. No password,
+kubeconfig, token or Kubernetes private key is emitted. The worker's HOME, PATH,
+KUBECONFIG and isolated `AZURE_CONFIG_DIR` are not changed.
 
-The participant hook uses an **incremental deployment**; initial-provisioning
-fallback may recycle failed attempts as described above. Protected labs retain
-resources and failed deployment records for diagnosis. It grants each supplied participant
-**Reader on this AKS node RG only**, so the PostgreSQL recipe can discover AKS
-egress IPs. Role operations use object IDs and explicitly disable Graph name
-resolution. No subscription-wide participant role is added.
+After deployment and node-RG Reader assignments, readiness checks require:
 
-Console mounts the source content **read-only**. The hook uses a private,
-GUID-named HOME under the worker's writable `[IO.Path]::GetTempPath()` for `.kube`,
-`.rad`, `.ssh`, downloaded clients and scratch files; it never creates directories
-under the mounted source. The platform's **absolute,
-isolated `AZURE_CONFIG_DIR` is preserved**. Before participant provisioning, the
-hook downloads the allowlisted `resources/` and `iac/` files into a private working
-lab root beneath that HOME and verifies every hash. Downloads have bounded
-timeouts and retries. A missing file, network failure or hash mismatch stops the
-hook before ARM deployment or Bash execution; it never falls back to `main`.
-All six phases reuse the verified files. Generated `artifacts/types.tgz` and
-recipe artifacts cannot race with another participant or modify the source
-checkout. No credentials or local configuration are downloaded, and all temporary
-files are removed on success or failure. There is no root-level Bicep configuration.
-A host-assigned ephemeral loopback port
-is passed as `K3S_LOCAL_PORT`; tunnel startup still detects a port collision and
-fails rather than taking another lab's tunnel. HOME/PATH/environment are restored
-and the exact private directory removed in `finally`.
+- K3s API and nodes ready, verified inside the VM by Run Command.
+- AKS nodes ready, verified by `az aks command invoke` against the named lab AKS
+  cluster, with both successful operation state and exit code zero. This uses
+  AKS's temporary command pod, not a local worker kubeconfig.
+- Bastion provisioned with Standard/Premium SKU and native tunneling enabled.
+- ACR provisioned with anonymous pull enabled.
 
-The Bash interface, run from that isolated lab root, is:
+The hook clears `adaptiveAppsInfrastructureReady` before changes and sets it
+to `true` only after all checks pass. `adaptiveAppsAcr` records the registry name.
+The obsolete developer-ready tag `adaptiveAppsReady` is set to `false` so old
+connection scripts cannot mistake this for a lab prepared through Challenge 05.
+Credentials emitted on success hand participants off to **Challenge 03**.
 
-```text
-bash resources/install-console-tools.sh
-bash resources/bootstrap-console.sh aks-radius
-bash resources/bootstrap-console.sh k3s-radius
-bash resources/bootstrap-console.sh aks-types
-bash resources/bootstrap-console.sh k3s-types
-bash resources/bootstrap-console.sh recipes
-bash resources/bootstrap-console.sh verify
-```
+`resources/connect-console.sh` runs on the participant workstation. It checks
+the new readiness tag, obtains fresh credentials, validates both clusters and
+the Bastion tunnel, and writes `artifacts/console-env.sh`. It neither invokes
+Radius nor requires installed Radius control planes, types or recipes.
+Participants must use the updated checkout when reconnecting.
 
-Every invocation follows `Update-MhhToken`; every nonzero exit throws. Each
-bootstrap phase obtains fresh local context and owns its tunnel cleanup.
-`AZURE_SUBSCRIPTION`, `RESOURCE_GROUP`, `REGION`, `AZURE_LOCATION`, `ACR_NAME`,
-`AKS_CLUSTER`, `AKS_CLUSTER_NAME`, `AKS_CONTEXT`, `K3S_VM_NAME`, `K3S_CONTEXT`,
-`BASTION_NAME`, `K3S_LOCAL_PORT` and isolated K3s paths are supplied explicitly.
+## Fallback and existing labs
 
-The group is marked `adaptiveAppsReady=false` before changes. `adaptiveAppsAcr`
-is written after infrastructure exists; **`adaptiveAppsReady=true` is written
-only after the verify phase succeeds**. Only then are identifiers and the minimal
-connect command emitted as Console `HackboxCredential` hashtables. No kubeconfig,
-bearer token, registry password or Kubernetes private key is emitted.
+For initial provisioning, `Invoke-MhhDeploymentWithRegionFallback` receives only
+validated regions. It can **delete the participant RG and all its contents**,
+retry in the same region, or recreate it in the next region, restoring participant
+Owner access. Initial provisioning is only for dedicated, disposable lab groups.
+The parameter file omits `location`; all resources and later database recipes
+follow `resourceGroup().location`. The hook re-reads the group after fallback.
 
-## Rough costs and cleanup
+After ARM succeeds, `adaptiveAppsPreserve=true` prevents destructive fallback
+on subsequent runs, even when K3s or another readiness check failed. Existing
+labs with either readiness tag set also receive this persistent guard before
+readiness is cleared. Protected labs receive incremental deployment in place;
+an unvalidated region stops the hook rather than relocating the lab.
 
-Budget **US$35 per lab per 24 hours**, or about **US$175/day for the default five
-labs**, before optional exercises and significant traffic. This is an approximate
-pay-as-you-go planning allowance, not a quote:
+Rerunning this infrastructure-only hook **does not uninstall** Radius or any
+participant workloads already present, including partial installs from earlier
+Console attempts. Inspect reused labs before starting the exercises. Do not
+remove the preservation tag merely to troubleshoot them.
 
-- Three continuously running D4s v5 VMs: roughly US$14–20/day by region.
-- Standard Bastion: roughly US$7–10/day.
-- Managed disks, NAT, Standard IPs, load balancer and ACR: roughly US$4–7/day.
-- A small PostgreSQL server created during challenge 06 adds roughly US$1–3/day;
-  larger sizes, AI models, log ingestion, bandwidth and optional runners add more.
+Fallback depends on the Console's error classifier. Versions that classify
+`AKSCapacityHeavyUsage` as `UnknownAssumedFatal` will not try the next region;
+update the Console classifier or select a working primary region explicitly.
+If public-IP creation still reports `AllowBringYourOwnPublicIpAddress`, verify
+both feature registration and subsequent Network provider registration completed.
 
-Use the [Azure pricing calculator](https://azure.microsoft.com/pricing/calculator/)
-for the event's actual region/offer. Shared recurring infrastructure cost is
-effectively zero; the short-lived policy probe costs are negligible. AKS surge
-temporarily increases compute cost. VM deallocation does **not** stop Bastion,
-NAT, registry or disk charges.
+## Costs and cleanup
 
-After the event, use Console's scope cleanup to delete the participant RGs.
-Deleting AKS normally removes its managed node RG; **verify node RG deletion** and
-check for orphaned disks/IPs. The shared policy assignment/definition, its managed
-identity and subscription metadata are outside those groups. The organizer must
-remove them when releasing a dedicated subscription, but must not remove an
-initiative still used by another hosted event. No cleanup hook deletes resources
-automatically on deployment failure.
+Budget approximately **US$35 per lab per 24 hours** (US$175/day for five),
+before optional exercises and significant traffic. This is a planning allowance,
+not a quote; use the [Azure pricing calculator](https://azure.microsoft.com/pricing/calculator/).
+VM deallocation does not stop Bastion, NAT, registry or disk charges. Databases
+created during later challenges add cost.
 
-## Maintaining the bootstrap source pin
+Use Console scope cleanup after the event. Verify AKS's managed node RG is
+removed and check for orphaned disks/IPs. Shared policy resources and subscription
+tags live outside participant RGs and must be removed when releasing the
+subscription, but not while another hosted event still uses them.
 
-The workshop's `resources/` and `iac/` are the only editable source copies.
-`bootstrap-source.json` contains only a commit identifier and file hashes, not
-duplicate code. When bootstrap inputs change, publish them to `microsoft/MicroHack`
-first, then update the pin to that published commit:
+## Validation
 
-```powershell
-pwsh -File "./03-Azure/01-01-App Innovation/04-adaptive-apps/labautomation/update-bootstrap-source.ps1" -Commit "<full-40-character-commit-sha>"
-```
-
-The updater downloads that revision and verifies it matches the local sources
-before writing the manifest. Use `-Check` instead of `-Commit` for an offline
-local-source/hash check. Tests reject a stale pin, so source edits deliberately
-require refreshing the pin before publishing the automation update.
-
-This is a two-step release when source changes are not yet published: first
-publish the canonical inputs, then publish the verified manifest update. If an
-input file is added, update the allowlist in `Get-AdaptiveBootstrapFiles` as well.
-After publishing the automation update, refresh/reimport the content in Console
-before retrying. A pin update is unnecessary for documentation-only changes.
-
-## Offline tests and live acceptance
-
-With PowerShell 7, Pester 5 and Bicep installed, from the repository root:
+Run offline tests from the repository root:
 
 ```bash
 bash "03-Azure/01-01-App Innovation/04-adaptive-apps/labautomation/tests/run-offline-tests.sh"
+python3 -m unittest discover -s "03-Azure/01-01-App Innovation/04-adaptive-apps/tests" -p test_console_helpers.py
 ```
 
-Set `PWSH_COMMAND`, `BICEP_COMMAND`, or `PESTER_MODULE` to use already-installed
-tools outside PATH. The runner confines Pester scratch files to a unique directory
-under the current checkout and removes it on exit. Tests mock Azure and Console
-commands; they cover quota boundaries, PostgreSQL capability schemas, failure
-propagation, packaging, region consistency, token refresh, phase ordering, output
-hygiene, a read-only lab-only Console layout with no sibling sources, immutable
-source pins, hash mismatches, download failures, private-directory cleanup, and compiled
-ARM resource properties. Only the local test runner puts its test scratch beneath
-a writable checkout; the production hook uses writable worker scratch instead.
+The first runner requires PowerShell 7, Pester 5 and Bicep; set `PWSH_COMMAND`,
+`BICEP_COMMAND`, or `PESTER_MODULE` for tools outside PATH. The Python tests need
+Bash, jq and kubectl and exercise real local kubeconfig operations. Both suites
+mock cloud calls. Tests cover feature registration, quota, fallback protection,
+read-only packaging, secure parameters and cleanup, infrastructure readiness
+failures, and connecting before Radius installation without changing Radius state.
 
-For the companion Bash helper tests, from this `labautomation/` directory:
-
-```bash
-python3 -m unittest discover -s ../tests -p test_console_helpers.py
-```
-
-These require Python 3, Bash and `kubectl` on PATH. They exercise real local
-`kubectl config` operations to verify kubeconfig preservation; Azure, Radius and
-Kubernetes network calls are mocked, so no cloud resources are accessed.
-
-**Offline tests are not Azure deployment verification.** Organizer live testing
-must still prove policy propagation, actual allocation, managed Istio, K3s
-installation/Bastion, image access, Radius identity federation, recipe execution
-and participant reconnect/permissions in Console before an event. No live Azure
-deployment success should be inferred from a passing offline test or ARM
-validation alone.
-
-The AKS template supplies an explicit empty `serviceMeshProfile.istio` object:
-the managed-cluster API requires the profile when `mode` is `Istio`, and Azure
-selects its default supported revision when no revision is specified.
-
-If a live deployment reports `AKSCapacityHeavyUsage`, quota/SKU validation has
-not reserved AKS capacity. Initial provisioning can use the validated fallback;
-protected labs require organizer investigation. If
-`SubscriptionNotRegisteredForFeature` still mentions
-`AllowBringYourOwnPublicIpAddress`, verify shared setup completed both feature
-registration and subsequent Network provider registration. The template itself
-does not request BYOIP or a custom IP prefix.
+Offline success is not live acceptance. Verify actual allocation, K3s and AKS node
+health, participant Bastion access and permissions, then run the participant
+Radius/identity/recipe exercises before the event.
 
 ## Hosted policy provenance
 
@@ -311,5 +213,3 @@ at commit `d3e446889384325605e5db7e4e61ab1ed8af2cfd`. Their functional bodies,
 verification, cleanup and existing `sov-hosted-control-tags` /
 `sovereign-hosted-control-tags` names are unchanged. Only provenance comments
 were added; there is no runtime dependency on the Sovereign MicroHack folder.
-The retained names deliberately reuse an already-present hosted initiative
-instead of creating competing assignments.

@@ -4,17 +4,14 @@
 
 ## Coach notes
 
-**Hosted path:** use Tasks 2-4 in the student challenge, then
+**Hosted path:** complete Tasks 2-4 in the student challenge, then follow
 [Console setup](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/docs/console-setup.md).
-Participants use Bash and their own Azure sign-in; skip provider registration,
-extra-RG preflight, and provisioning/install steps 02-05. A ready hosted lab
-includes recipes, but each participant still needs the connection helper's local
-contexts, workspaces, and `artifacts/types.tgz`. Source `artifacts/console-env.sh`
-in every new Bash terminal, then start 06. The remaining setup is the manual path.
+Validate the supplied platforms in Challenge 02 instead of provisioning them,
+then continue with Challenges 03-06.
 
 Challenge 01 verifies prerequisites. Participants should arrive with most tools
 installed or be prepared to install them quickly. Coaches should unblock environment
-issues so teams can proceed to Challenge 02, where they provision AKS and K3s.
+issues so teams can proceed to Challenge 02 to provision or explore AKS and K3s.
 
 Share these instructions one or two weeks before the MicroHack when possible.
 

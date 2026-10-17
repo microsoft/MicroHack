@@ -8,7 +8,9 @@ Duration: 30-60 minutes
 
 **Hosted Console:** do not run this provisioning walkthrough on a ready lab.
 Use [Console setup](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/docs/console-setup.md)
-after Challenge 01 and continue at 06. The steps below are the manual platform path.
+after Challenge 01. Complete the read-only platform validation and context-switching
+checks, then continue at **03** to install Radius. Skip all infrastructure creation
+and K3s installation steps; these are supplied. Keep Console's resource names/region.
 
 Complete [Challenge 01](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/walkthrough/challenge-01/solution-01.md) and the
 [general prerequisites](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/Readme.md#general-prerequisites) before starting.
@@ -202,7 +204,9 @@ Each script exits with a nonzero status when its environment is unhealthy. Check
 cover Azure provisioning, the active context, Kubernetes API readiness, node
 readiness, AKS identity features, and the K3s service.
 
-Repeat the Kubernetes checks manually:
+Hosted participants source `artifacts/console-env.sh` first; do not replace its
+resource names with the provisioning examples above. Repeat the Kubernetes checks
+manually:
 
 ```bash
 # AKS
@@ -213,7 +217,7 @@ kubectl wait --for=condition=Ready nodes --all --timeout=10m
 kubectl get nodes -o wide
 
 # K3s
-export AZURE_SUBSCRIPTION="<subscription-id>"
+export AZURE_SUBSCRIPTION="${AZURE_SUBSCRIPTION:-<subscription-id>}"
 bash resources/prepare-k3s-azure-vm.sh connect
 export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
 kubectl config use-context k3s-azure-vm
@@ -238,8 +242,9 @@ into Azure management; it does not create the cluster and is not required by Rad
 
 ## Completion criteria
 
-- Both scripts finish successfully.
+- BYOS: both provisioning scripts finish successfully. Hosted: the connection helper
+  succeeds without reprovisioning the supplied infrastructure.
 - Coaches can switch explicitly between AKS and K3s.
 - Both Kubernetes APIs and all nodes are healthy.
 - The K3s VM is private and reachable only through the localhost Bastion tunnel.
-- No Radius control plane, portfolio, recipes, or application workloads are installed.
+- The platforms are ready for Radius installation in Challenge 03.

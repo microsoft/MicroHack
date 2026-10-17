@@ -16,12 +16,9 @@ any bucket.
 
 Complete Tasks **2-4** for workstation setup and tools, then follow
 [Console setup](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/docs/console-setup.md)
-to sign in and connect from a **Bash terminal**. Skip the manual access/capacity,
-provider-registration, extra-resource-group preflight, and platform setup below.
-The helper reconstructs your local kubeconfig, Radius workspaces, and Bicep
-extension using your own credentials. Source `artifacts/console-env.sh` in every
-new Bash terminal and start **Challenge 06**, not provisioning Challenges 02-05.
-The manual bring-your-own-subscription path below is unchanged.
+to sign in and connect from a **Bash terminal**. Skip the remaining setup tasks;
+your infrastructure is already supplied. Explore and validate it in **Challenge 02**,
+then continue to **Challenge 03** to install Radius.
 
 ## Learning goals
 
@@ -53,7 +50,9 @@ Confirm that your workshop team has:
 - Permission to create a resource group, AKS cluster, Linux VM, networking resources,
   Azure Bastion Standard, its managed public IP, a NAT gateway and its public IP, VM Run
   Command, and role assignments
-- Permission to create a Microsoft Entra application and service principal
+- Permission to create a user-assigned managed identity and role assignments in the
+  lab resource group, or tenant permission to create a Microsoft Entra application
+  and service principal for the optional application identity path
 - Regional quota for the AKS nodes, K3s VM, Azure Bastion, and two Standard public IP
   addresses
 - Contributor or equivalent resource permissions, Network Contributor where networking
@@ -71,7 +70,7 @@ deployed these services silently fails later with provider or feature errors:
 az account set --subscription "<subscription-id>"
 
 for provider in Microsoft.Network Microsoft.Compute Microsoft.ContainerService \
-  Microsoft.ContainerRegistry Microsoft.KeyVault Microsoft.Storage; do
+  Microsoft.ContainerRegistry Microsoft.ManagedIdentity Microsoft.KeyVault Microsoft.Storage; do
   az provider register --namespace "$provider" --wait
 done
 
@@ -235,7 +234,8 @@ Radius CLI, PowerShell 7, Git, `jq`, `yq`, `curl`, SSH, and `tar`. These tools c
 every command in Challenges 01-06.
 The container is only a workstation: AKS, the Linux VM, K3s, Radius control planes,
 portfolio workloads, and recipes are still created on the remote Azure and Kubernetes
-targets by the manual commands or the organizer's hosted setup.
+targets. Hosted setup supplies only AKS, the private VM with K3s, networking/NAT/Bastion,
+and ACR; participants install Radius, portfolio workloads, and recipes in 03-05.
 
 Sign in to Azure from inside the container. If the container cannot open a browser, use
 the device-code flow:
@@ -380,7 +380,9 @@ kubeconfig or SSH private key into the Git workspace.
 ## Success criteria
 
 For hosted labs, the success criteria are working local tools and a successful
-Console connection with both contexts/workspaces and `artifacts/types.tgz`.
+Console connection with both Kubernetes contexts, Ready nodes, a working private
+API tunnel, and `artifacts/console-env.sh`. Workspaces and `artifacts/types.tgz`
+are created by participants in Challenges 03 and 04, not by the connection helper.
 The capacity and subscription-wide checks below apply to manual setup only.
 
 You are ready to continue when:

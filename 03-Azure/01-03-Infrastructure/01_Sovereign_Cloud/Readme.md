@@ -46,7 +46,7 @@ After completing this Hackathon you will:
 
 Use **GitHub Codespaces with the Azure / Infra / Sovereign Cloud devcontainer** throughout all seven challenges. It provides VS Code in your browser with Azure CLI, PowerShell, Docker, `kubectl`, Radius CLI and the other lab tools, without requiring Windows or local installations. Continue to use the Azure portal for portal-based tasks.
 
-### Set up before Challenge 1
+### Set up codespaces (recommended)
 
 1. Sign in with a **personal GitHub account**. Optionally set **Settings > Codespaces > Default idle timeout** at [github.com/settings/codespaces](https://github.com/settings/codespaces) **before creating the Codespace**. The default is 30 minutes; you can choose 5-240 minutes, subject to organization policy. The setting applies to new Codespaces.
 2. Open the **repository home page**, [microsoft/MicroHack](https://github.com/microsoft/MicroHack), while signed in to GitHub:

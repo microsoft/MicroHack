@@ -152,7 +152,7 @@ The main cost driver for this Hackathon is virtual machines:
 - Plan subscription quotas for at least 12 general-purpose vCPUs and 4 confidential vCPUs per participant, plus upgrade headroom. Keep two participants per subscription unless larger aggregate increases have been approved. Challenge 5 application cleanup does not release node quota because Challenge 7 still uses the cluster.
 
 For a 50-participant event, this planning range is USD 1,750-2,250 per day, plus LocalBox for each participating subscription if Challenge 6 is enabled.
-There will also be smaller costs for services such as Key Vault, storage, and monitoring. Budget separately for the approved Defender for Servers plan used in Challenge 6.
+There will also be smaller costs for services such as Key Vault, storage, and monitoring. Hosted Console setup automatically enables **Defender for Servers P2 and Endpoint protection on every event subscription**. Budget separately for P2 charges on covered servers during preparation and delivery; the infrastructure estimates above do not include them. Manual/BYOS organizers enable their approved plan separately. Removing lab resource groups does not reset subscription-level Defender settings.
 An Azure Pricing Calculator estimate is available [here](https://azure.com/e/1a7aec76a3e049cba57cda6742025373).
 This estimate can be adjusted for fewer/more students, running the VMs shorter/longer and adding additional services if desired.
 

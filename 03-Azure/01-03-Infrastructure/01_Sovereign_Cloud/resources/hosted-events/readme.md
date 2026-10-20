@@ -14,6 +14,31 @@ This runbook covers the FY27 EMEA Cloud & AI Hackathons program described in the
 
 When automatic provisioning is not scheduled, use the Console's **Create Users**, content-pack license defaults and **Deploy Lab Environment** lifecycle in order. Investigate failures before continuing; do not compensate by running subscription-wide manual utilities.
 
+## Defender for Servers configuration and costs
+
+The [shared hook](../../labautomation/shared-deploy-lab.ps1) calls
+[hosted Defender setup](../../labautomation/hosted-defender.ps1) once per subscription,
+after hosted tag-policy verification and before LocalBox deployment. It sets
+`Microsoft.Security/pricings/VirtualMachines` to `Standard` / `P2` and
+`Microsoft.Security/settings/WDATP` to `enabled=true` (the **Endpoint protection**
+toggle). Existing pricing extension and enforcement settings are preserved; other
+Defender plans and settings are not changed. Reruns never toggle protection off.
+
+The Console deployment identity needs permission to read/write these subscription
+settings; the hosted subscription Owner identity supplies it. Participants retain
+their existing roles, including Security Reader; no participant subscription Owner
+or User Access Administrator role is added. Setup verifies both settings by GET,
+retrying propagation up to 12 times, 10 seconds apart. Authorization/API failures
+or verification timeout stop shared setup rather than report readiness. A failure
+does not roll back P2 or disable protection; inspect the settings before retrying.
+
+**P2 is a paid subscription-wide plan**, not a per-lab-RG setting. Include its
+charges for covered servers during preparation and delivery in the approved event
+budget, separately from the existing infrastructure estimates. Use only dedicated
+hosted lab subscriptions. Deleting lab resource groups does not reset the plan or
+Endpoint integration; the subscription owner must review these settings when
+releasing a subscription. This hook is not part of manual/BYOS preparation.
+
 ## Complete LocalBox preparation
 
 The shared hook submits `localbox-*` in `rg-localbox-shared`, then waits up to six hours for ARM completion, refreshing its Console authentication while polling. It does not publish LocalBox administrator credentials. A Client VM appearing after roughly 15-20 minutes confirms only that deployment has started. Full nested Azure Local provisioning can take 4-6 hours and must still be checked separately.
@@ -23,7 +48,7 @@ The shared hook submits `localbox-*` in `rg-localbox-shared`, then waits up to s
 3. Copy **Lab Group ObjectId** from the Console's **Credentials** tab for the preparation prompt or `-AksAdminGroupObjectId`. Confirm that intended Azure lab identities/coaches are members; see the group dependency below.
 4. Follow [LocalBox preparation](../localbox/readme.md), once per shared subscription, in elevated PowerShell 7. It creates AKS and then installs/verifies the shared MetalLB extension and reserved ARP pool. Azure authentication uses the Client VM's managed identity; preparation constructs the nested Windows credential locally from the installed configuration without printing it. An explicit `-NodeCredential` overrides that value after a nested-account rotation.
 5. Run [Pester health checks](../tests/readme.md) for LocalBox and every selected participant lab. A control-plane-only pass does not establish full readiness.
-6. Complete the [participant VM readiness exercise](../localbox/manual-preparation.md#step-6-test-the-environment), including guest management, Defender and Update Manager. Subscription-wide paid-plan changes require the authorized owner and approved budget.
+6. Console shared setup enables and verifies **Defender for Servers Plan 2** and **Endpoint protection** on every event subscription. Complete the [Defender readiness checklist](../localbox/manual-preparation.md#defender-for-servers-readiness-organizer) and [participant VM readiness exercise](../localbox/manual-preparation.md#step-6-test-the-environment), including guest management, actual Defender onboarding and Update Manager. Verified subscription settings do not prove that a VM has completed onboarding.
 7. Verify an intended participant can use Entra-authenticated `az connectedk8s proxy` and a private application port-forward from their Codespace. Participants inspect MetalLB, not install it, and never need LocalBox-Client access. This validates the lab access path, not routing to the MetalLB service VIP.
 
 Shared setup registers `Microsoft.KubernetesRuntime`, waits for registration,

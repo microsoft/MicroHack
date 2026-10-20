@@ -22,13 +22,14 @@ This folder holds the screenshots embedded throughout the challenge guides and w
 | `challenge-00-notebook-ids.png` | 0 | The setup notebook's final cell output printing the **Workspace ID** and **Data Agent (Agent) ID** (values redacted). |
 | `challenge-00-agent-test.png` | 0 | The published data agent's **Test data agent** pane answering the Leaf Blower X2 question with exact **CRITICAL** stock levels for Portland and Seattle (all tables selected). |
 | `challenge-00-no-tables.png` | 0 | Troubleshooting: the data agent with **no tables selected** and the agent replying it *can't access the data source*. |
-| `challenge-01-new-connection.png` | 1 | The **Add tool → Fabric Data Agent** connection dialog (Workspace ID / Artifact ID redacted) named `inventory-hack-agent` — created in Challenge 2. |
-| `challenge-01-new-agent.png` | 1 | New agent editor for `demand-sensing-agent`: name, `gpt-5.4-mini` model, and populated instructions. |
-| `challenge-01-add-tool.png` | 1 | The tool catalogue in the agent editor with **Web Search** and **Fabric Data Agent** available. |
-| `challenge-01-playground.png` | 1 | Playground response with a Fabric inventory result (and a web source if Web Search is on) ending in a demand assessment. |
-| `challenge-02-recommendation.png` | 2 | Reorder **recommendation table** (SKU / Warehouse / Current Stock / Suggested Reorder Qty / Priority) with a **CRITICAL** item. |
-| `challenge-02-trace.png` | 2 | **Traces → Response view** detail expanded to the model call, Fabric tool call, tool response, and final generation spans. |
+| `challenge-01-fabric-iq-catalog.png` | 1 | The **OneLake Catalog** dialog with `inventory-hack-agent` selected and its Location visible (Challenge 2, Part C). |
+| `challenge-01-new-agent.png` | 1 | New agent editor for `demand-sensing-agent`: name, `gpt-5.4-mini` model, instructions and **Web search** under **Tools**. |
+| `challenge-01-add-tool.png` | 1 | The **Select a tool** dialog (**Configured** tab) with **Fabric IQ (OneLake Catalog)** selected; the deprecated Fabric Data Agent tile is greyed out. |
+| `challenge-01-playground.png` | 1 | Playground answer to the heatwave scenario: cited web sources, Fabric stock numbers and a demand assessment, with `inventoryhackagent` and `Web search` chips. |
+| `challenge-02-reuse-connection.png` | 2 | The **Select a tool** dialog showing the existing `inventoryhackagent` connection under **Configured** (Challenges 3 and 4). |
+| `challenge-02-recommendation.png` | 2 | Reorder **recommendation table** (SKU / Location / Current Stock / Suggested Reorder Qty / Priority), all rows **CRITICAL**. |
+| `challenge-02-trace.png` | 2 | The **Traces** tab's trace detail: an **Invoke Agent** span with its **Execute Tool** (Fabric) and **Chat** spans, and **Input + Output**. |
 | `challenge-03-approval-flow.png` | 3 | The `MODIFY 1 50` → `YES` approval exchange and the simulated submission confirmation. |
-| `challenge-03-trace.png` | 3 | Trace of the approval run: model calls plus the Fabric unit-cost lookup across propose → MODIFY → YES. |
+| `challenge-03-trace.png` | 3 | The conversation trace for the approval run: three **Invoke Agent** spans, with the Fabric unit-cost lookup only in the first. |
 | `challenge-04-orchestrator.png` | 4 *(stretch)* | The `inventory-planning-workflow` canvas: Start → demand-sensing → inventory-optimisation → replenishment-action. |
 | `challenge-04-teams.png` | 4 *(stretch)* | The workflow's **Publish** menu open on **Teams & Microsoft 365 Copilot** — the "what's next" showcase entry point. |

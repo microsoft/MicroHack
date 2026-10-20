@@ -82,11 +82,37 @@ Hosted lab automation grants participants access to shared LocalBox resources, *
 
 #### Defender for Servers readiness (organizer)
 
+Complete these checks on **every event subscription** before attendees arrive.
+Hosted Console setup enables and reads back **Defender for Servers P2** and
+**Endpoint protection**, and grants participants Security Reader access. For
+manual/BYOS setup, an authorized subscription administrator enables the approved
+plan and integration using the steps below. In both paths, verify actual onboarding
+of a test participant VM; subscription configuration alone is not exercise readiness.
+
 1. Confirm the Defender for Servers plan approved for the event, including its subscription scope and charges
 2. As an authorized subscription administrator, open **Microsoft Defender for Cloud -> Environment settings** and select the lab subscription
 3. Under **Defender plans**, enable **Servers** with the approved plan if it is not already enabled, and save the changes
-4. Verify that the [Defender for Endpoint integration](https://learn.microsoft.com/azure/defender-for-cloud/enable-defender-for-endpoint) is enabled and that required onboarding settings and extensions can apply to the participant VMs
+4. Open **Settings & monitoring** for Servers and verify **Endpoint protection** is **On**. If enabling it, select **Continue**, then **Save** on the Defender plans page. This [Defender for Endpoint integration](https://learn.microsoft.com/azure/defender-for-cloud/enable-defender-for-endpoint) is separate from the Servers plan status; verify it even when the plan is already enabled.
 5. Verify that participants have **Security Reader** access to review coverage and recommendations. Students verify protection on their own VM; subscription-level plan changes remain an organizer responsibility
+
+For a read-only CLI check, use the intended event subscription explicitly:
+
+```bash
+SUBSCRIPTION_ID='<event-subscription-id>'
+az rest --method get \
+  --url "https://management.azure.com/subscriptions/${SUBSCRIPTION_ID}/providers/Microsoft.Security/pricings/VirtualMachines?api-version=2024-01-01" \
+  --query 'properties.{tier:pricingTier,plan:subPlan}'
+az rest --method get \
+  --url "https://management.azure.com/subscriptions/${SUBSCRIPTION_ID}/providers/Microsoft.Security/settings/WDATP?api-version=2021-06-01" \
+  --query 'properties.enabled'
+```
+
+For hosted Console labs, expect `Standard` / `P2` and `true` for `WDATP`.
+For manual labs, compare the returned plan with the approved plan. A missing setting
+or a failed query is not proof that integration is enabled. These are
+subscription-configuration checks only: verify `MDE.Windows` extension success
+and actual device onboarding on the test VM below. Allow for onboarding delays;
+do not repeatedly toggle integration to force deployment.
 
 ### Step 6: Test the Environment
 

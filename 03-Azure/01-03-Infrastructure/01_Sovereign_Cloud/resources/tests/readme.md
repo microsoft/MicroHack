@@ -43,6 +43,20 @@ exception while retaining the four European regions. These checks make no
 Azure changes; a fresh Console deployment and participant VM creation remain
 required to validate regional service availability and effective inherited policies.
 
+## Hosted Defender unit tests
+
+Run `Invoke-Pester ./hosted-defender.tests.ps1 -Output Detailed` for the focused
+offline suite. It mocks Azure REST calls and covers Free/P1 to P2 setup, Endpoint
+protection, subscription-context guards, preservation of existing pricing settings,
+reruns, authorization/HTTP errors, malformed responses, independent read-back,
+bounded propagation and shared-hook wiring. These tests do not enable paid plans.
+
+The Endpoint protection API was tested off/on in an authorized test subscription
+on 2026-10-19 and restored to enabled, without changing its existing P1 plan.
+That does not validate this new P2 automation live. A fresh Console deployment
+must verify P2 and Endpoint protection, followed by a normal participant login,
+VM onboarding and Challenge 1 modify-policy identity/RBAC/remediation testing.
+
 ## Hosted tag-policy unit tests
 
 From this directory, run `Invoke-Pester ./hosted-tag-policy.tests.ps1 -Output Detailed`. These offline tests mock all Azure and Console commands. They cover hosted-only wiring, subscription targeting, tag-policy propagation, both tag values on resources and resource groups, preservation of unrelated tags, bounded failure, and temporary probe cleanup. Compile the initiative separately with `az bicep build --file ../../labautomation/infra/hosted-tag-policy.bicep --stdout`.

@@ -7,7 +7,8 @@ required Azure resource providers. It ensures one preferred region has the VM
 SKUs and compute quota required by the subscription's participant count.
 It also submits one shared LocalBox environment per subscription for Challenge 6.
 For Microsoft-hosted environments only: assigns and verifies the MCAPS control-tag
-initiative before deploying resources. Do not use this hook for BYOS setup.
+initiative and enables paid Defender for Servers P2 with Endpoint protection before
+deploying resources. Do not use this hook for BYOS setup.
 #>
 param(
     [Parameter(Mandatory=$true)]
@@ -23,6 +24,7 @@ param(
 . (Join-Path $PSScriptRoot 'quota-helpers.ps1')
 . (Join-Path $PSScriptRoot 'localbox-credentials.ps1')
 . (Join-Path $PSScriptRoot 'hosted-tag-policy.ps1')
+. (Join-Path $PSScriptRoot 'hosted-defender.ps1')
 
 Get-LocalBoxConsoleGroupCredential
 
@@ -155,6 +157,7 @@ Set-MhhConfidentialComputeSelection -SubscriptionId $SubscriptionId -Candidate $
 Write-Host "Selected $($selectedCandidate.VmSize) in $($selectedCandidate.Location); compute SKUs and quotas are ready for $participantCount participants." -ForegroundColor Green
 
 Initialize-MhhHostedTagPolicy -SubscriptionId $SubscriptionId -Location $selectedCandidate.Location
+Initialize-MhhHostedDefender -SubscriptionId $SubscriptionId
 
 $localBoxResourceGroupName = 'rg-localbox-shared'
 $localBoxLocations = @(

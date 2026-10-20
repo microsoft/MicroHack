@@ -20,7 +20,7 @@ Use your [Sovereign Cloud Codespace](https://github.com/microsoft/MicroHack/blob
 - **Reader** and **Azure Stack HCI VM Contributor** role permissions on the resource group containing the shared LocalBox resources
 - Your assigned resource group (for example, `labuser-XX`) with permission to create and manage your VM and its extensions and assess updates. Hosted labs grant **Owner** on your own resource group
 - **Security Reader** access at subscription scope to review Defender for Cloud coverage and recommendations
-- Defender for Servers enabled by the organizer on the lab subscription, using an approved plan and the required Defender for Endpoint integration
+- Defender for Servers and Endpoint protection enabled on the lab subscription (P2 is configured by hosted Console setup; manual labs use the organizer-approved plan)
 - A guest network with a valid IP address, working DNS, and outbound access to the required Azure Arc, Defender, and configured Windows update-source endpoints
 - For Task 5, the shared `localbox-aks` cluster in `rg-localbox-shared`, with Microsoft Entra authentication, Kubernetes RBAC, and organizer-prepared MetalLB networking
 - Membership in the cluster's configured Microsoft Entra administrator group, supplied through the workshop Console, and the **Azure Arc Enabled Kubernetes Cluster User Role** already assigned by the organizer for Cluster Connect. These are separate prerequisites; ask the facilitator to verify either if access fails
@@ -202,7 +202,7 @@ The screenshots in Tasks 3 and 4 use `labuser23-vm-01` in resource group `rg-lab
 1. Navigate to **Microsoft Defender for Cloud** in the Azure Portal
 2. Open **Inventory** and filter by your subscription and assigned resource group
 3. Search for `labuserXX-vm-01` (using your own suffix). Match its resource ID to the VM recorded in Task 2, rather than selecting a shared machine with a similar name
-4. Open the resource details and review its Defender for Servers coverage and onboarding status. The organizer should already have enabled the approved Servers plan and Defender for Endpoint integration
+4. Open the resource details and review its Defender for Servers coverage and onboarding status. Hosted Console setup enables Servers P2 and Endpoint protection; manual labs require the organizer to enable the approved plan and integration
 
 You can also open your VM resource and select **Settings -> Security** to see its **Microsoft Defender for Servers** status, as illustrated in Task 3.2. The **On** indicator shows the displayed plan status; it does not by itself confirm that Defender for Endpoint onboarding has completed.
 
@@ -214,7 +214,7 @@ Select the subscription and review **Defender plans**, including the **Servers**
 
 ![Subscription Defender plans showing Servers Plan 2 and Full monitoring coverage](./images/dfc_03.png)
 
-The example subscription uses **Servers Plan 2** with **Full** monitoring coverage. Your lab's approved plan may differ. These subscription-level settings are context, not evidence that your individual VM has completed onboarding.
+The example subscription uses **Servers Plan 2** with **Full** monitoring coverage. Your lab's approved plan may differ. Ask the facilitator to confirm **Settings & monitoring > Endpoint protection** is **On**, even if the Servers plan is enabled. These subscription-level settings are context, not evidence that your individual VM has completed onboarding.
 
 > [!NOTE]
 > A newly created VM can take time to appear and complete onboarding. If it is missing, first recheck **Guest management: Enabled (Connected)** and the selected subscription/resource group, then refresh Inventory. Ask the facilitator to check plan coverage and extension onboarding if it remains missing or unprotected. An Inventory entry alone does not prove that Defender for Servers protection is active. Do not enable a paid subscription-level plan yourself in a hosted lab.

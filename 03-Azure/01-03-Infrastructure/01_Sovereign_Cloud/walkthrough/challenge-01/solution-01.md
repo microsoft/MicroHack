@@ -228,6 +228,9 @@ az policy assignment create \
 ### Step 1: Assign the "Require a tag and its value" Policy
 
 This policy requires that resources have a specific tag with a specific value.
+It uses **deny**, not **modify**: no managed identity or remediation task is
+available for this assignment. To add missing tags to existing resources, use
+the separate modify policy in **Task 10**.
 
 **Policy Definition ID:**
 
@@ -918,6 +921,15 @@ Verify all your Tasks 2-5 assignments show `DoNotEnforce`, and allow propagation
 - **Modify**: Changes resource properties (e.g., adds tags)
 - **Remediation Task**: A job that applies DINE or Modify effects to existing resources
 - **Managed Identity**: Required for remediation tasks to have permissions to modify resources
+
+If **Remediate** is unavailable, first check the assigned definition: Task 3's
+**Require Data Classification Tag** policy uses **deny** and cannot be remediated.
+Select **Add DataClassification Tag with Remediation**, created below, instead.
+For that modify assignment, verify both its managed identity and the identity's
+Contributor role on your resource group. Creating the identity and granting it
+access are separate operations; Resource Policy Contributor alone cannot grant
+roles. Ask the facilitator to check your resource-group Owner access if the role
+assignment fails; subscription-level Owner is not needed for this RG-scoped task.
 
 ### Before Remediation: Create an Untagged Test Resource
 

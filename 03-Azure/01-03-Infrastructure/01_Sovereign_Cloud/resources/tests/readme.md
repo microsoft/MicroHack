@@ -53,9 +53,36 @@ bounded propagation and shared-hook wiring. These tests do not enable paid plans
 
 The Endpoint protection API was tested off/on in an authorized test subscription
 on 2026-10-19 and restored to enabled, without changing its existing P1 plan.
-That does not validate this new P2 automation live. A fresh Console deployment
-must verify P2 and Endpoint protection, followed by a normal participant login,
-VM onboarding and Challenge 1 modify-policy identity/RBAC/remediation testing.
+On 2026-10-20, after a successful fresh Console deployment, the signed-in
+participant `labuser-0007` independently read `Standard` / `P2` and
+`WDATP.properties.enabled=true` in `traininglab-57`. No Defender settings were
+changed during verification. Individual VM extension/device onboarding remains
+a separate acceptance check.
+
+### Participant policy-permission validation
+
+The same participant had Owner on `rg-labuser-0007` and subscription-level
+Resource Policy Contributor and Security Reader, without subscription Owner or
+User Access Administrator. Using that account, the live test successfully:
+
+- Created a subscription-level custom modify definition and an RG-scoped assignment
+  with a system-assigned managed identity.
+- Granted that identity Contributor on the participant RG.
+- Remediated a pre-existing empty storage account and independently read back
+  `DataClassification=Sovereign`, preserving its other tags. The test definition
+  restricted modification to that exact storage account, not existing lab resources.
+
+The initial `ReEvaluateCompliance` task remained in `Evaluating` during observation,
+even after the account appeared as NonCompliant. It was canceled and its canceled
+state confirmed before retrying with `ExistingNonCompliant`. The retry succeeded
+with one successful deployment and zero failures. This verifies the participant
+permissions and actual remediation, not completion of the original evaluation task.
+
+The test account, both remediation tasks, assignment, custom definition and
+identity role assignment were removed afterward; existing lab resources were
+preserved. The Task 3 built-in require-tag policy was separately confirmed to use
+`deny`, which does not support automatic remediation. These findings do not
+establish the historical assignment or permissions in `traininglab-11`.
 
 ## Hosted tag-policy unit tests
 

@@ -117,6 +117,7 @@ Everything so far lives in the Foundry portal — great for builders, but the **
 | The replenishment node never stops looping | The **Loop condition** `Find` is **case-sensitive** — keep the Challenge 4 confirmation wording (`submitted to ERP`, `Order cancelled`) exactly. |
 | A node doesn't receive the previous agent's output | Set **Save agent output message as** on the upstream node and reference that variable in the next node's **Input message**. |
 | The purchase order shows **$20** unit costs | That is the fallback: the replenishment agent skipped the Fabric cost lookup. Reply `NO`, then run the workflow again in a **new** conversation. The costs should be $95 (P004), $140 (P005) and $85 (P006). |
+| The replenishment node asks you to paste a table or SKU data instead of presenting a purchase order | An earlier node returned no usable recommendation. Run the workflow again in a **new** conversation, and name the product as in step 2 (*Include Leaf Blower X2 (P004) at Seattle and Portland*). |
 | The visual designer isn't available | Do the **Part D** evaluation bonus instead, or export the workflow **YAML** and run it as a hosted agent (see Learning resources). |
 
 ## 🚀 Go further

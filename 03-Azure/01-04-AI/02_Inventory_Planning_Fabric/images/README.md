@@ -4,7 +4,7 @@ This folder holds the screenshots embedded throughout the challenge guides and w
 
 > **Model name in captures is illustrative.** Where a screenshot shows a selected chat model (e.g. `gpt-4o-mini` or `gpt-5.4-mini`), that name reflects only what was deployed when the capture was taken. The model is **swappable** — attendees use whatever their facilitator provisioned. You do **not** need to re-shoot screenshots when the deployed model changes; challenge-01 tells attendees this explicitly.
 
-> **Portal UI captures pending re-shoot.** The Fabric/Foundry portals changed after some captures were taken; the guide text is already updated for the current UI. Re-capture when convenient: the Data Agent **Settings → Model Context Protocol → MCP server URL** page (replaces the retired *Publishing → Published URL*; used by `challenge-00-agent-settings.png`, `challenge-00-agent-url.png`, `challenge-00-agent-ids.png`) and the agent **Traces → Response view** (`challenge-02-trace.png`, `challenge-03-trace.png`).
+> **Portal UI captures pending re-shoot.** The Fabric/Foundry portals changed after some captures were taken; the guide text is already updated for the current UI. Re-capture when convenient: the Data Agent **Settings → Model Context Protocol → MCP server URL** page (replaces the retired *Publishing → Published URL*; used by `challenge-00-agent-settings.png`, `challenge-00-agent-url.png`, `challenge-00-agent-ids.png`). The Foundry captures for Challenges 2-4 (Fabric IQ tool, recommendation, approval flow and traces) were re-taken in October 2026.
 
 | Filename | Challenge | Shows |
 |----------|-----------|-------|

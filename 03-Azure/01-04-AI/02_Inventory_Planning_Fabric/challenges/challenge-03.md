@@ -32,7 +32,7 @@ Your Inventory Optimisation Agent answers these questions by querying the Fabric
    description of the affected product categories or SKUs. Your job is to produce a
    concrete reorder recommendation.
 
-   IMPORTANT - tool use: You have a Fabric Data Agent tool connected to the governed Zava
+   IMPORTANT - tool use: Fabric IQ connects inventory-hack-agent to the governed Zava
    inventory data (Inventory, Products, Stores, DemandHistory, Suppliers, ReplenishmentOrders).
    For ANY inventory number - stock level, reorder point, safety stock, average daily sales -
    you MUST call the Fabric Data Agent and answer from its result. Never answer from memory
@@ -59,8 +59,10 @@ Your Inventory Optimisation Agent answers these questions by querying the Fabric
    If you cannot find a SKU in the data, say so clearly - do not invent numbers.
    ```
 
-5. Add the **Fabric Data Agent** tool and select the existing **`inventory-hack-agent`** connection (created in Challenge 2).
-6. **Remove the Web Search tool.** New prompt agents ship with **Web Search** attached by default, and `gpt-5.4-mini` will happily reach for it instead of the governed data. Under **Tools**, delete **Web Search** so the **only** tool is the Fabric Data Agent — this agent works from internal data only.
+5. Add **Fabric IQ** by **reusing the connection you made in Challenge 2**: under **Tools** select **Add → Add tools**, and on the **Configured** tab choose the existing **`inventoryhackagent`** tile, then **Add tool**. It points to your published `inventory-hack-agent`, so you don't need to browse the catalog again. Do not use the deprecated **Fabric Data Agent** tool.
+
+   ![The Select a tool dialog with the existing inventoryhackagent connection listed under Configured](../images/challenge-02-reuse-connection.png)
+6. **Remove the Web Search tool.** New prompt agents ship with **Web Search** attached by default, and `gpt-5.4-mini` will happily reach for it instead of the governed data. Under **Tools**, delete **Web Search** so the **only** tool is Fabric IQ — this agent works from internal data only.
 7. Click **Save**.
 
 ### Part B — Run the agent (15 min)
@@ -94,18 +96,18 @@ Your Inventory Optimisation Agent answers these questions by querying the Fabric
 > [!IMPORTANT]
 > This is the most important part of the challenge. Understanding what an agent did — and why — is essential for building trust with stakeholders and catching errors before they reach production.
 
-1. Open the `inventory-optimisation-agent` and select **Traces → Response view**. (In the current Foundry portal, tracing lives on the agent as **Traces** — there is no top-level *Tracing* menu.)
-2. Find the most recent run of `inventory-optimisation-agent`.
-3. Open the trace and locate:
-   - The **model call** — what instructions and context were sent to gpt-5.4-mini?
-   - The **tool call** — what exact NL query was sent to the Fabric Data Agent?
-   - The **tool response** — what data did Fabric return?
-   - The **final generation** — how did the model synthesise the data into the recommendation?
+1. Open the `inventory-optimisation-agent` and select the **Traces** tab (next to **Playground** and **Details**). The **Trace view** lists each run with its duration, tokens, estimated cost and agent version.
+2. Select the **Trace ID** of the most recent run.
+3. In the **Trajectories** tab, expand the span tree and locate:
+   - The **model call**: the `Chat` span. Select it to see what instructions and context were sent to gpt-5.4-mini.
+   - The **tool call**: the `Execute Tool` span (`mcp_inventoryhackagent.DataAgent_inventory_hack_agent`). Select it to see the exact natural-language query sent to the Fabric Data Agent.
+   - The **tool response**: the same span. Select **Input + Output** on the right to see what data Fabric returned.
+   - The **final generation**: the `Invoke Agent` span's output, which shows how the model turned the data into the recommendation.
 
-   ![Expanded trace view showing the model call, Fabric tool call, tool response, and final generation spans](../images/challenge-02-trace.png)
+   ![A trace showing the Invoke Agent span with its Execute Tool and Chat spans, and the Input + Output panel with the agent's final answer](../images/challenge-02-trace.png)
 
    > [!NOTE]
-   > The **Traces → Response view** on the agent gives the full span tree shown above. The quick **Traces** link at the bottom of a playground chat opens a lighter, differently-laid-out view of the same run — either works, but the Response view is the one this challenge describes.
+   > The quick **Traces** link under an answer in the playground opens the same viewer as a popup for the whole conversation, with one **Invoke Agent** span per question. The **Traces** tab shows one run at a time. Either works.
 4. Answer these questions by reading the trace:
    - Did the agent query Fabric once or multiple times? Why?
    - Was the reorder quantity calculation visible in the trace?
@@ -113,7 +115,7 @@ Your Inventory Optimisation Agent answers these questions by querying the Fabric
 
 ## 🏁 Success criteria
 
-- [ ] The `inventory-optimisation-agent` prompt agent exists with only the Fabric Data Agent tool (no Web Search).
+- [ ] The `inventory-optimisation-agent` prompt agent exists with only the Fabric IQ tool (no Web Search).
 - [ ] A test run returns a recommendation table with at least one CRITICAL flagged item.
 - [ ] You have opened the trace for your run and can identify the model call, tool call, tool response, and final generation steps.
 - [ ] You can explain, by pointing to the trace, why the agent made the recommendation it did.

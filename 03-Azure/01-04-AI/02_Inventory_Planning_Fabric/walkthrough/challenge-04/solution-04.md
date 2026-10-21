@@ -12,7 +12,7 @@ Build the Replenishment Action Agent, implement the human approval loop, and tra
 
 ### Tools — one tool, and remove the default Web Search
 
-This agent needs **only the Fabric Data Agent tool** (to look up unit costs from the `Products` table). New prompt agents ship with **Web Search attached by default** — **remove it**, or `gpt-5.4-mini` will reach for the web instead of the governed cost data. After configuring, confirm the Fabric Data Agent is the only tool listed.
+This agent needs **only the Fabric IQ tool** (to look up unit costs from the `Products` table). Reuse the `inventoryhackagent` connection from Challenge 2 (**Tools → Add → Add tools → Configured**). New prompt agents may ship with **Web Search attached by default** — **remove it**, or `gpt-5.4-mini` will reach for the web instead of the governed cost data. After configuring, confirm Fabric IQ is the only tool listed.
 
 ### Simulated submission (no function tool)
 
@@ -31,16 +31,20 @@ If the agent skips the re-presentation, add to the instructions: *"After any MOD
 
 ### Trace — what the full cycle looks like
 
+In the agent's **Traces** tab (or the playground's **Traces** link), one conversation shows one **Invoke Agent** span per message:
+
 ```
-run (challenge 3 approval)
-├── model_call (format PO proposal from recommendation)
-│   └── tool_call: Fabric Data Agent (unit-cost lookup from Products)
-├── model_call (present proposal + ask for approval)
-│   → user replies: MODIFY 1 50
-├── model_call (update line 1, recalculate, re-present)
-│   → user replies: YES
-└── model_call (simulated confirmation: "✅ Purchase order PO-... submitted")
+Conversation
+├── Invoke Agent (first message: the recommendation table)
+│   ├── Execute Tool: Fabric IQ (unit-cost lookup from Products)
+│   └── Chat (present proposal + ask for approval)
+├── Invoke Agent (user replies: MODIFY 1 50)
+│   └── Chat (update line 1, recalculate, re-present)
+└── Invoke Agent (user replies: YES)
+    └── Chat (simulated confirmation: "✅ Purchase order PO-... submitted")
 ```
+
+Only the first turn calls Fabric, because the later turns reuse the costs the agent already has.
 
 ### Where does the human add value?
 

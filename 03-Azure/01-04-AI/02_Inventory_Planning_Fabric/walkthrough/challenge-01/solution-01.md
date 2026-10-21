@@ -28,7 +28,7 @@ Understand the inventory scenario, provision your own Fabric workspace + Data Ag
 2. Select your project — in a shared tenant, match the **`FoundryProjectEndpoint`** from your lab dashboard (Credentials tab) to the project's **Parent resource** to be sure it's yours.
 3. Open your **model deployments** → confirm `gpt-5.4-mini` is listed with status **Succeeded**.
 4. Open a **deployed model → Playground** → send "Hello" → confirm a response is returned. (The current portal opens the Playground from a model or agent, not a top-level *Agents → Playground* menu.)
-5. You attach the **Fabric Data Agent** as a *tool* on each agent you build — the `inventory-hack-agent` connection is created the first time (Challenge 2) via **Tools → Add → Fabric Data Agent**, using the **Workspace ID and Agent ID your setup notebook printed** in Challenge 1. No standalone connection page is needed.
+5. You attach your published Data Agent as a *tool* on each agent you build, through **Tools → Add → Add tools → Fabric IQ (OneLake Catalog)**. The `inventoryhackagent` connection is created the first time (Challenge 2); later agents reuse it. You pick the agent by name, so the Workspace ID and Agent ID are only for diagnostics. No standalone connection page is needed.
 
 ### Provision your Fabric workspace + Data Agent (Challenge 1 Task 3)
 
@@ -36,7 +36,7 @@ Understand the inventory scenario, provision your own Fabric workspace + Data Ag
 2. **Create the Lakehouse.** **+ New item → Lakehouse**, named exactly **`InventoryLakehouse`**.
 3. **Import + attach.** Download **`Setup-InventoryDataAgent.ipynb`** from the repo's **`setup/`** folder (or your facilitator's link), then **Import → Notebook → From this computer → Upload** in the workspace toolbar. Open it and, in the **Explorer**, **Add data items → From OneLake catalog → `InventoryLakehouse`** as the **default** — if names collide, pick the one whose **Location** is your `inventory-hack-…` workspace (the write cells fail without a default Lakehouse).
 4. **Run all** (~5–10 min). The kernel restarts once after the `%pip` cell — expected. It writes 7 tables and publishes `inventory-hack-agent`.
-5. Copy the **Workspace ID** and **Agent ID** the final cell prints — you'll use them in Challenge 2.
+5. Copy the **Workspace ID** and **Agent ID** the final cell prints for diagnostics. You won't paste them in Challenge 2, because you select the agent by name through Fabric IQ.
 
 **Common stumbles:** capacity not in the dropdown (paused, or wrong signed-in user) · table-write cells fail (Lakehouse not attached as default) · Data Agent tool missing later in Foundry (capacity paused, or the notebook didn't finish publishing).
 

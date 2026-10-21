@@ -49,7 +49,7 @@ The data lives in **Microsoft Fabric** (a governed Lakehouse with inventory, dem
      ```text
      What can you do?
      ```
-   - You will inspect agent decisions in Challenges 3 and 4 via **Traces → Response view** on an agent (not a top-level *Tracing* menu).
+   - You will inspect agent decisions in Challenges 3 and 4 in the agent's **Traces** tab (not a top-level *Tracing* menu).
 
    ![Models and endpoints view in the Foundry portal showing gpt-5.4-mini deployed with status Succeeded](../images/challenge-00-model-deployments.png)
 
@@ -172,7 +172,7 @@ The data lives in **Microsoft Fabric** (a governed Lakehouse with inventory, dem
    - **Workspace ID** — the value between `/workspaces/` and `/dataagents/`
    - **Agent ID** — the value between `/dataagents/` and `/agent`
 
-   You paste both IDs into the Fabric Data Agent tool in Challenge 2.
+   Keep both IDs for diagnostics. In Challenge 2 you select your published `inventory-hack-agent` by name through **Fabric IQ**, so you don't paste them anywhere.
 
    ![MCP server URL with the Workspace ID and Agent ID segments identified](../images/challenge-00-agent-ids.png)
 
@@ -210,7 +210,7 @@ The data lives in **Microsoft Fabric** (a governed Lakehouse with inventory, dem
    > 2. Then **either** re-run the notebook's publish cell (it's idempotent), **or** open the **`inventory-hack-agent`** data agent → tick **all 7 tables** in the **Explorer** (left pane) → **Publish**.
 
    **d. Copy your two IDs.**
-   When it finishes, the **last cell prints your Workspace ID and Agent ID**. Note both — you paste them into the Fabric Data Agent tool in Challenge 2.
+   When it finishes, the **last cell prints your Workspace ID and Agent ID**. Note both for diagnostics. Challenge 2 selects the published item by name through **Fabric IQ**, so you don't paste them anywhere.
 
    ![Final notebook cell output printing the Workspace ID and Data Agent ID](../images/challenge-00-notebook-ids.png)
 
@@ -229,10 +229,9 @@ The data lives in **Microsoft Fabric** (a governed Lakehouse with inventory, dem
    |-------|---------------------|
    | Workspace ID | printed by the notebook's last cell (also in the workspace URL) |
    | Artifact / Data Agent ID | printed by the notebook's last cell |
-   | Connection name | `inventory-hack-agent` |
 
    > [!NOTE]
-   > You attach the **Fabric Data Agent** as a *tool* on each Foundry agent, and the connection is created the **first time** you add it (Challenge 2). After that you simply **select** it. It points your Foundry agents at the data agent on top of **your** inventory Lakehouse.
+   > You attach your published Data Agent as a *tool* on each Foundry agent through **Fabric IQ (OneLake Catalog)**. The connection is created the **first time** you add it (Challenge 2). After that you simply **select** it. It points your Foundry agents at the data agent on top of **your** inventory Lakehouse. The IDs above are for diagnostics only, because you pick the agent by name.
 
 5. **Understand the three-agent pattern.**
    Draw (on paper or a whiteboard) the flow:
@@ -257,7 +256,7 @@ The data lives in **Microsoft Fabric** (a governed Lakehouse with inventory, dem
 
 - [ ] You can name the key inventory tables and explain what each one is used for.
 - [ ] You have confirmed the `gpt-5.4-mini` model is deployed in your Foundry project.
-- [ ] You have created your own Fabric workspace on your Fabric capacity, run the setup notebook, and published your `inventory-hack-agent` Data Agent — and noted its **Workspace ID** and **Agent ID** (used in Challenge 2).
+- [ ] You have created your own Fabric workspace on your Fabric capacity, run the setup notebook, and published your `inventory-hack-agent` Data Agent — and noted its **Workspace ID** and **Agent ID** (for diagnostics; Challenge 2 selects the agent by name through Fabric IQ).
 - [ ] You can describe, in one sentence each, what each of the three agents does.
 - [ ] You can explain why combining web signals with governed data produces better decisions than either source alone.
 

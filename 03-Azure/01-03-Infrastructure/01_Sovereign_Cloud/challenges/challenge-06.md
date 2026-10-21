@@ -19,6 +19,16 @@ Before starting, return your Challenge 1 exercise policies to **DoNotEnforce**. 
 * Verify Microsoft Defender for Cloud coverage and review security recommendations for the VM you provisioned
 * Use Azure Update Manager to assess OS updates on the VM you provisioned
 
+MDE onboarding can take up to an hour after Arc connects when Endpoint integration
+is already established. Continue with Update Manager and the AKS tasks while waiting.
+Recommendations may appear later; you do not need a nonzero count to complete the
+challenge. Record pending assessment separately from confirmed protection.
+
+If your facilitator provides `sov-ref-vm`, inspect its existing Defender and Update
+Manager results while your own VM onboards. **Do not modify, run assessments on,
+patch, restart or delete this shared VM.** Still complete the deployment and
+assessment steps on your own VM, and record which VM each observation describes.
+
 ### Review the AKS load balancer and deploy an app
 
 * Review the preinstalled **MetalLB load balancer**: check that it is healthy and understand how it assigns IP addresses to applications
@@ -34,7 +44,7 @@ In a real deployment, clients would reach the app through its MetalLB IP address
 
 * You can navigate and understand the LocalBox hybrid environment in the Azure Portal
 * You have deployed your own VM on Azure Local via the Azure Portal and verified that guest management is Enabled (Connected)
-* You have verified Defender for Servers coverage for your VM and reviewed its available recommendations, or identified that its assessment is still pending
+* You have verified Defender for Servers plan coverage, recorded MDE extension/onboarding status separately, and reviewed available recommendations or recorded that assessment is pending/not yet confirmed
 * You have completed an Azure Update Manager assessment for your VM and reviewed the results, including when no updates are pending
 * You can explain MetalLB's role and have checked that the preinstalled load balancer is healthy
 * Your sample application runs in your team's namespace and has a load-balancer IP address

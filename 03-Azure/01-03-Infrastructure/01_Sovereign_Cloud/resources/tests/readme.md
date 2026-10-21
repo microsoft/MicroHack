@@ -43,6 +43,44 @@ exception while retaining the four European regions. These checks make no
 Azure changes; a fresh Console deployment and participant VM creation remain
 required to validate regional service availability and effective inherited policies.
 
+## Reference-VM checks
+
+Run `Invoke-Pester ./prepare-localbox.tests.ps1 -Output Detailed` for the offline
+preparation and capacity regression suite. Reference-VM tests cover default inclusion, explicit opt-out and WhatIf,
+the 15-character Windows name limit, separate credentials, resource reuse and
+conflicts, periodic assessment configuration, and pending/failed MDE status.
+The shared VM submission tests check secure parameter-file transport and cleanup,
+error redaction, and an ARM preview restricted to three new VM resources.
+
+When the preparation manifest contains `ReferenceVm`, the live LocalBox health
+suite additionally checks the expected machine/NIC/instance, running state, Arc
+connection, MDE installation and periodic assessment mode. Older manifests without
+that optional entry retain the normal test set. These checks do **not** verify
+ongoing Defender device reporting or completed Defender/Update Manager results;
+perform the [organizer reference readiness checks](../localbox/readme.md#reference-readiness-and-participant-use)
+before the workshop. The new reference-VM path still requires a live Windows/LocalBox
+integration test; offline mocks are not deployment evidence.
+
+## Preparation recovery and ordering checks
+
+Default/preflight tests verify that no manual address-reservation switch is
+required for the standard greenfield topology, while configured gateway,
+infrastructure-address, AKS/VIP and VLAN conflicts still stop preparation.
+
+The same offline suite checks the standard nonprompting confirmation impact,
+continued support for explicit `-Confirm`/`-WhatIf`, and safe recovery of matching
+Failed Marketplace images, conflicting-image protection, bounded deletion waits,
+and a single import attempt per run. It executes the preparation workload sequence
+with mocked Azure calls to verify that networks, AKS and MetalLB precede image
+import and the optional reference VM, including when image import fails.
+
+Storage tests verify no repeated disk/partition mutations on a completed rerun,
+resumption of an interrupted partition expansion, and detection of unallocated
+space without calling `Get-PartitionSupportedSize` on an already expanded
+partition. The alignment/GPT allowance is tested at and above 1 MiB. Live
+LocalBox validation is still required for actual Windows storage behavior and
+Marketplace failure recovery.
+
 ## Hosted Defender unit tests
 
 Run `Invoke-Pester ./hosted-defender.tests.ps1 -Output Detailed` for the focused

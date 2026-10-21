@@ -54,7 +54,7 @@ You should also see updated values in the Azure Portal:
 ![Create logical network](./img/add_logical_network_02.jpg)
 5. Enter the following parameter values:
 - **IPv4 address space**: 192.168.200.0 /24 (256 addresses)
-- **IP Pools**: 192.168.200.10 - 192.168.200.199, only after verifying DHCP exclusions and infrastructure reservations; never include the network, broadcast or gateway addresses
+- **IP Pools**: 192.168.200.10 - 192.168.200.199 for the standard greenfield LocalBox configuration. For customized networks, verify DHCP exclusions and infrastructure reservations; never include the network, broadcast or gateway addresses
 - **Default gateway**: 192.168.200.1
 - **DNS Servers**: 192.168.1.254
 - **VLAN ID**: 200
@@ -115,6 +115,8 @@ and actual device onboarding on the test VM below. Allow for onboarding delays;
 do not repeatedly toggle integration to force deployment.
 
 ### Step 6: Test the Environment
+
+The preparation script includes a [reference VM](readme.md#reference-vm) by default; verify its assessment results before the event, or opt out with `-IncludeReferenceVm:$false`. This does not replace the participant-identity test below.
 
 Before participants begin, follow the [Challenge 6 walkthrough](../../walkthrough/challenge-06/solution-06.md) using a normal participant identity:
 

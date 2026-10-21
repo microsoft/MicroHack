@@ -20,6 +20,8 @@ Operations run without confirmation under the default PowerShell preference;
 use Confirm to request prompts or WhatIf to preview changes.
 Assumes the standard greenfield LocalBox network configuration. Configured address
 ranges and known reservations are validated; live DHCP leases are not inspected.
+New image imports resolve latest from this cluster's Edge Marketplace catalog,
+not the Azure Compute catalog; existing working images are reused unchanged.
 Dot-source this file to load its functions without running provisioning.
 #>
 [CmdletBinding(SupportsShouldProcess)]
@@ -489,9 +491,51 @@ function Sync-LocalBoxResource {
     }
 }
 
+function Resolve-LocalBoxImageVersion {
+    param(
+        [Parameter(Mandatory)][string]$ClusterId,
+        [Parameter(Mandatory)][hashtable]$Identifier,
+        [ValidateNotNullOrEmpty()][string]$RequestedVersion = 'latest'
+    )
+    if ($ClusterId -notmatch '^/subscriptions/[^/]+/resourceGroups/[^/]+/providers/Microsoft\.AzureStackHCI/clusters/[^/]+$') {
+        throw 'Image version discovery requires the Azure Local cluster resource ID.'
+    }
+    foreach ($field in @('publisher', 'offer', 'sku')) {
+        if ([string]::IsNullOrWhiteSpace($Identifier[$field])) { throw "Image identifier is missing $field." }
+    }
+    $offerId = [uri]::EscapeDataString("$($Identifier.publisher):$($Identifier.offer)")
+    $offer = Invoke-LocalBoxAz @('rest', '--method', 'get', '--url',
+        "https://management.azure.com$ClusterId/providers/Microsoft.EdgeMarketplace/offers/${offerId}?api-version=2023-08-01")
+    if ($offer.properties.marketplaceSkus -isnot [System.Collections.IList]) {
+        throw 'Edge Marketplace returned no valid SKU catalog for this cluster; no image import or deletion was attempted.'
+    }
+    $skus = @($offer.properties.marketplaceSkus | Where-Object marketplaceSkuId -eq $Identifier.sku)
+    if ($skus.Count -ne 1 -or $skus[0].marketplaceSkuVersions -isnot [System.Collections.IList] -or
+        $skus[0].marketplaceSkuVersions.Count -eq 0) {
+        throw "Edge Marketplace does not advertise one usable version list for SKU '$($Identifier.sku)' on this cluster."
+    }
+    $versions = @($skus[0].marketplaceSkuVersions | ForEach-Object {
+        $parsed = $null
+        if (-not [version]::TryParse($_.name, [ref]$parsed)) { throw 'Edge Marketplace returned an invalid image version.' }
+        [string]$_.name
+    })
+    if ($RequestedVersion -eq 'latest') {
+        $selected = $versions | Sort-Object { [version]$_ } -Descending | Select-Object -First 1
+    }
+    elseif ($RequestedVersion -in $versions) { $selected = $RequestedVersion }
+    else {
+        throw "Image version '$RequestedVersion' is not advertised by this cluster's Edge Marketplace catalog for '$($Identifier.sku)'. Select a listed version or use latest."
+    }
+    Write-Host "Using Edge Marketplace image version $selected for $($Identifier.sku)."
+    return $selected
+}
+
 function Sync-LocalBoxImage {
     [CmdletBinding(SupportsShouldProcess)]
-    param([string]$Id, [hashtable]$Expected, [string[]]$CreateArguments, [int]$TimeoutSeconds = 21600)
+    param(
+        [string]$Id, [hashtable]$Expected, [string[]]$CreateArguments,
+        [Parameter(Mandatory)][string]$ClusterId, [int]$TimeoutSeconds = 21600
+    )
     if ($Id -notmatch '^/subscriptions/([^/]+)/resourceGroups/([^/]+)/providers/Microsoft\.AzureStackHCI/marketplaceGalleryImages/[^/]+$') {
         throw 'Image recovery requires an exact Azure Local Marketplace image resource ID.'
     }
@@ -499,29 +543,37 @@ function Sync-LocalBoxImage {
     $existing = @((Invoke-LocalBoxAz $listArguments) | Where-Object id -ieq $Id)
     if ($existing.Count) {
         $image = Get-LocalBoxResource $Id
-        if ($image.properties.provisioningState -in @('Failed', 'Deleting')) {
-            Assert-LocalBoxProperties $image $Expected
-            if ($image.properties.provisioningState -eq 'Failed') {
-                Write-Warning "Image import failed for $Id. Review its deployment error before retrying; recovery does not fix Marketplace availability or configuration errors."
-                if (-not $PSCmdlet.ShouldProcess($Id, 'Delete matching Failed image and retry import once')) {
-                    if ($WhatIfPreference) { return }
-                    throw 'Failed-image recovery was declined. No image was deleted; preparation cannot continue with this image.'
-                }
-                Invoke-LocalBoxAz @('resource', 'delete', '--ids', $Id, '--api-version', '2024-01-01') -TimeoutSeconds $TimeoutSeconds -NoOutput
+        if ($image.properties.provisioningState -notin @('Failed', 'Deleting')) {
+            return Sync-LocalBoxResource -Id $Id -Expected $Expected -CreateArguments $CreateArguments -TimeoutSeconds $TimeoutSeconds -WhatIf:$WhatIfPreference
+        }
+        Assert-LocalBoxProperties $image $Expected
+    }
+    $requestedVersion = if ($Expected.properties.Contains('version')) { $Expected.properties.version.name } else { 'latest' }
+    $version = Resolve-LocalBoxImageVersion -ClusterId $ClusterId -Identifier $Expected.properties.identifier -RequestedVersion $requestedVersion
+    $createExpected = $Expected.Clone()
+    $createExpected.properties = $Expected.properties.Clone()
+    $createExpected.properties.version = @{ name = $version }
+    if ($existing.Count) {
+        if ($image.properties.provisioningState -eq 'Failed') {
+            Write-Warning "Image import failed for $Id. Retrying with catalog-listed version $version."
+            if (-not $PSCmdlet.ShouldProcess($Id, 'Delete matching Failed image and retry import once')) {
+                if ($WhatIfPreference) { return }
+                throw 'Failed-image recovery was declined. No image was deleted; preparation cannot continue with this image.'
             }
-            if ($WhatIfPreference) {
-                Write-Host "Image deletion is in progress; a real run will wait for removal before importing $Id."
-                return
-            }
-            $deadline = [datetime]::UtcNow.AddSeconds($TimeoutSeconds)
-            while (@((Invoke-LocalBoxAz $listArguments) | Where-Object id -ieq $Id).Count) {
-                if ([datetime]::UtcNow -ge $deadline) { throw "Timed out waiting for image deletion: $Id. No replacement import was started." }
-                Write-Host "Waiting for failed image removal: $Id..."
-                Start-Sleep -Seconds 15
-            }
+            Invoke-LocalBoxAz @('resource', 'delete', '--ids', $Id, '--api-version', '2024-01-01') -TimeoutSeconds $TimeoutSeconds -NoOutput
+        }
+        if ($WhatIfPreference) {
+            Write-Host "Image deletion is in progress; a real run will wait for removal before importing $Id."
+            return
+        }
+        $deadline = [datetime]::UtcNow.AddSeconds($TimeoutSeconds)
+        while (@((Invoke-LocalBoxAz $listArguments) | Where-Object id -ieq $Id).Count) {
+            if ([datetime]::UtcNow -ge $deadline) { throw "Timed out waiting for image deletion: $Id. No replacement import was started." }
+            Write-Host "Waiting for failed image removal: $Id..."
+            Start-Sleep -Seconds 15
         }
     }
-    Sync-LocalBoxResource -Id $Id -Expected $Expected -CreateArguments $CreateArguments -TimeoutSeconds $TimeoutSeconds -WhatIf:$WhatIfPreference
+    Sync-LocalBoxResource -Id $Id -Expected $createExpected -CreateArguments ($CreateArguments + @('--version', $version)) -TimeoutSeconds $TimeoutSeconds -WhatIf:$WhatIfPreference
 }
 
 function Get-LocalBoxMetalLbPlan {
@@ -1013,9 +1065,9 @@ function Invoke-LocalBoxPreparation {
         }
         if ($Settings.ImageVersion -ne 'latest') { $imageExpected.properties.version = @{ name = $Settings.ImageVersion } }
         Write-Host "Preparing VM image $($Settings.ImageName); download can take several hours..."
-        $image = Sync-LocalBoxImage -Id $imageId -Expected $imageExpected -TimeoutSeconds $timeout -CreateArguments (@('stack-hci-vm', 'image', 'create') + $common + @(
+        $image = Sync-LocalBoxImage -Id $imageId -Expected $imageExpected -ClusterId $cluster[0].id -TimeoutSeconds $timeout -CreateArguments (@('stack-hci-vm', 'image', 'create') + $common + @(
             '--name', $Settings.ImageName, '--os-type', 'Windows', '--publisher', 'microsoftwindowsserver', '--offer', 'windowsserver',
-            '--sku', '2025-datacenter-azure-edition-smalldisk', '--version', $Settings.ImageVersion, '--storage-path-id', $storageId))
+            '--sku', '2025-datacenter-azure-edition-smalldisk', '--storage-path-id', $storageId))
         $referenceVm = Sync-LocalBoxReferenceVm -Settings $Settings -Location $location -CustomLocationId $custom.id `
             -ImageId $imageId -NetworkId $networks[0].Id -StorageId $storageId -WhatIf:$WhatIfPreference
         $manifest = @{

@@ -70,7 +70,13 @@ infrastructure-address, AKS/VIP and VLAN conflicts still stop preparation.
 The same offline suite checks the standard nonprompting confirmation impact,
 continued support for explicit `-Confirm`/`-WhatIf`, and safe recovery of matching
 Failed Marketplace images, conflicting-image protection, bounded deletion waits,
-and a single import attempt per run. It executes the preparation workload sequence
+and a single import attempt per run. Image-version tests cover numeric selection
+from the cluster-scoped Edge Marketplace catalog, explicit version validation,
+malformed/unavailable catalogs, discovery before deletion, unchanged reuse of
+working images, and verification of the actual imported version. The resolver was
+also run read-only against the live cluster catalog on 2026-10-21; it selected
+`26100.33438.260905`, while Azure Compute exposed the newer `26100.33650.261013`.
+It executes the preparation workload sequence
 with mocked Azure calls to verify that networks, AKS and MetalLB precede image
 import and the optional reference VM, including when image import fails.
 

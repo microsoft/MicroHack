@@ -1715,6 +1715,62 @@ Describe 'Resource reconciliation' {
     }
 }
 
+Describe 'LocalBox Edge Marketplace image versions' {
+    BeforeEach {
+        $clusterId = '/subscriptions/test/resourceGroups/localbox/providers/Microsoft.AzureStackHCI/clusters/localboxcluster'
+        $identifier = @{ publisher = 'microsoftwindowsserver'; offer = 'windowsserver'; sku = '2025-datacenter-azure-edition-smalldisk' }
+        $sku = @{ marketplaceSkuId = $identifier.sku; marketplaceSkuVersions = @(
+            @{ name = '26100.33222.260810' }, @{ name = '26100.33438.260905' }
+        ) }
+        $catalog = @{ properties = @{ marketplaceSkus = @($sku) } }
+        Mock Invoke-LocalBoxAz { $catalog }
+    }
+    It 'resolves latest from the cluster catalog rather than the newer Azure Compute image' {
+        Resolve-LocalBoxImageVersion $clusterId $identifier | Should -Be '26100.33438.260905'
+        Should -Invoke Invoke-LocalBoxAz -Times 1 -Exactly -ParameterFilter {
+            $Arguments[0] -eq 'rest' -and $Arguments -contains 'get' -and
+            $Arguments -contains "https://management.azure.com$clusterId/providers/Microsoft.EdgeMarketplace/offers/microsoftwindowsserver%3Awindowsserver?api-version=2023-08-01"
+        }
+    }
+    It 'sorts versions numerically rather than lexically or by catalog order' {
+        $sku.marketplaceSkuVersions = @(@{ name = '26100.999.260905' }, @{ name = '26100.1000.260905' })
+        Resolve-LocalBoxImageVersion $clusterId $identifier | Should -Be '26100.1000.260905'
+    }
+    It 'honors an explicit catalog-listed version' {
+        Resolve-LocalBoxImageVersion $clusterId $identifier '26100.33222.260810' | Should -Be '26100.33222.260810'
+    }
+    It 'rejects a version available in Azure Compute but absent from Edge Marketplace' {
+        { Resolve-LocalBoxImageVersion $clusterId $identifier '26100.33650.261013' } | Should -Throw '*not advertised*'
+    }
+    It 'supports deserialized ArrayList catalog collections' {
+        $catalog.properties.marketplaceSkus = [Collections.ArrayList]::new(@($sku))
+        $sku.marketplaceSkuVersions = [Collections.ArrayList]::new(@(@{ name = '26100.33438.260905' }))
+        Resolve-LocalBoxImageVersion $clusterId $identifier | Should -Be '26100.33438.260905'
+    }
+    It 'fails explicitly for unusable catalogs' -TestCases @(
+        @{ Invalid = 'missing catalog' }; @{ Invalid = 'missing SKU' }; @{ Invalid = 'duplicate SKU' }
+        @{ Invalid = 'empty versions' }; @{ Invalid = 'invalid version' }
+    ) {
+        param($Invalid)
+        switch ($Invalid) {
+            'missing catalog' { $catalog.properties.Remove('marketplaceSkus') }
+            'missing SKU' { $sku.marketplaceSkuId = 'different' }
+            'duplicate SKU' { $catalog.properties.marketplaceSkus = @($sku, $sku) }
+            'empty versions' { $sku.marketplaceSkuVersions = @() }
+            'invalid version' { $sku.marketplaceSkuVersions = @(@{ name = 'latest' }) }
+        }
+        { Resolve-LocalBoxImageVersion $clusterId $identifier } | Should -Throw '*Edge Marketplace*'
+    }
+    It 'propagates catalog authorization failures without a fallback version' {
+        Mock Invoke-LocalBoxAz { throw 'AuthorizationFailed' }
+        { Resolve-LocalBoxImageVersion $clusterId $identifier } | Should -Throw '*AuthorizationFailed*'
+    }
+    It 'rejects a wrong resource scope before querying the catalog' {
+        { Resolve-LocalBoxImageVersion '/subscriptions/test/resourceGroups/localbox' $identifier } | Should -Throw '*cluster resource ID*'
+        Should -Invoke Invoke-LocalBoxAz -Times 0
+    }
+}
+
 Describe 'LocalBox failed image recovery' {
     BeforeEach {
         $imageId = '/subscriptions/test/resourceGroups/localbox/providers/Microsoft.AzureStackHCI/marketplaceGalleryImages/windows'
@@ -1723,22 +1779,35 @@ Describe 'LocalBox failed image recovery' {
                 identifier = @{ publisher = 'microsoftwindowsserver'; offer = 'windowsserver'; sku = '2025-datacenter-azure-edition-smalldisk' } } }
         $actual = $expected | ConvertTo-Json -Depth 10 | ConvertFrom-Json -AsHashtable
         $actual.properties.provisioningState = 'Failed'
+        $actual.properties.version = @{ name = '26100.33650.261013' }
         $script:imagePresent = $true
         $createArguments = @('stack-hci-vm', 'image', 'create', '--name', 'windows')
+        $syncArguments = @{
+            Id = $imageId; Expected = $expected; CreateArguments = $createArguments
+            ClusterId = '/subscriptions/test/resourceGroups/localbox/providers/Microsoft.AzureStackHCI/clusters/localboxcluster'
+        }
         Mock Invoke-LocalBoxAz {
             if ($Arguments[1] -eq 'list' -and $script:imagePresent) { @(@{ id = $imageId }) }
             elseif ($Arguments[1] -eq 'delete') { $script:imagePresent = $false }
         }
         Mock Get-LocalBoxResource { $actual }
-        Mock Wait-LocalBoxResource { $expected }
+        Mock Wait-LocalBoxResource {
+            $imported = $expected | ConvertTo-Json -Depth 10 | ConvertFrom-Json -AsHashtable
+            $imported.properties.version = @{ name = '26100.33438.260905' }
+            $imported
+        }
+        Mock Resolve-LocalBoxImageVersion { '26100.33438.260905' }
         Mock Start-Sleep {}
     }
     It 'removes only the matching Failed image, verifies absence and imports once' {
-        Sync-LocalBoxImage $imageId $expected $createArguments -Confirm:$false | Out-Null
+        Sync-LocalBoxImage @syncArguments -Confirm:$false | Out-Null
         Should -Invoke Invoke-LocalBoxAz -Times 1 -Exactly -ParameterFilter {
             $Arguments[1] -eq 'delete' -and $Arguments -contains $imageId -and $Arguments -contains '2024-01-01'
         }
-        Should -Invoke Invoke-LocalBoxAz -Times 1 -Exactly -ParameterFilter { $Arguments[2] -eq 'create' }
+        Should -Invoke Invoke-LocalBoxAz -Times 1 -Exactly -ParameterFilter {
+            $Arguments[2] -eq 'create' -and $Arguments[$Arguments.IndexOf('--version') + 1] -eq '26100.33438.260905'
+        }
+        $expected.properties.Contains('version') | Should -BeFalse
         Should -Invoke Invoke-LocalBoxAz -Times 3 -Exactly -ParameterFilter {
             $Arguments[1] -eq 'list' -and $Arguments -contains 'test' -and $Arguments -contains 'localbox'
         }
@@ -1748,9 +1817,10 @@ Describe 'LocalBox failed image recovery' {
     ) {
         param($State)
         $actual.properties.provisioningState = $State
-        Sync-LocalBoxImage $imageId $expected $createArguments -Confirm:$false | Out-Null
+        Sync-LocalBoxImage @syncArguments -Confirm:$false | Out-Null
         Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments -contains 'delete' -or $Arguments -contains 'create' }
         Should -Invoke Wait-LocalBoxResource -Times 1 -Exactly
+        Should -Invoke Resolve-LocalBoxImageVersion -Times 0
     }
     It 'does not remove conflicting Failed images' -TestCases @(
         @{ Field = 'location' }; @{ Field = 'storage' }; @{ Field = 'custom' }; @{ Field = 'sku' }; @{ Field = 'missing' }
@@ -1763,11 +1833,11 @@ Describe 'LocalBox failed image recovery' {
             'sku' { $actual.properties.identifier.sku = 'different' }
             'missing' { $actual.properties.Remove('identifier') }
         }
-        { Sync-LocalBoxImage $imageId $expected $createArguments -Confirm:$false } | Should -Throw
+        { Sync-LocalBoxImage @syncArguments -Confirm:$false } | Should -Throw
         Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments -contains 'delete' -or $Arguments -contains 'create' }
     }
     It 'does not delete or import a Failed image during WhatIf' {
-        Sync-LocalBoxImage $imageId $expected $createArguments -WhatIf | Should -BeNullOrEmpty
+        Sync-LocalBoxImage @syncArguments -WhatIf | Should -BeNullOrEmpty
         Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments -contains 'delete' -or $Arguments -contains 'create' }
         Should -Invoke Wait-LocalBoxResource -Times 0
     }
@@ -1780,37 +1850,62 @@ Describe 'LocalBox failed image recovery' {
                 if ($script:imageLists -le 2) { @(@{ id = $imageId }) }
             }
         }
-        Sync-LocalBoxImage $imageId $expected $createArguments -Confirm:$false | Out-Null
+        Sync-LocalBoxImage @syncArguments -Confirm:$false | Out-Null
         Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments -contains 'delete' }
         Should -Invoke Invoke-LocalBoxAz -Times 1 -Exactly -ParameterFilter { $Arguments[2] -eq 'create' }
         Should -Invoke Start-Sleep -Times 1 -Exactly
     }
     It 'does not wait for deletion during WhatIf' {
         $actual.properties.provisioningState = 'Deleting'
-        Sync-LocalBoxImage $imageId $expected $createArguments -WhatIf | Should -BeNullOrEmpty
+        Sync-LocalBoxImage @syncArguments -WhatIf | Should -BeNullOrEmpty
         Should -Invoke Start-Sleep -Times 0
         Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments -contains 'delete' -or $Arguments -contains 'create' }
     }
     It 'does not recreate when deletion fails' {
         Mock Invoke-LocalBoxAz { throw 'AuthorizationFailed' } -ParameterFilter { $Arguments[1] -eq 'delete' }
-        { Sync-LocalBoxImage $imageId $expected $createArguments -Confirm:$false } | Should -Throw '*AuthorizationFailed*'
+        { Sync-LocalBoxImage @syncArguments -Confirm:$false } | Should -Throw '*AuthorizationFailed*'
         Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments[2] -eq 'create' }
     }
     It 'bounds deletion waits and does not import over a remaining object' {
         Mock Invoke-LocalBoxAz {} -ParameterFilter { $Arguments[1] -eq 'delete' }
-        { Sync-LocalBoxImage $imageId $expected $createArguments -TimeoutSeconds 0 -Confirm:$false } | Should -Throw '*Timed out waiting for image deletion*'
+        { Sync-LocalBoxImage @syncArguments -TimeoutSeconds 0 -Confirm:$false } | Should -Throw '*Timed out waiting for image deletion*'
         Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments[2] -eq 'create' }
     }
     It 'surfaces a fresh import failure without deleting it or looping on retries' {
         $script:imagePresent = $false
         Mock Invoke-LocalBoxAz { throw 'GenerateTokenFromEdgeMarketplaceServiceFailed: NotFound' } -ParameterFilter { $Arguments[2] -eq 'create' }
-        { Sync-LocalBoxImage $imageId $expected $createArguments -Confirm:$false } | Should -Throw '*GenerateTokenFromEdgeMarketplaceServiceFailed*'
+        { Sync-LocalBoxImage @syncArguments -Confirm:$false } | Should -Throw '*GenerateTokenFromEdgeMarketplaceServiceFailed*'
         Should -Invoke Invoke-LocalBoxAz -Times 1 -Exactly -ParameterFilter { $Arguments[2] -eq 'create' }
         Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments -contains 'delete' }
     }
     It 'refuses recovery for a non-image resource ID' {
-        { Sync-LocalBoxImage '/subscriptions/test/resourceGroups/localbox/providers/Microsoft.AzureStackHCI/logicalNetworks/net' $expected $createArguments } | Should -Throw '*exact Azure Local Marketplace image*'
+        $syncArguments.Id = '/subscriptions/test/resourceGroups/localbox/providers/Microsoft.AzureStackHCI/logicalNetworks/net'
+        { Sync-LocalBoxImage @syncArguments } | Should -Throw '*exact Azure Local Marketplace image*'
         Should -Invoke Invoke-LocalBoxAz -Times 0
+    }
+    It 'preserves the failed image when catalog discovery fails' {
+        Mock Resolve-LocalBoxImageVersion { throw 'Catalog unavailable' }
+        { Sync-LocalBoxImage @syncArguments } | Should -Throw '*Catalog unavailable*'
+        Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments -contains 'delete' -or $Arguments -contains 'create' }
+    }
+    It 'passes an explicit requested version through catalog validation for a new image' {
+        $script:imagePresent = $false
+        $expected.properties.version = @{ name = '26100.33438.260905' }
+        Sync-LocalBoxImage @syncArguments | Out-Null
+        Should -Invoke Resolve-LocalBoxImageVersion -Times 1 -Exactly -ParameterFilter {
+            $RequestedVersion -eq '26100.33438.260905' -and $ClusterId -eq $syncArguments.ClusterId
+        }
+    }
+    It 'resolves a new image during WhatIf without importing it' {
+        $script:imagePresent = $false
+        Sync-LocalBoxImage @syncArguments -WhatIf | Should -BeNullOrEmpty
+        Should -Invoke Resolve-LocalBoxImageVersion -Times 1 -Exactly
+        Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments -contains 'delete' -or $Arguments -contains 'create' }
+        Should -Invoke Wait-LocalBoxResource -Times 0
+    }
+    It 'verifies the imported version rather than accepting a different resolved image' {
+        Mock Wait-LocalBoxResource { $actual }
+        { Sync-LocalBoxImage @syncArguments -Confirm:$false } | Should -Throw '*Conflicting*version.name*'
     }
 }
 
@@ -1828,6 +1923,7 @@ Describe 'LocalBox preparation dependency order' {
             AksClusterName = 'localbox-aks'; NodeCount = 3; NodeVmSize = 'node'; ControlPlaneVmSize = 'control'; SkipAks = $false; IncludeReferenceVm = $true
             KubernetesRuntimeObjectId = '11111111-1111-1111-1111-111111111111' }
         $custom = @{ id = 'custom'; location = 'australiaeast' }
+        $cluster = @(@{ id = "$scope/providers/Microsoft.AzureStackHCI/clusters/localboxcluster" })
         $config = @{ AKSControlPlaneIP = '10.10.0.5' }
         $storageId = 'storage'
         $imageId = 'image'
@@ -1850,6 +1946,9 @@ Describe 'LocalBox preparation dependency order' {
     It 'completes networks, AKS and MetalLB before importing the image and reference VM' {
         & $prepareWorkloads -Confirm:$false
         $events -join ',' | Should -Be 'network:localbox-vm-lnet-vlan200,network:localbox-aks-lnet-vlan110,aks-validate,aks-create,proxy,metallb,image,reference'
+        Should -Invoke Sync-LocalBoxImage -Times 1 -Exactly -ParameterFilter {
+            $ClusterId -eq "$scope/providers/Microsoft.AzureStackHCI/clusters/localboxcluster" -and $CreateArguments -notcontains '--version'
+        }
     }
     It 'preserves completed infrastructure when the late image stage fails and does not start the reference VM' {
         Mock Sync-LocalBoxImage { $events.Add('image-failed'); throw 'Import failed' }

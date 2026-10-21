@@ -278,6 +278,9 @@ resource aiProjectAppInsightsConnection 'Microsoft.CognitiveServices/accounts/pr
 resource gpt5_4MiniDeployment 'Microsoft.CognitiveServices/accounts/deployments@2025-04-01-preview' = {
   parent: aiFoundry
   name: 'gpt-5.4-mini'
+	dependsOn: [
+		aiProjectAppInsightsConnection
+	]
   sku: {
     capacity: 50
     name: 'GlobalStandard'

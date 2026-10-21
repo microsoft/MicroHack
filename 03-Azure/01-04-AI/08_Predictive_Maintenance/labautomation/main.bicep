@@ -256,31 +256,12 @@ resource aiProject 'Microsoft.CognitiveServices/accounts/projects@2025-04-01-pre
   ]
 }
 
-resource aiProjectAppInsightsConnection 'Microsoft.CognitiveServices/accounts/projects/connections@2025-04-01-preview' = {
-  parent: aiProject
-  name: applicationInsightsName
-  properties: {
-    authType: 'ApiKey'
-    category: 'AppInsights'
-    target: applicationInsights.id
-    useWorkspaceManagedIdentity: false
-    isSharedToAll: true
-    credentials: {
-      key: applicationInsights.properties.InstrumentationKey
-    }
-    metadata: {
-      ApiType: 'Azure'
-      ResourceId: applicationInsights.id
-    }
-  }
-}
-
 resource gpt5_4MiniDeployment 'Microsoft.CognitiveServices/accounts/deployments@2025-04-01-preview' = {
   parent: aiFoundry
   name: 'gpt-5.4-mini'
-	dependsOn: [
-		aiProjectAppInsightsConnection
-	]
+  dependsOn: [
+    aiProject
+  ]
   sku: {
     capacity: 50
     name: 'GlobalStandard'

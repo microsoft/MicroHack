@@ -1130,7 +1130,9 @@ together.
 
 The frontend can reach the newly created `ai-agent` service by its stable Radius
 container name. Challenge 09 does not redeploy `iac/app.bicep`, so Challenge 07's
-target-specific OIDC client secret and broker configuration are not overwritten.
+target-specific OIDC client secret and broker configuration are not overwritten. The
+Challenge 06 `trading-db` and its Azure PostgreSQL server also remain in place; no
+AI-recipe change is needed for the PostgreSQL naming correction.
 
 ## Optional cleanup
 

@@ -114,7 +114,7 @@ if command == "rad":
                  "aiModels", "governance", "agentGuardrails", "sqlDatabases"]
         recipes = [{"name": os.environ.get("RECIPE_NAME", "default"),
                     "resourceType": "Radius.Resources/" + kind, "templateKind": "bicep",
-                    "templatePath": "mock.azurecr.io/recipe:1.0.6"} for kind in types]
+                    "templatePath": "mock.azurecr.io/recipe:1.0.7"} for kind in types]
         print(os.environ.get("RECIPE_JSON", json.dumps(recipes)))
     elif args[:2] == ["bicep", "publish-extension"]:
         Path(arg("--target")).write_text("mock-extension")

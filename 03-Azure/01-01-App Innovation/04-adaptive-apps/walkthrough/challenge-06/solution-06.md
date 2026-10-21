@@ -1035,6 +1035,28 @@ Run `rad recipe list --environment <environment>` in the matching workspace. Ret
 Challenge 05 and deploy `iac/local-env.bicep` or `iac/aks-env.bicep`. Do not replace a
 portable resource with a platform-specific declaration.
 
+### `ServerNameAlreadyExists` for `trading-db`
+
+Azure PostgreSQL server names are globally unique. Recipe `1.0.6` derived the name only
+from the Radius resource ID, so another workshop with the same group, application, and
+resource names could already own it. Do not delete the reported server; it can belong to
+another workshop.
+
+Confirm that this workshop has its own Azure resource group, then inspect the registration:
+
+```bash
+rad recipe list --environment env-azure-prod
+```
+
+If `Radius.Resources/postgreSqlDatabases` still references `postgres-azure-flex:1.0.6`,
+follow [Update an existing AKS environment to recipe `1.0.7`](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/walkthrough/challenge-05/solution-05.md#update-an-existing-aks-environment-to-recipe-107).
+Verify that the registration references `postgres-azure-flex:1.0.7`, then rerun the
+unchanged AKS `rad deploy iac/app.bicep` command from Stage 3. Retries use the same
+`1.0.7` server name.
+
+If the registration already uses `1.0.7`, check that the environment's Azure provider
+scope is not shared with another workshop that uses the same Radius resource names.
+
 ### The deployment reached the wrong platform
 
 Check all four dimensions:

@@ -217,9 +217,23 @@ Select the subscription and review **Defender plans**, including the **Servers**
 The example subscription uses **Servers Plan 2** with **Full** monitoring coverage. Your lab's approved plan may differ. Ask the facilitator to confirm **Settings & monitoring > Endpoint protection** is **On**, even if the Servers plan is enabled. These subscription-level settings are context, not evidence that your individual VM has completed onboarding.
 
 > [!NOTE]
-> A newly created VM can take time to appear and complete onboarding. If it is missing, first recheck **Guest management: Enabled (Connected)** and the selected subscription/resource group, then refresh Inventory. Ask the facilitator to check plan coverage and extension onboarding if it remains missing or unprotected. An Inventory entry alone does not prove that Defender for Servers protection is active. Do not enable a paid subscription-level plan yourself in a hosted lab.
+> Automatic MDE onboarding is asynchronous. [Microsoft documents up to one hour for new machines](https://learn.microsoft.com/azure/defender-for-cloud/enable-defender-for-endpoint#enable-defender-for-endpoint-integration-on-a-subscription) after integration is established; first-time integration in a tenant can take up to 12 hours. Keep your VM powered on with **Guest management: Enabled (Connected)**. Continue with Tasks 4 and 5 while waiting; do not toggle Defender settings or install the extension manually to hurry it along.
+
+Open **your VM -> Extensions** and look for **MDE.Windows**, then check its provisioning
+status is **Succeeded**. Record the extension/onboarding status separately from the
+Servers plan status. Successful extension installation is not proof of ongoing device
+reporting; ask the facilitator to verify the device in the Microsoft Defender portal
+if you do not have access. If the extension is absent after the expected onboarding
+window, or reports a failure, ask the facilitator to check guest connectivity and
+Endpoint protection. Do not change subscription-level settings yourself.
 
 ### 3.2 Review Your VM's Security Posture
+
+If your facilitator has prepared **`sov-ref-vm`** in the shared LocalBox resource
+group, you may inspect its existing recommendations while your own VM is still
+onboarding. Record the reference VM's resource ID separately. **Inspect only: do
+not remediate, change extensions, restart or delete it.** Return to your own VM
+for the exercise; the reference does not replace creating and assessing your VM.
 
 1. From your VM's resource details in Defender for Cloud, open its **Recommendations**. Alternatively, open your Azure Local VM resource and select **Settings -> Security** to view its recommendations
 2. Review the assessment status and any recommendations for that VM. If navigating from the subscription-wide **Recommendations** view, verify the affected resource is your VM by resource ID
@@ -229,6 +243,17 @@ The example subscription uses **Servers Plan 2** with **Full** monitoring covera
 
 The example VM shows **Microsoft Defender for Servers On** and **No recommendations to display**. Use **View all recommendations in Defender for Cloud** to investigate further, keeping the results scoped to your own VM.
 
+The following screenshot shows recommendations after assessments had time to populate:
+
+<a href="./images/defender-recommendations-populated.png"><img src="./images/defender-recommendations-populated.png" alt="Azure Arc VM win01 Security page with Defender for Servers On, populated update and Windows configuration recommendations, and zero security alerts." width="560" /></a>
+
+In this workshop test, the view was empty shortly after MDE installation and
+contained recommendations when checked the next morning, about **10 hours after
+the MDE extension was created**. They may have appeared earlier between checks;
+this is an observed example, not a required wait or guaranteed processing time.
+Your findings and counts will differ. Continue the workshop rather than waiting
+for recommendations to appear.
+
 Depending on the enabled plan and completed assessments, recommendations may concern:
 
 | Area | What to investigate |
@@ -236,11 +261,24 @@ Depending on the enabled plan and completed assessments, recommendations may con
 | System updates | Missing OS security updates |
 | Endpoint protection | Defender for Endpoint onboarding or protection status |
 | Vulnerabilities | Detected software vulnerabilities and remediation guidance |
+| OS configuration | Windows security settings assessed against the configured baseline |
 
 Only investigate or remediate your own VM. Do not apply subscription-wide fixes or change shared LocalBox infrastructure as part of this exercise.
 
 > [!NOTE]
-> Recommendations may still be pending on a fresh VM, and an assessed VM may have no active recommendations. Record the displayed assessment status separately from the verified protection status. An empty recommendations list does not demonstrate completed assessment or compliance. You can complete Task 4 while waiting, then return to review your VM's results.
+> **Zero recommendations is a valid observation, not proof that assessment is complete.** MDE installation, telemetry collection, security assessments, and display of recommendations happen separately. Recommendations can appear later than the extension, and different checks have different evaluation schedules; the one-hour onboarding window is not a deadline for recommendations. A machine with completed assessments can also have no applicable findings.
+
+Use **View all recommendations in Defender for Cloud**, keep the scope on your VM,
+and review any available assessment status and timestamp. Record one of these outcomes:
+
+- Findings available: explain one recommendation and its proposed remediation.
+- Assessments completed with no findings: record that outcome.
+- No assessment evidence yet: record **assessment pending/not yet confirmed**, not "fully compliant."
+
+You do not need a nonzero recommendation count to complete this exercise. Continue
+with the remaining tasks and revisit later if time permits; do not weaken security
+to generate findings. [Reviewing recommendations](https://learn.microsoft.com/azure/defender-for-cloud/review-security-recommendations)
+provides more detail on the available views and filters.
 
 ### 3.3 Review Security Alerts (if any)
 
@@ -264,6 +302,10 @@ No alerts is an expected outcome for a new lab VM; do not generate an alert or s
 ## Task 4: Assess Your VM with Azure Update Manager
 
 **Use Azure Update Manager to assess OS updates on the same Windows Server VM you created in Task 2.**
+
+You may also view existing assessment results and timestamps on `sov-ref-vm`, if
+provided by the facilitator. **Do not select the shared reference VM for Check
+for updates, patch installation, scheduling or any configuration change.**
 
 ### 4.1 Locate Your VM
 
@@ -554,7 +596,7 @@ Before completing this challenge, verify:
 
 - [ ] You can navigate and understand the LocalBox hybrid environment in the Azure Portal
 - [ ] You have deployed your own VM on Azure Local and verified that guest management is Enabled (Connected)
-- [ ] You have verified Defender for Servers coverage for your VM and reviewed its available recommendations, or recorded that its assessment is still pending
+- [ ] You have verified Defender for Servers plan coverage, recorded MDE extension/onboarding status separately, and reviewed available recommendations or recorded that assessment is pending/not yet confirmed; a nonzero recommendation count is not required
 - [ ] You have completed an Azure Update Manager assessment for your VM and reviewed its timestamp and results, including when no updates are pending
 - [ ] You verified the organizer-prepared `arcnetworking` extension is Succeeded, MetalLB workloads are healthy, and `aks-pool` has the reserved ARP VIP range
 - [ ] Your application rolled out successfully in your team's namespace and received an IP from that pool

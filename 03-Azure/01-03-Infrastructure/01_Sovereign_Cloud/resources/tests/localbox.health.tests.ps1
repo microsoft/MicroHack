@@ -72,6 +72,28 @@ Describe 'Shared LocalBox control plane' {
     }
 }
 
+if ($LocalBox.ReferenceVm) {
+    Describe 'Optional shared reference VM' {
+        It 'matches the organizer-owned VM, network and guest-management configuration' {
+            $reference = $LocalBox.ReferenceVm
+            $reference.MachineId | Should -Be "/subscriptions/$($LocalBox.SubscriptionId)/resourceGroups/$($LocalBox.ResourceGroupName)/providers/Microsoft.HybridCompute/machines/sov-ref-vm"
+            $reference.InstanceId | Should -Be "$($reference.MachineId)/providers/Microsoft.AzureStackHCI/virtualMachineInstances/default"
+            Assert-LocalBoxProperties (Get-LocalBoxResource $reference.MachineId) $reference.MachineExpected
+            Assert-LocalBoxProperties (Get-LocalBoxResource $reference.NicId) $reference.NicExpected
+            Assert-LocalBoxProperties (Wait-LocalBoxResource $reference.InstanceId -TimeoutSeconds $TimeoutSeconds) $reference.Expected
+        }
+        It 'is running and Arc-connected with successful MDE installation (not proof of completed assessments)' {
+            Wait-SovereignCheck -TimeoutSeconds $TimeoutSeconds -Check {
+                $readiness = Get-LocalBoxReferenceVmReadiness $LocalBox.ReferenceVm.MachineId
+                $readiness.PowerState | Should -Be 'Running'
+                $readiness.ArcStatus | Should -Be 'Connected'
+                $readiness.MdeProvisioningState | Should -Be 'Succeeded'
+                $readiness.PeriodicAssessmentMode | Should -Be 'AutomaticByPlatform'
+            }
+        }
+    }
+}
+
 Describe 'LocalBox runtime health' -Skip:($Mode -ne 'Full') {
     It 'has running healthy nested nodes and sufficient storage' {
         $IsWindows | Should -BeTrue -Because 'Full LocalBox tests run on LocalBox-Client'

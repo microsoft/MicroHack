@@ -11,8 +11,9 @@ Run [prepare-localbox.ps1](../prepare-localbox.ps1) **inside LocalBox-Client**, 
 - An existing Entra AKS admin-group object ID. Hosted events use **Lab Group ObjectId** from the Console's **Credentials** tab, published by [shared automation](../hosted-events/readme.md#console-group-dependency). Group membership is not validated through Graph by this script.
 - `Microsoft.KubernetesRuntime` registered, and its tenant-specific service-principal **object ID** available for MetalLB. Updated Console setup stores this nonsecret ID in the shared resource group's `microhack-k8s-runtime-object-id` tag. Manual organizers supply `-KubernetesRuntimeObjectId`; see [MetalLB preparation](#metallb-preparation) below. The Client managed identity needs write access to cluster extensions and KubernetesRuntime load balancers at the AKS connected-cluster scope; do not grant participants those permissions for installation.
 - The installed Jumpstart configuration referenced by `$env:LocalBoxConfigFile` (or `-ConfigPath`), containing `SDNDomainFQDN` and `SDNAdminPassword`. Preparation constructs the nested administrator credential locally without printing it. Supply `-NodeCredential` to override it if the nested password/account has changed. Azure managed identity cannot authenticate Windows PowerShell Direct inside nested nodes.
-- `Microsoft.EdgeMarketplace` registered by the subscription owner. The Marketplace image workflow also requires the Azure Connected Machine Resource Manager role for the `Microsoft.AzureStackHCI` resource-provider identity on the image resource group; ask the deployment owner to verify this prerequisite. No automatic privilege escalation is attempted.
-- Verified DHCP exclusions/static reservations for both node/VM pools **and the AKS service VIP range**, sufficient backing `V:` capacity and event budget. Dynamic disks do not add physical backing capacity.
+- `Microsoft.EdgeMarketplace` registered by the subscription owner. The Client managed identity needs read access to the cluster's Edge Marketplace offers for image-version discovery. The Marketplace image workflow also requires the Azure Connected Machine Resource Manager role for the `Microsoft.AzureStackHCI` resource-provider identity on the image resource group; ask the deployment owner to verify this prerequisite. No automatic privilege escalation is attempted.
+- The standard greenfield LocalBox network configuration. For customized networks, review DHCP exclusions/static reservations for both node/VM pools **and the AKS service VIP range** before preparation.
+- Sufficient backing `V:` capacity and event budget. Dynamic disks do not add physical backing capacity.
 
 For the standard Jumpstart configuration, the nested-node administrator is `jumpstart\Administrator`. The Client VM's `arcdemo` account is not the nested-node administrator. Use the nested domain's credentials (adjust the domain if customized), not a password reset solely on the Client VM.
 
@@ -25,15 +26,19 @@ Download files, inspect them, then execute. Do not pipe downloaded content into 
 ```powershell
 $base = 'https://raw.githubusercontent.com/microsoft/MicroHack/refs/heads/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/resources'
 Invoke-WebRequest "$base/prepare-localbox.ps1" -OutFile './prepare-localbox.ps1'
-./prepare-localbox.ps1 -AddressReservationsConfirmed -WhatIf
-./prepare-localbox.ps1 -AddressReservationsConfirmed
+./prepare-localbox.ps1 -WhatIf
+./prepare-localbox.ps1
 ```
 
 If the nested account was rotated, pass a current `PSCredential` through `-NodeCredential`; do not substitute the reset Client password. Missing configuration credentials produce an actionable error instead of exposing their contents or prompting unexpectedly.
 
 The script prompts for the Entra group object ID, or accepts `-AksAdminGroupObjectId`. Subscription, resource group and configuration path default from Jumpstart's machine environment. Explicit scope values must match this Client's deployment. Run only one preparation session at a time.
 
-If the Console-owned group is not available yet, `-SkipAks` explicitly prepares only storage, the VM image and both networks. It does not fabricate a group or grant anyone cluster access. The manifest records this as a partial run, and full health checks fail until preparation is rerun without `-SkipAks` using a valid admin-group ID.
+The reference VM is **enabled by default**; pass `-IncludeReferenceVm:$false` to skip its preparation. Operation confirmation prompts are off under PowerShell's default confirmation preference, including storage changes and recovery of a matching Failed image. Use `-Confirm` to request confirmations, or `-Confirm:$false` if your session has a stricter preference. `-WhatIf` and all configuration/health safety checks remain active. Group-ID and first-creation credential prompts are separate; supply `-AksAdminGroupObjectId` and `-ReferenceVmCredential` to avoid those inputs.
+
+Preparation runs in this order: **storage -> logical networks -> AKS, proxy access and MetalLB -> VM image -> reference VM (unless disabled)**. A late Marketplace image failure therefore leaves the networks and AKS resources in place for the next run to reuse; it does not roll them back. The final manifest is written only after the requested preparation finishes.
+
+If the Console-owned group is not available yet, `-SkipAks` prepares storage, both networks, the VM image and the reference VM (unless disabled). It does not fabricate a group or grant anyone cluster access. The manifest records this as a partial run, and full health checks fail until preparation is rerun without `-SkipAks` using a valid admin-group ID.
 
 `-WhatIf` installs missing CLI extensions as a deliberate local-tooling exception, then performs authenticated reads and validation. It does not provision Azure resources, assign roles or change Hyper-V or storage. The RBAC step only reports the planned group/cluster assignment, without querying a cluster that may not exist yet; it does not validate role-assignment permissions. It can create and remove a temporary local CLI profile. It does not establish that later resource creation will succeed.
 
@@ -43,15 +48,30 @@ If the Console-owned group is not available yet, `-SkipAks` explicitly prepares 
 | --- | --- |
 | Storage | One stable-named 1 TiB dynamic VHDX per node; grow `UserStorage_1` to 1 TiB, never shrink or grow it again on every rerun |
 | VM image | `2025-datacenter-azure-edition-smalldisk-01`, matching the walkthrough screenshot; Marketplace Windows Server 2025 Azure Edition smalldisk, explicitly on `UserStorage1` |
-| VM network | `localbox-vm-lnet-vlan200`, VLAN 200, `192.168.200.0/24`, pool `.10-.199` after reservation review |
+| VM network | `localbox-vm-lnet-vlan200`, VLAN 200, `192.168.200.0/24`, pool `.10-.199` for the standard LocalBox configuration |
 | AKS network | `localbox-aks-lnet-vlan110`, VLAN 110, `10.10.0.0/24`, nodes `.101-.199` |
 | AKS control plane / service reservation | `10.10.0.5`; `.10-.100` reserved for MetalLB service VIPs, separate from nodes `.101-.199` |
 | AKS cluster | `localbox-aks`, one control-plane node and three Linux workers; `Standard_A4_v2` defaults, subject to installed-version capacity/CLI validation |
 | AKS proxy access | Azure Arc Enabled Kubernetes Cluster User Role for `AksAdminGroupObjectId`, scoped to the connected-cluster resource; matching direct or inherited grants are reused |
 | MetalLB | `arcnetworking` Arc extension (`microsoft.arcnetworking`), ARP pool `aks-pool`, addresses from `AKSVIPStartIP` through `AKSVIPEndIP` (standard config: `10.10.0.10-10.10.0.100`) |
+| Reference VM | `sov-ref-vm`, Windows Server 2025, 2 vCPU / 4 GiB RAM, shared VM network and `UserStorage1`; enabled by default, opt out with `-IncludeReferenceVm:$false` |
 | Output | `C:\LocalBox\sovereign-localbox.json`, nonsecret IDs and expected configuration for health tests |
 
-Topology defaults come from the installed Jumpstart config, except the VM pool bounds and configurable resource names/sizes. The network/broadcast addresses, gateways and Jumpstart infrastructure reservations must not be allocated. `-AddressReservationsConfirmed` is your explicit confirmation that DHCP/static reservations were reviewed; the script cannot safely infer all DHCP leases from Azure. It does not change routers or DHCP configuration.
+Topology defaults come from the installed Jumpstart config, except the VM pool bounds and configurable resource names/sizes. Preparation assumes the standard greenfield LocalBox topology and requires no manual address-reservation acknowledgement. It still validates subnet boundaries, gateways, configured infrastructure addresses, and AKS node/control-plane/VIP separation. These checks do not inspect live DHCP leases/exclusions or discover additional static consumers. Review those separately for customized networks; the script does not change routers or DHCP configuration.
+
+## Reruns and failed image imports
+
+Rerun with the same settings after resolving a failure. Storage is checked against its **actual state**, not a completion flag: existing disks are not recreated or reattached, and a sufficiently sized virtual disk is not resized. The partition-extension step (including its confirmation and supported-size query) is skipped once the partition fills the disk, allowing for its alignment/GPT tail. If a previous run grew the virtual disk but stopped before extending the partition, the next run completes only that unfinished step.
+
+Read-only health checks still run, and preparation still waits for active storage jobs before dependent operations. A rerun must not bypass unhealthy or busy storage simply because an earlier run completed.
+
+If the configured Marketplace image exists in **Failed** state, preparation verifies its region, custom location, storage path and image settings, then **deletes that exact image and retries its import**. Use `-Confirm` to request confirmation first. It verifies that deletion has finished before creating the replacement. A matching deletion already in progress is awaited. `-WhatIf` previews recovery without deleting or importing anything. Healthy/in-progress images are reused or awaited; conflicting or incomplete image metadata requires organizer review and is never deleted automatically.
+
+Before a new import or failed-image deletion, the default `-ImageVersion latest` is resolved to the newest version **advertised by this Azure Local cluster's Edge Marketplace catalog**, and that exact version is passed to the import command. An explicit `-ImageVersion` must also be listed there. Catalog lookup failures stop preparation without deleting the failed image or guessing a fallback version. Existing healthy/in-progress images are reused or awaited without a catalog lookup or automatic upgrade.
+
+This avoids a mismatch observed on 21 October 2026: Azure Compute exposed `26100.33650.261013`, but the cluster's Edge Marketplace catalog only advertised versions through `26100.33438.260905` for the same Windows Server 2025 smalldisk SKU. Passing `latest` directly had resolved to the newer, unavailable Edge version and failed with `GenerateTokenFromEdgeMarketplaceServiceFailed` / `NotFound`. The script discovers the available version rather than hard-coding either example.
+
+There is **one import attempt per run**, not an endless retry loop. If the new attempt also fails, its original CLI error is reported and the failed resource remains available for investigation. The SAS-token error does not by itself prove a transient outage; check catalog availability, provider prerequisites and service status before another retry. See [Microsoft's image-management guidance](https://learn.microsoft.com/azure/azure-local/manage/virtual-machine-manage-image#delete-vm-image).
 
 ## MetalLB preparation
 
@@ -76,7 +96,7 @@ grant Graph permissions to the Client identity.
 
 The VIP reservation is checked against the AKS subnet, gateway, control-plane
 address and node pool. Do not use `10.10.0.150-10.10.0.160` from older screenshots:
-it overlaps the node pool. The address-reservation confirmation includes DHCP and
+it overlaps the node pool. For customized networks, also review DHCP exclusions and
 other static consumers of the service VIPs.
 
 Matching extensions and pools are reused. Conflicting identities, address ranges,
@@ -122,9 +142,43 @@ Use `-ImageVersion` to pin a Marketplace version, `-KubernetesVersion` for a sup
 
 If an image was imported manually before preparation under the documented name but on another storage path, preparation stops before disk expansion. The facilitator must review its dependencies; only if the image is confirmed unused should it be removed manually so preparation can import it on `UserStorage1` under the same documented name. Otherwise, resolve placement with the Azure Local administrator before proceeding. Do not change image names or use `-RemoveUserStorage2` to work around this conflict. Automation never deletes or moves an existing image.
 
+## Reference VM
+
+Preparation includes one shared Windows VM for Challenge 6 by default, preferably prepared **the day before the event**. Opt out with `-IncludeReferenceVm:$false`. It uses the prepared image, VM network and storage. The fixed VM/computer name `sov-ref-vm` is 10 characters, below Windows' **15-character** limit. Allow for its additional memory, disk growth, address consumption and Defender costs.
+
+On an **existing LocalBox**, copy the updated [prepare-localbox.ps1](../prepare-localbox.ps1) to the Client (or download it from your published branch/commit). In elevated PowerShell 7, rerun with the same settings used for the original preparation:
+
+```powershell
+./prepare-localbox.ps1 -WhatIf
+./prepare-localbox.ps1
+```
+
+Supply the existing AKS group ID when prompted, or pass `-AksAdminGroupObjectId`. Preserve any original nondefault image/network/AKS settings. This is an idempotent preparation rerun, **not** a new LocalBox deployment. It still validates/reconciles the normal shared resources; do not use `-SkipAks` just to bypass those checks.
+
+Creation prompts for a **separate local administrator credential**, not the nested domain administrator. Retain it securely for organizer maintenance; alternatively supply `-ReferenceVmCredential (Get-Credential -UserName 'localadmin')`. The password is passed through a restricted temporary ARM parameter file, never through CLI arguments or the manifest, and the file is removed after submission. Do not share the credential with participants.
+
+The script requests guest management and **periodic update assessment** (`AutomaticByPlatform`); it does not install patches, toggle Defender or force MDE installation. Defender for Servers P2 and Endpoint protection must already be enabled, and the VM needs outbound access to Arc, Defender and its configured update source. Resources carry `SecurityControl=Ignore`, `CostControl=Ignore` and `MicroHackPurpose=LocalBoxReferenceVM`.
+
+Matching resources are reused without password resets, resizing or redeployment. Conflicting/partial resources cause an explicit failure for organizer inspection; they are never deleted or overwritten. Reruns with `-IncludeReferenceVm:$false` neither manage nor delete the VM, and preserve its existing manifest entry (including the original observation timestamp).
+
+### Reference readiness and participant use
+
+The manifest's `ReferenceVm` entry records nonsecret IDs and an observed power/Arc/MDE status. **Provisioning is not proof of completed onboarding or assessment.** Pending, disconnected or failed states must be resolved before advertising the VM as ready. Health checks reread live status rather than trusting the saved snapshot.
+
+Before the workshop, verify:
+
+1. `sov-ref-vm` is running with **Guest management: Enabled (Connected)**.
+2. `MDE.Windows` is **Succeeded**; verify actual device reporting through the Microsoft Defender portal with an authorized organizer account.
+3. Defender for Cloud has assessment evidence for this VM. Review available recommendations or a completed assessment with no findings; an empty list alone is not sufficient.
+4. Azure Update Manager shows a **successful assessment and timestamp**. Periodic assessment is asynchronous; an organizer can run **Check for updates** on this VM if no result is available yet. Do not install patches just to prepare the demonstration.
+
+The script intentionally leaves Defender assessment and update-result readiness as `NotVerified`; these portal checks remain required even after automated health tests pass. See the [Defender readiness checklist](manual-preparation.md#defender-for-servers-readiness-organizer).
+
+Participants still create and assess **their own VM**. While waiting, they may inspect this reference VM's existing security and update results. **Do not modify, assess, patch, restart, remediate or delete the shared reference VM.** This is an instruction, **not an RBAC-enforced read-only boundary**: existing shared resource-group VM Contributor grants remain unchanged. Verify participant visibility before the event; do not grant access to LocalBox-Client or publish the reference administrator credential.
+
 ## Optional storage consolidation
 
-On a new, empty environment, pass `-RemoveUserStorage2` to request removal of the unused second Azure storage path, CSV and virtual disk. Each destructive operation requires confirmation. The script refuses consolidation when storage is unhealthy/busy, the volume is not empty, its identity is ambiguous, or existing LocalBox workload resources are found. Do this **before** image/AKS creation. Never use confirmation suppression to override a failed safety check.
+On a new, empty environment, pass `-RemoveUserStorage2` to request removal of the unused second Azure storage path, CSV and virtual disk. This remains opt-in; use `-WhatIf` to preview or `-Confirm` to request confirmation. The script refuses consolidation when storage is unhealthy/busy, the volume is not empty, its identity is ambiguous, or existing LocalBox workload resources are found. Do this **before** image/AKS creation. Confirmation suppression does not override a failed safety check.
 
 If existing workloads use the secondary volume, do not remove it. Use the [manual reference](manual-preparation.md) with an Azure Local administrator to assess storage and placement. Image placement is explicitly `UserStorage1`; retaining `UserStorage2` can still affect other workload placement and requires the participant VM smoke test.
 

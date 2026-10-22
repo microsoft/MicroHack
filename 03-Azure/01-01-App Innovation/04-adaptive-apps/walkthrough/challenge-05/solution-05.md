@@ -122,59 +122,6 @@ Derive that name from a compile-time variable rather than from `tradingDb.name`,
 compile to a runtime `reference('tradingDb').name` call that cannot resolve.
 `resources/validate-postgres-recipes.sh` guards all of these.
 
-### Kubernetes resources created by a recipe
-
-The PostgreSQL recipes also create a Kubernetes Job that applies the trading schema. Two
-properties of that Job are easy to get wrong and fail silently.
-
-**A Job's `spec.template` is immutable.** Kubernetes rejects an update that changes the pod
-template of an existing Job with `spec.template: field is immutable`, so the Job has to be
-replaced rather than updated. That only happens if its *name* changes, which means the name
-must be derived from everything the pod template embeds — the script, the image tag and the
-name of the Secret holding the password, not just the schema SQL. The recipes hash all of
-those into `schemaRevision`. Radius then creates the new Job and garbage-collects the old one
-through `result.resources`.
-
-**Line endings reach the container verbatim.** Bicep preserves the on-disk line endings of
-`loadTextContent()` and of `'''…'''` multi-line strings, so a CRLF checkout embeds carriage
-returns in the Job's shell script. `sh` does not treat CR as whitespace, so `do<CR>` stops
-being the `do` keyword and the container exits immediately with
-`syntax error: unexpected word`. Because the recipe does not wait for the Job to succeed, the
-deployment still reports success and the database is simply left empty. The repository pins
-these files to LF in `.gitattributes`, and the recipes additionally strip carriage returns
-with `replace(..., '\r', '')` so they stay correct on any checkout.
-
-Verify the Job actually completed rather than trusting the deployment result:
-
-```bash
-kubectl get jobs -n <application-namespace>
-```
-
-`COMPLETIONS` must read `1/1`.
-
-### Globally unique Azure PostgreSQL names
-
-Azure Database for PostgreSQL Flexible Server names are globally unique. Separate
-workshops commonly use the same Radius resource ID, for example the same group,
-application, and `trading-db` resource names on different clusters. Recipe version
-`1.0.8` retains the deterministic server name scoped to the target Azure resource group:
-
-```bicep
-var serverName = 'pg-${uniqueString(resourceGroup().id, context.resource.id)}'
-```
-
-`resourceGroup().id` contains both the subscription ID and resource-group name, so
-identical Radius resource IDs in different Azure resource groups receive different
-names. Different Radius resources in one resource group also receive different names,
-and retries with the same inputs reuse the same name. The result is `pg-` plus 13
-lowercase alphanumeric characters, which satisfies the Flexible Server naming rules.
-
-Give every workshop its own Azure resource group in the AKS environment's Azure
-provider scope. Hosted Console labs already do this. Sharing an Azure resource group
-between workshops is not supported by this recipe; a design that needs it must add a
-stable, explicit workshop identifier to the hash. Never use a timestamp or another
-value that changes on every deployment.
-
 ## Manual tutorial, Stage 1: Author the Azure SQL recipe
 
 Open `iac/recipes/sql-server.bicep` and walk through:
@@ -675,3 +622,33 @@ environment definition, and verifies the registered recipes. It uses
 `WORKSHOP_RECIPE_VERSION=1.0.8` by default and reuses an existing version tag instead of
 overwriting it. `k3s` also needs `AZURE_SUBSCRIPTION`, `RESOURCE_GROUP`, and `ACR_NAME`
 because it publishes the pinned workshop recipe before registration when needed.
+
+### Troubleshooting: Kubernetes resources created by a recipe
+
+The PostgreSQL recipes also create a Kubernetes Job that applies the trading schema. Two
+properties of that Job are easy to get wrong and fail silently.
+
+**A Job's `spec.template` is immutable.** Kubernetes rejects an update that changes the pod
+template of an existing Job with `spec.template: field is immutable`, so the Job has to be
+replaced rather than updated. That only happens if its *name* changes, which means the name
+must be derived from everything the pod template embeds — the script, the image tag and the
+name of the Secret holding the password, not just the schema SQL. The recipes hash all of
+those into `schemaRevision`. Radius then creates the new Job and garbage-collects the old one
+through `result.resources`.
+
+**Line endings reach the container verbatim.** Bicep preserves the on-disk line endings of
+`loadTextContent()` and of `'''…'''` multi-line strings, so a CRLF checkout embeds carriage
+returns in the Job's shell script. `sh` does not treat CR as whitespace, so `do<CR>` stops
+being the `do` keyword and the container exits immediately with
+`syntax error: unexpected word`. Because the recipe does not wait for the Job to succeed, the
+deployment still reports success and the database is simply left empty. The repository pins
+these files to LF in `.gitattributes`, and the recipes additionally strip carriage returns
+with `replace(..., '\r', '')` so they stay correct on any checkout.
+
+Verify the Job actually completed rather than trusting the deployment result:
+
+```bash
+kubectl get jobs -n <application-namespace>
+```
+
+`COMPLETIONS` must read `1/1`.

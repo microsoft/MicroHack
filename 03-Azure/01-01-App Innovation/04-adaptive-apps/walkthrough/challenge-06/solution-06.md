@@ -288,6 +288,8 @@ on a trusted, single-user workstation or devcontainer host.
 
 ### 4. Validate graph, resources, and workloads
 
+Radius stores the application Graph. resources and workload types. Let's check if we can retrieve these from the Radius control plane. 
+
 **Bash:**
 
 ```bash

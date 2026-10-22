@@ -533,7 +533,7 @@ name.
 
 ```bash
 export AZURE_SUBSCRIPTION="${AZURE_SUBSCRIPTION:-<subscription-id>}"
-export RESOURCE_GROUP="${RESOURCE_GROUP:-rg-adaptive-apps}"
+export RESOURCE_GROUP="${RESOURCE_GROUP:-<lab-resource-group>}"
 export AKS_NAME="aks-adaptive-apps"
 export OPENAI_RESOURCE_GROUP="<existing-openai-resource-group>"
 export OPENAI_ACCOUNT="<existing-openai-account>"
@@ -591,7 +591,9 @@ test "$WORKLOAD_IDENTITY_ENABLED" = "true"
 
 ```powershell
 $env:AZURE_SUBSCRIPTION = "<subscription-id>"
-$env:RESOURCE_GROUP = "rg-adaptive-apps"
+if (-not $env:RESOURCE_GROUP) {
+    $env:RESOURCE_GROUP = "<lab-resource-group>"
+}
 $env:AKS_NAME = "aks-adaptive-apps"
 $env:OPENAI_RESOURCE_GROUP = "<existing-openai-resource-group>"
 $env:OPENAI_ACCOUNT = "<existing-openai-account>"

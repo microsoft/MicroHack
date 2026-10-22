@@ -157,7 +157,7 @@ kubectl get jobs -n <application-namespace>
 Azure Database for PostgreSQL Flexible Server names are globally unique. Separate
 workshops commonly use the same Radius resource ID, for example the same group,
 application, and `trading-db` resource names on different clusters. Recipe version
-`1.0.7` therefore scopes the deterministic server name to the target Azure resource group:
+`1.0.8` retains the deterministic server name scoped to the target Azure resource group:
 
 ```bicep
 var serverName = 'pg-${uniqueString(resourceGroup().id, context.resource.id)}'
@@ -260,6 +260,25 @@ rad env switch env-azure-prod
 rad group switch rg-trading
 ```
 
+> [!IMPORTANT]
+> `ACR_NAME` must contain only the Azure Container Registry resource name, not a URL
+> or the login-server hostname.
+>
+> ```bash
+> # Correct
+> export ACR_NAME="acad3zqjinwxy6mh2"
+>
+> # Incorrect
+> export ACR_NAME="acad3zqjinwxy6mh2.azurecr.io"
+> ```
+>
+> The commands below append `.azurecr.io` automatically. Including it in `ACR_NAME`
+> produces a duplicated hostname and causes Radius recipe downloads to fail with
+> `RecipeDownloadFailed` / `no such host`.
+>
+> Hosted participants should source `artifacts/console-env.sh` and retain its supplied
+> `ACR_NAME`.
+
 **Hosted Console:** reuse the supplied registry; do not run the creation block.
 Source and verify your supplied values:
 
@@ -273,7 +292,7 @@ az acr show --resource-group "$RESOURCE_GROUP" --name "$ACR_NAME" \
 
 ```bash
 export AZURE_SUBSCRIPTION="${AZURE_SUBSCRIPTION:-<subscription-id>}"
-export RESOURCE_GROUP="${RESOURCE_GROUP:-rg-adaptive-apps}"
+export RESOURCE_GROUP="${RESOURCE_GROUP:-<lab-resource-group>}"
 export ACR_NAME="${ACR_NAME:-<globally-unique-acr-name>}"
 
 az account set --subscription "$AZURE_SUBSCRIPTION"
@@ -329,22 +348,25 @@ EOF
 
 Publish the teaching recipe and both workshop-owned PostgreSQL recipes. The PostgreSQL
 recipes compile the same `iac/recipes/trading-schema.sql` into each implementation and
-use immutable workshop tags rather than the external `latest` recipes. Version `1.0.7`
-contains the Azure PostgreSQL naming correction. Do not republish changed source over
+use immutable workshop tags rather than the external `latest` recipes. Version `1.0.8`
+retains the Azure PostgreSQL naming correction and maps size `L` to General Purpose
+`Standard_D4ds_v5` (4 vCores, 16 GiB RAM), as requested by the default application.
+PostgreSQL remains version 16 with 32 GiB storage. In K3s, the same portable size `L`
+selects a 2 GiB memory limit rather than Azure compute. Do not republish changed source over
 `1.0.6` or another existing tag; publish a new version instead.
 
 ```bash
 rad bicep publish \
   --file iac/recipes/sql-server.bicep \
-  --target "br:${ACR_NAME}.azurecr.io/recipes/sql-server:1.0.7"
+  --target "br:${ACR_NAME}.azurecr.io/recipes/sql-server:1.0.8"
 
 rad bicep publish \
   --file iac/recipes/postgres-azure-flex.bicep \
-  --target "br:${ACR_NAME}.azurecr.io/recipes/postgres-azure-flex:1.0.7"
+  --target "br:${ACR_NAME}.azurecr.io/recipes/postgres-azure-flex:1.0.8"
 
 rad bicep publish \
   --file iac/recipes/postgres-kubernetes.bicep \
-  --target "br:${ACR_NAME}.azurecr.io/recipes/postgres-kubernetes:1.0.7"
+  --target "br:${ACR_NAME}.azurecr.io/recipes/postgres-kubernetes:1.0.8"
 ```
 
 **PowerShell 7:**
@@ -352,15 +374,15 @@ rad bicep publish \
 ```powershell
 rad bicep publish `
     --file iac/recipes/sql-server.bicep `
-    --target "br:$env:ACR_NAME.azurecr.io/recipes/sql-server:1.0.7"
+    --target "br:$env:ACR_NAME.azurecr.io/recipes/sql-server:1.0.8"
 
 rad bicep publish `
     --file iac/recipes/postgres-azure-flex.bicep `
-    --target "br:$env:ACR_NAME.azurecr.io/recipes/postgres-azure-flex:1.0.7"
+    --target "br:$env:ACR_NAME.azurecr.io/recipes/postgres-azure-flex:1.0.8"
 
 rad bicep publish `
     --file iac/recipes/postgres-kubernetes.bicep `
-    --target "br:$env:ACR_NAME.azurecr.io/recipes/postgres-kubernetes:1.0.7"
+    --target "br:$env:ACR_NAME.azurecr.io/recipes/postgres-kubernetes:1.0.8"
 ```
 
 Register the Azure SQL teaching recipe:
@@ -370,7 +392,7 @@ rad recipe register default \
   --environment env-azure-prod \
   --resource-type Radius.Resources/sqlDatabases \
   --template-kind bicep \
-  --template-path "${ACR_NAME}.azurecr.io/recipes/sql-server:1.0.7"
+  --template-path "${ACR_NAME}.azurecr.io/recipes/sql-server:1.0.8"
 ```
 
 Verify:
@@ -449,9 +471,9 @@ rad deploy iac/aks-env.bicep \
   --parameters azureSubscriptionId="$AZURE_SUBSCRIPTION" \
   --parameters azureResourceGroup="$RESOURCE_GROUP" \
   --parameters istioRevision="$ISTIO_REVISION" \
-  --parameters postgresRecipeTemplatePath="${ACR_NAME}.azurecr.io/recipes/postgres-azure-flex:1.0.7" \
+  --parameters postgresRecipeTemplatePath="${ACR_NAME}.azurecr.io/recipes/postgres-azure-flex:1.0.8" \
   --parameters aksEgressIps="$AKS_EGRESS_IPS" \
-  --parameters sqlDatabasesRecipeTemplatePath="${ACR_NAME}.azurecr.io/recipes/sql-server:1.0.7"
+  --parameters sqlDatabasesRecipeTemplatePath="${ACR_NAME}.azurecr.io/recipes/sql-server:1.0.8"
 ```
 
 **PowerShell 7:**
@@ -502,9 +524,9 @@ rad deploy iac/aks-env.bicep `
     --parameters azureSubscriptionId=$env:AZURE_SUBSCRIPTION `
     --parameters azureResourceGroup=$env:RESOURCE_GROUP `
     --parameters istioRevision=$IstioRevision `
-    --parameters "postgresRecipeTemplatePath=$env:ACR_NAME.azurecr.io/recipes/postgres-azure-flex:1.0.7" `
+    --parameters "postgresRecipeTemplatePath=$env:ACR_NAME.azurecr.io/recipes/postgres-azure-flex:1.0.8" `
     --parameters "aksEgressIps=$($EgressIps -join ',')" `
-    --parameters "sqlDatabasesRecipeTemplatePath=$env:ACR_NAME.azurecr.io/recipes/sql-server:1.0.7"
+    --parameters "sqlDatabasesRecipeTemplatePath=$env:ACR_NAME.azurecr.io/recipes/sql-server:1.0.8"
 ```
 
 | Resource type | AKS/Azure backend |
@@ -525,47 +547,6 @@ rad deploy iac/aks-env.bicep `
 > Selecting it therefore crash-loops the backend. Challenge 06 explains this in
 > [Why AKS uses Mosquitto for `mqttBrokers`](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/walkthrough/challenge-06/solution-06.md#why-aks-uses-mosquitto-for-mqttbrokers),
 > including the `mqttRecipeTemplatePath` override that restores the Event Grid recipe.
-
-### Update an existing AKS environment to recipe `1.0.7`
-
-Changing the naming algorithm changes the Azure resource name. It is not an in-place
-rename. Decide from the current `trading-db` state before changing the registration:
-
-```bash
-rad recipe list \
-  --workspace ws-azure-prod \
-  --group rg-trading \
-  --environment env-azure-prod
-rad resource show Radius.Resources/postgreSqlDatabases trading-db \
-  --workspace ws-azure-prod \
-  --group rg-trading \
-  --output json
-```
-
-| Current state | Action |
-| --- | --- |
-| No `trading-db` exists, or its AKS deployment failed with `ServerNameAlreadyExists` | Update the registration to `1.0.7`, then retry the Challenge 06 deployment. |
-| `trading-db` already succeeded with `1.0.6` | Keep `1.0.6` registered unless you deliberately plan a replacement. The next deployment with `1.0.7` creates a different, empty server. Radius can garbage-collect the old server because it is no longer in the recipe result. Back up and migrate any required data first. |
-
-The recipe and helper scripts do not delete or migrate an existing server. Do not delete a
-server reported by `ServerNameAlreadyExists`; it can belong to another workshop.
-
-To update an eligible environment:
-
-1. Confirm `RESOURCE_GROUP` is this workshop's own Azure resource group, and that
-   `rad env show env-azure-prod --output json` uses the same Azure provider scope.
-2. Publish all three recipes as `1.0.7` with the Stage 2 commands. Skip a tag that
-   already exists rather than overwriting it.
-3. Rerun the Stage 3 `rad deploy iac/aks-env.bicep` command. Its
-   `postgresRecipeTemplatePath` must end in `postgres-azure-flex:1.0.7`.
-4. Run `rad recipe list --environment env-azure-prod` and verify that
-   `Radius.Resources/postgreSqlDatabases` references
-   `${ACR_NAME}.azurecr.io/recipes/postgres-azure-flex:1.0.7`.
-5. Retry the unchanged Challenge 06 AKS `rad deploy iac/app.bicep` command.
-
-The optional automation performs steps 2 and 3 with
-`bash resources/configure-recipes.sh aks`. It defaults to `1.0.7` and does not
-overwrite an existing version tag.
 
 ## Manual tutorial, Stage 4: Register the complete K3s recipe set
 
@@ -590,7 +571,7 @@ rad deploy iac/local-env.bicep \
   --environment env-local-prod \
   --parameters environmentName=env-local-prod \
   --parameters namespace=env-local-prod \
-  --parameters postgresRecipeTemplatePath="${ACR_NAME}.azurecr.io/recipes/postgres-kubernetes:1.0.7"
+  --parameters postgresRecipeTemplatePath="${ACR_NAME}.azurecr.io/recipes/postgres-kubernetes:1.0.8"
 ```
 
 **PowerShell 7:**
@@ -602,7 +583,7 @@ rad deploy iac/local-env.bicep `
     --environment env-local-prod `
     --parameters environmentName=env-local-prod `
     --parameters namespace=env-local-prod `
-    --parameters "postgresRecipeTemplatePath=$env:ACR_NAME.azurecr.io/recipes/postgres-kubernetes:1.0.7"
+    --parameters "postgresRecipeTemplatePath=$env:ACR_NAME.azurecr.io/recipes/postgres-kubernetes:1.0.8"
 ```
 
 | Resource type | K3s/local backend |
@@ -677,7 +658,7 @@ The manual tutorial is the intended learning path. To automate the same configur
 
 ```bash
 export AZURE_SUBSCRIPTION="${AZURE_SUBSCRIPTION:-<subscription-id>}"
-export RESOURCE_GROUP="${RESOURCE_GROUP:-rg-adaptive-apps}"
+export RESOURCE_GROUP="${RESOURCE_GROUP:-<lab-resource-group>}"
 export ACR_NAME="${ACR_NAME:-<globally-unique-acr-name>}"
 
 # Configure both defaults:
@@ -691,6 +672,6 @@ bash resources/configure-recipes.sh k3s
 The script creates or reuses ACR, publishes the custom SQL recipe for AKS, deploys the
 two corrected PostgreSQL recipes plus the custom SQL recipe, deploys the appropriate
 environment definition, and verifies the registered recipes. It uses
-`WORKSHOP_RECIPE_VERSION=1.0.7` by default and reuses an existing version tag instead of
+`WORKSHOP_RECIPE_VERSION=1.0.8` by default and reuses an existing version tag instead of
 overwriting it. `k3s` also needs `AZURE_SUBSCRIPTION`, `RESOURCE_GROUP`, and `ACR_NAME`
 because it publishes the pinned workshop recipe before registration when needed.

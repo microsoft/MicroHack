@@ -60,11 +60,30 @@ administrator password.
 
 While targeting AKS and workspace `ws-azure-prod`:
 
+> [!IMPORTANT]
+> `ACR_NAME` must contain only the Azure Container Registry resource name, not a URL
+> or the login-server hostname.
+>
+> ```bash
+> # Correct
+> export ACR_NAME="acad3zqjinwxy6mh2"
+>
+> # Incorrect
+> export ACR_NAME="acad3zqjinwxy6mh2.azurecr.io"
+> ```
+>
+> The commands below append `.azurecr.io` automatically. Including it in `ACR_NAME`
+> produces a duplicated hostname and causes Radius recipe downloads to fail with
+> `RecipeDownloadFailed` / `no such host`.
+>
+> Hosted participants should source `artifacts/console-env.sh` and retain its supplied
+> `ACR_NAME`.
+
 1. Hosted: use the supplied `ACR_NAME` from `artifacts/console-env.sh` without
    recreating it. BYOS: create or select a globally unique, lowercase registry.
 2. Authenticate to the registry.
 3. Publish `iac/recipes/sql-server.bicep` and the workshop-owned Azure and Kubernetes
-   PostgreSQL recipes as version `1.0.7`. Never overwrite an existing version tag.
+   PostgreSQL recipes as version `1.0.8`. Never overwrite an existing version tag.
 4. Register it as the default recipe for `Radius.Resources/sqlDatabases` in
    `env-azure-prod`.
 5. Verify that the registration refers to the expected OCI artifact.
@@ -120,8 +139,8 @@ Prepare a comparison that answers:
 
 ## Success criteria
 
-- The custom SQL recipe is published to ACR at version `1.0.7`.
-- Both corrected PostgreSQL recipes are published to ACR at version `1.0.7` and
+- The custom SQL recipe is published to ACR at version `1.0.8`.
+- Both corrected PostgreSQL recipes are published to ACR at version `1.0.8` and
   registered without mutable `latest` references.
 - The Azure PostgreSQL server name is deterministic and scoped to both the workshop's
   Azure resource group and the Radius resource ID.

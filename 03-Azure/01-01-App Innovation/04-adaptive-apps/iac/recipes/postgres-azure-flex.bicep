@@ -33,7 +33,7 @@ var skuBySize = {
     tier: 'Burstable'
   }
   L: {
-    name: 'Standard_D2s_v3'
+    name: 'Standard_D4ds_v5'
     tier: 'GeneralPurpose'
   }
 }

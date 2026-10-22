@@ -27,7 +27,7 @@ AKS_ENVIRONMENT="${AKS_ENVIRONMENT:-env-azure-prod}"
 K3S_ENVIRONMENT="${K3S_ENVIRONMENT:-env-local-prod}"
 RADIUS_GROUP="${RADIUS_GROUP:-rg-trading}"
 RECIPE_REGISTRY="${RECIPE_REGISTRY:-ghcr.io/microsoft/adaptive-apps/recipes}"
-WORKSHOP_RECIPE_VERSION="${WORKSHOP_RECIPE_VERSION:-1.0.7}"
+WORKSHOP_RECIPE_VERSION="${WORKSHOP_RECIPE_VERSION:-1.0.8}"
 [[ "$WORKSHOP_RECIPE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
   echo "WORKSHOP_RECIPE_VERSION must be an immutable semantic version such as 1.0.0." >&2
   exit 1
@@ -119,6 +119,11 @@ publish_workshop_recipes() {
   : "${AZURE_SUBSCRIPTION:?Set AZURE_SUBSCRIPTION for workshop recipe publishing.}"
   : "${RESOURCE_GROUP:?Set RESOURCE_GROUP for workshop recipe publishing.}"
   : "${ACR_NAME:?Set a globally unique lowercase ACR_NAME.}"
+
+  if [[ ! "$ACR_NAME" =~ ^[a-z0-9]{5,50}$ ]]; then
+    echo "ACR_NAME must be the 5-50 character lowercase alphanumeric registry name, without .azurecr.io or https://." >&2
+    exit 1
+  fi
 
   source "$(dirname "${BASH_SOURCE[0]}")/azure-session.sh"
 

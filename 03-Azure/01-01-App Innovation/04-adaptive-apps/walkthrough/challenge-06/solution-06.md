@@ -97,7 +97,7 @@ API on localhost; it does not expose application HTTP, HTTPS, MQTT, or SSH ports
 Each workspace targets an independent Radius control plane. Switching `kubectl`
 context without switching the Radius workspace can deploy to the wrong platform.
 
-## Stage 1: Inspect the invariant application model
+## Stage 1: Inspect the application model
 
 Open `iac/app.bicep`. The core model declares:
 

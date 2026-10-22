@@ -592,12 +592,6 @@ kubectl port-forward service/dashboard \
 
 Open <http://localhost:7007>, navigate to the environment, and inspect **Recipes**.
 
-## Optional platforms
-
-If Azure Local or Arc-enabled Kubernetes replaces K3s, use `iac/local-env.bicep` for
-in-cluster implementations unless the platform team intentionally provides managed
-services. Always use a distinct workspace and translate context and environment names
-consistently.
 
 ## Optional automation
 

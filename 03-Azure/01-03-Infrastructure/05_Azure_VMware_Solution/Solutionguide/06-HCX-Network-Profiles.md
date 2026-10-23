@@ -16,13 +16,12 @@ Generally in a customer scenario we create multiple network profiles for the net
 - Uplink
 
 
-1.	Under Infrastructure, select Interconnect > Multi-Site Service Mesh > Network Profiles > Create Network Profile.
+1.	Under Infrastructure, select Interconnect > Network Profiles > Create Network Profile.
 
-![](./Images/06-HCX-Network-Profiles/HCX_image18.png)
+![](./Images/06-HCX-Network-Profiles/HCX_NetworkProfile2.png)
 
 2.	For each network profile, select the network and port group, provide a name, and create the segment's IP pool. Then select Create.
  
-![](./Images/06-HCX-Network-Profiles/HCX_NetworkProfile1.png)
 
 ### Management Network Profile
 
@@ -31,6 +30,8 @@ Management Profile IP: 10.1.1.10-10.1.1.16
 Prefix Length: 27
 
 Management Network Gateway: 10.1.1.1
+
+![](./Images/06-HCX-Network-Profiles/HCX_NetworkProfile3.png)
 
 ### Uplink Network Profile
 
@@ -42,6 +43,8 @@ Uplink Network Gateway: 10.1.1.33
 
 DNS: 1.1.1.1
 
+![](./Images/06-HCX-Network-Profiles/HCX_NetworkProfile4.png)
+
 ### vMotion Network Profile
 
 vMotion Profile IP: 10.1.1.74-10.1.1.77
@@ -52,6 +55,8 @@ vMotion Network Gateway: 10.1.1.65
 
 DNS: 1.1.1.1
 
+![](./Images/06-HCX-Network-Profiles/HCX_NetworkProfile5.png)
+
 ### Replication Network Profile
 
 Replication Profile IP: 10.1.1.106-10.1.1.109
@@ -61,6 +66,8 @@ Prefix Length: 27
 Replication Network Gateway: 10.1.1.97
 
 DNS: 1.1.1.1
+
+![](./Images/06-HCX-Network-Profiles/HCX_NetworkProfile6.png)
 
 
 3.	Once done, the network profile created by you will be available to be used by the Interconnect and Network Extension appliances within the Service Mesh

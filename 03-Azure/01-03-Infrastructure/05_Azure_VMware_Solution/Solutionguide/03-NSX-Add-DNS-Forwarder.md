@@ -18,15 +18,6 @@
 
 ![](./Images/03-NSX-Add-DNS-Forwarder/DNS4.png)
 
-4.  For this Microhack there was also a nested VMware cluster deployed which is running inside the AVS cluster. This nested cluster is reachable from the Jumbox-VM under https://10.1.1.2/ and the credentials are availble in the provided Azure Key Vault.
-
-5. In the on-premise VMware clusters there are two VMs running. One is a Windows 2022 Domain Controller and the other is a domain-joined Windows 2022 server. 
-
-6. Find the hostname of the domain-joined server.
-
-7. Verify from the VM created in last challenge that it can resolve the hostname of the domain-joined on-prem server.
-
-
 ### Note : 
 
-These DNS zones are a prerequisite for LDAP configuration for NSX. 
+These DNS zones are a prerequisite for LDAP configuration for NSX.

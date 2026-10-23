@@ -17,46 +17,52 @@ Be sure to review the VMware HCX required ports.
 
 2.	Review the sites that are pre-populated, and then select Continue.
 
-![](./Images/08-HCX-Service-Mesh/HCX_image35.png)
+![](./Images/08-HCX-Service-Mesh/HCX_servicemesh_image1.png)
 
 ### Note
 If this is your first service mesh configuration, you won't need to modify this screen
 
 3.	Select the source and remote compute profiles from the drop-down lists, and then select Continue.
 
-The selections define the resources where VMs can consume VMware HCX services.
+    The selections define the resources where VMs can consume VMware HCX services.
 
-![](./Images/08-HCX-Service-Mesh/HCX_image36.png)
+    ![](./Images/08-HCX-Service-Mesh/HCX_servicemesh_image2.png)
 
 4.	Review services that will be enabled, and then select Continue.
 
-![](./Images/08-HCX-Service-Mesh/HCX_image37.png)
+    ![](./Images/08-HCX-Service-Mesh/HCX_servicemesh_image3.png)
 
 5.	In Advanced Configuration - Override Uplink Network profiles, select Continue.
 
-![](./Images/08-HCX-Service-Mesh/HCX_image38.png)
+    ![](./Images/08-HCX-Service-Mesh/HCX_servicemesh_image4.png)
 
-### Note
-Uplink network profiles connect to the network through which the remote site's interconnect appliances can be reached. For this Microhack, please use the management network profile.
+    ### Note
+    Uplink network profiles connect to the network through which the remote site's interconnect appliances can be reached. For this Microhack, please use the management network profile.
 
-6.	In Advanced Configuration - Network Extension Appliance Scale Out, review and select Continue.
+6.  Advanced Configuration (MTU). Optional. Review and continue
+    
+    ![](./Images/08-HCX-Service-Mesh/HCX_servicemesh_image5.png) 
 
-![](./Images/08-HCX-Service-Mesh/HCX_image39.png)
+
+7.	In Advanced Configuration - Network Extension Appliance Scale Out, review and select Continue.
+
+    ![](./Images/08-HCX-Service-Mesh/HCX_servicemesh_image6.png) 
+    
 
 ### Note 
 You can have up to eight VLANs per appliance, but you can deploy another appliance to add another eight VLANs. You must also have IP space to account for the more appliances, and it's one IP per appliance. For more information, see VMware HCX Configuration Limits.
 
-7. In Advanced Configuration - Traffic Engineering, do not select the Application Path Resiliency and Traffic Flow Conditioning, and then select Continue.
+7. In Advanced Configuration - Traffic Engineering, do not select any option, and then select Continue.
 
-![](./Images/08-HCX-Service-Mesh/HCX_image40.png)
+    ![](./Images/08-HCX-Service-Mesh/HCX_servicemesh_image7.png) 
 
 8.	Review the topology preview and select Continue.
 
-![](./Images/08-HCX-Service-Mesh/HCX_image41.png)
+    ![](./Images/08-HCX-Service-Mesh/HCX_servicemesh_image8.png) 
 
 9.	Enter the name for this HCX-Microhack-ServiceMesh and select Finish to complete.
 
-![](./Images/08-HCX-Service-Mesh/ServiceMeshName.PNG)
+    ![](./Images/08-HCX-Service-Mesh/HCX_servicemesh_image9.png) 
 
 10.	Select View Tasks to monitor the deployment.
  
@@ -64,8 +70,6 @@ When the service mesh deployment finishes successfully, you'll see the services 
 
 11.	Verify the service mesh's health by checking the appliance status.
 
-![](./Images/08-HCX-Service-Mesh/HCX_image43.png)
-
 12.	Select Interconnect > Appliances.
 
-![](./Images/08-HCX-Service-Mesh/HCX_image44.png)
+    ![](./Images/08-HCX-Service-Mesh/HCX_servicemesh_image10.png) 

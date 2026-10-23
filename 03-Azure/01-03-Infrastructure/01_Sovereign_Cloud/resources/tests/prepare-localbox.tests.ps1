@@ -506,6 +506,95 @@ Describe 'LocalBox capacity secure submission' {
     }
 }
 
+Describe 'LocalBox generated credentials' {
+    It 'generates distinct complex read-only credentials without persistence' {
+        $first = New-LocalBoxVmCredential
+        $second = New-LocalBoxVmCredential
+        $first.UserName | Should -Be 'localadmin'
+        $first.Password.IsReadOnly() | Should -BeTrue
+        $password = $first.GetNetworkCredential().Password
+        $password.Length | Should -Be 45
+        $password | Should -Match '[A-Z]'
+        $password | Should -Match '[a-z]'
+        $password | Should -Match '[0-9]'
+        $password | Should -Match '[^a-zA-Z0-9]'
+        $password | Should -Not -Be $second.GetNetworkCredential().Password
+    }
+}
+
+Describe 'LocalBox encrypted credential persistence' {
+    BeforeEach {
+        $originalWindows = $IsWindows
+        Set-Variable IsWindows $true -Force
+        $path = Join-Path $TestDrive "$([guid]::NewGuid())/credential.clixml"
+        $machineId = '/subscriptions/test/resourceGroups/shared/providers/Microsoft.HybridCompute/machines/sov-ref-vm'
+        $credential = New-LocalBoxVmCredential
+        $saved = @{ MachineId = $machineId; Credential = $credential }
+        Mock Initialize-LocalBoxPrivateDirectory { New-Item -ItemType Directory -Path $Path -Force | Out-Null }
+        Mock New-LocalBoxVmCredential { $credential }
+        Mock Export-Clixml {
+            $InputObject.MachineId | Should -Be $machineId
+            $InputObject.Credential | Should -Be $credential
+            Set-Content -LiteralPath $LiteralPath -Value 'mock encrypted record'
+        }
+        Mock Import-Clixml { $saved }
+    }
+    AfterEach { Set-Variable IsWindows $originalWindows -Force }
+    It 'persists before returning and reuses the same credential on retry' {
+        Get-LocalBoxReferenceVmCredential $machineId $path | Should -Be $credential
+        Test-Path -LiteralPath $path | Should -BeTrue
+        Get-LocalBoxReferenceVmCredential $machineId $path | Should -Be $credential
+        Should -Invoke New-LocalBoxVmCredential -Times 1 -Exactly
+        Should -Invoke Export-Clixml -Times 1 -Exactly
+        Should -Invoke Import-Clixml -Times 1 -Exactly
+        @(Get-ChildItem (Split-Path $path) -Filter '*.tmp').Count | Should -Be 0
+    }
+    It 'rejects non-Windows persistence before accessing files' {
+        Set-Variable IsWindows $false -Force
+        { Get-LocalBoxReferenceVmCredential $machineId $path } | Should -Throw '*requires Windows DPAPI*'
+        Should -Invoke Initialize-LocalBoxPrivateDirectory -Times 0
+    }
+    It 'rejects an invalid saved record without replacing it' -TestCases @(
+        @{ Invalid = 'machine' }; @{ Invalid = 'type' }; @{ Invalid = 'username' }; @{ Invalid = 'empty' }
+    ) {
+        param($Invalid)
+        Get-LocalBoxReferenceVmCredential $machineId $path | Out-Null
+        switch ($Invalid) {
+            'machine' { $saved.MachineId = 'another-resource' }
+            'type' { $saved.Credential = 'not-a-credential' }
+            'username' { $saved.Credential = [pscredential]::new('wrong-user', $credential.Password) }
+            'empty' { $saved.Credential = [pscredential]::new('localadmin', [Security.SecureString]::new()) }
+        }
+        { Get-LocalBoxReferenceVmCredential $machineId $path } | Should -Throw '*invalid or belongs to a different resource*'
+        Should -Invoke Export-Clixml -Times 1 -Exactly
+        Get-Content $path | Should -Be 'mock encrypted record'
+    }
+    It 'fails closed on decryption errors without disclosing underlying details' {
+        Get-LocalBoxReferenceVmCredential $machineId $path | Out-Null
+        Mock Import-Clixml { throw 'sensitive underlying detail' }
+        { Get-LocalBoxReferenceVmCredential $machineId $path } | Should -Throw '*same Windows account*No credential was replaced*'
+        Should -Invoke Export-Clixml -Times 1 -Exactly
+    }
+    It 'cleans partial output and surfaces persistence failure' {
+        Mock Export-Clixml {
+            Set-Content -LiteralPath $LiteralPath -Value 'partial'
+            throw 'write failed'
+        }
+        { Get-LocalBoxReferenceVmCredential $machineId $path } | Should -Throw '*write failed*'
+        Test-Path $path | Should -BeFalse
+        @(Get-ChildItem (Split-Path $path)).Count | Should -Be 0
+    }
+    It 'never overwrites a credential created concurrently' {
+        Mock Export-Clixml {
+            Set-Content -LiteralPath $LiteralPath -Value 'temporary'
+            Set-Content -LiteralPath (Join-Path (Split-Path $LiteralPath) 'credential.clixml') -Value 'existing record'
+        }
+        { Get-LocalBoxReferenceVmCredential $machineId $path } | Should -Throw
+        Get-Content $path | Should -Be 'existing record'
+        @(Get-ChildItem (Split-Path $path) -Filter '*.tmp').Count | Should -Be 0
+    }
+}
+
 Describe 'LocalBox preparation defaults' {
     It 'does not expose the removed manual address-reservation acknowledgement' {
         (Get-Command "$PSScriptRoot/../prepare-localbox.ps1").Parameters.ContainsKey('AddressReservationsConfirmed') | Should -BeFalse
@@ -604,7 +693,7 @@ Describe 'Optional LocalBox reference VM' {
             }
         }
         $nic = @{ location = 'westeurope'; extendedLocation = @{ name = 'custom' }; tags = $tags
-            properties = @{ ipConfigurations = @(@{ name = 'ipconfig1'; properties = @{ subnet = @{ id = 'network' } } }) } }
+            properties = @{ ipConfigurations = @(@{ properties = @{ subnet = @{ id = 'network' } } }) } }
         $referenceArguments = @{ Settings = $settings; Location = 'westeurope'; CustomLocationId = 'custom'; ImageId = 'image'; NetworkId = 'network'; StorageId = 'storage' }
         Mock Invoke-LocalBoxAz { @() }
         Mock Get-LocalBoxResource {
@@ -620,18 +709,21 @@ Describe 'Optional LocalBox reference VM' {
         }
         Mock Get-LocalBoxArmCollection { @() }
         Mock Submit-LocalBoxVM {}
-        Mock Get-Credential { [pscredential]::new('localadmin', (ConvertTo-SecureString 'Mock!Password9-not-real' -AsPlainText -Force)) }
+        Mock Get-Credential { throw 'Unexpected interactive credential prompt' }
+        Mock Get-LocalBoxReferenceVmCredential { [pscredential]::new('localadmin', (ConvertTo-SecureString 'Mock!Password9-not-real' -AsPlainText -Force)) }
     }
     It 'does nothing when explicitly disabled' {
         $settings.IncludeReferenceVm = $false
         Sync-LocalBoxReferenceVm @referenceArguments | Should -BeNullOrEmpty
         Should -Invoke Invoke-LocalBoxAz -Times 0
         Should -Invoke Get-Credential -Times 0
+        Should -Invoke Get-LocalBoxReferenceVmCredential -Times 0
         Should -Invoke Submit-LocalBoxVM -Times 0
     }
     It 'previews without credentials, provisioning, polling or a success-shaped manifest' {
         Sync-LocalBoxReferenceVm @referenceArguments -WhatIf | Should -BeNullOrEmpty
         Should -Invoke Get-Credential -Times 0
+        Should -Invoke Get-LocalBoxReferenceVmCredential -Times 0
         Should -Invoke Submit-LocalBoxVM -Times 0
         Should -Invoke Wait-LocalBoxResource -Times 0
     }
@@ -645,6 +737,10 @@ Describe 'Optional LocalBox reference VM' {
         $reference.Readiness.DefenderAssessments | Should -Be 'NotVerified'
         $reference.Readiness.UpdateAssessmentResults | Should -Be 'NotVerified'
         $reference | ConvertTo-Json -Depth 30 | Should -Not -Match 'Mock!Password|adminPassword|localadmin'
+        Should -Invoke Get-LocalBoxReferenceVmCredential -Times 1 -Exactly -ParameterFilter {
+            $MachineId -eq '/subscriptions/test/resourceGroups/shared/providers/Microsoft.HybridCompute/machines/sov-ref-vm'
+        }
+        Should -Invoke Get-Credential -Times 0
         Should -Invoke Submit-LocalBoxVM -Times 1 -Exactly -ParameterFilter {
             $Entry.Name -eq 'sov-ref-vm' -and $Credential.UserName -eq 'localadmin' -and
             $State.ResourceGroupName -eq 'shared' -and $State.ProcessorCount -eq 2 -and $State.MemoryMB -eq 4096 -and
@@ -655,6 +751,7 @@ Describe 'Optional LocalBox reference VM' {
         $settings.ReferenceVmCredential = [pscredential]::new('refadmin', (ConvertTo-SecureString 'Mock!Password9-not-real' -AsPlainText -Force))
         Sync-LocalBoxReferenceVm @referenceArguments | Out-Null
         Should -Invoke Get-Credential -Times 0
+        Should -Invoke Get-LocalBoxReferenceVmCredential -Times 0
         Should -Invoke Submit-LocalBoxVM -Times 1 -ParameterFilter { $Credential.UserName -eq 'refadmin' }
     }
     It 'reuses matching resources without resetting credentials or redeploying' {
@@ -662,6 +759,22 @@ Describe 'Optional LocalBox reference VM' {
         Sync-LocalBoxReferenceVm @referenceArguments | Out-Null
         Should -Invoke Submit-LocalBoxVM -Times 0
         Should -Invoke Get-Credential -Times 0
+        Should -Invoke Get-LocalBoxReferenceVmCredential -Times 0
+    }
+    It 'does not submit when credential persistence fails' {
+        Mock Get-LocalBoxReferenceVmCredential { throw 'Credential persistence failed' }
+        { Sync-LocalBoxReferenceVm @referenceArguments } | Should -Throw '*Credential persistence failed*'
+        Should -Invoke Submit-LocalBoxVM -Times 0
+    }
+    It 'still rejects incorrect NIC subnet or extra IP configurations without requiring a name' -TestCases @(
+        @{ Conflict = 'subnet' }; @{ Conflict = 'count' }
+    ) {
+        param($Conflict)
+        Mock Invoke-LocalBoxAz { @(@{ id = $machineId }) }
+        if ($Conflict -eq 'subnet') { $nic.properties.ipConfigurations[0].properties.subnet.id = 'wrong-network' }
+        else { $nic.properties.ipConfigurations += $nic.properties.ipConfigurations[0] }
+        { Sync-LocalBoxReferenceVm @referenceArguments } | Should -Throw
+        Should -Invoke Submit-LocalBoxVM -Times 0
     }
     It 'rejects an unrelated machine at the stable name' {
         Mock Invoke-LocalBoxAz { @(@{ id = $machineId }) }

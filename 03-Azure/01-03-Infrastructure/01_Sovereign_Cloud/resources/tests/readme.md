@@ -47,7 +47,9 @@ required to validate regional service availability and effective inherited polic
 
 Run `Invoke-Pester ./prepare-localbox.tests.ps1 -Output Detailed` for the offline
 preparation and capacity regression suite. Reference-VM tests cover default inclusion, explicit opt-out and WhatIf,
-the 15-character Windows name limit, separate credentials, resource reuse and
+the 15-character Windows name limit, generated credentials, encrypted-file lifecycle
+(mocked offline), retry reuse, persistence failures, no credential access on
+reuse/WhatIf/opt-out, optional NIC response names with strict subnet/count checks, resource reuse and
 conflicts, periodic assessment configuration, and pending/failed MDE status.
 The shared VM submission tests check secure parameter-file transport and cleanup,
 error redaction, and an ARM preview restricted to three new VM resources.
@@ -58,8 +60,17 @@ connection, MDE installation and periodic assessment mode. Older manifests witho
 that optional entry retain the normal test set. These checks do **not** verify
 ongoing Defender device reporting or completed Defender/Update Manager results;
 perform the [organizer reference readiness checks](../localbox/readme.md#reference-readiness-and-participant-use)
-before the workshop. The new reference-VM path still requires a live Windows/LocalBox
-integration test; offline mocks are not deployment evidence.
+before the workshop.
+
+On 2026-10-21, read-only validation against an existing running reference VM passed
+with the IP-configuration name absent from the actual NIC response. Arc was
+Connected and periodic assessment was enabled; MDE was still Pending. Separately,
+Azure Run Command on LocalBox-Client verified real Windows DPAPI credential
+round-trip, restricted directory/file ACLs, unchanged retry reuse and rejection
+of a different resource ID. This test ran as SYSTEM against a disposable test
+file and removed it afterwards; it did not reset the reference VM's password.
+An interactive organizer-account run and fresh creation using the generated
+credential remain end-to-end integration checks.
 
 ## Preparation recovery and ordering checks
 

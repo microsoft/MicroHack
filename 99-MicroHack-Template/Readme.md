@@ -35,6 +35,11 @@ After completing this MicroHack you will:
 
 This MicroHack has a few but important prerequisites
 
+For disposable GitHub Enterprise Managed Users lab tenants, see the optional
+[GitHub tenant setup automation](./ghe-setup/README.md). It configures group-based
+Copilot licensing, budgets, policies and MicroHack workflows, including destructive
+nightly cleanup of all other organization repositories.
+
 In order to use the MicroHack time most effectively, the following tasks should be completed prior to starting the session.
 
 With these pre-requisites in place, we can focus on building the differentiated knowledge in ... that is required when working with the product, rather than spending hours repeating relatively simple tasks such as setting up....

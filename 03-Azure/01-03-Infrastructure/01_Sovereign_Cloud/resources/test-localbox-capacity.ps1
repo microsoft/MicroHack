@@ -340,12 +340,7 @@ function Invoke-LocalBoxCapacityRun {
         Repair-LocalBoxCapacityPendingSubmission $state
         if (-not $Settings.VmCredential -and @($state.VMs).Count -lt $Settings.VmCount) {
             if ($Settings.GenerateVmCredential) {
-                $password = 'Lb!' + [Convert]::ToBase64String([Security.Cryptography.RandomNumberGenerator]::GetBytes(30)) + '9a'
-                $secure = [Security.SecureString]::new()
-                foreach ($character in $password.GetEnumerator()) { $secure.AppendChar($character) }
-                $secure.MakeReadOnly()
-                $Settings.VmCredential = [pscredential]::new('localadmin', $secure)
-                $password = $null
+                $Settings.VmCredential = New-LocalBoxVmCredential
                 Write-Host 'Generated a disposable test-VM password in memory. It is not saved; use a supplied VmCredential if interactive sign-in is needed.'
             }
             else { $Settings.VmCredential = Get-Credential -UserName 'localadmin' -Message 'Local administrator for disposable capacity-test VMs (not the LocalBox administrator)' }

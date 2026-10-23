@@ -15,7 +15,7 @@ It also installs the MetalLB Arc extension and an ARP pool from the configured
 service VIP reservation. The Runtime provider object ID comes from the organizer,
 not a Graph lookup using the Client managed identity.
 IncludeReferenceVm defaults to true and creates sov-ref-vm for participant inspection,
-with a separate local credential, guest management and periodic update assessment.
+with a generated, locally encrypted credential, guest management and periodic update assessment.
 Operations run without confirmation under the default PowerShell preference;
 use Confirm to request prompts or WhatIf to preview changes.
 Assumes the standard greenfield LocalBox network configuration. Configured address
@@ -276,6 +276,80 @@ function New-LocalBoxVmTemplate {
     }
 }
 
+function Initialize-LocalBoxPrivateDirectory {
+    param([Parameter(Mandatory)][string]$Path)
+    if (Test-Path -LiteralPath $Path) {
+        $item = Get-Item -LiteralPath $Path -Force -ErrorAction Stop
+        if (-not $item.PSIsContainer -or ($item.Attributes -band [IO.FileAttributes]::ReparsePoint)) {
+            throw "Expected a private directory, not a file or link: $Path"
+        }
+    }
+    elseif ($IsWindows) {
+        New-Item -ItemType Directory -Path $Path -ErrorAction Stop | Out-Null
+    }
+    else {
+        [IO.Directory]::CreateDirectory($Path, [IO.UnixFileMode]::UserRead -bor [IO.UnixFileMode]::UserWrite -bor [IO.UnixFileMode]::UserExecute) | Out-Null
+    }
+    if ($IsWindows) {
+        $identity = [Security.Principal.WindowsIdentity]::GetCurrent().User
+        $acl = [Security.AccessControl.DirectorySecurity]::new()
+        $acl.SetOwner($identity)
+        $acl.SetAccessRuleProtection($true, $false)
+        $rule = [Security.AccessControl.FileSystemAccessRule]::new($identity, 'FullControl', 'ContainerInherit, ObjectInherit', 'None', 'Allow')
+        $acl.SetAccessRule($rule)
+        Set-Acl -LiteralPath $Path -AclObject $acl -ErrorAction Stop
+    }
+    else {
+        [IO.File]::SetUnixFileMode($Path, [IO.UnixFileMode]::UserRead -bor [IO.UnixFileMode]::UserWrite -bor [IO.UnixFileMode]::UserExecute)
+    }
+}
+
+function New-LocalBoxVmCredential {
+    $password = 'Lb!' + [Convert]::ToBase64String([Security.Cryptography.RandomNumberGenerator]::GetBytes(30)) + '9a'
+    try {
+        $secure = [Security.SecureString]::new()
+        foreach ($character in $password.GetEnumerator()) { $secure.AppendChar($character) }
+        $secure.MakeReadOnly()
+        return [pscredential]::new('localadmin', $secure)
+    }
+    finally { $password = $null }
+}
+
+function Get-LocalBoxReferenceVmCredential {
+    param(
+        [Parameter(Mandatory)][string]$MachineId,
+        [string]$Path = 'C:\LocalBox\credentials\sov-ref-vm\credential.clixml'
+    )
+    if (-not $IsWindows) { throw 'Reference-VM credential persistence requires Windows DPAPI on LocalBox-Client.' }
+    $directory = Split-Path -Parent $Path
+    Initialize-LocalBoxPrivateDirectory $directory
+    if (Test-Path -LiteralPath $Path) {
+        if ((Get-Item -LiteralPath $Path -Force -ErrorAction Stop).Attributes -band [IO.FileAttributes]::ReparsePoint) {
+            throw "Refusing to load a linked credential file: $Path"
+        }
+        try { $saved = Import-Clixml -LiteralPath $Path -ErrorAction Stop }
+        catch { throw "Cannot read or decrypt $Path. Use the same Windows account on this LocalBox-Client that created it. No credential was replaced." }
+        if ($saved.MachineId -ine $MachineId -or $saved.Credential -isnot [pscredential] -or
+            $saved.Credential.UserName -ne 'localadmin' -or $saved.Credential.Password.Length -eq 0) {
+            throw "Saved reference-VM credential in $Path is invalid or belongs to a different resource. No credential was replaced."
+        }
+        Write-Host "Reusing the encrypted reference-VM credential in $Path."
+        return $saved.Credential
+    }
+    $credential = New-LocalBoxVmCredential
+    $temporary = Join-Path $directory "$([guid]::NewGuid()).tmp"
+    try {
+        @{ MachineId = $MachineId; Credential = $credential } |
+            Export-Clixml -LiteralPath $temporary -Depth 5 -ErrorAction Stop
+        [IO.File]::Move($temporary, $Path, $false)
+    }
+    finally {
+        if (Test-Path -LiteralPath $temporary) { Remove-Item -LiteralPath $temporary -Force -ErrorAction Stop }
+    }
+    Write-Host "Generated reference-VM administrator credential; encrypted copy saved to $Path."
+    return $credential
+}
+
 function Submit-LocalBoxVM {
     param([hashtable]$State, [hashtable]$Entry, [pscredential]$Credential, [hashtable]$Tags, [switch]$EnablePeriodicAssessment)
     if ($Entry.Name -notmatch '^(?=.{1,15}$)(?=.*[a-zA-Z])[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?$') {
@@ -283,16 +357,7 @@ function Submit-LocalBoxVM {
     }
     $directory = Join-Path ([IO.Path]::GetTempPath()) "lbvm-$([guid]::NewGuid())"
     try {
-        if ($IsWindows) {
-            New-Item -ItemType Directory -Path $directory -ErrorAction Stop | Out-Null
-            $acl = Get-Acl -LiteralPath $directory
-            $acl.SetAccessRuleProtection($true, $false)
-            $identity = [Security.Principal.WindowsIdentity]::GetCurrent().User
-            $rule = [Security.AccessControl.FileSystemAccessRule]::new($identity, 'FullControl', 'ContainerInherit, ObjectInherit', 'None', 'Allow')
-            $acl.SetAccessRule($rule)
-            Set-Acl -LiteralPath $directory -AclObject $acl -ErrorAction Stop
-        }
-        else { [IO.Directory]::CreateDirectory($directory, [IO.UnixFileMode]::UserRead -bor [IO.UnixFileMode]::UserWrite -bor [IO.UnixFileMode]::UserExecute) | Out-Null }
+        Initialize-LocalBoxPrivateDirectory $directory
         $templatePath = Join-Path $directory 'vm.json'
         New-LocalBoxVmTemplate -EnablePeriodicAssessment:$EnablePeriodicAssessment | ConvertTo-Json -Depth 30 |
             Set-Content -LiteralPath $templatePath -ErrorAction Stop
@@ -379,7 +444,7 @@ function Sync-LocalBoxReferenceVm {
     $machineExpected = @{ kind = 'HCI'; location = $Location; tags = $tags; identity = @{ type = 'SystemAssigned' }
         properties = @{ osProfile = @{ windowsConfiguration = @{ patchSettings = @{ assessmentMode = 'AutomaticByPlatform' } } } } }
     $nicExpected = @{ location = $Location; extendedLocation = @{ name = $CustomLocationId }; tags = $tags
-        properties = @{ ipConfigurations = @(@{ name = 'ipconfig1'; properties = @{ subnet = @{ id = $NetworkId } } }) } }
+        properties = @{ ipConfigurations = @(@{ properties = @{ subnet = @{ id = $NetworkId } } }) } }
     $resources = @(Invoke-LocalBoxAz @('resource', 'list', '--subscription', $Settings.SubscriptionId, '--resource-group', $Settings.ResourceGroupName))
     $existing = @($resources | Where-Object id -ieq $machineId)
     if ($existing.Count) {
@@ -394,7 +459,7 @@ function Sync-LocalBoxReferenceVm {
     elseif ($PSCmdlet.ShouldProcess($machineId, 'Create shared reference VM (2 vCPU, 4 GiB RAM, guest management and periodic update assessment)')) {
         $credential = $Settings.ReferenceVmCredential
         if (-not $credential) {
-            $credential = Get-Credential -UserName 'localadmin' -Message 'Separate local administrator for sov-ref-vm; retain securely and do not share with participants'
+            $credential = Get-LocalBoxReferenceVmCredential -MachineId $machineId
         }
         if (-not $credential) { throw 'A separate reference-VM credential is required; nested domain credentials are not reused.' }
         $state = @{

@@ -1114,7 +1114,7 @@ Describe 'Console LocalBox credential isolation' {
         Should -Invoke New-MhhStablePassword -Times 0
     }
     It 'keeps group metadata and deployment checks without password publication in the shared hook' {
-        $source = Get-Content "$PSScriptRoot/../../labautomation/shared-deploy-lab.ps1" -Raw
+        $source = Get-Content "$PSScriptRoot/../../labautomation/global-event-deploy.ps1" -Raw
         $source | Should -Match '-UseConsoleCredentials'
         $source | Should -Match 'Get-LocalBoxConsoleGroupCredential'
         $source | Should -Match 'Wait-LocalBoxDeployment -ResourceGroupName \$localBoxResourceGroupName -DeploymentName \$localBoxDeployment.DeploymentName'
@@ -1146,7 +1146,7 @@ Describe 'LocalBox registration region contract' {
     It 'uses Australia East registration while preserving shared host-region selection' {
         $errors = $null
         $ast = [System.Management.Automation.Language.Parser]::ParseFile(
-            "$PSScriptRoot/../../labautomation/shared-deploy-lab.ps1", [ref]$null, [ref]$errors)
+            "$PSScriptRoot/../../labautomation/global-event-deploy.ps1", [ref]$null, [ref]$errors)
         $errors.Count | Should -Be 0
         $ast.Extent.Text | Should -Match "-AzureLocalInstanceLocation 'australiaeast'"
         $ast.Extent.Text | Should -Match '-Location \$localBoxLocation'
@@ -1176,7 +1176,7 @@ Describe 'Console LocalBox CLI failure propagation' {
         }, $true)
         . ([scriptblock]::Create($helper.Extent.Text))
         $shared = [Management.Automation.Language.Parser]::ParseFile(
-            "$PSScriptRoot/../../labautomation/shared-deploy-lab.ps1", [ref]$null, [ref]$null)
+            "$PSScriptRoot/../../labautomation/global-event-deploy.ps1", [ref]$null, [ref]$null)
         $loop = $shared.Find({
             param($node)
             $node -is [Management.Automation.Language.ForEachStatementAst] -and
@@ -1711,7 +1711,7 @@ Describe 'LocalBox MetalLB preparation' {
         foreach ($path in @('../../labautomation/resource-providers.ps1', '../manual-setup/subscription-preparations/1-resource-providers.ps1')) {
             Get-Content "$PSScriptRoot/$path" -Raw | Should -Match '"Microsoft.KubernetesRuntime"'
         }
-        $shared = Get-Content "$PSScriptRoot/../../labautomation/shared-deploy-lab.ps1" -Raw
+        $shared = Get-Content "$PSScriptRoot/../../labautomation/global-event-deploy.ps1" -Raw
         $shared | Should -Match "appId eq '087fca6e-4606-4d41-b3f6-5ebdf75b8b4c'"
         $shared | Should -Match 'microhack-k8s-runtime-object-id.*\$runtimeObjectId\.ToString'
         $preparation = ${function:Invoke-LocalBoxPreparation}.ToString()

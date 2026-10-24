@@ -4,6 +4,11 @@
   "description": "Smart defaults for the lab lifecycle wizard. Place as lab-defaults.json in hackcontent/<slug>/lab/. Only include fields you want to override — missing fields are ignored.",
   "type": "object",
   "properties": {
+    "$schema": {
+      "type": "string",
+      "format": "uri",
+      "description": "Optional URI of the lab-defaults JSON schema."
+    },
     "groups": {
       "type": "array",
       "items": { "type": "string" },
@@ -28,6 +33,11 @@
       "type": "number",
       "minimum": 0,
       "description": "Estimated daily cost per lab environment in USD: the running cost of the resources deploy-lab.ps1 creates. Used for cost forecasting in the lab lifecycle wizard. Defaults to 25 when absent or < 1."
+    },
+    "estimatedGlobalDeploymentDailyCostsUsd": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Estimated daily cost in USD of resources created once per event by global-event-deploy.ps1, not multiplied by subscription count. The Console only runs this hook when its parameter contract matches and this value is greater than 5; re-import the content pack after enabling it."
     },
     "estimatedSharedDeploymentDailyCostsUsd": {
       "type": "number",

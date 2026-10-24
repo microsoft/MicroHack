@@ -152,11 +152,13 @@ Describe 'Hosted control-tag setup' {
 
 Describe 'Hosted-only policy wiring' {
     It 'calls policy setup before any shared LocalBox deployment' {
-        $source = Get-Content "$root/labautomation/shared-deploy-lab.ps1" -Raw
+        $source = Get-Content "$root/labautomation/global-event-deploy.ps1" -Raw
         $source | Should -Match "Join-Path .+ 'hosted-tag-policy.ps1'"
-        $setup = $source.IndexOf('Initialize-MhhHostedTagPolicy -SubscriptionId $SubscriptionId -Location $selectedCandidate.Location')
+        $setup = $source.IndexOf('Initialize-MhhHostedTagPolicy -SubscriptionId $SubscriptionId -Location $PreferredLocation[0]')
         $setup | Should -BeGreaterThan -1
         $setup | Should -BeLessThan $source.IndexOf('$localBoxResourceGroupName =')
+        Get-Content "$root/labautomation/shared-deploy-lab.ps1" -Raw |
+            Should -Match 'Initialize-MhhHostedTagPolicy -SubscriptionId \$SubscriptionId'
     }
 
     It 'does not wire hosted policies into BYOS setup or participant deployment' {

@@ -48,7 +48,7 @@ LocalBox runs as a nested lab environment hosted in Azure. In a production sover
 **Familiarize yourself with the LocalBox resources in Azure Portal to understand the hybrid architecture.**
 
 1. Sign in to the [Azure Portal](https://portal.azure.com)
-2. Navigate to the shared LocalBox resource group (e.g., `rg-localbox-shared`)
+2. From the Console's Credentials tab, copy **Shared LocalBox Subscription ID** and **Shared LocalBox Resource Group ID**. Navigate to that exact shared resource group (`rg-localbox-shared` in hosted events), enabling its subscription in the portal filter if needed. One LocalBox serves the whole event; it may be in a different subscription from your assigned lab. For manual delivery, use the scope supplied by the facilitator.
 3. Locate the **Azure Local** instance resource
 4. Review the following connected resources:
    - **Arc Resource Bridge** - Connects Azure Local to Azure
@@ -80,7 +80,7 @@ LocalBox runs as a nested lab environment hosted in Azure. In a production sover
 
 💥 **Basic settings:**
 
-1. **Subscription**: Select your subscription (e.g. **traininglab-01**)
+1. **Subscription**: Select your assigned participant subscription (e.g. **traininglab-01**), not the shared LocalBox subscription unless they are the same
 2. **Resource group**: Select your assigned resource group (e.g., `rg-labuser-0024`; use the exact name provided by the facilitator)
 3. **Virtual machine name**: `labuserXX-vm-01` (replace XX with your own suffix)
 4. **Security type**: Select **Standard**
@@ -88,6 +88,8 @@ LocalBox runs as a nested lab environment hosted in Azure. In a production sover
 ![Azure Arc VM creation Basics showing the assigned resource group, VM name, Standard security, and automatic storage selection](./images/localbox_02.png)
 
 Verify that **Custom location** points to the shared LocalBox environment and **Virtual machine kind** is **Azure Local**. Leave **Storage path** set to **Choose automatically** unless the facilitator instructs otherwise.
+
+Your VM remains in your own resource group even when the custom location, image and network are in the event's shared subscription. Verify the shared resource IDs instead of choosing a similarly named resource in another subscription. If the wizard does not expose the assigned shared resources, ask the facilitator to check access; do not deploy into the shared resource group or create another LocalBox.
 
 > [!NOTE]
 > The selected custom location determines the Azure region used for the VM's management resources; it need not match your resource group's location or the Azure region hosting the LocalBox simulator. Fresh hosted deployments and the manual deployment default to **Australia East**, including LocalBox's staging storage account, after a hosted test encountered a West Europe eligibility rejection. This is a lab-only choice, not a European data-residency recommendation. Inspect the actual custom location in your event rather than assuming the latest default has changed an existing environment.
@@ -359,7 +361,7 @@ The shared AKS cluster and MetalLB load balancer are already prepared for you. I
 
 ### Task 5.1: Verify Your Cluster Access
 
-1. In the Azure portal, open **`localbox-aks`** in **`rg-localbox-shared`**.
+1. In the Azure portal, open **`localbox-aks`** in **`rg-localbox-shared`**, using the Console's **Shared LocalBox Subscription ID**.
 2. Open **Access control (IAM) > Check access > View my access**.
 3. Under **Current role assignments**, confirm that **Azure Arc Enabled Kubernetes Cluster User Role** applies to your workshop identity on this cluster. It can be assigned directly, through a group, or inherited from a parent scope. If it is missing, ask the facilitator; do not add role assignments yourself.
 
@@ -392,19 +394,24 @@ If the extension, healthy workloads, or pool are missing, stop and contact the f
 
 ### Task 5.3: Start the Microsoft Entra Cluster Connect Proxy — Terminal 1
 
-Open a **Bash** terminal in your Sovereign Cloud Codespace. This assumes you are already signed in to Azure CLI with your workshop identity and have selected the workshop subscription. Retrieve the tenant and subscription IDs from the current CLI context, then enter your **assigned participant resource group**, not `rg-localbox-shared`, when prompted. Teammates sharing an assigned resource group share one namespace; coordinate deployment and cleanup.
+Open a **Bash** terminal in your Sovereign Cloud Codespace. Sign in with your workshop identity and keep your **assigned participant subscription** selected. Retrieve its tenant and subscription IDs, then enter your **assigned participant resource group**, not `rg-localbox-shared`, and the separate **Shared LocalBox Subscription ID** from Console credentials. For manual delivery, use the LocalBox subscription supplied by the facilitator. Teammates sharing an assigned resource group share one namespace; coordinate deployment and cleanup.
 
 ```bash
 TENANT_ID=$(az account show --query tenantId --output tsv) || exit 1
 SUBSCRIPTION_ID=$(az account show --query id --output tsv) || exit 1
 read -r -p "Your assigned participant resource group: " PARTICIPANT_RG
+read -r -p "Shared LocalBox Subscription ID: " LOCALBOX_SUBSCRIPTION_ID
 if [[ -z "$TENANT_ID" || -z "$SUBSCRIPTION_ID" || -z "$PARTICIPANT_RG" ||
+      ! "$LOCALBOX_SUBSCRIPTION_ID" =~ ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$ ||
       "${PARTICIPANT_RG,,}" == "rg-localbox-shared" ]]; then
-  echo "Verify your current Azure CLI context and use your own assigned resource group."
+  echo "Verify your participant context, assigned resource group and Shared LocalBox Subscription ID."
   exit 1
 fi
 printf 'Current tenant: %s\nCurrent subscription: %s\n' "$TENANT_ID" "$SUBSCRIPTION_ID"
 az group show --subscription "$SUBSCRIPTION_ID" --name "$PARTICIPANT_RG" \
+  --query '{name:name,id:id}' --output table || exit 1
+az connectedk8s show --subscription "$LOCALBOX_SUBSCRIPTION_ID" \
+  --resource-group rg-localbox-shared --name localbox-aks \
   --query '{name:name,id:id}' --output table || exit 1
 ```
 
@@ -423,13 +430,14 @@ umask 077
 mkdir -p "$HOME/.config/microhack" "$HOME/.kube"
 printf 'export %s=%q\n' \
   SUBSCRIPTION_ID "$SUBSCRIPTION_ID" PARTICIPANT_RG "$PARTICIPANT_RG" \
+  LOCALBOX_SUBSCRIPTION_ID "$LOCALBOX_SUBSCRIPTION_ID" \
   TEAM_NAMESPACE "$TEAM_NAMESPACE" AKS_CONTEXT "$AKS_CONTEXT" \
   AKS_KUBECONFIG "$AKS_KUBECONFIG" MANIFEST "$MANIFEST" \
   > "$HOME/.config/microhack/challenge06.env"
 source "$HOME/.config/microhack/challenge06.env"
 printf 'Team namespace: %s\n' "$TEAM_NAMESPACE"
 az connectedk8s proxy \
-  --subscription "$SUBSCRIPTION_ID" \
+  --subscription "$LOCALBOX_SUBSCRIPTION_ID" \
   --resource-group rg-localbox-shared --name localbox-aks \
   --file "$AKS_KUBECONFIG" --kube-context "$AKS_CONTEXT" --port 47011
 ```

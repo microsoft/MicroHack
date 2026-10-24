@@ -37,11 +37,31 @@ authorized test of real network access through the load-balancer address.
 The LocalBox registration-region contract is checked offline with
 `Invoke-Pester ./prepare-localbox.tests.ps1 -FullName 'LocalBox registration region contract*' -Output Detailed`.
 It verifies that both deployment entry points default registration to Australia East,
-the shared hook passes that region independently of host-region selection, and
+the global hook passes that region independently of host-region selection, and
 all four Challenge 1 policy parameter examples include the Australia East lab-only
 exception while retaining the four European regions. These checks make no
 Azure changes; a fresh Console deployment and participant VM creation remain
 required to validate regional service availability and effective inherited policies.
+
+## Global event LocalBox checks
+
+Run `Invoke-Pester ./global-localbox.tests.ps1 -Output Detailed` for offline
+coverage of the Console's exact global-hook signature, cost/schema opt-in, one
+LocalBox deployment followed by two subscription preparations, all-event RBAC,
+shared subscription/resource-group discovery outputs, regional fallback, reuse,
+context guards and failure propagation without publishing success credentials.
+The preparation, hosted-tag-policy, hosted-defender and shared-AKS suites also
+cover the relocated wiring and unchanged per-subscription setup.
+
+For integration, re-import the content pack and provision a fresh event spanning
+at least two subscriptions with organizer approval (the normal one-lab smoke test
+cannot verify cross-subscription access). Confirm exactly one global job and
+LocalBox, separate shared preparation jobs, identical global discovery credentials
+for all labs, and a participant in the other subscription creating/managing their
+own VM against the shared custom location. Verify reference-VM Defender visibility,
+Entra AKS proxy access, distinct team namespaces and teardown ordering. These are
+live integration gates; offline tests do not establish Console execution or
+cross-subscription Azure resource-linking behavior.
 
 ## Reference-VM checks
 

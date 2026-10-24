@@ -5,7 +5,7 @@ Prepares a subscription for Sovereign Cloud MicroHack labs.
 Runs once per subscription before participant lab deployments and registers the
 required Azure resource providers. It ensures one preferred region has the VM
 SKUs and compute quota required by the subscription's participant count.
-It also submits one shared LocalBox environment per subscription for Challenge 6.
+LocalBox is deployed separately by global-event-deploy.ps1 once per event.
 For Microsoft-hosted environments only: assigns and verifies the MCAPS control-tag
 initiative and enables paid Defender for Servers P2 with Endpoint protection before
 deploying resources. Do not use this hook for BYOS setup.
@@ -21,30 +21,15 @@ param(
     [string[]]$AllowedEntraUserIds = @()
 )
 
+$ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'quota-helpers.ps1')
-. (Join-Path $PSScriptRoot 'localbox-credentials.ps1')
 . (Join-Path $PSScriptRoot 'hosted-tag-policy.ps1')
 . (Join-Path $PSScriptRoot 'hosted-defender.ps1')
 
-Get-LocalBoxConsoleGroupCredential
-
-$azureLocalResourceProviderAppId = '1412d89f-b8a8-4111-b4fd-e82905cbd85d'
 Update-MhhToken | Out-Null
-$azureLocalResourceProviderObjectIds = @(
-    & az ad sp list `
-        --filter "appId eq '$azureLocalResourceProviderAppId'" `
-        --query '[].id' `
-        --output tsv `
-        --only-show-errors
-)
-if($LASTEXITCODE -ne 0) {
-    throw 'Unable to query Microsoft Graph for the Microsoft.AzureStackHCI service principal.'
+if ((Get-AzContext -ErrorAction Stop).Subscription.Id -ne $SubscriptionId) {
+    throw "The Azure context must target participant subscription $SubscriptionId."
 }
-$azureLocalResourceProviderObjectIds = @($azureLocalResourceProviderObjectIds | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
-if($azureLocalResourceProviderObjectIds.Count -ne 1) {
-    throw "Expected exactly one Microsoft.AzureStackHCI service principal, found $($azureLocalResourceProviderObjectIds.Count)."
-}
-Write-Host "Resolved Microsoft.AzureStackHCI service-principal object ID: $($azureLocalResourceProviderObjectIds[0])" -ForegroundColor Green
 
 Write-Host "Preparing subscription $SubscriptionId for Sovereign Cloud labs..."
 & (Join-Path $PSScriptRoot 'resource-providers.ps1')
@@ -158,141 +143,3 @@ Write-Host "Selected $($selectedCandidate.VmSize) in $($selectedCandidate.Locati
 
 Initialize-MhhHostedTagPolicy -SubscriptionId $SubscriptionId -Location $selectedCandidate.Location
 Initialize-MhhHostedDefender -SubscriptionId $SubscriptionId
-
-$localBoxResourceGroupName = 'rg-localbox-shared'
-$localBoxLocations = @(
-    @($selectedCandidate.Location) + $PreferredLocation |
-        Where-Object { $_ } |
-        Select-Object -Unique
-)
-$activeDeploymentStates = @('Accepted', 'Running', 'Ready', 'Creating', 'Created', 'Succeeded')
-$resourceGroup = Get-AzResourceGroup -Name $localBoxResourceGroupName -ErrorAction SilentlyContinue
-if ($resourceGroup) {
-    Update-AzTag `
-        -ResourceId $resourceGroup.ResourceId `
-        -Operation Merge `
-        -Tag @{
-            workload = 'sovereign-localbox'
-            challenge = '6'
-            SecurityControl = 'Ignore'
-            CostControl = 'Ignore'
-        } `
-        -ErrorAction Stop | Out-Null
-    Write-Host "Applied the temporary MCAPS security-control exemption to $localBoxResourceGroupName." -ForegroundColor Green
-}
-$localBoxDeployment = if ($resourceGroup) {
-    Get-AzResourceGroupDeployment `
-        -ResourceGroupName $localBoxResourceGroupName `
-        -ErrorAction Stop |
-        Where-Object {
-            $_.DeploymentName -like 'localbox-*' -and
-            $_.ProvisioningState -in $activeDeploymentStates
-        } |
-        Sort-Object Timestamp -Descending |
-        Select-Object -First 1
-}
-
-if ($localBoxDeployment) {
-    Write-Host "Reusing LocalBox deployment '$($localBoxDeployment.DeploymentName)' ($($localBoxDeployment.ProvisioningState))." -ForegroundColor Green
-    $localBoxClient = Get-AzResource `
-        -ResourceGroupName $localBoxResourceGroupName `
-        -ResourceType 'Microsoft.Compute/virtualMachines' `
-        -ErrorAction Stop |
-        Where-Object Name -eq 'LocalBox-Client'
-    if ($localBoxClient) {
-        Update-AzTag `
-            -ResourceId $localBoxClient.ResourceId `
-            -Operation Merge `
-            -Tag @{ CostControl = 'Ignore' } `
-            -ErrorAction Stop | Out-Null
-    }
-}
-else {
-    foreach ($localBoxLocation in $localBoxLocations) {
-        try {
-            Write-Host "Submitting shared LocalBox deployment in $localBoxLocation..." -ForegroundColor Cyan
-            $localBoxDeployment = & (Join-Path $PSScriptRoot 'deploy-localbox.ps1') `
-                -SubscriptionId $SubscriptionId `
-                -ResourceGroupName $localBoxResourceGroupName `
-                -Location $localBoxLocation `
-                -AzureLocalResourceProviderObjectId $azureLocalResourceProviderObjectIds[0] `
-                -AzureLocalInstanceLocation 'australiaeast' `
-                -UseConsoleCredentials `
-                -NoWait
-
-            if (-not $localBoxDeployment -or $localBoxDeployment.ProvisioningState -ne 'Submitted') {
-                throw "LocalBox deployment submission did not return the expected Submitted state."
-            }
-            break
-        }
-        catch {
-            $failureDetails = @(
-                $_.Exception.ToString()
-                $_.ErrorDetails.Message
-            ) | Where-Object { $_ }
-            $failureDetails = $failureDetails -join ' '
-            $retryableRegionalFailure = $failureDetails -match 'RequestDisallowedByAzure|locationineligible|SkuNotAvailable|QuotaExceeded|OperationNotAllowed|AllocationFailed|VM size .+ unavailable|At least 32 unused'
-
-            if ($retryableRegionalFailure -and $localBoxLocation -ne $localBoxLocations[-1]) {
-                Write-Warning "LocalBox is unavailable in $localBoxLocation; trying the next preferred region. $($_.Exception.Message)"
-                $localBoxDeployment = $null
-                continue
-            }
-            throw
-        }
-    }
-
-    if (-not $localBoxDeployment) {
-        throw "LocalBox deployment submission failed in all candidate regions for subscription $SubscriptionId."
-    }
-}
-
-
-$localBoxScope = "/subscriptions/$SubscriptionId/resourceGroups/$localBoxResourceGroupName"
-for ($attempt = 1; $attempt -le 60; $attempt++) {
-    Update-MhhToken | Out-Null
-    $runtimeProvider = Get-AzResourceProvider -ProviderNamespace Microsoft.KubernetesRuntime -ErrorAction Stop
-    if ($runtimeProvider.RegistrationState -eq 'Registered') { break }
-    Start-Sleep -Seconds 10
-}
-if ($runtimeProvider.RegistrationState -ne 'Registered') {
-    throw 'Microsoft.KubernetesRuntime registration did not complete. LocalBox MetalLB preparation is blocked.'
-}
-$runtimeObjectIds = @(& az ad sp list --filter "appId eq '087fca6e-4606-4d41-b3f6-5ebdf75b8b4c'" --query '[].id' --output tsv --only-show-errors)
-if ($LASTEXITCODE -ne 0) { throw 'Unable to resolve the Microsoft.KubernetesRuntime service principal for MetalLB.' }
-$runtimeObjectIds = @($runtimeObjectIds | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
-$runtimeObjectId = [guid]::Empty
-if ($runtimeObjectIds.Count -ne 1 -or -not [guid]::TryParse($runtimeObjectIds[0], [ref]$runtimeObjectId) -or $runtimeObjectId -eq [guid]::Empty) {
-    throw 'Expected exactly one valid Microsoft.KubernetesRuntime service-principal object ID. Have the tenant administrator verify provider registration.'
-}
-Update-AzTag -ResourceId $localBoxScope -Operation Merge `
-    -Tag @{ 'microhack-k8s-runtime-object-id' = $runtimeObjectId.ToString() } -ErrorAction Stop | Out-Null
-
-foreach ($participantObjectId in $AllowedEntraUserIds) {
-    foreach ($roleName in @('Reader', 'Azure Stack HCI VM Contributor')) {
-        $roleAssignment = Get-AzRoleAssignment `
-            -ObjectId $participantObjectId `
-            -RoleDefinitionName $roleName `
-            -Scope $localBoxScope `
-            -ErrorAction SilentlyContinue
-
-        if (-not $roleAssignment) {
-            Write-Host "Assigning '$roleName' on shared LocalBox to $participantObjectId..."
-            New-AzRoleAssignment `
-                -ObjectId $participantObjectId `
-                -RoleDefinitionName $roleName `
-                -Scope $localBoxScope `
-                -ErrorAction Stop | Out-Null
-        }
-    }
-}
-
-Wait-LocalBoxDeployment -ResourceGroupName $localBoxResourceGroupName -DeploymentName $localBoxDeployment.DeploymentName
-
-@{
-    'HackboxCredential' = @{
-        name = 'Shared LocalBox Resource Group'
-        value = $localBoxResourceGroupName
-        note = 'Shared Challenge 6 environment; readiness is verified by the facilitator'
-    }
-}

@@ -76,7 +76,7 @@ There is **one import attempt per run**, not an endless retry loop. If the new a
 ## MetalLB preparation
 
 MetalLB is installed automatically **after AKS is ready**, by this organizer
-preparation script, not by participants. The Console shared hook still deploys
+preparation script, not by participants. The Console global event hook deploys
 LocalBox only; it registers the Runtime provider and supplies the object-ID tag
 needed for this later step. No Client VM access is granted to attendees.
 

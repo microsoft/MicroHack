@@ -12,6 +12,8 @@ Your organization must run workloads in a sovereign cloud while still leveraging
 
 Before starting, return your Challenge 1 exercise policies to **DoNotEnforce**. If a policy blocks deployment, use the [troubleshooting steps](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/walkthrough/challenge-06/solution-06.md#if-validation-or-deployment-is-blocked-by-a-location-policy) or ask the facilitator.
 
+Hosted events share **one LocalBox across all subscriptions**. Find it using **Shared LocalBox Subscription ID** and **Shared LocalBox Resource Group ID** in the Console's Credentials tab. Your own VM still belongs in your assigned subscription/resource group; AKS proxy connections use the shared LocalBox subscription.
+
 ### Explore and manage a VM
 
 * Explore the LocalBox hybrid infrastructure in the Azure Portal

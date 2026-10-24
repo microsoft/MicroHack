@@ -40,6 +40,14 @@ reference-VM security inspection. No participant Owner, host login or password i
 granted by this hook. Existing shared VM/AKS access remains a workshop trust
 boundary, not per-participant isolation.
 
+Participant RBAC setup reuses an existing direct Security Reader assignment on
+its subscription, including the grant made by the global hook for participants
+in the LocalBox host subscription. It does not recreate the same grant under a
+different role-assignment ID. If an earlier run failed with
+`RoleAssignmentExists` during `lab-*` deployment, re-import the corrected branch
+and retry the event deployment; do not delete the global grants or LocalBox.
+An assignment lookup failure stops setup rather than treating access as absent.
+
 Participant VMs still belong in their own assigned subscription/resource group,
 using the shared custom location, image, network and storage. Keep the participant
 subscription separate from the LocalBox subscription when following Challenge 6.

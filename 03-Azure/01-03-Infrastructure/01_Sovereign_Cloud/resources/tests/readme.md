@@ -50,6 +50,10 @@ coverage of the Console's exact global-hook signature, cost/schema opt-in, one
 LocalBox deployment followed by two subscription preparations, all-event RBAC,
 shared subscription/resource-group discovery outputs, regional fallback, reuse,
 context guards and failure propagation without publishing success credentials.
+Participant RBAC regressions cover reuse of the global Security Reader grant,
+creation when absent, rejecting unrelated-scope/user/role matches, and read-error
+propagation. This prevents `RoleAssignmentExists` when the global hook's
+assignment ID differs from the participant Bicep template's deterministic ID.
 The preparation, hosted-tag-policy, hosted-defender and shared-AKS suites also
 cover the relocated wiring and unchanged per-subscription setup.
 

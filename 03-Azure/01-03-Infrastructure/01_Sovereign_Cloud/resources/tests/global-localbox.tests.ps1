@@ -24,7 +24,7 @@ Submit-TestLocalBox @PSBoundParameters
     function Get-AzResource { param($ResourceGroupName, $ResourceType) }
     function Update-AzTag { param($ResourceId, $Operation, $Tag) }
     function Get-AzResourceProvider { param($ProviderNamespace) }
-    function Get-AzRoleAssignment { param($ObjectId, $RoleDefinitionName, $Scope) }
+    function Get-AzRoleAssignment { param($ObjectId, $RoleDefinitionName, $RoleDefinitionId, $Scope) }
     function New-AzRoleAssignment { param($ObjectId, $RoleDefinitionName, $Scope) }
     function Wait-LocalBoxDeployment { param($ResourceGroupName, $DeploymentName) }
     function Submit-TestLocalBox {
@@ -220,5 +220,78 @@ az() {
         )
         $namespaces[0] | Should -Not -BeNullOrEmpty
         $namespaces[0] | Should -Not -Be $namespaces[1]
+    }
+}
+
+Describe 'Participant Security Reader reuse after global setup' {
+    BeforeAll {
+        $source = Get-Content "$root/labautomation/deploy-lab.ps1" -Raw
+        $start = $source.IndexOf('Write-Host "Assigning subscription-scoped lab RBAC')
+        $end = $source.IndexOf('@{"HackboxCredential" = @{ name = "Sovereign Lab Region"')
+        if ($start -lt 0 -or $end -le $start) { throw 'Participant RBAC block was not found.' }
+        $rbacBlock = Join-Path $fixture 'participant-rbac.ps1'
+        $source.Substring($start, $end - $start) | Set-Content -LiteralPath $rbacBlock
+        function New-AzSubscriptionDeployment { param($Name, $Location, $TemplateFile, $TemplateParameterObject) }
+    }
+    BeforeEach {
+        $SubscriptionId = '10000000-0000-0000-0000-000000000001'
+        $AllowedEntraUserIds = @('20000000-0000-0000-0000-000000000001')
+        $ResourceGroupName = 'rg-labuser-test'
+        $deploymentName = 'lab-test'
+        $effectiveLocation = 'spaincentral'
+        $existing = @{
+            ObjectId = $AllowedEntraUserIds[0]
+            Scope = "/subscriptions/$SubscriptionId"
+            RoleDefinitionId = '39bc4728-0917-49c7-9d2c-d95423bc2eb4'
+            RoleAssignmentId = "/subscriptions/$SubscriptionId/providers/Microsoft.Authorization/roleAssignments/c868cdb5-b1ed-4d61-8aea-d192f49de4e5"
+        }
+        Mock Update-MhhToken {}
+        Mock Get-AzRoleAssignment { $existing }
+        Mock New-AzSubscriptionDeployment {}
+    }
+    It 'preserves the global grant instead of redeploying the same role under the Bicep GUID' {
+        & $rbacBlock
+        Should -Invoke Get-AzRoleAssignment -Times 1 -Exactly -ParameterFilter {
+            $Scope -eq "/subscriptions/$SubscriptionId" -and
+            $ObjectId -eq $AllowedEntraUserIds[0] -and
+            $RoleDefinitionId -eq '39bc4728-0917-49c7-9d2c-d95423bc2eb4'
+        }
+        Should -Invoke New-AzSubscriptionDeployment -Times 1 -Exactly -ParameterFilter {
+            $TemplateParameterObject.assignSecurityReader -eq $false -and
+            $TemplateParameterObject.userObjectId -eq $AllowedEntraUserIds[0] -and
+            $TemplateParameterObject.resourceGroupName -eq $ResourceGroupName
+        }
+    }
+    It 'still grants Security Reader in another subscription where no grant exists' {
+        Mock Get-AzRoleAssignment { @() }
+        & $rbacBlock
+        Should -Invoke New-AzSubscriptionDeployment -Times 1 -Exactly -ParameterFilter {
+            $TemplateParameterObject.assignSecurityReader -eq $true
+        }
+    }
+    It 'does not skip the grant based on a different <Field>' -TestCases @(
+        @{ Field = 'Scope'; Value = '/subscriptions/other' }
+        @{ Field = 'Scope'; Value = '/subscriptions/10000000-0000-0000-0000-000000000001/resourceGroups/child' }
+        @{ Field = 'ObjectId'; Value = 'another-user' }
+        @{ Field = 'RoleDefinitionId'; Value = 'another-role' }
+    ) {
+        param($Field, $Value)
+        $existing[$Field] = $Value
+        & $rbacBlock
+        Should -Invoke New-AzSubscriptionDeployment -Times 1 -Exactly -ParameterFilter {
+            $TemplateParameterObject.assignSecurityReader -eq $true
+        }
+    }
+    It 'fails closed when existing role assignments cannot be read' {
+        Mock Get-AzRoleAssignment { throw 'AuthorizationFailed' }
+        { & $rbacBlock } | Should -Throw '*AuthorizationFailed*'
+        Should -Invoke New-AzSubscriptionDeployment -Times 0
+    }
+    It 'keeps the default grant and other RBAC resources unchanged in the template' {
+        $template = Get-Content "$root/labautomation/main.bicep" -Raw
+        $template | Should -Match 'param assignSecurityReader bool = true'
+        $template | Should -Match "resource securityReaderAssignment [^\r\n]+ = if \(assignSecurityReader\)"
+        $template | Should -Match "resource resourcePolicyContributorAssignment [^\r\n]+ = \{"
+        $template | Should -Match "module resourceGroupRbac 'rg-rbac.bicep' = \{"
     }
 }

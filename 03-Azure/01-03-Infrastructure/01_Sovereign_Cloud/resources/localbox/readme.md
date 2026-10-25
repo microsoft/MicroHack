@@ -2,6 +2,23 @@
 
 Run [prepare-localbox.ps1](../prepare-localbox.ps1) **inside LocalBox-Client**, after Jumpstart has finished deploying the nested Azure Local cluster. This is common to hosted and manual delivery. It does not deploy a new LocalBox or replace the existing Azure AKS/K3s labs.
 
+## Preparation time
+
+In a test run reported on **25 October 2026**, PowerShell history recorded
+**4 hours 24 minutes 26 seconds** for `./prepare-localbox.ps1`, including the
+default reference VM. This is the observed duration of the whole preparation
+command, not an image-download or reference-VM-only measurement, and not a
+guaranteed runtime.
+
+<a href="./img/preparation-duration-test4.png"><img src="./img/preparation-duration-test4.png" alt="PowerShell history showing prepare-localbox.ps1 completed in 4:24:26.111, with the reference VM Running, Arc Connected and MDE Pending." width="800" /></a>
+
+Budget this post-provisioning work **in addition to** the initial LocalBox and
+nested Azure Local deployment. At preparation completion, the reference VM was
+**Running**, **Arc Connected**, and **MDE Pending**; health checks and Defender/
+Update Manager readiness still had to be verified separately. Start provisioning
+at least **24 hours before the event**, complete preparation the day before, and
+verify readiness rather than treating the elapsed time as a guarantee.
+
 ## Prerequisites
 
 - Elevated PowerShell 7 on `LocalBox-Client` and an installed Azure CLI. Preparation automatically installs missing `stack-hci-vm`, `customlocation` and `aksarc` extensions, including during `-WhatIf`, verifies their versions and leaves existing versions unchanged. Internet access to the extension downloads is required; installation failure stops preparation before infrastructure changes. Record the versions printed by the script for your event.

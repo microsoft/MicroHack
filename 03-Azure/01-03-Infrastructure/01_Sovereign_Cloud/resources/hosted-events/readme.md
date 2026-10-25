@@ -54,6 +54,13 @@ subscription separate from the LocalBox subscription when following Challenge 6.
 AKS proxy connections target the **LocalBox subscription**; team namespaces remain
 unique by participant subscription plus resource group.
 
+Portal VM creation across subscriptions was successfully tested as `labuser-0027`
+on 25 October 2026, using its original RG in traininglab-12 with LocalBox in
+traininglab-59. The wizard defaulted to the host subscription: remind participants
+to change **Subscription** to their assigned subscription before selecting their
+own RG. Keep the existing single participant-RG workflow; see
+[test evidence and remaining checks](../tests/readme.md#observed-test4-integration-results).
+
 **Capacity and migration:** one instance now carries the entire event's nested
 VMs, reference VM, AKS workers and service IP allocations. Validate memory, storage
 and address-pool headroom for the planned event size; the cost reduction does not
@@ -94,6 +101,13 @@ releasing a subscription. This hook is not part of manual/BYOS preparation.
 ## Complete LocalBox preparation
 
 The global hook submits `localbox-*` in `rg-localbox-shared` in the published **Shared LocalBox Subscription ID**, then waits up to six hours for ARM completion, refreshing its Console authentication while polling. It does not publish LocalBox administrator credentials. A Client VM appearing after roughly 15-20 minutes confirms only that deployment has started. Full nested Azure Local provisioning can take 4-6 hours and must still be checked separately.
+
+The subsequent preparation script took **4 hours 24 minutes 26 seconds** in the
+TEST4 run reported on 25 October 2026, including reference-VM creation. This is
+additional post-provisioning time, not the total event deployment duration or a
+guaranteed runtime. MDE was still Pending when preparation finished. See the
+[timing evidence and planning guidance](../localbox/readme.md#preparation-time);
+allow time for both preparation and later assessments.
 
 1. Inspect the Azure deployment, Client bootstrap logs and Azure Local/Arc status. Resolve failures before proceeding.
 2. If the Client password is unknown, an authorized event lead/coach uses the Azure VM's **Help > Reset password** to set a known password for the `arcdemo` host account, then connects to `LocalBox-Client` through Bastion. Do not expose this password through participant credentials or job logs. A host password reset does not change the nested-node Windows credentials. See [LocalBox credentials](#localbox-credentials).

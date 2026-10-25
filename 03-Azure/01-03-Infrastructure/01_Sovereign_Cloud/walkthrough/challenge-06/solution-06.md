@@ -85,7 +85,14 @@ LocalBox runs as a nested lab environment hosted in Azure. In a production sover
 3. **Virtual machine name**: `labuserXX-vm-01` (replace XX with your own suffix)
 4. **Security type**: Select **Standard**
 
+> [!IMPORTANT]
+> When you start the wizard from the shared LocalBox cluster, **Subscription may default to the LocalBox host subscription**. Change it to your assigned participant subscription first, then select your own resource group where you have Owner access. For example, the tested participant `labuser-0027` changed **traininglab-59** (LocalBox) to **traininglab-12**, then selected **rg-labuser-0027**. Use your own assigned values, not these example names.
+
 ![Azure Arc VM creation Basics showing the assigned resource group, VM name, Standard security, and automatic storage selection](./images/localbox_02.png)
+
+<a href="./images/localbox-cross-subscription-basics.png"><img src="./images/localbox-cross-subscription-basics.png" alt="Azure Local VM creation from the shared cluster with traininglab-12 and rg-labuser-0027 selected, retaining the shared jumpstart custom location and Windows Server 2025 image." width="700" /></a>
+
+*Cross-subscription example: the VM's subscription and resource group belong to the participant; the custom location remains the shared LocalBox location.*
 
 Verify that **Custom location** points to the shared LocalBox environment and **Virtual machine kind** is **Azure Local**. Leave **Storage path** set to **Choose automatically** unless the facilitator instructs otherwise.
 
@@ -96,7 +103,7 @@ Your VM remains in your own resource group even when the custom location, image 
 >
 > In production, the workload runs on the Azure Local hardware, while Azure stores management data in the registration region. In this lab, that hardware is simulated inside Azure-hosted LocalBox. Registration in Australia East does **not** mean that the nested VM's compute has moved there, but the management-data location still matters for sovereignty and Azure Policy. See [Azure Local regions](https://learn.microsoft.com/azure/azure-local/concepts/system-requirements-23h2#azure-requirements) and [Azure Local data handling](https://learn.microsoft.com/azure/azure-local/faq#does-my-data-stored-on-azure-local-get-sent-to-the-cloud).
 
-The creation screenshots use `labuser24-vm-01`, while the validation and management screenshots use `labuser23-vm-01`. These are examples from different participants; create and use only your own VM throughout the challenge.
+The screenshots show examples from different participants, including `labuser24-vm-01`, `labuser23-vm-01` and the cross-subscription test VM `labuser-0027`. Create and use only your own VM throughout the challenge.
 
 5. **Image**: Select the available gallery image **2025-datacenter-azure-edition-smalldisk-01** (Windows Server 2025)
 6. **Virtual processor count**: 2

@@ -97,7 +97,7 @@ API on localhost; it does not expose application HTTP, HTTPS, MQTT, or SSH ports
 Each workspace targets an independent Radius control plane. Switching `kubectl`
 context without switching the Radius workspace can deploy to the wrong platform.
 
-## Stage 1: Inspect the invariant application model
+## Stage 1: Inspect the application model
 
 Open `iac/app.bicep`. The core model declares:
 
@@ -288,6 +288,8 @@ on a trusted, single-user workstation or devcontainer host.
 
 ### 4. Validate graph, resources, and workloads
 
+Radius stores the application Graph. resources and workload types. Let's check if we can retrieve these from the Radius control plane. 
+
 **Bash:**
 
 ```bash
@@ -471,7 +473,7 @@ Azure Database for PostgreSQL can take several minutes to provision.
 
 ```bash
 export AZURE_SUBSCRIPTION="${AZURE_SUBSCRIPTION:-<subscription-id>}"
-export RESOURCE_GROUP="${RESOURCE_GROUP:-rg-adaptive-apps}"
+export RESOURCE_GROUP="${RESOURCE_GROUP:-<lab-resource-group>}"
 az account set --subscription "$AZURE_SUBSCRIPTION"
 
 rad app graph --application adaptive-apps
@@ -493,7 +495,9 @@ az resource list \
 
 ```powershell
 $env:AZURE_SUBSCRIPTION = "<subscription-id>"
-$env:RESOURCE_GROUP = "rg-adaptive-apps"
+if (-not $env:RESOURCE_GROUP) {
+    $env:RESOURCE_GROUP = "<lab-resource-group>"
+}
 az account set --subscription $env:AZURE_SUBSCRIPTION
 
 rad app graph --application adaptive-apps
@@ -523,7 +527,7 @@ active AKS control plane:
 ```bash
 rad resource expose Applications.Core/containers frontend \
   --application adaptive-apps \
-  --port 3000 \
+  --port 3002 \
   --remote-port 3000
 ```
 
@@ -565,335 +569,12 @@ the reason the Event Grid implementation is not selected.
 
 ### 6. Prove database initialization and backend readiness
 
-`app.bicep` never changes, but the database it resolves to does, so the evidence differs
-per platform. On K3s the database is a pod inside the cluster. On AKS it is an Azure
-Database for PostgreSQL Flexible Server outside the cluster, so the check runs against
-Azure and doubles as proof that the orders you placed in step 5 really left Kubernetes.
-
-Both checks depend on the recipe-owned schema Job. Wait for it: a Kubernetes-extension
-deployment records API acceptance, not Job completion, so the deployment can report
-success before the tables exist. The backend readiness probe calls `/api/accounts`, so
-Kubernetes does not mark the backend Ready until the schema is queryable.
-
-#### K3s: check the in-cluster database
-
-The verification pod reuses the recipe-created Secret through `secretKeyRef`; no command,
-manifest, or output contains the database password. It prints only table names and the
-number of `Demo Account` rows.
-
-**Bash:**
+For one combined Bash check on either platform, so run for both AKS and K3S, select the intended Kubernetes context (if lost set `APP_NAMESPACE` to the application's namespace), then run in both AKS and K3S context:
 
 ```bash
-SCHEMA_JOB="$(kubectl get jobs \
-  --namespace "$APP_NAMESPACE" \
-  --selector app=postgres-schema-initializer,resource=trading-db \
-  --output jsonpath='{.items[0].metadata.name}')"
-test -n "$SCHEMA_JOB"
-kubectl wait \
-  --namespace "$APP_NAMESPACE" \
-  --for=condition=complete \
-  "job/$SCHEMA_JOB" \
-  --timeout=15m
-
-DB_HOST="$(kubectl get job "$SCHEMA_JOB" --namespace "$APP_NAMESPACE" \
-  --output jsonpath='{.spec.template.spec.containers[0].env[?(@.name=="PGHOST")].value}')"
-DB_NAME="$(kubectl get job "$SCHEMA_JOB" --namespace "$APP_NAMESPACE" \
-  --output jsonpath='{.spec.template.spec.containers[0].env[?(@.name=="PGDATABASE")].value}')"
-DB_USER="$(kubectl get job "$SCHEMA_JOB" --namespace "$APP_NAMESPACE" \
-  --output jsonpath='{.spec.template.spec.containers[0].env[?(@.name=="PGUSER")].value}')"
-DB_SECRET="$(kubectl get job "$SCHEMA_JOB" --namespace "$APP_NAMESPACE" \
-  --output jsonpath='{.spec.template.spec.containers[0].env[?(@.name=="PGPASSWORD")].valueFrom.secretKeyRef.name}')"
-DB_SSLMODE="$(kubectl get job "$SCHEMA_JOB" --namespace "$APP_NAMESPACE" \
-  --output jsonpath='{.spec.template.spec.containers[0].env[?(@.name=="PGSSLMODE")].value}')"
-DB_SSLMODE="${DB_SSLMODE:-prefer}"
-
-cat <<EOF | kubectl apply -f -
-apiVersion: v1
-kind: Pod
-metadata:
-  name: trading-db-verify
-  namespace: ${APP_NAMESPACE}
-spec:
-  restartPolicy: Never
-  containers:
-    - name: psql
-      image: postgres:16-alpine
-      command:
-        - sh
-        - -ceu
-        - |
-          psql --set=ON_ERROR_STOP=1 --tuples-only --no-align <<'SQL'
-          SELECT table_name
-          FROM information_schema.tables
-          WHERE table_schema = 'public'
-            AND table_name IN ('accounts', 'orders', 'trades', 'positions')
-          ORDER BY table_name;
-          SELECT 'demo_seed_count=' || count(*)
-          FROM accounts
-          WHERE name = 'Demo Account';
-          SQL
-      env:
-        - name: PGHOST
-          value: "${DB_HOST}"
-        - name: PGDATABASE
-          value: "${DB_NAME}"
-        - name: PGUSER
-          value: "${DB_USER}"
-        - name: PGSSLMODE
-          value: "${DB_SSLMODE}"
-        - name: PGPASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: "${DB_SECRET}"
-              key: password
-EOF
-kubectl wait --namespace "$APP_NAMESPACE" \
-  --for=jsonpath='{.status.phase}'=Succeeded \
-  pod/trading-db-verify \
-  --timeout=5m
-kubectl logs --namespace "$APP_NAMESPACE" pod/trading-db-verify
-kubectl delete --namespace "$APP_NAMESPACE" pod/trading-db-verify --wait=true
-
-kubectl wait --namespace "$APP_NAMESPACE" \
-  --for=condition=Available \
-  deployment/backend \
-  --timeout=5m
-kubectl run backend-db-verify \
-  --namespace "$APP_NAMESPACE" \
-  --rm --restart=Never --attach \
-  --image=curlimages/curl:8.12.1 \
-  --silent --show-error --fail \
-  http://backend:8080/api/accounts |
-  grep -F '"Demo Account"'
+bash resources/verify-trading-db.sh
 ```
-
-**PowerShell 7:**
-
-```powershell
-$SchemaJob = kubectl get jobs `
-    --namespace $AppNamespace `
-    --selector app=postgres-schema-initializer,resource=trading-db `
-    --output jsonpath='{.items[0].metadata.name}'
-if (-not $SchemaJob) { throw "PostgreSQL schema Job was not created." }
-kubectl wait `
-    --namespace $AppNamespace `
-    --for=condition=complete `
-    "job/$SchemaJob" `
-    --timeout=15m
-
-$Job = kubectl get job $SchemaJob --namespace $AppNamespace --output json |
-    ConvertFrom-Json
-$Environment = $Job.spec.template.spec.containers[0].env
-$DbHost = ($Environment | Where-Object name -eq "PGHOST").value
-$DbName = ($Environment | Where-Object name -eq "PGDATABASE").value
-$DbUser = ($Environment | Where-Object name -eq "PGUSER").value
-$DbSecret = ($Environment | Where-Object name -eq "PGPASSWORD").valueFrom.secretKeyRef.name
-$DbSslMode = ($Environment | Where-Object name -eq "PGSSLMODE").value
-if (-not $DbSslMode) { $DbSslMode = "prefer" }
-
-@"
-apiVersion: v1
-kind: Pod
-metadata:
-  name: trading-db-verify
-  namespace: $AppNamespace
-spec:
-  restartPolicy: Never
-  containers:
-    - name: psql
-      image: postgres:16-alpine
-      command:
-        - sh
-        - -ceu
-        - |
-          psql --set=ON_ERROR_STOP=1 --tuples-only --no-align <<'SQL'
-          SELECT table_name
-          FROM information_schema.tables
-          WHERE table_schema = 'public'
-            AND table_name IN ('accounts', 'orders', 'trades', 'positions')
-          ORDER BY table_name;
-          SELECT 'demo_seed_count=' || count(*)
-          FROM accounts
-          WHERE name = 'Demo Account';
-          SQL
-      env:
-        - name: PGHOST
-          value: "$DbHost"
-        - name: PGDATABASE
-          value: "$DbName"
-        - name: PGUSER
-          value: "$DbUser"
-        - name: PGSSLMODE
-          value: "$DbSslMode"
-        - name: PGPASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: "$DbSecret"
-              key: password
-"@ | kubectl apply -f -
-
-kubectl wait `
-    --namespace $AppNamespace `
-    --for=jsonpath='{.status.phase}'=Succeeded `
-    pod/trading-db-verify `
-    --timeout=5m
-kubectl logs --namespace $AppNamespace pod/trading-db-verify
-kubectl delete --namespace $AppNamespace pod/trading-db-verify --wait=true
-
-kubectl wait `
-    --namespace $AppNamespace `
-    --for=condition=Available `
-    deployment/backend `
-    --timeout=5m
-$Accounts = kubectl run backend-db-verify `
-    --namespace $AppNamespace `
-    --rm --restart=Never --attach `
-    --image=curlimages/curl:8.12.1 `
-    --silent --show-error --fail `
-    http://backend:8080/api/accounts
-if ($Accounts -notmatch '"Demo Account"') {
-    throw "Backend did not return the Demo Account seed."
-}
-```
-
-Expected metadata output is the four table names and `demo_seed_count=1`.
-
-#### AKS: check the managed Azure database
-
-On AKS the same `postgreSqlDatabases` resource resolves to an Azure Database for
-PostgreSQL Flexible Server, so verify it the way you would verify any managed Azure
-database: connect to it and query the `orders` table you just filled from the frontend.
-
-> [!NOTE]
-> Flexible Server has no query editor blade in the Azure portal. The portal route is
-> Cloud Shell, which runs the same Azure CLI commands shown below.
-
-Ask Radius where the database lives. The recipe returns the connection metadata but
-deliberately never returns the password, so that still comes from the recipe-created
-Kubernetes Secret.
-
-**Bash:**
-
-```bash
-az extension add --name rdbms-connect
-
-DB_JSON="$(rad resource show Radius.Resources/postgreSqlDatabases trading-db \
-  --output json)"
-PG_HOST="$(jq -r '.properties.host' <<<"$DB_JSON")"
-PG_DATABASE="$(jq -r '.properties.database' <<<"$DB_JSON")"
-PG_USER="$(jq -r '.properties.username' <<<"$DB_JSON")"
-PG_SERVER="${PG_HOST%%.*}"
-PG_GROUP="$(az postgres flexible-server list \
-  --query "[?name=='$PG_SERVER'].resourceGroup | [0]" \
-  --output tsv)"
-PG_PASSWORD="$(kubectl get secret trading-db-credentials \
-  --namespace "$APP_NAMESPACE" \
-  --output jsonpath='{.data.password}' | base64 --decode)"
-
-echo "server=$PG_SERVER group=$PG_GROUP database=$PG_DATABASE user=$PG_USER"
-```
-
-The recipe allowlisted only the AKS egress IPs, so your own client — laptop, dev
-container, or Cloud Shell — cannot reach the server yet. Open a rule for it, then close
-it again once the queries are done:
-
-```bash
-CLIENT_IP="$(curl -sf https://api.ipify.org)"
-az postgres flexible-server firewall-rule create \
-  --resource-group "$PG_GROUP" \
-  --server-name "$PG_SERVER" \
-  --name workshop-client \
-  --start-ip-address "$CLIENT_IP" \
-  --end-ip-address "$CLIENT_IP" \
-  --output none
-```
-
-Confirm the schema Job created the tables, then read back your orders:
-
-> [!IMPORTANT]
-> Keep each `--querytext` value on a single line. `az postgres flexible-server execute`
-> splits the query on newlines and runs only the first fragment, which fails with a
-> confusing `column "..." does not exist` instead of an obvious syntax error. The `id`
-> alias and the `::text` cast are also deliberate: the CLI's table renderer drops a bare
-> `id` column and native timestamp columns. Use `--output json` to see raw values.
-
-```bash
-az postgres flexible-server execute \
-  --name "$PG_SERVER" \
-  --admin-user "$PG_USER" \
-  --admin-password "$PG_PASSWORD" \
-  --database-name "$PG_DATABASE" \
-  --querytext "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name;" \
-  --output table
-
-az postgres flexible-server execute \
-  --name "$PG_SERVER" \
-  --admin-user "$PG_USER" \
-  --admin-password "$PG_PASSWORD" \
-  --database-name "$PG_DATABASE" \
-  --querytext "SELECT id AS order_id, symbol, side, order_type, quantity, price, status, created_at::text AS placed_at FROM orders ORDER BY id;" \
-  --output table
-
-az postgres flexible-server firewall-rule delete \
-  --resource-group "$PG_GROUP" \
-  --server-name "$PG_SERVER" \
-  --name workshop-client \
-  --yes
-```
-
-**PowerShell 7:**
-
-```powershell
-az extension add --name rdbms-connect
-
-$Database = rad resource show Radius.Resources/postgreSqlDatabases trading-db `
-    --output json |
-    ConvertFrom-Json
-$PgHost = $Database.properties.host
-$PgDatabase = $Database.properties.database
-$PgUser = $Database.properties.username
-$PgServer = $PgHost.Split(".")[0]
-$PgGroup = az postgres flexible-server list `
-    --query "[?name=='$PgServer'].resourceGroup | [0]" `
-    --output tsv
-$PgPassword = [Text.Encoding]::UTF8.GetString(
-    [Convert]::FromBase64String((kubectl get secret trading-db-credentials `
-        --namespace $AppNamespace `
-        --output jsonpath='{.data.password}')))
-
-"server=$PgServer group=$PgGroup database=$PgDatabase user=$PgUser"
-
-$ClientIp = "$(Invoke-RestMethod -Uri 'https://api.ipify.org')".Trim()
-az postgres flexible-server firewall-rule create `
-    --resource-group $PgGroup `
-    --server-name $PgServer `
-    --name workshop-client `
-    --start-ip-address $ClientIp `
-    --end-ip-address $ClientIp `
-    --output none
-
-az postgres flexible-server execute `
-    --name $PgServer `
-    --admin-user $PgUser `
-    --admin-password $PgPassword `
-    --database-name $PgDatabase `
-    --querytext "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name;" `
-    --output table
-
-az postgres flexible-server execute `
-    --name $PgServer `
-    --admin-user $PgUser `
-    --admin-password $PgPassword `
-    --database-name $PgDatabase `
-    --querytext "SELECT id AS order_id, symbol, side, order_type, quantity, price, status, created_at::text AS placed_at FROM orders ORDER BY id;" `
-    --output table
-
-az postgres flexible-server firewall-rule delete `
-    --resource-group $PgGroup `
-    --server-name $PgServer `
-    --name workshop-client `
-    --yes
-```
+You will see the entered trading records per environment, they should differe and this step proof that the chain is working.
 
 The first query lists `accounts`, `orders`, `positions`, and `trades`. The second returns
 one row per order you placed in step 5:
@@ -905,18 +586,9 @@ Order_id    Order_type    Placed_at                      Price    Quantity    Si
 2           MARKET        2026-09-02 12:36:09.462464+00  384.04   10          BUY     processed  TSLA
 ```
 
-An uncovered SELL shows up here too, with `status` `rejected`. Those rows are in Azure,
-not in the cluster: the pods you were talking to contain no database at all. Nothing in
-`app.bicep` changed to make that happen; only the recipe registered for
-`Radius.Resources/postgreSqlDatabases` differs between the two environments.
-
-`PGSSLMODE=require` on the schema Job proves the initializer uses TLS. The recipe also
-enables `require_secure_transport` and a TLS 1.2 floor on the server, so the backend's
-Npgsql connection negotiates TLS and the server rejects plaintext sessions.
 
 > [!TIP]
-> To avoid touching the firewall at all, run the query from inside the cluster, whose
-> egress IP the recipe already allowlisted. This also avoids the CLI's table-rendering
+> To avoid touching the firewall at all, add the client ip in the Azure portal OR run > the query from inside the cluster, whose egress IP the recipe already allowlisted. > This also avoids the CLI's table-rendering
 > quirks, because you get raw `psql` output, and the pod deletes itself on exit:
 >
 > ```bash
@@ -1034,6 +706,29 @@ Azure provider scope, resource types, recipes, and backing-service authorization
 Run `rad recipe list --environment <environment>` in the matching workspace. Return to
 Challenge 05 and deploy `iac/local-env.bicep` or `iac/aks-env.bicep`. Do not replace a
 portable resource with a platform-specific declaration.
+
+### `ServerNameAlreadyExists` for `trading-db`
+
+Azure PostgreSQL server names are globally unique. Recipe `1.0.6` derived the name only
+from the Radius resource ID, so another workshop with the same group, application, and
+resource names could already own it. Do not delete the reported server; it can belong to
+another workshop.
+
+Confirm that this workshop has its own Azure resource group, then inspect the registration:
+
+```bash
+rad recipe list --environment env-azure-prod
+```
+
+For this fresh deployment, the registration must reference `postgres-azure-flex:1.0.8`.
+If it does not, return to Challenge 05: publish the `1.0.8` recipes in Stage 2 and rerun
+the Stage 3 `rad deploy iac/aks-env.bicep` command with the `1.0.8` PostgreSQL recipe
+path. Verify the registration before retrying the unchanged AKS
+`rad deploy iac/app.bicep` command from Stage 3 here. Retries use the same `1.0.8`
+server name.
+
+If the registration already uses `1.0.8`, check that the environment's Azure provider
+scope is not shared with another workshop that uses the same Radius resource names.
 
 ### The deployment reached the wrong platform
 

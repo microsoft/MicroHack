@@ -89,8 +89,9 @@ override the ordered regions before provisioning.
    in both regional and DSv5-family quota: 12 baseline plus 4 for AKS surge.
    Five labs require 80 free vCPUs (60 steady-state). The check budgets the entire
    fan-out as new capacity, including on reruns.
-5. Check PostgreSQL 16 / Burstable `Standard_B1ms` availability for the later
-   participant recipe; this does not provision a database.
+5. Check PostgreSQL 16 / General Purpose `Standard_D4ds_v5` availability for the later
+   participant application (`size: 'L'`, 4 vCores, 16 GiB RAM); this does not provision
+   a database or guarantee allocation capacity.
 6. Apply the hosted tag initiative and verify inheritance with a temporary RG/NSG.
 7. Persist eligible regions and lab count as subscription tags.
 

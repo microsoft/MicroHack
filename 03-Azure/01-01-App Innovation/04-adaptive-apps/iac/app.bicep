@@ -107,7 +107,7 @@ resource tradingDb 'Radius.Resources/postgreSqlDatabases@2025-08-01-preview' = {
   properties: {
     environment: environment
     application: tradingApp.id
-    size: 'S'
+    size: 'L'
   }
 }
 

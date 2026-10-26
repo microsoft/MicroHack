@@ -33,11 +33,15 @@ var skuBySize = {
     tier: 'Burstable'
   }
   L: {
-    name: 'Standard_D2s_v3'
+    name: 'Standard_D4ds_v5'
     tier: 'GeneralPurpose'
   }
 }
-var serverName = 'pg-${uniqueString(context.resource.id)}'
+// Azure PostgreSQL server names are globally unique, while separate workshops commonly reuse
+// the same Radius resource ID. Include the target resource group ID, which also contains the
+// subscription ID, so isolated workshops do not collide. Every input is stable, so retries reuse
+// the same name. Changing these inputs creates a different server rather than renaming one.
+var serverName = 'pg-${uniqueString(resourceGroup().id, context.resource.id)}'
 var egressIps = map(filter(split(aksEgressIps, ','), ip => !empty(trim(ip))), ip => trim(ip))
 // Strip carriage returns from everything that is executed or interpreted inside the cluster.
 // Both files are stored in git with LF, but a Windows checkout rewrites them to CRLF unless

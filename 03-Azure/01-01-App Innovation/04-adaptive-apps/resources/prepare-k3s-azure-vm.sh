@@ -17,7 +17,7 @@ readonly K3S_API_PORT="6443"
 readonly KUBECONFIG_CHUNK_SIZE="1800"
 
 AZURE_LOCATION="${AZURE_LOCATION:-westeurope}"
-RESOURCE_GROUP="${RESOURCE_GROUP:-rg-adaptive-apps}"
+RESOURCE_GROUP="${RESOURCE_GROUP:-}"
 VNET_NAME="${VNET_NAME:-vnet-adaptive-apps}"
 VNET_PREFIX="${VNET_PREFIX:-10.42.0.0/16}"
 K3S_SUBNET_NAME="${K3S_SUBNET_NAME:-snet-k3s}"
@@ -69,6 +69,10 @@ Usage: bash resources/prepare-k3s-azure-vm.sh [provision|connect|status|disconne
 
 Required for provision/connect:
   AZURE_SUBSCRIPTION   Target Azure subscription ID.
+  RESOURCE_GROUP       Lab Azure resource group.
+
+For status/disconnect of a running tunnel, retain the same RESOURCE_GROUP so its
+process identity can be verified. These modes do not require Azure authentication.
 
 The kubeconfig endpoint defaults to https://127.0.0.1:16443. Override the local port
 with K3S_LOCAL_PORT before provisioning and on every later connect command.
@@ -106,6 +110,7 @@ tunnel_pid_matches() {
   local pid="$1"
   local command_line
 
+  [[ -n "$RESOURCE_GROUP" ]] || return 1
   is_pid_running "$pid" || return 1
   [[ -r "/proc/${pid}/cmdline" ]] || return 1
   command_line="$(tr '\0' ' ' <"/proc/${pid}/cmdline")"
@@ -216,6 +221,10 @@ disconnect_tunnel() {
 }
 
 if [[ "$MODE" == "status" ]]; then
+  if [[ -z "$RESOURCE_GROUP" && -f "$TUNNEL_PID_FILE" ]]; then
+    echo "Set RESOURCE_GROUP to the lab Azure resource group to verify the recorded tunnel." >&2
+    exit 1
+  fi
   if tunnel_status; then
     exit 0
   fi
@@ -223,11 +232,18 @@ if [[ "$MODE" == "status" ]]; then
 fi
 
 if [[ "$MODE" == "disconnect" ]]; then
+  if [[ -z "$RESOURCE_GROUP" && -f "$TUNNEL_PID_FILE" ]]; then
+    echo "Set RESOURCE_GROUP to the lab Azure resource group to verify the recorded tunnel." >&2
+    exit 1
+  fi
   if disconnect_tunnel; then
     exit 0
   fi
   exit 1
 fi
+
+: "${AZURE_SUBSCRIPTION:?Set AZURE_SUBSCRIPTION to the target subscription ID.}"
+: "${RESOURCE_GROUP:?Set RESOURCE_GROUP to the lab Azure resource group.}"
 
 for command_name in az base64 cut grep install jq kubectl nohup sed tail timeout tr wc; do
   command -v "$command_name" >/dev/null 2>&1 || {
@@ -236,7 +252,6 @@ for command_name in az base64 cut grep install jq kubectl nohup sed tail timeout
   }
 done
 
-: "${AZURE_SUBSCRIPTION:?Set AZURE_SUBSCRIPTION to the target subscription ID.}"
 if ! is_integer "$K3S_LOCAL_PORT"; then
   echo "K3S_LOCAL_PORT must be an unprivileged TCP port from 1024 through 65535." >&2
   exit 1

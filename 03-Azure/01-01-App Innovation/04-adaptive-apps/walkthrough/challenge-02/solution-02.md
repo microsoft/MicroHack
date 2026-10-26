@@ -65,7 +65,7 @@ pwd
 
 export AZURE_SUBSCRIPTION="<subscription-id>"
 export AZURE_LOCATION="westeurope"
-export RESOURCE_GROUP="rg-adaptive-apps"
+export RESOURCE_GROUP="${RESOURCE_GROUP:-<lab-resource-group>}"
 export AKS_CLUSTER="aks-adaptive-apps"
 
 bash resources/prepare-aks.sh
@@ -101,7 +101,7 @@ Bastion-restricted Linux troubleshooting route.
 ```bash
 export AZURE_SUBSCRIPTION="<subscription-id>"
 export AZURE_LOCATION="westeurope"
-export RESOURCE_GROUP="rg-adaptive-apps"
+export RESOURCE_GROUP="${RESOURCE_GROUP:-<lab-resource-group>}"
 export K3S_VM_NAME="vm-adaptive-apps-k3s"
 
 bash resources/prepare-k3s-azure-vm.sh

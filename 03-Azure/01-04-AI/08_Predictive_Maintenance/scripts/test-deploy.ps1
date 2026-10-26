@@ -104,6 +104,9 @@ if (-not (Get-Command Invoke-MhhDeploymentWithRegionFallback -ErrorAction Silent
         } else {
             az group create --name $ResourceGroupName --location $chosenLocation --output none
         }
+        if ($LASTEXITCODE -ne 0) {
+            throw "Could not create or update resource group '$ResourceGroupName' (Azure CLI exit code $LASTEXITCODE)."
+        }
         
         # Build parameter arguments for az deployment
         $paramArgs = @()
@@ -122,8 +125,16 @@ if (-not (Get-Command Invoke-MhhDeploymentWithRegionFallback -ErrorAction Silent
             --parameters $paramArgs `
             --query "{outputs: properties.outputs}" `
             --output json
-            
+
+        if ($LASTEXITCODE -ne 0) {
+            throw "Deployment '$deploymentName' failed in resource group '$ResourceGroupName' (Azure CLI exit code $LASTEXITCODE). Data seeding will not run. See the Azure CLI error above."
+        }
+
         $parsed = $jsonResult | ConvertFrom-Json
+
+        if (-not $parsed.outputs) {
+            throw "Deployment '$deploymentName' returned no outputs. Data seeding will not run."
+        }
         
         # Flatten outputs: { "name": { "value": "val" } } -> { "name": "val" }
         $flatOutputs = @{}

@@ -131,6 +131,6 @@ Resolve connectivity, extension provisioning, or permission failures before the 
 
 ## Notes
 
-- **Shared Environment**: For MicroHack events, typically one LocalBox instance per subscription is shared among participants; each participant creates a VM in their assigned resource group
+- **Shared Environment**: Hosted MicroHack events use one LocalBox instance across all event subscriptions; each participant creates a VM in their assigned subscription/resource group. Use the Console's Shared LocalBox Subscription ID to find the shared infrastructure. Manual organizers choose and publish their LocalBox scope.
 - **Resource Costs**: LocalBox and the enabled security services consume Azure resources; clean up lab resources after the event and review lab-specific paid plans with the subscription owner
 - **Deployment Time**: Plan for deployment time when scheduling your MicroHack

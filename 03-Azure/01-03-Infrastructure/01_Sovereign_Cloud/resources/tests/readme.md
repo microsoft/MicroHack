@@ -37,11 +37,59 @@ authorized test of real network access through the load-balancer address.
 The LocalBox registration-region contract is checked offline with
 `Invoke-Pester ./prepare-localbox.tests.ps1 -FullName 'LocalBox registration region contract*' -Output Detailed`.
 It verifies that both deployment entry points default registration to Australia East,
-the shared hook passes that region independently of host-region selection, and
+the global hook passes that region independently of host-region selection, and
 all four Challenge 1 policy parameter examples include the Australia East lab-only
 exception while retaining the four European regions. These checks make no
 Azure changes; a fresh Console deployment and participant VM creation remain
 required to validate regional service availability and effective inherited policies.
+
+## Global event LocalBox checks
+
+Run `Invoke-Pester ./global-localbox.tests.ps1 -Output Detailed` for offline
+coverage of the Console's exact global-hook signature, cost/schema opt-in, one
+LocalBox deployment followed by two subscription preparations, all-event RBAC,
+shared subscription/resource-group discovery outputs, regional fallback, reuse,
+context guards and failure propagation without publishing success credentials.
+Participant RBAC regressions cover reuse of the global Security Reader grant,
+creation when absent, rejecting unrelated-scope/user/role matches, and read-error
+propagation. This prevents `RoleAssignmentExists` when the global hook's
+assignment ID differs from the participant Bicep template's deterministic ID.
+The preparation, hosted-tag-policy, hosted-defender and shared-AKS suites also
+cover the relocated wiring and unchanged per-subscription setup.
+
+For integration, re-import the content pack and provision a fresh event spanning
+at least two subscriptions with organizer approval (the normal one-lab smoke test
+cannot verify cross-subscription access). Confirm exactly one global job and
+LocalBox, separate shared preparation jobs, identical global discovery credentials
+for all labs, and a participant in the other subscription creating/managing their
+own VM against the shared custom location. Verify reference-VM Defender visibility,
+Entra AKS proxy access, distinct team namespaces and teardown ordering. These are
+live integration gates; offline tests do not establish Console execution or
+cross-subscription Azure resource-linking behavior.
+
+### Observed TEST4 integration results
+
+The 24 October 2026 Console log for `NO-SovCloud-Oct24-TEST4` showed one completed
+global deployment in **traininglab-59**, completed subscription preparation in
+**traininglab-12** and **traininglab-59**, and **4/4** completed participant jobs.
+The two participants in the host subscription reused their existing Security
+Reader grants without a role-assignment collision.
+
+On **25 October 2026**, the organizer signed in as **labuser-0027** and successfully
+created VM **labuser-0027** in **traininglab-12 / rg-labuser-0027**, using LocalBox
+in **traininglab-59 / rg-localbox-shared**. The portal initially selected the
+LocalBox subscription; switching it to the participant subscription exposed the
+participant's original resource group while retaining the shared custom location
+and image. See the [wizard example](../../walkthrough/challenge-06/images/localbox-cross-subscription-basics.png).
+
+<a href="../../walkthrough/challenge-06/images/localbox-cross-subscription-complete.png"><img src="../../walkthrough/challenge-06/images/localbox-cross-subscription-complete.png" alt="Completed Azure Local VM deployment for labuser-0027 in traininglab-12 and rg-labuser-0027." width="800" /></a>
+
+This is live evidence for **portal VM creation across subscriptions** with the
+tested participant permissions, not blanket validation of every Azure CLI
+operation. Guest management was selected during creation, but connected guest
+status, Defender onboarding/assessments, Update Manager results, AKS proxy access
+and teardown still require their separate checks. No second participant resource
+group or shared-RG VM placement is needed for the tested creation flow.
 
 ## Reference-VM checks
 

@@ -1,0 +1,38 @@
+# ============================================================================
+# Foundry Local ModelDeployment Custom Resource (CPU / ONNX Runtime GenAI)
+# Deploys Phi-4-mini-instruct from the on-cluster Foundry Local catalog,
+# exposes it internally via the Istio Gateway API (inference-internal-gateway),
+# and authorizes the 'inference-client' ServiceAccount in 'edge-agents'
+# via Kubernetes Service Account Token (SAT) authentication.
+# ============================================================================
+apiVersion: foundrylocal.azure.com/v1
+kind: ModelDeployment
+metadata:
+  name: phi-4-mini
+  namespace: foundry-local-operator
+spec:
+  model:
+    catalog:
+      name: phi-4-mini
+      version: "latest"
+  workloadType: generative
+  compute: cpu
+  runtime: onnx-genai
+  replicas: 1
+  endpoint:
+    exposure: internal
+  authenticationMethods:
+    - method: serviceAccountToken
+      enabled: true
+      roles:
+        - role: GeneralInferenceUser
+          authorizedSubjects:
+            - serviceAccountName: inference-client
+              serviceAccountNamespace: edge-agents
+  resources:
+    requests:
+      cpu: "4"
+      memory: "8Gi"
+    limits:
+      cpu: "8"
+      memory: "16Gi"

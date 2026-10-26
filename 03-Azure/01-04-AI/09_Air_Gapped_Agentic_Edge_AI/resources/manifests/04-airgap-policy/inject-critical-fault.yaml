@@ -1,0 +1,31 @@
+# ============================================================================
+# Challenge 5: Critical Bearing Thermal Runaway Fault Injector
+# Runs inside the air-gapped 'edge-agents' namespace and publishes a critical
+# emergency telemetry event to verify autonomous sub-3-second local actuation
+# with zero public cloud connectivity.
+# ============================================================================
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: inject-critical-bearing-fault
+  namespace: edge-agents
+spec:
+  ttlSecondsAfterFinished: 300
+  template:
+    metadata:
+      labels:
+        app: fault-injector
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: fault-injector
+          image: eclipse-mosquitto:2.0
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/sh
+            - -c
+            - |
+              PAYLOAD='{"machineId":"CNC-EXTRUDER-01","timestamp":"2026-10-18T12:00:00Z","tick":9999,"spindleRpm":4200,"bearingTempC":114.6,"vibrationMmPerSec":15.2,"coolantFlowLpm":1.4,"status":"CRITICAL_THERMAL_RUNAWAY_BEARING_SEIZURE"}'
+              echo "[FAULT-INJECTOR] Publishing critical fault to factory/line1/telemetry..."
+              mosquitto_pub -h aio-broker-internal.azure-iot-operations.svc.cluster.local -p 1883 -t "factory/line1/telemetry" -q 1 -m "$PAYLOAD"
+              echo "[FAULT-INJECTOR] Critical fault injected successfully."

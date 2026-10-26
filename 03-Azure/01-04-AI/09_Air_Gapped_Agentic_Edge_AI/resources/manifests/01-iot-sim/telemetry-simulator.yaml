@@ -1,0 +1,157 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: edge-agents
+  labels:
+    app.kubernetes.io/part-of: sovereign-edge-ai-microhack
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: telemetry-simulator-script
+  namespace: edge-agents
+data:
+  simulator.py: |
+    import json
+    import os
+    import random
+    import time
+    from datetime import datetime, timezone
+    import paho.mqtt.client as mqtt
+
+    MQTT_HOST = os.getenv("MQTT_HOST", "aio-broker-internal.azure-iot-operations.svc.cluster.local")
+    MQTT_PORT = int(os.getenv("MQTT_PORT", "1883"))
+    TELEMETRY_TOPIC = os.getenv("TELEMETRY_TOPIC", "factory/line1/telemetry")
+    COMMANDS_TOPIC = os.getenv("COMMANDS_TOPIC", "factory/line1/commands")
+    MACHINE_ID = os.getenv("MACHINE_ID", "CNC-EXTRUDER-01")
+    ANOMALY_EVERY_N = int(os.getenv("ANOMALY_EVERY_N", "6"))
+
+    state = {
+        "spindleRpm": 4200,
+        "coolantBoost": False,
+        "lastAction": "NONE",
+    }
+
+    def on_connect(client, userdata, flags, reason_code, properties=None):
+        print(f"[SIMULATOR] Connected to AIO MQTT Broker at {MQTT_HOST}:{MQTT_PORT} (rc={reason_code})", flush=True)
+        client.subscribe(COMMANDS_TOPIC, qos=1)
+        print(f"[SIMULATOR] Subscribed to PLC actuation topic: {COMMANDS_TOPIC}", flush=True)
+
+    def on_message(client, userdata, msg):
+        try:
+            payload = json.loads(msg.payload.decode("utf-8"))
+            action = payload.get("decision", {}).get("tool_name", "UNKNOWN")
+            args = payload.get("decision", {}).get("arguments", {})
+            print(f"[SIMULATOR] <<< RECEIVED AUTONOMOUS PLC COMMAND on {msg.topic}: action={action} args={json.dumps(args)}", flush=True)
+            if action in ("adjust_plc_setpoint", "trigger_safety_interlock"):
+                rpm_delta_pct = args.get("spindle_rpm_delta_pct", -30)
+                state["spindleRpm"] = max(1200, int(4200 * (100 + rpm_delta_pct) / 100))
+                state["coolantBoost"] = bool(args.get("enable_coolant_boost", True))
+                state["lastAction"] = action
+                print(f"[SIMULATOR] === PLC ACTUATED: spindleRpm={state['spindleRpm']}, coolantBoost={state['coolantBoost']} ===", flush=True)
+        except Exception as exc:
+            print(f"[SIMULATOR] Error processing command message: {exc}", flush=True)
+
+    client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=f"sim-{MACHINE_ID}")
+    client.on_connect = on_connect
+    client.on_message = on_message
+
+    while True:
+        try:
+            client.connect(MQTT_HOST, MQTT_PORT, keepalive=60)
+            break
+        except Exception as exc:
+            print(f"[SIMULATOR] Waiting for AIO MQTT broker ({MQTT_HOST}:{MQTT_PORT}): {exc}", flush=True)
+            time.sleep(5)
+
+    client.loop_start()
+    tick = 0
+    while True:
+        tick += 1
+        is_anomaly = (tick % ANOMALY_EVERY_N == 0)
+        if is_anomaly:
+            bearing_temp = round(random.uniform(91.5, 104.2), 1)
+            vibration = round(random.uniform(8.4, 12.6), 2)
+            coolant_flow = round(random.uniform(2.1, 3.4), 1)
+            status = "WARNING_THERMAL_VIBRATION_DRIFT"
+        else:
+            bearing_temp = round(random.uniform(62.0, 74.5), 1)
+            vibration = round(random.uniform(1.8, 3.9), 2)
+            coolant_flow = round(random.uniform(7.5, 9.2), 1) if not state["coolantBoost"] else round(random.uniform(11.0, 12.5), 1)
+            status = "NOMINAL"
+
+        event = {
+            "machineId": MACHINE_ID,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "tick": tick,
+            "spindleRpm": state["spindleRpm"],
+            "bearingTempC": bearing_temp,
+            "vibrationMmPerSec": vibration,
+            "coolantFlowLpm": coolant_flow,
+            "coolantBoostActive": state["coolantBoost"],
+            "lastAutonomousAction": state["lastAction"],
+            "status": status,
+        }
+        client.publish(TELEMETRY_TOPIC, json.dumps(event), qos=1)
+        print(f"[SIMULATOR] >>> Published {TELEMETRY_TOPIC} (tick={tick}, status={status}, temp={bearing_temp}C, vib={vibration}mm/s)", flush=True)
+        time.sleep(5)
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: manufacturing-telemetry-simulator
+  namespace: edge-agents
+  labels:
+    app: manufacturing-telemetry-simulator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: manufacturing-telemetry-simulator
+  template:
+    metadata:
+      labels:
+        app: manufacturing-telemetry-simulator
+    spec:
+      containers:
+        - name: simulator
+          image: python:3.12-slim
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/sh
+            - -c
+            - |
+              (pip install --no-index --find-links=/opt/edge-wheels paho-mqtt==2.1.0 || pip install --no-cache-dir paho-mqtt==2.1.0) && python /app/simulator.py
+          env:
+            - name: MQTT_HOST
+              value: "aio-broker-internal.azure-iot-operations.svc.cluster.local"
+            - name: MQTT_PORT
+              value: "1883"
+            - name: TELEMETRY_TOPIC
+              value: "factory/line1/telemetry"
+            - name: COMMANDS_TOPIC
+              value: "factory/line1/commands"
+            - name: ANOMALY_EVERY_N
+              value: "6"
+          volumeMounts:
+            - name: script-vol
+              mountPath: /app
+              readOnly: true
+            - name: wheel-cache-vol
+              mountPath: /opt/edge-wheels
+              readOnly: true
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "250m"
+              memory: "256Mi"
+      volumes:
+        - name: script-vol
+          configMap:
+            name: telemetry-simulator-script
+        - name: wheel-cache-vol
+          hostPath:
+            path: /opt/edge-wheels
+            type: DirectoryOrCreate

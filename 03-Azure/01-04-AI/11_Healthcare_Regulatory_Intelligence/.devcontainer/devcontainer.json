@@ -1,0 +1,42 @@
+{
+  "name": "Caldova Regulatory Intelligence",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/azure-cli:1": {
+      "installBicep": true
+    },
+    "ghcr.io/azure/azure-dev/azd:latest": {}
+  },
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/regulatory-intelligence,type=bind,consistency=cached",
+  "workspaceFolder": "/workspaces/regulatory-intelligence",
+  "remoteUser": "vscode",
+  "waitFor": "postCreateCommand",
+  "postCreateCommand": "uv sync --frozen --all-extras && uv run --frozen --all-extras pytest -q",
+  "forwardPorts": [8088],
+  "portsAttributes": {
+    "8088": {
+      "label": "Regulatory Intelligence Assistant (local run)",
+      "visibility": "private",
+      "onAutoForward": "notify"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-azuretools.vscode-bicep"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/home/vscode/.venvs/regintel/bin/python",
+        "python.testing.pytestEnabled": true,
+        "python.testing.unittestEnabled": false,
+        "python.testing.pytestArgs": ["tests"],
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "git.openRepositoryInParentFolders": "always"
+      }
+    }
+  }
+}

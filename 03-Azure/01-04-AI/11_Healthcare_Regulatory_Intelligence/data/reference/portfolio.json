@@ -1,0 +1,8 @@
+{
+  "description": "Caldova's product portfolio. The monitor uses the names to flag documents that mention a Caldova product.",
+  "company": "Caldova Health Services Ltd (fictional)",
+  "products": [
+    {"id": "CDX-TAB", "name": "Caldivex 50 mg tablets", "match": ["caldivex tablets", "caldivex"], "markets": ["UK", "EU", "US"]},
+    {"id": "CDX-PEN", "name": "Caldivex 140 mg/mL injection pen", "match": ["caldivex injection pen", "caldivex pen"], "markets": ["EU", "US"]}
+  ]
+}

@@ -13,6 +13,12 @@ param(
     [string]$SubscriptionId = ((Get-AzContext -ErrorAction SilentlyContinue).Subscription.Id),
     [string]$ResourceGroupName = "rg-inventory-hack-local",
     [string]$Location = "swedencentral",
+    [ValidateSet('F2','F4','F8','F16','F32','F64')]
+    [string]$FabricSkuName = "F4",
+    [string]$ModelName = "gpt-5.4-mini",
+    [string]$ModelVersion = "2026-03-17",
+    [string]$ModelDeploymentName = "gpt-5.4-mini",
+    [int]$ModelCapacity = 200,
     # Defaults to the current signed-in user's Entra object ID (resolved below).
     [string[]]$AllowedEntraUserIds = @()
 )
@@ -21,6 +27,9 @@ $ErrorActionPreference = "Stop"
 
 if (-not $SubscriptionId) {
     throw "No subscription in context. Run Connect-AzAccount first, or pass -SubscriptionId."
+}
+if ((Get-AzContext).Subscription.Id -ne $SubscriptionId) {
+    throw "Az context does not match SubscriptionId. Select the intended subscription before running."
 }
 
 # The platform passes the lab's attendee object IDs here. Run locally, this defaults
@@ -64,6 +73,10 @@ function Get-MhhLabUser {
     }
 }
 
+& "$PSScriptRoot\..\labautomation\shared-deploy-lab.ps1" `
+    -SubscriptionId $SubscriptionId -PreferredLocation @($Location) `
+    -AllowedEntraUserIds $AllowedEntraUserIds
+
 # Pre-create the resource group (the platform does this for 'resourcegroup' type).
 if (-not (Get-AzResourceGroup -Name $ResourceGroupName -ErrorAction SilentlyContinue)) {
     Write-Host "[INFO]  Creating resource group '$ResourceGroupName' in '$Location'..."
@@ -78,4 +91,7 @@ if (-not (Get-AzResourceGroup -Name $ResourceGroupName -ErrorAction SilentlyCont
     -SubscriptionId $SubscriptionId `
     -ResourceGroupName $ResourceGroupName `
     -PreferredLocation @($Location, "westeurope", "norwayeast") `
-    -AllowedEntraUserIds $AllowedEntraUserIds
+    -AllowedEntraUserIds $AllowedEntraUserIds `
+    -FabricSkuName $FabricSkuName `
+    -ModelName $ModelName -ModelVersion $ModelVersion `
+    -ModelDeploymentName $ModelDeploymentName -ModelCapacity $ModelCapacity

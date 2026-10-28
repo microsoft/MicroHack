@@ -20,9 +20,9 @@ Your Inventory Optimisation Agent answers these questions by querying the Fabric
 
 ### Part A — Create the Inventory Optimisation Agent (20 min)
 
-1. In the Foundry portal, navigate to **Agents** and click **+ New agent**.
+1. In the Foundry portal, navigate to **Agents** and click **New agent**.
 2. Name it `inventory-optimisation-agent`.
-3. Select the `gpt-5.4-mini` model deployment.
+3. Select dashboard **ModelDeploymentName** (default `gpt-5.4-mini`).
 4. Paste the following **system instructions**:
 
    ```
@@ -59,10 +59,13 @@ Your Inventory Optimisation Agent answers these questions by querying the Fabric
    If you cannot find a SKU in the data, say so clearly - do not invent numbers.
    ```
 
-5. Add **Fabric IQ** by **reusing the connection you made in Challenge 2**: under **Tools** select **Add → Add tools**, and on the **Configured** tab choose the existing **`inventoryhackagent`** tile, then **Add tool**. It points to your published `inventory-hack-agent`, so you don't need to browse the catalog again. Do not use the deprecated **Fabric Data Agent** tool.
+   > [!NOTE]
+   > **Two meanings of CRITICAL.** In Challenge 1 the Data Agent flags an item CRITICAL when `onHand` is below `safetyStock`. This agent's rule (step 5) flags CRITICAL when stock is below the `reorderPoint`, which is a higher bar, so it can flag more items than the Data Agent did.
+
+5. Add **Fabric IQ** by **reusing the connection you made in Challenge 2**: under **Tools** select **Add → Add tools**, and on the **Configured** tab choose the existing **`inventoryhackagent`** tile, then **Add tool**. It points to your published `inventory-hack-agent`, so you don't need to browse the catalog again. Name that Data Agent in the instructions as the source for Zava inventory and demand. Do not add the retiring Fabric Data Agent connector.
 
    ![The Select a tool dialog with the existing inventoryhackagent connection listed under Configured](../images/challenge-02-reuse-connection.png)
-6. **Remove the Web Search tool.** New prompt agents ship with **Web Search** attached by default, and `gpt-5.4-mini` will happily reach for it instead of the governed data. Under **Tools**, delete **Web Search** so the **only** tool is Fabric IQ — this agent works from internal data only.
+6. **Remove the Web Search tool.** New prompt agents may ship with it attached. Under **Tools**, delete **Web Search** so **Fabric IQ** is the only tool — this agent works from internal data only. Record the saved version for the hosted assistant in Challenge 5.
 7. Click **Save**.
 
 ### Part B — Run the agent (15 min)
@@ -71,18 +74,21 @@ Your Inventory Optimisation Agent answers these questions by querying the Fabric
 2. Paste the demand assessment you received in Challenge 2 as your first message. Copy it directly from your Challenge 2 playground chat, for example:
 
    ```text
-   Outdoor power tools are critically exposed. For SKU P004 at Portland and P006 at Seattle, query current stock, reorder point, and average weekly units sold, then return the reorder recommendation table (SKU, Location, Current Stock, Suggested Reorder Qty, Priority). Flag any SKU below its reorder point as CRITICAL.
+   Outdoor power tools are critically exposed. For SKU P004 at Portland and Seattle and P006 at Portland, query current stock, reorder point, and average weekly units sold, then return the reorder recommendation table (SKU, Location, Current Stock, Suggested Reorder Qty, Priority). Flag any SKU below its reorder point as CRITICAL.
    ```
 
    > [!TIP]
    > **Phrasing matters — name the SKUs.** A purely prose prompt (e.g. *"leaf blowers and chainsaws are exposed"*) often makes the Fabric Data Agent generate a query that filters on a friendly category label and returns **nothing**. Naming the **SKUs/productIds** (e.g. `P004`, `P006`) and the exact fields you want — as in the example above — reliably returns data. If a prompt comes back empty, re-ask it by SKU.
 
 3. The agent should query Fabric and return a recommendation table.
-4. Ask a follow-up:
+4. Ask a follow-up **in the same chat as the table**:
 
    ```text
    Show me only the CRITICAL items.
    ```
+
+   > [!NOTE]
+   > In a new chat the agent has no table to filter, so it queries the data again and can return a wider list. Stay in the same chat, or re-send the first message first.
 5. Ask:
 
    ```text
@@ -115,7 +121,7 @@ Your Inventory Optimisation Agent answers these questions by querying the Fabric
 
 ## 🏁 Success criteria
 
-- [ ] The `inventory-optimisation-agent` prompt agent exists with only the Fabric IQ tool (no Web Search).
+- [ ] The `inventory-optimisation-agent` prompt agent exists with only Fabric IQ connected to `inventory-hack-agent` (no Web Search).
 - [ ] A test run returns a recommendation table with at least one CRITICAL flagged item.
 - [ ] You have opened the trace for your run and can identify the model call, tool call, tool response, and final generation steps.
 - [ ] You can explain, by pointing to the trace, why the agent made the recommendation it did.

@@ -1,0 +1,7 @@
+.env
+.azure/
+tests/
+__pycache__/
+process_events.py
+check_starter.py
+starter/

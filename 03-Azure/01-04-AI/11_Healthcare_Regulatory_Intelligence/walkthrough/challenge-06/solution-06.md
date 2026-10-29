@@ -79,5 +79,6 @@ This is why the assistant only ever proposes: a person reviews the briefing and 
 | `DefaultAzureCredential failed` | Run `az login --use-device-code` in the Codespace terminal |
 | Azure Storage permission error | Wrong subscription or account name; check `az account show` |
 | `rate_limit_exceeded` (429) | Several medium-reasoning agents ran at once and used the deployment's tokens per minute | Wait a minute and run again; use `--limit 1` |
+| **Traces** says *Create or connect an App Insights resource* | The project has no Application Insights connection. The lab automation creates one (`appinsights`); in an older lab, select **Connect** and choose the lab's Application Insights. Only runs after connecting are traced. |
 | `The workflow returned no briefing` | Open Traces for the three agents; usually one agent without `caldova-regulatory-kb` under Knowledge, or still with Web search |
 | Codespace setup failed | Rebuild the container; if it fails again, use the local devcontainer and report the log to the facilitator |

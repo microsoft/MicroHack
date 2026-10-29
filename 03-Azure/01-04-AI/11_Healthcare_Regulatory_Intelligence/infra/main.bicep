@@ -35,6 +35,7 @@ var searchManager = '7ca78c08-252a-4471-8644-bb5ff32d4ba0'
 var foundryUser = '53ca6127-db72-4b80-b1b0-d745d6d5456d'
 var foundryProjectManager = 'eadc314b-1a2d-4efa-be10-5d325db5065e'
 var modelUser = '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd'
+var logAnalyticsReader = '73c42c96-874c-492b-b04d-ab87d138a893'
 var lakeContainers = ['lake-raw', 'regulatory-knowledge']
 
 resource logs 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
@@ -104,6 +105,21 @@ resource embedding 'Microsoft.CognitiveServices/accounts/deployments@2025-06-01'
   }
 }
 
+// Agent traces (the Traces tab) are stored in Application Insights, connected to the project.
+resource tracing 'Microsoft.CognitiveServices/accounts/projects/connections@2025-06-01' = {
+  parent: project
+  name: 'appinsights'
+  dependsOn: [embedding]
+  properties: {
+    category: 'AppInsights'
+    target: insights.id
+    authType: 'ApiKey'
+    isSharedToAll: true
+    credentials: { key: insights.properties.ConnectionString }
+    metadata: { ApiType: 'Azure', ResourceId: insights.id }
+  }
+}
+
 resource storage 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   name: 'stregintel${resourceSuffix}'
   location: location
@@ -166,6 +182,19 @@ resource participantModels 'Microsoft.Authorization/roleAssignments@2022-04-01' 
   name: guid(foundry.id, id, modelUser)
   scope: foundry
   properties: { principalId: id, principalType: 'User', roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', modelUser) }
+}]
+
+// The Traces tab queries Application Insights and its Log Analytics workspace as the signed-in user.
+resource participantTraces 'Microsoft.Authorization/roleAssignments@2022-04-01' = [for id in participantObjectIds: {
+  name: guid(insights.id, id, logAnalyticsReader)
+  scope: insights
+  properties: { principalId: id, principalType: 'User', roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', logAnalyticsReader) }
+}]
+
+resource participantLogs 'Microsoft.Authorization/roleAssignments@2022-04-01' = [for id in participantObjectIds: {
+  name: guid(logs.id, id, logAnalyticsReader)
+  scope: logs
+  properties: { principalId: id, principalType: 'User', roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', logAnalyticsReader) }
 }]
 
 resource participantBlobs 'Microsoft.Authorization/roleAssignments@2022-04-01' = [for id in participantObjectIds: {

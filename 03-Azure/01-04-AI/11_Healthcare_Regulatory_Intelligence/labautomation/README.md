@@ -13,7 +13,7 @@ This folder follows the [scaffolding prompt](../.github/prompts/scaffold-lab-aut
 | Embedding model `text-embedding-3-small` (GlobalStandard, capacity 30) | Used by Foundry IQ to index the lake |
 | Storage account with private containers `lake-raw` and `regulatory-knowledge` | The regulatory lake. Shared keys and public blob access are disabled; access is by Entra ID only. Tagged `SecurityControl: Ignore` (parameter `storageTags`) so that tenant automation in managed subscriptions does not disable public network access, which Cloud Shell and the Search indexer need |
 | Azure AI Search (Basic, semantic ranker free plan) with a system-assigned identity | Foundry IQ knowledge base |
-| Log Analytics and Application Insights | Monitoring |
+| Log Analytics and Application Insights, connected to the project (connection `appinsights`) | Agent traces for the **Traces** tab, including the runs from the Challenge 6 agent chain |
 
 Role assignments, all scoped to the attendee's own resources:
 
@@ -22,6 +22,7 @@ Role assignments, all scoped to the attendee's own resources:
 | Attendee | Foundry User, **Foundry Project Manager** (to add the knowledge connection) | Project |
 | Attendee | Cognitive Services OpenAI User | Foundry account |
 | Attendee | Storage Blob Data Contributor | Storage account |
+| Attendee | Log Analytics Reader (to read agent traces) | Application Insights and its Log Analytics workspace |
 | Attendee | Search Service Contributor, Search Index Data Contributor | Search service |
 | Search identity | Storage Blob Data Reader; Cognitive Services OpenAI User | Storage account; Foundry account |
 | Project identity | Search Index Data Reader, Search Index Data Contributor, Search Service Contributor; Cognitive Services OpenAI User | Search service (Foundry IQ connects with the project managed identity because Search API keys are disabled); Foundry account |

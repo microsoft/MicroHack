@@ -123,6 +123,7 @@ def test_template_role_ids_are_real_built_in_roles():
         "53ca6127-db72-4b80-b1b0-d745d6d5456d": "Foundry User",
         "eadc314b-1a2d-4efa-be10-5d325db5065e": "Foundry Project Manager",
         "5e0bd9bd-7b93-4f28-af87-19fc36ad61bd": "Cognitive Services OpenAI User",
+        "73c42c96-874c-492b-b04d-ab87d138a893": "Log Analytics Reader",
     }
     template = (LAB / "infra" / "main.bicep").read_text(encoding="utf-8")
     used = set(re.findall(r"'([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})'", template))

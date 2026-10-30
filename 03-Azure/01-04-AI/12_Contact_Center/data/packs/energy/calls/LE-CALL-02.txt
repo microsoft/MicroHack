@@ -1,0 +1,12 @@
+# LE-CALL-02: Estimated bill much higher than usual
+
+Customer voice: female
+
+Agent: Thanks for calling Lumora Energy. How can I help today?
+Customer: My bill is over four hundred pounds. I normally pay about a hundred and twenty. This is ridiculous.
+Agent: I'm sorry, that must have been a shock. Let me check. Can I have your account number and postcode?
+Customer: L E three zero zero one zero one, Z Z two, four K T.
+Agent: Thank you, Fiona. Your March bill is based on an estimate, because readings from some meters in your area didn't reach us. If you can give me a reading now, we'll send a new bill within three working days.
+Customer: Fine. It's four five six seven two.
+Agent: Thank you. That's much lower than the estimate, so any overcharge will be credited to your account. I'm sorry for the worry this caused.
+Customer: Okay. I just want it sorted.

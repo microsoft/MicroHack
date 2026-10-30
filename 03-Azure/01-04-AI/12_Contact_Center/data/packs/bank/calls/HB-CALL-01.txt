@@ -1,0 +1,12 @@
+# HB-CALL-01: Lost card frozen and replaced
+
+Customer voice: male
+
+Agent: Thanks for calling Harbourline Bank. How can I help today?
+Customer: I think I've lost my debit card. I had it yesterday at the station.
+Agent: Let's sort that out. Can I take your account number and postcode?
+Customer: H B five zero zero three zero two, postcode Z Z one, three T C.
+Agent: Thanks, Imran. You can freeze the card instantly in the app, or I can report it lost now, which cancels it and sends a new one.
+Customer: I'm sure it's gone. Please cancel it.
+Agent: Done. Your new card will arrive in three to five working days. Remember to update any regular payments with the new number.
+Customer: Great, thanks for being quick.

@@ -1,0 +1,11 @@
+# NI-CALL-02: Car park collision
+
+Customer voice: male
+
+Agent: Thanks for calling Northmere Insurance. How can I help today?
+Customer: Someone reversed into me in a car park. Nobody's hurt, but my bumper's smashed.
+Agent: I'm glad nobody's hurt. Can I take your policy number and postcode?
+Customer: N I seven zero zero four zero two, Z Z one, six P W.
+Agent: Thanks, Samuel. Did you get the other driver's details?
+Customer: Yes, name, number and registration.
+Agent: Great. Your comprehensive policy includes a courtesy car while your car is repaired at an approved garage. I'll open the claim now.

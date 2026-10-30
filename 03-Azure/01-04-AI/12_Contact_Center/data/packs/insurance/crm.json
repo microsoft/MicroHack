@@ -1,0 +1,334 @@
+{
+  "customers": [
+    {
+      "customer_id": "NI-C01",
+      "account_number": "NI700401",
+      "name": "Rebecca Holt",
+      "postcode": "ZZ3 8DF",
+      "product": "Home buildings and contents",
+      "balance_due": 0.0,
+      "status": "active",
+      "flags": [],
+      "notes": "Roof damaged in the storm on 2 March 2027."
+    },
+    {
+      "customer_id": "NI-C02",
+      "account_number": "NI700402",
+      "name": "Samuel Osei",
+      "postcode": "ZZ1 6PW",
+      "product": "Comprehensive motor",
+      "balance_due": 0.0,
+      "status": "active",
+      "flags": [],
+      "notes": "Minor collision in a car park on 4 March 2027."
+    },
+    {
+      "customer_id": "NI-C03",
+      "account_number": "NI700403",
+      "name": "Dorothy Clarke",
+      "postcode": "ZZ3 4JB",
+      "product": "Home buildings and contents",
+      "balance_due": 0.0,
+      "status": "active",
+      "flags": [
+        "age_80_plus",
+        "lives_alone"
+      ],
+      "notes": "Ceiling leak after the storm; lives alone."
+    },
+    {
+      "customer_id": "NI-C04",
+      "account_number": "NI700404",
+      "name": "Jamal Turner",
+      "postcode": "ZZ2 5LK",
+      "product": "Third party motor",
+      "balance_due": 0.0,
+      "status": "active",
+      "flags": [],
+      "notes": "Asked about a courtesy car."
+    },
+    {
+      "customer_id": "NI-C05",
+      "account_number": "NI700405",
+      "name": "Emily Foster",
+      "postcode": "ZZ3 1QS",
+      "product": "Contents only",
+      "balance_due": 0.0,
+      "status": "active",
+      "flags": [],
+      "notes": "Open claim for a water-damaged sofa."
+    },
+    {
+      "customer_id": "NI-C06",
+      "account_number": "NI700406",
+      "name": "Hugo Martins",
+      "postcode": "ZZ4 2VH",
+      "product": "Comprehensive motor",
+      "balance_due": 0.0,
+      "status": "active",
+      "flags": [],
+      "notes": ""
+    },
+    {
+      "customer_id": "NI-C07",
+      "account_number": "NI700407",
+      "name": "Layla Hassan",
+      "postcode": "ZZ3 9CN",
+      "product": "Home buildings and contents",
+      "balance_due": 0.0,
+      "status": "active",
+      "flags": [
+        "young_children"
+      ],
+      "notes": "Storm damage to a window."
+    },
+    {
+      "customer_id": "NI-C08",
+      "account_number": "NI700408",
+      "name": "Owen Davies",
+      "postcode": "ZZ5 7GR",
+      "product": "Home buildings and contents",
+      "balance_due": 0.0,
+      "status": "active",
+      "flags": [],
+      "notes": ""
+    },
+    {
+      "customer_id": "NI-C09",
+      "account_number": "NI700409",
+      "name": "Zara Ahmed",
+      "postcode": "ZZ1 2NU",
+      "product": "Contents only",
+      "balance_due": 0.0,
+      "status": "active",
+      "flags": [
+        "recent_bereavement"
+      ],
+      "notes": ""
+    },
+    {
+      "customer_id": "NI-C10",
+      "account_number": "NI700410",
+      "name": "Peter Lund",
+      "postcode": "ZZ2 8TE",
+      "product": "Third party motor",
+      "balance_due": 0.0,
+      "status": "active",
+      "flags": [],
+      "notes": ""
+    }
+  ],
+  "slots": [
+    {
+      "slot_id": "NI-S001",
+      "type": "claims assessor visit",
+      "start": "2027-03-15T08:00",
+      "area": "ZZ1"
+    },
+    {
+      "slot_id": "NI-S002",
+      "type": "claims assessor visit",
+      "start": "2027-03-15T10:00",
+      "area": "ZZ2"
+    },
+    {
+      "slot_id": "NI-S003",
+      "type": "claims assessor visit",
+      "start": "2027-03-15T13:00",
+      "area": "ZZ3"
+    },
+    {
+      "slot_id": "NI-S004",
+      "type": "claims assessor visit",
+      "start": "2027-03-15T15:00",
+      "area": "ZZ4"
+    },
+    {
+      "slot_id": "NI-S005",
+      "type": "claims assessor visit",
+      "start": "2027-03-16T08:00",
+      "area": "ZZ5"
+    },
+    {
+      "slot_id": "NI-S006",
+      "type": "claims assessor visit",
+      "start": "2027-03-16T10:00",
+      "area": "ZZ1"
+    },
+    {
+      "slot_id": "NI-S007",
+      "type": "claims assessor visit",
+      "start": "2027-03-16T13:00",
+      "area": "ZZ2"
+    },
+    {
+      "slot_id": "NI-S008",
+      "type": "claims assessor visit",
+      "start": "2027-03-16T15:00",
+      "area": "ZZ3"
+    },
+    {
+      "slot_id": "NI-S009",
+      "type": "claims assessor visit",
+      "start": "2027-03-17T08:00",
+      "area": "ZZ4"
+    },
+    {
+      "slot_id": "NI-S010",
+      "type": "claims assessor visit",
+      "start": "2027-03-17T10:00",
+      "area": "ZZ5"
+    },
+    {
+      "slot_id": "NI-S011",
+      "type": "claims assessor visit",
+      "start": "2027-03-17T13:00",
+      "area": "ZZ1"
+    },
+    {
+      "slot_id": "NI-S012",
+      "type": "claims assessor visit",
+      "start": "2027-03-17T15:00",
+      "area": "ZZ2"
+    },
+    {
+      "slot_id": "NI-S013",
+      "type": "claims assessor visit",
+      "start": "2027-03-18T08:00",
+      "area": "ZZ3"
+    },
+    {
+      "slot_id": "NI-S014",
+      "type": "claims assessor visit",
+      "start": "2027-03-18T10:00",
+      "area": "ZZ4"
+    },
+    {
+      "slot_id": "NI-S015",
+      "type": "claims assessor visit",
+      "start": "2027-03-18T13:00",
+      "area": "ZZ5"
+    },
+    {
+      "slot_id": "NI-S016",
+      "type": "claims assessor visit",
+      "start": "2027-03-18T15:00",
+      "area": "ZZ1"
+    },
+    {
+      "slot_id": "NI-S017",
+      "type": "claims assessor visit",
+      "start": "2027-03-19T08:00",
+      "area": "ZZ2"
+    },
+    {
+      "slot_id": "NI-S018",
+      "type": "claims assessor visit",
+      "start": "2027-03-19T10:00",
+      "area": "ZZ3"
+    },
+    {
+      "slot_id": "NI-S019",
+      "type": "claims assessor visit",
+      "start": "2027-03-19T13:00",
+      "area": "ZZ4"
+    },
+    {
+      "slot_id": "NI-S020",
+      "type": "claims assessor visit",
+      "start": "2027-03-19T15:00",
+      "area": "ZZ5"
+    },
+    {
+      "slot_id": "NI-S021",
+      "type": "claims assessor visit",
+      "start": "2027-03-22T08:00",
+      "area": "ZZ1"
+    },
+    {
+      "slot_id": "NI-S022",
+      "type": "claims assessor visit",
+      "start": "2027-03-22T10:00",
+      "area": "ZZ2"
+    },
+    {
+      "slot_id": "NI-S023",
+      "type": "claims assessor visit",
+      "start": "2027-03-22T13:00",
+      "area": "ZZ3"
+    },
+    {
+      "slot_id": "NI-S024",
+      "type": "claims assessor visit",
+      "start": "2027-03-22T15:00",
+      "area": "ZZ4"
+    },
+    {
+      "slot_id": "NI-S025",
+      "type": "claims assessor visit",
+      "start": "2027-03-23T08:00",
+      "area": "ZZ5"
+    },
+    {
+      "slot_id": "NI-S026",
+      "type": "claims assessor visit",
+      "start": "2027-03-23T10:00",
+      "area": "ZZ1"
+    },
+    {
+      "slot_id": "NI-S027",
+      "type": "claims assessor visit",
+      "start": "2027-03-23T13:00",
+      "area": "ZZ2"
+    },
+    {
+      "slot_id": "NI-S028",
+      "type": "claims assessor visit",
+      "start": "2027-03-23T15:00",
+      "area": "ZZ3"
+    },
+    {
+      "slot_id": "NI-S029",
+      "type": "claims assessor visit",
+      "start": "2027-03-24T08:00",
+      "area": "ZZ4"
+    },
+    {
+      "slot_id": "NI-S030",
+      "type": "claims assessor visit",
+      "start": "2027-03-24T10:00",
+      "area": "ZZ5"
+    },
+    {
+      "slot_id": "NI-S031",
+      "type": "claims assessor visit",
+      "start": "2027-03-24T13:00",
+      "area": "ZZ1"
+    },
+    {
+      "slot_id": "NI-S032",
+      "type": "claims assessor visit",
+      "start": "2027-03-24T15:00",
+      "area": "ZZ2"
+    }
+  ],
+  "cases": [
+    {
+      "case_id": "NI-CASE-2210",
+      "customer_id": "NI-C05",
+      "category": "home claim",
+      "summary": "Sofa damaged by a leaking washing machine; photos received, awaiting assessment.",
+      "status": "open",
+      "priority": "normal",
+      "opened": "2027-02-25"
+    }
+  ],
+  "service_notices": [
+    {
+      "area": "ZZ3",
+      "since": "2027-03-02",
+      "estimated_fix": "2027-03-20",
+      "description": "Storm surge: high claim volumes after the storm; unsafe homes are handled first"
+    }
+  ]
+}

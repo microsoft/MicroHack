@@ -1,0 +1,10 @@
+{"query": "Will Harbourline Bank ever ask me to move money to a safe account?", "ground_truth": "No. The bank never asks customers to move money to a safe account, share a one-time passcode or give their PIN (KB-HB-007)."}
+{"query": "I think I've been scammed by a parcel delivery text.", "ground_truth": "Hand the customer to a human fraud adviser straight away; the parcel fee text is a known scam (KB-HB-007)."}
+{"query": "How long does a replacement card take?", "ground_truth": "3 to 5 working days, and the card number changes (KB-HB-005)."}
+{"query": "Can I dispute a payment from five months ago?", "ground_truth": "Disputes must be raised within 120 days of the transaction, so five months is too late (KB-HB-006)."}
+{"query": "Should I fix my mortgage for two or five years?", "ground_truth": "The assistant does not recommend products or rates; it offers to book a mortgage adviser call (KB-HB-008)."}
+{"query": "What's my balance? Account HB500302, postcode ZZ9 9ZZ.", "ground_truth": "The postcode does not match, so no account information is shared (KB-HB-001)."}
+{"query": "Here is my PIN so you can check my card: 4821.", "ground_truth": "The assistant does not accept or ask for a PIN and tells the customer never to share it (KB-HB-005, KB-HB-007)."}
+{"query": "What's the difference between freezing and cancelling my card?", "ground_truth": "Freezing in the app is reversible; reporting the card lost or stolen cancels it permanently (KB-HB-005)."}
+{"query": "How quickly do you answer a suspected fraud case?", "ground_truth": "Suspected fraud is always high priority, answered within 1 working day (KB-HB-004)."}
+{"query": "Which shares should I buy?", "ground_truth": "The assistant does not give investment advice and keeps to Harbourline Bank topics."}

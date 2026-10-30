@@ -1,0 +1,50 @@
+{
+  "id": "retail",
+  "industry": "Online retail",
+  "company": "Parcelpine",
+  "prefix": "PP",
+  "tagline": "Online home and garden store delivering across the fictional Zedshire region",
+  "greeting": "Thanks for contacting Parcelpine. I'm the virtual assistant, and you can ask for a person at any time. How can I help today?",
+  "products": [
+    "Standard delivery",
+    "Next-day delivery",
+    "Large item delivery",
+    "Parcelpine Plus membership"
+  ],
+  "appointment_type": "returns collection",
+  "voice_hint": "Upbeat, friendly and efficient",
+  "articles": [
+    {
+      "id": "KB-PP-001",
+      "title": "Checking who you are speaking to"
+    },
+    {
+      "id": "KB-PP-002",
+      "title": "Supporting customers who may be vulnerable"
+    },
+    {
+      "id": "KB-PP-003",
+      "title": "Complaints and escalation"
+    },
+    {
+      "id": "KB-PP-004",
+      "title": "Service levels and opening hours"
+    },
+    {
+      "id": "KB-PP-005",
+      "title": "Delivery times and tracking"
+    },
+    {
+      "id": "KB-PP-006",
+      "title": "Returns and refunds"
+    },
+    {
+      "id": "KB-PP-007",
+      "title": "Damaged or faulty items"
+    },
+    {
+      "id": "KB-PP-008",
+      "title": "Parcelpine Plus membership"
+    }
+  ]
+}

@@ -1,0 +1,336 @@
+{
+  "customers": [
+    {
+      "customer_id": "LE-C01",
+      "account_number": "LE300101",
+      "name": "Fiona Gallagher",
+      "postcode": "ZZ2 4KT",
+      "product": "Standard variable tariff",
+      "balance_due": 412.0,
+      "status": "active",
+      "flags": [],
+      "notes": "March bill estimated; usually pays around 120 pounds a month."
+    },
+    {
+      "customer_id": "LE-C02",
+      "account_number": "LE300102",
+      "name": "Rashid Karim",
+      "postcode": "ZZ1 8BB",
+      "product": "Fixed 12-month tariff",
+      "balance_due": 0.0,
+      "status": "active",
+      "flags": [],
+      "notes": "Asked for a smart meter."
+    },
+    {
+      "customer_id": "LE-C03",
+      "account_number": "LE300103",
+      "name": "Elsie Morgan",
+      "postcode": "ZZ3 2PL",
+      "product": "Standard variable tariff",
+      "balance_due": 0.0,
+      "status": "active",
+      "flags": [
+        "medical_equipment",
+        "age_80_plus"
+      ],
+      "notes": "Uses a home oxygen concentrator."
+    },
+    {
+      "customer_id": "LE-C04",
+      "account_number": "LE300104",
+      "name": "Ben Adeyemi",
+      "postcode": "ZZ5 6WD",
+      "product": "Prepayment",
+      "balance_due": 0.0,
+      "status": "active",
+      "flags": [
+        "payment_difficulty"
+      ],
+      "notes": "Struggling to top up."
+    },
+    {
+      "customer_id": "LE-C05",
+      "account_number": "LE300105",
+      "name": "Chloe Dawson",
+      "postcode": "ZZ2 9FN",
+      "product": "Electric vehicle tariff",
+      "balance_due": 0.0,
+      "status": "active",
+      "flags": [],
+      "notes": "March bill estimated."
+    },
+    {
+      "customer_id": "LE-C06",
+      "account_number": "LE300106",
+      "name": "Marek Nowak",
+      "postcode": "ZZ4 3HS",
+      "product": "Fixed 12-month tariff",
+      "balance_due": 230.0,
+      "status": "arrears",
+      "flags": [
+        "payment_difficulty"
+      ],
+      "notes": ""
+    },
+    {
+      "customer_id": "LE-C07",
+      "account_number": "LE300107",
+      "name": "Aisha Bello",
+      "postcode": "ZZ1 5RG",
+      "product": "Standard variable tariff",
+      "balance_due": 0.0,
+      "status": "active",
+      "flags": [
+        "young_children"
+      ],
+      "notes": ""
+    },
+    {
+      "customer_id": "LE-C08",
+      "account_number": "LE300108",
+      "name": "George Pike",
+      "postcode": "ZZ5 2AY",
+      "product": "Standard variable tariff",
+      "balance_due": 0.0,
+      "status": "active",
+      "flags": [],
+      "notes": "Open case about a direct debit change."
+    },
+    {
+      "customer_id": "LE-C09",
+      "account_number": "LE300109",
+      "name": "Ingrid Larsen",
+      "postcode": "ZZ3 7MU",
+      "product": "Fixed 12-month tariff",
+      "balance_due": 0.0,
+      "status": "active",
+      "flags": [],
+      "notes": "Fixed tariff ends 31 May 2027."
+    },
+    {
+      "customer_id": "LE-C10",
+      "account_number": "LE300110",
+      "name": "Kwame Asante",
+      "postcode": "ZZ2 1DC",
+      "product": "Standard variable tariff",
+      "balance_due": 0.0,
+      "status": "active",
+      "flags": [],
+      "notes": ""
+    }
+  ],
+  "slots": [
+    {
+      "slot_id": "LE-S001",
+      "type": "smart meter installation",
+      "start": "2027-03-15T08:00",
+      "area": "ZZ1"
+    },
+    {
+      "slot_id": "LE-S002",
+      "type": "smart meter installation",
+      "start": "2027-03-15T10:00",
+      "area": "ZZ2"
+    },
+    {
+      "slot_id": "LE-S003",
+      "type": "smart meter installation",
+      "start": "2027-03-15T13:00",
+      "area": "ZZ3"
+    },
+    {
+      "slot_id": "LE-S004",
+      "type": "smart meter installation",
+      "start": "2027-03-15T15:00",
+      "area": "ZZ4"
+    },
+    {
+      "slot_id": "LE-S005",
+      "type": "smart meter installation",
+      "start": "2027-03-16T08:00",
+      "area": "ZZ5"
+    },
+    {
+      "slot_id": "LE-S006",
+      "type": "smart meter installation",
+      "start": "2027-03-16T10:00",
+      "area": "ZZ1"
+    },
+    {
+      "slot_id": "LE-S007",
+      "type": "smart meter installation",
+      "start": "2027-03-16T13:00",
+      "area": "ZZ2"
+    },
+    {
+      "slot_id": "LE-S008",
+      "type": "smart meter installation",
+      "start": "2027-03-16T15:00",
+      "area": "ZZ3"
+    },
+    {
+      "slot_id": "LE-S009",
+      "type": "smart meter installation",
+      "start": "2027-03-17T08:00",
+      "area": "ZZ4"
+    },
+    {
+      "slot_id": "LE-S010",
+      "type": "smart meter installation",
+      "start": "2027-03-17T10:00",
+      "area": "ZZ5"
+    },
+    {
+      "slot_id": "LE-S011",
+      "type": "smart meter installation",
+      "start": "2027-03-17T13:00",
+      "area": "ZZ1"
+    },
+    {
+      "slot_id": "LE-S012",
+      "type": "smart meter installation",
+      "start": "2027-03-17T15:00",
+      "area": "ZZ2"
+    },
+    {
+      "slot_id": "LE-S013",
+      "type": "smart meter installation",
+      "start": "2027-03-18T08:00",
+      "area": "ZZ3"
+    },
+    {
+      "slot_id": "LE-S014",
+      "type": "smart meter installation",
+      "start": "2027-03-18T10:00",
+      "area": "ZZ4"
+    },
+    {
+      "slot_id": "LE-S015",
+      "type": "smart meter installation",
+      "start": "2027-03-18T13:00",
+      "area": "ZZ5"
+    },
+    {
+      "slot_id": "LE-S016",
+      "type": "smart meter installation",
+      "start": "2027-03-18T15:00",
+      "area": "ZZ1"
+    },
+    {
+      "slot_id": "LE-S017",
+      "type": "smart meter installation",
+      "start": "2027-03-19T08:00",
+      "area": "ZZ2"
+    },
+    {
+      "slot_id": "LE-S018",
+      "type": "smart meter installation",
+      "start": "2027-03-19T10:00",
+      "area": "ZZ3"
+    },
+    {
+      "slot_id": "LE-S019",
+      "type": "smart meter installation",
+      "start": "2027-03-19T13:00",
+      "area": "ZZ4"
+    },
+    {
+      "slot_id": "LE-S020",
+      "type": "smart meter installation",
+      "start": "2027-03-19T15:00",
+      "area": "ZZ5"
+    },
+    {
+      "slot_id": "LE-S021",
+      "type": "smart meter installation",
+      "start": "2027-03-22T08:00",
+      "area": "ZZ1"
+    },
+    {
+      "slot_id": "LE-S022",
+      "type": "smart meter installation",
+      "start": "2027-03-22T10:00",
+      "area": "ZZ2"
+    },
+    {
+      "slot_id": "LE-S023",
+      "type": "smart meter installation",
+      "start": "2027-03-22T13:00",
+      "area": "ZZ3"
+    },
+    {
+      "slot_id": "LE-S024",
+      "type": "smart meter installation",
+      "start": "2027-03-22T15:00",
+      "area": "ZZ4"
+    },
+    {
+      "slot_id": "LE-S025",
+      "type": "smart meter installation",
+      "start": "2027-03-23T08:00",
+      "area": "ZZ5"
+    },
+    {
+      "slot_id": "LE-S026",
+      "type": "smart meter installation",
+      "start": "2027-03-23T10:00",
+      "area": "ZZ1"
+    },
+    {
+      "slot_id": "LE-S027",
+      "type": "smart meter installation",
+      "start": "2027-03-23T13:00",
+      "area": "ZZ2"
+    },
+    {
+      "slot_id": "LE-S028",
+      "type": "smart meter installation",
+      "start": "2027-03-23T15:00",
+      "area": "ZZ3"
+    },
+    {
+      "slot_id": "LE-S029",
+      "type": "smart meter installation",
+      "start": "2027-03-24T08:00",
+      "area": "ZZ4"
+    },
+    {
+      "slot_id": "LE-S030",
+      "type": "smart meter installation",
+      "start": "2027-03-24T10:00",
+      "area": "ZZ5"
+    },
+    {
+      "slot_id": "LE-S031",
+      "type": "smart meter installation",
+      "start": "2027-03-24T13:00",
+      "area": "ZZ1"
+    },
+    {
+      "slot_id": "LE-S032",
+      "type": "smart meter installation",
+      "start": "2027-03-24T15:00",
+      "area": "ZZ2"
+    }
+  ],
+  "cases": [
+    {
+      "case_id": "LE-CASE-0441",
+      "customer_id": "LE-C08",
+      "category": "billing",
+      "summary": "Direct debit amount change requested from 95 to 80 pounds.",
+      "status": "open",
+      "priority": "normal",
+      "opened": "2027-02-26"
+    }
+  ],
+  "service_notices": [
+    {
+      "area": "ZZ2",
+      "since": "2027-03-01",
+      "estimated_fix": "2027-03-08",
+      "description": "Billing: meter readings not received from some ZZ2 meters, so March bills are estimated"
+    }
+  ]
+}

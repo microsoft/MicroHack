@@ -41,27 +41,26 @@ try {
 
     Write-Host 'Resolving latest Azure Storage Explorer release.'
 
-    $release = Invoke-RestMethod `
-        -Uri 'https://api.github.com/repos/microsoft/AzureStorageExplorer/releases/latest' `
-        -UseBasicParsing
+    # $release = Invoke-RestMethod `
+    #     -Uri 'https://api.github.com/repos/microsoft/AzureStorageExplorer/releases/latest' `
+    #     -UseBasicParsing
 
-    $asset = $release.assets |
-        Where-Object {
-            $_.name -eq 'StorageExplorer-windows-x64.exe'
-        } |
-        Select-Object -First 1
+    # $asset = $release.assets |
+    #     Where-Object {
+    #         $_.name -eq 'StorageExplorer-windows-x64.exe'
+    #     } |
+    #     Select-Object -First 1
 
-    if (-not $asset) {
-        throw 'The Azure Storage Explorer x64 installer could not be found.'
-    }
+    # if (-not $asset) {
+    #     throw 'The Azure Storage Explorer x64 installer could not be found.'
+    # }
 
-    $storageExplorerInstaller =
-        Join-Path $installDirectory 'StorageExplorer-windows-x64.exe'
+    $storageExplorerInstaller = Join-Path $installDirectory 'StorageExplorer-windows-x64.exe'
 
     Write-Host 'Downloading Azure Storage Explorer.'
 
     Invoke-WebRequest `
-        -Uri $asset.browser_download_url `
+        -Uri 'https://go.microsoft.com/fwlink/?LinkId=708343&clcid=0x409' `
         -OutFile $storageExplorerInstaller `
         -UseBasicParsing
 

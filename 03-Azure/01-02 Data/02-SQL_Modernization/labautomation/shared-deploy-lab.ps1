@@ -179,6 +179,11 @@ Start-Sleep -Seconds 30
 
 try {
     $FirstLabUser = Get-MhhLabUser -UserId @($AllowedEntraUserIds) | Where-Object { $_.ShortName.ToLower() -match "labuser-[0-9]{4}"} | Sort-Object -Property ShortName | Select-Object -First 1
+    #Fallback for local testing
+    if (!($FirstLabUser) -and @($AllowedEntraUserIds).Count -eq 1) {
+        Write-Host "No lab user found, using fallback for local testing..."
+        $FirstLabUser = Get-MhhLabUser -UserId @($AllowedEntraUserIds)[0]
+    }
     $SQLMiEntraAdmin = Get-AzADUser -ObjectId $FirstLabUser.Id -ErrorAction Stop
     # Entra Admin auf der MI setzen
     #$return = Set-AzSqlInstanceActiveDirectoryAdministrator `

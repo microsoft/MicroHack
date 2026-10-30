@@ -14,6 +14,44 @@ Start-Transcript -Path $logPath -Append
 Write-Host 'Configuring SQL legacy Instance...'
 
 $ConfigureSql = @"
+USE [master];
+GO
+/* ============================================================
+   SQL Server configuration for SSMS Migration Assessments
+
+   - MAXDOP = 1
+   - Optimize for Ad Hoc Workloads = ON
+   - Network Packet Size = 8000
+   - Max Server Memory = Physical RAM - 4 GB
+   ============================================================ */
+DECLARE @PhysicalMemoryMB bigint;
+DECLARE @MaxServerMemoryMB bigint;
+/* Get physical memory of the server */
+SELECT
+    @PhysicalMemoryMB = total_physical_memory_kb / 1024
+FROM sys.dm_os_sys_memory;
+/* Reserve 4 GB for Windows */
+SET @MaxServerMemoryMB = @PhysicalMemoryMB - 4096;
+/* Safety check */
+IF @MaxServerMemoryMB < 1024
+BEGIN
+    THROW 50000, 'Not enough physical memory available.', 1;
+END;
+/* Enable advanced options */
+EXEC sys.sp_configure 'show advanced options', 1;
+RECONFIGURE;
+/* MAXDOP = 1 */
+EXEC sys.sp_configure 'max degree of parallelism', 1;
+/* Optimize for Ad Hoc Workloads */
+EXEC sys.sp_configure 'optimize for ad hoc workloads', 1;
+/* Network Packet Size = 8000 bytes */
+EXEC sys.sp_configure 'network packet size (B)', 8000;
+/* Dynamically configure Max Server Memory */
+EXEC sys.sp_configure
+    'max server memory (MB)',
+    @MaxServerMemoryMB;
+RECONFIGURE;
+GO
 USE master
 GO
 EXEC sp_configure 'CLR Enabled', 1

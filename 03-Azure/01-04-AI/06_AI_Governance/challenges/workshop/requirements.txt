@@ -277,7 +277,7 @@ tenacity==9.1.4
     # via langchain-core
 tiktoken==0.12.0
     # via langchain-openai
-tornado==6.5.9
+tornado==6.6
     # via
     #   ipykernel
     #   jupyter-client

@@ -49,7 +49,7 @@ Register these resource providers before the event: Microsoft.CognitiveServices,
 - **Why Flex Consumption for the CRM?** Some subscriptions have no App Service plan quota at all (every tier, including Free, at 0). Flex Consumption does not use that quota.
 - **Model quota.** `gpt-5.4-mini` GlobalStandard quota is shared across the subscription. Four labs need 4 × 200K TPM of `gpt-5.4-mini` and 4 × 30K TPM of `gpt-5.4`. **Soft-deleted Foundry accounts keep their model quota** until they are purged, so purge test accounts after a dry run: `az cognitiveservices account purge -l <location> -n <account> -g <resource group>`.
 - Role assignments take a few minutes to apply. Give participants their lab at least 10 minutes after deployment.
-- `$10/day/lab` is a **planning estimate**, not a quote: Azure AI Search Basic is the largest fixed cost. Voice sessions, Content Understanding on three short calls and the agent tests are small. Codespaces used in Challenge 8 are billed by GitHub separately.
+- `$6/day/lab` is a **planning estimate**, not a quote: Azure AI Search Basic is the largest fixed cost (about $2.40 a day, charged whether the lab is used or not). In a full test run through all eight challenges the lab cost about $3 to $5 a day. Voice sessions, Content Understanding on three short calls and the agent tests are small. Codespaces used in Challenge 8 are billed by GitHub separately.
 - No Microsoft 365 licence is needed (`groups: []`).
 
 ## Testing the automation outside the platform

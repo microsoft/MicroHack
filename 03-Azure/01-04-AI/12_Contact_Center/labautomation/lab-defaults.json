@@ -4,6 +4,6 @@
   "deploymentType": "resourcegroup",
   "labsPerSubscription": 4,
   "preferredLocation": "uksouth",
-  "estimatedDailyCostsUsd": 10.0,
+  "estimatedDailyCostsUsd": 6.0,
   "estimatedSharedDeploymentDailyCostsUsd": 0.0
 }

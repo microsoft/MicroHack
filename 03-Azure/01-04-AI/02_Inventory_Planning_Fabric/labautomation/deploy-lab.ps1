@@ -43,10 +43,22 @@
     Entra user object IDs for this lab — passed in by the platform.
 
 .PARAMETER FabricSkuName
-    Per-attendee Fabric capacity SKU (default F4). Drop to F2 to halve cost if
-    attendees don't hit capacity throttling. If you change it, ALSO adjust
+    Per-attendee Fabric capacity SKU (default F4). Rehearse F4 and F8 before an event.
+    If you change it, ALSO adjust
     estimatedDailyCostsUsd in lab-defaults.json to match — Fabric is the dominant
     cost and each SKU step roughly doubles it.
+
+.PARAMETER ModelName
+    Model to deploy. Defaults to gpt-5.4-mini; verify regional availability and quota.
+
+.PARAMETER ModelVersion
+    Explicit model version. Change together with ModelName.
+
+.PARAMETER ModelDeploymentName
+    Deployment name shown to attendees. Use a different name for a fallback model.
+
+.PARAMETER ModelCapacity
+    GlobalStandard capacity units. TPM and RPM per unit depend on the model.
 #>
 param(
     [Parameter(Mandatory=$true)]
@@ -62,12 +74,20 @@ param(
 
     [string[]]$AllowedEntraUserIds = @(),
 
-    # Per-attendee Fabric capacity SKU. Default F4 avoids capacity throttling; drop
-    # to F2 to halve cost. If you change this, ALSO adjust estimatedDailyCostsUsd
-    # in lab-defaults.json (Fabric is the dominant cost; each SKU step roughly
-    # doubles it).
     [ValidateSet('F2','F4','F8','F16','F32','F64')]
-    [string]$FabricSkuName = "F4"
+    [string]$FabricSkuName = "F4",
+
+    [ValidateNotNullOrEmpty()]
+    [string]$ModelName = "gpt-5.4-mini",
+
+    [ValidateNotNullOrEmpty()]
+    [string]$ModelVersion = "2026-03-17",
+
+    [ValidatePattern('^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,63}$')]
+    [string]$ModelDeploymentName = "gpt-5.4-mini",
+
+    [ValidateRange(1, 100000)]
+    [int]$ModelCapacity = 200
 )
 
 $scriptPath = Split-Path -Parent $MyInvocation.MyCommand.Definition
@@ -98,7 +118,7 @@ if ([string]::IsNullOrWhiteSpace($effectiveRG)) {
 # Pattern: inv-{12-char hash} keeps it short and DNS-safe (Get-MhhStableHash minimum length is 12)
 $foundryAccountName = "inv-$stableHash"
 $foundryProjectName = "inventory-hack"
-$modelDeployment    = "gpt-5.4-mini"
+$modelDeployment    = $ModelDeploymentName
 
 # Per-attendee Fabric capacity name (lowercase alphanumeric, 3-63 chars).
 $fabricCapacityName = "invcap$stableHash"
@@ -366,24 +386,62 @@ $deploymentUri = "/subscriptions/$SubscriptionId/resourceGroups/$effectiveRG" +
     "/deployments/$modelDeployment" +
     "?api-version=2025-04-01-preview"
 
-$existingDeploy = Invoke-AzRestMethod -Method GET -Path $deploymentUri -ErrorAction SilentlyContinue
-if ($existingDeploy.StatusCode -ne 200) {
-    $deploymentBody = @{
-        sku        = @{ name = "GlobalStandard"; capacity = 200 }
-        properties = @{
-            model = @{ format = "OpenAI"; name = "gpt-5.4-mini"; version = "2026-03-17" }
-        }
-    } | ConvertTo-Json -Depth 10
+function Ensure-LabModelDeployment {
+    param(
+        [string]$Uri,
+        [string]$Name,
+        [string]$Version,
+        [int]$Capacity,
+        [int]$TimeoutSeconds = 300
+    )
 
-    try {
-        Invoke-AzRestMethod -Method PUT -Path $deploymentUri -Payload $deploymentBody | Out-Null
-        Write-Host "[OK]    Model deployment '$modelDeployment' initiated."
-    } catch {
-        Write-Host "[WARN]  Model deployment: $_ — may already exist, continuing."
+    $response = Invoke-AzRestMethod -Method GET -Path $Uri
+    if ($response.StatusCode -notin 200, 404) {
+        throw "Model deployment lookup failed (HTTP $($response.StatusCode)): $($response.Content)"
     }
-} else {
-    Write-Host "[OK]    Model deployment already exists — skipping."
+    $existing = if ($response.StatusCode -eq 200) { $response.Content | ConvertFrom-Json }
+    if ($existing -and (
+        $existing.properties.model.name -ne $Name -or
+        $existing.properties.model.version -ne $Version -or
+        $existing.sku.name -ne 'GlobalStandard')) {
+        throw "Existing deployment has a different model, version, or SKU. Choose a new ModelDeploymentName; it will not be replaced automatically."
+    }
+
+    if (-not $existing -or $existing.sku.capacity -ne $Capacity) {
+        $body = @{
+            sku = @{ name = 'GlobalStandard'; capacity = $Capacity }
+            properties = @{ model = @{ format = 'OpenAI'; name = $Name; version = $Version } }
+        } | ConvertTo-Json -Depth 5
+        $response = Invoke-AzRestMethod -Method PUT -Path $Uri -Payload $body
+        if ($response.StatusCode -lt 200 -or $response.StatusCode -ge 300) {
+            throw "Model deployment create/update failed (HTTP $($response.StatusCode)): $($response.Content)"
+        }
+    }
+
+    for ($elapsed = 0; $elapsed -le $TimeoutSeconds; $elapsed += 5) {
+        $response = Invoke-AzRestMethod -Method GET -Path $Uri
+        if ($response.StatusCode -ne 200) {
+            throw "Model deployment verification failed (HTTP $($response.StatusCode)): $($response.Content)"
+        }
+        $deployment = $response.Content | ConvertFrom-Json
+        $state = $deployment.properties.provisioningState
+        if ($state -in 'Failed', 'Canceled', 'Cancelled') {
+            throw "Model deployment reached ${state}: $($response.Content)"
+        }
+        if ($state -eq 'Succeeded' -and
+            $deployment.properties.model.name -eq $Name -and
+            $deployment.properties.model.version -eq $Version -and
+            $deployment.sku.name -eq 'GlobalStandard' -and
+            $deployment.sku.capacity -eq $Capacity) {
+            Write-Host "[OK]    Model '$Name' version '$Version' is ready (GlobalStandard capacity $Capacity)."
+            return
+        }
+        if ($elapsed -lt $TimeoutSeconds) { Start-Sleep -Seconds 5 }
+    }
+    throw "Model deployment did not reach the requested Succeeded configuration within ${TimeoutSeconds}s. Last response: $($response.Content)"
 }
+
+Ensure-LabModelDeployment -Uri $deploymentUri -Name $ModelName -Version $ModelVersion -Capacity $ModelCapacity
 
 # ---------------------------------------------------------------------------
 # Per-attendee Fabric capacity (ARM REST — no az CLI / Fabric extension needed).
@@ -411,7 +469,7 @@ foreach ($uid in $AllowedEntraUserIds) {
 }
 
 if ($adminUpns.Count -eq 0) {
-    Write-Warning "No attendee UPNs resolved — skipping Fabric capacity creation. Create the capacity manually and set the attendee as capacity admin, or re-run once the lab-user cache is available."
+    throw "No attendee UPNs resolved. Re-run once the lab-user cache is available; Fabric capacity is required for this lab."
 } else {
     # Ensure the Microsoft.Fabric resource provider is registered (idempotent).
     $prov = Invoke-AzRestMethod -Method GET -Path "/subscriptions/$SubscriptionId/providers/Microsoft.Fabric?api-version=2021-04-01"
@@ -421,6 +479,15 @@ if ($adminUpns.Count -eq 0) {
 
     $capExists = Get-AzResource -ResourceGroupName $effectiveRG -ResourceType "Microsoft.Fabric/capacities" -Name $fabricCapacityName -ErrorAction SilentlyContinue
     if ($capExists) {
+        if ($capExists.Properties.provisioningState -ne 'Succeeded' -or $capExists.Properties.state -eq 'Paused') {
+            throw "Existing Fabric capacity is not ready. Resume it if paused and wait for Succeeded before re-running."
+        }
+        $actualSku = $capExists.Sku.Name
+        if (-not $actualSku) { throw "Could not determine the existing Fabric capacity SKU." }
+        if ($actualSku -ne $FabricSkuName) {
+            Write-Warning "Existing capacity uses $actualSku, not requested $FabricSkuName. It will not be resized automatically."
+            $FabricSkuName = $actualSku
+        }
         $fabricCapacityRegion = $capExists.Location
         Write-Host "[OK]    Fabric capacity '$fabricCapacityName' already exists in '$fabricCapacityRegion' — skipping."
     } else {
@@ -452,7 +519,7 @@ if ($adminUpns.Count -eq 0) {
             Write-Warning "Fabric capacity provisioning did not succeed in '$region' — trying next region."
         }
         if (-not $fabricCapacityRegion) {
-            Write-Warning "Could not create the Fabric capacity in any preferred region (check Fabric F-SKU quota). The attendee can still do the Foundry steps; provision Fabric manually."
+            throw "Could not create the required Fabric capacity in any preferred region. Check Fabric quota and deployment errors above."
         }
     }
 }

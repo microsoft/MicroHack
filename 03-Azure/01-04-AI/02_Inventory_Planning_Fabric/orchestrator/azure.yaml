@@ -1,0 +1,35 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+name: inventory-planning-assistant
+requiredVersions:
+  azd: ">=1.34.2"
+  extensions:
+    azure.ai.agents: ">=1.0.0-beta.19"
+    azure.ai.projects: ">=1.0.0-beta.1"
+services:
+  inventory-planning-assistant:
+    name: inventory-planning-assistant
+    project: .
+    host: azure.ai.agent
+    language: python
+    kind: hosted
+    description: Sense demand, plan inventory and obtain human approval for simulated replenishment.
+    uses:
+      - ai-project
+    codeConfiguration:
+      runtime: python_3_13
+      entryPoint: main.py
+    container:
+      resources:
+        cpu: "0.5"
+        memory: 1Gi
+    protocols:
+      - protocol: responses
+        version: 2.0.0
+    env:
+      TOOLBOX_ENDPOINT: ${TOOLBOX_ENDPOINT}
+  ai-project:
+    host: azure.ai.project
+    endpoint: ${FOUNDRY_PROJECT_ENDPOINT}
+    deployments: []
+infra:
+  provider: microsoft.foundry

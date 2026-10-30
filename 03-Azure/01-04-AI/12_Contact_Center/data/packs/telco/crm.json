@@ -1,0 +1,344 @@
+{
+  "customers": [
+    {
+      "customer_id": "KC-C01",
+      "account_number": "KC100201",
+      "name": "Priya Shah",
+      "postcode": "ZZ4 2BT",
+      "product": "Fibre 500 broadband",
+      "monthly_charge": 42.0,
+      "balance_due": 0.0,
+      "status": "active",
+      "flags": [],
+      "notes": "Broadband down since 1 March 2027; area ZZ4 has a known outage."
+    },
+    {
+      "customer_id": "KC-C02",
+      "account_number": "KC100202",
+      "name": "Tom Hughes",
+      "postcode": "ZZ1 4QD",
+      "product": "Broadband and mobile bundle",
+      "monthly_charge": 58.0,
+      "balance_due": 84.0,
+      "status": "arrears",
+      "flags": [
+        "payment_difficulty"
+      ],
+      "notes": "Two payments missed; asked about spreading the balance."
+    },
+    {
+      "customer_id": "KC-C03",
+      "account_number": "KC100203",
+      "name": "Margaret Ellis",
+      "postcode": "ZZ4 7HN",
+      "product": "Fibre 150 broadband",
+      "monthly_charge": 29.0,
+      "balance_due": 0.0,
+      "status": "active",
+      "flags": [
+        "telecare_alarm",
+        "age_80_plus"
+      ],
+      "notes": "Telecare alarm uses the broadband line."
+    },
+    {
+      "customer_id": "KC-C04",
+      "account_number": "KC100204",
+      "name": "Daniel Okafor",
+      "postcode": "ZZ2 3LP",
+      "product": "Fibre 500 broadband",
+      "monthly_charge": 42.0,
+      "balance_due": 0.0,
+      "status": "active",
+      "flags": [],
+      "notes": "Open case about slow evening speeds."
+    },
+    {
+      "customer_id": "KC-C05",
+      "account_number": "KC100205",
+      "name": "Sofia Marin",
+      "postcode": "ZZ3 9RW",
+      "product": "SIM-only mobile",
+      "monthly_charge": 12.0,
+      "balance_due": 0.0,
+      "status": "active",
+      "flags": [],
+      "notes": "Joined in February; first bill included a part-month charge."
+    },
+    {
+      "customer_id": "KC-C06",
+      "account_number": "KC100206",
+      "name": "Arjun Mehta",
+      "postcode": "ZZ5 1EF",
+      "product": "Fibre 150 broadband",
+      "monthly_charge": 29.0,
+      "balance_due": 0.0,
+      "status": "active",
+      "flags": [],
+      "notes": "Moving to ZZ2 6TT on 2 April 2027."
+    },
+    {
+      "customer_id": "KC-C07",
+      "account_number": "KC100207",
+      "name": "Grace Whitfield",
+      "postcode": "ZZ2 8MS",
+      "product": "Broadband and mobile bundle",
+      "monthly_charge": 58.0,
+      "balance_due": 0.0,
+      "status": "active",
+      "flags": [
+        "recent_bereavement"
+      ],
+      "notes": "Account holder's partner died recently; asked to change the account name."
+    },
+    {
+      "customer_id": "KC-C08",
+      "account_number": "KC100208",
+      "name": "Lewis Carter",
+      "postcode": "ZZ1 2XY",
+      "product": "Fibre 500 broadband",
+      "monthly_charge": 42.0,
+      "balance_due": 0.0,
+      "status": "active",
+      "flags": [],
+      "notes": "Minimum term ends 30 April 2027."
+    },
+    {
+      "customer_id": "KC-C09",
+      "account_number": "KC100209",
+      "name": "Hannah Brook",
+      "postcode": "ZZ3 5GU",
+      "product": "SIM-only mobile",
+      "monthly_charge": 12.0,
+      "balance_due": 12.0,
+      "status": "active",
+      "flags": [],
+      "notes": ""
+    },
+    {
+      "customer_id": "KC-C10",
+      "account_number": "KC100210",
+      "name": "Omar Haddad",
+      "postcode": "ZZ5 4DJ",
+      "product": "Fibre 150 broadband",
+      "monthly_charge": 29.0,
+      "balance_due": 0.0,
+      "status": "active",
+      "flags": [],
+      "notes": ""
+    }
+  ],
+  "slots": [
+    {
+      "slot_id": "KC-S001",
+      "type": "engineer visit",
+      "start": "2027-03-15T08:00",
+      "area": "ZZ1"
+    },
+    {
+      "slot_id": "KC-S002",
+      "type": "engineer visit",
+      "start": "2027-03-15T10:00",
+      "area": "ZZ2"
+    },
+    {
+      "slot_id": "KC-S003",
+      "type": "engineer visit",
+      "start": "2027-03-15T13:00",
+      "area": "ZZ3"
+    },
+    {
+      "slot_id": "KC-S004",
+      "type": "engineer visit",
+      "start": "2027-03-15T15:00",
+      "area": "ZZ4"
+    },
+    {
+      "slot_id": "KC-S005",
+      "type": "engineer visit",
+      "start": "2027-03-16T08:00",
+      "area": "ZZ5"
+    },
+    {
+      "slot_id": "KC-S006",
+      "type": "engineer visit",
+      "start": "2027-03-16T10:00",
+      "area": "ZZ1"
+    },
+    {
+      "slot_id": "KC-S007",
+      "type": "engineer visit",
+      "start": "2027-03-16T13:00",
+      "area": "ZZ2"
+    },
+    {
+      "slot_id": "KC-S008",
+      "type": "engineer visit",
+      "start": "2027-03-16T15:00",
+      "area": "ZZ3"
+    },
+    {
+      "slot_id": "KC-S009",
+      "type": "engineer visit",
+      "start": "2027-03-17T08:00",
+      "area": "ZZ4"
+    },
+    {
+      "slot_id": "KC-S010",
+      "type": "engineer visit",
+      "start": "2027-03-17T10:00",
+      "area": "ZZ5"
+    },
+    {
+      "slot_id": "KC-S011",
+      "type": "engineer visit",
+      "start": "2027-03-17T13:00",
+      "area": "ZZ1"
+    },
+    {
+      "slot_id": "KC-S012",
+      "type": "engineer visit",
+      "start": "2027-03-17T15:00",
+      "area": "ZZ2"
+    },
+    {
+      "slot_id": "KC-S013",
+      "type": "engineer visit",
+      "start": "2027-03-18T08:00",
+      "area": "ZZ3"
+    },
+    {
+      "slot_id": "KC-S014",
+      "type": "engineer visit",
+      "start": "2027-03-18T10:00",
+      "area": "ZZ4"
+    },
+    {
+      "slot_id": "KC-S015",
+      "type": "engineer visit",
+      "start": "2027-03-18T13:00",
+      "area": "ZZ5"
+    },
+    {
+      "slot_id": "KC-S016",
+      "type": "engineer visit",
+      "start": "2027-03-18T15:00",
+      "area": "ZZ1"
+    },
+    {
+      "slot_id": "KC-S017",
+      "type": "engineer visit",
+      "start": "2027-03-19T08:00",
+      "area": "ZZ2"
+    },
+    {
+      "slot_id": "KC-S018",
+      "type": "engineer visit",
+      "start": "2027-03-19T10:00",
+      "area": "ZZ3"
+    },
+    {
+      "slot_id": "KC-S019",
+      "type": "engineer visit",
+      "start": "2027-03-19T13:00",
+      "area": "ZZ4"
+    },
+    {
+      "slot_id": "KC-S020",
+      "type": "engineer visit",
+      "start": "2027-03-19T15:00",
+      "area": "ZZ5"
+    },
+    {
+      "slot_id": "KC-S021",
+      "type": "engineer visit",
+      "start": "2027-03-22T08:00",
+      "area": "ZZ1"
+    },
+    {
+      "slot_id": "KC-S022",
+      "type": "engineer visit",
+      "start": "2027-03-22T10:00",
+      "area": "ZZ2"
+    },
+    {
+      "slot_id": "KC-S023",
+      "type": "engineer visit",
+      "start": "2027-03-22T13:00",
+      "area": "ZZ3"
+    },
+    {
+      "slot_id": "KC-S024",
+      "type": "engineer visit",
+      "start": "2027-03-22T15:00",
+      "area": "ZZ4"
+    },
+    {
+      "slot_id": "KC-S025",
+      "type": "engineer visit",
+      "start": "2027-03-23T08:00",
+      "area": "ZZ5"
+    },
+    {
+      "slot_id": "KC-S026",
+      "type": "engineer visit",
+      "start": "2027-03-23T10:00",
+      "area": "ZZ1"
+    },
+    {
+      "slot_id": "KC-S027",
+      "type": "engineer visit",
+      "start": "2027-03-23T13:00",
+      "area": "ZZ2"
+    },
+    {
+      "slot_id": "KC-S028",
+      "type": "engineer visit",
+      "start": "2027-03-23T15:00",
+      "area": "ZZ3"
+    },
+    {
+      "slot_id": "KC-S029",
+      "type": "engineer visit",
+      "start": "2027-03-24T08:00",
+      "area": "ZZ4"
+    },
+    {
+      "slot_id": "KC-S030",
+      "type": "engineer visit",
+      "start": "2027-03-24T10:00",
+      "area": "ZZ5"
+    },
+    {
+      "slot_id": "KC-S031",
+      "type": "engineer visit",
+      "start": "2027-03-24T13:00",
+      "area": "ZZ1"
+    },
+    {
+      "slot_id": "KC-S032",
+      "type": "engineer visit",
+      "start": "2027-03-24T15:00",
+      "area": "ZZ2"
+    }
+  ],
+  "cases": [
+    {
+      "case_id": "KC-CASE-0901",
+      "customer_id": "KC-C04",
+      "category": "fault",
+      "summary": "Evening speeds below 100 Mbps on Fibre 500 for two weeks.",
+      "status": "open",
+      "priority": "normal",
+      "opened": "2027-02-24"
+    }
+  ],
+  "service_notices": [
+    {
+      "area": "ZZ4",
+      "since": "2027-03-01",
+      "estimated_fix": "2027-03-04 18:00",
+      "description": "Broadband outage: damaged fibre cable"
+    }
+  ]
+}

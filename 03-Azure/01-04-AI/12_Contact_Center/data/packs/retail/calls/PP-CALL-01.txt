@@ -1,0 +1,12 @@
+# PP-CALL-01: Sofa return collection booked
+
+Customer voice: male
+
+Agent: Thanks for contacting Parcelpine. How can I help today?
+Customer: Hi, I'd like to return a sofa. It's the wrong colour for the room.
+Agent: No problem. Can I take your account number and postcode?
+Customer: P P nine zero zero five zero two, Z Z two, seven A L.
+Agent: Thanks, Ryan. Large items are collected free of charge. The first slot is Monday the fifteenth, in the morning. Shall I book it?
+Customer: Yes please.
+Agent: Done. Your refund will reach your original payment method within five working days of the sofa arriving at our warehouse.
+Customer: Brilliant, thanks.

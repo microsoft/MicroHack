@@ -1,0 +1,12 @@
+# LE-CALL-01: Smart meter installation booked
+
+Customer voice: male
+
+Agent: Thanks for calling Lumora Energy. How can I help today?
+Customer: Hi, I'd like to get a smart meter so I can stop sending readings.
+Agent: Happy to help. Can I take your account number and postcode, please?
+Customer: L E three zero zero one zero two, and it's Z Z one, eight B B.
+Agent: Thanks, Rashid. Installation is free. The first slot in your area is Monday the fifteenth of March, between eight and ten in the morning. Does that work?
+Customer: Yes, that's perfect.
+Agent: Booked. Someone over eighteen needs to be home, and the power will be off for about half an hour.
+Customer: Great, thanks very much.

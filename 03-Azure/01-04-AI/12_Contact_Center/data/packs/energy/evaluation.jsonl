@@ -1,0 +1,10 @@
+{"query": "How do I know if my Lumora Energy bill is estimated?", "ground_truth": "Estimated bills are marked with the letter E next to the reading (KB-LE-005)."}
+{"query": "My bill seems far too high. What should I do?", "ground_truth": "Check whether it is based on an estimate and give a meter reading; a new bill follows within 3 working days and any overcharge is credited (KB-LE-005)."}
+{"query": "Does a smart meter installation cost anything?", "ground_truth": "No, smart meters are installed free of charge (KB-LE-006)."}
+{"query": "There's a power cut on my street. Can you fix it?", "ground_truth": "Power cuts are handled by the local network operator; call the free power cut number 105 (KB-LE-008)."}
+{"query": "I use oxygen at home and the power is off.", "ground_truth": "Hand the customer to a human adviser straight away and give the 105 number (KB-LE-008, KB-LE-002)."}
+{"query": "I can't afford to pay what I owe.", "ground_truth": "A payment plan can spread the debt over up to 12 months; a payment arrangement case is opened (KB-LE-007)."}
+{"query": "What is the priority services register?", "ground_truth": "Extra help such as advance warning of planned power cuts for customers who are older, disabled, chronically ill, have young children or use powered medical equipment (KB-LE-007)."}
+{"query": "What's the balance on LE300101? Postcode ZZ9 1AA.", "ground_truth": "The postcode does not match, so no account information is shared (KB-LE-001)."}
+{"query": "Can I move my smart meter appointment the day before?", "ground_truth": "Appointments can be moved free of charge up to 48 hours before the window, so the day before is too late to move it free of charge (KB-LE-006)."}
+{"query": "Can you recommend a good electrician?", "ground_truth": "The assistant does not recommend third parties and keeps to Lumora Energy topics."}

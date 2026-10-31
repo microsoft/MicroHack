@@ -123,15 +123,42 @@ def check_app(app_url: str, profile: dict) -> None:
         print(f"  Portal check: could not reach {base}/portal ({err}). It can take a minute to start; open it in your browser.")
 
 
+AI_TOKEN_HELP = ("Cloud Shell's built-in sign-in can't get a token for Microsoft Foundry. Sign in once in this "
+                 "terminal, then run the command again:\n  az login --use-device-code --scope https://ai.azure.com/.default")
+
+
+def _foundry_token() -> str:
+    try:
+        return _az("account", "get-access-token", "--resource", "https://ai.azure.com", "--query", "accessToken",
+                   "--output", "tsv", capture=True, storage=False).strip()
+    except SetupError as err:
+        raise SetupError(f"{AI_TOKEN_HELP}\n({str(err).splitlines()[1] if len(str(err).splitlines()) > 1 else err})")
+
+
+def _agent_principal(agent: str, project_endpoint: str, project_id: str) -> str | None:
+    """Find the agent's own identity. Its Entra name is <account>-<project>-<agent>-AgentIdentity."""
+    match = re.search(r"/accounts/([^/]+)/projects/([^/]+)$", project_id.rstrip("/"))
+    if match:
+        name = f"{match.group(1)}-{match.group(2)}-{agent}-AgentIdentity"
+        found = json.loads(_az("ad", "sp", "list", "--display-name", name, "--query", "[].id", "--output", "json",
+                               capture=True, storage=False) or "[]")
+        if found:
+            return found[0]
+    # Fall back to the agent definition in Foundry (needs a token for https://ai.azure.com).
+    try:
+        data = json.loads(_az("rest", "--method", "get", "--url", f"{project_endpoint.rstrip('/')}/agents/{agent}?api-version=v1",
+                              "--resource", "https://ai.azure.com", capture=True, storage=False) or "{}")
+    except SetupError:
+        return None
+    latest = (data.get("versions") or {}).get("latest") or data
+    return (latest.get("instance_identity") or data.get("instance_identity") or {}).get("principal_id")
+
+
 def grant_agent(agent: str, project_endpoint: str, project_id: str) -> None:
     """Give an agent's own identity the Foundry User role on the project, so it can return files."""
-    url = f"{project_endpoint.rstrip('/')}/agents/{agent}?api-version=v1"
-    data = json.loads(_az("rest", "--method", "get", "--url", url, "--resource", "https://ai.azure.com",
-                          capture=True, storage=False) or "{}")
-    latest = (data.get("versions") or {}).get("latest") or data
-    principal = (latest.get("instance_identity") or data.get("instance_identity") or {}).get("principal_id")
+    principal = _agent_principal(agent, project_endpoint, project_id)
     if not principal:
-        raise SetupError(f"Agent '{agent}' has no identity yet. Save the agent in the Foundry portal first.")
+        raise SetupError(f"Agent '{agent}' has no identity yet. Check the name, and save the agent in the Foundry portal first.")
     existing = json.loads(_az("role", "assignment", "list", "--assignee", principal, "--scope", project_id,
                               "--role", FOUNDRY_USER, "--output", "json", capture=True, storage=False) or "[]")
     if existing:
@@ -212,8 +239,7 @@ def publish_skill(folder: Path, project_endpoint: str) -> None:
     """Upload a skill folder as a SKILL.md package, the format the Copilot harness loads, and make it the default."""
     folder = folder.resolve()
     name, description = read_skill(folder)
-    token = _az("account", "get-access-token", "--resource", "https://ai.azure.com", "--query", "accessToken",
-                "--output", "tsv", capture=True, storage=False).strip()
+    token = _foundry_token()
     base = f"{project_endpoint.rstrip('/')}/skills/{name}"
     created = _upload_skill(f"{base}/versions?api-version=v1", token, _skill_archive(folder), name)
     version = str(created.get("version", ""))

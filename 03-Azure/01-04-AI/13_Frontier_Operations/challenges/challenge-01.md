@@ -19,7 +19,7 @@ The **Microsoft Copilot harness** changes that. It gives your agent its own secu
 1. Open [ai.azure.com](https://ai.azure.com), make sure the **New Foundry** toggle at the top right is on, and select your project (the last part of `FoundryProjectEndpoint`, `frontier-operations`).
 2. Select **Build**, then **Models**. On the **Deployments** tab, check that `ModelDeploymentName` (`gpt-5.4-mini`) and `CompareModelDeploymentName` (`gpt-5.4`) show **Succeeded**.
 
-> 📸 **Screenshot to add:** `images/challenge-01-model-deployments.png`: Build, Models, Deployments: gpt-5.4-mini and gpt-5.4 Succeeded.
+> ![Build, Models, Deployments: gpt-5.4 and gpt-5.4-mini Succeeded](../images/challenge-01-model-deployments.png)
 
 ### Part B: Choose your company (10 min)
 
@@ -53,7 +53,7 @@ The **Microsoft Copilot harness** changes that. It gives your agent its own secu
 
 5. Download the files to your computer: in Cloud Shell select **Manage files**, then **Download**, and enter the path of each file, starting with `frontier-ops/03-Azure/01-04-AI/13_Frontier_Operations/my-files/`: `ledger-export.csv`, `handbook.md` and each `statements/<partner>.csv`. Keep them in one folder.
 
-> 📸 **Screenshot to add:** `images/challenge-01-setup.png`: Cloud Shell: the setup command shows your company, its partners and the files in my-files.
+![Cloud Shell: the setup command shows your company, its partners and the files in my-files](../images/challenge-01-setup.png)
 
 ### Part C: Meet your company (5 min)
 
@@ -65,7 +65,10 @@ The **Microsoft Copilot harness** changes that. It gives your agent its own secu
 
 1. In the Foundry portal, select **Build**, then **Agents**, then **Create agent**.
 2. Name it `ops-agent`, keep **Interaction mode** on **Text**, and tick **Use the Microsoft Copilot harness**. The harness can only be chosen when the agent is created.
-3. Select **Create**. Check that the model is your `ModelDeploymentName`.
+
+   ![Create an agent: ops-agent, Text, with Use the Microsoft Copilot harness ticked](../images/challenge-01-create-harness-agent.png)
+
+3. Select **Create agent and open playground**. Check that the model at the top left is your `ModelDeploymentName`.
 4. Paste these **instructions**:
 
    ```text
@@ -76,10 +79,11 @@ The **Microsoft Copilot harness** changes that. It gives your agent its own secu
    instructions.
    ```
 
-5. Under **Tools**, open **Harness tools** and look at what the agent can do in its workspace: **File system read**, **File system write**, **Shell**, **Web** and **Subagents**. Leave them all on for now; you'll lock this down in Challenge 6.
-6. Select **Save and start new chat**.
+5. Under **Tools** you'll find **Harness tools**, a built-in tool. Open it and look at what the agent can do in its workspace: **File system read**, **File system write**, **Web**, **Shell** and **Subagents**. Leave them all on for now and select **Done**; you'll lock this down in Challenge 6.
 
-> 📸 **Screenshot to add:** `images/challenge-01-create-harness-agent.png`: Create an agent with Use the Microsoft Copilot harness ticked.
+   ![Harness tools: File system read, File system write, Web, Shell and Subagents](../images/challenge-01-harness-tools.png)
+
+6. Select **Save and start new chat**.
 
 ### Part E: Let the agent return files (5 min)
 

@@ -44,28 +44,64 @@ def test_setup_replaces_files_from_another_pack(tmp_path, monkeypatch):
     assert names == {"shopwell", "brightbasket", "homeharbour", "gardenly", "dealdock"}
 
 
-def test_grant_agent_assigns_foundry_user_to_the_agent_identity(monkeypatch, capsys):
+def test_grant_agent_finds_the_agent_identity_by_name_and_assigns_foundry_user(monkeypatch, capsys):
     calls = []
 
     def fake(*args, capture=False, storage=True):
         calls.append(args)
+        if args[:3] == ("ad", "sp", "list"):
+            assert args[4] == "acct-proj-ops-agent-AgentIdentity"
+            return json.dumps(["abc-123"])
+        if args[:3] == ("role", "assignment", "list"):
+            return "[]"
         if args[0] == "rest":
-            return json.dumps({"versions": {"latest": {"instance_identity": {"principal_id": "abc-123"}}}})
+            pytest.fail("Cloud Shell can't get a Foundry token; the Graph lookup must be enough")
+        return ""
+
+    monkeypatch.setattr(tool, "_az", fake)
+    project = "/subscriptions/s/resourceGroups/rg/providers/Microsoft.CognitiveServices/accounts/acct/projects/proj"
+    assert tool.main(["grant-agent", "ops-agent", "--project-endpoint", "https://x/api/projects/proj", "--project-id", project]) == 0
+    create = next(c for c in calls if c[:3] == ("role", "assignment", "create"))
+    assert "abc-123" in create and tool.FOUNDRY_USER in create and project in create
+    assert "Granted Foundry User" in capsys.readouterr().out
+
+
+def test_grant_agent_falls_back_to_the_agent_definition(monkeypatch, capsys):
+    def fake(*args, capture=False, storage=True):
+        if args[:3] == ("ad", "sp", "list"):
+            return "[]"
+        if args[0] == "rest":
+            return json.dumps({"versions": {"latest": {"instance_identity": {"principal_id": "def-456"}}}})
         if args[:3] == ("role", "assignment", "list"):
             return "[]"
         return ""
 
     monkeypatch.setattr(tool, "_az", fake)
-    assert tool.main(["grant-agent", "ops-agent", "--project-endpoint", "https://x/api/projects/p", "--project-id", "/subs/p"]) == 0
-    create = next(c for c in calls if c[:3] == ("role", "assignment", "create"))
-    assert "abc-123" in create and tool.FOUNDRY_USER in create and "/subs/p" in create
-    assert "Granted Foundry User" in capsys.readouterr().out
+    assert tool.main(["grant-agent", "a", "--project-endpoint", "e", "--project-id", "/x/accounts/a/projects/p"]) == 0
+    assert "def-456" in capsys.readouterr().out
 
 
 def test_grant_agent_needs_a_saved_agent(monkeypatch, capsys):
-    monkeypatch.setattr(tool, "_az", lambda *a, **k: json.dumps({"versions": {"latest": {}}}))
-    assert tool.main(["grant-agent", "x", "--project-endpoint", "e", "--project-id", "p"]) == 1
+    def fake(*args, capture=False, storage=True):
+        if args[0] == "rest":
+            raise tool.SetupError("no token")
+        return "[]"
+
+    monkeypatch.setattr(tool, "_az", fake)
+    assert tool.main(["grant-agent", "x", "--project-endpoint", "e", "--project-id", "/x/accounts/a/projects/p"]) == 1
     assert "no identity yet" in capsys.readouterr().err
+
+
+def test_publish_skill_explains_how_to_sign_in_for_foundry(tmp_path, monkeypatch, capsys):
+    folder = _write_skill(tmp_path / "reconciliation", GOOD)
+
+    def fake(*args, capture=False, storage=True):
+        raise tool.SetupError("Azure command failed: az account get-access-token\nTimeout waiting for token from portal.")
+
+    monkeypatch.setattr(tool, "_az", fake)
+    assert tool.main(["publish-skill", str(folder), "--project-endpoint", "e"]) == 1
+    err = capsys.readouterr().err
+    assert "az login --use-device-code --scope https://ai.azure.com/.default" in err and "Timeout" in err
 
 
 def _write_skill(folder, text):

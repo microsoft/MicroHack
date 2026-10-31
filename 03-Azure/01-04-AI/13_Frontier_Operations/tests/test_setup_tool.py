@@ -25,7 +25,7 @@ def test_setup_uploads_selects_pack_and_prepares_files(tmp_path, monkeypatch, ca
     assert verbs == ["storage blob delete-batch", "storage blob upload-batch", "storage blob upload"]
     assert ("--container-name", "ops-state") == calls[2][4:6] or "ops-state" in calls[2]
     files = sorted(p.relative_to(tmp_path / "my-files").as_posix() for p in (tmp_path / "my-files").rglob("*") if p.is_file())
-    assert "handbook.md" in files and sum(f.startswith("statements/") for f in files) == 5
+    assert "handbook.md" in files and "ledger-export.csv" in files and sum(f.startswith("statements/") for f in files) == 5
     out = capsys.readouterr().out
     assert "Kestrel Connect" in out and "Carrier Exchange" in out
 

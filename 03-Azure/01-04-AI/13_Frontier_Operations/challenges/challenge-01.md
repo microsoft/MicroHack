@@ -49,9 +49,9 @@ The **Microsoft Copilot harness** changes that. It gives your agent its own secu
    python3 -m frontierops --account <StorageAccountName> setup --industry <distribution|telco|energy|insurance|retail> --app-url <BackOfficeUrl>
    ```
 
-   The tool switches the ERP and the partner portal to your company and puts the files you'll need in a `my-files` folder: one statement per partner, and the team's handbook.
+   The tool switches the ERP and the partner portal to your company and puts the files you'll need in a `my-files` folder: one statement per partner, this month's **ledger export** from your ERP, and the team's handbook.
 
-5. Download `my-files` to your computer: in Cloud Shell select **Manage files**, then **Download**, and enter `frontier-ops/03-Azure/01-04-AI/13_Frontier_Operations/my-files/statements/<partner>.csv` for each statement, and `.../my-files/handbook.md`. Keep them in one folder.
+5. Download the files to your computer: in Cloud Shell select **Manage files**, then **Download**, and enter the path of each file, starting with `frontier-ops/03-Azure/01-04-AI/13_Frontier_Operations/my-files/`: `ledger-export.csv`, `handbook.md` and each `statements/<partner>.csv`. Keep them in one folder.
 
 > 📸 **Screenshot to add:** `images/challenge-01-setup.png`: Cloud Shell: the setup command shows your company, its partners and the files in my-files.
 
@@ -93,11 +93,11 @@ Your lab account may grant exactly this role on your project and nothing else. A
 
 ### Part F: Hand it the work (10 min)
 
-1. In the chat, attach **one** statement (for example the first partner's CSV) and ask:
+1. In the chat, attach **one** partner's statement and `ledger-export.csv`, and ask:
 
-   > *Reconcile this statement against our ledger. Our ledger for this partner is in the ERP, but for now use this: list matches, amount differences and lines missing on either side. Then create reconciliation.xlsx with one sheet per category and give it back to me as a file.*
+   > *Reconcile this partner's statement against our ledger export. List matches, amount differences and lines missing on either side. Then create reconciliation.xlsx with one sheet per category and give it back to me as a file.*
 
-   The agent doesn't have the ledger yet, so it will tell you so, or ask for it. That's the right behaviour: it won't invent numbers. Attach the matching lines from your company's ledger: in Cloud Shell, `grep <partner_id> data/packs/<industry>/ledger.csv > my-files/ledger-<partner_id>.csv`, download it and attach it.
+   Try it first with only the statement attached: the agent should tell you it needs the ledger rather than invent numbers.
 
 2. Watch the steps under the answer: it reads the files, writes Python, runs it in the **shell**, and uploads the workbook. If a library is missing, it installs it or switches to another.
 3. Download `reconciliation.xlsx` and open it. Check two lines against the statement yourself.

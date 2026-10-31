@@ -68,6 +68,8 @@ def copy_my_files(pack_id: str, target: Path | None = None) -> list:
     for file in sorted((source / "statements").glob("*.csv")):
         shutil.copy2(file, target / "statements" / file.name)
     shutil.copy2(source / "handbook.md", target / "handbook.md")
+    # Challenges 1 to 3 start from an ERP export, the way most teams work today; Challenge 4 connects the live ERP.
+    shutil.copy2(source / "ledger.csv", target / "ledger-export.csv")
     return sorted(p.relative_to(target).as_posix() for p in target.rglob("*") if p.is_file())
 
 

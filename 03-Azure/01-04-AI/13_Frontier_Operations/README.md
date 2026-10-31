@@ -44,7 +44,7 @@ The thread that runs through the whole day: **instructions set the outcome, skil
 | 2 | Your best expert's know-how, captured once and reused | A **skill**: your team's rules and procedure, packaged so the agent applies them the same way every time |
 | 3 | From one partner to all of them, at once | **Subagents**: the agent splits the work, one helper per partner, and combines the results |
 | 4 | Your systems of record, safely | An **OpenAPI tool** that calls your ERP with an **API key** kept in a Foundry connection, never in the prompt |
-| 5 | Reach the systems that have no API | **Browser automation**: the agent works in the partner's web portal, while a person watches live and approves |
+| 5 | Reach the systems that have no API | **Browser automation**: the agent works in the partner's web portal after a person approves, and the person checks what it submitted |
 | 6 | Trust you can sign off | **Network egress rules**, the agent's own identity, least privilege and **traces** of every step |
 | 7 | Prove it before you scale it | Run two models, measure time, accuracy and **cost per run**, and build the business case |
 | Finish | Your own next process | A **process canvas** and a first skill for a process from your organisation |
@@ -67,7 +67,7 @@ The **Microsoft Copilot harness** is the engine behind GitHub Copilot, now avail
 | Service | Its job in this hack |
 |---|---|
 | **Microsoft Foundry Agent Service** with the **Copilot harness** | Runs your agents, their workspace (files, shell, Python), skills and subagents. Every step is recorded in **Traces**. |
-| **Browser Automation** (Playwright Workspaces) | A managed browser the agent uses to work in web portals, with **Live View** so a person can watch and take control. |
+| **Browser Automation** (Playwright Workspaces) | A managed browser in Microsoft's cloud that the agent uses to work in web portals. Every session is logged with its billable time. |
 | **Azure Functions** (Flex Consumption) | Runs the company's **ERP API** (protected by an API key) and the partner's **web portal** (no API). |
 | **Azure Blob Storage** | Holds your industry pack and the state of the ERP and the portal. |
 | **Application Insights** | Stores agent traces so you can see and check every step. |

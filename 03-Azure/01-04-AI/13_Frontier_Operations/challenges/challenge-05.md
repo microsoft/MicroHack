@@ -78,12 +78,18 @@ Every company has systems that only have a web page: a partner's portal, a gover
 >
 > ![The portal: INQ-106 filed under Kellerman Hygiene instead of Brightwell Packaging](../images/challenge-05-portal-cases.png)
 
-### Part D: Watch live and take control (10 min)
+### Part D: See every browser session (10 min)
 
-1. Start one more query. While the agent works, look in its steps for the browser session and open its **Live View**: you watch the same browser the agent is using, in real time.
-2. Select **Take control**, change one field yourself, and hand back. This is how a person steps in when a page asks for something the agent shouldn't decide.
+Every time the agent opens a browser, your Playwright workspace records it: when it started and ended, which agent opened it, and how long it was billed for.
 
-> 📸 **Screenshot to add:** `images/challenge-05-live-view.png`: Live View of the agent filling in the partner portal form.
+1. In the [Azure portal](https://portal.azure.com), open your Playwright workspace (`PlaywrightWorkspaceName`, for example `pw-frontier-<suffix>`).
+2. Select **Browser sessions**, then **Browser activity log**. Each row is one browser session from your agent, with its **Billable Time**.
+3. Select a session. **Browser session details** shows the start and end, the status, the browser (Chromium on Linux) and the **Source ID**: the Foundry project and agent that opened it.
+4. Add up the billable time for your Part C run. You'll use it for the cost of a run in Challenge 7.
+
+> 📸 **Screenshot to add:** `images/challenge-05-browser-sessions.png`: The Browser activity log of your Playwright workspace with this run's sessions and their billable time.
+
+The agent's browser runs in Microsoft's cloud, not on your computer, and in this preview there's no live view of it from the Foundry playground. That's one more reason for the check in step 5 of Part C: the evidence of what the agent did is the portal itself, the trace, and this log.
 
 ### Part E: Discuss (5 min)
 

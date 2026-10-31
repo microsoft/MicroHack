@@ -24,6 +24,7 @@ The portal refuses a submission without **Approved by** (*missing required field
 
 | Symptom | Cause and fix |
 |---|---|
+| The agent has no browser tool after adding Browser Automation to the toolbox | Saving the toolbox creates a new version; the agent stays on the old one. On the agent, **⋯** next to `ops-tools`, **Switch version**, **Version 2**, then save. Adding the toolbox again doesn't change the version. |
 | No **Browser Automation** option in the toolbox | Check the project has the `browser` connection (Manage, Project details, Connected resources). The lab automation creates it with the Playwright workspace. |
 | The browser can't start, or *access denied* on the workspace | The project's identity needs the Playwright Workspace Contributor role on the workspace; the lab automation assigns it. Wait ten minutes after deployment. |
 | The agent submits without waiting for approval | Ask it to start again and say *don't submit anything until I approve*; add the rule to the skill's **Safety** section. The portal still blocks cases without an approver. |

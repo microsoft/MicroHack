@@ -33,11 +33,17 @@ Every company has systems that only have a web page: a partner's portal, a gover
 
    ![Add Browser Automation tool: the browser connection](../images/challenge-05-browser-connection.png)
 
-4. The toolbox now has two tools, `erp` and `browser`. Save it: that creates a new version.
+4. The toolbox now has two tools, `erp` and `browser`. Save it: that creates **version 2**. Your agent still uses version 1 until you switch it.
 
    ![The ops-tools toolbox with the ERP tool and Browser Automation](../images/challenge-05-toolbox-browser.png)
 
-5. Open `ops-agent`. In **Tools**, select the `ops-tools` toolbox and switch it to the **new version**. Select **Save and start new chat**.
+5. Open `ops-agent`. In **Tools**, select the **⋯** next to `ops-tools`, then **Switch version**. Choose **Version 2** and select **Switch**. The toolbox now shows as `ops-tools (2)`: the number is the version the agent uses. Select **Save and start new chat**.
+
+   ![The toolbox menu on the agent: Edit, View, Switch version and Remove](../images/challenge-05-switch-version-menu.png)
+
+   ![Switch toolbox version: Version 2 selected](../images/challenge-05-switch-version.png)
+
+   Versions are a control, not a chore: an agent keeps the tools it was tested with until someone deliberately moves it to the new ones.
 
 ### Part C: Prepare, approve, submit (25 min)
 

@@ -10,7 +10,7 @@
 2. **Approve.** After the approval message the agent opens `<BackOfficeUrl>/portal/new`, chooses the partner and type, fills in reference, amount and details, types the approver's name in **Approved by** and submits.
 3. **Confirm.** The portal returns a reference such as `INQ-101` for Ashgrove Supply or `CHQ-101` for Kestrel Connect: the first two letters come from the company's reference prefix. The agent reports one reference per query.
 
-In our tests one portal submission took about 80 seconds, so five queries take several minutes. The portal list and the activity page show each case with *approved by &lt;name&gt;*.
+In our tests one portal submission took about 80 seconds through the API. In the guided portal run, three queries took **510 seconds and 1.26M tokens**: every browser step (snapshot, click, type, wait) goes back to the model, and one `browser_select_option` on the supplier dropdown timed out after 60 seconds. The agent recovered, but filed one query (INQ-106, INV-41002) under **Kellerman Hygiene** instead of Brightwell Packaging, and reported it as done. Use this in the debrief: the portal list is the evidence, not the agent's report. Asking the agent to snapshot and check every field before submitting is part of the approval prompt for this reason.
 
 The portal refuses a submission without **Approved by** (*missing required fields*), so an agent that skips the approval step can't raise a case. That's a control in the system, not only in the prompt.
 
@@ -29,5 +29,7 @@ The portal refuses a submission without **Approved by** (*missing required field
 | The browser can't start, or *access denied* on the workspace | The project's identity needs the Playwright Workspace Contributor role on the workspace; the lab automation assigns it. Wait ten minutes after deployment. |
 | The agent submits without waiting for approval | Ask it to start again and say *don't submit anything until I approve*; add the rule to the skill's **Safety** section. The portal still blocks cases without an approver. |
 | The agent types a made-up approver | The portal checks the field is filled, not who it is. That's a discussion point: real approval needs identity, not a typed name. |
+| A query is filed under the wrong partner, though the agent reported it as done | A dropdown step timed out or landed on the wrong option and the agent didn't look again. Put the check in the approval (*take a snapshot and check every field before you submit*), and always compare the portal list with the approval. To correct it, raise the query again under the right partner; the portal keeps the wrong one, like a real system would, so note it for the partner. |
+| `browser_select_option` takes 60 seconds and fails | The managed browser sometimes times out on a dropdown. The agent usually retries with a click instead; let it. If a whole run stalls, ask for one query at a time. |
 | A run takes very long | Each form takes about a minute. Ask for two or three queries first. |
 | No **Live View** link in the steps | Open the Playwright workspace in the Azure portal (`PlaywrightWorkspaceName`) to see browser sessions. |

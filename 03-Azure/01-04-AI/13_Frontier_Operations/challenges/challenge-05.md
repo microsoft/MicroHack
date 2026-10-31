@@ -51,13 +51,17 @@ Every company has systems that only have a web page: a partner's portal, a gover
 
    > *From this workbook, list the queries we should raise in the partner portal: partner, type of query, reference, amount and a one-line reason. Use your skill for the type and action. Don't submit anything yet: wait for my approval.*
 
-2. Check the list as a team. Remove one item you'd rather handle by phone.
-3. Approve in writing, as your company's approver (see the table below):
+   In seconds the agent lists every query with the action from your skill, and stops: *I've not submitted anything; waiting for your approval.*
 
-   > *Approved by <approver's name>. Raise these queries in the partner portal at <BackOfficeUrl>/portal: one form per query, with the approver's name in Approved by. Give me each reference number the portal returns.*
+   ![The agent's list of queries to raise, ending with: waiting for your approval](../images/challenge-05-prepare-queries.png)
 
-4. Watch it work. The agent opens the portal, picks the partner and the type, types the reference, amount and details, fills in **Approved by** and submits. Each query takes about a minute.
-5. Open `<BackOfficeUrl>/portal` in your own tab and refresh: each query is listed with its reference number and the approver's name. The activity page shows the same.
+2. Check the list as a team. Pick **two** queries to raise now; a browser is slow, so start small.
+3. Approve in writing, as your company's approver (see the table below), and ask the agent to check its own work before each submit:
+
+   > *Approved by <approver's name>. Raise these two queries in the partner portal at <BackOfficeUrl>/portal, one form per query, with the approver's name in Approved by: <the two queries from the list>. Before you submit each form, take a snapshot and check every field matches the query, especially the supplier. Fix anything that doesn't match. After submitting, report the reference number and the supplier the portal shows.*
+
+4. Watch it work. The agent opens the portal, picks the partner and the type, types the reference, amount and details, fills in **Approved by** and submits. Each step goes back to the model to decide the next click, so one form takes one to three minutes.
+5. **Check the agent's work.** Open `<BackOfficeUrl>/portal` in your own tab and compare every row with what you approved: supplier, type, reference and amount.
 
 | Company | Approver |
 |---|---|
@@ -67,7 +71,12 @@ Every company has systems that only have a web page: a partner's portal, a gover
 | Northmere Insurance | Claire Dunmore, Chief Financial Officer |
 | Parcelpine | Joanna Price, Finance Director |
 
-> 📸 **Screenshot to add:** `images/challenge-05-portal-cases.png`: The partner portal listing the queries the agent raised, each with its approver.
+> [!IMPORTANT]
+> **Why step 5 matters.** In our test, without the check in the approval, we asked for three queries. The agent reported three reference numbers as if all were done, but one had been filed under the wrong supplier: a dropdown had timed out and the agent didn't look again before submitting. The portal had the evidence; the agent's report didn't. An agent that works in a web page can be wrong in ways it doesn't notice, so a person compares the result with the approval, every time.
+>
+> ![The agent's report: three reference numbers](../images/challenge-05-agent-report.png)
+>
+> ![The portal: INQ-106 filed under Kellerman Hygiene instead of Brightwell Packaging](../images/challenge-05-portal-cases.png)
 
 ### Part D: Watch live and take control (10 min)
 
@@ -85,7 +94,7 @@ Every company has systems that only have a web page: a partner's portal, a gover
 
 - [ ] The agent prepared a list of queries and waited for approval.
 - [ ] After approval, it raised them in the portal with the approver's name, and gave you each reference number.
-- [ ] You saw the queries in the portal yourself.
+- [ ] You compared every query in the portal with what you approved, and know what to do if one is wrong.
 - [ ] You can explain why the browser is the riskiest tool so far, and what keeps it under control.
 
 ## 📚 Learning resources

@@ -80,9 +80,14 @@ The agent's identity already has the role it needs to use a toolbox: you gave it
 
    > *Reconcile this statement against the ERP. List the exceptions in a table, then add a note in the ERP to each ledger line with an exception, saying what we found and the action.*
 
-2. Watch the steps: the agent calls the ERP through the toolbox (shown as **managed_tools**): the company profile for the tolerance and currency, the ledger for that partner, then works in its workspace with your skill, and adds a ledger note once per exception. Open **Traces** to see each ERP operation by name: `getCompany`, `getLedger`, `addLedgerNote`.
-3. Open `<BackOfficeUrl>` (the activity page). Each note the agent wrote is there, with the time. The reads don't change anything, so the ERP doesn't log them; you'll find them in **Traces**.
-4. Open **Traces**, find this run and expand the `getLedger` and `addLedgerNote` calls. Look at what was sent. Is the API key anywhere in the trace?
+2. Watch the steps: **skill** (your method), then **managed_tools**: the agent reads the company profile and that partner's ledger from the ERP through the toolbox, compares them in its workspace, and adds a note in the ERP to each ledger line with an exception.
+
+   ![Reconciled against the live ERP: the exception table, and notes added to the three ledger lines with exceptions](../images/challenge-04-erp-reconcile.png)
+
+   Count the notes. Lines that are only on the partner's statement (a missing invoice, a credit note) have no ledger line yet, so there's nothing to attach a note to: in our run five exceptions gave three notes. That's the agent respecting the system, not skipping work.
+
+3. Open `<BackOfficeUrl>` (the activity page). Each note the agent wrote is there, with the time and its text. The reads don't change anything, so the ERP doesn't log them; you'll find them in **Traces**.
+4. Open **Traces**, find this run and expand the ERP calls. Look at what was sent. Is the API key anywhere in the trace?
 
 > 📸 **Screenshot to add:** `images/challenge-04-erp-notes.png`: The back-office activity page with the notes the agent wrote to the ERP.
 

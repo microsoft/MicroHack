@@ -11,7 +11,7 @@ For one partner, with the skill and the ERP tool and no ledger export attached:
 1. `getCompany`: company, currency, **tolerance** and period (the agent may skip it if the skill already gives the tolerance).
 2. `listPartners` (optional) to find the partner's ID, then `getLedger` with `partner_id`.
 3. Workspace and **skill** steps, as in Challenge 2.
-4. `addLedgerNote` once per exception: five for a partner, because the within-tolerance line isn't an exception. The body has `reference` and `note`, for example `{"reference": "INV-41007", "note": "Amount mismatch: statement 2,354.87 vs ledger 2,342.37 (12.50). Action: Raise price dispute."}`.
+4. `addLedgerNote` once per exception **that has a ledger line**: three for a distribution partner (mismatch, missing on statement, duplicate). Missing-in-ledger lines and credit notes aren't in the ledger yet, so there's nothing to note. Our portal run: 22 seconds, 70,736 tokens, three notes, for example *INV-41007: Reconciliation exception: statement amount GBP 2,354.87 differs from ledger amount GBP 2,342.37 by GBP 12.50. Raise price dispute.*
 
 The notes appear on the activity page (`BackOfficeUrl`) as *agent (ERP API) · ledger note*. `lookupReference` normalises references the way the handbook does, so `inv 41007`, `IN-41007` and `INV-041007` all find `INV-41007`.
 

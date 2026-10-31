@@ -38,7 +38,7 @@ The pattern for the rest of the day: **instructions set the outcome, skills set 
 
    **What this does:** every statement has six lines planted the way real statements go wrong: a real price difference, a rounding difference, lines missing on each side, a duplicate and a credit note. The tool opens the workbook the agent gave you, compares it with the answer key for your company and lists each line the agent handled differently from your handbook. It only reads the file; nothing changes in Azure. Note the score.
 
-> 📸 **Screenshot to add:** `images/challenge-02-score-before.png`: Cloud Shell: the score without a skill, with the lines the agent got wrong.
+![Cloud Shell: download and score without a skill: 4 of 6, with the two lines the agent judged differently from the handbook](../images/challenge-02-score-before.png)
 
 ### Part B: Write the skill (15 min)
 

@@ -97,7 +97,7 @@ Every time the agent opens a browser, your Playwright workspace records it: when
    When you have finished in a web page, close the browser.
    ```
 
-   Next time, check the log again: the session should end when the agent finishes.
+   Next time, check the log again: the session should end when the agent finishes. In **Traces**, the agent's last browser step is now `close_browser_session`.
 
 The agent's browser runs in Microsoft's cloud, not on your computer, and in this preview there's no live view of it from the Foundry playground. That's one more reason for the check in step 5 of Part C: the evidence of what the agent did is the portal itself, the trace, and this log.
 

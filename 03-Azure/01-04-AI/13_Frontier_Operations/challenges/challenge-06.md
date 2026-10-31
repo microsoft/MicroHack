@@ -116,6 +116,8 @@ One partner's statement in every pack has a line that isn't a transaction: it's 
 
    Score it too: the hidden line doesn't change the reconciliation (in our run, still 6 of 6).
 
+   ![Cloud Shell: download and score, 6 of 6 with the hidden line set aside](../images/challenge-06-score-needs-review.png)
+
 ### Part D: Its own identity, least access (5 min)
 
 1. Every agent has its **own Microsoft Entra identity**, separate from yours. Open `ops-agent`, select **Details** and look at the **Identity & access** card: the **Entra agent identity** (`ops-agent-AgentIdentity`) and the blueprint it was created from. Then, in the [Azure portal](https://portal.azure.com), open your Foundry project resource, select **Access control (IAM)**, then **Role assignments**, and find `ops-agent-AgentIdentity`.

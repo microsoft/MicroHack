@@ -6,7 +6,7 @@
 
 ## Expected run
 
-Our guided run in the portal (distribution, `gpt-5.4-mini`, with the skill): **91 seconds, 698,295 tokens**, steps `skill`, `view`, `task`, `shell_call`, `read_agent` and the upload. The answer line lists each kind of step once; the trace shows each of the five `task` calls. It scored **26 of 30**: four partners were perfect, but the Northgate Freight subagent didn't normalise `IN-` references to `INV-`, so it listed most ledger lines as missing on statement and the statement lines as unmatched. That's the strongest teaching moment of the challenge: parallel helpers can each make their own mistake, and the score (or a person) catches it. Asking the agent to redo only that partner fixes it.
+Our guided run in the portal (distribution, `gpt-5.4-mini`, with the skill): **91 seconds, 698,295 tokens**, steps `skill`, `view`, `task`, `shell_call`, `read_agent` and the upload. The answer line lists each kind of step once; the trace shows each of the five `task` calls. It scored **26 of 30**: four partners were perfect, but the Northgate Freight subagent didn't normalise `IN-` references to `INV-`, so it listed most ledger lines as missing on statement and the statement lines as unmatched. That's the strongest teaching moment of the challenge: parallel helpers can each make their own mistake, and the score (or a person) catches it. Asking the agent to redo only that partner fixed it: 23 seconds, 189,816 tokens, 30 of 30.
 
 Our API runs on the distribution pack, all five partners, `gpt-5.4-mini`, one request:
 

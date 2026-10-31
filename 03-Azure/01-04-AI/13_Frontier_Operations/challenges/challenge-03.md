@@ -50,7 +50,9 @@ Subagents aren't always the answer. They pay off when the work splits into **ind
 
    ![Cloud Shell: 26 of 30, with one partner's lines mismatched by its subagent](../images/challenge-03-score.png)
 
-   This is why a person still checks the result. If one partner looks wrong, ask the agent in the same chat to redo just that partner, for example: *Northgate Freight writes references as IN- instead of INV-. Redo Northgate using the matching rules in your skill, update exceptions.xlsx and give it back to me.* Then download and score again.
+   This is why a person still checks the result. If one partner looks wrong, ask the agent in the same chat to redo just that partner, for example: *Northgate Freight writes references as IN- instead of INV-. Redo Northgate using the matching rules in your skill, update exceptions.xlsx and give it back to me.* Then download and score again. In our run the redo took 23 seconds and the score went to 30 of 30.
+
+   ![The agent redoes one partner and returns the corrected workbook in 23 seconds](../images/challenge-03-redo-partner.png)
 
 2. Open the **Summary** sheet. Which partner has the most money at stake? That's where your approver will look first.
 3. Select **Traces** on the answer line. The header shows how much work went into the month: in our run 124 steps, 35 model calls and 40 tool calls in 92 seconds. Scroll down past the skill and the file reads to the **execute_tool task** steps, one per partner, and select one to see the brief the lead agent gave that subagent. Which partner took longest?

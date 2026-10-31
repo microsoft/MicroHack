@@ -37,6 +37,9 @@ The **Microsoft Copilot harness** changes that. It gives your agent its own secu
 
    **Why Cloud Shell?** It's a terminal in your browser that is already signed in as you, with the Azure CLI and Python installed. Nothing is installed on your computer.
 
+   > [!NOTE]
+   > Without storage, Cloud Shell forgets its files when the session ends (after about 20 minutes idle, or if you close the tab). That's fine: everything that matters lives in Azure, not in Cloud Shell. If you come back to an empty Cloud Shell, run steps 3 to 5 again; setup puts your company back in seconds. A skill you've already published is safe in Foundry: `python3 -m frontierops get-skill reconciliation` brings it back into `my-files`.
+
 3. Sign in once more, inside Cloud Shell:
 
    ```bash

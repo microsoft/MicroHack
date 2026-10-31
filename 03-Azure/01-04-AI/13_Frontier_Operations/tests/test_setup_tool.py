@@ -352,3 +352,43 @@ def test_score_reads_hand_written_workbooks_with_repeated_rows(tmp_path):
     assert tool._xlsx_sheets(tmp_path / "x.xlsx")["Brightwell Packaging"] == [["reference", "category"], ["CN-478", "Credit to confirm"]]
     result = tool.score(tmp_path / "x.xlsx", "distribution")
     assert result["total"] == 6 and result["correct"] == 2  # the credit, and the within-tolerance line left out
+
+
+def test_setup_again_keeps_the_skill_the_team_wrote(tmp_path, monkeypatch):
+    monkeypatch.setattr(tool, "_az", lambda *a, **k: "")
+    monkeypatch.setattr(tool, "MY_FILES", tmp_path / "my-files")
+    tool.main(["setup", "--industry", "distribution", "--account", "x"])
+    skill = tmp_path / "my-files" / "skills" / "reconciliation" / "SKILL.md"
+    skill.write_text(GOOD, encoding="utf-8")
+    tool.main(["setup", "--industry", "distribution", "--account", "x"])
+    assert skill.read_text(encoding="utf-8") == GOOD
+
+
+def test_get_skill_restores_the_published_skill(tmp_path, monkeypatch, capsys):
+    import io
+    import zipfile
+    tool.save_lab(project_id="/s/accounts/acct/projects/proj")
+    monkeypatch.setattr(tool, "MY_FILES", tmp_path / "my-files")
+    monkeypatch.setattr(tool, "_foundry_token", lambda: "t")
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w") as package:
+        package.writestr("SKILL.md", GOOD)
+        package.writestr("../escape.txt", "no")
+    seen = {}
+
+    class Response:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+        def read(self):
+            return buffer.getvalue()
+
+    monkeypatch.setattr(tool.urllib.request, "urlopen", lambda req, timeout: seen.update(url=req.full_url) or Response())
+    assert tool.main(["get-skill"]) == 0
+    assert seen["url"] == "https://acct.services.ai.azure.com/api/projects/proj/skills/reconciliation/content?api-version=v1"
+    assert (tmp_path / "my-files" / "skills" / "reconciliation" / "SKILL.md").read_text(encoding="utf-8") == GOOD
+    assert not (tmp_path / "my-files" / "skills" / "escape.txt").exists()
+    assert "Restored the published skill" in capsys.readouterr().out

@@ -4,6 +4,7 @@
     python3 -m frontierops setup --industry distribution --account <StorageAccountName> --app-url <BackOfficeUrl> --project-id <FoundryProjectResourceId>
     python3 -m frontierops grant-agent ops-agent
     python3 -m frontierops publish-skill my-files/skills/reconciliation
+    python3 -m frontierops get-skill reconciliation
     python3 -m frontierops download
     python3 -m frontierops score ~/exceptions.xlsx
     python3 -m frontierops status
@@ -74,7 +75,11 @@ def _az(*arguments: str, capture: bool = False, storage: bool = True) -> str:
 def copy_my_files(pack_id: str, target: Path | None = None) -> list:
     """Put the files participants attach in the Foundry chat in one easy-to-find folder."""
     target = target or MY_FILES
+    kept_skills = None
     if target.exists():
+        if (target / "skills").is_dir():
+            kept_skills = Path(tempfile.mkdtemp()) / "skills"
+            shutil.copytree(target / "skills", kept_skills)
         shutil.rmtree(target)
     (target / "statements").mkdir(parents=True)
     source = PACKS / pack_id
@@ -83,9 +88,13 @@ def copy_my_files(pack_id: str, target: Path | None = None) -> list:
     shutil.copy2(source / "handbook.md", target / "handbook.md")
     # Challenges 1 to 3 start from an ERP export, the way most teams work today; Challenge 4 connects the live ERP.
     shutil.copy2(source / "ledger.csv", target / "ledger-export.csv")
-    # Challenge 2: the team writes the expert's method into this starter skill.
-    (target / "skills" / "reconciliation").mkdir(parents=True)
-    shutil.copy2(TEMPLATES / "SKILL.md", target / "skills" / "reconciliation" / "SKILL.md")
+    # Challenge 2: the team writes the expert's method into this starter skill. Never overwrite their work.
+    starter = target / "skills" / "reconciliation" / "SKILL.md"
+    if kept_skills:
+        shutil.copytree(kept_skills, target / "skills")
+    if not starter.exists():
+        starter.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(TEMPLATES / "SKILL.md", starter)
     return sorted(p.relative_to(target).as_posix() for p in target.rglob("*") if p.is_file())
 
 
@@ -495,6 +504,35 @@ def download(project_endpoint: str, which: str | None = None, target_dir: Path |
     return target
 
 
+def get_skill(name: str, project_endpoint: str, target_root: Path | None = None) -> Path:
+    """Bring a published skill back from Foundry, for example after a new Cloud Shell session."""
+    if not SKILL_NAME.match(name):
+        raise SetupError(f"'{name}' isn't a skill name. Use the name you published, for example reconciliation.")
+    token = _foundry_token()
+    request = urllib.request.Request(f"{project_endpoint.rstrip('/')}/skills/{name}/content?api-version=v1",
+                                     headers={"Authorization": f"Bearer {token}", "Foundry-Features": "Skills=V1Preview"})
+    try:
+        with urllib.request.urlopen(request, timeout=60) as response:
+            archive = response.read()
+    except urllib.error.HTTPError as err:
+        if err.code == 404:
+            raise SetupError(f"There's no published skill called '{name}' in your project yet.")
+        raise SetupError(f"Foundry answered {err.code}: {err.read().decode('utf-8', 'replace')[:300]}")
+    folder = (target_root or MY_FILES / "skills") / name
+    if folder.exists():
+        shutil.rmtree(folder)
+    folder.mkdir(parents=True)
+    with zipfile.ZipFile(io.BytesIO(archive)) as package:
+        for member in package.namelist():
+            path = (folder / member).resolve()
+            if not path.is_relative_to(folder.resolve()) or member.endswith("/"):
+                continue
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(package.read(member))
+    print(f"Restored the published skill '{name}' (its current default version) into {folder.relative_to(LAB) if folder.is_relative_to(LAB) else folder}.")
+    return folder
+
+
 def status(account: str) -> None:
     active = _az("storage", "blob", "download", "--account-name", account, "--container-name", "ops-state",
                  "--name", "active.json", "--file", "/dev/stdout" if sys.platform != "win32" else "CON", capture=True)
@@ -522,6 +560,9 @@ def main(argv=None) -> int:
     publish = sub.add_parser("publish-skill", help="Publish a skill folder (with SKILL.md) to your Foundry project")
     publish.add_argument("folder", help="Skill folder, for example my-files/skills/reconciliation")
     publish.add_argument("--project-id", help="FoundryProjectResourceId (saved by setup)")
+    get_parser = sub.add_parser("get-skill", help="Bring a published skill back into my-files/skills, for example after a new Cloud Shell session")
+    get_parser.add_argument("name", nargs="?", default="reconciliation", help="Skill name (default: reconciliation)")
+    get_parser.add_argument("--project-id", help="FoundryProjectResourceId (saved by setup)")
     score_parser = sub.add_parser("score", help="Check an agent's exceptions workbook against the answer key")
     score_parser.add_argument("workbook", help="The .xlsx file the agent returned")
     score_parser.add_argument("--industry", help="distribution, telco, energy, insurance or retail (saved by setup)")
@@ -540,13 +581,15 @@ def main(argv=None) -> int:
             account = need(getattr(args, "setup_account", None) or args.account, "account", "StorageAccountName")
             setup(account, args.industry.lower(), args.app_url, args.project_id)
             return 0
-        if args.command in ("grant-agent", "publish-skill", "download"):
+        if args.command in ("grant-agent", "publish-skill", "download", "get-skill"):
             project_id = need(args.project_id or lab.get("project_id"), "project id", "FoundryProjectResourceId")
             endpoint = project_endpoint_from_id(project_id)
             if args.command == "grant-agent":
                 grant_agent(args.agent, endpoint, project_id, args.identity)
             elif args.command == "download":
                 download(endpoint, args.file)
+            elif args.command == "get-skill":
+                get_skill(args.name, endpoint)
             else:
                 publish_skill(Path(args.folder), endpoint)
             return 0

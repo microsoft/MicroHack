@@ -51,7 +51,10 @@ A **toolbox** is a named, versioned set of tools that agents share. You'll add t
 
 ### Part C: Give the toolbox to your agent (5 min)
 
-1. Open `ops-agent`. In **Tools**, select **Add**, then **Browse toolboxes**, and choose `ops-tools`.
+1. Open `ops-agent`. In **Tools**, select **Add**, then **Browse toolboxes**. Select `ops-tools` and then **Attach**.
+
+   ![Select a toolbox: ops-tools selected](../images/challenge-04-select-toolbox.png)
+
 2. Add one sentence to the instructions:
 
    ```text
@@ -59,9 +62,17 @@ A **toolbox** is a named, versioned set of tools that agents share. You'll add t
    and after a reconciliation add a note to each ledger line that has an exception.
    ```
 
-3. Select **Save and start new chat**.
+3. Select **Save and start new chat**. The toolbox now appears under **Tools** as `ops-tools`, next to Harness tools and your skill.
 
 The agent's identity already has the role it needs to use a toolbox: you gave it in Challenge 1.
+
+4. Check it works with a quick question, with no files attached:
+
+   > *Using the ERP, tell me our company name and tolerance, then look up reference inv 41007.*
+
+   In seconds the agent answers from the ERP. The step under the answer is **managed_tools**: a call through the toolbox. Notice that `inv 41007` was found as `INV-41007`: the ERP normalises references too.
+
+   ![The agent answers from the ERP through the toolbox: company, tolerance and the reference lookup](../images/challenge-04-erp-first-call.png)
 
 ### Part D: Work from the live ERP (15 min)
 
@@ -69,7 +80,7 @@ The agent's identity already has the role it needs to use a toolbox: you gave it
 
    > *Reconcile this statement against the ERP. List the exceptions in a table, then add a note in the ERP to each ledger line with an exception, saying what we found and the action.*
 
-2. Watch the steps: the agent calls `getCompany` (for the tolerance and currency), `getLedger` for that partner, works in its workspace with your skill, then calls `addLedgerNote` once per exception.
+2. Watch the steps: the agent calls the ERP through the toolbox (shown as **managed_tools**): the company profile for the tolerance and currency, the ledger for that partner, then works in its workspace with your skill, and adds a ledger note once per exception. Open **Traces** to see each ERP operation by name: `getCompany`, `getLedger`, `addLedgerNote`.
 3. Open `<BackOfficeUrl>` (the activity page). Each note the agent wrote is there, with the time. The reads don't change anything, so the ERP doesn't log them; you'll find them in **Traces**.
 4. Open **Traces**, find this run and expand the `getLedger` and `addLedgerNote` calls. Look at what was sent. Is the API key anywhere in the trace?
 

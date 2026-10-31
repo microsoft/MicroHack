@@ -138,7 +138,11 @@ New permissions take up to **five minutes** to apply. Use the time to look at th
 
 ### Part F: Hand it the work (10 min)
 
-1. In the chat, attach **one** partner's statement and `ledger-export.csv`, and ask:
+1. In the chat, select the **paperclip** under the message box and attach **one** partner's statement and `ledger-export.csv`. Use the paperclip, not **Upload files** under **Tools**: files attached to a message go into the agent's workspace for this chat only.
+
+   ![The chat with brightwell.csv and ledger-export.csv attached under the message box](../images/challenge-01-attach-files.png)
+
+   Then ask:
 
    > *Reconcile this partner's statement against our ledger export. List matches, amount differences and lines missing on either side. Then create reconciliation.xlsx with one sheet per category and give it back to me as a file.*
 

@@ -58,12 +58,14 @@ A guardrail with **egress rules** decides which internet addresses the agent's w
    Look closely and you'll see `AuditWouldDeny` not only for Bing but for `*.monitor.azure.com` and `*.applicationinsights.azure.com`: that's the harness sending your traces. Block those and you lose the traces you'll need in Part E and Challenge 7. This is exactly why you audit before you enforce.
 
 7. Open the guardrail again (**Build**, **Guardrails**, `ops-agent-egress`), edit its egress rules and add two more Allow rules: `*.monitor.azure.com` and `*.applicationinsights.azure.com`. Switch **Mode** to **Enforce** and save.
-8. Start a new chat and ask the same `curl` question again. Bing is now refused with **403**, and your back office still answers.
+
+   ![Egress rules in Enforce mode: the back office and Azure Monitor allowed, everything else denied](../images/challenge-06-network-rules.png)
+
+8. Start a new chat and ask the same `curl` question again. Bing is now refused with **403**, and your back office still answers. In **Traces**, the decision for Bing is now `Deny`, and the telemetry hosts are `Allow`, so your traces keep arriving.
+
+   ![Enforce mode: Bing refused with 403, the back office answering](../images/challenge-06-egress-blocked.png)
+
 9. Run your Challenge 3 request once more with all five statements. Does the reconciliation still work with the internet closed?
-
-> 📸 **Screenshot to add:** `images/challenge-06-network-rules.png`: The ops-agent-egress rules in Enforce mode: the back office and Azure Monitor allowed, everything else denied.
-
-> 📸 **Screenshot to add:** `images/challenge-06-egress-blocked.png`: The agent's shell step: Bing refused with 403, the back office answering.
 
 ### Part C: Not fooled by the data (10 min)
 

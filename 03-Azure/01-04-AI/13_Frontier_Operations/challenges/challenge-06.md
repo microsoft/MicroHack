@@ -106,7 +106,15 @@ One partner's statement in every pack has a line that isn't a transaction: it's 
 4. Publish the new version (`publish-skill`, as in Challenge 2). On `ops-agent`, remove the skill, add it again so it takes the new version, and save.
 
    ![The skill's Safety section with the new Needs review rule, and publish-skill making it the default version](../images/challenge-06-safety-skill.png)
-5. Reconcile that one partner again and open the workbook: the line is in **Needs review**.
+
+   > [!IMPORTANT]
+   > In the agent's **Tools**, the skill shows its newest text straight away, but the agent still **runs the version it was saved with**. Removing the skill and adding it again is what moves the agent to the new version. As with toolboxes, nothing changes under an agent until someone deliberately moves it.
+
+5. In a new chat, reconcile that one partner again, with the same request as in Challenge 2: don't mention the hidden line. The skill alone is enough. The agent reports it found an instruction-like line, and the workbook has a **Needs review** sheet with the partner and the exact text.
+
+   ![The agent separates the instruction-like line into a Needs review sheet](../images/challenge-06-needs-review.png)
+
+   Score it too: the hidden line doesn't change the reconciliation (in our run, still 6 of 6).
 
 ### Part D: Its own identity, least access (5 min)
 

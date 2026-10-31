@@ -26,15 +26,28 @@ Most business systems already have an API, and most APIs use a key. The question
 
 A **toolbox** is a named, versioned set of tools that agents share. You'll add the browser to the same toolbox in Challenge 5.
 
-1. Select **Build**, then **Tools**, then **Create toolbox**. Name it `ops-tools`.
-2. Add an **OpenAPI** tool:
-   - **Name**: `erp`
-   - **Description**: *The company ERP: partners, the ledger, reference lookup and notes on ledger lines.*
-   - **Schema**: copy the whole JSON from `<BackOfficeUrl>/openapi.json` and paste it.
-   - **Authentication**: **Connection**, and choose `erp`.
-3. Save the toolbox.
+1. Select **Build**, then **Tools**, then **Create toolbox**. Name it `ops-tools` and describe it: *The tools our operations agents share: the company ERP (partners, ledger lines, reference lookup and notes), and later the partner portal.*
+2. Under **Included**, select **Add**, then **Add tool**.
 
-> 📸 **Screenshot to add:** `images/challenge-04-openapi-tool.png`: The OpenAPI tool in the ops-tools toolbox, authenticated with the erp connection.
+   ![Create toolbox: name, description, and Add, Add tool under Included](../images/challenge-04-create-toolbox.png)
+
+3. On the **Custom** tab, select **OpenAPI tool**, then **Create**.
+
+   ![Select a tool, Custom tab: OpenAPI tool selected](../images/challenge-04-select-openapi.png)
+
+4. Fill in the tool:
+   - **Name**: `erp`
+   - **Description**: *The company ERP: partners, the ledger, reference lookup and notes on ledger lines.* The model reads this to decide when to use the tool.
+   - **Authentication method**: **API key**, and **Connection**: `erp`. The key travels from the connection to the ERP on every call; it never appears in the agent.
+   - **OpenAPI 3.0+ schema**: copy the whole JSON from `<BackOfficeUrl>/openapi.json` and paste it.
+
+   Select **Create tool**.
+
+   ![Create an OpenAPI tool: erp, API key from the erp connection, and the ERP's schema](../images/challenge-04-openapi-tool.png)
+
+5. Back on the toolbox, `erp` is listed under **Included**. Select **Create**. The toolbox is saved as version **v1**, with its own endpoint that agents (and your own code) call.
+
+   ![The saved ops-tools toolbox, v1, with the erp tool and its endpoint](../images/challenge-04-toolbox-saved.png)
 
 ### Part C: Give the toolbox to your agent (5 min)
 

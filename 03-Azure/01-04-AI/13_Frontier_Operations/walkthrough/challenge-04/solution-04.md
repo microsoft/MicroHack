@@ -27,7 +27,7 @@ Without a key, `<BackOfficeUrl>/erp/partners` returns **401** *Missing or wrong 
 
 | Symptom | Cause and fix |
 |---|---|
-| Tool calls return 401 | The tool isn't using the `erp` connection. Edit the OpenAPI tool and set authentication to **Connection**, `erp`. |
+| Tool calls return 401 | The tool isn't using the `erp` connection. Edit the OpenAPI tool and set **Authentication method** to **API key** with **Connection** `erp`. |
 | Tool calls return 409 *No industry pack is selected* | Run the Challenge 1 `setup` command again. |
 | The agent says it has no ERP tool, or *tools could not be initialized* | The toolbox isn't attached to the agent, or the agent's identity can't reach the toolbox. Check the agent's **Tools** list shows `ops-tools`, that `grant-agent` was run for this agent, and start a new chat. If the toolbox route still fails, add the OpenAPI tool **directly** to the agent instead (**Tools**, **Add**, **Add tools**, **OpenAPI**, with the `erp` connection): in our tests an OpenAPI tool attached directly to a harness agent called the ERP with the key correctly. |
 | The schema won't save | Paste the JSON from `/openapi.json`, not the URL. |

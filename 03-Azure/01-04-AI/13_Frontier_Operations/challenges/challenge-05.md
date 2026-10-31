@@ -17,6 +17,9 @@ Every company has systems that only have a web page: a partner's portal, a gover
 ### Part A: Do one by hand (5 min)
 
 1. Open `<BackOfficeUrl>/portal` and select **Raise a new …**. Look at the form: partner, type, reference, amount, details and **Approved by**. The portal refuses a query without an approver.
+
+   ![The partner portal's form: supplier, type of query, reference, amount, details and Approved by](../images/challenge-05-portal-form.png)
+
 2. Don't submit anything. Count the clicks and fields for one query, and multiply by the queries in your Summary sheet from Challenge 3.
 
 ### Part B: Add the browser to your toolbox (10 min)

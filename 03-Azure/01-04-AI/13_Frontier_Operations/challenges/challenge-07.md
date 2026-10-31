@@ -47,7 +47,7 @@ Why one partner? The bigger model has a smaller quota in your lab, and a five-pa
    Then the cost of the month: your five-partner run for `gpt-5.4-mini`, and roughly five times the one-partner cost for `gpt-5.4`.
 
 3. Add the harness: while the Copilot harness is in preview it's free until 1 December 2026; after that its workspace is billed per vCPU-hour and GiB-hour while a session runs. A run of a few minutes is a small share of an hour.
-4. Add the browser if the run used it: Browser Automation is billed per browser minute on your Playwright workspace. Find the price on the [Playwright Workspaces pricing page](https://azure.microsoft.com/pricing/details/app-testing/).
+4. Add the browser if the run used it: Browser Automation is billed per minute of browser session on your Playwright workspace, and a session stays open until the agent closes it or it times out (Challenge 5, Part D). Take the billable time from the workspace's **Browser activity log**, and the price from the [Playwright Workspaces pricing page](https://azure.microsoft.com/pricing/details/app-testing/).
 
 ### Part D: The business case (10 min)
 

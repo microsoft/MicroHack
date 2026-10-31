@@ -85,9 +85,19 @@ Every time the agent opens a browser, your Playwright workspace records it: when
 1. In the [Azure portal](https://portal.azure.com), open your Playwright workspace (`PlaywrightWorkspaceName`, for example `pw-frontier-<suffix>`).
 2. Select **Browser sessions**, then **Browser activity log**. Each row is one browser session from your agent, with its **Billable Time**.
 3. Select a session. **Browser session details** shows the start and end, the status, the browser (Chromium on Linux) and the **Source ID**: the Foundry project and agent that opened it.
-4. Add up the billable time for your Part C run. You'll use it for the cost of a run in Challenge 7.
+4. Look at **Billable Time** and **Status**. In our lab, sessions that did a minute or two of work were billed for 15 to 31 minutes, and the newest ones were still **Active** long after the agent had answered: a browser stays open, and billed, until it times out. Add up the billable time for your Part C run; you'll use it for the cost of a run in Challenge 7.
 
-> 📸 **Screenshot to add:** `images/challenge-05-browser-sessions.png`: The Browser activity log of your Playwright workspace with this run's sessions and their billable time.
+   ![Browser activity log: one row per session, with billable time; the newest still active](../images/challenge-05-browser-sessions.png)
+
+   ![Browser session details: an agent's session still Active after the agent finished](../images/challenge-05-browser-session-details.png)
+
+5. Fix it the way you'd fix it for a colleague: tell the agent to tidy up. Add this sentence to `ops-agent`'s instructions and save:
+
+   ```text
+   When you have finished in a web page, close the browser.
+   ```
+
+   Next time, check the log again: the session should end when the agent finishes.
 
 The agent's browser runs in Microsoft's cloud, not on your computer, and in this preview there's no live view of it from the Foundry playground. That's one more reason for the check in step 5 of Part C: the evidence of what the agent did is the portal itself, the trace, and this log.
 

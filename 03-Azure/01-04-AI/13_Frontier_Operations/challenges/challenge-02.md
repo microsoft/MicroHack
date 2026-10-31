@@ -102,6 +102,10 @@ If you publish again later, you get version 2, 3 and so on. Older versions are k
 
    ![The answer with the skill: the first step is skill, then the work and the upload](../images/challenge-02-skill-run.png)
 
+   To see exactly what happened, select **Traces** on that line. The trace lists every step with its timing; select **execute_tool skill** to see the input (`"skill": "reconciliation"`) and the output (*Skill "reconciliation" loaded successfully*). The header shows the totals for the run: steps, model calls, tool calls, time and tokens.
+
+   ![The trace of the run: execute_tool skill selected, with its input and output](../images/challenge-02-trace-skill.png)
+
 3. Run `python3 -m frontierops download` again to fetch the new workbook (it replaces the first one in `~`), and score it again.
 
    ![Cloud Shell: with the skill, 6 of 6](../images/challenge-02-score-after.png)

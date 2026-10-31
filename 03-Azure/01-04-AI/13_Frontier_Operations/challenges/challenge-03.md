@@ -54,6 +54,8 @@ Subagents aren't always the answer. They pay off when the work splits into **ind
 
    ![The agent redoes one partner and returns the corrected workbook in 23 seconds](../images/challenge-03-redo-partner.png)
 
+   ![Cloud Shell: 26 of 30 before the redo, 30 of 30 after](../images/challenge-03-score-after-redo.png)
+
 2. Open the **Summary** sheet. Which partner has the most money at stake? That's where your approver will look first.
 3. Select **Traces** on the answer line. The header shows how much work went into the month: in our run 124 steps, 35 model calls and 40 tool calls in 92 seconds. Scroll down past the skill and the file reads to the **execute_tool task** steps, one per partner, and select one to see the brief the lead agent gave that subagent. Which partner took longest?
 

@@ -79,7 +79,10 @@ If you publish again later, you get version 2, 3 and so on. Older versions are k
 
 ### Part D: Give the skill to your agent (5 min)
 
-1. In the Foundry portal, select **Build**, then **Tools**, and open **Skills (Preview)**. Find `reconciliation` and open it: you see your description and your method.
+1. In the Foundry portal, select **Build**, then **Tools**, and open **Skills (Preview)**. Open `reconciliation`: you see your description, the version you published (top right, with every earlier version in the list) and your `SKILL.md` under **Skill preview**. This is the copy every agent will load.
+
+   ![The reconciliation skill in Foundry: description, version, and SKILL.md in the Skill preview](../images/challenge-02-skill-in-portal.png)
+
 2. Open `ops-agent`. In the **Tools** section select **Add**, then **Add skills**, choose `reconciliation` and select **Add**.
 3. Select **Save and start new chat** and wait for the new version to become active.
 

@@ -24,7 +24,7 @@ The portal refuses a submission without **Approved by** (*missing required field
 
 | Symptom | Cause and fix |
 |---|---|
-| No **Browser Automation** option in the toolbox | Check the project has the `browser` connection (Operate, Admin, Connected resources). The lab automation creates it with the Playwright workspace. |
+| No **Browser Automation** option in the toolbox | Check the project has the `browser` connection (Manage, Project details, Connected resources). The lab automation creates it with the Playwright workspace. |
 | The browser can't start, or *access denied* on the workspace | The project's identity needs the Playwright Workspace Contributor role on the workspace; the lab automation assigns it. Wait ten minutes after deployment. |
 | The agent submits without waiting for approval | Ask it to start again and say *don't submit anything until I approve*; add the rule to the skill's **Safety** section. The portal still blocks cases without an approver. |
 | The agent types a made-up approver | The portal checks the field is filled, not who it is. That's a discussion point: real approval needs identity, not a typed name. |

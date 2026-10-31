@@ -18,9 +18,9 @@ Most business systems already have an API, and most APIs use a key. The question
 
 1. Open `<BackOfficeUrl>/openapi.json` in a browser tab. This is the ERP's **OpenAPI document**: the list of things the ERP lets a program do. Find the five operations: `getCompany`, `listPartners`, `getLedger`, `lookupReference` and `addLedgerNote`. Find `securitySchemes`: every call needs an `x-api-key` header.
 2. Open `<BackOfficeUrl>/erp/partners`. The ERP answers **401**: no key, no data.
-3. In the Foundry portal, select **Operate**, then **Admin**, open your project and select **Connected resources**. Find the connection named `ErpConnectionName` (`erp`). The lab automation created it with the key. You can see that it exists and who may use it, but not the key itself.
+3. In the Foundry portal, select **Manage** in the top bar, then **Project details**, and open the **Connected resources** tab. Select the connection named `ErpConnectionName` (`erp`). The lab automation created it with the key: its category is *CustomKeys*, its target is your back office, and the **Key** column says *No key available*. You can see that it exists and who created it, but nobody can read the key back, not even you.
 
-> 📸 **Screenshot to add:** `images/challenge-04-erp-connection.png`: The erp connection in Connected resources, with the key hidden.
+   ![Manage, Project details, Connected resources: the erp connection with its key hidden](../images/challenge-04-erp-connection.png)
 
 ### Part B: Build a toolbox with the ERP tool (10 min)
 

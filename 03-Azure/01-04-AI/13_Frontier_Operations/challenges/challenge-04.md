@@ -91,7 +91,7 @@ The agent's identity already has the role it needs to use a toolbox: you gave it
 
    ![Traces: the ERP operations by name, addLedgerNote selected with its input and the ERP's reply, and no key](../images/challenge-04-trace-erp.png)
 
-> 📸 **Screenshot to add:** `images/challenge-04-erp-notes.png`: The back-office activity page with the notes the agent wrote to the ERP.
+![The back office's activity page: the three ledger notes the agent wrote through the ERP API](../images/challenge-04-erp-notes.png)
 
 ### Part E: Discuss (5 min)
 

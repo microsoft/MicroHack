@@ -154,6 +154,10 @@ def mutate(st, pack: str, change):
     raise ApiError(409, "The system is busy. Try again.")
 
 
+def plural(noun: str) -> str:
+    return noun[:-1] + "ies" if noun.endswith("y") else noun + "s"
+
+
 def now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
@@ -298,7 +302,7 @@ def portal_home(st, p, pack, form):
         for c in reversed(state["cases"][-25:]))
     noun = p["portal"]["case_noun"]
     return page(p, p["portal"]["name"], f"""
-<h1>{escape(p['company'])}: open {escape(noun)}s</h1>
+<h1>{escape(p['company'])}: open {escape(plural(noun))}</h1>
 <p><a href="/portal/new">Raise a new {escape(noun)}</a></p>
 <table><tr><th>ID</th><th>{escape(p['partner_type'].capitalize())}</th><th>Type</th><th>Reference</th><th>Amount ({escape(p['currency'])})</th><th>Status</th></tr>
 {rows or '<tr><td colspan=6>Nothing raised yet.</td></tr>'}</table>""")
@@ -348,7 +352,7 @@ def portal_submit(st, p, pack, form):
 <div class="ok"><h1>{escape(noun.capitalize())} submitted</h1>
 <p>Reference number: <b id="case-id">{escape(case['case_id'])}</b></p>
 <p>{escape(case['partner'])} will reply within 5 working days.</p></div>
-<p><a href="/portal">Back to {escape(noun)}s</a></p>""")
+<p><a href="/portal">Back to {escape(plural(noun))}</a></p>""")
 
 
 PORTAL_ROUTES = {"/portal": portal_home, "/portal/new": portal_new, "/portal/submit": portal_submit}

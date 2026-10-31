@@ -90,7 +90,7 @@ def test_portal_case_needs_an_approver_and_shows_on_the_activity_page(client):
     code, html = client("POST", "/portal/submit", form=form, key=None)
     assert code == 200 and 'id="case-id"' in html and "Northgate Freight" in html
     code, html = client("GET", "/portal", key=None)
-    assert "INV-41022" in html and "Submitted" in html
+    assert "INV-41022" in html and "Submitted" in html and "open queries" in html
     code, page = client("GET", "/", key=None)
     assert "query raised" in page and "approved by Dana Okoro" in page
 

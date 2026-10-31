@@ -12,6 +12,7 @@ import frontierops.__main__ as tool  # noqa: E402
 @pytest.fixture(autouse=True)
 def lab_state(tmp_path, monkeypatch):
     monkeypatch.setattr(tool, "STATE", tmp_path / ".state" / "lab.json")
+    monkeypatch.setattr(tool, "MY_FILES_ZIP", tmp_path / "my-files.zip")
     return tool.STATE
 
 
@@ -292,3 +293,14 @@ def test_setup_rejects_a_project_id_that_is_not_one(capsys, monkeypatch):
     monkeypatch.setattr(tool, "_az", lambda *a, **k: pytest.fail("must not call Azure"))
     assert tool.main(["setup", "--industry", "telco", "--account", "x", "--project-id", "https://ai.azure.com"]) == 1
     assert "FoundryProjectResourceId" in capsys.readouterr().err
+
+
+def test_setup_puts_every_file_in_one_zip_to_download(tmp_path, monkeypatch, capsys):
+    import zipfile
+    monkeypatch.setattr(tool, "_az", lambda *a, **k: "")
+    monkeypatch.setattr(tool, "MY_FILES", tmp_path / "my-files")
+    assert tool.main(["setup", "--industry", "distribution", "--account", "x"]) == 0
+    names = zipfile.ZipFile(tool.MY_FILES_ZIP).namelist()
+    assert "my-files/ledger-export.csv" in names and "my-files/statements/brightwell.csv" in names
+    assert "my-files/skills/reconciliation/SKILL.md" in names
+    assert "type my-files.zip" in capsys.readouterr().out

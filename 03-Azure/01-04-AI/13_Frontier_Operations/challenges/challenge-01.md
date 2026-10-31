@@ -71,7 +71,10 @@ The **Microsoft Copilot harness** changes that. It gives your agent its own secu
 
    You can run it again at any time, for example to switch industry. It replaces the previous company.
 
-6. Download the files to your computer: in Cloud Shell select **Manage files**, then **Download**, and enter the path of each file, starting with `frontier-ops/03-Azure/01-04-AI/13_Frontier_Operations/my-files/`: `ledger-export.csv`, `handbook.md` and each `statements/<partner>.csv`. Keep them in one folder.
+6. Get the files onto your computer, so you can attach them in the Foundry chat:
+   1. In Cloud Shell, select **Manage files**, then **Download**.
+   2. Type `my-files.zip` and select **Download**. Setup put all your files in this one zip in your Cloud Shell home folder.
+   3. Unzip it on your computer. You'll attach files from the `my-files` folder in the chat: the partner statements are in `statements`.
 
 ![Cloud Shell: the setup command shows your company, its partners and the files in my-files](../images/challenge-01-setup.png)
 

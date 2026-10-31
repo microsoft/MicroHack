@@ -29,6 +29,7 @@ LAB = Path(__file__).resolve().parents[1]
 PACKS = LAB / "data" / "packs"
 TEMPLATES = LAB / "templates"
 MY_FILES = LAB / "my-files"
+MY_FILES_ZIP = Path.home() / "my-files.zip"
 STATE = LAB / ".state" / "lab.json"
 FOUNDRY_USER = "53ca6127-db72-4b80-b1b0-d745d6d5456d"
 SKILL_NAME = re.compile(r"^[a-z0-9]([a-z0-9-]*[a-z0-9])?$")
@@ -87,6 +88,16 @@ def copy_my_files(pack_id: str, target: Path | None = None) -> list:
     return sorted(p.relative_to(target).as_posix() for p in target.rglob("*") if p.is_file())
 
 
+def zip_my_files(source: Path | None = None, target: Path | None = None) -> Path:
+    """One file to download from Cloud Shell, at a short path in the home folder."""
+    source, target = source or MY_FILES, target or MY_FILES_ZIP
+    with zipfile.ZipFile(target, "w", zipfile.ZIP_DEFLATED) as archive:
+        for file in sorted(source.rglob("*")):
+            if file.is_file():
+                archive.write(file, (Path("my-files") / file.relative_to(source)).as_posix())
+    return target
+
+
 def load_lab() -> dict:
     """The dashboard values saved by setup, so later commands stay short."""
     try:
@@ -135,6 +146,7 @@ def setup(account: str, pack_id: str, app_url: str | None, project_id: str | Non
         _az("storage", "blob", "upload", "--account-name", account, "--container-name", "ops-state",
             "--name", "active.json", "--file", str(active), "--overwrite", "true")
     files = copy_my_files(pack_id)
+    zip_my_files()
     save_lab(account=account, industry=pack_id, app_url=app_url, project_id=project_id, project_endpoint=endpoint)
 
     print(f"Your company: {profile['company']} ({profile['industry']})")
@@ -146,7 +158,8 @@ def setup(account: str, pack_id: str, app_url: str | None, project_id: str | Non
     print("\nFiles to attach in the Foundry chat are in the my-files folder:")
     for name in files:
         print(f"  {name}")
-    print("Download them with the Cloud Shell 'Manage files' > 'Download' button, or open them in the editor (code my-files).")
+    print("\nTo get them on your computer: in Cloud Shell select 'Manage files' > 'Download', type my-files.zip "
+          "and select Download. Unzip it, then attach files from the folder in the Foundry chat.")
     print("\nYour dashboard values are saved in .state/lab.json, so the next commands don't need them.")
 
 

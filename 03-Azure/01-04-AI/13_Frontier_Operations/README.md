@@ -72,6 +72,8 @@ The **Microsoft Copilot harness** is the engine behind GitHub Copilot, now avail
 | **Azure Blob Storage** | Holds your industry pack and the state of the ERP and the portal. |
 | **Application Insights** | Stores agent traces so you can see and check every step. |
 
+![Frontier Operations architecture](images/readme-architecture.png)
+
 Not everything is an AI job. **Matching a reference or applying a tolerance is a rule**: the agent writes and runs code for it so the answer is the same every time. **Deciding what to chase, and approving it, is a judgement**: the agent prepares it, a person decides.
 
 ## What you'll take home

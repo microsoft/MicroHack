@@ -14,7 +14,7 @@ A demo shows that something *can* work. A business case shows that it's **worth*
 
 ### Part A: Your numbers so far (10 min)
 
-Open **Traces** for `ops-agent`. Find two runs and record their numbers:
+Every answer in the playground shows its time and tokens on the line under it, and **Traces** keeps them for every run. Find two runs and record their numbers:
 
 - your Challenge 2 run **with the skill** (one partner);
 - your Challenge 3 run (all five partners, with subagents).

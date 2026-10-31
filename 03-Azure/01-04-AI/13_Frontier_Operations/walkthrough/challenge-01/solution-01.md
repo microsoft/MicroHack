@@ -9,7 +9,9 @@
 - `python3 -m frontierops ... setup` prints the company, its five partners, *Portal check: OK* and the files in `my-files`, including `ledger-export.csv` and `skills/reconciliation/SKILL.md`.
 - `ops-agent` shows **Microsoft Copilot harness** in its details. The harness can only be chosen when the agent is created; if a team forgot, they create a new agent.
 - With only a statement attached, the agent says it needs the ledger and doesn't invent numbers.
-- With both files, the steps show `view` (reading the files), one or more `shell` steps running Python, and an upload. The answer has a downloadable `reconciliation.xlsx`.
+- With both files, the steps show `view` (reading the files), one or more `shell_call` steps running Python, and `upload_file_from_workspace_to_foundry_project`. The answer has a downloadable `reconciliation.xlsx`.
+
+Our run (distribution, Brightwell Packaging, `gpt-5.4-mini`): **56 seconds, 222,069 tokens**. The agent found `openpyxl` missing, switched to another way of writing the workbook, fixed a column-name mismatch on its own and returned a workbook with four sheets: *Exact matches*, *Amount differences*, *Missing in statement* and *Missing in ledger*. Self-correction like this is the harness at work; point it out to participants.
 
 Without a skill the agent uses its own judgement. That is the point of Challenge 2: expect it to list the within-tolerance line as a mismatch, and to call the duplicate and the credit note "statement only". The exact lines per partner are in [expected results](../expected-results.md).
 

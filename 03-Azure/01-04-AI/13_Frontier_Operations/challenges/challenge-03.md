@@ -59,6 +59,10 @@ Subagents aren't always the answer. They pay off when the work splits into **ind
 
    ![The trace of the five-partner run: totals in the header, the skill, then the file reads before the subagent tasks](../images/challenge-03-trace.png)
 
+   Each subagent gets a written brief, the way a lead briefs a colleague. In ours the lead copied the skill's matching rules and the GBP 2.00 tolerance into each brief, and started all five subagents within a fraction of a second, so they worked in parallel:
+
+   ![execute_tool task selected: the brief the lead agent wrote for the Brightwell subagent](../images/challenge-03-subagent-brief.png)
+
 > 📸 **Screenshot to add:** `images/challenge-03-workbook-summary.png`: The returned workbook: the Summary sheet and one sheet per partner.
 
 ### Part C: When not to use subagents (10 min)

@@ -19,7 +19,7 @@ The **Microsoft Copilot harness** changes that. It gives your agent its own secu
 1. Open [ai.azure.com](https://ai.azure.com), make sure the **New Foundry** toggle at the top right is on, and select your project (the last part of `FoundryProjectEndpoint`, `frontier-operations`).
 2. Select **Build**, then **Models**. On the **Deployments** tab, check that `ModelDeploymentName` (`gpt-5.4-mini`) and `CompareModelDeploymentName` (`gpt-5.4`) show **Succeeded**.
 
-> ![Build, Models, Deployments: gpt-5.4 and gpt-5.4-mini Succeeded](../images/challenge-01-model-deployments.png)
+![Build, Models, Deployments: gpt-5.4 and gpt-5.4-mini Succeeded](../images/challenge-01-model-deployments.png)
 
 ### Part B: Choose your company (10 min)
 

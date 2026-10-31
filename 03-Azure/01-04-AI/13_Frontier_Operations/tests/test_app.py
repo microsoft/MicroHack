@@ -95,6 +95,15 @@ def test_portal_case_needs_an_approver_and_shows_on_the_activity_page(client):
     assert "query raised" in page and "approved by Dana Okoro" in page
 
 
+def test_notes_do_not_use_up_query_numbers(client):
+    for _ in range(3):
+        assert client("POST", "/erp/notes", {"reference": "INV-41007", "note": "checked"})[0] == 200
+    form = {"partner": "brightwell", "case_type": "Price dispute", "reference": "INV-41007", "amount": "12.50",
+            "details": "x", "approved_by": "Dana Okoro"}
+    code, html = client("POST", "/portal/submit", form=form, key=None)
+    assert 'id="case-id">INQ-101<' in html
+
+
 def test_ledger_note_via_api(client):
     code, note = client("POST", "/erp/notes", {"reference": "INV-41022", "note": "Price dispute raised"})
     assert code == 200 and note["note_id"].startswith("NOTE-")

@@ -219,8 +219,8 @@ def erp_note(st, query, body):
             raise ApiError(400, f"Missing required field: {field}.")
 
     def change(state):
-        state["counter"] += 1
-        note = {"note_id": f"NOTE-{state['counter']}", "reference": str(body["reference"])[:40],
+        state["note_counter"] = state.get("note_counter", 0) + 1
+        note = {"note_id": f"NOTE-{state['note_counter']}", "reference": str(body["reference"])[:40],
                 "note": str(body["note"])[:500], "created": now()}
         state.setdefault("notes", []).append(note)
         log(state, "agent (ERP API)", "ledger note", f"{note['reference']}: {note['note']}")

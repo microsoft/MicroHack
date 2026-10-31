@@ -1,11 +1,13 @@
 """Set up your Frontier Operations lab.
 
     python3 -m frontierops packs
-    python3 -m frontierops --account <StorageAccountName> setup --industry distribution --app-url <BackOfficeUrl>
-    python3 -m frontierops grant-agent <agent-name> --project-endpoint <FoundryProjectEndpoint> --project-id <FoundryProjectResourceId>
-    python3 -m frontierops publish-skill my-files/skills/reconciliation --project-endpoint <FoundryProjectEndpoint>
-    python3 -m frontierops score ~/exceptions.xlsx --industry distribution
-    python3 -m frontierops --account <StorageAccountName> status
+    python3 -m frontierops setup --industry distribution --account <StorageAccountName> --app-url <BackOfficeUrl> --project-id <FoundryProjectResourceId>
+    python3 -m frontierops grant-agent ops-agent
+    python3 -m frontierops publish-skill my-files/skills/reconciliation
+    python3 -m frontierops score ~/exceptions.xlsx
+    python3 -m frontierops status
+
+setup remembers your dashboard values in .state/lab.json, so the other commands don't need them.
 """
 from __future__ import annotations
 
@@ -27,6 +29,7 @@ LAB = Path(__file__).resolve().parents[1]
 PACKS = LAB / "data" / "packs"
 TEMPLATES = LAB / "templates"
 MY_FILES = LAB / "my-files"
+STATE = LAB / ".state" / "lab.json"
 FOUNDRY_USER = "53ca6127-db72-4b80-b1b0-d745d6d5456d"
 SKILL_NAME = re.compile(r"^[a-z0-9]([a-z0-9-]*[a-z0-9])?$")
 
@@ -84,11 +87,43 @@ def copy_my_files(pack_id: str, target: Path | None = None) -> list:
     return sorted(p.relative_to(target).as_posix() for p in target.rglob("*") if p.is_file())
 
 
-def setup(account: str, pack_id: str, app_url: str | None) -> None:
+def load_lab() -> dict:
+    """The dashboard values saved by setup, so later commands stay short."""
+    try:
+        return json.loads(STATE.read_text(encoding="utf-8"))
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
+
+
+def save_lab(**values) -> None:
+    current = load_lab()
+    current.update({k: v for k, v in values.items() if v})
+    STATE.parent.mkdir(parents=True, exist_ok=True)
+    STATE.write_text(json.dumps(current, indent=2), encoding="utf-8")
+
+
+def project_endpoint_from_id(project_id: str) -> str:
+    match = re.search(r"/accounts/([^/]+)/projects/([^/]+)$", project_id.rstrip("/"))
+    if not match:
+        raise SetupError("That doesn't look like a FoundryProjectResourceId. Copy it from your lab dashboard: "
+                         "it starts with /subscriptions/ and ends with /projects/frontier-operations.")
+    return f"https://{match.group(1)}.services.ai.azure.com/api/projects/{match.group(2)}"
+
+
+def need(value: str | None, name: str, dashboard: str) -> str:
+    if value:
+        return value
+    raise SetupError(f"I don't know your {name} yet. Run the Challenge 1 setup command first (it remembers your "
+                     f"dashboard values), or add --{name.replace(' ', '-')} <{dashboard}>.")
+
+
+def setup(account: str, pack_id: str, app_url: str | None, project_id: str | None = None) -> None:
     available = packs()
     if pack_id not in available:
         raise SetupError(f"Unknown industry '{pack_id}'. Choose one of: {', '.join(available)}.")
     profile = available[pack_id]
+    endpoint = project_endpoint_from_id(project_id) if project_id else None
+    print(f"Loading {profile['company']} into your lab...")
     with tempfile.TemporaryDirectory() as tmp:
         staged = Path(tmp) / "packs"
         shutil.copytree(PACKS / pack_id, staged)
@@ -100,6 +135,7 @@ def setup(account: str, pack_id: str, app_url: str | None) -> None:
         _az("storage", "blob", "upload", "--account-name", account, "--container-name", "ops-state",
             "--name", "active.json", "--file", str(active), "--overwrite", "true")
     files = copy_my_files(pack_id)
+    save_lab(account=account, industry=pack_id, app_url=app_url, project_id=project_id, project_endpoint=endpoint)
 
     print(f"Your company: {profile['company']} ({profile['industry']})")
     print(f"  Process: {profile['process']}")
@@ -111,6 +147,7 @@ def setup(account: str, pack_id: str, app_url: str | None) -> None:
     for name in files:
         print(f"  {name}")
     print("Download them with the Cloud Shell 'Manage files' > 'Download' button, or open them in the editor (code my-files).")
+    print("\nYour dashboard values are saved in .state/lab.json, so the next commands don't need them.")
 
 
 def check_app(app_url: str, profile: dict) -> None:
@@ -389,41 +426,45 @@ def main(argv=None) -> int:
     parser.add_argument("--account", help="Storage account name from your lab dashboard (StorageAccountName)")
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("packs", help="List the industry packs you can choose from")
-    setup_parser = sub.add_parser("setup", help="Load an industry pack into your lab")
+    setup_parser = sub.add_parser("setup", help="Load an industry pack into your lab and remember your dashboard values")
     setup_parser.add_argument("--industry", required=True, help="distribution, telco, energy, insurance or retail")
+    setup_parser.add_argument("--account", dest="setup_account", help="StorageAccountName from your lab dashboard")
     setup_parser.add_argument("--app-url", help="BackOfficeUrl from your lab dashboard, to check the portal answers")
+    setup_parser.add_argument("--project-id", help="FoundryProjectResourceId from your lab dashboard")
     grant = sub.add_parser("grant-agent", help="Let an agent return files (Foundry User for its own identity)")
     grant.add_argument("agent", help="Agent name, for example ops-agent")
-    grant.add_argument("--project-endpoint", required=True, help="FoundryProjectEndpoint from your lab dashboard")
-    grant.add_argument("--project-id", required=True, help="FoundryProjectResourceId from your lab dashboard")
+    grant.add_argument("--project-id", help="FoundryProjectResourceId (saved by setup)")
     publish = sub.add_parser("publish-skill", help="Publish a skill folder (with SKILL.md) to your Foundry project")
     publish.add_argument("folder", help="Skill folder, for example my-files/skills/reconciliation")
-    publish.add_argument("--project-endpoint", required=True, help="FoundryProjectEndpoint from your lab dashboard")
+    publish.add_argument("--project-id", help="FoundryProjectResourceId (saved by setup)")
     score_parser = sub.add_parser("score", help="Check an agent's exceptions workbook against the answer key")
     score_parser.add_argument("workbook", help="The .xlsx file the agent returned")
-    score_parser.add_argument("--industry", required=True, help="distribution, telco, energy, insurance or retail")
+    score_parser.add_argument("--industry", help="distribution, telco, energy, insurance or retail (saved by setup)")
     sub.add_parser("status", help="Show what is loaded in your lab")
     args = parser.parse_args(argv)
+    lab = load_lab()
     try:
         if args.command == "packs":
             for pack_id, profile in packs().items():
                 print(f"  {pack_id:13} {profile['company']:21} {profile['process']}")
             return 0
-        if args.command == "grant-agent":
-            grant_agent(args.agent, args.project_endpoint, args.project_id)
+        if args.command == "setup":
+            account = need(getattr(args, "setup_account", None) or args.account, "account", "StorageAccountName")
+            setup(account, args.industry.lower(), args.app_url, args.project_id)
             return 0
-        if args.command == "publish-skill":
-            publish_skill(Path(args.folder), args.project_endpoint)
+        if args.command in ("grant-agent", "publish-skill"):
+            project_id = need(args.project_id or lab.get("project_id"), "project id", "FoundryProjectResourceId")
+            endpoint = project_endpoint_from_id(project_id)
+            if args.command == "grant-agent":
+                grant_agent(args.agent, endpoint, project_id)
+            else:
+                publish_skill(Path(args.folder), endpoint)
             return 0
         if args.command == "score":
-            print_score(Path(args.workbook).expanduser(), args.industry.lower())
+            industry = need(args.industry or lab.get("industry"), "industry", "distribution, telco, energy, insurance or retail")
+            print_score(Path(args.workbook).expanduser(), industry.lower())
             return 0
-        if not args.account:
-            raise SetupError("Add --account <StorageAccountName> (from your lab dashboard) before the command.")
-        if args.command == "setup":
-            setup(args.account, args.industry.lower(), args.app_url)
-        else:
-            status(args.account)
+        status(need(args.account or lab.get("account"), "account", "StorageAccountName"))
         return 0
     except SetupError as err:
         print(f"ERROR: {err}", file=sys.stderr)

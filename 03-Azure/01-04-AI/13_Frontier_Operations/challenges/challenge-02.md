@@ -27,10 +27,10 @@ The pattern for the rest of the day: **instructions set the outcome, skills set 
 4. Score it against the answer key for your company:
 
    ```bash
-   python3 -m frontierops score ~/exceptions.xlsx --industry <your industry>
+   python3 -m frontierops score ~/exceptions.xlsx
    ```
 
-   Every statement has six lines planted the way real statements go wrong. The tool lists each one the agent handled differently from your handbook. Note the score.
+   **What this does:** every statement has six lines planted the way real statements go wrong: a real price difference, a rounding difference, lines missing on each side, a duplicate and a credit note. The tool opens the workbook the agent gave you, compares it with the answer key for your company and lists each line the agent handled differently from your handbook. It only reads the file; nothing changes in Azure. Note the score.
 
 > 📸 **Screenshot to add:** `images/challenge-02-score-before.png`: Cloud Shell: the score without a skill, with the lines the agent got wrong.
 
@@ -44,6 +44,8 @@ The setup command put a starter skill in `my-files/skills/reconciliation/SKILL.m
    code my-files/skills/reconciliation/SKILL.md
    ```
 
+   **What this does:** opens the file in a simple editor above the terminal. A skill is just a text file: a few lines at the top that name and describe it, then the method in plain English.
+
 2. Open `my-files/handbook.md` next to it and, as a team, replace every **TODO** with your company's method. Write it the way you'd brief a new joiner: short, exact, with the real numbers. For example: the tolerance amount, which reference formats count as the same, and the action for each kind of exception.
 3. Keep the first lines (the front matter between the two `---` lines). The **name** must stay `reconciliation`. The **description** is what the agent reads to decide when to use the skill, so make it one clear sentence.
 4. Save with Ctrl+S.
@@ -53,11 +55,27 @@ The setup command put a starter skill in `my-files/skills/reconciliation/SKILL.m
 
 ### Part C: Publish it (5 min)
 
-```bash
-python3 -m frontierops publish-skill my-files/skills/reconciliation --project-endpoint <FoundryProjectEndpoint>
-```
+1. Sign in once for Microsoft Foundry. Cloud Shell is signed in to Azure already, but publishing a skill talks to Foundry directly, which needs its own sign-in:
 
-The tool checks the file first and tells you in plain words what to fix: a TODO left in, quotes around the name, a missing description. Then it publishes the skill as a new version and makes it the default.
+   ```bash
+   az login --use-device-code --scope https://ai.azure.com/.default
+   ```
+
+   **What this does:** shows a code and a link. Open the link, enter the code and choose your lab account. You only need to do this once per Cloud Shell session.
+
+2. Publish the skill:
+
+   ```bash
+   python3 -m frontierops publish-skill my-files/skills/reconciliation
+   ```
+
+   **What this does:**
+
+   - Checks your file first, and tells you in plain words what to fix: a TODO left in, quotes around the name, a missing description.
+   - Packages the folder and uploads it to your Foundry project as a new **version** of the skill `reconciliation`, and makes it the default.
+   - Doesn't change your agent yet; that's Part D.
+
+   If you publish again later, you get version 2, 3 and so on. Older versions are kept, so you can always go back.
 
 > 📸 **Screenshot to add:** `images/challenge-02-publish-skill.png`: Cloud Shell: publish-skill reports the version it published.
 

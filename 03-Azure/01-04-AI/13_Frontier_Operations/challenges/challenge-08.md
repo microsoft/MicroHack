@@ -16,7 +16,7 @@ Everything you configured today has a file form. In this challenge you deploy a 
 
 ### Part A: Open a terminal with azd (5 min)
 
-Use **Cloud Shell** (azd is already installed) or **GitHub Codespaces**: on the MicroHack repository select **Code**, **Codespaces**, **...**, **New with options**, and choose the **Azure / AI / Frontier Operations** configuration.
+The **Azure Developer CLI** (`azd`) turns files that describe your app, here an agent and its skill, into the real thing in Azure. Use **Cloud Shell** (azd is already installed) or **GitHub Codespaces**: on the MicroHack repository select **Code**, **Codespaces**, **...**, **New with options**, and choose the **Azure / AI / Frontier Operations** configuration.
 
 ```bash
 az login --use-device-code      # Codespaces only; Cloud Shell is already signed in
@@ -25,7 +25,11 @@ azd extension install azure.ai.agents   # or: azd extension upgrade azure.ai.age
 export AZD_ALPHA_ENABLE_AGENTS_MANAGED_HARNESS=true
 ```
 
-The harness needs `azure.ai.agents` version `1.0.0-beta.22` or later; check with `azd extension list --installed`. Set the `export` line again in every new terminal.
+**What this does:**
+
+- Signs `azd` in as you.
+- Adds the Foundry agents extension to `azd`. The harness needs `azure.ai.agents` version `1.0.0-beta.22` or later; check with `azd extension list --installed`.
+- The last line switches on the Copilot harness, which is in preview. Run it again in every new terminal.
 
 ### Part B: Create the project from your existing Foundry project (5 min)
 
@@ -36,7 +40,7 @@ azd ai agent init ops-agent-code --no-prompt --kind prompt --agent-name ops-agen
 cd ops-agent-code
 ```
 
-This creates `azure.yaml` and points it at your **existing** project. Nothing new is created in Azure.
+**What this does:** creates a folder `ops-agent-code` with one file, `azure.yaml`, that describes a new agent called `ops-agent-code` in your **existing** project, using your model. Nothing is created in Azure yet, and your portal agent `ops-agent` isn't touched.
 
 ### Part C: Describe the agent and its skill in files (15 min)
 
@@ -47,6 +51,8 @@ This creates `azure.yaml` and points it at your **existing** project. Nothing ne
    cp -r ~/frontier-ops/03-Azure/01-04-AI/13_Frontier_Operations/my-files/skills/reconciliation skills/reconciliation-code
    sed -i 's/^name: reconciliation$/name: reconciliation-code/' skills/reconciliation-code/SKILL.md
    ```
+
+   **What this does:** makes a `skills` folder, copies your Challenge 2 skill into it as `reconciliation-code`, and changes the name inside the file to match.
 
 2. Open `azure.yaml` (`code azure.yaml`). Keep what `init` generated, and add the lines marked below to the agent service. Your project service key (here `frontier-operations`) may be different: use the one in your file.
 
@@ -88,6 +94,12 @@ azd ai agent show --output json
 azd ai agent invoke --new-conversation --no-prompt "List your skills, then load reconciliation-code and quote its tolerance rule."
 ```
 
+**What this does:**
+
+- `deploy` reads `azure.yaml` and creates what it describes in your project: first the skill, then the agent that uses it.
+- `show` prints the agent's definition as Foundry stored it, so you can check it matches your file.
+- `invoke` sends the agent one message in a new chat and prints the answer, the same as typing it in the playground.
+
 `show` must list `harness.type: microsoft_copilot_preview` and the `reconciliation-code` skill. `invoke` answers with your tolerance rule. In the Foundry portal the new agent `ops-agent-code` appears next to `ops-agent`, and you can test it there too.
 
 > 📸 **Screenshot to add:** `images/challenge-08-azd-deploy.png`: azd deploy and azd ai agent invoke: the agent quotes the tolerance rule from its skill.
@@ -104,6 +116,8 @@ azd ai agent invoke --new-conversation --no-prompt "List your skills, then load 
 azd ai agent delete ops-agent-code --force --no-prompt
 azd ai skill delete reconciliation-code --force --no-prompt
 ```
+
+**What this does:** deletes only the agent and the skill you created in this challenge. Your portal agent and its skill stay.
 
 Don't run `azd down`: it would try to remove resources your lab still needs.
 

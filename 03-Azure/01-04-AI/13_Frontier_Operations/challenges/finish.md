@@ -41,6 +41,8 @@ Keep a copy: paste it into a document, or download it from Cloud Shell.
    code my-files/skills/<your-process>/SKILL.md
    ```
 
+   **What this does:** makes a folder for your process's skill, copies the same starter file you used in Challenge 2 into it, and opens it in the editor. Replace `<your-process>` in all three lines.
+
 2. Change the **name** to your folder's name, and rewrite the headings and every TODO for your process. Don't put real names, customer data or secrets in it.
 3. Optional: publish it with `publish-skill`, add it to a new harness agent and ask it to explain how it would handle one of your process's typical cases.
 

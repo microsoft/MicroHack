@@ -34,7 +34,10 @@ The **Microsoft Copilot harness** changes that. It gives your agent its own secu
    | `retail` | Parcelpine | Marketplace payouts against orders |
 
 2. Open the [Azure portal](https://portal.azure.com) with your lab account, select the **Cloud Shell** icon (`>_`) and choose **Bash**. If you are asked about storage, choose the option without storage.
-3. Copy only this lab from GitHub and move into it:
+
+   **Why Cloud Shell?** It's a terminal in your browser that is already signed in as you, with the Azure CLI and Python installed. Nothing is installed on your computer.
+
+3. Copy this lab's files from GitHub into Cloud Shell, and move into its folder:
 
    ```bash
    git clone --depth 1 --filter=blob:none --sparse https://github.com/microsoft/MicroHack frontier-ops
@@ -43,13 +46,22 @@ The **Microsoft Copilot harness** changes that. It gives your agent its own secu
    cd 03-Azure/01-04-AI/13_Frontier_Operations
    ```
 
-4. Load your company, with the values from your dashboard:
+   **What this does:** the MicroHack repository holds many labs. These four lines download only this one (the industry packs, the setup tool and the templates) into a folder called `frontier-ops`, and open it. Nothing changes in Azure yet.
+
+4. Load your company. Replace each `<...>` with the value from your lab dashboard, and the industry with the one your team picked:
 
    ```bash
-   python3 -m frontierops --account <StorageAccountName> setup --industry <distribution|telco|energy|insurance|retail> --app-url <BackOfficeUrl>
+   python3 -m frontierops setup --industry distribution --account <StorageAccountName> --app-url <BackOfficeUrl> --project-id <FoundryProjectResourceId>
    ```
 
-   The tool switches the ERP and the partner portal to your company and puts the files you'll need in a `my-files` folder: one statement per partner, this month's **ledger export** from your ERP, and the team's handbook.
+   **What this does:**
+
+   - Uploads your company's data (partners, ledger and handbook) to your lab's storage, and switches the ERP and the partner portal to your company.
+   - Checks that the partner portal answers.
+   - Puts the files you'll attach in the chat into a `my-files` folder: one statement per partner, this month's **ledger export** from your ERP, the team's handbook and a starter skill for Challenge 2.
+   - Remembers your dashboard values, so the commands in later challenges are short.
+
+   You can run it again at any time, for example to switch industry. It replaces the previous company.
 
 5. Download the files to your computer: in Cloud Shell select **Manage files**, then **Download**, and enter the path of each file, starting with `frontier-ops/03-Azure/01-04-AI/13_Frontier_Operations/my-files/`: `ledger-export.csv`, `handbook.md` and each `statements/<partner>.csv`. Keep them in one folder.
 
@@ -87,13 +99,17 @@ The **Microsoft Copilot harness** changes that. It gives your agent its own secu
 
 ### Part E: Let the agent return files (5 min)
 
-To hand a file back to you, the agent uses **its own identity**, which needs permission on your project. In Cloud Shell, run:
+**Why this step?** Your agent isn't you. When it hands a file back, it acts as **itself**, with its own identity in Microsoft Entra, separate from your account. A new agent's identity has no permissions at all, so it can read the files you give it but can't save a file for you. You give it exactly one role, **Foundry User**, on your project. (You'll come back to this idea in Challenge 6: every agent gets only the access it needs.)
+
+In Cloud Shell, in the same folder as before, run:
 
 ```bash
-python3 -m frontierops grant-agent ops-agent --project-endpoint <FoundryProjectEndpoint> --project-id <FoundryProjectResourceId>
+python3 -m frontierops grant-agent ops-agent
 ```
 
-Your lab account may grant exactly this role on your project and nothing else. Allow up to five minutes before the next part.
+**What this does:** it finds `ops-agent`'s identity and gives it the **Foundry User** role on your project. Your lab account is allowed to grant exactly this role on your own project, and nothing else. You should see *Granted Foundry User to agent 'ops-agent'*.
+
+New permissions take up to **five minutes** to apply. Use the time to look at the files you downloaded.
 
 > ⚠️ The permission only reaches **new chats**. A chat you started before the grant keeps answering "Foundry Files access denied" when it tries to return a file. Select **New chat** before Part F.
 

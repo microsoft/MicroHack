@@ -9,6 +9,12 @@ sys.path.insert(0, str(LAB))
 import frontierops.__main__ as tool  # noqa: E402
 
 
+@pytest.fixture(autouse=True)
+def lab_state(tmp_path, monkeypatch):
+    monkeypatch.setattr(tool, "STATE", tmp_path / ".state" / "lab.json")
+    return tool.STATE
+
+
 def test_packs_lists_five_companies(capsys):
     assert tool.main(["packs"]) == 0
     out = capsys.readouterr().out
@@ -60,7 +66,7 @@ def test_grant_agent_finds_the_agent_identity_by_name_and_assigns_foundry_user(m
 
     monkeypatch.setattr(tool, "_az", fake)
     project = "/subscriptions/s/resourceGroups/rg/providers/Microsoft.CognitiveServices/accounts/acct/projects/proj"
-    assert tool.main(["grant-agent", "ops-agent", "--project-endpoint", "https://x/api/projects/proj", "--project-id", project]) == 0
+    assert tool.main(["grant-agent", "ops-agent", "--project-id", project]) == 0
     create = next(c for c in calls if c[:3] == ("role", "assignment", "create"))
     assert "abc-123" in create and tool.FOUNDRY_USER in create and project in create
     assert "Granted Foundry User" in capsys.readouterr().out
@@ -77,7 +83,7 @@ def test_grant_agent_falls_back_to_the_agent_definition(monkeypatch, capsys):
         return ""
 
     monkeypatch.setattr(tool, "_az", fake)
-    assert tool.main(["grant-agent", "a", "--project-endpoint", "e", "--project-id", "/x/accounts/a/projects/p"]) == 0
+    assert tool.main(["grant-agent", "a", "--project-id", "/x/accounts/a/projects/p"]) == 0
     assert "def-456" in capsys.readouterr().out
 
 
@@ -88,7 +94,7 @@ def test_grant_agent_needs_a_saved_agent(monkeypatch, capsys):
         return "[]"
 
     monkeypatch.setattr(tool, "_az", fake)
-    assert tool.main(["grant-agent", "x", "--project-endpoint", "e", "--project-id", "/x/accounts/a/projects/p"]) == 1
+    assert tool.main(["grant-agent", "x", "--project-id", "/x/accounts/a/projects/p"]) == 1
     assert "no identity yet" in capsys.readouterr().err
 
 
@@ -99,7 +105,7 @@ def test_publish_skill_explains_how_to_sign_in_for_foundry(tmp_path, monkeypatch
         raise tool.SetupError("Azure command failed: az account get-access-token\nTimeout waiting for token from portal.")
 
     monkeypatch.setattr(tool, "_az", fake)
-    assert tool.main(["publish-skill", str(folder), "--project-endpoint", "e"]) == 1
+    assert tool.main(["publish-skill", str(folder), "--project-id", "/s/accounts/x/projects/p"]) == 1
     err = capsys.readouterr().err
     assert "az login --use-device-code --scope https://ai.azure.com/.default" in err and "Timeout" in err
 
@@ -138,9 +144,9 @@ def test_publish_skill_uploads_a_zip_with_skill_md_at_the_root(tmp_path, monkeyp
 
     monkeypatch.setattr(tool, "_upload_skill", fake_upload)
     monkeypatch.setattr(tool, "_set_default_skill_version", lambda url, token, version: sent.update(default=(url, version)))
-    assert tool.main(["publish-skill", str(folder), "--project-endpoint", "https://x/api/projects/p/"]) == 0
-    assert sent["url"] == "https://x/api/projects/p/skills/reconciliation/versions?api-version=v1"
-    assert sent["default"] == ("https://x/api/projects/p/skills/reconciliation?api-version=v1", "3")
+    assert tool.main(["publish-skill", str(folder), "--project-id", "/s/accounts/x/projects/p"]) == 0
+    assert sent["url"] == "https://x.services.ai.azure.com/api/projects/p/skills/reconciliation/versions?api-version=v1"
+    assert sent["default"] == ("https://x.services.ai.azure.com/api/projects/p/skills/reconciliation?api-version=v1", "3")
     assert sent["token"] == "token-123"
     assert sorted(sent["names"]) == ["SKILL.md", "examples.md"]
     assert "version 3" in capsys.readouterr().out
@@ -157,13 +163,13 @@ def test_publish_skill_uploads_a_zip_with_skill_md_at_the_root(tmp_path, monkeyp
 def test_publish_skill_explains_problems_before_uploading(tmp_path, monkeypatch, capsys, text, message):
     folder = _write_skill(tmp_path / "reconciliation", text)
     monkeypatch.setattr(tool, "_az", lambda *a, **k: pytest.fail("must not call Azure"))
-    assert tool.main(["publish-skill", str(folder), "--project-endpoint", "e"]) == 1
+    assert tool.main(["publish-skill", str(folder), "--project-id", "/s/accounts/x/projects/p"]) == 1
     assert message in capsys.readouterr().err
 
 
 def test_publish_skill_needs_a_skill_md(tmp_path, capsys):
     (tmp_path / "empty").mkdir()
-    assert tool.main(["publish-skill", str(tmp_path / "empty"), "--project-endpoint", "e"]) == 1
+    assert tool.main(["publish-skill", str(tmp_path / "empty"), "--project-id", "/s/accounts/x/projects/p"]) == 1
     assert "no SKILL.md" in capsys.readouterr().err
 
 
@@ -243,3 +249,32 @@ def test_score_explains_a_file_that_is_not_a_workbook(tmp_path, capsys):
     (tmp_path / "x.xlsx").write_text("not a workbook", encoding="utf-8")
     assert tool.main(["score", str(tmp_path / "x.xlsx"), "--industry", "distribution"]) == 1
     assert "Excel workbook" in capsys.readouterr().err
+
+
+def test_setup_remembers_the_dashboard_values_for_later_commands(tmp_path, monkeypatch, capsys):
+    calls = []
+    monkeypatch.setattr(tool, "_az", lambda *a, **k: calls.append(a) or "")
+    monkeypatch.setattr(tool, "MY_FILES", tmp_path / "my-files")
+    project = "/subscriptions/s/resourceGroups/rg/providers/Microsoft.CognitiveServices/accounts/acct/projects/proj"
+    assert tool.main(["setup", "--industry", "retail", "--account", "stx", "--project-id", project]) == 0
+    saved = tool.load_lab()
+    assert saved == {"account": "stx", "industry": "retail", "project_id": project,
+                     "project_endpoint": "https://acct.services.ai.azure.com/api/projects/proj"}
+    assert "don't need them" in capsys.readouterr().out
+    seen = {}
+    monkeypatch.setattr(tool, "grant_agent", lambda agent, endpoint, pid: seen.update(agent=agent, endpoint=endpoint, pid=pid))
+    assert tool.main(["grant-agent", "ops-agent"]) == 0
+    assert seen == {"agent": "ops-agent", "endpoint": saved["project_endpoint"], "pid": project}
+    monkeypatch.setattr(tool, "print_score", lambda wb, industry: seen.update(industry=industry))
+    assert tool.main(["score", "x.xlsx"]) == 0 and seen["industry"] == "retail"
+
+
+def test_commands_explain_when_setup_has_not_run(capsys):
+    assert tool.main(["grant-agent", "ops-agent"]) == 1
+    assert "Run the Challenge 1 setup command first" in capsys.readouterr().err
+
+
+def test_setup_rejects_a_project_id_that_is_not_one(capsys, monkeypatch):
+    monkeypatch.setattr(tool, "_az", lambda *a, **k: pytest.fail("must not call Azure"))
+    assert tool.main(["setup", "--industry", "telco", "--account", "x", "--project-id", "https://ai.azure.com"]) == 1
+    assert "FoundryProjectResourceId" in capsys.readouterr().err

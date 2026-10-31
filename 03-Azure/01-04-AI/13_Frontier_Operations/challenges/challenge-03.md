@@ -37,8 +37,10 @@ Subagents aren't always the answer. They pay off when the work splits into **ind
 1. Download `exceptions.xlsx`, upload it to Cloud Shell and score it:
 
    ```bash
-   python3 -m frontierops score ~/exceptions.xlsx --industry <your industry>
+   python3 -m frontierops score ~/exceptions.xlsx
    ```
+
+   **What this does:** the same check as in Challenge 2, now for all five partners: 30 planted lines in total.
 
 2. Open the **Summary** sheet. Which partner has the most money at stake? That's where your approver will look first.
 3. Open **Traces** for `ops-agent` (in the agent, select **Traces**) and find this run. Expand it and find the five subagent tasks. How long did the slowest one take?

@@ -23,7 +23,8 @@ Without a skill the agent uses its own judgement. That is the point of Challenge
 
 | Symptom | Cause and fix |
 |---|---|
-| *Timeout waiting for token from portal* (Audience `https://graph.microsoft.com/` or `https://ai.azure.com`) | Cloud Shell's automatic sign-in only covers Azure resources. Run `az login --use-device-code` in Cloud Shell once (Part B, step 3) and run the command again. Setup works without it; `grant-agent` and `publish-skill` don't. |
+| *Timeout waiting for token from portal* (Audience `https://graph.microsoft.com/` or `https://ai.azure.com`) | Cloud Shell's automatic sign-in only covers Azure resources. Run `az login --use-device-code` in Cloud Shell once (Part B, step 3) and run the command again. Setup works without it; `publish-skill` needs it. If device-code sign-in is blocked in your tenant, use `grant-agent ops-agent --identity <ID>` with the identity copied from the agent's **Details** tab: that needs only Azure Resource Manager. |
+| `grant-agent` can't find the agent's identity | It reads the identity from Foundry first and doesn't need directory access. If that fails, it tries Microsoft Entra by name, which lab accounts may not be allowed to read. Use `--identity` with the ID from the agent's **Details** tab. |
 | *Foundry Files access denied* when the agent tries to return the workbook | The agent's identity has no Foundry User role yet, or the chat started before the grant. Run `grant-agent`, wait five minutes and start a **new chat**: the grant only reaches chats started after it. In our tests a chat started before the grant kept failing for hours. |
 | `grant-agent` says the agent has no identity yet | The agent wasn't saved. Select **Save** in the portal and run it again. |
 | `grant-agent` fails with *AuthorizationFailed* | The participant isn't using their lab account in Cloud Shell, or the lab was deployed less than ten minutes ago. Their lab account may assign only Foundry User on their own project. |

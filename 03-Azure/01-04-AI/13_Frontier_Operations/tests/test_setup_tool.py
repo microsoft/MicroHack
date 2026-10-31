@@ -50,53 +50,58 @@ def test_setup_replaces_files_from_another_pack(tmp_path, monkeypatch):
     assert names == {"shopwell", "brightbasket", "homeharbour", "gardenly", "dealdock"}
 
 
-def test_grant_agent_finds_the_agent_identity_by_name_and_assigns_foundry_user(monkeypatch, capsys):
-    calls = []
+PROJECT = "/subscriptions/s/resourceGroups/rg/providers/Microsoft.CognitiveServices/accounts/acct/projects/proj"
 
+
+def _fake_az(calls, rest=None, entra=None):
     def fake(*args, capture=False, storage=True):
         calls.append(args)
-        if args[:3] == ("ad", "sp", "list"):
-            assert args[4] == "acct-proj-ops-agent-AgentIdentity"
-            return json.dumps(["abc-123"])
-        if args[:3] == ("role", "assignment", "list"):
-            return "[]"
         if args[0] == "rest":
-            pytest.fail("Cloud Shell can't get a Foundry token; the Graph lookup must be enough")
+            if isinstance(rest, Exception):
+                raise rest
+            return json.dumps(rest or {})
+        if args[:3] == ("ad", "sp", "list"):
+            if isinstance(entra, Exception):
+                raise entra
+            return json.dumps(entra or [])
+        if args[:3] == ("role", "assignment", "list"):
+            assert "--assignee" not in args, "listing by assignee needs directory access"
+            return "[]"
         return ""
+    return fake
 
-    monkeypatch.setattr(tool, "_az", fake)
-    project = "/subscriptions/s/resourceGroups/rg/providers/Microsoft.CognitiveServices/accounts/acct/projects/proj"
-    assert tool.main(["grant-agent", "ops-agent", "--project-id", project]) == 0
+
+def test_grant_agent_reads_the_identity_from_foundry_and_needs_no_directory_access(monkeypatch, capsys):
+    calls = []
+    monkeypatch.setattr(tool, "_az", _fake_az(calls, rest={"versions": {"latest": {"instance_identity": {"principal_id": "abc-123"}}}}))
+    assert tool.main(["grant-agent", "ops-agent", "--project-id", PROJECT]) == 0
+    assert not [c for c in calls if c[0] == "ad"], "Entra must not be needed when Foundry answers"
     create = next(c for c in calls if c[:3] == ("role", "assignment", "create"))
-    assert "abc-123" in create and tool.FOUNDRY_USER in create and project in create
+    assert "abc-123" in create and tool.FOUNDRY_USER in create and PROJECT in create
+    assert "--assignee-object-id" in create and "ServicePrincipal" in create
     assert "Granted Foundry User" in capsys.readouterr().out
 
 
-def test_grant_agent_falls_back_to_the_agent_definition(monkeypatch, capsys):
-    def fake(*args, capture=False, storage=True):
-        if args[:3] == ("ad", "sp", "list"):
-            return "[]"
-        if args[0] == "rest":
-            return json.dumps({"versions": {"latest": {"instance_identity": {"principal_id": "def-456"}}}})
-        if args[:3] == ("role", "assignment", "list"):
-            return "[]"
-        return ""
+def test_grant_agent_with_an_identity_from_the_portal_needs_only_resource_manager(monkeypatch, capsys):
+    calls = []
+    monkeypatch.setattr(tool, "_az", _fake_az(calls, rest=AssertionError("no lookup"), entra=AssertionError("no lookup")))
+    assert tool.main(["grant-agent", "ops-agent", "--project-id", PROJECT, "--identity", "id-789"]) == 0
+    assert [c[0] for c in calls] == ["role", "role"]
+    assert "id-789" in capsys.readouterr().out
 
-    monkeypatch.setattr(tool, "_az", fake)
-    assert tool.main(["grant-agent", "a", "--project-id", "/x/accounts/a/projects/p"]) == 0
+
+def test_grant_agent_falls_back_to_the_identity_name_in_entra(monkeypatch, capsys):
+    calls = []
+    monkeypatch.setattr(tool, "_az", _fake_az(calls, rest=tool.SetupError("Forbidden"), entra=["def-456"]))
+    assert tool.main(["grant-agent", "ops-agent", "--project-id", PROJECT]) == 0
+    assert next(c for c in calls if c[0] == "ad")[4] == "acct-proj-ops-agent-AgentIdentity"
     assert "def-456" in capsys.readouterr().out
 
 
 def test_grant_agent_needs_a_saved_agent(monkeypatch, capsys):
-    def fake(*args, capture=False, storage=True):
-        if args[0] == "rest":
-            raise tool.SetupError("no token")
-        return "[]"
-
-    monkeypatch.setattr(tool, "_az", fake)
-    assert tool.main(["grant-agent", "x", "--project-id", "/x/accounts/a/projects/p"]) == 1
+    monkeypatch.setattr(tool, "_az", _fake_az([], rest={"versions": {"latest": {}}}, entra=[]))
+    assert tool.main(["grant-agent", "x", "--project-id", PROJECT]) == 1
     assert "no identity yet" in capsys.readouterr().err
-
 
 def test_grant_agent_explains_the_sign_in_when_cloud_shell_has_no_token(monkeypatch, capsys):
     def fake(*args, capture=False, storage=True):
@@ -271,7 +276,7 @@ def test_setup_remembers_the_dashboard_values_for_later_commands(tmp_path, monke
                      "project_endpoint": "https://acct.services.ai.azure.com/api/projects/proj"}
     assert "don't need them" in capsys.readouterr().out
     seen = {}
-    monkeypatch.setattr(tool, "grant_agent", lambda agent, endpoint, pid: seen.update(agent=agent, endpoint=endpoint, pid=pid))
+    monkeypatch.setattr(tool, "grant_agent", lambda agent, endpoint, pid, identity=None: seen.update(agent=agent, endpoint=endpoint, pid=pid))
     assert tool.main(["grant-agent", "ops-agent"]) == 0
     assert seen == {"agent": "ops-agent", "endpoint": saved["project_endpoint"], "pid": project}
     monkeypatch.setattr(tool, "print_score", lambda wb, industry: seen.update(industry=industry))

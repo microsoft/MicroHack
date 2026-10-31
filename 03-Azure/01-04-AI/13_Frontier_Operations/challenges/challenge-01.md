@@ -119,6 +119,14 @@ python3 -m frontierops grant-agent ops-agent
 
 ![Cloud Shell: grant-agent gives ops-agent's identity the Foundry User role](../images/challenge-01-grant-agent.png)
 
+If the command says it can't find the agent's identity, copy it from the portal instead: open `ops-agent`, select the **Details** tab and copy the **agent identity** ID. Then run:
+
+```bash
+python3 -m frontierops grant-agent ops-agent --identity <agent identity ID>
+```
+
+**What this does:** the same grant, using the ID you copied, so the tool doesn't need to look the agent up.
+
 New permissions take up to **five minutes** to apply. Use the time to look at the files you downloaded.
 
 > ⚠️ The permission only reaches **new chats**. A chat you started before the grant keeps answering "Foundry Files access denied" when it tries to return a file. Select **New chat** before Part F.

@@ -178,8 +178,22 @@ def _foundry_token() -> str:
 
 
 def _agent_principal(agent: str, project_endpoint: str, project_id: str) -> str | None:
-    """Find the agent's own identity. Its Entra name is <account>-<project>-<agent>-AgentIdentity."""
+    """Find the agent's own identity, using the least access possible.
+
+    1. The agent definition in Foundry: needs only the participant's Foundry User role (and a Foundry token).
+    2. Entra, by the identity's name <account>-<project>-<agent>-AgentIdentity: needs directory read access,
+       which lab accounts may not have, so it's the last resort.
+    """
     problems = []
+    try:
+        data = json.loads(_az("rest", "--method", "get", "--url", f"{project_endpoint.rstrip('/')}/agents/{agent}?api-version=v1",
+                              "--resource", "https://ai.azure.com", capture=True, storage=False) or "{}")
+        latest = (data.get("versions") or {}).get("latest") or data
+        principal = (latest.get("instance_identity") or data.get("instance_identity") or {}).get("principal_id")
+        if principal:
+            return principal
+    except SetupError as err:
+        problems.append(err)
     match = re.search(r"/accounts/([^/]+)/projects/([^/]+)$", project_id.rstrip("/"))
     if match:
         name = f"{match.group(1)}-{match.group(2)}-{agent}-AgentIdentity"
@@ -190,26 +204,23 @@ def _agent_principal(agent: str, project_endpoint: str, project_id: str) -> str 
                 return found[0]
         except SetupError as err:
             problems.append(err)
-    # Fall back to the agent definition in Foundry (needs a token for https://ai.azure.com).
-    try:
-        data = json.loads(_az("rest", "--method", "get", "--url", f"{project_endpoint.rstrip('/')}/agents/{agent}?api-version=v1",
-                              "--resource", "https://ai.azure.com", capture=True, storage=False) or "{}")
-    except SetupError as err:
-        problems.append(err)
-        if all(_token_problem(p) for p in problems):
-            raise SetupError(AI_TOKEN_HELP)
-        return None
-    latest = (data.get("versions") or {}).get("latest") or data
-    return (latest.get("instance_identity") or data.get("instance_identity") or {}).get("principal_id")
+    if problems and all(_token_problem(p) for p in problems):
+        raise SetupError(f"{AI_TOKEN_HELP}\nOr copy the agent's identity from the Foundry portal and add it: "
+                         f"python3 -m frontierops grant-agent {agent} --identity <agent identity ID>")
+    return None
 
 
-def grant_agent(agent: str, project_endpoint: str, project_id: str) -> None:
-    """Give an agent's own identity the Foundry User role on the project, so it can return files."""
-    principal = _agent_principal(agent, project_endpoint, project_id)
+def grant_agent(agent: str, project_endpoint: str, project_id: str, identity: str | None = None) -> None:
+    """Give an agent's own identity the Foundry User role on the project, so it can return files.
+
+    Only Azure Resource Manager is used for the role assignment itself, so no directory access is needed.
+    """
+    principal = identity or _agent_principal(agent, project_endpoint, project_id)
     if not principal:
         raise SetupError(f"Agent '{agent}' has no identity yet. Check the name, and save the agent in the Foundry portal first.")
-    existing = json.loads(_az("role", "assignment", "list", "--assignee", principal, "--scope", project_id,
-                              "--role", FOUNDRY_USER, "--output", "json", capture=True, storage=False) or "[]")
+    existing = json.loads(_az("role", "assignment", "list", "--scope", project_id, "--role", FOUNDRY_USER,
+                              "--query", f"[?principalId=='{principal}']", "--output", "json",
+                              capture=True, storage=False) or "[]")
     if existing:
         print(f"Agent '{agent}' already has Foundry User on the project. Nothing to do.")
         return
@@ -446,6 +457,7 @@ def main(argv=None) -> int:
     grant = sub.add_parser("grant-agent", help="Let an agent return files (Foundry User for its own identity)")
     grant.add_argument("agent", help="Agent name, for example ops-agent")
     grant.add_argument("--project-id", help="FoundryProjectResourceId (saved by setup)")
+    grant.add_argument("--identity", help="The agent's identity ID, copied from the Foundry portal (optional)")
     publish = sub.add_parser("publish-skill", help="Publish a skill folder (with SKILL.md) to your Foundry project")
     publish.add_argument("folder", help="Skill folder, for example my-files/skills/reconciliation")
     publish.add_argument("--project-id", help="FoundryProjectResourceId (saved by setup)")
@@ -468,7 +480,7 @@ def main(argv=None) -> int:
             project_id = need(args.project_id or lab.get("project_id"), "project id", "FoundryProjectResourceId")
             endpoint = project_endpoint_from_id(project_id)
             if args.command == "grant-agent":
-                grant_agent(args.agent, endpoint, project_id)
+                grant_agent(args.agent, endpoint, project_id, args.identity)
             else:
                 publish_skill(Path(args.folder), endpoint)
             return 0

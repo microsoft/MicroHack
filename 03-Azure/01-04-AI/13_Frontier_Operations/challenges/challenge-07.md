@@ -30,10 +30,18 @@ Every answer in the playground shows its time and tokens on the line under it, a
 
 ### Part B: Run the same partner on the bigger model (15 min)
 
-1. Open `ops-agent` and change the **model** to your `CompareModelDeploymentName` (`gpt-5.4`). Select **Save and start new chat**.
-2. Attach the **same one** partner statement and ledger export as in Challenge 2, and send the same request.
-3. Score the workbook, and record the same measures from **Traces** in a new column.
-4. Change the model back to `ModelDeploymentName` (`gpt-5.4-mini`) and save.
+To compare fairly, run the **same agent** (same instructions, skill, toolbox and guardrail) on the other model, side by side. Don't switch `ops-agent`'s model: in this preview the portal warns that the bigger model *doesn't work with Built-in tool* and would remove **Harness tools** from the agent. Cancel that dialog if you see it.
+
+1. Create a copy of your agent on `CompareModelDeploymentName` (`gpt-5.4`). In Cloud Shell:
+
+   ```bash
+   python3 -m frontierops copy-agent ops-agent ops-agent-54 --model gpt-5.4
+   ```
+
+   **What this does:** reads `ops-agent`'s definition from Foundry and saves it as a new agent, `ops-agent-54`, with only the model changed, then gives the copy's identity the same Foundry User role so it can return files. Your original agent isn't touched.
+
+2. Wait five minutes for the role, then open `ops-agent-54` in the portal. Attach the **same one** partner statement and ledger export as in Challenge 2, and send the same request.
+3. Download and score the workbook, and record the same measures in a new column.
 
 Why one partner? The bigger model has a smaller quota in your lab, and a five-partner run reads about a million tokens in a few minutes. Comparing one partner is fair to both models; you scale the result up in Part C.
 

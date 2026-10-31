@@ -5,6 +5,7 @@
     python3 -m frontierops grant-agent ops-agent
     python3 -m frontierops publish-skill my-files/skills/reconciliation
     python3 -m frontierops get-skill reconciliation
+    python3 -m frontierops copy-agent ops-agent ops-agent-54 --model gpt-5.4
     python3 -m frontierops download
     python3 -m frontierops score ~/exceptions.xlsx
     python3 -m frontierops status
@@ -533,6 +534,35 @@ def get_skill(name: str, project_endpoint: str, target_root: Path | None = None)
     return folder
 
 
+def copy_agent(source: str, target: str, model: str, project_endpoint: str, project_id: str) -> None:
+    """Save an agent's definition under a new name with another model, and let the copy return files."""
+    if not SKILL_NAME.match(target):
+        raise SetupError(f"'{target}' isn't a valid agent name: use lowercase letters, numbers and hyphens.")
+    token = _foundry_token()
+    base = project_endpoint.rstrip("/")
+    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json",
+               "Foundry-Features": "MicrosoftCopilot=V1Preview,Skills=V1Preview,Toolboxes=V1Preview"}
+    try:
+        with urllib.request.urlopen(urllib.request.Request(f"{base}/agents/{source}?api-version=v1", headers=headers), timeout=60) as r:
+            data = json.loads(r.read())
+    except urllib.error.HTTPError as err:
+        raise SetupError(f"Couldn't read agent '{source}' ({err.code}). Check the name in the Foundry portal.")
+    definition = dict(((data.get("versions") or {}).get("latest") or {}).get("definition") or {})
+    if not definition:
+        raise SetupError(f"Agent '{source}' has no saved definition yet. Save it in the Foundry portal first.")
+    definition["model"] = model
+    request = urllib.request.Request(f"{base}/agents/{target}/versions?api-version=v1", method="POST", headers=headers,
+                                     data=json.dumps({"definition": definition}).encode())
+    try:
+        with urllib.request.urlopen(request, timeout=120) as r:
+            created = json.loads(r.read())
+    except urllib.error.HTTPError as err:
+        raise SetupError(f"Foundry refused the copy ({err.code}): {err.read().decode('utf-8', 'replace')[:300]}")
+    print(f"Created agent '{target}' (version {created.get('version', '?')}): '{source}' on model {model}.")
+    principal = (created.get("instance_identity") or {}).get("principal_id")
+    grant_agent(target, project_endpoint, project_id, principal)
+
+
 def status(account: str) -> None:
     active = _az("storage", "blob", "download", "--account-name", account, "--container-name", "ops-state",
                  "--name", "active.json", "--file", "/dev/stdout" if sys.platform != "win32" else "CON", capture=True)
@@ -563,6 +593,11 @@ def main(argv=None) -> int:
     get_parser = sub.add_parser("get-skill", help="Bring a published skill back into my-files/skills, for example after a new Cloud Shell session")
     get_parser.add_argument("name", nargs="?", default="reconciliation", help="Skill name (default: reconciliation)")
     get_parser.add_argument("--project-id", help="FoundryProjectResourceId (saved by setup)")
+    copy_parser = sub.add_parser("copy-agent", help="Copy an agent to a new name with another model, to compare models")
+    copy_parser.add_argument("source", help="Agent to copy, for example ops-agent")
+    copy_parser.add_argument("target", help="Name of the copy, for example ops-agent-54")
+    copy_parser.add_argument("--model", required=True, help="Model deployment for the copy, for example gpt-5.4")
+    copy_parser.add_argument("--project-id", help="FoundryProjectResourceId (saved by setup)")
     score_parser = sub.add_parser("score", help="Check an agent's exceptions workbook against the answer key")
     score_parser.add_argument("workbook", help="The .xlsx file the agent returned")
     score_parser.add_argument("--industry", help="distribution, telco, energy, insurance or retail (saved by setup)")
@@ -581,11 +616,13 @@ def main(argv=None) -> int:
             account = need(getattr(args, "setup_account", None) or args.account, "account", "StorageAccountName")
             setup(account, args.industry.lower(), args.app_url, args.project_id)
             return 0
-        if args.command in ("grant-agent", "publish-skill", "download", "get-skill"):
+        if args.command in ("grant-agent", "publish-skill", "download", "get-skill", "copy-agent"):
             project_id = need(args.project_id or lab.get("project_id"), "project id", "FoundryProjectResourceId")
             endpoint = project_endpoint_from_id(project_id)
             if args.command == "grant-agent":
                 grant_agent(args.agent, endpoint, project_id, args.identity)
+            elif args.command == "copy-agent":
+                copy_agent(args.source, args.target, args.model, endpoint, project_id)
             elif args.command == "download":
                 download(endpoint, args.file)
             elif args.command == "get-skill":

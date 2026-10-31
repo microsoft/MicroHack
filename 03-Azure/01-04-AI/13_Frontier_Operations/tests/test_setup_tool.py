@@ -392,3 +392,39 @@ def test_get_skill_restores_the_published_skill(tmp_path, monkeypatch, capsys):
     assert (tmp_path / "my-files" / "skills" / "reconciliation" / "SKILL.md").read_text(encoding="utf-8") == GOOD
     assert not (tmp_path / "my-files" / "skills" / "escape.txt").exists()
     assert "Restored the published skill" in capsys.readouterr().out
+
+
+def test_copy_agent_keeps_the_definition_changes_the_model_and_grants(monkeypatch, capsys):
+    tool.save_lab(project_id="/s/accounts/acct/projects/proj")
+    monkeypatch.setattr(tool, "_foundry_token", lambda: "t")
+    sent = {}
+    definition = {"kind": "prompt", "model": "gpt-5.4-mini", "harness": {"type": "microsoft_copilot_preview"},
+                  "skills": [{"name": "reconciliation", "version": "6"}], "instructions": "x"}
+
+    class Response:
+        def __init__(self, body):
+            self.body = body
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+        def read(self):
+            return json.dumps(self.body).encode()
+
+    def fake_urlopen(req, timeout):
+        if req.get_method() == "POST":
+            sent.update(url=req.full_url, body=json.loads(req.data))
+            return Response({"version": "1", "instance_identity": {"principal_id": "pid-54"}})
+        return Response({"versions": {"latest": {"definition": definition}}})
+
+    monkeypatch.setattr(tool.urllib.request, "urlopen", fake_urlopen)
+    granted = {}
+    monkeypatch.setattr(tool, "grant_agent", lambda agent, ep, pid, identity=None: granted.update(agent=agent, identity=identity))
+    assert tool.main(["copy-agent", "ops-agent", "ops-agent-54", "--model", "gpt-5.4"]) == 0
+    assert sent["url"].endswith("/agents/ops-agent-54/versions?api-version=v1")
+    assert sent["body"]["definition"]["model"] == "gpt-5.4"
+    assert sent["body"]["definition"]["skills"] == definition["skills"] and sent["body"]["definition"]["harness"] == definition["harness"]
+    assert granted == {"agent": "ops-agent-54", "identity": "pid-54"}

@@ -104,6 +104,8 @@ One partner's statement in every pack has a line that isn't a transaction: it's 
    **What this does:** downloads the skill as Foundry holds it, the version your agent uses, into `my-files/skills/reconciliation`. The published skill is the master copy, not the file in Cloud Shell.
 
 4. Publish the new version (`publish-skill`, as in Challenge 2). On `ops-agent`, remove the skill, add it again so it takes the new version, and save.
+
+   ![The skill's Safety section with the new Needs review rule, and publish-skill making it the default version](../images/challenge-06-safety-skill.png)
 5. Reconcile that one partner again and open the workbook: the line is in **Needs review**.
 
 ### Part D: Its own identity, least access (5 min)

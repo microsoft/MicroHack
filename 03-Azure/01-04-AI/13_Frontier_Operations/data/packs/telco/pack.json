@@ -1,0 +1,64 @@
+{
+  "id": "telco",
+  "industry": "Telecom and broadband",
+  "company": "Kestrel Connect",
+  "tagline": "Home broadband and mobile across the fictional Zedshire region",
+  "process": "Wholesale carrier invoice reconciliation (interconnect and roaming)",
+  "partner_type": "carrier",
+  "partner_type_plural": "carriers",
+  "currency": "GBP",
+  "tolerance": 5.0,
+  "period": "2027-02",
+  "ref_prefix": "CHG",
+  "actions": {
+    "mismatch": "Raise rate dispute",
+    "missing_on_statement": "Ask carrier to confirm charge",
+    "missing_in_ledger": "Request CDR evidence",
+    "duplicate": "Raise double-billing dispute",
+    "credit": "Confirm SLA credit"
+  },
+  "portal": {
+    "name": "Carrier Exchange",
+    "tagline": "The wholesale settlement portal shared by Kestrel Connect and its carriers",
+    "case_noun": "dispute",
+    "case_types": [
+      "Rate dispute",
+      "Double billing",
+      "Charge confirmation",
+      "CDR evidence request",
+      "SLA credit confirmation"
+    ]
+  },
+  "people": {
+    "process_owner": "Rhys Morgan, Wholesale Billing Manager",
+    "expert": "Ines Carvalho, Senior Settlements Analyst",
+    "approver": "Tom Ashby, Head of Carrier Relations"
+  },
+  "partners": [
+    {
+      "id": "aldermoor",
+      "name": "Aldermoor Telecom",
+      "contact": "billing@aldermoor.example"
+    },
+    {
+      "id": "farcastle",
+      "name": "Farcastle Networks",
+      "contact": "wholesale@farcastle.example"
+    },
+    {
+      "id": "lumen-isles",
+      "name": "Lumen Isles Mobile",
+      "contact": "roaming@lumenisles.example"
+    },
+    {
+      "id": "brackwater",
+      "name": "Brackwater Fibre",
+      "contact": "ar@brackwater.example"
+    },
+    {
+      "id": "sennen",
+      "name": "Sennen Carrier Services",
+      "contact": "settlements@sennen.example"
+    }
+  ]
+}

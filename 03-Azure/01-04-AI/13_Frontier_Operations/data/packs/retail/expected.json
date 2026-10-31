@@ -1,0 +1,272 @@
+[
+  {
+    "partner_id": "shopwell",
+    "reference": "ORD-85008",
+    "kind": "mismatch",
+    "ledger_amount": 704.45,
+    "statement_amount": 710.45,
+    "difference": 6.0,
+    "action": "Raise payout claim"
+  },
+  {
+    "partner_id": "shopwell",
+    "reference": "ORD-85012",
+    "kind": "within_tolerance",
+    "ledger_amount": 717.88,
+    "statement_amount": 718.33,
+    "difference": 0.45,
+    "action": "none"
+  },
+  {
+    "partner_id": "shopwell",
+    "reference": "ORD-85010",
+    "kind": "missing_on_statement",
+    "ledger_amount": 770.55,
+    "statement_amount": null,
+    "difference": null,
+    "action": "Claim missing payout"
+  },
+  {
+    "partner_id": "shopwell",
+    "reference": "ORD-85013",
+    "kind": "missing_in_ledger",
+    "ledger_amount": null,
+    "statement_amount": 381.55,
+    "difference": null,
+    "action": "Request order details"
+  },
+  {
+    "partner_id": "shopwell",
+    "reference": "ORD-85002",
+    "kind": "duplicate",
+    "ledger_amount": 881.46,
+    "statement_amount": 881.46,
+    "difference": null,
+    "action": "Raise duplicate-deduction claim"
+  },
+  {
+    "partner_id": "shopwell",
+    "reference": "RF-270",
+    "kind": "credit",
+    "ledger_amount": null,
+    "statement_amount": -212.19,
+    "difference": null,
+    "action": "Confirm refund"
+  },
+  {
+    "partner_id": "brightbasket",
+    "reference": "ORD-85021",
+    "kind": "mismatch",
+    "ledger_amount": 471.18,
+    "statement_amount": 478.18,
+    "difference": 7.0,
+    "action": "Raise payout claim"
+  },
+  {
+    "partner_id": "brightbasket",
+    "reference": "ORD-85016",
+    "kind": "within_tolerance",
+    "ledger_amount": 830.14,
+    "statement_amount": 830.39,
+    "difference": 0.25,
+    "action": "none"
+  },
+  {
+    "partner_id": "brightbasket",
+    "reference": "ORD-85024",
+    "kind": "missing_on_statement",
+    "ledger_amount": 837.95,
+    "statement_amount": null,
+    "difference": null,
+    "action": "Claim missing payout"
+  },
+  {
+    "partner_id": "brightbasket",
+    "reference": "ORD-85026",
+    "kind": "missing_in_ledger",
+    "ledger_amount": null,
+    "statement_amount": 137.77,
+    "difference": null,
+    "action": "Request order details"
+  },
+  {
+    "partner_id": "brightbasket",
+    "reference": "ORD-85015",
+    "kind": "duplicate",
+    "ledger_amount": 319.53,
+    "statement_amount": 319.53,
+    "difference": null,
+    "action": "Raise duplicate-deduction claim"
+  },
+  {
+    "partner_id": "brightbasket",
+    "reference": "RF-180",
+    "kind": "credit",
+    "ledger_amount": null,
+    "statement_amount": -122.85,
+    "difference": null,
+    "action": "Confirm refund"
+  },
+  {
+    "partner_id": "homeharbour",
+    "reference": "ORD-85029",
+    "kind": "mismatch",
+    "ledger_amount": 139.68,
+    "statement_amount": 142.93,
+    "difference": 3.25,
+    "action": "Raise payout claim"
+  },
+  {
+    "partner_id": "homeharbour",
+    "reference": "ORD-85033",
+    "kind": "within_tolerance",
+    "ledger_amount": 291.2,
+    "statement_amount": 291.45,
+    "difference": 0.25,
+    "action": "none"
+  },
+  {
+    "partner_id": "homeharbour",
+    "reference": "ORD-85031",
+    "kind": "missing_on_statement",
+    "ledger_amount": 711.02,
+    "statement_amount": null,
+    "difference": null,
+    "action": "Claim missing payout"
+  },
+  {
+    "partner_id": "homeharbour",
+    "reference": "ORD-85039",
+    "kind": "missing_in_ledger",
+    "ledger_amount": null,
+    "statement_amount": 824.14,
+    "difference": null,
+    "action": "Request order details"
+  },
+  {
+    "partner_id": "homeharbour",
+    "reference": "ORD-85028",
+    "kind": "duplicate",
+    "ledger_amount": 560.86,
+    "statement_amount": 560.86,
+    "difference": null,
+    "action": "Raise duplicate-deduction claim"
+  },
+  {
+    "partner_id": "homeharbour",
+    "reference": "RF-588",
+    "kind": "credit",
+    "ledger_amount": null,
+    "statement_amount": -74.54,
+    "difference": null,
+    "action": "Confirm refund"
+  },
+  {
+    "partner_id": "gardenly",
+    "reference": "ORD-85046",
+    "kind": "mismatch",
+    "ledger_amount": 735.58,
+    "statement_amount": 740.08,
+    "difference": 4.5,
+    "action": "Raise payout claim"
+  },
+  {
+    "partner_id": "gardenly",
+    "reference": "ORD-85047",
+    "kind": "within_tolerance",
+    "ledger_amount": 909.57,
+    "statement_amount": 910.02,
+    "difference": 0.45,
+    "action": "none"
+  },
+  {
+    "partner_id": "gardenly",
+    "reference": "ORD-85045",
+    "kind": "missing_on_statement",
+    "ledger_amount": 516.42,
+    "statement_amount": null,
+    "difference": null,
+    "action": "Claim missing payout"
+  },
+  {
+    "partner_id": "gardenly",
+    "reference": "ORD-85052",
+    "kind": "missing_in_ledger",
+    "ledger_amount": null,
+    "statement_amount": 528.81,
+    "difference": null,
+    "action": "Request order details"
+  },
+  {
+    "partner_id": "gardenly",
+    "reference": "ORD-85041",
+    "kind": "duplicate",
+    "ledger_amount": 532.9,
+    "statement_amount": 532.9,
+    "difference": null,
+    "action": "Raise duplicate-deduction claim"
+  },
+  {
+    "partner_id": "gardenly",
+    "reference": "RF-925",
+    "kind": "credit",
+    "ledger_amount": null,
+    "statement_amount": -147.83,
+    "difference": null,
+    "action": "Confirm refund"
+  },
+  {
+    "partner_id": "dealdock",
+    "reference": "ORD-85056",
+    "kind": "mismatch",
+    "ledger_amount": 211.23,
+    "statement_amount": 215.73,
+    "difference": 4.5,
+    "action": "Raise payout claim"
+  },
+  {
+    "partner_id": "dealdock",
+    "reference": "ORD-85061",
+    "kind": "within_tolerance",
+    "ledger_amount": 884.84,
+    "statement_amount": 885.29,
+    "difference": 0.45,
+    "action": "none"
+  },
+  {
+    "partner_id": "dealdock",
+    "reference": "ORD-85060",
+    "kind": "missing_on_statement",
+    "ledger_amount": 802.93,
+    "statement_amount": null,
+    "difference": null,
+    "action": "Claim missing payout"
+  },
+  {
+    "partner_id": "dealdock",
+    "reference": "ORD-85065",
+    "kind": "missing_in_ledger",
+    "ledger_amount": null,
+    "statement_amount": 522.17,
+    "difference": null,
+    "action": "Request order details"
+  },
+  {
+    "partner_id": "dealdock",
+    "reference": "ORD-85054",
+    "kind": "duplicate",
+    "ledger_amount": 361.57,
+    "statement_amount": 361.57,
+    "difference": null,
+    "action": "Raise duplicate-deduction claim"
+  },
+  {
+    "partner_id": "dealdock",
+    "reference": "RF-650",
+    "kind": "credit",
+    "ledger_amount": null,
+    "statement_amount": -268.57,
+    "difference": null,
+    "action": "Confirm refund"
+  }
+]

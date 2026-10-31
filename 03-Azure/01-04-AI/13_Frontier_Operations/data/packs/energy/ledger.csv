@@ -1,0 +1,61 @@
+reference,partner_id,partner,date,description,amount,status
+DUOS-63001,wessex-grid,Wessex Grid Distribution,2027-02-01,Meter operator fee,17404.90,posted
+DUOS-63002,wessex-grid,Wessex Grid Distribution,2027-02-03,Distribution use of system,35115.47,posted
+DUOS-63003,wessex-grid,Wessex Grid Distribution,2027-02-05,Capacity charge,5773.72,posted
+DUOS-63004,wessex-grid,Wessex Grid Distribution,2027-02-07,Distribution use of system,35462.69,posted
+DUOS-63005,wessex-grid,Wessex Grid Distribution,2027-02-10,Reactive power,40777.29,posted
+DUOS-63006,wessex-grid,Wessex Grid Distribution,2027-02-12,Excess capacity,43443.19,posted
+DUOS-63007,wessex-grid,Wessex Grid Distribution,2027-02-14,Excess capacity,16361.70,posted
+DUOS-63008,wessex-grid,Wessex Grid Distribution,2027-02-16,Meter operator fee,38590.94,posted
+DUOS-63009,wessex-grid,Wessex Grid Distribution,2027-02-19,Distribution use of system,37568.26,posted
+DUOS-63010,wessex-grid,Wessex Grid Distribution,2027-02-21,Reactive power,12726.86,posted
+DUOS-63011,wessex-grid,Wessex Grid Distribution,2027-02-23,Excess capacity,31582.87,posted
+DUOS-63012,wessex-grid,Wessex Grid Distribution,2027-02-25,Distribution use of system,34636.56,posted
+DUOS-63014,pennine,Pennine Power Networks,2027-02-01,Transmission charges,3017.69,posted
+DUOS-63015,pennine,Pennine Power Networks,2027-02-03,Meter operator fee,32790.09,posted
+DUOS-63016,pennine,Pennine Power Networks,2027-02-05,Meter operator fee,18873.64,posted
+DUOS-63017,pennine,Pennine Power Networks,2027-02-07,Meter operator fee,16690.66,posted
+DUOS-63018,pennine,Pennine Power Networks,2027-02-10,Data collection fee,12653.21,posted
+DUOS-63019,pennine,Pennine Power Networks,2027-02-12,Transmission charges,6483.43,posted
+DUOS-63020,pennine,Pennine Power Networks,2027-02-14,Reactive power,34226.07,posted
+DUOS-63021,pennine,Pennine Power Networks,2027-02-16,Data collection fee,34827.66,posted
+DUOS-63022,pennine,Pennine Power Networks,2027-02-19,Data collection fee,41254.76,posted
+DUOS-63023,pennine,Pennine Power Networks,2027-02-21,Capacity charge,27623.15,posted
+DUOS-63024,pennine,Pennine Power Networks,2027-02-23,Distribution use of system,45022.07,posted
+DUOS-63025,pennine,Pennine Power Networks,2027-02-25,Data collection fee,1331.30,posted
+DUOS-63027,estuary,Estuary Electricity,2027-02-01,Excess capacity,31396.18,posted
+DUOS-63028,estuary,Estuary Electricity,2027-02-03,Meter operator fee,7084.25,posted
+DUOS-63029,estuary,Estuary Electricity,2027-02-05,Distribution use of system,45589.19,posted
+DUOS-63030,estuary,Estuary Electricity,2027-02-07,Excess capacity,31725.72,posted
+DUOS-63031,estuary,Estuary Electricity,2027-02-10,Meter operator fee,41224.80,posted
+DUOS-63032,estuary,Estuary Electricity,2027-02-12,Excess capacity,3306.38,posted
+DUOS-63033,estuary,Estuary Electricity,2027-02-14,Capacity charge,26415.29,posted
+DUOS-63034,estuary,Estuary Electricity,2027-02-16,Transmission charges,9900.54,posted
+DUOS-63035,estuary,Estuary Electricity,2027-02-19,Reactive power,28155.64,posted
+DUOS-63036,estuary,Estuary Electricity,2027-02-21,Standing charge,1929.24,posted
+DUOS-63037,estuary,Estuary Electricity,2027-02-23,Data collection fee,25738.84,posted
+DUOS-63038,estuary,Estuary Electricity,2027-02-25,Excess capacity,9940.98,posted
+DUOS-63040,highmoor,Highmoor Gas Transport,2027-02-01,Standing charge,40854.15,posted
+DUOS-63041,highmoor,Highmoor Gas Transport,2027-02-03,Excess capacity,36366.34,posted
+DUOS-63042,highmoor,Highmoor Gas Transport,2027-02-05,Excess capacity,36404.09,posted
+DUOS-63043,highmoor,Highmoor Gas Transport,2027-02-07,Distribution use of system,29801.94,posted
+DUOS-63044,highmoor,Highmoor Gas Transport,2027-02-10,Reactive power,9857.80,posted
+DUOS-63045,highmoor,Highmoor Gas Transport,2027-02-12,Capacity charge,12692.26,posted
+DUOS-63046,highmoor,Highmoor Gas Transport,2027-02-14,Meter operator fee,29531.58,posted
+DUOS-63047,highmoor,Highmoor Gas Transport,2027-02-16,Reactive power,33714.90,posted
+DUOS-63048,highmoor,Highmoor Gas Transport,2027-02-19,Transmission charges,44398.40,posted
+DUOS-63049,highmoor,Highmoor Gas Transport,2027-02-21,Standing charge,27271.35,posted
+DUOS-63050,highmoor,Highmoor Gas Transport,2027-02-23,Transmission charges,39859.79,posted
+DUOS-63051,highmoor,Highmoor Gas Transport,2027-02-25,Transmission charges,22916.35,posted
+DUOS-63053,cotswold-meter,Cotswold Metering,2027-02-01,Meter operator fee,45473.19,posted
+DUOS-63054,cotswold-meter,Cotswold Metering,2027-02-03,Data collection fee,13905.26,posted
+DUOS-63055,cotswold-meter,Cotswold Metering,2027-02-05,Excess capacity,10860.51,posted
+DUOS-63056,cotswold-meter,Cotswold Metering,2027-02-07,Reactive power,12488.75,posted
+DUOS-63057,cotswold-meter,Cotswold Metering,2027-02-10,Transmission charges,35335.90,posted
+DUOS-63058,cotswold-meter,Cotswold Metering,2027-02-12,Transmission charges,20868.70,posted
+DUOS-63059,cotswold-meter,Cotswold Metering,2027-02-14,Meter operator fee,33424.05,posted
+DUOS-63060,cotswold-meter,Cotswold Metering,2027-02-16,Data collection fee,6234.26,posted
+DUOS-63061,cotswold-meter,Cotswold Metering,2027-02-19,Data collection fee,9109.72,posted
+DUOS-63062,cotswold-meter,Cotswold Metering,2027-02-21,Standing charge,43452.21,posted
+DUOS-63063,cotswold-meter,Cotswold Metering,2027-02-23,Reactive power,24045.79,posted
+DUOS-63064,cotswold-meter,Cotswold Metering,2027-02-25,Distribution use of system,5379.24,posted

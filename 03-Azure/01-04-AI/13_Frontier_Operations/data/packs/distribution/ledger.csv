@@ -1,0 +1,61 @@
+reference,partner_id,partner,date,description,amount,status
+INV-41001,brightwell,Brightwell Packaging,2027-02-01,Bin liners,3527.88,posted
+INV-41002,brightwell,Brightwell Packaging,2027-02-03,Hi-vis vests,3476.55,posted
+INV-41003,brightwell,Brightwell Packaging,2027-02-05,Corrugated cartons,589.74,posted
+INV-41004,brightwell,Brightwell Packaging,2027-02-07,Bin liners,1149.52,posted
+INV-41005,brightwell,Brightwell Packaging,2027-02-10,Nitrile gloves,575.97,posted
+INV-41006,brightwell,Brightwell Packaging,2027-02-12,Corrugated cartons,4057.93,posted
+INV-41007,brightwell,Brightwell Packaging,2027-02-14,Hand towels,2342.37,posted
+INV-41008,brightwell,Brightwell Packaging,2027-02-16,Bin liners,1824.19,posted
+INV-41009,brightwell,Brightwell Packaging,2027-02-19,Packing tape,1878.38,posted
+INV-41010,brightwell,Brightwell Packaging,2027-02-21,Bin liners,3642.65,posted
+INV-41011,brightwell,Brightwell Packaging,2027-02-23,Nitrile gloves,2402.03,posted
+INV-41012,brightwell,Brightwell Packaging,2027-02-25,Hand towels,2507.16,posted
+INV-41014,northgate,Northgate Freight,2027-02-01,Nitrile gloves,3035.60,posted
+INV-41015,northgate,Northgate Freight,2027-02-03,Bin liners,475.65,posted
+INV-41016,northgate,Northgate Freight,2027-02-05,Hi-vis vests,2071.73,posted
+INV-41017,northgate,Northgate Freight,2027-02-07,Stretch film,2669.97,posted
+INV-41018,northgate,Northgate Freight,2027-02-10,Nitrile gloves,1795.29,posted
+INV-41019,northgate,Northgate Freight,2027-02-12,Corrugated cartons,783.49,posted
+INV-41020,northgate,Northgate Freight,2027-02-14,Stretch film,1282.94,posted
+INV-41021,northgate,Northgate Freight,2027-02-16,Hi-vis vests,295.63,posted
+INV-41022,northgate,Northgate Freight,2027-02-19,Bin liners,1931.94,posted
+INV-41023,northgate,Northgate Freight,2027-02-21,Floor cleaner,1803.08,posted
+INV-41024,northgate,Northgate Freight,2027-02-23,Hi-vis vests,3034.66,posted
+INV-41025,northgate,Northgate Freight,2027-02-25,Nitrile gloves,1356.77,posted
+INV-41027,osric,Osric Office Supplies,2027-02-01,Printer paper,1492.21,posted
+INV-41028,osric,Osric Office Supplies,2027-02-03,Stretch film,1920.91,posted
+INV-41029,osric,Osric Office Supplies,2027-02-05,Labels,1609.88,posted
+INV-41030,osric,Osric Office Supplies,2027-02-07,Stretch film,1873.45,posted
+INV-41031,osric,Osric Office Supplies,2027-02-10,Stretch film,3299.66,posted
+INV-41032,osric,Osric Office Supplies,2027-02-12,Nitrile gloves,3923.60,posted
+INV-41033,osric,Osric Office Supplies,2027-02-14,Pallet wrap,3883.21,posted
+INV-41034,osric,Osric Office Supplies,2027-02-16,Packing tape,2455.92,posted
+INV-41035,osric,Osric Office Supplies,2027-02-19,Packing tape,839.20,posted
+INV-41036,osric,Osric Office Supplies,2027-02-21,Hand towels,1853.97,posted
+INV-41037,osric,Osric Office Supplies,2027-02-23,Packing tape,1039.07,posted
+INV-41038,osric,Osric Office Supplies,2027-02-25,Pallet wrap,3634.86,posted
+INV-41040,kellerman,Kellerman Hygiene,2027-02-01,Nitrile gloves,1358.51,posted
+INV-41041,kellerman,Kellerman Hygiene,2027-02-03,Pallet wrap,866.85,posted
+INV-41042,kellerman,Kellerman Hygiene,2027-02-05,Printer paper,2405.01,posted
+INV-41043,kellerman,Kellerman Hygiene,2027-02-07,Bin liners,1470.43,posted
+INV-41044,kellerman,Kellerman Hygiene,2027-02-10,Packing tape,2940.68,posted
+INV-41045,kellerman,Kellerman Hygiene,2027-02-12,Packing tape,2088.00,posted
+INV-41046,kellerman,Kellerman Hygiene,2027-02-14,Bin liners,1045.21,posted
+INV-41047,kellerman,Kellerman Hygiene,2027-02-16,Printer paper,2456.02,posted
+INV-41048,kellerman,Kellerman Hygiene,2027-02-19,Safety boots,3459.67,posted
+INV-41049,kellerman,Kellerman Hygiene,2027-02-21,Pallet wrap,1988.12,posted
+INV-41050,kellerman,Kellerman Hygiene,2027-02-23,Corrugated cartons,989.35,posted
+INV-41051,kellerman,Kellerman Hygiene,2027-02-25,Nitrile gloves,765.77,posted
+INV-41053,tamsin,Tamsin Workwear,2027-02-01,Nitrile gloves,2905.26,posted
+INV-41054,tamsin,Tamsin Workwear,2027-02-03,Corrugated cartons,439.64,posted
+INV-41055,tamsin,Tamsin Workwear,2027-02-05,Corrugated cartons,1463.23,posted
+INV-41056,tamsin,Tamsin Workwear,2027-02-07,Hi-vis vests,1785.10,posted
+INV-41057,tamsin,Tamsin Workwear,2027-02-10,Pallet wrap,3914.23,posted
+INV-41058,tamsin,Tamsin Workwear,2027-02-12,Hand towels,1963.44,posted
+INV-41059,tamsin,Tamsin Workwear,2027-02-14,Floor cleaner,3463.73,posted
+INV-41060,tamsin,Tamsin Workwear,2027-02-16,Bin liners,929.99,posted
+INV-41061,tamsin,Tamsin Workwear,2027-02-19,Hand towels,598.68,posted
+INV-41062,tamsin,Tamsin Workwear,2027-02-21,Labels,4142.82,posted
+INV-41063,tamsin,Tamsin Workwear,2027-02-23,Floor cleaner,1683.94,posted
+INV-41064,tamsin,Tamsin Workwear,2027-02-25,Packing tape,668.42,posted

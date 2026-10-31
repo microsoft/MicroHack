@@ -1,0 +1,15 @@
+reference,date,description,amount_gbp
+inv 41027,2027-02-01,Printer paper,1492.21
+inv 41028,2027-02-03,Stretch film,1920.91
+inv 41029,2027-02-05,Labels,1626.38
+inv 41030,2027-02-07,Stretch film,1873.45
+inv 41031,2027-02-10,Stretch film,3299.66
+inv 41032,2027-02-12,Nitrile gloves,3923.60
+inv 41033,2027-02-14,Pallet wrap,3883.71
+inv 41034,2027-02-16,Packing tape,2455.92
+inv 41035,2027-02-19,Packing tape,839.20
+inv 41036,2027-02-21,Hand towels,1853.97
+inv 41038,2027-02-25,Pallet wrap,3634.86
+inv 41028,2027-02-03,Stretch film,1920.91
+inv 41039,2027-02-27,Hi-vis vests,2626.77
+CN-554,2027-02-28,Credit note: returned goods,-177.97

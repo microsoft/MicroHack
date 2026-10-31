@@ -101,7 +101,7 @@ def test_commands_in_the_challenges_exist_in_the_setup_tool():
     commands = set()
     for path in (LAB / "challenges").glob("*.md"):
         commands |= set(re.findall(r"python3 -m frontierops(?: --account \S+)? ([a-z-]+)", path.read_text(encoding="utf-8")))
-    assert commands == {"setup", "grant-agent", "publish-skill", "score"}
+    assert commands == {"setup", "grant-agent", "publish-skill", "download", "score"}
     for command in commands:
         assert command in tool.__doc__
 

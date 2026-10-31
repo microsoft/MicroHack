@@ -30,7 +30,7 @@ Every company has systems that only have a web page: a partner's portal, a gover
 
 ### Part C: Prepare, approve, submit (25 min)
 
-1. In the new chat, attach your `exceptions.xlsx` from Challenge 3 and ask:
+1. In the new chat, attach your `exceptions.xlsx` from Challenge 3 (to get it onto your computer: in Cloud Shell, **Manage files**, **Download**, `exceptions.xlsx`) and ask:
 
    > *From this workbook, list the queries we should raise in the partner portal: partner, type of query, reference, amount and a one-line reason. Use your skill for the type and action. Don't submit anything yet: wait for my approval.*
 

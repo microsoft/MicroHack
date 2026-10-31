@@ -151,7 +151,13 @@ New permissions take up to **five minutes** to apply. Use the time to look at th
    Try it first with only the statement attached: the agent should tell you it needs the ledger rather than invent numbers.
 
 2. While it works, the agent tells you what it's doing in plain words. When it finishes, look at the line under the answer: the model, how long it took, the tokens it used, and the **steps** it took, such as `view` (reading a file), `shell_call` (running Python), and `upload_file_from_workspace_to_foundry_project` (handing the file back). If a library is missing, it installs it or switches to another; that's the harness at work.
-3. Select `reconciliation.xlsx` under the answer to download it, and open it. Check two lines against the statement yourself.
+3. Get the workbook. The playground shows `reconciliation.xlsx` under the answer, but the file is kept in your Foundry project. In Cloud Shell, run:
+
+   ```bash
+   python3 -m frontierops download
+   ```
+
+   **What this does:** fetches the newest file your agent handed back from your Foundry project into your Cloud Shell home folder. To open it on your computer, select **Manage files**, then **Download**, and type `reconciliation.xlsx`. Open it and check two lines against the statement yourself.
 
 ![The agent's answer: what it did, reconciliation.xlsx to download, and the steps, time and tokens under it](../images/challenge-01-workbook.png)
 

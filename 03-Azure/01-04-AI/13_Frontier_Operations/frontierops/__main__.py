@@ -4,6 +4,7 @@
     python3 -m frontierops setup --industry distribution --account <StorageAccountName> --app-url <BackOfficeUrl> --project-id <FoundryProjectResourceId>
     python3 -m frontierops grant-agent ops-agent
     python3 -m frontierops publish-skill my-files/skills/reconciliation
+    python3 -m frontierops download
     python3 -m frontierops score ~/exceptions.xlsx
     python3 -m frontierops status
 
@@ -343,18 +344,34 @@ def _xlsx_sheets(path: Path) -> dict:
     for sheet in ET.fromstring(book.read("xl/workbook.xml")).find("m:sheets", ns):
         target = rels[sheet.get(f"{{{ns['r']}}}id")].lstrip("/")
         target = target if target.startswith("xl/") else f"xl/{target}"
-        rows = []
+        grid: dict[int, dict[int, str]] = {}
+        next_row = 0
         for row in ET.fromstring(book.read(target)).iter(f"{{{ns['m']}}}row"):
-            values = []
+            # Hand-written workbooks sometimes repeat a row or skip references, so place cells by their own address.
+            next_row = int(row.get("r") or next_row + 1)
+            next_col = 0
             for cell in row.findall("m:c", ns):
+                ref = re.match(r"([A-Z]+)(\d+)$", cell.get("r") or "")
+                if ref:
+                    next_col = 0
+                    for letter in ref.group(1):
+                        next_col = next_col * 26 + ord(letter) - 64
+                    row_number = int(ref.group(2))
+                else:
+                    next_col += 1
+                    row_number = next_row
                 kind, value = cell.get("t"), cell.find("m:v", ns)
                 if kind == "s" and value is not None:
-                    values.append(shared[int(value.text)])
+                    text = shared[int(value.text)]
                 elif kind == "inlineStr":
-                    values.append("".join(t.text or "" for t in cell.iter(f"{{{ns['m']}}}t")))
+                    text = "".join(t.text or "" for t in cell.iter(f"{{{ns['m']}}}t"))
                 else:
-                    values.append(value.text if value is not None else "")
-            rows.append(values)
+                    text = value.text if value is not None else ""
+                grid.setdefault(row_number, {})[next_col] = text
+        rows = []
+        for row_number in sorted(grid):
+            cells = grid[row_number]
+            rows.append([cells.get(c, "") for c in range(1, max(cells) + 1)])
         sheets[sheet.get("name")] = rows
     return sheets
 
@@ -370,9 +387,11 @@ CATEGORY_WORDS = [
     ("duplicate", ("duplicate", "double")),
     ("credit", ("credit", "refund", "adjustment", "return premium")),
     ("missing_on_statement", ("missing on statement", "missing from statement", "not on statement", "ledger only",
-                              "missing on their statement", "missing payout")),
+                              "missing on their statement", "missing payout", "unmatched in ledger", "unmatched on ledger",
+                              "only in ledger", "only in our ledger", "in ledger only")),
     ("missing_in_ledger", ("missing in ledger", "missing from ledger", "not in ledger", "not in our ledger",
-                           "statement only", "missing in our ledger")),
+                           "statement only", "missing in our ledger", "unmatched on statement", "unmatched in statement",
+                           "only on statement", "only on the statement", "on statement only")),
     ("mismatch", ("mismatch", "difference", "dispute", "query", "claim", "variance")),
 ]
 
@@ -408,7 +427,7 @@ def score(workbook: Path, pack_id: str) -> dict:
         for row in rows[header + 1:]:
             if len(row) > max(ref_col, cat_col) and row[ref_col].strip() \
                     and not row[ref_col].strip().lower().startswith(("total", "summary", "grand")):
-                found[(partner, _normalise_reference(row[ref_col]))] = _category(row[cat_col])
+                found[(partner, _normalise_reference(row[ref_col]))] = (_category(row[cat_col]), row[cat_col].strip())
     results = {"correct": 0, "total": 0, "wrong": [], "extra": [], "partners": sorted({p for p, _ in found})}
     if not found:
         raise SetupError("No partner sheets with a reference and a category column were found in the workbook. "
@@ -420,7 +439,7 @@ def score(workbook: Path, pack_id: str) -> dict:
         results["total"] += 1
         key = (item["partner_id"], _normalise_reference(item["reference"]))
         wanted.add(key)
-        got = found.get(key)
+        got, words = found.get(key, (None, ""))
         if item["kind"] == "within_tolerance":
             ok = got in (None, "within_tolerance")
         else:
@@ -428,7 +447,8 @@ def score(workbook: Path, pack_id: str) -> dict:
         if ok:
             results["correct"] += 1
         else:
-            results["wrong"].append((names[item["partner_id"]]["name"], item["reference"], item["kind"], got or "not listed"))
+            results["wrong"].append((names[item["partner_id"]]["name"], item["reference"], item["kind"],
+                                     f"'{words}'" if got else "nothing (it isn't listed)"))
     results["extra"] = sorted(f"{names[p]['name']} {ref}" for p, ref in set(found) - wanted)
     return results
 
@@ -440,11 +460,39 @@ def print_score(workbook: Path, pack_id: str) -> None:
           f"({partners} partner{'s' if partners != 1 else ''}).")
     labels = {"mismatch": "amount mismatch", "within_tolerance": "within tolerance (accept, don't list)",
               "missing_on_statement": "missing on statement", "missing_in_ledger": "missing in ledger",
-              "duplicate": "possible duplicate", "credit": "credit to confirm", "other": "a category the score didn't recognise"}
+              "duplicate": "possible duplicate", "credit": "credit to confirm"}
     for partner, reference, kind, got in result["wrong"]:
-        print(f"  {partner} {reference}: should be {labels[kind]}, the workbook says {labels.get(got, got)}")
+        print(f"  {partner} {reference}: should be {labels[kind]}, the workbook says {got}")
     for extra in result["extra"]:
         print(f"  Listed but not in the answer key: {extra}")
+
+
+def _foundry_get(url: str, token: str) -> bytes:
+    request = urllib.request.Request(url, headers={"Authorization": f"Bearer {token}"})
+    try:
+        with urllib.request.urlopen(request, timeout=60) as response:
+            return response.read()
+    except urllib.error.HTTPError as err:
+        raise SetupError(f"Foundry answered {err.code}: {err.read().decode('utf-8', 'replace')[:300]}")
+
+
+def download(project_endpoint: str, which: str | None = None, target_dir: Path | None = None) -> Path:
+    """Fetch a file an agent handed back, from the project's files, into the Cloud Shell home folder."""
+    base = f"{project_endpoint.rstrip('/')}/openai/v1/files"
+    token = _foundry_token()
+    if which and which.startswith("assistant-"):
+        meta = json.loads(_foundry_get(f"{base}/{which}", token))
+    else:
+        listing = json.loads(_foundry_get(f"{base}?limit=100&order=desc", token)).get("data", [])
+        returned = [f for f in listing if f.get("purpose") == "assistants" and (not which or f.get("filename") == which)]
+        if not returned:
+            raise SetupError(f"No file{' called ' + which if which else ''} has been handed back by an agent yet. "
+                             "Ask the agent to upload the file so you can download it, then run this again.")
+        meta = max(returned, key=lambda f: f.get("created_at", 0))
+    target = (target_dir or Path.home()) / Path(meta["filename"]).name
+    target.write_bytes(_foundry_get(f"{base}/{meta['id']}/content", token))
+    print(f"Saved {target}: '{meta['filename']}', handed back by your agent ({target.stat().st_size:,} bytes).")
+    return target
 
 
 def status(account: str) -> None:
@@ -477,6 +525,9 @@ def main(argv=None) -> int:
     score_parser = sub.add_parser("score", help="Check an agent's exceptions workbook against the answer key")
     score_parser.add_argument("workbook", help="The .xlsx file the agent returned")
     score_parser.add_argument("--industry", help="distribution, telco, energy, insurance or retail (saved by setup)")
+    download_parser = sub.add_parser("download", help="Download a file an agent handed back into your Cloud Shell home folder")
+    download_parser.add_argument("file", nargs="?", help="File name or file ID (default: the newest file)")
+    download_parser.add_argument("--project-id", help="FoundryProjectResourceId (saved by setup)")
     sub.add_parser("status", help="Show what is loaded in your lab")
     args = parser.parse_args(argv)
     lab = load_lab()
@@ -489,11 +540,13 @@ def main(argv=None) -> int:
             account = need(getattr(args, "setup_account", None) or args.account, "account", "StorageAccountName")
             setup(account, args.industry.lower(), args.app_url, args.project_id)
             return 0
-        if args.command in ("grant-agent", "publish-skill"):
+        if args.command in ("grant-agent", "publish-skill", "download"):
             project_id = need(args.project_id or lab.get("project_id"), "project id", "FoundryProjectResourceId")
             endpoint = project_endpoint_from_id(project_id)
             if args.command == "grant-agent":
                 grant_agent(args.agent, endpoint, project_id, args.identity)
+            elif args.command == "download":
+                download(endpoint, args.file)
             else:
                 publish_skill(Path(args.folder), endpoint)
             return 0

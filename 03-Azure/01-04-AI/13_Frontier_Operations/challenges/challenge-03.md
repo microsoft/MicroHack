@@ -34,9 +34,10 @@ Subagents aren't always the answer. They pay off when the work splits into **ind
 
 ### Part B: Check the result (10 min)
 
-1. Download `exceptions.xlsx`, upload it to Cloud Shell and score it:
+1. Fetch the workbook into Cloud Shell and score it:
 
    ```bash
+   python3 -m frontierops download
    python3 -m frontierops score ~/exceptions.xlsx
    ```
 

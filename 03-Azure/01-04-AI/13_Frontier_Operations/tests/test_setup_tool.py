@@ -243,7 +243,7 @@ def test_score_spots_the_typical_mistakes_without_a_skill(tmp_path, capsys):
     assert tool.main(["score", str(tmp_path / "x.xlsx"), "--industry", "distribution"]) == 0
     out = capsys.readouterr().out
     assert "Score: 20 of 30" in out
-    assert "should be credit to confirm, the workbook says missing in ledger" in out
+    assert "should be credit to confirm, the workbook says 'Statement only'" in out
 
 
 def test_score_flags_lines_that_are_not_in_the_answer_key(tmp_path):
@@ -304,3 +304,51 @@ def test_setup_puts_every_file_in_one_zip_to_download(tmp_path, monkeypatch, cap
     assert "my-files/ledger-export.csv" in names and "my-files/statements/brightwell.csv" in names
     assert "my-files/skills/reconciliation/SKILL.md" in names
     assert "type my-files.zip" in capsys.readouterr().out
+
+
+def test_download_fetches_the_newest_file_an_agent_handed_back(tmp_path, monkeypatch, capsys):
+    tool.save_lab(project_id="/s/accounts/acct/projects/proj")
+    monkeypatch.setattr(tool.Path, "home", lambda: tmp_path)
+    monkeypatch.setattr(tool, "_foundry_token", lambda: "t")
+    listing = {"data": [{"id": "assistant-old", "filename": "exceptions.xlsx", "purpose": "assistants", "created_at": 1},
+                        {"id": "assistant-new", "filename": "exceptions.xlsx", "purpose": "assistants", "created_at": 2},
+                        {"id": "file-in", "filename": "brightwell.csv", "purpose": "user_data", "created_at": 3}]}
+    fetched = []
+
+    def fake_get(url, token):
+        fetched.append(url)
+        return json.dumps(listing).encode() if "?" in url else b"xlsx-bytes"
+
+    monkeypatch.setattr(tool, "_foundry_get", fake_get)
+    assert tool.main(["download"]) == 0
+    assert fetched[0].startswith("https://acct.services.ai.azure.com/api/projects/proj/openai/v1/files?")
+    assert fetched[1].endswith("/files/assistant-new/content")
+    assert (tmp_path / "exceptions.xlsx").read_bytes() == b"xlsx-bytes"
+    assert "handed back by your agent" in capsys.readouterr().out
+
+
+def test_download_explains_when_nothing_was_handed_back(monkeypatch, capsys):
+    tool.save_lab(project_id="/s/accounts/acct/projects/proj")
+    monkeypatch.setattr(tool, "_foundry_token", lambda: "t")
+    monkeypatch.setattr(tool, "_foundry_get", lambda url, token: json.dumps({"data": []}).encode())
+    assert tool.main(["download", "exceptions.xlsx"]) == 1
+    assert "Ask the agent to upload the file" in capsys.readouterr().err
+
+
+def test_score_reads_hand_written_workbooks_with_repeated_rows(tmp_path):
+    import zipfile
+    sheet = ('<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>'
+             '<row r="1"><c r="A1" t="inlineStr"><is><t>reference</t></is></c></row>'
+             '<row r="1"><c r="B1" t="inlineStr"><is><t>category</t></is></c></row>'
+             '<row r="2"><c r="A2" t="inlineStr"><is><t>CN-478</t></is></c><c r="B2" t="inlineStr"><is><t>Credit to confirm</t></is></c></row>'
+             '</sheetData></worksheet>')
+    with zipfile.ZipFile(tmp_path / "x.xlsx", "w") as book:
+        book.writestr("xl/workbook.xml", '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" '
+                      'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>'
+                      '<sheet name="Brightwell Packaging" sheetId="1" r:id="rId1"/></sheets></workbook>')
+        book.writestr("xl/_rels/workbook.xml.rels", '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+                      '<Relationship Id="rId1" Target="worksheets/sheet1.xml"/></Relationships>')
+        book.writestr("xl/worksheets/sheet1.xml", sheet)
+    assert tool._xlsx_sheets(tmp_path / "x.xlsx")["Brightwell Packaging"] == [["reference", "category"], ["CN-478", "Credit to confirm"]]
+    result = tool.score(tmp_path / "x.xlsx", "distribution")
+    assert result["total"] == 6 and result["correct"] == 2  # the credit, and the within-tolerance line left out

@@ -23,7 +23,13 @@ The pattern for the rest of the day: **instructions set the outcome, skills set 
 
    > *Reconcile this partner's statement against our ledger export. Create exceptions.xlsx with a sheet named after the partner (reference, category, our amount, their amount, difference, action), and give it back to me as a file.*
 
-3. Download `exceptions.xlsx`. In Cloud Shell, select **Manage files**, then **Upload**, and upload it. It lands in your home folder.
+3. Bring the workbook into Cloud Shell:
+
+   ```bash
+   python3 -m frontierops download
+   ```
+
+   **What this does:** saves the newest file your agent handed back, `exceptions.xlsx`, in your Cloud Shell home folder (`~`).
 4. Score it against the answer key for your company:
 
    ```bash
@@ -81,7 +87,7 @@ If you publish again later, you get version 2, 3 and so on. Older versions are k
 
 1. In the new chat, attach the same two files and send the same request as in Part A.
 2. Watch the steps: early on the agent calls **skill** with `reconciliation` and loads your method before it writes any code.
-3. Download the new workbook, upload it to Cloud Shell and score it again. Name it differently, or upload it over the first one.
+3. Run `python3 -m frontierops download` again to fetch the new workbook (it replaces the first one in `~`), and score it again.
 4. Compare the two scores. Which lines changed? Find the rule in your skill that made the difference.
 
 > 📸 **Screenshot to add:** `images/challenge-02-score-after.png`: Cloud Shell: the score with the skill, next to the score without it.

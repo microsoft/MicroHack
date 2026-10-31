@@ -15,27 +15,53 @@ An agent that does real work is a new kind of colleague: it reads company data, 
 ### Part A: Only the tools it needs (5 min)
 
 1. Open `ops-agent`, go to **Tools** and open **Harness tools**.
-2. Your agent reads files, writes files, runs Python and uses subagents. It doesn't need to fetch web pages. Turn **Web** off and keep the other four on.
+2. Your agent reads files, writes files, runs Python and uses subagents. It doesn't need to fetch web pages. Untick **Web**, keep the other four on, and select **Done**.
+
+   ![Harness tools with Web turned off](../images/challenge-06-harness-tools-web-off.png)
+
 3. Select **Save and start new chat**.
 
 **Shell** is the broadest tool: a shell command can reach the network by itself. So switching off **Web** alone isn't a boundary. Part B is.
 
-### Part B: Only the sites you allow (15 min)
+### Part B: Only the sites you allow (20 min)
 
-A guardrail with **network egress rules** decides which internet addresses the agent's workspace may reach. Everything else is blocked.
+A guardrail with **egress rules** decides which internet addresses the agent's workspace may reach. Everything else is blocked. As the portal says, network controls apply to hosted agents and to prompt agents on the Copilot harness, like yours.
 
-1. Select **Build**, then **Guardrails**, then **Create**. Name it `ops-egress`.
-2. Open **Network rules**. Set the default to **Deny** and add one allow rule for your back office: `*.azurewebsites.net`.
-3. Start in **Audit** mode: requests that would be blocked are logged, not stopped. Assign the guardrail to `ops-agent` and save.
-4. In a new chat, ask:
+1. Select **Build**, then **Guardrails**, then **Create guardrail**. Under **Network**, keep **Egress rules** ticked with the action **Deny**: that's what happens to anything no rule allows. Select **Add rules**.
+
+   ![Create guardrail: Network, Egress rules with Add rules and the default action Deny](../images/challenge-06-guardrail-network.png)
+
+2. In **Create egress rules**, set **Mode** to **Audit**: requests that would be blocked are logged, not stopped. Add one rule: **Host match** `*.azurewebsites.net`, **Action** **Allow**, and select **Add**, then **Create**.
+
+   ![Create egress rules: Audit mode, one Allow rule for *.azurewebsites.net](../images/challenge-06-egress-rules.png)
+
+3. Select **Next**. Tick **ops-agent** only (no models), and **Next** again. Applying a guardrail creates a new version of the agent.
+
+   ![Select agents and models: ops-agent ticked](../images/challenge-06-guardrail-assign.png)
+
+4. Name the guardrail `ops-agent-egress`, check the review and select **Create**. The review also shows the controls every guardrail includes, such as jailbreak and content-harm filters.
+
+   ![Review: name, the agent, egress rules with Deny, and the default controls](../images/challenge-06-guardrail-review.png)
+
+5. In a new chat with `ops-agent`, ask:
 
    > *Run `curl -sI https://www.bing.com` and `curl -sI <BackOfficeUrl>/health` in the shell and show me the first line of each answer.*
 
-   In audit mode both work. Find the audit entry for `www.bing.com`.
-5. Switch the guardrail to **Enforce**, save, start a new chat and ask again. Bing is refused with **403**, and the answer says why. Your back office still answers.
-6. Run your Challenge 3 request once more with all five statements. Does the reconciliation still work with the internet closed?
+   In Audit mode both answer.
 
-> 📸 **Screenshot to add:** `images/challenge-06-network-rules.png`: The ops-egress guardrail: default Deny, allow *.azurewebsites.net, Enforce.
+   ![Audit mode: both requests answer](../images/challenge-06-egress-audit.png)
+
+6. Now find out what Enforce would have blocked. Select **Traces** on the answer line and look for **Network egress decision** entries. Each shows the host, the decision (`Allow`, or `AuditWouldDeny` for what Enforce would block) and the rule that matched. Foundry itself is always allowed by a built-in rule.
+
+   ![A Network egress decision in the trace: host, decision, matched rule, enforcement Audit](../images/challenge-06-egress-trace.png)
+
+   Look closely and you'll see `AuditWouldDeny` not only for Bing but for `*.monitor.azure.com` and `*.applicationinsights.azure.com`: that's the harness sending your traces. Block those and you lose the traces you'll need in Part E and Challenge 7. This is exactly why you audit before you enforce.
+
+7. Open the guardrail again (**Build**, **Guardrails**, `ops-agent-egress`), edit its egress rules and add two more Allow rules: `*.monitor.azure.com` and `*.applicationinsights.azure.com`. Switch **Mode** to **Enforce** and save.
+8. Start a new chat and ask the same `curl` question again. Bing is now refused with **403**, and your back office still answers.
+9. Run your Challenge 3 request once more with all five statements. Does the reconciliation still work with the internet closed?
+
+> 📸 **Screenshot to add:** `images/challenge-06-network-rules.png`: The ops-agent-egress rules in Enforce mode: the back office and Azure Monitor allowed, everything else denied.
 
 > 📸 **Screenshot to add:** `images/challenge-06-egress-blocked.png`: The agent's shell step: Bing refused with 403, the back office answering.
 
@@ -82,7 +108,7 @@ One partner's statement in every pack has a line that isn't a transaction: it's 
 ## ✔️ Success criteria
 
 - [ ] `ops-agent` has only the harness tools it needs.
-- [ ] The `ops-egress` guardrail blocks everything but your back office, and you saw a blocked request.
+- [ ] The `ops-agent-egress` guardrail blocks everything but your back office and the telemetry the harness needs, and you saw a blocked request.
 - [ ] Instructions hidden in a statement are reported for review, not followed and not hidden.
 - [ ] You can show the agent's identity and its one role.
 - [ ] You can walk a colleague through a trace of a full run.

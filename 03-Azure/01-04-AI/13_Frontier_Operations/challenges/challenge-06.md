@@ -120,19 +120,22 @@ One partner's statement in every pack has a line that isn't a transaction: it's 
 
 ### Part D: Its own identity, least access (5 min)
 
-1. Every agent has its **own Microsoft Entra identity**, separate from yours. Open `ops-agent`, select **Details** and look at the **Identity & access** card: the **Entra agent identity** (`ops-agent-AgentIdentity`) and the blueprint it was created from. Then, in the [Azure portal](https://portal.azure.com), open your Foundry project resource, select **Access control (IAM)**, then **Role assignments**, and find `ops-agent-AgentIdentity`.
-2. It has exactly one role, **Foundry User**, on this project, which you gave it in Challenge 1. It has no access to your storage account, subscription or any other project.
-3. The ERP key isn't the agent's at all: it belongs to the `erp` connection, and the browser signs in with the project's identity.
+1. Every agent has its **own Microsoft Entra identity**, separate from yours. Open `ops-agent`, select **Details** and look at the **Identity & access** card: the **Entra agent identity** (`ops-agent-AgentIdentity`) and the blueprint it was created from.
+2. In the [Azure portal](https://portal.azure.com), open your Foundry project resource (`frontier-operations`), select **Access control (IAM)**, then **Role assignments**, and search for `ops-agent`. Its identity has exactly one role, **Foundry User**, on this project, which you gave it in Challenge 1. It has no access to your storage account, your subscription or any other project.
 
-> 📸 **Screenshot to add:** `images/challenge-06-agent-identity.png`: Access control (IAM): the ops-agent identity with only Foundry User on the project.
+   ![Access control (IAM) on the project: the ops-agent identity with only Foundry User](../images/challenge-06-agent-identity.png)
+
+3. The ERP key isn't the agent's at all: it belongs to the `erp` connection, and the browser signs in with the project's identity.
 
 ### Part E: See every step (10 min)
 
-1. Open **Traces** for `ops-agent` and open your Challenge 3 run.
-2. Find, in order: the skill loading, the five subagent tasks, the shell commands, the file upload and the token counts.
-3. Open a Challenge 5 run: find each browser step and the approval message that came before it.
+You've opened traces in every challenge. Now read one as a reviewer would.
 
-> 📸 **Screenshot to add:** `images/challenge-06-trace.png`: A trace of the full run: skill, subagents, shell steps and tokens.
+1. Open **Traces** for your Challenge 3 run (all five partners). Find, in order: the skill loading, the five subagent tasks, the shell commands, the file upload, and the totals in the header (steps, model calls, tool calls, time, tokens).
+2. Open a Challenge 5 run: find each browser step, the `close_browser_session` at the end, and the approval message that came before them.
+3. Open the Part B run in Enforce mode and find the **Network egress decision** for Bing: `Deny`.
+
+Ask yourselves: could someone who wasn't in the room reconstruct what the agent did, and why, from this alone? (The [Challenge 3 trace](challenge-03.md#part-b-check-the-result-10-min) shows what a full run looks like.)
 
 ## ✔️ Success criteria
 

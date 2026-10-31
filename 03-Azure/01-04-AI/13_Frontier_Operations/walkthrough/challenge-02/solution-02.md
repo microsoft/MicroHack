@@ -6,7 +6,17 @@
 
 ## Expected scores
 
-Our runs on the distribution pack, `gpt-5.4-mini`, all five partners at once:
+Our guided run in the portal, distribution pack, Brightwell Packaging, `gpt-5.4-mini`:
+
+| | Without the skill | With the skill |
+|---|---|---|
+| Score | **4 of 6** | **6 of 6** |
+| Lines judged differently | INV-41009 (GBP 1.00, within tolerance) called *Amount mismatch*; CN-478 (credit note) called *Unmatched on statement* | none |
+| Time, tokens | 56 s, 148,232 | 42 s, 239,080 |
+
+Without a skill, results vary between 3 and 4 of 6: the tolerance line and the credit note are almost always wrong, the duplicate sometimes. With the skill the run uses more tokens (it reads the skill) and is often faster, because it doesn't have to work out the rules.
+
+Our API runs, all five partners at once:
 
 | | Without the skill | With the skill |
 |---|---|---|

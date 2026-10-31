@@ -98,11 +98,15 @@ If you publish again later, you get version 2, 3 and so on. Older versions are k
 ### Part E: Measure again (10 min)
 
 1. In the new chat, attach the same two files and send the same request as in Part A.
-2. Watch the steps: early on the agent calls **skill** with `reconciliation` and loads your method before it writes any code.
-3. Run `python3 -m frontierops download` again to fetch the new workbook (it replaces the first one in `~`), and score it again.
-4. Compare the two scores. Which lines changed? Find the rule in your skill that made the difference.
+2. Look at the steps under the answer: the first one is now **skill**. The agent loaded your method before it wrote any code.
 
-> 📸 **Screenshot to add:** `images/challenge-02-score-after.png`: Cloud Shell: the score with the skill, next to the score without it.
+   ![The answer with the skill: the first step is skill, then the work and the upload](../images/challenge-02-skill-run.png)
+
+3. Run `python3 -m frontierops download` again to fetch the new workbook (it replaces the first one in `~`), and score it again.
+
+   ![Cloud Shell: with the skill, 6 of 6](../images/challenge-02-score-after.png)
+
+4. Compare the two scores. Which lines changed? Find the rule in your skill that made the difference.
 
 ## ✔️ Success criteria
 

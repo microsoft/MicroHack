@@ -46,6 +46,12 @@ Subagents aren't always the answer. They pay off when the work splits into **ind
 
    **What this does:** the same check as in Challenge 2, now for all five partners: 30 planted lines in total.
 
+   Don't expect a perfect score every time. In our run, four partners were perfect and one wasn't: Northgate Freight writes its references as `IN-41015` instead of `INV-41015`, and that partner's subagent didn't match them, so it reported most of the statement as missing.
+
+   ![Cloud Shell: 26 of 30, with one partner's lines mismatched by its subagent](../images/challenge-03-score.png)
+
+   This is why a person still checks the result. If one partner looks wrong, ask the agent in the same chat to redo just that partner, for example: *Northgate Freight writes references as IN- instead of INV-. Redo Northgate using the matching rules in your skill, update exceptions.xlsx and give it back to me.* Then download and score again.
+
 2. Open the **Summary** sheet. Which partner has the most money at stake? That's where your approver will look first.
 3. Open **Traces** for `ops-agent` (in the agent, select **Traces**) and find this run. Expand it and find the five subagent tasks. How long did the slowest one take?
 

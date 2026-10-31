@@ -38,7 +38,7 @@ A **toolbox** is a named, versioned set of tools that agents share. You'll add t
 
 ### Part C: Give the toolbox to your agent (5 min)
 
-1. Open `ops-agent`. In **Tools**, select **Add**, then **Add a toolbox**, and choose `ops-tools`.
+1. Open `ops-agent`. In **Tools**, select **Add**, then **Browse toolboxes**, and choose `ops-tools`.
 2. Add one sentence to the instructions:
 
    ```text

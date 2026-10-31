@@ -83,10 +83,17 @@ If you publish again later, you get version 2, 3 and so on. Older versions are k
 
    ![The reconciliation skill in Foundry: description, version, and SKILL.md in the Skill preview](../images/challenge-02-skill-in-portal.png)
 
-2. Open `ops-agent`. In the **Tools** section select **Add**, then **Add skills**, choose `reconciliation` and select **Add**.
-3. Select **Save and start new chat** and wait for the new version to become active.
+2. Open `ops-agent`. In the **Tools** section select **Add**, then **Add skills**.
 
-> 📸 **Screenshot to add:** `images/challenge-02-add-skill.png`: The agent's Tools section with the reconciliation skill added.
+   ![The Add menu on the agent: Web search, Code interpreter, Add tools, Add skills and Browse toolboxes](../images/challenge-02-add-menu.png)
+
+3. On the **Configured** tab, select `reconciliation` and then **Add**. (The **New skill** tab creates a skill from text typed in the portal; this hack publishes the file with the tool instead, so the skill your team wrote is exactly what the agent loads.)
+
+   ![Select a skill: the Configured tab with reconciliation selected](../images/challenge-02-select-skill.png)
+
+4. The skill now appears under **Tools** next to **Harness tools**. Select **Save and start new chat** and wait for the new version to become active.
+
+   ![The agent's Tools: Harness tools and the reconciliation skill](../images/challenge-02-add-skill.png)
 
 ### Part E: Measure again (10 min)
 

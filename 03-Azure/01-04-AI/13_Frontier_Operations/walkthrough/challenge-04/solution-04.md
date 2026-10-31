@@ -6,7 +6,7 @@
 
 ## Expected tool calls
 
-For one partner, with the skill and the ERP tool and no ledger export attached:
+For one partner, with the skill and the ERP tool and no ledger export attached. In **Traces** each call is named `managed_tools-ops-tools___erp___<operation>`; our run had `listPartners`, `getCompany`, `getLedger` and three `addLedgerNote`, each about 2 to 5 seconds (the toolbox adds a few seconds per call):
 
 1. `getCompany`: company, currency, **tolerance** and period (the agent may skip it if the skill already gives the tolerance).
 2. `listPartners` (optional) to find the partner's ID, then `getLedger` with `partner_id`.

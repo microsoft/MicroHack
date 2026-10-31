@@ -87,7 +87,9 @@ The agent's identity already has the role it needs to use a toolbox: you gave it
    Count the notes. Lines that are only on the partner's statement (a missing invoice, a credit note) have no ledger line yet, so there's nothing to attach a note to: in our run five exceptions gave three notes. That's the agent respecting the system, not skipping work.
 
 3. Open `<BackOfficeUrl>` (the activity page). Each note the agent wrote is there, with the time and its text. The reads don't change anything, so the ERP doesn't log them; you'll find them in **Traces**.
-4. Open **Traces**, find this run and expand the ERP calls. Look at what was sent. Is the API key anywhere in the trace?
+4. Open **Traces** on the answer line. Each ERP call is listed by name, as `managed_tools-ops-tools___erp___` followed by the operation: `listPartners`, `getCompany`, `getLedger`, then `addLedgerNote` once per note. Select an `addLedgerNote` call: the input is the reference and the note, the output is what the ERP saved. Is the API key anywhere in the trace?
+
+   ![Traces: the ERP operations by name, addLedgerNote selected with its input and the ERP's reply, and no key](../images/challenge-04-trace-erp.png)
 
 > 📸 **Screenshot to add:** `images/challenge-04-erp-notes.png`: The back-office activity page with the notes the agent wrote to the ERP.
 

@@ -56,6 +56,8 @@ The setup command put a starter skill in `my-files/skills/reconciliation/SKILL.m
 3. Keep the first lines (the front matter between the two `---` lines). The **name** must stay `reconciliation`. The **description** is what the agent reads to decide when to use the skill, so make it one clear sentence.
 4. Save with Ctrl+S.
 
+![The Cloud Shell editor with the team's skill: front matter, matching, tolerance and the exceptions table](../images/challenge-02-edit-skill.png)
+
 > [!TIP]
 > Business people write the best skills. Let the person who knows the process dictate and the person at the keyboard type.
 
@@ -73,7 +75,7 @@ python3 -m frontierops publish-skill my-files/skills/reconciliation
 
 If you publish again later, you get version 2, 3 and so on. Older versions are kept, so you can always go back. If the tool asks you to sign in, you're in a new Cloud Shell session: run `az login --use-device-code` as in Challenge 1, then publish again.
 
-> 📸 **Screenshot to add:** `images/challenge-02-publish-skill.png`: Cloud Shell: publish-skill reports the version it published.
+![Cloud Shell: publish-skill checks the file, publishes a new version and makes it the default](../images/challenge-02-publish-skill.png)
 
 ### Part D: Give the skill to your agent (5 min)
 

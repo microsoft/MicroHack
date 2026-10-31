@@ -19,18 +19,21 @@ Subagents aren't always the answer. They pay off when the work splits into **ind
 ### Part A: Hand over the whole month (15 min)
 
 1. Open `ops-agent` and start a **new chat**. Check that the `reconciliation` skill is still attached.
-2. Attach **all five** statements and `ledger-export.csv`, and ask:
+2. Attach **all five** statements and `ledger-export.csv` (the chat shows the first five files and **+1**), and ask:
 
    > *Reconcile every partner statement against our ledger export, one subagent per partner. Combine the results into exceptions.xlsx with one sheet per partner (reference, category, our amount, their amount, difference, action) and a Summary sheet with the number of exceptions and the money at stake per partner. Give the workbook back to me as a file.*
 
-3. Note the time you sent it. While it works, watch the steps:
-   - **skill**: the lead agent loads your method.
-   - **task**, five times: one subagent per partner, each with its own brief.
-   - **read_agent**: the lead collects each helper's result.
-   - **shell** and an upload: the lead builds and returns the workbook.
-4. Note the time the answer arrived.
+   ![The chat with all five statements and the ledger export attached](../images/challenge-03-attach-all.png)
 
-> 📸 **Screenshot to add:** `images/challenge-03-subagent-steps.png`: The agent's steps: the skill, five task calls and read_agent.
+3. It takes a minute or two. When the answer arrives, look at the line under it: the time it took, the tokens, and the steps. New ones appear:
+   - **skill**: the lead agent loads your method.
+   - **task**: the lead starts a subagent, one per partner, each with its own brief.
+   - **read_agent**: the lead collects each helper's result.
+   - **shell_call** and **upload_file_from_workspace_to_foundry_project**: the lead builds and returns the workbook.
+
+   ![The answer for all five partners: 91 seconds, with skill, task, read_agent and the upload among the steps](../images/challenge-03-subagent-steps.png)
+
+4. Compare the time with how long your team takes for the month today.
 
 ### Part B: Check the result (10 min)
 

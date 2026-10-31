@@ -6,7 +6,9 @@
 
 ## Expected run
 
-Our runs on the distribution pack, all five partners, `gpt-5.4-mini`, one request:
+Our guided run in the portal (distribution, `gpt-5.4-mini`, with the skill): **91 seconds, 698,295 tokens**, steps `skill`, `view`, `task`, `shell_call`, `read_agent` and the upload. The answer line lists each kind of step once; the trace shows each of the five `task` calls.
+
+Our API runs on the distribution pack, all five partners, `gpt-5.4-mini`, one request:
 
 | | Without the skill | With the skill |
 |---|---|---|

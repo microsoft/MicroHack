@@ -98,6 +98,15 @@ def test_grant_agent_needs_a_saved_agent(monkeypatch, capsys):
     assert "no identity yet" in capsys.readouterr().err
 
 
+def test_grant_agent_explains_the_sign_in_when_cloud_shell_has_no_token(monkeypatch, capsys):
+    def fake(*args, capture=False, storage=True):
+        raise tool.SetupError("Azure command failed\nERROR: Timeout waiting for token from portal. Audience: x")
+
+    monkeypatch.setattr(tool, "_az", fake)
+    assert tool.main(["grant-agent", "ops-agent", "--project-id", "/x/accounts/a/projects/p"]) == 1
+    assert "az login --use-device-code" in capsys.readouterr().err
+
+
 def test_publish_skill_explains_how_to_sign_in_for_foundry(tmp_path, monkeypatch, capsys):
     folder = _write_skill(tmp_path / "reconciliation", GOOD)
 
@@ -107,7 +116,7 @@ def test_publish_skill_explains_how_to_sign_in_for_foundry(tmp_path, monkeypatch
     monkeypatch.setattr(tool, "_az", fake)
     assert tool.main(["publish-skill", str(folder), "--project-id", "/s/accounts/x/projects/p"]) == 1
     err = capsys.readouterr().err
-    assert "az login --use-device-code --scope https://ai.azure.com/.default" in err and "Timeout" in err
+    assert "az login --use-device-code" in err and "Timeout" in err
 
 
 def _write_skill(folder, text):

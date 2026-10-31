@@ -37,7 +37,15 @@ The **Microsoft Copilot harness** changes that. It gives your agent its own secu
 
    **Why Cloud Shell?** It's a terminal in your browser that is already signed in as you, with the Azure CLI and Python installed. Nothing is installed on your computer.
 
-3. Copy this lab's files from GitHub into Cloud Shell, and move into its folder:
+3. Sign in once more, inside Cloud Shell:
+
+   ```bash
+   az login --use-device-code
+   ```
+
+   **What this does:** shows a link and a code. Open the link, enter the code and choose your lab account; if asked for a subscription, press Enter. Cloud Shell's automatic sign-in covers Azure resources, but later commands also talk to Microsoft Foundry and Microsoft Entra, and they need this full sign-in. You do it once per Cloud Shell session.
+
+4. Copy this lab's files from GitHub into Cloud Shell, and move into its folder:
 
    ```bash
    git clone --depth 1 --filter=blob:none --sparse https://github.com/microsoft/MicroHack frontier-ops
@@ -48,7 +56,7 @@ The **Microsoft Copilot harness** changes that. It gives your agent its own secu
 
    **What this does:** the MicroHack repository holds many labs. These four lines download only this one (the industry packs, the setup tool and the templates) into a folder called `frontier-ops`, and open it. Nothing changes in Azure yet.
 
-4. Load your company. Replace each `<...>` with the value from your lab dashboard, and the industry with the one your team picked:
+5. Load your company. Replace each `<...>` with the value from your lab dashboard, and the industry with the one your team picked:
 
    ```bash
    python3 -m frontierops setup --industry distribution --account <StorageAccountName> --app-url <BackOfficeUrl> --project-id <FoundryProjectResourceId>
@@ -63,7 +71,7 @@ The **Microsoft Copilot harness** changes that. It gives your agent its own secu
 
    You can run it again at any time, for example to switch industry. It replaces the previous company.
 
-5. Download the files to your computer: in Cloud Shell select **Manage files**, then **Download**, and enter the path of each file, starting with `frontier-ops/03-Azure/01-04-AI/13_Frontier_Operations/my-files/`: `ledger-export.csv`, `handbook.md` and each `statements/<partner>.csv`. Keep them in one folder.
+6. Download the files to your computer: in Cloud Shell select **Manage files**, then **Download**, and enter the path of each file, starting with `frontier-ops/03-Azure/01-04-AI/13_Frontier_Operations/my-files/`: `ledger-export.csv`, `handbook.md` and each `statements/<partner>.csv`. Keep them in one folder.
 
 ![Cloud Shell: the setup command shows your company, its partners and the files in my-files](../images/challenge-01-setup.png)
 

@@ -160,8 +160,13 @@ def check_app(app_url: str, profile: dict) -> None:
         print(f"  Portal check: could not reach {base}/portal ({err}). It can take a minute to start; open it in your browser.")
 
 
-AI_TOKEN_HELP = ("Cloud Shell's built-in sign-in can't get a token for Microsoft Foundry. Sign in once in this "
-                 "terminal, then run the command again:\n  az login --use-device-code --scope https://ai.azure.com/.default")
+AI_TOKEN_HELP = ("Cloud Shell's built-in sign-in can't get a token for this. Sign in once in this terminal "
+                 "(open the link, enter the code, choose your lab account), then run the command again:\n"
+                 "  az login --use-device-code")
+
+
+def _token_problem(err: SetupError) -> bool:
+    return any(word in str(err) for word in ("Timeout waiting for token", "AADSTS", "az login"))
 
 
 def _foundry_token() -> str:
@@ -174,18 +179,25 @@ def _foundry_token() -> str:
 
 def _agent_principal(agent: str, project_endpoint: str, project_id: str) -> str | None:
     """Find the agent's own identity. Its Entra name is <account>-<project>-<agent>-AgentIdentity."""
+    problems = []
     match = re.search(r"/accounts/([^/]+)/projects/([^/]+)$", project_id.rstrip("/"))
     if match:
         name = f"{match.group(1)}-{match.group(2)}-{agent}-AgentIdentity"
-        found = json.loads(_az("ad", "sp", "list", "--display-name", name, "--query", "[].id", "--output", "json",
-                               capture=True, storage=False) or "[]")
-        if found:
-            return found[0]
+        try:
+            found = json.loads(_az("ad", "sp", "list", "--display-name", name, "--query", "[].id", "--output", "json",
+                                   capture=True, storage=False) or "[]")
+            if found:
+                return found[0]
+        except SetupError as err:
+            problems.append(err)
     # Fall back to the agent definition in Foundry (needs a token for https://ai.azure.com).
     try:
         data = json.loads(_az("rest", "--method", "get", "--url", f"{project_endpoint.rstrip('/')}/agents/{agent}?api-version=v1",
                               "--resource", "https://ai.azure.com", capture=True, storage=False) or "{}")
-    except SetupError:
+    except SetupError as err:
+        problems.append(err)
+        if all(_token_problem(p) for p in problems):
+            raise SetupError(AI_TOKEN_HELP)
         return None
     latest = (data.get("versions") or {}).get("latest") or data
     return (latest.get("instance_identity") or data.get("instance_identity") or {}).get("principal_id")

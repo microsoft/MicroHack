@@ -55,27 +55,17 @@ The setup command put a starter skill in `my-files/skills/reconciliation/SKILL.m
 
 ### Part C: Publish it (5 min)
 
-1. Sign in once for Microsoft Foundry. Cloud Shell is signed in to Azure already, but publishing a skill talks to Foundry directly, which needs its own sign-in:
+```bash
+python3 -m frontierops publish-skill my-files/skills/reconciliation
+```
 
-   ```bash
-   az login --use-device-code --scope https://ai.azure.com/.default
-   ```
+**What this does:**
 
-   **What this does:** shows a code and a link. Open the link, enter the code and choose your lab account. You only need to do this once per Cloud Shell session.
+- Checks your file first, and tells you in plain words what to fix: a TODO left in, quotes around the name, a missing description.
+- Packages the folder and uploads it to your Foundry project as a new **version** of the skill `reconciliation`, and makes it the default.
+- Doesn't change your agent yet; that's Part D.
 
-2. Publish the skill:
-
-   ```bash
-   python3 -m frontierops publish-skill my-files/skills/reconciliation
-   ```
-
-   **What this does:**
-
-   - Checks your file first, and tells you in plain words what to fix: a TODO left in, quotes around the name, a missing description.
-   - Packages the folder and uploads it to your Foundry project as a new **version** of the skill `reconciliation`, and makes it the default.
-   - Doesn't change your agent yet; that's Part D.
-
-   If you publish again later, you get version 2, 3 and so on. Older versions are kept, so you can always go back.
+If you publish again later, you get version 2, 3 and so on. Older versions are kept, so you can always go back. If the tool asks you to sign in, you're in a new Cloud Shell session: run `az login --use-device-code` as in Challenge 1, then publish again.
 
 > 📸 **Screenshot to add:** `images/challenge-02-publish-skill.png`: Cloud Shell: publish-skill reports the version it published.
 

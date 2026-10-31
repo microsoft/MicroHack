@@ -119,13 +119,15 @@ python3 -m frontierops grant-agent ops-agent
 
 ![Cloud Shell: grant-agent gives ops-agent's identity the Foundry User role](../images/challenge-01-grant-agent.png)
 
-If the command says it can't find the agent's identity, copy it from the portal instead: open `ops-agent`, select the **Details** tab and copy the **agent identity** ID. Then run:
+If the command says it can't find the agent's identity, copy it from the portal instead: open `ops-agent` and select the **Details** tab. In the **Identity & access** card, next to **Entra agent identity** (`ops-agent-AgentIdentity`), select the copy icon beside the **ID**. Then run:
 
 ```bash
-python3 -m frontierops grant-agent ops-agent --identity <agent identity ID>
+python3 -m frontierops grant-agent ops-agent --identity <the ID you copied>
 ```
 
 **What this does:** the same grant, using the ID you copied, so the tool doesn't need to look the agent up.
+
+![The agent's Details tab: Identity & access shows the Entra agent identity and its ID](../images/challenge-01-agent-identity.png)
 
 New permissions take up to **five minutes** to apply. Use the time to look at the files you downloaded.
 

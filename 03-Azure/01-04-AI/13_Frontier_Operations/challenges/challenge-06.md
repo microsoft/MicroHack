@@ -65,7 +65,7 @@ One partner's statement in every pack has a line that isn't a transaction: it's 
 
 ### Part D: Its own identity, least access (5 min)
 
-1. Every agent has its **own Microsoft Entra identity**, separate from yours. In the [Azure portal](https://portal.azure.com), open your Foundry project resource, select **Access control (IAM)**, then **Role assignments**, and find `ops-agent`'s identity.
+1. Every agent has its **own Microsoft Entra identity**, separate from yours. Open `ops-agent`, select **Details** and look at the **Identity & access** card: the **Entra agent identity** (`ops-agent-AgentIdentity`) and the blueprint it was created from. Then, in the [Azure portal](https://portal.azure.com), open your Foundry project resource, select **Access control (IAM)**, then **Role assignments**, and find `ops-agent-AgentIdentity`.
 2. It has exactly one role, **Foundry User**, on this project, which you gave it in Challenge 1. It has no access to your storage account, subscription or any other project.
 3. The ERP key isn't the agent's at all: it belongs to the `erp` connection, and the browser signs in with the project's identity.
 

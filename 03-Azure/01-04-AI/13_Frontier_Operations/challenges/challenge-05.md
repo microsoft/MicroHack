@@ -24,12 +24,20 @@ Every company has systems that only have a web page: a partner's portal, a gover
 
 ### Part B: Add the browser to your toolbox (10 min)
 
-1. Select **Build**, then **Tools**, and open your `ops-tools` toolbox.
-2. Select **Add tool**, then **Browser Automation**, and choose the connection `BrowserConnectionName` (`browser`). The lab automation connected it to your own Playwright workspace, which signs in with the project's identity: there's no password or key to manage.
-3. Save the toolbox. That creates a new version.
-4. Open `ops-agent`. In **Tools**, select the `ops-tools` toolbox and switch it to the **new version**. Select **Save and start new chat**.
+1. Select **Build**, then **Tools**, and open your `ops-tools` toolbox. Under **Included**, select **Add**, then **Add tool**.
+2. On the **Configured** tab, select **Browser Automation**, then **Add tool**.
 
-> 📸 **Screenshot to add:** `images/challenge-05-toolbox-browser.png`: The ops-tools toolbox with the ERP tool and Browser Automation.
+   ![Select a tool, Configured tab: Browser Automation selected](../images/challenge-05-select-browser.png)
+
+3. Choose the connection `BrowserConnectionName` (`browser`) and select **Connect**. The lab automation connected it to your own Playwright workspace, which signs in with the project's identity: there's no password or key to manage. (If the dialog says preview connections are deprecated, that's expected in this lab; the connection works.)
+
+   ![Add Browser Automation tool: the browser connection](../images/challenge-05-browser-connection.png)
+
+4. The toolbox now has two tools, `erp` and `browser`. Save it: that creates a new version.
+
+   ![The ops-tools toolbox with the ERP tool and Browser Automation](../images/challenge-05-toolbox-browser.png)
+
+5. Open `ops-agent`. In **Tools**, select the `ops-tools` toolbox and switch it to the **new version**. Select **Save and start new chat**.
 
 ### Part C: Prepare, approve, submit (25 min)
 

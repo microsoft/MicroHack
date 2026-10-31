@@ -91,6 +91,8 @@ python3 -m frontierops grant-agent ops-agent --project-endpoint <FoundryProjectE
 
 Your lab account may grant exactly this role on your project and nothing else. Allow up to five minutes before the next part.
 
+> ⚠️ The permission only reaches **new chats**. A chat you started before the grant keeps answering "Foundry Files access denied" when it tries to return a file. Select **New chat** before Part F.
+
 ### Part F: Hand it the work (10 min)
 
 1. In the chat, attach **one** partner's statement and `ledger-export.csv`, and ask:

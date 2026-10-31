@@ -28,7 +28,7 @@ param modelSku string = 'GlobalStandard'
 param chatCapacity int = 200
 
 @minValue(1)
-param compareCapacity int = 50
+param compareCapacity int = 150
 
 @description('Tags for the storage account. The default exempts it from tenant automation that disables public network access.')
 param storageTags object = { SecurityControl: 'Ignore' }

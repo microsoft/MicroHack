@@ -22,7 +22,7 @@ What it shows:
 - **With a good skill, the smaller model is as accurate** on this process. The skill carries the method, so the model doesn't need to work it out.
 - **The bigger model used fewer tokens** and less reasoning, but each token costs more and it was slower here. Which is cheaper depends on the current prices: let teams do the sum with today's price list.
 - **Most input is cached.** Files and the skill are read again by each step and each subagent; cached input is billed at a fraction of the normal price.
-- Five partners on `gpt-5.4` failed twice in our lab with a server error after about four minutes, while one partner worked. The lab deploys `gpt-5.4` with 50K tokens per minute, so a million-token run is too much for it. That's why the challenge compares one partner, and it's a useful lesson: **quota is part of the design.**
+- Five partners on `gpt-5.4` failed twice in our lab with a server error after about four minutes, and in the portal even one partner failed with *Model deployment rate limit exceeded* while `gpt-5.4` had 50K tokens per minute. The lab now deploys it with 150K. That's why the challenge compares one partner, and it's a useful lesson: **quota is part of the design.**
 
 ## The business case, worked
 

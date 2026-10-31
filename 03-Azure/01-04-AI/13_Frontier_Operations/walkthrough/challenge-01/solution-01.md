@@ -32,4 +32,5 @@ Without a skill the agent uses its own judgement. That is the point of Challenge
 | `grant-agent` fails with *AuthorizationFailed* | The participant isn't using their lab account in Cloud Shell, or the lab was deployed less than ten minutes ago. Their lab account may assign only Foundry User on their own project. |
 | The setup *Portal check* says it couldn't reach the portal | The Functions app is cold-starting. Open `BackOfficeUrl` in a browser and run setup again. |
 | The agent says it can't open `.xlsx` or Excel libraries are missing | It switches to another library or writes the workbook with plain XML; let it work. If it insists, ask for a CSV instead. |
+| The answer says the file was created in `/home/session/workspace/outputs/` but there's nothing to download, and no `upload_file_from_workspace_to_foundry_project` step | The agent made the file but didn't hand it back. Reply *Please upload it so I can download it.* Check the instructions include the sentence about uploading every file it creates: with it, agents return files reliably. |
 | The upload button in the chat is missing | Make sure the agent was created with the harness; file inputs need it. |

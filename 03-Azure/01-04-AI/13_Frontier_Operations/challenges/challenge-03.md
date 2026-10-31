@@ -53,7 +53,9 @@ Subagents aren't always the answer. They pay off when the work splits into **ind
    This is why a person still checks the result. If one partner looks wrong, ask the agent in the same chat to redo just that partner, for example: *Northgate Freight writes references as IN- instead of INV-. Redo Northgate using the matching rules in your skill, update exceptions.xlsx and give it back to me.* Then download and score again.
 
 2. Open the **Summary** sheet. Which partner has the most money at stake? That's where your approver will look first.
-3. Open **Traces** for `ops-agent` (in the agent, select **Traces**) and find this run. Expand it and find the five subagent tasks. How long did the slowest one take?
+3. Select **Traces** on the answer line. The header shows how much work went into the month: in our run 124 steps, 35 model calls and 40 tool calls in 92 seconds. Scroll down past the skill and the file reads to the **execute_tool task** steps, one per partner, and select one to see the brief the lead agent gave that subagent. Which partner took longest?
+
+   ![The trace of the five-partner run: totals in the header, the skill, then the file reads before the subagent tasks](../images/challenge-03-trace.png)
 
 > 📸 **Screenshot to add:** `images/challenge-03-workbook-summary.png`: The returned workbook: the Summary sheet and one sheet per partner.
 

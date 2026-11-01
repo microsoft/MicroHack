@@ -96,6 +96,9 @@ def copy_my_files(pack_id: str, target: Path | None = None) -> list:
     if not starter.exists():
         starter.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(TEMPLATES / "SKILL.md", starter)
+    # The Finish: a canvas to fill in, kept with the team's other files.
+    if not (target / "process-canvas.md").exists():
+        shutil.copy2(TEMPLATES / "process-canvas.md", target / "process-canvas.md")
     return sorted(p.relative_to(target).as_posix() for p in target.rglob("*") if p.is_file())
 
 

@@ -302,7 +302,7 @@ def test_setup_puts_every_file_in_one_zip_to_download(tmp_path, monkeypatch, cap
     assert tool.main(["setup", "--industry", "distribution", "--account", "x"]) == 0
     names = zipfile.ZipFile(tool.MY_FILES_ZIP).namelist()
     assert "my-files/ledger-export.csv" in names and "my-files/statements/brightwell.csv" in names
-    assert "my-files/skills/reconciliation/SKILL.md" in names
+    assert "my-files/skills/reconciliation/SKILL.md" in names and "my-files/process-canvas.md" in names
     assert "type my-files.zip" in capsys.readouterr().out
 
 

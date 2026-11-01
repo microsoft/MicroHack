@@ -18,7 +18,13 @@ As a team, list three processes from your own organisations where people move da
 
 ### Part B: Fill in the canvas (15 min)
 
-Open [templates/process-canvas.md](../templates/process-canvas.md) and work through it together:
+Setup put a copy of the [process canvas](../templates/process-canvas.md) in your files. Open it in Cloud Shell:
+
+```bash
+code my-files/process-canvas.md
+```
+
+Or open it on your computer: it's in the `my-files` folder you downloaded in Challenge 1. Work through it together:
 
 1. **The process**: who, how often, how long.
 2. **Is it ready for an agent?**: tick the checklist honestly.
@@ -27,7 +33,7 @@ Open [templates/process-canvas.md](../templates/process-canvas.md) and work thro
 5. **The business case**: today against the agent, with your own estimates.
 6. **First step**: the owner, the pilot and how you'd know it worked.
 
-Keep a copy: paste it into a document, or download it from Cloud Shell.
+Keep a copy: download it from Cloud Shell (**Manage files**, **Download**, `frontier-ops/03-Azure/01-04-AI/13_Frontier_Operations/my-files/process-canvas.md`), or paste it into a document.
 
 > 📸 **Screenshot to add:** `images/finish-process-canvas.png`: A team's completed process canvas for a process of their own.
 
@@ -37,13 +43,13 @@ Keep a copy: paste it into a document, or download it from Cloud Shell.
 
    ```bash
    mkdir -p my-files/skills/<your-process>
-   cp templates/SKILL.md my-files/skills/<your-process>/SKILL.md
+   cp my-files/skills/reconciliation/SKILL.md my-files/skills/<your-process>/SKILL.md
    code my-files/skills/<your-process>/SKILL.md
    ```
 
-   **What this does:** makes a folder for your process's skill, copies the same starter file you used in Challenge 2 into it, and opens it in the editor. Replace `<your-process>` in all three lines.
+   **What this does:** makes a folder for your process's skill, copies your reconciliation skill into it as a model to follow, and opens it in the editor. Replace `<your-process>` in all three lines. (A blank starter with TODOs is in `templates/SKILL.md`.)
 
-2. Change the **name** to your folder's name, and rewrite the headings and every TODO for your process. Don't put real names, customer data or secrets in it.
+2. Change the **name** to your folder's name, and rewrite the headings and the content for your process. Don't put real names, customer data or secrets in it.
 3. Optional: publish it with `publish-skill`, add it to a new harness agent and ask it to explain how it would handle one of your process's typical cases.
 
 ### Part D: Clean up (5 min)

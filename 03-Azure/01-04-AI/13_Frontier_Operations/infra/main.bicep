@@ -175,7 +175,11 @@ resource browserConnection 'Microsoft.CognitiveServices/accounts/projects/connec
     authType: 'ProjectManagedIdentity'
     audience: 'https://mcp.playwright.microsoft.com'
     isSharedToAll: true
-    metadata: {}
+    // The portal treats a Playwright connection without the workspace's resource ID as a deprecated preview connection.
+    metadata: {
+      resourceId: browser.id
+      enableRecording: 'false'
+    }
   }
 }
 

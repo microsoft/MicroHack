@@ -29,7 +29,7 @@ Every company has systems that only have a web page: a partner's portal, a gover
 
    ![Select a tool, Configured tab: Browser Automation selected](../images/challenge-05-select-browser.png)
 
-3. Choose the connection `BrowserConnectionName` (`browser`) and select **Connect**. The lab automation connected it to your own Playwright workspace, which signs in with the project's identity: there's no password or key to manage. (If the dialog says preview connections are deprecated, that's expected in this lab; the connection works.)
+3. Choose the connection `BrowserConnectionName` (`browser`) and select **Connect**. The lab automation connected it to your own Playwright workspace, which signs in with the project's identity: there's no password or key to manage.
 
    ![Add Browser Automation tool: the browser connection](../images/challenge-05-browser-connection.png)
 

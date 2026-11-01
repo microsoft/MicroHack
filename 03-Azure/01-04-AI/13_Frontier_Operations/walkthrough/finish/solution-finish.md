@@ -15,6 +15,8 @@ A strong first canvas:
 - estimates time and cost today against the agent, even roughly;
 - defines a four-week pilot with one measurable result, for example *all supplier statements for one business unit reconciled within a day of month-end, with no more corrections than today*.
 
+A complete worked example for supplier onboarding is in [example-process-canvas.md](example-process-canvas.md).
+
 Processes teams often choose: supplier onboarding and due diligence, expense and invoice checks, insurance claims triage, contract renewals, compliance evidence collection, customer order exceptions, access reviews.
 
 ## A good first skill

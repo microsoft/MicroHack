@@ -35,7 +35,9 @@ Or open it on your computer: it's in the `my-files` folder you downloaded in Cha
 
 Keep a copy: download it from Cloud Shell (**Manage files**, **Download**, `frontier-ops/03-Azure/01-04-AI/13_Frontier_Operations/my-files/process-canvas.md`), or paste it into a document.
 
-> 📸 **Screenshot to add:** `images/finish-process-canvas.png`: A team's completed process canvas for a process of their own.
+Here's what a first draft can look like, for supplier onboarding:
+
+![An example canvas for supplier onboarding: the process, readiness, the agent team and trust](../images/finish-process-canvas.png)
 
 ### Part C: Write the first skill (10 min)
 

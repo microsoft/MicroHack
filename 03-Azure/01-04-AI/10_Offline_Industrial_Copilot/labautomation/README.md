@@ -16,7 +16,7 @@ Foundry Local itself is **not** installed by the automation. Installing it is pa
 | File | Purpose |
 |------|---------|
 | `deploy-lab.ps1` | Platform entry point, one run per participant |
-| `shared-deploy-lab.ps1` | Registers resource providers once per subscription |
+| `shared-deploy-lab.ps1` | Registers resource providers and the public IP feature once per subscription |
 | `main.bicep` | The resources above |
 | `lab-defaults.json` | Platform configuration |
 
@@ -29,14 +29,17 @@ Foundry Local itself is **not** installed by the automation. Installing it is pa
 - **VM is Windows, not Linux**: the Foundry Local command-line tool is supported on Windows and macOS. The VM runs the models on its CPU, so answers are slower than on a laptop with a GPU or NPU. Choose a GPU `vmSize` in `main.bicep` for faster answers.
 - **The extension installs the Visual C++ runtime** next to Python. Foundry Local cannot start without it on a fresh Windows image.
 - **Set `$deployVm = $false`** in `deploy-lab.ps1` if every participant brings a suitable laptop.
+- **`shared-deploy-lab.ps1` registers `Microsoft.Network/AllowBringYourOwnPublicIpAddress`**, like other labs on the platform that give a VM a public IP. Without it some subscriptions refuse every public IP with `SubscriptionNotRegisteredForFeature`, and the platform stops the lab without trying another region. The `SecurityControl: Ignore` tag does not help here: this is a subscription feature, not a policy. The script also registers `Microsoft.Network` again, because the feature only takes effect after that.
+- **The VM password comes from `New-MhhStablePassword -Purpose 'vm-admin'`**: the same value on every run. A redeploy keeps the first password on an existing VM, so a new random password would put a password on the dashboard that does not work.
 
 ## Credentials returned to the participant
 
-Resource group, Azure Machine Learning workspace, region, and (with a VM) the VM address, user name and a random password.
+Resource group, Azure Machine Learning workspace, region, and (with a VM) the VM address, user name and password. The password stays the same on every run of the script.
 
 ## Assumptions and checks
 
-- `Invoke-MhhDeploymentWithRegionFallback` and `Get-MhhStablehash` exist only inside the MicroHack platform, so `deploy-lab.ps1` cannot be run on its own. `main.bicep` itself was **deployed for real** (twice, in a temporary resource group in `swedencentral`, then deleted): it succeeded in about 6 minutes, and after provisioning the VM had Python 3.12.8 and the Visual C++ runtime. `deploy-lab.ps1` as a whole was not run on the platform.
-- On that VM, Foundry Local, the models and the whole lab code were run (see the coach notes in the walkthrough for the results), and so was the Azure Machine Learning workspace (a compute instance and the training job from challenge 5).
-- Not verified: the platform integration itself (`Invoke-MhhDeploymentWithRegionFallback`, the credentials on the dashboard) and a participant signing in over Remote Desktop.
+- `Invoke-MhhDeploymentWithRegionFallback`, `Get-MhhStableHash` and `New-MhhStablePassword` are platform helpers. Both scripts were tested **unchanged** with the helper module from the platform's local-testing image (`ghcr.io/qxsch/adminpwsh`): `shared-deploy-lab.ps1` registered the public IP feature on a subscription that refused public IPs (1.4 minutes), then `deploy-lab.ps1` provisioned the lab in `swedencentral` on the first attempt in 6.3 minutes, with the VM address, user and password on the dashboard. After provisioning the VM had Python 3.12.8 and the Visual C++ runtime.
+- On that VM, signed in as `labadmin`, Foundry Local 0.12.1, the models and the lab code for challenges 1 to 6 were run, including the offline run with the internet blocked (see the coach notes in the walkthrough), and so was the Azure Machine Learning workspace (a compute instance and the challenge 5 notebook, accuracy 0.94).
+- **Azure Machine Learning workspaces are soft-deleted** when their resource group is deleted, and the workspace name is the same for a participant on every run. If the platform wipes and recreates the resource group (a retry or a region fallback), the new deployment can meet the soft-deleted name. The platform purges it and treats this as a same-region retry; the older helper in the testing image treats it as fatal. When you test locally with that image, use a new participant ID or wait for the purge.
+- Not verified: a participant signing in over Remote Desktop, and the platform's current helper (only the version in the testing image).
 - The VM is open for Remote Desktop from the internet and carries the `SecurityControl: Ignore` tag, like other labs on the platform. Do not use it for anything except this lab.

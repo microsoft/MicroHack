@@ -65,10 +65,8 @@ if($AllowedEntraUserIds.Count -eq 0) {
 
 $resourceSuffix = (Get-MhhStablehash $AllowedEntraUserIds -Length 12).ToLower()
 
-# Random VM password with upper, lower, digit and symbol so it always meets the Azure complexity rules.
-$chars = (48..57) + (65..90) + (97..122) | ForEach-Object { [char]$_ }
-$vmPassword = -join (1..20 | ForEach-Object { $chars | Get-Random })
-$vmPassword = "Aa1!$vmPassword"
+# Same password on every run for this lab, so the one on the dashboard keeps working after a re-run or a region fallback.
+$vmPassword = New-MhhStablePassword -Purpose 'vm-admin'
 
 @{"HackboxCredential" = @{ name = "ResourceGroupName"; value = $effectiveResourceGroup; note = "The resource group of your lab" }}
 @{"HackboxCredential" = @{ name = "MachineLearningWorkspace"; value = "mlw-oic-$resourceSuffix"; note = "Azure Machine Learning workspace for challenge 5" }}

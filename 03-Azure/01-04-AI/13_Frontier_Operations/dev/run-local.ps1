@@ -1,6 +1,7 @@
 # Local-only wrapper to run labautomation/deploy-lab.ps1 outside the MicroHack platform.
-# Supplies the platform-provided helper (Get-MhhStableHash), pre-creates the resource
-# group, and passes the signed-in user's Entra object ID, exactly as the platform would.
+# Supplies the platform-provided helpers (Get-MhhStableHash, New-MhhStablePassword), runs
+# labautomation/shared-deploy-lab.ps1, pre-creates the resource group, and passes the
+# signed-in user's Entra object ID, exactly as the platform would.
 # Not part of the participant flow: for facilitators testing the lab automation.
 #
 # Prereqs: Connect-AzAccount (Az PowerShell) AND az login (Azure CLI) to the SAME subscription.
@@ -55,6 +56,23 @@ function Get-MhhStableHash {
     return $hex.Substring(0, $Length)
 }
 
+# Platform-provided helper shim: the same letters-and-digits password on every run for this resource group and purpose.
+# The platform keys it with a secret per lab; locally a random secret kept in your profile does the same job.
+function New-MhhStablePassword {
+    param([string]$Purpose = 'default', [int]$Length = 16)
+    $secretFile = Join-Path $HOME '.mhh-local-password-secret'
+    if (-not (Test-Path $secretFile)) { [Convert]::ToBase64String([System.Security.Cryptography.RandomNumberGenerator]::GetBytes(32)) | Set-Content $secretFile -NoNewline }
+    $hmac = [System.Security.Cryptography.HMACSHA256]::new([Convert]::FromBase64String((Get-Content $secretFile -Raw)))
+    $chars = 'abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+    $password = ''
+    for ($i = 0; $password.Length -lt $Length; $i++) {
+        $bytes = $hmac.ComputeHash([System.Text.Encoding]::UTF8.GetBytes("$SubscriptionId|$ResourceGroupName|$Purpose|$i"))
+        $password += -join ($bytes | ForEach-Object { $chars[$_ % $chars.Length] })
+    }
+    # Always one lowercase letter, one uppercase letter and one digit, like the platform helper.
+    return 'aA2' + $password.Substring(0, $Length - 3)
+}
+
 $arguments = @{
     DeploymentType      = $DeploymentType
     SubscriptionId      = $SubscriptionId
@@ -79,6 +97,9 @@ if (-not (Get-Command bicep -ErrorAction SilentlyContinue)) {
         throw 'Bicep CLI not found. Run "az bicep install" or see https://aka.ms/bicep-install.'
     }
 }
+
+# The platform runs the once-per-subscription hook before any lab.
+& "$PSScriptRoot\..\labautomation\shared-deploy-lab.ps1" -SubscriptionId $SubscriptionId -PreferredLocation @($Location) -AllowedEntraUserIds $AllowedEntraUserIds
 
 $started = Get-Date
 $outputs = & "$PSScriptRoot\..\labautomation\deploy-lab.ps1" @arguments

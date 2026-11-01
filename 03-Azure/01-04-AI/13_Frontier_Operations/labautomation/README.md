@@ -2,7 +2,7 @@
 
 [Home](../README.md)
 
-The Bicep template lives in [infra](../infra/main.bicep). This folder holds the platform files: [deploy-lab.ps1](deploy-lab.ps1) and [lab-defaults.json](lab-defaults.json).
+The Bicep template lives in [infra](../infra/main.bicep). This folder holds the platform files: [deploy-lab.ps1](deploy-lab.ps1), [shared-deploy-lab.ps1](shared-deploy-lab.ps1) and [lab-defaults.json](lab-defaults.json).
 
 ## What is deployed per attendee
 
@@ -38,13 +38,13 @@ Attendees load their industry pack, and create the agents, skills, toolboxes and
 
 The platform sets the Az context and passes `DeploymentType`, `SubscriptionId`, `ResourceGroupName`, `PreferredLocation` and `AllowedEntraUserIds`. The default mode is `resourcegroup`. Only `subscription` mode creates a resource group, named with `Get-MhhStableHash -Length 24`. The script never signs in, switches subscription, deletes resources or silently changes region. One region is accepted (default `uksouth`); a quota or capacity failure is reported, not worked around.
 
-The ERP key is derived with `Get-MhhStableHash` from the subscription, resource group and attendees, so a re-run keeps the same key. It is passed to the template as a secure parameter and never written to the outputs.
+The ERP key comes from `New-MhhStablePassword -Purpose 'erp-api-key'`: the platform keys it with a secret per lab, so it cannot be worked out from the subscription, resource group or attendee IDs, and a re-run keeps the same key. It is passed to the template as a secure parameter and never written to the outputs.
 
 After the template, the script zips the back office (`app/` plus each pack's `pack.json` and `ledger.csv`) and publishes it to the Functions app's `/api/publish` endpoint with an ARM token, then waits until `/health` reports all five packs.
 
 Dashboard outputs (not secrets): `ResourceGroupName`, `EffectiveLocation`, `FoundryAccountName`, `FoundryProjectEndpoint`, `FoundryProjectResourceId`, `ModelDeploymentName`, `CompareModelDeploymentName`, `StorageAccountName`, `BackOfficeAppName`, `BackOfficeUrl`, `PlaywrightWorkspaceName`, `BrowserConnectionName`, `ErpConnectionName`, `ApplicationInsightsName`.
 
-Register these resource providers before the event: Microsoft.CognitiveServices, Microsoft.Storage, Microsoft.Web, Microsoft.OperationalInsights, Microsoft.Insights and **Microsoft.LoadTestService** (Playwright Workspaces).
+[`shared-deploy-lab.ps1`](shared-deploy-lab.ps1) registers these resource providers once per subscription, before the labs start, and waits for them: Microsoft.CognitiveServices, Microsoft.Storage, Microsoft.Web, Microsoft.OperationalInsights, Microsoft.Insights and **Microsoft.LoadTestService** (Playwright Workspaces). Participants own only their resource group and cannot register a provider. If a provider cannot be registered, the script prints the command for a subscription owner and lets the labs continue.
 
 ## Capacity and cost
 
@@ -57,7 +57,7 @@ Register these resource providers before the event: Microsoft.CognitiveServices,
 
 ## Testing the automation outside the platform
 
-[`dev/run-local.ps1`](../dev/run-local.ps1) runs `deploy-lab.ps1` the way the platform does: it supplies `Get-MhhStableHash`, creates the resource group, passes your Entra object ID and prints the dashboard values. Sign in with both `Connect-AzAccount` and `az login` to the same subscription, then run it from the lab folder:
+[`dev/run-local.ps1`](../dev/run-local.ps1) runs `shared-deploy-lab.ps1` and `deploy-lab.ps1` the way the platform does: it supplies `Get-MhhStableHash` and `New-MhhStablePassword`, creates the resource group, passes your Entra object ID and prints the dashboard values. Sign in with both `Connect-AzAccount` and `az login` to the same subscription, then run it from the lab folder:
 
 ```powershell
 ./dev/run-local.ps1 -AllowedEntraUserIds (az ad signed-in-user show --query id -o tsv)

@@ -53,8 +53,9 @@ if ($group.Location -ne $location) {
 }
 $suffix = Get-MhhStableHash (@($SubscriptionId, $ResourceGroupName) + $identityParts) -Length 12
 # One ERP API key per lab, stable across re-runs so the Foundry connection and the app keep matching.
+# New-MhhStablePassword is keyed by the platform, so the key cannot be worked out from the lab's IDs.
 # It is a training credential for fictional data; it is passed as a secure parameter and never output.
-$erpApiKey = 'erp-' + (Get-MhhStableHash (@('erp-api-key', $SubscriptionId, $ResourceGroupName) + $identityParts) -Length 32)
+$erpApiKey = 'erp-' + (New-MhhStablePassword -Purpose 'erp-api-key' -Length 32)
 $template = Join-Path $labRoot 'infra\main.bicep'
 $result = New-AzResourceGroupDeployment `
     -Name "frontier-$suffix" `

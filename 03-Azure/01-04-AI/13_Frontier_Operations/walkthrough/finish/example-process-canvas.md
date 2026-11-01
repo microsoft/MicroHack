@@ -1,6 +1,6 @@
 # Example process canvas: supplier onboarding
 
-**[Home](../README.md)** - [Finish](../challenges/finish.md) - [Blank canvas](../templates/process-canvas.md)
+**[Home](../../README.md)** - [Finish](../../challenges/finish.md) - [Blank canvas](../../templates/process-canvas.md)
 
 A worked example for coaches, filled in the way a team would in the Finish. The company and numbers are fictional.
 

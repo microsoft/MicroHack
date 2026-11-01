@@ -21,14 +21,14 @@ The **Azure Developer CLI** (`azd`) turns files that describe your app, here an 
 ```bash
 az login --use-device-code      # Codespaces only; Cloud Shell is already signed in
 azd auth login --use-device-code
-azd extension install azure.ai.agents   # or: azd extension upgrade azure.ai.agents
+azd extension install azure.ai.agents azure.ai.skills
 export AZD_ALPHA_ENABLE_AGENTS_MANAGED_HARNESS=true
 ```
 
 **What this does:**
 
 - Signs `azd` in as you.
-- Adds the Foundry agents extension to `azd`, with the extensions it needs (projects, connections, toolboxes and the inspector). The harness needs `azure.ai.agents` version `1.0.0-beta.22` or later; check with `azd extension list --installed`.
+- Adds two Foundry extensions to `azd`: **agents** (with the extensions it needs: projects, connections, toolboxes and the inspector) and **skills**, which `azd` needs to deploy a skill from its folder. The harness needs `azure.ai.agents` version `1.0.0-beta.22` or later; check with `azd extension list --installed`. If they're already installed, use `azd extension upgrade` instead of `install`.
 - The last line switches on the Copilot harness, which is in preview. Run it again in every new terminal.
 
 ![azd extension install: azure.ai.agents and its dependencies, all up to date](../images/challenge-08-azd-extensions.png)

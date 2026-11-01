@@ -10,9 +10,12 @@ Guided portal run, distribution pack, Brightwell Packaging, the same agent defin
 
 | Measure | `ops-agent`, `gpt-5.4-mini` | `ops-agent-54`, `gpt-5.4` |
 |---|---|---|
-| Time from request to answer | 69 s | 76 s |
+| Time from request to answer | 46 s | 76 s |
 | Score | 6 of 6 | 6 of 6 |
-| Tokens | 253,317 (248,642 input of which 226,304 cached; 4,675 output) | 169,072 |
+| Tokens | 189,488 | 169,072 |
+| What it did | Wrote the workbook (installed no library; wrote the .xlsx itself) | Also read the ERP and wrote three ledger notes |
+
+Both models were equally accurate. The bigger model used about 10% fewer tokens but took longer and costs more per token; the smaller one is the better choice here. An API run of the mini agent with the same request took 69 s and 253K tokens: expect this much variation between runs.
 
 The `gpt-5.4` copy also read the ERP and wrote three ledger notes on its own, because the instructions say the ERP is the system of record. That's the same behaviour as `ops-agent`, and a reminder that you compare **agents**, not models in isolation.
 

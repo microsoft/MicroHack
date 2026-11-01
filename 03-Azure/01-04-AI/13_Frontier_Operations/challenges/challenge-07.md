@@ -48,7 +48,11 @@ To compare fairly, run the **same agent** (same instructions, skill, toolbox and
 
    ![Cloud Shell: gpt-5.4 also scores 6 of 6](../images/challenge-07-gpt54-score.png)
 
-4. For a fair comparison, run the same request once more on `ops-agent` (`gpt-5.4-mini`) in a new chat. Your agent has changed since Challenge 2 (it now also reads the ERP and has a guardrail), so its Challenge 2 numbers aren't a like-for-like baseline any more.
+4. For a fair comparison, run the same request once more on `ops-agent` (`gpt-5.4-mini`) in a new chat. Your agent has changed since Challenge 2 (it now also has the ERP and a guardrail), so its Challenge 2 numbers aren't a like-for-like baseline any more.
+
+   ![The same request on gpt-5.4-mini: 46 seconds and 189K tokens](../images/challenge-07-mini-run.png)
+
+   Notice that the two models didn't do exactly the same work: in our run the `gpt-5.4` copy also wrote notes to the ERP. Compare what each one did, not only the numbers.
 
 Why one partner? The bigger model has a smaller quota in your lab, and a five-partner run reads about a million tokens in a few minutes. Comparing one partner is fair to both models; you scale the result up in Part C.
 

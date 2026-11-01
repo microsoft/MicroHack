@@ -23,10 +23,14 @@ Every answer in the playground shows its time and tokens on the line under it, a
 |---|---|---|
 | Time from request to answer | | |
 | Score | | |
-| Input tokens, of which cached | | |
-| Output tokens | | |
+| Tokens | | |
 
-> 📸 **Screenshot to add:** `images/challenge-07-trace-tokens.png`: The trace summary of a full run: duration and token counts.
+The trace header shows the totals for a run: steps (spans), model calls, tool calls, time and tokens.
+
+![The trace header: spans, chat calls, tool calls, time and tokens for one run](../images/challenge-07-trace-tokens.png)
+
+> [!NOTE]
+> Take the tokens from the **line under the answer**. For a run without subagents it matches the trace header. With subagents, the answer line also counts each helper's tokens, and the trace header doesn't (in our five-partner run: 698K on the answer line, 431K in the header). The answer line is what you pay for.
 
 ### Part B: Run the same partner on the bigger model (15 min)
 
@@ -59,9 +63,11 @@ Why one partner? The bigger model has a smaller quota in your lab, and a five-pa
 ### Part C: Cost per run (10 min)
 
 1. Open the [Azure OpenAI pricing page](https://azure.microsoft.com/pricing/details/cognitive-services/openai-service/) and find the **Global** prices per million tokens for both models: input, cached input and output.
-2. Work out the model cost of one partner on each model:
+2. Work out the model cost of one partner on each model. The playground shows one total, so use this split, which is what we measured across our runs: about **85% of the tokens are cached input** (the files and the skill, read again at each step), **12% are new input** and **3% are output**.
 
-   *(uncached input × input price + cached input × cached price + output × output price) ÷ 1,000,000*
+   *(total × 0.85 × cached price + total × 0.12 × input price + total × 0.03 × output price) ÷ 1,000,000*
+
+   If you want the exact split, select **Traces** and open the **chat** steps: each shows its input, cached and output tokens.
 
    Then the cost of the month: your five-partner run for `gpt-5.4-mini`, and roughly five times the one-partner cost for `gpt-5.4`.
 

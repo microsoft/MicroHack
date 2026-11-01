@@ -14,6 +14,14 @@ Kubernetes Cluster User Role for proxy access, reusing applicable existing grant
 It also installs the MetalLB Arc extension and an ARP pool from the configured
 service VIP reservation. The Runtime provider object ID comes from the organizer,
 not a Graph lookup using the Client managed identity.
+IncludeReferenceVm defaults to true and creates sov-ref-vm for participant inspection,
+with a generated, locally encrypted credential, guest management and periodic update assessment.
+Operations run without confirmation under the default PowerShell preference;
+use Confirm to request prompts or WhatIf to preview changes.
+Assumes the standard greenfield LocalBox network configuration. Configured address
+ranges and known reservations are validated; live DHCP leases are not inspected.
+New image imports resolve latest from this cluster's Edge Marketplace catalog,
+not the Azure Compute catalog; existing working images are reused unchanged.
 Dot-source this file to load its functions without running provisioning.
 #>
 [CmdletBinding(SupportsShouldProcess)]
@@ -24,6 +32,8 @@ param(
     [string]$AksAdminGroupObjectId,
     [string]$KubernetesRuntimeObjectId,
     [switch]$SkipAks,
+    [switch]$IncludeReferenceVm = $true,
+    [pscredential]$ReferenceVmCredential,
     [pscredential]$NodeCredential,
     [string]$VmSwitchName,
     [string]$ImageName = '2025-datacenter-azure-edition-smalldisk-01',
@@ -37,7 +47,6 @@ param(
     [ValidateRange(1, 10)][int]$NodeCount = 3,
     [ValidateRange(512, 4096)][int]$StorageSizeGB = 1024,
     [switch]$RemoveUserStorage2,
-    [switch]$AddressReservationsConfirmed,
     [ValidateRange(1, 720)][int]$TimeoutMinutes = 360,
     [string]$ManifestPath = 'C:\LocalBox\sovereign-localbox.json'
 )
@@ -202,7 +211,278 @@ function Get-LocalBoxResource {
     elseif ($Id -match '/providers/Microsoft\.KubernetesRuntime/loadBalancers/') {
         $arguments += @('--api-version', '2024-08-01')
     }
+    elseif ($Id -match '/providers/Microsoft\.AzureStackHCI/virtualMachineInstances/') {
+        $arguments += @('--api-version', '2024-01-01')
+    }
+    elseif ($Id -match '/providers/Microsoft\.HybridCompute/machines/') {
+        $arguments += @('--api-version', '2024-07-10')
+    }
     Invoke-LocalBoxAz $arguments
+}
+
+function New-LocalBoxVmTemplate {
+    param([switch]$EnablePeriodicAssessment)
+    $machineId = "[resourceId('Microsoft.HybridCompute/machines', parameters('name'))]"
+    $nicId = "[resourceId('Microsoft.AzureStackHCI/networkInterfaces', concat(parameters('name'), '-nic'))]"
+    $extendedLocation = @{ type = 'CustomLocation'; name = "[parameters('customLocationId')]" }
+    $machine = @{
+        type = 'Microsoft.HybridCompute/machines'; apiVersion = '2023-10-03-preview'
+        name = "[parameters('name')]"; location = "[parameters('location')]"
+        kind = 'HCI'; identity = @{ type = 'SystemAssigned' }; tags = "[parameters('tags')]"
+    }
+    if ($EnablePeriodicAssessment) {
+        $machine.apiVersion = '2024-07-10'
+        $machine.properties = @{ osProfile = @{ windowsConfiguration = @{
+            patchSettings = @{ assessmentMode = 'AutomaticByPlatform' }
+        } } }
+    }
+    @{
+        '$schema' = 'https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#'
+        contentVersion = '1.0.0.0'
+        parameters = @{
+            name = @{ type = 'string'; minLength = 1; maxLength = 15 }; location = @{ type = 'string' }
+            customLocationId = @{ type = 'string' }; imageId = @{ type = 'string' }
+            networkId = @{ type = 'string' }; storageId = @{ type = 'string' }
+            processors = @{ type = 'int' }; memoryMB = @{ type = 'int' }
+            adminUsername = @{ type = 'string' }; adminPassword = @{ type = 'securestring' }
+            tags = @{ type = 'object' }
+        }
+        resources = @(
+            $machine
+            @{
+                type = 'Microsoft.AzureStackHCI/networkInterfaces'; apiVersion = '2024-01-01'
+                name = "[concat(parameters('name'), '-nic')]"; location = "[parameters('location')]"
+                extendedLocation = $extendedLocation; tags = "[parameters('tags')]"
+                properties = @{ ipConfigurations = @(@{
+                    name = 'ipconfig1'; properties = @{ subnet = @{ id = "[parameters('networkId')]" } }
+                }) }
+            }
+            @{
+                type = 'Microsoft.AzureStackHCI/virtualMachineInstances'; apiVersion = '2024-01-01'
+                name = 'default'; scope = $machineId; extendedLocation = $extendedLocation
+                dependsOn = @($machineId, $nicId)
+                properties = @{
+                    hardwareProfile = @{ vmSize = 'Custom'; processors = "[parameters('processors')]"; memoryMB = "[parameters('memoryMB')]" }
+                    osProfile = @{
+                        adminUsername = "[parameters('adminUsername')]"; adminPassword = "[parameters('adminPassword')]"
+                        computerName = "[parameters('name')]"
+                        windowsConfiguration = @{ provisionVMAgent = $true; provisionVMConfigAgent = $true }
+                    }
+                    storageProfile = @{ vmConfigStoragePathId = "[parameters('storageId')]"; imageReference = @{ id = "[parameters('imageId')]" } }
+                    networkProfile = @{ networkInterfaces = @(@{ id = $nicId }) }
+                }
+            }
+        )
+    }
+}
+
+function Initialize-LocalBoxPrivateDirectory {
+    param([Parameter(Mandatory)][string]$Path)
+    if (Test-Path -LiteralPath $Path) {
+        $item = Get-Item -LiteralPath $Path -Force -ErrorAction Stop
+        if (-not $item.PSIsContainer -or ($item.Attributes -band [IO.FileAttributes]::ReparsePoint)) {
+            throw "Expected a private directory, not a file or link: $Path"
+        }
+    }
+    elseif ($IsWindows) {
+        New-Item -ItemType Directory -Path $Path -ErrorAction Stop | Out-Null
+    }
+    else {
+        [IO.Directory]::CreateDirectory($Path, [IO.UnixFileMode]::UserRead -bor [IO.UnixFileMode]::UserWrite -bor [IO.UnixFileMode]::UserExecute) | Out-Null
+    }
+    if ($IsWindows) {
+        $identity = [Security.Principal.WindowsIdentity]::GetCurrent().User
+        $acl = [Security.AccessControl.DirectorySecurity]::new()
+        $acl.SetOwner($identity)
+        $acl.SetAccessRuleProtection($true, $false)
+        $rule = [Security.AccessControl.FileSystemAccessRule]::new($identity, 'FullControl', 'ContainerInherit, ObjectInherit', 'None', 'Allow')
+        $acl.SetAccessRule($rule)
+        Set-Acl -LiteralPath $Path -AclObject $acl -ErrorAction Stop
+    }
+    else {
+        [IO.File]::SetUnixFileMode($Path, [IO.UnixFileMode]::UserRead -bor [IO.UnixFileMode]::UserWrite -bor [IO.UnixFileMode]::UserExecute)
+    }
+}
+
+function New-LocalBoxVmCredential {
+    $password = 'Lb!' + [Convert]::ToBase64String([Security.Cryptography.RandomNumberGenerator]::GetBytes(30)) + '9a'
+    try {
+        $secure = [Security.SecureString]::new()
+        foreach ($character in $password.GetEnumerator()) { $secure.AppendChar($character) }
+        $secure.MakeReadOnly()
+        return [pscredential]::new('localadmin', $secure)
+    }
+    finally { $password = $null }
+}
+
+function Get-LocalBoxReferenceVmCredential {
+    param(
+        [Parameter(Mandatory)][string]$MachineId,
+        [string]$Path = 'C:\LocalBox\credentials\sov-ref-vm\credential.clixml'
+    )
+    if (-not $IsWindows) { throw 'Reference-VM credential persistence requires Windows DPAPI on LocalBox-Client.' }
+    $directory = Split-Path -Parent $Path
+    Initialize-LocalBoxPrivateDirectory $directory
+    if (Test-Path -LiteralPath $Path) {
+        if ((Get-Item -LiteralPath $Path -Force -ErrorAction Stop).Attributes -band [IO.FileAttributes]::ReparsePoint) {
+            throw "Refusing to load a linked credential file: $Path"
+        }
+        try { $saved = Import-Clixml -LiteralPath $Path -ErrorAction Stop }
+        catch { throw "Cannot read or decrypt $Path. Use the same Windows account on this LocalBox-Client that created it. No credential was replaced." }
+        if ($saved.MachineId -ine $MachineId -or $saved.Credential -isnot [pscredential] -or
+            $saved.Credential.UserName -ne 'localadmin' -or $saved.Credential.Password.Length -eq 0) {
+            throw "Saved reference-VM credential in $Path is invalid or belongs to a different resource. No credential was replaced."
+        }
+        Write-Host "Reusing the encrypted reference-VM credential in $Path."
+        return $saved.Credential
+    }
+    $credential = New-LocalBoxVmCredential
+    $temporary = Join-Path $directory "$([guid]::NewGuid()).tmp"
+    try {
+        @{ MachineId = $MachineId; Credential = $credential } |
+            Export-Clixml -LiteralPath $temporary -Depth 5 -ErrorAction Stop
+        [IO.File]::Move($temporary, $Path, $false)
+    }
+    finally {
+        if (Test-Path -LiteralPath $temporary) { Remove-Item -LiteralPath $temporary -Force -ErrorAction Stop }
+    }
+    Write-Host "Generated reference-VM administrator credential; encrypted copy saved to $Path."
+    return $credential
+}
+
+function Submit-LocalBoxVM {
+    param([hashtable]$State, [hashtable]$Entry, [pscredential]$Credential, [hashtable]$Tags, [switch]$EnablePeriodicAssessment)
+    if ($Entry.Name -notmatch '^(?=.{1,15}$)(?=.*[a-zA-Z])[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?$') {
+        throw 'VM computer name must contain 1-15 letters, digits or internal hyphens, and cannot be all numeric.'
+    }
+    $directory = Join-Path ([IO.Path]::GetTempPath()) "lbvm-$([guid]::NewGuid())"
+    try {
+        Initialize-LocalBoxPrivateDirectory $directory
+        $templatePath = Join-Path $directory 'vm.json'
+        New-LocalBoxVmTemplate -EnablePeriodicAssessment:$EnablePeriodicAssessment | ConvertTo-Json -Depth 30 |
+            Set-Content -LiteralPath $templatePath -ErrorAction Stop
+        $values = @{
+            name = $Entry.Name; location = $State.Location; customLocationId = $State.CustomLocationId
+            imageId = $State.ImageId; networkId = $State.NetworkId; storageId = $State.StorageId
+            processors = $State.ProcessorCount; memoryMB = $State.MemoryMB
+            adminUsername = $Credential.UserName; adminPassword = $Credential.GetNetworkCredential().Password
+            tags = $Tags
+        }
+        $parameters = @{}
+        foreach ($key in $values.Keys) { $parameters[$key] = @{ value = $values[$key] } }
+        $parameterPath = Join-Path $directory 'parameters.json'
+        @{ '$schema' = 'https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#'; contentVersion = '1.0.0.0'; parameters = $parameters } |
+            ConvertTo-Json -Depth 10 | Set-Content -LiteralPath $parameterPath -ErrorAction Stop
+        $arguments = @('--subscription', $State.SubscriptionId, '--resource-group', $State.ResourceGroupName,
+            '--name', $Entry.Name, '--template-file', $templatePath, '--parameters', "@$parameterPath")
+        $preview = Invoke-LocalBoxAz (@('deployment', 'group', 'what-if') + $arguments + @('--no-pretty-print', '--result-format', 'ResourceIdOnly'))
+        $machineId = "/subscriptions/$($State.SubscriptionId)/resourceGroups/$($State.ResourceGroupName)/providers/Microsoft.HybridCompute/machines/$($Entry.Name)"
+        $allowed = @($machineId, "$machineId/providers/Microsoft.AzureStackHCI/virtualMachineInstances/default",
+            "/subscriptions/$($State.SubscriptionId)/resourceGroups/$($State.ResourceGroupName)/providers/Microsoft.AzureStackHCI/networkInterfaces/$($Entry.Name)-nic")
+        $creates = @($preview.changes | Where-Object changeType -eq 'Create')
+        $unsafe = @($preview.changes | Where-Object {
+            ($_.resourceId -iin $allowed -and $_.changeType -ne 'Create') -or
+            ($_.resourceId -inotIn $allowed -and $_.changeType -notin @('Ignore', 'NoChange'))
+        })
+        if ($preview.status -ne 'Succeeded' -or $creates.Count -ne 3 -or
+            @($creates.resourceId | Sort-Object -Unique).Count -ne 3 -or $unsafe.Count) {
+            $Entry.SubmissionError = 'ARM what-if did not confirm exactly the three new VM resources with no changes to existing resources.'
+            throw $Entry.SubmissionError
+        }
+        Invoke-LocalBoxAz (@('deployment', 'group', 'create') + $arguments + @('--no-wait')) -NoOutput
+    }
+    catch { throw "VM submission failed for $($Entry.Name). Inspect its ARM deployment; resources may still be provisioning. CLI details are withheld to protect the VM credential." }
+    finally {
+        $values = $null
+        $parameters = $null
+        if (Test-Path -LiteralPath $directory) { Remove-Item -LiteralPath $directory -Recurse -Force -ErrorAction Stop }
+    }
+}
+
+function Get-LocalBoxReferenceVmReadiness {
+    param([string]$MachineId)
+    $machine = Get-LocalBoxResource $MachineId
+    $instance = Get-LocalBoxResource "$MachineId/providers/Microsoft.AzureStackHCI/virtualMachineInstances/default"
+    if ($machine.properties -isnot [System.Collections.IDictionary] -or -not $instance.properties.status.powerState) {
+        throw "Reference VM $MachineId returned incomplete machine/power data. Inspect its provisioning state."
+    }
+    $extensions = @(Get-LocalBoxArmCollection "https://management.azure.com$MachineId/extensions?api-version=2024-07-10")
+    $mde = @($extensions | Where-Object { $_.properties.publisher -eq 'Microsoft.Azure.AzureDefenderForServers' -and $_.properties.type -eq 'MDE.Windows' })
+    if ($mde.Count -gt 1 -or ($mde.Count -eq 1 -and -not $mde[0].properties.provisioningState)) {
+        throw "Reference VM $MachineId returned unexpected MDE extension status."
+    }
+    @{
+        ObservedAt = [datetime]::UtcNow.ToString('o')
+        PowerState = $instance.properties.status.powerState
+        ArcStatus = if ($machine.properties.status) { $machine.properties.status } else { 'NotReported' }
+        MdeProvisioningState = if ($mde.Count) { $mde[0].properties.provisioningState } else { 'Pending' }
+        PeriodicAssessmentMode = $machine.properties.osProfile.windowsConfiguration.patchSettings.assessmentMode
+        DefenderAssessments = 'NotVerified'
+        UpdateAssessmentResults = 'NotVerified'
+    }
+}
+
+function Sync-LocalBoxReferenceVm {
+    [CmdletBinding(SupportsShouldProcess)]
+    param([hashtable]$Settings, [string]$Location, [string]$CustomLocationId, [string]$ImageId, [string]$NetworkId, [string]$StorageId)
+    if (-not $Settings.IncludeReferenceVm) { return }
+    $name = 'sov-ref-vm'
+    $scope = "/subscriptions/$($Settings.SubscriptionId)/resourceGroups/$($Settings.ResourceGroupName)"
+    $machineId = "$scope/providers/Microsoft.HybridCompute/machines/$name"
+    $nicId = "$scope/providers/Microsoft.AzureStackHCI/networkInterfaces/$name-nic"
+    $instanceId = "$machineId/providers/Microsoft.AzureStackHCI/virtualMachineInstances/default"
+    $tags = @{ MicroHackPurpose = 'LocalBoxReferenceVM'; SecurityControl = 'Ignore'; CostControl = 'Ignore' }
+    $expected = @{
+        extendedLocation = @{ name = $CustomLocationId }
+        properties = @{
+            hardwareProfile = @{ vmSize = 'Custom'; processors = 2; memoryMB = 4096 }
+            osProfile = @{ computerName = $name; windowsConfiguration = @{ provisionVMAgent = $true; provisionVMConfigAgent = $true } }
+            storageProfile = @{ vmConfigStoragePathId = $StorageId; imageReference = @{ id = $ImageId } }
+            networkProfile = @{ networkInterfaces = @(@{ id = $nicId }) }
+        }
+    }
+    $machineExpected = @{ kind = 'HCI'; location = $Location; tags = $tags; identity = @{ type = 'SystemAssigned' }
+        properties = @{ osProfile = @{ windowsConfiguration = @{ patchSettings = @{ assessmentMode = 'AutomaticByPlatform' } } } } }
+    $nicExpected = @{ location = $Location; extendedLocation = @{ name = $CustomLocationId }; tags = $tags
+        properties = @{ ipConfigurations = @(@{ properties = @{ subnet = @{ id = $NetworkId } } }) } }
+    $resources = @(Invoke-LocalBoxAz @('resource', 'list', '--subscription', $Settings.SubscriptionId, '--resource-group', $Settings.ResourceGroupName))
+    $existing = @($resources | Where-Object id -ieq $machineId)
+    if ($existing.Count) {
+        Assert-LocalBoxProperties (Get-LocalBoxResource $machineId) $machineExpected
+        Assert-LocalBoxProperties (Get-LocalBoxResource $nicId) $nicExpected
+        Assert-LocalBoxProperties (Get-LocalBoxResource $instanceId) $expected
+        Write-Host "Reusing reference VM $name without changing credentials or configuration."
+    }
+    elseif (@($resources | Where-Object { $_.id -iin @($nicId, $instanceId) }).Count) {
+        throw 'Partial or conflicting reference-VM resources exist. Inspect them before retrying; preparation will not overwrite or delete them.'
+    }
+    elseif ($PSCmdlet.ShouldProcess($machineId, 'Create shared reference VM (2 vCPU, 4 GiB RAM, guest management and periodic update assessment)')) {
+        $credential = $Settings.ReferenceVmCredential
+        if (-not $credential) {
+            $credential = Get-LocalBoxReferenceVmCredential -MachineId $machineId
+        }
+        if (-not $credential) { throw 'A separate reference-VM credential is required; nested domain credentials are not reused.' }
+        $state = @{
+            SubscriptionId = $Settings.SubscriptionId; ResourceGroupName = $Settings.ResourceGroupName; Location = $Location
+            CustomLocationId = $CustomLocationId; ImageId = $ImageId; NetworkId = $NetworkId; StorageId = $StorageId
+            ProcessorCount = 2; MemoryMB = 4096
+        }
+        Submit-LocalBoxVM -State $state -Entry @{ Name = $name } -Credential $credential -Tags $tags -EnablePeriodicAssessment
+        Wait-LocalBoxResource "$scope/providers/Microsoft.Resources/deployments/$name" -TimeoutSeconds ($Settings.TimeoutMinutes * 60) | Out-Null
+    }
+    else { return }
+    if ($WhatIfPreference) { return }
+    Assert-LocalBoxProperties (Wait-LocalBoxResource $instanceId -TimeoutSeconds ($Settings.TimeoutMinutes * 60)) $expected
+    Assert-LocalBoxProperties (Get-LocalBoxResource $machineId) $machineExpected
+    Assert-LocalBoxProperties (Get-LocalBoxResource $nicId) $nicExpected
+    $readiness = Get-LocalBoxReferenceVmReadiness $machineId
+    Write-Host "Reference VM: power=$($readiness.PowerState), Arc=$($readiness.ArcStatus), MDE=$($readiness.MdeProvisioningState)."
+    Write-Warning 'Reference VM is for inspection only, not enforced read-only by RBAC. Verify Defender and Update Manager assessment results before the event; provisioning does not prove assessment completion.'
+    @{
+        Name = $name; MachineId = $machineId; InstanceId = $instanceId; NicId = $nicId
+        Expected = $expected; MachineExpected = $machineExpected; NicExpected = $nicExpected
+        Readiness = $readiness
+    }
 }
 
 function Resolve-LocalBoxStoragePath {
@@ -274,6 +554,91 @@ function Sync-LocalBoxResource {
         Assert-LocalBoxProperties $resource $Expected
         return $resource
     }
+}
+
+function Resolve-LocalBoxImageVersion {
+    param(
+        [Parameter(Mandatory)][string]$ClusterId,
+        [Parameter(Mandatory)][hashtable]$Identifier,
+        [ValidateNotNullOrEmpty()][string]$RequestedVersion = 'latest'
+    )
+    if ($ClusterId -notmatch '^/subscriptions/[^/]+/resourceGroups/[^/]+/providers/Microsoft\.AzureStackHCI/clusters/[^/]+$') {
+        throw 'Image version discovery requires the Azure Local cluster resource ID.'
+    }
+    foreach ($field in @('publisher', 'offer', 'sku')) {
+        if ([string]::IsNullOrWhiteSpace($Identifier[$field])) { throw "Image identifier is missing $field." }
+    }
+    $offerId = [uri]::EscapeDataString("$($Identifier.publisher):$($Identifier.offer)")
+    $offer = Invoke-LocalBoxAz @('rest', '--method', 'get', '--url',
+        "https://management.azure.com$ClusterId/providers/Microsoft.EdgeMarketplace/offers/${offerId}?api-version=2023-08-01")
+    if ($offer.properties.marketplaceSkus -isnot [System.Collections.IList]) {
+        throw 'Edge Marketplace returned no valid SKU catalog for this cluster; no image import or deletion was attempted.'
+    }
+    $skus = @($offer.properties.marketplaceSkus | Where-Object marketplaceSkuId -eq $Identifier.sku)
+    if ($skus.Count -ne 1 -or $skus[0].marketplaceSkuVersions -isnot [System.Collections.IList] -or
+        $skus[0].marketplaceSkuVersions.Count -eq 0) {
+        throw "Edge Marketplace does not advertise one usable version list for SKU '$($Identifier.sku)' on this cluster."
+    }
+    $versions = @($skus[0].marketplaceSkuVersions | ForEach-Object {
+        $parsed = $null
+        if (-not [version]::TryParse($_.name, [ref]$parsed)) { throw 'Edge Marketplace returned an invalid image version.' }
+        [string]$_.name
+    })
+    if ($RequestedVersion -eq 'latest') {
+        $selected = $versions | Sort-Object { [version]$_ } -Descending | Select-Object -First 1
+    }
+    elseif ($RequestedVersion -in $versions) { $selected = $RequestedVersion }
+    else {
+        throw "Image version '$RequestedVersion' is not advertised by this cluster's Edge Marketplace catalog for '$($Identifier.sku)'. Select a listed version or use latest."
+    }
+    Write-Host "Using Edge Marketplace image version $selected for $($Identifier.sku)."
+    return $selected
+}
+
+function Sync-LocalBoxImage {
+    [CmdletBinding(SupportsShouldProcess)]
+    param(
+        [string]$Id, [hashtable]$Expected, [string[]]$CreateArguments,
+        [Parameter(Mandatory)][string]$ClusterId, [int]$TimeoutSeconds = 21600
+    )
+    if ($Id -notmatch '^/subscriptions/([^/]+)/resourceGroups/([^/]+)/providers/Microsoft\.AzureStackHCI/marketplaceGalleryImages/[^/]+$') {
+        throw 'Image recovery requires an exact Azure Local Marketplace image resource ID.'
+    }
+    $listArguments = @('resource', 'list', '--subscription', $Matches[1], '--resource-group', $Matches[2])
+    $existing = @((Invoke-LocalBoxAz $listArguments) | Where-Object id -ieq $Id)
+    if ($existing.Count) {
+        $image = Get-LocalBoxResource $Id
+        if ($image.properties.provisioningState -notin @('Failed', 'Deleting')) {
+            return Sync-LocalBoxResource -Id $Id -Expected $Expected -CreateArguments $CreateArguments -TimeoutSeconds $TimeoutSeconds -WhatIf:$WhatIfPreference
+        }
+        Assert-LocalBoxProperties $image $Expected
+    }
+    $requestedVersion = if ($Expected.properties.Contains('version')) { $Expected.properties.version.name } else { 'latest' }
+    $version = Resolve-LocalBoxImageVersion -ClusterId $ClusterId -Identifier $Expected.properties.identifier -RequestedVersion $requestedVersion
+    $createExpected = $Expected.Clone()
+    $createExpected.properties = $Expected.properties.Clone()
+    $createExpected.properties.version = @{ name = $version }
+    if ($existing.Count) {
+        if ($image.properties.provisioningState -eq 'Failed') {
+            Write-Warning "Image import failed for $Id. Retrying with catalog-listed version $version."
+            if (-not $PSCmdlet.ShouldProcess($Id, 'Delete matching Failed image and retry import once')) {
+                if ($WhatIfPreference) { return }
+                throw 'Failed-image recovery was declined. No image was deleted; preparation cannot continue with this image.'
+            }
+            Invoke-LocalBoxAz @('resource', 'delete', '--ids', $Id, '--api-version', '2024-01-01') -TimeoutSeconds $TimeoutSeconds -NoOutput
+        }
+        if ($WhatIfPreference) {
+            Write-Host "Image deletion is in progress; a real run will wait for removal before importing $Id."
+            return
+        }
+        $deadline = [datetime]::UtcNow.AddSeconds($TimeoutSeconds)
+        while (@((Invoke-LocalBoxAz $listArguments) | Where-Object id -ieq $Id).Count) {
+            if ([datetime]::UtcNow -ge $deadline) { throw "Timed out waiting for image deletion: $Id. No replacement import was started." }
+            Write-Host "Waiting for failed image removal: $Id..."
+            Start-Sleep -Seconds 15
+        }
+    }
+    Sync-LocalBoxResource -Id $Id -Expected $createExpected -CreateArguments ($CreateArguments + @('--version', $version)) -TimeoutSeconds $TimeoutSeconds -WhatIf:$WhatIfPreference
 }
 
 function Get-LocalBoxMetalLbPlan {
@@ -496,8 +861,31 @@ function Wait-LocalBoxStorageReady {
     } while ($true)
 }
 
+function Get-LocalBoxPartitionState {
+    param([string]$Node, [pscredential]$Credential)
+    $state = Invoke-Command -VMName $Node -Credential $Credential -ErrorAction Stop -ScriptBlock {
+        $ErrorActionPreference = 'Stop'
+        $partitions = @(Get-Volume -FileSystemLabel 'UserStorage_1' | Get-Partition)
+        if ($partitions.Count -ne 1) { throw 'Cannot uniquely resolve the UserStorage_1 partition.' }
+        $partition = $partitions[0]
+        $disk = $partition | Get-Disk
+        if ($partition.Size -le 0 -or $partition.Offset -lt 0 -or $disk.Size -lt ($partition.Offset + $partition.Size)) {
+            throw 'Invalid UserStorage_1 disk/partition sizes; refusing partition expansion.'
+        }
+        # Ignore the alignment/GPT tail, without running the costly supported-size query on every rerun.
+        @{
+            Size = $partition.Size
+            NeedsExpansion = ($disk.Size - $partition.Offset - $partition.Size) -gt 1MB
+        }
+    }
+    if ($state.NeedsExpansion -isnot [bool] -or $state.Size -le 0) {
+        throw 'No valid UserStorage_1 partition state was returned; preparation cannot safely skip or perform expansion.'
+    }
+    return $state
+}
+
 function Initialize-LocalBoxStorage {
-    [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'High')]
+    [CmdletBinding(SupportsShouldProcess)]
     param(
         [hashtable]$Configuration, [pscredential]$Credential, [int]$DesiredSizeGB,
         [string]$Subscription, [string]$ResourceGroup, [switch]$RemoveSecondary
@@ -560,15 +948,24 @@ function Initialize-LocalBoxStorage {
                 throw 'Insufficient supported storage capacity including resiliency and reserve. No resize performed.'
             }
             Resize-VirtualDisk -FriendlyName 'UserStorage_1' -Size $target
+            Update-HostStorageCache -ErrorAction Stop
         }
     }
-    if ($PSCmdlet.ShouldProcess('UserStorage_1 partition', 'Extend partition to existing virtual disk size')) {
+    $partitionState = Get-LocalBoxPartitionState $nodes[0] $Credential
+    $needsExpansion = $partitionState.NeedsExpansion -or ($WhatIfPreference -and $state.Size -lt ([uint64]$DesiredSizeGB * 1GB))
+    if ($needsExpansion -and $PSCmdlet.ShouldProcess('UserStorage_1 partition', 'Extend partition to existing virtual disk size')) {
         Invoke-Command -VMName $nodes[0] -Credential $Credential -ErrorAction Stop -ScriptBlock {
             $ErrorActionPreference = 'Stop'
             $partition = Get-Volume -FileSystemLabel 'UserStorage_1' | Get-Partition
             $maximum = ($partition | Get-PartitionSupportedSize).SizeMax
             if ($maximum -gt $partition.Size) { $partition | Resize-Partition -Size $maximum }
         }
+        if ((Get-LocalBoxPartitionState $nodes[0] $Credential).NeedsExpansion) {
+            throw 'UserStorage_1 still has unexpanded partition space. Inspect the disk/partition state before retrying.'
+        }
+    }
+    elseif (-not $needsExpansion) {
+        Write-Host 'UserStorage_1 partition already fills the disk; no partition expansion needed.'
     }
 }
 
@@ -593,9 +990,6 @@ function Invoke-LocalBoxPreparation {
     Test-LocalBoxAddressPool $config.AKSIPPrefix $config.AKSNodeStartIP $config.AKSNodeEndIP $config.AKSGWIP @($config.AKSControlPlaneIP) -ReservedRanges @($vipRange)
     Test-LocalBoxAddressPool $config.AKSIPPrefix $config.AKSControlPlaneIP $config.AKSControlPlaneIP $config.AKSGWIP -ReservedRanges @($vipRange)
     if ($config.vmVLAN -eq $config.AKSVLAN -or $config.vmIpPrefix -eq $config.AKSIPPrefix) { throw 'VMs and AKS must use separate VLANs and subnets.' }
-    if (-not $Settings.AddressReservationsConfirmed) {
-        throw 'Verify BOTH VM/node pools and the AKS service VIP reservation against DHCP leases/exclusions and static reservations, then pass -AddressReservationsConfirmed. The script does not alter DHCP/router configuration.'
-    }
     $Settings.NodeCredential = Resolve-LocalBoxNodeCredential -Configuration $config -Credential $Settings.NodeCredential
     $previousConfig = $env:AZURE_CONFIG_DIR
     $previousExtensions = $env:AZURE_EXTENSION_DIR
@@ -657,8 +1051,6 @@ function Invoke-LocalBoxPreparation {
             }
             if ($Settings.VmSwitchName -notin $state.Switches) { throw "External switch not present on $node." }
         }
-        $provider = Invoke-LocalBoxAz @('provider', 'show', '--namespace', 'Microsoft.EdgeMarketplace')
-        if ($provider.registrationState -ne 'Registered') { throw 'Ask the subscription administrator to register Microsoft.EdgeMarketplace before importing the image.' }
         $storage = Resolve-LocalBoxStoragePath -Resources $resources -Name UserStorage1 -CustomLocationId $custom.id
         $storageId = $storage.id
         $imageId = "$scope/providers/Microsoft.AzureStackHCI/marketplaceGalleryImages/$($Settings.ImageName)"
@@ -671,17 +1063,6 @@ function Invoke-LocalBoxPreparation {
         $location = $custom.location
         $timeout = $Settings.TimeoutMinutes * 60
         $common = @('--subscription', $Settings.SubscriptionId, '--resource-group', $Settings.ResourceGroupName, '--location', $location, '--custom-location', $custom.id)
-        $imageExpected = @{
-            extendedLocation = @{ name = $custom.id }; location = $location
-            properties = @{ containerId = $storageId; osType = 'Windows'; identifier = @{
-                publisher = 'microsoftwindowsserver'; offer = 'windowsserver'; sku = '2025-datacenter-azure-edition-smalldisk'
-            } }
-        }
-        if ($Settings.ImageVersion -ne 'latest') { $imageExpected.properties.version = @{ name = $Settings.ImageVersion } }
-        Write-Host "Preparing VM image $($Settings.ImageName); download can take several hours..."
-        $image = Sync-LocalBoxResource -Id $imageId -Expected $imageExpected -TimeoutSeconds $timeout -CreateArguments (@('stack-hci-vm', 'image', 'create') + $common + @(
-            '--name', $Settings.ImageName, '--os-type', 'Windows', '--publisher', 'microsoftwindowsserver', '--offer', 'windowsserver',
-            '--sku', '2025-datacenter-azure-edition-smalldisk', '--version', $Settings.ImageVersion, '--storage-path-id', $storageId))
         $networks = @(
             @{ Name = 'localbox-vm-lnet-vlan200'; Prefix = $config.vmIpPrefix; Gateway = $config.vmGateway; Dns = $config.vmDNS; Vlan = $config.vmVLAN; Start = $Settings.VmPoolStart; End = $Settings.VmPoolEnd },
             @{ Name = 'localbox-aks-lnet-vlan110'; Prefix = $config.AKSIPPrefix; Gateway = $config.AKSGWIP; Dns = $config.AKSDNSIP; Vlan = $config.AKSVLAN; Start = $config.AKSNodeStartIP; End = $config.AKSNodeEndIP }
@@ -739,6 +1120,21 @@ function Invoke-LocalBoxPreparation {
             Sync-LocalBoxMetalLb -ClusterId $aksId -Plan $metalLb -RuntimeObjectId $Settings.KubernetesRuntimeObjectId `
                 -TimeoutSeconds $timeout -WhatIf:$WhatIfPreference
         }
+        $provider = Invoke-LocalBoxAz @('provider', 'show', '--namespace', 'Microsoft.EdgeMarketplace')
+        if ($provider.registrationState -ne 'Registered') { throw 'Ask the subscription administrator to register Microsoft.EdgeMarketplace before importing the image.' }
+        $imageExpected = @{
+            extendedLocation = @{ name = $custom.id }; location = $location
+            properties = @{ containerId = $storageId; osType = 'Windows'; identifier = @{
+                publisher = 'microsoftwindowsserver'; offer = 'windowsserver'; sku = '2025-datacenter-azure-edition-smalldisk'
+            } }
+        }
+        if ($Settings.ImageVersion -ne 'latest') { $imageExpected.properties.version = @{ name = $Settings.ImageVersion } }
+        Write-Host "Preparing VM image $($Settings.ImageName); download can take several hours..."
+        $image = Sync-LocalBoxImage -Id $imageId -Expected $imageExpected -ClusterId $cluster[0].id -TimeoutSeconds $timeout -CreateArguments (@('stack-hci-vm', 'image', 'create') + $common + @(
+            '--name', $Settings.ImageName, '--os-type', 'Windows', '--publisher', 'microsoftwindowsserver', '--offer', 'windowsserver',
+            '--sku', '2025-datacenter-azure-edition-smalldisk', '--storage-path-id', $storageId))
+        $referenceVm = Sync-LocalBoxReferenceVm -Settings $Settings -Location $location -CustomLocationId $custom.id `
+            -ImageId $imageId -NetworkId $networks[0].Id -StorageId $storageId -WhatIf:$WhatIfPreference
         $manifest = @{
             SubscriptionId = $Settings.SubscriptionId; ResourceGroupName = $Settings.ResourceGroupName; CustomLocationId = $custom.id
             ClusterId = $cluster[0].id; BridgeId = $bridge.id; ExtensionId = $extensions[0]; StorageId = $storageId
@@ -748,6 +1144,14 @@ function Invoke-LocalBoxPreparation {
             FullHealthVerified = $false
             AksPreparationSkipped = [bool]$Settings.SkipAks
             MetalLb = $metalLb
+        }
+        if ($referenceVm) { $manifest.ReferenceVm = $referenceVm }
+        elseif (Test-Path -LiteralPath $Settings.ManifestPath) {
+            $previousManifest = Get-Content -LiteralPath $Settings.ManifestPath -Raw -ErrorAction Stop | ConvertFrom-Json -AsHashtable
+            if ($previousManifest.SubscriptionId -ieq $Settings.SubscriptionId -and
+                $previousManifest.ResourceGroupName -ieq $Settings.ResourceGroupName -and $previousManifest.ReferenceVm) {
+                $manifest.ReferenceVm = $previousManifest.ReferenceVm
+            }
         }
         if ($PSCmdlet.ShouldProcess($Settings.ManifestPath, 'Write nonsecret preparation manifest')) {
             $manifest | ConvertTo-Json -Depth 30 | Set-Content -LiteralPath $Settings.ManifestPath -Encoding utf8
@@ -770,10 +1174,11 @@ if ($MyInvocation.InvocationName -ne '.') {
         SubscriptionId = $SubscriptionId; ResourceGroupName = $ResourceGroupName; ConfigPath = $ConfigPath
         AksAdminGroupObjectId = $AksAdminGroupObjectId; KubernetesRuntimeObjectId = $KubernetesRuntimeObjectId
         SkipAks = [bool]$SkipAks; NodeCredential = $NodeCredential; VmSwitchName = $VmSwitchName
+        IncludeReferenceVm = [bool]$IncludeReferenceVm; ReferenceVmCredential = $ReferenceVmCredential
         ImageName = $ImageName; ImageVersion = $ImageVersion; VmPoolStart = $VmPoolStart; VmPoolEnd = $VmPoolEnd
         AksClusterName = $AksClusterName; KubernetesVersion = $KubernetesVersion; NodeVmSize = $NodeVmSize
         ControlPlaneVmSize = $ControlPlaneVmSize; NodeCount = $NodeCount; StorageSizeGB = $StorageSizeGB
-        RemoveUserStorage2 = [bool]$RemoveUserStorage2; AddressReservationsConfirmed = [bool]$AddressReservationsConfirmed
+        RemoveUserStorage2 = [bool]$RemoveUserStorage2
         TimeoutMinutes = $TimeoutMinutes; ManifestPath = $ManifestPath
     }
     Invoke-LocalBoxPreparation -Settings $settings

@@ -1,0 +1,251 @@
+# ============================================================================
+# Autonomous Edge Triage & Actuation Agent Deployment
+# - Runs under the 'inference-client' ServiceAccount
+# - Mounts a projected Kubernetes Service Account Token (audience: foundry-local)
+#   at /var/run/secrets/foundry-local/token
+# - Subscribes to 'factory/line1/anomalies' on the AIO MQTT Broker
+# - Invokes Foundry Local (/v1/chat/completions) over the internal Istio Gateway
+# - Publishes autonomous PLC commands to 'factory/line1/commands'
+# ============================================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: edge-agent-code
+  namespace: edge-agents
+data:
+  agent.py: |
+    import json
+    import os
+    import ssl
+    import time
+    import urllib.request
+    from datetime import datetime, timezone
+    import paho.mqtt.client as mqtt
+
+    MQTT_HOST = os.getenv("MQTT_HOST", "aio-broker-internal.azure-iot-operations.svc.cluster.local")
+    MQTT_PORT = int(os.getenv("MQTT_PORT", "1883"))
+    ANOMALIES_TOPIC = os.getenv("ANOMALIES_TOPIC", "factory/line1/anomalies")
+    COMMANDS_TOPIC = os.getenv("COMMANDS_TOPIC", "factory/line1/commands")
+    FOUNDRY_ENDPOINT = os.getenv(
+        "FOUNDRY_ENDPOINT",
+        "https://inference-internal-gateway-istio.foundry-local-operator.svc.cluster.local:443/phi-4-mini/v1/chat/completions",
+    )
+    MODEL_NAME = os.getenv("MODEL_NAME", "Phi-4-mini-instruct-generic-cpu:5")
+    SAT_TOKEN_PATH = os.getenv("SAT_TOKEN_PATH", "/var/run/secrets/foundry-local/token")
+    SOP_PATH = os.getenv("SOP_PATH", "/etc/edge-sop/sop.md")
+
+    def read_local_sop() -> str:
+        try:
+            with open(SOP_PATH, "r", encoding="utf-8") as f:
+                return f.read()
+        except Exception as exc:
+            return f"Fallback SOP: If temp >= 105C or vibration >= 13.0, call trigger_safety_interlock (-60% RPM). Otherwise call adjust_plc_setpoint (-25% RPM). ({exc})"
+
+    def read_sat_token() -> str:
+        """Always re-read the projected Kubernetes Service Account Token so rotated tokens are picked up."""
+        with open(SAT_TOKEN_PATH, "r", encoding="utf-8") as f:
+            return f.read().strip()
+
+    def invoke_foundry_local(telemetry: dict, sop_text: str) -> dict:
+        token = read_sat_token()
+        system_prompt = (
+            "You are an autonomous industrial edge AI agent. Evaluate the sensor anomaly against the SOP and reply ONLY with one compact JSON object on a single line (no markdown, no explanation outside JSON):\n"
+            '{"tool_name":"adjust_plc_setpoint"|"trigger_safety_interlock","arguments":{"spindle_rpm_delta_pct":int,"enable_coolant_boost":true,"interlock_mode":str,"priority":str},"reasoning":str}\n'
+            f"{sop_text}"
+        )
+        request_body = {
+            "model": MODEL_NAME,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": json.dumps(telemetry)},
+            ],
+            "temperature": 0.0,
+            "max_tokens": 140,
+        }
+
+        ctx = ssl.create_default_context()
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
+
+        req = urllib.request.Request(
+            FOUNDRY_ENDPOINT,
+            data=json.dumps(request_body).encode("utf-8"),
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {token}",
+            },
+            method="POST",
+        )
+        start = time.perf_counter()
+        with urllib.request.urlopen(req, context=ctx, timeout=60) as resp:
+            raw = json.loads(resp.read().decode("utf-8"))
+        latency_ms = round((time.perf_counter() - start) * 1000, 1)
+
+        content = raw["choices"][0]["message"]["content"].strip()
+        if "{" in content and "}" in content:
+            content = content[content.find("{"):content.rfind("}") + 1]
+        decision = json.loads(content)
+        decision["inferenceLatencyMs"] = latency_ms
+        return decision
+
+    def evaluate_anomaly(client: mqtt.Client, telemetry: dict):
+        sop_text = read_local_sop()
+        start_ts = time.perf_counter()
+        try:
+            decision = invoke_foundry_local(telemetry, sop_text)
+            source = "foundry-local-onnx-genai"
+        except Exception as exc:
+            print(f"[EDGE-AGENT] Foundry Local call notice ({exc}); applying deterministic SOP fallback.", flush=True)
+            is_critical = (
+                telemetry.get("bearingTempC", 0) >= 105.0
+                or telemetry.get("vibrationMmPerSec", 0) >= 13.0
+                or telemetry.get("coolantFlowLpm", 10) < 2.0
+            )
+            decision = {
+                "tool_name": "trigger_safety_interlock" if is_critical else "adjust_plc_setpoint",
+                "arguments": {
+                    "spindle_rpm_delta_pct": -60 if is_critical else -25,
+                    "enable_coolant_boost": True,
+                    "interlock_mode": "SAFE_HOLD" if is_critical else "CLOSED_LOOP_THROTTLE",
+                    "priority": "P1-CRITICAL-INTERLOCK" if is_critical else "P2-WARNING",
+                },
+                "reasoning": f"SOP-CNC-042 rule evaluation for temp={telemetry.get('bearingTempC')}C, vib={telemetry.get('vibrationMmPerSec')}mm/s",
+                "inferenceLatencyMs": round((time.perf_counter() - start_ts) * 1000, 1),
+            }
+            source = "local-sop-deterministic-guard"
+
+        command_event = {
+            "commandId": f"cmd-{int(time.time() * 1000)}",
+            "machineId": telemetry.get("machineId", "CNC-EXTRUDER-01"),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "triggerTelemetry": {
+                "bearingTempC": telemetry.get("bearingTempC"),
+                "vibrationMmPerSec": telemetry.get("vibrationMmPerSec"),
+                "coolantFlowLpm": telemetry.get("coolantFlowLpm"),
+            },
+            "authMethod": "Kubernetes-SAT (audience: foundry-local)",
+            "inferenceEngine": source,
+            "decision": decision,
+        }
+        client.publish(COMMANDS_TOPIC, json.dumps(command_event), qos=1)
+        print(
+            f"[EDGE-AGENT] >>> Published autonomous actuation to {COMMANDS_TOPIC}: "
+            f"tool={decision.get('tool_name')} latency={decision.get('inferenceLatencyMs')}ms "
+            f"args={json.dumps(decision.get('arguments'))}",
+            flush=True,
+        )
+
+    def on_connect(client, userdata, flags, reason_code, properties=None):
+        print(f"[EDGE-AGENT] Connected to AIO MQTT Broker at {MQTT_HOST}:{MQTT_PORT} (rc={reason_code})", flush=True)
+        client.subscribe(ANOMALIES_TOPIC, qos=1)
+        print(f"[EDGE-AGENT] Subscribed to anomaly topic: {ANOMALIES_TOPIC}", flush=True)
+
+    def on_message(client, userdata, msg):
+        try:
+            telemetry = json.loads(msg.payload.decode("utf-8"))
+            print(
+                f"[EDGE-AGENT] <<< Anomaly received on {msg.topic}: "
+                f"machine={telemetry.get('machineId')} temp={telemetry.get('bearingTempC')}C "
+                f"vib={telemetry.get('vibrationMmPerSec')}mm/s",
+                flush=True,
+            )
+            evaluate_anomaly(client, telemetry)
+        except Exception as exc:
+            print(f"[EDGE-AGENT] Error handling message: {exc}", flush=True)
+
+    if __name__ == "__main__":
+        client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id="autonomous-edge-agent-01")
+        client.on_connect = on_connect
+        client.on_message = on_message
+        while True:
+            try:
+                client.connect(MQTT_HOST, MQTT_PORT, keepalive=60)
+                break
+            except Exception as exc:
+                print(f"[EDGE-AGENT] Waiting for AIO MQTT Broker ({MQTT_HOST}:{MQTT_PORT}): {exc}", flush=True)
+                time.sleep(5)
+        client.loop_forever()
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: autonomous-edge-agent
+  namespace: edge-agents
+  labels:
+    app: autonomous-edge-agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: autonomous-edge-agent
+  template:
+    metadata:
+      labels:
+        app: autonomous-edge-agent
+    spec:
+      serviceAccountName: inference-client
+      automountServiceAccountToken: false
+      containers:
+        - name: agent
+          image: python:3.12-slim
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/sh
+            - -c
+            - |
+              (pip install --no-index --find-links=/opt/edge-wheels paho-mqtt==2.1.0 || pip install --no-cache-dir paho-mqtt==2.1.0) && python /app/agent.py
+          env:
+            - name: MQTT_HOST
+              value: "aio-broker-internal.azure-iot-operations.svc.cluster.local"
+            - name: MQTT_PORT
+              value: "1883"
+            - name: ANOMALIES_TOPIC
+              value: "factory/line1/anomalies"
+            - name: COMMANDS_TOPIC
+              value: "factory/line1/commands"
+            - name: FOUNDRY_ENDPOINT
+              value: "https://inference-internal-gateway-istio.foundry-local-operator.svc.cluster.local:443/phi-4-mini/v1/chat/completions"
+            - name: MODEL_NAME
+              value: "Phi-4-mini-instruct-generic-cpu:5"
+            - name: SAT_TOKEN_PATH
+              value: "/var/run/secrets/foundry-local/token"
+            - name: SOP_PATH
+              value: "/etc/edge-sop/sop.md"
+          volumeMounts:
+            - name: agent-code-vol
+              mountPath: /app
+              readOnly: true
+            - name: local-sop-vol
+              mountPath: /etc/edge-sop
+              readOnly: true
+            - name: foundry-local-sat
+              mountPath: /var/run/secrets/foundry-local
+              readOnly: true
+            - name: wheel-cache-vol
+              mountPath: /opt/edge-wheels
+              readOnly: true
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+      volumes:
+        - name: agent-code-vol
+          configMap:
+            name: edge-agent-code
+        - name: local-sop-vol
+          configMap:
+            name: local-sop-runbook
+        - name: foundry-local-sat
+          projected:
+            sources:
+              - serviceAccountToken:
+                  path: token
+                  audience: foundry-local
+                  expirationSeconds: 3600
+        - name: wheel-cache-vol
+          hostPath:
+            path: /opt/edge-wheels
+            type: DirectoryOrCreate

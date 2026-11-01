@@ -1,0 +1,76 @@
+#cloud-config
+package_update: true
+package_upgrade: true
+packages:
+  - curl
+  - jq
+  - git
+  - ca-certificates
+  - apt-transport-https
+  - gnupg
+  - lsb-release
+  - python3-pip
+  - python3-venv
+  - mosquitto-clients
+
+write_files:
+  - path: /etc/sysctl.d/99-azure-iot-operations.conf
+    permissions: '0644'
+    content: |
+      fs.inotify.max_user_instances = 8192
+      fs.inotify.max_user_watches = 524288
+      fs.file-max = 100000
+
+  - path: /usr/local/bin/bootstrap-edge-host.sh
+    permissions: '0755'
+    content: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+
+      echo "[1/5] Applying kernel sysctl limits for Azure IoT Operations & Foundry Local..."
+      sysctl --system
+
+      echo "[2/5] Installing single-node K3s (Kubernetes 1.33 - Microsoft GA validated baseline for Azure IoT Operations)..."
+      curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="v1.33.13+k3s2" sh -s - --write-kubeconfig-mode 644
+
+      # Configure kubeconfig for edgeadmin
+      ADMIN_USER="edgeadmin"
+      if id "$ADMIN_USER" &>/dev/null; then
+        USER_HOME=$(eval echo "~$ADMIN_USER")
+        mkdir -p "$USER_HOME/.kube"
+        cp /etc/rancher/k3s/k3s.yaml "$USER_HOME/.kube/config"
+        chown -R "$ADMIN_USER:$ADMIN_USER" "$USER_HOME/.kube"
+        chmod 600 "$USER_HOME/.kube/config"
+        echo 'export KUBECONFIG=~/.kube/config' >> "$USER_HOME/.bashrc"
+      fi
+
+      echo "[3/5] Installing Helm 3..."
+      curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+      echo "[4/5] Installing Azure CLI..."
+      curl -sL https://aka.ms/InstallAzureCLIDeb | bash
+
+      echo "[5/6] Pre-installing Azure CLI extensions for Arc, IoT Operations, and Foundry Local..."
+      export AZURE_EXTENSION_DIR=/usr/local/lib/azure-cli-extensions
+      mkdir -p "$AZURE_EXTENSION_DIR"
+      chmod 755 "$AZURE_EXTENSION_DIR"
+      echo 'export AZURE_EXTENSION_DIR=/usr/local/lib/azure-cli-extensions' >> /etc/profile.d/azure-cli-extensions.sh
+      az extension add --upgrade --name connectedk8s --yes || true
+      az extension add --upgrade --name k8s-extension --yes || true
+      az extension add --upgrade --name customlocation --yes || true
+      az extension add --upgrade --name azure-iot-ops --yes || true
+      su - "$ADMIN_USER" -c "az extension add --upgrade --name connectedk8s --yes" || true
+      su - "$ADMIN_USER" -c "az extension add --upgrade --name k8s-extension --yes" || true
+      su - "$ADMIN_USER" -c "az extension add --upgrade --name customlocation --yes" || true
+      su - "$ADMIN_USER" -c "az extension add --upgrade --name azure-iot-ops --yes" || true
+
+      echo "[6/6] Pre-caching container images & Python wheels for disconnected air-gap resilience..."
+      mkdir -p /opt/edge-wheels
+      pip3 download --dest /opt/edge-wheels paho-mqtt==2.1.0 || true
+      k3s ctr images pull docker.io/library/python:3.12-slim || true
+      k3s ctr images pull docker.io/library/eclipse-mosquitto:2.0 || true
+
+      echo "Edge host bootstrap completed successfully." > /var/log/edge-bootstrap-complete.log
+
+runcmd:
+  - [ bash, -c, "/usr/local/bin/bootstrap-edge-host.sh 2>&1 | tee -a /var/log/edge-bootstrap.log" ]

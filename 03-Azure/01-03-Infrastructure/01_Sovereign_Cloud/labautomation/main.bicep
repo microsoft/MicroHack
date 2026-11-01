@@ -19,11 +19,14 @@ param userObjectId string
 @description('Name of the participant resource group (created by the platform) to grant resource-group-scoped RBAC roles in.')
 param resourceGroupName string
 
+@description('Create the subscription Security Reader assignment only when the participant does not already have a direct assignment at this scope.')
+param assignSecurityReader bool = true
+
 // Built-in role definition IDs (stable across all Azure subscriptions)
 var securityReaderRoleId = '39bc4728-0917-49c7-9d2c-d95423bc2eb4'
 var resourcePolicyContributorRoleId = '36243c78-bf99-498c-9df9-86d9f8d28608'
 
-resource securityReaderAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+resource securityReaderAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (assignSecurityReader) {
   name: guid(subscription().id, userObjectId, securityReaderRoleId)
   properties: {
     principalId: userObjectId
@@ -50,4 +53,3 @@ module resourceGroupRbac 'rg-rbac.bicep' = {
     userObjectId: userObjectId
   }
 }
-

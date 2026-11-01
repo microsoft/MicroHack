@@ -14,11 +14,70 @@ This runbook covers the FY27 EMEA Cloud & AI Hackathons program described in the
 
 When automatic provisioning is not scheduled, use the Console's **Create Users**, content-pack license defaults and **Deploy Lab Environment** lifecycle in order. Investigate failures before continuing; do not compensate by running subscription-wide manual utilities.
 
+## One LocalBox per event
+
+Re-import the content pack after updating it. The Console discovers
+[global-event-deploy.ps1](../../labautomation/global-event-deploy.ps1) beside the
+participant hook and requires `estimatedGlobalDeploymentDailyCostsUsd` to be
+**greater than 5**. This pack sets it to **USD 110/day**, with the per-subscription
+shared infrastructure estimate set to **0**. A missing/mismatched global signature
+or a cost of 5 or less causes the Console to skip the hook and log a warning;
+verify the global deployment job actually ran before continuing.
+
+The Console runs the global hook **once per event in the lowest-GUID event
+subscription**, passing all event lab-user object IDs. It completes before
+`shared-deploy-lab.ps1` runs in each subscription, followed by participant
+deployments. A global failure stops the event deployment. Host-region fallback
+uses the preferred regions within that selected subscription; it does not choose
+a different subscription if quota or SKU availability is insufficient.
+
+The global hook deploys/reuses one `rg-localbox-shared`, including one LocalBox
+Client. It publishes **Shared LocalBox Subscription ID**, **Shared LocalBox Resource
+Group ID**, the group name and lab-group metadata to **every event participant**.
+It grants each participant Reader and Azure Stack HCI VM Contributor on the
+LocalBox resource group, plus Security Reader on the host subscription for
+reference-VM security inspection. No participant Owner, host login or password is
+granted by this hook. Existing shared VM/AKS access remains a workshop trust
+boundary, not per-participant isolation.
+
+Participant RBAC setup reuses an existing direct Security Reader assignment on
+its subscription, including the grant made by the global hook for participants
+in the LocalBox host subscription. It does not recreate the same grant under a
+different role-assignment ID. If an earlier run failed with
+`RoleAssignmentExists` during `lab-*` deployment, re-import the corrected branch
+and retry the event deployment; do not delete the global grants or LocalBox.
+An assignment lookup failure stops setup rather than treating access as absent.
+
+Participant VMs still belong in their own assigned subscription/resource group,
+using the shared custom location, image, network and storage. Keep the participant
+subscription separate from the LocalBox subscription when following Challenge 6.
+AKS proxy connections target the **LocalBox subscription**; team namespaces remain
+unique by participant subscription plus resource group.
+
+Portal VM creation across subscriptions was successfully tested as `labuser-0027`
+on 25 October 2026, using its original RG in traininglab-12 with LocalBox in
+traininglab-59. The wizard defaulted to the host subscription: remind participants
+to change **Subscription** to their assigned subscription before selecting their
+own RG. Keep the existing single participant-RG workflow; see
+[test evidence and remaining checks](../tests/readme.md#observed-test4-integration-results).
+
+**Capacity and migration:** one instance now carries the entire event's nested
+VMs, reference VM, AKS workers and service IP allocations. Validate memory, storage
+and address-pool headroom for the planned event size; the cost reduction does not
+increase LocalBox capacity. Use a fresh event to validate this change, including
+a participant assigned to a different subscription. Existing LocalBoxes in other
+subscriptions are not moved or deleted automatically. Review their dependencies
+and arrange explicit cleanup separately. Keep the global environment until all
+participant VMs are removed, then verify Console teardown removes it.
+
 ## Defender for Servers configuration and costs
 
-The [shared hook](../../labautomation/shared-deploy-lab.ps1) calls
-[hosted Defender setup](../../labautomation/hosted-defender.ps1) once per subscription,
-after hosted tag-policy verification and before LocalBox deployment. It sets
+The [global hook](../../labautomation/global-event-deploy.ps1) calls
+[hosted Defender setup](../../labautomation/hosted-defender.ps1) in the host
+subscription after hosted tag-policy verification and before LocalBox deployment.
+The [shared hook](../../labautomation/shared-deploy-lab.ps1) also verifies these
+settings on every participant subscription before lab deployment, including an
+idempotent recheck of the host subscription. Setup sets
 `Microsoft.Security/pricings/VirtualMachines` to `Standard` / `P2` and
 `Microsoft.Security/settings/WDATP` to `enabled=true` (the **Endpoint protection**
 toggle). Existing pricing extension and enforcement settings are preserved; other
@@ -41,17 +100,25 @@ releasing a subscription. This hook is not part of manual/BYOS preparation.
 
 ## Complete LocalBox preparation
 
-The shared hook submits `localbox-*` in `rg-localbox-shared`, then waits up to six hours for ARM completion, refreshing its Console authentication while polling. It does not publish LocalBox administrator credentials. A Client VM appearing after roughly 15-20 minutes confirms only that deployment has started. Full nested Azure Local provisioning can take 4-6 hours and must still be checked separately.
+The global hook submits `localbox-*` in `rg-localbox-shared` in the published **Shared LocalBox Subscription ID**, then waits up to six hours for ARM completion, refreshing its Console authentication while polling. It does not publish LocalBox administrator credentials. A Client VM appearing after roughly 15-20 minutes confirms only that deployment has started. Full nested Azure Local provisioning can take 4-6 hours and must still be checked separately.
+
+The subsequent preparation script took **4 hours 24 minutes 26 seconds** in the
+TEST4 run reported on 25 October 2026, including reference-VM creation. This is
+additional post-provisioning time, not the total event deployment duration or a
+guaranteed runtime. MDE was still Pending when preparation finished. See the
+[timing evidence and planning guidance](../localbox/readme.md#preparation-time);
+allow time for both preparation and later assessments.
 
 1. Inspect the Azure deployment, Client bootstrap logs and Azure Local/Arc status. Resolve failures before proceeding.
 2. If the Client password is unknown, an authorized event lead/coach uses the Azure VM's **Help > Reset password** to set a known password for the `arcdemo` host account, then connects to `LocalBox-Client` through Bastion. Do not expose this password through participant credentials or job logs. A host password reset does not change the nested-node Windows credentials. See [LocalBox credentials](#localbox-credentials).
 3. Copy **Lab Group ObjectId** from the Console's **Credentials** tab for the preparation prompt or `-AksAdminGroupObjectId`. Confirm that intended Azure lab identities/coaches are members; see the group dependency below.
-4. Follow [LocalBox preparation](../localbox/readme.md), once per shared subscription, in elevated PowerShell 7. It creates AKS and then installs/verifies the shared MetalLB extension and reserved ARP pool. Azure authentication uses the Client VM's managed identity; preparation constructs the nested Windows credential locally from the installed configuration without printing it. An explicit `-NodeCredential` overrides that value after a nested-account rotation.
+4. Follow [LocalBox preparation](../localbox/readme.md), **once per event on the global LocalBox Client**, in elevated PowerShell 7. It creates AKS and then installs/verifies the shared MetalLB extension and reserved ARP pool. Azure authentication uses the Client VM's managed identity; preparation constructs the nested Windows credential locally from the installed configuration without printing it. An explicit `-NodeCredential` overrides that value after a nested-account rotation.
+   Preparation includes `sov-ref-vm` by default; run it **the day before the event** for inspection while participant VMs onboard, or opt out with `-IncludeReferenceVm:$false`. Follow the [reference readiness checks](../localbox/readme.md#reference-readiness-and-participant-use); Console plan configuration and successful provisioning do not establish completed VM assessments. Participants must not modify this shared VM; no RBAC restrictions are added.
 5. Run [Pester health checks](../tests/readme.md) for LocalBox and every selected participant lab. A control-plane-only pass does not establish full readiness.
 6. Console shared setup enables and verifies **Defender for Servers Plan 2** and **Endpoint protection** on every event subscription. Complete the [Defender readiness checklist](../localbox/manual-preparation.md#defender-for-servers-readiness-organizer) and [participant VM readiness exercise](../localbox/manual-preparation.md#step-6-test-the-environment), including guest management, actual Defender onboarding and Update Manager. Verified subscription settings do not prove that a VM has completed onboarding.
 7. Verify an intended participant can use Entra-authenticated `az connectedk8s proxy` and a private application port-forward from their Codespace. Participants inspect MetalLB, not install it, and never need LocalBox-Client access. This validates the lab access path, not routing to the MetalLB service VIP.
 
-Shared setup registers `Microsoft.KubernetesRuntime`, waits for registration,
+Global setup registers `Microsoft.KubernetesRuntime`, waits for registration,
 resolves its tenant service-principal object ID using the Console's existing
 Graph-capable identity, and records it in the shared RG tag
 `microhack-k8s-runtime-object-id`. Missing registration or identity resolution
@@ -84,7 +151,7 @@ do not assume a region is available merely because its SKU/quota checks passed.
 There are three separate locations to check: the participant resource group's
 metadata location, the Azure region hosting the LocalBox simulator, and the
 Azure Local/custom-location registration region. The hosted
-[shared hook](../../labautomation/shared-deploy-lab.ps1) explicitly passes
+[global hook](../../labautomation/global-event-deploy.ps1) explicitly passes
 `AzureLocalInstanceLocation = australiaeast`; the
 [manual deployment](../manual-setup/localbox/deploy-localbox.ps1) defaults to
 `australiaeast`. Host-region fallback does not change that registration parameter.
@@ -122,7 +189,7 @@ Existing-environment cleanup is a separate organizer action.
 
 ### Hosted MCAPS control-tag initiative
 
-The organizer-owned [shared hook](../../labautomation/shared-deploy-lab.ps1) deploys the [hosted tag initiative](../../labautomation/infra/hosted-tag-policy.bicep) once per subscription, before LocalBox deployment and participant lab fan-out. This is specific to MCAPS governance in Microsoft-internal hosted environments. **Do not deploy it for bring-your-own-subscription or manual setup.** The Console deployment identity must be authorized to create subscription-scoped policy initiatives and assignments, as well as the lab resources.
+The organizer-owned [global hook](../../labautomation/global-event-deploy.ps1) deploys and verifies the [hosted tag initiative](../../labautomation/infra/hosted-tag-policy.bicep) before LocalBox deployment. The [shared hook](../../labautomation/shared-deploy-lab.ps1) deploys/verifies the same initiative on every participant subscription before participant lab fan-out; rechecking the host subscription is idempotent. This is specific to MCAPS governance in Microsoft-internal hosted environments. **Do not deploy it for bring-your-own-subscription or manual setup.** The Console deployment identity must be authorized to create subscription-scoped policy initiatives and assignments, as well as the lab resources.
 
 The initiative `sovereign-hosted-control-tags` and assignment `sov-hosted-control-tags` use four built-in **modify** policies:
 
@@ -151,7 +218,7 @@ Verify that the hosted governance system honors the tag. It does not disable ind
 
 For new hosted deployments, the wrapper uses `New-MhhStablePassword -Purpose 'localbox-admin-v1' -Length 24`. The same Console scope and purpose yield the same password on retries. The password is passed as a secure template parameter, never added to tags, deployment outputs, log messages or `HackboxCredential` outputs. Do not change the password purpose or length for an existing event.
 
-Shared-hook credentials are visible to **every lab in that subscription**. Only the resource-group name and nonsecret lab-group metadata are published by this hook. LocalBox administrator credentials must be restricted to coaches/event leads. A supported Console mechanism for restricted retrieval or secret input is pending confirmation from the Console owner and is not implemented here. It is not required for the Client-reset/local-configuration workflow above. The manual deployment path keeps its existing password handling and does not require Console helpers.
+Global-hook credentials are visible to **every lab in the event**. Only the LocalBox subscription ID, resource-group name/ID and nonsecret lab-group metadata are published by this hook. LocalBox administrator credentials must be restricted to coaches/event leads. A supported Console mechanism for restricted retrieval or secret input is pending confirmation from the Console owner and is not implemented here. It is not required for the Client-reset/local-configuration workflow above. The manual deployment path keeps its existing password handling and does not require Console helpers.
 
 **Existing deployments:** environments are reused without password rotation. Original random passwords cannot be recovered from ARM or reconstructed by rerunning this hook, but Jumpstart's installed configuration on the Client retains `SDNAdminPassword`. After gaining host access, preparation reads that value through `$env:LocalBoxConfigFile` and uses the configured domain's Administrator account for PowerShell Direct. A Client-only reset does not alter it. If the nested account has since been rotated, supply its current credential explicitly. Do not redeploy the environment merely to recover a password.
 
@@ -161,7 +228,7 @@ If an earlier automation version already published an administrator password, re
 
 ### Console group dependency
 
-The shared hook calls the Console-supported `Get-MhhDefaultLabGroup` helper and publishes **Lab Group ObjectId**, **Lab Group GroupName** and **Lab Group DisplayName** as separate credentials. Complete the Console's Entra user/group creation lifecycle first; missing or invalid metadata stops shared deployment. The object ID is the value to supply to LocalBox preparation for AKS Entra administration.
+The global hook calls the Console-supported `Get-MhhDefaultLabGroup` helper and publishes **Lab Group ObjectId**, **Lab Group GroupName** and **Lab Group DisplayName** as separate credentials to the entire event. Complete the Console's Entra user/group creation lifecycle first; missing or invalid metadata stops global deployment. The object ID is the value to supply to LocalBox preparation for AKS Entra administration.
 
 The [platform contract](../../../../../99-MicroHack-Template/labautomation/README.md#groups-supported-values) still uses `groups` for licensing activation (`GHCPUsers`, `M365-E5-Users`), not arbitrary group creation. No new schema fields or Graph permissions are needed. The Console owns the event group, its membership and teardown; the facilitator must verify intended users/coaches and late registrations. The preparation script still prompts for the ID on the Client, where Console helpers are unavailable, and does not create groups or validate membership through Graph.
 

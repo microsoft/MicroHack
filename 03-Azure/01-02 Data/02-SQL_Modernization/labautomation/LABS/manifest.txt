@@ -1,0 +1,14 @@
+challenge-01.pdf
+challenge-02.pdf
+challenge-03.pdf
+Readme.pdf
+solution-01.pdf
+solution-02.pdf
+solution-03.pdf
+01-Data_Migration/Check_ManagedInstanceLink_ReplicaStatus.sql
+02-Administering_Monitoring/Part_01_Monitoring_Lab_1.sql
+02-Administering_Monitoring/Part_02_Monitoring_Lab_1.sql
+03-Security/ATP_Demo.sql
+03-Security/SQLScripts/2. Auditing.sql
+03-Security/SQLScripts/3. Dynamic Data Masking.sql
+03-Security/SQLScripts/4. TDE and Password Reset.sql

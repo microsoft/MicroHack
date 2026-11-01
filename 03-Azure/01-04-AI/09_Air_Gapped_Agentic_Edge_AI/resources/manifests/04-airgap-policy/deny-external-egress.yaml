@@ -1,0 +1,56 @@
+# ============================================================================
+# Challenge 5: "Cut the Cord" — Sovereign Air-Gap NetworkPolicy
+# Blocks all external internet / public Azure cloud egress from the
+# 'edge-agents' namespace while permitting strictly local in-cluster communication:
+#   1. CoreDNS (UDP/TCP 53 in kube-system)
+#   2. Azure IoT Operations MQTT Broker (TCP 1883/18883 in azure-iot-operations)
+#   3. Foundry Local Internal Gateway & Inference pods (TCP 80/443/8080 in foundry-local-operator & istio-system)
+# ============================================================================
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: enforce-airgap-sovereign-mode
+  namespace: edge-agents
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    # 1. Allow in-cluster CoreDNS resolution
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # 2. Allow local MQTT communication with Azure IoT Operations
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: azure-iot-operations
+      ports:
+        - protocol: TCP
+          port: 1883
+        - protocol: TCP
+          port: 18883
+    # 3. Allow local LLM inference calls to Foundry Local & Istio Internal Gateway
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: foundry-local-operator
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: istio-system
+      ports:
+        - protocol: TCP
+          port: 80
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 8080
+    # 4. Allow intra-namespace communication within edge-agents
+    - to:
+        - podSelector: {}

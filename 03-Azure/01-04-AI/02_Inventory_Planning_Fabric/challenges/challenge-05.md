@@ -58,11 +58,14 @@ You'll chain the three specialist agents you built in Challenges 2–4. **You do
 2. Send a single request, e.g.:
 
    ```text
-   A prolonged heatwave is hitting the Pacific Northwest. Check our exposure on outdoor power tools and prepare a replenishment order for approval.
+   A prolonged heatwave is hitting the Pacific Northwest. Check our exposure on outdoor power tools and prepare a replenishment order for approval. Include Leaf Blower X2 (P004) at Seattle and Portland.
    ```
 
-3. Watch the nodes execute in order: demand sensing → optimisation → replenishment. When the replenishment node presents the PO proposal, reply `YES` (or `MODIFY <line> <qty>`).
-4. Open **Traces** and find the run. Confirm you can see the **node-by-node execution** — each agent node's model call with its **Fabric Data Agent** tool call underneath, and the human approval turn on the replenishment node.
+   > [!TIP]
+   > **Name the product, as in Challenge 3.** A prompt that only says "outdoor power tools" sometimes makes the Fabric Data Agent write a query that fails with a *collation conflict*, and then the later agents have no data to work with. Naming the SKU (`P004`) and the locations avoids it. If a run says it cannot verify inventory, send the request again.
+
+3. Watch the nodes execute in order: demand sensing → optimisation → replenishment. When the replenishment node presents the PO proposal, check that the unit costs are **$95** (P004) and not the **$20** fallback, then reply `YES` (or `MODIFY <line> <qty>`).
+4. Open **Traces** and find the run. Confirm you can see the **node-by-node execution** — each agent node's model call with its **Fabric IQ** tool call underneath, and the human approval turn on the replenishment node.
 
 ## 🏁 Success criteria
 
@@ -113,6 +116,8 @@ Everything so far lives in the Foundry portal — great for builders, but the **
 | Chatting a published **workflow** in Teams/M365 fails: *"Agent kind 'workflow' is not supported"* | Teams / Microsoft 365 publishing supports only **prompt and hosted agents**. Publish a **prompt agent** (e.g. `demand-sensing-agent`) instead — see Part E. |
 | The replenishment node never stops looping | The **Loop condition** `Find` is **case-sensitive** — keep the Challenge 4 confirmation wording (`submitted to ERP`, `Order cancelled`) exactly. |
 | A node doesn't receive the previous agent's output | Set **Save agent output message as** on the upstream node and reference that variable in the next node's **Input message**. |
+| The purchase order shows **$20** unit costs | That is the fallback: the replenishment agent skipped the Fabric cost lookup. Reply `NO`, then run the workflow again in a **new** conversation. The costs should be $95 (P004), $140 (P005) and $85 (P006). |
+| The replenishment node asks you to paste a table or SKU data instead of presenting a purchase order | An earlier node returned no usable recommendation. Run the workflow again in a **new** conversation, and name the product as in step 2 (*Include Leaf Blower X2 (P004) at Seattle and Portland*). |
 | The visual designer isn't available | Do the **Part D** evaluation bonus instead, or export the workflow **YAML** and run it as a hosted agent (see Learning resources). |
 
 ## 🚀 Go further

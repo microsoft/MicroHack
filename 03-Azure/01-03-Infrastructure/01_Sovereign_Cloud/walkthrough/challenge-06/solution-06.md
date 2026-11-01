@@ -48,7 +48,7 @@ LocalBox runs as a nested lab environment hosted in Azure. In a production sover
 **Familiarize yourself with the LocalBox resources in Azure Portal to understand the hybrid architecture.**
 
 1. Sign in to the [Azure Portal](https://portal.azure.com)
-2. Navigate to the shared LocalBox resource group (e.g., `rg-localbox-shared`)
+2. From the Console's Credentials tab, copy **Shared LocalBox Subscription ID** and **Shared LocalBox Resource Group ID**. Navigate to that exact shared resource group (`rg-localbox-shared` in hosted events), enabling its subscription in the portal filter if needed. One LocalBox serves the whole event; it may be in a different subscription from your assigned lab. For manual delivery, use the scope supplied by the facilitator.
 3. Locate the **Azure Local** instance resource
 4. Review the following connected resources:
    - **Arc Resource Bridge** - Connects Azure Local to Azure
@@ -80,21 +80,30 @@ LocalBox runs as a nested lab environment hosted in Azure. In a production sover
 
 💥 **Basic settings:**
 
-1. **Subscription**: Select your subscription (e.g. **traininglab-01**)
+1. **Subscription**: Select your assigned participant subscription (e.g. **traininglab-01**), not the shared LocalBox subscription unless they are the same
 2. **Resource group**: Select your assigned resource group (e.g., `rg-labuser-0024`; use the exact name provided by the facilitator)
 3. **Virtual machine name**: `labuserXX-vm-01` (replace XX with your own suffix)
 4. **Security type**: Select **Standard**
 
+> [!IMPORTANT]
+> When you start the wizard from the shared LocalBox cluster, **Subscription may default to the LocalBox host subscription**. Change it to your assigned participant subscription first, then select your own resource group where you have Owner access. For example, the tested participant `labuser-0027` changed **traininglab-59** (LocalBox) to **traininglab-12**, then selected **rg-labuser-0027**. Use your own assigned values, not these example names.
+
 ![Azure Arc VM creation Basics showing the assigned resource group, VM name, Standard security, and automatic storage selection](./images/localbox_02.png)
 
+<a href="./images/localbox-cross-subscription-basics.png"><img src="./images/localbox-cross-subscription-basics.png" alt="Azure Local VM creation from the shared cluster with traininglab-12 and rg-labuser-0027 selected, retaining the shared jumpstart custom location and Windows Server 2025 image." width="700" /></a>
+
+*Cross-subscription example: the VM's subscription and resource group belong to the participant; the custom location remains the shared LocalBox location.*
+
 Verify that **Custom location** points to the shared LocalBox environment and **Virtual machine kind** is **Azure Local**. Leave **Storage path** set to **Choose automatically** unless the facilitator instructs otherwise.
+
+Your VM remains in your own resource group even when the custom location, image and network are in the event's shared subscription. Verify the shared resource IDs instead of choosing a similarly named resource in another subscription. If the wizard does not expose the assigned shared resources, ask the facilitator to check access; do not deploy into the shared resource group or create another LocalBox.
 
 > [!NOTE]
 > The selected custom location determines the Azure region used for the VM's management resources; it need not match your resource group's location or the Azure region hosting the LocalBox simulator. Fresh hosted deployments and the manual deployment default to **Australia East**, including LocalBox's staging storage account, after a hosted test encountered a West Europe eligibility rejection. This is a lab-only choice, not a European data-residency recommendation. Inspect the actual custom location in your event rather than assuming the latest default has changed an existing environment.
 >
 > In production, the workload runs on the Azure Local hardware, while Azure stores management data in the registration region. In this lab, that hardware is simulated inside Azure-hosted LocalBox. Registration in Australia East does **not** mean that the nested VM's compute has moved there, but the management-data location still matters for sovereignty and Azure Policy. See [Azure Local regions](https://learn.microsoft.com/azure/azure-local/concepts/system-requirements-23h2#azure-requirements) and [Azure Local data handling](https://learn.microsoft.com/azure/azure-local/faq#does-my-data-stored-on-azure-local-get-sent-to-the-cloud).
 
-The creation screenshots use `labuser24-vm-01`, while the validation and management screenshots use `labuser23-vm-01`. These are examples from different participants; create and use only your own VM throughout the challenge.
+The screenshots show examples from different participants, including `labuser24-vm-01`, `labuser23-vm-01` and the cross-subscription test VM `labuser-0027`. Create and use only your own VM throughout the challenge.
 
 5. **Image**: Select the available gallery image **2025-datacenter-azure-edition-smalldisk-01** (Windows Server 2025)
 6. **Virtual processor count**: 2
@@ -217,9 +226,23 @@ Select the subscription and review **Defender plans**, including the **Servers**
 The example subscription uses **Servers Plan 2** with **Full** monitoring coverage. Your lab's approved plan may differ. Ask the facilitator to confirm **Settings & monitoring > Endpoint protection** is **On**, even if the Servers plan is enabled. These subscription-level settings are context, not evidence that your individual VM has completed onboarding.
 
 > [!NOTE]
-> A newly created VM can take time to appear and complete onboarding. If it is missing, first recheck **Guest management: Enabled (Connected)** and the selected subscription/resource group, then refresh Inventory. Ask the facilitator to check plan coverage and extension onboarding if it remains missing or unprotected. An Inventory entry alone does not prove that Defender for Servers protection is active. Do not enable a paid subscription-level plan yourself in a hosted lab.
+> Automatic MDE onboarding is asynchronous. [Microsoft documents up to one hour for new machines](https://learn.microsoft.com/azure/defender-for-cloud/enable-defender-for-endpoint#enable-defender-for-endpoint-integration-on-a-subscription) after integration is established; first-time integration in a tenant can take up to 12 hours. Keep your VM powered on with **Guest management: Enabled (Connected)**. Continue with Tasks 4 and 5 while waiting; do not toggle Defender settings or install the extension manually to hurry it along.
+
+Open **your VM -> Extensions** and look for **MDE.Windows**, then check its provisioning
+status is **Succeeded**. Record the extension/onboarding status separately from the
+Servers plan status. Successful extension installation is not proof of ongoing device
+reporting; ask the facilitator to verify the device in the Microsoft Defender portal
+if you do not have access. If the extension is absent after the expected onboarding
+window, or reports a failure, ask the facilitator to check guest connectivity and
+Endpoint protection. Do not change subscription-level settings yourself.
 
 ### 3.2 Review Your VM's Security Posture
+
+If your facilitator has prepared **`sov-ref-vm`** in the shared LocalBox resource
+group, you may inspect its existing recommendations while your own VM is still
+onboarding. Record the reference VM's resource ID separately. **Inspect only: do
+not remediate, change extensions, restart or delete it.** Return to your own VM
+for the exercise; the reference does not replace creating and assessing your VM.
 
 1. From your VM's resource details in Defender for Cloud, open its **Recommendations**. Alternatively, open your Azure Local VM resource and select **Settings -> Security** to view its recommendations
 2. Review the assessment status and any recommendations for that VM. If navigating from the subscription-wide **Recommendations** view, verify the affected resource is your VM by resource ID
@@ -229,6 +252,17 @@ The example subscription uses **Servers Plan 2** with **Full** monitoring covera
 
 The example VM shows **Microsoft Defender for Servers On** and **No recommendations to display**. Use **View all recommendations in Defender for Cloud** to investigate further, keeping the results scoped to your own VM.
 
+The following screenshot shows recommendations after assessments had time to populate:
+
+<a href="./images/defender-recommendations-populated.png"><img src="./images/defender-recommendations-populated.png" alt="Azure Arc VM win01 Security page with Defender for Servers On, populated update and Windows configuration recommendations, and zero security alerts." width="560" /></a>
+
+In this workshop test, the view was empty shortly after MDE installation and
+contained recommendations when checked the next morning, about **10 hours after
+the MDE extension was created**. They may have appeared earlier between checks;
+this is an observed example, not a required wait or guaranteed processing time.
+Your findings and counts will differ. Continue the workshop rather than waiting
+for recommendations to appear.
+
 Depending on the enabled plan and completed assessments, recommendations may concern:
 
 | Area | What to investigate |
@@ -236,11 +270,24 @@ Depending on the enabled plan and completed assessments, recommendations may con
 | System updates | Missing OS security updates |
 | Endpoint protection | Defender for Endpoint onboarding or protection status |
 | Vulnerabilities | Detected software vulnerabilities and remediation guidance |
+| OS configuration | Windows security settings assessed against the configured baseline |
 
 Only investigate or remediate your own VM. Do not apply subscription-wide fixes or change shared LocalBox infrastructure as part of this exercise.
 
 > [!NOTE]
-> Recommendations may still be pending on a fresh VM, and an assessed VM may have no active recommendations. Record the displayed assessment status separately from the verified protection status. An empty recommendations list does not demonstrate completed assessment or compliance. You can complete Task 4 while waiting, then return to review your VM's results.
+> **Zero recommendations is a valid observation, not proof that assessment is complete.** MDE installation, telemetry collection, security assessments, and display of recommendations happen separately. Recommendations can appear later than the extension, and different checks have different evaluation schedules; the one-hour onboarding window is not a deadline for recommendations. A machine with completed assessments can also have no applicable findings.
+
+Use **View all recommendations in Defender for Cloud**, keep the scope on your VM,
+and review any available assessment status and timestamp. Record one of these outcomes:
+
+- Findings available: explain one recommendation and its proposed remediation.
+- Assessments completed with no findings: record that outcome.
+- No assessment evidence yet: record **assessment pending/not yet confirmed**, not "fully compliant."
+
+You do not need a nonzero recommendation count to complete this exercise. Continue
+with the remaining tasks and revisit later if time permits; do not weaken security
+to generate findings. [Reviewing recommendations](https://learn.microsoft.com/azure/defender-for-cloud/review-security-recommendations)
+provides more detail on the available views and filters.
 
 ### 3.3 Review Security Alerts (if any)
 
@@ -264,6 +311,10 @@ No alerts is an expected outcome for a new lab VM; do not generate an alert or s
 ## Task 4: Assess Your VM with Azure Update Manager
 
 **Use Azure Update Manager to assess OS updates on the same Windows Server VM you created in Task 2.**
+
+You may also view existing assessment results and timestamps on `sov-ref-vm`, if
+provided by the facilitator. **Do not select the shared reference VM for Check
+for updates, patch installation, scheduling or any configuration change.**
 
 ### 4.1 Locate Your VM
 
@@ -317,7 +368,7 @@ The shared AKS cluster and MetalLB load balancer are already prepared for you. I
 
 ### Task 5.1: Verify Your Cluster Access
 
-1. In the Azure portal, open **`localbox-aks`** in **`rg-localbox-shared`**.
+1. In the Azure portal, open **`localbox-aks`** in **`rg-localbox-shared`**, using the Console's **Shared LocalBox Subscription ID**.
 2. Open **Access control (IAM) > Check access > View my access**.
 3. Under **Current role assignments**, confirm that **Azure Arc Enabled Kubernetes Cluster User Role** applies to your workshop identity on this cluster. It can be assigned directly, through a group, or inherited from a parent scope. If it is missing, ask the facilitator; do not add role assignments yourself.
 
@@ -350,19 +401,24 @@ If the extension, healthy workloads, or pool are missing, stop and contact the f
 
 ### Task 5.3: Start the Microsoft Entra Cluster Connect Proxy — Terminal 1
 
-Open a **Bash** terminal in your Sovereign Cloud Codespace. This assumes you are already signed in to Azure CLI with your workshop identity and have selected the workshop subscription. Retrieve the tenant and subscription IDs from the current CLI context, then enter your **assigned participant resource group**, not `rg-localbox-shared`, when prompted. Teammates sharing an assigned resource group share one namespace; coordinate deployment and cleanup.
+Open a **Bash** terminal in your Sovereign Cloud Codespace. Sign in with your workshop identity and keep your **assigned participant subscription** selected. Retrieve its tenant and subscription IDs, then enter your **assigned participant resource group**, not `rg-localbox-shared`, and the separate **Shared LocalBox Subscription ID** from Console credentials. For manual delivery, use the LocalBox subscription supplied by the facilitator. Teammates sharing an assigned resource group share one namespace; coordinate deployment and cleanup.
 
 ```bash
 TENANT_ID=$(az account show --query tenantId --output tsv) || exit 1
 SUBSCRIPTION_ID=$(az account show --query id --output tsv) || exit 1
 read -r -p "Your assigned participant resource group: " PARTICIPANT_RG
+read -r -p "Shared LocalBox Subscription ID: " LOCALBOX_SUBSCRIPTION_ID
 if [[ -z "$TENANT_ID" || -z "$SUBSCRIPTION_ID" || -z "$PARTICIPANT_RG" ||
+      ! "$LOCALBOX_SUBSCRIPTION_ID" =~ ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$ ||
       "${PARTICIPANT_RG,,}" == "rg-localbox-shared" ]]; then
-  echo "Verify your current Azure CLI context and use your own assigned resource group."
+  echo "Verify your participant context, assigned resource group and Shared LocalBox Subscription ID."
   exit 1
 fi
 printf 'Current tenant: %s\nCurrent subscription: %s\n' "$TENANT_ID" "$SUBSCRIPTION_ID"
 az group show --subscription "$SUBSCRIPTION_ID" --name "$PARTICIPANT_RG" \
+  --query '{name:name,id:id}' --output table || exit 1
+az connectedk8s show --subscription "$LOCALBOX_SUBSCRIPTION_ID" \
+  --resource-group rg-localbox-shared --name localbox-aks \
   --query '{name:name,id:id}' --output table || exit 1
 ```
 
@@ -381,13 +437,14 @@ umask 077
 mkdir -p "$HOME/.config/microhack" "$HOME/.kube"
 printf 'export %s=%q\n' \
   SUBSCRIPTION_ID "$SUBSCRIPTION_ID" PARTICIPANT_RG "$PARTICIPANT_RG" \
+  LOCALBOX_SUBSCRIPTION_ID "$LOCALBOX_SUBSCRIPTION_ID" \
   TEAM_NAMESPACE "$TEAM_NAMESPACE" AKS_CONTEXT "$AKS_CONTEXT" \
   AKS_KUBECONFIG "$AKS_KUBECONFIG" MANIFEST "$MANIFEST" \
   > "$HOME/.config/microhack/challenge06.env"
 source "$HOME/.config/microhack/challenge06.env"
 printf 'Team namespace: %s\n' "$TEAM_NAMESPACE"
 az connectedk8s proxy \
-  --subscription "$SUBSCRIPTION_ID" \
+  --subscription "$LOCALBOX_SUBSCRIPTION_ID" \
   --resource-group rg-localbox-shared --name localbox-aks \
   --file "$AKS_KUBECONFIG" --kube-context "$AKS_CONTEXT" --port 47011
 ```
@@ -554,7 +611,7 @@ Before completing this challenge, verify:
 
 - [ ] You can navigate and understand the LocalBox hybrid environment in the Azure Portal
 - [ ] You have deployed your own VM on Azure Local and verified that guest management is Enabled (Connected)
-- [ ] You have verified Defender for Servers coverage for your VM and reviewed its available recommendations, or recorded that its assessment is still pending
+- [ ] You have verified Defender for Servers plan coverage, recorded MDE extension/onboarding status separately, and reviewed available recommendations or recorded that assessment is pending/not yet confirmed; a nonzero recommendation count is not required
 - [ ] You have completed an Azure Update Manager assessment for your VM and reviewed its timestamp and results, including when no updates are pending
 - [ ] You verified the organizer-prepared `arcnetworking` extension is Succeeded, MetalLB workloads are healthy, and `aks-pool` has the reserved ARP VIP range
 - [ ] Your application rolled out successfully in your team's namespace and received an IP from that pool

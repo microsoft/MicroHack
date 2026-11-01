@@ -908,6 +908,19 @@ Use the AKS client secret captured in Stage 3, step 2. The endpoint values match
 because both portfolios use the same service and realm names; the secret and upstream
 provider differ.
 
+> [!IMPORTANT]
+> This redeploys `iac/app.bicep`, so the Azure PostgreSQL recipe runs again. Keep the
+> same recipe registration used for the healthy Challenge 06 deployment. Record the
+> database host before deploying, then confirm it is unchanged afterward:
+>
+> ```bash
+> rad resource show Radius.Resources/postgreSqlDatabases trading-db \
+>   --workspace ws-azure-prod --group rg-trading --output json | jq -r '.properties.host'
+> ```
+>
+> A different host means a replacement server, not a rename. Stop and follow the
+> recipe-version guidance in Challenge 05 before continuing.
+
 **Bash:**
 
 ```bash

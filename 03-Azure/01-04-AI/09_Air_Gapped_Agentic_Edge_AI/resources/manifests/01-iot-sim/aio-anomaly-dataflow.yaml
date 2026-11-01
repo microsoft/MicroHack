@@ -1,0 +1,55 @@
+# ============================================================================
+# Azure IoT Operations — Internal In-Cluster MQTT BrokerListener & Anomaly Dataflow
+# Exposes a cluster-internal MQTT listener for edge workloads and routes
+# high-temperature / high-vibration events from factory/line1/telemetry
+# to factory/line1/anomalies.
+# ============================================================================
+apiVersion: mqttbroker.iotoperations.azure.com/v1
+kind: BrokerListener
+metadata:
+  name: aio-broker-internal
+  namespace: azure-iot-operations
+spec:
+  brokerRef: default
+  serviceName: aio-broker-internal
+  serviceType: NodePort
+  ports:
+    - port: 1883
+      nodePort: 31883
+      protocol: Mqtt
+---
+apiVersion: connectivity.iotoperations.azure.com/v1
+kind: Dataflow
+metadata:
+  name: cnc-anomaly-router
+  namespace: azure-iot-operations
+spec:
+  profileRef: default
+  mode: Enabled
+  operations:
+    - operationType: Source
+      name: source-telemetry
+      sourceSettings:
+        endpointRef: default
+        dataSources:
+          - factory/line1/telemetry
+    - operationType: BuiltInTransformation
+      name: filter-anomalies
+      builtInTransformationSettings:
+        # Note: In Azure IoT Operations Dataflows, when a filter expression evaluates to true,
+        # the message is DROPPED. Dropping messages where (bearingTempC <= 85.0 && vibrationMmPerSec <= 7.5)
+        # ensures ONLY anomalous readings pass through to factory/line1/anomalies.
+        filter:
+          - inputs:
+              - bearingTempC
+              - vibrationMmPerSec
+            expression: "$1 <= 85.0 && $2 <= 7.5"
+        map:
+          - inputs:
+              - "*"
+            output: "*"
+    - operationType: Destination
+      name: destination-anomalies
+      destinationSettings:
+        endpointRef: default
+        dataDestination: factory/line1/anomalies

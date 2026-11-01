@@ -1,0 +1,48 @@
+{
+  "description": "Caldova's regulatory task register. Maintained only by `python -m regintel signoff` and `python -m regintel task`. Agents read the rendered task-register.md; they never write it.",
+  "tasks": [
+    {
+      "id": "TASK-2026-041",
+      "title": "Complete nitrosamine risk assessment for Caldivex tablets",
+      "change": "Internal quality plan",
+      "citation": "CAPA-2026-031",
+      "domain": "manufacturing",
+      "region": "UK, EU, US",
+      "owner_role": "Quality Head",
+      "due": "2027-04-30",
+      "status": "in progress",
+      "history": [
+        {"at": "2026-10-05", "event": "approved", "by": "Quality Head", "note": "Opened from CAPA-2026-031"}
+      ]
+    },
+    {
+      "id": "TASK-2026-044",
+      "title": "Schedule re-audit of contract manufacturer CMO-17",
+      "change": "Internal quality plan",
+      "citation": "history.md: Contract manufacturer audit of CMO-17",
+      "domain": "manufacturing",
+      "region": "US",
+      "owner_role": "Quality Head",
+      "due": "2026-12-15",
+      "status": "open",
+      "history": [
+        {"at": "2026-09-20", "event": "approved", "by": "Quality Head", "note": "Re-audit due in 2027"}
+      ]
+    },
+    {
+      "id": "TASK-2026-047",
+      "title": "Submit Q4 2026 UK sales report to the pricing scheme",
+      "change": "Internal market access plan",
+      "citation": "SOP-MA-006",
+      "domain": "market access",
+      "region": "UK",
+      "owner_role": "Market Access Lead",
+      "due": "2027-01-30",
+      "status": "done",
+      "history": [
+        {"at": "2026-12-01", "event": "approved", "by": "Market Access Lead", "note": "Routine quarterly task"},
+        {"at": "2027-01-08", "event": "status", "by": "Market Access Lead", "note": "done"}
+      ]
+    }
+  ]
+}

@@ -151,6 +151,9 @@ Capture a side-by-side comparison that shows:
 1. Radius installation alone does not make custom resource types deployable.
 2. The application needs the extension package generated from the Challenge 04 catalog.
 3. A `RecipeNotFoundFailure` is an environment-layer problem. Return to Challenge 05.
+4. `ServerNameAlreadyExists` for PostgreSQL is also an environment-layer problem. Use a
+   workshop-specific Azure resource group, register Azure PostgreSQL recipe `1.0.8`,
+   then retry the unchanged deployment.
 
 ### Deployment and validation
 

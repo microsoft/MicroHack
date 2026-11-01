@@ -16,6 +16,21 @@ param location string
 @description('Deterministic suffix for resource naming (DNS-safe, lowercase).')
 param resourceToken string
 
+@maxLength(6)
+@description('''Extra suffix appended to the two Azure AI Foundry account names only.
+An `AIServices` account with `allowProjectManagement` is backed by a hidden AML
+(`AmlRp`) workspace. Deleting the account soft-deletes that workspace for ~14 days,
+and purging the Cognitive Services account does NOT purge it -- Azure exposes no API
+to list or purge it at all. The account name is therefore unusable for two weeks after
+any delete: recreating it always lands in `provisioningState: Failed` with
+"Soft-deleted workspace exists. Please purge or recover it.".
+Because `resourceToken` is derived from subscription id + resource group name and the
+platform reuses both, every re-run of an event would otherwise be guaranteed to fail.
+`labautomation/deploy-lab.ps1` supplies a fresh suffix whenever the previous account is
+not healthy, and reuses the existing one when it is. Foundry accounts are the only
+resources affected: Key Vault and APIM purge correctly and keep their stable names.''')
+param foundryNameSuffix string = ''
+
 // Participant RBAC is applied by labautomation/deploy-lab.ps1 AFTER this deployment,
 // so that EVERY id in $AllowedEntraUserIds is granted the roles (a template can only
 // conveniently grant the first one) and so that hub AND spoke resources are both
@@ -37,7 +52,7 @@ only after confirming quota with `az cognitiveservices usage list -l <region>`.'
 param modelCapacity int = 20
 
 // ===== Hub Resource Naming =====
-var hubFoundryAccountName = 'aif-hub-${resourceToken}'
+var hubFoundryAccountName = 'aif-hub-${resourceToken}${foundryNameSuffix}'
 var hubFoundryProjectName = 'citadel-hub-project'
 var apimName = 'apim-citadel-${resourceToken}'
 var cosmosAccountName = 'cos-citadel-${resourceToken}'
@@ -52,7 +67,7 @@ var apimMIName = 'mi-apim-${resourceToken}'
 var logicAppMIName = 'mi-logicapp-${resourceToken}'
 
 // ===== Spoke Resource Naming =====
-var spokeFoundryAccountName = 'aif-spoke-${resourceToken}'
+var spokeFoundryAccountName = 'aif-spoke-${resourceToken}${foundryNameSuffix}'
 var spokeFoundryProjectName = 'citadel-agents-project'
 var spokeLaName = 'law-spoke-${resourceToken}'
 var spokeAiName = 'appi-spoke-${resourceToken}'

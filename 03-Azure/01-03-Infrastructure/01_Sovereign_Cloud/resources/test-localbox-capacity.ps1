@@ -135,54 +135,6 @@ function Assert-LocalBoxCapacityHeadroom {
     }
 }
 
-function New-LocalBoxCapacityTemplate {
-    $machineId = "[resourceId('Microsoft.HybridCompute/machines', parameters('name'))]"
-    $nicId = "[resourceId('Microsoft.AzureStackHCI/networkInterfaces', concat(parameters('name'), '-nic'))]"
-    $extendedLocation = @{ type = 'CustomLocation'; name = "[parameters('customLocationId')]" }
-    @{
-        '$schema' = 'https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#'
-        contentVersion = '1.0.0.0'
-        parameters = @{
-            name = @{ type = 'string'; maxLength = 15 }; location = @{ type = 'string' }
-            customLocationId = @{ type = 'string' }; imageId = @{ type = 'string' }
-            networkId = @{ type = 'string' }; storageId = @{ type = 'string' }
-            processors = @{ type = 'int' }; memoryMB = @{ type = 'int' }
-            adminUsername = @{ type = 'string' }; adminPassword = @{ type = 'securestring' }
-            tags = @{ type = 'object' }
-        }
-        resources = @(
-            @{
-                type = 'Microsoft.HybridCompute/machines'; apiVersion = '2023-10-03-preview'
-                name = "[parameters('name')]"; location = "[parameters('location')]"
-                kind = 'HCI'; identity = @{ type = 'SystemAssigned' }; tags = "[parameters('tags')]"
-            }
-            @{
-                type = 'Microsoft.AzureStackHCI/networkInterfaces'; apiVersion = '2024-01-01'
-                name = "[concat(parameters('name'), '-nic')]"; location = "[parameters('location')]"
-                extendedLocation = $extendedLocation; tags = "[parameters('tags')]"
-                properties = @{ ipConfigurations = @(@{
-                    name = 'ipconfig1'; properties = @{ subnet = @{ id = "[parameters('networkId')]" } }
-                }) }
-            }
-            @{
-                type = 'Microsoft.AzureStackHCI/virtualMachineInstances'; apiVersion = '2024-01-01'
-                name = 'default'; scope = $machineId; extendedLocation = $extendedLocation
-                dependsOn = @($machineId, $nicId)
-                properties = @{
-                    hardwareProfile = @{ vmSize = 'Custom'; processors = "[parameters('processors')]"; memoryMB = "[parameters('memoryMB')]" }
-                    osProfile = @{
-                        adminUsername = "[parameters('adminUsername')]"; adminPassword = "[parameters('adminPassword')]"
-                        computerName = "[parameters('name')]"
-                        windowsConfiguration = @{ provisionVMAgent = $true; provisionVMConfigAgent = $true }
-                    }
-                    storageProfile = @{ vmConfigStoragePathId = "[parameters('storageId')]"; imageReference = @{ id = "[parameters('imageId')]" } }
-                    networkProfile = @{ networkInterfaces = @(@{ id = $nicId }) }
-                }
-            }
-        )
-    }
-}
-
 function Save-LocalBoxCapacityState {
     param([hashtable]$State, [string]$Path)
     $State.UpdatedAt = [datetime]::UtcNow.ToString('o')
@@ -231,56 +183,8 @@ function Assert-LocalBoxCapacityOwnership {
 
 function Submit-LocalBoxCapacityVM {
     param([hashtable]$State, [hashtable]$Entry, [pscredential]$Credential)
-    $directory = Join-Path ([IO.Path]::GetTempPath()) "lbcap-$([guid]::NewGuid())"
-    try {
-        if ($IsWindows) {
-            New-Item -ItemType Directory -Path $directory -ErrorAction Stop | Out-Null
-            $acl = Get-Acl -LiteralPath $directory
-            $acl.SetAccessRuleProtection($true, $false)
-            $identity = [Security.Principal.WindowsIdentity]::GetCurrent().User
-            $rule = [Security.AccessControl.FileSystemAccessRule]::new($identity, 'FullControl', 'ContainerInherit, ObjectInherit', 'None', 'Allow')
-            $acl.SetAccessRule($rule)
-            Set-Acl -LiteralPath $directory -AclObject $acl -ErrorAction Stop
-        }
-        else { [IO.Directory]::CreateDirectory($directory, [IO.UnixFileMode]::UserRead -bor [IO.UnixFileMode]::UserWrite -bor [IO.UnixFileMode]::UserExecute) | Out-Null }
-        $templatePath = Join-Path $directory 'vm.json'
-        New-LocalBoxCapacityTemplate | ConvertTo-Json -Depth 30 | Set-Content -LiteralPath $templatePath -ErrorAction Stop
-        $values = @{
-            name = $Entry.Name; location = $State.Location; customLocationId = $State.CustomLocationId
-            imageId = $State.ImageId; networkId = $State.NetworkId; storageId = $State.StorageId
-            processors = $State.ProcessorCount; memoryMB = $State.MemoryMB
-            adminUsername = $Credential.UserName; adminPassword = $Credential.GetNetworkCredential().Password
-            tags = @{ MicroHackPurpose = 'LocalBoxCapacityTest'; MicroHackRunId = $State.RunId }
-        }
-        $parameters = @{}
-        foreach ($key in $values.Keys) { $parameters[$key] = @{ value = $values[$key] } }
-        $parameterPath = Join-Path $directory 'parameters.json'
-        @{ '$schema' = 'https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#'; contentVersion = '1.0.0.0'; parameters = $parameters } |
-            ConvertTo-Json -Depth 10 | Set-Content -LiteralPath $parameterPath -ErrorAction Stop
-        $arguments = @('--subscription', $State.SubscriptionId, '--resource-group', $State.ResourceGroupName,
-            '--name', $Entry.Name, '--template-file', $templatePath, '--parameters', "@$parameterPath")
-        $preview = Invoke-LocalBoxAz (@('deployment', 'group', 'what-if') + $arguments + @('--no-pretty-print', '--result-format', 'ResourceIdOnly'))
-        $machineId = "/subscriptions/$($State.SubscriptionId)/resourceGroups/$($State.ResourceGroupName)/providers/Microsoft.HybridCompute/machines/$($Entry.Name)"
-        $allowed = @($machineId, "$machineId/providers/Microsoft.AzureStackHCI/virtualMachineInstances/default",
-            "/subscriptions/$($State.SubscriptionId)/resourceGroups/$($State.ResourceGroupName)/providers/Microsoft.AzureStackHCI/networkInterfaces/$($Entry.Name)-nic")
-        $creates = @($preview.changes | Where-Object changeType -eq 'Create')
-        $unsafe = @($preview.changes | Where-Object {
-            ($_.resourceId -iin $allowed -and $_.changeType -ne 'Create') -or
-            ($_.resourceId -inotIn $allowed -and $_.changeType -notin @('Ignore', 'NoChange'))
-        })
-        if ($preview.status -ne 'Succeeded' -or $creates.Count -ne 3 -or
-            @($creates.resourceId | Sort-Object -Unique).Count -ne 3 -or $unsafe.Count) {
-            $Entry.SubmissionError = 'ARM what-if did not confirm exactly the three new test resources with no changes to existing resources.'
-            throw $Entry.SubmissionError
-        }
-        Invoke-LocalBoxAz (@('deployment', 'group', 'create') + $arguments + @('--no-wait')) -NoOutput
-    }
-    catch { throw "VM submission failed for $($Entry.Name). Inspect its ARM deployment; resources may still be provisioning. CLI details are withheld to protect the VM credential." }
-    finally {
-        $values = $null
-        $parameters = $null
-        if (Test-Path -LiteralPath $directory) { Remove-Item -LiteralPath $directory -Recurse -Force -ErrorAction Stop }
-    }
+    Submit-LocalBoxVM -State $State -Entry $Entry -Credential $Credential `
+        -Tags @{ MicroHackPurpose = 'LocalBoxCapacityTest'; MicroHackRunId = $State.RunId }
 }
 
 function Update-LocalBoxCapacityVM {
@@ -436,12 +340,7 @@ function Invoke-LocalBoxCapacityRun {
         Repair-LocalBoxCapacityPendingSubmission $state
         if (-not $Settings.VmCredential -and @($state.VMs).Count -lt $Settings.VmCount) {
             if ($Settings.GenerateVmCredential) {
-                $password = 'Lb!' + [Convert]::ToBase64String([Security.Cryptography.RandomNumberGenerator]::GetBytes(30)) + '9a'
-                $secure = [Security.SecureString]::new()
-                foreach ($character in $password.GetEnumerator()) { $secure.AppendChar($character) }
-                $secure.MakeReadOnly()
-                $Settings.VmCredential = [pscredential]::new('localadmin', $secure)
-                $password = $null
+                $Settings.VmCredential = New-LocalBoxVmCredential
                 Write-Host 'Generated a disposable test-VM password in memory. It is not saved; use a supplied VmCredential if interactive sign-in is needed.'
             }
             else { $Settings.VmCredential = Get-Credential -UserName 'localadmin' -Message 'Local administrator for disposable capacity-test VMs (not the LocalBox administrator)' }

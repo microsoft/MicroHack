@@ -1,0 +1,10 @@
+{
+  "description": "Allowlist of the portals the Regulatory Web and Change Monitor may crawl. Each portal is a fictional training site served from data/portals/<day>/<portal>/.",
+  "portals": [
+    {"id": "eu-medicines-regulator", "region": "EU", "publisher": "EU medicines regulator (fictional)", "kind": "health authority", "start": "index.html"},
+    {"id": "uk-medicines-regulator", "region": "UK", "publisher": "UK medicines regulator (fictional)", "kind": "health authority", "start": "index.html"},
+    {"id": "us-medicines-regulator", "region": "US", "publisher": "US medicines regulator (fictional)", "kind": "health authority", "start": "index.html"},
+    {"id": "us-health-plan", "region": "US", "publisher": "US health plan (fictional)", "kind": "payer", "start": "index.html"},
+    {"id": "uk-pricing-scheme", "region": "UK", "publisher": "UK branded medicines pricing scheme (fictional)", "kind": "payer", "start": "index.html"}
+  ]
+}

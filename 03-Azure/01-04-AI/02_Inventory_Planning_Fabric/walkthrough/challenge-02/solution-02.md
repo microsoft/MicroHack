@@ -6,13 +6,17 @@
 
 ## Goal
 
-Build a Foundry prompt agent with Web Search + Fabric Data Agent tools to sense a real-world demand change.
+Build a Foundry prompt agent with Web Search + Fabric IQ (connected to your published Fabric Data Agent) to sense a real-world demand change.
 
 ## Solution walkthrough
 
 ### Agent creation
 
-Navigate to **Agents → + New agent**. If the portal shows a wizard, select **Prompt agent** (not Hosted agent).
+Navigate to **Agents → New agent**. If the portal shows a wizard, select **Prompt agent** (not Hosted agent).
+
+### Connecting the Data Agent
+
+Use **Tools → Add → Add tools → Fabric IQ (OneLake Catalog)**, filter by **Data agent**, and select the team's `inventory-hack-agent` (check its **Location** is the attendee's own workspace). The earlier **Fabric Data Agent** tool, which asked for a Workspace ID and Agent ID, is deprecated and greyed out in the catalogue; it retires on 6 November 2026. The new connection is named after the Data Agent (`inventoryhackagent`), and Challenges 3 and 4 reuse it from the **Configured** tab.
 
 ### Common issues
 

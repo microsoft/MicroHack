@@ -14,7 +14,7 @@ Adapted from the Citadel workshop (`azd up`), the lab deploys:
 | Resource | Purpose |
 |----------|---------|
 | **API Management (StandardV2)** | Unified AI gateway; all model calls route through APIM |
-| **Azure AI Foundry Account (Hub)** | Primary Foundry account (`aif-hub-<hash>`) for governance backend |
+| **Azure AI Foundry Account (Hub)** | Primary Foundry account (`aif-hub-<token><suffix>`) for governance backend |
 | **Azure AI Foundry Project (Hub)** | Hosts hub-level agents and access-control demonstrations |
 | **Log Analytics Workspace** | Hub observability backend |
 | **Application Insights** | Connected to hub Foundry for agent tracing |
@@ -27,7 +27,7 @@ Adapted from the Citadel workshop (`azd up`), the lab deploys:
 ### Spoke Resources (Folded into Same RG)
 | Resource | Purpose |
 |----------|---------|
-| **Azure AI Foundry Account (Spoke)** | Sample workload Foundry account (`aif-spoke-<hash>`) for attendee agent development |
+| **Azure AI Foundry Account (Spoke)** | Sample workload Foundry account (`aif-spoke-<token><suffix>`) for attendee agent development |
 | **Azure AI Foundry Project (Spoke)** | Where attendees deploy their governed agents (`citadel-agents-project`) |
 | **Log Analytics Workspace (Spoke)** | Spoke observability |
 | **Application Insights (Spoke)** | Spoke agent tracing |
@@ -65,7 +65,7 @@ infix plus the shared `resourceToken`.
 | Workshop `deploy-spoke-foundry.ps1` step | Equivalent here |
 |---|---|
 | Create spoke resource group | *Not applicable* — hub and spoke share the participant's single RG |
-| Foundry account (`allowProjectManagement`, system-assigned identity) | `spokeFoundryAccount` → `aif-spoke-<token>` |
+| Foundry account (`allowProjectManagement`, system-assigned identity) | `spokeFoundryAccount` → `aif-spoke-<token><suffix>` |
 | Foundry project (system-assigned identity) | `spokeFoundryProject` → `citadel-agents-project` |
 | Log Analytics workspace | `laSpoke` → `law-spoke-<token>` |
 | Application Insights | `aiSpoke` → `appi-spoke-<token>` |
@@ -163,12 +163,39 @@ The script follows MicroHack conventions:
 - **Region fallback** — Retries across `$PreferredLocation` (honoring platform preference),
   falling back to [swedencentral, westeurope, norwayeast] if all fail. Retries are gated on
   `Test-MhhDeploymentFailureRetryable`: a non-retryable failure (template or permission bug)
-  aborts immediately with the real error rather than being retried in every region.
+  aborts immediately with the real error rather than being retried in every region. Fallback
+  applies to **empty resource groups only** — once an RG holds resources their names are
+  pinned to that region, so any other candidate would fail with `InvalidResourceLocation` and
+  bury the real error. If all regions fail, the **first** (root cause) error is reported.
 - **Deterministic naming** — `Get-MhhStableHash` generates a stable suffix per attendee,
   ensuring names are DNS-safe, globally unique, and consistent across re-runs. The hash is
   computed **once** and passed to Bicep as `resourceToken`; the template is the single source
   of truth for every resource name.
-- **Idempotent provisioning** — All resources are created once; re-runs skip existing resources.
+- **Idempotent provisioning** — Re-runs reuse healthy resources. Because `resourceToken` is
+  derived from subscription id + RG name — both of which the platform reuses when an event is
+  torn down and re-deployed — the script first **purges soft-deleted Key Vaults and APIM
+  services** whose names contain this lab's token, and **recycles Foundry accounts left in a
+  `Failed` state**. A soft-deleted resource keeps its name reserved, so without this a
+  re-deployed event fails during preflight with an opaque
+  `Microsoft.CognitiveServices/accounts ... reported preflight validation errors` before any
+  resource is touched. Purges are asynchronous, so the script then waits for the names to
+  actually disappear before deploying. Only this lab's token is matched, so other labs sharing
+  the subscription are never affected.
+- **Fresh Foundry account names** — Foundry is the one resource that purging cannot rescue. An
+  `AIServices` account with `allowProjectManagement` is backed by a hidden Azure ML (`AmlRp`)
+  workspace; deleting the account soft-deletes that workspace for ~14 days, purging the
+  Cognitive Services account does **not** purge it, and Azure exposes no API to list or purge
+  it. Recreating the account then always lands in `provisioningState: Failed` with
+  *"Soft-deleted workspace exists. Please purge or recover it."* — which is what took out every
+  lab on the Sept-10 re-run. The script therefore reuses the existing Foundry accounts only
+  while they are healthy, and otherwise deploys under a **fresh name**
+  (`aif-hub-<token><suffix>`), recording the suffix as a resource-group tag
+  (`citadelFoundrySuffix`) so repeat runs stay stable. This is the only reason attendees must
+  copy the two Foundry account names rather than build them from the token.
+- **Transient-failure retry** — A deployment is retried up to three times in the same region
+  for genuinely transient states (`ServiceLocked` while APIM is still activating, AML
+  soft-delete lag), re-running the cleanup before each attempt so a retry never trips over the
+  wreckage of the previous one.
 - **Managed identities** — No hardcoded keys or connection strings; all auth uses Entra ID +
   Azure RBAC (DefaultAzureCredential in notebooks).
 - **Multi-user RBAC** — Every ID in `$AllowedEntraUserIds` is granted the necessary data-plane

@@ -180,9 +180,21 @@ module storage_rbac 'modules/storage-rbac.bicep' = {
   }
 }
 
+module sqlmi_rbac 'modules/sqlmi-rbac.bicep' = {
+  name: 'sqlmi_rbac'
+  scope: resourceGroup
+  params: {
+    managedInstanceName: managedInstance.outputs.managedInstanceName
+    vmPrincipalId: legacySqlVm.outputs.vmPrincipalId
+  }
+}
+
 module legacySqlVm_cse 'modules/sql2016-vm-cse.bicep' = {
   name: 'legacy-sql-vm_cse'
   scope: resourceGroup
+  dependsOn: [
+    sqlmi_rbac
+  ]
   params: {
     location: location
     vmName: legacySQLName

@@ -47,6 +47,7 @@ resource ConfigureSQLMachine 'Microsoft.Compute/virtualMachines/extensions@2024-
         '${repoBaseURL}/scripts/Install-AzureCLI.ps1'
         '${repoBaseURL}/scripts/Configure-SQLMI.ps1'
         '${repoBaseURL}/scripts/Configure-legacySQL.ps1'
+        '${repoBaseURL}/scripts/Configure-SQLMI-Link.ps1'
       ]
     }
 

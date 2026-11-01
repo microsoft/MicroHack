@@ -1,0 +1,10 @@
+{
+  "description": "Keyword rules the monitor uses to tag each document with impacted domains. Matching is case-insensitive on the normalised text. Tags help people and agents filter; they are not a legal assessment.",
+  "domains": {
+    "clinical": ["clinical trial", "trial ", "sponsor", "plain-language summary"],
+    "labelling": ["product information", "package leaflet", "patient information leaflet", "section 4.", "summary of product characteristics", "carton", "labelling"],
+    "manufacturing": ["good manufacturing practice", "contract manufacturer", "manufacturing site", "cleaning validation", "impurit", "fill-finish", "released for sale"],
+    "vigilance": ["safety update report", "psur", "risk management plan", "adverse reaction", "pharmacovigilance", "direct healthcare professional communication", "liver injury"],
+    "market access": ["formulary", "coverage", "prior authorisation", "pricing scheme", "payment rate", "net sales", "economic evidence"]
+  }
+}

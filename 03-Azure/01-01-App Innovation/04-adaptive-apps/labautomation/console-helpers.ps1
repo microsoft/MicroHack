@@ -43,19 +43,19 @@ function Test-AdaptiveRegion {
         if ($capability.status -and $capability.status -ne 'Available') { continue }
         if ($capability.supportedFeatures | Where-Object { $_.name -eq 'OfferRestricted' -and $_.status -eq 'Enabled' }) { continue }
         # Current CLI uses server editions; older runners return flexible editions per zone.
-        $burst = @($capability.supportedServerEditions | Where-Object { $_.name -eq 'Burstable' })
+        $generalPurpose = @($capability.supportedServerEditions | Where-Object { $_.name -eq 'GeneralPurpose' })
         $versions = @($capability.supportedServerVersions | Where-Object { $_.name -eq '16' })
-        if ($versions.Count -gt 0 -and ($burst.supportedServerSkus | Where-Object { $_.name -eq 'Standard_B1ms' })) {
+        if ($versions.Count -gt 0 -and ($generalPurpose.supportedServerSkus | Where-Object { $_.name -eq 'Standard_D4ds_v5' })) {
             $postgresReady = $true
         }
-        $legacyBurst = @($capability.supportedFlexibleServerEditions | Where-Object { $_.name -eq 'Burstable' })
-        $legacyVersion = @($legacyBurst.supportedServerVersions | Where-Object { $_.name -eq '16' })
-        if ($legacyVersion.supportedVcores | Where-Object { $_.name -eq 'Standard_B1ms' }) {
+        $legacyGeneralPurpose = @($capability.supportedFlexibleServerEditions | Where-Object { $_.name -eq 'GeneralPurpose' })
+        $legacyVersion = @($legacyGeneralPurpose.supportedServerVersions | Where-Object { $_.name -eq '16' })
+        if ($legacyVersion.supportedVcores | Where-Object { $_.name -eq 'Standard_D4ds_v5' }) {
             $postgresReady = $true
         }
     }
     if (-not $postgresReady) {
-        throw "$Location does not advertise PostgreSQL 16 Burstable Standard_B1ms required by the default recipe."
+        throw "$Location does not advertise PostgreSQL 16 GeneralPurpose Standard_D4ds_v5 required by the default application."
     }
     return $Location
 }

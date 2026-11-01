@@ -26,7 +26,7 @@ from sys.dm_exec_procedure_stats s
 Where OBJECT_NAME(object_id,database_id) is not NULL
 order by s.total_worker_time desc
 
--- QUERY 2 replace the filter clause with the SP identify
+-- QUERY 2 replace the filter clause with the SP identified
 -- Procedure statement details
 select OBJECT_NAME(object_id,database_id) as ProcedureName,st.text
 ,SUBSTRING(st.text, (qs.statement_start_offset/2)+1, 

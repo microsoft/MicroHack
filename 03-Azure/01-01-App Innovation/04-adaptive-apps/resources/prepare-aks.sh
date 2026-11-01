@@ -5,6 +5,9 @@ set -euo pipefail
 # AKS credentials belong in the default kubeconfig, not a previously selected K3s file.
 unset KUBECONFIG
 
+: "${AZURE_SUBSCRIPTION:?Set AZURE_SUBSCRIPTION to the target subscription ID.}"
+: "${RESOURCE_GROUP:?Set RESOURCE_GROUP to the lab Azure resource group.}"
+
 for command_name in az grep kubectl; do
   command -v "$command_name" >/dev/null 2>&1 || {
     echo "Required command not found: $command_name" >&2
@@ -12,9 +15,7 @@ for command_name in az grep kubectl; do
   }
 done
 
-: "${AZURE_SUBSCRIPTION:?Set AZURE_SUBSCRIPTION to the target subscription ID.}"
 AZURE_LOCATION="${AZURE_LOCATION:-westeurope}"
-RESOURCE_GROUP="${RESOURCE_GROUP:-rg-adaptive-apps}"
 AKS_CLUSTER="${AKS_CLUSTER:-aks-adaptive-apps}"
 AKS_NODE_COUNT="${AKS_NODE_COUNT:-2}"
 AKS_NODE_VM_SIZE="${AKS_NODE_VM_SIZE:-Standard_D4s_v5}"

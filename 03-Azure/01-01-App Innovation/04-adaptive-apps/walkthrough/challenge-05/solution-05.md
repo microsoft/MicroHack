@@ -122,36 +122,6 @@ Derive that name from a compile-time variable rather than from `tradingDb.name`,
 compile to a runtime `reference('tradingDb').name` call that cannot resolve.
 `resources/validate-postgres-recipes.sh` guards all of these.
 
-### Kubernetes resources created by a recipe
-
-The PostgreSQL recipes also create a Kubernetes Job that applies the trading schema. Two
-properties of that Job are easy to get wrong and fail silently.
-
-**A Job's `spec.template` is immutable.** Kubernetes rejects an update that changes the pod
-template of an existing Job with `spec.template: field is immutable`, so the Job has to be
-replaced rather than updated. That only happens if its *name* changes, which means the name
-must be derived from everything the pod template embeds — the script, the image tag and the
-name of the Secret holding the password, not just the schema SQL. The recipes hash all of
-those into `schemaRevision`. Radius then creates the new Job and garbage-collects the old one
-through `result.resources`.
-
-**Line endings reach the container verbatim.** Bicep preserves the on-disk line endings of
-`loadTextContent()` and of `'''…'''` multi-line strings, so a CRLF checkout embeds carriage
-returns in the Job's shell script. `sh` does not treat CR as whitespace, so `do<CR>` stops
-being the `do` keyword and the container exits immediately with
-`syntax error: unexpected word`. Because the recipe does not wait for the Job to succeed, the
-deployment still reports success and the database is simply left empty. The repository pins
-these files to LF in `.gitattributes`, and the recipes additionally strip carriage returns
-with `replace(..., '\r', '')` so they stay correct on any checkout.
-
-Verify the Job actually completed rather than trusting the deployment result:
-
-```bash
-kubectl get jobs -n <application-namespace>
-```
-
-`COMPLETIONS` must read `1/1`.
-
 ## Manual tutorial, Stage 1: Author the Azure SQL recipe
 
 Open `iac/recipes/sql-server.bicep` and walk through:
@@ -237,6 +207,25 @@ rad env switch env-azure-prod
 rad group switch rg-trading
 ```
 
+> [!IMPORTANT]
+> `ACR_NAME` must contain only the Azure Container Registry resource name, not a URL
+> or the login-server hostname.
+>
+> ```bash
+> # Correct
+> export ACR_NAME="acad3zqjinwxy6mh2"
+>
+> # Incorrect
+> export ACR_NAME="acad3zqjinwxy6mh2.azurecr.io"
+> ```
+>
+> The commands below append `.azurecr.io` automatically. Including it in `ACR_NAME`
+> produces a duplicated hostname and causes Radius recipe downloads to fail with
+> `RecipeDownloadFailed` / `no such host`.
+>
+> Hosted participants should source `artifacts/console-env.sh` and retain its supplied
+> `ACR_NAME`.
+
 **Hosted Console:** reuse the supplied registry; do not run the creation block.
 Source and verify your supplied values:
 
@@ -250,7 +239,7 @@ az acr show --resource-group "$RESOURCE_GROUP" --name "$ACR_NAME" \
 
 ```bash
 export AZURE_SUBSCRIPTION="${AZURE_SUBSCRIPTION:-<subscription-id>}"
-export RESOURCE_GROUP="${RESOURCE_GROUP:-rg-adaptive-apps}"
+export RESOURCE_GROUP="${RESOURCE_GROUP:-<lab-resource-group>}"
 export ACR_NAME="${ACR_NAME:-<globally-unique-acr-name>}"
 
 az account set --subscription "$AZURE_SUBSCRIPTION"
@@ -306,20 +295,25 @@ EOF
 
 Publish the teaching recipe and both workshop-owned PostgreSQL recipes. The PostgreSQL
 recipes compile the same `iac/recipes/trading-schema.sql` into each implementation and
-use immutable workshop tags rather than the external `latest` recipes.
+use immutable workshop tags rather than the external `latest` recipes. Version `1.0.8`
+retains the Azure PostgreSQL naming correction and maps size `L` to General Purpose
+`Standard_D4ds_v5` (4 vCores, 16 GiB RAM), as requested by the default application.
+PostgreSQL remains version 16 with 32 GiB storage. In K3s, the same portable size `L`
+selects a 2 GiB memory limit rather than Azure compute. Do not republish changed source over
+`1.0.6` or another existing tag; publish a new version instead.
 
 ```bash
 rad bicep publish \
   --file iac/recipes/sql-server.bicep \
-  --target "br:${ACR_NAME}.azurecr.io/recipes/sql-server:1.0.6"
+  --target "br:${ACR_NAME}.azurecr.io/recipes/sql-server:1.0.8"
 
 rad bicep publish \
   --file iac/recipes/postgres-azure-flex.bicep \
-  --target "br:${ACR_NAME}.azurecr.io/recipes/postgres-azure-flex:1.0.6"
+  --target "br:${ACR_NAME}.azurecr.io/recipes/postgres-azure-flex:1.0.8"
 
 rad bicep publish \
   --file iac/recipes/postgres-kubernetes.bicep \
-  --target "br:${ACR_NAME}.azurecr.io/recipes/postgres-kubernetes:1.0.6"
+  --target "br:${ACR_NAME}.azurecr.io/recipes/postgres-kubernetes:1.0.8"
 ```
 
 **PowerShell 7:**
@@ -327,15 +321,15 @@ rad bicep publish \
 ```powershell
 rad bicep publish `
     --file iac/recipes/sql-server.bicep `
-    --target "br:$env:ACR_NAME.azurecr.io/recipes/sql-server:1.0.6"
+    --target "br:$env:ACR_NAME.azurecr.io/recipes/sql-server:1.0.8"
 
 rad bicep publish `
     --file iac/recipes/postgres-azure-flex.bicep `
-    --target "br:$env:ACR_NAME.azurecr.io/recipes/postgres-azure-flex:1.0.6"
+    --target "br:$env:ACR_NAME.azurecr.io/recipes/postgres-azure-flex:1.0.8"
 
 rad bicep publish `
     --file iac/recipes/postgres-kubernetes.bicep `
-    --target "br:$env:ACR_NAME.azurecr.io/recipes/postgres-kubernetes:1.0.6"
+    --target "br:$env:ACR_NAME.azurecr.io/recipes/postgres-kubernetes:1.0.8"
 ```
 
 Register the Azure SQL teaching recipe:
@@ -345,7 +339,7 @@ rad recipe register default \
   --environment env-azure-prod \
   --resource-type Radius.Resources/sqlDatabases \
   --template-kind bicep \
-  --template-path "${ACR_NAME}.azurecr.io/recipes/sql-server:1.0.6"
+  --template-path "${ACR_NAME}.azurecr.io/recipes/sql-server:1.0.8"
 ```
 
 Verify:
@@ -424,9 +418,9 @@ rad deploy iac/aks-env.bicep \
   --parameters azureSubscriptionId="$AZURE_SUBSCRIPTION" \
   --parameters azureResourceGroup="$RESOURCE_GROUP" \
   --parameters istioRevision="$ISTIO_REVISION" \
-  --parameters postgresRecipeTemplatePath="${ACR_NAME}.azurecr.io/recipes/postgres-azure-flex:1.0.6" \
+  --parameters postgresRecipeTemplatePath="${ACR_NAME}.azurecr.io/recipes/postgres-azure-flex:1.0.8" \
   --parameters aksEgressIps="$AKS_EGRESS_IPS" \
-  --parameters sqlDatabasesRecipeTemplatePath="${ACR_NAME}.azurecr.io/recipes/sql-server:1.0.6"
+  --parameters sqlDatabasesRecipeTemplatePath="${ACR_NAME}.azurecr.io/recipes/sql-server:1.0.8"
 ```
 
 **PowerShell 7:**
@@ -477,9 +471,9 @@ rad deploy iac/aks-env.bicep `
     --parameters azureSubscriptionId=$env:AZURE_SUBSCRIPTION `
     --parameters azureResourceGroup=$env:RESOURCE_GROUP `
     --parameters istioRevision=$IstioRevision `
-    --parameters "postgresRecipeTemplatePath=$env:ACR_NAME.azurecr.io/recipes/postgres-azure-flex:1.0.6" `
+    --parameters "postgresRecipeTemplatePath=$env:ACR_NAME.azurecr.io/recipes/postgres-azure-flex:1.0.8" `
     --parameters "aksEgressIps=$($EgressIps -join ',')" `
-    --parameters "sqlDatabasesRecipeTemplatePath=$env:ACR_NAME.azurecr.io/recipes/sql-server:1.0.6"
+    --parameters "sqlDatabasesRecipeTemplatePath=$env:ACR_NAME.azurecr.io/recipes/sql-server:1.0.8"
 ```
 
 | Resource type | AKS/Azure backend |
@@ -524,7 +518,7 @@ rad deploy iac/local-env.bicep \
   --environment env-local-prod \
   --parameters environmentName=env-local-prod \
   --parameters namespace=env-local-prod \
-  --parameters postgresRecipeTemplatePath="${ACR_NAME}.azurecr.io/recipes/postgres-kubernetes:1.0.6"
+  --parameters postgresRecipeTemplatePath="${ACR_NAME}.azurecr.io/recipes/postgres-kubernetes:1.0.8"
 ```
 
 **PowerShell 7:**
@@ -536,7 +530,7 @@ rad deploy iac/local-env.bicep `
     --environment env-local-prod `
     --parameters environmentName=env-local-prod `
     --parameters namespace=env-local-prod `
-    --parameters "postgresRecipeTemplatePath=$env:ACR_NAME.azurecr.io/recipes/postgres-kubernetes:1.0.6"
+    --parameters "postgresRecipeTemplatePath=$env:ACR_NAME.azurecr.io/recipes/postgres-kubernetes:1.0.8"
 ```
 
 | Resource type | K3s/local backend |
@@ -598,12 +592,6 @@ kubectl port-forward service/dashboard \
 
 Open <http://localhost:7007>, navigate to the environment, and inspect **Recipes**.
 
-## Optional platforms
-
-If Azure Local or Arc-enabled Kubernetes replaces K3s, use `iac/local-env.bicep` for
-in-cluster implementations unless the platform team intentionally provides managed
-services. Always use a distinct workspace and translate context and environment names
-consistently.
 
 ## Optional automation
 
@@ -611,7 +599,7 @@ The manual tutorial is the intended learning path. To automate the same configur
 
 ```bash
 export AZURE_SUBSCRIPTION="${AZURE_SUBSCRIPTION:-<subscription-id>}"
-export RESOURCE_GROUP="${RESOURCE_GROUP:-rg-adaptive-apps}"
+export RESOURCE_GROUP="${RESOURCE_GROUP:-<lab-resource-group>}"
 export ACR_NAME="${ACR_NAME:-<globally-unique-acr-name>}"
 
 # Configure both defaults:
@@ -624,6 +612,37 @@ bash resources/configure-recipes.sh k3s
 
 The script creates or reuses ACR, publishes the custom SQL recipe for AKS, deploys the
 two corrected PostgreSQL recipes plus the custom SQL recipe, deploys the appropriate
-environment definition, and verifies the registered recipes. `k3s` also needs
-`AZURE_SUBSCRIPTION`, `RESOURCE_GROUP`, and `ACR_NAME` because it republishes the pinned
-workshop recipe before registration.
+environment definition, and verifies the registered recipes. It uses
+`WORKSHOP_RECIPE_VERSION=1.0.8` by default and reuses an existing version tag instead of
+overwriting it. `k3s` also needs `AZURE_SUBSCRIPTION`, `RESOURCE_GROUP`, and `ACR_NAME`
+because it publishes the pinned workshop recipe before registration when needed.
+
+### Troubleshooting: Kubernetes resources created by a recipe
+
+The PostgreSQL recipes also create a Kubernetes Job that applies the trading schema. Two
+properties of that Job are easy to get wrong and fail silently.
+
+**A Job's `spec.template` is immutable.** Kubernetes rejects an update that changes the pod
+template of an existing Job with `spec.template: field is immutable`, so the Job has to be
+replaced rather than updated. That only happens if its *name* changes, which means the name
+must be derived from everything the pod template embeds — the script, the image tag and the
+name of the Secret holding the password, not just the schema SQL. The recipes hash all of
+those into `schemaRevision`. Radius then creates the new Job and garbage-collects the old one
+through `result.resources`.
+
+**Line endings reach the container verbatim.** Bicep preserves the on-disk line endings of
+`loadTextContent()` and of `'''…'''` multi-line strings, so a CRLF checkout embeds carriage
+returns in the Job's shell script. `sh` does not treat CR as whitespace, so `do<CR>` stops
+being the `do` keyword and the container exits immediately with
+`syntax error: unexpected word`. Because the recipe does not wait for the Job to succeed, the
+deployment still reports success and the database is simply left empty. The repository pins
+these files to LF in `.gitattributes`, and the recipes additionally strip carriage returns
+with `replace(..., '\r', '')` so they stay correct on any checkout.
+
+Verify the Job actually completed rather than trusting the deployment result:
+
+```bash
+kubectl get jobs -n <application-namespace>
+```
+
+`COMPLETIONS` must read `1/1`.

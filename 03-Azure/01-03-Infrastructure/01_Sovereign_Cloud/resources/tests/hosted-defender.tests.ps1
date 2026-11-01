@@ -131,10 +131,12 @@ Describe 'Hosted Defender setup' {
     }
 
     It 'wires Defender after hosted tag setup and before LocalBox deployment' {
-        $hook = Get-Content "$root/labautomation/shared-deploy-lab.ps1" -Raw
+        $hook = Get-Content "$root/labautomation/global-event-deploy.ps1" -Raw
         $hook | Should -Match "Join-Path \`$PSScriptRoot 'hosted-defender.ps1'"
         $call = $hook.IndexOf('Initialize-MhhHostedDefender -SubscriptionId $SubscriptionId')
         $call | Should -BeGreaterThan $hook.IndexOf('Initialize-MhhHostedTagPolicy -SubscriptionId')
         $call | Should -BeLessThan $hook.IndexOf("`$localBoxResourceGroupName = 'rg-localbox-shared'")
+        $shared = Get-Content "$root/labautomation/shared-deploy-lab.ps1" -Raw
+        $shared | Should -Match 'Initialize-MhhHostedDefender -SubscriptionId \$SubscriptionId'
     }
 }

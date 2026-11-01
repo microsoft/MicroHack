@@ -37,11 +37,114 @@ authorized test of real network access through the load-balancer address.
 The LocalBox registration-region contract is checked offline with
 `Invoke-Pester ./prepare-localbox.tests.ps1 -FullName 'LocalBox registration region contract*' -Output Detailed`.
 It verifies that both deployment entry points default registration to Australia East,
-the shared hook passes that region independently of host-region selection, and
+the global hook passes that region independently of host-region selection, and
 all four Challenge 1 policy parameter examples include the Australia East lab-only
 exception while retaining the four European regions. These checks make no
 Azure changes; a fresh Console deployment and participant VM creation remain
 required to validate regional service availability and effective inherited policies.
+
+## Global event LocalBox checks
+
+Run `Invoke-Pester ./global-localbox.tests.ps1 -Output Detailed` for offline
+coverage of the Console's exact global-hook signature, cost/schema opt-in, one
+LocalBox deployment followed by two subscription preparations, all-event RBAC,
+shared subscription/resource-group discovery outputs, regional fallback, reuse,
+context guards and failure propagation without publishing success credentials.
+Participant RBAC regressions cover reuse of the global Security Reader grant,
+creation when absent, rejecting unrelated-scope/user/role matches, and read-error
+propagation. This prevents `RoleAssignmentExists` when the global hook's
+assignment ID differs from the participant Bicep template's deterministic ID.
+The preparation, hosted-tag-policy, hosted-defender and shared-AKS suites also
+cover the relocated wiring and unchanged per-subscription setup.
+
+For integration, re-import the content pack and provision a fresh event spanning
+at least two subscriptions with organizer approval (the normal one-lab smoke test
+cannot verify cross-subscription access). Confirm exactly one global job and
+LocalBox, separate shared preparation jobs, identical global discovery credentials
+for all labs, and a participant in the other subscription creating/managing their
+own VM against the shared custom location. Verify reference-VM Defender visibility,
+Entra AKS proxy access, distinct team namespaces and teardown ordering. These are
+live integration gates; offline tests do not establish Console execution or
+cross-subscription Azure resource-linking behavior.
+
+### Observed TEST4 integration results
+
+The 24 October 2026 Console log for `NO-SovCloud-Oct24-TEST4` showed one completed
+global deployment in **traininglab-59**, completed subscription preparation in
+**traininglab-12** and **traininglab-59**, and **4/4** completed participant jobs.
+The two participants in the host subscription reused their existing Security
+Reader grants without a role-assignment collision.
+
+On **25 October 2026**, the organizer signed in as **labuser-0027** and successfully
+created VM **labuser-0027** in **traininglab-12 / rg-labuser-0027**, using LocalBox
+in **traininglab-59 / rg-localbox-shared**. The portal initially selected the
+LocalBox subscription; switching it to the participant subscription exposed the
+participant's original resource group while retaining the shared custom location
+and image. See the [wizard example](../../walkthrough/challenge-06/images/localbox-cross-subscription-basics.png).
+
+<a href="../../walkthrough/challenge-06/images/localbox-cross-subscription-complete.png"><img src="../../walkthrough/challenge-06/images/localbox-cross-subscription-complete.png" alt="Completed Azure Local VM deployment for labuser-0027 in traininglab-12 and rg-labuser-0027." width="800" /></a>
+
+This is live evidence for **portal VM creation across subscriptions** with the
+tested participant permissions, not blanket validation of every Azure CLI
+operation. Guest management was selected during creation, but connected guest
+status, Defender onboarding/assessments, Update Manager results, AKS proxy access
+and teardown still require their separate checks. No second participant resource
+group or shared-RG VM placement is needed for the tested creation flow.
+
+## Reference-VM checks
+
+Run `Invoke-Pester ./prepare-localbox.tests.ps1 -Output Detailed` for the offline
+preparation and capacity regression suite. Reference-VM tests cover default inclusion, explicit opt-out and WhatIf,
+the 15-character Windows name limit, generated credentials, encrypted-file lifecycle
+(mocked offline), retry reuse, persistence failures, no credential access on
+reuse/WhatIf/opt-out, optional NIC response names with strict subnet/count checks, resource reuse and
+conflicts, periodic assessment configuration, and pending/failed MDE status.
+The shared VM submission tests check secure parameter-file transport and cleanup,
+error redaction, and an ARM preview restricted to three new VM resources.
+
+When the preparation manifest contains `ReferenceVm`, the live LocalBox health
+suite additionally checks the expected machine/NIC/instance, running state, Arc
+connection, MDE installation and periodic assessment mode. Older manifests without
+that optional entry retain the normal test set. These checks do **not** verify
+ongoing Defender device reporting or completed Defender/Update Manager results;
+perform the [organizer reference readiness checks](../localbox/readme.md#reference-readiness-and-participant-use)
+before the workshop.
+
+On 2026-10-21, read-only validation against an existing running reference VM passed
+with the IP-configuration name absent from the actual NIC response. Arc was
+Connected and periodic assessment was enabled; MDE was still Pending. Separately,
+Azure Run Command on LocalBox-Client verified real Windows DPAPI credential
+round-trip, restricted directory/file ACLs, unchanged retry reuse and rejection
+of a different resource ID. This test ran as SYSTEM against a disposable test
+file and removed it afterwards; it did not reset the reference VM's password.
+An interactive organizer-account run and fresh creation using the generated
+credential remain end-to-end integration checks.
+
+## Preparation recovery and ordering checks
+
+Default/preflight tests verify that no manual address-reservation switch is
+required for the standard greenfield topology, while configured gateway,
+infrastructure-address, AKS/VIP and VLAN conflicts still stop preparation.
+
+The same offline suite checks the standard nonprompting confirmation impact,
+continued support for explicit `-Confirm`/`-WhatIf`, and safe recovery of matching
+Failed Marketplace images, conflicting-image protection, bounded deletion waits,
+and a single import attempt per run. Image-version tests cover numeric selection
+from the cluster-scoped Edge Marketplace catalog, explicit version validation,
+malformed/unavailable catalogs, discovery before deletion, unchanged reuse of
+working images, and verification of the actual imported version. The resolver was
+also run read-only against the live cluster catalog on 2026-10-21; it selected
+`26100.33438.260905`, while Azure Compute exposed the newer `26100.33650.261013`.
+It executes the preparation workload sequence
+with mocked Azure calls to verify that networks, AKS and MetalLB precede image
+import and the optional reference VM, including when image import fails.
+
+Storage tests verify no repeated disk/partition mutations on a completed rerun,
+resumption of an interrupted partition expansion, and detection of unallocated
+space without calling `Get-PartitionSupportedSize` on an already expanded
+partition. The alignment/GPT allowance is tested at and above 1 MiB. Live
+LocalBox validation is still required for actual Windows storage behavior and
+Marketplace failure recovery.
 
 ## Hosted Defender unit tests
 

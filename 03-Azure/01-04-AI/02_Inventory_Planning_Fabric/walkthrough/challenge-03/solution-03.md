@@ -12,23 +12,19 @@ Build the Inventory Optimisation Agent and use agent tracing to inspect its reas
 
 ### Agent — key configuration point
 
-This agent should have **only the Fabric Data Agent tool** — no Web Search. New prompt agents ship with **Web Search attached by default**, so the key step is to **remove it**; otherwise `gpt-5.4-mini` tends to reach for the web instead of the governed data. The instructions say "governed data only" for a reason: optimisation decisions should be traceable to authoritative internal data, not unverified web content.
+This agent should have **only the Fabric IQ tool** — no Web Search. Reuse the `inventoryhackagent` connection from Challenge 2 (**Tools → Add → Add tools → Configured**). New prompt agents ship with **Web Search attached by default**, so the key step is to **remove it**; otherwise `gpt-5.4-mini` tends to reach for the web instead of the governed data. The instructions say "governed data only" for a reason: optimisation decisions should be traceable to authoritative internal data, not unverified web content.
 
 ### Reading the trace — what to look for
 
-In the agent's **Traces → Response view**, each run shows a tree of spans:
+In the agent's **Traces** tab, open a run's **Trace ID**. The **Trajectories** tab shows a tree of spans:
 
 ```
-run
-├── model_call (instructions + user message sent to gpt-5.4-mini)
-├── tool_call: Fabric Data Agent
-│   ├── input: { query: "current stock and reorder point for Leaf Blower X2 (P004) across all locations" }
-│   └── output: { ... table of rows ... }
-├── tool_call: Fabric Data Agent   ← agent may call multiple times
-│   ├── input: { query: "average weekly sales for outdoor power tools over the last 8 weeks" }
-│   └── output: { ... }
-└── model_call (final synthesis → recommendation table)
+Invoke Agent: invoke_agent inventory-optimisation-agent:<version>
+├── Execute Tool: mcp_inventoryhackagent.DataAgent_inventory_hack_agent   (the Fabric call, tens of seconds)
+└── Chat: gpt-5.4-mini                                                    (final synthesis, under a second)
 ```
+
+Select a span and use **Input + Output** on the right to read the query, the data Fabric returned and the final answer. The agent may call Fabric more than once.
 
 ### Common issues
 
@@ -36,7 +32,7 @@ run
 |---------|-------|-----|
 | Agent returns "I don't have enough information" or an empty table | Product/category words don't match Fabric values | Ask by **SKU/productId** (e.g. `P004`) or the exact snake_case category value (`outdoor_power_tools`), not a friendly label like "Outdoor Power Tools" |
 | Reorder quantity seems wrong | Agent used a different formula | Remind the agent of the formula in a follow-up: "Use the rule: reorder_qty = max(0, 30-day demand - current stock)" |
-| Trace not appearing | Tracing may take 30–60 seconds to update | Refresh the agent's **Traces → Response view** |
+| Trace not appearing | Tracing may take 30–60 seconds to update | Refresh the agent's **Traces** tab |
 
 ### Sample recommendation table
 

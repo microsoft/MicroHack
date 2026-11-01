@@ -1,0 +1,30 @@
+# ============================================================================
+# Local Edge SOP Runbook ConfigMap (SOP-CNC-042)
+# Stored on-cluster so the Autonomous Edge Agent grounds its decisions
+# without any cloud vector database or external network dependency.
+# ============================================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: local-sop-runbook
+  namespace: edge-agents
+data:
+  sop.md: |
+    # Contoso Sovereign Manufacturing — Edge Standard Operating Procedure (SOP-CNC-042)
+
+    ## Machine Class: CNC-EXTRUDER Series (Line 1)
+    - Nominal Bearing Temperature: 60.0°C – 78.0°C
+    - Warning Bearing Temperature: 85.0°C – 104.9°C
+    - Critical Bearing Thermal Runaway: >= 105.0°C
+    - Nominal Vibration (RMS): 1.5 – 4.5 mm/s
+    - Warning Vibration (RMS): 7.5 – 12.9 mm/s
+    - Critical Bearing Seizure Vibration: >= 13.0 mm/s
+    - Minimum Safe Coolant Flow: 4.0 LPM
+
+    ## Mandatory Autonomous Mitigation Rules
+    1. **Thermal / Vibration Warning (`85°C <= bearingTempC < 105°C` OR `7.5 <= vibrationMmPerSec < 13.0`)**:
+       - Call tool `adjust_plc_setpoint` with `spindle_rpm_delta_pct: -25` and `enable_coolant_boost: true`.
+       - Record local work order priority `P2-WARNING`.
+    2. **Critical Thermal Runaway or Bearing Seizure (`bearingTempC >= 105°C` OR `vibrationMmPerSec >= 13.0` OR `coolantFlowLpm < 2.0`)**:
+       - Immediately call tool `trigger_safety_interlock` with `spindle_rpm_delta_pct: -60`, `enable_coolant_boost: true`, and `interlock_mode: "SAFE_HOLD"`.
+       - Record local work order priority `P1-CRITICAL-INTERLOCK`.

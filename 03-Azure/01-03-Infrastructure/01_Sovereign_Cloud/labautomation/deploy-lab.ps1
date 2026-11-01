@@ -166,6 +166,21 @@ $sovereignLabResult = Invoke-MhhDeploymentWithRegionFallback `
 $deploymentName = "lab-$stableHash"
 
 Write-Host "Assigning subscription-scoped lab RBAC to participant $($AllowedEntraUserIds[0])..."
+Update-MhhToken | Out-Null
+$securityReaderScope = "/subscriptions/$SubscriptionId"
+$securityReaderRoleId = '39bc4728-0917-49c7-9d2c-d95423bc2eb4'
+$existingSecurityReader = @(Get-AzRoleAssignment `
+    -ObjectId $AllowedEntraUserIds[0] `
+    -RoleDefinitionId $securityReaderRoleId `
+    -Scope $securityReaderScope `
+    -ErrorAction Stop | Where-Object {
+        $_.ObjectId -ieq $AllowedEntraUserIds[0] -and
+        $_.Scope -ieq $securityReaderScope -and
+        $_.RoleDefinitionId -ieq $securityReaderRoleId
+    })
+if ($existingSecurityReader.Count -gt 0) {
+    Write-Host 'Reusing the existing subscription Security Reader assignment without changing its ID.'
+}
 New-AzSubscriptionDeployment `
     -Name                    $deploymentName `
     -Location                $effectiveLocation `
@@ -173,6 +188,7 @@ New-AzSubscriptionDeployment `
     -TemplateParameterObject @{
         userObjectId = $AllowedEntraUserIds[0]
         resourceGroupName = $ResourceGroupName
+        assignSecurityReader = ($existingSecurityReader.Count -eq 0)
     } | Out-Null
 
 @{"HackboxCredential" = @{ name = "Sovereign Lab Region"; value = $sovereignLabResult.LocationUsed; note = "Region selected after capacity checks" }}

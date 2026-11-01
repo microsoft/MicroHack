@@ -52,15 +52,26 @@ end of the event.
 
 Every resource in your lab is named with the same random token, and the `.env` values
 are built from it. In the portal, open your resource group (`rg-labuser-00XX`) and find
-the AI Foundry account named **`aif-hub-<TOKEN>`** — everything after the prefix is your
-token. For example `aif-hub-fd79f0b6fee89` means the token is `fd79f0b6fee89`.
+the API Management service named **`apim-citadel-<TOKEN>`** — everything after the prefix
+is your token. For example `apim-citadel-fd79f0b6fee89` means the token is
+`fd79f0b6fee89`.
 
 From the CLI:
 
 ```bash
-az cognitiveservices account list -g <your-rg> \
-  --query "[?starts_with(name,'aif-hub-')].name" -o tsv
+az apim list -g <your-rg> --query "[].name" -o tsv
 ```
+
+> [!IMPORTANT]
+> The two AI Foundry accounts are the one exception: they carry a few extra random
+> characters after the token (for example `aif-hub-fd79f0b6fee89-k3xq`). Azure reserves a
+> deleted Foundry account's name for two weeks, so the lab gives them a fresh name on every
+> deployment. Copy those two names **exactly as they appear** rather than building them
+> from the token:
+>
+> ```bash
+> az cognitiveservices account list -g <your-rg> --query "[].name" -o tsv
+> ```
 
 #### A.3 — Fill in `.env`
 
@@ -71,7 +82,7 @@ cp .env.template .env
 
 Open `.env` and set the values below, replacing `<TOKEN>` throughout. The first three
 come straight from the dashboard / portal Overview blade; the rest are derived from the
-token.
+token, except the two Foundry account names you copied in A.2.
 
 ```bash
 AZURE_RESOURCE_GROUP=rg-labuser-00XX
@@ -80,11 +91,11 @@ AZURE_SUBSCRIPTION_ID=<SubscriptionId>
 
 SPOKE_RESOURCE_GROUP=rg-labuser-00XX  # same RG — this lab uses one resource group
 SPOKE_KEY_VAULT_NAME=kv-spoke-<TOKEN>
-SPOKE_AI_FOUNDRY_ACCOUNT_NAME=aif-spoke-<TOKEN>
+SPOKE_AI_FOUNDRY_ACCOUNT_NAME=<SPOKE_FOUNDRY_ACCOUNT>   # the full aif-spoke-... name
 SPOKE_AI_FOUNDRY_PROJECT_NAME=citadel-agents-project
 SPOKE_ACR_NAME=acrcitadel<TOKEN>
 SPOKE_ACR_LOGIN_SERVER=acrcitadel<TOKEN>.azurecr.io
-A2A_FOUNDRY_ACCOUNT_NAME=aif-spoke-<TOKEN>
+A2A_FOUNDRY_ACCOUNT_NAME=<SPOKE_FOUNDRY_ACCOUNT>        # same value as above
 ```
 
 Challenges 1-6 need only the first four values plus `LLM_BACKEND_CONFIG`.
@@ -92,10 +103,11 @@ Challenges 1-6 need only the first four values plus `LLM_BACKEND_CONFIG`.
 #### A.4 — Fill in `LLM_BACKEND_CONFIG`
 
 This one is a single line of JSON describing your gateway's backend and its six models.
-Paste the block below as **one line**, with `<TOKEN>` replaced in **both** places:
+Paste the block below as **one line**, replacing `<HUB_FOUNDRY_ACCOUNT>` in **both**
+places with the full `aif-hub-...` name you copied in A.2:
 
 ```
-LLM_BACKEND_CONFIG=[{"backendId":"aif-hub-<TOKEN>","backendType":"ai-foundry","endpoint":"https://aif-hub-<TOKEN>.openai.azure.com","authScheme":"managedIdentity","authType":"managed-identity","priority":1,"weight":100,"supportedModels":[{"name":"gpt-4.1","sku":"GlobalStandard","capacity":20,"modelFormat":"OpenAI","modelVersion":"2025-04-14","retirementDate":"2027-04-14"},{"name":"gpt-5.4-mini","sku":"GlobalStandard","capacity":20,"modelFormat":"OpenAI","modelVersion":"2026-03-17","retirementDate":"2027-09-21"},{"name":"gpt-5.2","sku":"GlobalStandard","capacity":20,"modelFormat":"OpenAI","modelVersion":"2025-12-11","retirementDate":"2027-06-08"},{"name":"text-embedding-3-large","sku":"GlobalStandard","capacity":20,"modelFormat":"OpenAI","modelVersion":"1","retirementDate":"2028-02-09"},{"name":"Mistral-Large-3","sku":"GlobalStandard","capacity":20,"modelFormat":"Mistral AI","modelVersion":"1","retirementDate":"2099-12-31"},{"name":"Phi-4","sku":"GlobalStandard","capacity":1,"modelFormat":"Microsoft","modelVersion":"7","retirementDate":"2099-12-31"}]}]
+LLM_BACKEND_CONFIG=[{"backendId":"<HUB_FOUNDRY_ACCOUNT>","backendType":"ai-foundry","endpoint":"https://<HUB_FOUNDRY_ACCOUNT>.openai.azure.com","authScheme":"managedIdentity","authType":"managed-identity","priority":1,"weight":100,"supportedModels":[{"name":"gpt-4.1","sku":"GlobalStandard","capacity":20,"modelFormat":"OpenAI","modelVersion":"2025-04-14","retirementDate":"2027-04-14"},{"name":"gpt-5.4-mini","sku":"GlobalStandard","capacity":20,"modelFormat":"OpenAI","modelVersion":"2026-03-17","retirementDate":"2027-09-21"},{"name":"gpt-5.2","sku":"GlobalStandard","capacity":20,"modelFormat":"OpenAI","modelVersion":"2025-12-11","retirementDate":"2027-06-08"},{"name":"text-embedding-3-large","sku":"GlobalStandard","capacity":20,"modelFormat":"OpenAI","modelVersion":"1","retirementDate":"2028-02-09"},{"name":"Mistral-Large-3","sku":"GlobalStandard","capacity":20,"modelFormat":"Mistral AI","modelVersion":"1","retirementDate":"2099-12-31"},{"name":"Phi-4","sku":"GlobalStandard","capacity":1,"modelFormat":"Microsoft","modelVersion":"7","retirementDate":"2099-12-31"}]}]
 ```
 
 > [!IMPORTANT]

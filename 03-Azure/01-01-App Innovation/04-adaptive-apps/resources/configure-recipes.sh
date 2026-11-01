@@ -27,7 +27,7 @@ AKS_ENVIRONMENT="${AKS_ENVIRONMENT:-env-azure-prod}"
 K3S_ENVIRONMENT="${K3S_ENVIRONMENT:-env-local-prod}"
 RADIUS_GROUP="${RADIUS_GROUP:-rg-trading}"
 RECIPE_REGISTRY="${RECIPE_REGISTRY:-ghcr.io/microsoft/adaptive-apps/recipes}"
-WORKSHOP_RECIPE_VERSION="${WORKSHOP_RECIPE_VERSION:-1.0.6}"
+WORKSHOP_RECIPE_VERSION="${WORKSHOP_RECIPE_VERSION:-1.0.8}"
 [[ "$WORKSHOP_RECIPE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
   echo "WORKSHOP_RECIPE_VERSION must be an immutable semantic version such as 1.0.0." >&2
   exit 1
@@ -120,6 +120,11 @@ publish_workshop_recipes() {
   : "${RESOURCE_GROUP:?Set RESOURCE_GROUP for workshop recipe publishing.}"
   : "${ACR_NAME:?Set a globally unique lowercase ACR_NAME.}"
 
+  if [[ ! "$ACR_NAME" =~ ^[a-z0-9]{5,50}$ ]]; then
+    echo "ACR_NAME must be the 5-50 character lowercase alphanumeric registry name, without .azurecr.io or https://." >&2
+    exit 1
+  fi
+
   source "$(dirname "${BASH_SOURCE[0]}")/azure-session.sh"
 
   if ! az acr show \
@@ -158,15 +163,28 @@ publish_workshop_recipes() {
 }
 EOF
 
-  DOCKER_CONFIG="${TEMP_DIR}/docker" rad bicep publish \
-    --file iac/recipes/sql-server.bicep \
-    --target "br:${ACR_NAME}.azurecr.io/recipes/sql-server:${WORKSHOP_RECIPE_VERSION}"
-  DOCKER_CONFIG="${TEMP_DIR}/docker" rad bicep publish \
-    --file iac/recipes/postgres-azure-flex.bicep \
-    --target "br:${ACR_NAME}.azurecr.io/recipes/postgres-azure-flex:${WORKSHOP_RECIPE_VERSION}"
-  DOCKER_CONFIG="${TEMP_DIR}/docker" rad bicep publish \
-    --file iac/recipes/postgres-kubernetes.bicep \
-    --target "br:${ACR_NAME}.azurecr.io/recipes/postgres-kubernetes:${WORKSHOP_RECIPE_VERSION}"
+  publish_recipe() {
+    local file="$1"
+    local repository="$2"
+    local image="${repository}:${WORKSHOP_RECIPE_VERSION}"
+
+    # Version tags are immutable workshop artifacts. Republishing changed source under an
+    # existing tag would silently alter every environment already registered to that tag.
+    if az acr repository show \
+      --name "$ACR_NAME" \
+      --image "$image" >/dev/null 2>&1; then
+      echo "Reusing existing ${ACR_NAME}.azurecr.io/${image}; published versions are not overwritten."
+      return 0
+    fi
+
+    DOCKER_CONFIG="${TEMP_DIR}/docker" rad bicep publish \
+      --file "$file" \
+      --target "br:${ACR_NAME}.azurecr.io/${image}"
+  }
+
+  publish_recipe iac/recipes/sql-server.bicep recipes/sql-server
+  publish_recipe iac/recipes/postgres-azure-flex.bicep recipes/postgres-azure-flex
+  publish_recipe iac/recipes/postgres-kubernetes.bicep recipes/postgres-kubernetes
 }
 
 assert_recipes() {

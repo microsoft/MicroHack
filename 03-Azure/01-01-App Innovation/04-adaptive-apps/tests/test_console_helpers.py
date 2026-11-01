@@ -114,7 +114,7 @@ if command == "rad":
                  "aiModels", "governance", "agentGuardrails", "sqlDatabases"]
         recipes = [{"name": os.environ.get("RECIPE_NAME", "default"),
                     "resourceType": "Radius.Resources/" + kind, "templateKind": "bicep",
-                    "templatePath": "mock.azurecr.io/recipe:1.0.6"} for kind in types]
+                    "templatePath": "mock.azurecr.io/recipe:1.0.7"} for kind in types]
         print(os.environ.get("RECIPE_JSON", json.dumps(recipes)))
     elif args[:2] == ["bicep", "publish-extension"]:
         Path(arg("--target")).write_text("mock-extension")
@@ -172,6 +172,38 @@ class ConsoleHelpers(unittest.TestCase):
 
     def commands(self):
         return [json.loads(line) for line in self.log.read_text().splitlines()] if self.log.exists() else []
+
+    def test_platform_preparation_requires_explicit_azure_resource_group(self):
+        for script, mode in (("prepare-aks.sh", ()),
+                             ("prepare-k3s-azure-vm.sh", ("provision",)),
+                             ("prepare-k3s-azure-vm.sh", ("connect",))):
+            with self.subTest(script=script, mode=mode):
+                result = self.run_script(script, *mode, success=False, RESOURCE_GROUP="")
+                self.assertIn("Set RESOURCE_GROUP", result.stderr)
+                self.assertEqual(self.commands(), [])
+
+    def test_k3s_local_modes_without_recorded_tunnel_need_no_azure_configuration(self):
+        for mode in ("--help", "status", "disconnect"):
+            with self.subTest(mode=mode):
+                result = self.run_script(
+                    "prepare-k3s-azure-vm.sh", mode, success=mode != "status",
+                    AZURE_SUBSCRIPTION="", RESOURCE_GROUP="")
+                self.assertNotIn("Set RESOURCE_GROUP", result.stderr)
+                self.assertEqual(self.commands(), [])
+
+    def test_k3s_recorded_tunnel_requires_group_for_identity_verification(self):
+        state = self.root / "recorded-tunnel"
+        state.mkdir()
+        (state / "tunnel.pid").write_text("99999999")
+        for mode in ("status", "disconnect"):
+            with self.subTest(mode=mode):
+                result = self.run_script(
+                    "prepare-k3s-azure-vm.sh", mode, success=False,
+                    AZURE_SUBSCRIPTION="", RESOURCE_GROUP="",
+                    K3S_TUNNEL_STATE_DIR=str(state))
+                self.assertIn("Set RESOURCE_GROUP", result.stderr)
+                self.assertTrue((state / "tunnel.pid").exists())
+                self.assertEqual(self.commands(), [])
 
     def assert_no_provisioning(self):
         for command in self.commands():

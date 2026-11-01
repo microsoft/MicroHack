@@ -1,0 +1,24 @@
+# Reference only: GitHub does not discover workflows nested inside a MicroHack.
+# Run the manual verification command in environment/README.md.
+name: Regulatory Intelligence container (reference only)
+
+on:
+  pull_request:
+    paths:
+      - "03-Azure/01-04-AI/11_Healthcare_Regulatory_Intelligence/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  clean-linux-environment:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: devcontainers/ci@v0.3
+        with:
+          configFile: .devcontainer/03-azure-01-04-ai-11-healthcare-regulatory-intelligence/devcontainer.json
+          push: never
+          runCmd: uv run --frozen --all-extras pytest -q

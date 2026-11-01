@@ -154,7 +154,7 @@ Describe 'LocalBox capacity lifecycle' {
         Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments[0] -eq 'resource' }
     }
     It 'uses a secure password parameter and explicitly targets the prepared storage and network' {
-        $template = New-LocalBoxCapacityTemplate
+        $template = New-LocalBoxVmTemplate
         $template.parameters.adminPassword.type | Should -Be 'securestring'
         $template.resources.Count | Should -Be 3
         $vm = $template.resources | Where-Object type -eq 'Microsoft.AzureStackHCI/virtualMachineInstances'
@@ -451,6 +451,12 @@ Describe 'LocalBox capacity secure submission' {
         Should -Invoke Invoke-LocalBoxAz -Times 1 -Exactly -ParameterFilter { $Arguments[2] -eq 'create' -and $NoOutput -and $Arguments -contains '--no-wait' }
         foreach ($path in $paths) { Test-Path -LiteralPath $path | Should -BeFalse }
     }
+    It 'accepts the exact 15-character Windows computer-name limit' {
+        $entry.Name = 'abcdefghijklmno'
+        foreach ($change in $preview.changes) { $change.resourceId = $change.resourceId.Replace('lc-test-001', $entry.Name) }
+        Submit-LocalBoxCapacityVM $state $entry $credential
+        Should -Invoke Invoke-LocalBoxAz -Times 1 -Exactly -ParameterFilter { $Arguments[2] -eq 'create' }
+    }
     It 'rejects changes outside the three new VM resources' -TestCases @(
         @{ Field = 'changeType'; Value = 'Modify' }
         @{ Field = 'resourceId'; Value = '/subscriptions/test/resourceGroups/shared/providers/Microsoft.HybridCompute/machines/student' }
@@ -497,6 +503,428 @@ Describe 'LocalBox capacity secure submission' {
             $_.Exception.Message | Should -Not -Match 'Mock!Password9-not-real'
         }
         foreach ($path in $paths) { Test-Path -LiteralPath $path | Should -BeFalse }
+    }
+}
+
+Describe 'LocalBox generated credentials' {
+    It 'generates distinct complex read-only credentials without persistence' {
+        $first = New-LocalBoxVmCredential
+        $second = New-LocalBoxVmCredential
+        $first.UserName | Should -Be 'localadmin'
+        $first.Password.IsReadOnly() | Should -BeTrue
+        $password = $first.GetNetworkCredential().Password
+        $password.Length | Should -Be 45
+        $password | Should -Match '[A-Z]'
+        $password | Should -Match '[a-z]'
+        $password | Should -Match '[0-9]'
+        $password | Should -Match '[^a-zA-Z0-9]'
+        $password | Should -Not -Be $second.GetNetworkCredential().Password
+    }
+}
+
+Describe 'LocalBox encrypted credential persistence' {
+    BeforeEach {
+        $originalWindows = $IsWindows
+        Set-Variable IsWindows $true -Force
+        $path = Join-Path $TestDrive "$([guid]::NewGuid())/credential.clixml"
+        $machineId = '/subscriptions/test/resourceGroups/shared/providers/Microsoft.HybridCompute/machines/sov-ref-vm'
+        $credential = New-LocalBoxVmCredential
+        $saved = @{ MachineId = $machineId; Credential = $credential }
+        Mock Initialize-LocalBoxPrivateDirectory { New-Item -ItemType Directory -Path $Path -Force | Out-Null }
+        Mock New-LocalBoxVmCredential { $credential }
+        Mock Export-Clixml {
+            $InputObject.MachineId | Should -Be $machineId
+            $InputObject.Credential | Should -Be $credential
+            Set-Content -LiteralPath $LiteralPath -Value 'mock encrypted record'
+        }
+        Mock Import-Clixml { $saved }
+    }
+    AfterEach { Set-Variable IsWindows $originalWindows -Force }
+    It 'persists before returning and reuses the same credential on retry' {
+        Get-LocalBoxReferenceVmCredential $machineId $path | Should -Be $credential
+        Test-Path -LiteralPath $path | Should -BeTrue
+        Get-LocalBoxReferenceVmCredential $machineId $path | Should -Be $credential
+        Should -Invoke New-LocalBoxVmCredential -Times 1 -Exactly
+        Should -Invoke Export-Clixml -Times 1 -Exactly
+        Should -Invoke Import-Clixml -Times 1 -Exactly
+        @(Get-ChildItem (Split-Path $path) -Filter '*.tmp').Count | Should -Be 0
+    }
+    It 'rejects non-Windows persistence before accessing files' {
+        Set-Variable IsWindows $false -Force
+        { Get-LocalBoxReferenceVmCredential $machineId $path } | Should -Throw '*requires Windows DPAPI*'
+        Should -Invoke Initialize-LocalBoxPrivateDirectory -Times 0
+    }
+    It 'rejects an invalid saved record without replacing it' -TestCases @(
+        @{ Invalid = 'machine' }; @{ Invalid = 'type' }; @{ Invalid = 'username' }; @{ Invalid = 'empty' }
+    ) {
+        param($Invalid)
+        Get-LocalBoxReferenceVmCredential $machineId $path | Out-Null
+        switch ($Invalid) {
+            'machine' { $saved.MachineId = 'another-resource' }
+            'type' { $saved.Credential = 'not-a-credential' }
+            'username' { $saved.Credential = [pscredential]::new('wrong-user', $credential.Password) }
+            'empty' { $saved.Credential = [pscredential]::new('localadmin', [Security.SecureString]::new()) }
+        }
+        { Get-LocalBoxReferenceVmCredential $machineId $path } | Should -Throw '*invalid or belongs to a different resource*'
+        Should -Invoke Export-Clixml -Times 1 -Exactly
+        Get-Content $path | Should -Be 'mock encrypted record'
+    }
+    It 'fails closed on decryption errors without disclosing underlying details' {
+        Get-LocalBoxReferenceVmCredential $machineId $path | Out-Null
+        Mock Import-Clixml { throw 'sensitive underlying detail' }
+        { Get-LocalBoxReferenceVmCredential $machineId $path } | Should -Throw '*same Windows account*No credential was replaced*'
+        Should -Invoke Export-Clixml -Times 1 -Exactly
+    }
+    It 'cleans partial output and surfaces persistence failure' {
+        Mock Export-Clixml {
+            Set-Content -LiteralPath $LiteralPath -Value 'partial'
+            throw 'write failed'
+        }
+        { Get-LocalBoxReferenceVmCredential $machineId $path } | Should -Throw '*write failed*'
+        Test-Path $path | Should -BeFalse
+        @(Get-ChildItem (Split-Path $path)).Count | Should -Be 0
+    }
+    It 'never overwrites a credential created concurrently' {
+        Mock Export-Clixml {
+            Set-Content -LiteralPath $LiteralPath -Value 'temporary'
+            Set-Content -LiteralPath (Join-Path (Split-Path $LiteralPath) 'credential.clixml') -Value 'existing record'
+        }
+        { Get-LocalBoxReferenceVmCredential $machineId $path } | Should -Throw
+        Get-Content $path | Should -Be 'existing record'
+        @(Get-ChildItem (Split-Path $path) -Filter '*.tmp').Count | Should -Be 0
+    }
+}
+
+Describe 'LocalBox preparation defaults' {
+    It 'does not expose the removed manual address-reservation acknowledgement' {
+        (Get-Command "$PSScriptRoot/../prepare-localbox.ps1").Parameters.ContainsKey('AddressReservationsConfirmed') | Should -BeFalse
+        ${function:Invoke-LocalBoxPreparation}.ToString() | Should -Not -Match 'AddressReservationsConfirmed'
+    }
+    It 'includes the reference VM when the switch is omitted' {
+        & {
+            . "$PSScriptRoot/../prepare-localbox.ps1"
+            [bool]$IncludeReferenceVm
+        } | Should -BeTrue
+    }
+    It 'accepts an explicit reference-VM opt-out' {
+        & {
+            . "$PSScriptRoot/../prepare-localbox.ps1" -IncludeReferenceVm:$false
+            [bool]$IncludeReferenceVm
+        } | Should -BeFalse
+    }
+    It 'keeps script-level Confirm and WhatIf available without prompting at the default threshold' {
+        $command = Get-Command "$PSScriptRoot/../prepare-localbox.ps1"
+        $binding = $command.ScriptBlock.Attributes | Where-Object { $_ -is [Management.Automation.CmdletBindingAttribute] }
+        $binding.SupportsShouldProcess | Should -BeTrue
+        [int]$binding.ConfirmImpact | Should -BeLessThan ([int][Management.Automation.ConfirmImpact]::High)
+        $command.Parameters.ContainsKey('Confirm') | Should -BeTrue
+        $command.Parameters.ContainsKey('WhatIf') | Should -BeTrue
+    }
+    It 'does not require default confirmation for <FunctionName>, while preserving explicit confirmation and previews' -TestCases @(
+        @{ FunctionName = 'Initialize-LocalBoxStorage' }
+        @{ FunctionName = 'Sync-LocalBoxImage' }
+        @{ FunctionName = 'Sync-LocalBoxResource' }
+        @{ FunctionName = 'Sync-LocalBoxReferenceVm' }
+        @{ FunctionName = 'Invoke-LocalBoxPreparation' }
+    ) {
+        param($FunctionName)
+        $command = Get-Command $FunctionName
+        $binding = $command.ScriptBlock.Attributes | Where-Object { $_ -is [Management.Automation.CmdletBindingAttribute] }
+        $binding.SupportsShouldProcess | Should -BeTrue
+        [int]$binding.ConfirmImpact | Should -BeLessThan ([int][Management.Automation.ConfirmImpact]::High)
+        $command.Parameters.ContainsKey('Confirm') | Should -BeTrue
+        $command.Parameters.ContainsKey('WhatIf') | Should -BeTrue
+    }
+}
+
+Describe 'LocalBox greenfield address validation' {
+    BeforeAll {
+        $source = ${function:Invoke-LocalBoxPreparation}.ToString()
+        $start = $source.IndexOf('Test-LocalBoxAddressPool $config.vmIpPrefix')
+        $end = $source.IndexOf('$Settings.NodeCredential =', $start)
+        $addressChecks = [scriptblock]::Create($source.Substring($start, $end - $start))
+    }
+    BeforeEach {
+        $Settings = @{ VmPoolStart = '192.168.200.10'; VmPoolEnd = '192.168.200.199' }
+        $config = @{
+            vmIpPrefix = '192.168.200.0/24'; vmGateway = '192.168.200.1'; dcVLAN200IP = '192.168.200.205'; vmVLAN = 200
+            AKSIPPrefix = '10.10.0.0/24'; AKSGWIP = '10.10.0.1'; AKSControlPlaneIP = '10.10.0.5'; AKSVLAN = 110
+            AKSVIPStartIP = '10.10.0.10'; AKSVIPEndIP = '10.10.0.100'; AKSNodeStartIP = '10.10.0.101'; AKSNodeEndIP = '10.10.0.199'
+        }
+    }
+    It 'accepts the standard topology without a manual acknowledgement' {
+        { & $addressChecks } | Should -Not -Throw
+    }
+    It 'still rejects configured address conflicts' -TestCases @(
+        @{ Conflict = 'gateway'; Message = '*reserved address*' }
+        @{ Conflict = 'infrastructure'; Message = '*reserved address*' }
+        @{ Conflict = 'VIP overlap'; Message = '*overlaps reserved range*' }
+        @{ Conflict = 'shared VLAN'; Message = '*separate VLANs and subnets*' }
+    ) {
+        param($Conflict, $Message)
+        switch ($Conflict) {
+            'gateway' { $Settings.VmPoolStart = '192.168.200.1' }
+            'infrastructure' { $Settings.VmPoolEnd = '192.168.200.210' }
+            'VIP overlap' { $config.AKSNodeStartIP = '10.10.0.100' }
+            'shared VLAN' { $config.AKSVLAN = $config.vmVLAN }
+        }
+        { & $addressChecks } | Should -Throw $Message
+    }
+}
+
+Describe 'Optional LocalBox reference VM' {
+    BeforeEach {
+        $settings = @{ SubscriptionId = 'test'; ResourceGroupName = 'shared'; IncludeReferenceVm = $true; TimeoutMinutes = 30 }
+        $scope = '/subscriptions/test/resourceGroups/shared'
+        $machineId = "$scope/providers/Microsoft.HybridCompute/machines/sov-ref-vm"
+        $nicId = "$scope/providers/Microsoft.AzureStackHCI/networkInterfaces/sov-ref-vm-nic"
+        $instanceId = "$machineId/providers/Microsoft.AzureStackHCI/virtualMachineInstances/default"
+        $tags = @{ MicroHackPurpose = 'LocalBoxReferenceVM'; SecurityControl = 'Ignore'; CostControl = 'Ignore' }
+        $machine = @{ kind = 'HCI'; location = 'westeurope'; tags = $tags; identity = @{ type = 'SystemAssigned' }
+            properties = @{ status = 'Connected'; osProfile = @{ windowsConfiguration = @{ patchSettings = @{ assessmentMode = 'AutomaticByPlatform' } } } } }
+        $instance = @{
+            extendedLocation = @{ name = 'custom' }
+            properties = @{
+                provisioningState = 'Succeeded'; status = @{ powerState = 'Running' }
+                hardwareProfile = @{ vmSize = 'Custom'; processors = 2; memoryMB = 4096 }
+                osProfile = @{ computerName = 'sov-ref-vm'; windowsConfiguration = @{ provisionVMAgent = $true; provisionVMConfigAgent = $true } }
+                storageProfile = @{ vmConfigStoragePathId = 'storage'; imageReference = @{ id = 'image' } }
+                networkProfile = @{ networkInterfaces = @(@{ id = $nicId }) }
+            }
+        }
+        $nic = @{ location = 'westeurope'; extendedLocation = @{ name = 'custom' }; tags = $tags
+            properties = @{ ipConfigurations = @(@{ properties = @{ subnet = @{ id = 'network' } } }) } }
+        $referenceArguments = @{ Settings = $settings; Location = 'westeurope'; CustomLocationId = 'custom'; ImageId = 'image'; NetworkId = 'network'; StorageId = 'storage' }
+        Mock Invoke-LocalBoxAz { @() }
+        Mock Get-LocalBoxResource {
+            if ($Id -eq $machineId) { return $machine }
+            if ($Id -eq $nicId) { return $nic }
+            if ($Id -eq $instanceId) { return $instance }
+            throw "Unexpected resource $Id"
+        }
+        Mock Wait-LocalBoxResource {
+            if ($Id -like '*/Microsoft.Resources/deployments/sov-ref-vm') { return @{ properties = @{ provisioningState = 'Succeeded' } } }
+            if ($Id -eq $instanceId) { return $instance }
+            throw "Unexpected wait $Id"
+        }
+        Mock Get-LocalBoxArmCollection { @() }
+        Mock Submit-LocalBoxVM {}
+        Mock Get-Credential { throw 'Unexpected interactive credential prompt' }
+        Mock Get-LocalBoxReferenceVmCredential { [pscredential]::new('localadmin', (ConvertTo-SecureString 'Mock!Password9-not-real' -AsPlainText -Force)) }
+    }
+    It 'does nothing when explicitly disabled' {
+        $settings.IncludeReferenceVm = $false
+        Sync-LocalBoxReferenceVm @referenceArguments | Should -BeNullOrEmpty
+        Should -Invoke Invoke-LocalBoxAz -Times 0
+        Should -Invoke Get-Credential -Times 0
+        Should -Invoke Get-LocalBoxReferenceVmCredential -Times 0
+        Should -Invoke Submit-LocalBoxVM -Times 0
+    }
+    It 'previews without credentials, provisioning, polling or a success-shaped manifest' {
+        Sync-LocalBoxReferenceVm @referenceArguments -WhatIf | Should -BeNullOrEmpty
+        Should -Invoke Get-Credential -Times 0
+        Should -Invoke Get-LocalBoxReferenceVmCredential -Times 0
+        Should -Invoke Submit-LocalBoxVM -Times 0
+        Should -Invoke Wait-LocalBoxResource -Times 0
+    }
+    It 'creates one short-named tagged VM using a separate credential and periodic assessment' {
+        $reference = Sync-LocalBoxReferenceVm @referenceArguments
+        $reference.Name | Should -Be 'sov-ref-vm'
+        $reference.Name.Length | Should -BeLessOrEqual 15
+        $reference.MachineId | Should -Be $machineId
+        $reference.Readiness.ArcStatus | Should -Be 'Connected'
+        $reference.Readiness.MdeProvisioningState | Should -Be 'Pending'
+        $reference.Readiness.DefenderAssessments | Should -Be 'NotVerified'
+        $reference.Readiness.UpdateAssessmentResults | Should -Be 'NotVerified'
+        $reference | ConvertTo-Json -Depth 30 | Should -Not -Match 'Mock!Password|adminPassword|localadmin'
+        Should -Invoke Get-LocalBoxReferenceVmCredential -Times 1 -Exactly -ParameterFilter {
+            $MachineId -eq '/subscriptions/test/resourceGroups/shared/providers/Microsoft.HybridCompute/machines/sov-ref-vm'
+        }
+        Should -Invoke Get-Credential -Times 0
+        Should -Invoke Submit-LocalBoxVM -Times 1 -Exactly -ParameterFilter {
+            $Entry.Name -eq 'sov-ref-vm' -and $Credential.UserName -eq 'localadmin' -and
+            $State.ResourceGroupName -eq 'shared' -and $State.ProcessorCount -eq 2 -and $State.MemoryMB -eq 4096 -and
+            $EnablePeriodicAssessment -and $Tags.SecurityControl -eq 'Ignore' -and $Tags.CostControl -eq 'Ignore'
+        }
+    }
+    It 'uses a supplied credential without prompting' {
+        $settings.ReferenceVmCredential = [pscredential]::new('refadmin', (ConvertTo-SecureString 'Mock!Password9-not-real' -AsPlainText -Force))
+        Sync-LocalBoxReferenceVm @referenceArguments | Out-Null
+        Should -Invoke Get-Credential -Times 0
+        Should -Invoke Get-LocalBoxReferenceVmCredential -Times 0
+        Should -Invoke Submit-LocalBoxVM -Times 1 -ParameterFilter { $Credential.UserName -eq 'refadmin' }
+    }
+    It 'reuses matching resources without resetting credentials or redeploying' {
+        Mock Invoke-LocalBoxAz { @(@{ id = $machineId }) }
+        Sync-LocalBoxReferenceVm @referenceArguments | Out-Null
+        Should -Invoke Submit-LocalBoxVM -Times 0
+        Should -Invoke Get-Credential -Times 0
+        Should -Invoke Get-LocalBoxReferenceVmCredential -Times 0
+    }
+    It 'does not submit when credential persistence fails' {
+        Mock Get-LocalBoxReferenceVmCredential { throw 'Credential persistence failed' }
+        { Sync-LocalBoxReferenceVm @referenceArguments } | Should -Throw '*Credential persistence failed*'
+        Should -Invoke Submit-LocalBoxVM -Times 0
+    }
+    It 'still rejects incorrect NIC subnet or extra IP configurations without requiring a name' -TestCases @(
+        @{ Conflict = 'subnet' }; @{ Conflict = 'count' }
+    ) {
+        param($Conflict)
+        Mock Invoke-LocalBoxAz { @(@{ id = $machineId }) }
+        if ($Conflict -eq 'subnet') { $nic.properties.ipConfigurations[0].properties.subnet.id = 'wrong-network' }
+        else { $nic.properties.ipConfigurations += $nic.properties.ipConfigurations[0] }
+        { Sync-LocalBoxReferenceVm @referenceArguments } | Should -Throw
+        Should -Invoke Submit-LocalBoxVM -Times 0
+    }
+    It 'rejects an unrelated machine at the stable name' {
+        Mock Invoke-LocalBoxAz { @(@{ id = $machineId }) }
+        $machine.tags = @{ MicroHackPurpose = 'ParticipantVM' }
+        { Sync-LocalBoxReferenceVm @referenceArguments } | Should -Throw
+        Should -Invoke Submit-LocalBoxVM -Times 0
+    }
+    It 'rejects changed hardware rather than resizing it' {
+        Mock Invoke-LocalBoxAz { @(@{ id = $machineId }) }
+        $instance.properties.hardwareProfile.memoryMB = 8192
+        { Sync-LocalBoxReferenceVm @referenceArguments } | Should -Throw '*Conflicting*memoryMB*'
+        Should -Invoke Submit-LocalBoxVM -Times 0
+    }
+    It 'rejects a partial deployment rather than overwriting its NIC' {
+        Mock Invoke-LocalBoxAz { @(@{ id = $nicId }) }
+        { Sync-LocalBoxReferenceVm @referenceArguments } | Should -Throw '*Partial or conflicting*'
+        Should -Invoke Submit-LocalBoxVM -Times 0
+    }
+    It 'does not hide failed deployment polling' {
+        Mock Wait-LocalBoxResource { throw 'Deployment Failed' }
+        { Sync-LocalBoxReferenceVm @referenceArguments } | Should -Throw '*Deployment Failed*'
+    }
+    It 'reports actual disconnected guest status without declaring protection ready' {
+        $machine.properties.status = 'Disconnected'
+        (Get-LocalBoxReferenceVmReadiness $machineId).ArcStatus | Should -Be 'Disconnected'
+    }
+    It 'reports MDE extension state separately from assessment completion' -TestCases @(
+        @{ State = 'Creating' }; @{ State = 'Succeeded' }; @{ State = 'Failed' }
+    ) {
+        param($State)
+        Mock Get-LocalBoxArmCollection { @(@{ properties = @{ publisher = 'Microsoft.Azure.AzureDefenderForServers'; type = 'MDE.Windows'; provisioningState = $State } }) }
+        $readiness = Get-LocalBoxReferenceVmReadiness $machineId
+        $readiness.MdeProvisioningState | Should -Be $State
+        $readiness.DefenderAssessments | Should -Be 'NotVerified'
+    }
+    It 'reports an unreported guest status explicitly while initial onboarding is pending' {
+        $machine.properties.Remove('status')
+        (Get-LocalBoxReferenceVmReadiness $machineId).ArcStatus | Should -Be 'NotReported'
+    }
+    It 'surfaces malformed responses or failed extension reads instead of reporting readiness' {
+        $instance.properties.status.Remove('powerState')
+        { Get-LocalBoxReferenceVmReadiness $machineId } | Should -Throw '*incomplete machine/power data*'
+        $instance.properties.status.powerState = 'Running'
+        Mock Get-LocalBoxArmCollection { throw 'Forbidden' }
+        { Get-LocalBoxReferenceVmReadiness $machineId } | Should -Throw '*Forbidden*'
+    }
+    It 'only adds periodic assessment to reference templates and leaves capacity behavior unchanged' {
+        $template = New-LocalBoxVmTemplate -EnablePeriodicAssessment
+        $template.resources[0].apiVersion | Should -Be '2024-07-10'
+        $template.resources[0].properties.osProfile.windowsConfiguration.patchSettings.assessmentMode | Should -Be 'AutomaticByPlatform'
+        (New-LocalBoxVmTemplate).resources[0].ContainsKey('properties') | Should -BeFalse
+        $template.parameters.adminPassword.type | Should -Be 'securestring'
+        $template.parameters.name.maxLength | Should -Be 15
+        $template.resources[2].properties.osProfile.computerName | Should -Be "[parameters('name')]"
+    }
+}
+
+Describe 'LocalBox VM name validation' {
+    It 'rejects Windows-invalid names before making any Azure request' -TestCases @(
+        @{ Name = 'sixteenlettersxxx' }; @{ Name = '12345' }; @{ Name = '-bad' }; @{ Name = 'bad_' }; @{ Name = '' }
+    ) {
+        param($Name)
+        Mock Invoke-LocalBoxAz { throw 'Unexpected Azure request' }
+        { Submit-LocalBoxVM -State @{} -Entry @{ Name = $Name } } | Should -Throw '*1-15*'
+        Should -Invoke Invoke-LocalBoxAz -Times 0
+    }
+}
+
+Describe 'Reference VM preparation wiring and manifest' {
+    BeforeAll {
+        $preparation = [scriptblock]::Create(${function:Invoke-LocalBoxPreparation}.ToString()).Ast
+        $invokeStep = [scriptblock]::Create($preparation.Find({
+            param($node)
+            $node -is [Management.Automation.Language.AssignmentStatementAst] -and $node.Left.Extent.Text -eq '$referenceVm'
+        }, $true).Extent.Text)
+        $manifestStep = [scriptblock]::Create($preparation.Find({
+            param($node)
+            $node -is [Management.Automation.Language.IfStatementAst] -and $node.Clauses[0].Item1.Extent.Text -eq '$referenceVm'
+        }, $true).Extent.Text)
+    }
+    BeforeEach {
+        $Settings = @{ SubscriptionId = 'test'; ResourceGroupName = 'shared'; ManifestPath = "$TestDrive/manifest.json"; IncludeReferenceVm = $true }
+        $manifest = @{}
+        $referenceVm = $null
+        $location = 'australiaeast'
+        $custom = @{ id = 'custom' }
+        $imageId = 'image'
+        $networks = @(@{ Id = 'vm-network' }, @{ Id = 'aks-network' })
+        $storageId = 'storage'
+    }
+    It 'wires the enabled reference VM to the prepared image and VM network, not the AKS network' {
+        Mock Sync-LocalBoxReferenceVm { @{ Name = 'sov-ref-vm' } }
+        . $invokeStep
+        . $manifestStep
+        $manifest.ReferenceVm.Name | Should -Be 'sov-ref-vm'
+        Should -Invoke Sync-LocalBoxReferenceVm -Times 1 -ParameterFilter {
+            $Settings.IncludeReferenceVm -and $Location -eq 'australiaeast' -and $CustomLocationId -eq 'custom' -and
+            $ImageId -eq 'image' -and $NetworkId -eq 'vm-network' -and $StorageId -eq 'storage'
+        }
+    }
+    It 'preserves reference inventory and its original observation time when explicitly opted out' {
+        $Settings.IncludeReferenceVm = $false
+        @{ SubscriptionId = 'test'; ResourceGroupName = 'shared'; ReferenceVm = @{ Name = 'sov-ref-vm'; Readiness = @{ ObservedAt = 'original' } } } |
+            ConvertTo-Json -Depth 5 | Set-Content $Settings.ManifestPath
+        . $manifestStep
+        $manifest.ReferenceVm.Name | Should -Be 'sov-ref-vm'
+        $manifest.ReferenceVm.Readiness.ObservedAt | Should -Be 'original'
+    }
+    It 'does not import reference inventory from a different scope' {
+        @{ SubscriptionId = 'other'; ResourceGroupName = 'shared'; ReferenceVm = @{ Name = 'sov-ref-vm' } } |
+            ConvertTo-Json -Depth 5 | Set-Content $Settings.ManifestPath
+        . $manifestStep
+        $manifest.ContainsKey('ReferenceVm') | Should -BeFalse
+    }
+    It 'leaves a normal manifest unchanged when there is no reference VM' {
+        . $manifestStep
+        $manifest.ContainsKey('ReferenceVm') | Should -BeFalse
+    }
+}
+
+Describe 'Reference VM live health assertions' {
+    BeforeAll {
+        $health = [Management.Automation.Language.Parser]::ParseFile("$PSScriptRoot/localbox.health.tests.ps1", [ref]$null, [ref]$null)
+        $referenceCheck = $health.Find({
+            param($node)
+            $node -is [Management.Automation.Language.CommandAst] -and $node.GetCommandName() -eq 'It' -and
+            $node.CommandElements[1].Value -like 'is running and Arc-connected*'
+        }, $true).CommandElements[-1].ScriptBlock.GetScriptBlock()
+    }
+    BeforeEach {
+        $LocalBox = @{ ReferenceVm = @{ MachineId = 'reference' } }
+        $TimeoutSeconds = 1
+        $status = @{ PowerState = 'Running'; ArcStatus = 'Connected'; MdeProvisioningState = 'Succeeded'; PeriodicAssessmentMode = 'AutomaticByPlatform' }
+        Mock Get-LocalBoxReferenceVmReadiness { $status }
+        Mock Wait-SovereignCheck { & $Check }
+    }
+    It 'passes with connected guest management and successful MDE installation' {
+        { & $referenceCheck } | Should -Not -Throw
+    }
+    It 'rejects incomplete live reference readiness' -TestCases @(
+        @{ Field = 'PowerState'; Value = 'Off' }
+        @{ Field = 'ArcStatus'; Value = 'NotReported' }
+        @{ Field = 'ArcStatus'; Value = 'Disconnected' }
+        @{ Field = 'MdeProvisioningState'; Value = 'Pending' }
+        @{ Field = 'MdeProvisioningState'; Value = 'Failed' }
+        @{ Field = 'PeriodicAssessmentMode'; Value = 'ImageDefault' }
+    ) {
+        param($Field, $Value)
+        $status[$Field] = $Value
+        { & $referenceCheck } | Should -Throw
     }
 }
 
@@ -686,7 +1114,7 @@ Describe 'Console LocalBox credential isolation' {
         Should -Invoke New-MhhStablePassword -Times 0
     }
     It 'keeps group metadata and deployment checks without password publication in the shared hook' {
-        $source = Get-Content "$PSScriptRoot/../../labautomation/shared-deploy-lab.ps1" -Raw
+        $source = Get-Content "$PSScriptRoot/../../labautomation/global-event-deploy.ps1" -Raw
         $source | Should -Match '-UseConsoleCredentials'
         $source | Should -Match 'Get-LocalBoxConsoleGroupCredential'
         $source | Should -Match 'Wait-LocalBoxDeployment -ResourceGroupName \$localBoxResourceGroupName -DeploymentName \$localBoxDeployment.DeploymentName'
@@ -718,7 +1146,7 @@ Describe 'LocalBox registration region contract' {
     It 'uses Australia East registration while preserving shared host-region selection' {
         $errors = $null
         $ast = [System.Management.Automation.Language.Parser]::ParseFile(
-            "$PSScriptRoot/../../labautomation/shared-deploy-lab.ps1", [ref]$null, [ref]$errors)
+            "$PSScriptRoot/../../labautomation/global-event-deploy.ps1", [ref]$null, [ref]$errors)
         $errors.Count | Should -Be 0
         $ast.Extent.Text | Should -Match "-AzureLocalInstanceLocation 'australiaeast'"
         $ast.Extent.Text | Should -Match '-Location \$localBoxLocation'
@@ -748,7 +1176,7 @@ Describe 'Console LocalBox CLI failure propagation' {
         }, $true)
         . ([scriptblock]::Create($helper.Extent.Text))
         $shared = [Management.Automation.Language.Parser]::ParseFile(
-            "$PSScriptRoot/../../labautomation/shared-deploy-lab.ps1", [ref]$null, [ref]$null)
+            "$PSScriptRoot/../../labautomation/global-event-deploy.ps1", [ref]$null, [ref]$null)
         $loop = $shared.Find({
             param($node)
             $node -is [Management.Automation.Language.ForEachStatementAst] -and
@@ -1283,7 +1711,7 @@ Describe 'LocalBox MetalLB preparation' {
         foreach ($path in @('../../labautomation/resource-providers.ps1', '../manual-setup/subscription-preparations/1-resource-providers.ps1')) {
             Get-Content "$PSScriptRoot/$path" -Raw | Should -Match '"Microsoft.KubernetesRuntime"'
         }
-        $shared = Get-Content "$PSScriptRoot/../../labautomation/shared-deploy-lab.ps1" -Raw
+        $shared = Get-Content "$PSScriptRoot/../../labautomation/global-event-deploy.ps1" -Raw
         $shared | Should -Match "appId eq '087fca6e-4606-4d41-b3f6-5ebdf75b8b4c'"
         $shared | Should -Match 'microhack-k8s-runtime-object-id.*\$runtimeObjectId\.ToString'
         $preparation = ${function:Invoke-LocalBoxPreparation}.ToString()
@@ -1397,6 +1825,254 @@ Describe 'Resource reconciliation' {
         }
         (Wait-LocalBoxResource $resourceId).properties.provisioningState | Should -Be 'Succeeded'
         Should -Invoke Start-Sleep -Times 1
+    }
+}
+
+Describe 'LocalBox Edge Marketplace image versions' {
+    BeforeEach {
+        $clusterId = '/subscriptions/test/resourceGroups/localbox/providers/Microsoft.AzureStackHCI/clusters/localboxcluster'
+        $identifier = @{ publisher = 'microsoftwindowsserver'; offer = 'windowsserver'; sku = '2025-datacenter-azure-edition-smalldisk' }
+        $sku = @{ marketplaceSkuId = $identifier.sku; marketplaceSkuVersions = @(
+            @{ name = '26100.33222.260810' }, @{ name = '26100.33438.260905' }
+        ) }
+        $catalog = @{ properties = @{ marketplaceSkus = @($sku) } }
+        Mock Invoke-LocalBoxAz { $catalog }
+    }
+    It 'resolves latest from the cluster catalog rather than the newer Azure Compute image' {
+        Resolve-LocalBoxImageVersion $clusterId $identifier | Should -Be '26100.33438.260905'
+        Should -Invoke Invoke-LocalBoxAz -Times 1 -Exactly -ParameterFilter {
+            $Arguments[0] -eq 'rest' -and $Arguments -contains 'get' -and
+            $Arguments -contains "https://management.azure.com$clusterId/providers/Microsoft.EdgeMarketplace/offers/microsoftwindowsserver%3Awindowsserver?api-version=2023-08-01"
+        }
+    }
+    It 'sorts versions numerically rather than lexically or by catalog order' {
+        $sku.marketplaceSkuVersions = @(@{ name = '26100.999.260905' }, @{ name = '26100.1000.260905' })
+        Resolve-LocalBoxImageVersion $clusterId $identifier | Should -Be '26100.1000.260905'
+    }
+    It 'honors an explicit catalog-listed version' {
+        Resolve-LocalBoxImageVersion $clusterId $identifier '26100.33222.260810' | Should -Be '26100.33222.260810'
+    }
+    It 'rejects a version available in Azure Compute but absent from Edge Marketplace' {
+        { Resolve-LocalBoxImageVersion $clusterId $identifier '26100.33650.261013' } | Should -Throw '*not advertised*'
+    }
+    It 'supports deserialized ArrayList catalog collections' {
+        $catalog.properties.marketplaceSkus = [Collections.ArrayList]::new(@($sku))
+        $sku.marketplaceSkuVersions = [Collections.ArrayList]::new(@(@{ name = '26100.33438.260905' }))
+        Resolve-LocalBoxImageVersion $clusterId $identifier | Should -Be '26100.33438.260905'
+    }
+    It 'fails explicitly for unusable catalogs' -TestCases @(
+        @{ Invalid = 'missing catalog' }; @{ Invalid = 'missing SKU' }; @{ Invalid = 'duplicate SKU' }
+        @{ Invalid = 'empty versions' }; @{ Invalid = 'invalid version' }
+    ) {
+        param($Invalid)
+        switch ($Invalid) {
+            'missing catalog' { $catalog.properties.Remove('marketplaceSkus') }
+            'missing SKU' { $sku.marketplaceSkuId = 'different' }
+            'duplicate SKU' { $catalog.properties.marketplaceSkus = @($sku, $sku) }
+            'empty versions' { $sku.marketplaceSkuVersions = @() }
+            'invalid version' { $sku.marketplaceSkuVersions = @(@{ name = 'latest' }) }
+        }
+        { Resolve-LocalBoxImageVersion $clusterId $identifier } | Should -Throw '*Edge Marketplace*'
+    }
+    It 'propagates catalog authorization failures without a fallback version' {
+        Mock Invoke-LocalBoxAz { throw 'AuthorizationFailed' }
+        { Resolve-LocalBoxImageVersion $clusterId $identifier } | Should -Throw '*AuthorizationFailed*'
+    }
+    It 'rejects a wrong resource scope before querying the catalog' {
+        { Resolve-LocalBoxImageVersion '/subscriptions/test/resourceGroups/localbox' $identifier } | Should -Throw '*cluster resource ID*'
+        Should -Invoke Invoke-LocalBoxAz -Times 0
+    }
+}
+
+Describe 'LocalBox failed image recovery' {
+    BeforeEach {
+        $imageId = '/subscriptions/test/resourceGroups/localbox/providers/Microsoft.AzureStackHCI/marketplaceGalleryImages/windows'
+        $expected = @{ location = 'australiaeast'; extendedLocation = @{ name = 'custom' }
+            properties = @{ containerId = 'storage'; osType = 'Windows'
+                identifier = @{ publisher = 'microsoftwindowsserver'; offer = 'windowsserver'; sku = '2025-datacenter-azure-edition-smalldisk' } } }
+        $actual = $expected | ConvertTo-Json -Depth 10 | ConvertFrom-Json -AsHashtable
+        $actual.properties.provisioningState = 'Failed'
+        $actual.properties.version = @{ name = '26100.33650.261013' }
+        $script:imagePresent = $true
+        $createArguments = @('stack-hci-vm', 'image', 'create', '--name', 'windows')
+        $syncArguments = @{
+            Id = $imageId; Expected = $expected; CreateArguments = $createArguments
+            ClusterId = '/subscriptions/test/resourceGroups/localbox/providers/Microsoft.AzureStackHCI/clusters/localboxcluster'
+        }
+        Mock Invoke-LocalBoxAz {
+            if ($Arguments[1] -eq 'list' -and $script:imagePresent) { @(@{ id = $imageId }) }
+            elseif ($Arguments[1] -eq 'delete') { $script:imagePresent = $false }
+        }
+        Mock Get-LocalBoxResource { $actual }
+        Mock Wait-LocalBoxResource {
+            $imported = $expected | ConvertTo-Json -Depth 10 | ConvertFrom-Json -AsHashtable
+            $imported.properties.version = @{ name = '26100.33438.260905' }
+            $imported
+        }
+        Mock Resolve-LocalBoxImageVersion { '26100.33438.260905' }
+        Mock Start-Sleep {}
+    }
+    It 'removes only the matching Failed image, verifies absence and imports once' {
+        Sync-LocalBoxImage @syncArguments -Confirm:$false | Out-Null
+        Should -Invoke Invoke-LocalBoxAz -Times 1 -Exactly -ParameterFilter {
+            $Arguments[1] -eq 'delete' -and $Arguments -contains $imageId -and $Arguments -contains '2024-01-01'
+        }
+        Should -Invoke Invoke-LocalBoxAz -Times 1 -Exactly -ParameterFilter {
+            $Arguments[2] -eq 'create' -and $Arguments[$Arguments.IndexOf('--version') + 1] -eq '26100.33438.260905'
+        }
+        $expected.properties.Contains('version') | Should -BeFalse
+        Should -Invoke Invoke-LocalBoxAz -Times 3 -Exactly -ParameterFilter {
+            $Arguments[1] -eq 'list' -and $Arguments -contains 'test' -and $Arguments -contains 'localbox'
+        }
+    }
+    It 'never deletes healthy or in-progress images' -TestCases @(
+        @{ State = 'Succeeded' }; @{ State = 'Creating' }
+    ) {
+        param($State)
+        $actual.properties.provisioningState = $State
+        Sync-LocalBoxImage @syncArguments -Confirm:$false | Out-Null
+        Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments -contains 'delete' -or $Arguments -contains 'create' }
+        Should -Invoke Wait-LocalBoxResource -Times 1 -Exactly
+        Should -Invoke Resolve-LocalBoxImageVersion -Times 0
+    }
+    It 'does not remove conflicting Failed images' -TestCases @(
+        @{ Field = 'location' }; @{ Field = 'storage' }; @{ Field = 'custom' }; @{ Field = 'sku' }; @{ Field = 'missing' }
+    ) {
+        param($Field)
+        switch ($Field) {
+            'location' { $actual.location = 'westeurope' }
+            'storage' { $actual.properties.containerId = 'different' }
+            'custom' { $actual.extendedLocation.name = 'different' }
+            'sku' { $actual.properties.identifier.sku = 'different' }
+            'missing' { $actual.properties.Remove('identifier') }
+        }
+        { Sync-LocalBoxImage @syncArguments -Confirm:$false } | Should -Throw
+        Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments -contains 'delete' -or $Arguments -contains 'create' }
+    }
+    It 'does not delete or import a Failed image during WhatIf' {
+        Sync-LocalBoxImage @syncArguments -WhatIf | Should -BeNullOrEmpty
+        Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments -contains 'delete' -or $Arguments -contains 'create' }
+        Should -Invoke Wait-LocalBoxResource -Times 0
+    }
+    It 'waits for a previously started deletion without submitting another delete' {
+        $actual.properties.provisioningState = 'Deleting'
+        $script:imageLists = 0
+        Mock Invoke-LocalBoxAz {
+            if ($Arguments[1] -eq 'list') {
+                $script:imageLists++
+                if ($script:imageLists -le 2) { @(@{ id = $imageId }) }
+            }
+        }
+        Sync-LocalBoxImage @syncArguments -Confirm:$false | Out-Null
+        Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments -contains 'delete' }
+        Should -Invoke Invoke-LocalBoxAz -Times 1 -Exactly -ParameterFilter { $Arguments[2] -eq 'create' }
+        Should -Invoke Start-Sleep -Times 1 -Exactly
+    }
+    It 'does not wait for deletion during WhatIf' {
+        $actual.properties.provisioningState = 'Deleting'
+        Sync-LocalBoxImage @syncArguments -WhatIf | Should -BeNullOrEmpty
+        Should -Invoke Start-Sleep -Times 0
+        Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments -contains 'delete' -or $Arguments -contains 'create' }
+    }
+    It 'does not recreate when deletion fails' {
+        Mock Invoke-LocalBoxAz { throw 'AuthorizationFailed' } -ParameterFilter { $Arguments[1] -eq 'delete' }
+        { Sync-LocalBoxImage @syncArguments -Confirm:$false } | Should -Throw '*AuthorizationFailed*'
+        Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments[2] -eq 'create' }
+    }
+    It 'bounds deletion waits and does not import over a remaining object' {
+        Mock Invoke-LocalBoxAz {} -ParameterFilter { $Arguments[1] -eq 'delete' }
+        { Sync-LocalBoxImage @syncArguments -TimeoutSeconds 0 -Confirm:$false } | Should -Throw '*Timed out waiting for image deletion*'
+        Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments[2] -eq 'create' }
+    }
+    It 'surfaces a fresh import failure without deleting it or looping on retries' {
+        $script:imagePresent = $false
+        Mock Invoke-LocalBoxAz { throw 'GenerateTokenFromEdgeMarketplaceServiceFailed: NotFound' } -ParameterFilter { $Arguments[2] -eq 'create' }
+        { Sync-LocalBoxImage @syncArguments -Confirm:$false } | Should -Throw '*GenerateTokenFromEdgeMarketplaceServiceFailed*'
+        Should -Invoke Invoke-LocalBoxAz -Times 1 -Exactly -ParameterFilter { $Arguments[2] -eq 'create' }
+        Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments -contains 'delete' }
+    }
+    It 'refuses recovery for a non-image resource ID' {
+        $syncArguments.Id = '/subscriptions/test/resourceGroups/localbox/providers/Microsoft.AzureStackHCI/logicalNetworks/net'
+        { Sync-LocalBoxImage @syncArguments } | Should -Throw '*exact Azure Local Marketplace image*'
+        Should -Invoke Invoke-LocalBoxAz -Times 0
+    }
+    It 'preserves the failed image when catalog discovery fails' {
+        Mock Resolve-LocalBoxImageVersion { throw 'Catalog unavailable' }
+        { Sync-LocalBoxImage @syncArguments } | Should -Throw '*Catalog unavailable*'
+        Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments -contains 'delete' -or $Arguments -contains 'create' }
+    }
+    It 'passes an explicit requested version through catalog validation for a new image' {
+        $script:imagePresent = $false
+        $expected.properties.version = @{ name = '26100.33438.260905' }
+        Sync-LocalBoxImage @syncArguments | Out-Null
+        Should -Invoke Resolve-LocalBoxImageVersion -Times 1 -Exactly -ParameterFilter {
+            $RequestedVersion -eq '26100.33438.260905' -and $ClusterId -eq $syncArguments.ClusterId
+        }
+    }
+    It 'resolves a new image during WhatIf without importing it' {
+        $script:imagePresent = $false
+        Sync-LocalBoxImage @syncArguments -WhatIf | Should -BeNullOrEmpty
+        Should -Invoke Resolve-LocalBoxImageVersion -Times 1 -Exactly
+        Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments -contains 'delete' -or $Arguments -contains 'create' }
+        Should -Invoke Wait-LocalBoxResource -Times 0
+    }
+    It 'verifies the imported version rather than accepting a different resolved image' {
+        Mock Wait-LocalBoxResource { $actual }
+        { Sync-LocalBoxImage @syncArguments -Confirm:$false } | Should -Throw '*Conflicting*version.name*'
+    }
+}
+
+Describe 'LocalBox preparation dependency order' {
+    BeforeAll {
+        $source = ${function:Invoke-LocalBoxPreparation}.ToString()
+        $start = $source.IndexOf('$location = $custom.location')
+        $end = $source.IndexOf('$manifest = @{', $start)
+        $prepareWorkloads = [scriptblock]::Create("[CmdletBinding(SupportsShouldProcess)]param()`n" + $source.Substring($start, $end - $start))
+    }
+    BeforeEach {
+        $events = [Collections.Generic.List[string]]::new()
+        $scope = '/subscriptions/test/resourceGroups/localbox'
+        $Settings = @{ SubscriptionId = 'test'; ResourceGroupName = 'localbox'; TimeoutMinutes = 1; ImageName = 'windows'; ImageVersion = 'latest'
+            AksClusterName = 'localbox-aks'; NodeCount = 3; NodeVmSize = 'node'; ControlPlaneVmSize = 'control'; SkipAks = $false; IncludeReferenceVm = $true
+            KubernetesRuntimeObjectId = '11111111-1111-1111-1111-111111111111' }
+        $custom = @{ id = 'custom'; location = 'australiaeast' }
+        $cluster = @(@{ id = "$scope/providers/Microsoft.AzureStackHCI/clusters/localboxcluster" })
+        $config = @{ AKSControlPlaneIP = '10.10.0.5' }
+        $storageId = 'storage'
+        $imageId = 'image'
+        $groupId = 'group'
+        $metalLb = @{}
+        Mock Sync-LocalBoxResource { $events.Add("network:$($Id.Split('/')[-1])") }
+        Mock Invoke-LocalBoxAz {
+            if ($Arguments[0] -eq 'aksarc') {
+                $events.Add($(if ($Arguments -contains '--validate') { 'aks-validate' } else { 'aks-create' }))
+            }
+            elseif ($Arguments[0] -eq 'provider') { @{ registrationState = 'Registered' } }
+        }
+        Mock Wait-LocalBoxResource { @{ properties = @{ connectivityStatus = 'Connected' } } }
+        Mock Assert-LocalBoxProperties {}
+        Mock Sync-LocalBoxAksProxyRole { $events.Add('proxy') }
+        Mock Sync-LocalBoxMetalLb { $events.Add('metallb') }
+        Mock Sync-LocalBoxImage { $events.Add('image') }
+        Mock Sync-LocalBoxReferenceVm { $events.Add('reference') }
+    }
+    It 'completes networks, AKS and MetalLB before importing the image and reference VM' {
+        & $prepareWorkloads -Confirm:$false
+        $events -join ',' | Should -Be 'network:localbox-vm-lnet-vlan200,network:localbox-aks-lnet-vlan110,aks-validate,aks-create,proxy,metallb,image,reference'
+        Should -Invoke Sync-LocalBoxImage -Times 1 -Exactly -ParameterFilter {
+            $ClusterId -eq "$scope/providers/Microsoft.AzureStackHCI/clusters/localboxcluster" -and $CreateArguments -notcontains '--version'
+        }
+    }
+    It 'preserves completed infrastructure when the late image stage fails and does not start the reference VM' {
+        Mock Sync-LocalBoxImage { $events.Add('image-failed'); throw 'Import failed' }
+        { & $prepareWorkloads -Confirm:$false } | Should -Throw '*Import failed*'
+        $events -join ',' | Should -Be 'network:localbox-vm-lnet-vlan200,network:localbox-aks-lnet-vlan110,aks-validate,aks-create,proxy,metallb,image-failed'
+        Should -Invoke Sync-LocalBoxReferenceVm -Times 0
+    }
+    It 'preserves the explicit SkipAks behavior while keeping the VM stages last' {
+        $Settings.SkipAks = $true
+        & $prepareWorkloads -Confirm:$false
+        $events -join ',' | Should -Be 'network:localbox-vm-lnet-vlan200,network:localbox-aks-lnet-vlan110,image,reference'
     }
 }
 
@@ -1878,6 +2554,7 @@ Describe 'Storage execution safety' {
         Mock New-VHD {}
         Mock Add-VMHardDiskDrive {}
         Mock Invoke-Command {}
+        Mock Get-LocalBoxPartitionState { @{ Size = 1TB - 2MB; NeedsExpansion = $false } }
         Mock Get-LocalBoxNodeState { @{ PoolHealth = 'Healthy'; DiskHealth = 'Healthy'; VolumeHealth = 'Healthy'; NodesUp = $true; StorageJobs = 0; UnhealthyPhysicalDisks = 0; Size = 679GB } }
     }
     It 'does not create, attach or resize anything during WhatIf' {
@@ -1893,7 +2570,77 @@ Describe 'Storage execution safety' {
         Initialize-LocalBoxStorage -Configuration $configuration -Credential $credential -DesiredSizeGB 1024 -Confirm:$false
         Should -Invoke New-VHD -Times 0
         Should -Invoke Add-VMHardDiskDrive -Times 0
+        Should -Invoke Invoke-Command -Times 0
+    }
+    It 'resumes partition expansion after an interrupted virtual-disk resize, then skips it on the next run' {
+        Mock Test-Path { $true }
+        Mock Get-VMHardDiskDrive { @(@{ Path = Join-Path $TestDrive "$VMName-microhack-s2d.vhdx" }) }
+        Mock Get-LocalBoxNodeState { @{ PoolHealth = 'Healthy'; DiskHealth = 'Healthy'; VolumeHealth = 'Healthy'; NodesUp = $true; StorageJobs = 0; UnhealthyPhysicalDisks = 0; Size = 1TB } }
+        $script:partitionReads = 0
+        Mock Get-LocalBoxPartitionState {
+            $script:partitionReads++
+            @{ Size = 679GB; NeedsExpansion = $script:partitionReads -eq 1 }
+        }
+        Initialize-LocalBoxStorage -Configuration $configuration -Credential $credential -DesiredSizeGB 1024 -Confirm:$false
+        Initialize-LocalBoxStorage -Configuration $configuration -Credential $credential -DesiredSizeGB 1024 -Confirm:$false
+        Should -Invoke New-VHD -Times 0
+        Should -Invoke Add-VMHardDiskDrive -Times 0
         Should -Invoke Invoke-Command -Times 0 -ParameterFilter { $ScriptBlock.ToString() -match 'Resize-VirtualDisk' }
+        Should -Invoke Invoke-Command -Times 1 -Exactly -ParameterFilter { $ScriptBlock.ToString() -match 'Resize-Partition' }
+    }
+    It 'reports an incomplete partition expansion instead of claiming completion' {
+        Mock Get-LocalBoxPartitionState { @{ Size = 679GB; NeedsExpansion = $true } }
+        { Initialize-LocalBoxStorage -Configuration $configuration -Credential $credential -DesiredSizeGB 1024 -Confirm:$false } |
+            Should -Throw '*still has unexpanded partition space*'
+    }
+    It 'does not expand an unfinished partition during WhatIf' {
+        Mock Get-LocalBoxPartitionState { @{ Size = 679GB; NeedsExpansion = $true } }
+        Initialize-LocalBoxStorage -Configuration $configuration -Credential $credential -DesiredSizeGB 1024 -WhatIf
+        Should -Invoke Invoke-Command -Times 0
+    }
+}
+
+Describe 'LocalBox partition capacity detection' {
+    BeforeAll {
+        function Get-Volume { param($FileSystemLabel) }
+        function Get-Partition { param([Parameter(ValueFromPipeline)]$InputObject) }
+        function Get-Disk { param([Parameter(ValueFromPipeline)]$InputObject) }
+        function Get-PartitionSupportedSize { throw 'Unexpected expensive supported-size query' }
+    }
+    BeforeEach {
+        $partition = @{ Size = 1TB - 2MB; Offset = 1MB }
+        $credential = [pscredential]::new('test-user', [Security.SecureString]::new())
+        Mock Invoke-Command { & $ScriptBlock }
+        Mock Get-Volume { @{ FileSystemLabel = 'UserStorage_1' } }
+        Mock Get-Partition { $partition }
+        Mock Get-Disk { @{ Size = 1TB } }
+        Mock Get-PartitionSupportedSize { throw 'Unexpected expensive supported-size query' }
+    }
+    It 'ignores an alignment/GPT tail of at most 1 MiB' -TestCases @(
+        @{ Tail = 0 }; @{ Tail = 512KB }; @{ Tail = 1MB }
+    ) {
+        param($Tail)
+        $partition.Size = 1TB - 1MB - $Tail
+        (Get-LocalBoxPartitionState 'node' $credential).NeedsExpansion | Should -BeFalse
+        Should -Invoke Get-PartitionSupportedSize -Times 0
+    }
+    It 'detects actual unfinished expansion above the alignment allowance' -TestCases @(
+        @{ Tail = 1MB + 1 }; @{ Tail = 345GB }
+    ) {
+        param($Tail)
+        $partition.Size = 1TB - 1MB - $Tail
+        (Get-LocalBoxPartitionState 'node' $credential).NeedsExpansion | Should -BeTrue
+        Should -Invoke Get-PartitionSupportedSize -Times 0
+    }
+    It 'rejects ambiguous partitions and missing remoting output' {
+        Mock Get-Partition { @($partition, $partition) }
+        { Get-LocalBoxPartitionState 'node' $credential } | Should -Throw '*uniquely resolve*'
+        Mock Invoke-Command {}
+        { Get-LocalBoxPartitionState 'node' $credential } | Should -Throw '*No valid*'
+    }
+    It 'rejects invalid disk geometry rather than silently skipping work' {
+        $partition.Size = 2TB
+        { Get-LocalBoxPartitionState 'node' $credential } | Should -Throw '*Invalid*'
     }
 }
 

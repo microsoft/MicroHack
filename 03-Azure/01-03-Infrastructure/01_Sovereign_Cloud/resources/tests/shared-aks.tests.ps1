@@ -146,7 +146,8 @@ Describe 'Shared AKS infrastructure contract' {
         }
         $defaults = Get-Content "$root/labautomation/lab-defaults.json" -Raw | ConvertFrom-Json
         $defaults.estimatedDailyCostsUsd | Should -Be 45
-        $defaults.estimatedSharedDeploymentDailyCostsUsd | Should -Be 110
+        $defaults.estimatedSharedDeploymentDailyCostsUsd | Should -Be 0
+        $defaults.estimatedGlobalDeploymentDailyCostsUsd | Should -Be 110
     }
     It 'removes obsolete resources and credentials while retaining two labeled Ubuntu confidential nodes' {
         $template = Get-Content "$root/labautomation/sovereign-lab.bicep" -Raw

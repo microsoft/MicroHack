@@ -17,17 +17,6 @@ for Azure workload identity.
 - Radius startup can take 5-10 minutes. Inspect pod state before rerunning commands.
 - Always compare `kubectl config current-context` with the active Radius workspace.
 
-Before any K3s work after a devcontainer restart, restore the private API tunnel:
-
-```bash
-export AZURE_SUBSCRIPTION="${AZURE_SUBSCRIPTION:-<subscription-id>}"
-bash resources/prepare-k3s-azure-vm.sh connect
-export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
-```
-
-The tunnel exposes only the Kubernetes API on localhost. Radius dashboard access still
-uses `kubectl port-forward` through that API connection.
-
 ## Control-plane deployment options
 
 ### Federated control planes
@@ -130,6 +119,20 @@ Workstation rad configuration
 
 ### 1. Select and verify AKS
 
+If the `aks-adaptive-apps` context is missing, connect to your lab's AKS cluster:
+
+```bash
+export AZURE_SUBSCRIPTION="${AZURE_SUBSCRIPTION:-<subscription-id>}"
+export RESOURCE_GROUP="${RESOURCE_GROUP:-<lab-resource-group>}"
+unset KUBECONFIG
+az aks get-credentials \
+  --resource-group "$RESOURCE_GROUP" \
+  --name aks-adaptive-apps \
+  --context aks-adaptive-apps
+```
+
+Then select and verify it:
+
 ```bash
 unset KUBECONFIG
 kubectl config use-context aks-adaptive-apps
@@ -142,11 +145,12 @@ kubectl get namespace radius-system --ignore-not-found
 
 Hosted participants first source `artifacts/console-env.sh`; the defaults below
 preserve those supplied values. BYOS participants set their own subscription and
-resource group. Do not replace a Console resource group with `rg-adaptive-apps`.
+resource group. Replace `<lab-resource-group>` with your lab's Azure resource-group
+name; keep the value supplied by Console if already set.
 
 ```bash
 export AZURE_SUBSCRIPTION="${AZURE_SUBSCRIPTION:-<subscription-id>}"
-export RESOURCE_GROUP="${RESOURCE_GROUP:-rg-adaptive-apps}"
+export RESOURCE_GROUP="${RESOURCE_GROUP:-<lab-resource-group>}"
 export AKS_CLUSTER="${AKS_CLUSTER:-aks-adaptive-apps}"
 export RADIUS_APP_NAME="${AKS_CLUSTER}-radius-app"
 
@@ -163,7 +167,7 @@ Choose **one** identity option. Both use AKS OIDC federation with no client secr
 See Microsoft's [AKS workload identity guide](https://learn.microsoft.com/azure/aks/workload-identity-deploy-cluster)
 for the managed identity and federated credential commands.
 
-#### Option A: user-assigned managed identity (required for hosted Console)
+#### Option A: user-assigned managed identity (required for MicroHack Console)
 
 Create the identity inside the supplied lab resource group. These are Azure Resource
 Manager operations, not tenant app/SP creation. The explicit principal object ID
@@ -206,7 +210,7 @@ at **Grant the identity access**.
 
 #### Option B: Entra application (BYOS with tenant permissions only)
 
-Create an Entra application and service principal. Do not run this option in a
+BYOS: Create an Entra application and service principal. Do not run this option in a
 hosted RG-only lab:
 
 ```bash
@@ -226,7 +230,7 @@ export IDENTITY_PRINCIPAL_ID="$(az ad sp show \
   --id "$APPLICATION_CLIENT_ID" --query id --output tsv)"
 ```
 
-For each Radius service account, create a federated credential. The example below is
+BYOS: For each Radius service account, create a federated credential. The example below is
 for `applications-rp`; repeat it for `bicep-de`, `ucp`, and `dynamic-rp`, changing
 both `name` and `subject`:
 
@@ -307,6 +311,7 @@ rad credential register azure wi \
 
 ```bash
 export AZURE_SUBSCRIPTION="${AZURE_SUBSCRIPTION:-<subscription-id>}"
+export RESOURCE_GROUP="${RESOURCE_GROUP:-<lab-resource-group>}"
 bash resources/prepare-k3s-azure-vm.sh connect
 export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
 kubectl config use-context k3s-azure-vm
@@ -412,7 +417,7 @@ unset KUBECONFIG
 kubectl config use-context aks-adaptive-apps
 
 export AZURE_SUBSCRIPTION="${AZURE_SUBSCRIPTION:-<subscription-id>}"
-export RESOURCE_GROUP="${RESOURCE_GROUP:-rg-adaptive-apps}"
+export RESOURCE_GROUP="${RESOURCE_GROUP:-<lab-resource-group>}"
 export AKS_CLUSTER="aks-adaptive-apps"
 
 # Run from the Adaptive Apps MicroHack root.

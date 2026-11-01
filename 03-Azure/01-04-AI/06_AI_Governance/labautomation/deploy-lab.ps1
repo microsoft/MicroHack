@@ -125,40 +125,294 @@ if ($AllowedEntraUserIds.Count -eq 0) {
 Write-Host "[INFO]  Deploying Citadel Agentic Governance Hub + Spoke into RG '$effectiveRG'..."
 Write-Host "[INFO]  Engine: $templateKind, resource-group-scoped."
 
-$deployOutputs = $null
-$effectiveLocation = $null
-
-foreach ($region in $candidateRegions) {
-    Write-Host "[INFO]  Deploying → RG '$effectiveRG' in '$region' (token '$resourceToken')..."
+# ===== Purge soft-deleted namesakes left by a previous event =====
+# $resourceToken is derived from subscription id + RG name, and the platform reuses BOTH
+# when an event is torn down and a new one is deployed over it. Foundry accounts, Key
+# Vaults and APIM services are soft deleted rather than removed, and a soft-deleted resource
+# keeps its name reserved — for Foundry, also its globally unique customSubDomainName.
+# Re-deploying then fails with 'FlagMustBeSetForRestore' during preflight (Foundry, before
+# any resource is touched), 'ConflictError' (Key Vault) or
+# 'ServiceAlreadyExistsInSoftDeletedState' (APIM), which is what took out all three labs on
+# the Sept-10 re-run.
+#
+# Only names ending in THIS lab's token are purged, so other labs sharing the subscription
+# are never affected. A purge failure is non-fatal: it is reported, and the deployment
+# below surfaces the resulting preflight error.
+# Wrapped in a function because it must run again before EVERY deployment attempt: a failed
+# attempt leaves Foundry accounts in a Failed state and freshly soft-deleted namesakes behind,
+# so retrying without cleaning up first fails preflight on the wreckage of the previous try.
+function Invoke-LabSoftDeleteCleanup {
+    # A Foundry account left in a Failed provisioning state by an earlier partial deployment is
+    # just as blocking: ARM refuses to update it ('AccountIsNotSucceeded'), so the resource group
+    # would stay permanently un-deployable. Deleting it soft-deletes it, and the purge pass below
+    # then frees the name for this run to recreate.
     try {
-        $d = New-AzResourceGroupDeployment `
-            -ResourceGroupName $effectiveRG `
-            -TemplateFile $templateFile `
-            -location $region `
-            -resourceToken $resourceToken `
-            -tags $tags `
-            -ErrorAction Stop
-        $deployOutputs = $d.Outputs
-        $effectiveLocation = $region
-        break
+        $failedAccounts = @(Get-AzResource -ResourceGroupName $effectiveRG `
+                -ResourceType 'Microsoft.CognitiveServices/accounts' -ExpandProperties -ErrorAction SilentlyContinue |
+            Where-Object { $_.Name -and $_.Name.Contains($resourceToken) -and $_.Properties.provisioningState -eq 'Failed' })
+        foreach ($account in $failedAccounts) {
+            Write-Host "[INFO]  Foundry account '$($account.Name)' is in a Failed state from an earlier run — recycling it..."
+            Remove-AzResource -ResourceId $account.ResourceId -Force -ErrorAction Stop | Out-Null
+            Write-Host "[OK]    Deleted '$($account.Name)'; it will be purged and recreated below."
+        }
     }
     catch {
-        # Only capacity/quota/region-availability failures are worth retrying elsewhere.
-        # A template or permission bug fails identically in every region, so retrying it
-        # just triples the runtime and buries the real error under the last region's message.
-        $retryable = $true
-        if (Get-Command Test-MhhDeploymentFailureRetryable -ErrorAction SilentlyContinue) {
-            $retryable = [bool](Test-MhhDeploymentFailureRetryable -ErrorRecord $_)
+        Write-Host "[WARN]  Could not recycle failed Foundry accounts: $_"
+    }
+
+    $softDeletedScopes = @(
+        @{ Label = 'Foundry account'; ApiVersion = '2023-05-01'
+           ListPath = "/subscriptions/$SubscriptionId/providers/Microsoft.CognitiveServices/deletedAccounts?api-version=2023-05-01"
+           # Cognitive Services purges via DELETE on the deleted-account resource itself.
+           PurgeMethod = 'DELETE'; PurgeSuffix = '' },
+        @{ Label = 'Key Vault'; ApiVersion = '2022-07-01'
+           ListPath = "/subscriptions/$SubscriptionId/providers/Microsoft.KeyVault/deletedVaults?api-version=2022-07-01"
+           # Key Vault has no DELETE on the deleted vault (that returns HTTP 405) — it exposes a
+           # dedicated POST .../purge action instead.
+           PurgeMethod = 'POST'; PurgeSuffix = '/purge' },
+        @{ Label = 'APIM service'; ApiVersion = '2022-08-01'
+           ListPath = "/subscriptions/$SubscriptionId/providers/Microsoft.ApiManagement/deletedservices?api-version=2022-08-01"
+           # APIM soft-deletes too, failing the deployment with ServiceAlreadyExistsInSoftDeletedState.
+           PurgeMethod = 'DELETE'; PurgeSuffix = '' }
+    )
+
+    # Azure REST calls occasionally fail with transient TLS/socket errors. Without a retry a
+    # single blip silently skips the rest of the purge pass and the deployment then fails on a
+    # name that was supposed to have been cleared.
+    function Invoke-LabAzRest {
+        param([Parameter(Mandatory)][string]$Method, [Parameter(Mandatory)][string]$Path, [int]$MaxAttempts = 3)
+        for ($attempt = 1; $attempt -le $MaxAttempts; $attempt++) {
+            try {
+                return Invoke-AzRestMethod -Method $Method -Path $Path -ErrorAction Stop
+            }
+            catch {
+                if ($attempt -eq $MaxAttempts) { throw }
+                $reason = "$($_.Exception.Message)".Split("`n")[0]
+                Write-Host "[WARN]  $Method call failed (attempt $attempt/$MaxAttempts): $reason — retrying..."
+                Start-Sleep -Seconds (5 * $attempt)
+            }
         }
-        if (-not $retryable) {
-            throw "Deployment failed in '$region' with a non-retryable error (retrying other regions would fail the same way): $_"
+    }
+
+    $purgedAnything = $false
+
+    foreach ($scope in $softDeletedScopes) {
+        try {
+            $listResponse = Invoke-LabAzRest -Method GET -Path $scope.ListPath
+            if ($listResponse.StatusCode -ne 200) {
+                Write-Host "[WARN]  Could not list soft-deleted $($scope.Label)s (HTTP $($listResponse.StatusCode)) — skipping purge check."
+                continue
+            }
+            # The deleted-resource id already encodes location and original RG, so purging by
+            # id avoids reconstructing a scope that may differ from the current deployment.
+            $stale = @(($listResponse.Content | ConvertFrom-Json).value |
+                Where-Object { $_.name -and $_.name.Contains($resourceToken) })
+
+            foreach ($item in $stale) {
+                # Isolated per item: one failure must not skip the remaining purges.
+                try {
+                    Write-Host "[INFO]  Purging soft-deleted $($scope.Label) '$($item.name)' from a previous event..."
+                    $purge = Invoke-LabAzRest -Method $scope.PurgeMethod `
+                        -Path "$($item.id)$($scope.PurgeSuffix)?api-version=$($scope.ApiVersion)"
+                    if (@(200, 202, 204) -contains $purge.StatusCode) {
+                        Write-Host "[OK]    Purged '$($item.name)'."
+                        $purgedAnything = $true
+                    }
+                    else {
+                        Write-Host "[WARN]  Failed to purge '$($item.name)' (HTTP $($purge.StatusCode)). Deployment will likely"
+                        Write-Host "[WARN]  fail preflight because the name is still reserved. Response: $($purge.Content)"
+                    }
+                }
+                catch {
+                    Write-Host "[WARN]  Failed to purge '$($item.name)': $_"
+                }
+            }
         }
-        Write-Host "[WARN]  Deployment failed in '$region': $_ — trying next region."
+        catch {
+            Write-Host "[WARN]  Soft-deleted $($scope.Label) check skipped: $_"
+        }
+    }
+
+    # Purging is eventually consistent, and Key Vault/APIM purges are outright asynchronous.
+    # Recreating a name before the purge has propagated fails with a bare 'Failed to Create the
+    # resource. Provisioning state: Failed', which then leaves the account in a Failed state that
+    # blocks every later run. Wait for the names to actually disappear before deploying.
+    if ($purgedAnything) {
+        Write-Host "[INFO]  Waiting for purges to propagate before deploying..."
+        $purgeDeadline = (Get-Date).AddMinutes(5)
+        do {
+            Start-Sleep -Seconds 10
+            $stillPresent = 0
+            foreach ($scope in $softDeletedScopes) {
+                try {
+                    $check = Invoke-LabAzRest -Method GET -Path $scope.ListPath
+                    if ($check.StatusCode -eq 200) {
+                        $stillPresent += @(($check.Content | ConvertFrom-Json).value |
+                            Where-Object { $_.name -and $_.name.Contains($resourceToken) }).Count
+                    }
+                }
+                catch { }
+            }
+        } while ($stillPresent -gt 0 -and (Get-Date) -lt $purgeDeadline)
+
+        if ($stillPresent -gt 0) {
+            Write-Host "[WARN]  $stillPresent soft-deleted resource(s) still present after 5 minutes."
+            Write-Host "[WARN]  Continuing anyway — the deployment below will report the conflict."
+        }
+        else {
+            # The name index lags the deleted-resource list by a few seconds.
+            Start-Sleep -Seconds 20
+            Write-Host "[OK]    All purges propagated."
+        }
     }
 }
 
+Invoke-LabSoftDeleteCleanup
+
+# ===== Pick a usable Azure AI Foundry account name =====
+# Deleting an `AIServices` account soft-deletes the hidden AML workspace behind it for ~14
+# days, and that workspace cannot be purged -- Azure exposes no API for it. The account name
+# is therefore burned: recreating it always lands in `provisioningState: Failed` with
+# "Soft-deleted workspace exists". Since $resourceToken is deterministic and the platform
+# reuses subscription + RG name, a re-run would be guaranteed to fail on the old name.
+#
+# So: reuse the current account only while it is healthy, and otherwise move to a brand-new
+# name. The chosen suffix is stored as a resource-group tag so that repeat runs stay stable
+# and do not strand a working deployment behind a new set of names.
+$foundrySuffixTag = 'citadelFoundrySuffix'
+
+function Resolve-LabFoundrySuffix {
+    $suffix = ''
+    try {
+        $rgTags = (Get-AzResourceGroup -Name $effectiveRG -ErrorAction Stop).Tags
+        if ($rgTags -and $rgTags[$foundrySuffixTag]) { $suffix = [string]$rgTags[$foundrySuffixTag] }
+    }
+    catch { }
+
+    if ($suffix) {
+        $hub = Get-AzResource -ResourceGroupName $effectiveRG -Name "aif-hub-$resourceToken$suffix" `
+            -ResourceType 'Microsoft.CognitiveServices/accounts' -ExpandProperties -ErrorAction SilentlyContinue
+        if ($hub -and $hub.Properties.provisioningState -eq 'Succeeded') {
+            Write-Host "[OK]    Reusing healthy Foundry accounts 'aif-*-$resourceToken$suffix'."
+            return $suffix
+        }
+    }
+
+    # No healthy account: the previous name (if any) is now unusable, so mint a fresh one.
+    # An empty RG is treated the same way — the RG may have been deleted and recreated, which
+    # leaves the soft-deleted workspace behind while removing all visible trace of it.
+    $new = -join ((1..4) | ForEach-Object { 'abcdefghijklmnopqrstuvwxyz0123456789'[(Get-Random -Maximum 36)] })
+    Write-Host "[INFO]  No healthy Foundry account found — using fresh account names 'aif-*-$resourceToken$new'."
+    Write-Host "[INFO]  (A previously deleted account keeps its name reserved by an unpurgeable AML workspace.)"
+    try {
+        $existingTags = (Get-AzResourceGroup -Name $effectiveRG -ErrorAction Stop).Tags
+        if (-not $existingTags) { $existingTags = @{} }
+        $existingTags[$foundrySuffixTag] = $new
+        Set-AzResourceGroup -Name $effectiveRG -Tag $existingTags -ErrorAction Stop | Out-Null
+    }
+    catch {
+        Write-Host "[WARN]  Could not record the Foundry suffix on the resource group: $_"
+    }
+    return $new
+}
+
+$deployOutputs = $null
+$effectiveLocation = $null
+$firstFailure = $null
+
+# Region fallback only makes sense for an EMPTY resource group. Once the RG holds
+# resources, their names are already pinned to the region of the first attempt, so every
+# later candidate fails with 'InvalidResourceLocation: <name> already exists in location
+# <first region>' — which masks the real error and cannot ever succeed. Re-running into a
+# non-empty RG (a re-deployed event, or a retry after a partial failure) must therefore
+# stay in the region that RG already uses.
+$existingRegions = @(
+    Get-AzResource -ResourceGroupName $effectiveRG -ErrorAction SilentlyContinue |
+        Select-Object -ExpandProperty Location -ErrorAction SilentlyContinue |
+        Where-Object { $_ -and $_ -ne 'global' } |
+        Group-Object |
+        Sort-Object Count -Descending |
+        Select-Object -ExpandProperty Name
+)
+if ($existingRegions.Count -gt 0) {
+    # Prefer a region the platform actually asked for; otherwise the most common region
+    # already used in the RG. 'global' resources are ignored — they are not deployable regions.
+    $pinnedRegion = $candidateRegions | Where-Object { $existingRegions -contains $_ } | Select-Object -First 1
+    if (-not $pinnedRegion) { $pinnedRegion = $existingRegions[0] }
+    if ($candidateRegions.Count -gt 1) {
+        Write-Host "[INFO]  RG '$effectiveRG' already contains resources in '$($existingRegions -join ", ")'."
+        Write-Host "[INFO]  Pinning deployment to '$pinnedRegion' (region fallback applies to empty RGs only)."
+    }
+    $candidateRegions = @($pinnedRegion)
+}
+
+foreach ($region in $candidateRegions) {
+    # Some failures are purely transient and clear on their own: APIM reports 'ServiceLocked'
+    # while a previous create/purge is still activating, and the AML resource provider behind
+    # Foundry projects reports 'Soft-deleted workspace exists' for a short window after the
+    # parent account is purged. Retrying in place beats moving region — a different region
+    # would hit the same lag, and for a non-empty RG there is no other region to move to.
+    $transientPatterns = @(
+        'ServiceLocked', 'is transitioning', 'Soft-deleted workspace exists',
+        'AnotherOperationInProgress', 'operation is in progress', 'RetryableError'
+    )
+    $maxAttempts = 3
+
+    for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
+        $suffix = if ($attempt -gt 1) { " (attempt $attempt/$maxAttempts)" } else { '' }
+        if ($attempt -gt 1) { Invoke-LabSoftDeleteCleanup }
+        $foundryNameSuffix = Resolve-LabFoundrySuffix
+        Write-Host "[INFO]  Deploying → RG '$effectiveRG' in '$region' (token '$resourceToken')$suffix..."
+        try {
+            $d = New-AzResourceGroupDeployment `
+                -ResourceGroupName $effectiveRG `
+                -TemplateFile $templateFile `
+                -location $region `
+                -resourceToken $resourceToken `
+                -foundryNameSuffix $foundryNameSuffix `
+                -tags $tags `
+                -ErrorAction Stop
+            $deployOutputs = $d.Outputs
+            $effectiveLocation = $region
+            break
+        }
+        catch {
+            $message = "$_"
+
+            $isTransient = $false
+            foreach ($pattern in $transientPatterns) {
+                if ($message -match $pattern) { $isTransient = $true; break }
+            }
+            if ($isTransient -and $attempt -lt $maxAttempts) {
+                Write-Host "[WARN]  Transient Azure state during deployment: $message"
+                Write-Host "[INFO]  This usually resolves itself — waiting 2 minutes and retrying in '$region'..."
+                Start-Sleep -Seconds 120
+                continue
+            }
+
+            # Only capacity/quota/region-availability failures are worth retrying elsewhere.
+            # A template or permission bug fails identically in every region, so retrying it
+            # just triples the runtime and buries the real error under the last region's message.
+            $retryable = $true
+            if (Get-Command Test-MhhDeploymentFailureRetryable -ErrorAction SilentlyContinue) {
+                $retryable = [bool](Test-MhhDeploymentFailureRetryable -ErrorRecord $_)
+            }
+            if (-not $retryable) {
+                throw "Deployment failed in '$region' with a non-retryable error (retrying other regions would fail the same way): $_"
+            }
+            # Keep the FIRST failure: it is the real one. Later regions typically fail with a
+            # downstream symptom, so reporting only the last error hides the actual cause.
+            if (-not $firstFailure) { $firstFailure = "in '$region': $_" }
+            Write-Host "[WARN]  Deployment failed in '$region': $_ — trying next region."
+            break
+        }
+    }
+
+    if ($deployOutputs) { break }
+}
+
 if (-not $deployOutputs) {
-    throw "Deployment failed in all candidate regions: $($candidateRegions -join ', ')"
+    throw "Deployment failed in all candidate regions ($($candidateRegions -join ', ')). First (root cause) error $firstFailure"
 }
 
 Write-Host "[OK]    Provisioning complete in '$effectiveLocation' (resource group '$effectiveRG')."

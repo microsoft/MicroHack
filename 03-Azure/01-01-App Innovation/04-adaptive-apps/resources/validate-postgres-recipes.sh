@@ -23,6 +23,17 @@ for recipe in "$AZURE_RECIPE" "$KUBERNETES_RECIPE"; do
   }
 done
 
+grep -A8 -F "resource tradingDb " "$APP_TEMPLATE" | grep -Fq "size: 'L'" || {
+  echo "The default application must request PostgreSQL size L." >&2
+  exit 1
+}
+large_sku="$(sed -n '/^  L: {/,/^  }/p' "$AZURE_RECIPE")"
+grep -Fq "name: 'Standard_D4ds_v5'" <<<"$large_sku" &&
+  grep -Fq "tier: 'GeneralPurpose'" <<<"$large_sku" || {
+  echo "Azure PostgreSQL size L must use GeneralPurpose Standard_D4ds_v5." >&2
+  exit 1
+}
+
 for table in accounts orders trades positions; do
   grep -Eq "CREATE TABLE IF NOT EXISTS ${table}[[:space:]]*\\(" "$SCHEMA_FILE" || {
     echo "Shared schema is missing table: $table" >&2
@@ -61,6 +72,13 @@ for recipe in "$AZURE_RECIPE" "$SQL_RECIPE"; do
     }
   done
 done
+
+# Azure PostgreSQL server names are globally unique. Workshops often reuse Radius resource IDs,
+# so the deterministic name must also be scoped to the target Azure subscription/resource group.
+grep -Fqx "var serverName = 'pg-\${uniqueString(resourceGroup().id, context.resource.id)}'" "$AZURE_RECIPE" || {
+  echo "Azure PostgreSQL server name must hash resourceGroup().id and context.resource.id." >&2
+  exit 1
+}
 
 # sql-server.bicep provisions only Azure resources, so any 'radapp.io/' key in it is an
 # invalid Azure tag name rather than a Kubernetes label.

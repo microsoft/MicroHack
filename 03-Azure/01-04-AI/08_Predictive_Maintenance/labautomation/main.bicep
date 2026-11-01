@@ -33,6 +33,7 @@ var cognitiveServicesUserRoleId = subscriptionResourceId('Microsoft.Authorizatio
 var searchServiceContributorRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '7ca78c08-252a-4471-8644-bb5ff32d4ba0')
 var searchIndexDataReaderRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '1407120a-92aa-4202-b7e9-c0e197c71c8f')
 var monitoringReaderRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '43d0d8ad-25c7-4714-9337-8ba259a9fe05')
+var logAnalyticsReaderRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '73c42c96-874c-492b-b04d-ab87d138a893')
 var foundryUserRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '53ca6127-db72-4b80-b1b0-d745d6d5456d')
 var openAiContributorRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'a001fd3d-188f-4b5d-821b-7da978bf7442')
 var storageBlobDataContributorRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')
@@ -263,10 +264,9 @@ resource aiProjectAppInsightsConnection 'Microsoft.CognitiveServices/accounts/pr
     authType: 'ApiKey'
     category: 'AppInsights'
     target: applicationInsights.id
-    useWorkspaceManagedIdentity: false
     isSharedToAll: true
     credentials: {
-      key: applicationInsights.properties.InstrumentationKey
+      key: applicationInsights.properties.ConnectionString
     }
     metadata: {
       ApiType: 'Azure'
@@ -278,6 +278,9 @@ resource aiProjectAppInsightsConnection 'Microsoft.CognitiveServices/accounts/pr
 resource gpt5_4MiniDeployment 'Microsoft.CognitiveServices/accounts/deployments@2025-04-01-preview' = {
   parent: aiFoundry
   name: 'gpt-5.4-mini'
+  dependsOn: [
+    aiProject
+  ]
   sku: {
     capacity: 50
     name: 'GlobalStandard'
@@ -371,6 +374,16 @@ resource appInsightsMonitoringReaderForProject 'Microsoft.Authorization/roleAssi
   name: guid(applicationInsights.id, aiProject.id, monitoringReaderRoleId)
   properties: {
     roleDefinitionId: monitoringReaderRoleId
+    principalId: aiProject.identity.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+resource appInsightsLogAnalyticsReaderForProject 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: applicationInsights
+  name: guid(applicationInsights.id, aiProject.id, logAnalyticsReaderRoleId)
+  properties: {
+    roleDefinitionId: logAnalyticsReaderRoleId
     principalId: aiProject.identity.principalId
     principalType: 'ServicePrincipal'
   }

@@ -33,7 +33,7 @@ function Wait-LocalBoxDeployment {
             throw "LocalBox deployment '$DeploymentName' ended as $($deployment.ProvisioningState)."
         }
         if ((Get-Date -AsUTC) -ge $deadline) {
-            throw "Timed out waiting for LocalBox deployment '$DeploymentName'. Rerun the shared hook after investigating the deployment."
+            throw "Timed out waiting for LocalBox deployment '$DeploymentName'. Rerun the global event hook after investigating the deployment."
         }
         Write-Host "Waiting for LocalBox ARM deployment '$DeploymentName' ($($deployment.ProvisioningState))..."
         Start-Sleep -Seconds 30

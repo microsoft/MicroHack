@@ -3,7 +3,8 @@
   "groups": [],
   "deploymentType": "resourcegroup",
   "labsPerSubscription": 2,
-  "preferredLocation": "swedencentral, spaincentral",
+  "preferredLocation": "spaincentral, swedencentral",
   "estimatedDailyCostsUsd": 45.0,
-  "estimatedSharedDeploymentDailyCostsUsd": 110.0
+  "estimatedSharedDeploymentDailyCostsUsd": 0.0,
+  "estimatedGlobalDeploymentDailyCostsUsd": 110.0
 }

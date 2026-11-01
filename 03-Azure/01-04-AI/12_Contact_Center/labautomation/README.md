@@ -2,7 +2,7 @@
 
 [Home](../README.md)
 
-The Bicep template lives in [infra](../infra/main.bicep). This folder holds the platform files: [deploy-lab.ps1](deploy-lab.ps1) and [lab-defaults.json](lab-defaults.json).
+The Bicep template lives in [infra](../infra/main.bicep). This folder holds the platform files: [deploy-lab.ps1](deploy-lab.ps1), [shared-deploy-lab.ps1](shared-deploy-lab.ps1) and [lab-defaults.json](lab-defaults.json).
 
 ## What is deployed per attendee
 
@@ -41,7 +41,7 @@ After the template, the script zips the CRM (`crm/` plus each pack's `pack.json`
 
 Dashboard outputs (not secrets): `ResourceGroupName`, `EffectiveLocation`, `FoundryProjectEndpoint`, `FoundryAccountName`, `ModelDeploymentName`, `EmbeddingDeploymentName`, `AnalysisModelDeploymentName`, `StorageAccountName`, `SearchServiceName`, `SearchEndpoint`, `CrmUrl`, `ApplicationInsightsName`.
 
-Register these resource providers before the event: Microsoft.CognitiveServices, Microsoft.Storage, Microsoft.Search, Microsoft.Web, Microsoft.OperationalInsights and Microsoft.Insights.
+[`shared-deploy-lab.ps1`](shared-deploy-lab.ps1) registers these resource providers once per subscription, before the labs start, and waits for them: Microsoft.CognitiveServices, Microsoft.Storage, Microsoft.Search, Microsoft.Web, Microsoft.OperationalInsights and Microsoft.Insights. Participants own only their resource group and cannot register a provider. If a provider cannot be registered, the script prints the command for a subscription owner and lets the labs continue.
 
 ## Capacity and cost
 
@@ -54,7 +54,7 @@ Register these resource providers before the event: Microsoft.CognitiveServices,
 
 ## Testing the automation outside the platform
 
-[`dev/run-local.ps1`](../dev/run-local.ps1) runs `deploy-lab.ps1` the way the platform does: it supplies `Get-MhhStableHash`, creates the resource group, passes your Entra object ID and prints the dashboard values. Sign in with both `Connect-AzAccount` and `az login` to the same subscription, then run it from the lab folder:
+[`dev/run-local.ps1`](../dev/run-local.ps1) runs `shared-deploy-lab.ps1` and `deploy-lab.ps1` the way the platform does: it supplies `Get-MhhStableHash`, creates the resource group, passes your Entra object ID and prints the dashboard values. Sign in with both `Connect-AzAccount` and `az login` to the same subscription, then run it from the lab folder:
 
 ```powershell
 ./dev/run-local.ps1 -AllowedEntraUserIds (az ad signed-in-user show --query id -o tsv)

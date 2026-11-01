@@ -1,6 +1,7 @@
 # Local-only wrapper to run labautomation/deploy-lab.ps1 outside the MicroHack platform.
-# Supplies the platform-provided helper (Get-MhhStableHash), pre-creates the resource
-# group, and passes the signed-in user's Entra object ID, exactly as the platform would.
+# Supplies the platform-provided helper (Get-MhhStableHash), runs
+# labautomation/shared-deploy-lab.ps1, pre-creates the resource group, and passes the
+# signed-in user's Entra object ID, exactly as the platform would.
 # Not part of the participant flow: for facilitators testing the lab automation.
 #
 # Prereqs: Connect-AzAccount (Az PowerShell) AND az login (Azure CLI) to the SAME subscription.
@@ -79,6 +80,9 @@ if (-not (Get-Command bicep -ErrorAction SilentlyContinue)) {
         throw 'Bicep CLI not found. Run "az bicep install" or see https://aka.ms/bicep-install.'
     }
 }
+
+# The platform runs the once-per-subscription hook before any lab.
+& "$PSScriptRoot\..\labautomation\shared-deploy-lab.ps1" -SubscriptionId $SubscriptionId -PreferredLocation @($Location) -AllowedEntraUserIds $AllowedEntraUserIds
 
 $started = Get-Date
 $outputs = & "$PSScriptRoot\..\labautomation\deploy-lab.ps1" @arguments

@@ -72,7 +72,23 @@ The **Microsoft Copilot harness** changes that. It gives your agent its own secu
    - Puts the files you'll attach in the chat into a `my-files` folder: one statement per partner, this month's **ledger export** from your ERP, the team's handbook and a starter skill for Challenge 2.
    - Remembers your dashboard values, so the commands in later challenges are short.
 
-   You can run it again at any time, for example to switch industry. It replaces the previous company.
+   You can run it again at any time, for example to switch industry. It replaces the previous company, but keeps a skill you've already written.
+
+   > [!TIP]
+   > **How to read these commands.** Every lab command has the same shape:
+   >
+   > ```text
+   > python3 -m frontierops   setup   --industry distribution --account stfrontier123
+   > └──────┬──────────────┘ └─┬──┘   └──────────────────────┬─────────────────────┘
+   >   run the lab's tool    what to do     the details, as --name value pairs
+   > ```
+   >
+   > - `python3` starts Python, which is already installed in Cloud Shell.
+   > - `-m frontierops` tells Python to run a *module* (a folder of Python code) called `frontierops`, instead of a single file. It's the `frontierops` folder in this lab: the lab's own small tool. Python finds it because you're in the lab's folder, so always run these commands from `13_Frontier_Operations`.
+   > - The next word is the **command**: what you want the tool to do, such as `setup`, `grant-agent`, `publish-skill`, `download` or `score`.
+   > - Anything starting with `--` is an **option**, and the word after it is its value. Some commands also take a plain value without `--`, such as an agent name (`grant-agent ops-agent`) or a file (`score ~/exceptions.xlsx`).
+   >
+   > To see every command, run `python3 -m frontierops --help`. For the options of one command, add `--help` after it, for example `python3 -m frontierops setup --help`. The tool only does what these pages describe; you can read every line of it in the `frontierops` folder.
 
 6. Get the files onto your computer, so you can attach them in the Foundry chat:
    1. In Cloud Shell, select **Manage files**, then **Download**.

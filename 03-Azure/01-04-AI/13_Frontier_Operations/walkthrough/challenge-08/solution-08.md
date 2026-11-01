@@ -6,7 +6,7 @@
 
 ## Expected run
 
-Verified end to end against a lab project in October 2026 with azd 1.37.2 and `azure.ai.agents` 1.0.0-beta.23:
+Verified end to end against a lab project in October 2026 with azd 1.37.2, `azure.ai.agents` 1.0.0-beta.23 and `azure.ai.skills` 1.0.0-beta.10, and again in Cloud Shell during the guided run (deploy 31 s; the invoke quoted *Differences of GBP 2.00 or less are rounding…*):
 
 | Step | Result | Time |
 |---|---|---|
@@ -30,7 +30,7 @@ A skill deployed with azd is a `SKILL.md` package, the same format as `publish-s
 | Symptom | Cause and fix |
 |---|---|
 | `azd ai agent` is an unknown command | Install the extension: `azd extension install azure.ai.agents`. |
-| *skill "reconciliation-code" has no enabled azure.ai.skill sibling service* | The skills extension isn't installed, so `azd` ignores the `azure.ai.skill` service. Run `azd extension install azure.ai.skills`, then deploy again. `azure.ai.agents` doesn't bring it in as a dependency. |
+| *skill "reconciliation-code" has no enabled azure.ai.skill sibling service* | Either the skills extension isn't installed (`azd extension install azure.ai.skills`; `azure.ai.agents` doesn't bring it in), or `azure.yaml` has no `reconciliation-code` service: check with `cat azure.yaml`. In our guided run, changes made in the Cloud Shell editor weren't saved, which is why step 2 writes the file with one command. |
 | `harness` is ignored, or the agent is created without it | The extension is older than 1.0.0-beta.22 (`azd extension upgrade azure.ai.agents`), or `AZD_ALPHA_ENABLE_AGENTS_MANAGED_HARNESS=true` isn't set in this terminal. |
 | `init` asks to create a new project | Pass `--project-id` with the full `FoundryProjectResourceId` and `--no-prompt`. |
 | Deploy fails on the skill | `archive` must point at the folder that contains `SKILL.md`, and the front matter `name:` and `description:` must be unquoted. |

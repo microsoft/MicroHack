@@ -116,10 +116,12 @@ azd ai agent invoke --new-conversation --no-prompt "List your skills, then load 
 
 `show` must list `harness.type: microsoft_copilot_preview` and the `reconciliation-code` skill. `invoke` answers with your tolerance rule. In the Foundry portal the new agent `ops-agent-code` appears next to `ops-agent`, and you can test it there too.
 
+![azd deploy: the project, the skill, then the agent](../images/challenge-08-azd-deploy.png)
+
+![azd ai agent invoke: the agent lists reconciliation-code and quotes its tolerance rule](../images/challenge-08-azd-invoke.png)
+
 > [!WARNING]
 > If you ran `azd deploy` before writing `azure.yaml` (step 2), the agent was created **without** the harness, and a harness can only be chosen when an agent is created. `invoke` then answers like a plain chatbot that knows no skills. Delete it and deploy again: `azd ai agent delete ops-agent-code --force --no-prompt`, then `azd deploy --all --no-prompt`.
-
-> 📸 **Screenshot to add:** `images/challenge-08-azd-deploy.png`: azd deploy and azd ai agent invoke: the agent quotes the tolerance rule from its skill.
 
 ### Part E: Make a change the way a team would (10 min)
 

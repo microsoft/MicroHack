@@ -41,7 +41,14 @@ To compare fairly, run the **same agent** (same instructions, skill, toolbox and
    **What this does:** reads `ops-agent`'s definition from Foundry and saves it as a new agent, `ops-agent-54`, with only the model changed, then gives the copy's identity the same Foundry User role so it can return files. Your original agent isn't touched.
 
 2. Wait five minutes for the role, then open `ops-agent-54` in the portal. Attach the **same one** partner statement and ledger export as in Challenge 2, and send the same request.
+
+   ![The same agent on gpt-5.4: 76 seconds and 169K tokens, with the skill, the ERP and the upload](../images/challenge-07-gpt54-run.png)
+
 3. Download and score the workbook, and record the same measures in a new column.
+
+   ![Cloud Shell: gpt-5.4 also scores 6 of 6](../images/challenge-07-gpt54-score.png)
+
+4. For a fair comparison, run the same request once more on `ops-agent` (`gpt-5.4-mini`) in a new chat. Your agent has changed since Challenge 2 (it now also reads the ERP and has a guardrail), so its Challenge 2 numbers aren't a like-for-like baseline any more.
 
 Why one partner? The bigger model has a smaller quota in your lab, and a five-partner run reads about a million tokens in a few minutes. Comparing one partner is fair to both models; you scale the result up in Part C.
 

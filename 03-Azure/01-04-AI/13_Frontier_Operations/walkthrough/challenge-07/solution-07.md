@@ -6,7 +6,17 @@
 
 ## Our measurements
 
-Distribution pack, with the `reconciliation` skill, October 2026:
+Guided portal run, distribution pack, Brightwell Packaging, the same agent definition (skill v6, ERP toolbox, egress guardrail) on each model:
+
+| Measure | `ops-agent`, `gpt-5.4-mini` | `ops-agent-54`, `gpt-5.4` |
+|---|---|---|
+| Time from request to answer | 69 s | 76 s |
+| Score | 6 of 6 | 6 of 6 |
+| Tokens | 253,317 (248,642 input of which 226,304 cached; 4,675 output) | 169,072 |
+
+The `gpt-5.4` copy also read the ERP and wrote three ledger notes on its own, because the instructions say the ERP is the system of record. That's the same behaviour as `ops-agent`, and a reminder that you compare **agents**, not models in isolation.
+
+Earlier API runs (before the ERP and guardrail were added), for the scale of a full month:
 
 | Measure | One partner, `gpt-5.4-mini` | One partner, `gpt-5.4` | Five partners, `gpt-5.4-mini` |
 |---|---|---|---|

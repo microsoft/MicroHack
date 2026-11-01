@@ -35,7 +35,7 @@ The platform sets the Az context and passes `DeploymentType`, `SubscriptionId`, 
 
 Dashboard outputs (not secrets): `ResourceGroupName`, `EffectiveLocation`, `FoundryProjectEndpoint`, `FoundryAccountName`, `ModelDeploymentName`, `EmbeddingDeploymentName`, `StorageAccountName`, `SearchServiceName`, `SearchEndpoint`, `ApplicationInsightsName`.
 
-Register these resource providers before the event: Microsoft.CognitiveServices, Microsoft.Storage, Microsoft.Search, Microsoft.OperationalInsights and Microsoft.Insights.
+[`shared-deploy-lab.ps1`](shared-deploy-lab.ps1) registers these resource providers once per subscription, before the labs start, and waits for them: Microsoft.CognitiveServices, Microsoft.Storage, Microsoft.Search, Microsoft.OperationalInsights and Microsoft.Insights. Participants own only their resource group and cannot register a provider. If a provider cannot be registered, the script prints the command for a subscription owner and lets the labs continue.
 
 ## Capacity and cost
 
@@ -48,7 +48,7 @@ Register these resource providers before the event: Microsoft.CognitiveServices,
 
 ## Testing the automation outside the platform
 
-[`dev/run-local.ps1`](../dev/run-local.ps1) runs `deploy-lab.ps1` the way the platform does: it supplies `Get-MhhStableHash`, creates the resource group, passes your Entra object ID and prints the dashboard values. Sign in with both `Connect-AzAccount` and `az login` to the same subscription, then run `./dev/run-local.ps1` from the lab folder (add `-Location <region>` to check another region). It needs the Bicep CLI; if only the Azure CLI's copy is installed, the wrapper uses it. Delete the resource group afterwards.
+[`dev/run-local.ps1`](../dev/run-local.ps1) runs `shared-deploy-lab.ps1` and `deploy-lab.ps1` the way the platform does: it supplies `Get-MhhStableHash`, creates the resource group, passes your Entra object ID and prints the dashboard values. Sign in with both `Connect-AzAccount` and `az login` to the same subscription, then run `./dev/run-local.ps1` from the lab folder (add `-Location <region>` to check another region). It needs the Bicep CLI; if only the Azure CLI's copy is installed, the wrapper uses it. Delete the resource group afterwards.
 
 ## Lifecycle
 

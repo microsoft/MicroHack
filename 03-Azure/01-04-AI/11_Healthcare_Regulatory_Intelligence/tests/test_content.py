@@ -84,7 +84,7 @@ def test_no_em_dashes_anywhere():
 
 
 def test_platform_automation_layout():
-    assert {p.name for p in (LAB / "labautomation").iterdir()} == {"deploy-lab.ps1", "lab-defaults.json", "README.md"}
+    assert {p.name for p in (LAB / "labautomation").iterdir()} == {"deploy-lab.ps1", "shared-deploy-lab.ps1", "lab-defaults.json", "README.md"}
     defaults = json.loads((LAB / "labautomation" / "lab-defaults.json").read_text(encoding="utf-8"))
     assert defaults["deploymentType"] in {"resourcegroup", "subscription", "resourcegroup-with-subscriptionowner"}
     assert defaults["$schema"].endswith("/lab-defaults-schema.json")

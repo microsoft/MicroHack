@@ -57,6 +57,9 @@ Subagents aren't always the answer. They pay off when the work splits into **ind
    ![Cloud Shell: 26 of 30 before the redo, 30 of 30 after](../images/challenge-03-score-after-redo.png)
 
 2. Open the **Summary** sheet. Which partner has the most money at stake? That's where your approver will look first.
+
+   ![The returned exceptions.xlsx: the Summary sheet with exceptions and money at stake per partner, and one sheet per partner](../images/challenge-03-workbook-summary.png)
+
 3. Select **Traces** on the answer line. The header shows how much work went into the month: in our run 124 steps, 35 model calls and 40 tool calls in 92 seconds. Scroll down past the skill and the file reads to the **execute_tool task** steps, one per partner, and select one to see the brief the lead agent gave that subagent. Which partner took longest?
 
    ![The trace of the five-partner run: totals in the header, the skill, then the file reads before the subagent tasks](../images/challenge-03-trace.png)
@@ -64,8 +67,6 @@ Subagents aren't always the answer. They pay off when the work splits into **ind
    Each subagent gets a written brief, the way a lead briefs a colleague. In ours the lead copied the skill's matching rules and the GBP 2.00 tolerance into each brief, and started all five subagents within a fraction of a second, so they worked in parallel:
 
    ![execute_tool task selected: the brief the lead agent wrote for the Brightwell subagent](../images/challenge-03-subagent-brief.png)
-
-> 📸 **Screenshot to add:** `images/challenge-03-workbook-summary.png`: The returned workbook: the Summary sheet and one sheet per partner.
 
 ### Part C: When not to use subagents (10 min)
 

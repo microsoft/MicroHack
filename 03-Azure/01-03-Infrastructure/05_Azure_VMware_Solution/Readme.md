@@ -65,6 +65,9 @@ The automated script to setup the lab environment can be found under the followi
 
 **Note: To best benefit from this Microhack, prior VMware knowledge and basic AVS knowledge are preferred.**
 
+### Note
+
+ All the data needed is in the excel file: [AVSMicroHackData](Lab/info/datos_Microhack_300925.xlsx). Prefixes, credentials .. 
 
 ## Solution Guide
 
@@ -94,6 +97,8 @@ The automated script to setup the lab environment can be found under the followi
 - [Andreas Schwarz]()
 - [Sven Forstreuter]()
 - [Sarah Tabet]()
+- [David Wahby]()
+- [Pablo Vales]()
 
 
 Thank you for participating in this MicroHack!

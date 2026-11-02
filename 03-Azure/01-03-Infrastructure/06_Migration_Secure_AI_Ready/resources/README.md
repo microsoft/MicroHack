@@ -65,7 +65,22 @@ Use the current standard template's [local testing harness](../../../../99-Micro
 4. Inside the harness, invoke `deploy-lab.ps1` from this Hack's `labautomation` directory with all five parameters from the table above, using `DeploymentType` = `resourcegroup`, the existing test resource group, ordered region array, and learner object-ID array. Confirm that the reported selected region and RG **LabRegion** tag match the resources, not necessarily the RG's metadata location. Follow the standard harness invocation syntax and helper limitations.
 5. Verify the returned credential fields (the platform dashboard shows these for hosted runs) and Key Vault access as the test learner, then follow Solution 1's **initial-handoff** readiness checks. Also verify that a completed rerun preserves learner state and does not restart migrated source guests. Syntax/build checks alone are not evidence of a live deployment.
 
-The official source remains `microsoft/MicroHack` on `main`. For premerge fork testing, check out the fork's feature branch locally **and** set `MICROHACK_GITHUB_ACCOUNT` and `MICROHACK_GITHUB_BRANCH` in the harness/deployment environment to that owner and branch before invocation. These environment variables default to `microsoft` and `main` and select downloaded automation and demo-page assets via the existing Bicep `githubAccount` and `githubBranch` parameters. The local checkout and asset reference must match, and the branch must retain the Hack resource paths. Do not change the official repository identifiers in documentation or templates just to test a fork.
+### Select the artifact source without runner access
+
+The script automatically reads [deployment-settings.json](../labautomation/deployment-settings.json) from its own directory. This branch is configured for the fork:
+
+```json
+{
+  "githubAccount": "ASchwarz1984",
+  "githubBranch": "aschwarz1984-migration-lab"
+}
+```
+
+Edit these two nonsecret values in the repository and import/re-import that version of the `labautomation` folder. No runner environment changes are required. The selected owner and branch (or commit SHA) must contain the Hack's existing `resources/artifacts` paths, and the imported templates/settings must match that source version. The script passes the values through Bicep and Bootstrap to both guests and all demo-page asset downloads.
+
+Keep the file valid and present: missing/malformed settings fail instead of silently downloading another version. Do not add these fields to `lab-defaults.json`; the platform schema rejects additional properties. Optional `MICROHACK_GITHUB_ACCOUNT` and `MICROHACK_GITHUB_BRANCH` environment variables still override the corresponding JSON values when an operator controls the runner.
+
+For official upstream deployment, change the settings to `"githubAccount": "microsoft"` and `"githubBranch": "main"`. The repository name `MicroHack`, artifact paths, published defaults schema, and demo-page repository link remain unchanged.
 
 ## Resource lifecycle
 

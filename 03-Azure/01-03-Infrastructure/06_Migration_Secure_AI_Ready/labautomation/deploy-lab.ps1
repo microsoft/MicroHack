@@ -28,6 +28,24 @@ foreach ($participantId in $AllowedEntraUserIds) {
 }
 $AllowedEntraUserIds = @($AllowedEntraUserIds | Sort-Object -Unique)
 
+$sourceSettingsPath = Join-Path $PSScriptRoot 'deployment-settings.json'
+$sourceSettings = Get-Content -LiteralPath $sourceSettingsPath -Raw | ConvertFrom-Json -AsHashtable -NoEnumerate
+if ($sourceSettings -isnot [Collections.IDictionary] -or @($sourceSettings.Keys).Count -ne 2 -or
+    @($sourceSettings.Keys | Where-Object { $_ -cnotin @('githubAccount', 'githubBranch') }).Count -gt 0) {
+    throw 'deployment-settings.json must contain only githubAccount and githubBranch.'
+}
+foreach ($key in @('githubAccount', 'githubBranch')) {
+    if ($sourceSettings[$key] -isnot [string] -or [string]::IsNullOrWhiteSpace($sourceSettings[$key])) {
+        throw "deployment-settings.json requires a nonempty string for $key."
+    }
+}
+$githubAccount = if ($env:MICROHACK_GITHUB_ACCOUNT) { $env:MICROHACK_GITHUB_ACCOUNT } else { $sourceSettings['githubAccount'] }
+$githubBranch = if ($env:MICROHACK_GITHUB_BRANCH) { $env:MICROHACK_GITHUB_BRANCH } else { $sourceSettings['githubBranch'] }
+if ($githubAccount -notmatch '^[A-Za-z0-9][A-Za-z0-9-]*$' -or
+    $githubBranch -notmatch '^[A-Za-z0-9][A-Za-z0-9._/-]*$' -or $githubBranch.Contains('..')) {
+    throw 'Invalid GitHub artifact source in deployment-settings.json or MICROHACK_GITHUB_ACCOUNT/MICROHACK_GITHUB_BRANCH overrides.'
+}
+
 foreach ($helper in @('Get-MhhStableHash', 'New-MhhStablePassword', 'Update-MhhToken')) {
     Get-Command $helper -ErrorAction Stop | Out-Null
 }
@@ -194,12 +212,7 @@ if (-not $alreadyReady -and ($null -eq $deployment -or $deployment.ProvisioningS
         throw "No eligible deployment region among $($candidateLocations -join ', '). Resources are preserved; an existing lab cannot fall back to another region."
     }
 
-    $githubAccount = if ($env:MICROHACK_GITHUB_ACCOUNT) { $env:MICROHACK_GITHUB_ACCOUNT } else { 'microsoft' }
-    $githubBranch = if ($env:MICROHACK_GITHUB_BRANCH) { $env:MICROHACK_GITHUB_BRANCH } else { 'main' }
-    if ($githubAccount -notmatch '^[A-Za-z0-9][A-Za-z0-9-]*$' -or
-        $githubBranch -notmatch '^[A-Za-z0-9][A-Za-z0-9._/-]*$' -or $githubBranch.Contains('..')) {
-        throw 'Invalid MICROHACK_GITHUB_ACCOUNT or MICROHACK_GITHUB_BRANCH artifact source.'
-    }
+    Write-Host "Artifact source: $githubAccount/MicroHack at $githubBranch"
     $artifactUrl = "https://raw.githubusercontent.com/$githubAccount/MicroHack/$githubBranch/03-Azure/01-03-Infrastructure/$hackName/resources/artifacts/Bootstrap.ps1"
     Invoke-WebRequest -Uri $artifactUrl -Method Head -UseBasicParsing -TimeoutSec 30 | Out-Null
     Update-AzTag -ResourceId $resourceGroupId -Operation Merge -Tag @{

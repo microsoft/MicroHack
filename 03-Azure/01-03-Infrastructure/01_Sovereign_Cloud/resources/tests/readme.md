@@ -54,6 +54,12 @@ update-assessment failure, credential-file cleanup and diagnostic-upload failure
 They do not exercise Windows SYSTEM, real managed Run Command, Blob RBAC propagation,
 AKS admin credentials, or a multi-hour Console token rotation; those are live gates.
 
+Packaging tests also emulate the Console's `labautomation`-only mount, with no
+sibling `resources` directory. They verify immutable source pins and SHA256
+checks, reject missing/mutable/corrupt sources, prevent mixing partial local
+sources with downloads, and check that packaging failure stops the global hook
+before Azure changes. Source-pin digests must match the checkout's guest files.
+
 Hosted automation runs upstream infrastructure tests and the existing LocalBox
 Full suite **inside the Client**, without downloading a second copy of Sovereign
 tests from `main`. The automation wrapper (not the read-only test runner) obtains

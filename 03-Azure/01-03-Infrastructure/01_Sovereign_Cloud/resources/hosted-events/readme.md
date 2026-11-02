@@ -107,14 +107,19 @@ It does not publish LocalBox administrator credentials.
 
 The [orchestrator](../../labautomation/localbox-automation.ps1) implements:
 
-1. Wait for `localbox-*` ARM completion, then `localcluster-deploy`, connected
+1. Use the validated `Get-MhhDefaultLabGroup` result (also published as **Lab
+   Group ObjectId**) as `AksAdminGroupObjectId`. No guest Graph lookup is needed.
+2. Package the preparation script, guest runner and health tests before making
+   deployment changes. A full checkout uses local resources. Console can mount
+   only `labautomation`, without its sibling `resources` directory; in that case
+   download the complete guest file set from the immutable commit in
+   [localbox-automation-source.json](../../labautomation/localbox-automation-source.json)
+   and verify every SHA256. Never mix partial local files with downloaded files
+   or fall back to a moving `main` branch. A content hash identifies the package,
+   which is reused in the Managed Run Command payload after ARM completion.
+3. Wait for `localbox-*` ARM completion, then `localcluster-deploy`, connected
    Azure Local, a running Arc Resource Bridge, custom location and
    `hybridaksextension`. A successful Client bootstrap extension is not sufficient.
-2. Use the validated `Get-MhhDefaultLabGroup` result (also published as **Lab
-   Group ObjectId**) as `AksAdminGroupObjectId`. No guest Graph lookup is needed.
-3. Package the preparation script, guest runner and health tests from the
-   **imported content directory** into the Managed Run Command payload. A content
-   hash identifies the package; there is no second download from upstream `main`.
 4. Run `sovereign-localbox-prepare` asynchronously on LocalBox-Client as **SYSTEM**,
    explicitly using PowerShell 7. The [guest runner](../invoke-localbox-automation.ps1)
    prepares storage, logical networks, AKS, proxy RBAC, MetalLB, the Windows
@@ -157,6 +162,14 @@ allow time for both preparation and later assessments.
 
 ### Diagnostics and reruns
 
+If an older run failed with `Could not find a part of the path
+'/content/.../resources/prepare-localbox.ps1'`, it reached ARM completion but
+could not package guest automation. Re-import the corrected branch (including
+the source manifest) and retry; the global hook can reuse the existing LocalBox
+deployment. Do not delete the environment to repair a missing content file.
+Missing manifests, unavailable downloads and checksum mismatches now fail
+preflight, before provisioning or changing subscription settings.
+
 Results use a private `microhack-automation` container in the existing LocalBox
 staging storage account. The Console identity and Client identity receive
 **Storage Blob Data Contributor at that container only**. No SAS tokens, account
@@ -184,6 +197,13 @@ monitored without resubmission. A different active content hash/group is rejecte
 not overwritten. After a completed/failed command, retrying starts a new tracked
 run and reuses preparation's resource checks; it does not delete the lab or reset
 existing VM passwords. Investigate failures before retrying.
+
+When changing any packaged guest script or health test, publish those sources
+first, then update the source manifest's repository, full commit SHA and file
+digests together. The offline tests require the pin's digests to match the
+checkout. Re-import the final content revision, not the intermediate source
+commit. The feature branch currently pins the tested guest sources in the fork;
+promotion upstream must retain an accessible immutable source revision.
 
 ### Remaining event validation
 

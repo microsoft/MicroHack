@@ -38,6 +38,7 @@ foreach ($participant in $participants) {
     }
 }
 $groupCredentials = @(Get-LocalBoxConsoleGroupCredential)
+$localBoxAutomationPackage = New-LocalBoxAutomationPackage
 
 $azureLocalResourceProviderAppId = '1412d89f-b8a8-4111-b4fd-e82905cbd85d'
 Update-MhhToken | Out-Null
@@ -206,7 +207,8 @@ foreach ($participantObjectId in $participants) {
 
 Wait-LocalBoxDeployment -ResourceGroupName $localBoxResourceGroupName -DeploymentName $localBoxDeployment.DeploymentName
 $groupId = ($groupCredentials.HackboxCredential | Where-Object name -eq 'Lab Group ObjectId').value
-$automation = Invoke-LocalBoxHostedAutomation -SubscriptionId $SubscriptionId -ResourceGroupName $localBoxResourceGroupName -AksAdminGroupObjectId $groupId
+$automation = Invoke-LocalBoxHostedAutomation -SubscriptionId $SubscriptionId -ResourceGroupName $localBoxResourceGroupName `
+    -AksAdminGroupObjectId $groupId -Package $localBoxAutomationPackage
 Write-Host "LocalBox preparation and health checks completed. Private results: $($automation.ResultsUri)"
 
 $groupCredentials

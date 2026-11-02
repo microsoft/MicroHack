@@ -96,6 +96,7 @@ Describe 'Nested deployment gate' {
 }
 
 Describe 'Imported-content package and PS7 bootstrap' {
+    BeforeEach { Mock Invoke-WebRequest { throw 'Unexpected download for a complete local checkout.' } }
     It 'packages local content without fetching a moving GitHub branch' {
         $one = New-Item -ItemType Directory -Path "$TestDrive/one"
         $two = New-Item -ItemType Directory -Path "$TestDrive/two"
@@ -124,6 +125,72 @@ Describe 'Imported-content package and PS7 bootstrap' {
         Add-Content "$TestDrive/prepare-localbox.ps1" '# changed content'
         $after = New-LocalBoxAutomationPackage $TestDrive "$TestDrive/after"
         $before.Hash | Should -Not -Be $after.Hash
+    }
+}
+
+Describe 'Console mount without guest resources' {
+    BeforeEach {
+        $originalGuestRoot = $resourceRoot
+        $mount = Join-Path $TestDrive ([guid]::NewGuid().ToString())
+        New-Item -ItemType Directory "$mount/labautomation" | Out-Null
+        foreach ($file in @('localbox-automation.ps1', 'localbox-automation-source.json')) {
+            Copy-Item "$resourceRoot/../labautomation/$file" "$mount/labautomation"
+        }
+        $sourceManifestPath = "$mount/labautomation/localbox-automation-source.json"
+        $pin = Get-Content $sourceManifestPath -Raw | ConvertFrom-Json -AsHashtable
+        Mock Invoke-WebRequest {
+            $prefix = "https://raw.githubusercontent.com/$($pin.repository)/$($pin.commit)/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/resources/"
+            $url = $Uri.AbsoluteUri
+            $url.StartsWith($prefix) | Should -BeTrue
+            Copy-Item -LiteralPath (Join-Path $originalGuestRoot $url.Substring($prefix.Length)) -Destination $OutFile
+        }
+    }
+    It 'keeps the pin synchronized with the guest sources in this checkout' {
+        $pin.commit | Should -Match '^[a-f0-9]{40}$'
+        $pin.files.Count | Should -Be 5
+        foreach ($file in $pin.files.Keys) {
+            (Get-FileHash -LiteralPath (Join-Path $resourceRoot $file) -Algorithm SHA256).Hash |
+                Should -Be $pin.files[$file]
+        }
+    }
+    It 'packages the actual labautomation-only layout using default paths' {
+        . "$mount/labautomation/localbox-automation.ps1"
+        $package = New-LocalBoxAutomationPackage
+        $local = New-LocalBoxAutomationPackage -ResourceRoot $resourceRoot
+        $package.Hash | Should -Be $local.Hash
+        Test-Path "$mount/resources" | Should -BeFalse
+        Should -Invoke Invoke-WebRequest -Times 5 -Exactly
+    }
+    It 'uses the whole pinned set rather than mixing partial local files with downloads' {
+        New-Item -ItemType Directory "$mount/resources" | Out-Null
+        Set-Content "$mount/resources/prepare-localbox.ps1" 'incomplete checkout - must not be used'
+        $package = New-LocalBoxAutomationPackage -ResourceRoot "$mount/resources" -SourceManifestPath $sourceManifestPath
+        $local = New-LocalBoxAutomationPackage -ResourceRoot $resourceRoot
+        $package.Hash | Should -Be $local.Hash
+        Should -Invoke Invoke-WebRequest -Times 5 -Exactly
+    }
+    It 'rejects mutable refs or incomplete checksums before downloading' -TestCases @(
+        @{ Invalid = 'branch' }; @{ Invalid = 'checksum' }; @{ Invalid = 'extra-file' }
+    ) {
+        param($Invalid)
+        switch ($Invalid) {
+            'branch' { $pin.commit = 'main' }
+            'checksum' { $pin.files['prepare-localbox.ps1'] = 'bad' }
+            'extra-file' { $pin.files['unwanted.ps1'] = '0' * 64 }
+        }
+        $pin | ConvertTo-Json -Depth 5 | Set-Content $sourceManifestPath
+        { New-LocalBoxAutomationPackage -ResourceRoot "$mount/resources" -SourceManifestPath $sourceManifestPath } | Should -Throw
+        Should -Invoke Invoke-WebRequest -Times 0
+    }
+    It 'rejects downloaded content that does not match the pinned SHA256' {
+        Mock Invoke-WebRequest { Set-Content -LiteralPath $OutFile 'incorrect content' }
+        { New-LocalBoxAutomationPackage -ResourceRoot "$mount/resources" -SourceManifestPath $sourceManifestPath } |
+            Should -Throw '*SHA256 mismatch*'
+    }
+    It 'propagates download failures without a success-shaped package' {
+        Mock Invoke-WebRequest { throw 'Source download failed: HTTP 404' }
+        { New-LocalBoxAutomationPackage -ResourceRoot "$mount/resources" -SourceManifestPath $sourceManifestPath } |
+            Should -Throw '*HTTP 404*'
     }
 }
 
@@ -229,6 +296,11 @@ Describe 'Hosted LocalBox automation lifecycle' {
         Should -Invoke Wait-LocalBoxNestedDeployment -Times 1
         Should -Invoke New-AzRoleAssignment -Times 0
         Should -Invoke Invoke-LocalBoxAutomationAz -Times 4 -ParameterFilter { $Arguments[2] -eq 'download' }
+    }
+    It 'uses the already validated preflight package without downloading it again' {
+        Invoke-LocalBoxHostedAutomation $subscription rg-localbox-shared $group -Package @{ Hash = 'package'; Archive = 'UEs=' } | Out-Null
+        Should -Invoke New-LocalBoxAutomationPackage -Times 0
+        Should -Invoke New-LocalBoxGuestCommand -Times 1 -ParameterFilter { $Archive -eq 'UEs=' }
     }
     It 'fails on nonzero, absent or failed guest execution results' -TestCases @(
         @{ Code = 1; State = 'Succeeded' }; @{ Code = $null; State = 'Succeeded' }; @{ Code = 0; State = 'Failed' }

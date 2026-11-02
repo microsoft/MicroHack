@@ -27,7 +27,8 @@ Submit-TestLocalBox @PSBoundParameters
     function Get-AzRoleAssignment { param($ObjectId, $RoleDefinitionName, $RoleDefinitionId, $Scope) }
     function New-AzRoleAssignment { param($ObjectId, $RoleDefinitionName, $Scope) }
     function Wait-LocalBoxDeployment { param($ResourceGroupName, $DeploymentName) }
-    function Invoke-LocalBoxHostedAutomation { param($SubscriptionId, $ResourceGroupName, $AksAdminGroupObjectId) }
+    function Invoke-LocalBoxHostedAutomation { param($SubscriptionId, $ResourceGroupName, $AksAdminGroupObjectId, $Package) }
+    function New-LocalBoxAutomationPackage {}
     function Submit-TestLocalBox {
         param($SubscriptionId, $ResourceGroupName, $Location, $AzureLocalResourceProviderObjectId, $AzureLocalInstanceLocation, [switch]$UseConsoleCredentials, [switch]$NoWait)
     }
@@ -75,6 +76,7 @@ Describe 'Event-wide LocalBox orchestration' {
         Mock Update-MhhToken {}
         Mock Get-AzContext { @{ Subscription = @{ Id = $state.Subscription } } }
         Mock Get-LocalBoxConsoleGroupCredential { @{ HackboxCredential = @{ name = 'Lab Group ObjectId'; value = '30000000-0000-0000-0000-000000000001' } } }
+        Mock New-LocalBoxAutomationPackage { $state.Events.Add('package'); @{ Hash = 'validated'; Archive = 'package' } }
         Mock Register-TestProviders { $state.Events.Add('providers') }
         Mock Initialize-MhhHostedTagPolicy { $state.Events.Add("tags:$SubscriptionId") }
         Mock Initialize-MhhHostedDefender { $state.Events.Add("defender:$SubscriptionId") }
@@ -108,10 +110,10 @@ Describe 'Event-wide LocalBox orchestration' {
             $SubscriptionId -eq $state.Subscription -and $ResourceGroupName -eq 'rg-localbox-shared' -and
             $AzureLocalInstanceLocation -eq 'australiaeast' -and $UseConsoleCredentials -and $NoWait
         }
-        $state.Events -join ',' | Should -Be "providers,tags:$($state.Subscription),defender:$($state.Subscription),deploy:$($state.Subscription),wait,automation"
+        $state.Events -join ',' | Should -Be "package,providers,tags:$($state.Subscription),defender:$($state.Subscription),deploy:$($state.Subscription),wait,automation"
         Should -Invoke Invoke-LocalBoxHostedAutomation -Times 1 -Exactly -ParameterFilter {
             $SubscriptionId -eq $state.Subscription -and $ResourceGroupName -eq 'rg-localbox-shared' -and
-            $AksAdminGroupObjectId -eq '30000000-0000-0000-0000-000000000001'
+            $AksAdminGroupObjectId -eq '30000000-0000-0000-0000-000000000001' -and $Package.Hash -eq 'validated'
         }
         $state.Assignments.Count | Should -Be 6
         foreach ($user in $users) {
@@ -151,10 +153,11 @@ Describe 'Event-wide LocalBox orchestration' {
         Should -Invoke Submit-TestLocalBox -Times 1 -ParameterFilter { $Location -eq 'swedencentral' -and $SubscriptionId -eq $state.Subscription }
     }
     It 'stops without publishing discovery credentials when <Stage> fails' -TestCases @(
-        @{ Stage = 'tags' }; @{ Stage = 'defender' }; @{ Stage = 'roles' }; @{ Stage = 'wait' }; @{ Stage = 'deploy' }; @{ Stage = 'graph' }; @{ Stage = 'automation' }
+        @{ Stage = 'tags' }; @{ Stage = 'defender' }; @{ Stage = 'roles' }; @{ Stage = 'wait' }; @{ Stage = 'deploy' }; @{ Stage = 'graph' }; @{ Stage = 'automation' }; @{ Stage = 'package' }
     ) {
         param($Stage)
         switch ($Stage) {
+            'package' { Mock New-LocalBoxAutomationPackage { throw 'Test failure' } }
             'tags' { Mock Initialize-MhhHostedTagPolicy { throw 'Test failure' } }
             'defender' { Mock Initialize-MhhHostedDefender { throw 'Test failure' } }
             'roles' { Mock Get-AzRoleAssignment { throw 'Test failure' } }
@@ -167,7 +170,12 @@ Describe 'Event-wide LocalBox orchestration' {
         { & "$fixture/global-event-deploy.ps1" -SubscriptionId $state.Subscription -PreferredLocation spaincentral -AllowedEntraUserIds $users |
             ForEach-Object { $captured.Add($_) } } | Should -Throw
         $captured.Count | Should -Be 0
-        if ($Stage -in @('tags', 'defender', 'graph')) { Should -Invoke Submit-TestLocalBox -Times 0 }
+        if ($Stage -in @('tags', 'defender', 'graph', 'package')) { Should -Invoke Submit-TestLocalBox -Times 0 }
+        if ($Stage -eq 'package') {
+            Should -Invoke Register-TestProviders -Times 0
+            Should -Invoke Initialize-MhhHostedTagPolicy -Times 0
+            Should -Invoke Initialize-MhhHostedDefender -Times 0
+        }
     }
     It 'rejects the wrong subscription context before mutating resources' -TestCases @(
         @{ Hook = 'global-event-deploy.ps1' }; @{ Hook = 'shared-deploy-lab.ps1' }

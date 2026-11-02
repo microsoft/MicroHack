@@ -72,22 +72,59 @@ function Wait-LocalBoxNestedDeployment {
 }
 
 function New-LocalBoxAutomationPackage {
-    param([string]$ResourceRoot, [string]$Directory)
+    param(
+        [string]$ResourceRoot = (Join-Path $PSScriptRoot '../resources'),
+        [string]$Directory,
+        [string]$SourceManifestPath = (Join-Path $PSScriptRoot 'localbox-automation-source.json')
+    )
+    $ErrorActionPreference = 'Stop'
     $files = @('prepare-localbox.ps1', 'invoke-localbox-automation.ps1', 'test-sovereign-cloud.ps1',
         'tests/localbox.health.tests.ps1', 'tests/sovereign-lab.health.tests.ps1')
-    $contents = [ordered]@{}
-    $package = Join-Path $Directory 'package'
-    New-Item -ItemType Directory -Path "$package/tests" -Force | Out-Null
-    foreach ($file in $files) {
-        $source = Join-Path $ResourceRoot $file
-        $contents[$file] = (Get-FileHash -LiteralPath $source -Algorithm SHA256 -ErrorAction Stop).Hash
-        Copy-Item -LiteralPath $source -Destination (Join-Path $package $file) -ErrorAction Stop
+    $ownsDirectory = -not $Directory
+    if ($ownsDirectory) { $Directory = Join-Path ([IO.Path]::GetTempPath()) "localbox-package-$([guid]::NewGuid())" }
+    try {
+        $contents = [ordered]@{}
+        $package = Join-Path $Directory 'package'
+        New-Item -ItemType Directory -Path "$package/tests" -Force | Out-Null
+        $missing = @($files | Where-Object { -not (Test-Path -LiteralPath (Join-Path $ResourceRoot $_) -PathType Leaf) })
+        $sourceManifest = $null
+        if ($missing.Count) {
+            $sourceManifest = Get-Content -LiteralPath $SourceManifestPath -Raw | ConvertFrom-Json -AsHashtable
+            if ($sourceManifest.repository -notmatch '^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$' -or
+                $sourceManifest.commit -notmatch '^[a-fA-F0-9]{40}$' -or $sourceManifest.files.Count -ne $files.Count) {
+                throw 'LocalBox source manifest must identify one repository, immutable commit and the exact guest file set.'
+            }
+            foreach ($file in $files) {
+                if ($sourceManifest.files[$file] -notmatch '^[a-fA-F0-9]{64}$') { throw "Missing or invalid SHA256 for guest source $file." }
+            }
+            Write-Host "LocalBox guest sources are absent from the content mount ($($missing -join ', ')). Downloading the complete pinned set from $($sourceManifest.repository) at $($sourceManifest.commit)."
+        }
+        else { Write-Host 'Packaging LocalBox guest scripts from the local resources directory.' }
+        foreach ($file in $files) {
+            $destination = Join-Path $package $file
+            if ($sourceManifest) {
+                $base = "https://raw.githubusercontent.com/$($sourceManifest.repository)/$($sourceManifest.commit)/03-Azure/01-03-Infrastructure/01_Sovereign_Cloud/resources"
+                Invoke-WebRequest -Uri "$base/$file" -OutFile $destination -TimeoutSec 120 -ErrorAction Stop | Out-Null
+            }
+            else {
+                Copy-Item -LiteralPath (Join-Path $ResourceRoot $file) -Destination $destination -ErrorAction Stop
+            }
+            $contents[$file] = (Get-FileHash -LiteralPath $destination -Algorithm SHA256 -ErrorAction Stop).Hash
+            if ($sourceManifest -and $contents[$file] -ine $sourceManifest.files[$file]) {
+                throw "SHA256 mismatch for LocalBox guest source $file. No guest code was submitted."
+            }
+        }
+        $bytes = [Text.Encoding]::UTF8.GetBytes(($contents | ConvertTo-Json -Compress))
+        $hash = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($bytes)).ToLowerInvariant()
+        $archive = Join-Path $Directory 'package.zip'
+        Compress-Archive -Path "$package/*" -DestinationPath $archive -ErrorAction Stop
+        @{ Hash = $hash; Archive = [Convert]::ToBase64String([IO.File]::ReadAllBytes($archive)) }
     }
-    $bytes = [Text.Encoding]::UTF8.GetBytes(($contents | ConvertTo-Json -Compress))
-    $hash = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($bytes)).ToLowerInvariant()
-    $archive = Join-Path $Directory 'package.zip'
-    Compress-Archive -Path "$package/*" -DestinationPath $archive -ErrorAction Stop
-    @{ Hash = $hash; Archive = [Convert]::ToBase64String([IO.File]::ReadAllBytes($archive)) }
+    finally {
+        if ($ownsDirectory -and (Test-Path -LiteralPath $Directory)) {
+            Remove-Item -LiteralPath $Directory -Recurse -Force -ErrorAction Stop
+        }
+    }
 }
 
 function New-LocalBoxGuestCommand {
@@ -169,6 +206,7 @@ function Invoke-LocalBoxHostedAutomation {
         [Parameter(Mandatory)][string]$ResourceGroupName,
         [Parameter(Mandatory)][guid]$AksAdminGroupObjectId,
         [string]$ResourceRoot = (Join-Path $PSScriptRoot '../resources'),
+        [hashtable]$Package,
         [int]$NestedTimeoutSeconds = 28800,
         [int]$GuestTimeoutSeconds = 43200
     )
@@ -181,7 +219,7 @@ function Invoke-LocalBoxHostedAutomation {
     $temporary = Join-Path ([IO.Path]::GetTempPath()) "localbox-automation-$([guid]::NewGuid())"
     New-Item -ItemType Directory -Path $temporary | Out-Null
     try {
-        $package = New-LocalBoxAutomationPackage -ResourceRoot $ResourceRoot -Directory $temporary
+        if (-not $Package) { $Package = New-LocalBoxAutomationPackage -ResourceRoot $ResourceRoot -Directory $temporary }
         $existing = Invoke-LocalBoxAutomationRequest -Path "$commandUri&`$expand=instanceView" -AllowNotFound
         $active = $existing -and ($existing.properties.provisioningState -in @('Creating', 'Updating') -or
             $existing.properties.instanceView.executionState -in @('Pending', 'Running', 'Unknown') -or

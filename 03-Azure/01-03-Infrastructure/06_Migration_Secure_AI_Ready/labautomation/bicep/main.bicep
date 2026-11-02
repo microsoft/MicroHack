@@ -1,4 +1,13 @@
-targetScope = 'subscription'
+targetScope = 'resourceGroup'
+
+@minLength(8)
+@maxLength(8)
+@description('Stable, lowercase alphanumeric suffix derived from the subscription and lab resource group.')
+param labSuffix string
+
+@minLength(1)
+@description('Entra user object IDs that need to read the host login secrets.')
+param participantObjectIds array
 
 @description('Your Microsoft Entra tenant Id')
 param tenantId string = tenant().tenantId
@@ -10,7 +19,7 @@ param windowsAdminUsername string = 'HVAdmin'
 @minLength(12)
 @maxLength(123)
 @secure()
-param windowsAdminPassword string  = newGuid()
+param windowsAdminPassword string
 
 @description('Enable automatic logon into ArcBox Virtual Machine')
 param vmAutologon bool = true
@@ -53,7 +62,7 @@ param bastionSku string = 'Developer'
 param githubUser string = 'Azure'
 
 @description('Azure location to deploy all resources')
-param location string = deployment().location
+param location string = resourceGroup().location
 
 @description('Use this parameter to enable or disable debug mode for the automation scripts on the client VM, effectively configuring PowerShell ErrorActionPreference to Break. Intended for use when troubleshooting automation scripts. Default is false.')
 param debugEnabled bool = false
@@ -82,34 +91,22 @@ param zones string = '1'
 
 var templateBaseUrl = 'https://raw.githubusercontent.com/${githubAccount}/MicroHack/${githubBranch}/03-Azure/01-03-Infrastructure/06_Migration_Secure_AI_Ready/resources/'
 
-var userName = contains(deployer().userPrincipalName, '@') ? substring(deployer().userPrincipalName, 0, indexOf(deployer().userPrincipalName, '@')) : deployer().userPrincipalName
-
-var namingPrefix = '${Prefix}-${userName}'
+var namingPrefix = 'mh-${labSuffix}'
 
 @description('Tags to assign for all MH resources')
 var resourceTags object = {
   Microhack: '06_Migration_Secure_AI_Ready'
-  User: userName
-}
-
-@description('Source resource group')
-resource sourceRg 'Microsoft.Resources/resourceGroups@2021-01-01'={
-  name: '${namingPrefix}-source-rg'
-  location: location
-  tags: resourceTags
-}
-
-@description('Destination resource group')
-resource destinationRg 'Microsoft.Resources/resourceGroups@2021-01-01'={
-  name: '${namingPrefix}-destination-rg'
-  location: location
-  tags: resourceTags
+  LabId: labSuffix
 }
 
 module clientVmDeployment 'clientVm/clientVm.bicep' = {
   name: '${namingPrefix}-clientVmDeployment'
-  scope: sourceRg
   params: {
+    labSuffix: labSuffix
+    participantObjectIds: participantObjectIds
+    keyVaultName: mgmtArtifactsSourceDeployment.outputs.vaultName
+    tags: resourceTags
+    Prefix: Prefix
     windowsAdminUsername: windowsAdminUsername
     windowsAdminPassword: windowsAdminPassword
     tenantId: tenantId
@@ -137,8 +134,9 @@ module clientVmDeployment 'clientVm/clientVm.bicep' = {
 
 module mgmtArtifactsSourceDeployment 'mgmt/mgmtArtifactsSource.bicep' = {
   name: '${namingPrefix}-mgmtArtifactsSourceDeployment'
-  scope: sourceRg
   params: {
+    labSuffix: labSuffix
+    tags: resourceTags
     flavor: flavor
     deployBastion: deployBastion
     bastionSku: bastionSku
@@ -150,8 +148,9 @@ module mgmtArtifactsSourceDeployment 'mgmt/mgmtArtifactsSource.bicep' = {
 
 module mgmtArtifactsDestinationDeployment 'mgmt/mgmtArtifactsDestination.bicep' = {
   name: '${namingPrefix}-mgmtArtifactsDestinationDeployment'
-  scope: destinationRg
   params: {
+    labSuffix: labSuffix
+    tags: resourceTags
     flavor: flavor
     deployBastion: deployBastion
     bastionSku: bastionSku
@@ -161,3 +160,9 @@ module mgmtArtifactsDestinationDeployment 'mgmt/mgmtArtifactsDestination.bicep' 
 
 
 output clientVmLogonUserName string = windowsAdminUsername
+output hostVmName string = clientVmDeployment.outputs.vmName
+output keyVaultName string = mgmtArtifactsSourceDeployment.outputs.vaultName
+output sourceVnetName string = mgmtArtifactsSourceDeployment.outputs.vnetName
+output sourceSubnetId string = mgmtArtifactsSourceDeployment.outputs.subnetId
+output destinationVnetName string = mgmtArtifactsDestinationDeployment.outputs.vnetName
+output destinationSubnetId string = mgmtArtifactsDestinationDeployment.outputs.subnetId

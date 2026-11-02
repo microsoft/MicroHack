@@ -19,10 +19,10 @@ The Linux alert monitors every process whose `"process.executable.name"` is `apa
 
 ## Prerequisites and access assumptions
 
-* Challenge 5 is complete and both migrated web VMs in `destination-rg` are running.
+* Challenge 5 is complete and both migrated web VMs in `<YOUR-LAB-RESOURCE-GROUP>` are running.
 * You can connect to both VMs through Azure Bastion and each site responds locally.
-* Before opening **Infrastructure monitoring**, you can create or reuse one user-assigned managed identity for both migrated VMs. Using the destination resource group and the same region is recommended for this lab.
-* You can grant that identity **Monitoring Reader** on both monitored VMs or their containing destination resource group, and on the Azure Monitor workspace when the alert uses workspace scope.
+* You have RG Owner and subscription Reader. Before opening **Infrastructure monitoring**, create or reuse one user-assigned managed identity in the lab resource group for both migrated VMs.
+* Grant that identity **Monitoring Reader** on the lab resource group for the migrated VMs and monitoring workspace. Do not assign roles at subscription scope.
 * This user-assigned identity authorizes OpenTelemetry query-based and recommended alerts. It is separate from the VM's system-assigned identity used by Azure Monitor Agent; the portal doesn't automatically create the user-assigned alert identity.
 * Azure Copilot access, a supported region, and the required telemetry permissions are available to Hack participants. No Azure OpenAI resource, model deployment, or model quota is required.
 * The client network allows WebSocket connections to `https://directline.botframework.com`.
@@ -50,11 +50,12 @@ Enable metrics-based OpenTelemetry monitoring for both VMs. Use classic log coll
 
 * Warm and validate both web pages before changing either service.
 * Create one reusable user-assigned alert identity before opening Infrastructure monitoring, grant its required **Monitoring Reader** access, and select that existing identity in the portal's **Identity** field for both VMs.
-* Let Infrastructure monitoring select or create the regional default Azure Monitor workspace and generated OpenTelemetry DCR; do not pre-create a custom workspace.
+* As part of this exercise, explicitly choose or create an Azure Monitor workspace and a compatible regional Log Analytics workspace through the portal **in the lab resource group**, then select those workspaces in Infrastructure monitoring.
+* Keep all user-controlled workspaces, identities, DCRs, alert rules, and action groups in the lab resource group. Verify the proposed scope before enabling monitoring; do not accept resources in another user-controlled group.
 * Enable OpenTelemetry metrics, per-process metrics, built-in Grafana dashboards, and recommended infrastructure alerts.
 * Confirm query-based and recommended alerts use the pre-created identity and that it retains the required monitoring read access.
 * Locate the Linux VM's generated `MSVMOtel-<region>-<name>` DCR and ensure that `process.uptime` is collected.
-* Reuse the portal-selected compatible Log Analytics workspace for Windows events and associate a focused Event DCR.
+* Reuse the selected compatible Log Analytics workspace in the lab resource group for Windows events and associate a focused Event DCR.
 * Create an Apache PromQL absence alert and an IIS KQL scheduled-query alert.
 * Stop Apache and IIS in a controlled manner, prove local HTTP failure, and wait for both alerts.
 * Start a deep investigation from each fired alert, evaluate evidence and ruled-out hypotheses, and save useful context as an Azure Monitor issue when available.
@@ -62,19 +63,23 @@ Enable metrics-based OpenTelemetry monitoring for both VMs. Use classic log coll
 
 ## Success criteria
 
-* Both VMs send default OpenTelemetry guest metrics to the portal-selected Azure Monitor workspace through their intended generated DCR associations.
+* Both VMs send default OpenTelemetry guest metrics to the explicitly selected Azure Monitor workspace in the lab resource group through their intended generated DCR associations.
 * Linux `process.uptime` metrics include one or more `apache2` process series before the incident.
-* Windows System event ID 7036 records for `W3SVC` are visible in the portal-selected Log Analytics workspace.
+* Windows System event ID 7036 records for `W3SVC` are visible in the selected compatible Log Analytics workspace in the lab resource group.
 * The Apache PromQL alert and IIS KQL alert are enabled, use the intended signals, and fire after the controlled failures.
 * An inactive service and local HTTP failure prove user-visible impact on each VM; process or service telemetry alone isn't treated as a synthetic availability test.
 * The AI-assisted or manual investigation distinguishes service failure from VM/platform failure and produces evidence-backed remediation with rollback and prevention guidance.
 * A human restores `W3SVC` and `apache2`; both sites return HTTP `200`, service/process telemetry returns, and alerts resolve.
 * Both recovered workloads are available for the path selection at the start of Challenge 8.
 
+> [!NOTE]
+> Azure Monitor automatically creates an `MA_<workspace-name>_<location>_managed` resource group for its workspace-managed DCR/DCE. This Azure-managed exception is not another learner-created lab group. Keep user-controlled monitoring resources in your assigned lab group; do not move or separately delete the service-managed internals.
+
 ## Learning resources
 
 * [Metrics experience for virtual machines](https://learn.microsoft.com/azure/azure-monitor/vm/metrics-opentelemetry-guest)
 * [Enable enhanced monitoring for an Azure VM](https://learn.microsoft.com/azure/azure-monitor/vm/tutorial-enable-monitoring)
+* [Manage an Azure Monitor workspace](https://learn.microsoft.com/azure/azure-monitor/metrics/azure-monitor-workspace-manage)
 * [Customize OpenTelemetry metrics for VMs](https://learn.microsoft.com/azure/azure-monitor/vm/metrics-opentelemetry-guest-modify)
 * [OpenTelemetry guest OS metrics reference](https://learn.microsoft.com/azure/azure-monitor/vm/metrics-guest-reference)
 * [PromQL for system and guest OS metrics](https://learn.microsoft.com/azure/azure-monitor/metrics/prometheus-system-metrics-best-practices)

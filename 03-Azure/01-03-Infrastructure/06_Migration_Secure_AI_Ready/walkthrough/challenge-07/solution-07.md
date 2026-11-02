@@ -6,7 +6,7 @@ Duration: 70 minutes
 
 ## Task 1: Validate both workloads and complete preflight (5 minutes)
 
-Record both VM names, their region, and their Azure resource IDs. Connect to each VM with Azure Bastion.
+Record both VM names, their region, and their Azure resource IDs in `<YOUR-LAB-RESOURCE-GROUP>`. Use the actual lab group from the platform dashboard throughout. Connect to each VM with Azure Bastion. Monitoring is a learner exercise; it was not preconfigured during Challenge 1.
 
 ### Windows/IIS baseline
 
@@ -44,9 +44,9 @@ Opening each page before the incident both proves the baseline and warms IIS/Apa
 Azure Copilot access is treated as available for this Hack. Confirm:
 
 1. The portal **Copilot** entry opens and the current region is listed in the [Observability Agent regions](https://learn.microsoft.com/azure/azure-monitor/aiops/observability-agent-overview#regions).
-2. Your account can read both VMs and their monitoring data and create the lab monitoring resources. To grant **Monitoring Reader**, you also need Owner, Role Based Access Control Administrator, User Access Administrator, or equivalent role-assignment permissions at the chosen scope; Contributor alone can't create the role assignment.
+2. Your account has **Owner** on the lab resource group and **Reader** on the subscription. RG Owner allows creation of the monitoring resources and lab-scoped **Monitoring Reader** assignments; Contributor alone can't create role assignments. Do not request subscription Owner or make subscription-level assignments.
 3. The client network allows WebSocket connections to `https://directline.botframework.com`.
-4. Your account can create or reuse a user-assigned managed identity and grant it **Monitoring Reader** at the scope used by the query-based metric alerts.
+4. Your account can create or reuse a user-assigned managed identity in the lab group and grant it **Monitoring Reader** on that group for the query-based metric alerts.
 
 > [!IMPORTANT]
 > Observability Agent, deep investigations, Azure Monitor issues, and query-based metric alerts include preview experiences. A deep investigation can use up to 300 Azure Agent Credits. Portal labels and availability can vary by tenant and region.
@@ -68,13 +68,24 @@ Azure Monitor provides two different guest-monitoring models:
 
 Use the recommended OpenTelemetry experience for both VMs. Windows also needs Log Analytics for the authoritative service-control event; this challenge doesn't query classic performance tables.
 
+### Choose the workspaces explicitly in the lab resource group
+
+1. In the portal, open **Azure Monitor workspaces**. Select a suitable existing workspace in `<YOUR-LAB-RESOURCE-GROUP>`, or select **Create**, choose the Hack subscription and that exact resource group, and create an Azure Monitor workspace in a supported region for the migrated VMs. Follow [Manage an Azure Monitor workspace](https://learn.microsoft.com/azure/azure-monitor/metrics/azure-monitor-workspace-manage).
+2. Open **Log Analytics workspaces** and choose or create a workspace in **the same lab resource group**. Use a regional workspace supported by the Windows Infrastructure monitoring flow, normally in the VM's region. A workspace in another region is usable only if the current portal flow supports it; compatibility is not implied by placing it in the same RG. Azure Monitor workspaces hold metrics; Log Analytics workspaces hold logs and aren't interchangeable.
+3. Record both workspace resource IDs. During onboarding, explicitly select these workspaces rather than accepting a default in another resource group. Keep all user-controlled DCRs, alert rules, action groups, and identities in the lab group too.
+
+Azure Monitor automatically creates an `MA_<workspace-name>_<location>_managed` resource group containing its workspace-managed DCR and DCE. This documented **Azure-managed** exception is not an extra learner-created lab group. Do not move those internals or delete their group separately. User-controlled VM collection DCRs still belong in the lab group.
+
+> [!IMPORTANT]
+> Review every resource-group selection before enabling monitoring. If this preview's wizard cannot select the lab workspaces or keep user-controlled generated resources in the lab group, stop and ask the instructor for a compatible portal configuration. Do not accept an unrelated default group, create another learner group, or broaden permissions to subscription Owner.
+
 ### Create the alert-query identity before onboarding
 
 Create the identity before opening **Infrastructure monitoring** on either VM:
 
-1. In the Azure portal, search for **Managed Identities**, select **Create**, and create a user-assigned managed identity such as `id-mh-monitor-alerts`. For this lab, use the Hack subscription and preferably the destination resource group and the same region as the migrated VMs.
-2. Open the destination resource group or each migrated VM, select **Access control (IAM)** > **Add role assignment**, choose **Monitoring Reader**, and assign it to the new user-assigned managed identity. Resource-group scope is the simplest reusable choice for both lab VMs.
-3. If a query-based alert is scoped to the Azure Monitor workspace instead of a VM or resource group, also grant the identity **Monitoring Reader** on that workspace.
+1. In the Azure portal, search for **Managed Identities**, select **Create**, and create a user-assigned managed identity such as `id-mh-monitor-alerts` in `<YOUR-LAB-RESOURCE-GROUP>` and the same region as the migrated VMs.
+2. Open the lab resource group, select **Access control (IAM)** > **Add role assignment**, choose **Monitoring Reader**, and assign it to the new user-assigned managed identity. This lab-scoped assignment covers both migrated VMs and the monitoring workspaces in the group.
+3. For a query-based alert scoped to the Azure Monitor workspace, confirm the identity's inherited **Monitoring Reader** access on that workspace. No subscription-level role assignment is needed.
 4. Reuse this identity for both migrated VMs. The [query-based metric alert identity requirements](https://learn.microsoft.com/azure/azure-monitor/alerts/alerts-query-based-metric-alerts-overview#managed-identities-for-query-based-alerts) require read access to the alert scope.
 
 This user-assigned identity authorizes OpenTelemetry alert queries. It is different from the VM's system-assigned identity that Azure Monitor Agent can use. The Infrastructure monitoring wizard doesn't create the user-assigned alert identity, so create and authorize it before selecting it in the wizard.
@@ -85,17 +96,15 @@ This user-assigned identity authorizes OpenTelemetry alert queries. It is differ
 2. Select **Customize infrastructure monitoring**.
 3. Keep **OpenTelemetry metrics** selected.
 4. Optionally select the OpenTelemetry detailed or per-process option to explore the cross-platform schema. The Windows alert doesn't use process metrics, and enabling them can incur ingestion cost.
-5. Also select **Classic Log-based metrics** for the Windows VM so the portal selects or creates a compatible regional default Log Analytics workspace for the Windows Event DCR and Logs-scoped agent experience. This also enables classic performance ingestion as a side effect and can incur Log Analytics cost. Do not create a separately named lab workspace first.
-6. Use the default regional Azure Monitor workspace, Log Analytics workspace, and generated DCR proposed by the portal.
+5. Also select **Classic Log-based metrics** for the Windows VM and explicitly select the compatible regional Log Analytics workspace in the lab group for the Windows Event DCR and Logs-scoped agent experience. This also enables classic performance ingestion as a side effect and can incur Log Analytics cost.
+6. Select the Azure Monitor workspace chosen above and confirm the generated user-controlled DCR is placed in `<YOUR-LAB-RESOURCE-GROUP>`. Do not accept a regional default workspace or collection rule in another user-controlled group.
 7. Keep **Dashboards with Grafana** and **Recommended alerts** selected when offered. Recommended alerts cover infrastructure health; they don't replace the service-specific alerts created in Task 3.
-8. In **Identity**, select the pre-created `id-mh-monitor-alerts` user-assigned identity. Confirm it has **Monitoring Reader** on the VM or containing destination resource group and, for a workspace-scoped rule, on the Azure Monitor workspace.
-9. Review and enable monitoring.
+8. In **Identity**, select the pre-created `id-mh-monitor-alerts` user-assigned identity. Confirm its lab-RG **Monitoring Reader** assignment covers the VM and Azure Monitor workspace.
+9. Review all user-controlled DCR, alert, and action-group resource-group selections, keep them in the lab group, and enable monitoring.
 
-Before continuing, confirm that the review page names an Azure Monitor workspace, a compatible regional default Log Analytics workspace, and the generated DCR. If no Log Analytics workspace appears, return to customization and confirm **Classic Log-based metrics** is selected. If the portal still doesn't propose a default workspace, stop and ask your instructor to provide the lab's compatible default; don't independently recreate the obsolete custom-workspace flow.
+Before continuing, confirm that the review page names the selected Azure Monitor workspace, compatible regional Log Analytics workspace, and generated VM collection DCR **in the lab group**. If no Log Analytics workspace appears, return to customization and confirm **Classic Log-based metrics** is selected. If your selected regional workspace is not offered, ask the instructor to check region/service compatibility before proceeding; don't silently accept an out-of-scope default.
 
-The configuration should show both **OpenTelemetry metrics** and **Classic Log-based metrics** selected, the portal-proposed Azure Monitor and Log Analytics workspaces, recommended alerts enabled, and the pre-created user-assigned identity selected.
-
-![Azure portal Infrastructure monitoring configuration showing OpenTelemetry and Classic Log-based metrics, proposed workspaces, recommended alerts, and a pre-created user-assigned identity](./img/configure-infrastructure-monitoring.png)
+The final configuration should show both **OpenTelemetry metrics** and **Classic Log-based metrics**, your selected workspaces, recommended alerts, and the pre-created user-assigned identity. Portal labels can change; the resource IDs and lab RG are the authoritative checks.
 
 > [!NOTE]
 > As part of Azure Monitor Agent installation, Azure can enable a system-assigned identity on the VM. That VM identity is separate from the pre-created user-assigned identity selected for alert queries; the wizard doesn't create the user-assigned alert identity.
@@ -106,8 +115,8 @@ Repeat the Infrastructure monitoring flow for the Linux VM:
 
 1. Keep **OpenTelemetry metrics** and its detailed/per-process option selected.
 2. Leave **Classic Log-based metrics** off; Apache uses an OpenTelemetry process signal and doesn't require a Log Analytics workspace.
-3. Let the portal select or create the same regional default Azure Monitor workspace.
-4. Accept the generated DCR, dashboard, and recommended alerts.
+3. Explicitly select the same Azure Monitor workspace in the lab resource group.
+4. Keep the generated VM collection DCR, dashboard configuration, and recommended alert/action-group resources in the lab resource group.
 5. Select the same pre-created user-assigned alert identity and enable monitoring.
 
 The portal installs `AzureMonitorWindowsAgent` or `AzureMonitorLinuxAgent`. Provisioning, DCR association, and the first metric samples take several minutes.
@@ -115,7 +124,7 @@ The portal installs `AzureMonitorWindowsAgent` or `AzureMonitorLinuxAgent`. Prov
 ### Verify and customize the generated OpenTelemetry DCR
 
 1. Open **Monitor** > **Data Collection Rules** > **Resources**.
-2. Locate each VM and open its associated DCR whose name follows `MSVMOtel-<region>-<name>`.
+2. Locate each VM and open its associated DCR whose name follows `MSVMOtel-<region>-<name>`. Confirm that this user-controlled VM collection DCR is in the lab group and targets the selected Azure Monitor workspace; it is not the Azure-managed workspace-internal DCR.
 3. For the Linux DCR, open **Data sources** > **OpenTelemetry Performance Counters**.
 4. Select **Custom** and confirm that `process.uptime` is included. Add it if it isn't present.
 5. Optionally include `process.cpu.utilization` and `process.memory.usage` for richer investigation evidence.
@@ -146,14 +155,14 @@ The first query must return recent data for each VM. The Linux query must return
 
 ## Task 3: Create service-specific alert paths (15 minutes)
 
-Reuse the action group created by recommended monitoring alerts, or create `ag-mh-operators` in `destination-rg` with an email receiver you can check.
+Reuse the action group created by recommended monitoring alerts **in the lab group**, or create `ag-mh-operators` in `<YOUR-LAB-RESOURCE-GROUP>` with an email receiver you can check. Save both service-specific alert rules below in that same group.
 
 ### Windows/IIS: collect the authoritative service event
 
 Create a focused DCR:
 
 1. Open **Monitor** > **Data Collection Rules** and select **Create**.
-2. Name it `dcr-iis-service-events`, use `destination-rg`, the VM's region, and platform type **Windows**.
+2. Name it `dcr-iis-service-events`, use `<YOUR-LAB-RESOURCE-GROUP>`, the VM's region, and platform type **Windows**.
 3. On **Resources**, add the Windows VM. Leave **Enable Data Collection Endpoints** off unless your network design requires a DCE.
 4. Add a **Windows Event Logs** data source.
 5. Select **Custom** and enter:
@@ -162,7 +171,7 @@ Create a focused DCR:
    System!*[System[(EventID=7036)]]
    ```
 
-6. Set the destination to **Azure Monitor Logs** and select the compatible default Log Analytics workspace chosen during Windows onboarding.
+6. Set the destination to **Azure Monitor Logs** and select the compatible regional Log Analytics workspace in the lab group chosen during Windows onboarding.
 7. Create the DCR and verify its VM association.
 
 Confirm that the DCR's **Resources** page shows the Windows VM. You can use the Log Analytics workspace's **Logs** page to inspect any service-control records collected after the association:
@@ -225,7 +234,7 @@ Configure:
 | Failing period | 1 minute |
 | Auto resolution | Enabled |
 | Severity | 2 - Warning |
-| Managed identity | Pre-created user-assigned identity with **Monitoring Reader** on the Linux VM or destination resource group and, for workspace scope, the Azure Monitor workspace |
+| Managed identity | Pre-created user-assigned identity with **Monitoring Reader** on the lab resource group, covering the Linux VM and Azure Monitor workspace |
 | Action group | `ag-mh-operators` |
 
 `apache2` normally has a parent and multiple workers, each with its own `process.uptime` series. `absent_over_time` returns no result while any matching series exists and returns `1` only after all matching series have been absent for the full five-minute window. Allow up to 10 minutes after the stop command for the final sample, absence window, collection, and alert evaluation before treating a missing alert as a configuration problem.

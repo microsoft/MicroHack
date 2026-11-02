@@ -8,12 +8,14 @@ Duration: 90 minutes
 
 Please make sure that you successfully completed [Challenge 4](../challenge-04/solution-04.md) before continuing with this challenge.
 
+Use the existing `<YOUR-LAB-RESOURCE-GROUP>` for the Azure Migrate project, replication resources you create, and migrated VMs. The source and destination VNets are separate networks in this **same** group. Screenshots are illustrative; the platform dashboard's resource group and host name are authoritative.
+
 > [!IMPORTANT]
 > Native Hyper-V migration uses host-installed replication components: the Azure Site Recovery provider and Recovery Services agent. Install them on the Hyper-V host or cluster nodes. Nothing is installed in the guest VMs, and the Azure Migrate appliance isn't used for migration.
 
 ### **Task 1: Configure and register the Hyper-V replication providers**
 
-In the Azure Portal, select *Virtual machines* from the navigation pane on the left. Select the **MHBox-HV** system and log on via Azure Bastion with your credentials:
+In the Azure Portal, select *Virtual machines* from the navigation pane on the left. Select the supplied Hyper-V host **`mh-<8charStableLabSuffix>-hv`** and log on via Azure Bastion with your host credentials:
 
 > [!NOTE]
 > You can also select *Password from Azure Key Vault* under *Authentication Type* to select the secret stored in the Key Vault.
@@ -38,7 +40,7 @@ On *Specify intent*, select *Servers or virtual machines (VMs)* as the workload 
 ![image](./img/PrepRep3-1.png)
 
 > [!IMPORTANT]
-> **Make sure to select the correct target region. Double-check it against the destination resource group location. This can't be changed afterward.**
+> **Select the target region containing your destination VNet (`10.2.0.0/16`), as shown in the lab dashboard. The source and destination resources use the same lab resource group; the selected migration target region can't be changed afterward.**
 
 Click *Create resources*.
 
@@ -93,9 +95,7 @@ Next, select both web VMs: **MHBox-Win2K22** and **MHBox-Ubuntu-01**. Enable rep
 
 ![image](./img/Rep3.png)
 
-Next, select the destination resource group, virtual network, and subnet.
-
-![image](./img/Rep4.png)
+Next, select `<YOUR-LAB-RESOURCE-GROUP>` as the target resource group, then its destination VNet (`10.2.0.0/16`) and workload subnet. Do not select the source VNet or create a separate target resource group.
 
 In the *Compute* section, you can adjust target settings such as the VM size.
 
@@ -129,7 +129,7 @@ On the new page, make sure that *Preparation* is *Completed*. Open the menu next
 
 ![image](./img/TestMig2.png)
 
-Select the destination network and click *Test migration*.
+Select the destination network in your lab resource group and click *Test migration*.
 
 ![image](./img/TestMig3.png)
 
@@ -175,7 +175,7 @@ From the *Testing* menu, select *Cleanup test migration*.
 
 ![image](./img/TestMig8.png)
 
-Provide a comment, select *Testing is complete....*, and click *Cleanup Test* to remove all resources.
+Provide a comment, select *Testing is complete....*, and click *Cleanup Test* to remove the test-migration resources only. Do not delete the lab resource group.
 
 ![image](./img/TestMig9.png)
 
@@ -215,9 +215,7 @@ On the Hyper-V host, the VMs should also be turned off.
 
 ![image](./img/mig6.png)
 
-In the *Virtual machines* section of the Azure Portal, you should now see two additional servers in the *destination-rg* resource group.
-
-![image](./img/mig8.png)
+In the *Virtual machines* section of the Azure Portal, filter to `<YOUR-LAB-RESOURCE-GROUP>`. You should now see the two migrated Azure web VMs alongside the original Hyper-V host; they use the destination VNet.
 
 Connect to both migrated VMs through Azure Bastion and validate each workload directly.
 
@@ -252,4 +250,4 @@ Under *Completion*, select *Complete migration*. Repeat this action for both **M
 
 You successfully completed Challenge 5.
 
-Continue to Challenge 6 to secure the migrated environment. Do not remove `destination-rg` because Challenges 6 through 8 use the migrated workload.
+Continue to Challenge 6 to secure the migrated environment. Do not delete `<YOUR-LAB-RESOURCE-GROUP>` during Challenges 2–8: it contains **both** the simulated source and the migrated workloads, and later also monitoring and App Service resources.

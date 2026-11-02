@@ -235,7 +235,7 @@ For both paths, the archive must contain `index.html` and all four image/style a
 
 ## Task 3: Verify Azure scope and create the App Service target (10 minutes)
 
-The Bicep deployment names the destination resource group `MHBox-<UserSuffix>-destination-rg`, where `<UserSuffix>` is the deployer's user principal name before `@`. Find the exact name under **Resource groups** in the Azure portal. After selecting the intended subscription, you can also run `az group list --query "[?ends_with(name, '-destination-rg')].[name,location]" --output table`.
+Use the exact existing `<YOUR-LAB-RESOURCE-GROUP>` and subscription ID from the platform dashboard. This single group already contains the source Hyper-V environment and migrated Azure VMs; App Service resources also belong here. The platform supplies the group name; do not infer it from a deployer's UPN or create a separate destination group.
 
 Replace every placeholder below before running a resource command. Each Path B block repeats the required subscription and resource-group values and derives the same stable plan and app names, so it can be rerun from a new SSH session.
 
@@ -245,15 +245,15 @@ Open Azure Cloud Shell in the portal and select **PowerShell**. Verify the Az Po
 
 ```powershell
 $subscriptionId = '<REPLACE-WITH-SUBSCRIPTION-ID>'
-$destinationRg = 'MHBox-<UserSuffix>-destination-rg'
+$labResourceGroup = '<YOUR-LAB-RESOURCE-GROUP>'
 
 if ([string]::IsNullOrWhiteSpace($subscriptionId) -or
     $subscriptionId -eq '<REPLACE-WITH-SUBSCRIPTION-ID>') {
     throw 'Replace $subscriptionId with the Hack subscription ID.'
 }
-if ([string]::IsNullOrWhiteSpace($destinationRg) -or
-    $destinationRg -match '[<>]') {
-    throw 'Replace $destinationRg with the exact destination resource-group name.'
+if ([string]::IsNullOrWhiteSpace($labResourceGroup) -or
+    $labResourceGroup -match '[<>]') {
+    throw 'Replace $labResourceGroup with the exact lab resource-group name.'
 }
 
 if (-not (Get-AzContext -ErrorAction SilentlyContinue)) {
@@ -285,13 +285,13 @@ if ($azContext.Subscription.Id -ne $cliContext.subscriptionId) {
     throw 'Az PowerShell and Azure CLI are using different subscriptions.'
 }
 
-$resourceGroup = Get-AzResourceGroup -Name $destinationRg -ErrorAction Stop
+$resourceGroup = Get-AzResourceGroup -Name $labResourceGroup -ErrorAction Stop
 $location = $resourceGroup.Location
 $resourceGroup | Select-Object ResourceGroupName, Location
 ```
 
 > [!WARNING]
-> Stop if either displayed context isn't the Hack subscription or if the resource group isn't your `MHBox-<UserSuffix>-destination-rg`.
+> Stop if either displayed context isn't the Hack subscription or if the resource group isn't the exact lab group shown in your platform dashboard.
 
 Create the Windows plan and app:
 
@@ -302,20 +302,20 @@ $appName = "mh-web-win-$suffix"
 
 az appservice plan create `
     --name $planName `
-    --resource-group $destinationRg `
+    --resource-group $labResourceGroup `
     --location $location `
     --sku B1 `
     --is-linux false
 
 az webapp create `
     --name $appName `
-    --resource-group $destinationRg `
+    --resource-group $labResourceGroup `
     --plan $planName `
     --https-only true
 
 az webapp show `
     --name $appName `
-    --resource-group $destinationRg `
+    --resource-group $labResourceGroup `
     --query '{name:name,host:defaultHostName,httpsOnly:httpsOnly,state:state}' `
     --output table
 
@@ -335,7 +335,7 @@ if bash /dev/fd/3 3<<'PATH_B_SCOPE'
 set -euo pipefail
 
 subscription_id='<REPLACE-WITH-SUBSCRIPTION-ID>'
-destination_rg='MHBox-<UserSuffix>-destination-rg'
+lab_rg='<YOUR-LAB-RESOURCE-GROUP>'
 installer_path="$(mktemp)"
 
 cleanup_installer() {
@@ -351,10 +351,10 @@ if [[ -z "${subscription_id}" ||
   echo 'Replace subscription_id with the Hack subscription ID.' >&2
   false
 fi
-if [[ -z "${destination_rg}" ||
-      "${destination_rg}" == *'<'* ||
-      "${destination_rg}" == *'>'* ]]; then
-  echo 'Replace destination_rg with the exact destination resource-group name.' >&2
+if [[ -z "${lab_rg}" ||
+      "${lab_rg}" == *'<'* ||
+      "${lab_rg}" == *'>'* ]]; then
+  echo 'Replace lab_rg with the exact lab resource-group name.' >&2
   false
 fi
 
@@ -372,22 +372,22 @@ account_show_args=(account show --query '{subscription:name,subscriptionId:id,te
 az "${account_show_args[@]}"
 
 active_subscription_id="$(az account show --query id --output tsv)"
-destination_rg="$(az group show --name "${destination_rg}" --query name --output tsv)"
-location="$(az group show --name "${destination_rg}" --query location --output tsv)"
+lab_rg="$(az group show --name "${lab_rg}" --query name --output tsv)"
+location="$(az group show --name "${lab_rg}" --query location --output tsv)"
 if [[ -z "${location}" ]]; then
-  echo "Could not resolve ${destination_rg} in the active subscription." >&2
+  echo "Could not resolve ${lab_rg} in the active subscription." >&2
   false
 fi
 
 name_suffix="$(
-  printf '%s\0%s' "${active_subscription_id}" "${destination_rg}" |
+  printf '%s\0%s' "${active_subscription_id}" "${lab_rg}" |
     sha256sum |
     cut -c1-12
 )"
 plan_name="asp-mh-linux-${name_suffix}"
 app_name="mh-web-linux-${name_suffix}"
 
-printf 'Destination resource group: %s (%s)\nPlan name: %s\nWeb app name: %s\n' "${destination_rg}" "${location}" "${plan_name}" "${app_name}"
+printf 'Lab resource group: %s (%s)\nPlan name: %s\nWeb app name: %s\n' "${lab_rg}" "${location}" "${plan_name}" "${app_name}"
 PATH_B_SCOPE
 then
   echo 'Path B scope verification completed.'
@@ -398,10 +398,10 @@ else
 fi
 ```
 
-Complete the sign-in in the browser using the displayed code. Do not paste passwords, tokens, or publishing credentials into the shell or lab notes. The stable 12-character suffix is derived only from Azure's validated subscription ID and canonical destination resource-group name; it contains no secret and is reproduced by every later block.
+Complete the sign-in in the browser using the displayed code. Do not paste passwords, tokens, or publishing credentials into the shell or lab notes. The stable 12-character suffix is derived only from Azure's validated subscription ID and canonical lab resource-group name; it contains no secret and is reproduced by every later block.
 
 > [!WARNING]
-> Stop if the displayed subscription, tenant, or user doesn't identify the Hack subscription, or if the resource group isn't your `MHBox-<UserSuffix>-destination-rg`.
+> Stop if the displayed subscription, tenant, or user doesn't identify the Hack subscription, or if the resource group isn't the exact lab group shown in your platform dashboard.
 
 Resolve the newest advertised Node.js LTS runtime and create a Linux target:
 
@@ -410,28 +410,28 @@ if bash /dev/fd/3 3<<'PATH_B_CREATE'
 set -euo pipefail
 
 subscription_id='<REPLACE-WITH-SUBSCRIPTION-ID>'
-destination_rg='MHBox-<UserSuffix>-destination-rg'
+lab_rg='<YOUR-LAB-RESOURCE-GROUP>'
 
 if [[ -z "${subscription_id}" ||
       "${subscription_id}" == '<REPLACE-WITH-SUBSCRIPTION-ID>' ]]; then
   echo 'Replace subscription_id with the Hack subscription ID.' >&2
   false
 fi
-if [[ -z "${destination_rg}" ||
-      "${destination_rg}" == *'<'* ||
-      "${destination_rg}" == *'>'* ]]; then
-  echo 'Replace destination_rg with the exact destination resource-group name.' >&2
+if [[ -z "${lab_rg}" ||
+      "${lab_rg}" == *'<'* ||
+      "${lab_rg}" == *'>'* ]]; then
+  echo 'Replace lab_rg with the exact lab resource-group name.' >&2
   false
 fi
 
 command -v az >/dev/null
 az account set --subscription "${subscription_id}"
 active_subscription_id="$(az account show --query id --output tsv)"
-destination_rg="$(az group show --name "${destination_rg}" --query name --output tsv)"
-location="$(az group show --name "${destination_rg}" --query location --output tsv)"
+lab_rg="$(az group show --name "${lab_rg}" --query name --output tsv)"
+location="$(az group show --name "${lab_rg}" --query location --output tsv)"
 
 name_suffix="$(
-  printf '%s\0%s' "${active_subscription_id}" "${destination_rg}" |
+  printf '%s\0%s' "${active_subscription_id}" "${lab_rg}" |
     sha256sum |
     cut -c1-12
 )"
@@ -489,17 +489,17 @@ runtime="${runtime_candidates%%$'\n'*}"
 printf 'Discovered Node LTS runtimes, normalized for az webapp create:\n%s\n' "${runtime_candidates}"
 printf 'Selected runtime: %s\n' "${runtime}"
 
-plan_list_args=(appservice plan list --resource-group "${destination_rg}" --query "[?name=='${plan_name}'].id | [0]" --output tsv)
+plan_list_args=(appservice plan list --resource-group "${lab_rg}" --query "[?name=='${plan_name}'].id | [0]" --output tsv)
 plan_id="$(az "${plan_list_args[@]}")"
 if [[ -z "${plan_id}" ]]; then
-  plan_create_args=(appservice plan create --name "${plan_name}" --resource-group "${destination_rg}" --location "${location}" --sku B1 --is-linux true --output none)
+  plan_create_args=(appservice plan create --name "${plan_name}" --resource-group "${lab_rg}" --location "${location}" --sku B1 --is-linux true --output none)
   az "${plan_create_args[@]}"
-  plan_id="$(az appservice plan show --name "${plan_name}" --resource-group "${destination_rg}" --query id --output tsv)"
+  plan_id="$(az appservice plan show --name "${plan_name}" --resource-group "${lab_rg}" --query id --output tsv)"
   echo "Created Linux App Service plan: ${plan_name}"
 else
-  plan_is_linux="$(az appservice plan show --name "${plan_name}" --resource-group "${destination_rg}" --query reserved --output tsv)"
-  plan_location="$(az appservice plan show --name "${plan_name}" --resource-group "${destination_rg}" --query location --output tsv)"
-  plan_sku="$(az appservice plan show --name "${plan_name}" --resource-group "${destination_rg}" --query sku.name --output tsv)"
+  plan_is_linux="$(az appservice plan show --name "${plan_name}" --resource-group "${lab_rg}" --query reserved --output tsv)"
+  plan_location="$(az appservice plan show --name "${plan_name}" --resource-group "${lab_rg}" --query location --output tsv)"
+  plan_sku="$(az appservice plan show --name "${plan_name}" --resource-group "${lab_rg}" --query sku.name --output tsv)"
   normalized_plan_location="${plan_location// /}"
   normalized_location="${location// /}"
   if [[ "${plan_is_linux,,}" != 'true' ||
@@ -511,16 +511,16 @@ else
   echo "Reusing compatible Linux App Service plan: ${plan_name}"
 fi
 
-app_list_args=(webapp list --resource-group "${destination_rg}" --query "[?name=='${app_name}'].id | [0]" --output tsv)
+app_list_args=(webapp list --resource-group "${lab_rg}" --query "[?name=='${app_name}'].id | [0]" --output tsv)
 app_id="$(az "${app_list_args[@]}")"
 if [[ -z "${app_id}" ]]; then
-  app_create_args=(webapp create --name "${app_name}" --resource-group "${destination_rg}" --plan "${plan_name}" --runtime "${runtime}" --https-only true --output none)
+  app_create_args=(webapp create --name "${app_name}" --resource-group "${lab_rg}" --plan "${plan_name}" --runtime "${runtime}" --https-only true --output none)
   az "${app_create_args[@]}"
   echo "Created Linux web app: ${app_name}"
 else
-  existing_plan_id="$(az webapp show --name "${app_name}" --resource-group "${destination_rg}" --query serverFarmId --output tsv)"
-  existing_https_only="$(az webapp show --name "${app_name}" --resource-group "${destination_rg}" --query httpsOnly --output tsv)"
-  existing_runtime="$(az webapp config show --name "${app_name}" --resource-group "${destination_rg}" --query linuxFxVersion --output tsv)"
+  existing_plan_id="$(az webapp show --name "${app_name}" --resource-group "${lab_rg}" --query serverFarmId --output tsv)"
+  existing_https_only="$(az webapp show --name "${app_name}" --resource-group "${lab_rg}" --query httpsOnly --output tsv)"
+  existing_runtime="$(az webapp config show --name "${app_name}" --resource-group "${lab_rg}" --query linuxFxVersion --output tsv)"
   existing_runtime_canonical="$(printf '%s' "${existing_runtime/|/:}" | tr '[:upper:]' '[:lower:]')"
   supported_runtime_candidates="$(printf '%s\n' "${runtime_candidates}" | tr '[:upper:]' '[:lower:]')"
   if [[ "${existing_plan_id,,}" != "${plan_id,,}" ||
@@ -534,13 +534,13 @@ else
   runtime="${existing_runtime_canonical}"
 fi
 
-appsettings_args=(webapp config appsettings set --resource-group "${destination_rg}" --name "${app_name}" --settings SCM_DO_BUILD_DURING_DEPLOYMENT=false --output none)
+appsettings_args=(webapp config appsettings set --resource-group "${lab_rg}" --name "${app_name}" --settings SCM_DO_BUILD_DURING_DEPLOYMENT=false --output none)
 az "${appsettings_args[@]}"
-startup_args=(webapp config set --resource-group "${destination_rg}" --name "${app_name}" --startup-file "${startup_command}" --output none)
+startup_args=(webapp config set --resource-group "${lab_rg}" --name "${app_name}" --startup-file "${startup_command}" --output none)
 az "${startup_args[@]}"
-app_show_args=(webapp show --name "${app_name}" --resource-group "${destination_rg}" --query '{name:name,host:defaultHostName,httpsOnly:httpsOnly,state:state}' --output table)
+app_show_args=(webapp show --name "${app_name}" --resource-group "${lab_rg}" --query '{name:name,host:defaultHostName,httpsOnly:httpsOnly,state:state}' --output table)
 az "${app_show_args[@]}"
-config_show_args=(webapp config show --name "${app_name}" --resource-group "${destination_rg}" --query '{runtime:linuxFxVersion,startup:appCommandLine}' --output table)
+config_show_args=(webapp config show --name "${app_name}" --resource-group "${lab_rg}" --query '{runtime:linuxFxVersion,startup:appCommandLine}' --output table)
 az "${config_show_args[@]}"
 
 printf 'Runtime: %s\nPlan name: %s\nWeb app name: %s\nHTTPS URL: https://%s.azurewebsites.net\n' "${runtime}" "${plan_name}" "${app_name}" "${app_name}"
@@ -554,7 +554,7 @@ else
 fi
 ```
 
-If runtime discovery stopped this step on an earlier attempt, paste and run the entire corrected block again with the same subscription ID and destination resource group. Its stable names reconcile compatible existing resources instead of creating duplicates. Continue only after the block reports success.
+If runtime discovery stopped this step on an earlier attempt, paste and run the entire corrected block again with the same subscription ID and lab resource group. Its stable names reconcile compatible existing resources instead of creating duplicates. Continue only after the block reports success.
 
 `az webapp list-runtimes` is the source of truth for currently available built-in runtimes. The block chooses the highest advertised Node.js LTS major version for a new app and fails rather than inventing a fallback. On rerun, it reuses only the same Linux B1 plan and HTTPS-enabled app when their plan association and Node LTS runtime remain compatible. PM2 runs in the foreground, listens on the App Service-provided `$PORT`, and serves the ready-to-run static ZIP from `/home/site/wwwroot`. `B1` incurs charges until the plan is deleted.
 
@@ -574,7 +574,7 @@ If the package is available in a shell with Azure CLI, this is an equivalent sup
 
 ```powershell
 az webapp deploy `
-    --resource-group $destinationRg `
+    --resource-group $labResourceGroup `
     --name $appName `
     --src-path '<path-to-microhack-app.zip>' `
     --type zip
@@ -591,7 +591,7 @@ if bash /dev/fd/3 3<<'PATH_B_DEPLOY'
 set -euo pipefail
 
 subscription_id='<REPLACE-WITH-SUBSCRIPTION-ID>'
-destination_rg='MHBox-<UserSuffix>-destination-rg'
+lab_rg='<YOUR-LAB-RESOURCE-GROUP>'
 package_path="${HOME}/microhack-app.zip"
 
 if [[ -z "${subscription_id}" ||
@@ -599,10 +599,10 @@ if [[ -z "${subscription_id}" ||
   echo 'Replace subscription_id with the Hack subscription ID.' >&2
   false
 fi
-if [[ -z "${destination_rg}" ||
-      "${destination_rg}" == *'<'* ||
-      "${destination_rg}" == *'>'* ]]; then
-  echo 'Replace destination_rg with the exact destination resource-group name.' >&2
+if [[ -z "${lab_rg}" ||
+      "${lab_rg}" == *'<'* ||
+      "${lab_rg}" == *'>'* ]]; then
+  echo 'Replace lab_rg with the exact lab resource-group name.' >&2
   false
 fi
 if [[ ! -f "${package_path}" ]]; then
@@ -639,15 +639,15 @@ fi
 command -v az >/dev/null
 az account set --subscription "${subscription_id}"
 active_subscription_id="$(az account show --query id --output tsv)"
-destination_rg="$(az group show --name "${destination_rg}" --query name --output tsv)"
+lab_rg="$(az group show --name "${lab_rg}" --query name --output tsv)"
 name_suffix="$(
-  printf '%s\0%s' "${active_subscription_id}" "${destination_rg}" |
+  printf '%s\0%s' "${active_subscription_id}" "${lab_rg}" |
     sha256sum |
     cut -c1-12
 )"
 plan_name="asp-mh-linux-${name_suffix}"
 app_name="mh-web-linux-${name_suffix}"
-app_list_args=(webapp list --resource-group "${destination_rg}" --query "[?name=='${app_name}'].id | [0]" --output tsv)
+app_list_args=(webapp list --resource-group "${lab_rg}" --query "[?name=='${app_name}'].id | [0]" --output tsv)
 app_id="$(az "${app_list_args[@]}")"
 if [[ -z "${app_id}" ]]; then
   echo "Web app ${app_name} doesn't exist. Complete Task 3 first." >&2
@@ -656,7 +656,7 @@ fi
 
 printf 'Plan name: %s\nWeb app name: %s\nPackage: %s\n' "${plan_name}" "${app_name}" "${package_path}"
 
-deploy_args=(webapp deploy --resource-group "${destination_rg}" --name "${app_name}" --src-path "${package_path}" --type zip)
+deploy_args=(webapp deploy --resource-group "${lab_rg}" --name "${app_name}" --src-path "${package_path}" --type zip)
 az "${deploy_args[@]}"
 PATH_B_DEPLOY
 then
@@ -743,26 +743,26 @@ if bash /dev/fd/3 3<<'PATH_B_VALIDATE'
 set -euo pipefail
 
 subscription_id='<REPLACE-WITH-SUBSCRIPTION-ID>'
-destination_rg='MHBox-<UserSuffix>-destination-rg'
+lab_rg='<YOUR-LAB-RESOURCE-GROUP>'
 
 if [[ -z "${subscription_id}" ||
       "${subscription_id}" == '<REPLACE-WITH-SUBSCRIPTION-ID>' ]]; then
   echo 'Replace subscription_id with the Hack subscription ID.' >&2
   false
 fi
-if [[ -z "${destination_rg}" ||
-      "${destination_rg}" == *'<'* ||
-      "${destination_rg}" == *'>'* ]]; then
-  echo 'Replace destination_rg with the exact destination resource-group name.' >&2
+if [[ -z "${lab_rg}" ||
+      "${lab_rg}" == *'<'* ||
+      "${lab_rg}" == *'>'* ]]; then
+  echo 'Replace lab_rg with the exact lab resource-group name.' >&2
   false
 fi
 
 command -v az >/dev/null
 az account set --subscription "${subscription_id}"
 active_subscription_id="$(az account show --query id --output tsv)"
-destination_rg="$(az group show --name "${destination_rg}" --query name --output tsv)"
+lab_rg="$(az group show --name "${lab_rg}" --query name --output tsv)"
 name_suffix="$(
-  printf '%s\0%s' "${active_subscription_id}" "${destination_rg}" |
+  printf '%s\0%s' "${active_subscription_id}" "${lab_rg}" |
     sha256sum |
     cut -c1-12
 )"
@@ -803,7 +803,7 @@ for asset in stylesheet.css GitHub_Logo.png MSLogo.png MSicon.png; do
   curl "${asset_curl_args[@]}" "${app_url}/${asset}"
 done
 
-app_show_args=(webapp show --resource-group "${destination_rg}" --name "${app_name}" --query '{state:state,httpsOnly:httpsOnly,host:defaultHostName}' --output table)
+app_show_args=(webapp show --resource-group "${lab_rg}" --name "${app_name}" --query '{state:state,httpsOnly:httpsOnly,host:defaultHostName}' --output table)
 az "${app_show_args[@]}"
 
 if ! sudo systemctl is-active --quiet apache2; then
@@ -876,17 +876,17 @@ Document which target you would choose and why.
 
 ### Optional resource cleanup
 
-Do not delete resources automatically. If the lab owner approves cleanup, delete the web app and plan. Path B reconstructs its stable names from the validated subscription and resource group:
+Do not delete resources automatically. If the lab owner approves cleanup, delete only the web app and its plan using the blocks below. Keep `<YOUR-LAB-RESOURCE-GROUP>` through the exercise: it also contains the simulated source, migrated VMs, and monitoring. Whole-lab deletion belongs to the [approved finish cleanup](../../challenges/finish.md), after supported backup/replication cleanup. Path B reconstructs its stable names from the validated subscription and resource group:
 
 Path A, Azure Cloud Shell PowerShell:
 
 ```powershell
 az webapp delete `
-    --resource-group $destinationRg `
+    --resource-group $labResourceGroup `
     --name $appName
 
 az appservice plan delete `
-    --resource-group $destinationRg `
+    --resource-group $labResourceGroup `
     --name $planName `
     --yes
 ```
@@ -898,26 +898,26 @@ if bash /dev/fd/3 3<<'PATH_B_CLEANUP'
 set -euo pipefail
 
 subscription_id='<REPLACE-WITH-SUBSCRIPTION-ID>'
-destination_rg='MHBox-<UserSuffix>-destination-rg'
+lab_rg='<YOUR-LAB-RESOURCE-GROUP>'
 
 if [[ -z "${subscription_id}" ||
       "${subscription_id}" == '<REPLACE-WITH-SUBSCRIPTION-ID>' ]]; then
   echo 'Replace subscription_id with the Hack subscription ID.' >&2
   false
 fi
-if [[ -z "${destination_rg}" ||
-      "${destination_rg}" == *'<'* ||
-      "${destination_rg}" == *'>'* ]]; then
-  echo 'Replace destination_rg with the exact destination resource-group name.' >&2
+if [[ -z "${lab_rg}" ||
+      "${lab_rg}" == *'<'* ||
+      "${lab_rg}" == *'>'* ]]; then
+  echo 'Replace lab_rg with the exact lab resource-group name.' >&2
   false
 fi
 
 command -v az >/dev/null
 az account set --subscription "${subscription_id}"
 active_subscription_id="$(az account show --query id --output tsv)"
-destination_rg="$(az group show --name "${destination_rg}" --query name --output tsv)"
+lab_rg="$(az group show --name "${lab_rg}" --query name --output tsv)"
 name_suffix="$(
-  printf '%s\0%s' "${active_subscription_id}" "${destination_rg}" |
+  printf '%s\0%s' "${active_subscription_id}" "${lab_rg}" |
     sha256sum |
     cut -c1-12
 )"
@@ -926,10 +926,10 @@ app_name="mh-web-linux-${name_suffix}"
 printf 'Plan name: %s\nWeb app name: %s\n' "${plan_name}" "${app_name}"
 
 cleanup_failed=0
-app_list_args=(webapp list --resource-group "${destination_rg}" --query "[?name=='${app_name}'].id | [0]" --output tsv)
+app_list_args=(webapp list --resource-group "${lab_rg}" --query "[?name=='${app_name}'].id | [0]" --output tsv)
 app_id="$(az "${app_list_args[@]}")"
 if [[ -n "${app_id}" ]]; then
-  app_delete_args=(webapp delete --resource-group "${destination_rg}" --name "${app_name}")
+  app_delete_args=(webapp delete --resource-group "${lab_rg}" --name "${app_name}")
   if ! az "${app_delete_args[@]}"; then
     echo "Could not delete web app ${app_name}." >&2
     cleanup_failed=1
@@ -938,10 +938,10 @@ else
   echo "Web app is already absent: ${app_name}"
 fi
 
-plan_list_args=(appservice plan list --resource-group "${destination_rg}" --query "[?name=='${plan_name}'].id | [0]" --output tsv)
+plan_list_args=(appservice plan list --resource-group "${lab_rg}" --query "[?name=='${plan_name}'].id | [0]" --output tsv)
 plan_id="$(az "${plan_list_args[@]}")"
 if [[ -n "${plan_id}" ]]; then
-  plan_delete_args=(appservice plan delete --resource-group "${destination_rg}" --name "${plan_name}" --yes)
+  plan_delete_args=(appservice plan delete --resource-group "${lab_rg}" --name "${plan_name}" --yes)
   if ! az "${plan_delete_args[@]}"; then
     echo "Could not delete App Service plan ${plan_name}." >&2
     cleanup_failed=1

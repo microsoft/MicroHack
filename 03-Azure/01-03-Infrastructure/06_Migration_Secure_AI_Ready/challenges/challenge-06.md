@@ -6,11 +6,16 @@
 
 The goal of this exercise is to ...
 
-* secure the migrated virtual machines by enabling Defender for Cloud for Servers.
+* verify and use Defender for Cloud for Servers protection on the migrated virtual machines in your lab resource group.
+
+## Prerequisites
+
+* The instructor has approved and enabled the subscription-wide Defender CSPM and Defender for Servers plans on the shared subscription, including their costs.
+* Learners retain **Owner** on `<YOUR-LAB-RESOURCE-GROUP>` and **Reader** on the subscription. Subscription-wide plan activation is an instructor task, not a reason to grant subscription Owner to each learner.
 
 ## Actions
 
-* Enable Defender for Cloud.
+* Verify the instructor-enabled Defender plans, inspect endpoint protection, and review alerts and recommendations for your lab resources.
 
 ## Success criteria
 

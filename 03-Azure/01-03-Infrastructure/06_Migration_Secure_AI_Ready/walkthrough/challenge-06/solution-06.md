@@ -4,17 +4,18 @@
 
 Duration: 40 minutes
 
-## **Task 1: Enable Defender for Cloud for Servers**
+## **Task 1: Verify instructor-enabled Defender plans**
 
-In [Challenge 5](../challenge-05/solution-05.md) we migrated two servers to Azure. The servers are already protected by the basic services of Defender for Cloud. In this challenge, we'll significantly improve the protection level by activating advanced services such as "Cloud Security Posture Management (CSPM)" and "Cloud Workload Protection (CWP)" (Defender for Servers).
+In [Challenge 5](../challenge-05/solution-05.md) we migrated two servers to Azure in `<YOUR-LAB-RESOURCE-GROUP>`. This challenge uses advanced services such as "Cloud Security Posture Management (CSPM)" and "Cloud Workload Protection (CWP)" (Defender for Servers), beyond the basic Defender for Cloud services.
 
-To enable the advanced Defender for Cloud components, open the portal and select *Defender for Cloud*. Under *Management*, select *Environment settings* to define the Defender for Cloud settings for the subscription.
+> [!IMPORTANT]
+> Defender plan activation changes subscription-wide settings and costs on a shared subscription. An authorized **instructor** must approve and enable the required plans before this exercise. Learners have RG Owner and subscription Reader, not subscription Owner; do not broaden every learner's permissions to enable a plan. If the plans are unavailable, ask the instructor or skip this optional challenge.
+
+For instructor setup, open *Defender for Cloud* > *Management* > *Environment settings* and select the shared subscription. Learners can inspect the resulting settings without changing subscription-wide configuration.
 
 ![image](./img/Def-environment-settings.jpg)
 
-In the settings, enable the *Defender CSPM* and *Defender for Servers* plans to better protect the migrated servers from threats. After enabling the plans, use the *Settings* link for both plans and verify that all features are enabled. Finally, click *Save*.
-
-![image](./img/Def-environment-settings.jpg)
+The instructor enables the approved *Defender CSPM* and *Defender for Servers* plans, reviews their features through *Settings*, and saves the configuration. Learners verify that the expected protection is active for their migrated VMs. Screenshots illustrate the workflow; use the actual subscription and lab resource names from your dashboard.
 
 Verify the *Defender CSPM* settings and monitoring details.
 
@@ -68,7 +69,7 @@ Try to save the file. Defender for Endpoint will detect and quarantine it, and t
 
 ![image](./img/vmthreat.png)
 
-Next, verify that the alert was forwarded to Azure. Open the portal, select *Defender for Cloud*, and then select *Security Alerts*. EICAR detections are reported with the severity *Informational*. Add *Informational* to the severity filter to display these alerts.
+Next, verify that the alert was forwarded to Azure. Open the portal, select *Defender for Cloud*, and then select *Security Alerts*. Filter to your lab resources. EICAR detections are reported with the severity *Informational*. Add *Informational* to the severity filter to display these alerts.
 
 ![image](./img/DefSecAlert.png)
 
@@ -98,4 +99,4 @@ In this Hack, we deployed virtual machines that use public IP addresses and are 
 
 You successfully completed Challenge 6.
 
-Continue to Challenge 7 and configure intelligent observability for both migrated web workloads. Do not remove `destination-rg`.
+Continue to Challenge 7 and configure intelligent observability for both migrated web workloads. Keep `<YOUR-LAB-RESOURCE-GROUP>` throughout Challenges 2–8; deleting it removes both the simulated source and migrated resources.

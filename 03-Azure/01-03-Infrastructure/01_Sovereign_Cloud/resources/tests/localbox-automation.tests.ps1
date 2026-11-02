@@ -353,6 +353,99 @@ Describe 'Hosted LocalBox automation lifecycle' {
     }
 }
 
+Describe 'Unattended kubectl provisioning' {
+    BeforeAll {
+        function Invoke-LocalBoxAz { param($Arguments, $TimeoutSeconds, [switch]$NoOutput) }
+        function Get-LocalBoxResource { param($Id) }
+    }
+    BeforeEach {
+        $clientDirectory = Join-Path $TestDrive ([guid]::NewGuid().ToString())
+        $clientRun = Join-Path $clientDirectory 'run'
+        $clientPath = Join-Path $clientDirectory 'tools/kubectl-1.31.5/kubectl.exe'
+        $originalPath = $env:PATH
+        Mock Get-LocalBoxResource { @{ properties = @{ kubernetesVersion = '1.31.5' } } }
+        Mock Get-Command { $null } -ParameterFilter { $Name -eq 'kubectl' }
+        Mock Get-LocalBoxKubectlClientVersion { [version]'1.31.5' }
+        Mock Invoke-LocalBoxAz {}
+    }
+    AfterEach { $env:PATH = $originalPath }
+    It 'installs a matching client privately when SYSTEM cannot resolve kubectl' {
+        Initialize-LocalBoxAutomationKubectl '/aks/instance' $clientRun | Should -Be $clientPath
+        Should -Invoke Get-LocalBoxResource -Times 1 -Exactly -ParameterFilter { $Id -eq '/aks/instance' }
+        Should -Invoke Invoke-LocalBoxAz -Times 1 -Exactly -ParameterFilter {
+            $Arguments[0..1] -join ' ' -eq 'aks install-cli' -and
+            $Arguments[$Arguments.IndexOf('--client-version') + 1] -eq '1.31.5' -and
+            $Arguments[$Arguments.IndexOf('--install-location') + 1] -eq $clientPath -and
+            $Arguments[$Arguments.IndexOf('--kubelogin-install-location') + 1] -eq (Join-Path (Split-Path $clientPath) 'kubelogin.exe') -and
+            $TimeoutSeconds -eq 900 -and $NoOutput
+        }
+        Should -Invoke Get-LocalBoxKubectlClientVersion -Times 1 -Exactly -ParameterFilter { $Path -eq $clientPath }
+        $env:PATH.Split([IO.Path]::PathSeparator)[0] | Should -Be (Split-Path $clientPath)
+    }
+    It 'reuses an existing same-minor client without upgrading or installing anything' {
+        Mock Get-Command { @{ Path = '/existing/kubectl.exe' } } -ParameterFilter { $Name -eq 'kubectl' }
+        Mock Get-LocalBoxKubectlClientVersion { [version]'1.31.4' }
+        Initialize-LocalBoxAutomationKubectl '/aks/instance' $clientRun | Should -Be '/existing/kubectl.exe'
+        Should -Invoke Invoke-LocalBoxAz -Times 0
+        $env:PATH | Should -Be $originalPath
+    }
+    It 'does not overwrite an existing client from a different minor release' {
+        Mock Get-Command { @{ Path = '/existing/kubectl.exe' } } -ParameterFilter { $Name -eq 'kubectl' }
+        Mock Get-LocalBoxKubectlClientVersion { [version]'1.35.0' } -ParameterFilter { $Path -eq '/existing/kubectl.exe' }
+        Initialize-LocalBoxAutomationKubectl '/aks/instance' $clientRun | Should -Be $clientPath
+        Should -Invoke Invoke-LocalBoxAz -Times 1 -Exactly
+    }
+    It 'revalidates and reuses a private client on retry' {
+        New-Item -ItemType Directory -Path (Split-Path $clientPath) -Force | Out-Null
+        Set-Content $clientPath 'fixture'
+        Initialize-LocalBoxAutomationKubectl '/aks/instance' $clientRun | Should -Be $clientPath
+        Should -Invoke Invoke-LocalBoxAz -Times 0
+        Should -Invoke Get-LocalBoxKubectlClientVersion -Times 1 -Exactly -ParameterFilter { $Path -eq $clientPath }
+    }
+    It 'never falls back to latest when the cluster version is missing or invalid' -TestCases @(
+        @{ Version = $null }; @{ Version = 'latest' }; @{ Version = '../other' }
+    ) {
+        param($Version)
+        Mock Get-LocalBoxResource { @{ properties = @{ kubernetesVersion = $Version } } }
+        { Initialize-LocalBoxAutomationKubectl '/aks/instance' $clientRun } | Should -Throw '*valid Kubernetes version*'
+        Should -Invoke Invoke-LocalBoxAz -Times 0
+    }
+    It 'propagates installation errors without adding a broken directory to PATH' {
+        Mock Invoke-LocalBoxAz { throw 'Download failed' }
+        { Initialize-LocalBoxAutomationKubectl '/aks/instance' $clientRun } | Should -Throw '*Download failed*'
+        $env:PATH | Should -Be $originalPath
+    }
+    It 'rejects an incorrect installed version before running health tests' {
+        Mock Get-LocalBoxKubectlClientVersion { [version]'1.35.0' }
+        { Initialize-LocalBoxAutomationKubectl '/aks/instance' $clientRun } | Should -Throw '*does not match requested version*'
+        $env:PATH | Should -Be $originalPath
+    }
+}
+
+Describe 'kubectl client version validation' {
+    BeforeAll {
+        function Test-KubectlProcess {
+            $global:LASTEXITCODE = $script:kubectlExit
+            $script:kubectlOutput
+        }
+    }
+    BeforeEach { $script:kubectlExit = 0; $script:kubectlOutput = '{"clientVersion":{"gitVersion":"v1.31.5"}}' }
+    It 'reads the actual client version' {
+        Get-LocalBoxKubectlClientVersion Test-KubectlProcess | Should -Be ([version]'1.31.5')
+    }
+    It 'rejects a failing executable' {
+        $script:kubectlExit = 1
+        { Get-LocalBoxKubectlClientVersion Test-KubectlProcess } | Should -Throw '*client version check failed*'
+    }
+    It 'rejects malformed or missing version output' -TestCases @(
+        @{ Output = 'not JSON' }; @{ Output = '{}' }; @{ Output = '{"clientVersion":{"gitVersion":"latest"}}' }
+    ) {
+        param($Output)
+        $script:kubectlOutput = $Output
+        { Get-LocalBoxKubectlClientVersion Test-KubectlProcess } | Should -Throw
+    }
+}
+
 Describe 'Guest default preparation and health orchestration' {
     BeforeAll {
         function Invoke-LocalBoxAz { param($Arguments, $TimeoutSeconds, [switch]$NoOutput) }
@@ -383,6 +476,8 @@ Invoke-TestPreparation -SubscriptionId $SubscriptionId -ResourceGroupName $Resou
         $env:AZURE_CONFIG_DIR = 'caller-profile'
         Mock Start-Transcript {}
         Mock Stop-Transcript {}
+        Mock Initialize-LocalBoxAutomationEnvironment {}
+        Mock Initialize-LocalBoxAutomationKubectl { 'private/kubectl.exe' }
         Mock Invoke-TestPreparation {}
         Mock Send-LocalBoxAutomationFiles {}
         Mock Write-LocalBoxAutomationStatus {}
@@ -395,7 +490,7 @@ Invoke-TestPreparation -SubscriptionId $SubscriptionId -ResourceGroupName $Resou
             }
         }
         $manifestFile = Join-Path $guestDirectory 'manifest.json'
-        @{ AksPreparationSkipped = $false; AksAdminGroupObjectId = $group; ReferenceVm = @{ MachineId = 'reference' } } |
+        @{ AksPreparationSkipped = $false; AksAdminGroupObjectId = $group; AksInstanceId = '/aks/instance'; ReferenceVm = @{ MachineId = 'reference' } } |
             ConvertTo-Json -Depth 6 | Set-Content $manifestFile
         Mock Test-Path { $true } -ParameterFilter { $LiteralPath -like 'C:\LocalBox\Tests\*' }
         Mock Get-Module { @{ Version = [version]'5.7.1' } } -ParameterFilter { $Name -eq 'Pester' }
@@ -417,12 +512,43 @@ Invoke-TestPreparation -SubscriptionId $SubscriptionId -ResourceGroupName $Resou
         }
         Should -Invoke Invoke-LocalBoxAz -Times 1 -ParameterFilter { $Arguments[0..1] -join ' ' -eq 'connectedmachine assess-patches' }
         Should -Invoke Invoke-LocalBoxAutomationHealthProcess -Times 1
+        Should -Invoke Initialize-LocalBoxAutomationKubectl -Times 1 -Exactly -ParameterFilter {
+            $InstanceId -eq '/aks/instance' -and $Directory -eq $guestDirectory
+        }
         Should -Invoke Send-LocalBoxAutomationFiles -Times 1
         $status = Get-Content "$guestDirectory/status.json" -Raw | ConvertFrom-Json
         $status.State | Should -Be 'Succeeded'
         $status.UpdateAssessment.Status | Should -Be 'Succeeded'
         $status.DefenderCloudReporting | Should -Be 'NotVerified'
         $env:AZURE_CONFIG_DIR | Should -Be 'caller-profile'
+    }
+    It 'captures prerequisite failures locally even before Azure authentication' {
+        Mock Initialize-LocalBoxAutomationEnvironment { throw 'Get-VM unavailable' }
+        { Invoke-LocalBoxGuestAutomation $guestConfig $guestDirectory $guestFixture 'input.json' -ManifestPath $manifestFile } | Should -Throw '*Get-VM unavailable*'
+        $status = Get-Content "$guestDirectory/status.json" -Raw | ConvertFrom-Json
+        $status.State | Should -Be 'Failed'
+        $status.Phase | Should -Be 'Prerequisites'
+        $status.Error | Should -Be 'Get-VM unavailable'
+        Should -Invoke Start-Transcript -Times 1
+        Should -Invoke Stop-Transcript -Times 1
+        Should -Invoke Send-LocalBoxAutomationFiles -Times 0
+        Should -Invoke Invoke-TestPreparation -Times 0
+    }
+    It 'reports kubectl provisioning failures and restores the caller PATH' {
+        $callerPath = $env:PATH
+        Mock Initialize-LocalBoxAutomationKubectl { $env:PATH = 'broken'; throw 'kubectl install failed' }
+        { Invoke-LocalBoxGuestAutomation $guestConfig $guestDirectory $guestFixture 'input.json' -ManifestPath $manifestFile } | Should -Throw '*kubectl install failed*'
+        $env:PATH | Should -Be $callerPath
+        $status = Get-Content "$guestDirectory/status.json" -Raw | ConvertFrom-Json
+        $status.State | Should -Be 'Failed'
+        $status.Phase | Should -Be 'KubernetesClient'
+        Should -Invoke Send-LocalBoxAutomationFiles -Times 1
+        Should -Invoke Invoke-LocalBoxAutomationHealthProcess -Times 0
+    }
+    It 'preserves the original error if diagnostic upload also fails' {
+        Mock Invoke-TestPreparation { throw 'Preparation failed' }
+        Mock Send-LocalBoxAutomationFiles { throw 'Blob upload failed' }
+        { Invoke-LocalBoxGuestAutomation $guestConfig $guestDirectory $guestFixture 'input.json' -ManifestPath $manifestFile } | Should -Throw '*Preparation failed*Blob upload failed*'
     }
     It 'records and uploads preparation failure without running tests or deleting the lab' {
         Mock Invoke-TestPreparation { throw 'Storage validation failed' }

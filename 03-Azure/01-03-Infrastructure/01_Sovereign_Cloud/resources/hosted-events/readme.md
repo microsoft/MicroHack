@@ -124,6 +124,14 @@ The [orchestrator](../../labautomation/localbox-automation.ps1) implements:
    explicitly using PowerShell 7. The [guest runner](../invoke-localbox-automation.ps1)
    prepares storage, logical networks, AKS, proxy RBAC, MetalLB, the Windows
    image and the default reference VM.
+
+   SYSTEM does not inherit the interactive administrator's tools or profile.
+   Before Kubernetes health checks, the runner reuses an available `kubectl` with
+   the cluster's major/minor version, or uses `az aks install-cli` to install the
+   cluster's exact version in its private automation tools directory. The CLI
+   also installs its bundled `kubelogin` dependency there. Only the runner and its
+   child health process receive the private tools PATH; existing installations
+   and the machine PATH are not changed. Retries validate and reuse this client.
 5. Wait for the reference VM to be Running, Arc Connected and MDE installation
    Succeeded. Request an Update Manager assessment and require a successful,
    timestamped result. This assesses updates; it does **not** install patches.
@@ -181,6 +189,10 @@ Each run has a separate prefix containing `status.json`, `automation.log`,
 Status is updated at phase boundaries. Failures retain available diagnostics and
 resources; a failed upload also fails the command. Only the listed diagnostics
 are uploaded, never the AKS kubeconfig or reference-VM credential file.
+Prerequisite checks run inside transcript/status capture. If failure occurs
+before guest Azure authentication, diagnostics remain in the private run
+directory on LocalBox-Client and the error is reported through Run Command
+instanceView; no Blob upload is attempted without an authenticated guest.
 
 An organizer with Blob data access can download a run using:
 

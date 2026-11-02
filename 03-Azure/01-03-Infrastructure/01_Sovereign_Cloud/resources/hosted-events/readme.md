@@ -100,32 +100,114 @@ releasing a subscription. This hook is not part of manual/BYOS preparation.
 
 ## Complete LocalBox preparation
 
-The global hook submits `localbox-*` in `rg-localbox-shared` in the published **Shared LocalBox Subscription ID**, then waits up to six hours for ARM completion, refreshing its Console authentication while polling. It does not publish LocalBox administrator credentials. A Client VM appearing after roughly 15-20 minutes confirms only that deployment has started. Full nested Azure Local provisioning can take 4-6 hours and must still be checked separately.
+The global hook now remains active through nested deployment, default Sovereign
+preparation, and infrastructure health checks. No organizer login, host password
+reset, or manual preparation invocation is required for a greenfield hosted event.
+It does not publish LocalBox administrator credentials.
+
+The [orchestrator](../../labautomation/localbox-automation.ps1) implements:
+
+1. Wait for `localbox-*` ARM completion, then `localcluster-deploy`, connected
+   Azure Local, a running Arc Resource Bridge, custom location and
+   `hybridaksextension`. A successful Client bootstrap extension is not sufficient.
+2. Use the validated `Get-MhhDefaultLabGroup` result (also published as **Lab
+   Group ObjectId**) as `AksAdminGroupObjectId`. No guest Graph lookup is needed.
+3. Package the preparation script, guest runner and health tests from the
+   **imported content directory** into the Managed Run Command payload. A content
+   hash identifies the package; there is no second download from upstream `main`.
+4. Run `sovereign-localbox-prepare` asynchronously on LocalBox-Client as **SYSTEM**,
+   explicitly using PowerShell 7. The [guest runner](../invoke-localbox-automation.ps1)
+   prepares storage, logical networks, AKS, proxy RBAC, MetalLB, the Windows
+   image and the default reference VM.
+5. Wait for the reference VM to be Running, Arc Connected and MDE installation
+   Succeeded. Request an Update Manager assessment and require a successful,
+   timestamped result. This assesses updates; it does **not** install patches.
+6. Run installed upstream Jumpstart infrastructure Pester tests, then the
+   Sovereign **LocalBox Full** suite. The Client retrieves a private AKS admin
+   kubeconfig for infrastructure probes using its managed identity. It is not
+   shared with participants and is deleted after the run.
+7. Require a zero guest exit code, matching run/content/group/scope metadata,
+   nonempty passing suites without skipped/not-run tests, and matching NUnit XML
+   before publishing global discovery credentials and returning to Console.
+
+`Update-MhhToken` runs in the **Console process** on each poll and before Azure
+operations, including result retrieval. It refreshes Console clients, not guest
+credentials or job time limits. The guest uses its own managed identity and
+locally resolved nested Windows credentials. Generated reference-VM credentials
+remain DPAPI-protected under SYSTEM; do not copy them into Console output or
+attempt to decrypt them from a different Windows account.
+
+### Timeouts and scheduling
+
+The initial ARM wait allows six hours, nested readiness eight hours, and the
+Managed Run Command twelve hours (with five additional minutes for host polling).
+These are independent ceilings, **not** expected durations. Confirm with the
+Console operator that its global-job limit accommodates the intended run; token
+refresh cannot prevent a platform-enforced job timeout. Subscription and
+participant jobs now start **after** this global readiness gate, rather than
+overlapping nested deployment.
 
 The subsequent preparation script took **4 hours 24 minutes 26 seconds** in the
 TEST4 run reported on 25 October 2026, including reference-VM creation. This is
 additional post-provisioning time, not the total event deployment duration or a
-guaranteed runtime. MDE was still Pending when preparation finished. See the
+guaranteed runtime. MDE was still Pending when preparation finished; the new
+automation waits separately for installation and assesses updates. See the
 [timing evidence and planning guidance](../localbox/readme.md#preparation-time);
 allow time for both preparation and later assessments.
 
-1. Inspect the Azure deployment, Client bootstrap logs and Azure Local/Arc status. Resolve failures before proceeding.
-2. If the Client password is unknown, an authorized event lead/coach uses the Azure VM's **Help > Reset password** to set a known password for the `arcdemo` host account, then connects to `LocalBox-Client` through Bastion. Do not expose this password through participant credentials or job logs. A host password reset does not change the nested-node Windows credentials. See [LocalBox credentials](#localbox-credentials).
-3. Copy **Lab Group ObjectId** from the Console's **Credentials** tab for the preparation prompt or `-AksAdminGroupObjectId`. Confirm that intended Azure lab identities/coaches are members; see the group dependency below.
-4. Follow [LocalBox preparation](../localbox/readme.md), **once per event on the global LocalBox Client**, in elevated PowerShell 7. It creates AKS and then installs/verifies the shared MetalLB extension and reserved ARP pool. Azure authentication uses the Client VM's managed identity; preparation constructs the nested Windows credential locally from the installed configuration without printing it. An explicit `-NodeCredential` overrides that value after a nested-account rotation.
-   Preparation includes `sov-ref-vm` by default; run it **the day before the event** for inspection while participant VMs onboard, or opt out with `-IncludeReferenceVm:$false`. Follow the [reference readiness checks](../localbox/readme.md#reference-readiness-and-participant-use); Console plan configuration and successful provisioning do not establish completed VM assessments. Participants must not modify this shared VM; no RBAC restrictions are added.
-5. Run [Pester health checks](../tests/readme.md) for LocalBox and every selected participant lab. A control-plane-only pass does not establish full readiness.
-6. Console shared setup enables and verifies **Defender for Servers Plan 2** and **Endpoint protection** on every event subscription. Complete the [Defender readiness checklist](../localbox/manual-preparation.md#defender-for-servers-readiness-organizer) and [participant VM readiness exercise](../localbox/manual-preparation.md#step-6-test-the-environment), including guest management, actual Defender onboarding and Update Manager. Verified subscription settings do not prove that a VM has completed onboarding.
-7. Verify an intended participant can use Entra-authenticated `az connectedk8s proxy` and a private application port-forward from their Codespace. Participants inspect MetalLB, not install it, and never need LocalBox-Client access. This validates the lab access path, not routing to the MetalLB service VIP.
+### Diagnostics and reruns
+
+Results use a private `microhack-automation` container in the existing LocalBox
+staging storage account. The Console identity and Client identity receive
+**Storage Blob Data Contributor at that container only**. No SAS tokens, account
+keys or participant data-plane grants are created. Storage firewall rules are
+not changed. The Console logs the authenticated result URL and run ID.
+
+Each run has a separate prefix containing `status.json`, `automation.log`,
+`upstream.xml`, `health.xml` and `health.json` when those phases produced them.
+Status is updated at phase boundaries. Failures retain available diagnostics and
+resources; a failed upload also fails the command. Only the listed diagnostics
+are uploaded, never the AKS kubeconfig or reference-VM credential file.
+
+An organizer with Blob data access can download a run using:
+
+```bash
+az storage blob download-batch --account-name <localbox-storage-account> \
+  --source microhack-automation --pattern '<run-id>/*' \
+  --destination ./localbox-results --auth-mode login
+```
+
+Inspect **LocalBox-Client > Run commands > sovereign-localbox-prepare** and its
+instance view if no diagnostic blobs were uploaded. Bootstrap failures before
+the guest runner starts are reported there. A matching active command is
+monitored without resubmission. A different active content hash/group is rejected,
+not overwritten. After a completed/failed command, retrying starts a new tracked
+run and reuses preparation's resource checks; it does not delete the lab or reset
+existing VM passwords. Investigate failures before retrying.
+
+### Remaining event validation
+
+The automated gate verifies **infrastructure**, MDE extension installation and
+an Update Manager assessment. It explicitly reports Defender cloud device
+reporting and participant sign-in as `NotVerified`; these are not inferred from
+an installed extension, a resource-count check or admin kubeconfig access.
+
+- After participant deployments, run [health checks](../tests/readme.md) for each
+  selected lab; they cannot run inside the earlier global stage.
+- Complete the [Defender readiness checklist](../localbox/manual-preparation.md#defender-for-servers-readiness-organizer),
+  including actual device reporting and recommendation/assessment visibility.
+- Verify intended lab users/coaches belong to the Console group and test a real
+  participant's Entra-authenticated proxy and private application port-forward.
+- Preserve the [manual preparation guide](../localbox/readme.md) for BYOS and
+  deliberate recovery only. Do not run it concurrently with hosted automation.
 
 Global setup registers `Microsoft.KubernetesRuntime`, waits for registration,
 resolves its tenant service-principal object ID using the Console's existing
 Graph-capable identity, and records it in the shared RG tag
 `microhack-k8s-runtime-object-id`. Missing registration or identity resolution
 fails setup explicitly. Organizer preparation reads that nonsecret tag; it does
-not require Graph permissions on the Client managed identity. This does not move
-AKS or MetalLB installation into the Console hook: they remain part of the
-organizer's post-provisioning preparation.
+not require Graph permissions on the Client managed identity. The global hook
+invokes AKS and MetalLB preparation inside the Client after nested readiness.
 
 ### LocalBox registration region and location policies
 

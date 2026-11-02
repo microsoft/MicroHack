@@ -45,6 +45,22 @@ required to validate regional service availability and effective inherited polic
 
 ## Global event LocalBox checks
 
+Run `Invoke-Pester ./localbox-automation.tests.ps1,./global-localbox.tests.ps1 -Output Detailed`
+for the hosted readiness gate. Offline tests cover token refresh on every poll,
+nested readiness beyond ARM success, imported-content packaging, event-group
+propagation, asynchronous execution, active-run resume/conflicts, stale instance
+views, nonzero guest exit codes, run-correlated JSON/XML, default guest preparation,
+update-assessment failure, credential-file cleanup and diagnostic-upload failures.
+They do not exercise Windows SYSTEM, real managed Run Command, Blob RBAC propagation,
+AKS admin credentials, or a multi-hour Console token rotation; those are live gates.
+
+Hosted automation runs upstream infrastructure tests and the existing LocalBox
+Full suite **inside the Client**, without downloading a second copy of Sovereign
+tests from `main`. The automation wrapper (not the read-only test runner) obtains
+and later removes a private AKS admin kubeconfig and requests one reference-VM
+update assessment. This is distinct from actual participant Entra access or
+Defender cloud reporting. See [automation diagnostics and limits](../hosted-events/readme.md#complete-localbox-preparation).
+
 Run `Invoke-Pester ./global-localbox.tests.ps1 -Output Detailed` for offline
 coverage of the Console's exact global-hook signature, cost/schema opt-in, one
 LocalBox deployment followed by two subscription preparations, all-event RBAC,

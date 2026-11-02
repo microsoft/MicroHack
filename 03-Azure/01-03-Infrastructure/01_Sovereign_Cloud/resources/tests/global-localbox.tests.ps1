@@ -5,7 +5,7 @@ BeforeAll {
     foreach ($name in @('global-event-deploy.ps1', 'shared-deploy-lab.ps1', 'lab-defaults.json')) {
         Copy-Item "$root/labautomation/$name" $fixture
     }
-    foreach ($name in @('quota-helpers.ps1', 'localbox-credentials.ps1', 'hosted-tag-policy.ps1', 'hosted-defender.ps1')) {
+    foreach ($name in @('quota-helpers.ps1', 'localbox-credentials.ps1', 'localbox-automation.ps1', 'hosted-tag-policy.ps1', 'hosted-defender.ps1')) {
         Set-Content "$fixture/$name" ''
     }
     Set-Content "$fixture/resource-providers.ps1" 'Register-TestProviders'
@@ -27,6 +27,7 @@ Submit-TestLocalBox @PSBoundParameters
     function Get-AzRoleAssignment { param($ObjectId, $RoleDefinitionName, $RoleDefinitionId, $Scope) }
     function New-AzRoleAssignment { param($ObjectId, $RoleDefinitionName, $Scope) }
     function Wait-LocalBoxDeployment { param($ResourceGroupName, $DeploymentName) }
+    function Invoke-LocalBoxHostedAutomation { param($SubscriptionId, $ResourceGroupName, $AksAdminGroupObjectId) }
     function Submit-TestLocalBox {
         param($SubscriptionId, $ResourceGroupName, $Location, $AzureLocalResourceProviderObjectId, $AzureLocalInstanceLocation, [switch]$UseConsoleCredentials, [switch]$NoWait)
     }
@@ -85,6 +86,7 @@ Describe 'Event-wide LocalBox orchestration' {
         Mock Get-AzRoleAssignment {}
         Mock New-AzRoleAssignment { $state.Assignments.Add(@{ User = $ObjectId; Role = $RoleDefinitionName; Scope = $Scope }) }
         Mock Wait-LocalBoxDeployment { $state.Events.Add('wait') }
+        Mock Invoke-LocalBoxHostedAutomation { $state.Events.Add('automation'); @{ ResultsUri = 'https://private/results' } }
         Mock Submit-TestLocalBox {
             $state.Events.Add("deploy:$SubscriptionId")
             @{ DeploymentName = 'localbox-new'; ProvisioningState = 'Submitted' }
@@ -106,7 +108,11 @@ Describe 'Event-wide LocalBox orchestration' {
             $SubscriptionId -eq $state.Subscription -and $ResourceGroupName -eq 'rg-localbox-shared' -and
             $AzureLocalInstanceLocation -eq 'australiaeast' -and $UseConsoleCredentials -and $NoWait
         }
-        $state.Events -join ',' | Should -Be "providers,tags:$($state.Subscription),defender:$($state.Subscription),deploy:$($state.Subscription),wait"
+        $state.Events -join ',' | Should -Be "providers,tags:$($state.Subscription),defender:$($state.Subscription),deploy:$($state.Subscription),wait,automation"
+        Should -Invoke Invoke-LocalBoxHostedAutomation -Times 1 -Exactly -ParameterFilter {
+            $SubscriptionId -eq $state.Subscription -and $ResourceGroupName -eq 'rg-localbox-shared' -and
+            $AksAdminGroupObjectId -eq '30000000-0000-0000-0000-000000000001'
+        }
         $state.Assignments.Count | Should -Be 6
         foreach ($user in $users) {
             @($state.Assignments | Where-Object { $_.User -eq $user -and $_.Scope -eq $scope -and $_.Role -in @('Reader', 'Azure Stack HCI VM Contributor') }).Count | Should -Be 2
@@ -145,7 +151,7 @@ Describe 'Event-wide LocalBox orchestration' {
         Should -Invoke Submit-TestLocalBox -Times 1 -ParameterFilter { $Location -eq 'swedencentral' -and $SubscriptionId -eq $state.Subscription }
     }
     It 'stops without publishing discovery credentials when <Stage> fails' -TestCases @(
-        @{ Stage = 'tags' }; @{ Stage = 'defender' }; @{ Stage = 'roles' }; @{ Stage = 'wait' }; @{ Stage = 'deploy' }; @{ Stage = 'graph' }
+        @{ Stage = 'tags' }; @{ Stage = 'defender' }; @{ Stage = 'roles' }; @{ Stage = 'wait' }; @{ Stage = 'deploy' }; @{ Stage = 'graph' }; @{ Stage = 'automation' }
     ) {
         param($Stage)
         switch ($Stage) {
@@ -153,6 +159,7 @@ Describe 'Event-wide LocalBox orchestration' {
             'defender' { Mock Initialize-MhhHostedDefender { throw 'Test failure' } }
             'roles' { Mock Get-AzRoleAssignment { throw 'Test failure' } }
             'wait' { Mock Wait-LocalBoxDeployment { throw 'Test failure' } }
+            'automation' { Mock Invoke-LocalBoxHostedAutomation { throw 'Test failure' } }
             'deploy' { Mock Submit-TestLocalBox { throw 'Test failure' } }
             'graph' { Mock az { $global:LASTEXITCODE = 1 } }
         }

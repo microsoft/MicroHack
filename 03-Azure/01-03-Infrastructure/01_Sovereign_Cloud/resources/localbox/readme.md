@@ -1,6 +1,6 @@
 # LocalBox post-provisioning preparation
 
-Run [prepare-localbox.ps1](../prepare-localbox.ps1) **inside LocalBox-Client**, after Jumpstart has finished deploying the nested Azure Local cluster. This is common to hosted and manual delivery. It does not deploy a new LocalBox or replace the existing Azure AKS/K3s labs.
+Run [prepare-localbox.ps1](../prepare-localbox.ps1) **inside LocalBox-Client**, after Jumpstart has finished deploying the nested Azure Local cluster. Hosted Console events now [invoke it automatically](../hosted-events/readme.md#complete-localbox-preparation), with AKS and the reference VM enabled, then run infrastructure health checks. The instructions below are for manual/BYOS delivery and deliberate recovery; do not run preparation concurrently with the hosted job. The script does not deploy a new LocalBox or replace the existing Azure AKS/K3s labs.
 
 ## Preparation time
 

@@ -22,6 +22,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'localbox-credentials.ps1')
+. (Join-Path $PSScriptRoot 'localbox-automation.ps1')
 . (Join-Path $PSScriptRoot 'hosted-tag-policy.ps1')
 . (Join-Path $PSScriptRoot 'hosted-defender.ps1')
 
@@ -204,6 +205,9 @@ foreach ($participantObjectId in $participants) {
 }
 
 Wait-LocalBoxDeployment -ResourceGroupName $localBoxResourceGroupName -DeploymentName $localBoxDeployment.DeploymentName
+$groupId = ($groupCredentials.HackboxCredential | Where-Object name -eq 'Lab Group ObjectId').value
+$automation = Invoke-LocalBoxHostedAutomation -SubscriptionId $SubscriptionId -ResourceGroupName $localBoxResourceGroupName -AksAdminGroupObjectId $groupId
+Write-Host "LocalBox preparation and health checks completed. Private results: $($automation.ResultsUri)"
 
 $groupCredentials
 @{ HackboxCredential = @{

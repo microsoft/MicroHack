@@ -9,8 +9,46 @@ function Initialize-LocalBoxAutomationEnvironment {
         if (-not $value) { throw "LocalBox machine environment is missing $name." }
         [Environment]::SetEnvironmentVariable($name, $value, 'Process')
     }
-    $env:PATH = [Environment]::GetEnvironmentVariable('PATH', 'Machine') + ';' + $env:PATH
-    foreach ($command in @('az', 'kubectl', 'Get-VM')) { Get-Command $command -ErrorAction Stop | Out-Null }
+    $env:PATH = $env:PATH + ';' + [Environment]::GetEnvironmentVariable('PATH', 'Machine')
+    foreach ($command in @('az', 'Get-VM')) { Get-Command $command -ErrorAction Stop | Out-Null }
+}
+
+function Get-LocalBoxKubectlClientVersion {
+    param([string]$Path)
+    $output = & $Path version --client --output json 2>&1
+    if ($LASTEXITCODE -ne 0) { throw "kubectl client version check failed: $($output -join "`n")" }
+    $client = ($output -join "`n") | ConvertFrom-Json -AsHashtable -ErrorAction Stop
+    if ($client.clientVersion.gitVersion -notmatch '^v?(?<Version>\d+\.\d+\.\d+)(?:[-+][0-9A-Za-z.-]+)?$') {
+        throw 'kubectl did not report a valid client version.'
+    }
+    [version]$Matches.Version
+}
+
+function Initialize-LocalBoxAutomationKubectl {
+    param([string]$InstanceId, [string]$Directory)
+    $instance = Get-LocalBoxResource $InstanceId
+    if ($instance.properties.kubernetesVersion -notmatch '^v?(?<Version>\d+\.\d+\.\d+)(?:[-+][0-9A-Za-z.-]+)?$') {
+        throw 'AKS did not report a valid Kubernetes version for kubectl installation.'
+    }
+    $version = [version]$Matches.Version
+    $existing = Get-Command kubectl -CommandType Application -ErrorAction SilentlyContinue
+    if ($existing) {
+        $client = Get-LocalBoxKubectlClientVersion -Path $existing.Path
+        if ($client.Major -eq $version.Major -and $client.Minor -eq $version.Minor) { return $existing.Path }
+    }
+    $tools = Join-Path (Split-Path -Parent $Directory) "tools/kubectl-$version"
+    New-Item -ItemType Directory -Path $tools -Force -ErrorAction Stop | Out-Null
+    $kubectl = Join-Path $tools 'kubectl.exe'
+    if (-not (Test-Path -LiteralPath $kubectl -PathType Leaf)) {
+        Write-Host "Installing kubectl $version for unattended SYSTEM health checks in $tools."
+        Invoke-LocalBoxAz @('aks', 'install-cli', '--client-version', $version.ToString(),
+            '--install-location', $kubectl, '--kubelogin-install-location', (Join-Path $tools 'kubelogin.exe')) -TimeoutSeconds 900 -NoOutput
+    }
+    if ((Get-LocalBoxKubectlClientVersion -Path $kubectl) -ne $version) {
+        throw "The private kubectl installation does not match requested version $version."
+    }
+    $env:PATH = $tools + [IO.Path]::PathSeparator + $env:PATH
+    return $kubectl
 }
 
 function Assert-LocalBoxAutomationTests {
@@ -46,6 +84,7 @@ function Write-LocalBoxAutomationStatus {
 function Invoke-LocalBoxAutomationHealth {
     param([hashtable]$Configuration, [string]$Directory, [string]$ResourceRoot, [string]$ManifestPath)
     $nodeConfig = Import-PowerShellDataFile -LiteralPath $env:LocalBoxConfigFile
+    Get-Command kubectl -CommandType Application -ErrorAction Stop | Out-Null
     $credential = Resolve-LocalBoxNodeCredential -Configuration $nodeConfig
     $global:LASTEXITCODE = 0
     & "$ResourceRoot/test-sovereign-cloud.ps1" -Scope LocalBox -Mode Full -DownloadTests:$false `
@@ -74,13 +113,16 @@ function Invoke-LocalBoxGuestAutomation {
     $lock = [Threading.Mutex]::new($false, 'Global\MicroHackLocalBoxAutomation')
     $locked = $false
     $transcribing = $false
+    $azureReady = $false
     $previousConfig = $env:AZURE_CONFIG_DIR
     $previousExtensions = $env:AZURE_EXTENSION_DIR
+    $previousPath = $env:PATH
     try {
         $locked = $lock.WaitOne(0)
         if (-not $locked) { throw 'Another hosted LocalBox automation is running.' }
         Start-Transcript -LiteralPath "$Directory/automation.log" -Force | Out-Null
         $transcribing = $true
+        Initialize-LocalBoxAutomationEnvironment
         if ($Configuration.SubscriptionId -ine $env:subscriptionId -or $Configuration.ResourceGroupName -ine $env:resourceGroup) {
             throw 'Automation scope does not match the LocalBox machine environment.'
         }
@@ -92,6 +134,7 @@ function Invoke-LocalBoxGuestAutomation {
         $env:AZURE_EXTENSION_DIR = Join-Path (Split-Path $Directory) 'cliextensions'
         Invoke-LocalBoxAz @('login', '--identity') | Out-Null
         Invoke-LocalBoxAz @('account', 'set', '--subscription', $Configuration.SubscriptionId) | Out-Null
+        $azureReady = $true
         # Blob role assignments may still be propagating when the guest starts.
         Wait-SovereignCheck -TimeoutSeconds 600 -Check {
             Invoke-LocalBoxAz @('storage', 'blob', 'list', '--account-name', $Configuration.StorageAccountName,
@@ -124,6 +167,9 @@ function Invoke-LocalBoxGuestAutomation {
             throw 'Reference VM Update Manager assessment did not return Succeeded with a timestamp.'
         }
         $status.UpdateAssessment = @{ Status = $assessment.status; Timestamp = $assessment.lastModifiedDateTime; ActivityId = $assessment.assessmentActivityId }
+        $status.Phase = 'KubernetesClient'
+        Write-LocalBoxAutomationStatus $Configuration $Directory $status
+        $status.KubectlPath = Initialize-LocalBoxAutomationKubectl -InstanceId $manifest.AksInstanceId -Directory $Directory
         $status.Phase = 'Pester'
         Write-LocalBoxAutomationStatus $Configuration $Directory $status
         $pester = Get-Module -ListAvailable Pester | Where-Object { $_.Version -ge [version]'5.7.1' -and $_.Version -lt [version]'6.0' }
@@ -158,12 +204,20 @@ function Invoke-LocalBoxGuestAutomation {
             if ($locked) {
                 $status.CompletedAt = [datetime]::UtcNow.ToString('o')
                 $status | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath "$Directory/status.json"
-                Send-LocalBoxAutomationFiles $Configuration $Directory
+                if ($azureReady) {
+                    try { Send-LocalBoxAutomationFiles $Configuration $Directory }
+                    catch {
+                        if ($status.Error) { throw "$($status.Error) Diagnostic upload also failed: $($_.Exception.Message)" }
+                        throw
+                    }
+                }
+                else { Write-Warning "Guest Azure authentication was not established. Diagnostics remain in $Directory and Run Command instanceView." }
             }
         }
         finally {
             $env:AZURE_CONFIG_DIR = $previousConfig
             $env:AZURE_EXTENSION_DIR = $previousExtensions
+            $env:PATH = $previousPath
             if ($locked) {
                 foreach ($path in @("$Directory/aks.kubeconfig", "$Directory/.azure")) {
                     if (Test-Path -LiteralPath $path) { Remove-Item -LiteralPath $path -Recurse -Force -ErrorAction Stop }
@@ -178,13 +232,13 @@ function Invoke-LocalBoxGuestAutomation {
 if ($MyInvocation.InvocationName -ne '.') {
     $ErrorActionPreference = 'Stop'
     if (-not $IsWindows) { throw 'Hosted guest automation requires Windows LocalBox-Client.' }
-    Initialize-LocalBoxAutomationEnvironment
     $requestedManifestPath = $ManifestPath
     . "$PSScriptRoot/prepare-localbox.ps1"
     . "$PSScriptRoot/test-sovereign-cloud.ps1"
     $automation = Get-Content -LiteralPath $ParametersPath -Raw | ConvertFrom-Json -AsHashtable
     $directory = Split-Path -Parent $ParametersPath
     if ($HealthOnly) {
+        Initialize-LocalBoxAutomationEnvironment
         Invoke-LocalBoxAutomationHealth -Configuration $automation -Directory $directory -ResourceRoot $PSScriptRoot -ManifestPath $requestedManifestPath
     }
     else {

@@ -1,0 +1,15 @@
+reference,date,description,amount_gbp
+CHG52040,2027-02-01,Roaming data EU,12506.75
+CHG52041,2027-02-03,Leased line rental,17234.51
+CHG52042,2027-02-05,Roaming data EU,8925.34
+CHG52043,2027-02-07,Backhaul capacity,9714.00
+CHG52044,2027-02-10,Signalling,10144.61
+CHG52045,2027-02-12,Backhaul capacity,15613.23
+CHG52047,2027-02-16,SMS termination,5716.65
+CHG52048,2027-02-19,Roaming data EU,1963.93
+CHG52049,2027-02-21,Roaming voice,5661.08
+CHG52050,2027-02-23,Interconnect minutes,1228.24
+CHG52051,2027-02-25,Roaming data EU,13528.52
+CHG52041,2027-02-03,Leased line rental,17234.51
+CHG52052,2027-02-27,Roaming data EU,9279.00
+CR-757,2027-02-28,Credit: SLA rebate,-214.01

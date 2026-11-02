@@ -1,0 +1,32 @@
+{
+  "name": "Azure / AI / Frontier Operations",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12",
+  "features": {
+    "ghcr.io/devcontainers/features/azure-cli:1": {},
+    "ghcr.io/azure/azure-dev/azd:latest": {}
+  },
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}/03-Azure/01-04-AI/13_Frontier_Operations",
+  "remoteUser": "vscode",
+  "waitFor": "postCreateCommand",
+  "postCreateCommand": "pip install --user pytest && python3 -m pytest -q",
+  "containerEnv": {
+    "AZD_ALPHA_ENABLE_AGENTS_MANAGED_HARNESS": "true"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-azuretools.azure-dev"
+      ],
+      "settings": {
+        "python.testing.pytestEnabled": true,
+        "python.testing.pytestArgs": [
+          "tests"
+        ],
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "git.openRepositoryInParentFolders": "always"
+      }
+    }
+  }
+}

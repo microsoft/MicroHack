@@ -1,0 +1,272 @@
+[
+  {
+    "partner_id": "harbour-brokers",
+    "reference": "POL-74003",
+    "kind": "mismatch",
+    "ledger_amount": 4935.84,
+    "statement_amount": 4942.34,
+    "difference": 6.5,
+    "action": "Raise premium query"
+  },
+  {
+    "partner_id": "harbour-brokers",
+    "reference": "POL-74008",
+    "kind": "within_tolerance",
+    "ledger_amount": 1372.09,
+    "statement_amount": 1372.34,
+    "difference": 0.25,
+    "action": "none"
+  },
+  {
+    "partner_id": "harbour-brokers",
+    "reference": "POL-74006",
+    "kind": "missing_on_statement",
+    "ledger_amount": 4663.91,
+    "statement_amount": null,
+    "difference": null,
+    "action": "Ask broker to confirm policy"
+  },
+  {
+    "partner_id": "harbour-brokers",
+    "reference": "POL-74013",
+    "kind": "missing_in_ledger",
+    "ledger_amount": null,
+    "statement_amount": 1067.13,
+    "difference": null,
+    "action": "Request policy schedule"
+  },
+  {
+    "partner_id": "harbour-brokers",
+    "reference": "POL-74002",
+    "kind": "duplicate",
+    "ledger_amount": 3069.86,
+    "statement_amount": 3069.86,
+    "difference": null,
+    "action": "Raise duplicate-premium query"
+  },
+  {
+    "partner_id": "harbour-brokers",
+    "reference": "RTN-551",
+    "kind": "credit",
+    "ledger_amount": null,
+    "statement_amount": -81.8,
+    "difference": null,
+    "action": "Confirm return premium"
+  },
+  {
+    "partner_id": "linden",
+    "reference": "POL-74017",
+    "kind": "mismatch",
+    "ledger_amount": 5171.99,
+    "statement_amount": 5177.24,
+    "difference": 5.25,
+    "action": "Raise premium query"
+  },
+  {
+    "partner_id": "linden",
+    "reference": "POL-74024",
+    "kind": "within_tolerance",
+    "ledger_amount": 2766.62,
+    "statement_amount": 2767.52,
+    "difference": 0.9,
+    "action": "none"
+  },
+  {
+    "partner_id": "linden",
+    "reference": "POL-74018",
+    "kind": "missing_on_statement",
+    "ledger_amount": 2663.92,
+    "statement_amount": null,
+    "difference": null,
+    "action": "Ask broker to confirm policy"
+  },
+  {
+    "partner_id": "linden",
+    "reference": "POL-74026",
+    "kind": "missing_in_ledger",
+    "ledger_amount": null,
+    "statement_amount": 1564.03,
+    "difference": null,
+    "action": "Request policy schedule"
+  },
+  {
+    "partner_id": "linden",
+    "reference": "POL-74015",
+    "kind": "duplicate",
+    "ledger_amount": 4265.47,
+    "statement_amount": 4265.47,
+    "difference": null,
+    "action": "Raise duplicate-premium query"
+  },
+  {
+    "partner_id": "linden",
+    "reference": "RTN-598",
+    "kind": "credit",
+    "ledger_amount": null,
+    "statement_amount": -268.43,
+    "difference": null,
+    "action": "Confirm return premium"
+  },
+  {
+    "partner_id": "brightside",
+    "reference": "POL-74036",
+    "kind": "mismatch",
+    "ledger_amount": 5811.2,
+    "statement_amount": 5820.45,
+    "difference": 9.25,
+    "action": "Raise premium query"
+  },
+  {
+    "partner_id": "brightside",
+    "reference": "POL-74029",
+    "kind": "within_tolerance",
+    "ledger_amount": 5453.23,
+    "statement_amount": 5453.48,
+    "difference": 0.25,
+    "action": "none"
+  },
+  {
+    "partner_id": "brightside",
+    "reference": "POL-74037",
+    "kind": "missing_on_statement",
+    "ledger_amount": 3994.04,
+    "statement_amount": null,
+    "difference": null,
+    "action": "Ask broker to confirm policy"
+  },
+  {
+    "partner_id": "brightside",
+    "reference": "POL-74039",
+    "kind": "missing_in_ledger",
+    "ledger_amount": null,
+    "statement_amount": 5586.35,
+    "difference": null,
+    "action": "Request policy schedule"
+  },
+  {
+    "partner_id": "brightside",
+    "reference": "POL-74028",
+    "kind": "duplicate",
+    "ledger_amount": 6364.87,
+    "statement_amount": 6364.87,
+    "difference": null,
+    "action": "Raise duplicate-premium query"
+  },
+  {
+    "partner_id": "brightside",
+    "reference": "RTN-276",
+    "kind": "credit",
+    "ledger_amount": null,
+    "statement_amount": -215.82,
+    "difference": null,
+    "action": "Confirm return premium"
+  },
+  {
+    "partner_id": "marlow",
+    "reference": "POL-74044",
+    "kind": "mismatch",
+    "ledger_amount": 614.31,
+    "statement_amount": 625.31,
+    "difference": 11.0,
+    "action": "Raise premium query"
+  },
+  {
+    "partner_id": "marlow",
+    "reference": "POL-74047",
+    "kind": "within_tolerance",
+    "ledger_amount": 2576.52,
+    "statement_amount": 2577.42,
+    "difference": 0.9,
+    "action": "none"
+  },
+  {
+    "partner_id": "marlow",
+    "reference": "POL-74049",
+    "kind": "missing_on_statement",
+    "ledger_amount": 5641.4,
+    "statement_amount": null,
+    "difference": null,
+    "action": "Ask broker to confirm policy"
+  },
+  {
+    "partner_id": "marlow",
+    "reference": "POL-74052",
+    "kind": "missing_in_ledger",
+    "ledger_amount": null,
+    "statement_amount": 2867.33,
+    "difference": null,
+    "action": "Request policy schedule"
+  },
+  {
+    "partner_id": "marlow",
+    "reference": "POL-74041",
+    "kind": "duplicate",
+    "ledger_amount": 6113.1,
+    "statement_amount": 6113.1,
+    "difference": null,
+    "action": "Raise duplicate-premium query"
+  },
+  {
+    "partner_id": "marlow",
+    "reference": "RTN-464",
+    "kind": "credit",
+    "ledger_amount": null,
+    "statement_amount": -61.23,
+    "difference": null,
+    "action": "Confirm return premium"
+  },
+  {
+    "partner_id": "seaton",
+    "reference": "POL-74058",
+    "kind": "mismatch",
+    "ledger_amount": 5185.6,
+    "statement_amount": 5194.6,
+    "difference": 9.0,
+    "action": "Raise premium query"
+  },
+  {
+    "partner_id": "seaton",
+    "reference": "POL-74059",
+    "kind": "within_tolerance",
+    "ledger_amount": 5179.4,
+    "statement_amount": 5180.3,
+    "difference": 0.9,
+    "action": "none"
+  },
+  {
+    "partner_id": "seaton",
+    "reference": "POL-74056",
+    "kind": "missing_on_statement",
+    "ledger_amount": 5899.29,
+    "statement_amount": null,
+    "difference": null,
+    "action": "Ask broker to confirm policy"
+  },
+  {
+    "partner_id": "seaton",
+    "reference": "POL-74065",
+    "kind": "missing_in_ledger",
+    "ledger_amount": null,
+    "statement_amount": 5846.71,
+    "difference": null,
+    "action": "Request policy schedule"
+  },
+  {
+    "partner_id": "seaton",
+    "reference": "POL-74054",
+    "kind": "duplicate",
+    "ledger_amount": 5850.66,
+    "statement_amount": 5850.66,
+    "difference": null,
+    "action": "Raise duplicate-premium query"
+  },
+  {
+    "partner_id": "seaton",
+    "reference": "RTN-546",
+    "kind": "credit",
+    "ledger_amount": null,
+    "statement_amount": -210.9,
+    "difference": null,
+    "action": "Confirm return premium"
+  }
+]

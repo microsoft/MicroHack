@@ -1,0 +1,272 @@
+[
+  {
+    "partner_id": "wessex-grid",
+    "reference": "DUOS-63003",
+    "kind": "mismatch",
+    "ledger_amount": 5773.72,
+    "statement_amount": 5856.72,
+    "difference": 83.0,
+    "action": "Raise charge query"
+  },
+  {
+    "partner_id": "wessex-grid",
+    "reference": "DUOS-63011",
+    "kind": "within_tolerance",
+    "ledger_amount": 31582.87,
+    "statement_amount": 31585.37,
+    "difference": 2.5,
+    "action": "none"
+  },
+  {
+    "partner_id": "wessex-grid",
+    "reference": "DUOS-63010",
+    "kind": "missing_on_statement",
+    "ledger_amount": 12726.86,
+    "statement_amount": null,
+    "difference": null,
+    "action": "Ask operator to confirm charge"
+  },
+  {
+    "partner_id": "wessex-grid",
+    "reference": "DUOS-63013",
+    "kind": "missing_in_ledger",
+    "ledger_amount": null,
+    "statement_amount": 8632.81,
+    "difference": null,
+    "action": "Request settlement data"
+  },
+  {
+    "partner_id": "wessex-grid",
+    "reference": "DUOS-63002",
+    "kind": "duplicate",
+    "ledger_amount": 35115.47,
+    "statement_amount": 35115.47,
+    "difference": null,
+    "action": "Raise duplicate-charge query"
+  },
+  {
+    "partner_id": "wessex-grid",
+    "reference": "ADJ-261",
+    "kind": "credit",
+    "ledger_amount": null,
+    "statement_amount": -140.01,
+    "difference": null,
+    "action": "Confirm adjustment"
+  },
+  {
+    "partner_id": "pennine",
+    "reference": "DUOS-63023",
+    "kind": "mismatch",
+    "ledger_amount": 27623.15,
+    "statement_amount": 27703.65,
+    "difference": 80.5,
+    "action": "Raise charge query"
+  },
+  {
+    "partner_id": "pennine",
+    "reference": "DUOS-63016",
+    "kind": "within_tolerance",
+    "ledger_amount": 18873.64,
+    "statement_amount": 18882.64,
+    "difference": 9.0,
+    "action": "none"
+  },
+  {
+    "partner_id": "pennine",
+    "reference": "DUOS-63017",
+    "kind": "missing_on_statement",
+    "ledger_amount": 16690.66,
+    "statement_amount": null,
+    "difference": null,
+    "action": "Ask operator to confirm charge"
+  },
+  {
+    "partner_id": "pennine",
+    "reference": "DUOS-63026",
+    "kind": "missing_in_ledger",
+    "ledger_amount": null,
+    "statement_amount": 28914.48,
+    "difference": null,
+    "action": "Request settlement data"
+  },
+  {
+    "partner_id": "pennine",
+    "reference": "DUOS-63015",
+    "kind": "duplicate",
+    "ledger_amount": 32790.09,
+    "statement_amount": 32790.09,
+    "difference": null,
+    "action": "Raise duplicate-charge query"
+  },
+  {
+    "partner_id": "pennine",
+    "reference": "ADJ-821",
+    "kind": "credit",
+    "ledger_amount": null,
+    "statement_amount": -294.76,
+    "difference": null,
+    "action": "Confirm adjustment"
+  },
+  {
+    "partner_id": "estuary",
+    "reference": "DUOS-63038",
+    "kind": "mismatch",
+    "ledger_amount": 9940.98,
+    "statement_amount": 10023.98,
+    "difference": 83.0,
+    "action": "Raise charge query"
+  },
+  {
+    "partner_id": "estuary",
+    "reference": "DUOS-63035",
+    "kind": "within_tolerance",
+    "ledger_amount": 28155.64,
+    "statement_amount": 28160.64,
+    "difference": 5.0,
+    "action": "none"
+  },
+  {
+    "partner_id": "estuary",
+    "reference": "DUOS-63031",
+    "kind": "missing_on_statement",
+    "ledger_amount": 41224.8,
+    "statement_amount": null,
+    "difference": null,
+    "action": "Ask operator to confirm charge"
+  },
+  {
+    "partner_id": "estuary",
+    "reference": "DUOS-63039",
+    "kind": "missing_in_ledger",
+    "ledger_amount": null,
+    "statement_amount": 18343.1,
+    "difference": null,
+    "action": "Request settlement data"
+  },
+  {
+    "partner_id": "estuary",
+    "reference": "DUOS-63028",
+    "kind": "duplicate",
+    "ledger_amount": 7084.25,
+    "statement_amount": 7084.25,
+    "difference": null,
+    "action": "Raise duplicate-charge query"
+  },
+  {
+    "partner_id": "estuary",
+    "reference": "ADJ-790",
+    "kind": "credit",
+    "ledger_amount": null,
+    "statement_amount": -112.52,
+    "difference": null,
+    "action": "Confirm adjustment"
+  },
+  {
+    "partner_id": "highmoor",
+    "reference": "DUOS-63042",
+    "kind": "mismatch",
+    "ledger_amount": 36404.09,
+    "statement_amount": 36487.09,
+    "difference": 83.0,
+    "action": "Raise charge query"
+  },
+  {
+    "partner_id": "highmoor",
+    "reference": "DUOS-63044",
+    "kind": "within_tolerance",
+    "ledger_amount": 9857.8,
+    "statement_amount": 9866.8,
+    "difference": 9.0,
+    "action": "none"
+  },
+  {
+    "partner_id": "highmoor",
+    "reference": "DUOS-63049",
+    "kind": "missing_on_statement",
+    "ledger_amount": 27271.35,
+    "statement_amount": null,
+    "difference": null,
+    "action": "Ask operator to confirm charge"
+  },
+  {
+    "partner_id": "highmoor",
+    "reference": "DUOS-63052",
+    "kind": "missing_in_ledger",
+    "ledger_amount": null,
+    "statement_amount": 29324.87,
+    "difference": null,
+    "action": "Request settlement data"
+  },
+  {
+    "partner_id": "highmoor",
+    "reference": "DUOS-63041",
+    "kind": "duplicate",
+    "ledger_amount": 36366.34,
+    "statement_amount": 36366.34,
+    "difference": null,
+    "action": "Raise duplicate-charge query"
+  },
+  {
+    "partner_id": "highmoor",
+    "reference": "ADJ-570",
+    "kind": "credit",
+    "ledger_amount": null,
+    "statement_amount": -119.47,
+    "difference": null,
+    "action": "Confirm adjustment"
+  },
+  {
+    "partner_id": "cotswold-meter",
+    "reference": "DUOS-63063",
+    "kind": "mismatch",
+    "ledger_amount": 24045.79,
+    "statement_amount": 24127.04,
+    "difference": 81.25,
+    "action": "Raise charge query"
+  },
+  {
+    "partner_id": "cotswold-meter",
+    "reference": "DUOS-63059",
+    "kind": "within_tolerance",
+    "ledger_amount": 33424.05,
+    "statement_amount": 33433.05,
+    "difference": 9.0,
+    "action": "none"
+  },
+  {
+    "partner_id": "cotswold-meter",
+    "reference": "DUOS-63058",
+    "kind": "missing_on_statement",
+    "ledger_amount": 20868.7,
+    "statement_amount": null,
+    "difference": null,
+    "action": "Ask operator to confirm charge"
+  },
+  {
+    "partner_id": "cotswold-meter",
+    "reference": "DUOS-63065",
+    "kind": "missing_in_ledger",
+    "ledger_amount": null,
+    "statement_amount": 9099.5,
+    "difference": null,
+    "action": "Request settlement data"
+  },
+  {
+    "partner_id": "cotswold-meter",
+    "reference": "DUOS-63054",
+    "kind": "duplicate",
+    "ledger_amount": 13905.26,
+    "statement_amount": 13905.26,
+    "difference": null,
+    "action": "Raise duplicate-charge query"
+  },
+  {
+    "partner_id": "cotswold-meter",
+    "reference": "ADJ-482",
+    "kind": "credit",
+    "ledger_amount": null,
+    "statement_amount": -195.87,
+    "difference": null,
+    "action": "Confirm adjustment"
+  }
+]

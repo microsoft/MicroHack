@@ -1,0 +1,15 @@
+reference,date,description,amount_gbp
+DUOS63040,2027-02-01,Standing charge,40854.15
+DUOS63041,2027-02-03,Excess capacity,36366.34
+DUOS63042,2027-02-05,Excess capacity,36487.09
+DUOS63043,2027-02-07,Distribution use of system,29801.94
+DUOS63044,2027-02-10,Reactive power,9866.80
+DUOS63045,2027-02-12,Capacity charge,12692.26
+DUOS63046,2027-02-14,Meter operator fee,29531.58
+DUOS63047,2027-02-16,Reactive power,33714.90
+DUOS63048,2027-02-19,Transmission charges,44398.40
+DUOS63050,2027-02-23,Transmission charges,39859.79
+DUOS63051,2027-02-25,Transmission charges,22916.35
+DUOS63041,2027-02-03,Excess capacity,36366.34
+DUOS63052,2027-02-27,Data collection fee,29324.87
+ADJ-570,2027-02-28,Adjustment: reading correction,-119.47

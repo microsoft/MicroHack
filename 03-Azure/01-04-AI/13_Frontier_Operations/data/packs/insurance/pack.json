@@ -1,0 +1,64 @@
+{
+  "id": "insurance",
+  "industry": "Insurance",
+  "company": "Northmere Insurance",
+  "tagline": "Home and motor insurer across the fictional Zedshire region",
+  "process": "Broker premium statement reconciliation",
+  "partner_type": "broker",
+  "partner_type_plural": "brokers",
+  "currency": "GBP",
+  "tolerance": 1.0,
+  "period": "2027-02",
+  "ref_prefix": "POL",
+  "actions": {
+    "mismatch": "Raise premium query",
+    "missing_on_statement": "Ask broker to confirm policy",
+    "missing_in_ledger": "Request policy schedule",
+    "duplicate": "Raise duplicate-premium query",
+    "credit": "Confirm return premium"
+  },
+  "portal": {
+    "name": "Broker Gateway",
+    "tagline": "The portal where Northmere and its brokers agree premium statements",
+    "case_noun": "query",
+    "case_types": [
+      "Premium query",
+      "Duplicate premium",
+      "Policy confirmation",
+      "Policy schedule request",
+      "Return premium confirmation"
+    ]
+  },
+  "people": {
+    "process_owner": "Aisha Bello, Credit Control Manager",
+    "expert": "Pete Lomax, Senior Credit Controller",
+    "approver": "Claire Dunmore, Chief Financial Officer"
+  },
+  "partners": [
+    {
+      "id": "harbour-brokers",
+      "name": "Harbour Brokers",
+      "contact": "accounts@harbourbrokers.example"
+    },
+    {
+      "id": "linden",
+      "name": "Linden & Gale",
+      "contact": "premiums@lindengale.example"
+    },
+    {
+      "id": "brightside",
+      "name": "Brightside Cover",
+      "contact": "finance@brightside.example"
+    },
+    {
+      "id": "marlow",
+      "name": "Marlow Insurance Services",
+      "contact": "ledger@marlow.example"
+    },
+    {
+      "id": "seaton",
+      "name": "Seaton Partners",
+      "contact": "ar@seaton.example"
+    }
+  ]
+}

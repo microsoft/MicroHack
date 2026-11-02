@@ -1,0 +1,107 @@
+# Challenge 7: Prove it before you scale it
+
+**[← Previous](challenge-06.md)** - [Home](../README.md) - [Next Challenge →](finish.md)
+
+## 🎯 Objective
+
+Measure what one month's run costs and how good it is, on two models, and turn the numbers into a business case your finance director would accept.
+
+## 🧭 Why this matters for your business
+
+A demo shows that something *can* work. A business case shows that it's **worth** it: how long a run takes, how often it's right and what it costs, compared with how the team works today. Those numbers also decide the model. A bigger model may be more accurate and slower and dearer; a smaller one may be good enough once the skill carries the method. You won't know until you measure.
+
+## ✅ Tasks
+
+### Part A: Your numbers so far (10 min)
+
+Every answer in the playground shows its time and tokens on the line under it, and **Traces** keeps them for every run. Find two runs and record their numbers:
+
+- your Challenge 2 run **with the skill** (one partner);
+- your Challenge 3 run (all five partners, with subagents).
+
+| Measure | One partner, `gpt-5.4-mini` | Five partners, `gpt-5.4-mini` |
+|---|---|---|
+| Time from request to answer | | |
+| Score | | |
+| Tokens | | |
+
+The trace header shows the totals for a run: steps (spans), model calls, tool calls, time and tokens.
+
+![The trace header: spans, chat calls, tool calls, time and tokens for one run](../images/challenge-07-trace-tokens.png)
+
+> [!NOTE]
+> Take the tokens from the **line under the answer**. For a run without subagents it matches the trace header. With subagents, the answer line also counts each helper's tokens, and the trace header doesn't (in our five-partner run: 698K on the answer line, 431K in the header). The answer line is what you pay for.
+
+### Part B: Run the same partner on the bigger model (15 min)
+
+To compare fairly, run the **same agent** (same instructions, skill, toolbox and guardrail) on the other model, side by side. Don't switch `ops-agent`'s model: in this preview the portal warns that the bigger model *doesn't work with Built-in tool* and would remove **Harness tools** from the agent. Cancel that dialog if you see it.
+
+1. Create a copy of your agent on `CompareModelDeploymentName` (`gpt-5.4`). In Cloud Shell:
+
+   ```bash
+   python3 -m frontierops copy-agent ops-agent ops-agent-54 --model gpt-5.4
+   ```
+
+   **What this does:** reads `ops-agent`'s definition from Foundry and saves it as a new agent, `ops-agent-54`, with only the model changed, then gives the copy's identity the same Foundry User role so it can return files. Your original agent isn't touched.
+
+2. Wait five minutes for the role, then open `ops-agent-54` in the portal. Attach the **same one** partner statement and ledger export as in Challenge 2, and send the same request.
+
+   ![The same agent on gpt-5.4: 76 seconds and 169K tokens, with the skill, the ERP and the upload](../images/challenge-07-gpt54-run.png)
+
+3. Download and score the workbook, and record the same measures in a new column.
+
+   ![Cloud Shell: gpt-5.4 also scores 6 of 6](../images/challenge-07-gpt54-score.png)
+
+4. For a fair comparison, run the same request once more on `ops-agent` (`gpt-5.4-mini`) in a new chat. Your agent has changed since Challenge 2 (it now also has the ERP and a guardrail), so its Challenge 2 numbers aren't a like-for-like baseline any more.
+
+   ![The same request on gpt-5.4-mini: 46 seconds and 189K tokens](../images/challenge-07-mini-run.png)
+
+   Notice that the two models didn't do exactly the same work: in our run the `gpt-5.4` copy also wrote notes to the ERP. Compare what each one did, not only the numbers.
+
+Why one partner? The bigger model has a smaller quota in your lab, and a five-partner run reads about a million tokens in a few minutes. Comparing one partner is fair to both models; you scale the result up in Part C.
+
+### Part C: Cost per run (10 min)
+
+1. Open the [Azure OpenAI pricing page](https://azure.microsoft.com/pricing/details/cognitive-services/openai-service/) and find the **Global** prices per million tokens for both models: input, cached input and output.
+2. Work out the model cost of one partner on each model. The playground shows one total, so use this split, which is what we measured across our runs: about **85% of the tokens are cached input** (the files and the skill, read again at each step), **12% are new input** and **3% are output**.
+
+   *(total × 0.85 × cached price + total × 0.12 × input price + total × 0.03 × output price) ÷ 1,000,000*
+
+   If you want the exact split, select **Traces** and open the **chat** steps: each shows its input, cached and output tokens.
+
+   Then the cost of the month: your five-partner run for `gpt-5.4-mini`, and roughly five times the one-partner cost for `gpt-5.4`.
+
+3. Add the harness: while the Copilot harness is in preview it's free until 1 December 2026; after that its workspace is billed per vCPU-hour and GiB-hour while a session runs. A run of a few minutes is a small share of an hour.
+4. Add the browser if the run used it: Browser Automation is billed per minute of browser session on your Playwright workspace, and a session stays open until the agent closes it or it times out (Challenge 5, Part D). Take the billable time from the workspace's **Browser activity log**, and the price from the [Playwright Workspaces pricing page](https://azure.microsoft.com/pricing/details/app-testing/).
+
+### Part D: The business case (10 min)
+
+Use your company's numbers or these, and change anything you disagree with:
+
+| Today | Value |
+|---|---|
+| People on the month-end reconciliation | 4 |
+| Days each, every month | 3 |
+| Cost of a person-day | 400 pounds |
+| Queries raised late, after the partner's dispute window | 1 in 10 |
+
+1. What does one month cost today, and what would it cost with the agent? Keep a person in the loop: who reviews the workbook and approves the queries, and for how long?
+2. Which model would you choose, and why? Is the difference in score worth the difference in cost and time?
+3. What would you measure in the first three months of a pilot to know it worked?
+
+Write it as five sentences you could send to your finance director.
+
+## ✔️ Success criteria
+
+- [ ] You measured time, score and tokens for a full run on two models.
+- [ ] You worked out the cost of one run, and know which parts of the price are tokens, harness and browser.
+- [ ] You chose a model with a reason you can defend.
+- [ ] You wrote a short business case in your own words.
+
+## 📚 Learning resources
+
+- [Azure OpenAI pricing](https://azure.microsoft.com/pricing/details/cognitive-services/openai-service/)
+- [Copilot harness limits, quotas and regions](https://learn.microsoft.com/azure/foundry/agents/concepts/limits-quotas-regions#microsoft-copilot-harness-preview)
+- [Evaluate your agents](https://learn.microsoft.com/azure/foundry/observability/how-to/evaluate-agent)
+
+[Coach solution and expected answers](../walkthrough/challenge-07/solution-07.md)

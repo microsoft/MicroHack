@@ -1,0 +1,50 @@
+{
+  "id": "telco",
+  "industry": "Telecom and broadband",
+  "company": "Kestrel Connect",
+  "prefix": "KC",
+  "tagline": "Home broadband and mobile for households across the fictional Zedshire region",
+  "greeting": "Thanks for calling Kestrel Connect. I'm the virtual assistant, and you can ask for a person at any time. How can I help today?",
+  "products": [
+    "Fibre 150 broadband",
+    "Fibre 500 broadband",
+    "SIM-only mobile",
+    "Broadband and mobile bundle"
+  ],
+  "appointment_type": "engineer visit",
+  "voice_hint": "Friendly, calm and practical",
+  "articles": [
+    {
+      "id": "KB-KC-001",
+      "title": "Checking who you are speaking to"
+    },
+    {
+      "id": "KB-KC-002",
+      "title": "Supporting customers who may be vulnerable"
+    },
+    {
+      "id": "KB-KC-003",
+      "title": "Complaints and escalation"
+    },
+    {
+      "id": "KB-KC-004",
+      "title": "Service levels and opening hours"
+    },
+    {
+      "id": "KB-KC-005",
+      "title": "Broadband outages and faults"
+    },
+    {
+      "id": "KB-KC-006",
+      "title": "Engineer appointments"
+    },
+    {
+      "id": "KB-KC-007",
+      "title": "Bills and payment arrangements"
+    },
+    {
+      "id": "KB-KC-008",
+      "title": "Moving home and ending a contract"
+    }
+  ]
+}

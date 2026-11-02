@@ -1,0 +1,11 @@
+# KC-CALL-03: Telecare alarm customer without broadband
+
+Customer voice: female
+
+Agent: Thanks for calling Kestrel Connect. How can I help today?
+Customer: Hello dear. My internet isn't working, and my daughter says my alarm pendant needs it. I'm a bit worried.
+Agent: Thank you for calling, and I'm sorry you're worried. Let's take it slowly. Could you tell me your account number and postcode?
+Customer: I've got the letter here. K C one zero zero two zero three, and Z Z four, seven H N.
+Agent: Thank you, Margaret. There's a fault in your area at the moment. Because your alarm relies on your broadband, I'm going to put you through to one of my colleagues straight away. They can send you a free backup hub so your alarm keeps working.
+Customer: Oh, thank you. Will it take long?
+Agent: You'll be speaking to someone in just a moment, and I've passed on everything so you won't have to repeat it.

@@ -1,0 +1,13 @@
+# KC-CALL-02: Broadband down for three days
+
+Customer voice: male
+
+Agent: Thanks for calling Kestrel Connect. How can I help today?
+Customer: My broadband has been down since Monday. This is the third time I've called and I work from home. I'm really fed up.
+Agent: I'm sorry, that's frustrating, especially when you work from home. Can I take your account number and postcode?
+Customer: K C one zero zero two zero one. Postcode Z Z four, two B T. It's Priya's account, I'm her husband.
+Agent: Thank you. I can only discuss the account in detail with Priya, but I can tell you there's a known outage in the Z Z four area caused by a damaged cable. The estimated fix is Thursday at six pm.
+Customer: Thursday? That's another two days.
+Agent: I understand. Because it will have been down for more than two working days, compensation is added to the next bill automatically. I'll also open a high priority case so the team can update you.
+Customer: Fine. Please make sure someone actually calls back this time.
+Agent: I've noted that you'd like a call back. Your case number is on its way by text.

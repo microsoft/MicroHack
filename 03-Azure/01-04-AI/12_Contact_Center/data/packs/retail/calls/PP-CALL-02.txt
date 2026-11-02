@@ -1,0 +1,11 @@
+# PP-CALL-02: Garden table six days late
+
+Customer voice: female
+
+Agent: Thanks for contacting Parcelpine. How can I help today?
+Customer: I paid for next-day delivery on a garden table and it's now six days late. Nobody's told me anything.
+Agent: I'm sorry, that's not good enough. Can I take your account number and postcode?
+Customer: P P nine zero zero five zero one, Z Z five, three Q F.
+Agent: Thank you, Jessica. There's a courier depot closure in your area delaying deliveries. As your order is more than five working days late, you can choose a full refund or a free redelivery.
+Customer: I still want the table. Redeliver it, but I want my delivery fee back.
+Agent: I've arranged a free redelivery and opened a case to refund the delivery fee.

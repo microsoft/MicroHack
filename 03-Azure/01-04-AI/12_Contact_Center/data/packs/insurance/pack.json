@@ -1,0 +1,50 @@
+{
+  "id": "insurance",
+  "industry": "Insurance",
+  "company": "Northmere Insurance",
+  "prefix": "NI",
+  "tagline": "Home and motor insurance for customers across the fictional Zedshire region",
+  "greeting": "Thanks for calling Northmere Insurance. I'm the virtual assistant, and you can ask for a person at any time. How can I help today?",
+  "products": [
+    "Home buildings and contents",
+    "Contents only",
+    "Comprehensive motor",
+    "Third party motor"
+  ],
+  "appointment_type": "claims assessor visit",
+  "voice_hint": "Empathetic, steady and clear",
+  "articles": [
+    {
+      "id": "KB-NI-001",
+      "title": "Checking who you are speaking to"
+    },
+    {
+      "id": "KB-NI-002",
+      "title": "Supporting customers who may be vulnerable"
+    },
+    {
+      "id": "KB-NI-003",
+      "title": "Complaints and escalation"
+    },
+    {
+      "id": "KB-NI-004",
+      "title": "Service levels and opening hours"
+    },
+    {
+      "id": "KB-NI-005",
+      "title": "Making a home claim"
+    },
+    {
+      "id": "KB-NI-006",
+      "title": "Storm and escape of water damage"
+    },
+    {
+      "id": "KB-NI-007",
+      "title": "Motor claims and courtesy cars"
+    },
+    {
+      "id": "KB-NI-008",
+      "title": "Claims assessor visits"
+    }
+  ]
+}

@@ -1,0 +1,331 @@
+{
+  "customers": [
+    {
+      "customer_id": "PP-C01",
+      "account_number": "PP900501",
+      "name": "Jessica Moore",
+      "postcode": "ZZ5 3QF",
+      "product": "Next-day delivery",
+      "balance_due": 0.0,
+      "status": "active",
+      "flags": [],
+      "notes": "Order PP-O7712 (garden table) is 6 working days late; area ZZ5 has courier delays."
+    },
+    {
+      "customer_id": "PP-C02",
+      "account_number": "PP900502",
+      "name": "Ryan Fletcher",
+      "postcode": "ZZ2 7AL",
+      "product": "Parcelpine Plus membership",
+      "balance_due": 0.0,
+      "status": "active",
+      "flags": [],
+      "notes": "Wants to return a sofa (large item)."
+    },
+    {
+      "customer_id": "PP-C03",
+      "account_number": "PP900503",
+      "name": "Alice Kemp",
+      "postcode": "ZZ1 9GH",
+      "product": "Standard delivery",
+      "balance_due": 0.0,
+      "status": "active",
+      "flags": [],
+      "notes": "Lamp arrived with a cracked base (worth 18 pounds)."
+    },
+    {
+      "customer_id": "PP-C04",
+      "account_number": "PP900504",
+      "name": "Mohammed Rahman",
+      "postcode": "ZZ5 6DY",
+      "product": "Next-day delivery",
+      "balance_due": 0.0,
+      "status": "active",
+      "flags": [],
+      "notes": "Order delayed in ZZ5."
+    },
+    {
+      "customer_id": "PP-C05",
+      "account_number": "PP900505",
+      "name": "Beatrice Hall",
+      "postcode": "ZZ3 2KR",
+      "product": "Large item delivery",
+      "balance_due": 0.0,
+      "status": "active",
+      "flags": [
+        "mobility_needs"
+      ],
+      "notes": "Needs the courier to carry items inside."
+    },
+    {
+      "customer_id": "PP-C06",
+      "account_number": "PP900506",
+      "name": "Leo Grant",
+      "postcode": "ZZ4 5PN",
+      "product": "Standard delivery",
+      "balance_due": 0.0,
+      "status": "active",
+      "flags": [],
+      "notes": "Open case about a missing refund."
+    },
+    {
+      "customer_id": "PP-C07",
+      "account_number": "PP900507",
+      "name": "Nina Kowalski",
+      "postcode": "ZZ2 3BW",
+      "product": "Parcelpine Plus membership",
+      "balance_due": 0.0,
+      "status": "active",
+      "flags": [],
+      "notes": ""
+    },
+    {
+      "customer_id": "PP-C08",
+      "account_number": "PP900508",
+      "name": "Harold Simmons",
+      "postcode": "ZZ1 4TE",
+      "product": "Standard delivery",
+      "balance_due": 0.0,
+      "status": "active",
+      "flags": [
+        "low_digital_confidence"
+      ],
+      "notes": "Struggles with the website."
+    },
+    {
+      "customer_id": "PP-C09",
+      "account_number": "PP900509",
+      "name": "Tanya Ivanova",
+      "postcode": "ZZ5 8LM",
+      "product": "Next-day delivery",
+      "balance_due": 0.0,
+      "status": "active",
+      "flags": [],
+      "notes": ""
+    },
+    {
+      "customer_id": "PP-C10",
+      "account_number": "PP900510",
+      "name": "Chris Doyle",
+      "postcode": "ZZ3 6WS",
+      "product": "Standard delivery",
+      "balance_due": 0.0,
+      "status": "active",
+      "flags": [],
+      "notes": ""
+    }
+  ],
+  "slots": [
+    {
+      "slot_id": "PP-S001",
+      "type": "returns collection",
+      "start": "2027-03-15T08:00",
+      "area": "ZZ1"
+    },
+    {
+      "slot_id": "PP-S002",
+      "type": "returns collection",
+      "start": "2027-03-15T10:00",
+      "area": "ZZ2"
+    },
+    {
+      "slot_id": "PP-S003",
+      "type": "returns collection",
+      "start": "2027-03-15T13:00",
+      "area": "ZZ3"
+    },
+    {
+      "slot_id": "PP-S004",
+      "type": "returns collection",
+      "start": "2027-03-15T15:00",
+      "area": "ZZ4"
+    },
+    {
+      "slot_id": "PP-S005",
+      "type": "returns collection",
+      "start": "2027-03-16T08:00",
+      "area": "ZZ5"
+    },
+    {
+      "slot_id": "PP-S006",
+      "type": "returns collection",
+      "start": "2027-03-16T10:00",
+      "area": "ZZ1"
+    },
+    {
+      "slot_id": "PP-S007",
+      "type": "returns collection",
+      "start": "2027-03-16T13:00",
+      "area": "ZZ2"
+    },
+    {
+      "slot_id": "PP-S008",
+      "type": "returns collection",
+      "start": "2027-03-16T15:00",
+      "area": "ZZ3"
+    },
+    {
+      "slot_id": "PP-S009",
+      "type": "returns collection",
+      "start": "2027-03-17T08:00",
+      "area": "ZZ4"
+    },
+    {
+      "slot_id": "PP-S010",
+      "type": "returns collection",
+      "start": "2027-03-17T10:00",
+      "area": "ZZ5"
+    },
+    {
+      "slot_id": "PP-S011",
+      "type": "returns collection",
+      "start": "2027-03-17T13:00",
+      "area": "ZZ1"
+    },
+    {
+      "slot_id": "PP-S012",
+      "type": "returns collection",
+      "start": "2027-03-17T15:00",
+      "area": "ZZ2"
+    },
+    {
+      "slot_id": "PP-S013",
+      "type": "returns collection",
+      "start": "2027-03-18T08:00",
+      "area": "ZZ3"
+    },
+    {
+      "slot_id": "PP-S014",
+      "type": "returns collection",
+      "start": "2027-03-18T10:00",
+      "area": "ZZ4"
+    },
+    {
+      "slot_id": "PP-S015",
+      "type": "returns collection",
+      "start": "2027-03-18T13:00",
+      "area": "ZZ5"
+    },
+    {
+      "slot_id": "PP-S016",
+      "type": "returns collection",
+      "start": "2027-03-18T15:00",
+      "area": "ZZ1"
+    },
+    {
+      "slot_id": "PP-S017",
+      "type": "returns collection",
+      "start": "2027-03-19T08:00",
+      "area": "ZZ2"
+    },
+    {
+      "slot_id": "PP-S018",
+      "type": "returns collection",
+      "start": "2027-03-19T10:00",
+      "area": "ZZ3"
+    },
+    {
+      "slot_id": "PP-S019",
+      "type": "returns collection",
+      "start": "2027-03-19T13:00",
+      "area": "ZZ4"
+    },
+    {
+      "slot_id": "PP-S020",
+      "type": "returns collection",
+      "start": "2027-03-19T15:00",
+      "area": "ZZ5"
+    },
+    {
+      "slot_id": "PP-S021",
+      "type": "returns collection",
+      "start": "2027-03-22T08:00",
+      "area": "ZZ1"
+    },
+    {
+      "slot_id": "PP-S022",
+      "type": "returns collection",
+      "start": "2027-03-22T10:00",
+      "area": "ZZ2"
+    },
+    {
+      "slot_id": "PP-S023",
+      "type": "returns collection",
+      "start": "2027-03-22T13:00",
+      "area": "ZZ3"
+    },
+    {
+      "slot_id": "PP-S024",
+      "type": "returns collection",
+      "start": "2027-03-22T15:00",
+      "area": "ZZ4"
+    },
+    {
+      "slot_id": "PP-S025",
+      "type": "returns collection",
+      "start": "2027-03-23T08:00",
+      "area": "ZZ5"
+    },
+    {
+      "slot_id": "PP-S026",
+      "type": "returns collection",
+      "start": "2027-03-23T10:00",
+      "area": "ZZ1"
+    },
+    {
+      "slot_id": "PP-S027",
+      "type": "returns collection",
+      "start": "2027-03-23T13:00",
+      "area": "ZZ2"
+    },
+    {
+      "slot_id": "PP-S028",
+      "type": "returns collection",
+      "start": "2027-03-23T15:00",
+      "area": "ZZ3"
+    },
+    {
+      "slot_id": "PP-S029",
+      "type": "returns collection",
+      "start": "2027-03-24T08:00",
+      "area": "ZZ4"
+    },
+    {
+      "slot_id": "PP-S030",
+      "type": "returns collection",
+      "start": "2027-03-24T10:00",
+      "area": "ZZ5"
+    },
+    {
+      "slot_id": "PP-S031",
+      "type": "returns collection",
+      "start": "2027-03-24T13:00",
+      "area": "ZZ1"
+    },
+    {
+      "slot_id": "PP-S032",
+      "type": "returns collection",
+      "start": "2027-03-24T15:00",
+      "area": "ZZ2"
+    }
+  ],
+  "cases": [
+    {
+      "case_id": "PP-CASE-3305",
+      "customer_id": "PP-C06",
+      "category": "refund",
+      "summary": "Returned rug received at warehouse on 20 February 2027; refund not yet showing.",
+      "status": "open",
+      "priority": "normal",
+      "opened": "2027-02-28"
+    }
+  ],
+  "service_notices": [
+    {
+      "area": "ZZ5",
+      "since": "2027-03-03",
+      "estimated_fix": "2027-03-10",
+      "description": "Delivery delays: courier depot closure in ZZ5 is delaying deliveries by up to 4 working days"
+    }
+  ]
+}

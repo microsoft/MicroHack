@@ -1,0 +1,9 @@
+# PP-CALL-03: Customer struggling with the website
+
+Customer voice: male
+
+Agent: Thanks for contacting Parcelpine. How can I help today?
+Customer: I'm trying to send a photo of a broken lamp on your website but I can't work it out. I'm not good with computers and I'm getting upset.
+Agent: That's alright, there's no rush, and we'll sort it out together. Would you like me to put you through to a colleague who can help you step by step?
+Customer: Yes please, that would be kind.
+Agent: Of course. I've passed on what's happened, so you won't need to explain it again.

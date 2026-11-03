@@ -15,7 +15,7 @@ Use the existing `<YOUR-LAB-RESOURCE-GROUP>` for the Azure Migrate project, repl
 
 ### **Task 1: Configure and register the Hyper-V replication providers**
 
-In the Azure Portal, select *Virtual machines* from the navigation pane on the left. Select the supplied Hyper-V host **`mh-<8charStableLabSuffix>-hv`** and log on via Azure Bastion with your host credentials:
+In the Azure Portal, select *Virtual machines* from the navigation pane on the left. Select the Hyper-V host named in your platform dashboard (for example, `mh-0013-hv` in a fresh `rg-labuser-0013` lab) and log on via Azure Bastion with your host credentials:
 
 > [!NOTE]
 > You can also select *Password from Azure Key Vault* under *Authentication Type* to select the secret stored in the Key Vault.

@@ -70,7 +70,6 @@ if ($labHash -cnotmatch '^[a-f0-9]{12}$') {
     throw 'The platform returned an invalid stable lab suffix.'
 }
 $labSuffix = $labHash.Substring(0, 8)
-$hostName = "mh-$labSuffix-hv"
 $deploymentName = "migration-$labSuffix"
 $labVersion = 'single-rg-v1'
 $hackName = '06_Migration_Secure_AI_Ready'
@@ -87,6 +86,42 @@ if ($existingResources.Count -gt 0 -and $groupTags['Microhack'] -ne $hackName) {
 
 $deployments = @(Get-AzResourceGroupDeployment -ResourceGroupName $ResourceGroupName)
 $deployment = $deployments | Where-Object DeploymentName -EQ $deploymentName | Select-Object -First 1
+# Keep the resource-name suffix separate from the stable lab identity, including on legacy retries.
+$recordedNameSuffixes = @(
+    if ($groupTags.ContainsKey('LabNameSuffix')) { [string]$groupTags['LabNameSuffix'] }
+    if ($null -ne $deployment) {
+        if ($null -ne $deployment.Parameters -and $deployment.Parameters.ContainsKey('resourceNameSuffix')) {
+            [string]$deployment.Parameters['resourceNameSuffix'].Value
+        } else {
+            $labSuffix
+        }
+    }
+    foreach ($resource in $existingResources) {
+        if ($resource.ResourceId -match '/providers/Microsoft.Compute/virtualMachines/mh-([a-z0-9]{1,9})-hv$' -or
+            $resource.ResourceId -match '/providers/Microsoft.Network/virtualNetworks/mh-([a-z0-9]{1,9})-(?:Source-VNet|destination-VNet)$') {
+            $Matches[1]
+        }
+    }
+) | Select-Object -Unique
+$recordedNameSuffixes = @($recordedNameSuffixes)
+if ($recordedNameSuffixes.Count -gt 1 -or
+    @($recordedNameSuffixes | Where-Object {
+        $_ -isnot [string] -or ($_ -cnotmatch '\A[0-9]{1,9}\z' -and $_ -cne $labSuffix)
+    }).Count -gt 0) {
+    throw 'The existing lab has conflicting or invalid resource-name suffixes. Inspect LabNameSuffix, deployment parameters and resource names; no resources were changed.'
+}
+$resourceNameSuffix = $labSuffix
+if ($recordedNameSuffixes.Count -eq 1) {
+    $resourceNameSuffix = $recordedNameSuffixes[0]
+} elseif ($existingResources.Count -eq 0 -and -not $groupTags['LabId'] -and
+    $ResourceGroupName -match '^rg-labuser-([0-9]+)$') {
+    $resourceNameSuffix = $Matches[1]
+    if ($resourceNameSuffix.Length -gt 9) {
+        throw 'The learner number exceeds nine digits and would exceed the 15-character Windows hostname limit. No resources were changed.'
+    }
+}
+$hostName = "mh-$resourceNameSuffix-hv"
+Write-Host "Resource name prefix: mh-$resourceNameSuffix; stable lab ID: $labSuffix."
 $hostVm = $null
 if ($existingResources.ResourceId -contains "$resourceGroupId/providers/Microsoft.Compute/virtualMachines/$hostName") {
     $hostVm = Get-AzVM -ResourceGroupName $ResourceGroupName -Name $hostName
@@ -223,6 +258,7 @@ if (-not $alreadyReady -and ($null -eq $deployment -or $deployment.ProvisioningS
     Update-AzTag -ResourceId $resourceGroupId -Operation Merge -Tag @{
         Microhack = $hackName
         LabId = $labSuffix
+        LabNameSuffix = $resourceNameSuffix
         LabRegion = $location
     } | Out-Null
     Update-MhhToken | Out-Null
@@ -234,6 +270,7 @@ if (-not $alreadyReady -and ($null -eq $deployment -or $deployment.ProvisioningS
         AsJob = $true
         TemplateParameterObject = @{
             labSuffix = $labSuffix
+            resourceNameSuffix = $resourceNameSuffix
             participantObjectIds = $AllowedEntraUserIds
             location = $location
             # Use a JSON string here; Bicep's @secure() retains ARM secret protection.

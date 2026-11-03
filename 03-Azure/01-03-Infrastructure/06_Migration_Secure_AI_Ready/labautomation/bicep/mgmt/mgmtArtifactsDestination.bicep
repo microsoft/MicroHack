@@ -22,10 +22,12 @@ param bastionSku string = 'Basic'
 @description('DNS Server configuration')
 param dnsServers array = []
 
-param labSuffix string
+@minLength(1)
+@maxLength(9)
+param resourceNameSuffix string
 param tags object = {}
 
-var namingPrefix = 'mh-${labSuffix}'
+var namingPrefix = 'mh-${resourceNameSuffix}'
 
 @description('Name of the VNet')
 var virtualNetworkNameDST string = '${namingPrefix}-destination-VNet'

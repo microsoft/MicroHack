@@ -33,12 +33,12 @@ Your previously created Azure Migrate project should be listed. Click on it to o
 
 ### **Task 2: Install the Azure Migrate appliance for Hyper-V discovery**
 
-Hyper-V discovery uses an Azure Migrate appliance that connects to the Hyper-V host and continuously collects VM configuration, performance metadata, and workload inventory. For this Hack, install and register the appliance by running the PowerShell installation script on the existing **MHBox-AzMigSrv** nested server, and then connect it to the supplied Hyper-V host **`mh-<8charStableLabSuffix>-hv`**.
+Hyper-V discovery uses an Azure Migrate appliance that connects to the Hyper-V host and continuously collects VM configuration, performance metadata, and workload inventory. For this Hack, install and register the appliance by running the PowerShell installation script on the existing **MHBox-AzMigSrv** nested server, and then connect it to the Hyper-V host named in your platform dashboard (for example, `mh-0013-hv` in a fresh `rg-labuser-0013` lab).
 
 > [!IMPORTANT]
 > Check the current [Hyper-V discovery prerequisites](https://learn.microsoft.com/en-us/azure/migrate/tutorial-discover-hyper-v?view=migrate#prerequisites) for the Azure Migrate appliance and Hyper-V host.
 
-In the Azure Portal select *Virtual machines* from the navigation pane on the left. Select the host named in your dashboard (`mh-<8charStableLabSuffix>-hv`) and log on via Azure Bastion with your host credentials:
+In the Azure Portal select *Virtual machines* from the navigation pane on the left. Select the host named in your dashboard and log on via Azure Bastion with your host credentials:
 
 > [!NOTE]
 > You can also select *Password from Azure Key Vault* under *Authentication Type* to select the secret stored in the Key Vault.

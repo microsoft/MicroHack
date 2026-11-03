@@ -1,122 +1,131 @@
-# Instructor deployment and validation
+# Deploy the migration lab
 
-Learners start with a ready environment and follow [Solution 1](../walkthrough/challenge-01/solution-01.md) to verify it. They do not deploy the landing zone themselves.
+Instructors prepare Challenge 1 before the session. Both deployment options use the same [Bicep template](../labautomation/bicep/main.bicep) and Bootstrap scripts: one learner resource group contains source and destination networks, Bastion, NAT Gateways, Key Vault, and a Hyper-V host with four nested VMs. Discovery, migration, monitoring, and App Service remain learner exercises.
 
-## Hosted deployment
-
-The platform reads [lab-defaults.json](../labautomation/lab-defaults.json):
-
-| Default | Value |
+| Option | Use when |
 | --- | --- |
-| `groups` | `[]` |
-| `deploymentType` | `resourcegroup` |
-| `labsPerSubscription` | `2` |
-| `preferredLocation` | `swedencentral` |
-| `estimatedDailyCostsUsd` | `80.0` |
+| [Hackbox Console](#option-1-hackbox-console) | The Console provisions learner scopes, runs automation, verifies readiness, and delivers connection details. |
+| [Manual deployment](#option-2-manual-deployment) | An instructor deploys directly into Azure without the Console or its helper commands. |
 
-The USD 80 daily value is a **conservative planning estimate for a running baseline, not a quote**. Check current Azure pricing, quota, learner count, and event duration before the event; later migration, monitoring, and App Service exercises can add charges.
+## Before either deployment
 
-The platform first runs [shared-deploy-lab.ps1](../labautomation/shared-deploy-lab.ps1) **once per subscription** to register required resource providers. This hook creates no shared resource group and makes no Defender plan changes. It then invokes [deploy-lab.ps1](../labautomation/deploy-lab.ps1) once per learner. The per-learner entry point accepts exactly these platform parameters:
+- Arrange permission to deploy resources and create role assignments in the lab RG, for example RG Owner. Creating an RG and registering providers require additional subscription permissions. Learners need RG Owner and subscription Reader, not subscription Owner; manual organizers assign these roles themselves.
+- Check regional capacity and quota. The host needs **Standard_D16s_v5**, zone **1**, a **PremiumV2_LRS** data disk, and Bastion Developer support; the default region is **swedencentral**. Budget per learner for 30 regional vCPUs, including 16 DSv5 and 10 BS-family vCPUs, and five Standard public IPs across the Hack. See [quota requests](https://learn.microsoft.com/azure/quotas/quickstart-increase-quota-portal).
+- Resolve subscription policy restrictions and any required feature registrations with the organizer. Optional Defender plans must be separately approved and enabled; deployment does not change subscription-wide Defender plans.
+- Allow **35-90+ minutes** for initial setup. The USD 80 daily baseline estimate in [lab-defaults.json](../labautomation/lab-defaults.json) is a conservative planning value, not a quote; later exercises add costs.
 
-| Parameter | Type | Meaning |
-| --- | --- | --- |
-| `DeploymentType` | `string` | `resourcegroup` for this Hack |
-| `SubscriptionId` | `string` | The learner's assigned subscription |
-| `ResourceGroupName` | `string` | The single, already-created learner resource group |
-| `PreferredLocation` | `string[]` | Ordered deployment regions; default `swedencentral`. The RG's metadata location does not restrict its resources' region. |
-| `AllowedEntraUserIds` | `string[]` | Learner Entra object IDs requiring lab access |
+The Console deployer applies the approved training RG tags `SecurityControl=Ignore` and `CostControl=Ignore`. Direct Bicep deployment does **not** apply these exemptions. If required for a manual lab, obtain governance approval and apply the approved tags explicitly. Tags affect only controls that honor them; they are not universal policy exemptions and do not stop billing.
 
-Before per-learner invocation, the platform creates the resource group, authenticates Az PowerShell and Azure CLI, selects the subscription, and assigns the learner **Owner** on the resource group and **Reader** on the subscription. The hosted script neither signs in nor creates another resource group. Instructors must verify that the shared provider-registration hook succeeded, quota is sufficient, and any optional Defender plans were separately approved and enabled; do not grant subscription Owner to every learner.
+## Option 1: Hackbox Console
 
-**Approved training policy exemptions:** After validating the RG scope and existing-lab consistency, the deployer merges `SecurityControl=Ignore` and `CostControl=Ignore` into the learner RG's tags before submitting or resuming ARM. Completed reruns also apply these tags. Existing values for these two keys are replaced; unrelated tags are preserved. A tag-write failure stops the script before deployment or credential publication.
+1. Import this Hack's complete `labautomation` folder, including its `bicep` subtree and both JSON files. Review [deployment-settings.json](../labautomation/deployment-settings.json) before importing; the configured source must contain the matching Bootstrap and guest artifacts.
+2. Select **resourcegroup** deployment. Defaults are two labs per subscription in `swedencentral`; adjust the event settings and quota as needed. The Console supplies the existing learner RG, authentication, and learner RBAC.
+3. Run predeployment. [shared-deploy-lab.ps1](../labautomation/shared-deploy-lab.ps1) registers providers once per subscription; [deploy-lab.ps1](../labautomation/deploy-lab.ps1) deploys and verifies each lab.
+4. Hand out the Console's connection and credential fields only after verification succeeds. Learners then follow [Solution 1](../walkthrough/challenge-01/solution-01.md).
 
-Use this automation only for training RGs approved for these **RG-wide exemptions**, including later learner-created resources. The tags affect only governance controls that explicitly honor them; they are not general Azure Policy exemptions. Where supported, the security exemption avoids inherited public-IP `ipTags` injection that can trigger the `AllowBringYourOwnPublicIpAddress` feature requirement. The deployer does not register subscription features or change Defender plans. The cost-control exemption does **not** prevent Azure charges; the planning estimate and event cost management still apply.
+Fresh `rg-labuser-0013` labs use `mh-0013-hv` and matching network prefixes. Leading zeros are preserved; learner numbers can contain one to nine digits. Existing labs and nonstandard RG names retain hash-based names. Keep the RG's `LabId`, `LabNameSuffix`, and `LabRegion` records intact: completed reruns preserve learner progress, and incomplete retries retain the original names and region.
 
-[main.bicep](../labautomation/bicep/main.bicep) and its local modules are packaged together under `labautomation/bicep`, so importing or mounting only `labautomation` is sufficient for template deployment. The guest automation and demo-page assets remain under `resources/artifacts` and are downloaded from the selected repository/branch.
+## Option 2: Manual deployment
 
-When auto-shutdown is enabled, the host's managed identity receives **Virtual Machine Contributor on the host VM only**, in addition to Contributor on its shutdown schedule. Updating the schedule also requires `Microsoft.Compute/virtualMachines/write` on that linked VM. Bootstrap depends on both assignments and retries transient schedule authorization failures within its existing five-minute Azure-initialization budget; it receives no RG- or subscription-wide Contributor grant. A fixed extension update tag reruns Bootstrap once when this fix is applied to an incomplete lab; completed hosted labs are still reused without redeployment.
+Use **PowerShell 7**, Azure CLI with Bicep support, and an interactive user login. Azure Cloud Shell's **PowerShell** environment also works after checking out the repository. Run the blocks below in order, starting at the repository root. Do not run the Console's `deploy-lab.ps1` in an ordinary shell: it requires platform helpers.
 
-Bootstrap installs Hyper-V without restarting inside Custom Script Extension. Its final step schedules one SYSTEM restart two minutes later and exits successfully, allowing the extension to report success before the logon provisioning stage starts. Repeated incomplete runs replace the same restart task rather than creating duplicate tasks. Extension success still does not establish guest readiness.
+### Sign in and prepare the subscription
 
-The WinGet CLI, `Microsoft.WinGet.Client`, and `Microsoft.WinGet.DSC` are pinned together to **1.29.380**. The common configuration also requires that exact DSC module version so an older cached module is not selected. This avoids mixing the [old named-pipe transport with the newer elevated RPC transport](https://github.com/microsoft/winget-cli/issues/6560). The logon task starts a fresh, profile-free PowerShell 7 process, validates the CLI version and COM package query before applying configurations, and stops on failures rather than continuing with missing software. Do not repair to `-Latest` independently of the module pins.
+The provider list matches the shared preparation script. An organizer runs registration once; it is skipped for providers already registered. In Cloud Shell, omit `Invoke-Az login` because the session is already authenticated.
 
-The template deploys at **resource-group scope** into the existing group. For a fresh lab, the deployer tries `PreferredLocation` in order and warns when skipping a region. Preflight checks provider-advertised service regions, the documented Bastion Developer regional list, zone-1 availability of `Standard_D16s_v5` and `PremiumV2_LRS`, and available regional/DSv5 quota for a new host. These checks do not reserve capacity or guarantee that a later ARM deployment will succeed. With only the default `swedencentral` configured, there is no second candidate; instructors can configure an ordered list of suitable regions before deployment.
+```powershell
+Set-Location '.\03-Azure\01-03-Infrastructure\06_Migration_Secure_AI_Ready'
+$ErrorActionPreference = 'Stop'
+function Invoke-Az {
+    $result = & az @args
+    if ($LASTEXITCODE -ne 0) { throw 'Azure CLI failed; inspect the error above before continuing.' }
+    $result
+}
+Invoke-Az login --output none
+$subscriptionId = Read-Host 'Subscription ID'
+Invoke-Az account set --subscription $subscriptionId
+$participantIds = @((Invoke-Az ad signed-in-user show --query id --output tsv))
 
-The selected region is recorded as **LabRegion** on the RG before submission. Its metadata location stays unchanged, even if resources deploy in a different preferred region. Existing labs retain their recorded region, checked against the host location and deployment parameters. A retry never moves partial resources to another region, deletes the RG, or changes the lab names. Include the recorded region in `PreferredLocation` when rerunning an existing lab; resolve inconsistent or missing region records before retrying.
-
-All user-controlled resources for the Hack stay in that one group: the source VNet (`10.1.0.0/16`), destination VNet (`10.2.0.0/16`), NAT Gateways, Bastion access, Key Vault, and Hyper-V host.
-
-Names use the first eight characters of a deterministic 12-character platform hash of the subscription and resource-group scope, not the deployer's UPN. Requesting 12 characters respects `Get-MhhStableHash`'s documented 12–64 range while retaining the eight-character naming suffix:
-
-| Resource | Name |
-| --- | --- |
-| Hyper-V host | `mh-<suffix>-hv` (14 characters) |
-| Source VNet | `mh-<suffix>-Source-VNet` |
-| Destination VNet | `mh-<suffix>-destination-VNet` |
-| Key Vault | `mhkv` followed by `uniqueString(resourceGroup().id)` |
-
-The deployer passes the Bicep parameters `labSuffix` and `participantObjectIds`. The main template exposes `hostVmName`, `keyVaultName`, `sourceVnetName`, `destinationVnetName`, and `clientVmLogonUserName` so automation can discover the actual deployed names.
-
-Fresh predeployment prepares only Challenge 1, including the four running nested guests `MHBox-AzMigSrv`, `MHBox-SQL`, `MHBox-Win2K22`, and `MHBox-Ubuntu-01`. It does not configure discovery, migration, monitoring, or App Service. Bootstrap publishes the schema-version-1 ready marker at `C:\MHBox\lab-ready.json` and sets the host VM tags `LabReady=single-rg-v1` and `DeploymentProgress=Deployment Completed`. Before the initial handoff, the deployer waits for completion and independently checks the marker and four running guests; the marker records Bootstrap's HTTP/metadata checks of both dashboards. Only after independent verification succeeds does the deployer set `LabVerified=single-rg-v1` on the resource group. Failed verification is retried rather than treated as a completed handoff.
-
-Allow **35–90+ minutes** for a fresh environment. ARM is submitted asynchronously and polled every 30 seconds with token refresh, bounded to **180 minutes per invocation**. An already-running deployment is polled rather than resubmitted. After ARM succeeds, the separate guest-readiness wait is bounded to **120 minutes**. ARM failure/cancellation, submission errors, and timeouts stop the script without publishing credentials. A timeout does not cancel ARM; resources are preserved, and a rerun resumes polling. Inspect deployment/provisioning diagnostics before retrying; no deployment failure triggers destructive cleanup or cross-region recreation. An ARM deployment success alone does not prove guest readiness.
-
-**Completed reruns preserve learner progress:** the deployer reuses an already-completed baseline without restarting the nested guests or requiring them to be running. A learner may have legitimately stopped source guests during migration. Only incomplete deployments receive an incremental deployment retry; rerunning is not a request to reset the lab.
-
-The platform dashboard provides the lab resource group, connection details, and login credential fields. The Key Vault retains the host login username and generated password. Keep those credentials private; do not paste generated passwords into deployment commands, shared notes, or screenshots.
-
-## Manual/local validation for instructors
-
-Use the current standard template's [local testing harness](../../../../99-MicroHack-Template/labautomation/README.md#local-testing), not an arbitrary PowerShell session. That harness supplies the platform helper stand-ins through the `ghcr.io/qxsch/adminpwsh:latest` container. Mount this Hack's `labautomation` directory, including its `bicep` subtree, at `/app` as shown by the harness. No sibling repository directories are required. The pinned Azure Verified Module for Key Vault must still be restored by Bicep, and downloaded guest artifacts must be reachable.
-
-1. Follow the harness's container setup and authenticate **both** Az PowerShell and Azure CLI locally; select the same intended instructor-owned test subscription in both contexts. Hosted runs already have those contexts.
-2. Follow [testing the shared hook locally](../../../../99-MicroHack-Template/labautomation/README.md#testing-the-shared-hook-locally): from this Hack's `labautomation` directory, run `shared-deploy-lab.ps1` once for the test subscription before the per-learner script, using that subscription's preferred regions and learner object IDs. The instructor test identity needs permission to register providers; learner subscription Reader is intentionally insufficient.
-3. Create a fresh, uniquely named test resource group before the per-learner invocation, normally in the first preferred region, and grant the test learner RG Owner and subscription Reader to reproduce learner access. Unlike hosted execution, local preparation is your responsibility. If a test group already exists, inspect it or choose a new name; do not delete a group as a retry shortcut.
-4. Inside the harness, invoke `deploy-lab.ps1` from this Hack's `labautomation` directory with all five parameters from the table above, using `DeploymentType` = `resourcegroup`, the existing test resource group, ordered region array, and learner object-ID array. Confirm that the reported selected region and RG **LabRegion** tag match the resources, not necessarily the RG's metadata location. Follow the standard harness invocation syntax and helper limitations.
-5. Verify the returned credential fields (the platform dashboard shows these for hosted runs) and Key Vault access as the test learner, then follow Solution 1's **initial-handoff** readiness checks. Also verify that a completed rerun preserves learner state and does not restart migrated source guests. Syntax/build checks alone are not evidence of a live deployment.
-
-### Select the artifact source without runner access
-
-The script automatically reads [deployment-settings.json](../labautomation/deployment-settings.json) from its own directory. This branch is configured for the fork:
-
-```json
-{
-  "githubAccount": "ASchwarz1984",
-  "githubBranch": "aschwarz1984-migration-lab"
+$providers = @(
+    'Microsoft.Compute', 'Microsoft.Network', 'Microsoft.KeyVault', 'Microsoft.Storage',
+    'Microsoft.DevTestLab', 'Microsoft.ManagedIdentity', 'Microsoft.Migrate', 'Microsoft.OffAzure',
+    'Microsoft.RecoveryServices', 'Microsoft.Insights', 'Microsoft.OperationalInsights',
+    'Microsoft.Monitor', 'Microsoft.AlertsManagement', 'Microsoft.Web', 'Microsoft.Security'
+)
+foreach ($provider in $providers) {
+    $state = Invoke-Az provider show --namespace $provider --query registrationState --output tsv
+    if ($state -ne 'Registered') {
+        Invoke-Az provider register --namespace $provider --wait --output none
+    }
 }
 ```
 
-Edit these two nonsecret values in the repository and import/re-import that version of the `labautomation` folder. No runner environment changes are required. The selected owner and branch (or commit SHA) must contain the Hack's existing `resources/artifacts` paths, and the imported templates/settings must match that source version. The script passes the values through Bicep and Bootstrap to both guests and all demo-page asset downloads.
+By default, the signed-in user receives Key Vault secret access. To deploy for other learners, replace `$participantIds` with their Entra **object IDs** and arrange their RG/subscription roles separately; the template does not assign learner RG Owner or subscription Reader.
 
-Keep the file valid and present: missing/malformed settings fail instead of silently downloading another version. Do not add these fields to `lab-defaults.json`; the platform schema rejects additional properties. Optional `MICROHACK_GITHUB_ACCOUNT` and `MICROHACK_GITHUB_BRANCH` environment variables still override the corresponding JSON values when an operator controls the runner.
+### Create a fresh lab and deploy
 
-For official upstream deployment, change the settings to `"githubAccount": "microsoft"` and `"githubBranch": "main"`. The repository name `MicroHack`, artifact paths, published defaults schema, and demo-page repository link remain unchanged.
+Choose a new RG, not an existing or Console-managed lab. Keep the number as a quoted string to preserve leading zeros. The example reads the same source JSON as Console deployment; there is no hardcoded test account or branch.
 
-## Resource lifecycle
+Azure CLI will prompt securely for the omitted `windowsAdminPassword`. Use a unique 12-123 character password meeting Windows complexity requirements and retain it securely for recovery. It is not placed in the temporary parameters file or command history.
 
-Keep the single lab resource group throughout Challenges 2–8, including the learner-created Azure Migrate, migrated VMs, monitoring resources, and App Service resources. Azure Monitor can create an Azure-managed `MA_*_managed` group for workspace internals; that service-managed exception is not another learner-created lab group.
+```powershell
+$resourceGroup = 'rg-migration-0013'
+$number = '0013'
+$location = 'swedencentral'
+if ((Invoke-Az group exists --name $resourceGroup --output tsv) -ne 'false') {
+    throw 'The RG already exists. Inspect it or choose a fresh name; do not delete it to retry.'
+}
+$source = Get-Content '.\labautomation\deployment-settings.json' -Raw | ConvertFrom-Json
+$templateFile = (Resolve-Path '.\labautomation\bicep\main.bicep').ProviderPath
+$scope = "$subscriptionId/$resourceGroup".ToLowerInvariant()
+$labId = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData(
+    [Text.Encoding]::UTF8.GetBytes($scope))).Substring(0, 8).ToLowerInvariant()
+$parameters = @{
+    labSuffix = @{ value = $labId }
+    resourceNameSuffix = @{ value = $number }
+    participantObjectIds = @{ value = $participantIds }
+    location = @{ value = $location }
+    githubAccount = @{ value = $source.githubAccount }
+    githubBranch = @{ value = $source.githubBranch }
+}
+Invoke-Az group create --name $resourceGroup --location $location --output none
+$parameterFile = [IO.Path]::GetTempFileName()
+try {
+    $parameters | ConvertTo-Json -Depth 5 | Set-Content $parameterFile -Encoding utf8NoBOM
+    $outputs = Invoke-Az deployment group create --name migration-manual `
+        --resource-group $resourceGroup --mode Incremental `
+        --template-file $templateFile `
+        --parameters "@$parameterFile" --query properties.outputs --output json |
+        ConvertFrom-Json
+} finally {
+    Remove-Item -LiteralPath $parameterFile
+}
+$outputs | Format-List
+```
 
-Only after the lab owner approves the finish should you clean up. Use Azure Migrate's supported test-migration cleanup and complete-migration/stop-replication actions, and remove backup protection or retained recovery data through the relevant service's supported cleanup. Backup or replication dependencies can block resource-group deletion. Deleting the lab resource group removes **both** the simulated source and migrated resources, plus monitoring and App Service; it is not a way to remove just the source environment.
+Record the output host name, username, Key Vault, and network names. Connect to the host through Azure Bastion using the password entered above. Key Vault also stores `windowsAdminUserName` and `windowsAdminPassword`; do not copy secret values into shared notes or transcripts.
 
-## Quota information if multiple users deploy to the same subscription
+Manual deployment does not run the Console's capacity preflight, automatic resume, or completed-baseline safeguards. If the command is interrupted, inspect the existing ARM deployment rather than rerunning the creation block:
 
-If you have multiple users deploying to the same subscription, you need to make sure you have enough quota for the deployments.
-For a single-user deployment, you should make sure to have the following quotas requested upfront:
+```powershell
+Invoke-Az deployment group show --resource-group $resourceGroup --name migration-manual `
+    --query properties.provisioningState --output tsv
+```
 
-| Quota name  | Needed quantity |
-| ------------- | ------------- |
-| Total Regional vCPUs  | 30  |
-| Standard DSv5 Family vCPUs  | 16  |
-| Standard BS Family vCPUs  | 10  |
-| Public IP Addresses - Standard | 5 |
+An incomplete deployment retry must retain its RG, names, region, source version, and original password. Do not resubmit a healthy baseline, switch deployment methods in the same RG, or delete resources as a retry shortcut.
 
-For five users who need to deploy individually to a region, make sure you have the following quotas in place:
+## Verify readiness and hand off
 
-| Quota name  | Needed quantity |
-| ------------- | ------------- |
-| Total Regional vCPUs  | 150  |
-| Standard DSv5 Family vCPUs  | 80  |
-| Standard BS Family vCPUs  | 50  |
-| Public IP Addresses - Standard | 25 |
+**ARM success alone is not lab readiness.** The host reboots after Bootstrap, then logon provisioning prepares the nested guests. Inspect `C:\MHBox\Logs` if setup fails.
 
-To request a quota increase, follow [Request quota increases in the Azure portal](https://learn.microsoft.com/en-us/azure/quotas/quickstart-increase-quota-portal).
+For either option, complete [Solution 1's initial-handoff checks](../walkthrough/challenge-01/solution-01.md): host tags `DeploymentProgress=Deployment Completed` and `LabReady=single-rg-v1`, a valid schema-version-1 `C:\MHBox\lab-ready.json`, all four nested VMs running, and both live dashboards returning HTTP success with correct metadata. Console labs additionally have RG tag `LabVerified=single-rg-v1`; manual instructors perform the verification themselves, without that Console tag.
+
+For manual labs, securely provide the subscription, RG, region, host, Key Vault, network names, and login instructions to learners. References to the "dashboard" in later challenges mean these instructor-provided details when no Console is used.
+
+Keep the RG through Challenges 2-8: it contains both source and migrated resources. Azure Monitor may create an Azure-managed `MA_*_managed` group for workspace internals; do not delete it separately. At the end, obtain approval, complete supported migration/replication and backup cleanup, then remove the lab RG. Deletion removes the entire lab, not just the source environment.
+
+## Testing changes
+
+Use a fresh test RG and a real learner account to exercise deployment, both dashboard variants, Challenges 2-8 with RG Owner/subscription Reader, and preservation of learner progress on a completed Console rerun. The [local harness](../../../../99-MicroHack-Template/labautomation/README.md#local-testing) is also available for testing Console automation; its helpers are local-development stand-ins, not the manual deployment requirement.
+
+To test unpublished changes, set `githubAccount` and `githubBranch` in [deployment-settings.json](../labautomation/deployment-settings.json) to a repository account and branch or commit containing the matching artifacts. The source must be publicly downloadable by the VMs. Re-import the Console package after edits; the manual example reads the JSON directly. Keep these fields out of `lab-defaults.json`. For official upstream deployment, use `microsoft` and `main` once the matching version is published there. Complete the Azure deployment and learner-flow tests before upstream integration; syntax checks alone are not sufficient.

@@ -46,12 +46,12 @@ The Hack follows a coherent modernization storyline:
 6. **Operate intelligently** with Azure Monitor telemetry, alerting, and AI-assisted investigation.
 7. **Replatform** the selected static IIS or Apache workload to Azure App Service and evaluate the optimal production hosting target.
 
-Each learner receives one pre-created resource group, shown as `<YOUR-LAB-RESOURCE-GROUP>` in these instructions. It contains both the simulated on-premises environment and the migration destination: the source VNet (`10.1.0.0/16`) hosts a Hyper-V server with four nested VMs, while the destination VNet (`10.2.0.0/16`) receives the migrated web VMs. Both networks retain NAT Gateway outbound connectivity and Azure Bastion access. Azure resource names use a deterministic eight-character hash of the subscription and resource-group scope, not the deployer's user principal name; the Hyper-V host is named `mh-<8charStableLabSuffix>-hv`.
+Each learner receives one pre-created resource group, shown as `<YOUR-LAB-RESOURCE-GROUP>` in these instructions. It contains both the simulated on-premises environment and the migration destination: the source VNet (`10.1.0.0/16`) hosts a Hyper-V server with four nested VMs, while the destination VNet (`10.2.0.0/16`) receives the migrated web VMs. Both networks retain NAT Gateway outbound connectivity and Azure Bastion access. Fresh Console labs use the learner number from the RG name: for example, `rg-labuser-0013` receives the host `mh-0013-hv`. Existing Console labs and nonstandard Console RG names retain their deterministic hash-based names; retries never rename resources. For either deployment option, use the actual resource names supplied for your lab.
 
-The platform predeploys only the Challenge 1 infrastructure and waits until all four nested VMs and both web dashboards are ready for the initial handoff. Completed deployment reruns reuse that baseline without restarting source guests that migration may have stopped. Discovery, assessment, migration, monitoring, and App Service remain learner exercises. In the final challenges, each team operates and manually replatforms either the migrated Windows/IIS workload or the migrated Ubuntu/Apache workload, keeping all user-controlled resources in the same lab resource group.
+Instructors predeploy only the Challenge 1 infrastructure, using either Hackbox Console or the [manual Azure deployment](resources/README.md#option-2-manual-deployment), and verify all four nested VMs and both web dashboards before handoff. Completed Console deployment reruns reuse that baseline without restarting source guests that migration may have stopped. Discovery, assessment, migration, monitoring, and App Service remain learner exercises. In the final challenges, each team operates and manually replatforms either the migrated Windows/IIS workload or the migrated Ubuntu/Apache workload, keeping all user-controlled resources in the same lab resource group.
 
 > [!NOTE]
-> Screenshots throughout the Hack illustrate portal workflows and may show older resource names. The lab dashboard's subscription, resource group, host name, and credentials are authoritative. Do not create separate source and destination resource groups or delete the lab resource group during Challenges 2–8.
+> Screenshots throughout the Hack illustrate portal workflows and may show older resource names. The lab dashboard's subscription, resource group, host name, and credentials are authoritative. For manual deployments, use the equivalent details provided securely by your instructor wherever a challenge refers to the dashboard. Do not create separate source and destination resource groups or delete the lab resource group during Challenges 2–8.
 
 The Hyper-V discovery and migration design is described here:
 
@@ -81,9 +81,9 @@ Complete these prerequisites before the session:
 
 * A Microsoft Entra ID tenant.
 * At least one Azure subscription.
-* A Microsoft Entra learner account with **Owner** on its lab resource group and **Reader** on the subscription, assigned by the platform. The hosted shared hook registers required resource providers once per subscription without creating a shared group or enabling Defender. Instructors verify that preparation succeeded, arrange quota, and separately approve/enable any optional Defender plans; learners do not need subscription Owner.
+* A Microsoft Entra learner account with **Owner** on its lab resource group and **Reader** on the subscription, assigned by Hackbox Console or the manual organizer. Instructors verify provider registration, arrange quota, and separately approve/enable any optional Defender plans; learners do not need subscription Owner.
 * A client network and browser that support the Azure portal, Azure Bastion, and Azure Cloud Shell.
-* A ready lab deployment and access to the platform dashboard's connection details. Instructors should follow the [deployment and local validation instructions](resources/README.md) before the session; fresh predeployment can take 35–90+ minutes.
+* A ready lab deployment and connection details from Hackbox Console or the instructor. Instructors should follow the [deployment instructions](resources/README.md) before the session; fresh predeployment can take 35–90+ minutes.
 
 Challenge 7 assumes Hack participants have Azure Copilot access, suitable RBAC, network access, and a supported region. It also includes a concise manual/KQL fallback if agent output is unavailable. No Azure OpenAI resource, model deployment, or model quota is required anywhere in this Hack.
 

@@ -22,7 +22,9 @@ param location string = resourceGroup().location
 @description('Resource Id of the subnet in the virtual network')
 param subnetId string
 
-param labSuffix string
+@minLength(1)
+@maxLength(9)
+param resourceNameSuffix string
 param keyVaultName string
 param participantObjectIds array
 param tags object = {}
@@ -87,7 +89,7 @@ param zones string = '1'
 @description('Option to enable spot pricing for the ArcBox Client VM')
 param enableAzureSpotPricing bool = false
 
-var namingPrefix = 'mh-${labSuffix}'
+var namingPrefix = 'mh-${resourceNameSuffix}'
 
 @description('The name of your Virtual Machine')
 var hostName string = '${namingPrefix}-hv'

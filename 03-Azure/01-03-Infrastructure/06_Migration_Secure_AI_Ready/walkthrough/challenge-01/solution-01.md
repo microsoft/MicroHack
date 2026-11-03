@@ -7,7 +7,7 @@ Duration: 15 minutes (verification of an already-provisioned lab)
 ## Prerequisites
 
 - Please ensure that you successfully verified the [General prerequisites](../../Readme.md#general-prerequisites) before continuing with this challenge.
-- Your instructor/platform has completed [predeployment](../../resources/README.md), and your platform dashboard contains the subscription, lab resource group, connection details, and login credential fields.
+- Your instructor has completed [predeployment](../../resources/README.md) through Hackbox Console or manually. Obtain the subscription, lab resource group, connection details, and login instructions from the Console dashboard or your instructor.
 - Your learner account has **Owner** on the assigned resource group and **Reader** on the subscription.
 
 > [!IMPORTANT]
@@ -15,10 +15,10 @@ Duration: 15 minutes (verification of an already-provisioned lab)
 
 ### **Task 1: Receive the lab and verify host readiness**
 
-1. Open your platform dashboard. Record the assigned subscription, `<YOUR-LAB-RESOURCE-GROUP>`, region, Hyper-V host name, and login credential fields. Do not copy passwords into shared notes.
+1. Record the assigned subscription, `<YOUR-LAB-RESOURCE-GROUP>`, region, Hyper-V host name, and login instructions from your Console dashboard or instructor. Do not copy passwords into shared notes.
 2. Sign in to the [Azure Portal](https://portal.azure.com) with your assigned learner account. Open that existing resource group; do not create a source or destination resource group.
-3. Locate the Hyper-V host `mh-<8charStableLabSuffix>-hv`. The suffix is a deterministic eight-character hash of the subscription and resource-group scope, not a UPN. Use the actual host name shown by your dashboard.
-4. On the host VM, check that **DeploymentProgress** is **Deployment Completed** and **LabReady** is **single-rg-v1**; the resource group's **LabVerified** tag must also be **single-rg-v1**. Bootstrap publishes `C:\MHBox\lab-ready.json` (schema version 1), which the deployer independently checks before handoff. You can inspect ARM deployment status under the lab resource group's **Deployments**, but ARM success alone is not the readiness gate.
+3. Locate the supplied Hyper-V host. A fresh Console lab in `rg-labuser-0013` uses `mh-0013-hv`, preserving the learner number's leading zeros. Existing Console labs and nonstandard RG names retain hash-based names; manual deployments use the instructor's chosen suffix. Do not rename a working host.
+4. On the host VM, check that **DeploymentProgress** is **Deployment Completed** and **LabReady** is **single-rg-v1**. Console deployments also require RG tag **LabVerified=single-rg-v1**; for manual deployment the instructor performs the initial-handoff checks directly, without this Console tag. Bootstrap publishes `C:\MHBox\lab-ready.json` (schema version 1). Confirm it names the actual host and four expected guests and records HTTP 200 for both workloads. You can inspect ARM deployment status under the lab resource group's **Deployments**, but ARM success alone is not the readiness gate.
 5. Connect to the host using **Connect** > **Bastion** and the supplied host login credentials. You can also select **Password from Azure Key Vault** and use the login secrets stored in the lab Key Vault.
 
 > [!NOTE]
@@ -27,9 +27,9 @@ Duration: 15 minutes (verification of an already-provisioned lab)
 ![Host VM DeploymentProgress tag example](./img/CS9.png)
 
 > [!IMPORTANT]
-> Fresh predeployment can take **35–90+ minutes**, including nested-VM downloads and configuration. ARM submission is polled with token refresh for up to **180 minutes per invocation**; guest readiness then has a separate **120-minute post-deployment timeout**. Before the initial handoff, the deployer waits for the completion tags, ready marker, four running guests, and both dashboard HTTP checks. Use the dashboard's lab region, also recorded in the RG's **LabRegion** tag; the RG's own metadata location can differ. The instructor's deployer can skip an unsupported preferred region before initial deployment, but retries never move or delete an existing lab. If your lab is not ready, contact the instructor with its status; do not delete the resource group or redeploy into a different region.
+> Fresh predeployment can take **35–90+ minutes**, including nested-VM downloads and configuration. Console automation polls ARM for up to **180 minutes per invocation**, then waits up to **120 minutes** for guest readiness and independently checks the baseline. Its **LabRegion** tag records the selected resource region, which can differ from the RG's metadata location. Manual instructors check readiness themselves. If your lab is not ready, contact the instructor with its status; do not delete the resource group or redeploy into a different region.
 
-These are **initial-handoff** checks. If you revisit this walkthrough after migration, source guests may correctly be stopped. Completed deployment reruns preserve that state instead of restarting guests or requiring all four to be running; do not reset learner progress just to repeat Challenge 1.
+These are **initial-handoff** checks. If you revisit this walkthrough after migration, source guests may correctly be stopped. Completed Console deployment reruns preserve that state instead of restarting guests or requiring all four to be running; do not reset learner progress just to repeat Challenge 1.
 
 ### **Task 2: Verify the deployed VM resources**
 Open *Hyper-V Manager* on the supplied host and ensure that four VMs are running.
@@ -42,7 +42,7 @@ Open *Hyper-V Manager* on the supplied host and ensure that four VMs are running
 + MHBox-Win2K22
     + This system hosts Windows Server 2022 with an installed IIS web server.
 
-The following lab-only credentials are used inside the nested VMs. These are separate from the generated host login credentials delivered by the platform and stored in Key Vault.
+The following lab-only credentials are used inside the nested VMs. These are separate from the host login credentials provided by the Console or instructor and stored in Key Vault.
 
 **Windows virtual machine credentials:**
 
@@ -74,7 +74,7 @@ The **Hostname** value must match the VM you opened.
 
 ### **Task 3: Verify the deployed Azure resources**
 
-Within **the same** `<YOUR-LAB-RESOURCE-GROUP>`, verify:
+Within **the same** `<YOUR-LAB-RESOURCE-GROUP>`, verify the following. `<suffix>` is the learner number (for example, `0013`) for fresh Console labs, the existing hash suffix for older Console labs and nonstandard RG names, or the instructor's chosen suffix for manual labs:
 
 | Component | Purpose |
 | --- | --- |

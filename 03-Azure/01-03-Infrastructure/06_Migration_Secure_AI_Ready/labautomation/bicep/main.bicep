@@ -2,8 +2,13 @@ targetScope = 'resourceGroup'
 
 @minLength(8)
 @maxLength(8)
-@description('Stable, lowercase alphanumeric suffix derived from the subscription and lab resource group.')
+@description('Stable, lowercase hexadecimal lab identity derived from the subscription and lab resource group.')
 param labSuffix string
+
+@minLength(1)
+@maxLength(9)
+@description('Resource-name suffix: the learner number for new hosted labs, or the stable lab identity for legacy labs.')
+param resourceNameSuffix string = labSuffix
 
 @minLength(1)
 @description('Entra user object IDs that need to read the host login secrets.')
@@ -69,7 +74,7 @@ param debugEnabled bool = false
 
 
 @maxLength(7)
-@description('The naming prefix for the nested virtual machines and all Azure resources deployed. The maximum length for the naming prefix is 7 characters,example: `ArcBox-Win2k19`')
+@description('The naming prefix for the nested virtual machines. The maximum length is 7 characters, example: `MHBox-Win2K22`.')
 param Prefix string = 'MHBox'
 
 
@@ -91,7 +96,7 @@ param zones string = '1'
 
 var templateBaseUrl = 'https://raw.githubusercontent.com/${githubAccount}/MicroHack/${githubBranch}/03-Azure/01-03-Infrastructure/06_Migration_Secure_AI_Ready/resources/'
 
-var namingPrefix = 'mh-${labSuffix}'
+var namingPrefix = 'mh-${resourceNameSuffix}'
 
 @description('Tags to assign for all MH resources')
 var resourceTags object = {
@@ -102,7 +107,7 @@ var resourceTags object = {
 module clientVmDeployment 'clientVm/clientVm.bicep' = {
   name: '${namingPrefix}-clientVmDeployment'
   params: {
-    labSuffix: labSuffix
+    resourceNameSuffix: resourceNameSuffix
     participantObjectIds: participantObjectIds
     keyVaultName: mgmtArtifactsSourceDeployment.outputs.vaultName
     tags: resourceTags
@@ -135,7 +140,7 @@ module clientVmDeployment 'clientVm/clientVm.bicep' = {
 module mgmtArtifactsSourceDeployment 'mgmt/mgmtArtifactsSource.bicep' = {
   name: '${namingPrefix}-mgmtArtifactsSourceDeployment'
   params: {
-    labSuffix: labSuffix
+    resourceNameSuffix: resourceNameSuffix
     tags: resourceTags
     flavor: flavor
     deployBastion: deployBastion
@@ -149,7 +154,7 @@ module mgmtArtifactsSourceDeployment 'mgmt/mgmtArtifactsSource.bicep' = {
 module mgmtArtifactsDestinationDeployment 'mgmt/mgmtArtifactsDestination.bicep' = {
   name: '${namingPrefix}-mgmtArtifactsDestinationDeployment'
   params: {
-    labSuffix: labSuffix
+    resourceNameSuffix: resourceNameSuffix
     tags: resourceTags
     flavor: flavor
     deployBastion: deployBastion

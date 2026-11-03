@@ -21,7 +21,9 @@ param bastionSku string = 'Basic'
 @description('DNS Server configuration')
 param dnsServers array = []
 
-param labSuffix string
+@minLength(1)
+@maxLength(9)
+param resourceNameSuffix string
 param tags object = {}
 
 @description('Password for Windows account. Password must have 3 of the following: 1 lower case character, 1 upper case character, 1 number, and 1 special character. The value must be between 12 and 123 characters long')
@@ -32,7 +34,7 @@ param windowsAdminPassword string?
 
 param windowsAdminUserName string?
 
-var namingPrefix = 'mh-${labSuffix}'
+var namingPrefix = 'mh-${resourceNameSuffix}'
 
 @description('Name of the VNet')
 var virtualNetworkName string = '${namingPrefix}-Source-VNet'

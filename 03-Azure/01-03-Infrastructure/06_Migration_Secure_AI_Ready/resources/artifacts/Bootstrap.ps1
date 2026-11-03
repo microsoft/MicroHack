@@ -31,19 +31,42 @@ trap {
     $failure = $_
     Write-Error -ErrorRecord $failure -ErrorAction Continue
     Remove-Item -LiteralPath 'C:\MHBox\lab-ready.json' -Force -ErrorAction SilentlyContinue
+    $azFailureScriptPath = $null
     try {
-        if (Get-Command Connect-AzAccount -ErrorAction SilentlyContinue) {
-            Connect-AzAccount -Identity -Tenant $tenantId -Subscription $subscriptionId -ErrorAction Stop | Out-Null
-            $groupId = "/subscriptions/$subscriptionId/resourceGroups/$resourceGroup"
-            foreach ($target in @($groupId, "$groupId/providers/Microsoft.Compute/virtualMachines/$hostVmName")) {
-                try {
-                    Update-AzTag -ResourceId $target -Operation Merge -Tag @{ DeploymentProgress = 'Deployment Failed' } -ErrorAction Stop | Out-Null
-                }
-                catch { Write-Warning "Could not report failure on '$target': $($_.Exception.Message)" }
-            }
+        # Keep Az isolated from the parent's package-management assemblies.
+        $azFailureScriptPath = Join-Path ([IO.Path]::GetTempPath()) "AzBootstrap-Failure-$([guid]::NewGuid().ToString('N')).ps1"
+        $azFailureScript = @'
+param(
+    [string]$tenantId,
+    [string]$subscriptionId,
+    [string]$resourceGroup,
+    [string]$hostVmName
+)
+
+$ErrorActionPreference = 'Stop'
+Import-Module Az.Accounts -Force
+Import-Module Az.Resources -Force
+Connect-AzAccount -Identity -Tenant $tenantId -Subscription $subscriptionId | Out-Null
+Set-AzContext -Subscription $subscriptionId | Out-Null
+$groupId = "/subscriptions/$subscriptionId/resourceGroups/$resourceGroup"
+foreach ($target in @($groupId, "$groupId/providers/Microsoft.Compute/virtualMachines/$hostVmName")) {
+    Update-AzTag -ResourceId $target -Operation Merge -Tag @{ DeploymentProgress = 'Deployment Failed' } | Out-Null
+}
+'@
+        $azFailureScript | Set-Content -LiteralPath $azFailureScriptPath -Encoding UTF8
+        & "$env:WINDIR\System32\WindowsPowerShell\v1.0\powershell.exe" `
+            -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $azFailureScriptPath `
+            -tenantId $tenantId -subscriptionId $subscriptionId -resourceGroup $resourceGroup -hostVmName $hostVmName
+        if ($LASTEXITCODE -ne 0) {
+            Write-Warning "Isolated bootstrap failure reporting failed with exit code $LASTEXITCODE. The original bootstrap error is retained."
         }
     }
-    catch { Write-Warning "Could not authenticate to report bootstrap failure: $($_.Exception.Message)" }
+    catch { Write-Warning "Could not report bootstrap failure: $($_.Exception.Message)" }
+    finally {
+        if ($azFailureScriptPath) {
+            Remove-Item -LiteralPath $azFailureScriptPath -Force -ErrorAction SilentlyContinue
+        }
+    }
     exit 1
 }
 
@@ -229,13 +252,15 @@ try {
         $scheduleId = "$groupId/providers/Microsoft.DevTestLab/schedules/shutdown-computevm-$hostVmName"
         $Uri = "https://management.azure.com${scheduleId}?api-version=2018-09-15"
 
-        $Schedule = Invoke-AzRestMethod -Uri $Uri
-        if ($Schedule.StatusCode -ne 200) { throw "Reading shutdown schedule failed: HTTP $($Schedule.StatusCode). $($Schedule.Content)" }
-        $ScheduleSettings = $Schedule.Content | ConvertFrom-Json
-        $ScheduleSettings.properties.status = 'Disabled'
+        Invoke-InitialAzureOperation -Description "shutdown schedule access to '$scheduleId' and its target VM" -Operation {
+            $Schedule = Invoke-AzRestMethod -Uri $Uri
+            if ($Schedule.StatusCode -ne 200) { throw "Reading shutdown schedule failed: HTTP $($Schedule.StatusCode). $($Schedule.Content)" }
+            $ScheduleSettings = $Schedule.Content | ConvertFrom-Json
+            $ScheduleSettings.properties.status = 'Disabled'
 
-        $result = Invoke-AzRestMethod -Uri $Uri -Method PUT -Payload ($ScheduleSettings | ConvertTo-Json -Depth 10)
-        if ($result.StatusCode -notin @(200, 201, 202)) { throw "Disabling shutdown schedule failed: HTTP $($result.StatusCode). $($result.Content)" }
+            $result = Invoke-AzRestMethod -Uri $Uri -Method PUT -Payload ($ScheduleSettings | ConvertTo-Json -Depth 10)
+            if ($result.StatusCode -notin @(200, 201, 202)) { throw "Disabling shutdown schedule failed: HTTP $($result.StatusCode). $($result.Content)" }
+        }
     }
 
     Stop-Transcript

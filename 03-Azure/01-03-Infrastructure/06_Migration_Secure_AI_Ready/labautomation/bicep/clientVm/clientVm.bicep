@@ -229,12 +229,15 @@ resource vm 'Microsoft.Compute/virtualMachines@2024-07-01' = {
     vmTagContributor
     vmDiskContributor
     vmScheduleContributor
+    vmShutdownTargetContributor
   ]
   properties: {
     publisher: 'Microsoft.Compute'
     type: 'CustomScriptExtension'
     typeHandlerVersion: '1.10'
     autoUpgradeMinorVersion: true
+    // Rerun failed Bootstrap for this fix without changing the tag on every deployment.
+    forceUpdateTag: 'bootstrap-shutdown-rbac-v1'
     protectedSettings: {
       fileUris: [
         uri(templateBaseUrl, 'artifacts/Bootstrap.ps1')
@@ -304,6 +307,17 @@ resource vmScheduleContributor 'Microsoft.Authorization/roleAssignments@2022-04-
     principalId: vm.identity.principalId
     principalType: 'ServicePrincipal'
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')
+  }
+}
+
+// Schedule writes also authorize Microsoft.Compute/virtualMachines/write on the linked VM.
+resource vmShutdownTargetContributor 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (autoShutdownEnabled) {
+  name: guid(vm.id, 'shutdown-target-contributor')
+  scope: vm
+  properties: {
+    principalId: vm.identity.principalId
+    principalType: 'ServicePrincipal'
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '9980e02c-c2be-4d73-94e8-173b1dc7cf3c')
   }
 }
 

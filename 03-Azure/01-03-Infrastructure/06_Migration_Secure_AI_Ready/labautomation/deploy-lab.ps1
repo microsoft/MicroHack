@@ -250,9 +250,13 @@ if ($null -eq $deployment -or $deployment.ProvisioningState -ne 'Succeeded') {
         try {
             $deployment = Get-AzResourceGroupDeployment -ResourceGroupName $ResourceGroupName -Name $deploymentName -ErrorAction Stop
         } catch {
-            $notRegistered = $_.Exception.Response.StatusCode -eq 404 -or
-                $_.FullyQualifiedErrorId -match 'DeploymentNotFound|ResourceNotFound' -or
+            $notRegistered = $_.FullyQualifiedErrorId -match 'DeploymentNotFound|ResourceNotFound' -or
                 $_.ErrorDetails.Message -match '"code"\s*:\s*"(DeploymentNotFound|ResourceNotFound)"'
+            # Az.Resources can wrap the HTTP response in an inner CloudException.
+            for ($lookupError = $_.Exception; $null -ne $lookupError -and -not $notRegistered; $lookupError = $lookupError.InnerException) {
+                $notRegistered = $lookupError.Response.StatusCode -eq 404 -or
+                    $lookupError.Body.Code -in @('DeploymentNotFound', 'ResourceNotFound')
+            }
             if (-not $notRegistered) { throw }
             $deployment = $null
         }
@@ -270,6 +274,9 @@ if ($null -eq $deployment -or $deployment.ProvisioningState -ne 'Succeeded') {
         }
         if ((Get-Date).ToUniversalTime() -ge $armDeadline) {
             throw "ARM deployment '$deploymentName' timed out after 180 minutes. It may still be running; the RG is preserved and a rerun resumes polling."
+        }
+        if ($null -eq $deployment) {
+            Write-Host "Waiting for ARM deployment '$deploymentName' to become visible; polling again in 30 seconds."
         }
         Start-Sleep -Seconds 30
     } while ($true)

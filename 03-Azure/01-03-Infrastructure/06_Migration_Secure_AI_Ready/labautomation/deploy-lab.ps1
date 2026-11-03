@@ -231,7 +231,8 @@ if (-not $alreadyReady -and ($null -eq $deployment -or $deployment.ProvisioningS
             labSuffix = $labSuffix
             participantObjectIds = $AllowedEntraUserIds
             location = $location
-            windowsAdminPassword = ConvertTo-SecureString $password -AsPlainText -Force
+            # Use a JSON string here; Bicep's @secure() retains ARM secret protection.
+            windowsAdminPassword = $password
             githubAccount = $githubAccount
             githubBranch = $githubBranch
         }

@@ -199,6 +199,17 @@ function Assert-LocalBoxAutomationXml {
     finally { $reader.Dispose() }
 }
 
+function Write-LocalBoxAutomationSuiteSummary {
+    param([ValidateSet('Upstream', 'Sovereign')][string]$Name, [hashtable]$Counts)
+    foreach ($field in @('Passed', 'Failed', 'Skipped', 'NotRun')) {
+        $number = 0L
+        if (-not $Counts -or -not [long]::TryParse([string]$Counts[$field], [ref]$number) -or $number -lt 0) {
+            throw "Cannot display $Name test results: missing or invalid $field count."
+        }
+    }
+    Write-Host "[LocalBox] $Name tests: $($Counts.Passed) passed, $($Counts.Failed) failed, $($Counts.Skipped) skipped, $($Counts.NotRun) not run."
+}
+
 function Invoke-LocalBoxHostedAutomation {
     [CmdletBinding()]
     param(
@@ -217,6 +228,7 @@ function Invoke-LocalBoxHostedAutomation {
     $commandPath = "$vmId/runCommands/sovereign-localbox-prepare"
     $commandUri = "$commandPath`?api-version=2024-07-01"
     $temporary = Join-Path ([IO.Path]::GetTempPath()) "localbox-automation-$([guid]::NewGuid())"
+    $resultUri = $null
     New-Item -ItemType Directory -Path $temporary | Out-Null
     try {
         if (-not $Package) { $Package = New-LocalBoxAutomationPackage -ResourceRoot $ResourceRoot -Directory $temporary }
@@ -316,8 +328,21 @@ function Invoke-LocalBoxHostedAutomation {
             -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName
         Assert-LocalBoxAutomationXml -Path "$temporary/health.xml" -Expected $result.Sovereign
         Assert-LocalBoxAutomationXml -Path "$temporary/upstream.xml" -Expected $result.Upstream
-        Write-Warning 'Automated infrastructure, MDE installation and update assessment passed. Defender cloud reporting and real participant sign-in still require verification.'
+        Write-Host '[LocalBox] Infrastructure health: PASSED' -ForegroundColor Green
+        Write-LocalBoxAutomationSuiteSummary -Name Upstream -Counts $result.Upstream
+        Write-LocalBoxAutomationSuiteSummary -Name Sovereign -Counts $result.Sovereign
+        Write-Host '[LocalBox] Reference VM: Running / Arc Connected / MDE installation succeeded.'
+        Write-Host "[LocalBox] Update assessment: $($result.UpdateAssessment.Status) ($($result.UpdateAssessment.Timestamp))."
+        Write-Host "[LocalBox] Private test reports: $resultUri (Entra authentication required)."
+        Write-Host '[LocalBox] Scope: shared LocalBox only; subsequent participant deployment stages are not covered by this result.'
+        Write-Warning '[LocalBox] Remaining manual checks: Defender cloud reporting and real participant sign-in.'
         @{ RunId = $runId; ResultsUri = $resultUri }
+    }
+    catch {
+        Write-Host '[LocalBox] Readiness gate: FAILED - infrastructure health is NOT VERIFIED.' -ForegroundColor Red
+        Write-Host '[LocalBox] No successful end-of-run test summary was verified. See the error and diagnostic reports; do not treat deployment as ready.'
+        if ($resultUri) { Write-Host "[LocalBox] Private diagnostic reports: $resultUri (Entra authentication required)." }
+        throw
     }
     finally { Remove-Item -LiteralPath $temporary -Recurse -Force -ErrorAction Stop }
 }

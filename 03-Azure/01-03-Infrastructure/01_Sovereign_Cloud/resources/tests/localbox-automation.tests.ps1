@@ -241,10 +241,34 @@ Describe 'Guest readiness result contract' {
     }
 }
 
+Describe 'Console LocalBox test summary formatting' {
+    BeforeEach { Mock Write-Host {} }
+    It 'prints supplied counts rather than fixed expected totals' {
+        Write-LocalBoxAutomationSuiteSummary -Name Sovereign -Counts @{ Passed = 27; Failed = 2; Skipped = 1; NotRun = 3 }
+        Should -Invoke Write-Host -Times 1 -Exactly -ParameterFilter {
+            $Object -eq '[LocalBox] Sovereign tests: 27 passed, 2 failed, 1 skipped, 3 not run.'
+        }
+    }
+    It 'does not emit success-stream objects that change the orchestration return value' {
+        @(Write-LocalBoxAutomationSuiteSummary -Name Upstream -Counts $suite).Count | Should -Be 0
+    }
+    It 'rejects missing, negative and nonnumeric counts without printing fabricated totals' -TestCases @(
+        @{ Value = $null }; @{ Value = -1 }; @{ Value = 'unknown' }
+    ) {
+        param($Value)
+        $counts = $suite.Clone()
+        $counts.Failed = $Value
+        { Write-LocalBoxAutomationSuiteSummary -Name Sovereign -Counts $counts } | Should -Throw '*invalid Failed count*'
+        Should -Invoke Write-Host -Times 0
+    }
+}
+
 Describe 'Hosted LocalBox automation lifecycle' {
     BeforeEach {
         $tracking = @{ Body = $null; Polls = 0; Existing = $null; ExitCode = 0; ExecutionState = 'Succeeded' }
         Mock Update-MhhToken {}
+        Mock Write-Host {}
+        Mock Write-Warning {}
         Mock Start-Sleep {}
         Mock Wait-LocalBoxNestedDeployment {}
         Mock New-LocalBoxAutomationPackage { @{ Hash = 'package'; Archive = 'UEs=' } }
@@ -296,6 +320,27 @@ Describe 'Hosted LocalBox automation lifecycle' {
         Should -Invoke Wait-LocalBoxNestedDeployment -Times 1
         Should -Invoke New-AzRoleAssignment -Times 0
         Should -Invoke Invoke-LocalBoxAutomationAz -Times 4 -ParameterFilter { $Arguments[2] -eq 'download' }
+        Should -Invoke Write-Host -Times 1 -Exactly -ParameterFilter { $Object -eq '[LocalBox] Infrastructure health: PASSED' }
+        Should -Invoke Write-Host -Times 1 -Exactly -ParameterFilter { $Object -eq '[LocalBox] Upstream tests: 1 passed, 0 failed, 0 skipped, 0 not run.' }
+        Should -Invoke Write-Host -Times 1 -Exactly -ParameterFilter { $Object -eq '[LocalBox] Sovereign tests: 1 passed, 0 failed, 0 skipped, 0 not run.' }
+        Should -Invoke Write-Host -Times 1 -Exactly -ParameterFilter { $Object -like '[[]LocalBox] Update assessment: Succeeded*' }
+        Should -Invoke Write-Host -Times 1 -Exactly -ParameterFilter { $Object -like '*subsequent participant deployment stages are not covered*' }
+        Should -Invoke Write-Warning -Times 1 -Exactly -ParameterFilter { $Message -like '*Remaining manual checks*Defender cloud reporting*participant sign-in*' }
+    }
+    It 'does not claim readiness when report verification fails' -TestCases @(
+        @{ Gate = 'Assert-LocalBoxAutomationResult' }; @{ Gate = 'Assert-LocalBoxAutomationXml' }
+    ) {
+        param($Gate)
+        Mock $Gate { throw 'Report verification failed' }
+        { Invoke-LocalBoxHostedAutomation $subscription rg-localbox-shared $group } | Should -Throw '*Report verification failed*'
+        Should -Invoke Write-Host -Times 0 -ParameterFilter { $Object -like '*Infrastructure health: PASSED*' }
+        Should -Invoke Write-Host -Times 1 -Exactly -ParameterFilter { $Object -like '*Readiness gate: FAILED*NOT VERIFIED*' }
+    }
+    It 'reports an unavailable result download as unverified, not healthy' {
+        Mock Invoke-LocalBoxAutomationAz { throw 'Diagnostic download denied' } -ParameterFilter { $Arguments[2] -eq 'download' }
+        { Invoke-LocalBoxHostedAutomation $subscription rg-localbox-shared $group } | Should -Throw '*Diagnostic download denied*'
+        Should -Invoke Write-Host -Times 0 -ParameterFilter { $Object -like '*Infrastructure health: PASSED*' }
+        Should -Invoke Write-Host -Times 1 -Exactly -ParameterFilter { $Object -like '*Readiness gate: FAILED*NOT VERIFIED*' }
     }
     It 'uses the already validated preflight package without downloading it again' {
         Invoke-LocalBoxHostedAutomation $subscription rg-localbox-shared $group -Package @{ Hash = 'package'; Archive = 'UEs=' } | Out-Null
@@ -310,6 +355,8 @@ Describe 'Hosted LocalBox automation lifecycle' {
         $tracking.ExecutionState = $State
         { Invoke-LocalBoxHostedAutomation $subscription rg-localbox-shared $group } | Should -Throw '*LocalBox guest*'
         Should -Invoke Invoke-LocalBoxAutomationAz -Times 0 -ParameterFilter { $Arguments[2] -eq 'download' }
+        Should -Invoke Write-Host -Times 0 -ParameterFilter { $Object -like '*Infrastructure health: PASSED*' }
+        Should -Invoke Write-Host -Times 1 -Exactly -ParameterFilter { $Object -like '*Readiness gate: FAILED*NOT VERIFIED*' }
     }
     It 'does not overwrite an active command from another revision or group' {
         $tracking.Existing = @{ properties = @{ instanceView = @{ executionState = 'Running' }; parameters = @(@{ name = 'PackageHash'; value = 'old' }) } }

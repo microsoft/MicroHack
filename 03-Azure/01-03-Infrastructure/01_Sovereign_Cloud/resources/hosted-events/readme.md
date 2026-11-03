@@ -153,6 +153,17 @@ The [orchestrator](../../labautomation/localbox-automation.ps1) implements:
 7. Require a zero guest exit code, matching run/content/group/scope metadata,
    nonempty passing suites without skipped/not-run tests, and matching NUnit XML
    before publishing global discovery credentials and returning to Console.
+   After these validations, Console Live Output prints **Infrastructure health:
+   PASSED**, actual upstream and Sovereign passed/failed/skipped/not-run counts,
+   reference-VM onboarding, the timestamped update-assessment result and the
+   private reports link. This summary covers shared LocalBox, not the subsequent
+   participant deployment stages. Defender cloud reporting and participant
+   sign-in remain explicitly listed as manual checks.
+   A failed execution, unavailable report or failed validation instead prints
+   **Readiness gate: FAILED - infrastructure health is NOT VERIFIED** and
+   propagates the error. It does not invent test counts or print a passing
+   summary when reports could not be verified; inspect the private diagnostics
+   for individual failed tests. These summaries do not stream guest progress.
 
 `Update-MhhToken` runs in the **Console process** on each poll and before Azure
 operations, including result retrieval. It refreshes Console clients, not guest

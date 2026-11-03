@@ -139,6 +139,17 @@ The [orchestrator](../../labautomation/localbox-automation.ps1) implements:
    Sovereign **LocalBox Full** suite. The Client retrieves a private AKS admin
    kubeconfig for infrastructure probes using its managed identity. It is not
    shared with participants and is deleted after the run.
+   During the Sovereign checks, the parent runner temporarily routes only the
+   private AKS API IPv4 address (`/32`) through the configured internal gateway
+   (`SDNLABRoute`) and internal switch interface. The endpoint must match
+   `AKSControlPlaneIP`; no default route, subnet route, firewall or persistent
+   routing setting is changed. An existing matching route is reused and left
+   intact; conflicting routes fail explicitly. A newly created route uses
+   Windows `ActiveStore` and is removed in `finally` after the health child
+   succeeds or fails. Removal is verified before readiness can pass.
+   If the parent process is forcibly terminated, its `finally` cannot run;
+   inspect the API host route before retrying rather than deleting existing
+   routes indiscriminately. ActiveStore routes do not survive a reboot.
 7. Require a zero guest exit code, matching run/content/group/scope metadata,
    nonempty passing suites without skipped/not-run tests, and matching NUnit XML
    before publishing global discovery credentials and returning to Console.

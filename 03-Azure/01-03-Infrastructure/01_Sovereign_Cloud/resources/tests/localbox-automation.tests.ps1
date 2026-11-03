@@ -446,6 +446,151 @@ Describe 'kubectl client version validation' {
     }
 }
 
+Describe 'Temporary AKS API routing for hosted health checks' {
+    BeforeAll {
+        . "$resourceRoot/prepare-localbox.ps1"
+        function kubectl {}
+        function Get-NetIPAddress { param($AddressFamily, $InterfaceAlias) }
+        function Get-NetRoute { param($AddressFamily, $PolicyStore) }
+        function New-NetRoute { param($DestinationPrefix, $InterfaceIndex, $NextHop, $PolicyStore) }
+        function Remove-NetRoute {
+            [CmdletBinding(SupportsShouldProcess)]
+            param([Parameter(ValueFromPipeline)]$InputObject)
+            process {}
+        }
+    }
+    BeforeEach {
+        $previousLocalConfig = $env:LocalBoxConfigFile
+        $env:LocalBoxConfigFile = "$TestDrive/route-config.psd1"
+        Set-Content $env:LocalBoxConfigFile '@{}'
+        $routeConfig = @{
+            AKSControlPlaneIP = '10.10.0.5'; PhysicalHostInternalIP = '192.168.1.20'
+            SDNLABRoute = '192.168.1.1'; InternalSwitch = 'InternalSwitch'
+        }
+        $routeState = @{ Active = @(); HealthCalls = 0 }
+        $expectedRoute = [pscustomobject]@{ DestinationPrefix = '10.10.0.5/32'; InterfaceIndex = 42; NextHop = '192.168.1.1' }
+        Mock Import-PowerShellDataFile { $routeConfig }
+        Mock kubectl { $global:LASTEXITCODE = 0; 'https://10.10.0.5:6443' }
+        Mock Get-NetIPAddress {
+            [pscustomobject]@{ IPAddress = '192.168.1.20'; PrefixLength = 24; InterfaceIndex = 42; InterfaceAlias = 'vEthernet (InternalSwitch)' }
+        }
+        Mock Get-NetRoute { $routeState.Active }
+        Mock New-NetRoute { $routeState.Active = @($expectedRoute); $expectedRoute }
+        Mock Remove-NetRoute { $routeState.Active = @() }
+        Mock Invoke-LocalBoxAutomationHealthProcess {
+            $routeState.Active.Count | Should -Be 1
+            $routeState.HealthCalls++
+        }
+    }
+    AfterEach { $env:LocalBoxConfigFile = $previousLocalConfig }
+    It 'adds only a nonpersistent API host route while health checks run and verifies cleanup' {
+        Invoke-LocalBoxAutomationRoutedHealth 'source' 'input.json' 'manifest.json' 'private.kubeconfig'
+        Should -Invoke kubectl -Times 1
+        Should -Invoke New-NetRoute -Times 1 -Exactly -ParameterFilter {
+            $DestinationPrefix -eq '10.10.0.5/32' -and $InterfaceIndex -eq 42 -and
+            $NextHop -eq '192.168.1.1' -and $PolicyStore -eq 'ActiveStore'
+        }
+        Should -Invoke Invoke-LocalBoxAutomationHealthProcess -Times 1 -Exactly -ParameterFilter {
+            $ResourceRoot -eq 'source' -and $InputPath -eq 'input.json' -and $ManifestPath -eq 'manifest.json'
+        }
+        Should -Invoke Remove-NetRoute -Times 1 -Exactly -ParameterFilter { $InputObject -eq $expectedRoute }
+        Should -Invoke Get-NetRoute -Times 2 -Exactly -ParameterFilter { $PolicyStore -eq 'ActiveStore' }
+        $routeState.Active.Count | Should -Be 0
+    }
+    It 'cleans up an owned route when the health child fails' {
+        Mock Invoke-LocalBoxAutomationHealthProcess { throw 'Health child failed' }
+        { Invoke-LocalBoxAutomationRoutedHealth 'source' 'input' 'manifest' 'kubeconfig' } | Should -Throw '*Health child failed*'
+        Should -Invoke Remove-NetRoute -Times 1
+        $routeState.Active.Count | Should -Be 0
+    }
+    It 'preserves an existing matching route' {
+        $routeState.Active = @($expectedRoute)
+        Invoke-LocalBoxAutomationRoutedHealth 'source' 'input' 'manifest' 'kubeconfig'
+        Should -Invoke New-NetRoute -Times 0
+        Should -Invoke Remove-NetRoute -Times 0
+        $routeState.Active.Count | Should -Be 1
+    }
+    It 'preserves an existing matching route even when tests fail' {
+        $routeState.Active = @($expectedRoute)
+        Mock Invoke-LocalBoxAutomationHealthProcess { throw 'Health child failed' }
+        { Invoke-LocalBoxAutomationRoutedHealth 'source' 'input' 'manifest' 'kubeconfig' } | Should -Throw '*Health child failed*'
+        Should -Invoke Remove-NetRoute -Times 0
+    }
+    It 'rejects conflicting and ambiguous routes without replacing them' -TestCases @(
+        @{ Ambiguous = $false }; @{ Ambiguous = $true }
+    ) {
+        param($Ambiguous)
+        $routeState.Active = if ($Ambiguous) { @($expectedRoute, $expectedRoute) } else {
+            @([pscustomobject]@{ DestinationPrefix = '10.10.0.5/32'; InterfaceIndex = 5; NextHop = '172.16.1.1' })
+        }
+        { Invoke-LocalBoxAutomationRoutedHealth 'source' 'input' 'manifest' 'kubeconfig' } | Should -Throw '*conflicting route*'
+        Should -Invoke New-NetRoute -Times 0
+        Should -Invoke Remove-NetRoute -Times 0
+        Should -Invoke Invoke-LocalBoxAutomationHealthProcess -Times 0
+    }
+    It 'fails explicitly on route creation failure without deleting an unowned route' {
+        Mock New-NetRoute { throw 'Route creation denied' }
+        { Invoke-LocalBoxAutomationRoutedHealth 'source' 'input' 'manifest' 'kubeconfig' } | Should -Throw '*Route creation denied*'
+        Should -Invoke Remove-NetRoute -Times 0
+        Should -Invoke Invoke-LocalBoxAutomationHealthProcess -Times 0
+    }
+    It 'fails the gate if route removal fails' {
+        Mock Remove-NetRoute { throw 'Route removal denied' }
+        { Invoke-LocalBoxAutomationRoutedHealth 'source' 'input' 'manifest' 'kubeconfig' } | Should -Throw '*Route removal denied*'
+    }
+    It 'verifies removal rather than trusting a successful removal command' {
+        Mock Remove-NetRoute {}
+        { Invoke-LocalBoxAutomationRoutedHealth 'source' 'input' 'manifest' 'kubeconfig' } | Should -Throw '*remains after cleanup*'
+    }
+    It 'reports both health and cleanup failures' {
+        Mock Invoke-LocalBoxAutomationHealthProcess { throw 'Health child failed' }
+        Mock Remove-NetRoute { throw 'Route removal denied' }
+        { Invoke-LocalBoxAutomationRoutedHealth 'source' 'input' 'manifest' 'kubeconfig' } | Should -Throw '*Health child failed*Route removal denied*'
+    }
+    It 'rejects kubeconfig endpoints that do not match the configured private IPv4 API' -TestCases @(
+        @{ Endpoint = 'https://10.10.0.6:6443' }; @{ Endpoint = 'http://10.10.0.5:6443' }; @{ Endpoint = 'not a URI' }
+    ) {
+        param($Endpoint)
+        Mock kubectl { $global:LASTEXITCODE = 0; $Endpoint }
+        { Invoke-LocalBoxAutomationRoutedHealth 'source' 'input' 'manifest' 'kubeconfig' } | Should -Throw '*endpoint does not match*'
+        Should -Invoke New-NetRoute -Times 0
+    }
+    It 'propagates kubeconfig inspection failure' {
+        Mock kubectl { $global:LASTEXITCODE = 1 }
+        { Invoke-LocalBoxAutomationRoutedHealth 'source' 'input' 'manifest' 'kubeconfig' } | Should -Throw '*Cannot read the AKS API endpoint*'
+        Should -Invoke New-NetRoute -Times 0
+    }
+    It 'rejects invalid IP configuration' -TestCases @(
+        @{ Key = 'AKSControlPlaneIP'; Value = '10.10.0.0/24' }
+        @{ Key = 'PhysicalHostInternalIP'; Value = '::1' }
+        @{ Key = 'SDNLABRoute'; Value = '' }
+    ) {
+        param($Key, $Value)
+        $routeConfig[$Key] = $Value
+        { Invoke-LocalBoxAutomationRoutedHealth 'source' 'input' 'manifest' 'kubeconfig' } | Should -Throw '*canonical IPv4*'
+        Should -Invoke New-NetRoute -Times 0
+    }
+    It 'rejects missing or ambiguous internal interfaces' -TestCases @(
+        @{ Count = 0 }; @{ Count = 2 }
+    ) {
+        param($Count)
+        Mock Get-NetIPAddress {
+            for ($i = 0; $i -lt $Count; $i++) { @{ IPAddress = '192.168.1.20'; PrefixLength = 24; InterfaceIndex = 42 } }
+        }
+        { Invoke-LocalBoxAutomationRoutedHealth 'source' 'input' 'manifest' 'kubeconfig' } | Should -Throw '*uniquely resolve*'
+        Should -Invoke New-NetRoute -Times 0
+    }
+    It 'rejects unusable internal gateways' -TestCases @(
+        @{ Gateway = '172.16.1.1' }; @{ Gateway = '192.168.1.20' }
+        @{ Gateway = '192.168.1.0' }; @{ Gateway = '192.168.1.255' }
+    ) {
+        param($Gateway)
+        $routeConfig.SDNLABRoute = $Gateway
+        { Invoke-LocalBoxAutomationRoutedHealth 'source' 'input' 'manifest' 'kubeconfig' } | Should -Throw '*usable peer*'
+        Should -Invoke New-NetRoute -Times 0
+    }
+}
+
 Describe 'Guest default preparation and health orchestration' {
     BeforeAll {
         function Invoke-LocalBoxAz { param($Arguments, $TimeoutSeconds, [switch]$NoOutput) }
@@ -478,6 +623,9 @@ Invoke-TestPreparation -SubscriptionId $SubscriptionId -ResourceGroupName $Resou
         Mock Stop-Transcript {}
         Mock Initialize-LocalBoxAutomationEnvironment {}
         Mock Initialize-LocalBoxAutomationKubectl { 'private/kubectl.exe' }
+        Mock Invoke-LocalBoxAutomationRoutedHealth {
+            Invoke-LocalBoxAutomationHealthProcess -ResourceRoot $ResourceRoot -InputPath $InputPath -ManifestPath $ManifestPath
+        }
         Mock Invoke-TestPreparation {}
         Mock Send-LocalBoxAutomationFiles {}
         Mock Write-LocalBoxAutomationStatus {}
@@ -512,6 +660,9 @@ Invoke-TestPreparation -SubscriptionId $SubscriptionId -ResourceGroupName $Resou
         }
         Should -Invoke Invoke-LocalBoxAz -Times 1 -ParameterFilter { $Arguments[0..1] -join ' ' -eq 'connectedmachine assess-patches' }
         Should -Invoke Invoke-LocalBoxAutomationHealthProcess -Times 1
+        Should -Invoke Invoke-LocalBoxAutomationRoutedHealth -Times 1 -Exactly -ParameterFilter {
+            $Kubeconfig -eq "$guestDirectory/aks.kubeconfig" -and $ManifestPath -eq $manifestFile
+        }
         Should -Invoke Initialize-LocalBoxAutomationKubectl -Times 1 -Exactly -ParameterFilter {
             $InstanceId -eq '/aks/instance' -and $Directory -eq $guestDirectory
         }

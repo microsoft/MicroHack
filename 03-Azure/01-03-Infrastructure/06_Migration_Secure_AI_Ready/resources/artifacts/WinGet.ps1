@@ -55,12 +55,13 @@ Import-Module -Name Microsoft.WinGet.Client -RequiredVersion $winGetVersion -For
 Install-PSResource -Name HyperVDsc -Scope AllUsers -Quiet -AcceptLicense -TrustRepository -Prerelease
 Install-PSResource -Name NetworkingDsc -Scope AllUsers -Quiet -AcceptLicense -TrustRepository
 
-# Repeat repair for WinAppSDK registration without drifting to a newer CLI.
-Repair-WinGetPackageManager -AllUsers -Force -Version $winGetVersion -Verbose
-Repair-WinGetPackageManager -AllUsers -Force -Version $winGetVersion -Verbose
+# Repeat repair for WinAppSDK registration; fresh installs require the v-prefixed GitHub release tag.
+$winGetReleaseTag = "v$winGetVersion"
+Repair-WinGetPackageManager -AllUsers -Force -Version $winGetReleaseTag -Verbose
+Repair-WinGetPackageManager -AllUsers -Force -Version $winGetReleaseTag -Verbose
 $actualWinGetVersion = (winget --version | Out-String).Trim()
-if ($LASTEXITCODE -ne 0 -or $actualWinGetVersion -ne "v$winGetVersion") {
-    throw "Expected WinGet v$winGetVersion; found '$actualWinGetVersion' (exit code $LASTEXITCODE)."
+if ($LASTEXITCODE -ne 0 -or $actualWinGetVersion -ne $winGetReleaseTag) {
+    throw "Expected WinGet $winGetReleaseTag; found '$actualWinGetVersion' (exit code $LASTEXITCODE)."
 }
 Get-WinGetPackage | Out-Null
 

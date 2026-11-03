@@ -42,17 +42,27 @@ foreach ($target in @($groupId, "$groupId/providers/Microsoft.Compute/virtualMac
     Update-AzTag -ResourceId $target -Operation Merge -Tag @{ DeploymentProgress = $DeploymentProgressString } | Out-Null
 }
 
-# Pinned to version 1.11.460 to avoid known issue: https://github.com/microsoft/winget-cli/issues/5826
-Install-PSResource -Name Microsoft.WinGet.Client -Scope AllUsers -Quiet -AcceptLicense -TrustRepository -Version 1.11.460
-Install-PSResource -Name Microsoft.WinGet.DSC -Scope AllUsers -Quiet -AcceptLicense -TrustRepository -Version 1.11.460
+# The CLI and modules must share the elevated COM transport introduced in 1.29.380.
+$winGetVersion = '1.29.380'
+if (@(Get-Module -Name Microsoft.WinGet.Client | Where-Object Version -NE ([version]$winGetVersion)).Count -gt 0) {
+    throw "Run WinGet.ps1 in a fresh PowerShell 7 process; another WinGet client version is already loaded."
+}
+Install-PSResource -Name Microsoft.WinGet.Client -Scope AllUsers -Quiet -AcceptLicense -TrustRepository -Version $winGetVersion
+Install-PSResource -Name Microsoft.WinGet.DSC -Scope AllUsers -Quiet -AcceptLicense -TrustRepository -Version $winGetVersion
+Import-Module -Name Microsoft.WinGet.Client -RequiredVersion $winGetVersion -Force
 
 # Install DSC resources required for MHBox
 Install-PSResource -Name HyperVDsc -Scope AllUsers -Quiet -AcceptLicense -TrustRepository -Prerelease
 Install-PSResource -Name NetworkingDsc -Scope AllUsers -Quiet -AcceptLicense -TrustRepository
 
-# Update WinGet package manager to the latest version (running twice due to a known issue regarding WinAppSDK)
-Repair-WinGetPackageManager -AllUsers -Force -Latest -Verbose
-Repair-WinGetPackageManager -AllUsers -Force -Latest -Verbose
+# Repeat repair for WinAppSDK registration without drifting to a newer CLI.
+Repair-WinGetPackageManager -AllUsers -Force -Version $winGetVersion -Verbose
+Repair-WinGetPackageManager -AllUsers -Force -Version $winGetVersion -Verbose
+$actualWinGetVersion = (winget --version | Out-String).Trim()
+if ($LASTEXITCODE -ne 0 -or $actualWinGetVersion -ne "v$winGetVersion") {
+    throw "Expected WinGet v$winGetVersion; found '$actualWinGetVersion' (exit code $LASTEXITCODE)."
+}
+Get-WinGetPackage | Out-Null
 
 # Apply WinGet Configuration files
 winget configure --file C:\MHBox\DSC\common.dsc.yml --accept-configuration-agreements --disable-interactivity

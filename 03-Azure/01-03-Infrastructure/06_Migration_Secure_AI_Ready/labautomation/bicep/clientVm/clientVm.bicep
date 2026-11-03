@@ -237,7 +237,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2024-07-01' = {
     typeHandlerVersion: '1.10'
     autoUpgradeMinorVersion: true
     // Rerun failed Bootstrap for this fix without changing the tag on every deployment.
-    forceUpdateTag: 'bootstrap-shutdown-rbac-v1'
+    forceUpdateTag: 'bootstrap-deferred-restart-v2'
     protectedSettings: {
       fileUris: [
         uri(templateBaseUrl, 'artifacts/Bootstrap.ps1')

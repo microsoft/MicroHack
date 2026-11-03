@@ -517,7 +517,7 @@ if ($LASTEXITCODE -ne 0) {
 if ($flavor -eq 'ITPro') {
     # Creating scheduled task for WinGet.ps1
     $Trigger = New-ScheduledTaskTrigger -AtLogOn
-    $Action = New-ScheduledTaskAction -Execute $ScheduledTaskExecutable -Argument $Env:MHBoxDir\WinGet.ps1
+    $Action = New-ScheduledTaskAction -Execute $ScheduledTaskExecutable -Argument "-NoProfile -File $Env:MHBoxDir\WinGet.ps1"
     Register-ScheduledTask -TaskName 'WinGetLogonScript' -Trigger $Trigger -User $adminUsername -Action $Action -RunLevel Highest -Force | Out-Null
 
     # Creating scheduled task for MHServersLogonScript.ps1
@@ -531,11 +531,13 @@ Get-ScheduledTask -TaskName ServerManager | Disable-ScheduledTask | Out-Null
 if ($flavor -eq 'ITPro') {
     Write-Host "`n### Installing Hyper-V ###`n"
 
-    # Install Hyper-V and reboot
-    Write-Host 'Installing Hyper-V and restart'
+    Write-Host 'Installing Hyper-V without restarting the extension host'
     Enable-WindowsOptionalFeature -Online -FeatureName Containers -All -NoRestart | Out-Null
     Enable-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatform -NoRestart | Out-Null
-    Install-WindowsFeature -Name Hyper-V -IncludeAllSubFeature -IncludeManagementTools -Restart
+    $hyperVInstallation = Install-WindowsFeature -Name Hyper-V -IncludeAllSubFeature -IncludeManagementTools
+    if (-not $hyperVInstallation.Success) {
+        throw "Hyper-V installation failed: $($hyperVInstallation.ExitCode)."
+    }
 }
 
 # Clean up Bootstrap.log
@@ -544,5 +546,12 @@ Stop-Transcript
 $logSuppress = Get-Content "$Env:MHBoxLogsDir\Bootstrap.log" | Where-Object { $_ -notmatch "Host Application: $ScheduledTaskExecutable" }
 $logSuppress | Set-Content "$Env:MHBoxLogsDir\Bootstrap.log" -Force
 
-# Restart computer
-Restart-Computer
+# Let CSE report success before the host reboots and starts the logon stage.
+$restartAction = New-ScheduledTaskAction -Execute "$env:WINDIR\System32\shutdown.exe" `
+    -Argument '/r /t 0 /d p:2:4 /c "MicroHack bootstrap completed"'
+$restartTrigger = New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes(2)
+$restartPrincipal = New-ScheduledTaskPrincipal -UserId 'SYSTEM' -LogonType ServiceAccount -RunLevel Highest
+Register-ScheduledTask -TaskName 'MHBox-BootstrapRestart' -Action $restartAction -Trigger $restartTrigger `
+    -Principal $restartPrincipal -Force | Out-Null
+Write-Host 'Bootstrap completed; the host restart is scheduled in two minutes.'
+exit 0

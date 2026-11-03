@@ -270,7 +270,13 @@ if ($null -eq $deployment -or $deployment.ProvisioningState -ne 'Succeeded') {
                 throw "ARM deployment ended as $($deployment.ProvisioningState). Inspect deployment operations; resources and the selected region are preserved."
             }
         } elseif ($null -ne $submissionJob -and $submissionJob.State -in @('Failed', 'Stopped')) {
-            throw "ARM submission failed before the deployment was registered: $($submissionJob.JobStateInfo.Reason)"
+            Write-Host "ARM submission job $($submissionJob.Id) ended as $($submissionJob.State); reading retained errors."
+            Receive-Job -Job $submissionJob -Keep -ErrorAction Stop | Out-Null
+            $reason = [string]$submissionJob.JobStateInfo.Reason
+            if ([string]::IsNullOrWhiteSpace($reason)) {
+                $reason = "Job $($submissionJob.Id) ended as $($submissionJob.State) with no retained error record. Inspect the runner's job diagnostics; resources are preserved."
+            }
+            throw "ARM submission failed before the deployment was registered: $reason"
         }
         if ((Get-Date).ToUniversalTime() -ge $armDeadline) {
             throw "ARM deployment '$deploymentName' timed out after 180 minutes. It may still be running; the RG is preserved and a rerun resumes polling."

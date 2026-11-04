@@ -42,7 +42,7 @@ Open *Hyper-V Manager* on the supplied host and ensure that four VMs are running
 + MHBox-Win2K22
     + This system hosts Windows Server 2022 with an installed IIS web server.
 
-The following lab-only credentials are used inside the nested VMs. These are separate from the host login credentials provided by the Console or instructor and stored in Key Vault.
+The Console dashboard lists **Migration Windows Guest** username and initial-password fields for the three Windows VMs, and **Migration Ubuntu Guest** fields for the Ubuntu VM. These are separate from the host login credentials provided by the Console or instructor and stored in Key Vault. The following lab-only image defaults also apply to manual deployments; if you change a guest password, use your updated password rather than the dashboard's initial value.
 
 **Windows virtual machine credentials:**
 

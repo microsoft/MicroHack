@@ -400,3 +400,10 @@ if ($outputs['hostVmName'].Value -ne $hostName) {
 @{ HackboxCredential = @{ name = 'Migration Source VNet'; value = $outputs['sourceVnetName'].Value } }
 @{ HackboxCredential = @{ name = 'Migration Destination VNet'; value = $outputs['destinationVnetName'].Value } }
 @{ HackboxCredential = @{ name = 'Migration Lab Region'; value = $location } }
+
+# Public training-image defaults, separate from the generated per-lab host credentials.
+$guestInitialPassword = 'JS123!!'
+@{ HackboxCredential = @{ name = 'Migration Windows Guest Username'; value = 'Administrator'; note = 'Windows OS login for MHBox-AzMigSrv, MHBox-SQL, and MHBox-Win2K22.' } }
+@{ HackboxCredential = @{ name = 'Migration Windows Guest Initial Password'; value = $guestInitialPassword; note = 'Initial Windows guest image password, not the host password. If changed, use your updated password.' } }
+@{ HackboxCredential = @{ name = 'Migration Ubuntu Guest Username'; value = 'jumpstart'; note = 'Ubuntu OS login for MHBox-Ubuntu-01; use sudo for administrative commands.' } }
+@{ HackboxCredential = @{ name = 'Migration Ubuntu Guest Initial Password'; value = $guestInitialPassword; note = 'Initial Ubuntu guest image password, not the host password. If changed, use your updated password.' } }

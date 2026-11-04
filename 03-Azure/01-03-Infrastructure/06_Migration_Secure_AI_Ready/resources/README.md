@@ -27,6 +27,8 @@ The Console deployer applies the approved training RG tags `SecurityControl=Igno
 3. Run predeployment. [shared-deploy-lab.ps1](../labautomation/shared-deploy-lab.ps1) registers baseline providers once per subscription; [deploy-lab.ps1](../labautomation/deploy-lab.ps1) deploys and verifies each lab. Learners can register additional providers as required by later exercises.
 4. Confirm each learner has subscription Owner, then hand out the Console's connection and credential fields only after verification succeeds. Learners then follow [Solution 1](../walkthrough/challenge-01/solution-01.md).
 
+The dashboard includes **Migration Windows Guest** username and initial-password fields for `MHBox-AzMigSrv`, `MHBox-SQL`, and `MHBox-Win2K22`, plus **Migration Ubuntu Guest** fields for `MHBox-Ubuntu-01`. These are the supplied guest images' lab-only defaults, separate from the generated host login; they are not changed by deployment reruns. If a learner changes a guest password, the dashboard's initial password no longer applies. To add these fields to an already verified Console lab, re-import the updated automation package and rerun its deployment; the completed baseline is reused without restarting guests or resetting learner progress.
+
 Fresh `rg-labuser-0013` labs use `mh-0013-hv` and matching network prefixes. Leading zeros are preserved; learner numbers can contain one to nine digits. Existing labs and nonstandard RG names retain hash-based names. Keep the RG's `LabId`, `LabNameSuffix`, and `LabRegion` records intact: completed reruns preserve learner progress, and incomplete retries retain the original names and region.
 
 ## Option 2: Manual deployment

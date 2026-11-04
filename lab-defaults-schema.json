@@ -10,6 +10,11 @@
       "default": "https://raw.githubusercontent.com/microsoft/MicroHack/refs/heads/main/lab-defaults-schema.json",
       "description": "Optional URI of the lab-defaults JSON schema. Defaults to the schema published in microsoft/MicroHack."
     },
+    "Quality": {
+      "type": "string",
+      "enum": ["Testing", "Preview", "GA"],
+      "description": "Optional quality (maturity) label of the content pack. When set, importing or refreshing the content pack in the platform updates its quality label to this value; an invalid value is reported as a warning and ignored. When absent, the quality label is left as it is."
+    },
     "groups": {
       "type": "array",
       "items": { "type": "string" },

@@ -237,6 +237,47 @@ bounded intervals and potential optimizations.
 
 ### Diagnostics and reruns
 
+#### Automatic Azure Local validation recovery
+
+The Console can perform **one automatic validation retry**, after a **two-minute
+delay**, for the known `UpdateDeploymentSettingsDataFailed` failure in
+`Download content for deployment` with `Timeout of 7200 seconds reached for
+interface`. It requires exactly one failed deployment-settings operation and
+recognized error details. Other validation failures, cancellation, deployment
+failures, unreadable diagnostics and ambiguous state still stop the job.
+
+The host submits the asynchronous Managed Run Command
+`sovereign-localbox-validation-retry` on LocalBox-Client. Keep
+[localbox-validation-retry.ps1](../../labautomation/localbox-validation-retry.ps1)
+in the imported `labautomation` directory. The recovery:
+
+1. Rechecks the original failed validation correlation after the delay.
+2. Uses the Client's managed identity and existing `C:\LocalBox\azlocal.json` and
+   `azlocal.parameters.json`. Nonsecret environment identifiers must match the
+   failed deployment. It does not regenerate templates or credentials,
+   replay bootstrap, or export the parameter file to Console.
+3. Reruns `localcluster-validate` with `deploymentMode=Validate`. Only a new,
+   successful validation permits submission of `localcluster-deploy` with
+   `deploymentMode=Deploy`. A concurrent/manual deployment is not overwritten.
+4. Removes its temporary Azure CLI profile. Console refreshes its own tokens
+   while polling, reports retry status, and continues the normal cluster,
+   connectivity, bridge, extension and subsequent Full health gates.
+
+Recovery uses the **remaining eight-hour nested-readiness budget**, not a new
+eight-hour window. A retry can itself take hours, and neither its submission nor
+its successful exit means the nested deployment is ready. Ensure the Console
+job limit accommodates the complete workflow.
+
+The Run Command record persists: a restarted Console job monitors an existing
+recovery instead of submitting another. A failed/timed-out recovery is terminal;
+there is no automatic retry loop across Console restarts. Inspect its
+`instanceView` and the ARM deployment operations before manual intervention.
+Once a manual repair has produced a successful cluster deployment, the normal
+readiness checks can proceed without rerunning that historical recovery.
+Do not manually re-trigger validation/deployment while automatic recovery is
+running. Cancellation or forced guest termination may prevent CLI-profile
+cleanup; inspect the Client before resetting recovery state.
+
 If an older run failed with `Could not find a part of the path
 '/content/.../resources/prepare-localbox.ps1'`, it reached ARM completion but
 could not package guest automation. Re-import the corrected branch (including

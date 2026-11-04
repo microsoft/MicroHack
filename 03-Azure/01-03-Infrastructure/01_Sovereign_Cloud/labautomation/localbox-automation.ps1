@@ -44,15 +44,125 @@ function Wait-LocalBoxAutomation {
     } while ($true)
 }
 
+function Test-LocalBoxValidationDownloadTimeout {
+    param($ErrorDetail)
+    if (-not $ErrorDetail) { return $false }
+    if ($ErrorDetail.details) {
+        foreach ($child in $ErrorDetail.details) {
+            if (-not (Test-LocalBoxValidationDownloadTimeout $child)) { return $false }
+        }
+        return $true
+    }
+    return $ErrorDetail.code -eq 'UpdateDeploymentSettingsDataFailed' -and
+        $ErrorDetail.message -match 'Name=Download content for deployment' -and
+        $ErrorDetail.message -match 'Exception=Timeout of 7200 seconds reached for interface'
+}
+
+function Get-LocalBoxValidationRetryState {
+    param($Command, [string]$SubscriptionId, [string]$ResourceGroupName)
+    $metadata = @{}
+    foreach ($parameter in $Command.properties.parameters) {
+        if ($metadata.ContainsKey($parameter.name)) { throw 'Duplicate validation recovery metadata. Inspect the existing Run Command; it was not replaced.' }
+        $metadata[$parameter.name] = $parameter.value
+    }
+    $correlation = [guid]::Empty
+    $startedAfter = [datetimeoffset]::MinValue
+    if ($metadata.RecoveryVersion -ne '1' -or $metadata.SubscriptionId -ne $SubscriptionId -or
+        $metadata.ResourceGroupName -ne $ResourceGroupName -or
+        -not [guid]::TryParse([string]$metadata.OriginalValidationCorrelationId, [ref]$correlation) -or $correlation -eq [guid]::Empty -or
+        -not [datetimeoffset]::TryParse([string]$metadata.StartedAfter, [ref]$startedAfter)) {
+        throw 'Unrecognized validation recovery Run Command. Inspect it before retrying; it was not replaced.'
+    }
+    if ($Command.properties.provisioningState -in @('Failed', 'Canceled')) { throw 'Validation recovery Run Command provisioning failed. Inspect sovereign-localbox-validation-retry.' }
+    $state = $Command.properties.instanceView
+    if (-not $state.startTime -or [datetimeoffset]$state.startTime -lt $startedAfter) {
+        return @{ Ready = $false; OriginalCorrelationId = $metadata.OriginalValidationCorrelationId
+            Detail = 'Waiting for validation retry 1/1 to start; ignoring stale instanceView.' }
+    }
+    if ($state.executionState -in @('Failed', 'Canceled', 'TimedOut')) {
+        throw 'Automatic validation retry failed or timed out. No further automatic retry will be submitted; inspect sovereign-localbox-validation-retry and localcluster-validate.'
+    }
+    if ($state.executionState -eq 'Succeeded') {
+        if ($null -eq $state.exitCode -or $state.exitCode -ne 0) { throw 'Validation recovery did not exit successfully.' }
+        return @{ Ready = $true; OriginalCorrelationId = $metadata.OriginalValidationCorrelationId }
+    }
+    @{ Ready = $false; OriginalCorrelationId = $metadata.OriginalValidationCorrelationId
+        Detail = "Automatic validation retry 1/1: $($state.executionState). Deployment remains gated on successful validation." }
+}
+
 function Wait-LocalBoxNestedDeployment {
     param([string]$SubscriptionId, [string]$ResourceGroupName, [int]$TimeoutSeconds = 28800)
+    $deadline = [datetime]::UtcNow.AddSeconds($TimeoutSeconds)
+    $retry = @{ Checked = $false; Command = $null; OriginalCorrelationId = $null }
+    $vmId = "/subscriptions/$SubscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Compute/virtualMachines/LocalBox-Client"
+    $retryUri = "$vmId/runCommands/sovereign-localbox-validation-retry?api-version=2024-07-01"
     Wait-LocalBoxAutomation -Phase 'nested deployment' -TimeoutSeconds $TimeoutSeconds -Probe {
         $deployments = @(Invoke-LocalBoxAutomationAz @('deployment', 'group', 'list', '--subscription', $SubscriptionId, '--resource-group', $ResourceGroupName))
         $clusterDeployment = @($deployments | Where-Object name -eq 'localcluster-deploy')
-        foreach ($deployment in @($deployments | Where-Object name -in @('localcluster-validate', 'localcluster-deploy'))) {
-            if ($deployment.properties.provisioningState -in @('Failed', 'Canceled')) {
-                throw "Nested deployment $($deployment.name) failed. Inspect its deployment operations and Client logs."
+        $validation = @($deployments | Where-Object name -eq 'localcluster-validate')
+        if ($clusterDeployment.Count -gt 1 -or $validation.Count -gt 1) { throw 'Ambiguous nested deployment records.' }
+        if ($clusterDeployment.Count -eq 1 -and $clusterDeployment[0].properties.provisioningState -in @('Failed', 'Canceled')) {
+            throw 'Nested deployment localcluster-deploy failed. Inspect its deployment operations and Client logs.'
+        }
+        if (-not $retry.Checked -and ($clusterDeployment.Count -ne 1 -or $clusterDeployment[0].properties.provisioningState -ne 'Succeeded')) {
+            $retry.Command = Invoke-LocalBoxAutomationRequest -Path "$retryUri&`$expand=instanceView" -AllowNotFound
+            $retry.Checked = $true
+        }
+        if ($retry.Command) {
+            $retry.Command = Invoke-LocalBoxAutomationRequest -Path "$retryUri&`$expand=instanceView"
+            $retryState = Get-LocalBoxValidationRetryState -Command $retry.Command -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName
+            if ($retry.OriginalCorrelationId -and $retry.OriginalCorrelationId -ne $retryState.OriginalCorrelationId) {
+                throw 'Validation recovery correlation changed while monitoring; the command was not replaced.'
             }
+            $retry.OriginalCorrelationId = $retryState.OriginalCorrelationId
+            if (-not $retryState.Ready) { return $retryState }
+            if ($validation.Count -eq 1 -and $validation[0].properties.correlationId -eq $retryState.OriginalCorrelationId) {
+                return @{ Ready = $false; Detail = 'Validation retry completed; waiting for updated ARM deployment records.' }
+            }
+        }
+        if ($validation.Count -eq 1 -and $validation[0].properties.provisioningState -in @('Failed', 'Canceled')) {
+            if ($retry.Command -or $validation[0].properties.provisioningState -eq 'Canceled' -or $clusterDeployment.Count) {
+                throw 'Nested deployment localcluster-validate failed or was canceled. No further automatic validation retry is allowed.'
+            }
+            $operations = @(Invoke-LocalBoxAutomationAz @('deployment', 'operation', 'group', 'list', '--subscription', $SubscriptionId,
+                '--resource-group', $ResourceGroupName, '--name', 'localcluster-validate'))
+            $failed = @($operations | Where-Object { $_.properties.provisioningState -eq 'Failed' })
+            if ($failed.Count -ne 1 -or $failed[0].properties.targetResource.resourceType -ine 'Microsoft.AzureStackHCI/clusters/deploymentSettings') {
+                throw 'Nested deployment localcluster-validate failed outside the recognized content-download operation. Manual investigation is required.'
+            }
+            $status = $failed[0].properties.statusMessage
+            if ($status -is [string]) {
+                try { $status = $status | ConvertFrom-Json -AsHashtable -ErrorAction Stop }
+                catch { throw 'Unable to parse validation operation details; automatic retry is not safe.' }
+            }
+            if (-not (Test-LocalBoxValidationDownloadTimeout $status.error)) {
+                throw 'Nested deployment localcluster-validate failed with a non-retryable validation error. Inspect its deployment operations.'
+            }
+            $correlation = [guid]::Empty
+            if (-not [guid]::TryParse([string]$validation[0].properties.correlationId, [ref]$correlation) -or $correlation -eq [guid]::Empty) {
+                throw 'Cannot correlate the failed validation; automatic retry was not submitted.'
+            }
+            $remaining = [int][math]::Floor(($deadline - [datetime]::UtcNow).TotalSeconds)
+            if ($remaining -le 120) { throw 'Insufficient nested-deployment time remaining for the validation retry delay.' }
+            $source = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'localbox-validation-retry.ps1') -Raw -ErrorAction Stop
+            $vm = Invoke-LocalBoxAutomationRequest -Path "$vmId`?api-version=2024-07-01"
+            Write-Warning '[LocalBox] Azure Local validation hit the 7200-second content-download timeout. Scheduling automatic retry 1/1 after 120 seconds; the existing nested wait deadline is unchanged.'
+            Invoke-LocalBoxAutomationRequest -Path $retryUri -Method PUT -Body @{
+                location = $vm.location
+                properties = @{
+                    source = @{ script = $source }; asyncExecution = $true; timeoutInSeconds = $remaining
+                    parameters = @(
+                        @{ name = 'SubscriptionId'; value = $SubscriptionId }
+                        @{ name = 'ResourceGroupName'; value = $ResourceGroupName }
+                        @{ name = 'OriginalValidationCorrelationId'; value = $correlation.ToString() }
+                        @{ name = 'StartedAfter'; value = [datetime]::UtcNow.ToString('o') }
+                        @{ name = 'RecoveryVersion'; value = '1' }
+                    )
+                }
+            } | Out-Null
+            $retry.Command = @{ properties = @{} }
+            $retry.OriginalCorrelationId = $correlation.ToString()
+            return @{ Ready = $false; Detail = 'Automatic validation retry 1/1 submitted. Credentials and existing ARM files remain on LocalBox-Client.' }
         }
         if ($clusterDeployment.Count -ne 1 -or $clusterDeployment[0].properties.provisioningState -ne 'Succeeded') {
             return @{ Ready = $false; Detail = 'Waiting for localcluster-deploy to succeed.' }

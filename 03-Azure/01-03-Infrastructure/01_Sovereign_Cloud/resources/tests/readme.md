@@ -45,6 +45,16 @@ required to validate regional service availability and effective inherited polic
 
 ## Global event LocalBox checks
 
+Run `Invoke-Pester ./localbox-validation-retry.tests.ps1 -Output Detailed` for
+the bounded Azure Local validation recovery. These mocked tests cover the exact
+content-download timeout classifier, the unchanged nested wait budget, one
+asynchronous recovery, Console restart/resume, stale execution state, error
+propagation, existing local-file/correlation checks, managed-identity CLI-profile
+cleanup, and validation-before-deploy ordering. They never submit Azure
+deployments. The reported traininglab-58 failure could not be read with the
+available operator permissions; real retry and subsequent cluster deployment
+remain a fresh-Console integration check.
+
 Run `Invoke-Pester ./localbox-deployment.tests.ps1 -Output Detailed` for the
 LocalBox Developer Bastion deployment contract. These tests require Azure CLI
 with Bicep available: they compile the network module locally, then mock Azure

@@ -317,7 +317,7 @@ Because you are now connected to the SQL Server **instance** (port `1533`) and n
 > **Windows / PowerShell jump box notes**
 > * If `sqlcmd` is missing, install go-sqlcmd with `winget install sqlcmd` and open a **new** shell so the updated `PATH` is picked up (or call it via its full path, e.g. `& "C:\Program Files\sqlcmd\sqlcmd.exe" ...`).
 > * The legacy .NET Framework `System.Data.SqlClient` may fail the TLS pre-login handshake against SQL Server on Linux. Use **go-sqlcmd** (`-C` to trust the self-signed certificate) or the **VS Code mssql extension** (ODBC Driver 18) with **Trust Server Certificate = Yes** — connect it to `127.0.0.1,15330` through the same tunnel.
-> * When creating `config.sql` from PowerShell, use a **double-quoted here-string** (`@" ... "@ | Set-Content -Encoding ascii`) so the single quotes in `N'...'` stay intact. A single-quoted here-string requires doubling every SQL quote (`''`) and, if written to the file un-collapsed, produces `Msg 102 Incorrect syntax near 'show'`.
+> * When creating `config.sql` from PowerShell, use a **single-quoted here-string** to preserve the SQL text literally. Put `@'` on its own opening line and `'@ | Set-Content -Path config.sql -Encoding ascii` on the closing line; leave the single quotes in `N'...'` unchanged. Double-quoted here-strings also preserve those quotes, but expand PowerShell variables and escape sequences.
 
 ### Important behavior notes
 

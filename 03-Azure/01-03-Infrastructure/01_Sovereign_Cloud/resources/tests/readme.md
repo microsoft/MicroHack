@@ -45,6 +45,15 @@ required to validate regional service availability and effective inherited polic
 
 ## Global event LocalBox checks
 
+Run `Invoke-Pester ./localbox-deployment.tests.ps1 -Output Detailed` for the
+LocalBox Developer Bastion deployment contract. These tests require Azure CLI
+with Bicep available: they compile the network module locally, then mock Azure
+deployment operations. They verify the Developer VNet binding, retained NAT
+outbound path, absence of dedicated Bastion resources, complete Console
+packaging, manual-entry-point forwarding, and refusal to downgrade an existing
+dedicated Bastion or remove its subnet. They do not deploy resources or verify
+real portal connectivity; a fresh deployment remains the integration gate.
+
 Run `Invoke-Pester ./localbox-automation.tests.ps1,./global-localbox.tests.ps1 -Output Detailed`
 for the hosted readiness gate. Offline tests cover token refresh on every poll,
 nested readiness beyond ARM success, imported-content packaging, event-group

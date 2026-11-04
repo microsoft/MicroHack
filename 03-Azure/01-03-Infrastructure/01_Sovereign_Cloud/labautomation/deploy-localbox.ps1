@@ -3,8 +3,8 @@
 .SYNOPSIS
 Deploys the Azure Arc Jumpstart LocalBox environment used by the Sovereign Cloud lab.
 .DESCRIPTION
-Downloads a coherent set of upstream LocalBox Bicep templates, validates them, and
-deploys the LocalBox host, networking, storage, and optional Azure Bastion resources.
+Downloads upstream LocalBox Bicep templates and substitutes the lab's Developer
+Bastion network module, then validates and deploys the environment.
 .PARAMETER SubscriptionId
 The Azure subscription that receives the LocalBox resources.
 .PARAMETER ResourceGroupName
@@ -21,6 +21,9 @@ It is not published as a participant credential. Coach/event-lead-only retrieval
 requires a supported mechanism from the Console owner.
 .PARAMETER GithubRef
 The azure_arc branch, tag, or commit used for both Bicep and runtime artifacts.
+.PARAMETER DeployBastion
+Deploy Bastion Developer for one browser-based coach connection at a time.
+The host remains private and retains NAT Gateway outbound access when enabled.
 .PARAMETER AzureLocalResourceProviderObjectId
 Optional tenant-specific object ID of the Microsoft.AzureStackHCI enterprise
 application. The script resolves it through Microsoft Graph when omitted.
@@ -103,6 +106,32 @@ function New-LocalBoxPassword {
     )
     $characters += 1..20 | ForEach-Object { $all[(Get-Random -Maximum $all.Length)] }
     return -join ($characters | Sort-Object { Get-Random })
+}
+
+function Assert-LocalBoxNetworkCompatibility {
+    param([string]$SubscriptionId, [string]$ResourceGroupName)
+
+    $bastions = @(Invoke-AzJson -Arguments @(
+        'network', 'bastion', 'list', '--subscription', $SubscriptionId, '--resource-group', $ResourceGroupName
+    ))
+    foreach ($bastion in @($bastions | Where-Object name -eq 'LocalBox-Bastion')) {
+        if ($bastion.sku.name -ne 'Developer') {
+            throw "Existing LocalBox-Bastion SKU '$($bastion.sku.name)' cannot be changed to Developer in place. Use a fresh resource group or arrange an explicitly approved delete/recreate migration. No existing Bastion was changed."
+        }
+    }
+    $networks = @(Invoke-AzJson -Arguments @(
+        'network', 'vnet', 'list', '--subscription', $SubscriptionId, '--resource-group', $ResourceGroupName
+    ))
+    $legacySubnets = @($networks | Where-Object name -eq 'LocalBox-VNet' |
+        ForEach-Object { $_.subnets } | Where-Object name -eq 'AzureBastionSubnet')
+    if ($legacySubnets.Count) {
+        throw 'LocalBox-VNet contains a legacy AzureBastionSubnet. Use a fresh resource group or arrange an explicitly approved migration; this deployment will not automatically remove an existing Bastion subnet.'
+    }
+}
+
+$networkTemplateFile = Join-Path $PSScriptRoot 'localbox-network.bicep'
+if (-not (Test-Path -LiteralPath $networkTemplateFile -PathType Leaf)) {
+    throw 'Missing localbox-network.bicep. Import the complete labautomation directory before deploying LocalBox.'
 }
 
 if (-not (Get-Command az -ErrorAction SilentlyContinue)) {
@@ -254,6 +283,7 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 if ($resourceGroupExists -eq 'true') {
+    Assert-LocalBoxNetworkCompatibility -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName
     $resourceGroup = Invoke-AzJson -Arguments @(
         'group', 'show', '--subscription', $SubscriptionId, '--name', $ResourceGroupName
     )
@@ -279,7 +309,6 @@ $bicepFiles = @(
     'mgmt/mgmtArtifacts.bicep',
     'mgmt/storageAccount.bicep',
     'mgmt/customerUsageAttribution.bicep',
-    'network/network.bicep',
     'host/host.bicep'
 )
 $deploymentName = "localbox-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
@@ -291,6 +320,10 @@ try {
     foreach ($file in $bicepFiles) {
         Write-Host "Downloading LocalBox template: $file"
         Invoke-WebRequest -Uri "$baseUri/$file" -OutFile (Join-Path $tempDirectory $file) -UseBasicParsing
+    }
+    Copy-Item -LiteralPath $networkTemplateFile -Destination (Join-Path $tempDirectory 'network/network.bicep') -ErrorAction Stop
+    if ($DeployBastion) {
+        Write-Host 'Using Bastion Developer: one browser connection at a time; no native-client tunnels. Regional support is checked by ARM validation.' -ForegroundColor Cyan
     }
 
     $resourceTags = @{

@@ -40,6 +40,39 @@ reference-VM security inspection. No participant Owner, host login or password i
 granted by this hook. Existing shared VM/AKS access remains a workshop trust
 boundary, not per-participant isolation.
 
+### LocalBox Bastion
+
+New LocalBox deployments use **Azure Bastion Developer**, with no hourly Bastion
+charge. It supports **one browser-based connection at a time**, intended for a
+coach accessing LocalBox-Client. It does not support native-client tunnels,
+concurrent sessions or peered-VNet access. Spain Central and Sweden Central are
+supported; check the current [SKU and region matrix](https://learn.microsoft.com/azure/bastion/bastion-sku-comparison)
+before choosing another host region. ARM validation remains authoritative; the
+deployer does not silently substitute a paid SKU.
+
+The [local network module](../../labautomation/localbox-network.bicep) replaces
+only the downloaded upstream network module. It preserves the LocalBox VNet,
+Client subnet/NSG and NAT Gateway outbound path, but creates no dedicated Bastion
+subnet, Bastion public IP or Bastion NSG. Keep this file beside
+`deploy-localbox.ps1` when importing the Console package. The interactive manual
+entry point delegates to the same deployer. Other Jumpstart templates and runtime
+artifacts still come from the selected upstream revision.
+
+This change applies only to **LocalBox**. Challenge 7's separate Bastion remains
+**Standard** because its K3s workflow requires `az network bastion tunnel`.
+Developer avoids dedicated Bastion provisioning, but neither a deployment-time
+improvement nor elimination of Azure service errors is guaranteed.
+
+Existing successful LocalBox deployments are reused without SKU changes.
+Azure does not support an in-place downgrade from Basic/Standard to Developer.
+The deployer rejects an existing dedicated `LocalBox-Bastion` or legacy
+`AzureBastionSubnet` rather than deleting resources or rewriting that subnet.
+Use a fresh event/resource group, or arrange a separate approved migration.
+Re-importing this change alone will **not** repair a failed dedicated Bastion.
+In particular, the failed Basic Bastion on traininglab-44 was left unchanged.
+
+### Participant access
+
 Participant RBAC setup reuses an existing direct Security Reader assignment on
 its subscription, including the grant made by the global hook for participants
 in the LocalBox host subscription. It does not recreate the same grant under a
@@ -192,6 +225,15 @@ guaranteed runtime. MDE was still Pending when preparation finished; the new
 automation waits separately for installation and assesses updates. See the
 [timing evidence and planning guidance](../localbox/readme.md#preparation-time);
 allow time for both preparation and later assessments.
+
+For a full cold-run breakdown, see the
+[test-06 timing and optimization assessment](test-06-timing-analysis.md).
+The 4 November 2026 run took **10 hours 30 minutes 44 seconds** from Console
+start to finish, including **5 hours 24 minutes 9 seconds** of managed guest
+execution. All 26 guest tests passed, but Console result retrieval failed and
+downstream shared/participant stages were skipped. This is not a successful
+end-to-end event-duration benchmark; the report separates measured operations,
+bounded intervals and potential optimizations.
 
 ### Diagnostics and reruns
 

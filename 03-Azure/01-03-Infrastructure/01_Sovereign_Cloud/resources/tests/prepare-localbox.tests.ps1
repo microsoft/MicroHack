@@ -1140,8 +1140,14 @@ Describe 'LocalBox registration region contract' {
         $registration.DefaultValue.SafeGetValue() | Should -Be 'australiaeast'
         $hostRegion = $ast.ParamBlock.Parameters | Where-Object { $_.Name.VariablePath.UserPath -eq 'Location' }
         $hostRegion.DefaultValue.SafeGetValue() | Should -Be 'swedencentral'
-        $ast.Extent.Text | Should -Match 'azureLocalInstanceLocation\s*=\s*@\{\s*value\s*=\s*\$AzureLocalInstanceLocation\s*\}'
-        $ast.Extent.Text | Should -Match 'location\s*=\s*@\{\s*value\s*=\s*\$Location\s*\}'
+        if ($Path -like 'resources/manual-setup/*') {
+            $ast.Extent.Text | Should -Match '-AzureLocalInstanceLocation \$AzureLocalInstanceLocation'
+            $ast.Extent.Text | Should -Match '-Location \$Location'
+        }
+        else {
+            $ast.Extent.Text | Should -Match 'azureLocalInstanceLocation\s*=\s*@\{\s*value\s*=\s*\$AzureLocalInstanceLocation\s*\}'
+            $ast.Extent.Text | Should -Match 'location\s*=\s*@\{\s*value\s*=\s*\$Location\s*\}'
+        }
     }
     It 'uses Australia East registration while preserving shared host-region selection' {
         $errors = $null

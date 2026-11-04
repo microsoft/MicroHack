@@ -4,18 +4,21 @@
 
 Duration: 40 minutes
 
-## **Task 1: Verify instructor-enabled Defender plans**
+## **Task 1: Verify existing Defender plans**
 
 In [Challenge 5](../challenge-05/solution-05.md) we migrated two servers to Azure in `<YOUR-LAB-RESOURCE-GROUP>`. This challenge uses advanced services such as "Cloud Security Posture Management (CSPM)" and "Cloud Workload Protection (CWP)" (Defender for Servers), beyond the basic Defender for Cloud services.
 
 > [!IMPORTANT]
-> Defender plan activation changes subscription-wide settings and costs on a shared subscription. An authorized **instructor** must approve and enable the required plans before this exercise. Although learners have subscription Owner, do not change shared plan settings without instructor approval. If the plans are unavailable, ask the instructor or skip this optional challenge.
+> Learners have **Owner on the Hack subscription**, not just read-only access. Defender plan changes affect subscription-wide settings and costs for all learners. Do not change shared plan settings without instructor approval. If a required plan is unavailable, ask the instructor or skip this optional challenge.
 
-For instructor setup, open *Defender for Cloud* > *Management* > *Environment settings* and select the shared subscription. Learners can inspect the resulting settings without changing subscription-wide configuration.
+> [!NOTE]
+> In the hosted environment, Defender plans are likely already enabled on the shared subscription through Azure Policy enforcement. Verify both required plans and their settings rather than assuming every feature is enabled. Do not disable or downgrade policy-managed plans.
+
+Open *Defender for Cloud* > *Management* > *Environment settings* and select the assigned Hack subscription. Check the existing plan status before making any changes.
 
 ![image](./img/Def-environment-settings.jpg)
 
-The instructor enables the approved *Defender CSPM* and *Defender for Servers* plans, reviews their features through *Settings*, and saves the configuration. Learners verify that the expected protection is active for their migrated VMs. Screenshots illustrate the workflow; use the actual subscription and lab resource names from your dashboard.
+Check whether *Defender CSPM* and *Defender for Servers* are already enabled, and review their features through *Settings*. If both plans are enabled, leave the configuration unchanged and continue with the protection checks for your migrated VMs. If a required plan is missing, ask the instructor to confirm whether Azure Policy should enable it or whether manual activation is approved. Only the instructor enables missing plans after reviewing the shared subscription's requirements and costs. Screenshots illustrate the workflow; use the actual subscription and lab resource names from your dashboard.
 
 Verify the *Defender CSPM* settings and monitoring details.
 

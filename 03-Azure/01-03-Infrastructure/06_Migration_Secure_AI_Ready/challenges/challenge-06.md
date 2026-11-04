@@ -10,12 +10,15 @@ The goal of this exercise is to ...
 
 ## Prerequisites
 
-* The instructor has approved and enabled the subscription-wide Defender CSPM and Defender for Servers plans on the shared subscription, including their costs.
-* Learners have **Owner on the Hack subscription**, but subscription-wide plan activation remains an instructor task. Do not change shared plan settings without instructor approval.
+* Learners have **Owner on the Hack subscription**. Subscription-wide plan changes affect every learner, so do not change shared settings without instructor approval.
+* The instructor has confirmed that the shared subscription's Defender CSPM and Defender for Servers plans are enabled and has approved their costs.
+
+> [!NOTE]
+> In the hosted environment, Defender plans are likely already enabled on the shared subscription through Azure Policy enforcement. Verify the current status of both required plans before requesting activation; do not disable or downgrade policy-managed plans.
 
 ## Actions
 
-* Verify the instructor-enabled Defender plans, inspect endpoint protection, and review alerts and recommendations for your lab resources.
+* Check the existing Defender plans first. If a required plan is missing, ask the instructor to confirm policy enforcement or approve activation. Then inspect endpoint protection and review alerts and recommendations for your lab resources.
 
 ## Success criteria
 

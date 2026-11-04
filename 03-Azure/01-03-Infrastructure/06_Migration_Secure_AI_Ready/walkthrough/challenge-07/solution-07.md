@@ -44,7 +44,7 @@ Opening each page before the incident both proves the baseline and warms IIS/Apa
 Azure Copilot access is treated as available for this Hack. Confirm:
 
 1. The portal **Copilot** entry opens and the current region is listed in the [Observability Agent regions](https://learn.microsoft.com/azure/azure-monitor/aiops/observability-agent-overview#regions).
-2. Your account has **Owner** on the lab resource group and **Reader** on the subscription. RG Owner allows creation of the monitoring resources and lab-scoped **Monitoring Reader** assignments; Contributor alone can't create role assignments. Do not request subscription Owner or make subscription-level assignments.
+2. Your account has **Owner on the Hack subscription**, allowing provider registration, monitoring-resource creation, and role assignments. Keep monitoring resources and the alert identity's **Monitoring Reader** assignments scoped to your lab resource group; the identity does not need your subscription-wide access.
 3. The client network allows WebSocket connections to `https://directline.botframework.com`.
 4. Your account can create or reuse a user-assigned managed identity in the lab group and grant it **Monitoring Reader** on that group for the query-based metric alerts.
 
@@ -77,7 +77,7 @@ Use the recommended OpenTelemetry experience for both VMs. Windows also needs Lo
 Azure Monitor automatically creates an `MA_<workspace-name>_<location>_managed` resource group containing its workspace-managed DCR and DCE. This documented **Azure-managed** exception is not an extra learner-created lab group. Do not move those internals or delete their group separately. User-controlled VM collection DCRs still belong in the lab group.
 
 > [!IMPORTANT]
-> Review every resource-group selection before enabling monitoring. If this preview's wizard cannot select the lab workspaces or keep user-controlled generated resources in the lab group, stop and ask the instructor for a compatible portal configuration. Do not accept an unrelated default group, create another learner group, or broaden permissions to subscription Owner.
+> Review every resource-group selection before enabling monitoring. If this preview's wizard cannot select the lab workspaces or keep user-controlled generated resources in the lab group, stop and ask the instructor for a compatible portal configuration. Your subscription Owner access is not a reason to accept an unrelated default group or create another learner group.
 
 ### Create the alert-query identity before onboarding
 
@@ -85,7 +85,7 @@ Create the identity before opening **Infrastructure monitoring** on either VM:
 
 1. In the Azure portal, search for **Managed Identities**, select **Create**, and create a user-assigned managed identity such as `id-mh-monitor-alerts` in `<YOUR-LAB-RESOURCE-GROUP>` and the same region as the migrated VMs.
 2. Open the lab resource group, select **Access control (IAM)** > **Add role assignment**, choose **Monitoring Reader**, and assign it to the new user-assigned managed identity. This lab-scoped assignment covers both migrated VMs and the monitoring workspaces in the group.
-3. For a query-based alert scoped to the Azure Monitor workspace, confirm the identity's inherited **Monitoring Reader** access on that workspace. No subscription-level role assignment is needed.
+3. For a query-based alert scoped to the Azure Monitor workspace, confirm the identity's inherited **Monitoring Reader** access on that workspace. No subscription-level role assignment is needed for the alert identity.
 4. Reuse this identity for both migrated VMs. The [query-based metric alert identity requirements](https://learn.microsoft.com/azure/azure-monitor/alerts/alerts-query-based-metric-alerts-overview#managed-identities-for-query-based-alerts) require read access to the alert scope.
 
 This user-assigned identity authorizes OpenTelemetry alert queries. It is different from the VM's system-assigned identity that Azure Monitor Agent can use. The Infrastructure monitoring wizard doesn't create the user-assigned alert identity, so create and authorize it before selecting it in the wizard.

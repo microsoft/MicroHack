@@ -11,7 +11,7 @@ The goal of this exercise is to ...
 ## Prerequisites
 
 * The instructor has approved and enabled the subscription-wide Defender CSPM and Defender for Servers plans on the shared subscription, including their costs.
-* Learners retain **Owner** on `<YOUR-LAB-RESOURCE-GROUP>` and **Reader** on the subscription. Subscription-wide plan activation is an instructor task, not a reason to grant subscription Owner to each learner.
+* Learners have **Owner on the Hack subscription**, but subscription-wide plan activation remains an instructor task. Do not change shared plan settings without instructor approval.
 
 ## Actions
 

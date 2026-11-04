@@ -9,7 +9,7 @@ Duration: 40 minutes
 In [Challenge 5](../challenge-05/solution-05.md) we migrated two servers to Azure in `<YOUR-LAB-RESOURCE-GROUP>`. This challenge uses advanced services such as "Cloud Security Posture Management (CSPM)" and "Cloud Workload Protection (CWP)" (Defender for Servers), beyond the basic Defender for Cloud services.
 
 > [!IMPORTANT]
-> Defender plan activation changes subscription-wide settings and costs on a shared subscription. An authorized **instructor** must approve and enable the required plans before this exercise. Learners have RG Owner and subscription Reader, not subscription Owner; do not broaden every learner's permissions to enable a plan. If the plans are unavailable, ask the instructor or skip this optional challenge.
+> Defender plan activation changes subscription-wide settings and costs on a shared subscription. An authorized **instructor** must approve and enable the required plans before this exercise. Although learners have subscription Owner, do not change shared plan settings without instructor approval. If the plans are unavailable, ask the instructor or skip this optional challenge.
 
 For instructor setup, open *Defender for Cloud* > *Management* > *Environment settings* and select the shared subscription. Learners can inspect the resulting settings without changing subscription-wide configuration.
 

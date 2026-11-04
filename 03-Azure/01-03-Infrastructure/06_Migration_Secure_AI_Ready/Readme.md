@@ -81,9 +81,12 @@ Complete these prerequisites before the session:
 
 * A Microsoft Entra ID tenant.
 * At least one Azure subscription.
-* A Microsoft Entra learner account with **Owner** on its lab resource group and **Reader** on the subscription, assigned by Hackbox Console or the manual organizer. Instructors verify provider registration, arrange quota, and separately approve/enable any optional Defender plans; learners do not need subscription Owner.
+* A Microsoft Entra learner account with **Owner on the Hack subscription**, assigned by Hackbox Console or the manual organizer, so additional resource providers can be registered during the exercises. RG Owner with subscription Reader is not sufficient when providers are not preregistered. Instructors arrange quota and separately approve/enable any optional Defender plans.
 * A client network and browser that support the Azure portal, Azure Bastion, and Azure Cloud Shell.
 * A ready lab deployment and connection details from Hackbox Console or the instructor. Instructors should follow the [deployment instructions](resources/README.md) before the session; fresh predeployment can take 35–90+ minutes.
+
+> [!WARNING]
+> Subscription Owner also permits modifying other learners' resource groups and shared subscription settings. Work only in your assigned lab RG and follow the instructor's approval and cost guidance; separate RGs do not provide security isolation with this role.
 
 Challenge 7 assumes Hack participants have Azure Copilot access, suitable RBAC, network access, and a supported region. It also includes a concise manual/KQL fallback if agent output is unavailable. No Azure OpenAI resource, model deployment, or model quota is required anywhere in this Hack.
 

@@ -9,19 +9,23 @@ Instructors prepare Challenge 1 before the session. Both deployment options use 
 
 ## Before either deployment
 
-- Arrange permission to deploy resources and create role assignments in the lab RG, for example RG Owner. Creating an RG and registering providers require additional subscription permissions. Learners need RG Owner and subscription Reader, not subscription Owner; manual organizers assign these roles themselves.
+- Require **Owner on the Hack subscription** for the deployment account and learner accounts. This allows learners to register additional resource providers during the exercises; RG Owner with subscription Reader is not sufficient when those providers are not preregistered. Manual organizers assign subscription Owner themselves.
+- Arrange any separate Microsoft Entra permissions needed for Azure Migrate appliance registration; subscription Owner does not grant directory roles.
 - Check regional capacity and quota. The host needs **Standard_D16s_v5**, zone **1**, a **PremiumV2_LRS** data disk, and Bastion Developer support; the default region is **swedencentral**. Budget per learner for 30 regional vCPUs, including 16 DSv5 and 10 BS-family vCPUs, and five Standard public IPs across the Hack. See [quota requests](https://learn.microsoft.com/azure/quotas/quickstart-increase-quota-portal).
 - Resolve subscription policy restrictions and any required feature registrations with the organizer. Optional Defender plans must be separately approved and enabled; deployment does not change subscription-wide Defender plans.
 - Allow **35-90+ minutes** for initial setup. The USD 80 daily baseline estimate in [lab-defaults.json](../labautomation/lab-defaults.json) is a conservative planning value, not a quote; later exercises add costs.
+
+> [!WARNING]
+> Subscription Owner grants control of all resource groups, resources, role assignments, and subscription settings, including other learners' labs in a shared subscription. Learner RGs are not security-isolated. Use trusted training accounts, work only in the assigned lab RG, and obtain instructor approval before changing shared settings. Remove temporary subscription Owner assignments after the Hack.
 
 The Console deployer applies the approved training RG tags `SecurityControl=Ignore` and `CostControl=Ignore`. Direct Bicep deployment does **not** apply these exemptions. If required for a manual lab, obtain governance approval and apply the approved tags explicitly. Tags affect only controls that honor them; they are not universal policy exemptions and do not stop billing.
 
 ## Option 1: Hackbox Console
 
 1. Import this Hack's complete `labautomation` folder, including its `bicep` subtree and both JSON files. Review [deployment-settings.json](../labautomation/deployment-settings.json) before importing; the configured source must contain the matching Bootstrap and guest artifacts.
-2. Select **resourcegroup** deployment. Defaults are two labs per subscription in `swedencentral`; adjust the event settings and quota as needed. The Console supplies the existing learner RG, authentication, and learner RBAC.
-3. Run predeployment. [shared-deploy-lab.ps1](../labautomation/shared-deploy-lab.ps1) registers providers once per subscription; [deploy-lab.ps1](../labautomation/deploy-lab.ps1) deploys and verifies each lab.
-4. Hand out the Console's connection and credential fields only after verification succeeds. Learners then follow [Solution 1](../walkthrough/challenge-01/solution-01.md).
+2. Select **resourcegroup-with-subscriptionowner** deployment, overriding the supplied `resourcegroup` default. This keeps one lab RG per learner while granting both RG Owner and subscription Owner; plain `resourcegroup` grants only subscription Reader and does not meet this Hack's access requirement. Defaults are two labs per subscription in `swedencentral`; adjust the event settings and quota as needed.
+3. Run predeployment. [shared-deploy-lab.ps1](../labautomation/shared-deploy-lab.ps1) registers baseline providers once per subscription; [deploy-lab.ps1](../labautomation/deploy-lab.ps1) deploys and verifies each lab. Learners can register additional providers as required by later exercises.
+4. Confirm each learner has subscription Owner, then hand out the Console's connection and credential fields only after verification succeeds. Learners then follow [Solution 1](../walkthrough/challenge-01/solution-01.md).
 
 Fresh `rg-labuser-0013` labs use `mh-0013-hv` and matching network prefixes. Leading zeros are preserved; learner numbers can contain one to nine digits. Existing labs and nonstandard RG names retain hash-based names. Keep the RG's `LabId`, `LabNameSuffix`, and `LabRegion` records intact: completed reruns preserve learner progress, and incomplete retries retain the original names and region.
 
@@ -31,7 +35,7 @@ Use **PowerShell 7**, Azure CLI with Bicep support, and an interactive user logi
 
 ### Sign in and prepare the subscription
 
-The provider list matches the shared preparation script. An organizer runs registration once; it is skipped for providers already registered. In Cloud Shell, omit `Invoke-Az login` because the session is already authenticated.
+Sign in with a subscription Owner account. The provider list matches the shared preparation script and covers baseline deployment, not every provider used by later exercises. An organizer runs registration once; it is skipped for providers already registered. Learners register additional providers when needed using their subscription Owner access. In Cloud Shell, omit `Invoke-Az login` because the session is already authenticated.
 
 ```powershell
 Set-Location '.\03-Azure\01-03-Infrastructure\06_Migration_Secure_AI_Ready'
@@ -60,7 +64,7 @@ foreach ($provider in $providers) {
 }
 ```
 
-By default, the signed-in user receives Key Vault secret access. To deploy for other learners, replace `$participantIds` with their Entra **object IDs** and arrange their RG/subscription roles separately; the template does not assign learner RG Owner or subscription Reader.
+By default, the signed-in user receives Key Vault secret access. To deploy for other learners, replace `$participantIds` with their Entra **object IDs** and separately assign them **Owner on the Hack subscription**; the template does not assign this role.
 
 ### Create a fresh lab and deploy
 
@@ -126,6 +130,6 @@ Keep the RG through Challenges 2-8: it contains both source and migrated resourc
 
 ## Testing changes
 
-Use a fresh test RG and a real learner account to exercise deployment, both dashboard variants, Challenges 2-8 with RG Owner/subscription Reader, and preservation of learner progress on a completed Console rerun. The [local harness](../../../../99-MicroHack-Template/labautomation/README.md#local-testing) is also available for testing Console automation; its helpers are local-development stand-ins, not the manual deployment requirement.
+Use a fresh test RG and a real learner account with **subscription Owner** to exercise deployment, both dashboard variants, provider registration during Challenges 2-8, and preservation of learner progress on a completed Console rerun. The [local harness](../../../../99-MicroHack-Template/labautomation/README.md#local-testing) is also available for testing Console automation; its helpers are local-development stand-ins, not the manual deployment requirement.
 
 To test unpublished changes, set `githubAccount` and `githubBranch` in [deployment-settings.json](../labautomation/deployment-settings.json) to a repository account and branch or commit containing the matching artifacts. The source must be publicly downloadable by the VMs. Re-import the Console package after edits; the manual example reads the JSON directly. Keep these fields out of `lab-defaults.json`. For official upstream deployment, use `microsoft` and `main` once the matching version is published there. Complete the Azure deployment and learner-flow tests before upstream integration; syntax checks alone are not sufficient.

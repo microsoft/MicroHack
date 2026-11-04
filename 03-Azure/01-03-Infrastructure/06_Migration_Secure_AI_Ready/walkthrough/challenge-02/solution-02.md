@@ -6,7 +6,7 @@ Duration: 60 minutes
 
 ### **Task 1: Create an Azure Migrate project**
 
-Open the [Azure Portal](https://portal.azure.com) with your assigned learner account: **Owner** on `<YOUR-LAB-RESOURCE-GROUP>` and **Reader** on the subscription.
+Open the [Azure Portal](https://portal.azure.com) with your assigned learner account: **Owner on the Hack subscription**. Azure Migrate can register additional providers during project creation; RG Owner alone cannot register them at subscription scope.
 
 > [!NOTE]
 > Screenshots illustrate the portal workflow and may show older resource names. Use the lab resource group and Hyper-V host from your platform dashboard throughout; all learner-created resources belong in that group.

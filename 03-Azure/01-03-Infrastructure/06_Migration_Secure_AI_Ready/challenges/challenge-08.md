@@ -24,7 +24,7 @@ Complete one path during the standard challenge time. If time permits, you may c
 
 * Challenge 7 is complete and both `W3SVC` and `apache2` have been restored.
 * You can connect to the source VM for your chosen path through Azure Bastion.
-* You know the Hack subscription ID and have **Owner** on your assigned lab resource group and **Reader** on the subscription.
+* You know the Hack subscription ID and have **Owner on the Hack subscription**. Keep the App Service resources in your assigned lab resource group despite the broader access.
 * You know the exact `<YOUR-LAB-RESOURCE-GROUP>` from the platform dashboard. It already contains the simulated source and migrated VMs; create the App Service resources in this same group.
 * The selected site content is available at `C:\inetpub\wwwroot` or `/var/www/html`.
 * Path A can use Azure Cloud Shell and an interactive browser session for Kudu ZIP upload, or the documented CLI alternative.

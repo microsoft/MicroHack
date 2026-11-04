@@ -21,8 +21,8 @@ The Linux alert monitors every process whose `"process.executable.name"` is `apa
 
 * Challenge 5 is complete and both migrated web VMs in `<YOUR-LAB-RESOURCE-GROUP>` are running.
 * You can connect to both VMs through Azure Bastion and each site responds locally.
-* You have RG Owner and subscription Reader. Before opening **Infrastructure monitoring**, create or reuse one user-assigned managed identity in the lab resource group for both migrated VMs.
-* Grant that identity **Monitoring Reader** on the lab resource group for the migrated VMs and monitoring workspace. Do not assign roles at subscription scope.
+* You have **Owner on the Hack subscription**. Before opening **Infrastructure monitoring**, create or reuse one user-assigned managed identity in the lab resource group for both migrated VMs.
+* Grant that identity **Monitoring Reader** on the lab resource group for the migrated VMs and monitoring workspace. Do not grant the alert identity a subscription-scoped role.
 * This user-assigned identity authorizes OpenTelemetry query-based and recommended alerts. It is separate from the VM's system-assigned identity used by Azure Monitor Agent; the portal doesn't automatically create the user-assigned alert identity.
 * Azure Copilot access, a supported region, and the required telemetry permissions are available to Hack participants. No Azure OpenAI resource, model deployment, or model quota is required.
 * The client network allows WebSocket connections to `https://directline.botframework.com`.

@@ -8,7 +8,7 @@ Duration: 15 minutes (verification of an already-provisioned lab)
 
 - Please ensure that you successfully verified the [General prerequisites](../../Readme.md#general-prerequisites) before continuing with this challenge.
 - Your instructor has completed [predeployment](../../resources/README.md) through Hackbox Console or manually. Obtain the subscription, lab resource group, connection details, and login instructions from the Console dashboard or your instructor.
-- Your learner account has **Owner** on the assigned resource group and **Reader** on the subscription.
+- Your learner account has **Owner on the Hack subscription**, including access to the assigned resource group and permission to register additional providers. On shared subscriptions, this also grants access to other learners' labs; work only in your assigned RG.
 
 > [!IMPORTANT]
 > **Many of the resource deployments in this Hack are adapted from the [Jumpstart ArcBox for IT Pros](https://jumpstart.azure.com/azure_jumpstart_arcbox/ITPro). Special thanks to the [Jumpstart Team](https://aka.ms/arcjumpstart) for their excellent work.**

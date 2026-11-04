@@ -43,6 +43,34 @@ Describe 'Token-aware LocalBox polling' {
         Mock az { $global:LASTEXITCODE = 0; 'not JSON' }
         { Invoke-LocalBoxAutomationAz @('resource', 'list') } | Should -Throw
     }
+    It 'separates native stderr progress from JSON and surfaces it as a warning' {
+        Mock Write-Warning {}
+        Mock az {
+            $global:LASTEXITCODE = 0
+            [System.Management.Automation.ErrorRecord]::new([Exception]::new('Alive[###] 100%'), 'NativeCommandError',
+                [System.Management.Automation.ErrorCategory]::NotSpecified, $null)
+            '{"state":"Succeeded"}'
+        }
+        (Invoke-LocalBoxAutomationAz @('resource', 'show')).state | Should -Be 'Succeeded'
+        Should -Invoke Write-Warning -Times 1 -Exactly -ParameterFilter { $Message -like '*Alive*' }
+    }
+    It 'does not parse or return command metadata in explicit no-output mode' {
+        Mock az { $global:LASTEXITCODE = 0; 'Non-JSON command output' }
+        @(Invoke-LocalBoxAutomationAz @('storage', 'blob', 'download') -NoOutput).Count | Should -Be 0
+        Should -Invoke az -Times 1 -Exactly -ParameterFilter {
+            $args[[array]::IndexOf($args, '--output') + 1] -eq 'none'
+        }
+    }
+    It 'still propagates failed commands in no-output mode' {
+        Mock az { $global:LASTEXITCODE = 1; 'AuthorizationPermissionMismatch' }
+        { Invoke-LocalBoxAutomationAz @('storage', 'blob', 'download') -NoOutput } |
+            Should -Throw '*AuthorizationPermissionMismatch*'
+    }
+    It 'adds operation context to malformed JSON without echoing raw output' {
+        Mock az { $global:LASTEXITCODE = 0; 'private diagnostic payload' }
+        $failure = { Invoke-LocalBoxAutomationAz @('resource', 'list') } | Should -Throw '*az resource list*invalid JSON*' -PassThru
+        $failure.Exception.Message | Should -Not -Match 'private diagnostic payload'
+    }
     It 'treats only an allowed 404 as absence' {
         Mock Invoke-AzRestMethod { @{ StatusCode = 404; Content = '' } }
         Invoke-LocalBoxAutomationRequest -Path '/test' -AllowNotFound | Should -BeNullOrEmpty
@@ -320,6 +348,9 @@ Describe 'Hosted LocalBox automation lifecycle' {
         Should -Invoke Wait-LocalBoxNestedDeployment -Times 1
         Should -Invoke New-AzRoleAssignment -Times 0
         Should -Invoke Invoke-LocalBoxAutomationAz -Times 4 -ParameterFilter { $Arguments[2] -eq 'download' }
+        Should -Invoke Invoke-LocalBoxAutomationAz -Times 4 -Exactly -ParameterFilter {
+            $Arguments[2] -eq 'download' -and $Arguments -contains '--no-progress' -and $NoOutput
+        }
         Should -Invoke Write-Host -Times 1 -Exactly -ParameterFilter { $Object -eq '[LocalBox] Infrastructure health: PASSED' }
         Should -Invoke Write-Host -Times 1 -Exactly -ParameterFilter { $Object -eq '[LocalBox] Upstream tests: 1 passed, 0 failed, 0 skipped, 0 not run.' }
         Should -Invoke Write-Host -Times 1 -Exactly -ParameterFilter { $Object -eq '[LocalBox] Sovereign tests: 1 passed, 0 failed, 0 skipped, 0 not run.' }

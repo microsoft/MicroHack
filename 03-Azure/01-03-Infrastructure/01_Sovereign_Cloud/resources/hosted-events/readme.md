@@ -164,6 +164,9 @@ The [orchestrator](../../labautomation/localbox-automation.ps1) implements:
    propagates the error. It does not invent test counts or print a passing
    summary when reports could not be verified; inspect the private diagnostics
    for individual failed tests. These summaries do not stream guest progress.
+   Result downloads suppress CLI progress and discard download-command metadata;
+   validation reads the downloaded JSON/XML files themselves. Native CLI stderr
+   is kept separate from JSON parsing, and nonzero CLI exits still fail the gate.
 
 `Update-MhhToken` runs in the **Console process** on each poll and before Azure
 operations, including result retrieval. It refreshes Console clients, not guest

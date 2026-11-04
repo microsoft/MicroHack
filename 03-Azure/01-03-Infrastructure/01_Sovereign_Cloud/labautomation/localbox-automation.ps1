@@ -1,9 +1,21 @@
 function Invoke-LocalBoxAutomationAz {
-    param([Parameter(Mandatory)][string[]]$Arguments)
+    param([Parameter(Mandatory)][string[]]$Arguments, [switch]$NoOutput)
     Update-MhhToken | Out-Null
-    $output = & az @Arguments --only-show-errors --output json 2>&1
+    $PSNativeCommandUseErrorActionPreference = $false
+    $format = if ($NoOutput) { 'none' } else { 'json' }
+    $output = @(& az @Arguments --only-show-errors --output $format 2>&1)
     if ($LASTEXITCODE -ne 0) { throw "LocalBox automation Azure CLI failed: $($output -join "`n")" }
-    if ($output) { ($output -join "`n") | ConvertFrom-Json -AsHashtable -ErrorAction Stop }
+    $stderr = @($output | Where-Object { $_ -is [System.Management.Automation.ErrorRecord] })
+    foreach ($message in $stderr) { Write-Warning "$message" }
+    if ($NoOutput) { return }
+    $stdout = ($output | Where-Object { $_ -isnot [System.Management.Automation.ErrorRecord] }) -join "`n"
+    if (-not [string]::IsNullOrWhiteSpace($stdout)) {
+        try { $stdout | ConvertFrom-Json -AsHashtable -ErrorAction Stop }
+        catch {
+            $operation = ($Arguments | Select-Object -First 3) -join ' '
+            throw "LocalBox automation Azure CLI 'az $operation' returned invalid JSON. Raw output is omitted because it may contain sensitive data."
+        }
+    }
 }
 
 function Invoke-LocalBoxAutomationRequest {
@@ -321,7 +333,8 @@ function Invoke-LocalBoxHostedAutomation {
         } | Out-Null
         foreach ($name in @('status.json', 'health.json', 'health.xml', 'upstream.xml')) {
             Invoke-LocalBoxAutomationAz @('storage', 'blob', 'download', '--account-name', $account.name, '--container-name', $container,
-                '--name', "$runId/$name", '--file', (Join-Path $temporary $name), '--auth-mode', 'login', '--overwrite', 'true') | Out-Null
+                '--name', "$runId/$name", '--file', (Join-Path $temporary $name), '--auth-mode', 'login', '--overwrite', 'true',
+                '--no-progress') -NoOutput
         }
         $result = Get-Content -LiteralPath "$temporary/status.json" -Raw | ConvertFrom-Json -AsHashtable
         Assert-LocalBoxAutomationResult -Result $result -RunId $runId -PackageHash $package.Hash -GroupId $AksAdminGroupObjectId.ToString() `

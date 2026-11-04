@@ -7,7 +7,12 @@
     "$schema": {
       "type": "string",
       "format": "uri",
+<<<<<<< Updated upstream
       "description": "Optional URI of the lab-defaults JSON schema."
+=======
+      "default": "https://raw.githubusercontent.com/microsoft/MicroHack/refs/heads/main/lab-defaults-schema.json",
+      "description": "Optional URI of the lab-defaults JSON schema. Defaults to the schema published in microsoft/MicroHack."
+>>>>>>> Stashed changes
     },
     "groups": {
       "type": "array",
@@ -43,6 +48,11 @@
       "type": "number",
       "minimum": 0,
       "description": "Estimated daily cost in USD of the resources shared-deploy-lab.ps1 creates. That hook runs once per Azure subscription, so this is multiplied by the subscription count: labs / labsPerSubscription (rounded up) for deploymentType resourcegroup and resourcegroup-with-subscriptionowner, or one per lab for deploymentType subscription. Defaults to 0 when absent or negative."
+    },
+    "estimatedGlobalDeploymentDailyCostsUsd": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Estimated daily cost in USD of the event-wide resources global-event-deploy.ps1 creates. That hook runs once per event (before shared-deploy-lab.ps1), so this is added once per day of the event, whatever the lab or subscription count. Required for the hook to run: global-event-deploy.ps1 is skipped with a warning unless its param block is ([string]$SubscriptionId, [string[]]$PreferredLocation, [string[]]$AllowedEntraUserIds) and this is greater than 5; at 5 or less no cost is estimated either. Re-import the content pack after enabling it."
     }
   },
   "additionalProperties": false

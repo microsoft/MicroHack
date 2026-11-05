@@ -17,6 +17,8 @@ Instructors prepare Challenge 1 before the session. Both deployment options use 
 
 New deployments use **two paid Basic SKU Bastion hosts**, one per VNet, each with a Standard static public IP and a dedicated `/26` `AzureBastionSubnet`. Basic supports the lab's portal-based RDP/SSH connections and concurrent sessions; native-client tunneling and IP-based connections require Standard or higher. Review [Bastion pricing](https://azure.microsoft.com/pricing/details/azure-bastion/), since Basic is billed hourly even when not connected.
 
+Once source networking and Key Vault are ready, the Hyper-V host starts deploying without waiting for Bastion. Each Bastion host provisions independently after its network prerequisites complete, overlapping host and guest preparation. This does not speed up Bastion itself: wait for the entire ARM deployment and host/guest readiness checks before handing over the lab.
+
 Updating the package does not change Bastion in an already verified Console lab: completed reruns reuse the existing baseline. Upgrade existing Developer hosts separately using the [supported SKU upgrade procedure](https://learn.microsoft.com/azure/bastion/upgrade-sku); do not clear readiness records or redeploy the whole lab just to change Bastion.
 
 > [!WARNING]

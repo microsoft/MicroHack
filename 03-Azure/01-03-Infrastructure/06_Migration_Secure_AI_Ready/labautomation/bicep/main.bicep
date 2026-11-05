@@ -164,6 +164,33 @@ module mgmtArtifactsDestinationDeployment 'mgmt/mgmtArtifactsDestination.bicep' 
 }
 
 
+// Bastion depends on networking, but must not delay host VM startup.
+module sourceBastionDeployment 'mgmt/bastion.bicep' = if (deployBastion) {
+  name: '${namingPrefix}-sourceBastionDeployment'
+  params: {
+    bastionName: mgmtArtifactsSourceDeployment.outputs.bastionName
+    bastionSku: bastionSku
+    location: location
+    tags: resourceTags
+    virtualNetworkId: mgmtArtifactsSourceDeployment.outputs.vnetId
+    bastionSubnetId: mgmtArtifactsSourceDeployment.outputs.bastionSubnetId
+    publicIpAddressId: mgmtArtifactsSourceDeployment.outputs.bastionPublicIpId
+  }
+}
+
+module destinationBastionDeployment 'mgmt/bastion.bicep' = if (deployBastion) {
+  name: '${namingPrefix}-destinationBastionDeployment'
+  params: {
+    bastionName: mgmtArtifactsDestinationDeployment.outputs.bastionName
+    bastionSku: bastionSku
+    location: location
+    tags: resourceTags
+    virtualNetworkId: mgmtArtifactsDestinationDeployment.outputs.vnetId
+    bastionSubnetId: mgmtArtifactsDestinationDeployment.outputs.bastionSubnetId
+    publicIpAddressId: mgmtArtifactsDestinationDeployment.outputs.bastionPublicIpId
+  }
+}
+
 output clientVmLogonUserName string = windowsAdminUsername
 output hostVmName string = clientVmDeployment.outputs.vmName
 output keyVaultName string = mgmtArtifactsSourceDeployment.outputs.vaultName

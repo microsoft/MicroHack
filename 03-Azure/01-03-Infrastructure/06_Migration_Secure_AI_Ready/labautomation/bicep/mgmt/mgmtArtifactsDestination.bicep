@@ -8,7 +8,7 @@ param flavor string = 'ITPro'
 @description('Azure Region to deploy the Log Analytics Workspace')
 param location string = resourceGroup().location
 
-@description('Choice to deploy Bastion to connect to the client VM')
+@description('Deploy network prerequisites for Bastion access to the client VM')
 param deployBastion bool = false
 
 @description('Bastion host Sku name')
@@ -326,42 +326,9 @@ resource publicIpAddressDST 'Microsoft.Network/publicIPAddresses@2024-05-01' = i
   }
 }
 
-resource bastionHostDST 'Microsoft.Network/bastionHosts@2024-05-01' = if (deployBastion == true) {
-  name: bastionDSTName
-  location: location
-  tags: tags
-  dependsOn: [
-    
-  ]
-  sku: {
-    name: bastionSku
-  }
-  properties: {
-    virtualNetwork: bastionSku == 'Developer'
-      ? {
-          id: destinationVirtualNetwork.id
-        }
-      : null
-    ipConfigurations: bastionSku != 'Developer'
-      ? [
-          {
-            name: 'IpConf'
-            properties: {
-              publicIPAddress: {
-                id: publicIpAddressDST.id
-              }
-              subnet: {
-                id: bastionDSTSubnetRef
-              }
-            }
-          }
-        ]
-      : null
-  }
-}
-
-
-
 output vnetId string = destinationVirtualNetwork.id
 output subnetId string = destinationVirtualNetwork.properties.subnets[0].id
 output vnetName string = destinationVirtualNetwork.name
+output bastionName string = bastionDSTName
+output bastionSubnetId string = (deployBastion && bastionSku != 'Developer') ? bastionDSTSubnetRef : ''
+output bastionPublicIpId string = (deployBastion && bastionSku != 'Developer') ? publicIpAddressDST!.id : ''

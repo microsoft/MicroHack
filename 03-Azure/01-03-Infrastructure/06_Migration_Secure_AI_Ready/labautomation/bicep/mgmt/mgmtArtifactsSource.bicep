@@ -7,7 +7,7 @@ param flavor string = 'ITPro'
 @description('Azure Region to deploy the Log Analytics Workspace')
 param location string = resourceGroup().location
 
-@description('Choice to deploy Bastion to connect to the client VM')
+@description('Deploy network prerequisites for Bastion access to the client VM')
 param deployBastion bool = false
 
 @description('Bastion host Sku name')
@@ -323,41 +323,6 @@ resource publicIpAddress 'Microsoft.Network/publicIPAddresses@2024-05-01' = if (
   }
 }
 
-resource bastionHost 'Microsoft.Network/bastionHosts@2024-05-01' = if (deployBastion == true) {
-  name: bastionName
-  location: location
-  tags: tags
-  dependsOn: [
-    
-  ]
-  sku: {
-    name: bastionSku
-  }
-  properties: {
-    virtualNetwork: bastionSku == 'Developer'
-      ? {
-          id: sourceVirtualNetwork.id
-        }
-      : null
-    ipConfigurations: bastionSku != 'Developer'
-      ? [
-          {
-            name: 'IpConf'
-            properties: {
-              publicIPAddress: {
-                id: publicIpAddress.id
-              }
-              subnet: {
-                id: bastionSubnetRef
-              }
-            }
-          }
-        ]
-      : null
-  }
-}
-
-
 module keyVault 'br/public:avm/res/key-vault/vault:0.5.1' = {
   name: '${namingPrefix}-kvsrc'
   dependsOn: [
@@ -405,3 +370,6 @@ output vnetId string = sourceVirtualNetwork.id
 output subnetId string = sourceVirtualNetwork.properties.subnets[0].id
 output vnetName string = sourceVirtualNetwork.name
 output vaultName string = kv.name
+output bastionName string = bastionName
+output bastionSubnetId string = (deployBastion && bastionSku != 'Developer') ? bastionSubnetRef : ''
+output bastionPublicIpId string = (deployBastion && bastionSku != 'Developer') ? publicIpAddress!.id : ''

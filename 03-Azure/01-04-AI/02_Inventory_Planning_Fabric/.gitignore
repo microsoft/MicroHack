@@ -13,6 +13,7 @@ labautomation/lab-defaults.local.json
 Thumbs.db
 desktop.ini
 .DS_Store
+__pycache__/
 
 # Diagram build artifacts — only the rendered PNG (images/architecture.png) is committed
 images/render/

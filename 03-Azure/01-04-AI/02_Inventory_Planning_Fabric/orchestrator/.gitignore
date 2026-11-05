@@ -1,0 +1,7 @@
+.azure/
+.venv/
+.venv-tools/
+__pycache__/
+.env
+.foundry/
+specialists.json

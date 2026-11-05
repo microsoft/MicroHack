@@ -4,5 +4,6 @@
   "deploymentType": "resourcegroup-with-subscriptionowner",
   "labsPerSubscription": 4,
   "preferredLocation": "swedencentral, francecentral, germanywestcentral",
-  "estimatedDailyCostsUsd": 8.0
+  "estimatedDailyCostsUsd": 8.0,
+  "Quality": "Preview"
 }

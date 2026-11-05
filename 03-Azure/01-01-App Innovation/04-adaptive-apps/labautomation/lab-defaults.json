@@ -4,5 +4,6 @@
   "labsPerSubscription": 5,
   "preferredLocation": "spaincentral,swedencentral",
   "estimatedDailyCostsUsd": 35.0,
-  "estimatedSharedDeploymentDailyCostsUsd": 0.0
+  "estimatedSharedDeploymentDailyCostsUsd": 0.0,
+  "Quality": "Preview"
 }

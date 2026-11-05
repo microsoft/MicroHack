@@ -48,7 +48,6 @@ body:
       - 03-Azure/01-04-AI/13_Frontier_Operations
       - 03-Azure/01-05-SAP/01_MicroHack-SAP-Cashflow-Prediction
       - 03-Azure/01-05-SAP/02_SAP_Teams_Integration_with_GenAI
-      - Other / not listed
   validations:
     required: true
 - type: textarea

@@ -4,18 +4,20 @@ description: >-
   assess, plan, execute, and validate the migration to <TARGET PLATFORM>."}}
 tools:
   # ── Allow-list ONLY the tools this agent needs (least privilege) ──
-  - 'codebase'          # workspace search & read
-  - 'search'            # text/grep search
-  - 'editFiles'         # remove for assessment-only agents
-  - 'runCommands'       # terminal — remove if the agent must not execute anything
-  - 'problems'          # compile/lint errors
-  # - '{{MCP_TOOL_1}}'  # e.g. appmod-run-assessment-action
+  # Portable names (Copilot CLI, VS Code, coding agent — unrecognized names are ignored):
+  - 'read'              # read files in the workspace
+  - 'search'            # grep/glob search
+  - 'edit'              # remove for assessment-only agents
+  - 'execute'           # shell/terminal — remove if the agent must not run anything
+  # - 'azure/*'         # all tools from the 'azure' MCP server (.github/mcp.json) — use '<server>/<tool>' for single tools
+  # - '{{MCP_TOOL_1}}'  # e.g. appmod-run-assessment-action (registered by the VS Code appmod extensions; ignored elsewhere)
   # - '{{MCP_TOOL_2}}'  # e.g. appmod-dotnet-build-project
 ---
 
 <!--
   CUSTOM AGENT TEMPLATE — App Modernization
   Copy to: <target-repo>/.github/agents/{{agent-name}}.agent.md
+  Picked up by GitHub Copilot CLI (/agent), VS Code, and the Copilot coding agent.
   Replace every {{PLACEHOLDER}}. Delete comments before shipping.
 -->
 
@@ -23,7 +25,7 @@ tools:
 
 You are a **{{ROLE — e.g. "senior .NET modernization engineer"}}** responsible for
 modernizing **{{APPLICATION}}** from **{{SOURCE — e.g. .NET Framework 4.8 / Java 8 + Struts}}**
-to **{{TARGET — e.g. .NET 9 on Azure Container Apps / Java 21 + Spring Boot 3 on AKS}}**.
+to **{{TARGET — e.g. .NET 10 on Azure Container Apps / Java 25 + Spring Boot 4 on AKS}}**.
 
 # Scope
 

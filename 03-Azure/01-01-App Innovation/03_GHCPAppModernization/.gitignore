@@ -123,3 +123,9 @@ build/
 .project
 .settings/
 .factorypath
+
+# Sample application clones (created by docs/environment-setup.md)
+repos/
+
+# modernize CLI artifacts (repos.json, assessment reports, plans)
+.github/modernize/

@@ -2,35 +2,26 @@
 
 [Previous Challenge Solution](../challenge-01/solution-01.md) - **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-03/solution-03.md)
 
-## 2.1. Fork the sample repositories
+## 2.1. Verify the sample repositories
 
-Complete the [environment setup guide](../../docs/environment-setup.md) before continuing. It explains how to start the recommended GHCP App Modernization Codespace, authenticate GitHub CLI for GitHub Copilot, authenticate Azure CLI, and verify the required tools.
-
-Fork both applications while signed in with the same GitHub account used by `gh`:
-
-- [Fork PhotoAlbum-Java](https://github.com/Azure-Samples/PhotoAlbum-Java/fork)
-- [Fork PhotoAlbum](https://github.com/Azure-Samples/PhotoAlbum/fork)
-
-<img src="img/1.png" width="700" alt="Forking the PhotoAlbum sample repositories" />
+Complete the [environment setup guide](../../docs/environment-setup.md) before continuing. It explains how to start the recommended GHCP App Modernization Codespace, authenticate GitHub CLI for GitHub Copilot, authenticate Azure CLI, verify the required tools, and clone the two sample applications directly from `Azure-Samples` — no forking needed; your work stays on a local `modernize` branch.
 
 ## 2.2. Set up your working directory
 
-The recommended Codespace opens in the GHCP App Modernization hack directory. Clone your forks into a `repos/` working directory:
+The recommended Codespace opens in the GHCP App Modernization hack directory, and the environment setup cloned both samples into `repos/`. From the hack directory, confirm they are present and on the `modernize` branch:
 
 ```bash
-mkdir -p repos
-cd repos
-
-GH_USER="$(gh api user --jq .login)"
-git clone "https://github.com/${GH_USER}/PhotoAlbum-Java.git"
-git clone "https://github.com/${GH_USER}/PhotoAlbum.git"
+git -C repos/PhotoAlbum-Java status
+git -C repos/PhotoAlbum status
 ```
 
-If your forks belong to an organization, use the organization name instead of `${GH_USER}`. Verify that the remotes point to repositories where you can push:
+If a repository is missing, clone it and create the working branch:
 
 ```bash
-git -C PhotoAlbum-Java remote -v
-git -C PhotoAlbum remote -v
+git clone https://github.com/Azure-Samples/PhotoAlbum-Java.git repos/PhotoAlbum-Java
+git clone https://github.com/Azure-Samples/PhotoAlbum.git repos/PhotoAlbum
+git -C repos/PhotoAlbum-Java checkout -b modernize
+git -C repos/PhotoAlbum checkout -b modernize
 ```
 
 The modernization CLI is already installed in the recommended Codespace. Confirm the installation and GitHub authentication:
@@ -42,15 +33,32 @@ gh auth status
 
 For a local workstation, follow the installation instructions in the [environment setup guide](../../docs/environment-setup.md#option-b-local-workstation). We will use the modernization CLI end-to-end for upgrade, assessment, planning, and execution.
 
-For batch operations across many repositories, create a JSON config file to list all repositories. For example, create it at `.github/modernize/repos.json` in your working directory, or provide a custom path.
+For batch operations across multiple repositories, create a JSON config file that lists them. Create it at `.github/modernize/repos.json` in the hack directory (the folder you launch `modernize` from), using local `path` entries so the CLI operates on your clones in `repos/`. Paths must be absolute — print them with:
 
-Reference: <https://learn.microsoft.com/en-gb/azure/developer/github-copilot-app-modernization/modernization-agent/batch-assess#configure-repositories>
+```bash
+echo "$(pwd)/repos/PhotoAlbum-Java"
+echo "$(pwd)/repos/PhotoAlbum"
+```
+
+```json
+{
+  "repos": [
+    { "name": "PhotoAlbum-Java", "path": "<absolute path to repos/PhotoAlbum-Java>" },
+    { "name": "PhotoAlbum", "path": "<absolute path to repos/PhotoAlbum>" }
+  ]
+}
+```
+
+Reference: <https://learn.microsoft.com/azure/developer/github-copilot-app-modernization/modernization-agent/batch-assess#configure-repositories>
 
 <img src="img/2.png" width="500" alt="Config file listing the repositories" />
 
+> [!NOTE]
+> The screenshot shows a config that lists repository URLs. In this MicroHack you use local `path` entries instead, so the assessment and upgrades run directly on your working copies — nothing is re-cloned.
+
 ## 2.3. Run the batch assessment
 
-In your terminal, run the modernize CLI agent by typing _modernize_ (you can verify the Modernize CLI is properly installed and see the available commands by typing _modernize --help_) and accept execution in your working directory.
+From the hack directory, run the modernize CLI by typing `modernize` (verify the installation and see the available commands with `modernize --help`) and accept execution in the working directory when prompted.
 
 Run "Assess" to analyze the code of the 2 apps and generate a report.
 
@@ -68,14 +76,14 @@ Check both "Upgrade" and "Cloud readiness". Leave "Security" unchecked.
 
 <img src="img/6.png" width="700" alt="Selecting Upgrade and cloud readiness" />
 
-Change the Analysis coverage to "Full analysis" and press enter to continue.
+Change the Analysis coverage to "Full analysis". On the same configuration page, verify the upgrade targets before continuing: **.NET / Target Framework = .NET 10** and **Java / Target Runtime = OpenJDK 25** — the report's upgrade recommendations are driven by these values. Then press enter to continue.
 
 <img src="img/8.png" width="700" alt="Setting analysis coverage to Full analysis" />
 
-Chose to assess locally (using cloud agents is also possible)
+Choose to assess locally. (Cloud-agent delegation is not available in this setup — it requires github.com repository URLs, and this hack uses local `path` entries.)
 
 > [!NOTE]
-> Note that an assessment-config.yaml file gets automatically generated. Both repositories get cloned and assessment starts. It may take about 5-10 min to complete, so it's a good time to take a coffee break.
+> An `assessment-config.yaml` file is generated automatically and the assessment starts on your local working copies. With Full analysis it takes roughly 10-20 minutes for the two repositories, so it's a good time to take a coffee break.
 
 <img src="img/9.png" width="700" alt="Assessment running locally" />
 
@@ -92,6 +100,8 @@ Batch assessment is especially valuable for migration planning because it enable
 
 **Per repository report:** Provides detailed insights on the two aspects identified at the individual repository level.
 
+All reports are written to **`.github/modernize/assessment/`** in the hack directory (the folder you launched `modernize` from), inside a timestamped `reports-*` subfolder: an aggregated report (`index.md`) plus one report per repository. The CLI opens the aggregated report automatically when the assessment finishes; use this path to get back to the reports later.
+
 <img src="img/11.png" width="700" alt="Per repository report" />
 
 <img src="img/12.png" width="700" alt="Per repository report details" />
@@ -102,13 +112,13 @@ Now that we have an assessment report, we could jump straight to a modernization
 
 For a batch upgrade, both repositories would need to use the same programming language, which is not the case here, so let's upgrade both apps individually.
 
-Exit the modernize CLI, navigate to the folder of the PhotoAlbum (.NET) and relaunch the modernize CLI.
+When the assessment finishes, the CLI asks how to continue — select **Return to main menu** (creating a modernization plan is the subject of Challenge 3). Exit the modernize CLI, navigate to the folder of the PhotoAlbum (.NET) and relaunch the modernize CLI.
 
 Select the Upgrade option, current folder, and upgrade locally.
 
 In the prompt box, submit the following prompt: "Upgrade to .NET 10", as recommended previously in our assessment report.
 
-Migrate CLI imediately starts creating an upgrade plan, followed by execution of the necessary code changes.
+The modernize CLI immediately starts creating an upgrade plan, followed by execution of the necessary code changes.
 
 Check the resulting Plan Execution Summary for each app. Upgrade should show "Success".
 
@@ -116,10 +126,11 @@ Check the resulting Plan Execution Summary for each app. Upgrade should show "Su
 
 Navigate to the PhotoAlbum-Java directory and repeat the same process for the Java version of the app. Use the following prompt: "Upgrade to Java 25 and upgrade to Spring Boot 4.0", as recommended previously in our assessment report.
 
-Exit modernize CLI, navigate to each app folder, commit and push your changes to each respective remote repository. Ensure all changes are committed and pushed.
+Exit the modernize CLI, navigate to each app folder, and commit your changes on the `modernize` branch (the upgrade may already have created commits — check with `git log`). The upstream `Azure-Samples` repositories are read-only for you, so there is nothing to push; if you want a remote copy, publish a repository to your own account with `gh repo create <name> --source=. --private --push`.
+
+> [!WARNING]
+> The sample repositories ship with pre-existing example content under `.github/` (agents, prompts, and several GitHub Actions workflows). If you publish a copy to your own account, delete `.github/workflows/` first — otherwise those workflows start running on your account, and pushing workflow files requires the `workflow` scope on your GitHub CLI credential.
 
 Congratulations 🎉 your apps are now upgraded and you have completed challenge 2.
-
-Navigate back to your parent directory and launch modernize CLI again.
 
 You are now ready to initiate challenge 3 - modernize your upgraded apps and deploy them in Azure.

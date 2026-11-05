@@ -2,25 +2,25 @@
 name: java-upgrade
 description: >-
   Transformation rules and verification steps for upgrading Java 8/11 +
-  Spring Boot 2.x applications to Java 21 + Spring Boot 3.x.
+  Spring Boot 2.x applications to Java 25 + Spring Boot 4.x.
   WHEN: upgrade Java version, migrate Spring Boot 2 to 3, javax to jakarta,
-  fix CVE in Java dependencies, update Maven/Gradle build for Java 21,
-  Spring Security 5 to 6 migration.
+  fix CVE in Java dependencies, update Maven/Gradle build for Java 25,
+  Spring Security 5 to 6 migration, Spring Boot 3 to 4 migration.
   NOT for: greenfield Java services, framework replacement rewrites
   (Struts/EJB — use dedicated migration rulebooks), infrastructure-only changes.
 ---
 
-# Java 8 / Spring Boot 2.x → Java 21 / Spring Boot 3.x Upgrade Rules
+# Java 8 / Spring Boot 2.x → Java 25 / Spring Boot 4.x Upgrade Rules
 
 ## Purpose
 
 Packages the version-step strategy, API mappings, and verification checklist for a
-behavior-preserving upgrade to Java 21 + Spring Boot 3.x.
+behavior-preserving upgrade to Java 25 + Spring Boot 4.x.
 
 ## Prerequisites
 
 - `ASSESSMENT.md` exists and is approved.
-- JDK 21 + compatible Maven installed — verify: `java -version`, `mvn -version`.
+- Target JDK + compatible Maven installed — verify: `java -version`, `mvn -version`.
 
 ## Procedure
 
@@ -31,8 +31,10 @@ behavior-preserving upgrade to Java 21 + Spring Boot 3.x.
 | 1 | Java 8 → 11 | Removed JEE modules (JAXB, JAX-WS) — add explicit deps |
 | 2 | Java 11 → 17 | Strong encapsulation of JDK internals (`--add-opens` smells) |
 | 3 | Java 17 → 21 | Mostly safe; check agents/bytecode libs (ASM, CGLIB versions) |
-| 4 | Boot 2.x → 2.7 | Deprecation cleanup before the big jump |
-| 5 | Boot 2.7 → 3.x | `javax → jakarta`, Spring Security 6, Hibernate 6 |
+| 4 | Java 21 → 25 | Recheck bytecode/agent libs and build-plugin versions for the new class-file level |
+| 5 | Boot 2.x → 2.7 | Deprecation cleanup before the big jump |
+| 6 | Boot 2.7 → 3.x | `javax → jakarta`, Spring Security 6, Hibernate 6 |
+| 7 | Boot 3.x → 4.x | APIs deprecated in 3.x are removed — clean up all deprecation warnings first |
 
 ```powershell
 mvn -q clean verify   # run after EVERY step; fix before proceeding
@@ -54,10 +56,10 @@ mvn -q clean verify   # run after EVERY step; fix before proceeding
 
 ### Step 3 — Verify
 
-- [ ] `mvn clean verify` passes on JDK 21
+- [ ] `mvn clean verify` passes on the target JDK (Java 25)
 - [ ] `grep -r "javax\." src/` returns only intentional matches (e.g. `javax.crypto`, `javax.sql` stay in the JDK)
 - [ ] App starts; health endpoint returns UP
-- [ ] CVE assessment clean of criticals (`appmod-java-cve-assessment`)
+- [ ] CVE assessment clean of criticals (`appmod-cve-assessment`)
 - [ ] No `--add-opens` workarounds left without a tracked issue
 
 ## Common Pitfalls
@@ -70,6 +72,6 @@ mvn -q clean verify   # run after EVERY step; fix before proceeding
 
 ## References
 
-- Spring Boot 3.x migration guide; Spring Security 6 migration guide
+- Spring Boot 3.x and 4.x migration guides; Spring Security 6 migration guide
 - OpenRewrite recipes: `org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_x`
 - appmod assessment report (linked from `ASSESSMENT.md`)

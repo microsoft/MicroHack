@@ -58,7 +58,7 @@ Simple one-step requests ("read this file") won't trigger a skill no matter how 
 | General patterns | Overfitting to one example |
 | Exact output templates | Vague "format nicely" |
 
-Modern models have good theory of mind: a rule with a reason ("delete binding redirects — .NET 9 ignores them and they mask resolution errors") generalizes far better than a bare command.
+Modern models have good theory of mind: a rule with a reason ("delete binding redirects — .NET 10 ignores them and they mask resolution errors") generalizes far better than a bare command.
 
 ## 5. The create → test → iterate loop
 

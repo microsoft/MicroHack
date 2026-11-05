@@ -1,9 +1,9 @@
 ---
-name: {{skill-name-kebab-case}}
+name: "{{skill-name-kebab-case}}"
 description: >-
   {{WHAT this skill does in one sentence.}}
   WHEN: {{trigger phrase 1}}, {{trigger phrase 2}}, {{trigger phrase 3}},
-  {{e.g. "upgrade .NET Framework to .NET 9", "migrate Struts to Spring MVC",
+  {{e.g. "upgrade .NET Framework to .NET 10", "migrate Struts to Spring MVC",
   "fix CVE vulnerabilities", "containerize legacy app"}}.
   NOT for: {{explicit exclusions — prevents false triggering, e.g. "greenfield
   development, infrastructure-only changes"}}.
@@ -12,11 +12,14 @@ description: >-
 <!--
   SKILL TEMPLATE — App Modernization knowledge package
   Copy to: <target-repo>/.github/skills/{{skill-name}}/SKILL.md
+  Picked up by GitHub Copilot CLI (/skills list) and auto-matched by the
+  modernize CLI against your prompt during `modernize plan create`.
   The `description` is the routing contract — invest most effort there.
+  The skill name must be lowercase and hyphenated (no spaces) and match its folder name.
   Optional supporting files live next to this file (rulebooks, scripts, examples).
 -->
 
-# {{Skill Title — e.g. ".NET Framework → .NET 9 Migration Rules"}}
+# {{Skill Title — e.g. ".NET Framework → .NET 10 Migration Rules"}}
 
 ## Purpose
 
@@ -25,7 +28,7 @@ description: >-
 ## Prerequisites
 
 - {{e.g. "Assessment report (ASSESSMENT.md) exists"}}
-- {{e.g. ".NET 9 SDK installed — verify with `dotnet --list-sdks`"}}
+- {{e.g. ".NET 10 SDK installed — verify with `dotnet --list-sdks`"}}
 
 ## Procedure
 
@@ -51,7 +54,7 @@ description: >-
 
 ## Common Pitfalls
 
-- ⚠️ {{pitfall + how to avoid — e.g. "binding redirects are not honored in .NET 9; delete them and use the SDK-style project resolution"}}
+- ⚠️ {{pitfall + how to avoid — e.g. "binding redirects are not honored in .NET 10; delete them and use the SDK-style project resolution"}}
 - ⚠️ {{pitfall + how to avoid}}
 
 ## References
